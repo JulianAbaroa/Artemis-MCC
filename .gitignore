@@ -47,10 +47,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Submodules (para que no se suban accidentalmente)
-Artemis/External/imgui/
-Artemis/External/minhook/
-
 # OS
 Thumbs.db
 desktop.ini
