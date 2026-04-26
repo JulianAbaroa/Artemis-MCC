@@ -1,0 +1,6 @@
+[submodule "Artemis/External/imgui"]
+	path = Artemis/External/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "Artemis/External/minhook"]
+	path = Artemis/External/minhook
+	url = https://github.com/TsudaKageyu/minhook.git

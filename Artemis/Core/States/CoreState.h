@@ -1,0 +1,20 @@
+#pragma once
+
+#include <memory>
+
+struct CoreDomainState;
+struct CoreInfrastructureState;
+class DebugState;
+
+// Main container for the application's states.
+struct CoreState
+{
+	CoreState();
+	~CoreState();
+
+	std::unique_ptr<CoreDomainState> Domain;
+	std::unique_ptr<CoreInfrastructureState> Infrastructure;
+	std::unique_ptr<DebugState> Debug;
+};
+
+extern CoreState* g_pState;

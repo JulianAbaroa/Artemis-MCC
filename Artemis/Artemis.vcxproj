@@ -1,0 +1,465 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{c56ac911-e132-4c88-a103-1b4bdd344475}</ProjectGuid>
+    <RootNamespace>Librarian</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis-MCC</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+    <TargetName>wtsapi32</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>wtsapi32</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>wtsapi32</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>wtsapi32</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/../TagTranspiler;</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Common\MapMagics.h" />
+    <ClInclude Include="Core\Common\MapOffsets.h" />
+    <ClInclude Include="Core\Common\ModCore.h" />
+    <ClInclude Include="Core\Common\Signatures.h" />
+    <ClInclude Include="Core\Common\Types\Domain\BlamTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Graph\GraphTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Interactable\InteractableTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Map\MapTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\ModTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Tables\InteractionTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Tables\ObjectTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Tables\PlayerTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\TimelineTypes.h" />
+    <ClInclude Include="Core\Common\Types\Infrastructure\DX11Types.h" />
+    <ClInclude Include="Core\Common\Types\Infrastructure\InputTypes.h" />
+    <ClInclude Include="Core\Common\Types\Infrastructure\SignatureTypes.h" />
+    <ClInclude Include="Core\Common\Types\Infrastructure\UITypes.h" />
+    <ClInclude Include="Core\Common\Types\Interface\LogTypes.h" />
+    <ClInclude Include="Core\DllMain.h" />
+    <ClInclude Include="Core\Hooks\CoreHook.h" />
+    <ClInclude Include="Core\Hooks\Data\CoreDataHook.h" />
+    <ClInclude Include="Core\Hooks\Data\Legacy\BlamOpenFileHook.h" />
+    <ClInclude Include="Core\Hooks\Data\Legacy\BuildGameEventHook.h" />
+    <ClInclude Include="Core\Hooks\Data\Map\BlamOpenMapHook.h" />
+    <ClInclude Include="Core\Hooks\Data\Tables\CreateObjectHook.h" />
+    <ClInclude Include="Core\Hooks\Data\Tables\CreatePlayerHook.h" />
+    <ClInclude Include="Core\Hooks\Data\Tables\ReleaseObjectHook.h" />
+    <ClInclude Include="Core\Hooks\Input\CoreInputHook.h" />
+    <ClInclude Include="Core\Hooks\Input\GetButtonStateHook.h" />
+    <ClInclude Include="Core\Hooks\Input\GetRawInputDataHook.h" />
+    <ClInclude Include="Core\Hooks\Lifecycle\CoreLifecycleHook.h" />
+    <ClInclude Include="Core\Hooks\Lifecycle\DestroySubsystemsHook.h" />
+    <ClInclude Include="Core\Hooks\Lifecycle\EngineInitializeHook.h" />
+    <ClInclude Include="Core\Hooks\Lifecycle\GameEngineStartHook.h" />
+    <ClInclude Include="Core\Hooks\Memory\CoreMemoryHook.h" />
+    <ClInclude Include="Core\Hooks\Memory\InteractionTableHook.h" />
+    <ClInclude Include="Core\Hooks\Memory\ObjectTableHook.h" />
+    <ClInclude Include="Core\Hooks\Memory\PlayerTableHook.h" />
+    <ClInclude Include="Core\Hooks\Render\CoreRenderHook.h" />
+    <ClInclude Include="Core\Hooks\Render\PresentHook.h" />
+    <ClInclude Include="Core\Hooks\Render\ResizeBuffersHook.h" />
+    <ClInclude Include="Core\Hooks\Window\CoreWindowHook.h" />
+    <ClInclude Include="Core\Hooks\Window\WndProcHook.h" />
+    <ClInclude Include="Core\States\CoreState.h" />
+    <ClInclude Include="Core\States\Domain\CoreDomainState.h" />
+    <ClInclude Include="Core\States\Domain\Graph\ObjectGraphState.h" />
+    <ClInclude Include="Core\States\Domain\Interactable\InteractableState.h" />
+    <ClInclude Include="Core\States\Domain\Legacy\EventRegistryState.h" />
+    <ClInclude Include="Core\States\Domain\Legacy\TimelineState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Bipd\MapBipdState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Bloc\MapBlocState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Coll\MapCollState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Eqip\MapEqipState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Jmad\MapJmadState.h" />
+    <ClInclude Include="Core\States\Domain\Map\MapState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Mode\MapModeState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Phmo\MapPhmoState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Proj\MapProjState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Sbsp\MapSbspState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Scen\MapScenState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Scnr\MapScnrState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Vehi\MapVehiState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Weap\MapWeapState.h" />
+    <ClInclude Include="Core\States\Domain\Tables\InteractionTableState.h" />
+    <ClInclude Include="Core\States\Domain\Tables\ObjectTableState.h" />
+    <ClInclude Include="Core\States\Domain\Tables\PlayerTableState.h" />
+    <ClInclude Include="Core\States\Domain\Tags\Phmo\PhmoState.h" />
+    <ClInclude Include="Core\States\Domain\Tags\Vehi\VehiState.h" />
+    <ClInclude Include="Core\States\Infrastructure\CoreInfrastructureState.h" />
+    <ClInclude Include="Core\States\Infrastructure\Engine\InputState.h" />
+    <ClInclude Include="Core\States\Infrastructure\Engine\LifecycleState.h" />
+    <ClInclude Include="Core\States\Infrastructure\Engine\RenderState.h" />
+    <ClInclude Include="Core\States\Infrastructure\Persistence\SettingsState.h" />
+    <ClInclude Include="Core\States\Interface\DebugState.h" />
+    <ClInclude Include="Core\Systems\CoreSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\CoreDomainSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Graph\ObjectGraphSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Interactable\InteractableSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Legacy\EventRegistrySystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Legacy\TimelineSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Map\MapSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Map\MapTagGroupSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Map\TagGroupReader.h" />
+    <ClInclude Include="Core\Systems\Domain\Tables\InteractionTableSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Tables\ObjectTableSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Tables\PlayerTableSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Tags\Phmo\PhmoSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Tags\Vehi\VehiSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\CoreInfrastructureSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\DialogSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\FormatSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\InputSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\LifecycleSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\RenderSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\ScannerSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Engine\ThreadSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Persistence\PreferencesSystem.h" />
+    <ClInclude Include="Core\Systems\Infrastructure\Persistence\SettingsSystem.h" />
+    <ClInclude Include="Core\Systems\Interface\DebugSystem.h" />
+    <ClInclude Include="Core\Threads\CoreThread.h" />
+    <ClInclude Include="Core\Threads\Domain\MainThread.h" />
+    <ClInclude Include="Core\Threads\Domain\AIThread.h" />
+    <ClInclude Include="Core\Threads\Infrastructure\InputThread.h" />
+    <ClInclude Include="Core\UI\CoreUI.h" />
+    <ClInclude Include="Core\UI\Tabs\Domain\Graph\ObjectGraphTab.h" />
+    <ClInclude Include="Core\UI\Tabs\Domain\Interactable\InteractableTab.h" />
+    <ClInclude Include="Core\UI\Tabs\Domain\Physics\PhysicsDebugTab.h" />
+    <ClInclude Include="Core\UI\Tabs\Domain\SettingsTab.h" />
+    <ClInclude Include="Core\UI\Tabs\Domain\Tables\ObjectTableTab.h" />
+    <ClInclude Include="Core\UI\Tabs\Domain\Tables\PlayerTableTab.h" />
+    <ClInclude Include="Core\UI\Tabs\Interface\LogsTab.h" />
+    <ClInclude Include="Core\UI\MainInterface.h" />
+    <ClInclude Include="External\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="External\imgui\imgui.h" />
+    <ClInclude Include="External\imgui\imgui_internal.h" />
+    <ClInclude Include="External\minhook\include\MinHook.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Proxy\ProxyExports.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core\Common\ModCore.cpp" />
+    <ClCompile Include="Core\DllMain.cpp" />
+    <ClCompile Include="Core\Hooks\CoreHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\CoreDataHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\Legacy\BlamOpenFileHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\Legacy\BuildGameEventHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\Map\BlamOpenMapHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\Tables\CreateObjectHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\Tables\CreatePlayerHook.cpp" />
+    <ClCompile Include="Core\Hooks\Data\Tables\ReleaseObjectHook.cpp" />
+    <ClCompile Include="Core\Hooks\Input\CoreInputHook.cpp" />
+    <ClCompile Include="Core\Hooks\Input\GetButtonStateHook.cpp" />
+    <ClCompile Include="Core\Hooks\Input\GetRawInputDataHook.cpp" />
+    <ClCompile Include="Core\Hooks\Lifecycle\CoreLifecycleHook.cpp" />
+    <ClCompile Include="Core\Hooks\Lifecycle\DestroySubsystemsHook.cpp" />
+    <ClCompile Include="Core\Hooks\Lifecycle\EngineInitializeHook.cpp" />
+    <ClCompile Include="Core\Hooks\Lifecycle\GameEngineStartHook.cpp" />
+    <ClCompile Include="Core\Hooks\Memory\CoreMemoryHook.cpp" />
+    <ClCompile Include="Core\Hooks\Memory\InteractionTableHook.cpp" />
+    <ClCompile Include="Core\Hooks\Memory\ObjectTableHook.cpp" />
+    <ClCompile Include="Core\Hooks\Memory\PlayerTableHook.cpp" />
+    <ClCompile Include="Core\Hooks\Render\CoreRenderHook.cpp" />
+    <ClCompile Include="Core\Hooks\Render\PresentHook.cpp" />
+    <ClCompile Include="Core\Hooks\Render\ResizeBuffersHook.cpp" />
+    <ClCompile Include="Core\Hooks\Window\CoreWindowHook.cpp" />
+    <ClCompile Include="Core\Hooks\Window\WndProcHook.cpp" />
+    <ClCompile Include="Core\States\CoreState.cpp" />
+    <ClCompile Include="Core\States\Domain\CoreDomainState.cpp" />
+    <ClCompile Include="Core\States\Domain\Graph\ObjectGraphState.cpp" />
+    <ClCompile Include="Core\States\Domain\Interactable\InteractableState.cpp" />
+    <ClCompile Include="Core\States\Domain\Legacy\EventRegistryState.cpp" />
+    <ClCompile Include="Core\States\Domain\Legacy\TimelineState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Bipd\MapBipdState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Bloc\MapBlocState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Coll\MapCollState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Eqip\MapEqipState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Jmad\MapJmadState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\MapState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Mode\MapModeState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Phmo\MapPhmoState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Proj\MapProjState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Sbsp\MapSbspState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Scen\MapScenState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Scnr\MapScnrState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Vehi\MapVehiState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Weap\MapWeapState.cpp" />
+    <ClCompile Include="Core\States\Domain\Tables\InteractionTableState.cpp" />
+    <ClCompile Include="Core\States\Domain\Tables\ObjectTableState.cpp" />
+    <ClCompile Include="Core\States\Domain\Tables\PlayerTableState.cpp" />
+    <ClCompile Include="Core\States\Domain\Tags\Phmo\PhmoState.cpp" />
+    <ClCompile Include="Core\States\Domain\Tags\Vehi\VehiState.cpp" />
+    <ClCompile Include="Core\States\Infrastructure\CoreInfrastructureState.cpp" />
+    <ClCompile Include="Core\States\Infrastructure\Engine\InputState.cpp" />
+    <ClCompile Include="Core\States\Infrastructure\Engine\LifecycleState.cpp" />
+    <ClCompile Include="Core\States\Infrastructure\Engine\RenderState.cpp" />
+    <ClCompile Include="Core\States\Infrastructure\Persistence\SettingsState.cpp" />
+    <ClCompile Include="Core\States\Interface\DebugState.cpp" />
+    <ClCompile Include="Core\Systems\CoreSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\CoreDomainSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Graph\ObjectGraphSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Interactable\InteractableSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Legacy\EventRegistrySystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Legacy\TimelineSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Map\MapSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Map\MapTagGroupSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Tables\InteractionTableSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Tables\ObjectTableSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Tables\PlayerTableSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Tags\Phmo\PhmoSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Tags\Vehi\VehiSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\CoreInfrastructureSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\DialogSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\FormatSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\InputSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\LifecycleSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\RenderSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\ScannerSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Engine\ThreadSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Persistence\PreferencesSystem.cpp" />
+    <ClCompile Include="Core\Systems\Infrastructure\Persistence\SettingsSystem.cpp" />
+    <ClCompile Include="Core\Systems\Interface\DebugSystem.cpp" />
+    <ClCompile Include="Core\Threads\CoreThread.cpp" />
+    <ClCompile Include="Core\Threads\Domain\MainThread.cpp" />
+    <ClCompile Include="Core\Threads\Domain\AIThread.cpp" />
+    <ClCompile Include="Core\Threads\Infrastructure\InputThread.cpp" />
+    <ClCompile Include="Core\UI\CoreUI.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Domain\Graph\ObjectGraphTab.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Domain\Interactable\InteractableTab.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Domain\Physics\PhysicsDebugTab.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Domain\SettingsTab.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Domain\Tables\ObjectTableTab.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Domain\Tables\PlayerTableTab.cpp" />
+    <ClCompile Include="Core\UI\Tabs\Interface\LogsTab.cpp" />
+    <ClCompile Include="Core\UI\MainInterface.cpp" />
+    <ClCompile Include="External\imgui\backends\imgui_impl_dx11.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\imgui\imgui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\imgui\imgui_demo.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\imgui\imgui_draw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\imgui\imgui_tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\imgui\imgui_widgets.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\minhook\src\buffer.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\minhook\src\hde\hde32.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\minhook\src\hde\hde64.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\minhook\src\hook.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="External\minhook\src\trampoline.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>

@@ -1,0 +1,57 @@
+build/
+x64/
+bin/
+
+.vs/
+*.user
+*.suo
+*.sln.doccache
+
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+
+*.obj
+*.lib
+*.exp
+*.dll
+*.pdb
+*.ilk
+*.idb
+*.aps
+*.res
+*.pch
+*.tlog
+*.lastbuildstate
+*.unsuccessfulbuild
+*.iobj
+*.ipdb
+
+*.log
+*.database
+*.opendb
+*.db
+*.sqliteno-wal
+*.sqlite-shm
+
+# TagTranspiler generated headers
+TagTranspiler/Generated/
+
+# Python
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Submodules (para que no se suban accidentalmente)
+Artemis/External/imgui/
+Artemis/External/minhook/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
