@@ -14,9 +14,6 @@
 #include "Core/Systems/Interface/DebugSystem.h"
 #include "External/imgui/backends/imgui_impl_dx11.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "External/stb/stb_image.h"
-
 DX11Addresses RenderSystem::GetVtableAddresses()
 {
     DX11Addresses addr = { nullptr, nullptr };
@@ -205,66 +202,6 @@ void RenderSystem::UpdateFramerate()
     }
 }
 
-//void RenderSystem::TickCapture(IDXGISwapChain* pSwapChain)
-//{
-//    if (!g_pState->Infrastructure->FFmpeg->IsRecording())
-//    {
-//        m_LastCaptureTime = std::chrono::steady_clock::now();
-//        return;
-//    }
-//
-//    this->CaptureFrame(pSwapChain);
-//}
-//
-//void RenderSystem::CaptureFrame(IDXGISwapChain* pSwapChain)
-//{
-//    if (!g_pState->Infrastructure->Video->IsRecording()) return;
-//
-//    ID3D11Device* device = g_pState->Infrastructure->Render->GetDevice();
-//    ID3D11DeviceContext* context = g_pState->Infrastructure->Render->GetContext();
-//
-//    ID3D11Texture2D* pBackBuffer = nullptr;
-//    if (FAILED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer)))
-//    {
-//        return;
-//    }
-//
-//    D3D11_TEXTURE2D_DESC desc;
-//    pBackBuffer->GetDesc(&desc);
-//
-//    for (int i = 0; i < 2; i++)
-//    {
-//        if (!m_pStagingTextures[i])
-//        {
-//            D3D11_TEXTURE2D_DESC stagingDesc = desc;
-//            stagingDesc.Usage = D3D11_USAGE_STAGING;
-//            stagingDesc.BindFlags = 0;
-//            stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-//            stagingDesc.MiscFlags = 0;
-//            device->CreateTexture2D(&stagingDesc, nullptr, &m_pStagingTextures[i]);
-//        }
-//    }
-//
-//    context->CopyResource(m_pStagingTextures[m_currentBufferIndex], pBackBuffer);
-//    pBackBuffer->Release();
-//
-//    int prevIndex = (m_currentBufferIndex + 1) % 2;
-//
-//    D3D11_MAPPED_SUBRESOURCE mapped;
-//    if (SUCCEEDED(context->Map(m_pStagingTextures[prevIndex], 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &mapped)))
-//    {
-//        auto now = std::chrono::steady_clock::now();
-//        std::chrono::duration<double> elapsed = now - g_pState->Infrastructure->FFmpeg->GetStartRecordingTime();
-//        double currentRealTime = elapsed.count();
-//
-//        g_pSystem->Infrastructure->Video->PushFrame((uint8_t*)mapped.pData, desc.Width, desc.Height, mapped.RowPitch, currentRealTime);
-//        context->Unmap(m_pStagingTextures[prevIndex], 0);
-//    }
-//
-//    m_currentBufferIndex = prevIndex;
-//}
-
-
 void RenderSystem::BeginFrame(IDXGISwapChain* pSwapChain)
 {
     if (g_pState->Infrastructure->Render->GetRTV() == nullptr)
@@ -323,44 +260,6 @@ void RenderSystem::EndFrame()
         if (oldRTV) oldRTV->Release();
         if (oldDSV) oldDSV->Release();
     }
-}
-
-
-void* RenderSystem::CreateTextureFromMemory(const unsigned char* data, size_t size)
-{
-    ID3D11Device* device = g_pState->Infrastructure->Render->GetDevice();
-    if (!device) return nullptr;
-
-    int width, height, channels;
-    unsigned char* pixels = stbi_load_from_memory(data, (int)size, &width, &height, &channels, 4);
-    if (!pixels) return nullptr;
-
-    ID3D11Texture2D* pTexture = nullptr;
-    D3D11_TEXTURE2D_DESC desc = {};
-    desc.Width = width;
-    desc.Height = height;
-    desc.MipLevels = 1;
-    desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    desc.SampleDesc.Count = 1;
-    desc.Usage = D3D11_USAGE_DEFAULT;
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-    D3D11_SUBRESOURCE_DATA subResource = {};
-    subResource.pSysMem = pixels;
-    subResource.SysMemPitch = width * 4;
-
-    device->CreateTexture2D(&desc, &subResource, &pTexture);
-
-    ID3D11ShaderResourceView* srv = nullptr;
-    if (pTexture) 
-    {
-        device->CreateShaderResourceView(pTexture, nullptr, &srv);
-        pTexture->Release();
-    }
-
-    stbi_image_free(pixels);
-    return (void*)srv;
 }
 
 

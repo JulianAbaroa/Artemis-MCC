@@ -12,7 +12,6 @@
 #include "Core/Systems/Domain/Tables/InteractionTableSystem.h"
 #include "Core/Systems/Domain/Graph/ObjectGraphSystem.h"
 #include "Core/Systems/Domain/Interactable/InteractableSystem.h"
-#include "Core/Systems/Domain/Tags/Phmo/PhmoSystem.h"
 #include "Core/Systems/Interface/DebugSystem.h"
 #include "Core/Threads/Domain/AIThread.h"
 #include <chrono>
@@ -27,11 +26,13 @@ void AIThread::Run()
 	{
 		if (g_pState->Domain->Map->IsLoaded())
 		{
+			// Update tables.
 			g_pSystem->Domain->ObjectTable->UpdateObjectTable();
 			g_pSystem->Domain->PlayerTable->UpdatePlayerTable();
 			g_pSystem->Domain->InteractionTable->UpdateInteractionTable();
+
+			// Update the father-child-sibling object graph.
 			g_pSystem->Domain->ObjectGraph->UpdateGraph();
-			g_pSystem->Domain->Phmo->UpdatePhmos();
 
 			uint32_t selfPlayer = 
 				g_pState->Domain->PlayerTable->GetPlayerHandleByName(

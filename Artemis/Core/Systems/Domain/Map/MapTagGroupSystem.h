@@ -29,6 +29,8 @@
 #include "Generated/Scen/ScenDescriptor.h"
 #include "Generated/Scnr/ScnrObject.h"
 #include "Generated/Scnr/ScnrDescriptor.h"
+#include "Generated/Ctrl/CtrlObject.h"
+#include "Generated/Ctrl/CtrlDescriptor.h"
 
 class TagGroupReader;
 

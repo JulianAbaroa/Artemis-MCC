@@ -42,6 +42,7 @@ def ProcessXml(xmlPath: str) -> None:
         GenerateOffset.Generate(xmlPath, os.path.join(outDir, f"{prefix}Offsets.h"))
         GenerateType.Generate( xmlPath, os.path.join(outDir, f"{prefix}Types.h"))
         GenerateObject.Generate(xmlPath, outDir)
+        
     except Exception as e:
         import traceback
         print(f"  [ERROR] {e}")

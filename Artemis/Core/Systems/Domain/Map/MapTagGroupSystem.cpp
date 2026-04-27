@@ -16,6 +16,7 @@
 #include "Core/States/Domain/Map/Scen/MapScenState.h"
 #include "Core/States/Domain/Map/Scnr/MapScnrState.h"
 #include "Core/States/Domain/Map/Jmad/MapJmadState.h"
+#include "Core/States/Domain/Map/Ctrl/MapCtrlState.h"
 #include "Core/Systems/CoreSystem.h"
 #include "Core/Systems/Domain/CoreDomainSystem.h"
 #include "Core/Systems/Domain/Map/MapSystem.h"
@@ -61,6 +62,7 @@ void MapTagGroupSystem::Cleanup()
     g_pState->Domain->MapEqip->Cleanup();
     g_pState->Domain->MapScen->Cleanup();
     g_pState->Domain->MapScnr->Cleanup();
+    g_pState->Domain->MapCtrl->Cleanup();
 
     g_pSystem->Debug->Log("[MapTagGroupSystem] INFO: Cleanup completed.");
 }
@@ -194,6 +196,7 @@ void MapTagGroupSystem::LoadDirectTags(FILE* file, TagGroupReader& reader)
     int32_t eqipCount = 0;
     int32_t scenCount = 0;
     int32_t scnrCount = 0;
+    int32_t ctrlCount = 0;
 
     for (int32_t i = 0; i < tagCount; ++i)
     {
@@ -339,12 +342,28 @@ void MapTagGroupSystem::LoadDirectTags(FILE* file, TagGroupReader& reader)
             g_pState->Domain->MapScnr->AddScnr(tagName, std::move(*scnr));
             ++scnrCount;
         }
+
+        // --- Ctrl ---
+        if (magic == MapMagics::k_CtrlMagic &&
+            !g_pState->Domain->MapCtrl->HasCtrl(tagName))
+        {
+            const int64_t offset =
+                g_pSystem->Domain->Map->GetTagMetaOffsetByIndex(i);
+            if (offset < 0) continue;
+
+            auto ctrl = std::make_unique<CtrlObject>(
+                reader.Read<CtrlObject>(file, offset, tagName));
+
+            g_pState->Domain->MapCtrl->AddCtrl(tagName, std::move(*ctrl));
+            ++ctrlCount;
+        }
     }
 
     g_pSystem->Debug->Log("[MapTagGroupSystem] INFO:"
         " Vehi loaded: %d | Bloc loaded: %d | Sbsp loaded: %d |"
         " Weap loaded: %d | Proj loaded: %d | Bipd loaded: %d |"
-        " Eqip loaded: %d | Scen loaded: %d | Sncr loaded: %d", 
+        " Eqip loaded: %d | Scen loaded: %d | Sncr loaded: %d |"
+        " Ctrl loaded: %d", 
         vehiCount, blocCount, sbspCount, weapCount, projCount, bipdCount, 
-        eqipCount, scenCount, scnrCount);
+        eqipCount, scenCount, scnrCount, ctrlCount);
 }

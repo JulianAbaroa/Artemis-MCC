@@ -21,6 +21,7 @@ class MapEqipState;
 class MapScenState;
 class MapScnrState;
 class MapJmadState;
+class MapCtrlState;
 
 // Tables
 class ObjectTableState;
@@ -31,9 +32,6 @@ class InteractionTableState;
 // the AI is going to receive the final polished data).
 class ObjectGraphState;
 class InteractableState;
-
-class PhmoState;
-class VehiState;
 
 // Main container for the application's domain states.
 struct CoreDomainState
@@ -58,6 +56,7 @@ struct CoreDomainState
 	std::unique_ptr<MapScenState> MapScen;
 	std::unique_ptr<MapScnrState> MapScnr;
 	std::unique_ptr<MapJmadState> MapJmad;
+	std::unique_ptr<MapCtrlState> MapCtrl;
 
 	std::unique_ptr<ObjectTableState> ObjectTable;
 	std::unique_ptr<PlayerTableState> PlayerTable;
@@ -65,7 +64,4 @@ struct CoreDomainState
 
 	std::unique_ptr<ObjectGraphState> ObjectGraph;
 	std::unique_ptr<InteractableState> Interactable;
-
-	std::unique_ptr<PhmoState> Phmo;
-	std::unique_ptr<VehiState> Vehi;
 };

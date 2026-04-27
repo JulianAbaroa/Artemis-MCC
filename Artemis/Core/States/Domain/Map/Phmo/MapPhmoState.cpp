@@ -28,6 +28,24 @@ void MapPhmoState::AddPhmo(const std::string& tagName, PhmoObject data)
     m_Phmos.emplace(tagName, std::move(data));
 }
 
+size_t MapPhmoState::GetSize() const
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_Phmos.size();
+}
+
+std::vector<std::string> MapPhmoState::GetTagNames()
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+
+    std::vector<std::string> names;
+    names.reserve(m_Phmos.size());
+
+    for (const auto& [name, object] : m_Phmos) names.push_back(name);
+
+    return names;
+}
+
 void MapPhmoState::Cleanup()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);

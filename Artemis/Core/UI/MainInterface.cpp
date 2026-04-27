@@ -199,8 +199,8 @@ void MainInterface::DrawTabs()
 	AddTab("Object Table", []() { g_pUI->ObjectTable->Draw(); }, false, nullptr);
 	AddTab("Player Table", []() { g_pUI->PlayerTable->Draw(); }, false, nullptr);
 	AddTab("Object Graph", []() { g_pUI->ObjectGraph->Draw(); }, false, nullptr);
-	AddTab("Interactable", []() { g_pUI->Interactable->Draw(); }, false, nullptr);
-	AddTab("Physics Debug", []() { g_pUI->PhysicsDebug->Draw(); }, false, nullptr);
+	//AddTab("Interactable", []() { g_pUI->Interactable->Draw(); }, false, nullptr);
+	//AddTab("Physics Debug", []() { g_pUI->PhysicsDebug->Draw(); }, false, nullptr);
 	AddTab("Settings", []() { g_pUI->Settings->Draw(); }, firstLaunch, nullptr);
 
 	// Logs

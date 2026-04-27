@@ -4,7 +4,17 @@
 #include "Core/States/Domain/Graph/ObjectGraphState.h"
 #include "Core/States/Domain/Tables/ObjectTableState.h"
 #include "Core/States/Domain/Tables/PlayerTableState.h"
+#include "Core/States/Domain/Map/Bloc/MapBlocState.h"
+#include "Core/States/Domain/Map/Coll/MapCollState.h"
+#include "Core/States/Domain/Map/Eqip/MapEqipState.h"
+#include "Core/States/Domain/Map/Jmad/MapJmadState.h"
+#include "Core/States/Domain/Map/Mode/MapModeState.h"
 #include "Core/States/Domain/Map/Phmo/MapPhmoState.h"
+#include "Core/States/Domain/Map/Proj/MapProjState.h"
+#include "Core/States/Domain/Map/Scen/MapScenState.h"
+#include "Core/States/Domain/Map/Vehi/MapVehiState.h"
+#include "Core/States/Domain/Map/Weap/MapWeapState.h"
+#include "Core/States/Domain/Map/Ctrl/MapCtrlState.h"
 #include "Core/Systems/CoreSystem.h"
 #include "Core/Systems/Domain/Graph/ObjectGraphSystem.h"
 #include "Core/Systems/Interface/DebugSystem.h"
@@ -52,7 +62,7 @@ void ObjectGraphSystem::Cleanup()
 void ObjectGraphSystem::BuildNodes(
 	std::unordered_map<uint32_t, ObjectNode>& nodes)
 {
-	const auto& allObjects = g_pState->Domain->ObjectTable->GetAllObjects();
+	const auto& allObjects = g_pState->Domain->ObjectTable->GetObjectTable();
 
 	for (const auto& [handle, object] : allObjects)
 	{
@@ -72,8 +82,16 @@ void ObjectGraphSystem::BuildNodes(
 		TagProfile profile;
 		profile.PrimaryGroup = ResolveTagGroup(object.Class);
 
-		// Sub-tags.
-		//profile.HasPhmo = g_pState->Domain->MapPhmo->HasPhmo(object.TagName);
+		profile.HasBloc = g_pState->Domain->MapBloc->HasBloc(object.TagName);
+		profile.HasColl = g_pState->Domain->MapColl->HasColl(object.TagName);
+		profile.HasCtrl = g_pState->Domain->MapCtrl->HasCtrl(object.TagName);
+		profile.HasEqip = g_pState->Domain->MapEqip->HasEqip(object.TagName);
+		profile.HasJmad = g_pState->Domain->MapJmad->HasJmad(object.TagName);
+		profile.HasMode = g_pState->Domain->MapMode->HasMode(object.TagName);
+		profile.HasPhmo = g_pState->Domain->MapPhmo->HasPhmo(object.TagName);
+		profile.HasProj = g_pState->Domain->MapProj->HasProj(object.TagName);
+		profile.HasScen = g_pState->Domain->MapScen->HasScen(object.TagName);
+		profile.HasWeap = g_pState->Domain->MapWeap->HasWeap(object.TagName);
 
 		node.Profile = profile;
 

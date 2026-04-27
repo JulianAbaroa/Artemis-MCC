@@ -12,10 +12,10 @@ void ObjectTableTab::Draw()
 {
 	std::map<std::string, std::vector<LiveObject>> groupedObjects;
 
-	bool hasMapChanged = g_pState->Domain->ObjectTable->HasMapChanged();
+	bool hasMapChanged = g_pState->Domain->ObjectTable->HasChanged();
 	if (hasMapChanged)
 	{
-		m_CacheObjects = g_pState->Domain->ObjectTable->GetAllObjects();
+		m_CacheObjects = g_pState->Domain->ObjectTable->GetObjectTable();
 	}
 
 	for (const auto& [handle, object] : m_CacheObjects)

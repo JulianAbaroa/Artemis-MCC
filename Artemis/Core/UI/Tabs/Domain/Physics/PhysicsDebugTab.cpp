@@ -5,7 +5,6 @@
 #include "Core/States/Domain/Map/Phmo/MapPhmoState.h"
 #include "Core/States/Domain/Tables/ObjectTableState.h"
 #include "Core/States/Domain/Tables/PlayerTableState.h"
-#include "Core/States/Domain/Tags/Phmo/PhmoState.h"
 #include "External/imgui/imgui.h"
 #include <algorithm>
 #include <format>
@@ -48,7 +47,7 @@ void PhysicsDebugTab::DrawPlayerSection()
     ImGui::Spacing();
 
     // Find local player biped.
-    const auto& allObjects = g_pState->Domain->ObjectTable->GetAllObjects();
+    const auto& allObjects = g_pState->Domain->ObjectTable->GetObjectTable();
     const auto& allPlayers = g_pState->Domain->PlayerTable->GetAllPlayers();
 
     // Use first local player's biped.
@@ -108,7 +107,7 @@ void PhysicsDebugTab::DrawObjectList()
     ImGui::TextDisabled("Select to inspect physics data.");
     ImGui::Spacing();
 
-    const auto& allObjects = g_pState->Domain->ObjectTable->GetAllObjects();
+    const auto& allObjects = g_pState->Domain->ObjectTable->GetObjectTable();
 
     // Get player position for distance sort.
     float playerPos[3] = {};

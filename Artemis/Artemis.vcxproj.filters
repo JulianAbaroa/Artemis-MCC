@@ -157,24 +157,6 @@
     <Filter Include="Core\UI\Tabs\Domain\Physics">
       <UniqueIdentifier>{0b5f4491-3604-403a-b07f-e2a26025cd28}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Domain\Tags">
-      <UniqueIdentifier>{728d4011-e7f0-44c5-8d53-bac97afb5c36}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\States\Domain\Tags\Phmo">
-      <UniqueIdentifier>{41702dda-13c0-4009-a833-7f1d5e3ef639}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\States\Domain\Tags\Vehi">
-      <UniqueIdentifier>{303ee816-478e-4db6-b03e-3d34c9ca03a2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Systems\Domain\Tags">
-      <UniqueIdentifier>{d93c45aa-c0ed-4f89-b6a1-1e32ca5a686f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Systems\Domain\Tags\Phmo">
-      <UniqueIdentifier>{928ff939-6064-4424-a6a9-e0d5ee6711cc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Systems\Domain\Tags\Vehi">
-      <UniqueIdentifier>{1e0b41cb-df0a-4c3c-80b8-22e17c304f77}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Common\Types\Domain">
       <UniqueIdentifier>{a658f6a0-103a-433a-8cf2-dce5a681d7ab}</UniqueIdentifier>
     </Filter>
@@ -234,6 +216,12 @@
     </Filter>
     <Filter Include="Core\States\Domain\Map\Jmad">
       <UniqueIdentifier>{c74e22de-521e-4f84-a76e-aa1877c68deb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Map\Sbsp">
+      <UniqueIdentifier>{7b8c54c2-75da-4e2a-a740-fc7128fb3288}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\States\Domain\Map\Ctrl">
+      <UniqueIdentifier>{17d0be79-3d61-4495-8950-66be11e3a6b1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -485,18 +473,6 @@
     <ClInclude Include="Core\States\Domain\Tables\InteractionTableState.h">
       <Filter>Core\States\Domain\Tables</Filter>
     </ClInclude>
-    <ClInclude Include="Core\States\Domain\Tags\Phmo\PhmoState.h">
-      <Filter>Core\States\Domain\Tags\Phmo</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Domain\Tags\Phmo\PhmoSystem.h">
-      <Filter>Core\Systems\Domain\Tags\Phmo</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Domain\Tags\Vehi\VehiSystem.h">
-      <Filter>Core\Systems\Domain\Tags\Vehi</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Domain\Tags\Vehi\VehiState.h">
-      <Filter>Core\States\Domain\Tags\Vehi</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Common\Types\Domain\Map\MapTypes.h">
       <Filter>Core\Common\Types\Domain\Map</Filter>
     </ClInclude>
@@ -592,6 +568,12 @@
     </ClInclude>
     <ClInclude Include="Core\States\Domain\Map\Jmad\MapJmadState.h">
       <Filter>Core\States\Domain\Map\Jmad</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Common\Types\Domain\Map\SbspGeometry.h">
+      <Filter>Core\Common\Types\Domain\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\States\Domain\Map\Ctrl\MapCtrlState.h">
+      <Filter>Core\States\Domain\Map\Ctrl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -857,18 +839,6 @@
     <ClCompile Include="Core\States\Domain\Tables\InteractionTableState.cpp">
       <Filter>Core\States\Domain\Tables</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Domain\Tags\Phmo\PhmoState.cpp">
-      <Filter>Core\States\Domain\Tags\Phmo</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Systems\Domain\Tags\Phmo\PhmoSystem.cpp">
-      <Filter>Core\Systems\Domain\Tags\Phmo</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Systems\Domain\Tags\Vehi\VehiSystem.cpp">
-      <Filter>Core\Systems\Domain\Tags\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\States\Domain\Tags\Vehi\VehiState.cpp">
-      <Filter>Core\States\Domain\Tags\Vehi</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Systems\Domain\Map\MapTagGroupSystem.cpp">
       <Filter>Core\Systems\Domain\Map</Filter>
     </ClCompile>
@@ -913,6 +883,9 @@
     </ClCompile>
     <ClCompile Include="Core\States\Domain\Map\Jmad\MapJmadState.cpp">
       <Filter>Core\States\Domain\Map\Jmad</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\States\Domain\Map\Ctrl\MapCtrlState.cpp">
+      <Filter>Core\States\Domain\Map\Ctrl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

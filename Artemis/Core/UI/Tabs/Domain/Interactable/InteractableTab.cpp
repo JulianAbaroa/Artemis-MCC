@@ -3,7 +3,6 @@
 #include "Core/States/Domain/CoreDomainState.h"
 #include "Core/States/Domain/Tables/InteractionTableState.h"
 #include "Core/States/Domain/Interactable/InteractableState.h"
-#include "Core/States/Domain/Tags/Phmo/PhmoState.h"
 #include "Core/UI/Tabs/Domain/Interactable/InteractableTab.h"
 #include "External/imgui/imgui.h"
 #include <Algorithm>

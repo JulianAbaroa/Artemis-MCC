@@ -15,13 +15,9 @@ public:
 	void Shutdown();
 
 	void UpdateFramerate();
-	void TickCapture(IDXGISwapChain* pSwapChain);
-	void CaptureFrame(IDXGISwapChain* pSwapChain);
 
 	void BeginFrame(IDXGISwapChain* pSwapChain);
 	void EndFrame();
-
-	void* CreateTextureFromMemory(const unsigned char* data, size_t size);
 
 	void UpdateUIScale();
 

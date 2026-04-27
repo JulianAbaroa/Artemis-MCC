@@ -171,6 +171,7 @@
     <ClInclude Include="Core\Common\Types\Domain\Graph\GraphTypes.h" />
     <ClInclude Include="Core\Common\Types\Domain\Interactable\InteractableTypes.h" />
     <ClInclude Include="Core\Common\Types\Domain\Map\MapTypes.h" />
+    <ClInclude Include="Core\Common\Types\Domain\Map\SbspGeometry.h" />
     <ClInclude Include="Core\Common\Types\Domain\ModTypes.h" />
     <ClInclude Include="Core\Common\Types\Domain\Tables\InteractionTypes.h" />
     <ClInclude Include="Core\Common\Types\Domain\Tables\ObjectTypes.h" />
@@ -215,6 +216,7 @@
     <ClInclude Include="Core\States\Domain\Map\Bipd\MapBipdState.h" />
     <ClInclude Include="Core\States\Domain\Map\Bloc\MapBlocState.h" />
     <ClInclude Include="Core\States\Domain\Map\Coll\MapCollState.h" />
+    <ClInclude Include="Core\States\Domain\Map\Ctrl\MapCtrlState.h" />
     <ClInclude Include="Core\States\Domain\Map\Eqip\MapEqipState.h" />
     <ClInclude Include="Core\States\Domain\Map\Jmad\MapJmadState.h" />
     <ClInclude Include="Core\States\Domain\Map\MapState.h" />
@@ -229,8 +231,6 @@
     <ClInclude Include="Core\States\Domain\Tables\InteractionTableState.h" />
     <ClInclude Include="Core\States\Domain\Tables\ObjectTableState.h" />
     <ClInclude Include="Core\States\Domain\Tables\PlayerTableState.h" />
-    <ClInclude Include="Core\States\Domain\Tags\Phmo\PhmoState.h" />
-    <ClInclude Include="Core\States\Domain\Tags\Vehi\VehiState.h" />
     <ClInclude Include="Core\States\Infrastructure\CoreInfrastructureState.h" />
     <ClInclude Include="Core\States\Infrastructure\Engine\InputState.h" />
     <ClInclude Include="Core\States\Infrastructure\Engine\LifecycleState.h" />
@@ -249,8 +249,6 @@
     <ClInclude Include="Core\Systems\Domain\Tables\InteractionTableSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Tables\ObjectTableSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Tables\PlayerTableSystem.h" />
-    <ClInclude Include="Core\Systems\Domain\Tags\Phmo\PhmoSystem.h" />
-    <ClInclude Include="Core\Systems\Domain\Tags\Vehi\VehiSystem.h" />
     <ClInclude Include="Core\Systems\Infrastructure\CoreInfrastructureSystem.h" />
     <ClInclude Include="Core\Systems\Infrastructure\Engine\DialogSystem.h" />
     <ClInclude Include="Core\Systems\Infrastructure\Engine\FormatSystem.h" />
@@ -320,6 +318,7 @@
     <ClCompile Include="Core\States\Domain\Map\Bipd\MapBipdState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\Bloc\MapBlocState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\Coll\MapCollState.cpp" />
+    <ClCompile Include="Core\States\Domain\Map\Ctrl\MapCtrlState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\Eqip\MapEqipState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\Jmad\MapJmadState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\MapState.cpp" />
@@ -334,8 +333,6 @@
     <ClCompile Include="Core\States\Domain\Tables\InteractionTableState.cpp" />
     <ClCompile Include="Core\States\Domain\Tables\ObjectTableState.cpp" />
     <ClCompile Include="Core\States\Domain\Tables\PlayerTableState.cpp" />
-    <ClCompile Include="Core\States\Domain\Tags\Phmo\PhmoState.cpp" />
-    <ClCompile Include="Core\States\Domain\Tags\Vehi\VehiState.cpp" />
     <ClCompile Include="Core\States\Infrastructure\CoreInfrastructureState.cpp" />
     <ClCompile Include="Core\States\Infrastructure\Engine\InputState.cpp" />
     <ClCompile Include="Core\States\Infrastructure\Engine\LifecycleState.cpp" />
@@ -353,8 +350,6 @@
     <ClCompile Include="Core\Systems\Domain\Tables\InteractionTableSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Tables\ObjectTableSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Tables\PlayerTableSystem.cpp" />
-    <ClCompile Include="Core\Systems\Domain\Tags\Phmo\PhmoSystem.cpp" />
-    <ClCompile Include="Core\Systems\Domain\Tags\Vehi\VehiSystem.cpp" />
     <ClCompile Include="Core\Systems\Infrastructure\CoreInfrastructureSystem.cpp" />
     <ClCompile Include="Core\Systems\Infrastructure\Engine\DialogSystem.cpp" />
     <ClCompile Include="Core\Systems\Infrastructure\Engine\FormatSystem.cpp" />

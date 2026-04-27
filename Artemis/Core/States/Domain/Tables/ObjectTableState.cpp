@@ -8,7 +8,7 @@ const LiveObject* ObjectTableState::GetObject(uint32_t handle) const
 	return it != m_Objects.end() ? &it->second : nullptr;
 }
 
-const std::unordered_map<uint32_t, LiveObject>& ObjectTableState::GetAllObjects() const
+const std::unordered_map<uint32_t, LiveObject> ObjectTableState::GetObjectTable() const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	return m_Objects;
@@ -18,7 +18,7 @@ void ObjectTableState::AddObject(uint32_t handle, const LiveObject& object)
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	m_Objects[handle] = object;
-	m_HasMapChanged.store(true);
+	m_HasChanged.store(true);
 }
 
 std::optional<LiveObject> ObjectTableState::RemoveObject(uint32_t handle)
@@ -30,7 +30,7 @@ std::optional<LiveObject> ObjectTableState::RemoveObject(uint32_t handle)
 	{
 		LiveObject removedCopy = std::move(it->second);
 		m_Objects.erase(handle);
-		m_HasMapChanged.store(true);
+		m_HasChanged.store(true);
 		return removedCopy;
 	}
 
@@ -44,18 +44,18 @@ void ObjectTableState::UpdateObjects(std::function<void(uint32_t, LiveObject&)> 
 	{
 		processor(handle, object);
 	}
-	m_HasMapChanged.store(true);
+	m_HasChanged.store(true);
 }
 
-bool ObjectTableState::HasMapChanged() const { return m_HasMapChanged.load(); }
-void ObjectTableState::SetMapChanged(bool value) { m_HasMapChanged.store(value); }
+bool ObjectTableState::HasChanged() const { return m_HasChanged.load(); }
+void ObjectTableState::SetChanged(bool value) { m_HasChanged.store(value); }
 
 uintptr_t ObjectTableState::GetObjectTableBase() { return m_ObjectTableBase.load(); }
 void ObjectTableState::SetObjectTableBase(uintptr_t pointer) { m_ObjectTableBase.store(pointer); }
 
 void ObjectTableState::Cleanup()
 {
-	m_HasMapChanged.store(false);
+	m_HasChanged.store(false);
 	m_ObjectTableBase.store(0);
 
 	std::lock_guard<std::mutex> lock(m_Mutex);

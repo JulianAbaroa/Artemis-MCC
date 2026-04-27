@@ -23,4 +23,5 @@ namespace MapMagics
 	static constexpr uint32_t k_ProjMagic = 0x70726F6A;
 	static constexpr uint32_t k_BipdMagic = 0x62697064;
 	static constexpr uint32_t k_JmadMagic = 0x6A6D6164;
+	static constexpr uint32_t k_CtrlMagic = 0x6374726C;
 }
