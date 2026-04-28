@@ -106,9 +106,6 @@
     <Filter Include="Core\Systems\Domain\Legacy">
       <UniqueIdentifier>{0d57b8c3-2bba-4986-b1e7-dd83501e00b3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Domain\Map">
-      <UniqueIdentifier>{d5b5b3eb-b04a-4830-ab0b-7cc8d6b21bc7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\States\Domain\Map">
       <UniqueIdentifier>{921efa0a-22a1-4b93-8fc5-4a404387e8d8}</UniqueIdentifier>
     </Filter>
@@ -217,11 +214,20 @@
     <Filter Include="Core\States\Domain\Map\Jmad">
       <UniqueIdentifier>{c74e22de-521e-4f84-a76e-aa1877c68deb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Domain\Map\Sbsp">
-      <UniqueIdentifier>{7b8c54c2-75da-4e2a-a740-fc7128fb3288}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\States\Domain\Map\Ctrl">
       <UniqueIdentifier>{17d0be79-3d61-4495-8950-66be11e3a6b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\States\Domain\Navigation">
+      <UniqueIdentifier>{3b73085e-9e6f-4035-8513-8326d7e6e4b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Navigation">
+      <UniqueIdentifier>{dc0c6e13-4494-4bb0-9776-12b28bf4960a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Map">
+      <UniqueIdentifier>{d5b5b3eb-b04a-4830-ab0b-7cc8d6b21bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Map\Sbsp">
+      <UniqueIdentifier>{7b8c54c2-75da-4e2a-a740-fc7128fb3288}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -569,11 +575,23 @@
     <ClInclude Include="Core\States\Domain\Map\Jmad\MapJmadState.h">
       <Filter>Core\States\Domain\Map\Jmad</Filter>
     </ClInclude>
+    <ClInclude Include="Core\States\Domain\Map\Ctrl\MapCtrlState.h">
+      <Filter>Core\States\Domain\Map\Ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Map\Sbsp\SbspGeometryBuilder.h">
+      <Filter>Core\Systems\Domain\Map\Sbsp</Filter>
+    </ClInclude>
     <ClInclude Include="Core\Common\Types\Domain\Map\SbspGeometry.h">
       <Filter>Core\Common\Types\Domain\Map</Filter>
     </ClInclude>
-    <ClInclude Include="Core\States\Domain\Map\Ctrl\MapCtrlState.h">
-      <Filter>Core\States\Domain\Map\Ctrl</Filter>
+    <ClInclude Include="Core\States\Domain\Navigation\NavigationState.h">
+      <Filter>Core\States\Domain\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Navigation\NavigationSystem.h">
+      <Filter>Core\Systems\Domain\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Map\Sbsp\SbspSeamLinker.h">
+      <Filter>Core\Systems\Domain\Map\Sbsp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -886,6 +904,18 @@
     </ClCompile>
     <ClCompile Include="Core\States\Domain\Map\Ctrl\MapCtrlState.cpp">
       <Filter>Core\States\Domain\Map\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Map\Sbsp\SbspGeometryBuilder.cpp">
+      <Filter>Core\Systems\Domain\Map\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\States\Domain\Navigation\NavigationState.cpp">
+      <Filter>Core\States\Domain\Navigation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Navigation\NavigationSystem.cpp">
+      <Filter>Core\Systems\Domain\Navigation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Map\Sbsp\SbspSeamLinker.cpp">
+      <Filter>Core\Systems\Domain\Map\Sbsp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

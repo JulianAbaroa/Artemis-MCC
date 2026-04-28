@@ -19,7 +19,7 @@ namespace
         case TagGroup::Weapon:       return "Weapon";
         case TagGroup::Equipment:    return "Equipment";
         case TagGroup::Scenery:      return "Scenery";
-        case TagGroup::Control:      return "Control";
+        case TagGroup::DeviceControl:return "Control";
         case TagGroup::Crate:        return "Crate";
         case TagGroup::Projectile:   return "Projectile";
         default:                     return "Unknown";

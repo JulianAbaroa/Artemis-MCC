@@ -17,6 +17,7 @@
 #include "Core/States/Domain/Map/Scnr/MapScnrState.h"
 #include "Core/States/Domain/Map/Jmad/MapJmadState.h"
 #include "Core/States/Domain/Map/Ctrl/MapCtrlState.h"
+#include "Core/States/Domain/Navigation/NavigationState.h"
 #include "Core/States/Domain/Tables/ObjectTableState.h"
 #include "Core/States/Domain/Tables/PlayerTableState.h"
 #include "Core/States/Domain/Tables/InteractionTableState.h"
@@ -43,6 +44,8 @@ CoreDomainState::CoreDomainState()
 	MapScnr = std::make_unique<MapScnrState>();
 	MapJmad = std::make_unique<MapJmadState>();
 	MapCtrl = std::make_unique<MapCtrlState>();
+
+	Navigation = std::make_unique<NavigationState>();
 
 	ObjectTable = std::make_unique<ObjectTableState>();
 	PlayerTable = std::make_unique<PlayerTableState>();

@@ -35,7 +35,7 @@ enum class TagGroup : uint8_t
     Unknown = 0,
     Crate,          // "bloc"
     Collision,      // "coll"
-    Control,        // "ctrl"
+    DeviceControl,  // "ctrl"
     Equipment,      // "eqip"
     Animation,      // "jmad"
     Model,          // "mode"

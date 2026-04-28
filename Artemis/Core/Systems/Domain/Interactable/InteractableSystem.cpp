@@ -14,7 +14,7 @@
 
 void InteractableSystem::UpdateInteractables(uint32_t selfPlayerHandle)
 {
-	const LivePlayer* selfPtr =
+	const LivePlayer* selfPtr = 
 		g_pState->Domain->PlayerTable->GetPlayer(selfPlayerHandle);
 	if (!selfPtr) return;
 
@@ -162,7 +162,7 @@ std::vector<InteractableBehavior> InteractableSystem::DeriveBehaviors(
 		behaviors.push_back(InteractableBehavior::EnterVehicle);
 		break;
 
-	case TagGroup::Control:
+	case TagGroup::DeviceControl:
 		behaviors.push_back(InteractableBehavior::Interact);
 		break;
 
@@ -189,7 +189,7 @@ InteractableActivation InteractableSystem::DeriveActivation(TagGroup group) cons
 	case TagGroup::Weapon:
 	case TagGroup::Equipment:
 	case TagGroup::Vehicle:
-	case TagGroup::Control:
+	case TagGroup::DeviceControl:
 		return InteractableActivation::KeyPress;
 
 	case TagGroup::Scenery:

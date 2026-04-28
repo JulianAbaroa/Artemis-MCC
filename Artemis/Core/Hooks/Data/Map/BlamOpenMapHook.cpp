@@ -4,6 +4,7 @@
 #include "Core/Systems/Domain/CoreDomainSystem.h"
 #include "Core/Systems/Domain/Map/MapSystem.h"
 #include "Core/Systems/Domain/Map/MapTagGroupSystem.h"
+#include "Core/Systems/Domain/Navigation/NavigationSystem.h"
 #include "Core/Systems/Infrastructure/CoreInfrastructureSystem.h"
 #include "Core/Systems/Infrastructure/Engine/ScannerSystem.h"
 #include "Core/Systems/Interface/DebugSystem.h"
@@ -31,7 +32,11 @@ void BlamOpenMapHook::HookedBlamOpenMap(uint64_t param_1,
 	std::filesystem::path fullPath = gameRoot / relativePath;
 
 	bool mapLoaded = g_pSystem->Domain->Map->LoadMap(fullPath.string());
-	if (mapLoaded) g_pSystem->Domain->MapTagGroup->LoadForMap();
+	if (mapLoaded)
+	{
+		g_pSystem->Domain->MapTagGroup->LoadForMap();
+		g_pSystem->Domain->Navigation->BuildForMap();
+	}
 }
 
 void BlamOpenMapHook::Install()

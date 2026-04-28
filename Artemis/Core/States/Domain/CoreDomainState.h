@@ -23,6 +23,9 @@ class MapScnrState;
 class MapJmadState;
 class MapCtrlState;
 
+// Navigation
+class NavigationState;
+
 // Tables
 class ObjectTableState;
 class PlayerTableState;
@@ -57,6 +60,8 @@ struct CoreDomainState
 	std::unique_ptr<MapScnrState> MapScnr;
 	std::unique_ptr<MapJmadState> MapJmad;
 	std::unique_ptr<MapCtrlState> MapCtrl;
+
+	std::unique_ptr<NavigationState> Navigation;
 
 	std::unique_ptr<ObjectTableState> ObjectTable;
 	std::unique_ptr<PlayerTableState> PlayerTable;

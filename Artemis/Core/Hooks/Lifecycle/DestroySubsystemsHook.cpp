@@ -26,6 +26,7 @@
 #include "Core/Systems/Domain/CoreDomainSystem.h"
 #include "Core/Systems/Domain/Map/MapSystem.h"
 #include "Core/Systems/Domain/Map/MapTagGroupSystem.h"
+#include "Core/Systems/Domain/Navigation/NavigationSystem.h"
 #include "Core/Systems/Domain/Tables/ObjectTableSystem.h"
 #include "Core/Systems/Domain/Tables/PlayerTableSystem.h"
 #include "Core/Systems/Domain/Tables/InteractionTableSystem.h"
@@ -54,6 +55,9 @@ void __fastcall DestroySubsystemsHook::HookedDestroySubsystems(void)
 	g_pSystem->Domain->Map->Cleanup();
 	g_pSystem->Domain->MapTagGroup->Cleanup();
 
+	// Systems: Navigation.
+	g_pSystem->Domain->Navigation->Cleanup();
+
 	// Systems: Tables.
 	g_pSystem->Domain->ObjectTable->Cleanup();
 	g_pSystem->Domain->PlayerTable->Cleanup();
@@ -64,10 +68,6 @@ void __fastcall DestroySubsystemsHook::HookedDestroySubsystems(void)
 
 	// Systems: Interactables.
 	g_pSystem->Domain->Interactable->Cleanup();
-
-	// Systems: Tags.
-	//g_pSystem->Domain->Phmo->Cleanup();
-	//g_pSystem->Domain->Vehi->Cleanup();
 
 	// UI.
 	g_pUI->ObjectTable->Cleanup();

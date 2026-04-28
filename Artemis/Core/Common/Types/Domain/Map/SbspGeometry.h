@@ -1,16 +1,12 @@
 #pragma once
 
-// Core/Common/Types/Domain/Map/SbspGeometry.h
-//
 // Processed representation of SBSP data for AI navigation.
-// These structs are produced by SbspGeometryBuilder::BuildGeometry()
-// from a fully-deserialized SbspObject.
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
-// Primitive types (independent of MapTypes.h so AI code has no engine deps).
+// Primitive types.
 struct SbspVec2 { float X, Y; };
 struct SbspVec3 { float X, Y, Z; };
 struct SbspVec4 { float X, Y, Z, W; };
@@ -22,15 +18,33 @@ struct SbspWorldBounds
     SbspVec3 Max;
 };
 
+// Cross-BSP link
+//
+// Represents a connection from a cluster in this BSP to a cluster in another
+// BSP, discovered by matching Structure Seam centroids across BSPs.
+//
+// RemoteSbspIndex    — index into NavigationState::m_Geometries
+// RemoteClusterIndex — index into that SbspGeometry::Clusters
+// ConnectionPoint    — world space position of the seam centroid
+//                      (useful for pathfinding cost estimation)
+struct SbspCrossLink
+{
+    int32_t  RemoteSbspIndex;
+    int32_t  RemoteClusterIndex;
+    SbspVec3 ConnectionPoint;
+};
+
+
 // Cluster (spatial cell)
 //
-// Each cluster is a convex region of the BSP. The engine uses cluster
-// portals to determine visibility and audio propagation, for navigation we
+// Each cluster is a convex region of the BSP.  The engine uses cluster
+// portals to determine visibility and audio propagation; for navigation we
 // use the same connectivity as a graph of reachable regions.
 //
 // BoundsMin/Max come from Sbsp_ClustersEntry::BoundsX/Y/Z (RangeF).
 // ConnectedClusters is built by walking every portal listed in Portals[]
 // and recording whichever of BackCluster/FrontCluster is not this cluster.
+// CrossLinks is populated after all BSPs are built, by SeamLinker.
 struct SbspCluster
 {
     int32_t  ClusterIndex;          // index of this cluster in SbspObject::Clusters
@@ -39,12 +53,16 @@ struct SbspCluster
     SbspVec3 Center;                // midpoint of bounds, useful for distance checks
     int16_t  MeshIndex;             // render mesh index (-1 if none)
 
-    // Adjacency list: indices into SbspGeometry::Clusters.
-    std::vector<int32_t> ConnectedClusters;
+    // Intra-BSP adjacency (via portals, same BSP)
+    std::vector<int32_t>       ConnectedClusters;
 
-    // Portal indices (into SbspGeometry::Portals) that touch this cluster.
-    std::vector<int32_t> PortalIndices;
+    // Portal indices (into SbspGeometry::Portals) that touch this cluster
+    std::vector<int32_t>       PortalIndices;
+
+    // Inter-BSP adjacency (via structure seams, different BSP)
+    std::vector<SbspCrossLink> CrossLinks;
 };
+
 
 // Portal (connection between two clusters)
 //
@@ -75,9 +93,9 @@ struct SbspInstancedGeometryEntry
 {
     int32_t  SubGroupIndex;         // index in SbspObject::InstancedGeometrySubGroups
     int32_t  NameIndex;             // index in SbspObject::InstancedGeometryInstances
-    // (-1 if the subgroup has no members)
+                                    // (-1 if the subgroup has no members)
     uint32_t NameId;                // raw stringid from InstancedGeometryInstancesEntry
-    // (0 if NameIndex == -1)
+                                    // (0 if NameIndex == -1)
     SbspVec3 Center;                // SubGroupsEntry::Center
     float    Radius;                // SubGroupsEntry::Radius
     int16_t  ClusterCount;          // how many clusters this subgroup spans

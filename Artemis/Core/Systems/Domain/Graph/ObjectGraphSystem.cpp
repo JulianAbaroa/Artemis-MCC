@@ -27,7 +27,7 @@ namespace
 		{ "weap", TagGroup::Weapon       },
 		{ "eqip", TagGroup::Equipment    },
 		{ "scen", TagGroup::Scenery      },
-		{ "ctrl", TagGroup::Control      },
+		{ "ctrl", TagGroup::DeviceControl},
 		{ "bloc", TagGroup::Crate        },
 		{ "proj", TagGroup::Projectile   },
 	};

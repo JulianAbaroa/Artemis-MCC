@@ -228,6 +228,7 @@
     <ClInclude Include="Core\States\Domain\Map\Scnr\MapScnrState.h" />
     <ClInclude Include="Core\States\Domain\Map\Vehi\MapVehiState.h" />
     <ClInclude Include="Core\States\Domain\Map\Weap\MapWeapState.h" />
+    <ClInclude Include="Core\States\Domain\Navigation\NavigationState.h" />
     <ClInclude Include="Core\States\Domain\Tables\InteractionTableState.h" />
     <ClInclude Include="Core\States\Domain\Tables\ObjectTableState.h" />
     <ClInclude Include="Core\States\Domain\Tables\PlayerTableState.h" />
@@ -245,7 +246,10 @@
     <ClInclude Include="Core\Systems\Domain\Legacy\TimelineSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Map\MapSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Map\MapTagGroupSystem.h" />
+    <ClInclude Include="Core\Systems\Domain\Map\Sbsp\SbspGeometryBuilder.h" />
+    <ClInclude Include="Core\Systems\Domain\Map\Sbsp\SbspSeamLinker.h" />
     <ClInclude Include="Core\Systems\Domain\Map\TagGroupReader.h" />
+    <ClInclude Include="Core\Systems\Domain\Navigation\NavigationSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Tables\InteractionTableSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Tables\ObjectTableSystem.h" />
     <ClInclude Include="Core\Systems\Domain\Tables\PlayerTableSystem.h" />
@@ -330,6 +334,7 @@
     <ClCompile Include="Core\States\Domain\Map\Scnr\MapScnrState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\Vehi\MapVehiState.cpp" />
     <ClCompile Include="Core\States\Domain\Map\Weap\MapWeapState.cpp" />
+    <ClCompile Include="Core\States\Domain\Navigation\NavigationState.cpp" />
     <ClCompile Include="Core\States\Domain\Tables\InteractionTableState.cpp" />
     <ClCompile Include="Core\States\Domain\Tables\ObjectTableState.cpp" />
     <ClCompile Include="Core\States\Domain\Tables\PlayerTableState.cpp" />
@@ -347,6 +352,9 @@
     <ClCompile Include="Core\Systems\Domain\Legacy\TimelineSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Map\MapSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Map\MapTagGroupSystem.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Map\Sbsp\SbspGeometryBuilder.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Map\Sbsp\SbspSeamLinker.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Navigation\NavigationSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Tables\InteractionTableSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Tables\ObjectTableSystem.cpp" />
     <ClCompile Include="Core\Systems\Domain\Tables\PlayerTableSystem.cpp" />
