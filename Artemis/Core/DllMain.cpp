@@ -1,20 +1,20 @@
 #include "pch.h"
 #include "Core/DllMain.h"
 #include "Proxy/ProxyExports.h"
-#include "Core/Common/ModCore.h"
-#include "Core/States/CoreState.h"
-#include "Core/States/Infrastructure/CoreInfrastructureState.h"
-#include "Core/States/Infrastructure/Engine/LifecycleState.h"
-#include "Core/States/Infrastructure/Persistence/SettingsState.h"
-#include "Core/Systems/CoreSystem.h"
-#include "Core/Systems/Infrastructure/CoreInfrastructureSystem.h"
-#include "Core/Systems/Infrastructure/Persistence/SettingsSystem.h"
-#include "Core/Systems/Infrastructure/Persistence/PreferencesSystem.h"
-#include "Core/Systems/Interface/DebugSystem.h"
-#include "Core/Threads/CoreThread.h"
-#include "Core/Threads/Domain/MainThread.h"
-#include "Core/Threads/Domain/AIThread.h"
-#include "Core/Threads/Infrastructure/InputThread.h"
+#include "Core/Common/Mod_Core.h"
+#include "Core/States/Core_State.h"
+#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+#include "Core/States/Infrastructure/Engine/State_Lifecycle.h"
+#include "Core/States/Infrastructure/Persistence/State_Settings.h"
+#include "Core/Systems/Core_System.h"
+#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
+#include "Core/Systems/Infrastructure/Persistence/System_Settings.h"
+#include "Core/Systems/Infrastructure/Persistence/System_Preferences.h"
+#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Threads/Core_Thread.h"
+#include "Core/Threads/Domain/Thread_Main.h"
+#include "Core/Threads/Domain/Thread_AI.h"
+#include "Core/Threads/Infrastructure/Thread_Input.h"
 #include "External/minhook/include/MinHook.h"
 #include <fstream>
 #pragma comment(lib, "shlwapi.lib")
@@ -59,7 +59,7 @@ void ModLoader::OnDetach(LPVOID lpReserved)
 DWORD WINAPI ModLoader::InitializeArtemis(LPVOID lpParam)
 {
     // Initializes the complete mod architecture.
-    g_Mod = std::make_unique<ModCore>();
+    g_Mod = std::make_unique<Mod_Core>();
 
     // Saves the handle module of the game.
     HMODULE handleModule = (HMODULE)lpParam;
@@ -91,9 +91,9 @@ DWORD WINAPI ModLoader::InitializeArtemis(LPVOID lpParam)
     g_pState->Infrastructure->Lifecycle->SetRunning(true);
 
     // Creates and starts the core threads of Artemis.
-    g_DllInstance.m_MainThread = std::thread(&MainThread::Run, g_pThread->Main.get());
-    g_DllInstance.m_InputThread = std::thread(&InputThread::Run, g_pThread->Input.get());
-    g_DllInstance.m_AIThread = std::thread(&AIThread::Run, g_pThread->AI.get());
+    g_DllInstance.m_MainThread = std::thread(&Thread_Main::Run, g_pThread->Main.get());
+    g_DllInstance.m_InputThread = std::thread(&Thread_Input::Run, g_pThread->Input.get());
+    g_DllInstance.m_AIThread = std::thread(&Thread_AI::Run, g_pThread->AI.get());
 
     g_pSystem->Debug->Log("[DllMain] INFO: Artemis Initialized.");
     return 0;

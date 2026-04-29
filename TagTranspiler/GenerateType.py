@@ -257,7 +257,7 @@ def Generate(xmlPath: str, outPath: str) -> None:
     lines.append(f"")
     lines.append(f"#pragma once")
     lines.append(f"")
-    lines.append(f"#include \"Core/Common/Types/Domain/Map/MapTypes.h\"")
+    lines.append(f"#include \"Core/Types/Domain/Map/MapTypes.h\"")
     lines.append(f"#include <cstdint>")
     lines.append(f"")
     lines.append(f"#pragma pack(push, 1)")

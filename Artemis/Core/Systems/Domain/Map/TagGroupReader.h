@@ -7,7 +7,7 @@
 // --- Forward-declarations ---
 
 // MapTagGroupSystem.cpp includes these definitions.
-class MapSystem;
+class System_Map;
 struct Map_TagBlock;
 
 // Specialized GroupDescriptor for each tag group.
@@ -19,7 +19,7 @@ class TagGroupReader
 {
 public:
     // Links the Reader to a specific MapSystem using a reference.
-    explicit TagGroupReader(MapSystem& map) : m_Map(map) {}
+    explicit TagGroupReader(System_Map& map) : m_Map(map) {}
 
     // Specialized entry point for reconstructing a high-level Tag Object 
     // from the map's metadata.
@@ -89,5 +89,5 @@ public:
     }
 
 private:
-    MapSystem& m_Map;
+    System_Map& m_Map;
 };
