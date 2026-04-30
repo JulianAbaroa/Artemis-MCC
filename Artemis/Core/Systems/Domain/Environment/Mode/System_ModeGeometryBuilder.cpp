@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Mode/System_ModeGeometryBuilder.h"
+#include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
+#include "Generated/Mode/ModeObject.h"
 
 ModeGeometry System_ModeGeometryBuilder::BuildGeometry(const ModeObject& mode)
 {
@@ -75,3 +77,6 @@ void System_ModeGeometryBuilder::BuildBounds(const ModeObject& mode, ModeGeometr
     out.BoundsMin = { ci.PositionBoundsX.Min, ci.PositionBoundsY.Min, ci.PositionBoundsZ.Min };
     out.BoundsMax = { ci.PositionBoundsX.Max, ci.PositionBoundsY.Max, ci.PositionBoundsZ.Max };
 }
+
+ModeVec3 System_ModeGeometryBuilder::MakeVec3(const Vec3& v) { return { v.X, v.Y, v.Z }; }
+ModeVec4 System_ModeGeometryBuilder::MakeVec4(const Vec4& v) { return { v.X, v.Y, v.Z, v.W }; }

@@ -6,6 +6,8 @@
 #include "Core/States/Domain/Graph/State_ObjectGraph.h"
 #include "Core/States/Domain/Map/State_Map.h"
 #include "Core/States/Domain/Map/Vehi/State_MapVehi.h"
+#include "Core/States/Domain/Map/Eqip/State_MapEqip.h"
+#include "Core/States/Domain/Map/Weap/State_MapWeap.h"
 #include "Core/States/Domain/Tables/State_PlayerTable.h"
 #include "Core/States/Domain/Tables/State_InteractionTable.h"
 #include "Core/States/Domain/Environment/State_Environment.h"
@@ -13,6 +15,8 @@
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
 #include "Core/Systems/Domain/Interactable/Vehi/System_VehiDataBuilder.h"
+#include "Core/Systems/Domain/Interactable/Eqip/System_EqipDataBuilder.h"
+#include "Core/Systems/Domain/Interactable/Weap/System_WeapDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/System_Interactable.h"
 #include "Core/Systems/Interface/System_Debug.h"
 #include <algorithm>
@@ -23,7 +27,9 @@ void System_Interactable::BuildForMap()
 	const int32_t tagCount =
 		static_cast<int32_t>(g_pState->Domain->Map->GetTagsSize());
 
-	int32_t builtCount = 0;
+	int32_t vehiCount = 0;
+	int32_t eqipCount = 0;
+	int32_t weapCount = 0;
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
@@ -32,28 +38,63 @@ void System_Interactable::BuildForMap()
 
 		const uint32_t magic =
 			g_pState->Domain->Map->GetGroupMagic(entry.TagGroupIndex);
-		if (magic != MapMagics::k_VehiMagic) continue;
 
 		const std::string tagName = g_pState->Domain->Map->GetTagName(i);
 		if (tagName.empty()) continue;
 
-		const VehiObject* vehi = g_pState->Domain->MapVehi->GetVehi(tagName);
-		if (!vehi)
+		if (magic == MapMagics::k_VehiMagic)
 		{
-			g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
-				" Vehi tag found in table but not loaded: ", tagName);
-			continue;
+			const VehiObject* vehi = g_pState->Domain->MapVehi->GetVehi(tagName);
+			if (!vehi)
+			{
+				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+					" Vehi tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			VehicleData data =
+				g_pSystem->Domain->VehiDataBuilder->BuildData(*vehi);
+
+			g_pState->Domain->Interactable->AddVehiData(tagName, std::move(data));
+			++vehiCount;
 		}
+		else if (magic == MapMagics::k_EqipMagic)
+		{
+			const EqipObject* eqip = g_pState->Domain->MapEqip->GetEqip(tagName);
+			if (!eqip)
+			{
+				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+					" Eqip tag found in table but not loaded: ", tagName);
+				continue;
+			}
 
-		VehicleData data =
-			g_pSystem->Domain->VehiDataBuilder->BuildData(*vehi);
+			EquipmentData data =
+				g_pSystem->Domain->EqipDataBuilder->BuildData(*eqip);
 
-		g_pState->Domain->Interactable->AddVehiData(tagName, std::move(data));
-		++builtCount;
+			g_pState->Domain->Interactable->AddEquipmentData(tagName, std::move(data));
+			++eqipCount;
+		}
+		else if (magic == MapMagics::k_WeapMagic)
+		{
+			const WeapObject* weap = g_pState->Domain->MapWeap->GetWeap(tagName);
+			if (!weap)
+			{
+				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+					" Weap tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			WeaponData data =
+				g_pSystem->Domain->WeapDataBuilder->BuildData(*weap);
+
+			g_pState->Domain->Interactable->AddWeaponData(tagName, std::move(data));
+			++weapCount;
+		}
 	}
 
 	g_pSystem->Debug->Log("[InteractableSystem] INFO:"
-		" Interactable built. Vehi: %d", builtCount);
+		" Interactable built. Vehi: %d, Eqip: %d, Weap: %d",
+		vehiCount, eqipCount, weapCount);
 }
 
 void System_Interactable::UpdateInteractables(uint32_t selfPlayerHandle)

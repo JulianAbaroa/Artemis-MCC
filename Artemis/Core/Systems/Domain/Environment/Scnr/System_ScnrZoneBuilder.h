@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Environment/ScnrZones.h"
-#include "Generated/Scnr/ScnrObject.h"
+#include <cstdint>
 
-struct ScnrObject;
+struct Scnr_TriggerVolumesObject;
+struct ScnrTriggerVolume;
 struct ScnrMapZones;
+struct ScnrObject;
 
 class System_ScnrZoneBuilder
 {

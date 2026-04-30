@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Interactable/VehicleData.h"
-#include "Generated/Vehi/VehiObject.h"
+struct VehicleData;
+struct VehiObject;
 
 class System_VehiDataBuilder
 {

@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Phmo/System_PhmoGeometryBuilder.h"
+#include "Core/Types/Domain/Domains/Environment/PhmoGeometry.h"
+#include "Generated/Phmo/PhmoObject.h"
 #include <algorithm>
 #include <limits>
 
@@ -224,6 +226,8 @@ PhmoShape System_PhmoGeometryBuilder::MakeMultiSphere(const Phmo_MultiSpheresEnt
 
     return s;
 }
+
+PhmoVec3 System_PhmoGeometryBuilder::MakeVec3(const Vec3& v) { return { v.X, v.Y, v.Z }; }
 
 void System_PhmoGeometryBuilder::BuildNodes(const PhmoObject& phmo, PhmoGeometry& out)
 {

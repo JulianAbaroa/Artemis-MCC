@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Interactable/Vehi/System_VehiDataBuilder.h"
+#include "Core/Types/Domain/Domains/Interactable/VehicleData.h"
+#include "Generated/Vehi/VehiObject.h"
 
 VehicleData System_VehiDataBuilder::BuildData(const VehiObject& vehi)
 {

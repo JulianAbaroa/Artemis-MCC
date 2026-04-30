@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Environment/CollGeometry.h"
-#include "Generated/Coll/CollObject.h"
+struct CollGeometry;
+struct CollObject;
+struct CollVec3;
+struct Vec3;
 
 class System_CollGeometryBuilder
 {
@@ -15,5 +17,5 @@ private:
 	void BuildNodes(const CollObject& coll, CollGeometry& out);
 	void BuildBounds(CollGeometry& out);
 
-	CollVec3 MakeVec3(const Vec3& v) { return { v.X, v.Y, v.Z }; }
+	CollVec3 MakeVec3(const Vec3& v);
 };

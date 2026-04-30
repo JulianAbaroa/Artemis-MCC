@@ -116,7 +116,7 @@ void System_Environment::BuildForMap()
 			}
 
 			BipdPhysicsData data =
-				g_pSystem->Domain->BipdDataBuilder->Build(*bipd);
+				g_pSystem->Domain->BipdDataBuilder->BuildData(*bipd);
 
 			g_pState->Domain->Environment->AddBipdData(tagName, std::move(data));
 			++bipdCount;

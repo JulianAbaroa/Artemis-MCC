@@ -1,7 +1,11 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
-#include "Generated/Mode/ModeObject.h"
+struct ModeGeometry;
+struct ModeObject;
+struct ModeVec4;
+struct ModeVec3;
+struct Vec4;
+struct Vec3;
 
 class System_ModeGeometryBuilder
 {
@@ -13,6 +17,6 @@ private:
     void BuildNodes(const ModeObject& mode, ModeGeometry& out);
     void BuildBounds(const ModeObject& mode, ModeGeometry& out);
 
-    ModeVec3 MakeVec3(const Vec3& v) { return { v.X, v.Y, v.Z }; }
-    ModeVec4 MakeVec4(const Vec4& v) { return { v.X, v.Y, v.Z, v.W }; }
+    ModeVec3 MakeVec3(const Vec3& v);
+    ModeVec4 MakeVec4(const Vec4& v);
 };

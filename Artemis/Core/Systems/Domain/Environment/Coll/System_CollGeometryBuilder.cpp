@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Coll/System_CollGeometryBuilder.h"
+#include "Core/Types/Domain/Domains/Environment/CollGeometry.h"
+#include "Generated/Coll/CollObject.h"
 #include <limits>
 
 CollGeometry System_CollGeometryBuilder::BuildGeometry(const CollObject& coll)
@@ -73,3 +75,5 @@ void System_CollGeometryBuilder::BuildBounds(CollGeometry& out)
         out.BoundsMax.Z = (std::max)(out.BoundsMax.Z, s.Center.Z + s.Radius);
     }
 }
+
+CollVec3 System_CollGeometryBuilder::MakeVec3(const Vec3& v) { return { v.X, v.Y, v.Z }; }

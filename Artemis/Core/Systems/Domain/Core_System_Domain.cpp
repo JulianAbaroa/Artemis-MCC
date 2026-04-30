@@ -18,6 +18,8 @@
 #include "Core/Systems/Domain/Tables/System_InteractionTable.h"
 #include "Core/Systems/Domain/Graph/System_ObjectGraph.h"
 #include "Core/Systems/Domain/Interactable/Vehi/System_VehiDataBuilder.h"
+#include "Core/Systems/Domain/Interactable/Eqip/System_EqipDataBuilder.h"
+#include "Core/Systems/Domain/Interactable/Weap/System_WeapDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/System_Interactable.h"
 
 Core_System_Domain::Core_System_Domain()
@@ -46,6 +48,8 @@ Core_System_Domain::Core_System_Domain()
 	ObjectGraph = std::make_unique<System_ObjectGraph>();
 
 	VehiDataBuilder = std::make_unique<System_VehiDataBuilder>();
+	EqipDataBuilder = std::make_unique<System_EqipDataBuilder>();
+	WeapDataBuilder = std::make_unique<System_WeapDataBuilder>();
 	Interactable = std::make_unique<System_Interactable>();
 }
 

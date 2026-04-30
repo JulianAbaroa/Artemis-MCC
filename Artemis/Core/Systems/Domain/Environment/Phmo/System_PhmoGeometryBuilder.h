@@ -1,7 +1,19 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Environment/PhmoGeometry.h"
-#include "Generated/Phmo/PhmoObject.h"
+#include <cstdint>
+#include <vector>
+
+// Forward declarations.
+struct Phmo_MultiSpheresEntry;
+struct Phmo_PolyhedraEntry;
+struct Phmo_SpheresEntry;
+struct Phmo_PillsEntry;
+struct Phmo_BoxesEntry;
+struct PhmoGeometry;
+struct PhmoObject;
+struct PhmoShape;
+struct PhmoVec3;
+struct Vec3;
 
 class System_PhmoGeometryBuilder
 {
@@ -35,7 +47,7 @@ private:
     PhmoShape MakePolyhedron(const Phmo_PolyhedraEntry& src);
     PhmoShape MakeMultiSphere(const Phmo_MultiSpheresEntry& src);
 
-    PhmoVec3 MakeVec3(const Vec3& v) { return { v.X, v.Y, v.Z }; }
+    PhmoVec3 MakeVec3(const Vec3& v);
 
     // ShapeType enum values ​​of the tag.
     static constexpr uint16_t k_ShapeSphere = 0x0;

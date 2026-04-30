@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Scnr/System_ScnrZoneBuilder.h"
+#include "Core/Types/Domain/Domains/Environment/ScnrZones.h"
+#include "Generated/Scnr/ScnrObject.h"
 #include <unordered_set>
 #include <cmath>
 

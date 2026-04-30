@@ -32,6 +32,8 @@ class System_ObjectGraph;
 
 // Interactables.
 class System_VehiDataBuilder;
+class System_EqipDataBuilder;
+class System_WeapDataBuilder;
 class System_Interactable;
 
 struct Core_System_Domain
@@ -63,5 +65,7 @@ struct Core_System_Domain
 	std::unique_ptr<System_ObjectGraph> ObjectGraph;
 
 	std::unique_ptr<System_VehiDataBuilder> VehiDataBuilder;
+	std::unique_ptr<System_EqipDataBuilder> EqipDataBuilder;
+	std::unique_ptr<System_WeapDataBuilder> WeapDataBuilder;
 	std::unique_ptr<System_Interactable> Interactable;
 };

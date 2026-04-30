@@ -271,6 +271,12 @@
     <Filter Include="Core\Systems\Domain\Environment\Bipd">
       <UniqueIdentifier>{a66b1b05-ab7a-434e-88bf-8a623f7ed285}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Systems\Domain\Interactable\Eqip">
+      <UniqueIdentifier>{8de2ee93-5576-4769-be10-47dc564395fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Interactable\Weap">
+      <UniqueIdentifier>{f2f22c5a-1477-4ce0-bcef-f989a4e2152f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Proxy\ProxyExports.h">
@@ -668,6 +674,18 @@
     <ClInclude Include="Core\Systems\Domain\Environment\Bipd\System_BipdDataBuilder.h">
       <Filter>Core\Systems\Domain\Environment\Bipd</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Interactable\EquipmentData.h">
+      <Filter>Core\Types\Domain\Domains\Interactable</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Interactable\Eqip\System_EqipDataBuilder.h">
+      <Filter>Core\Systems\Domain\Interactable\Eqip</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Interactable\WeaponData.h">
+      <Filter>Core\Types\Domain\Domains\Interactable</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Interactable\Weap\System_WeapDataBuilder.h">
+      <Filter>Core\Systems\Domain\Interactable\Weap</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\DllMain.cpp">
@@ -1003,6 +1021,12 @@
     </ClCompile>
     <ClCompile Include="Core\Systems\Domain\Environment\Bipd\System_BipdDataBuilder.cpp">
       <Filter>Core\Systems\Domain\Environment\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Interactable\Eqip\System_EqipDataBuilder.cpp">
+      <Filter>Core\Systems\Domain\Interactable\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Interactable\Weap\System_WeapDataBuilder.cpp">
+      <Filter>Core\Systems\Domain\Interactable\Weap</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
