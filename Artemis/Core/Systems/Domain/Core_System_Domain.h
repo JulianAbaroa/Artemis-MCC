@@ -14,6 +14,7 @@ class System_MapTagGroup;
 class System_CollGeometryBuilder;
 class System_PhmoGeometryBuilder;
 class System_ModeGeometryBuilder;
+class System_ScnrZoneBuilder;
 class System_Environment;
 
 // Navigation.
@@ -46,6 +47,7 @@ struct Core_System_Domain
 	std::unique_ptr<System_CollGeometryBuilder> CollGeometryBuilder;
 	std::unique_ptr<System_PhmoGeometryBuilder> PhmoGeometryBuilder;
 	std::unique_ptr<System_ModeGeometryBuilder> ModeGeometryBuilder;
+	std::unique_ptr<System_ScnrZoneBuilder> ScnrZoneBuilder;
 	std::unique_ptr<System_Environment> Environment;
 
 	std::unique_ptr<System_SbspGeometryBuilder> SbspGeometryBuilder;

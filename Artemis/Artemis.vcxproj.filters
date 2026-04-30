@@ -265,6 +265,9 @@
     <Filter Include="Core\Types\Interface">
       <UniqueIdentifier>{524fbcca-a767-4dad-a20a-48505cbf1b65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Systems\Domain\Environment\Scnr">
+      <UniqueIdentifier>{4a789825-66c1-4321-83a2-3b4a9dc3b8f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Proxy\ProxyExports.h">
@@ -650,6 +653,12 @@
     <ClInclude Include="Core\Types\Interface\LogTypes.h">
       <Filter>Core\Types\Interface</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Environment\ScnrZones.h">
+      <Filter>Core\Types\Domain\Domains\Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Environment\Scnr\System_ScnrZoneBuilder.h">
+      <Filter>Core\Systems\Domain\Environment\Scnr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\DllMain.cpp">
@@ -979,6 +988,9 @@
     </ClCompile>
     <ClCompile Include="Core\UI\Domain\Legacy\UI_EventRegistry.cpp">
       <Filter>Core\UI\Domain\Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Environment\Scnr\System_ScnrZoneBuilder.cpp">
+      <Filter>Core\Systems\Domain\Environment\Scnr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -71,10 +71,31 @@ void State_Environment::AddModeGeometry(const std::string& tagName, ModeGeometry
 	m_ModeGeometries[tagName] = std::move(geometry);
 }
 
+bool State_Environment::HasMapZones() const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_HasMapZones;
+}
+
+const ScnrMapZones* State_Environment::GetMapZones() const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_HasMapZones ? &m_MapZones : nullptr;
+}
+
+void State_Environment::SetMapZones(ScnrMapZones zones)
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	m_MapZones = std::move(zones);
+	m_HasMapZones = true;
+}
+
 void State_Environment::Cleanup()
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	m_CollGeometries.clear();
 	m_PhmoGeometries.clear();
 	m_ModeGeometries.clear();
+	m_HasMapZones = false;
+	m_MapZones = {};
 }

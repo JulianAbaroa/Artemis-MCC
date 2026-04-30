@@ -3,6 +3,7 @@
 #include "Core/Types/Domain/Domains/Environment/CollGeometry.h"
 #include "Core/Types/Domain/Domains/Environment/PhmoGeometry.h"
 #include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
+#include "Core/Types/Domain/Domains/Environment/ScnrZones.h"
 #include <unordered_map>
 #include <mutex>
 
@@ -24,11 +25,18 @@ public:
 	const ModeGeometry* GetModeGeometry(const std::string& tagName) const;
 	void AddModeGeometry(const std::string& tagName, ModeGeometry geometry);
 
+	// Scnr.
+	bool HasMapZones() const;
+	const ScnrMapZones* GetMapZones() const;
+	void SetMapZones(ScnrMapZones zones);
+
 	void Cleanup();
 
 private:
 	std::unordered_map<std::string, CollGeometry> m_CollGeometries;
 	std::unordered_map<std::string, PhmoGeometry> m_PhmoGeometries;
 	std::unordered_map<std::string, ModeGeometry> m_ModeGeometries;
+	ScnrMapZones m_MapZones;
+	bool m_HasMapZones;
 	mutable std::mutex m_Mutex;
 };

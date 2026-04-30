@@ -223,6 +223,7 @@
     <ClInclude Include="Core\Systems\Core_System.h" />
     <ClInclude Include="Core\Systems\Domain\Core_System_Domain.h" />
     <ClInclude Include="Core\Systems\Domain\Environment\Coll\System_CollGeometryBuilder.h" />
+    <ClInclude Include="Core\Systems\Domain\Environment\Scnr\System_ScnrZoneBuilder.h" />
     <ClInclude Include="Core\Systems\Domain\Environment\System_Environment.h" />
     <ClInclude Include="Core\Systems\Domain\Environment\Mode\System_ModeGeometryBuilder.h" />
     <ClInclude Include="Core\Systems\Domain\Environment\Phmo\System_PhmoGeometryBuilder.h" />
@@ -259,6 +260,7 @@
     <ClInclude Include="Core\Types\Domain\Domains\Environment\CollGeometry.h" />
     <ClInclude Include="Core\Types\Domain\Domains\Environment\ModeGeometry.h" />
     <ClInclude Include="Core\Types\Domain\Domains\Environment\PhmoGeometry.h" />
+    <ClInclude Include="Core\Types\Domain\Domains\Environment\ScnrZones.h" />
     <ClInclude Include="Core\Types\Domain\Domains\Interactable\InteractableTypes.h" />
     <ClInclude Include="Core\Types\Domain\Domains\Interactable\VehicleData.h" />
     <ClInclude Include="Core\Types\Domain\Domains\Navigation\SbspGeometry.h" />
@@ -351,6 +353,7 @@
     <ClCompile Include="Core\Systems\Core_System.cpp" />
     <ClCompile Include="Core\Systems\Domain\Core_System_Domain.cpp" />
     <ClCompile Include="Core\Systems\Domain\Environment\Coll\System_CollGeometryBuilder.cpp" />
+    <ClCompile Include="Core\Systems\Domain\Environment\Scnr\System_ScnrZoneBuilder.cpp" />
     <ClCompile Include="Core\Systems\Domain\Environment\System_Environment.cpp" />
     <ClCompile Include="Core\Systems\Domain\Environment\Mode\System_ModeGeometryBuilder.cpp" />
     <ClCompile Include="Core\Systems\Domain\Environment\Phmo\System_PhmoGeometryBuilder.cpp" />

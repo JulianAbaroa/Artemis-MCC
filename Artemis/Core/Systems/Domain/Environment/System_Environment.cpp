@@ -6,6 +6,7 @@
 #include "Core/States/Domain/Map/Coll/State_MapColl.h"
 #include "Core/States/Domain/Map/Phmo/State_MapPhmo.h"
 #include "Core/States/Domain/Map/Mode/State_MapMode.h"
+#include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
 #include "Core/States/Domain/Environment/State_Environment.h"
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
@@ -13,6 +14,7 @@
 #include "Core/Systems/Domain/Environment/Coll/System_CollGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Phmo/System_PhmoGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Mode/System_ModeGeometryBuilder.h"
+#include "Core/Systems/Domain/Environment/Scnr/System_ScnrZoneBuilder.h"
 #include "Core/Systems/Interface/System_Debug.h"
 
 void System_Environment::BuildForMap()
@@ -23,6 +25,7 @@ void System_Environment::BuildForMap()
 	int32_t collCount = 0;
 	int32_t phmoCount = 0;
 	int32_t modeCount = 0;
+	int32_t scnrCount = 0;
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
@@ -83,11 +86,27 @@ void System_Environment::BuildForMap()
 			g_pState->Domain->Environment->AddModeGeometry(tagName, std::move(geometry));
 			++modeCount;
 		}
+		else if (magic == MapMagics::k_ScnrMagic)
+		{
+			const ScnrObject* scnr = g_pState->Domain->MapScnr->GetScnr(tagName);
+			if (!scnr)
+			{
+				g_pSystem->Debug->Log("[EnvironmentSystem] WARNING:"
+					" Scnr tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			ScnrMapZones zones =
+				g_pSystem->Domain->ScnrZoneBuilder->BuildZone(*scnr);
+
+			g_pState->Domain->Environment->SetMapZones(std::move(zones));
+			++scnrCount;
+		}
 	}
 
 	g_pSystem->Debug->Log("[EnvironmentSystem] INFO:"
-		" Environment built. Coll: %d, Phmo: %d, Mode: %d", 
-		collCount, phmoCount, modeCount);
+		" Environment built. Coll: %d, Phmo: %d, Mode: %d, Scnr: %d", 
+		collCount, phmoCount, modeCount, scnrCount);
 }
 
 void System_Environment::Cleanup()
