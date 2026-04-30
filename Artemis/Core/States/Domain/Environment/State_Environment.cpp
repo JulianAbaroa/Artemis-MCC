@@ -90,12 +90,32 @@ void State_Environment::SetMapZones(ScnrMapZones zones)
 	m_HasMapZones = true;
 }
 
+bool State_Environment::HasBipdData(const std::string& tagName) const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_BipdData.count(tagName) > 0;
+}
+
+const BipdPhysicsData* State_Environment::GetBipdData(const std::string& tagName) const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	auto it = m_BipdData.find(tagName);
+	return it != m_BipdData.end() ? &it->second : nullptr;
+}
+
+void State_Environment::AddBipdData(const std::string& tagName, BipdPhysicsData data)
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	m_BipdData[tagName] = std::move(data);
+}
+
 void State_Environment::Cleanup()
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	m_CollGeometries.clear();
 	m_PhmoGeometries.clear();
 	m_ModeGeometries.clear();
+	m_BipdData.clear();
 	m_HasMapZones = false;
 	m_MapZones = {};
 }

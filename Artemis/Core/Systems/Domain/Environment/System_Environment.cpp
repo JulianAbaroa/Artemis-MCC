@@ -7,6 +7,7 @@
 #include "Core/States/Domain/Map/Phmo/State_MapPhmo.h"
 #include "Core/States/Domain/Map/Mode/State_MapMode.h"
 #include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
+#include "Core/States/Domain/Map/Bipd/State_MapBipd.h"
 #include "Core/States/Domain/Environment/State_Environment.h"
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
@@ -15,6 +16,7 @@
 #include "Core/Systems/Domain/Environment/Phmo/System_PhmoGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Mode/System_ModeGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Scnr/System_ScnrZoneBuilder.h"
+#include "Core/Systems/Domain/Environment/Bipd/System_BipdDataBuilder.h"
 #include "Core/Systems/Interface/System_Debug.h"
 
 void System_Environment::BuildForMap()
@@ -26,6 +28,7 @@ void System_Environment::BuildForMap()
 	int32_t phmoCount = 0;
 	int32_t modeCount = 0;
 	int32_t scnrCount = 0;
+	int32_t bipdCount = 0;
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
@@ -102,11 +105,27 @@ void System_Environment::BuildForMap()
 			g_pState->Domain->Environment->SetMapZones(std::move(zones));
 			++scnrCount;
 		}
+		else if (magic == MapMagics::k_BipdMagic)
+		{
+			const BipdObject* bipd = g_pState->Domain->MapBipd->GetBipd(tagName);
+			if (!bipd)
+			{
+				g_pSystem->Debug->Log("[EnvironmentSystem] WARNING:"
+					" Bipd tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			BipdPhysicsData data =
+				g_pSystem->Domain->BipdDataBuilder->Build(*bipd);
+
+			g_pState->Domain->Environment->AddBipdData(tagName, std::move(data));
+			++bipdCount;
+		}
 	}
 
 	g_pSystem->Debug->Log("[EnvironmentSystem] INFO:"
-		" Environment built. Coll: %d, Phmo: %d, Mode: %d, Scnr: %d", 
-		collCount, phmoCount, modeCount, scnrCount);
+		" Environment built. Coll: %d, Phmo: %d, Mode: %d, Scnr: %d"
+		" Bipd: %d", collCount, phmoCount, modeCount, scnrCount, bipdCount);
 }
 
 void System_Environment::Cleanup()

@@ -268,6 +268,9 @@
     <Filter Include="Core\Systems\Domain\Environment\Scnr">
       <UniqueIdentifier>{4a789825-66c1-4321-83a2-3b4a9dc3b8f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Systems\Domain\Environment\Bipd">
+      <UniqueIdentifier>{a66b1b05-ab7a-434e-88bf-8a623f7ed285}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Proxy\ProxyExports.h">
@@ -659,6 +662,12 @@
     <ClInclude Include="Core\Systems\Domain\Environment\Scnr\System_ScnrZoneBuilder.h">
       <Filter>Core\Systems\Domain\Environment\Scnr</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Environment\BipdPhysicsData.h">
+      <Filter>Core\Types\Domain\Domains\Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Environment\Bipd\System_BipdDataBuilder.h">
+      <Filter>Core\Systems\Domain\Environment\Bipd</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\DllMain.cpp">
@@ -991,6 +1000,9 @@
     </ClCompile>
     <ClCompile Include="Core\Systems\Domain\Environment\Scnr\System_ScnrZoneBuilder.cpp">
       <Filter>Core\Systems\Domain\Environment\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Environment\Bipd\System_BipdDataBuilder.cpp">
+      <Filter>Core\Systems\Domain\Environment\Bipd</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

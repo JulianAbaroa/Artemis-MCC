@@ -8,6 +8,7 @@
 #include "Core/Systems/Domain/Environment/Phmo/System_PhmoGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Mode/System_ModeGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Scnr/System_ScnrZoneBuilder.h"
+#include "Core/Systems/Domain/Environment/Bipd/System_BipdDataBuilder.h"
 #include "Core/Systems/Domain/Environment/System_Environment.h"
 #include "Core/Systems/Domain/Navigation/Sbsp/System_SbspGeometryBuilder.h"
 #include "Core/Systems/Domain/Navigation/Sbsp/System_SbspSeamLinker.h"
@@ -31,6 +32,7 @@ Core_System_Domain::Core_System_Domain()
 	PhmoGeometryBuilder = std::make_unique<System_PhmoGeometryBuilder>();
 	ModeGeometryBuilder = std::make_unique<System_ModeGeometryBuilder>();
 	ScnrZoneBuilder = std::make_unique<System_ScnrZoneBuilder>();
+	BipdDataBuilder = std::make_unique<System_BipdDataBuilder>();
 	Environment = std::make_unique<System_Environment>();
 
 	SbspGeometryBuilder = std::make_unique<System_SbspGeometryBuilder>();
