@@ -17,4 +17,6 @@ public:
 private:
     std::unordered_map<std::string, ProjObject> m_Projs;
     mutable std::mutex m_Mutex;
+
+    void LogRawData(const std::string& tagName, const ProjObject& proj);
 };

@@ -8,6 +8,7 @@
 #include "Core/States/Domain/Map/Mode/State_MapMode.h"
 #include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
 #include "Core/States/Domain/Map/Bipd/State_MapBipd.h"
+#include "Core/States/Domain/Map/Scen/State_MapScen.h"
 #include "Core/States/Domain/Environment/State_Environment.h"
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
@@ -17,6 +18,7 @@
 #include "Core/Systems/Domain/Environment/Mode/System_ModeGeometryBuilder.h"
 #include "Core/Systems/Domain/Environment/Scnr/System_ScnrZoneBuilder.h"
 #include "Core/Systems/Domain/Environment/Bipd/System_BipdDataBuilder.h"
+#include "Core/Systems/Domain/Environment/Scen/System_ScenZoneBuilder.h"
 #include "Core/Systems/Interface/System_Debug.h"
 
 void System_Environment::BuildForMap()
@@ -29,6 +31,7 @@ void System_Environment::BuildForMap()
 	int32_t modeCount = 0;
 	int32_t scnrCount = 0;
 	int32_t bipdCount = 0;
+	int32_t scenCount = 0;
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
@@ -121,11 +124,30 @@ void System_Environment::BuildForMap()
 			g_pState->Domain->Environment->AddBipdData(tagName, std::move(data));
 			++bipdCount;
 		}
+		else if (magic == MapMagics::k_ScenMagic)
+		{
+			const ScenObject* scen = g_pState->Domain->MapScen->GetScen(tagName);
+			if (!scen)
+			{
+				g_pSystem->Debug->Log("[EnvironmentSystem] WARNING:"
+					" Scen tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			if (g_pSystem->Domain->ScenZoneBuilder->IsMpZone(*scen))
+			{
+				SceneryZoneData data =
+					g_pSystem->Domain->ScenZoneBuilder->BuildData(*scen);
+				
+				g_pState->Domain->Environment->AddScenData(tagName, std::move(data));
+				++scenCount;
+			}
+		}
 	}
 
-	g_pSystem->Debug->Log("[EnvironmentSystem] INFO:"
-		" Environment built. Coll: %d, Phmo: %d, Mode: %d, Scnr: %d"
-		" Bipd: %d", collCount, phmoCount, modeCount, scnrCount, bipdCount);
+	g_pSystem->Debug->Log("[EnvironmentSystem] INFO: Environment built."
+		" Coll: %d | Phmo: %d | Mode: %d | Scnr: %d | Bipd: %d | Scen: %d", 
+		collCount, phmoCount, modeCount, scnrCount, bipdCount, scenCount);
 }
 
 void System_Environment::Cleanup()

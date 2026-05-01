@@ -4,7 +4,4 @@ class Thread_AI
 {
 public:
 	void Run();
-
-private:
-
 };

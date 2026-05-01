@@ -16,11 +16,16 @@ class System_PhmoGeometryBuilder;
 class System_ModeGeometryBuilder;
 class System_ScnrZoneBuilder;
 class System_BipdDataBuilder;
+class System_ScenZoneBuilder;
 class System_Environment;
 
 // Navigation.
 class System_SbspGeometryBuilder;
 class System_SbspSeamLinker;
+class System_ScenObstacleBuilder;
+class System_BlocObstacleBuilder;
+class System_BlocTeleporterBuilder;
+class System_MachDataBuilder;
 class System_Navigation;
 
 // Tables.
@@ -34,6 +39,8 @@ class System_ObjectGraph;
 class System_VehiDataBuilder;
 class System_EqipDataBuilder;
 class System_WeapDataBuilder;
+class System_ProjDataBuilder;
+class System_CtrlDataBuilder;
 class System_Interactable;
 
 struct Core_System_Domain
@@ -52,10 +59,15 @@ struct Core_System_Domain
 	std::unique_ptr<System_ModeGeometryBuilder> ModeGeometryBuilder;
 	std::unique_ptr<System_ScnrZoneBuilder> ScnrZoneBuilder;
 	std::unique_ptr<System_BipdDataBuilder> BipdDataBuilder;
+	std::unique_ptr<System_ScenZoneBuilder> ScenZoneBuilder;
 	std::unique_ptr<System_Environment> Environment;
 
 	std::unique_ptr<System_SbspGeometryBuilder> SbspGeometryBuilder;
 	std::unique_ptr<System_SbspSeamLinker> SbspSeamLinker;
+	std::unique_ptr<System_ScenObstacleBuilder> ScenObstacleBuilder;
+	std::unique_ptr<System_BlocObstacleBuilder> BlocObstacleBuilder;
+	std::unique_ptr<System_BlocTeleporterBuilder> BlocTeleporterBuilder;
+	std::unique_ptr<System_MachDataBuilder> MachDataBuilder;
 	std::unique_ptr<System_Navigation> Navigation;
 
 	std::unique_ptr<System_ObjectTable> ObjectTable;
@@ -67,5 +79,7 @@ struct Core_System_Domain
 	std::unique_ptr<System_VehiDataBuilder> VehiDataBuilder;
 	std::unique_ptr<System_EqipDataBuilder> EqipDataBuilder;
 	std::unique_ptr<System_WeapDataBuilder> WeapDataBuilder;
+	std::unique_ptr<System_ProjDataBuilder> ProjDataBuilder;
+	std::unique_ptr<System_CtrlDataBuilder> CtrlDataBuilder;
 	std::unique_ptr<System_Interactable> Interactable;
 };

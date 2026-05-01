@@ -36,7 +36,7 @@ void Thread_AI::Run()
 			g_pSystem->Domain->ObjectGraph->UpdateGraph();
 
 			// Next systems are dependent on the geometry of the map.
-			if (!g_pState->Domain->Navigation->HasGeometry()) continue;
+			if (!g_pState->Domain->Navigation->HasSbspGeometry()) continue;
 
 			// Temporal way to get the AI-self.
 			uint32_t selfPlayer = 

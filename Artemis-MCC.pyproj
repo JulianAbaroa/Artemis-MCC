@@ -96,6 +96,7 @@
     <Folder Include="TagTranspiler\Generated\Wezr\" />
     <Folder Include="TagTranspiler\Generated\Wigl\" />
     <Folder Include="TagTranspiler\Generated\Zone\" />
+    <Folder Include="TagTranspiler\TagFilter\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TagTranspiler\GenerateTags.py" />
@@ -103,6 +104,15 @@
     <Compile Include="TagTranspiler\GenerateOffset.py" />
     <Compile Include="TagTranspiler\GenerateObject.py" />
     <Compile Include="TagTranspiler\GenerateType.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_bipd_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_bloc_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_ctrl_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_eqip_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_mach_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_proj_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_scen_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_scnr_fields.py" />
+    <Compile Include="TagTranspiler\TagFilter\filter_weap_fields.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">

@@ -17,6 +17,7 @@
 #include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
 #include "Core/States/Domain/Map/Jmad/State_MapJmad.h"
 #include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
+#include "Core/States/Domain/Map/Mach/State_MapMach.h"
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
 #include "Core/Systems/Domain/Map/System_Map.h"
@@ -177,7 +178,7 @@ void System_MapTagGroup::LoadHlmtFamily(FILE* file, TagGroupReader& reader)
         }
     }
 
-    g_pSystem->Debug->Log("[MapTagGroupSystem] INFO:"
+    g_pSystem->Debug->Log("[MapTagGroupSystem] INFO: Raw built."
         " Hlmt processed: %d | Phmo loaded: %d | Coll loaded: %d |"
         " Mode loaded: %d | Jmad loaded: %d", 
         hlmtCount, phmoCount, collCount, modeCount, jmadCount);
@@ -197,6 +198,7 @@ void System_MapTagGroup::LoadDirectTags(FILE* file, TagGroupReader& reader)
     int32_t scenCount = 0;
     int32_t scnrCount = 0;
     int32_t ctrlCount = 0;
+    int32_t machCount = 0;
 
     for (int32_t i = 0; i < tagCount; ++i)
     {
@@ -357,13 +359,28 @@ void System_MapTagGroup::LoadDirectTags(FILE* file, TagGroupReader& reader)
             g_pState->Domain->MapCtrl->AddCtrl(tagName, std::move(*ctrl));
             ++ctrlCount;
         }
+
+        // --- Mach ---
+        if (magic == MapMagics::k_MachMagic &&
+            !g_pState->Domain->MapMach->HasMach(tagName))
+        {
+            const int64_t offset =
+                g_pSystem->Domain->Map->GetTagMetaOffsetByIndex(i);
+            if (offset < 0) continue;
+
+            auto mach = std::make_unique<MachObject>(
+                reader.Read<MachObject>(file, offset, tagName));
+
+            g_pState->Domain->MapMach->AddMach(tagName, std::move(*mach));
+            ++machCount;
+        }
     }
 
-    g_pSystem->Debug->Log("[MapTagGroupSystem] INFO:"
+    g_pSystem->Debug->Log("[MapTagGroupSystem] INFO: Raw built."
         " Vehi loaded: %d | Bloc loaded: %d | Sbsp loaded: %d |"
         " Weap loaded: %d | Proj loaded: %d | Bipd loaded: %d |"
         " Eqip loaded: %d | Scen loaded: %d | Sncr loaded: %d |"
-        " Ctrl loaded: %d", 
+        " Ctrl loaded: %d | Mach loaded: %d", 
         vehiCount, blocCount, sbspCount, weapCount, projCount, bipdCount, 
-        eqipCount, scenCount, scnrCount, ctrlCount);
+        eqipCount, scenCount, scnrCount, ctrlCount, machCount);
 }

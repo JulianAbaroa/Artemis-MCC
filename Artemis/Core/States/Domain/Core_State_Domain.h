@@ -22,6 +22,7 @@ class State_MapScen;
 class State_MapScnr;
 class State_MapJmad;
 class State_MapCtrl;
+class State_MapMach;
 
 // Environment.
 class State_Environment;
@@ -64,6 +65,7 @@ struct Core_State_Domain
 	std::unique_ptr<State_MapScnr> MapScnr;
 	std::unique_ptr<State_MapJmad> MapJmad;
 	std::unique_ptr<State_MapCtrl> MapCtrl;
+	std::unique_ptr<State_MapMach> MapMach;
 
 	// Environment.
 	std::unique_ptr<State_Environment> Environment;

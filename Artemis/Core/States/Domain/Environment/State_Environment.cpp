@@ -109,6 +109,25 @@ void State_Environment::AddBipdData(const std::string& tagName, BipdPhysicsData 
 	m_BipdData[tagName] = std::move(data);
 }
 
+bool State_Environment::HasScenData(const std::string& tagName) const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_ScenData.count(tagName) > 0;
+}
+
+const SceneryZoneData* State_Environment::GetScenData(const std::string& tagName) const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	auto it = m_ScenData.find(tagName);
+	return it != m_ScenData.end() ? &it->second : nullptr;
+}
+
+void State_Environment::AddScenData(const std::string& tagName, SceneryZoneData data)
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	m_ScenData[tagName] = std::move(data);
+}
+
 void State_Environment::Cleanup()
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
@@ -116,6 +135,7 @@ void State_Environment::Cleanup()
 	m_PhmoGeometries.clear();
 	m_ModeGeometries.clear();
 	m_BipdData.clear();
+	m_ScenData.clear();
 	m_HasMapZones = false;
 	m_MapZones = {};
 }

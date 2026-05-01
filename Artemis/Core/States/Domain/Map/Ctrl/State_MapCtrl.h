@@ -17,4 +17,6 @@ public:
 private:
     std::unordered_map<std::string, CtrlObject> m_Ctrls;
     mutable std::mutex m_Mutex;
+
+    void LogRawData(const std::string& tagName, const CtrlObject& ctrl);
 };

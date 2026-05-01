@@ -12,6 +12,7 @@ ScnrMapZones System_ScnrZoneBuilder::BuildZone(const ScnrObject& scnr)
     ScnrMapZones out{};
     this->BuildSpawnPoints(scnr, out);
     this->BuildTriggerVolumes(scnr, out);
+    this->BuildNamedLocationVolumes(scnr, out);
     return out;
 }
 
@@ -20,14 +21,13 @@ ScnrMapZones System_ScnrZoneBuilder::BuildZone(const ScnrObject& scnr)
 void System_ScnrZoneBuilder::BuildSpawnPoints(const ScnrObject& scnr, ScnrMapZones& out)
 {
     out.SpawnPoints.reserve(scnr.PlayerStartingLocations.size());
-
     for (const auto& raw : scnr.PlayerStartingLocations)
     {
         ScnrSpawnPoint sp{};
         sp.Position[0] = raw.Position.X;
         sp.Position[1] = raw.Position.Y;
         sp.Position[2] = raw.Position.Z;
-        sp.FacingYaw = ExtractYawFromDegree2(raw.Facing);
+        sp.FacingYaw = this->ExtractYawFromDegree2(raw.Facing);
         sp.InsertionPointIndex = raw.InsertionPointIndex;
         out.SpawnPoints.push_back(sp);
     }
@@ -37,71 +37,99 @@ void System_ScnrZoneBuilder::BuildSpawnPoints(const ScnrObject& scnr, ScnrMapZon
 
 void System_ScnrZoneBuilder::BuildTriggerVolumes(const ScnrObject& scnr, ScnrMapZones& out)
 {
-    // We build AllVolumes first, base reference.
-    out.AllVolumes.reserve(scnr.TriggerVolumes.size());
-    for (const auto& tv : scnr.TriggerVolumes)
-    {
-        out.AllVolumes.push_back(BuildTriggerVolume(tv));
-    }
+    const int32_t tvCount = static_cast<int32_t>(scnr.TriggerVolumes.size());
 
-    // Kill zone indices.
+    // Build AllVolumes first without kill/safe classification
+    out.AllVolumes.reserve(tvCount);
+    for (const auto& tv : scnr.TriggerVolumes)
+        out.AllVolumes.push_back(this->BuildTriggerVolume(tv, false));
+
+    // Kill zones — flags bit 1 = OnlyKillPlayers
     std::unordered_set<int16_t> killIndices;
     killIndices.reserve(scnr.ScenarioKillTriggers.size());
     for (const auto& kt : scnr.ScenarioKillTriggers)
     {
-        if (kt.TriggerVolumeIndex >= 0 &&
-            kt.TriggerVolumeIndex < static_cast<int16_t>(scnr.TriggerVolumes.size()))
-        {
+        if (kt.TriggerVolumeIndex >= 0 && kt.TriggerVolumeIndex < tvCount)
             killIndices.insert(kt.TriggerVolumeIndex);
-        }
     }
 
-    // Safe zone indices.
+    // Safe zones
     std::unordered_set<int16_t> safeIndices;
     safeIndices.reserve(scnr.ScenarioSafeZoneTriggers.size());
     for (const auto& sz : scnr.ScenarioSafeZoneTriggers)
     {
-        if (sz.TriggerVolumeIndex >= 0 &&
-            sz.TriggerVolumeIndex < static_cast<int16_t>(scnr.TriggerVolumes.size()))
-        {
+        if (sz.TriggerVolumeIndex >= 0 && sz.TriggerVolumeIndex < tvCount)
             safeIndices.insert(sz.TriggerVolumeIndex);
-        }
     }
 
-    // We populate KillZones and SafeZones from pre-built AllVolumes.
-    for (int16_t i = 0; i < static_cast<int16_t>(scnr.TriggerVolumes.size()); ++i)
+    for (int16_t i = 0; i < static_cast<int16_t>(tvCount); ++i)
     {
         if (killIndices.count(i))
         {
-            out.KillZones.push_back(out.AllVolumes[i]);
+            // Find the original kill trigger to read its flags
+            bool onlyKillPlayers = false;
+            for (const auto& kt : scnr.ScenarioKillTriggers)
+            {
+                if (kt.TriggerVolumeIndex == i)
+                {
+                    onlyKillPlayers = (kt.Flags & 0x01) != 0;
+                    break;
+                }
+            }
+            out.KillZones.push_back(
+                this->BuildTriggerVolume(scnr.TriggerVolumes[i], onlyKillPlayers));
         }
 
         if (safeIndices.count(i))
+            out.SafeZones.push_back(
+                this->BuildTriggerVolume(scnr.TriggerVolumes[i], false));
+    }
+}
+
+void System_ScnrZoneBuilder::BuildNamedLocationVolumes(
+    const ScnrObject& scnr, ScnrMapZones& out)
+{
+    out.NamedLocationVolumes.reserve(scnr.NamedLocationVolumes.size());
+
+    for (const auto& raw : scnr.NamedLocationVolumes)
+    {
+        ScnrNamedLocationVolume nlv{};
+        nlv.LocationNameId = raw.LocationName;
+        nlv.Height = raw.Height;
+        nlv.Sink = raw.Sink;
+
+        nlv.Points.reserve(raw.Points.size());
+        for (const auto& p : raw.Points)
         {
-            out.SafeZones.push_back(out.AllVolumes[i]);
+            ScnrNamedLocationPoint pt{};
+            pt.Position[0] = p.Position.X;
+            pt.Position[1] = p.Position.Y;
+            pt.Position[2] = p.Position.Z;
+            pt.Normal[0] = static_cast<float>(p.Normal & 0xFFFF);
+            pt.Normal[1] = static_cast<float>((p.Normal >> 16) & 0xFFFF);
+            nlv.Points.push_back(pt);
         }
+
+        out.NamedLocationVolumes.push_back(std::move(nlv));
     }
 }
 
 // --- Helpers ---
 
-// degree2 in scnr is stored as two packed floats in a uint32.
-// The first float(bits 0 - 15 normalized) is the yaw(horizontal facing).
-// We extract the yaw in radians directly from the raw field.
 float System_ScnrZoneBuilder::ExtractYawFromDegree2(uint32_t degree2)
 {
-    // degree2 = two normalized int16s [-32768, 32767] → [-π, π]
-    // The yaw component is the first int16 (bits [31:16] big-endian in the tag,
-    // but in memory little-endian are the low bits).
     int16_t raw = static_cast<int16_t>(degree2 & 0xFFFF);
     return static_cast<float>(raw) / 32767.0f * 3.14159265f;
 }
 
-ScnrTriggerVolume System_ScnrZoneBuilder::BuildTriggerVolume(const Scnr_TriggerVolumesObject& tv)
+ScnrTriggerVolume System_ScnrZoneBuilder::BuildTriggerVolume(
+    const Scnr_TriggerVolumesObject& tv,
+    bool onlyKillPlayers)
 {
     ScnrTriggerVolume out{};
     out.NameId = tv.Name;
     out.Type = static_cast<ScnrTriggerVolumeType>(tv.Type);
+    out.OnlyKillPlayers = onlyKillPlayers;
     out.Position[0] = tv.Position.X;
     out.Position[1] = tv.Position.Y;
     out.Position[2] = tv.Position.Z;

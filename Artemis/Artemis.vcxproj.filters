@@ -277,6 +277,27 @@
     <Filter Include="Core\Systems\Domain\Interactable\Weap">
       <UniqueIdentifier>{f2f22c5a-1477-4ce0-bcef-f989a4e2152f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Systems\Domain\Interactable\Projectile">
+      <UniqueIdentifier>{db994ff6-15ef-47fe-b4fc-656d6f5a19ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\States\Domain\Map\Mach">
+      <UniqueIdentifier>{487513ac-b532-444b-88e4-dde82b4ce7b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Interactable\Ctrl">
+      <UniqueIdentifier>{5939e5cb-eb48-4b7f-992b-8e3a86a67456}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Navigation\Scen">
+      <UniqueIdentifier>{f081afe4-ec4a-405b-a616-1d39df457bae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Environment\Scen">
+      <UniqueIdentifier>{27910978-5585-4421-9d81-d54c844d13aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Navigation\Bloc">
+      <UniqueIdentifier>{63e101a8-503b-43ac-b06a-f101cf82ccaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Systems\Domain\Navigation\Mach">
+      <UniqueIdentifier>{ba0c265b-ae57-489f-90df-967a19c1a2b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Proxy\ProxyExports.h">
@@ -686,6 +707,51 @@
     <ClInclude Include="Core\Systems\Domain\Interactable\Weap\System_WeapDataBuilder.h">
       <Filter>Core\Systems\Domain\Interactable\Weap</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Interactable\ProjectileData.h">
+      <Filter>Core\Types\Domain\Domains\Interactable</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Interactable\Proj\System_ProjDataBuilder.h">
+      <Filter>Core\Systems\Domain\Interactable\Projectile</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\States\Domain\Map\Mach\State_MapMach.h">
+      <Filter>Core\States\Domain\Map\Mach</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Interactable\Ctrl\System_CtrlDataBuilder.h">
+      <Filter>Core\Systems\Domain\Interactable\Ctrl</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Interactable\ControlDeviceData.h">
+      <Filter>Core\Types\Domain\Domains\Interactable</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Environment\SceneryZoneData.h">
+      <Filter>Core\Types\Domain\Domains\Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Navigation\ScenObstacleData.h">
+      <Filter>Core\Types\Domain\Domains\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Navigation\Scen\System_ScenObstacleBuilder.h">
+      <Filter>Core\Systems\Domain\Navigation\Scen</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Environment\Scen\System_ScenZoneBuilder.h">
+      <Filter>Core\Systems\Domain\Environment\Scen</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Navigation\BlocObstacleData.h">
+      <Filter>Core\Types\Domain\Domains\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Navigation\BlocTeleporterData.h">
+      <Filter>Core\Types\Domain\Domains\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Navigation\Bloc\System_BlocObstacleBuilder.h">
+      <Filter>Core\Systems\Domain\Navigation\Bloc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Navigation\Bloc\System_BlocTeleporterBuilder.h">
+      <Filter>Core\Systems\Domain\Navigation\Bloc</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Types\Domain\Domains\Navigation\MachData.h">
+      <Filter>Core\Types\Domain\Domains\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Domain\Navigation\Mach\System_MachDataBuilder.h">
+      <Filter>Core\Systems\Domain\Navigation\Mach</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\DllMain.cpp">
@@ -1027,6 +1093,30 @@
     </ClCompile>
     <ClCompile Include="Core\Systems\Domain\Interactable\Weap\System_WeapDataBuilder.cpp">
       <Filter>Core\Systems\Domain\Interactable\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Interactable\Proj\System_ProjDataBuilder.cpp">
+      <Filter>Core\Systems\Domain\Interactable\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\States\Domain\Map\Mach\State_MapMach.cpp">
+      <Filter>Core\States\Domain\Map\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Interactable\Ctrl\System_CtrlDataBuilder.cpp">
+      <Filter>Core\Systems\Domain\Interactable\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Navigation\Scen\System_ScenObstacleBuilder.cpp">
+      <Filter>Core\Systems\Domain\Navigation\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Environment\Scen\System_ScenZoneBuilder.cpp">
+      <Filter>Core\Systems\Domain\Environment\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Navigation\Bloc\System_BlocObstacleBuilder.cpp">
+      <Filter>Core\Systems\Domain\Navigation\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Navigation\Bloc\System_BlocTeleporterBuilder.cpp">
+      <Filter>Core\Systems\Domain\Navigation\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Domain\Navigation\Mach\System_MachDataBuilder.cpp">
+      <Filter>Core\Systems\Domain\Navigation\Mach</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

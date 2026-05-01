@@ -74,6 +74,44 @@ void State_Interactable::AddWeaponData(const std::string& tagName, WeaponData da
     m_WeaponData[tagName] = std::move(data);
 }
 
+bool State_Interactable::HasProjectileData(const std::string& tagName) const
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ProjectileData.count(tagName) > 0;
+}
+
+const ProjectileData* State_Interactable::GetProjectileData(const std::string& tagName) const
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    auto it = m_ProjectileData.find(tagName);
+    return it != m_ProjectileData.end() ? &it->second : nullptr;
+}
+
+void State_Interactable::AddProjectileData(const std::string& tagName, ProjectileData data)
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_ProjectileData[tagName] = std::move(data);
+}
+
+bool State_Interactable::HasControlDeviceData(const std::string& tagName) const
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    return m_ControlDeviceData.count(tagName) > 0;
+}
+
+const ControlDeviceData* State_Interactable::GetControlDeviceData(const std::string& tagName) const
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    auto it = m_ControlDeviceData.find(tagName);
+    return it != m_ControlDeviceData.end() ? &it->second : nullptr;
+}
+
+void State_Interactable::AddControlDeviceData(const std::string& tagName, ControlDeviceData data)
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_ControlDeviceData[tagName] = std::move(data);
+}
+
 void State_Interactable::Cleanup()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -81,4 +119,6 @@ void State_Interactable::Cleanup()
     m_VehicleData.clear();
     m_EquipmentData.clear();
     m_WeaponData.clear();
+    m_ProjectileData.clear();
+    m_ControlDeviceData.clear();
 }

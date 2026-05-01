@@ -6,48 +6,64 @@
 EquipmentData System_EqipDataBuilder::BuildData(const EqipObject& eqip)
 {
     EquipmentData out{};
+    const auto& d = eqip.Data;
 
     out.TagName = eqip.TagName;
-    out.Type = this->DeriveType(eqip);
+    out.Type = DeriveType(eqip);
 
-    // Use and duration.
-    out.WarmupTime = eqip.Data.WarmupTime;
-    out.Duration = eqip.Data.Duration;
-    out.CooldownTime = eqip.Data.CooldownTime;
-    out.Charges = eqip.Data.Charges;
-    out.IsToggle = (eqip.Data.ActivationType == 0x0); // 0=Toggle, 1=Hold
+    // Timing
+    out.WarmupTime = d.WarmupTime;
+    out.Duration = d.Duration;
+    out.EnergyRecoveryTime = d.EnergyRecoveryTime;
+    out.Charges = d.Charges;
+    out.IsToggle = (d.ActivationType == 0x0);
 
-    // Energy.
-    out.MinimumActivationEnergy = eqip.Data.MinimumActivationEnergy;
-    out.ActiveEnergyRate = eqip.Data.ActiveEnergyRate;
-    out.RechargeRate = eqip.Data.RechargeRate;
+    // Energy
+    out.MinimumActivationEnergy = d.MinimumActivationEnergy;
+    out.ActivationEnergyCost = d.ActivationEnergyCost;
+    out.ActiveEnergyRate = d.ActiveEnergyRate;
+    out.RechargeRate = d.RechargeRate;
+    out.MovementSpeedDomain = d.MovementSpeedDomain;
 
-    // AI behavior.
-    // Flags_3 bit 1 = Equipment Is Dangerous To AI
-    // Flags_3 bit 2 = Never Dropped By AI
-    out.DangerRadius = eqip.Data.DangerRadius;
-    out.IsDangerousToAI = (eqip.Data.Flags_3 & (1u << 1)) != 0;
-    out.NeverDroppedByAI = (eqip.Data.Flags_3 & (1u << 2)) != 0;
+    // Flags
+    out.CannotBeActiveAirborne = (d.Flags_3 & (1u << 7)) != 0;
+    out.CannotActivateAirborne = (d.Flags_3 & (1u << 8)) != 0;
+    out.CannotActivateInVehicle = (d.Flags_3 & (1u << 10)) != 0;
+    out.DeactivatedByFiringWeapon = (d.Flags_3 & (1u << 11)) != 0;
+    out.DeactivatedByMelee = (d.Flags_3 & (1u << 12)) != 0;
+    out.DeactivatedByGrenade = (d.Flags_3 & (1u << 13)) != 0;
+    out.ThirdPersonWhileActive = (d.Flags_3 & (1u << 4)) != 0;
+
+    // AI
+    out.AwarenessTime = d.AwarenessTime;
+    out.ObjectNoiseAdjustment = d.ObjectNoiseAdjustment;
+
+    // Multiplayer object
+    out.HasMultiplayerObject = !eqip.MultiplayerObject.empty();
+    if (out.HasMultiplayerObject)
+    {
+        const auto& mp = eqip.MultiplayerObject[0];
+        out.MultiplayerObjectType = mp.Type;
+        out.BoundaryShape = mp.BoundaryShape;
+        out.BoundaryWidthRadius = mp.BoundaryWidthRadius;
+        out.DefaultSpawnTime = mp.DefaultSpawnTime;
+        out.DefaultAbandonmentTime = mp.DefaultAbandonmentTime;
+    }
 
     return out;
 }
 
 EquipmentType System_EqipDataBuilder::DeriveType(const EqipObject& eqip)
 {
-    // We derive the type by the presence of specific sub-blocks.
-    // Order matters : we check the most specific ones first.
-    if (!eqip.Sprint.empty())              return EquipmentType::Sprint;
-    if (!eqip.Jetpack.empty())             return EquipmentType::Jetpack;
-    if (!eqip.HealthPack.empty())          return EquipmentType::HealthPack;
-    if (!eqip.AmmoPack.empty())            return EquipmentType::AmmoPack;
-    if (!eqip.Hologram.empty())            return EquipmentType::Hologram;
-    if (!eqip.InvincibilityMode.empty())   return EquipmentType::Invincibility;
-    if (!eqip.RepulsorField.empty())       return EquipmentType::RepulsorField;
-    if (!eqip.ProximityMine.empty())       return EquipmentType::ProximityMine;
-    if (!eqip.MotionTrackerNoise.empty())  return EquipmentType::MotionTrackerNoise;
-    if (!eqip.PowerFist.empty())           return EquipmentType::PowerFist;
-    if (!eqip.Spawner.empty())             return EquipmentType::Spawner;
-    if (!eqip.MultiplayerPowerup.empty())  return EquipmentType::Powerup;
-    if (!eqip.SuperJump.empty())           return EquipmentType::SuperJump;
+    if (!eqip.Sprint.empty())             return EquipmentType::Sprint;
+    if (!eqip.Jetpack.empty())            return EquipmentType::Jetpack;
+    if (!eqip.Hologram.empty())           return EquipmentType::Hologram;
+    if (!eqip.InvincibilityMode.empty())  return EquipmentType::Invincibility;
+    if (!eqip.MotionTrackerNoise.empty()) return EquipmentType::MotionTrackerNoise;
+    if (!eqip.ProximityMine.empty())      return EquipmentType::ProximityMine;
+    if (!eqip.Spawner.empty())            return EquipmentType::Spawner;
+    if (!eqip.MultiplayerPowerup.empty()) return EquipmentType::Powerup;
+    if (!eqip.TreeOfLife.empty())         return EquipmentType::TreeOfLife;
+    if (!eqip.SpecialMove.empty())        return EquipmentType::SpecialMove;
     return EquipmentType::Unknown;
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 struct EqipObject;
-enum class EquipmentType : uint8_t;
 struct EquipmentData;
+enum class EquipmentType : uint8_t;
 
 class System_EqipDataBuilder
 {

@@ -8,6 +8,8 @@
 #include "Core/States/Domain/Map/Vehi/State_MapVehi.h"
 #include "Core/States/Domain/Map/Eqip/State_MapEqip.h"
 #include "Core/States/Domain/Map/Weap/State_MapWeap.h"
+#include "Core/States/Domain/Map/Proj/State_MapProj.h"
+#include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
 #include "Core/States/Domain/Tables/State_PlayerTable.h"
 #include "Core/States/Domain/Tables/State_InteractionTable.h"
 #include "Core/States/Domain/Environment/State_Environment.h"
@@ -17,6 +19,8 @@
 #include "Core/Systems/Domain/Interactable/Vehi/System_VehiDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Eqip/System_EqipDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Weap/System_WeapDataBuilder.h"
+#include "Core/Systems/Domain/Interactable/Proj/System_ProjDataBuilder.h"
+#include "Core/Systems/Domain/Interactable/Ctrl/System_CtrlDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/System_Interactable.h"
 #include "Core/Systems/Interface/System_Debug.h"
 #include <algorithm>
@@ -30,6 +34,8 @@ void System_Interactable::BuildForMap()
 	int32_t vehiCount = 0;
 	int32_t eqipCount = 0;
 	int32_t weapCount = 0;
+	int32_t projCount = 0;
+	int32_t ctrlCount = 0;
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
@@ -90,11 +96,43 @@ void System_Interactable::BuildForMap()
 			g_pState->Domain->Interactable->AddWeaponData(tagName, std::move(data));
 			++weapCount;
 		}
+		else if (magic == MapMagics::k_ProjMagic)
+		{
+			const ProjObject* proj = g_pState->Domain->MapProj->GetProj(tagName);
+			if (!proj)
+			{
+				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+					" Proj tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			ProjectileData data =
+				g_pSystem->Domain->ProjDataBuilder->BuildData(*proj);
+
+			g_pState->Domain->Interactable->AddProjectileData(tagName, std::move(data));
+			++projCount;
+		}
+		else if (magic == MapMagics::k_CtrlMagic)
+		{
+			const CtrlObject* ctrl = g_pState->Domain->MapCtrl->GetCtrl(tagName);
+			if (!ctrl)
+			{
+				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+					" Proj tag found in table but not loaded: ", tagName);
+				continue;
+			}
+
+			ControlDeviceData data =
+				g_pSystem->Domain->CtrlDataBuilder->BuildData(*ctrl);
+
+			g_pState->Domain->Interactable->AddControlDeviceData(tagName, std::move(data));
+			++ctrlCount;
+		}
 	}
 
-	g_pSystem->Debug->Log("[InteractableSystem] INFO:"
-		" Interactable built. Vehi: %d, Eqip: %d, Weap: %d",
-		vehiCount, eqipCount, weapCount);
+	g_pSystem->Debug->Log("[InteractableSystem] INFO: Interactable built."
+		" Vehi: %d | Eqip: %d | Weap: %d | Proj: %d | Ctrl: %d",
+		vehiCount, eqipCount, weapCount, projCount, ctrlCount);
 }
 
 void System_Interactable::UpdateInteractables(uint32_t selfPlayerHandle)

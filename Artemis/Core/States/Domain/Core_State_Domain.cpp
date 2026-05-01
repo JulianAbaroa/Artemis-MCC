@@ -17,6 +17,7 @@
 #include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
 #include "Core/States/Domain/Map/Jmad/State_MapJmad.h"
 #include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
+#include "Core/States/Domain/Map/Mach/State_MapMach.h"
 #include "Core/States/Domain/Environment/State_Environment.h"
 #include "Core/States/Domain/Navigation/State_Navigation.h"
 #include "Core/States/Domain/Tables/State_ObjectTable.h"
@@ -45,6 +46,7 @@ Core_State_Domain::Core_State_Domain()
 	MapScnr = std::make_unique<State_MapScnr>();
 	MapJmad = std::make_unique<State_MapJmad>();
 	MapCtrl = std::make_unique<State_MapCtrl>();
+	MapMach = std::make_unique<State_MapMach>();
 
 	Environment = std::make_unique<State_Environment>();
 

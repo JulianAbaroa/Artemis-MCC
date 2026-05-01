@@ -5,6 +5,7 @@
 #include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
 #include "Core/Types/Domain/Domains/Environment/ScnrZones.h"
 #include "Core/Types/Domain/Domains/Environment/BipdPhysicsData.h"
+#include "Core/Types/Domain/Domains/Environment/SceneryZoneData.h"
 #include <unordered_map>
 #include <mutex>
 
@@ -36,6 +37,11 @@ public:
 	const BipdPhysicsData* GetBipdData(const std::string& tagName) const;
 	void AddBipdData(const std::string& tagName, BipdPhysicsData data);
 
+	// Scen.
+	bool HasScenData(const std::string& tagName) const;
+	const SceneryZoneData* GetScenData(const std::string& tagName) const;
+	void AddScenData(const std::string& tagName, SceneryZoneData data);
+
 	void Cleanup();
 
 private:
@@ -43,6 +49,7 @@ private:
 	std::unordered_map<std::string, PhmoGeometry> m_PhmoGeometries;
 	std::unordered_map<std::string, ModeGeometry> m_ModeGeometries;
 	std::unordered_map<std::string, BipdPhysicsData> m_BipdData;
+	std::unordered_map<std::string, SceneryZoneData> m_ScenData;
 	ScnrMapZones m_MapZones;
 	bool m_HasMapZones;
 	mutable std::mutex m_Mutex;

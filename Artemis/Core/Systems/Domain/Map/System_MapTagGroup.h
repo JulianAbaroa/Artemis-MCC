@@ -31,6 +31,8 @@
 #include "Generated/Scnr/ScnrDescriptor.h"
 #include "Generated/Ctrl/CtrlObject.h"
 #include "Generated/Ctrl/CtrlDescriptor.h"
+#include "Generated/Mach/MachObject.h"
+#include "Generated/Mach/MachDescriptor.h"
 
 class TagGroupReader;
 
