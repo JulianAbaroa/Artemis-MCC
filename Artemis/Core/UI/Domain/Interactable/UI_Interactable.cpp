@@ -1,25 +1,55 @@
 #include "pch.h"
+
+// Header.
+#include "UI_Interactable.h"
+
+// States.
 #include "Core/States/Core_State.h"
 #include "Core/States/Domain/Core_State_Domain.h"
-#include "Core/States/Domain/Tables/State_InteractionTable.h"
+
+// Object.
+#include "Core/States/Domain/Object/State_ObjectTable.h"
+
+// Interaction.
+#include "Core/States/Domain/Interaction/State_InteractionTable.h"
+
+// Interactable.
 #include "Core/States/Domain/Interactable/State_Interactable.h"
-#include "Core/UI/Domain/Interactable/UI_Interactable.h"
+
+// ImGui.
 #include "External/imgui/imgui.h"
+
 #include <Algorithm>
 #include <format>
 
-// Helpers.
+// TODO: Move to somewhere else.
 namespace
 {
-    const char* TagGroupToString(TagGroup group)
+    const char* RoleToString(ObjectRole role)
     {
-        switch (group)
+        switch (role)
         {
-        case TagGroup::Weapon:       return "Weapon";
-        case TagGroup::Equipment:    return "Equipment";
-        case TagGroup::Vehicle:      return "Vehicle";
-        case TagGroup::DeviceControl:return "Control";
-        default:                     return "Unknown";
+        case ObjectRole::HealthStation:         return "HealthStation";
+        case ObjectRole::Shield:                return "Shield";
+        case ObjectRole::Lift:                  return "Lift";
+        case ObjectRole::Explosive:             return "Explosive";
+        case ObjectRole::Teleporter:            return "Teleporter";
+        case ObjectRole::DeviceMachine:         return "DeviceMachine";
+        case ObjectRole::ObjectiveSpawn:        return "Objective Spawn";
+        case ObjectRole::ObjectivePickup:       return "Objective Pickup";
+        case ObjectRole::ObjectiveEquiped:      return "Objective Equiped";
+        case ObjectRole::Spawn:                 return "Spawn";
+        case ObjectRole::Projectile:            return "Projectile";
+        case ObjectRole::AmmoPickup:            return "AmmoPickup";
+        case ObjectRole::ArmorAbilityEquiped:   return "Armor Ability Equiped";
+        case ObjectRole::ArmorAbilityPickup:    return "Armor Ability Pickup";
+        case ObjectRole::WeaponEquiped:         return "WeaponEquipped";
+        case ObjectRole::WeaponPickup:          return "WeaponPickup";
+        case ObjectRole::VehiclePart:           return "VehiclePart";
+        case ObjectRole::Vehicle:               return "Vehicle";
+        case ObjectRole::Biped:                 return "Biped";
+        case ObjectRole::SelfBiped:             return "SelfBiped";
+        default:                                return "Unknown";
         }
     }
 
@@ -73,22 +103,53 @@ namespace
         }
     }
 
-    ImVec4 GetGroupColor(TagGroup group)
+    ImVec4 GetRoleColor(ObjectRole role)
     {
-        switch (group)
+        switch (role)
         {
-        case TagGroup::Vehicle:       return { 1.0f, 0.8f, 0.2f, 1.0f }; // yellow
-        case TagGroup::Weapon:        return { 0.4f, 0.8f, 1.0f, 1.0f }; // sky blue
-        case TagGroup::Equipment:     return { 0.6f, 1.0f, 0.6f, 1.0f }; // light green
-        case TagGroup::DeviceControl: return { 1.0f, 0.5f, 0.8f, 1.0f }; // pink
-        default:                      return { 0.7f, 0.7f, 0.7f, 1.0f };
+        case ObjectRole::Vehicle:
+        case ObjectRole::VehiclePart:
+            return { 1.0f, 0.8f, 0.2f, 1.0f };  // yellow
+
+        case ObjectRole::WeaponPickup:
+        case ObjectRole::WeaponEquiped:
+            return { 0.4f, 0.8f, 1.0f, 1.0f };  // sky blue
+
+        case ObjectRole::ArmorAbilityPickup:
+        case ObjectRole::ArmorAbilityEquiped:
+            return { 0.6f, 1.0f, 0.6f, 1.0f };  // light green
+
+        case ObjectRole::HealthStation:
+            return { 1.0f, 0.5f, 0.8f, 1.0f };  // pink
+
+        case ObjectRole::AmmoPickup:
+            return { 0.8f, 0.6f, 0.3f, 1.0f };  // orange
+
+        case ObjectRole::Projectile:
+            return { 1.0f, 0.3f, 0.3f, 1.0f };  // red
+
+        case ObjectRole::Biped:
+        case ObjectRole::SelfBiped:
+            return { 0.8f, 0.6f, 1.0f, 1.0f };  // purple
+
+        case ObjectRole::DeviceMachine:
+        case ObjectRole::Teleporter:
+        case ObjectRole::Lift:
+        case ObjectRole::Shield:
+            return { 0.5f, 0.9f, 0.9f, 1.0f };  // teal
+
+        case ObjectRole::Explosive:
+            return { 1.0f, 0.4f, 0.1f, 1.0f };  // deep orange
+
+        default:
+            return { 0.7f, 0.7f, 0.7f, 1.0f };  // gray
         }
     }
 
     ImVec4 GetItemColor(const AIInteractable& item)
     {
         if (item.IsEngineSelected) return { 0.2f, 1.0f, 0.2f, 1.0f };
-        return GetGroupColor(item.PrimaryGroup());
+        return GetRoleColor(item.Role);
     }
 }
 
@@ -148,7 +209,7 @@ void UI_Interactable::Draw()
 
         auto it = std::find_if(interactables.begin(), interactables.end(),
             [this](const AIInteractable& i) {
-                return i.Handle() == m_SelectedHandle;
+                return i.Handle == m_SelectedHandle;
             });
 
         if (it != interactables.end())
@@ -165,7 +226,6 @@ void UI_Interactable::Cleanup()
     m_SelectedHandle = 0xFFFFFFFF;
 }
 
-// Engine interaction panel (global, always visible)
 void UI_Interactable::DrawEngineInteractionPanel(const LiveInteraction& interaction)
 {
     ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.f }, "Engine Interaction State");
@@ -179,7 +239,7 @@ void UI_Interactable::DrawEngineInteractionPanel(const LiveInteraction& interact
         ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f }, "Object");
         ImGui::Text("  Type:   %s", InteractionTypeToString(interaction.Type));
         ImGui::Text("  Handle: 0x%08X", interaction.TargetObjectHandle);
-        ImGui::Text("  SlotID: %u", interaction.InteractionSlotID);
+        ImGui::Text("  Detail: %s", this->InteractionDetailToString(interaction.Type, interaction.InteractionSlotID));
     }
     else
     {
@@ -223,39 +283,49 @@ void UI_Interactable::DrawEngineInteractionPanel(const LiveInteraction& interact
     }
 }
 
-// Left list.
 void UI_Interactable::DrawInteractableList(
     const std::vector<AIInteractable>& interactables)
 {
-    // Quick lookup handle -> interactive.
+    // Build handle set for root filtering (children are drawn under their parent).
+    // Since VehicleParts are in ChildHandles of their root Vehicle, we collect
+    // all child handles across all interactables.
+    std::unordered_set<uint32_t> childHandleSet;
     std::unordered_map<uint32_t, const AIInteractable*> byHandle;
+
     byHandle.reserve(interactables.size());
     for (const auto& item : interactables)
-        byHandle[item.Handle()] = &item;
+    {
+        byHandle[item.Handle] = &item;
+        for (uint32_t ch : item.ChildHandles)
+            childHandleSet.insert(ch);
+    }
 
     for (const auto& item : interactables)
     {
-        // Solo roots, the children are drawn below their father.
-        if (byHandle.count(item.ParentHandle()) > 0) continue;
+        // Skip items that are children of another interactable.
+        if (childHandleSet.count(item.Handle)) continue;
 
-        bool hasChildren = !item.ChildHandles.empty();
-        bool isSelected = (m_SelectedHandle == item.Handle());
+        const bool hasChildren = !item.ChildHandles.empty();
+        const bool isSelected = (m_SelectedHandle == item.Handle);
+
+        // Resolve TagName from ObjectTable.
+        const std::string tagName = this->GetTagName(item.Handle);
 
         ImGui::PushStyleColor(ImGuiCol_Text, GetItemColor(item));
 
         std::string label = std::format("[{:.1f}m] {} | {}{}##{:08X}",
             item.DistanceToPlayer,
-            TagGroupToString(item.PrimaryGroup()),
-            GetShortName(item.TagName()),
+            RoleToString(item.Role),
+            GetShortName(tagName),
             hasChildren ? " +" : "",
-            item.Handle());
+            item.Handle);
 
         if (ImGui::Selectable(label.c_str(), isSelected))
-            m_SelectedHandle = item.Handle();
+            m_SelectedHandle = item.Handle;
 
         ImGui::PopStyleColor();
 
-        //Children (turrets, sub-vehicles) immediately below, indented.
+        // Children (VehicleParts) immediately below, indented.
         if (hasChildren)
         {
             ImGui::Indent(14.0f);
@@ -265,18 +335,19 @@ void UI_Interactable::DrawInteractableList(
                 if (it == byHandle.end()) continue;
 
                 const AIInteractable& child = *it->second;
-                bool                  childSel = (m_SelectedHandle == child.Handle());
+                const bool            childSel = (m_SelectedHandle == child.Handle);
+                const std::string     childTag = this->GetTagName(child.Handle);
 
                 ImGui::PushStyleColor(ImGuiCol_Text, GetItemColor(child));
 
                 std::string childLabel = std::format("[{:.1f}m] {} | {}##{:08X}",
                     child.DistanceToPlayer,
-                    TagGroupToString(child.PrimaryGroup()),
-                    GetShortName(child.TagName()),
-                    child.Handle());
+                    RoleToString(child.Role),
+                    GetShortName(childTag),
+                    child.Handle);
 
                 if (ImGui::Selectable(childLabel.c_str(), childSel))
-                    m_SelectedHandle = child.Handle();
+                    m_SelectedHandle = child.Handle;
 
                 ImGui::PopStyleColor();
             }
@@ -285,41 +356,50 @@ void UI_Interactable::DrawInteractableList(
     }
 }
 
-// Details panel.
 void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
 {
+    // Resolve LiveObject once for this frame.
+    const LiveObject* objPtr =
+        g_pState->Domain->ObjectTable->GetLiveObject(item.Handle);
+
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
 
     if (ImGui::BeginChild("InteractableDetailCard", ImVec2(0, 0), true))
     {
-        // Identity.
-        ImGui::PushStyleColor(ImGuiCol_Text, GetGroupColor(item.PrimaryGroup()));
-        ImGui::TextWrapped("%s", item.TagName().c_str());
+        // --- Identity ---
+        ImGui::PushStyleColor(ImGuiCol_Text, GetRoleColor(item.Role));
+        if (objPtr)
+            ImGui::TextWrapped("%s", objPtr->TagName.c_str());
+        else
+            ImGui::TextWrapped("0x%08X", item.Handle);
         ImGui::PopStyleColor();
 
-        ImGui::Text("Handle:  0x%08X", item.Handle());
-        if (item.ParentHandle() != 0xFFFFFFFF)
-            ImGui::Text("Parent:  0x%08X", item.ParentHandle());
+        ImGui::Text("Handle: 0x%08X", item.Handle);
+        ImGui::Text("Role:   %s", RoleToString(item.Role));
+
+        if (objPtr && objPtr->ParentHandle != 0xFFFFFFFF)
+            ImGui::Text("Parent: 0x%08X", objPtr->ParentHandle);
 
         ImGui::Spacing();
         ImGui::Separator();
 
-        // Interaction state.
+        // --- Interaction state ---
         ImGui::Spacing();
         if (item.IsEngineSelected)
-            ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f }, "[ ACTION READY — ENGINE SELECTED ]");
+            ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f },
+                "[ ACTION READY — ENGINE SELECTED ]");
         else if (item.Activation == InteractableActivation::None)
-            ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.f }, "[ WORLD ENTITY — NO DIRECT INTERACTION ]");
+            ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.f },
+                "[ WORLD ENTITY — NO DIRECT INTERACTION ]");
         else
             ImGui::TextColored({ 1.f, 0.4f, 0.4f, 1.f }, "[ OUT OF RANGE ]");
 
         ImGui::Spacing();
         ImGui::Separator();
 
-        // Classification.
+        // --- Classification ---
         ImGui::Spacing();
         ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.f }, "Classification");
-        ImGui::Text("Group:      %s", TagGroupToString(item.PrimaryGroup()));
         ImGui::Text("Activation: %s", ActivationToString(item.Activation));
 
         ImGui::Text("Behaviors:  ");
@@ -330,75 +410,85 @@ void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
             ImGui::TextDisabled("%s", BehaviorToString(item.Behaviors[i]));
         }
 
-        ImGui::Spacing();
-        ImGui::Separator();
-
-        // Tag Profile.
-        ImGui::Spacing();
-        ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.f }, "Tag Profile");
-
-        const TagProfile& p = item.Node.Profile;
-
-        auto BoolBadge = [](const char* label, bool value)
-            {
-                ImGui::Text("%-10s", label);
-                ImGui::SameLine();
-                if (value) ImGui::TextColored({ 0.4f, 1.f, 0.4f, 1.f }, "yes");
-                else       ImGui::TextColored({ 0.4f, 0.4f, 0.4f, 1.f }, "no");
-            };
-
-        // Two columns for compacting.
-        if (ImGui::BeginTable("##profile", 2))
+        // --- Spatial data ---
+        if (objPtr)
         {
-            ImGui::TableNextColumn(); BoolBadge("HasPhmo:", p.HasPhmo);
-            ImGui::TableNextColumn(); BoolBadge("HasColl:", p.HasColl);
-            ImGui::TableNextColumn(); BoolBadge("HasMode:", p.HasMode);
-            ImGui::TableNextColumn(); BoolBadge("HasJmad:", p.HasJmad);
-            ImGui::TableNextColumn(); BoolBadge("HasWeap:", p.HasWeap);
-            ImGui::TableNextColumn(); BoolBadge("HasVehi:", p.HasVehi);
-            ImGui::TableNextColumn(); BoolBadge("HasEqip:", p.HasEqip);
-            ImGui::TableNextColumn(); BoolBadge("HasBloc:", p.HasBloc);
-            ImGui::TableNextColumn(); BoolBadge("HasCtrl:", p.HasCtrl);
-            ImGui::TableNextColumn(); BoolBadge("HasProj:", p.HasProj);
-            ImGui::EndTable();
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.f }, "Spatial Data");
+
+            ImGui::Text("Distance: %.2f m", item.DistanceToPlayer);
+            ImGui::Text("Position: %.3f  %.3f  %.3f",
+                objPtr->Position[0], objPtr->Position[1], objPtr->Position[2]);
+            ImGui::Text("Forward:  %.3f  %.3f  %.3f",
+                objPtr->Forward[0], objPtr->Forward[1], objPtr->Forward[2]);
+            ImGui::Text("Up:       %.3f  %.3f  %.3f",
+                objPtr->Up[0], objPtr->Up[1], objPtr->Up[2]);
+            ImGui::Text("LinVel:   %.3f  %.3f  %.3f",
+                objPtr->LinearVelocity[0],
+                objPtr->LinearVelocity[1],
+                objPtr->LinearVelocity[2]);
+            ImGui::Text("AngVel:   %.3f  %.3f  %.3f",
+                objPtr->AngularVelocity[0],
+                objPtr->AngularVelocity[1],
+                objPtr->AngularVelocity[2]);
         }
 
-        ImGui::Spacing();
-        ImGui::Separator();
+        // --- Object Profile ---
+        if (objPtr)
+        {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.f }, "Object Profile");
 
-        // Spatial Data.
-        ImGui::Spacing();
-        ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.f }, "Spatial Data");
-        ImGui::Text("Distance: %.2f m", item.DistanceToPlayer);
-        ImGui::Text("Position: %.3f  %.3f  %.3f",
-            item.Node.Position[0], item.Node.Position[1], item.Node.Position[2]);
-        ImGui::Text("Forward:  %.3f  %.3f  %.3f",
-            item.Node.Forward[0], item.Node.Forward[1], item.Node.Forward[2]);
-        ImGui::Text("Up:       %.3f  %.3f  %.3f",
-            item.Node.Up[0], item.Node.Up[1], item.Node.Up[2]);
+            const ObjectProfile& p = objPtr->Profile;
 
-        // Velocity
-        // ObjectNode doesn't have velocity yet, but LiveObject does.
-        // TODO: Add velocity to ObjectNode.
+            auto BoolBadge = [](const char* label, bool value)
+                {
+                    ImGui::Text("%-10s", label);
+                    ImGui::SameLine();
+                    if (value) ImGui::TextColored({ 0.4f, 1.f, 0.4f, 1.f }, "yes");
+                    else       ImGui::TextColored({ 0.4f, 0.4f, 0.4f, 1.f }, "no");
+                };
 
-        // Vehicle Seats.
+            if (ImGui::BeginTable("##profile", 2))
+            {
+                ImGui::TableNextColumn(); BoolBadge("HasPhmo:", p.HasPhmo);
+                ImGui::TableNextColumn(); BoolBadge("HasColl:", p.HasColl);
+                ImGui::TableNextColumn(); BoolBadge("HasMode:", p.HasMode);
+                ImGui::TableNextColumn(); BoolBadge("HasJmad:", p.HasJmad);
+                ImGui::TableNextColumn(); BoolBadge("HasWeap:", p.HasWeap);
+                ImGui::TableNextColumn(); BoolBadge("HasVehi:", p.HasVehi);
+                ImGui::TableNextColumn(); BoolBadge("HasEqip:", p.HasEqip);
+                ImGui::TableNextColumn(); BoolBadge("HasBloc:", p.HasBloc);
+                ImGui::TableNextColumn(); BoolBadge("HasCtrl:", p.HasCtrl);
+                ImGui::TableNextColumn(); BoolBadge("HasProj:", p.HasProj);
+                ImGui::EndTable();
+            }
+        }
+
+        // --- Vehicle Seats ---
         if (!item.Seats.empty())
         {
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
-            ImGui::TextColored({ 1.f, 0.8f, 0.2f, 1.f }, "Vehicle Seats (%zu)", item.Seats.size());
+            ImGui::TextColored({ 1.f, 0.8f, 0.2f, 1.f },
+                "Vehicle Seats (%zu)", item.Seats.size());
 
-            if (ImGui::BeginTable("##seats", 4,
+            if (ImGui::BeginTable("##seats", 5,
                 ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
             {
                 ImGui::TableSetupColumn("Seat");
+                ImGui::TableSetupColumn("Type");
                 ImGui::TableSetupColumn("Status");
                 ImGui::TableSetupColumn("Occupant");
                 ImGui::TableSetupColumn("Dist");
                 ImGui::TableHeadersRow();
 
-                for (const auto& seat : item.Seats)
+                for (const SeatStatus& seat : item.Seats)
                 {
                     ImGui::TableNextRow();
 
@@ -406,18 +496,24 @@ void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
                     ImGui::Text("%s", seat.SeatName.c_str());
 
                     ImGui::TableSetColumnIndex(1);
+                    if (seat.IsHijackerSlot)
+                        ImGui::TextColored({ 1.f, 0.6f, 0.1f, 1.f }, "Hijack");
+                    else
+                        ImGui::TextDisabled("Normal");
+
+                    ImGui::TableSetColumnIndex(2);
                     if (seat.IsOccupied)
                         ImGui::TextColored({ 1.f, 0.4f, 0.4f, 1.f }, "Occupied");
                     else
                         ImGui::TextColored({ 0.4f, 1.f, 0.4f, 1.f }, "Free");
 
-                    ImGui::TableSetColumnIndex(2);
+                    ImGui::TableSetColumnIndex(3);
                     if (seat.OccupyingBipedHandle == 0xFFFFFFFF)
                         ImGui::TextDisabled("—");
                     else
                         ImGui::Text("0x%08X", seat.OccupyingBipedHandle);
 
-                    ImGui::TableSetColumnIndex(3);
+                    ImGui::TableSetColumnIndex(4);
                     ImGui::Text("%.2f m", seat.DistanceToPlayer);
                 }
 
@@ -425,7 +521,7 @@ void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
             }
         }
 
-        // Child Vehicles.
+        // --- Child Vehicles ---
         if (!item.ChildHandles.empty())
         {
             ImGui::Spacing();
@@ -435,7 +531,10 @@ void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
                 "Child Vehicles (%zu)", item.ChildHandles.size());
 
             for (uint32_t ch : item.ChildHandles)
-                ImGui::Text("  0x%08X", ch);
+            {
+                const std::string childTag = this->GetTagName(ch);
+                ImGui::Text("  0x%08X  %s", ch, GetShortName(childTag).c_str());
+            }
         }
 
         ImGui::Spacing();
@@ -445,8 +544,47 @@ void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
     ImGui::PopStyleVar();
 }
 
+const char* UI_Interactable::InteractionDetailToString(InteractionType type, InteractionDetail detail)
+{
+    switch (type)
+    {
+    case InteractionType::GrabWeapon:
+        switch (detail)
+        {
+        case InteractionDetail::GrabWeapon:    return "Grab Weapon";
+        case InteractionDetail::ChangeWeapon:  return "Change Weapon";
+        default:                               return "Unknown";
+        }
+
+    case InteractionType::EnterVehicle:
+    case InteractionType::Hijack:
+        switch (detail)
+        {
+        case InteractionDetail::ZeroSeat:      return "Seat (0)";
+        case InteractionDetail::FirstSeat:     return "Seat (1)";
+        case InteractionDetail::SecondSeat:    return "Seat (2)";
+        case InteractionDetail::ThirdSeat:     return "Seat (3)";
+        case InteractionDetail::FourthSeat:    return "Seat (4)";
+        case InteractionDetail::FifthSeat:     return "Seat (5)";
+        default:                               return "Unknown Seat";
+        }
+
+    case InteractionType::GrabArmorAbility:    return "Grab Armor Ability";
+    case InteractionType::TakeHealthStation:   return "Take Health Station";
+    case InteractionType::GrabObjective:       return "Grab Objective";
+    case InteractionType::None:                return "None";
+    default:                                   return "Unknown";
+    }
+}
+
 std::string UI_Interactable::GetShortName(const std::string& fullPath) const
 {
     size_t pos = fullPath.find_last_of("\\/");
     return pos != std::string::npos ? fullPath.substr(pos + 1) : fullPath;
+}
+
+std::string UI_Interactable::GetTagName(uint32_t handle) const
+{
+    const LiveObject* obj = g_pState->Domain->ObjectTable->GetLiveObject(handle);
+    return obj ? obj->TagName : std::format("0x{:08X}", handle);
 }

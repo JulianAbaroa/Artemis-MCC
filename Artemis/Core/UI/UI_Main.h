@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/Types/Domain/ModTypes.h"
-
 class UI_Main
 {
 public:

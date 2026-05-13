@@ -1,17 +1,23 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Environment/CollGeometry.h"
-#include "Core/Types/Domain/Domains/Environment/PhmoGeometry.h"
-#include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
-#include "Core/Types/Domain/Domains/Environment/ScnrZones.h"
-#include "Core/Types/Domain/Domains/Environment/BipdPhysicsData.h"
-#include "Core/Types/Domain/Domains/Environment/SceneryZoneData.h"
+// Types.
+#include "Core/Types/Domain/Environment/CollGeometry.h"
+#include "Core/Types/Domain/Environment/PhmoGeometry.h"
+#include "Core/Types/Domain/Environment/ModeGeometry.h"
+#include "Core/Types/Domain/Environment/ScnrZones.h"
+#include "Core/Types/Domain/Environment/BipdPhysicsData.h"
+#include "Core/Types/Domain/Environment/ScenZoneData.h"
+#include "Core/Types/Domain/Environment/EnvironmentTypes.h"
+
 #include <unordered_map>
+#include <atomic>
 #include <mutex>
 
 class State_Environment
 {
 public:
+	// --- Static Data ---
+
 	// Coll.
 	bool HasCollGeometry(const std::string& tagName) const;
 	const CollGeometry* GetCollGeometry(const std::string& tagName) const;
@@ -42,15 +48,29 @@ public:
 	const SceneryZoneData* GetScenData(const std::string& tagName) const;
 	void AddScenData(const std::string& tagName, SceneryZoneData data);
 
+	// --- Dynamic Data ---
+
+	const std::vector<ActivePhysicsInstance> GetActivePhysicsInstances() const;
+	void SetActivePhysicsInstances(std::vector<ActivePhysicsInstance> instances);
+
+	// Cleanup.
 	void Cleanup();
 
 private:
+	// --- Static Data ---
+
 	std::unordered_map<std::string, CollGeometry> m_CollGeometries;
 	std::unordered_map<std::string, PhmoGeometry> m_PhmoGeometries;
 	std::unordered_map<std::string, ModeGeometry> m_ModeGeometries;
 	std::unordered_map<std::string, BipdPhysicsData> m_BipdData;
 	std::unordered_map<std::string, SceneryZoneData> m_ScenData;
+	
 	ScnrMapZones m_MapZones;
-	bool m_HasMapZones;
+	std::atomic<bool> m_HasMapZones;
+
+	// --- Dynamic Data ---
+
+	std::vector<ActivePhysicsInstance> m_PhysicsInstances;
+
 	mutable std::mutex m_Mutex;
 };

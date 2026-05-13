@@ -1,13 +1,25 @@
 #include "pch.h"
-#include "Core/Threads/Core_Thread.h"
-#include "Core/Hooks/Infrastructure/Render/Hook_ResizeBuffers.h"
+
+// Header.
+#include "Hook_ResizeBuffers.h"
+
+// --- States ---
+
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
-#include "Core/States/Infrastructure/Engine/State_Render.h"
+
+#include "Core/States/Infrastructure/Engine/Render/State_Render.h"
+
+// --- Systems ---
+
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-#include "Core/Systems/Infrastructure/Engine/System_Render.h"
+
+#include "Core/Systems/Infrastructure/Engine/Render/System_Render.h"
+
 #include "Core/Systems/Interface/System_Debug.h"
+
+// MinHook.
 #include "External/minhook/include/MinHook.h"
 
 // Manages swap chain resizing to prevent crashes, updating render targets 
@@ -15,25 +27,28 @@
 HRESULT __stdcall Hook_ResizeBuffers::HookedResizeBuffers(IDXGISwapChain* pSwapChain, UINT BufferCount,
 	UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags)
 {
-	g_pState->Infrastructure->Render->SetResizing(true);
+	auto& stateRender = *g_pState->Infrastructure->Render;
+	auto& systemRender = *g_pSystem->Infrastructure->Render;
+
+	stateRender.SetResizing(true);
 
 	UINT evenWidth = Width & ~1;
 	UINT evenHeight = Height & ~1;
-	g_pState->Infrastructure->Render->SetWidth(evenWidth);
-	g_pState->Infrastructure->Render->SetHeight(evenHeight);
+	stateRender.SetWidth(evenWidth);
+	stateRender.SetHeight(evenHeight);
 
-	if (g_pState->Infrastructure->Render->GetContext())
+	if (stateRender.GetContext())
 	{
-		g_pState->Infrastructure->Render->GetContext()->OMSetRenderTargets(0, nullptr, nullptr);
+		stateRender.GetContext()->OMSetRenderTargets(0, nullptr, nullptr);
 	}
 
-	g_pState->Infrastructure->Render->CleanupRTV();
+	stateRender.CleanupRTV();
 
 	HRESULT hr = m_OriginalFunction(pSwapChain, BufferCount, Width, Height, NewFormat, SwapChainFlags);
 
-	if (SUCCEEDED(hr)) g_pSystem->Infrastructure->Render->Initialize(pSwapChain);
+	if (SUCCEEDED(hr)) systemRender.Initialize(pSwapChain);
 
-	g_pState->Infrastructure->Render->SetResizing(false);
+	stateRender.SetResizing(false);
 
 	return hr;
 }
@@ -42,23 +57,30 @@ void Hook_ResizeBuffers::Install()
 {
 	if (m_IsHookInstalled.load()) return;
 
-	auto addresses = g_pSystem->Infrastructure->Render->GetVtableAddresses();
+	auto& debug = *g_pSystem->Debug;
+	auto& render = *g_pSystem->Infrastructure->Render;
+
+	auto addresses = render.GetVtableAddresses();
 	if (!addresses.ResizeBuffers) return;
 
 	m_FunctionAddress.store(addresses.ResizeBuffers);
-	if (MH_CreateHook(m_FunctionAddress.load(), &this->HookedResizeBuffers, reinterpret_cast<LPVOID*>(&m_OriginalFunction)))
+	if (MH_CreateHook(
+			m_FunctionAddress.load(), 
+			&this->HookedResizeBuffers, 
+			reinterpret_cast<LPVOID*>(&m_OriginalFunction)) 
+		!= MH_OK)
 	{
-		g_pSystem->Debug->Log("[ResizeBuffers] ERROR: Failed to create the hook.");
+		debug.Log("[ResizeBuffers] ERROR: Failed to create the hook.");
 		return;
 	}
 	if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK) 
 	{
-		g_pSystem->Debug->Log("[ResizeBuffers] ERROR: Failed to enable the hook.");
+		debug.Log("[ResizeBuffers] ERROR: Failed to enable the hook.");
 		return;
 	}
 
 	m_IsHookInstalled.store(true);
-	g_pSystem->Debug->Log("[ResizeBuffers] INFO: Hook installed.");
+	debug.Log("[ResizeBuffers] INFO: Hook installed.");
 }
 
 void Hook_ResizeBuffers::Uninstall()
@@ -69,5 +91,7 @@ void Hook_ResizeBuffers::Uninstall()
 	MH_RemoveHook(m_FunctionAddress.load());
 
 	m_IsHookInstalled.store(false);
-	g_pSystem->Debug->Log("[ResizeBuffers] INFO: Hook uninstalled.");
+
+	auto& debug = *g_pSystem->Debug;
+	debug.Log("[ResizeBuffers] INFO: Hook uninstalled.");
 }

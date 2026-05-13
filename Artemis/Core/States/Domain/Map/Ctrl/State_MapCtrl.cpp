@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
+
+// Header.
+#include "State_MapCtrl.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapCtrl::HasCtrl(const std::string& tagName) const

@@ -1,11 +1,19 @@
 #include "pch.h"
-#include "Core/Common/Map/MapMagics.h"
-#include "Core/Common/Map/MapOffsets.h"
+
+// Header.
+#include "System_Map.h"
+
+// Types.
+#include "Core/Types/Domain/Map/MapMagics.h"
+#include "Core/Types/Domain/Map/MapOffsets.h"
+
+// States.
 #include "Core/States/Core_State.h"
 #include "Core/States/Domain/Core_State_Domain.h"
 #include "Core/States/Domain/Map/State_Map.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Map/System_Map.h"
 #include "Core/Systems/Interface/System_Debug.h"
 
 // This '.map' reader was based on Assembly (https://github.com/xboxchaos/assembly)
@@ -71,7 +79,7 @@ void System_Map::Cleanup()
 
 // --- Tag Table Queries ---
 
-TagInfo System_Map::ResolveHandle(uint32_t handle) const
+ResolvedTag System_Map::ResolveHandle(uint32_t handle) const
 {
 	if (!g_pState->Domain->Map->IsLoaded())
 	{
@@ -104,35 +112,35 @@ TagInfo System_Map::ResolveHandle(uint32_t handle) const
 		return {};
 	}
 
-	const Map_TagTableEntry& tag = g_pState->Domain->Map->GetTag(index);
-	if (tag.DatumIndexSalt == 0xFFFF)
+	const Map_TagTableEntry& tagEntry = g_pState->Domain->Map->GetTag(index);
+	if (tagEntry.DatumIndexSalt == 0xFFFF)
 	{
 		g_pSystem->Debug->Log("[MapSystem] WARNING: DatumSalt is invalid.");
 		return {};
 	}
 
-	if (tag.DatumIndexSalt != salt)
+	if (tagEntry.DatumIndexSalt != salt)
 	{
 		g_pSystem->Debug->Log("[MapSystem] WARNING: DatumSalt mismatch."
-			" Expected: %u, Got: %u", salt, tag.DatumIndexSalt);
+			" Expected: %u, Got: %u", salt, tagEntry.DatumIndexSalt);
 
 		return {};
 	}
 
-	TagInfo info;
-	info.IsValid = true;
+	ResolvedTag tag;
+	tag.IsValid = true;
 
-	if (tag.TagGroupIndex >= 0 &&
-		tag.TagGroupIndex < (uint16_t)g_pState->Domain->Map->GetGroupsSize())
+	if (tagEntry.TagGroupIndex >= 0 &&
+		tagEntry.TagGroupIndex < (uint16_t)g_pState->Domain->Map->GetGroupsSize())
 	{
 		// We get the class of this tag (e.g. scen, proj, vehi, ...)
-		uint32_t magic = g_pState->Domain->Map->GetGroupMagic(tag.TagGroupIndex);
-		info.ClassName = this->MagicToString(magic);
+		uint32_t magic = g_pState->Domain->Map->GetGroupMagic(tagEntry.TagGroupIndex);
+		tag.Class = this->MagicToString(magic);
 	}
 
 	// We get the name of this tag.
-	info.TagName = g_pState->Domain->Map->GetTagName(index);
-	return info;
+	tag.Name = g_pState->Domain->Map->GetTagName(index);
+	return tag;
 }
 
 // Resolves the file offset of a tag's metadata block by its filename.
@@ -148,14 +156,14 @@ TagInfo System_Map::ResolveHandle(uint32_t handle) const
 //
 // Returns -1 if the tag is not found or the TagInfo is marked invalid.
 // For repeated lookups or performance-sensitive paths, prefer GetTagMetaOffsetByIndex().
-int64_t System_Map::GetTagMetaOffset(const TagInfo& info) const
+int64_t System_Map::GetTagMetaOffset(const ResolvedTag& tag) const
 {
-	if (!info.IsValid) return -1;
+	if (!tag.IsValid) return -1;
 
 	int32_t count = (int32_t)g_pState->Domain->Map->GetTagsSize();
 	for (int32_t i = 0; i < count; ++i)
 	{
-		if (g_pState->Domain->Map->GetTagName(i) == info.TagName)
+		if (g_pState->Domain->Map->GetTagName(i) == tag.Name)
 		{
 			const Map_TagTableEntry& entry = g_pState->Domain->Map->GetTag(i);
 			return this->ToFileOffset(this->Expand(
@@ -354,7 +362,7 @@ int64_t System_Map::ToDebugOffset(int64_t pointer) const
 	return (int64_t)(uint32_t)((uint32_t)pointer + m_DebugOffsetMask);
 }
 
-// TODO: offset masks[1] and [3] (and their corr	esponding sections) are not yet
+// TODO: offset masks[1] and [3] (and their corresponding sections) are not yet
 // used. Each likely corresponds to an additional file segment (possibly locales
 // and resources) that requires its own To...Offset() conversion function.
 

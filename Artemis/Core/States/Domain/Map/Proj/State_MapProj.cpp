@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Proj/State_MapProj.h"
+
+// Header.
+#include "State_MapProj.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapProj::HasProj(const std::string& tagName) const

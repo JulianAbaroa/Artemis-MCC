@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 struct EqipObject;
 struct EquipmentData;
 enum class EquipmentType : uint8_t;

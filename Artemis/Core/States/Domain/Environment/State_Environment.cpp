@@ -1,10 +1,16 @@
 #include "pch.h"
-#include "Core/States/Domain/Environment/State_Environment.h"
+
+// Header.
+#include "State_Environment.h"
+
+// --- Static Data ---
 
 bool State_Environment::HasCollGeometry(const std::string& tagName) const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	return !m_CollGeometries.empty();
+	auto it = m_CollGeometries.find(tagName);
+	if (it == m_CollGeometries.end()) return false;
+	return true;
 }
 
 const CollGeometry* State_Environment::GetCollGeometry(const std::string& tagName) const
@@ -28,7 +34,9 @@ void State_Environment::AddCollGeometry(const std::string& tagName, CollGeometry
 bool State_Environment::HasPhmoGeometry(const std::string& tagName) const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	return !m_PhmoGeometries.empty();
+	auto it = m_PhmoGeometries.find(tagName);
+	if (it == m_PhmoGeometries.end()) return false;
+	return true;
 }
 
 const PhmoGeometry* State_Environment::GetPhmoGeometry(const std::string& tagName) const
@@ -51,7 +59,9 @@ void State_Environment::AddPhmoGeometry(const std::string& tagName, PhmoGeometry
 bool State_Environment::HasModeGeometry(const std::string& tagName) const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	return !m_ModeGeometries.empty();
+	auto it = m_ModeGeometries.find(tagName);
+	if (it == m_ModeGeometries.end()) return false;
+	return true;
 }
 
 const ModeGeometry* State_Environment::GetModeGeometry(const std::string& tagName) const
@@ -73,21 +83,20 @@ void State_Environment::AddModeGeometry(const std::string& tagName, ModeGeometry
 
 bool State_Environment::HasMapZones() const
 {
-	std::lock_guard<std::mutex> lock(m_Mutex);
-	return m_HasMapZones;
+	return m_HasMapZones.load();
 }
 
 const ScnrMapZones* State_Environment::GetMapZones() const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	return m_HasMapZones ? &m_MapZones : nullptr;
+	return m_HasMapZones.load() ? &m_MapZones : nullptr;
 }
 
 void State_Environment::SetMapZones(ScnrMapZones zones)
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	m_MapZones = std::move(zones);
-	m_HasMapZones = true;
+	m_HasMapZones.store(true);
 }
 
 bool State_Environment::HasBipdData(const std::string& tagName) const
@@ -128,14 +137,35 @@ void State_Environment::AddScenData(const std::string& tagName, SceneryZoneData 
 	m_ScenData[tagName] = std::move(data);
 }
 
+// --- Dynamic Data ---
+
+const std::vector<ActivePhysicsInstance> State_Environment::GetActivePhysicsInstances() const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_PhysicsInstances;
+}
+
+void State_Environment::SetActivePhysicsInstances(std::vector<ActivePhysicsInstance> instances)
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	m_PhysicsInstances = std::move(instances);
+}
+
+// Cleanup.
 void State_Environment::Cleanup()
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
+
+	// Static Data.
 	m_CollGeometries.clear();
 	m_PhmoGeometries.clear();
 	m_ModeGeometries.clear();
 	m_BipdData.clear();
 	m_ScenData.clear();
-	m_HasMapZones = false;
+
 	m_MapZones = {};
+	m_HasMapZones.store(false);
+
+	// Dynamic Data.
+	m_PhysicsInstances.clear();
 }

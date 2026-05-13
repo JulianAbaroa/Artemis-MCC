@@ -1,10 +1,21 @@
 #include "pch.h"
+
+// Header.
+#include "System_Settings.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+
+// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Persistence/System_Settings.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
+
 #include <filesystem>
 #include <shlobj.h>
 #include <fstream>

@@ -1,46 +1,59 @@
 #include "pch.h"
+
+// Header.
+#include "Thread_Main.h"
+
+// --- Hooks ---
 #include "Core/Hooks/Core_Hook.h"
+#include "Core/Hooks/Infrastructure/Core_Hook_Infrastructure.h"
+
 #include "Core/Hooks/Infrastructure/Lifecycle/Hook_EngineInitialize.h"
 #include "Core/Hooks/Infrastructure/Lifecycle/Hook_DestroySubsystems.h"
 #include "Core/Hooks/Infrastructure/Lifecycle/Hook_GameEngineInit.h"
-#include "Core/Hooks/Infrastructure/Core_Hook_Infrastructure.h"
 #include "Core/Hooks/Infrastructure/Render/Hook_Present.h"
 #include "Core/Hooks/Infrastructure/Render/Hook_ResizeBuffers.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
-#include "Core/States/Infrastructure/Engine/State_Lifecycle.h"
-#include "Core/States/Infrastructure/Engine/State_Input.h"
-#include "Core/States/Infrastructure/Persistence/State_Settings.h"
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-#include "Core/Systems/Infrastructure/Engine/System_Thread.h"
-#include "Core/Systems/Interface/System_Debug.h"
-#include "Core/Threads/Domain/Thread_Main.h"
-#include <chrono>
 
+#include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
+
+// --- Systems ---
+#include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
-#include "Core/Systems/Domain/Map/System_Map.h"
+#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
+
+#include "Core/Systems/Infrastructure/Engine/Thread/System_Thread.h"
+
+#include "Core/Systems/Interface/System_Debug.h"
+
+#include <chrono>
 
 using namespace std::chrono_literals;
 
 void Thread_Main::Run() 
 {
-    // Initial delay.
-    g_pSystem->Infrastructure->Thread->WaitOrExit(5000ms);
+    auto& lifecycle = *g_pState->Infrastructure->Lifecycle;
+    auto& thread = *g_pSystem->Infrastructure->Thread;
+    auto& debug = *g_pSystem->Debug;
 
-    g_pSystem->Debug->Log("[MainThread] INFO: Started.");
+    // Initial delay.
+    thread.WaitOrExit(5000ms);
+
+    debug.Log("[MainThread] INFO: Started.");
 
     this->InitializeArtemis();
-    this->InstallCaptureHooks();
+    this->InstallUIHooks();
 
-    while (g_pState->Infrastructure->Lifecycle->IsRunning())
+    while (lifecycle.IsRunning())
     {
         this->CheckHooksHealth();
 
-		auto engineStatus = g_pState->Infrastructure->Lifecycle->GetEngineStatus();
+		auto engineStatus = lifecycle.GetEngineStatus();
         if (engineStatus == EngineStatus::Destroyed)
         {
-            g_pSystem->Debug->Log("[MainThread] INFO: Game engine destruction detected, resetting lifecycle.");
+            debug.Log("[MainThread] INFO: Game engine destruction detected, resetting lifecycle.");
 
             if (!this->IsStillRunning()) break;
 
@@ -50,25 +63,24 @@ void Thread_Main::Run()
 
             if (!this->TryInstallLifecycleHooks("Engine Reset Cycle")) 
             {
-                g_pSystem->Debug->Log("[MainThread] ERROR: Failed to re-install hooks after engine reset.");
+                debug.Log("[MainThread] ERROR: Failed to re-install hooks after engine reset.");
                 Shutdown();
                 return;
             }
 
-            g_pState->Infrastructure->Lifecycle->SetEngineStatus(
-                { EngineStatus::Waiting });
+            lifecycle.SetEngineStatus({ EngineStatus::Waiting });
         }
 
-        g_pSystem->Infrastructure->Thread->WaitOrExit(1000ms);
+        thread.WaitOrExit(1000ms);
     }
 
-    this->UninstallCaptureHooks();
+    this->UninstallUIHooks();
     this->DeinitializeArtemis();
 
     std::this_thread::sleep_for(200ms);
-    g_pSystem->Debug->Log("[MainThread] INFO: Stopped.");
+    debug.Log("[MainThread] INFO: Stopped.");
 
-    HMODULE hMod = g_pState->Infrastructure->Lifecycle->GetHandleModule();
+    HMODULE hMod = lifecycle.GetHandleModule();
     if (hMod != nullptr) FreeLibraryAndExitThread(hMod, 0);
 }
 
@@ -83,43 +95,64 @@ void Thread_Main::InitializeArtemis()
 
 void Thread_Main::DeinitializeArtemis()
 {
-    g_pHook->Infrastructure->EngineInitialize->Uninstall();
-    g_pHook->Infrastructure->DestroySubsystems->Uninstall();
-    g_pHook->Infrastructure->GameEngineStart->Uninstall();
+    auto& enginInitialize = *g_pHook->Infrastructure->EngineInitialize;
+    enginInitialize.Uninstall();
+
+    auto& destroySubsystems = *g_pHook->Infrastructure->DestroySubsystems;
+    destroySubsystems.Uninstall();
+
+    auto& gameEngineStart = *g_pHook->Infrastructure->GameEngineStart;
+    gameEngineStart.Uninstall();
 }
 
-void Thread_Main::InstallCaptureHooks()
+void Thread_Main::InstallUIHooks()
 {
-    // Video
-    g_pHook->Infrastructure->Present->Install();
-    g_pHook->Infrastructure->ResizeBuffers->Install();
+    auto& present = *g_pHook->Infrastructure->Present;
+    present.Install();
+
+    auto& resizeBuffers = *g_pHook->Infrastructure->ResizeBuffers;
+    resizeBuffers.Install();
 }
 
-void Thread_Main::UninstallCaptureHooks()
+void Thread_Main::UninstallUIHooks()
 {
-    // Video
-    g_pHook->Infrastructure->ResizeBuffers->Uninstall();
-    g_pHook->Infrastructure->Present->Uninstall();
+    auto& resizeBuffers = *g_pHook->Infrastructure->ResizeBuffers;
+    resizeBuffers.Uninstall();
+
+    auto& present = *g_pHook->Infrastructure->Present;
+    present.Uninstall();
 }
 
 void Thread_Main::CheckHooksHealth()
 {
-    bool areHooksIntact =
-        !this->IsHookIntact(g_pHook->Infrastructure->EngineInitialize->GetFunctionAddress()) ||
-        !this->IsHookIntact(g_pHook->Infrastructure->DestroySubsystems->GetFunctionAddress()) ||
-        !this->IsHookIntact(g_pHook->Infrastructure->GameEngineStart->GetFunctionAddress());
+    auto& enginInitialize = *g_pHook->Infrastructure->EngineInitialize;
+    auto& destroySubsystems = *g_pHook->Infrastructure->DestroySubsystems;
+    auto& gameEngineStart = *g_pHook->Infrastructure->GameEngineStart;
 
-    if (areHooksIntact && g_pState->Infrastructure->Lifecycle->IsRunning())
+    bool areHooksIntact =
+        !this->IsHookIntact(enginInitialize.GetFunctionAddress()) ||
+        !this->IsHookIntact(destroySubsystems.GetFunctionAddress()) ||
+        !this->IsHookIntact(gameEngineStart.GetFunctionAddress());
+
+    auto& lifecycle = *g_pState->Infrastructure->Lifecycle;
+    if (areHooksIntact && lifecycle.IsRunning())
     {
-        g_pSystem->Debug->Log("[MainThread] WARNING: Hooks corrupted, rebooting.");
-        g_pState->Infrastructure->Lifecycle->SetEngineStatus({ EngineStatus::Destroyed });
+        auto& debug = *g_pSystem->Debug;
+        debug.Log("[MainThread] WARNING: Hooks corrupted, rebooting.");
+
+        auto& lifecycle = *g_pState->Infrastructure->Lifecycle;
+        lifecycle.SetEngineStatus({ EngineStatus::Destroyed });
     }
 }
 
 bool Thread_Main::IsStillRunning()
 {
-    g_pSystem->Infrastructure->Thread->WaitOrExit(1000ms);
-    if (!g_pState->Infrastructure->Lifecycle->IsRunning()) return false;
+    auto& thread = *g_pSystem->Infrastructure->Thread;
+    thread.WaitOrExit(1000ms);
+
+    auto& lifecycle = *g_pState->Infrastructure->Lifecycle;
+    if (!lifecycle.IsRunning()) return false;
+
     return true;
 }
 
@@ -131,7 +164,8 @@ bool Thread_Main::IsHookIntact(void* address)
     unsigned char firstByte{};
     size_t bytesRead;
 
-    if (ReadProcessMemory(GetCurrentProcess(), address, &firstByte, 1, &bytesRead))
+    if (ReadProcessMemory(GetCurrentProcess(), 
+        address, &firstByte, 1, &bytesRead))
     {
         return firstByte == 0xE9;
     }
@@ -141,16 +175,22 @@ bool Thread_Main::IsHookIntact(void* address)
 
 bool Thread_Main::TryInstallLifecycleHooks(const char* context)
 {
-    while (g_pState->Infrastructure->Lifecycle->IsRunning())
+    auto& enginInitialize = *g_pHook->Infrastructure->EngineInitialize;
+    auto& destroySubsystems = *g_pHook->Infrastructure->DestroySubsystems;
+    auto& gameEngineStart = *g_pHook->Infrastructure->GameEngineStart;
+    auto& lifecycle = *g_pState->Infrastructure->Lifecycle;
+    auto& thread = *g_pSystem->Infrastructure->Thread;
+
+    while (lifecycle.IsRunning())
     {
-        if (g_pHook->Infrastructure->EngineInitialize->Install(true) &&
-            g_pHook->Infrastructure->DestroySubsystems->Install(true) &&
-            g_pHook->Infrastructure->GameEngineStart->Install(true))
+        if (enginInitialize.Install() &&
+            destroySubsystems.Install() &&
+            gameEngineStart.Install())
         {
             return true;
         }
 
-        g_pSystem->Infrastructure->Thread->WaitOrExit(1000ms);
+        thread.WaitOrExit(1000ms);
     }
 
     return false;
@@ -158,6 +198,9 @@ bool Thread_Main::TryInstallLifecycleHooks(const char* context)
 
 void Thread_Main::Shutdown()
 {
-    g_pSystem->Debug->Log("[MainThread] ERROR: Initiating emergency shutdown.");
-    g_pState->Infrastructure->Lifecycle->SetRunning(false);
+    auto& debug = *g_pSystem->Debug;
+    debug.Log("[MainThread] ERROR: Initiating emergency shutdown.");
+
+    auto& lifecycle = *g_pState->Infrastructure->Lifecycle;
+    lifecycle.SetRunning(false);
 }

@@ -6,7 +6,7 @@
 class Hook_GameEngineInit
 {
 public:
-	bool Install(bool silent);
+	bool Install();
 	void Uninstall();
 
 	void* GetFunctionAddress();

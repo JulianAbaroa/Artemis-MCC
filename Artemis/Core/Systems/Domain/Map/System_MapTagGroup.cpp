@@ -1,7 +1,16 @@
 #include "pch.h"
-#include "Core/Common/Map/MapMagics.h"
+
+// Header.
+#include "System_MapTagGroup.h"
+
+// Types.
+#include "Core/Types/Domain/Map/MapMagics.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Domain/Core_State_Domain.h"
+
+// Map.
 #include "Core/States/Domain/Map/State_Map.h"
 #include "Core/States/Domain/Map/Phmo/State_MapPhmo.h"
 #include "Core/States/Domain/Map/Coll/State_MapColl.h"
@@ -18,12 +27,18 @@
 #include "Core/States/Domain/Map/Jmad/State_MapJmad.h"
 #include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
 #include "Core/States/Domain/Map/Mach/State_MapMach.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
+
+// Map.
 #include "Core/Systems/Domain/Map/System_Map.h"
-#include "Core/Systems/Domain/Map/System_MapTagGroup.h"
 #include "Core/Systems/Domain/Map/TagGroupReader.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
+
 #include "Generated/Hlmt/HlmtOffsets.h" 
 
 void System_MapTagGroup::LoadForMap()

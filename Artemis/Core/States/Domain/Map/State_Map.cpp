@@ -1,5 +1,7 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/State_Map.h"
+
+// Header.
+#include "State_Map.h"
 
 bool State_Map::IsLoaded() const { return m_IsLoaded.load(); }
 void State_Map::SetLoaded(bool value) { m_IsLoaded.store(value); }
@@ -100,4 +102,6 @@ void State_Map::Cleanup()
 	m_Groups.clear();
 	m_NameData.clear();
 	m_NameOffsets.clear();
+	
+	m_MapFilePath.clear();
 }

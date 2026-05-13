@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Phmo/System_PhmoGeometryBuilder.h"
-#include "Core/Types/Domain/Domains/Environment/PhmoGeometry.h"
+#include "Core/Types/Domain/Environment/PhmoGeometry.h"
 #include "Generated/Phmo/PhmoObject.h"
 #include <algorithm>
 #include <limits>
@@ -48,31 +48,16 @@ std::vector<PhmoShape> System_PhmoGeometryBuilder::ResolveShapes(
 
     if (shapeType == k_ShapeList)
     {
-        if (shapeIndex >= static_cast<int16_t>(phmo.Lists.size()))
-            return result;
+        if (shapeIndex >= static_cast<int16_t>(phmo.Lists.size())) return result;
 
         const auto& list = phmo.Lists[shapeIndex];
-
-        // ListShapes are global entries, the List references a consecutive range
-        // within phmo.ListShapes by ChildShapesSize from its position. 
-        // We iterate through all ListShapes, searching for those that
-        // belong to this List by shape index.
-
-        // In Havok, the List points to the first child via RuntimeListPointer,
-        // but in the tag, the ListShapes are ordered, and ChildShapesSize
-        // indicates how many there are starting from the offset UserData / entry size.
-
-        // We use the index of List * ChildShapesSize as a base.
-
-        // Safer alternative: iterate through all ListShapes and take
-        // the first ChildShapesSize starting from the calculated offset.
-
         const int32_t count = list.ChildShapesSize;
         const int32_t total = static_cast<int32_t>(phmo.ListShapes.size());
 
-        // The base offset in ListShapes for this List is:
-        // shapeIndex * count (each List occupies a consecutive block)
-        const int32_t base = shapeIndex * count;
+        // UserData es byte offset desde inicio del bloque ListShapes.
+        const int32_t base =
+            static_cast<int32_t>(list.UserData) /
+            static_cast<int32_t>(sizeof(Phmo_ListShapesEntry));
 
         for (int32_t i = 0; i < count; ++i)
         {
@@ -87,19 +72,28 @@ std::vector<PhmoShape> System_PhmoGeometryBuilder::ResolveShapes(
     }
     else if (shapeType == k_ShapeMOPP)
     {
-        // MOPP is a BVH over other shapes, for Level B we take
-        // the AABB of MOPP (CodeInfoCopy + Scale) as an approximate polyhedron.
-        if (shapeIndex < static_cast<int16_t>(phmo.Mopps.size()))
-        {
-            const auto& mopp = phmo.Mopps[shapeIndex];
-            PhmoShape shape;
-            shape.Type = PhmoShapeType::Polyhedron;
-            // CodeInfoCopy is the MOPP offset/scale, we use it as the center.
-            shape.Polyhedron.AABBCenter = this->MakeVec3(mopp.CodeInfoCopy);
-            // Without accurate half-extents at Level B, we leave it at 0 for upgrade.
-            shape.Polyhedron.AABBHalfExtents = {};
-            result.push_back(shape);
-        }
+        if (shapeIndex >= static_cast<int16_t>(phmo.Mopps.size()))
+            return result;
+
+        const auto& mopp = phmo.Mopps[shapeIndex];
+
+        // El MOPP apunta a su child shape, seguirla.
+        std::vector<PhmoShape> inner = this->ResolveShapes(
+            phmo, mopp.ShapeType, mopp.ShapeIndex);
+
+        result.insert(result.end(), inner.begin(), inner.end());
+    }
+    else if (shapeType == k_ShapePhantom)
+    {
+        if (shapeIndex >= static_cast<int16_t>(phmo.Phantoms.size()))
+            return result;
+
+        const auto& phantom = phmo.Phantoms[shapeIndex];
+
+        std::vector<PhmoShape> inner = this->ResolveShapes(
+            phmo, phantom.ShapeType, phantom.ShapeIndex);
+
+        result.insert(result.end(), inner.begin(), inner.end());
     }
     else
     {
@@ -138,7 +132,7 @@ bool System_PhmoGeometryBuilder::ResolvePrimitive(
 
     case k_ShapePolyhedron:
         if (shapeIndex >= static_cast<int16_t>(phmo.Polyhedra.size())) return false;
-        out = this->MakePolyhedron(phmo.Polyhedra[shapeIndex]);
+        out = this->MakePolyhedron(phmo, phmo.Polyhedra[shapeIndex], shapeIndex);
         return true;
 
     case k_ShapeMultiSphere:
@@ -185,12 +179,51 @@ PhmoShape System_PhmoGeometryBuilder::MakeBox(const Phmo_BoxesEntry& src)
     return s;
 }
 
-PhmoShape System_PhmoGeometryBuilder::MakePolyhedron(const Phmo_PolyhedraEntry& src)
+PhmoShape System_PhmoGeometryBuilder::MakePolyhedron(
+    const PhmoObject& phmo,
+    const Phmo_PolyhedraEntry& src,
+    int16_t polyIndex)
 {
     PhmoShape s;
     s.Type = PhmoShapeType::Polyhedron;
     s.Polyhedron.AABBCenter = this->MakeVec3(src.AxisAlignedBoundingBoxCenter);
     s.Polyhedron.AABBHalfExtents = this->MakeVec3(src.AxisAlignedBoundingBoxHalfExtents);
+
+    const int32_t fvCount = src.FourVectorsSize;
+    const int32_t numVerts = src.NumberOfVertices;
+    const int32_t totalFV = static_cast<int32_t>(phmo.PolyhedronFourVectors.size());
+
+    if (fvCount <= 0 || numVerts <= 0 || totalFV == 0)
+        return s;
+
+    int32_t fvBase = 0;
+    for (int16_t i = 0; i < polyIndex; ++i)
+        fvBase += phmo.Polyhedra[i].FourVectorsSize;
+
+    if (fvBase < 0 || fvBase >= totalFV)
+        return s;
+
+    s.Polyhedron.Vertices.reserve(numVerts);
+
+    int32_t vertsSeen = 0;
+    for (int32_t i = 0; i < fvCount && (fvBase + i) < totalFV; ++i)
+    {
+        const auto& fv = phmo.PolyhedronFourVectors[fvBase + i];
+
+        const float xs[4] = {
+            fv.FourVectorsX.X, fv.FourVectorsX.Y,
+            fv.FourVectorsX.Z, fv.WFourVectorsX };
+        const float ys[4] = {
+            fv.FourVectorsY.X, fv.FourVectorsY.Y,
+            fv.FourVectorsY.Z, fv.WFourVectorsY };
+        const float zs[4] = {
+            fv.FourVectorsZ.X, fv.FourVectorsZ.Y,
+            fv.FourVectorsZ.Z, fv.WFourVectorsZ };
+
+        for (int32_t j = 0; j < 4 && vertsSeen < numVerts; ++j, ++vertsSeen)
+            s.Polyhedron.Vertices.push_back({ xs[j], ys[j], zs[j] });
+    }
+
     return s;
 }
 

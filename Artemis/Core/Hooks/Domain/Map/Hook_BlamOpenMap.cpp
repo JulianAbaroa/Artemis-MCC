@@ -1,23 +1,34 @@
 #include "pch.h"
-#include "Core/Hooks/Domain/Map/Hook_BlamOpenMap.h"
+
+// Header.
+#include "Hook_BlamOpenMap.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
+#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
+
 #include "Core/Systems/Domain/Map/System_Map.h"
 #include "Core/Systems/Domain/Map/System_MapTagGroup.h"
-#include "Core/Systems/Domain/Environment/System_Environment.h"
 #include "Core/Systems/Domain/Navigation/System_Navigation.h"
+#include "Core/Systems/Domain/Environment/System_Environment.h"
 #include "Core/Systems/Domain/Interactable/System_Interactable.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-#include "Core/Systems/Infrastructure/Engine/System_Scanner.h"
+
+#include "Core/Systems/Infrastructure/Engine/Memory/System_AOBScanner.h"
+
 #include "Core/Systems/Interface/System_Debug.h"
+
+// MinHook.
 #include "External/minhook/include/MinHook.h"
+
 #include <filesystem>
 #include <string>
 
 void Hook_BlamOpenMap::HookedBlamOpenMap(uint64_t param_1, 
 	uint64_t param_2, uint64_t mapRelativePath, uint32_t* param_4)
 {
-	std::string relativePath = reinterpret_cast<const char*>(mapRelativePath);
+	std::string relativePath = 
+		reinterpret_cast<const char*>(mapRelativePath);
 
 	m_OriginalFunction(param_1, param_2, mapRelativePath, param_4);
 
@@ -33,13 +44,21 @@ void Hook_BlamOpenMap::HookedBlamOpenMap(uint64_t param_1,
 
 	std::filesystem::path fullPath = gameRoot / relativePath;
 
-	bool mapLoaded = g_pSystem->Domain->Map->LoadMap(fullPath.string());
+	auto& map = *g_pSystem->Domain->Map;
+	bool mapLoaded = map.LoadMap(fullPath.string());
 	if (mapLoaded)
 	{
-		g_pSystem->Domain->MapTagGroup->LoadForMap();
-		g_pSystem->Domain->Environment->BuildForMap();
-		g_pSystem->Domain->Navigation->BuildForMap();
-		g_pSystem->Domain->Interactable->BuildForMap();
+		auto& mapTagGroup = *g_pSystem->Domain->MapTagGroup;
+		mapTagGroup.LoadForMap();
+
+		auto& navigation = *g_pSystem->Domain->Navigation;
+		navigation.BuildForMap();
+
+		auto& environment = *g_pSystem->Domain->Environment;
+		environment.BuildForMap();
+
+		auto& interactable = *g_pSystem->Domain->Interactable;
+		interactable.BuildForMap();
 	}
 }
 
@@ -47,15 +66,16 @@ void Hook_BlamOpenMap::Install()
 {
 	if (m_IsHookInstalled.load()) return;
 
-	void* functionAddress =
-		(void*)g_pSystem->Infrastructure->Scanner->FindPattern(
-			Signatures::BlamOpenMap);
+	auto& debug = *g_pSystem->Debug;
+	auto& aobScanner = *g_pSystem->Infrastructure->AOBScanner;
+	
+	void* functionAddress = 
+		(void*)aobScanner.FindPattern(Signatures::BlamOpenMap);
 
 	if (!functionAddress)
 	{
-		g_pSystem->Debug->Log("[BlamOpenMap] ERROR:"
-			" Failed to obtain the function address.");
-
+		debug.Log("[BlamOpenMap] ERROR: Failed to obtain"
+			" the function address.");
 		return;
 	}
 
@@ -65,21 +85,21 @@ void Hook_BlamOpenMap::Install()
 		reinterpret_cast<LPVOID*>(&m_OriginalFunction)
 	) != MH_OK)
 	{
-		g_pSystem->Debug->Log("[BlamOpenMap] ERROR:"
+		debug.Log("[BlamOpenMap] ERROR:"
 			" Failed to create the hook.");
 
 		return;
 	}
 	if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
 	{
-		g_pSystem->Debug->Log(" [BlamOpenMap] ERROR:"
+		debug.Log(" [BlamOpenMap] ERROR:"
 			" Failed to enable hook.");
 
 		return;
 	}
 
 	m_IsHookInstalled.store(true);
-	g_pSystem->Debug->Log("[BlamOpenMap] INFO: Hook installed.");
+	debug.Log("[BlamOpenMap] INFO: Hook installed.");
 	return;
 }
 
@@ -91,5 +111,7 @@ void Hook_BlamOpenMap::Uninstall()
 	MH_RemoveHook(m_FunctionAddress.load());
 
 	m_IsHookInstalled.store(false);
-	g_pSystem->Debug->Log("[BlamOpenMap] INFO: Hook uninstalled.");
+
+	auto& debug = *g_pSystem->Debug;
+	debug.Log("[BlamOpenMap] INFO: Hook uninstalled.");
 }

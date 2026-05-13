@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Weap/State_MapWeap.h"
+
+// Header.
+#include "State_MapWeap.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapWeap::HasWeap(const std::string& tagName) const

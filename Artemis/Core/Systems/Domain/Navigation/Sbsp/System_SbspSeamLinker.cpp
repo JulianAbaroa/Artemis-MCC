@@ -1,5 +1,8 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Navigation/Sbsp/System_SbspSeamLinker.h"
+
+// Header.
+#include "System_SbspSeamLinker.h"
+
 #include <cmath>
 
 // Algorithm:

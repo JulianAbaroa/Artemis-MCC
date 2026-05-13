@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Generated/Sbsp/SbspObject.h"
+
 #include <unordered_map>
 #include <string>
 #include <mutex>

@@ -6,8 +6,11 @@
 // This runs after all SbspGeometry objects have been built.  It mutates
 // the Clusters inside each geometry by appending SbspCrossLink entries.
 
-#include "Core/Types/Domain/Domains/Navigation/SbspGeometry.h"
+// Types.
+#include "Core/Types/Domain/Navigation/SbspGeometry.h"
+
 #include "Generated/Sbsp/SbspObject.h"
+
 #include <vector>
 
 class System_SbspSeamLinker

@@ -1,10 +1,18 @@
 #include "pch.h"
+
+// Header.
+#include "System_Debug.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+
+// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
+
+// Debug.
 #include "Core/States/Interface/State_Debug.h"
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Interface/System_Debug.h"
+
 #include <fstream>
 
 void System_Debug::Log(const char* format, ...)
@@ -29,7 +37,7 @@ void System_Debug::Log(const char* format, ...)
     std::string tagPart = entry.Tag.empty() ? "" : entry.Tag + " ";
     entry.FullText = entry.Timestamp + tagPart + entry.MessagePrefix + entry.Message;
 
-    g_pSystem->Debug->AddLog(entry);
+    this->AddLog(entry);
     this->WriteToLogFile(entry.Timestamp.c_str(), messageBuffer);
 }
 

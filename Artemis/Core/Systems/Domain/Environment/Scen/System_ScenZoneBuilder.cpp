@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Scen/System_ScenZoneBuilder.h"
-#include "Core/Types/Domain/Domains/Environment/SceneryZoneData.h"
+#include "Core/Types/Domain/Environment/ScenZoneData.h"
 #include "Generated/Scen/ScenObject.h"
 
 SceneryZoneData System_ScenZoneBuilder::BuildData(const ScenObject& scen) const

@@ -1,21 +1,41 @@
 #include "pch.h"
-#include "Core/DllMain.h"
+
+// Header.
+#include "DllMain.h"
+
+// Proxies.
 #include "Proxy/ProxyExports.h"
-#include "Core/Common/Mod_Core.h"
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
-#include "Core/States/Infrastructure/Engine/State_Lifecycle.h"
-#include "Core/States/Infrastructure/Persistence/State_Settings.h"
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-#include "Core/Systems/Infrastructure/Persistence/System_Settings.h"
-#include "Core/Systems/Infrastructure/Persistence/System_Preferences.h"
-#include "Core/Systems/Interface/System_Debug.h"
-#include "Core/Threads/Core_Thread.h"
-#include "Core/Threads/Domain/Thread_Main.h"
-#include "Core/Threads/Domain/Thread_AI.h"
-#include "Core/Threads/Infrastructure/Thread_Input.h"
+
+// Mod Core.
+#include "Mod_Core.h"
+
+// --- States ---
+#include "States/Core_State.h"
+#include "States/Infrastructure/Core_State_Infrastructure.h"
+
+#include "States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
+#include "States/Infrastructure/Persistence/State_Settings.h"
+
+// --- Systems ---
+#include "Systems/Core_System.h"
+#include "Systems/Infrastructure/Core_System_Infrastructure.h"
+
+#include "Systems/Infrastructure/Persistence/System_Settings.h"
+#include "Systems/Infrastructure/Persistence/System_Preferences.h"
+
+#include "Systems/Interface/System_Debug.h"
+
+// --- Threads ---
+#include "Threads/Core_Thread.h"
+
+#include "Threads/Domain/Thread_Main.h"
+#include "Threads/Domain/Thread_AI.h"
+
+#include "Threads/Infrastructure/Thread_Input.h"
+
+// MinHook.
 #include "External/minhook/include/MinHook.h"
+
 #include <fstream>
 #pragma comment(lib, "shlwapi.lib")
 

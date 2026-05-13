@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Interactable/Ctrl/System_CtrlDataBuilder.h"
-#include "Core/Types/Domain/Domains/Interactable/ControlDeviceData.h"
+#include "Core/Types/Domain/Interactable/ControlDeviceData.h"
 #include "Generated/Ctrl/CtrlObject.h"
 
 ControlDeviceData System_CtrlDataBuilder::BuildData(const CtrlObject& ctrl)

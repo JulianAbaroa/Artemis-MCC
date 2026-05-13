@@ -5,7 +5,7 @@
 class Hook_DestroySubsystems
 {
 public:
-	bool Install(bool silent);
+	bool Install();
 	void Uninstall();
 
 	void* GetFunctionAddress();

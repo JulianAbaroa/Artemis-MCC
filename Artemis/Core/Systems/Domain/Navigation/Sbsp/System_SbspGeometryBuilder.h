@@ -3,7 +3,9 @@
 // Converts a fully-deserialized SbspObject into a SbspGeometry that is
 // suitable for AI navigation and reinforcement learning observations.
 
-#include "Core/Types/Domain/Domains/Navigation/SbspGeometry.h"
+// Types.
+#include "Core/Types/Domain/Navigation/SbspGeometry.h"
+
 #include "Generated/Sbsp/SbspObject.h"
 
 class System_SbspGeometryBuilder
@@ -22,6 +24,8 @@ private:
     void BuildInstancedGeometry(const SbspObject& sbsp, SbspGeometry& out);
     void BuildCollisionMaterials(const SbspObject& sbsp, SbspGeometry& out);
     void BuildMarkers(const SbspObject& sbsp, SbspGeometry& out);
+
+    void LogGeometry(const SbspGeometry& out);
 
     // --- Helpers ---
 

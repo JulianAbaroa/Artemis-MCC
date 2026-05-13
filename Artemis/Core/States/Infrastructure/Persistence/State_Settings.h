@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Core/Types/Domain/ModTypes.h"
+// Types.
+#include "Core/Types/Infrastructure/EngineStatus.h"
+
 #include <string>
 #include <atomic>
 #include <vector>

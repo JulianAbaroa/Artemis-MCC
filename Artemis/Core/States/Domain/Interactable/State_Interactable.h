@@ -1,11 +1,14 @@
 #pragma once
 
-#include "Core/Types/Domain/Domains/Interactable/InteractableTypes.h"
-#include "Core/Types/Domain/Domains/Interactable/VehicleData.h"
-#include "Core/Types/Domain/Domains/Interactable/EquipmentData.h"
-#include "Core/Types/Domain/Domains/Interactable/WeaponData.h"
-#include "Core/Types/Domain/Domains/Interactable/ProjectileData.h"
-#include "Core/Types/Domain/Domains/Interactable/ControlDeviceData.h"
+// Types.
+#include "Core/Types/Domain/Interactable/InteractableTypes.h"
+#include "Core/Types/Domain/Interactable/VehicleData.h"
+#include "Core/Types/Domain/Interactable/EquipmentData.h"
+#include "Core/Types/Domain/Interactable/WeaponData.h"
+#include "Core/Types/Domain/Interactable/ProjectileData.h"
+#include "Core/Types/Domain/Interactable/ControlDeviceData.h"
+
+#include <unordered_map>
 #include <vector>
 #include <mutex>
 
@@ -14,6 +17,7 @@ class State_Interactable
 public:
     std::vector<AIInteractable> GetInteractables() const;
     void SetInteractables(std::vector<AIInteractable> interactables);
+    void ClearInteractables();
 
     // VehicleData.
     bool HasVehiData(const std::string& tagName) const;
@@ -44,10 +48,12 @@ public:
 
 private:
     std::vector<AIInteractable> m_Interactables;
+
     std::unordered_map<std::string, VehicleData> m_VehicleData;
     std::unordered_map<std::string, EquipmentData> m_EquipmentData;
     std::unordered_map<std::string, WeaponData> m_WeaponData;
     std::unordered_map<std::string, ProjectileData> m_ProjectileData;
     std::unordered_map<std::string, ControlDeviceData> m_ControlDeviceData;
+
     mutable std::mutex m_Mutex;
 };

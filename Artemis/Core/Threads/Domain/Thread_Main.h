@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Core/Types/Domain/ModTypes.h"
+// Types.
+#include "Core/Types/Infrastructure/EngineStatus.h"
 
 class Thread_Main
 {
@@ -11,8 +12,8 @@ private:
 	void InitializeArtemis();
 	void DeinitializeArtemis();
 
-	void InstallCaptureHooks();
-	void UninstallCaptureHooks();
+	void InstallUIHooks();
+	void UninstallUIHooks();
 
 	void CheckHooksHealth();
 	bool IsStillRunning();

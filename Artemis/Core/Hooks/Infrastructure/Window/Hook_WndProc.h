@@ -1,6 +1,8 @@
 #pragma once
 
+// ImGui.
 #include "External/imgui/backends/imgui_impl_win32.h"
+
 #include <Windows.h>
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

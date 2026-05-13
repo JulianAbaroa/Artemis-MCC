@@ -5,7 +5,7 @@
 class Hook_EngineInitialize
 {
 public:
-	bool Install(bool silent);
+	bool Install();
 	void Uninstall();
 
 	void* GetFunctionAddress();

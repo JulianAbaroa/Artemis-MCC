@@ -1,12 +1,22 @@
 #include "pch.h"
-#include "Core/Hooks/Infrastructure/Core_Hook_Infrastructure.h"
+
+// Header.
+#include "Core_Hook_Infrastructure.h"
+
+// Input.
 #include "Core/Hooks/Infrastructure/Input/Hook_GetButtonState.h"
 #include "Core/Hooks/Infrastructure/Input/Hook_GetRawInputData.h"
+
+// Lifecycle.
 #include "Core/Hooks/Infrastructure/Lifecycle/Hook_GameEngineInit.h"
 #include "Core/Hooks/Infrastructure/Lifecycle/Hook_EngineInitialize.h"
 #include "Core/Hooks/Infrastructure/Lifecycle/Hook_DestroySubsystems.h"
+
+// Render.
 #include "Core/Hooks/Infrastructure/Render/Hook_ResizeBuffers.h"
 #include "Core/Hooks/Infrastructure/Render/Hook_Present.h"
+
+// Window.
 #include "Core/Hooks/Infrastructure/Window/Hook_WndProc.h"
 
 Core_Hook_Infrastructure::Core_Hook_Infrastructure()

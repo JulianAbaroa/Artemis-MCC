@@ -1,6 +1,11 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Navigation/Mach/System_MachDataBuilder.h"
-#include "Core/Types/Domain/Domains/Navigation/MachData.h"
+
+// Header.
+#include "System_MachDataBuilder.h"
+
+// Types.
+#include "Core/Types/Domain/Navigation/MachData.h"
+
 #include "Generated/Mach/MachObject.h"
 
 MachineData System_MachDataBuilder::BuildData(const MachObject& mach) const

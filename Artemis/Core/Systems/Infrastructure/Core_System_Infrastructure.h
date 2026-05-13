@@ -2,15 +2,35 @@
 
 #include <memory>
 
-class System_Dialog;
-class System_Format;
+// --- Engine ---
+
+// Input.
 class System_Input;
+
+// Memory Reader.
+class System_MemoryReader;
+	
+// Memory Scanner.
+class System_MemoryScanner;
+
+// AOB Scanner.
+class System_AOBScanner;
+
+// Lifecycle.
 class System_Lifecycle;
+
+// Render.
 class System_Render;
-class System_Scanner;
+
+// Thread.
 class System_Thread;
 
+// --- Persistence ---
+
+// Preferences.
 class System_Preferences;
+
+// Settings.
 class System_Settings;
 
 struct Core_System_Infrastructure
@@ -18,27 +38,35 @@ struct Core_System_Infrastructure
 	Core_System_Infrastructure();
 	~Core_System_Infrastructure();
 
-	// Capture
-	//std::unique_ptr<AudioSystem> Audio;
-	//std::unique_ptr<DownloadSystem> Download;
-	//std::unique_ptr<FFmpegSystem> FFmpeg;
-	//std::unique_ptr<ProcessSystem> Process;
-	//std::unique_ptr<PipeSystem> Pipe;
-	//std::unique_ptr<SyncSystem> Sync;
-	//std::unique_ptr<VideoSystem> Video;
+	// --- Engine ---
 
-	// Engine
-	std::unique_ptr<System_Dialog> Dialog;
-	std::unique_ptr<System_Format> Format;
+	// Input.
 	std::unique_ptr<System_Input> Input;
+
+	// Memory Reader.
+	std::unique_ptr<System_MemoryReader> MemoryReader;
+
+	// Memory Scanner.
+	std::unique_ptr<System_MemoryScanner> MemoryScanner;
+
+	// AOB Scanner.
+	std::unique_ptr<System_AOBScanner> AOBScanner;
+
+	// Lifecycle.
 	std::unique_ptr<System_Lifecycle> Lifecycle;
+
+	// Render.
 	std::unique_ptr<System_Render> Render;
-	std::unique_ptr<System_Scanner> Scanner;
+
+	// Thread.
 	std::unique_ptr<System_Thread> Thread;
 
-	// Persistence
-	//std::unique_ptr<GallerySystem> Gallery;
+	// --- Persistence ---
+
+	// Preferences.
 	std::unique_ptr<System_Preferences> Preferences;
-	//std::unique_ptr<ReplaySystem> Replay;
+
+	// Settings.
 	std::unique_ptr<System_Settings> Settings;
+
 };

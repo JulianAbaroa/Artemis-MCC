@@ -1,6 +1,8 @@
 #pragma once
 
+// Types.
 #include "Core/Types/Domain/Map/MapTypes.h"
+
 #include <cstdint>
 #include <atomic>
 #include <vector>

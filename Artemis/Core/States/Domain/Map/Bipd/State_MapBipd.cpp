@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Bipd/State_MapBipd.h"
+
+// Header.
+#include "State_MapBipd.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapBipd::HasBipd(const std::string& tagName) const

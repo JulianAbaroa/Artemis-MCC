@@ -1,15 +1,29 @@
 #include "pch.h"
+
+// Header.
+#include "Hook_WndProc.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
-#include "Core/States/Infrastructure/Engine/State_Lifecycle.h"
+
+#include "Core/States/Infrastructure/Engine/Memory/State_MemoryScanner.h"
+#include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-#include "Core/Systems/Infrastructure/Engine/System_Lifecycle.h"
+
+#include "Core/Systems/Infrastructure/Engine/Memory/System_MemoryScanner.h"
+#include "Core/Systems/Infrastructure/Engine/Lifecycle/System_Lifecycle.h"
 #include "Core/Systems/Infrastructure/Persistence/System_Preferences.h"
+
 #include "Core/Systems/Interface/System_Debug.h"
-#include "Core/Hooks/Infrastructure/Window/Hook_WndProc.h"
+
+// ImGui.
 #include "External/imgui/imgui.h"
+
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -19,34 +33,52 @@ using namespace std::chrono_literals;
 LRESULT __stdcall Hook_WndProc::HookedWndProc(
 	const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 {
-	// WM_CLOSE/WM_DESTROY/WM_QUIT: Intercept the window closing to clear the state.
-	bool windowDestroyed = (uMsg == WM_CLOSE || uMsg == WM_DESTROY || uMsg == WM_QUIT);
+	auto& debug = *g_pSystem->Debug;
+	auto& stateLifecycle = *g_pState->Infrastructure->Lifecycle;
+	auto& systemLifecycle = *g_pSystem->Infrastructure->Lifecycle;
+	auto& preferences = *g_pSystem->Infrastructure->Preferences;
+	auto& settings = *g_pState->Infrastructure->Settings;
+
+	// WM_CLOSE/WM_DESTROY/WM_QUIT: 
+	// Intercept the window closing to clear the state.
+	bool windowDestroyed = 
+		(uMsg == WM_CLOSE || uMsg == WM_DESTROY || uMsg == WM_QUIT);
+
 	if (windowDestroyed)
 	{
-		if (g_pState->Infrastructure->Lifecycle->IsRunning())
+		if (stateLifecycle.IsRunning())
 		{
-			g_pSystem->Debug->Log("[WndProc] WARNING: MCC shutdown detected.");
-			g_pSystem->Infrastructure->Preferences->SavePreferences();
-			g_pSystem->Infrastructure->Lifecycle->SignalShutdown();
+			debug.Log("[WndProc] WARNING: MCC shutdown detected.");
+			preferences.SavePreferences();
+			systemLifecycle.SignalShutdown();
 		}
 		
 		return CallWindowProc(m_OriginalWndProc, hWnd, uMsg, wParam, lParam);
 	}
 
-	// WM_SYSKEYDOWN + VK_F4: Ignore Alt+F4 so that Windows handles it by default.
+	// WM_SYSKEYDOWN + VK_F4: 
+	// Ignore Alt+F4 so that Windows handles it by default.
 	bool altF4Pressed = (uMsg == WM_SYSKEYDOWN && wParam == VK_F4);
-	if (altF4Pressed) return CallWindowProc(m_OriginalWndProc, hWnd, uMsg, wParam, lParam);
+	if (altF4Pressed)
+	{
+		return CallWindowProc(m_OriginalWndProc, hWnd, uMsg, wParam, lParam);
+	}
 
-	// WM_KEYDOWN/WM_SYSKEYDOWN: It captures heartbeats before they reach the motor.
+	// WM_KEYDOWN/WM_SYSKEYDOWN: 
+	// It captures heartbeats before they reach the motor.
 	bool isKeyDown = (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN);
 	if (isKeyDown) if (HandleHotKeys(wParam)) return 0;
 
 	// If the menu is visible, ImGui has input priority.
-	if (g_pState->Infrastructure->Settings->IsMenuVisible())
+	if (settings.IsMenuVisible())
 	{
-		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam)) return 1;
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+		{
+			return 1;
+		}
 
-		// WM_KEYFIRST/WM_KEYLAST: Range that covers from KeyDown to KeyUp.
+		// WM_KEYFIRST/WM_KEYLAST: 
+		// Range that covers from KeyDown to KeyUp.
 		bool wantCaptureKeyboard = ImGui::GetIO().WantCaptureKeyboard;
 		bool isKeyboardMessage = (uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST);
 		if (wantCaptureKeyboard && isKeyboardMessage) return 0;
@@ -72,25 +104,40 @@ LRESULT __stdcall Hook_WndProc::HookedWndProc(
 // Private helper to handle mod-specific hotkeys.
 bool Hook_WndProc::HandleHotKeys(WPARAM wParam)
 {
+	auto& settings = *g_pState->Infrastructure->Settings;
+	auto& stateMemoryScanner = *g_pState->Infrastructure->MemoryScanner;
+	auto& systemMemoryScanner = *g_pSystem->Infrastructure->MemoryScanner;
+	
 	bool shiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 
 	if (shiftPressed && wParam == '1')
 	{
-		g_pState->Infrastructure->Settings->SetMenuVisible(!g_pState->Infrastructure->Settings->IsMenuVisible());
+		settings.SetMenuVisible(!settings.IsMenuVisible());
 		return true;
 	}
 
 	if (shiftPressed && wParam == '2')
 	{
-		g_pState->Infrastructure->Settings->SetMenuVisible(true);
-		g_pState->Infrastructure->Settings->SetForceMenuReset(true);
+		settings.SetMenuVisible(true);
+		settings.SetForceMenuReset(true);
 		return true;
 	}
 
 	if (shiftPressed && wParam == '3')
 	{
-		bool currentLock = g_pState->Infrastructure->Settings->IsMenuLocked();
-		g_pState->Infrastructure->Settings->SetMenuLocked(!currentLock);
+		bool currentLock = settings.IsMenuLocked();
+		settings.SetMenuLocked(!currentLock);
+		return true;
+	}
+
+	if (shiftPressed && wParam == '4')
+	{
+		if (!g_pState->Infrastructure->MemoryScanner->IsScanning())
+		{
+			systemMemoryScanner.TriggerScan(
+				stateMemoryScanner.GetDelayMs());
+		}
+
 		return true;
 	}
 

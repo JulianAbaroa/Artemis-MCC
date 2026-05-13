@@ -1,5 +1,7 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Sbsp/State_MapSbsp.h"
+
+// Header.
+#include "State_MapSbsp.h"
 
 //#include "Core/Systems/CoreSystem.h"
 //#include "Core/Systems/Interface/DebugSystem.h"

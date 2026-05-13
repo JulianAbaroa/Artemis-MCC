@@ -1,6 +1,8 @@
 #pragma once
 
+// Types.
 #include "Core/Types/Interface/LogTypes.h"
+
 #include <functional>
 #include <string>
 #include <atomic>

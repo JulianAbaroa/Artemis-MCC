@@ -1,11 +1,25 @@
 #include "pch.h"
+
+// Header.
+#include "UI_Logs.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+
+// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
+
+// Debug.
 #include "Core/States/Interface/State_Debug.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
-#include "Core/UI/Interface/UI_Logs.h"
+
+// ImGui.
 #include "External/imgui/imgui.h"
 
 void UI_Logs::Draw()

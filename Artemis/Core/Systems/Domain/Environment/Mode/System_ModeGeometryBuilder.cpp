@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Mode/System_ModeGeometryBuilder.h"
-#include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
+#include "Core/Types/Domain/Environment/ModeGeometry.h"
 #include "Generated/Mode/ModeObject.h"
 
 ModeGeometry System_ModeGeometryBuilder::BuildGeometry(const ModeObject& mode)

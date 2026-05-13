@@ -30,7 +30,6 @@ struct EngineSpecificData
 	std::byte _pad_end[1753];
 };
 
-// TODO: Keep working on this struct.
 struct GameConfiguration
 {
 	int32_t EngineID;

@@ -1,5 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Interactable/State_Interactable.h"
+
+// Header.
+#include "State_Interactable.h"
+
+// --- Systems ---
+#include "Core/Systems/Core_System.h"
+
+#include "Core/Systems/Interface/System_Debug.h"
 
 std::vector<AIInteractable> State_Interactable::GetInteractables() const
 {
@@ -13,20 +20,25 @@ void State_Interactable::SetInteractables(std::vector<AIInteractable> interactab
     m_Interactables = std::move(interactables);
 }
 
+void State_Interactable::ClearInteractables()
+{
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    m_Interactables.clear();
+}
+
 bool State_Interactable::HasVehiData(const std::string& tagName) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    return !m_VehicleData.empty();
+    return m_VehicleData.count(tagName) > 0;
 }
 
 const VehicleData* State_Interactable::GetVehiData(const std::string& tagName) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
+
     auto it = m_VehicleData.find(tagName);
-    if (it == m_VehicleData.end())
-    {
-        return nullptr;
-    }
+    if (it == m_VehicleData.end()) return nullptr;
+
     return &it->second;
 }
 
@@ -112,10 +124,13 @@ void State_Interactable::AddControlDeviceData(const std::string& tagName, Contro
     m_ControlDeviceData[tagName] = std::move(data);
 }
 
+// Cleanup.
 void State_Interactable::Cleanup()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
+
     m_Interactables.clear();
+
     m_VehicleData.clear();
     m_EquipmentData.clear();
     m_WeaponData.clear();

@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Scen/State_MapScen.h"
+
+// Header.
+#include "State_MapScen.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapScen::HasScen(const std::string& tagName) const

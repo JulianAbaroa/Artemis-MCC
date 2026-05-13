@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Interactable/Proj/System_ProjDataBuilder.h"
-#include "Core/Types/Domain/Domains/Interactable/ProjectileData.h"
+#include "Core/Types/Domain/Interactable/ProjectileData.h"
 #include "Generated/Proj/ProjObject.h"
 
 ProjectileData System_ProjDataBuilder::BuildData(const ProjObject& proj)

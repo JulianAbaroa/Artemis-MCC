@@ -1,5 +1,7 @@
 #include "pch.h"
-#include "Core/States/Infrastructure/Persistence/State_Settings.h"
+
+// Header.
+#include "State_Settings.h"
 
 bool State_Settings::ShouldUseAppData() const { return m_UseAppData.load(); }
 void State_Settings::SetUseAppData(bool value) { m_UseAppData.store(value); }

@@ -12,8 +12,13 @@ struct Core_State
 	Core_State();
 	~Core_State();
 
+	// Domain.
 	std::unique_ptr<Core_State_Domain> Domain;
+
+	// Infrastructure.
 	std::unique_ptr<Core_State_Infrastructure> Infrastructure;
+
+	// Interface.
 	std::unique_ptr<State_Debug> Debug;
 };
 

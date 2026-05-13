@@ -1,30 +1,66 @@
 #include "pch.h"
-#include "Core/Common/Map/MapMagics.h"
-#include "Core/Types/Domain/Domains/Environment/ModeGeometry.h"
+
+// Header.
+#include "System_Interactable.h"
+
+// Types.
+#include "Core/Types/Domain/Map/MapMagics.h"
+#include "Core/Types/Domain/Environment/ModeGeometry.h"
+
+// States.
 #include "Core/States/Core_State.h"
 #include "Core/States/Domain/Core_State_Domain.h"
-#include "Core/States/Domain/Graph/State_ObjectGraph.h"
+
+// Map.
 #include "Core/States/Domain/Map/State_Map.h"
 #include "Core/States/Domain/Map/Vehi/State_MapVehi.h"
 #include "Core/States/Domain/Map/Eqip/State_MapEqip.h"
 #include "Core/States/Domain/Map/Weap/State_MapWeap.h"
 #include "Core/States/Domain/Map/Proj/State_MapProj.h"
 #include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
-#include "Core/States/Domain/Tables/State_PlayerTable.h"
-#include "Core/States/Domain/Tables/State_InteractionTable.h"
+
+// Object.
+#include "Core/States/Domain/Object/State_ObjectTable.h"
+
+// Player.
+#include "Core/States/Domain/Player/State_PlayerTable.h"
+
+// Intraction
+#include "Core/States/Domain/Interaction/State_InteractionTable.h"
+
+// Classification.
+#include "Core/States/Domain/Classification/State_Classification.h"
+
+// Graph.
+#include "Core/States/Domain/Graph/State_ObjectGraph.h"
+#include "Core/States/Domain/Graph/State_PlayerGraph.h"
+
+// Environment.
 #include "Core/States/Domain/Environment/State_Environment.h"
+
+// Interactable.
 #include "Core/States/Domain/Interactable/State_Interactable.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
+
+// Classification.
+#include "Core/Systems/Domain/Classification/System_ObjectClassifier.h"
+
+// Interactable.
 #include "Core/Systems/Domain/Interactable/Vehi/System_VehiDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Eqip/System_EqipDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Weap/System_WeapDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Proj/System_ProjDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Ctrl/System_CtrlDataBuilder.h"
-#include "Core/Systems/Domain/Interactable/System_Interactable.h"
+
 #include "Core/Systems/Interface/System_Debug.h"
+
 #include <algorithm>
 #include <cmath>
+
+// --- BuildForMap ---
 
 void System_Interactable::BuildForMap()
 {
@@ -135,73 +171,89 @@ void System_Interactable::BuildForMap()
 		vehiCount, eqipCount, weapCount, projCount, ctrlCount);
 }
 
-void System_Interactable::UpdateInteractables(uint32_t selfPlayerHandle)
+// --- UpdateInteractables ---
+
+void System_Interactable::UpdateInteractables()
 {
+	// --- Gather inputs ---
+	uint32_t selfPlayerHandle =
+		g_pState->Domain->PlayerTable->GetPlayerHandleByName("Artemis11010");
+
 	const LivePlayer* selfPtr =
 		g_pState->Domain->PlayerTable->GetPlayer(selfPlayerHandle);
 	if (!selfPtr) return;
 
 	const LivePlayer self = *selfPtr;
-
 	if (!self.IsAlive)
 	{
-		g_pState->Domain->Interactable->Cleanup();
+		g_pState->Domain->Interactable->ClearInteractables();
 		return;
 	}
 
 	const LiveInteraction interaction =
 		g_pState->Domain->InteractionTable->GetLiveInteraction();
 
-	const std::unordered_map<uint32_t, ObjectNode> nodes =
+	const std::vector<ClassifiedObject>& classified =
+		g_pState->Domain->Classification->GetObjects();
+
+	const std::unordered_map<uint32_t, ObjectNode>& nodes =
 		g_pState->Domain->ObjectGraph->GetNodes();
 
+	const std::vector<PlayerTree>& playerTrees =
+		g_pState->Domain->PlayerGraph->GetTrees();
+
+	const std::unordered_map<uint32_t, LiveObject>& objectTable =
+		g_pState->Domain->ObjectTable->GetObjectTable();
+
+	// --- Process each classified object ---
 	std::vector<AIInteractable> results;
 	results.reserve(32);
 
-	for (const auto& [handle, node] : nodes)
+	for (const ClassifiedObject& classified : classified)
 	{
-		if (!this->PassesGroupFilter(node)) continue;
+		auto it = objectTable.find(classified.Handle);
+		if (it == objectTable.end()) continue;
 
-		std::vector<InteractableBehavior> behaviors = this->DeriveBehaviors(node.Profile);
-		if (behaviors.empty()) continue;
+		const LiveObject& object = it->second;
+		if (object.Address == 0) continue;
 
 		AIInteractable interactable;
-		interactable.Node = node;
-		interactable.Behaviors = behaviors;
-		interactable.Activation = this->DeriveActivation(node.Profile.PrimaryGroup);
 
-		this->SetPosition(node, nodes, interactable);
-
-		interactable.DistanceToPlayer =
-			this->Distance(interactable.Node.Position, self.WeaponPosition);
-
-		// Child vehicles (turrets, sub-vehicles).
-		if (node.Profile.PrimaryGroup == TagGroup::Vehicle)
+		switch (classified.Role)
 		{
-			uint32_t cursor = node.ChildHandle;
-			while (cursor != 0xFFFFFFFF)
+		case ObjectRole::Vehicle:
+		{
+			if (!this->BuildVehicleInteractable(
+				object, self, interaction, nodes, playerTrees, objectTable,
+				interactable))
 			{
-				auto it = nodes.find(cursor);
-				if (it == nodes.end()) break;
-				if (it->second.Profile.PrimaryGroup == TagGroup::Vehicle)
-					interactable.ChildHandles.push_back(cursor);
-				cursor = it->second.NextSiblingHandle;
+				continue;
 			}
+			break;
 		}
 
-		if (!this->PassesContextFilter(node, behaviors, nodes, self.WeaponPosition, interactable))
-			continue;
+		case ObjectRole::WeaponPickup:
+		case ObjectRole::ArmorAbilityPickup:
+		case ObjectRole::ObjectivePickup:
+			interactable = this->BuildPickupInteractable(object, classified.Role, self, interaction);
+			break;
 
-		if (handle == interaction.TargetObjectHandle &&
-			interaction.TargetObjectHandle != 0xFFFFFFFF)
-		{
-			interactable.IsEngineSelected = true;
+		case ObjectRole::HealthStation:
+			interactable = this->BuildInteractInteractable(object, self, interaction);
+			break;
+
+		case ObjectRole::AmmoPickup:
+			interactable = this->BuildAmmoInteractable(object, self, classified.Role);
+			break;
+
+		default:
+			continue;
 		}
 
 		results.push_back(std::move(interactable));
 	}
 
-	g_pState->Domain->Interactable->SetInteractables(results);
+	g_pState->Domain->Interactable->SetInteractables(std::move(results));
 }
 
 void System_Interactable::Cleanup()
@@ -210,36 +262,317 @@ void System_Interactable::Cleanup()
 	g_pSystem->Debug->Log("[InteractableSystem] INFO: Cleanup completed.");
 }
 
-// --- Classification ---
+// --- BuildVehicleInteractable ---
 
-bool System_Interactable::PassesGroupFilter(const ObjectNode& node) const
+bool System_Interactable::BuildVehicleInteractable(
+	const LiveObject& object,
+	const LivePlayer& self,
+	const LiveInteraction& interaction,
+	const std::unordered_map<uint32_t, ObjectNode>& nodes,
+	const std::vector<PlayerTree>& playerTrees,
+	const std::unordered_map<uint32_t, LiveObject>& objectTable,
+	AIInteractable& out) const
 {
-	switch (node.Profile.PrimaryGroup)
+	// VehicleObject must be present in the variant.
+	const VehicleObject* vehiPtr =
+		std::get_if<VehicleObject>(&object.SpecificObject);
+	if (!vehiPtr) return false;
+
+	const VehicleObject& vehi = *vehiPtr;
+
+	// Resolve seat statuses from memory offsets.
+	// Returns false if no free non-hijacker seat exists.
+	std::vector<SeatStatus> seats;
+	if (!this->ResolveSeatStatuses(
+		vehi, object, nodes, objectTable, playerTrees, self, seats))
 	{
-	case TagGroup::Weapon:
-	case TagGroup::Equipment:
-	case TagGroup::Vehicle:
-	case TagGroup::DeviceControl:
-		return true;
-	default:
 		return false;
 	}
+
+	// Collect VehiclePart child handles (torretas, etc.)
+	std::vector<uint32_t> partHandles =
+		this->CollectVehiclePartHandles(object.Handle, nodes, objectTable);
+
+	out.Handle = object.Handle;
+	out.Role = ObjectRole::Vehicle;
+	out.Behaviors = this->DeriveBehaviors(ObjectRole::Vehicle);
+	out.Activation = this->DeriveActivation(ObjectRole::Vehicle);
+	out.Seats = std::move(seats);
+	out.ChildHandles = std::move(partHandles);
+	out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
+	out.DistanceToPlayer = this->Distance(object.Position, self.WeaponPosition);
+
+	return true;
+}
+
+// --- BuildPickupInteractable ---
+
+AIInteractable System_Interactable::BuildPickupInteractable(
+	const LiveObject& object, ObjectRole role,
+	const LivePlayer& self, const LiveInteraction& interaction) const
+{
+	// Pickups attached to a parent (e.g. equipped weapon) are not pickups.
+	// The classifier already handles this for WeaponPickup/EquipmentPickup,
+	// but we guard here as a second layer.
+	AIInteractable out;
+	out.Handle = object.Handle;
+	out.Role = role;
+	out.Behaviors = this->DeriveBehaviors(role);
+	out.Activation = this->DeriveActivation(role);
+	out.DistanceToPlayer = this->Distance(object.Position, self.WeaponPosition);
+	out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
+	return out;
+}
+
+// --- BuildInteractInteractable ---
+
+AIInteractable System_Interactable::BuildInteractInteractable(
+	const LiveObject& object, const LivePlayer& self, 
+	const LiveInteraction& interaction) const
+{
+	AIInteractable out;
+	out.Handle = object.Handle;
+	out.Role = ObjectRole::HealthStation;
+	out.Behaviors = this->DeriveBehaviors(ObjectRole::HealthStation);
+	out.Activation = this->DeriveActivation(ObjectRole::HealthStation);
+	out.DistanceToPlayer = this->Distance(object.Position, self.WeaponPosition);
+	out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
+	return out;
+}
+
+AIInteractable System_Interactable::BuildAmmoInteractable(
+	const LiveObject& object, const LivePlayer& self,
+	ObjectRole role) const
+{
+	AIInteractable out;
+	out.Handle = object.Handle;
+	out.Role = role;
+	out.Behaviors = this->DeriveBehaviors(role);
+	out.Activation = this->DeriveActivation(role);
+	out.DistanceToPlayer = this->Distance(object.Position, self.WeaponPosition);
+	return out;
+}
+
+// --- ResolveSeatStatuses ---
+
+bool System_Interactable::ResolveSeatStatuses(
+	const VehicleObject& vehi,
+	const LiveObject& object,
+	const std::unordered_map<uint32_t, ObjectNode>& nodes,
+	const std::unordered_map<uint32_t, LiveObject>& objectTable,
+	const std::vector<PlayerTree>& playerTrees,
+	const LivePlayer& self,
+	std::vector<SeatStatus>& outSeats) const
+{
+	if (!vehi.SeatLayout) return false;
+
+	// Collect biped children of this vehicle for occupant resolution.
+	const std::vector<uint32_t> bipedChildren =
+		this->CollectBipedChildHandles(object.Handle, nodes, objectTable);
+
+	bool anyFreeSeat = false;
+	bool anyFreeHijack = false;
+
+	for (const SeatInfo& seatInfo : vehi.SeatLayout->seats)
+	{
+		SeatStatus seat;
+		seat.SeatName = seatInfo.Name;
+		seat.IsHijackerSlot = seatInfo.IsHijackerSlot;
+		seat.IsOccupied = !vehi.IsSeatFree(seatInfo);
+
+		// World position: vehicle root position as fallback.
+		seat.SeatWorldPosition = object.Position;
+		seat.DistanceToPlayer =
+			this->Distance(seat.SeatWorldPosition, self.WeaponPosition);
+
+		// --- Occupant resolution ---
+		//
+		// We can resolve OccupyingBipedHandle with confidence only in
+		// specific cases. Otherwise we leave it at 0xFFFFFFFF.
+		//
+		if (seat.IsOccupied)
+		{
+			// Case 1: Vehicle has exactly one non-hijacker seat (Banshee,
+			// Ghost, ShadeTurret). If occupied, the only biped child is the
+			// occupant.
+			const int32_t normalSeatCount = static_cast<int32_t>(
+				std::count_if(vehi.SeatLayout->seats.begin(),
+					vehi.SeatLayout->seats.end(),
+					[](const SeatInfo& s)
+					{
+						return std::string(s.Name).find("Hijacker")
+							== std::string::npos;
+					}));
+
+			if (normalSeatCount == 1 && bipedChildren.size() == 1)
+			{
+				seat.OccupyingBipedHandle = bipedChildren[0];
+			}
+			// Case 2: Self player is in this vehicle — use LivePlayer data.
+			// We check if any biped child belongs to self.
+			else
+			{
+				for (uint32_t bipedHandle : bipedChildren)
+				{
+					if (bipedHandle == self.CurrentBipedHandle)
+					{
+						seat.OccupyingBipedHandle = bipedHandle;
+						break;
+					}
+				}
+			}
+		}
+
+		if (!seat.IsOccupied && !seat.IsHijackerSlot) anyFreeSeat = true;
+		if (!seat.IsOccupied && seat.IsHijackerSlot) anyFreeHijack = true;
+
+		outSeats.push_back(std::move(seat));
+	}
+
+	// Also process VehiclePart children (torretas).
+	// Each part has its own SeatLayout; if a biped is a child of the part,
+	// we can resolve the occupant with certainty.
+	const auto nodeIt = nodes.find(object.Handle);
+	if (nodeIt != nodes.end())
+	{
+		for (uint32_t childHandle : nodeIt->second.ChildrenHandles)
+		{
+			auto childObjIt = objectTable.find(childHandle);
+			if (childObjIt == objectTable.end()) continue;
+			if (childObjIt->second.Type != ObjectClass::Vehicle) continue;
+
+			const LiveObject& partObj = childObjIt->second;
+			const VehicleObject* partVehi =
+				std::get_if<VehicleObject>(&partObj.SpecificObject);
+			if (!partVehi || !partVehi->SeatLayout) continue;
+
+			// Collect biped children of this part.
+			const std::vector<uint32_t> partBipeds =
+				this->CollectBipedChildHandles(childHandle, nodes, objectTable);
+
+			for (const SeatInfo& seatInfo : partVehi->SeatLayout->seats)
+			{
+				SeatStatus seat;
+				seat.SeatName = seatInfo.Name;
+				seat.IsHijackerSlot = (std::string(seatInfo.Name).find("Hijacker")
+					!= std::string::npos);
+				seat.IsOccupied = !partVehi->IsSeatFree(seatInfo);
+
+				seat.SeatWorldPosition = partObj.Position;
+				seat.DistanceToPlayer =
+					this->Distance(seat.SeatWorldPosition, self.WeaponPosition);
+
+				// Turret seats are 1:1 with their biped child → certainty.
+				if (seat.IsOccupied && partBipeds.size() == 1)
+					seat.OccupyingBipedHandle = partBipeds[0];
+
+				if (!seat.IsOccupied && !seat.IsHijackerSlot)
+					anyFreeSeat = true;
+
+				outSeats.push_back(std::move(seat));
+			}
+		}
+	}
+
+	return anyFreeSeat || anyFreeHijack;
+}
+
+// --- CollectVehiclePartHandles ---
+
+std::vector<uint32_t> System_Interactable::CollectVehiclePartHandles(
+	uint32_t vehicleHandle,
+	const std::unordered_map<uint32_t, ObjectNode>& nodes,
+	const std::unordered_map<uint32_t, LiveObject>& objectTable) const
+{
+	std::vector<uint32_t> parts;
+
+	auto nodeIt = nodes.find(vehicleHandle);
+	if (nodeIt == nodes.end()) return parts;
+
+	for (uint32_t childHandle : nodeIt->second.ChildrenHandles)
+	{
+		auto objIt = objectTable.find(childHandle);
+		if (objIt == objectTable.end()) continue;
+		if (objIt->second.Type == ObjectClass::Vehicle)
+			parts.push_back(childHandle);
+	}
+
+	return parts;
+}
+
+
+// --- CollectBipedChildHandles ---
+
+std::vector<uint32_t> System_Interactable::CollectBipedChildHandles(
+	uint32_t vehicleHandle,
+	const std::unordered_map<uint32_t, ObjectNode>& nodes,
+	const std::unordered_map<uint32_t, LiveObject>& objectTable) const
+{
+	std::vector<uint32_t> bipeds;
+
+	auto nodeIt = nodes.find(vehicleHandle);
+	if (nodeIt == nodes.end()) return bipeds;
+
+	for (uint32_t childHandle : nodeIt->second.ChildrenHandles)
+	{
+		auto objIt = objectTable.find(childHandle);
+		if (objIt == objectTable.end()) continue;
+		if (objIt->second.Type == ObjectClass::Biped)
+			bipeds.push_back(childHandle);
+	}
+
+	return bipeds;
+}
+
+// --- FindPlayerHandleForBiped ---
+
+uint32_t System_Interactable::FindPlayerHandleForBiped(
+	uint32_t bipedHandle,
+	const std::vector<PlayerTree>& playerTrees) const
+{
+	for (const PlayerTree& tree : playerTrees)
+	{
+		if (tree.BipedHandle == bipedHandle)
+			return tree.Handle;
+	}
+	return 0xFFFFFFFF;
+}
+
+// --- Shared helpers ---
+
+float System_Interactable::Distance(const float a[3], const float b[3]) const
+{
+	float dx = a[0] - b[0];
+	float dy = a[1] - b[1];
+	float dz = a[2] - b[2];
+	return std::sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+float System_Interactable::Distance(
+	const std::array<float, 3>& a,
+	const std::array<float, 3>& b) const
+{
+	float dx = a[0] - b[0];
+	float dy = a[1] - b[1];
+	float dz = a[2] - b[2];
+	return std::sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 std::vector<InteractableBehavior> System_Interactable::DeriveBehaviors(
-	const TagProfile& profile) const
+	ObjectRole role) const
 {
 	std::vector<InteractableBehavior> behaviors;
-	switch (profile.PrimaryGroup)
+	switch (role)
 	{
-	case TagGroup::Weapon:
-	case TagGroup::Equipment:
+	case ObjectRole::AmmoPickup:
+	case ObjectRole::WeaponPickup:
+	case ObjectRole::ArmorAbilityPickup:
 		behaviors.push_back(InteractableBehavior::Pickup);
 		break;
-	case TagGroup::Vehicle:
+	case ObjectRole::Vehicle:
 		behaviors.push_back(InteractableBehavior::EnterVehicle);
 		break;
-	case TagGroup::DeviceControl:
+	case ObjectRole::HealthStation:
 		behaviors.push_back(InteractableBehavior::Interact);
 		break;
 	default:
@@ -248,233 +581,20 @@ std::vector<InteractableBehavior> System_Interactable::DeriveBehaviors(
 	return behaviors;
 }
 
-InteractableActivation System_Interactable::DeriveActivation(TagGroup group) const
+InteractableActivation System_Interactable::DeriveActivation(
+	ObjectRole role) const
 {
-	switch (group)
+	switch (role)
 	{
-	case TagGroup::Weapon:
-	case TagGroup::Equipment:
-	case TagGroup::Vehicle:
-	case TagGroup::DeviceControl:
+	case ObjectRole::WeaponPickup:
+	case ObjectRole::ArmorAbilityPickup:
+	case ObjectRole::Vehicle:
+	case ObjectRole::HealthStation:
 		return InteractableActivation::KeyPress;
+
+	case ObjectRole::AmmoPickup:
+		return InteractableActivation::Proximity;
 	default:
 		return InteractableActivation::None;
 	}
-}
-
-// --- Context filters ---
-
-bool System_Interactable::PassesContextFilter(
-	const ObjectNode& node,
-	const std::vector<InteractableBehavior>& behaviors,
-	const std::unordered_map<uint32_t, ObjectNode>& nodes,
-	const float playerPosition[3],
-	AIInteractable& out) const
-{
-	for (InteractableBehavior behavior : behaviors)
-	{
-		switch (behavior)
-		{
-		case InteractableBehavior::Pickup:
-		case InteractableBehavior::Interact:
-			if (node.ParentHandle != 0xFFFFFFFF) return false;
-			break;
-
-		case InteractableBehavior::EnterVehicle:
-			if (!this->PassesVehicleFilter(node, nodes, playerPosition, out))
-				return false;
-			break;
-
-		default:
-			break;
-		}
-	}
-	return true;
-}
-
-bool System_Interactable::PassesVehicleFilter(
-	const ObjectNode& node,
-	const std::unordered_map<uint32_t, ObjectNode>& nodes,
-	const float playerPosition[3],
-	AIInteractable& out) const
-{
-	const std::vector<uint32_t> occupants = this->CollectDirectBipeds(node, nodes);
-
-	// Resolve seats from ModeGeometry markers.
-	this->ResolveSeats(node, occupants, playerPosition, nodes, out);
-
-	// Vehicle is interactable if at least one seat is free.
-	for (const auto& seat : out.Seats)
-	{
-		if (!seat.IsOccupied) return true;
-	}
-
-	// No ModeGeometry or no seats defined, fall back to occupant count heuristic.
-	if (out.Seats.empty()) return occupants.empty();
-
-	return false;
-}
-
-// --- Helpers ---
-
-std::vector<uint32_t> System_Interactable::CollectDirectBipeds(
-	const ObjectNode& vehicleNode,
-	const std::unordered_map<uint32_t, ObjectNode>& nodes) const
-{
-	std::vector<uint32_t> bipeds;
-	uint32_t cursor = vehicleNode.ChildHandle;
-	while (cursor != 0xFFFFFFFF)
-	{
-		auto it = nodes.find(cursor);
-		if (it == nodes.end()) break;
-		if (it->second.Class == "bipd")
-			bipeds.push_back(cursor);
-		cursor = it->second.NextSiblingHandle;
-	}
-	return bipeds;
-}
-
-void System_Interactable::ResolveSeats(
-	const ObjectNode& node,
-	const std::vector<uint32_t>& occupants,
-	const float playerPosition[3],
-	const std::unordered_map<uint32_t, ObjectNode>& nodes,
-	AIInteractable& out) const
-{
-	// Resolve source node for position and orientation.
-	// Child objects have a buggy position, use the parent's position.
-	const ObjectNode* origin = &node;
-	if (node.ParentHandle != 0xFFFFFFFF)
-	{
-		auto it = nodes.find(node.ParentHandle);
-		if (it != nodes.end()) origin = &it->second;
-	}
-
-	const VehicleData* vehicleData =
-		g_pState->Domain->Interactable->GetVehiData(node.TagName);
-
-	const int32_t occupantCount = static_cast<int32_t>(occupants.size());
-
-	if (!vehicleData || vehicleData->Seats.empty())
-	{
-		SeatStatus seat;
-		seat.SeatName = "Seat";
-		seat.IsOccupied = !occupants.empty();
-		seat.OccupyingBipedHandle = occupants.empty() ? 0xFFFFFFFF : occupants[0];
-		std::memcpy(seat.SeatWorldPosition, origin->Position,
-			sizeof(seat.SeatWorldPosition));
-		seat.DistanceToPlayer = Distance(seat.SeatWorldPosition, playerPosition);
-		out.Seats.push_back(seat);
-		return;
-	}
-
-	const float fx = origin->Forward[0], fy = origin->Forward[1], fz = origin->Forward[2];
-	const float ux = origin->Up[0], uy = origin->Up[1], uz = origin->Up[2];
-	const float rx = fy * uz - fz * uy;
-	const float ry = fz * ux - fx * uz;
-	const float rz = fx * uy - fy * ux;
-
-	const ModeGeometry* mode =
-		g_pState->Domain->Environment->GetModeGeometry(node.TagName);
-
-	int32_t seatIndex = 0;
-
-	for (const auto& seatDef : vehicleData->Seats)
-	{
-		if (seatDef.InvalidForPlayer && seatDef.InvalidForNonPlayer) continue;
-		if (seatDef.AISeatType == VehicleAISeatType::None) continue;
-		if (seatDef.SeatMarkerNameId == 0) continue;
-
-		if (mode)
-		{
-			bool markerExists = false;
-			for (const auto& group : mode->MarkerGroups)
-			{
-				if (group.NameId == seatDef.SeatMarkerNameId)
-				{
-					markerExists = true; break;
-				}
-			}
-			if (!markerExists) continue;
-		}
-
-		SeatStatus seat;
-
-		switch (seatDef.AISeatType)
-		{
-		case VehicleAISeatType::Driver:     seat.SeatName = "Driver";     break;
-		case VehicleAISeatType::Gunner:     seat.SeatName = "Gunner";     break;
-		case VehicleAISeatType::Passenger:  seat.SeatName = "Passenger";  break;
-		case VehicleAISeatType::SmallCargo: seat.SeatName = "SmallCargo"; break;
-		case VehicleAISeatType::LargeCargo: seat.SeatName = "LargeCargo"; break;
-		default:                            seat.SeatName = "Seat";       break;
-		}
-
-		seat.IsOccupied = (seatIndex < occupantCount);
-		seat.OccupyingBipedHandle =
-			seat.IsOccupied ? occupants[seatIndex] : 0xFFFFFFFF;
-
-		bool markerResolved = false;
-
-		if (mode && seatDef.SeatMarkerNameId != 0)
-		{
-			for (const auto& group : mode->MarkerGroups)
-			{
-				if (group.NameId != seatDef.SeatMarkerNameId) continue;
-				if (group.Markers.empty()) break;
-
-				const ModeMarker& marker = group.Markers[0];
-				const float lx = marker.Translation.X;
-				const float ly = marker.Translation.Y;
-				const float lz = marker.Translation.Z;
-
-				seat.SeatWorldPosition[0] = origin->Position[0] + lx * rx + ly * fx + lz * ux;
-				seat.SeatWorldPosition[1] = origin->Position[1] + lx * ry + ly * fy + lz * uy;
-				seat.SeatWorldPosition[2] = origin->Position[2] + lx * rz + ly * fz + lz * uz;
-
-				markerResolved = true;
-				break;
-			}
-		}
-
-		if (!markerResolved)
-		{
-			seat.SeatWorldPosition[0] = origin->Position[0];
-			seat.SeatWorldPosition[1] = origin->Position[1];
-			seat.SeatWorldPosition[2] = origin->Position[2];
-		}
-
-		seat.DistanceToPlayer = Distance(seat.SeatWorldPosition, playerPosition);
-		out.Seats.push_back(seat);
-		++seatIndex;
-	}
-}
-
-void System_Interactable::SetPosition(
-	const ObjectNode& node,
-	const std::unordered_map<uint32_t, ObjectNode>& nodes,
-	AIInteractable& out) const
-{
-	// Child objects have a broken world position near zero in Reach MCC.
-	// Use parent position when available.
-	const ObjectNode* source = &node;
-
-	if (node.ParentHandle != 0xFFFFFFFF)
-	{
-		auto it = nodes.find(node.ParentHandle);
-		if (it != nodes.end())
-			source = &it->second;
-	}
-
-	std::memcpy(out.Node.Position, source->Position, sizeof(out.Node.Position));
-	std::memcpy(out.Node.Forward, source->Forward, sizeof(out.Node.Forward));
-	std::memcpy(out.Node.Up, source->Up, sizeof(out.Node.Up));
-}
-
-float System_Interactable::Distance(const float a[3], const float b[3]) const
-{
-	float dx = a[0] - b[0];
-	float dy = a[1] - b[1];
-	float dz = a[2] - b[2];
-	return std::sqrt(dx * dx + dy * dy + dz * dz);
 }

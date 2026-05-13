@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Mach/State_MapMach.h"
+
+// Header.
+#include "State_MapMach.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapMach::HasMach(const std::string& tagName) const
@@ -18,7 +24,7 @@ const MachObject* State_MapMach::GetMach(const std::string& tagName) const
 
 void State_MapMach::AddMach(const std::string& tagName, MachObject data)
 {
-    this->LogRawData(tagName, data);
+    //this->LogRawData(tagName, data);
 
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Machs.emplace(tagName, std::move(data));

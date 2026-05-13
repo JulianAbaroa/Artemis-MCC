@@ -1,6 +1,11 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Navigation/Bloc/System_BlocObstacleBuilder.h"
-#include "Core/Types/Domain/Domains/Navigation/BlocObstacleData.h"
+
+// Header.
+#include "System_BlocObstacleBuilder.h"
+
+// Types.
+#include "Core/Types/Domain/Navigation/BlocObstacleData.h"
+
 #include "Generated/Bloc/BlocObject.h"
 
 CrateObstacleData System_BlocObstacleBuilder::BuildData(const BlocObject& bloc) const

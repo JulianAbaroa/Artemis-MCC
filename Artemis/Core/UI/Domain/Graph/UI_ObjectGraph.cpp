@@ -1,18 +1,38 @@
 #include "pch.h"
-#include "Core/UI/Domain/Graph/UI_ObjectGraph.h"
+
+// Header.
+#include "UI_ObjectGraph.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Domain/Core_State_Domain.h"
+
+// Object.
+#include "Core/States/Domain/Object/State_ObjectTable.h"
+
+// Player.
+#include "Core/States/Domain/Player/State_PlayerTable.h"
+
+// Graph.
 #include "Core/States/Domain/Graph/State_ObjectGraph.h"
+#include "Core/States/Domain/Graph/State_PlayerGraph.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
+
+// ImGui.
 #include "External/imgui/imgui.h"
+
 #include <Algorithm>
 #include <format>
 
 void UI_ObjectGraph::Draw()
 {
     const auto& nodes = g_pState->Domain->ObjectGraph->GetNodes();
-    const auto& playerTrees = g_pState->Domain->ObjectGraph->GetPlayerTrees();
+    const auto& playerTrees = g_pState->Domain->PlayerGraph->GetTrees();
 
     auto it_remove = std::remove_if(m_DiscoveryOrder.begin(), m_DiscoveryOrder.end(),
         [&](uint32_t h) { return nodes.find(h) == nodes.end(); });
@@ -20,59 +40,52 @@ void UI_ObjectGraph::Draw()
 
     for (const auto& [handle, node] : nodes)
     {
-        if (std::find(m_DiscoveryOrder.begin(), m_DiscoveryOrder.end(), handle) == m_DiscoveryOrder.end())
-        {
+        if (std::find(m_DiscoveryOrder.begin(), m_DiscoveryOrder.end(), handle)
+            == m_DiscoveryOrder.end())
             m_DiscoveryOrder.push_back(handle);
-        }
     }
 
-    std::vector<uint32_t> currentRoots;
-    currentRoots.reserve(m_DiscoveryOrder.size());
-    for (uint32_t handle : m_DiscoveryOrder)
+    std::vector<uint32_t> roots;
+    roots.reserve(m_DiscoveryOrder.size());
+    for (uint32_t h : m_DiscoveryOrder)
     {
-        auto it = nodes.find(handle);
+        auto it = nodes.find(h);
         if (it != nodes.end() && it->second.ParentHandle == 0xFFFFFFFF)
-        {
-            currentRoots.push_back(handle);
-        }
+            roots.push_back(h);
     }
 
-    ImGui::TextDisabled("Total Nodes: %zu | Roots: %zu | Players: %zu",
-        nodes.size(), currentRoots.size(), playerTrees.size());
+    ImGui::TextDisabled("Nodes: %zu | Roots: %zu | Players: %zu",
+        nodes.size(), roots.size(), playerTrees.size());
     ImGui::Separator();
 
-    float leftPanelWidth = ImGui::GetContentRegionAvail().x * 0.4f;
+    float leftWidth = ImGui::GetContentRegionAvail().x * 0.4f;
 
-    if (ImGui::BeginChild("##GraphTreeRegion", ImVec2(leftPanelWidth, 0), true, ImGuiWindowFlags_HorizontalScrollbar))
+    if (ImGui::BeginChild("##Left", ImVec2(leftWidth, 0), true,
+        ImGuiWindowFlags_HorizontalScrollbar))
     {
         if (ImGui::CollapsingHeader("Player Trees", ImGuiTreeNodeFlags_DefaultOpen))
-        {
             this->DrawPlayerTrees(playerTrees, nodes);
-        }
 
         ImGui::Spacing();
 
-        if (ImGui::CollapsingHeader("World Object Roots (Stable)", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("World Roots", ImGuiTreeNodeFlags_DefaultOpen))
         {
             ImGuiListClipper clipper;
-            clipper.Begin(static_cast<int>(currentRoots.size()));
-
+            clipper.Begin(static_cast<int>(roots.size()));
             while (clipper.Step())
             {
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                {
-                    uint32_t handle = currentRoots[i];
-                    this->DrawNodeHierarchy(handle, nodes);
-                }
+                    this->DrawNodeHierarchy(roots[i], nodes);
             }
             clipper.End();
         }
+
         ImGui::EndChild();
     }
 
     ImGui::SameLine();
 
-    if (ImGui::BeginChild("##NodeDetailsRegion", ImVec2(0, 0), true))
+    if (ImGui::BeginChild("##Right", ImVec2(0, 0), true))
     {
         auto it = nodes.find(m_SelectedHandle);
         if (it != nodes.end())
@@ -84,128 +97,162 @@ void UI_ObjectGraph::Draw()
     }
 }
 
-
 void UI_ObjectGraph::Cleanup()
 {
     m_SelectedHandle = 0xFFFFFFFF;
     m_DiscoveryOrder.clear();
 }
 
-
-void UI_ObjectGraph::DrawPlayerTrees(const std::vector<PlayerObjectTree>& trees,
+void UI_ObjectGraph::DrawPlayerTrees(
+    const std::vector<PlayerTree>& trees,
     const std::unordered_map<uint32_t, ObjectNode>& nodes)
 {
     for (const auto& tree : trees)
     {
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+        auto player = g_pState->Domain->PlayerTable->CopyLivePlayer(tree.Handle);
+        if (!player) continue;
 
-        bool isOpen = ImGui::TreeNodeEx(
-            reinterpret_cast<void*>(static_cast<uintptr_t>(tree.PlayerHandle)),
-            flags, "Player: %s", tree.Gamertag.c_str());
+        const char* gamertag = player->Gamertag.c_str();
+        bool alive = tree.IsAlive();
 
-        if (isOpen)
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_SpanAvailWidth;
+
+        ImVec4 nameColor = alive
+            ? ImVec4(0.4f, 1.0f, 0.4f, 1.0f)
+            : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+        ImGui::PushStyleColor(ImGuiCol_Text, nameColor);
+        bool open = ImGui::TreeNodeEx(
+            reinterpret_cast<void*>(static_cast<uintptr_t>(tree.Handle)),
+            flags, "%s %s", gamertag, alive ? "" : "(dead)");
+        ImGui::PopStyleColor();
+
+        if (!open) continue;
+
+        auto drawLeaf = [&](const char* label, uint32_t handle) {
+            if (handle == 0xFFFFFFFF) return;
+        
+            auto obj = g_pState->Domain->ObjectTable->CopyLiveObject(handle);
+            const char* detail = obj ? obj->Class.c_str() : "?";
+        
+            ImGuiTreeNodeFlags leafFlags =
+                ImGuiTreeNodeFlags_Leaf |
+                ImGuiTreeNodeFlags_NoTreePushOnOpen |
+                ImGuiTreeNodeFlags_SpanAvailWidth;
+        
+            if (m_SelectedHandle == handle)
+                leafFlags |= ImGuiTreeNodeFlags_Selected;
+        
+            ImGui::TreeNodeEx(
+                reinterpret_cast<void*>(static_cast<uintptr_t>(handle)),
+                leafFlags, "%s [%s] 0x%08X", label, detail, handle);
+        
+            if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                m_SelectedHandle = handle;
+        };
+
+        drawLeaf("Biped", tree.BipedHandle);
+        drawLeaf("Primary Weapon", tree.PrimaryWeaponHandle);
+        drawLeaf("Secondary Weapon", tree.SecondaryWeaponHandle);
+        drawLeaf("Ability", tree.AbilityHandle);
+        drawLeaf("Objective", tree.ObjectiveHandle);
+        drawLeaf("Vehicle", tree.VehicleHandle);
+
+        if (!tree.VehiclePartHandles.empty())
         {
-            auto drawPlayerLeaf = [&](const char* label, uint32_t handle) {
-                if (handle == 0xFFFFFFFF) return;
-
-                auto it = nodes.find(handle);
-                if (it == nodes.end()) return;
-
-                const auto& node = it->second;
-                ImGuiTreeNodeFlags leafFlags = ImGuiTreeNodeFlags_Leaf |
-                    ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-                if (m_SelectedHandle == handle) leafFlags |= ImGuiTreeNodeFlags_Selected;
-
-                ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<uintptr_t>(handle)),
-                    leafFlags, "%s: %s", label, node.Class.c_str());
-
-                if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-                    m_SelectedHandle = handle;
-                };
-
-            drawPlayerLeaf("Biped", tree.BipedHandle);
-            drawPlayerLeaf("Primary Weapon", tree.PrimaryWeaponHandle);
-            drawPlayerLeaf("Secondary Weapon", tree.SecondaryWeaponHandle);
-            drawPlayerLeaf("Vehicle", tree.VehicleHandle);
-            drawPlayerLeaf("Objective", tree.ObjectiveHandle);
-
-            if (!tree.VehicleSiblingHandles.empty())
+            if (ImGui::TreeNodeEx("Vehicle Parts",
+                ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth))
             {
-                if (ImGui::TreeNodeEx("Vehicle Parts", ImGuiTreeNodeFlags_OpenOnArrow))
-                {
-                    for (uint32_t sibHandle : tree.VehicleSiblingHandles)
-                        drawPlayerLeaf("Part", sibHandle);
-                    ImGui::TreePop();
-                }
+                for (uint32_t partHandle : tree.VehiclePartHandles)
+                    drawLeaf("Part", partHandle);
+                ImGui::TreePop();
             }
-            ImGui::TreePop();
-        }
-    }
-}
-
-void UI_ObjectGraph::DrawNodeHierarchy(uint32_t handle, const std::unordered_map<uint32_t, ObjectNode>& nodes)
-{
-    auto it = nodes.find(handle);
-    if (it == nodes.end()) return;
-
-    const auto& node = it->second;
-
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (node.ChildHandle == 0xFFFFFFFF) flags |= ImGuiTreeNodeFlags_Leaf;
-    if (m_SelectedHandle == handle) flags |= ImGuiTreeNodeFlags_Selected;
-
-    bool isOpen = ImGui::TreeNodeEx((void*)(uintptr_t)handle, flags,
-        "[%s] 0x%08X", node.Class.c_str(), handle);
-
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-        m_SelectedHandle = handle;
-
-    if (isOpen)
-    {
-        uint32_t currentChildHandle = node.ChildHandle;
-
-        while (currentChildHandle != 0xFFFFFFFF)
-        {
-            auto childIt = nodes.find(currentChildHandle);
-            if (childIt == nodes.end()) break;
-
-            this->DrawNodeHierarchy(currentChildHandle, nodes);
-
-            currentChildHandle = childIt->second.NextSiblingHandle;
         }
 
         ImGui::TreePop();
     }
 }
 
+void UI_ObjectGraph::DrawNodeHierarchy(
+    uint32_t handle,
+    const std::unordered_map<uint32_t, ObjectNode>& nodes)
+{
+    auto it = nodes.find(handle);
+    if (it == nodes.end()) return;
+
+    const auto& node = it->second;
+
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (node.ChildrenHandles.empty()) flags |= ImGuiTreeNodeFlags_Leaf;
+    if (m_SelectedHandle == handle)   flags |= ImGuiTreeNodeFlags_Selected;
+
+    auto obj = g_pState->Domain->ObjectTable->CopyLiveObject(handle);
+    const char* cls = obj ? obj->Class.c_str() : "?";
+
+    bool open = ImGui::TreeNodeEx(
+        reinterpret_cast<void*>(static_cast<uintptr_t>(handle)),
+        flags, "[%s] 0x%08X", cls, handle);
+
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+        m_SelectedHandle = handle;
+
+    if (open)
+    {
+        for (uint32_t childHandle : node.ChildrenHandles)
+            this->DrawNodeHierarchy(childHandle, nodes);
+        ImGui::TreePop();
+    }
+}
+
 void UI_ObjectGraph::DrawSelectedNodeDetails(const ObjectNode& node)
 {
+    auto obj = g_pState->Domain->ObjectTable->CopyLiveObject(node.Handle);
+
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-
-    if (ImGui::BeginChild("NodeCardDetail", ImVec2(0, 0), true))
+    if (ImGui::BeginChild("##NodeDetail", ImVec2(0, 0), true))
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
-        ImGui::Text("Tag: %s", node.TagName.c_str());
-        ImGui::PopStyleColor();
+        if (obj)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+            ImGui::TextWrapped("%s", obj->TagName.c_str());
+            ImGui::PopStyleColor();
 
-        ImGui::Separator();
-        ImGui::TextDisabled("Class: %s", node.Class.c_str());
-        ImGui::Text("Handle: 0x%08X", node.Handle);
+            ImGui::Separator();
+            ImGui::TextDisabled("Class: %s", obj->Class.c_str());
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.4f, 1.0f), "Position");
+            ImGui::Text("%.3f  %.3f  %.3f",
+                obj->Position[0], obj->Position[1], obj->Position[2]);
+        }
 
         ImGui::Spacing();
-        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.6f, 1.0f), "Relationships (Graph Topology)");
+        ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.6f, 1.0f), "Graph");
         ImGui::Separator();
 
-        auto drawHandleInfo = [](const char* label, uint32_t h) {
-            ImGui::Text("%s: %s", label, h == 0xFFFFFFFF ? "NONE" : std::format("0x{:08X}", h).c_str());
+        auto drawHandle = [](const char* label, uint32_t h)
+            {
+                if (h == 0xFFFFFFFF)
+                    ImGui::TextDisabled("%s: NONE", label);
+                else
+                    ImGui::Text("%s: 0x%08X", label, h);
             };
 
-        drawHandleInfo("Parent Handle", node.ParentHandle);
-        drawHandleInfo("Child Handle", node.ChildHandle);
-        drawHandleInfo("Sibling Handle", node.NextSiblingHandle);
-    }
+        drawHandle("Handle", node.Handle);
+        drawHandle("Parent", node.ParentHandle);
 
-    ImGui::EndChild();
+        if (!node.ChildrenHandles.empty())
+        {
+            ImGui::Spacing();
+            ImGui::TextDisabled("Children (%zu):", node.ChildrenHandles.size());
+            for (uint32_t ch : node.ChildrenHandles)
+                ImGui::Text("  0x%08X", ch);
+        }
+
+        ImGui::EndChild();
+    }
     ImGui::PopStyleVar();
 }

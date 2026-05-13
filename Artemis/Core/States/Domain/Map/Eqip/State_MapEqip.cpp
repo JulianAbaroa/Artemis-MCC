@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Eqip/State_MapEqip.h"
+
+// Header.
+#include "State_MapEqip.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapEqip::HasEqip(const std::string& tagName) const

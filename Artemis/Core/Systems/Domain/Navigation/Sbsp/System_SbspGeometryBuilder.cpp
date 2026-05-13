@@ -1,5 +1,13 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Navigation/Sbsp/System_SbspGeometryBuilder.h"
+
+// Header.
+#include "System_SbspGeometryBuilder.h"
+
+// --- Systems ---
+#include "Core/Systems/Core_System.h"
+
+// Debug.
+#include "Core/Systems/Interface/System_Debug.h"
 
 // --- BuildGeometry, orchestrates all sub-builders in dependency order ---
 
@@ -15,6 +23,8 @@ SbspGeometry System_SbspGeometryBuilder::BuildGeometry(const SbspObject& sbsp)
     this->BuildInstancedGeometry(sbsp, out);
     this->BuildCollisionMaterials(sbsp, out);
     this->BuildMarkers(sbsp, out);
+
+    // this->LogGeometry(out);
 
     return out;
 }
@@ -252,5 +262,31 @@ void System_SbspGeometryBuilder::BuildMarkers(const SbspObject& sbsp, SbspGeomet
         marker.Rotation = this->MakeVec4(src.Rotation);
 
         out.Markers.push_back(marker);
+    }
+}
+
+void System_SbspGeometryBuilder::LogGeometry(const SbspGeometry& geometry)
+{
+    g_pSystem->Debug->Log(
+        "[SbspGeometry] Tag: %s", geometry.TagName.c_str());
+
+    g_pSystem->Debug->Log(
+        "[SbspGeometry]   World bounds: "
+        "(%.1f, %.1f, %.1f) → (%.1f, %.1f, %.1f)",
+        geometry.WorldBounds.Min.X, geometry.WorldBounds.Min.Y, geometry.WorldBounds.Min.Z,
+        geometry.WorldBounds.Max.X, geometry.WorldBounds.Max.Y, geometry.WorldBounds.Max.Z);
+
+    for (const auto& c : geometry.Clusters)
+    {
+        g_pSystem->Debug->Log(
+            "[SbspGeometry]   Cluster %d: "
+            "(%.1f, %.1f, %.1f) → (%.1f, %.1f, %.1f) "
+            "center=(%.1f, %.1f, %.1f) links=%d portals=%d",
+            c.ClusterIndex,
+            c.BoundsMin.X, c.BoundsMin.Y, c.BoundsMin.Z,
+            c.BoundsMax.X, c.BoundsMax.Y, c.BoundsMax.Z,
+            c.Center.X, c.Center.Y, c.Center.Z,
+            static_cast<int>(c.ConnectedClusters.size()),
+            static_cast<int>(c.PortalIndices.size()));
     }
 }

@@ -1,14 +1,28 @@
 #include "pch.h"
+
+// Header.
+#include "System_Preferences.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+
+// Lifecycle.
+#include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
+
+// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
-#include "Core/States/Infrastructure/Engine/State_Lifecycle.h"
-#include "Core/States/Infrastructure/Engine/State_Render.h"
+
+// Render.
+#include "Core/States/Infrastructure/Engine/Render/State_Render.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
 #include "Core/Systems/Domain/Core_System_Domain.h"
-#include "Core/Systems/Domain/Legacy/System_EventRegistry.h"
-#include "Core/Systems/Infrastructure/Persistence/System_Preferences.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
+
 #include <fstream>
 
 void System_Preferences::SavePreferences()

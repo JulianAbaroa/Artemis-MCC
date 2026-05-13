@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
+
+// Header.
+#include "State_MapScnr.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapScnr::HasScnr(const std::string& tagName) const

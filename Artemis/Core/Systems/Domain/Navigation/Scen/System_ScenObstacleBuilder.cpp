@@ -1,6 +1,11 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Navigation/Scen/System_ScenObstacleBuilder.h"
-#include "Core/Types/Domain/Domains/Navigation/ScenObstacleData.h"
+
+// Header.
+#include "System_ScenObstacleBuilder.h"
+
+// Types.
+#include "Core/Types/Domain/Navigation/ScenObstacleData.h"
+
 #include "Generated/Scen/ScenObject.h"
 
 SceneryObstacleData System_ScenObstacleBuilder::BuildData(const ScenObject& scen) const

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Generated/Jmad/JmadObject.h"
+
 #include <unordered_map>
 #include <string>
 #include <mutex>

@@ -44,7 +44,7 @@ private:
     PhmoShape MakeSphere(const Phmo_SpheresEntry& src);
     PhmoShape MakePill(const Phmo_PillsEntry& src);
     PhmoShape MakeBox(const Phmo_BoxesEntry& src);
-    PhmoShape MakePolyhedron(const Phmo_PolyhedraEntry& src);
+    PhmoShape MakePolyhedron(const PhmoObject& phmo, const Phmo_PolyhedraEntry& src, int16_t polyIndex);
     PhmoShape MakeMultiSphere(const Phmo_MultiSpheresEntry& src);
 
     PhmoVec3 MakeVec3(const Vec3& v);
@@ -56,6 +56,7 @@ private:
     static constexpr uint16_t k_ShapeTriangle = 0x3;
     static constexpr uint16_t k_ShapePolyhedron = 0x4;
     static constexpr uint16_t k_ShapeMultiSphere = 0x5;
+    static constexpr uint16_t k_ShapePhantom = 0x6;
     static constexpr uint16_t k_ShapeList = 0xE;
     static constexpr uint16_t k_ShapeMOPP = 0xF;
 };

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Core/Systems/Domain/Environment/Coll/System_CollGeometryBuilder.h"
-#include "Core/Types/Domain/Domains/Environment/CollGeometry.h"
+#include "Core/Types/Domain/Environment/CollGeometry.h"
 #include "Generated/Coll/CollObject.h"
 #include <limits>
 

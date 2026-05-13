@@ -1,8 +1,11 @@
 #include "pch.h"
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
-#include "Core/States/Interface/State_Debug.h"
+
+// Header.
+#include "Core_State.h"
+
+#include "Domain/Core_State_Domain.h"
+#include "Infrastructure/Core_State_Infrastructure.h"
+#include "Interface/State_Debug.h"
 
 Core_State::Core_State()
 {

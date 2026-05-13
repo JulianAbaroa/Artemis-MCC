@@ -193,10 +193,3 @@ struct RangeF { float Min, Max; };
 struct RangeD { double Min, Max; };
 
 #pragma pack(pop)
-
-struct TagInfo
-{
-	bool IsValid = false;
-	std::string ClassName;
-	std::string TagName;
-};

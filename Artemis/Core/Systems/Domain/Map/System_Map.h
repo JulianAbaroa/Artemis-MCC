@@ -1,6 +1,9 @@
 #pragma once
 
+// Types.
+#include "Core/Types/Domain/Map/ResolvedTag.h"
 #include "Core/Types/Domain/Map/MapTypes.h"
+
 #include <string>
 #include <vector>
 
@@ -12,8 +15,8 @@ public:
 
 	// --- Tag Table Queries ---
 
-	TagInfo ResolveHandle(uint32_t handle) const;
-	int64_t GetTagMetaOffset(const TagInfo& info) const;
+	ResolvedTag ResolveHandle(uint32_t handle) const;
+	int64_t GetTagMetaOffset(const ResolvedTag& tag) const;
 	int64_t GetTagMetaOffsetByIndex(int32_t tagIndex) const;
 
 	// --- Shared Parsing Infrastructure ---

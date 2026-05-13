@@ -1,6 +1,11 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Navigation/Bloc/System_BlocTeleporterBuilder.h"
-#include "Core/Types/Domain/Domains/Navigation/BlocTeleporterData.h"
+
+// Header.
+#include "System_BlocTeleporterBuilder.h"
+
+// Types.
+#include "Core/Types/Domain/Navigation/BlocTeleporterData.h"
+
 #include "Generated/Bloc/BlocObject.h"
 
 BlocTeleporterData System_BlocTeleporterBuilder::BuildData(const BlocObject& bloc) const

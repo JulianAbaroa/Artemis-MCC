@@ -1,5 +1,8 @@
 #include "pch.h"
-#include "Core/Threads/Core_Thread.h"
+
+// Header.
+#include "Core_Thread.h"
+
 #include "Core/Threads/Domain/Thread_Main.h"
 #include "Core/Threads/Infrastructure/Thread_Input.h"
 #include "Core/Threads/Domain/Thread_AI.h"

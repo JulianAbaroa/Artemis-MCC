@@ -1,22 +1,61 @@
 #include "pch.h"
-#include "Core/UI/Core_UI.h"
-#include "Core/UI/UI_Main.h"
-#include "Core/UI/Interface/UI_Logs.h"
-//#include "Core/UI/Tabs/Optional/EventRegistryTab.h"
-#include "Core/UI/Domain/Tables/UI_ObjectTable.h"
-#include "Core/UI/Domain/Tables/UI_PlayerTable.h"
-#include "Core/UI/Domain/Graph/UI_ObjectGraph.h"
-#include "Core/UI/Domain/Interactable/UI_Interactable.h"
-#include "Core/UI/Infrastructure/UI_Settings.h"
+
+// Header.
+#include "UI_Main.h"
+
+// --- States ---
 #include "Core/States/Core_State.h"
 #include "Core/States/Infrastructure/Core_State_Infrastructure.h"
-#include "Core/States/Infrastructure/Engine/State_Lifecycle.h"
-#include "Core/States/Infrastructure/Engine/State_Render.h"
+
+// Lifecycle.
+#include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
+
+// Render.
+#include "Core/States/Infrastructure/Engine/Render/State_Render.h"
+
+// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
+
+// --- Systems ---
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
+
+// --- Threads ---
 #include "Core/Threads/Core_Thread.h"
+
+// Main.
 #include "Core/Threads/Domain/Thread_Main.h"
+
+// --- UI ---
+#include "Core_UI.h"
+
+// Logs.
+#include "Interface/UI_Logs.h"
+
+// Object Table.
+#include "Domain/Object/UI_ObjectTable.h"
+
+// Player Table.
+#include "Domain/Player/UI_PlayerTable.h"
+
+// Object Graph.
+#include "Domain/Graph/UI_ObjectGraph.h"
+
+// Map.
+#include "Domain/Map/UI_Map.h"
+
+// Interactable.
+#include "Domain/Interactable/UI_Interactable.h"
+
+// Settings.
+#include "Infrastructure/Persistence/UI_Settings.h"
+
+// Memory Scanner.
+#include "Infrastructure/Memory/UI_MemoryScanner.h"
+
+// ImGui.
 #include "External/imgui/imgui_internal.h"
 
 void UI_Main::Draw()
@@ -206,8 +245,10 @@ void UI_Main::DrawTabs()
 	AddTab("Object Table", []() { g_pUI->ObjectTable->Draw(); }, false, nullptr);
 	AddTab("Player Table", []() { g_pUI->PlayerTable->Draw(); }, false, nullptr);
 	AddTab("Object Graph", []() { g_pUI->ObjectGraph->Draw(); }, false, nullptr);
+	AddTab("Map", []() { g_pUI->Map->Draw(); }, false, nullptr);
 	AddTab("Interactable", []() { g_pUI->Interactable->Draw(); }, false, nullptr);
 	AddTab("Settings", []() { g_pUI->Settings->Draw(); }, firstLaunch, nullptr);
+	AddTab("Memory Scanner", []() { g_pUI->MemoryScanner->Draw(); }, false, nullptr);
 
 	// Logs
 	const ImVec4* activeAlert = nullptr;

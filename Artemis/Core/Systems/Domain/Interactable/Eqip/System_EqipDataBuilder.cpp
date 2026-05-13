@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "Core/Types/Domain/Domains/Interactable/EquipmentData.h"
 #include "Core/Systems/Domain/Interactable/Eqip/System_EqipDataBuilder.h"
+#include "Core/Types/Domain/Interactable/EquipmentData.h"
 #include "Generated/Eqip/EqipObject.h"
 
 EquipmentData System_EqipDataBuilder::BuildData(const EqipObject& eqip)

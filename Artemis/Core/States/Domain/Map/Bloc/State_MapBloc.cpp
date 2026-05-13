@@ -1,6 +1,12 @@
 #include "pch.h"
-#include "Core/States/Domain/Map/Bloc/State_MapBloc.h"
+
+// Header.
+#include "State_MapBloc.h"
+
+// Systems.
 #include "Core/Systems/Core_System.h"
+
+// Debug.
 #include "Core/Systems/Interface/System_Debug.h"
 
 bool State_MapBloc::HasBloc(const std::string& tagName) const

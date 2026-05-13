@@ -1,7 +1,9 @@
 #pragma once
 
+// Types.
 #include "Core/Types/Infrastructure/UITypes.h"
 #include "Core/Types/Interface/LogTypes.h"
+
 #include <atomic>
 
 class UI_Logs

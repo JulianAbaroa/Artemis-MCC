@@ -1,5 +1,7 @@
 #include "pch.h"
-#include "Core/States/Interface/State_Debug.h"
+
+// Header.
+#include "State_Debug.h"
 
 void State_Debug::PushBack(LogEntry entry)
 {

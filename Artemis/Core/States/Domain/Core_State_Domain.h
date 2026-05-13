@@ -2,10 +2,6 @@
 
 #include <memory>
 
-// TODO: Rework these, not priority.
-//class TimelineState;
-//class EventRegistryState;
-
 // Map.
 class State_Map;
 class State_MapPhmo;
@@ -24,20 +20,29 @@ class State_MapJmad;
 class State_MapCtrl;
 class State_MapMach;
 
-// Environment.
-class State_Environment;
+// Object.
+class State_ObjectTable;
+
+// Player.
+class State_PlayerTable;
+
+// Interaction.
+class State_InteractionTable;
+
+// Classification.
+class State_Classification;
+
+// Graph.
+class State_ObjectGraph;
+class State_PlayerGraph;
 
 // Navigation
 class State_Navigation;
 
-// Tables
-class State_ObjectTable;
-class State_PlayerTable;
-class State_InteractionTable;
+// Environment.
+class State_Environment;
 
-// AI Processed-data (TODO: ObservableSystem from which 
-// the AI is going to receive the final polished data).
-class State_ObjectGraph;
+// Interactable.
 class State_Interactable;
 
 // Main container for the application's domain states.
@@ -45,9 +50,6 @@ struct Core_State_Domain
 {
 	Core_State_Domain();
 	~Core_State_Domain();
-
-	//std::unique_ptr<State_Timeline> Timeline;
-	//std::unique_ptr<State_EventRegistry> EventRegistry;
 
 	// Map.
 	std::unique_ptr<State_Map> Map;
@@ -67,18 +69,27 @@ struct Core_State_Domain
 	std::unique_ptr<State_MapCtrl> MapCtrl;
 	std::unique_ptr<State_MapMach> MapMach;
 
-	// Environment.
-	std::unique_ptr<State_Environment> Environment;
+	// Object.
+	std::unique_ptr<State_ObjectTable> ObjectTable;
+
+	// Player.
+	std::unique_ptr<State_PlayerTable> PlayerTable;
+
+	// Interaction.
+	std::unique_ptr<State_InteractionTable> InteractionTable;
+
+	// Classification.
+	std::unique_ptr<State_Classification> Classification;
+
+	// Graph.
+	std::unique_ptr<State_ObjectGraph> ObjectGraph;
+	std::unique_ptr<State_PlayerGraph> PlayerGraph;
 
 	// Navigation.
 	std::unique_ptr<State_Navigation> Navigation;
 
-	// Tables.
-	std::unique_ptr<State_ObjectTable> ObjectTable;
-	std::unique_ptr<State_PlayerTable> PlayerTable;
-	std::unique_ptr<State_InteractionTable> InteractionTable;
-
-	std::unique_ptr<State_ObjectGraph> ObjectGraph;
+	// Environment.
+	std::unique_ptr<State_Environment> Environment;
 
 	// Interactable.
 	std::unique_ptr<State_Interactable> Interactable;
