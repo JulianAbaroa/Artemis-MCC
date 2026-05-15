@@ -2,6 +2,9 @@
 
 #include <memory>
 
+struct Core_State;
+struct Core_System_Interface;
+
 // --- Engine ---
 
 // Input.
@@ -38,6 +41,10 @@ struct Core_System_Infrastructure
 	Core_System_Infrastructure();
 	~Core_System_Infrastructure();
 
+	void Initialize(Core_State& state, 
+		Core_System_Interface& systemInterface);
+	void Shutdown();
+
 	// --- Engine ---
 
 	// Input.
@@ -68,5 +75,4 @@ struct Core_System_Infrastructure
 
 	// Settings.
 	std::unique_ptr<System_Settings> Settings;
-
 };

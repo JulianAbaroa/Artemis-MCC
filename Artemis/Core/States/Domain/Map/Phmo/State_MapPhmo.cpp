@@ -3,12 +3,6 @@
 // Header.
 #include "State_MapPhmo.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
-
 bool State_MapPhmo::HasPhmo(const std::string& tagName) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -24,11 +18,6 @@ const PhmoObject* State_MapPhmo::GetPhmo(const std::string& tagName) const
 
 void State_MapPhmo::AddPhmo(const std::string& tagName, PhmoObject data)
 {
-    //g_pSystem->Debug->Log("[MapPhmoState] INFO:" 
-    //    " Added: %s | RigidBodies=%zu | Nodes=%zu | Materials=%zu",
-    //    tagName.c_str(), data.RigidBodies.size(),
-    //    data.Nodes.size(), data.Materials.size());
-
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Phmos.emplace(tagName, std::move(data));
 }

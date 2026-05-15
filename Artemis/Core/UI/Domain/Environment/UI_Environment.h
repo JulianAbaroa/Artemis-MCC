@@ -3,20 +3,34 @@
 // Types.
 #include "Core/Types/Domain/Environment/EnvironmentTypes.h"
 
-// Helpers.
-#include "Core/UI/Utils/MapTypes.h"
-#include "Core/UI/Utils/MapHelpers.h"
-#include "Core/UI/Utils/Strings/EnumToString.h"
-
 // ImGui.
 #include "External/imgui/imgui.h"
 
 #include <vector>
 #include <array>
 
+struct MapTransform;
+struct MapSelection;
+struct MapCandidate;
+struct WorldRigidBody;
+struct WorldShape;
+
+class State_Environment;
+class System_Debug;
+
+struct UI_Environment_Dependencies
+{
+    State_Environment& State_Environment;
+    System_Debug& System_Debug;
+};
+
 class UI_Environment
 {
 public:
+    UI_Environment(UI_Environment_Dependencies dependencies) :
+        m_Deps(dependencies) {}
+    ~UI_Environment() = default;
+
     void Draw(const MapTransform& transform, const MapSelection& selection) const;
     void DrawLayers(ImDrawList* draw, const MapTransform& transform,
         const MapSelection& selection, uint32_t visibleLayers) const;
@@ -34,6 +48,8 @@ public:
         float& outMaxX, float& outMaxY) const;
 
 private:
+    UI_Environment_Dependencies m_Deps;
+
     std::vector<ActivePhysicsInstance> m_CachedInstances;
 
     // --- Draw layers ---

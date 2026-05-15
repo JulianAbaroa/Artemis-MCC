@@ -3,17 +3,10 @@
 // Header.
 #include "UI_Interactable.h"
 
-// States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
+// --- States ---
 
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
-
-// Interaction.
 #include "Core/States/Domain/Interaction/State_InteractionTable.h"
-
-// Interactable.
 #include "Core/States/Domain/Interactable/State_Interactable.h"
 
 // ImGui.
@@ -156,7 +149,7 @@ namespace
 void UI_Interactable::Draw()
 {
     std::vector<AIInteractable> interactables =
-        g_pState->Domain->Interactable->GetInteractables();
+        m_Deps.State_Interactable.GetInteractables();
 
     std::sort(interactables.begin(), interactables.end(),
         [](const AIInteractable& a, const AIInteractable& b) {
@@ -164,7 +157,7 @@ void UI_Interactable::Draw()
         });
 
     const LiveInteraction interaction =
-        g_pState->Domain->InteractionTable->GetLiveInteraction();
+        m_Deps.State_InteractionTable.GetLiveInteraction();
 
     // Header bar.
     ImGui::TextDisabled("Interactables: %zu", interactables.size());
@@ -360,7 +353,7 @@ void UI_Interactable::DrawSelectedDetails(const AIInteractable& item)
 {
     // Resolve LiveObject once for this frame.
     const LiveObject* objPtr =
-        g_pState->Domain->ObjectTable->GetLiveObject(item.Handle);
+        m_Deps.State_ObjectTable.GetLiveObject(item.Handle);
 
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
 
@@ -585,6 +578,6 @@ std::string UI_Interactable::GetShortName(const std::string& fullPath) const
 
 std::string UI_Interactable::GetTagName(uint32_t handle) const
 {
-    const LiveObject* obj = g_pState->Domain->ObjectTable->GetLiveObject(handle);
+    const LiveObject* obj = m_Deps.State_ObjectTable.GetLiveObject(handle);
     return obj ? obj->TagName : std::format("0x{:08X}", handle);
 }

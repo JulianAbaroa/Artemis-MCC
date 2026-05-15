@@ -4,34 +4,14 @@
 #include "System_ObjectGraph.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
-// Map.
-#include "Core/States/Domain/Map/Bipd/State_MapBipd.h"
-#include "Core/States/Domain/Map/Bloc/State_MapBloc.h"
-#include "Core/States/Domain/Map/Coll/State_MapColl.h"
-#include "Core/States/Domain/Map/Eqip/State_MapEqip.h"
-#include "Core/States/Domain/Map/Jmad/State_MapJmad.h"
-#include "Core/States/Domain/Map/Mach/State_MapMach.h"
-#include "Core/States/Domain/Map/Mode/State_MapMode.h"
-#include "Core/States/Domain/Map/Phmo/State_MapPhmo.h"
-#include "Core/States/Domain/Map/Proj/State_MapProj.h"
-#include "Core/States/Domain/Map/Scen/State_MapScen.h"
-#include "Core/States/Domain/Map/Scnr/State_MapScnr.h"
-#include "Core/States/Domain/Map/Vehi/State_MapVehi.h"
-#include "Core/States/Domain/Map/Weap/State_MapWeap.h"
-#include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
-
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
-// Graph.
 #include "Core/States/Domain/Graph/State_ObjectGraph.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Interface/System_Debug.h"
+// --- Systems ---
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // Called from 'Thread_AI::Run', its responsible for generating & updating
 // the father-child-sibling relationship between objects. These relationships
@@ -40,19 +20,19 @@ void System_ObjectGraph::UpdateGraph()
 {
 	std::unordered_map<uint32_t, ObjectNode> nodes;
 	this->BuildNodes(nodes);
-	g_pState->Domain->ObjectGraph->SetNodes(std::move(nodes));
+	m_Deps.State_ObjectGraph.SetNodes(std::move(nodes));
 }
 
 void System_ObjectGraph::Cleanup()
 {
-	g_pState->Domain->ObjectGraph->Cleanup();
-	g_pSystem->Debug->Log("[System_ObjectGraph] INFO: Cleanup completed.");
+	m_Deps.State_ObjectGraph.Cleanup();
+	m_Deps.System_Debug.Log("[System_ObjectGraph] INFO: Cleanup completed.");
 }
 
 void System_ObjectGraph::BuildNodes(std::unordered_map<uint32_t, ObjectNode>& nodes)
 {
 	// Get the entire Artemis object table.
-	const auto& objectTable = g_pState->Domain->ObjectTable->GetObjectTable();
+	const auto& objectTable = m_Deps.State_ObjectTable.GetObjectTable();
 
 	for (const auto& [handle, object] : objectTable)
 	{

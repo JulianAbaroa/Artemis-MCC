@@ -3,25 +3,20 @@
 // Header.
 #include "UI_ObjectGraph.h"
 
+// Types.
+#include "Core/Types/Domain/Graph/ObjectNode.h"
+#include "Core/Types/Domain/Graph/PlayerTree.h"
+
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
-
-// Player.
 #include "Core/States/Domain/Player/State_PlayerTable.h"
-
-// Graph.
 #include "Core/States/Domain/Graph/State_ObjectGraph.h"
 #include "Core/States/Domain/Graph/State_PlayerGraph.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // ImGui.
 #include "External/imgui/imgui.h"
@@ -31,8 +26,8 @@
 
 void UI_ObjectGraph::Draw()
 {
-    const auto& nodes = g_pState->Domain->ObjectGraph->GetNodes();
-    const auto& playerTrees = g_pState->Domain->PlayerGraph->GetTrees();
+    const auto& nodes = m_Deps.State_ObjectGraph.GetNodes();
+    const auto& playerTrees = m_Deps.State_PlayerGraph.GetTrees();
 
     auto it_remove = std::remove_if(m_DiscoveryOrder.begin(), m_DiscoveryOrder.end(),
         [&](uint32_t h) { return nodes.find(h) == nodes.end(); });
@@ -109,7 +104,7 @@ void UI_ObjectGraph::DrawPlayerTrees(
 {
     for (const auto& tree : trees)
     {
-        auto player = g_pState->Domain->PlayerTable->CopyLivePlayer(tree.Handle);
+        auto player = m_Deps.State_PlayerTable.CopyLivePlayer(tree.Handle);
         if (!player) continue;
 
         const char* gamertag = player->Gamertag.c_str();
@@ -133,8 +128,8 @@ void UI_ObjectGraph::DrawPlayerTrees(
         auto drawLeaf = [&](const char* label, uint32_t handle) {
             if (handle == 0xFFFFFFFF) return;
         
-            auto obj = g_pState->Domain->ObjectTable->CopyLiveObject(handle);
-            const char* detail = obj ? obj->Class.c_str() : "?";
+            auto obj = m_Deps.State_ObjectTable.CopyLiveObject(handle);
+            const char* detail = obj ? obj->FourCC.c_str() : "?";
         
             ImGuiTreeNodeFlags leafFlags =
                 ImGuiTreeNodeFlags_Leaf |
@@ -189,8 +184,8 @@ void UI_ObjectGraph::DrawNodeHierarchy(
     if (node.ChildrenHandles.empty()) flags |= ImGuiTreeNodeFlags_Leaf;
     if (m_SelectedHandle == handle)   flags |= ImGuiTreeNodeFlags_Selected;
 
-    auto obj = g_pState->Domain->ObjectTable->CopyLiveObject(handle);
-    const char* cls = obj ? obj->Class.c_str() : "?";
+    auto obj = m_Deps.State_ObjectTable.CopyLiveObject(handle);
+    const char* cls = obj ? obj->FourCC.c_str() : "?";
 
     bool open = ImGui::TreeNodeEx(
         reinterpret_cast<void*>(static_cast<uintptr_t>(handle)),
@@ -209,7 +204,7 @@ void UI_ObjectGraph::DrawNodeHierarchy(
 
 void UI_ObjectGraph::DrawSelectedNodeDetails(const ObjectNode& node)
 {
-    auto obj = g_pState->Domain->ObjectTable->CopyLiveObject(node.Handle);
+    auto obj = m_Deps.State_ObjectTable.CopyLiveObject(node.Handle);
 
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
     if (ImGui::BeginChild("##NodeDetail", ImVec2(0, 0), true))
@@ -221,7 +216,7 @@ void UI_ObjectGraph::DrawSelectedNodeDetails(const ObjectNode& node)
             ImGui::PopStyleColor();
 
             ImGui::Separator();
-            ImGui::TextDisabled("Class: %s", obj->Class.c_str());
+            ImGui::TextDisabled("Class: %s", obj->FourCC.c_str());
 
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.4f, 1.0f), "Position");

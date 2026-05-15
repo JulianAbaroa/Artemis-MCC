@@ -3,11 +3,36 @@
 // Header.
 #include "Hook_ObjectTable.h"
 
+// Types.
+#include "Core/Types/Infrastructure/AOB/Signatures.h"
+
+// --- States ---
+
+#include "Core/States/Domain/Object/State_ObjectTable.h"
+
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
 #include "Core/Systems/Infrastructure/Engine/Memory/System_AOBScanner.h"
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
+
+void Hook_ObjectTable::FindAndStoreTableBase()
+{
+    uintptr_t tableBase = m_Deps.State_ObjectTable.GetObjectTableBase();
+    if (tableBase == 0)
+    {
+        tableBase = this->GetObjectTable();
+        if (!tableBase)
+        {
+            m_Deps.System_Debug.Log("[ObjectTable] ERROR: ObjectTableBase invalid.");
+            return;
+        }
+
+        m_Deps.System_Debug.Log("[ObjectTable] INFO: ObjectTable: 0x%llX", tableBase);
+
+        m_Deps.State_ObjectTable.SetObjectTableBase(tableBase);
+    }
+}
 
 // Returns the pointer to the Global Object Table (Indirection Table).
 // This table acts as a lookup array where each 24-byte (0x18) entry maps a 
@@ -23,7 +48,8 @@ uintptr_t Hook_ObjectTable::GetObjectTable()
     {
         uintptr_t tlsArray = (uintptr_t)__readgsqword(0x58);
 
-        uintptr_t match = g_pSystem->Infrastructure->AOBScanner->FindPattern(Signatures::TelemetryIdModifier);
+        uintptr_t match = m_Deps.System_AOBScanner.
+            FindPattern(Signatures::TelemetryIdModifier);
 
         if (match)
         {

@@ -6,7 +6,7 @@
 // Identification of a game engine's object.
 struct ObjectProfile
 {
-    ObjectClass PrimaryClass = ObjectClass::Invalid;
+    ObjectClass Class = ObjectClass::Invalid;
 
     // These flags allow us to know what game objects shares the same 'Tag Name'.
     bool HasBipd = false;   // biped.

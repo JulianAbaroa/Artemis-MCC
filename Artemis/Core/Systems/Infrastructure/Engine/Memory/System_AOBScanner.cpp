@@ -3,11 +3,12 @@
 // Header.
 #include "System_AOBScanner.h"
 
-// --- Systems ---
-#include "Core/Systems/Core_System.h"
+// Types.
+#include "Core/Types/Infrastructure/AOB/Signatures.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+// --- Systems ---
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <psapi.h>
 #include <vector>

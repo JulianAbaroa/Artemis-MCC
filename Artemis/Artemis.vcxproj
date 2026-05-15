@@ -216,7 +216,8 @@
     <ClInclude Include="Core\States\Infrastructure\Engine\Memory\State_MemoryScanner.h" />
     <ClInclude Include="Core\States\Infrastructure\Engine\Render\State_Render.h" />
     <ClInclude Include="Core\States\Infrastructure\Persistence\State_Settings.h" />
-    <ClInclude Include="Core\States\Interface\State_Debug.h" />
+    <ClInclude Include="Core\States\Interface\Core_State_Interface.h" />
+    <ClInclude Include="Core\States\Interface\Debug\State_Debug.h" />
     <ClInclude Include="Core\Systems\Core_System.h" />
     <ClInclude Include="Core\Systems\Domain\Classification\System_ObjectClassifier.h" />
     <ClInclude Include="Core\Systems\Domain\Core_System_Domain.h" />
@@ -258,7 +259,8 @@
     <ClInclude Include="Core\Systems\Infrastructure\Engine\Thread\System_Thread.h" />
     <ClInclude Include="Core\Systems\Infrastructure\Persistence\System_Preferences.h" />
     <ClInclude Include="Core\Systems\Infrastructure\Persistence\System_Settings.h" />
-    <ClInclude Include="Core\Systems\Interface\System_Debug.h" />
+    <ClInclude Include="Core\Systems\Interface\Core_System_Interface.h" />
+    <ClInclude Include="Core\Systems\Interface\Debug\System_Debug.h" />
     <ClInclude Include="Core\Threads\Core_Thread.h" />
     <ClInclude Include="Core\Threads\Domain\Thread_Main.h" />
     <ClInclude Include="Core\Threads\Domain\Thread_AI.h" />
@@ -403,7 +405,8 @@
     <ClCompile Include="Core\States\Infrastructure\Engine\Memory\State_MemoryScanner.cpp" />
     <ClCompile Include="Core\States\Infrastructure\Engine\Render\State_Render.cpp" />
     <ClCompile Include="Core\States\Infrastructure\Persistence\State_Settings.cpp" />
-    <ClCompile Include="Core\States\Interface\State_Debug.cpp" />
+    <ClCompile Include="Core\States\Interface\Core_State_Interface.cpp" />
+    <ClCompile Include="Core\States\Interface\Debug\State_Debug.cpp" />
     <ClCompile Include="Core\Systems\Core_System.cpp" />
     <ClCompile Include="Core\Systems\Domain\Classification\System_ObjectClassifier.cpp" />
     <ClCompile Include="Core\Systems\Domain\Core_System_Domain.cpp" />
@@ -443,7 +446,8 @@
     <ClCompile Include="Core\Systems\Infrastructure\Engine\Thread\System_Thread.cpp" />
     <ClCompile Include="Core\Systems\Infrastructure\Persistence\System_Preferences.cpp" />
     <ClCompile Include="Core\Systems\Infrastructure\Persistence\System_Settings.cpp" />
-    <ClCompile Include="Core\Systems\Interface\System_Debug.cpp" />
+    <ClCompile Include="Core\Systems\Interface\Core_System_Interface.cpp" />
+    <ClCompile Include="Core\Systems\Interface\Debug\System_Debug.cpp" />
     <ClCompile Include="Core\Threads\Core_Thread.cpp" />
     <ClCompile Include="Core\Threads\Domain\Thread_Main.cpp" />
     <ClCompile Include="Core\Threads\Domain\Thread_AI.cpp" />

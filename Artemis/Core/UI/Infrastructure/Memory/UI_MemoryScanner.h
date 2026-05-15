@@ -1,18 +1,32 @@
 #pragma once
 
-// Types.
-#include "Core/Types/Infrastructure/MemoryScannerTypes.h"
-
 #include <vector>
 #include <string>
+
+struct ScanSession;
+enum class ScanDataType : uint8_t;
+enum class ScanMode : uint8_t;
+
+class State_MemoryScanner;
+class System_MemoryScanner;
+
+struct UI_MemoryScanner_Dependencies
+{
+    State_MemoryScanner& State_MemoryScanner;
+    System_MemoryScanner& System_MemoryScanner;
+};
 
 class UI_MemoryScanner
 {
 public:
-    UI_MemoryScanner() = default;
+    UI_MemoryScanner(UI_MemoryScanner_Dependencies dependencies) :
+        m_Deps(dependencies) {};
+    ~UI_MemoryScanner() = default;
     void Draw();
 
 private:
+    UI_MemoryScanner_Dependencies m_Deps;
+
     void DrawTopBar();
     void DrawRegionInputs();
     void DrawKnownSizesCombo();
@@ -87,7 +101,7 @@ private:
     static const SizeEntry  s_KnownSizes[3];
 
     uint64_t ParseValueBuf(const char* buf, ScanDataType type) const;
-    const ModeEntry& CurrentMode() const { return s_Modes[m_ModeIndex]; }
-    ScanDataType CurrentDataType() const { return s_DataTypes[m_DataTypeIndex].Type; }
-    bool IsTypedMode() const { return CurrentDataType() != ScanDataType::Bytes; }
+    const ModeEntry& CurrentMode() const;
+    ScanDataType CurrentDataType() const;
+    bool IsTypedMode() const;
 };

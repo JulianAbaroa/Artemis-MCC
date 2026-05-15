@@ -18,8 +18,8 @@ public:
 	void Cleanup();
 
 private:
+	std::atomic<uintptr_t> m_InteractionTablebase{ 0 };
+
 	LiveInteraction m_LiveInteraction{};
 	mutable std::mutex m_Mutex;
-
-	std::atomic<uintptr_t> m_InteractionTablebase{ 0 };
 };

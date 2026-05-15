@@ -3,18 +3,20 @@
 // Header.
 #include "UI_Map.h"
 
+// --- UI ---
+#include "Core/UI/Domain/Navigation/UI_Navigation.h"
+#include "Core/UI/Domain/Environment/UI_Environment.h"
+
 #include <algorithm>
 #include <limits>
 #include <cmath>
 
-// --- Public ---
-
 void UI_Map::Draw()
 {
-    m_Navigation.FetchState();
-    m_Environment.FetchState();
+    m_Deps.UI_Navigation.FetchState();
+    m_Deps.UI_Environment.FetchState();
 
-    if (m_Navigation.GetGraph().empty())
+    if (m_Deps.UI_Navigation.GetGraph().empty())
     {
         ImGui::TextDisabled("No SBSP geometry loaded.");
         return;
@@ -43,8 +45,8 @@ void UI_Map::Cleanup()
     m_ActiveTab = 0;
     m_RequestTabSwitch = false;
 
-    m_Navigation.Cleanup();
-    m_Environment.Cleanup();
+    m_Deps.UI_Navigation.Cleanup();
+    m_Deps.UI_Environment.Cleanup();
 }
 
 // --- Left panel ---
@@ -52,7 +54,7 @@ void UI_Map::Cleanup()
 void UI_Map::DrawLeftPanel()
 {
     ImGui::TextDisabled("Graph: %d clusters across %d SBSPs",
-        static_cast<int>(m_Navigation.GetGraph().size()),
+        static_cast<int>(m_Deps.UI_Navigation.GetGraph().size()),
         this->CountSbsps());
     ImGui::Separator();
 
@@ -87,12 +89,12 @@ void UI_Map::DrawLeftPanel()
 
 void UI_Map::DrawTabNavigation()
 {
-    m_Navigation.Draw(m_Transform, m_Selection);
+    m_Deps.UI_Navigation.Draw(m_Transform, m_Selection);
 }
 
 void UI_Map::DrawTabEnvironment() const
 {
-    m_Environment.Draw(m_Transform, m_Selection);
+    m_Deps.UI_Environment.Draw(m_Transform, m_Selection);
 }
 
 // --- Right panel ---
@@ -212,10 +214,10 @@ void UI_Map::DrawMapCanvas()
         true);
 
     // Navigation layers.
-    m_Navigation.DrawLayers(draw, m_Transform, m_Selection, m_VisibleLayers);
+    m_Deps.UI_Navigation.DrawLayers(draw, m_Transform, m_Selection, m_VisibleLayers);
 
     // Environment layers.
-    m_Environment.DrawLayers(draw, m_Transform, m_Selection, m_VisibleLayers);
+    m_Deps.UI_Environment.DrawLayers(draw, m_Transform, m_Selection, m_VisibleLayers);
 
     draw->PopClipRect();
 
@@ -288,8 +290,8 @@ void UI_Map::HandleMapSelection()
 
     std::vector<MapCandidate> candidates;
 
-    m_Navigation.CollectCandidates(m_Transform, candidates, m_VisibleLayers);
-    m_Environment.CollectCandidates(m_Transform, candidates, m_VisibleLayers);
+    m_Deps.UI_Navigation.CollectCandidates(m_Transform, candidates, m_VisibleLayers);
+    m_Deps.UI_Environment.CollectCandidates(m_Transform, candidates, m_VisibleLayers);
 
     if (candidates.empty())
     {
@@ -328,8 +330,8 @@ void UI_Map::HandleMapSelection()
 void UI_Map::ComputeWorldBounds(float& outMinX, float& outMinY,
     float& outMaxX, float& outMaxY) const
 {
-    m_Navigation.GetWorldBounds(outMinX, outMinY, outMaxX, outMaxY);
-    m_Environment.GetWorldBounds(outMinX, outMinY, outMaxX, outMaxY);
+    m_Deps.UI_Navigation.GetWorldBounds(outMinX, outMinY, outMaxX, outMaxY);
+    m_Deps.UI_Environment.GetWorldBounds(outMinX, outMinY, outMaxX, outMaxY);
 }
 
 // --- Layer helpers ---
@@ -354,7 +356,7 @@ bool UI_Map::IsLayerVisible(MapLayer layer) const
 int32_t UI_Map::CountSbsps() const
 {
     int32_t max = -1;
-    for (const auto& c : m_Navigation.GetGraph())
+    for (const auto& c : m_Deps.UI_Navigation.GetGraph())
         if (c.SbspIndex > max) max = c.SbspIndex;
     return max + 1;
 }

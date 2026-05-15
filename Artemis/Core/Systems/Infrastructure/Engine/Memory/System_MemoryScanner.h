@@ -1,20 +1,32 @@
 #pragma once
 
-// Types.
-#include "Core/Types/Infrastructure/MemoryScannerTypes.h"
-
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <atomic>
 #include <thread>
 
+struct ScanFilter;
+enum class ScanDataType : uint8_t;
+
 class State_MemoryScanner;
+class System_Debug;
+
+struct System_MemoryScanner_Dependencies
+{
+    State_MemoryScanner& State_MemoryScanner;
+    System_Debug& System_Debug;
+};
 
 class System_MemoryScanner
 {
 public:
-    System_MemoryScanner();
-    ~System_MemoryScanner();
+    System_MemoryScanner(System_MemoryScanner_Dependencies dependencies) :
+        m_Deps(dependencies) {}
+    ~System_MemoryScanner()
+    {
+        if (m_WorkerThread.joinable()) m_WorkerThread.join();
+    }
 
     void SetRegion(const std::string& name, uintptr_t base, size_t size);
 
@@ -43,6 +55,8 @@ public:
     void Reset();
 
 private:
+    System_MemoryScanner_Dependencies m_Deps;
+
     // Capture Before/After and call the diff
     void RunDifferentialScan(int delayMs);   
     void CaptureSnapshot(bool isBefore);

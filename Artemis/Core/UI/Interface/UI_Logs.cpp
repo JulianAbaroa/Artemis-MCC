@@ -3,23 +3,20 @@
 // Header.
 #include "UI_Logs.h"
 
-// --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+// Types.
+#include "Core/Types/Infrastructure/UITypes.h"
+#include "Core/Types/Interface/LogTypes.h"
 
-// Settings.
+// --- States ---
+
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
-// Debug.
-#include "Core/States/Interface/State_Debug.h"
+#include "Core/States/Interface/Debug/State_Debug.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
-// ImGui.
 #include "External/imgui/imgui.h"
 
 void UI_Logs::Draw()
@@ -50,8 +47,11 @@ LogFilterState UI_Logs::DrawTopBar()
 
     ImGui::SameLine();
 
-    bool autoScroll = g_pState->Infrastructure->Settings->GetLogsAutoScroll();
-    if (ImGui::Checkbox("Auto-Scroll", &autoScroll)) g_pState->Infrastructure->Settings->SetLogsAutoScroll(autoScroll);
+    bool autoScroll = m_Deps.State_Settings.GetLogsAutoScroll();
+    if (ImGui::Checkbox("Auto-Scroll", &autoScroll))
+    {
+        m_Deps.State_Settings.SetLogsAutoScroll(autoScroll);
+    }
 
     ImGui::SameLine();
 
@@ -69,7 +69,7 @@ void UI_Logs::DrawClearButton(bool isFiltering, std::string& searchStr)
         if (isFiltering)
         {
             std::string lowerFilter = searchStr;
-            g_pSystem->Debug->RemoveLogsIf([&](const LogEntry& entry) {
+            m_Deps.System_Debug.RemoveLogsIf([&](const LogEntry& entry) {
                 std::string textLower = entry.FullText;
                 std::transform(textLower.begin(), textLower.end(), textLower.begin(), ::tolower);
                 return textLower.find(lowerFilter) != std::string::npos;
@@ -77,7 +77,7 @@ void UI_Logs::DrawClearButton(bool isFiltering, std::string& searchStr)
         }
         else
         {
-            g_pState->Debug->ClearLogs();
+            m_Deps.State_Debug.ClearLogs();
         }
 
         // Reset selections.
@@ -94,7 +94,7 @@ void UI_Logs::DrawCopyButton(bool isFiltering, std::string& searchStr)
     {
         std::string output;
 
-        g_pState->Debug->ForEachLog([&](const LogEntry& entry) {
+        m_Deps.State_Debug.ForEachLog([&](const LogEntry& entry) {
             if (isFiltering)
             {
                 std::string textLower = entry.FullText;
@@ -138,18 +138,17 @@ void UI_Logs::DrawHelpMarker()
     }
 }
 
-
 std::vector<int> UI_Logs::GetFilteredIndices(const LogFilterState& filter)
 {
     std::vector<int> filtered;
     if (!filter.IsFiltering) return filtered;
 
-    int totalLogs = static_cast<int>(g_pState->Debug->GetTotalLogs());
+    int totalLogs = static_cast<int>(m_Deps.State_Debug.GetTotalLogs());
     filtered.reserve(totalLogs / 2);
 
     for (int i = 0; i < totalLogs; i++)
     {
-        LogEntry entry = g_pState->Debug->GetLogAt(i);
+        LogEntry entry = m_Deps.State_Debug.GetLogAt(i);
         std::string textLower = entry.FullText;
         
         std::transform(textLower.begin(), textLower.end(), textLower.begin(),
@@ -173,7 +172,7 @@ void UI_Logs::DrawScrollingRegion(const LogFilterState& filter)
     }
 
     auto filteredIndices = this->GetFilteredIndices(filter);
-    int totalLogs = static_cast<int>(g_pState->Debug->GetTotalLogs());
+    int totalLogs = static_cast<int>(m_Deps.State_Debug.GetTotalLogs());
     int displayCount = filter.IsFiltering ? (int)filteredIndices.size() : totalLogs;
 
     ImGuiListClipper clipper;
@@ -186,7 +185,7 @@ void UI_Logs::DrawScrollingRegion(const LogFilterState& filter)
         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
         {
             int realIndex = filter.IsFiltering ? filteredIndices[i] : i;
-            LogEntry entry = g_pState->Debug->GetLogAt(realIndex);
+            LogEntry entry = m_Deps.State_Debug.GetLogAt(realIndex);
 
             this->DrawLogLine(realIndex, entry, logClickedThisFrame);
         }
@@ -198,7 +197,8 @@ void UI_Logs::DrawScrollingRegion(const LogFilterState& filter)
         m_SelectionEnd.store(-1);
     }
 
-    if (g_pState->Infrastructure->Settings->GetLogsAutoScroll() && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+    if (m_Deps.State_Settings.GetLogsAutoScroll() && 
+        ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
     {
         ImGui::SetScrollHereY(1.0f);
     }
@@ -307,7 +307,7 @@ void UI_Logs::HandleLogInteraction(int realIndex, const LogEntry& entry, bool& l
 
             for (int j = start; j <= end; j++)
             {
-                selectedText += g_pState->Debug->GetLogAt(j).FullText + "\n";
+                selectedText += m_Deps.State_Debug.GetLogAt(j).FullText + "\n";
             }
 
             ImGui::SetClipboardText(selectedText.c_str());

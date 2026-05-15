@@ -4,28 +4,23 @@
 #include "UI_PlayerTable.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
-// Player.
 #include "Core/states/Domain/Player/State_PlayerTable.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // ImGui.
 #include "External/imgui/imgui.h"
 
 void UI_PlayerTable::Draw()
 {
-	bool hasMapChanged = g_pState->Domain->PlayerTable->HasMapChanged();
+	bool hasMapChanged = m_Deps.State_PlayerTable.HasMapChanged();
 	if (hasMapChanged)
 	{
-		m_CachePlayers = g_pState->Domain->PlayerTable->GetPlayerTable();
-		g_pState->Domain->PlayerTable->SetMapChanged(false);
+		m_CachePlayers = m_Deps.State_PlayerTable.GetPlayerTable();
+        m_Deps.State_PlayerTable.SetMapChanged(false);
 	}
 
 	ImGui::TextDisabled("Live Players Count: %d", (int)m_CachePlayers.size());

@@ -48,7 +48,6 @@ public:
 
 private:
     std::vector<AIInteractable> m_Interactables;
-
     std::unordered_map<std::string, VehicleData> m_VehicleData;
     std::unordered_map<std::string, EquipmentData> m_EquipmentData;
     std::unordered_map<std::string, WeaponData> m_WeaponData;

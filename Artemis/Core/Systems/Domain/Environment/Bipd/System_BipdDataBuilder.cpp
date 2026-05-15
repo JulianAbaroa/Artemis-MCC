@@ -1,6 +1,11 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Environment/Bipd/System_BipdDataBuilder.h"
+
+// Header.
+#include "System_BipdDataBuilder.h"
+
+// Types.
 #include "Core/Types/Domain/Environment/BipdPhysicsData.h"
+
 #include "Generated/Bipd/BipdObject.h"
 
 BipdPhysicsData System_BipdDataBuilder::BuildData(const BipdObject& bipd)

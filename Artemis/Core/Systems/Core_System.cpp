@@ -3,25 +3,34 @@
 // Header.
 #include "Core_System.h"
 
-// Domain.
+// State.
+#include "Core/States/Core_State.h"
+
 #include "Domain/Core_System_Domain.h"
-
-// Infrastructure.
 #include "Infrastructure/Core_System_Infrastructure.h"
+#include "Interface/Core_System_Interface.h"
 
-// Interface.
-#include "Interface/System_Debug.h"
+Core_System::Core_System() = default;
+Core_System::~Core_System() = default;
 
-Core_System::Core_System()
+void Core_System::Initialize(Core_State& state)
 {
-	// Domain.
-	Domain = std::make_unique<Core_System_Domain>();
+	// Interface.
+	Interface = std::make_unique<Core_System_Interface>();
+	Interface->Initialize(state);
 
 	// Infrastructure.
 	Infrastructure = std::make_unique<Core_System_Infrastructure>();
+	Infrastructure->Initialize(state, *Interface);
 
-	// Interface.
-	Debug = std::make_unique<System_Debug>();
+	// Domain.
+	Domain = std::make_unique<Core_System_Domain>();
+	Domain->Initialize(state, *Infrastructure, *Interface);
 }
 
-Core_System::~Core_System() = default;
+void Core_System::Shutdown() const
+{
+	Interface->Shutdown();
+	Infrastructure->Shutdown();
+	Domain->Shutdown();
+}

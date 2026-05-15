@@ -2,13 +2,31 @@
 
 #include <atomic>
 
+class System_ObjectTable;
+class System_AOBScanner;
+class System_Debug;
+
+struct Hook_ReleaseObject_Dependencies
+{
+	System_ObjectTable& System_ObjectTable;
+	System_AOBScanner& System_AOBScanner;
+	System_Debug& System_Debug;
+};
+
 class Hook_ReleaseObject
 {
 public:
+	Hook_ReleaseObject(Hook_ReleaseObject_Dependencies dependencies) :
+		m_Deps(dependencies) {};
+	~Hook_ReleaseObject() = default;
+
 	void Install();
 	void Uninstall();
 
 private:
+	static Hook_ReleaseObject* s_Instance;
+	Hook_ReleaseObject_Dependencies m_Deps;
+
 	static void __fastcall HookedReleaseObject(
 		unsigned int handle);
 

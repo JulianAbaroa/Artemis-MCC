@@ -3,18 +3,8 @@
 // Header.
 #include "System_ObjectTable.h"
 
-// Hooks.
-#include "Core/Hooks/Core_Hook.h"
-#include "Core/Hooks/Domain/Core_Hook_Domain.h"
-
-// Object.
-#include "Core/Hooks/Domain/Object/Hook_ObjectTable.h"
-
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
-// Map.
 #include "Core/States/Domain/Map/Bipd/State_MapBipd.h"
 #include "Core/States/Domain/Map/Bloc/State_MapBloc.h"
 #include "Core/States/Domain/Map/Coll/State_MapColl.h"
@@ -30,31 +20,28 @@
 #include "Core/States/Domain/Map/Weap/State_MapWeap.h"
 #include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
 
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
+// --- Systems ---
 
-// Map.
-#include "../Map/System_Map.h"
+#include "Core/Systems/Domain/Map/System_Map.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Infrastructure/Engine/Memory/System_MemoryReader.h"
 
+#include "Core/Systems/Interface/Debug/System_Debug.h"
+
+// Called from 'Hook_CreateObject::HookedCreateObject', its responisble of
+// adding every single object that's created in-game to the Artemis 
+// object table, and settings its base data.
 void System_ObjectTable::OnObjectCreated(uint32_t handle, uint32_t datumIndex)
 {
-	auto& map = *g_pSystem->Domain->Map;
-	auto& debug = *g_pSystem->Debug;
-
 	// Determines whether this datum index has a valid tag reference.
-	auto info = map.ResolveHandle(datumIndex);
+	auto info = m_Dependencies.System_Map.ResolveHandle(datumIndex);
 	if (!info.IsValid)
 	{
-		debug.Log("[ObjectTableSystem] WARNING:Failed to resolve"
-			" DatumIndex 0x%X for handle 0x%X.", datumIndex, handle);
+		m_Dependencies.System_Debug.Log("[ObjectTableSystem] WARNING:"
+			" Failed to resolve DatumIndex 0x%X for handle 0x%X.", 
+			datumIndex, handle);
 		return;
 	}
 
@@ -67,50 +54,40 @@ void System_ObjectTable::OnObjectCreated(uint32_t handle, uint32_t datumIndex)
 	object.DatumIndex = datumIndex;
 
 	// Tag Group of this object.
-	object.Class = info.Class;
+	object.FourCC = info.FourCC;
 
 	// Tag Name of this object.
-	object.TagName = info.Name;
+	object.TagName = info.TagName;
 
 	// Filters invalid objects.
-	if (object.Class == "" || object.TagName == "")
+	if (object.FourCC == "" || object.TagName == "")
 	{
-		g_pSystem->Debug->Log("[ObjectTableSystem] WARNING:" 
+		m_Dependencies.System_Debug.Log("[ObjectTableSystem] WARNING:"
 			" Invalid object created, skipping.");
 		return;
 	}
 
-	// Placeholders, filled inside of 'System_ObjectTable::UpdateObjectTable()'. 
-	object.SpecificObject = [&]() -> SpecificObject {
-		if (object.Class == "bipd") return BipedObject{};
-		if (object.Class == "weap") return WeaponObject{};
-		if (object.Class == "vehi") return VehicleObject{};
-		if (object.Class == "eqip") return EquipmentObject{};
-		return std::monostate{};
-	}();
-
 	// Define the object's profile.
 	ObjectProfile profile;
-	profile.PrimaryClass = this->ClassNameToObjectClass(object.Class);
 
-	profile.HasBipd = g_pState->Domain->MapBipd->HasBipd(object.TagName);
-	profile.HasBloc = g_pState->Domain->MapBloc->HasBloc(object.TagName);
-	profile.HasColl = g_pState->Domain->MapColl->HasColl(object.TagName);
-	profile.HasCtrl = g_pState->Domain->MapCtrl->HasCtrl(object.TagName);
-	profile.HasEqip = g_pState->Domain->MapEqip->HasEqip(object.TagName);
-	profile.HasJmad = g_pState->Domain->MapJmad->HasJmad(object.TagName);
-	profile.HasMach = g_pState->Domain->MapMach->HasMach(object.TagName);
-	profile.HasMode = g_pState->Domain->MapMode->HasMode(object.TagName);
-	profile.HasPhmo = g_pState->Domain->MapPhmo->HasPhmo(object.TagName);
-	profile.HasProj = g_pState->Domain->MapProj->HasProj(object.TagName);
-	profile.HasScen = g_pState->Domain->MapScen->HasScen(object.TagName);
-	profile.HasScnr = g_pState->Domain->MapScnr->HasScnr(object.TagName);
-	profile.HasVehi = g_pState->Domain->MapVehi->HasVehi(object.TagName);
-	profile.HasWeap = g_pState->Domain->MapWeap->HasWeap(object.TagName);
+	profile.HasBipd = m_Dependencies.State_MapBipd.HasBipd(object.TagName);
+	profile.HasBloc = m_Dependencies.State_MapBloc.HasBloc(object.TagName);
+	profile.HasColl = m_Dependencies.State_MapColl.HasColl(object.TagName);
+	profile.HasCtrl = m_Dependencies.State_MapCtrl.HasCtrl(object.TagName);
+	profile.HasEqip = m_Dependencies.State_MapEqip.HasEqip(object.TagName);
+	profile.HasJmad = m_Dependencies.State_MapJmad.HasJmad(object.TagName);
+	profile.HasMach = m_Dependencies.State_MapMach.HasMach(object.TagName);
+	profile.HasMode = m_Dependencies.State_MapMode.HasMode(object.TagName);
+	profile.HasPhmo = m_Dependencies.State_MapPhmo.HasPhmo(object.TagName);
+	profile.HasProj = m_Dependencies.State_MapProj.HasProj(object.TagName);
+	profile.HasScen = m_Dependencies.State_MapScen.HasScen(object.TagName);
+	profile.HasScnr = m_Dependencies.State_MapScnr.HasScnr(object.TagName);
+	profile.HasVehi = m_Dependencies.State_MapVehi.HasVehi(object.TagName);
+	profile.HasWeap = m_Dependencies.State_MapWeap.HasWeap(object.TagName);
 
 	object.Profile = profile;
 
-	g_pState->Domain->ObjectTable->AddObject(handle, object);
+	m_Dependencies.State_ObjectTable.AddObject(handle, object);
 }
 
 // Called from 'Hook_ReleaseObject::HookedReleaseObject', its responsible
@@ -119,10 +96,10 @@ void System_ObjectTable::OnObjectCreated(uint32_t handle, uint32_t datumIndex)
 // object table has.
 void System_ObjectTable::OnObjectDestroyed(uint32_t handle)
 {
-	auto deletedObject = g_pState->Domain->ObjectTable->RemoveObject(handle);
+	auto deletedObject = m_Dependencies.State_ObjectTable.RemoveObject(handle);
 	if (!deletedObject.has_value())
 	{
-		g_pSystem->Debug->Log("[ObjectTableSystem] WARNING:"
+		m_Dependencies.System_Debug.Log("[ObjectTableSystem] WARNING:"
 			" OnObjectDestroyed called for unknown handle 0x%X.", handle);
 	}
 }
@@ -133,47 +110,46 @@ void System_ObjectTable::OnObjectDestroyed(uint32_t handle)
 void System_ObjectTable::UpdateObjectTable()
 {
 	// Gets the memory address of the game engine's object table.
-	uintptr_t tableBase = g_pState->Domain->ObjectTable->GetObjectTableBase();
+	uintptr_t tableBase = m_Dependencies.State_ObjectTable.GetObjectTableBase();
 	if (tableBase == 0) return;
 
-	g_pState->Domain->ObjectTable->UpdateObjects(
+	m_Dependencies.State_ObjectTable.UpdateObjects(
 		[&](uint32_t handle, LiveObject& object) {
-		// 1. Index = Handle & 0xFFFF
+		// Index = Handle & 0xFFFF
 		uint32_t index = handle & 0xFFFF;
 	
-		// 2. Offset = Index * 0x18
+		// Offset = Index * 0x18
 		uintptr_t offset = (uintptr_t)index * 0x18;
 	
-		// 3. Address = ObjectTableBase + Offset
+		// Address = ObjectTableBase + Offset
 		uintptr_t entryAddr = tableBase + offset;
 
 		if (entryAddr != 0)
 		{
-			uint32_t tableHandle = *(uint32_t*)(entryAddr);
+			// The Salt (generation validator) in this Object Entry.
+			uint16_t tableSalt = *(uint16_t*)(entryAddr);
 
-			// Each table entry has the object type at the offset '0x04'.
-			ObjectClass objectType = *(ObjectClass*)(entryAddr + 0x04);
-
-			// Each table entry has the pointer to the object header,
-			// which contains all the data of this object.
-			uintptr_t entityPtr = *(uintptr_t*)(entryAddr + 0x10);
-
-			// The object table only uses the 'Salt' of the handle.
-			uint16_t tableSalt = (uint16_t)(tableHandle & 0xFFFF);
+			// The expected salt, in our saved handle.
 			uint16_t expectedSalt = (uint16_t)(handle >> 16);
 
-			// Filter: Is this table entry, the expected object we were looking for?
+			// The Object Data Ptr readed as a pointer.
+			uintptr_t entityPtr = *(uintptr_t*)(entryAddr + 0x10);
+
 			if (entityPtr != 0 && tableSalt == expectedSalt)
 			{
-				// Object addresses can change, so we make sure to always update it.
+				// Update the object address only if it changed.
 				if (object.Address != entityPtr) object.Address = entityPtr;
 
-				// We assign the object type to this object, only if it haven't been assigned.
-				// Object types cannot change once the object was created.
-				if (object.Type == ObjectClass::Invalid &&
-					objectType != ObjectClass::Invalid) object.Type = objectType;
+				// Each object entry has the object class at the offset '0x04'.
+				ObjectClass objectClass = *(ObjectClass*)(entryAddr + 0x04);
+
+				// Set the Class if it is necessary.
+				if (object.Profile.Class == ObjectClass::Invalid &&
+					objectClass != ObjectClass::Invalid)
+				{
+					object.Profile.Class = objectClass;
+				}
 		
-				// Update the more, specific data of this object.
 				this->UpdateObjectData(object);
 			}
 			else object.Address = 0;
@@ -181,29 +157,10 @@ void System_ObjectTable::UpdateObjectTable()
 	});
 }
 
-void System_ObjectTable::FindObjectTableBase()
-{
-	uintptr_t tableBase = g_pState->Domain->ObjectTable->GetObjectTableBase();
-	if (tableBase == 0)
-	{
-		tableBase = g_pHook->Domain->ObjectTable->GetObjectTable();
-		if (!tableBase)
-		{
-			g_pSystem->Debug->Log("[ObjectTableSystem] ERROR:"
-				" ObjectTableBase invalid.");
-			return;
-		}
-
-		g_pSystem->Debug->Log("[ObjectTableSystem] INFO: ObjectTable: 0x%llX", tableBase);
-
-		g_pState->Domain->ObjectTable->SetObjectTableBase(tableBase);
-	}
-}
-
 void System_ObjectTable::Cleanup()
 {
-	g_pState->Domain->ObjectTable->Cleanup();
-	g_pSystem->Debug->Log("[ObjectTableSystem] INFO: Cleanup completed.");
+	m_Dependencies.State_ObjectTable.Cleanup();
+	m_Dependencies.System_Debug.Log("[ObjectTableSystem] INFO: Cleanup completed.");
 }
 
 // Responsible of updating all the general & specific data of a given object.
@@ -213,60 +170,62 @@ void System_ObjectTable::UpdateObjectData(LiveObject& object)
 
 	using namespace ObjectOffsets;
 
-	auto& reader = *g_pSystem->Infrastructure->MemoryReader;
+	auto& reader = m_Dependencies.System_MemoryReader;
 
 	// Update the parent-child-sibling handles.
 	object.NextSiblingHandle = reader.Read<uint32_t>(object.Address, NextSiblingHandle);
 	object.ChildHandle = reader.Read<uint32_t>(object.Address, ChildHandle);
 	object.ParentHandle = reader.Read<uint32_t>(object.Address, ParentHandle);
-	object.CurrentRadius = reader.Read<float>(object.Address, CurrentRadius);
 
 	// Update the world-space position, and forward/up.
 	object.Position = reader.ReadArray<float, 3>(object.Address, CurrentPosition);
 	object.Forward = reader.ReadArray<float, 3>(object.Address, Forward);
 	object.Up = reader.ReadArray<float, 3>(object.Address, Up);
 
+	object.CurrentRadius = reader.Read<float>(object.Address, CurrentRadius);
+
 	// Update the velocities.
 	object.LinearVelocity = reader.ReadArray<float, 3>(object.Address, LinearVelocity);
 	object.AngularVelocity = reader.ReadArray<float, 3>(object.Address, AngularVelocity);
+	
 	object.DamageReceived = reader.Read<float>(object.Address, DamageReceived);
 
 	// Update the specific data.
-	switch (object.Type)
+	switch (object.Profile.Class)
 	{
 	case ObjectClass::Biped:
 	{
-		this->UpdateBiped(reader, object);
+		this->UpdateBiped(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 		
 	case ObjectClass::Vehicle:
 	{
-		this->UpdateVehicle(reader, object);
+		this->UpdateVehicle(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 
 	case ObjectClass::Weapon:
 	{
-		this->UpdateWeapon(reader, object);
+		this->UpdateWeapon(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 
 	case ObjectClass::Equipment:
 	{
-		this->UpdateEquipment(reader, object);
+		this->UpdateEquipment(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 
 	case ObjectClass::Projectile:
 	{
-		this->UpdateProjectiles(reader, object);
+		this->UpdateProjectiles(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 
 	case ObjectClass::Scenery:
 	{
-		this->UpdateScenery(reader, object);
+		this->UpdateScenery(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 
@@ -275,7 +234,7 @@ void System_ObjectTable::UpdateObjectData(LiveObject& object)
 
 	case ObjectClass::Crate:
 	{
-		this->UpdateCrate(reader, object);
+		this->UpdateCrate(m_Dependencies.System_MemoryReader, object);
 		break;
 	}
 
@@ -590,30 +549,4 @@ void System_ObjectTable::UpdateScenery(System_MemoryReader& reader, LiveObject& 
 	}
 
 	object.SpecificObject = scenery;
-}
-
-// --- Helpers ---
-
-ObjectClass System_ObjectTable::ClassNameToObjectClass(const std::string& className)
-{
-	static const std::unordered_map<std::string, ObjectClass> k_ObjectClassMap =
-	{
-		{ "bloc", ObjectClass::Crate },
-		{ "mach", ObjectClass::DeviceMachine },
-		{ "sbsp", ObjectClass::ScenarioStructureBsp },
-		{ "scen", ObjectClass::Scenery },
-		{ "bipd", ObjectClass::Biped },
-		{ "coll", ObjectClass::CollisionModel },
-		{ "mode", ObjectClass::RenderModel },
-		{ "phmo", ObjectClass::PhysicsModel },
-		{ "scnr", ObjectClass::Scenario },
-		{ "ctrl", ObjectClass::DeviceControl },
-		{ "eqip", ObjectClass::Equipment},
-		{ "proj", ObjectClass::Projectile },
-		{ "vehi", ObjectClass::Vehicle },
-		{ "weap", ObjectClass::Weapon },
-	};
-
-	auto it = k_ObjectClassMap.find(className);
-	return it != k_ObjectClassMap.end() ? it->second : ObjectClass::Invalid;
 }

@@ -3,12 +3,6 @@
 // Header.
 #include "State_MapJmad.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
-
 bool State_MapJmad::HasJmad(const std::string& tagName) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -24,9 +18,6 @@ const JmadObject* State_MapJmad::GetJmad(const std::string& tagName) const
 
 void State_MapJmad::AddJmad(const std::string& tagName, JmadObject data)
 {
-    //g_pSystem->Debug->Log("[MapJmadState] INFO:" 
-    //    " Added: %s", tagName.c_str());
-
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Jmads.emplace(tagName, std::move(data));
 }

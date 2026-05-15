@@ -4,26 +4,18 @@
 #include "System_Render.h"
 
 // --- Hooks ---
-#include "Core/Hooks/Core_Hook.h"
-#include "Core/Hooks/Infrastructure/Core_Hook_Infrastructure.h"
+
 #include "Core/Hooks/Infrastructure/Window/Hook_WndProc.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
-// Render.
 #include "Core/States/Infrastructure/Engine/Render/State_Render.h"
 
-// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include "External/imgui/backends/imgui_impl_win32.h"
 #include "External/imgui/backends/imgui_impl_dx11.h"
@@ -41,7 +33,7 @@ DX11Addresses System_Render::GetVtableAddresses() const
 
     if (!RegisterClassEx(&wc))
     {
-        g_pSystem->Debug->Log("[DXUtil] ERROR: RegisterClassEx failed");
+        m_Deps.System_Debug.Log("[DXUtil] ERROR: RegisterClassEx failed");
         return addr;
     }
 
@@ -52,7 +44,7 @@ DX11Addresses System_Render::GetVtableAddresses() const
 
     if (!hWnd)
     {
-        g_pSystem->Debug->Log("[DXUtil] ERROR: CreateWindowEx failed");
+        m_Deps.System_Debug.Log("[DXUtil] ERROR: CreateWindowEx failed");
         UnregisterClass(wc.lpszClassName, wc.hInstance);
         return addr;
     }
@@ -85,7 +77,7 @@ DX11Addresses System_Render::GetVtableAddresses() const
     }
     else
     {
-        g_pSystem->Debug->Log("[DXUtil] ERROR: D3D11CreateDeviceAndSwapChain failed");
+        m_Deps.System_Debug.Log("[DXUtil] ERROR: D3D11CreateDeviceAndSwapChain failed");
     }
 
     if (pContext) pContext->Release();
@@ -106,14 +98,14 @@ void System_Render::Initialize(IDXGISwapChain* pSwapChain)
     ID3D11DeviceContext* context = nullptr;
     device->GetImmediateContext(&context);
 
-    g_pState->Infrastructure->Render->SetDevice(device);
-    g_pState->Infrastructure->Render->SetContext(context);
+    m_Deps.State_Render.SetDevice(device);
+    m_Deps.State_Render.SetContext(context);
 
     DXGI_SWAP_CHAIN_DESC sd;
     pSwapChain->GetDesc(&sd);
-    g_pState->Infrastructure->Render->SetHWND(sd.OutputWindow);
+    m_Deps.State_Render.SetHWND(sd.OutputWindow);
 
-    if (!g_pState->Infrastructure->Render->IsImGuiInitialized())
+    if (!m_Deps.State_Render.IsImGuiInitialized())
     {
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
@@ -123,14 +115,14 @@ void System_Render::Initialize(IDXGISwapChain* pSwapChain)
         UINT height = sd.BufferDesc.Height;
         int evenWidth = static_cast<int>(width & ~1);
         int evenHeight = static_cast<int>(height & ~1);
-        g_pState->Infrastructure->Render->SetWidth(evenWidth);
-        g_pState->Infrastructure->Render->SetHeight(evenHeight);
+        m_Deps.State_Render.SetWidth(evenWidth);
+        m_Deps.State_Render.SetHeight(evenHeight);
 
         float baseFontSize = 22.0f;
         if (width >= 2560) baseFontSize = 30.0f;
         if (width >= 3840) baseFontSize = 38.0f;
 
-        float savedScale = g_pState->Infrastructure->Render->GetUIScale();
+        float savedScale = m_Deps.State_Render.GetUIScale();
         if (savedScale < 0.8f || savedScale > 4.0f) savedScale = 1.0f;
 
         float finalFontSize = baseFontSize * savedScale;
@@ -140,9 +132,10 @@ void System_Render::Initialize(IDXGISwapChain* pSwapChain)
 
         this->ApplyCustomStyle();
 
-        if (g_pState->Infrastructure->Settings->ShouldUseAppData())
+        if (m_Deps.State_Settings.ShouldUseAppData())
         {
-            ImGui::GetStyle().Alpha = g_pState->Infrastructure->Settings->GetMenuAlpha();
+            ImGui::GetStyle().Alpha = 
+                m_Deps.State_Settings.GetMenuAlpha();
         }
 
         ImGui::GetStyle().ScaleAllSizes(savedScale);
@@ -150,19 +143,17 @@ void System_Render::Initialize(IDXGISwapChain* pSwapChain)
         ImGui_ImplWin32_Init(sd.OutputWindow);
         ImGui_ImplDX11_Init(device, context);
 
-        g_pHook->Infrastructure->WndProc->SetWndProc((WNDPROC)SetWindowLongPtr(sd.OutputWindow, GWLP_WNDPROC, (LONG_PTR)g_pHook->Infrastructure->WndProc->HookedWndProc));
-        
-        bool showOnStart = g_pState->Infrastructure->Settings->ShouldOpenUIOnStart();
-        g_pState->Infrastructure->Settings->SetMenuVisible(showOnStart);
+        bool showOnStart = m_Deps.State_Settings.ShouldOpenUIOnStart();
+        m_Deps.State_Settings.SetMenuVisible(showOnStart);
 
-        g_pState->Infrastructure->Render->SetImGuiInitialized(true);
-        g_pSystem->Debug->Log("[RenderSystem] INFO: ImGui Initialized for the first time.");
+        m_Deps.State_Render.SetImGuiInitialized(true);
+        m_Deps.System_Debug.Log("[RenderSystem] INFO: ImGui Initialized for the first time.");
     }
     else
     {
         ImGui_ImplDX11_InvalidateDeviceObjects();
         ImGui_ImplDX11_CreateDeviceObjects();
-        g_pSystem->Debug->Log("[RenderSystem] INFO: Device Objects Refreshed (Resize).");
+        m_Deps.System_Debug.Log("[RenderSystem] INFO: Device Objects Refreshed (Resize).");
     }
 
     ID3D11Texture2D* pBackBuffer = nullptr;
@@ -170,37 +161,28 @@ void System_Render::Initialize(IDXGISwapChain* pSwapChain)
     {
         ID3D11RenderTargetView* rtv = nullptr;
         device->CreateRenderTargetView(pBackBuffer, NULL, &rtv);
-        g_pState->Infrastructure->Render->SetRTV(rtv); 
+        m_Deps.State_Render.SetRTV(rtv);
         pBackBuffer->Release();
     }
 }
 
 bool System_Render::IsInitialized()
 {
-    return g_pState->Infrastructure->Render->GetRTV() != nullptr;
+    return m_Deps.State_Render.GetRTV() != nullptr;
 }
 
 void System_Render::Shutdown()
 {
-    HWND hwnd = g_pState->Infrastructure->Render->GetHWND();
-    WNDPROC original = g_pHook->Infrastructure->WndProc->GetWndProc();
-
-    if (hwnd && original)
-    {
-        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)original);
-        g_pHook->Infrastructure->WndProc->SetWndProc(nullptr);
-    }
-
-    if (g_pState->Infrastructure->Render->IsImGuiInitialized() && ImGui::GetCurrentContext())
+    if (m_Deps.State_Render.IsImGuiInitialized() && ImGui::GetCurrentContext())
     {
         ImGui_ImplDX11_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
-        g_pState->Infrastructure->Render->SetImGuiInitialized(false);
+        m_Deps.State_Render.SetImGuiInitialized(false);
     }
 
-    g_pState->Infrastructure->Render->FullCleanup();
-    g_pSystem->Debug->Log("[RenderSystem] INFO: Shutdown complete.");
+    m_Deps.State_Render.FullCleanup();
+    m_Deps.System_Debug.Log("[RenderSystem] INFO: Shutdown complete.");
 }
 
 
@@ -210,7 +192,7 @@ void System_Render::UpdateFramerate()
     auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration_cast<std::chrono::seconds>(now - m_LastFramerateTime).count() >= 1)
     {
-        g_pState->Infrastructure->Render->SetFramerate(m_FrameCount.load());
+        m_Deps.State_Render.SetFramerate(m_FrameCount.load());
         m_FrameCount = 0;
         m_LastFramerateTime = now;
     }
@@ -218,25 +200,26 @@ void System_Render::UpdateFramerate()
 
 void System_Render::BeginFrame(IDXGISwapChain* pSwapChain)
 {
-    if (g_pState->Infrastructure->Render->GetRTV() == nullptr)
+    if (m_Deps.State_Render.GetRTV() == nullptr)
     {
         this->Initialize(pSwapChain);
-        if (g_pState->Infrastructure->Render->GetRTV() == nullptr) return;
+        if (m_Deps.State_Render.GetRTV() == nullptr) return;
     }
 
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    bool menuVisible = g_pState->Infrastructure->Settings->IsMenuVisible();
+    bool menuVisible = m_Deps.State_Settings.IsMenuVisible();
     ImGuiIO& io = ImGui::GetIO();
 
     if (menuVisible)
     {
-        if (g_pState->Infrastructure->Settings->ShouldFreezeMouse() && GetForegroundWindow() == g_pState->Infrastructure->Render->GetHWND()) 
+        if (m_Deps.State_Settings.ShouldFreezeMouse() && 
+            GetForegroundWindow() == m_Deps.State_Render.GetHWND())
         {
             RECT rect;
-            GetWindowRect(g_pState->Infrastructure->Render->GetHWND(), &rect);
+            GetWindowRect(m_Deps.State_Render.GetHWND(), &rect);
             ClipCursor(&rect);
         }
         
@@ -256,10 +239,10 @@ void System_Render::EndFrame()
 {
     ImGui::Render();
 
-    auto rtv = g_pState->Infrastructure->Render->GetRTV();
+    auto rtv = m_Deps.State_Render.GetRTV();
     if (rtv)
     {
-        auto ctx = g_pState->Infrastructure->Render->GetContext();
+        auto ctx = m_Deps.State_Render.GetContext();
 
         ID3D11RenderTargetView* oldRTV = nullptr;
         ID3D11DepthStencilView* oldDSV = nullptr;
@@ -279,12 +262,12 @@ void System_Render::EndFrame()
 
 void System_Render::UpdateUIScale()
 {
-    if (!g_pState->Infrastructure->Render->ShouldRebuildFonts()) return;
+    if (!m_Deps.State_Render.ShouldRebuildFonts()) return;
 
-    float newScale = g_pState->Infrastructure->Render->GetUIScale();
+    float newScale = m_Deps.State_Render.GetUIScale();
     if (newScale < 1.0f) newScale = 1.0f;
 
-    UINT width = g_pState->Infrastructure->Render->GetWidth();
+    UINT width = m_Deps.State_Render.GetWidth();
     float baseFontSize = 22.0f;
     if (width >= 2560) baseFontSize = 30.0f;
     if (width >= 3840) baseFontSize = 38.0f;
@@ -309,9 +292,9 @@ void System_Render::UpdateUIScale()
     this->ApplyCustomStyle();
 
     style.ScaleAllSizes(newScale);
-    style.Alpha = g_pState->Infrastructure->Settings->GetMenuAlpha();
+    style.Alpha = m_Deps.State_Settings.GetMenuAlpha();
 
-    g_pState->Infrastructure->Render->ResetFontRebuild();
+    m_Deps.State_Render.ResetFontRebuild();
 }
 
 

@@ -46,7 +46,10 @@
 // Interactable.
 #include "Interactable/State_Interactable.h"
 
-Core_State_Domain::Core_State_Domain()
+Core_State_Domain::Core_State_Domain() = default;
+Core_State_Domain::~Core_State_Domain() = default;
+
+void Core_State_Domain::Initialize()
 {
 	// Map.
 	Map = std::make_unique<State_Map>();
@@ -79,7 +82,7 @@ Core_State_Domain::Core_State_Domain()
 	Classification = std::make_unique<State_Classification>();
 	
 	// Graph.
-	ObjectGraph = std::make_unique<State_ObjectGraph>();
+	ObjectGraph = std::make_unique<State_ObjectGraph>(*ObjectTable);
 	PlayerGraph = std::make_unique<State_PlayerGraph>();
 
 	// Navigation.
@@ -92,4 +95,31 @@ Core_State_Domain::Core_State_Domain()
 	Interactable = std::make_unique<State_Interactable>();
 }
 
-Core_State_Domain::~Core_State_Domain() = default;
+void Core_State_Domain::Shutdown()
+{
+	Map.reset();
+	MapPhmo.reset();
+	MapVehi.reset();
+	MapColl.reset();
+	MapMode.reset();
+	MapBloc.reset();
+	MapSbsp.reset();
+	MapWeap.reset();
+	MapProj.reset();
+	MapBipd.reset();
+	MapEqip.reset();
+	MapScen.reset();
+	MapScnr.reset();
+	MapJmad.reset();
+	MapCtrl.reset();
+	MapMach.reset();
+	ObjectTable.reset();
+	PlayerTable.reset();
+	InteractionTable.reset();
+	Classification.reset();
+	ObjectGraph.reset();
+	PlayerGraph.reset();
+	Navigation.reset();
+	Environment.reset();
+	Interactable.reset();
+}

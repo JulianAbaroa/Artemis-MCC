@@ -2,6 +2,11 @@
 
 #include <memory>
 
+// Dependecies.
+struct Core_State;
+struct Core_System_Infrastructure;
+struct Core_System_Interface;
+
 // Map.
 class System_Map;
 class System_MapTagGroup;
@@ -52,6 +57,11 @@ struct Core_System_Domain
 {
 	Core_System_Domain();
 	~Core_System_Domain();
+
+	void Initialize(Core_State& state, 
+		Core_System_Infrastructure& systemInfrastructure,
+		Core_System_Interface& systemInterface);
+	void Shutdown();
 
 	// Map.
 	std::unique_ptr<System_Map> Map;

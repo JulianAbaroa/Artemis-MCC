@@ -3,12 +3,6 @@
 // Header.
 #include "State_MapMode.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
-
 bool State_MapMode::HasMode(const std::string& tagName) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -24,9 +18,6 @@ const ModeObject* State_MapMode::GetMode(const std::string& tagName) const
 
 void State_MapMode::AddMode(const std::string& tagName, ModeObject data)
 {
-    //g_pSystem->Debug->Log("[MapModeState] INFO:" 
-    //    " Added: %s", tagName.c_str());
-
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Modes.emplace(tagName, std::move(data));
 }

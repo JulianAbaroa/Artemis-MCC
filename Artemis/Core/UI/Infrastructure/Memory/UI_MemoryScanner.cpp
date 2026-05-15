@@ -3,27 +3,20 @@
 // Header.
 #include "UI_MemoryScanner.h"
 
-// --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+// --- Types ---
 
-// Memory Scanner.
+#include "Core/Types/Domain/Object/ObjectSizes.h"
+#include "Core/Types/Domain/Player/PlayerSizes.h"
+
+#include "Core/Types/Infrastructure/MemoryScannerTypes.h"
+
+// --- States ---
+
 #include "Core/States/Infrastructure/Engine/Memory/State_MemoryScanner.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
-// Memory Scanner.
 #include "Core/Systems/Infrastructure/Engine/Memory/System_MemoryScanner.h"
-
-// --- Types ---
-
-// Object.
-#include "Core/Types/Domain/Object/ObjectSizes.h"
-
-// Player.
-#include "Core/Types/Domain/Player/PlayerSizes.h"
 
 // ImGui.
 #include "External/imgui/imgui_internal.h"
@@ -113,7 +106,7 @@ void UI_MemoryScanner::DrawKnownSizesCombo()
 
 void UI_MemoryScanner::DrawTriggerResetButtons()
 {
-    bool scanning = g_pState->Infrastructure->MemoryScanner->IsScanning();
+    bool scanning = m_Deps.State_MemoryScanner.IsScanning();
 
     if (scanning) ImGui::BeginDisabled();
 
@@ -127,7 +120,7 @@ void UI_MemoryScanner::DrawTriggerResetButtons()
     if (ImGui::Button("Reset"))
     {
         m_SelectedRow = -1;
-        g_pSystem->Infrastructure->MemoryScanner->Reset();
+        m_Deps.State_MemoryScanner.Reset();
     }
 }
 
@@ -136,8 +129,8 @@ void UI_MemoryScanner::DispatchScan()
     uintptr_t base = (uintptr_t)strtoull(m_BaseBuf, nullptr, 16);
     size_t    size = (size_t)strtoull(m_SizeBuf, nullptr, 0);
 
-    g_pSystem->Infrastructure->MemoryScanner->SetRegion("scan", base, size);
-    g_pState->Infrastructure->MemoryScanner->SetDelayMs(m_DelayMs);
+    m_Deps.State_MemoryScanner.SetRegion("scan", base, size);
+    m_Deps.State_MemoryScanner.SetDelayMs(m_DelayMs);
 
     const auto& mode = CurrentMode();
     ScanDataType dt = CurrentDataType();
@@ -145,51 +138,51 @@ void UI_MemoryScanner::DispatchScan()
     switch (mode.Mode)
     {
     case ScanMode::Changed:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerScan(m_DelayMs);
+        m_Deps.System_MemoryScanner.TriggerScan(m_DelayMs);
         break;
     case ScanMode::Unchanged:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerUnchangedScan(m_DelayMs);
+        m_Deps.System_MemoryScanner.TriggerUnchangedScan(m_DelayMs);
         break;
     case ScanMode::Increased:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerIncreasedScan(dt, m_DelayMs);
+        m_Deps.System_MemoryScanner.TriggerIncreasedScan(dt, m_DelayMs);
         break;
     case ScanMode::Decreased:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerDecreasedScan(dt, m_DelayMs);
+        m_Deps.System_MemoryScanner.TriggerDecreasedScan(dt, m_DelayMs);
         break;
     case ScanMode::IncreasedBy:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerIncreasedByScan(
+        m_Deps.System_MemoryScanner.TriggerIncreasedByScan(
             dt, this->ParseValueBuf(m_ValueABuf, dt), m_DelayMs);
         break;
     case ScanMode::DecreasedBy:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerDecreasedByScan(
+        m_Deps.System_MemoryScanner.TriggerDecreasedByScan(
             dt, this->ParseValueBuf(m_ValueABuf, dt), m_DelayMs);
         break;
     case ScanMode::ExactValue:
         if (dt == ScanDataType::Float32)
-            g_pSystem->Infrastructure->MemoryScanner->TriggerExactScanFloat(
+            m_Deps.System_MemoryScanner.TriggerExactScanFloat(
                 std::strtof(m_ValueABuf, nullptr), m_DelayMs);
         else
-            g_pSystem->Infrastructure->MemoryScanner->TriggerExactScan(
+            m_Deps.System_MemoryScanner.TriggerExactScan(
                 dt, this->ParseValueBuf(m_ValueABuf, dt), m_DelayMs);
         break;
     case ScanMode::InRange:
         if (dt == ScanDataType::Float32)
-            g_pSystem->Infrastructure->MemoryScanner->TriggerInRangeScanFloat(
+            m_Deps.System_MemoryScanner.TriggerInRangeScanFloat(
                 std::strtof(m_ValueABuf, nullptr),
                 std::strtof(m_ValueBBuf, nullptr), m_DelayMs);
         else
-            g_pSystem->Infrastructure->MemoryScanner->TriggerInRangeScan(
+            m_Deps.System_MemoryScanner.TriggerInRangeScan(
                 dt, this->ParseValueBuf(m_ValueABuf, dt),
                 ParseValueBuf(m_ValueBBuf, dt), m_DelayMs);
         break;
     case ScanMode::BitMask:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerBitMaskScan(
+        m_Deps.System_MemoryScanner.TriggerBitMaskScan(
             (uint32_t)strtoull(m_BitMaskBuf, nullptr, 0),
             (uint32_t)strtoull(m_BitPatternBuf, nullptr, 0),
             m_DelayMs);
         break;
     case ScanMode::Stabilized:
-        g_pSystem->Infrastructure->MemoryScanner->TriggerStabilizedScan(
+        m_Deps.System_MemoryScanner.TriggerStabilizedScan(
             dt, m_StabilizeRounds, m_DelayMs);
         break;
     }
@@ -197,13 +190,15 @@ void UI_MemoryScanner::DispatchScan()
 
 void UI_MemoryScanner::DrawScanStatus()
 {
-    const auto& session = g_pState->Infrastructure->MemoryScanner->GetSession();
-    bool        scanning = g_pState->Infrastructure->MemoryScanner->IsScanning();
+    const auto& session = m_Deps.State_MemoryScanner.GetSession();
+    bool scanning = m_Deps.State_MemoryScanner.IsScanning();
     const bool  isTyped = IsTypedMode();
 
-    const size_t resultCount = isTyped
-        ? session.FinalMatches.size()
-        : session.FinalDiffs.size();
+    size_t resultCount;
+    if (isTyped)
+        resultCount = session.FinalMatches.size();
+    else
+        resultCount = session.FinalDiffs.size();
 
     if (session.Rounds.empty())
     {
@@ -450,7 +445,7 @@ void UI_MemoryScanner::DrawAddressCell(uintptr_t address, int rowIndex)
 
 void UI_MemoryScanner::DrawDiffResults()
 {
-    const auto& session = g_pState->Infrastructure->MemoryScanner->GetSession();
+    const auto& session = m_Deps.State_MemoryScanner.GetSession();
     const auto& diffs = session.FinalDiffs;
 
     if (diffs.empty())
@@ -482,11 +477,11 @@ void UI_MemoryScanner::DrawDiffResults()
 
     for (int d = 0; d < (int)diffs.size(); ++d)
     {
-        const auto& diff = diffs[d];
+        if (useFilter && (diffs[d].Offset < filterFrom || diffs[d].Offset >= filterTo)) continue;
+        if (m_FilterByBefore && diffs[d].Before != (uint8_t)m_FilterBeforeVal)          continue;
+        if (m_FilterByAfter && diffs[d].After != (uint8_t)m_FilterAfterVal)           continue;
 
-        if (useFilter && (diff.Offset < filterFrom || diff.Offset >= filterTo)) continue;
-        if (m_FilterByBefore && diff.Before != (uint8_t)m_FilterBeforeVal)       continue;
-        if (m_FilterByAfter && diff.After != (uint8_t)m_FilterAfterVal)        continue;
+        const auto& diff = diffs[d];
 
         ImGui::TableNextRow();
         if (d == m_SelectedRow)
@@ -538,7 +533,7 @@ std::string UI_MemoryScanner::FormatTypedValue(uint64_t raw, ScanDataType dt)
 
 void UI_MemoryScanner::DrawTypedResults()
 {
-    const auto& session = g_pState->Infrastructure->MemoryScanner->GetSession();
+    const auto& session = m_Deps.State_MemoryScanner.GetSession();
     const auto& matches = session.FinalMatches;
     ScanDataType dt = CurrentDataType();
 
@@ -608,6 +603,10 @@ uint64_t UI_MemoryScanner::ParseValueBuf(const char* buf, ScanDataType type) con
     }
     return (uint64_t)strtoull(buf, nullptr, 0);
 }
+
+const UI_MemoryScanner::ModeEntry& UI_MemoryScanner::CurrentMode() const { return s_Modes[m_ModeIndex]; }
+ScanDataType UI_MemoryScanner::CurrentDataType() const { return s_DataTypes[m_DataTypeIndex].Type; }
+bool UI_MemoryScanner::IsTypedMode() const { return CurrentDataType() != ScanDataType::Bytes; }
 
 const UI_MemoryScanner::ModeEntry UI_MemoryScanner::s_Modes[10] =
 {

@@ -7,9 +7,24 @@
 #include <atomic>
 #include <chrono>
 
+class State_Render;
+class State_Settings;
+class System_Debug;
+
+struct System_Render_Dependencies
+{
+	State_Render& State_Render;
+	State_Settings& State_Settings;
+	System_Debug& System_Debug;
+};
+
 class System_Render
 {
 public:
+	System_Render(System_Render_Dependencies dependencies) : 
+		m_Deps(dependencies) {}
+	~System_Render() = default;
+
 	DX11Addresses GetVtableAddresses() const;
 
 	void Initialize(IDXGISwapChain* pSwapChain);
@@ -24,6 +39,8 @@ public:
 	void UpdateUIScale();
 
 private:
+	System_Render_Dependencies m_Deps;
+
 	void ApplyCustomStyle();
 
 	const int m_PresentVMTIndex = 8;

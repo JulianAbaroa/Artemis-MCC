@@ -3,36 +3,30 @@
 // Head.
 #include "Hook_EngineInitialize.h"
 
+// Types.
+#include "Core/Types/Infrastructure/AOB/Signatures.h"
+
 // --- Hooks ---
-#include "Core/Hooks/Core_Hook.h"
-#include "Core/Hooks/Domain/Core_Hook_Domain.h"
-#include "Core/Hooks/Infrastructure/Core_Hook_Infrastructure.h"
 
 #include "Core/Hooks/Domain/Map/Hook_BlamOpenMap.h"
+#include "Core/Hooks/Domain/Object/Hook_ObjectTable.h"
 #include "Core/Hooks/Domain/Object/Hook_CreateObject.h"
 #include "Core/Hooks/Domain/Object/Hook_ReleaseObject.h"
+#include "Core/Hooks/Domain/Player/Hook_PlayerTable.h"
 #include "Core/Hooks/Domain/Player/Hook_CreatePlayer.h"
+#include "Core/Hooks/Domain/Interaction/Hook_InteractionTable.h"
 
-#include "../Input/Hook_GetButtonState.h"
+#include "Core/Hooks/Infrastructure/Input/Hook_GetButtonState.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
 #include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-
-#include "Core/Systems/Domain/Object/System_ObjectTable.h"
-#include "Core/Systems/Domain/Player/System_PlayerTable.h"
-#include "Core/Systems/Domain/Interaction/System_InteractionTable.h"
+// --- Systems ---
 
 #include "Core/Systems/Infrastructure/Engine/Memory/System_AOBScanner.h"
 
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // MinHook.
 #include "External/minhook/include/MinHook.h"
@@ -41,35 +35,33 @@ void __fastcall Hook_EngineInitialize::HookedEngineInitialize(void)
 {
 	m_OriginalFunction();
 
-	// --- Hooks ---
-	g_pHook->Domain->BlamOpenMap->Install();
-	g_pHook->Domain->CreateGO->Install();
-	g_pHook->Domain->ReleaseGO->Install();
-	g_pHook->Domain->CreatePlayer->Install();
+	s_Instance->m_Deps.Hook_BlamOpenMap.Install();
+	s_Instance->m_Deps.Hook_CreateObject.Install();
+	s_Instance->m_Deps.Hook_ReleaseObject.Install();
+	s_Instance->m_Deps.Hook_CreatePlayer.Install();
 
-	g_pHook->Infrastructure->GetButtonState->Install();
+	s_Instance->m_Deps.Hook_GetButtonState.Install();
 
-	// --- Systems ---
-	g_pSystem->Domain->ObjectTable->FindObjectTableBase();
-	g_pSystem->Domain->PlayerTable->FindPlayerTableBase();
-	g_pSystem->Domain->InteractionTable->FindInteractionTableBase();
+	s_Instance->m_Deps.Hook_ObjectTable.FindAndStoreTableBase();
+	s_Instance->m_Deps.Hook_PlayerTable.FindAndStoreTableBase();
+	s_Instance->m_Deps.Hook_InteractionTable.FindAndStoreTableBase();
 	
-	g_pState->Infrastructure->Lifecycle->SetEngineStatus(
+	s_Instance->m_Deps.State_Lifecycle.SetEngineStatus(
 		{ EngineStatus::Running });
 
-	auto& debug = *g_pSystem->Debug;
-	debug.Log("[EngineInitialize] INFO: Game engine initialized.");
+	s_Instance->m_Deps.System_Debug.Log("[EngineInitialize] INFO:"
+		" Game engine initialized.");
 }
+
+Hook_EngineInitialize* Hook_EngineInitialize::s_Instance = nullptr;
 
 bool Hook_EngineInitialize::Install()
 {
 	if (m_IsHookInstalled.load()) return true;
+	s_Instance = this;
 
-	auto& debug = *g_pSystem->Debug;
-	auto& aobScanner = *g_pSystem->Infrastructure->AOBScanner;
-	
-	void* functionAddress = 
-		(void*)aobScanner.FindPattern(Signatures::EngineInitialize);
+	void* functionAddress = (void*)s_Instance->m_Deps.System_AOBScanner.
+		FindPattern(Signatures::EngineInitialize);
 	
 	if (!functionAddress) return false;
 
@@ -82,17 +74,20 @@ bool Hook_EngineInitialize::Install()
 		reinterpret_cast<LPVOID*>(&m_OriginalFunction)) 
 		!= MH_OK)
 	{
-		debug.Log("[EngineInitialize] ERROR: Failed to create the hook.");
+		s_Instance->m_Deps.System_Debug.Log("[EngineInitialize] ERROR:"
+			" Failed to create the hook.");
 		return false;
 	}
 	if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK) 
 	{
-		debug.Log("[EngineInitialize] ERROR: Failed to enable the hook.");
+		s_Instance->m_Deps.System_Debug.Log("[EngineInitialize] ERROR:"
+			" Failed to enable the hook.");
 		return false;
 	}
 
 	m_IsHookInstalled.store(true);
-	debug.Log("[EngineInitialize] INFO: Hook installed.");
+	s_Instance->m_Deps.System_Debug.Log("[EngineInitialize] INFO:"
+		" Hook installed.");
 	return true;
 }
 
@@ -105,8 +100,10 @@ void Hook_EngineInitialize::Uninstall()
 
 	m_IsHookInstalled.store(false);
 
-	auto& debug = *g_pSystem->Debug;
-	debug.Log("[EngineInitialize] INFO: Hook uninstalled.");
+	s_Instance->m_Deps.System_Debug.Log("[EngineInitialize] INFO:"
+		" Hook uninstalled.");
+
+	s_Instance = nullptr;
 }
 
 void* Hook_EngineInitialize::GetFunctionAddress()

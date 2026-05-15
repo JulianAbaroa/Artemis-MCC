@@ -151,7 +151,6 @@ void State_Environment::SetActivePhysicsInstances(std::vector<ActivePhysicsInsta
 	m_PhysicsInstances = std::move(instances);
 }
 
-// Cleanup.
 void State_Environment::Cleanup()
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);

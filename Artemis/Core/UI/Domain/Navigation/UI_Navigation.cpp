@@ -3,33 +3,26 @@
 // Header.
 #include "UI_Navigation.h"
 
-// States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
+// --- States ---
 
-// Navigation.
 #include "Core/States/Domain/Navigation/State_Navigation.h"
 
 #include <algorithm>
 #include <limits>
 #include <cmath>
 
-// --- Public ---
-
 void UI_Navigation::FetchState()
 {
-    auto& navigation = *g_pState->Domain->Navigation;
-
-    m_CachedGraph = navigation.GetNavigationGraph();
-    m_CachedRawGraph = navigation.GetRawNavigationGraph();
-    m_CachedObstacles = navigation.GetActiveObstacles();
-    m_CachedSpawns = navigation.GetActiveSpawns();
-    m_CachedTeleporters = navigation.GetActiveTeleporters();
-    m_CachedLifts = navigation.GetActiveLifts();
-    m_CachedShields = navigation.GetActiveShields();
-    m_CachedObjectiveSpawns = navigation.GetActiveObjectiveSpawns();
-    m_CachedObjectives = navigation.GetActiveObjectives();
-    m_CachedDestructibles = navigation.GetActiveDestructibles();
+    m_CachedGraph = m_State_Navigation.GetNavigationGraph();
+    m_CachedRawGraph = m_State_Navigation.GetRawNavigationGraph();
+    m_CachedObstacles = m_State_Navigation.GetActiveObstacles();
+    m_CachedSpawns = m_State_Navigation.GetActiveSpawns();
+    m_CachedTeleporters = m_State_Navigation.GetActiveTeleporters();
+    m_CachedLifts = m_State_Navigation.GetActiveLifts();
+    m_CachedShields = m_State_Navigation.GetActiveShields();
+    m_CachedObjectiveSpawns = m_State_Navigation.GetActiveObjectiveSpawns();
+    m_CachedObjectives = m_State_Navigation.GetActiveObjectives();
+    m_CachedDestructibles = m_State_Navigation.GetActiveDestructibles();
 }
 
 void UI_Navigation::Cleanup()

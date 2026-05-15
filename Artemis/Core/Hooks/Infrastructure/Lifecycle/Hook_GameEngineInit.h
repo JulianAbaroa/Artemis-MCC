@@ -3,15 +3,31 @@
 #include <cstdint>
 #include <atomic>
 
+class System_AOBScanner;
+class System_Debug;
+
+struct Hook_GameEngineInit_Dependencies
+{
+	System_AOBScanner& System_AOBScanner;
+	System_Debug& System_Debug;
+};
+
 class Hook_GameEngineInit
 {
 public:
+	Hook_GameEngineInit(Hook_GameEngineInit_Dependencies dependencies) :
+		m_Deps(dependencies) {}
+	~Hook_GameEngineInit() = default;
+
 	bool Install();
 	void Uninstall();
 
 	void* GetFunctionAddress();
 
 private:
+	static Hook_GameEngineInit* s_Instance;
+	Hook_GameEngineInit_Dependencies m_Deps;
+
 	static void __fastcall HookedGameEngineInit(
 		uint64_t param_1, uint64_t pSystem, uint64_t* pConfiguration);
 	

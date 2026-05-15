@@ -2,8 +2,27 @@
 
 #include <cstdint>
 
+class State_PlayerTable;
+class System_AOBScanner;
+class System_Debug;
+
+struct Hook_PlayerTable_Dependencies
+{
+	State_PlayerTable& State_PlayerTable;
+	System_AOBScanner& System_AOBScanner;
+	System_Debug& System_Debug;
+};
+
 class Hook_PlayerTable
 {
 public:
+	Hook_PlayerTable(Hook_PlayerTable_Dependencies dependencies) :
+		m_Deps(dependencies) {}
+	~Hook_PlayerTable() = default;
+
+	void FindAndStoreTableBase();
 	uintptr_t GetPlayerTable();
+
+private:
+	Hook_PlayerTable_Dependencies m_Deps;
 };

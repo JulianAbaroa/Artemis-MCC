@@ -21,11 +21,13 @@ class State_Render;
 // Settings.
 class State_Settings;
 
-// Main container for the application's infrastructure states.
 struct Core_State_Infrastructure
 {
 	Core_State_Infrastructure();
 	~Core_State_Infrastructure();
+
+	void Initialize();
+	void Shutdown();
 
 	// Engine.
 	std::unique_ptr<State_Input> Input;

@@ -5,9 +5,6 @@
 
 // --- States ---
 
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
-
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
 // --- UI ---
@@ -24,17 +21,15 @@
 
 void UI_ObjectTable::Draw()
 {
-	auto& objectTable = *g_pState->Domain->ObjectTable;
-
 	// Only update if the object table has changed.
-	if (objectTable.HasChanged())
+	if (Sta_ObjectTable.HasChanged())
 	{
-		m_CacheObjects = objectTable.GetObjectTable();
+		m_CacheObjects = Sta_ObjectTable.GetObjectTable();
 		m_GroupedObjects.clear();
 
 		for (const auto& [handle, object] : m_CacheObjects)
 		{
-			m_GroupedObjects[object.Class].push_back(&m_CacheObjects.at(handle));
+			m_GroupedObjects[object.FourCC].push_back(&m_CacheObjects.at(handle));
 		}
 	}
 
@@ -150,7 +145,7 @@ void UI_ObjectTable::DrawCardBaseFields(const LiveObject& object)
 	char buf[64];
 
 	ImGui::Indent(5.0f);
-	m_CopyableField.Draw("Class:", object.Class, object.Handle);
+	m_CopyableField.Draw("Class:", object.FourCC, object.Handle);
 
 	snprintf(buf, sizeof(buf), "0x%08X", object.DatumIndex);		
 	m_CopyableField.Draw("Datum Index:", buf, object.Handle);
@@ -313,7 +308,6 @@ void UI_ObjectTable::DrawSectionCrate(const CrateObject& specific)
 
 		ImGui::Text("[ Teleporter ]");
 		ImGui::Indent(5.0f);
-		ImGui::Text("Team: %s", EnumToString::TeamToString(t.Team));
 		ImGui::Text("Channel: %u", t.Channel);
 		ImGui::Text("Allowed:");
 

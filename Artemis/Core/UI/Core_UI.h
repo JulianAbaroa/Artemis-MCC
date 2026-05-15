@@ -2,6 +2,9 @@
 
 #include <memory>
 
+struct Core_State;
+struct Core_System;
+
 // Main.
 class UI_Main;
 
@@ -16,6 +19,9 @@ class UI_ObjectGraph;
 
 // Navigation.
 class UI_Navigation;
+
+// Environment.
+class UI_Environment;
 
 // Interactable.
 class UI_Interactable;
@@ -38,6 +44,9 @@ struct Core_UI
 	Core_UI();
 	~Core_UI();
 
+	void Initialize(Core_State& state, Core_System& system);
+	void Shutdown();
+
 	// Main.
 	std::unique_ptr<UI_Main> Main;
 
@@ -52,6 +61,9 @@ struct Core_UI
 
 	// Navigation.
 	std::unique_ptr<UI_Navigation> Navigation;
+
+	// Environment.
+	std::unique_ptr<UI_Environment> Environment;
 
 	// Interactable.
 	std::unique_ptr<UI_Interactable> Interactable;
@@ -68,5 +80,3 @@ struct Core_UI
 	// Logs.
 	std::unique_ptr<UI_Logs> Logs;
 };
-
-extern Core_UI* g_pUI;

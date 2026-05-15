@@ -12,7 +12,6 @@
 class State_Map
 {
 public:
-	// Returns true if a map has been successfully loaded and its ready to query.
 	bool IsLoaded() const;
 	void SetLoaded(bool value);
 
@@ -41,19 +40,10 @@ public:
 
 private:
 	std::atomic<bool> m_IsLoaded{ false };
-
-	// Tag group definitions (class magic, parent/grandparent class).
 	std::vector<Map_TagTableGroupEntry> m_Groups;
-
-	// Tag entries (group index, datum salt, memory address).
 	std::vector<Map_TagTableEntry> m_Tags;
-
-	// Per-tag offsets inot m_NameData. -1 means the tag has no filename.
 	std::vector<int32_t> m_NameOffsets;
-
-	// Raw ASCII string data for all tag filenames, concatenated.
 	std::vector<char> m_NameData;
-
 	std::string m_MapFilePath;
 
 	mutable std::mutex m_Mutex;

@@ -4,27 +4,16 @@
 #include "UI_Settings.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
-// Render.
 #include "Core/States/Infrastructure/Engine/Render/State_Render.h"
-
-// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
-// Settings.
 #include "Core/Systems/Infrastructure/Persistence/System_Settings.h"
-
-// Preferences.
 #include "Core/Systems/Infrastructure/Persistence/System_Preferences.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <algorithm>
 
@@ -79,7 +68,7 @@ void UI_Settings::DrawUserPreferences()
 {
 	if (!m_IsInitialized)
 	{
-		m_UIScalePreview = g_pState->Infrastructure->Render->GetUIScale();
+		m_UIScalePreview = m_Deps.State_Render.GetUIScale();
 		m_IsInitialized = true;
 	}
 
@@ -96,11 +85,11 @@ void UI_Settings::DrawUserPreferences()
 	ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
 	ImGui::PushItemWidth(200.0f);
 
-	float menuAlpha = g_pState->Infrastructure->Settings->GetMenuAlpha();
+	float menuAlpha = m_Deps.State_Settings.GetMenuAlpha();
 	if (ImGui::SliderFloat("##Global Opacity", &menuAlpha, 0.2f, 1.0f, "%.2f"))
 	{
 		ImGui::GetStyle().Alpha = (std::max)(menuAlpha, 0.20f);
-		g_pState->Infrastructure->Settings->SetMenuAlpha(menuAlpha);
+		m_Deps.State_Settings.SetMenuAlpha(menuAlpha);
 	}
 	ImGui::PopItemWidth();
 
@@ -115,18 +104,18 @@ void UI_Settings::DrawUserPreferences()
 	if (ImGui::IsItemDeactivatedAfterEdit())
 	{
 		m_UIScalePreview = std::clamp(m_UIScalePreview, 1.0f, 4.0f);
-		g_pState->Infrastructure->Render->SetUIScale(m_UIScalePreview);
+		m_Deps.State_Render.SetUIScale(m_UIScalePreview);
 
-		g_pSystem->Debug->Log("[SettingsTab] INFO: Applied scale: %.2f", m_UIScalePreview);
+		m_Deps.System_Debug.Log("[SettingsTab] INFO: Applied scale: %.2f", m_UIScalePreview);
 	}
 	ImGui::PopItemWidth();
 
 	ImGui::Spacing();
 
-	bool blockMouse = g_pState->Infrastructure->Settings->ShouldFreezeMouse();
+	bool blockMouse = m_Deps.State_Settings.ShouldFreezeMouse();
 	if (ImGui::Checkbox("Freeze Mouse Input", &blockMouse))
 	{
-		g_pState->Infrastructure->Settings->SetFreezeMouse(blockMouse);
+		m_Deps.State_Settings.SetFreezeMouse(blockMouse);
 	}
 	if (ImGui::IsItemHovered())
 	{
@@ -135,13 +124,13 @@ void UI_Settings::DrawUserPreferences()
 
 	ImGui::Spacing();
 
-	bool usePreferences = g_pState->Infrastructure->Settings->ShouldUseAppData();
+	bool usePreferences = m_Deps.State_Settings.ShouldUseAppData();
 	if (!usePreferences) ImGui::BeginDisabled();
 
-	bool openUIOnStart = g_pState->Infrastructure->Settings->ShouldOpenUIOnStart();
+	bool openUIOnStart = m_Deps.State_Settings.ShouldOpenUIOnStart();
 	if (ImGui::Checkbox("Open UI on MCC start", &openUIOnStart))
 	{
-		g_pState->Infrastructure->Settings->SetOpenUIOnStart(openUIOnStart);
+		m_Deps.State_Settings.SetOpenUIOnStart(openUIOnStart);
 	}
 	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 	{
@@ -235,16 +224,16 @@ void UI_Settings::DrawDataPersistence()
 	ImGui::Spacing();
 
 	ImGui::BeginGroup();
-	bool useAppData = g_pState->Infrastructure->Settings->ShouldUseAppData();
+	bool useAppData = m_Deps.State_Settings.ShouldUseAppData();
 	ImGui::AlignTextToFramePadding();
 	if (ImGui::Checkbox("Enable Local Storage (AppData)", &useAppData))
 	{
 		if (!useAppData) openDisablePopup = true;
 		else {
-			g_pState->Infrastructure->Settings->SetUseAppData(true);
-			g_pSystem->Infrastructure->Settings->CreateAppData();
-			g_pSystem->Infrastructure->Settings->SaveUseAppData();
-			g_pSystem->Infrastructure->Preferences->LoadPreferences();
+			m_Deps.State_Settings.SetUseAppData(true);
+			m_Deps.System_Settings.CreateAppData();
+			m_Deps.System_Settings.SaveUseAppData();
+			m_Deps.System_Preferences.LoadPreferences();
 		}
 	}
 	ImGui::EndGroup();
@@ -288,9 +277,9 @@ void UI_Settings::DrawSystemDirectories()
 	ImGui::Indent(10.0f);
 	ImGui::Spacing();
 
-	this->DrawPathField("Base Installation", g_pState->Infrastructure->Settings->GetBaseDirectory());
-	this->DrawPathField("Log File Output", g_pState->Infrastructure->Settings->GetLoggerPath());
-	this->DrawPathField("Storage Folder", g_pState->Infrastructure->Settings->GetAppDataDirectory());
+	this->DrawPathField("Base Installation", m_Deps.State_Settings.GetBaseDirectory());
+	this->DrawPathField("Log File Output", m_Deps.State_Settings.GetLoggerPath());
+	this->DrawPathField("Storage Folder", m_Deps.State_Settings.GetAppDataDirectory());
 
 	ImGui::Spacing();
 	ImGui::Unindent(10.0f);
@@ -406,8 +395,8 @@ void UI_Settings::DrawConfirmDisableAppData()
 	
 	if (ImGui::Button("Yes", ImVec2(buttonWidth, 0.0f)))
 	{
-		g_pState->Infrastructure->Settings->SetUseAppData(false);
-		g_pSystem->Infrastructure->Settings->SaveUseAppData();
+		m_Deps.State_Settings.SetUseAppData(false);
+		m_Deps.System_Settings.SaveUseAppData();
 		ImGui::CloseCurrentPopup();
 	}
 	
@@ -444,9 +433,8 @@ void UI_Settings::DrawDeleteAllAppData()
 
 	if (ImGui::Button("Yes", ImVec2(btnWidth, 0.0f)))
 	{
-		g_pSystem->Infrastructure->Settings->DeleteAppData();
-		//g_pState->Infrastructure->Replay->SetRefreshReplayList(true);
-		g_pState->Infrastructure->Settings->SetUseAppData(false);
+		m_Deps.System_Settings.DeleteAppData();
+		m_Deps.State_Settings.SetUseAppData(false);
 		ImGui::CloseCurrentPopup();
 	}
 

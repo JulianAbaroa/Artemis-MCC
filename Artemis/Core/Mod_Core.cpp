@@ -10,40 +10,34 @@
 #include "Core/Threads/Core_Thread.h"
 #include "Core/UI/Core_UI.h"
 
-Core_State* g_pState = nullptr;
-Core_System* g_pSystem = nullptr;
-Core_Hook* g_pHook = nullptr;
-Core_Thread* g_pThread = nullptr;
-Core_UI* g_pUI = nullptr;
+Mod_Core::Mod_Core() = default;
+Mod_Core::~Mod_Core() = default;
 
-std::unique_ptr<Mod_Core> g_Mod = nullptr;
-
-Mod_Core::Mod_Core()
+// Note: The initialization order here is critical 
+// for dependencies between subsystems.
+void Mod_Core::Initialize()
 {
-    // Note: The initialization order here is critical 
-    // for dependencies between subsystems.
-
     State = std::make_unique<Core_State>();
-    g_pState = State.get();
+    State->Initialize();
 
     System = std::make_unique<Core_System>();
-    g_pSystem = System.get();
-
-    Hook = std::make_unique<Core_Hook>();
-    g_pHook = Hook.get();
-
-    Thread = std::make_unique<Core_Thread>();
-    g_pThread = Thread.get();
+    System->Initialize(*State);
 
     UI = std::make_unique<Core_UI>();
-    g_pUI = UI.get();
+    UI->Initialize(*State, *System);
+
+    Hook = std::make_unique<Core_Hook>();
+    Hook->Initialize(*State, *System, *UI);
+
+    Thread = std::make_unique<Core_Thread>();
+    Thread->Initialize(*State, *System, *Hook);
 }
 
-Mod_Core::~Mod_Core()
+void Mod_Core::Shutdown() const
 {
-	g_pState = nullptr;
-	g_pSystem = nullptr;
-	g_pHook = nullptr;
-	g_pThread = nullptr;
-	g_pUI = nullptr;
+    Thread->Shutdown();
+    Hook->Shutdown();
+    UI->Shutdown();
+    System->Shutdown();
+    State->Shutdown();
 }

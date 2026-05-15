@@ -1,7 +1,13 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Environment/Coll/System_CollGeometryBuilder.h"
+
+// Header.
+#include "System_CollGeometryBuilder.h"
+
+// Types.
 #include "Core/Types/Domain/Environment/CollGeometry.h"
+
 #include "Generated/Coll/CollObject.h"
+
 #include <limits>
 
 CollGeometry System_CollGeometryBuilder::BuildGeometry(const CollObject& coll)

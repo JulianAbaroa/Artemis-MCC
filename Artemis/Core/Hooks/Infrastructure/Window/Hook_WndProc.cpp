@@ -4,22 +4,18 @@
 #include "Hook_WndProc.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
 #include "Core/States/Infrastructure/Engine/Memory/State_MemoryScanner.h"
 #include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
 #include "Core/Systems/Infrastructure/Engine/Memory/System_MemoryScanner.h"
 #include "Core/Systems/Infrastructure/Engine/Lifecycle/System_Lifecycle.h"
 #include "Core/Systems/Infrastructure/Persistence/System_Preferences.h"
 
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // ImGui.
 #include "External/imgui/imgui.h"
@@ -33,11 +29,10 @@ using namespace std::chrono_literals;
 LRESULT __stdcall Hook_WndProc::HookedWndProc(
 	const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 {
-	auto& debug = *g_pSystem->Debug;
-	auto& stateLifecycle = *g_pState->Infrastructure->Lifecycle;
-	auto& systemLifecycle = *g_pSystem->Infrastructure->Lifecycle;
-	auto& preferences = *g_pSystem->Infrastructure->Preferences;
-	auto& settings = *g_pState->Infrastructure->Settings;
+	if (s_Instance == nullptr)
+	{
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
 
 	// WM_CLOSE/WM_DESTROY/WM_QUIT: 
 	// Intercept the window closing to clear the state.
@@ -46,11 +41,13 @@ LRESULT __stdcall Hook_WndProc::HookedWndProc(
 
 	if (windowDestroyed)
 	{
-		if (stateLifecycle.IsRunning())
+		if (s_Instance->m_Deps.State_Lifecycle.IsRunning())
 		{
-			debug.Log("[WndProc] WARNING: MCC shutdown detected.");
-			preferences.SavePreferences();
-			systemLifecycle.SignalShutdown();
+			s_Instance->m_Deps.System_Debug.Log("[WndProc] WARNING:"
+				" MCC shutdown detected.");
+
+			s_Instance->m_Deps.System_Preferences.SavePreferences();
+			s_Instance->m_Deps.System_Lifecycle.SignalShutdown();
 		}
 		
 		return CallWindowProc(m_OriginalWndProc, hWnd, uMsg, wParam, lParam);
@@ -70,7 +67,7 @@ LRESULT __stdcall Hook_WndProc::HookedWndProc(
 	if (isKeyDown) if (HandleHotKeys(wParam)) return 0;
 
 	// If the menu is visible, ImGui has input priority.
-	if (settings.IsMenuVisible())
+	if (s_Instance->m_Deps.State_Settings.IsMenuVisible())
 	{
 		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
 		{
@@ -104,38 +101,35 @@ LRESULT __stdcall Hook_WndProc::HookedWndProc(
 // Private helper to handle mod-specific hotkeys.
 bool Hook_WndProc::HandleHotKeys(WPARAM wParam)
 {
-	auto& settings = *g_pState->Infrastructure->Settings;
-	auto& stateMemoryScanner = *g_pState->Infrastructure->MemoryScanner;
-	auto& systemMemoryScanner = *g_pSystem->Infrastructure->MemoryScanner;
-	
 	bool shiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 
 	if (shiftPressed && wParam == '1')
 	{
-		settings.SetMenuVisible(!settings.IsMenuVisible());
+		s_Instance->m_Deps.State_Settings.SetMenuVisible(
+			!s_Instance->m_Deps.State_Settings.IsMenuVisible());
 		return true;
 	}
 
 	if (shiftPressed && wParam == '2')
 	{
-		settings.SetMenuVisible(true);
-		settings.SetForceMenuReset(true);
+		s_Instance->m_Deps.State_Settings.SetMenuVisible(true);
+		s_Instance->m_Deps.State_Settings.SetForceMenuReset(true);
 		return true;
 	}
 
 	if (shiftPressed && wParam == '3')
 	{
-		bool currentLock = settings.IsMenuLocked();
-		settings.SetMenuLocked(!currentLock);
+		bool currentLock = s_Instance->m_Deps.State_Settings.IsMenuLocked();
+		s_Instance->m_Deps.State_Settings.SetMenuLocked(!currentLock);
 		return true;
 	}
 
 	if (shiftPressed && wParam == '4')
 	{
-		if (!g_pState->Infrastructure->MemoryScanner->IsScanning())
+		if (!s_Instance->m_Deps.State_MemoryScanner.IsScanning())
 		{
-			systemMemoryScanner.TriggerScan(
-				stateMemoryScanner.GetDelayMs());
+			s_Instance->m_Deps.System_MemoryScanner.TriggerScan(
+				s_Instance->m_Deps.State_MemoryScanner.GetDelayMs());
 		}
 
 		return true;
@@ -143,6 +137,8 @@ bool Hook_WndProc::HandleHotKeys(WPARAM wParam)
 
 	return false;
 }
+
+Hook_WndProc* Hook_WndProc::s_Instance = nullptr;
 
 WNDPROC Hook_WndProc::GetWndProc()
 {
@@ -152,4 +148,28 @@ WNDPROC Hook_WndProc::GetWndProc()
 void Hook_WndProc::SetWndProc(WNDPROC lpPrevWndFunc)
 {
 	m_OriginalWndProc = lpPrevWndFunc;
+}
+
+void Hook_WndProc::Install(HWND hwnd)
+{
+	if (m_OriginalWndProc != nullptr) return;
+
+	m_hWnd = hwnd;
+	m_OriginalWndProc = (WNDPROC)SetWindowLongPtr(
+		hwnd, GWLP_WNDPROC, (LONG_PTR)HookedWndProc);
+
+	s_Instance->m_Deps.System_Debug.Log("[WndProc] INFO: Hook installed.");
+}
+
+void Hook_WndProc::Uninstall()
+{
+	if (m_OriginalWndProc == nullptr) return;
+
+	SetWindowLongPtr(m_hWnd, GWLP_WNDPROC, (LONG_PTR)m_OriginalWndProc);
+
+	s_Instance->m_Deps.System_Debug.Log("[WndProc] INFO: Hook uninstalled.");
+
+	m_OriginalWndProc = nullptr;
+	m_hWnd = nullptr;
+	s_Instance = nullptr;
 }

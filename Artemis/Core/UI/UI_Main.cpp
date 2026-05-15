@@ -4,55 +4,27 @@
 #include "UI_Main.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
-// Lifecycle.
 #include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
-
-// Render.
 #include "Core/States/Infrastructure/Engine/Render/State_Render.h"
-
-// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
-
-// --- Threads ---
-#include "Core/Threads/Core_Thread.h"
-
-// Main.
-#include "Core/Threads/Domain/Thread_Main.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // --- UI ---
-#include "Core_UI.h"
 
-// Logs.
+#include "Core/UI/Core_UI.h"
+
+#include "Domain/Object/UI_ObjectTable.h"
+#include "Domain/Player/UI_PlayerTable.h"
+#include "Domain/Graph/UI_ObjectGraph.h"
+#include "Domain/Map/UI_Map.h"
+#include "Domain/Interactable/UI_Interactable.h"
 #include "Interface/UI_Logs.h"
 
-// Object Table.
-#include "Domain/Object/UI_ObjectTable.h"
-
-// Player Table.
-#include "Domain/Player/UI_PlayerTable.h"
-
-// Object Graph.
-#include "Domain/Graph/UI_ObjectGraph.h"
-
-// Map.
-#include "Domain/Map/UI_Map.h"
-
-// Interactable.
-#include "Domain/Interactable/UI_Interactable.h"
-
-// Settings.
 #include "Infrastructure/Persistence/UI_Settings.h"
-
-// Memory Scanner.
 #include "Infrastructure/Memory/UI_MemoryScanner.h"
 
 // ImGui.
@@ -61,7 +33,7 @@
 void UI_Main::Draw()
 {
 	// Pre-render: Visibility and Input Management
-	if (!g_pState->Infrastructure->Settings->IsMenuVisible())
+	if (!m_Deps.State_Settings.IsMenuVisible())
 	{
 		ImGui::GetIO().ClearInputMouse();
 		ImGui::GetIO().ClearInputKeys();
@@ -76,18 +48,18 @@ void UI_Main::Draw()
 
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 
-	if (g_pState->Infrastructure->Settings->IsMenuLocked())
+	if (m_Deps.State_Settings.IsMenuLocked())
 	{
 		windowFlags |= ImGuiWindowFlags_NoMove;
 	}
 
-	bool open = g_pState->Infrastructure->Settings->IsMenuVisible();
+	bool open = m_Deps.State_Settings.IsMenuVisible();
 
 	bool isVisible = ImGui::Begin("Artemis - Control Panel", &open, windowFlags);
 
 	if (!open)
 	{
-		g_pState->Infrastructure->Settings->SetMenuVisible(false);
+		m_Deps.State_Settings.SetMenuVisible(false);
 	}
 
 	if (isVisible)
@@ -102,7 +74,7 @@ void UI_Main::Draw()
 
 void UI_Main::HandleWindowReset()
 {
-	if (!g_pState->Infrastructure->Settings->MustResetMenu()) return;
+	if (!m_Deps.State_Settings.MustResetMenu()) return;
 
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImVec2 screenSize = viewport->Size;
@@ -115,7 +87,7 @@ void UI_Main::HandleWindowReset()
 	);
 
 	ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
-	g_pState->Infrastructure->Settings->SetForceMenuReset(false);
+	m_Deps.State_Settings.SetForceMenuReset(false);
 }
 
 void UI_Main::DrawStatusBar()
@@ -127,7 +99,7 @@ void UI_Main::DrawStatusBar()
 	ImGui::Text("Game Engine:");
 	ImGui::SameLine();
 
-	auto status = g_pState->Infrastructure->Lifecycle->GetEngineStatus();
+	auto status = m_Deps.State_Lifecycle.GetEngineStatus();
 	ImVec4 statusColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
 	const char* statusText = "UNKNOWN";
 
@@ -151,7 +123,7 @@ void UI_Main::DrawStatusBar()
 
 	ImGui::TextColored(statusColor, statusText);
 
-	int fps = g_pState->Infrastructure->Render->GetFramerate();
+	int fps = m_Deps.State_Render.GetFramerate();
 	char fpsText[32];
 	sprintf_s(fpsText, sizeof(fpsText), "%d FPS", fps);
 
@@ -189,13 +161,14 @@ void UI_Main::DrawTabs()
 
 	if (!ImGui::BeginTabBar("MainTabs")) return;
 
-	auto AddTab = [](const char* label, auto drawFn, bool forceOpen, const ImVec4* alertColor, bool disabled = false) {
+	auto AddTab = [this](const char* label, auto drawFn, bool forceOpen, const ImVec4* alertColor, bool disabled = false) {
 		bool pushedColor = false;
 
 		if (alertColor != nullptr)
 		{
 			auto now = std::chrono::steady_clock::now();
-			auto elapsed = std::chrono::duration<float>(now - g_pSystem->Debug->GetLastAlertTime()).count();
+			auto elapsed = std::chrono::duration<float>(
+				now - m_Deps.System_Debug.GetLastAlertTime()).count();
 
 			ImVec4 finalColor = *alertColor;
 
@@ -240,27 +213,29 @@ void UI_Main::DrawTabs()
 		if (pushedColor) ImGui::PopStyleColor(3);
 	};
 
-	bool useAppData = g_pState->Infrastructure->Settings->ShouldUseAppData();
+	bool useAppData = m_Deps.State_Settings.ShouldUseAppData();
 
-	AddTab("Object Table", []() { g_pUI->ObjectTable->Draw(); }, false, nullptr);
-	AddTab("Player Table", []() { g_pUI->PlayerTable->Draw(); }, false, nullptr);
-	AddTab("Object Graph", []() { g_pUI->ObjectGraph->Draw(); }, false, nullptr);
-	AddTab("Map", []() { g_pUI->Map->Draw(); }, false, nullptr);
-	AddTab("Interactable", []() { g_pUI->Interactable->Draw(); }, false, nullptr);
-	AddTab("Settings", []() { g_pUI->Settings->Draw(); }, firstLaunch, nullptr);
-	AddTab("Memory Scanner", []() { g_pUI->MemoryScanner->Draw(); }, false, nullptr);
+	
+
+	AddTab("Object Table", [this]() { m_Deps.UI_ObjectTable.Draw(); }, false, nullptr);
+	AddTab("Player Table", [this]() { m_Deps.UI_PlayerTable.Draw(); }, false, nullptr);
+	AddTab("Object Graph", [this]() { m_Deps.UI_ObjectGraph.Draw(); }, false, nullptr);
+	AddTab("Map", [this]() { m_Deps.UI_Map.Draw(); }, false, nullptr);
+	AddTab("Interactable", [this]() { m_Deps.UI_Interactable.Draw(); }, false, nullptr);
+	AddTab("Settings", [this]() { m_Deps.UI_Settings.Draw(); }, firstLaunch, nullptr);
+	AddTab("Memory Scanner", [this]() { m_Deps.UI_MemoryScanner.Draw(); }, false, nullptr);
 
 	// Logs
 	const ImVec4* activeAlert = nullptr;
 	static ImVec4 colorError(1.0f, 0.33f, 0.33f, 1.0f);
 	static ImVec4 colorWarning(1.0f, 0.79f, 0.23f, 1.0f);
 
-	if (g_pSystem->Debug->HasUnreadError()) activeAlert = &colorError;
-	else if (g_pSystem->Debug->HasUnreadWarning()) activeAlert = &colorWarning;
+	if (m_Deps.System_Debug.HasUnreadError()) activeAlert = &colorError;
+	else if (m_Deps.System_Debug.HasUnreadWarning()) activeAlert = &colorWarning;
 
-	AddTab("Logs", []() {
-		g_pSystem->Debug->ClearUnreadStates();
-		g_pUI->Logs->Draw();
+	AddTab("Logs", [this]() {
+		m_Deps.System_Debug.ClearUnreadStates();
+		m_Deps.UI_Logs.Draw();
 	}, false, activeAlert);
 
 	firstLaunch = false;

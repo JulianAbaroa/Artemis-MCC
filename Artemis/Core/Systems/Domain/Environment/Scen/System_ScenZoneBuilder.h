@@ -1,7 +1,7 @@
 #pragma once
 
-struct SceneryZoneData;
 struct ScenObject;
+struct SceneryZoneData;
 
 class System_ScenZoneBuilder
 {

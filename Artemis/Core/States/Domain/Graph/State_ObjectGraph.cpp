@@ -3,9 +3,7 @@
 // Header.
 #include "State_ObjectGraph.h"
 
-// States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
+// --- States ---
 
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
@@ -28,9 +26,7 @@ std::vector<uint32_t> State_ObjectGraph::GetChildren(uint32_t handle) const
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	std::vector<uint32_t> children;
 
-	auto& objectTable = *g_pState->Domain->ObjectTable;
-
-	auto object = objectTable.CopyLiveObject(handle);
+	auto object = m_State_ObjectTable.CopyLiveObject(handle);
 	if (!object || object->ChildHandle == 0xFFFFFFFF) return children;
 
 	uint32_t currentHandle = object->ChildHandle;
@@ -38,10 +34,9 @@ std::vector<uint32_t> State_ObjectGraph::GetChildren(uint32_t handle) const
 	{
 		children.push_back(currentHandle);
 
-		auto child = objectTable.CopyLiveObject(currentHandle);
-		if (!child) break;
-
-		currentHandle = child->NextSiblingHandle;
+		std::optional<LiveObject> child{};
+		child = m_State_ObjectTable.CopyLiveObject(currentHandle);
+		currentHandle = (child) ? child->NextSiblingHandle : 0xFFFFFFFF;
 	}
 
 	return children;
@@ -51,9 +46,7 @@ uint32_t State_ObjectGraph::GetParent(uint32_t handle) const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
 
-	auto& objectTable = *g_pState->Domain->ObjectTable;
-
-	auto object = objectTable.CopyLiveObject(handle);
+	auto object = m_State_ObjectTable.CopyLiveObject(handle);
 	if (!object || object->ParentHandle == 0xFFFFFFFF) return 0xFFFFFFFF;
 
 	return object->ParentHandle;
@@ -67,8 +60,6 @@ std::vector<uint32_t> State_ObjectGraph::GetSubtree(uint32_t rootHandle) const
 	std::queue<uint32_t> pending;
 	pending.push(rootHandle);
 
-	auto& objectTable = *g_pState->Domain->ObjectTable;
-
 	while (!pending.empty())
 	{
 		uint32_t current = pending.front();
@@ -76,7 +67,7 @@ std::vector<uint32_t> State_ObjectGraph::GetSubtree(uint32_t rootHandle) const
 
 		result.push_back(current);
 
-		auto object = objectTable.CopyLiveObject(current);
+		auto object = m_State_ObjectTable.CopyLiveObject(current);
 		if (!object) continue;
 
 		uint32_t childHandle = object->ChildHandle;
@@ -84,7 +75,8 @@ std::vector<uint32_t> State_ObjectGraph::GetSubtree(uint32_t rootHandle) const
 		{
 			pending.push(childHandle);
 
-			auto child = objectTable.CopyLiveObject(childHandle);
+			std::optional<LiveObject> child{};
+			child = m_State_ObjectTable.CopyLiveObject(childHandle);
 			if (!child) continue;
 
 			childHandle = child->NextSiblingHandle;

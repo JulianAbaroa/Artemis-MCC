@@ -18,7 +18,10 @@
 // Settings.
 #include "Persistence/State_Settings.h"
 
-Core_State_Infrastructure::Core_State_Infrastructure()
+Core_State_Infrastructure::Core_State_Infrastructure() = default;
+Core_State_Infrastructure::~Core_State_Infrastructure() = default;
+
+void Core_State_Infrastructure::Initialize()
 {
 	// Engine.
 	Input = std::make_unique<State_Input>();
@@ -30,4 +33,11 @@ Core_State_Infrastructure::Core_State_Infrastructure()
 	Settings = std::make_unique<State_Settings>();
 }
 
-Core_State_Infrastructure::~Core_State_Infrastructure() = default;
+void Core_State_Infrastructure::Shutdown()
+{
+	Input.reset();
+	MemoryScanner.reset();
+	Lifecycle.reset();
+	Render.reset();
+	Settings.reset();
+}

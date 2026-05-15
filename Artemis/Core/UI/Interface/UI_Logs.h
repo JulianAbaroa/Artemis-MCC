@@ -1,17 +1,34 @@
 #pragma once
 
-// Types.
-#include "Core/Types/Infrastructure/UITypes.h"
-#include "Core/Types/Interface/LogTypes.h"
-
 #include <atomic>
+#include <vector>
+#include <string>
+
+struct LogFilterState;
+struct LogEntry;
+
+class State_Settings;
+class State_Debug;
+class System_Debug;
+
+struct UI_Logs_Dependencies
+{
+	State_Settings& State_Settings;
+	State_Debug& State_Debug;
+	System_Debug& System_Debug;
+};
 
 class UI_Logs
 {
 public:
+	UI_Logs(UI_Logs_Dependencies dependencies) : m_Deps(dependencies) {}
+	~UI_Logs() = default;
+
 	void Draw();
 	
 private:
+	UI_Logs_Dependencies m_Deps;
+
 	LogFilterState DrawTopBar();
 	void DrawClearButton(bool isFiltering, std::string& searchStr);
 	void DrawCopyButton(bool isFiltering, std::string& searchStr);

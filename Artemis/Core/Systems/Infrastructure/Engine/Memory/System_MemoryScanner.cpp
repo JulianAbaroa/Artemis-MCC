@@ -3,22 +3,16 @@
 // Header.
 #include "System_MemoryScanner.h"
 
-// --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+// Types.
+#include "Core/Types/Infrastructure/MemoryScannerTypes.h"
 
-// Memory Scanner.
+// --- States ---
+
 #include "Core/States/Infrastructure/Engine/Memory/State_MemoryScanner.h"
 
 #include <algorithm>
 #include <cstring>
 #include <bit>
-
-System_MemoryScanner::System_MemoryScanner() = default;
-System_MemoryScanner::~System_MemoryScanner()
-{
-    if (m_WorkerThread.joinable()) m_WorkerThread.join();
-}
 
 // Helpers.
 
@@ -87,14 +81,14 @@ void System_MemoryScanner::RunDifferentialScan(int delayMs)
         Sleep(delayMs);
         this->CaptureSnapshot(false);
 
-        const auto& filter = g_pState->Infrastructure->MemoryScanner->GetFilter();
+        const auto& filter = m_Deps.State_MemoryScanner.GetFilter();
         if (filter.DataType == ScanDataType::Bytes)
             this->ComputeRoundDiff();
         else
             this->ComputeTypedRoundDiff();
 
-        g_pState->Infrastructure->MemoryScanner->ComputeFinalDiffs();
-        g_pState->Infrastructure->MemoryScanner->SetScanning(false);
+        m_Deps.State_MemoryScanner.ComputeFinalDiffs();
+        m_Deps.State_MemoryScanner.SetScanning(false);
         });
 }
 
@@ -102,84 +96,84 @@ void System_MemoryScanner::RunDifferentialScan(int delayMs)
 
 void System_MemoryScanner::SetRegion(const std::string& name, uintptr_t base, size_t size)
 {
-    g_pState->Infrastructure->MemoryScanner->SetRegion(name, base, size);
+    m_Deps.State_MemoryScanner.SetRegion(name, base, size);
 }
 
 void System_MemoryScanner::TriggerScan(int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::Changed; f.DataType = ScanDataType::Bytes;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
 void System_MemoryScanner::TriggerUnchangedScan(int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::Unchanged; f.DataType = ScanDataType::Bytes;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginUnchangedRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginUnchangedRound();
     RunDifferentialScan(delayMs);
 }
 
 void System_MemoryScanner::TriggerIncreasedScan(ScanDataType type, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::Increased; f.DataType = type;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
 void System_MemoryScanner::TriggerDecreasedScan(ScanDataType type, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::Decreased; f.DataType = type;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
 void System_MemoryScanner::TriggerIncreasedByScan(ScanDataType type, uint64_t delta, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::IncreasedBy; f.DataType = type; f.ValueA = delta;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
 void System_MemoryScanner::TriggerDecreasedByScan(ScanDataType type, uint64_t delta, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::DecreasedBy; f.DataType = type; f.ValueA = delta;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
 // Exact Value, first pass: no need for Before, just the current snapshot
 void System_MemoryScanner::TriggerExactScan(ScanDataType type, uint64_t value, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::ExactValue; f.DataType = type; f.ValueA = value;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
 
     // We use Before as a single snapshot
     CaptureSnapshot(true); 
@@ -188,8 +182,8 @@ void System_MemoryScanner::TriggerExactScan(ScanDataType type, uint64_t value, i
     m_WorkerThread = std::thread([this, f]() {
         Sleep(0);
         this->ComputeExactMatchFirstPass(f);
-        g_pState->Infrastructure->MemoryScanner->ComputeFinalDiffs();
-        g_pState->Infrastructure->MemoryScanner->SetScanning(false);
+        m_Deps.State_MemoryScanner.ComputeFinalDiffs();
+        m_Deps.State_MemoryScanner.SetScanning(false);
         });
 }
 
@@ -201,12 +195,12 @@ void System_MemoryScanner::TriggerExactScanFloat(float value, int delayMs)
 
 void System_MemoryScanner::TriggerInRangeScan(ScanDataType type, uint64_t lo, uint64_t hi, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::InRange; f.DataType = type; f.ValueA = lo; f.ValueB = hi;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
@@ -220,16 +214,16 @@ void System_MemoryScanner::TriggerInRangeScanFloat(float lo, float hi, int delay
 
 void System_MemoryScanner::TriggerBitMaskScan(uint32_t mask, uint32_t pattern, int delayMs)
 {
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f;
     f.Mode = ScanMode::BitMask;
     f.DataType = ScanDataType::UInt32;
     f.BitMaskPattern = mask;
     f.BitMaskValue = pattern;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
@@ -237,27 +231,27 @@ void System_MemoryScanner::TriggerStabilizedScan(ScanDataType type, int rounds, 
 {
     // Stabilized: Triggers N rounds of typed "Unchanged" and then ComputeFinalDiffs filters them.
     // Each call to TriggerStabilizedScan adds one round, the caller calls it N times.
-    if (g_pState->Infrastructure->MemoryScanner->IsScanning()) return;
-    g_pState->Infrastructure->MemoryScanner->SetScanning(true);
+    if (m_Deps.State_MemoryScanner.IsScanning()) return;
+    m_Deps.State_MemoryScanner.SetScanning(true);
 
     ScanFilter f; f.Mode = ScanMode::Stabilized; f.DataType = type; f.StabilizeRounds = rounds;
-    g_pState->Infrastructure->MemoryScanner->SetFilter(f);
-    g_pState->Infrastructure->MemoryScanner->BeginRound();
+    m_Deps.State_MemoryScanner.SetFilter(f);
+    m_Deps.State_MemoryScanner.BeginRound();
     RunDifferentialScan(delayMs);
 }
 
 void System_MemoryScanner::Reset()
 {
     if (m_WorkerThread.joinable()) m_WorkerThread.join();
-    g_pState->Infrastructure->MemoryScanner->SetScanning(false);
-    g_pState->Infrastructure->MemoryScanner->Reset();
+    m_Deps.State_MemoryScanner.SetScanning(false);
+    m_Deps.State_MemoryScanner.Reset();
 }
 
 // Diff logic
 
 void System_MemoryScanner::CaptureSnapshot(bool isBefore)
 {
-    const auto& region = g_pState->Infrastructure->MemoryScanner->GetSession().Region;
+    const auto& region = m_Deps.State_MemoryScanner.GetSession().Region;
     if (region.BaseAddress == 0 || region.Size == 0) return;
 
     ScanSnapshot snap;
@@ -265,13 +259,13 @@ void System_MemoryScanner::CaptureSnapshot(bool isBefore)
     snap.Label = isBefore ? "Before" : "After";
     snap.BaseAddress = region.BaseAddress;
 
-    if (isBefore) g_pState->Infrastructure->MemoryScanner->SetRoundBefore(std::move(snap));
-    else          g_pState->Infrastructure->MemoryScanner->SetRoundAfter(std::move(snap));
+    if (isBefore) m_Deps.State_MemoryScanner.SetRoundBefore(std::move(snap));
+    else          m_Deps.State_MemoryScanner.SetRoundAfter(std::move(snap));
 }
 
 void System_MemoryScanner::ComputeRoundDiff()
 {
-    const auto& session = g_pState->Infrastructure->MemoryScanner->GetSession();
+    const auto& session = m_Deps.State_MemoryScanner.GetSession();
     if (session.Rounds.empty()) return;
 
     const auto& round = session.Rounds.back();
@@ -284,13 +278,13 @@ void System_MemoryScanner::ComputeRoundDiff()
         if (before[i] != after[i])
             diffs.push_back({ i, before[i], after[i] });
 
-    g_pState->Infrastructure->MemoryScanner->SetRoundDiffs(std::move(diffs));
-    g_pState->Infrastructure->MemoryScanner->CompleteRound();
+    m_Deps.State_MemoryScanner.SetRoundDiffs(std::move(diffs));
+    m_Deps.State_MemoryScanner.CompleteRound();
 }
 
 void System_MemoryScanner::ComputeTypedRoundDiff()
 {
-    const auto& session = g_pState->Infrastructure->MemoryScanner->GetSession();
+    const auto& session = m_Deps.State_MemoryScanner.GetSession();
     if (session.Rounds.empty()) return;
 
     const auto& round = session.Rounds.back();
@@ -319,13 +313,13 @@ void System_MemoryScanner::ComputeTypedRoundDiff()
         }
     }
 
-    g_pState->Infrastructure->MemoryScanner->SetRoundTypedDiffs(std::move(matches));
-    g_pState->Infrastructure->MemoryScanner->CompleteRound();
+    m_Deps.State_MemoryScanner.SetRoundTypedDiffs(std::move(matches));
+    m_Deps.State_MemoryScanner.CompleteRound();
 }
 
 void System_MemoryScanner::ComputeExactMatchFirstPass(const ScanFilter& f)
 {
-    const auto& session = g_pState->Infrastructure->MemoryScanner->GetSession();
+    const auto& session = m_Deps.State_MemoryScanner.GetSession();
     if (session.Rounds.empty()) return;
 
     const auto& snap = session.Rounds.back().Before.Data; // snapshot único
@@ -346,8 +340,8 @@ void System_MemoryScanner::ComputeExactMatchFirstPass(const ScanFilter& f)
         }
     }
 
-    g_pState->Infrastructure->MemoryScanner->SetRoundTypedDiffs(std::move(matches));
-    g_pState->Infrastructure->MemoryScanner->CompleteRound();
+    m_Deps.State_MemoryScanner.SetRoundTypedDiffs(std::move(matches));
+    m_Deps.State_MemoryScanner.CompleteRound();
 }
 
 bool System_MemoryScanner::TryReadMemory(uintptr_t base, size_t size, uint8_t* outBuffer)

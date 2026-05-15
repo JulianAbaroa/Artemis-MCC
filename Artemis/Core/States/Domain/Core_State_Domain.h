@@ -51,6 +51,9 @@ struct Core_State_Domain
 	Core_State_Domain();
 	~Core_State_Domain();
 
+	void Initialize();
+	void Shutdown();
+
 	// Map.
 	std::unique_ptr<State_Map> Map;
 	std::unique_ptr<State_MapPhmo> MapPhmo;

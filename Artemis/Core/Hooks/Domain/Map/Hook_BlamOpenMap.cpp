@@ -3,10 +3,10 @@
 // Header.
 #include "Hook_BlamOpenMap.h"
 
+// Types.
+#include "Core/Types/Infrastructure/AOB/Signatures.h"
+
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
 #include "Core/Systems/Domain/Map/System_Map.h"
 #include "Core/Systems/Domain/Map/System_MapTagGroup.h"
@@ -16,7 +16,7 @@
 
 #include "Core/Systems/Infrastructure/Engine/Memory/System_AOBScanner.h"
 
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // MinHook.
 #include "External/minhook/include/MinHook.h"
@@ -44,38 +44,32 @@ void Hook_BlamOpenMap::HookedBlamOpenMap(uint64_t param_1,
 
 	std::filesystem::path fullPath = gameRoot / relativePath;
 
-	auto& map = *g_pSystem->Domain->Map;
-	bool mapLoaded = map.LoadMap(fullPath.string());
+	bool mapLoaded = s_Instance->m_Deps.
+		System_Map.LoadMap(fullPath.string());
+
 	if (mapLoaded)
 	{
-		auto& mapTagGroup = *g_pSystem->Domain->MapTagGroup;
-		mapTagGroup.LoadForMap();
-
-		auto& navigation = *g_pSystem->Domain->Navigation;
-		navigation.BuildForMap();
-
-		auto& environment = *g_pSystem->Domain->Environment;
-		environment.BuildForMap();
-
-		auto& interactable = *g_pSystem->Domain->Interactable;
-		interactable.BuildForMap();
+		s_Instance->m_Deps.System_MapTagGroup.LoadForMap();
+		s_Instance->m_Deps.System_Navigation.BuildForMap();
+		s_Instance->m_Deps.System_Environment.BuildForMap();
+		s_Instance->m_Deps.System_Interactable.BuildForMap();
 	}
 }
+
+Hook_BlamOpenMap* Hook_BlamOpenMap::s_Instance = nullptr;
 
 void Hook_BlamOpenMap::Install()
 {
 	if (m_IsHookInstalled.load()) return;
+	s_Instance = this;
 
-	auto& debug = *g_pSystem->Debug;
-	auto& aobScanner = *g_pSystem->Infrastructure->AOBScanner;
-	
-	void* functionAddress = 
-		(void*)aobScanner.FindPattern(Signatures::BlamOpenMap);
+	void* functionAddress = (void*)s_Instance->m_Deps.
+		System_AOBScanner.FindPattern(Signatures::BlamOpenMap);
 
 	if (!functionAddress)
 	{
-		debug.Log("[BlamOpenMap] ERROR: Failed to obtain"
-			" the function address.");
+		s_Instance->m_Deps.System_Debug.Log("[BlamOpenMap] ERROR:"
+			" Failed to obtain the function address.");
 		return;
 	}
 
@@ -85,21 +79,22 @@ void Hook_BlamOpenMap::Install()
 		reinterpret_cast<LPVOID*>(&m_OriginalFunction)
 	) != MH_OK)
 	{
-		debug.Log("[BlamOpenMap] ERROR:"
+		s_Instance->m_Deps.System_Debug.Log("[BlamOpenMap] ERROR:"
 			" Failed to create the hook.");
 
 		return;
 	}
 	if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
 	{
-		debug.Log(" [BlamOpenMap] ERROR:"
+		s_Instance->m_Deps.System_Debug.Log(" [BlamOpenMap] ERROR:"
 			" Failed to enable hook.");
 
 		return;
 	}
 
 	m_IsHookInstalled.store(true);
-	debug.Log("[BlamOpenMap] INFO: Hook installed.");
+	s_Instance->m_Deps.System_Debug.Log("[BlamOpenMap] INFO:"
+		" Hook installed.");
 	return;
 }
 
@@ -112,6 +107,8 @@ void Hook_BlamOpenMap::Uninstall()
 
 	m_IsHookInstalled.store(false);
 
-	auto& debug = *g_pSystem->Debug;
-	debug.Log("[BlamOpenMap] INFO: Hook uninstalled.");
+	s_Instance->m_Deps.System_Debug.Log("[BlamOpenMap] INFO:"
+		" Hook uninstalled.");
+
+	s_Instance = nullptr;
 }

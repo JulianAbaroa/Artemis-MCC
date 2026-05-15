@@ -3,17 +3,16 @@
 #include <cstdint>
 #include <vector>
 
-// Forward declarations.
-struct Phmo_MultiSpheresEntry;
-struct Phmo_PolyhedraEntry;
-struct Phmo_SpheresEntry;
-struct Phmo_PillsEntry;
-struct Phmo_BoxesEntry;
-struct PhmoGeometry;
-struct PhmoObject;
-struct PhmoShape;
-struct PhmoVec3;
 struct Vec3;
+struct PhmoVec3;
+struct PhmoShape;
+struct PhmoObject;
+struct PhmoGeometry;
+struct Phmo_BoxesEntry;
+struct Phmo_PillsEntry;
+struct Phmo_SpheresEntry;
+struct Phmo_PolyhedraEntry;
+struct Phmo_MultiSpheresEntry;
 
 class System_PhmoGeometryBuilder
 {

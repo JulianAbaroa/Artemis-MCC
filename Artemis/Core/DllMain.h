@@ -15,6 +15,5 @@ private:
 
 	std::thread m_MainThread{};
 	std::thread m_InputThread{};
-	
 	std::thread m_AIThread{};
 };

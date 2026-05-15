@@ -3,15 +3,19 @@
 // Header.
 #include "System_Interactable.h"
 
-// Types.
+// --- Types ---
+
 #include "Core/Types/Domain/Map/MapMagics.h"
+#include "Core/Types/Domain/Object/LiveObject.h"
+#include "Core/Types/Domain/Interaction/LiveInteraction.h"
+#include "Core/Types/Domain/Classification/ClassifiedObject.h"
+#include "Core/Types/Domain/Graph/ObjectNode.h"
+#include "Core/Types/Domain/Graph/PlayerTree.h"
 #include "Core/Types/Domain/Environment/ModeGeometry.h"
+#include "Core/Types/Domain/Interactable/InteractableTypes.h"
 
-// States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
+// --- States ---
 
-// Map.
 #include "Core/States/Domain/Map/State_Map.h"
 #include "Core/States/Domain/Map/Vehi/State_MapVehi.h"
 #include "Core/States/Domain/Map/Eqip/State_MapEqip.h"
@@ -19,43 +23,32 @@
 #include "Core/States/Domain/Map/Proj/State_MapProj.h"
 #include "Core/States/Domain/Map/Ctrl/State_MapCtrl.h"
 
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
-// Player.
 #include "Core/States/Domain/Player/State_PlayerTable.h"
 
-// Intraction
 #include "Core/States/Domain/Interaction/State_InteractionTable.h"
 
-// Classification.
 #include "Core/States/Domain/Classification/State_Classification.h"
 
-// Graph.
 #include "Core/States/Domain/Graph/State_ObjectGraph.h"
 #include "Core/States/Domain/Graph/State_PlayerGraph.h"
 
-// Environment.
 #include "Core/States/Domain/Environment/State_Environment.h"
 
-// Interactable.
 #include "Core/States/Domain/Interactable/State_Interactable.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
 
-// Classification.
 #include "Core/Systems/Domain/Classification/System_ObjectClassifier.h"
 
-// Interactable.
 #include "Core/Systems/Domain/Interactable/Vehi/System_VehiDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Eqip/System_EqipDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Weap/System_WeapDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Proj/System_ProjDataBuilder.h"
 #include "Core/Systems/Domain/Interactable/Ctrl/System_CtrlDataBuilder.h"
 
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <algorithm>
 #include <cmath>
@@ -65,7 +58,7 @@
 void System_Interactable::BuildForMap()
 {
 	const int32_t tagCount =
-		static_cast<int32_t>(g_pState->Domain->Map->GetTagsSize());
+		static_cast<int32_t>(m_Deps.State_Map.GetTagsSize());
 
 	int32_t vehiCount = 0;
 	int32_t eqipCount = 0;
@@ -75,98 +68,98 @@ void System_Interactable::BuildForMap()
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
-		const Map_TagTableEntry& entry = g_pState->Domain->Map->GetTag(i);
+		const Map_TagTableEntry& entry = m_Deps.State_Map.GetTag(i);
 		if (entry.TagGroupIndex < 0) continue;
 
 		const uint32_t magic =
-			g_pState->Domain->Map->GetGroupMagic(entry.TagGroupIndex);
+			m_Deps.State_Map.GetGroupMagic(entry.TagGroupIndex);
 
-		const std::string tagName = g_pState->Domain->Map->GetTagName(i);
+		const std::string tagName = m_Deps.State_Map.GetTagName(i);
 		if (tagName.empty()) continue;
 
 		if (magic == MapMagics::k_VehiMagic)
 		{
-			const VehiObject* vehi = g_pState->Domain->MapVehi->GetVehi(tagName);
+			const VehiObject* vehi = m_Deps.State_MapVehi.GetVehi(tagName);
 			if (!vehi)
 			{
-				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+				m_Deps.System_Debug.Log("[InteractableSystem] WARNING:"
 					" Vehi tag found in table but not loaded: ", tagName);
 				continue;
 			}
 
 			VehicleData data =
-				g_pSystem->Domain->VehiDataBuilder->BuildData(*vehi);
+				m_Deps.System_VehiDataBuilder.BuildData(*vehi);
 
-			g_pState->Domain->Interactable->AddVehiData(tagName, std::move(data));
+			m_Deps.State_Interactable.AddVehiData(tagName, std::move(data));
 			++vehiCount;
 		}
 		else if (magic == MapMagics::k_EqipMagic)
 		{
-			const EqipObject* eqip = g_pState->Domain->MapEqip->GetEqip(tagName);
+			const EqipObject* eqip = m_Deps.State_MapEqip.GetEqip(tagName);
 			if (!eqip)
 			{
-				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+				m_Deps.System_Debug.Log("[InteractableSystem] WARNING:"
 					" Eqip tag found in table but not loaded: ", tagName);
 				continue;
 			}
 
 			EquipmentData data =
-				g_pSystem->Domain->EqipDataBuilder->BuildData(*eqip);
+				m_Deps.System_EqipDataBuilder.BuildData(*eqip);
 
-			g_pState->Domain->Interactable->AddEquipmentData(tagName, std::move(data));
+			m_Deps.State_Interactable.AddEquipmentData(tagName, std::move(data));
 			++eqipCount;
 		}
 		else if (magic == MapMagics::k_WeapMagic)
 		{
-			const WeapObject* weap = g_pState->Domain->MapWeap->GetWeap(tagName);
+			const WeapObject* weap = m_Deps.State_MapWeap.GetWeap(tagName);
 			if (!weap)
 			{
-				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+				m_Deps.System_Debug.Log("[InteractableSystem] WARNING:"
 					" Weap tag found in table but not loaded: ", tagName);
 				continue;
 			}
 
 			WeaponData data =
-				g_pSystem->Domain->WeapDataBuilder->BuildData(*weap);
+				m_Deps.System_WeapDataBuilder.BuildData(*weap);
 
-			g_pState->Domain->Interactable->AddWeaponData(tagName, std::move(data));
+			m_Deps.State_Interactable.AddWeaponData(tagName, std::move(data));
 			++weapCount;
 		}
 		else if (magic == MapMagics::k_ProjMagic)
 		{
-			const ProjObject* proj = g_pState->Domain->MapProj->GetProj(tagName);
+			const ProjObject* proj = m_Deps.State_MapProj.GetProj(tagName);
 			if (!proj)
 			{
-				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+				m_Deps.System_Debug.Log("[InteractableSystem] WARNING:"
 					" Proj tag found in table but not loaded: ", tagName);
 				continue;
 			}
 
 			ProjectileData data =
-				g_pSystem->Domain->ProjDataBuilder->BuildData(*proj);
+				m_Deps.System_ProjDataBuilder.BuildData(*proj);
 
-			g_pState->Domain->Interactable->AddProjectileData(tagName, std::move(data));
+			m_Deps.State_Interactable.AddProjectileData(tagName, std::move(data));
 			++projCount;
 		}
 		else if (magic == MapMagics::k_CtrlMagic)
 		{
-			const CtrlObject* ctrl = g_pState->Domain->MapCtrl->GetCtrl(tagName);
+			const CtrlObject* ctrl = m_Deps.State_MapCtrl.GetCtrl(tagName);
 			if (!ctrl)
 			{
-				g_pSystem->Debug->Log("[InteractableSystem] WARNING:"
+				m_Deps.System_Debug.Log("[InteractableSystem] WARNING:"
 					" Proj tag found in table but not loaded: ", tagName);
 				continue;
 			}
 
 			ControlDeviceData data =
-				g_pSystem->Domain->CtrlDataBuilder->BuildData(*ctrl);
+				m_Deps.System_CtrlDataBuilder.BuildData(*ctrl);
 
-			g_pState->Domain->Interactable->AddControlDeviceData(tagName, std::move(data));
+			m_Deps.State_Interactable.AddControlDeviceData(tagName, std::move(data));
 			++ctrlCount;
 		}
 	}
 
-	g_pSystem->Debug->Log("[InteractableSystem] INFO: Interactable built."
+	m_Deps.System_Debug.Log("[InteractableSystem] INFO: Interactable built."
 		" Vehi: %d | Eqip: %d | Weap: %d | Proj: %d | Ctrl: %d",
 		vehiCount, eqipCount, weapCount, projCount, ctrlCount);
 }
@@ -177,33 +170,33 @@ void System_Interactable::UpdateInteractables()
 {
 	// --- Gather inputs ---
 	uint32_t selfPlayerHandle =
-		g_pState->Domain->PlayerTable->GetPlayerHandleByName("Artemis11010");
+		m_Deps.State_PlayerTable.GetPlayerHandleByName("Artemis11010");
 
 	const LivePlayer* selfPtr =
-		g_pState->Domain->PlayerTable->GetPlayer(selfPlayerHandle);
+		m_Deps.State_PlayerTable.GetPlayer(selfPlayerHandle);
 	if (!selfPtr) return;
 
 	const LivePlayer self = *selfPtr;
 	if (!self.IsAlive)
 	{
-		g_pState->Domain->Interactable->ClearInteractables();
+		m_Deps.State_Interactable.ClearInteractables();
 		return;
 	}
 
 	const LiveInteraction interaction =
-		g_pState->Domain->InteractionTable->GetLiveInteraction();
+		m_Deps.State_InteractionTable.GetLiveInteraction();
 
 	const std::vector<ClassifiedObject>& classified =
-		g_pState->Domain->Classification->GetObjects();
+		m_Deps.State_Classification.GetObjects();
 
 	const std::unordered_map<uint32_t, ObjectNode>& nodes =
-		g_pState->Domain->ObjectGraph->GetNodes();
+		m_Deps.State_ObjectGraph.GetNodes();
 
 	const std::vector<PlayerTree>& playerTrees =
-		g_pState->Domain->PlayerGraph->GetTrees();
+		m_Deps.State_PlayerGraph.GetTrees();
 
 	const std::unordered_map<uint32_t, LiveObject>& objectTable =
-		g_pState->Domain->ObjectTable->GetObjectTable();
+		m_Deps.State_ObjectTable.GetObjectTable();
 
 	// --- Process each classified object ---
 	std::vector<AIInteractable> results;
@@ -253,13 +246,13 @@ void System_Interactable::UpdateInteractables()
 		results.push_back(std::move(interactable));
 	}
 
-	g_pState->Domain->Interactable->SetInteractables(std::move(results));
+	m_Deps.State_Interactable.SetInteractables(std::move(results));
 }
 
 void System_Interactable::Cleanup()
 {
-	g_pState->Domain->Interactable->Cleanup();
-	g_pSystem->Debug->Log("[InteractableSystem] INFO: Cleanup completed.");
+	m_Deps.State_Interactable.Cleanup();
+	m_Deps.System_Debug.Log("[InteractableSystem] INFO: Cleanup completed.");
 }
 
 // --- BuildVehicleInteractable ---
@@ -439,7 +432,7 @@ bool System_Interactable::ResolveSeatStatuses(
 		{
 			auto childObjIt = objectTable.find(childHandle);
 			if (childObjIt == objectTable.end()) continue;
-			if (childObjIt->second.Type != ObjectClass::Vehicle) continue;
+			if (childObjIt->second.Profile.Class != ObjectClass::Vehicle) continue;
 
 			const LiveObject& partObj = childObjIt->second;
 			const VehicleObject* partVehi =
@@ -493,7 +486,7 @@ std::vector<uint32_t> System_Interactable::CollectVehiclePartHandles(
 	{
 		auto objIt = objectTable.find(childHandle);
 		if (objIt == objectTable.end()) continue;
-		if (objIt->second.Type == ObjectClass::Vehicle)
+		if (objIt->second.Profile.Class == ObjectClass::Vehicle)
 			parts.push_back(childHandle);
 	}
 
@@ -517,7 +510,7 @@ std::vector<uint32_t> System_Interactable::CollectBipedChildHandles(
 	{
 		auto objIt = objectTable.find(childHandle);
 		if (objIt == objectTable.end()) continue;
-		if (objIt->second.Type == ObjectClass::Biped)
+		if (objIt->second.Profile.Class == ObjectClass::Biped)
 			bipeds.push_back(childHandle);
 	}
 

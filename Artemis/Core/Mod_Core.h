@@ -14,6 +14,9 @@ class Mod_Core
 public:
 	Mod_Core();
 	~Mod_Core();
+
+	void Initialize();
+	void Shutdown() const;
 	
 	std::unique_ptr<Core_State> State;
 	std::unique_ptr<Core_System> System;
@@ -21,5 +24,3 @@ public:
 	std::unique_ptr<Core_Thread> Thread;
 	std::unique_ptr<Core_UI> UI;
 };
-
-extern std::unique_ptr<Mod_Core> g_Mod;

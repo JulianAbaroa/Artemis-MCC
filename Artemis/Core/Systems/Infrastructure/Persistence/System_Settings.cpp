@@ -4,17 +4,12 @@
 #include "System_Settings.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
-// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <filesystem>
 #include <shlobj.h>
@@ -22,12 +17,12 @@
 
 void System_Settings::InitializePaths(char* buffer)
 {
-	g_pState->Infrastructure->Settings->SetBaseDirectory(std::string(buffer));
-	g_pState->Infrastructure->Settings->SetLoggerPath(g_pState->Infrastructure->Settings->GetBaseDirectory() + "\\Artemis.txt");
+	m_Deps.State_Settings.SetBaseDirectory(std::string(buffer));
+	m_Deps.State_Settings.SetLoggerPath(m_Deps.State_Settings.GetBaseDirectory() + "\\Artemis.txt");
 
 	this->LoadUseAppData();
 
-	if (g_pState->Infrastructure->Settings->ShouldUseAppData())
+	if (m_Deps.State_Settings.ShouldUseAppData())
 	{
 		this->CreateAppData();
 	}
@@ -35,20 +30,20 @@ void System_Settings::InitializePaths(char* buffer)
 
 void System_Settings::SaveUseAppData()
 {
-	std::string configPath = g_pState->Infrastructure->Settings->GetBaseDirectory() + "\\config.ini";
+	std::string configPath = m_Deps.State_Settings.GetBaseDirectory() + "\\config.ini";
 	std::ofstream file(configPath);
 	if (file.is_open())
 	{
-		file << "useAppData=" << (g_pState->Infrastructure->Settings->ShouldUseAppData() ? "1" : "0") << "\n";
+		file << "useAppData=" << (m_Deps.State_Settings.ShouldUseAppData() ? "1" : "0") << "\n";
 		file.close();
 	}
 }
 
 void System_Settings::LoadUseAppData()
 {
-	g_pState->Infrastructure->Settings->SetUseAppData(false);
+	m_Deps.State_Settings.SetUseAppData(false);
 
-	std::string configPath = g_pState->Infrastructure->Settings->GetBaseDirectory() + "\\config.ini";
+	std::string configPath = m_Deps.State_Settings.GetBaseDirectory() + "\\config.ini";
 	std::ifstream file(configPath);
 	if (file.is_open())
 	{
@@ -57,7 +52,7 @@ void System_Settings::LoadUseAppData()
 		{
 			if (line.find("useAppData=1") != std::string::npos)
 			{
-				g_pState->Infrastructure->Settings->SetUseAppData(true);
+				m_Deps.State_Settings.SetUseAppData(true);
 			}
 		}
 
@@ -67,8 +62,8 @@ void System_Settings::LoadUseAppData()
 
 void System_Settings::CreateAppData()
 {
-	if (!g_pState->Infrastructure->Settings->ShouldUseAppData() ||
-		!g_pState->Infrastructure->Settings->IsAppDataDirectoryEmpty()) return;
+	if (!m_Deps.State_Settings.ShouldUseAppData() ||
+		!m_Deps.State_Settings.IsAppDataDirectoryEmpty()) return;
 
 	PWSTR pathTemp = NULL;
 
@@ -84,7 +79,7 @@ void System_Settings::CreateAppData()
 		if (std::filesystem::create_directories(basePath, errorCode) ||
 			std::filesystem::exists(basePath)) 
 		{
-			g_pState->Infrastructure->Settings->SetAppDataDirectory(basePath.string());
+			m_Deps.State_Settings.SetAppDataDirectory(basePath.string());
 		}
 
 		CoTaskMemFree(pathTemp);
@@ -93,17 +88,17 @@ void System_Settings::CreateAppData()
 
 void System_Settings::DeleteAppData()
 {
-	if (g_pState->Infrastructure->Settings->IsAppDataDirectoryEmpty()) return;
+	if (m_Deps.State_Settings.IsAppDataDirectoryEmpty()) return;
 
 	std::error_code errorCode;
 
-	if (std::filesystem::remove_all(g_pState->Infrastructure->Settings->GetAppDataDirectory(), errorCode) > 0)
+	if (std::filesystem::remove_all(m_Deps.State_Settings.GetAppDataDirectory(), errorCode) > 0)
 	{
-		g_pState->Infrastructure->Settings->ClearAppDataDirectory();
+		m_Deps.State_Settings.ClearAppDataDirectory();
 	}
 
 	if (errorCode)
 	{
-		g_pSystem->Debug->Log("[SettingsSystem] ERROR: While deleting AppData. %s.", errorCode.message().c_str());
+		m_Deps.System_Debug.Log("[SettingsSystem] ERROR: While deleting AppData. %s.", errorCode.message().c_str());
 	}
 }

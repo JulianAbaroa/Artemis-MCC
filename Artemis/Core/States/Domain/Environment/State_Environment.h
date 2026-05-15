@@ -53,7 +53,6 @@ public:
 	const std::vector<ActivePhysicsInstance> GetActivePhysicsInstances() const;
 	void SetActivePhysicsInstances(std::vector<ActivePhysicsInstance> instances);
 
-	// Cleanup.
 	void Cleanup();
 
 private:

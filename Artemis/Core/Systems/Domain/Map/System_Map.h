@@ -7,10 +7,24 @@
 #include <string>
 #include <vector>
 
+class State_Map;
+class System_Debug;
+
+struct System_Map_Dependencies
+{
+	State_Map& State_Map;
+	System_Debug& System_Debug;
+};
+
 class System_Map
 {
 public:
+	System_Map(System_Map_Dependencies depedencies) :
+		m_Deps(depedencies) {}
+	~System_Map() = default;
+
 	bool LoadMap(const std::string& path);
+
 	void Cleanup();
 
 	// --- Tag Table Queries ---
@@ -36,6 +50,8 @@ public:
 	int64_t ToDebugOffset(int64_t pointer) const;
 
 private:
+	System_Map_Dependencies m_Deps;
+
 	// --- .MAP Parsing ---
 
 	bool ReadHeader(FILE* file);

@@ -3,11 +3,6 @@
 // Header.
 #include "State_Interactable.h"
 
-// --- Systems ---
-#include "Core/Systems/Core_System.h"
-
-#include "Core/Systems/Interface/System_Debug.h"
-
 std::vector<AIInteractable> State_Interactable::GetInteractables() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -130,7 +125,6 @@ void State_Interactable::Cleanup()
     std::lock_guard<std::mutex> lock(m_Mutex);
 
     m_Interactables.clear();
-
     m_VehicleData.clear();
     m_EquipmentData.clear();
     m_WeaponData.clear();

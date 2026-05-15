@@ -3,9 +3,6 @@
 // Header.
 #include "State_MapSbsp.h"
 
-//#include "Core/Systems/CoreSystem.h"
-//#include "Core/Systems/Interface/DebugSystem.h"
-
 bool State_MapSbsp::HasSbsp(const std::string& tagName) const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -21,9 +18,6 @@ const SbspObject* State_MapSbsp::GetSbsp(const std::string& tagName) const
 
 void State_MapSbsp::AddSbsp(const std::string& tagName, SbspObject data)
 {
-    //g_pSystem->Debug->Log("[MapSbspState] INFO:"
-    //    " Added: %s", tagName.c_str());
-
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Sbsps.emplace(tagName, std::move(data));
 }

@@ -9,13 +9,28 @@
 
 #include <unordered_map>
 
+class State_PlayerTable;
+class System_Debug;
+
+struct UI_PlayerTable_Dependencies
+{
+    State_PlayerTable& State_PlayerTable;
+    System_Debug& System_Debug;
+};
+
 class UI_PlayerTable
 {
 public:
+    UI_PlayerTable(UI_PlayerTable_Dependencies dependencies) :
+        m_Deps(dependencies) {}
+    ~UI_PlayerTable() = default;
+
 	void Draw();
 	void Cleanup();
 
 private:
+    UI_PlayerTable_Dependencies m_Deps;
+
     std::unordered_map<uint32_t, LivePlayer> m_CachePlayers;
     PlayerSearchFilter m_SearchFilter;
     CopyableField m_CopyableField;

@@ -1,11 +1,11 @@
 #pragma once
 
-struct ModeGeometry;
-struct ModeObject;
-struct ModeVec4;
-struct ModeVec3;
-struct Vec4;
 struct Vec3;
+struct Vec4;
+struct ModeVec3;
+struct ModeVec4;
+struct ModeObject;
+struct ModeGeometry;
 
 class System_ModeGeometryBuilder
 {

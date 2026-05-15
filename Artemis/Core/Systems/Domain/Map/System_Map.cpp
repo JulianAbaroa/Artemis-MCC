@@ -8,13 +8,10 @@
 #include "Core/Types/Domain/Map/MapOffsets.h"
 
 // States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 #include "Core/States/Domain/Map/State_Map.h"
 
 // Systems.
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // This '.map' reader was based on Assembly (https://github.com/xboxchaos/assembly)
 
@@ -38,12 +35,12 @@
 // GetTagMetaOffset() / GetTagMetaOffsetByIndex().
 bool System_Map::LoadMap(const std::string& path)
 {
-	g_pState->Domain->Map->SetMapFilePath(path);
+	m_Deps.State_Map.SetMapFilePath(path);
 
 	FILE* file = this->OpenMapFile();
 	if (!file)
 	{
-		g_pSystem->Debug->Log("[MapSystem] ERROR: Could not open map file.");
+		m_Deps.System_Debug.Log("[MapSystem] ERROR: Could not open map file.");
 		return false;
 	}
 
@@ -53,9 +50,10 @@ bool System_Map::LoadMap(const std::string& path)
 
 	fclose(file);
 
-	if (isValid) g_pSystem->Debug->Log("[MapSystem] INFO: Map loaded successfully.");
-	else g_pSystem->Debug->Log("[MapSystem] ERROR: Failed to load map.");
-	g_pState->Domain->Map->SetLoaded(isValid);
+	if (isValid) m_Deps.System_Debug.Log("[MapSystem] INFO: Map loaded successfully.");
+	else m_Deps.System_Debug.Log("[MapSystem] ERROR: Failed to load map.");
+
+	m_Deps.State_Map.SetLoaded(isValid);
 	return isValid;
 }
 
@@ -73,17 +71,17 @@ void System_Map::Cleanup()
 	m_MetaFileOffset = 0;
 	m_IndexHeaderFileOffset = 0;
 
-	g_pState->Domain->Map->Cleanup();
-	g_pSystem->Debug->Log("[MapSystem] INFO: Cleanup completed.");
+	m_Deps.State_Map.Cleanup();
+	m_Deps.System_Debug.Log("[MapSystem] INFO: Cleanup completed.");
 }
 
 // --- Tag Table Queries ---
 
 ResolvedTag System_Map::ResolveHandle(uint32_t handle) const
 {
-	if (!g_pState->Domain->Map->IsLoaded())
+	if (!m_Deps.State_Map.IsLoaded())
 	{
-		g_pSystem->Debug->Log("[MapSystem] WARNING: No map loaded.");
+		m_Deps.System_Debug.Log("[MapSystem] WARNING: No map loaded.");
 		return {};
 	}
 
@@ -100,30 +98,27 @@ ResolvedTag System_Map::ResolveHandle(uint32_t handle) const
 	// Validate handle integrity and bounds.
 	if (salt == 0xFFFF && index == 0xFFFF)
 	{
-		g_pSystem->Debug->Log("[MapSystem] WARNING: Salt or Index are invalid.");
+		m_Deps.System_Debug.Log("[MapSystem] WARNING: Salt or Index are invalid.");
 		return {};
 	}
 
-	if (index >= g_pState->Domain->Map->GetTagsSize())
+	if (index >= m_Deps.State_Map.GetTagsSize())
 	{
-		g_pSystem->Debug->Log("[MapSystem] WARNING:"
-			" Index %d is out of range.", index);
-
+		m_Deps.System_Debug.Log("[MapSystem] WARNING: Index %d is out of range.", index);
 		return {};
 	}
 
-	const Map_TagTableEntry& tagEntry = g_pState->Domain->Map->GetTag(index);
+	const Map_TagTableEntry& tagEntry = m_Deps.State_Map.GetTag(index);
 	if (tagEntry.DatumIndexSalt == 0xFFFF)
 	{
-		g_pSystem->Debug->Log("[MapSystem] WARNING: DatumSalt is invalid.");
+		m_Deps.System_Debug.Log("[MapSystem] WARNING: DatumSalt is invalid.");
 		return {};
 	}
 
 	if (tagEntry.DatumIndexSalt != salt)
 	{
-		g_pSystem->Debug->Log("[MapSystem] WARNING: DatumSalt mismatch."
+		m_Deps.System_Debug.Log("[MapSystem] WARNING: DatumSalt mismatch."
 			" Expected: %u, Got: %u", salt, tagEntry.DatumIndexSalt);
-
 		return {};
 	}
 
@@ -131,15 +126,15 @@ ResolvedTag System_Map::ResolveHandle(uint32_t handle) const
 	tag.IsValid = true;
 
 	if (tagEntry.TagGroupIndex >= 0 &&
-		tagEntry.TagGroupIndex < (uint16_t)g_pState->Domain->Map->GetGroupsSize())
+		tagEntry.TagGroupIndex < (uint16_t)m_Deps.State_Map.GetGroupsSize())
 	{
 		// We get the class of this tag (e.g. scen, proj, vehi, ...)
-		uint32_t magic = g_pState->Domain->Map->GetGroupMagic(tagEntry.TagGroupIndex);
-		tag.Class = this->MagicToString(magic);
+		uint32_t magic = m_Deps.State_Map.GetGroupMagic(tagEntry.TagGroupIndex);
+		tag.FourCC = this->MagicToString(magic);
 	}
 
 	// We get the name of this tag.
-	tag.Name = g_pState->Domain->Map->GetTagName(index);
+	tag.TagName = m_Deps.State_Map.GetTagName(index);
 	return tag;
 }
 
@@ -160,12 +155,12 @@ int64_t System_Map::GetTagMetaOffset(const ResolvedTag& tag) const
 {
 	if (!tag.IsValid) return -1;
 
-	int32_t count = (int32_t)g_pState->Domain->Map->GetTagsSize();
+	int32_t count = (int32_t)m_Deps.State_Map.GetTagsSize();
 	for (int32_t i = 0; i < count; ++i)
 	{
-		if (g_pState->Domain->Map->GetTagName(i) == tag.Name)
+		if (m_Deps.State_Map.GetTagName(i) == tag.TagName)
 		{
-			const Map_TagTableEntry& entry = g_pState->Domain->Map->GetTag(i);
+			const Map_TagTableEntry& entry = m_Deps.State_Map.GetTag(i);
 			return this->ToFileOffset(this->Expand(
 				static_cast<uint32_t>(entry.MemoryAddress)));
 		}
@@ -188,12 +183,12 @@ int64_t System_Map::GetTagMetaOffset(const ResolvedTag& tag) const
 int64_t System_Map::GetTagMetaOffsetByIndex(int32_t tagIndex) const
 {
 	if (tagIndex < 0 ||
-		tagIndex >= (int32_t)g_pState->Domain->Map->GetTagsSize())
+		tagIndex >= (int32_t)m_Deps.State_Map.GetTagsSize())
 	{
 		return -1;
 	}
 
-	const Map_TagTableEntry& entry = g_pState->Domain->Map->GetTag(tagIndex);
+	const Map_TagTableEntry& entry = m_Deps.State_Map.GetTag(tagIndex);
 	if (entry.MemoryAddress == 0) return -1;
 
 	return this->ToFileOffset(this->Expand(
@@ -204,7 +199,7 @@ int64_t System_Map::GetTagMetaOffsetByIndex(int32_t tagIndex) const
 
 FILE* System_Map::OpenMapFile() const
 {
-	std::string path = g_pState->Domain->Map->GetMapFilePath();
+	std::string path = m_Deps.State_Map.GetMapFilePath();
 	if (path.empty()) return nullptr;
 
 	FILE* file = nullptr;
@@ -246,9 +241,9 @@ Map_TagTableEntry System_Map::ReadTagRef(FILE* file, int64_t tagRefOffset) const
 	int32_t tagIndex = datumIndex & 0xFFFF;
 
 	if (tagIndex < 0 || tagIndex >=
-		(int32_t)g_pState->Domain->Map->GetTagsSize()) return {};
+		(int32_t)m_Deps.State_Map.GetTagsSize()) return {};
 
-	return g_pState->Domain->Map->GetTag(tagIndex);
+	return m_Deps.State_Map.GetTag(tagIndex);
 }
 
 // Resolves the file offset of a specific tag's metadata block.
@@ -515,9 +510,9 @@ bool System_Map::ReadTagGroups(FILE* file, int64_t fileOffset, int32_t count)
 {
 	if (count <= 0) return false;
 
-	g_pState->Domain->Map->ResizeGroups(count);
+	m_Deps.State_Map.ResizeGroups(count);
 	fseek(file, (long)fileOffset, SEEK_SET);
-	if (fread(g_pState->Domain->Map->GetGroupsData(), sizeof(Map_TagTableGroupEntry), 
+	if (fread(m_Deps.State_Map.GetGroupsData(), sizeof(Map_TagTableGroupEntry),
 		count, file) != (size_t)count) return false;
 
 	return true;
@@ -543,9 +538,9 @@ bool System_Map::ReadTags(FILE* file, int64_t fileOffset, int32_t count)
 {
 	if (count <= 0) return false;
 
-	g_pState->Domain->Map->ResizeTags(count);
+	m_Deps.State_Map.ResizeTags(count);
 	fseek(file, (long)fileOffset, SEEK_SET);
-	if (fread(g_pState->Domain->Map->GetTagsData(), sizeof(Map_TagTableEntry), 
+	if (fread(m_Deps.State_Map.GetTagsData(), sizeof(Map_TagTableEntry),
 		count, file) != (size_t)count) return false;
 
 	return true;
@@ -573,14 +568,14 @@ bool System_Map::ReadFileNames(FILE* f) const
 	uint32_t nameIndexOffset = (uint32_t)ToDebugOffset(m_FileIndexTableOffset);
 	uint32_t nameDataOffset = (uint32_t)ToDebugOffset(m_FileTableOffset);
 
-	g_pState->Domain->Map->ResizeNameOffsets(m_FileTableCount);
+	m_Deps.State_Map.ResizeNameOffsets(m_FileTableCount);
 	fseek(f, nameIndexOffset, SEEK_SET);
-	if (fread(g_pState->Domain->Map->GetNameOffsetsData(), sizeof(int32_t), 
+	if (fread(m_Deps.State_Map.GetNameOffsetsData(), sizeof(int32_t),
 		m_FileTableCount, f) != (size_t)m_FileTableCount) return false;
 
-	g_pState->Domain->Map->ResizeNameData(m_FileTableSize);
+	m_Deps.State_Map.ResizeNameData(m_FileTableSize);
 	fseek(f, nameDataOffset, SEEK_SET);
-	if (fread(g_pState->Domain->Map->GetNameData(), sizeof(char), 
+	if (fread(m_Deps.State_Map.GetNameData(), sizeof(char),
 		m_FileTableSize, f) != (size_t)m_FileTableSize) return false;
 
 	return true;

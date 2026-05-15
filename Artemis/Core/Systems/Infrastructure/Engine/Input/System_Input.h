@@ -1,20 +1,32 @@
 #pragma once
 
-// Types.
-#include "Core/Types/Domain/BlamTypes.h"
-#include "Core/Types/Infrastructure/InputTypes.h"
-
 #include <functional>
 #include <chrono>
 #include <map>
 
+struct InputRequest;
+
+class State_Input;
+class System_Debug;
+
+struct System_Input_Dependencies
+{
+    State_Input& State_Input;
+    System_Debug& System_Debug;
+};
+
 class System_Input
 {
 public:
-    //void ManualInput();
+    System_Input(System_Input_Dependencies dependencies) :
+        m_Deps(dependencies) {}
+    ~System_Input() = default;
+
     void AutomaticInput();
     
 private:
+    System_Input_Dependencies m_Deps;
+
     const std::map<int, float> INPUT_SPEED_MAP = {
         {'0', 16.0f},  {'9', 8.0f},   {'8', 4.0f},
         {'7', 1.0f},   {'6', 0.5f},   {'5', 0.25f},

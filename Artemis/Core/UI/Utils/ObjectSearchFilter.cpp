@@ -35,7 +35,7 @@ bool ObjectSearchFilter::PassesFilter(const LiveObject& object) const
     std::string query = ToLower(m_Query);
 
     if (ContainsQuery(object.TagName, query)) return true;
-    if (ContainsQuery(object.Class, query)) return true;
+    if (ContainsQuery(object.FourCC, query)) return true;
 
     char buf[64];
     snprintf(buf, sizeof(buf), "0x%08x", object.Handle);          if (ContainsQuery(buf, query)) return true;

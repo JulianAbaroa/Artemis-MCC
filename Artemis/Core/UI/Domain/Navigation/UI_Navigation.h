@@ -16,9 +16,15 @@
 #include <vector>
 #include <array>
 
+class State_Navigation;
+
 class UI_Navigation
 {
 public:
+    UI_Navigation(State_Navigation& stateNavigation) : 
+        m_State_Navigation(stateNavigation){}
+    ~UI_Navigation() = default;
+
     void Draw(const MapTransform& transform, const MapSelection& selection);
     void DrawLayers(ImDrawList* draw, const MapTransform& transform,
         const MapSelection& selection, uint32_t visibleLayers) const;
@@ -38,6 +44,8 @@ public:
     const std::vector<AINavigationCluster>& GetGraph() const { return m_CachedGraph; }
 
 private:
+    State_Navigation& m_State_Navigation;
+
     std::vector<AINavigationCluster> m_CachedGraph;
     std::vector<AINavigationCluster> m_CachedRawGraph;
     std::vector<ActiveObstacle>      m_CachedObstacles;

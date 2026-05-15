@@ -3,45 +3,39 @@
 // Header.
 #include "System_PlayerGraph.h"
 
-// States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
+// --- States ---
 
-// Player.
-#include "Core/States/Domain/Player/State_PlayerTable.h"
-
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
-// Classification.
+#include "Core/States/Domain/Player/State_PlayerTable.h"
+
 #include "Core/States/Domain/Classification/State_Classification.h"
 
-// Graph.
 #include "Core/States/Domain/Graph/State_ObjectGraph.h"
 #include "Core/States/Domain/Graph/State_PlayerGraph.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Interface/System_Debug.h"
+// --- Systems ---
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // Called from 'Thread_AI::Run'. Responsible of updating the player trees.
 void System_PlayerGraph::UpdateGraph()
 {
 	std::vector<PlayerTree> trees;
 	this->BuildPlayerTrees(trees);
-	g_pState->Domain->PlayerGraph->SetTrees(std::move(trees));
+	m_Deps.State_PlayerGraph.SetTrees(std::move(trees));
 }
 
 void System_PlayerGraph::Cleanup()
 {
-	g_pState->Domain->PlayerGraph->Cleanup();
-	g_pSystem->Debug->Log("[PlayerGraph] INFO: Cleanup completed.");
+	m_Deps.State_PlayerGraph.Cleanup();
+	m_Deps.System_Debug.Log("[PlayerGraph] INFO: Cleanup completed.");
 }
 
 void System_PlayerGraph::BuildPlayerTrees(std::vector<PlayerTree>& trees)
 {
-	const auto& playerTable = g_pState->Domain->PlayerTable->GetPlayerTable();
-	const auto& nodes = g_pState->Domain->ObjectGraph->GetNodes();
+	const auto& playerTable = m_Deps.State_PlayerTable.GetPlayerTable();
+	const auto& nodes = m_Deps.State_ObjectGraph.GetNodes();
 
 	for (const auto& [handle, player] : playerTable)
 	{
@@ -87,7 +81,7 @@ void System_PlayerGraph::BuildPlayerTrees(std::vector<PlayerTree>& trees)
 		// Armor ability.
 
 		// We get the classified objects.
-		const auto& classifiedObjects = g_pState->Domain->Classification->GetObjects();
+		const auto& classifiedObjects = m_Deps.State_Classification.GetObjects();
 		for (const auto& classified : classifiedObjects)
 		{
 			// We skip everything that's not a EquipmentEquiped.
@@ -129,8 +123,8 @@ void System_PlayerGraph::BuildVehicle(PlayerTree& tree,
 	if (parentHandle == 0xFFFFFFFF) return;
 
 	// We get the parent object.
-	auto parentObject = g_pState->Domain->ObjectTable->CopyLiveObject(parentHandle);
-	if (!parentObject || parentObject->Type != ObjectClass::Vehicle) return;
+	auto parentObject = m_Deps.State_ObjectTable.CopyLiveObject(parentHandle);
+	if (!parentObject || parentObject->Profile.Class != ObjectClass::Vehicle) return;
 
 	// If this parent has another parent, the root is that grandparent.
 	// (case: biped is sitting in a turret child of the root vehicle).
@@ -151,10 +145,10 @@ void System_PlayerGraph::BuildVehicle(PlayerTree& tree,
 	for (uint32_t childHandle : rootIt->second.ChildrenHandles)
 	{
 		auto childrenObject = 
-			g_pState->Domain->ObjectTable->CopyLiveObject(childHandle);
+			m_Deps.State_ObjectTable.CopyLiveObject(childHandle);
 	
 		if (!childrenObject) continue;
-		if (childrenObject->Type != ObjectClass::Vehicle) continue;
+		if (childrenObject->Profile.Class != ObjectClass::Vehicle) continue;
 	
 		tree.VehiclePartHandles.push_back(childHandle);
 	}

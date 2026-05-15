@@ -3,11 +3,36 @@
 // Header.
 #include "Hook_PlayerTable.h"
 
+// Types.
+#include "Core/Types/Infrastructure/AOB/Signatures.h"
+
+// --- States ---
+
+#include "Core/States/Domain/Player/State_PlayerTable.h"
+
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
 
 #include "Core/Systems/Infrastructure/Engine/Memory/System_AOBScanner.h"
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
+
+void Hook_PlayerTable::FindAndStoreTableBase()
+{
+    uintptr_t tableBase = m_Deps.State_PlayerTable.GetPlayerTableBase();
+    if (tableBase == 0)
+    {
+        tableBase = this->GetPlayerTable();
+        if (!tableBase)
+        {
+            m_Deps.System_Debug.Log("[PlayerTableSystem] ERROR:"
+                " PlayerTableBase invalid.");
+            return;
+        }
+
+        m_Deps.System_Debug.Log("[PlayerTableSystem] INFO: PlayerTable: 0x%llX", tableBase);
+        m_Deps.State_PlayerTable.SetPlayerTableBase(tableBase);
+    }
+}
 
 // Returns the pointer to the PlayerTable within the game's memory.
 // This table acts as the primary data structure for session-specific player data,
@@ -22,7 +47,8 @@ uintptr_t Hook_PlayerTable::GetPlayerTable()
     {
         uintptr_t tlsArray = (uintptr_t)__readgsqword(0x58);
 
-        uintptr_t match = g_pSystem->Infrastructure->AOBScanner->FindPattern(Signatures::TelemetryIdModifier);
+        uintptr_t match = m_Deps.System_AOBScanner.
+            FindPattern(Signatures::TelemetryIdModifier);
 
         if (match)
         {

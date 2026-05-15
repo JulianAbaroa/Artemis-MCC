@@ -7,30 +7,21 @@
 #include "Core/Types/Domain/Map/MapMagics.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
-// Map.
 #include "Core/States/Domain/Map/State_Map.h"
 #include "Core/States/Domain/Map/Sbsp/State_MapSbsp.h"
 #include "Core/States/Domain/Map/Scen/State_MapScen.h"
 #include "Core/States/Domain/Map/Bloc/State_MapBloc.h"
 #include "Core/States/Domain/Map/Mach/State_MapMach.h"
 
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
-// Classification.
 #include "Core/States/Domain/Classification/State_Classification.h"
 
-// Navigation.
 #include "Core/States/Domain/Navigation/State_Navigation.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
 
-// Navigation.
 #include "Sbsp/System_SbspGeometryBuilder.h"
 #include "Sbsp/System_SbspSeamLinker.h"
 #include "Scen/System_ScenObstacleBuilder.h"
@@ -38,8 +29,7 @@
 #include "Bloc/System_BlocTeleporterBuilder.h"
 #include "Mach/System_MachDataBuilder.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <array>
 
@@ -51,10 +41,6 @@
 
 void System_Navigation::BuildForMap()
 {
-    auto& navigation = *g_pState->Domain->Navigation;
-    auto& map = *g_pState->Domain->Map;
-    auto& debug = *g_pSystem->Debug;
-
     std::vector<SbspGeometry> geometries;
     std::vector<const SbspObject*> sbspObjects;
 
@@ -66,35 +52,35 @@ void System_Navigation::BuildForMap()
 
     // We traverse all the tags, to build the needed data structures.
     // (Sbsp, Scen, Bloc and Mach)
-    const int32_t tagCount = static_cast<int32_t>(map.GetTagsSize());
+    const int32_t tagCount = static_cast<int32_t>(m_Deps.State_Map.GetTagsSize());
     for (int32_t i = 0; i < tagCount; ++i)
     {
-        const Map_TagTableEntry& entry = map.GetTag(i);
+        const Map_TagTableEntry& entry = m_Deps.State_Map.GetTag(i);
         if (entry.TagGroupIndex < 0) continue;
 
-        const std::string tagName = map.GetTagName(i);
+        const std::string tagName = m_Deps.State_Map.GetTagName(i);
         if (tagName.empty()) continue;
 
-        const uint32_t magic = map.GetGroupMagic(entry.TagGroupIndex);
+        const uint32_t magic = 
+            m_Deps.State_Map.GetGroupMagic(entry.TagGroupIndex);
 
         // Build Sbsp.
         if (magic == MapMagics::k_SbspMagic)
         {
-            if (!this->BuildSbsp(tagName, debug, 
-                geometries, sbspObjects)) continue;
+            if (!this->BuildSbsp(tagName, geometries, sbspObjects)) continue;
             ++sbspCount;
         }
         // Build Scen.
         else if (magic == MapMagics::k_ScenMagic)
         {
-            if (!this->BuildScen(tagName, debug, navigation)) continue;
+            if (!this->BuildScen(tagName)) continue;
             ++scenCount;
         }
         // Build Bloc.
         else if (magic == MapMagics::k_BlocMagic)
         {
             auto [addedObstacle, addedTeleporter] =
-                this->BuildBloc(tagName, debug, navigation);
+                this->BuildBloc(tagName);
 
             if (addedObstacle) ++blocObstacleCount;
             if (addedTeleporter) ++blocTeleportCount;
@@ -102,7 +88,7 @@ void System_Navigation::BuildForMap()
         // Build Mach.
         else if (magic == MapMagics::k_MachMagic)
         {
-            if (!this->BuildMach(tagName, debug, navigation)) continue;
+            if (!this->BuildMach(tagName)) continue;
             ++machCount;
         }
     }
@@ -110,8 +96,7 @@ void System_Navigation::BuildForMap()
     // If there's more than one SBSP, we link them all.
     if (sbspCount > 1)
     {
-        auto& seamLinker = *g_pSystem->Domain->SbspSeamLinker;
-        seamLinker.LinkSeams(geometries, sbspObjects);
+        m_Deps.System_SbspSeamLinker.LinkSeams(geometries, sbspObjects);
 
         int32_t totalCrossLinks = 0;
         for (const auto& geometry : geometries)
@@ -123,42 +108,40 @@ void System_Navigation::BuildForMap()
             }
         }
 
-        debug.Log("[NavigationSystem] INFO: Seam linking complete."
+        m_Deps.System_Debug.Log("[NavigationSystem] INFO: Seam linking complete."
             " Total cross-links: %d", totalCrossLinks);
     }
 
     // We save the all the SBSPs geometries obtained.
-    for (auto& geometry : geometries) navigation.AddSbspGeometry(geometry);
+    for (auto& geometry : geometries) m_Deps.State_Navigation.AddSbspGeometry(geometry);
 
     // We build the navigation graph.
-    this->BuildNavigationGraph(geometries, navigation, debug);
+    this->BuildNavigationGraph(geometries);
 
-    debug.Log("[NavigationSystem] INFO: Navigation built."
+    m_Deps.System_Debug.Log("[NavigationSystem] INFO: Navigation built."
         " Total SBSPs: %d | Scen: %d | Bloc obstacle: %d |"
         " Bloc teleport: %d | Mach: %d", sbspCount, scenCount, 
         blocObstacleCount, blocTeleportCount, machCount);
 }
 
-bool System_Navigation::BuildSbsp(const std::string& tagName,
-    System_Debug& debug, std::vector<SbspGeometry>& geometries,
+bool System_Navigation::BuildSbsp(const std::string& tagName, 
+    std::vector<SbspGeometry>& geometries,
     std::vector<const SbspObject*>& sbspObjects)
 {
     if (tagName.find("shared") != std::string::npos) return false;
     if (tagName.find("hidden") != std::string::npos) return false;
 
-    auto& mapSbsp = *g_pState->Domain->MapSbsp;
-    const SbspObject* sbsp = mapSbsp.GetSbsp(tagName);
+    const SbspObject* sbsp = m_Deps.State_MapSbsp.GetSbsp(tagName);
     if (!sbsp)
     {
-        debug.Log("[NavigationSystem] WARNING:"
+        m_Deps.System_Debug.Log("[NavigationSystem] WARNING:"
             " SBSP tag found in table but not loaded: ", tagName);
         return false;
     }
 
-    auto& geomtryBuilder = *g_pSystem->Domain->SbspGeometryBuilder;
-    SbspGeometry geometry = geomtryBuilder.BuildGeometry(*sbsp);
+    SbspGeometry geometry = m_Deps.System_SbspGeometryBuilder.BuildGeometry(*sbsp);
 
-    debug.Log("[NavigationSystem] INFO:"
+    m_Deps.System_Debug.Log("[NavigationSystem] INFO:"
         " Built %d clusters, %d portals, %d markers, %d seams.",
         geometry.Clusters.size(), geometry.Portals.size(),
         geometry.Markers.size(), sbsp->StructureSeams.size());
@@ -169,82 +152,84 @@ bool System_Navigation::BuildSbsp(const std::string& tagName,
     return true;
 }
 
-bool System_Navigation::BuildScen(const std::string& tagName,
-    System_Debug& debug, State_Navigation& navigation)
+bool System_Navigation::BuildScen(const std::string& tagName)
 {
-    auto& mapScen = *g_pState->Domain->MapScen;
-    const ScenObject* scen = mapScen.GetScen(tagName);
+    const ScenObject* scen = m_Deps.State_MapScen.GetScen(tagName);
     if (!scen)
     {
-        debug.Log("[NavigationSystem] WARNING:"
+        m_Deps.System_Debug.Log("[NavigationSystem] WARNING:"
             " Scen tag found in table but not loaded: ", tagName);
         return false;
     }
 
-    auto& obstacleBuilder = *g_pSystem->Domain->ScenObstacleBuilder;
-    if (!obstacleBuilder.IsNavigationRelevant(*scen)) return false;
+    if (!m_Deps.System_ScenObstacleBuilder.IsNavigationRelevant(*scen))
+    {
+        return false;
+    }
 
-    SceneryObstacleData obstacle = obstacleBuilder.BuildData(*scen);
-    navigation.AddScenObstacle(tagName, std::move(obstacle));
+    SceneryObstacleData obstacle = 
+        m_Deps.System_ScenObstacleBuilder.BuildData(*scen);
+
+    m_Deps.State_Navigation.AddScenObstacle(tagName, std::move(obstacle));
 
     return true;
 }
 
-BlocResult System_Navigation::BuildBloc(const std::string& tagName,
-    System_Debug& debug, State_Navigation& navigation)
+BlocResult System_Navigation::BuildBloc(const std::string& tagName)
 {
-    auto& mapBloc = *g_pState->Domain->MapBloc;
-    const BlocObject* bloc = mapBloc.GetBloc(tagName);
+    const BlocObject* bloc = m_Deps.State_MapBloc.GetBloc(tagName);
     if (!bloc)
     {
-        debug.Log("[NavigationSystem] WARNING:"
+        m_Deps.System_Debug.Log("[NavigationSystem] WARNING:"
             " Bloc tag found in table but not loaded: ", tagName);
         return {};
     }
 
     BlocResult result;
 
-    auto& obstacleBuilder = *g_pSystem->Domain->BlocObstacleBuilder;
-    if (obstacleBuilder.IsObstacleRelevant(*bloc))
+    if (m_Deps.System_BlocObstacleBuilder.IsObstacleRelevant(*bloc))
     {
-        CrateObstacleData obstacle = obstacleBuilder.BuildData(*bloc);
-        navigation.AddBlocObstacle(tagName, std::move(obstacle));
+        CrateObstacleData obstacle = 
+            m_Deps.System_BlocObstacleBuilder.BuildData(*bloc);
+
+        m_Deps.State_Navigation.AddBlocObstacle(
+            tagName, std::move(obstacle));
+
         result.addedObstacle = true;
     }
 
-    auto& teleporterBuilder = *g_pSystem->Domain->BlocTeleporterBuilder;
-    if (teleporterBuilder.IsTeleporter(*bloc))
+    if (m_Deps.System_BlocTeleporterBuilder.IsTeleporter(*bloc))
     {
-        BlocTeleporterData teleporter = teleporterBuilder.BuildData(*bloc);
-        navigation.AddBlocTeleporter(tagName, std::move(teleporter));
+        BlocTeleporterData teleporter = 
+            m_Deps.System_BlocTeleporterBuilder.BuildData(*bloc);
+
+        m_Deps.State_Navigation.AddBlocTeleporter(
+            tagName, std::move(teleporter));
+
         result.addedTeleporter = true;
     }
 
     return result;
 }
 
-bool System_Navigation::BuildMach(const std::string& tagName, System_Debug& debug,
-    State_Navigation& navigation)
+bool System_Navigation::BuildMach(const std::string& tagName)
 {
-    auto& mapMach = *g_pState->Domain->MapMach;
-    const MachObject* mach = mapMach.GetMach(tagName);
+    const MachObject* mach = m_Deps.State_MapMach.GetMach(tagName);
     if (!mach)
     {
-        debug.Log("[NavigationSystem] WARNING:"
+        m_Deps.System_Debug.Log("[NavigationSystem] WARNING:"
             " Mach tag found in table but not loaded: ", tagName);
         return false;
     }
 
-    auto& dataBuilder = *g_pSystem->Domain->MachDataBuilder;
-    MachineData machine = dataBuilder.BuildData(*mach);
-    navigation.AddMach(tagName, std::move(machine));
+    MachineData machine = m_Deps.System_MachDataBuilder.BuildData(*mach);
+    m_Deps.State_Navigation.AddMach(tagName, std::move(machine));
 
     return true;
 }
 
 void System_Navigation::BuildNavigationGraph(
-    const std::vector<SbspGeometry>& geometries, 
-    State_Navigation& navigation, System_Debug& debug) const
+    const std::vector<SbspGeometry>& geometries) const
 {
     std::vector<AINavigationCluster> clusters;
     std::vector<AINavigationCluster> rawClusters;
@@ -342,10 +327,10 @@ void System_Navigation::BuildNavigationGraph(
     }
 
     const int32_t total = static_cast<int32_t>(clusters.size());
-    navigation.SetNavigationGraph(std::move(clusters));
-    navigation.SetRawNavigationGraph(std::move(rawClusters));
+    m_Deps.State_Navigation.SetNavigationGraph(std::move(clusters));
+    m_Deps.State_Navigation.SetRawNavigationGraph(std::move(rawClusters));
 
-    debug.Log("[NavigationSystem] INFO: Navigation graph built."
+    m_Deps.System_Debug.Log("[NavigationSystem] INFO: Navigation graph built."
         " Total clusters: %d | Skipped: %d", total, skipped);
 }
 
@@ -353,33 +338,32 @@ void System_Navigation::BuildNavigationGraph(
 
 void System_Navigation::UpdateNavigation()
 {
-    auto& navigation = *g_pState->Domain->Navigation;
-    auto& classifieds = g_pState->Domain->Classification->GetObjects();
-    auto& objects = g_pState->Domain->ObjectTable->GetObjectTable();
+    auto& classifieds = m_Deps.State_Classification.GetObjects();
+    auto& objects = m_Deps.State_ObjectTable.GetObjectTable();
 
     // Obstacles.
-    this->BuildObstacles(navigation, classifieds, objects);
+    this->BuildObstacles(classifieds, objects);
 
     // Spawns.
-    this->BuildSpawns(navigation, classifieds, objects);
+    this->BuildSpawns(classifieds, objects);
 
     // Teleports.
-    this->BuildTeleports(navigation, classifieds, objects);
+    this->BuildTeleports(classifieds, objects);
 
     // Lifts.
-    this->BuildLifts(navigation, classifieds, objects);
+    this->BuildLifts(classifieds, objects);
 
     // Shields.
-    this->BuildShields(navigation, classifieds, objects);
+    this->BuildShields(classifieds, objects);
 
     // Objectives.
-    this->BuildObjectives(navigation, classifieds, objects);
+    this->BuildObjectives(classifieds, objects);
 
     // Explosives.
-    this->BuildDestructibles(navigation, classifieds, objects);
+    this->BuildDestructibles(classifieds, objects);
 }
 
-void System_Navigation::BuildObstacles(State_Navigation& navigation,
+void System_Navigation::BuildObstacles(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -437,10 +421,10 @@ void System_Navigation::BuildObstacles(State_Navigation& navigation,
         obstacles.push_back(obstacle);
     }
 
-    navigation.SetActiveObstacles(std::move(obstacles));
+    m_Deps.State_Navigation.SetActiveObstacles(std::move(obstacles));
 }
 
-void System_Navigation::BuildSpawns(State_Navigation& navigation,
+void System_Navigation::BuildSpawns(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -487,10 +471,10 @@ void System_Navigation::BuildSpawns(State_Navigation& navigation,
         spawns.push_back(spawn);
     }
 
-    navigation.SetActiveSpawns(std::move(spawns));
+    m_Deps.State_Navigation.SetActiveSpawns(std::move(spawns));
 }
 
-void System_Navigation::BuildTeleports(State_Navigation& navigation,
+void System_Navigation::BuildTeleports(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -559,10 +543,10 @@ void System_Navigation::BuildTeleports(State_Navigation& navigation,
         }
     }
 
-    navigation.SetActiveTeleporters(std::move(teleporters));
+    m_Deps.State_Navigation.SetActiveTeleporters(std::move(teleporters));
 }
 
-void System_Navigation::BuildLifts(State_Navigation& navigation,
+void System_Navigation::BuildLifts(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -621,10 +605,10 @@ void System_Navigation::BuildLifts(State_Navigation& navigation,
         lifts.push_back(lift);
     }
 
-    navigation.SetActiveLifts(std::move(lifts));
+    m_Deps.State_Navigation.SetActiveLifts(std::move(lifts));
 }
 
-void System_Navigation::BuildShields(State_Navigation& navigation,
+void System_Navigation::BuildShields(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -675,10 +659,10 @@ void System_Navigation::BuildShields(State_Navigation& navigation,
         shields.push_back(shield);
     }
 
-    navigation.SetActiveShields(std::move(shields));
+    m_Deps.State_Navigation.SetActiveShields(std::move(shields));
 }
 
-void System_Navigation::BuildObjectives(State_Navigation& navigation,
+void System_Navigation::BuildObjectives(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -753,11 +737,13 @@ void System_Navigation::BuildObjectives(State_Navigation& navigation,
         }
     }
 
-    navigation.SetActiveObjectiveSpawns(std::move(objectiveSpawns));
-    navigation.SetActiveObjectives(std::move(objectives));
+    m_Deps.State_Navigation.SetActiveObjectiveSpawns(
+        std::move(objectiveSpawns));
+
+    m_Deps.State_Navigation.SetActiveObjectives(std::move(objectives));
 }
 
-void System_Navigation::BuildDestructibles(State_Navigation& navigation,
+void System_Navigation::BuildDestructibles(
     const std::vector<ClassifiedObject>& classifieds,
     const std::unordered_map<uint32_t, LiveObject> objects)
 {
@@ -815,12 +801,12 @@ void System_Navigation::BuildDestructibles(State_Navigation& navigation,
         destructibles.push_back(dest);
     }
 
-    navigation.SetActiveDestructibles(std::move(destructibles));
+    m_Deps.State_Navigation.SetActiveDestructibles(std::move(destructibles));
 }
 
 // Cleanup.
 void System_Navigation::Cleanup()
 {
-    g_pState->Domain->Navigation->Cleanup();
-    g_pSystem->Debug->Log("[NavigationSystem] INFO: Cleanup completed.");
+    m_Deps.State_Navigation.Cleanup();
+    m_Deps.System_Debug.Log("[NavigationSystem] INFO: Cleanup completed.");
 }

@@ -5,8 +5,7 @@
 
 // ----- Static Data -----
 
-// --- Sbsp Gemtretry ---
-
+// Sbsp Gemtretry.
 bool State_Navigation::HasSbspGeometry() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -43,8 +42,7 @@ int32_t State_Navigation::GetSbspGeometryCount() const
     return static_cast<int32_t>(m_SbspGeometries.size());
 }
 
-// --- Scen ---
-
+// Scen.
 bool State_Navigation::HasScenObstacle() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -64,8 +62,7 @@ void State_Navigation::AddScenObstacle(const std::string& tagName, SceneryObstac
     m_ScenObstacles[tagName] = std::move(obstacle);
 }
 
-// --- Bloc ---
-
+// Bloc.
 bool State_Navigation::HasBlocObstacle() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -86,8 +83,7 @@ void State_Navigation::AddBlocObstacle(const std::string& tagName,
     m_BlocObstacles[tagName] = std::move(obstacle);
 }
 
-// --- Teleporter ---
-
+// Teleporter.
 bool State_Navigation::HasBlocTeleporter() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -107,8 +103,7 @@ void State_Navigation::AddBlocTeleporter(const std::string& tagName, BlocTelepor
     m_BlocTeleporters[tagName] = std::move(teleporter);
 }
 
-// --- Mach ---
-
+// Mach.
 bool State_Navigation::HasMach() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -128,8 +123,7 @@ void State_Navigation::AddMach(const std::string& tagName, MachineData machine)
     m_Machs[tagName] = std::move(machine);
 }
 
-// --- Navigation graph ---
-
+// Navigation graph.
 const std::vector<AINavigationCluster> State_Navigation::GetNavigationGraph() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -149,16 +143,16 @@ const std::vector<AINavigationCluster> State_Navigation::GetRawNavigationGraph()
     return m_RawNavigationGraph;
 }
 
+// ----- Dynamic Data -----
+
 void State_Navigation::SetRawNavigationGraph(std::vector<AINavigationCluster> clusters)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_RawNavigationGraph = std::move(clusters);
 }
 
-// ----- Dynamic Data -----
 
-// --- Obstacles ---
-
+// Obstacles.
 std::vector<ActiveObstacle> State_Navigation::GetActiveObstacles() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -171,8 +165,7 @@ void State_Navigation::SetActiveObstacles(std::vector<ActiveObstacle> obstacles)
     m_ActiveObstacles = std::move(obstacles);
 }
 
-// --- Spawns ---
-
+// Spawns.
 std::vector<ActiveSpawn> State_Navigation::GetActiveSpawns() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -185,8 +178,7 @@ void State_Navigation::SetActiveSpawns(std::vector<ActiveSpawn> spawns)
     m_ActiveSpawns = std::move(spawns);
 }
 
-// --- Teleports ---
-
+// Teleports.
 std::vector<ActiveTeleporter> State_Navigation::GetActiveTeleporters() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -199,8 +191,7 @@ void State_Navigation::SetActiveTeleporters(std::vector<ActiveTeleporter> telepo
     m_ActiveTeleporters = std::move(teleporters);
 }
 
-// --- Lifts ---
-
+// Lifts.
 std::vector<ActiveLift> State_Navigation::GetActiveLifts() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -213,8 +204,7 @@ void State_Navigation::SetActiveLifts(std::vector<ActiveLift> lifts)
     m_ActiveLifts = std::move(lifts);
 }
 
-// --- Shields ---
-
+// Shields.
 std::vector<ActiveShield> State_Navigation::GetActiveShields() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -227,8 +217,7 @@ void State_Navigation::SetActiveShields(std::vector<ActiveShield> shields)
     m_ActiveShields = std::move(shields);
 }
 
-// --- Objective Spawns ---
-
+// Objective Spawns.
 std::vector<ActiveObjectiveSpawn> State_Navigation::GetActiveObjectiveSpawns() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -241,8 +230,7 @@ void State_Navigation::SetActiveObjectiveSpawns(std::vector<ActiveObjectiveSpawn
     m_ActiveObjectiveSpawns = std::move(spawns);
 }
 
-// --- Objectives ---
-
+// Objectives.
 std::vector<ActiveObjective> State_Navigation::GetActiveObjectives() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -255,8 +243,7 @@ void State_Navigation::SetActiveObjectives(std::vector<ActiveObjective> objectiv
     m_ActiveObjectives = std::move(objectives);
 }
 
-// --- Destructibles ---
-
+// Destructibles.
 std::vector<ActiveDestructible> State_Navigation::GetActiveDestructibles() const
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
@@ -268,8 +255,6 @@ void State_Navigation::SetActiveDestructibles(std::vector<ActiveDestructible> de
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_ActiveDestructibles = std::move(destructibles);
 }
-
-// Cleanup.
 
 void State_Navigation::Cleanup()
 {

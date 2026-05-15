@@ -1,7 +1,13 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Environment/Phmo/System_PhmoGeometryBuilder.h"
+
+// Header.
+#include "System_PhmoGeometryBuilder.h"
+
+// Types.
 #include "Core/Types/Domain/Environment/PhmoGeometry.h"
+
 #include "Generated/Phmo/PhmoObject.h"
+
 #include <algorithm>
 #include <limits>
 

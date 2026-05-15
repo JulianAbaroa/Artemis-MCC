@@ -5,6 +5,6 @@
 struct ResolvedTag
 {
 	bool IsValid = false;
-	std::string Class;
-	std::string Name;
+	std::string FourCC;
+	std::string TagName;
 };

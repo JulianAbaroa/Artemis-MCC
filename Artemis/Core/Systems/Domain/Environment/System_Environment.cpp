@@ -7,10 +7,7 @@
 #include "Core/Types/Domain/Map/MapMagics.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
-// Map.
 #include "Core/States/Domain/Map/State_Map.h"
 #include "Core/States/Domain/Map/Coll/State_MapColl.h"
 #include "Core/States/Domain/Map/Phmo/State_MapPhmo.h"
@@ -19,20 +16,14 @@
 #include "Core/States/Domain/Map/Bipd/State_MapBipd.h"
 #include "Core/States/Domain/Map/Scen/State_MapScen.h"
 
-// Object.
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 
-// Classification.
 #include "Core/States/Domain/Classification/State_Classification.h"
 
-// Environment.
 #include "Core/States/Domain/Environment/State_Environment.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
 
-// Environment.
 #include "Coll/System_CollGeometryBuilder.h"
 #include "Phmo/System_PhmoGeometryBuilder.h"
 #include "Mode/System_ModeGeometryBuilder.h"
@@ -40,18 +31,14 @@
 #include "Bipd/System_BipdDataBuilder.h"	
 #include "Scen/System_ScenZoneBuilder.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // ----- Static Data -----
 
 void System_Environment::BuildForMap()
 {
-	auto& environment = *g_pState->Domain->Environment;
-	auto& debug = *g_pSystem->Debug;
-
-	const int32_t tagCount =
-		static_cast<int32_t>(g_pState->Domain->Map->GetTagsSize());
+	const int32_t tagCount = 
+		static_cast<int32_t>(m_Deps.State_Map.GetTagsSize());
 
 	int32_t collCount = 0;
 	int32_t phmoCount = 0;
@@ -62,164 +49,148 @@ void System_Environment::BuildForMap()
 
 	for (int32_t i = 0; i < tagCount; ++i)
 	{
-		const Map_TagTableEntry& entry = g_pState->Domain->Map->GetTag(i);
+		const Map_TagTableEntry& entry = m_Deps.State_Map.GetTag(i);
 		if (entry.TagGroupIndex < 0) continue;
 
 		const uint32_t magic =
-			g_pState->Domain->Map->GetGroupMagic(entry.TagGroupIndex);
+			m_Deps.State_Map.GetGroupMagic(entry.TagGroupIndex);
 
-		const std::string tagName = g_pState->Domain->Map->GetTagName(i);
+		const std::string tagName = m_Deps.State_Map.GetTagName(i);
 		if (tagName.empty()) continue;
 
 		if (magic == MapMagics::k_CollMagic)
 		{
-			if (!this->BuildColl(tagName, debug, environment)) continue;
+			if (!this->BuildColl(tagName)) continue;
 			++collCount;
 		}
 		else if (magic == MapMagics::k_PhmoMagic)
 		{
-			if (!this->BuildPhmo(tagName, debug, environment)) continue;
+			if (!this->BuildPhmo(tagName)) continue;
 			++phmoCount;
 		}
 		else if (magic == MapMagics::k_ModeMagic)
 		{
-			if (!this->BuildMode(tagName, debug, environment)) continue;
+			if (!this->BuildMode(tagName)) continue;
 			++modeCount;
 		}
 		else if (magic == MapMagics::k_ScnrMagic)
 		{
-			if (!this->BuildScnr(tagName, debug, environment)) continue;
+			if (!this->BuildScnr(tagName)) continue;
 			++scnrCount;
 		}
 		else if (magic == MapMagics::k_BipdMagic)
 		{
-			if (!this->BuildBipd(tagName, debug, environment)) continue;
+			if (!this->BuildBipd(tagName)) continue;
 			++bipdCount;
 		}
 		else if (magic == MapMagics::k_ScenMagic)
 		{
-			if (!this->BuildScen(tagName, debug, environment)) continue;
+			if (!this->BuildScen(tagName)) continue;
 			++scenCount;
 		}
 	}
 
-	g_pSystem->Debug->Log("[EnvironmentSystem] INFO: Environment built."
+	m_Deps.System_Debug.Log("[EnvironmentSystem] INFO: Environment built."
 		" Coll: %d | Phmo: %d | Mode: %d | Scnr: %d | Bipd: %d | Scen: %d", 
 		collCount, phmoCount, modeCount, scnrCount, bipdCount, scenCount);
 }
 
-bool System_Environment::BuildColl(const std::string& tagName, 
-	System_Debug& debug, State_Environment& environment)
+bool System_Environment::BuildColl(const std::string& tagName)
 {
-	auto& map = *g_pState->Domain->MapColl;
-	const CollObject* coll = map.GetColl(tagName);
+	const CollObject* coll = m_Deps.State_MapColl.GetColl(tagName);
 	if (!coll)
 	{
-		debug.Log("[EnvironmentSystem] WARNING: Coll tag found"
+		m_Deps.System_Debug.Log("[EnvironmentSystem] WARNING: Coll tag found"
 			" in table but not loaded: ", tagName);
 		return false;
 	}
 
-	auto& geometryBuilder = *g_pSystem->Domain->CollGeometryBuilder;
-	CollGeometry geometry = geometryBuilder.BuildGeometry(*coll);
+	CollGeometry geometry = 
+		m_Deps.System_CollGeometryBuilder.BuildGeometry(*coll);
 
-	environment.AddCollGeometry(tagName, std::move(geometry));
+	m_Deps.State_Environment.AddCollGeometry(tagName, std::move(geometry));
 	return true;
 }
 
-bool System_Environment::BuildPhmo(const std::string& tagName,
-	System_Debug& debug, State_Environment& environment)
+bool System_Environment::BuildPhmo(const std::string& tagName)
 {
-	auto& map = *g_pState->Domain->MapPhmo;
-	const PhmoObject* phmo = map.GetPhmo(tagName);
+	const PhmoObject* phmo = m_Deps.State_MapPhmo.GetPhmo(tagName);
 	if (!phmo)
 	{
-		debug.Log("[EnvironmentSystem] WARNING: Phmo tag found"
+		m_Deps.System_Debug.Log("[EnvironmentSystem] WARNING: Phmo tag found"
 			" in table but not loaded: ", tagName);
 		return false;
 	}
 
-	auto& geometryBuilder = *g_pSystem->Domain->PhmoGeometryBuilder;
-	PhmoGeometry geometry = geometryBuilder.BuildGeometry(*phmo);
+	PhmoGeometry geometry = 
+		m_Deps.System_PhmoGeometryBuilder.BuildGeometry(*phmo);
 
-	environment.AddPhmoGeometry(tagName, std::move(geometry));
+	m_Deps.State_Environment.AddPhmoGeometry(tagName, std::move(geometry));
 	return true;
 }
 
-bool System_Environment::BuildMode(const std::string& tagName,
-	System_Debug& debug, State_Environment& environment)
+bool System_Environment::BuildMode(const std::string& tagName)
 {
-	auto& map = *g_pState->Domain->MapMode;
-	const ModeObject* mode = map.GetMode(tagName);
+	const ModeObject* mode = m_Deps.State_MapMode.GetMode(tagName);
 	if (!mode)
 	{
-		debug.Log("[EnvironmentSystem] WARNING: Mode tag found"
+		m_Deps.System_Debug.Log("[EnvironmentSystem] WARNING: Mode tag found"
 			" in table but not loaded: ", tagName);
 		return false;
 	}
 
-	auto& geometryBuilder = *g_pSystem->Domain->ModeGeometryBuilder;
-	ModeGeometry geometry = geometryBuilder.BuildGeometry(*mode);
+	ModeGeometry geometry = m_Deps.System_ModeGeometryBuilder.BuildGeometry(*mode);
 
-	environment.AddModeGeometry(tagName, std::move(geometry));
+	m_Deps.State_Environment.AddModeGeometry(tagName, std::move(geometry));
 	return true;
 }
 
-bool System_Environment::BuildScnr(const std::string& tagName,
-	System_Debug& debug, State_Environment& environment)
+bool System_Environment::BuildScnr(const std::string& tagName)
 {
-	auto& map = *g_pState->Domain->MapScnr;
-	const ScnrObject* scnr = map.GetScnr(tagName);
+	const ScnrObject* scnr = m_Deps.State_MapScnr.GetScnr(tagName);
 	if (!scnr)
 	{
-		debug.Log("[EnvironmentSystem] WARNING: Scnr tag found"
+		m_Deps.System_Debug.Log("[EnvironmentSystem] WARNING: Scnr tag found"
 			" in table but not loaded: ", tagName);
 		return false;
 	}
 
-	auto& zoneBuilder = *g_pSystem->Domain->ScnrZoneBuilder;
-	ScnrMapZones zones = zoneBuilder.BuildZone(*scnr);
+	ScnrMapZones zones = m_Deps.System_ScnrZoneBuilder.BuildZone(*scnr);
 
-	environment.SetMapZones(std::move(zones));
+	m_Deps.State_Environment.SetMapZones(std::move(zones));
 	return true;
 }
 
-bool System_Environment::BuildBipd(const std::string& tagName,
-	System_Debug& debug, State_Environment& environment)
+bool System_Environment::BuildBipd(const std::string& tagName)
 {
-	auto& map = *g_pState->Domain->MapBipd;
-	const BipdObject* bipd = map.GetBipd(tagName);
+	const BipdObject* bipd = m_Deps.State_MapBipd.GetBipd(tagName);
 	if (!bipd)
 	{
-		debug.Log("[EnvironmentSystem] WARNING: Bipd tag found"
+		m_Deps.System_Debug.Log("[EnvironmentSystem] WARNING: Bipd tag found"
 			" in table but not loaded: ", tagName);
 		return false;
 	}
 
-	auto& dataBuilder = *g_pSystem->Domain->BipdDataBuilder;
-	BipdPhysicsData data = dataBuilder.BuildData(*bipd);
+	BipdPhysicsData data = m_Deps.System_BipdDataBuilder.BuildData(*bipd);
 
-	environment.AddBipdData(tagName, std::move(data));
+	m_Deps.State_Environment.AddBipdData(tagName, std::move(data));
 	return true;
 }
 
-bool System_Environment::BuildScen(const std::string& tagName,
-	System_Debug& debug, State_Environment& environment)
+bool System_Environment::BuildScen(const std::string& tagName)
 {
-	auto& map = *g_pState->Domain->MapScen;
-	const ScenObject* scen = map.GetScen(tagName);
+	const ScenObject* scen = m_Deps.State_MapScen.GetScen(tagName);
 	if (!scen)
 	{
-		debug.Log("[EnvironmentSystem] WARNING: Scen tag found"
+		m_Deps.System_Debug.Log("[EnvironmentSystem] WARNING: Scen tag found"
 			" in table but not loaded: ", tagName);
 		return false;
 	}
 
-	auto& zoneBuilder = *g_pSystem->Domain->ScenZoneBuilder;
-	if (!zoneBuilder.IsMpZone(*scen)) return false;
+	if (!m_Deps.System_ScenZoneBuilder.IsMpZone(*scen)) return false;
 
-	SceneryZoneData data = zoneBuilder.BuildData(*scen);
-	environment.AddScenData(tagName, std::move(data));
+	SceneryZoneData data = m_Deps.System_ScenZoneBuilder.BuildData(*scen);
+	m_Deps.State_Environment.AddScenData(tagName, std::move(data));
 	return true;
 }
 
@@ -227,19 +198,13 @@ bool System_Environment::BuildScen(const std::string& tagName,
 
 void System_Environment::UpdateEnvironment()
 {
-	auto& environment = *g_pState->Domain->Environment;
+	const auto& classifieds = m_Deps.State_Classification.GetObjects();
+	const auto& objects = m_Deps.State_ObjectTable.GetObjectTable();
 
-	auto& classification = *g_pState->Domain->Classification;
-	const auto& classifieds = classification.GetObjects();
-
-	auto& objectTable = *g_pState->Domain->ObjectTable;
-	const auto& objects = objectTable.GetObjectTable();
-
-	this->BuildPhysicsInstances(environment, classifieds, objects);
+	this->BuildPhysicsInstances(classifieds, objects);
 }
 
 void System_Environment::BuildPhysicsInstances(	
-	State_Environment& environment,
 	const std::vector<ClassifiedObject>& classifieds,
 	const std::unordered_map<uint32_t, LiveObject>& objects)
 {
@@ -280,7 +245,7 @@ void System_Environment::BuildPhysicsInstances(
 
 		// Broad-phase: AABB from CollGeometry.
 		const CollGeometry* coll =
-			environment.GetCollGeometry(object.TagName);
+			m_Deps.State_Environment.GetCollGeometry(object.TagName);
 		if (coll)
 		{
 			instance.CollBoundsMin = {
@@ -296,21 +261,21 @@ void System_Environment::BuildPhysicsInstances(
 		}
 
 		// Narrow-phase: PhmoGeometry pointer (no copy).
-		instance.Phmo = environment.GetPhmoGeometry(object.TagName);
+		instance.Phmo = m_Deps.State_Environment.GetPhmoGeometry(object.TagName);
 
 		instance.WorldRigidBodies = BuildWorldRigidBodies(instance);
 
 		instances.push_back(std::move(instance));
 	}
 
-	environment.SetActivePhysicsInstances(std::move(instances));
+	m_Deps.State_Environment.SetActivePhysicsInstances(std::move(instances));
 }
 
 // Cleanup.
 void System_Environment::Cleanup()
 {
-	g_pState->Domain->Environment->Cleanup();
-	g_pSystem->Debug->Log("[EnvironmentSystem] INFO: Cleanup completed.");
+	m_Deps.State_Environment.Cleanup();
+	m_Deps.System_Debug.Log("[EnvironmentSystem] INFO: Cleanup completed.");
 }
 
 // --- Helpers ---
@@ -349,7 +314,7 @@ std::vector<WorldRigidBody> System_Environment::BuildWorldRigidBodies(
 	const auto& pos = inst.Position;
 	const auto& fwd = inst.Forward;
 	const auto& up = inst.Up;
-	const auto  rgt = Cross(up, fwd); // right = forward × up
+	const auto rgt = Cross(up, fwd); // right = up x forward
 
 	std::vector<WorldRigidBody> result;
 	result.reserve(inst.Phmo->RigidBodies.size());

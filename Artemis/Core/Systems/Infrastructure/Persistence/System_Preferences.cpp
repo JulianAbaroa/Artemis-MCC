@@ -4,35 +4,27 @@
 #include "System_Preferences.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
-// Lifecycle.
 #include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
 
-// Settings.
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
-// Render.
 #include "Core/States/Infrastructure/Engine/Render/State_Render.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Domain/Core_System_Domain.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <fstream>
 
 void System_Preferences::SavePreferences()
 {
-	if (!g_pState->Infrastructure->Settings->ShouldUseAppData()) return;
+	if (!m_Deps.State_Settings.ShouldUseAppData()) return;
 
 	std::ofstream file(this->GetPreferencesFilePath(), std::ios::trunc);
 	if (!file.is_open())
 	{
-		g_pSystem->Debug->Log("[PreferencesSystem] ERROR: Failed to save user preferences.");
+		m_Deps.System_Debug.Log("[PreferencesSystem] ERROR: Failed to save user preferences.");
 		return;
 	}
 
@@ -42,17 +34,17 @@ void System_Preferences::SavePreferences()
 	this->SaveSettingsState(file);
 	this->SaveUI(file);
 
-	g_pSystem->Debug->Log("[PreferencesSystem] INFO: User preferences saved successfully.");
+	m_Deps.System_Debug.Log("[PreferencesSystem] INFO: User preferences saved successfully.");
 }
 
 void System_Preferences::LoadPreferences()
 {
-	if (!g_pState->Infrastructure->Settings->ShouldUseAppData()) return;
+	if (!m_Deps.State_Settings.ShouldUseAppData()) return;
 
 	std::ifstream file(this->GetPreferencesFilePath());
 	if (!file.is_open())
 	{
-		g_pSystem->Debug->Log("[PreferencesSystem] WARNING: No user preferences file found, using defaults.");
+		m_Deps.System_Debug.Log("[PreferencesSystem] WARNING: No user preferences file found, using defaults.");
 		return;
 	}
 
@@ -62,7 +54,7 @@ void System_Preferences::LoadPreferences()
 		this->ParseLine(line);
 	}
 
-	g_pSystem->Debug->Log("[PreferencesSystem] INFO: User preferences loaded successfully.");
+	m_Deps.System_Debug.Log("[PreferencesSystem] INFO: User preferences loaded successfully.");
 }
 
 
@@ -83,7 +75,7 @@ void System_Preferences::ParseLine(const std::string& line)
 
 std::string System_Preferences::GetPreferencesFilePath() const
 {
-	return g_pState->Infrastructure->Settings->GetAppDataDirectory() + "\\user_preferences.cfg";
+	return m_Deps.State_Settings.GetAppDataDirectory() + "\\user_preferences.cfg";
 }
 
 
@@ -94,18 +86,18 @@ void System_Preferences::SaveLifeCycleState(std::ofstream& file)
 
 void System_Preferences::SaveSettingsState(std::ofstream& file)
 {
-	file << "Settings_ShouldFreezeMouse=" << (g_pState->Infrastructure->Settings->ShouldFreezeMouse() ? "1" : "0") << "\n";
-	file << "Settings_ShouldOpenUIOnStart=" << (g_pState->Infrastructure->Settings->ShouldOpenUIOnStart() ? "1" : "0") << "\n";
+	file << "Settings_ShouldFreezeMouse=" << (m_Deps.State_Settings.ShouldFreezeMouse() ? "1" : "0") << "\n";
+	file << "Settings_ShouldOpenUIOnStart=" << (m_Deps.State_Settings.ShouldOpenUIOnStart() ? "1" : "0") << "\n";
 
 	file << std::fixed << std::setprecision(2);
-	file << "Settings_MenuAlpha=" << g_pState->Infrastructure->Settings->GetMenuAlpha() << "\n";
-	file << "Settings_UIScale=" << g_pState->Infrastructure->Render->GetUIScale() << "\n";
+	file << "Settings_MenuAlpha=" << m_Deps.State_Settings.GetMenuAlpha() << "\n";
+	file << "Settings_UIScale=" << m_Deps.State_Render.GetUIScale() << "\n";
 	file << std::defaultfloat;
 }
 
 void System_Preferences::SaveUI(std::ofstream& file)
 {
-	file << "UI_LogsAutoScroll=" << (g_pState->Infrastructure->Settings->GetLogsAutoScroll() ? "1" : "0") << "\n";
+	file << "UI_LogsAutoScroll=" << (m_Deps.State_Settings.GetLogsAutoScroll() ? "1" : "0") << "\n";
 }
 
 void System_Preferences::LoadLifecycleState(std::string& key, std::string& value)
@@ -117,32 +109,32 @@ void System_Preferences::LoadSettingsState(std::string& key, std::string& value)
 {
 	if (key == "Settings_ShouldFreezeMouse")
 	{
-		g_pState->Infrastructure->Settings->SetFreezeMouse(value == "1" || value == "true");
+		m_Deps.State_Settings.SetFreezeMouse(value == "1" || value == "true");
 	}
 	else if (key == "Settings_ShouldOpenUIOnStart")
 	{
-		g_pState->Infrastructure->Settings->SetOpenUIOnStart(value == "1" || value == "true");
+		m_Deps.State_Settings.SetOpenUIOnStart(value == "1" || value == "true");
 	}
 	else if (key == "Settings_MenuAlpha")
 	{
 		try
 		{
-			g_pState->Infrastructure->Settings->SetMenuAlpha(std::stof(value));
+			m_Deps.State_Settings.SetMenuAlpha(std::stof(value));
 		}
 		catch (...)
 		{
-			g_pState->Infrastructure->Settings->SetMenuAlpha(1.0f);
+			m_Deps.State_Settings.SetMenuAlpha(1.0f);
 		}
 	}
 	else if (key == "Settings_UIScale")
 	{
 		try
 		{
-			g_pState->Infrastructure->Render->SetUIScale(std::stof(value));
+			m_Deps.State_Render.SetUIScale(std::stof(value));
 		}
 		catch (...)
 		{
-			g_pState->Infrastructure->Render->SetUIScale(1.0f);
+			m_Deps.State_Render.SetUIScale(1.0f);
 		}
 	}
 }
@@ -151,6 +143,6 @@ void System_Preferences::LoadUI(std::string& key, std::string& value)
 {
 	if (key == "UI_LogsAutoScroll")
 	{
-		g_pState->Infrastructure->Settings->SetLogsAutoScroll(value == "1" || value == "true");
+		m_Deps.State_Settings.SetLogsAutoScroll(value == "1" || value == "true");
 	}
 }

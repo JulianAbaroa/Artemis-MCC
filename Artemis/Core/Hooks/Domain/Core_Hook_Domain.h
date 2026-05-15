@@ -2,6 +2,9 @@
 
 #include <memory>
 
+struct Core_State;
+struct Core_System;
+
 // Map.
 class Hook_BlamOpenMap;
 
@@ -22,12 +25,15 @@ struct Core_Hook_Domain
 	Core_Hook_Domain();
 	~Core_Hook_Domain();
 
+	void Initialize(Core_State& state, Core_System& system);
+	void Shutdown();
+
 	// Map.
 	std::unique_ptr<Hook_BlamOpenMap> BlamOpenMap;
 
 	// Object.
-	std::unique_ptr<Hook_CreateObject> CreateGO;
-	std::unique_ptr<Hook_ReleaseObject> ReleaseGO;
+	std::unique_ptr<Hook_CreateObject> CreateGameObject;
+	std::unique_ptr<Hook_ReleaseObject> ReleaseGameObject;
 	std::unique_ptr<Hook_ObjectTable> ObjectTable;
 
 	// Player.

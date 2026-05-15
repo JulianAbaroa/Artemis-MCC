@@ -11,6 +11,7 @@ class State_Classification
 public:
     const std::vector<ClassifiedObject>& GetObjects() const;
     void SetObjects(std::vector<ClassifiedObject> objects);
+
     void Cleanup();
 
 private:

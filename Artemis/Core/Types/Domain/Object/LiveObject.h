@@ -32,7 +32,7 @@ struct LiveObject
 	uint32_t DatumIndex{};
 	uintptr_t Address{};
 
-	std::string Class{};
+	std::string FourCC{};
 	std::string TagName{};
 
 	uint32_t Handle{};
@@ -51,6 +51,5 @@ struct LiveObject
 	float DamageReceived{};
 
 	ObjectProfile Profile{};
-	ObjectClass Type = ObjectClass::Invalid;
 	SpecificObject SpecificObject{};
 };

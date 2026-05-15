@@ -18,6 +18,4 @@ public:
 private:
     std::unordered_map<std::string, ScenObject> m_Scens;
     mutable std::mutex m_Mutex;
-
-    void LogRawData(const std::string& tagName, const ScenObject& scen);
 };

@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-struct Scnr_TriggerVolumesObject;
-struct ScnrTriggerVolume;
-struct ScnrMapZones;
 struct ScnrObject;
+struct ScnrMapZones;
+struct ScnrTriggerVolume;
+struct Scnr_TriggerVolumesObject;
 
 class System_ScnrZoneBuilder
 {

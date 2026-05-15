@@ -1,17 +1,68 @@
 #pragma once
 
-// Types.
-#include "Core/Types/Domain/Interactable/InteractableTypes.h"
-#include "Core/Types/Domain/Classification/ClassifiedObject.h"
-#include "Core/Types/Domain/Interaction/LiveInteraction.h"
-#include "Core/Types/Domain/Object/LiveObject.h"
-#include "Core/Types/Domain/Graph/ObjectNode.h"
-#include "Core/Types/Domain/Graph/PlayerTree.h"
-
 #include <unordered_map>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+struct LiveObject;
+struct LivePlayer;
+struct LiveInteraction;
+struct ObjectNode;
+struct PlayerTree;
+struct AIInteractable;
+struct VehicleObject;
+struct SeatStatus;
+enum class InteractableBehavior : uint8_t;
+enum class InteractableActivation : uint8_t;
+enum class ObjectRole : uint8_t;
+
+class State_Map;
+class State_MapVehi;
+class State_MapEqip;
+class State_MapWeap;
+class State_MapProj;
+class State_MapCtrl;
+class State_ObjectTable;
+class State_PlayerTable;
+class State_InteractionTable;
+class State_Classification;
+class State_ObjectGraph;
+class State_PlayerGraph;
+class State_Environment;
+class State_Interactable;
+class System_ObjectClassifier;
+class System_VehiDataBuilder;
+class System_EqipDataBuilder;
+class System_WeapDataBuilder;
+class System_ProjDataBuilder;
+class System_CtrlDataBuilder;
+class System_Debug;
+
+struct System_Interactable_Dependencies
+{
+    State_Map& State_Map;
+    State_MapVehi& State_MapVehi;
+    State_MapEqip& State_MapEqip;
+    State_MapWeap& State_MapWeap;
+    State_MapProj& State_MapProj;
+    State_MapCtrl& State_MapCtrl;
+    State_ObjectTable& State_ObjectTable;
+    State_PlayerTable& State_PlayerTable;
+    State_InteractionTable& State_InteractionTable;
+    State_Classification& State_Classification;
+    State_ObjectGraph& State_ObjectGraph;
+    State_PlayerGraph& State_PlayerGraph;
+    State_Environment& State_Environment;
+    State_Interactable& State_Interactable;
+    System_ObjectClassifier& System_ObjectClassifier;
+    System_VehiDataBuilder& System_VehiDataBuilder;
+    System_EqipDataBuilder& System_EqipDataBuilder;
+    System_WeapDataBuilder& System_WeapDataBuilder;
+    System_ProjDataBuilder& System_ProjDataBuilder;
+    System_CtrlDataBuilder& System_CtrlDataBuilder;
+    System_Debug& System_Debug;
+};
 
 // Runs every ~16 ms. Reads from ObjectGraphState and PlayerTableState, 
 // builds the list of AIInteractable objects for the requested player, 
@@ -19,11 +70,19 @@
 class System_Interactable
 { 
 public:
+    System_Interactable(System_Interactable_Dependencies dependencies) :
+        m_Deps(dependencies) {}
+    ~System_Interactable() = default;
+
     void BuildForMap();
+
     void UpdateInteractables();
+
     void Cleanup();
 
 private:
+    System_Interactable_Dependencies m_Deps;
+
     // --- Per-role builders ---
 
     bool BuildVehicleInteractable(const LiveObject& object,

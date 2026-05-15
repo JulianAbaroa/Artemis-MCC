@@ -11,13 +11,21 @@
 #include <cstdint>
 #include <map>
 
+class State_ObjectTable;
+
 class UI_ObjectTable
 {
 public:
+	UI_ObjectTable(State_ObjectTable& stateObjectTable) :
+		Sta_ObjectTable(stateObjectTable) {}
+	~UI_ObjectTable() = default;
+
 	void Draw();
 	void Cleanup();
 
 private:
+	State_ObjectTable& Sta_ObjectTable;
+
 	std::unordered_map<uint32_t, LiveObject> m_CacheObjects;
 	std::map<std::string, std::vector<const LiveObject*>> m_GroupedObjects;
 	ObjectSearchFilter m_SearchFilter;

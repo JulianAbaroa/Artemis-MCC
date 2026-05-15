@@ -373,6 +373,12 @@
     <Filter Include="Core\Types\Domain\Player\Unused">
       <UniqueIdentifier>{aeac0f5d-f782-46ae-a8f5-83527980630a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Systems\Interface\Debug">
+      <UniqueIdentifier>{05df2364-db6d-48df-879f-f900a2336427}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\States\Interface\Debug">
+      <UniqueIdentifier>{221e0b02-b70a-4ffe-b13c-53197138c61c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Proxy\ProxyExports.h">
@@ -392,12 +398,6 @@
     </ClInclude>
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Interface\State_Debug.h">
-      <Filter>Core\States\Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Interface\System_Debug.h">
-      <Filter>Core\Systems\Interface</Filter>
     </ClInclude>
     <ClInclude Include="Core\UI\UI_Main.h">
       <Filter>Core\UI</Filter>
@@ -926,6 +926,18 @@
     <ClInclude Include="Core\Mod_Core.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Systems\Interface\Core_System_Interface.h">
+      <Filter>Core\Systems\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Systems\Interface\Debug\System_Debug.h">
+      <Filter>Core\Systems\Interface\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\States\Interface\Debug\State_Debug.h">
+      <Filter>Core\States\Interface\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\States\Interface\Core_State_Interface.h">
+      <Filter>Core\States\Interface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\DllMain.cpp">
@@ -966,12 +978,6 @@
     </ClCompile>
     <ClCompile Include="External\minhook\src\hde\hde64.c">
       <Filter>External\minhook\hde</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\States\Interface\State_Debug.cpp">
-      <Filter>Core\States\Interface</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Systems\Interface\System_Debug.cpp">
-      <Filter>Core\Systems\Interface</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\UI_Main.cpp">
       <Filter>Core\UI</Filter>
@@ -1312,6 +1318,18 @@
     </ClCompile>
     <ClCompile Include="Core\Mod_Core.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Interface\Core_System_Interface.cpp">
+      <Filter>Core\Systems\Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\Interface\Debug\System_Debug.cpp">
+      <Filter>Core\Systems\Interface\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\States\Interface\Debug\State_Debug.cpp">
+      <Filter>Core\States\Interface\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\States\Interface\Core_State_Interface.cpp">
+      <Filter>Core\States\Interface</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

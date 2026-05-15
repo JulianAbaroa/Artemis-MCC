@@ -14,10 +14,13 @@ class State_ObjectTable
 {
 public:
 	const LiveObject* GetLiveObject(uint32_t handle) const;
-	const std::unordered_map<uint32_t, LiveObject> GetObjectTable() const;
-	void AddObject(uint32_t handle, const LiveObject& object);
 	std::optional<LiveObject> CopyLiveObject(uint32_t handle) const;
+
+	void AddObject(uint32_t handle, const LiveObject& object);
 	std::optional<LiveObject> RemoveObject(uint32_t handle);
+
+	const std::unordered_map<uint32_t, LiveObject> GetObjectTable() const;
+
 	void UpdateObjects(std::function<void(uint32_t, LiveObject&)> processor);
 
 	bool HasChanged() const;
@@ -29,9 +32,9 @@ public:
 	void Cleanup();
 
 private:
-	std::unordered_map<uint32_t, LiveObject> m_Objects;
-	mutable std::mutex m_Mutex;
-
 	std::atomic<bool> m_HasChanged = false;
 	std::atomic<intptr_t> m_ObjectTableBase{ 0 };
+
+	std::unordered_map<uint32_t, LiveObject> m_Objects;
+	mutable std::mutex m_Mutex;
 };

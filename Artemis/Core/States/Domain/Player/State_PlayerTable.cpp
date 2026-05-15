@@ -10,10 +10,12 @@ const LivePlayer* State_PlayerTable::GetPlayer(uint32_t handle) const
 	return it != m_Players.end() ? &it->second : nullptr;
 }
 
-const std::unordered_map<uint32_t, LivePlayer>& State_PlayerTable::GetPlayerTable() const
+std::optional<LivePlayer> State_PlayerTable::CopyLivePlayer(uint32_t handle)
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	return m_Players;
+	auto it = m_Players.find(handle);
+	if (it == m_Players.end()) return std::nullopt;
+	return it->second;
 }
 
 void State_PlayerTable::AddPlayer(uint32_t handle, const LivePlayer& player)
@@ -21,14 +23,6 @@ void State_PlayerTable::AddPlayer(uint32_t handle, const LivePlayer& player)
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	m_Players[handle] = player;
 	m_HasMapChanged.store(true);
-}
-
-std::optional<LivePlayer> State_PlayerTable::CopyLivePlayer(uint32_t handle)
-{
-	std::lock_guard<std::mutex> lock(m_Mutex);
-	auto it = m_Players.find(handle);
-	if (it == m_Players.end()) return std::nullopt;
-	return it->second;
 }
 
 std::optional<LivePlayer> State_PlayerTable::RemovePlayer(uint32_t handle)
@@ -50,7 +44,7 @@ std::optional<LivePlayer> State_PlayerTable::RemovePlayer(uint32_t handle)
 void State_PlayerTable::RemovePlayerIf(std::function<bool(uint32_t, const LivePlayer&)> predicate)
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	
+
 	bool changed = false;
 	for (auto it = m_Players.begin(); it != m_Players.end(); )
 	{
@@ -71,14 +65,10 @@ void State_PlayerTable::RemovePlayerIf(std::function<bool(uint32_t, const LivePl
 	}
 }
 
-void State_PlayerTable::UpdatePlayers(std::function<void(uint32_t, LivePlayer&)> processor)
+const std::unordered_map<uint32_t, LivePlayer> State_PlayerTable::GetPlayerTable() const
 {
-	std::scoped_lock lock(m_Mutex);
-	for (auto& [handle, player] : m_Players)
-	{
-		processor(handle, player);
-	}
-	m_HasMapChanged.store(true);
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_Players;
 }
 
 const uint32_t State_PlayerTable::GetPlayerHandleByName(std::string name) const
@@ -94,6 +84,16 @@ const uint32_t State_PlayerTable::GetPlayerHandleByName(std::string name) const
 	}
 
 	return 0;
+}
+
+void State_PlayerTable::UpdatePlayers(std::function<void(uint32_t, LivePlayer&)> processor)
+{
+	std::scoped_lock lock(m_Mutex);
+	for (auto& [handle, player] : m_Players)
+	{
+		processor(handle, player);
+	}
+	m_HasMapChanged.store(true);
 }
 
 bool State_PlayerTable::HasMapChanged() const 

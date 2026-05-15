@@ -10,15 +10,17 @@
 class State_PlayerGraph
 {
 public:
+	bool HasChanged() const;
 	const std::vector<PlayerTree>& GetTrees() const;
 	void SetTrees(std::vector<PlayerTree>&& trees);
-	bool HasChanged() const;
+
 	void ClearChanged();
 
 	void Cleanup();
 
 private:
-	mutable std::mutex m_Mutex;
-	std::vector<PlayerTree> m_Trees;
 	std::atomic<bool> m_HasChanged{ false };
+
+	std::vector<PlayerTree> m_Trees;
+	mutable std::mutex m_Mutex;
 };

@@ -18,6 +18,4 @@ public:
 private:
     std::unordered_map<std::string, BlocObject> m_Blocs;
     mutable std::mutex m_Mutex;
-
-    void LogRawData(const std::string& tagName, const BlocObject& bloc);
 };

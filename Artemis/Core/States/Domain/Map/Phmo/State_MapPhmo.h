@@ -7,7 +7,6 @@
 #include <vector>
 #include <mutex>
 
-// Stores all physics models parsed from the current map's phmo tags.
 class State_MapPhmo
 {
 public:
@@ -22,7 +21,6 @@ public:
     void Cleanup();
 
 private:
-    // Keyed by hlmt TagName (e.g. "objects\characters\spartans\spartans").
     std::unordered_map<std::string, PhmoObject> m_Phmos;
     mutable std::mutex m_Mutex;
 };

@@ -3,18 +3,17 @@
 // Header.
 #include "System_Input.h"
 
-// --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
+// Types.
+#include "Core/Types/Domain/BlamTypes.h"
+#include "Core/Types/Infrastructure/InputTypes.h"
 
-// Input.
+// --- States ---
+
 #include "Core/States/Infrastructure/Engine/Input/State_Input.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <chrono>
 
@@ -24,7 +23,7 @@ void System_Input::AutomaticInput()
 {
     InputRequest currentReq = { InputContext::Unknown, InputAction::Unknown };
 
-    if (!g_pState->Infrastructure->Input->DequeueRequest(currentReq) ||
+    if (!m_Deps.State_Input.DequeueRequest(currentReq) ||
         currentReq.Action == InputAction::Unknown) return;
     
     switch (currentReq.Action)
@@ -42,7 +41,7 @@ bool System_Input::InjectInput(
     std::chrono::milliseconds timeoutMs,
     std::chrono::milliseconds stabilizeMs) 
 {
-	g_pState->Infrastructure->Input->SetNextRequest(request.Context, request.Action);
+	m_Deps.State_Input.SetNextRequest(request.Context, request.Action);
 
 	auto startWait = std::chrono::steady_clock::now();
 	bool success = false;
@@ -58,11 +57,11 @@ bool System_Input::InjectInput(
 		std::this_thread::yield();
 	}
 
-	g_pState->Infrastructure->Input->SetNextRequest(InputContext::Theater, InputAction::Unknown);
+	m_Deps.State_Input.SetNextRequest(InputContext::Theater, InputAction::Unknown);
 
     if (stabilizeMs > 0ms) std::this_thread::sleep_for(stabilizeMs);
 
-	g_pState->Infrastructure->Input->SetProcessing(false);
+    m_Deps.State_Input.SetProcessing(false);
 
 	return success;
 }

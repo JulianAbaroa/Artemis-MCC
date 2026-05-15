@@ -30,5 +30,5 @@ void State_InteractionTable::Cleanup()
 	m_InteractionTablebase.store(0);
 
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	m_LiveInteraction = LiveInteraction{};
+	m_LiveInteraction = {};
 }

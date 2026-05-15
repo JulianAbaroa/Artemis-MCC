@@ -3,8 +3,15 @@
 // Header.
 #include "State_Map.h"
 
-bool State_Map::IsLoaded() const { return m_IsLoaded.load(); }
-void State_Map::SetLoaded(bool value) { m_IsLoaded.store(value); }
+bool State_Map::IsLoaded() const 
+{ 
+	return m_IsLoaded.load(); 
+}
+
+void State_Map::SetLoaded(bool value) 
+{ 
+	m_IsLoaded.store(value); 
+}
 
 std::string State_Map::GetMapFilePath() const
 {
@@ -45,10 +52,25 @@ std::string State_Map::GetTagName(int32_t index) const
 	return std::string(&m_NameData[offset]);
 }
 
-Map_TagTableGroupEntry* State_Map::GetGroupsData() { return m_Groups.data(); }
-Map_TagTableEntry* State_Map::GetTagsData() { return m_Tags.data(); }
-int32_t* State_Map::GetNameOffsetsData() { return m_NameOffsets.data(); }
-char* State_Map::GetNameData() { return m_NameData.data(); }
+Map_TagTableGroupEntry* State_Map::GetGroupsData() 
+{ 
+	return m_Groups.data(); 
+}
+
+Map_TagTableEntry* State_Map::GetTagsData() 
+{ 
+	return m_Tags.data(); 
+}
+
+int32_t* State_Map::GetNameOffsetsData() 
+{ 
+	return m_NameOffsets.data(); 
+}
+
+char* State_Map::GetNameData() 
+{ 
+	return m_NameData.data(); 
+}
 
 size_t State_Map::GetTagsSize() const
 {
@@ -102,6 +124,5 @@ void State_Map::Cleanup()
 	m_Groups.clear();
 	m_NameData.clear();
 	m_NameOffsets.clear();
-	
 	m_MapFilePath.clear();
 }

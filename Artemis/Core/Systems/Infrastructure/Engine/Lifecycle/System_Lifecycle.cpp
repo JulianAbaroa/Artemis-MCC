@@ -4,24 +4,22 @@
 #include "System_Lifecycle.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/Systems/Core_System.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
-// Lifecycle.
 #include "Core/States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
 
-// Debug.
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 void System_Lifecycle::SignalShutdown()
 {
-	g_pState->Infrastructure->Lifecycle->SetRunning(false);
+	m_Deps.State_Lifecycle.SetRunning(false);
 
 	{
-		std::lock_guard<std::mutex>	lock(g_pState->Infrastructure->Lifecycle->GetMutex());
-		g_pState->Infrastructure->Lifecycle->GetCV().notify_all();
+		std::lock_guard<std::mutex>	lock(
+			m_Deps.State_Lifecycle.GetMutex());
+
+		m_Deps.State_Lifecycle.GetCV().notify_all();
 	}
 
-	g_pSystem->Debug->Log("[LifecycleSystem] WARNING: Shutdown signaled to all threads.");
+	m_Deps.System_Debug.Log("[LifecycleSystem] WARNING:"
+		" Shutdown signaled to all threads.");
 }

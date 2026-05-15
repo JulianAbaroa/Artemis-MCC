@@ -1,6 +1,11 @@
 #include "pch.h"
-#include "Core/Systems/Domain/Interactable/Weap/System_WeapDataBuilder.h"
+
+// Header.
+#include "System_WeapDataBuilder.h"
+
+// Types.
 #include "Core/Types/Domain/Interactable/WeaponData.h"
+
 #include "Generated/Weap/WeapObject.h"
 
 WeaponData System_WeapDataBuilder::BuildData(const WeapObject& weap)

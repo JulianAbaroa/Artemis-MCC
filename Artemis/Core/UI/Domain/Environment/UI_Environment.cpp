@@ -3,15 +3,21 @@
 // Header.
 #include "UI_Environment.h"
 
-// States.
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
+// Types.
+#include "Core/Types/Domain/Environment/EnvironmentTypes.h"
 
-// Environment.
+// Helpers.
+#include "Core/UI/Utils/MapTypes.h"
+#include "Core/UI/Utils/MapHelpers.h"
+#include "Core/UI/Utils/Strings/EnumToString.h"
+
+// --- States ---
+
 #include "Core/States/Domain/Environment/State_Environment.h"
 
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Interface/System_Debug.h"
+// --- Systems ---
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <algorithm>
 #include <numeric>
@@ -22,8 +28,7 @@
 
 void UI_Environment::FetchState()
 {
-    auto& environment = *g_pState->Domain->Environment;
-    m_CachedInstances = environment.GetActivePhysicsInstances();
+    m_CachedInstances = m_Deps.State_Environment.GetActivePhysicsInstances();
 }
 
 void UI_Environment::Cleanup()
@@ -105,10 +110,6 @@ void UI_Environment::CollectCandidates(const MapTransform& transform,
             candidates.push_back({ MapSelectionType::PhysicsInstance,
                 i, screenRadius });
     }
-
-    g_pSystem->Debug->Log("[UI_Environment] CollectCandidates: instances=%d added=%d",
-        (int)m_CachedInstances.size(),
-        (int)candidates.size() - prevSize);
 }
 
 void UI_Environment::GetWorldBounds(float& outMinX, float& outMinY,

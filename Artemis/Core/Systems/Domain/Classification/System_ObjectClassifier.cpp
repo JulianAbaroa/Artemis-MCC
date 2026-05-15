@@ -3,19 +3,7 @@
 // Header.
 #include "System_ObjectClassifier.h"
 
-// --- Types ---
- 
-#include "Core/Types/Domain/TagName.h"
-#include "Core/Types/Domain/Object/LiveObject.h"
-#include "Core/Types/Domain/Classification/ClassifiedObject.h"
-#include "Core/Types/Domain/Navigation/BlocTeleporterData.h"
-#include "Core/Types/Domain/Environment/ScenZoneData.h"
-#include "Core/Types/Domain/Interactable/ControlDeviceData.h"
-
 // --- States ---
-
-#include "Core/States/Core_State.h"
-#include "Core/States/Domain/Core_State_Domain.h"
 
 #include "Core/States/Domain/Object/State_ObjectTable.h"
 #include "Core/States/Domain/Player/State_PlayerTable.h"
@@ -24,25 +12,25 @@
 #include "Core/States/Domain/Environment/State_Environment.h"
 #include "Core/States/Domain/Interactable/State_Interactable.h"
 
-// Systems.
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Interface/System_Debug.h"
+// --- Systems ---
+
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 #include <unordered_set>
 
 void System_ObjectClassifier::UpdateClassification()
 {
-    uint32_t selfPlayerHandle =
-        g_pState->Domain->PlayerTable->GetPlayerHandleByName("Artemis11010");
+    uint32_t selfPlayerHandle = 
+        m_Deps.State_PlayerTable.GetPlayerHandleByName("Artemis11010");
 
-    const LivePlayer* selfPtr =
-        g_pState->Domain->PlayerTable->GetPlayer(selfPlayerHandle);
+    const LivePlayer* selfPtr = 
+        m_Deps.State_PlayerTable.GetPlayer(selfPlayerHandle);
 
     // Obtain the self, current biped handle.
     uint32_t selfBipedHandle = 0xFFFFFFFF;
     if (selfPtr) selfBipedHandle = selfPtr->CurrentBipedHandle;
 
-    const auto& objectTable = g_pState->Domain->ObjectTable->GetObjectTable();
+    const auto& objectTable = m_Deps.State_ObjectTable.GetObjectTable();
 
     std::vector<ClassifiedObject> results;
     results.reserve(objectTable.size());
@@ -62,20 +50,20 @@ void System_ObjectClassifier::UpdateClassification()
         results.push_back(std::move(object));
     }
 
-    g_pState->Domain->Classification->SetObjects(std::move(results));
+    m_Deps.State_Classification.SetObjects(std::move(results));
 }
 
 void System_ObjectClassifier::Cleanup()
 {
-    g_pState->Domain->Classification->Cleanup();
-    g_pSystem->Debug->Log("[System_ObjectClassifier] INFO: Cleanup completed.");
+    m_Deps.State_Classification.Cleanup();
+    m_Deps.System_Debug.Log("[System_ObjectClassifier] INFO: Cleanup completed.");
 }
 
 ObjectRole System_ObjectClassifier::ClassifyNode(uint32_t handle, 
     uint32_t selfBipedHandle, const LiveObject& object,
     const std::unordered_map<uint32_t, LiveObject>& nodes) const
 {
-    switch (object.Type)
+    switch (object.Profile.Class)
     {
     case ObjectClass::Biped:
         return this->ClassifyBiped(handle, selfBipedHandle);
@@ -226,8 +214,8 @@ ObjectRole System_ObjectClassifier::ClassifyScenery(const LiveObject& object) co
     }
 
     // Obstacles.
-    const SceneryObstacleData* obstacle =
-        g_pState->Domain->Navigation->GetScenObstacle(tag);
+    const SceneryObstacleData* obstacle = 
+        m_Deps.State_Navigation.GetScenObstacle(tag);
     // TODO: This works fine?
     if (obstacle && !obstacle->NotAPathfindingObstacle &&
         obstacle->PathfindingPolicy != ScenPathfindingPolicy::None)
@@ -279,7 +267,7 @@ ObjectRole System_ObjectClassifier::ClassifyBloc(const LiveObject& object) const
     }
 
     const CrateObstacleData* obstacle =
-        g_pState->Domain->Navigation->GetBlocObstacle(object.TagName);
+        m_Deps.State_Navigation.GetBlocObstacle(object.TagName);
     // TODO: This works fine?
     if (obstacle && !obstacle->NotAPathfindingObstacle)
         return ObjectRole::CrateObstacle;
@@ -291,7 +279,7 @@ ObjectRole System_ObjectClassifier::ClassifyDeviceControl(
     const LiveObject& object) const
 {
     const ControlDeviceData* ctrl =
-        g_pState->Domain->Interactable->GetControlDeviceData(object.TagName);
+        m_Deps.State_Interactable.GetControlDeviceData(object.TagName);
 
     if (ctrl && ctrl->DeviceType == CtrlDeviceType::Health)
     {

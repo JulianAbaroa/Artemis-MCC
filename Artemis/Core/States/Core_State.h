@@ -4,7 +4,7 @@
 
 struct Core_State_Domain;
 struct Core_State_Infrastructure;
-class State_Debug;
+struct Core_State_Interface;
 
 // Main container for the application's states.
 struct Core_State
@@ -12,14 +12,10 @@ struct Core_State
 	Core_State();
 	~Core_State();
 
-	// Domain.
+	void Initialize();
+	void Shutdown() const;
+
 	std::unique_ptr<Core_State_Domain> Domain;
-
-	// Infrastructure.
 	std::unique_ptr<Core_State_Infrastructure> Infrastructure;
-
-	// Interface.
-	std::unique_ptr<State_Debug> Debug;
+	std::unique_ptr<Core_State_Interface> Interface;
 };
-
-extern Core_State* g_pState;

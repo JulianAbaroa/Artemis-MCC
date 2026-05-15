@@ -2,6 +2,11 @@
 
 #include <memory>
 
+struct Core_State;
+struct Core_System;
+struct Core_UI;
+struct Core_Hook_Domain;
+
 // Input.
 class Hook_GetButtonState;
 class Hook_GetRawInputData;
@@ -22,6 +27,10 @@ struct Core_Hook_Infrastructure
 {
 	Core_Hook_Infrastructure();
 	~Core_Hook_Infrastructure();
+
+	void Initialize(Core_State& state, Core_System& system, 
+		Core_UI& ui, Core_Hook_Domain& hookDomain);
+	void Shutdown();
 
 	// Input.
 	std::unique_ptr<Hook_GetButtonState> GetButtonState;

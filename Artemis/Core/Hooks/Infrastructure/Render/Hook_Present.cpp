@@ -5,26 +5,18 @@
 
 // --- Hooks ---
 
-#include "Core/Hooks/Core_Hook.h"
-#include "Core/Hooks/Infrastructure/Core_Hook_Infrastructure.h"
-
 #include "Core/Hooks/Infrastructure/Input/Hook_GetRawInputData.h"
+#include "Core/Hooks/Infrastructure/Window/Hook_WndProc.h"
 
 // --- States ---
-
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
 #include "Core/States/Infrastructure/Engine/Render/State_Render.h"
 
 // --- Systems ---
 
-#include "Core/Systems/Core_System.h"
-#include "Core/Systems/Infrastructure/Core_System_Infrastructure.h"
-
 #include "Core/Systems/Infrastructure/Engine/Render/System_Render.h"
 
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // --- UI ---
 
@@ -40,50 +32,52 @@
 HRESULT __stdcall Hook_Present::HookedPresent(
     IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
-    auto& stateRender = *g_pState->Infrastructure->Render;
-    auto& systemRender = *g_pSystem->Infrastructure->Render;
-
-    if (stateRender.IsResizing())
+    if (s_Instance->m_Deps.State_Render.IsResizing())
     {
         return m_OriginalPresent(pSwapChain, SyncInterval, Flags);
     }
 
-    if (!systemRender.IsInitialized()) 
+    if (!s_Instance->m_Deps.System_Render.IsInitialized())
     {
-        systemRender.Initialize(pSwapChain);
+        s_Instance->m_Deps.System_Render.Initialize(pSwapChain);
+
+        DXGI_SWAP_CHAIN_DESC sd;
+        pSwapChain->GetDesc(&sd);
+        s_Instance->m_Deps.Hook_WndProc.Install(sd.OutputWindow);
     }
 
     // Rebuild ImGui UI
-    if (stateRender.ShouldRebuildFonts())
+    if (s_Instance->m_Deps.State_Render.ShouldRebuildFonts())
     {
-        systemRender.UpdateUIScale();
+        s_Instance->m_Deps.System_Render.UpdateUIScale();
     }
 
     // Calculate Framerate 
-    systemRender.UpdateFramerate();
+    s_Instance->m_Deps.System_Render.UpdateFramerate();
 
     // Draw ImGui
-    if (stateRender.GetRTV())
+    if (s_Instance->m_Deps.State_Render.GetRTV())
     {
-        systemRender.BeginFrame(pSwapChain);
-        g_pUI->Main->Draw();
-        systemRender.EndFrame();
+        s_Instance->m_Deps.System_Render.BeginFrame(pSwapChain);
+        s_Instance->m_Deps.UI_Main.Draw();
+        s_Instance->m_Deps.System_Render.EndFrame();
     }
 
     return m_OriginalPresent(pSwapChain, SyncInterval, Flags);
 }
 
+Hook_Present* Hook_Present::s_Instance = nullptr;
+
 void Hook_Present::Install() 
 {
     if (m_PresentHookInstalled.load()) return;
+    s_Instance = this;
 
-    auto& debug = *g_pSystem->Debug;
-    auto& systemRender = *g_pSystem->Infrastructure->Render;
-
-    auto addresses = systemRender.GetVtableAddresses();
+    auto addresses = s_Instance->m_Deps.System_Render.GetVtableAddresses();
     if (!addresses.Present) 
     {
-        debug.Log("[Present] ERROR: Failed to obtain the function address.");
+        s_Instance->m_Deps.System_Debug.Log("[Present] ERROR:"
+            " Failed to obtain the function address.");
         return;
     }
 
@@ -94,28 +88,29 @@ void Hook_Present::Install()
             reinterpret_cast<LPVOID*>(&m_OriginalPresent)) 
         != MH_OK) 
     {
-        debug.Log("[Present] ERROR: Failed to create the hook.");
+        s_Instance->m_Deps.System_Debug.Log("[Present] ERROR:"
+            " Failed to create the hook.");
         return;
     }
     if (MH_EnableHook(m_PresentAddress) != MH_OK) 
     {
-        debug.Log("[Present] ERROR: Failed to enable the hook.");
+        s_Instance->m_Deps.System_Debug.Log("[Present] ERROR:"
+            " Failed to enable the hook.");
         return;
     }
 
-    auto& getRawInputData = *g_pHook->Infrastructure->GetRawInputData;
-    getRawInputData.Install();
+    s_Instance->m_Deps.Hook_GetRawInputData.Install();
 
     m_PresentHookInstalled.store(true);
-    debug.Log("[Present] INFO: Hook installed.");
+    s_Instance->m_Deps.System_Debug.Log("[Present] INFO: Hook installed.");
 }
 
-void Hook_Present::Uninstall() 
+void Hook_Present::Uninstall()
 {
     if (!m_PresentHookInstalled.load()) return;
 
-    auto& systemRender = *g_pSystem->Infrastructure->Render;
-    systemRender.Shutdown();
+    s_Instance->m_Deps.Hook_WndProc.Uninstall();
+    s_Instance->m_Deps.System_Render.Shutdown();
 
     if (m_PresentAddress)
     {
@@ -123,11 +118,9 @@ void Hook_Present::Uninstall()
         MH_RemoveHook(m_PresentAddress);
     }
 
-    auto& getRawInputData = *g_pHook->Infrastructure->GetRawInputData;
-    getRawInputData.Uninstall();
+    s_Instance->m_Deps.Hook_GetRawInputData.Uninstall();
 
     m_PresentHookInstalled.store(false);
-
-    auto& debug = *g_pSystem->Debug;
-    debug.Log("[Present] INFO: Hook uninstalled.");
+    s_Instance->m_Deps.System_Debug.Log("[Present] INFO: Hook uninstalled.");
+    s_Instance = nullptr;
 }

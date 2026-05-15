@@ -18,6 +18,4 @@ public:
 private:
     std::unordered_map<std::string, BipdObject> m_Bipds;
     mutable std::mutex m_Mutex;
-
-    void LogRawData(const std::string& tagName, const BipdObject& bipd);
 };

@@ -34,15 +34,73 @@
 #include "Generated/Mach/MachObject.h"
 #include "Generated/Mach/MachDescriptor.h"
 
+// Dependencies
+class State_Map;
+class System_Map;
+class System_Debug;
+
 class TagGroupReader;
+
+class State_Map;
+class System_Map;
+class System_Debug;
+class State_MapPhmo;
+class State_MapColl;
+class State_MapMode;
+class State_MapJmad;
+class State_MapVehi;
+class State_MapBloc;
+class State_MapSbsp;
+class State_MapWeap;
+class State_MapProj;
+class State_MapBipd;
+class State_MapEqip;
+class State_MapScen;
+class State_MapScnr;
+class State_MapCtrl;
+class State_MapMach;
+
+struct System_MapTagGroup_Dependencies
+{
+    System_Map& System_Map;
+    State_Map& State_Map;
+
+    // Hlmt-derived states
+    State_MapPhmo& State_MapPhmo;
+    State_MapColl& State_MapColl;
+    State_MapMode& State_MapMode;
+    State_MapJmad& State_MapJmad;
+
+    // Direct tag states
+    State_MapVehi& State_MapVehi;
+    State_MapBloc& State_MapBloc;
+    State_MapSbsp& State_MapSbsp;
+    State_MapWeap& State_MapWeap;
+    State_MapProj& State_MapProj;
+    State_MapBipd& State_MapBipd;
+    State_MapEqip& State_MapEqip;
+    State_MapScen& State_MapScen;
+    State_MapScnr& State_MapScnr;
+    State_MapCtrl& State_MapCtrl;
+    State_MapMach& State_MapMach;
+
+    System_Debug& System_Debug;
+};
 
 class System_MapTagGroup
 {
 public:
+    System_MapTagGroup(System_MapTagGroup_Dependencies dependencies) :
+        m_Dependencies(dependencies) {}
+    ~System_MapTagGroup() = default;
+
     void LoadForMap();
+
     void Cleanup();
 
 private:
+    System_MapTagGroup_Dependencies m_Dependencies;
+
     void LoadHlmtFamily(FILE* file, TagGroupReader& reader);
     void LoadDirectTags(FILE* file, TagGroupReader& reader);
 };

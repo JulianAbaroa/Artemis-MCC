@@ -4,15 +4,12 @@
 #include "Hook_GetRawInputData.h"
 
 // --- States ---
-#include "Core/States/Core_State.h"
-#include "Core/States/Infrastructure/Core_State_Infrastructure.h"
 
 #include "Core/States/Infrastructure/Persistence/State_Settings.h"
 
 // --- Systems ---
-#include "Core/Systems/Core_System.h"
 
-#include "Core/Systems/Interface/System_Debug.h"
+#include "Core/Systems/Interface/Debug/System_Debug.h"
 
 // MinHook.
 #include "External/minhook/include/MinHook.h"
@@ -25,9 +22,9 @@ UINT WINAPI Hook_GetRawInputData::HookedGetRawInputData(HRAWINPUT hRawInput, UIN
 	UINT dwSize = m_OriginalFunction(
 		hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
 
-	auto& settings = *g_pState->Infrastructure->Settings;
 	if (dwSize != (UINT)-1 && pData != NULL && 
-		settings.IsMenuVisible() && settings.ShouldFreezeMouse())
+		s_Instance->m_Deps.State_Settings.IsMenuVisible() && 
+		s_Instance->m_Deps.State_Settings.ShouldFreezeMouse())
 	{
 		RAWINPUT* raw = (RAWINPUT*)pData;
 		if (raw->header.dwType == RIM_TYPEMOUSE)
@@ -43,25 +40,26 @@ UINT WINAPI Hook_GetRawInputData::HookedGetRawInputData(HRAWINPUT hRawInput, UIN
 	return dwSize;
 }
 
+Hook_GetRawInputData* Hook_GetRawInputData::s_Instance = nullptr;
+
 void Hook_GetRawInputData::Install()
 {
 	if (m_IsHookInstalled.load()) return;
-
-	auto& debug = *g_pSystem->Debug;
+	s_Instance = this;
 
 	HMODULE hUser32 = GetModuleHandle(L"user32.dll");
 	if (!hUser32) 
 	{
-		debug.Log("[GetRawInputData] ERROR: Could not get"
-			" handle for user32.dll");
+		s_Instance->m_Deps.System_Debug.Log("[GetRawInputData] ERROR:"
+			" Could not get handle for user32.dll");
 		return;
 	}
 
 	m_FunctionAddress.store((void*)GetProcAddress(hUser32, "GetRawInputData"));
 	if (!m_FunctionAddress.load()) 
 	{
-		debug.Log("[GetRawInputData] ERROR: GetProcAddress for"
-			" GetRawInputData failed");
+		s_Instance->m_Deps.System_Debug.Log("[GetRawInputData] ERROR:"
+			" GetProcAddress for GetRawInputData failed");
 		return;
 	}
 
@@ -71,17 +69,20 @@ void Hook_GetRawInputData::Install()
 			reinterpret_cast<LPVOID*>(&m_OriginalFunction)) 
 		!= MH_OK)
 	{
-		debug.Log("[GetRawInputData] ERROR: Failed to create the hook.");
+		s_Instance->m_Deps.System_Debug.Log("[GetRawInputData] ERROR:"
+			" Failed to create the hook.");
 	}
 
 	if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK) 
 	{
-		debug.Log("[GetRawInputData] ERROR: Failed to enable the hook.");
+		s_Instance->m_Deps.System_Debug.Log("[GetRawInputData] ERROR:"
+			" Failed to enable the hook.");
 		return;
 	}
 	
 	m_IsHookInstalled.store(true);
-	debug.Log("[GetRawInputData] INFO: Hook installed.");
+	s_Instance->m_Deps.System_Debug.Log("[GetRawInputData] INFO:"
+		" Hook installed.");
 }
 
 void Hook_GetRawInputData::Uninstall()
@@ -93,6 +94,8 @@ void Hook_GetRawInputData::Uninstall()
 
 	m_IsHookInstalled.store(false);
 
-	auto& debug = *g_pSystem->Debug;
-	debug.Log("[GetRawInputData] INFO: Hook uninstalled.");
+	s_Instance->m_Deps.System_Debug.Log("[GetRawInputData] INFO:"
+		" Hook uninstalled.");
+
+	s_Instance = nullptr;
 }

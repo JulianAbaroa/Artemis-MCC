@@ -10,10 +10,12 @@ const LiveObject* State_ObjectTable::GetLiveObject(uint32_t handle) const
 	return it != m_Objects.end() ? &it->second : nullptr;
 }
 
-const std::unordered_map<uint32_t, LiveObject> State_ObjectTable::GetObjectTable() const
+std::optional<LiveObject> State_ObjectTable::CopyLiveObject(uint32_t handle) const
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
-	return m_Objects;
+	auto it = m_Objects.find(handle);
+	if (it == m_Objects.end()) return std::nullopt;
+	return it->second;
 }
 
 void State_ObjectTable::AddObject(uint32_t handle, const LiveObject& object)
@@ -21,14 +23,6 @@ void State_ObjectTable::AddObject(uint32_t handle, const LiveObject& object)
 	std::lock_guard<std::mutex> lock(m_Mutex);
 	m_Objects[handle] = object;
 	m_HasChanged.store(true);
-}
-
-std::optional<LiveObject> State_ObjectTable::CopyLiveObject(uint32_t handle) const
-{
-	std::lock_guard<std::mutex> lock(m_Mutex);
-	auto it = m_Objects.find(handle);
-	if (it == m_Objects.end()) return std::nullopt;
-	return it->second;
 }
 
 std::optional<LiveObject> State_ObjectTable::RemoveObject(uint32_t handle)
@@ -47,6 +41,12 @@ std::optional<LiveObject> State_ObjectTable::RemoveObject(uint32_t handle)
 	return std::nullopt;
 }
 
+const std::unordered_map<uint32_t, LiveObject> State_ObjectTable::GetObjectTable() const
+{
+	std::lock_guard<std::mutex> lock(m_Mutex);
+	return m_Objects;
+}
+
 void State_ObjectTable::UpdateObjects(std::function<void(uint32_t, LiveObject&)> processor)
 {
 	std::lock_guard<std::mutex> lock(m_Mutex);
@@ -57,11 +57,25 @@ void State_ObjectTable::UpdateObjects(std::function<void(uint32_t, LiveObject&)>
 	m_HasChanged.store(true);
 }
 
-bool State_ObjectTable::HasChanged() const { return m_HasChanged.load(); }
-void State_ObjectTable::SetChanged(bool value) { m_HasChanged.store(value); }
+bool State_ObjectTable::HasChanged() const 
+{ 
+	return m_HasChanged.load(); 
+}
 
-uintptr_t State_ObjectTable::GetObjectTableBase() { return m_ObjectTableBase.load(); }
-void State_ObjectTable::SetObjectTableBase(uintptr_t pointer) { m_ObjectTableBase.store(pointer); }
+void State_ObjectTable::SetChanged(bool value) 
+{ 
+	m_HasChanged.store(value); 
+}
+
+uintptr_t State_ObjectTable::GetObjectTableBase() 
+{ 
+	return m_ObjectTableBase.load(); 
+}
+
+void State_ObjectTable::SetObjectTableBase(uintptr_t pointer) 
+{ 
+	m_ObjectTableBase.store(pointer); 
+}
 
 void State_ObjectTable::Cleanup()
 {

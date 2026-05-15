@@ -61,7 +61,6 @@ struct TeleporterData
 	ZoneShape ZoneShape;
 	uint8_t Channel;
 	AllowedObjects AllowedObjects;
-	Team Team;
 };
 
 struct ZoneData

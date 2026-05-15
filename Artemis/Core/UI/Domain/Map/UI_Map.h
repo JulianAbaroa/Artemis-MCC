@@ -4,23 +4,33 @@
 #include "Core/UI/Utils/MapTypes.h"
 #include "Core/UI/Utils/MapHelpers.h"
 
-// Panels.
-#include "Core/UI/Domain/Navigation/UI_Navigation.h"
-#include "Core/UI/Domain/Environment/UI_Environment.h"
-
 // ImGui.
 #include "External/imgui/imgui.h"
 #include "External/imgui/imgui_internal.h"
 
 #include <vector>
 
+class UI_Navigation;
+class UI_Environment;
+
+struct UI_Map_Dependencies
+{
+    UI_Navigation& UI_Navigation;
+    UI_Environment& UI_Environment;
+};
+
 class UI_Map
 {
 public:
+    UI_Map(UI_Map_Dependencies dependencies) : m_Deps(dependencies) {}
+    ~UI_Map() = default;
+
     void Draw();
     void Cleanup();
 
 private:
+    UI_Map_Dependencies m_Deps;
+
     // --- Canvas state ---
 
     float    m_MapZoom = 1.0f;
@@ -37,11 +47,6 @@ private:
     // --- Layer visibility ---
 
     uint32_t m_VisibleLayers = ~0u;
-
-    // --- Domain panels ---
-
-    UI_Navigation m_Navigation;
-    UI_Environment m_Environment;
 
     // --- Left panel ---
 

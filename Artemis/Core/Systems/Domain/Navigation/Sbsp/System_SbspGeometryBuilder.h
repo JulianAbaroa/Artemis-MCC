@@ -8,6 +8,8 @@
 
 #include "Generated/Sbsp/SbspObject.h"
 
+class System_Debug;
+
 class System_SbspGeometryBuilder
 {
 public:
@@ -24,8 +26,6 @@ private:
     void BuildInstancedGeometry(const SbspObject& sbsp, SbspGeometry& out);
     void BuildCollisionMaterials(const SbspObject& sbsp, SbspGeometry& out);
     void BuildMarkers(const SbspObject& sbsp, SbspGeometry& out);
-
-    void LogGeometry(const SbspGeometry& out);
 
     // --- Helpers ---
 
