@@ -3,7 +3,7 @@
 #include <shlwapi.h>
 #include <thread>
 
-class ModLoader
+class DllInstance
 {
 public:
 	BOOL OnAttach(HMODULE hModule);

@@ -1,55 +1,40 @@
 #include "pch.h"
 
-// Header.
 #include "DllMain.h"
+#include "Core.h"
 
-// Proxies.
 #include "Proxy/ProxyExports.h"
 
-// Mod Core.
-#include "Mod_Core.h"
-
-// --- Hooks ---
-
-#include "Core/Hooks/Core_Hook.h"
-
-// --- States ---
-
 #include "States/Core_State.h"
-#include "States/Infrastructure/Core_State_Infrastructure.h"
-
-#include "States/Infrastructure/Engine/Lifecycle/State_Lifecycle.h"
-#include "States/Infrastructure/Persistence/State_Settings.h"
-
-// --- Systems ---
+#include "States/Lifecycle/State_Lifecycle.h"
+#include "States/Settings/State_Settings.h"
 
 #include "Systems/Core_System.h"
-#include "Systems/Infrastructure/Core_System_Infrastructure.h"
-#include "Systems/Interface/Core_System_Interface.h"
+#include "Systems/Settings/System_Settings.h"
+#include "Systems/Logs/System_Logs.h"
 
-#include "Systems/Infrastructure/Persistence/System_Settings.h"
-#include "Systems/Infrastructure/Persistence/System_Preferences.h"
-
-#include "Systems/Interface/Debug/System_Debug.h"
-
-// --- Threads ---
 #include "Threads/Core_Thread.h"
+#include "Threads/Main/Thread_Main.h"
+#include "Threads/AI/Thread_AI.h"
+#include "Threads/Input/Thread_Input.h"
 
-#include "Threads/Domain/Thread_Main.h"
-#include "Threads/Domain/Thread_AI.h"
-
-#include "Threads/Infrastructure/Thread_Input.h"
-
-// MinHook.
 #include "External/minhook/include/MinHook.h"
 
 #include <fstream>
+#include <thread>
+
 #pragma comment(lib, "shlwapi.lib")
 
-using namespace std::chrono_literals;
+// TODO: Refactor UI/Utils/
+// TODO: Make a Color Library for the UI.
+// TODO: It seems the object centers readed from .map files (phmo) 
+// are not always the real center that the game engine uses, making
+// some objects appear out-of-place from where they really are.
+// Maybe get them from the game's memory.
 
-ModLoader g_DllInstance;
-static std::unique_ptr<Mod_Core> m_Mod;
+DllInstance g_DllInstance;
+
+static std::unique_ptr<Core> m_Mod;
 
 extern "C" BOOL APIENTRY DllMain(HMODULE handleModule, 
     DWORD ulReasonForCall, LPVOID lpReserved) 
@@ -67,32 +52,31 @@ extern "C" BOOL APIENTRY DllMain(HMODULE handleModule,
     return TRUE;
 }
 
-BOOL ModLoader::OnAttach(HMODULE hModule)
+BOOL DllInstance::OnAttach(HMODULE hModule)
 {
     DisableThreadLibraryCalls(hModule);
 
-    HANDLE hThread = CreateThread(NULL, 0, ModLoader::InitializeArtemis, hModule, 0, NULL);
+    HANDLE hThread = CreateThread(NULL, 0, DllInstance::InitializeArtemis, hModule, 0, NULL);
     if (hThread) CloseHandle(hThread);
 
     return TRUE;
 }
 
-void ModLoader::OnDetach(LPVOID lpReserved)
+void DllInstance::OnDetach(LPVOID lpReserved)
 {
     this->DeinitializeArtemis(lpReserved);
 }
 
-
 // Responsible for initializing Artemis data and core systems.
-DWORD WINAPI ModLoader::InitializeArtemis(LPVOID lpParam)
+DWORD WINAPI DllInstance::InitializeArtemis(LPVOID lpParam)
 {
     // Initializes the complete mod architecture.
-    m_Mod = std::make_unique<Mod_Core>();
+    m_Mod = std::make_unique<Core>();
     m_Mod->Initialize();
 
     // Saves the handle module of the game.
     HMODULE handleModule = (HMODULE)lpParam;
-    m_Mod->State->Infrastructure->Lifecycle->SetHandleModule(handleModule);
+    m_Mod->State->Lifecycle->SetHandleModule(handleModule);
 
     // Gets the path of the game.
     char buffer[MAX_PATH];
@@ -100,28 +84,29 @@ DWORD WINAPI ModLoader::InitializeArtemis(LPVOID lpParam)
     PathRemoveFileSpecA(buffer);
 
     // Initializes the paths that are going to be used by the mod.
-    m_Mod->System->Infrastructure->Settings->InitializePaths(buffer);
-    std::ofstream ofs(m_Mod->State->Infrastructure->Settings->
+    m_Mod->System->Settings->InitializePaths(buffer);
+    std::ofstream ofs(m_Mod->State->Settings->
         GetLoggerPath(), std::ios::trunc);
 
     // Load user preferences if user allowed the mod to use AppData.
-    if (m_Mod->State->Infrastructure->Settings->ShouldUseAppData())
+    if (m_Mod->State->Settings->ShouldUseAppData())
     {
-        m_Mod->System->Infrastructure->Preferences->LoadPreferences();
+        // m_Mod->System->Preferences->LoadPreferences();
     }
 
     // Initializes MinHook, the tool that Artemis uses to hook game's functions.
     if (MH_Initialize() != MH_OK)
     {
-        m_Mod->System->Interface->Debug->Log("[DllMain] ERROR:"
+        m_Mod->System->Logs->Log("[DllMain] ERROR:"
             " MH_Initialize failed.");
         return 0;
     }
 
     // Sets the mod IsRunning flag as true.
-    m_Mod->State->Infrastructure->Lifecycle->SetRunning(true);
+    m_Mod->State->Lifecycle->SetRunning(true);
 
     // Creates and starts the core threads of Artemis.
+
     g_DllInstance.m_MainThread = std::thread(
         &Thread_Main::Run, m_Mod->Thread->Main.get());
 
@@ -131,27 +116,27 @@ DWORD WINAPI ModLoader::InitializeArtemis(LPVOID lpParam)
     g_DllInstance.m_AIThread = std::thread(
         &Thread_AI::Run, m_Mod->Thread->AI.get());
 
-    m_Mod->System->Interface->Debug->Log("[DllMain] INFO:"
+    m_Mod->System->Logs->Log("[DllMain] INFO:"
         " Artemis Initialized.");
     return 0;
 }
 
-void ModLoader::DeinitializeArtemis(LPVOID lpReserved)
+void DllInstance::DeinitializeArtemis(LPVOID lpReserved)
 {
     if (lpReserved == NULL)
     {
-        m_Mod->System->Interface->Debug->Log("[DllMain] INFO:"
+        m_Mod->System->Logs->Log("[DllMain] INFO:"
             " Deinitializing Artemis.");
 
-        m_Mod->State->Infrastructure->Lifecycle->SetRunning(false);
+        m_Mod->State->Lifecycle->SetRunning(false);
 
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         if (m_MainThread.joinable()) m_MainThread.detach();
         if (m_InputThread.joinable()) m_InputThread.detach();
         if (m_AIThread.joinable()) m_AIThread.detach();
 
-        m_Mod->Shutdown();
+        m_Mod->Deinitialize();
 
         MH_Uninitialize();
     }

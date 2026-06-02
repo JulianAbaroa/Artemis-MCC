@@ -1,0 +1,106 @@
+Microsoft (R) COFF/PE Dumper Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\Windows\System32\wtsapi32.dll
+
+File Type: DLL
+
+  Section contains the following exports for WTSAPI32.dll
+
+    00000000 characteristics
+    DC1422FF time date stamp
+        0.00 version
+           1 ordinal base
+          76 number of functions
+          76 number of names
+
+    ordinal hint RVA      name
+
+          1    0 00005310 IsInteractiveUserSession
+          2    1 00004E30 QueryActiveSession
+          3    2 00001790 QueryUserToken
+          4    3 00004E30 RegisterUsertokenForNoWinlogon
+          5    4 00008EB0 WTSActiveSessionExists
+          6    5 00005A90 WTSCloseServer
+          7    6 000130C0 WTSCloudAuthClose
+          8    7 00013100 WTSCloudAuthConvertAssertionToSerializedUserCredential
+          9    8 000131A0 WTSCloudAuthDuplicateSerializedUserCredential
+         10    9 00013220 WTSCloudAuthGetServerNonce
+         11    A 000132A0 WTSCloudAuthNetworkLogonWithSerializedCredential
+         12    B 00013330 WTSCloudAuthOpen
+         13    C 00007700 WTSConnectSessionA
+         14    D 00005F80 WTSConnectSessionW
+         15    E 0000A480 WTSCreateListenerA
+         16    F 0000A5A0 WTSCreateListenerW
+         17   10 00008ED0 WTSDisconnectSession
+         18   11 00007800 WTSEnableChildSessions
+         19   12 0000AD80 WTSEnumerateListenersA
+         20   13 0000AEC0 WTSEnumerateListenersW
+         21   14 000019A0 WTSEnumerateProcessesA
+         22   15 00002100 WTSEnumerateProcessesExA
+         23   16 00002460 WTSEnumerateProcessesExW
+         24   17 00001D40 WTSEnumerateProcessesW
+         25   18 000086D0 WTSEnumerateServersA
+         26   19 00008880 WTSEnumerateServersW
+         27   1A 00004800 WTSEnumerateSessionsA
+         28   1B 00008EF0 WTSEnumerateSessionsExA
+         29   1C 00003B60 WTSEnumerateSessionsExW
+         30   1D 00003900 WTSEnumerateSessionsW
+         31   1E 00004C90 WTSFreeMemory
+         32   1F 00006200 WTSFreeMemoryExA
+         33   20 000037A0 WTSFreeMemoryExW
+         34   21 00007820 WTSGetChildSessionId
+         35   22 0000B060 WTSGetListenerSecurityA
+         36   23 0000B150 WTSGetListenerSecurityW
+         37   24 00007860 WTSIsChildSessionsEnabled
+         38   25 000090E0 WTSLogoffSession
+         39   26 00005AD0 WTSOpenServerA
+         40   27 00008A20 WTSOpenServerExA
+         41   28 00005AB0 WTSOpenServerExW
+         42   29 00005AF0 WTSOpenServerW
+         43   2A 0000B3B0 WTSQueryListenerConfigA
+         44   2B 00005790 WTSQueryListenerConfigW
+         45   2C 00002860 WTSQuerySessionInformationA
+         46   2D 00002A80 WTSQuerySessionInformationW
+         47   2E 00009D30 WTSQueryUserConfigA
+         48   2F 00005B10 WTSQueryUserConfigW
+         49   30 00001790 WTSQueryUserToken
+         50   31 00004CB0 WTSRegisterSessionNotification
+         51   32 00005480 WTSRegisterSessionNotificationEx
+         52   33 00009100 WTSSendMessageA
+         53   34 00009190 WTSSendMessageW
+         54   35 0000B4F0 WTSSetListenerSecurityA
+         55   36 0000B5C0 WTSSetListenerSecurityW
+         56   37 000078A0 WTSSetRenderHint
+         57   38 00009220 WTSSetSessionInformationA
+         58   39 00009220 WTSSetSessionInformationW
+         59   3A 00009F50 WTSSetUserConfigA
+         60   3B 00004E60 WTSSetUserConfigW
+         61   3C 000078C0 WTSShutdownSystem
+         62   3D 00007990 WTSStartRemoteControlSessionA
+         63   3E 00007A90 WTSStartRemoteControlSessionW
+         64   3F 00007AC0 WTSStopRemoteControlSession
+         65   40 000093A0 WTSTerminateProcess
+         66   41 00004DA0 WTSUnRegisterSessionNotification
+         67   42 00005540 WTSUnRegisterSessionNotificationEx
+         68   43 000056F0 WTSVirtualChannelClose
+         69   44 00006290 WTSVirtualChannelOpen
+         70   45 00005560 WTSVirtualChannelOpenEx
+         71   46 00009490 WTSVirtualChannelPurgeInput
+         72   47 000094B0 WTSVirtualChannelPurgeOutput
+         73   48 00005580 WTSVirtualChannelQuery
+         74   49 000094D0 WTSVirtualChannelRead
+         75   4A 000095F0 WTSVirtualChannelWrite
+         76   4B 00005320 WTSWaitSystemEvent
+
+  Summary
+
+        1000 .data
+        1000 .didat
+        2000 .pdata
+        8000 .rdata
+        1000 .reloc
+        1000 .rsrc
+       19000 .text
+        1000 fothk

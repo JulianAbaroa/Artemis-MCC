@@ -6,6 +6,13 @@ bin/
 *.user
 *.suo
 *.sln.doccache
+*.vcxproj.user
+ipch/
+*.cache
+*.vs/
+
+CMakeCache.txt
+CMakeFiles/
 
 [Dd]ebug/
 [Rr]elease/
@@ -46,6 +53,7 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
+*.pyproj.user
 
 # OS
 Thumbs.db

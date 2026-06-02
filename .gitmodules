@@ -1,6 +1,10 @@
 [submodule "Artemis/External/imgui"]
 	path = Artemis/External/imgui
 	url = https://github.com/ocornut/imgui.git
+        branch = docking
 [submodule "Artemis/External/minhook"]
 	path = Artemis/External/minhook
 	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "Artemis/External/zlib"]
+	path = Artemis/External/zlib
+	url = https://github.com/madler/zlib.git

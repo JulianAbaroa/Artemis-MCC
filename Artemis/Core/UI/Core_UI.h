@@ -2,81 +2,37 @@
 
 #include <memory>
 
-struct Core_State;
-struct Core_System;
+class Core_State;
+class Core_System;
 
-// Main.
-class UI_Main;
-
-// Object Table.
+class UI_Launcher;
+class UI_Overlay;
 class UI_ObjectTable;
-
-// Player Table.
 class UI_PlayerTable;
-
-// Object Graph.
-class UI_ObjectGraph;
-
-// Navigation.
 class UI_Navigation;
-
-// Environment.
 class UI_Environment;
-
-// Interactable.
-class UI_Interactable;
-
-// Map. 
 class UI_Map;
-
-// Settings.
 class UI_Settings;
-
-// Memory Scanner.
 class UI_MemoryScanner;
-
-// Logs.
 class UI_Logs;
 
-// Main container for the application's UIs.
-struct Core_UI
+class Core_UI
 {
+public:
 	Core_UI();
 	~Core_UI();
 
 	void Initialize(Core_State& state, Core_System& system);
-	void Shutdown();
+	void Deinitialize();
 
-	// Main.
-	std::unique_ptr<UI_Main> Main;
-
-	// Object Table.
+	std::unique_ptr<UI_Launcher> Launcher;
+	std::unique_ptr<UI_Overlay> Overlay;
 	std::unique_ptr<UI_ObjectTable> ObjectTable;
-
-	// Player Table.
 	std::unique_ptr<UI_PlayerTable> PlayerTable;
-
-	// Object Graph.
-	std::unique_ptr<UI_ObjectGraph> ObjectGraph;
-
-	// Navigation.
 	std::unique_ptr<UI_Navigation> Navigation;
-
-	// Environment.
 	std::unique_ptr<UI_Environment> Environment;
-
-	// Interactable.
-	std::unique_ptr<UI_Interactable> Interactable;
-
-	// Map.
 	std::unique_ptr<UI_Map> Map;
-
-	// Settings.
 	std::unique_ptr<UI_Settings> Settings;
-
-	// Memory Scanner.
 	std::unique_ptr<UI_MemoryScanner> MemoryScanner;
-
-	// Logs.
 	std::unique_ptr<UI_Logs> Logs;
 };

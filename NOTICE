@@ -1,0 +1,148 @@
+Artemis-MCC
+Copyright (C) 2026 [Julian Abaroa]
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version. See the LICENSE file for the full GPL-3.0 text.
+
+This product includes third-party software and assets. Their respective
+copyright notices and license terms are reproduced below.
+
+================================================================================
+1. Reclaimer  (GPL-3.0)
+================================================================================
+Copyright (C) Gravemind2401
+https://github.com/Gravemind2401/Reclaimer
+
+The geometry-extraction logic in Artemis (System_MeshReader) was derived and
+ported from Reclaimer's C# implementation of Halo Reach MCC mesh reading.
+As a derivative work of GPL-3.0 software, the corresponding portions of
+Artemis are likewise licensed under GPL-3.0. See MeshReader.md for the full
+theory and the Assembly <-> Reclaimer name mapping.
+
+================================================================================
+2. Assembly  (GPL-3.0)
+================================================================================
+Copyright (C) XboxChaos and Assembly contributors
+https://github.com/XboxChaos/Assembly
+
+Artemis does NOT redistribute Assembly's source or its plugin XML files.
+TagTranspiler consumes Assembly's tag-definition plugin XML files (which the
+user must supply from their own copy of Assembly) to generate the C++ tag
+structure headers used by Artemis. Headers generated from those XML files are
+derivative of Assembly's definitions and are therefore covered by GPL-3.0.
+
+================================================================================
+3. MinHook  (BSD-2-Clause)
+================================================================================
+Copyright (C) 2009-2017 Tsuda Kageyu
+https://github.com/TsudaKageyu/minhook
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+================================================================================
+4. Dear ImGui  (MIT)
+================================================================================
+Copyright (c) 2014-2026 Omar Cornut
+https://github.com/ocornut/imgui
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+5. zlib  (zlib License)
+================================================================================
+Copyright (C) 1995-2026 Jean-loup Gailly and Mark Adler
+https://zlib.net
+
+This software is provided 'as-is', without any express or implied warranty.
+In no event will the authors be held liable for any damages arising from the
+use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it freely,
+subject to the following restrictions:
+
+ 1. The origin of this software must not be misrepresented; you must not claim
+    that you wrote the original software. If you use this software in a product,
+    an acknowledgment in the product documentation would be appreciated but is
+    not required.
+ 2. Altered source versions must be plainly marked as such, and must not be
+    misrepresented as being the original software.
+ 3. This notice may not be removed or altered from any source distribution.
+
+================================================================================
+6. stb_image  (dual-licensed: Public Domain / MIT)
+================================================================================
+Copyright (C) 2017 Sean Barrett
+https://github.com/nothings/stb
+
+stb_image.h is released into the public domain (alternatively, MIT licensed,
+at the user's choice). It carries no legal obligation, though attribution is
+appreciated by the author. This attribution is provided in that spirit.
+
+================================================================================
+7. Font Awesome Free  (icons: CC BY 4.0)
+================================================================================
+Copyright (C) Fonticons, Inc.
+https://fontawesome.com   License: https://creativecommons.org/licenses/by/4.0/
+
+The following icons are used in the Artemis UI: cube, person-rifle, gear,
+square-binary, file-lines, map. They were downloaded from Font Awesome Free as
+PNG files and embedded as C++ byte arrays via GenerateIconData.py (format
+change from PNG to byte array). The icons remain licensed under CC BY 4.0;
+this license applies to the icon data only, not to the surrounding source code.
+
+================================================================================
+Acknowledgments (no code redistributed)
+================================================================================
+- AlphaRing (https://github.com/WinterSquire/AlphaRing)
+    Conceptual inspiration for the DLL proxy injection approach using
+    wtsapi32.dll. The proxy export forwarders in Artemis are regenerated
+    directly from the system wtsapi32.dll export table via GenerateProxyExports.py.
+- Mjolnir-Forge-Editor (https://github.com/Waffle1434/Mjolnir-Forge-Editor)
+    The author's entry point into Halo modding at the game-engine level.
+    No code was taken from this project.
+- The wider Halo modding community, for research on the Blam! engine.
+
+================================================================================
+Trademark / Game Content
+================================================================================
+Halo: The Master Chief Collection (c) Microsoft Corporation. Artemis-MCC was
+created under Microsoft's Game Content Usage Rules
+(https://www.xbox.com/en-US/developers/rules) and is not endorsed by or
+affiliated with Microsoft.
