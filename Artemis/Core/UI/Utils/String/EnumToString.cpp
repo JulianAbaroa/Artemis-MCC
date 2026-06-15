@@ -27,7 +27,7 @@ const char* EnumToString::VehicleTypeToString(VehicleType type)
 	case VehicleType::Revenant:				return "Revenant";
 	case VehicleType::Scorpion:				return "Scorpion";
 	case VehicleType::ScorpionTurret:		return "Scorpion Turret";
-	case VehicleType::Shade:			return "Shade Turret";
+	case VehicleType::ShadeTurret:			return "Shade Turret";
 	case VehicleType::Warthog:				return "Warthog";
 	case VehicleType::WarthogChaingun:		return "Warthog Chaingun";
 	case VehicleType::WarthogGauss:			return "Warthog Gauss";
@@ -151,5 +151,104 @@ const char* EnumToString::TeleporterTypeToString(TeleporterType type)
 	case TeleporterType::Sender:		return "Sender";
 	case TeleporterType::TwoWay:		return "TwoWay";
 	default:							return "Unknown";
+	}
+}
+
+const char* EnumToString::RoleToString(ObjectRole role)
+{
+	switch (role)
+	{
+	case ObjectRole::HealthStation:         return "HealthStation";
+	case ObjectRole::Shield:                return "Shield";
+	case ObjectRole::Lift:                  return "Lift";
+	case ObjectRole::Explosive:             return "Explosive";
+	case ObjectRole::Teleporter:            return "Teleporter";
+	case ObjectRole::DeviceMachine:         return "DeviceMachine";
+	case ObjectRole::ObjectiveSpawn:        return "Objective Spawn";
+	case ObjectRole::ObjectivePickup:       return "Objective Pickup";
+	case ObjectRole::ObjectiveEquipped:      return "Objective Equiped";
+	case ObjectRole::Spawn:                 return "Spawn";
+	case ObjectRole::Projectile:            return "Projectile";
+	case ObjectRole::AmmoPickup:            return "AmmoPickup";
+	case ObjectRole::ArmorAbilityEquipped:   return "Armor Ability Equiped";
+	case ObjectRole::ArmorAbilityPickup:    return "Armor Ability Pickup";
+	case ObjectRole::WeaponEquipped:         return "WeaponEquipped";
+	case ObjectRole::WeaponPickup:          return "WeaponPickup";
+	case ObjectRole::VehiclePart:           return "VehiclePart";
+	case ObjectRole::Vehicle:               return "Vehicle";
+	case ObjectRole::Biped:                 return "Biped";
+	default:                                return "Unknown";
+	}
+}
+
+const char* EnumToString::BehaviorToString(AffordanceBehavior behavior)
+{
+	switch (behavior)
+	{
+	case AffordanceBehavior::Pickup:       return "Pickup";
+	case AffordanceBehavior::EnterVehicle: return "EnterVehicle";
+	case AffordanceBehavior::Avoid:        return "Avoid";
+	case AffordanceBehavior::Interact:     return "Interact";
+	default:                                 return "Unknown";
+	}
+}
+
+const char* EnumToString::ActivationToString(AffordanceActivation act)
+{
+	switch (act)
+	{
+	case AffordanceActivation::None:      return "None";
+	case AffordanceActivation::KeyPress:  return "KeyPress";
+	case AffordanceActivation::Proximity: return "Proximity";
+	default:                                return "Unknown";
+	}
+}
+
+const char* EnumToString::InteractionTypeToString(InteractionType type)
+{
+	switch (type)
+	{
+	case InteractionType::None:              return "None";
+	case InteractionType::GrabWeapon:        return "GrabWeapon";
+	case InteractionType::GrabArmorAbility:  return "GrabArmorAbility";
+	case InteractionType::TakeHealthStation: return "TakeHealthStation";
+	case InteractionType::EnterVehicle:      return "EnterVehicle";
+	case InteractionType::Hijack:            return "Hijack";
+	case InteractionType::GrabObjective:     return "GrabObjective";
+	default:                                 return "Unknown";
+	}
+}
+
+const char* EnumToString::InteractionDetailToString(
+	InteractionType type, InteractionDetail detail)
+{
+	switch (type)
+	{
+	case InteractionType::GrabWeapon:
+		switch (detail)
+		{
+		case InteractionDetail::GrabWeapon:   return "Grab Weapon";
+		case InteractionDetail::ChangeWeapon: return "Change Weapon";
+		default:                              return "Unknown";
+		}
+
+	case InteractionType::EnterVehicle:
+	case InteractionType::Hijack:
+		switch (detail)
+		{
+		case InteractionDetail::ZeroSeat:   return "Seat (0)";
+		case InteractionDetail::FirstSeat:  return "Seat (1)";
+		case InteractionDetail::SecondSeat: return "Seat (2)";
+		case InteractionDetail::ThirdSeat:  return "Seat (3)";
+		case InteractionDetail::FourthSeat: return "Seat (4)";
+		case InteractionDetail::FifthSeat:  return "Seat (5)";
+		default:                            return "Unknown Seat";
+		}
+
+	case InteractionType::GrabArmorAbility:  return "Grab Armor Ability";
+	case InteractionType::TakeHealthStation: return "Take Health Station";
+	case InteractionType::GrabObjective:     return "Grab Objective";
+	case InteractionType::None:              return "None";
+	default:                                 return "Unknown";
 	}
 }

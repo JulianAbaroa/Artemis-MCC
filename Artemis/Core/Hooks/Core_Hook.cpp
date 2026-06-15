@@ -6,29 +6,24 @@
 #include "Core/Systems/Core_System.h"
 #include "Core/UI/Core_UI.h"
 
-#include "Map/Hook_BlamOpenMap.h"
+#include "Sources/Map/Hook_BlamOpenMap.h"
+#include "Sources/Object/Hook_ObjectTable.h"
+#include "Sources/Object/Hook_CreateObject.h"
+#include "Sources/Object/Hook_ReleaseObject.h"
+#include "Sources/Object/BoneMatrix/Hook_InitRootNode.h"
+#include "Sources/Player/Hook_PlayerTable.h"
+#include "Sources/Player/Hook_CreatePlayer.h"
+#include "Sources/Interaction/Hook_InteractionTable.h"
 
-#include "Gametype/Hook_GameEngineInit.h"
+#include "Other/Input/Hook_GetButtonState.h"
+#include "Other/Input/Hook_GetRawInputData.h"
+#include "Other/Lifecycle/Hook_EngineInitialize.h"
+#include "Other/Lifecycle/Hook_DestroySubsystems.h"
+#include "Other/Render/Hook_Present.h"
+#include "Other/Render/Hook_ResizeBuffers.h"
+#include "Other/Window/Hook_WndProc.h"
 
-#include "Object/Hook_ObjectTable.h"
-#include "Object/Hook_CreateObject.h"
-#include "Object/Hook_ReleaseObject.h"
-
-#include "Player/Hook_PlayerTable.h"
-#include "Player/Hook_CreatePlayer.h"
-
-#include "Interaction/Hook_InteractionTable.h"
-
-#include "Input/Hook_GetButtonState.h"
-#include "Input/Hook_GetRawInputData.h"
-
-#include "Lifecycle/Hook_EngineInitialize.h"
-#include "Lifecycle/Hook_DestroySubsystems.h"
-
-#include "Window/Hook_WndProc.h"
-
-#include "Render/Hook_Present.h"
-#include "Render/Hook_ResizeBuffers.h"
+#include "Tick/Hook_SimulationTicks.h"
 
 Core_Hook::Core_Hook() = default;
 Core_Hook::~Core_Hook() = default;
@@ -36,18 +31,12 @@ Core_Hook::~Core_Hook() = default;
 void Core_Hook::Initialize(Core_State& state, 
 	Core_System& system, Core_UI& ui)
 {
-	this->InitMap(state, system);
-	this->InitGametype(system);
-	this->InitObject(state, system);
-	this->InitPlayer(state, system);
-	this->InitInteraction(state, system);
-	this->InitInput(state, system, ui);
-	this->InitLifecycle(state, system, ui);
-	this->InitWindow(state, system, ui);
-	this->InitRender(state, system, ui);
+	this->InitSources(state, system);
+	this->InitTick(state, system, ui);
+	this->InitOther(state, system, ui);
 }
 
-void Core_Hook::InitMap(Core_State& state, Core_System& system) 
+void Core_Hook::InitSources(Core_State& state, Core_System& system) 
 {
 	BlamOpenMap = std::make_unique<Hook_BlamOpenMap>(
 		Hook_BlamOpenMap_Dependencies{
@@ -56,19 +45,7 @@ void Core_Hook::InitMap(Core_State& state, Core_System& system)
 			.System_AOBScanner = *system.AOBScanner,
 			.System_Logs = *system.Logs,
 		});
-}
 
-void Core_Hook::InitGametype(Core_System& system) 
-{
-	GameEngineInit = std::make_unique<Hook_GameEngineInit>(
-		Hook_GameEngineInit_Dependencies{
-			.System_AOBScanner = *system.AOBScanner,
-			.System_Logs = *system.Logs,
-		});
-}
-
-void Core_Hook::InitObject(Core_State& state, Core_System& system) 
-{
 	ObjectTable = std::make_unique<Hook_ObjectTable>(
 		Hook_ObjectTable_Dependencies{
 			.State_ObjectTable = *state.ObjectTable,
@@ -89,10 +66,15 @@ void Core_Hook::InitObject(Core_State& state, Core_System& system)
 			.System_AOBScanner = *system.AOBScanner,
 			.System_Logs = *system.Logs,
 		});
-}
 
-void Core_Hook::InitPlayer(Core_State& state, Core_System& system) 
-{
+	InitRootNode = std::make_unique<Hook_InitRootNode>(
+		Hook_InitRootNode_Dependencies{
+			.State_BoneOffsets = *state.BoneOffsets,
+			.System_ObjectTable = *system.ObjectTable,
+			.System_AOBScanner = *system.AOBScanner,
+			.System_Logs = *system.Logs,
+		});
+
 	PlayerTable = std::make_unique<Hook_PlayerTable>(
 		Hook_PlayerTable_Dependencies{
 			.State_PlayerTable = *state.PlayerTable,
@@ -106,11 +88,7 @@ void Core_Hook::InitPlayer(Core_State& state, Core_System& system)
 			.System_AOBScanner = *system.AOBScanner,
 			.System_Logs = *system.Logs,
 		});
-}
 
-void Core_Hook::InitInteraction(Core_State& state,
-	Core_System& system)
-{
 	InteractionTable = std::make_unique<Hook_InteractionTable>(
 		Hook_InteractionTable_Dependencies{
 			.State_InteractionTable = *state.InteractionTable,
@@ -119,7 +97,19 @@ void Core_Hook::InitInteraction(Core_State& state,
 		});
 }
 
-void Core_Hook::InitInput(Core_State& state, Core_System& system,
+void Core_Hook::InitTick(Core_State& state,
+	Core_System& system, Core_UI& ui)
+{
+	SimulationTicks = std::make_unique<Hook_SimulationTicks>(
+		Hook_SimulationTicks_Dependencies{
+			.State_Telemetry = *state.Telemetry,
+			.State_Lifecycle = *state.Lifecycle,
+			.System_AOBScanner = *system.AOBScanner,
+			.System_Logs = *system.Logs,
+		});
+}
+
+void Core_Hook::InitOther(Core_State& state, Core_System& system,
 	Core_UI& ui)
 {
 	GetButtonState = std::make_unique<Hook_GetButtonState>(
@@ -132,23 +122,22 @@ void Core_Hook::InitInput(Core_State& state, Core_System& system,
 	GetRawInputData = std::make_unique<Hook_GetRawInputData>(
 		Hook_GetRawInputData_Dependencies{
 			.State_Settings = *state.Settings,
+			.State_FlyCamera = *state.FlyCamera,
 			.System_Logs = *system.Logs,
 			.UI_Launcher = *ui.Launcher,
 		});
-}
 
-void Core_Hook::InitLifecycle(Core_State& state,
-	Core_System& system, Core_UI& ui)
-{
 	EngineInitialize = std::make_unique<Hook_EngineInitialize>(
 		Hook_EngineInitialize_Dependencies{
 			.Hook_BlamOpenMap = *BlamOpenMap,
 			.Hook_ObjectTable = *ObjectTable,
 			.Hook_CreateObject = *CreateGameObject,
 			.Hook_ReleaseObject = *ReleaseGameObject,
+			.Hook_InitRootNode = *InitRootNode,
 			.Hook_PlayerTable = *PlayerTable,
 			.Hook_CreatePlayer = *CreatePlayer,
 			.Hook_InteractionTable = *InteractionTable,
+			.Hook_SimulationTicks = *SimulationTicks,
 			.Hook_GetButtonState = *GetButtonState,
 			.State_Lifecycle = *state.Lifecycle,
 			.System_AOBScanner = *system.AOBScanner,
@@ -160,7 +149,9 @@ void Core_Hook::InitLifecycle(Core_State& state,
 			.Hook_BlamOpenMap = *BlamOpenMap,
 			.Hook_CreateObject = *CreateGameObject,
 			.Hook_ReleaseObject = *ReleaseGameObject,
+			.Hook_InitRootNode = *InitRootNode,
 			.Hook_CreatePlayer = *CreatePlayer,
+			.Hook_SimulationTicks = *SimulationTicks,
 			.Hook_GetButtonState = *GetButtonState,
 			.State_Lifecycle = *state.Lifecycle,
 			.System_MapReader = *system.MapReader,
@@ -171,48 +162,52 @@ void Core_Hook::InitLifecycle(Core_State& state,
 			.System_Classifier = *system.Classifier,
 			.System_ObjectGraph = *system.ObjectGraph,
 			.System_PlayerGraph = *system.PlayerGraph,
-			.System_Navigation = *system.Navigation,
-			.System_Environment = *system.Environment,
-			.System_Interactable = *system.Interactable,
+			.System_WorldBuilder = *system.WorldBuilder,
+			.System_Collidables = *system.Collidables,
+			.System_StatsBuilder = *system.StatsBuilder,
+			.System_VitalityBuilder = *system.VitalityBuilder,
+			.System_Vitality = *system.Vitality,
+			.System_Self = *system.Self,
+			.System_Fixtures = *system.Fixtures,
+			.System_Affordances = *system.Affordances,
+			.System_MapRenderer = *system.MapRenderer,
 			.System_AOBScanner = *system.AOBScanner,
 			.System_Logs = *system.Logs,
 			.UI_ObjectTable = *ui.ObjectTable,
 			.UI_PlayerTable = *ui.PlayerTable,
-			.UI_Map = *ui.Map,
 		});
-}
 
-void Core_Hook::InitWindow(Core_State& state,
-	Core_System& system, Core_UI& ui)
-{
 	WndProc = std::make_unique<Hook_WndProc>(
 		Hook_WndProc_Dependencies{
 			.State_MemoryScanner = *state.Memory,
 			.State_Lifecycle = *state.Lifecycle,
 			.State_Settings = *state.Settings,
+			.State_FlyCamera = *state.FlyCamera,
+			.State_Selection = *state.Selection,
+			.State_OverlayMode = *state.OverlayMode,
 			.System_MemoryScanner = *system.MemoryScanner,
 			.System_Lifecycle = *system.Lifecycle,
 			.System_Logs = *system.Logs,
 			.UI_Launcher = *ui.Launcher,
 			.UI_Overlay = *ui.Overlay,
 		});
-}
 
-void Core_Hook::InitRender(Core_State& state,
-	Core_System& system, Core_UI& ui)
-{
 	Present = std::make_unique<Hook_Present>(
-		Hook_Present_Depedencies{
+		Hook_Present_Deps{
 			.Hook_GetRawInputData = *GetRawInputData,
 			.Hook_WndProc = *WndProc,
+			.State_WorldBuilder = *state.WorldBuilder,
+			.State_Tick = *state.Tick,
 			.State_Render = *state.Render,
+			.State_Telemetry = *state.Telemetry,
+			.State_Settings = *state.Settings,
 			.System_Render = *system.Render,
+			.System_MapRenderer = *system.MapRenderer,
 			.System_Logs = *system.Logs,
 			.UI_Launcher = *ui.Launcher,
 			.UI_Overlay = *ui.Overlay,
 			.UI_ObjectTable = *ui.ObjectTable,
 			.UI_PlayerTable = *ui.PlayerTable,
-			.UI_Map = *ui.Map,
 			.UI_Settings = *ui.Settings,
 			.UI_MemoryScanner = *ui.MemoryScanner,
 			.UI_Logs = *ui.Logs,
@@ -228,31 +223,16 @@ void Core_Hook::InitRender(Core_State& state,
 
 void Core_Hook::Deinitialize()
 {
-	this->DeinitMap();
-	this->DeinitGametype();
-	this->DeinitObject();
-	this->DeinitPlayer();
-	this->DeinitInteraction();
-	this->DeinitInput();
-	this->DeinitLifecycle();
-	this->DeinitWindow();
-	this->DeinitRender();
+	this->DeinitSources();
+	this->DeinitTick();
+	this->DeinitOther();
 }
 
-void Core_Hook::DeinitMap() 
+void Core_Hook::DeinitSources() 
 {
 	if (BlamOpenMap) BlamOpenMap->Uninstall();
 	BlamOpenMap.reset();
-}
 
-void Core_Hook::DeinitGametype() 
-{
-	if (GameEngineInit) GameEngineInit->Uninstall();
-	GameEngineInit.reset();
-}
-
-void Core_Hook::DeinitObject() 
-{
 	ObjectTable.reset();
 
 	if (CreateGameObject) CreateGameObject->Uninstall();
@@ -260,46 +240,37 @@ void Core_Hook::DeinitObject()
 
 	if (ReleaseGameObject) ReleaseGameObject->Uninstall();
 	ReleaseGameObject.reset();
-}
 
-void Core_Hook::DeinitPlayer() 
-{
 	PlayerTable.reset();
 
 	if (CreatePlayer) CreatePlayer->Uninstall();
 	CreatePlayer.reset();
-}
 
-void Core_Hook::DeinitInteraction()
-{
 	InteractionTable.reset();
 }
 
-void Core_Hook::DeinitInput()
+void Core_Hook::DeinitTick()
+{
+	if (SimulationTicks) SimulationTicks->Uninstall();
+	SimulationTicks.reset();
+}
+
+void Core_Hook::DeinitOther()
 {
 	if (GetRawInputData) GetRawInputData->Uninstall();
 	GetRawInputData.reset();
 
 	if (GetButtonState) GetButtonState->Uninstall();
 	GetButtonState.reset();
-}
 
-void Core_Hook::DeinitLifecycle()
-{
 	if (EngineInitialize) EngineInitialize->Uninstall();
 	EngineInitialize.reset();
 
 	if (DestroySubsystems) DestroySubsystems->Uninstall();
 	DestroySubsystems.reset();
-}
 
-void Core_Hook::DeinitWindow()
-{
 	WndProc.reset();
-}
 
-void Core_Hook::DeinitRender()
-{
 	if (Present) Present->Uninstall();
 	Present.reset();
 

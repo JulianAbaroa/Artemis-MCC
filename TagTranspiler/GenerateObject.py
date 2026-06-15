@@ -98,7 +98,7 @@ def GenerateDescriptorHeader(prefix: str, rootNodes: list[BlockNode], xmlSource:
     lines.append(f"#pragma once")
     lines.append(f"")
     lines.append(f"#include \"{prefix}Object.h\"")
-    lines.append(f"#include \"Core/Systems/MapReader/TagGroup/TagGroupReader.h\"")
+    lines.append(f"#include \"Core/Systems/Sources/MapReader/TagGroup/TagGroupReader.h\"")
     lines.append(f"")
     lines.append(f"template <>")
     lines.append(f"struct GroupDescriptor<{prefix}Object>")

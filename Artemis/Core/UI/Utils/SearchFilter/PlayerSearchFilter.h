@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Types/Player/LivePlayer.h"
+#include "Core/Types/Sources/Tables/Player/LivePlayer.h"
 
 #include <string>
 

@@ -2,12 +2,12 @@
 
 #include "UI_Logs.h"
 
-#include "Core/Types/Logs/LogTypes.h"
+#include "Core/Types/Other/Logs/LogTypes.h"
 
-#include "Core/States/Settings/State_Settings.h"
-#include "Core/States/Logs/State_Logs.h"
+#include "Core/States/Other/Settings/State_Settings.h"
+#include "Core/States/Other/Logs/State_Logs.h"
 
-#include "Core/Systems/Logs/System_Logs.h"
+#include "Core/Systems/Other/Logs/System_Logs.h"
 
 #include "External/imgui/imgui.h"
 

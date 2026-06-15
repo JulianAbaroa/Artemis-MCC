@@ -4,20 +4,20 @@
 
 class Hook_EngineInitialize;
 class Hook_DestroySubsystems;
-class Hook_GameEngineInit;
 class Hook_ResizeBuffers;
 class Hook_Present;
 class State_Lifecycle;
+class System_Telemetry;
 class System_Logs;
 
 struct Thread_Main_Dependencies
 {
 	Hook_EngineInitialize& Hook_EngineInitialize;
 	Hook_DestroySubsystems& Hook_DestroySubsystems;
-	Hook_GameEngineInit& Hook_GameEngineInit;
 	Hook_ResizeBuffers& Hook_ResizeBuffers;
 	Hook_Present& Hook_Present;
 	State_Lifecycle& State_Lifecycle;
+	System_Telemetry& System_Telemetry;
 	System_Logs& System_Logs;
 };
 

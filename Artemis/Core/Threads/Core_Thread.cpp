@@ -22,13 +22,12 @@ void Core_Thread::Initialize(Core_State& state,
 		Thread_Main_Dependencies{
 			.Hook_EngineInitialize = *hook.EngineInitialize,
 			.Hook_DestroySubsystems = *hook.DestroySubsystems,
-			.Hook_GameEngineInit = *hook.GameEngineInit,
 			.Hook_ResizeBuffers = *hook.ResizeBuffers,
 			.Hook_Present = *hook.Present,
 			.State_Lifecycle = *state.Lifecycle,
+			.System_Telemetry = *system.Telemetry,
 			.System_Logs = *system.Logs,
-		}
-	);
+		});
 
 	Input = std::make_unique<Thread_Input>(
 		Thread_Input_Dependencies {
@@ -36,28 +35,32 @@ void Core_Thread::Initialize(Core_State& state,
 			.State_Lifecycle = *state.Lifecycle,
 			.System_Input = *system.Input,
 			.System_Logs = *system.Logs,
-		}
-	);
+		});
 
 	AI = std::make_unique<Thread_AI>(
-		Thread_AI_Dependencies {
+		Thread_AI_Deps {
 			.State_MapReader = *state.MapReader,
-			.State_PlayerTable = *state.PlayerTable,
-			.State_Navigation = *state.Navigation,
+			.State_WorldBuilder = *state.WorldBuilder,
 			.State_Lifecycle = *state.Lifecycle,
+			.State_Telemetry = *state.Telemetry,
 			.System_TagGroupReader = *system.TagGroupReader,
+			.System_WorldBuilder = *system.WorldBuilder,
+			.System_StatsBuilder = *system.StatsBuilder,
+			.System_VitalityBuilder = *system.VitalityBuilder,
 			.System_ObjectTable = *system.ObjectTable,
 			.System_PlayerTable = *system.PlayerTable,
 			.System_InteractionTable = *system.InteractionTable,
 			.System_Classifier = *system.Classifier,
 			.System_ObjectGraph = *system.ObjectGraph,
 			.System_PlayerGraph = *system.PlayerGraph,
-			.System_Navigation = *system.Navigation,
-			.System_Environment = *system.Environment,
-			.System_Interactable = *system.Interactable,
+			.System_Collidables = *system.Collidables,
+			.System_Fixtures = *system.Fixtures,
+			.System_Affordances = *system.Affordances,
+			.System_Vitality = *system.Vitality,
+			.System_Self = *system.Self,
+			.System_Tick = *system.Tick,
 			.System_Logs = *system.Logs,
-		}
-	);
+		});
 }
 
 void Core_Thread::Deinitialize()

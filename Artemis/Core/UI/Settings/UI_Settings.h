@@ -12,7 +12,7 @@ class State_Settings;
 class System_Settings;
 class System_Logs;
 
-struct UI_Settings_Dependencies
+struct UI_Settings_Deps
 {
 	State_Render& State_Render;
 	State_Settings& State_Settings;
@@ -23,7 +23,7 @@ struct UI_Settings_Dependencies
 class UI_Settings : public UI_Tab
 {
 public:
-	UI_Settings(UI_Settings_Dependencies dependencies) :
+	UI_Settings(UI_Settings_Deps dependencies) :
 		m_Deps(dependencies) {}
 	~UI_Settings() = default;
 
@@ -32,7 +32,7 @@ public:
 	void DrawPathField(const char* label, const std::string& path, float widthOffset = 10.0f);
 
 private:
-	UI_Settings_Dependencies m_Deps;
+	UI_Settings_Deps m_Deps;
 
 	void DrawUserPreferences();
 	void DrawHotkeysTable();

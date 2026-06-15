@@ -12,7 +12,7 @@ enum class ScanMode : uint8_t;
 class State_MemoryScanner;
 class System_MemoryScanner;
 
-struct UI_MemoryScanner_Dependencies
+struct UI_MemoryScanner_Deps
 {
     State_MemoryScanner& State_MemoryScanner;
     System_MemoryScanner& System_MemoryScanner;
@@ -21,13 +21,13 @@ struct UI_MemoryScanner_Dependencies
 class UI_MemoryScanner : public UI_Tab
 {
 public:
-    UI_MemoryScanner(UI_MemoryScanner_Dependencies dependencies) :
+    UI_MemoryScanner(UI_MemoryScanner_Deps dependencies) :
         m_Deps(dependencies) {};
     ~UI_MemoryScanner() = default;
     void Draw();
 
 private:
-    UI_MemoryScanner_Dependencies m_Deps;
+    UI_MemoryScanner_Deps m_Deps;
 
     void DrawTopBar();
     void DrawRegionInputs();

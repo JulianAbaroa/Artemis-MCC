@@ -2,7 +2,9 @@
 
 #include "UI_ObjectTable.h"
 
-#include "Core/States/Tables/Object/State_ObjectTable.h"
+#include "Core/Types/Tick/Tick.h"
+
+#include "Core/States/Sources/Tables/Object/State_ObjectTable.h"
 
 #include "Core/UI/Utils/String/EnumToString.h"
 #include "Core/UI/Utils/Hex/HexFormater.h"
@@ -11,7 +13,7 @@
 
 #include <format>
 
-void UI_ObjectTable::Draw()
+void UI_ObjectTable::Draw(std::shared_ptr<const Tick> tick)
 {
 	if (!m_Visible) return;
 
@@ -23,22 +25,23 @@ void UI_ObjectTable::Draw()
 
 	ImGui::Begin("Object Table", &m_Visible, flags);
 
-	if (State_ObjectTable.HasChanged())
+	m_ObjectTable = tick ? tick->ObjectTable : nullptr;
+
+	if (m_ObjectTable)
 	{
-		m_CacheObjects = State_ObjectTable.GetObjectTable();
 		m_GroupedObjects.clear();
 
-		for (const auto& [handle, object] : m_CacheObjects)
+		if (m_ObjectTable)
 		{
-			m_GroupedObjects[object.FourCC].push_back(
-				&m_CacheObjects.at(handle));
+			for (const auto& [handle, object] : *m_ObjectTable)
+			{
+				m_GroupedObjects[object.FourCC].push_back(&object);
+			}
 		}
-
-		State_ObjectTable.SetChanged(false);
 	}
 
-	ImGui::TextDisabled("Live Objects Count: %d", 
-		m_CacheObjects.size());
+	const int count = m_ObjectTable ? static_cast<int>(m_ObjectTable->size()) : 0;
+	ImGui::TextDisabled("Live Objects Count: %d", count);
 	
 	ImGui::Separator();
 
@@ -187,6 +190,6 @@ void UI_ObjectTable::DrawCardFields(const LiveObject& object)
 
 void UI_ObjectTable::Cleanup()
 {
-	m_CacheObjects.clear();
+	m_ObjectTable.reset();
 	m_GroupedObjects.clear();
 }

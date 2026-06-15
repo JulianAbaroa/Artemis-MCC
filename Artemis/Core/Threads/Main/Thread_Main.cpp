@@ -2,17 +2,17 @@
 
 #include "Thread_Main.h"
 
-#include "Core/Types/EngineStatus.h"
+#include "Core/Types/Other/EngineStatus.h"
 
-#include "Core/Hooks/Lifecycle/Hook_EngineInitialize.h"
-#include "Core/Hooks/Lifecycle/Hook_DestroySubsystems.h"
-#include "Core/Hooks/Gametype/Hook_GameEngineInit.h"
-#include "Core/Hooks/Render/Hook_Present.h"
-#include "Core/Hooks/Render/Hook_ResizeBuffers.h"
+#include "Core/Hooks/Other/Lifecycle/Hook_EngineInitialize.h"
+#include "Core/Hooks/Other/Lifecycle/Hook_DestroySubsystems.h"
+#include "Core/Hooks/Other/Render/Hook_Present.h"
+#include "Core/Hooks/Other/Render/Hook_ResizeBuffers.h"
 
-#include "Core/States/Lifecycle/State_Lifecycle.h"
+#include "Core/States/Other/Lifecycle/State_Lifecycle.h"
 
-#include "Core/Systems/Logs/System_Logs.h"
+#include "Core/Systems/Other/Telemetry/System_Telemetry.h"
+#include "Core/Systems/Other/Logs/System_Logs.h"
 
 #include <chrono>
 
@@ -33,6 +33,7 @@ void Thread_Main::Run()
     while (m_Deps.State_Lifecycle.IsRunning())
     {
         this->CheckHooksHealth();
+        m_Deps.System_Telemetry.Update();
 
 		auto engineStatus = m_Deps.State_Lifecycle.GetEngineStatus();
         if (engineStatus == EngineStatus::Destroyed)
@@ -40,11 +41,16 @@ void Thread_Main::Run()
             m_Deps.System_Logs.Log("[MainThread] INFO:"
                 " Game engine destruction detected, resetting lifecycle.");
 
+            while (Hook_DestroySubsystems::s_InProgress.load(
+                std::memory_order_acquire))
+            {
+                std::this_thread::sleep_for(5ms);
+            }
+
             if (!this->IsStillRunning()) break;
 
             m_Deps.Hook_EngineInitialize.Uninstall();
             m_Deps.Hook_DestroySubsystems.Uninstall();
-            m_Deps.Hook_GameEngineInit.Uninstall();
 
             if (!this->IsStillRunning()) break;
 
@@ -68,7 +74,6 @@ void Thread_Main::Run()
 
     m_Deps.Hook_EngineInitialize.Uninstall();
     m_Deps.Hook_DestroySubsystems.Uninstall();
-    m_Deps.Hook_GameEngineInit.Uninstall();
 
     std::this_thread::sleep_for(200ms);
 
@@ -96,8 +101,7 @@ bool Thread_Main::InstallLifecycleHooks()
     while (m_Deps.State_Lifecycle.IsRunning())
     {
         if (m_Deps.Hook_EngineInitialize.Install() &&
-            m_Deps.Hook_DestroySubsystems.Install() &&
-            m_Deps.Hook_GameEngineInit.Install())
+            m_Deps.Hook_DestroySubsystems.Install())
         {
             return true;
         }
@@ -118,14 +122,18 @@ void Thread_Main::Shutdown()
 
 void Thread_Main::CheckHooksHealth()
 {
+    if (m_Deps.State_Lifecycle.GetEngineStatus() == 
+        EngineStatus::Destroyed) return;
+
+    if (Hook_DestroySubsystems::s_InProgress.load(
+        std::memory_order_acquire)) return;
+
     void* engiInitAddr = m_Deps.Hook_EngineInitialize.GetFunctionAddress();
     void* destSubsAddr = m_Deps.Hook_DestroySubsystems.GetFunctionAddress();
-    void* gameEngiInitAddr = m_Deps.Hook_GameEngineInit.GetFunctionAddress();
 
     bool areHooksIntact =
         !this->IsHookIntact(engiInitAddr) ||
-        !this->IsHookIntact(destSubsAddr) ||
-        !this->IsHookIntact(gameEngiInitAddr);
+        !this->IsHookIntact(destSubsAddr);
 
     if (areHooksIntact && m_Deps.State_Lifecycle.IsRunning())
     {

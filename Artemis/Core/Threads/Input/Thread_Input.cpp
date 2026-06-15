@@ -2,11 +2,11 @@
 
 #include "Thread_Input.h"
 
-#include "Core/States/Lifecycle/State_Lifecycle.h"
-#include "Core/States/Settings/State_Settings.h"
+#include "Core/States/Other/Lifecycle/State_Lifecycle.h"
+#include "Core/States/Other/Settings/State_Settings.h"
 
-#include "Core/Systems/Input/System_Input.h"
-#include "Core/Systems/Logs/System_Logs.h"
+#include "Core/Systems/Other/Input/System_Input.h"
+#include "Core/Systems/Other/Logs/System_Logs.h"
 
 #include <chrono>
 

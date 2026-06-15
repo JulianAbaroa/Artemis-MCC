@@ -21,6 +21,4 @@ public:
 protected:
 	bool m_Visible = false;
 	bool m_ResetRequested = false;
-
-    void CenterWindow();
 };

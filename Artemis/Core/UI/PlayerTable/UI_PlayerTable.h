@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Core/Types/Player/LivePlayer.h"
+#include "Core/Types/Sources/Tables/Player/LivePlayer.h"
+
+#include "Core/states/Sources/Tables/Player/State_PlayerTable.h"
 
 #include "Core/UI/Launcher/UI_Tab.h"
 
 #include "Core/UI/Utils/SearchFilter/PlayerSearchFilter.h"
 #include "Core/UI/Utils/Field/CopyableField.h"
 
-#include <unordered_map>
-
-class State_PlayerTable;
+struct Tick;
 
 class UI_PlayerTable : public UI_Tab
 {
@@ -18,13 +18,14 @@ public:
         State_PlayerTable(statePlayerTable) {}
     ~UI_PlayerTable() = default;
 
-	void Draw();
+	void Draw(std::shared_ptr<const Tick> tick);
+
 	void Cleanup();
 
 private:
     State_PlayerTable& State_PlayerTable;
 
-    std::unordered_map<uint32_t, LivePlayer> m_CachePlayers;
+    std::shared_ptr<const PlayerTable> m_PlayerTable;
     PlayerSearchFilter m_SearchFilter;
     CopyableField m_CopyableField;
 

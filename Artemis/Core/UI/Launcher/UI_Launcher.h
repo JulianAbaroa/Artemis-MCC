@@ -8,7 +8,7 @@ struct IconSet;
 class UI_Tab;
 class State_Render;
 
-struct UI_Launcher_Dependencies
+struct UI_Launcher_Deps
 {
     std::vector<UI_Tab*> Tabs;
     State_Render& State_Render;
@@ -17,8 +17,7 @@ struct UI_Launcher_Dependencies
 class UI_Launcher
 {
 public:
-    UI_Launcher(UI_Launcher_Dependencies dependencies) :
-        m_Deps(dependencies) {};
+    UI_Launcher(UI_Launcher_Deps deps) : m_Deps(deps) {};
     ~UI_Launcher() = default;
 
     static bool s_IsVisible;
@@ -35,13 +34,12 @@ public:
     void ResetTabs();
 
 private:
-    UI_Launcher_Dependencies m_Deps;
+    UI_Launcher_Deps m_Deps;
     
     struct IconSet
     {
         IconTexture Objects;
         IconTexture Players;
-        IconTexture Map;
         IconTexture Settings;
         IconTexture Scanner;
         IconTexture Logs;

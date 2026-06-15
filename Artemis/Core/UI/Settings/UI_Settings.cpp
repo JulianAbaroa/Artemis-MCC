@@ -2,12 +2,11 @@
 
 #include "UI_Settings.h"
 
-#include "Core/States/Render/State_Render.h"
-#include "Core/States/Settings/State_Settings.h"
+#include "Core/States/Other/Render/State_Render.h"
+#include "Core/States/Other/Settings/State_Settings.h"
 
-#include "Core/Systems/Settings/System_Settings.h"
-
-#include "Core/Systems/Logs/System_Logs.h"
+#include "Core/Systems/Other/Settings/System_Settings.h"
+#include "Core/Systems/Other/Logs/System_Logs.h"
 
 #include <algorithm>
 
@@ -199,6 +198,7 @@ void UI_Settings::DrawHotkeysTable()
 
 		this->DrawHotkeyRow("Toggle Launcher", "F2", "Show or hide the launcher.");
 		this->DrawHotkeyRow("Toggle Overlay", "F3", "Show or hide the Overlay.");
+		this->DrawHotkeyRow("Toggle Map", "F4", "Show or hide the Map.");
 		this->DrawHotkeyRow("Toggle Menu", "SHIFT + 1", "Show or hide the Artemis Control Panel.");
 		this->DrawHotkeyRow("Emergency Reset", "SHIFT + 2", "Centers the window if it gets lost off-screen.");
 		this->DrawHotkeyRow("Lock Menu", "SHIFT + 3", "Lock the menu position and disable mouse dragging.");

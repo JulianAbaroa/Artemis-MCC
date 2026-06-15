@@ -55,6 +55,18 @@ namespace TagName
 		}
 	}
 
+	namespace Powerup
+	{
+		constexpr const char* BluePowerup = "objects\\multi\\powerups\\powerup_blue\\powerup_blue";
+		constexpr const char* RedPowerup = "objects\\multi\\powerups\\powerup_red\\powerup_red";
+		constexpr const char* YellowPowerup = "objects\\multi\\powerups\\powerup_yellow\\powerup_yellow";
+
+		inline bool IsPowerup(const std::string& tag)
+		{
+			return tag == BluePowerup || tag == RedPowerup || tag == YellowPowerup;
+		}
+	}
+
 	namespace Spawn
 	{
 		constexpr const char* InvisibleRespawnPoint = "objects\\multi\\spawning\\respawn_point_invisible";
@@ -187,12 +199,17 @@ namespace TagName
 		constexpr const char* CapturePlate = "objects\\multi\\models\\mp_circle\\mp_circle";
 		constexpr const char* Bomb = "objects\\weapons\\multiplayer\\assault_bomb\\assault_bomb";
 
-		// Zone. (special case, still unsure on how to handle this)
+		// Zone.
 		constexpr const char* HillMarker = "objects\\multi\\models\\mp_hill_beacon\\mp_hill_beacon";
 
 		inline bool IsObjectiveSpawn(const std::string& tag)
 		{
 			return tag == FlagStand || tag == CapturePlate;
+		}
+
+		inline bool IsObjectiveZone(const std::string& tag)
+		{
+			return tag == HillMarker;
 		}
 
 		inline bool IsObjective(const std::string& tag)
@@ -306,7 +323,7 @@ namespace TagName
 	{
 		constexpr const char* AssaultRifle = "objects\\weapons\\rifle\\assault_rifle\\assault_rifle";
 		constexpr const char* DMR = "objects\\weapons\\rifle\\dmr\\dmr";
-		constexpr const char* GrenadeLauncher = "objects\\weapons\\rifle\\grenade_rifle\\grenade_rifle";
+		constexpr const char* GrenadeLauncher = "objects\\weapons\\rifle\\grenade_launcher\\grenade_launcher";
 		constexpr const char* Magnum = "objects\\weapons\\pistol\\magnum\\magnum";
 		constexpr const char* RocktetLauncher = "objects\\weapons\\support_high\\rocket_launcher\\rocket_launcher";
 		constexpr const char* Shotgun = "objects\\weapons\\rifle\\shotgun\\shotgun";
@@ -448,7 +465,7 @@ namespace TagName
 
 	namespace ControlDevice
 	{
-		constexpr const char* HealthStation = "objects\\devices\\human\\health_station\\health_station";
+		constexpr const char* HealthStation = "objects\\levels\\shared\\device_controls\\health_station\\health_station";
 
 		inline bool IsHealthStation(const std::string& tag)
 		{

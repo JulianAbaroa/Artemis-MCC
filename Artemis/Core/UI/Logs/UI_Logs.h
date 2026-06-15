@@ -18,7 +18,7 @@ class State_Settings;
 class State_Logs;
 class System_Logs;
 
-struct UI_Logs_Dependencies
+struct UI_Logs_Deps
 {
 	State_Settings& State_Settings;
 	State_Logs& State_Logs;
@@ -28,13 +28,13 @@ struct UI_Logs_Dependencies
 class UI_Logs : public UI_Tab
 {
 public:
-	UI_Logs(UI_Logs_Dependencies dependencies) : m_Deps(dependencies) {}
+	UI_Logs(UI_Logs_Deps dependencies) : m_Deps(dependencies) {}
 	~UI_Logs() = default;
 
 	void Draw();
 	
 private:
-	UI_Logs_Dependencies m_Deps;
+	UI_Logs_Deps m_Deps;
 
 	LogFilterState DrawTopBar();
 	void DrawClearButton(bool isFiltering, std::string& searchStr);

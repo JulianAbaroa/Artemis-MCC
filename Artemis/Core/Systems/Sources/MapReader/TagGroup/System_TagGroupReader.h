@@ -1,0 +1,70 @@
+#pragma once
+
+#include <cstdio>
+
+class TagGroupReader;
+
+class State_MapReader;
+template <typename TObject> class State_MapBipd; struct BipdObject;
+template <typename TObject> class State_MapBloc; struct BlocObject;
+template <typename TObject> class State_MapColl; struct CollObject;
+template <typename TObject> class State_MapCtrl; struct CtrlObject;
+template <typename TObject> class State_MapEqip; struct EqipObject;
+template <typename TObject> class State_MapHlmt; struct HlmtObject;
+template <typename TObject> class State_MapLbsp; struct LbspObject;
+template <typename TObject> class State_MapMach; struct MachObject;
+template <typename TObject> class State_MapMode; struct ModeObject;
+template <typename TObject> class State_MapPhmo; struct PhmoObject;
+template <typename TObject> class State_MapPlay; struct PlayObject;
+template <typename TObject> class State_MapProj; struct ProjObject;
+template <typename TObject> class State_MapSbsp; struct SbspObject;
+template <typename TObject> class State_MapScen; struct ScenObject;
+template <typename TObject> class State_MapScnr; struct ScnrObject;
+template <typename TObject> class State_MapSldt; struct SldtObject;
+template <typename TObject> class State_MapVehi; struct VehiObject;
+template <typename TObject> class State_MapWeap; struct WeapObject;
+template <typename TObject> class State_MapZone; struct ZoneObject;
+class System_MapReader;
+class System_Logs;
+
+struct Sys_TagGroupReader_Deps
+{
+    State_MapReader& State_MapReader;
+    State_MapBipd<BipdObject>& State_MapBipd;
+    State_MapBloc<BlocObject>& State_MapBloc;
+    State_MapColl<CollObject>& State_MapColl;
+    State_MapCtrl<CtrlObject>& State_MapCtrl;
+    State_MapEqip<EqipObject>& State_MapEqip;
+    State_MapHlmt<HlmtObject>& State_MapHlmt;
+    State_MapLbsp<LbspObject>& State_MapLbsp;
+    State_MapMach<MachObject>& State_MapMach;
+    State_MapMode<ModeObject>& State_MapMode;
+    State_MapPhmo<PhmoObject>& State_MapPhmo;
+    State_MapPlay<PlayObject>& State_MapPlay;
+    State_MapProj<ProjObject>& State_MapProj;
+    State_MapSbsp<SbspObject>& State_MapSbsp;
+    State_MapScen<ScenObject>& State_MapScen;
+    State_MapScnr<ScnrObject>& State_MapScnr;
+    State_MapSldt<SldtObject>& State_MapSldt;
+    State_MapVehi<VehiObject>& State_MapVehi;
+    State_MapWeap<WeapObject>& State_MapWeap;
+    State_MapZone<ZoneObject>& State_MapZone;
+    System_MapReader& System_MapReader;
+    System_Logs& System_Logs;
+};
+
+class System_TagGroupReader
+{
+public:
+    System_TagGroupReader(Sys_TagGroupReader_Deps deps) : m_Deps(deps) {}
+    ~System_TagGroupReader() = default;
+
+    void LoadForMap();
+
+    void Cleanup();
+
+private:
+    Sys_TagGroupReader_Deps m_Deps;
+
+    void LoadTags(FILE* file, TagGroupReader& reader);
+};

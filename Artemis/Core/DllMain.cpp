@@ -6,12 +6,12 @@
 #include "Proxy/ProxyExports.h"
 
 #include "States/Core_State.h"
-#include "States/Lifecycle/State_Lifecycle.h"
-#include "States/Settings/State_Settings.h"
+#include "States/Other/Lifecycle/State_Lifecycle.h"
+#include "States/Other/Settings/State_Settings.h"
 
 #include "Systems/Core_System.h"
-#include "Systems/Settings/System_Settings.h"
-#include "Systems/Logs/System_Logs.h"
+#include "Systems/Other/Settings/System_Settings.h"
+#include "Systems/Other/Logs/System_Logs.h"
 
 #include "Threads/Core_Thread.h"
 #include "Threads/Main/Thread_Main.h"
@@ -27,10 +27,6 @@
 
 // TODO: Refactor UI/Utils/
 // TODO: Make a Color Library for the UI.
-// TODO: It seems the object centers readed from .map files (phmo) 
-// are not always the real center that the game engine uses, making
-// some objects appear out-of-place from where they really are.
-// Maybe get them from the game's memory.
 
 DllInstance g_DllInstance;
 
@@ -123,21 +119,19 @@ DWORD WINAPI DllInstance::InitializeArtemis(LPVOID lpParam)
 
 void DllInstance::DeinitializeArtemis(LPVOID lpReserved)
 {
-    if (lpReserved == NULL)
+    m_Mod->System->Logs->Log("[DllMain] DETACH lpReserved=%p", lpReserved);
+
+    m_Mod->State->Lifecycle->SetRunning(false);
+
+    if (lpReserved != NULL)
     {
-        m_Mod->System->Logs->Log("[DllMain] INFO:"
-            " Deinitializing Artemis.");
-
-        m_Mod->State->Lifecycle->SetRunning(false);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        if (m_MainThread.joinable()) m_MainThread.detach();
-        if (m_InputThread.joinable()) m_InputThread.detach();
-        if (m_AIThread.joinable()) m_AIThread.detach();
-
-        m_Mod->Deinitialize();
-
-        MH_Uninitialize();
+        return;
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if (m_MainThread.joinable())  m_MainThread.detach();
+    if (m_InputThread.joinable()) m_InputThread.detach();
+    if (m_AIThread.joinable())    m_AIThread.detach();
+    m_Mod->Deinitialize();
+    MH_Uninitialize();
 }

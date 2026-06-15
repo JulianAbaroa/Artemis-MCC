@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Types/Object/LiveObject.h"
+#include "Core/Types/Sources/Tables/Object/LiveObject.h"
 
 #include <string>
 

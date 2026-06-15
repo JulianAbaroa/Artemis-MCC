@@ -6,7 +6,7 @@
 
 #include "Resources/Icons/IconData.h"
 #include "Core/UI/Utils/Icon/IconLoader.h"
-#include "Core/States/Render/State_Render.h"
+#include "Core/States/Other/Render/State_Render.h"
 
 #include "External/imgui/imgui.h"
 #include "External/imgui/imgui_internal.h"
@@ -43,7 +43,6 @@ void UI_Launcher::Draw()
     const IconTexture* icons[] = {
         &m_Icons.Objects,
         &m_Icons.Players,
-        &m_Icons.Map,
         &m_Icons.Settings,
         &m_Icons.Scanner,
         &m_Icons.Logs,
@@ -71,9 +70,6 @@ void UI_Launcher::LoadIcons()
 
     LoadIconFromMemory(device, Icons::Data::Players,
         Icons::Data::PlayersSize, m_Icons.Players);
-
-    LoadIconFromMemory(device, Icons::Data::Map,
-        Icons::Data::MapSize, m_Icons.Map);
 
     LoadIconFromMemory(device, Icons::Data::Settings,
         Icons::Data::SettingsSize, m_Icons.Settings);

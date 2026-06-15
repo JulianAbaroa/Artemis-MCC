@@ -2,13 +2,13 @@
 
 #include "UI_MemoryScanner.h"
 
-#include "Core/Types/Object/ObjectSizes.h"
-#include "Core/Types/Player/PlayerSizes.h"
-#include "Core/Types/Memory/MemoryScannerTypes.h"
+#include "Core/Types/Sources/Tables/Object/ObjectSizes.h"
+#include "Core/Types/Sources/Tables/Player/PlayerSizes.h"
+#include "Core/Types/Other/Memory/Scanner/MemoryScannerTypes.h"
 
-#include "Core/States/Memory/State_MemoryScanner.h"
+#include "Core/States/Other/Memory/State_MemoryScanner.h"
 
-#include "Core/Systems/Memory/MemoryScanner/System_MemoryScanner.h"
+#include "Core/Systems/Other/Memory/Scanner/System_MemoryScanner.h"
 
 #include "External/imgui/imgui_internal.h"
 #include "External/imgui/imgui.h"

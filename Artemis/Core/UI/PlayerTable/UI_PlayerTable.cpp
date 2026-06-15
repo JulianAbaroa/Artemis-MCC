@@ -2,7 +2,7 @@
 
 #include "UI_PlayerTable.h"
 
-#include "Core/states/Tables/Player/State_PlayerTable.h"
+#include "Core/Types/Tick/Tick.h"
 
 #include "Core/UI/Utils/Handle/HandleDrawer.h"
 #include "Core/UI/Utils/String/EnumToString.h"
@@ -13,7 +13,7 @@
 
 #include <format>
 
-void UI_PlayerTable::Draw()
+void UI_PlayerTable::Draw(std::shared_ptr<const Tick> tick)
 {
     if (!m_Visible) return;
 
@@ -25,19 +25,15 @@ void UI_PlayerTable::Draw()
 
     ImGui::Begin("Player Table", &m_Visible, flags);
 
-	if (State_PlayerTable.HasMapChanged())
-	{
-		m_CachePlayers = State_PlayerTable.GetPlayerTable();
-        State_PlayerTable.SetMapChanged(false);
-	}
+    m_PlayerTable = tick ? tick->PlayerTable : nullptr;
 
-	ImGui::TextDisabled("Live Players Count: %d", 
-        (int)m_CachePlayers.size());
+    const int count = m_PlayerTable ? 
+        static_cast<int>(m_PlayerTable->size()) : 0;
+
+    ImGui::TextDisabled("Live Players Count: %d", count);
 
 	ImGui::Separator();
-
     m_SearchFilter.DrawSearchBar();
-
     ImGui::Separator();
 
 	if (!ImGui::BeginChild("Players Region"))
@@ -51,13 +47,15 @@ void UI_PlayerTable::Draw()
         ImGui::GetWindowContentRegionMax().x;
 
     std::vector<const LivePlayer*> filtered;
-    filtered.reserve(m_CachePlayers.size());
-
-    for (const auto& [handle, player] : m_CachePlayers)
+    if (m_PlayerTable)
     {
-        if (m_SearchFilter.PassesFilter(player))
-        { 
-            filtered.push_back(&player);
+        filtered.reserve(m_PlayerTable->size());
+        for (const auto& [handle, player] : *m_PlayerTable)
+        {
+            if (m_SearchFilter.PassesFilter(player))
+            {
+                filtered.push_back(&player);
+            }
         }
     }
 
@@ -133,18 +131,6 @@ void UI_PlayerTable::DrawCardIdentity(const LivePlayer& player)
         "%s", EnumToString::TeamToString(player.Team));
 
     this->DrawConnectionStatus(player);
-
-    ImGui::Text("State:");
-    ImGui::SameLine();
-
-    if (player.IsAlive)
-    {
-        ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.4f, 1.0f), "Alive");
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), "Dead");
-    }
 
     ImGui::Unindent(5.0f);
 }
@@ -228,5 +214,5 @@ void UI_PlayerTable::DrawCardBiped(const LivePlayer& player)
 
 void UI_PlayerTable::Cleanup()
 {
-    m_CachePlayers.clear();
+    m_PlayerTable.reset();
 }
