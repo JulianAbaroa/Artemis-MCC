@@ -15,7 +15,7 @@ void State_Telemetry::RecordSimTick(int ticks, uint64_t durationNs)
 	m_SimNs.fetch_add(durationNs, std::memory_order_relaxed);
 }
 
-void State_Telemetry::RecordAISweep(uint64_t durationNs)
+void State_Telemetry::RecordTickTime(uint64_t durationNs)
 {
 	m_Sweeps.fetch_add(1, std::memory_order_relaxed);
 	m_SweepNs.fetch_add(durationNs, std::memory_order_relaxed);

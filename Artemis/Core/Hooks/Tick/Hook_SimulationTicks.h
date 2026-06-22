@@ -12,7 +12,7 @@ class State_Lifecycle;
 class System_AOBScanner;
 class System_Logs;
 
-struct Hook_SimulationTicks_Dependencies
+struct Hook_SimulationTicks_Deps
 {
 	State_Telemetry& State_Telemetry;
 	State_Lifecycle& State_Lifecycle;
@@ -23,33 +23,21 @@ struct Hook_SimulationTicks_Dependencies
 class Hook_SimulationTicks
 {
 public:
-	Hook_SimulationTicks(Hook_SimulationTicks_Dependencies dependencies) :
-		m_Deps(dependencies) {
-	}
+	Hook_SimulationTicks(Hook_SimulationTicks_Deps deps) : m_Deps(deps) {}
 	~Hook_SimulationTicks() = default;
 
 	void Install();
 	void Uninstall();
 
-	// --- Telemetry (Phase 1: measurement) ---
-	static inline std::atomic<uint64_t> s_FrameCount{ 0 };     // calls with n>0... see note
-	static inline std::atomic<uint64_t> s_CallCount{ 0 };      // all calls
-	static inline std::atomic<uint64_t> s_TickTotal{ 0 };      // sum of ticksToAdvance
-	static inline std::atomic<uint64_t> s_Hist0{ 0 };          // frames, 0 ticks
-	static inline std::atomic<uint64_t> s_Hist1{ 0 };          // frames, 1 tick
-	static inline std::atomic<uint64_t> s_Hist2{ 0 };          // frames, 2 ticks
-	static inline std::atomic<uint64_t> s_Hist3Plus{ 0 };      // frames, 3+ ticks
-	static inline std::atomic<uint64_t> s_DurationNsAccum{ 0 };// sum of original-call duration
-
 private:
 	static Hook_SimulationTicks* s_Instance;
-	Hook_SimulationTicks_Dependencies m_Deps;
+	Hook_SimulationTicks_Deps m_Deps;
 
 	static void __fastcall HookedSimulationTicks(
-		int ticksToAdvance, float* outRemainingTime);
+		int ticksToAdvance, float* param_2);
 
 	typedef void(__fastcall* SimulationTicks_t)(
-		int ticksToAdvance, float* outRemainingTime);
+		int ticksToAdvance, float* param_2);
 
 	static inline SimulationTicks_t m_OriginalFunction = nullptr;
 	std::atomic<void*> m_FunctionAddress{ nullptr };

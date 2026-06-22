@@ -1,6 +1,9 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
+
+using MilliSeconds = std::chrono::milliseconds;
 
 class Hook_BlamOpenMap;
 class Hook_CreateObject;

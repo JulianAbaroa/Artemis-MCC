@@ -44,52 +44,64 @@ void __fastcall Hook_DestroySubsystems::HookedDestroySubsystems(void)
 {
 	s_InProgress.store(true, std::memory_order_release);
 
-	s_Instance->m_Deps.State_Lifecycle.SetTearingDown(true);
-	s_Instance->m_Deps.State_Lifecycle.WakeTickWaiters();
+	auto& deps = s_Instance->m_Deps;
+	auto& lifecycle = deps.State_Lifecycle;
+	auto& logs = deps.System_Logs;
 
-	bool idle = s_Instance->m_Deps.State_Lifecycle.WaitForAIIdle(
-		std::chrono::milliseconds(50));
-	if (!idle)
+	lifecycle.SetStatus({ Status::TearingDown });
+	if (!lifecycle.WaitForLoadEnd(MilliSeconds(1000)))
+	{
+		logs.Log("[DestroySubsystems] WARNING:"
+			" Artemis resources load did not finish within timeout.");
+	}
+	if (!lifecycle.WaitForTickEnd(MilliSeconds(10)))
 	{ 
-		s_Instance->m_Deps.System_Logs.Log("[DestroySubsystems] WARN:"
-			" AI sweep did not finish within timeout; proceeding anyway.");
+		logs.Log("[DestroySubsystems] WARNING:"
+			" Artemis tick did not finish within timeout.");
 	}
 
-	s_Instance->m_Deps.Hook_BlamOpenMap.Uninstall();
-	s_Instance->m_Deps.Hook_CreateObject.Uninstall();
-	s_Instance->m_Deps.Hook_ReleaseObject.Uninstall();
-	s_Instance->m_Deps.Hook_InitRootNode.Uninstall();
-	s_Instance->m_Deps.Hook_CreatePlayer.Uninstall();
-	s_Instance->m_Deps.Hook_SimulationTicks.Uninstall();
+	// --- Layer 0: Sources ---
+	deps.Hook_BlamOpenMap.Uninstall();
+	deps.Hook_CreateObject.Uninstall();
+	deps.Hook_ReleaseObject.Uninstall();
+	deps.Hook_InitRootNode.Uninstall();
+	deps.Hook_CreatePlayer.Uninstall();
+	deps.Hook_SimulationTicks.Uninstall();
+	
+	deps.System_MapReader.Cleanup();
+	deps.System_TagGroup.Cleanup();
+	deps.System_ObjectTable.Cleanup();
+	deps.System_PlayerTable.Cleanup();
+	deps.System_InteractionTable.Cleanup();
+	deps.System_WorldBuilder.Cleanup();
+	deps.System_StatsBuilder.Cleanup();
+	deps.System_VitalityBuilder.Cleanup();
 
-	s_Instance->m_Deps.System_MapReader.Cleanup();
-	s_Instance->m_Deps.System_TagGroup.Cleanup();
-	s_Instance->m_Deps.System_ObjectTable.Cleanup();
-	s_Instance->m_Deps.System_PlayerTable.Cleanup();
-	s_Instance->m_Deps.System_InteractionTable.Cleanup();
-	s_Instance->m_Deps.System_Classifier.Cleanup();
-	s_Instance->m_Deps.System_ObjectGraph.Cleanup();
-	s_Instance->m_Deps.System_PlayerGraph.Cleanup();
-	s_Instance->m_Deps.System_Collidables.Cleanup();
-	s_Instance->m_Deps.System_WorldBuilder.Cleanup();
-	s_Instance->m_Deps.System_StatsBuilder.Cleanup();
-	s_Instance->m_Deps.System_VitalityBuilder.Cleanup();
-	s_Instance->m_Deps.System_Vitality.Cleanup();
-	s_Instance->m_Deps.System_Self.Cleanup();
-	s_Instance->m_Deps.System_Fixtures.Cleanup();
-	s_Instance->m_Deps.System_Affordances.Cleanup();
-	s_Instance->m_Deps.System_MapRenderer.ReleaseMapMesh();
+	// --- Layer 1: Structure ---
+	deps.System_Classifier.Cleanup();
+	deps.System_ObjectGraph.Cleanup();
+	deps.System_PlayerGraph.Cleanup();
 
-	s_Instance->m_Deps.UI_ObjectTable.Cleanup();
-	s_Instance->m_Deps.UI_PlayerTable.Cleanup();
+	// --- Layer 2: Environment ---
+	deps.System_Collidables.Cleanup();
+	deps.System_Fixtures.Cleanup();
+	deps.System_Vitality.Cleanup();
+
+	// --- Layer 3: Egocentric ---
+	deps.System_Self.Cleanup();
+	deps.System_Affordances.Cleanup();
+
+	// Other.
+	deps.System_MapRenderer.ReleaseMapMesh();
+
+	deps.UI_ObjectTable.Cleanup();
+	deps.UI_PlayerTable.Cleanup();
 
 	m_OriginalFunction();
 
-	s_Instance->m_Deps.State_Lifecycle.SetEngineStatus({ EngineStatus::Destroyed });
-	s_Instance->m_Deps.State_Lifecycle.SetTearingDown(false);
+	lifecycle.SetStatus({ Status::Destroyed });
 
-	s_Instance->m_Deps.System_Logs.Log("[DestroySubsystems] INFO:"
-		" Game engine destroyed.");
+	logs.Log("[DestroySubsystems] INFO: Game engine destroyed.");
 
 	s_InProgress.store(false, std::memory_order_release);
 }

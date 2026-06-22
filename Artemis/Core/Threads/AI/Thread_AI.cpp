@@ -35,78 +35,126 @@ void Thread_AI::Run()
 	auto& telemetry = m_Deps.State_Telemetry;
 	auto& mapReader = m_Deps.State_MapReader;
 
-	uint64_t lastSeen = 0;
-
 	while (lifecycle.IsRunning())
 	{
-		if (mapReader.IsLoaded() && !m_WasLoaded)
+		auto status = lifecycle.GetStatus();
+
+		switch (status)
 		{
-			lastSeen = lifecycle.GetTickGen();
+		case Status::Waiting:
+			break;
 
-			// --- Layer 0: Sources ---
-			m_Deps.System_TagGroupReader.LoadForMap();
-			m_Deps.System_WorldBuilder.BuildForMap();
-			m_Deps.System_StatsBuilder.BuildForMap();
-			m_Deps.System_VitalityBuilder.BuildForMap();
-			m_WasLoaded = true;
+		case Status::Initialized:
+			if (mapReader.IsLoaded() && !m_WasLoaded)
+			{
+				lifecycle.BeginLoad();
+				if (!this->IsStable())
+				{
+					lifecycle.EndLoad();
+					break;
+				}
 
-			lastSeen = lifecycle.GetTickGen();
+				this->LoadResources();
+				lifecycle.EndLoad();
+
+				m_WasLoaded = true;
+			}
+			break;
+
+		case Status::Running:
+		{
+			uint64_t current = lifecycle.WaitForTick(m_Last, m_Dropped);
+			m_Last = current;
+
+			if (m_Dropped > 0) telemetry.RecordDroppedTicks(m_Dropped);
+			m_Dropped = 0;
+
+			lifecycle.BeginTick();
+			if (!this->IsStable())
+			{
+				lifecycle.EndTick();
+				break;
+			}
+
+			std::chrono::time_point tickStart = SteadyClock::now();
+
+			this->ExecuteTick();
+
+			m_Deps.System_Tick.Assemble(current);
+
+			std::chrono::time_point tickEnd = SteadyClock::now();
+			lifecycle.EndTick();
+
+			telemetry.RecordTickTime(
+				std::chrono::duration_cast<NanoSeconds>(
+					tickEnd - tickStart).count());
+			break;
 		}
 
-		if (!m_WasLoaded)
-		{
-			std::this_thread::sleep_for(50ms);
-			continue;
+		case Status::TearingDown:
+			this->Reset();
+			lifecycle.WaitForBlam();
+			break;
+
+		case Status::Destroyed:
+			break;
 		}
-
-		uint64_t dropped = 0;
-		uint64_t generation = lifecycle.WaitForTick(lastSeen, dropped);
-		lastSeen = generation;
-
-		if (!lifecycle.IsRunning()) break;
-
-		if (lifecycle.IsTearingDown() ||
-			lifecycle.GetEngineStatus() == EngineStatus::Destroyed ||
-			!mapReader.IsLoaded())
-		{
-			m_WasLoaded = false;
-			continue;
-		}
-
-		if (dropped > 0) telemetry.RecordDroppedTicks(dropped);
-
-		lifecycle.BeginAISweep();
-		auto sweepStart = SteadyClock::now();
-
-		// --- Layer 0: Sources ---
-		m_Deps.System_ObjectTable.UpdateObjectTable();
-		m_Deps.System_PlayerTable.UpdatePlayerTable();
-		m_Deps.System_InteractionTable.UpdateInteractionTable();
-
-		// --- Layer 1: Structure ---
-		m_Deps.System_Classifier.UpdateClassification();
-		m_Deps.System_ObjectGraph.UpdateGraph();
-		m_Deps.System_PlayerGraph.UpdateGraph();
-
-		// --- Layer 2: Environment ---
-		m_Deps.System_Collidables.Update();
-		m_Deps.System_Fixtures.Update();
-		m_Deps.System_Vitality.Update();
-
-		// --- Layer 3: Egocentric ---
-		m_Deps.System_Self.Update();
-		m_Deps.System_Affordances.Update();
-
-		// Tick.
-		m_Deps.System_Tick.Assemble(generation);
-
-		auto sweepEnd = SteadyClock::now();
-		lifecycle.EndAISweep();
-
-		telemetry.RecordAISweep(
-			std::chrono::duration_cast<NanoSeconds>(
-				sweepEnd - sweepStart).count());
 	}
 
 	m_Deps.System_Logs.Log("[AIThread] INFO: Stopped.");
+}
+
+void Thread_AI::LoadResources()
+{
+	auto& lifecycle = m_Deps.State_Lifecycle;
+
+	// --- Layer 0: Sources ---
+	m_Deps.System_TagGroupReader.LoadForMap();
+	m_Deps.System_WorldBuilder.BuildForMap();
+	m_Deps.System_StatsBuilder.BuildForMap();
+	m_Deps.System_VitalityBuilder.BuildForMap();
+}
+
+void Thread_AI::ExecuteTick()
+{
+	// --- Layer 0: Sources ---
+	m_Deps.System_ObjectTable.UpdateObjectTable();
+	m_Deps.System_PlayerTable.UpdatePlayerTable();
+	m_Deps.System_InteractionTable.UpdateInteractionTable();
+
+	// --- Layer 1: Structure ---
+	m_Deps.System_Classifier.UpdateClassification();
+	m_Deps.System_ObjectGraph.UpdateGraph();
+	m_Deps.System_PlayerGraph.UpdateGraph();
+
+	// --- Layer 2: Environment ---
+	m_Deps.System_Collidables.Update();
+	m_Deps.System_Fixtures.Update();
+	m_Deps.System_Vitality.Update();
+
+	// --- Layer 3: Egocentric ---
+	m_Deps.System_Self.Update();
+	m_Deps.System_Affordances.Update();
+}
+
+bool Thread_AI::IsStable()
+{
+	auto& lifecycle = m_Deps.State_Lifecycle;
+
+	if (!lifecycle.IsRunning() ||
+		lifecycle.GetStatus() == Status::TearingDown)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void Thread_AI::Reset()
+{
+	auto& lifecycle = m_Deps.State_Lifecycle;
+
+	lifecycle.ResetTickGeneration();
+	m_WasLoaded = false;
+	m_Last = 0;
 }

@@ -13,7 +13,7 @@
 
 namespace
 {
-    constexpr float kFillAlpha = 0.50f;
+    constexpr float kFillAlpha = 1.0f;
 }
 
 bool GpuPipeline::Init(ID3D11Device* device, System_Logs& logs)
@@ -148,9 +148,11 @@ bool GpuPipeline::CreateStates(ID3D11Device* device, System_Logs& logs)
     }
 
     rs.FillMode = D3D11_FILL_WIREFRAME;
-    rs.DepthBias = 0;
-    rs.SlopeScaledDepthBias = 0.0f;
+    rs.DepthBias = -16;
+    rs.SlopeScaledDepthBias = -0.5f;
     rs.DepthBiasClamp = 0.0f;
+    rs.AntialiasedLineEnable = TRUE;
+    rs.MultisampleEnable = FALSE;
     if (FAILED(device->CreateRasterizerState(&rs, &m_RasterWire)))
     {
         logs.Log("[GpuPipeline] ERROR: wire rasterizer failed.");
@@ -176,6 +178,22 @@ bool GpuPipeline::CreateStates(ID3D11Device* device, System_Logs& logs)
         return false;
     }
 
+    ds.DepthEnable = FALSE;
+    if (FAILED(device->CreateDepthStencilState(&ds, &m_DepthDisabled)))
+    {
+        logs.Log("[GpuPipeline] ERROR: depth-disabled state failed.");
+        return false;
+    }
+
+    D3D11_BLEND_DESC bsOpaque = {};
+    bsOpaque.RenderTarget[0].BlendEnable = FALSE;
+    bsOpaque.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    if (FAILED(device->CreateBlendState(&bsOpaque, &m_BlendOpaque)))
+    {
+        logs.Log("[GpuPipeline] ERROR: opaque blend state failed.");
+        return false;
+    }
+
     D3D11_BLEND_DESC bs = {};
     bs.AlphaToCoverageEnable = FALSE;
     bs.IndependentBlendEnable = FALSE;
@@ -187,7 +205,6 @@ bool GpuPipeline::CreateStates(ID3D11Device* device, System_Logs& logs)
     bs.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     bs.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
     bs.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
     if (FAILED(device->CreateBlendState(&bs, &m_BlendState)))
     {
         logs.Log("[GpuPipeline] ERROR: blend state failed.");
@@ -223,8 +240,7 @@ void GpuPipeline::UpdateTint(ID3D11DeviceContext* ctx, Fill fill)
 {
     if (!ctx || !m_TintCB) return;
 
-    const float alpha = (fill == Fill::Solid) ? kFillAlpha : (fill == Fill::Wire) ? 1.0f : 1.0f;
-    const float data[4] = { alpha, 0.0f, 0.0f, 0.0f };
+    const float data[4] = { kFillAlpha, 0.0f, 0.0f, 0.0f };
 
     D3D11_MAPPED_SUBRESOURCE mapped;
     if (SUCCEEDED(ctx->Map(m_TintCB, 0,
@@ -242,12 +258,13 @@ void GpuPipeline::Bind(ID3D11DeviceContext* ctx, Fill fill)
     UpdateTint(ctx, fill);
 
     const float bf[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    ID3D11BlendState* blend =
-        (fill == Fill::DepthPrime) ? m_BlendNoColor : m_BlendState;
+
+    ID3D11BlendState* blend = (fill == Fill::Wire) ? m_BlendState : m_BlendOpaque;
     ctx->OMSetBlendState(blend, bf, 0xffffffff);
 
-    ID3D11DepthStencilState* depth =
-        (fill == Fill::DepthPrime) ? m_DepthWrite : m_DepthNoWrite;
+    ID3D11DepthStencilState* depth;
+    if (fill == Fill::Wire) depth = m_DepthNoWrite;
+    else depth = m_DepthWrite;
     ctx->OMSetDepthStencilState(depth, 0);
 
     ID3D11RasterizerState* raster =
@@ -272,8 +289,10 @@ void GpuPipeline::Release()
     rel(m_InputLayout);
     rel(m_BlendState);
     rel(m_BlendNoColor);
+    rel(m_BlendOpaque);
     rel(m_DepthNoWrite);
     rel(m_DepthWrite);
+    rel(m_DepthDisabled);
     rel(m_RasterWire);
     rel(m_RasterSolid);
     rel(m_PS);

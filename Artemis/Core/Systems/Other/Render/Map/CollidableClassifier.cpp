@@ -9,26 +9,26 @@
 
 namespace
 {
-    constexpr RgbColor kCollidable = { 0.27f, 0.51f, 0.33f };
-    constexpr RgbColor kVitality = { 0.95f, 0.82f, 0.29f };
-    constexpr RgbColor kAffordance = { 0.88f, 0.32f, 0.77f };
+    constexpr RgbColor kCollidable = { 0.37f, 0.55f, 0.40f };
+    constexpr RgbColor kVitality = { 0.84f, 0.70f, 0.36f };
+    constexpr RgbColor kAffordance = { 0.66f, 0.44f, 0.72f };
     constexpr RgbColor kSelected = { 1.0f,  1.0f,  1.0f };
 
-    constexpr RgbColor kObstacle = { 0.27f, 0.51f, 0.33f };
-    constexpr RgbColor kTeleporter = { 0.20f, 0.80f, 0.78f };
-    constexpr RgbColor kShield = { 0.93f, 0.26f, 0.60f };
-    constexpr RgbColor kLift = { 0.18f, 0.35f, 0.95f };
-    constexpr RgbColor kDestructible = { 0.93f, 0.35f, 0.13f };
+    constexpr RgbColor kObstacle = { 0.37f, 0.55f, 0.40f };
+    constexpr RgbColor kTeleporter = { 0.32f, 0.66f, 0.62f };
+    constexpr RgbColor kShield = { 0.77f, 0.40f, 0.54f };
+    constexpr RgbColor kLift = { 0.36f, 0.49f, 0.77f };
+    constexpr RgbColor kDestructible = { 0.80f, 0.46f, 0.32f };
 
-    constexpr RgbColor kTeamRed = { 0.85f, 0.20f, 0.20f };
-    constexpr RgbColor kTeamBlue = { 0.22f, 0.40f, 0.90f };
-    constexpr RgbColor kTeamGreen = { 0.25f, 0.75f, 0.30f };
-    constexpr RgbColor kTeamOrange = { 0.94f, 0.54f, 0.19f };
-    constexpr RgbColor kTeamPurple = { 0.60f, 0.30f, 0.85f };
-    constexpr RgbColor kTeamGold = { 0.92f, 0.75f, 0.15f };
-    constexpr RgbColor kTeamBrown = { 0.55f, 0.36f, 0.20f };
-    constexpr RgbColor kTeamPink = { 0.95f, 0.55f, 0.75f };
-    constexpr RgbColor kTeamNeutral = { 0.60f, 0.60f, 0.60f };
+    constexpr RgbColor kTeamRed = { 0.77f, 0.31f, 0.31f };
+    constexpr RgbColor kTeamBlue = { 0.31f, 0.45f, 0.74f };
+    constexpr RgbColor kTeamGreen = { 0.36f, 0.66f, 0.41f };
+    constexpr RgbColor kTeamOrange = { 0.83f, 0.56f, 0.28f };
+    constexpr RgbColor kTeamPurple = { 0.59f, 0.41f, 0.75f };
+    constexpr RgbColor kTeamGold = { 0.84f, 0.71f, 0.35f };
+    constexpr RgbColor kTeamBrown = { 0.59f, 0.45f, 0.33f };
+    constexpr RgbColor kTeamPink = { 0.81f, 0.55f, 0.67f };
+    constexpr RgbColor kTeamNeutral = { 0.55f, 0.55f, 0.55f };
 
     RgbColor ColorForTeam(Team team)
     {

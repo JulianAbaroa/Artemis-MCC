@@ -9,7 +9,9 @@ bool State_Lifecycle::IsRunning() const
 
 void State_Lifecycle::SetRunning(bool value) 
 { 
-	m_IsRunning.store(value); 
+	m_IsRunning.store(value);
+
+	if (!value) this->WakeTickWaiters();
 }
 
 HMODULE State_Lifecycle::GetHandleModule() const 
@@ -22,85 +24,135 @@ void State_Lifecycle::SetHandleModule(HMODULE value)
 	m_HandleModule.store(value); 
 }
 
-EngineStatus State_Lifecycle::GetEngineStatus() const 
+Status State_Lifecycle::GetStatus() const 
 { 
-	return m_EngineStatus.load(); 
+	return m_Status.load(std::memory_order_acquire); 
 }
 
-void State_Lifecycle::SetEngineStatus(EngineStatus value) 
+void State_Lifecycle::SetStatus(Status value) 
 { 
-	m_EngineStatus.store(value); 
+	m_Status.store(value, std::memory_order_release); 
+
+	if (value == Status::TearingDown) this->WakeTickWaiters();
+	if (value == Status::Initialized) this->WakeBlamWaiters();
+}
+
+std::mutex& State_Lifecycle::GetShutdownMutex() const
+{
+	return m_ShutdownMutex;
+}
+
+std::condition_variable& State_Lifecycle::GetShutdownCV() const
+{
+	return m_ShutdownCV;
 }
 
 void State_Lifecycle::SignalTick()
 {
-	m_TickGen.fetch_add(1, std::memory_order_release);
-	m_TickCv.notify_one();
+	// Release ensures all of Blam's logic-tick writes are visible to the
+	// AI thread before it observes the incremented counter, otherwise 
+	// the AI thread could see the new tick but still read the previous
+	// tick's data.
+	m_TickGeneration.fetch_add(1, std::memory_order_release);
+	m_TickCV.notify_one();
 }
 
-uint64_t State_Lifecycle::WaitForTick(
-	uint64_t lastSeen, uint64_t& droppedOut)
+uint64_t State_Lifecycle::WaitForTick(uint64_t last, uint64_t& dropped)
 {
-	std::unique_lock<std::mutex> lock(m_TickMtx);
+	// The use of a mutex under unique lock is necessary to make the
+	// predicate evaluation and the lock of the AI thread atomic. 
+	std::unique_lock<std::mutex> lock(m_TickMutex);
 
-	m_TickCv.wait(lock, [&] {
-		return m_TickGen.load(std::memory_order_acquire) != 
-			lastSeen || !this->IsRunning() || this->IsTearingDown();
-		});
+	// Acquire ensures that all the Blam's logic-tick data is visible 
+	// from the AI thread when the tick generation is loaded.
+	m_TickCV.wait(lock, [&] {
+		return m_TickGeneration.load(std::memory_order_acquire) > last ||
+			m_Status.load(std::memory_order_acquire) == 
+			Status::TearingDown || !m_IsRunning.load();
+	});
 
-	uint64_t gen = m_TickGen.load(std::memory_order_acquire);
-	droppedOut = (gen > lastSeen) ? (gen - lastSeen - 1) : 0;
-	return gen;
+	uint64_t generation = m_TickGeneration.load(std::memory_order_acquire);
+
+	// The expected difference between generation and last is one,
+	// and that difference must not be counted as a drop.
+	dropped = (generation > last) ? 
+		generation - last - k_ExpectedSkips : 0;
+
+	return generation;
 }
 
 void State_Lifecycle::WakeTickWaiters()
 {
-	m_TickCv.notify_all();
+	m_TickCV.notify_all();
 }
 
-uint64_t State_Lifecycle::GetTickGen() const
+uint64_t State_Lifecycle::GetTickGeneration() const
 {
-	return m_TickGen.load(std::memory_order_acquire);
+	return m_TickGeneration.load();
 }
 
-void State_Lifecycle::BeginAISweep() 
-{ 
-	m_AISweepActive.store(true, std::memory_order_release); 
-}
-
-void State_Lifecycle::EndAISweep() 
-{ 
-	m_AISweepActive.store(false, std::memory_order_release); 
-}
-
-bool State_Lifecycle::WaitForAIIdle(std::chrono::milliseconds timeout)
+void State_Lifecycle::ResetTickGeneration()
 {
-	auto deadline = std::chrono::steady_clock::now() + timeout;
-	while (m_AISweepActive.load(std::memory_order_acquire))
+	m_TickGeneration.store(0);
+}
+
+void State_Lifecycle::BeginTick() 
+{ 
+	m_IsTickActive.store(true); 
+}
+
+void State_Lifecycle::EndTick() 
+{ 
+	m_IsTickActive.store(false); 
+}
+
+bool State_Lifecycle::WaitForTickEnd(MilliSeconds timeout)
+{
+	auto deadline = SteadyClock::now() + timeout;
+
+	while (m_IsTickActive.load())
 	{
-		if (std::chrono::steady_clock::now() >= deadline)
-			return false;
-		std::this_thread::sleep_for(std::chrono::microseconds(100));
+		if (SteadyClock::now() >= deadline) return false;
+		std::this_thread::sleep_for(MicroSeconds(100));
 	}
+
 	return true;
 }
 
-void State_Lifecycle::SetTearingDown(bool v)
-{ 
-	m_EngineTearingDown.store(v, std::memory_order_release); 
+void State_Lifecycle::WaitForBlam()
+{
+	std::unique_lock<std::mutex> lock(m_BlamMutex);
+
+	m_BlamCV.wait(lock, [&] {
+		return m_Status.load(std::memory_order_acquire) == 
+			Status::Initialized || !m_IsRunning.load();
+	});
 }
 
-bool State_Lifecycle::IsTearingDown() const 
-{ 
-	return m_EngineTearingDown.load(std::memory_order_acquire); 
+void State_Lifecycle::WakeBlamWaiters()
+{
+	m_BlamCV.notify_all();
 }
 
-std::mutex& State_Lifecycle::GetMutex() const 
-{ 
-	return m_Mutex; 
+void State_Lifecycle::BeginLoad()
+{
+	m_IsLoadActive.store(true);
 }
 
-std::condition_variable& State_Lifecycle::GetCV() const 
-{ 
-	return m_ShutdownCV; 
+void State_Lifecycle::EndLoad()
+{
+	m_IsLoadActive.store(false);
+}
+
+bool State_Lifecycle::WaitForLoadEnd(MilliSeconds timeout)
+{
+	auto deadline = SteadyClock::now() + timeout;
+
+	while (m_IsLoadActive.load())
+	{
+		if (SteadyClock::now() >= deadline) return false;
+		std::this_thread::sleep_for(MicroSeconds(100));
+	}
+
+	return true;
 }

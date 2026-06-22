@@ -12,9 +12,9 @@ void System_Lifecycle::SignalShutdown()
 
 	{
 		std::lock_guard<std::mutex>	lock(
-			m_Deps.State_Lifecycle.GetMutex());
+			m_Deps.State_Lifecycle.GetShutdownMutex());
 
-		m_Deps.State_Lifecycle.GetCV().notify_all();
+		m_Deps.State_Lifecycle.GetShutdownCV().notify_all();
 	}
 
 	m_Deps.System_Logs.Log("[LifecycleSystem] WARNING:"

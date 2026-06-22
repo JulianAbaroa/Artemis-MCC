@@ -37,8 +37,8 @@ void __fastcall Hook_EngineInitialize::HookedEngineInitialize(void)
 	s_Instance->m_Deps.Hook_PlayerTable.FindAndStoreTableBase();
 	s_Instance->m_Deps.Hook_InteractionTable.FindAndStoreTableBase();
 	
-	s_Instance->m_Deps.State_Lifecycle.SetEngineStatus(
-		{ EngineStatus::Running });
+	s_Instance->m_Deps.State_Lifecycle.SetStatus(
+		{ Status::Initialized });
 
 	s_Instance->m_Deps.System_Logs.Log("[EngineInitialize] INFO:"
 		" Game engine initialized.");

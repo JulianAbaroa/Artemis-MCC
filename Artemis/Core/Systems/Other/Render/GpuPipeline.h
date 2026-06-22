@@ -51,7 +51,9 @@ private:
 
     ID3D11DepthStencilState* m_DepthWrite = nullptr;
     ID3D11DepthStencilState* m_DepthNoWrite = nullptr;
+    ID3D11DepthStencilState* m_DepthDisabled = nullptr;
 
     ID3D11BlendState* m_BlendState = nullptr;
     ID3D11BlendState* m_BlendNoColor = nullptr;
+    ID3D11BlendState* m_BlendOpaque = nullptr;
 };

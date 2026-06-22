@@ -13,9 +13,9 @@
 
 namespace
 {
-    constexpr float kMapR = 0.45f;
-    constexpr float kMapG = 0.78f;
-    constexpr float kMapB = 0.96f;
+    constexpr float kMapR = 0.34f;
+    constexpr float kMapG = 0.52f;
+    constexpr float kMapB = 0.64f;
 }
 
 void MapPass::Upload(ID3D11Device* device,

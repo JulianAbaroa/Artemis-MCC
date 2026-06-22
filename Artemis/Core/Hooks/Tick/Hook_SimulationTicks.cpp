@@ -13,10 +13,12 @@
 #include "External/minhook/include/MinHook.h"
 
 void Hook_SimulationTicks::HookedSimulationTicks(
-	int ticksToAdvance, float* outRemainingTime)
+	int ticksToAdvance, float* param_2)
 {
+	s_Instance->m_Deps.State_Lifecycle.SetStatus({ Status::Running });
+
 	auto start = SteadyClock::now();
-	m_OriginalFunction(ticksToAdvance, outRemainingTime);
+	m_OriginalFunction(ticksToAdvance, param_2);
 	auto end = SteadyClock::now();
 
 	auto elapsed = end - start;

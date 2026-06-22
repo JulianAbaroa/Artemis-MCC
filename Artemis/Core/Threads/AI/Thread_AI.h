@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <chrono>
 #include <memory>
 
@@ -59,10 +60,48 @@ public:
 	Thread_AI(Thread_AI_Deps deps) : m_Deps(deps) {}
 	~Thread_AI() = default;
 
+	/**
+	* @brief Entry and main point of the AI threa. Runs the entire
+	* lifetime of the mod, driving Artemis through a state machine
+	* keyed on the current lifecycle Status.
+	*/
 	void Run();
 
 private:
 	Thread_AI_Deps m_Deps;
 
 	bool m_WasLoaded = false;
+
+	uint64_t m_Last = 0;
+	uint64_t m_Dropped = 0;
+
+	/**
+	* @brief Reads and builds the static map resources (i.e. tags),
+	* from the loaded .map file.
+	* @note Expensive (~1), called once per map load.
+	*/
+	void LoadResources();
+
+	/**
+	* @brief Runs the full per-tick transformation pipeline, advancing
+	* the game state through the layered architecture. Each layer 
+	* consumes the output of the previous one, so the call order
+	* is significant.
+	* @note Called once per signaled tick.
+	*/
+	void ExecuteTick();
+
+	/**
+	* @brief Determines if its safe to continue the resource loading or
+	* the tick execution, by the current Artemis status.
+	* @return true if Artemis is still running and if Blam it's not
+	* tearing down.
+	*/
+	bool IsStable();
+
+	/**  
+	* @brief Clears the AI thread's per-session tracking state to its
+	* initial values.
+	*/
+	void Reset();
 };

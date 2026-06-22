@@ -68,31 +68,19 @@ void System_MapRenderer::DrawFrame(std::shared_ptr<const Tick> tick)
 
     using Fill = GpuPipeline::Fill;
 
-    m_Pipeline.Bind(ctx, Fill::DepthPrime);
-    m_MapPass.Draw(ctx);
-    m_DynamicPass.Draw(ctx);
-
     m_Pipeline.Bind(ctx, Fill::Solid);
-    m_MapPass.Draw(ctx);
-    m_DynamicPass.Draw(ctx);
-
-    m_Pipeline.Bind(ctx, Fill::Wire);
     m_MapPass.Draw(ctx);
     m_DynamicPass.Draw(ctx);
 
     m_Pipeline.Bind(ctx, Fill::Solid);
     m_ZonePass.DrawSolid(ctx);
 
-    m_Pipeline.Bind(ctx, Fill::Wire);
-    m_ZonePass.DrawWire(ctx);
-
     guard.Restore();
 
     ImDrawList* fg = ImGui::GetForegroundDrawList();
     const ImVec2 center(w * 0.5f, h * 0.5f);
     const ImU32 celeste = IM_COL32(115, 200, 245, 230);
-    fg->AddCircle(center, 5.0f, celeste, 16, 1.5f);
-    fg->AddCircleFilled(center, 1.5f, celeste, 8);
+    fg->AddCircleFilled(center, 5.0f, celeste, 16);
 }
 
 void System_MapRenderer::UpdateCamera(const std::shared_ptr<const Tick>& tick,

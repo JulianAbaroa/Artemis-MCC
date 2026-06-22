@@ -35,11 +35,11 @@ void Thread_Main::Run()
         this->CheckHooksHealth();
         m_Deps.System_Telemetry.Update();
 
-		auto engineStatus = m_Deps.State_Lifecycle.GetEngineStatus();
-        if (engineStatus == EngineStatus::Destroyed)
+		auto engineStatus = m_Deps.State_Lifecycle.GetStatus();
+        if (engineStatus == Status::Destroyed)
         {
             m_Deps.System_Logs.Log("[MainThread] INFO:"
-                " Game engine destruction detected, resetting lifecycle.");
+                " Game engine destruction detected.");
 
             while (Hook_DestroySubsystems::s_InProgress.load(
                 std::memory_order_acquire))
@@ -62,8 +62,8 @@ void Thread_Main::Run()
                 return;
             }
 
-            m_Deps.State_Lifecycle.SetEngineStatus(
-                { EngineStatus::Waiting });
+            m_Deps.State_Lifecycle.SetStatus(
+                { Status::Waiting });
         }
 
         this->WaitOrExit(1000ms);
@@ -85,10 +85,10 @@ void Thread_Main::Run()
 
 bool Thread_Main::WaitOrExit(std::chrono::milliseconds ms)
 {
-    auto& mutex = m_Deps.State_Lifecycle.GetMutex();
+    auto& mutex = m_Deps.State_Lifecycle.GetShutdownMutex();
     std::unique_lock<std::mutex> lock(mutex);
 
-    auto& cv = m_Deps.State_Lifecycle.GetCV();
+    auto& cv = m_Deps.State_Lifecycle.GetShutdownCV();
     bool shouldExit = cv.wait_for(lock, ms, [this] {
         return !m_Deps.State_Lifecycle.IsRunning();
     });
@@ -122,8 +122,8 @@ void Thread_Main::Shutdown()
 
 void Thread_Main::CheckHooksHealth()
 {
-    if (m_Deps.State_Lifecycle.GetEngineStatus() == 
-        EngineStatus::Destroyed) return;
+    if (m_Deps.State_Lifecycle.GetStatus() == 
+        Status::Destroyed) return;
 
     if (Hook_DestroySubsystems::s_InProgress.load(
         std::memory_order_acquire)) return;
@@ -140,8 +140,8 @@ void Thread_Main::CheckHooksHealth()
         m_Deps.System_Logs.Log("[MainThread] WARNING:"
             " Hooks corrupted, rebooting.");
 
-        m_Deps.State_Lifecycle.SetEngineStatus(
-            { EngineStatus::Destroyed });
+        m_Deps.State_Lifecycle.SetStatus(
+            { Status::Destroyed });
     }
 }
 

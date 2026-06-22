@@ -11,7 +11,7 @@ public:
 
 	void RecordDroppedTicks(uint64_t dropped);
 	void RecordSimTick(int ticks, uint64_t durationNs);
-	void RecordAISweep(uint64_t durationNs);
+	void RecordTickTime(uint64_t durationNs);
 	void RecordPresent();
 
 	std::atomic<uint64_t> m_Dropped{ 0 };

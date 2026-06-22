@@ -26,8 +26,8 @@ namespace ZoneGeometry
         std::array<float, 3> r, f, u;
         BuildBasis(forward, up, r, f, u);
 
-        const float top = zone.Top;     // extensión hacia arriba
-        const float bot = -zone.Bottom;  // extensión hacia abajo (negada)
+        const float top = zone.Top;
+        const float bot = -zone.Bottom;
 
         auto W = [&](float lr, float lf, float lu) {
             return ToWorld(position, r, f, u, lr, lf, lu);
@@ -71,10 +71,9 @@ namespace ZoneGeometry
         }
         else if (zone.ShapeType == ShapeType::Box)
         {
-            const float hw = zone.Radius * 0.5f; // Width total → medio-extent (right)
-            const float hl = zone.Length * 0.5f; // Length total → medio-extent (fwd)
+            const float hw = zone.Radius * 0.5f;
+            const float hl = zone.Length * 0.5f;
 
-            // local: lr=right(width), lf=fwd(length), lu=up
             const std::array<std::array<float, 3>, 8> c = {
                 W(-hw,-hl,bot), W(hw,-hl,bot), W(hw, hl,bot), W(-hw, hl,bot),
                 W(-hw,-hl,top), W(hw,-hl,top), W(hw, hl,top), W(-hw, hl,top)

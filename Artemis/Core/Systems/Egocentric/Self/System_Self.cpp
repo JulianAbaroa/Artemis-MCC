@@ -15,7 +15,7 @@ namespace
 {
     // Placeholder agent name. Centralized here so the day an in-game
     // local-player resolution is found, only ResolveSelfHandle changes.
-    constexpr const char* k_SelfPlayerName = "PlaceHolder021";
+    constexpr const char* k_SelfPlayerName = "MasterLotz";
 }
 
 void System_Self::Update()

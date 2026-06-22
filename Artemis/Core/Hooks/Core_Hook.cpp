@@ -101,7 +101,7 @@ void Core_Hook::InitTick(Core_State& state,
 	Core_System& system, Core_UI& ui)
 {
 	SimulationTicks = std::make_unique<Hook_SimulationTicks>(
-		Hook_SimulationTicks_Dependencies{
+		Hook_SimulationTicks_Deps{
 			.State_Telemetry = *state.Telemetry,
 			.State_Lifecycle = *state.Lifecycle,
 			.System_AOBScanner = *system.AOBScanner,
