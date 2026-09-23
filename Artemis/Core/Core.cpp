@@ -1,39 +1,69 @@
-#include "pch.h"
+module;
 
-#include "Core.h"
+#include <windows.h>
+#include "External/minhook/include/MinHook.h"
 
-#include "Core/States/Core_State.h"
-#include "Core/Systems/Core_System.h"
-#include "Core/UI/Core_UI.h"
-#include "Core/Hooks/Core_Hook.h"
-#include "Core/Threads/Core_Thread.h"
+module Core;
 
-Core::Core() = default;
-Core::~Core() = default;
+import std;
 
-void Core::Initialize()
+using namespace std::chrono_literals;
+
+namespace Core
 {
-    State = std::make_unique<Core_State>();
-    State->Initialize();
+	Artemis::Artemis(HMODULE handleModule) : m_Module(handleModule) {}
 
-    System = std::make_unique<Core_System>();
-    System->Initialize(*State);
+	auto Artemis::Start() -> bool
+	{
+		auto& logs = m_Service.m_LogsService;
 
-    UI = std::make_unique<Core_UI>();
-    UI->Initialize(*State, *System);
+		char buffer[MAX_PATH]{};
+		GetModuleFileNameA(m_Module, buffer, MAX_PATH);
+		std::string directory = std::filesystem::path(buffer).parent_path().string();
 
-    Hook = std::make_unique<Core_Hook>();
-    Hook->Initialize(*State, *System, *UI);
+		m_Service.m_SettingsService.InitializePaths(directory.data());
+		std::ofstream{ m_Service.m_SettingsStore.GetLoggerPath(), std::ios::trunc };
 
-    Thread = std::make_unique<Core_Thread>();
-    Thread->Initialize(*State, *System, *Hook);
-}
+		if (m_Service.m_SettingsStore.ShouldUseAppData())
+		{
+			m_Preferences.Load();
+		}
 
-void Core::Deinitialize() const
-{
-    Thread->Deinitialize();
-    Hook->Deinitialize();
-    UI->Deinitialize();
-    System->Deinitialize();
-    State->Deinitialize();
+		if (MH_Initialize() != MH_OK)
+		{
+			logs.Message("[Core] ERROR: MH_Initialize failed.");
+			return false;
+		}
+
+		m_IsMinHookReady = true;
+
+		m_Platform.m_LifecycleStore.SetHandleModule(m_Module);
+		m_Platform.m_LifecycleStore.SetRunning(true);
+
+		logs.Message("[Core] INFO: Artemis initialized.");
+		return true;
+	}
+
+	auto Artemis::Run() -> void
+	{
+		m_Runtime.Run();
+	}
+
+	auto Artemis::RequestShutdown() -> void
+	{
+		m_Platform.m_LifecycleService.SignalShutdown();
+	}
+
+	Artemis::~Artemis()
+	{
+		m_Platform.m_LifecycleService.SignalShutdown();
+
+		m_Platform.m_LifecycleService.RaiseUnhook();
+
+		m_Platform.m_LifecycleService.RaiseShutdown();
+
+		std::this_thread::sleep_for(200ms);
+
+		if (m_IsMinHookReady) MH_Uninitialize();
+	}
 }

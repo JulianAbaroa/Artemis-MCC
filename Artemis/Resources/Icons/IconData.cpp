@@ -7,7 +7,6 @@
 // the surrounding source code (which is GPL-3.0).
 // ============================================================
 
-#include "pch.h"
 #include "IconData.h"
 
 const unsigned char Icons::Data::Objects[] = {

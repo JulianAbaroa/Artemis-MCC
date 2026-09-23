@@ -4,9 +4,6 @@
     <Filter Include="Core">
       <UniqueIdentifier>{5451e5d0-65dd-45a7-97b0-8c1c47408481}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems">
-      <UniqueIdentifier>{b3222c33-b409-45cc-830b-a2b197bc4873}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Proxy">
       <UniqueIdentifier>{b39b8137-507d-42c6-a0bb-e92d9839472c}</UniqueIdentifier>
     </Filter>
@@ -25,65 +22,8 @@
     <Filter Include="External\minhook\hde">
       <UniqueIdentifier>{17d6e520-dc78-4668-b388-5010c61e167d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States">
-      <UniqueIdentifier>{27a5a46a-6a14-4a14-b92e-d18622ee85eb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Hooks">
-      <UniqueIdentifier>{e321b691-32f2-4951-a478-d1d9e6d9b84f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Threads">
-      <UniqueIdentifier>{b1c15104-2fec-44f5-9633-73b57f77e41b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI">
-      <UniqueIdentifier>{4591bf68-a2aa-4ce6-b51e-3f11c13de7bd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Types">
-      <UniqueIdentifier>{c38259af-e292-4115-a5b0-c69bfe76684e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils">
-      <UniqueIdentifier>{ab35dbbe-51a5-4fc0-bb7c-2ac71b82292d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="External\zlib">
       <UniqueIdentifier>{3a8a451f-6a77-43ad-985a-6904314291b7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils\Color">
-      <UniqueIdentifier>{6445cbda-aed6-4153-94eb-9751c010ed8a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils\String">
-      <UniqueIdentifier>{03288a48-8154-4bb2-937d-437d4fe33882}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils\Field">
-      <UniqueIdentifier>{d22fcee7-5805-4d27-95f4-90057d0f1d39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils\SearchFilter">
-      <UniqueIdentifier>{d09ec4cd-5524-4576-b7fe-7965e4c6a8fa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils\Hex">
-      <UniqueIdentifier>{5ff283e7-bd86-4da5-8fdd-47fb0d2c8fd8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Utils\Handle">
-      <UniqueIdentifier>{92463c6c-25f0-4134-b7cd-e807be41e6f3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Launcher">
-      <UniqueIdentifier>{1ee8434d-748e-41ee-8121-0bc23cf12e3e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Overlay">
-      <UniqueIdentifier>{94def927-d27b-4866-878f-0719735a0aae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\ObjectTable">
-      <UniqueIdentifier>{acccf94c-2922-4d32-9c4a-9f9a1c8c83bd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\PlayerTable">
-      <UniqueIdentifier>{e02f46d3-4c55-4f55-81b4-969556e427bc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Logs">
-      <UniqueIdentifier>{c87182b0-9048-4a5b-b7da-191af76865db}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Settings">
-      <UniqueIdentifier>{2e03c527-89a4-42a5-8bda-c275c869b6ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\MemoryScanner">
-      <UniqueIdentifier>{0fbebd28-7131-4caf-9136-180520166a74}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{d9fbdb55-f886-49b4-a236-5abe3c687a66}</UniqueIdentifier>
@@ -94,389 +34,929 @@
     <Filter Include="External\stb">
       <UniqueIdentifier>{33abe619-c11e-48c7-a749-a76f51f04383}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\UI\Utils\Icon">
-      <UniqueIdentifier>{46e30eaf-8aa8-466b-ae9b-319e4c36befb}</UniqueIdentifier>
+    <Filter Include="Core\Runtime">
+      <UniqueIdentifier>{6404a4d9-b4ae-4ee5-86ea-ae57cd4b6992}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Threads\Input">
-      <UniqueIdentifier>{71655b37-5fe3-4835-924b-664180fe5e04}</UniqueIdentifier>
+    <Filter Include="Core\Runtime\AI">
+      <UniqueIdentifier>{e5efb182-4483-4250-993c-096094cbc2fe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Threads\Main">
-      <UniqueIdentifier>{f15e10ab-ca37-4c85-9bab-0f9c436df9b2}</UniqueIdentifier>
+    <Filter Include="Core\Runtime\Input">
+      <UniqueIdentifier>{7412080e-03c2-4831-b4e5-33f6b0ad26ce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Threads\AI">
-      <UniqueIdentifier>{a4a7d630-86af-498a-9ac2-f3f691f8d7bd}</UniqueIdentifier>
+    <Filter Include="Core\Runtime\Main">
+      <UniqueIdentifier>{3baf5a76-5aa1-4579-bf18-27d76ba83f8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources">
-      <UniqueIdentifier>{13a73a8b-6987-4ff9-9530-ff824029b369}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure">
+      <UniqueIdentifier>{f9470459-9f94-4cca-afd9-695e886d5b88}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\MapReader">
-      <UniqueIdentifier>{921efa0a-22a1-4b93-8fc5-4a404387e8d8}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform">
+      <UniqueIdentifier>{d3a7bcbf-9247-4ee8-92cf-c91e3bbe2522}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\MapReader\Tags">
-      <UniqueIdentifier>{45bc12f8-0f72-4095-b3ef-0b577ddd3cce}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Input">
+      <UniqueIdentifier>{80ebe4ff-c500-4ece-b37c-82334d45d983}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Tables">
-      <UniqueIdentifier>{93c3482a-dba5-445e-90ec-63fe418f8499}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Input\Type">
+      <UniqueIdentifier>{ad9f36ed-0c58-48a3-aa93-893b70b2091c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Tables\Object">
-      <UniqueIdentifier>{1fdfada6-65ca-4289-aa42-7e3c8b3b451e}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Input\State">
+      <UniqueIdentifier>{ff6e382f-6673-4729-a93e-c95fcbc0756d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Tables\Object\BoneMatrix">
-      <UniqueIdentifier>{d76b9e88-52d1-426f-95a7-cdb965d7d403}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Input\System">
+      <UniqueIdentifier>{0693826d-8a27-4e76-97c1-b131d2bd6e30}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Tables\Object\DamageSection">
-      <UniqueIdentifier>{3f18169a-2b9d-4f55-81c5-64d4555f4050}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Input\Hook">
+      <UniqueIdentifier>{0c546b9e-268d-43f1-a707-e98105ce0bbc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Tables\Player">
-      <UniqueIdentifier>{60f12d4f-12df-4e88-b259-c410e45ccb50}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Lifecycle">
+      <UniqueIdentifier>{68da32ca-fa4d-4660-b285-5946abaf0114}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Tables\Interaction">
-      <UniqueIdentifier>{fdf77120-04c7-4066-9c73-fe5549831aa6}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Lifecycle\State">
+      <UniqueIdentifier>{3d4db28a-cc58-470c-ac5e-91d10c451128}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Structure">
-      <UniqueIdentifier>{75474616-a869-44da-8c63-28b1333d8af0}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Lifecycle\System">
+      <UniqueIdentifier>{a917e39d-52b6-4bbf-8f12-0b33a0a55267}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Structure\Graph">
-      <UniqueIdentifier>{902fc1d2-1238-4639-a01d-64518a035037}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Lifecycle\Hook">
+      <UniqueIdentifier>{0257d8b6-cf22-4276-8591-b5aee5557dab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Structure\Graph\Object">
-      <UniqueIdentifier>{93dd7ab7-fd2c-4daf-a07f-a1a00c8eb755}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Lifecycle\Type">
+      <UniqueIdentifier>{fa612ca5-7820-4f17-bb94-e99667800daa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Structure\Graph\Player">
-      <UniqueIdentifier>{8504c80e-3d85-465d-aa10-ed8f6abeef3e}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory">
+      <UniqueIdentifier>{371b4643-f75c-46a9-86a8-0768aa313428}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Structure\Classifier">
-      <UniqueIdentifier>{80ea7180-1271-4ad3-a869-c4c5b343916f}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory\Type">
+      <UniqueIdentifier>{5881ed28-56e7-4fe0-aa94-8eb7fe29a61b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Structure">
-      <UniqueIdentifier>{35831834-be9a-460a-babd-425797ec362a}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory\State">
+      <UniqueIdentifier>{b8f087a3-afbb-464b-b378-0afee3390d9f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Structure\Graph">
-      <UniqueIdentifier>{b3be9164-9cbd-4c41-847f-ed79605f5335}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory\System">
+      <UniqueIdentifier>{31d732ce-1054-4a29-9825-84dbd8d0db2b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Structure\Graph\Object">
-      <UniqueIdentifier>{3ea05bb6-606c-4d26-87f6-01ae64a1c6a4}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory\System\Scanner">
+      <UniqueIdentifier>{4be2985f-6a46-4a23-863a-5f2e718bb0d6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Structure\Graph\Player">
-      <UniqueIdentifier>{06db6afb-2a2c-4eed-94a1-e69f41f9b5cc}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory\System\AOB">
+      <UniqueIdentifier>{9a67a9b4-2f97-4bc5-bb79-564d26c037ea}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Structure\Classifier">
-      <UniqueIdentifier>{c9a0270b-1f02-45e2-a53a-c49c66d47711}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Memory\System\Reader">
+      <UniqueIdentifier>{8b3d0834-488b-42f8-97c8-3163be4c44d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources">
-      <UniqueIdentifier>{b79fe52b-2619-426e-be19-6772b7898669}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Render">
+      <UniqueIdentifier>{95e7d874-00cb-4eaa-aaaf-6b9b88b844ca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\MapReader">
-      <UniqueIdentifier>{d5b5b3eb-b04a-4830-ab0b-7cc8d6b21bc7}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Render\State">
+      <UniqueIdentifier>{0f0cc746-e7ff-4194-a8bc-7a341eee0b3c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\MapReader\TagGroup">
-      <UniqueIdentifier>{d1240dd0-a1d4-497c-9902-6fc516ed6549}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Render\System">
+      <UniqueIdentifier>{4c0c9853-837c-4b47-a75d-5ed0190bd3d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Tables">
-      <UniqueIdentifier>{a3a10a4a-1ae5-46e3-be07-449b75d08efa}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Render\Hook">
+      <UniqueIdentifier>{6e8a9bf1-5b98-4e00-94dc-3208ddbd3e1b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Tables\Interaction">
-      <UniqueIdentifier>{04b05f80-95dd-41ac-94c3-1f4a0b6df7be}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Platform\Render\Type">
+      <UniqueIdentifier>{96694708-945e-402c-8207-32a77b6d2358}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Tables\Player">
-      <UniqueIdentifier>{532d2662-ec28-4d71-a07c-b0425bf4094b}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service">
+      <UniqueIdentifier>{57f75382-cf31-4e2e-ae10-4b1616c4e509}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Tables\Object">
-      <UniqueIdentifier>{30e9da93-92e4-456d-a82f-9fe1a2fcdb90}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Telemetry">
+      <UniqueIdentifier>{01b3b43d-b8e6-455d-82a1-573f5912a19e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\MapReader\Geometry">
-      <UniqueIdentifier>{27bad426-9986-4634-bafd-4186bd3149d3}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Telemetry\State">
+      <UniqueIdentifier>{7cd49cce-f6df-4bb3-96f7-0016879bb4f0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other">
-      <UniqueIdentifier>{6879f82a-e137-4ec9-b7e2-9be00d91d0b0}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Telemetry\System">
+      <UniqueIdentifier>{46a24751-225d-4b56-bb1e-a5c5fc654f9b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Input">
-      <UniqueIdentifier>{7b48095c-770d-4110-ba3e-6e007d9c61ce}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Preferences">
+      <UniqueIdentifier>{54d00af3-8ceb-4f88-ba6f-e72ea89d1575}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Lifecycle">
-      <UniqueIdentifier>{dd8437a3-8eb9-4474-9e0c-8b0011b28a9b}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Preferences\System">
+      <UniqueIdentifier>{a3e63258-6032-4cbc-b3f1-eeabf3cc769d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Logs">
-      <UniqueIdentifier>{05df2364-db6d-48df-879f-f900a2336427}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Settings">
+      <UniqueIdentifier>{294beb2f-3f92-4031-b027-2ae768056ed6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Memory">
-      <UniqueIdentifier>{d679297e-56e2-432c-959c-0383dc9be8de}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Settings\State">
+      <UniqueIdentifier>{a71b0d8f-8ff4-48c3-92a4-4367dea2e4f1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Memory\AOB">
-      <UniqueIdentifier>{b2a2ad3e-d7e9-4044-9bc7-4060245ac9b3}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Settings\System">
+      <UniqueIdentifier>{d3cc1a0d-1322-47a0-856b-47d4966dcf55}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Memory\Reader">
-      <UniqueIdentifier>{c7b4bbb8-77d3-45cc-96cc-b90717be2e41}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Logs">
+      <UniqueIdentifier>{15bb9313-0ef1-4588-bbb4-3dfb99e361ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Memory\Scanner">
-      <UniqueIdentifier>{6b2dfb6d-b6ab-43de-844e-cfd264091838}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Logs\Type">
+      <UniqueIdentifier>{ad752c2c-5e68-4091-9e60-49c5bac053a9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Preferences">
-      <UniqueIdentifier>{e61295e8-59c3-460d-87cb-b18ef8e692b7}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Logs\State">
+      <UniqueIdentifier>{fc4f7099-f1bf-4a3d-a775-87f5cff617ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Render">
-      <UniqueIdentifier>{fabc8671-6da1-4fc4-af97-e1ae4eeab37b}</UniqueIdentifier>
+    <Filter Include="Core\Infrastructure\Service\Logs\System">
+      <UniqueIdentifier>{27404a82-5c61-4e68-a7b7-3cafd7d05350}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Settings">
-      <UniqueIdentifier>{add3505e-6aa3-40c3-87d6-105182bc44f1}</UniqueIdentifier>
+    <Filter Include="Core\Domain">
+      <UniqueIdentifier>{c9089062-e4df-43b3-9795-6cc54284f159}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Telemetry">
-      <UniqueIdentifier>{c86a2f06-6339-4234-88a6-d0f21588011a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common">
+      <UniqueIdentifier>{bb34dd4c-6ffe-4602-8311-9144de62727d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other">
-      <UniqueIdentifier>{c57c1b09-eaa2-4c56-80ef-19bd36cbbd2c}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\Math">
+      <UniqueIdentifier>{35a3d382-b37a-4ea6-894f-5496598875ce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Input">
-      <UniqueIdentifier>{3e976842-248c-4699-b22c-7a6efbea6dc4}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\Math\Type">
+      <UniqueIdentifier>{1b6af01c-f252-44d0-8415-78ae222cae42}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Lifecycle">
-      <UniqueIdentifier>{11f1688e-789c-4d57-8ce0-fcd33a78ffb0}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\Tag">
+      <UniqueIdentifier>{2e4697de-ba11-4d62-92e6-d97d17722b2c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Logs">
-      <UniqueIdentifier>{221e0b02-b70a-4ffe-b13c-53197138c61c}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\Tag\Name">
+      <UniqueIdentifier>{ba54a298-48ba-4cfa-bcee-276345227488}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Memory">
-      <UniqueIdentifier>{d3ff4b10-7907-4666-af65-3df1f447873f}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\Team">
+      <UniqueIdentifier>{da8e7241-7d1c-4dcb-b0f5-55bd86c2f1aa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Render">
-      <UniqueIdentifier>{3a228a42-d9f9-40c5-8dcf-c340cab03779}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\Team\Type">
+      <UniqueIdentifier>{043eaa96-7864-4865-a640-96a9579b01a4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Settings">
-      <UniqueIdentifier>{efde284a-ab37-46ba-8686-4d4c14740f64}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\ZoneShape">
+      <UniqueIdentifier>{8d90489f-9ce2-47b2-a481-7835fb912d91}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Other\Telemetry">
-      <UniqueIdentifier>{24053316-4dfd-4461-aef0-c0ddb19ebebd}</UniqueIdentifier>
+    <Filter Include="Core\Domain\Common\ZoneShape\Type">
+      <UniqueIdentifier>{1a855fe9-7bfb-4b05-b38c-d41cbdb56ee6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Other">
-      <UniqueIdentifier>{d077dff4-7dd8-4a68-bf17-09c1787173de}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map">
+      <UniqueIdentifier>{208e74d2-1b14-4948-b2bd-1243c8c84f00}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Other\Input">
-      <UniqueIdentifier>{29093f94-310b-4100-96d5-ed05d194c53a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader">
+      <UniqueIdentifier>{4cae183f-5e23-481c-be0f-43d3855d290b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Other\Logs">
-      <UniqueIdentifier>{524fbcca-a767-4dad-a20a-48505cbf1b65}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\State">
+      <UniqueIdentifier>{070e29ce-77c7-4843-9685-f355fe475eb7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Other\Memory">
-      <UniqueIdentifier>{899880f0-0b93-4c1a-b117-44ad875db0b1}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\State\File">
+      <UniqueIdentifier>{dbb3d2db-fc95-4ec9-b1e2-fdcbc86430cb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Other\Memory\Scanner">
-      <UniqueIdentifier>{4920307a-2ea3-4b71-b9a0-7b0ce26e8558}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\State\TagIndex">
+      <UniqueIdentifier>{b92b1aa9-45a3-4b2d-9e20-1af003fd0883}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Other\Memory\AOB">
-      <UniqueIdentifier>{e26d5d94-12ac-46ee-ac94-07ab1c805b60}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\State\Tag">
+      <UniqueIdentifier>{bc3641d7-9bb7-4d44-a640-fc239a0f690e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Structure">
-      <UniqueIdentifier>{bfc7c6fa-3872-4eb1-97c8-ad846103723a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System">
+      <UniqueIdentifier>{d6fb60c0-128a-4f34-8556-1f205d978882}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Structure\Graph">
-      <UniqueIdentifier>{4eb8da7e-5e09-45d4-9d13-cd9a001c0737}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\DataStream">
+      <UniqueIdentifier>{78bd4325-dcb7-4be1-9497-950b61634690}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Structure\Graph\Object">
-      <UniqueIdentifier>{ea51423d-7c8b-474b-8fc4-25bddc82d50d}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\FileLocator">
+      <UniqueIdentifier>{ceb518c6-b077-4470-bf41-cb72daf8189b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Structure\Graph\Player">
-      <UniqueIdentifier>{cec6c93e-80d4-4c53-b18f-30139fab577c}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\FileNames">
+      <UniqueIdentifier>{8d1a38c0-d50e-4bc4-9eaa-042ccae0ce5b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Structure\Classified">
-      <UniqueIdentifier>{08aac236-157f-450c-a106-2ba838bfb3fe}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Formula">
+      <UniqueIdentifier>{d2027dda-4638-42da-9de2-8172b29ae2e5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources">
-      <UniqueIdentifier>{5fa1b68c-0254-4f72-884f-a794acb33d2a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Geometry">
+      <UniqueIdentifier>{9ff33cda-0a6f-45f4-b17a-b24690fda231}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\MapReader">
-      <UniqueIdentifier>{bde60d91-0038-4664-b2e0-aea96c97b500}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage">
+      <UniqueIdentifier>{7bbe2641-df4d-4c79-b827-515a65917c18}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables">
-      <UniqueIdentifier>{82a3fcc0-a694-49dd-b386-a1fb43ef20c6}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder">
+      <UniqueIdentifier>{e80893dd-3718-4ee1-abe1-f61f63f4aaf5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables\Player">
-      <UniqueIdentifier>{c9d1f6a5-f064-4f39-9552-97c244856216}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Geometry\Info">
+      <UniqueIdentifier>{a088d1cf-7e91-40d6-93f3-bf48bd8ffe9b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables\Interaction">
-      <UniqueIdentifier>{5950956d-6d85-48d7-83ad-83fc37f92158}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Geometry\Loader">
+      <UniqueIdentifier>{83d9fd95-4b1e-4e1e-a2b4-a1fbbd4074de}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables\Object">
-      <UniqueIdentifier>{e59b1c63-273b-4a12-af12-69be8f457eef}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Header">
+      <UniqueIdentifier>{2aeee4c7-6ede-4e67-85b6-61266d770bff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables\Object\Specific">
-      <UniqueIdentifier>{2d1c4590-649c-48c9-90f9-8071fff01a3a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\TagGroup">
+      <UniqueIdentifier>{fa63c43c-9070-49a5-a1c1-3e436e54d02e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables\Object\BoneMatrix">
-      <UniqueIdentifier>{d3c50f78-d028-42fb-9fff-48100c403224}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\TagIndex">
+      <UniqueIdentifier>{39bb1428-8c84-4a06-b91f-cd81ca3a6c62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Tables\Object\DamageSection">
-      <UniqueIdentifier>{d1629912-df69-4875-9c10-98c584e57882}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\TagResolver">
+      <UniqueIdentifier>{b8a461ea-2027-4594-ba3e-63778c68950e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Static">
-      <UniqueIdentifier>{12d9c73c-02c2-4dcb-bd87-3be28ba30a20}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\TagStructure">
+      <UniqueIdentifier>{62372cc1-d298-4bbb-b1aa-9cb47d53c221}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Static\Stats">
-      <UniqueIdentifier>{c544d07f-f606-47dc-bc31-b423aebb69bf}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\System\Loader">
+      <UniqueIdentifier>{561c87de-499a-4f2c-980e-bce3c2a531ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Static\Vitality">
-      <UniqueIdentifier>{58dff006-8d2a-4cb2-81f9-839f7fb0eaa8}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\Type">
+      <UniqueIdentifier>{b6a40c86-d1fd-4270-83f8-863825eda5e8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Sources\Static\World">
-      <UniqueIdentifier>{2fc7c948-f9fb-40ea-86ad-5ab889ff14c2}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Reader\Hook">
+      <UniqueIdentifier>{f0a3cedc-3a7d-4794-9397-eb4ff9fb6e48}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static">
-      <UniqueIdentifier>{01e8255c-797f-47ab-9f1f-5d9b6f43e0f3}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag">
+      <UniqueIdentifier>{ee84d7e7-fc5f-4278-bdde-596b4c3924d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\Stats">
-      <UniqueIdentifier>{f309afba-80d0-47ac-92e9-dc1d8a96df56}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bipd">
+      <UniqueIdentifier>{44a129b8-27c1-4aa2-a1a1-a31d228e7775}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\Stats\Proj">
-      <UniqueIdentifier>{87a56727-1c26-4dc4-a320-6dce335cb553}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bipd\Type">
+      <UniqueIdentifier>{5962d9df-0eb9-4a88-99d1-756e1cb484ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\Stats\Vehi">
-      <UniqueIdentifier>{acf9237a-b7cd-4d0c-b610-bb71319889a8}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bipd\State">
+      <UniqueIdentifier>{022b73a7-2328-48f8-9392-6c47ac46f37a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\Stats\Weap">
-      <UniqueIdentifier>{a8ef4d1a-b4e9-4605-9d38-6264cd5c38f7}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bipd\System">
+      <UniqueIdentifier>{19a36a56-1b49-454e-9f56-53c8efe24e07}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\Vitality">
-      <UniqueIdentifier>{5b1f689b-8c5a-4555-abe2-5d51e8cd204b}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bloc">
+      <UniqueIdentifier>{a40a60fd-e127-4b09-8f2a-452c3cb5f158}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\World">
-      <UniqueIdentifier>{c61e9569-af19-4fdc-9376-ec7cf25e408a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bloc\Type">
+      <UniqueIdentifier>{d8e2d03c-a2ed-4973-8feb-973701784058}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\World\Coll">
-      <UniqueIdentifier>{c32583a8-0317-44ee-a6ce-36573667b30f}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bloc\State">
+      <UniqueIdentifier>{384decd9-5a4c-4778-bdea-37e462024735}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\World\Mode">
-      <UniqueIdentifier>{d4406753-c0c5-410b-a038-95b33329e682}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Bloc\System">
+      <UniqueIdentifier>{acf1d01d-cce3-4d3a-a03f-c026ec94b075}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\World\Phmo">
-      <UniqueIdentifier>{15878c56-57f1-4ed6-b2b1-8a8870823542}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Coll">
+      <UniqueIdentifier>{3bf34557-2f26-4caa-a128-71c4f23a908a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Sources\Static\World\Sbsp">
-      <UniqueIdentifier>{12c4baa9-9a29-4769-8a68-9cbcf21b9fad}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Coll\Type">
+      <UniqueIdentifier>{ddd1a721-2a04-4979-819e-530c70949049}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Static">
-      <UniqueIdentifier>{e498d0f9-edb7-43e8-b50d-a504f28f50b7}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Coll\State">
+      <UniqueIdentifier>{7845c422-be5f-4a6e-b7cb-cdba17ce05cf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Static\World">
-      <UniqueIdentifier>{d3a63c2b-70a6-4cf6-ac35-f6327a7b642c}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Coll\System">
+      <UniqueIdentifier>{f2b1cf67-6f10-4d1f-9e93-6b500a096679}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Static\Stats">
-      <UniqueIdentifier>{aa52d3fa-6c4d-448f-ab0a-86f662ccef3f}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Ctrl">
+      <UniqueIdentifier>{b3317551-766f-4f89-8ea9-0f60cc7c7852}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Sources\Static\Vitality">
-      <UniqueIdentifier>{b3a60876-f1e8-407a-bf0d-76f4ab3ca82d}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Ctrl\Type">
+      <UniqueIdentifier>{5d66c3af-0f35-4e9a-9f87-661592d9f390}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Egocentric">
-      <UniqueIdentifier>{a9c9e636-1550-4ff3-850b-5a839377a42f}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Ctrl\State">
+      <UniqueIdentifier>{dc2e7f23-27c5-4d33-ad11-b8601f5beafc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Egocentric\Affordance">
-      <UniqueIdentifier>{dcf0cb03-5ed6-4c69-b1ec-39276b3ff834}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Ctrl\System">
+      <UniqueIdentifier>{6706cead-e565-4812-a5b3-258bb5ca7172}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Egocentric\Self">
-      <UniqueIdentifier>{7a11883c-2745-408a-849a-f708645eb7b8}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Eqip">
+      <UniqueIdentifier>{3fca6eba-33fa-47de-849e-bdfba26b1d9b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Egocentric">
-      <UniqueIdentifier>{b6dcb63d-3dba-421a-a7c3-ee06980379a6}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Eqip\Type">
+      <UniqueIdentifier>{61801a9b-6354-4843-ba06-36af8b013939}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Egocentric\Self">
-      <UniqueIdentifier>{2bf620ec-3514-4887-8ca2-0994881a7124}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Eqip\State">
+      <UniqueIdentifier>{e9cdb8a1-fc85-4928-9192-6847e6801c74}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Egocentric\Affordances">
-      <UniqueIdentifier>{f9c3e53d-16b9-4019-a5c7-e1e5339d50c9}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Eqip\System">
+      <UniqueIdentifier>{bae30257-4524-4b06-aa04-4e0e68c1bb91}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Environment">
-      <UniqueIdentifier>{8e18a7bb-475f-412c-bd06-018dbc40e6a4}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Hlmt">
+      <UniqueIdentifier>{006d3651-1fc9-4dc5-a0c5-3f8af5070af9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Environment\Vitality">
-      <UniqueIdentifier>{d9975fd4-a2b3-4ca0-b33b-e3edad65cf24}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Hlmt\Type">
+      <UniqueIdentifier>{96e58557-d32d-4320-9c3b-9b042f4eb503}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Environment\Fixtures">
-      <UniqueIdentifier>{3fbf31a2-83af-4082-8f25-a4b2361c791a}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Hlmt\State">
+      <UniqueIdentifier>{f95e99e2-f096-4f15-ba40-42bd85c1b044}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Environment\Collidable">
-      <UniqueIdentifier>{592bb3ce-a849-4aba-b06a-f93253f7b79f}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Hlmt\System">
+      <UniqueIdentifier>{8c8b3a79-466d-4664-8b2d-3b5f604c1210}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Environment">
-      <UniqueIdentifier>{edbf23f3-e8ac-4e26-af2c-0d2b86a3a654}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Lbsp">
+      <UniqueIdentifier>{5967f720-1ba2-4d39-bfbf-da23702e32b1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Environment\Vitality">
-      <UniqueIdentifier>{8522d557-3e27-414d-829c-de369951965d}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Lbsp\Type">
+      <UniqueIdentifier>{17049957-6c31-4bcc-aeff-48092ae34543}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Environment\Fixtures">
-      <UniqueIdentifier>{8c5eba83-2c22-44a8-9af9-3c5b7dcaabf7}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Lbsp\State">
+      <UniqueIdentifier>{d0c26c3a-decb-42fe-bd95-30f8be5f5ca6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Environment\Collidables">
-      <UniqueIdentifier>{0de4a401-d32f-4b42-ad60-7130cd8c8e1d}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Lbsp\System">
+      <UniqueIdentifier>{be62a990-886c-4626-89b8-21cdb6c3ba0e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Environment">
-      <UniqueIdentifier>{9c4cf60c-2827-4667-b7bf-79980b7fd82c}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mach">
+      <UniqueIdentifier>{bff063d9-2a3c-429c-8b3e-7867eaa4407b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Environment\Vitality">
-      <UniqueIdentifier>{c1aa9632-fc7e-45c5-881a-c3e4f4055a1d}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mach\Type">
+      <UniqueIdentifier>{eff44d5b-e544-439c-b8a6-23b49e636d8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Environment\Fixtures">
-      <UniqueIdentifier>{4c9bf253-5233-4782-b964-c6bb307cfccc}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mach\State">
+      <UniqueIdentifier>{71032d0c-ae6e-425c-b147-341478487a19}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Environment\Collidables">
-      <UniqueIdentifier>{f8446a99-69b9-4290-8f42-e444b1b5c794}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mach\System">
+      <UniqueIdentifier>{7ffba473-0383-44e3-9a78-4ffa9dac4b01}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\States\Tick">
-      <UniqueIdentifier>{63a69899-1fab-46ed-b71c-fe6582b9e2b1}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mode">
+      <UniqueIdentifier>{cada52b8-c7a2-4c84-a784-323e7969d8f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Types\Tick">
-      <UniqueIdentifier>{bca16b8c-7a67-4ac9-9bad-430b4f63a430}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mode\Type">
+      <UniqueIdentifier>{09f9ff04-a304-4d35-9445-357a584f73c0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Tick">
-      <UniqueIdentifier>{6fb7e930-c5b6-4712-8708-1213bf6384cf}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mode\State">
+      <UniqueIdentifier>{6c4aabe3-dd0a-4f2c-9577-d21236fe6b55}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Other\Render\Map">
-      <UniqueIdentifier>{89e0c562-ca04-4516-a831-9aac12743852}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Mode\System">
+      <UniqueIdentifier>{c130a9b0-9e10-418d-8aa9-47b7dbc4a174}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\UI\Overlay\Panels">
-      <UniqueIdentifier>{b06b215e-1b32-4f11-bcd5-1c251288c68d}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Phmo">
+      <UniqueIdentifier>{57b35ad5-ae1c-48c8-82f9-49426f205660}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Sources">
-      <UniqueIdentifier>{7a63b2f7-8bde-43ca-a5f9-00d6e5981c75}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Phmo\Type">
+      <UniqueIdentifier>{eb022b76-68dc-432a-9e49-e5e6d90dc17c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Other">
-      <UniqueIdentifier>{bbb35e9f-bd80-4c70-b5fc-fea245b569dd}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Phmo\State">
+      <UniqueIdentifier>{3872a33a-1333-4daf-b501-520f6770fcbb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Sources\Object">
-      <UniqueIdentifier>{00658039-ade4-45b0-88b9-5a319a3a80aa}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Phmo\System">
+      <UniqueIdentifier>{434c7153-ebef-4938-a323-414830e72524}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Sources\Object\BoneMatrix">
-      <UniqueIdentifier>{f99abdde-855d-449e-8fd9-ce30cd89f5be}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Play">
+      <UniqueIdentifier>{adce28ec-07ab-40a8-8298-844faf8afb04}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Sources\Map">
-      <UniqueIdentifier>{b9c8787e-581f-4c33-80a5-141339524c7b}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Play\Type">
+      <UniqueIdentifier>{78ed92f0-39a7-47d0-bdef-3afdd12a6282}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Sources\Interaction">
-      <UniqueIdentifier>{69dbd7aa-04ca-4703-9261-3b636c35ae62}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Play\State">
+      <UniqueIdentifier>{a8188884-09e8-4656-9234-184e646beb12}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Sources\Player">
-      <UniqueIdentifier>{be3f418d-f993-4bea-9a27-909f211a447e}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Play\System">
+      <UniqueIdentifier>{9d7c48f0-12ed-4b8c-93d8-6d0557b3a85d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Other\Lifecycle">
-      <UniqueIdentifier>{b869ddd3-cd8b-4eb4-b7b7-eb0afa97ccb8}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Proj">
+      <UniqueIdentifier>{4b4d3b78-f57a-41df-868d-254a19e959ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Other\Input">
-      <UniqueIdentifier>{486fe623-2f82-4881-9e0c-36a9d39972b4}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Proj\Type">
+      <UniqueIdentifier>{4293e022-eda8-49fe-9680-a209f9c93579}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Other\Window">
-      <UniqueIdentifier>{26f298d9-c19a-4d06-b1e5-a60af1e2ef21}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Proj\State">
+      <UniqueIdentifier>{c686bd21-3cec-4a9e-9494-fe0cf709458d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Other\Render">
-      <UniqueIdentifier>{b49cf330-dbb9-432d-97ff-6dbeb624f3fa}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Proj\System">
+      <UniqueIdentifier>{de90c466-02b3-4d8e-824d-ad109bffd9ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Tick">
-      <UniqueIdentifier>{c008c66d-8e1d-4931-bbaa-d25977802773}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Sbsp">
+      <UniqueIdentifier>{e0d16b71-5dc1-45b0-81cd-7db836fe099a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Egocentric">
-      <UniqueIdentifier>{fab443c3-c983-4589-9c73-e55a36cdfac4}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Sbsp\Type">
+      <UniqueIdentifier>{2e037149-8140-48cf-849c-789c34597153}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Egocentric\Self">
-      <UniqueIdentifier>{becc09ba-c124-4837-a195-3fb1695dbd0b}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Sbsp\State">
+      <UniqueIdentifier>{8ba427dd-8462-43f6-9edb-85ede8266106}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Systems\Egocentric\Affordances">
-      <UniqueIdentifier>{6194682d-ac78-4fa4-8935-4f28fee7e502}</UniqueIdentifier>
+    <Filter Include="Core\Domain\1_Map\Tag\Sbsp\System">
+      <UniqueIdentifier>{e53b9d93-9170-4221-a5ab-cf4a4ee049f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scen">
+      <UniqueIdentifier>{8f5a9a3c-4ccc-4e69-a8c5-0a7ee90ea90a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scen\Type">
+      <UniqueIdentifier>{d4b524ec-29fc-4667-b7ed-47b9bdb95497}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scen\State">
+      <UniqueIdentifier>{5a5416ac-5a3a-4e99-a0de-9af650b9f763}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scen\System">
+      <UniqueIdentifier>{5d94fa40-34bf-4178-82a8-3e5a8e9687a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scnr">
+      <UniqueIdentifier>{e05951b5-6710-40f5-bcb3-ba01430c9437}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scnr\Type">
+      <UniqueIdentifier>{0decdd82-f86b-4517-8293-24147f1a4607}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scnr\State">
+      <UniqueIdentifier>{d1f285d6-39d2-4fc9-9d5b-1b926e267880}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Scnr\System">
+      <UniqueIdentifier>{4206f0f8-7ead-41d0-af5a-de388c7680aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sldt">
+      <UniqueIdentifier>{ffe77a1e-75e8-4530-9415-096b8a485304}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sldt\Type">
+      <UniqueIdentifier>{8fda6ad6-4ace-4f44-bbf1-aa9bdb3bc805}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sldt\State">
+      <UniqueIdentifier>{dd1d7953-3fda-42b6-b87f-b8c405d882c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sldt\System">
+      <UniqueIdentifier>{e1794573-a740-4df0-8b68-2a05cfe01d28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Vehi">
+      <UniqueIdentifier>{d902838b-3521-41b5-bc18-6119ae475061}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Vehi\Type">
+      <UniqueIdentifier>{0c348dc2-e496-478b-8d40-10d407fa3bc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Vehi\State">
+      <UniqueIdentifier>{1029fbed-e09f-4085-871c-a5003a68417b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Vehi\System">
+      <UniqueIdentifier>{0bc166ff-7502-4524-9f9e-cf170fb5d6d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Weap">
+      <UniqueIdentifier>{488229f3-b61e-40bd-8008-493aa41b9eff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Weap\Type">
+      <UniqueIdentifier>{51f254d3-9ef6-4845-841f-b3351bda1614}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Weap\State">
+      <UniqueIdentifier>{fc9ec8ae-6811-4e29-9030-1586a6c9aa5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Weap\System">
+      <UniqueIdentifier>{36bc10b4-6e16-4826-893a-21c16262eccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Zone">
+      <UniqueIdentifier>{2746130c-9bd3-485e-91be-d5f6610b97a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Zone\Type">
+      <UniqueIdentifier>{65d3af3f-a1c9-4a33-8e0d-fac3c607c8ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Zone\State">
+      <UniqueIdentifier>{e5a7e539-535e-4070-ae46-168d44f5ba84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Zone\System">
+      <UniqueIdentifier>{56b05df2-a952-40fb-9201-c23437bd4b75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Builder">
+      <UniqueIdentifier>{97477174-856f-49b8-988e-c7700175ff93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Builder\System">
+      <UniqueIdentifier>{ddb35788-2021-4eee-b264-f65518189c8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved">
+      <UniqueIdentifier>{373b5952-a998-4a6f-bfe2-7261fbdd4307}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats">
+      <UniqueIdentifier>{584702e6-f09d-43ea-8312-20d171145dab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats\Type">
+      <UniqueIdentifier>{a86898c6-f196-42d7-9f79-e4110ae595d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats\State">
+      <UniqueIdentifier>{4e027ac2-6360-4466-8ef4-7c674d32122e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats\System">
+      <UniqueIdentifier>{8592344f-40d6-4c12-a888-06488c337105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats\System\Proj">
+      <UniqueIdentifier>{24132c04-3f08-4808-ab5b-6d703d994e40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats\System\Vehi">
+      <UniqueIdentifier>{4bfc3b89-46f0-44a6-9c39-86087416dc96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Stats\System\Weap">
+      <UniqueIdentifier>{616d5512-6b06-4970-b933-a86f21d008dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Vitality">
+      <UniqueIdentifier>{1fc6861c-8525-41f9-894a-82fc017259ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Vitality\Type">
+      <UniqueIdentifier>{f2625b89-bd65-4d35-8957-d0efa1018b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Vitality\State">
+      <UniqueIdentifier>{bf98a152-882b-4582-8668-3436770f0a57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Vitality\System">
+      <UniqueIdentifier>{8f49aada-1ffe-4d3d-861e-2ae41674d588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World">
+      <UniqueIdentifier>{b5a76e90-9835-4c7d-b50d-3122b4246d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\Type">
+      <UniqueIdentifier>{19bc8169-dff1-4e1d-bb90-c537bfc12960}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\State">
+      <UniqueIdentifier>{804e4826-609b-465d-b85e-03926a3d18ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System">
+      <UniqueIdentifier>{c748fb59-c272-4ed9-bd0b-bf78af8eb6dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System\Coll">
+      <UniqueIdentifier>{4c3bc373-6c26-428e-898b-d77bf4ac6797}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System\Mode">
+      <UniqueIdentifier>{6b2dac87-2d9c-4176-b062-1d4a7c8880d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System\Phmo">
+      <UniqueIdentifier>{86bfa6c1-9d38-4736-b971-feaa6861be1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System\Sbsp">
+      <UniqueIdentifier>{9a8136b3-09ee-46c2-9294-d108bc5b399c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System\RegionStates">
+      <UniqueIdentifier>{16cab8bb-0bf4-4637-8d1a-9f9e2c88deec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables">
+      <UniqueIdentifier>{99edae77-a8bb-4d6e-aa04-96c7dbf06300}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Interaction">
+      <UniqueIdentifier>{a5ca96b4-d973-48b8-b6c0-ea7328c84943}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Interaction\Type">
+      <UniqueIdentifier>{d56582bb-f1a3-4a91-887c-4e705900f590}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Interaction\State">
+      <UniqueIdentifier>{5ea5512c-36f4-4b37-b6f6-64c71d552932}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Interaction\System">
+      <UniqueIdentifier>{99e890f8-3c0c-4672-8114-2f8577a1d138}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Interaction\Hook">
+      <UniqueIdentifier>{94a5065f-6c5e-476c-bf56-e5f6fd935626}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object">
+      <UniqueIdentifier>{81b5843a-82b2-4881-a0ea-ad9676650c0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\Hook">
+      <UniqueIdentifier>{8555545b-2934-4149-8cc4-f336593eb4f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\Hook\BoneMatrix">
+      <UniqueIdentifier>{ec96a20d-9827-422a-8434-b90dbfbd65d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\State">
+      <UniqueIdentifier>{fa043b7c-caed-4d41-8889-51b03bf6f2a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\State\BoneMatrix">
+      <UniqueIdentifier>{40dad825-1b14-4344-b432-d41fad18afe6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\State\DamageSection">
+      <UniqueIdentifier>{4224ef2c-ebf4-4988-96f0-4b415258cc4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\System">
+      <UniqueIdentifier>{6a053864-0216-458e-93cf-29407cbb86f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\Type">
+      <UniqueIdentifier>{ba2049a6-a885-44d0-ae87-49e52f6f0060}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\Type\BoneMatrix">
+      <UniqueIdentifier>{c4d8bc7e-ceea-41b7-a44c-94dbe8387b19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\Type\DamageSection">
+      <UniqueIdentifier>{cca6f147-7824-409c-9602-c78c868efcb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Object\Type\Specific">
+      <UniqueIdentifier>{d34848eb-7f47-424b-96d5-03b0af89e007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Player">
+      <UniqueIdentifier>{66357dbe-e1f4-420e-bd1e-3d0ba21d87fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Player\Hook">
+      <UniqueIdentifier>{d3820057-bb61-479d-b317-e7bf57bf9884}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Player\State">
+      <UniqueIdentifier>{50c13a6e-09b0-4c9f-b72d-a093bf6a915e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Player\System">
+      <UniqueIdentifier>{1c5641ec-c8fa-4c2f-ac24-dc6861ae4a99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Player\Type">
+      <UniqueIdentifier>{2b7f33fe-b9f2-4f7d-b88c-4339686fb42e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations">
+      <UniqueIdentifier>{c956f9d7-fa4d-4b1c-9d3f-de49ad9898fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\Classifier">
+      <UniqueIdentifier>{52a51614-3c94-4df4-b7b2-3694c2087562}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\Classifier\Type">
+      <UniqueIdentifier>{7a6d0f7c-bcca-442c-927d-82afe2200566}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\Classifier\State">
+      <UniqueIdentifier>{66b94e3e-41e7-4ee0-bda5-9500ff7b8185}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\Classifier\System">
+      <UniqueIdentifier>{c655fb2c-407a-43fb-94cf-79f44c31fd48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\ObjectGraph">
+      <UniqueIdentifier>{27a4f736-3440-491d-95aa-7926f936ec6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\ObjectGraph\Type">
+      <UniqueIdentifier>{7d7ef5ef-2438-4b78-a236-7f35ae76fe97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\ObjectGraph\State">
+      <UniqueIdentifier>{5129c154-7aa3-42ce-8a3a-bac3be713bb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\ObjectGraph\System">
+      <UniqueIdentifier>{243ac1db-66ef-4c71-bd3e-687c6af032a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\PlayerGraph">
+      <UniqueIdentifier>{6c4e2afc-68e1-4ba2-8fed-2064a251a21f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\PlayerGraph\Type">
+      <UniqueIdentifier>{ba7bb4f7-504d-41fd-817a-e78b2641738b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\PlayerGraph\State">
+      <UniqueIdentifier>{ddc78b30-c6c0-4808-992a-b8589b319c3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Relations\PlayerGraph\System">
+      <UniqueIdentifier>{9442ec32-d9b3-463f-aa22-9840fdb5998d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment">
+      <UniqueIdentifier>{ae9d5c10-0a62-4dbf-b244-47ff3fc76de9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Collidable">
+      <UniqueIdentifier>{81192614-ecc6-4dc4-b5ef-a37aaec1bc0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Collidable\Type">
+      <UniqueIdentifier>{224e8a7b-5b76-44ac-bc7b-202bc720168f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Collidable\State">
+      <UniqueIdentifier>{049bca07-e1aa-4658-b7b4-4616934f1b13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Collidable\System">
+      <UniqueIdentifier>{222341c2-07d5-47fd-ae9b-1b77917ca80d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Fixtures">
+      <UniqueIdentifier>{317214c6-5015-4dc7-9eed-d719dac5d1ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Fixtures\Type">
+      <UniqueIdentifier>{de99ca93-f71c-4d08-bdf9-09d13db9a1e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Fixtures\State">
+      <UniqueIdentifier>{30d74ba4-d985-47fe-8b3a-4a09e45d7a1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Fixtures\System">
+      <UniqueIdentifier>{7d54c5d8-0eff-472e-a088-b1e1963bb193}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Health">
+      <UniqueIdentifier>{bf158fb4-af04-40f6-b380-da229f999f08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Health\Type">
+      <UniqueIdentifier>{8d5871e2-368c-444c-9065-121d4119c476}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Health\State">
+      <UniqueIdentifier>{0b8653d9-16b5-4a63-b1af-e0cd19055a3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Health\System">
+      <UniqueIdentifier>{021f8216-8ce3-4508-8177-82c91d74f6db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric">
+      <UniqueIdentifier>{40efa74b-c5b9-447b-89e7-7ad9bed66f3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Affordance">
+      <UniqueIdentifier>{35bdff82-fe65-4543-afc9-d9cb4e7b2dbf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Affordance\Type">
+      <UniqueIdentifier>{89537ffa-0186-41dc-8fd4-3bed7c8ad873}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Affordance\State">
+      <UniqueIdentifier>{df93de62-fb0d-4d1f-b042-e5ff884bdd0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Affordance\System">
+      <UniqueIdentifier>{25fc4d7f-05e1-4794-8e24-a4362b4bf323}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Self">
+      <UniqueIdentifier>{130a784e-f97f-4533-a504-d95ad6feae45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Self\Type">
+      <UniqueIdentifier>{8065e5a4-b7bb-45b3-808e-d83fe1ac542b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Self\State">
+      <UniqueIdentifier>{57d6dee4-ec7b-4351-b94b-ce390f422e5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Egocentric\Self\System">
+      <UniqueIdentifier>{2643f261-7f19-4b31-a157-ed2fc6322247}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\7_Export">
+      <UniqueIdentifier>{2bebb139-8c05-4a28-8c05-986961425058}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\7_Export\Tick">
+      <UniqueIdentifier>{9bb5ae9d-5dca-4c03-aff2-a2ebb5fa9b3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\7_Export\Tick\Type">
+      <UniqueIdentifier>{748c7a6a-32bd-49e2-bdf0-16ad14df6550}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\7_Export\Tick\State">
+      <UniqueIdentifier>{77b104ab-1e23-434c-8cca-be2c3894bf9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\7_Export\Tick\System">
+      <UniqueIdentifier>{ad15f119-02ac-49c0-9ddc-d0a866c5881c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\7_Export\Tick\Hook">
+      <UniqueIdentifier>{ff1c2968-814a-4d49-a04a-8d2712eb0735}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer">
+      <UniqueIdentifier>{75d4e7ce-0aa5-444c-a1cc-64e600b598fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Camera">
+      <UniqueIdentifier>{ab141f23-19a5-4f8d-aa8a-3a1bc9ae5413}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Camera\State">
+      <UniqueIdentifier>{7b4c46ec-1c01-47c9-b314-30f8d3cdc88e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Camera\System">
+      <UniqueIdentifier>{49894534-4827-482b-bd69-898b58ac7253}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Camera\Type">
+      <UniqueIdentifier>{5a066244-c92a-4839-bf06-eeced23eb756}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Control">
+      <UniqueIdentifier>{c3a4ca03-ca24-4428-a2cc-97e462c3d10f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Control\System">
+      <UniqueIdentifier>{3b80163a-fd9d-4421-98bc-197141f1254b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map">
+      <UniqueIdentifier>{00fb879d-6441-4a28-b151-3bd57ce838cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map\System">
+      <UniqueIdentifier>{c85a75d1-0377-4279-82b3-b2b67612eca2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map\Type">
+      <UniqueIdentifier>{d7f677a6-0f77-4cea-9855-eea667d321d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Math">
+      <UniqueIdentifier>{a84f0c55-f5da-484e-a5f8-0ccc069abe7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Math\System">
+      <UniqueIdentifier>{629121d3-cc17-4852-92c7-21a20587bef7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Overlay">
+      <UniqueIdentifier>{14ffa16a-9137-4820-b3f4-54c338192908}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Overlay\State">
+      <UniqueIdentifier>{3b016107-f5bc-47f9-8ddf-94622fd76574}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Overlay\Type">
+      <UniqueIdentifier>{bf01f994-4f97-4d1b-af0f-dc13783d3fbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Selection">
+      <UniqueIdentifier>{ed27cfe4-2756-476a-afac-72262ec3cd56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Selection\State">
+      <UniqueIdentifier>{2c7b8463-65c7-4e51-99ad-160d6a298c9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Selection\System">
+      <UniqueIdentifier>{7cc7de4a-4527-47c2-8eee-0c6f729fecfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI">
+      <UniqueIdentifier>{9ffce510-9d37-4201-8cbd-6dddf5b4093d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Backend">
+      <UniqueIdentifier>{8b06998d-be66-4f06-9352-019fb54beddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Backend\System">
+      <UniqueIdentifier>{8c4a4c8b-2e15-4cf8-bec5-8595ae4badbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Hotkey">
+      <UniqueIdentifier>{3a0f56b3-f8db-481e-9904-bf4b95833a9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Hotkey\State">
+      <UniqueIdentifier>{de3526e8-7bd1-4710-8c0f-2b3d7f3d82df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Hotkey\System">
+      <UniqueIdentifier>{cf505f85-fe22-4be2-8604-e39e597eedda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Hotkey\Type">
+      <UniqueIdentifier>{1697dc34-57c7-4f11-8dae-e7e36d40e180}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Launcher">
+      <UniqueIdentifier>{aeb1d6a1-edb0-4e0e-be5f-f3ea37e49dbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Launcher\State">
+      <UniqueIdentifier>{c17bf90d-7201-4bd7-b910-0902bf93c4fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Launcher\System">
+      <UniqueIdentifier>{a435b8d8-0d22-43c2-b07f-ca38aa886524}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Launcher\Type">
+      <UniqueIdentifier>{4bbac175-7447-436e-89dd-33591dbae0bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Overlay">
+      <UniqueIdentifier>{430482ef-6d8d-4bef-b9e2-f8ac23176da9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Overlay\State">
+      <UniqueIdentifier>{ddcf2840-fe45-4713-865b-c2f1e262110b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Overlay\System">
+      <UniqueIdentifier>{dea4e7fb-1d19-4798-b050-ace2a9888903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Overlay\System\Panel">
+      <UniqueIdentifier>{fdac4452-2b4e-485e-96c5-69908d5f17ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\ObjectTable">
+      <UniqueIdentifier>{af68c33a-50f0-4958-9bc7-0598c9030c06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\ObjectTable\State">
+      <UniqueIdentifier>{7a2c1955-d1ac-42c1-96c3-0b76fee0de86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\ObjectTable\System">
+      <UniqueIdentifier>{7e6ea274-5e84-4895-a298-6433cd41408f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\PlayerTable">
+      <UniqueIdentifier>{1420ba93-98fd-4dae-b23d-cd6ff9085555}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\PlayerTable\State">
+      <UniqueIdentifier>{bbdb62a6-1666-40de-a320-fa9a672ade00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\PlayerTable\System">
+      <UniqueIdentifier>{06364d1c-2958-4d05-b496-459fd7eee06c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Settings">
+      <UniqueIdentifier>{5ac0fce0-e541-4f33-bcd1-aa2dfe14ccf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Settings\System">
+      <UniqueIdentifier>{7ef7422e-884e-4f0a-9b1f-3c4e893cd01c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\MemoryScanner">
+      <UniqueIdentifier>{19cf5bf9-9238-4920-ab85-9a30ba66d665}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\MemoryScanner\State">
+      <UniqueIdentifier>{83f4d304-e8bc-40e0-ba64-dd83743882f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\MemoryScanner\System">
+      <UniqueIdentifier>{21809807-e161-4ec7-a674-347589ac4cff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\MemoryScanner\Type">
+      <UniqueIdentifier>{052d1b1b-1a9d-4f48-bc5a-0ba115adef1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Logs">
+      <UniqueIdentifier>{89b89d4c-5e87-4e59-a0ed-b195ff80375c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Logs\State">
+      <UniqueIdentifier>{09c14b98-6a19-4684-b21d-e4dcfadc67f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Logs\System">
+      <UniqueIdentifier>{b11238b3-888b-49f2-812e-fd39bd392c1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Logs\Type">
+      <UniqueIdentifier>{0101a15d-496f-4153-b471-b0f2bafad6c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Color">
+      <UniqueIdentifier>{d6f4e7d1-1327-4f32-b3a3-f2ded0661471}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Color\System">
+      <UniqueIdentifier>{fac0316f-622a-4d2d-b5dd-214c74de2b1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Color\System\Role">
+      <UniqueIdentifier>{41a1bbc4-ddc1-46b6-88fb-b8a68bd83d95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Color\System\Team">
+      <UniqueIdentifier>{b492a381-6568-4b33-a9f3-7d4c3b5ad360}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format">
+      <UniqueIdentifier>{f7f77317-3140-4394-b673-48394eec8d6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System">
+      <UniqueIdentifier>{f9bcde0e-8bc0-4651-9762-552b8ebb74be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Affordance">
+      <UniqueIdentifier>{7293480b-0ea3-48fa-a5e8-3ceb82ecd147}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Fixtures">
+      <UniqueIdentifier>{4900f541-99f4-48b4-9012-6bbea568d5b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Hex">
+      <UniqueIdentifier>{79bbac81-907d-4cd8-8cca-6bc8af39c413}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Interaction">
+      <UniqueIdentifier>{e55870a0-9ec8-4095-bafc-ae8e3b4b7ccb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Object">
+      <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Role">
+      <UniqueIdentifier>{556816c9-bc66-4f46-8682-295639c03e08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Format\System\Team">
+      <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Icon">
+      <UniqueIdentifier>{04cd2ce2-a76e-45bb-ae50-e11dd8b5af80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Icon\Type">
+      <UniqueIdentifier>{364424e4-1b28-4968-a66f-ee0ff8ffa916}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Icon\System">
+      <UniqueIdentifier>{a3eec7aa-077b-4196-a18e-5939cb31f9a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Widget">
+      <UniqueIdentifier>{49afb6fe-81e0-498f-9cd7-018840cba71f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Widget\System">
+      <UniqueIdentifier>{aa35498c-d314-4140-b6a8-3b5ed89d8e63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Widget\System\CopyableField">
+      <UniqueIdentifier>{d7e2dc53-0a2a-4410-8355-1eeeab45c0f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Widget\System\HandleDrawer">
+      <UniqueIdentifier>{6d2d8790-054f-4ebd-8668-91cad21a34bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Widget\System\SearchFilter">
+      <UniqueIdentifier>{aa66a3bb-1dc5-4790-944b-b7ec51edf58d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -495,604 +975,17 @@
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h">
       <Filter>External\imgui\backends</Filter>
     </ClInclude>
-    <ClInclude Include="Core\States\Core_State.h">
-      <Filter>Core\States</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Core_System.h">
-      <Filter>Core\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Threads\Core_Thread.h">
-      <Filter>Core\Threads</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Core_UI.h">
-      <Filter>Core\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\DllMain.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Core\Hooks\Core_Hook.h">
-      <Filter>Core\Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Core.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Field\CopyableField.h">
-      <Filter>Core\UI\Utils\Field</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Color\TeamToColor.h">
-      <Filter>Core\UI\Utils\Color</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\String\EnumToString.h">
-      <Filter>Core\UI\Utils\String</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\SearchFilter\ObjectSearchFilter.h">
-      <Filter>Core\UI\Utils\SearchFilter</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\SearchFilter\PlayerSearchFilter.h">
-      <Filter>Core\UI\Utils\SearchFilter</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Hex\HexFormater.h">
-      <Filter>Core\UI\Utils\Hex</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Handle\HandleDrawer.h">
-      <Filter>Core\UI\Utils\Handle</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Launcher\UI_Launcher.h">
-      <Filter>Core\UI\Launcher</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Overlay\UI_Overlay.h">
-      <Filter>Core\UI\Overlay</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Launcher\UI_Tab.h">
-      <Filter>Core\UI\Launcher</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Logs\UI_Logs.h">
-      <Filter>Core\UI\Logs</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\ObjectTable\UI_ObjectTable.h">
-      <Filter>Core\UI\ObjectTable</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\PlayerTable\UI_PlayerTable.h">
-      <Filter>Core\UI\PlayerTable</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Settings\UI_Settings.h">
-      <Filter>Core\UI\Settings</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\MemoryScanner\UI_MemoryScanner.h">
-      <Filter>Core\UI\MemoryScanner</Filter>
+    <ClInclude Include="Proxy\ProxyExports.h">
+      <Filter>Proxy</Filter>
     </ClInclude>
     <ClInclude Include="External\stb\stb_image.h">
       <Filter>External\stb</Filter>
     </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Icon\IconLoader.h">
-      <Filter>Core\UI\Utils\Icon</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Icon\IconTexture.h">
-      <Filter>Core\UI\Utils\Icon</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Threads\Main\Thread_Main.h">
-      <Filter>Core\Threads\Main</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Threads\Input\Thread_Input.h">
-      <Filter>Core\Threads\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Threads\AI\Thread_AI.h">
-      <Filter>Core\Threads\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\TagName.h">
-      <Filter>Core\Types</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Team.h">
-      <Filter>Core\Types</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\ZoneShape.h">
-      <Filter>Core\Types</Filter>
-    </ClInclude>
-    <ClInclude Include="Proxy\ProxyExports.h">
-      <Filter>Proxy</Filter>
-    </ClInclude>
     <ClInclude Include="Resources\Icons\IconData.h">
       <Filter>Resources\Icons</Filter>
     </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\MapTag.h">
-      <Filter>Core\States\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\State_MapReader.h">
-      <Filter>Core\States\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapBipd.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapBloc.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapColl.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapCtrl.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapEqip.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapHlmt.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapLbsp.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapMach.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapMode.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapPhmo.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapPlay.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapProj.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapSbsp.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapScen.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapScnr.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapSldt.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapVehi.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapWeap.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapZone.h">
-      <Filter>Core\States\Sources\MapReader\Tags</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Tables\Interaction\State_InteractionTable.h">
-      <Filter>Core\States\Sources\Tables\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneMatrices.h">
-      <Filter>Core\States\Sources\Tables\Object\BoneMatrix</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneOffsets.h">
-      <Filter>Core\States\Sources\Tables\Object\BoneMatrix</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Tables\Object\DamageSection\State_DamageSections.h">
-      <Filter>Core\States\Sources\Tables\Object\DamageSection</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Tables\Object\State_ObjectTable.h">
-      <Filter>Core\States\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Tables\Player\State_PlayerTable.h">
-      <Filter>Core\States\Sources\Tables\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Structure\Classifier\State_Classifier.h">
-      <Filter>Core\States\Structure\Classifier</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Structure\Graph\Object\State_ObjectGraph.h">
-      <Filter>Core\States\Structure\Graph\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Structure\Graph\Player\State_PlayerGraph.h">
-      <Filter>Core\States\Structure\Graph\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Structure\Classifier\System_Classifier.h">
-      <Filter>Core\Systems\Structure\Classifier</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Structure\Graph\Object\System_ObjectGraph.h">
-      <Filter>Core\Systems\Structure\Graph\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Structure\Graph\Player\System_PlayerGraph.h">
-      <Filter>Core\Systems\Structure\Graph\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\MapReader\System_MapReader.h">
-      <Filter>Core\Systems\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\MapReader\TagGroup\System_TagGroupReader.h">
-      <Filter>Core\Systems\Sources\MapReader\TagGroup</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\MapReader\TagGroup\TagGroupReader.h">
-      <Filter>Core\Systems\Sources\MapReader\TagGroup</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Tables\Interaction\System_InteractionTable.h">
-      <Filter>Core\Systems\Sources\Tables\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Tables\Object\System_ObjectTable.h">
-      <Filter>Core\Systems\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Tables\Player\System_PlayerTable.h">
-      <Filter>Core\Systems\Sources\Tables\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\MapReader\Geometry\System_GeometryReader.h">
-      <Filter>Core\Systems\Sources\MapReader\Geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Input\System_Input.h">
-      <Filter>Core\Systems\Other\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Lifecycle\System_Lifecycle.h">
-      <Filter>Core\Systems\Other\Lifecycle</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Logs\System_Logs.h">
-      <Filter>Core\Systems\Other\Logs</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Memory\AOB\System_AOBScanner.h">
-      <Filter>Core\Systems\Other\Memory\AOB</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Memory\Reader\System_MemoryReader.h">
-      <Filter>Core\Systems\Other\Memory\Reader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Memory\Scanner\System_MemoryScanner.h">
-      <Filter>Core\Systems\Other\Memory\Scanner</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Preferences\System_Preferences.h">
-      <Filter>Core\Systems\Other\Preferences</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\System_Render.h">
-      <Filter>Core\Systems\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Settings\System_Settings.h">
-      <Filter>Core\Systems\Other\Settings</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Telemetry\System_Telemetry.h">
-      <Filter>Core\Systems\Other\Telemetry</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Input\State_Input.h">
-      <Filter>Core\States\Other\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Lifecycle\State_Lifecycle.h">
-      <Filter>Core\States\Other\Lifecycle</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Logs\State_Logs.h">
-      <Filter>Core\States\Other\Logs</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Memory\State_MemoryScanner.h">
-      <Filter>Core\States\Other\Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Render\State_Render.h">
-      <Filter>Core\States\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Settings\State_Settings.h">
-      <Filter>Core\States\Other\Settings</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Telemetry\State_Telemetry.h">
-      <Filter>Core\States\Other\Telemetry</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Other\Input\InputTypes.h">
-      <Filter>Core\Types\Other\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Other\Logs\LogTypes.h">
-      <Filter>Core\Types\Other\Logs</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Other\Memory\AOB\Signatures.h">
-      <Filter>Core\Types\Other\Memory\AOB</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Other\Memory\Scanner\MemoryScannerTypes.h">
-      <Filter>Core\Types\Other\Memory\Scanner</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Structure\Classified\Classified.h">
-      <Filter>Core\Types\Structure\Classified</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Structure\Graph\Object\ObjectNode.h">
-      <Filter>Core\Types\Structure\Graph\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Structure\Graph\Player\PlayerTree.h">
-      <Filter>Core\Types\Structure\Graph\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\MapReader\MapMagics.h">
-      <Filter>Core\Types\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\MapReader\MapOffsets.h">
-      <Filter>Core\Types\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\MapReader\MapTypes.h">
-      <Filter>Core\Types\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\MapReader\ResolvedTag.h">
-      <Filter>Core\Types\Sources\MapReader</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Interaction\InteractionOffsets.h">
-      <Filter>Core\Types\Sources\Tables\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Interaction\LiveInteraction.h">
-      <Filter>Core\Types\Sources\Tables\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\BoneMatrix\BoneMatrix.h">
-      <Filter>Core\Types\Sources\Tables\Object\BoneMatrix</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\DamageSection\DamageSection.h">
-      <Filter>Core\Types\Sources\Tables\Object\DamageSection</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\BipedObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\CrateObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\EquipmentObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\ProjectileObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\SceneryObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\VehicleObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\WeaponObject.h">
-      <Filter>Core\Types\Sources\Tables\Object\Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\LiveObject.h">
-      <Filter>Core\Types\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectClass.h">
-      <Filter>Core\Types\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectOffsets.h">
-      <Filter>Core\Types\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectProfile.h">
-      <Filter>Core\Types\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectSizes.h">
-      <Filter>Core\Types\Sources\Tables\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Player\LivePlayer.h">
-      <Filter>Core\Types\Sources\Tables\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Player\PlayerOffsets.h">
-      <Filter>Core\Types\Sources\Tables\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Tables\Player\PlayerSizes.h">
-      <Filter>Core\Types\Sources\Tables\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Static\Stats\State_StatsBuilder.h">
-      <Filter>Core\States\Sources\Static\Stats</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Static\Vitality\State_VitalityBuilder.h">
-      <Filter>Core\States\Sources\Static\Vitality</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Sources\Static\World\State_WorldBuilder.h">
-      <Filter>Core\States\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\System_StatsBuilder.h">
-      <Filter>Core\Systems\Sources\Static\Stats</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\Proj\System_ProjBuilder.h">
-      <Filter>Core\Systems\Sources\Static\Stats\Proj</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\Vehi\System_VehiBuilder.h">
-      <Filter>Core\Systems\Sources\Static\Stats\Vehi</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\Weap\System_WeapBuilder.h">
-      <Filter>Core\Systems\Sources\Static\Stats\Weap</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\Vitality\System_VitalityBuilder.h">
-      <Filter>Core\Systems\Sources\Static\Vitality</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\World\System_WorldBuilder.h">
-      <Filter>Core\Systems\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\World\Coll\System_CollBuilder.h">
-      <Filter>Core\Systems\Sources\Static\World\Coll</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\World\Mode\System_ModeBuilder.h">
-      <Filter>Core\Systems\Sources\Static\World\Mode</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\World\Phmo\System_PhmoBuilder.h">
-      <Filter>Core\Systems\Sources\Static\World\Phmo</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspBuilder.h">
-      <Filter>Core\Systems\Sources\Static\World\Sbsp</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspSeamLinker.h">
-      <Filter>Core\Systems\Sources\Static\World\Sbsp</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\World\SbspGeometry.h">
-      <Filter>Core\Types\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\World\CollGeometry.h">
-      <Filter>Core\Types\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\World\ModeGeometry.h">
-      <Filter>Core\Types\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\World\NavigationGraph.h">
-      <Filter>Core\Types\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\World\PhmoGeometry.h">
-      <Filter>Core\Types\Sources\Static\World</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Eqip.h">
-      <Filter>Core\Types\Sources\Static\Stats</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Proj.h">
-      <Filter>Core\Types\Sources\Static\Stats</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Vehi.h">
-      <Filter>Core\Types\Sources\Static\Stats</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Weap.h">
-      <Filter>Core\Types\Sources\Static\Stats</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Sources\Static\Vitality\VitalityLayout.h">
-      <Filter>Core\Types\Sources\Static\Vitality</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Egocentric\Affordance\Affordance.h">
-      <Filter>Core\Types\Egocentric\Affordance</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Egocentric\Self\Self.h">
-      <Filter>Core\Types\Egocentric\Self</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Egocentric\Affordances\State_Affordances.h">
-      <Filter>Core\States\Egocentric\Affordances</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Egocentric\Self\State_Self.h">
-      <Filter>Core\States\Egocentric\Self</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Egocentric\Affordances\System_Affordances.h">
-      <Filter>Core\Systems\Egocentric\Affordances</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Egocentric\Self\System_Self.h">
-      <Filter>Core\Systems\Egocentric\Self</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Environment\Collidable\Collidable.h">
-      <Filter>Core\Types\Environment\Collidable</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Environment\Fixtures\Fixtures.h">
-      <Filter>Core\Types\Environment\Fixtures</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Environment\Vitality\ObjectVitality.h">
-      <Filter>Core\Types\Environment\Vitality</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Environment\Collidables\State_Collidables.h">
-      <Filter>Core\States\Environment\Collidables</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Environment\Fixtures\State_Fixtures.h">
-      <Filter>Core\States\Environment\Fixtures</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Environment\Vitality\State_Vitality.h">
-      <Filter>Core\States\Environment\Vitality</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Environment\Collidables\System_Collidables.h">
-      <Filter>Core\Systems\Environment\Collidables</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Environment\Fixtures\System_Fixtures.h">
-      <Filter>Core\Systems\Environment\Fixtures</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Environment\Vitality\System_Vitality.h">
-      <Filter>Core\Systems\Environment\Vitality</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Tick\State_Tick.h">
-      <Filter>Core\States\Tick</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Tick\Tick.h">
-      <Filter>Core\Types\Tick</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Tick\System_Tick.h">
-      <Filter>Core\Systems\Tick</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Utils\Color\RoleToColor.h">
-      <Filter>Core\UI\Utils\Color</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\GpuStateGuard.h">
-      <Filter>Core\Systems\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\FlyCamera.h">
-      <Filter>Core\Systems\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Render\State_FlyCamera.h">
-      <Filter>Core\States\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Shaders.h">
-      <Filter>Core\Systems\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\GpuPipeline.h">
-      <Filter>Core\Systems\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Map\System_MapRenderer.h">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Map\MapPass.h">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Map\DynamicPass.h">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Map\CollidableClassifier.h">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Render\State_Selection.h">
-      <Filter>Core\States\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\States\Other\Render\State_OverlayMode.h">
-      <Filter>Core\States\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Vitality.h">
-      <Filter>Core\UI\Overlay\Panels</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Affordance.h">
-      <Filter>Core\UI\Overlay\Panels</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Collidable.h">
-      <Filter>Core\UI\Overlay\Panels</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Fixture.h">
-      <Filter>Core\UI\Overlay\Panels</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Tick\Hook_SimulationTicks.h">
-      <Filter>Core\Hooks\Tick</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Interaction\Hook_InteractionTable.h">
-      <Filter>Core\Hooks\Sources\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Map\Hook_BlamOpenMap.h">
-      <Filter>Core\Hooks\Sources\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Object\BoneMatrix\Hook_InitRootNode.h">
-      <Filter>Core\Hooks\Sources\Object\BoneMatrix</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Object\Hook_CreateObject.h">
-      <Filter>Core\Hooks\Sources\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Object\Hook_ObjectTable.h">
-      <Filter>Core\Hooks\Sources\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Object\Hook_ReleaseObject.h">
-      <Filter>Core\Hooks\Sources\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Player\Hook_CreatePlayer.h">
-      <Filter>Core\Hooks\Sources\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Sources\Player\Hook_PlayerTable.h">
-      <Filter>Core\Hooks\Sources\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Input\Hook_GetButtonState.h">
-      <Filter>Core\Hooks\Other\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Input\Hook_GetRawInputData.h">
-      <Filter>Core\Hooks\Other\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Lifecycle\Hook_DestroySubsystems.h">
-      <Filter>Core\Hooks\Other\Lifecycle</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Lifecycle\Hook_EngineInitialize.h">
-      <Filter>Core\Hooks\Other\Lifecycle</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Render\Hook_Present.h">
-      <Filter>Core\Hooks\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Render\Hook_ResizeBuffers.h">
-      <Filter>Core\Hooks\Other\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Hooks\Other\Window\Hook_WndProc.h">
-      <Filter>Core\Hooks\Other\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Types\Other\EngineStatus.h">
-      <Filter>Core\Types\Other</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Map\ZoneGeometry.h">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Systems\Other\Render\Map\ZonePass.h">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\DllMain.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
@@ -1129,25 +1022,6 @@
     <ClCompile Include="External\minhook\src\hde\hde64.c">
       <Filter>External\minhook\hde</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Core_State.cpp">
-      <Filter>Core\States</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Systems\Core_System.cpp">
-      <Filter>Core\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Threads\Core_Thread.cpp">
-      <Filter>Core\Threads</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Core_UI.cpp">
-      <Filter>Core\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Core\Hooks\Core_Hook.cpp">
-      <Filter>Core\Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Core.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="External\zlib\adler32.c">
       <Filter>External\zlib</Filter>
     </ClCompile>
@@ -1166,347 +1040,1652 @@
     <ClCompile Include="External\zlib\zutil.c">
       <Filter>External\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\Field\CopyableField.cpp">
-      <Filter>Core\UI\Utils\Field</Filter>
+    <ClCompile Include="Core\Domain\Common\Math\Type\Common.Math.Type.ixx">
+      <Filter>Core\Domain\Common\Math\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\Color\TeamToColor.cpp">
-      <Filter>Core\UI\Utils\Color</Filter>
+    <ClCompile Include="Core\Domain\Common\Tag\Name\Common.Tag.Name.ixx">
+      <Filter>Core\Domain\Common\Tag\Name</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\String\EnumToString.cpp">
-      <Filter>Core\UI\Utils\String</Filter>
+    <ClCompile Include="Core\Domain\Common\Team\Type\Common.Team.Type.ixx">
+      <Filter>Core\Domain\Common\Team\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\SearchFilter\ObjectSearchFilter.cpp">
-      <Filter>Core\UI\Utils\SearchFilter</Filter>
+    <ClCompile Include="Core\Domain\Common\ZoneShape\Type\Common.ZoneShape.Type.ixx">
+      <Filter>Core\Domain\Common\ZoneShape\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\SearchFilter\PlayerSearchFilter.cpp">
-      <Filter>Core\UI\Utils\SearchFilter</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.State.ixx">
+      <Filter>Core\Domain\1_Map\Reader</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\Hex\HexFormater.cpp">
-      <Filter>Core\UI\Utils\Hex</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\DataStream\DataStreamService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\DataStream</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\Handle\HandleDrawer.cpp">
-      <Filter>Core\UI\Utils\Handle</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\DataStream\DataStreamService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\DataStream</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Launcher\UI_Launcher.cpp">
-      <Filter>Core\UI\Launcher</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileLocator\FileLocatorService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\FileLocator</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\UI_Overlay.cpp">
-      <Filter>Core\UI\Overlay</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileLocator\FileLocatorService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\FileLocator</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Launcher\UI_Tab.cpp">
-      <Filter>Core\UI\Launcher</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileNames\FileNamesService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\FileNames</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Logs\UI_Logs.cpp">
-      <Filter>Core\UI\Logs</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileNames\FileNamesService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\FileNames</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\ObjectTable\UI_ObjectTable.cpp">
-      <Filter>Core\UI\ObjectTable</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Formula\FormulaService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Formula</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\PlayerTable\UI_PlayerTable.cpp">
-      <Filter>Core\UI\PlayerTable</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Formula\FormulaService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Formula</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Settings\UI_Settings.cpp">
-      <Filter>Core\UI\Settings</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Header\HeaderService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Header</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\MemoryScanner\UI_MemoryScanner.cpp">
-      <Filter>Core\UI\MemoryScanner</Filter>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Header\HeaderService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Header</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagGroup\TagGroupService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\TagGroup</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagIndex\TagIndexService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\TagIndex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagIndex\TagIndexService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\TagIndex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagResolver\TagResolverService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\TagResolver</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagResolver\TagResolverService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\TagResolver</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\TagStructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\TagStructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.System.ixx">
+      <Filter>Core\Domain\1_Map\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Info\GeometryInfoService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\Info</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Info\GeometryInfoService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\Info</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage\GeometryResourcePageService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\ResourcePage</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage\GeometryResourcePageService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\ResourcePage</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder\GeometryMeshDecoderService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder\GeometryMeshDecoderService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Loader\GeometryLoaderService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\Loader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Loader\GeometryLoaderService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Geometry\Loader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Map.Reader.System.Geometry.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Loader\MapLoaderService.cpp">
+      <Filter>Core\Domain\1_Map\Reader\System\Loader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Loader\MapLoaderService.ixx">
+      <Filter>Core\Domain\1_Map\Reader\System\Loader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderGeometry.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderMagic.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderOffset.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderInfo.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderStructure.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Type.ixx">
+      <Filter>Core\Domain\1_Map\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Hook\OpenMapDetour.cpp">
+      <Filter>Core\Domain\1_Map\Reader\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Hook\OpenMapDetour.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Hook.ixx">
+      <Filter>Core\Domain\1_Map\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.System.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\State\BipdStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\State\BlocStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\State\CollStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\State\CtrlStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\State\EqipStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\State\HlmtStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\State\LbspStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\State\MachStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\State\ModeStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\State\PhmoStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\State\PlayStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\State\ProjStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\State\SbspStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\State\ScenStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\State\ScnrStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\State\SldtStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\State\VehiStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\State\WeapStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\State\ZoneStore.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsEqip.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsProj.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsVehi.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsWeap.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\State\StatsStore.cpp">
+      <Filter>Core\Domain\2_Resolved\Stats\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\State\StatsStore.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.ixx">
+      <Filter>Core\Domain\1_Map\Reader\State\File</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.cpp">
+      <Filter>Core\Domain\1_Map\Reader\State\File</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\Tag\TagStore.ixx">
+      <Filter>Core\Domain\1_Map\Reader\State\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.ixx">
+      <Filter>Core\Domain\1_Map\Reader\State\TagIndex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.cpp">
+      <Filter>Core\Domain\1_Map\Reader\State\TagIndex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.State.Bipd.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.Type.Bipd.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\System\BipdDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.State.Bloc.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.System.Bloc.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.Type.Bloc.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\System\BlocDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.State.Coll.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.System.Coll.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.Type.Coll.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\System\CollDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.State.Ctrl.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.System.Ctrl.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.Type.Ctrl.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\System\CtrlDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.State.Eqip.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.System.Eqip.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.Type.Eqip.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\System\EqipDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.State.Hlmt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.System.Hlmt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.Type.Hlmt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\System\HlmtDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.State.Lbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.System.Lbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.Type.Lbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\System\LbspDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.State.Mach.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.System.Mach.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.Type.Mach.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\System\MachDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.State.Mode.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.System.Mode.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.Type.Mode.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\System\ModeDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.State.Phmo.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.System.Phmo.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.Type.Phmo.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\System\PhmoDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.State.Play.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.System.Play.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.Type.Play.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\System\PlayDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.State.Proj.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.System.Proj.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.Type.Proj.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\System\ProjDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.State.Sbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.System.Sbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.Type.Sbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\System\SbspDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.State.Scen.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.System.Scen.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.Type.Scen.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\System\ScenDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.State.Scnr.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.System.Scnr.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.Type.Scnr.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\ScnrDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.State.Sldt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.Type.Sldt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\SldtDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.State.Vehi.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.System.Vehi.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.Type.Vehi.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\System\VehiDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.State.Weap.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.System.Weap.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.Type.Weap.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\System\WeapDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.State.Zone.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.System.Zone.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.Type.Zone.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\ZoneDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Resolved.Stats.Type.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Weap\WeapBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Stats\System\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Weap\WeapBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\System\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Vehi\VehiBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Stats\System\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Vehi\VehiBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\System\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Proj\ProjBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Stats\System\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Proj\ProjBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\System\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\Resolved.Vitality.Type.ixx">
+      <Filter>Core\Domain\2_Resolved\Vitality\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.cpp">
+      <Filter>Core\Domain\2_Resolved\Vitality\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.ixx">
+      <Filter>Core\Domain\2_Resolved\Vitality\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Vitality\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Vitality\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\StatsBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Stats\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\StatsBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Stats\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldColl.ixx">
+      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldMode.ixx">
+      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldPhmo.ixx">
+      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldSbsp.ixx">
+      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Resolved.World.Type.ixx">
+      <Filter>Core\Domain\2_Resolved\World</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.cpp">
+      <Filter>Core\Domain\2_Resolved\World\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.ixx">
+      <Filter>Core\Domain\2_Resolved\World\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Coll\CollBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Coll\CollBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Mode\ModeBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Mode\ModeBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Phmo\PhmoBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Phmo\PhmoBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspSeamLinker.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspSeamLinker.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.ixx">
+      <Filter>Core\Domain\1_Map\Builder\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.cpp">
+      <Filter>Core\Domain\1_Map\Builder\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionAlive.ixx">
+      <Filter>Core\Domain\3_Tables\Interaction\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Interaction\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\State\InteractionStore.cpp">
+      <Filter>Core\Domain\3_Tables\Interaction\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\State\InteractionStore.ixx">
+      <Filter>Core\Domain\3_Tables\Interaction\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Tables.Interaction.Type.ixx">
+      <Filter>Core\Domain\3_Tables\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\System\InteractionService.cpp">
+      <Filter>Core\Domain\3_Tables\Interaction\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\System\InteractionService.ixx">
+      <Filter>Core\Domain\3_Tables\Interaction\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Hook\InteractionTableLocator.cpp">
+      <Filter>Core\Domain\3_Tables\Interaction\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Hook\InteractionTableLocator.ixx">
+      <Filter>Core\Domain\3_Tables\Interaction\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerAlive.ixx">
+      <Filter>Core\Domain\3_Tables\Player\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Player\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerSize.ixx">
+      <Filter>Core\Domain\3_Tables\Player\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Type.ixx">
+      <Filter>Core\Domain\3_Tables\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.cpp">
+      <Filter>Core\Domain\3_Tables\Player\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.ixx">
+      <Filter>Core\Domain\3_Tables\Player\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.cpp">
+      <Filter>Core\Domain\3_Tables\Player\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.ixx">
+      <Filter>Core\Domain\3_Tables\Player\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.cpp">
+      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.ixx">
+      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.cpp">
+      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.ixx">
+      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Hook.ixx">
+      <Filter>Core\Domain\3_Tables\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\DamageSection</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectBiped.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectCrate.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectEquipment.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectProjectile.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectScenery.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectVehicle.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectWeapon.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectAlive.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectClass.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectProfile.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectSize.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Tables.Object.Type.ixx">
+      <Filter>Core\Domain\3_Tables\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp">
+      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx">
+      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneOffsetsStore.cpp">
+      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneOffsetsStore.ixx">
+      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\DamageSection\DamageSectionsStore.cpp">
+      <Filter>Core\Domain\3_Tables\Object\State\DamageSection</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\DamageSection\DamageSectionsStore.ixx">
+      <Filter>Core\Domain\3_Tables\Object\State\DamageSection</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\ObjectTableStore.cpp">
+      <Filter>Core\Domain\3_Tables\Object\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\ObjectTableStore.ixx">
+      <Filter>Core\Domain\3_Tables\Object\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\System\ObjectTableService.cpp">
+      <Filter>Core\Domain\3_Tables\Object\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\System\ObjectTableService.ixx">
+      <Filter>Core\Domain\3_Tables\Object\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.cpp">
+      <Filter>Core\Domain\3_Tables\Object\Hook\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Hook\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.cpp">
+      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.cpp">
+      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.cpp">
+      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.ixx">
+      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Object\Tables.Object.Hook.ixx">
+      <Filter>Core\Domain\3_Tables\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
+      <Filter>Core\Domain\4_Relations\Classifier\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\State\ClassifierStore.cpp">
+      <Filter>Core\Domain\4_Relations\Classifier\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\State\ClassifierStore.ixx">
+      <Filter>Core\Domain\4_Relations\Classifier\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\System\ClassifierService.cpp">
+      <Filter>Core\Domain\4_Relations\Classifier\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\System\ClassifierService.ixx">
+      <Filter>Core\Domain\4_Relations\Classifier\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\Type\Environment.Collidable.Type.ixx">
+      <Filter>Core\Domain\5_Environment\Collidable\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\State\CollidableStore.cpp">
+      <Filter>Core\Domain\5_Environment\Collidable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\State\CollidableStore.ixx">
+      <Filter>Core\Domain\5_Environment\Collidable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\System\CollidableService.cpp">
+      <Filter>Core\Domain\5_Environment\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\System\CollidableService.ixx">
+      <Filter>Core\Domain\5_Environment\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
+      <Filter>Core\Domain\4_Relations\ObjectGraph\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\State\ObjectGraphStore.cpp">
+      <Filter>Core\Domain\4_Relations\ObjectGraph\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\State\ObjectGraphStore.ixx">
+      <Filter>Core\Domain\4_Relations\ObjectGraph\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\System\ObjectGraphService.cpp">
+      <Filter>Core\Domain\4_Relations\ObjectGraph\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\System\ObjectGraphService.ixx">
+      <Filter>Core\Domain\4_Relations\ObjectGraph\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\Type\Relations.PlayerGraph.Type.ixx">
+      <Filter>Core\Domain\4_Relations\PlayerGraph\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\State\PlayerGraphStore.cpp">
+      <Filter>Core\Domain\4_Relations\PlayerGraph\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\State\PlayerGraphStore.ixx">
+      <Filter>Core\Domain\4_Relations\PlayerGraph\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\System\PlayerGraphService.cpp">
+      <Filter>Core\Domain\4_Relations\PlayerGraph\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\System\PlayerGraphService.ixx">
+      <Filter>Core\Domain\4_Relations\PlayerGraph\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx">
+      <Filter>Core\Domain\5_Environment\Fixtures\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\State\FixturesStore.cpp">
+      <Filter>Core\Domain\5_Environment\Fixtures\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\State\FixturesStore.ixx">
+      <Filter>Core\Domain\5_Environment\Fixtures\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\System\FixturesService.cpp">
+      <Filter>Core\Domain\5_Environment\Fixtures\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\System\FixturesService.ixx">
+      <Filter>Core\Domain\5_Environment\Fixtures\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Health\Type\Environment.Health.Type.ixx">
+      <Filter>Core\Domain\5_Environment\Health\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Health\State\HealthStore.cpp">
+      <Filter>Core\Domain\5_Environment\Health\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Health\State\HealthStore.ixx">
+      <Filter>Core\Domain\5_Environment\Health\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Health\System\HealthService.cpp">
+      <Filter>Core\Domain\5_Environment\Health\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Health\System\HealthService.ixx">
+      <Filter>Core\Domain\5_Environment\Health\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
+      <Filter>Core\Domain\6_Egocentric\Self\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\State\SelfStore.cpp">
+      <Filter>Core\Domain\6_Egocentric\Self\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\State\SelfStore.ixx">
+      <Filter>Core\Domain\6_Egocentric\Self\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\System\SelfService.cpp">
+      <Filter>Core\Domain\6_Egocentric\Self\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\System\SelfService.ixx">
+      <Filter>Core\Domain\6_Egocentric\Self\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\Type\Egocentric.Affordance.Type.ixx">
+      <Filter>Core\Domain\6_Egocentric\Affordance\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\State\AffordanceStore.cpp">
+      <Filter>Core\Domain\6_Egocentric\Affordance\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\State\AffordanceStore.ixx">
+      <Filter>Core\Domain\6_Egocentric\Affordance\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\System\AffordanceService.cpp">
+      <Filter>Core\Domain\6_Egocentric\Affordance\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\System\AffordanceService.ixx">
+      <Filter>Core\Domain\6_Egocentric\Affordance\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRegionStates.ixx">
+      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\RegionStates\RegionStatesBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\RegionStates</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\RegionStates\RegionStatesBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\RegionStates</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\DllMain.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Core.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Core.ixx">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Map.Layer.ixx">
+      <Filter>Core\Domain\1_Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Resolved.Layer.ixx">
+      <Filter>Core\Domain\2_Resolved</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Tables.Layer.ixx">
+      <Filter>Core\Domain\3_Tables</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Relations\Relations.Layer.ixx">
+      <Filter>Core\Domain\4_Relations</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Environment.Layer.ixx">
+      <Filter>Core\Domain\5_Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Egocentric\Egocentric.Layer.ixx">
+      <Filter>Core\Domain\6_Egocentric</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Runtime.Layer.ixx">
+      <Filter>Core\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Runtime.Thread.ixx">
+      <Filter>Core\Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Main\MainThread.cpp">
+      <Filter>Core\Runtime\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Main\MainThread.ixx">
+      <Filter>Core\Runtime\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Input\InputThread.cpp">
+      <Filter>Core\Runtime\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Input\InputThread.ixx">
+      <Filter>Core\Runtime\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\AI\AIThread.cpp">
+      <Filter>Core\Runtime\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\AI\AIThread.ixx">
+      <Filter>Core\Runtime\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Export.Layer.ixx">
+      <Filter>Core\Domain\7_Export</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\Type\Export.Tick.Type.ixx">
+      <Filter>Core\Domain\7_Export\Tick\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\State\TickStore.cpp">
+      <Filter>Core\Domain\7_Export\Tick\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\State\TickStore.ixx">
+      <Filter>Core\Domain\7_Export\Tick\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.cpp">
+      <Filter>Core\Domain\7_Export\Tick\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.ixx">
+      <Filter>Core\Domain\7_Export\Tick\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\Hook\SimulationTicksDetour.cpp">
+      <Filter>Core\Domain\7_Export\Tick\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\7_Export\Tick\Hook\SimulationTicksDetour.ixx">
+      <Filter>Core\Domain\7_Export\Tick\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Viewer.Layer.ixx">
+      <Filter>Core\Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Camera\Type\Viewer.Camera.Type.ixx">
+      <Filter>Core\Viewer\Camera\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Camera\State\CameraStore.ixx">
+      <Filter>Core\Viewer\Camera\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Camera\State\CameraStore.cpp">
+      <Filter>Core\Viewer\Camera\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Camera\System\CameraService.ixx">
+      <Filter>Core\Viewer\Camera\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Camera\System\CameraService.cpp">
+      <Filter>Core\Viewer\Camera\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Control\System\ControlService.ixx">
+      <Filter>Core\Viewer\Control\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Control\System\ControlService.cpp">
+      <Filter>Core\Viewer\Control\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\Viewer.Map.System.ixx">
+      <Filter>Core\Viewer\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx">
+      <Filter>Core\Viewer\Map\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapService.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapService.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\PaletteService.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\PaletteService.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZoneGeometry.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZoneGeometry.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Math\System\Vec3.ixx">
+      <Filter>Core\Viewer\Math\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Overlay\Type\Viewer.Overlay.Type.ixx">
+      <Filter>Core\Viewer\Overlay\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Overlay\State\OverlayStore.ixx">
+      <Filter>Core\Viewer\Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Overlay\State\OverlayStore.cpp">
+      <Filter>Core\Viewer\Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Selection\State\SelectionStore.ixx">
+      <Filter>Core\Viewer\Selection\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Selection\State\SelectionStore.cpp">
+      <Filter>Core\Viewer\Selection\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Selection\System\SelectionService.cpp">
+      <Filter>Core\Viewer\Selection\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Selection\System\SelectionService.ixx">
+      <Filter>Core\Viewer\Selection\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Backend\System\BackendUIService.ixx">
+      <Filter>Core\UI\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Backend\System\BackendUIService.cpp">
+      <Filter>Core\UI\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\UI.Layer.ixx">
+      <Filter>Core\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Hotkey\State\HotkeyUIStore.ixx">
+      <Filter>Core\UI\Hotkey\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Hotkey\State\HotkeyUIStore.cpp">
+      <Filter>Core\UI\Hotkey\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Hotkey\System\HotkeyUIService.cpp">
+      <Filter>Core\UI\Hotkey\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Hotkey\System\HotkeyUIService.ixx">
+      <Filter>Core\UI\Hotkey\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Launcher\State\LauncherUIStore.ixx">
+      <Filter>Core\UI\Launcher\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Launcher\State\LauncherUIStore.cpp">
+      <Filter>Core\UI\Launcher\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Launcher\System\LauncherUIService.ixx">
+      <Filter>Core\UI\Launcher\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Launcher\System\LauncherUIService.cpp">
+      <Filter>Core\UI\Launcher\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\State\OverlayUIStore.ixx">
+      <Filter>Core\UI\Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\State\OverlayUIStore.cpp">
+      <Filter>Core\UI\Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\OverlayUIService.ixx">
+      <Filter>Core\UI\Overlay\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\OverlayUIService.cpp">
+      <Filter>Core\UI\Overlay\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.ixx">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.cpp">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\VitalitiesUI.ixx">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\VitalitiesUI.cpp">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.cpp">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.ixx">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\AffordancesUI.cpp">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Overlay\System\Panel\AffordancesUI.ixx">
+      <Filter>Core\UI\Overlay\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.ixx">
+      <Filter>Core\UI\ObjectTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.cpp">
+      <Filter>Core\UI\ObjectTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\ObjectTable\System\ObjectTableUIService.ixx">
+      <Filter>Core\UI\ObjectTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\ObjectTable\System\ObjectTableUIService.cpp">
+      <Filter>Core\UI\ObjectTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\PlayerTable\State\PlayerTableUIStore.ixx">
+      <Filter>Core\UI\PlayerTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\PlayerTable\State\PlayerTableUIStore.cpp">
+      <Filter>Core\UI\PlayerTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\PlayerTable\System\PlayerTableUIService.ixx">
+      <Filter>Core\UI\PlayerTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\PlayerTable\System\PlayerTableUIService.cpp">
+      <Filter>Core\UI\PlayerTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Settings\System\SettingsUIService.ixx">
+      <Filter>Core\UI\Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Settings\System\SettingsUIService.cpp">
+      <Filter>Core\UI\Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.ixx">
+      <Filter>Core\UI\MemoryScanner\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.cpp">
+      <Filter>Core\UI\MemoryScanner\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.ixx">
+      <Filter>Core\UI\MemoryScanner\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.cpp">
+      <Filter>Core\UI\MemoryScanner\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Logs\State\LogsUIStore.ixx">
+      <Filter>Core\UI\Logs\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Logs\State\LogsUIStore.cpp">
+      <Filter>Core\UI\Logs\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Logs\System\LogsUIService.ixx">
+      <Filter>Core\UI\Logs\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Logs\System\LogsUIService.cpp">
+      <Filter>Core\UI\Logs\System</Filter>
     </ClCompile>
     <ClCompile Include="External\stb\stb_implementation.cpp">
       <Filter>External\stb</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Threads\Main\Thread_Main.cpp">
-      <Filter>Core\Threads\Main</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Threads\Input\Thread_Input.cpp">
-      <Filter>Core\Threads\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Threads\AI\Thread_AI.cpp">
-      <Filter>Core\Threads\AI</Filter>
-    </ClCompile>
     <ClCompile Include="Resources\Icons\IconData.cpp">
       <Filter>Resources\Icons</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\MapReader\State_MapReader.cpp">
-      <Filter>Core\States\Sources\MapReader</Filter>
+    <ClCompile Include="Core\UI\Color\UI.Color.System.ixx">
+      <Filter>Core\UI\Color</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Tables\Interaction\State_InteractionTable.cpp">
-      <Filter>Core\States\Sources\Tables\Interaction</Filter>
+    <ClCompile Include="Core\UI\Format\UI.Format.System.ixx">
+      <Filter>Core\UI\Format</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneMatrices.cpp">
-      <Filter>Core\States\Sources\Tables\Object\BoneMatrix</Filter>
+    <ClCompile Include="Core\UI\Format\System\Affordance\AffordanceFormater.cpp">
+      <Filter>Core\UI\Format\System\Affordance</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneOffsets.cpp">
-      <Filter>Core\States\Sources\Tables\Object\BoneMatrix</Filter>
+    <ClCompile Include="Core\UI\Format\System\Affordance\AffordanceFormater.ixx">
+      <Filter>Core\UI\Format\System\Affordance</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Tables\Object\DamageSection\State_DamageSections.cpp">
-      <Filter>Core\States\Sources\Tables\Object\DamageSection</Filter>
+    <ClCompile Include="Core\UI\Format\System\Fixtures\FixturesFormater.cpp">
+      <Filter>Core\UI\Format\System\Fixtures</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Tables\Object\State_ObjectTable.cpp">
-      <Filter>Core\States\Sources\Tables\Object</Filter>
+    <ClCompile Include="Core\UI\Format\System\Fixtures\FixturesFormater.ixx">
+      <Filter>Core\UI\Format\System\Fixtures</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Tables\Player\State_PlayerTable.cpp">
-      <Filter>Core\States\Sources\Tables\Player</Filter>
+    <ClCompile Include="Core\UI\Format\System\Hex\HexFormater.cpp">
+      <Filter>Core\UI\Format\System\Hex</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Structure\Classifier\State_Classifier.cpp">
-      <Filter>Core\States\Structure\Classifier</Filter>
+    <ClCompile Include="Core\UI\Format\System\Hex\HexFormater.ixx">
+      <Filter>Core\UI\Format\System\Hex</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Structure\Graph\Object\State_ObjectGraph.cpp">
-      <Filter>Core\States\Structure\Graph\Object</Filter>
+    <ClCompile Include="Core\UI\Format\System\Interaction\InteractionFormater.cpp">
+      <Filter>Core\UI\Format\System\Interaction</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Structure\Graph\Player\State_PlayerGraph.cpp">
-      <Filter>Core\States\Structure\Graph\Player</Filter>
+    <ClCompile Include="Core\UI\Format\System\Interaction\InteractionFormater.ixx">
+      <Filter>Core\UI\Format\System\Interaction</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Structure\Classifier\System_Classifier.cpp">
-      <Filter>Core\Systems\Structure\Classifier</Filter>
+    <ClCompile Include="Core\UI\Format\System\Object\ObjectFormater.cpp">
+      <Filter>Core\UI\Format\System\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Structure\Graph\Object\System_ObjectGraph.cpp">
-      <Filter>Core\Systems\Structure\Graph\Object</Filter>
+    <ClCompile Include="Core\UI\Format\System\Object\ObjectFormater.ixx">
+      <Filter>Core\UI\Format\System\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Structure\Graph\Player\System_PlayerGraph.cpp">
-      <Filter>Core\Systems\Structure\Graph\Player</Filter>
+    <ClCompile Include="Core\UI\Format\System\Role\RoleFormater.cpp">
+      <Filter>Core\UI\Format\System\Role</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\MapReader\System_MapReader.cpp">
-      <Filter>Core\Systems\Sources\MapReader</Filter>
+    <ClCompile Include="Core\UI\Format\System\Role\RoleFormater.ixx">
+      <Filter>Core\UI\Format\System\Role</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\MapReader\TagGroup\System_TagGroupReader.cpp">
-      <Filter>Core\Systems\Sources\MapReader\TagGroup</Filter>
+    <ClCompile Include="Core\UI\Format\System\Team\TeamFormater.cpp">
+      <Filter>Core\UI\Format\System\Team</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Tables\Interaction\System_InteractionTable.cpp">
-      <Filter>Core\Systems\Sources\Tables\Interaction</Filter>
+    <ClCompile Include="Core\UI\Format\System\Team\TeamFormater.ixx">
+      <Filter>Core\UI\Format\System\Team</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Tables\Object\System_ObjectTable.cpp">
-      <Filter>Core\Systems\Sources\Tables\Object</Filter>
+    <ClCompile Include="Core\UI\Icon\Type\UI.Icon.Type.ixx">
+      <Filter>Core\UI\Icon\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Tables\Player\System_PlayerTable.cpp">
-      <Filter>Core\Systems\Sources\Tables\Player</Filter>
+    <ClCompile Include="Core\UI\Icon\System\IconLoader.cpp">
+      <Filter>Core\UI\Icon\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\MapReader\Geometry\System_GeometryReader.cpp">
-      <Filter>Core\Systems\Sources\MapReader\Geometry</Filter>
+    <ClCompile Include="Core\UI\Icon\System\IconLoader.ixx">
+      <Filter>Core\UI\Icon\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Input\System_Input.cpp">
-      <Filter>Core\Systems\Other\Input</Filter>
+    <ClCompile Include="Core\UI\Widget\UI.Widget.System.ixx">
+      <Filter>Core\UI\Widget</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Lifecycle\System_Lifecycle.cpp">
-      <Filter>Core\Systems\Other\Lifecycle</Filter>
+    <ClCompile Include="Core\UI\Color\System\Role\RoleToColor.ixx">
+      <Filter>Core\UI\Color\System\Role</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Logs\System_Logs.cpp">
-      <Filter>Core\Systems\Other\Logs</Filter>
+    <ClCompile Include="Core\UI\Color\System\Role\RoleToColor.cpp">
+      <Filter>Core\UI\Color\System\Role</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Memory\AOB\System_AOBScanner.cpp">
-      <Filter>Core\Systems\Other\Memory\AOB</Filter>
+    <ClCompile Include="Core\UI\Color\System\Team\TeamToColor.ixx">
+      <Filter>Core\UI\Color\System\Team</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Memory\Scanner\System_MemoryScanner.cpp">
-      <Filter>Core\Systems\Other\Memory\Scanner</Filter>
+    <ClCompile Include="Core\UI\Color\System\Team\TeamToColor.cpp">
+      <Filter>Core\UI\Color\System\Team</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Preferences\System_Preferences.cpp">
-      <Filter>Core\Systems\Other\Preferences</Filter>
+    <ClCompile Include="Core\UI\Widget\System\CopyableField\CopyableFieldUIService.cpp">
+      <Filter>Core\UI\Widget\System\CopyableField</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\System_Render.cpp">
-      <Filter>Core\Systems\Other\Render</Filter>
+    <ClCompile Include="Core\UI\Widget\System\CopyableField\CopyableFieldUIService.ixx">
+      <Filter>Core\UI\Widget\System\CopyableField</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Settings\System_Settings.cpp">
-      <Filter>Core\Systems\Other\Settings</Filter>
+    <ClCompile Include="Core\UI\Widget\System\HandleDrawer\HandleDrawerUIService.cpp">
+      <Filter>Core\UI\Widget\System\HandleDrawer</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Telemetry\System_Telemetry.cpp">
-      <Filter>Core\Systems\Other\Telemetry</Filter>
+    <ClCompile Include="Core\UI\Widget\System\HandleDrawer\HandleDrawerUIService.ixx">
+      <Filter>Core\UI\Widget\System\HandleDrawer</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Input\State_Input.cpp">
-      <Filter>Core\States\Other\Input</Filter>
+    <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.ixx">
+      <Filter>Core\UI\Widget\System\SearchFilter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Lifecycle\State_Lifecycle.cpp">
-      <Filter>Core\States\Other\Lifecycle</Filter>
+    <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.cpp">
+      <Filter>Core\UI\Widget\System\SearchFilter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Logs\State_Logs.cpp">
-      <Filter>Core\States\Other\Logs</Filter>
+    <ClCompile Include="Core\UI\Hotkey\Type\UI.Hotkey.Type.ixx">
+      <Filter>Core\UI\Hotkey\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Memory\State_MemoryScanner.cpp">
-      <Filter>Core\States\Other\Memory</Filter>
+    <ClCompile Include="Core\UI\Launcher\Type\UI.Launcher.Type.ixx">
+      <Filter>Core\UI\Launcher\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Render\State_Render.cpp">
-      <Filter>Core\States\Other\Render</Filter>
+    <ClCompile Include="Core\UI\UI.Layer.cpp">
+      <Filter>Core\UI</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Settings\State_Settings.cpp">
-      <Filter>Core\States\Other\Settings</Filter>
+    <ClCompile Include="Core\UI\Logs\Type\UI.Logs.Type.ixx">
+      <Filter>Core\UI\Logs\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Telemetry\State_Telemetry.cpp">
-      <Filter>Core\States\Other\Telemetry</Filter>
+    <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx">
+      <Filter>Core\UI\MemoryScanner\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Static\Stats\State_StatsBuilder.cpp">
-      <Filter>Core\States\Sources\Static\Stats</Filter>
+    <ClCompile Include="Core\UI\Backend\System\WndProcUIService.ixx">
+      <Filter>Core\UI\Backend\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Static\Vitality\State_VitalityBuilder.cpp">
-      <Filter>Core\States\Sources\Static\Vitality</Filter>
+    <ClCompile Include="Core\UI\Backend\System\WndProcUIService.cpp">
+      <Filter>Core\UI\Backend\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Sources\Static\World\State_WorldBuilder.cpp">
-      <Filter>Core\States\Sources\Static\World</Filter>
+    <ClCompile Include="Core\UI\Backend\UI.Backend.System.ixx">
+      <Filter>Core\UI\Backend</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\System_StatsBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\Stats</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx">
+      <Filter>Core\Infrastructure\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\Proj\System_ProjBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\Stats\Proj</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Input</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\Vehi\System_VehiBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\Stats\Vehi</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\Weap\System_WeapBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\Stats\Weap</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\Vitality\System_VitalityBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\Vitality</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\World\System_WorldBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\World</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\World\Coll\System_CollBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\World\Coll</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\World\Mode\System_ModeBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\World\Mode</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\World\Phmo\System_PhmoBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\World\Phmo</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspBuilder.cpp">
-      <Filter>Core\Systems\Sources\Static\World\Sbsp</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspSeamLinker.cpp">
-      <Filter>Core\Systems\Sources\Static\World\Sbsp</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Egocentric\Affordances\State_Affordances.cpp">
-      <Filter>Core\States\Egocentric\Affordances</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Egocentric\Self\State_Self.cpp">
-      <Filter>Core\States\Egocentric\Self</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Egocentric\Affordances\System_Affordances.cpp">
-      <Filter>Core\Systems\Egocentric\Affordances</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Egocentric\Self\System_Self.cpp">
-      <Filter>Core\Systems\Egocentric\Self</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Environment\Collidables\State_Collidables.cpp">
-      <Filter>Core\States\Environment\Collidables</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Environment\Fixtures\State_Fixtures.cpp">
-      <Filter>Core\States\Environment\Fixtures</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Environment\Vitality\State_Vitality.cpp">
-      <Filter>Core\States\Environment\Vitality</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Environment\Collidables\System_Collidables.cpp">
-      <Filter>Core\Systems\Environment\Collidables</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Environment\Fixtures\System_Fixtures.cpp">
-      <Filter>Core\Systems\Environment\Fixtures</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Environment\Vitality\System_Vitality.cpp">
-      <Filter>Core\Systems\Environment\Vitality</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Tick\State_Tick.cpp">
-      <Filter>Core\States\Tick</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Tick\System_Tick.cpp">
-      <Filter>Core\Systems\Tick</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Utils\Color\RoleToColor.cpp">
-      <Filter>Core\UI\Utils\Color</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.State.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\GpuStateGuard.cpp">
-      <Filter>Core\Systems\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\FlyCamera.cpp">
-      <Filter>Core\Systems\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Render\State_FlyCamera.cpp">
-      <Filter>Core\States\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Memory\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\GpuPipeline.cpp">
-      <Filter>Core\Systems\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\Map\System_MapRenderer.cpp">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemoryScanner.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\Map\MapPass.cpp">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\Map\DynamicPass.cpp">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.cpp">
+      <Filter>Core\Infrastructure\Platform\Memory\System\AOB</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\Map\CollidableClassifier.cpp">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory\System\AOB</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Render\State_Selection.cpp">
-      <Filter>Core\States\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.cpp">
+      <Filter>Core\Infrastructure\Platform\Memory\System\Reader</Filter>
     </ClCompile>
-    <ClCompile Include="Core\States\Other\Render\State_OverlayMode.cpp">
-      <Filter>Core\States\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory\System\Reader</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Affordance.cpp">
-      <Filter>Core\UI\Overlay\Panels</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.cpp">
+      <Filter>Core\Infrastructure\Platform\Memory\System\Scanner</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Collidable.cpp">
-      <Filter>Core\UI\Overlay\Panels</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.ixx">
+      <Filter>Core\Infrastructure\Platform\Memory\System\Scanner</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Fixture.cpp">
-      <Filter>Core\UI\Overlay\Panels</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Render</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Vitality.cpp">
-      <Filter>Core\UI\Overlay\Panels</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Render</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Tick\Hook_SimulationTicks.cpp">
-      <Filter>Core\Hooks\Tick</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Interaction\Hook_InteractionTable.cpp">
-      <Filter>Core\Hooks\Sources\Interaction</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Map\Hook_BlamOpenMap.cpp">
-      <Filter>Core\Hooks\Sources\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Object\BoneMatrix\Hook_InitRootNode.cpp">
-      <Filter>Core\Hooks\Sources\Object\BoneMatrix</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Object\Hook_CreateObject.cpp">
-      <Filter>Core\Hooks\Sources\Object</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Object\Hook_ObjectTable.cpp">
-      <Filter>Core\Hooks\Sources\Object</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Object\Hook_ReleaseObject.cpp">
-      <Filter>Core\Hooks\Sources\Object</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Player\Hook_CreatePlayer.cpp">
-      <Filter>Core\Hooks\Sources\Player</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Sources\Player\Hook_PlayerTable.cpp">
-      <Filter>Core\Hooks\Sources\Player</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Input\Hook_GetButtonState.cpp">
-      <Filter>Core\Hooks\Other\Input</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Input\Hook_GetRawInputData.cpp">
-      <Filter>Core\Hooks\Other\Input</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Lifecycle\Hook_DestroySubsystems.cpp">
-      <Filter>Core\Hooks\Other\Lifecycle</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Lifecycle\Hook_EngineInitialize.cpp">
-      <Filter>Core\Hooks\Other\Lifecycle</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Render\Hook_Present.cpp">
-      <Filter>Core\Hooks\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\Shaders.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Render\Hook_ResizeBuffers.cpp">
-      <Filter>Core\Hooks\Other\Render</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Hooks\Other\Window\Hook_WndProc.cpp">
-      <Filter>Core\Hooks\Other\Window</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\Map\ZoneGeometry.cpp">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Service\Service.Layer.ixx">
+      <Filter>Core\Infrastructure\Service</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\Other\Render\Map\ZonePass.cpp">
-      <Filter>Core\Systems\Other\Render\Map</Filter>
+    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.cpp">
+      <Filter>Core\Infrastructure\Service\Logs\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.ixx">
+      <Filter>Core\Infrastructure\Service\Logs\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.cpp">
+      <Filter>Core\Infrastructure\Service\Logs\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.ixx">
+      <Filter>Core\Infrastructure\Service\Logs\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Logs\Type\Service.Logs.Type.ixx">
+      <Filter>Core\Infrastructure\Service\Logs\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.cpp">
+      <Filter>Core\Infrastructure\Service\Preferences\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.ixx">
+      <Filter>Core\Infrastructure\Service\Preferences\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.cpp">
+      <Filter>Core\Infrastructure\Service\Settings\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.ixx">
+      <Filter>Core\Infrastructure\Service\Settings\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.cpp">
+      <Filter>Core\Infrastructure\Service\Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.ixx">
+      <Filter>Core\Infrastructure\Service\Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.cpp">
+      <Filter>Core\Infrastructure\Service\Telemetry\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.ixx">
+      <Filter>Core\Infrastructure\Service\Telemetry\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.cpp">
+      <Filter>Core\Infrastructure\Service\Telemetry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.ixx">
+      <Filter>Core\Infrastructure\Service\Telemetry\System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

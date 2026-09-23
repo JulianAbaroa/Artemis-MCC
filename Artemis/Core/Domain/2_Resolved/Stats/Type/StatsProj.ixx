@@ -1,0 +1,87 @@
+export module Resolved.Stats.Type:Proj;
+
+import std;
+
+export namespace Resolved::Stats::Type::Proj
+{
+    enum class Type : std::uint8_t
+    {
+        Ballistic,
+        Guided,
+        BruteGrenade,
+        FireBomb,
+        ConicalSpread,
+    };
+
+    struct ConicalSpread
+    {
+        std::int16_t YawCount;
+        std::int16_t PitchCount;
+        float DistributionExponent;
+        float Spread;
+    };
+
+    struct Proj
+    {
+        std::string TagName;
+        Type Type;
+
+        // Kinematics.
+        float InitialVelocity;
+        float FinalVelocity;
+        float AirGravityScale;
+        float WaterGravityScale;
+        float AccelerationRangeMin;
+        float AccelerationRangeMax;
+        float AirDamageRangeMin;
+        float AirDamageRangeMax;
+        float WaterDamageRangeMin;
+        float WaterDamageRangeMax;
+
+        // Guidance.
+        float GuidedAngularVelocityLower;
+        float GuidedAngularVelocityUpper;
+        float GuidedAngularVelocityAtRest;
+        float TargetedLeadingFraction;
+        float OuterRangeErrorRadius;
+        float AutoaimLeadingMaxLeadTime;
+        float AiNormalVelocityScale;
+        float AiHeroicVelocityScale;
+        float AiLegendaryVelocityScale;
+        float AiNormalGuidedAngularVelocityScale;
+
+        // Detonation.
+        float CollisionRadius;
+        float ArmingTime;
+        float TimerMin;
+        float TimerMax;
+        float MinimumVelocity;
+        float MaximumRange;
+        float SuperDetonationTime;
+        float BoardingDetonationTime;
+        float MaxLatchTimeToArm;
+        std::uint16_t DetonationTimerStarts;
+
+        // Danger.
+        float DangerRadius;
+        float DangerStimuliRadius;
+        float FlybyDamageMaxDistance;
+        float MaterialEffectRadius;
+
+        // Noise
+        std::uint16_t ImpactNoise;
+        std::uint16_t DetonationNoise;
+
+        // Flags
+        bool MustUseBallisticAiming;
+        bool IsMinorTrackingThreat;
+        bool DangerousWhenInactive;
+
+        // Derived from MaterialResponse
+        bool CanBounce;
+
+        // Conical spread (only valid when Type == ConicalSpread)
+        bool HasConicalSpread;
+        ConicalSpread ConicalSpreadData;
+    };
+}

@@ -91,11 +91,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,11 +113,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,11 +133,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/External/zlib;$(ProjectDir)/../TagTranspiler;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,12 +155,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/../TagTranspiler;$(ProjectDir)/External/zlib;$(ProjectDir)/External/stb;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -163,331 +171,570 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Core\DllMain.h" />
-    <ClInclude Include="Core\Hooks\Core_Hook.h" />
-    <ClInclude Include="Core\Core.h" />
-    <ClInclude Include="Core\Hooks\Other\Input\Hook_GetButtonState.h" />
-    <ClInclude Include="Core\Hooks\Other\Input\Hook_GetRawInputData.h" />
-    <ClInclude Include="Core\Hooks\Other\Lifecycle\Hook_DestroySubsystems.h" />
-    <ClInclude Include="Core\Hooks\Other\Lifecycle\Hook_EngineInitialize.h" />
-    <ClInclude Include="Core\Hooks\Other\Render\Hook_Present.h" />
-    <ClInclude Include="Core\Hooks\Other\Render\Hook_ResizeBuffers.h" />
-    <ClInclude Include="Core\Hooks\Other\Window\Hook_WndProc.h" />
-    <ClInclude Include="Core\Hooks\Sources\Interaction\Hook_InteractionTable.h" />
-    <ClInclude Include="Core\Hooks\Sources\Map\Hook_BlamOpenMap.h" />
-    <ClInclude Include="Core\Hooks\Sources\Object\BoneMatrix\Hook_InitRootNode.h" />
-    <ClInclude Include="Core\Hooks\Sources\Object\Hook_CreateObject.h" />
-    <ClInclude Include="Core\Hooks\Sources\Object\Hook_ObjectTable.h" />
-    <ClInclude Include="Core\Hooks\Sources\Object\Hook_ReleaseObject.h" />
-    <ClInclude Include="Core\Hooks\Sources\Player\Hook_CreatePlayer.h" />
-    <ClInclude Include="Core\Hooks\Sources\Player\Hook_PlayerTable.h" />
-    <ClInclude Include="Core\Hooks\Tick\Hook_SimulationTicks.h" />
-    <ClInclude Include="Core\States\Core_State.h" />
-    <ClInclude Include="Core\States\Egocentric\Affordances\State_Affordances.h" />
-    <ClInclude Include="Core\States\Egocentric\Self\State_Self.h" />
-    <ClInclude Include="Core\States\Environment\Collidables\State_Collidables.h" />
-    <ClInclude Include="Core\States\Environment\Fixtures\State_Fixtures.h" />
-    <ClInclude Include="Core\States\Environment\Vitality\State_Vitality.h" />
-    <ClInclude Include="Core\States\Other\Input\State_Input.h" />
-    <ClInclude Include="Core\States\Other\Lifecycle\State_Lifecycle.h" />
-    <ClInclude Include="Core\States\Other\Logs\State_Logs.h" />
-    <ClInclude Include="Core\States\Other\Memory\State_MemoryScanner.h" />
-    <ClInclude Include="Core\States\Other\Render\State_FlyCamera.h" />
-    <ClInclude Include="Core\States\Other\Render\State_OverlayMode.h" />
-    <ClInclude Include="Core\States\Other\Render\State_Render.h" />
-    <ClInclude Include="Core\States\Other\Render\State_Selection.h" />
-    <ClInclude Include="Core\States\Other\Settings\State_Settings.h" />
-    <ClInclude Include="Core\States\Other\Telemetry\State_Telemetry.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\MapTag.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\State_MapReader.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapBipd.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapBloc.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapColl.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapCtrl.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapEqip.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapHlmt.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapLbsp.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapMach.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapMode.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapPhmo.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapPlay.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapProj.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapSbsp.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapScen.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapScnr.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapSldt.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapVehi.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapWeap.h" />
-    <ClInclude Include="Core\States\Sources\MapReader\Tags\State_MapZone.h" />
-    <ClInclude Include="Core\States\Sources\Static\Stats\State_StatsBuilder.h" />
-    <ClInclude Include="Core\States\Sources\Static\Vitality\State_VitalityBuilder.h" />
-    <ClInclude Include="Core\States\Sources\Static\World\State_WorldBuilder.h" />
-    <ClInclude Include="Core\States\Sources\Tables\Interaction\State_InteractionTable.h" />
-    <ClInclude Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneMatrices.h" />
-    <ClInclude Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneOffsets.h" />
-    <ClInclude Include="Core\States\Sources\Tables\Object\DamageSection\State_DamageSections.h" />
-    <ClInclude Include="Core\States\Sources\Tables\Object\State_ObjectTable.h" />
-    <ClInclude Include="Core\States\Sources\Tables\Player\State_PlayerTable.h" />
-    <ClInclude Include="Core\States\Structure\Classifier\State_Classifier.h" />
-    <ClInclude Include="Core\States\Structure\Graph\Object\State_ObjectGraph.h" />
-    <ClInclude Include="Core\States\Structure\Graph\Player\State_PlayerGraph.h" />
-    <ClInclude Include="Core\States\Tick\State_Tick.h" />
-    <ClInclude Include="Core\Systems\Core_System.h" />
-    <ClInclude Include="Core\Systems\Egocentric\Affordances\System_Affordances.h" />
-    <ClInclude Include="Core\Systems\Egocentric\Self\System_Self.h" />
-    <ClInclude Include="Core\Systems\Environment\Collidables\System_Collidables.h" />
-    <ClInclude Include="Core\Systems\Environment\Fixtures\System_Fixtures.h" />
-    <ClInclude Include="Core\Systems\Environment\Vitality\System_Vitality.h" />
-    <ClInclude Include="Core\Systems\Other\Input\System_Input.h" />
-    <ClInclude Include="Core\Systems\Other\Lifecycle\System_Lifecycle.h" />
-    <ClInclude Include="Core\Systems\Other\Logs\System_Logs.h" />
-    <ClInclude Include="Core\Systems\Other\Memory\AOB\System_AOBScanner.h" />
-    <ClInclude Include="Core\Systems\Other\Memory\Reader\System_MemoryReader.h" />
-    <ClInclude Include="Core\Systems\Other\Memory\Scanner\System_MemoryScanner.h" />
-    <ClInclude Include="Core\Systems\Other\Preferences\System_Preferences.h" />
-    <ClInclude Include="Core\Systems\Other\Render\FlyCamera.h" />
-    <ClInclude Include="Core\Systems\Other\Render\GpuPipeline.h" />
-    <ClInclude Include="Core\Systems\Other\Render\GpuStateGuard.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Map\CollidableClassifier.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Map\DynamicPass.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Map\MapPass.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Map\System_MapRenderer.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Map\ZoneGeometry.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Map\ZonePass.h" />
-    <ClInclude Include="Core\Systems\Other\Render\Shaders.h" />
-    <ClInclude Include="Core\Systems\Other\Render\System_Render.h" />
-    <ClInclude Include="Core\Systems\Other\Settings\System_Settings.h" />
-    <ClInclude Include="Core\Systems\Other\Telemetry\System_Telemetry.h" />
-    <ClInclude Include="Core\Systems\Sources\MapReader\Geometry\System_GeometryReader.h" />
-    <ClInclude Include="Core\Systems\Sources\MapReader\System_MapReader.h" />
-    <ClInclude Include="Core\Systems\Sources\MapReader\TagGroup\System_TagGroupReader.h" />
-    <ClInclude Include="Core\Systems\Sources\MapReader\TagGroup\TagGroupReader.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\Proj\System_ProjBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\System_StatsBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\Vehi\System_VehiBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\Stats\Weap\System_WeapBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\Vitality\System_VitalityBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\World\Coll\System_CollBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\World\Mode\System_ModeBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\World\Phmo\System_PhmoBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspSeamLinker.h" />
-    <ClInclude Include="Core\Systems\Sources\Static\World\System_WorldBuilder.h" />
-    <ClInclude Include="Core\Systems\Sources\Tables\Interaction\System_InteractionTable.h" />
-    <ClInclude Include="Core\Systems\Sources\Tables\Object\System_ObjectTable.h" />
-    <ClInclude Include="Core\Systems\Sources\Tables\Player\System_PlayerTable.h" />
-    <ClInclude Include="Core\Systems\Structure\Classifier\System_Classifier.h" />
-    <ClInclude Include="Core\Systems\Structure\Graph\Object\System_ObjectGraph.h" />
-    <ClInclude Include="Core\Systems\Structure\Graph\Player\System_PlayerGraph.h" />
-    <ClInclude Include="Core\Systems\Tick\System_Tick.h" />
-    <ClInclude Include="Core\Threads\AI\Thread_AI.h" />
-    <ClInclude Include="Core\Threads\Core_Thread.h" />
-    <ClInclude Include="Core\Threads\Input\Thread_Input.h" />
-    <ClInclude Include="Core\Threads\Main\Thread_Main.h" />
-    <ClInclude Include="Core\Types\Egocentric\Affordance\Affordance.h" />
-    <ClInclude Include="Core\Types\Egocentric\Self\Self.h" />
-    <ClInclude Include="Core\Types\Environment\Collidable\Collidable.h" />
-    <ClInclude Include="Core\Types\Environment\Fixtures\Fixtures.h" />
-    <ClInclude Include="Core\Types\Environment\Vitality\ObjectVitality.h" />
-    <ClInclude Include="Core\Types\Other\EngineStatus.h" />
-    <ClInclude Include="Core\Types\Other\Input\InputTypes.h" />
-    <ClInclude Include="Core\Types\Other\Logs\LogTypes.h" />
-    <ClInclude Include="Core\Types\Other\Memory\AOB\Signatures.h" />
-    <ClInclude Include="Core\Types\Other\Memory\Scanner\MemoryScannerTypes.h" />
-    <ClInclude Include="Core\Types\Sources\MapReader\MapMagics.h" />
-    <ClInclude Include="Core\Types\Sources\MapReader\MapOffsets.h" />
-    <ClInclude Include="Core\Types\Sources\MapReader\MapTypes.h" />
-    <ClInclude Include="Core\Types\Sources\MapReader\ResolvedTag.h" />
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Eqip.h" />
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Proj.h" />
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Vehi.h" />
-    <ClInclude Include="Core\Types\Sources\Static\Stats\Weap.h" />
-    <ClInclude Include="Core\Types\Sources\Static\Vitality\VitalityLayout.h" />
-    <ClInclude Include="Core\Types\Sources\Static\World\CollGeometry.h" />
-    <ClInclude Include="Core\Types\Sources\Static\World\ModeGeometry.h" />
-    <ClInclude Include="Core\Types\Sources\Static\World\NavigationGraph.h" />
-    <ClInclude Include="Core\Types\Sources\Static\World\PhmoGeometry.h" />
-    <ClInclude Include="Core\Types\Sources\Static\World\SbspGeometry.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Interaction\InteractionOffsets.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Interaction\LiveInteraction.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\BoneMatrix\BoneMatrix.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\DamageSection\DamageSection.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\LiveObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectClass.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectOffsets.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectProfile.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\ObjectSizes.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\BipedObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\CrateObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\EquipmentObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\ProjectileObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\SceneryObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\VehicleObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Object\Specific\WeaponObject.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Player\LivePlayer.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Player\PlayerOffsets.h" />
-    <ClInclude Include="Core\Types\Sources\Tables\Player\PlayerSizes.h" />
-    <ClInclude Include="Core\Types\Structure\Classified\Classified.h" />
-    <ClInclude Include="Core\Types\Structure\Graph\Object\ObjectNode.h" />
-    <ClInclude Include="Core\Types\Structure\Graph\Player\PlayerTree.h" />
-    <ClInclude Include="Core\Types\TagName.h" />
-    <ClInclude Include="Core\Types\Team.h" />
-    <ClInclude Include="Core\Types\Tick\Tick.h" />
-    <ClInclude Include="Core\Types\ZoneShape.h" />
-    <ClInclude Include="Core\UI\Core_UI.h" />
-    <ClInclude Include="Core\UI\Launcher\UI_Launcher.h" />
-    <ClInclude Include="Core\UI\Launcher\UI_Tab.h" />
-    <ClInclude Include="Core\UI\Logs\UI_Logs.h" />
-    <ClInclude Include="Core\UI\MemoryScanner\UI_MemoryScanner.h" />
-    <ClInclude Include="Core\UI\ObjectTable\UI_ObjectTable.h" />
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Affordance.h" />
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Collidable.h" />
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Fixture.h" />
-    <ClInclude Include="Core\UI\Overlay\Panels\OverlayPanel_Vitality.h" />
-    <ClInclude Include="Core\UI\Overlay\UI_Overlay.h" />
-    <ClInclude Include="Core\UI\PlayerTable\UI_PlayerTable.h" />
-    <ClInclude Include="Core\UI\Settings\UI_Settings.h" />
-    <ClInclude Include="Core\UI\Utils\Color\RoleToColor.h" />
-    <ClInclude Include="Core\UI\Utils\Color\TeamToColor.h" />
-    <ClInclude Include="Core\UI\Utils\Field\CopyableField.h" />
-    <ClInclude Include="Core\UI\Utils\Handle\HandleDrawer.h" />
-    <ClInclude Include="Core\UI\Utils\Hex\HexFormater.h" />
-    <ClInclude Include="Core\UI\Utils\Icon\IconLoader.h" />
-    <ClInclude Include="Core\UI\Utils\Icon\IconTexture.h" />
-    <ClInclude Include="Core\UI\Utils\SearchFilter\ObjectSearchFilter.h" />
-    <ClInclude Include="Core\UI\Utils\SearchFilter\PlayerSearchFilter.h" />
-    <ClInclude Include="Core\UI\Utils\String\EnumToString.h" />
+    <ClCompile Include="Core\Domain\7_Export\Export.Layer.ixx" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\Hook\SimulationTicksDetour.cpp" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\Hook\SimulationTicksDetour.ixx" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\State\TickStore.cpp" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\State\TickStore.ixx" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.cpp" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.ixx" />
+    <ClCompile Include="Core\Domain\7_Export\Tick\Type\Export.Tick.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.State.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemoryScanner.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.System.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\Shaders.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Logs\Type\Service.Logs.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Service.Layer.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.ixx" />
+    <ClCompile Include="Core\Runtime\AI\AIThread.cpp" />
+    <ClCompile Include="Core\Runtime\Input\InputThread.cpp" />
+    <ClCompile Include="Core\Runtime\Main\MainThread.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Input\InputThread.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\AI\AIThread.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Backend\System\WndProcUIService.cpp" />
+    <ClCompile Include="Core\UI\Backend\System\WndProcUIService.ixx" />
+    <ClCompile Include="Core\UI\Backend\UI.Backend.System.ixx" />
+    <ClCompile Include="Core\UI\Color\System\Role\RoleToColor.cpp" />
+    <ClCompile Include="Core\UI\Color\System\Role\RoleToColor.ixx" />
+    <ClCompile Include="Core\UI\Color\System\Team\TeamToColor.cpp" />
+    <ClCompile Include="Core\UI\Color\System\Team\TeamToColor.ixx" />
+    <ClCompile Include="Core\UI\Color\UI.Color.System.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Affordance\AffordanceFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Affordance\AffordanceFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Fixtures\FixturesFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Fixtures\FixturesFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Hex\HexFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Hex\HexFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Interaction\InteractionFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Interaction\InteractionFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Object\ObjectFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Object\ObjectFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Role\RoleFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Role\RoleFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\System\Team\TeamFormater.cpp" />
+    <ClCompile Include="Core\UI\Format\System\Team\TeamFormater.ixx" />
+    <ClCompile Include="Core\UI\Format\UI.Format.System.ixx" />
+    <ClCompile Include="Core\UI\Hotkey\Type\UI.Hotkey.Type.ixx" />
+    <ClCompile Include="Core\UI\Icon\System\IconLoader.cpp" />
+    <ClCompile Include="Core\UI\Icon\System\IconLoader.ixx" />
+    <ClCompile Include="Core\UI\Icon\Type\UI.Icon.Type.ixx" />
+    <ClCompile Include="Core\UI\Launcher\Type\UI.Launcher.Type.ixx" />
+    <ClCompile Include="Core\UI\Logs\Type\UI.Logs.Type.ixx" />
+    <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx" />
+    <ClCompile Include="Core\UI\UI.Layer.cpp" />
+    <ClCompile Include="Core\UI\Widget\System\CopyableField\CopyableFieldUIService.cpp" />
+    <ClCompile Include="Core\UI\Widget\System\CopyableField\CopyableFieldUIService.ixx" />
+    <ClCompile Include="Core\UI\Widget\System\HandleDrawer\HandleDrawerUIService.cpp" />
+    <ClCompile Include="Core\UI\Widget\System\HandleDrawer\HandleDrawerUIService.ixx" />
+    <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.cpp" />
+    <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.ixx" />
+    <ClCompile Include="Core\UI\Widget\UI.Widget.System.ixx" />
+    <ClCompile Include="Resources\Icons\IconData.cpp" />
     <ClInclude Include="External\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="External\imgui\imgui.h" />
     <ClInclude Include="External\imgui\imgui_internal.h" />
     <ClInclude Include="External\minhook\include\MinHook.h" />
     <ClInclude Include="External\stb\stb_image.h" />
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="pch.h" />
     <ClInclude Include="Proxy\ProxyExports.h" />
     <ClInclude Include="Resources\Icons\IconData.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\DllMain.cpp" />
-    <ClCompile Include="Core\Hooks\Core_Hook.cpp" />
     <ClCompile Include="Core\Core.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Input\Hook_GetButtonState.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Input\Hook_GetRawInputData.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Lifecycle\Hook_DestroySubsystems.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Lifecycle\Hook_EngineInitialize.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Render\Hook_Present.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Render\Hook_ResizeBuffers.cpp" />
-    <ClCompile Include="Core\Hooks\Other\Window\Hook_WndProc.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Interaction\Hook_InteractionTable.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Map\Hook_BlamOpenMap.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Object\BoneMatrix\Hook_InitRootNode.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Object\Hook_CreateObject.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Object\Hook_ObjectTable.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Object\Hook_ReleaseObject.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Player\Hook_CreatePlayer.cpp" />
-    <ClCompile Include="Core\Hooks\Sources\Player\Hook_PlayerTable.cpp" />
-    <ClCompile Include="Core\Hooks\Tick\Hook_SimulationTicks.cpp" />
-    <ClCompile Include="Core\States\Core_State.cpp" />
-    <ClCompile Include="Core\States\Egocentric\Affordances\State_Affordances.cpp" />
-    <ClCompile Include="Core\States\Egocentric\Self\State_Self.cpp" />
-    <ClCompile Include="Core\States\Environment\Collidables\State_Collidables.cpp" />
-    <ClCompile Include="Core\States\Environment\Fixtures\State_Fixtures.cpp" />
-    <ClCompile Include="Core\States\Environment\Vitality\State_Vitality.cpp" />
-    <ClCompile Include="Core\States\Other\Input\State_Input.cpp" />
-    <ClCompile Include="Core\States\Other\Lifecycle\State_Lifecycle.cpp" />
-    <ClCompile Include="Core\States\Other\Logs\State_Logs.cpp" />
-    <ClCompile Include="Core\States\Other\Memory\State_MemoryScanner.cpp" />
-    <ClCompile Include="Core\States\Other\Render\State_FlyCamera.cpp" />
-    <ClCompile Include="Core\States\Other\Render\State_OverlayMode.cpp" />
-    <ClCompile Include="Core\States\Other\Render\State_Render.cpp" />
-    <ClCompile Include="Core\States\Other\Render\State_Selection.cpp" />
-    <ClCompile Include="Core\States\Other\Settings\State_Settings.cpp" />
-    <ClCompile Include="Core\States\Other\Telemetry\State_Telemetry.cpp" />
-    <ClCompile Include="Core\States\Sources\MapReader\State_MapReader.cpp" />
-    <ClCompile Include="Core\States\Sources\Static\Stats\State_StatsBuilder.cpp" />
-    <ClCompile Include="Core\States\Sources\Static\Vitality\State_VitalityBuilder.cpp" />
-    <ClCompile Include="Core\States\Sources\Static\World\State_WorldBuilder.cpp" />
-    <ClCompile Include="Core\States\Sources\Tables\Interaction\State_InteractionTable.cpp" />
-    <ClCompile Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneMatrices.cpp" />
-    <ClCompile Include="Core\States\Sources\Tables\Object\BoneMatrix\State_BoneOffsets.cpp" />
-    <ClCompile Include="Core\States\Sources\Tables\Object\DamageSection\State_DamageSections.cpp" />
-    <ClCompile Include="Core\States\Sources\Tables\Object\State_ObjectTable.cpp" />
-    <ClCompile Include="Core\States\Sources\Tables\Player\State_PlayerTable.cpp" />
-    <ClCompile Include="Core\States\Structure\Classifier\State_Classifier.cpp" />
-    <ClCompile Include="Core\States\Structure\Graph\Object\State_ObjectGraph.cpp" />
-    <ClCompile Include="Core\States\Structure\Graph\Player\State_PlayerGraph.cpp" />
-    <ClCompile Include="Core\States\Tick\State_Tick.cpp" />
-    <ClCompile Include="Core\Systems\Core_System.cpp" />
-    <ClCompile Include="Core\Systems\Egocentric\Affordances\System_Affordances.cpp" />
-    <ClCompile Include="Core\Systems\Egocentric\Self\System_Self.cpp" />
-    <ClCompile Include="Core\Systems\Environment\Collidables\System_Collidables.cpp" />
-    <ClCompile Include="Core\Systems\Environment\Fixtures\System_Fixtures.cpp" />
-    <ClCompile Include="Core\Systems\Environment\Vitality\System_Vitality.cpp" />
-    <ClCompile Include="Core\Systems\Other\Input\System_Input.cpp" />
-    <ClCompile Include="Core\Systems\Other\Lifecycle\System_Lifecycle.cpp" />
-    <ClCompile Include="Core\Systems\Other\Logs\System_Logs.cpp" />
-    <ClCompile Include="Core\Systems\Other\Memory\AOB\System_AOBScanner.cpp" />
-    <ClCompile Include="Core\Systems\Other\Memory\Scanner\System_MemoryScanner.cpp" />
-    <ClCompile Include="Core\Systems\Other\Preferences\System_Preferences.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\FlyCamera.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\GpuPipeline.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\GpuStateGuard.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\Map\CollidableClassifier.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\Map\DynamicPass.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\Map\MapPass.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\Map\System_MapRenderer.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\Map\ZoneGeometry.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\Map\ZonePass.cpp" />
-    <ClCompile Include="Core\Systems\Other\Render\System_Render.cpp" />
-    <ClCompile Include="Core\Systems\Other\Settings\System_Settings.cpp" />
-    <ClCompile Include="Core\Systems\Other\Telemetry\System_Telemetry.cpp" />
-    <ClCompile Include="Core\Systems\Sources\MapReader\Geometry\System_GeometryReader.cpp" />
-    <ClCompile Include="Core\Systems\Sources\MapReader\System_MapReader.cpp" />
-    <ClCompile Include="Core\Systems\Sources\MapReader\TagGroup\System_TagGroupReader.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\Proj\System_ProjBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\System_StatsBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\Vehi\System_VehiBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\Stats\Weap\System_WeapBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\Vitality\System_VitalityBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\World\Coll\System_CollBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\World\Mode\System_ModeBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\World\Phmo\System_PhmoBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\World\Sbsp\System_SbspSeamLinker.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Static\World\System_WorldBuilder.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Tables\Interaction\System_InteractionTable.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Tables\Object\System_ObjectTable.cpp" />
-    <ClCompile Include="Core\Systems\Sources\Tables\Player\System_PlayerTable.cpp" />
-    <ClCompile Include="Core\Systems\Structure\Classifier\System_Classifier.cpp" />
-    <ClCompile Include="Core\Systems\Structure\Graph\Object\System_ObjectGraph.cpp" />
-    <ClCompile Include="Core\Systems\Structure\Graph\Player\System_PlayerGraph.cpp" />
-    <ClCompile Include="Core\Systems\Tick\System_Tick.cpp" />
-    <ClCompile Include="Core\Threads\AI\Thread_AI.cpp" />
-    <ClCompile Include="Core\Threads\Core_Thread.cpp" />
-    <ClCompile Include="Core\Threads\Input\Thread_Input.cpp" />
-    <ClCompile Include="Core\Threads\Main\Thread_Main.cpp" />
-    <ClCompile Include="Core\UI\Core_UI.cpp" />
-    <ClCompile Include="Core\UI\Launcher\UI_Launcher.cpp" />
-    <ClCompile Include="Core\UI\Launcher\UI_Tab.cpp" />
-    <ClCompile Include="Core\UI\Logs\UI_Logs.cpp" />
-    <ClCompile Include="Core\UI\MemoryScanner\UI_MemoryScanner.cpp" />
-    <ClCompile Include="Core\UI\ObjectTable\UI_ObjectTable.cpp" />
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Affordance.cpp" />
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Collidable.cpp" />
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Fixture.cpp" />
-    <ClCompile Include="Core\UI\Overlay\Panels\OverlayPanel_Vitality.cpp" />
-    <ClCompile Include="Core\UI\Overlay\UI_Overlay.cpp" />
-    <ClCompile Include="Core\UI\PlayerTable\UI_PlayerTable.cpp" />
-    <ClCompile Include="Core\UI\Settings\UI_Settings.cpp" />
-    <ClCompile Include="Core\UI\Utils\Color\RoleToColor.cpp" />
-    <ClCompile Include="Core\UI\Utils\Color\TeamToColor.cpp" />
-    <ClCompile Include="Core\UI\Utils\Field\CopyableField.cpp" />
-    <ClCompile Include="Core\UI\Utils\Handle\HandleDrawer.cpp" />
-    <ClCompile Include="Core\UI\Utils\Hex\HexFormater.cpp" />
-    <ClCompile Include="Core\UI\Utils\SearchFilter\ObjectSearchFilter.cpp" />
-    <ClCompile Include="Core\UI\Utils\SearchFilter\PlayerSearchFilter.cpp" />
-    <ClCompile Include="Core\UI\Utils\String\EnumToString.cpp" />
+    <ClCompile Include="Core\Core.ixx" />
+    <ClCompile Include="Core\DllMain.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Map.Layer.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Hook\OpenMapDetour.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Hook\OpenMapDetour.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Hook.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.State.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.System.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Type.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\State\Tag\TagStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\DataStream\DataStreamService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\DataStream\DataStreamService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileLocator\FileLocatorService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileLocator\FileLocatorService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileNames\FileNamesService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileNames\FileNamesService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Formula\FormulaService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Formula\FormulaService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Info\GeometryInfoService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Info\GeometryInfoService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Loader\GeometryLoaderService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Loader\GeometryLoaderService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder\GeometryMeshDecoderService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder\GeometryMeshDecoderService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage\GeometryResourcePageService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage\GeometryResourcePageService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Header\HeaderService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Header\HeaderService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Loader\MapLoaderService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Loader\MapLoaderService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\Map.Reader.System.Geometry.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagGroup\TagGroupService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagIndex\TagIndexService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagIndex\TagIndexService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagResolver\TagResolverService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagResolver\TagResolverService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.cpp" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderGeometry.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderMagic.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderInfo.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.State.Bipd.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.Type.Bipd.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\State\BipdStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\System\BipdDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.State.Bloc.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.System.Bloc.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.Type.Bloc.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\State\BlocStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\System\BlocDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.State.Coll.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.System.Coll.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.Type.Coll.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\State\CollStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\System\CollDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.State.Ctrl.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.System.Ctrl.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.Type.Ctrl.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\State\CtrlStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\System\CtrlDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.State.Eqip.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.System.Eqip.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.Type.Eqip.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\State\EqipStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\System\EqipDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.State.Hlmt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.System.Hlmt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.Type.Hlmt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\State\HlmtStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\System\HlmtDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.State.Lbsp.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.System.Lbsp.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.Type.Lbsp.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\State\LbspStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\System\LbspDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.State.Mach.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.System.Mach.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.Type.Mach.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\State\MachStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\System\MachDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.System.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.State.Mode.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.System.Mode.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.Type.Mode.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\State\ModeStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\System\ModeDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.State.Phmo.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.System.Phmo.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.Type.Phmo.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\State\PhmoStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\System\PhmoDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.State.Play.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.System.Play.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.Type.Play.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\State\PlayStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\System\PlayDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.State.Proj.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.System.Proj.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.Type.Proj.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\State\ProjStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\System\ProjDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.State.Sbsp.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.System.Sbsp.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.Type.Sbsp.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\State\SbspStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\System\SbspDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.State.Scen.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.System.Scen.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.Type.Scen.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\State\ScenStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\System\ScenDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.State.Scnr.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.System.Scnr.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.Type.Scnr.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\State\ScnrStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\ScnrDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.State.Sldt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.Type.Sldt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\State\SldtStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\SldtDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.State.Vehi.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.System.Vehi.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.Type.Vehi.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\State\VehiStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\System\VehiDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.State.Weap.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.System.Weap.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.Type.Weap.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\State\WeapStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\System\WeapDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.State.Zone.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.System.Zone.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.Type.Zone.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\State\ZoneStore.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\ZoneDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneStructure.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Resolved.Layer.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Resolved.Stats.Type.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\State\StatsStore.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\State\StatsStore.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Proj\ProjBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Proj\ProjBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\StatsBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\StatsBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Vehi\VehiBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Vehi\VehiBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Weap\WeapBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Weap\WeapBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsEqip.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsProj.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsVehi.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsWeap.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\Resolved.Vitality.Type.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\Resolved.World.Type.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Coll\CollBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Coll\CollBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Mode\ModeBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Mode\ModeBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Phmo\PhmoBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Phmo\PhmoBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\RegionStates\RegionStatesBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\RegionStates\RegionStatesBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspSeamLinker.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspSeamLinker.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldColl.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldMode.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldPhmo.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRegionStates.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldSbsp.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Hook\InteractionTableLocator.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Hook\InteractionTableLocator.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\State\InteractionStore.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\State\InteractionStore.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\System\InteractionService.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\System\InteractionService.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Tables.Interaction.Type.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionAlive.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionOffset.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneOffsetsStore.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneOffsetsStore.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\DamageSection\DamageSectionsStore.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\DamageSection\DamageSectionsStore.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\ObjectTableStore.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\State\ObjectTableStore.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\System\ObjectTableService.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\System\ObjectTableService.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Tables.Object.Hook.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Tables.Object.Type.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectAlive.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectClass.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectOffset.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectProfile.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectSize.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectBiped.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectCrate.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectEquipment.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectProjectile.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectScenery.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectVehicle.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectWeapon.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.cpp" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Hook.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Type.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerAlive.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerOffset.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerSize.ixx" />
+    <ClCompile Include="Core\Domain\3_Tables\Tables.Layer.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\State\ClassifierStore.cpp" />
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\State\ClassifierStore.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\System\ClassifierService.cpp" />
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\System\ClassifierService.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\Classifier\Type\Relations.Classifier.Type.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\State\ObjectGraphStore.cpp" />
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\State\ObjectGraphStore.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\System\ObjectGraphService.cpp" />
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\System\ObjectGraphService.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\State\PlayerGraphStore.cpp" />
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\State\PlayerGraphStore.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\System\PlayerGraphService.cpp" />
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\System\PlayerGraphService.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\Type\Relations.PlayerGraph.Type.ixx" />
+    <ClCompile Include="Core\Domain\4_Relations\Relations.Layer.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\State\CollidableStore.cpp" />
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\State\CollidableStore.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\System\CollidableService.cpp" />
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\System\CollidableService.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Collidable\Type\Environment.Collidable.Type.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Environment.Layer.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\State\FixturesStore.cpp" />
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\State\FixturesStore.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\System\FixturesService.cpp" />
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\System\FixturesService.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Health\State\HealthStore.cpp" />
+    <ClCompile Include="Core\Domain\5_Environment\Health\State\HealthStore.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Health\System\HealthService.cpp" />
+    <ClCompile Include="Core\Domain\5_Environment\Health\System\HealthService.ixx" />
+    <ClCompile Include="Core\Domain\5_Environment\Health\Type\Environment.Health.Type.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\State\AffordanceStore.cpp" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\State\AffordanceStore.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\System\AffordanceService.cpp" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\System\AffordanceService.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\Type\Egocentric.Affordance.Type.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Egocentric.Layer.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\State\SelfStore.cpp" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\State\SelfStore.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\System\SelfService.cpp" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\System\SelfService.ixx" />
+    <ClCompile Include="Core\Domain\6_Egocentric\Self\Type\Egocentric.Self.Type.ixx" />
+    <ClCompile Include="Core\Domain\Common\Math\Type\Common.Math.Type.ixx" />
+    <ClCompile Include="Core\Domain\Common\Tag\Name\Common.Tag.Name.ixx" />
+    <ClCompile Include="Core\Domain\Common\Team\Type\Common.Team.Type.ixx" />
+    <ClCompile Include="Core\Domain\Common\ZoneShape\Type\Common.ZoneShape.Type.ixx" />
+    <ClCompile Include="Core\Runtime\Main\MainThread.cpp" />
+    <ClCompile Include="Core\Runtime\Runtime.Layer.ixx" />
+    <ClCompile Include="Core\Runtime\Runtime.Thread.ixx" />
+    <ClCompile Include="Core\UI\Backend\System\BackendUIService.cpp" />
+    <ClCompile Include="Core\UI\Backend\System\BackendUIService.ixx" />
+    <ClCompile Include="Core\UI\Hotkey\State\HotkeyUIStore.cpp" />
+    <ClCompile Include="Core\UI\Hotkey\State\HotkeyUIStore.ixx" />
+    <ClCompile Include="Core\UI\Hotkey\System\HotkeyUIService.cpp" />
+    <ClCompile Include="Core\UI\Hotkey\System\HotkeyUIService.ixx" />
+    <ClCompile Include="Core\UI\Launcher\State\LauncherUIStore.cpp" />
+    <ClCompile Include="Core\UI\Launcher\State\LauncherUIStore.ixx" />
+    <ClCompile Include="Core\UI\Launcher\System\LauncherUIService.cpp" />
+    <ClCompile Include="Core\UI\Launcher\System\LauncherUIService.ixx" />
+    <ClCompile Include="Core\UI\Logs\State\LogsUIStore.cpp" />
+    <ClCompile Include="Core\UI\Logs\State\LogsUIStore.ixx" />
+    <ClCompile Include="Core\UI\Logs\System\LogsUIService.cpp" />
+    <ClCompile Include="Core\UI\Logs\System\LogsUIService.ixx" />
+    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.cpp" />
+    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.ixx" />
+    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.cpp" />
+    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.ixx" />
+    <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.cpp" />
+    <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.ixx" />
+    <ClCompile Include="Core\UI\ObjectTable\System\ObjectTableUIService.cpp" />
+    <ClCompile Include="Core\UI\ObjectTable\System\ObjectTableUIService.ixx" />
+    <ClCompile Include="Core\UI\Overlay\State\OverlayUIStore.cpp" />
+    <ClCompile Include="Core\UI\Overlay\State\OverlayUIStore.ixx" />
+    <ClCompile Include="Core\UI\Overlay\System\OverlayUIService.cpp" />
+    <ClCompile Include="Core\UI\Overlay\System\OverlayUIService.ixx" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\AffordancesUI.cpp" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\AffordancesUI.ixx" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.cpp" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.ixx" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.cpp" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.ixx" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\VitalitiesUI.cpp" />
+    <ClCompile Include="Core\UI\Overlay\System\Panel\VitalitiesUI.ixx" />
+    <ClCompile Include="Core\UI\PlayerTable\State\PlayerTableUIStore.cpp" />
+    <ClCompile Include="Core\UI\PlayerTable\State\PlayerTableUIStore.ixx" />
+    <ClCompile Include="Core\UI\PlayerTable\System\PlayerTableUIService.cpp" />
+    <ClCompile Include="Core\UI\PlayerTable\System\PlayerTableUIService.ixx" />
+    <ClCompile Include="Core\UI\Settings\System\SettingsUIService.cpp" />
+    <ClCompile Include="Core\UI\Settings\System\SettingsUIService.ixx" />
+    <ClCompile Include="Core\UI\UI.Layer.ixx" />
+    <ClCompile Include="Core\Viewer\Camera\State\CameraStore.cpp" />
+    <ClCompile Include="Core\Viewer\Camera\State\CameraStore.ixx" />
+    <ClCompile Include="Core\Viewer\Camera\System\CameraService.cpp" />
+    <ClCompile Include="Core\Viewer\Camera\System\CameraService.ixx" />
+    <ClCompile Include="Core\Viewer\Camera\Type\Viewer.Camera.Type.ixx" />
+    <ClCompile Include="Core\Viewer\Control\System\ControlService.cpp" />
+    <ClCompile Include="Core\Viewer\Control\System\ControlService.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\MapService.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\MapService.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\PaletteService.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\PaletteService.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\ZoneGeometry.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\ZoneGeometry.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx" />
+    <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx" />
+    <ClCompile Include="Core\Viewer\Map\Viewer.Map.System.ixx" />
+    <ClCompile Include="Core\Viewer\Math\System\Vec3.ixx" />
+    <ClCompile Include="Core\Viewer\Overlay\State\OverlayStore.cpp" />
+    <ClCompile Include="Core\Viewer\Overlay\State\OverlayStore.ixx" />
+    <ClCompile Include="Core\Viewer\Overlay\Type\Viewer.Overlay.Type.ixx" />
+    <ClCompile Include="Core\Viewer\Selection\State\SelectionStore.cpp" />
+    <ClCompile Include="Core\Viewer\Selection\State\SelectionStore.ixx" />
+    <ClCompile Include="Core\Viewer\Selection\System\SelectionService.cpp" />
+    <ClCompile Include="Core\Viewer\Selection\System\SelectionService.ixx" />
+    <ClCompile Include="Core\Viewer\Viewer.Layer.ixx" />
     <ClCompile Include="External\imgui\backends\imgui_impl_dx11.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -560,34 +807,43 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="External\stb\stb_implementation.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="External\stb\stb_implementation.cpp" />
     <ClCompile Include="External\zlib\adler32.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="External\zlib\crc32.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="External\zlib\inffast.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="External\zlib\inflate.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="External\zlib\inftrees.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="External\zlib\zutil.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Resources\Icons\IconData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Proxy\GenerateProxyExports.py" />
