@@ -40,27 +40,17 @@ If you already cloned without `--recursive`:
 git submodule update --init --recursive
 ```
 
-### 2. Generate the tag headers (required)
-The C++ tag structure headers are generated from Assembly's plugin XML files and are **not** committed to this repo, so you must generate them before building. Point TagTranspiler at your Assembly Halo Reach MCC plugin directory:
+### 2. Build Artemis
+Open `Artemis-MCC.sln` in Visual Studio 2026, select the **x64** and **Release** configurations, and build the solution. This produces the proxy DLL (`wtsapi32.dll`).
 
-```bash
-cd TagTranspiler
-python GenerateTags.py "C:\path\to\Assembly\src\Assembly\Plugins\ReachMCC"
-```
-
-This populates `TagTranspiler/Generated/`, which Artemis includes at compile time. The build will fail without these headers.
-
-### 3. Build Artemis
-Open `Artemis-MCC.sln` in Visual Studio 2026, select the **x64** configuration, and build the solution. This produces the proxy DLL (`wtsapi32.dll`).
-
-### 4. Run
+### 3. Run
 Artemis injects into the Halo Reach MCC process via DLL proxy injection. Place the built `wtsapi32.dll` next to the game's executable (C:\path\to\MCC\Binaries\Win64) so it loads in place of the system library, then launch the game (with EAC disabled).
 
 ## Credits and Acknowledgments
 - **[Assembly](https://github.com/XboxChaos/Assembly):** Tag definition plugin XML files, consumed by TagTranspiler to generate the C++ tag structure headers used by Artemis. Licensed under GPL-3.0.
 - **[Reclaimer](https://github.com/Gravemind2401/Reclaimer):** Reference implementation for Halo Reach MCC geometry extraction. The mesh-reading logic in System_MeshReader was derived/ported from Reclaimer's C# code. Licensed under GPL-3.0.
-- **[AlphaRing](https://github.com/WinterSquire/AlphaRing):** Conceptual inspiration for the DLL proxy injection approach using wtsapi32.dll.
-- **[Mjolnir-Forge-Editor](https://github.com/Waffle1434/Mjolnir-Forge-Editor):** The author's entry point into Halo modding at the game-engine level. No code was taken from this project.
+- **[AlphaRing](https://github.com/WinterSquire/AlphaRing):** Conceptual DLL proxy injection approach using wtsapi32.dll.
+- **[Mjolnir-Forge-Editor](https://github.com/Waffle1434/Mjolnir-Forge-Editor):** The author's inspiration and entry point into Halo modding at the game-engine level.
 - **[Font Awesome Free](https://fontawesome.com):** UI icons (cube, person-rifle, gear, square-binary, file-lines, map). Licensed under CC BY 4.0. Icons were downloaded as PNG and embedded as C++ byte arrays via `GenerateIconData.py`.
 - **Halo Modding Community:** Contributions to the understanding of the Blam! engine.
 
