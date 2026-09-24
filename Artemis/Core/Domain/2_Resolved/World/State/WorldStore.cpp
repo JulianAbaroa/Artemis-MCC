@@ -10,37 +10,34 @@ namespace Resolved::World::State
     auto WorldStore::HasResolvedColl(const std::string& tagName) const -> bool
     {
         assert(m_Frozen.load(std::memory_order_acquire));
-
-        auto it = m_ResolvedColls.find(tagName);
-        if (it == m_ResolvedColls.end())
-        {
-            return false;
-        }
-        return true;
+        return m_CollIndexByName.find(tagName) != m_CollIndexByName.end();
     }
 
     auto WorldStore::GetResolvedColl(const std::string& tagName) const -> const ResolvedColl*
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        auto it = m_ResolvedColls.find(tagName);
-        if (it == m_ResolvedColls.end())
+        auto it = m_CollIndexByName.find(tagName);
+        if (it == m_CollIndexByName.end())
         {
-            return {};
+            return nullptr;
         }
-        return &it->second;
+        return &m_ResolvedColls[it->second];
     }
 
     auto WorldStore::AddResolvedColl(const std::string& tagName, ResolvedColl geometry) -> void
     {
         assert(!m_Frozen.load(std::memory_order_relaxed));
-        m_ResolvedColls.emplace(tagName, std::move(geometry));
+
+        const std::int32_t index = static_cast<std::int32_t>(m_ResolvedColls.size());
+        m_ResolvedColls.push_back(std::move(geometry));
+        m_CollIndexByName.emplace(tagName, index);
     }
 
     auto WorldStore::PeekResolvedColl(const std::string& tagName) const -> const ResolvedColl*
     {
-        auto it = m_ResolvedColls.find(tagName);
-        return it != m_ResolvedColls.end() ? &it->second : nullptr;
+        auto it = m_CollIndexByName.find(tagName);
+        return it != m_CollIndexByName.end() ? &m_ResolvedColls[it->second] : nullptr;
     }
 
     auto WorldStore::GetResolvedCollForObject(
@@ -48,11 +45,12 @@ namespace Resolved::World::State
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        auto object = m_ObjectColls.find(objectTagName);
-        if (object == m_ObjectColls.end()) return nullptr;
-
-        auto it = m_ResolvedColls.find(object->second);
-        return it != m_ResolvedColls.end() ? &it->second : nullptr;
+        auto it = m_ObjectCollIndex.find(objectTagName);
+        if (it == m_ObjectCollIndex.end())
+        {
+            return nullptr;
+        }
+        return &m_ResolvedColls[it->second];
     }
 
     auto WorldStore::GetResolvedRegionStates(
@@ -60,57 +58,50 @@ namespace Resolved::World::State
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        auto object = m_ObjectHlmts.find(objectTagName);
-        if (object == m_ObjectHlmts.end())
+        auto it = m_ObjectHlmtIndex.find(objectTagName);
+        if (it == m_ObjectHlmtIndex.end())
         {
             return nullptr;
         }
-
-        auto it = m_ResolvedRegionStates.find(object->second);
-        if (it == m_ResolvedRegionStates.end())
-        {
-            return nullptr;
-        }
-
-        return &it->second;
+        return &m_ResolvedRegionStates[it->second];
     }
 
     auto WorldStore::AddResolvedRegionStates(const std::string& hlmtTagName,
         ResolvedRegionStates states) -> void
     {
         assert(!m_Frozen.load(std::memory_order_acquire));
-        m_ResolvedRegionStates.emplace(hlmtTagName, std::move(states));
+
+        const std::int32_t index = static_cast<std::int32_t>(m_ResolvedRegionStates.size());
+        m_ResolvedRegionStates.push_back(std::move(states));
+        m_RegionStatesIndexByName.emplace(hlmtTagName, index);
     }
 
     // Mode.
     auto WorldStore::HasResolvedMode(const std::string& tagName) const -> bool
     {
         assert(m_Frozen.load(std::memory_order_acquire));
-
-        auto it = m_ResolvedModes.find(tagName);
-        if (it == m_ResolvedModes.end())
-        {
-            return false;
-        }
-        return true;
+        return m_ModeIndexByName.find(tagName) != m_ModeIndexByName.end();
     }
 
     auto WorldStore::GetResolvedMode(const std::string& tagName) const -> const ResolvedMode*
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        auto it = m_ResolvedModes.find(tagName);
-        if (it == m_ResolvedModes.end())
+        auto it = m_ModeIndexByName.find(tagName);
+        if (it == m_ModeIndexByName.end())
         {
             return nullptr;
         }
-        return &it->second;
+        return &m_ResolvedModes[it->second];
     }
 
     auto WorldStore::AddResolvedMode(const std::string& tagName, ResolvedMode geometry) -> void
     {
         assert(!m_Frozen.load(std::memory_order_relaxed));
-        m_ResolvedModes.emplace(tagName, std::move(geometry));
+
+        const std::int32_t index = static_cast<std::int32_t>(m_ResolvedModes.size());
+        m_ResolvedModes.push_back(std::move(geometry));
+        m_ModeIndexByName.emplace(tagName, index);
     }
 
     // Sbsp.
@@ -153,14 +144,14 @@ namespace Resolved::World::State
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        if (auto it = m_ResolvedModes.find(tagName); it != m_ResolvedModes.end())
+        if (auto it = m_ModeIndexByName.find(tagName); it != m_ModeIndexByName.end())
         {
-            return it->second.Nodes.size();
+            return m_ResolvedModes[it->second].Nodes.size();
         }
 
-        if (auto it = m_ResolvedColls.find(tagName); it != m_ResolvedColls.end())
+        if (auto it = m_CollIndexByName.find(tagName); it != m_CollIndexByName.end())
         {
-            return it->second.Nodes.size();
+            return m_ResolvedColls[it->second].Nodes.size();
         }
 
         return 0;
@@ -196,16 +187,55 @@ namespace Resolved::World::State
         return it != m_ObjectHlmts.end() ? it->second : std::string{};
     }
 
+    auto WorldStore::CompileObjectIndices() -> void
+    {
+        m_ObjectCollIndex.clear();
+        m_ObjectCollIndex.reserve(m_ObjectColls.size());
+
+        for (const auto& [objectTagName, collTagName] : m_ObjectColls)
+        {
+            auto it = m_CollIndexByName.find(collTagName);
+            if (it == m_CollIndexByName.end()) continue;
+
+            m_ObjectCollIndex.emplace(objectTagName, it->second);
+        }
+
+        m_ObjectHlmtIndex.clear();
+        m_ObjectHlmtIndex.reserve(m_ObjectHlmts.size());
+
+        for (const auto& [objectTagName, hlmtTagName] : m_ObjectHlmts)
+        {
+            auto it = m_RegionStatesIndexByName.find(hlmtTagName);
+            if (it == m_RegionStatesIndexByName.end()) continue;
+
+            m_ObjectHlmtIndex.emplace(objectTagName, it->second);
+        }
+    }
+
+    auto WorldStore::Freeze() -> void
+    {
+        this->CompileObjectIndices();
+        m_Frozen.store(true, std::memory_order_release);
+    }
+
     auto WorldStore::Cleanup() -> void
     {
         m_Frozen.store(false, std::memory_order_relaxed);
 
         m_ObjectColls.clear();
         m_ObjectHlmts.clear();
+        m_ObjectCollIndex.clear();
+        m_ObjectHlmtIndex.clear();
 
         m_ResolvedColls.clear();
+        m_CollIndexByName.clear();
+
         m_ResolvedModes.clear();
+        m_ModeIndexByName.clear();
+
         m_ResolvedSbsps.clear();
+
         m_ResolvedRegionStates.clear();
+        m_RegionStatesIndexByName.clear();
     }
 }

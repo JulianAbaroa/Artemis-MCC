@@ -12,6 +12,8 @@ export namespace Map::Reader::State
 	class TagStore
 	{
 	public:
+		using ObjectType = TObject;
+
 		auto Has(const std::string& tagName) const -> bool
 		{
 			assert(m_Frozen.load(std::memory_order_acquire));

@@ -49,7 +49,7 @@ namespace Tables::Object::System
 		if (!tag.IsValid)
 		{
 			m_LogsService.Message("[ObjectTableService] WARNING:"
-				" Failed to resolve DatumIndex 0x{:X} for handle 0x{:X}.", 
+				" Failed to resolve DatumIndex 0x{:X} for handle 0x{:X}.",
 				datumIndex, handle);
 			return;
 		}
@@ -76,25 +76,20 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::SetProfile(AliveObject& object, Profile& profile) -> void
 	{
-		profile.HasBipd = m_BipdStore.Has(object.TagName);
-		profile.HasBloc = m_BlocStore.Has(object.TagName);
-		profile.HasColl = m_CollStore.Has(object.TagName);
-		profile.HasCtrl = m_CtrlStore.Has(object.TagName);
-		profile.HasEqip = m_EqipStore.Has(object.TagName);
-		profile.HasHlmt = m_HlmtStore.Has(object.TagName);
-		profile.HasLbsp = m_LbspStore.Has(object.TagName);
-		profile.HasMach = m_MachStore.Has(object.TagName);
-		profile.HasMode = m_ModeStore.Has(object.TagName);
-		profile.HasPhmo = m_PhmoStore.Has(object.TagName);
-		profile.HasPlay = m_PlayStore.Has(object.TagName);
-		profile.HasProj = m_ProjStore.Has(object.TagName);
-		profile.HasSbsp = m_SbspStore.Has(object.TagName);
-		profile.HasScen = m_ScenStore.Has(object.TagName);
-		profile.HasScnr = m_ScnrStore.Has(object.TagName);
-		profile.HasSldt = m_SldtStore.Has(object.TagName);
-		profile.HasVehi = m_VehiStore.Has(object.TagName);
-		profile.HasWeap = m_WeapStore.Has(object.TagName);
-		profile.HasZone = m_ZoneStore.Has(object.TagName);
+		profile.HasBipd = m_TagResolverService.HasBipd(object.TagName);
+		profile.HasBloc = m_TagResolverService.HasBloc(object.TagName);
+		profile.HasColl = m_TagResolverService.HasColl(object.TagName);
+		profile.HasCtrl = m_TagResolverService.HasCtrl(object.TagName);
+		profile.HasEqip = m_TagResolverService.HasEqip(object.TagName);
+		profile.HasHlmt = m_TagResolverService.HasHlmt(object.TagName);
+		profile.HasMach = m_TagResolverService.HasMach(object.TagName);
+		profile.HasMode = m_TagResolverService.HasMode(object.TagName);
+		profile.HasPhmo = m_TagResolverService.HasPhmo(object.TagName);
+		profile.HasProj = m_TagResolverService.HasProj(object.TagName);
+		profile.HasScen = m_TagResolverService.HasScen(object.TagName);
+		profile.HasScnr = m_TagResolverService.HasScnr(object.TagName);
+		profile.HasVehi = m_TagResolverService.HasVehi(object.TagName);
+		profile.HasWeap = m_TagResolverService.HasWeap(object.TagName);
 	}
 
 	auto ObjectTableService::OnObjectDestroyed(std::uint32_t handle) -> void
@@ -118,32 +113,32 @@ namespace Tables::Object::System
 
 		m_ObjectStore.UpdateObjects(
 			[&](std::uint32_t handle, AliveObject& object) {
-			std::uint32_t index = handle & 0xFFFF;
-			std::uintptr_t offset = (std::uintptr_t)index * 0x18;
-	
-			std::uintptr_t entryAddr = tableBase + offset;
+				std::uint32_t index = handle & 0xFFFF;
+				std::uintptr_t offset = (std::uintptr_t)index * 0x18;
 
-			if (entryAddr == 0) return;
-		
-			std::uint16_t tableSalt = *(std::uint16_t*)(entryAddr);
-			std::uint16_t expectedSalt = (std::uint16_t)(handle >> 16);
-			std::uintptr_t entityPtr = *(std::uintptr_t*)(entryAddr + 0x10);
+				std::uintptr_t entryAddr = tableBase + offset;
 
-			const bool isAlive = (entityPtr != 0 && tableSalt == expectedSalt);
-			object.Address = isAlive ? entityPtr : 0;
+				if (entryAddr == 0) return;
 
-			if (!isAlive) return;
-		
-			Class objectClass = *(Class*)(entryAddr + 0x04);
-		
-			if (object.Profile.Class == Class::Invalid &&
-				objectClass != Class::Invalid)
-			{
-				object.Profile.Class = objectClass;
-			}
-		
-			this->UpdateObjectData(object);
-		});
+				std::uint16_t tableSalt = *(std::uint16_t*)(entryAddr);
+				std::uint16_t expectedSalt = (std::uint16_t)(handle >> 16);
+				std::uintptr_t entityPtr = *(std::uintptr_t*)(entryAddr + 0x10);
+
+				const bool isAlive = (entityPtr != 0 && tableSalt == expectedSalt);
+				object.Address = isAlive ? entityPtr : 0;
+
+				if (!isAlive) return;
+
+				Class objectClass = *(Class*)(entryAddr + 0x04);
+
+				if (object.Profile.Class == Class::Invalid &&
+					objectClass != Class::Invalid)
+				{
+					object.Profile.Class = objectClass;
+				}
+
+				this->UpdateObjectData(object);
+			});
 
 		m_ObjectStore.Publish();
 	}
@@ -163,7 +158,7 @@ namespace Tables::Object::System
 		object.Up = reader.Read<Vec3>(object.Address, Offset::Up);
 		object.LinearVelocity = reader.Read<Vec3>(object.Address, Offset::LinearVelocity);
 		object.AngularVelocity = reader.Read<Vec3>(object.Address, Offset::AngularVelocity);
-	
+
 		object.CurrentRadius = reader.Read<float>(object.Address, Offset::CurrentRadius);
 		object.DamageReceived = reader.Read<float>(object.Address, Offset::DamageReceived);
 
@@ -179,7 +174,7 @@ namespace Tables::Object::System
 			this->UpdateBiped(reader, object);
 			break;
 		}
-		
+
 		case Class::Vehicle:
 		{
 			this->UpdateVehicle(reader, object);
@@ -220,7 +215,7 @@ namespace Tables::Object::System
 			object.Specific = std::monostate{};
 			break;
 		}
-	}	
+	}
 
 	auto ObjectTableService::ReadBoneMatrixTable(MemoryReaderService& reader, AliveObject& object) -> void
 	{
@@ -262,10 +257,10 @@ namespace Tables::Object::System
 
 		for (std::uint16_t section = 0; section < count; ++section)
 		{
-			table.Sections[section].DamageLevelMask = 
+			table.Sections[section].DamageLevelMask =
 				raw[section].DamageLevelMask;
 
-			table.Sections[section].Vitality = 
+			table.Sections[section].Vitality =
 				raw[section].Vitality;
 		}
 

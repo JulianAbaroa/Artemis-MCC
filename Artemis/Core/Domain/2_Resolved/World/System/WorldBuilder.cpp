@@ -116,7 +116,7 @@ namespace Resolved::World::System
 
     auto WorldBuilder::BuildColl(const std::string& tagName) -> bool
     {
-        const CollObject* coll = m_CollStore.Get(tagName);
+        const CollObject* coll = m_TagCatalog.Coll.Get(tagName);
         if (!coll)
         {
             m_LogsService.Message("[WorldBuilder] WARNING:"
@@ -132,7 +132,7 @@ namespace Resolved::World::System
 
     auto WorldBuilder::BuildMode(const std::string& tagName) -> bool
     {
-        const ModeObject* mode = m_ModeStore.Get(tagName);
+        const ModeObject* mode = m_TagCatalog.Mode.Get(tagName);
         if (!mode)
         {
             m_LogsService.Message("[WorldBuilder] WARNING:"
@@ -150,7 +150,7 @@ namespace Resolved::World::System
         std::vector<ResolvedSbsp>& geometries, 
         std::vector<const SbspObject*>& sbspObjects) -> bool
     {
-        const SbspObject* sbsp = m_SbspStore.Get(tagName);
+        const SbspObject* sbsp = m_TagCatalog.Sbsp.Get(tagName);
         if (!sbsp)
         {
             m_LogsService.Message("[WorldBuilder] WARNING:"
@@ -184,14 +184,14 @@ namespace Resolved::World::System
     {
         std::unordered_set<std::string> builtRegionStates;
 
-        this->LinkObjectFamily(m_BipdStore, builtRegionStates);
-        this->LinkObjectFamily(m_VehiStore, builtRegionStates);
-        this->LinkObjectFamily(m_WeapStore, builtRegionStates);
-        this->LinkObjectFamily(m_EqipStore, builtRegionStates);
-        this->LinkObjectFamily(m_ScenStore, builtRegionStates);
-        this->LinkObjectFamily(m_MachStore, builtRegionStates);
-        this->LinkObjectFamily(m_CtrlStore, builtRegionStates);
-        this->LinkObjectFamily(m_BlocStore, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Bipd, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Vehi, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Weap, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Eqip, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Scen, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Mach, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Ctrl, builtRegionStates);
+        this->LinkObjectFamily(m_TagCatalog.Bloc, builtRegionStates);
     }
 
     template <typename TObject>
@@ -204,7 +204,7 @@ namespace Resolved::World::System
                 ResolveTagReferenceName(object.Data.Model);
             if (hlmtName.empty()) continue;
 
-            const HlmtObject* hlmt = m_HlmtStore.Get(hlmtName);
+            const HlmtObject* hlmt = m_TagCatalog.Hlmt.Get(hlmtName);
             if (!hlmt) continue;
 
             m_WorldStore.LinkObjectHlmt(objectTagName, hlmtName);

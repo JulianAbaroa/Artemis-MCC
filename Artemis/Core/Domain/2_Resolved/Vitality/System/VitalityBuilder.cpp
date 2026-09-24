@@ -14,25 +14,17 @@ namespace Resolved::Vitality::System
         std::int32_t built = 0;
         std::int32_t skipped = 0;
 
-        const std::vector<std::string> tagNames =
-            m_HlmtStore.GetTagNames();
-
-        for (const std::string& tagName : tagNames)
+        for (const auto& [tagName, hlmt] : m_TagCatalog.Hlmt.All())
         {
-            const HlmtObject* hlmt =
-                m_HlmtStore.Get(tagName);
-
-            if (!hlmt) continue;
-
-            if (hlmt->DamageSections.empty())
+            if (hlmt.DamageSections.empty())
             {
                 ++skipped;
                 continue;
             }
 
-            const CollObject* coll = m_CollStore.Get(tagName);
+            const CollObject* coll = m_TagCatalog.Coll.Get(tagName);
 
-            ResolvedVitality vitality = this->BuildLayout(*hlmt, coll);
+            ResolvedVitality vitality = this->BuildLayout(hlmt, coll);
 
             if (vitality.Sections.empty())
             {

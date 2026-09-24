@@ -95,11 +95,8 @@ def GenerateDescriptorHeader(prefix: str, rootNodes: list[BlockNode], xmlSource:
     lines.append(f"")
     lines.append(f"export module Map.Tag.System:{prefix}.Descriptor;")
     lines.append(f"")
-    # Map.{prefix}.System is a standalone primary module (not a partition):
-    # it needs {prefix}Object/{prefix}Data from the tag's own Type module,
-    # plus Map.Reader.System, whose namespace it reopens below to add the
-    # GroupDescriptor<{prefix}Object> specialization.
     lines.append(f"import Map.Tag.Type;")
+    lines.append(f"import Map.Reader.Type;")
     lines.append(f"import Map.Reader.System;")
     lines.append(f"import std;")
     lines.append(f"")
@@ -107,20 +104,16 @@ def GenerateDescriptorHeader(prefix: str, rootNodes: list[BlockNode], xmlSource:
     lines.append("{")
     lines.append(f"    using namespace Map::Tag::Type::{prefix}::Structure;")
     lines.append(f"    using namespace Map::Tag::Type::{prefix}::Object;")
+    lines.append(f"    namespace MapMagic = Map::Reader::Type::Magic;")
     lines.append("}")
     lines.append(f"")
-    # IMPORTANT: an explicit template specialization must be declared with the
-    # real, qualified name of the primary template, reopening its actual
-    # namespace -- never through a local alias. GroupDescriptor's primary
-    # template lives in Map::Reader::System, so it is reopened there directly,
-    # even though this specialization is generated and lives in a separate
-    # per-tag module (Map.{prefix}.System).
     lines.append(f"export namespace Map::Reader::System")
     lines.append(f"{{")
     lines.append(f"    template <>")
     lines.append(f"    struct GroupDescriptor<{prefix}Object>")
     lines.append(f"    {{")
     lines.append(f"        using DataType = {prefix}Data;")
+    lines.append(f"        static constexpr std::uint32_t Magic = MapMagic::Tag::k_{prefix};")
     lines.append(f"")
     lines.append(f"        template <typename TReader>")
     lines.append(f"        static void ReadBlocks(")

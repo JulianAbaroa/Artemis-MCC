@@ -268,9 +268,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Bipd\Type">
       <UniqueIdentifier>{5962d9df-0eb9-4a88-99d1-756e1cb484ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Bipd\State">
-      <UniqueIdentifier>{022b73a7-2328-48f8-9392-6c47ac46f37a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Bipd\System">
       <UniqueIdentifier>{19a36a56-1b49-454e-9f56-53c8efe24e07}</UniqueIdentifier>
     </Filter>
@@ -279,9 +276,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Bloc\Type">
       <UniqueIdentifier>{d8e2d03c-a2ed-4973-8feb-973701784058}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Bloc\State">
-      <UniqueIdentifier>{384decd9-5a4c-4778-bdea-37e462024735}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Bloc\System">
       <UniqueIdentifier>{acf1d01d-cce3-4d3a-a03f-c026ec94b075}</UniqueIdentifier>
@@ -292,9 +286,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Coll\Type">
       <UniqueIdentifier>{ddd1a721-2a04-4979-819e-530c70949049}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Coll\State">
-      <UniqueIdentifier>{7845c422-be5f-4a6e-b7cb-cdba17ce05cf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Coll\System">
       <UniqueIdentifier>{f2b1cf67-6f10-4d1f-9e93-6b500a096679}</UniqueIdentifier>
     </Filter>
@@ -303,9 +294,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Ctrl\Type">
       <UniqueIdentifier>{5d66c3af-0f35-4e9a-9f87-661592d9f390}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Ctrl\State">
-      <UniqueIdentifier>{dc2e7f23-27c5-4d33-ad11-b8601f5beafc}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Ctrl\System">
       <UniqueIdentifier>{6706cead-e565-4812-a5b3-258bb5ca7172}</UniqueIdentifier>
@@ -316,9 +304,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Eqip\Type">
       <UniqueIdentifier>{61801a9b-6354-4843-ba06-36af8b013939}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Eqip\State">
-      <UniqueIdentifier>{e9cdb8a1-fc85-4928-9192-6847e6801c74}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Eqip\System">
       <UniqueIdentifier>{bae30257-4524-4b06-aa04-4e0e68c1bb91}</UniqueIdentifier>
     </Filter>
@@ -327,9 +312,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Hlmt\Type">
       <UniqueIdentifier>{96e58557-d32d-4320-9c3b-9b042f4eb503}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Hlmt\State">
-      <UniqueIdentifier>{f95e99e2-f096-4f15-ba40-42bd85c1b044}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Hlmt\System">
       <UniqueIdentifier>{8c8b3a79-466d-4664-8b2d-3b5f604c1210}</UniqueIdentifier>
@@ -340,9 +322,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Lbsp\Type">
       <UniqueIdentifier>{17049957-6c31-4bcc-aeff-48092ae34543}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Lbsp\State">
-      <UniqueIdentifier>{d0c26c3a-decb-42fe-bd95-30f8be5f5ca6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Lbsp\System">
       <UniqueIdentifier>{be62a990-886c-4626-89b8-21cdb6c3ba0e}</UniqueIdentifier>
     </Filter>
@@ -351,9 +330,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Mach\Type">
       <UniqueIdentifier>{eff44d5b-e544-439c-b8a6-23b49e636d8d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Mach\State">
-      <UniqueIdentifier>{71032d0c-ae6e-425c-b147-341478487a19}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Mach\System">
       <UniqueIdentifier>{7ffba473-0383-44e3-9a78-4ffa9dac4b01}</UniqueIdentifier>
@@ -364,9 +340,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Mode\Type">
       <UniqueIdentifier>{09f9ff04-a304-4d35-9445-357a584f73c0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Mode\State">
-      <UniqueIdentifier>{6c4aabe3-dd0a-4f2c-9577-d21236fe6b55}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Mode\System">
       <UniqueIdentifier>{c130a9b0-9e10-418d-8aa9-47b7dbc4a174}</UniqueIdentifier>
     </Filter>
@@ -375,9 +348,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Phmo\Type">
       <UniqueIdentifier>{eb022b76-68dc-432a-9e49-e5e6d90dc17c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Phmo\State">
-      <UniqueIdentifier>{3872a33a-1333-4daf-b501-520f6770fcbb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Phmo\System">
       <UniqueIdentifier>{434c7153-ebef-4938-a323-414830e72524}</UniqueIdentifier>
@@ -388,9 +358,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Play\Type">
       <UniqueIdentifier>{78ed92f0-39a7-47d0-bdef-3afdd12a6282}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Play\State">
-      <UniqueIdentifier>{a8188884-09e8-4656-9234-184e646beb12}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Play\System">
       <UniqueIdentifier>{9d7c48f0-12ed-4b8c-93d8-6d0557b3a85d}</UniqueIdentifier>
     </Filter>
@@ -399,9 +366,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Proj\Type">
       <UniqueIdentifier>{4293e022-eda8-49fe-9680-a209f9c93579}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Proj\State">
-      <UniqueIdentifier>{c686bd21-3cec-4a9e-9494-fe0cf709458d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Proj\System">
       <UniqueIdentifier>{de90c466-02b3-4d8e-824d-ad109bffd9ee}</UniqueIdentifier>
@@ -412,9 +376,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Sbsp\Type">
       <UniqueIdentifier>{2e037149-8140-48cf-849c-789c34597153}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Sbsp\State">
-      <UniqueIdentifier>{8ba427dd-8462-43f6-9edb-85ede8266106}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Sbsp\System">
       <UniqueIdentifier>{e53b9d93-9170-4221-a5ab-cf4a4ee049f1}</UniqueIdentifier>
     </Filter>
@@ -423,9 +384,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Scen\Type">
       <UniqueIdentifier>{d4b524ec-29fc-4667-b7ed-47b9bdb95497}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Scen\State">
-      <UniqueIdentifier>{5a5416ac-5a3a-4e99-a0de-9af650b9f763}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Scen\System">
       <UniqueIdentifier>{5d94fa40-34bf-4178-82a8-3e5a8e9687a9}</UniqueIdentifier>
@@ -436,9 +394,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Scnr\Type">
       <UniqueIdentifier>{0decdd82-f86b-4517-8293-24147f1a4607}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Scnr\State">
-      <UniqueIdentifier>{d1f285d6-39d2-4fc9-9d5b-1b926e267880}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Scnr\System">
       <UniqueIdentifier>{4206f0f8-7ead-41d0-af5a-de388c7680aa}</UniqueIdentifier>
     </Filter>
@@ -447,9 +402,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Sldt\Type">
       <UniqueIdentifier>{8fda6ad6-4ace-4f44-bbf1-aa9bdb3bc805}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Sldt\State">
-      <UniqueIdentifier>{dd1d7953-3fda-42b6-b87f-b8c405d882c6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Sldt\System">
       <UniqueIdentifier>{e1794573-a740-4df0-8b68-2a05cfe01d28}</UniqueIdentifier>
@@ -460,9 +412,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Vehi\Type">
       <UniqueIdentifier>{0c348dc2-e496-478b-8d40-10d407fa3bc9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Vehi\State">
-      <UniqueIdentifier>{1029fbed-e09f-4085-871c-a5003a68417b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Vehi\System">
       <UniqueIdentifier>{0bc166ff-7502-4524-9f9e-cf170fb5d6d2}</UniqueIdentifier>
     </Filter>
@@ -472,9 +421,6 @@
     <Filter Include="Core\Domain\1_Map\Tag\Weap\Type">
       <UniqueIdentifier>{51f254d3-9ef6-4845-841f-b3351bda1614}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Weap\State">
-      <UniqueIdentifier>{fc9ec8ae-6811-4e29-9030-1586a6c9aa5b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Weap\System">
       <UniqueIdentifier>{36bc10b4-6e16-4826-893a-21c16262eccd}</UniqueIdentifier>
     </Filter>
@@ -483,9 +429,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Zone\Type">
       <UniqueIdentifier>{65d3af3f-a1c9-4a33-8e0d-fac3c607c8ed}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\1_Map\Tag\Zone\State">
-      <UniqueIdentifier>{e5a7e539-535e-4070-ae46-168d44f5ba84}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Zone\System">
       <UniqueIdentifier>{56b05df2-a952-40fb-9201-c23437bd4b75}</UniqueIdentifier>
@@ -1178,63 +1121,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx">
       <Filter>Core\Domain\1_Map\Tag</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\State\BipdStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\State\BlocStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\State\CollStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\State\CtrlStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\State\EqipStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\State\HlmtStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\State\LbspStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\State\MachStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\State\ModeStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\State\PhmoStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\State\PlayStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\State\ProjStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\State\SbspStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\State\ScenStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\State\ScnrStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\State\SldtStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\State\VehiStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\State\WeapStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\State\ZoneStore.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone\State</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsEqip.ixx">
       <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
     </ClCompile>
@@ -1268,9 +1154,6 @@
     <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.cpp">
       <Filter>Core\Domain\1_Map\Reader\State\TagIndex</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.State.Bipd.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx">
       <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
     </ClCompile>
@@ -1288,9 +1171,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\System\BipdDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Bipd\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.State.Bloc.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.System.Bloc.ixx">
       <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
@@ -1310,9 +1190,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\System\BlocDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Bloc\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.State.Coll.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.System.Coll.ixx">
       <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
     </ClCompile>
@@ -1330,9 +1207,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Coll\System\CollDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Coll\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.State.Ctrl.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.System.Ctrl.ixx">
       <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
@@ -1352,9 +1226,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\System\CtrlDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Ctrl\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.State.Eqip.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.System.Eqip.ixx">
       <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
     </ClCompile>
@@ -1372,9 +1243,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\System\EqipDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Eqip\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.State.Hlmt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.System.Hlmt.ixx">
       <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
@@ -1394,9 +1262,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\System\HlmtDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Hlmt\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.State.Lbsp.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.System.Lbsp.ixx">
       <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
     </ClCompile>
@@ -1414,9 +1279,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\System\LbspDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Lbsp\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.State.Mach.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.System.Mach.ixx">
       <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
@@ -1436,9 +1298,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Mach\System\MachDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Mach\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.State.Mode.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.System.Mode.ixx">
       <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
     </ClCompile>
@@ -1456,9 +1315,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Mode\System\ModeDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Mode\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.State.Phmo.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.System.Phmo.ixx">
       <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
@@ -1478,9 +1334,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\System\PhmoDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Phmo\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.State.Play.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.System.Play.ixx">
       <Filter>Core\Domain\1_Map\Tag\Play</Filter>
     </ClCompile>
@@ -1498,9 +1351,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Play\System\PlayDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Play\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.State.Proj.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.System.Proj.ixx">
       <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
@@ -1520,9 +1370,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Proj\System\ProjDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Proj\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.State.Sbsp.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.System.Sbsp.ixx">
       <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
     </ClCompile>
@@ -1540,9 +1387,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\System\SbspDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Sbsp\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.State.Scen.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.System.Scen.ixx">
       <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
@@ -1562,9 +1406,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Scen\System\ScenDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Scen\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.State.Scnr.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.System.Scnr.ixx">
       <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
     </ClCompile>
@@ -1582,9 +1423,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\ScnrDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Scnr\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.State.Sldt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx">
       <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
@@ -1604,9 +1442,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\SldtDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Sldt\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.State.Vehi.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.System.Vehi.ixx">
       <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
     </ClCompile>
@@ -1625,9 +1460,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\System\VehiDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Vehi\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.State.Weap.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.System.Weap.ixx">
       <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
     </ClCompile>
@@ -1645,9 +1477,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Weap\System\WeapDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Weap\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.State.Zone.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.System.Zone.ixx">
       <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
@@ -2686,6 +2515,9 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.ixx">
       <Filter>Core\Infrastructure\Service\Telemetry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.TagCatalog.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

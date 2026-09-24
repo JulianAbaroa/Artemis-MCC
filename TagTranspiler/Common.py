@@ -20,8 +20,6 @@ CPP_KEYWORDS = {
     "virtual","void","volatile","wchar_t","while","xor","xor_eq",
 }
 
-# Naming, single source of truth.
-
 def Clean(name: str) -> str:
     return re.sub(r"[\u2018\u2019\u201c\u201d'\"´`]", "", name)
 
@@ -56,8 +54,6 @@ def XmlBaseName(xmlPath: str) -> str:
     base = os.path.splitext(os.path.basename(xmlPath))[0]
     base = re.sub(r"^ReachMCC_", "", base, flags=re.IGNORECASE)
     return ToPascal(base)
-
-# Block tree, shared between GenerateType and GenerateObject.
 
 @dataclass
 class BlockNode:
@@ -103,7 +99,6 @@ def BuildBlockTree(element: ET.Element, diskPrefix: str) -> list:
         n = allFieldCounter[base]
         fieldName = base if n == 1 else f"{base}_{n}"
 
-        # We avoid overlays.
         if offset in occupiedOffsets:
             continue
         occupiedOffsets.add(offset)
@@ -111,7 +106,6 @@ def BuildBlockTree(element: ET.Element, diskPrefix: str) -> list:
         if tag != "tagblock":
             continue
 
-        # Calculate actual available space by skipping overlays (same offset).
         available = 0
         for j in range(i + 1, len(childrenInfo)):
             nxt = childrenInfo[j][2]
@@ -121,8 +115,6 @@ def BuildBlockTree(element: ET.Element, diskPrefix: str) -> list:
         else:
             available = (totalSize - offset) if totalSize > offset else 0
 
-        # If the tagblock is less than 12 bytes, it is truncated. 
-        # It should not be included in the tree.
         if 0 < available < 12:
             continue
 

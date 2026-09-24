@@ -22,6 +22,7 @@
     <Folder Include="TagTranspiler\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TagTranspiler\GenerateCatalog.py" />
     <Compile Include="TagTranspiler\GenerateTags.py" />
     <Compile Include="TagTranspiler\Common.py" />
     <Compile Include="TagTranspiler\GenerateOffset.py" />

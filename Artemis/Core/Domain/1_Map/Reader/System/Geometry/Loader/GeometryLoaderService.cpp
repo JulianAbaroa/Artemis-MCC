@@ -17,8 +17,8 @@ namespace Map::Reader::System
 	{
 		std::vector<SbspGeometry> result;
 
-		const ZoneObject* zone = m_ZoneStore.Get("__zone__");
-		const PlayObject* play = m_PlayStore.Get("__play__");
+		const ZoneObject* zone = m_TagCatalog.Zone.Get("__zone__");
+		const PlayObject* play = m_TagCatalog.Play.Get("__play__");
 		if (!zone || !play) return result;
 
 		const std::int64_t fixupDataBase = m_FormulaService.ToFileOffset(
@@ -30,10 +30,10 @@ namespace Map::Reader::System
 
 		for (const std::string& tagName : sbspTagNames)
 		{
-			const SbspObject* sbsp = m_SbspStore.Get(tagName);
+			const SbspObject* sbsp = m_TagCatalog.Sbsp.Get(tagName);
 			if (!sbsp) continue;
 
-			const LbspObject* lbsp = m_LbspStore.Get(tagName);
+			const LbspObject* lbsp = m_TagCatalog.Lbsp.Get(tagName);
 			if (!lbsp || lbsp->Meshes.empty()) continue;
 
 			const TagResourcesObject* lbspEntry = nullptr;

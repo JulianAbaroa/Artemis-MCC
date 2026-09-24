@@ -52,21 +52,29 @@ export namespace Resolved::World::State
             return m_Frozen.load(std::memory_order_acquire);
         }
 
-        auto Freeze() -> void
-        {
-            m_Frozen.store(true, std::memory_order_release);
-        }
+        auto Freeze() -> void;
 
         auto Cleanup() -> void;
 
     private:
-        std::unordered_map<std::string, const ResolvedColl> m_ResolvedColls;
-        std::unordered_map<std::string, const ResolvedMode> m_ResolvedModes;
+        auto CompileObjectIndices() -> void;
+
+        std::vector<ResolvedColl> m_ResolvedColls;
+        std::unordered_map<std::string, std::int32_t> m_CollIndexByName;
+
+        std::vector<ResolvedMode> m_ResolvedModes;
+        std::unordered_map<std::string, std::int32_t> m_ModeIndexByName;
+
         std::vector<ResolvedSbsp> m_ResolvedSbsps;
-        std::unordered_map<std::string, const ResolvedRegionStates> m_ResolvedRegionStates;
+
+        std::vector<ResolvedRegionStates> m_ResolvedRegionStates;
+        std::unordered_map<std::string, std::int32_t> m_RegionStatesIndexByName;
 
         std::unordered_map<std::string, std::string> m_ObjectColls;
         std::unordered_map<std::string, std::string> m_ObjectHlmts;
+
+        std::unordered_map<std::string, std::int32_t> m_ObjectCollIndex;
+        std::unordered_map<std::string, std::int32_t> m_ObjectHlmtIndex;
 
         std::atomic<bool> m_Frozen{ false };
     };

@@ -4,6 +4,7 @@
 export module Map.Tag.System:Sldt.Descriptor;
 
 import Map.Tag.Type;
+import Map.Reader.Type;
 import Map.Reader.System;
 import std;
 
@@ -11,6 +12,7 @@ namespace
 {
     using namespace Map::Tag::Type::Sldt::Structure;
     using namespace Map::Tag::Type::Sldt::Object;
+    namespace MapMagic = Map::Reader::Type::Magic;
 }
 
 export namespace Map::Reader::System
@@ -19,6 +21,7 @@ export namespace Map::Reader::System
     struct GroupDescriptor<SldtObject>
     {
         using DataType = SldtData;
+        static constexpr std::uint32_t Magic = MapMagic::Tag::k_Sldt;
 
         template <typename TReader>
         static void ReadBlocks(

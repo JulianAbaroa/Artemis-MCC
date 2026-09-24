@@ -40,7 +40,7 @@ TYPE_INFO: dict[str, tuple[str, int]] = {
     "degree3":  ("MapStructure::Primitive::Vec3",      12),
     "vector4":  ("MapStructure::Primitive::Vec4",      16),
     "point2":   ("MapStructure::Primitive::Vec2",       8),
-    "colorf":   ("MapStructure::Primitive::ColorRGB",  12),  # dead path: 'colorf' se resuelve en la rama especial de abajo
+    "colorf":   ("MapStructure::Primitive::ColorRGB",  12),
     "rangef":   ("MapStructure::Primitive::RangeF",     8),
     "undefined":("_pad_",               4),
     "tagblock": ("_TagBlock_",         12),
@@ -153,7 +153,6 @@ class Parser:
             else:
                 print(f"  [WARN] Unknown tag '{tag}' in {structName}.{fieldName} @ 0x{offset:X}", file=sys.stderr)
 
-            # --- Dynamic truncation logic ---
             is_truncated = False
             comment = BuildComment(child, tag)
             if available > 0 and size > available:

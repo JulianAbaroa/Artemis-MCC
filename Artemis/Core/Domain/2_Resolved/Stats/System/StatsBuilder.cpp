@@ -57,7 +57,7 @@ namespace Resolved::Stats::System
 
     auto StatsBuilder::BuildProj(const std::string& tagName) -> bool
     {
-        const ProjObject* proj = m_ProjStore.Get(tagName);
+        const ProjObject* proj = m_TagCatalog.Proj.Get(tagName);
         if (!proj)
         {
             m_LogsService.Message("[StatsBuilder] WARNING:"
@@ -73,7 +73,7 @@ namespace Resolved::Stats::System
 
     auto StatsBuilder::BuildVehi(const std::string& tagName) -> bool
     {
-        const VehiObject* vehi = m_VehiStore.Get(tagName);
+        const VehiObject* vehi = m_TagCatalog.Vehi.Get(tagName);
         if (!vehi)
         {
             m_LogsService.Message("[StatsBuilder] WARNING:"
@@ -89,7 +89,7 @@ namespace Resolved::Stats::System
 
     auto StatsBuilder::BuildWeap(const std::string& tagName) -> bool
     {
-        const WeapObject* weap = m_WeapStore.Get(tagName);
+        const WeapObject* weap = m_TagCatalog.Weap.Get(tagName);
         if (!weap)
         {
             m_LogsService.Message("[StatsBuilder] WARNING:"

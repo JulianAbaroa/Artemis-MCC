@@ -22,32 +22,26 @@ export namespace Map::Reader::System
 	class GeometryLoaderService
 	{
 	private:
+		using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
+		using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
 		using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
 		using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
-		using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
-		using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
 		using SbspGeometry = Map::Reader::Type::Geometry::SbspGeometry;
 
 		using LogsService = Service::Logs::System::LogsService;
-		template <typename TObject> using SbspStore = Map::Tag::State::Sbsp::SbspStore<TObject>;
-		template <typename TObject> using LbspStore = Map::Tag::State::Lbsp::LbspStore<TObject>;
-		template <typename TObject> using PlayStore = Map::Tag::State::Play::PlayStore<TObject>;
-		template <typename TObject> using ZoneStore = Map::Tag::State::Zone::ZoneStore<TObject>;
+		using TagCatalog = Map::Tag::State::TagCatalog;
 		using FormulaService = Map::Reader::System::FormulaService;
 		using GeometryInfoService = Map::Reader::System::GeometryInfoService;
 		using GeometryResourcePageService = Map::Reader::System::GeometryResourcePageService;
 		using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
 
 	public:
-		GeometryLoaderService(LogsService& logsService, 
-			SbspStore<SbspObject>& sbspStore, LbspStore<LbspObject>& lbspStore, 
-			PlayStore<PlayObject>& playStore, ZoneStore<ZoneObject>& zoneStore,
+		GeometryLoaderService(LogsService& logsService, TagCatalog& tagCatalog,
 			GeometryResourcePageService& geometryResourcePageService,
 			GeometryInfoService& geometryInfoService,
 			GeometryMeshDecoderService& geometryMeshDecoderService,
 			FormulaService& m_FormulaService) :
-			m_LogsService(logsService), m_SbspStore(sbspStore), 
-			m_LbspStore(lbspStore),  m_PlayStore(playStore), m_ZoneStore(zoneStore), 
+			m_LogsService(logsService), m_TagCatalog(tagCatalog),
 			m_GeometryResourcePageService(geometryResourcePageService),
 			m_GeometryInfoService(geometryInfoService), 
 			m_GeometryMeshDecoderService(geometryMeshDecoderService),
@@ -59,10 +53,7 @@ export namespace Map::Reader::System
 
 	private:
 		LogsService& m_LogsService;
-		SbspStore<SbspObject>& m_SbspStore;
-		LbspStore<LbspObject>& m_LbspStore;
-		PlayStore<PlayObject>& m_PlayStore;
-		ZoneStore<ZoneObject>& m_ZoneStore;
+		TagCatalog& m_TagCatalog;
 		GeometryInfoService& m_GeometryInfoService;
 		FormulaService& m_FormulaService;
 		GeometryMeshDecoderService& m_GeometryMeshDecoderService;

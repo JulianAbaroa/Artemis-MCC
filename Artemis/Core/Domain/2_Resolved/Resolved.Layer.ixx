@@ -36,9 +36,9 @@ export namespace Resolved
 
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map) :
-			m_StatsBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagStore.proj, map.m_TagStore.vehi, map.m_TagStore.weap, m_StatsStore, m_ProjBuilder, m_VehiBuilder, m_WeapBuilder),
-			m_WorldBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagStore.bipd, map.m_TagStore.bloc, map.m_TagStore.coll, map.m_TagStore.ctrl, map.m_TagStore.eqip, map.m_TagStore.hlmt, map.m_TagStore.mach, map.m_TagStore.mode, map.m_TagStore.sbsp, map.m_TagStore.scen, map.m_TagStore.vehi, map.m_TagStore.weap, m_WorldStore, map.m_TagResolverService, map.m_GeometryLoaderService, m_SbspSeamLinker, m_SbspBuilder, m_CollBuilder, m_ModeBuilder, m_RegionStatesBuilder),
-			m_VitalityBuilder(service.m_LogsService, map.m_TagStore.coll, map.m_TagStore.hlmt, m_VitalityStore)
+			m_StatsBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, m_StatsStore, m_ProjBuilder, m_VehiBuilder, m_WeapBuilder),
+			m_WorldBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, m_WorldStore, map.m_TagResolverService, map.m_GeometryLoaderService, m_SbspSeamLinker, m_SbspBuilder, m_CollBuilder, m_ModeBuilder, m_RegionStatesBuilder),
+			m_VitalityBuilder(service.m_LogsService, map.m_TagCatalog, m_VitalityStore)
 		{
 			platform.m_LifecycleService.OnCleanup([this] {
 				m_WorldBuilder.Cleanup();

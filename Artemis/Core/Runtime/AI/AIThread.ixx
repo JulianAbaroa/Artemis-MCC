@@ -44,6 +44,8 @@ export namespace Runtime::Thread
 		std::uint64_t m_Last = 0;
 		std::uint64_t m_Dropped = 0;
 
+		std::size_t m_TickLogCounter = 0;
+
 		auto LoadResources() -> void;
 
 		auto ExecuteTick() -> void;

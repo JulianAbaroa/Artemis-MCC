@@ -23,9 +23,7 @@ export namespace Resolved::Stats::System
 
         using LogsService = Service::Logs::System::LogsService;
         using TagIndexStore = Map::Reader::State::TagIndexStore;
-        template <typename TObject> using ProjStore = Map::Tag::State::Proj::ProjStore<TObject>;
-        template <typename TObject> using VehiStore = Map::Tag::State::Vehi::VehiStore<TObject>;
-        template <typename TObject> using WeapStore = Map::Tag::State::Weap::WeapStore<TObject>;
+        using TagCatalog = Map::Tag::State::TagCatalog;
         using StatsStore = Resolved::Stats::State::StatsStore;
         using ProjBuilder = Resolved::Stats::System::ProjBuilder;
         using VehiBuilder = Resolved::Stats::System::VehiBuilder;
@@ -33,12 +31,10 @@ export namespace Resolved::Stats::System
 
     public:
         StatsBuilder(LogsService& logsService, TagIndexStore& m_TagIndexStore,
-            ProjStore<ProjObject>& projStore, VehiStore<VehiObject>& vehiStore,
-            WeapStore<WeapObject>& weapStore, StatsStore& StatsStore,
+            TagCatalog& tagCatalog, StatsStore& StatsStore,
             ProjBuilder& ProjBuilder, VehiBuilder& VehiBuilder, 
             WeapBuilder& WeapBuilder) : m_LogsService(logsService), 
-            m_TagIndexStore(m_TagIndexStore), m_ProjStore(projStore), 
-            m_VehiStore(vehiStore), m_WeapStore(weapStore), 
+            m_TagIndexStore(m_TagIndexStore), m_TagCatalog(tagCatalog),
             m_StatsStore(StatsStore), m_ProjBuilder(ProjBuilder), 
             m_VehiBuilder(VehiBuilder), m_WeapBuilder(WeapBuilder) {}
         ~StatsBuilder() = default;
@@ -50,9 +46,7 @@ export namespace Resolved::Stats::System
     private:
         LogsService& m_LogsService;
         TagIndexStore& m_TagIndexStore;
-        ProjStore<ProjObject>& m_ProjStore;
-        VehiStore<VehiObject>& m_VehiStore;
-        WeapStore<WeapObject>& m_WeapStore;
+        TagCatalog& m_TagCatalog;
         StatsStore& m_StatsStore;
         ProjBuilder& m_ProjBuilder;
         VehiBuilder& m_VehiBuilder;

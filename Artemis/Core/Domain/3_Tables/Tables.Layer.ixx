@@ -39,7 +39,7 @@ export namespace Tables
 
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map) :
-			m_ObjectService(service.m_LogsService, platform.m_MemoryReaderService, map.m_TagStore.bipd, map.m_TagStore.bloc, map.m_TagStore.coll, map.m_TagStore.ctrl, map.m_TagStore.eqip, map.m_TagStore.hlmt, map.m_TagStore.lbsp, map.m_TagStore.mach, map.m_TagStore.mode, map.m_TagStore.phmo, map.m_TagStore.play, map.m_TagStore.proj, map.m_TagStore.sbsp, map.m_TagStore.scen, map.m_TagStore.scnr, map.m_TagStore.sldt, map.m_TagStore.vehi, map.m_TagStore.weap, map.m_TagStore.zone, m_ObjectStore, m_BoneOffsetsStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
+			m_ObjectService(service.m_LogsService, platform.m_MemoryReaderService, m_ObjectStore, m_BoneOffsetsStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
 			m_PlayerService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore),
 			m_InteractionService(service.m_LogsService, platform.m_MemoryReaderService, m_InteractionStore),
 			m_ObjectTableLocator(service.m_LogsService, platform.m_AOBService, m_ObjectStore),

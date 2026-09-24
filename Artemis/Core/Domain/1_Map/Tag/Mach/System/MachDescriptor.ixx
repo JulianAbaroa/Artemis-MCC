@@ -4,6 +4,7 @@
 export module Map.Tag.System:Mach.Descriptor;
 
 import Map.Tag.Type;
+import Map.Reader.Type;
 import Map.Reader.System;
 import std;
 
@@ -11,6 +12,7 @@ namespace
 {
     using namespace Map::Tag::Type::Mach::Structure;
     using namespace Map::Tag::Type::Mach::Object;
+    namespace MapMagic = Map::Reader::Type::Magic;
 }
 
 export namespace Map::Reader::System
@@ -19,6 +21,7 @@ export namespace Map::Reader::System
     struct GroupDescriptor<MachObject>
     {
         using DataType = MachData;
+        static constexpr std::uint32_t Magic = MapMagic::Tag::k_Mach;
 
         template <typename TReader>
         static void ReadBlocks(

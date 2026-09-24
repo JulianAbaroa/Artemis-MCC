@@ -4,6 +4,7 @@
 export module Map.Tag.System:Bloc.Descriptor;
 
 import Map.Tag.Type;
+import Map.Reader.Type;
 import Map.Reader.System;
 import std;
 
@@ -11,6 +12,7 @@ namespace
 {
     using namespace Map::Tag::Type::Bloc::Structure;
     using namespace Map::Tag::Type::Bloc::Object;
+    namespace MapMagic = Map::Reader::Type::Magic;
 }
 
 export namespace Map::Reader::System
@@ -19,6 +21,7 @@ export namespace Map::Reader::System
     struct GroupDescriptor<BlocObject>
     {
         using DataType = BlocData;
+        static constexpr std::uint32_t Magic = MapMagic::Tag::k_Bloc;
 
         template <typename TReader>
         static void ReadBlocks(
