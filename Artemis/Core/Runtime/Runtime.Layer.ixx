@@ -9,6 +9,7 @@ import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
+import Viewer.Camera.State;
 import Runtime.Thread;
 import std;
 
@@ -25,10 +26,11 @@ export namespace Runtime
 		Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
 			Resolved::Layer& resolved, Tables::Layer& tables,
 			Relations::Layer& relations, Environment::Layer& environment,
-			Egocentric::Layer& egocentric, Export::Layer& exportLayer) :
+			Egocentric::Layer& egocentric, Export::Layer& exportLayer,
+			Viewer::Camera::State::CameraStore& viewerCameraStore) :
 			m_Main(service, platform),
 			m_AI(service, platform, map, resolved, tables, relations,
-				environment, egocentric, exportLayer),
+				environment, egocentric, exportLayer, viewerCameraStore),
 			m_Input(service, platform) {}
 		~Layer() = default;
 

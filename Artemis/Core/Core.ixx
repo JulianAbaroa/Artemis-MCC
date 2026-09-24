@@ -57,6 +57,6 @@ export namespace Core
 		Export::Layer m_Export{ m_Service, m_Platform, m_Tables, m_Relations, m_Environment, m_Egocentric };
 		Viewer::Layer m_Viewer{ m_Service, m_Platform, m_Resolved, m_Export };
 		UI::Layer m_UI{ m_Service, m_Platform, m_Resolved, m_Export, m_Viewer };
-		Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export };
+		Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export, m_Viewer.m_CameraStore };
 	};
 }

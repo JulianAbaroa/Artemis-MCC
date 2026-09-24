@@ -54,7 +54,7 @@ export namespace Environment::Collidable::System
             m_WorldStore(worldStore), m_CollidableStore(collidableStore) {}
         ~CollidableService() = default;
 
-        auto Update() -> void;
+        auto Update(bool isDebugViewActive) -> void;
 
         auto IsBoneMatrixValid(const BoneMatrix& m) -> bool;
 

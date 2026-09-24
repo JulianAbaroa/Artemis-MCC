@@ -9,21 +9,25 @@ import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
+import Viewer.Camera.State;
 import std;
 
 export namespace Runtime::Thread
 {
 	class AIThread
 	{
+	private:
+		using CameraStore = Viewer::Camera::State::CameraStore;
+
 	public:
 		AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
 			Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
 			Environment::Layer& environment, Egocentric::Layer& egocentric,
-			Export::Layer& exportLayer) :
+			Export::Layer& exportLayer, CameraStore& cameraStore) :
 			m_Service(service), m_Platform(platform), m_Map(map),
 			m_Resolved(resolved), m_Tables(tables), m_Relations(relations),
 			m_Environment(environment), m_Egocentric(egocentric),
-			m_Export(exportLayer) {}
+			m_Export(exportLayer), m_ViewerCameraStore(cameraStore) {}
 		~AIThread() = default;
 
 		auto Run() -> void;
@@ -38,6 +42,7 @@ export namespace Runtime::Thread
 		Environment::Layer& m_Environment;
 		Egocentric::Layer& m_Egocentric;
 		Export::Layer& m_Export;
+		CameraStore& m_ViewerCameraStore;
 
 		bool m_WasLoaded{ false };
 

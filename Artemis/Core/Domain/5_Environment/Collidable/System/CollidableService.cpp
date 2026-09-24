@@ -7,8 +7,14 @@ namespace
 
 namespace Environment::Collidable::System
 {
-    auto CollidableService::Update() -> void
+    auto CollidableService::Update(bool isDebugViewActive) -> void
     {
+        if (!isDebugViewActive)
+        {
+            m_CollidableStore.Publish({});
+            return;
+        }
+
         auto classifiedsPtr = m_ClassifierStore.Acquire();
         auto objectTablePtr = m_ObjectTableStore.Acquire();
         if (!classifiedsPtr || !objectTablePtr) return;

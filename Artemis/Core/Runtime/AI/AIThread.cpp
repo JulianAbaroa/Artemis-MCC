@@ -115,7 +115,7 @@ namespace Runtime::Thread
 		m_Relations.m_PlayerGraphService.UpdateGraph();
 
 		// --- Environment ---
-		m_Environment.m_CollidableService.Update();
+		m_Environment.m_CollidableService.Update(m_ViewerCameraStore.IsActive());
 		m_Environment.m_FixturesService.Update();
 		m_Environment.m_HealthService.Update();
 
