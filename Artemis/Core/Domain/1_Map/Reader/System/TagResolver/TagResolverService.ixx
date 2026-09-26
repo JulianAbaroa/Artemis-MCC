@@ -1,9 +1,9 @@
 export module Map.Reader.System:TagResolver;
 
 import :Formula;
+
 import Service.Logs.System;
 import Map.Reader.Type;
-import Map.Reader.State;
 import Map.Reader.State;
 import std;
 
@@ -26,8 +26,7 @@ export namespace Map::Reader::System
 		TagResolverService(LogsService& logsService, FileStore& fileStore,
 			TagIndexStore& m_TagIndexStore, FormulaService& m_FormulaService) :
 			m_LogsService(logsService), m_FileStore(fileStore),
-			m_TagIndexStore(m_TagIndexStore), m_FormulaService(m_FormulaService) {
-		}
+			m_TagIndexStore(m_TagIndexStore), m_FormulaService(m_FormulaService) {}
 		~TagResolverService() = default;
 
 		auto ResolveHandle(std::uint32_t handle) const -> TagInfo;

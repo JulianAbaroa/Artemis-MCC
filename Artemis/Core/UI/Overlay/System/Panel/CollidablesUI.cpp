@@ -5,49 +5,30 @@ module;
 module UI.Overlay.System;
 import :Collidables;
 
-import Common.Math.Type;
-import UI.Format.System;
+import UI.Widget.System;
 import std;
 
 namespace
 {
 	using Tick = Export::Tick::Type::Tick;
 	using Collidable = Export::Tick::Type::Collidable;
-	using Vec3 = Common::Math::Type::Vec3;
-	using HexFormater = UI::Format::System::HexFormater;
 
-	auto DrawVec3(const char* label, const Vec3& value) -> void
-	{
-		ImGui::Text("%s %.2f, %.2f, %.2f", label, value.X, value.Y, value.Z);
-	}
+	using PanelUIService = UI::Widget::System::PanelUIService;
 
-	auto DrawFlag(const char* label, bool value) -> void
-	{
-		ImGui::Text("%s", label);
-		ImGui::SameLine();
-
-		if (value) ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "yes");
-		else       ImGui::TextColored(ImVec4(0.4f, 0.4f, 0.4f, 1.0f), "no");
-	}
+	constexpr ImVec4 k_AlertColor{ 1.0f, 0.4f, 0.4f, 1.0f };
 
 	auto DrawCollidable(const Collidable& instance) -> void
 	{
-		ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Collidable");
-
-		ImGui::Separator();
-
-		ImGui::Text("%s", instance.TagName.c_str());
-		ImGui::Text("Handle: %s", HexFormater::Hex32(instance.Handle).c_str());
+		PanelUIService::DrawHeader(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Collidable",
+			instance.TagName, instance.Handle);
 
 		ImGui::Spacing();
 
-		DrawVec3("Position:", instance.Position);
-		DrawVec3("Forward:", instance.Forward);
-		DrawVec3("Up:", instance.Up);
+		PanelUIService::DrawVec3("Position:", instance.Position);
+		PanelUIService::DrawVec3("Forward:", instance.Forward);
+		PanelUIService::DrawVec3("Up:", instance.Up);
 
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
+		PanelUIService::DrawSectionSeparator();
 
 		const auto& mesh = instance.WorldMesh;
 
@@ -60,15 +41,13 @@ namespace
 		ImGui::Spacing();
 
 		ImGui::TextDisabled("Bounds (model-space):");
-		DrawVec3("Min:", mesh.LocalMin);
-		DrawVec3("Max:", mesh.LocalMax);
+		PanelUIService::DrawVec3("Min:", mesh.LocalMin);
+		PanelUIService::DrawVec3("Max:", mesh.LocalMax);
 
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
+		PanelUIService::DrawSectionSeparator();
 
-		DrawFlag("Ancestor dead:", instance.AncestorDead);
-		DrawFlag("Destroyed geometry:", instance.HasDestroyedGeometry);
+		PanelUIService::DrawBoolBadge("Ancestor dead:", instance.AncestorDead, k_AlertColor);
+		PanelUIService::DrawBoolBadge("Destroyed geometry:", instance.HasDestroyedGeometry, k_AlertColor);
 	}
 }
 

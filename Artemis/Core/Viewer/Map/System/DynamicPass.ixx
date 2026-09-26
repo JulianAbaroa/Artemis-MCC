@@ -54,7 +54,5 @@ export namespace Viewer::Map::System
 		std::uint32_t m_LastSelected{ 0xFFFFFFFF };
 
 		std::vector<ObjectBounds> m_Bounds{};
-
-		auto EnsureCapacity(ID3D11Device* device, UINT vertexCapacity) -> bool;
 	};
 }

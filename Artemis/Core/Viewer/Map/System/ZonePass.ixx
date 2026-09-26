@@ -45,7 +45,5 @@ export namespace Viewer::Map::System
 
 		std::uint64_t m_LastGeneration{ 0 };
 		bool m_HasGeneration{ false };
-
-		auto EnsureCapacity(ID3D11Device* device, UINT vertexCapacity) -> bool;
 	};
 }

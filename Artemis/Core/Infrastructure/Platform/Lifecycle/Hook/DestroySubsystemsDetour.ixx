@@ -43,7 +43,7 @@ export namespace Platform::Lifecycle::Hook
 
 		typedef auto(__fastcall* DestroySubsystems_t)() -> void;
 
-		static inline DestroySubsystems_t m_OriginalFunction = nullptr;
+		static inline DestroySubsystems_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

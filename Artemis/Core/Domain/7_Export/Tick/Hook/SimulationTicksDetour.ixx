@@ -43,7 +43,7 @@ export namespace Export::Tick::Hook
 		typedef void(__fastcall* SimulationTicks_t)(
 			int ticksToAdvance, float* param_2);
 
-		static inline SimulationTicks_t m_OriginalFunction = nullptr;
+		static inline SimulationTicks_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

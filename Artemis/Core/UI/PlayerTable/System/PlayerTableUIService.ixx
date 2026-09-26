@@ -17,10 +17,12 @@ export namespace UI::PlayerTable::System
 		using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
 		using SearchFilterUIService = UI::Widget::System::SearchFilterUIService;
 		using CopyableFieldUIService = UI::Widget::System::CopyableFieldUIService;
+		using ResponsiveCardUIService = UI::Widget::System::ResponsiveCardUIService;
 
 	public:
 		PlayerTableUIService(TickStore& tickStore, PlayerTableUIStore& playerTableUIStore) :
-			m_TickStore(tickStore), m_PlayerTableUIStore(playerTableUIStore) {}
+			m_TickStore(tickStore), m_PlayerTableUIStore(playerTableUIStore) {
+		}
 		~PlayerTableUIService() = default;
 
 		PlayerTableUIService(const PlayerTableUIService&) = delete;

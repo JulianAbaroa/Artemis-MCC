@@ -8,6 +8,7 @@ import :DestroySubsystems;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
+import Platform.Hook.Common;
 import std;
 
 namespace
@@ -65,29 +66,17 @@ namespace Platform::Lifecycle::Hook
 
 		void* functionAddress = reinterpret_cast<void*>(
 			m_AOBService.FindPattern(Signature::DestroySubsystems));
-
-		if (!functionAddress) return false;
-
 		m_FunctionAddress.store(functionAddress);
-		MH_RemoveHook(m_FunctionAddress.load());
 
-		if (MH_CreateHook(m_FunctionAddress.load(), &HookedDestroySubsystems,
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)) != MH_OK)
+		if (!Platform::Hook::Common::InstallDetour(functionAddress,
+			reinterpret_cast<void*>(&HookedDestroySubsystems),
+			reinterpret_cast<void**>(&m_OriginalFunction),
+			"[DestroySubsystemsDetour]", m_LogsService))
 		{
-			m_LogsService.Message("[DestroySubsystemsDetour] ERROR:"
-				" Failed to create the hook.");
-			return false;
-		}
-
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-		{
-			m_LogsService.Message("[DestroySubsystemsDetour] ERROR:"
-				" Failed to enable the hook.");
 			return false;
 		}
 
 		m_IsHookInstalled.store(true);
-		m_LogsService.Message("[DestroySubsystemsDetour] INFO: Hook installed.");
 		return true;
 	}
 
@@ -95,11 +84,10 @@ namespace Platform::Lifecycle::Hook
 	{
 		if (!m_IsHookInstalled.load()) return;
 
-		MH_DisableHook(m_FunctionAddress.load());
-		MH_RemoveHook(m_FunctionAddress.load());
+		Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+			"[DestroySubsystemsDetour]", m_LogsService);
 
 		m_IsHookInstalled.store(false);
-		m_LogsService.Message("[DestroySubsystemsDetour] INFO: Hook uninstalled.");
 	}
 
 	auto DestroySubsystemsDetour::GetFunctionAddress() const -> void*

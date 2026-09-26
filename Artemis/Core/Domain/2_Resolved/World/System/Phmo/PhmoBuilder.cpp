@@ -6,6 +6,16 @@ namespace
     using Vec3 = Common::Math::Type::Vec3;
     using Phmo_ListShapesEntry = Map::Tag::Type::Phmo::Structure::Phmo_ListShapesEntry;
     using RigidBody = Resolved::World::Type::Phmo::RigidBody;
+
+    using Resolved::World::Type::Constant::k_ShapeSphere;
+    using Resolved::World::Type::Constant::k_ShapePill;
+    using Resolved::World::Type::Constant::k_ShapeBox;
+    using Resolved::World::Type::Constant::k_ShapeTriangle;
+    using Resolved::World::Type::Constant::k_ShapePolyhedron;
+    using Resolved::World::Type::Constant::k_ShapeMultiSphere;
+    using Resolved::World::Type::Constant::k_ShapePhantom;
+    using Resolved::World::Type::Constant::k_ShapeList;
+    using Resolved::World::Type::Constant::k_ShapeMOPP;
 }
 
 namespace Resolved::World::System

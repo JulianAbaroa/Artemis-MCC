@@ -59,8 +59,8 @@ namespace UI::PlayerTable::System
 			this->DrawPlayerCard(*filtered[i]);
 
 			const bool hasNext = i + 1 < filtered.size();
-			const bool nextFits = ImGui::GetItemRectMax().x + k_CardSpacing +
-				k_CardSize.x < windowRightEdge;
+			const bool nextFits = ResponsiveCardUIService::FitsOnSameLine(
+				k_CardSize.x, k_CardSpacing, windowRightEdge);
 
 			if (hasNext && nextFits) ImGui::SameLine();
 		}
@@ -106,23 +106,13 @@ namespace UI::PlayerTable::System
 
 	auto PlayerTableUIService::DrawPlayerCard(const AlivePlayer& player) -> void
 	{
-		ImGui::PushID(static_cast<int>(player.Handle));
-		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-
-		const ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar |
-			ImGuiWindowFlags_NoScrollWithMouse;
-
-		if (ImGui::BeginChild("##card", k_CardSize, true, flags))
-		{
-			this->DrawCardHeader(player);
-			this->DrawCardIdentity(player);
-			this->DrawCardWeapon(player);
-			this->DrawCardBiped(player);
-		}
-
-		ImGui::EndChild();
-		ImGui::PopStyleVar();
-		ImGui::PopID();
+		ResponsiveCardUIService::Draw(player.Handle, k_CardSize, [this, &player]
+			{
+				this->DrawCardHeader(player);
+				this->DrawCardIdentity(player);
+				this->DrawCardWeapon(player);
+				this->DrawCardBiped(player);
+			});
 	}
 
 	auto PlayerTableUIService::DrawCardHeader(const AlivePlayer& player) -> void

@@ -26,48 +26,90 @@ namespace Environment::Collidable::System
         const ObjectTable& objectTable) -> void
     {
         std::vector<Collidable> instances;
+        instances.reserve(objectTable.size());
 
         for (const auto& [handle, object] : objectTable)
         {
             if (object.Address == 0) continue;
 
-            Collidable instance{};
-            instance.Handle = object.Handle;
-            instance.TagName = object.TagName;
-            instance.Position = object.Position;
-            instance.Forward = object.Forward;
-            instance.Up = object.Up;
-
-            Context ctx{};
-            ctx.Coll = m_WorldStore.GetResolvedCollForObject(object.TagName);
-
-            const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
-            const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
-
-            instance.AncestorDead =
-                this->IsAncestorDead(object.Handle, objectTable);
-
-            if (ctx.Coll)
-            {
-                const ResolvedRegionStates* states =
-                    m_WorldStore.GetResolvedRegionStates(object.TagName);
-
-                if (states && object.HlmtVariant < states->Variants.size())
-                {
-                    ctx.States = states;
-                    ctx.Variant = object.HlmtVariant;
-                    instance.HasDestroyedGeometry =
-                        states->Variants[object.HlmtVariant].HasDestroyedGeometry;
-                }
-            }
-
-            instance.WorldMesh = this->CollectMesh(
-                instance, ctx, bones, damage);
-
-            instances.push_back(std::move(instance));
+            instances.push_back(this->BuildInstance(object, objectTable));
         }
 
         m_CollidableStore.Publish(std::move(instances));
+    }
+
+    auto CollidableService::BuildInstance(const AliveObject& object,
+        const ObjectTable& objectTable) -> Collidable
+    {
+        Collidable instance{};
+        instance.Handle = object.Handle;
+        instance.TagName = object.TagName;
+        instance.Position = object.Position;
+        instance.Forward = object.Forward;
+        instance.Up = object.Up;
+
+        Context ctx{};
+        ctx.Coll = m_WorldStore.GetResolvedCollForObject(object.TagName);
+
+        const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
+        const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
+
+        instance.AncestorDead = this->IsAncestorDead(object.Handle, objectTable);
+
+        if (ctx.Coll)
+        {
+            const ResolvedRegionStates* states =
+                m_WorldStore.GetResolvedRegionStates(object.TagName);
+
+            if (states && object.HlmtVariant < states->Variants.size())
+            {
+                ctx.States = states;
+                ctx.Variant = object.HlmtVariant;
+                instance.HasDestroyedGeometry =
+                    states->Variants[object.HlmtVariant].HasDestroyedGeometry;
+            }
+        }
+
+        instance.WorldMesh = this->CollectMesh(instance, ctx, bones, damage);
+
+        return instance;
+    }
+
+    auto CollidableService::CollectMeshFor(std::uint32_t handle) -> std::optional<Collidable>
+    {
+        auto objectTablePtr = m_ObjectTableStore.Acquire();
+        if (!objectTablePtr) return std::nullopt;
+
+        auto it = objectTablePtr->find(handle);
+        if (it == objectTablePtr->end() || it->second.Address == 0) return std::nullopt;
+
+        return this->BuildInstance(it->second, *objectTablePtr);
+    }
+
+    auto CollidableService::QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>
+    {
+        std::vector<std::uint32_t> out;
+
+        auto objectTablePtr = m_ObjectTableStore.Acquire();
+        if (!objectTablePtr) return out;
+
+        const float radiusSq = radius * radius;
+
+        for (const auto& [handle, object] : *objectTablePtr)
+        {
+            if (object.Address == 0) continue;
+
+            const float dx = object.Position.X - origin.X;
+            const float dy = object.Position.Y - origin.Y;
+            const float dz = object.Position.Z - origin.Z;
+
+            if (dx * dx + dy * dy + dz * dz <= radiusSq)
+            {
+                out.push_back(handle);
+            }
+        }
+
+        return out;
     }
 
     auto CollidableService::CollectMesh(const Collidable& instance,
@@ -109,8 +151,7 @@ namespace Environment::Collidable::System
                 continue;
             }
 
-            if (mesh.NodeIndex < 0 ||
-                static_cast<size_t>(mesh.NodeIndex) >= matrices.size())
+            if (mesh.NodeIndex < 0 || static_cast<size_t>(mesh.NodeIndex) >= matrices.size())
             {
                 continue;
             }

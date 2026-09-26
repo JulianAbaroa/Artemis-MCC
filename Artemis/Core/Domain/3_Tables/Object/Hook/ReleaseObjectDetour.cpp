@@ -6,6 +6,7 @@ module Tables.Object.Hook;
 import :ReleaseObject;
 
 import Platform.Memory.Type;
+import Platform.Hook.Common;
 
 namespace
 {
@@ -23,56 +24,33 @@ namespace Tables::Object::Hook
 
 	ReleaseObjectDetour* ReleaseObjectDetour::s_Instance = nullptr;
 
-	auto ReleaseObjectDetour::Install() -> void
-	{
-		if (m_IsHookInstalled.load()) return;
-		s_Instance = this;
+    void ReleaseObjectDetour::Install()
+    {
+        if (m_IsHookInstalled.load()) return;
+        s_Instance = this;
 
-		void* functionAddress = (void*)s_Instance->m_AOBService.FindPattern(
-			Signature::ReleaseObject);
+        void* functionAddress = (void*)m_AOBService.FindPattern(Signature::ReleaseObject);
+        m_FunctionAddress.store(functionAddress);
 
-		if (!functionAddress)
-		{
-			s_Instance->m_LogsService.Message("[ReleaseObjectDetour] ERROR:"
-				" Failed to obtain the function address.");
-			return;
-		}
+        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+            reinterpret_cast<void*>(&HookedReleaseObject),
+            reinterpret_cast<void**>(&m_OriginalFunction),
+            "[ReleaseObjectDetour]", m_LogsService))
+        {
+            return;
+        }
 
-		m_FunctionAddress.store(functionAddress);
-		if (MH_CreateHook(m_FunctionAddress.load(),
-			&this->HookedReleaseObject,
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)
-		) != MH_OK)
-		{
-			s_Instance->m_LogsService.Message("[ReleaseObjectDetour] ERROR:"
-				" Failed to create the hook.");
-			return;
-		}
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-		{
-			s_Instance->m_LogsService.Message("[ReleaseObjectDetour] ERROR:"
-				" Failed to enable hook.");
-			return;
-		}
+        m_IsHookInstalled.store(true);
+    }
 
-		m_IsHookInstalled.store(true);
-		s_Instance->m_LogsService.Message("[ReleaseObjectDetour] INFO:"
-			" Hook installed.");
-		return;
-	}
+    void ReleaseObjectDetour::Uninstall()
+    {
+        if (!m_IsHookInstalled.load()) return;
 
-	auto ReleaseObjectDetour::Uninstall() -> void
-	{
-		if (!m_IsHookInstalled.load()) return;
+        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+            "[ReleaseObjectDetour]", m_LogsService);
 
-		MH_DisableHook(m_FunctionAddress.load());
-		MH_RemoveHook(m_FunctionAddress.load());
-
-		m_IsHookInstalled.store(false);
-
-		s_Instance->m_LogsService.Message("[ReleaseObjectDetour] INFO:"
-			" Hook uninstalled.");
-
-		s_Instance = nullptr;
-	}
+        m_IsHookInstalled.store(false);
+        s_Instance = nullptr;
+    }
 }

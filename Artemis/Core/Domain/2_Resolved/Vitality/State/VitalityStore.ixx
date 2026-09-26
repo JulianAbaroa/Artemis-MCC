@@ -8,7 +8,7 @@ export namespace Resolved::Vitality::State
     class VitalityStore
     {
     private:
-        using ResolvedVitality = Resolved::Vitality::Type::Vitality;
+        using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
 
     public:
         VitalityStore() = default;
@@ -31,7 +31,7 @@ export namespace Resolved::Vitality::State
         auto Cleanup() -> void;
 
     private:
-        std::unordered_map<std::string, ResolvedVitality> m_ResolvedVitalities;
+        std::unordered_map<std::string, ResolvedVitality> m_ResolvedVitalities{};
         std::atomic<bool> m_Frozen{ false };
     };
 }

@@ -1,6 +1,11 @@
 module Resolved.World.System;
 import :Mode;
 
+namespace
+{
+    using Resolved::World::Type::Constant::k_CompressedPositionFlag;
+}
+
 namespace Resolved::World::System
 {
     auto ModeBuilder::Build(const ModeObject& mode) -> ResolvedMode
@@ -67,7 +72,7 @@ namespace Resolved::World::System
 
         for (const auto& ci : mode.CompressionInfo)
         {
-            if ((ci.CompressionFlags & CompressedPositionFlag) == 0)
+            if ((ci.CompressionFlags & k_CompressedPositionFlag) == 0)
                 continue;
 
             min.X = std::min(min.X, ci.PositionBoundsX.Min);

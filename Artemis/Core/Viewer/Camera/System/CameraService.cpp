@@ -1,11 +1,11 @@
 module Viewer.Camera.System;
 
-import Viewer.Math.System;
+import Common.Math.System;
 import std;
 
 namespace
 {
-	namespace VecMath = Viewer::Math::System;
+	namespace VecMath = Common::Math::System;
 
 	using Key = Viewer::Camera::Type::Key;
 	using Vec3 = Viewer::Camera::Type::Vec3;

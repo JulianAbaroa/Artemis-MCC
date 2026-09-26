@@ -7,6 +7,7 @@ module Platform.Input.Hook;
 import :GetRawInputData;
 
 import Platform.Input.Type;
+import Platform.Hook.Common;
 import std;
 
 namespace
@@ -19,23 +20,6 @@ namespace
 		mouse.lLastY = 0;
 		mouse.ulButtons = 0;
 	}
-
-	struct InFlightScope
-	{
-		explicit InFlightScope(std::atomic<int>& counter) : m_Counter(counter)
-		{
-			m_Counter.fetch_add(1, std::memory_order_acq_rel);
-		}
-		~InFlightScope()
-		{
-			m_Counter.fetch_sub(1, std::memory_order_acq_rel);
-		}
-
-		InFlightScope(const InFlightScope&) = delete;
-		InFlightScope& operator=(const InFlightScope&) = delete;
-
-		std::atomic<int>& m_Counter;
-	};
 }
 
 namespace Platform::Input::Hook
@@ -51,7 +35,7 @@ namespace Platform::Input::Hook
 		auto* self = s_Instance;
 		if (!self) return size;
 
-		InFlightScope scope(s_InFlight);
+		Platform::Hook::Common::InFlightScope scope(s_InFlight);
 
 		if (size == static_cast<UINT>(-1) || !pData || uiCommand != RID_INPUT) return size;
 
@@ -94,56 +78,29 @@ namespace Platform::Input::Hook
 
 		void* functionAddress = reinterpret_cast<void*>(
 			GetProcAddress(user32, "GetRawInputData"));
-
-		if (!functionAddress)
-		{
-			m_LogsService.Message("[GetRawInputDataDetour] ERROR:"
-				" Failed to obtain the function address.");
-			return;
-		}
-
 		m_FunctionAddress.store(functionAddress);
-		MH_RemoveHook(m_FunctionAddress.load());
 
-		if (MH_CreateHook(m_FunctionAddress.load(), reinterpret_cast<LPVOID>(&HookedGetRawInputData),
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)) != MH_OK)
+		if (!Platform::Hook::Common::InstallDetour(functionAddress,
+			reinterpret_cast<void*>(&HookedGetRawInputData),
+			reinterpret_cast<void**>(&m_OriginalFunction),
+			"[GetRawInputDataDetour]", m_LogsService))
 		{
-			m_LogsService.Message("[GetRawInputDataDetour] ERROR:"
-				" Failed to create the hook.");
-			return;
-		}
-
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-		{
-			m_LogsService.Message("[GetRawInputDataDetour] ERROR:"
-				" Failed to enable the hook.");
-
-			MH_RemoveHook(m_FunctionAddress.load());
 			return;
 		}
 
 		m_IsHookInstalled.store(true);
-		m_LogsService.Message("[GetRawInputDataDetour] INFO: Hook installed.");
 	}
 
 	void GetRawInputDataDetour::Uninstall()
 	{
 		if (!m_IsHookInstalled.load()) return;
 
-		MH_DisableHook(m_FunctionAddress.load());
-
-		const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
-		while (s_InFlight.load(std::memory_order_acquire) > 0 &&
-			std::chrono::steady_clock::now() < deadline)
-		{
-			std::this_thread::sleep_for(std::chrono::microseconds(100));
-		}
-
-		MH_RemoveHook(m_FunctionAddress.load());
+		Platform::Hook::Common::DisableDetour(m_FunctionAddress.load());
+		Platform::Hook::Common::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+		Platform::Hook::Common::RemoveDetour(m_FunctionAddress.load(),
+			"[GetRawInputDataDetour]", m_LogsService);
 
 		m_IsHookInstalled.store(false);
-		m_LogsService.Message("[GetRawInputDataDetour] INFO: Hook uninstalled.");
-
 		s_Instance = nullptr;
 	}
 }

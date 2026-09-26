@@ -56,6 +56,10 @@ export namespace Environment::Collidable::System
 
         auto Update(bool isDebugViewActive) -> void;
 
+        auto CollectMeshFor(std::uint32_t handle) -> std::optional<Collidable>;
+
+        auto QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>;
+
         auto IsBoneMatrixValid(const BoneMatrix& m) -> bool;
 
         auto Cleanup() -> void;
@@ -72,6 +76,9 @@ export namespace Environment::Collidable::System
 
         auto CollectCollidables(const Classifieds& classifieds,
             const ObjectTable& objects) -> void;
+
+        auto BuildInstance(const AliveObject& object, 
+            const ObjectTable& objectTable) -> Collidable;
 
         auto CollectMesh(const Collidable& instance, const Context& ctx,
             const BoneMatrixTable* boneMatrixTable,

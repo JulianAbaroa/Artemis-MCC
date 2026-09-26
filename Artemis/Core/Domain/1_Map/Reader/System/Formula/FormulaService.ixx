@@ -26,6 +26,6 @@ export namespace Map::Reader::System
 			std::uint8_t addressLocationHighBits) const -> std::uint32_t;
 
 	private:
-		HeaderInfo m_HeaderInfo;
+		HeaderInfo m_HeaderInfo{};
 	};
 }

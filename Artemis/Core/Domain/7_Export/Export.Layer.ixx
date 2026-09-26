@@ -23,7 +23,7 @@ export namespace Export
 		Layer(Service::Layer& service, Platform::Layer& platform,
 			Tables::Layer& tables, Relations::Layer& relations,
 			Environment::Layer& environment, Egocentric::Layer& egocentric) :
-			m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, relations.m_PlayerGraphStore, environment.m_CollidableStore, environment.m_FixturesStore, environment.m_HealthStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, m_TickStore),
+			m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, relations.m_PlayerGraphStore, environment.m_CollidableStore, environment.m_FixturesStore, environment.m_HealthStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, m_TickStore),
 			m_SimulationTicksDetour(service.m_LogsService, service.m_TelemetryStore, platform.m_AOBService, platform.m_LifecycleStore)
 		{
 			auto& lifecycle = platform.m_LifecycleService;

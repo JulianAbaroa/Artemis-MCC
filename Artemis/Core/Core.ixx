@@ -34,7 +34,7 @@ export namespace Core
 		Artemis& operator=(const Artemis&) = delete;
 		Artemis(Artemis&&) = delete;
 		Artemis& operator=(Artemis&&) = delete;
-
+		
 		auto Start() -> bool;
 		auto Run() -> void;
 		auto RequestShutdown() -> void;
@@ -53,7 +53,7 @@ export namespace Core
 		Tables::Layer m_Tables{ m_Service, m_Platform, m_Map };
 		Relations::Layer m_Relations{ m_Service, m_Platform, m_Tables };
 		Environment::Layer m_Environment{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations };
-		Egocentric::Layer m_Egocentric{ m_Service, m_Platform, m_Tables, m_Relations, m_Environment };
+		Egocentric::Layer m_Egocentric{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment };
 		Export::Layer m_Export{ m_Service, m_Platform, m_Tables, m_Relations, m_Environment, m_Egocentric };
 		Viewer::Layer m_Viewer{ m_Service, m_Platform, m_Resolved, m_Export };
 		UI::Layer m_UI{ m_Service, m_Platform, m_Resolved, m_Export, m_Viewer };

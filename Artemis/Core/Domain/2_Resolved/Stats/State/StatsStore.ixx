@@ -44,9 +44,9 @@ export namespace Resolved::Stats::State
         auto Cleanup() -> void;
 
     private:
-        std::unordered_map<std::string, ResolvedVehi> m_ResolvedVehis;
-        std::unordered_map<std::string, ResolvedWeap> m_ResolvedWeaps;
-        std::unordered_map<std::string, ResolvedProj> m_ResolvedProjs;
+        std::unordered_map<std::string, ResolvedVehi> m_ResolvedVehis{};
+        std::unordered_map<std::string, ResolvedWeap> m_ResolvedWeaps{};
+        std::unordered_map<std::string, ResolvedProj> m_ResolvedProjs{};
 
         std::atomic<bool> m_Frozen{ false };
     };

@@ -4,7 +4,7 @@ namespace
 {
     using AliveObject = Tables::Object::Type::Alive::Object;
     using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
-    using VitalitySection = Resolved::Vitality::Type::Section;
+    using VitalitySection = Resolved::Vitality::Type::Vitality::Section;
     using Classified = Relations::Classifier::Type::Classified;
     using Classifieds = std::vector<Classified>;
     using Role = Relations::Classifier::Type::Role;

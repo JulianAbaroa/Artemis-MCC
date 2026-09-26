@@ -5,10 +5,10 @@ module;
 module UI.Overlay.System;
 import :Fixtures;
 
-import Common.Math.Type;
 import Common.ZoneShape.Type;
 import Tables.Object.Type;
 import Environment.Fixtures.Type;
+import UI.Widget.System;
 import UI.Format.System;
 import std;
 
@@ -18,7 +18,6 @@ namespace
 
 	using Tick = Export::Tick::Type::Tick;
 	using Fixtures = Export::Tick::Type::Fixtures;
-	using Vec3 = Common::Math::Type::Vec3;
 	using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 	using ZoneKind = Common::ZoneShape::Type::Kind;
 	using Allowed = Tables::Object::Type::Crate::Teleport::Allowed;
@@ -29,19 +28,7 @@ namespace
 	using TeamFormater = UI::Format::System::TeamFormater;
 	using FixturesFormater = UI::Format::System::FixturesFormater;
 
-	auto DrawVec3(const char* label, const Vec3& value) -> void
-	{
-		ImGui::Text("%s %.2f, %.2f, %.2f", label, value.X, value.Y, value.Z);
-	}
-
-	auto DrawHeader(const ImVec4& color, const char* title,
-		const std::string& tagName, std::uint32_t handle) -> void
-	{
-		ImGui::TextColored(color, "%s", title);
-		ImGui::Separator();
-		ImGui::Text("%s", tagName.c_str());
-		ImGui::Text("%s", HexFormater::Hex32(handle).c_str());
-	}
+	using PanelUIService = UI::Widget::System::PanelUIService;
 
 	auto SpawnKindToString(SpawnKind kind) -> const char*
 	{
@@ -117,29 +104,29 @@ namespace
 
 	auto DrawObstacle(const Fixture::Obstacle::Obstacle& o) -> void
 	{
-		DrawHeader(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), "Obstacle", o.TagName, o.Handle);
-		DrawVec3("Position:", o.Position);
-		DrawVec3("Forward:", o.Forward);
-		DrawVec3("Up:", o.Up);
-		DrawVec3("Linear Velocity:", o.LinearVelocity);
-		DrawVec3("Angular Velocity:", o.AngularVelocity);
+		PanelUIService::DrawHeader(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), "Obstacle", o.TagName, o.Handle);
+		PanelUIService::DrawVec3("Position:", o.Position);
+		PanelUIService::DrawVec3("Forward:", o.Forward);
+		PanelUIService::DrawVec3("Up:", o.Up);
+		PanelUIService::DrawVec3("Linear Velocity:", o.LinearVelocity);
+		PanelUIService::DrawVec3("Angular Velocity:", o.AngularVelocity);
 		ImGui::Text("Radius: %.2f", o.BoundingRadius);
 	}
 
 	auto DrawSpawn(const Fixture::Spawn::Spawn& s) -> void
 	{
-		DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), SpawnKindToString(s.Kind), s.TagName, s.Handle);
-		DrawVec3("Position:", s.Position);
-		DrawVec3("Forward:", s.Forward);
+		PanelUIService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), SpawnKindToString(s.Kind), s.TagName, s.Handle);
+		PanelUIService::DrawVec3("Position:", s.Position);
+		PanelUIService::DrawVec3("Forward:", s.Forward);
 		ImGui::Text("Team: %s", TeamFormater::TeamToString(s.Team));
 	}
 
 	auto DrawTeleporter(const Fixture::Teleport::Teleport& t) -> void
 	{
-		DrawHeader(ImVec4(1.0f, 1.0f, 0.4f, 1.0f), "Teleporter", t.TagName, t.Handle);
-		DrawVec3("Position:", t.Position);
-		DrawVec3("Forward:", t.Forward);
-		DrawVec3("Up:", t.Up);
+		PanelUIService::DrawHeader(ImVec4(1.0f, 1.0f, 0.4f, 1.0f), "Teleporter", t.TagName, t.Handle);
+		PanelUIService::DrawVec3("Position:", t.Position);
+		PanelUIService::DrawVec3("Forward:", t.Forward);
+		PanelUIService::DrawVec3("Up:", t.Up);
 		ImGui::Text("Channel: %d", static_cast<int>(t.Channel));
 		ImGui::Text("Type: %s", FixturesFormater::TeleporterKindToString(t.Kind));
 		ImGui::Text("Destinations: %d", static_cast<int>(t.DestinationPositions.size()));
@@ -154,35 +141,35 @@ namespace
 
 	auto DrawLift(const Fixture::Lift::Lift& l) -> void
 	{
-		DrawHeader(ImVec4(0.6f, 1.0f, 1.0f, 1.0f), "Lift", l.TagName, l.Handle);
-		DrawVec3("Position:", l.Position);
-		DrawVec3("Forward:", l.Forward);
-		DrawVec3("Up:", l.Up);
+		PanelUIService::DrawHeader(ImVec4(0.6f, 1.0f, 1.0f, 1.0f), "Lift", l.TagName, l.Handle);
+		PanelUIService::DrawVec3("Position:", l.Position);
+		PanelUIService::DrawVec3("Forward:", l.Forward);
+		PanelUIService::DrawVec3("Up:", l.Up);
 		ImGui::Text("Angle Type: %s", FixturesFormater::AngleKindToString(l.Angle));
 		ImGui::Text("Force Type: %s", FixturesFormater::ForceKindToString(l.Force));
-		DrawVec3("Launch Direction:", l.LaunchDirection);
+		PanelUIService::DrawVec3("Launch Direction:", l.LaunchDirection);
 	}
 
 	auto DrawShield(const Fixture::Shield::Shield& sh) -> void
 	{
-		DrawHeader(ImVec4(0.85f, 0.4f, 1.0f, 1.0f), "Shield", sh.TagName, sh.Handle);
-		DrawVec3("Position:", sh.Position);
-		DrawVec3("Forward:", sh.Forward);
-		DrawVec3("Up:", sh.Up);
+		PanelUIService::DrawHeader(ImVec4(0.85f, 0.4f, 1.0f, 1.0f), "Shield", sh.TagName, sh.Handle);
+		PanelUIService::DrawVec3("Position:", sh.Position);
+		PanelUIService::DrawVec3("Forward:", sh.Forward);
+		PanelUIService::DrawVec3("Up:", sh.Up);
 		ImGui::Text("Type: %s", ShieldKindToString(sh.Kind));
 
 		if (sh.BlockDirection.has_value())
 		{
-			DrawVec3("Block Direction:", *sh.BlockDirection);
+			PanelUIService::DrawVec3("Block Direction:", *sh.BlockDirection);
 		}
 	}
 
 	auto DrawObjectiveSpawn(const Fixture::ObjectiveSpawn::ObjectiveSpawn& os) -> void
 	{
-		DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Objective Spawn", os.TagName, os.Handle);
-		DrawVec3("Position:", os.Position);
-		DrawVec3("Forward:", os.Forward);
-		DrawVec3("Up:", os.Up);
+		PanelUIService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Objective Spawn", os.TagName, os.Handle);
+		PanelUIService::DrawVec3("Position:", os.Position);
+		PanelUIService::DrawVec3("Forward:", os.Forward);
+		PanelUIService::DrawVec3("Up:", os.Up);
 		ImGui::Text("Team: %s", TeamFormater::TeamToString(os.Team));
 
 		ImGui::Spacing();
@@ -191,13 +178,13 @@ namespace
 
 	auto DrawObjective(const Fixture::Objective::Objective& ob) -> void
 	{
-		DrawHeader(ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
+		PanelUIService::DrawHeader(ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
 			ob.IsEquipped ? "Objective (Carried)" : "Objective", ob.TagName, ob.Handle);
-		DrawVec3("Position:", ob.Position);
-		DrawVec3("Forward:", ob.Forward);
-		DrawVec3("Up:", ob.Up);
-		DrawVec3("Linear Velocity:", ob.LinearVelocity);
-		DrawVec3("Angular Velocity:", ob.AngularVelocity);
+		PanelUIService::DrawVec3("Position:", ob.Position);
+		PanelUIService::DrawVec3("Forward:", ob.Forward);
+		PanelUIService::DrawVec3("Up:", ob.Up);
+		PanelUIService::DrawVec3("Linear Velocity:", ob.LinearVelocity);
+		PanelUIService::DrawVec3("Angular Velocity:", ob.AngularVelocity);
 		ImGui::Text("Team: %s", TeamFormater::TeamToString(ob.Team));
 		ImGui::Text("Is Equipped: %s", ob.IsEquipped ? "Yes" : "No");
 
@@ -209,12 +196,12 @@ namespace
 
 	auto DrawDestructible(const Fixture::Destructible::Destructible& d) -> void
 	{
-		DrawHeader(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Destructible", d.TagName, d.Handle);
-		DrawVec3("Position:", d.Position);
-		DrawVec3("Forward:", d.Forward);
-		DrawVec3("Up:", d.Up);
-		DrawVec3("Linear Velocity:", d.LinearVelocity);
-		DrawVec3("Angular Velocity:", d.AngularVelocity);
+		PanelUIService::DrawHeader(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Destructible", d.TagName, d.Handle);
+		PanelUIService::DrawVec3("Position:", d.Position);
+		PanelUIService::DrawVec3("Forward:", d.Forward);
+		PanelUIService::DrawVec3("Up:", d.Up);
+		PanelUIService::DrawVec3("Linear Velocity:", d.LinearVelocity);
+		PanelUIService::DrawVec3("Angular Velocity:", d.AngularVelocity);
 		ImGui::Text("Type: %s", FixturesFormater::DestructibleKindToString(d.Kind));
 		ImGui::Text("Health: %.2f", d.Health);
 	}

@@ -2,8 +2,7 @@ export module Map.Reader.System:Geometry.MeshDecoder;
 
 import :DataStream;
 import :Formula;
-import :Geometry.ResourcePage;
-import :Geometry.Info;
+
 import Service.Logs.System;
 import Common.Math.Type;
 import Map.Reader.Type;
@@ -31,23 +30,6 @@ export namespace Map::Reader::System
 		using FileStore = Map::Reader::State::FileStore;
 		using DataStreamService = Map::Reader::System::DataStreamService;
 		using FormulaService = Map::Reader::System::FormulaService;
-
-		static constexpr std::uint32_t m_kFixupMask{ 0x0FFFFFFF };
-		static constexpr std::uint32_t m_kResourceDatumMask{ 0xFFFFu };
-
-		static constexpr std::uint32_t m_kVertexBufferStride{ 0x24 };
-		static constexpr std::int32_t m_kXOffset{ 0 };
-		static constexpr std::int32_t m_kYOffset{ 4 };
-		static constexpr std::int32_t m_kZOffset{ 8 };
-		static constexpr std::uint16_t m_kMeshFlagUnindexed{ (1u << 4) };
-
-		static constexpr std::int32_t m_kInstanceStride{ 156 };
-		static constexpr int m_kInstanceFixupFromEnd{ 10 };
-		static constexpr int m_kInstanceMatrixFloats{ 12 };
-		static constexpr int m_kInstanceScaledFloats{ 9 };
-		static constexpr int m_kInstanceScaleOffset{ 0 };
-		static constexpr int m_kInstanceMatrixOffset{ 4 };
-		static constexpr int m_kInstanceSectionOffset{ 58 };
 
 	public:
 		GeometryMeshDecoderService(LogsService& logsService, FileStore& fileStore,

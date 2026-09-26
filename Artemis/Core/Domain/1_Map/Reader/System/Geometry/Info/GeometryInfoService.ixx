@@ -1,6 +1,7 @@
 export module Map.Reader.System:Geometry.Info;
 
 import :DataStream;
+
 import Map.Reader.Type;
 import Map.Reader.State;
 import Map.Tag.Type;
@@ -16,15 +17,6 @@ export namespace Map::Reader::System
 
 		using FileStore = Map::Reader::State::FileStore;
 		using DataStreamService = Map::Reader::System::DataStreamService;
-
-		static constexpr std::int64_t m_kFooterSize{ 24 };
-		static constexpr std::int64_t m_kFooterVBCountOffset{ 0 };
-		static constexpr std::int64_t m_kFooterIBCountOffset{ 12 };
-
-		static constexpr std::int32_t m_kInfoStride{ 28 };
-		static constexpr std::int32_t m_kAuxSize{ 12 };
-		static constexpr std::int32_t m_kInfoAuxOffset{ 0 };
-		static constexpr std::int32_t m_kInfoDataLengthOffset{ 8 };
 
 	public:
 		GeometryInfoService(FileStore& fileStore, DataStreamService& dataStreamService) :

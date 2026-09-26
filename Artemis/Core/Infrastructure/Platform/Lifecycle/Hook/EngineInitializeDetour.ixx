@@ -40,7 +40,7 @@ export namespace Platform::Lifecycle::Hook
 
 		typedef auto(__fastcall* EngineInitialize_t)() -> void;
 
-		static inline EngineInitialize_t m_OriginalFunction = nullptr;
+		static inline EngineInitialize_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

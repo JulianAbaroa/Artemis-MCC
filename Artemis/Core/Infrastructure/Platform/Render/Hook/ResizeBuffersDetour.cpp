@@ -7,6 +7,7 @@ module;
 module Platform.Render.Hook;
 import :ResizeBuffers;
 
+import Platform.Hook.Common;
 import std;
 
 namespace Platform::Render::Hook
@@ -37,61 +38,42 @@ namespace Platform::Render::Hook
 		return result;
 	}
 
-	auto ResizeBuffersDetour::Install() -> bool
-	{
-		if (m_IsHookInstalled.load()) return true;
-		s_Instance = this;
+    auto ResizeBuffersDetour::Install() -> bool
+    {
+        if (m_IsHookInstalled.load()) return true;
+        s_Instance = this;
 
-		void* functionAddress = m_SwapChainLocator.Locate().ResizeBuffers;
-		if (!functionAddress)
-		{
-			m_LogsService.Message("[ResizeBuffersDetour] ERROR:"
-				" Failed to obtain the function address.");
-			return false;
-		}
+        void* functionAddress = m_SwapChainLocator.Locate().ResizeBuffers;
+        m_FunctionAddress.store(functionAddress);
 
-		m_FunctionAddress.store(functionAddress);
-		MH_RemoveHook(m_FunctionAddress.load());
+        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+            reinterpret_cast<void*>(&HookedResizeBuffers),
+            reinterpret_cast<void**>(&m_OriginalFunction),
+            "[ResizeBuffersDetour]", m_LogsService))
+        {
+            return false;
+        }
 
-		if (MH_CreateHook(m_FunctionAddress.load(), reinterpret_cast<LPVOID>(&HookedResizeBuffers),
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)) != MH_OK)
-		{
-			m_LogsService.Message("[ResizeBuffersDetour] ERROR:"
-				" Failed to create the hook.");
-			return false;
-		}
+        m_IsHookInstalled.store(true);
+        return true;
+    }
 
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-		{
-			m_LogsService.Message("[ResizeBuffersDetour] ERROR:"
-				" Failed to enable the hook.");
+    auto ResizeBuffersDetour::Uninstall() -> void
+    {
+        if (!m_IsHookInstalled.load()) return;
 
-			MH_RemoveHook(m_FunctionAddress.load());
-			return false;
-		}
+        Platform::Hook::Common::DisableDetour(m_FunctionAddress.load());
 
-		m_IsHookInstalled.store(true);
-		m_LogsService.Message("[ResizeBuffersDetour] INFO: Hook installed.");
-		return true;
-	}
+        if (!m_RenderService.WaitForIdle(std::chrono::milliseconds(1000)))
+        {
+            m_LogsService.Message("[ResizeBuffersDetour] WARNING:"
+                " A call was still running when the hook was removed.");
+        }
 
-	auto ResizeBuffersDetour::Uninstall() -> void
-	{
-		if (!m_IsHookInstalled.load()) return;
+        Platform::Hook::Common::RemoveDetour(m_FunctionAddress.load(),
+            "[ResizeBuffersDetour]", m_LogsService);
 
-		MH_DisableHook(m_FunctionAddress.load());
-
-		if (!m_RenderService.WaitForIdle(std::chrono::milliseconds(1000)))
-		{
-			m_LogsService.Message("[ResizeBuffersDetour] WARNING:"
-				" A call was still running when the hook was removed.");
-		}
-
-		MH_RemoveHook(m_FunctionAddress.load());
-
-		m_IsHookInstalled.store(false);
-		m_LogsService.Message("[ResizeBuffersDetour] INFO: Hook uninstalled.");
-
-		s_Instance = nullptr;
-	}
+        m_IsHookInstalled.store(false);
+        s_Instance = nullptr;
+    }
 }

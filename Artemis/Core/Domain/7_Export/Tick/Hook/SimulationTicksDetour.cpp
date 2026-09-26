@@ -6,6 +6,7 @@ module Export.Tick.Hook;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
+import Platform.Hook.Common;
 
 namespace
 {
@@ -38,58 +39,33 @@ namespace Export::Tick::Hook
 
 	SimulationTicksDetour* SimulationTicksDetour::s_Instance = nullptr;
 
-	auto SimulationTicksDetour::Install() -> void
+	void SimulationTicksDetour::Install()
 	{
 		if (m_IsHookInstalled.load()) return;
 		s_Instance = this;
 
-		void* functionAddress = (void*)s_Instance->m_AOBService.FindPattern(
-			Signature::SimulationTicks);
-
-		if (!functionAddress)
-		{
-			s_Instance->m_LogsService.Message("[SimulationTicksDetour] ERROR:"
-				" Failed to obtain the function address.");
-			return;
-		}
-
+		void* functionAddress = (void*)m_AOBService.FindPattern(Signature::SimulationTicks);
 		m_FunctionAddress.store(functionAddress);
-		if (MH_CreateHook(m_FunctionAddress.load(),
-			&this->HookedSimulationTicks,
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)
-		) != MH_OK)
-		{
-			s_Instance->m_LogsService.Message("[SimulationTicksDetour] ERROR:"
-				" Failed to create the hook.");
 
-			return;
-		}
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
+		if (!Platform::Hook::Common::InstallDetour(functionAddress,
+			reinterpret_cast<void*>(&HookedSimulationTicks),
+			reinterpret_cast<void**>(&m_OriginalFunction),
+			"[SimulationTicksDetour]", m_LogsService))
 		{
-			s_Instance->m_LogsService.Message(" [SimulationTicksDetour] ERROR:"
-				" Failed to enable hook.");
-
 			return;
 		}
 
 		m_IsHookInstalled.store(true);
-		s_Instance->m_LogsService.Message("[SimulationTicksDetour] INFO:"
-			" Hook installed.");
-		return;
 	}
 
-	auto SimulationTicksDetour::Uninstall() -> void
+	void SimulationTicksDetour::Uninstall()
 	{
 		if (!m_IsHookInstalled.load()) return;
 
-		MH_DisableHook(m_FunctionAddress.load());
-		MH_RemoveHook(m_FunctionAddress.load());
+		Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+			"[SimulationTicksDetour]", m_LogsService);
 
 		m_IsHookInstalled.store(false);
-
-		s_Instance->m_LogsService.Message("[SimulationTicksDetour] INFO:"
-			" Hook uninstalled.");
-
 		s_Instance = nullptr;
 	}
 }

@@ -4,6 +4,7 @@ import :FileLocator;
 import :FileNames;
 import :Header;
 import :TagIndex;
+
 import Service.Logs.System;
 import Map.Reader.Type;
 import Map.Reader.State;
@@ -47,6 +48,6 @@ export namespace Map::Reader::System
 		HeaderService& m_HeaderService;
 		TagIndexService& m_TagIndexService;
 
-		HeaderInfo m_HeaderInfo;
+		HeaderInfo m_HeaderInfo{};
 	};
 }

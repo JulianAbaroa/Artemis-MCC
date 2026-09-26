@@ -1,8 +1,6 @@
 module Map.Reader.System;
 import :Geometry.Loader;
 
-import Map.Reader.Type;
-
 namespace
 {
 	using MeshesObject = Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;

@@ -5,11 +5,11 @@ module;
 module UI.Overlay.System;
 import :Affordances;
 
-import Common.Math.Type;
 import Tables.Object.Type;
 import Egocentric.Affordance.Type;
 import UI.Color.System;
 import UI.Format.System;
+import UI.Widget.System;
 import std;
 
 namespace
@@ -22,17 +22,19 @@ namespace
 	using Activation = Egocentric::Affordance::Type::Activation;
 	using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
 	using Profile = Tables::Object::Type::Profile::Profile;
-	using Vec3 = Common::Math::Type::Vec3;
 
 	using RoleToColor = UI::Color::System::RoleToColor;
 	using RoleFormater = UI::Format::System::RoleFormater;
 	using AffordanceFormater = UI::Format::System::AffordanceFormater;
 	using InteractionFormater = UI::Format::System::InteractionFormater;
 
+	using PanelUIService = UI::Widget::System::PanelUIService;
+
 	constexpr std::uint32_t k_InvalidHandle = 0xFFFFFFFF;
 	constexpr std::uint8_t k_MeleeAvailable = 0x0E;
 	constexpr std::uint8_t k_AimAvailable = 0x01;
 
+	constexpr ImVec4 k_PositiveColor{ 0.4f, 1.0f, 0.4f, 1.0f };
 	const ImVec4 k_SectionColor{ 0.8f, 0.8f, 0.8f, 1.0f };
 
 	auto FindObject(const ObjectTable* objects, std::uint32_t handle) -> const AliveObject*
@@ -52,20 +54,6 @@ namespace
 		const std::size_t slash = tag.find_last_of("\\/");
 
 		return (slash == std::string::npos) ? tag : tag.substr(slash + 1);
-	}
-
-	auto DrawVec3(const char* label, const Vec3& value) -> void
-	{
-		ImGui::Text("%s %.3f  %.3f  %.3f", label, value.X, value.Y, value.Z);
-	}
-
-	auto DrawSectionSeparator(const char* title) -> void
-	{
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
-
-		if (title) ImGui::TextColored(k_SectionColor, "%s", title);
 	}
 
 	auto DrawEngineInteraction(const Interaction& interaction) -> void
@@ -116,7 +104,7 @@ namespace
 			ImGui::Text("  Target:    0x%08X", interaction.AimTargetHandle);
 			ImGui::Text("  SlotID:    0x%08X", interaction.AimTargetSlotID);
 			ImGui::Text("  ModelPart: 0x%02X", interaction.ModelPart);
-			DrawVec3("  LocalPos: ", interaction.AimHitLocalPosition);
+			PanelUIService::DrawVec3("  LocalPos: ", interaction.AimHitLocalPosition);
 		}
 		else
 		{
@@ -124,18 +112,9 @@ namespace
 		}
 	}
 
-	auto DrawBoolBadge(const char* label, bool value) -> void
-	{
-		ImGui::Text("%-10s", label);
-		ImGui::SameLine();
-
-		if (value) ImGui::TextColored({ 0.4f, 1.f, 0.4f, 1.f }, "yes");
-		else       ImGui::TextColored({ 0.4f, 0.4f, 0.4f, 1.f }, "no");
-	}
-
 	auto DrawProfile(const Profile& p) -> void
 	{
-		DrawSectionSeparator("Object Profile");
+		PanelUIService::DrawSectionSeparator("Object Profile");
 
 		if (!ImGui::BeginTable("##profile", 2)) return;
 
@@ -151,7 +130,7 @@ namespace
 		for (const auto& [label, value] : badges)
 		{
 			ImGui::TableNextColumn();
-			DrawBoolBadge(label, value);
+			PanelUIService::DrawBoolBadge(label, value, k_PositiveColor);
 		}
 
 		ImGui::EndTable();
@@ -159,9 +138,7 @@ namespace
 
 	auto DrawSeats(const std::vector<SeatStatus>& seats) -> void
 	{
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
+		PanelUIService::DrawSectionSeparator(nullptr);
 		ImGui::TextColored({ 1.f, 0.8f, 0.2f, 1.f }, "Vehicle Seats (%zu)", seats.size());
 
 		if (!ImGui::BeginTable("##seats", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
@@ -221,7 +198,7 @@ namespace
 		}
 
 		// --- Interaction state ---
-		DrawSectionSeparator(nullptr);
+		PanelUIService::DrawSectionSeparator(nullptr);
 
 		if (item.IsEngineSelected)
 			ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f }, "[ ACTION READY - ENGINE SELECTED ]");
@@ -231,7 +208,7 @@ namespace
 			ImGui::TextColored({ 1.f, 0.4f, 0.4f, 1.f }, "[ OUT OF RANGE ]");
 
 		// --- Classification ---
-		DrawSectionSeparator("Classification");
+		PanelUIService::DrawSectionSeparator("Classification");
 
 		ImGui::Text("Activation: %s", AffordanceFormater::ActivationToString(item.Activation));
 		ImGui::Text("Behaviors:  ");
@@ -244,17 +221,17 @@ namespace
 		}
 
 		// --- Spatial data ---
-		DrawSectionSeparator("Spatial Data");
+		PanelUIService::DrawSectionSeparator("Spatial Data");
 
 		ImGui::Text("Distance: %.2f m", item.DistanceToPlayer);
-		DrawVec3("Position:", item.Position);
+		PanelUIService::DrawVec3("Position:", item.Position);
 
 		if (object)
 		{
-			DrawVec3("Forward: ", object->Forward);
-			DrawVec3("Up:      ", object->Up);
-			DrawVec3("LinVel:  ", object->LinearVelocity);
-			DrawVec3("AngVel:  ", object->AngularVelocity);
+			PanelUIService::DrawVec3("Forward: ", object->Forward);
+			PanelUIService::DrawVec3("Up:      ", object->Up);
+			PanelUIService::DrawVec3("LinVel:  ", object->LinearVelocity);
+			PanelUIService::DrawVec3("AngVel:  ", object->AngularVelocity);
 
 			DrawProfile(object->Profile);
 		}
@@ -265,9 +242,7 @@ namespace
 		// --- Child Vehicles ---
 		if (!item.ChildHandles.empty())
 		{
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
+			PanelUIService::DrawSectionSeparator(nullptr);
 			ImGui::TextColored({ 1.f, 0.8f, 0.2f, 1.f },
 				"Child Vehicles (%zu)", item.ChildHandles.size());
 
@@ -288,9 +263,7 @@ namespace UI::Overlay::System
 
 		DrawEngineInteraction(interaction);
 
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
+		PanelUIService::DrawSectionSeparator(nullptr);
 
 		if (!tick.Affordances)
 		{

@@ -17,6 +17,7 @@ export namespace UI::ObjectTable::System
 		using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
 		using SearchFilterUIService = UI::Widget::System::SearchFilterUIService;
 		using CopyableFieldUIService = UI::Widget::System::CopyableFieldUIService;
+		using ResponsiveCardUIService = UI::Widget::System::ResponsiveCardUIService;
 
 	public:
 		ObjectTableUIService(TickStore& tickStore, ObjectTableUIStore& objectTableUIStore) :

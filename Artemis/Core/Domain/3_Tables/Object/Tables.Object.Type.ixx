@@ -14,3 +14,4 @@ export import :Class;
 export import :Offset;
 export import :Profile;
 export import :Size;
+export import :Constant;

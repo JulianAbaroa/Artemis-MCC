@@ -122,6 +122,7 @@ namespace Runtime::Thread
 		// --- Egocentric ---
 		m_Egocentric.m_SelfService.Update();
 		m_Egocentric.m_AffordanceService.Update();
+		m_Egocentric.m_RaycastService.Update();
 
 		// --- Export --- (Assemble(current) is called by Run(), it needs the generation)
 	}

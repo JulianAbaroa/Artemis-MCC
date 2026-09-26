@@ -7,6 +7,7 @@ import :Vitalities;
 
 import Resolved.Vitality.Type;
 import UI.Format.System;
+import UI.Widget.System;
 import std;
 
 namespace
@@ -14,10 +15,12 @@ namespace
 	using Tick = Export::Tick::Type::Tick;
 	using Health = Export::Tick::Type::Health;
 	using ObjectTable = Export::Tick::Type::ObjectTable;
-	using Section = Resolved::Vitality::Type::Section;
-	using SectionKind = Resolved::Vitality::Type::Kind;
-	using ResolvedVitality = Resolved::Vitality::Type::Vitality;
+	using Section = Resolved::Vitality::Type::Vitality::Section;
+	using SectionKind = Resolved::Vitality::Type::Vitality::Kind;
+	using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
 	using HexFormater = UI::Format::System::HexFormater;
+
+	using PanelUIService = UI::Widget::System::PanelUIService;
 
 	auto DrawSectionRow(std::size_t index, float vitality, const Section* section) -> void
 	{
@@ -95,9 +98,7 @@ namespace
 		else
 			ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "[ ALIVE ]");
 
-		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
+		PanelUIService::DrawSectionSeparator(nullptr);
 
 		ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.0f }, "Damage Sections (%d)",
 			static_cast<int>(health.SectionVitalities.size()));

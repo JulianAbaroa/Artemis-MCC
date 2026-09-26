@@ -5,3 +5,4 @@ export import :Structure;
 export import :Info;
 export import :Offset;
 export import :Magic;
+export import :Constant;

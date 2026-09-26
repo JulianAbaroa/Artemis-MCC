@@ -74,10 +74,10 @@ namespace UI::ObjectTable::System
 				const bool hasNext = i + 1 < filtered.size();
 				if (!hasNext) continue;
 
-				const float nextCardRightEdge = ImGui::GetItemRectMax().x +
-					k_CardSpacing + CardWidth(filtered[i + 1]->TagName);
+				const bool nextFits = ResponsiveCardUIService::FitsOnSameLine(
+					CardWidth(filtered[i + 1]->TagName), k_CardSpacing, windowRightEdge);
 
-				if (nextCardRightEdge < windowRightEdge) ImGui::SameLine();
+				if (nextFits) ImGui::SameLine();
 			}
 
 			ImGui::PopStyleVar();
@@ -129,21 +129,11 @@ namespace UI::ObjectTable::System
 	{
 		const ImVec2 cardSize(CardWidth(object.TagName), k_CardHeight);
 
-		ImGui::PushID(static_cast<int>(object.Handle));
-		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-
-		const ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollbar |
-			ImGuiWindowFlags_NoScrollWithMouse;
-
-		if (ImGui::BeginChild("##card", cardSize, true, flags))
-		{
-			this->DrawCardHeader(object);
-			this->DrawCardFields(object);
-		}
-
-		ImGui::EndChild();
-		ImGui::PopStyleVar();
-		ImGui::PopID();
+		ResponsiveCardUIService::Draw(object.Handle, cardSize, [this, &object]
+			{
+				this->DrawCardHeader(object);
+				this->DrawCardFields(object);
+			});
 	}
 
 	auto ObjectTableUIService::DrawCardHeader(const AliveObject& object) -> void

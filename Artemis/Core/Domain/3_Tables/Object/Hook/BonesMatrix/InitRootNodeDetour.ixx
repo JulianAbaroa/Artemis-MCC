@@ -34,7 +34,7 @@ export namespace Tables::Object::Hook
 
 		typedef auto(__fastcall* InitRootNode_t)(unsigned short* param_1) -> void;
 
-		static inline InitRootNode_t m_OriginalFunction = nullptr;
+		static inline InitRootNode_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

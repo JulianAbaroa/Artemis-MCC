@@ -36,7 +36,7 @@ export namespace Tables::Player::Hook
 		typedef auto(__fastcall* Create_t)(std::uint32_t playerIndex, 
 			std::uint64_t pPlayerInfo, std::uint8_t playerFlags) -> std::uint32_t;
 
-		static inline Create_t m_OriginalFunction = nullptr;
+		static inline Create_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

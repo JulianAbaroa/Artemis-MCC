@@ -6,8 +6,9 @@ module;
 module Viewer.Map.System;
 import :DynamicPass;
 
-import Viewer.Selection.State;
 import Platform.Render.System;
+import Viewer.Selection.State;
+import Viewer.Render.Common;
 import std;
 
 namespace
@@ -100,28 +101,19 @@ namespace Viewer::Map::System
 
 		const UINT needed = static_cast<UINT>(vertices.size());
 
-		if (needed > m_Capacity)
+		if (!Viewer::Render::Common::GrowDynamicVertexBuffer(device, needed,
+			k_InitialCapacity, m_VertexBuffer, m_Capacity, "[DynamicPass]", m_LogsService))
 		{
-			UINT newCapacity = m_Capacity ? m_Capacity : k_InitialCapacity;
-			while (newCapacity < needed) newCapacity *= 2;
-
-			if (!this->EnsureCapacity(device, newCapacity))
-			{
-				m_VertexCount = 0;
-				return;
-			}
-		}
-
-		D3D11_MAPPED_SUBRESOURCE mapped = {};
-		if (FAILED(context->Map(m_VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
-		{
-			m_LogsService.Message("[DynamicPass] ERROR: Map failed.");
 			m_VertexCount = 0;
 			return;
 		}
 
-		std::memcpy(mapped.pData, vertices.data(), vertices.size() * sizeof(Vertex));
-		context->Unmap(m_VertexBuffer.Get(), 0);
+		if (!Viewer::Render::Common::UploadDynamicVertices(context, m_VertexBuffer.Get(),
+			vertices, "[DynamicPass]", m_LogsService))
+		{
+			m_VertexCount = 0;
+			return;
+		}
 
 		m_VertexCount = needed;
 	}
@@ -131,38 +123,12 @@ namespace Viewer::Map::System
 		return m_Bounds;
 	}
 
-	auto DynamicPass::EnsureCapacity(ID3D11Device* device, UINT vertexCapacity) -> bool
-	{
-		m_VertexBuffer.Reset();
-		m_Capacity = 0;
-
-		D3D11_BUFFER_DESC desc = {};
-		desc.Usage = D3D11_USAGE_DYNAMIC;
-		desc.ByteWidth = vertexCapacity * Platform::Render::System::GpuPipeline::k_VertexStride;
-		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		if (FAILED(device->CreateBuffer(&desc, nullptr, m_VertexBuffer.GetAddressOf())))
-		{
-			m_LogsService.Message("[DynamicPass] ERROR: The dynamic vertex buffer failed.");
-			return false;
-		}
-
-		m_Capacity = vertexCapacity;
-		return true;
-	}
-
 	auto DynamicPass::Draw(ID3D11DeviceContext* context) -> void
 	{
 		if (!context || !m_VertexBuffer || m_VertexCount == 0) return;
 
-		ID3D11Buffer* buffer = m_VertexBuffer.Get();
-		const UINT stride = Platform::Render::System::GpuPipeline::k_VertexStride;
-		const UINT offset = 0;
-
-		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		context->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
-		context->Draw(m_VertexCount, 0);
+		Viewer::Render::Common::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+			m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
 	auto DynamicPass::Release() -> void

@@ -30,8 +30,6 @@ export namespace Tables::Object::System
 		using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
 		using TagResolverService = Map::Reader::System::TagResolverService;
 
-		static constexpr std::uint8_t m_kDamageSectionStride = 0x18;
-
 	public:
 		ObjectTableService(LogsService& logsService,
 			MemoryReaderService& memoryReaderService,

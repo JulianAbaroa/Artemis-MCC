@@ -1,12 +1,12 @@
 module Viewer.Map.System;
 import :ZoneGeometry;
 
-import Viewer.Math.System;
+import Common.Math.System;
 import std;
 
 namespace
 {
-	namespace VecMath = Viewer::Math::System;
+	namespace VecMath = Common::Math::System;
 
 	using Vertex = Platform::Render::System::GpuPipeline::Vertex;
 	using Vec3 = Common::Math::Type::Vec3;

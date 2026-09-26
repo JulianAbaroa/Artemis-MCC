@@ -1,8 +1,8 @@
-export module Resolved.Vitality.Type;
+export module Resolved.Vitality.Type:Vitality;
 
 import std;
 
-export namespace Resolved::Vitality::Type
+export namespace Resolved::Vitality::Type::Vitality
 {
     enum class Kind : std::uint8_t
     {

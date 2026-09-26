@@ -8,28 +8,12 @@ import :WndProc;
 import std;
 
 import Platform.Input.Type;
+import Platform.Hook.Common;
 import std;
 
 namespace
 {
 	using WindowMessage = Platform::Input::Type::WindowMessage;
-
-	struct InFlightScope
-	{
-		explicit InFlightScope(std::atomic<int>& counter) : m_Counter(counter) 
-		{
-			m_Counter.fetch_add(1, std::memory_order_acq_rel);
-		}
-		~InFlightScope()
-		{
-			m_Counter.fetch_sub(1, std::memory_order_acq_rel);
-		}
-
-		InFlightScope(const InFlightScope&) = delete;
-		InFlightScope& operator=(const InFlightScope&) = delete;
-
-		std::atomic<int>& m_Counter;
-	};
 }
 
 namespace Platform::Input::Hook
@@ -45,7 +29,7 @@ namespace Platform::Input::Hook
 		auto* self = s_Instance;
 		if (!self) return CallWindowProcW(original, window, message, wParam, lParam);
 
-		InFlightScope scope(s_InFlight);
+		Platform::Hook::Common::InFlightScope scope(s_InFlight);
 
 		const bool windowDestroyed = (message == WM_CLOSE ||
 			message == WM_DESTROY || message == WM_QUIT);
@@ -125,12 +109,7 @@ namespace Platform::Input::Hook
 
 		const HWND window = m_Window.load();
 
-		const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
-		while (s_InFlight.load(std::memory_order_acquire) > 0 &&
-			std::chrono::steady_clock::now() < deadline)
-		{
-			std::this_thread::sleep_for(std::chrono::microseconds(100));
-		}
+		Platform::Hook::Common::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
 
 		const auto current = GetWindowLongPtrW(window, GWLP_WNDPROC);
 		if (current == reinterpret_cast<LONG_PTR>(&HookedWndProc))

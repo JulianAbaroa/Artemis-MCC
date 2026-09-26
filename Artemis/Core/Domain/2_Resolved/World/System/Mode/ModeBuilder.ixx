@@ -20,8 +20,6 @@ export namespace Resolved::World::System
         using MarkerGroup = Resolved::World::Type::Mode::MarkerGroup;
         using Bounds = Resolved::World::Type::Mode::Bounds;
 
-        static constexpr std::uint16_t CompressedPositionFlag = 1u << 0; // bit0: "Compressed Position"
-
     public:
         ModeBuilder() = default;
         ~ModeBuilder() = default;

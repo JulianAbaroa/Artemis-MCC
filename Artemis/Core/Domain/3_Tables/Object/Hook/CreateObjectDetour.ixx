@@ -36,7 +36,7 @@ export namespace Tables::Object::Hook
 		typedef auto(__fastcall* Create_t)(
 			unsigned short* placementData) -> unsigned long long;
 
-		static inline Create_t m_OriginalFunction = nullptr;
+		static inline Create_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

@@ -31,6 +31,7 @@ export namespace Resolved
 		using SbspSeamLinker = Resolved::World::System::SbspSeamLinker;
 		using RegionStatesBuilder = Resolved::World::System::RegionStatesBuilder;
 		using WorldBuilder = Resolved::World::System::WorldBuilder;
+		using SbspRaycaster = Resolved::World::System::SbspRaycaster;
 
 		using VitalityBuilder = Resolved::Vitality::System::VitalityBuilder;
 
@@ -44,6 +45,7 @@ export namespace Resolved
 				m_WorldBuilder.Cleanup();
 				m_StatsBuilder.Cleanup();
 				m_VitalityBuilder.Cleanup();
+				m_SbspRaycaster.Cleanup();
 			});
 		}
 		~Layer() = default;
@@ -70,6 +72,7 @@ export namespace Resolved
 		SbspSeamLinker m_SbspSeamLinker;
 		RegionStatesBuilder m_RegionStatesBuilder;
 		WorldBuilder m_WorldBuilder;
+		SbspRaycaster m_SbspRaycaster{};
 
 		// --- System: Vitality ---
 		VitalityBuilder m_VitalityBuilder;

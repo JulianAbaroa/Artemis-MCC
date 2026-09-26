@@ -14,15 +14,11 @@ export namespace Resolved::Vitality::System
     private:
         using CollObject = Map::Tag::Type::Coll::Object::CollObject;
         using HlmtObject = Map::Tag::Type::Hlmt::Object::HlmtObject;
-        using ResolvedVitality = Resolved::Vitality::Type::Vitality;
+        using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
 
         using LogsService = Service::Logs::System::LogsService;
         using TagCatalog = Map::Tag::State::TagCatalog;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
-
-        const std::uint32_t k_FlagKillsObject = (1u << 0);       // "Kills Object"
-        const std::uint32_t k_FlagKillsObjectNoSolo = (1u << 10);// "Kills Object (No Player Solo)"
-        const std::uint32_t k_FlagHeadshot = (1u << 4);          // "Headshot"
 
     public:
         VitalityBuilder(LogsService& logsService, TagCatalog& tagCatalog, 

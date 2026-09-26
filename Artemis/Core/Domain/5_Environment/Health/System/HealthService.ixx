@@ -19,7 +19,7 @@ export namespace Environment::Health::System
         using AliveObject = Tables::Object::Type::Alive::Object;
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
         using Classified = Relations::Classifier::Type::Classified;
-        using ResolvedVitality = Resolved::Vitality::Type::Vitality;
+        using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
         using Health = Environment::Health::Type::Health;
 
         using LogsService = Service::Logs::System::LogsService;

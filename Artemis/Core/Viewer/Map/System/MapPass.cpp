@@ -7,6 +7,7 @@ module Viewer.Map.System;
 import :MapPass;
 
 import Platform.Render.System;
+import Viewer.Render.Common;
 import std;
 
 namespace
@@ -94,13 +95,8 @@ namespace Viewer::Map::System
 	{
 		if (!context || !this->HasBuffer()) return;
 
-		ID3D11Buffer* buffer = m_VertexBuffer.Get();
-		const UINT stride = Platform::Render::System::GpuPipeline::k_VertexStride;
-		const UINT offset = 0;
-
-		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		context->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
-		context->Draw(m_VertexCount, 0);
+		Viewer::Render::Common::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+			m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
 	auto MapPass::Release() -> void

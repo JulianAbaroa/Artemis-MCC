@@ -8,6 +8,7 @@ import :Palette;
 import :MapPass;
 import :DynamicPass;
 import :ZonePass;
+import :RaycastPass;
 
 import Service.Logs.System;
 import Service.Settings.State;
@@ -49,7 +50,8 @@ export namespace Viewer::Map::System
 			m_SelectionStore(selectionStore), m_SelectionService(selectionService),
 			m_SettingsStore(settingsStore), m_LogsService(logsService),
 			m_GpuPipeline(logsService), m_MapPass(logsService),
-			m_DynamicPass(logsService), m_ZonePass(logsService) {
+			m_DynamicPass(logsService), m_ZonePass(logsService),
+			m_RaycastPass(logsService) {
 		}
 		~MapService() = default;
 
@@ -76,6 +78,7 @@ export namespace Viewer::Map::System
 		MapPass m_MapPass;
 		DynamicPass m_DynamicPass;
 		ZonePass m_ZonePass;
+		RaycastPass m_RaycastPass;
 		PaletteService m_PaletteService{};
 
 		std::mutex m_Mutex{};

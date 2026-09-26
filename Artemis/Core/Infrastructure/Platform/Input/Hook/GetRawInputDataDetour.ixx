@@ -42,7 +42,7 @@ export namespace Platform::Input::Hook
 		typedef auto(WINAPI* GetRawInputData_t)(HRAWINPUT, UINT,
 			LPVOID, PUINT, UINT)->UINT;
 
-		static inline GetRawInputData_t m_OriginalFunction = nullptr;
+		static inline GetRawInputData_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

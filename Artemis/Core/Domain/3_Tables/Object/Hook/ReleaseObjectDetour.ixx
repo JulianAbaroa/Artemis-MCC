@@ -34,7 +34,7 @@ export namespace Tables::Object::Hook
 
 		typedef auto(__fastcall* Release_t)(unsigned int handle) -> void;
 
-		static inline Release_t m_OriginalFunction = nullptr;
+		static inline Release_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

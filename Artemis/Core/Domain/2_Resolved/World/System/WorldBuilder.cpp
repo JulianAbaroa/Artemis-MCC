@@ -177,6 +177,7 @@ namespace Resolved::World::System
     {
         m_WorldStore.Cleanup();
 
+
         m_LogsService.Message("[WorldBuilder] INFO: Cleanup completed.");
     }
 

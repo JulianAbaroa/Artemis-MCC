@@ -11,7 +11,7 @@ export namespace Map::Reader::Type::Offset
         constexpr std::size_t k_TagBufferOffset{ 0x10 };   // uint32.
         constexpr std::size_t k_VirtualSize{ 0x14 };       // uint32.
 
-        constexpr std::size_t k_Type = 0x18;  // int16.
+        constexpr std::size_t k_Type{ 0x18 };  // int16.
 
         constexpr std::size_t k_FileTableCount{ 0x20 };        // int32.
         constexpr std::size_t k_FileTableOffset{ 0x24 };       // int32.

@@ -8,6 +8,7 @@ import :EngineInitialize;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
+import Platform.Hook.Common;
 import std;
 
 namespace
@@ -32,49 +33,36 @@ namespace Platform::Lifecycle::Hook
 			" Game engine initialized.");
 	}
 
-	auto EngineInitializeDetour::Install() -> bool
-	{
-		if (m_IsHookInstalled.load()) return true;
-		s_Instance = this;
+    auto EngineInitializeDetour::Install() -> bool
+    {
+        if (m_IsHookInstalled.load()) return true;
+        s_Instance = this;
 
-		void* functionAddress = reinterpret_cast<void*>(
-			m_AOBService.FindPattern(Signature::EngineInitialize));
+        void* functionAddress = reinterpret_cast<void*>(
+            m_AOBService.FindPattern(Signature::EngineInitialize));
+        m_FunctionAddress.store(functionAddress);
 
-		if (!functionAddress) return false;
+        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+            reinterpret_cast<void*>(&HookedEngineInitialize),
+            reinterpret_cast<void**>(&m_OriginalFunction),
+            "[EngineInitializeDetour]", m_LogsService))
+        {
+            return false;
+        }
 
-		m_FunctionAddress.store(functionAddress);
-		MH_RemoveHook(m_FunctionAddress.load());
+        m_IsHookInstalled.store(true);
+        return true;
+    }
 
-		if (MH_CreateHook(m_FunctionAddress.load(), &HookedEngineInitialize,
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)) != MH_OK)
-		{
-			m_LogsService.Message("[EngineInitializeDetour] ERROR:"
-				" Failed to create the hook.");
-			return false;
-		}
+    auto EngineInitializeDetour::Uninstall() -> void
+    {
+        if (!m_IsHookInstalled.load()) return;
 
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-		{
-			m_LogsService.Message("[EngineInitializeDetour] ERROR:"
-				" Failed to enable the hook.");
-			return false;
-		}
+        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+            "[EngineInitializeDetour]", m_LogsService);
 
-		m_IsHookInstalled.store(true);
-		m_LogsService.Message("[EngineInitializeDetour] INFO: Hook installed.");
-		return true;
-	}
-
-	auto EngineInitializeDetour::Uninstall() -> void
-	{
-		if (!m_IsHookInstalled.load()) return;
-
-		MH_DisableHook(m_FunctionAddress.load());
-		MH_RemoveHook(m_FunctionAddress.load());
-
-		m_IsHookInstalled.store(false);
-		m_LogsService.Message("[EngineInitializeDetour] INFO: Hook uninstalled.");
-	}
+        m_IsHookInstalled.store(false);
+    }
 
 	auto EngineInitializeDetour::GetFunctionAddress() const -> void*
 	{

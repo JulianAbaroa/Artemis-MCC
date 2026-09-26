@@ -42,7 +42,7 @@ export namespace Map::Reader::Hook
 			std::uint64_t param_1, std::uint64_t param_2,
 			std::uint64_t mapRelativePath, std::uint32_t* param_4) -> void;
 
-		static inline OpenMap_t m_OriginalFunction = nullptr;
+		static inline OpenMap_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

@@ -22,16 +22,6 @@ export namespace Resolved::World::System
 		using ShapeType = Resolved::World::Type::Phmo::ShapeType;
         using MultiSphere = Resolved::World::Type::Phmo::MultiSphere;
 
-        static constexpr std::uint16_t k_ShapeSphere = 0x0;
-        static constexpr std::uint16_t k_ShapePill = 0x1;
-        static constexpr std::uint16_t k_ShapeBox = 0x2;
-        static constexpr std::uint16_t k_ShapeTriangle = 0x3;
-        static constexpr std::uint16_t k_ShapePolyhedron = 0x4;
-        static constexpr std::uint16_t k_ShapeMultiSphere = 0x5;
-        static constexpr std::uint16_t k_ShapePhantom = 0x6;
-        static constexpr std::uint16_t k_ShapeList = 0xE;
-        static constexpr std::uint16_t k_ShapeMOPP = 0xF;
-
     public:
         PhmoBuilder() = default;
         ~PhmoBuilder() = default;

@@ -1,6 +1,24 @@
 module Map.Reader.System;
 import :Geometry.MeshDecoder;
 
+namespace
+{
+	using Map::Reader::Type::Constant::k_FixupMask;
+	using Map::Reader::Type::Constant::k_ResourceDatumMask;
+	using Map::Reader::Type::Constant::k_VertexBufferStride;
+	using Map::Reader::Type::Constant::k_XOffset;
+	using Map::Reader::Type::Constant::k_YOffset;
+	using Map::Reader::Type::Constant::k_ZOffset;
+	using Map::Reader::Type::Constant::k_MeshFlagUnindexed;
+	using Map::Reader::Type::Constant::k_InstanceStride;
+	using Map::Reader::Type::Constant::k_InstanceFixupFromEnd;
+	using Map::Reader::Type::Constant::k_InstanceMatrixFloats;
+	using Map::Reader::Type::Constant::k_InstanceScaledFloats;
+	using Map::Reader::Type::Constant::k_InstanceScaleOffset;
+	using Map::Reader::Type::Constant::k_InstanceMatrixOffset;
+	using Map::Reader::Type::Constant::k_InstanceSectionOffset;
+}
+
 namespace Map::Reader::System
 {
 	auto GeometryMeshDecoderService::EmitSection(const std::vector<std::uint8_t>& pageData,
@@ -32,7 +50,7 @@ namespace Map::Reader::System
 		const std::uint8_t* vertexBuffer = pageData.data() + vbOffset;
 
 		std::uint32_t vCountInfo = vbInfo[vbIdx].Aux;
-		std::uint32_t stride = m_kVertexBufferStride;
+		std::uint32_t stride = k_VertexBufferStride;
 
 		if (vCountInfo > 0 && (vbLength % vCountInfo) == 0)
 		{
@@ -44,7 +62,7 @@ namespace Map::Reader::System
 				" VB {} DataLength={} not divisible by VertexCount={},"
 				" stride fallback 0x{:X} (VertexType={}).", tagName ? 
 				tagName : "?", vbIdx, vbLength, vCountInfo, 
-				m_kVertexBufferStride, (unsigned)sec.VertexType);
+				k_VertexBufferStride, (unsigned)sec.VertexType);
 		}
 
 		if (stride == 0) return 0;
@@ -89,7 +107,7 @@ namespace Map::Reader::System
 		std::uint32_t emitted = 0;
 
 		bool unindexed = (ibIdx < 0) ||
-			(sec.MeshFlags & m_kMeshFlagUnindexed);
+			(sec.MeshFlags & k_MeshFlagUnindexed);
 
 		if (unindexed)
 		{
@@ -162,17 +180,17 @@ namespace Map::Reader::System
 	{
 		if (sbsp->InstancedGeometryInstances.empty()) return 0;
 
-		int instResIdx = (int)(sbsp->Data.ZoneAssetDatum5 & m_kResourceDatumMask);
+		int instResIdx = (int)(sbsp->Data.ZoneAssetDatum5 & k_ResourceDatumMask);
 		if (instResIdx < 0 || instResIdx >= (int)zone->TagResources.size()) return 0;
 
 		const TagResourcesObject& instEntry = zone->TagResources[instResIdx];
 
-		int fixupIdx = (int)instEntry.ResourceFixups.size() - m_kInstanceFixupFromEnd;
+		int fixupIdx = (int)instEntry.ResourceFixups.size() - k_InstanceFixupFromEnd;
 		if (fixupIdx < 0 || fixupIdx >= (int)instEntry.ResourceFixups.size())
 		{
 			m_LogsService.Message("[GeometryMeshDecoderService] WARNING: '{}':"
 				" InstancesEntry.ResourceFixups too short (Count={}, need >={})", 
-				tagName, (int)instEntry.ResourceFixups.size(), m_kInstanceFixupFromEnd);
+				tagName, (int)instEntry.ResourceFixups.size(), k_InstanceFixupFromEnd);
 			return 0;
 		}
 
@@ -183,40 +201,40 @@ namespace Map::Reader::System
 		// instEntry.FixupInformationOffset and does not use AddressLocationHighBits.
 		// Preserved as is from the original — do not merge with the one above.
 		std::uint32_t rawOffset = ((std::uint32_t)fixup.AddressUpperBits << 16) | fixup.Address;
-		std::uint32_t address = ((std::uint32_t)instEntry.FixupInformationOffset + rawOffset) & m_kFixupMask;
+		std::uint32_t address = ((std::uint32_t)instEntry.FixupInformationOffset + rawOffset) & k_FixupMask;
 		std::int64_t transformsBase = fixupDataBase + address;
 
 		int instCount = (int)sbsp->InstancedGeometryInstances.size();
 
 		auto blob = m_DataStreamService.ReadData(
 			m_FileStore.GetMapFilePath(), transformsBase,
-			m_kInstanceStride * instCount);
+			k_InstanceStride * instCount);
 
 		std::uint32_t emitted = 0;
 
 		for (int i = 0; i < instCount; ++i)
 		{
-			const std::int64_t base = (std::int64_t)i * m_kInstanceStride;
-			if (base + m_kInstanceStride > (std::int64_t)blob.size()) break;
+			const std::int64_t base = (std::int64_t)i * k_InstanceStride;
+			if (base + k_InstanceStride > (std::int64_t)blob.size()) break;
 
 			const std::uint8_t* pointer = blob.data() + base;
 
 			float scale;
-			std::memcpy(&scale, pointer + m_kInstanceScaleOffset, sizeof(scale));
+			std::memcpy(&scale, pointer + k_InstanceScaleOffset, sizeof(scale));
 
-			float m[m_kInstanceMatrixFloats]{};
-			for (int k = 0; k < m_kInstanceMatrixFloats; ++k)
+			float m[k_InstanceMatrixFloats]{};
+			for (int k = 0; k < k_InstanceMatrixFloats; ++k)
 			{
-				std::memcpy(&m[k], pointer + m_kInstanceMatrixOffset + k * (int)sizeof(float), sizeof(float));
+				std::memcpy(&m[k], pointer + k_InstanceMatrixOffset + k * (int)sizeof(float), sizeof(float));
 			}
 
-			for (int k = 0; k < m_kInstanceScaledFloats; ++k)
+			for (int k = 0; k < k_InstanceScaledFloats; ++k)
 			{
 				m[k] *= scale;
 			}
 
 			std::int16_t sectionIdx16;
-			std::memcpy(&sectionIdx16, pointer + m_kInstanceSectionOffset, sizeof(sectionIdx16));
+			std::memcpy(&sectionIdx16, pointer + k_InstanceSectionOffset, sizeof(sectionIdx16));
 
 			int sectionIdx = (int)sectionIdx16;
 			if (sectionIdx < 0 || sectionIdx >= (int)lbsp->Meshes.size()) continue;
@@ -319,9 +337,9 @@ namespace Map::Reader::System
 
 		float x{}, y{}, z{};
 
-		std::memcpy(&x, pointer + m_kXOffset, sizeof(x));
-		std::memcpy(&y, pointer + m_kYOffset, sizeof(y));
-		std::memcpy(&z, pointer + m_kZOffset, sizeof(z));
+		std::memcpy(&x, pointer + k_XOffset, sizeof(x));
+		std::memcpy(&y, pointer + k_YOffset, sizeof(y));
+		std::memcpy(&z, pointer + k_ZOffset, sizeof(z));
 
 		if (context.HasBounds)
 		{

@@ -11,6 +11,7 @@ import Environment.Fixtures.State;
 import Environment.Health.State;
 import Egocentric.Self.State;
 import Egocentric.Affordance.State;
+import Egocentric.Raycast.State;
 import Export.Tick.State;
 import std;
 
@@ -30,6 +31,7 @@ export namespace Export::Tick::System
 		using HealthStore = Environment::Health::State::HealthStore;
 		using SelfStore = Egocentric::Self::State::SelfStore;
 		using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
+		using RaycastStore = Egocentric::Raycast::State::RaycastStore;
 		using TickStore = Export::Tick::State::TickStore;
 
 	public:
@@ -38,13 +40,15 @@ export namespace Export::Tick::System
 			ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
 			CollidableStore& collidableStore, FixturesStore& fixturesStore,
 			HealthStore& healthStore, SelfStore& selfStore,
-			AffordanceStore& affordanceStore, TickStore& tickStore) : 
+			AffordanceStore& affordanceStore, RaycastStore& raycastStore,
+			TickStore& tickStore) :
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
 			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
 			m_CollidableStore(collidableStore), m_FixturesStore(fixturesStore),
 			m_HealthStore(healthStore), m_SelfStore(selfStore),
-			m_AffordanceStore(affordanceStore), m_TickStore(tickStore) {}
+			m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
+			m_TickStore(tickStore) {}
 		~TickService() = default;
 
 		auto Assemble(std::uint64_t generation) -> void;
@@ -61,6 +65,7 @@ export namespace Export::Tick::System
 		HealthStore& m_HealthStore;
 		SelfStore& m_SelfStore;
 		AffordanceStore& m_AffordanceStore;
+		RaycastStore& m_RaycastStore;
 		TickStore& m_TickStore;
 	};
 }

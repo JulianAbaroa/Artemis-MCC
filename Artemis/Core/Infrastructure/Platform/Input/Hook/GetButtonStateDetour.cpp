@@ -8,6 +8,7 @@ import :GetButtonState;
 
 import Platform.Input.Type;
 import Platform.Memory.Type;
+import Platform.Hook.Common;
 
 namespace
 {
@@ -54,51 +55,28 @@ namespace Platform::Input::Hook
         if (m_IsHookInstalled.load()) return;
         s_Instance = this;
 
-        void* functionAddress = (void*)s_Instance->m_AOBService.FindPattern(
-            Signature::GetButtonState);
-
-        if (!functionAddress)
-        {
-            s_Instance->m_LogsService.Message("[GetButtonStateDetour] ERROR:"
-                " Failed to obtain the function address.");
-            return;
-        }
-
+        void* functionAddress = (void*)m_AOBService.FindPattern(Signature::GetButtonState);
         m_FunctionAddress.store(functionAddress);
-        if (MH_CreateHook(
-            m_FunctionAddress.load(),
-            &this->HookedGetButtonState,
-            reinterpret_cast<LPVOID*>(&m_OriginalFunction))
-            != MH_OK)
+
+        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+            reinterpret_cast<void*>(&HookedGetButtonState),
+            reinterpret_cast<void**>(&m_OriginalFunction),
+            "[GetButtonStateDetour]", m_LogsService))
         {
-            s_Instance->m_LogsService.Message("[GetButtonStateDetour] ERROR:"
-                " Failed to create the hook.");
-            return;
-        }
-        if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-        {
-            s_Instance->m_LogsService.Message("[GetButtonStateDetour] ERROR:"
-                " Failed to enable the hook.");
             return;
         }
 
         m_IsHookInstalled.store(true);
-        s_Instance->m_LogsService.Message("[GetButtonStateDetour] INFO:"
-            " Hook installed.");
     }
 
     auto GetButtonStateDetour::Uninstall() -> void
     {
         if (!m_IsHookInstalled.load()) return;
 
-        MH_DisableHook(m_FunctionAddress.load());
-        MH_RemoveHook(m_FunctionAddress.load());
+        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+            "[GetButtonStateDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);
-
-        s_Instance->m_LogsService.Message("[GetButtonStateDetour] INFO:"
-            " Hook uninstalled.");
-
         s_Instance = nullptr;
     }
 }

@@ -34,7 +34,7 @@ export namespace Platform::Input::Hook
 
 		typedef auto(__fastcall* GetButtonState_t)(short buttonID) -> char;
 
-		static inline GetButtonState_t m_OriginalFunction = nullptr;
+		static inline GetButtonState_t m_OriginalFunction{ nullptr };
 		std::atomic<void*> m_FunctionAddress{ nullptr };
 		std::atomic<bool> m_IsHookInstalled{ false };
 	};

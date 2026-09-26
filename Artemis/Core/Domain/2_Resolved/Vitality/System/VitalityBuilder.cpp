@@ -2,9 +2,13 @@ module Resolved.Vitality.System;
 
 namespace
 {
-    using Kind = Resolved::Vitality::Type::Kind;
-    using Section = Resolved::Vitality::Type::Section;
+    using Kind = Resolved::Vitality::Type::Vitality::Kind;
+    using Section = Resolved::Vitality::Type::Vitality::Section;
     using Hlmt_DamageSectionsObject = Map::Tag::Type::Hlmt::Object::Hlmt_DamageSectionsObject;
+
+    using Resolved::Vitality::Type::Constant::k_FlagKillsObject;
+    using Resolved::Vitality::Type::Constant::k_FlagKillsObjectNoSolo;
+    using Resolved::Vitality::Type::Constant::k_FlagHeadshot;
 }
 
 namespace Resolved::Vitality::System

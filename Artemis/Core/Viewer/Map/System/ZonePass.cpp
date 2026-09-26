@@ -7,9 +7,10 @@ module Viewer.Map.System;
 import :ZonePass;
 import :ZoneGeometry;
 
-import Platform.Render.System;
 import Common.Math.Type;
 import Common.ZoneShape.Type;
+import Platform.Render.System;
+import Viewer.Render.Common;
 import std;
 
 namespace
@@ -66,59 +67,27 @@ namespace Viewer::Map::System
 
 		const UINT needed = static_cast<UINT>(vertices.size());
 
-		if (needed > m_Capacity)
+		if (!Viewer::Render::Common::GrowDynamicVertexBuffer(device, needed,
+			k_InitialCapacity, m_VertexBuffer, m_Capacity, "[ZonePass]", m_LogsService))
 		{
-			UINT newCapacity = m_Capacity ? m_Capacity : k_InitialCapacity;
-			while (newCapacity < needed) newCapacity *= 2;
-
-			if (!this->EnsureCapacity(device, newCapacity)) return;
-		}
-
-		D3D11_MAPPED_SUBRESOURCE mapped = {};
-		if (FAILED(context->Map(m_VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
-		{
-			m_LogsService.Message("[ZonePass] ERROR: Map failed.");
 			return;
 		}
 
-		std::memcpy(mapped.pData, vertices.data(), vertices.size() * sizeof(Vertex));
-		context->Unmap(m_VertexBuffer.Get(), 0);
-
-		m_VertexCount = needed;
-	}
-
-	auto ZonePass::EnsureCapacity(ID3D11Device* device, UINT vertexCapacity) -> bool
-	{
-		m_VertexBuffer.Reset();
-		m_Capacity = 0;
-
-		D3D11_BUFFER_DESC desc = {};
-		desc.Usage = D3D11_USAGE_DYNAMIC;
-		desc.ByteWidth = vertexCapacity * Platform::Render::System::GpuPipeline::k_VertexStride;
-		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		if (FAILED(device->CreateBuffer(&desc, nullptr, m_VertexBuffer.GetAddressOf())))
+		if (!Viewer::Render::Common::UploadDynamicVertices(context, m_VertexBuffer.Get(),
+			vertices, "[ZonePass]", m_LogsService))
 		{
-			m_LogsService.Message("[ZonePass] ERROR: The vertex buffer failed.");
-			return false;
+			return;
 		}
 
-		m_Capacity = vertexCapacity;
-		return true;
+		m_VertexCount = needed;
 	}
 
 	auto ZonePass::Draw(ID3D11DeviceContext* context) -> void
 	{
 		if (!context || !m_VertexBuffer || m_VertexCount == 0) return;
 
-		ID3D11Buffer* buffer = m_VertexBuffer.Get();
-		const UINT stride = Platform::Render::System::GpuPipeline::k_VertexStride;
-		const UINT offset = 0;
-
-		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		context->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
-		context->Draw(m_VertexCount, 0);
+		Viewer::Render::Common::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+			m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
 	auto ZonePass::Release() -> void

@@ -57,7 +57,7 @@ export namespace Map::Reader::State
 		}
 
 	protected:
-		std::unordered_map<std::string, TObject> m_Map;
+		std::unordered_map<std::string, TObject> m_Map{};
 		std::atomic<bool> m_Frozen{ false };
 	};
 }

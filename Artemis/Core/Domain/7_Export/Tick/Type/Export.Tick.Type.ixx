@@ -11,6 +11,7 @@ import Environment.Health.Type;
 import Environment.Fixtures.Type;
 import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
+import Egocentric.Raycast.Type;
 import std;
 
 export namespace Export::Tick::Type
@@ -37,6 +38,7 @@ export namespace Export::Tick::Type
 	using Affordance = Egocentric::Affordance::Type::Affordance;
 	using Affordances = std::vector<Affordance>;
 	using Self = Egocentric::Self::Type::Self;
+	using Raycasts = Egocentric::Raycast::Type::Raycasts;
 
 	struct Tick
 	{
@@ -60,6 +62,7 @@ export namespace Export::Tick::Type
 		// --- Layer 6: Egocentric ---
 		std::shared_ptr<const Self> Self;
 		std::shared_ptr<const Affordances> Affordances;
+		std::shared_ptr<const Raycasts> Raycasts;
 		// std::shared_ptr<const Entities> Entities;
 	};
 }

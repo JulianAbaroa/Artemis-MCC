@@ -39,6 +39,8 @@ namespace
 	using SceneryKind = Tables::Object::Type::Scenery::Kind;
 	using Shield = Tables::Object::Type::Crate::Shield::Shield;
 	using SpawnData = Tables::Object::Type::Scenery::Spawn::Spawn;
+
+	using Tables::Object::Type::Constant::k_DamageSectionStride;
 }
 
 namespace Tables::Object::System
@@ -245,7 +247,7 @@ namespace Tables::Object::System
 		const std::uint16_t regionsOffsetRaw = reader.Read<std::uint16_t>(object.Address, Offset::DamageRegionsOffset);
 
 		if (regionsOffsetRaw == 0xFFFF) return;
-		const std::uint16_t count = regionsSize / m_kDamageSectionStride;
+		const std::uint16_t count = regionsSize / k_DamageSectionStride;
 		if (count == 0 || count >= 256) return;
 
 		DamageSectionTable table;
