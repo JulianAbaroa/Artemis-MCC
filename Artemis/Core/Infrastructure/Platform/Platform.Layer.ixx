@@ -22,6 +22,7 @@ export namespace Platform
 	private:
 		using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
 		using InputStore = Platform::Input::State::InputStore;
+		using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
 		using MemoryScannerStore = Platform::Memory::State::MemoryScannerStore;
 		using RenderStore = Platform::Render::State::RenderStore;
 
@@ -48,7 +49,7 @@ export namespace Platform
 	public:
 		explicit Layer(Service::Layer& service) :
 			m_LifecycleService(service.m_LogsService, m_LifecycleStore),
-			m_InputService(service.m_LogsService, m_InputStore),
+			m_InputService(service.m_LogsService, m_InputStore, m_MouseDeltaStore),
 			m_AOBService(service.m_LogsService),
 			m_MemoryScannerService(service.m_LogsService, m_MemoryScannerStore),
 			m_RenderService(service.m_LogsService, m_RenderStore),
@@ -56,7 +57,7 @@ export namespace Platform
 			m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
 			m_DestroySubsystemsDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
 			m_GetButtonStateDetour(service.m_LogsService, m_AOBService, m_InputStore),
-			m_GetRawInputDataDetour(service.m_LogsService, service.m_SettingsStore, m_InputService),
+			m_GetRawInputDataDetour(service.m_LogsService, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
 			m_WndProcDetour(service.m_LogsService, m_InputService, m_LifecycleStore, m_LifecycleService),
 			m_PresentDetour(service.m_LogsService, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
 			m_ResizeBuffersDetour(service.m_LogsService, m_RenderStore, m_RenderService, m_SwapChainLocator)
@@ -69,8 +70,14 @@ export namespace Platform
 				m_GetButtonStateDetour.Uninstall();
 			});
 
+			m_LifecycleService.OnCleanup([this] {
+				m_InputStore.Cleanup();
+				m_MouseDeltaStore.Cleanup();
+			});
+
 			m_RenderService.OnInitialized([this](const FrameContext& frame) {
 				m_WndProcDetour.Install(frame.Window);
+				m_InputService.BindWindow(frame.Window);
 			});
 
 			m_LifecycleService.OnShutdown([this] {
@@ -85,6 +92,7 @@ export namespace Platform
 		// --- State ---
 		LifecycleStore m_LifecycleStore;
 		InputStore m_InputStore;
+		MouseDeltaStore m_MouseDeltaStore;
 		MemoryScannerStore m_MemoryScannerStore;
 		RenderStore m_RenderStore;
 

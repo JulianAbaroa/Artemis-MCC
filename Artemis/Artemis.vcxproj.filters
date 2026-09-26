@@ -2621,6 +2621,15 @@
     <ClCompile Include="Core\UI\Widget\System\ResponsiveCard\ResponsiveCardUIService.cpp">
       <Filter>Core\UI\Widget\System\ResponsiveCard</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx">
+      <Filter>Core\Infrastructure\Platform\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Icons\GenerateIconData.py">

@@ -211,8 +211,11 @@
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx" />

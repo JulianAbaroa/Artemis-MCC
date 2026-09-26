@@ -7,6 +7,7 @@ export module Platform.Input.Hook:GetRawInputData;
 import Service.Logs.System;
 import Service.Settings.State;
 import Platform.Input.System;
+import Platform.Input.State;
 import std;
 
 export namespace Platform::Input::Hook
@@ -17,11 +18,14 @@ export namespace Platform::Input::Hook
 		using LogsService = Service::Logs::System::LogsService;
 		using SettingsStore = Service::Settings::State::SettingsStore;
 		using InputService = Platform::Input::System::InputService;
+		using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
 
 	public:
 		GetRawInputDataDetour(LogsService& logsService, SettingsStore& settingsStore,
-			InputService& inputService) : m_LogsService(logsService),
-			m_SettingsStore(settingsStore), m_InputService(inputService) {}
+			InputService& inputService, MouseDeltaStore& mouseDeltaStore) : m_LogsService(logsService),
+			m_SettingsStore(settingsStore), m_InputService(inputService),
+			m_MouseDeltaStore(mouseDeltaStore) {
+		}
 		~GetRawInputDataDetour() = default;
 
 		auto Install() -> void;
@@ -31,6 +35,7 @@ export namespace Platform::Input::Hook
 		LogsService& m_LogsService;
 		SettingsStore& m_SettingsStore;
 		InputService& m_InputService;
+		MouseDeltaStore& m_MouseDeltaStore;
 
 		static GetRawInputDataDetour* s_Instance;
 

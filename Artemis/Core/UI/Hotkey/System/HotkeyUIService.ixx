@@ -24,8 +24,7 @@ export namespace UI::Hotkey::System
 		HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,
 			LauncherUIStore& launcherStore, OverlayUIStore& overlayVisibilityStore) :
 			m_SettingsStore(settingsStore), m_HotkeyStore(hotkeyStore),
-			m_LauncherStore(launcherStore), m_OverlayVisibilityStore(overlayVisibilityStore) {
-		}
+			m_LauncherStore(launcherStore), m_OverlayVisibilityStore(overlayVisibilityStore) {}
 		~HotkeyUIService() = default;
 
 		HotkeyUIService(const HotkeyUIService&) = delete;

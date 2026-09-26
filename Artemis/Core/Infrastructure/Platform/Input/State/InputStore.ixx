@@ -1,4 +1,4 @@
-export module Platform.Input.State;
+export module Platform.Input.State:Input;
 
 import Platform.Input.Type;
 import std;
@@ -8,30 +8,28 @@ export namespace Platform::Input::State
 	class InputStore
 	{
 	private:
-		using Request = Platform::Input::Type::Request;
-		using Context = Platform::Input::Type::Context;
 		using Action = Platform::Input::Type::Action;
+
+		static constexpr std::size_t k_MaxButtonId = 256;
+		static constexpr std::uint16_t k_MinHoldTicks = 2;
 
 	public:
 		InputStore() = default;
 		~InputStore() = default;
 
-		auto GetNextRequest() const -> Request;
-		auto IsProcessing() const -> bool;
+		auto SetActionRequested(Action action, bool requested) -> void;
 
-		auto SetNextRequest(Context context, Action action) -> void;
-		auto SetProcessing(bool processing) -> void;
+		auto AdvanceTick() -> void;
 
-		auto EnqueueRequest(const Request& request, bool uniqueRequest = false) -> void;
-		auto DequeueRequest(Request& outRequest) -> bool;
+		auto IsActionHeld(short buttonID) const -> bool;
 
 		auto Cleanup() -> void;
 
 	private:
-		std::atomic<bool> m_IsProcessing{ false };
+		std::array<std::atomic<bool>, k_MaxButtonId> m_Requested{};
+		std::array<std::atomic<std::uint16_t>, k_MaxButtonId> m_TicksRemaining{};
 
-		std::queue<Request> m_Queue{};
-		Request m_NextRequest{ Context::Unknown, Action::Unknown };
-		mutable std::mutex m_Mutex{};
+		static auto ToIndex(short buttonID) -> std::size_t;
+		static auto ToIndex(Action action) -> std::size_t;
 	};
 }

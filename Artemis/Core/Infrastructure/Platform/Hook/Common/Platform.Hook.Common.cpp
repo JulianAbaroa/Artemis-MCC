@@ -32,7 +32,7 @@ namespace Platform::Hook::Common
             return false;
         }
 
-        logsService.Message("{} INFO: Hook installed.", tag);
+        logsService.Message("{} INFO: Hook installed, address: {:016X}", tag, reinterpret_cast<uintptr_t>(functionAddress));
         return true;
     }
 

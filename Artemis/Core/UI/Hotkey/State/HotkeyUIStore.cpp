@@ -13,7 +13,7 @@ namespace UI::Hotkey::State
 		{
 			if (binding.Scope != Scope::UI) continue;
 			if (binding.VirtualKey != virtualKey) continue;
-			if (binding.RequiresShift != isShiftDown) continue;
+			if (binding.RequiresShift && !isShiftDown) continue;
 
 			return &binding;
 		}

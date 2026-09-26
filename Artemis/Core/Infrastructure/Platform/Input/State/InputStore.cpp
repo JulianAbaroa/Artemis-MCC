@@ -1,62 +1,66 @@
 module Platform.Input.State;
+import :Input;
 
 namespace Platform::Input::State
 {
-	// We don't use a mutex here because the 
-	// HookedGetButtonState() is very sensitive.
-	auto InputStore::GetNextRequest() const -> Request
+	auto InputStore::ToIndex(short buttonID) -> std::size_t
 	{
-		return m_NextRequest;
+		return static_cast<std::size_t>(static_cast<unsigned short>(buttonID));
 	}
 
-	auto InputStore::IsProcessing() const -> bool
+	auto InputStore::ToIndex(Action action) -> std::size_t
 	{
-		return m_IsProcessing.load();
+		return ToIndex(static_cast<short>(action));
 	}
 
-	auto InputStore::SetNextRequest(Context context, Action action) -> void
+	auto InputStore::SetActionRequested(Action action, bool requested) -> void
 	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		m_IsProcessing.store(true);
-		m_NextRequest = { context, action };
+		const auto index = this->ToIndex(action);
+		if (index >= k_MaxButtonId) return;
+
+		m_Requested[index].store(requested, std::memory_order_release);
+
+		if (!requested) return;
+
+		auto current = m_TicksRemaining[index].load(std::memory_order_relaxed);
+		while (current < k_MinHoldTicks && !m_TicksRemaining[index].
+			compare_exchange_weak(current, k_MinHoldTicks, std::memory_order_relaxed)) {}
 	}
 
-	auto InputStore::SetProcessing(bool processing) -> void
+	auto InputStore::AdvanceTick() -> void
 	{
-		m_IsProcessing.store(processing);
-	}
-
-	auto InputStore::EnqueueRequest(const Request& request, bool uniqueRequest) -> void
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-
-		if (uniqueRequest && !m_Queue.empty())
+		for (std::size_t index = 0; index < k_MaxButtonId; ++index)
 		{
-			if (m_Queue.back().Action == request.Action) return;
-		}
+			if (m_Requested[index].load(std::memory_order_relaxed))
+			{
+				m_TicksRemaining[index].store(k_MinHoldTicks, std::memory_order_relaxed);
+				continue;
+			}
 
-		m_Queue.push(request);
+			const auto remaining = m_TicksRemaining[index].load(std::memory_order_relaxed);
+			if (remaining > 0)
+			{
+				m_TicksRemaining[index].store(
+					static_cast<std::uint16_t>(remaining - 1), std::memory_order_relaxed);
+			}
+		}
 	}
 
-	auto InputStore::DequeueRequest(Request& outRequest) -> bool
+	auto InputStore::IsActionHeld(short buttonID) const -> bool
 	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		if (m_Queue.empty()) return false;
-		outRequest = m_Queue.front();
-		m_Queue.pop();
-		return true;
+		const auto index = this->ToIndex(buttonID);
+		if (index >= k_MaxButtonId) return false;
+
+		return m_Requested[index].load(std::memory_order_acquire) ||
+			m_TicksRemaining[index].load(std::memory_order_acquire) > 0;
 	}
 
 	auto InputStore::Cleanup() -> void
 	{
+		for (std::size_t index = 0; index < k_MaxButtonId; ++index)
 		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
-			std::queue<Request> empty;
-			std::swap(m_Queue, empty);
-
-			m_NextRequest = { Context::Unknown, Action::Unknown };
+			m_Requested[index].store(false, std::memory_order_relaxed);
+			m_TicksRemaining[index].store(0, std::memory_order_relaxed);
 		}
-
-		m_IsProcessing.store(false);
 	}
 }

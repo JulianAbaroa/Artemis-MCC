@@ -36,14 +36,7 @@ namespace Platform::Input::Hook
     // internal mapping for each physical key.
     auto __fastcall GetButtonStateDetour::HookedGetButtonState(short buttonID) -> char
     {
-        auto nextInput = s_Instance->m_InputStore.GetNextRequest();
-        if (nextInput.Action != InputAction::Unknown)
-        {
-            if (static_cast<short>(nextInput.Action) == buttonID)
-            {
-                return 1;
-            }
-        }
+        if (s_Instance->m_InputStore.IsActionHeld(buttonID)) return 1;
 
         return m_OriginalFunction(buttonID);
     }

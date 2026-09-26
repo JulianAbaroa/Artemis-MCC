@@ -28,7 +28,7 @@ export namespace Tables::Player::Type::Offset
 	
 	constexpr std::uintptr_t WeaponPosition{ 0x038 };		// 3 floats.
 	constexpr std::uintptr_t WeaponForward{ 0x044 };		// 3 floats.
-	
+
 	// Related to aim, this needs more study.
 	constexpr std::uintptr_t AimOffset{ 0x050 };			// 3 floats.
 	

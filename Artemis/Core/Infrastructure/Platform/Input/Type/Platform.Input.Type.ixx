@@ -10,44 +10,23 @@ export namespace Platform::Input::Type
 	{
 		Unknown = -1,
 
-		// UI and Menu Controls.
-		PauseMenu = 0,
-		ToggleScoreboard = 30,
+		W = 32,					// Move forward
+		A = 45,					// Move left
+		S = 46,					// Move backward
+		D = 47,					// Move right
+		Space = 72,				// Jump
+		LeftControl = 69,		// Crouch
+		Z = 58,					// Zoom in
+		X = 59,					// Zoom out
+		Q = 31,					// Melee
+		R = 34,					// Reload
+		F = 48,					// Throw grenade
+		E = 33,					// Interact
+		One = 17,				// Change weapon
+		Two = 18,				// Change grenade
+		Shift = 57,				// Use armor ability
 
-		// Theater Mode Controls.
-		TogglePanel = 59,
-		ToggleUIMode = 58,
-		TogglePOVMode = 60,
-		NextPlayer = 78,
-		PreviousPlayer = 77,
-		JumpForward = 80,
-		JumpBackward = 79,
-		PlayPause = 56,
-		FastForward = 33,
-		ToggleCameraMode = 72,
-		Boost = 57,
-		FasterBoost = 69,
-		Ascend = 34,
-		Descend = 48,
-
-		CameraReset = -100,			// Internal logic (No direct GetButtonState mapping).
-		TheaterPanning = -101,		// I didn't get this one.
-	};
-
-	// Defines the operational scope for inputs.
-	// Ensures the Director only injects commands when the engine is in the correct state.
-	enum class Context
-	{
-		Unknown, Communication, Movement,
-		Actions, VehicleControls, UIControls,
-		Theater, Forge,
-	};
-
-	// Data structure used to request an input injection with specific parameters.
-	struct Request
-	{
-		Context Context{};
-		Action Action{};
+		C = 60,					// Shoot
 	};
 
 	struct WindowMessage

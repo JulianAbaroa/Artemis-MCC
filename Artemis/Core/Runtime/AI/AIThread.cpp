@@ -70,6 +70,8 @@ namespace Runtime::Thread
 
 				auto tickStart = SteadyClock::now();
 
+				m_Platform.m_InputService.AdvanceInputTick();
+
 				this->ExecuteTick();
 				m_Export.m_TickService.Assemble(current);
 

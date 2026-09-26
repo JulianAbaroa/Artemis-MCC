@@ -29,10 +29,49 @@ namespace Platform::Input::Hook
 	auto WINAPI GetRawInputDataDetour::HookedGetRawInputData(HRAWINPUT hRawInput,
 		UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) -> UINT
 	{
+		auto* self = s_Instance;
+
+		if (self && uiCommand == RID_INPUT && 
+			self->m_MouseDeltaStore.IsAIControlActive())
+		{
+			std::int32_t injectX = 0;
+			std::int32_t injectY = 0;
+
+			if (self->m_MouseDeltaStore.ConsumePendingDelta(injectX, injectY))
+			{
+				Platform::Hook::Common::InFlightScope scope(s_InFlight);
+
+				const UINT requiredSize = sizeof(RAWINPUT);
+
+				if (!pData)
+				{
+					if (pcbSize) *pcbSize = requiredSize;
+					return 0;
+				}
+
+				if (!pcbSize || *pcbSize < requiredSize)
+				{
+					return static_cast<UINT>(-1);
+				}
+
+				auto* raw = static_cast<RAWINPUT*>(pData);
+				raw->header.dwType = RIM_TYPEMOUSE;
+				raw->header.dwSize = requiredSize;	
+				raw->header.hDevice = self->m_MouseDeltaStore.GetKnownDeviceHandle();
+				raw->header.wParam = RIM_INPUT;
+
+				raw->data.mouse = {};
+				raw->data.mouse.usFlags = MOUSE_MOVE_RELATIVE;
+				raw->data.mouse.lLastX = injectX;
+				raw->data.mouse.lLastY = injectY;
+
+				return requiredSize;
+			}
+		}
+
 		const UINT size = m_OriginalFunction(
 			hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
 
-		auto* self = s_Instance;
 		if (!self) return size;
 
 		Platform::Hook::Common::InFlightScope scope(s_InFlight);
@@ -43,6 +82,8 @@ namespace Platform::Input::Hook
 		if (raw->header.dwType != RIM_TYPEMOUSE) return size;
 
 		RAWMOUSE& mouse = raw->data.mouse;
+
+		self->m_MouseDeltaStore.SetKnownDeviceHandle(raw->header.hDevice);
 
 		if (self->m_SettingsStore.IsMenuVisible())
 		{
