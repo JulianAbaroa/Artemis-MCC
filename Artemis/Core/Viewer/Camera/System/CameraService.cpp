@@ -101,8 +101,8 @@ namespace Viewer::Camera::System
 				const auto& player = entry.second;
 				if (player.AliveBipedHandle != selected) continue;
 
-				outPosition = player.WeaponPosition;
-				outForward = player.WeaponForward;
+				outPosition = player.CameraPosition;
+				outForward = player.CameraForward;
 				return true;
 			}
 		}

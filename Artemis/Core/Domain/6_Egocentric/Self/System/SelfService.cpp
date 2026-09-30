@@ -26,14 +26,14 @@ namespace Egocentric::Self::System
         const AlivePlayer& player = it->second;
 
         Vec3 forward{}, right{}, up{};
-        Common::Math::System::BuildFrame(player.WeaponForward, forward, right, up);
+        Common::Math::System::BuildFrame(player.CameraForward, forward, right, up);
 
         ::Self self;
         self.Handle = player.Handle;
         self.BipedHandle = player.CurrentBipedHandle;
         self.IsAlive = player.AliveBipedHandle != 0xFFFFFFFF;
         self.Team = player.Team;
-        self.Position = player.WeaponPosition;
+        self.Position = player.CameraPosition;
         self.Forward = forward;
         self.Right = right;
         self.Up = up;

@@ -61,8 +61,8 @@ namespace Tables::Player::System
 		player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::PrimaryWeaponHandle);
 		player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::SecondaryWeaponHandle);
 		player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, Offset::ObjectiveHandle);
-		player.WeaponPosition = reader.Read<Vec3>(playerBase, Offset::WeaponPosition);
-		player.WeaponForward = reader.Read<Vec3>(playerBase, Offset::WeaponForward);
+		player.CameraPosition = reader.Read<Vec3>(playerBase, Offset::CameraPosition);
+		player.CameraForward = reader.Read<Vec3>(playerBase, Offset::CameraForward);
 		player.AimOffset = reader.Read<Vec3>(playerBase, Offset::AimOffset);
 
 		return player;
@@ -108,8 +108,8 @@ namespace Tables::Player::System
 			player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::PrimaryWeaponHandle);
 			player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::SecondaryWeaponHandle);
 			player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, Offset::ObjectiveHandle);
-			player.WeaponPosition = reader.Read<Vec3>(playerBase, Offset::WeaponPosition);
-			player.WeaponForward = reader.Read<Vec3>(playerBase, Offset::WeaponForward);
+			player.CameraPosition = reader.Read<Vec3>(playerBase, Offset::CameraPosition);
+			player.CameraForward = reader.Read<Vec3>(playerBase, Offset::CameraForward);
 			player.AimOffset = reader.Read<Vec3>(playerBase, Offset::AimOffset);
 		});
 

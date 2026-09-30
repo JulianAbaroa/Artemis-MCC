@@ -30,8 +30,8 @@ export namespace Tables::Player::Type::Alive
 		std::string Gamertag{};
 		std::string Tag{};
 
-		Vec3 WeaponPosition{};
-		Vec3 WeaponForward{};
+		Vec3 CameraPosition{};
+		Vec3 CameraForward{};
 		Vec3 AimOffset{};
 
 		std::uint32_t PrimaryWeaponHandle{};
