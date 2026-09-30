@@ -32,7 +32,7 @@ namespace Map::Builder::System
     {
         const std::int32_t tagCount = (std::int32_t)m_TagIndexStore.GetTagsSize();
 
-        std::array<std::size_t, 19> counts{};
+        std::array<std::size_t, 20> counts{};
 
         for (std::int32_t i = 0; i < tagCount; ++i)
         {
@@ -77,15 +77,15 @@ namespace Map::Builder::System
         m_LogsService.Message("[MapBuilderService] INFO: Raw built."
             " Bipd loaded: {} | Bloc loaded: {} | Coll loaded: {} |"
             " Ctrl loaded: {} | Eqip loaded: {} | Hlmt loaded: {} |"
-            " Lbsp loaded: {} | Mach loaded: {} | Mode loaded: {} |"
-            " Phmo loaded: {} | Play loaded: {} | Proj loaded: {} |"
-            " Sbsp loaded: {} | Scen loaded: {} | Scnr loaded: {} |"
-            " Sldt loaded: {} | Vehi loaded: {} | Weap loaded: {} |"
-            " Zone loaded: {} |",
+            " Jpt! loaded: {} | Lbsp loaded: {} | Mach loaded: {} |"
+            " Mode loaded: {} | Phmo loaded: {} | Play loaded: {} |"
+            " Proj loaded: {} | Sbsp loaded: {} | Scen loaded: {} |"
+            " Scnr loaded: {} | Sldt loaded: {} | Vehi loaded: {} |"
+            " Weap loaded: {} | Zone loaded: {} |",
             counts[0], counts[1], counts[2], counts[3], counts[4], counts[5],
             counts[6], counts[7], counts[8], counts[9], counts[10], counts[11],
             counts[12], counts[13], counts[14], counts[15], counts[16], counts[17],
-            counts[18]);
+            counts[18], counts[19]);
     }
 
     auto MapBuilderService::Cleanup() -> void

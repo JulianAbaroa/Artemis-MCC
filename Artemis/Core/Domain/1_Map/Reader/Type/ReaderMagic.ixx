@@ -16,6 +16,7 @@ export namespace Map::Reader::Type::Magic
 		constexpr std::uint32_t k_Ctrl{ 0x6374726C };
 		constexpr std::uint32_t k_Eqip{ 0x65716970 };
 		constexpr std::uint32_t k_Hlmt{ 0x686C6D74 };
+		constexpr std::uint32_t k_Jpt{ 0x6A707421 };
 		constexpr std::uint32_t k_Lbsp{ 0x4C627370 };
 		constexpr std::uint32_t k_Mach{ 0x6D616368 };
 		constexpr std::uint32_t k_Mode{ 0x6D6F6465 };
