@@ -8,6 +8,7 @@ export import :Coll;
 export import :Ctrl;
 export import :Eqip;
 export import :Hlmt;
+export import :Jpt;
 export import :Lbsp;
 export import :Mach;
 export import :Mode;

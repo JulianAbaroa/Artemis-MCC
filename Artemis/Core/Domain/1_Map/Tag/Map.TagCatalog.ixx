@@ -15,6 +15,7 @@ export namespace Map::Tag::State
 		Map::Reader::State::TagStore<Map::Tag::Type::Ctrl::Object::CtrlObject> Ctrl;
 		Map::Reader::State::TagStore<Map::Tag::Type::Eqip::Object::EqipObject> Eqip;
 		Map::Reader::State::TagStore<Map::Tag::Type::Hlmt::Object::HlmtObject> Hlmt;
+		Map::Reader::State::TagStore<Map::Tag::Type::Jpt::Object::JptObject> Jpt;
 		Map::Reader::State::TagStore<Map::Tag::Type::Lbsp::Object::LbspObject> Lbsp;
 		Map::Reader::State::TagStore<Map::Tag::Type::Mach::Object::MachObject> Mach;
 		Map::Reader::State::TagStore<Map::Tag::Type::Mode::Object::ModeObject> Mode;
@@ -38,6 +39,7 @@ export namespace Map::Tag::State
 			f(Ctrl);
 			f(Eqip);
 			f(Hlmt);
+			f(Jpt);
 			f(Lbsp);
 			f(Mach);
 			f(Mode);
