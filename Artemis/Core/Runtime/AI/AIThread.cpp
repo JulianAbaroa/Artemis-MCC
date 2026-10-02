@@ -120,6 +120,7 @@ namespace Runtime::Thread
 		m_Environment.m_CollidableService.Update(m_ViewerCameraStore.IsActive());
 		m_Environment.m_FixturesService.Update();
 		m_Environment.m_HealthService.Update();
+		m_Environment.m_AimService.Update();
 
 		// --- Egocentric ---
 		m_Egocentric.m_SelfService.Update();

@@ -1,5 +1,7 @@
 module Environment.Collidable.System;
 
+import Tables.Object.Type;
+
 namespace
 {
     using Triangle = Common::Math::Type::Triangle;
@@ -158,7 +160,7 @@ namespace Environment::Collidable::System
 
             const BoneMatrix& bone = matrices[mesh.NodeIndex];
 
-            if (!this->IsBoneMatrixValid(bone))
+            if (!Tables::Object::Type::BoneMatrix::IsBoneMatrixValid(bone))
             {
                 continue;
             }
@@ -451,42 +453,6 @@ namespace Environment::Collidable::System
         const float wy = r[3] * lx + r[4] * ly + r[5] * lz + m.Translation[1];
         const float wz = r[6] * lx + r[7] * ly + r[8] * lz + m.Translation[2];
         return { wx, wy, wz };
-    }
-
-    auto CollidableService::IsBoneMatrixValid(const BoneMatrix& m) -> bool
-    {
-        if (!std::isfinite(m.Scale) || m.Scale < 1e-4f || m.Scale > 1e4f)
-        {
-            return false;
-        }
-
-        for (int row = 0; row < 3; ++row)
-        {
-            const float a = m.Rotation[row * 3 + 0];
-            const float b = m.Rotation[row * 3 + 1];
-            const float c = m.Rotation[row * 3 + 2];
-
-            if (!std::isfinite(a) || !std::isfinite(b) || !std::isfinite(c))
-            {
-                return false;
-            }
-
-            const float n2 = a * a + b * b + c * c;
-            if (n2 < 0.25f || n2 > 4.0f)
-            {
-                return false;
-            }
-        }
-
-        for (int i = 0; i < 3; ++i)
-        {
-            if (!std::isfinite(m.Translation[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     auto CollidableService::HighestLevelFromMask(std::uint16_t mask) -> int

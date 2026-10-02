@@ -9,6 +9,7 @@ import Relations.PlayerGraph.Type;
 import Environment.Collidable.Type;
 import Environment.Health.Type;
 import Environment.Fixtures.Type;
+import Environment.Aim.Type;
 import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
 import Egocentric.Raycast.Type;
@@ -34,6 +35,7 @@ export namespace Export::Tick::Type
 	using Health = Environment::Health::Type::Health;
 	using Healths = std::unordered_map<std::uint32_t, Health>;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;
+	using Aims = Environment::Aim::Type::Aims;
 
 	using Affordance = Egocentric::Affordance::Type::Affordance;
 	using Affordances = std::vector<Affordance>;
@@ -58,6 +60,7 @@ export namespace Export::Tick::Type
 		std::shared_ptr<const Collidables> Collidables;
 		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Healths> Healths;
+		std::shared_ptr<const Aims> Aims;
 
 		// --- Layer 6: Egocentric ---
 		std::shared_ptr<const Self> Self;

@@ -9,6 +9,7 @@ import Relations.PlayerGraph.State;
 import Environment.Collidable.State;
 import Environment.Fixtures.State;
 import Environment.Health.State;
+import Environment.Aim.State;
 import Egocentric.Self.State;
 import Egocentric.Affordance.State;
 import Egocentric.Raycast.State;
@@ -29,6 +30,7 @@ export namespace Export::Tick::System
 		using CollidableStore = Environment::Collidable::State::CollidableStore;
 		using FixturesStore = Environment::Fixtures::State::FixturesStore;
 		using HealthStore = Environment::Health::State::HealthStore;
+		using AimStore = Environment::Aim::State::AimStore;
 		using SelfStore = Egocentric::Self::State::SelfStore;
 		using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
 		using RaycastStore = Egocentric::Raycast::State::RaycastStore;
@@ -39,14 +41,14 @@ export namespace Export::Tick::System
 			InteractionStore& interactionStore, ClassifierStore& classifierStore,
 			ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
 			CollidableStore& collidableStore, FixturesStore& fixturesStore,
-			HealthStore& healthStore, SelfStore& selfStore,
+			HealthStore& healthStore, AimStore& aimStore, SelfStore& selfStore,
 			AffordanceStore& affordanceStore, RaycastStore& raycastStore,
 			TickStore& tickStore) :
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
 			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
 			m_CollidableStore(collidableStore), m_FixturesStore(fixturesStore),
-			m_HealthStore(healthStore), m_SelfStore(selfStore),
+			m_HealthStore(healthStore), m_AimStore(aimStore), m_SelfStore(selfStore),
 			m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
 			m_TickStore(tickStore) {}
 		~TickService() = default;
@@ -63,6 +65,7 @@ export namespace Export::Tick::System
 		CollidableStore& m_CollidableStore;
 		FixturesStore& m_FixturesStore;
 		HealthStore& m_HealthStore;
+		AimStore& m_AimStore;
 		SelfStore& m_SelfStore;
 		AffordanceStore& m_AffordanceStore;
 		RaycastStore& m_RaycastStore;

@@ -28,6 +28,7 @@ namespace Export::Tick::System
         tick.Collidables = m_CollidableStore.Acquire();
         tick.Fixtures = m_FixturesStore.Acquire();
         tick.Healths = m_HealthStore.Acquire();
+		tick.Aims = m_AimStore.Acquire();
 
         // --- Layer 6: Egocentric ---
         tick.Self = m_SelfStore.Acquire();

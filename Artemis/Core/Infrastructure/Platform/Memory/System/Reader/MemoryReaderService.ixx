@@ -34,7 +34,6 @@ export namespace Platform::Memory::System
 		}
 
 	private:
-		auto CopyFromGame(std::uintptr_t address, void* destination,
-			std::size_t bytes) -> bool;
+		auto CopyFromGame(std::uintptr_t address, void* destination, std::size_t bytes) -> bool;
 	};
 }

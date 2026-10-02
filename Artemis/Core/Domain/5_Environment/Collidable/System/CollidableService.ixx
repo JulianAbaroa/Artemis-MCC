@@ -63,8 +63,6 @@ export namespace Environment::Collidable::System
 
         auto QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>;
 
-        auto IsBoneMatrixValid(const BoneMatrix& m) -> bool;
-
         auto Cleanup() -> void;
 
     private:

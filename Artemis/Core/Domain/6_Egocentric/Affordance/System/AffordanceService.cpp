@@ -5,6 +5,7 @@ module;
 
 module Egocentric.Affordance.System;
 
+import Tables.Object.Type;
 import Egocentric.Self.Type;
 
 namespace
@@ -330,7 +331,7 @@ namespace Egocentric::Affordance::System
 
         const BoneMatrix& bone = bones.Matrices[seatMarker.NodeIndex];
 
-        if (!m_CollidableService.IsBoneMatrixValid(bone)) return std::nullopt;
+        if (!Tables::Object::Type::BoneMatrix::IsBoneMatrixValid(bone)) return std::nullopt;
 
         const auto& r = bone.Rotation;
         const Vec3& v = seatMarker.LocalTranslation;
