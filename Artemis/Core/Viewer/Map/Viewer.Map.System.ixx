@@ -7,3 +7,4 @@ export import :DynamicPass;
 export import :ZonePass;
 export import :RaycastPass;
 export import :MapService;
+export import :AimPass;

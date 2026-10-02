@@ -415,27 +415,6 @@
     <Filter Include="Core\Domain\2_Resolved">
       <UniqueIdentifier>{373b5952-a998-4a6f-bfe2-7261fbdd4307}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats">
-      <UniqueIdentifier>{584702e6-f09d-43ea-8312-20d171145dab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats\Type">
-      <UniqueIdentifier>{a86898c6-f196-42d7-9f79-e4110ae595d4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats\State">
-      <UniqueIdentifier>{4e027ac2-6360-4466-8ef4-7c674d32122e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats\System">
-      <UniqueIdentifier>{8592344f-40d6-4c12-a888-06488c337105}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats\System\Proj">
-      <UniqueIdentifier>{24132c04-3f08-4808-ab5b-6d703d994e40}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats\System\Vehi">
-      <UniqueIdentifier>{4bfc3b89-46f0-44a6-9c39-86087416dc96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\Stats\System\Weap">
-      <UniqueIdentifier>{616d5512-6b06-4970-b933-a86f21d008dd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\2_Resolved\Vitality">
       <UniqueIdentifier>{1fc6861c-8525-41f9-894a-82fc017259ca}</UniqueIdentifier>
     </Filter>
@@ -459,18 +438,6 @@
     </Filter>
     <Filter Include="Core\Domain\2_Resolved\World\System">
       <UniqueIdentifier>{c748fb59-c272-4ed9-bd0b-bf78af8eb6dc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\World\System\Coll">
-      <UniqueIdentifier>{4c3bc373-6c26-428e-898b-d77bf4ac6797}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\World\System\Mode">
-      <UniqueIdentifier>{6b2dac87-2d9c-4176-b062-1d4a7c8880d6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\World\System\Phmo">
-      <UniqueIdentifier>{86bfa6c1-9d38-4736-b971-feaa6861be1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\2_Resolved\World\System\Sbsp">
-      <UniqueIdentifier>{9a8136b3-09ee-46c2-9294-d108bc5b399c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\2_Resolved\World\System\RegionStates">
       <UniqueIdentifier>{16cab8bb-0bf4-4637-8d1a-9f9e2c88deec}</UniqueIdentifier>
@@ -943,6 +910,144 @@
     <Filter Include="Core\UI\Widget\System\ResponsiveCard">
       <UniqueIdentifier>{2ead2168-1c59-47e3-b980-f2562924addf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Jpt">
+      <UniqueIdentifier>{ed2d2283-5c26-43d1-9c3d-728838098daa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Jpt\System">
+      <UniqueIdentifier>{f7016a6c-4f84-4301-b11e-e9246bf2524f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Jpt\Type">
+      <UniqueIdentifier>{a77a170a-2b81-4126-b48b-f9686affc709}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Reflect">
+      <UniqueIdentifier>{590315ad-1390-40e5-9b00-c411edcedbb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Reflect\Type">
+      <UniqueIdentifier>{f7044b52-8576-4dd9-b973-93f93a6de2a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Reflect\System">
+      <UniqueIdentifier>{b7f1b12e-223a-4444-a975-b7008982fdd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Widget\System\Inspector">
+      <UniqueIdentifier>{4b9aafa2-045c-46a4-a259-1242fd0c7c77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions">
+      <UniqueIdentifier>{584702e6-f09d-43ea-8312-20d171145dab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\Type">
+      <UniqueIdentifier>{743acbf3-84f8-4e88-a2b3-1926d0aaa12d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\State">
+      <UniqueIdentifier>{00e73b17-7f40-4190-881b-1ab8672ab5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System">
+      <UniqueIdentifier>{81b9d8c8-1fa0-4133-b28c-a1a419c23a37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object">
+      <UniqueIdentifier>{631cf5d9-c80d-472d-b8e4-c4130cf46c38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Damage">
+      <UniqueIdentifier>{8592344f-40d6-4c12-a888-06488c337105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Level">
+      <UniqueIdentifier>{a86898c6-f196-42d7-9f79-e4110ae595d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model">
+      <UniqueIdentifier>{4e027ac2-6360-4466-8ef4-7c674d32122e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\Type\Damage">
+      <UniqueIdentifier>{a81b4e2d-7608-4a58-93cb-07a01c7d3df9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\Type\Level">
+      <UniqueIdentifier>{a5616714-f287-489b-aebe-2d74e55936e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\Type\Model">
+      <UniqueIdentifier>{d84048fc-c152-4a47-921d-36dd15cfb8da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\Type\Object">
+      <UniqueIdentifier>{d2db672b-0096-4e49-9b22-154185ede8c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt">
+      <UniqueIdentifier>{a7e8094e-242c-4971-94ab-3004ea1ffc64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp">
+      <UniqueIdentifier>{4be93b8e-212f-45ec-b1eb-ea34c248b3e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr">
+      <UniqueIdentifier>{f8c564a1-417e-44a6-a38b-e089d5e5ac50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt">
+      <UniqueIdentifier>{d94be7e9-8f5e-43d3-a968-7c1fd9747e35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll">
+      <UniqueIdentifier>{48c58afd-ddff-421d-8340-856890d148ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode">
+      <UniqueIdentifier>{0c32a808-fc02-4920-a370-ae5355d795ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Bipd">
+      <UniqueIdentifier>{f22e101f-05fc-4503-8665-8d4198136746}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Bloc">
+      <UniqueIdentifier>{60c2906c-51de-4c83-9b59-d5d978627493}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Ctrl">
+      <UniqueIdentifier>{d5f0ac0b-68bf-4dfd-aed3-bf1b142ce116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Eqip">
+      <UniqueIdentifier>{c451b627-e2fe-4214-b411-43fbdb496bb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Mach">
+      <UniqueIdentifier>{9e856027-f748-444f-8b26-87f42e68d9a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Proj">
+      <UniqueIdentifier>{c945eda3-4afe-431e-8c23-30e1a3057998}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Scen">
+      <UniqueIdentifier>{a8d80c52-496f-4458-b176-a573411562b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Vehi">
+      <UniqueIdentifier>{5a8d8da4-7897-4720-b65a-2fa48fc72240}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Object\Weap">
+      <UniqueIdentifier>{8b62c522-3d63-4030-a776-add0cd063fc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\_Reflect">
+      <UniqueIdentifier>{1b02a404-84d1-48d5-be90-e4239ebcc6bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object">
+      <UniqueIdentifier>{8fd150bc-6449-4051-a457-72a1ba38f002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\_Reflect\Damage">
+      <UniqueIdentifier>{f40f2e9f-338f-44b5-ad69-3b6e4f9c9e04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level">
+      <UniqueIdentifier>{230703ae-4c32-4237-bf9c-535f88a3cace}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model">
+      <UniqueIdentifier>{324a5085-f13c-444a-b930-d368120dad7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\DefinitionsInspector">
+      <UniqueIdentifier>{65c14abe-9c77-4c0d-9d18-8aabe882e967}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\DefinitionsInspector\System">
+      <UniqueIdentifier>{73d74bdf-8611-4c8f-b416-fdf80ea5ad82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\2_Resolved\World\System\ModelLink">
+      <UniqueIdentifier>{2646e01d-9757-41a9-817b-f10a27eb9730}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Aim">
+      <UniqueIdentifier>{04e45202-3cec-4268-afca-dd9ff0e78d1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Aim\Type">
+      <UniqueIdentifier>{240427c7-c311-4a19-8d9d-e7d525fe203a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Aim\State">
+      <UniqueIdentifier>{47134b01-8389-495b-860c-4909b8ce4b5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\5_Environment\Aim\System">
+      <UniqueIdentifier>{8a441872-8e9b-46e9-b668-a3f2b363cf2f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imgui.h">
@@ -1150,24 +1255,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx">
       <Filter>Core\Domain\1_Map\Tag</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsEqip.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsProj.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsVehi.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\Type\StatsWeap.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\State\StatsStore.cpp">
-      <Filter>Core\Domain\2_Resolved\Stats\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\State\StatsStore.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\State</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.ixx">
       <Filter>Core\Domain\1_Map\Reader\State\File</Filter>
@@ -1526,27 +1613,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\ZoneDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\Resolved.Stats.Type.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Weap\WeapBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\Stats\System\Weap</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Weap\WeapBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\System\Weap</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Vehi\VehiBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\Stats\System\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Vehi\VehiBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\System\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Proj\ProjBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\Stats\System\Proj</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\Proj\ProjBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\System\Proj</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\ResolvedVitality.ixx">
       <Filter>Core\Domain\2_Resolved\Vitality\Type</Filter>
     </ClCompile>
@@ -1562,24 +1628,6 @@
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.ixx">
       <Filter>Core\Domain\2_Resolved\Vitality\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\StatsBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\Stats\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Stats\System\StatsBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\Stats\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldColl.ixx">
-      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldMode.ixx">
-      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldPhmo.ixx">
-      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldSbsp.ixx">
-      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\Resolved.World.Type.ixx">
       <Filter>Core\Domain\2_Resolved\World</Filter>
     </ClCompile>
@@ -1588,36 +1636,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.ixx">
       <Filter>Core\Domain\2_Resolved\World\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Coll\CollBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\World\System\Coll</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Coll\CollBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\World\System\Coll</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Mode\ModeBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\World\System\Mode</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Mode\ModeBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\World\System\Mode</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Phmo\PhmoBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\World\System\Phmo</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Phmo\PhmoBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\World\System\Phmo</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspBuilder.cpp">
-      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspBuilder.ixx">
-      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspSeamLinker.cpp">
-      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Sbsp\SbspSeamLinker.ixx">
-      <Filter>Core\Domain\2_Resolved\World\System\Sbsp</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.cpp">
       <Filter>Core\Domain\2_Resolved\World\System</Filter>
@@ -2117,10 +2135,10 @@
     <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.cpp">
       <Filter>Core\UI\Overlay\System\Panel</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\VitalitiesUI.ixx">
+    <ClCompile Include="Core\UI\Overlay\System\Panel\HealthsUI.ixx">
       <Filter>Core\UI\Overlay\System\Panel</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\VitalitiesUI.cpp">
+    <ClCompile Include="Core\UI\Overlay\System\Panel\HealthsUI.cpp">
       <Filter>Core\UI\Overlay\System\Panel</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.cpp">
@@ -2629,6 +2647,282 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.cpp">
       <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.System.Jpt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.Type.Jpt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\JptObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\JptOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\JptStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\System\JptDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx">
+      <Filter>Core\Common\Reflect\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Reflect\System\Common.Reflect.System.ixx">
+      <Filter>Core\Common\Reflect\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx">
+      <Filter>Core\Common\Reflect\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Widget\System\Inspector\InspectorUIService.ixx">
+      <Filter>Core\UI\Widget\System\Inspector</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\StatsInspector\System\DefinitionsInspectorUIService.cpp">
+      <Filter>Core\UI\DefinitionsInspector\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\StatsInspector\System\DefinitionsInspectorUIService.ixx">
+      <Filter>Core\UI\DefinitionsInspector\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Damage\DefinitionsJpt.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Damage</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsColl.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsHlmt.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsMode.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsBipd.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsBloc.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsCtrl.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsEqip.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsMach.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\_DefinitionsObject.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsProj.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsVehi.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsWeap.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Damage\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Damage\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Resolved.Definitions.Reflect.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Resolved.Definitions.Type.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode\ModeBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode\ModeBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bipd\BipdBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bipd\BipdBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\ObjectBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bloc\BlocBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bloc\BlocBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Ctrl\CtrlBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Ctrl\CtrlBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Eqip\EqipBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Eqip\EqipBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Mach\MachBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Mach\MachBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Proj\ProjBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Proj\ProjBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Vehi\VehiBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Vehi\VehiBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Weap\WeapBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Weap\WeapBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\DefinitionsBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\DefinitionsBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Weap.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Bipd.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Bloc.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Ctrl.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Eqip.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Mach.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\_Reflect.Object.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Proj.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Vehi.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Coll.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Hlmt.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Mode.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Damage\Reflect.Jpt.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Damage</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsScen.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Scen\ScenBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Scen\ScenBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Scen.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSbsp.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp\SbspBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp\SbspBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sbsp.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsScnr.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Scnr.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Reflect\Common.Reflect.Type.ixx">
+      <Filter>Core\Common\Reflect</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldModelLink.ixx">
+      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\World\System\ModelLink</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\World\System\ModelLink</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\Type\Environment.Aim.Type.ixx">
+      <Filter>Core\Domain\5_Environment\Aim\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.cpp">
+      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
+      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.cpp">
+      <Filter>Core\Domain\5_Environment\Aim\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.ixx">
+      <Filter>Core\Domain\5_Environment\Aim\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

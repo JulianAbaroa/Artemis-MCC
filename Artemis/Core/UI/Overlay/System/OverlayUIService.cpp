@@ -107,8 +107,10 @@ namespace UI::Overlay::System
 
 		const float screenHeight = static_cast<float>(m_RenderStore.GetHeight());
 		const float pageHeight = screenHeight * 0.5f;
+		const float screenWidth = static_cast<float>(m_RenderStore.GetWidth());
+		const float panelWidth = (std::min)((std::max)(screenWidth * 0.30f, 480.0f), screenWidth - 40.0f);
 
-		ImGui::BeginChild("##panel_body", ImVec2(0.0f, pageHeight), false,
+		ImGui::BeginChild("##panel_body", ImVec2(panelWidth, pageHeight), false,
 			ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 		if (tick) this->DrawPanel(*tick, handle);
@@ -145,7 +147,7 @@ namespace UI::Overlay::System
 			break;
 
 		case Mode::Health:
-			VitalitiesUI::Draw(tick, handle, m_VitalityStore);
+			HealthsUI::Draw(tick, handle, m_VitalityStore);
 			break;
 
 		case Mode::Fixture:

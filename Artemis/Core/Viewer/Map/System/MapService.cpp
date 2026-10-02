@@ -74,6 +74,9 @@ namespace Viewer::Map::System
 
 		m_RaycastPass.Upload(frame.Device, frame.Context, tick->Raycasts, tick->Generation);
 
+		m_AimPass.Upload(frame.Device, frame.Context, tick->Aims,
+			m_SelectionStore.GetSelected(), tick->Generation);
+
 		this->Draw(frame);
 	}
 
@@ -103,6 +106,7 @@ namespace Viewer::Map::System
 		m_DynamicPass.Draw(context);
 		m_ZonePass.Draw(context);
 		m_RaycastPass.Draw(context);
+		m_AimPass.Draw(context);
 	}
 
 	auto MapService::Suspend() -> void
@@ -136,6 +140,7 @@ namespace Viewer::Map::System
 		m_DynamicPass.Release();
 		m_ZonePass.Release();
 		m_RaycastPass.Release();
+		m_AimPass.Release();
 		m_PaletteService.Reset();
 	}
 

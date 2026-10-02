@@ -6,15 +6,15 @@ import std;
 
 export namespace UI::Overlay::System
 {
-	class VitalitiesUI
+	class HealthsUI
 	{
 	private:
 		using Tick = Export::Tick::Type::Tick;
 		using VitalityStore = Resolved::Vitality::State::VitalityStore;
 
 	public:
-		VitalitiesUI() = default;
-		~VitalitiesUI() = default;
+		HealthsUI() = default;
+		~HealthsUI() = default;
 
 		static auto Draw(const Tick& tick, std::uint32_t handle,
 			const VitalityStore& vitalityStore) -> void;

@@ -27,14 +27,13 @@ namespace
 		if (field == "ModelTagName") return "hlmt";
 		if (field == "CollisionModelTagName") return "coll";
 		if (field == "RenderModelTagName") return "mode";
-		if (field == "PhysicsModelTagName") return "phmo";
 		if (field.ends_with("ProjectileTagName")) return "proj";
 		if (field.ends_with("TagName")) return "jpt!";
 		return {};
 	}
 
 	constexpr std::array<const char*, 15> k_DumpFourCCs{
-		"bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "phmo", "proj", "scen", "scnr", "vehi", "weap"};
+		"bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "proj", "scen", "scnr", "vehi", "weap"};
 
 	auto JsonEscape(std::string_view text) -> std::string
 	{
@@ -190,7 +189,6 @@ namespace UI::DefinitionsInspector::System
 		if (fourCC == "coll") return m_DefinitionsStore.HasResolvedColl(tagName);
 		if (fourCC == "jpt!") return m_DefinitionsStore.HasResolvedJpt(tagName);
 		if (fourCC == "mode") return m_DefinitionsStore.HasResolvedMode(tagName);
-		if (fourCC == "phmo") return m_DefinitionsStore.HasResolvedPhmo(tagName);
 		if (fourCC == "proj") return m_DefinitionsStore.HasResolvedProj(tagName);
 		if (fourCC == "vehi") return m_DefinitionsStore.HasResolvedVehi(tagName);
 		if (fourCC == "weap") return m_DefinitionsStore.HasResolvedWeap(tagName);
@@ -219,7 +217,6 @@ namespace UI::DefinitionsInspector::System
 		else if (fourCC == "jpt!") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedJpts());
 		else if (fourCC == "mach") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedMachs());
 		else if (fourCC == "mode") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedModes());
-		else if (fourCC == "phmo") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedPhmos());
 		else if (fourCC == "proj") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedProjs());
 		else if (fourCC == "scen") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedScens());
 		else if (fourCC == "scnr") n = WriteNdjson(path, fourCC, m_DefinitionsStore.GetAllResolvedScnrs());
@@ -309,7 +306,6 @@ namespace UI::DefinitionsInspector::System
 		else if (fourCC == "jpt!") this->DrawResolved(m_DefinitionsStore.GetResolvedJpt(tag), fourCC, tag, ownerHandle);
 		else if (fourCC == "mach") this->DrawResolved(m_DefinitionsStore.GetResolvedMach(tag), fourCC, tag, ownerHandle);
 		else if (fourCC == "mode") this->DrawResolved(m_DefinitionsStore.GetResolvedMode(tag), fourCC, tag, ownerHandle);
-		else if (fourCC == "phmo") this->DrawResolved(m_DefinitionsStore.GetResolvedPhmo(tag), fourCC, tag, ownerHandle);
 		else if (fourCC == "proj") this->DrawResolved(m_DefinitionsStore.GetResolvedProj(tag), fourCC, tag, ownerHandle);
 		else if (fourCC == "scen") this->DrawResolved(m_DefinitionsStore.GetResolvedScen(tag), fourCC, tag, ownerHandle);
 		else if (fourCC == "scnr") this->DrawResolved(m_DefinitionsStore.GetResolvedScnr(tag), fourCC, tag, ownerHandle);
