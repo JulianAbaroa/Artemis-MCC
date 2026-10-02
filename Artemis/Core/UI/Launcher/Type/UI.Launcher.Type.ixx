@@ -8,6 +8,7 @@ export namespace UI::Launcher::Type
 	{
 		ObjectTable = 0,
 		PlayerTable,
+		DefinitionsInspector,
 		Settings,
 		MemoryScanner,
 		Logs,

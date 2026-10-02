@@ -19,6 +19,7 @@ import UI.ObjectTable.State;
 import UI.ObjectTable.System;
 import UI.PlayerTable.State;
 import UI.PlayerTable.System;
+import UI.DefinitionsInspector.System;
 import UI.Settings.System;
 import UI.MemoryScanner.State;
 import UI.MemoryScanner.System;
@@ -49,6 +50,7 @@ export namespace UI
 		using OverlayUIService = UI::Overlay::System::OverlayUIService;
 		using ObjectTableUIService = UI::ObjectTable::System::ObjectTableUIService;
 		using PlayerTableUIService = UI::PlayerTable::System::PlayerTableUIService;
+		using DefinitionsInspectorUIService = UI::DefinitionsInspector::System::DefinitionsInspectorUIService;
 		using SettingsUIService = UI::Settings::System::SettingsUIService;
 		using MemoryScannerUIService = UI::MemoryScanner::System::MemoryScannerUIService;
 		using LogsUIService = UI::Logs::System::LogsUIService;
@@ -62,6 +64,7 @@ export namespace UI
 			m_OverlayUIService(service.m_TelemetryStore, platform.m_RenderStore, resolved.m_VitalityStore, exportLayer.m_TickStore, viewer.m_OverlayStore, viewer.m_SelectionStore, m_OverlayUIStore),
 			m_ObjectTableUIService(exportLayer.m_TickStore, m_ObjectTableUIStore),
 			m_PlayerTableUIService(exportLayer.m_TickStore, m_PlayerTableUIStore),
+			m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
 			m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore),
 			m_MemoryScannerUIService(platform.m_MemoryScannerStore, platform.m_MemoryScannerService, m_MemoryScannerUIStore),
 			m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, service.m_LogsService, m_LogsUIStore),
@@ -84,7 +87,7 @@ export namespace UI
 			});
 
 			platform.m_InputService.OnWindowMessage([this](WindowMessage& message) {
-				return m_HotkeyUIService.HandleMessage(message) || 
+				return m_HotkeyUIService.HandleMessage(message) ||
 					m_WndProcUIService.HandleMessage(message);
 			});
 		}
@@ -109,6 +112,7 @@ export namespace UI
 		OverlayUIService m_OverlayUIService;
 		ObjectTableUIService m_ObjectTableUIService;
 		PlayerTableUIService m_PlayerTableUIService;
+		DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
 		SettingsUIService m_SettingsUIService;
 		MemoryScannerUIService m_MemoryScannerUIService;
 		LogsUIService m_LogsUIService;
@@ -121,4 +125,4 @@ export namespace UI
 		auto Shutdown() -> void;
 		auto DrawFrame(const FrameContext& frame) -> void;
 	};
-}	
+}

@@ -41,6 +41,7 @@ namespace UI
 
 		m_LauncherUIService.DrawTab(Tab::ObjectTable, "Object Table", [this] { m_ObjectTableUIService.Draw(); });
 		m_LauncherUIService.DrawTab(Tab::PlayerTable, "Player Table", [this] { m_PlayerTableUIService.Draw(); });
+		m_LauncherUIService.DrawTab(Tab::DefinitionsInspector, "Definitions Inspector", [this] { m_DefinitionsInspectorUIService.Draw(); });
 		m_LauncherUIService.DrawTab(Tab::Settings, "Settings", [this] { m_SettingsUIService.Draw(); });
 		m_LauncherUIService.DrawTab(Tab::MemoryScanner, "Memory Scanner", [this] { m_MemoryScannerUIService.Draw(); });
 		m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] { m_LogsUIService.Draw(); });

@@ -21,6 +21,7 @@ namespace
 	{
 		Tab::ObjectTable,
 		Tab::PlayerTable,
+		Tab::DefinitionsInspector,
 		Tab::Settings,
 		Tab::MemoryScanner,
 		Tab::Logs,
@@ -40,12 +41,13 @@ namespace
 
 		switch (tab)
 		{
-		case Tab::ObjectTable:   return { "Objects",  "Object Table",   Data::Objects,  Data::ObjectsSize };
-		case Tab::PlayerTable:   return { "Players",  "Player Table",   Data::Players,  Data::PlayersSize };
-		case Tab::Settings:      return { "Settings", "Settings",       Data::Settings, Data::SettingsSize };
-		case Tab::MemoryScanner: return { "Scanner",  "Memory Scanner", Data::Scanner,  Data::ScannerSize };
-		case Tab::Logs:          return { "Logs",     "Logs",           Data::Logs,     Data::LogsSize };
-		default:                 return { "?",        "?",              nullptr,        0 };
+		case Tab::ObjectTable:			return { "Objects",		"Object Table",				Data::Objects,  Data::ObjectsSize };
+		case Tab::PlayerTable:			return { "Players",		"Player Table",				Data::Players,  Data::PlayersSize };
+		case Tab::DefinitionsInspector:	return { "Definitions",	"Definitions Inspector",	nullptr,		0 };
+		case Tab::Settings:				return { "Settings",	"Settings",					Data::Settings, Data::SettingsSize };
+		case Tab::MemoryScanner:		return { "Scanner",		"Memory Scanner",			Data::Scanner,  Data::ScannerSize };
+		case Tab::Logs:					return { "Logs",		"Logs",						Data::Logs,     Data::LogsSize };
+		default:						return { "?",			"?",						nullptr,        0 };
 		}
 	}
 
