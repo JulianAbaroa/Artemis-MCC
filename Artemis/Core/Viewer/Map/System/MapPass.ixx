@@ -6,7 +6,7 @@ module;
 export module Viewer.Map.System:MapPass;
 
 import Service.Logs.System;
-import Resolved.World.Type;
+import Resolved.Definitions.Type;
 import std;
 
 export namespace Viewer::Map::System
@@ -16,7 +16,7 @@ export namespace Viewer::Map::System
 	private:
 		template <typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
-		using Sbsp = Resolved::World::Type::Sbsp::Sbsp;
+		using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
 
 		using LogsService = Service::Logs::System::LogsService;
 
@@ -27,7 +27,8 @@ export namespace Viewer::Map::System
 		MapPass(const MapPass&) = delete;
 		MapPass& operator=(const MapPass&) = delete;
 
-		auto Upload(ID3D11Device* device, const std::vector<Sbsp>& sbsps) -> void;
+		auto Upload(ID3D11Device* device,
+			const std::unordered_map<std::string, Sbsp>& sbsps) -> void;
 
 		auto IsUploaded() const -> bool;
 		auto HasBuffer() const -> bool;

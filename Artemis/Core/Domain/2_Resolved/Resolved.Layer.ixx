@@ -3,10 +3,10 @@ export module Resolved.Layer;
 import Service.Layer;
 import Platform.Layer;
 import Map.Layer;
+import Resolved.Definitions.State;
+import Resolved.Definitions.System;
 import Resolved.World.State;
 import Resolved.World.System;
-import Resolved.Stats.State;
-import Resolved.Stats.System;
 import Resolved.Vitality.State;
 import Resolved.Vitality.System;
 
@@ -16,19 +16,28 @@ export namespace Resolved
 	{
 	private:
 		using WorldStore = Resolved::World::State::WorldStore;
-		using StatsStore = Resolved::Stats::State::StatsStore;
+		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 		using VitalityStore = Resolved::Vitality::State::VitalityStore;
 
-		using WeapBuilder = Resolved::Stats::System::WeapBuilder;
-		using VehiBuilder = Resolved::Stats::System::VehiBuilder;
-		using ProjBuilder = Resolved::Stats::System::ProjBuilder;
-		using StatsBuilder = Resolved::Stats::System::StatsBuilder;
+		using ObjectBuilder = Resolved::Definitions::System::ObjectBuilder;
+		using BipdBuilder = Resolved::Definitions::System::BipdBuilder;
+		using BlocBuilder = Resolved::Definitions::System::BlocBuilder;
+		using CollBuilder = Resolved::Definitions::System::CollBuilder;
+		using CtrlBuilder = Resolved::Definitions::System::CtrlBuilder;
+		using EqipBuilder = Resolved::Definitions::System::EqipBuilder;
+		using HlmtBuilder = Resolved::Definitions::System::HlmtBuilder;
+		using JptBuilder = Resolved::Definitions::System::JptBuilder;
+		using MachBuilder = Resolved::Definitions::System::MachBuilder;
+		using ProjBuilder = Resolved::Definitions::System::ProjBuilder;
+		using SbspBuilder = Resolved::Definitions::System::SbspBuilder;
+		using ScenBuilder = Resolved::Definitions::System::ScenBuilder;
+		using ScnrBuilder = Resolved::Definitions::System::ScnrBuilder;
+		using WeapBuilder = Resolved::Definitions::System::WeapBuilder;
+		using VehiBuilder = Resolved::Definitions::System::VehiBuilder;
+		using DefinitionsBuilder = Resolved::Definitions::System::DefinitionsBuilder;
 
-		using CollBuilder = Resolved::World::System::CollBuilder;
-		using ModeBuilder = Resolved::World::System::ModeBuilder;
-		using PhmoBuilder = Resolved::World::System::PhmoBuilder;
-		using SbspBuilder = Resolved::World::System::SbspBuilder;
-		using SbspSeamLinker = Resolved::World::System::SbspSeamLinker;
+		using ModeBuilder = Resolved::Definitions::System::ModeBuilder;
+		using PhmoBuilder = Resolved::Definitions::System::PhmoBuilder;
 		using RegionStatesBuilder = Resolved::World::System::RegionStatesBuilder;
 		using WorldBuilder = Resolved::World::System::WorldBuilder;
 		using SbspRaycaster = Resolved::World::System::SbspRaycaster;
@@ -37,16 +46,26 @@ export namespace Resolved
 
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map) :
-			m_StatsBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, m_StatsStore, m_ProjBuilder, m_VehiBuilder, m_WeapBuilder),
-			m_WorldBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, m_WorldStore, map.m_TagResolverService, map.m_GeometryLoaderService, m_SbspSeamLinker, m_SbspBuilder, m_CollBuilder, m_ModeBuilder, m_RegionStatesBuilder),
-			m_VitalityBuilder(service.m_LogsService, map.m_TagCatalog, m_VitalityStore)
+			m_ObjectBuilder(map.m_TagResolverService),
+			m_BipdBuilder(m_ObjectBuilder),
+			m_BlocBuilder(m_ObjectBuilder),
+			m_CtrlBuilder(m_ObjectBuilder),
+			m_EqipBuilder(m_ObjectBuilder),
+			m_MachBuilder(m_ObjectBuilder),
+			m_ProjBuilder(m_ObjectBuilder),
+			m_ScenBuilder(m_ObjectBuilder),
+			m_WeapBuilder(m_ObjectBuilder),
+			m_VehiBuilder(m_ObjectBuilder),
+			m_DefinitionsBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, map.m_GeometryLoaderService, m_DefinitionsStore, m_BipdBuilder, m_BlocBuilder, m_CollBuilder, m_CtrlBuilder, m_EqipBuilder, m_HlmtBuilder, m_JptBuilder, m_MachBuilder, m_ModeBuilder, m_PhmoBuilder, m_ProjBuilder, m_SbspBuilder, m_ScenBuilder, m_ScnrBuilder, m_VehiBuilder, m_WeapBuilder),
+			m_WorldBuilder(service.m_LogsService, map.m_TagCatalog, m_WorldStore, m_DefinitionsStore, map.m_TagResolverService, m_RegionStatesBuilder),
+			m_VitalityBuilder(service.m_LogsService, m_DefinitionsStore, m_VitalityStore)
 		{
 			platform.m_LifecycleService.OnCleanup([this] {
 				m_WorldBuilder.Cleanup();
-				m_StatsBuilder.Cleanup();
+				m_DefinitionsBuilder.Cleanup();
 				m_VitalityBuilder.Cleanup();
 				m_SbspRaycaster.Cleanup();
-			});
+				});
 		}
 		~Layer() = default;
 
@@ -54,22 +73,31 @@ export namespace Resolved
 		Layer& operator=(const Layer&) = delete;
 
 		// --- State ---
-		WorldStore m_WorldStore;
-		StatsStore m_StatsStore;
+		DefinitionsStore m_DefinitionsStore;
 		VitalityStore m_VitalityStore;
+		WorldStore m_WorldStore;
 
-		// --- System: Stats ---
+		// --- System: Definitions ---
+		ObjectBuilder m_ObjectBuilder;
+		BipdBuilder m_BipdBuilder;
+		BlocBuilder m_BlocBuilder;
+		CollBuilder m_CollBuilder;
+		CtrlBuilder m_CtrlBuilder;
+		EqipBuilder m_EqipBuilder;
+		HlmtBuilder m_HlmtBuilder;
+		JptBuilder m_JptBuilder;
+		MachBuilder m_MachBuilder;
+		ModeBuilder m_ModeBuilder;
+		PhmoBuilder m_PhmoBuilder;
 		WeapBuilder m_WeapBuilder;
 		VehiBuilder m_VehiBuilder;
 		ProjBuilder m_ProjBuilder;
-		StatsBuilder m_StatsBuilder;
+		SbspBuilder m_SbspBuilder;
+		ScenBuilder m_ScenBuilder;
+		ScnrBuilder m_ScnrBuilder;
+		DefinitionsBuilder m_DefinitionsBuilder;
 
 		// --- System: World ---
-		CollBuilder m_CollBuilder;
-		ModeBuilder m_ModeBuilder;
-		PhmoBuilder m_PhmoBuilder;
-		SbspBuilder m_SbspBuilder;
-		SbspSeamLinker m_SbspSeamLinker;
 		RegionStatesBuilder m_RegionStatesBuilder;
 		WorldBuilder m_WorldBuilder;
 		SbspRaycaster m_SbspRaycaster{};

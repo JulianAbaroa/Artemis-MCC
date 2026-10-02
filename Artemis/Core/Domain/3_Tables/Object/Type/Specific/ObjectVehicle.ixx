@@ -3,13 +3,13 @@ export module Tables.Object.Type:Vehicle;
 import :Offset;
 import Common.Math.Type;
 import Common.Tag.Name;
-import Resolved.Stats.Type;
+import Resolved.Definitions.Type;
 import std;
 
 namespace
 {
 	using Vec3 = Common::Math::Type::Vec3;
-	using SeatType = Resolved::Stats::Type::Vehi::SeatType;
+	using SeatKind = Resolved::Definitions::Type::Vehi::SeatKind;
 }
 
 export namespace Tables::Object::Type::Vehicle
@@ -65,7 +65,7 @@ export namespace Tables::Object::Type::Vehicle
 			std::int8_t NodeIndex{};
 			Vec3 LocalTranslation{};
 			Vec3 LocalRotation{};
-			SeatType SeatType{};
+			SeatKind SeatKind{};
 			float EntryRadius{};
 		};
 

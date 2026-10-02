@@ -14,7 +14,7 @@ import Service.Logs.System;
 import Service.Settings.State;
 import Platform.Render.System;
 import Platform.Render.Type;
-import Resolved.World.State;
+import Resolved.Definitions.State;
 import Export.Tick.State;
 import Viewer.Camera.State;
 import Viewer.Camera.System;
@@ -33,7 +33,7 @@ export namespace Viewer::Map::System
 		using SettingsStore = Service::Settings::State::SettingsStore;
 		using GpuPipeline = Platform::Render::System::GpuPipeline;
 		using GpuStateGuard = Platform::Render::System::GpuStateGuard;
-		using WorldStore = Resolved::World::State::WorldStore;
+		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 		using TickStore = Export::Tick::State::TickStore;
 		using CameraStore = Viewer::Camera::State::CameraStore;
 		using CameraService = Viewer::Camera::System::CameraService;
@@ -42,17 +42,16 @@ export namespace Viewer::Map::System
 
 	public:
 		MapService(LogsService& logsService, SettingsStore& settingsStore,
-			WorldStore& worldStore, TickStore& tickStore,
+			DefinitionsStore& definitionsStore, TickStore& tickStore,
 			CameraStore& cameraStore, CameraService& cameraService,
 			SelectionStore& selectionStore, SelectionService& selectionService) :
-			m_WorldStore(worldStore), m_TickStore(tickStore),
+			m_DefinitionsStore(definitionsStore), m_TickStore(tickStore),
 			m_CameraStore(cameraStore), m_CameraService(cameraService),
 			m_SelectionStore(selectionStore), m_SelectionService(selectionService),
 			m_SettingsStore(settingsStore), m_LogsService(logsService),
 			m_GpuPipeline(logsService), m_MapPass(logsService),
 			m_DynamicPass(logsService), m_ZonePass(logsService),
-			m_RaycastPass(logsService) {
-		}
+			m_RaycastPass(logsService) {}
 		~MapService() = default;
 
 		MapService(const MapService&) = delete;
@@ -67,7 +66,7 @@ export namespace Viewer::Map::System
 	private:
 		LogsService& m_LogsService;
 		SettingsStore& m_SettingsStore;
-		WorldStore& m_WorldStore;
+		DefinitionsStore& m_DefinitionsStore;
 		TickStore& m_TickStore;
 		CameraStore& m_CameraStore;
 		CameraService& m_CameraService;

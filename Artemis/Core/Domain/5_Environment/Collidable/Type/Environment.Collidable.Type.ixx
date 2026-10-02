@@ -1,14 +1,15 @@
 export module Environment.Collidable.Type;
 
 import Common.Math.Type;
+import Resolved.Definitions.Type;
 import Resolved.World.Type;
 import std;
 
 namespace
 {
     using Vec3 = Common::Math::Type::Vec3;
-    using Mesh = Resolved::World::Type::Coll::Mesh;
-    using ResolvedColl = Resolved::World::Type::Coll::Coll;
+    using Mesh = Resolved::Definitions::Type::Coll::Mesh;
+    using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
     using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
 }
 

@@ -49,7 +49,7 @@ namespace Environment::Collidable::System
         instance.Up = object.Up;
 
         Context ctx{};
-        ctx.Coll = m_WorldStore.GetResolvedCollForObject(object.TagName);
+        ctx.Coll = m_WorldStore.GetResolvedCollForObject(object.TagName, m_DefinitionsStore);
 
         const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
         const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);

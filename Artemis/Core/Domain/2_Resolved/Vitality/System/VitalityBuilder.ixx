@@ -1,8 +1,8 @@
 export module Resolved.Vitality.System;
 
 import Service.Logs.System;
-import Map.Tag.Type;
-import Map.Tag.State;
+import Resolved.Definitions.Type;
+import Resolved.Definitions.State;
 import Resolved.Vitality.Type;
 import Resolved.Vitality.State;
 import std;
@@ -12,18 +12,18 @@ export namespace Resolved::Vitality::System
     class VitalityBuilder
     {
     private:
-        using CollObject = Map::Tag::Type::Coll::Object::CollObject;
-        using HlmtObject = Map::Tag::Type::Hlmt::Object::HlmtObject;
+        using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
+        using ResolvedHlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
         using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
 
         using LogsService = Service::Logs::System::LogsService;
-        using TagCatalog = Map::Tag::State::TagCatalog;
+        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
 
     public:
-        VitalityBuilder(LogsService& logsService, TagCatalog& tagCatalog, 
+        VitalityBuilder(LogsService& logsService, DefinitionsStore& definitionsStore,
             VitalityStore& vitalityStore) : m_LogsService(logsService), 
-            m_TagCatalog(tagCatalog), m_VitalityStore(vitalityStore) { }
+            m_DefinitionsStore(definitionsStore), m_VitalityStore(vitalityStore) { }
         ~VitalityBuilder() = default;
 
         auto BuildForMap() -> void;
@@ -32,9 +32,9 @@ export namespace Resolved::Vitality::System
 
     private:
         LogsService& m_LogsService;
-        TagCatalog& m_TagCatalog;
+        DefinitionsStore& m_DefinitionsStore;
         VitalityStore& m_VitalityStore;
 
-        auto BuildLayout(const HlmtObject& hlmt, const CollObject* coll) const -> ResolvedVitality;
+        auto BuildLayout(const ResolvedHlmt& hlmt, const ResolvedColl* coll) const -> ResolvedVitality;
     };
 }

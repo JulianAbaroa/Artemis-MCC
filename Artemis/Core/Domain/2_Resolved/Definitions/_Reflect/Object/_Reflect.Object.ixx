@@ -1,0 +1,39 @@
+export module Resolved.Definitions.Reflect:Object;
+
+import Common.Reflect.Type;
+import Resolved.Definitions.Type;
+import std;
+
+namespace
+{
+    using MultiplayerObject = Resolved::Definitions::Type::Object::MultiplayerObject;
+    using Object = Resolved::Definitions::Type::Object::Object;
+}
+
+export namespace Common::Reflect::Type
+{
+    template <>
+    struct Fields<MultiplayerObject>
+    {
+        static constexpr bool HasFields{ true };
+        static constexpr auto Value = std::tuple{
+            MakeField("Kind", &MultiplayerObject::Kind),
+        };
+    };
+
+    template <>
+    struct Fields<Object>
+    {
+        static constexpr bool HasFields{ true };
+        static constexpr auto Value = std::tuple{
+            MakeField("TagName", &Object::TagName),
+            MakeField("Kind", &Object::Kind),
+            MakeField("BoundingRadius", &Object::BoundingRadius),
+            MakeField("BoundingOffset", &Object::BoundingOffset),
+            MakeField("CollisionDamageTagName", &Object::CollisionDamageTagName),
+            MakeField("BrittleCollisionDamageTagName", &Object::BrittleCollisionDamageTagName),
+            MakeField("ModelTagName", &Object::ModelTagName),
+            MakeField("MultiplayerObjects", &Object::MultiplayerObjects),
+        };
+    };
+}

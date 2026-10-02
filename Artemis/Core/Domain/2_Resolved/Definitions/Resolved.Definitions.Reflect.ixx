@@ -1,0 +1,19 @@
+export module Resolved.Definitions.Reflect;
+
+export import :Object;
+export import :Bipd;
+export import :Bloc;
+export import :Coll;
+export import :Ctrl;
+export import :Eqip;
+export import :Hlmt;
+export import :Jpt;
+export import :Mach;
+export import :Mode;
+export import :Phmo;
+export import :Proj;
+export import :Sbsp;
+export import :Scen;
+export import :Scnr;
+export import :Vehi;
+export import :Weap;

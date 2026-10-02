@@ -2,6 +2,8 @@ export module Environment.Collidable.System;
 
 import Service.Logs.System;
 import Common.Math.Type;
+import Resolved.Definitions.Type;
+import Resolved.Definitions.State;
 import Resolved.World.Type;
 import Resolved.World.State;
 import Tables.Object.Type;
@@ -19,8 +21,8 @@ export namespace Environment::Collidable::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using CollMesh = Resolved::World::Type::Coll::Mesh;
-        using ResolvedColl = Resolved::World::Type::Coll::Coll;
+        using CollMesh = Resolved::Definitions::Type::Coll::Mesh;
+        using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
         using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
         using StateMap = std::vector<std::array<int, 5>>;
         using AliveObject = Tables::Object::Type::Alive::Object;
@@ -34,6 +36,7 @@ export namespace Environment::Collidable::System
         using Context = Environment::Collidable::Type::Context;
 
         using LogsService = Service::Logs::System::LogsService;
+        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
@@ -43,13 +46,13 @@ export namespace Environment::Collidable::System
         using CollidableStore = Environment::Collidable::State::CollidableStore;
 
     public:
-        CollidableService(LogsService& logsService, ObjectTableStore& objectTableStore,
-            BoneMatricesStore& boneMatricesStore, 
+        CollidableService(LogsService& logsService, DefinitionsStore& definitionsStore,
+            ObjectTableStore& objectTableStore, BoneMatricesStore& boneMatricesStore, 
             DamageSectionsStore& damageSectionsStore, ClassifierStore& classifierStore,
             ObjectGraphStore& objectGraphStore, WorldStore& worldStore,
             CollidableStore& collidableStore) : m_LogsService(logsService),
-            m_ObjectTableStore(objectTableStore), m_BoneMatricesStore(boneMatricesStore),
-            m_DamageSectionsStore(damageSectionsStore), 
+            m_DefinitionsStore(definitionsStore), m_ObjectTableStore(objectTableStore),
+            m_BoneMatricesStore(boneMatricesStore), m_DamageSectionsStore(damageSectionsStore), 
             m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
             m_WorldStore(worldStore), m_CollidableStore(collidableStore) {}
         ~CollidableService() = default;
@@ -66,6 +69,7 @@ export namespace Environment::Collidable::System
 
     private:
         LogsService& m_LogsService;
+        DefinitionsStore& m_DefinitionsStore;
         ObjectTableStore& m_ObjectTableStore;
         BoneMatricesStore& m_BoneMatricesStore;
         DamageSectionsStore& m_DamageSectionsStore;

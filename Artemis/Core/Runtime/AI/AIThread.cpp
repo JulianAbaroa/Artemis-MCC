@@ -99,8 +99,8 @@ namespace Runtime::Thread
 	{
 		// --- Map / Resolved ---
 		m_Map.m_MapBuilderService.LoadForMap();
+		m_Resolved.m_DefinitionsBuilder.BuildForMap();
 		m_Resolved.m_WorldBuilder.BuildForMap();
-		m_Resolved.m_StatsBuilder.BuildForMap();
 		m_Resolved.m_VitalityBuilder.BuildForMap();
 	}
 

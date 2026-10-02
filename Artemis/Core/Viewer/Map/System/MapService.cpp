@@ -49,9 +49,9 @@ namespace Viewer::Map::System
 
 		if (!m_GpuPipeline.Initialize(frame.Device)) return;
 
-		if (m_WorldStore.IsFrozen() && !m_MapPass.IsUploaded())
+		if (m_DefinitionsStore.IsFrozen() && !m_MapPass.IsUploaded())
 		{
-			m_MapPass.Upload(frame.Device, m_WorldStore.GetAllResolvedSbsps());
+			m_MapPass.Upload(frame.Device, m_DefinitionsStore.GetAllResolvedSbsps());
 		}
 
 		if (!m_MapPass.HasBuffer()) return;

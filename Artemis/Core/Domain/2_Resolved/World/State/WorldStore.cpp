@@ -7,50 +7,17 @@ module Resolved.World.State;
 namespace Resolved::World::State
 {
     // Coll.
-    auto WorldStore::HasResolvedColl(const std::string& tagName) const -> bool
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return m_CollIndexByName.find(tagName) != m_CollIndexByName.end();
-    }
-
-    auto WorldStore::GetResolvedColl(const std::string& tagName) const -> const ResolvedColl*
+    auto WorldStore::GetResolvedCollForObject(const std::string& objectTagName,
+        const DefinitionsStore& definitionsStore) const -> const ResolvedColl*
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        auto it = m_CollIndexByName.find(tagName);
-        if (it == m_CollIndexByName.end())
+        auto it = m_ObjectColls.find(objectTagName);
+        if (it == m_ObjectColls.end())
         {
             return nullptr;
         }
-        return &m_ResolvedColls[it->second];
-    }
-
-    auto WorldStore::AddResolvedColl(const std::string& tagName, ResolvedColl geometry) -> void
-    {
-        assert(!m_Frozen.load(std::memory_order_relaxed));
-
-        const std::int32_t index = static_cast<std::int32_t>(m_ResolvedColls.size());
-        m_ResolvedColls.push_back(std::move(geometry));
-        m_CollIndexByName.emplace(tagName, index);
-    }
-
-    auto WorldStore::PeekResolvedColl(const std::string& tagName) const -> const ResolvedColl*
-    {
-        auto it = m_CollIndexByName.find(tagName);
-        return it != m_CollIndexByName.end() ? &m_ResolvedColls[it->second] : nullptr;
-    }
-
-    auto WorldStore::GetResolvedCollForObject(
-        const std::string& objectTagName) const -> const ResolvedColl*
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-
-        auto it = m_ObjectCollIndex.find(objectTagName);
-        if (it == m_ObjectCollIndex.end())
-        {
-            return nullptr;
-        }
-        return &m_ResolvedColls[it->second];
+        return definitionsStore.GetResolvedColl(it->second);
     }
 
     auto WorldStore::GetResolvedRegionStates(
@@ -76,89 +43,25 @@ namespace Resolved::World::State
         m_RegionStatesIndexByName.emplace(hlmtTagName, index);
     }
 
-    // Mode.
-    auto WorldStore::HasResolvedMode(const std::string& tagName) const -> bool
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return m_ModeIndexByName.find(tagName) != m_ModeIndexByName.end();
-    }
-
-    auto WorldStore::GetResolvedMode(const std::string& tagName) const -> const ResolvedMode*
+    auto WorldStore::GetNodeCount(const std::string& tagName,
+        const DefinitionsStore& definitionsStore) const -> std::size_t
     {
         assert(m_Frozen.load(std::memory_order_acquire));
 
-        auto it = m_ModeIndexByName.find(tagName);
-        if (it == m_ModeIndexByName.end())
+        if (const auto* mode = definitionsStore.GetResolvedMode(tagName))
         {
-            return nullptr;
-        }
-        return &m_ResolvedModes[it->second];
-    }
-
-    auto WorldStore::AddResolvedMode(const std::string& tagName, ResolvedMode geometry) -> void
-    {
-        assert(!m_Frozen.load(std::memory_order_relaxed));
-
-        const std::int32_t index = static_cast<std::int32_t>(m_ResolvedModes.size());
-        m_ResolvedModes.push_back(std::move(geometry));
-        m_ModeIndexByName.emplace(tagName, index);
-    }
-
-    // Sbsp.
-    auto WorldStore::HasResolvedSbsp() const -> bool
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return !m_ResolvedSbsps.empty();
-    }
-
-    auto WorldStore::GetResolvedSbsp(std::int32_t index) const -> const ResolvedSbsp*
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-
-        if (index < 0 || index >= static_cast<std::int32_t>(m_ResolvedSbsps.size()))
-        {
-            return nullptr;
-        }
-        return &m_ResolvedSbsps[index];
-    }
-
-    auto WorldStore::AddResolvedSbsp(ResolvedSbsp geometry) -> void
-    {
-        assert(!m_Frozen.load(std::memory_order_relaxed));
-        m_ResolvedSbsps.push_back(std::move(geometry));
-    }
-
-    auto WorldStore::GetAllResolvedSbsps() const -> const std::vector<ResolvedSbsp>&
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return m_ResolvedSbsps;
-    }
-
-    auto WorldStore::GetResolvedSbspCount() const -> std::int32_t
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return static_cast<std::int32_t>(m_ResolvedSbsps.size());
-    }
-
-    auto WorldStore::GetNodeCount(const std::string& tagName) const -> std::size_t
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-
-        if (auto it = m_ModeIndexByName.find(tagName); it != m_ModeIndexByName.end())
-        {
-            return m_ResolvedModes[it->second].Nodes.size();
+            return mode->Nodes.size();
         }
 
-        if (auto it = m_CollIndexByName.find(tagName); it != m_CollIndexByName.end())
+        if (const ResolvedColl* coll = definitionsStore.GetResolvedColl(tagName))
         {
-            return m_ResolvedColls[it->second].Nodes.size();
+            return coll->Nodes.size();
         }
 
         return 0;
     }
 
-    auto WorldStore::ResolveObjectCollName(
-        const std::string& objectTagName) const -> std::string
+    auto WorldStore::ResolveObjectCollName(const std::string& objectTagName) const -> std::string
     {
         assert(m_Frozen.load(std::memory_order_acquire));
         auto it = m_ObjectColls.find(objectTagName);
@@ -179,8 +82,7 @@ namespace Resolved::World::State
         m_ObjectHlmts[objectTagName] = hlmtTagName;
     }
 
-    auto WorldStore::ResolveObjectHlmtName(
-        const std::string& objectTagName) const -> std::string
+    auto WorldStore::ResolveObjectHlmtName(const std::string& objectTagName) const -> std::string
     {
         assert(m_Frozen.load(std::memory_order_acquire));
         auto it = m_ObjectHlmts.find(objectTagName);
@@ -189,17 +91,6 @@ namespace Resolved::World::State
 
     auto WorldStore::CompileObjectIndices() -> void
     {
-        m_ObjectCollIndex.clear();
-        m_ObjectCollIndex.reserve(m_ObjectColls.size());
-
-        for (const auto& [objectTagName, collTagName] : m_ObjectColls)
-        {
-            auto it = m_CollIndexByName.find(collTagName);
-            if (it == m_CollIndexByName.end()) continue;
-
-            m_ObjectCollIndex.emplace(objectTagName, it->second);
-        }
-
         m_ObjectHlmtIndex.clear();
         m_ObjectHlmtIndex.reserve(m_ObjectHlmts.size());
 
@@ -224,16 +115,8 @@ namespace Resolved::World::State
 
         m_ObjectColls.clear();
         m_ObjectHlmts.clear();
-        m_ObjectCollIndex.clear();
         m_ObjectHlmtIndex.clear();
 
-        m_ResolvedColls.clear();
-        m_CollIndexByName.clear();
-
-        m_ResolvedModes.clear();
-        m_ModeIndexByName.clear();
-
-        m_ResolvedSbsps.clear();
 
         m_ResolvedRegionStates.clear();
         m_RegionStatesIndexByName.clear();

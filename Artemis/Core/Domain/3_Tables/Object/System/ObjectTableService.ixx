@@ -3,7 +3,7 @@ export module Tables.Object.System;
 import Service.Logs.System;
 import Platform.Memory.System;
 import Map.Reader.System;
-import Resolved.Stats.State;
+import Resolved.Definitions.State;
 import Resolved.Vitality.State;
 import Resolved.World.State;
 import Tables.Object.Type;

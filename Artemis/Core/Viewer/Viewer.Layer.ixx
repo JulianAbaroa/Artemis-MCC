@@ -39,7 +39,7 @@ export namespace Viewer
 			m_CameraService(m_CameraStore, m_SelectionStore),
 			m_SelectionService(m_SelectionStore),
 			m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore),
-			m_MapService(service.m_LogsService, service.m_SettingsStore, resolved.m_WorldStore, exportLayer.m_TickStore, m_CameraStore, m_CameraService, m_SelectionStore, m_SelectionService)
+			m_MapService(service.m_LogsService, service.m_SettingsStore, resolved.m_DefinitionsStore, exportLayer.m_TickStore, m_CameraStore, m_CameraService, m_SelectionStore, m_SelectionService)
 		{
 			auto& lifecycle = platform.m_LifecycleService;
 

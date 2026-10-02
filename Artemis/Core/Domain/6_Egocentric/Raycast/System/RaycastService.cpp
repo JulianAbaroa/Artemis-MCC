@@ -115,7 +115,7 @@ namespace Egocentric::Raycast::System
 		auto weaponIt = objectTablePtr->find(weaponHandle);
 		if (weaponIt == objectTablePtr->end()) return k_FallbackAimRange;
 
-		const ResolvedWeap* weap = m_StatsStore.GetResolvedWeap(weaponIt->second.TagName);
+		const ResolvedWeap* weap = m_DefinitionsStore.GetResolvedWeap(weaponIt->second.TagName);
 		if (!weap || weap->AutoaimRange <= 0.0f) return k_FallbackAimRange;
 
 		return weap->AutoaimRange;
@@ -235,7 +235,7 @@ namespace Egocentric::Raycast::System
 		best.Direction = direction;
 		best.MaxDistance = maxDistance;
 
-		const auto staticHit = m_SbspRaycaster.Cast(m_WorldStore, origin, direction, maxDistance);
+		const auto staticHit = m_SbspRaycaster.Cast(m_DefinitionsStore, origin, direction, maxDistance);
 		if (staticHit.IsHit)
 		{
 			best.Hit = true;

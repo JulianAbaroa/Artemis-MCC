@@ -4,7 +4,7 @@ namespace
 {
     using Kind = Resolved::Vitality::Type::Vitality::Kind;
     using Section = Resolved::Vitality::Type::Vitality::Section;
-    using Hlmt_DamageSectionsObject = Map::Tag::Type::Hlmt::Object::Hlmt_DamageSectionsObject;
+    using DamageSection = Resolved::Definitions::Type::Hlmt::DamageSection;
 
     using Resolved::Vitality::Type::Constant::k_FlagKillsObject;
     using Resolved::Vitality::Type::Constant::k_FlagKillsObjectNoSolo;
@@ -18,7 +18,7 @@ namespace Resolved::Vitality::System
         std::int32_t built = 0;
         std::int32_t skipped = 0;
 
-        for (const auto& [tagName, hlmt] : m_TagCatalog.Hlmt.All())
+        for (const auto& [tagName, hlmt] : m_DefinitionsStore.GetAllResolvedHlmts())
         {
             if (hlmt.DamageSections.empty())
             {
@@ -26,7 +26,7 @@ namespace Resolved::Vitality::System
                 continue;
             }
 
-            const CollObject* coll = m_TagCatalog.Coll.Get(tagName);
+            const ResolvedColl* coll = m_DefinitionsStore.GetResolvedColl(tagName);
 
             ResolvedVitality vitality = this->BuildLayout(hlmt, coll);
 
@@ -48,23 +48,18 @@ namespace Resolved::Vitality::System
             built, skipped);
     }
 
-    auto VitalityBuilder::BuildLayout(const HlmtObject& hlmt, const CollObject* coll) const -> ResolvedVitality
+    auto VitalityBuilder::BuildLayout(const ResolvedHlmt& hlmt, const ResolvedColl* coll) const -> ResolvedVitality
     {
         ResolvedVitality vitality;
-        vitality.MaximumVitality = hlmt.Data.MaximumVitality;
-
-        if (!hlmt.OldDamageInfo.empty())
-        {
-            vitality.MaximumShieldVitality =
-                hlmt.OldDamageInfo[0].MaximumShieldVitality;
-        }
+        vitality.MaximumVitality = hlmt.MaximumVitality;
+        vitality.MaximumShieldVitality = hlmt.MaximumShieldVitality;
 
         const std::size_t count = hlmt.DamageSections.size();
         vitality.Sections.resize(count);
 
         for (std::size_t i = 0; i < count; ++i)
         {
-            const Hlmt_DamageSectionsObject& ds = hlmt.DamageSections[i];
+            const DamageSection& ds = hlmt.DamageSections[i];
             Section& out = vitality.Sections[i];
 
             out.NameId = ds.Name;
@@ -102,9 +97,9 @@ namespace Resolved::Vitality::System
 
             if (coll)
             {
-                for (std::size_t r = 0; r < coll->Regions.size(); ++r)
+                for (std::size_t r = 0; r < coll->RegionNames.size(); ++r)
                 {
-                    if (coll->Regions[r].Name == ds.Name)
+                    if (coll->RegionNames[r] == ds.Name)
                     {
                         out.CollRegion = static_cast<int>(r);
                         break;
@@ -115,7 +110,7 @@ namespace Resolved::Vitality::System
 
         if (vitality.ShieldSection < 0)
         {
-            const int idx = hlmt.Data.ShieldedStateDamageSectionIndex;
+            const int idx = hlmt.ShieldedStateDamageSectionIndex;
             if (idx >= 0 &&
                 static_cast<std::size_t>(idx) < vitality.Sections.size())
             {

@@ -21,14 +21,15 @@ namespace
 
 namespace Viewer::Map::System
 {
-	auto MapPass::Upload(ID3D11Device* device, const std::vector<Sbsp>& sbsps) -> void
+	auto MapPass::Upload(ID3D11Device* device,
+		const std::unordered_map<std::string, Sbsp>& sbsps) -> void
 	{
 		if (m_IsUploaded || !device) return;
 
 		m_IsUploaded = true;
 
 		std::size_t triangleCount = 0;
-		for (const auto& sbsp : sbsps) triangleCount += sbsp.RenderGeometry.size();
+		for (const auto& [tagName, sbsp] : sbsps) triangleCount += sbsp.RenderGeometry.size();
 
 		if (triangleCount == 0)
 		{
@@ -44,7 +45,7 @@ namespace Viewer::Map::System
 				k_MapRed, k_MapGreen, k_MapBlue });
 			};
 
-		for (const auto& sbsp : sbsps)
+		for (const auto& [tagName, sbsp] : sbsps)
 		{
 			for (const auto& triangle : sbsp.RenderGeometry)
 			{
