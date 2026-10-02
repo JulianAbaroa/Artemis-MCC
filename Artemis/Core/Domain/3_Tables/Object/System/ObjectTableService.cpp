@@ -255,15 +255,13 @@ namespace Tables::Object::System
 		table.Sections.resize(count);
 
 		std::vector<DamageSection> raw(count);
-		if (reader.ReadRaw(table.BaseAddress, raw.data(), count * sizeof(DamageSection))) return;
+		if (!reader.ReadRaw(table.BaseAddress, raw.data(), count * sizeof(DamageSection))) return;
 
 		for (std::uint16_t section = 0; section < count; ++section)
 		{
-			table.Sections[section].DamageLevelMask =
-				raw[section].DamageLevelMask;
+			table.Sections[section].DamageLevelMask = raw[section].DamageLevelMask;
 
-			table.Sections[section].Vitality =
-				raw[section].Vitality;
+			table.Sections[section].Vitality = raw[section].Vitality;
 		}
 
 		m_DamageSectionsStore.Set(object.Handle, std::move(table));

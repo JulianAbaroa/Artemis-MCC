@@ -43,6 +43,21 @@ namespace Resolved::World::State
         m_RegionStatesIndexByName.emplace(hlmtTagName, index);
     }
 
+    auto WorldStore::GetResolvedModelLink(const std::string& hlmtTagName) const -> const ResolvedModelLink*
+    {
+        assert(m_Frozen.load(std::memory_order_acquire));
+
+        auto it = m_ModelLinks.find(hlmtTagName);
+        return (it != m_ModelLinks.end()) ? &it->second : nullptr;
+    }
+
+    auto WorldStore::AddResolvedModelLink(const std::string& hlmtTagName, ResolvedModelLink link) -> void
+    {
+        assert(!m_Frozen.load(std::memory_order_acquire));
+
+        m_ModelLinks.emplace(hlmtTagName, std::move(link));
+    }
+
     auto WorldStore::GetNodeCount(const std::string& tagName,
         const DefinitionsStore& definitionsStore) const -> std::size_t
     {
@@ -103,20 +118,15 @@ namespace Resolved::World::State
         }
     }
 
-    auto WorldStore::Freeze() -> void
-    {
-        this->CompileObjectIndices();
-        m_Frozen.store(true, std::memory_order_release);
-    }
-
     auto WorldStore::Cleanup() -> void
     {
         m_Frozen.store(false, std::memory_order_relaxed);
 
+        m_ModelLinks.clear();
+
         m_ObjectColls.clear();
         m_ObjectHlmts.clear();
         m_ObjectHlmtIndex.clear();
-
 
         m_ResolvedRegionStates.clear();
         m_RegionStatesIndexByName.clear();

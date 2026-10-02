@@ -12,6 +12,7 @@ export namespace Resolved::World::State
     private:
         using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
         using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
+        using ResolvedModelLink = Resolved::World::Type::ModelLink::ModelLink;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 
     public:
@@ -22,6 +23,9 @@ export namespace Resolved::World::State
         auto GetResolvedCollForObject(const std::string& objectTagName, const DefinitionsStore& definitionsStore) const -> const ResolvedColl*;
         auto GetResolvedRegionStates(const std::string& objectTagName) const -> const ResolvedRegionStates*;
         auto AddResolvedRegionStates(const std::string& hlmtTagName, ResolvedRegionStates states) -> void;
+
+        auto GetResolvedModelLink(const std::string& hlmtTagName) const -> const ResolvedModelLink*;
+        auto AddResolvedModelLink(const std::string& hlmtTagName, ResolvedModelLink link) -> void;
 
         auto GetNodeCount(const std::string& tagName, const DefinitionsStore& definitionsStore) const -> std::size_t;
 
@@ -36,7 +40,11 @@ export namespace Resolved::World::State
             return m_Frozen.load(std::memory_order_acquire);
         }
 
-        auto Freeze() -> void;
+        auto Freeze() -> void
+        {
+            this->CompileObjectIndices();
+            m_Frozen.store(true, std::memory_order_release);
+        }
 
         auto Cleanup() -> void;
 
@@ -46,6 +54,8 @@ export namespace Resolved::World::State
 
         std::vector<ResolvedRegionStates> m_ResolvedRegionStates{};
         std::unordered_map<std::string, std::int32_t> m_RegionStatesIndexByName{};
+
+        std::unordered_map<std::string, ResolvedModelLink> m_ModelLinks{};
 
         std::unordered_map<std::string, std::string> m_ObjectColls{};
         std::unordered_map<std::string, std::string> m_ObjectHlmts{};

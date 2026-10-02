@@ -2,7 +2,8 @@ export module Resolved.World.System:Raycast;
 
 import Common.Math.Type;
 import Resolved.World.Type;
-import Resolved.World.State;
+import Resolved.Definitions.Type;
+import Resolved.Definitions.State;
 import std;
 
 export namespace Resolved::World::System
@@ -12,7 +13,8 @@ export namespace Resolved::World::System
 	private:
 		using Vec3 = Common::Math::Type::Vec3;
 		using Triangle = Common::Math::Type::Triangle;
-		using WorldStore = Resolved::World::State::WorldStore;
+		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
+		using ResolvedSbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
 		using Hit = Resolved::World::Type::Raycast::Hit;
 		using CellKey = Resolved::World::Type::Raycast::CellKey;
 		using CellKeyHash = Resolved::World::Type::Raycast::CellKeyHash;
@@ -22,16 +24,17 @@ export namespace Resolved::World::System
 		SbspRaycaster() = default;
 		~SbspRaycaster() = default;
 
-		auto Cast(const WorldStore& worldStore, const Vec3& origin,
+		auto Cast(const DefinitionsStore& definitionsStore, const Vec3& origin,
 			const Vec3& direction, float maxDistance) -> Hit;
 
 		auto Cleanup() -> void;
 
 	private:
 		bool m_GridBuilt{ false };
+		std::vector<const ResolvedSbsp*> m_Sbsps{};
 		std::unordered_map<CellKey, std::vector<TriangleRef>, CellKeyHash> m_Cells{};
 
-		auto EnsureGrid(const WorldStore& worldStore) -> void;
+		auto EnsureGrid(const DefinitionsStore& definitionsStore) -> void;
 		auto CellKeyFor(const Vec3& point) const -> CellKey;
 	};
 }

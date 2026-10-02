@@ -20,7 +20,7 @@ export namespace Common::Math::Type
 
 	struct Node
 	{
-		std::string Name{};
+		std::uint32_t Name{};
 		std::int16_t ParentIndex{ -1 };
 		std::int16_t NextSiblingIndex{ -1 };
 		std::int16_t FirstChildIndex{ -1 };

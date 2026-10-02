@@ -10,8 +10,6 @@ import Common.Geometry.System;
 namespace
 {
 	using Vec3 = Common::Math::Type::Vec3;
-	using ResolvedSbsp = Resolved::World::Type::Sbsp::Sbsp;
-
 	using Resolved::World::Type::Constant::k_CellSize;
 
 	auto FloorToCell(float value, float cellSize) -> std::int32_t
@@ -37,17 +35,26 @@ namespace Resolved::World::System
 		};
 	}
 
-	auto SbspRaycaster::EnsureGrid(const WorldStore& worldStore) -> void
+	auto SbspRaycaster::EnsureGrid(const DefinitionsStore& definitionsStore) -> void
 	{
 		if (m_GridBuilt) return;
 
 		m_Cells.clear();
+		m_Sbsps.clear();
 
-		const auto& sbsps = worldStore.GetAllResolvedSbsps();
-
-		for (std::size_t sbspIndex = 0; sbspIndex < sbsps.size(); ++sbspIndex)
+		// The store is unordered, so the list is sorted for a deterministic grid
+		for (const auto& [tagName, sbsp] : definitionsStore.GetAllResolvedSbsps())
 		{
-			const auto& triangles = sbsps[sbspIndex].RenderGeometry;
+			m_Sbsps.push_back(&sbsp);
+		}
+
+		std::ranges::sort(m_Sbsps, [](const ResolvedSbsp* a, const ResolvedSbsp* b) {
+			return a->TagName < b->TagName;
+		});
+
+		for (std::size_t sbspIndex = 0; sbspIndex < m_Sbsps.size(); ++sbspIndex)
+		{
+			const auto& triangles = m_Sbsps[sbspIndex]->RenderGeometry;
 
 			for (std::size_t triIndex = 0; triIndex < triangles.size(); ++triIndex)
 			{
@@ -63,7 +70,7 @@ namespace Resolved::World::System
 				const CellKey cellMin = this->CellKeyFor({ minX, minY, minZ });
 				const CellKey cellMax = this->CellKeyFor({ maxX, maxY, maxZ });
 
-				const TriangleRef ref {
+				const TriangleRef ref{
 					static_cast<std::int32_t>(sbspIndex),
 					static_cast<std::int32_t>(triIndex)
 				};
@@ -84,15 +91,13 @@ namespace Resolved::World::System
 		m_GridBuilt = true;
 	}
 
-	auto SbspRaycaster::Cast(const WorldStore& worldStore, const Vec3& origin,
+	auto SbspRaycaster::Cast(const DefinitionsStore& definitionsStore, const Vec3& origin,
 		const Vec3& direction, float maxDistance) -> Hit
 	{
-		this->EnsureGrid(worldStore);
+		this->EnsureGrid(definitionsStore);
 
 		Hit best{};
 		if (maxDistance <= 0.0f) return best;
-
-		const auto& sbsps = worldStore.GetAllResolvedSbsps();
 
 		CellKey cell = this->CellKeyFor(origin);
 
@@ -102,7 +107,7 @@ namespace Resolved::World::System
 
 		auto boundary = [](std::int32_t cellCoord, std::int32_t step) -> float {
 			return static_cast<float>(step > 0 ? cellCoord + 1 : cellCoord) * k_CellSize;
-		};
+			};
 
 		float tMaxX = stepX != 0 ? SafeDiv(boundary(cell.X, stepX) - origin.X, direction.X) : (std::numeric_limits<float>::max)();
 		float tMaxY = stepY != 0 ? SafeDiv(boundary(cell.Y, stepY) - origin.Y, direction.Y) : (std::numeric_limits<float>::max)();
@@ -126,8 +131,8 @@ namespace Resolved::World::System
 				for (const TriangleRef& ref : it->second)
 				{
 					const auto& triangle =
-						sbsps[static_cast<std::size_t>(ref.SbspIndex)]
-						.RenderGeometry[static_cast<std::size_t>(ref.TriangleIndex)];
+						m_Sbsps[static_cast<std::size_t>(ref.SbspIndex)]
+						->RenderGeometry[static_cast<std::size_t>(ref.TriangleIndex)];
 
 					const float currentBest = best.IsHit ? best.Distance : maxDistance;
 
@@ -180,6 +185,7 @@ namespace Resolved::World::System
 	auto SbspRaycaster::Cleanup() -> void
 	{
 		m_Cells.clear();
+		m_Sbsps.clear();
 		m_GridBuilt = false;
 	}
 }

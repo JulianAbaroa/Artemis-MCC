@@ -1,6 +1,7 @@
 export module Resolved.World.System:RegionStates;
 
 import Map.Tag.Type;
+import Resolved.Definitions.Type;
 import Resolved.World.Type;
 import std;
 
@@ -11,7 +12,7 @@ export namespace Resolved::World::System
 	private:
 		using HlmtObject = Map::Tag::Type::Hlmt::Object::HlmtObject;
 		using Hlmt_VariantsObject = Map::Tag::Type::Hlmt::Object::Hlmt_VariantsObject;
-		using ResolvedColl = Resolved::World::Type::Coll::Coll;
+		using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
 		using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
 		using RegionStatesVariant = Resolved::World::Type::RegionStates::Variant;
 		using StateMap = std::vector<std::array<int, 5>>;

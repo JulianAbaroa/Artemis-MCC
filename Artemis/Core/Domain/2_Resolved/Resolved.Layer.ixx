@@ -37,10 +37,10 @@ export namespace Resolved
 		using DefinitionsBuilder = Resolved::Definitions::System::DefinitionsBuilder;
 
 		using ModeBuilder = Resolved::Definitions::System::ModeBuilder;
-		using PhmoBuilder = Resolved::Definitions::System::PhmoBuilder;
 		using RegionStatesBuilder = Resolved::World::System::RegionStatesBuilder;
 		using WorldBuilder = Resolved::World::System::WorldBuilder;
 		using SbspRaycaster = Resolved::World::System::SbspRaycaster;
+		using ModelLinkBuilder = Resolved::World::System::ModelLinkBuilder;
 
 		using VitalityBuilder = Resolved::Vitality::System::VitalityBuilder;
 
@@ -51,21 +51,22 @@ export namespace Resolved
 			m_BlocBuilder(m_ObjectBuilder),
 			m_CtrlBuilder(m_ObjectBuilder),
 			m_EqipBuilder(m_ObjectBuilder),
+			m_HlmtBuilder(map.m_TagResolverService),
 			m_MachBuilder(m_ObjectBuilder),
 			m_ProjBuilder(m_ObjectBuilder),
 			m_ScenBuilder(m_ObjectBuilder),
 			m_WeapBuilder(m_ObjectBuilder),
 			m_VehiBuilder(m_ObjectBuilder),
-			m_DefinitionsBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, map.m_GeometryLoaderService, m_DefinitionsStore, m_BipdBuilder, m_BlocBuilder, m_CollBuilder, m_CtrlBuilder, m_EqipBuilder, m_HlmtBuilder, m_JptBuilder, m_MachBuilder, m_ModeBuilder, m_PhmoBuilder, m_ProjBuilder, m_SbspBuilder, m_ScenBuilder, m_ScnrBuilder, m_VehiBuilder, m_WeapBuilder),
-			m_WorldBuilder(service.m_LogsService, map.m_TagCatalog, m_WorldStore, m_DefinitionsStore, map.m_TagResolverService, m_RegionStatesBuilder),
-			m_VitalityBuilder(service.m_LogsService, m_DefinitionsStore, m_VitalityStore)
+			m_DefinitionsBuilder(service.m_LogsService, map.m_TagIndexStore, map.m_TagCatalog, map.m_GeometryLoaderService, m_DefinitionsStore, m_BipdBuilder, m_BlocBuilder, m_CollBuilder, m_CtrlBuilder, m_EqipBuilder, m_HlmtBuilder, m_JptBuilder, m_MachBuilder, m_ModeBuilder, m_ProjBuilder, m_SbspBuilder, m_ScenBuilder, m_ScnrBuilder, m_VehiBuilder, m_WeapBuilder),
+			m_WorldBuilder(service.m_LogsService, map.m_TagCatalog, m_WorldStore, m_DefinitionsStore, map.m_TagResolverService, m_RegionStatesBuilder, m_ModelLinkBuilder),
+			m_VitalityBuilder(service.m_LogsService, m_DefinitionsStore, m_WorldStore, m_VitalityStore)
 		{
 			platform.m_LifecycleService.OnCleanup([this] {
 				m_WorldBuilder.Cleanup();
 				m_DefinitionsBuilder.Cleanup();
 				m_VitalityBuilder.Cleanup();
 				m_SbspRaycaster.Cleanup();
-				});
+			});
 		}
 		~Layer() = default;
 
@@ -88,7 +89,6 @@ export namespace Resolved
 		JptBuilder m_JptBuilder;
 		MachBuilder m_MachBuilder;
 		ModeBuilder m_ModeBuilder;
-		PhmoBuilder m_PhmoBuilder;
 		WeapBuilder m_WeapBuilder;
 		VehiBuilder m_VehiBuilder;
 		ProjBuilder m_ProjBuilder;
@@ -101,6 +101,7 @@ export namespace Resolved
 		RegionStatesBuilder m_RegionStatesBuilder;
 		WorldBuilder m_WorldBuilder;
 		SbspRaycaster m_SbspRaycaster{};
+		ModelLinkBuilder m_ModelLinkBuilder;
 
 		// --- System: Vitality ---
 		VitalityBuilder m_VitalityBuilder;
