@@ -10,7 +10,6 @@ export import :Hlmt;
 export import :Mach;
 export import :Mode;
 export import :Jpt;
-export import :Phmo;
 export import :Proj;
 export import :Sbsp;
 export import :Scen;

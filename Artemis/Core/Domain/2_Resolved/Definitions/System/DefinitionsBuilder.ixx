@@ -11,7 +11,6 @@ export import :Scnr;
 export import :Coll;
 export import :Ctrl;
 export import :Hlmt;
-export import :Phmo;
 
 // Object
 export import :Object;
@@ -48,7 +47,6 @@ export namespace Resolved::Definitions::System
         using JptObject = Map::Tag::Type::Jpt::Object::JptObject;
         using MachObject = Map::Tag::Type::Mach::Object::MachObject;
         using ModeObject = Map::Tag::Type::Mode::Object::ModeObject;
-        using PhmoObject = Map::Tag::Type::Phmo::Object::PhmoObject;
         using ProjObject = Map::Tag::Type::Proj::Object::ProjObject;
         using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
         using ScenObject = Map::Tag::Type::Scen::Object::ScenObject;
@@ -63,7 +61,6 @@ export namespace Resolved::Definitions::System
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using MachBuilder = Resolved::Definitions::System::MachBuilder;
         using ModeBuilder = Resolved::Definitions::System::ModeBuilder;
-        using PhmoBuilder = Resolved::Definitions::System::PhmoBuilder;
         using ProjBuilder = Resolved::Definitions::System::ProjBuilder;
         using SbspBuilder = Resolved::Definitions::System::SbspBuilder;
         using ScenBuilder = Resolved::Definitions::System::ScenBuilder;
@@ -77,14 +74,14 @@ export namespace Resolved::Definitions::System
             DefinitionsStore& definitionsStore, BipdBuilder& bipdBuilder,
             BlocBuilder& blocBuilder, CollBuilder& collBuilder, CtrlBuilder& ctrlBuilder,
             EqipBuilder& eqipBuilder, HlmtBuilder& hlmtBuilder, JptBuilder& jptBuilder, MachBuilder& machBuilder,
-            ModeBuilder& modeBuilder, PhmoBuilder& phmoBuilder, ProjBuilder& ProjBuilder, SbspBuilder& sbspBuilder,
+            ModeBuilder& modeBuilder, ProjBuilder& ProjBuilder, SbspBuilder& sbspBuilder,
             ScenBuilder& scenBuilder, ScnrBuilder& scnrBuilder, VehiBuilder& VehiBuilder, WeapBuilder& WeapBuilder) :
             m_LogsService(logsService), m_TagIndexStore(m_TagIndexStore), m_TagCatalog(tagCatalog),
             m_GeometryLoaderService(geometryLoaderService), m_DefinitionsStore(definitionsStore), 
             m_BipdBuilder(bipdBuilder), m_BlocBuilder(blocBuilder), m_CollBuilder(collBuilder), 
             m_CtrlBuilder(ctrlBuilder), m_EqipBuilder(eqipBuilder), m_HlmtBuilder(hlmtBuilder), 
             m_JptBuilder(jptBuilder), m_MachBuilder(machBuilder), m_ModeBuilder(modeBuilder), 
-            m_PhmoBuilder(phmoBuilder), m_ProjBuilder(ProjBuilder), m_SbspBuilder(sbspBuilder), 
+            m_ProjBuilder(ProjBuilder), m_SbspBuilder(sbspBuilder), 
             m_ScenBuilder(scenBuilder), m_ScnrBuilder(scnrBuilder), m_VehiBuilder(VehiBuilder), 
             m_WeapBuilder(WeapBuilder) {}
         ~DefinitionsBuilder() = default;
@@ -108,7 +105,6 @@ export namespace Resolved::Definitions::System
         JptBuilder& m_JptBuilder;
         MachBuilder& m_MachBuilder;
         ModeBuilder& m_ModeBuilder;
-        PhmoBuilder& m_PhmoBuilder;
         ProjBuilder& m_ProjBuilder;
         SbspBuilder& m_SbspBuilder;
         ScenBuilder& m_ScenBuilder;
@@ -125,7 +121,6 @@ export namespace Resolved::Definitions::System
         auto BuildJpt(const std::string& tagName) -> bool;
         auto BuildMach(const std::string& tagName) -> bool;
         auto BuildMode(const std::string& tagName) -> bool;
-        auto BuildPhmo(const std::string& tagName) -> bool;
         auto BuildProj(const std::string& tagName) -> bool;
         auto BuildSbsps(std::vector<std::string>& tagNames) -> std::int32_t;
         auto BuildScen(const std::string& tagName) -> bool;

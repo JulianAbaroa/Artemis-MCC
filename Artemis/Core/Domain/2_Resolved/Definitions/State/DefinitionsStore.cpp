@@ -198,37 +198,6 @@ namespace Resolved::Definitions::State
         m_ResolvedModes.emplace(tagName, std::move(data));
     }
 
-    // Phmo
-    auto DefinitionsStore::HasResolvedPhmo(const std::string& tagName) const -> bool
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return m_ResolvedPhmos.find(tagName) != m_ResolvedPhmos.end();
-    }
-
-    auto DefinitionsStore::GetResolvedPhmo(const std::string& tagName) const -> const ResolvedPhmo*
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-
-        auto it = m_ResolvedPhmos.find(tagName);
-        if (it == m_ResolvedPhmos.end())
-        {
-            return nullptr;
-        }
-        return &it->second;
-    }
-
-    auto DefinitionsStore::GetAllResolvedPhmos() const -> const std::unordered_map<std::string, ResolvedPhmo>&
-    {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return m_ResolvedPhmos;
-    }
-
-    auto DefinitionsStore::AddResolvedPhmo(const std::string& tagName, ResolvedPhmo data) -> void
-    {
-        assert(!m_Frozen.load(std::memory_order_relaxed));
-        m_ResolvedPhmos.emplace(tagName, std::move(data));
-    }
-
     // --- Object ---
 
     // Bipd
@@ -525,7 +494,6 @@ namespace Resolved::Definitions::State
         m_ResolvedColls.clear();
         m_ResolvedHlmts.clear();
         m_ResolvedModes.clear();
-        m_ResolvedPhmos.clear();
 
         // Object
         m_ResolvedBipds.clear();

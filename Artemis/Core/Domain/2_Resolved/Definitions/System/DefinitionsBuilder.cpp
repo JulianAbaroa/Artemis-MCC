@@ -19,7 +19,6 @@ namespace
     using ResolvedJpt = Resolved::Definitions::Type::Jpt::Jpt;
     using ResolvedMach = Resolved::Definitions::Type::Mach::Mach;
     using ResolvedMode = Resolved::Definitions::Type::Mode::Mode;
-    using ResolvedPhmo = Resolved::Definitions::Type::Phmo::Phmo;
     using ResolvedProj = Resolved::Definitions::Type::Proj::Proj;
     using ResolvedSbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
     using ResolvedScen = Resolved::Definitions::Type::Scen::Scen;
@@ -32,7 +31,7 @@ namespace Resolved::Definitions::System
 {
     auto DefinitionsBuilder::BuildForMap() -> void
     {
-        std::int32_t bipd{}, bloc{}, coll{}, ctrl{}, eqip{}, hlmt{}, jpt{}, mach{}, mode{}, phmo{}, proj{},
+        std::int32_t bipd{}, bloc{}, coll{}, ctrl{}, eqip{}, hlmt{}, jpt{}, mach{}, mode{}, proj{},
             sbsp{}, scen{}, scnr{}, vehi{}, weap{};
 
         std::vector<std::string> sbspTagNames;
@@ -96,11 +95,6 @@ namespace Resolved::Definitions::System
                 if (!this->BuildMode(tagName)) continue;
                 ++mode;
             }
-            else if (magic == Magic::Tag::k_Phmo)
-            {
-                if (!this->BuildPhmo(tagName)) continue;
-                ++phmo;
-            }
             else if (magic == Magic::Tag::k_Proj)
             {
                 if (!this->BuildProj(tagName)) continue;
@@ -138,8 +132,8 @@ namespace Resolved::Definitions::System
 
         m_LogsService.Message("[DefinitionsBuilder] INFO: Definitions built."
             " Bipd: {} | Bloc: {} | Coll: {} | Ctrl: {} | Eqip: {} | Hlmt: {} | Jpt: {} | Mach: {} | Mode: {} |"
-            " Phmo: {} | Proj: {} | Sbsp: {} | Scen: {} | Scnr: {} | Vehi: {} | Weap: {}",
-            bipd, bloc, coll, ctrl, eqip, hlmt, jpt, mach, mode, phmo, proj, sbsp, scen, scnr, vehi, weap);
+            " Proj: {} | Sbsp: {} | Scen: {} | Scnr: {} | Vehi: {} | Weap: {}",
+            bipd, bloc, coll, ctrl, eqip, hlmt, jpt, mach, mode, proj, sbsp, scen, scnr, vehi, weap);
     }
 
     auto DefinitionsBuilder::BuildBipd(const std::string& tagName) -> bool
@@ -251,22 +245,6 @@ namespace Resolved::Definitions::System
 
         ResolvedMode data = m_ModeBuilder.Build(*mode);
         m_DefinitionsStore.AddResolvedMode(tagName, std::move(data));
-        return true;
-    }
-
-    auto DefinitionsBuilder::BuildPhmo(const std::string& tagName) -> bool
-    {
-        const PhmoObject* phmo = m_TagCatalog.Phmo.Get(tagName);
-        if (!phmo)
-        {
-            m_LogsService.Message("[DefinitionsBuilder] WARNING:"
-                " Phmo tag found in table but not loaded: {}",
-                tagName.c_str());
-            return false;
-        }
-
-        ResolvedPhmo data = m_PhmoBuilder.Build(*phmo);
-        m_DefinitionsStore.AddResolvedPhmo(tagName, std::move(data));
         return true;
     }
 

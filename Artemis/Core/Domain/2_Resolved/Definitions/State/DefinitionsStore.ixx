@@ -19,7 +19,6 @@ export namespace Resolved::Definitions::State
         using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
         using ResolvedHlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
         using ResolvedMode = Resolved::Definitions::Type::Mode::Mode;
-        using ResolvedPhmo = Resolved::Definitions::Type::Phmo::Phmo;
 
         // Object
         using ResolvedBipd = Resolved::Definitions::Type::Bipd::Bipd;
@@ -77,12 +76,6 @@ export namespace Resolved::Definitions::State
         auto GetResolvedMode(const std::string& tagName) const -> const ResolvedMode*;
         auto AddResolvedMode(const std::string& tagName, ResolvedMode data) -> void;
         auto GetAllResolvedModes() const -> const std::unordered_map<std::string, ResolvedMode>&;
-
-        // Phmo
-        auto HasResolvedPhmo(const std::string& tagName) const -> bool;
-        auto GetResolvedPhmo(const std::string& tagName) const -> const ResolvedPhmo*;
-        auto AddResolvedPhmo(const std::string& tagName, ResolvedPhmo data) -> void;
-        auto GetAllResolvedPhmos() const -> const std::unordered_map<std::string, ResolvedPhmo>&;
 
         // --- Object ---
 
@@ -164,7 +157,6 @@ export namespace Resolved::Definitions::State
         std::unordered_map<std::string, ResolvedColl> m_ResolvedColls{};
         std::unordered_map<std::string, ResolvedHlmt> m_ResolvedHlmts{};
         std::unordered_map<std::string, ResolvedMode> m_ResolvedModes{};
-        std::unordered_map<std::string, ResolvedPhmo> m_ResolvedPhmos{};
 
         // Object
         std::unordered_map<std::string, ResolvedBipd> m_ResolvedBipds{};
