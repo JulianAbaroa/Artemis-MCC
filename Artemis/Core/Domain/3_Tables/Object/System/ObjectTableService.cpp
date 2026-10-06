@@ -334,8 +334,23 @@ namespace Tables::Object::System
 	auto ObjectTableService::UpdateEquipment(MemoryReaderService& reader, AliveObject& object) -> void
 	{
 		EquipmentObject equipment{};
+		equipment.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
 		equipment.Energy = reader.Read<float>(object.Address, Offset::Equipment::TotalEnergy);
+
+		if (equipment.Kind == CrateKind::Shield)
+		{
+			Shield shield{};
+
+			// As far as I know, the only equipment that is a shield,
+			// is the drop shield, and it can only be two-way
+			if (TagName::Shield::IsTwoWay(object.TagName))
+			{
+				shield.Kind = ShieldKind::TwoWay;
+			}
+
+			equipment.Shield = shield;
+		}
 
 		object.Specific = equipment;
 	}

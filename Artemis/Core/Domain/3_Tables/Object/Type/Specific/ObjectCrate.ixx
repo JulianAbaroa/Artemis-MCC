@@ -171,6 +171,7 @@ export namespace Tables::Object::Type::Crate
 			{ Name::Shield::HangarShieldDoorSmallSolid,	Kind::Shield			},
 			{ Name::Shield::HangarShieldDoorLarge,		Kind::Shield			},
 			{ Name::Shield::HangarShieldDoorLargeSolid,	Kind::Shield			},
+			{ Name::Shield::DropShield,					Kind::Shield			},
 		};
 	
 		auto it = map.find(tagName);

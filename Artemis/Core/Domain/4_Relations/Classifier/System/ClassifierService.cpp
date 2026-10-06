@@ -153,6 +153,11 @@ namespace Relations::Classifier::System
             return Role::Powerup;
         }
 
+        if (TagName::Shield::IsShield(tag))
+        {
+            return Role::Shield;
+        }
+
         return Role::Unknown;
     }
 

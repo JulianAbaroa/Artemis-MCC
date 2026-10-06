@@ -242,6 +242,8 @@ export namespace Common::Tag::Name
 
 		constexpr const char* PortableShield = "objects\\props\\covenant\\cov_portable_shield\\cov_portable_shield";
 
+		constexpr const char* DropShield = "objects\\equipment\\drop_shield\\drop_shield_shield\\drop_shield_shield";
+
 		constexpr bool IsShield(const std::string& tag)
 		{
 			return tag == OneWayDoorSmall || tag == OneWayDoorMedium ||
@@ -253,7 +255,7 @@ export namespace Common::Tag::Name
 				tag == ShieldDoorSmall || tag == ShieldDoorMedium ||
 				tag == ShieldDoorLarge || tag == HangarShieldDoorSmall ||
 				tag == HangarShieldDoorSmallSolid || tag == HangarShieldDoorLarge ||
-				tag == HangarShieldDoorLargeSolid;
+				tag == HangarShieldDoorLargeSolid || tag == DropShield;
 		}
 
 		constexpr bool IsOneWay(const std::string& tag)
@@ -268,7 +270,7 @@ export namespace Common::Tag::Name
 		{
 			return tag == TwoWayDoorSmall || tag == TwoWayDoorMedium || 
 				tag == TwoWayDoorLarge || tag == HangarShieldDoorSmall ||
-				tag == HangarShieldDoorLarge;
+				tag == HangarShieldDoorLarge || tag == DropShield;
 		}
 
 		constexpr bool IsBlocker(const std::string& tag)

@@ -7,7 +7,8 @@ import std;
 
 namespace
 {
-    using Resolved::World::Type::ModelLink::AnchorSource;
+    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
+	using NodeBounds = Resolved::World::Type::ModelLink::NodeBounds;
 
     // ModelTarget.LockOnFlags: Headshot = bit 0
     constexpr std::uint32_t k_LockOnHeadshot{ (1u << 0) };
@@ -59,7 +60,6 @@ namespace Resolved::World::System
     auto ModelLinkBuilder::BuildSectionToRegion(const ResolvedHlmt& hlmt,
         const ResolvedColl* coll) const -> std::vector<std::int32_t>
     {
-        // Engine convention: damage section name == coll region name
         std::vector<std::int32_t> map(hlmt.DamageSections.size(), -1);
         if (!coll) return map;
 
@@ -89,7 +89,6 @@ namespace Resolved::World::System
             const auto& target = hlmt.ModelTargets[i];
             Anchor& out = targets[i];
 
-            // Not tied to a resolved marker, but keep what the hlmt says
             out.Radius = target.Size;
             out.Relevance = target.TargetingRelevance;
             out.ConeAngle = target.ConeAngle;
@@ -101,7 +100,6 @@ namespace Resolved::World::System
                 if (group.NameId != target.MarkerName) continue;
                 if (group.Markers.empty()) break;
 
-                // A group can hold several markers; the first one is used
                 const auto& marker = group.Markers.front();
                 if (marker.NodeIndex < 0 ||
                     static_cast<std::size_t>(marker.NodeIndex) >= mode->Nodes.size())
@@ -129,7 +127,6 @@ namespace Resolved::World::System
 
         for (std::size_t r = 0; r < coll->RegionNames.size(); ++r)
         {
-            // Prefer the default permutation if it has geometry, otherwise use all of them
             const int defaultPermutation = r < coll->DefaultPermutationIndex.size()
                 ? coll->DefaultPermutationIndex[r] : -1;
 
@@ -147,12 +144,6 @@ namespace Resolved::World::System
                 }
             }
 
-            // Union of the mesh bounds per coll node
-            struct NodeBounds
-            {
-                bool Used{ false };
-                float MinX{}, MinY{}, MinZ{}, MaxX{}, MaxY{}, MaxZ{};
-            };
             std::vector<NodeBounds> perNode(coll->Nodes.size());
 
             for (const auto& mesh : coll->Meshes)
@@ -177,7 +168,6 @@ namespace Resolved::World::System
                 b.MaxZ = (std::max)(b.MaxZ, mesh.LocalMax.Z);
             }
 
-            // The region is anchored to the node holding the largest volume of it
             int bestNode = -1;
             float bestVolume = -1.0f;
             for (std::size_t n = 0; n < perNode.size(); ++n)

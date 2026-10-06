@@ -23,7 +23,7 @@ export namespace Environment::Aim::System
         using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
         using AimAnchor = Resolved::World::Type::ModelLink::Anchor;
         using Aim = Environment::Aim::Type::Aim;
-        using Aims = Environment::Aim::Type::Aims;
+        using Aims = std::unordered_map<std::uint32_t, Environment::Aim::Type::Aim>;
         using SectionAim = Environment::Aim::Type::SectionAim;
 
         using LogsService = Service::Logs::System::LogsService;
@@ -37,8 +37,7 @@ export namespace Environment::Aim::System
             ObjectTableStore& objectStore, BoneMatricesStore& boneMatricesStore,
             AimStore& aimStore) : m_LogsService(logsService),
             m_VitalityStore(vitalityStore), m_ObjectStore(objectStore),
-            m_BoneMatricesStore(boneMatricesStore), m_AimStore(aimStore) {
-        }
+            m_BoneMatricesStore(boneMatricesStore), m_AimStore(aimStore) {}
         ~AimService() = default;
 
         auto Update() -> void;
@@ -52,7 +51,6 @@ export namespace Environment::Aim::System
         BoneMatricesStore& m_BoneMatricesStore;
         AimStore& m_AimStore;
 
-        // anchor (mode node + local offset, or object space) -> world position
         static auto MakeAim(const AimAnchor& anchor, const AliveObject& object,
             const BoneMatrixTable* bones) -> SectionAim;
 

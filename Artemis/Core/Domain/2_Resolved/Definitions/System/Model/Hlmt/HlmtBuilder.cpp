@@ -8,7 +8,6 @@ namespace
     using DamageTransfer = Resolved::Definitions::Type::Hlmt::DamageTransfer;
     using ModelTarget = Resolved::Definitions::Type::Hlmt::ModelTarget;
 
-    // ModelTargets and OldTargets entries share the same field names
     template <typename TEntry>
     auto MakeModelTarget(const TEntry& src) -> ModelTarget
     {
@@ -25,7 +24,6 @@ namespace
         return out;
     }
 
-    // SectionDamageTransfers and HealthTransfers entries share the same field names
     template <typename TEntry>
     auto MakeDamageTransfers(const std::vector<TEntry>& src) -> std::vector<DamageTransfer>
     {

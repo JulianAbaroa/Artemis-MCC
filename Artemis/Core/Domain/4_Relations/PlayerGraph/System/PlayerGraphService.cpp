@@ -90,6 +90,7 @@ namespace Relations::PlayerGraph::System
 
 			if (tree.BipedHandle != 0xFFFFFFFF)
 			{
+						if (roleIt == roles.end() || roleIt->second != Role::WeaponEquipped) continue;
 				this->BuildVehicle(tree, objectNodes, objectTable);
 			}
 

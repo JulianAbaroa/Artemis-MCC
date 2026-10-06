@@ -3,7 +3,7 @@ import :Mode;
 
 namespace
 {
-    // Mode_CompressionInfoEntry::CompressionFlags bit0: "Compressed Position".
+    // Mode_CompressionInfoEntry::CompressionFlags bit0: "Compressed Position"
     constexpr std::uint16_t k_CompressedPositionFlag{ 1u << 0 };
 }
 

@@ -67,11 +67,8 @@ export namespace Resolved::Definitions::Type::Hlmt
         float MaximumShieldVitality{};
 
         std::int32_t ShieldedStateDamageSectionIndex{ -1 };
-
         std::vector<DamageSection> DamageSections{};
-
 		std::vector<ModelTarget> ModelTargets{};
-        
 		std::vector<CollisionRegion> CollisionRegions{};
     };
 }

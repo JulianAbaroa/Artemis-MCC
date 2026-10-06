@@ -3,7 +3,7 @@ module Environment.Aim.System;
 namespace
 {
     using Vec3 = Common::Math::Type::Vec3;
-    using AimSource = Resolved::World::Type::ModelLink::AnchorSource;
+    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
 }
 
 namespace Environment::Aim::System
@@ -21,11 +21,9 @@ namespace Environment::Aim::System
         {
             if (object.Address == 0) continue;
 
-            // Most objects have no damage sections / vitality layout.
             const ResolvedVitality* layout = m_VitalityStore.GetResolvedVitality(object.TagName);
             if (!layout || !this->HasAnchors(*layout)) continue;
 
-            // May be null (no bones): node anchors are then marked invalid.
             const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
 
             Aim aim;
@@ -48,15 +46,14 @@ namespace Environment::Aim::System
     {
         SectionAim aim;
         aim.Radius = anchor.Radius;
-        aim.Source = anchor.Source;
+        aim.AimSource = anchor.Source;
 
-        if (anchor.Source == AimSource::None) return aim;
+        if (anchor.Source == AnchorSource::None) return aim;
 
         const Vec3& offset = anchor.LocalOffset;
 
         if (anchor.ModelNodeIndex >= 0)
         {
-            // Node space: bone matrix takes node-local points to world
             if (!bones ||
                 static_cast<std::size_t>(anchor.ModelNodeIndex) >= bones->Matrices.size())
             {
@@ -77,7 +74,6 @@ namespace Environment::Aim::System
         const Vec3& f = object.Forward;
         const Vec3& u = object.Up;
 
-        // left = up x forward
         const float lx = u.Y * f.Z - u.Z * f.Y;
         const float ly = u.Z * f.X - u.X * f.Z;
         const float lz = u.X * f.Y - u.Y * f.X;
@@ -95,14 +91,14 @@ namespace Environment::Aim::System
     {
         for (const auto& section : layout.Sections)
         {
-            if (section.Aim.Source != AimSource::None) return true;
+            if (section.Aim.Source != AnchorSource::None) return true;
         }
         return false;
     }
 
     auto AimService::Cleanup() -> void
     {
-        m_AimStore.Clear();
+        m_AimStore.Cleanup();
 
         m_LogsService.Message("[AimService] INFO: Cleanup completed.");
     }
