@@ -13,6 +13,9 @@ import Environment.Aim.State;
 import Egocentric.Self.State;
 import Egocentric.Affordance.State;
 import Egocentric.Raycast.State;
+import Resolved.Definitions.Type;
+import Resolved.Definitions.State;
+import Export.Tick.Type;
 import Export.Tick.State;
 import std;
 
@@ -34,7 +37,9 @@ export namespace Export::Tick::System
 		using SelfStore = Egocentric::Self::State::SelfStore;
 		using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
 		using RaycastStore = Egocentric::Raycast::State::RaycastStore;
+		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 		using TickStore = Export::Tick::State::TickStore;
+		using MapSbsps = Export::Tick::Type::MapSbsps;
 
 	public:
 		TickService(ObjectTableStore& objectStore, PlayerTableStore& playerStore,
@@ -43,14 +48,14 @@ export namespace Export::Tick::System
 			CollidableStore& collidableStore, FixturesStore& fixturesStore,
 			HealthStore& healthStore, AimStore& aimStore, SelfStore& selfStore,
 			AffordanceStore& affordanceStore, RaycastStore& raycastStore,
-			TickStore& tickStore) :
+			DefinitionsStore& definitionsStore, TickStore& tickStore) :
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
 			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
 			m_CollidableStore(collidableStore), m_FixturesStore(fixturesStore),
 			m_HealthStore(healthStore), m_AimStore(aimStore), m_SelfStore(selfStore),
 			m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
-			m_TickStore(tickStore) {}
+			m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
 		~TickService() = default;
 
 		auto Assemble(std::uint64_t generation) -> void;
@@ -69,6 +74,8 @@ export namespace Export::Tick::System
 		SelfStore& m_SelfStore;
 		AffordanceStore& m_AffordanceStore;
 		RaycastStore& m_RaycastStore;
+		DefinitionsStore& m_DefinitionsStore;
 		TickStore& m_TickStore;
+		std::shared_ptr<const MapSbsps> m_Map{};
 	};
 }

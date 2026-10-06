@@ -2888,12 +2888,6 @@
     <ClCompile Include="Core\Domain\5_Environment\Aim\Type\Environment.Aim.Type.ixx">
       <Filter>Core\Domain\5_Environment\Aim\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.cpp">
-      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
-      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.cpp">
       <Filter>Core\Domain\5_Environment\Aim\System</Filter>
     </ClCompile>
@@ -2952,5 +2946,8 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
+      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
     </ClCompile>
 </Project>

@@ -13,6 +13,7 @@ import Environment.Aim.Type;
 import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
 import Egocentric.Raycast.Type;
+import Resolved.Definitions.Type;
 import std;
 
 export namespace Export::Tick::Type
@@ -35,16 +36,20 @@ export namespace Export::Tick::Type
 	using Health = Environment::Health::Type::Health;
 	using Healths = std::unordered_map<std::uint32_t, Health>;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;
-	using Aims = Environment::Aim::Type::Aims;
+	using Aim = Environment::Aim::Type::Aim;
+	using Aims = std::unordered_map<std::uint32_t, Aim>;
 
 	using Affordance = Egocentric::Affordance::Type::Affordance;
 	using Affordances = std::vector<Affordance>;
 	using Self = Egocentric::Self::Type::Self;
 	using Raycasts = Egocentric::Raycast::Type::Raycasts;
+	using MapSbsps = std::unordered_map<std::string, Resolved::Definitions::Type::Sbsp::Sbsp>;
 
 	struct Tick
 	{
 		std::uint64_t Generation = 0;
+
+		std::shared_ptr<const MapSbsps> Map;
 
 		// --- Layer 3: Tables ---
 		std::shared_ptr<const ObjectTable> ObjectTable;

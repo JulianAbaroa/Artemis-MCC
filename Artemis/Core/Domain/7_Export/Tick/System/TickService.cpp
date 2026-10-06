@@ -14,6 +14,21 @@ namespace Export::Tick::System
         ::Tick tick;
         tick.Generation = generation;
 
+        if (m_DefinitionsStore.IsFrozen())
+        {
+            if (!m_Map)
+            {
+                m_Map = std::shared_ptr<const Export::Tick::Type::MapSbsps>(
+                    std::shared_ptr<void>{}, &m_DefinitionsStore.GetAllResolvedSbsps());
+            }
+        }
+        else
+        {
+            m_Map.reset();
+        }
+
+        tick.Map = m_Map;
+
         // --- Layer 3: Tables ---
         tick.ObjectTable = m_ObjectStore.Acquire();
         tick.PlayerTable = m_PlayerStore.Acquire();

@@ -2,6 +2,7 @@ export module Export.Layer;
 
 import Service.Layer;
 import Platform.Layer;
+import Resolved.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -21,9 +22,9 @@ export namespace Export
 
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform,
-			Tables::Layer& tables, Relations::Layer& relations,
+			Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
 			Environment::Layer& environment, Egocentric::Layer& egocentric) :
-			m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, relations.m_PlayerGraphStore, environment.m_CollidableStore, environment.m_FixturesStore, environment.m_HealthStore, environment.m_AimStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, m_TickStore),
+			m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, relations.m_PlayerGraphStore, environment.m_CollidableStore, environment.m_FixturesStore, environment.m_HealthStore, environment.m_AimStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, resolved.m_DefinitionsStore, m_TickStore),
 			m_SimulationTicksDetour(service.m_LogsService, service.m_TelemetryStore, platform.m_AOBService, platform.m_LifecycleStore)
 		{
 			auto& lifecycle = platform.m_LifecycleService;

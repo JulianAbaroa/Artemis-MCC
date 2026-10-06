@@ -271,8 +271,6 @@
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldModelLink.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRaycast.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectConstant.ixx" />
-    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.cpp" />
-    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx" />
     <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.cpp" />
     <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.ixx" />
     <ClCompile Include="Core\Domain\5_Environment\Aim\Type\Environment.Aim.Type.ixx" />
@@ -907,6 +905,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp" />
