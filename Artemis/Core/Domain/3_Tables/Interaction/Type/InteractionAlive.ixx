@@ -51,5 +51,28 @@ export namespace Tables::Interaction::Type::Alive
 		std::uint32_t AimTargetHandle = 0xFFFFFFFF;
 		std::uint32_t AimTargetSlotID = 0xFFFFFFFF;
 		Vec3 AimHitLocalPosition{};
+
+		static constexpr std::uint8_t k_MeleeAvailable = 0x0E;
+		static constexpr std::uint8_t k_AimAvailable = 0x01;
+
+		static constexpr auto IsValidHandle(std::uint32_t handle) -> bool
+		{
+			return handle != 0xFFFFFFFF && handle != 0;
+		}
+
+		auto HasObjectTarget() const -> bool
+		{
+			return IsValidHandle(TargetObjectHandle);
+		}
+
+		auto HasMeleeTarget() const -> bool
+		{
+			return IsMeleeAvailable == k_MeleeAvailable && IsValidHandle(MeleeTargetHandle);
+		}
+
+		auto HasAimTarget() const -> bool
+		{
+			return IsAimAvailable == k_AimAvailable && IsValidHandle(AimTargetHandle);
+		}
 	};
 }

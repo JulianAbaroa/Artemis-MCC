@@ -16,13 +16,20 @@ namespace Resolved::Vitality::State
     {
         assert(m_Frozen.load(std::memory_order_acquire));
         auto it = m_ResolvedVitalities.find(tagName);
-        return (it != m_ResolvedVitalities.end()) ? &it->second : nullptr;
+        return (it != m_ResolvedVitalities.end()) ? it->second.get() : nullptr;
+    }
+
+    auto VitalityStore::GetSharedVitality(const std::string& tagName) const -> std::shared_ptr<const ResolvedVitality>
+    {
+        assert(m_Frozen.load(std::memory_order_acquire));
+        auto it = m_ResolvedVitalities.find(tagName);
+        return (it != m_ResolvedVitalities.end()) ? it->second : nullptr;
     }
 
     auto VitalityStore::AddResolvedVitality(const std::string& tagName, ResolvedVitality layout) -> void
     {
         assert(!m_Frozen.load(std::memory_order_relaxed));
-        m_ResolvedVitalities.emplace(tagName, std::move(layout));
+        m_ResolvedVitalities.emplace(tagName, std::make_shared<const ResolvedVitality>(std::move(layout)));
     }
 
     auto VitalityStore::Cleanup() -> void

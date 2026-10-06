@@ -14,6 +14,9 @@ export namespace Relations::PlayerGraph::Type
 		std::uint32_t AbilityHandle = 0xFFFFFFFF;
 		std::uint32_t ObjectiveHandle = 0xFFFFFFFF;
 		std::uint32_t ParentHandle = 0xFFFFFFFF;
+		std::uint32_t EquippedWeaponHandle = 0xFFFFFFFF;
+
+		std::vector<std::uint32_t> HeldWeaponHandles;
 
 		std::vector<std::uint32_t> VehiclePartHandles;
 

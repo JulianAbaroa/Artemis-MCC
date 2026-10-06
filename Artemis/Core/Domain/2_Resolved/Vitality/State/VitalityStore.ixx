@@ -16,6 +16,7 @@ export namespace Resolved::Vitality::State
 
         auto HasResolvedVitality(const std::string& tagName) const -> bool;
         auto GetResolvedVitality(const std::string& tagName) const -> const ResolvedVitality*;
+        auto GetSharedVitality(const std::string& tagName) const -> std::shared_ptr<const ResolvedVitality>;
         auto AddResolvedVitality(const std::string& tagName, ResolvedVitality layout) -> void;
 
         auto IsFrozen() const -> bool
@@ -31,7 +32,7 @@ export namespace Resolved::Vitality::State
         auto Cleanup() -> void;
 
     private:
-        std::unordered_map<std::string, ResolvedVitality> m_ResolvedVitalities{};
+        std::unordered_map<std::string, std::shared_ptr<const ResolvedVitality>> m_ResolvedVitalities{};
         std::atomic<bool> m_Frozen{ false };
     };
 }

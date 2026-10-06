@@ -24,5 +24,16 @@ export namespace Egocentric::Self::Type
 
         Team Team{};
         bool IsAlive{ false };
+
+        auto DistanceTo(const Vec3& point) const -> std::optional<float>
+        {
+            if (!IsAlive) return std::nullopt;
+
+            const float dx = point.X - Position.X;
+            const float dy = point.Y - Position.Y;
+            const float dz = point.Z - Position.Z;
+
+            return std::sqrt(dx * dx + dy * dy + dz * dz);
+        }
     };
 }

@@ -11,7 +11,7 @@ namespace
 }
 
 namespace Environment::Health::System
-{ 
+{
     auto HealthService::Update() -> void
     {
         auto classifiedsPtr = m_ClassifierStore.Acquire();
@@ -37,10 +37,11 @@ namespace Environment::Health::System
             const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
             if (!damage || damage->Sections.empty()) continue;
 
-            const ResolvedVitality* layout = m_VitalityStore.GetResolvedVitality(object.TagName);
+            const auto layout = m_VitalityStore.GetSharedVitality(object.TagName);
             if (!layout) continue;
 
             Health health = this->MakeHealth(object, *layout, *damage);
+            health.Layout = layout;
             result.emplace(object.Handle, std::move(health));
         }
 

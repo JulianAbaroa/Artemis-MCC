@@ -33,6 +33,10 @@ namespace Relations::PlayerGraph::System
 		const ObjectNodes& objectNodes = *objectGraphPtr;
 		const Classifieds& classifieds = *classifiedsPtr;
 
+		std::unordered_map<std::uint32_t, Role> roles;
+		roles.reserve(classifieds.size());
+		for (const auto& classified : classifieds) roles[classified.Handle] = classified.Role;
+
 		for (const auto& [handle, player] : playerTable)
 		{
 			if (!player.Handle) continue;
@@ -90,7 +94,23 @@ namespace Relations::PlayerGraph::System
 
 			if (tree.BipedHandle != 0xFFFFFFFF)
 			{
+				const auto bipedNodeIt = objectNodes.find(tree.BipedHandle);
+				if (bipedNodeIt != objectNodes.end())
+				{
+					for (const std::uint32_t child : bipedNodeIt->second.ChildrenHandles)
+					{
+						const auto roleIt = roles.find(child);
 						if (roleIt == roles.end() || roleIt->second != Role::WeaponEquipped) continue;
+
+						tree.HeldWeaponHandles.push_back(child);
+					}
+
+					if (!tree.HeldWeaponHandles.empty())
+					{
+						tree.EquippedWeaponHandle = tree.HeldWeaponHandles.front();
+					}
+				}
+
 				this->BuildVehicle(tree, objectNodes, objectTable);
 			}
 
