@@ -73,6 +73,7 @@ namespace Environment::Collidable::System
         }
 
         instance.WorldMesh = this->CollectMesh(instance, ctx, bones, damage);
+        instance.Parts = this->CollectParts(instance, ctx, bones, damage);
 
         return instance;
     }
@@ -231,6 +232,83 @@ namespace Environment::Collidable::System
                 worldTriangle.Material = triangle.Material;
                 out.Triangles.push_back(worldTriangle);
             }
+        }
+
+        return out;
+    }
+
+    auto CollidableService::CollectParts(const Collidable& instance,
+        const Context& ctx, const BoneMatrixTable* bones,
+        const DamageSectionTable* damage) -> std::vector<CollidablePart>
+    {
+        std::vector<CollidablePart> out;
+        if (!ctx.Coll) return out;
+
+        const auto& meshes = ctx.Coll->Meshes;
+        out.reserve(meshes.size());
+
+        if (bones != nullptr)
+        {
+            const auto& matrices = bones->Matrices;
+            if (matrices.empty()) return out;
+
+            for (const auto& mesh : meshes)
+            {
+                if (!this->IsActivePermutation(instance, ctx, mesh, damage)) continue;
+
+                if (mesh.NodeIndex < 0 || static_cast<size_t>(mesh.NodeIndex) >= matrices.size())
+                {
+                    continue;
+                }
+
+                const BoneMatrix& bone = matrices[mesh.NodeIndex];
+
+                if (!Tables::Object::Type::BoneMatrix::IsBoneMatrixValid(bone))
+                {
+                    continue;
+                }
+
+                const auto& r = bone.Rotation;
+                const auto& t = bone.Translation;
+
+                CollidablePart part;
+                part.Source = &mesh;
+                part.Transform = {
+                    r[0], r[3], r[6], t[0],
+                    r[1], r[4], r[7], t[1],
+                    r[2], r[5], r[8], t[2] };
+
+                out.push_back(part);
+            }
+
+            return out;
+        }
+
+        const auto& pos = instance.Position;
+        const auto& fwd = instance.Forward;
+        const auto& up = instance.Up;
+        const auto  rgt = this->Cross(up, fwd);
+
+        const float cx = (ctx.Coll->BoundsMin.X + ctx.Coll->BoundsMax.X) * 0.5f;
+        const float cy = (ctx.Coll->BoundsMin.Y + ctx.Coll->BoundsMax.Y) * 0.5f;
+        const float cz = (ctx.Coll->BoundsMin.Z + ctx.Coll->BoundsMax.Z) * 0.5f;
+
+        const float tx = pos.X - (fwd.X * cx + rgt.X * cy + up.X * cz);
+        const float ty = pos.Y - (fwd.Y * cx + rgt.Y * cy + up.Y * cz);
+        const float tz = pos.Z - (fwd.Z * cx + rgt.Z * cy + up.Z * cz);
+
+        for (const auto& mesh : meshes)
+        {
+            if (!this->IsActivePermutation(instance, ctx, mesh, damage)) continue;
+
+            CollidablePart part;
+            part.Source = &mesh;
+            part.Transform = {
+                fwd.X, rgt.X, up.X, tx,
+                fwd.Y, rgt.Y, up.Y, ty,
+                fwd.Z, rgt.Z, up.Z, tz };
+
+            out.push_back(part);
         }
 
         return out;

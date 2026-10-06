@@ -30,7 +30,7 @@ export namespace Environment::Fixtures::Type
 
             Vec3 LinearVelocity;
             Vec3 AngularVelocity;
-            
+
             float BoundingRadius;
         };
     }
@@ -56,7 +56,7 @@ export namespace Environment::Fixtures::Type
             Team Team;
         };
     }
-    
+
     namespace Teleport
     {
         enum class Kind : std::uint8_t
@@ -64,6 +64,15 @@ export namespace Environment::Fixtures::Type
             Sender,
             Receiver,
             TwoWay,
+        };
+
+        struct Passes
+        {
+            bool Players{ false };
+            bool Ground{ false };
+            bool Heavy{ false };
+            bool Flying{ false };
+            bool Projectiles{ false };
         };
 
         struct Teleport
@@ -79,11 +88,12 @@ export namespace Environment::Fixtures::Type
             std::uint8_t Channel;
             ZoneShape ZoneShape;
             Crate::Teleport::Allowed Allowed;
+            Passes Passes;
 
             std::vector<Vec3> DestinationPositions;
         };
     }
-    
+
     namespace Lift
     {
         struct Lift
@@ -101,7 +111,7 @@ export namespace Environment::Fixtures::Type
             Vec3 LaunchDirection;
         };
     }
-    
+
     namespace Shield
     {
         struct Shield
@@ -154,7 +164,7 @@ export namespace Environment::Fixtures::Type
             std::uint32_t CarrierHandle;
         };
     }
-    
+
     namespace Destructible
     {
         enum class Kind : uint8_t

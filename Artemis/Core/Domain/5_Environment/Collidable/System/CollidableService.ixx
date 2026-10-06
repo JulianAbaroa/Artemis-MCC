@@ -33,6 +33,7 @@ export namespace Environment::Collidable::System
         using Classified = Relations::Classifier::Type::Classified;
         using Classifieds = std::vector<Classified>;
         using Collidable = Environment::Collidable::Type::Collidable;
+        using CollidablePart = Environment::Collidable::Type::CollidablePart;
         using Context = Environment::Collidable::Type::Context;
 
         using LogsService = Service::Logs::System::LogsService;
@@ -47,12 +48,12 @@ export namespace Environment::Collidable::System
 
     public:
         CollidableService(LogsService& logsService, DefinitionsStore& definitionsStore,
-            ObjectTableStore& objectTableStore, BoneMatricesStore& boneMatricesStore, 
+            ObjectTableStore& objectTableStore, BoneMatricesStore& boneMatricesStore,
             DamageSectionsStore& damageSectionsStore, ClassifierStore& classifierStore,
             ObjectGraphStore& objectGraphStore, WorldStore& worldStore,
             CollidableStore& collidableStore) : m_LogsService(logsService),
             m_DefinitionsStore(definitionsStore), m_ObjectTableStore(objectTableStore),
-            m_BoneMatricesStore(boneMatricesStore), m_DamageSectionsStore(damageSectionsStore), 
+            m_BoneMatricesStore(boneMatricesStore), m_DamageSectionsStore(damageSectionsStore),
             m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
             m_WorldStore(worldStore), m_CollidableStore(collidableStore) {}
         ~CollidableService() = default;
@@ -79,7 +80,7 @@ export namespace Environment::Collidable::System
         auto CollectCollidables(const Classifieds& classifieds,
             const ObjectTable& objects) -> void;
 
-        auto BuildInstance(const AliveObject& object, 
+        auto BuildInstance(const AliveObject& object,
             const ObjectTable& objectTable) -> Collidable;
 
         auto CollectMesh(const Collidable& instance, const Context& ctx,
@@ -92,6 +93,10 @@ export namespace Environment::Collidable::System
 
         auto CollectRigid(const Collidable& instance, const Context& ctx,
             const DamageSectionTable* damageSectionTable) -> CollMesh;
+
+        auto CollectParts(const Collidable& instance, const Context& ctx,
+            const BoneMatrixTable* boneMatrixTable,
+            const DamageSectionTable* damageSectionTable) -> std::vector<CollidablePart>;
 
         auto IsActivePermutation(const Collidable& instance, const Context& ctx,
             const CollMesh& mesh, const DamageSectionTable* damageSectionTable) -> bool;

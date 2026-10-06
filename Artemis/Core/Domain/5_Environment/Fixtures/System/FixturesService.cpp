@@ -10,6 +10,7 @@ namespace
     using SceneryObject = Tables::Object::Type::Scenery::Scenery;
     using SceneryKind = Tables::Object::Type::Scenery::Kind;
     using CrateObject = Tables::Object::Type::Crate::Crate;
+    using EquipmentObject = Tables::Object::Type::Equipment::Equipment;
     using CrateKind = Tables::Object::Type::Crate::Kind;
     using AngleType = Tables::Object::Type::Crate::Lift::Angle;
     using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
@@ -138,6 +139,14 @@ namespace Environment::Fixtures::System
             teleport.ZoneShape = crate->Teleport->ZoneShape;
             teleport.Allowed = crate->Teleport->Allowed;
 
+            using Allowed = Tables::Object::Type::Crate::Teleport::Allowed;
+            const auto allowed = crate->Teleport->Allowed;
+            teleport.Passes.Players = !Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::NoPlayers);
+            teleport.Passes.Ground = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowGround);
+            teleport.Passes.Heavy = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowHeavy);
+            teleport.Passes.Flying = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowFlying);
+            teleport.Passes.Projectiles = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowProjctile);
+
             if (crate->Kind == CrateKind::TeleportReceiver)
             {
                 teleport.Kind = TeleportKind::Receiver;
@@ -238,7 +247,12 @@ namespace Environment::Fixtures::System
             if (object.Address == 0) continue;
 
             const auto* crate = std::get_if<CrateObject>(&object.Specific);
-            if (!crate || !crate->Shield.has_value()) continue;
+            const auto* equipment = std::get_if<EquipmentObject>(&object.Specific);
+
+            const auto* data = (crate && crate->Shield.has_value()) ? &*crate->Shield
+                : (equipment && equipment->Shield.has_value()) ? &*equipment->Shield
+                : nullptr;
+            if (!data) continue;
 
             Shield shield{};
             shield.Handle = classified.Handle;
@@ -246,11 +260,11 @@ namespace Environment::Fixtures::System
             shield.Position = object.Position;
             shield.Forward = object.Forward;
             shield.Up = object.Up;
-            shield.Kind = crate->Shield->Kind;
+            shield.Kind = data->Kind;
 
             if (shield.Kind == ShieldKind::OneWay)
             {
-                if (crate->Shield->IsShieldDoor)
+                if (data->IsShieldDoor)
                 {
                     shield.BlockDirection = {
                         -shield.Forward.X,

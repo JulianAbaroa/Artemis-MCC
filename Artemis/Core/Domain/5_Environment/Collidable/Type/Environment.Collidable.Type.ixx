@@ -23,6 +23,12 @@ export namespace Environment::Collidable::Type
         std::uint8_t Variant{};
     };
 
+    struct CollidablePart
+    {
+        const Mesh* Source{ nullptr };
+        std::array<float, 12> Transform{};
+    };
+
     struct Collidable
     {
         std::uint32_t Handle{};
@@ -33,6 +39,7 @@ export namespace Environment::Collidable::Type
         Vec3 Up{};
 
         Mesh WorldMesh{};
+        std::vector<CollidablePart> Parts{};
 
         bool AncestorDead{ false };
         bool HasDestroyedGeometry{ false };
