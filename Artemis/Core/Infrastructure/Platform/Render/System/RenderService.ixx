@@ -13,64 +13,93 @@ import std;
 
 export namespace Platform::Render::System
 {
-	class RenderService
-	{
-	private:
-		template <typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-		using SteadyClock = std::chrono::steady_clock;
-		using MilliSeconds = std::chrono::milliseconds;
-		using FrameContext = Platform::Render::Type::FrameContext;
+    // Runs the render frame from the Present hook and raises the render events to the handlers.
+    // It binds to the swap chain, recreates the targets on resize and runs the shutdown.
+    // note: The events run on the game render thread. Handlers that throw are logged and skipped.
+    class RenderService
+    {
+    private:
+        template <typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		using LogsService = Service::Logs::System::LogsService;
-		using RenderStore = Platform::Render::State::RenderStore;
+        using milliseconds = std::chrono::milliseconds;
 
-	public:
-		using Callback = std::function<void()>;
-		using FrameHandler = std::function<void(const FrameContext&)>;
+        using LogsService = Service::Logs::System::LogsService;
 
-		RenderService(LogsService& logsService, RenderStore& renderStore) :
-			m_LogsService(logsService), m_RenderStore(renderStore) {}
-		~RenderService() = default;
+        using FrameContext = Platform::Render::Type::FrameContext;
+        using FrameHandler = Platform::Render::Type::FrameHandler;
+        using ShutdownCallback = Platform::Render::Type::ShutdownCallback;
 
-		RenderService(const RenderService&) = delete;
-		RenderService& operator=(const RenderService&) = delete;
+        using RenderStore = Platform::Render::State::RenderStore;
 
-		auto OnInitialized(FrameHandler handler) -> void;
-		auto OnFrame(FrameHandler handler) -> void;
-		auto OnResize(FrameHandler handler) -> void;
-		auto OnShutdown(Callback callback) -> void;
+    public:
+        RenderService(LogsService& logsService, RenderStore& renderStore) :
+            m_LogsService(logsService), m_RenderStore(renderStore) {}
+        ~RenderService() = default;
 
-		auto PresentFrame(IDXGISwapChain* swapChain) -> void;
-		auto BeginResize() -> void;
-		auto EndResize(IDXGISwapChain* swapChain, HRESULT result) -> void;
+        RenderService(const RenderService&) = delete;
+        auto operator=(const RenderService&) -> RenderService& = delete;
 
-		auto RequestShutdown() -> void;
-		auto WaitForShutdown(MilliSeconds timeout) -> bool;
+        // Handlers are called in registration order.
+        auto OnInitialized(FrameHandler handler) -> void;   // first bind to a swap chain
+        auto OnFrame(FrameHandler handler) -> void;         // every frame
+        auto OnPostFrame(FrameHandler handler) -> void;     // every frame, after OnFrame
+        auto OnResize(FrameHandler handler) -> void;        // after the targets are recreated
 
-		auto WaitForIdle(MilliSeconds timeout) -> bool;
+        // Callbacks are called in reverse registration order.
+        auto OnShutdown(ShutdownCallback callback) -> void;
 
-		auto Shutdown() -> void;
+        // Runs one frame. Skipped while resizing. Runs the shutdown if it was requested.
+        // note: Called by the Present hook.
+        auto PresentFrame(IDXGISwapChain* swapChain) -> void;
 
-	private:
-		LogsService& m_LogsService;
-		RenderStore& m_RenderStore;
+        // Releases the targets so the swap chain can resize.
+        // note: Called by the ResizeBuffers hook before the original.
+        auto BeginResize() -> void;
 
-		std::vector<FrameHandler> m_OnInitialized{};
-		std::vector<FrameHandler> m_OnFrame{};
-		std::vector<FrameHandler> m_OnResize{};
-		std::vector<Callback> m_OnShutdown{};
+        // Recreates the targets if the resize succeeded.
+        // note: Called by the ResizeBuffers hook after the original.
+        auto EndResize(IDXGISwapChain* swapChain, HRESULT result) -> void;
 
-		std::mutex m_ShutdownMutex{};
-		std::atomic<int> m_HandlerErrors{ 0 };
-		bool m_HasAttachFailed{ false };
+        // Asks for the shutdown. It runs on the next Present.
+        auto RequestShutdown() -> void;
 
-		auto Bind(IDXGISwapChain* swapChain) -> void;
-		auto Attach(IDXGISwapChain* swapChain) -> bool;
+        // return: False if the shutdown did not finish before the timeout.
+        auto WaitForShutdown(milliseconds timeout) -> bool;
 
-		auto MakeContext() const -> FrameContext;
+        // Waits for the calls inside the render hooks to finish.
+        // return: False if some are still running after the timeout.
+        auto WaitForIdle(milliseconds timeout) -> bool;
 
-		auto Raise(const std::vector<FrameHandler>& handlers, const char* stage) -> void;
-		auto ReportHandlerError(const char* stage) -> void;
-	};
+        // Runs the shutdown callbacks and releases the store. Does nothing if already done.
+        auto Shutdown() -> void;
+
+    private:
+        LogsService& m_LogsService;
+        RenderStore& m_RenderStore;
+
+        std::vector<FrameHandler> m_OnInitialized{};
+        std::vector<FrameHandler> m_OnFrame{};
+        std::vector<FrameHandler> m_OnPostFrame{};
+        std::vector<FrameHandler> m_OnResize{};
+        std::vector<ShutdownCallback> m_OnShutdown{};
+
+        std::mutex m_ShutdownMutex{};
+        std::atomic<int> m_HandlerErrors{ 0 };
+        bool m_IsAttachFailed{ false };
+
+        // Attaches to the swap chain and raises OnInitialized the first time, OnResize otherwise.
+        auto Bind(IDXGISwapChain* swapChain) -> void;
+
+        // Takes the device and creates the targets. Logs the first failure only.
+        // return: False if the device or the render target could not be obtained.
+        auto Attach(IDXGISwapChain* swapChain) -> bool;
+
+        auto MakeContext() const -> FrameContext;
+
+        auto Raise(const std::vector<FrameHandler>& handlers, const char* stage) -> void;
+
+        // Logs the first 5 handler errors only.
+        auto ReportHandlerError(const char* stage) -> void;
+    };
 }

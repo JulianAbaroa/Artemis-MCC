@@ -7,49 +7,56 @@ export module Platform.Render.Hook:Present;
 
 import Service.Logs.System;
 import Service.Telemetry.State;
+import Platform.Render.Type;
 import Platform.Render.State;
 import Platform.Render.System;
 import std;
 
 export namespace Platform::Render::Hook
 {
-	class PresentDetour
-	{
-	private:
-		using LogsService = Service::Logs::System::LogsService;
-		using TelemetryStore = Service::Telemetry::State::TelemetryStore;
-		using RenderStore = Platform::Render::State::RenderStore;
-		using RenderService = Platform::Render::System::RenderService;
-		using SwapChainLocator = Platform::Render::System::SwapChainLocator;
+    // Hooks IDXGISwapChain::Present to run the render frame before the game presents it.
+    class PresentDetour
+    {
+    private:
+        using LogsService = Service::Logs::System::LogsService;
+        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
-	public:
-		PresentDetour(LogsService& logsService, TelemetryStore& telemetryStore, 
-			RenderStore& renderStore, RenderService& renderService,
-			SwapChainLocator& swapChainLocator) : m_LogsService(logsService),
-			m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), 
-			m_RenderService(renderService), m_SwapChainLocator(swapChainLocator) {}
-		~PresentDetour() = default;
+        using PresentFunction = Platform::Render::Type::PresentFunction;
 
-		auto Install() -> bool;
-		auto Uninstall() -> void;
+        using RenderStore = Platform::Render::State::RenderStore;
 
-	private:
-		LogsService& m_LogsService;
-		TelemetryStore& m_TelemetryStore;
-		RenderStore& m_RenderStore;
-		RenderService& m_RenderService;
-		SwapChainLocator& m_SwapChainLocator;
+        using RenderService = Platform::Render::System::RenderService;
+        using SwapChainLocator = Platform::Render::System::SwapChainLocator;
 
-		static PresentDetour* s_Instance;
+    public:
+        PresentDetour(LogsService& logsService, TelemetryStore& telemetryStore,
+            RenderStore& renderStore, RenderService& renderService,
+            SwapChainLocator& swapChainLocator) : m_LogsService(logsService),
+            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore),
+            m_RenderService(renderService), m_SwapChainLocator(swapChainLocator) {}
+        ~PresentDetour() = default;
 
-		static auto __stdcall HookedPresent(IDXGISwapChain* pSwapChain,
-			UINT SyncInterval, UINT Flags)->HRESULT;
+        // Locates Present and installs the hook. Does nothing if already installed.
+        // return: False if the hook could not be installed.
+        auto Install() -> bool;
 
-		typedef auto(__stdcall* Present_t)(IDXGISwapChain* pSwapChain,
-			UINT SyncInterval, UINT Flags)->HRESULT;
+        // Waits for the calls in flight to drain, then removes the hook. Does nothing if not installed.
+        auto Uninstall() -> void;
 
-		static inline Present_t m_OriginalFunction = nullptr;
-		std::atomic<void*> m_FunctionAddress{ nullptr };
-		std::atomic<bool> m_IsHookInstalled{ false };
-	};
+    private:
+        LogsService& m_LogsService;
+        TelemetryStore& m_TelemetryStore;
+        RenderStore& m_RenderStore;
+        RenderService& m_RenderService;
+        SwapChainLocator& m_SwapChainLocator;
+
+        static inline PresentDetour* s_Instance{ nullptr };
+        static inline PresentFunction s_OriginalFunction{ nullptr };
+
+        std::atomic<void*> m_FunctionAddress{ nullptr };
+        std::atomic<bool> m_IsHookInstalled{ false };
+
+        static auto __stdcall HookedPresent(IDXGISwapChain* swapChain,
+            UINT syncInterval, UINT flags) -> HRESULT;
+    };
 }

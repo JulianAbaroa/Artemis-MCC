@@ -6,7 +6,7 @@ module Tables.Object.Hook;
 import :CreateObject;
 
 import Platform.Memory.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 
 namespace
 {
@@ -39,7 +39,7 @@ namespace Tables::Object::Hook
         void* functionAddress = (void*)m_AOBService.FindPattern(Signature::CreateObject);
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedCreateObject),
             reinterpret_cast<void**>(&m_OriginalFunction),
             "[CreateObjectDetour]", m_LogsService))
@@ -54,7 +54,7 @@ namespace Tables::Object::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
             "[CreateObjectDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

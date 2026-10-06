@@ -6,7 +6,7 @@ module Tables.Player.Hook;
 import :CreatePlayer;
 
 import Platform.Memory.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 
 namespace
 {
@@ -33,7 +33,7 @@ namespace Tables::Player::Hook
         void* functionAddress = (void*)m_AOBService.FindPattern(Signature::CreatePlayer);
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedCreatePlayer),
             reinterpret_cast<void**>(&m_OriginalFunction),
             "[CreatePlayerDetour]", m_LogsService))
@@ -48,7 +48,7 @@ namespace Tables::Player::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
             "[CreatePlayerDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

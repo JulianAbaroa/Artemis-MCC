@@ -5,133 +5,90 @@ import std;
 
 export namespace Platform::Lifecycle::State
 {
-	class LifecycleStore
-	{
-	private:
-		using Status = Platform::Lifecycle::Type::Status;
-		using MilliSeconds = std::chrono::milliseconds;
+    // Lifecycle of the game engine and the synchronization primitives built on it.
+    // note: Thread-safe. Written by hooks and the main thread, read by the AI, input and main threads.
+    class LifecycleStore
+    {
+    private:
+        using Status = Platform::Lifecycle::Type::Status;
 
-		static constexpr std::uint64_t k_ExpectedSkips = 1;
+        using milliseconds = std::chrono::milliseconds;
 
-	public:
-		LifecycleStore() = default;
-		~LifecycleStore() = default;
+    public:
+        LifecycleStore() = default;
+        ~LifecycleStore() = default;
 
-		auto IsRunning() const -> bool;
-		auto SetRunning(bool value) -> void;
+        // Whether Artemis is running.
+        auto IsRunning() const -> bool;
 
-		auto GetHandleModule() const -> void*;
-		auto SetHandleModule(void* value) -> void;
+        // Sets whether Artemis is running. Setting false wakes every waiting thread.
+        auto SetRunning(bool value) -> void;
 
-		auto GetStatus() const -> Status;
-		auto SetStatus(Status value) -> void;
+        auto GetStatus() const -> Status;
 
-		auto GetShutdownMutex() const -> std::mutex&;
-		auto GetShutdownCV() const -> std::condition_variable&;
+        // Changes the engine status.
+        // note: TearingDown wakes the tick waiters and Initialized wakes the Blam waiters.
+        auto SetStatus(Status value) -> void;
 
-		/**
-		* @brief Signals that Blam has just finished processing a logic-tick,
-		* making the AI thread to read a stable Object Table.
-		* @note Called from Blam main thread (via the SimulationTicks hook).
-		* @see docs/TickSynchronization.md
-		*/
-		auto SignalTick() -> void;
+        // Mutex and condition variable to wait on until shutdown is signaled.
+        // note: LifecycleService::SignalShutdown notifies them.
+        auto GetShutdownMutex() const -> std::mutex&;
+        auto GetShutdownCV() const -> std::condition_variable&;
 
-		/**
-		* @brief Blocks the AI thread until a new logic-tick is signaled,
-		* the mod stops running, or Blam game engine begins tearing down.
-		* @param last The last tick generation the AI thread already processed.
-		* @param dropped [out] Number of Blam logic-ticks missed since `last`
-		* (i.e. ticks that elapsed while the AI thread was busy).
-		* @return The current tick generation the thread woke up on.
-		* @note Called from AI thread (via the AI_Thread::Run function).
-		* @see docs/TickSynchronization.md
-		*/
-		auto WaitForTick(std::uint64_t last, std::uint64_t& dropped) -> std::uint64_t;
+        // Signals that the game finished a logic tick, so the AI thread can read a stable object table.
+        // note: Called from the game main thread through the SimulationTicks hook. See docs/Tick Synchronization.md.
+        auto SignalTick() -> void;
 
-		/**
-		* @brief Returns the current tick generation that Blam
-		* has signaled so far.
-		* @return The latest tick generation.
-		*/
-		auto GetTickGeneration() const -> std::uint64_t;
+        // Blocks until a new tick is signaled, Artemis stops, or the engine starts tearing down.
+        // param last: Last tick generation the AI thread processed.
+        // param dropped: Out. Ticks missed since last, because the AI thread was busy.
+        // return: Tick generation the thread woke up on.
+        // note: Called from the AI thread. See docs/Tick Synchronization.md.
+        auto WaitForTick(std::uint64_t last, std::uint64_t& dropped) -> std::uint64_t;
 
-		/**
-		* @brief Resets the tick generation to zero.
-		*/
-		auto ResetTickGeneration() -> void;
+        auto ResetTickGeneration() -> void;
 
-		/**
-		* @brief Marks the Artemis tick as active.
-		*/
-		auto BeginTick() -> void;
+        // Marks the Artemis tick as running, so WaitForTickEnd can wait for it.
+        auto BeginTick() -> void;
+        auto EndTick() -> void;
 
-		/**
-		* @brief Marks the Artemis tick as finished.
-		*/
-		auto EndTick() -> void;
+        // Waits for the Artemis tick in progress to finish.
+        // return: False if the timeout expired first.
+        auto WaitForTickEnd(milliseconds timeout) -> bool;
 
-		/**
-		* @brief Waits until the AI thread finishes processing the current
-		* tick, within the time window provided by `timeout`.
-		* @param timeout Maximum time to wait for the tick to finish.
-		* @return true if the tick was finished within the timeout.
-		*/
-		auto WaitForTickEnd(MilliSeconds timeout) -> bool;
+        // Blocks until the game engine is initialized or Artemis stops.
+        auto WaitForBlam() -> void;
 
-		/*
-		* @brief Blocks the AI thread until a new Instance of Blam game
-		* engine has been initialized.
-		*/
-		auto WaitForBlam() -> void;
+        // Marks the resource loading as running, so WaitForLoadEnd can wait for it.
+        auto BeginLoad() -> void;
+        auto EndLoad() -> void;
 
-		/*
-		* @brief Marks the resource loading as active.
-		*/
-		auto BeginLoad() -> void;
+        // Waits for the resource loading in progress to finish.
+        // return: False if the timeout expired first.
+        auto WaitForLoadEnd(milliseconds timeout) -> bool;
 
-		/*
-		* @brief Marks the resource loading as finished.
-		*/
-		auto EndLoad() -> void;
+    private:
+        std::atomic<bool> m_IsRunning{ false };
+        std::atomic<Status> m_Status{ Status::Waiting };
 
-		/*
-		* @brief Waits until the AI thread finishes processing the current
-		* resource loading, within the time window provided by `timeout`.
-		* @param timeout Maximum time to wait for the resource loading
-		* to finish.
-		* @return true if the resource loading finished within the timeout.
-		*/
-		auto WaitForLoadEnd(MilliSeconds timeout) -> bool;
+        mutable std::condition_variable m_ShutdownCV{};
+        mutable std::mutex m_ShutdownMutex{};
 
-	private:
-		std::atomic<bool> m_IsRunning{ false };
-		std::atomic<void*> m_HandleModule{ nullptr };
-		std::atomic<Status> m_Status{ Status::Waiting };
+        std::atomic<bool> m_IsTickActive{ false };
+        std::atomic<bool> m_IsLoadActive{ false };
 
-		mutable std::condition_variable m_ShutdownCV{};
-		mutable std::mutex m_ShutdownMutex{};
+        std::atomic<std::uint64_t> m_TickGeneration{ 0 };
+        std::condition_variable m_TickCV{};
+        std::mutex m_TickMutex{};
 
-		std::atomic<bool> m_IsTickActive{ false };
-		std::atomic<bool> m_IsLoadActive{ false };
+        std::condition_variable m_BlamCV{};
+        std::mutex m_BlamMutex{};
 
-		std::atomic<std::uint64_t> m_TickGeneration{ 0 };
-		std::condition_variable m_TickCV{};
-		std::mutex m_TickMutex{};
+        // Wakes every thread blocked on the tick condition variable so they re-check their predicate.
+        // note: Takes the mutex first, so a waiter between its check and its wait cannot miss the wake.
+        auto WakeTickWaiters() -> void;
 
-		std::condition_variable m_BlamCV{};
-		std::mutex m_BlamMutex{};
-
-		/**
-		* @brief Wakes all threads blocked on `m_TickCV`,
-		* forcing them to re-check their predicate.
-		*/
-		auto WakeTickWaiters() -> void;
-
-		/*
-		* @brief Wakes all the threads blocked on `m_BlamCV`,
-		* forcing them to re-check their predicate.
-		*/
-		auto WakeBlamWaiters() -> void;
-	};
+        // Same as WakeTickWaiters, for the Blam condition variable.
+        auto WakeBlamWaiters() -> void;
+    };
 }

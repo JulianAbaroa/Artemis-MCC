@@ -5,6 +5,8 @@ import std;
 
 export namespace Platform::Memory::State
 {
+    // State of the memory scanner: scan session and scanning flag.
+    // note: Written by the scan worker thread and read by the UI without locks.
     class MemoryScannerStore
     {
     private:
@@ -19,35 +21,32 @@ export namespace Platform::Memory::State
         MemoryScannerStore() = default;
         ~MemoryScannerStore() = default;
 
-        const Session& GetSession() const;
-
-        auto GetDelayMs() const -> int;
-        auto SetDelayMs(int ms) -> void;
-
+        auto GetSession() const -> const Session&;
         auto GetFilter() const -> const Filter&;
+        auto IsScanning() const -> bool;
+
         auto SetFilter(const Filter& filter) -> void;
-
         auto SetRegion(const std::string& name, std::uintptr_t base, std::size_t size) -> void;
-        auto SetWaitingForKey(bool waiting) -> void;
+        auto SetScanning(bool isScanning) -> void;
 
+        // Opens a round. The Set/Complete methods below act on the last one and do nothing without rounds.
         auto BeginRound() -> void;
         auto BeginUnchangedRound() -> void;
-        auto SetRoundBefore(Snapshot snap) -> void;
-        auto SetRoundAfter(Snapshot snap) -> void;
+        auto SetRoundBefore(Snapshot snapshot) -> void;
+        auto SetRoundAfter(Snapshot snapshot) -> void;
         auto SetRoundDiffs(std::vector<ByteDiff> diffs) -> void;
         auto SetRoundTypedDiffs(std::vector<TypedMatch> matches) -> void;
         auto CompleteRound() -> void;
-        auto ComputeFinalDiffs() -> void;
-        auto Reset() -> void;
 
-        auto IsWaitingForKey() const -> bool;
-        auto IsScanning() const -> bool;
-        auto SetScanning(bool scanning) -> void;
+        // Intersects the completed rounds into the final result, byte or typed according to the filter.
+        // note: Unchanged rounds remove from the result the offsets that changed (byte modes only).
+        auto ComputeFinalDiffs() -> void;
+
+        // Clears the session and the scanning flag.
+        auto Reset() -> void;
 
     private:
         Session m_Session{};
-        int m_DelayMs{ 500 };
-        bool m_WaitingForKey{ false };
-        bool m_Scanning{ false };
+        bool m_IsScanning{ false };
     };
 }

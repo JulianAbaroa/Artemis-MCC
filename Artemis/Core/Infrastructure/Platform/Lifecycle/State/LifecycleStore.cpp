@@ -2,176 +2,162 @@ module Platform.Lifecycle.State;
 
 namespace
 {
-	using MicroSeconds = std::chrono::microseconds;
-	using SteadyClock = std::chrono::steady_clock;
+    using std::chrono::microseconds;
+    using std::chrono::steady_clock;
+
+    constexpr std::uint64_t k_ExpectedSkips{ 1 };
 }
 
 namespace Platform::Lifecycle::State
 {
-	auto LifecycleStore::IsRunning() const -> bool
-	{
-		return m_IsRunning.load();
-	}
+    auto LifecycleStore::IsRunning() const -> bool
+    {
+        return m_IsRunning.load();
+    }
 
-	auto LifecycleStore::SetRunning(bool value) -> void
-	{
-		m_IsRunning.store(value);
+    auto LifecycleStore::SetRunning(bool value) -> void
+    {
+        m_IsRunning.store(value);
 
-		if (!value)
-		{
-			this->WakeTickWaiters();
-			this->WakeBlamWaiters();
-		}
-	}
+        if (!value)
+        {
+            this->WakeTickWaiters();
+            this->WakeBlamWaiters();
+        }
+    }
 
-	auto LifecycleStore::GetHandleModule() const -> void*
-	{
-		return m_HandleModule.load();
-	}
+    auto LifecycleStore::GetStatus() const -> Status
+    {
+        return m_Status.load(std::memory_order_acquire);
+    }
 
-	auto LifecycleStore::SetHandleModule(void* value) -> void
-	{
-		m_HandleModule.store(value);
-	}
+    auto LifecycleStore::SetStatus(Status value) -> void
+    {
+        m_Status.store(value, std::memory_order_release);
 
-	auto LifecycleStore::GetStatus() const -> Status
-	{
-		return m_Status.load(std::memory_order_acquire);
-	}
+        if (value == Status::TearingDown) this->WakeTickWaiters();
+        if (value == Status::Initialized) this->WakeBlamWaiters();
+    }
 
-	auto LifecycleStore::SetStatus(Status value) -> void
-	{
-		m_Status.store(value, std::memory_order_release);
+    auto LifecycleStore::GetShutdownMutex() const -> std::mutex&
+    {
+        return m_ShutdownMutex;
+    }
 
-		if (value == Status::TearingDown) this->WakeTickWaiters();
-		if (value == Status::Initialized) this->WakeBlamWaiters();
-	}
+    auto LifecycleStore::GetShutdownCV() const -> std::condition_variable&
+    {
+        return m_ShutdownCV;
+    }
 
-	auto LifecycleStore::GetShutdownMutex() const -> std::mutex&
-	{
-		return m_ShutdownMutex;
-	}
+    auto LifecycleStore::SignalTick() -> void
+    {
+        // Release ensures all of Blam's logic-tick writes are visible to the
+        // AI thread before it observes the incremented counter, otherwise
+        // the AI thread could see the new tick but still read the previous
+        // tick's data.
+        m_TickGeneration.fetch_add(1, std::memory_order_release);
+        m_TickCV.notify_one();
+    }
 
-	auto LifecycleStore::GetShutdownCV() const -> std::condition_variable&
-	{
-		return m_ShutdownCV;
-	}
+    auto LifecycleStore::WaitForTick(std::uint64_t last, std::uint64_t& dropped) -> std::uint64_t
+    {
+        // The use of a mutex under unique lock is necessary to make the
+        // predicate evaluation and the lock of the AI thread atomic.
+        std::unique_lock<std::mutex> lock(m_TickMutex);
 
-	auto LifecycleStore::SignalTick() -> void
-	{
-		// Release ensures all of Blam's logic-tick writes are visible to the
-		// AI thread before it observes the incremented counter, otherwise 
-		// the AI thread could see the new tick but still read the previous
-		// tick's data.
-		m_TickGeneration.fetch_add(1, std::memory_order_release);
-		m_TickCV.notify_one();
-	}
+        // Acquire ensures that all the Blam's logic-tick data is visible
+        // from the AI thread when the tick generation is loaded.
+        m_TickCV.wait(lock, [&] {
+            return m_TickGeneration.load(std::memory_order_acquire) > last ||
+                m_Status.load(std::memory_order_acquire) ==
+                Status::TearingDown || !m_IsRunning.load();
+            });
 
-	auto LifecycleStore::WaitForTick(std::uint64_t last, std::uint64_t& dropped) -> std::uint64_t
-	{
-		// The use of a mutex under unique lock is necessary to make the
-		// predicate evaluation and the lock of the AI thread atomic. 
-		std::unique_lock<std::mutex> lock(m_TickMutex);
+        std::uint64_t generation = m_TickGeneration.load(std::memory_order_acquire);
 
-		// Acquire ensures that all the Blam's logic-tick data is visible 
-		// from the AI thread when the tick generation is loaded.
-		m_TickCV.wait(lock, [&] {
-			return m_TickGeneration.load(std::memory_order_acquire) > last ||
-				m_Status.load(std::memory_order_acquire) ==
-				Status::TearingDown || !m_IsRunning.load();
-			});
+        // The expected difference between generation and last is one,
+        // and that difference must not be counted as a drop.
+        dropped = (generation > last) ? generation - last - k_ExpectedSkips : 0;
 
-		std::uint64_t generation = m_TickGeneration.load(std::memory_order_acquire);
+        return generation;
+    }
 
-		// The expected difference between generation and last is one,
-		// and that difference must not be counted as a drop.
-		dropped = (generation > last) ?
-			generation - last - k_ExpectedSkips : 0;
+    auto LifecycleStore::WakeTickWaiters() -> void
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_TickMutex);
+        }
 
-		return generation;
-	}
+        m_TickCV.notify_all();
+    }
 
-	auto LifecycleStore::WakeTickWaiters() -> void
-	{
-		{
-			std::lock_guard<std::mutex> lock(m_TickMutex);
-		}
+    auto LifecycleStore::ResetTickGeneration() -> void
+    {
+        m_TickGeneration.store(0);
+    }
 
-		m_TickCV.notify_all();
-	}
+    auto LifecycleStore::BeginTick() -> void
+    {
+        m_IsTickActive.store(true);
+    }
 
-	auto LifecycleStore::GetTickGeneration() const -> std::uint64_t
-	{
-		return m_TickGeneration.load();
-	}
+    auto LifecycleStore::EndTick() -> void
+    {
+        m_IsTickActive.store(false);
+    }
 
-	auto LifecycleStore::ResetTickGeneration() -> void
-	{
-		m_TickGeneration.store(0);
-	}
+    auto LifecycleStore::WaitForTickEnd(milliseconds timeout) -> bool
+    {
+        auto deadline = steady_clock::now() + timeout;
 
-	auto LifecycleStore::BeginTick() -> void
-	{
-		m_IsTickActive.store(true);
-	}
+        while (m_IsTickActive.load())
+        {
+            if (steady_clock::now() >= deadline) return false;
+            std::this_thread::sleep_for(microseconds(100));
+        }
 
-	auto LifecycleStore::EndTick() -> void
-	{
-		m_IsTickActive.store(false);
-	}
+        return true;
+    }
 
-	auto LifecycleStore::WaitForTickEnd(MilliSeconds timeout) -> bool
-	{
-		auto deadline = SteadyClock::now() + timeout;
+    auto LifecycleStore::WaitForBlam() -> void
+    {
+        std::unique_lock<std::mutex> lock(m_BlamMutex);
 
-		while (m_IsTickActive.load())
-		{
-			if (SteadyClock::now() >= deadline) return false;
-			std::this_thread::sleep_for(MicroSeconds(100));
-		}
+        m_BlamCV.wait(lock, [&] {
+            return m_Status.load(std::memory_order_acquire) ==
+                Status::Initialized || !m_IsRunning.load();
+            });
+    }
 
-		return true;
-	}
+    auto LifecycleStore::WakeBlamWaiters() -> void
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_BlamMutex);
+        }
 
-	auto LifecycleStore::WaitForBlam() -> void
-	{
-		std::unique_lock<std::mutex> lock(m_BlamMutex);
+        m_BlamCV.notify_all();
+    }
 
-		m_BlamCV.wait(lock, [&] {
-			return m_Status.load(std::memory_order_acquire) ==
-				Status::Initialized || !m_IsRunning.load();
-			});
-	}
+    auto LifecycleStore::BeginLoad() -> void
+    {
+        m_IsLoadActive.store(true);
+    }
 
-	auto LifecycleStore::WakeBlamWaiters() -> void
-	{
-		{
-			std::lock_guard<std::mutex> lock(m_BlamMutex);
-		}
+    auto LifecycleStore::EndLoad() -> void
+    {
+        m_IsLoadActive.store(false);
+    }
 
-		m_BlamCV.notify_all();
-	}
+    auto LifecycleStore::WaitForLoadEnd(milliseconds timeout) -> bool
+    {
+        auto deadline = steady_clock::now() + timeout;
 
-	auto LifecycleStore::BeginLoad() -> void
-	{
-		m_IsLoadActive.store(true);
-	}
+        while (m_IsLoadActive.load())
+        {
+            if (steady_clock::now() >= deadline) return false;
+            std::this_thread::sleep_for(microseconds(100));
+        }
 
-	auto LifecycleStore::EndLoad() -> void
-	{
-		m_IsLoadActive.store(false);
-	}
-
-	auto LifecycleStore::WaitForLoadEnd(MilliSeconds timeout) -> bool
-	{
-		auto deadline = SteadyClock::now() + timeout;
-
-		while (m_IsLoadActive.load())
-		{
-			if (SteadyClock::now() >= deadline) return false;
-			std::this_thread::sleep_for(MicroSeconds(100));
-		}
-
-		return true;
-	}
+        return true;
+    }
 }

@@ -2,34 +2,37 @@ module;
 
 #include <d3d11.h>
 #include <dxgi.h>
-#include "External/minhook/include/MinHook.h"
 
 module Platform.Render.Hook;
 import :Present;
 
-import Platform.Render.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 import std;
+
+namespace
+{
+    using std::chrono::milliseconds;
+
+    constexpr milliseconds k_IdleTimeout{ 1000 };
+}
 
 namespace Platform::Render::Hook
 {
-	PresentDetour* PresentDetour::s_Instance = nullptr;
+    auto __stdcall PresentDetour::HookedPresent(IDXGISwapChain* swapChain,
+        UINT syncInterval, UINT flags) -> HRESULT
+    {
+        auto* self = s_Instance;
 
-	auto __stdcall PresentDetour::HookedPresent(IDXGISwapChain* pSwapChain,
-		UINT SyncInterval, UINT Flags) -> HRESULT
-	{
-		auto* self = s_Instance;
+        if (self)
+        {
+            RenderStore::HookScope scope{ self->m_RenderStore };
 
-		if (self)
-		{
-			RenderStore::HookScope scope(self->m_RenderStore);
+            self->m_TelemetryStore.RecordPresent();
+            self->m_RenderService.PresentFrame(swapChain);
+        }
 
-			self->m_TelemetryStore.RecordPresent();
-			self->m_RenderService.PresentFrame(pSwapChain);
-		}
-
-		return m_OriginalFunction(pSwapChain, SyncInterval, Flags);
-	}
+        return s_OriginalFunction(swapChain, syncInterval, flags);
+    }
 
     auto PresentDetour::Install() -> bool
     {
@@ -39,9 +42,9 @@ namespace Platform::Render::Hook
         void* functionAddress = m_SwapChainLocator.Locate().Present;
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedPresent),
-            reinterpret_cast<void**>(&m_OriginalFunction),
+            reinterpret_cast<void**>(&s_OriginalFunction),
             "[PresentDetour]", m_LogsService))
         {
             return false;
@@ -55,15 +58,15 @@ namespace Platform::Render::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::DisableDetour(m_FunctionAddress.load());
+        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
 
-        if (!m_RenderService.WaitForIdle(std::chrono::milliseconds(1000)))
+        if (!m_RenderService.WaitForIdle(k_IdleTimeout))
         {
             m_LogsService.Message("[PresentDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
 
-        Platform::Hook::Common::RemoveDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[PresentDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

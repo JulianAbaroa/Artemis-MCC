@@ -69,6 +69,7 @@ namespace Platform::Input::System
 
         m_MouseDeltaStore.AddPendingDelta(deltaX, deltaY);
 
+        // The handle value is arbitrary. The GetRawInputData hook serves the injected data instead of reading it from the OS.
         const auto k_SyntheticHandle = reinterpret_cast<HRAWINPUT>(
             static_cast<std::uintptr_t>(0xA1A1A1A1));
 
@@ -76,7 +77,7 @@ namespace Platform::Input::System
             reinterpret_cast<LPARAM>(k_SyntheticHandle)) != FALSE;
     }
 
-    auto InputService::SetActionRequested(Action action, bool requested) -> void
+    auto InputService::SetActionRequested(InputAction action, bool requested) -> void
     {
         m_InputStore.SetActionRequested(action, requested);
     }

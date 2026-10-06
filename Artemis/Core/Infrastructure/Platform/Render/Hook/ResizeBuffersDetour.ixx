@@ -6,48 +6,54 @@ module;
 export module Platform.Render.Hook:ResizeBuffers;
 
 import Service.Logs.System;
+import Platform.Render.Type;
 import Platform.Render.State;
 import Platform.Render.System;
 import std;
 
 export namespace Platform::Render::Hook
 {
-	class ResizeBuffersDetour
-	{
-	private:
-		using LogsService = Service::Logs::System::LogsService;
-		using RenderStore = Platform::Render::State::RenderStore;
-		using RenderService = Platform::Render::System::RenderService;
-		using SwapChainLocator = Platform::Render::System::SwapChainLocator;
+    // Hooks IDXGISwapChain::ResizeBuffers to release the render targets before the resize and rebind them after.
+    class ResizeBuffersDetour
+    {
+    private:
+        using LogsService = Service::Logs::System::LogsService;
 
-	public:
-		ResizeBuffersDetour(LogsService& logsService, RenderStore& renderStore, 
-			RenderService& renderService, SwapChainLocator& swapChainLocator) :
-			m_LogsService(logsService), m_RenderStore(renderStore), 
-			m_RenderService(renderService), m_SwapChainLocator(swapChainLocator) {}
-		~ResizeBuffersDetour() = default;
+        using ResizeBuffersFunction = Platform::Render::Type::ResizeBuffersFunction;
 
-		auto Install() -> bool;
-		auto Uninstall() -> void;
+        using RenderStore = Platform::Render::State::RenderStore;
 
-	private:
-		LogsService& m_LogsService;
-		RenderStore& m_RenderStore;
-		RenderService& m_RenderService;
-		SwapChainLocator& m_SwapChainLocator;
+        using RenderService = Platform::Render::System::RenderService;
+        using SwapChainLocator = Platform::Render::System::SwapChainLocator;
 
-		static ResizeBuffersDetour* s_Instance;
+    public:
+        ResizeBuffersDetour(LogsService& logsService, RenderStore& renderStore,
+            RenderService& renderService, SwapChainLocator& swapChainLocator) :
+            m_LogsService(logsService), m_RenderStore(renderStore),
+            m_RenderService(renderService), m_SwapChainLocator(swapChainLocator) {}
+        ~ResizeBuffersDetour() = default;
 
-		static auto __stdcall HookedResizeBuffers(IDXGISwapChain* pSwapChain,
-			UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat,
-			UINT SwapChainFlags)->HRESULT;
+        // Locates ResizeBuffers and installs the hook. Does nothing if already installed.
+        // return: False if the hook could not be installed.
+        auto Install() -> bool;
 
-		typedef auto(__stdcall* ResizeBuffers_t)(IDXGISwapChain* pSwapChain,
-			UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat,
-			UINT SwapChainFlags)->HRESULT;
+        // Waits for the calls in flight to drain, then removes the hook. Does nothing if not installed.
+        auto Uninstall() -> void;
 
-		static inline ResizeBuffers_t m_OriginalFunction = nullptr;
-		std::atomic<void*> m_FunctionAddress{ nullptr };
-		std::atomic<bool> m_IsHookInstalled{ false };
-	};
+    private:
+        LogsService& m_LogsService;
+        RenderStore& m_RenderStore;
+        RenderService& m_RenderService;
+        SwapChainLocator& m_SwapChainLocator;
+
+        static inline ResizeBuffersDetour* s_Instance{ nullptr };
+        static inline ResizeBuffersFunction s_OriginalFunction{ nullptr };
+
+        std::atomic<void*> m_FunctionAddress{ nullptr };
+        std::atomic<bool> m_IsHookInstalled{ false };
+
+        static auto __stdcall HookedResizeBuffers(IDXGISwapChain* swapChain,
+            UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat,
+            UINT swapChainFlags) -> HRESULT;
+    };
 }

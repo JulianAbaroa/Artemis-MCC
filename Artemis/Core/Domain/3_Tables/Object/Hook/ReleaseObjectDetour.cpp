@@ -6,7 +6,7 @@ module Tables.Object.Hook;
 import :ReleaseObject;
 
 import Platform.Memory.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 
 namespace
 {
@@ -32,7 +32,7 @@ namespace Tables::Object::Hook
         void* functionAddress = (void*)m_AOBService.FindPattern(Signature::ReleaseObject);
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedReleaseObject),
             reinterpret_cast<void**>(&m_OriginalFunction),
             "[ReleaseObjectDetour]", m_LogsService))
@@ -47,7 +47,7 @@ namespace Tables::Object::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
             "[ReleaseObjectDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

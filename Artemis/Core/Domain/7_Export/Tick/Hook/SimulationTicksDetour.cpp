@@ -6,7 +6,7 @@ module Export.Tick.Hook;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 
 namespace
 {
@@ -47,7 +47,7 @@ namespace Export::Tick::Hook
 		void* functionAddress = (void*)m_AOBService.FindPattern(Signature::SimulationTicks);
 		m_FunctionAddress.store(functionAddress);
 
-		if (!Platform::Hook::Common::InstallDetour(functionAddress,
+		if (!Platform::Hook::System::InstallDetour(functionAddress,
 			reinterpret_cast<void*>(&HookedSimulationTicks),
 			reinterpret_cast<void**>(&m_OriginalFunction),
 			"[SimulationTicksDetour]", m_LogsService))
@@ -62,7 +62,7 @@ namespace Export::Tick::Hook
 	{
 		if (!m_IsHookInstalled.load()) return;
 
-		Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+		Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
 			"[SimulationTicksDetour]", m_LogsService);
 
 		m_IsHookInstalled.store(false);

@@ -8,30 +8,28 @@ import :EngineInitialize;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 import std;
 
 namespace
 {
-	namespace Signature = Platform::Memory::Type::Signature;
-	using Status = Platform::Lifecycle::Type::Status;
+    namespace Signature = Platform::Memory::Type::Signature;
+    using Platform::Lifecycle::Type::Status;
 }
 
 namespace Platform::Lifecycle::Hook
 {
-	EngineInitializeDetour* EngineInitializeDetour::s_Instance = nullptr;
+    auto __fastcall EngineInitializeDetour::HookedEngineInitialize() -> void
+    {
+        s_OriginalFunction();
 
-	auto __fastcall EngineInitializeDetour::HookedEngineInitialize() -> void
-	{
-		m_OriginalFunction();
+        s_Instance->m_LifecycleService.RaiseEngineInitialized();
 
-		s_Instance->m_LifecycleService.RaiseEngineInitialized();
+        s_Instance->m_LifecycleStore.SetStatus(Status::Initialized);
 
-		s_Instance->m_LifecycleStore.SetStatus(Status::Initialized);
-
-		s_Instance->m_LogsService.Message("[EngineInitializeDetour] INFO:"
-			" Game engine initialized.");
-	}
+        s_Instance->m_LogsService.Message("[EngineInitializeDetour] INFO:"
+            " Game engine initialized.");
+    }
 
     auto EngineInitializeDetour::Install() -> bool
     {
@@ -42,9 +40,9 @@ namespace Platform::Lifecycle::Hook
             m_AOBService.FindPattern(Signature::EngineInitialize));
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedEngineInitialize),
-            reinterpret_cast<void**>(&m_OriginalFunction),
+            reinterpret_cast<void**>(&s_OriginalFunction),
             "[EngineInitializeDetour]", m_LogsService))
         {
             return false;
@@ -58,14 +56,14 @@ namespace Platform::Lifecycle::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
             "[EngineInitializeDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);
     }
 
-	auto EngineInitializeDetour::GetFunctionAddress() const -> void*
-	{
-		return m_FunctionAddress.load();
-	}
+    auto EngineInitializeDetour::GetFunctionAddress() const -> void*
+    {
+        return m_FunctionAddress.load();
+    }
 }

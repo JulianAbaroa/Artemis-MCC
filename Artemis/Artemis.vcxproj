@@ -289,8 +289,6 @@
     <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.cpp" />
     <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.ixx" />
     <ClCompile Include="Core\Domain\7_Export\Tick\Type\Export.Tick.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\Common\Platform.Hook.Common.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\Common\Platform.Hook.Common.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.cpp" />
@@ -421,8 +419,6 @@
     <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.cpp" />
     <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.ixx" />
     <ClCompile Include="Core\UI\Widget\UI.Widget.System.ixx" />
-    <ClCompile Include="Core\Viewer\Common\Render\Viewer.Render.Common.cpp" />
-    <ClCompile Include="Core\Viewer\Common\Render\Viewer.Render.Common.ixx" />
     <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp" />
     <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx" />
     <ClCompile Include="Core\Viewer\Map\System\RaycastPass.cpp" />
@@ -911,4 +907,8 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx" />
 </Project>

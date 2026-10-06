@@ -2,41 +2,45 @@ module;
 
 #include <d3d11.h>
 #include <dxgi.h>
-#include "External/minhook/include/MinHook.h"
 
 module Platform.Render.Hook;
 import :ResizeBuffers;
 
-import Platform.Hook.Common;
+import Platform.Hook.System;
 import std;
+
+namespace
+{
+    using std::chrono::milliseconds;
+
+    constexpr milliseconds k_IdleTimeout{ 1000 };
+}
 
 namespace Platform::Render::Hook
 {
-	ResizeBuffersDetour* ResizeBuffersDetour::s_Instance = nullptr;
+    auto __stdcall ResizeBuffersDetour::HookedResizeBuffers(IDXGISwapChain* swapChain,
+        UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat,
+        UINT swapChainFlags) -> HRESULT
+    {
+        auto* self = s_Instance;
 
-	auto __stdcall ResizeBuffersDetour::HookedResizeBuffers(IDXGISwapChain* pSwapChain,
-		UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat,
-		UINT SwapChainFlags) -> HRESULT
-	{
-		auto* self = s_Instance;
+        if (!self)
+        {
+            return s_OriginalFunction(swapChain, bufferCount,
+                width, height, newFormat, swapChainFlags);
+        }
 
-		if (!self)
-		{
-			return m_OriginalFunction(pSwapChain, BufferCount,
-				Width, Height, NewFormat, SwapChainFlags);
-		}
+        RenderStore::HookScope scope{ self->m_RenderStore };
 
-		RenderStore::HookScope scope(self->m_RenderStore);
+        self->m_RenderService.BeginResize();
 
-		self->m_RenderService.BeginResize();
+        const HRESULT result = s_OriginalFunction(swapChain, bufferCount,
+            width, height, newFormat, swapChainFlags);
 
-		const HRESULT result = m_OriginalFunction(pSwapChain, BufferCount,
-			Width, Height, NewFormat, SwapChainFlags);
+        self->m_RenderService.EndResize(swapChain, result);
 
-		self->m_RenderService.EndResize(pSwapChain, result);
-
-		return result;
-	}
+        return result;
+    }
 
     auto ResizeBuffersDetour::Install() -> bool
     {
@@ -46,9 +50,9 @@ namespace Platform::Render::Hook
         void* functionAddress = m_SwapChainLocator.Locate().ResizeBuffers;
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedResizeBuffers),
-            reinterpret_cast<void**>(&m_OriginalFunction),
+            reinterpret_cast<void**>(&s_OriginalFunction),
             "[ResizeBuffersDetour]", m_LogsService))
         {
             return false;
@@ -62,15 +66,15 @@ namespace Platform::Render::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::DisableDetour(m_FunctionAddress.load());
+        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
 
-        if (!m_RenderService.WaitForIdle(std::chrono::milliseconds(1000)))
+        if (!m_RenderService.WaitForIdle(k_IdleTimeout))
         {
             m_LogsService.Message("[ResizeBuffersDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
 
-        Platform::Hook::Common::RemoveDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[ResizeBuffersDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

@@ -6,42 +6,37 @@ module;
 module Platform.Input.Hook;
 import :GetButtonState;
 
-import Platform.Input.Type;
 import Platform.Memory.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
-
-    using InputAction = Platform::Input::Type::Action;
 }
 
 namespace Platform::Input::Hook
 {
-    // This function polls keyboard events at a high frequency 
+    // This function polls keyboard events at a high frequency
     // (approximately every 3ms).
-    // 
+    //
     // Note: This specific handler does not process mouse events.
-    // 
-    // Critical: This function is extremely sensitive to stack manipulation 
-    // and timing. Avoid using blocking mechanisms (e.g., std::mutex) as they 
+    //
+    // Critical: This function is extremely sensitive to stack manipulation
+    // and timing. Avoid using blocking mechanisms (e.g., std::mutex) as they
     // generate undefined behavior.
-    // 
-    // Observed behavior: Blocking or desynchronizing this thread causes 
-    // the engine to repeatedly execute the recieved action every 3ms, 
+    //
+    // Observed behavior: Blocking or desynchronizing this thread causes
+    // the engine to repeatedly execute the received action every 3ms,
     // leading to input flooding.
-    // 
-    // Input Data: Recieves a unique 'buttonID', which represents the engine's 
+    //
+    // Input Data: Receives a unique 'buttonID', which represents the engine's
     // internal mapping for each physical key.
     auto __fastcall GetButtonStateDetour::HookedGetButtonState(short buttonID) -> char
     {
         if (s_Instance->m_InputStore.IsActionHeld(buttonID)) return 1;
 
-        return m_OriginalFunction(buttonID);
+        return s_OriginalFunction(buttonID);
     }
-
-    GetButtonStateDetour* GetButtonStateDetour::s_Instance = nullptr;
 
     auto GetButtonStateDetour::Install() -> void
     {
@@ -51,9 +46,9 @@ namespace Platform::Input::Hook
         void* functionAddress = (void*)m_AOBService.FindPattern(Signature::GetButtonState);
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::Common::InstallDetour(functionAddress,
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedGetButtonState),
-            reinterpret_cast<void**>(&m_OriginalFunction),
+            reinterpret_cast<void**>(&s_OriginalFunction),
             "[GetButtonStateDetour]", m_LogsService))
         {
             return;
@@ -66,7 +61,7 @@ namespace Platform::Input::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
             "[GetButtonStateDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

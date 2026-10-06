@@ -3,9 +3,14 @@ module;
 #include <windows.h>
 #include "External/minhook/include/MinHook.h"
 
-module Platform.Hook.Common;
+module Platform.Hook.System;
 
-namespace Platform::Hook::Common
+namespace
+{
+    using Service::Logs::System::LogsService;
+}
+
+namespace Platform::Hook::System
 {
     auto InstallDetour(void* functionAddress, void* hookedFunction,
         void** outOriginal, const char* tag, LogsService& logsService) -> bool

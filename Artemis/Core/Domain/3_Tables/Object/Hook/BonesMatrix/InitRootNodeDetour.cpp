@@ -7,7 +7,7 @@ import :InitRootNode;
 
 import Tables.Object.Type;
 import Platform.Memory.Type;
-import Platform.Hook.Common;
+import Platform.Hook.System;
 
 namespace
 {
@@ -67,7 +67,7 @@ namespace Tables::Object::Hook
 		void* functionAddress = (void*)m_AOBService.FindPattern(Signature::InitRootNode);
 		m_FunctionAddress.store(functionAddress);
 
-		if (!Platform::Hook::Common::InstallDetour(functionAddress,
+		if (!Platform::Hook::System::InstallDetour(functionAddress,
 			reinterpret_cast<void*>(&HookedInitRootNode),
 			reinterpret_cast<void**>(&m_OriginalFunction),
 			"[InitRootNodeDetour]", m_LogsService))
@@ -82,7 +82,7 @@ namespace Tables::Object::Hook
 	{
 		if (!m_IsHookInstalled.load()) return;
 
-		Platform::Hook::Common::UninstallDetour(m_FunctionAddress.load(),
+		Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
 			"[InitRootNodeDetour]", m_LogsService);
 
 		m_IsHookInstalled.store(false);

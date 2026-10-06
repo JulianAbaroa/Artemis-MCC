@@ -895,15 +895,6 @@
     <Filter Include="Core\Infrastructure\Platform\Hook">
       <UniqueIdentifier>{069b409e-a3dd-4385-b657-4927292aa2a1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Hook\Common">
-      <UniqueIdentifier>{9a47eef2-d3b9-4d1f-8b3e-731553de7710}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Common">
-      <UniqueIdentifier>{f422aa88-438c-4b84-b78d-15e6f6d02c27}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Common\Render">
-      <UniqueIdentifier>{c6af8c52-8a7b-417d-a1a0-35b347d39a07}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\UI\Widget\System\Panel">
       <UniqueIdentifier>{ece42211-15c5-4856-a09d-390793f12e68}</UniqueIdentifier>
     </Filter>
@@ -2618,18 +2609,6 @@
     <ClCompile Include="Core\Common\State\System\Common.State.System.ixx">
       <Filter>Core\Common\State\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\Common\Platform.Hook.Common.ixx">
-      <Filter>Core\Infrastructure\Platform\Hook\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\Common\Platform.Hook.Common.cpp">
-      <Filter>Core\Infrastructure\Platform\Hook\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Common\Render\Viewer.Render.Common.ixx">
-      <Filter>Core\Viewer\Common\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Common\Render\Viewer.Render.Common.cpp">
-      <Filter>Core\Viewer\Common\Render</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\Widget\System\Panel\PanelUIService.ixx">
       <Filter>Core\UI\Widget\System\Panel</Filter>
     </ClCompile>
@@ -2959,4 +2938,19 @@
       <Filter>Resources\Icons</Filter>
     </Image>
   </ItemGroup>
+    <Filter Include="Core\Infrastructure\Platform\Hook\System">
+      <UniqueIdentifier>{9a47eef2-d3b9-4d1f-8b3e-731553de7710}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp">
+      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
+    </ClCompile>
 </Project>

@@ -2,6 +2,9 @@ export module Platform.Render.System:Shaders;
 
 export namespace Platform::Render::System::Shaders
 {
+    // HLSL source of the map pipeline, shared by every pass.
+    // Vertex shaders: VSMain (Vertex), VSInstanced (SphereInstance) and VSInstancedMesh (MeshInstance).
+    // Pixel shader: PSMain, flat shading from the screen-space derivatives and two fixed lights.
     inline constexpr const char* k_MapSource = R"(
 cbuffer Camera : register(b0)
 {
@@ -21,6 +24,44 @@ VSOut VSMain(VSIn input)
     VSOut o;
     o.pos = mul(float4(input.pos, 1.0f), ViewProj);
     o.worldPos = input.pos;
+    o.color = input.color;
+    return o;
+}
+
+struct VSInstIn
+{
+    float3 pos    : POSITION;
+    float4 center : INST_CENTER;
+    float3 color  : INST_COLOR;
+};
+
+VSOut VSInstanced(VSInstIn input)
+{
+    VSOut o;
+    float3 world = input.center.xyz + input.pos * input.center.w;
+    o.pos = mul(float4(world, 1.0f), ViewProj);
+    o.worldPos = world;
+    o.color = input.color;
+    return o;
+}
+
+struct VSMeshIn
+{
+    float3 pos   : POSITION;
+    float4 row0  : INST_ROW0;
+    float4 row1  : INST_ROW1;
+    float4 row2  : INST_ROW2;
+    float3 color : INST_COLOR;
+};
+
+VSOut VSInstancedMesh(VSMeshIn input)
+{
+    float4 p = float4(input.pos, 1.0f);
+    float3 world = float3(dot(input.row0, p), dot(input.row1, p), dot(input.row2, p));
+
+    VSOut o;
+    o.pos = mul(float4(world, 1.0f), ViewProj);
+    o.worldPos = world;
     o.color = input.color;
     return o;
 }
