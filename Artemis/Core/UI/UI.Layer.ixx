@@ -28,11 +28,15 @@ import std;
 
 export namespace UI
 {
+    // Root of the UI layer. Owns the stores and the services of the launcher and its tab windows.
+    // note: Hooks into the Platform events. It draws the windows with the game frame and handles the hotkeys of the window messages.
     class Layer
     {
     private:
         using FrameContext = Platform::Render::Type::FrameContext;
         using WindowMessage = Platform::Input::Type::WindowMessage;
+
+        using BackendGuiService = Gui::Backend::System::BackendGuiService;
 
         using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
         using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
@@ -41,7 +45,6 @@ export namespace UI
         using MemoryScannerUIStore = UI::MemoryScanner::State::MemoryScannerUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
-        using BackendGuiService = Gui::Backend::System::BackendGuiService;
         using HotkeyUIService = UI::Hotkey::System::HotkeyUIService;
         using LauncherUIService = UI::Launcher::System::LauncherUIService;
         using ObjectTableUIService = UI::ObjectTable::System::ObjectTableUIService;
@@ -84,17 +87,18 @@ export namespace UI
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
-        Layer& operator=(const Layer&) = delete;
+        auto operator=(const Layer&) -> Layer& = delete;
 
+        // Backend of the Gui layer, used to know if the UI can be drawn.
         BackendGuiService& m_BackendGuiService;
 
         // --- State ---
-        HotkeyUIStore m_HotkeyUIStore;
-        LauncherUIStore m_LauncherUIStore;
-        ObjectTableUIStore m_ObjectTableUIStore;
-        PlayerTableUIStore m_PlayerTableUIStore;
-        MemoryScannerUIStore m_MemoryScannerUIStore;
-        LogsUIStore m_LogsUIStore;
+        HotkeyUIStore m_HotkeyUIStore{};
+        LauncherUIStore m_LauncherUIStore{};
+        ObjectTableUIStore m_ObjectTableUIStore{};
+        PlayerTableUIStore m_PlayerTableUIStore{};
+        MemoryScannerUIStore m_MemoryScannerUIStore{};
+        LogsUIStore m_LogsUIStore{};
 
         // --- System ---
         HotkeyUIService m_HotkeyUIService;
@@ -107,8 +111,13 @@ export namespace UI
         LogsUIService m_LogsUIService;
 
     private:
+        // Releases the old icons and opens the launcher if the setting asks for it.
         auto Initialize(const FrameContext& frame) -> void;
+
+        // Releases the icons and drops the table snapshots.
         auto Shutdown() -> void;
+
+        // Draws the launcher and the visible tab windows.
         auto DrawFrame(const FrameContext& frame) -> void;
     };
 }

@@ -10,16 +10,19 @@ namespace
 {
     using Service::Logs::Type::LogLevel;
 
+    // Returns the text in lower case.
     auto ToLower(std::string_view text) -> std::string
     {
-        std::string out(text);
+        std::string out{ text };
 
-        std::ranges::transform(out, out.begin(),
-            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        std::ranges::transform(out, out.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
 
         return out;
     }
 
+    // Returns the color of a log level.
     auto LevelColor(LogLevel level) -> ImVec4
     {
         switch (level)
@@ -36,7 +39,7 @@ namespace UI::Logs::System
 {
     auto LogsUIService::Draw() -> void
     {
-        const FilterState filter = this->DrawTopBar();
+        const FilterState filter{ this->DrawTopBar() };
 
         ImGui::Separator();
 
@@ -59,7 +62,7 @@ namespace UI::Logs::System
 
         ImGui::SameLine();
 
-        bool isAutoScroll = m_SettingsStore.IsLogsAutoScrollEnabled();
+        bool isAutoScroll{ m_SettingsStore.IsLogsAutoScrollEnabled() };
         if (ImGui::Checkbox("Auto-Scroll", &isAutoScroll))
         {
             m_SettingsStore.SetLogsAutoScrollEnabled(isAutoScroll);
@@ -78,8 +81,8 @@ namespace UI::Logs::System
         ImGui::Text("Filter:");
         ImGui::SameLine();
 
-        const float clearButtonWidth = 60.0f;
-        const float availableWidth = ImGui::GetContentRegionAvail().x;
+        const float clearButtonWidth{ 60.0f };
+        const float availableWidth{ ImGui::GetContentRegionAvail().x };
 
         ImGui::PushItemWidth(availableWidth - clearButtonWidth - ImGui::GetStyle().ItemSpacing.x);
         ImGui::InputTextWithHint("##log_filter", "Search for specific logs...",
@@ -96,15 +99,15 @@ namespace UI::Logs::System
 
     auto LogsUIService::DrawClearButton(const FilterState& filter) -> void
     {
-        const char* label = filter.IsFiltering ? "Clear Filtered" : "Clear All Logs";
+        const char* label{ filter.IsFiltering ? "Clear Filtered" : "Clear All Logs" };
 
         if (!ImGui::Button(label)) return;
 
         if (filter.IsFiltering)
         {
             m_LogsStore.RemoveIf([&filter](const LogEntry& entry) {
-                return Matches(entry, filter);
-                });
+                return LogsUIService::Matches(entry, filter);
+            });
         }
         else
         {
@@ -116,26 +119,26 @@ namespace UI::Logs::System
 
     auto LogsUIService::DrawCopyButton(const FilterState& filter) -> void
     {
-        const char* label = filter.IsFiltering ? "Copy Filtered" : "Copy All";
+        const char* label{ filter.IsFiltering ? "Copy Filtered" : "Copy All" };
 
         if (!ImGui::Button(label)) return;
 
-        std::string output;
+        std::string output{};
 
         m_LogsStore.ForEachLog([&](const LogEntry& entry) {
-            if (!filter.IsFiltering || Matches(entry, filter))
+            if (!filter.IsFiltering || LogsUIService::Matches(entry, filter))
             {
                 output += entry.FullText + "\n";
             }
-            });
+        });
 
         ImGui::SetClipboardText(output.c_str());
     }
 
     auto LogsUIService::DrawHelpMarker() -> void
     {
-        const float helpIconWidth = ImGui::CalcTextSize("(?)").x;
-        const float posX = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - helpIconWidth;
+        const float helpIconWidth{ ImGui::CalcTextSize("(?)").x };
+        const float posX{ ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - helpIconWidth };
         ImGui::SetCursorPosX(posX);
 
         ImGui::TextDisabled("(?)");
@@ -156,15 +159,15 @@ namespace UI::Logs::System
 
     auto LogsUIService::GetFilteredIndices(const FilterState& filter) const -> std::vector<int>
     {
-        std::vector<int> filtered;
+        std::vector<int> filtered{};
         if (!filter.IsFiltering) return filtered;
 
-        int index = 0;
+        int index{ 0 };
 
         m_LogsStore.ForEachLog([&](const LogEntry& entry) {
-            if (Matches(entry, filter)) filtered.push_back(index);
+            if (LogsUIService::Matches(entry, filter)) filtered.push_back(index);
             ++index;
-            });
+        });
 
         return filtered;
     }
@@ -178,30 +181,30 @@ namespace UI::Logs::System
             return;
         }
 
-        const std::vector<int> filteredIndices = this->GetFilteredIndices(filter);
-        const int totalLogs = static_cast<int>(m_LogsStore.GetTotalLogs());
-        const int displayCount = filter.IsFiltering ?
-            static_cast<int>(filteredIndices.size()) : totalLogs;
+        const std::vector<int> filteredIndices{ this->GetFilteredIndices(filter) };
+        const int totalLogs{ static_cast<int>(m_LogsStore.GetTotalLogs()) };
+        const int displayCount{ filter.IsFiltering ?
+            static_cast<int>(filteredIndices.size()) : totalLogs };
 
-        ImGuiListClipper clipper;
+        ImGuiListClipper clipper{};
         clipper.Begin(displayCount);
 
-        bool isLogClicked = false;
+        bool isLogClicked{ false };
 
         while (clipper.Step())
         {
-            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
+            for (int i{ clipper.DisplayStart }; i < clipper.DisplayEnd; ++i)
             {
-                const int realIndex = filter.IsFiltering ? filteredIndices[i] : i;
-                const LogEntry entry = m_LogsStore.GetLogAt(static_cast<std::size_t>(realIndex));
+                const int realIndex{ filter.IsFiltering ? filteredIndices[i] : i };
+                const LogEntry entry{ m_LogsStore.GetLogAt(static_cast<std::size_t>(realIndex)) };
 
                 this->DrawLogLine(realIndex, entry, isLogClicked);
             }
         }
 
-        const bool isBackgroundClicked = ImGui::IsWindowHovered() &&
+        const bool isBackgroundClicked{ ImGui::IsWindowHovered() &&
             ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-            !ImGui::IsAnyItemHovered() && !isLogClicked;
+            !ImGui::IsAnyItemHovered() && !isLogClicked };
 
         if (isBackgroundClicked) m_LogsUIStore.ClearSelection();
 
@@ -221,9 +224,9 @@ namespace UI::Logs::System
 
         if (m_LogsUIStore.IsIndexSelected(realIndex))
         {
-            const ImVec2 min = ImGui::GetCursorScreenPos();
-            const ImVec2 max(min.x + ImGui::GetContentRegionAvail().x,
-                min.y + ImGui::GetTextLineHeightWithSpacing());
+            const ImVec2 min{ ImGui::GetCursorScreenPos() };
+            const ImVec2 max{ min.x + ImGui::GetContentRegionAvail().x,
+                min.y + ImGui::GetTextLineHeightWithSpacing() };
 
             ImGui::GetWindowDrawList()->AddRectFilled(min, max, IM_COL32(66, 150, 250, 60));
         }
@@ -259,9 +262,9 @@ namespace UI::Logs::System
     auto LogsUIService::DrawLogMessage(const std::string& message) -> void
     {
         // The first 'quoted' fragment is highlighted.
-        const std::size_t quoteStart = message.find('\'');
-        const std::size_t quoteEnd = (quoteStart != std::string::npos) ?
-            message.find('\'', quoteStart + 1) : std::string::npos;
+        const std::size_t quoteStart{ message.find('\'') };
+        const std::size_t quoteEnd{ (quoteStart != std::string::npos) ?
+            message.find('\'', quoteStart + 1) : std::string::npos };
 
         if (quoteStart == std::string::npos || quoteEnd == std::string::npos)
         {
@@ -271,17 +274,17 @@ namespace UI::Logs::System
 
         if (quoteStart > 0)
         {
-            const std::string before = message.substr(0, quoteStart);
+            const std::string before{ message.substr(0, quoteStart) };
             ImGui::TextUnformatted(before.c_str());
             ImGui::SameLine(0.0f, 0.0f);
         }
 
-        const std::string quoted = message.substr(quoteStart, quoteEnd - quoteStart + 1);
+        const std::string quoted{ message.substr(quoteStart, quoteEnd - quoteStart + 1) };
         ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "%s", quoted.c_str());
 
         if (quoteEnd + 1 < message.length())
         {
-            const std::string after = message.substr(quoteEnd + 1);
+            const std::string after{ message.substr(quoteEnd + 1) };
             ImGui::SameLine(0.0f, 0.0f);
             ImGui::TextUnformatted(after.c_str());
         }
@@ -300,13 +303,13 @@ namespace UI::Logs::System
 
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
         {
-            const float now = static_cast<float>(ImGui::GetTime());
+            const float now{ static_cast<float>(ImGui::GetTime()) };
 
             if (m_LogsUIStore.IsIndexSelected(realIndex))
             {
-                std::string selectedText;
+                std::string selectedText{};
 
-                for (int i = m_LogsUIStore.GetSelectionMin(); i <= m_LogsUIStore.GetSelectionMax(); ++i)
+                for (int i{ m_LogsUIStore.GetSelectionMin() }; i <= m_LogsUIStore.GetSelectionMax(); ++i)
                 {
                     selectedText += m_LogsStore.GetLogAt(static_cast<std::size_t>(i)).FullText + "\n";
                 }
@@ -321,18 +324,18 @@ namespace UI::Logs::System
             }
         }
 
-        const int animatedIndex = m_LogsUIStore.GetAnimatedIndex();
-        const bool isAnimatingSelection = animatedIndex == LogsUIStore::k_SelectionIndex &&
-            m_LogsUIStore.IsIndexSelected(realIndex);
+        const int animatedIndex{ m_LogsUIStore.GetAnimatedIndex() };
+        const bool isAnimatingSelection{ animatedIndex == LogsUIStore::k_SelectionIndex &&
+            m_LogsUIStore.IsIndexSelected(realIndex) };
 
         if (animatedIndex != realIndex && !isAnimatingSelection) return;
 
-        const float elapsed = static_cast<float>(ImGui::GetTime()) -
-            m_LogsUIStore.GetAnimationStartTime();
+        const float elapsed{ static_cast<float>(ImGui::GetTime()) -
+            m_LogsUIStore.GetAnimationStartTime() };
 
         if (elapsed < k_AnimationDuration)
         {
-            const float alpha = 1.0f - (elapsed / k_AnimationDuration);
+            const float alpha{ 1.0f - (elapsed / k_AnimationDuration) };
 
             ImGui::GetWindowDrawList()->AddRectFilled(
                 ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),

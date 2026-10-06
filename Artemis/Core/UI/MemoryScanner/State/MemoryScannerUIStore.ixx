@@ -5,35 +5,47 @@ import std;
 
 export namespace UI::MemoryScanner::State
 {
-	class MemoryScannerUIStore
-	{
-	private:
-		using RegionForm = UI::MemoryScanner::Type::RegionForm;
-		using ScanForm = UI::MemoryScanner::Type::ScanForm;
-		using FilterForm = UI::MemoryScanner::Type::FilterForm;
+    // Inputs and selected row of the memory scanner window.
+    class MemoryScannerUIStore
+    {
+    private:
+        using RegionForm = UI::MemoryScanner::Type::RegionForm;
+        using ScanForm = UI::MemoryScanner::Type::ScanForm;
+        using FilterForm = UI::MemoryScanner::Type::FilterForm;
 
-	public:
-		static constexpr int k_NoRow = -1;
+    public:
+        // Marks that no result row is selected.
+        static constexpr int k_NoRow{ -1 };
 
-		MemoryScannerUIStore() = default;
-		~MemoryScannerUIStore() = default;
+        MemoryScannerUIStore() = default;
+        ~MemoryScannerUIStore() = default;
 
-		MemoryScannerUIStore(const MemoryScannerUIStore&) = delete;
-		MemoryScannerUIStore& operator=(const MemoryScannerUIStore&) = delete;
+        MemoryScannerUIStore(const MemoryScannerUIStore&) = delete;
+        auto operator=(const MemoryScannerUIStore&) -> MemoryScannerUIStore& = delete;
 
-		auto GetRegion() -> RegionForm&;
-		auto GetScan() -> ScanForm&;
-		auto GetScan() const -> const ScanForm&;
-		auto GetFilters() -> FilterForm&;
+        // Returns the inputs of the scanned region.
+        auto GetRegion() -> RegionForm&;
 
-		auto GetSelectedRow() const -> int;
-		auto SetSelectedRow(int row) -> void;
-		auto ClearSelectedRow() -> void;
+        // Returns the inputs of the scan.
+        auto GetScan() -> ScanForm&;
+        auto GetScan() const -> const ScanForm&;
 
-	private:
-		RegionForm m_Region{};
-		ScanForm m_Scan{};
-		FilterForm m_Filters{};
-		int m_SelectedRow{ k_NoRow };
-	};
+        // Returns the inputs of the result filter.
+        auto GetFilters() -> FilterForm&;
+
+        // Returns the selected result row, k_NoRow when there is none.
+        auto GetSelectedRow() const -> int;
+
+        // Selects a result row.
+        auto SetSelectedRow(int row) -> void;
+
+        // Clears the selected row.
+        auto ClearSelectedRow() -> void;
+
+    private:
+        RegionForm m_Region{};
+        ScanForm m_Scan{};
+        FilterForm m_Filters{};
+        int m_SelectedRow{ k_NoRow };
+    };
 }

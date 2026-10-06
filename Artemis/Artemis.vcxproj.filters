@@ -757,6 +757,15 @@
     <Filter Include="Core\UI\Hotkey\Type">
       <UniqueIdentifier>{1697dc34-57c7-4f11-8dae-e7e36d40e180}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\UI\ObjectTable\Type">
+      <UniqueIdentifier>{b1f74f90-503e-47de-a31b-a6226568e775}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\PlayerTable\Type">
+      <UniqueIdentifier>{ed121e9f-6e01-41be-b073-5543db01ed6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\DefinitionsInspector\Type">
+      <UniqueIdentifier>{5c654475-5f26-4d66-b583-a2808e6a326c}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI\Launcher">
       <UniqueIdentifier>{aeb1d6a1-edb0-4e0e-be5f-f3ea37e49dbb}</UniqueIdentifier>
     </Filter>
@@ -2438,6 +2447,15 @@
     <ClCompile Include="Core\UI\Hotkey\Type\UI.Hotkey.Type.ixx">
       <Filter>Core\UI\Hotkey\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Core\UI\DefinitionsInspector\Type\UI.DefinitionsInspector.Type.ixx">
+      <Filter>Core\UI\DefinitionsInspector\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\ObjectTable\Type\UI.ObjectTable.Type.ixx">
+      <Filter>Core\UI\ObjectTable\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\PlayerTable\Type\UI.PlayerTable.Type.ixx">
+      <Filter>Core\UI\PlayerTable\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Core\UI\Launcher\Type\UI.Launcher.Type.ixx">
       <Filter>Core\UI\Launcher\Type</Filter>
     </ClCompile>
@@ -2816,10 +2834,10 @@
     <ClCompile Include="Core\Gui\Widget\System\Inspector\InspectorGuiService.ixx">
       <Filter>Core\Gui\Widget\System\Inspector</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\StatsInspector\System\DefinitionsInspectorUIService.cpp">
+    <ClCompile Include="Core\UI\DefinitionsInspector\System\DefinitionsInspectorUIService.cpp">
       <Filter>Core\UI\DefinitionsInspector\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\StatsInspector\System\DefinitionsInspectorUIService.ixx">
+    <ClCompile Include="Core\UI\DefinitionsInspector\System\DefinitionsInspectorUIService.ixx">
       <Filter>Core\UI\DefinitionsInspector\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Damage\DefinitionsJpt.ixx">

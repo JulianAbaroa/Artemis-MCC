@@ -11,8 +11,10 @@ namespace
 
 export namespace UI::MemoryScanner::Type
 {
-    inline constexpr std::size_t k_FieldSize = 32;
+    // Size of the text buffers of the forms.
+    inline constexpr std::size_t k_FieldSize{ 32 };
 
+    // Inputs of the region scan.
     struct RegionForm
     {
         char Base[k_FieldSize]{ "0" };
@@ -20,6 +22,7 @@ export namespace UI::MemoryScanner::Type
         int DelayMs{ 500 };
     };
 
+    // Inputs of a value scan.
     struct ScanForm
     {
         int ModeIndex{ 0 };
@@ -31,6 +34,7 @@ export namespace UI::MemoryScanner::Type
         char BitPattern[k_FieldSize]{ "0" };
     };
 
+    // Inputs of the result filter.
     struct FilterForm
     {
         char From[k_FieldSize]{ "0x0" };
@@ -43,25 +47,28 @@ export namespace UI::MemoryScanner::Type
         int AfterValue{ 0x01 };
     };
 
+    // Scan mode shown in the mode selector with the inputs it needs.
     struct ModeEntry
     {
-        const char* Label;
-        Mode Mode;
-        bool NeedsBefore;
-        bool NeedsValueA;
-        bool NeedsValueB;
-        bool NeedsBitMask;
+        const char* Label{};
+        Mode Mode{};
+        bool NeedsBefore{ false };
+        bool NeedsValueA{ false };
+        bool NeedsValueB{ false };
+        bool NeedsBitMask{ false };
     };
 
+    // Data type shown in the type selector.
     struct TypeEntry
     {
-        const char* Label;
-        DataType Type;
+        const char* Label{};
+        DataType Type{};
     };
 
+    // Region size shown in the size selector.
     struct SizeEntry
     {
-        const char* Label;
-        std::size_t Size;
+        const char* Label{};
+        std::size_t Size{ 0 };
     };
 }

@@ -2,42 +2,48 @@ export module UI.Hotkey.System;
 
 import Service.Settings.State;
 import Platform.Input.Type;
+import Viewer.Overlay.State;
 import UI.Hotkey.Type;
 import UI.Hotkey.State;
 import UI.Launcher.State;
-import Viewer.Overlay.State;
 
 export namespace UI::Hotkey::System
 {
-	class HotkeyUIService
-	{
-	private:
-		using WindowMessage = Platform::Input::Type::WindowMessage;
-		using Action = UI::Hotkey::Type::Action;
+    // Runs the action of the hotkey pressed in the game window.
+    class HotkeyUIService
+    {
+    private:
+        using SettingsStore = Service::Settings::State::SettingsStore;
 
-		using SettingsStore = Service::Settings::State::SettingsStore;
-		using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
-		using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
-		using OverlayStore = Viewer::Overlay::State::OverlayStore;
+        using WindowMessage = Platform::Input::Type::WindowMessage;
 
-	public:
-		HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,
-			LauncherUIStore& launcherStore, OverlayStore& overlayStore) :
-			m_SettingsStore(settingsStore), m_HotkeyStore(hotkeyStore),
-			m_LauncherStore(launcherStore), m_OverlayStore(overlayStore) {}
-		~HotkeyUIService() = default;
+        using OverlayStore = Viewer::Overlay::State::OverlayStore;
 
-		HotkeyUIService(const HotkeyUIService&) = delete;
-		HotkeyUIService& operator=(const HotkeyUIService&) = delete;
+        using Action = UI::Hotkey::Type::Action;
+        using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
+        using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
 
-		auto HandleMessage(WindowMessage& message) -> bool;
+    public:
+        HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,
+            LauncherUIStore& launcherStore, OverlayStore& overlayStore) :
+            m_SettingsStore(settingsStore), m_HotkeyStore(hotkeyStore),
+            m_LauncherStore(launcherStore), m_OverlayStore(overlayStore) {}
+        ~HotkeyUIService() = default;
 
-	private:
-		SettingsStore& m_SettingsStore;
-		HotkeyUIStore& m_HotkeyStore;
-		LauncherUIStore& m_LauncherStore;
-		OverlayStore& m_OverlayStore;
+        HotkeyUIService(const HotkeyUIService&) = delete;
+        auto operator=(const HotkeyUIService&) -> HotkeyUIService& = delete;
 
-		auto Execute(Action action) -> void;
-	};
+        // Handles a key down message that matches a UI hotkey.
+        // return: true if the message was consumed.
+        auto HandleMessage(WindowMessage& message) -> bool;
+
+    private:
+        SettingsStore& m_SettingsStore;
+        HotkeyUIStore& m_HotkeyStore;
+        LauncherUIStore& m_LauncherStore;
+        OverlayStore& m_OverlayStore;
+
+        // Runs the action of a hotkey.
+        auto Execute(Action action) -> void;
+    };
 }

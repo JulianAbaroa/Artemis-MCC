@@ -2,49 +2,68 @@ export module UI.PlayerTable.System;
 
 import Export.Tick.Type;
 import Export.Tick.State;
-import UI.PlayerTable.State;
 import Gui.Widget.System;
+import UI.PlayerTable.Type;
+import UI.PlayerTable.State;
 import std;
 
 export namespace UI::PlayerTable::System
 {
-	class PlayerTableUIService
-	{
-	private:
-		using AlivePlayer = Export::Tick::Type::AlivePlayer;
+    // Draws the live players as cards with a search filter.
+    class PlayerTableUIService
+    {
+    private:
+        using AlivePlayer = Export::Tick::Type::AlivePlayer;
 
-		using TickStore = Export::Tick::State::TickStore;
-		using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
-		using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
-		using CopyableFieldGuiService = Gui::Widget::System::CopyableFieldGuiService;
-		using ResponsiveCardGuiService = Gui::Widget::System::ResponsiveCardGuiService;
+        using TickStore = Export::Tick::State::TickStore;
 
-	public:
-		PlayerTableUIService(TickStore& tickStore, PlayerTableUIStore& playerTableUIStore) :
-			m_TickStore(tickStore), m_PlayerTableUIStore(playerTableUIStore) {
-		}
-		~PlayerTableUIService() = default;
+        using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
+        using CopyableFieldGuiService = Gui::Widget::System::CopyableFieldGuiService;
+        using ResponsiveCardGuiService = Gui::Widget::System::ResponsiveCardGuiService;
 
-		PlayerTableUIService(const PlayerTableUIService&) = delete;
-		PlayerTableUIService& operator=(const PlayerTableUIService&) = delete;
+        using Players = UI::PlayerTable::Type::Players;
+        using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
 
-		auto Draw() -> void;
+    public:
+        PlayerTableUIService(TickStore& tickStore, PlayerTableUIStore& playerTableUIStore) :
+            m_TickStore(tickStore), m_PlayerTableUIStore(playerTableUIStore) {}
+        ~PlayerTableUIService() = default;
 
-	private:
-		TickStore& m_TickStore;
-		PlayerTableUIStore& m_PlayerTableUIStore;
+        PlayerTableUIService(const PlayerTableUIService&) = delete;
+        auto operator=(const PlayerTableUIService&) -> PlayerTableUIService& = delete;
 
-		SearchFilterGuiService m_SearchFilter{};
-		CopyableFieldGuiService m_CopyableField{};
+        // Draws the player table window content.
+        auto Draw() -> void;
 
-		auto RefreshSnapshot() -> void;
-		auto PassesFilter(const AlivePlayer& player) const -> bool;
+    private:
+        TickStore& m_TickStore;
+        PlayerTableUIStore& m_PlayerTableUIStore;
 
-		auto DrawPlayerCard(const AlivePlayer& player) -> void;
-		auto DrawCardHeader(const AlivePlayer& player) -> void;
-		auto DrawCardIdentity(const AlivePlayer& player) -> void;
-		auto DrawConnectionStatus(const AlivePlayer& player) -> void;
-		auto DrawCardWeapon(const AlivePlayer& player) -> void;
-		auto DrawCardBiped(const AlivePlayer& player) -> void;
-	};
+        SearchFilterGuiService m_SearchFilter{};
+        CopyableFieldGuiService m_CopyableField{};
+
+        // Rebuilds the player list when the tick has a new player table.
+        auto RefreshSnapshot() -> void;
+
+        // Checks whether the player matches the search text.
+        auto PassesFilter(const AlivePlayer& player) const -> bool;
+
+        // Draws the card of a player.
+        auto DrawPlayerCard(const AlivePlayer& player) -> void;
+
+        // Draws the gamertag and the clan tag of the card.
+        auto DrawCardHeader(const AlivePlayer& player) -> void;
+
+        // Draws the handle, the address, the team and the connection status.
+        auto DrawCardIdentity(const AlivePlayer& player) -> void;
+
+        // Draws the connection status with its raw value.
+        auto DrawConnectionStatus(const AlivePlayer& player) -> void;
+
+        // Draws the weapon and objective handles.
+        auto DrawCardWeapon(const AlivePlayer& player) -> void;
+
+        // Draws the biped handles.
+        auto DrawCardBiped(const AlivePlayer& player) -> void;
+    };
 }

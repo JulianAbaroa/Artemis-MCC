@@ -21,6 +21,7 @@ namespace
     namespace ObjectSize = Tables::Object::Type::Size;
     namespace PlayerSize = Tables::Player::Type::Size;
 
+    // Scan modes in the order of the mode combo.
     constexpr std::array<ModeEntry, 9> k_Modes
     { {
         { "Changed",      Mode::Changed,     true,  false, false, false },
@@ -34,6 +35,7 @@ namespace
         { "Bit Mask",     Mode::BitMask,     false, false, false, true  },
     } };
 
+    // Data types in the order of the type combo.
     constexpr std::array<TypeEntry, 8> k_DataTypes
     { {
         { "Bytes (raw)", DataType::Bytes   },
@@ -46,6 +48,7 @@ namespace
         { "Float32",     DataType::Float32 },
     } };
 
+    // Structure sizes offered to fill the region size.
     constexpr std::array<SizeEntry, 3> k_KnownSizes
     { {
         { "Object::Base",  ObjectSize::Base   },
@@ -53,35 +56,41 @@ namespace
         { "Player::Base",  PlayerSize::Base   },
     } };
 
-    constexpr int k_DefaultTypedIndex = 5;
+    // Index of Int32 in the data types, used when raw bytes are not allowed.
+    constexpr int k_DefaultTypedIndex{ 5 };
 
     const ImVec4 k_ValueColor{ 0.4f, 0.7f, 1.0f, 1.0f };
-    constexpr ImU32 k_SelectedRowColor = IM_COL32(50, 80, 150, 120);
+    constexpr ImU32 k_SelectedRowColor{ IM_COL32(50, 80, 150, 120) };
 
-    constexpr ImGuiTableFlags k_ResultTableFlags =
+    constexpr ImGuiTableFlags k_ResultTableFlags{
         ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
-        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit;
+        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit };
 
+    // Checks whether the mode can scan raw bytes.
     auto AllowsBytes(Mode mode) -> bool
     {
         return mode == Mode::Changed || mode == Mode::Unchanged;
     }
 
+    // Parses an unsigned hexadecimal number.
     auto ParseHex(const char* text) -> std::uint64_t
     {
         return std::strtoull(text, nullptr, 16);
     }
 
+    // Parses an unsigned number in decimal or with a 0x prefix in hexadecimal.
     auto ParseAuto(const char* text) -> std::uint64_t
     {
         return std::strtoull(text, nullptr, 0);
     }
 
+    // Parses a float.
     auto ParseFloat(const char* text) -> float
     {
         return std::strtof(text, nullptr);
     }
 
+    // Draws the state of a snapshot in orange while empty and in green when taken.
     auto DrawSnapshotLabel(bool isEmpty, const char* pending, const char* done) -> void
     {
         ImGui::PushStyleColor(ImGuiCol_Text, isEmpty ?
@@ -92,10 +101,12 @@ namespace
         ImGui::PopStyleColor();
     }
 
+    // Draws the invisible selectable that spans a result row.
+    // return: true if the row was clicked.
     auto DrawRowSelectable(int row, int selectedRow) -> bool
     {
-        const ImGuiSelectableFlags flags = ImGuiSelectableFlags_SpanAllColumns |
-            ImGuiSelectableFlags_AllowOverlap;
+        const ImGuiSelectableFlags flags{ ImGuiSelectableFlags_SpanAllColumns |
+            ImGuiSelectableFlags_AllowOverlap };
 
         return ImGui::Selectable("##row", row == selectedRow, flags, ImVec2(0.0f, 0.0f));
     }
@@ -140,7 +151,7 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawRegionInputs() -> void
     {
-        auto& region = m_MemoryScannerUIStore.GetRegion();
+        auto& region{ m_MemoryScannerUIStore.GetRegion() };
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled("Address");
@@ -182,15 +193,15 @@ namespace UI::MemoryScanner::System
             return;
         }
 
-        auto& region = m_MemoryScannerUIStore.GetRegion();
+        auto& region{ m_MemoryScannerUIStore.GetRegion() };
 
-        for (int i = 0; i < static_cast<int>(k_KnownSizes.size()); ++i)
+        for (int i{ 0 }; i < static_cast<int>(k_KnownSizes.size()); ++i)
         {
             ImGui::PushID(i);
 
             if (ImGui::Selectable(k_KnownSizes[i].Label, false))
             {
-                const std::string text = std::format("0x{:X}", k_KnownSizes[i].Size);
+                const std::string text{ std::format("0x{:X}", k_KnownSizes[i].Size) };
                 std::snprintf(region.Size, sizeof(region.Size), "%s", text.c_str());
             }
 
@@ -202,7 +213,7 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawTriggerResetButtons() -> void
     {
-        const bool isScanning = m_MemoryScannerStore.IsScanning();
+        const bool isScanning{ m_MemoryScannerStore.IsScanning() };
 
         if (isScanning) ImGui::BeginDisabled();
 
@@ -221,17 +232,17 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DispatchScan() -> void
     {
-        auto& region = m_MemoryScannerUIStore.GetRegion();
-        auto& scan = m_MemoryScannerUIStore.GetScan();
+        auto& region{ m_MemoryScannerUIStore.GetRegion() };
+        auto& scan{ m_MemoryScannerUIStore.GetScan() };
 
-        const auto base = static_cast<std::uintptr_t>(ParseHex(region.Base));
-        const auto size = static_cast<std::size_t>(ParseAuto(region.Size));
-        const int delayMs = region.DelayMs;
+        const auto base{ static_cast<std::uintptr_t>(ParseHex(region.Base)) };
+        const auto size{ static_cast<std::size_t>(ParseAuto(region.Size)) };
+        const int delayMs{ region.DelayMs };
 
         m_MemoryScannerStore.SetRegion("scan", base, size);
 
-        const DataType type = this->CurrentDataType();
-        auto& service = m_MemoryScannerService;
+        const DataType type{ this->CurrentDataType() };
+        auto& service{ m_MemoryScannerService };
 
         switch (this->CurrentMode().Mode)
         {
@@ -252,27 +263,35 @@ namespace UI::MemoryScanner::System
             break;
 
         case Mode::IncreasedBy:
-            service.TriggerIncreasedByScan(type, ParseValue(scan.ValueA, type), delayMs);
+            service.TriggerIncreasedByScan(type, MemoryScannerUIService::ParseValue(scan.ValueA, type), delayMs);
             break;
 
         case Mode::DecreasedBy:
-            service.TriggerDecreasedByScan(type, ParseValue(scan.ValueA, type), delayMs);
+            service.TriggerDecreasedByScan(type, MemoryScannerUIService::ParseValue(scan.ValueA, type), delayMs);
             break;
 
         case Mode::ExactValue:
             if (type == DataType::Float32)
+            {
                 service.TriggerExactScanFloat(ParseFloat(scan.ValueA));
+            }
             else
-                service.TriggerExactScan(type, ParseValue(scan.ValueA, type));
+            {
+                service.TriggerExactScan(type, MemoryScannerUIService::ParseValue(scan.ValueA, type));
+            }
             break;
 
         case Mode::InRange:
             if (type == DataType::Float32)
+            {
                 service.TriggerInRangeScanFloat(ParseFloat(scan.ValueA),
                     ParseFloat(scan.ValueB), delayMs);
+            }
             else
-                service.TriggerInRangeScan(type, ParseValue(scan.ValueA, type),
-                    ParseValue(scan.ValueB, type), delayMs);
+            {
+                service.TriggerInRangeScan(type, MemoryScannerUIService::ParseValue(scan.ValueA, type),
+                    MemoryScannerUIService::ParseValue(scan.ValueB, type), delayMs);
+            }
             break;
 
         case Mode::BitMask:
@@ -280,15 +299,14 @@ namespace UI::MemoryScanner::System
                 static_cast<std::uint32_t>(ParseAuto(scan.BitMask)),
                 static_cast<std::uint32_t>(ParseAuto(scan.BitPattern)), delayMs);
             break;
-
         }
     }
 
     auto MemoryScannerUIService::DrawScanStatus() -> void
     {
-        const Session& session = m_MemoryScannerStore.GetSession();
-        const bool isScanning = m_MemoryScannerStore.IsScanning();
-        const bool isTyped = this->IsTypedMode();
+        const Session& session{ m_MemoryScannerStore.GetSession() };
+        const bool isScanning{ m_MemoryScannerStore.IsScanning() };
+        const bool isTyped{ this->IsTypedMode() };
 
         if (session.Rounds.empty())
         {
@@ -296,10 +314,10 @@ namespace UI::MemoryScanner::System
             return;
         }
 
-        const std::size_t resultCount = isTyped ?
-            session.FinalMatches.size() : session.FinalDiffs.size();
+        const std::size_t resultCount{ isTyped ?
+            session.FinalMatches.size() : session.FinalDiffs.size() };
 
-        const int roundCount = static_cast<int>(session.Rounds.size());
+        const int roundCount{ static_cast<int>(session.Rounds.size()) };
 
         if (isScanning)
         {
@@ -321,14 +339,18 @@ namespace UI::MemoryScanner::System
         ImGui::Text("Round History");
         ImGui::Separator();
 
-        for (int r = 0; r < static_cast<int>(session.Rounds.size()); ++r)
+        for (int r{ 0 }; r < static_cast<int>(session.Rounds.size()); ++r)
         {
-            const auto& round = session.Rounds[r];
+            const auto& round{ session.Rounds[r] };
 
             if (round.IsUnchangedRound)
+            {
                 ImGui::TextColored({ 1.0f, 0.4f, 0.4f, 1.0f }, "Round %d [UNCHANGED]:", r + 1);
+            }
             else
+            {
                 ImGui::Text("Round %d:", r + 1);
+            }
 
             ImGui::SameLine();
             DrawSnapshotLabel(round.Before.Data.empty(), "Before...", "Before OK");
@@ -338,7 +360,7 @@ namespace UI::MemoryScanner::System
 
             if (round.IsComplete)
             {
-                const std::size_t count = isTyped ? round.TypedDiffs.size() : round.Diffs.size();
+                const std::size_t count{ isTyped ? round.TypedDiffs.size() : round.Diffs.size() };
 
                 ImGui::SameLine();
                 ImGui::TextColored(k_ValueColor, "(%zu matches)", count);
@@ -356,10 +378,10 @@ namespace UI::MemoryScanner::System
 
         this->DrawDataTypeCombo();
 
-        auto& scan = m_MemoryScannerUIStore.GetScan();
-        const ModeEntry& mode = this->CurrentMode();
-        const bool isFloat = this->CurrentDataType() == DataType::Float32;
-        const char* format = isFloat ? "float (e.g. 1.0)" : "hex or dec";
+        auto& scan{ m_MemoryScannerUIStore.GetScan() };
+        const ModeEntry& mode{ this->CurrentMode() };
+        const bool isFloat{ this->CurrentDataType() == DataType::Float32 };
+        const char* format{ isFloat ? "float (e.g. 1.0)" : "hex or dec" };
 
         if (mode.NeedsValueA)
         {
@@ -400,7 +422,7 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawModeCombo() -> void
     {
-        auto& scan = m_MemoryScannerUIStore.GetScan();
+        auto& scan{ m_MemoryScannerUIStore.GetScan() };
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled("Mode");
@@ -409,10 +431,10 @@ namespace UI::MemoryScanner::System
 
         if (!ImGui::BeginCombo("##mode", k_Modes[scan.ModeIndex].Label)) return;
 
-        for (int i = 0; i < static_cast<int>(k_Modes.size()); ++i)
+        for (int i{ 0 }; i < static_cast<int>(k_Modes.size()); ++i)
         {
             ImGui::PushID(i);
-            const bool isSelected = (i == scan.ModeIndex);
+            const bool isSelected{ (i == scan.ModeIndex) };
 
             if (ImGui::Selectable(k_Modes[i].Label, isSelected))
             {
@@ -435,8 +457,8 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawDataTypeCombo() -> void
     {
-        auto& scan = m_MemoryScannerUIStore.GetScan();
-        const int typeStart = AllowsBytes(this->CurrentMode().Mode) ? 0 : 1;
+        auto& scan{ m_MemoryScannerUIStore.GetScan() };
+        const int typeStart{ AllowsBytes(this->CurrentMode().Mode) ? 0 : 1 };
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled("Type");
@@ -445,10 +467,10 @@ namespace UI::MemoryScanner::System
 
         if (!ImGui::BeginCombo("##type", k_DataTypes[scan.DataTypeIndex].Label)) return;
 
-        for (int i = typeStart; i < static_cast<int>(k_DataTypes.size()); ++i)
+        for (int i{ typeStart }; i < static_cast<int>(k_DataTypes.size()); ++i)
         {
             ImGui::PushID(i);
-            const bool isSelected = (i == scan.DataTypeIndex);
+            const bool isSelected{ (i == scan.DataTypeIndex) };
 
             if (ImGui::Selectable(k_DataTypes[i].Label, isSelected)) scan.DataTypeIndex = i;
 
@@ -462,7 +484,7 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawFilters() -> void
     {
-        auto& filters = m_MemoryScannerUIStore.GetFilters();
+        auto& filters{ m_MemoryScannerUIStore.GetFilters() };
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled("Offset");
@@ -505,8 +527,8 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawDiffResults() -> void
     {
-        const Session& session = m_MemoryScannerStore.GetSession();
-        const auto& diffs = session.FinalDiffs;
+        const Session& session{ m_MemoryScannerStore.GetSession() };
+        const auto& diffs{ session.FinalDiffs };
 
         if (diffs.empty())
         {
@@ -514,11 +536,11 @@ namespace UI::MemoryScanner::System
             return;
         }
 
-        auto& filters = m_MemoryScannerUIStore.GetFilters();
+        auto& filters{ m_MemoryScannerUIStore.GetFilters() };
 
-        const auto filterFrom = static_cast<std::size_t>(ParseHex(filters.From));
-        const auto filterTo = static_cast<std::size_t>(ParseHex(filters.To));
-        const bool usesRange = filterTo > filterFrom;
+        const auto filterFrom{ static_cast<std::size_t>(ParseHex(filters.From)) };
+        const auto filterTo{ static_cast<std::size_t>(ParseHex(filters.To)) };
+        const bool usesRange{ filterTo > filterFrom };
 
         if (!ImGui::BeginTable("##difftable", 6, k_ResultTableFlags,
             ImVec2(0.0f, ImGui::GetContentRegionAvail().y)))
@@ -535,11 +557,11 @@ namespace UI::MemoryScanner::System
         ImGui::TableSetupColumn("Dec After", ImGuiTableColumnFlags_WidthFixed, 80.0f);
         ImGui::TableHeadersRow();
 
-        const int selectedRow = m_MemoryScannerUIStore.GetSelectedRow();
+        const int selectedRow{ m_MemoryScannerUIStore.GetSelectedRow() };
 
-        for (int d = 0; d < static_cast<int>(diffs.size()); ++d)
+        for (int d{ 0 }; d < static_cast<int>(diffs.size()); ++d)
         {
-            const auto& diff = diffs[d];
+            const auto& diff{ diffs[d] };
 
             if (usesRange && (diff.Offset < filterFrom || diff.Offset >= filterTo)) continue;
             if (filters.ByBefore && diff.Before != static_cast<std::uint8_t>(filters.BeforeValue)) continue;
@@ -557,7 +579,7 @@ namespace UI::MemoryScanner::System
             if (DrawRowSelectable(d, selectedRow)) m_MemoryScannerUIStore.SetSelectedRow(d);
             ImGui::SameLine();
 
-            this->DrawAddressCell(ResolveAddress(session, diff.Offset), d);
+            this->DrawAddressCell(MemoryScannerUIService::ResolveAddress(session, diff.Offset), d);
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(1); ImGui::Text("0x%04zX", diff.Offset);
@@ -572,9 +594,9 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawTypedResults() -> void
     {
-        const Session& session = m_MemoryScannerStore.GetSession();
-        const auto& matches = session.FinalMatches;
-        const DataType type = this->CurrentDataType();
+        const Session& session{ m_MemoryScannerStore.GetSession() };
+        const auto& matches{ session.FinalMatches };
+        const DataType type{ this->CurrentDataType() };
 
         if (matches.empty())
         {
@@ -595,11 +617,11 @@ namespace UI::MemoryScanner::System
         ImGui::TableSetupColumn("After", ImGuiTableColumnFlags_WidthFixed, 160.0f);
         ImGui::TableHeadersRow();
 
-        const int selectedRow = m_MemoryScannerUIStore.GetSelectedRow();
+        const int selectedRow{ m_MemoryScannerUIStore.GetSelectedRow() };
 
-        for (int d = 0; d < static_cast<int>(matches.size()); ++d)
+        for (int d{ 0 }; d < static_cast<int>(matches.size()); ++d)
         {
-            const auto& match = matches[d];
+            const auto& match{ matches[d] };
 
             ImGui::TableNextRow();
             if (d == selectedRow)
@@ -613,17 +635,17 @@ namespace UI::MemoryScanner::System
             if (DrawRowSelectable(d, selectedRow)) m_MemoryScannerUIStore.SetSelectedRow(d);
             ImGui::SameLine();
 
-            this->DrawAddressCell(ResolveAddress(session, match.Offset), d);
+            this->DrawAddressCell(MemoryScannerUIService::ResolveAddress(session, match.Offset), d);
             ImGui::PopID();
 
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("0x%04zX", match.Offset);
 
             ImGui::TableSetColumnIndex(2);
-            ImGui::TextDisabled("%s", FormatTypedValue(match.ValueBefore, type).c_str());
+            ImGui::TextDisabled("%s", MemoryScannerUIService::FormatTypedValue(match.ValueBefore, type).c_str());
 
             ImGui::TableSetColumnIndex(3);
-            ImGui::TextColored(k_ValueColor, "%s", FormatTypedValue(match.ValueAfter, type).c_str());
+            ImGui::TextColored(k_ValueColor, "%s", MemoryScannerUIService::FormatTypedValue(match.ValueAfter, type).c_str());
         }
 
         ImGui::EndTable();
@@ -631,13 +653,13 @@ namespace UI::MemoryScanner::System
 
     auto MemoryScannerUIService::DrawAddressCell(std::uintptr_t address, int rowIndex) -> void
     {
-        const std::string text = std::format("0x{:X}", address);
+        const std::string text{ std::format("0x{:X}", address) };
 
-        const float buttonWidth = ImGui::CalcTextSize("Copy").x +
-            ImGui::GetStyle().FramePadding.x * 2.0f;
+        const float buttonWidth{ ImGui::CalcTextSize("Copy").x +
+            ImGui::GetStyle().FramePadding.x * 2.0f };
 
-        const float columnRight = ImGui::GetCursorPosX() +
-            ImGui::GetColumnWidth() - ImGui::GetStyle().ScrollbarSize;
+        const float columnRight{ ImGui::GetCursorPosX() +
+            ImGui::GetColumnWidth() - ImGui::GetStyle().ScrollbarSize };
 
         ImGui::TextUnformatted(text.c_str());
         ImGui::SameLine();
@@ -696,7 +718,7 @@ namespace UI::MemoryScanner::System
 
         case DataType::Float32:
         {
-            const auto bits = static_cast<std::uint32_t>(raw);
+            const auto bits{ static_cast<std::uint32_t>(raw) };
             return std::format("{:.6f} (0x{:08X})", std::bit_cast<float>(bits), bits);
         }
 

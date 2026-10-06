@@ -4,9 +4,10 @@ import std;
 
 export namespace UI::Logs::Type
 {
-	struct FilterState
-	{
-		std::string LowerQuery{};
-		bool IsFiltering{ false };
-	};
+    // Text filter of the logs window.
+    struct FilterState
+    {
+        std::string LowerQuery{};
+        bool IsFiltering{ false };
+    };
 }

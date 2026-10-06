@@ -7,11 +7,12 @@ export module UI.Icon.Type;
 
 export namespace UI::Icon::Type
 {
+    // GPU texture of an icon with its size.
     struct IconTexture
     {
-        ID3D11ShaderResourceView* SRV = nullptr;
-        int Width = 0;
-        int Height = 0;
+        ID3D11ShaderResourceView* SRV{ nullptr };
+        int Width{ 0 };
+        int Height{ 0 };
 
         auto IsValid() const -> bool
         {
