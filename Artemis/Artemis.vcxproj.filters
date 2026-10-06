@@ -697,18 +697,6 @@
     <Filter Include="Core\UI\Launcher\Type">
       <UniqueIdentifier>{4bbac175-7447-436e-89dd-33591dbae0bf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\UI\Overlay">
-      <UniqueIdentifier>{430482ef-6d8d-4bef-b9e2-f8ac23176da9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Overlay\State">
-      <UniqueIdentifier>{ddcf2840-fe45-4713-865b-c2f1e262110b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Overlay\System">
-      <UniqueIdentifier>{dea4e7fb-1d19-4798-b050-ace2a9888903}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Overlay\System\Panel">
-      <UniqueIdentifier>{fdac4452-2b4e-485e-96c5-69908d5f17ac}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\UI\ObjectTable">
       <UniqueIdentifier>{af68c33a-50f0-4958-9bc7-0598c9030c06}</UniqueIdentifier>
     </Filter>
@@ -1985,42 +1973,6 @@
     <ClCompile Include="Core\UI\Launcher\System\LauncherUIService.cpp">
       <Filter>Core\UI\Launcher\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\State\OverlayUIStore.ixx">
-      <Filter>Core\UI\Overlay\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\State\OverlayUIStore.cpp">
-      <Filter>Core\UI\Overlay\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\OverlayUIService.ixx">
-      <Filter>Core\UI\Overlay\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\OverlayUIService.cpp">
-      <Filter>Core\UI\Overlay\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.ixx">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\CollidablesUI.cpp">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\HealthsUI.ixx">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\HealthsUI.cpp">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.cpp">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\FixturesUI.ixx">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\AffordancesUI.cpp">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Overlay\System\Panel\AffordancesUI.ixx">
-      <Filter>Core\UI\Overlay\System\Panel</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.ixx">
       <Filter>Core\UI\ObjectTable\State</Filter>
     </ClCompile>
@@ -2737,6 +2689,12 @@
     <Filter Include="Core\Viewer\Style\Type">
       <UniqueIdentifier>{1ba49452-11fa-47f9-b4c7-e05cb0650008}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Viewer\Hud\Type">
+      <UniqueIdentifier>{8ada1ebf-56c2-4336-bd0b-024b107ecbe3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\System\Label">
+      <UniqueIdentifier>{61417c77-12dc-4923-9864-e354ffa9c48f}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Viewer\Options">
       <UniqueIdentifier>{bbb158fd-fa68-4f73-9cce-b8fce7e3664d}</UniqueIdentifier>
     </Filter>
@@ -2754,6 +2712,15 @@
     </Filter>
     <Filter Include="Core\Gui\Backend\System">
       <UniqueIdentifier>{8c4a4c8b-2e15-4cf8-bec5-8595ae4badbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud">
+      <UniqueIdentifier>{430482ef-6d8d-4bef-b9e2-f8ac23176da9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\System">
+      <UniqueIdentifier>{dea4e7fb-1d19-4798-b050-ace2a9888903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\System\Panel">
+      <UniqueIdentifier>{fdac4452-2b4e-485e-96c5-69908d5f17ac}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Gui\Color">
       <UniqueIdentifier>{d6f4e7d1-1327-4f32-b3a3-f2ded0661471}</UniqueIdentifier>
@@ -2833,6 +2800,54 @@
     <ClCompile Include="Core\Viewer\Options\State\OptionsStore.cpp">
       <Filter>Core\Viewer\Options\State</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelCanvas.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelCanvas.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\PlayerLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\PlayerLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelService.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelService.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\ObjectLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\ObjectLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\VehicleLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\VehicleLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\HealthLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\HealthLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\InteractionLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\InteractionLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\FixtureLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\FixtureLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx">
       <Filter>Core\Viewer\Map\Type</Filter>
     </ClCompile>
@@ -2904,6 +2919,39 @@
     </ClCompile>
     <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.cpp">
       <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\HudService.ixx">
+      <Filter>Core\Viewer\Hud\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\Type\Viewer.Hud.Type.ixx">
+      <Filter>Core\Viewer\Hud\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\HudService.cpp">
+      <Filter>Core\Viewer\Hud\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\CollidablesHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\CollidablesHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\HealthsHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\HealthsHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\FixturesHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\FixturesHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\AffordancesHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\AffordancesHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Color\Gui.Color.System.ixx">
       <Filter>Core\Gui\Color</Filter>
