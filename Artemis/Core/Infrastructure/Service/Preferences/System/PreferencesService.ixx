@@ -1,42 +1,62 @@
 export module Service.Preferences.System;
 
-import Platform.Lifecycle.State;
+import Service.Preferences.Type;
 import Service.Settings.State;
 import Service.Logs.System;
 import std;
 
 export namespace Service::Preferences::System
 {
-	using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-	using SettingsStore = Service::Settings::State::SettingsStore;
-	using LogsService = Service::Logs::System::LogsService;
+    // Persists user preferences to user_preferences.cfg in the AppData folder.
+    // note: Does nothing unless AppData is enabled. Other modules add their keys through RegisterSection.
+    class PreferencesService
+    {
+    private:
+        using SectionSaver = Service::Preferences::Type::SectionSaver;
+        using SectionLoader = Service::Preferences::Type::SectionLoader;
+        using Section = Service::Preferences::Type::Section;
 
-	class PreferencesService
-	{
-	public:
-		PreferencesService(LifecycleStore& lifecycleStore,
-			SettingsStore& settingsStore, LogsService& logService) :
-			m_LifecycleStore(lifecycleStore), m_SettingsStore(settingsStore),
-			m_LogService(logService) {}
-		~PreferencesService() = default;
+        using SettingsStore = Service::Settings::State::SettingsStore;
+        using LogsService = Service::Logs::System::LogsService;
 
-		auto Save() -> void;
-		auto Load() -> void;
+    public:
+        PreferencesService(SettingsStore& settingsStore, LogsService& logsService) :
+            m_SettingsStore(settingsStore), m_LogsService(logsService) {}
+        ~PreferencesService() = default;
 
-	private:
-		LifecycleStore& m_LifecycleStore;
-		SettingsStore& m_SettingsStore;
-		LogsService& m_LogService;
+        // Writes all preferences to disk, replacing the file.
+        auto Save() -> void;
 
-		auto GetPreferencesFilePath() const -> std::string;
-		auto ParseLine(const std::string& line) -> void;
+        // Reads preferences from disk and applies them. A missing file keeps the defaults.
+        auto Load() -> void;
 
-		auto SaveLifeCycleState(std::ofstream& file) -> void;
-		auto SaveSettingsState(std::ofstream& file) -> void;
-		auto SaveUI(std::ofstream& file) -> void;
+        // Registers a group of keys owned by another module.
+        // param prefix: Key prefix that identifies the group.
+        // param saver: Writes the group's lines.
+        // param loader: Receives each matching key without its prefix, and the value.
+        auto RegisterSection(std::string prefix, SectionSaver saver, SectionLoader loader) -> void;
 
-		auto LoadLifecycleState(std::string& key, std::string& value) -> void;
-		auto LoadSettingsState(std::string& key, std::string& value) -> void;
-		auto LoadUI(std::string& key, std::string& value) -> void;
-	};
+    private:
+        SettingsStore& m_SettingsStore;
+        LogsService& m_LogsService;
+
+        std::vector<Section> m_Sections{};
+
+        auto GetPreferencesFilePath() const -> std::string;
+
+        // Applies one "key=value" line. Blank lines and comment lines are ignored.
+        auto ParseLine(const std::string& line) -> void;
+
+        // Writes the Settings_ keys.
+        auto SaveSettingsState(std::ofstream& file) -> void;
+
+        // Writes the UI_ keys.
+        auto SaveUI(std::ofstream& file) -> void;
+
+        // Applies one Settings_ key. Invalid numbers fall back to 1.0.
+        auto LoadSettingsState(const std::string& key, const std::string& value) -> void;
+
+        // Applies one UI_ key.
+        auto LoadUI(const std::string& key, const std::string& value) -> void;
+    };
 }

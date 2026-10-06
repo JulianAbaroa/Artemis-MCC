@@ -1048,6 +1048,9 @@
     <Filter Include="Core\Domain\5_Environment\Aim\System">
       <UniqueIdentifier>{8a441872-8e9b-46e9-b668-a3f2b363cf2f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Infrastructure\Service\Preferences\Type">
+      <UniqueIdentifier>{b156d511-5ac1-46c1-9b59-d69c02b8f074}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imgui.h">
@@ -2923,6 +2926,9 @@
     </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx">
+      <Filter>Core\Infrastructure\Service\Preferences\Type</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

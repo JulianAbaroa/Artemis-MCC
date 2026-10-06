@@ -355,6 +355,7 @@
     <ClCompile Include="Core\Infrastructure\Service\Logs\Type\Service.Logs.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.cpp" />
     <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Service\Service.Layer.ixx" />
     <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.ixx" />

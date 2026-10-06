@@ -5,32 +5,37 @@ import std;
 
 export namespace Service::Logs::State
 {
-	class LogsStore
-	{
-	private:
-		using Entry = Service::Logs::Type::Entry;
+    // Thread-safe buffer of the most recent log entries, oldest first.
+    class LogsStore
+    {
+    private:
+        using LogEntry = Service::Logs::Type::LogEntry;
 
-	public:
-		LogsStore() = default;
-		~LogsStore() = default;
+    public:
+        LogsStore() = default;
+        ~LogsStore() = default;
 
-		auto PushBack(Entry entry) -> void;
-		auto TrimToSize(int size) -> void;
+        // Appends an entry. Drops the oldest one if the buffer is over capacity.
+        auto PushBack(LogEntry entry) -> void;
 
-		auto ForEachLog(std::function<void(const Entry&)> callback) const -> void;
-		auto ClearLogs() -> void;
+        // Visits every entry, oldest first.
+        // note: Holds the lock during the walk. The callback must not call back into this store.
+        auto ForEachLog(std::function<void(const LogEntry&)> callback) const -> void;
+        auto ClearLogs() -> void;
 
-		auto GetMaxCapacity() const -> int;
+        // Returns a copy of the entry at index, oldest first.
+        // return: Empty entry if index is out of range.
+        auto GetLogAt(std::size_t index) const -> LogEntry;
+        auto GetTotalLogs() const -> std::size_t;
 
-		auto GetLogAt(std::size_t index) const -> Entry;
-		auto GetTotalLogs() const -> std::size_t;
+        // Removes every entry matching the predicate.
+        // note: Same locking rule as ForEachLog.
+        auto RemoveIf(std::function<bool(const LogEntry&)> predicate) -> void;
 
-		auto RemoveIf(std::function<bool(const Entry&)> predicate) -> void;
+    private:
+        std::deque<LogEntry> m_Logs{};
+        mutable std::mutex m_Mutex{};
 
-	private:
-		std::deque<Entry> m_Logs{};
-		mutable std::mutex m_Mutex{};
-
-		const std::atomic<int> m_MaxCapacity{ 500 };
-	};
+        const std::size_t m_MaxCapacity{ 500 };
+    };
 }

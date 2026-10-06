@@ -78,7 +78,7 @@ namespace Runtime::Thread
 				auto tickEnd = SteadyClock::now();
 				lifecycle.EndTick();
 
-				telemetry.RecordTickTime(static_cast<std::uint64_t>(
+				telemetry.RecordSweepTime(static_cast<std::uint64_t>(
 					std::chrono::duration_cast<NanoSeconds>(tickEnd - tickStart).count())
 				);
 

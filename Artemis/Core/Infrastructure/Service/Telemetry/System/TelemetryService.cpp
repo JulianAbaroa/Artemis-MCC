@@ -4,13 +4,9 @@ namespace Service::Telemetry::System
 {
     auto TelemetryService::Update() -> void
     {
-        auto now = Clock::now();
+        auto now = steady_clock::now();
 
-        auto ticksNow = now.time_since_epoch().count();
-        auto ticksLast = m_LastUpdate.time_since_epoch().count();
-
-        constexpr double secondsPerTick = static_cast<double>(Clock::period::num) / static_cast<double>(Clock::period::den);
-        double seconds = static_cast<double>(ticksNow - ticksLast) * secondsPerTick;
+        double seconds = std::chrono::duration<double>(now - m_LastUpdate).count();
 
         if (seconds <= 0.0) return;
         m_LastUpdate = now;

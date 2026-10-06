@@ -5,24 +5,26 @@ import std;
 
 export namespace Service::Telemetry::System
 {
-	class TelemetryService
-	{
-	private:
-		using Clock = std::chrono::steady_clock;
-		using DurationDouble = std::chrono::duration<double>;
+    // Turns the raw counters of TelemetryStore into per-second rates and averages.
+    class TelemetryService
+    {
+    private:
+        using steady_clock = std::chrono::steady_clock;
 
-		using TelemetryStore = Service::Telemetry::State::TelemetryStore;
+        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
-	public:
-		TelemetryService(TelemetryStore& telemetryStore) :
-			m_TelemetryStore(telemetryStore) {}
-		~TelemetryService() = default;
+    public:
+        TelemetryService(TelemetryStore& telemetryStore) :
+            m_TelemetryStore(telemetryStore) {}
+        ~TelemetryService() = default;
 
-		auto Update() -> void;
+        // Converts the counters gathered since the last call into rates and averages, then resets them.
+        // note: Call periodically from a single thread. Other threads keep feeding the counters meanwhile.
+        auto Update() -> void;
 
-	private:
-		TelemetryStore& m_TelemetryStore;
+    private:
+        TelemetryStore& m_TelemetryStore;
 
-		Clock::time_point m_LastUpdate{ Clock::now() };
-	};
+        steady_clock::time_point m_LastUpdate{ steady_clock::now() };
+    };
 }
