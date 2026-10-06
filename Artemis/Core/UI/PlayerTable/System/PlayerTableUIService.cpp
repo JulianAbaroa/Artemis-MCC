@@ -5,18 +5,18 @@ module;
 module UI.PlayerTable.System;
 
 import Tables.Player.Type;
-import UI.Color.System;
-import UI.Format.System;
+import Gui.Color.System;
+import Gui.Format.System;
 import std;
 
 namespace
 {
 	using ConnectionState = Tables::Player::Type::Alive::ConnectionState;
 
-	using TeamToColor = UI::Color::System::TeamToColor;
-	using HexFormater = UI::Format::System::HexFormater;
-	using TeamFormater = UI::Format::System::TeamFormater;
-	using HandleDrawerUIService = UI::Widget::System::HandleDrawerUIService;
+	using TeamToColor = Gui::Color::System::TeamToColor;
+	using HexFormater = Gui::Format::System::HexFormater;
+	using TeamFormater = Gui::Format::System::TeamFormater;
+	using HandleDrawerGuiService = Gui::Widget::System::HandleDrawerGuiService;
 
 	const ImVec2 k_CardSize{ 320.0f, 480.0f };
 	constexpr float k_CardSpacing = 8.0f;
@@ -59,7 +59,7 @@ namespace UI::PlayerTable::System
 			this->DrawPlayerCard(*filtered[i]);
 
 			const bool hasNext = i + 1 < filtered.size();
-			const bool nextFits = ResponsiveCardUIService::FitsOnSameLine(
+			const bool nextFits = ResponsiveCardGuiService::FitsOnSameLine(
 				k_CardSize.x, k_CardSpacing, windowRightEdge);
 
 			if (hasNext && nextFits) ImGui::SameLine();
@@ -106,7 +106,7 @@ namespace UI::PlayerTable::System
 
 	auto PlayerTableUIService::DrawPlayerCard(const AlivePlayer& player) -> void
 	{
-		ResponsiveCardUIService::Draw(player.Handle, k_CardSize, [this, &player]
+		ResponsiveCardGuiService::Draw(player.Handle, k_CardSize, [this, &player]
 			{
 				this->DrawCardHeader(player);
 				this->DrawCardIdentity(player);
@@ -189,13 +189,13 @@ namespace UI::PlayerTable::System
 		ImGui::Separator();
 		ImGui::Indent(5.0f);
 
-		HandleDrawerUIService::DrawU32("Primary Weapon:", player.PrimaryWeaponHandle,
+		HandleDrawerGuiService::DrawU32("Primary Weapon:", player.PrimaryWeaponHandle,
 			player.Handle, m_CopyableField);
 
-		HandleDrawerUIService::DrawU32("Secondary Weapon:", player.SecondaryWeaponHandle,
+		HandleDrawerGuiService::DrawU32("Secondary Weapon:", player.SecondaryWeaponHandle,
 			player.Handle, m_CopyableField);
 
-		HandleDrawerUIService::DrawU32("Objective:", player.ObjectiveHandle,
+		HandleDrawerGuiService::DrawU32("Objective:", player.ObjectiveHandle,
 			player.Handle, m_CopyableField);
 
 		ImGui::Unindent(5.0f);
@@ -208,13 +208,13 @@ namespace UI::PlayerTable::System
 		ImGui::Separator();
 		ImGui::Indent(5.0f);
 
-		HandleDrawerUIService::DrawU32("Current Biped:", player.CurrentBipedHandle,
+		HandleDrawerGuiService::DrawU32("Current Biped:", player.CurrentBipedHandle,
 			player.Handle, m_CopyableField);
 
-		HandleDrawerUIService::DrawU32("Alive Biped:", player.AliveBipedHandle,
+		HandleDrawerGuiService::DrawU32("Alive Biped:", player.AliveBipedHandle,
 			player.Handle, m_CopyableField);
 
-		HandleDrawerUIService::DrawU32("Dead Biped:", player.DeadBipedHandle,
+		HandleDrawerGuiService::DrawU32("Dead Biped:", player.DeadBipedHandle,
 			player.Handle, m_CopyableField);
 
 		ImGui::Unindent(5.0f);

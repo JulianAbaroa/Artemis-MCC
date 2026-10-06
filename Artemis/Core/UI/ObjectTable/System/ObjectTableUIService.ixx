@@ -3,7 +3,7 @@ export module UI.ObjectTable.System;
 import Export.Tick.Type;
 import Export.Tick.State;
 import UI.ObjectTable.State;
-import UI.Widget.System;
+import Gui.Widget.System;
 import std;
 
 export namespace UI::ObjectTable::System
@@ -15,9 +15,9 @@ export namespace UI::ObjectTable::System
 
 		using TickStore = Export::Tick::State::TickStore;
 		using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
-		using SearchFilterUIService = UI::Widget::System::SearchFilterUIService;
-		using CopyableFieldUIService = UI::Widget::System::CopyableFieldUIService;
-		using ResponsiveCardUIService = UI::Widget::System::ResponsiveCardUIService;
+		using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
+		using CopyableFieldGuiService = Gui::Widget::System::CopyableFieldGuiService;
+		using ResponsiveCardGuiService = Gui::Widget::System::ResponsiveCardGuiService;
 
 	public:
 		ObjectTableUIService(TickStore& tickStore, ObjectTableUIStore& objectTableUIStore) :
@@ -34,8 +34,8 @@ export namespace UI::ObjectTable::System
 		TickStore& m_TickStore;
 		ObjectTableUIStore& m_ObjectTableUIStore;
 
-		SearchFilterUIService m_SearchFilter{};
-		CopyableFieldUIService m_CopyableField{};
+		SearchFilterGuiService m_SearchFilter{};
+		CopyableFieldGuiService m_CopyableField{};
 
 		auto RefreshSnapshot() -> void;
 		auto PassesFilter(const AliveObject& object) const -> bool;

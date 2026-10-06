@@ -16,6 +16,7 @@ export namespace UI::Hotkey::State
 		static constexpr std::uint32_t k_VK_F3 = 0x72;
 		static constexpr std::uint32_t k_VK_F4 = 0x73;
 		static constexpr std::uint32_t k_VK_F5 = 0x74;
+		static constexpr std::uint32_t k_VK_F6 = 0x75;
 		static constexpr std::uint32_t k_VK_Left = 0x25;
 		static constexpr std::uint32_t k_VK_Up = 0x26;
 
@@ -31,7 +32,7 @@ export namespace UI::Hotkey::State
 		auto Find(std::uint32_t virtualKey, bool isShiftDown) const -> const Binding*;
 
 	private:
-		const std::array<Binding, 9> m_Bindings
+		const std::array<Binding, 10> m_Bindings
 		{ {
 			{ Action::ToggleLauncher, Scope::UI, k_VK_F2, false,
 				"Toggle Launcher", "F2", "Show or hide the launcher." },
@@ -44,6 +45,9 @@ export namespace UI::Hotkey::State
 
 			{ Action::None, Scope::Viewer, k_VK_F5, false,
 				"Toggle Camera Follow", "F5", "Makes the map camera follow the selection." },
+
+			{ Action::None, Scope::Viewer, k_VK_F6, false,
+				"Toggle Labels", "F6", "Show or hide the 3D labels over the map." },
 
 			{ Action::ToggleMenu, Scope::UI, '1', true,
 				"Toggle Menu", "SHIFT + 1", "Show or hide the Artemis Control Panel." },

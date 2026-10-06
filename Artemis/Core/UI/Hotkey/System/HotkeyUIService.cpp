@@ -49,7 +49,7 @@ namespace UI::Hotkey::System
 			break;
 
 		case Action::ToggleOverlay:
-			m_OverlayVisibilityStore.ToggleVisible();
+			m_OverlayStore.ToggleVisible();
 			break;
 
 		case Action::ToggleMenu:
@@ -57,7 +57,7 @@ namespace UI::Hotkey::System
 			break;
 
 		case Action::ResetMenu:
-			m_SettingsStore.SetForceMenuReset(true);
+			m_SettingsStore.SetMenuResetPending(true);
 			break;
 
 		case Action::LockMenu:

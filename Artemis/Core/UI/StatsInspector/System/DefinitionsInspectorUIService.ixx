@@ -5,7 +5,7 @@ import Export.Tick.State;
 import Resolved.Definitions.State;
 import Service.Settings.State;
 import Viewer.Selection.State;
-import UI.Widget.System;
+import Gui.Widget.System;
 import std;
 
 export namespace UI::DefinitionsInspector::System
@@ -18,7 +18,7 @@ export namespace UI::DefinitionsInspector::System
 		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 		using SettingsStore = Service::Settings::State::SettingsStore;
 		using SelectionStore = Viewer::Selection::State::SelectionStore;
-		using InspectorUIService = UI::Widget::System::InspectorUIService;
+		using InspectorGuiService = Gui::Widget::System::InspectorGuiService;
 
 		// TODO: Move to type
 		struct LinkedTag
@@ -46,7 +46,7 @@ export namespace UI::DefinitionsInspector::System
 		SelectionStore& m_SelectionStore;
 		SettingsStore& m_SettingsStore;
 
-		InspectorUIService m_Inspector{};
+		InspectorGuiService m_Inspector{};
 
 		std::optional<LinkedTag> m_Pinned{};
 		std::optional<std::uint32_t> m_LastHandle{};

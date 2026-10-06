@@ -5,6 +5,7 @@ module;
 module UI.Settings.System;
 
 import UI.Hotkey.Type;
+import Viewer.Options.Type;
 import std;
 
 namespace
@@ -89,6 +90,14 @@ namespace UI::Settings::System
 				ImGui::Spacing();
 			}
 
+			if (ImGui::CollapsingHeader("Viewer"))
+			{
+				ImGui::Indent(10.0f);
+				this->DrawViewerOptions();
+				ImGui::Unindent(10.0f);
+				ImGui::Spacing();
+			}
+
 			if (ImGui::CollapsingHeader("Hotkeys", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				ImGui::Indent(10.0f);
@@ -162,10 +171,10 @@ namespace UI::Settings::System
 
 		ImGui::Spacing();
 
-		bool shouldFreezeMouse = m_SettingsStore.ShouldFreezeMouse();
+		bool shouldFreezeMouse = m_SettingsStore.IsMouseFreezeEnabled();
 		if (ImGui::Checkbox("Freeze Mouse Input", &shouldFreezeMouse))
 		{
-			m_SettingsStore.SetFreezeMouse(shouldFreezeMouse);
+			m_SettingsStore.SetMouseFreezeEnabled(shouldFreezeMouse);
 		}
 
 		if (ImGui::IsItemHovered())
@@ -175,13 +184,13 @@ namespace UI::Settings::System
 
 		ImGui::Spacing();
 
-		const bool usesAppData = m_SettingsStore.ShouldUseAppData();
+		const bool usesAppData = m_SettingsStore.IsAppDataEnabled();
 		if (!usesAppData) ImGui::BeginDisabled();
 
-		bool shouldOpenOnStart = m_SettingsStore.ShouldOpenUIOnStart();
+		bool shouldOpenOnStart = m_SettingsStore.IsOpenUIOnStartEnabled();
 		if (ImGui::Checkbox("Open UI on MCC start", &shouldOpenOnStart))
 		{
-			m_SettingsStore.SetOpenUIOnStart(shouldOpenOnStart);
+			m_SettingsStore.SetOpenUIOnStartEnabled(shouldOpenOnStart);
 		}
 
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
@@ -192,6 +201,87 @@ namespace UI::Settings::System
 		}
 
 		if (!usesAppData) ImGui::EndDisabled();
+	}
+
+	auto SettingsUIService::DrawViewerOptions() -> void
+	{
+		using namespace Viewer::Options::Type;
+
+		for (const GroupInfo& group : k_Groups)
+		{
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed;
+			if (group.IsOpenByDefault) flags |= ImGuiTreeNodeFlags_DefaultOpen;
+
+			if (!ImGui::TreeNodeEx(group.Label, flags)) continue;
+
+			this->DrawViewerGroup(group.Id);
+
+			ImGui::TreePop();
+			ImGui::Spacing();
+		}
+
+		if (ImGui::Button("Reset Viewer Options"))
+		{
+			m_OptionsStore.ResetToDefaults();
+		}
+	}
+
+	auto SettingsUIService::DrawViewerGroup(Viewer::Options::Type::Group group) -> void
+	{
+		using namespace Viewer::Options::Type;
+
+		const bool areLabelsEnabled = m_OptionsStore.IsEnabled(Flag::Labels);
+
+		SectionBox box;
+
+		for (const FlagInfo& info : k_Flags)
+		{
+			if (info.Group != group) continue;
+
+			const bool isMaster = info.Id == Flag::Labels;
+			const bool isDisabled = !isMaster && !areLabelsEnabled;
+
+			if (isDisabled) ImGui::BeginDisabled();
+
+			bool value = m_OptionsStore.IsEnabled(info.Id);
+			if (ImGui::Checkbox(info.Label, &value))
+			{
+				m_OptionsStore.SetEnabled(info.Id, value);
+			}
+
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			{
+				ImGui::SetTooltip("%s", info.Tooltip);
+			}
+
+			if (isDisabled) ImGui::EndDisabled();
+		}
+
+		for (const ScalarInfo& info : k_Scalars)
+		{
+			if (info.Group != group) continue;
+
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", info.Label);
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("%s", info.Tooltip);
+			}
+
+			ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
+			ImGui::PushItemWidth(200.0f);
+			ImGui::PushID(info.Key);
+
+			float value = m_OptionsStore.GetScalar(info.Id);
+			if (ImGui::SliderFloat("##value", &value, info.Min, info.Max, info.Format))
+			{
+				m_OptionsStore.SetScalar(info.Id, value);
+			}
+
+			ImGui::PopID();
+			ImGui::PopItemWidth();
+		}
 	}
 
 	auto SettingsUIService::DrawHotkeysTable() -> void
@@ -241,7 +331,7 @@ namespace UI::Settings::System
 			SectionBox box;
 
 			ImGui::BeginGroup();
-			bool usesAppData = m_SettingsStore.ShouldUseAppData();
+			bool usesAppData = m_SettingsStore.IsAppDataEnabled();
 			ImGui::AlignTextToFramePadding();
 
 			if (ImGui::Checkbox("Enable Local Storage (AppData)", &usesAppData))
@@ -252,9 +342,9 @@ namespace UI::Settings::System
 				}
 				else
 				{
-					m_SettingsStore.SetUseAppData(true);
+					m_SettingsStore.SetAppDataEnabled(true);
 					m_SettingsService.CreateAppData();
-					m_SettingsService.SaveUseAppData();
+					m_SettingsService.SaveAppDataEnabled();
 				}
 			}
 			ImGui::EndGroup();
@@ -379,8 +469,8 @@ namespace UI::Settings::System
 
 		if (ImGui::Button("Yes", ImVec2(buttonWidth, 0.0f)))
 		{
-			m_SettingsStore.SetUseAppData(false);
-			m_SettingsService.SaveUseAppData();
+			m_SettingsStore.SetAppDataEnabled(false);
+			m_SettingsService.SaveAppDataEnabled();
 			ImGui::CloseCurrentPopup();
 		}
 
@@ -414,8 +504,8 @@ namespace UI::Settings::System
 		if (ImGui::Button("Yes", ImVec2(buttonWidth, 0.0f)))
 		{
 			m_SettingsService.DeleteAppData();
-			m_SettingsStore.SetUseAppData(false);
-			m_SettingsService.SaveUseAppData();
+			m_SettingsStore.SetAppDataEnabled(false);
+			m_SettingsService.SaveAppDataEnabled();
 			ImGui::CloseCurrentPopup();
 		}
 

@@ -5,49 +5,39 @@ import std;
 
 namespace
 {
-	using Tab = UI::Launcher::Type::Tab;
+    using Tab = UI::Launcher::Type::Tab;
 }
 
 namespace UI
 {
-	auto Layer::Initialize(const FrameContext& frame) -> void
-	{
-		m_LauncherUIService.ReleaseIcons();
+    auto Layer::Initialize(const FrameContext&) -> void
+    {
+        m_LauncherUIService.ReleaseIcons();
+        m_LauncherUIService.OnInitialized();
+    }
 
-		m_BackendUIService.Initialize(frame);
-		m_LauncherUIService.OnInitialized();
-	}
+    auto Layer::Shutdown() -> void
+    {
+        m_LauncherUIService.ReleaseIcons();
+        m_ObjectTableUIStore.Cleanup();
+        m_PlayerTableUIStore.Cleanup();
+    }
 
-	auto Layer::Shutdown() -> void
-	{
-		m_LauncherUIService.ReleaseIcons();
-		m_BackendUIService.Shutdown();
+    auto Layer::DrawFrame(const FrameContext& frame) -> void
+    {
+        if (!m_BackendGuiService.IsReady()) return;
 
-		m_ObjectTableUIStore.Cleanup();
-		m_PlayerTableUIStore.Cleanup();
-	}
+        const bool isMenuVisible = m_LauncherUIService.Update();
 
-	auto Layer::DrawFrame(const FrameContext& frame) -> void
-	{
-		if (!m_BackendUIService.IsReady()) return;
+        if (isMenuVisible) m_LauncherUIService.DrawDockSpace();
 
-		const bool isMenuVisible = m_LauncherUIService.Update();
+        m_LauncherUIService.DrawTab(Tab::ObjectTable, "Object Table", [this] { m_ObjectTableUIService.Draw(); });
+        m_LauncherUIService.DrawTab(Tab::PlayerTable, "Player Table", [this] { m_PlayerTableUIService.Draw(); });
+        m_LauncherUIService.DrawTab(Tab::DefinitionsInspector, "Definitions Inspector", [this] { m_DefinitionsInspectorUIService.Draw(); });
+        m_LauncherUIService.DrawTab(Tab::Settings, "Settings", [this] { m_SettingsUIService.Draw(); });
+        m_LauncherUIService.DrawTab(Tab::MemoryScanner, "Memory Scanner", [this] { m_MemoryScannerUIService.Draw(); });
+        m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] { m_LogsUIService.Draw(); });
 
-		m_BackendUIService.NewFrame(isMenuVisible);
-
-		if (isMenuVisible) m_LauncherUIService.DrawDockSpace();
-
-		m_OverlayUIService.Draw();
-
-		m_LauncherUIService.DrawTab(Tab::ObjectTable, "Object Table", [this] { m_ObjectTableUIService.Draw(); });
-		m_LauncherUIService.DrawTab(Tab::PlayerTable, "Player Table", [this] { m_PlayerTableUIService.Draw(); });
-		m_LauncherUIService.DrawTab(Tab::DefinitionsInspector, "Definitions Inspector", [this] { m_DefinitionsInspectorUIService.Draw(); });
-		m_LauncherUIService.DrawTab(Tab::Settings, "Settings", [this] { m_SettingsUIService.Draw(); });
-		m_LauncherUIService.DrawTab(Tab::MemoryScanner, "Memory Scanner", [this] { m_MemoryScannerUIService.Draw(); });
-		m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] { m_LogsUIService.Draw(); });
-
-		m_LauncherUIService.Draw(frame);
-
-		m_BackendUIService.Render();
-	}
+        m_LauncherUIService.Draw(frame);
+    }
 }

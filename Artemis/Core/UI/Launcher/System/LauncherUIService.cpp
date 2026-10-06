@@ -61,7 +61,7 @@ namespace UI::Launcher::System
 		if (m_HasHandledOpenOnStart) return;
 		m_HasHandledOpenOnStart = true;
 
-		if (m_SettingsStore.ShouldOpenUIOnStart())
+		if (m_SettingsStore.IsOpenUIOnStartEnabled())
 		{
 			m_LauncherStore.SetVisible(true);
 		}
@@ -81,9 +81,9 @@ namespace UI::Launcher::System
 	{
 		if (m_LauncherStore.ConsumeToggleAllTabs()) this->ToggleAllTabs();
 
-		if (m_SettingsStore.MustResetMenu())
+		if (m_SettingsStore.IsMenuResetPending())
 		{
-			m_SettingsStore.SetForceMenuReset(false);
+			m_SettingsStore.SetMenuResetPending(false);
 			this->ResetTabs();
 		}
 

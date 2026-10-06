@@ -5,7 +5,7 @@ import Platform.Input.Type;
 import UI.Hotkey.Type;
 import UI.Hotkey.State;
 import UI.Launcher.State;
-import UI.Overlay.State;
+import Viewer.Overlay.State;
 
 export namespace UI::Hotkey::System
 {
@@ -18,13 +18,13 @@ export namespace UI::Hotkey::System
 		using SettingsStore = Service::Settings::State::SettingsStore;
 		using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
 		using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
-		using OverlayUIStore = UI::Overlay::State::OverlayUIStore;
+		using OverlayStore = Viewer::Overlay::State::OverlayStore;
 
 	public:
 		HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,
-			LauncherUIStore& launcherStore, OverlayUIStore& overlayVisibilityStore) :
+			LauncherUIStore& launcherStore, OverlayStore& overlayStore) :
 			m_SettingsStore(settingsStore), m_HotkeyStore(hotkeyStore),
-			m_LauncherStore(launcherStore), m_OverlayVisibilityStore(overlayVisibilityStore) {}
+			m_LauncherStore(launcherStore), m_OverlayStore(overlayStore) {}
 		~HotkeyUIService() = default;
 
 		HotkeyUIService(const HotkeyUIService&) = delete;
@@ -36,7 +36,7 @@ export namespace UI::Hotkey::System
 		SettingsStore& m_SettingsStore;
 		HotkeyUIStore& m_HotkeyStore;
 		LauncherUIStore& m_LauncherStore;
-		OverlayUIStore& m_OverlayVisibilityStore;
+		OverlayStore& m_OverlayStore;
 
 		auto Execute(Action action) -> void;
 	};

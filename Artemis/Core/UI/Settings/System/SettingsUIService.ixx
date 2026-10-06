@@ -3,6 +3,8 @@ export module UI.Settings.System;
 import Service.Settings.State;
 import Service.Settings.System;
 import Service.Logs.System;
+import Viewer.Options.State;
+import Viewer.Options.Type;
 import UI.Hotkey.State;
 import std;
 
@@ -15,14 +17,17 @@ export namespace UI::Settings::System
 		using SettingsService = Service::Settings::System::SettingsService;
 		using LogsService = Service::Logs::System::LogsService;
 		using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
+		using OptionsStore = Viewer::Options::State::OptionsStore;
 
 		static constexpr float k_AnimationDuration{ 0.6f };
 
 	public:
 		SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,
-			LogsService& logsService, HotkeyUIStore& hotkeyStore) :
+			LogsService& logsService, HotkeyUIStore& hotkeyStore,
+			OptionsStore& optionsStore) :
 			m_SettingsStore(settingsStore), m_SettingsService(settingsService),
-			m_LogsService(logsService), m_HotkeyStore(hotkeyStore) {
+			m_LogsService(logsService), m_HotkeyStore(hotkeyStore),
+			m_OptionsStore(optionsStore) {
 		}
 		~SettingsUIService() = default;
 
@@ -36,6 +41,7 @@ export namespace UI::Settings::System
 		SettingsService& m_SettingsService;
 		LogsService& m_LogsService;
 		HotkeyUIStore& m_HotkeyStore;
+		OptionsStore& m_OptionsStore;
 
 		std::string m_AnimatedPathLabel{};
 		float m_AnimationStartTime{ 0.0f };
@@ -44,6 +50,8 @@ export namespace UI::Settings::System
 		bool m_IsScalePreviewInitialized{ false };
 
 		auto DrawUserPreferences() -> void;
+		auto DrawViewerOptions() -> void;
+		auto DrawViewerGroup(Viewer::Options::Type::Group group) -> void;
 		auto DrawHotkeysTable() -> void;
 		auto DrawDataPersistence() -> void;
 		auto DrawSystemDirectories() -> void;

@@ -652,6 +652,15 @@
     <Filter Include="Core\Viewer\Control\System">
       <UniqueIdentifier>{3b80163a-fd9d-4421-98bc-197141f1254b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Viewer\Map">
+      <UniqueIdentifier>{00fb879d-6441-4a28-b151-3bd57ce838cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map\Type">
+      <UniqueIdentifier>{c901f480-e214-4ac0-b3b9-4fa81d69b8ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map\System">
+      <UniqueIdentifier>{c85a75d1-0377-4279-82b3-b2b67612eca2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Viewer\Overlay">
       <UniqueIdentifier>{14ffa16a-9137-4820-b3f4-54c338192908}</UniqueIdentifier>
     </Filter>
@@ -660,6 +669,36 @@
     </Filter>
     <Filter Include="Core\Viewer\Overlay\Type">
       <UniqueIdentifier>{bf01f994-4f97-4d1b-af0f-dc13783d3fbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Profiler">
+      <UniqueIdentifier>{91947145-27a2-4336-a535-9c5bc41a460d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Profiler\Type">
+      <UniqueIdentifier>{41239d6a-042a-4194-abc3-24da0d457a94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Profiler\System">
+      <UniqueIdentifier>{41604735-4580-41c5-b135-7fa1d18e8b90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Geometry">
+      <UniqueIdentifier>{012b4614-b824-44b9-8055-80b7c14a5133}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Geometry\System">
+      <UniqueIdentifier>{94503848-0ccc-4124-ab71-5e88342548c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Palette">
+      <UniqueIdentifier>{60522328-cb4e-4de3-8696-dc6a0ee85c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Palette\System">
+      <UniqueIdentifier>{e4a95e2c-2822-46f4-9d5e-250c13177e2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Palette\Type">
+      <UniqueIdentifier>{73c5aaef-5466-4532-9005-0a4b8341e7ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Scene">
+      <UniqueIdentifier>{5664a410-7918-4afe-9f2e-f9ba8af8f15f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Scene\System">
+      <UniqueIdentifier>{9a6651ba-2f1f-4e10-9459-c2ccf9b42a91}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Viewer\Selection">
       <UniqueIdentifier>{ed27cfe4-2756-476a-afac-72262ec3cd56}</UniqueIdentifier>
@@ -670,8 +709,41 @@
     <Filter Include="Core\Viewer\Selection\System">
       <UniqueIdentifier>{7cc7de4a-4527-47c2-8eee-0c6f729fecfb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Viewer\Selection\Type">
+      <UniqueIdentifier>{a603a38d-174d-4ac8-9d85-dea15e4b3197}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Style">
+      <UniqueIdentifier>{27df507b-84cc-4576-a32d-2ded0e7cc6b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Style\Type">
+      <UniqueIdentifier>{1ba49452-11fa-47f9-b4c7-e05cb0650008}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI">
       <UniqueIdentifier>{9ffce510-9d37-4201-8cbd-6dddf5b4093d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\Type">
+      <UniqueIdentifier>{8ada1ebf-56c2-4336-bd0b-024b107ecbe3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\System\Label">
+      <UniqueIdentifier>{61417c77-12dc-4923-9864-e354ffa9c48f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Options">
+      <UniqueIdentifier>{bbb158fd-fa68-4f73-9cce-b8fce7e3664d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Options\State">
+      <UniqueIdentifier>{9935d2ec-cb26-4dde-a65f-b7bc54a03585}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Options\Type">
+      <UniqueIdentifier>{1cff5e79-5419-4a51-9fa6-a8b8b85ef82b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui">
+      <UniqueIdentifier>{0ab4c6ea-d4db-4ee1-98a4-8d39c4469ea7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Backend">
+      <UniqueIdentifier>{8b06998d-be66-4f06-9352-019fb54beddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Backend\System">
+      <UniqueIdentifier>{8c4a4c8b-2e15-4cf8-bec5-8595ae4badbd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\UI\Hotkey">
       <UniqueIdentifier>{3a0f56b3-f8db-481e-9904-bf4b95833a9e}</UniqueIdentifier>
@@ -696,6 +768,15 @@
     </Filter>
     <Filter Include="Core\UI\Launcher\Type">
       <UniqueIdentifier>{4bbac175-7447-436e-89dd-33591dbae0bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud">
+      <UniqueIdentifier>{430482ef-6d8d-4bef-b9e2-f8ac23176da9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\System">
+      <UniqueIdentifier>{dea4e7fb-1d19-4798-b050-ace2a9888903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Hud\System\Panel">
+      <UniqueIdentifier>{fdac4452-2b4e-485e-96c5-69908d5f17ac}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\UI\ObjectTable">
       <UniqueIdentifier>{af68c33a-50f0-4958-9bc7-0598c9030c06}</UniqueIdentifier>
@@ -745,6 +826,45 @@
     <Filter Include="Core\UI\Logs\Type">
       <UniqueIdentifier>{0101a15d-496f-4153-b471-b0f2bafad6c3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Gui\Color">
+      <UniqueIdentifier>{d6f4e7d1-1327-4f32-b3a3-f2ded0661471}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color\System">
+      <UniqueIdentifier>{fac0316f-622a-4d2d-b5dd-214c74de2b1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color\System\Role">
+      <UniqueIdentifier>{41a1bbc4-ddc1-46b6-88fb-b8a68bd83d95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color\System\Team">
+      <UniqueIdentifier>{b492a381-6568-4b33-a9f3-7d4c3b5ad360}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format">
+      <UniqueIdentifier>{f7f77317-3140-4394-b673-48394eec8d6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System">
+      <UniqueIdentifier>{f9bcde0e-8bc0-4651-9762-552b8ebb74be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Affordance">
+      <UniqueIdentifier>{7293480b-0ea3-48fa-a5e8-3ceb82ecd147}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Fixtures">
+      <UniqueIdentifier>{4900f541-99f4-48b4-9012-6bbea568d5b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Hex">
+      <UniqueIdentifier>{79bbac81-907d-4cd8-8cca-6bc8af39c413}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Interaction">
+      <UniqueIdentifier>{e55870a0-9ec8-4095-bafc-ae8e3b4b7ccb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Object">
+      <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Role">
+      <UniqueIdentifier>{556816c9-bc66-4f46-8682-295639c03e08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Team">
+      <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI\Icon">
       <UniqueIdentifier>{04cd2ce2-a76e-45bb-ae50-e11dd8b5af80}</UniqueIdentifier>
     </Filter>
@@ -753,6 +873,21 @@
     </Filter>
     <Filter Include="Core\UI\Icon\System">
       <UniqueIdentifier>{a3eec7aa-077b-4196-a18e-5939cb31f9a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget">
+      <UniqueIdentifier>{49afb6fe-81e0-498f-9cd7-018840cba71f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System">
+      <UniqueIdentifier>{aa35498c-d314-4140-b6a8-3b5ed89d8e63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\CopyableField">
+      <UniqueIdentifier>{d7e2dc53-0a2a-4410-8355-1eeeab45c0f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\HandleDrawer">
+      <UniqueIdentifier>{6d2d8790-054f-4ebd-8668-91cad21a34bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\SearchFilter">
+      <UniqueIdentifier>{aa66a3bb-1dc5-4790-944b-b7ec51edf58d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\2_Resolved\World\System\Raycast">
       <UniqueIdentifier>{ad5d22f2-2451-48d5-b127-f78af2864f81}</UniqueIdentifier>
@@ -814,6 +949,15 @@
     <Filter Include="Core\Infrastructure\Platform\Hook">
       <UniqueIdentifier>{069b409e-a3dd-4385-b657-4927292aa2a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Hook\System">
+      <UniqueIdentifier>{9a47eef2-d3b9-4d1f-8b3e-731553de7710}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\Panel">
+      <UniqueIdentifier>{ece42211-15c5-4856-a09d-390793f12e68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\ResponsiveCard">
+      <UniqueIdentifier>{2ead2168-1c59-47e3-b980-f2562924addf}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Jpt">
       <UniqueIdentifier>{ed2d2283-5c26-43d1-9c3d-728838098daa}</UniqueIdentifier>
     </Filter>
@@ -831,6 +975,9 @@
     </Filter>
     <Filter Include="Core\Common\Reflect\System">
       <UniqueIdentifier>{b7f1b12e-223a-4444-a975-b7008982fdd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\Inspector">
+      <UniqueIdentifier>{4b9aafa2-045c-46a4-a259-1242fd0c7c77}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\2_Resolved\Definitions">
       <UniqueIdentifier>{584702e6-f09d-43ea-8312-20d171145dab}</UniqueIdentifier>
@@ -1835,6 +1982,66 @@
     <ClCompile Include="Core\Core.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Gui\Gui.Layer.ixx">
+      <Filter>Core\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Options\Type\Viewer.Options.Type.ixx">
+      <Filter>Core\Viewer\Options\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Options\State\OptionsStore.ixx">
+      <Filter>Core\Viewer\Options\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Options\State\OptionsStore.cpp">
+      <Filter>Core\Viewer\Options\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelCanvas.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelCanvas.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\PlayerLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\PlayerLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelService.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelService.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\ObjectLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\ObjectLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\VehicleLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\VehicleLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\HealthLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\HealthLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\InteractionLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\InteractionLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\FixtureLabels.ixx">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Label\FixtureLabels.cpp">
+      <Filter>Core\Viewer\Hud\System\Label</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Core.ixx">
       <Filter>Core</Filter>
     </ClCompile>
@@ -1925,6 +2132,36 @@
     <ClCompile Include="Core\Viewer\Control\System\ControlService.cpp">
       <Filter>Core\Viewer\Control\System</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx">
+      <Filter>Core\Viewer\Map\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\Viewer.Map.System.ixx">
+      <Filter>Core\Viewer\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapService.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapService.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Viewer\Overlay\Type\Viewer.Overlay.Type.ixx">
       <Filter>Core\Viewer\Overlay\Type</Filter>
     </ClCompile>
@@ -1933,6 +2170,36 @@
     </ClCompile>
     <ClCompile Include="Core\Viewer\Overlay\State\OverlayStore.cpp">
       <Filter>Core\Viewer\Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Profiler\System\FrameProfiler.cpp">
+      <Filter>Core\Viewer\Profiler\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Profiler\System\FrameProfiler.ixx">
+      <Filter>Core\Viewer\Profiler\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Profiler\Type\Viewer.Profiler.Type.ixx">
+      <Filter>Core\Viewer\Profiler\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Geometry\System\ZoneGeometry.cpp">
+      <Filter>Core\Viewer\Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Geometry\System\ZoneGeometry.ixx">
+      <Filter>Core\Viewer\Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Palette\System\PaletteService.cpp">
+      <Filter>Core\Viewer\Palette\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Palette\System\PaletteService.ixx">
+      <Filter>Core\Viewer\Palette\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Palette\Type\Viewer.Palette.Type.ixx">
+      <Filter>Core\Viewer\Palette\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Scene\System\SceneService.cpp">
+      <Filter>Core\Viewer\Scene\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Scene\System\SceneService.ixx">
+      <Filter>Core\Viewer\Scene\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Selection\State\SelectionStore.ixx">
       <Filter>Core\Viewer\Selection\State</Filter>
@@ -1945,6 +2212,18 @@
     </ClCompile>
     <ClCompile Include="Core\Viewer\Selection\System\SelectionService.ixx">
       <Filter>Core\Viewer\Selection\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Selection\Type\Viewer.Selection.Type.ixx">
+      <Filter>Core\Viewer\Selection\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Style\Type\Viewer.Style.Type.ixx">
+      <Filter>Core\Viewer\Style\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.ixx">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.cpp">
+      <Filter>Core\Gui\Backend\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\UI.Layer.ixx">
       <Filter>Core\UI</Filter>
@@ -1972,6 +2251,39 @@
     </ClCompile>
     <ClCompile Include="Core\UI\Launcher\System\LauncherUIService.cpp">
       <Filter>Core\UI\Launcher\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\HudService.ixx">
+      <Filter>Core\Viewer\Hud\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\Type\Viewer.Hud.Type.ixx">
+      <Filter>Core\Viewer\Hud\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\HudService.cpp">
+      <Filter>Core\Viewer\Hud\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\CollidablesHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\CollidablesHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\HealthsHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\HealthsHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\FixturesHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\FixturesHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\AffordancesHud.cpp">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Hud\System\Panel\AffordancesHud.ixx">
+      <Filter>Core\Viewer\Hud\System\Panel</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.ixx">
       <Filter>Core\UI\ObjectTable\State</Filter>
@@ -2033,6 +2345,54 @@
     <ClCompile Include="Resources\Icons\IconData.cpp">
       <Filter>Resources\Icons</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Gui\Color\Gui.Color.System.ixx">
+      <Filter>Core\Gui\Color</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\Gui.Format.System.ixx">
+      <Filter>Core\Gui\Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.cpp">
+      <Filter>Core\Gui\Format\System\Affordance</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.ixx">
+      <Filter>Core\Gui\Format\System\Affordance</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.cpp">
+      <Filter>Core\Gui\Format\System\Fixtures</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.ixx">
+      <Filter>Core\Gui\Format\System\Fixtures</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.cpp">
+      <Filter>Core\Gui\Format\System\Hex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.ixx">
+      <Filter>Core\Gui\Format\System\Hex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.cpp">
+      <Filter>Core\Gui\Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.ixx">
+      <Filter>Core\Gui\Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.cpp">
+      <Filter>Core\Gui\Format\System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.ixx">
+      <Filter>Core\Gui\Format\System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.cpp">
+      <Filter>Core\Gui\Format\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.ixx">
+      <Filter>Core\Gui\Format\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.cpp">
+      <Filter>Core\Gui\Format\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.ixx">
+      <Filter>Core\Gui\Format\System\Team</Filter>
+    </ClCompile>
     <ClCompile Include="Core\UI\Icon\Type\UI.Icon.Type.ixx">
       <Filter>Core\UI\Icon\Type</Filter>
     </ClCompile>
@@ -2041,6 +2401,39 @@
     </ClCompile>
     <ClCompile Include="Core\UI\Icon\System\IconLoader.ixx">
       <Filter>Core\UI\Icon\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\Gui.Widget.System.ixx">
+      <Filter>Core\Gui\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.ixx">
+      <Filter>Core\Gui\Color\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.cpp">
+      <Filter>Core\Gui\Color\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.ixx">
+      <Filter>Core\Gui\Color\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.cpp">
+      <Filter>Core\Gui\Color\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\CopyableField\CopyableFieldGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\CopyableField</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\CopyableField\CopyableFieldGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\CopyableField</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\HandleDrawer\HandleDrawerGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\HandleDrawer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\HandleDrawer\HandleDrawerGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\HandleDrawer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\SearchFilter\SearchFilterGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\SearchFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\SearchFilter\SearchFilterGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\SearchFilter</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\Hotkey\Type\UI.Hotkey.Type.ixx">
       <Filter>Core\UI\Hotkey\Type</Filter>
@@ -2056,6 +2449,15 @@
     </ClCompile>
     <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx">
       <Filter>Core\UI\MemoryScanner\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.ixx">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.cpp">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\Gui.Backend.System.ixx">
+      <Filter>Core\Gui\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx">
       <Filter>Core\Infrastructure\Platform</Filter>
@@ -2192,6 +2594,12 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Render\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx">
+      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.cpp">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
@@ -2312,6 +2720,18 @@
     <ClCompile Include="Core\Domain\6_Egocentric\Raycast\Egocentric.Raycast.Type.ixx">
       <Filter>Core\Domain\6_Egocentric\Raycast</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\FixturePass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\FixturePass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Common\Math\Type\Common.Math.Type.ixx">
       <Filter>Core\Common\Math\Type</Filter>
     </ClCompile>
@@ -2338,6 +2758,24 @@
     </ClCompile>
     <ClCompile Include="Core\Common\State\System\Common.State.System.ixx">
       <Filter>Core\Common\State\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp">
+      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx">
       <Filter>Core\Infrastructure\Platform\Input</Filter>
@@ -2374,6 +2812,9 @@
     </ClCompile>
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx">
       <Filter>Core\Common\Reflect\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\Inspector\InspectorGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\Inspector</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\StatsInspector\System\DefinitionsInspectorUIService.cpp">
       <Filter>Core\UI\DefinitionsInspector\System</Filter>
@@ -2603,11 +3044,20 @@
     <ClCompile Include="Core\Domain\5_Environment\Aim\Type\Environment.Aim.Type.ixx">
       <Filter>Core\Domain\5_Environment\Aim\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
+      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.cpp">
       <Filter>Core\Domain\5_Environment\Aim\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.ixx">
       <Filter>Core\Domain\5_Environment\Aim\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx">
       <Filter>Core\Infrastructure\Service\Preferences\Type</Filter>
@@ -2620,6 +3070,7 @@
     <None Include="Proxy\GenerateProxyExports.py">
       <Filter>Proxy</Filter>
     </None>
+    <None Include="..\.editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Icons\cube-solid.png">
@@ -2641,454 +3092,7 @@
       <Filter>Resources\Icons</Filter>
     </Image>
   </ItemGroup>
-    <Filter Include="Core\Viewer\Map">
-      <UniqueIdentifier>{00fb879d-6441-4a28-b151-3bd57ce838cb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Map\Type">
-      <UniqueIdentifier>{c901f480-e214-4ac0-b3b9-4fa81d69b8ad}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Map\System">
-      <UniqueIdentifier>{c85a75d1-0377-4279-82b3-b2b67612eca2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Profiler">
-      <UniqueIdentifier>{91947145-27a2-4336-a535-9c5bc41a460d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Profiler\Type">
-      <UniqueIdentifier>{41239d6a-042a-4194-abc3-24da0d457a94}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Profiler\System">
-      <UniqueIdentifier>{41604735-4580-41c5-b135-7fa1d18e8b90}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Geometry">
-      <UniqueIdentifier>{012b4614-b824-44b9-8055-80b7c14a5133}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Geometry\System">
-      <UniqueIdentifier>{94503848-0ccc-4124-ab71-5e88342548c2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Palette">
-      <UniqueIdentifier>{60522328-cb4e-4de3-8696-dc6a0ee85c4e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Palette\System">
-      <UniqueIdentifier>{e4a95e2c-2822-46f4-9d5e-250c13177e2e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Palette\Type">
-      <UniqueIdentifier>{73c5aaef-5466-4532-9005-0a4b8341e7ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Scene">
-      <UniqueIdentifier>{5664a410-7918-4afe-9f2e-f9ba8af8f15f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Scene\System">
-      <UniqueIdentifier>{9a6651ba-2f1f-4e10-9459-c2ccf9b42a91}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Selection\Type">
-      <UniqueIdentifier>{a603a38d-174d-4ac8-9d85-dea15e4b3197}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Style">
-      <UniqueIdentifier>{27df507b-84cc-4576-a32d-2ded0e7cc6b5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Style\Type">
-      <UniqueIdentifier>{1ba49452-11fa-47f9-b4c7-e05cb0650008}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Hud\Type">
-      <UniqueIdentifier>{8ada1ebf-56c2-4336-bd0b-024b107ecbe3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Hud\System\Label">
-      <UniqueIdentifier>{61417c77-12dc-4923-9864-e354ffa9c48f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Options">
-      <UniqueIdentifier>{bbb158fd-fa68-4f73-9cce-b8fce7e3664d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Options\State">
-      <UniqueIdentifier>{9935d2ec-cb26-4dde-a65f-b7bc54a03585}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Options\Type">
-      <UniqueIdentifier>{1cff5e79-5419-4a51-9fa6-a8b8b85ef82b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui">
-      <UniqueIdentifier>{0ab4c6ea-d4db-4ee1-98a4-8d39c4469ea7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Backend">
-      <UniqueIdentifier>{8b06998d-be66-4f06-9352-019fb54beddb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Backend\System">
-      <UniqueIdentifier>{8c4a4c8b-2e15-4cf8-bec5-8595ae4badbd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Hud">
-      <UniqueIdentifier>{430482ef-6d8d-4bef-b9e2-f8ac23176da9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Hud\System">
-      <UniqueIdentifier>{dea4e7fb-1d19-4798-b050-ace2a9888903}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Hud\System\Panel">
-      <UniqueIdentifier>{fdac4452-2b4e-485e-96c5-69908d5f17ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Color">
-      <UniqueIdentifier>{d6f4e7d1-1327-4f32-b3a3-f2ded0661471}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Color\System">
-      <UniqueIdentifier>{fac0316f-622a-4d2d-b5dd-214c74de2b1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Color\System\Role">
-      <UniqueIdentifier>{41a1bbc4-ddc1-46b6-88fb-b8a68bd83d95}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Color\System\Team">
-      <UniqueIdentifier>{b492a381-6568-4b33-a9f3-7d4c3b5ad360}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format">
-      <UniqueIdentifier>{f7f77317-3140-4394-b673-48394eec8d6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System">
-      <UniqueIdentifier>{f9bcde0e-8bc0-4651-9762-552b8ebb74be}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Affordance">
-      <UniqueIdentifier>{7293480b-0ea3-48fa-a5e8-3ceb82ecd147}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Fixtures">
-      <UniqueIdentifier>{4900f541-99f4-48b4-9012-6bbea568d5b1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Hex">
-      <UniqueIdentifier>{79bbac81-907d-4cd8-8cca-6bc8af39c413}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Interaction">
-      <UniqueIdentifier>{e55870a0-9ec8-4095-bafc-ae8e3b4b7ccb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Object">
-      <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Role">
-      <UniqueIdentifier>{556816c9-bc66-4f46-8682-295639c03e08}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Team">
-      <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget">
-      <UniqueIdentifier>{49afb6fe-81e0-498f-9cd7-018840cba71f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System">
-      <UniqueIdentifier>{aa35498c-d314-4140-b6a8-3b5ed89d8e63}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System\CopyableField">
-      <UniqueIdentifier>{d7e2dc53-0a2a-4410-8355-1eeeab45c0f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System\HandleDrawer">
-      <UniqueIdentifier>{6d2d8790-054f-4ebd-8668-91cad21a34bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System\SearchFilter">
-      <UniqueIdentifier>{aa66a3bb-1dc5-4790-944b-b7ec51edf58d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Hook\System">
-      <UniqueIdentifier>{9a47eef2-d3b9-4d1f-8b3e-731553de7710}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System\Panel">
-      <UniqueIdentifier>{ece42211-15c5-4856-a09d-390793f12e68}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System\ResponsiveCard">
-      <UniqueIdentifier>{2ead2168-1c59-47e3-b980-f2562924addf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Widget\System\Inspector">
-      <UniqueIdentifier>{4b9aafa2-045c-46a4-a259-1242fd0c7c77}</UniqueIdentifier>
-    </Filter>
-    <ClCompile Include="Core\Gui\Gui.Layer.ixx">
-      <Filter>Core\Gui</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Options\Type\Viewer.Options.Type.ixx">
-      <Filter>Core\Viewer\Options\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Options\State\OptionsStore.ixx">
-      <Filter>Core\Viewer\Options\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Options\State\OptionsStore.cpp">
-      <Filter>Core\Viewer\Options\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelCanvas.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelCanvas.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\PlayerLabels.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\PlayerLabels.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelService.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\LabelService.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\ObjectLabels.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\ObjectLabels.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\VehicleLabels.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\VehicleLabels.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\HealthLabels.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\HealthLabels.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\InteractionLabels.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\InteractionLabels.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\FixtureLabels.ixx">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Label\FixtureLabels.cpp">
-      <Filter>Core\Viewer\Hud\System\Label</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx">
-      <Filter>Core\Viewer\Map\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\Viewer.Map.System.ixx">
-      <Filter>Core\Viewer\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapService.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapService.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\ZonePass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Profiler\System\FrameProfiler.cpp">
-      <Filter>Core\Viewer\Profiler\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Profiler\System\FrameProfiler.ixx">
-      <Filter>Core\Viewer\Profiler\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Profiler\Type\Viewer.Profiler.Type.ixx">
-      <Filter>Core\Viewer\Profiler\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Geometry\System\ZoneGeometry.cpp">
-      <Filter>Core\Viewer\Geometry\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Geometry\System\ZoneGeometry.ixx">
-      <Filter>Core\Viewer\Geometry\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Palette\System\PaletteService.cpp">
-      <Filter>Core\Viewer\Palette\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Palette\System\PaletteService.ixx">
-      <Filter>Core\Viewer\Palette\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Palette\Type\Viewer.Palette.Type.ixx">
-      <Filter>Core\Viewer\Palette\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Scene\System\SceneService.cpp">
-      <Filter>Core\Viewer\Scene\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Scene\System\SceneService.ixx">
-      <Filter>Core\Viewer\Scene\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Selection\Type\Viewer.Selection.Type.ixx">
-      <Filter>Core\Viewer\Selection\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Style\Type\Viewer.Style.Type.ixx">
-      <Filter>Core\Viewer\Style\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.ixx">
-      <Filter>Core\Gui\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.cpp">
-      <Filter>Core\Gui\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\HudService.ixx">
-      <Filter>Core\Viewer\Hud\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\Type\Viewer.Hud.Type.ixx">
-      <Filter>Core\Viewer\Hud\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\HudService.cpp">
-      <Filter>Core\Viewer\Hud\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\CollidablesHud.ixx">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\CollidablesHud.cpp">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\HealthsHud.ixx">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\HealthsHud.cpp">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\FixturesHud.cpp">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\FixturesHud.ixx">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\AffordancesHud.cpp">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Hud\System\Panel\AffordancesHud.ixx">
-      <Filter>Core\Viewer\Hud\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Color\Gui.Color.System.ixx">
-      <Filter>Core\Gui\Color</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\Gui.Format.System.ixx">
-      <Filter>Core\Gui\Format</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.cpp">
-      <Filter>Core\Gui\Format\System\Affordance</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.ixx">
-      <Filter>Core\Gui\Format\System\Affordance</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.cpp">
-      <Filter>Core\Gui\Format\System\Fixtures</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.ixx">
-      <Filter>Core\Gui\Format\System\Fixtures</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.cpp">
-      <Filter>Core\Gui\Format\System\Hex</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.ixx">
-      <Filter>Core\Gui\Format\System\Hex</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.cpp">
-      <Filter>Core\Gui\Format\System\Interaction</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.ixx">
-      <Filter>Core\Gui\Format\System\Interaction</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.cpp">
-      <Filter>Core\Gui\Format\System\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.ixx">
-      <Filter>Core\Gui\Format\System\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.cpp">
-      <Filter>Core\Gui\Format\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.ixx">
-      <Filter>Core\Gui\Format\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.cpp">
-      <Filter>Core\Gui\Format\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.ixx">
-      <Filter>Core\Gui\Format\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\Gui.Widget.System.ixx">
-      <Filter>Core\Gui\Widget</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.ixx">
-      <Filter>Core\Gui\Color\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.cpp">
-      <Filter>Core\Gui\Color\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.ixx">
-      <Filter>Core\Gui\Color\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.cpp">
-      <Filter>Core\Gui\Color\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\CopyableField\CopyableFieldGuiService.cpp">
-      <Filter>Core\Gui\Widget\System\CopyableField</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\CopyableField\CopyableFieldGuiService.ixx">
-      <Filter>Core\Gui\Widget\System\CopyableField</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\HandleDrawer\HandleDrawerGuiService.cpp">
-      <Filter>Core\Gui\Widget\System\HandleDrawer</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\HandleDrawer\HandleDrawerGuiService.ixx">
-      <Filter>Core\Gui\Widget\System\HandleDrawer</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\SearchFilter\SearchFilterGuiService.ixx">
-      <Filter>Core\Gui\Widget\System\SearchFilter</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\SearchFilter\SearchFilterGuiService.cpp">
-      <Filter>Core\Gui\Widget\System\SearchFilter</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.ixx">
-      <Filter>Core\Gui\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.cpp">
-      <Filter>Core\Gui\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Backend\Gui.Backend.System.ixx">
-      <Filter>Core\Gui\Backend</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\FixturePass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\FixturePass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp">
-      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.ixx">
-      <Filter>Core\Gui\Widget\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.cpp">
-      <Filter>Core\Gui\Widget\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.ixx">
-      <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp">
-      <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Widget\System\Inspector\InspectorGuiService.ixx">
-      <Filter>Core\Gui\Widget\System\Inspector</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
-      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
+  <ItemGroup>
+    <Text Include="..\Ignore\rules.txt" />
+  </ItemGroup>
 </Project>

@@ -4,12 +4,12 @@ module;
 
 module UI.ObjectTable.System;
 
-import UI.Format.System;
+import Gui.Format.System;
 import std;
 
 namespace
 {
-	using HexFormater = UI::Format::System::HexFormater;
+	using HexFormater = Gui::Format::System::HexFormater;
 
 	constexpr float k_CardMinWidth = 250.0f;
 	constexpr float k_CardHeight = 270.0f;
@@ -74,7 +74,7 @@ namespace UI::ObjectTable::System
 				const bool hasNext = i + 1 < filtered.size();
 				if (!hasNext) continue;
 
-				const bool nextFits = ResponsiveCardUIService::FitsOnSameLine(
+				const bool nextFits = ResponsiveCardGuiService::FitsOnSameLine(
 					CardWidth(filtered[i + 1]->TagName), k_CardSpacing, windowRightEdge);
 
 				if (nextFits) ImGui::SameLine();
@@ -129,7 +129,7 @@ namespace UI::ObjectTable::System
 	{
 		const ImVec2 cardSize(CardWidth(object.TagName), k_CardHeight);
 
-		ResponsiveCardUIService::Draw(object.Handle, cardSize, [this, &object]
+		ResponsiveCardGuiService::Draw(object.Handle, cardSize, [this, &object]
 			{
 				this->DrawCardHeader(object);
 				this->DrawCardFields(object);
