@@ -77,12 +77,12 @@ export namespace Resolved::Definitions::System
             ModeBuilder& modeBuilder, ProjBuilder& ProjBuilder, SbspBuilder& sbspBuilder,
             ScenBuilder& scenBuilder, ScnrBuilder& scnrBuilder, VehiBuilder& VehiBuilder, WeapBuilder& WeapBuilder) :
             m_LogsService(logsService), m_TagIndexStore(m_TagIndexStore), m_TagCatalog(tagCatalog),
-            m_GeometryLoaderService(geometryLoaderService), m_DefinitionsStore(definitionsStore), 
-            m_BipdBuilder(bipdBuilder), m_BlocBuilder(blocBuilder), m_CollBuilder(collBuilder), 
-            m_CtrlBuilder(ctrlBuilder), m_EqipBuilder(eqipBuilder), m_HlmtBuilder(hlmtBuilder), 
-            m_JptBuilder(jptBuilder), m_MachBuilder(machBuilder), m_ModeBuilder(modeBuilder), 
-            m_ProjBuilder(ProjBuilder), m_SbspBuilder(sbspBuilder), 
-            m_ScenBuilder(scenBuilder), m_ScnrBuilder(scnrBuilder), m_VehiBuilder(VehiBuilder), 
+            m_GeometryLoaderService(geometryLoaderService), m_DefinitionsStore(definitionsStore),
+            m_BipdBuilder(bipdBuilder), m_BlocBuilder(blocBuilder), m_CollBuilder(collBuilder),
+            m_CtrlBuilder(ctrlBuilder), m_EqipBuilder(eqipBuilder), m_HlmtBuilder(hlmtBuilder),
+            m_JptBuilder(jptBuilder), m_MachBuilder(machBuilder), m_ModeBuilder(modeBuilder),
+            m_ProjBuilder(ProjBuilder), m_SbspBuilder(sbspBuilder),
+            m_ScenBuilder(scenBuilder), m_ScnrBuilder(scnrBuilder), m_VehiBuilder(VehiBuilder),
             m_WeapBuilder(WeapBuilder) {}
         ~DefinitionsBuilder() = default;
 

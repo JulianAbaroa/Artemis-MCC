@@ -19,7 +19,7 @@ export namespace Resolved::World::State
         WorldStore() = default;
         ~WorldStore() = default;
 
-        // Coll: 
+        // Coll:
         auto GetResolvedCollForObject(const std::string& objectTagName, const DefinitionsStore& definitionsStore) const -> const ResolvedColl*;
         auto GetResolvedRegionStates(const std::string& objectTagName) const -> const ResolvedRegionStates*;
         auto AddResolvedRegionStates(const std::string& hlmtTagName, ResolvedRegionStates states) -> void;

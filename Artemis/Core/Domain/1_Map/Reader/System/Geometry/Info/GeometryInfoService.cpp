@@ -15,7 +15,7 @@ namespace
 namespace Map::Reader::System
 {
 	auto GeometryInfoService::ReadFooter(const TagResourcesObject& entry,
-		std::int32_t& outVBCount, std::int32_t& outIBCount, 
+		std::int32_t& outVBCount, std::int32_t& outIBCount,
 		std::int64_t fixupDataBase) const -> bool
 	{
 		std::int64_t footerPosition = fixupDataBase +
@@ -34,8 +34,8 @@ namespace Map::Reader::System
 	}
 
 	auto GeometryInfoService::ReadBufferInfoTables(const TagResourcesObject& entry,
-		std::int32_t vbCount, std::int32_t ibCount, 
-		std::vector<BufferInfo>& outVBTable, std::vector<BufferInfo>& outIBTable, 
+		std::int32_t vbCount, std::int32_t ibCount,
+		std::vector<BufferInfo>& outVBTable, std::vector<BufferInfo>& outIBTable,
 		std::int64_t fixupDataBase) const -> bool
 	{
 		std::int64_t blockBase = fixupDataBase + entry.FixupInformationOffset;

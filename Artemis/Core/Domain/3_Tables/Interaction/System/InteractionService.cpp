@@ -26,22 +26,22 @@ namespace Tables::Interaction::System
 		}
 
 		auto& reader = m_MemoryReaderService;
-	
+
 		AliveInteraction interaction;
-	
+
 		interaction.Kind = reader.Read<InteractionKind>(tableBase, Offset::Kind);
 		interaction.InteractionSlotID = reader.Read<InteractionDetail>(tableBase, Offset::Detail);
 		interaction.TargetObjectHandle = reader.Read<std::uint32_t>(tableBase, Offset::TargetObjectHandle);
-	
+
 		interaction.IsMeleeAvailable = reader.Read<std::uint8_t>(tableBase, Offset::IsMeleeAvailable);
 		interaction.MeleeTargetHandle = reader.Read<std::uint32_t>(tableBase, Offset::MeleeTargetHandle);
-	
+
 		interaction.IsAimAvailable = reader.Read<std::uint8_t>(tableBase, Offset::IsAimAvailable);
 		interaction.ModelPart = reader.Read<std::uint8_t>(tableBase, Offset::BipedBodyPart);
 		interaction.AimTargetHandle = reader.Read<std::uint32_t>(tableBase, Offset::AimTargetHandle);
 		interaction.AimTargetSlotID = reader.Read<std::uint32_t>(tableBase, Offset::AimTargetSlotID);
 		interaction.AimHitLocalPosition = reader.Read<Vec3>(tableBase, Offset::AimHitLocalPosition);
-	
+
 		m_InteractionStore.Publish(interaction);
 	}
 

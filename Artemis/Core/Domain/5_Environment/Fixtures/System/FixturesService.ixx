@@ -42,7 +42,7 @@ export namespace Environment::Fixtures::System
 
     public:
         FixturesService(LogsService& logsService, ObjectTableStore& objectStore,
-        ClassifierStore& classifierStore, FixturesStore& fixturesStore) : 
+        ClassifierStore& classifierStore, FixturesStore& fixturesStore) :
         m_LogsService(logsService), m_ObjectStore(objectStore),
         m_ClassifierStore(classifierStore), m_FixturesStore(fixturesStore) {}
         ~FixturesService() = default;

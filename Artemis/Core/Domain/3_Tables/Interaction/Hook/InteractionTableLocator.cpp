@@ -51,12 +51,12 @@ namespace Tables::Interaction::Hook
 
 				if (telemetryIdx <= 1000)
 				{
-					std::uintptr_t threadContext = *(std::uintptr_t*)(tlsArray + 
+					std::uintptr_t threadContext = *(std::uintptr_t*)(tlsArray +
 						(static_cast<unsigned long long>(telemetryIdx) * 8));
 
 					if (threadContext)
 					{
-						std::uintptr_t hudGlobalsPtr = 
+						std::uintptr_t hudGlobalsPtr =
 							*(std::uintptr_t*)(threadContext + 0xD8);
 
 						if (hudGlobalsPtr)

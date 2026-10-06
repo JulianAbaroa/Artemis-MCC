@@ -13,7 +13,7 @@ export namespace Resolved::Definitions::System
 		using ResolvedBipd = Resolved::Definitions::Type::Bipd::Bipd;
 
 	public:
-		explicit BipdBuilder(ObjectBuilder& objectBuilder) : 
+		explicit BipdBuilder(ObjectBuilder& objectBuilder) :
 			m_ObjectBuilder(objectBuilder) {}
 		~BipdBuilder() = default;
 

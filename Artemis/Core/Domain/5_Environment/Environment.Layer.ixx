@@ -30,7 +30,7 @@ export namespace Environment
 		using AimService = Environment::Aim::System::AimService;
 
 	public:
-		Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved, 
+		Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
 			Tables::Layer& tables, Relations::Layer& relations) :
 			m_CollidableService(service.m_LogsService, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, resolved.m_WorldStore, m_CollidableStore),
 			m_FixturesService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_FixturesStore),

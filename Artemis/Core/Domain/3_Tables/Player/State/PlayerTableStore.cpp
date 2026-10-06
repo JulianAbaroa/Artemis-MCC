@@ -44,7 +44,7 @@ namespace Tables::Player::State
 	auto PlayerTableStore::Cleanup() -> void
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
-	
+
 		m_PlayerTable.clear();
 		m_PlayerTableBase.store(0);
 		m_pPlayerTable.store(nullptr, std::memory_order_release);

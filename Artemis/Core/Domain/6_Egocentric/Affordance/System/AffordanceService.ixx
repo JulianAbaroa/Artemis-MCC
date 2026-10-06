@@ -52,16 +52,16 @@ export namespace Egocentric::Affordance::System
         using LogsService = Service::Logs::System::LogsService;
 
     public:
-        AffordanceService(LogsService& logsService, ObjectTableStore& objectStore, 
-            BoneMatricesStore& boneMatricesStore, InteractionStore& interactionStore, 
-            SelfStore& selfStore, ClassifierStore& classifierStore, 
-            ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore, 
-            AffordanceStore& affordanceStore, CollidableService& collidableService) : 
-            m_LogsService(logsService), m_ObjectStore(objectStore), 
+        AffordanceService(LogsService& logsService, ObjectTableStore& objectStore,
+            BoneMatricesStore& boneMatricesStore, InteractionStore& interactionStore,
+            SelfStore& selfStore, ClassifierStore& classifierStore,
+            ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
+            AffordanceStore& affordanceStore, CollidableService& collidableService) :
+            m_LogsService(logsService), m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore),
-            m_InteractionStore(interactionStore), m_SelfStore(selfStore), 
-            m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore), 
-            m_PlayerGraphStore(playerGraphStore), m_AffordanceStore(affordanceStore), 
+            m_InteractionStore(interactionStore), m_SelfStore(selfStore),
+            m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
+            m_PlayerGraphStore(playerGraphStore), m_AffordanceStore(affordanceStore),
             m_CollidableService(collidableService)  {}
         ~AffordanceService() = default;
 
@@ -87,7 +87,7 @@ export namespace Egocentric::Affordance::System
             const ObjectGraph& objectGraph, const PlayerGraph& playerGraph,
             const ObjectTable& objectTable, Affordance& out) const -> bool;
 
-        auto BuildAffordance(const AliveObject& object, Role role, 
+        auto BuildAffordance(const AliveObject& object, Role role,
             const Vec3& selfPosition, const AliveInteraction& interaction) const -> Affordance;
 
         auto ResolveSeatStatuses(const Vehicle& vehi,
@@ -102,7 +102,7 @@ export namespace Egocentric::Affordance::System
         auto CollectBipedChildHandles(std::uint32_t vehicleHandle,
             const ObjectGraph& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>;
 
-        auto GetSeatWorldPosition(const BoneMatrixTable& bones, const SeatMarker& seatMarker, 
+        auto GetSeatWorldPosition(const BoneMatrixTable& bones, const SeatMarker& seatMarker,
             const AliveObject& vehicleObject) const -> std::optional<Vec3>;
 
         auto Distance(const float a[3], const float b[3]) const -> float;

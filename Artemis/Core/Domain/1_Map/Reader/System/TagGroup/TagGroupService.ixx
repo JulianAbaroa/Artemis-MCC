@@ -23,7 +23,7 @@ export namespace Map::Reader::System
         ~TagGroupService() = default;
 
         template <typename TObject>
-        auto Read(std::ifstream& file, std::int64_t tagOffset, 
+        auto Read(std::ifstream& file, std::int64_t tagOffset,
             const std::string& tagName) const -> TObject
         {
             using TData = typename GroupDescriptor<TObject>::DataType;
@@ -47,7 +47,7 @@ export namespace Map::Reader::System
         }
 
         template <typename TEntry>
-        auto ReadBlock(std::ifstream& file, 
+        auto ReadBlock(std::ifstream& file,
             const TagBlock& block) const -> std::vector<TEntry>
         {
             if (block.EntryCount <= 0) return {};

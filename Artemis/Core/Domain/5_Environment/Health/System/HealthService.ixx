@@ -32,7 +32,7 @@ export namespace Environment::Health::System
     public:
         HealthService(LogsService& logsService, VitalityStore& vitalityStore,
             ObjectTableStore& objectStore, DamageSectionsStore& damageSectionsStore,
-            ClassifierStore& classifierStore, HealthStore& healthStore) : 
+            ClassifierStore& classifierStore, HealthStore& healthStore) :
             m_LogsService(logsService), m_VitalityStore(vitalityStore),
             m_ObjectStore(objectStore), m_DamageSectionsStore(damageSectionsStore),
             m_ClassifierStore(classifierStore), m_HealthStore(healthStore) {}

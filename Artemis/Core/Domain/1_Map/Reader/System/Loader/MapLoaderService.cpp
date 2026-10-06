@@ -5,8 +5,8 @@ import :MapLoader;
 // Assembly: https://github.com/xboxchaos/assembly
 // Reclaimer: https://github.com/Gravemind2401/Reclaimer
 
-// Note: offset mask [3] is not yet used. 
-// It possibly corresponds to locales, that requires 
+// Note: offset mask [3] is not yet used.
+// It possibly corresponds to locales, that requires
 // its own To...Offset() conversion function.
 
 namespace Map::Reader::System

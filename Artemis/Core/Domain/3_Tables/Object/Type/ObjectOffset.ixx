@@ -24,7 +24,7 @@ export namespace Tables::Object::Type::Offset
 	constexpr std::uintptr_t DamageReceived{ 0x128 };			// float (1).
 	constexpr std::uintptr_t DamageRegionsSize{ 0x184 };		// uint16.
 	constexpr std::uintptr_t DamageRegionsOffset{ 0x186 };		// uint16.
-	
+
 	namespace Biped
 	{
 		constexpr std::uintptr_t VerticalState{ 0x1D8 };		// uint8.
@@ -38,7 +38,7 @@ export namespace Tables::Object::Type::Offset
 		constexpr std::uintptr_t DamagerBipedHandle{ 0x4E8 };	// uint32.
 		constexpr std::uintptr_t DamagerPlayerHandle{ 0x4EC };	// uint32.
 	}
-	
+
 	namespace Vehicle
 	{
 		constexpr std::uintptr_t BoostThrottle{ 0x53C };		// float (1).
@@ -55,7 +55,7 @@ export namespace Tables::Object::Type::Offset
 			constexpr std::uintptr_t IsCannonDepleted{ 0x2DE6 };	// uint8.
 			constexpr std::uintptr_t IsFiring{ 0x29E1 };			// uint8.
 		}
-	
+
 		namespace Falcon
 		{
 			constexpr std::uintptr_t DriverSeat{ 0x27DC };				// float (1).
@@ -73,7 +73,7 @@ export namespace Tables::Object::Type::Offset
 				constexpr std::uintptr_t GunnerHijacker{ 0x2274 };	// float (1).
 				// TODO: Get IsFiring.
 			}
-	
+
 			namespace Grenadier
 			{
 				constexpr std::uintptr_t GrenadierSeat{ 0x22D4 };		// float (1).
@@ -81,7 +81,7 @@ export namespace Tables::Object::Type::Offset
 				// TODO: Get IsFiring.
 			}
 		}
-	
+
 		namespace Ghost
 		{
 			constexpr std::uintptr_t DriverSeat{ 0x2418 };				// float (1).
@@ -90,7 +90,7 @@ export namespace Tables::Object::Type::Offset
 			constexpr std::uintptr_t FrontLeftDriverHijacker{ 0x243C };	// float (1).
 			constexpr std::uintptr_t IsFiring{ 0x2771 };				// uint8.
 		}
-	
+
 		namespace Mongoose
 		{
 			constexpr std::uintptr_t DriverSeat{ 0x263C };			// float (1).
@@ -98,77 +98,77 @@ export namespace Tables::Object::Type::Offset
 			constexpr std::uintptr_t DriverHijacker{ 0x2654 };		// float (1).
 			constexpr std::uintptr_t PassengerHijacker{ 0x2660 };	// float (1).
 		}
-	
+
 		namespace Revenant
 		{
-			constexpr std::uintptr_t DriverSeat{ 0x2118 };			// float (1).	
+			constexpr std::uintptr_t DriverSeat{ 0x2118 };			// float (1).
 			constexpr std::uintptr_t PassengerSeat{ 0x2124 };		// float (1).
 			constexpr std::uintptr_t DriverHijacker{ 0x2130 };		// float (1).
 			constexpr std::uintptr_t PassengerHijacker{ 0x213C };	// float (1).
 		}
-	
+
 		namespace Scorpion
 		{
-			constexpr std::uintptr_t DriverSeat{ 0x27E0 };			// float (1).	
-			constexpr std::uintptr_t RightDriverHijacker{ 0x281C };	// float (1).	
-			constexpr std::uintptr_t LeftDriverHijacker{ 0x2828 };	// float (1).	
-			constexpr std::uintptr_t BackHijacker{ 0x2834 };		// float (1).	
-	
-			namespace Turret
-			{
-				constexpr std::uintptr_t GunnerSeat{ 0x1E90 };	// float (1).	
-				// TODO: Get IsFiring.
-			}
-		}
-	
-		namespace ShadeTurret
-		{
-			constexpr std::uintptr_t GunnerSeat{ 0x3960 };	// float (1).	
-			// TODO: Get IsFiring.
-		}
-	
-		namespace Warthog
-		{
-			constexpr std::uintptr_t DriverSeat{ 0x2AB0 };			// float (1).	
-			constexpr std::uintptr_t PassengerSeat{ 0x2ABC };		// float (1).	
-			constexpr std::uintptr_t DriverHijacker{ 0x2AC8 };		// float (1).	
-			constexpr std::uintptr_t PassengerHijacker{ 0x2AD4 };	// float (1).	
+			constexpr std::uintptr_t DriverSeat{ 0x27E0 };			// float (1).
+			constexpr std::uintptr_t RightDriverHijacker{ 0x281C };	// float (1).
+			constexpr std::uintptr_t LeftDriverHijacker{ 0x2828 };	// float (1).
+			constexpr std::uintptr_t BackHijacker{ 0x2834 };		// float (1).
 
 			namespace Turret
 			{
-				constexpr std::uintptr_t GunnerSeat{ 0x1F48 };			// float (1).	
-				constexpr std::uintptr_t GunnerHijackerSeat{ 0x1F54 };	// float (1).	
+				constexpr std::uintptr_t GunnerSeat{ 0x1E90 };	// float (1).
 				// TODO: Get IsFiring.
 			}
-	
+		}
+
+		namespace ShadeTurret
+		{
+			constexpr std::uintptr_t GunnerSeat{ 0x3960 };	// float (1).
+			// TODO: Get IsFiring.
+		}
+
+		namespace Warthog
+		{
+			constexpr std::uintptr_t DriverSeat{ 0x2AB0 };			// float (1).
+			constexpr std::uintptr_t PassengerSeat{ 0x2ABC };		// float (1).
+			constexpr std::uintptr_t DriverHijacker{ 0x2AC8 };		// float (1).
+			constexpr std::uintptr_t PassengerHijacker{ 0x2AD4 };	// float (1).
+
+			namespace Turret
+			{
+				constexpr std::uintptr_t GunnerSeat{ 0x1F48 };			// float (1).
+				constexpr std::uintptr_t GunnerHijackerSeat{ 0x1F54 };	// float (1).
+				// TODO: Get IsFiring.
+			}
+
 			namespace Gauss
 			{
-				constexpr std::uintptr_t GunnerSeat{ 0x1F38 };			// float (1).	
-				constexpr std::uintptr_t GunnerHijackerSeat{ 0x1F44 };	// float (1).	
+				constexpr std::uintptr_t GunnerSeat{ 0x1F38 };			// float (1).
+				constexpr std::uintptr_t GunnerHijackerSeat{ 0x1F44 };	// float (1).
 			}
-	
+
 			namespace Rocket
 			{
-				constexpr std::uintptr_t GunnerSeat{ 0x2020 };			// float (1).	
-				constexpr std::uintptr_t GunnerHijackerSeat{ 0x202C };	// float (1).	
+				constexpr std::uintptr_t GunnerSeat{ 0x2020 };			// float (1).
+				constexpr std::uintptr_t GunnerHijackerSeat{ 0x202C };	// float (1).
 			}
 		}
-	
+
 		namespace Wraith
 		{
-			constexpr std::uintptr_t DriverSeat{ 0x23E4 };				// float (1).	
-			constexpr std::uintptr_t LeftDriverHijackerSeat{ 0x23F0 };	// float (1).	
-			constexpr std::uintptr_t RightDriverHijackerSeat{ 0x23FC };	// float (1).	
-			constexpr std::uintptr_t BackHijackerSeat{ 0x2408 };		// float (1).	
-	
+			constexpr std::uintptr_t DriverSeat{ 0x23E4 };				// float (1).
+			constexpr std::uintptr_t LeftDriverHijackerSeat{ 0x23F0 };	// float (1).
+			constexpr std::uintptr_t RightDriverHijackerSeat{ 0x23FC };	// float (1).
+			constexpr std::uintptr_t BackHijackerSeat{ 0x2408 };		// float (1).
+
 			namespace PlasmaTurret
 			{
-				constexpr std::uintptr_t GunnerSeat{ 0x1EC4 };	// float (1).	
+				constexpr std::uintptr_t GunnerSeat{ 0x1EC4 };	// float (1).
 				// TODO: Get IsFiring.
 			}
 		}
 	}
-	
+
 	namespace Weapon
 	{
 		constexpr std::uintptr_t ActionState{ 0x1CA };			// uint8.
@@ -177,34 +177,34 @@ export namespace Tables::Object::Type::Offset
 		constexpr std::uintptr_t IsTracking{ 0x1F8 };			// uint8.
 		constexpr std::uintptr_t TrackedBipedHandle{ 0x200 };	// uint32.
 		constexpr std::uintptr_t IsFiring{ 0x2A8 };				// uint8.
-		constexpr std::uintptr_t ChargeProgress{ 0x2AC };		// uint8.	
+		constexpr std::uintptr_t ChargeProgress{ 0x2AC };		// uint8.
 		constexpr std::uintptr_t IsReloading{ 0x2C0 };			// uint8.
 		constexpr std::uintptr_t TotalAmmo{ 0x2C6 };			// uint16.
 		constexpr std::uintptr_t CurrentAmmo{ 0x2CA };			// uint16.
-	
+
 		namespace Flag
 		{
 			constexpr std::uintptr_t Team{ 0x6D1 };	// uint8.
 		}
-	
+
 		namespace Bomb
 		{
 			constexpr std::uintptr_t Team{ 0x6E5 };	// uint8.
 		}
 	}
-	
+
 	namespace Projectile
 	{
 		constexpr std::uintptr_t RuntimeFlags{ 0x1A8 };			// uint32.
 		constexpr std::uintptr_t OwnerBipedHandle{ 0x1C4 };		// uint32.
 		constexpr std::uintptr_t OwnerWeaponHandle{ 0x1D8 };	// uint32.
 	}
-	
+
 	namespace Equipment
 	{
 		constexpr std::uintptr_t TotalEnergy{ 0x1EC };	// float (1).
 	}
-	
+
 	namespace Crate
 	{
 		// Just for Flag & Capture Plate.
@@ -217,7 +217,7 @@ export namespace Tables::Object::Type::Offset
 			constexpr std::uintptr_t ShapeKind{ 0x268 };	// uint8.
 			constexpr std::uintptr_t Team{ 0x271 };			// uint8.
 		}
-	
+
 		namespace HillMarker
 		{
 			constexpr std::uintptr_t Radius{ 0x274 };		// float (1).
@@ -227,7 +227,7 @@ export namespace Tables::Object::Type::Offset
 			constexpr std::uintptr_t ShapeKind{ 0x284 };	// uint8.
 			constexpr std::uintptr_t Team{ 0x28D };			// uint8.
 		}
-	
+
 		namespace Teleport
 		{
 			constexpr std::uintptr_t Radius{ 0x290 };			// float (1).
@@ -239,7 +239,7 @@ export namespace Tables::Object::Type::Offset
 			constexpr std::uintptr_t Allowed{ 0x2A6 };			// uint8.
 		}
 	}
-	
+
 	namespace Scenery
 	{
 		// Initial & Respawn.
@@ -247,7 +247,7 @@ export namespace Tables::Object::Type::Offset
 		{
 			constexpr std::uintptr_t Team{ 0x2C1 };	// uint8.
 		}
-	
+
 		// Safe, SoftSafe, Kill & SoftKill.
 		namespace Boundary
 		{

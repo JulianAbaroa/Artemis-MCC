@@ -13,7 +13,7 @@ export namespace Resolved::Definitions::System
         using ResolvedBloc = Resolved::Definitions::Type::Bloc::Bloc;
 
     public:
-        explicit BlocBuilder(ObjectBuilder& objectBuilder) : 
+        explicit BlocBuilder(ObjectBuilder& objectBuilder) :
             m_ObjectBuilder(objectBuilder) {}
         ~BlocBuilder() = default;
 

@@ -60,7 +60,7 @@ export namespace Tables::Object::Type::Scenery
     inline Kind ResolveSceneryType(const std::string& tagName)
     {
     	namespace Name = Common::Tag::Name;
-    
+
         static const std::unordered_map<std::string, Kind> map =
         {
             // Spawns.
@@ -76,18 +76,18 @@ export namespace Tables::Object::Type::Scenery
 
             { Name::Shield::PortableShield,      Kind::PortableShield         },
         };
-    
+
         auto it = map.find(tagName);
         return it != map.end() ? it->second : Kind::Unknown;
     }
-    
+
     inline bool IsSpawnPoint(Kind kind)
     {
-        return kind == Kind::InitialSpawnPoint 
-            || kind == Kind::RespawnPoint 
+        return kind == Kind::InitialSpawnPoint
+            || kind == Kind::RespawnPoint
             || kind == Kind::InvisibleRespawnPoint;
     }
-    
+
     inline bool IsBoundary(Kind kind)
     {
         return kind == Kind::SafeBoundary
@@ -95,7 +95,7 @@ export namespace Tables::Object::Type::Scenery
             || kind == Kind::KillBoundary
             || kind == Kind::SoftKillBoundary;
     }
-    
+
     inline bool IsPortableShield(Kind kind)
     {
         return kind == Kind::PortableShield;

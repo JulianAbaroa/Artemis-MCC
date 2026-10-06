@@ -15,7 +15,7 @@ namespace Tables::Object::State
     }
 
     auto BoneMatricesStore::Clear() -> void
-    { 
-        m_BoneMatrixTables.clear(); 
+    {
+        m_BoneMatrixTables.clear();
     }
 }

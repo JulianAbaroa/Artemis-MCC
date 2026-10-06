@@ -10,7 +10,7 @@ namespace
 namespace Map::Reader::System
 {
 	auto GeometryResourcePageService::Read(std::uint32_t datum,
-		const TagResourcesObject** outEntry, const ZoneObject* zone, 
+		const TagResourcesObject** outEntry, const ZoneObject* zone,
 		const PlayObject* play) const -> std::vector<std::uint8_t>
 	{
 		int resourceIdx = (int)(datum & 0xFFFF);

@@ -7,7 +7,7 @@ export namespace Map::Reader::Type::Offset
     // Size: 0xA000.
     namespace Header
     {
-        constexpr std::size_t k_FileSize{ 0x8 };           // uint32.  
+        constexpr std::size_t k_FileSize{ 0x8 };           // uint32.
         constexpr std::size_t k_TagBufferOffset{ 0x10 };   // uint32.
         constexpr std::size_t k_VirtualSize{ 0x14 };       // uint32.
 
@@ -146,7 +146,7 @@ export namespace Map::Reader::Type::Offset
             constexpr std::size_t k_LocaleTableSize{ 0x4 };        // uint32.
             constexpr std::size_t k_LocaleIndexTableOffset{ 0x8 }; // uint32.
             constexpr std::size_t k_LocaleDataIndexOffset{ 0xC };  // uint32.
-            
+
             constexpr std::size_t k_IndexTableHash{ 0x10 };
             constexpr std::size_t k_IndexTableHashSize{ 0x14 };
 

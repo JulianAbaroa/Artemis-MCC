@@ -10,12 +10,12 @@ export namespace Map::Reader::System
 		explicit DataStreamService() = default;
 		~DataStreamService() = default;
 
-		auto ReadData(const std::string& filePath, std::int64_t fileOffset, 
+		auto ReadData(const std::string& filePath, std::int64_t fileOffset,
 			std::int32_t size) const -> std::vector<std::uint8_t>;
 
-		auto ReadSegment(const std::string& filePath, std::int64_t fileOffset, 
-			std::int32_t compressedSize, std::int32_t decompressedSize, 
-			std::int32_t segmentOffset, std::int32_t segmentLength) const -> 
+		auto ReadSegment(const std::string& filePath, std::int64_t fileOffset,
+			std::int32_t compressedSize, std::int32_t decompressedSize,
+			std::int32_t segmentOffset, std::int32_t segmentLength) const ->
 			std::vector<std::uint8_t>;
 
 	private:

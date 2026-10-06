@@ -30,8 +30,8 @@ export namespace Map::Reader::System
 			TagIndexStore& m_TagIndexStore, FileLocatorService& fileLocatorService,
 			FileNamesService& fileNamesService, HeaderService& headerService,
 			TagIndexService& tagIndexService) : m_LogsService(logsService),
-			m_FileStore(fileStore), m_TagIndexStore(m_TagIndexStore), 
-			m_FileLocatorService(fileLocatorService), 
+			m_FileStore(fileStore), m_TagIndexStore(m_TagIndexStore),
+			m_FileLocatorService(fileLocatorService),
 			m_FileNamesService(fileNamesService), m_HeaderService(headerService),
 			m_TagIndexService(tagIndexService) {}
 		~MapLoaderService() = default;

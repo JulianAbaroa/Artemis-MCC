@@ -22,7 +22,7 @@ export namespace Map::Reader::System
 		auto ToDebugOffset(std::int64_t pointer) const -> std::int64_t;
 		auto ToResourceOffset(std::int64_t blockOffset) const -> std::int64_t;
 
-		auto ResolveFixupOffset(std::uint16_t address, std::uint16_t addressUpperBits, 
+		auto ResolveFixupOffset(std::uint16_t address, std::uint16_t addressUpperBits,
 			std::uint8_t addressLocationHighBits) const -> std::uint32_t;
 
 	private:

@@ -19,10 +19,10 @@ export namespace Map::Reader::System
 			m_TagIndexStore(m_TagIndexStore) {}
 		~TagStructureService() = default;
 
-		auto ReadTagReference(std::ifstream& file, 
+		auto ReadTagReference(std::ifstream& file,
 			std::int64_t tagRefOffset) const -> TagTableEntry;
 
-		auto ReadTagBlock(std::ifstream& file, 
+		auto ReadTagBlock(std::ifstream& file,
 			std::int64_t blockHeaderOffset) const -> TagBlock;
 
 	private:

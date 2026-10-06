@@ -42,7 +42,7 @@ namespace Map::Reader::System
 	}
 
 	auto FormulaService::ResolveFixupOffset(std::uint16_t address,
-		std::uint16_t addressUpperBits, 
+		std::uint16_t addressUpperBits,
 		std::uint8_t addressLocationHighBits) const -> std::uint32_t
 	{
 		constexpr std::uint32_t k_FixupMask = 0x0FFFFFFF;

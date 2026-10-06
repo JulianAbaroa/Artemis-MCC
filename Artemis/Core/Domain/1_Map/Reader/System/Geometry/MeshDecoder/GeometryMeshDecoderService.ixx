@@ -34,13 +34,13 @@ export namespace Map::Reader::System
 	public:
 		GeometryMeshDecoderService(LogsService& logsService, FileStore& fileStore,
 			DataStreamService& dataStreamService, FormulaService& m_FormulaService) :
-			m_LogsService(logsService), m_FileStore(fileStore), 
+			m_LogsService(logsService), m_FileStore(fileStore),
 			m_DataStreamService(dataStreamService), m_FormulaService(m_FormulaService) {}
 		~GeometryMeshDecoderService() = default;
 
 		auto EmitSection(const std::vector<std::uint8_t>& pageData,
 			const TagResourcesObject& entry, std::int32_t vbCount,
-			const std::vector<BufferInfo>& vbInfo, 
+			const std::vector<BufferInfo>& vbInfo,
 			const std::vector<BufferInfo>& ibInfo,
 			const MeshesObject& section,
 			const CompressionInfoEntry3* compressionInfo,
@@ -49,13 +49,13 @@ export namespace Map::Reader::System
 
 		auto EmitInstancedGeometry(const std::vector<std::uint8_t>& pageData,
 			const TagResourcesObject& lbspEntry, std::int32_t vbCount,
-			const std::vector<BufferInfo>& vbInfo, 
+			const std::vector<BufferInfo>& vbInfo,
 			const std::vector<BufferInfo>& ibInfo,
 			const SbspObject* sbsp, const LbspObject* lbsp,
 			const ZoneObject* zone, std::int64_t fixupDataBase,
 			const char* tagName, std::vector<Triangle>& out) const -> std::uint32_t;
 
-		auto GetCompressionInfo(int sectionIdx, 
+		auto GetCompressionInfo(int sectionIdx,
 			const SbspObject* sbsp) const -> const CompressionInfoEntry3*;
 
 	private:

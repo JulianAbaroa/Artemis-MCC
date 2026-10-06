@@ -82,12 +82,12 @@ namespace Map::Reader::System
 				const MeshesObject& section = lbsp->Meshes[sectionIdx];
 
 				trianglesWorld += m_GeometryMeshDecoderService.EmitSection(
-					pageData, *lbspEntry, vbCount, vbInfo, ibInfo, section, 
+					pageData, *lbspEntry, vbCount, vbInfo, ibInfo, section,
 					nullptr, name, nullptr, geometry.RenderGeometry);
 			}
 
 			std::uint32_t trianglesInstances = m_GeometryMeshDecoderService.
-				EmitInstancedGeometry(pageData, *lbspEntry, vbCount, vbInfo, ibInfo, 
+				EmitInstancedGeometry(pageData, *lbspEntry, vbCount, vbInfo, ibInfo,
 					sbsp, lbsp, zone, fixupDataBase, name, geometry.RenderGeometry);
 
 			m_LogsService.Message("[GeometryLoaderService] INFO:"

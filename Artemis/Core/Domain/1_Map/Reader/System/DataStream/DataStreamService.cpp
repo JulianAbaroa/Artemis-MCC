@@ -8,7 +8,7 @@ import :DataStream;
 namespace Map::Reader::System
 {
 	auto DataStreamService::ReadData(const std::string& filePath,
-		std::int64_t fileOffset, std::int32_t size) const -> 
+		std::int64_t fileOffset, std::int32_t size) const ->
 		std::vector<std::uint8_t>
 	{
 		if (size <= 0) return {};
@@ -33,8 +33,8 @@ namespace Map::Reader::System
 	}
 
 	auto DataStreamService::ReadSegment(const std::string& filePath,
-		std::int64_t fileOffset, std::int32_t compressedSize, 
-		std::int32_t decompressedSize, std::int32_t segmentOffset, 
+		std::int64_t fileOffset, std::int32_t compressedSize,
+		std::int32_t decompressedSize, std::int32_t segmentOffset,
 		std::int32_t segmentLength) const -> std::vector<std::uint8_t>
 	{
 		if (decompressedSize <= 0 || segmentOffset < 0) return {};

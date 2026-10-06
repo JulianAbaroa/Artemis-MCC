@@ -104,9 +104,9 @@ namespace Egocentric::Affordance::System
         m_AffordanceStore.Publish(std::move(results));
     }
 
-    auto AffordanceService::BuildVehicleAffordance(const AliveObject& object, 
-        const Vec3& selfPosition, std::uint32_t selfBipedHandle, 
-        const AliveInteraction& interaction, const ObjectGraph& objectGraph, 
+    auto AffordanceService::BuildVehicleAffordance(const AliveObject& object,
+        const Vec3& selfPosition, std::uint32_t selfBipedHandle,
+        const AliveInteraction& interaction, const ObjectGraph& objectGraph,
         const PlayerGraph& playerGraph, const ObjectTable& objectTable, Affordance& out) const -> bool
     {
         const Vehicle* vehiPtr = std::get_if<Vehicle>(&object.Specific);
@@ -152,10 +152,10 @@ namespace Egocentric::Affordance::System
         return out;
     }
 
-    auto AffordanceService::ResolveSeatStatuses(const Vehicle& vehi, 
-        const AliveObject& object, const ObjectGraph& objectGraph, 
-        const ObjectTable& objectTable, const PlayerGraph& playerGraph, 
-        const Vec3& selfPosition, std::uint32_t selfBipedHandle, 
+    auto AffordanceService::ResolveSeatStatuses(const Vehicle& vehi,
+        const AliveObject& object, const ObjectGraph& objectGraph,
+        const ObjectTable& objectTable, const PlayerGraph& playerGraph,
+        const Vec3& selfPosition, std::uint32_t selfBipedHandle,
         std::vector<SeatStatus>& outSeats) const -> bool
     {
         if (!vehi.SeatLayout) return false;
@@ -297,7 +297,7 @@ namespace Egocentric::Affordance::System
         return parts;
     }
 
-    auto AffordanceService::CollectBipedChildHandles(std::uint32_t vehicleHandle, 
+    auto AffordanceService::CollectBipedChildHandles(std::uint32_t vehicleHandle,
         const ObjectGraph& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>
     {
         std::vector<std::uint32_t> bipeds;
@@ -316,7 +316,7 @@ namespace Egocentric::Affordance::System
         return bipeds;
     }
 
-    auto AffordanceService::GetSeatWorldPosition(const BoneMatrixTable& bones, 
+    auto AffordanceService::GetSeatWorldPosition(const BoneMatrixTable& bones,
         const SeatMarker& seatMarker, const AliveObject& vehicleObject) const -> std::optional<Vec3>
     {
         if (seatMarker.NodeIndex < 0)

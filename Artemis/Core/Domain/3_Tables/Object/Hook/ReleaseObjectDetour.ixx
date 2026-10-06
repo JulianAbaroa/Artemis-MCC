@@ -15,7 +15,7 @@ export namespace Tables::Object::Hook
 		using ObjectTableService = Tables::Object::System::ObjectTableService;
 
 	public:
-		ReleaseObjectDetour(LogsService& logsService, AOBService& aobService, 
+		ReleaseObjectDetour(LogsService& logsService, AOBService& aobService,
 			ObjectTableService& objectService) : m_LogsService(logsService),
 			m_AOBService(aobService), m_ObjectService(objectService) {};
 		~ReleaseObjectDetour() = default;

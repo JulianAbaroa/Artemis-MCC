@@ -35,7 +35,7 @@ export namespace Map::Reader::Hook
 		static OpenMapDetour* s_Instance;
 
 		static auto __fastcall HookedOpenMap(std::uint64_t param_1,
-			std::uint64_t param_2, std::uint64_t mapRelativePath, 
+			std::uint64_t param_2, std::uint64_t mapRelativePath,
 			std::uint32_t* param_4) -> void;
 
 		typedef auto(__fastcall* OpenMap_t)(

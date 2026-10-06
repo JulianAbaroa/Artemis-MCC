@@ -55,10 +55,10 @@ namespace Egocentric::Raycast::System
 		const PerceptionOrigin perceptionOrigin =
 			this->ResolvePerceptionOrigin(selfPtr->Handle, selfPtr->BipedHandle);
 
-		const Vec3 originPosition = perceptionOrigin.Valid ? 
+		const Vec3 originPosition = perceptionOrigin.Valid ?
 			perceptionOrigin.Position : selfPtr->Position;
 
-		const Vec3 originForwardIn = perceptionOrigin.Valid ? 
+		const Vec3 originForwardIn = perceptionOrigin.Valid ?
 			perceptionOrigin.Forward : selfPtr->Forward;
 
 		Vec3 originForward{}, originRight{}, originUp{};

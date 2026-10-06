@@ -30,10 +30,10 @@ export namespace Tables::Player::Hook
 
 		static CreatePlayerDetour* s_Instance;
 
-		static auto __fastcall HookedCreatePlayer(std::uint32_t playerIndex, 
+		static auto __fastcall HookedCreatePlayer(std::uint32_t playerIndex,
 			std::uint64_t pPlayerInfo, std::uint8_t playerFlags) -> std::uint32_t;
 
-		typedef auto(__fastcall* Create_t)(std::uint32_t playerIndex, 
+		typedef auto(__fastcall* Create_t)(std::uint32_t playerIndex,
 			std::uint64_t pPlayerInfo, std::uint8_t playerFlags) -> std::uint32_t;
 
 		static inline Create_t m_OriginalFunction{ nullptr };

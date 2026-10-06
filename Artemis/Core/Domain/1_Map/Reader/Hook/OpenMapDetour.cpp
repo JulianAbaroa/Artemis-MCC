@@ -16,12 +16,12 @@ namespace
 namespace Map::Reader::Hook
 {
 	auto __fastcall OpenMapDetour::HookedOpenMap(std::uint64_t param_1,
-		std::uint64_t param_2, std::uint64_t mapRelativePath, 
+		std::uint64_t param_2, std::uint64_t mapRelativePath,
 		std::uint32_t* param_4) -> void
 	{
 		m_OriginalFunction(param_1, param_2, mapRelativePath, param_4);
 
-		std::string relativePath = 
+		std::string relativePath =
 			reinterpret_cast<const char*>(mapRelativePath);
 
 		char exePath[MAX_PATH];

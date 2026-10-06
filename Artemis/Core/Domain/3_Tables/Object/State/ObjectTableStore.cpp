@@ -61,7 +61,7 @@ namespace Tables::Object::State
 	auto ObjectTableStore::Cleanup() -> void
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
-	
+
 		m_ObjectTable.clear();
 		m_ObjectTableBase.store(0);
 		m_pObjectTable.store(nullptr, std::memory_order_release);

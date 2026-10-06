@@ -115,29 +115,29 @@ export namespace Tables::Object::Type::Crate
 	inline Kind ResolveCrateType(const std::string& tagName)
 	{
 		namespace Name = Common::Tag::Name;
-	
+
 		static const std::unordered_map<std::string, Kind> map =
 		{
 			// Objectives.
 			{ Name::Objective::FlagStand,				Kind::FlagStand			},
 			{ Name::Objective::CapturePlate,			Kind::CapturePlate		},
 			{ Name::Objective::HillMarker,				Kind::HillMarker		},
-	
+
 			// Teleports.
 			{ Name::Teleport::TeleportSender,			Kind::TeleportSender	},
 			{ Name::Teleport::TeleportReceiver,			Kind::TeleportReceiver	},
 			{ Name::Teleport::TeleportTwoWay,			Kind::TeleportTwoWay	},
-	
+
 			// Palletes.
 			{ Name::Palletes::Pallet,					Kind::Pallete,			},
 			{ Name::Palletes::PalletLarge,				Kind::Pallete,			},
-	
+
 			// Explosives.
 			{ Name::Explosive::FusionCoil,				Kind::FusionCoil		},
 			{ Name::Explosive::Landmine,				Kind::Landmine			},
 			{ Name::Explosive::PlasmaBattery,			Kind::PlasmaBattery		},
 			{ Name::Explosive::PropaneTank,				Kind::PropaneTank		},
-	
+
 			// Lift.
 			{ Name::Lift::ManCannon,					Kind::Lift				},
 			{ Name::Lift::ManCannonHeavy,				Kind::Lift				},
@@ -150,7 +150,7 @@ export namespace Tables::Object::Type::Crate
 			{ Name::Lift::ForerunnerGravityLift,		Kind::Lift				},
 			{ Name::Lift::ForerunnerGravityLiftTall,	Kind::Lift				},
 			{ Name::Lift::ManCannonHumanMCC,			Kind::Lift				},
-	
+
 			// Shield.
 			{ Name::Shield::OneWayDoorSmall,			Kind::Shield			},
 			{ Name::Shield::OneWayDoorMedium,			Kind::Shield			},
@@ -173,11 +173,11 @@ export namespace Tables::Object::Type::Crate
 			{ Name::Shield::HangarShieldDoorLargeSolid,	Kind::Shield			},
 			{ Name::Shield::DropShield,					Kind::Shield			},
 		};
-	
+
 		auto it = map.find(tagName);
 		return it != map.end() ? it->second : Kind::Unknown;
 	}
-	
+
 	struct ZoneOffsets
 	{
 		std::uintptr_t Radius{};
@@ -187,11 +187,11 @@ export namespace Tables::Object::Type::Crate
 		std::uintptr_t ZoneType{};
 		std::uintptr_t Team{};
 	};
-	
+
 	inline std::optional<ZoneOffsets> ResolveZoneOffsets(Kind kind)
 	{
 		namespace Offset = Tables::Object::Type::Offset;
-	
+
 		static const std::unordered_map<Kind, ZoneOffsets> map =
 		{
 			{
@@ -228,7 +228,7 @@ export namespace Tables::Object::Type::Crate
 				}
 			},
 		};
-	
+
 		auto it = map.find(kind);
 		if (it == map.end()) return std::nullopt;
 			return it->second;

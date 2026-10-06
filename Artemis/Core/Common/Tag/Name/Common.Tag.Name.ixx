@@ -8,7 +8,7 @@ export namespace Common::Tag::Name
 	{
 		constexpr const char* Spartan = "objects\\characters\\spartans\\spartans";
 		constexpr const char* Elite = "objects\\characters\\elite\\elite";
-		
+
 		constexpr bool IsBiped(const std::string& tag)
 		{
 			return tag == Spartan || tag == Elite;
@@ -184,7 +184,7 @@ export namespace Common::Tag::Name
 
 		constexpr bool IsRedirected(const std::string& tag)
 		{
-			return tag == ForerunnerGravityLift || 
+			return tag == ForerunnerGravityLift ||
 				tag == ForerunnerGravityLiftTall;
 		}
 	}
@@ -261,14 +261,14 @@ export namespace Common::Tag::Name
 		constexpr bool IsOneWay(const std::string& tag)
 		{
 			return tag == OneWayDoorSmall || tag == OneWayDoorMedium ||
-				tag == OneWayDoorLarge || tag == OneWayDoorXSmall || 
+				tag == OneWayDoorLarge || tag == OneWayDoorXSmall ||
 				tag == OneWayDoorGarage || tag == ShieldDoorSmall ||
 				tag == ShieldDoorMedium || tag == ShieldDoorLarge;
 		}
 
 		constexpr bool IsTwoWay(const std::string& tag)
 		{
-			return tag == TwoWayDoorSmall || tag == TwoWayDoorMedium || 
+			return tag == TwoWayDoorSmall || tag == TwoWayDoorMedium ||
 				tag == TwoWayDoorLarge || tag == HangarShieldDoorSmall ||
 				tag == HangarShieldDoorLarge || tag == DropShield;
 		}
@@ -359,8 +359,8 @@ export namespace Common::Tag::Name
 				tag == RocketLauncher || tag == Shotgun ||
 				tag == SniperRifle || tag == SpartanLaser ||
 				tag == MountedMachinegun || tag == Machinegun ||
-				tag == ConcussionRifle || tag == EnergySword || 
-				tag == FuelRod || tag == GravityHammer || 
+				tag == ConcussionRifle || tag == EnergySword ||
+				tag == FuelRod || tag == GravityHammer ||
 				tag == FocusRifle || tag == NeedleRifle ||
 				tag == Needler || tag == PlasmaLauncher ||
 				tag == PlasmaPistol || tag == PlasmaRepeater ||
@@ -375,7 +375,7 @@ export namespace Common::Tag::Name
 
 		constexpr bool IsVehicle(const std::string tag)
 		{
-			return tag == VehicleMountedPlasmaTurret || 
+			return tag == VehicleMountedPlasmaTurret ||
 				tag == MountedMachinegun;
 		}
 	}
@@ -419,15 +419,15 @@ export namespace Common::Tag::Name
 
 		constexpr bool IsVehicle(const std::string& tag)
 		{
-			return 
-				tag == Banshee || 
+			return
+				tag == Banshee ||
 				tag == Falcon || tag == FalconSensor ||
 				tag == FalconTurretRight || tag == FalconTurretLeft ||
 				tag == FalconGrenadeRight || tag == FalconGrenadeLeft ||
 				tag == FalconChinGun ||
-				tag == Ghost || 
+				tag == Ghost ||
 				tag == Mongoose ||
-				tag == Revenant || 
+				tag == Revenant ||
 				tag == RevenantPlasmaTurret ||
 				tag == Scorpion || tag == ScorpionTurret ||
 				tag == ScorpionCannon ||
@@ -438,10 +438,10 @@ export namespace Common::Tag::Name
 				tag == WarthogTroop ||
 				tag == Wraith || tag == WraithPlasmaTurret ||
 				tag == WraithCannon ||
-				tag == Sabre || 
+				tag == Sabre ||
 				tag == Seraph ||
-				tag == CartElectric || 
-				tag == Forklift || 
+				tag == CartElectric ||
+				tag == Forklift ||
 				tag == Pickup ||
 				tag == TruckCab || tag == TruckCabBedLong ||
 				tag == OniVan;

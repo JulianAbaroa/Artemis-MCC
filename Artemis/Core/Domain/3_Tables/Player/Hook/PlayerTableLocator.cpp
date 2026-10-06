@@ -58,17 +58,17 @@ namespace Tables::Player::Hook
 
                 if (telemetryIdx <= 1000)
                 {
-                    std::uintptr_t threadContext = *(std::uintptr_t*)(tlsArray + 
+                    std::uintptr_t threadContext = *(std::uintptr_t*)(tlsArray +
                             (static_cast<unsigned long long>(telemetryIdx) * 8));
 
                     if (threadContext)
                     {
-                        std::uintptr_t telemetryData = 
+                        std::uintptr_t telemetryData =
                             *(std::uintptr_t*)(threadContext + 0x18);
 
                         if (telemetryData)
                         {
-                            std::uintptr_t playerTable = 
+                            std::uintptr_t playerTable =
                                 *(std::uintptr_t*)(telemetryData + 0x50);
 
                             return playerTable;

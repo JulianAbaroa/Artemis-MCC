@@ -16,15 +16,15 @@ export namespace Resolved::Definitions::Type::Object
         Vehicle = 0x0001,
         Weapon = 0x0002,
         Equipment = 0x0003,
-        Terminal = 0x0004, 
-        Projectile = 0x0005, 
-        Scenery = 0x0006, 
-        Machine = 0x0007, 
-        Control = 0x0008, 
-        SoundScenery = 0x0009, 
-        Crate = 0x000A, 
-        Creature = 0x000B, 
-        Giant = 0x000C, 
+        Terminal = 0x0004,
+        Projectile = 0x0005,
+        Scenery = 0x0006,
+        Machine = 0x0007,
+        Control = 0x0008,
+        SoundScenery = 0x0009,
+        Crate = 0x000A,
+        Creature = 0x000B,
+        Giant = 0x000C,
         EffectScenery = 0x000D,
 
         Invalid = 0xFFFF,
@@ -81,7 +81,7 @@ export namespace Resolved::Definitions::Type::Object
         // Damage
         std::string CollisionDamageTagName{};
         std::string BrittleCollisionDamageTagName{};
-        
+
         // Model
         std::string ModelTagName{};
 

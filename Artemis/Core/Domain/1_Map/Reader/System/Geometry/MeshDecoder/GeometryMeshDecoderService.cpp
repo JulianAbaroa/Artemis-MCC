@@ -22,7 +22,7 @@ namespace
 namespace Map::Reader::System
 {
 	auto GeometryMeshDecoderService::EmitSection(const std::vector<std::uint8_t>& pageData,
-		const TagResourcesObject& entry, std::int32_t vbCount, 
+		const TagResourcesObject& entry, std::int32_t vbCount,
 		const std::vector<BufferInfo>& vbInfo,
 		const std::vector<BufferInfo>& ibInfo, const MeshesObject& sec,
 		const CompressionInfoEntry3* compressionInfo,
@@ -60,8 +60,8 @@ namespace Map::Reader::System
 		{
 			m_LogsService.Message("[GeometryMeshDecoderService] WARNING: '{}':"
 				" VB {} DataLength={} not divisible by VertexCount={},"
-				" stride fallback 0x{:X} (VertexType={}).", tagName ? 
-				tagName : "?", vbIdx, vbLength, vCountInfo, 
+				" stride fallback 0x{:X} (VertexType={}).", tagName ?
+				tagName : "?", vbIdx, vbLength, vCountInfo,
 				k_VertexBufferStride, (unsigned)sec.VertexType);
 		}
 
@@ -170,7 +170,7 @@ namespace Map::Reader::System
 	}
 
 	auto GeometryMeshDecoderService::EmitInstancedGeometry(
-		const std::vector<std::uint8_t>& pageData, 
+		const std::vector<std::uint8_t>& pageData,
 		const TagResourcesObject& lbspEntry,
 		std::int32_t vbCount, const std::vector<BufferInfo>& vbInfo,
 		const std::vector<BufferInfo>& ibInfo, const SbspObject* sbsp,
@@ -189,7 +189,7 @@ namespace Map::Reader::System
 		if (fixupIdx < 0 || fixupIdx >= (int)instEntry.ResourceFixups.size())
 		{
 			m_LogsService.Message("[GeometryMeshDecoderService] WARNING: '{}':"
-				" InstancesEntry.ResourceFixups too short (Count={}, need >={})", 
+				" InstancesEntry.ResourceFixups too short (Count={}, need >={})",
 				tagName, (int)instEntry.ResourceFixups.size(), k_InstanceFixupFromEnd);
 			return 0;
 		}
@@ -313,7 +313,7 @@ namespace Map::Reader::System
 	}
 
 	auto GeometryMeshDecoderService::PushTriangle(std::uint32_t a, std::uint32_t b,
-		std::uint32_t c, const VertexDecodeContext& context, 
+		std::uint32_t c, const VertexDecodeContext& context,
 		std::uint32_t& emitted, std::vector<Triangle>& out) const -> void
 	{
 		if (a == b || b == c || a == c) return;

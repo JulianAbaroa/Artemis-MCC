@@ -87,24 +87,24 @@ namespace Tables::Player::System
 			[&](std::uint32_t handle, AlivePlayer& player) {
 			std::uint32_t index = handle & 0xFFFF;
 			std::uintptr_t playerBase = tableBase + (index * Sizes::Base);
-	
+
 			std::uint32_t rawHandleInMemory = reader.Read<std::uint32_t>(playerBase, Offset::Handle);
-	
+
 			std::uint32_t handleInMemory = (rawHandleInMemory << 16) | index;
 			if (handleInMemory != handle)
 			{
 				handlesToRemove.push_back(handle);
 				return;
 			}
-	
+
 			player.ConnectionState = reader.Read<ConnectionState>(playerBase, Offset::ConnectionState);
-	
+
 			player.Team = reader.Read<Team>(playerBase, Offset::Team);
-	
+
 			player.AliveBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::AliveBipedHandle);
 			player.DeadBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::DeadBipedHandle);
 			player.CurrentBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::CurrentBipedHandle);
-	
+
 			player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::PrimaryWeaponHandle);
 			player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::SecondaryWeaponHandle);
 			player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, Offset::ObjectiveHandle);
@@ -135,12 +135,12 @@ namespace Tables::Player::System
 		int wideLength = (int)wcsnlen(source, maxLength);
 		if (wideLength == 0) return std::string();
 
-		int utf8Length = WideCharToMultiByte(CP_UTF8, 0, source, 
+		int utf8Length = WideCharToMultiByte(CP_UTF8, 0, source,
 			wideLength, NULL, 0, NULL, NULL);
 
 		std::string result(utf8Length, 0);
 
-		WideCharToMultiByte(CP_UTF8, 0, source, wideLength, 
+		WideCharToMultiByte(CP_UTF8, 0, source, wideLength,
 			&result[0], utf8Length, NULL, NULL);
 
 		return result;

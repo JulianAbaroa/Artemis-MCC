@@ -20,7 +20,7 @@ export namespace Tables::Player::State
 
 		auto AddPlayer(std::uint32_t handle, const AlivePlayer& player) -> void;
 		auto RemovePlayer(std::uint32_t handle) -> void;
-		
+
 		template<typename Predicate>
 		auto RemovePlayerIf(Predicate&& predicate) -> void
 		{

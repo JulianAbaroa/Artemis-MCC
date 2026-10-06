@@ -22,8 +22,8 @@ export namespace Egocentric::Self::System
         using SelfStore = Egocentric::Self::State::SelfStore;
 
     public:
-        SelfService(LogsService& logsService, PlayerTableStore& playerStore, 
-            SelfStore& selfStore) : m_LogsService(logsService), 
+        SelfService(LogsService& logsService, PlayerTableStore& playerStore,
+            SelfStore& selfStore) : m_LogsService(logsService),
             m_PlayerStore(playerStore), m_SelfStore(selfStore) {}
         ~SelfService() = default;
 

@@ -43,7 +43,7 @@ export namespace Resolved::Definitions::Type::Coll
 
         Vec3 BoundsMin{};
         Vec3 BoundsMax{};
-        
+
         // TODO: See if this can be used at all
         std::vector<Material> Materials{};
     };

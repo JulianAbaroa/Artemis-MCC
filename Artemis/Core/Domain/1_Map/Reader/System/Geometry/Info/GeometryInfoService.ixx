@@ -29,7 +29,7 @@ export namespace Map::Reader::System
 
 		auto ReadBufferInfoTables(const TagResourcesObject& entry,
 			std::int32_t vbCount, std::int32_t ibCount,
-			std::vector<BufferInfo>& outVBTable, 
+			std::vector<BufferInfo>& outVBTable,
 			std::vector<BufferInfo>& outIBTable,
 			std::int64_t fixupDataBase) const -> bool;
 

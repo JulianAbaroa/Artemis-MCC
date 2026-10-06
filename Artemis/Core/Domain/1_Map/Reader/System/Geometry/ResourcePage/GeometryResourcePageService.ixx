@@ -35,7 +35,7 @@ export namespace Map::Reader::System
 		~GeometryResourcePageService() = default;
 
 		auto Read(std::uint32_t datum, const TagResourcesObject** outEntry,
-			const ZoneObject* zone, const PlayObject* play) const -> 
+			const ZoneObject* zone, const PlayObject* play) const ->
 			std::vector<std::uint8_t>;
 
 	private:

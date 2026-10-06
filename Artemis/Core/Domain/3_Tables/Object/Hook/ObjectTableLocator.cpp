@@ -35,7 +35,7 @@ namespace Tables::Object::Hook
     }
 
     // Returns the pointer to the Global Object Table (Indirection Table).
-    // This table acts as a lookup array where each 24-byte (0x18) entry maps a 
+    // This table acts as a lookup array where each 24-byte (0x18) entry maps a
     // networked 'Handle' to a physical memory address.
     // Resolution logic: The lower 16 bits of a Handle (0xFFFF) serve as the index
     // into this table, while the upper 16 bits function as a 'Salt' for versioning.
@@ -59,17 +59,17 @@ namespace Tables::Object::Hook
 
                 if (telemetryIdx <= 1000)
                 {
-                    std::uintptr_t threadContext = *(std::uintptr_t*)(tlsArray + 
+                    std::uintptr_t threadContext = *(std::uintptr_t*)(tlsArray +
                         (static_cast<unsigned long long>(telemetryIdx) * 8));
 
                     if (threadContext)
                     {
-                        std::uintptr_t telemetryData = 
+                        std::uintptr_t telemetryData =
                             *(std::uintptr_t*)(threadContext + 0x10);
 
                         if (telemetryData)
                         {
-                            std::uintptr_t objectTable = 
+                            std::uintptr_t objectTable =
                                 *(std::uintptr_t*)(telemetryData + 0x50);
 
                             return objectTable;

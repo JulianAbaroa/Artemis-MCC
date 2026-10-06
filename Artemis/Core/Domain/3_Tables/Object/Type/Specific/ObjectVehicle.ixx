@@ -91,7 +91,7 @@ export namespace Tables::Object::Type::Vehicle
 	// TODO: Add the rest of the vehicles.
 	inline const std::vector<Seat::Layout> Layouts =
 	{
-		{ 
+		{
 			Kind::Banshee,
 			{
 				// Seat.
@@ -102,7 +102,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Banshee::DriverLeftHijacker,			"LeftHijacker",			false, true },
 			}
 		},
-		{ 
+		{
 			Kind::Falcon,
 			{
 				// Seats.
@@ -118,7 +118,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Falcon::LeftDriverHijacker,			"DriverLeftHijacker",	false, true },
 			}
 		},
-		{ 
+		{
 			Kind::FalconTurret,
 			{
 				// Gunners.
@@ -128,7 +128,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Falcon::Turret::GunnerHijacker,		"GunnerHijacker",		false, true },
 			}
 		},
-		{ 
+		{
 			Kind::FalconGrenadeTurret,
 			{
 				// Gunners.
@@ -138,7 +138,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Falcon::Grenadier::GrenadierHijacker, "GunnerHijacker",		false, true },
 			}
 		},
-		{ 
+		{
 			Kind::Ghost,
 			{
 				// Seat.
@@ -150,7 +150,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Ghost::BackDriverHijacker,			"BackHijacker",			false, true },
 			}
 		},
-		{ 
+		{
 			Kind::Mongoose,
 			{
 				// Seats.
@@ -162,7 +162,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Mongoose::PassengerHijacker,			"PassengerHijacker",	false, true },
 			}
 		},
-		{ 
+		{
 			Kind::Revenant,
 			{
 				// Seats.
@@ -174,7 +174,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Revenant::PassengerHijacker,			"PassengerHijacker",	false, true },
 			}
 		},
-		{ 
+		{
 			Kind::Scorpion,
 			{
 				// Seat.
@@ -186,21 +186,21 @@ export namespace Tables::Object::Type::Vehicle
 				{ Scorpion::BackHijacker,				"BackHijacker",			false, true },
 			}
 		},
-		{ 
+		{
 			Kind::ScorpionTurret,
 			{
 				// Gunner.
 				{ Scorpion::Turret::GunnerSeat,			"Gunner",				false, false },
 			}
 		},
-		{ 
+		{
 			Kind::ShadeTurret,
 			{
 				// Seat.
 				{ ShadeTurret::GunnerSeat,				"Gunner",				false, false },
 			}
 		},
-		{ 
+		{
 			Kind::Warthog,
 			{
 				// Seats.
@@ -212,7 +212,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Warthog::PassengerHijacker,			"PassengerHijacker",	false, true },
 			}
 		},
-		{ 
+		{
 			Kind::WarthogChaingun,
 			{
 				// Gunner.
@@ -222,7 +222,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Warthog::Turret::GunnerHijackerSeat, "GunnerHijacker",		false, true },
 			}
 		},
-		{ 
+		{
 			Kind::WarthogGauss,
 			{
 				// Gunner.
@@ -232,7 +232,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Warthog::Gauss::GunnerHijackerSeat,	"GunnerHijacker",		false, true },
 			}
 		},
-		{ 
+		{
 			Kind::WarthogRocket,
 			{
 				// Gunner.
@@ -242,7 +242,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Warthog::Rocket::GunnerHijackerSeat,	"GunnerHijacker",		false, true },
 			}
 		},
-		{ 
+		{
 			Kind::Wraith,
 			{
 				// Seat.
@@ -254,7 +254,7 @@ export namespace Tables::Object::Type::Vehicle
 				{ Wraith::BackHijackerSeat,				"BackHijacker",			false, true },
 			}
 		},
-		{ 
+		{
 			Kind::WraithPlasmaTurret,
 			{
 				// Gunner.
@@ -268,7 +268,7 @@ export namespace Tables::Object::Type::Vehicle
 	inline Kind ResolveVehicleType(const std::string& tagName)
 	{
 		namespace Vehicle = Common::Tag::Name::Vehicle;
-	
+
 		static const std::unordered_map<std::string, Kind> map =
 		{
 			{ Vehicle::Banshee,				Kind::Banshee				},
@@ -305,7 +305,7 @@ export namespace Tables::Object::Type::Vehicle
 			{ Vehicle::TruckCab,			Kind::TruckCab				},
 			{ Vehicle::OniVan,				Kind::OniVan				},
 		};
-	
+
 		auto it = map.find(tagName);
 		return it != map.end() ? it->second : Kind::Unknown;
 	}

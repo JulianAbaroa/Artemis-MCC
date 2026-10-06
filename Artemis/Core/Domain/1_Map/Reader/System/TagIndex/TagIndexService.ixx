@@ -24,10 +24,10 @@ export namespace Map::Reader::System
 		TagIndexStore& m_TagIndexStore;
 		FormulaService& m_FormulaService;
 
-		auto ReadTagGroups(std::ifstream& file, std::int64_t fileOffset, 
+		auto ReadTagGroups(std::ifstream& file, std::int64_t fileOffset,
 			std::int32_t count) -> bool;
 
-		auto ReadTags(std::ifstream& file, std::int64_t fileOffset, 
+		auto ReadTags(std::ifstream& file, std::int64_t fileOffset,
 			std::int32_t count) -> bool;
 	};
 }

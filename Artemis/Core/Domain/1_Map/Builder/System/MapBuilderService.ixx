@@ -24,7 +24,7 @@ export namespace Map::Builder::System
     public:
         MapBuilderService(LogsService& logsService, TagCatalog& tagCatalog,
             FileStore& fileStore, TagIndexStore& m_TagIndexStore,
-            FileLocatorService& fileLocatorService, 
+            FileLocatorService& fileLocatorService,
             TagResolverService& tagResolverService) :
             m_LogsService(logsService), m_TagCatalog(tagCatalog), m_FileStore(fileStore),
             m_TagIndexStore(m_TagIndexStore), m_FileLocatorService(fileLocatorService),

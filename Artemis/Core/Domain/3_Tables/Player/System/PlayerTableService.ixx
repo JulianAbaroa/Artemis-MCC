@@ -18,8 +18,8 @@ export namespace Tables::Player::System
 		using PlayerTableStore = Tables::Player::State::PlayerTableStore;
 
 	public:
-		PlayerTableService(LogsService& logsService, 
-			MemoryReaderService& memoryReaderService, PlayerTableStore& playerStore) : 
+		PlayerTableService(LogsService& logsService,
+			MemoryReaderService& memoryReaderService, PlayerTableStore& playerStore) :
 			m_LogsService(logsService), m_MemoryReaderService(memoryReaderService),
 			m_PlayerStore(playerStore) {}
 		~PlayerTableService() = default;
@@ -36,7 +36,7 @@ export namespace Tables::Player::System
 		PlayerTableStore& m_PlayerStore;
 
 		auto BuildLivePlayer(std::uint32_t handle, std::uintptr_t playerBase) -> AlivePlayer;
-	
+
 		auto UpdatePlayerData() -> void;
 
 		// --- Helpers ---

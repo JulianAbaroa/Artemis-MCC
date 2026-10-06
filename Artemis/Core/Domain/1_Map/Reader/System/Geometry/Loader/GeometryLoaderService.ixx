@@ -44,12 +44,12 @@ export namespace Map::Reader::System
 			FormulaService& m_FormulaService) :
 			m_LogsService(logsService), m_TagCatalog(tagCatalog),
 			m_GeometryResourcePageService(geometryResourcePageService),
-			m_GeometryInfoService(geometryInfoService), 
+			m_GeometryInfoService(geometryInfoService),
 			m_GeometryMeshDecoderService(geometryMeshDecoderService),
 			m_FormulaService(m_FormulaService) {}
 		~GeometryLoaderService() = default;
 
-		auto ReadRenderGeometry(std::vector<std::string>& sbspTagNames) const 
+		auto ReadRenderGeometry(std::vector<std::string>& sbspTagNames) const
 			-> std::vector<SbspGeometry>;
 
 	private:

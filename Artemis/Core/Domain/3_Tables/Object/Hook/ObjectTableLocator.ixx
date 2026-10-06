@@ -16,7 +16,7 @@ export namespace Tables::Object::Hook
 
 	public:
 		ObjectTableLocator(LogsService& logsService, AOBService& aobService,
-			ObjectStore& objectStore) : m_AOBService(aobService), 
+			ObjectStore& objectStore) : m_AOBService(aobService),
 			m_LogsService(logsService), m_ObjectStore(objectStore) {};
 		~ObjectTableLocator() = default;
 
