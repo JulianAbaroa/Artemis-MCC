@@ -682,12 +682,6 @@
     <Filter Include="Core\UI">
       <UniqueIdentifier>{9ffce510-9d37-4201-8cbd-6dddf5b4093d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\UI\Backend">
-      <UniqueIdentifier>{8b06998d-be66-4f06-9352-019fb54beddb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Backend\System">
-      <UniqueIdentifier>{8c4a4c8b-2e15-4cf8-bec5-8595ae4badbd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\UI\Hotkey">
       <UniqueIdentifier>{3a0f56b3-f8db-481e-9904-bf4b95833a9e}</UniqueIdentifier>
     </Filter>
@@ -772,45 +766,6 @@
     <Filter Include="Core\UI\Logs\Type">
       <UniqueIdentifier>{0101a15d-496f-4153-b471-b0f2bafad6c3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\UI\Color">
-      <UniqueIdentifier>{d6f4e7d1-1327-4f32-b3a3-f2ded0661471}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Color\System">
-      <UniqueIdentifier>{fac0316f-622a-4d2d-b5dd-214c74de2b1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Color\System\Role">
-      <UniqueIdentifier>{41a1bbc4-ddc1-46b6-88fb-b8a68bd83d95}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Color\System\Team">
-      <UniqueIdentifier>{b492a381-6568-4b33-a9f3-7d4c3b5ad360}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format">
-      <UniqueIdentifier>{f7f77317-3140-4394-b673-48394eec8d6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System">
-      <UniqueIdentifier>{f9bcde0e-8bc0-4651-9762-552b8ebb74be}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Affordance">
-      <UniqueIdentifier>{7293480b-0ea3-48fa-a5e8-3ceb82ecd147}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Fixtures">
-      <UniqueIdentifier>{4900f541-99f4-48b4-9012-6bbea568d5b1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Hex">
-      <UniqueIdentifier>{79bbac81-907d-4cd8-8cca-6bc8af39c413}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Interaction">
-      <UniqueIdentifier>{e55870a0-9ec8-4095-bafc-ae8e3b4b7ccb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Object">
-      <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Role">
-      <UniqueIdentifier>{556816c9-bc66-4f46-8682-295639c03e08}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Format\System\Team">
-      <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\UI\Icon">
       <UniqueIdentifier>{04cd2ce2-a76e-45bb-ae50-e11dd8b5af80}</UniqueIdentifier>
     </Filter>
@@ -819,21 +774,6 @@
     </Filter>
     <Filter Include="Core\UI\Icon\System">
       <UniqueIdentifier>{a3eec7aa-077b-4196-a18e-5939cb31f9a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget">
-      <UniqueIdentifier>{49afb6fe-81e0-498f-9cd7-018840cba71f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget\System">
-      <UniqueIdentifier>{aa35498c-d314-4140-b6a8-3b5ed89d8e63}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget\System\CopyableField">
-      <UniqueIdentifier>{d7e2dc53-0a2a-4410-8355-1eeeab45c0f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget\System\HandleDrawer">
-      <UniqueIdentifier>{6d2d8790-054f-4ebd-8668-91cad21a34bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget\System\SearchFilter">
-      <UniqueIdentifier>{aa66a3bb-1dc5-4790-944b-b7ec51edf58d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\2_Resolved\World\System\Raycast">
       <UniqueIdentifier>{ad5d22f2-2451-48d5-b127-f78af2864f81}</UniqueIdentifier>
@@ -895,12 +835,6 @@
     <Filter Include="Core\Infrastructure\Platform\Hook">
       <UniqueIdentifier>{069b409e-a3dd-4385-b657-4927292aa2a1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\UI\Widget\System\Panel">
-      <UniqueIdentifier>{ece42211-15c5-4856-a09d-390793f12e68}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget\System\ResponsiveCard">
-      <UniqueIdentifier>{2ead2168-1c59-47e3-b980-f2562924addf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Jpt">
       <UniqueIdentifier>{ed2d2283-5c26-43d1-9c3d-728838098daa}</UniqueIdentifier>
     </Filter>
@@ -918,9 +852,6 @@
     </Filter>
     <Filter Include="Core\Common\Reflect\System">
       <UniqueIdentifier>{b7f1b12e-223a-4444-a975-b7008982fdd6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\Widget\System\Inspector">
-      <UniqueIdentifier>{4b9aafa2-045c-46a4-a259-1242fd0c7c77}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\2_Resolved\Definitions">
       <UniqueIdentifier>{584702e6-f09d-43ea-8312-20d171145dab}</UniqueIdentifier>
@@ -2078,12 +2009,6 @@
     <ClCompile Include="Core\Viewer\Selection\System\SelectionService.ixx">
       <Filter>Core\Viewer\Selection\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Backend\System\BackendUIService.ixx">
-      <Filter>Core\UI\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Backend\System\BackendUIService.cpp">
-      <Filter>Core\UI\Backend\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\UI.Layer.ixx">
       <Filter>Core\UI</Filter>
     </ClCompile>
@@ -2207,54 +2132,6 @@
     <ClCompile Include="Resources\Icons\IconData.cpp">
       <Filter>Resources\Icons</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Color\UI.Color.System.ixx">
-      <Filter>Core\UI\Color</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\UI.Format.System.ixx">
-      <Filter>Core\UI\Format</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Affordance\AffordanceFormater.cpp">
-      <Filter>Core\UI\Format\System\Affordance</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Affordance\AffordanceFormater.ixx">
-      <Filter>Core\UI\Format\System\Affordance</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Fixtures\FixturesFormater.cpp">
-      <Filter>Core\UI\Format\System\Fixtures</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Fixtures\FixturesFormater.ixx">
-      <Filter>Core\UI\Format\System\Fixtures</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Hex\HexFormater.cpp">
-      <Filter>Core\UI\Format\System\Hex</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Hex\HexFormater.ixx">
-      <Filter>Core\UI\Format\System\Hex</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Interaction\InteractionFormater.cpp">
-      <Filter>Core\UI\Format\System\Interaction</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Interaction\InteractionFormater.ixx">
-      <Filter>Core\UI\Format\System\Interaction</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Object\ObjectFormater.cpp">
-      <Filter>Core\UI\Format\System\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Object\ObjectFormater.ixx">
-      <Filter>Core\UI\Format\System\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Role\RoleFormater.cpp">
-      <Filter>Core\UI\Format\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Role\RoleFormater.ixx">
-      <Filter>Core\UI\Format\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Team\TeamFormater.cpp">
-      <Filter>Core\UI\Format\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Format\System\Team\TeamFormater.ixx">
-      <Filter>Core\UI\Format\System\Team</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\Icon\Type\UI.Icon.Type.ixx">
       <Filter>Core\UI\Icon\Type</Filter>
     </ClCompile>
@@ -2263,39 +2140,6 @@
     </ClCompile>
     <ClCompile Include="Core\UI\Icon\System\IconLoader.ixx">
       <Filter>Core\UI\Icon\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\UI.Widget.System.ixx">
-      <Filter>Core\UI\Widget</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Color\System\Role\RoleToColor.ixx">
-      <Filter>Core\UI\Color\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Color\System\Role\RoleToColor.cpp">
-      <Filter>Core\UI\Color\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Color\System\Team\TeamToColor.ixx">
-      <Filter>Core\UI\Color\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Color\System\Team\TeamToColor.cpp">
-      <Filter>Core\UI\Color\System\Team</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\CopyableField\CopyableFieldUIService.cpp">
-      <Filter>Core\UI\Widget\System\CopyableField</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\CopyableField\CopyableFieldUIService.ixx">
-      <Filter>Core\UI\Widget\System\CopyableField</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\HandleDrawer\HandleDrawerUIService.cpp">
-      <Filter>Core\UI\Widget\System\HandleDrawer</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\HandleDrawer\HandleDrawerUIService.ixx">
-      <Filter>Core\UI\Widget\System\HandleDrawer</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.ixx">
-      <Filter>Core\UI\Widget\System\SearchFilter</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\SearchFilter\SearchFilterUIService.cpp">
-      <Filter>Core\UI\Widget\System\SearchFilter</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\Hotkey\Type\UI.Hotkey.Type.ixx">
       <Filter>Core\UI\Hotkey\Type</Filter>
@@ -2311,15 +2155,6 @@
     </ClCompile>
     <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx">
       <Filter>Core\UI\MemoryScanner\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Backend\System\WndProcUIService.ixx">
-      <Filter>Core\UI\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Backend\System\WndProcUIService.cpp">
-      <Filter>Core\UI\Backend\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Backend\UI.Backend.System.ixx">
-      <Filter>Core\UI\Backend</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx">
       <Filter>Core\Infrastructure\Platform</Filter>
@@ -2609,18 +2444,6 @@
     <ClCompile Include="Core\Common\State\System\Common.State.System.ixx">
       <Filter>Core\Common\State\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\Panel\PanelUIService.ixx">
-      <Filter>Core\UI\Widget\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\Panel\PanelUIService.cpp">
-      <Filter>Core\UI\Widget\System\Panel</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\ResponsiveCard\ResponsiveCardUIService.ixx">
-      <Filter>Core\UI\Widget\System\ResponsiveCard</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\ResponsiveCard\ResponsiveCardUIService.cpp">
-      <Filter>Core\UI\Widget\System\ResponsiveCard</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx">
       <Filter>Core\Infrastructure\Platform\Input</Filter>
     </ClCompile>
@@ -2656,9 +2479,6 @@
     </ClCompile>
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx">
       <Filter>Core\Common\Reflect\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\Widget\System\Inspector\InspectorUIService.ixx">
-      <Filter>Core\UI\Widget\System\Inspector</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\StatsInspector\System\DefinitionsInspectorUIService.cpp">
       <Filter>Core\UI\DefinitionsInspector\System</Filter>
@@ -2932,9 +2752,180 @@
       <Filter>Resources\Icons</Filter>
     </Image>
   </ItemGroup>
+    <Filter Include="Core\Gui">
+      <UniqueIdentifier>{0ab4c6ea-d4db-4ee1-98a4-8d39c4469ea7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Backend">
+      <UniqueIdentifier>{8b06998d-be66-4f06-9352-019fb54beddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Backend\System">
+      <UniqueIdentifier>{8c4a4c8b-2e15-4cf8-bec5-8595ae4badbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color">
+      <UniqueIdentifier>{d6f4e7d1-1327-4f32-b3a3-f2ded0661471}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color\System">
+      <UniqueIdentifier>{fac0316f-622a-4d2d-b5dd-214c74de2b1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color\System\Role">
+      <UniqueIdentifier>{41a1bbc4-ddc1-46b6-88fb-b8a68bd83d95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Color\System\Team">
+      <UniqueIdentifier>{b492a381-6568-4b33-a9f3-7d4c3b5ad360}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format">
+      <UniqueIdentifier>{f7f77317-3140-4394-b673-48394eec8d6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System">
+      <UniqueIdentifier>{f9bcde0e-8bc0-4651-9762-552b8ebb74be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Affordance">
+      <UniqueIdentifier>{7293480b-0ea3-48fa-a5e8-3ceb82ecd147}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Fixtures">
+      <UniqueIdentifier>{4900f541-99f4-48b4-9012-6bbea568d5b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Hex">
+      <UniqueIdentifier>{79bbac81-907d-4cd8-8cca-6bc8af39c413}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Interaction">
+      <UniqueIdentifier>{e55870a0-9ec8-4095-bafc-ae8e3b4b7ccb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Object">
+      <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Role">
+      <UniqueIdentifier>{556816c9-bc66-4f46-8682-295639c03e08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Format\System\Team">
+      <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget">
+      <UniqueIdentifier>{49afb6fe-81e0-498f-9cd7-018840cba71f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System">
+      <UniqueIdentifier>{aa35498c-d314-4140-b6a8-3b5ed89d8e63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\CopyableField">
+      <UniqueIdentifier>{d7e2dc53-0a2a-4410-8355-1eeeab45c0f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\HandleDrawer">
+      <UniqueIdentifier>{6d2d8790-054f-4ebd-8668-91cad21a34bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\SearchFilter">
+      <UniqueIdentifier>{aa66a3bb-1dc5-4790-944b-b7ec51edf58d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Hook\System">
       <UniqueIdentifier>{9a47eef2-d3b9-4d1f-8b3e-731553de7710}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Gui\Widget\System\Panel">
+      <UniqueIdentifier>{ece42211-15c5-4856-a09d-390793f12e68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\ResponsiveCard">
+      <UniqueIdentifier>{2ead2168-1c59-47e3-b980-f2562924addf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Widget\System\Inspector">
+      <UniqueIdentifier>{4b9aafa2-045c-46a4-a259-1242fd0c7c77}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="Core\Gui\Gui.Layer.ixx">
+      <Filter>Core\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.ixx">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.cpp">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\Gui.Color.System.ixx">
+      <Filter>Core\Gui\Color</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\Gui.Format.System.ixx">
+      <Filter>Core\Gui\Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.cpp">
+      <Filter>Core\Gui\Format\System\Affordance</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.ixx">
+      <Filter>Core\Gui\Format\System\Affordance</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.cpp">
+      <Filter>Core\Gui\Format\System\Fixtures</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.ixx">
+      <Filter>Core\Gui\Format\System\Fixtures</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.cpp">
+      <Filter>Core\Gui\Format\System\Hex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.ixx">
+      <Filter>Core\Gui\Format\System\Hex</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.cpp">
+      <Filter>Core\Gui\Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.ixx">
+      <Filter>Core\Gui\Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.cpp">
+      <Filter>Core\Gui\Format\System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.ixx">
+      <Filter>Core\Gui\Format\System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.cpp">
+      <Filter>Core\Gui\Format\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.ixx">
+      <Filter>Core\Gui\Format\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.cpp">
+      <Filter>Core\Gui\Format\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.ixx">
+      <Filter>Core\Gui\Format\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\Gui.Widget.System.ixx">
+      <Filter>Core\Gui\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.ixx">
+      <Filter>Core\Gui\Color\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.cpp">
+      <Filter>Core\Gui\Color\System\Role</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.ixx">
+      <Filter>Core\Gui\Color\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.cpp">
+      <Filter>Core\Gui\Color\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\CopyableField\CopyableFieldGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\CopyableField</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\CopyableField\CopyableFieldGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\CopyableField</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\HandleDrawer\HandleDrawerGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\HandleDrawer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\HandleDrawer\HandleDrawerGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\HandleDrawer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\SearchFilter\SearchFilterGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\SearchFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\SearchFilter\SearchFilterGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\SearchFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.ixx">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.cpp">
+      <Filter>Core\Gui\Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Backend\Gui.Backend.System.ixx">
+      <Filter>Core\Gui\Backend</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
@@ -2946,6 +2937,21 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp">
+      <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Widget\System\Inspector\InspectorGuiService.ixx">
+      <Filter>Core\Gui\Widget\System\Inspector</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
       <Filter>Core\Domain\5_Environment\Aim\State</Filter>
