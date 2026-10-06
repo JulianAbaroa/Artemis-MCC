@@ -181,7 +181,7 @@
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx" />
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx" />
     <ClCompile Include="Core\Common\State\System\Common.State.System.ixx" />
-    <ClCompile Include="Core\Common\Tag\Name\Common.Tag.Name.ixx" />
+    <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx" />
     <ClCompile Include="Core\Common\Team\Type\Common.Team.Type.ixx" />
     <ClCompile Include="Core\Common\ZoneShape\Type\Common.ZoneShape.Type.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderConstant.ixx" />

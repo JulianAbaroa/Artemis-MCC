@@ -1,8 +1,16 @@
-module;
-
-#include <cmath>
-
 module Common.Math.System;
+
+import Common.Math.Type;
+import std;
+
+namespace
+{
+    using Vec3 = Common::Math::Type::Vec3;
+
+    constexpr Vec3 k_WorldUp{ 0.0f, 0.0f, 1.0f };
+    constexpr Vec3 k_WorldX{ 1.0f, 0.0f, 0.0f };
+    constexpr float k_ParallelEpsilon{ 1e-4f };
+}
 
 namespace Common::Math::System
 {
@@ -56,17 +64,13 @@ namespace Common::Math::System
     auto BuildFrame(const Vec3& forwardIn, Vec3& outForward, Vec3& outRight,
         Vec3& outUp, const Vec3& normalizeFallback) -> void
     {
-        constexpr Vec3 kWorldUp{ 0.0f, 0.0f, 1.0f };
-        constexpr float kParallelEpsilon = 1e-4f;
-
         outForward = Normalize(forwardIn, normalizeFallback);
 
-        Vec3 right = Cross(outForward, kWorldUp);
+        Vec3 right = Cross(outForward, k_WorldUp);
 
-        if (Dot(right, right) < kParallelEpsilon)
+        if (Dot(right, right) < k_ParallelEpsilon)
         {
-            constexpr Vec3 kWorldX{ 1.0f, 0.0f, 0.0f };
-            right = Cross(outForward, kWorldX);
+            right = Cross(outForward, k_WorldX);
         }
 
         outRight = Normalize(right, normalizeFallback);

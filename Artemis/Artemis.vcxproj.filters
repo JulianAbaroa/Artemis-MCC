@@ -919,7 +919,7 @@
     <Filter Include="Core\Common\Tag">
       <UniqueIdentifier>{2e4697de-ba11-4d62-92e6-d97d17722b2c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Common\Tag\Name">
+    <Filter Include="Core\Common\Tag\Type">
       <UniqueIdentifier>{ba54a298-48ba-4cfa-bcee-276345227488}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Common\Team">
@@ -2747,8 +2747,8 @@
     <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.ixx">
       <Filter>Core\Common\Geometry\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Common\Tag\Name\Common.Tag.Name.ixx">
-      <Filter>Core\Common\Tag\Name</Filter>
+    <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx">
+      <Filter>Core\Common\Tag\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Team\Type\Common.Team.Type.ixx">
       <Filter>Core\Common\Team\Type</Filter>

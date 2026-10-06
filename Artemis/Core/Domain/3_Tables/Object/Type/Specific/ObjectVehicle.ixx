@@ -2,7 +2,7 @@ export module Tables.Object.Type:Vehicle;
 
 import :Offset;
 import Common.Math.Type;
-import Common.Tag.Name;
+import Common.Tag.Type;
 import Resolved.Definitions.Type;
 import std;
 
@@ -267,43 +267,43 @@ export namespace Tables::Object::Type::Vehicle
 	// Hardcoded solution, but those tag names are not going to change.
 	inline Kind ResolveVehicleType(const std::string& tagName)
 	{
-		namespace Vehicle = Common::Tag::Name::Vehicle;
+		namespace Vehicle = Common::Tag::Type::Vehicle;
 
 		static const std::unordered_map<std::string, Kind> map =
 		{
-			{ Vehicle::Banshee,				Kind::Banshee				},
-			{ Vehicle::Falcon,				Kind::Falcon				},
-			{ Vehicle::FalconSensor,		Kind::FalconGrenadeTurret	},
-			{ Vehicle::FalconTurretRight,   Kind::FalconTurret			},
-			{ Vehicle::FalconTurretLeft,    Kind::FalconTurret			},
-			{ Vehicle::FalconGrenadeRight,	Kind::FalconGrenadeTurret	},
-			{ Vehicle::FalconGrenadeLeft,	Kind::FalconGrenadeTurret	},
-			{ Vehicle::FalconChinGun,		Kind::FalconGrenadeTurret	},
-			{ Vehicle::Ghost,				Kind::Ghost					},
-			{ Vehicle::Mongoose,			Kind::Mongoose				},
-			{ Vehicle::Revenant,			Kind::Revenant				},
-			{ Vehicle::RevenantPlasmaTurret,Kind::Revenant				},
-			{ Vehicle::Scorpion,			Kind::Scorpion				},
-			{ Vehicle::ScorpionTurret,      Kind::ScorpionTurret		},
-			{ Vehicle::ScorpionCannon,      Kind::ScorpionCannon		},
-			{ Vehicle::Shade,				Kind::ShadeTurret			},
-			{ Vehicle::ShadePlasmaCannon,	Kind::ShadePlasmaCannon		},
-			{ Vehicle::ShadeFlakCannon,		Kind::ShadeFlakCannon		},
-			{ Vehicle::Warthog,				Kind::Warthog				},
-			{ Vehicle::WarthogChaingun,		Kind::WarthogChaingun		},
-			{ Vehicle::WarthogGauss,		Kind::WarthogGauss			},
-			{ Vehicle::WarthogRocket,		Kind::WarthogRocket			},
-			{ Vehicle::WarthogTroop,		Kind::WarthogTroop			},
-			{ Vehicle::Wraith,				Kind::Wraith				},
-			{ Vehicle::WraithPlasmaTurret,	Kind::WraithPlasmaTurret	},
-			{ Vehicle::WraithCannon,		Kind::WraithCannon			},
-			{ Vehicle::Sabre,				Kind::Sabre					},
-			{ Vehicle::Seraph,				Kind::Seraph				},
-			{ Vehicle::CartElectric,		Kind::CartElectric			},
-			{ Vehicle::Forklift,			Kind::Forklift				},
-			{ Vehicle::Pickup,				Kind::Pickup				},
-			{ Vehicle::TruckCab,			Kind::TruckCab				},
-			{ Vehicle::OniVan,				Kind::OniVan				},
+			{ Vehicle::k_Banshee,				Kind::Banshee				},
+			{ Vehicle::k_Falcon,				Kind::Falcon				},
+			{ Vehicle::k_FalconSensor,		Kind::FalconGrenadeTurret	},
+			{ Vehicle::k_FalconTurretRight,   Kind::FalconTurret			},
+			{ Vehicle::k_FalconTurretLeft,    Kind::FalconTurret			},
+			{ Vehicle::k_FalconGrenadeRight,	Kind::FalconGrenadeTurret	},
+			{ Vehicle::k_FalconGrenadeLeft,	Kind::FalconGrenadeTurret	},
+			{ Vehicle::k_FalconChinGun,		Kind::FalconGrenadeTurret	},
+			{ Vehicle::k_Ghost,				Kind::Ghost					},
+			{ Vehicle::k_Mongoose,			Kind::Mongoose				},
+			{ Vehicle::k_Revenant,			Kind::Revenant				},
+			{ Vehicle::k_RevenantPlasmaTurret,Kind::Revenant				},
+			{ Vehicle::k_Scorpion,			Kind::Scorpion				},
+			{ Vehicle::k_ScorpionTurret,      Kind::ScorpionTurret		},
+			{ Vehicle::k_ScorpionCannon,      Kind::ScorpionCannon		},
+			{ Vehicle::k_Shade,				Kind::ShadeTurret			},
+			{ Vehicle::k_ShadePlasmaCannon,	Kind::ShadePlasmaCannon		},
+			{ Vehicle::k_ShadeFlakCannon,		Kind::ShadeFlakCannon		},
+			{ Vehicle::k_Warthog,				Kind::Warthog				},
+			{ Vehicle::k_WarthogChaingun,		Kind::WarthogChaingun		},
+			{ Vehicle::k_WarthogGauss,		Kind::WarthogGauss			},
+			{ Vehicle::k_WarthogRocket,		Kind::WarthogRocket			},
+			{ Vehicle::k_WarthogTroop,		Kind::WarthogTroop			},
+			{ Vehicle::k_Wraith,				Kind::Wraith				},
+			{ Vehicle::k_WraithPlasmaTurret,	Kind::WraithPlasmaTurret	},
+			{ Vehicle::k_WraithCannon,		Kind::WraithCannon			},
+			{ Vehicle::k_Sabre,				Kind::Sabre					},
+			{ Vehicle::k_Seraph,				Kind::Seraph				},
+			{ Vehicle::k_CartElectric,		Kind::CartElectric			},
+			{ Vehicle::k_Forklift,			Kind::Forklift				},
+			{ Vehicle::k_Pickup,				Kind::Pickup				},
+			{ Vehicle::k_TruckCab,			Kind::TruckCab				},
+			{ Vehicle::k_OniVan,				Kind::OniVan				},
 		};
 
 		auto it = map.find(tagName);

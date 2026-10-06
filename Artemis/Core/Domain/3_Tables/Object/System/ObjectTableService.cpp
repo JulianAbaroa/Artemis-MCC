@@ -2,13 +2,13 @@ module Tables.Object.System;
 
 import Common.Math.Type;
 import Common.ZoneShape.Type;
-import Common.Tag.Name;
+import Common.Tag.Type;
 import Common.Team.Type;
 
 namespace
 {
 	namespace Offset = Tables::Object::Type::Offset;
-	namespace TagName = Common::Tag::Name;
+	namespace TagName = Common::Tag::Type;
 
 	using Vec2 = Common::Math::Type::Vec2;
 	using Vec3 = Common::Math::Type::Vec3;
@@ -319,11 +319,11 @@ namespace Tables::Object::System
 		weapon.ChargeProgress = reader.Read<std::uint8_t>(object.Address, Offset::Weapon::ChargeProgress);
 		weapon.ActionState = reader.Read<ActionState>(object.Address, Offset::Weapon::ActionState);
 
-		if (object.TagName == TagName::Objective::Flag)
+		if (object.TagName == TagName::Objective::k_Flag)
 		{
 			weapon.Team = reader.Read<Team>(object.Address, Offset::Weapon::Flag::Team);
 		}
-		else if (object.TagName == TagName::Objective::Bomb)
+		else if (object.TagName == TagName::Objective::k_Bomb)
 		{
 			weapon.Team = reader.Read<Team>(object.Address, Offset::Weapon::Bomb::Team);
 		}

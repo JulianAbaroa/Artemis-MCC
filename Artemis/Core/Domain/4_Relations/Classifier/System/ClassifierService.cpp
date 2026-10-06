@@ -1,10 +1,10 @@
 module Relations.Classifier.System;
 
-import Common.Tag.Name;
+import Common.Tag.Type;
 
 namespace
 {
-    namespace TagName = Common::Tag::Name;
+    namespace TagName = Common::Tag::Type;
 
     using Class = Tables::Object::Type::Class::Class;
     using Classified = Relations::Classifier::Type::Classified;
@@ -214,7 +214,7 @@ namespace Relations::Classifier::System
             return Role::Explosive;
         }
 
-        if (TagName::Palletes::IsPallete(tag))
+        if (TagName::Pallets::IsPallet(tag))
         {
             return Role::Pallet;
         }

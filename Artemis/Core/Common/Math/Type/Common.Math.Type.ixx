@@ -4,32 +4,55 @@ import std;
 
 export namespace Common::Math::Type
 {
-	struct Vec2 { float X{}, Y{}; };
-	struct Vec3 { float X{}, Y{}, Z{}; };
-	struct Vec4 { float X{}, Y{}, Z{}, W{}; };
+    // Two-component vector.
+    struct Vec2
+    {
+        float X{};
+        float Y{};
+    };
 
-	struct Triangle
-	{
-		Vec3 A{};
-		Vec3 B{};
-		Vec3 C{};
+    // Three-component vector.
+    struct Vec3
+    {
+        float X{};
+        float Y{};
+        float Z{};
+    };
 
-		std::uint8_t SurfaceFlags{ 0 };
-		std::int16_t Material{ -1 };
-	};
+    // Four-component vector. Also used for quaternions.
+    struct Vec4
+    {
+        float X{};
+        float Y{};
+        float Z{};
+        float W{};
+    };
 
-	struct Node
-	{
-		std::uint32_t Name{};
-		std::int16_t ParentIndex{ -1 };
-		std::int16_t NextSiblingIndex{ -1 };
-		std::int16_t FirstChildIndex{ -1 };
+    // Triangle of a mesh with its surface flags and material.
+    struct Triangle
+    {
+        Vec3 A{};
+        Vec3 B{};
+        Vec3 C{};
 
-		// T-pose local-space transform.
-		Vec3 DefaultTranslation{};
-		Vec4 DefaultRotation{};
-		float InverseScale{ 1.0f };
+        std::uint8_t SurfaceFlags{ 0 };
+        std::int16_t Material{ -1 };
+    };
 
-		bool DoesNotAnimate{ false };
-	};
+    // Node of a model skeleton.
+    // The indices link to the parent, the next sibling and the first child, with -1 for none.
+    struct Node
+    {
+        std::uint32_t Name{};
+        std::int16_t ParentIndex{ -1 };
+        std::int16_t NextSiblingIndex{ -1 };
+        std::int16_t FirstChildIndex{ -1 };
+
+        // Local-space transform of the T-pose.
+        Vec3 DefaultTranslation{};
+        Vec4 DefaultRotation{};
+        float InverseScale{ 1.0f };
+
+        bool DoesNotAnimate{ false };
+    };
 }

@@ -1,6 +1,6 @@
 export module Tables.Object.Type:Scenery;
 
-import Common.Tag.Name;
+import Common.Tag.Type;
 import Common.Team.Type;
 import Common.ZoneShape.Type;
 import std;
@@ -59,22 +59,22 @@ export namespace Tables::Object::Type::Scenery
 
     inline Kind ResolveSceneryType(const std::string& tagName)
     {
-    	namespace Name = Common::Tag::Name;
+    	namespace Name = Common::Tag::Type;
 
         static const std::unordered_map<std::string, Kind> map =
         {
             // Spawns.
-            { Name::Spawn::InvisibleRespawnPoint,Kind::InvisibleRespawnPoint  },
-            { Name::Spawn::InitialSpawnPoint,    Kind::InitialSpawnPoint      },
-            { Name::Spawn::RespawnPoint,         Kind::RespawnPoint           },
+            { Name::Spawn::k_InvisibleRespawnPoint,Kind::InvisibleRespawnPoint  },
+            { Name::Spawn::k_InitialSpawnPoint,    Kind::InitialSpawnPoint      },
+            { Name::Spawn::k_RespawnPoint,         Kind::RespawnPoint           },
 
             // Boundaries
-            { Name::Boundary::SafeBoundary,      Kind::SafeBoundary           },
-            { Name::Boundary::SoftSafeBoundary,  Kind::SoftSafeBoundary       },
-            { Name::Boundary::KillBoundary,      Kind::KillBoundary           },
-            { Name::Boundary::SoftKillBoundary,  Kind::SoftKillBoundary       },
+            { Name::Boundary::k_SafeBoundary,      Kind::SafeBoundary           },
+            { Name::Boundary::k_SoftSafeBoundary,  Kind::SoftSafeBoundary       },
+            { Name::Boundary::k_KillBoundary,      Kind::KillBoundary           },
+            { Name::Boundary::k_SoftKillBoundary,  Kind::SoftKillBoundary       },
 
-            { Name::Shield::PortableShield,      Kind::PortableShield         },
+            { Name::Shield::k_PortableShield,      Kind::PortableShield         },
         };
 
         auto it = map.find(tagName);

@@ -1,7 +1,7 @@
 export module Tables.Object.Type:Crate;
 
 import :Offset;
-import Common.Tag.Name;
+import Common.Tag.Type;
 import Common.Team.Type;
 import Common.ZoneShape.Type;
 import std;
@@ -114,64 +114,64 @@ export namespace Tables::Object::Type::Crate
 
 	inline Kind ResolveCrateType(const std::string& tagName)
 	{
-		namespace Name = Common::Tag::Name;
+		namespace Name = Common::Tag::Type;
 
 		static const std::unordered_map<std::string, Kind> map =
 		{
 			// Objectives.
-			{ Name::Objective::FlagStand,				Kind::FlagStand			},
-			{ Name::Objective::CapturePlate,			Kind::CapturePlate		},
-			{ Name::Objective::HillMarker,				Kind::HillMarker		},
+			{ Name::Objective::k_FlagStand,				Kind::FlagStand			},
+			{ Name::Objective::k_CapturePlate,			Kind::CapturePlate		},
+			{ Name::Objective::k_HillMarker,				Kind::HillMarker		},
 
 			// Teleports.
-			{ Name::Teleport::TeleportSender,			Kind::TeleportSender	},
-			{ Name::Teleport::TeleportReceiver,			Kind::TeleportReceiver	},
-			{ Name::Teleport::TeleportTwoWay,			Kind::TeleportTwoWay	},
+			{ Name::Teleport::k_TeleportSender,			Kind::TeleportSender	},
+			{ Name::Teleport::k_TeleportReceiver,			Kind::TeleportReceiver	},
+			{ Name::Teleport::k_TeleportTwoWay,			Kind::TeleportTwoWay	},
 
 			// Palletes.
-			{ Name::Palletes::Pallet,					Kind::Pallete,			},
-			{ Name::Palletes::PalletLarge,				Kind::Pallete,			},
+			{ Name::Pallets::k_Pallet,					Kind::Pallete,			},
+			{ Name::Pallets::k_PalletLarge,				Kind::Pallete,			},
 
 			// Explosives.
-			{ Name::Explosive::FusionCoil,				Kind::FusionCoil		},
-			{ Name::Explosive::Landmine,				Kind::Landmine			},
-			{ Name::Explosive::PlasmaBattery,			Kind::PlasmaBattery		},
-			{ Name::Explosive::PropaneTank,				Kind::PropaneTank		},
+			{ Name::Explosive::k_FusionCoil,				Kind::FusionCoil		},
+			{ Name::Explosive::k_Landmine,				Kind::Landmine			},
+			{ Name::Explosive::k_PlasmaBattery,			Kind::PlasmaBattery		},
+			{ Name::Explosive::k_PropaneTank,				Kind::PropaneTank		},
 
 			// Lift.
-			{ Name::Lift::ManCannon,					Kind::Lift				},
-			{ Name::Lift::ManCannonHeavy,				Kind::Lift				},
-			{ Name::Lift::ManCannonLight,				Kind::Lift				},
-			{ Name::Lift::VehicleManCannon,				Kind::Lift				},
-			{ Name::Lift::GravityLift,					Kind::Lift				},
-			{ Name::Lift::ManCannonMCC,					Kind::Lift				},
-			{ Name::Lift::ManCannonHeavyMCC,			Kind::Lift				},
-			{ Name::Lift::ManCannonLightMCC,			Kind::Lift				},
-			{ Name::Lift::ForerunnerGravityLift,		Kind::Lift				},
-			{ Name::Lift::ForerunnerGravityLiftTall,	Kind::Lift				},
-			{ Name::Lift::ManCannonHumanMCC,			Kind::Lift				},
+			{ Name::Lift::k_ManCannon,					Kind::Lift				},
+			{ Name::Lift::k_ManCannonHeavy,				Kind::Lift				},
+			{ Name::Lift::k_ManCannonLight,				Kind::Lift				},
+			{ Name::Lift::k_VehicleManCannon,				Kind::Lift				},
+			{ Name::Lift::k_GravityLift,					Kind::Lift				},
+			{ Name::Lift::k_ManCannonMCC,					Kind::Lift				},
+			{ Name::Lift::k_ManCannonHeavyMCC,			Kind::Lift				},
+			{ Name::Lift::k_ManCannonLightMCC,			Kind::Lift				},
+			{ Name::Lift::k_ForerunnerGravityLift,		Kind::Lift				},
+			{ Name::Lift::k_ForerunnerGravityLiftTall,	Kind::Lift				},
+			{ Name::Lift::k_ManCannonHumanMCC,			Kind::Lift				},
 
 			// Shield.
-			{ Name::Shield::OneWayDoorSmall,			Kind::Shield			},
-			{ Name::Shield::OneWayDoorMedium,			Kind::Shield			},
-			{ Name::Shield::OneWayDoorLarge,			Kind::Shield			},
-			{ Name::Shield::TwoWayDoorSmall,			Kind::Shield			},
-			{ Name::Shield::TwoWayDoorMedium,			Kind::Shield			},
-			{ Name::Shield::TwoWayDoorLarge,			Kind::Shield			},
-			{ Name::Shield::OneWayDoorXSmall,			Kind::Shield			},
-			{ Name::Shield::OneWayDoorGarage,			Kind::Shield			},
-			{ Name::Shield::ShieldWallSmall,			Kind::Shield			},
-			{ Name::Shield::ShieldWallMedium,			Kind::Shield			},
-			{ Name::Shield::ShieldWallLarge,			Kind::Shield			},
-			{ Name::Shield::ShieldWallXLarge,			Kind::Shield			},
-			{ Name::Shield::ShieldDoorSmall,			Kind::Shield			},
-			{ Name::Shield::ShieldDoorMedium,			Kind::Shield			},
-			{ Name::Shield::ShieldDoorLarge,			Kind::Shield			},
-			{ Name::Shield::HangarShieldDoorSmall,		Kind::Shield			},
-			{ Name::Shield::HangarShieldDoorSmallSolid,	Kind::Shield			},
-			{ Name::Shield::HangarShieldDoorLarge,		Kind::Shield			},
-			{ Name::Shield::HangarShieldDoorLargeSolid,	Kind::Shield			},
-			{ Name::Shield::DropShield,					Kind::Shield			},
+			{ Name::Shield::k_OneWayDoorSmall,			Kind::Shield			},
+			{ Name::Shield::k_OneWayDoorMedium,			Kind::Shield			},
+			{ Name::Shield::k_OneWayDoorLarge,			Kind::Shield			},
+			{ Name::Shield::k_TwoWayDoorSmall,			Kind::Shield			},
+			{ Name::Shield::k_TwoWayDoorMedium,			Kind::Shield			},
+			{ Name::Shield::k_TwoWayDoorLarge,			Kind::Shield			},
+			{ Name::Shield::k_OneWayDoorXSmall,			Kind::Shield			},
+			{ Name::Shield::k_OneWayDoorGarage,			Kind::Shield			},
+			{ Name::Shield::k_ShieldWallSmall,			Kind::Shield			},
+			{ Name::Shield::k_ShieldWallMedium,			Kind::Shield			},
+			{ Name::Shield::k_ShieldWallLarge,			Kind::Shield			},
+			{ Name::Shield::k_ShieldWallXLarge,			Kind::Shield			},
+			{ Name::Shield::k_ShieldDoorSmall,			Kind::Shield			},
+			{ Name::Shield::k_ShieldDoorMedium,			Kind::Shield			},
+			{ Name::Shield::k_ShieldDoorLarge,			Kind::Shield			},
+			{ Name::Shield::k_HangarShieldDoorSmall,		Kind::Shield			},
+			{ Name::Shield::k_HangarShieldDoorSmallSolid,	Kind::Shield			},
+			{ Name::Shield::k_HangarShieldDoorLarge,		Kind::Shield			},
+			{ Name::Shield::k_HangarShieldDoorLargeSolid,	Kind::Shield			},
+			{ Name::Shield::k_DropShield,					Kind::Shield			},
 		};
 
 		auto it = map.find(tagName);

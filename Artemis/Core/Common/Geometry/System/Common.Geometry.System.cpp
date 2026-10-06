@@ -1,9 +1,18 @@
 module Common.Geometry.System;
+
+import Common.Math.Type;
 import Common.Math.System;
 
 namespace
 {
-    using namespace Common::Math::System;
+    using Vec3 = Common::Math::Type::Vec3;
+    using Triangle = Common::Math::Type::Triangle;
+
+    using Common::Math::System::Cross;
+    using Common::Math::System::Dot;
+    using Common::Math::System::Subtract;
+
+    constexpr float k_Epsilon{ 1e-6f };
 }
 
 namespace Common::Geometry::System
