@@ -1,97 +1,113 @@
 module;
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 export module Viewer.Map.System:MapService;
 
-import :Palette;
 import :MapPass;
 import :DynamicPass;
 import :ZonePass;
 import :RaycastPass;
+import :FixturePass;
 import :AimPass;
 
 import Service.Logs.System;
-import Service.Settings.State;
-import Platform.Render.System;
 import Platform.Render.Type;
-import Resolved.Definitions.State;
+import Platform.Render.System;
 import Export.Tick.State;
-import Viewer.Camera.State;
-import Viewer.Camera.System;
-import Viewer.Selection.State;
-import Viewer.Selection.System;
+import Viewer.Profiler.System;
+import Viewer.Scene.System;
+import Viewer.Options.State;
 import std;
 
 export namespace Viewer::Map::System
 {
-	class MapService
-	{
-	private:
-		using FrameContext = Platform::Render::Type::FrameContext;
+    template <typename T>
+    concept RenderPass = requires(T pass, ID3D11DeviceContext* context,
+        Platform::Render::System::GpuPipeline& pipeline)
+    {
+        { pass.Draw(context, pipeline) } -> std::same_as<void>;
+        { pass.Release() } -> std::same_as<void>;
+    };
 
-		using LogsService = Service::Logs::System::LogsService;
-		using SettingsStore = Service::Settings::State::SettingsStore;
-		using GpuPipeline = Platform::Render::System::GpuPipeline;
-		using GpuStateGuard = Platform::Render::System::GpuStateGuard;
-		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-		using TickStore = Export::Tick::State::TickStore;
-		using CameraStore = Viewer::Camera::State::CameraStore;
-		using CameraService = Viewer::Camera::System::CameraService;
-		using SelectionStore = Viewer::Selection::State::SelectionStore;
-		using SelectionService = Viewer::Selection::System::SelectionService;
+    static_assert(RenderPass<MapPass>);
+    static_assert(RenderPass<DynamicPass>);
+    static_assert(RenderPass<ZonePass>);
+    static_assert(RenderPass<RaycastPass>);
+    static_assert(RenderPass<FixturePass>);
+    static_assert(RenderPass<AimPass>);
 
-	public:
-		MapService(LogsService& logsService, SettingsStore& settingsStore,
-			DefinitionsStore& definitionsStore, TickStore& tickStore,
-			CameraStore& cameraStore, CameraService& cameraService,
-			SelectionStore& selectionStore, SelectionService& selectionService) :
-			m_DefinitionsStore(definitionsStore), m_TickStore(tickStore),
-			m_CameraStore(cameraStore), m_CameraService(cameraService),
-			m_SelectionStore(selectionStore), m_SelectionService(selectionService),
-			m_SettingsStore(settingsStore), m_LogsService(logsService),
-			m_GpuPipeline(logsService), m_MapPass(logsService),
-			m_DynamicPass(logsService), m_ZonePass(logsService),
-			m_RaycastPass(logsService), m_AimPass(logsService) {}
-		~MapService() = default;
+    // Renders the map frame: the static map, the collidables, the zones, the raycasts, the fixture arrows and the aim spheres.
+    // It uploads what changed in the tick, draws every pass and times the frame with the profiler.
+    // note: Render runs on the game render thread. Suspend, Resume and Release may come from other threads, so they share a mutex.
+    class MapService
+    {
+    private:
+        using LogsService = Service::Logs::System::LogsService;
 
-		MapService(const MapService&) = delete;
-		MapService& operator=(const MapService&) = delete;
+        using FrameContext = Platform::Render::Type::FrameContext;
+        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using GpuStateGuard = Platform::Render::System::GpuStateGuard;
 
-		auto Render(const FrameContext& frame) -> void;
+        using TickStore = Export::Tick::State::TickStore;
 
-		auto Release() -> void;
-		auto Suspend() -> void;
-		auto Resume() -> void;
+        using FrameProfiler = Viewer::Profiler::System::FrameProfiler;
+        using SceneService = Viewer::Scene::System::SceneService;
+        using OptionsStore = Viewer::Options::State::OptionsStore;
 
-	private:
-		LogsService& m_LogsService;
-		SettingsStore& m_SettingsStore;
-		DefinitionsStore& m_DefinitionsStore;
-		TickStore& m_TickStore;
-		CameraStore& m_CameraStore;
-		CameraService& m_CameraService;
-		SelectionStore& m_SelectionStore;
-		SelectionService& m_SelectionService;
+    public:
+        MapService(LogsService& logsService,
+            TickStore& tickStore, SceneService& sceneService, OptionsStore& optionsStore) :
+            m_LogsService(logsService),
+            m_TickStore(tickStore), m_SceneService(sceneService), m_OptionsStore(optionsStore),
+            m_GpuPipeline(logsService), m_MapPass(logsService),
+            m_DynamicPass(logsService), m_ZonePass(logsService),
+            m_RaycastPass(logsService), m_FixturePass(logsService), m_AimPass(logsService) {}
+        ~MapService() = default;
 
-		GpuPipeline m_GpuPipeline;
-		MapPass m_MapPass;
-		DynamicPass m_DynamicPass;
-		ZonePass m_ZonePass;
-		RaycastPass m_RaycastPass;
-		AimPass m_AimPass;
-		PaletteService m_PaletteService{};
+        MapService(const MapService&) = delete;
+        auto operator=(const MapService&) -> MapService& = delete;
 
-		std::mutex m_Mutex{};
-		bool m_IsSuspended{ false };
-		bool m_IsMapResetPending{ false };
+        // Draws one frame. Does nothing while suspended or while the free camera is inactive.
+        // note: Releases the GPU resources first if the device changed.
+        auto Render(const FrameContext& frame) -> void;
 
-		const ID3D11Device* m_Device{ nullptr };
+        // Releases every GPU resource. Call it before the device goes away.
+        auto Release() -> void;
 
-		auto Draw(const FrameContext& frame) -> void;
+        // Stops rendering and drops the map data on the next frame, because the map is about to change.
+        auto Suspend() -> void;
 
-		auto ReleaseMap() -> void;
+        auto Resume() -> void;
 
-		auto ReleaseAll() -> void;
-	};
+    private:
+        LogsService& m_LogsService;
+        TickStore& m_TickStore;
+        SceneService& m_SceneService;
+        OptionsStore& m_OptionsStore;
+
+        GpuPipeline m_GpuPipeline;
+        MapPass m_MapPass;
+        DynamicPass m_DynamicPass;
+        ZonePass m_ZonePass;
+        RaycastPass m_RaycastPass;
+        FixturePass m_FixturePass;
+        AimPass m_AimPass;
+        FrameProfiler m_Profiler{};
+
+        std::mutex m_Mutex{};
+        bool m_IsSuspended{ false };
+        bool m_IsMapResetPending{ false };
+
+        // Device the resources were created on. Compared only, never used.
+        const ID3D11Device* m_Device{ nullptr };
+
+        auto Draw(const FrameContext& frame) -> void;
+
+        // Releases what depends on the map and resets the scene.
+        auto ReleaseMap() -> void;
+
+        auto ReleaseAll() -> void;
+    };
 }

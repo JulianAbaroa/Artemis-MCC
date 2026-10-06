@@ -652,15 +652,6 @@
     <Filter Include="Core\Viewer\Control\System">
       <UniqueIdentifier>{3b80163a-fd9d-4421-98bc-197141f1254b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Viewer\Map">
-      <UniqueIdentifier>{00fb879d-6441-4a28-b151-3bd57ce838cb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Map\System">
-      <UniqueIdentifier>{c85a75d1-0377-4279-82b3-b2b67612eca2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Viewer\Map\Type">
-      <UniqueIdentifier>{d7f677a6-0f77-4cea-9855-eea667d321d9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Viewer\Overlay">
       <UniqueIdentifier>{14ffa16a-9137-4820-b3f4-54c338192908}</UniqueIdentifier>
     </Filter>
@@ -1946,48 +1937,6 @@
     <ClCompile Include="Core\Viewer\Control\System\ControlService.cpp">
       <Filter>Core\Viewer\Control\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\Viewer.Map.System.ixx">
-      <Filter>Core\Viewer\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx">
-      <Filter>Core\Viewer\Map\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapService.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\MapService.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\PaletteService.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\PaletteService.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\ZoneGeometry.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\ZoneGeometry.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\ZonePass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Viewer\Overlay\Type\Viewer.Overlay.Type.ixx">
       <Filter>Core\Viewer\Overlay\Type</Filter>
     </ClCompile>
@@ -2411,12 +2360,6 @@
     <ClCompile Include="Core\Domain\6_Egocentric\Raycast\Egocentric.Raycast.Type.ixx">
       <Filter>Core\Domain\6_Egocentric\Raycast</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Common\Math\Type\Common.Math.Type.ixx">
       <Filter>Core\Common\Math\Type</Filter>
     </ClCompile>
@@ -2714,12 +2657,6 @@
     <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.ixx">
       <Filter>Core\Domain\5_Environment\Aim\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
-      <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx">
       <Filter>Core\Infrastructure\Service\Preferences\Type</Filter>
     </ClCompile>
@@ -2752,6 +2689,63 @@
       <Filter>Resources\Icons</Filter>
     </Image>
   </ItemGroup>
+    <Filter Include="Core\Viewer\Map">
+      <UniqueIdentifier>{00fb879d-6441-4a28-b151-3bd57ce838cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map\Type">
+      <UniqueIdentifier>{c901f480-e214-4ac0-b3b9-4fa81d69b8ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Map\System">
+      <UniqueIdentifier>{c85a75d1-0377-4279-82b3-b2b67612eca2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Profiler">
+      <UniqueIdentifier>{91947145-27a2-4336-a535-9c5bc41a460d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Profiler\Type">
+      <UniqueIdentifier>{41239d6a-042a-4194-abc3-24da0d457a94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Profiler\System">
+      <UniqueIdentifier>{41604735-4580-41c5-b135-7fa1d18e8b90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Geometry">
+      <UniqueIdentifier>{012b4614-b824-44b9-8055-80b7c14a5133}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Geometry\System">
+      <UniqueIdentifier>{94503848-0ccc-4124-ab71-5e88342548c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Palette">
+      <UniqueIdentifier>{60522328-cb4e-4de3-8696-dc6a0ee85c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Palette\System">
+      <UniqueIdentifier>{e4a95e2c-2822-46f4-9d5e-250c13177e2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Palette\Type">
+      <UniqueIdentifier>{73c5aaef-5466-4532-9005-0a4b8341e7ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Scene">
+      <UniqueIdentifier>{5664a410-7918-4afe-9f2e-f9ba8af8f15f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Scene\System">
+      <UniqueIdentifier>{9a6651ba-2f1f-4e10-9459-c2ccf9b42a91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Selection\Type">
+      <UniqueIdentifier>{a603a38d-174d-4ac8-9d85-dea15e4b3197}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Style">
+      <UniqueIdentifier>{27df507b-84cc-4576-a32d-2ded0e7cc6b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Style\Type">
+      <UniqueIdentifier>{1ba49452-11fa-47f9-b4c7-e05cb0650008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Options">
+      <UniqueIdentifier>{bbb158fd-fa68-4f73-9cce-b8fce7e3664d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Options\State">
+      <UniqueIdentifier>{9935d2ec-cb26-4dde-a65f-b7bc54a03585}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Options\Type">
+      <UniqueIdentifier>{1cff5e79-5419-4a51-9fa6-a8b8b85ef82b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Gui">
       <UniqueIdentifier>{0ab4c6ea-d4db-4ee1-98a4-8d39c4469ea7}</UniqueIdentifier>
     </Filter>
@@ -2829,6 +2823,81 @@
     </Filter>
     <ClCompile Include="Core\Gui\Gui.Layer.ixx">
       <Filter>Core\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Options\Type\Viewer.Options.Type.ixx">
+      <Filter>Core\Viewer\Options\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Options\State\OptionsStore.ixx">
+      <Filter>Core\Viewer\Options\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Options\State\OptionsStore.cpp">
+      <Filter>Core\Viewer\Options\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\Type\Viewer.Map.Type.ixx">
+      <Filter>Core\Viewer\Map\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\Viewer.Map.System.ixx">
+      <Filter>Core\Viewer\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapService.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\MapService.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\ZonePass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Profiler\System\FrameProfiler.cpp">
+      <Filter>Core\Viewer\Profiler\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Profiler\System\FrameProfiler.ixx">
+      <Filter>Core\Viewer\Profiler\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Profiler\Type\Viewer.Profiler.Type.ixx">
+      <Filter>Core\Viewer\Profiler\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Geometry\System\ZoneGeometry.cpp">
+      <Filter>Core\Viewer\Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Geometry\System\ZoneGeometry.ixx">
+      <Filter>Core\Viewer\Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Palette\System\PaletteService.cpp">
+      <Filter>Core\Viewer\Palette\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Palette\System\PaletteService.ixx">
+      <Filter>Core\Viewer\Palette\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Palette\Type\Viewer.Palette.Type.ixx">
+      <Filter>Core\Viewer\Palette\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Scene\System\SceneService.cpp">
+      <Filter>Core\Viewer\Scene\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Scene\System\SceneService.ixx">
+      <Filter>Core\Viewer\Scene\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Selection\Type\Viewer.Selection.Type.ixx">
+      <Filter>Core\Viewer\Selection\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Style\Type\Viewer.Style.Type.ixx">
+      <Filter>Core\Viewer\Style\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Backend\System\BackendGuiService.ixx">
       <Filter>Core\Gui\Backend\System</Filter>
@@ -2932,6 +3001,18 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\FixturePass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\FixturePass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
     </ClCompile>
@@ -2955,5 +3036,11 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
       <Filter>Core\Domain\5_Environment\Aim\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
 </Project>

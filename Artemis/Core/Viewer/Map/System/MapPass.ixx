@@ -6,42 +6,50 @@ module;
 export module Viewer.Map.System:MapPass;
 
 import Service.Logs.System;
-import Resolved.Definitions.Type;
+import Platform.Render.System;
+import Export.Tick.Type;
 import std;
 
 export namespace Viewer::Map::System
 {
-	class MapPass
-	{
-	private:
-		template <typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-		using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
+    // Draws the static map geometry. The vertex buffer is built once from the render geometry of the map.
+    class MapPass
+    {
+    private:
+        template <typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		using LogsService = Service::Logs::System::LogsService;
+        using LogsService = Service::Logs::System::LogsService;
 
-	public:
-		explicit MapPass(LogsService& logsService) : m_LogsService(logsService) {}
-		~MapPass() = default;
+        using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-		MapPass(const MapPass&) = delete;
-		MapPass& operator=(const MapPass&) = delete;
+        using MapSbsps = Export::Tick::Type::MapSbsps;
 
-		auto Upload(ID3D11Device* device,
-			const std::unordered_map<std::string, Sbsp>& sbsps) -> void;
+    public:
+        explicit MapPass(LogsService& logsService) : m_LogsService(logsService) {}
+        ~MapPass() = default;
 
-		auto IsUploaded() const -> bool;
-		auto HasBuffer() const -> bool;
+        MapPass(const MapPass&) = delete;
+        auto operator=(const MapPass&) -> MapPass& = delete;
 
-		auto Draw(ID3D11DeviceContext* context) -> void;
+        // Builds and uploads the vertex buffer. Does nothing if it was already uploaded.
+        // note: The map counts as uploaded even if it failed, so it is not retried until Release.
+        auto Upload(ID3D11Device* device, const MapSbsps& sbsps) -> void;
 
-		auto Release() -> void;
+        auto IsUploaded() const -> bool;
 
-	private:
-		LogsService& m_LogsService;
+        // return: True if there is geometry to draw.
+        auto HasBuffer() const -> bool;
 
-		ComPtr<ID3D11Buffer> m_VertexBuffer{};
-		UINT m_VertexCount{ 0 };
-		bool m_IsUploaded{ false };
-	};
+        auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
+
+        auto Release() -> void;
+
+    private:
+        LogsService& m_LogsService;
+
+        ComPtr<ID3D11Buffer> m_VertexBuffer{};
+        UINT m_VertexCount{ 0 };
+        bool m_IsUploaded{ false };
+    };
 }

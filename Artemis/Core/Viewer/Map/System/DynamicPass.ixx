@@ -5,54 +5,90 @@ module;
 
 export module Viewer.Map.System:DynamicPass;
 
-import :Palette;
-
 import Service.Logs.System;
+import Platform.Render.Type;
+import Platform.Render.System;
 import Export.Tick.Type;
+import Viewer.Palette.System;
 import Viewer.Map.Type;
 import std;
 
 export namespace Viewer::Map::System
 {
-	class DynamicPass
-	{
-	private:
-		template <typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-		using Collidables = Export::Tick::Type::Collidables;
-		using ObjectBounds = Viewer::Map::Type::ObjectBounds;
+    // Draws the collidable meshes with GPU instancing. Each mesh is stored once and drawn once per instance.
+    // The selected object is drawn in the selection color, and the translucent handles go to a second draw.
+    class DynamicPass
+    {
+    private:
+        template <typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		using LogsService = Service::Logs::System::LogsService;
+        using LogsService = Service::Logs::System::LogsService;
 
-	public:
-		explicit DynamicPass(LogsService& logsService) : m_LogsService(logsService) {}
-		~DynamicPass() = default;
+        using MeshInstance = Platform::Render::Type::MeshInstance;
+        using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-		DynamicPass(const DynamicPass&) = delete;
-		DynamicPass& operator=(const DynamicPass&) = delete;
+        using Collidables = Export::Tick::Type::Collidables;
 
-		auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-			const std::shared_ptr<const Collidables>& collidables,
-			const PaletteService& palette, std::uint32_t selectedHandle,
-			std::uint64_t generation) -> void;
+        using PaletteService = Viewer::Palette::System::PaletteService;
+        using Geometry = Viewer::Map::Type::Geometry;
+        using DrawRange = Viewer::Map::Type::DrawRange;
 
-		auto GetBounds() const -> std::span<const ObjectBounds>;
+    public:
+        explicit DynamicPass(LogsService& logsService) : m_LogsService(logsService) {}
+        ~DynamicPass() = default;
 
-		auto Draw(ID3D11DeviceContext* context) -> void;
+        DynamicPass(const DynamicPass&) = delete;
+        auto operator=(const DynamicPass&) -> DynamicPass& = delete;
 
-		auto Release() -> void;
+        // Rebuilds the instances when the tick generation, the selection or the translucent set change.
+        // param translucentHandles: Objects drawn by DrawTranslucent instead of Draw.
+        auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
+            const std::shared_ptr<const Collidables>& collidables,
+            const PaletteService& palette, std::uint32_t selectedHandle,
+            const std::unordered_set<std::uint32_t>& translucentHandles,
+            std::uint64_t generation) -> void;
 
-	private:
-		LogsService& m_LogsService;
+        // return: Instances uploaded in the last rebuild, translucent ones included.
+        auto GetInstanceCount() const -> UINT;
 
-		ComPtr<ID3D11Buffer> m_VertexBuffer{};
-		UINT m_Capacity{ 0 };
-		UINT m_VertexCount{ 0 };
+        // return: Draw calls of the opaque pass.
+        auto GetDrawCount() const -> UINT;
 
-		std::uint64_t m_LastGeneration{ 0 };
-		bool m_HasGeneration{ false };
-		std::uint32_t m_LastSelected{ 0xFFFFFFFF };
+        auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 
-		std::vector<ObjectBounds> m_Bounds{};
-	};
+        // param alpha: Opacity of the translucent objects.
+        auto DrawTranslucent(ID3D11DeviceContext* context, GpuPipeline& pipeline, float alpha) -> void;
+
+        auto Release() -> void;
+
+    private:
+        LogsService& m_LogsService;
+
+        ComPtr<ID3D11Buffer> m_GeometryBuffer{};
+        UINT m_GeometryCapacity{ 0 };
+        UINT m_GeometryUploaded{ 0 };
+        UINT m_GeometryTotal{ 0 };
+        std::vector<float> m_PendingVertices{};
+
+        std::unordered_map<const void*, std::uint32_t> m_GeometryIndex{};
+        std::vector<Geometry> m_Geometries{};
+        std::vector<std::uint32_t> m_Active{};
+        std::vector<std::uint32_t> m_ActiveTranslucent{};
+
+        Platform::Render::System::GpuBuffer::InstanceBuffer m_InstanceBuffer{};
+        UINT m_InstanceCount{ 0 };
+
+        std::vector<MeshInstance> m_InstanceScratch{};
+        std::vector<DrawRange> m_Draws{};
+        std::vector<DrawRange> m_TranslucentDraws{};
+
+        Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
+
+        // Copies the pending vertices to the geometry buffer and grows it if needed.
+        // return: False if the buffer could not be created.
+        auto FlushGeometry(ID3D11Device* device, ID3D11DeviceContext* context) -> bool;
+
+        auto UploadInstances(ID3D11Device* device, ID3D11DeviceContext* context) -> void;
+    };
 }

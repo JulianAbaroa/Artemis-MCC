@@ -6,286 +6,318 @@ module;
 module Viewer.Map.System;
 import :AimPass;
 
-import Common.Math.Type;
+import Platform.Render.Type;
 import Platform.Render.System;
+import Common.Math.Type;
 import Resolved.World.Type;
-import Viewer.Render.Common;
+import Environment.Aim.Type;
 import Viewer.Selection.State;
+import Viewer.Style.Type;
 import std;
 
 namespace
 {
-	using Vertex = Platform::Render::System::GpuPipeline::Vertex;
-	using Vec3 = Common::Math::Type::Vec3;
-	using AimSource = Resolved::World::Type::ModelLink::AnchorSource;
-	using SectionAim = Environment::Aim::Type::SectionAim;
+    using SphereInstance = Platform::Render::Type::SphereInstance;
+    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
+    using SectionAim = Environment::Aim::Type::SectionAim;
+    using Color = Viewer::Style::Type::Color;
 
-	using Viewer::Selection::State::k_NoSelection;
+    using Platform::Render::Type::SurfaceMode;
+    using Platform::Render::Type::VertexLayout;
+    using Viewer::Selection::State::k_NoSelection;
 
-	constexpr UINT k_InitialCapacity = 2048;
+    using Viewer::Style::Type::k_AimModelTarget;
+    using Viewer::Style::Type::k_AimHeadshotTarget;
+    using Viewer::Style::Type::k_AimCollRegion;
+    using Viewer::Style::Type::k_AimObjectCenter;
+    using Viewer::Style::Type::k_TranslucentAlpha;
 
-	constexpr int k_Segments = 16;      // outline circles
-	constexpr int k_FillSegments = 12;  // sphere fill, around
-	constexpr int k_FillRings = 8;      // sphere fill, pole to pole
+    constexpr UINT k_InitialInstances{ 256 };
 
-	constexpr float k_MinRadius = 0.01f;
-	constexpr float k_CenterMarkerRadius = 0.05f; // ObjectCenter is imprecise: small marker only
-	constexpr float k_FillAlpha = 0.35f;
-	constexpr float k_Pi = 3.14159265359f;
-	constexpr float k_TwoPi = 6.28318530718f;
+    // Circles of the outline.
+    constexpr int k_Segments{ 16 };
 
-	struct Color { float R{}, G{}, B{}; };
+    // Segments around the sphere fill.
+    constexpr int k_FillSegments{ 12 };
 
-	constexpr Color k_ModelTarget{ 0.3f, 1.0f, 0.3f };     // green:  marker of the hlmt target
-	constexpr Color k_HeadshotTarget{ 1.0f, 0.85f, 0.2f }; // yellow: headshot lock-on marker
-	constexpr Color k_CollRegion{ 0.2f, 0.6f, 1.0f };      // blue:   bounds of the coll region
-	constexpr Color k_ObjectCenter{ 0.6f, 0.6f, 0.6f };    // gray:   center of the model (imprecise)
+    // Rings of the sphere fill, from pole to pole.
+    constexpr int k_FillRings{ 8 };
 
-	auto ColorOf(AimSource source) -> Color
-	{
-		switch (source)
-		{
-		case AimSource::ModelTarget:    return k_ModelTarget;
-		case AimSource::HeadshotTarget: return k_HeadshotTarget;
-		case AimSource::CollRegion:     return k_CollRegion;
-		default:                        return k_ObjectCenter;
-		}
-	}
+    constexpr float k_MinRadius{ 0.01f };
 
-	auto RadiusOf(const SectionAim& aim) -> float
-	{
-		if (aim.Source == AimSource::ObjectCenter) return k_CenterMarkerRadius;
+    // The object center is imprecise, so it only gets a small marker.
+    constexpr float k_CenterMarkerRadius{ 0.05f };
 
-		return (std::max)(aim.Radius, k_MinRadius);
-	}
+    constexpr float k_Pi{ 3.14159265359f };
+    constexpr float k_TwoPi{ 6.28318530718f };
 
-	auto AppendOutline(std::vector<Vertex>& vertices, const SectionAim& aim) -> void
-	{
-		const Color c = ColorOf(aim.Source);
-		const float r = RadiusOf(aim);
-		const Vec3& p = aim.Position;
+    auto ColorOf(AnchorSource source) -> Color
+    {
+        switch (source)
+        {
+        case AnchorSource::ModelTarget:    return k_AimModelTarget;
+        case AnchorSource::HeadshotTarget: return k_AimHeadshotTarget;
+        case AnchorSource::CollRegion:     return k_AimCollRegion;
+        default:                           return k_AimObjectCenter;
+        }
+    }
 
-		auto point = [&](int plane, float angle) {
-			const float a = std::cos(angle) * r;
-			const float b = std::sin(angle) * r;
+    auto RadiusOf(const SectionAim& aim) -> float
+    {
+        if (aim.AimSource == AnchorSource::ObjectCenter) return k_CenterMarkerRadius;
 
-			switch (plane)
-			{
-			case 0:  return Vertex{ p.X + a, p.Y + b, p.Z, c.R, c.G, c.B };
-			case 1:  return Vertex{ p.X + a, p.Y, p.Z + b, c.R, c.G, c.B };
-			default: return Vertex{ p.X, p.Y + a, p.Z + b, c.R, c.G, c.B };
-			}
-			};
+        return (std::max)(aim.Radius, k_MinRadius);
+    }
 
-		for (int plane = 0; plane < 3; ++plane)
-		{
-			for (int i = 0; i < k_Segments; ++i)
-			{
-				const float a0 = k_TwoPi * static_cast<float>(i) / k_Segments;
-				const float a1 = k_TwoPi * static_cast<float>(i + 1) / k_Segments;
+    // Unit sphere meshes as lists of xyz floats: line segments for the outline and triangles for the fill.
+    struct UnitMeshes
+    {
+        std::vector<float> Outline{};
+        std::vector<float> Fill{};
 
-				vertices.push_back(point(plane, a0));
-				vertices.push_back(point(plane, a1));
-			}
-		}
-	}
+        UnitMeshes()
+        {
+            auto push = [](std::vector<float>& out, float x, float y, float z)
+            {
+                out.push_back(x);
+                out.push_back(y);
+                out.push_back(z);
+            };
 
-	// UV sphere as a triangle list.
-	auto AppendFill(std::vector<Vertex>& vertices, const SectionAim& aim) -> void
-	{
-		const Color c = ColorOf(aim.Source);
-		const float r = RadiusOf(aim);
-		const Vec3& p = aim.Position;
+            for (int plane = 0; plane < 3; ++plane)
+            {
+                for (int i = 0; i < k_Segments; ++i)
+                {
+                    for (int end = 0; end < 2; ++end)
+                    {
+                        const float angle = k_TwoPi * static_cast<float>(i + end) / k_Segments;
+                        const float a = std::cos(angle);
+                        const float b = std::sin(angle);
 
-		auto point = [&](int ring, int segment) {
-			const float theta = k_Pi * static_cast<float>(ring) / k_FillRings;
-			const float phi = k_TwoPi * static_cast<float>(segment) / k_FillSegments;
+                        switch (plane)
+                        {
+                        case 0:  push(Outline, a, b, 0.0f); break;
+                        case 1:  push(Outline, a, 0.0f, b); break;
+                        default: push(Outline, 0.0f, a, b); break;
+                        }
+                    }
+                }
+            }
 
-			return Vertex{
-				p.X + r * std::sin(theta) * std::cos(phi),
-				p.Y + r * std::sin(theta) * std::sin(phi),
-				p.Z + r * std::cos(theta),
-				c.R, c.G, c.B };
-			};
+            struct P
+            {
+                float X{};
+                float Y{};
+                float Z{};
+            };
 
-		for (int ring = 0; ring < k_FillRings; ++ring)
-		{
-			for (int segment = 0; segment < k_FillSegments; ++segment)
-			{
-				const Vertex v00 = point(ring, segment);
-				const Vertex v01 = point(ring, segment + 1);
-				const Vertex v10 = point(ring + 1, segment);
-				const Vertex v11 = point(ring + 1, segment + 1);
+            auto point = [](int ring, int segment)
+            {
+                const float theta = k_Pi * static_cast<float>(ring) / k_FillRings;
+                const float phi = k_TwoPi * static_cast<float>(segment) / k_FillSegments;
 
-				vertices.push_back(v00);
-				vertices.push_back(v10);
-				vertices.push_back(v11);
+                return P{
+                    std::sin(theta) * std::cos(phi),
+                    std::sin(theta) * std::sin(phi),
+                    std::cos(theta) };
+            };
 
-				vertices.push_back(v00);
-				vertices.push_back(v11);
-				vertices.push_back(v01);
-			}
-		}
-	}
+            auto pushPoint = [&](const P& p) { push(Fill, p.X, p.Y, p.Z); };
 
-	auto UploadBuffer(ID3D11Device* device, ID3D11DeviceContext* context,
-		const std::vector<Vertex>& vertices, Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer,
-		UINT& capacity, UINT& count, const char* tag,
-		Service::Logs::System::LogsService& logs) -> void
-	{
-		count = 0;
-		if (vertices.empty()) return;
+            for (int ring = 0; ring < k_FillRings; ++ring)
+            {
+                for (int segment = 0; segment < k_FillSegments; ++segment)
+                {
+                    const P v00 = point(ring, segment);
+                    const P v01 = point(ring, segment + 1);
+                    const P v10 = point(ring + 1, segment);
+                    const P v11 = point(ring + 1, segment + 1);
 
-		const UINT needed = static_cast<UINT>(vertices.size());
+                    pushPoint(v00); pushPoint(v10); pushPoint(v11);
+                    pushPoint(v00); pushPoint(v11); pushPoint(v01);
+                }
+            }
+        }
+    };
 
-		if (!Viewer::Render::Common::GrowDynamicVertexBuffer(device, needed,
-			k_InitialCapacity, buffer, capacity, tag, logs))
-		{
-			return;
-		}
+    auto CreateImmutableBuffer(ID3D11Device* device, const std::vector<float>& data,
+        Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer) -> bool
+    {
+        D3D11_BUFFER_DESC desc{};
+        desc.Usage = D3D11_USAGE_IMMUTABLE;
+        desc.ByteWidth = static_cast<UINT>(data.size() * sizeof(float));
+        desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-		if (!Viewer::Render::Common::UploadDynamicVertices(context, buffer.Get(),
-			vertices, tag, logs))
-		{
-			return;
-		}
+        D3D11_SUBRESOURCE_DATA init{};
+        init.pSysMem = data.data();
 
-		count = needed;
-	}
+        return SUCCEEDED(device->CreateBuffer(&desc, &init, buffer.ReleaseAndGetAddressOf()));
+    }
 }
 
 namespace Viewer::Map::System
 {
-	auto AimPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-		const std::shared_ptr<const Aims>& aims, std::uint32_t selectedHandle,
-		std::uint64_t generation) -> void
-	{
-		if (!device || !context) return;
+    auto AimPass::CreateUnitMeshes(ID3D11Device* device) -> bool
+    {
+        if (m_UnitFillBuffer && m_UnitWireBuffer) return true;
 
-		if (m_HasUpload && generation == m_LastGeneration &&
-			selectedHandle == m_LastSelected)
-		{
-			return;
-		}
+        const UnitMeshes meshes{};
 
-		m_LastGeneration = generation;
-		m_LastSelected = selectedHandle;
-		m_HasUpload = true;
-		m_FillCount = 0;
-		m_WireCount = 0;
+        if (!CreateImmutableBuffer(device, meshes.Fill, m_UnitFillBuffer) ||
+            !CreateImmutableBuffer(device, meshes.Outline, m_UnitWireBuffer))
+        {
+            m_UnitFillBuffer.Reset();
+            m_UnitWireBuffer.Reset();
+            m_LogsService.Message("[AimPass] ERROR: Failed to create the unit mesh buffers.");
+            return false;
+        }
 
-		if (!m_NoDepthState)
-		{
-			D3D11_DEPTH_STENCIL_DESC depth = {};
-			depth.DepthEnable = FALSE;
-			depth.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-			depth.DepthFunc = D3D11_COMPARISON_ALWAYS;
-			depth.StencilEnable = FALSE;
+        m_UnitFillCount = static_cast<UINT>(meshes.Fill.size() / 3);
+        m_UnitWireCount = static_cast<UINT>(meshes.Outline.size() / 3);
+        return true;
+    }
 
-			if (FAILED(device->CreateDepthStencilState(&depth, m_NoDepthState.GetAddressOf())))
-			{
-				m_LogsService.Message("[AimPass] ERROR: Depth state failed.");
-				return;
-			}
-		}
+    auto AimPass::UploadInstances(ID3D11Device* device, ID3D11DeviceContext* context) -> void
+    {
+        m_InstanceCount = 0;
+        m_FillInstanceCount = 0;
 
-		if (!m_FillBlendState)
-		{
-			D3D11_BLEND_DESC blend = {};
-			auto& target = blend.RenderTarget[0];
-			target.BlendEnable = TRUE;
-			target.SrcBlend = D3D11_BLEND_BLEND_FACTOR;
-			target.DestBlend = D3D11_BLEND_INV_BLEND_FACTOR;
-			target.BlendOp = D3D11_BLEND_OP_ADD;
-			target.SrcBlendAlpha = D3D11_BLEND_ONE;
-			target.DestBlendAlpha = D3D11_BLEND_ZERO;
-			target.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-			target.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        const UINT fillCount = static_cast<UINT>(m_FillScratch.size());
+        m_FillScratch.insert(m_FillScratch.end(), m_CenterScratch.begin(), m_CenterScratch.end());
 
-			if (FAILED(device->CreateBlendState(&blend, m_FillBlendState.GetAddressOf())))
-			{
-				m_LogsService.Message("[AimPass] ERROR: Blend state failed.");
-				return;
-			}
-		}
+        const UINT total = static_cast<UINT>(m_FillScratch.size());
+        if (total == 0) return;
 
-		if (!aims) return;
+        if (!m_InstanceBuffer.Update(device, context, m_FillScratch.data(), total,
+            GpuPipeline::k_InstanceStride, k_InitialInstances, "[AimPass]", m_LogsService))
+        {
+            return;
+        }
 
-		std::vector<Vertex> fill;
-		std::vector<Vertex> wire;
+        m_InstanceCount = total;
+        m_FillInstanceCount = fillCount;
+    }
 
-		auto emit = [&](const Environment::Aim::Type::Aim& aim) {
-			for (const SectionAim& section : aim.Sections)
-			{
-				if (!section.Valid) continue;
+    auto AimPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
+        const std::shared_ptr<const Aims>& aims,
+        const std::shared_ptr<const Healths>& healths, bool tintByHealth,
+        std::uint32_t selectedHandle, std::uint64_t generation) -> void
+    {
+        if (!device || !context) return;
 
-				if (section.Source != AimSource::ObjectCenter)
-				{
-					AppendFill(fill, section);
-				}
-				AppendOutline(wire, section);
-			}
-			};
+        if (m_Gate.IsCurrent(generation, selectedHandle) && tintByHealth == m_IsTintByHealth) return;
 
-		if (selectedHandle != k_NoSelection)
-		{
-			auto it = aims->find(selectedHandle);
-			if (it != aims->end()) emit(it->second);
-		}
-		else
-		{
-			for (const auto& [handle, aim] : *aims)
-			{
-				emit(aim);
-			}
-		}
+        m_IsTintByHealth = tintByHealth;
+        m_Gate.Mark(generation, selectedHandle);
+        m_InstanceCount = 0;
+        m_FillInstanceCount = 0;
 
-		UploadBuffer(device, context, fill, m_FillBuffer, m_FillCapacity,
-			m_FillCount, "[AimPass]", m_LogsService);
-		UploadBuffer(device, context, wire, m_WireBuffer, m_WireCapacity,
-			m_WireCount, "[AimPass]", m_LogsService);
-	}
+        if (!this->CreateUnitMeshes(device)) return;
 
-	auto AimPass::Draw(ID3D11DeviceContext* context) -> void
-	{
-		if (!context || !m_NoDepthState || !m_FillBlendState) return;
-		if (m_FillCount == 0 && m_WireCount == 0) return;
+        if (!aims) return;
 
-		context->OMSetDepthStencilState(m_NoDepthState.Get(), 0);
+        m_FillScratch.clear();
+        m_CenterScratch.clear();
 
-		if (m_FillBuffer && m_FillCount > 0)
-		{
-			const float factor[4] = { k_FillAlpha, k_FillAlpha, k_FillAlpha, k_FillAlpha };
-			context->OMSetBlendState(m_FillBlendState.Get(), factor, 0xffffffff);
+        auto emit = [&](const Aim& aim)
+        {
+            const Health* health{ nullptr };
+            if (tintByHealth && healths)
+            {
+                const auto healthIt = healths->find(aim.Handle);
+                if (healthIt != healths->end()) health = &healthIt->second;
+            }
 
-			Viewer::Render::Common::DrawVertexBuffer(context, m_FillBuffer.Get(),
-				m_FillCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		}
+            for (std::size_t i = 0; i < aim.Sections.size(); ++i)
+            {
+                const SectionAim& section = aim.Sections[i];
+                if (!section.Valid) continue;
 
-		if (m_WireBuffer && m_WireCount > 0)
-		{
-			const float factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-			context->OMSetBlendState(nullptr, factor, 0xffffffff);
+                Color c = ColorOf(section.AimSource);
+                if (health && section.AimSource != AnchorSource::ObjectCenter && i < health->SectionVitalities.size())
+                {
+                    c = Viewer::Style::Type::ColorOfVitality(health->SectionVitalities[i]);
+                }
 
-			Viewer::Render::Common::DrawVertexBuffer(context, m_WireBuffer.Get(),
-				m_WireCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-		}
-	}
+                const SphereInstance instance{
+                    section.Position.X, section.Position.Y, section.Position.Z,
+                    RadiusOf(section), c.R, c.G, c.B };
 
-	auto AimPass::Release() -> void
-	{
-		m_FillBuffer.Reset();
-		m_WireBuffer.Reset();
-		m_NoDepthState.Reset();
-		m_FillBlendState.Reset();
+                if (section.AimSource == AnchorSource::ObjectCenter)
+                {
+                    m_CenterScratch.push_back(instance);
+                }
+                else
+                {
+                    m_FillScratch.push_back(instance);
+                }
+            }
+        };
 
-		m_FillCapacity = 0;
-		m_WireCapacity = 0;
-		m_FillCount = 0;
-		m_WireCount = 0;
+        if (selectedHandle != k_NoSelection)
+        {
+            auto it = aims->find(selectedHandle);
+            if (it != aims->end()) emit(it->second);
+        }
+        else
+        {
+            for (const auto& [handle, aim] : *aims)
+            {
+                emit(aim);
+            }
+        }
 
-		m_LastGeneration = 0;
-		m_LastSelected = 0;
-		m_HasUpload = false;
-	}
+        this->UploadInstances(device, context);
+    }
+
+    auto AimPass::Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void
+    {
+        if (!context || !m_InstanceBuffer.Get()) return;
+        if (m_InstanceCount == 0 || !m_UnitFillBuffer || !m_UnitWireBuffer) return;
+
+        const UINT strides[2] = { GpuPipeline::k_UnitVertexStride, GpuPipeline::k_InstanceStride };
+        const UINT offsets[2] = { 0, 0 };
+
+        if (m_FillInstanceCount > 0)
+        {
+            pipeline.Bind(context, VertexLayout::SphereInstanced, SurfaceMode::Translucent,
+                k_TranslucentAlpha);
+
+            ID3D11Buffer* buffers[2] = { m_UnitFillBuffer.Get(), m_InstanceBuffer.Get() };
+            context->IASetVertexBuffers(0, 2, buffers, strides, offsets);
+            context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            context->DrawInstanced(m_UnitFillCount, m_FillInstanceCount, 0, 0);
+        }
+
+        {
+            pipeline.Bind(context, VertexLayout::SphereInstanced, SurfaceMode::Overlay);
+
+            ID3D11Buffer* buffers[2] = { m_UnitWireBuffer.Get(), m_InstanceBuffer.Get() };
+            context->IASetVertexBuffers(0, 2, buffers, strides, offsets);
+            context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+            context->DrawInstanced(m_UnitWireCount, m_InstanceCount, 0, 0);
+        }
+    }
+
+    auto AimPass::GetInstanceCount() const -> UINT
+    {
+        return m_InstanceCount;
+    }
+
+    auto AimPass::Release() -> void
+    {
+        m_UnitFillBuffer.Reset();
+        m_UnitWireBuffer.Reset();
+        m_InstanceBuffer.Release();
+
+        m_UnitFillCount = 0;
+        m_UnitWireCount = 0;
+        m_InstanceCount = 0;
+        m_FillInstanceCount = 0;
+
+        m_Gate.Reset();
+
+        std::vector<SphereInstance>().swap(m_FillScratch);
+        std::vector<SphereInstance>().swap(m_CenterScratch);
+    }
 }

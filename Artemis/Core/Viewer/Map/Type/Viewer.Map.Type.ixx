@@ -1,22 +1,38 @@
 export module Viewer.Map.Type;
 
-import Common.Math.Type;
+import Platform.Render.Type;
 import std;
 
 export namespace Viewer::Map::Type
 {
-	using Vec3 = Common::Math::Type::Vec3;
+    using MeshInstance = Platform::Render::Type::MeshInstance;
 
-	struct Color
-	{
-		float R{}, G{}, B{};
-	};
+    // Which fixture arrows the fixture pass draws, and how long the direction arrows are in world units.
+    struct FixturePassOptions
+    {
+        bool TeleportLinks{ true };
+        bool LiftArrows{ true };
+        bool ShieldArrows{ true };
+        float ArrowLength{ 3.0f };
+    };
 
-	struct ObjectBounds
-	{
-		std::uint32_t Handle{};
+    // A mesh stored once in the geometry buffer, with the instances to draw it with.
+    // The translucent bucket holds the instances that are drawn translucent.
+    struct Geometry
+    {
+        std::uint32_t FirstVertex{ 0 };
+        std::uint32_t VertexCount{ 0 };
 
-		Vec3 Min{};
-		Vec3 Max{};
-	};
+        std::vector<MeshInstance> Bucket{};
+        std::vector<MeshInstance> TranslucentBucket{};
+    };
+
+    // One instanced draw call.
+    struct DrawRange
+    {
+        std::uint32_t FirstVertex{ 0 };
+        std::uint32_t VertexCount{ 0 };
+        std::uint32_t FirstInstance{ 0 };
+        std::uint32_t InstanceCount{ 0 };
+    };
 }

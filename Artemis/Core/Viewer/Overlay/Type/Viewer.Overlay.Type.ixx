@@ -4,14 +4,15 @@ import std;
 
 export namespace Viewer::Overlay::Type
 {
-	enum class Mode : std::uint8_t
-	{
-		Default = 0,
-		Collidable,
-		Health,
-		Fixture,
-		Affordance,
+    // What the map and the HUD highlight. Count is the number of modes and is not a mode.
+    enum class Mode : std::uint8_t
+    {
+        Default = 0,
+        Collidable,
+        Health,
+        Fixture,
+        Affordance,
 
-		Count
-	};
+        Count
+    };
 }
