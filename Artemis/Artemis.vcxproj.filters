@@ -2708,19 +2708,16 @@
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\Resolved.Vitality.Type.ixx">
       <Filter>Core\Domain\2_Resolved\Vitality</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldConstant.ixx">
-      <Filter>Core\Domain\2_Resolved\World\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectConstant.ixx">
       <Filter>Core\Domain\3_Tables\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRaycast.ixx">
       <Filter>Core\Domain\2_Resolved\World\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\SbspRaycaster.ixx">
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.ixx">
       <Filter>Core\Domain\2_Resolved\World\System\Raycast</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\SbspRaycaster.cpp">
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.cpp">
       <Filter>Core\Domain\2_Resolved\World\System\Raycast</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Egocentric\Raycast\Type\Raycasts.ixx">

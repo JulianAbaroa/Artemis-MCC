@@ -1,215 +1,219 @@
 module Resolved.World.System;
 import :RegionStates;
 
+namespace
+{
+    using Resolved::World::Type::RegionStates::Variant;
+}
+
 namespace Resolved::World::System
 {
-	auto RegionStatesBuilder::Build(const HlmtObject& hlmt,
-		const ResolvedColl& coll) -> ResolvedRegionStates
-	{
-		ResolvedRegionStates out;
+    auto RegionStatesBuilder::Build(const Hlmt& hlmt, const Coll& coll) -> RegionStates
+    {
+        RegionStates out{};
 
-		out.Variants.reserve(hlmt.Variants.size());
+        out.Variants.reserve(hlmt.Variants.size());
 
-		for (const Hlmt_VariantsObject& variant : hlmt.Variants)
-		{
-			RegionStatesVariant entry;
-			entry.StateMap = this->BuildStateMap(variant, coll);
+        for (const auto& hlmtVariant : hlmt.Variants)
+        {
+            Variant entry{};
 
-			for (const auto& region : entry.StateMap)
-			{
-				if (region[4] >= 0)
-				{
-					entry.HasDestroyedGeometry = true;
-					break;
-				}
-			}
+            entry.StateMap = this->BuildStateMap(hlmtVariant, coll);
 
-			out.Variants.push_back(std::move(entry));
-		}
+            for (const auto& region : entry.StateMap)
+            {
+                if (region[4] >= 0)
+                {
+                    entry.HasDestroyedGeometry = true;
+                    break;
+                }
+            }
 
-		this->BuildLevelToState(hlmt, coll, out.LevelToState);
-		this->BuildDeathStateMap(hlmt, coll, out.DeathStateMap);
-		out.RegionToSection = this->BuildRegionToSection(hlmt, coll);
+            out.Variants.push_back(std::move(entry));
+        }
 
-		return out;
-	}
+        this->BuildLevelToState(hlmt, coll, out.LevelToState);
+        this->BuildDeathStateMap(hlmt, coll, out.DeathStateMap);
+        out.RegionToSection = this->BuildRegionToSection(hlmt, coll);
 
-	auto RegionStatesBuilder::BuildStateMap(const Hlmt_VariantsObject& variant,
-		const ResolvedColl& coll) -> StateMap
-	{
-		std::vector<std::array<int, 5>> stateMap(
-			coll.RegionNames.size(),
-			std::array<int, 5>{ -1, -1, -1, -1, -1 });
+        return out;
+    }
 
-		for (size_t variantRegion = 0;
-			variantRegion < variant.Regions.size();
-			++variantRegion)
-		{
-			const auto& hlmtRegion = variant.Regions[variantRegion];
+    auto RegionStatesBuilder::BuildStateMap(const Resolved::Definitions::Type::Hlmt::Variant& variant,
+        const Coll& coll) -> std::vector<std::array<int, 5>>
+    {
+        std::vector<std::array<int, 5>> stateMap(
+            coll.RegionNames.size(),
+            std::array<int, 5>{ -1, -1, -1, -1, -1 });
 
-			int collRegionIdx = -1;
-			for (size_t regionName = 0;
-				regionName < coll.RegionNames.size();
-				++regionName)
-			{
-				if (coll.RegionNames[regionName] == hlmtRegion.RegionName)
-				{
-					collRegionIdx = (int)regionName;
-					break;
-				}
-			}
+        for (std::size_t variantRegion = 0;
+            variantRegion < variant.Regions.size();
+            ++variantRegion)
+        {
+            const auto& hlmtRegion = variant.Regions[variantRegion];
 
-			if (collRegionIdx < 0) continue;
+            int collRegionIdx{ -1 };
+            for (std::size_t regionName = 0;
+                regionName < coll.RegionNames.size();
+                ++regionName)
+            {
+                if (coll.RegionNames[regionName] == hlmtRegion.RegionName)
+                {
+                    collRegionIdx = static_cast<int>(regionName);
+                    break;
+                }
+            }
 
-			for (const auto& permutation : hlmtRegion.Permutations)
-			{
-				for (const auto& state : permutation.States)
-				{
-					if (state.State > 4) continue;
+            if (collRegionIdx < 0) continue;
 
-					const std::uint32_t name = state.PermutationName;
-					if (name == 0) continue;
+            for (const auto& permutation : hlmtRegion.Permutations)
+            {
+                for (const auto& state : permutation.States)
+                {
+                    if (state.State > 4) continue;
 
-					const auto& names =
-						coll.PermutationNames[collRegionIdx];
+                    const std::uint32_t name = state.PermutationName;
+                    if (name == 0) continue;
 
-					for (size_t current = 0;
-						current < names.size();
-						++current)
-					{
-						if (names[current] == name)
-						{
-							stateMap[collRegionIdx][state.State] = (int)current;
-							break;
-						}
-					}
-				}
-			}
-		}
+                    const auto& names =
+                        coll.PermutationNames[collRegionIdx];
 
-		return stateMap;
-	}
+                    for (std::size_t current = 0;
+                        current < names.size();
+                        ++current)
+                    {
+                        if (names[current] == name)
+                        {
+                            stateMap[collRegionIdx][state.State] = static_cast<int>(current);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-	auto RegionStatesBuilder::BuildLevelToState(const HlmtObject& hlmt,
-		const ResolvedColl& coll, LevelToState& levelToState) -> void
-	{
-		levelToState.assign(coll.RegionNames.size(), {});
+        return stateMap;
+    }
 
-		for (const auto& damageSection : hlmt.DamageSections)
-		{
-			int ownRegion = -1;
+    auto RegionStatesBuilder::BuildLevelToState(const Hlmt& hlmt, const Coll& coll,
+        std::vector<std::vector<int>>& levelToState) -> void
+    {
+        levelToState.assign(coll.RegionNames.size(), {});
 
-			for (size_t current = 0;
-				current < coll.RegionNames.size();
-				++current)
-			{
-				if (coll.RegionNames[current] == damageSection.Name)
-				{
-					ownRegion = (int)current;
-					break;
-				}
-			}
+        for (const auto& damageSection : hlmt.DamageSections)
+        {
+            int ownRegion{ -1 };
 
-			if (ownRegion < 0) continue;
+            for (std::size_t current = 0;
+                current < coll.RegionNames.size();
+                ++current)
+            {
+                if (coll.RegionNames[current] == damageSection.Name)
+                {
+                    ownRegion = static_cast<int>(current);
+                    break;
+                }
+            }
 
-			auto& levels = levelToState[ownRegion];
-			levels.resize(damageSection.InstantResponses.size(), -1);
+            if (ownRegion < 0) continue;
 
-			for (size_t instantResponse = 0;
-				instantResponse < damageSection.InstantResponses.size();
-				++instantResponse)
-			{
-				for (const auto& regionTransition :
-					damageSection.InstantResponses[
-						instantResponse].RegionTransitions)
-				{
-					if (regionTransition.Region ==
-						damageSection.Name)
-					{
-						levels[instantResponse] =
-							(int)regionTransition.NewState;
+            auto& levels = levelToState[ownRegion];
+            levels.resize(damageSection.InstantResponses.size(), -1);
 
-						break;
-					}
-				}
-			}
-		}
-	}
+            for (std::size_t instantResponse = 0;
+                instantResponse < damageSection.InstantResponses.size();
+                ++instantResponse)
+            {
+                for (const auto& regionTransition :
+                    damageSection.InstantResponses[
+                        instantResponse].RegionTransitions)
+                {
+                    if (regionTransition.Region ==
+                        damageSection.Name)
+                    {
+                        levels[instantResponse] =
+                            static_cast<int>(regionTransition.NewState);
 
-	auto RegionStatesBuilder::BuildDeathStateMap(const HlmtObject& hlmt,
-		const ResolvedColl& coll, std::vector<int>& deathState) -> void
-	{
-		deathState.assign(coll.RegionNames.size(), -1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
-		for (const auto& damageSection : hlmt.DamageSections)
-		{
-			bool isOwnedRegionSection = false;
+    auto RegionStatesBuilder::BuildDeathStateMap(const Hlmt& hlmt, const Coll& coll,
+        std::vector<int>& deathState) -> void
+    {
+        deathState.assign(coll.RegionNames.size(), -1);
 
-			for (size_t current = 0;
-				current < coll.RegionNames.size();
-				++current)
-			{
-				if (coll.RegionNames[current] == damageSection.Name)
-				{
-					isOwnedRegionSection = true;
-					break;
-				}
-			}
+        for (const auto& damageSection : hlmt.DamageSections)
+        {
+            bool isOwnedRegionSection{};
 
-			if (isOwnedRegionSection) continue;
+            for (std::size_t current = 0;
+                current < coll.RegionNames.size();
+                ++current)
+            {
+                if (coll.RegionNames[current] == damageSection.Name)
+                {
+                    isOwnedRegionSection = true;
+                    break;
+                }
+            }
 
-			for (const auto& instantResponse :
-				damageSection.InstantResponses)
-			{
-				if (instantResponse.DamageThreshold > 0.0001f) continue;
+            if (isOwnedRegionSection) continue;
 
-				for (const auto& regionTransition :
-					instantResponse.RegionTransitions)
-				{
-					for (size_t current = 0;
-						current < coll.RegionNames.size();
-						++current)
-					{
-						if (coll.RegionNames[current] ==
-							regionTransition.Region)
-						{
-							if ((int)regionTransition.NewState >
-								deathState[current])
-							{
-								deathState[current] =
-									(int)regionTransition.NewState;
-							}
+            for (const auto& instantResponse :
+                damageSection.InstantResponses)
+            {
+                if (instantResponse.DamageThreshold > 0.0001f) continue;
 
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
+                for (const auto& regionTransition :
+                    instantResponse.RegionTransitions)
+                {
+                    for (std::size_t current = 0;
+                        current < coll.RegionNames.size();
+                        ++current)
+                    {
+                        if (coll.RegionNames[current] ==
+                            regionTransition.Region)
+                        {
+                            if (static_cast<int>(regionTransition.NewState) >
+                                deathState[current])
+                            {
+                                deathState[current] =
+                                    static_cast<int>(regionTransition.NewState);
+                            }
 
-	auto RegionStatesBuilder::BuildRegionToSection(const HlmtObject& hlmt,
-		const ResolvedColl& coll) -> std::vector<int>
-	{
-		std::vector<int> map(coll.RegionNames.size(), -1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-		for (size_t regionName = 0;
-			regionName < coll.RegionNames.size();
-			++regionName)
-		{
-			for (size_t damageSection = 0;
-				damageSection < hlmt.DamageSections.size();
-				++damageSection)
-			{
-				if (coll.RegionNames[regionName] ==
-					hlmt.DamageSections[damageSection].Name)
-				{
-					map[regionName] = (int)damageSection;
-					break;
-				}
-			}
-		}
+    auto RegionStatesBuilder::BuildRegionToSection(const Hlmt& hlmt, const Coll& coll) -> std::vector<int>
+    {
+        std::vector<int> regionToSection(coll.RegionNames.size(), -1);
 
-		return map;
-	}
+        for (std::size_t regionName = 0;
+            regionName < coll.RegionNames.size();
+            ++regionName)
+        {
+            for (std::size_t damageSection = 0;
+                damageSection < hlmt.DamageSections.size();
+                ++damageSection)
+            {
+                if (coll.RegionNames[regionName] ==
+                    hlmt.DamageSections[damageSection].Name)
+                {
+                    regionToSection[regionName] = static_cast<int>(damageSection);
+                    break;
+                }
+            }
+        }
+
+        return regionToSection;
+    }
 }

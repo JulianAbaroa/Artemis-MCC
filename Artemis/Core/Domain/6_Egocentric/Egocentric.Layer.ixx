@@ -32,7 +32,7 @@ export namespace Egocentric
 			Environment::Layer& environment) :
 			m_SelfService(service.m_LogsService, tables.m_PlayerStore, m_SelfStore),
 			m_AffordanceService(service.m_LogsService, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, relations.m_PlayerGraphStore, m_AffordanceStore, environment.m_CollidableService),
-			m_RaycastService(service.m_LogsService, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_SbspRaycaster, m_SelfStore, environment.m_CollidableService, relations.m_PlayerGraphStore, m_RaycastStore)
+			m_RaycastService(service.m_LogsService, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, relations.m_PlayerGraphStore, m_RaycastStore)
 		{
 			platform.m_LifecycleService.OnCleanup([this] {
 				m_SelfService.Cleanup();

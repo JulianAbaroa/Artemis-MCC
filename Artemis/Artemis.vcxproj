@@ -264,9 +264,8 @@
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\VitalityConstant.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\SbspRaycaster.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\SbspRaycaster.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldConstant.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldModelLink.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRaycast.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectConstant.ixx" />
