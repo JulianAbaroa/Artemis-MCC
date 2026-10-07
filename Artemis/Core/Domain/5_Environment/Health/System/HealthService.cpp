@@ -37,7 +37,7 @@ namespace Environment::Health::System
             const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
             if (!damage || damage->Sections.empty()) continue;
 
-            const auto layout = m_VitalityStore.GetSharedVitality(object.TagName);
+            const auto layout = m_VitalityStore.GetShared(object.TagName);
             if (!layout) continue;
 
             Health health = this->MakeHealth(object, *layout, *damage);

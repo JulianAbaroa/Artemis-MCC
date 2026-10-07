@@ -6,35 +6,35 @@ module Resolved.Vitality.State;
 
 namespace Resolved::Vitality::State
 {
-    auto VitalityStore::HasResolvedVitality(const std::string& tagName) const -> bool
+    auto VitalityStore::Has(const std::string& tagName) const -> bool
     {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        return m_ResolvedVitalities.find(tagName) != m_ResolvedVitalities.end();
+        assert(m_IsFrozen.load(std::memory_order_acquire));
+        return m_Vitalities.find(tagName) != m_Vitalities.end();
     }
 
-    auto VitalityStore::GetResolvedVitality(const std::string& tagName) const -> const ResolvedVitality*
+    auto VitalityStore::Get(const std::string& tagName) const -> const Vitality*
     {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        auto it = m_ResolvedVitalities.find(tagName);
-        return (it != m_ResolvedVitalities.end()) ? it->second.get() : nullptr;
+        assert(m_IsFrozen.load(std::memory_order_acquire));
+        auto it = m_Vitalities.find(tagName);
+        return (it != m_Vitalities.end()) ? it->second.get() : nullptr;
     }
 
-    auto VitalityStore::GetSharedVitality(const std::string& tagName) const -> std::shared_ptr<const ResolvedVitality>
+    auto VitalityStore::GetShared(const std::string& tagName) const -> std::shared_ptr<const Vitality>
     {
-        assert(m_Frozen.load(std::memory_order_acquire));
-        auto it = m_ResolvedVitalities.find(tagName);
-        return (it != m_ResolvedVitalities.end()) ? it->second : nullptr;
+        assert(m_IsFrozen.load(std::memory_order_acquire));
+        auto it = m_Vitalities.find(tagName);
+        return (it != m_Vitalities.end()) ? it->second : nullptr;
     }
 
-    auto VitalityStore::AddResolvedVitality(const std::string& tagName, ResolvedVitality layout) -> void
+    auto VitalityStore::Add(const std::string& tagName, Vitality layout) -> void
     {
-        assert(!m_Frozen.load(std::memory_order_relaxed));
-        m_ResolvedVitalities.emplace(tagName, std::make_shared<const ResolvedVitality>(std::move(layout)));
+        assert(!m_IsFrozen.load(std::memory_order_relaxed));
+        m_Vitalities.emplace(tagName, std::make_shared<const Vitality>(std::move(layout)));
     }
 
     auto VitalityStore::Cleanup() -> void
     {
-        m_Frozen.store(false, std::memory_order_relaxed);
-        m_ResolvedVitalities.clear();
+        m_IsFrozen.store(false, std::memory_order_relaxed);
+        m_Vitalities.clear();
     }
 }

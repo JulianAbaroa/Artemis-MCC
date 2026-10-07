@@ -21,7 +21,7 @@ namespace Environment::Aim::System
         {
             if (object.Address == 0) continue;
 
-            const ResolvedVitality* layout = m_VitalityStore.GetResolvedVitality(object.TagName);
+            const ResolvedVitality* layout = m_VitalityStore.Get(object.TagName);
             if (!layout || !this->HasAnchors(*layout)) continue;
 
             const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);

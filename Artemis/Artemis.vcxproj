@@ -636,7 +636,7 @@
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\ResolvedVitality.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\Vitality.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\World\Resolved.World.Type.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.ixx" />

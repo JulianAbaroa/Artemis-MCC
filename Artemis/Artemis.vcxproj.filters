@@ -1676,7 +1676,7 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\ZoneDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\ResolvedVitality.ixx">
+    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\Vitality.ixx">
       <Filter>Core\Domain\2_Resolved\Vitality\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.cpp">

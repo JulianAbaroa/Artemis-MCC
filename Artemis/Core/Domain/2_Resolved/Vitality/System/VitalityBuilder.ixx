@@ -11,13 +11,14 @@ import std;
 
 export namespace Resolved::Vitality::System
 {
+    // Builds the vitality layout of every model that has damage sections.
     class VitalityBuilder
     {
     private:
-        using ResolvedHlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
-        using ResolvedModelLink = Resolved::World::Type::ModelLink::ModelLink;
-        using AimAnchor = Resolved::World::Type::ModelLink::Anchor;
-        using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
+        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
+        using ModelLink = Resolved::World::Type::ModelLink::ModelLink;
+        using Anchor = Resolved::World::Type::ModelLink::Anchor;
+        using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
         using Section = Resolved::Vitality::Type::Vitality::Section;
 
         using LogsService = Service::Logs::System::LogsService;
@@ -32,8 +33,11 @@ export namespace Resolved::Vitality::System
             m_VitalityStore(vitalityStore) {}
         ~VitalityBuilder() = default;
 
+        // Builds the layouts from the definitions and the model links, then freezes the store.
+        // note: Runs after the definitions and the world are built.
         auto BuildForMap() -> void;
 
+        // Removes every layout.
         auto Cleanup() -> void;
 
     private:
@@ -42,10 +46,12 @@ export namespace Resolved::Vitality::System
         WorldStore& m_WorldStore;
         VitalityStore& m_VitalityStore;
 
-        auto BuildLayout(const ResolvedHlmt& hlmt, const ResolvedModelLink* link) const -> ResolvedVitality;
+        // Reads the roles, transfers and anchors of every damage section of the model.
+        auto BuildLayout(const Hlmt& hlmt, const ModelLink* link) const -> Vitality;
 
-        // Anchor cascade: ModelTarget of the section -> coll region of the section ->
-        // Headshot-lock ModelTarget (Headshot sections) -> object center (non-shield sections)
-        auto ResolveAnchor(const Section& section, const ResolvedModelLink& link) const -> AimAnchor;
+        // Finds where to aim for a section.
+        // note: Cascade: model target of the section, coll region of the section,
+        // headshot lock-on model target (headshot sections), object center (non-shield sections).
+        auto ResolveAnchor(const Section& section, const ModelLink& link) const -> Anchor;
     };
 }
