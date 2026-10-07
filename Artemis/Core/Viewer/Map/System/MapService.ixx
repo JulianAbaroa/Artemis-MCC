@@ -1,7 +1,6 @@
 module;
 
 #include <d3d11.h>
-#include <wrl/client.h>
 
 export module Viewer.Map.System:MapService;
 

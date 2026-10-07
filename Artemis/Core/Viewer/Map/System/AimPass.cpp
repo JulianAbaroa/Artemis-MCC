@@ -1,7 +1,6 @@
 module;
 
 #include <d3d11.h>
-#include <wrl/client.h>
 
 module Viewer.Map.System;
 import :AimPass;
@@ -13,6 +12,7 @@ import Resolved.World.Type;
 import Environment.Aim.Type;
 import Viewer.Selection.State;
 import Viewer.Style.Type;
+import Viewer.Map.Type;
 import std;
 
 namespace
@@ -141,7 +141,7 @@ namespace
     };
 
     auto CreateImmutableBuffer(ID3D11Device* device, const std::vector<float>& data,
-        Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer) -> bool
+        Viewer::Map::Type::ComPtr<ID3D11Buffer>& buffer) -> bool
     {
         D3D11_BUFFER_DESC desc{};
         desc.Usage = D3D11_USAGE_IMMUTABLE;

@@ -1,13 +1,13 @@
 module;
 
 #include <d3d11.h>
-#include <wrl/client.h>
 
 export module Viewer.Map.System:RaycastPass;
 
 import Service.Logs.System;
 import Export.Tick.Type;
 import Platform.Render.System;
+import Viewer.Map.Type;
 import std;
 
 export namespace Viewer::Map::System
@@ -17,7 +17,7 @@ export namespace Viewer::Map::System
     {
     private:
         template <typename T>
-        using ComPtr = Microsoft::WRL::ComPtr<T>;
+        using ComPtr = Viewer::Map::Type::ComPtr<T>;
 
         using LogsService = Service::Logs::System::LogsService;
 
