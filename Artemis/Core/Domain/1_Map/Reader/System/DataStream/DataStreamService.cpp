@@ -7,84 +7,86 @@ import :DataStream;
 
 namespace Map::Reader::System
 {
-	auto DataStreamService::ReadData(const std::string& filePath,
-		std::int64_t fileOffset, std::int32_t size) const ->
-		std::vector<std::uint8_t>
-	{
-		if (size <= 0) return {};
+    auto DataStreamService::ReadData(const std::string& filePath,
+        std::int64_t fileOffset, std::int32_t size) const
+        -> std::vector<std::uint8_t>
+    {
+        if (size <= 0) return {};
 
-		std::ifstream file(filePath, std::ios::binary);
-		if (!file.is_open()) return {};
+        std::ifstream file(filePath, std::ios::binary);
+        if (!file.is_open()) return {};
 
-		file.seekg(fileOffset, std::ios::beg);
-		if (!file) return {};
+        file.seekg(fileOffset, std::ios::beg);
+        if (!file) return {};
 
-		std::vector<std::uint8_t> buffer(size);
+        std::vector<std::uint8_t> buffer(size);
 
-		file.read(reinterpret_cast<char*>(buffer.data()), size);
+        file.read(reinterpret_cast<char*>(buffer.data()), size);
 
-		std::streamsize bytesRead = file.gcount();
-		if (bytesRead < static_cast<std::streamsize>(size))
-		{
-			buffer.resize(static_cast<std::size_t>(bytesRead));
-		}
+        std::streamsize bytesRead = file.gcount();
+        if (bytesRead < static_cast<std::streamsize>(size))
+        {
+            buffer.resize(static_cast<std::size_t>(bytesRead));
+        }
 
-		return buffer;
-	}
+        return buffer;
+    }
 
-	auto DataStreamService::ReadSegment(const std::string& filePath,
-		std::int64_t fileOffset, std::int32_t compressedSize,
-		std::int32_t decompressedSize, std::int32_t segmentOffset,
-		std::int32_t segmentLength) const -> std::vector<std::uint8_t>
-	{
-		if (decompressedSize <= 0 || segmentOffset < 0) return {};
+    auto DataStreamService::ReadSegment(const std::string& filePath,
+        std::int64_t fileOffset, std::int32_t compressedSize,
+        std::int32_t decompressedSize, std::int32_t segmentOffset,
+        std::int32_t segmentLength) const -> std::vector<std::uint8_t>
+    {
+        if (decompressedSize <= 0 || segmentOffset < 0) return {};
 
-		if (compressedSize == decompressedSize)
-		{
-			std::int32_t length = std::min(segmentLength,
-				decompressedSize - segmentOffset);
-			if (length <= 0) return {};
+        if (compressedSize == decompressedSize)
+        {
+            std::int32_t length = std::min(segmentLength,
+                decompressedSize - segmentOffset);
+            if (length <= 0) return {};
 
-			return this->ReadData(filePath,
-				fileOffset + segmentOffset, length);
-		}
+            return this->ReadData(filePath,
+                fileOffset + segmentOffset, length);
+        }
 
-		auto compressed = this->ReadData(filePath, fileOffset, compressedSize);
-		if ((std::int32_t)compressed.size() < compressedSize)
-		{
-			return {};
-		}
+        auto compressed = this->ReadData(filePath, fileOffset, compressedSize);
+        if ((std::int32_t)compressed.size() < compressedSize)
+        {
+            return {};
+        }
 
-		auto decompressed = this->Inflate(compressed, compressedSize, decompressedSize);
-		if (decompressed.empty()) return {};
+        auto decompressed = this->Inflate(compressed, compressedSize, decompressedSize);
+        if (decompressed.empty()) return {};
 
-		std::int32_t length = std::min(segmentLength,
-			decompressedSize - segmentOffset);
-		if (length <= 0) return {};
+        std::int32_t length = std::min(segmentLength,
+            decompressedSize - segmentOffset);
+        if (length <= 0) return {};
 
-		return std::vector<std::uint8_t>(decompressed.begin() + segmentOffset,
-			decompressed.begin() + segmentOffset + length);
-	}
+        return std::vector<std::uint8_t>(decompressed.begin() + segmentOffset,
+            decompressed.begin() + segmentOffset + length);
+    }
 
-	auto DataStreamService::Inflate(const std::vector<std::uint8_t>& compressed,
-		std::int32_t compressedSize, std::int32_t decompressedSize) const ->
-		std::vector<std::uint8_t>
-	{
-		std::vector<std::uint8_t> decompressed(decompressedSize);
+    auto DataStreamService::Inflate(const std::vector<std::uint8_t>& compressed,
+        std::int32_t compressedSize, std::int32_t decompressedSize) const
+        -> std::vector<std::uint8_t>
+    {
+        std::vector<std::uint8_t> decompressed(decompressedSize);
 
-		z_stream stream{};
-		if (inflateInit2(&stream, -15) != Z_OK) return {};
+        z_stream stream{};
 
-		stream.next_in = const_cast<std::uint8_t*>(compressed.data());
-		stream.avail_in = compressedSize;
-		stream.next_out = decompressed.data();
-		stream.avail_out = decompressedSize;
+        // A negative window size selects a raw deflate stream, without the zlib header.
+        if (inflateInit2(&stream, -15) != Z_OK) return {};
 
-		int ret = inflate(&stream, Z_FINISH);
-		inflateEnd(&stream);
+        stream.next_in = const_cast<std::uint8_t*>(compressed.data());
+        stream.avail_in = compressedSize;
+        stream.next_out = decompressed.data();
+        stream.avail_out = decompressedSize;
 
-		if (ret != Z_STREAM_END && ret != Z_OK) return {};
+        int ret = inflate(&stream, Z_FINISH);
+        inflateEnd(&stream);
 
-		return decompressed;
-	}
+        if (ret != Z_STREAM_END && ret != Z_OK) return {};
+
+        return decompressed;
+    }
 }

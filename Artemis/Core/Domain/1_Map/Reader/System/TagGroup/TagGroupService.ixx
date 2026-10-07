@@ -7,9 +7,12 @@ import std;
 
 export namespace Map::Reader::System
 {
+    // Describes how to read the tags of one group. Each group specializes it with:
+    // DataType (the fixed data of the tag), Magic (the group) and ReadBlocks (the blocks that follow the data).
     template <typename TObject>
     struct GroupDescriptor;
 
+    // Reads tags from the map, with the layout that the GroupDescriptor of their group defines.
     class TagGroupService
     {
     private:
@@ -22,6 +25,9 @@ export namespace Map::Reader::System
             m_TagResolverService(tagResolverService) {}
         ~TagGroupService() = default;
 
+        // Reads the data of a tag and then its blocks.
+        // param tagOffset: File offset of the tag data.
+        // return: The object with only the name set if the offset is invalid or the data is cut short.
         template <typename TObject>
         auto Read(std::ifstream& file, std::int64_t tagOffset,
             const std::string& tagName) const -> TObject
@@ -46,6 +52,8 @@ export namespace Map::Reader::System
             return object;
         }
 
+        // Reads the entries of a block.
+        // return: Fewer entries than the block declares if the file is cut short. Empty if the block is empty or has no valid pointer.
         template <typename TEntry>
         auto ReadBlock(std::ifstream& file,
             const TagBlock& block) const -> std::vector<TEntry>
@@ -72,5 +80,5 @@ export namespace Map::Reader::System
 
     private:
         TagResolverService& m_TagResolverService;
-   };
+    };
 }

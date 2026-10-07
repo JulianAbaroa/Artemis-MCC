@@ -86,10 +86,8 @@ namespace Tables::Object::System
 		profile.HasHlmt = m_TagResolverService.HasHlmt(object.TagName);
 		profile.HasMach = m_TagResolverService.HasMach(object.TagName);
 		profile.HasMode = m_TagResolverService.HasMode(object.TagName);
-		profile.HasPhmo = m_TagResolverService.HasPhmo(object.TagName);
 		profile.HasProj = m_TagResolverService.HasProj(object.TagName);
 		profile.HasScen = m_TagResolverService.HasScen(object.TagName);
-		profile.HasScnr = m_TagResolverService.HasScnr(object.TagName);
 		profile.HasVehi = m_TagResolverService.HasVehi(object.TagName);
 		profile.HasWeap = m_TagResolverService.HasWeap(object.TagName);
 	}

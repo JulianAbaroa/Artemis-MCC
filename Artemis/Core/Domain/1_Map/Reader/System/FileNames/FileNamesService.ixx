@@ -7,25 +7,31 @@ import std;
 
 export namespace Map::Reader::System
 {
-	class FileNamesService
-	{
-	private:
-		using TagIndexStore = Map::Reader::State::TagIndexStore;
-		using FormulaService = Map::Reader::System::FormulaService;
+    // Reads the table of tag names of the map.
+    class FileNamesService
+    {
+    private:
+        using TagIndexStore = Map::Reader::State::TagIndexStore;
+        using FormulaService = Map::Reader::System::FormulaService;
 
-	public:
-		FileNamesService(TagIndexStore& m_TagIndexStore,
-			FormulaService& m_FormulaService) :
-			m_TagIndexStore(m_TagIndexStore),
-			m_FormulaService(m_FormulaService) {}
-		~FileNamesService() = default;
+    public:
+        FileNamesService(TagIndexStore& tagIndexStore,
+            FormulaService& formulaService) :
+            m_TagIndexStore(tagIndexStore),
+            m_FormulaService(formulaService) {}
+        ~FileNamesService() = default;
 
-		auto Read(std::ifstream& file, std::int32_t fileTableCount,
-			std::int64_t fileIndexTableOffset, std::int64_t fileTableOffset,
-			std::int32_t fileTableSize) const -> bool;
+        // Reads the name offsets and the name characters into the tag index store.
+        // param fileIndexTableOffset: Pointer to the table of name offsets.
+        // param fileTableOffset: Pointer to the name characters.
+        // param fileTableSize: Size in bytes of the name characters.
+        // return: False if a table is cut short. True if there are no names to read.
+        auto Read(std::ifstream& file, std::int32_t fileTableCount,
+            std::int64_t fileIndexTableOffset, std::int64_t fileTableOffset,
+            std::int32_t fileTableSize) const -> bool;
 
-	private:
-		TagIndexStore& m_TagIndexStore;
-		FormulaService& m_FormulaService;
-	};
+    private:
+        TagIndexStore& m_TagIndexStore;
+        FormulaService& m_FormulaService;
+    };
 }

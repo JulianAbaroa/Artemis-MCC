@@ -20,44 +20,48 @@ import std;
 
 export namespace Map::Reader::System
 {
-	class GeometryLoaderService
-	{
-	private:
-		using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
-		using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
-		using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
-		using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
-		using SbspGeometry = Map::Reader::Type::Geometry::SbspGeometry;
+    // Builds the render geometry of the structure BSPs: the world meshes of each cluster plus the instanced geometry.
+    class GeometryLoaderService
+    {
+    private:
+        using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
+        using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
+        using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
+        using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
+        using SbspGeometry = Map::Reader::Type::Geometry::SbspGeometry;
 
-		using LogsService = Service::Logs::System::LogsService;
-		using TagCatalog = Map::Tag::State::TagCatalog;
-		using FormulaService = Map::Reader::System::FormulaService;
-		using GeometryInfoService = Map::Reader::System::GeometryInfoService;
-		using GeometryResourcePageService = Map::Reader::System::GeometryResourcePageService;
-		using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
+        using LogsService = Service::Logs::System::LogsService;
+        using TagCatalog = Map::Tag::State::TagCatalog;
+        using FormulaService = Map::Reader::System::FormulaService;
+        using GeometryInfoService = Map::Reader::System::GeometryInfoService;
+        using GeometryResourcePageService = Map::Reader::System::GeometryResourcePageService;
+        using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
 
-	public:
-		GeometryLoaderService(LogsService& logsService, TagCatalog& tagCatalog,
-			GeometryResourcePageService& geometryResourcePageService,
-			GeometryInfoService& geometryInfoService,
-			GeometryMeshDecoderService& geometryMeshDecoderService,
-			FormulaService& m_FormulaService) :
-			m_LogsService(logsService), m_TagCatalog(tagCatalog),
-			m_GeometryResourcePageService(geometryResourcePageService),
-			m_GeometryInfoService(geometryInfoService),
-			m_GeometryMeshDecoderService(geometryMeshDecoderService),
-			m_FormulaService(m_FormulaService) {}
-		~GeometryLoaderService() = default;
+    public:
+        GeometryLoaderService(LogsService& logsService, TagCatalog& tagCatalog,
+            GeometryResourcePageService& geometryResourcePageService,
+            GeometryInfoService& geometryInfoService,
+            GeometryMeshDecoderService& geometryMeshDecoderService,
+            FormulaService& formulaService) :
+            m_LogsService(logsService), m_TagCatalog(tagCatalog),
+            m_GeometryResourcePageService(geometryResourcePageService),
+            m_GeometryInfoService(geometryInfoService),
+            m_GeometryMeshDecoderService(geometryMeshDecoderService),
+            m_FormulaService(formulaService) {}
+        ~GeometryLoaderService() = default;
 
-		auto ReadRenderGeometry(std::vector<std::string>& sbspTagNames) const
-			-> std::vector<SbspGeometry>;
+        // Decodes the geometry of each structure BSP that has a lightmap BSP with meshes.
+        // param sbspTagNames: Names of the sbsp tags to decode.
+        // return: One geometry per decoded BSP. Empty if the zone or play tags are missing.
+        auto ReadRenderGeometry(std::vector<std::string>& sbspTagNames) const
+            -> std::vector<SbspGeometry>;
 
-	private:
-		LogsService& m_LogsService;
-		TagCatalog& m_TagCatalog;
-		GeometryInfoService& m_GeometryInfoService;
-		FormulaService& m_FormulaService;
-		GeometryMeshDecoderService& m_GeometryMeshDecoderService;
-		GeometryResourcePageService& m_GeometryResourcePageService;
-	};
+    private:
+        LogsService& m_LogsService;
+        TagCatalog& m_TagCatalog;
+        GeometryResourcePageService& m_GeometryResourcePageService;
+        GeometryInfoService& m_GeometryInfoService;
+        GeometryMeshDecoderService& m_GeometryMeshDecoderService;
+        FormulaService& m_FormulaService;
+    };
 }

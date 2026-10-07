@@ -2,48 +2,53 @@ export module Map.Reader.Hook:OpenMap;
 
 import Service.Logs.System;
 import Platform.Memory.System;
+import Map.Reader.Type;
 import Map.Reader.State;
 import Map.Reader.System;
 import std;
 
 export namespace Map::Reader::Hook
 {
-	class OpenMapDetour
-	{
-	private:
-		using LogsService = Service::Logs::System::LogsService;
-		using AOBService = Platform::Memory::System::AOBService;
-		using FileStore = Map::Reader::State::FileStore;
-		using MapLoaderService = Map::Reader::System::MapLoaderService;
+    // Hooks the engine map opening. Once the original returns, stores the path of the campaign and shared maps
+    // and loads any other map.
+    class OpenMapDetour
+    {
+    private:
+        using OpenMapFunction = Map::Reader::Type::Hook::OpenMapFunction;
 
-	public:
-		OpenMapDetour(LogsService& logsService, AOBService& aobService,
-			FileStore& fileStore, MapLoaderService& mapLoaderService) :
-			m_LogsService(logsService), m_AOBService(aobService),
-			m_FileStore(fileStore), m_MapLoaderService(mapLoaderService) {}
-		~OpenMapDetour() = default;
+        using LogsService = Service::Logs::System::LogsService;
+        using AOBService = Platform::Memory::System::AOBService;
+        using FileStore = Map::Reader::State::FileStore;
+        using MapLoaderService = Map::Reader::System::MapLoaderService;
 
-		auto Install() -> void;
-		auto Uninstall() -> void;
+    public:
+        OpenMapDetour(LogsService& logsService, AOBService& aobService,
+            FileStore& fileStore, MapLoaderService& mapLoaderService) :
+            m_LogsService(logsService), m_AOBService(aobService),
+            m_FileStore(fileStore), m_MapLoaderService(mapLoaderService) {}
+        ~OpenMapDetour() = default;
 
-	private:
-		LogsService& m_LogsService;
-		AOBService& m_AOBService;
-		FileStore& m_FileStore;
-		MapLoaderService& m_MapLoaderService;
+        // Finds the target by signature and installs the hook. Does nothing if already installed.
+        auto Install() -> void;
 
-		static OpenMapDetour* s_Instance;
+        // Removes the hook once the calls in flight finish. Does nothing if not installed.
+        auto Uninstall() -> void;
 
-		static auto __fastcall HookedOpenMap(std::uint64_t param_1,
-			std::uint64_t param_2, std::uint64_t mapRelativePath,
-			std::uint32_t* param_4) -> void;
+    private:
+        LogsService& m_LogsService;
+        AOBService& m_AOBService;
+        FileStore& m_FileStore;
+        MapLoaderService& m_MapLoaderService;
 
-		typedef auto(__fastcall* OpenMap_t)(
-			std::uint64_t param_1, std::uint64_t param_2,
-			std::uint64_t mapRelativePath, std::uint32_t* param_4) -> void;
+        static inline OpenMapDetour* s_Instance{ nullptr };
+        static inline OpenMapFunction s_OriginalFunction{ nullptr };
+        static inline std::atomic<int> s_InFlight{ 0 };
 
-		static inline OpenMap_t m_OriginalFunction{ nullptr };
-		std::atomic<void*> m_FunctionAddress{ nullptr };
-		std::atomic<bool> m_IsHookInstalled{ false };
-	};
+        std::atomic<void*> m_FunctionAddress{ nullptr };
+        std::atomic<bool> m_IsHookInstalled{ false };
+
+        static auto __fastcall HookedOpenMap(std::uint64_t param1,
+            std::uint64_t param2, std::uint64_t mapRelativePath,
+            std::uint32_t* param4) -> void;
+    };
 }

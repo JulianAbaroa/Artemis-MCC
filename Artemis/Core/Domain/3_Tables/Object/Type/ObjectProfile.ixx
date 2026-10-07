@@ -22,10 +22,8 @@ export namespace Tables::Object::Type::Profile
         bool HasHlmt{ false };
         bool HasMach{ false };
         bool HasMode{ false };
-        bool HasPhmo{ false };
         bool HasProj{ false };
         bool HasScen{ false };
-        bool HasScnr{ false };
         bool HasVehi{ false };
         bool HasWeap{ false };
     };

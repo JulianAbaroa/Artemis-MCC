@@ -6,3 +6,4 @@ export import :Info;
 export import :Offset;
 export import :Magic;
 export import :Constant;
+export import :Hook;

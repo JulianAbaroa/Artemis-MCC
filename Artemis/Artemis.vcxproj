@@ -510,6 +510,7 @@
     <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.cpp" />
     <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderGeometry.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderHook.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderMagic.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderOffset.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderInfo.ixx" />

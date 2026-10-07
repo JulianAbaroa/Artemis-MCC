@@ -8,56 +8,62 @@ import std;
 
 export namespace Map::Reader::State
 {
-	template <typename TObject>
-	class TagStore
-	{
-	public:
-		using ObjectType = TObject;
+    // Tags of one group by tag name. They are added while the map is built, then the store is frozen and only read.
+    // note: Reads assert that the store is frozen, and Add asserts that it is not.
+    template <typename TObject>
+    class TagStore
+    {
+    public:
+        using ObjectType = TObject;
 
-		auto Has(const std::string& tagName) const -> bool
-		{
-			assert(m_Frozen.load(std::memory_order_acquire));
-			return m_Map.find(tagName) != m_Map.end();
-		}
+        auto Has(const std::string& tagName) const -> bool
+        {
+            assert(m_IsFrozen.load(std::memory_order_acquire));
+            return m_Map.find(tagName) != m_Map.end();
+        }
 
-		auto Get(const std::string& tagName) const -> const TObject*
-		{
-			assert(m_Frozen.load(std::memory_order_acquire));
-			auto it = m_Map.find(tagName);
-			return it != m_Map.end() ? &it->second : nullptr;
-		}
+        // return: Null if the tag is not in the store.
+        auto Get(const std::string& tagName) const -> const TObject*
+        {
+            assert(m_IsFrozen.load(std::memory_order_acquire));
+            auto it = m_Map.find(tagName);
+            return it != m_Map.end() ? &it->second : nullptr;
+        }
 
-		auto Add(const std::string& tagName, TObject data) -> void
-		{
-			assert(!m_Frozen.load(std::memory_order_relaxed));
-			m_Map.emplace(tagName, std::move(data));
-		}
+        auto Add(const std::string& tagName, TObject data) -> void
+        {
+            assert(!m_IsFrozen.load(std::memory_order_relaxed));
+            m_Map.emplace(tagName, std::move(data));
+        }
 
-		auto All() const -> const std::unordered_map<std::string, TObject>&
-		{
-			assert(m_Frozen.load(std::memory_order_acquire));
-			return m_Map;
-		}
+        auto All() const -> const std::unordered_map<std::string, TObject>&
+        {
+            assert(m_IsFrozen.load(std::memory_order_acquire));
+            return m_Map;
+        }
 
-		auto Freeze() -> void
-		{
-			m_Frozen.store(true, std::memory_order_release);
-		}
+        // Ends the build. From now on the store can only be read.
+        auto Freeze() -> void
+        {
+            m_IsFrozen.store(true, std::memory_order_release);
+        }
 
-		// Must be called just by the builder class.
-		auto Contains(const std::string& tagName) const -> bool
-		{
-			return m_Map.find(tagName) != m_Map.end();
-		}
+        // Checks if a tag was added, without requiring the store to be frozen.
+        // note: Only for the builder, which runs before the freeze.
+        auto Contains(const std::string& tagName) const -> bool
+        {
+            return m_Map.find(tagName) != m_Map.end();
+        }
 
-		auto Cleanup() -> void
-		{
-			m_Frozen.store(false, std::memory_order_relaxed);
-			m_Map.clear();
-		}
+        // Removes every tag and unfreezes the store.
+        auto Cleanup() -> void
+        {
+            m_IsFrozen.store(false, std::memory_order_relaxed);
+            m_Map.clear();
+        }
 
-	protected:
-		std::unordered_map<std::string, TObject> m_Map{};
-		std::atomic<bool> m_Frozen{ false };
-	};
+    protected:
+        std::unordered_map<std::string, TObject> m_Map{};
+        std::atomic<bool> m_IsFrozen{ false };
+    };
 }

@@ -1,109 +1,89 @@
 module;
 
-#include "External/minhook/include/MinHook.h"
+#include <windows.h>
 
 module Map.Reader.Hook;
 import :OpenMap;
 
 import Platform.Memory.Type;
+import Platform.Hook.System;
 import std;
 
 namespace
 {
-	namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Platform::Memory::Type::Signature;
 }
 
 namespace Map::Reader::Hook
 {
-	auto __fastcall OpenMapDetour::HookedOpenMap(std::uint64_t param_1,
-		std::uint64_t param_2, std::uint64_t mapRelativePath,
-		std::uint32_t* param_4) -> void
-	{
-		m_OriginalFunction(param_1, param_2, mapRelativePath, param_4);
+    auto __fastcall OpenMapDetour::HookedOpenMap(std::uint64_t param1,
+        std::uint64_t param2, std::uint64_t mapRelativePath, std::uint32_t* param4) -> void
+    {
+        Platform::Hook::System::InFlightScope scope(s_InFlight);
 
-		std::string relativePath =
-			reinterpret_cast<const char*>(mapRelativePath);
+        s_OriginalFunction(param1, param2, mapRelativePath, param4);
 
-		char exePath[MAX_PATH];
-		GetModuleFileNameA(NULL, exePath, MAX_PATH);
+        std::string relativePath =
+            reinterpret_cast<const char*>(mapRelativePath);
 
-		std::filesystem::path gameRoot =
-			std::filesystem::path(exePath).parent_path().
-			parent_path().parent_path().parent_path();
+        char exePath[MAX_PATH]{};
+        GetModuleFileNameA(nullptr, exePath, MAX_PATH);
 
-		std::filesystem::path fullPath = gameRoot / relativePath;
+        std::filesystem::path gameRoot =
+            std::filesystem::path(exePath).parent_path().
+            parent_path().parent_path().parent_path();
 
-		if (relativePath.contains("campaign"))
-		{
-			s_Instance->m_FileStore.
-				SetCampaignFilePath(fullPath.string());
-			return;
-		}
+        std::filesystem::path fullPath = gameRoot / relativePath;
 
-		if (relativePath.contains("shared"))
-		{
-			s_Instance->m_FileStore.
-				SetSharedFilePath(fullPath.string());
-			return;
-		}
+        if (relativePath.contains("campaign"))
+        {
+            s_Instance->m_FileStore.
+                SetCampaignFilePath(fullPath.string());
+            return;
+        }
 
-		std::string mapPath = fullPath.string();
+        if (relativePath.contains("shared"))
+        {
+            s_Instance->m_FileStore.
+                SetSharedFilePath(fullPath.string());
+            return;
+        }
 
-		s_Instance->m_MapLoaderService.LoadMap(mapPath);
-	}
+        std::string mapPath = fullPath.string();
 
-	OpenMapDetour* OpenMapDetour::s_Instance = nullptr;
+        s_Instance->m_MapLoaderService.LoadMap(mapPath);
+    }
 
-	auto OpenMapDetour::Install() -> void
-	{
-		if (m_IsHookInstalled.load()) return;
-		s_Instance = this;
+    auto OpenMapDetour::Install() -> void
+    {
+        if (m_IsHookInstalled.load()) return;
+        s_Instance = this;
 
-		void* functionAddress = (void*)s_Instance->m_AOBService.
-			FindPattern(Signature::BlamOpenMap);
+        void* functionAddress = reinterpret_cast<void*>(
+            m_AOBService.FindPattern(Signature::BlamOpenMap));
+        m_FunctionAddress.store(functionAddress);
 
-		if (!functionAddress)
-		{
-			s_Instance->m_LogsService.Message("[OpenMapDetour] ERROR:"
-				" Failed to obtain the function address.");
-			return;
-		}
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
+            reinterpret_cast<void*>(&HookedOpenMap),
+            reinterpret_cast<void**>(&s_OriginalFunction),
+            "[OpenMapDetour]", m_LogsService))
+        {
+            return;
+        }
 
-		m_FunctionAddress.store(functionAddress);
-		if (MH_CreateHook(m_FunctionAddress.load(),
-			&this->HookedOpenMap,
-			reinterpret_cast<LPVOID*>(&m_OriginalFunction)
-		) != MH_OK)
-		{
-			s_Instance->m_LogsService.Message("[OpenMapDetour] ERROR:"
-				" Failed to create the hook.");
+        m_IsHookInstalled.store(true);
+    }
 
-			return;
-		}
-		if (MH_EnableHook(m_FunctionAddress.load()) != MH_OK)
-		{
-			s_Instance->m_LogsService.Message(" [OpenMapDetour] ERROR:"
-				" Failed to enable hook.");
+    auto OpenMapDetour::Uninstall() -> void
+    {
+        if (!m_IsHookInstalled.load()) return;
 
-			return;
-		}
+        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+            "[OpenMapDetour]", m_LogsService);
 
-		m_IsHookInstalled.store(true);
-		s_Instance->m_LogsService.Message("[OpenMapDetour] INFO: Hook installed.");
-		return;
-	}
-
-	auto OpenMapDetour::Uninstall() -> void
-	{
-		if (!m_IsHookInstalled.load()) return;
-
-		MH_DisableHook(m_FunctionAddress.load());
-		MH_RemoveHook(m_FunctionAddress.load());
-
-		m_IsHookInstalled.store(false);
-
-		s_Instance->m_LogsService.Message("[OpenMapDetour] INFO: Hook uninstalled.");
-
-		s_Instance = nullptr;
-	}
+        m_IsHookInstalled.store(false);
+        s_Instance = nullptr;
+    }
 }

@@ -9,6 +9,7 @@ import std;
 
 export namespace Map::Builder::System
 {
+    // Reads every tag of the loaded map that has a descriptor and stores it in the tag catalog.
     class MapBuilderService
     {
     private:
@@ -23,16 +24,19 @@ export namespace Map::Builder::System
 
     public:
         MapBuilderService(LogsService& logsService, TagCatalog& tagCatalog,
-            FileStore& fileStore, TagIndexStore& m_TagIndexStore,
+            FileStore& fileStore, TagIndexStore& tagIndexStore,
             FileLocatorService& fileLocatorService,
             TagResolverService& tagResolverService) :
             m_LogsService(logsService), m_TagCatalog(tagCatalog), m_FileStore(fileStore),
-            m_TagIndexStore(m_TagIndexStore), m_FileLocatorService(fileLocatorService),
+            m_TagIndexStore(tagIndexStore), m_FileLocatorService(fileLocatorService),
             m_TagResolverService(tagResolverService) {}
         ~MapBuilderService() = default;
 
+        // Fills the tag catalog from the loaded map and freezes it. Logs the result.
+        // note: Needs the map to be loaded first.
         auto LoadForMap() -> void;
 
+        // Empties the tag catalog.
         auto Cleanup() -> void;
 
     private:

@@ -5,97 +5,100 @@ import Platform.Layer;
 import Map.Reader.State;
 import Map.Reader.System;
 import Map.Reader.Hook;
-import Map.Tag.State;
 import Map.Tag.Type;
+import Map.Tag.State;
 import Map.Builder.System;
 
 export namespace Map
 {
-	class Layer
-	{
-	private:
-		using TagCatalog = Map::Tag::State::TagCatalog;
+    // Root of the Map layer. Owns the stores, services and hook that read the '.map' file and fill the tag catalog.
+    // The map is loaded when the engine opens it, and the catalog is cleaned up with the rest of the Map state.
+    // note: Members are built in declaration order, so stores come first, then services, then the hook.
+    class Layer
+    {
+    private:
+        using TagCatalog = Map::Tag::State::TagCatalog;
 
-		using FileStore = Map::Reader::State::FileStore;
-		using TagIndexStore = Map::Reader::State::TagIndexStore;
-		using FormulaService = Map::Reader::System::FormulaService;
-		using DataStreamService = Map::Reader::System::DataStreamService;
-		using FileLocatorService = Map::Reader::System::FileLocatorService;
-		using HeaderService = Map::Reader::System::HeaderService;
-		using TagIndexService = Map::Reader::System::TagIndexService;
-		using FileNamesService = Map::Reader::System::FileNamesService;
-		using TagResolverService = Map::Reader::System::TagResolverService;
-		using TagStructureService = Map::Reader::System::TagStructureService;
-		using GeometryInfoService = Map::Reader::System::GeometryInfoService;
-		using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
-		using GeometryResourcePageService = Map::Reader::System::GeometryResourcePageService;
-		using GeometryLoaderService = Map::Reader::System::GeometryLoaderService;
-		using MapLoaderService = Map::Reader::System::MapLoaderService;
-		using MapBuilderService = Map::Builder::System::MapBuilderService;
+        using FileStore = Map::Reader::State::FileStore;
+        using TagIndexStore = Map::Reader::State::TagIndexStore;
+        using FormulaService = Map::Reader::System::FormulaService;
+        using DataStreamService = Map::Reader::System::DataStreamService;
+        using FileLocatorService = Map::Reader::System::FileLocatorService;
+        using HeaderService = Map::Reader::System::HeaderService;
+        using TagIndexService = Map::Reader::System::TagIndexService;
+        using FileNamesService = Map::Reader::System::FileNamesService;
+        using TagResolverService = Map::Reader::System::TagResolverService;
+        using TagStructureService = Map::Reader::System::TagStructureService;
+        using GeometryInfoService = Map::Reader::System::GeometryInfoService;
+        using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
+        using GeometryResourcePageService = Map::Reader::System::GeometryResourcePageService;
+        using GeometryLoaderService = Map::Reader::System::GeometryLoaderService;
+        using MapLoaderService = Map::Reader::System::MapLoaderService;
+        using OpenMapDetour = Map::Reader::Hook::OpenMapDetour;
 
-		using OpenMapDetour = Map::Reader::Hook::OpenMapDetour;
+        using MapBuilderService = Map::Builder::System::MapBuilderService;
 
-	public:
-		Layer(Service::Layer& service, Platform::Layer& platform) :
-			m_FileLocatorService(m_FileStore),
-			m_HeaderService(m_FormulaService),
-			m_TagIndexService(m_TagIndexStore, m_FormulaService),
-			m_FileNamesService(m_TagIndexStore, m_FormulaService),
-			m_TagResolverService(service.m_LogsService, m_FileStore, m_TagIndexStore, m_FormulaService),
-			m_TagStructureService(m_TagIndexStore),
-			m_GeometryInfoService(m_FileStore, m_DataStreamService),
-			m_GeometryMeshDecoderService(service.m_LogsService, m_FileStore, m_DataStreamService, m_FormulaService),
-			m_GeometryResourcePageService(service.m_LogsService, m_FileStore, m_FileLocatorService, m_DataStreamService, m_FormulaService),
-			m_GeometryLoaderService(service.m_LogsService, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService, m_FormulaService),
-			m_MapLoaderService(service.m_LogsService, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_FileNamesService, m_HeaderService, m_TagIndexService),
-			m_MapBuilderService(service.m_LogsService, m_TagCatalog, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_TagResolverService),
-			m_OpenMapDetour(service.m_LogsService, platform.m_AOBService, m_FileStore, m_MapLoaderService)
-		{
-			auto& lifecycle = platform.m_LifecycleService;
+    public:
+        Layer(Service::Layer& service, Platform::Layer& platform) :
+            m_FileLocatorService(m_FileStore),
+            m_HeaderService(m_FormulaService),
+            m_TagIndexService(m_TagIndexStore, m_FormulaService),
+            m_FileNamesService(m_TagIndexStore, m_FormulaService),
+            m_TagResolverService(service.m_LogsService, m_FileStore, m_TagIndexStore, m_FormulaService),
+            m_TagStructureService(m_TagIndexStore),
+            m_GeometryInfoService(m_FileStore, m_DataStreamService),
+            m_GeometryMeshDecoderService(service.m_LogsService, m_FileStore, m_DataStreamService, m_FormulaService),
+            m_GeometryResourcePageService(service.m_LogsService, m_FileStore, m_FileLocatorService, m_DataStreamService, m_FormulaService),
+            m_GeometryLoaderService(service.m_LogsService, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService, m_FormulaService),
+            m_MapLoaderService(service.m_LogsService, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_FileNamesService, m_HeaderService, m_TagIndexService),
+            m_MapBuilderService(service.m_LogsService, m_TagCatalog, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_TagResolverService),
+            m_OpenMapDetour(service.m_LogsService, platform.m_AOBService, m_FileStore, m_MapLoaderService)
+        {
+            auto& lifecycle = platform.m_LifecycleService;
 
-			lifecycle.OnEngineInitialized([this] {
-				m_OpenMapDetour.Install();
-			});
+            lifecycle.OnEngineInitialized([this] {
+                m_OpenMapDetour.Install();
+            });
 
-			lifecycle.OnUnhook([this] {
-				m_OpenMapDetour.Uninstall();
-			});
+            lifecycle.OnUnhook([this] {
+                m_OpenMapDetour.Uninstall();
+            });
 
-			lifecycle.OnCleanup([this] {
-				m_MapLoaderService.Cleanup();
-				m_MapBuilderService.Cleanup();
-				m_FormulaService.Cleanup();
-			});
-		}
-		~Layer() = default;
+            lifecycle.OnCleanup([this] {
+                m_MapLoaderService.Cleanup();
+                m_MapBuilderService.Cleanup();
+                m_TagResolverService.Cleanup();
+                m_FormulaService.Cleanup();
+            });
+        }
+        ~Layer() = default;
 
-		Layer(const Layer&) = delete;
-		Layer& operator=(const Layer&) = delete;
+        // Not copyable. Members hold references to each other.
+        Layer(const Layer&) = delete;
+        auto operator=(const Layer&) -> Layer& = delete;
 
-		// --- State ---
-		TagCatalog m_TagCatalog;
-		FileStore m_FileStore;
-		TagIndexStore m_TagIndexStore;
+        // --- State ---
+        TagCatalog m_TagCatalog;
+        FileStore m_FileStore;
+        TagIndexStore m_TagIndexStore;
 
-		// --- System: Reader ---
-		FormulaService m_FormulaService;
-		DataStreamService m_DataStreamService;
-		FileLocatorService m_FileLocatorService;
-		HeaderService m_HeaderService;
-		TagIndexService m_TagIndexService;
-		FileNamesService m_FileNamesService;
-		TagResolverService m_TagResolverService;
-		TagStructureService m_TagStructureService;
-		GeometryInfoService m_GeometryInfoService;
-		GeometryMeshDecoderService m_GeometryMeshDecoderService;
-		GeometryResourcePageService m_GeometryResourcePageService;
-		GeometryLoaderService m_GeometryLoaderService;
-		MapLoaderService m_MapLoaderService;
+        // --- System ---
+        FormulaService m_FormulaService;
+        DataStreamService m_DataStreamService;
+        FileLocatorService m_FileLocatorService;
+        HeaderService m_HeaderService;
+        TagIndexService m_TagIndexService;
+        FileNamesService m_FileNamesService;
+        TagResolverService m_TagResolverService;
+        TagStructureService m_TagStructureService;
+        GeometryInfoService m_GeometryInfoService;
+        GeometryMeshDecoderService m_GeometryMeshDecoderService;
+        GeometryResourcePageService m_GeometryResourcePageService;
+        GeometryLoaderService m_GeometryLoaderService;
+        MapLoaderService m_MapLoaderService;
+        MapBuilderService m_MapBuilderService;
 
-		// --- System: Builder ---
-		MapBuilderService m_MapBuilderService;
-
-		// --- Hook ---
-		OpenMapDetour m_OpenMapDetour;
-	};
+        // --- Hook ---
+        OpenMapDetour m_OpenMapDetour;
+    };
 }

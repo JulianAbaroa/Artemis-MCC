@@ -1283,6 +1283,9 @@
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderGeometry.ixx">
       <Filter>Core\Domain\1_Map\Reader\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderHook.ixx">
+      <Filter>Core\Domain\1_Map\Reader\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderMagic.ixx">
       <Filter>Core\Domain\1_Map\Reader\Type</Filter>
     </ClCompile>

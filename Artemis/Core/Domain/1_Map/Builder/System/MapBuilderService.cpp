@@ -5,7 +5,9 @@ import Map.Reader.Type;
 namespace
 {
     namespace TagTable = Map::Reader::Type::Structure::TagTable;
-    namespace MapMagic = Map::Reader::Type::Magic;
+
+    using Map::Reader::Type::Magic::Tag::k_Play;
+    using Map::Reader::Type::Magic::Tag::k_Zone;
 }
 
 namespace Map::Builder::System
@@ -42,11 +44,10 @@ namespace Map::Builder::System
             const std::uint32_t magic = m_TagIndexStore.GetGroupMagic(entry.TagGroupIndex);
             const std::string tagName = m_TagIndexStore.GetTagName(i);
 
-            if (tagName.empty() && magic != MapMagic::Tag::k_Play) continue;
+            if (tagName.empty() && magic != k_Play) continue;
 
-            std::size_t slot = 0;
-            m_TagCatalog.ForEach([&]<typename TStore>(TStore & store)
-            {
+            std::size_t slot{};
+            m_TagCatalog.ForEach([&]<typename TStore>(TStore& store) {
                 using TObject = typename TStore::ObjectType;
                 using Descriptor = Map::Reader::System::GroupDescriptor<TObject>;
 
@@ -60,8 +61,8 @@ namespace Map::Builder::System
                             reader.Read<TObject>(file, offset, tagName));
 
                         std::string key = tagName;
-                        if constexpr (Descriptor::Magic == MapMagic::Tag::k_Play) key = "__play__";
-                        if constexpr (Descriptor::Magic == MapMagic::Tag::k_Zone) key = "__zone__";
+                        if constexpr (Descriptor::Magic == k_Play) key = "__play__";
+                        if constexpr (Descriptor::Magic == k_Zone) key = "__zone__";
 
                         store.Add(key, std::move(*object));
                         ++counts[slot];
@@ -81,7 +82,7 @@ namespace Map::Builder::System
             " Mode loaded: {} | Phmo loaded: {} | Play loaded: {} |"
             " Proj loaded: {} | Sbsp loaded: {} | Scen loaded: {} |"
             " Scnr loaded: {} | Sldt loaded: {} | Vehi loaded: {} |"
-            " Weap loaded: {} | Zone loaded: {} |",
+            " Weap loaded: {} | Zone loaded: {}.",
             counts[0], counts[1], counts[2], counts[3], counts[4], counts[5],
             counts[6], counts[7], counts[8], counts[9], counts[10], counts[11],
             counts[12], counts[13], counts[14], counts[15], counts[16], counts[17],

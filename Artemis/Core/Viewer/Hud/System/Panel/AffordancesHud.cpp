@@ -119,7 +119,7 @@ namespace
             { "HasProj:", p.HasProj }, { "HasScen:", p.HasScen },
             { "HasMach:", p.HasMach }, { "HasCtrl:", p.HasCtrl },
             { "HasBloc:", p.HasBloc }, { "HasColl:", p.HasColl },
-            { "HasPhmo:", p.HasPhmo }, { "HasMode:", p.HasMode },
+            { "HasMode:", p.HasMode },
         };
 
         for (const auto& [label, value] : badges)

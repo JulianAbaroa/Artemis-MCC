@@ -2,203 +2,253 @@ export module Map.Reader.Type:Structure;
 
 import std;
 
+// Structures read straight from the map file.
+// note: They are packed, so their layout must not change.
 export namespace Map::Reader::Type::Structure
 {
 #pragma pack(push, 1)
-	namespace Header
-	{
-		struct IndexTable
-		{
-			std::int32_t NumberOfTagGroups{};
-			std::uint64_t TagGroupTableAddress{};
-			std::int32_t NumberOfTags{};
-			std::uint64_t TagTableAddress{};
-			std::int32_t NumberOfGlobalTags{};
-			std::uint64_t GlobalTagTableAddress{};
-			std::int32_t NumberOfTagInterops{};
-			std::uint64_t TagInteropTableAddress{};
-			std::int32_t Magic{};
-		};
+    // Map file header.
+    namespace Header
+    {
+        // Header of the tag index table. Size: 0x4C.
+        struct IndexTable
+        {
+            std::int32_t NumberOfTagGroups{};
+            std::uint64_t TagGroupTableAddress{};
+            std::int32_t NumberOfTags{};
+            std::uint64_t TagTableAddress{};
+            std::int32_t NumberOfGlobalTags{};
+            std::uint64_t GlobalTagTableAddress{};
+            std::int32_t NumberOfTagInterops{};
+            std::uint64_t TagInteropTableAddress{};
+            std::int32_t Magic{};
+        };
 
-		struct Section
-		{
-			std::uint32_t VirtualAddress{};
-			std::uint32_t Size{};
-		};
+        struct Section
+        {
+            std::uint32_t VirtualAddress{};
+            std::uint32_t Size{};
+        };
 
-		struct OffsetMask
-		{
-			std::uint32_t Mask{};
-		};
+        struct OffsetMask
+        {
+            std::uint32_t Mask{};
+        };
 
-		struct Partition
-		{
-			std::uint64_t LoadAddress{};
-			std::uint64_t Size{};
-		};
+        struct Partition
+        {
+            std::uint64_t LoadAddress{};
+            std::uint64_t Size{};
+        };
 
-		struct Header
-		{
-			std::uint32_t FileSize{};
-			std::uint32_t TagBufferOffset{};
-			std::uint32_t VirtualSize{};
+        struct Header
+        {
+            std::uint32_t FileSize{};
+            std::uint32_t TagBufferOffset{};
+            std::uint32_t VirtualSize{};
 
-			std::int16_t Type{};
+            std::int16_t Type{};
 
-			std::int32_t FileTableCount{};
-			std::int32_t FileTableOffset{};
-			std::int32_t FileTableSize{};
-			std::int32_t FileIndexTableOffset{};
+            std::int32_t FileTableCount{};
+            std::int32_t FileTableOffset{};
+            std::int32_t FileTableSize{};
+            std::int32_t FileIndexTableOffset{};
 
-			std::int32_t StringTableCount{};
-			std::int32_t StringTableOffset{};
-			std::int32_t StringTableSize{};
-			std::int32_t StringIndexTableOffset{};
-			std::int32_t StringNamespaceTableCount{};
-			std::int32_t StringNamespaceTableOffset{};
+            std::int32_t StringTableCount{};
+            std::int32_t StringTableOffset{};
+            std::int32_t StringTableSize{};
+            std::int32_t StringIndexTableOffset{};
+            std::int32_t StringNamespaceTableCount{};
+            std::int32_t StringNamespaceTableOffset{};
 
-			std::int32_t CacheBuildDateHigh{};
-			std::int32_t CacheBuildDateLow{};
+            std::int32_t CacheBuildDateHigh{};
+            std::int32_t CacheBuildDateLow{};
 
-			char BuildString[32]{};
+            char BuildString[32]{};
 
-			char InternalName[32]{};
-			char ScenarioName[64]{};
+            char InternalName[32]{};
+            char ScenarioName[64]{};
 
-			std::int32_t CheckSum{};
+            std::int32_t CheckSum{};
 
-			std::uint64_t VirtualBaseAddress{};
-			std::uint64_t IndexHeaderAddress{};
-			std::uint32_t XDKVersion{};
+            std::uint64_t VirtualBaseAddress{};
+            std::uint64_t IndexHeaderAddress{};
+            std::uint32_t XDKVersion{};
 
-			Partition Partitions{};
-			OffsetMask OffsetMasks{};
-			Section Sections{};
-		};
-	}
+            Partition Partitions{};
+            OffsetMask OffsetMasks{};
+            Section Sections{};
+        };
+    }
 
-	namespace Tag
-	{
-		struct Reference
-		{
-			std::int32_t TagGroupMagic{};
-			std::byte _pad_0x04[8];
-			std::uint32_t DatumIndex{};
-		};
+    // Fields that tag structures embed.
+    namespace Tag
+    {
+        // Reference to another tag. Size: 0x10.
+        struct Reference
+        {
+            std::int32_t TagGroupMagic{};
+            std::byte _pad_0x04[8]{};
+            std::uint32_t DatumIndex{};
+        };
 
-		struct Block
-		{
-			std::int32_t EntryCount{};
-			std::uint32_t Pointer{};
-			std::byte _pad_0x08[4];
-		};
+        // Header of a block of entries. Size: 0xC.
+        struct Block
+        {
+            std::int32_t EntryCount{};
+            std::uint32_t Pointer{};
+            std::byte _pad_0x08[4]{};
+        };
 
-		struct TagInteropTableEntry
-		{
-			std::uint32_t Pointer{};
-			std::int32_t Type{};
-		};
-	}
+        struct TagInteropTableEntry
+        {
+            std::uint32_t Pointer{};
+            std::int32_t Type{};
+        };
+    }
 
-	namespace TagTable
-	{
-		struct Entry
-		{
-			std::int16_t TagGroupIndex{};
-			std::uint16_t DatumIndexSalt{};
-			std::uint32_t MemoryAddress{};
-		};
+    // Entries of the tag index tables.
+    namespace TagTable
+    {
+        struct Entry
+        {
+            std::int16_t TagGroupIndex{};
+            std::uint16_t DatumIndexSalt{};
+            std::uint32_t MemoryAddress{};
+        };
 
-		struct GroupEntry
-		{
-			std::int32_t Magic{};
-			std::int32_t ParentMagic{};
-			std::int32_t GranParentMagic{};
-			std::int32_t StringID{};
-		};
+        struct GroupEntry
+        {
+            std::int32_t Magic{};
+            std::int32_t ParentMagic{};
+            std::int32_t GranParentMagic{};
+            std::int32_t StringID{};
+        };
 
-		struct GlobalEntry
-		{
-			std::int32_t TagGroupMagic{};
-			std::uint32_t DatumIndex{};
-		};
-	}
+        struct GlobalEntry
+        {
+            std::int32_t TagGroupMagic{};
+            std::uint32_t DatumIndex{};
+        };
+    }
 
-	namespace Data
-	{
-		struct Reference
-		{
-			std::int32_t Size{};
-			std::byte _pad_0x04[8];
-			std::uint32_t Pointer{};
-			std::byte _pad_0x10[4];
-		};
-	}
+    namespace Data
+    {
+        // Reference to raw data. Size: 0x14.
+        struct Reference
+        {
+            std::int32_t Size{};
+            std::byte _pad_0x04[8]{};
+            std::uint32_t Pointer{};
+            std::byte _pad_0x10[4]{};
+        };
+    }
 
-	namespace Sbsp
-	{
-		struct InstancedGeometry
-		{
-			std::int32_t NameStringID{};
-		};
+    // Scenario structure BSP.
+    namespace Sbsp
+    {
+        struct InstancedGeometry
+        {
+            std::int32_t NameStringID{};
+        };
 
-		struct Sbsp
-		{
-			std::int32_t NumberOfInstancedGeometry{};
-			std::uint32_t InstancedGeometryTableAddress{};
-		};
-	}
+        struct Sbsp
+        {
+            std::int32_t NumberOfInstancedGeometry{};
+            std::uint32_t InstancedGeometryTableAddress{};
+        };
+    }
 
-	namespace Unic
-	{
-		struct LanguageRange
-		{
-			std::int16_t RangeStartIndex{};
-			std::int16_t RangeSize{};
-		};
+    // Multilingual unicode string list.
+    namespace Unic
+    {
+        struct LanguageRange
+        {
+            std::int16_t RangeStartIndex{};
+            std::int16_t RangeSize{};
+        };
 
-		struct Unic
-		{
-			LanguageRange LanguageRanges{};
-		};
-	}
+        struct Unic
+        {
+            LanguageRange LanguageRanges{};
+        };
+    }
 
-	namespace Localization
-	{
-		struct IndexTableElement
-		{
-			std::uint32_t StringID{};
-			std::uint32_t Offset{};
-		};
+    namespace Localization
+    {
+        struct IndexTableElement
+        {
+            std::uint32_t StringID{};
+            std::uint32_t Offset{};
+        };
 
-		struct Languages
-		{
-			std::uint32_t StringCount{};
-			std::uint32_t LocaleTableSize{};
-			std::uint32_t LocaleIndexTableOffset{};
-			std::uint32_t LocaleDataIndexOffset{};
+        struct Languages
+        {
+            std::uint32_t StringCount{};
+            std::uint32_t LocaleTableSize{};
+            std::uint32_t LocaleIndexTableOffset{};
+            std::uint32_t LocaleDataIndexOffset{};
 
-			std::byte IndexTableHash[14]{};
-			std::byte StringDataHash[14]{};
-		};
+            std::byte IndexTableHash[14]{};
+            std::byte StringDataHash[14]{};
+        };
 
-		struct MapGlobalMeta
-		{
-			Languages Languages{};
-		};
-	}
+        struct MapGlobalMeta
+        {
+            Languages Languages{};
+        };
+    }
 
-	namespace Primitive
-	{
-		struct Vec2 { float X{}, Y{}; };
-		struct Vec3 { float X{}, Y{}, Z{}; };
-		struct Vec4 { float X{}, Y{}, Z{}, W{}; };
+    // Basic types that tag structures are made of.
+    namespace Primitive
+    {
+        struct Vec2
+        {
+            float X{};
+            float Y{};
+        };
 
-		struct ColorRGB { float Red{}, Green{}, Blue{}; };
-		struct ColorRGBA { float Red{}, Green{}, Blue{}, Alpha{}; };
+        struct Vec3
+        {
+            float X{};
+            float Y{};
+            float Z{};
+        };
 
-		struct RangeF { float Min{}, Max{}; };
-		struct RangeD { double Min{}, Max{}; };
-	}
+        struct Vec4
+        {
+            float X{};
+            float Y{};
+            float Z{};
+            float W{};
+        };
+
+        struct ColorRGB
+        {
+            float Red{};
+            float Green{};
+            float Blue{};
+        };
+
+        struct ColorRGBA
+        {
+            float Red{};
+            float Green{};
+            float Blue{};
+            float Alpha{};
+        };
+
+        struct RangeF
+        {
+            float Min{};
+            float Max{};
+        };
+
+        struct RangeD
+        {
+            double Min{};
+            double Max{};
+        };
+    }
 #pragma pack(pop)
 }
