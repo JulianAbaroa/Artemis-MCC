@@ -3,12 +3,12 @@ import :Proj;
 
 namespace Resolved::Definitions::System
 {
-	auto ProjBuilder::Build(const ProjObject& proj) -> ResolvedProj
-	{
-		ResolvedProj out{};
+    auto ProjBuilder::Build(const ProjObject& proj) -> Proj
+    {
+        Proj out{};
 
-		out.Base = m_ObjectBuilder.Build(proj.TagName, proj.Data, proj.MultiplayerObject);
+        out.Base = m_ObjectBuilder.Build(proj.TagName, proj.Data, proj.MultiplayerObject);
 
-		return out;
-	}
+        return out;
+    }
 }

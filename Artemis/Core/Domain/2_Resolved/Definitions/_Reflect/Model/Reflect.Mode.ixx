@@ -6,10 +6,10 @@ import std;
 
 namespace
 {
-    using Marker = Resolved::Definitions::Type::Mode::Marker;
-    using MarkerGroup = Resolved::Definitions::Type::Mode::MarkerGroup;
-    using Bounds = Resolved::Definitions::Type::Mode::Bounds;
-    using Mode = Resolved::Definitions::Type::Mode::Mode;
+    using Resolved::Definitions::Type::Mode::Marker;
+    using Resolved::Definitions::Type::Mode::MarkerGroup;
+    using Resolved::Definitions::Type::Mode::Bounds;
+    using Resolved::Definitions::Type::Mode::Mode;
 }
 
 export namespace Common::Reflect::Type
@@ -17,7 +17,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Marker>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("NodeIndex", &Marker::NodeIndex),
             MakeField("Flags", &Marker::Flags),
@@ -31,7 +31,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<MarkerGroup>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("NameId", &MarkerGroup::NameId),
             MakeField("Markers", &MarkerGroup::Markers),
@@ -41,7 +41,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Bounds>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Min", &Bounds::Min),
             MakeField("Max", &Bounds::Max),
@@ -51,7 +51,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Mode>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Mode::TagName),
             MakeField("MarkerGroups", &Mode::MarkerGroups),

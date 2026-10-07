@@ -6,7 +6,7 @@ import std;
 
 namespace
 {
-    using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
+    using Resolved::Definitions::Type::Sbsp::Sbsp;
 }
 
 export namespace Common::Reflect::Type
@@ -14,7 +14,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Sbsp>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Sbsp::TagName),
             MakeField("WorldBoundsMin", &Sbsp::WorldBoundsMin),

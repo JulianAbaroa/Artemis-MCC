@@ -3,10 +3,12 @@ import :Bloc;
 
 namespace Resolved::Definitions::System
 {
-    auto BlocBuilder::Build(const BlocObject& bloc) -> ResolvedBloc
+    auto BlocBuilder::Build(const BlocObject& bloc) -> Bloc
     {
-        ResolvedBloc out{};
+        Bloc out{};
+
         out.Base = m_ObjectBuilder.Build(bloc.TagName, bloc.Data, bloc.MultiplayerObject);
+
         return out;
     }
 }

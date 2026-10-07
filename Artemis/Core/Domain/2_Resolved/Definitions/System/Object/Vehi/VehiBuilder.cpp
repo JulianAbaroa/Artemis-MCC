@@ -3,12 +3,12 @@ import :Vehi;
 
 namespace Resolved::Definitions::System
 {
-	auto VehiBuilder::Build(const VehiObject& vehi) -> ResolvedVehi
-	{
-		ResolvedVehi out{};
+    auto VehiBuilder::Build(const VehiObject& vehi) -> Vehi
+    {
+        Vehi out{};
 
-		out.Base = m_ObjectBuilder.Build(vehi.TagName, vehi.Data, vehi.MultiplayerObject);
+        out.Base = m_ObjectBuilder.Build(vehi.TagName, vehi.Data, vehi.MultiplayerObject);
 
-		return out;
-	}
+        return out;
+    }
 }

@@ -1,17 +1,15 @@
 export module Resolved.Definitions.Type:Proj;
 
 import :Object;
-import std;
 
-namespace
-{
-	using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-}
+import std;
 
 export namespace Resolved::Definitions::Type::Proj
 {
-	struct Proj
-	{
-		ResolvedObject Base{};
-	};
+    // Holds the projectile definition.
+    // Waiting for some system to need this.
+    struct Proj
+    {
+        Object::Object Base{};
+    };
 }

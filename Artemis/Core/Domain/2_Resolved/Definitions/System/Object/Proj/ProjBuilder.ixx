@@ -1,26 +1,27 @@
 export module Resolved.Definitions.System:Proj;
 
 import :Object;
+
 import Map.Tag.Type;
 import Resolved.Definitions.Type;
-import std;
 
 export namespace Resolved::Definitions::System
 {
-	class ProjBuilder
-	{
-	private:
-		using ProjObject = Map::Tag::Type::Proj::Object::ProjObject;
-		using ResolvedProj = Resolved::Definitions::Type::Proj::Proj;
+    // Builds the projectile definition.
+    class ProjBuilder
+    {
+    private:
+        using ProjObject = Map::Tag::Type::Proj::Object::ProjObject;
+        using Proj = Resolved::Definitions::Type::Proj::Proj;
 
-	public:
-		ProjBuilder(ObjectBuilder& objectBuilder) :
-			m_ObjectBuilder(objectBuilder) {}
-		~ProjBuilder() = default;
+    public:
+        explicit ProjBuilder(ObjectBuilder& objectBuilder) :
+            m_ObjectBuilder(objectBuilder) {}
+        ~ProjBuilder() = default;
 
-		auto Build(const ProjObject& proj) -> ResolvedProj;
+        auto Build(const ProjObject& proj) -> Proj;
 
-	private:
-		ObjectBuilder& m_ObjectBuilder;
-	};
+    private:
+        ObjectBuilder& m_ObjectBuilder;
+    };
 }

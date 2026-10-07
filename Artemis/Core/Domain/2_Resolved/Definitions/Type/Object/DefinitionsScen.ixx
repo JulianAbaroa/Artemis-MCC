@@ -1,17 +1,15 @@
 export module Resolved.Definitions.Type:Scen;
 
 import :Object;
-import std;
 
-namespace
-{
-    using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-}
+import std;
 
 export namespace Resolved::Definitions::Type::Scen
 {
+    // Holds the scenery definition.
+    // Waiting for some system to need this.
     struct Scen
     {
-        ResolvedObject Base{};
+        Object::Object Base{};
     };
 }

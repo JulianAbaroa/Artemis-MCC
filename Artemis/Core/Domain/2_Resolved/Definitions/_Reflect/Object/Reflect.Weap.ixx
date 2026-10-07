@@ -8,17 +8,17 @@ import std;
 
 namespace
 {
-	using Weap = Resolved::Definitions::Type::Weap::Weap;
+    using Resolved::Definitions::Type::Weap::Weap;
 }
 
 export namespace Common::Reflect::Type
 {
-	template <>
-	struct Fields<Weap>
-	{
-		static constexpr bool HasFields = true;
-		static constexpr auto Value = std::tuple{
-			MakeField("Base", &Weap::Base),
-		};
-	};
+    template <>
+    struct Fields<Weap>
+    {
+        static constexpr bool HasFields{ true };
+        static constexpr auto Value = std::tuple{
+            MakeField("Base", &Weap::Base),
+        };
+    };
 }

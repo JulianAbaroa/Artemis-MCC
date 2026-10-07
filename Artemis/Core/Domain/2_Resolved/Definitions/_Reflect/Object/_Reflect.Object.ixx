@@ -6,8 +6,8 @@ import std;
 
 namespace
 {
-    using MultiplayerObject = Resolved::Definitions::Type::Object::MultiplayerObject;
-    using Object = Resolved::Definitions::Type::Object::Object;
+    using Resolved::Definitions::Type::Object::MultiplayerObject;
+    using Resolved::Definitions::Type::Object::Object;
 }
 
 export namespace Common::Reflect::Type

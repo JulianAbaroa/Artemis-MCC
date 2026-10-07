@@ -1,13 +1,11 @@
 module Resolved.Definitions.System;
 import :Eqip;
 
-import std;
-
 namespace Resolved::Definitions::System
 {
-    auto EqipBuilder::Build(const EqipObject& eqip) -> ResolvedEqip
+    auto EqipBuilder::Build(const EqipObject& eqip) -> Eqip
     {
-        ResolvedEqip out{};
+        Eqip out{};
 
         out.Base = m_ObjectBuilder.Build(eqip.TagName, eqip.Data, eqip.MultiplayerObject);
 

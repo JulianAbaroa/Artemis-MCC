@@ -5,41 +5,42 @@ import std;
 
 namespace
 {
-	using Vec3 = Common::Math::Type::Vec3;
-	using Vec4 = Common::Math::Type::Vec4;
-	using Node = Common::Math::Type::Node;
+    using Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec4;
+    using Common::Math::Type::Node;
 }
 
 export namespace Resolved::Definitions::Type::Mode
 {
-	struct Marker
-	{
-		std::int8_t NodeIndex{ -1 };
-		std::uint8_t Flags{ 0 };
+    struct Marker
+    {
+        std::int8_t NodeIndex{ -1 };
+        std::uint8_t Flags{};
 
-		Vec3 Translation{};
-		Vec4 Rotation{};
-		Vec3 Direction{};
-		float Scale{ 1.0f };
-	};
+        Vec3 Translation{};
+        Vec4 Rotation{};
+        Vec3 Direction{};
+        float Scale{ 1.0f };
+    };
 
-	struct MarkerGroup
-	{
-		std::uint32_t NameId;
-		std::vector<Marker> Markers;
-	};
+    struct MarkerGroup
+    {
+        std::uint32_t NameId{};
+        std::vector<Marker> Markers{};
+    };
 
-	struct Bounds
-	{
-		Vec3 Min{};
-		Vec3 Max{};
-	};
+    struct Bounds
+    {
+        Vec3 Min{};
+        Vec3 Max{};
+    };
 
-	struct Mode
-	{
-		std::string TagName;
-		std::vector<MarkerGroup> MarkerGroups;
-		std::vector<Node> Nodes;
-		Bounds ModelBounds{};
-	};
+    // Holds the render model.
+    struct Mode
+    {
+        std::string TagName{};
+        std::vector<MarkerGroup> MarkerGroups{};
+        std::vector<Node> Nodes{};
+        Bounds ModelBounds{};
+    };
 }

@@ -8,7 +8,7 @@ import std;
 
 namespace
 {
-    using Mach = Resolved::Definitions::Type::Mach::Mach;
+    using Resolved::Definitions::Type::Mach::Mach;
 }
 
 export namespace Common::Reflect::Type
@@ -16,7 +16,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Mach>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Base", &Mach::Base),
         };

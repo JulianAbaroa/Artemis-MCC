@@ -8,7 +8,7 @@ import std;
 
 namespace
 {
-    using Scen = Resolved::Definitions::Type::Scen::Scen;
+    using Resolved::Definitions::Type::Scen::Scen;
 }
 
 export namespace Common::Reflect::Type
@@ -16,7 +16,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Scen>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Base", &Scen::Base),
         };

@@ -3,15 +3,17 @@ import :Mode;
 
 namespace
 {
-    // Mode_CompressionInfoEntry::CompressionFlags bit0: "Compressed Position"
+    // Bit 0 of the compression flags of the compression info: compressed position.
     constexpr std::uint16_t k_CompressedPositionFlag{ 1u << 0 };
+    constexpr float k_Max{ std::numeric_limits<float>::max() };
 }
 
 namespace Resolved::Definitions::System
 {
-    auto ModeBuilder::Build(const ModeObject& mode) -> ResolvedMode
+    auto ModeBuilder::Build(const ModeObject& mode) -> Mode
     {
-        ResolvedMode out;
+        Mode out{};
+
         out.TagName = mode.TagName;
 
         this->BuildMarkerGroups(mode, out);
@@ -21,19 +23,21 @@ namespace Resolved::Definitions::System
         return out;
     }
 
-    auto ModeBuilder::BuildMarkerGroups(const ModeObject& mode, ResolvedMode& out) -> void
+    auto ModeBuilder::BuildMarkerGroups(const ModeObject& mode, Mode& out) -> void
     {
         out.MarkerGroups.reserve(mode.MarkerGroups.size());
 
         for (const auto& srcGroup : mode.MarkerGroups)
         {
-            MarkerGroup group;
+            MarkerGroup group{};
+
             group.NameId = srcGroup.Name;
             group.Markers.reserve(srcGroup.Markers.size());
 
             for (const auto& srcMarker : srcGroup.Markers)
             {
-                Marker marker;
+                Marker marker{};
+
                 marker.NodeIndex = srcMarker.NodeIndex;
                 marker.Flags = srcMarker.Flags;
                 marker.Translation = this->MakeVec3(srcMarker.Translation);
@@ -48,13 +52,14 @@ namespace Resolved::Definitions::System
         }
     }
 
-    auto ModeBuilder::BuildNodes(const ModeObject& mode, ResolvedMode& out) -> void
+    auto ModeBuilder::BuildNodes(const ModeObject& mode, Mode& out) -> void
     {
         out.Nodes.reserve(mode.Nodes.size());
 
         for (const auto& src : mode.Nodes)
         {
-            Node node;
+            Node node{};
+
             node.Name = src.Name;
             node.ParentIndex = src.ParentNodeIndex;
             node.FirstChildIndex = src.FirstChildNodeIndex;
@@ -67,12 +72,12 @@ namespace Resolved::Definitions::System
         }
     }
 
-    auto ModeBuilder::BuildBounds(const ModeObject& mode, ResolvedMode& out) -> void
+    auto ModeBuilder::BuildBounds(const ModeObject& mode, Mode& out) -> void
     {
-        Vec3 min{ std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() };
-        Vec3 max{ -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() };
+        Vec3 min{ k_Max, k_Max, k_Max };
+        Vec3 max{ -k_Max, -k_Max, -k_Max };
 
-        bool found = false;
+        bool found{};
 
         for (const auto& ci : mode.CompressionInfo)
         {

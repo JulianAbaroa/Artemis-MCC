@@ -48,6 +48,11 @@ export namespace Map::Reader::State
             m_IsFrozen.store(true, std::memory_order_release);
         }
 
+        auto IsFrozen() const -> bool
+        {
+            return m_IsFrozen.load(std::memory_order_acquire);
+        }
+
         // Checks if a tag was added, without requiring the store to be frozen.
         // note: Only for the builder, which runs before the freeze.
         auto Contains(const std::string& tagName) const -> bool

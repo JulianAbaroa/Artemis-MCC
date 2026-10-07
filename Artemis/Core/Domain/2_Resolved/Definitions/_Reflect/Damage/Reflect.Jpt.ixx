@@ -6,7 +6,7 @@ import std;
 
 namespace
 {
-    using Jpt = Resolved::Definitions::Type::Jpt::Jpt;
+    using Resolved::Definitions::Type::Jpt::Jpt;
 }
 
 export namespace Common::Reflect::Type
@@ -14,7 +14,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Jpt>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Jpt::TagName),
         };

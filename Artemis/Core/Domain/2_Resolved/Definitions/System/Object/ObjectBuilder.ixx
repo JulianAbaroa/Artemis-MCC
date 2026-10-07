@@ -6,12 +6,13 @@ import std;
 
 export namespace Resolved::Definitions::System
 {
-	class ObjectBuilder
-	{
+    // Builds the data every object family shares.
+    class ObjectBuilder
+    {
     private:
-        using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-        using ResolvedMultiplayerObject = Resolved::Definitions::Type::Object::MultiplayerObject;
-        using ObjectKind = Resolved::Definitions::Type::Object::Kind;
+        using Object = Resolved::Definitions::Type::Object::Object;
+        using MultiplayerObject = Resolved::Definitions::Type::Object::MultiplayerObject;
+        using Kind = Resolved::Definitions::Type::Object::Kind;
         using MultiplayerObjectKind = Resolved::Definitions::Type::Object::MultiplayerObjectKind;
         using TagResolverService = Map::Reader::System::TagResolverService;
 
@@ -20,43 +21,51 @@ export namespace Resolved::Definitions::System
             m_TagResolverService(tagResolverService) {}
         ~ObjectBuilder() = default;
 
+        // param data: Object data of the family. It must have the common object fields.
         template <typename TData, typename TMultiplayerObjectEntry>
         auto Build(const std::string& tagName, const TData& data,
-            const std::vector<TMultiplayerObjectEntry>& multiplayerObject) -> ResolvedObject
+            const std::vector<TMultiplayerObjectEntry>& multiplayerObject) -> Object
         {
-            ResolvedObject out{};
+            Object out{};
+
             out.TagName = tagName;
 
-            // Classification
-            if (data.ObjectType <= static_cast<std::uint16_t>(ObjectKind::EffectScenery))
+            // Classification.
+            if (data.ObjectType <= static_cast<std::uint16_t>(Kind::EffectScenery))
             {
-                out.Kind = static_cast<ObjectKind>(data.ObjectType);
+                out.Kind = static_cast<Kind>(data.ObjectType);
             }
-            else out.Kind = ObjectKind::Invalid;
+            else
+            {
+                out.Kind = Kind::Invalid;
+            }
 
             out.BoundingRadius = data.BoundingRadius;
             out.BoundingOffset = { data.BoundingOffset.X, data.BoundingOffset.Y, data.BoundingOffset.Z };
 
-            // Damage
+            // Damage.
             out.CollisionDamageTagName = m_TagResolverService.ResolveTagReferenceName(data.CollisionDamage);
             out.BrittleCollisionDamageTagName = m_TagResolverService.ResolveTagReferenceName(data.BrittleCollisionDamage);
 
-            // Model
+            // Model.
             out.ModelTagName = m_TagResolverService.ResolveTagReferenceName(data.Model);
 
-            // Multiplayer
+            // Multiplayer.
             out.MultiplayerObjects.reserve(multiplayerObject.size());
             for (const auto& entry : multiplayerObject)
             {
-                ResolvedMultiplayerObject mp{};
+                MultiplayerObject multiplayer{};
 
                 if (entry.Type <= static_cast<std::uint8_t>(MultiplayerObjectKind::CinematicCameraPosition))
                 {
-                    mp.Kind = static_cast<MultiplayerObjectKind>(entry.Type);
+                    multiplayer.Kind = static_cast<MultiplayerObjectKind>(entry.Type);
                 }
-                else mp.Kind = MultiplayerObjectKind::Invalid;
+                else
+                {
+                    multiplayer.Kind = MultiplayerObjectKind::Invalid;
+                }
 
-                out.MultiplayerObjects.push_back(std::move(mp));
+                out.MultiplayerObjects.push_back(std::move(multiplayer));
             }
 
             return out;
@@ -64,5 +73,5 @@ export namespace Resolved::Definitions::System
 
     private:
         TagResolverService& m_TagResolverService;
-	};
+    };
 }

@@ -1,14 +1,11 @@
 module Resolved.Definitions.System;
 import :Jpt;
 
-import std;
-
 namespace Resolved::Definitions::System
 {
-    auto JptBuilder::Build(const JptObject& jpt) -> ResolvedJpt
+    auto JptBuilder::Build(const JptObject& jpt) -> Jpt
     {
-        ResolvedJpt out{};
-        const auto& data = jpt.Data;
+        Jpt out{};
 
         out.TagName = jpt.TagName;
 

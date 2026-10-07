@@ -5,13 +5,14 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Node = Common::Math::Type::Node;
-    using Triangle = Common::Math::Type::Triangle;
+    using Common::Math::Type::Vec3;
+    using Common::Math::Type::Node;
+    using Common::Math::Type::Triangle;
 }
 
 export namespace Resolved::Definitions::Type::Coll
 {
+    // Collision triangles of one region and permutation, in the space of its node.
     struct Mesh
     {
         std::int16_t NodeIndex{ -1 };
@@ -30,6 +31,7 @@ export namespace Resolved::Definitions::Type::Coll
         std::uint32_t Name{};
     };
 
+    // Holds the collision model.
     struct Coll
     {
         std::string TagName{};
@@ -44,7 +46,7 @@ export namespace Resolved::Definitions::Type::Coll
         Vec3 BoundsMin{};
         Vec3 BoundsMax{};
 
-        // TODO: See if this can be used at all
+        // TODO: See if this can be used at all.
         std::vector<Material> Materials{};
     };
 }

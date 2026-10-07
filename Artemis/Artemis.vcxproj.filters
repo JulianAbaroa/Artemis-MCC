@@ -2963,9 +2963,6 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Weap\WeapBuilder.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\System\Object\Weap</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.cpp">
-      <Filter>Core\Domain\2_Resolved\Definitions\State</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\State</Filter>
     </ClCompile>

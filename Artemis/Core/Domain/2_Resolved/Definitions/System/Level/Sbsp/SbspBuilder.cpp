@@ -3,15 +3,15 @@ import :Sbsp;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using SbspData = Map::Tag::Type::Sbsp::Structure::SbspData;
+    using Common::Math::Type::Vec3;
+    using Map::Tag::Type::Sbsp::Structure::SbspData;
 }
 
 namespace Resolved::Definitions::System
 {
-    auto SbspBuilder::Build(const SbspObject& sbsp, std::vector<Triangle> renderGeometry) -> ResolvedSbsp
+    auto SbspBuilder::Build(const SbspObject& sbsp, std::vector<Triangle> renderGeometry) -> Sbsp
     {
-        ResolvedSbsp out{};
+        Sbsp out{};
         out.TagName = sbsp.TagName;
 
         this->BuildBounds(sbsp, out);
@@ -21,14 +21,14 @@ namespace Resolved::Definitions::System
         return out;
     }
 
-    auto SbspBuilder::BuildBounds(const SbspObject& sbsp, ResolvedSbsp& out) -> void
+    auto SbspBuilder::BuildBounds(const SbspObject& sbsp, Sbsp& out) -> void
     {
-        const SbspData& d = sbsp.Data;
+        const SbspData& data = sbsp.Data;
 
-        out.WorldBoundsMin = { d.WorldBoundsX.Min, d.WorldBoundsY.Min, d.WorldBoundsZ.Min };
-        out.WorldBoundsMax = { d.WorldBoundsX.Max, d.WorldBoundsY.Max, d.WorldBoundsZ.Max };
+        out.WorldBoundsMin = { data.WorldBoundsX.Min, data.WorldBoundsY.Min, data.WorldBoundsZ.Min };
+        out.WorldBoundsMax = { data.WorldBoundsX.Max, data.WorldBoundsY.Max, data.WorldBoundsZ.Max };
 
-        out.MoppBoundsMin = std::bit_cast<Vec3>(d.MoppBoundsMinimum);
-        out.MoppBoundsMax = std::bit_cast<Vec3>(d.MoppBoundsMaximum);
+        out.MoppBoundsMin = std::bit_cast<Vec3>(data.MoppBoundsMinimum);
+        out.MoppBoundsMax = std::bit_cast<Vec3>(data.MoppBoundsMaximum);
     }
 }

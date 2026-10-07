@@ -1,17 +1,15 @@
 export module Resolved.Definitions.Type:Mach;
 
 import :Object;
-import std;
 
-namespace
-{
-	using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-}
+import std;
 
 export namespace Resolved::Definitions::Type::Mach
 {
-	struct Mach
-	{
-		ResolvedObject Base{};
-	};
+    // Holds the machine definition.
+    // Waiting for some system to need this.
+    struct Mach
+    {
+        Object::Object Base{};
+    };
 }

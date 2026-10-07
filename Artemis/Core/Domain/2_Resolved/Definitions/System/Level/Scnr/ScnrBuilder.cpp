@@ -1,14 +1,11 @@
 module Resolved.Definitions.System;
 import :Scnr;
 
-import Common.Math.Type;
-import std;
-
 namespace Resolved::Definitions::System
 {
-    auto ScnrBuilder::Build(const ScnrObject& scnr) -> ResolvedScnr
+    auto ScnrBuilder::Build(const ScnrObject& scnr) -> Scnr
     {
-        ResolvedScnr out{};
+        Scnr out{};
 
         out.TagName = scnr.TagName;
 

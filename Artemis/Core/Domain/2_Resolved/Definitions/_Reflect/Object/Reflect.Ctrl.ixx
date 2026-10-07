@@ -8,7 +8,7 @@ import std;
 
 namespace
 {
-    using Ctrl = Resolved::Definitions::Type::Ctrl::Ctrl;
+    using Resolved::Definitions::Type::Ctrl::Ctrl;
 }
 
 export namespace Common::Reflect::Type
@@ -16,7 +16,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Ctrl>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Base", &Ctrl::Base),
         };

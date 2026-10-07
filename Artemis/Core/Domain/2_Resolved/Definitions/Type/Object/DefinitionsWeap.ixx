@@ -1,19 +1,16 @@
 export module Resolved.Definitions.Type:Weap;
 
 import :Object;
-import std;
 
-namespace
-{
-	using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-}
+import std;
 
 export namespace Resolved::Definitions::Type::Weap
 {
-	struct Weap
-	{
-		ResolvedObject Base{};
+    // Holds the weapon definition.
+    struct Weap
+    {
+        Object::Object Base{};
 
-		float AutoaimRange{};
-	};
+        float AutoaimRange{};
+    };
 }

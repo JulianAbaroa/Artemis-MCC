@@ -3,16 +3,19 @@ import :Coll;
 
 namespace
 {
-    using Triangle = Common::Math::Type::Triangle;
-    using Mesh = Resolved::Definitions::Type::Coll::Mesh;
-    using CollMaterial = Resolved::Definitions::Type::Coll::Material;
+    using Common::Math::Type::Triangle;
+    using Resolved::Definitions::Type::Coll::Mesh;
+    using Resolved::Definitions::Type::Coll::Material;
+
+    constexpr float k_Max{ (std::numeric_limits<float>::max)() };
 }
 
 namespace Resolved::Definitions::System
 {
-    auto CollBuilder::Build(const CollObject& coll) -> ResolvedColl
+    auto CollBuilder::Build(const CollObject& coll) -> Coll
     {
-        ResolvedColl out{};
+        Coll out{};
+
         out.TagName = coll.TagName;
 
         this->BuildNodes(coll, out);
@@ -23,13 +26,14 @@ namespace Resolved::Definitions::System
         return out;
     }
 
-    auto CollBuilder::BuildNodes(const CollObject& coll, ResolvedColl& out) -> void
+    auto CollBuilder::BuildNodes(const CollObject& coll, Coll& out) -> void
     {
         out.Nodes.reserve(coll.Nodes.size());
 
         for (const auto& src : coll.Nodes)
         {
-            Node node;
+            Node node{};
+
             node.Name = src.Name;
             node.ParentIndex = src.ParentNodeIndex;
             node.NextSiblingIndex = src.NextSiblingNodeIndex;
@@ -39,7 +43,7 @@ namespace Resolved::Definitions::System
         }
     }
 
-    auto CollBuilder::BuildMeshes(const CollObject& coll, ResolvedColl& out) -> void
+    auto CollBuilder::BuildMeshes(const CollObject& coll, Coll& out) -> void
     {
         for (std::int16_t i = 0;
             i < static_cast<std::int16_t>(coll.Regions.size());
@@ -55,7 +59,8 @@ namespace Resolved::Definitions::System
 
                 for (const auto& bsp : permutation.Bsps)
                 {
-                    Mesh mesh;
+                    Mesh mesh{};
+
                     mesh.NodeIndex = bsp.NodeIndex;
                     mesh.RegionIndex = i;
                     mesh.PermutationIndex = j;
@@ -73,18 +78,19 @@ namespace Resolved::Definitions::System
 
                         const auto& surface = bsp.Surfaces[k];
 
-                        for (std::size_t i = 1; i + 1 < indices.size(); ++i)
+                        for (std::size_t fan = 1; fan + 1 < indices.size(); ++fan)
                         {
-                            Triangle triangle;
+                            Triangle triangle{};
+
 
                             triangle.A = this->MakeVec3(
                                 bsp.Vertices[indices[0]].Point);
 
                             triangle.B = this->MakeVec3(
-                                bsp.Vertices[indices[i]].Point);
+                                bsp.Vertices[indices[fan]].Point);
 
                             triangle.C = this->MakeVec3(
-                                bsp.Vertices[indices[i + 1]].Point);
+                                bsp.Vertices[indices[fan + 1]].Point);
 
                             triangle.SurfaceFlags = surface.Flags;
                             triangle.Material = surface.Material;
@@ -94,13 +100,11 @@ namespace Resolved::Definitions::System
 
                     if (mesh.Triangles.empty()) continue;
 
-                    constexpr float kMax =
-                        (std::numeric_limits<float>::max)();
+                    mesh.LocalMin = { k_Max, k_Max, k_Max };
+                    mesh.LocalMax = { -k_Max, -k_Max, -k_Max };
 
-                    mesh.LocalMin = { kMax,  kMax,  kMax };
-                    mesh.LocalMax = { -kMax, -kMax, -kMax };
-
-                    auto expandBounds = [&](const Vec3& q) {
+                    auto expandBounds = [&](const Vec3& q)
+                    {
                         mesh.LocalMin.X = (std::min)(mesh.LocalMin.X, q.X);
                         mesh.LocalMin.Y = (std::min)(mesh.LocalMin.Y, q.Y);
                         mesh.LocalMin.Z = (std::min)(mesh.LocalMin.Z, q.Z);
@@ -139,25 +143,27 @@ namespace Resolved::Definitions::System
                 // 0x0001 is "default" on the StringTable.
                 if (permutations[i].Name == 0x0001)
                 {
-                    out.DefaultPermutationIndex[region] = (int)i;
+                    out.DefaultPermutationIndex[region] = static_cast<int>(i);
                 }
             }
         }
     }
 
-    auto CollBuilder::BuildMaterials(const CollObject& coll, ResolvedColl& out) -> void
+    auto CollBuilder::BuildMaterials(const CollObject& coll, Coll& out) -> void
     {
         out.Materials.reserve(coll.Materials.size());
 
         for (const auto& material : coll.Materials)
         {
-            CollMaterial m{};
-            m.Name = material.Name;
-            out.Materials.push_back(m);
+            Material resolved{};
+
+            resolved.Name = material.Name;
+
+            out.Materials.push_back(resolved);
         }
     }
 
-    auto CollBuilder::BuildBounds(ResolvedColl& out) -> void
+    auto CollBuilder::BuildBounds(Coll& out) -> void
     {
         if (out.Meshes.empty())
         {
@@ -166,22 +172,19 @@ namespace Resolved::Definitions::System
             return;
         }
 
-        constexpr float kMax = (std::numeric_limits<float>::max)();
-        out.BoundsMin = { kMax,  kMax,  kMax };
-        out.BoundsMax = { -kMax, -kMax, -kMax };
+        out.BoundsMin = { k_Max, k_Max, k_Max };
+        out.BoundsMax = { -k_Max, -k_Max, -k_Max };
 
-        for (const auto& m : out.Meshes)
+        for (const auto& mesh : out.Meshes)
         {
-            out.BoundsMin.X = (std::min)(out.BoundsMin.X, m.LocalMin.X);
-            out.BoundsMin.Y = (std::min)(out.BoundsMin.Y, m.LocalMin.Y);
-            out.BoundsMin.Z = (std::min)(out.BoundsMin.Z, m.LocalMin.Z);
-            out.BoundsMax.X = (std::max)(out.BoundsMax.X, m.LocalMax.X);
-            out.BoundsMax.Y = (std::max)(out.BoundsMax.Y, m.LocalMax.Y);
-            out.BoundsMax.Z = (std::max)(out.BoundsMax.Z, m.LocalMax.Z);
+            out.BoundsMin.X = (std::min)(out.BoundsMin.X, mesh.LocalMin.X);
+            out.BoundsMin.Y = (std::min)(out.BoundsMin.Y, mesh.LocalMin.Y);
+            out.BoundsMin.Z = (std::min)(out.BoundsMin.Z, mesh.LocalMin.Z);
+            out.BoundsMax.X = (std::max)(out.BoundsMax.X, mesh.LocalMax.X);
+            out.BoundsMax.Y = (std::max)(out.BoundsMax.Y, mesh.LocalMax.Y);
+            out.BoundsMax.Z = (std::max)(out.BoundsMax.Z, mesh.LocalMax.Z);
         }
     }
-
-    // --- Helpers ---
 
     auto CollBuilder::MakeVec3(const Map::Reader::Type::Structure::Primitive::Vec3& v) -> Vec3
     {
@@ -192,7 +195,7 @@ namespace Resolved::Definitions::System
         const Coll_Regions_Permutations_BspsObject& bsp,
         std::int32_t surfaceIndex) -> std::vector<std::int32_t>
     {
-        std::vector<std::int32_t> ring;
+        std::vector<std::int32_t> ring{};
 
         const auto& surfaces = bsp.Surfaces;
         const auto& edges = bsp.Edges;
@@ -211,10 +214,10 @@ namespace Resolved::Definitions::System
             return ring;
         }
 
-        std::int32_t i = firstEdge;
+        std::int32_t i{ firstEdge };
 
         const std::size_t maxSteps = edges.size() + 1;
-        std::size_t steps = 0;
+        std::size_t steps{};
 
         do
         {
@@ -226,8 +229,8 @@ namespace Resolved::Definitions::System
 
             const auto& edge = edges[i];
 
-            std::int32_t vertex;
-            std::int32_t next;
+            std::int32_t vertex{};
+            std::int32_t next{};
 
             if (edge.LeftSurface == surfaceIndex)
             {

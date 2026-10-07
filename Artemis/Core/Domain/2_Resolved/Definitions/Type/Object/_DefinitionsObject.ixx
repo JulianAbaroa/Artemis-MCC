@@ -5,11 +5,12 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec3;
 }
 
 export namespace Resolved::Definitions::Type::Object
 {
+    // Object family, same ids as the engine object type.
     enum class Kind : std::uint16_t
     {
         Biped = 0x0000,
@@ -64,11 +65,14 @@ export namespace Resolved::Definitions::Type::Object
         Invalid = 0xFF,
     };
 
+    // Role of an object in a multiplayer game.
+    // note: Planned for semantization.
     struct MultiplayerObject
     {
         MultiplayerObjectKind Kind{ MultiplayerObjectKind::Invalid };
     };
 
+    // Data shared by every object family.
     struct Object
     {
         std::string TagName{};
@@ -86,10 +90,11 @@ export namespace Resolved::Definitions::Type::Object
         std::string ModelTagName{};
 
         // Multiplayer
-        std::vector<MultiplayerObject> MultiplayerObjects;
-
+        std::vector<MultiplayerObject> MultiplayerObjects{};
     };
 
+    // Weapon or cause a damage is reported as.
+    // note: Planned for semantization.
     enum class DamageReportingType : std::uint8_t
     {
         GuardiansUnknown = 0x00,

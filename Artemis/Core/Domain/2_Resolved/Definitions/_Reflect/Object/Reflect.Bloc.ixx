@@ -8,7 +8,7 @@ import std;
 
 namespace
 {
-    using Bloc = Resolved::Definitions::Type::Bloc::Bloc;
+    using Resolved::Definitions::Type::Bloc::Bloc;
 }
 
 export namespace Common::Reflect::Type
@@ -16,7 +16,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Bloc>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Base", &Bloc::Base),
         };

@@ -5,12 +5,13 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Triangle = Common::Math::Type::Triangle;
+    using Common::Math::Type::Vec3;
+    using Common::Math::Type::Triangle;
 }
 
 export namespace Resolved::Definitions::Type::Sbsp
 {
+    // Holds the bounds and the render triangles of a structure bsp.
     struct Sbsp
     {
         std::string TagName{};

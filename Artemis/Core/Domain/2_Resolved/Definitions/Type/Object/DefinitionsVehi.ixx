@@ -1,14 +1,14 @@
 export module Resolved.Definitions.Type:Vehi;
 
 import :Object;
+
 import Common.Math.Type;
 import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Vec4 = Common::Math::Type::Vec4;
-    using ResolvedObject = Resolved::Definitions::Type::Object::Object;
+    using Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec4;
 }
 
 export namespace Resolved::Definitions::Type::Vehi
@@ -25,21 +25,23 @@ export namespace Resolved::Definitions::Type::Vehi
         Invalid = 0xFF,
     };
 
+    // Places where a unit can sit in a vehicle.
+    // note: Planned for semantization. No builder fills it yet.
     struct Seat
     {
-        std::uint32_t SeatMarkerNameId{ 0 };
+        std::uint32_t SeatMarkerNameId{};
         std::int8_t NodeIndex{};
         SeatKind Kind{ SeatKind::Invalid };
         Vec3 LocalTranslation{};
         Vec4 LocalRotation{};
-        float EntryRadius{ 0.0f };
+        float EntryRadius{};
     };
 
+    // Holds the vehicle definition.
     struct Vehi
     {
-        ResolvedObject Base{};
+        Object::Object Base{};
 
-        std::string TagName{};
         std::vector<Seat> Seats{};
     };
 }

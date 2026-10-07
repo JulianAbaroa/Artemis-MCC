@@ -7,10 +7,10 @@ import std;
 
 namespace
 {
-    using Node = Common::Math::Type::Node;
-    using Mesh = Resolved::Definitions::Type::Coll::Mesh;
-    using Material = Resolved::Definitions::Type::Coll::Material;
-    using Coll = Resolved::Definitions::Type::Coll::Coll;
+    using Common::Math::Type::Node;
+    using Resolved::Definitions::Type::Coll::Mesh;
+    using Resolved::Definitions::Type::Coll::Material;
+    using Resolved::Definitions::Type::Coll::Coll;
 }
 
 export namespace Common::Reflect::Type
@@ -18,7 +18,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Node>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Name", &Node::Name),
             MakeField("ParentIndex", &Node::ParentIndex),
@@ -30,7 +30,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Mesh>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("NodeIndex", &Mesh::NodeIndex),
             MakeField("RegionIndex", &Mesh::RegionIndex),
@@ -44,7 +44,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Material>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple {
             MakeField("Name", &Material::Name),
         };
@@ -53,7 +53,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Coll>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Coll::TagName),
             MakeField("Nodes", &Coll::Nodes),

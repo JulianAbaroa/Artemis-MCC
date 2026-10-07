@@ -1,13 +1,19 @@
 module Resolved.Definitions.System;
 import :Hlmt;
 
-import std;
+import Resolved.Definitions.Type;
 
 namespace
 {
-    using DamageTransfer = Resolved::Definitions::Type::Hlmt::DamageTransfer;
-    using ModelTarget = Resolved::Definitions::Type::Hlmt::ModelTarget;
+    using Resolved::Definitions::Type::Hlmt::DamageTransfer;
+    using Resolved::Definitions::Type::Hlmt::ModelTarget;
+    using Resolved::Definitions::Type::Hlmt::RegionTransition;
+    using Resolved::Definitions::Type::Hlmt::Variant;
+    using Resolved::Definitions::Type::Hlmt::VariantPermutation;
+    using Resolved::Definitions::Type::Hlmt::VariantRegion;
+    using Resolved::Definitions::Type::Hlmt::VariantState;
 
+    // Copies the fields of a model target entry.
     template <typename TEntry>
     auto MakeModelTarget(const TEntry& src) -> ModelTarget
     {
@@ -24,10 +30,11 @@ namespace
         return out;
     }
 
+    // Copies the fields of every damage transfer entry.
     template <typename TEntry>
     auto MakeDamageTransfers(const std::vector<TEntry>& src) -> std::vector<DamageTransfer>
     {
-        std::vector<DamageTransfer> out;
+        std::vector<DamageTransfer> out{};
         out.reserve(src.size());
 
         for (const auto& entry : src)
@@ -43,13 +50,62 @@ namespace
 
         return out;
     }
+
+    // Copies the region transitions of an instant response.
+    template <typename TEntry>
+    auto MakeRegionTransitions(const std::vector<TEntry>& src) -> std::vector<RegionTransition>
+    {
+        std::vector<RegionTransition> out{};
+        out.reserve(src.size());
+
+        for (const auto& entry : src)
+        {
+            out.push_back({ .Region = entry.Region, .NewState = entry.NewState });
+        }
+
+        return out;
+    }
+
+    // Copies the regions of every variant, down to the permutation each damage state shows.
+    template <typename TEntry>
+    auto MakeVariants(const std::vector<TEntry>& src) -> std::vector<Variant>
+    {
+        std::vector<Variant> out{};
+        out.reserve(src.size());
+
+        for (const auto& srcVariant : src)
+        {
+            Variant& variant = out.emplace_back();
+
+            for (const auto& srcRegion : srcVariant.Regions)
+            {
+                VariantRegion& region = variant.Regions.emplace_back();
+
+                region.RegionName = srcRegion.RegionName;
+
+                for (const auto& srcPermutation : srcRegion.Permutations)
+                {
+                    VariantPermutation& permutation = region.Permutations.emplace_back();
+
+                    for (const auto& srcState : srcPermutation.States)
+                    {
+                        permutation.States.push_back({
+                            .PermutationName = srcState.PermutationName,
+                            .State = srcState.State });
+                    }
+                }
+            }
+        }
+
+        return out;
+    }
 }
 
 namespace Resolved::Definitions::System
 {
-    auto HlmtBuilder::Build(const HlmtObject& hlmt) -> ResolvedHlmt
+    auto HlmtBuilder::Build(const HlmtObject& hlmt) -> Hlmt
     {
-        ResolvedHlmt out{};
+        Hlmt out{};
 
         out.TagName = hlmt.TagName;
 
@@ -82,7 +138,9 @@ namespace Resolved::Definitions::System
             for (const auto& ir : ds.InstantResponses)
             {
                 section.InstantResponses.push_back(InstantResponse{
-                    .Flags = ir.Flags});
+                    .Flags = ir.Flags,
+                    .DamageThreshold = ir.DamageThreshold,
+                    .RegionTransitions = MakeRegionTransitions(ir.RegionTransitions) });
             }
 
             section.SectionDamageTransfers = MakeDamageTransfers(ds.SectionDamageTransfers);
@@ -102,6 +160,8 @@ namespace Resolved::Definitions::System
                 .CollisionRegionIndex = region.CollisionRegionIndex,
                 .PhysicsRegionIndex = region.PhysicsRegionIndex });
         }
+
+        out.Variants = MakeVariants(hlmt.Variants);
 
         return out;
     }

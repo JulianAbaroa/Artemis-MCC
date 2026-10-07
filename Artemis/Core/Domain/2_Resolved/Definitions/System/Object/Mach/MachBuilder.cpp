@@ -1,13 +1,11 @@
 module Resolved.Definitions.System;
 import :Mach;
 
-import std;
-
 namespace Resolved::Definitions::System
 {
-    auto MachBuilder::Build(const MachObject& mach) -> ResolvedMach
+    auto MachBuilder::Build(const MachObject& mach) -> Mach
     {
-        ResolvedMach out{};
+        Mach out{};
 
         out.Base = m_ObjectBuilder.Build(mach.TagName, mach.Data, mach.MultiplayerObject);
 

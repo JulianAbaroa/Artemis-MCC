@@ -1,19 +1,15 @@
 export module Resolved.Definitions.Type:Bipd;
 
 import :Object;
-import Common.Math.Type;
-import std;
 
-namespace
-{
-    using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-}
+import std;
 
 export namespace Resolved::Definitions::Type::Bipd
 {
-	// Waiting for some system to need this
-	struct Bipd
-	{
-		ResolvedObject Base{};
-	};
+    // Holds the biped definition.
+    // Waiting for some system to need this.
+    struct Bipd
+    {
+        Object::Object Base{};
+    };
 }

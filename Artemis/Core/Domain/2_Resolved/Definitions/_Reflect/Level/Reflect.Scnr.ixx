@@ -6,7 +6,7 @@ import std;
 
 namespace
 {
-    using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
+    using Resolved::Definitions::Type::Scnr::Scnr;
 }
 
 export namespace Common::Reflect::Type
@@ -14,7 +14,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Scnr>
     {
-        static constexpr bool HasFields = true;
+        static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Scnr::TagName),
         };

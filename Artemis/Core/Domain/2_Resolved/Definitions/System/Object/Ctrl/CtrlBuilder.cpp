@@ -3,9 +3,9 @@ import :Ctrl;
 
 namespace Resolved::Definitions::System
 {
-    auto CtrlBuilder::Build(const CtrlObject& ctrl) -> ResolvedCtrl
+    auto CtrlBuilder::Build(const CtrlObject& ctrl) -> Ctrl
     {
-        ResolvedCtrl out{};
+        Ctrl out{};
 
         out.Base = m_ObjectBuilder.Build(ctrl.TagName, ctrl.Data, ctrl.MultiplayerObject);
 

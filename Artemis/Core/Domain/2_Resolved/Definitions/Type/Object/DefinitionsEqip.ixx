@@ -1,17 +1,15 @@
 export module Resolved.Definitions.Type:Eqip;
 
 import :Object;
-import std;
 
-namespace
-{
-    using ResolvedObject = Resolved::Definitions::Type::Object::Object;
-}
+import std;
 
 export namespace Resolved::Definitions::Type::Eqip
 {
+    // Holds the equipment definition.
+    // Waiting for some system to need this.
     struct Eqip
     {
-        ResolvedObject Base{};
+        Object::Object Base{};
     };
 }

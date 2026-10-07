@@ -8,17 +8,17 @@ import std;
 
 namespace
 {
-	using Vehi = Resolved::Definitions::Type::Vehi::Vehi;
+    using Resolved::Definitions::Type::Vehi::Vehi;
 }
 
 export namespace Common::Reflect::Type
 {
-	template <>
-	struct Fields<Vehi>
-	{
-		static constexpr bool HasFields = true;
-		static constexpr auto Value = std::tuple{
-			MakeField("Base", &Vehi::Base),
-		};
-	};
+    template <>
+    struct Fields<Vehi>
+    {
+        static constexpr bool HasFields{ true };
+        static constexpr auto Value = std::tuple{
+            MakeField("Base", &Vehi::Base),
+        };
+    };
 }

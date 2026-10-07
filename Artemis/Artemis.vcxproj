@@ -194,7 +194,6 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Map.TagCatalog.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Resolved.Definitions.Reflect.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Resolved.Definitions.Type.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.ixx" />
