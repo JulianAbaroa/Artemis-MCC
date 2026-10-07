@@ -10,6 +10,8 @@ import Common.Geometry.System;
 namespace
 {
 	using RaycastHit = Egocentric::Raycast::Type::RaycastHit;
+	using CachedPart = Egocentric::Raycast::Type::CachedPart;
+	using CollidablePart = Environment::Collidable::Type::CollidablePart;
 	using HitKind = Egocentric::Raycast::Type::HitKind;
 
 	using Egocentric::Raycast::Type::Constant::k_FallbackAimRange;
@@ -36,6 +38,127 @@ namespace
 			{ -k_InvSqrt3, -k_InvSqrt3,  k_InvSqrt3 },
 			{ -k_InvSqrt3, -k_InvSqrt3, -k_InvSqrt3 },
 	} };
+
+	// Padding of the boxes, so rays that graze a triangle edge are not lost to rounding.
+	constexpr float k_BoxPadding{ 1.0e-3f };
+
+	// Prepares the parts of an object to be hit by rays.
+	// note: Computed once per tick for each object, instead of posing every triangle.
+	auto PrepareParts(const std::vector<CollidablePart>& parts) -> std::vector<CachedPart>
+	{
+		std::vector<CachedPart> out{};
+		out.reserve(parts.size());
+
+		for (const CollidablePart& part : parts)
+		{
+			if (!part.Source || part.Source->Triangles.empty()) continue;
+
+			const auto& m = part.Transform;
+
+			const float a = m[0], b = m[1], c = m[2];
+			const float d = m[4], e = m[5], f = m[6];
+			const float g = m[8], h = m[9], i = m[10];
+
+			const float det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+			if (std::fabs(det) < 1.0e-8f) continue;
+			const float inv = 1.0f / det;
+
+			const float i00 = (e * i - f * h) * inv;
+			const float i01 = (c * h - b * i) * inv;
+			const float i02 = (b * f - c * e) * inv;
+			const float i10 = (f * g - d * i) * inv;
+			const float i11 = (a * i - c * g) * inv;
+			const float i12 = (c * d - a * f) * inv;
+			const float i20 = (d * h - e * g) * inv;
+			const float i21 = (b * g - a * h) * inv;
+			const float i22 = (a * e - b * d) * inv;
+
+			CachedPart cached{};
+			cached.Source = part.Source;
+			cached.ToLocal = {
+				i00, i01, i02, -(i00 * m[3] + i01 * m[7] + i02 * m[11]),
+				i10, i11, i12, -(i10 * m[3] + i11 * m[7] + i12 * m[11]),
+				i20, i21, i22, -(i20 * m[3] + i21 * m[7] + i22 * m[11])
+			};
+
+			// The box is posed through its eight corners, so the sphere holds for any transform.
+			const auto& lo = part.Source->LocalMin;
+			const auto& hi = part.Source->LocalMax;
+			auto toWorld = [&](float x, float y, float z) -> Common::Math::Type::Vec3 {
+				return {
+					m[0] * x + m[1] * y + m[2] * z + m[3],
+					m[4] * x + m[5] * y + m[6] * z + m[7],
+					m[8] * x + m[9] * y + m[10] * z + m[11]
+				};
+			};
+
+			cached.Center = toWorld((lo.X + hi.X) * 0.5f, (lo.Y + hi.Y) * 0.5f, (lo.Z + hi.Z) * 0.5f);
+
+			float radiusSq{};
+			for (const float x : { lo.X, hi.X })
+			{
+				for (const float y : { lo.Y, hi.Y })
+				{
+					for (const float z : { lo.Z, hi.Z })
+					{
+						const auto corner = toWorld(x, y, z);
+						const float dx = corner.X - cached.Center.X;
+						const float dy = corner.Y - cached.Center.Y;
+						const float dz = corner.Z - cached.Center.Z;
+						radiusSq = (std::max)(radiusSq, dx * dx + dy * dy + dz * dz);
+					}
+				}
+			}
+
+			cached.Radius = std::sqrt(radiusSq);
+			out.push_back(cached);
+		}
+
+		return out;
+	}
+
+	// Whether a ray passes within a radius of a point, before travelling limit.
+	auto RayNearPoint(const Common::Math::Type::Vec3& origin, const Common::Math::Type::Vec3& direction,
+		float limit, const Common::Math::Type::Vec3& center, float radius) -> bool
+	{
+		const float px = center.X - origin.X;
+		const float py = center.Y - origin.Y;
+		const float pz = center.Z - origin.Z;
+
+		float along = px * direction.X + py * direction.Y + pz * direction.Z;
+		along = (std::max)(0.0f, (std::min)(along, limit));
+
+		const float cx = px - direction.X * along;
+		const float cy = py - direction.Y * along;
+		const float cz = pz - direction.Z * along;
+
+		return cx * cx + cy * cy + cz * cz <= radius * radius;
+	}
+
+	// Whether a ray crosses a box before travelling tMax.
+	auto RayHitsBox(const Common::Math::Type::Vec3& origin, const Common::Math::Type::Vec3& direction,
+		const Common::Math::Type::Vec3& boxMin, const Common::Math::Type::Vec3& boxMax, float tMax) -> bool
+	{
+		const std::array<float, 3> o{ origin.X, origin.Y, origin.Z };
+		const std::array<float, 3> dir{ direction.X, direction.Y, direction.Z };
+		const std::array<float, 3> lo{ boxMin.X - k_BoxPadding, boxMin.Y - k_BoxPadding, boxMin.Z - k_BoxPadding };
+		const std::array<float, 3> hi{ boxMax.X + k_BoxPadding, boxMax.Y + k_BoxPadding, boxMax.Z + k_BoxPadding };
+
+		float t0{ 0.0f };
+		float t1{ tMax };
+		for (int axis = 0; axis < 3; ++axis)
+		{
+			const float inverse = std::fabs(dir[axis]) < 1.0e-20f ? 1.0e20f : 1.0f / dir[axis];
+			float ta = (lo[axis] - o[axis]) * inverse;
+			float tb = (hi[axis] - o[axis]) * inverse;
+			if (ta > tb) std::swap(ta, tb);
+			t0 = (std::max)(t0, ta);
+			t1 = (std::min)(t1, tb);
+			if (t0 > t1) return false;
+		}
+
+		return true;
+	}
 }
 
 namespace Egocentric::Raycast::System
@@ -115,7 +238,7 @@ namespace Egocentric::Raycast::System
 		auto weaponIt = objectTablePtr->find(weaponHandle);
 		if (weaponIt == objectTablePtr->end()) return k_FallbackAimRange;
 
-		const ResolvedWeap* weap = m_DefinitionsStore.GetResolvedWeap(weaponIt->second.TagName);
+		const ResolvedWeap* weap = m_DefinitionsStore.Weap.Get(weaponIt->second.TagName);
 		if (!weap || weap->AutoaimRange <= 0.0f) return k_FallbackAimRange;
 
 		return weap->AutoaimRange;
@@ -202,23 +325,22 @@ namespace Egocentric::Raycast::System
 		{
 			if (selfExclusion.contains(handle)) continue;
 
-			auto collidable = m_CollidableService.CollectMeshFor(handle);
+			auto collidable = m_CollidableService.CollectPartsFor(handle);
 			if (!collidable) continue;
 
-			float boundingRadiusSq = 0.0f;
-			for (const Triangle& triangle : collidable->WorldMesh.Triangles)
+			CachedDynamic entry{};
+			entry.Parts = PrepareParts(collidable->Parts);
+
+			float boundingRadius{};
+			for (const CachedPart& part : entry.Parts)
 			{
-				for (const Vec3& vertex : { triangle.A, triangle.B, triangle.C })
-				{
-					const float dx = vertex.X - collidable->Position.X;
-					const float dy = vertex.Y - collidable->Position.Y;
-					const float dz = vertex.Z - collidable->Position.Z;
-					boundingRadiusSq = (std::max)(boundingRadiusSq, dx * dx + dy * dy + dz * dz);
-				}
+				const float dx = part.Center.X - collidable->Position.X;
+				const float dy = part.Center.Y - collidable->Position.Y;
+				const float dz = part.Center.Z - collidable->Position.Z;
+				boundingRadius = (std::max)(boundingRadius, std::sqrt(dx * dx + dy * dy + dz * dz) + part.Radius);
 			}
 
-			CachedDynamic entry{};
-			entry.BoundingRadius = std::sqrt(boundingRadiusSq) + k_DynamicRejectMargin;
+			entry.BoundingRadius = boundingRadius + k_DynamicRejectMargin;
 			entry.Data = std::move(*collidable);
 
 			cache.emplace(handle, std::move(entry));
@@ -235,7 +357,7 @@ namespace Egocentric::Raycast::System
 		best.Direction = direction;
 		best.MaxDistance = maxDistance;
 
-		const auto staticHit = m_SbspRaycaster.Cast(m_DefinitionsStore, origin, direction, maxDistance);
+		const auto staticHit = m_Raycaster.Cast(origin, direction, maxDistance);
 		if (staticHit.IsHit)
 		{
 			best.Hit = true;
@@ -244,48 +366,58 @@ namespace Egocentric::Raycast::System
 			best.Point = staticHit.Point;
 		}
 
-		const float dynamicSearchRadius = best.Hit ? best.Distance : maxDistance;
-
 		for (const auto& [handle, entry] : dynamicCache)
 		{
 			const auto& collidable = entry.Data;
 
-			const float px = collidable.Position.X - origin.X;
-			const float py = collidable.Position.Y - origin.Y;
-			const float pz = collidable.Position.Z - origin.Z;
+			float limit = best.Hit ? best.Distance : maxDistance;
 
-			float tAlong = px * direction.X + py * direction.Y + pz * direction.Z;
-			tAlong = (std::max)(0.0f, (std::min)(tAlong, dynamicSearchRadius));
+			if (!RayNearPoint(origin, direction, limit, collidable.Position, entry.BoundingRadius)) continue;
 
-			const float cx = px - direction.X * tAlong;
-			const float cy = py - direction.Y * tAlong;
-			const float cz = pz - direction.Z * tAlong;
-
-			const float rejectRadius = entry.BoundingRadius;
-			if (cx * cx + cy * cy + cz * cz > rejectRadius * rejectRadius) continue;
-
-			for (const Triangle& triangle : collidable.WorldMesh.Triangles)
+			for (const CachedPart& part : entry.Parts)
 			{
-				float distance = 0.0f;
-				const float currentBest = best.Hit ? best.Distance : maxDistance;
+				limit = best.Hit ? best.Distance : maxDistance;
 
-				if (!Common::Geometry::System::RayIntersectsTriangle(
-					origin, direction, triangle, currentBest, distance))
-				{
-					continue;
-				}
+				if (!RayNearPoint(origin, direction, limit, part.Center, part.Radius)) continue;
 
-				if (!best.Hit || distance < best.Distance)
+				const auto& m = part.ToLocal;
+				const Vec3 localOrigin{
+					m[0] * origin.X + m[1] * origin.Y + m[2] * origin.Z + m[3],
+					m[4] * origin.X + m[5] * origin.Y + m[6] * origin.Z + m[7],
+					m[8] * origin.X + m[9] * origin.Y + m[10] * origin.Z + m[11]
+				};
+				const Vec3 localDirection{
+					m[0] * direction.X + m[1] * direction.Y + m[2] * direction.Z,
+					m[4] * direction.X + m[5] * direction.Y + m[6] * direction.Z,
+					m[8] * direction.X + m[9] * direction.Y + m[10] * direction.Z
+				};
+
+				if (!RayHitsBox(localOrigin, localDirection, part.Source->LocalMin, part.Source->LocalMax, limit)) continue;
+
+				for (const Triangle& triangle : part.Source->Triangles)
 				{
-					best.Hit = true;
-					best.Kind = HitKind::Dynamic;
-					best.Distance = distance;
-					best.ObjectHandle = handle;
-					best.Point = {
-						origin.X + direction.X * distance,
-						origin.Y + direction.Y * distance,
-						origin.Z + direction.Z * distance
-					};
+					float distance = 0.0f;
+					const float currentBest = best.Hit ? best.Distance : maxDistance;
+
+					if (!Common::Geometry::System::RayIntersectsTriangle(
+						localOrigin, localDirection, triangle, currentBest, distance))
+					{
+						continue;
+					}
+
+					if (!best.Hit || distance < best.Distance)
+					{
+						best.Hit = true;
+						best.Kind = HitKind::Dynamic;
+						best.Distance = distance;
+						best.ObjectHandle = handle;
+						best.RegionIndex = part.Source->RegionIndex;
+						best.Point = {
+							origin.X + direction.X * distance,
+							origin.Y + direction.Y * distance,
+							origin.Z + direction.Z * distance
+						};
+					}
 				}
 			}
 		}

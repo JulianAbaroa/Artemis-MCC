@@ -34,14 +34,14 @@ namespace Environment::Collidable::System
         {
             if (object.Address == 0) continue;
 
-            instances.push_back(this->BuildInstance(object, objectTable));
+            instances.push_back(this->BuildInstance(object, objectTable, true));
         }
 
         m_CollidableStore.Publish(std::move(instances));
     }
 
     auto CollidableService::BuildInstance(const AliveObject& object,
-        const ObjectTable& objectTable) -> Collidable
+        const ObjectTable& objectTable, bool buildWorldMesh) -> Collidable
     {
         Collidable instance{};
         instance.Handle = object.Handle;
@@ -51,7 +51,7 @@ namespace Environment::Collidable::System
         instance.Up = object.Up;
 
         Context ctx{};
-        ctx.Coll = m_WorldStore.GetResolvedCollForObject(object.TagName, m_DefinitionsStore);
+        ctx.Coll = m_WorldStore.GetCollForObject(object.TagName, m_DefinitionsStore);
 
         const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
         const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
@@ -61,7 +61,7 @@ namespace Environment::Collidable::System
         if (ctx.Coll)
         {
             const ResolvedRegionStates* states =
-                m_WorldStore.GetResolvedRegionStates(object.TagName);
+                m_WorldStore.GetRegionStates(object.TagName);
 
             if (states && object.HlmtVariant < states->Variants.size())
             {
@@ -72,13 +72,17 @@ namespace Environment::Collidable::System
             }
         }
 
-        instance.WorldMesh = this->CollectMesh(instance, ctx, bones, damage);
+        if (buildWorldMesh)
+        {
+            instance.WorldMesh = this->CollectMesh(instance, ctx, bones, damage);
+        }
+
         instance.Parts = this->CollectParts(instance, ctx, bones, damage);
 
         return instance;
     }
 
-    auto CollidableService::CollectMeshFor(std::uint32_t handle) -> std::optional<Collidable>
+    auto CollidableService::CollectPartsFor(std::uint32_t handle) -> std::optional<Collidable>
     {
         auto objectTablePtr = m_ObjectTableStore.Acquire();
         if (!objectTablePtr) return std::nullopt;
@@ -86,7 +90,7 @@ namespace Environment::Collidable::System
         auto it = objectTablePtr->find(handle);
         if (it == objectTablePtr->end() || it->second.Address == 0) return std::nullopt;
 
-        return this->BuildInstance(it->second, *objectTablePtr);
+        return this->BuildInstance(it->second, *objectTablePtr, false);
     }
 
     auto CollidableService::QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>

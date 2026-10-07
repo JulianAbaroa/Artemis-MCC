@@ -46,7 +46,7 @@ export namespace Egocentric::Raycast::System
 		using PlayerTableStore = Tables::Player::State::PlayerTableStore;
 		using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-		using SbspRaycaster = Resolved::World::System::SbspRaycaster;
+		using Raycaster = Resolved::World::System::Raycaster;
 		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
 		using CollidableService = Environment::Collidable::System::CollidableService;
 		using SelfStore = Egocentric::Self::State::SelfStore;
@@ -55,12 +55,12 @@ export namespace Egocentric::Raycast::System
 	public:
 		RaycastService(LogsService& logsService, PlayerTableStore& playerStore,
 			ObjectTableStore& objectStore, DefinitionsStore& definitionsStore,
-			SbspRaycaster& sbspRaycaster, SelfStore& selfStore,
+			Raycaster& raycaster, SelfStore& selfStore,
 			CollidableService& collidableService, PlayerGraphStore& playerGraphStore,
 			RaycastStore& raycastStore) :
 			m_LogsService(logsService), m_PlayerStore(playerStore),
 			m_ObjectStore(objectStore), m_DefinitionsStore(definitionsStore),
-			m_SbspRaycaster(sbspRaycaster), m_SelfStore(selfStore),
+			m_Raycaster(raycaster), m_SelfStore(selfStore),
 			m_CollidableService(collidableService), m_PlayerGraphStore(playerGraphStore),
 			m_RaycastStore(raycastStore) {
 		}
@@ -75,7 +75,7 @@ export namespace Egocentric::Raycast::System
 		PlayerTableStore& m_PlayerStore;
 		ObjectTableStore& m_ObjectStore;
 		DefinitionsStore& m_DefinitionsStore;
-		SbspRaycaster& m_SbspRaycaster;
+		Raycaster& m_Raycaster;
 		SelfStore& m_SelfStore;
 		CollidableService& m_CollidableService;
 		PlayerGraphStore& m_PlayerGraphStore;

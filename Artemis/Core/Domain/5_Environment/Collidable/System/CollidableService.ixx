@@ -60,7 +60,9 @@ export namespace Environment::Collidable::System
 
         auto Update(bool isDebugViewActive) -> void;
 
-        auto CollectMeshFor(std::uint32_t handle) -> std::optional<Collidable>;
+        // Builds one object with its parts only.
+        // note: Each part is a collision mesh with the transform that places it in the world.
+        auto CollectPartsFor(std::uint32_t handle) -> std::optional<Collidable>;
 
         auto QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>;
 
@@ -81,7 +83,7 @@ export namespace Environment::Collidable::System
             const ObjectTable& objects) -> void;
 
         auto BuildInstance(const AliveObject& object,
-            const ObjectTable& objectTable) -> Collidable;
+            const ObjectTable& objectTable, bool buildWorldMesh) -> Collidable;
 
         auto CollectMesh(const Collidable& instance, const Context& ctx,
             const BoneMatrixTable* boneMatrixTable,
