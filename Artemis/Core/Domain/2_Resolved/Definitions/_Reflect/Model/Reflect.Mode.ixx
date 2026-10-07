@@ -6,11 +6,10 @@ import std;
 
 namespace
 {
-    namespace M = Resolved::Definitions::Type::Mode;
-    using Marker = M::Marker;
-    using MarkerGroup = M::MarkerGroup;
-    using Bounds = M::Bounds;
-    using Mode = M::Mode;
+    using Marker = Resolved::Definitions::Type::Mode::Marker;
+    using MarkerGroup = Resolved::Definitions::Type::Mode::MarkerGroup;
+    using Bounds = Resolved::Definitions::Type::Mode::Bounds;
+    using Mode = Resolved::Definitions::Type::Mode::Mode;
 }
 
 export namespace Common::Reflect::Type
