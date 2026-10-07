@@ -47,7 +47,8 @@ export namespace Viewer::Scene::System
 
         auto ClearSelection() -> void;
 
-        // Drops the palette and the selection boxes. Call it when the map changes.
+        // Drops the palette and the selection boxes.
+        // note: MapService calls it when it releases the map.
         auto Reset() -> void;
 
         auto GetViewProjection() const -> const Matrix&;
