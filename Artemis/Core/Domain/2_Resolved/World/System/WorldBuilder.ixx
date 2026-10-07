@@ -13,7 +13,7 @@ import std;
 export namespace Resolved::World::System
 {
     // Builds the world from the definitions: which model and collision each object has, how its
-    // collision permutations change, how its collision and render models relate, and the raycast grid.
+    // collision permutations change, how its collision and render models relate, and the hierarchy that rays are cast against.
     class WorldBuilder
     {
     private:

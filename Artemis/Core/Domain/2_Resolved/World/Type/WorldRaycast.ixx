@@ -20,6 +20,7 @@ export namespace Resolved::World::Type::Raycast
         std::int32_t Count{};
     };
 
+    // Closest triangle a ray hits.
     struct Hit
     {
         bool IsHit{};

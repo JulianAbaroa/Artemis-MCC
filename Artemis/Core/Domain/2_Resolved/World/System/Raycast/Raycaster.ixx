@@ -39,6 +39,7 @@ export namespace Resolved::World::System
         std::vector<BvhNode> m_Nodes{};
         std::vector<Triangle> m_Triangles{};
 
+        // Builds the hierarchy over the render triangles of the sbsps.
         auto BuildBvh(const std::vector<const Sbsp*>& sbsps) -> void;
     };
 }

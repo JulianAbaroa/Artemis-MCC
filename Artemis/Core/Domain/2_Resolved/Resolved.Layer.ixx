@@ -13,7 +13,7 @@ import Resolved.Vitality.System;
 export namespace Resolved
 {
     // Resolves the static data of the map: the definitions of its tags, the world built from them
-    // (links, region states and raycast grid), and the vitality layouts of its models.
+    // (links, region states and the raycast hierarchy), and the vitality layouts of its models.
     class Layer
     {
     private:

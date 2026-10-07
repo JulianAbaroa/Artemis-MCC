@@ -8,6 +8,7 @@ import :Raycast;
 import Common.Geometry.System;
 import Common.Math.Type;
 import Resolved.World.Type;
+import std;
 
 namespace
 {
@@ -44,6 +45,7 @@ namespace
         std::array<float, 3> Center{};
     };
 
+    // Box that grows to hold the points and boxes it is given.
     struct Bounds
     {
         std::array<float, 3> Min{ k_Max, k_Max, k_Max };
