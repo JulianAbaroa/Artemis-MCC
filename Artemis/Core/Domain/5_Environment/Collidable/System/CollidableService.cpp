@@ -5,6 +5,12 @@ import Tables.Object.Type;
 namespace
 {
     using Triangle = Common::Math::Type::Triangle;
+    using RegionDiagnostic = Environment::Collidable::Type::RegionDiagnostic;
+
+    // Layout of the region block: one state entry per region of the render model, then one permutation byte per region.
+    constexpr std::size_t k_RegionStateStride{ 0x04 };
+    constexpr std::size_t k_RegionStateValue{ 0x01 };
+    constexpr std::uint8_t k_NoPermutation{ 0xFF };
 }
 
 namespace Environment::Collidable::System
@@ -34,14 +40,13 @@ namespace Environment::Collidable::System
         {
             if (object.Address == 0) continue;
 
-            instances.push_back(this->BuildInstance(object, objectTable, true));
+            instances.push_back(this->BuildInstance(object, true));
         }
 
         m_CollidableStore.Publish(std::move(instances));
     }
 
-    auto CollidableService::BuildInstance(const AliveObject& object,
-        const ObjectTable& objectTable, bool buildWorldMesh) -> Collidable
+    auto CollidableService::BuildInstance(const AliveObject& object, bool buildWorldMesh) -> Collidable
     {
         Collidable instance{};
         instance.Handle = object.Handle;
@@ -56,20 +61,9 @@ namespace Environment::Collidable::System
         const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
         const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
 
-        instance.AncestorDead = this->IsAncestorDead(object.Handle, objectTable);
-
         if (ctx.Coll)
         {
-            const ResolvedRegionStates* states =
-                m_WorldStore.GetRegionStates(object.TagName);
-
-            if (states && object.HlmtVariant < states->Variants.size())
-            {
-                ctx.States = states;
-                ctx.Variant = object.HlmtVariant;
-                instance.HasDestroyedGeometry =
-                    states->Variants[object.HlmtVariant].HasDestroyedGeometry;
-            }
+            ctx.States = m_WorldStore.GetRegionStates(object.TagName);
         }
 
         if (buildWorldMesh)
@@ -78,6 +72,8 @@ namespace Environment::Collidable::System
         }
 
         instance.Parts = this->CollectParts(instance, ctx, bones, damage);
+
+        this->BuildRegionDiagnostics(instance, ctx, damage);
 
         return instance;
     }
@@ -90,7 +86,7 @@ namespace Environment::Collidable::System
         auto it = objectTablePtr->find(handle);
         if (it == objectTablePtr->end() || it->second.Address == 0) return std::nullopt;
 
-        return this->BuildInstance(it->second, *objectTablePtr, false);
+        return this->BuildInstance(it->second, false);
     }
 
     auto CollidableService::QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>
@@ -126,14 +122,14 @@ namespace Environment::Collidable::System
 
         if (bones != nullptr)
         {
-            return this->CollectSkeletal(instance, ctx, *bones, damage);
+            return this->CollectSkeletal(ctx, *bones, damage);
         }
 
         return this->CollectRigid(instance, ctx, damage);
     }
 
-    auto CollidableService::CollectSkeletal(const Collidable& instance,
-        const Context& ctx, const BoneMatrixTable& bones, const DamageSectionTable* damage) -> CollMesh
+    auto CollidableService::CollectSkeletal(const Context& ctx,
+        const BoneMatrixTable& bones, const DamageSectionTable* damage) -> CollMesh
     {
         CollMesh out;
 
@@ -153,7 +149,7 @@ namespace Environment::Collidable::System
 
         for (const auto& mesh : ctx.Coll->Meshes)
         {
-            if (!this->IsActivePermutation(instance, ctx, mesh, damage))
+            if (!this->IsActivePermutation(ctx, mesh, damage))
             {
                 continue;
             }
@@ -224,7 +220,7 @@ namespace Environment::Collidable::System
 
         for (const auto& mesh : ctx.Coll->Meshes)
         {
-            if (!this->IsActivePermutation(instance, ctx, mesh, damage)) continue;
+            if (!this->IsActivePermutation(ctx, mesh, damage)) continue;
 
             for (const auto& triangle : mesh.Triangles)
             {
@@ -258,7 +254,7 @@ namespace Environment::Collidable::System
 
             for (const auto& mesh : meshes)
             {
-                if (!this->IsActivePermutation(instance, ctx, mesh, damage)) continue;
+                if (!this->IsActivePermutation(ctx, mesh, damage)) continue;
 
                 if (mesh.NodeIndex < 0 || static_cast<size_t>(mesh.NodeIndex) >= matrices.size())
                 {
@@ -303,7 +299,7 @@ namespace Environment::Collidable::System
 
         for (const auto& mesh : meshes)
         {
-            if (!this->IsActivePermutation(instance, ctx, mesh, damage)) continue;
+            if (!this->IsActivePermutation(ctx, mesh, damage)) continue;
 
             CollidablePart part;
             part.Source = &mesh;
@@ -318,8 +314,7 @@ namespace Environment::Collidable::System
         return out;
     }
 
-    auto CollidableService::IsActivePermutation(const Collidable& instance,
-        const Context& ctx, const CollMesh& mesh,
+    auto CollidableService::IsActivePermutation(const Context& ctx, const CollMesh& mesh,
         const DamageSectionTable* damage) -> bool
     {
         auto isDefault = [&](int regionIdx) -> bool {
@@ -336,174 +331,109 @@ namespace Environment::Collidable::System
                 (mesh.PermutationIndex == def);
             };
 
-        const ResolvedRegionStates* states = ctx.States;
-        const StateMap* stateMap = states ?
-            &states->Variants[ctx.Variant].StateMap : nullptr;
-
-        if (!damage || damage->Sections.empty() ||
-            !stateMap || stateMap->empty() || mesh.RegionIndex < 0 ||
-            (size_t)mesh.RegionIndex >= stateMap->size() ||
-            (size_t)mesh.RegionIndex >= states->RegionToSection.size())
+        if (!damage || !ctx.States || mesh.RegionIndex < 0)
         {
             return isDefault(mesh.RegionIndex);
         }
 
-        const auto& sections = damage->Sections;
-        const auto& row = (*stateMap)[mesh.RegionIndex];
-        const int slot = states->RegionToSection[mesh.RegionIndex];
+        const auto& bytes = damage->Regions.Bytes;
+        const auto& engineRegions = ctx.States->EngineRegions;
+        const std::size_t regionCount = engineRegions.size();
+        const std::size_t permutationsBase = regionCount * k_RegionStateStride;
 
-        const bool objectDead = (!sections.empty() &&
-            sections[0].Vitality <= 0.0f) || instance.AncestorDead;
-
-        if (objectDead && instance.HasDestroyedGeometry)
-        {
-            if (row[4] >= 0)
-            {
-                return mesh.PermutationIndex == row[4];
-            }
-
-            return false;
-        }
-
-        int deathState = -1;
-        if ((size_t)mesh.RegionIndex < states->DeathStateMap.size())
-        {
-            deathState = states->DeathStateMap[mesh.RegionIndex];
-        }
-
-        int highestMapped = -1;
-        for (int section = 4; section >= 0; --section)
-        {
-            if (row[section] >= 0)
-            {
-                highestMapped = section;
-                break;
-            }
-        }
-
-        int defaultPermutation = 0;
-        if (ctx.Coll && mesh.RegionIndex >= 0 &&
-            (size_t)mesh.RegionIndex <
-            ctx.Coll->DefaultPermutationIndex.size())
-        {
-            const int def =
-                ctx.Coll->DefaultPermutationIndex[mesh.RegionIndex];
-
-            defaultPermutation = (def > 0) ? def : 0;
-        }
-
-        if (slot < 0 || (size_t)slot >= sections.size())
-        {
-            if (objectDead && deathState >= 0)
-            {
-                if (deathState <= highestMapped)
-                {
-                    return mesh.PermutationIndex == row[deathState];
-                }
-
-                int section = highestMapped;
-                int permutation = (section >= 0) ? row[section] : -1;
-                while (permutation < 0 && section > 0)
-                {
-                    --section;
-                    permutation = row[section];
-                }
-
-                if (permutation < 0 || permutation == defaultPermutation)
-                {
-                    return false;
-                }
-
-                return mesh.PermutationIndex == permutation;
-            }
-
-            return isDefault(mesh.RegionIndex);
-        }
-
-        bool hasAnyMapping = false;
-        for (int section = 0; section < 5; ++section)
-        {
-            if (row[section] >= 0)
-            {
-                hasAnyMapping = true;
-                break;
-            }
-        }
-
-        if (!hasAnyMapping)
-        {
-            if (objectDead && deathState >= 0)
-            {
-                return false;
-            }
-
-            return isDefault(mesh.RegionIndex);
-        }
-
-        int state = 0;
-        const uint16_t mask = sections[slot].DamageLevelMask;
-        const int level = this->HighestLevelFromMask(mask);
-
-        if (level >= 0 &&
-            (size_t)mesh.RegionIndex < states->LevelToState.size())
-        {
-            const auto& levels = states->LevelToState[mesh.RegionIndex];
-
-            for (int current = (std::min)(level, (int)levels.size() - 1);
-                current >= 0;
-                --current)
-            {
-                if (levels[current] >= 0)
-                {
-                    state = levels[current];
-                    break;
-                }
-            }
-        }
-
-        if (objectDead && deathState >= 0)
-        {
-            state = (std::max)(state, deathState);
-
-            if (state > highestMapped)
-            {
-                int section = highestMapped;
-                int permutation = (section >= 0) ? row[section] : -1;
-                while (permutation < 0 && section > 0)
-                {
-                    --section;
-                    permutation = row[section];
-                }
-
-                if (permutation < 0 || permutation == defaultPermutation)
-                {
-                    return false;
-                }
-
-                state = section;
-            }
-        }
-        else
-        {
-            if (state > highestMapped)
-            {
-                state = highestMapped;
-            }
-        }
-
-        int wantPermutation = row[state];
-        while (wantPermutation < 0 && state > 0)
-        {
-            --state;
-            wantPermutation = row[state];
-        }
-
-        if (wantPermutation < 0)
+        if (regionCount == 0 || bytes.size() < permutationsBase + regionCount)
         {
             return isDefault(mesh.RegionIndex);
         }
 
-        return mesh.PermutationIndex == wantPermutation;
+        for (std::size_t region = 0; region < regionCount; ++region)
+        {
+            if (engineRegions[region].CollRegion != mesh.RegionIndex) continue;
+
+            const std::uint8_t engine = bytes[permutationsBase + region];
+
+            if (engine == k_NoPermutation) return false;
+
+            if (engine < engineRegions[region].CollPermutations.size())
+            {
+                const int mapped = engineRegions[region].CollPermutations[engine];
+
+                if (mapped >= 0) return mesh.PermutationIndex == mapped;
+            }
+
+            // The collision model has no permutation with the name of the one the engine shows.
+            // The region still exists when the render model draws it, so it keeps its default.
+            const auto& meshCounts = engineRegions[region].PermutationMeshCounts;
+
+            if (engine < meshCounts.size() && meshCounts[engine] <= 0) return false;
+
+            return isDefault(mesh.RegionIndex);
+        }
+
+        return isDefault(mesh.RegionIndex);
+    }
+
+    auto CollidableService::BuildRegionDiagnostics(Collidable& instance, const Context& ctx,
+        const DamageSectionTable* damageSectionTable) -> void
+    {
+        if (!ctx.Coll || !ctx.States || !damageSectionTable ||
+            damageSectionTable->Regions.Bytes.empty()) return;
+
+        const auto& engineRegions = ctx.States->EngineRegions;
+        const auto& bytes = damageSectionTable->Regions.Bytes;
+
+        instance.RegionBlockSize = damageSectionTable->Regions.Size;
+        instance.RegionBlockOffset = damageSectionTable->Regions.Offset;
+        instance.RegionBlock = bytes;
+
+        // note: The block is, per region of the render model (n): n entries of 4 bytes with the state at +1,
+        // then n permutation bytes, then n bytes that are still unknown.
+        const std::size_t regionCount = engineRegions.size();
+        const std::size_t permutationsBase = regionCount * k_RegionStateStride;
+
+        instance.Regions.resize(regionCount);
+
+        for (std::size_t region = 0; region < regionCount; ++region)
+        {
+            RegionDiagnostic& entry = instance.Regions[region];
+            const auto& engineRegion = engineRegions[region];
+
+            entry.Name = engineRegion.Name;
+            entry.CollRegion = engineRegion.CollRegion;
+
+            const std::size_t stateIndex = region * k_RegionStateStride + k_RegionStateValue;
+            const std::size_t permutationIndex = permutationsBase + region;
+
+            if (stateIndex < bytes.size())
+            {
+                entry.EngineState = static_cast<int>(bytes[stateIndex]);
+            }
+
+            if (permutationIndex < bytes.size() && bytes[permutationIndex] != k_NoPermutation)
+            {
+                entry.EnginePermutation = static_cast<int>(bytes[permutationIndex]);
+
+                if (static_cast<std::size_t>(entry.EnginePermutation) < engineRegion.CollPermutations.size())
+                {
+                    entry.MappedPermutation = engineRegion.CollPermutations[entry.EnginePermutation];
+                }
+
+                if (static_cast<std::size_t>(entry.EnginePermutation) < engineRegion.PermutationMeshCounts.size())
+                {
+                    entry.EngineMeshCount = engineRegion.PermutationMeshCounts[entry.EnginePermutation];
+                }
+            }
+
+            if (entry.CollRegion < 0) continue;
+
+            for (const CollidablePart& part : instance.Parts)
+            {
+                if (part.Source && part.Source->RegionIndex == entry.CollRegion)
+                {
+                    entry.ShownPermutations.push_back(static_cast<int>(part.Source->PermutationIndex));
+                }
+            }
+        }
     }
 
     // --- Helpers ---
@@ -535,50 +465,6 @@ namespace Environment::Collidable::System
         const float wy = r[3] * lx + r[4] * ly + r[5] * lz + m.Translation[1];
         const float wz = r[6] * lx + r[7] * ly + r[8] * lz + m.Translation[2];
         return { wx, wy, wz };
-    }
-
-    auto CollidableService::HighestLevelFromMask(std::uint16_t mask) -> int
-    {
-        if (mask == 0) return -1;
-
-        int level = -1;
-        for (int b = 0; b < 16; ++b)
-        {
-            if (mask & (1u << b))
-            {
-                level = b;
-            }
-        }
-
-        return level;
-    }
-
-    auto CollidableService::IsAncestorDead(std::uint32_t handle,
-        const ObjectTable& objects) -> bool
-    {
-        uint32_t current = m_ObjectGraphStore.GetParent(handle);
-        int guard = 0;
-
-        while (current != 0 && current != 0xFFFFFFFF && guard++ < 16)
-        {
-            auto it = objects.find(current);
-            if (it != objects.end() && it->second.Address != 0)
-            {
-                const DamageSectionTable* dmg = m_DamageSectionsStore.Get(current);
-
-                if (dmg && !dmg->Sections.empty() &&
-                    dmg->Sections[0].Vitality <= 0.0f)
-                {
-                    return true;
-                }
-            }
-
-            const uint32_t parent = m_ObjectGraphStore.GetParent(current);
-            if (parent == current) break;
-            current = parent;
-        }
-
-        return false;
     }
 
     auto CollidableService::Cleanup() -> void

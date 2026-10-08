@@ -9,7 +9,6 @@ import Resolved.World.State;
 import Tables.Object.Type;
 import Tables.Object.State;
 import Relations.Classifier.State;
-import Relations.ObjectGraph.State;
 import Relations.Classifier.Type;
 import Environment.Collidable.Type;
 import Environment.Collidable.State;
@@ -23,8 +22,6 @@ export namespace Environment::Collidable::System
         using Vec3 = Common::Math::Type::Vec3;
         using CollMesh = Resolved::Definitions::Type::Coll::Mesh;
         using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
-        using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
-        using StateMap = std::vector<std::array<int, 5>>;
         using AliveObject = Tables::Object::Type::Alive::Object;
         using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
         using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
@@ -43,18 +40,16 @@ export namespace Environment::Collidable::System
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
         using WorldStore = Resolved::World::State::WorldStore;
         using ClassifierStore = Relations::Classifier::State::ClassifierStore;
-        using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
         using CollidableStore = Environment::Collidable::State::CollidableStore;
 
     public:
         CollidableService(LogsService& logsService, DefinitionsStore& definitionsStore,
             ObjectTableStore& objectTableStore, BoneMatricesStore& boneMatricesStore,
             DamageSectionsStore& damageSectionsStore, ClassifierStore& classifierStore,
-            ObjectGraphStore& objectGraphStore, WorldStore& worldStore,
-            CollidableStore& collidableStore) : m_LogsService(logsService),
+            WorldStore& worldStore, CollidableStore& collidableStore) : m_LogsService(logsService),
             m_DefinitionsStore(definitionsStore), m_ObjectTableStore(objectTableStore),
             m_BoneMatricesStore(boneMatricesStore), m_DamageSectionsStore(damageSectionsStore),
-            m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
+            m_ClassifierStore(classifierStore),
             m_WorldStore(worldStore), m_CollidableStore(collidableStore) {}
         ~CollidableService() = default;
 
@@ -75,22 +70,19 @@ export namespace Environment::Collidable::System
         BoneMatricesStore& m_BoneMatricesStore;
         DamageSectionsStore& m_DamageSectionsStore;
         ClassifierStore& m_ClassifierStore;
-        ObjectGraphStore& m_ObjectGraphStore;
         WorldStore& m_WorldStore;
         CollidableStore& m_CollidableStore;
 
         auto CollectCollidables(const Classifieds& classifieds,
             const ObjectTable& objects) -> void;
 
-        auto BuildInstance(const AliveObject& object,
-            const ObjectTable& objectTable, bool buildWorldMesh) -> Collidable;
+        auto BuildInstance(const AliveObject& object, bool buildWorldMesh) -> Collidable;
 
         auto CollectMesh(const Collidable& instance, const Context& ctx,
             const BoneMatrixTable* boneMatrixTable,
             const DamageSectionTable* damageSectionTable) -> CollMesh;
 
-        auto CollectSkeletal(const Collidable& instance, const Context& ctx,
-            const BoneMatrixTable& boneMatrixTable,
+        auto CollectSkeletal(const Context& ctx, const BoneMatrixTable& boneMatrixTable,
             const DamageSectionTable* damageSectionTable) -> CollMesh;
 
         auto CollectRigid(const Collidable& instance, const Context& ctx,
@@ -100,8 +92,15 @@ export namespace Environment::Collidable::System
             const BoneMatrixTable* boneMatrixTable,
             const DamageSectionTable* damageSectionTable) -> std::vector<CollidablePart>;
 
-        auto IsActivePermutation(const Collidable& instance, const Context& ctx,
-            const CollMesh& mesh, const DamageSectionTable* damageSectionTable) -> bool;
+        // Tells if the collision mesh belongs to the permutation the engine shows for its region.
+        // note: Objects without a region block show the default permutation of each region.
+        auto IsActivePermutation(const Context& ctx, const CollMesh& mesh,
+            const DamageSectionTable* damageSectionTable) -> bool;
+
+        // Fills the engine state of each region of the render model next to what the viewer shows, for diagnostics.
+        // note: The block keeps one entry per region of the render model. Its last bytes are still unknown.
+        auto BuildRegionDiagnostics(Collidable& instance, const Context& ctx,
+            const DamageSectionTable* damageSectionTable) -> void;
 
         // --- Helpers ---
 
@@ -112,9 +111,5 @@ export namespace Environment::Collidable::System
             const Vec3& up, float lx, float ly, float lz) -> Vec3;
 
         auto TransformByBone(const BoneMatrix& m, float lx, float ly, float lz) -> Vec3;
-
-        auto HighestLevelFromMask(std::uint16_t mask) -> int;
-
-        auto IsAncestorDead(std::uint32_t handle, const ObjectTable& objects) -> bool;
     };
 }
