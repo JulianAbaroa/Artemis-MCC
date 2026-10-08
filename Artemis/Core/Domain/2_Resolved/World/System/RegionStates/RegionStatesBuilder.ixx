@@ -6,36 +6,26 @@ import std;
 
 export namespace Resolved::World::System
 {
-    // Builds, for a model, the permutation each collision region shows in every damage state, and when it changes.
-    // note: Reverse engineered from the behavior of the damage sections in memory, so it is not 1:1 with the game yet.
+    // Matches, for a model, the regions and permutations of the render model with the collision ones.
+    // note: The engine keeps the permutation of each region of the render model in memory, so nothing is inferred from the damage.
     class RegionStatesBuilder
     {
     private:
-        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
         using Coll = Resolved::Definitions::Type::Coll::Coll;
+        using Mode = Resolved::Definitions::Type::Mode::Mode;
         using RegionStates = Resolved::World::Type::RegionStates::RegionStates;
+        using EngineRegion = Resolved::World::Type::RegionStates::EngineRegion;
 
     public:
         RegionStatesBuilder() = default;
         ~RegionStatesBuilder() = default;
 
-        auto Build(const Hlmt& hlmt, const Coll& coll) -> RegionStates;
+        // param mode: Render model, which gives the regions and permutations the engine indexes. May be null.
+        // note: Without it the engine permutations cannot be matched, so the result has no regions.
+        auto Build(const Coll& coll, const Mode* mode) -> RegionStates;
 
     private:
-        // return: Permutation of each collision region for each damage state, or -1.
-        auto BuildStateMap(const Resolved::Definitions::Type::Hlmt::Variant& variant,
-            const Coll& coll) -> std::vector<std::array<int, 5>>;
-
-        // Reads the damage state each instant response of a region damage section moves its own region to.
-        auto BuildLevelToState(const Hlmt& hlmt, const Coll& coll,
-            std::vector<std::vector<int>>& levelToState) -> void;
-
-        // Reads the damage state each region takes when the object dies.
-        // note: Only the instant responses of sections that do not own a region count, and only those with no threshold.
-        auto BuildDeathStateMap(const Hlmt& hlmt, const Coll& coll,
-            std::vector<int>& deathState) -> void;
-
-        // return: Damage section of each collision region, or -1.
-        auto BuildRegionToSection(const Hlmt& hlmt, const Coll& coll) -> std::vector<int>;
+        // Matches the regions and permutations of the render model with the collision ones by name.
+        auto BuildEngineRegions(const Coll& coll, const Mode& mode) -> std::vector<EngineRegion>;
     };
 }

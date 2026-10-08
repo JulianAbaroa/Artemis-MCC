@@ -19,6 +19,7 @@ export namespace Resolved::Definitions::System
         using Mode = Resolved::Definitions::Type::Mode::Mode;
         using Marker = Resolved::Definitions::Type::Mode::Marker;
         using MarkerGroup = Resolved::Definitions::Type::Mode::MarkerGroup;
+        using Region = Resolved::Definitions::Type::Mode::Region;
         using Bounds = Resolved::Definitions::Type::Mode::Bounds;
 
     public:
@@ -31,6 +32,7 @@ export namespace Resolved::Definitions::System
     private:
         auto BuildMarkerGroups(const ModeObject& mode, Mode& out) -> void;
         auto BuildNodes(const ModeObject& mode, Mode& out) -> void;
+        auto BuildRegions(const ModeObject& mode, Mode& out) -> void;
         auto BuildBounds(const ModeObject& mode, Mode& out) -> void;
 
         auto MakeVec3(const Map::Reader::Type::Structure::Primitive::Vec3& v) -> Vec3;

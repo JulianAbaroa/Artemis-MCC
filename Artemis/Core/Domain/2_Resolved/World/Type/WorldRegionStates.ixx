@@ -4,27 +4,27 @@ import std;
 
 export namespace Resolved::World::Type::RegionStates
 {
-    // Permutations of a model by variant.
-    struct Variant
+    // Region of the render model, which is how the engine indexes the permutations of an object.
+    struct EngineRegion
     {
-        // Permutation of each collision region for each damage state, or -1.
-        std::vector<std::array<int, 5>> StateMap{};
+        std::uint32_t Name{};
 
-        bool HasDestroyedGeometry{};
+        // Collision region with the same name, or -1.
+        int CollRegion{ -1 };
+
+        // Collision permutation with the same name as each permutation of the region, or -1.
+        // note: All -1 when the region has no collision region.
+        std::vector<int> CollPermutations{};
+
+        // Meshes the render model draws for each permutation of the region.
+        std::vector<int> PermutationMeshCounts{};
     };
 
-    // Which permutation of each collision region a model shows, and when it changes.
+    // Which permutation of the render model matches each permutation of the collision model.
     struct RegionStates
     {
-        std::vector<Variant> Variants{};
-
-        // Damage state of each collision region for each instant response of its damage section.
-        std::vector<std::vector<int>> LevelToState{};
-
-        // Damage state each collision region takes when the object dies, or -1.
-        std::vector<int> DeathStateMap{};
-
-        // Damage section of each collision region, or -1.
-        std::vector<int> RegionToSection{};
+        // Regions of the render model, in the order the engine keeps the permutation of each one.
+        // note: Empty when the model has no render model.
+        std::vector<EngineRegion> EngineRegions{};
     };
 }

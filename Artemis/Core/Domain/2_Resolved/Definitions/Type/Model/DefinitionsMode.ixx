@@ -29,6 +29,16 @@ export namespace Resolved::Definitions::Type::Mode
         std::vector<Marker> Markers{};
     };
 
+    // Permutations a region of the render model can draw.
+    struct Region
+    {
+        std::uint32_t NameId{};
+        std::vector<std::uint32_t> PermutationNames{};
+
+        // Meshes each permutation draws, so a permutation with none shows nothing.
+        std::vector<int> PermutationMeshCounts{};
+    };
+
     struct Bounds
     {
         Vec3 Min{};
@@ -41,6 +51,10 @@ export namespace Resolved::Definitions::Type::Mode
         std::string TagName{};
         std::vector<MarkerGroup> MarkerGroups{};
         std::vector<Node> Nodes{};
+
+        // The engine keeps the permutation of an object by index in these regions.
+        std::vector<Region> Regions{};
+
         Bounds ModelBounds{};
     };
 }

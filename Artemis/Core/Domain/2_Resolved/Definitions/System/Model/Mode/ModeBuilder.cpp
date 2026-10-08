@@ -18,6 +18,7 @@ namespace Resolved::Definitions::System
 
         this->BuildMarkerGroups(mode, out);
         this->BuildNodes(mode, out);
+        this->BuildRegions(mode, out);
         this->BuildBounds(mode, out);
 
         return out;
@@ -69,6 +70,28 @@ namespace Resolved::Definitions::System
             node.InverseScale = src.InverseScale;
 
             out.Nodes.push_back(node);
+        }
+    }
+
+    auto ModeBuilder::BuildRegions(const ModeObject& mode, Mode& out) -> void
+    {
+        out.Regions.reserve(mode.Regions.size());
+
+        for (const auto& src : mode.Regions)
+        {
+            Region region{};
+
+            region.NameId = src.Name;
+            region.PermutationNames.reserve(src.Permutations.size());
+            region.PermutationMeshCounts.reserve(src.Permutations.size());
+
+            for (const auto& permutation : src.Permutations)
+            {
+                region.PermutationNames.push_back(permutation.Name);
+                region.PermutationMeshCounts.push_back(permutation.MeshIndex < 0 ? 0 : permutation.MeshCount);
+            }
+
+            out.Regions.push_back(std::move(region));
         }
     }
 

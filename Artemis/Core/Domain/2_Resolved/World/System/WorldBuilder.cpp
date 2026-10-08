@@ -67,8 +67,11 @@ namespace Resolved::World::System
         const Coll* coll = m_DefinitionsStore.Coll.Get(hlmt.CollisionModelTagName);
         if (!coll) return;
 
+        const Mode* mode = hlmt.RenderModelTagName.empty()
+            ? nullptr : m_DefinitionsStore.Mode.Get(hlmt.RenderModelTagName);
+
         m_WorldStore.AddRegionStates(hlmtName,
-            m_RegionStatesBuilder.Build(hlmt, *coll));
+            m_RegionStatesBuilder.Build(*coll, mode));
     }
 
     auto WorldBuilder::BuildModelLinks() -> void
