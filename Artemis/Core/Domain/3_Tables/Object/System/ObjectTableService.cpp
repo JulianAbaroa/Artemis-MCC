@@ -41,6 +41,7 @@ namespace
 	using SpawnData = Tables::Object::Type::Scenery::Spawn::Spawn;
 
 	using Tables::Object::Type::Constant::k_DamageSectionStride;
+	using Tables::Object::Type::Constant::k_RegionBlockMaxSize;
 }
 
 namespace Tables::Object::System
@@ -241,6 +242,18 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::ReadDamageSectionTable(MemoryReaderService& reader, AliveObject& object) -> void
 	{
+		DamageSectionTable table{};
+
+		this->ReadDamageSections(reader, object, table);
+		this->ReadRegionBlock(reader, object, table);
+
+		if (table.Sections.empty() && table.Regions.Bytes.empty()) return;
+
+		m_DamageSectionsStore.Set(object.Handle, std::move(table));
+	}
+
+	auto ObjectTableService::ReadDamageSections(MemoryReaderService& reader, const AliveObject& object, DamageSectionTable& table) -> void
+	{
 		const std::uint16_t regionsSize = reader.Read<std::uint16_t>(object.Address, Offset::DamageRegionsSize);
 		const std::uint16_t regionsOffsetRaw = reader.Read<std::uint16_t>(object.Address, Offset::DamageRegionsOffset);
 
@@ -248,12 +261,13 @@ namespace Tables::Object::System
 		const std::uint16_t count = regionsSize / k_DamageSectionStride;
 		if (count == 0 || count >= 256) return;
 
-		DamageSectionTable table;
-		table.BaseAddress = object.Address + regionsOffsetRaw;
-		table.Sections.resize(count);
+		const std::uintptr_t baseAddress = object.Address + regionsOffsetRaw;
 
 		std::vector<DamageSection> raw(count);
-		if (!reader.ReadRaw(table.BaseAddress, raw.data(), count * sizeof(DamageSection))) return;
+		if (!reader.ReadRaw(baseAddress, raw.data(), count * sizeof(DamageSection))) return;
+
+		table.BaseAddress = baseAddress;
+		table.Sections.resize(count);
 
 		for (std::uint16_t section = 0; section < count; ++section)
 		{
@@ -261,8 +275,21 @@ namespace Tables::Object::System
 
 			table.Sections[section].Vitality = raw[section].Vitality;
 		}
+	}
 
-		m_DamageSectionsStore.Set(object.Handle, std::move(table));
+	auto ObjectTableService::ReadRegionBlock(MemoryReaderService& reader, const AliveObject& object, DamageSectionTable& table) -> void
+	{
+		const std::uint16_t size = reader.Read<std::uint16_t>(object.Address, Offset::RegionStateSize);
+		const std::uint16_t offset = reader.Read<std::uint16_t>(object.Address, Offset::RegionStateOffset);
+
+		if (offset == 0xFFFF || size == 0 || size > k_RegionBlockMaxSize) return;
+
+		std::vector<std::uint8_t> bytes(size);
+		if (!reader.ReadRaw(object.Address + offset, bytes.data(), size)) return;
+
+		table.Regions.Size = size;
+		table.Regions.Offset = offset;
+		table.Regions.Bytes = std::move(bytes);
 	}
 
 	auto ObjectTableService::UpdateBiped(MemoryReaderService& reader, AliveObject& object) -> void

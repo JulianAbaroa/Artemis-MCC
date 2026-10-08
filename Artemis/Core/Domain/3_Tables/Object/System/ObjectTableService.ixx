@@ -65,6 +65,11 @@ export namespace Tables::Object::System
 
 		auto ReadBoneMatrixTable(MemoryReaderService& reader, AliveObject& object) -> void;
 		auto ReadDamageSectionTable(MemoryReaderService& reader, AliveObject& object) -> void;
+		auto ReadDamageSections(MemoryReaderService& reader, const AliveObject& object, DamageSectionTable& table) -> void;
+
+		// Reads the block with the damage state of each region.
+		// note: Skipped when the header has no block or its size is not plausible.
+		auto ReadRegionBlock(MemoryReaderService& reader, const AliveObject& object, DamageSectionTable& table) -> void;
 
 		auto UpdateBiped(MemoryReaderService& reader, AliveObject& object) -> void;
 		auto UpdateVehicle(MemoryReaderService& reader, AliveObject& object) -> void;
