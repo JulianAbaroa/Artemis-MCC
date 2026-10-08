@@ -15,7 +15,7 @@ export namespace Viewer::Hud::System
         CollidablesHud() = default;
         ~CollidablesHud() = default;
 
-        // Draws the transform, the world mesh and the flags of the selected collidable.
+        // Draws the transform, the world mesh, the flags and the region states of the selected collidable.
         // param handle: The handle of the selected object.
         static auto Draw(const Tick& tick, std::uint32_t handle) -> void;
     };

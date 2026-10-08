@@ -33,6 +33,7 @@ export namespace Export::Tick::Type
 
 	using Collidable = Environment::Collidable::Type::Collidable;
 	using Collidables = std::vector<Collidable>;
+	using RegionDiagnostic = Environment::Collidable::Type::RegionDiagnostic;
 	using Health = Environment::Health::Type::Health;
 	using Healths = std::unordered_map<std::uint32_t, Health>;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;

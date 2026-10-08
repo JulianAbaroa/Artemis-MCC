@@ -173,7 +173,7 @@ namespace Environment::Collidable::System
                     r[1] * v.X + r[4] * v.Y + r[7] * v.Z + bone.Translation[1],
                     r[2] * v.X + r[5] * v.Y + r[8] * v.Z + bone.Translation[2]
                 };
-                };
+            };
 
             for (const auto& triangle : mesh.Triangles)
             {

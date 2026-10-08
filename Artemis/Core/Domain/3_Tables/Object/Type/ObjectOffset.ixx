@@ -22,10 +22,10 @@ export namespace Tables::Object::Type::Offset
 	constexpr std::uintptr_t OwnerPlayerHandle{ 0xF0 };			// uint32.
 	constexpr std::uintptr_t OwnerBipedHandle{ 0xF4 };			// uint32.
 	constexpr std::uintptr_t DamageReceived{ 0x128 };			// float (1).
-	constexpr std::uintptr_t DamageRegionsSize{ 0x184 };		// uint16.
-	constexpr std::uintptr_t DamageRegionsOffset{ 0x186 };		// uint16.
 	constexpr std::uintptr_t RegionStateSize{ 0x17C };			// uint16.
 	constexpr std::uintptr_t RegionStateOffset{ 0x17E };		// uint16.
+	constexpr std::uintptr_t DamageRegionsSize{ 0x184 };		// uint16.
+	constexpr std::uintptr_t DamageRegionsOffset{ 0x186 };		// uint16.
 
 	namespace Biped
 	{
