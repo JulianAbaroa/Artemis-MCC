@@ -28,6 +28,7 @@ namespace
     using Platform::Render::Type::VertexLayout;
 
     using Viewer::Style::Type::k_LimitKill;
+    using Viewer::Style::Type::k_LimitSoftKill;
     using Viewer::Style::Type::k_LimitSafe;
     using Viewer::Style::Type::k_CeilingAcceleration;
     using Viewer::Style::Type::k_CeilingSoftKill;
@@ -269,20 +270,32 @@ namespace
         }
     }
 
-    // Appends the volumes that the triggers point to. A volume that several triggers share is appended once.
+    // Appends the volumes that the triggers point to, once each.
+    // param immediateColor: Color of a volume that acts at once.
+    // param delayedColor: Color of a volume that acts after a countdown. A volume that any trigger makes immediate is immediate.
     auto AppendTriggers(Mesh& mesh, const Scnr& scnr, const std::vector<BoundaryTrigger>& triggers,
-        const Color& color) -> void
+        const Color& immediateColor, const Color& delayedColor) -> void
     {
-        std::unordered_set<std::int16_t> appended{};
+        std::unordered_map<std::int16_t, bool> isDelayed{};
 
         for (const BoundaryTrigger& trigger : triggers)
         {
             const std::int16_t index{ trigger.TriggerVolumeIndex };
 
             if (index < 0 || static_cast<std::size_t>(index) >= scnr.TriggerVolumes.size()) continue;
-            if (!appended.insert(index).second) continue;
 
-            AppendVolume(mesh, scnr.TriggerVolumes[static_cast<std::size_t>(index)], color);
+            const auto [at, isNew] = isDelayed.try_emplace(index, trigger.DontKillImmediately);
+
+            if (!isNew && !trigger.DontKillImmediately)
+            {
+                at->second = false;
+            }
+        }
+
+        for (const auto& [index, delayed] : isDelayed)
+        {
+            AppendVolume(mesh, scnr.TriggerVolumes[static_cast<std::size_t>(index)],
+                delayed ? delayedColor : immediateColor);
         }
     }
 
@@ -345,12 +358,12 @@ namespace Viewer::Map::System
             {
                 if (options.KillVolumes)
                 {
-                    AppendTriggers(mesh, scnr, scnr.KillTriggers, k_LimitKill);
+                    AppendTriggers(mesh, scnr, scnr.KillTriggers, k_LimitKill, k_LimitSoftKill);
                 }
 
                 if (options.SafeVolumes)
                 {
-                    AppendTriggers(mesh, scnr, scnr.SafeZoneTriggers, k_LimitSafe);
+                    AppendTriggers(mesh, scnr, scnr.SafeZoneTriggers, k_LimitSafe, k_LimitSafe);
                 }
             }
         }

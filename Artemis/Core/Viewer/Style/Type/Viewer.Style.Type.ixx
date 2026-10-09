@@ -50,9 +50,10 @@ export namespace Viewer::Style::Type
     inline constexpr Color k_RayPerceptionNoHit{ 1.0f, 1.0f, 1.0f };
 
     inline constexpr Color k_LimitKill{ 0.90f, 0.30f, 0.30f };
+    inline constexpr Color k_LimitSoftKill{ 0.95f, 0.55f, 0.20f };
     inline constexpr Color k_LimitSafe{ 0.40f, 0.85f, 0.50f };
     inline constexpr Color k_CeilingAcceleration{ 0.35f, 0.75f, 0.95f };
-    inline constexpr Color k_CeilingSoftKill{ 0.95f, 0.55f, 0.20f };
+    inline constexpr Color k_CeilingSoftKill{ 0.95f, 0.85f, 0.25f };
     inline constexpr Color k_CeilingSlipSurface{ 0.75f, 0.45f, 0.90f };
 
     inline constexpr Color k_InteractionObject{ 0.95f, 0.78f, 0.24f };

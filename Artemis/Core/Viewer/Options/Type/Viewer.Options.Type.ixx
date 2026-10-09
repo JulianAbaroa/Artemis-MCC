@@ -316,13 +316,13 @@ export namespace Viewer::Options::Type
             "Draws shield doors, walls and drop shields translucent so the geometry behind them stays visible.", true },
 
         { Flag::LimitKillVolumes, Group::Limits, "LimitKillVolumes", "Kill volumes",
-            "Draws the trigger volumes that the scenario uses as kill triggers, translucent with an outline.", true },
+            "Draws the trigger volumes that the scenario uses as kill triggers, translucent with an outline. Red kills at once and orange kills after a countdown.", true },
 
         { Flag::LimitSafeVolumes, Group::Limits, "LimitSafeVolumes", "Safe zone volumes",
             "Draws the trigger volumes that the scenario uses as safe zone triggers.", true },
 
         { Flag::LimitSoftCeilings, Group::Limits, "LimitSoftCeilings", "Soft ceilings",
-            "Draws the soft ceiling surfaces of the structure design: blue pushes back, orange kills softly and purple makes slip. Translucent, without outline.", true },
+            "Draws the soft ceiling surfaces of the structure design: blue pushes back, yellow kills softly and purple makes slip. Translucent, without outline.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
