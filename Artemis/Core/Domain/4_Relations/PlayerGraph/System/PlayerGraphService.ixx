@@ -18,12 +18,12 @@ export namespace Relations::PlayerGraph::System
     {
     private:
         using AliveObject = Tables::Object::Type::Alive::Object;
-        using AlivePlayer = Tables::Player::Type::Alive::Player;
+        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
         using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
         using PlayerTree = Relations::PlayerGraph::Type::PlayerTree;
 
         using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
-        using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
+        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
         using ObjectNodes = std::unordered_map<std::uint32_t, ObjectNode>;
         using PlayerTrees = std::vector<PlayerTree>;
 

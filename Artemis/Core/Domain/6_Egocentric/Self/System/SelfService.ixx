@@ -14,8 +14,8 @@ export namespace Egocentric::Self::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using AlivePlayer = Tables::Player::Type::Alive::Player;
-        using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
+        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
+        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
 
         using LogsService = Service::Logs::System::LogsService;
         using PlayerTableStore = Tables::Player::State::PlayerTableStore;

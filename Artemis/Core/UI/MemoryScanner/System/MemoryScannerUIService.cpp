@@ -53,7 +53,7 @@ namespace
     { {
         { "Object::Base",  ObjectSize::Base   },
         { "Object::Biped", ObjectSize::Biped  },
-        { "Player::Base",  PlayerSize::Base   },
+        { "Player::Base",  PlayerSize::k_Base   },
     } };
 
     // Index of Int32 in the data types, used when raw bytes are not allowed.

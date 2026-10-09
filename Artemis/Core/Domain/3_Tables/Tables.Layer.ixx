@@ -34,7 +34,6 @@ export namespace Tables
 		using ReleaseObjectDetour = Tables::Object::Hook::ReleaseObjectDetour;
 		using InitRootNodeDetour = Tables::Object::Hook::InitRootNodeDetour;
 		using PlayerTableLocator = Tables::Player::Hook::PlayerTableLocator;
-		using CreatePlayerDetour = Tables::Player::Hook::CreatePlayerDetour;
 		using InteractionTableLocator = Tables::Interaction::Hook::InteractionTableLocator;
 
 	public:
@@ -47,7 +46,6 @@ export namespace Tables
 			m_ReleaseObjectDetour(service.m_LogsService, platform.m_AOBService, m_ObjectService),
 			m_InitRootNodeDetour(service.m_LogsService, platform.m_AOBService, m_BoneOffsetsStore),
 			m_PlayerTableLocator(service.m_LogsService, platform.m_AOBService, m_PlayerStore),
-			m_CreatePlayerDetour(service.m_LogsService, platform.m_AOBService, m_PlayerService),
 			m_InteractionTableLocator(service.m_LogsService, platform.m_AOBService, m_InteractionStore)
 		{
 			auto& lifecycle = platform.m_LifecycleService;
@@ -56,7 +54,6 @@ export namespace Tables
 				m_CreateObjectDetour.Install();
 				m_ReleaseObjectDetour.Install();
 				m_InitRootNodeDetour.Install();
-				m_CreatePlayerDetour.Install();
 
 				m_ObjectTableLocator.FindAndStoreTableBase();
 				m_PlayerTableLocator.FindAndStoreTableBase();
@@ -67,7 +64,6 @@ export namespace Tables
 				m_CreateObjectDetour.Uninstall();
 				m_ReleaseObjectDetour.Uninstall();
 				m_InitRootNodeDetour.Uninstall();
-				m_CreatePlayerDetour.Uninstall();
 			});
 
 			lifecycle.OnCleanup([this] {
@@ -100,7 +96,6 @@ export namespace Tables
 		ReleaseObjectDetour m_ReleaseObjectDetour;
 		InitRootNodeDetour m_InitRootNodeDetour;
 		PlayerTableLocator m_PlayerTableLocator;
-		CreatePlayerDetour m_CreatePlayerDetour;
 		InteractionTableLocator m_InteractionTableLocator;
 	};
 }

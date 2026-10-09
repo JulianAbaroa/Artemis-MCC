@@ -6,40 +6,49 @@ import std;
 
 namespace
 {
-	using Team = Common::Team::Type::Team;
-	using Vec3 = Common::Math::Type::Vec3;
+    using Common::Team::Type::Team;
+    using Common::Math::Type::Vec3;
 }
 
 export namespace Tables::Player::Type::Alive
 {
-	enum class ConnectionState : std::uint8_t
-	{
-		Connected = 0x01,
-		Disconnected = 0x02,
-		Connecting = 0x08,
-	};
+    enum class ConnectionState : std::uint8_t
+    {
+        Connected = 0x01,
+        Disconnected = 0x02,
+        Connecting = 0x08,
+    };
 
-	struct Player
-	{
-		std::uint32_t Handle{};
-		std::uintptr_t Address{};
+    // Snapshot of one entry of the engine player table.
+    struct AlivePlayer
+    {
+        // The salt is in the high 16 bits and the table index in the low 16 bits.
+        std::uint32_t Handle{};
 
-		ConnectionState ConnectionState{};
-		Team Team{};
+        // Address of the entry inside the player table.
+        std::uintptr_t Address{};
 
-		std::string Gamertag{};
-		std::string Tag{};
+        ConnectionState ConnectionState{};
+        Team Team{};
 
-		Vec3 CameraPosition{};
-		Vec3 CameraForward{};
-		Vec3 AimOffset{};
+        std::string Gamertag{};
+        std::string Tag{};
 
-		std::uint32_t PrimaryWeaponHandle{};
-		std::uint32_t SecondaryWeaponHandle{};
-		std::uint32_t ObjectiveHandle{};
+        Vec3 CameraPosition{};
+        Vec3 CameraForward{};
 
-		std::uint32_t AliveBipedHandle{};
-		std::uint32_t DeadBipedHandle{};
-		std::uint32_t CurrentBipedHandle{};
-	};
+        // note: The aim hit of the raycast replaced it. Kept as raw engine data.
+        Vec3 AimOffset{};
+
+        std::uint32_t PrimaryWeaponHandle{};
+        std::uint32_t SecondaryWeaponHandle{};
+        std::uint32_t ObjectiveHandle{};
+
+        std::uint32_t AliveBipedHandle{};
+        std::uint32_t DeadBipedHandle{};
+        std::uint32_t CurrentBipedHandle{};
+    };
+
+    // Players by handle.
+    using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
 }

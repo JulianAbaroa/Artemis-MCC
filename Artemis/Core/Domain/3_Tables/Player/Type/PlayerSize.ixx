@@ -4,6 +4,6 @@ import std;
 
 export namespace Tables::Player::Type::Size
 {
-	// Every player entry inside the player table occupies 1168 bytes.
-	constexpr std::size_t Base{ 0x490 };
+    // Bytes every player entry occupies inside the player table.
+    constexpr std::size_t k_Base{ 0x490 };
 }

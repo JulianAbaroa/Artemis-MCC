@@ -26,8 +26,8 @@ export namespace Egocentric::Raycast::System
 	private:
 		using Vec3 = Common::Math::Type::Vec3;
 		using Triangle = Common::Math::Type::Triangle;
-		using AlivePlayer = Tables::Player::Type::Alive::Player;
-		using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
+		using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
+		using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
 		using AliveObject = Tables::Object::Type::Alive::Object;
 		using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
 		using ResolvedWeap = Resolved::Definitions::Type::Weap::Weap;

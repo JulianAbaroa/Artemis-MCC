@@ -9,140 +9,181 @@ import Common.Team.Type;
 
 namespace
 {
-	namespace Sizes = Tables::Player::Type::Size;
-	namespace Offset = Tables::Player::Type::Offset;
+    using Common::Math::Type::Vec3;
+    using Common::Team::Type::Team;
 
-	using Vec3 = Common::Math::Type::Vec3;
-	using Team = Common::Team::Type::Team;
-	using ConnectionState = Tables::Player::Type::Alive::ConnectionState;
+    using Tables::Player::Type::Alive::ConnectionState;
+
+    using Tables::Player::Type::Size::k_Base;
+
+    using Tables::Player::Type::Offset::k_Handle;
+    using Tables::Player::Type::Offset::k_ConnectionState;
+    using Tables::Player::Type::Offset::k_AliveBipedHandle;
+    using Tables::Player::Type::Offset::k_DeadBipedHandle;
+    using Tables::Player::Type::Offset::k_CurrentBipedHandle;
+    using Tables::Player::Type::Offset::k_CameraPosition;
+    using Tables::Player::Type::Offset::k_CameraForward;
+    using Tables::Player::Type::Offset::k_AimOffset;
+    using Tables::Player::Type::Offset::k_PrimaryWeaponHandle;
+    using Tables::Player::Type::Offset::k_SecondaryWeaponHandle;
+    using Tables::Player::Type::Offset::k_ObjectiveHandle;
+    using Tables::Player::Type::Offset::k_Team;
+    using Tables::Player::Type::Offset::k_GamerTag;
+    using Tables::Player::Type::Offset::k_Tag;
+
+    // Mask of the table index inside a player handle.
+    constexpr std::uint32_t k_IndexMask{ 0xFFFF };
+
+    // Mask of the salt inside the handle field of a table entry.
+    constexpr std::uint32_t k_SaltMask{ 0xFFFF };
+
+    // Bits the salt is shifted by inside a player handle.
+    constexpr std::uint32_t k_SaltShift{ 16 };
+
+    // Slots the player table is scanned for.
+    // note: Assumed from the maximum players of a match. Not read from the engine.
+    constexpr std::uint32_t k_MaxPlayers{ 16 };
+
+    // Whether the value is a connection state the engine uses.
+    auto IsKnownConnectionState(ConnectionState state) -> bool
+    {
+        return state == ConnectionState::Connected ||
+            state == ConnectionState::Disconnected ||
+            state == ConnectionState::Connecting;
+    }
+
+    // Characters of the gamertag and of the service tag in the table.
+    constexpr std::size_t k_GamerTagLength{ 16 };
+    constexpr std::size_t k_TagLength{ 4 };
 }
 
 namespace Tables::Player::System
 {
-	auto PlayerTableService::OnPlayerCreated(std::uint32_t handle) -> void
-	{
-		std::uintptr_t tableBase = m_PlayerStore.GetBase();
-		if (tableBase == 0) return;
+    auto PlayerTableService::BuildLivePlayer(std::uint32_t handle, std::uintptr_t playerBase) -> AlivePlayer
+    {
+        AlivePlayer player{};
 
-		std::uint32_t index = handle & 0xFFFF;
+        player.Handle = handle;
+        player.Address = playerBase;
 
-		m_PlayerStore.RemovePlayerIf(
-			[index](std::uint32_t oldHandle, const auto& player) {
-				return (oldHandle & 0xFFFF) == index;
-			});
+        auto& reader = m_MemoryReaderService;
 
-		std::uintptr_t playerBase = tableBase + (index * Sizes::Base);
+        player.ConnectionState = reader.Read<ConnectionState>(playerBase, k_ConnectionState);
 
-		m_PlayerStore.AddPlayer(
-			handle, this->BuildLivePlayer(handle, playerBase));
-	}
+        player.AliveBipedHandle = reader.Read<std::uint32_t>(playerBase, k_AliveBipedHandle);
+        player.DeadBipedHandle = reader.Read<std::uint32_t>(playerBase, k_DeadBipedHandle);
+        player.CurrentBipedHandle = reader.Read<std::uint32_t>(playerBase, k_CurrentBipedHandle);
 
-	auto PlayerTableService::BuildLivePlayer(std::uint32_t handle, std::uintptr_t playerBase) -> AlivePlayer
-	{
-		AlivePlayer player{};
+        auto rawGamerTag = reader.ReadArray<wchar_t, k_GamerTagLength>(playerBase, k_GamerTag);
+        player.Gamertag = this->WideToUtf8(rawGamerTag.data(), k_GamerTagLength);
 
-		player.Handle = handle;
-		player.Address = playerBase;
+        auto rawTag = reader.ReadArray<wchar_t, k_TagLength>(playerBase, k_Tag);
+        player.Tag = this->WideToUtf8(rawTag.data(), k_TagLength);
 
-		auto& reader = m_MemoryReaderService;
+        player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, k_PrimaryWeaponHandle);
+        player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, k_SecondaryWeaponHandle);
+        player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, k_ObjectiveHandle);
+        player.CameraPosition = reader.Read<Vec3>(playerBase, k_CameraPosition);
+        player.CameraForward = reader.Read<Vec3>(playerBase, k_CameraForward);
+        player.AimOffset = reader.Read<Vec3>(playerBase, k_AimOffset);
 
-		player.ConnectionState = reader.Read<ConnectionState>(playerBase, Offset::ConnectionState);
+        return player;
+    }
 
-		player.AliveBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::AliveBipedHandle);
-		player.DeadBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::DeadBipedHandle);
-		player.CurrentBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::CurrentBipedHandle);
+    auto PlayerTableService::UpdatePlayerTable() -> void
+    {
+        this->UpdatePlayerData();
+        m_PlayerStore.Publish();
+    }
 
-		auto rawGamerTag = reader.ReadArray<wchar_t, 16>(playerBase, Offset::GamerTag);
-		player.Gamertag = this->WideToUtf8(rawGamerTag.data(), 16);
+    auto PlayerTableService::DiscoverPlayers(std::uintptr_t tableBase) -> void
+    {
+        auto& reader = m_MemoryReaderService;
 
-		auto rawTag = reader.ReadArray<wchar_t, 4>(playerBase, Offset::Tag);
-		player.Tag = this->WideToUtf8(rawTag.data(), 4);
+        for (std::uint32_t index{ 0 }; index < k_MaxPlayers; ++index)
+        {
+            std::uintptr_t playerBase{ tableBase + (index * k_Base) };
 
-		player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::PrimaryWeaponHandle);
-		player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::SecondaryWeaponHandle);
-		player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, Offset::ObjectiveHandle);
-		player.CameraPosition = reader.Read<Vec3>(playerBase, Offset::CameraPosition);
-		player.CameraForward = reader.Read<Vec3>(playerBase, Offset::CameraForward);
-		player.AimOffset = reader.Read<Vec3>(playerBase, Offset::AimOffset);
+            std::uint32_t salt{ reader.Read<std::uint32_t>(playerBase, k_Handle) & k_SaltMask };
+            if (salt == 0) continue;
 
-		return player;
-	}
+            std::uint32_t handle{ (salt << k_SaltShift) | index };
+            if (m_PlayerStore.HasPlayer(handle)) continue;
 
-	void PlayerTableService::UpdatePlayerTable()
-	{
-		this->UpdatePlayerData();
-		m_PlayerStore.Publish();
-	}
+            if (!IsKnownConnectionState(reader.Read<ConnectionState>(playerBase, k_ConnectionState))) continue;
 
-	void PlayerTableService::UpdatePlayerData()
-	{
-		std::uintptr_t tableBase = m_PlayerStore.GetBase();
-		if (tableBase == 0) return;
+            m_PlayerStore.AddPlayer(handle, this->BuildLivePlayer(handle, playerBase));
+        }
+    }
 
-		auto& reader = m_MemoryReaderService;
+    auto PlayerTableService::UpdatePlayerData() -> void
+    {
+        std::uintptr_t tableBase{ m_PlayerStore.GetBase() };
+        if (tableBase == 0) return;
 
-		std::vector<std::uint32_t> handlesToRemove;
+        this->DiscoverPlayers(tableBase);
 
-		m_PlayerStore.UpdatePlayers(
-			[&](std::uint32_t handle, AlivePlayer& player) {
-			std::uint32_t index = handle & 0xFFFF;
-			std::uintptr_t playerBase = tableBase + (index * Sizes::Base);
+        auto& reader = m_MemoryReaderService;
 
-			std::uint32_t rawHandleInMemory = reader.Read<std::uint32_t>(playerBase, Offset::Handle);
+        std::vector<std::uint32_t> handlesToRemove{};
 
-			std::uint32_t handleInMemory = (rawHandleInMemory << 16) | index;
-			if (handleInMemory != handle)
-			{
-				handlesToRemove.push_back(handle);
-				return;
-			}
+        m_PlayerStore.UpdatePlayers([&](std::uint32_t handle, AlivePlayer& player) {
+            std::uint32_t index{ handle & k_IndexMask };
+            std::uintptr_t playerBase{ tableBase + (index * k_Base) };
 
-			player.ConnectionState = reader.Read<ConnectionState>(playerBase, Offset::ConnectionState);
+            std::uint32_t rawHandleInMemory{ reader.Read<std::uint32_t>(playerBase, k_Handle) };
 
-			player.Team = reader.Read<Team>(playerBase, Offset::Team);
+            std::uint32_t handleInMemory{ (rawHandleInMemory << k_SaltShift) | index };
+            if (handleInMemory != handle)
+            {
+                handlesToRemove.push_back(handle);
+                return;
+            }
 
-			player.AliveBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::AliveBipedHandle);
-			player.DeadBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::DeadBipedHandle);
-			player.CurrentBipedHandle = reader.Read<std::uint32_t>(playerBase, Offset::CurrentBipedHandle);
+            player.ConnectionState = reader.Read<ConnectionState>(playerBase, k_ConnectionState);
 
-			player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::PrimaryWeaponHandle);
-			player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, Offset::SecondaryWeaponHandle);
-			player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, Offset::ObjectiveHandle);
-			player.CameraPosition = reader.Read<Vec3>(playerBase, Offset::CameraPosition);
-			player.CameraForward = reader.Read<Vec3>(playerBase, Offset::CameraForward);
-			player.AimOffset = reader.Read<Vec3>(playerBase, Offset::AimOffset);
-		});
+            player.Team = reader.Read<Team>(playerBase, k_Team);
 
-		for (std::uint32_t handle : handlesToRemove)
-		{
-			m_PlayerStore.RemovePlayer(handle);
-		}
-	}
+            player.AliveBipedHandle = reader.Read<std::uint32_t>(playerBase, k_AliveBipedHandle);
+            player.DeadBipedHandle = reader.Read<std::uint32_t>(playerBase, k_DeadBipedHandle);
+            player.CurrentBipedHandle = reader.Read<std::uint32_t>(playerBase, k_CurrentBipedHandle);
 
-	void PlayerTableService::Cleanup()
-	{
-		m_PlayerStore.Cleanup();
+            player.PrimaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, k_PrimaryWeaponHandle);
+            player.SecondaryWeaponHandle = reader.Read<std::uint32_t>(playerBase, k_SecondaryWeaponHandle);
+            player.ObjectiveHandle = reader.Read<std::uint32_t>(playerBase, k_ObjectiveHandle);
+            player.CameraPosition = reader.Read<Vec3>(playerBase, k_CameraPosition);
+            player.CameraForward = reader.Read<Vec3>(playerBase, k_CameraForward);
+            player.AimOffset = reader.Read<Vec3>(playerBase, k_AimOffset);
+        });
 
-		m_LogsService.Message("[PlayerTableService] INFO: Cleanup completed.");
-	}
+        for (std::uint32_t handle : handlesToRemove)
+        {
+            m_PlayerStore.RemovePlayer(handle);
+        }
+    }
 
-	// --- Helpers ---
+    auto PlayerTableService::Cleanup() -> void
+    {
+        m_PlayerStore.Cleanup();
 
-	std::string PlayerTableService::WideToUtf8(const wchar_t* source, std::size_t maxLength)
-	{
-		if (!source || maxLength == 0) return std::string();
+        m_LogsService.Message("[PlayerTableService] INFO: Cleanup completed.");
+    }
 
-		int wideLength = (int)wcsnlen(source, maxLength);
-		if (wideLength == 0) return std::string();
+    auto PlayerTableService::WideToUtf8(const wchar_t* source, std::size_t maxLength) -> std::string
+    {
+        if (!source || maxLength == 0) return std::string{};
 
-		int utf8Length = WideCharToMultiByte(CP_UTF8, 0, source,
-			wideLength, NULL, 0, NULL, NULL);
+        int wideLength{ (int)wcsnlen(source, maxLength) };
+        if (wideLength == 0) return std::string{};
 
-		std::string result(utf8Length, 0);
+        int utf8Length{ WideCharToMultiByte(CP_UTF8, 0, source,
+            wideLength, NULL, 0, NULL, NULL) };
 
-		WideCharToMultiByte(CP_UTF8, 0, source, wideLength,
-			&result[0], utf8Length, NULL, NULL);
+        std::string result(utf8Length, 0);
 
-		return result;
-	}
+        WideCharToMultiByte(CP_UTF8, 0, source, wideLength,
+            &result[0], utf8Length, NULL, NULL);
+
+        return result;
+    }
 }

@@ -4,44 +4,57 @@ import std;
 
 export namespace Tables::Player::Type::Offset
 {
-	// Player table handle, composed from a Salt and a Index.
-	// The salt is generated via networking systems (2 byte value)
-	// The index is just the position inside the array of the player table.
-	constexpr std::uintptr_t Handle{ 0x000 };			// uint32.
+    // Salt of the player handle (uint32).
+    // note: The handle is the salt in the high 16 bits and the table index in the low 16 bits. The networking systems generate the salt.
+    constexpr std::uintptr_t k_Handle{ 0x000 };
 
-	// 0x01: Connected, 0x02: Disconnected, 0x08: Connecting.
-	constexpr std::uintptr_t ConnectionState{ 0x004 };	// uint8.
+    // Connection state (uint8). 0x01 is Connected, 0x02 is Disconnected and 0x08 is Connecting.
+    constexpr std::uintptr_t k_ConnectionState{ 0x004 };
 
-	constexpr std::uintptr_t Xuid{ 0x008 };				// uint64.
-	constexpr std::uintptr_t NetworkID{ 0x014 };			// uint32.
+    // Xuid of the player (uint64).
+    constexpr std::uintptr_t k_Xuid{ 0x008 };
 
-	// Holds the biped's handle that's being controlled by the player.
-	constexpr std::uintptr_t AliveBipedHandle{ 0x028 };	// uint32.
+    // Network ID of the player (uint32).
+    constexpr std::uintptr_t k_NetworkID{ 0x014 };
 
-	// Holds the last biped's handle that was controlled
-	// by the player, while the player is dead.
-	constexpr std::uintptr_t DeadBipedHandle{ 0x02C };	// uint32.
+    // Handle of the biped the player controls (uint32).
+    constexpr std::uintptr_t k_AliveBipedHandle{ 0x028 };
 
-	// Holds the biped's handle that the player is using.
-	// It changes when the game assings another biped to the player.
-	constexpr std::uintptr_t CurrentBipedHandle{ 0x034 };	// uint32.
+    // Handle of the last biped the player controlled (uint32).
+    // note: Kept while the player is dead.
+    constexpr std::uintptr_t k_DeadBipedHandle{ 0x02C };
 
-	constexpr std::uintptr_t CameraPosition{ 0x038 };		// 3 floats.
-	constexpr std::uintptr_t CameraForward{ 0x044 };		// 3 floats.
+    // Handle of the biped the player is using (uint32).
+    // note: Changes when the game assigns another biped to the player.
+    constexpr std::uintptr_t k_CurrentBipedHandle{ 0x034 };
 
-	// Related to aim, this needs more study.
-	constexpr std::uintptr_t AimOffset{ 0x050 };			// 3 floats.
+    // Position of the camera (3 floats).
+    constexpr std::uintptr_t k_CameraPosition{ 0x038 };
 
-	constexpr std::uintptr_t PrimaryWeaponHandle{ 0x05C };	// uint32.
-	constexpr std::uintptr_t SecondaryWeaponHandle{ 0x060 };	// uint32.
+    // Forward vector of the camera (3 floats).
+    constexpr std::uintptr_t k_CameraForward{ 0x044 };
 
-	// Holds the handle of the objective while the player is carrying it.
-	constexpr std::uintptr_t ObjectiveHandle{ 0x064 };		// uint32.
+    // Related to the aim, not fully understood (3 floats).
+    constexpr std::uintptr_t k_AimOffset{ 0x050 };
 
-	constexpr std::uintptr_t CameraPosition2{ 0x08C };		// 3 floats.
+    // Handle of the primary weapon (uint32).
+    constexpr std::uintptr_t k_PrimaryWeaponHandle{ 0x05C };
 
-	constexpr std::uintptr_t Team{ 0xAD };	// uint8.
+    // Handle of the secondary weapon (uint32).
+    constexpr std::uintptr_t k_SecondaryWeaponHandle{ 0x060 };
 
-	constexpr std::uintptr_t GamerTag{ 0xB0 };	// 32 bytes.
-	constexpr std::uintptr_t Tag{ 0xF4 };		// 8 bytes.
+    // Handle of the objective while the player carries it (uint32).
+    constexpr std::uintptr_t k_ObjectiveHandle{ 0x064 };
+
+    // Second copy of the camera position (3 floats).
+    constexpr std::uintptr_t k_CameraPosition2{ 0x08C };
+
+    // Team of the player (uint8).
+    constexpr std::uintptr_t k_Team{ 0x0AD };
+
+    // Gamertag as 16 wide characters (32 bytes).
+    constexpr std::uintptr_t k_GamerTag{ 0x0B0 };
+
+    // Service tag as 4 wide characters (8 bytes).
+    constexpr std::uintptr_t k_Tag{ 0x0F4 };
 }

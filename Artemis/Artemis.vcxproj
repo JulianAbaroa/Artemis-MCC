@@ -687,15 +687,12 @@
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectScenery.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectVehicle.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectWeapon.ixx" />
-    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.cpp" />
-    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.cpp" />
     <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.cpp" />
     <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.cpp" />
     <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.ixx" />
-    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Hook.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Type.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerAlive.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerOffset.ixx" />

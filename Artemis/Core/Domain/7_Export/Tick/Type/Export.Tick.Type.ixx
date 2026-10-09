@@ -20,8 +20,8 @@ export namespace Export::Tick::Type
 {
 	using AliveObject = Tables::Object::Type::Alive::Object;
 	using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
-	using AlivePlayer = Tables::Player::Type::Alive::Player;
-	using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
+	using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
+	using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
 	using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
 
 	using Classified = Relations::Classifier::Type::Classified;

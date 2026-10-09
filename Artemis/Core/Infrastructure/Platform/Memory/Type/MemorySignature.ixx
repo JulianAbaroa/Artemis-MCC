@@ -55,13 +55,6 @@ export namespace Platform::Memory::Type::Signature
         "48 89 5C 24 08 48 89 74 24 10 57 48 81 EC 90 00 00 00 33 D2 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 41 38 33 FF 48 63 D0 83 CE FF 3B D6"
     };
 
-    // Functions: Players
-    inline constexpr Signature CreatePlayer
-    {
-        "CreatePlayer",
-        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 44 8B 0D ?? ?? ?? ?? 48 8B FA 65 48 8B 04 25 58 00 00 00 8B D1 41 8A E8 4A 8B 34 C8 B8 18 00 00 00 48 8B 0C 30 E8 ?? ?? ?? ?? 8B D8 83 F8 FF 74"
-    };
-
     // Functions: Ticks
     inline constexpr Signature SimulationTicks
     {

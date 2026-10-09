@@ -1763,20 +1763,11 @@
     <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.ixx">
       <Filter>Core\Domain\3_Tables\Player\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.cpp">
-      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\CreatePlayerDetour.ixx">
-      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.cpp">
       <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.ixx">
       <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Hook.ixx">
-      <Filter>Core\Domain\3_Tables\Player</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
       <Filter>Core\Domain\3_Tables\Object\Type\BoneMatrix</Filter>
