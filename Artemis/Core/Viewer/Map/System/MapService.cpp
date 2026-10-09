@@ -123,9 +123,10 @@ namespace Viewer::Map::System
                 LimitsPassOptions limitsOptions{};
                 limitsOptions.KillVolumes = m_OptionsStore.IsEnabled(Flag::LimitKillVolumes);
                 limitsOptions.SafeVolumes = m_OptionsStore.IsEnabled(Flag::LimitSafeVolumes);
+                limitsOptions.SoftCeilings = m_OptionsStore.IsEnabled(Flag::LimitSoftCeilings);
                 limitsOptions.Opacity = m_OptionsStore.GetScalar(Scalar::LimitOpacity);
 
-                m_LimitsPass.Upload(frame.Device, frame.Context, tick->Limits, limitsOptions);
+                m_LimitsPass.Upload(frame.Device, frame.Context, tick->Limits, tick->Designs, limitsOptions);
             }
 
             {

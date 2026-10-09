@@ -1039,6 +1039,9 @@
     <Filter Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp">
       <UniqueIdentifier>{4be93b8e-212f-45ec-b1eb-ea34c248b3e2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt">
+      <UniqueIdentifier>{9af41633-e781-4e44-9ab4-12db497da9ab}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr">
       <UniqueIdentifier>{f8c564a1-417e-44a6-a38b-e089d5e5ac50}</UniqueIdentifier>
     </Filter>
@@ -3051,6 +3054,18 @@
       <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Scnr</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Scnr.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSddt.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt\SddtBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt\SddtBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Level\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sddt.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Level</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Reflect\Common.Reflect.Type.ixx">

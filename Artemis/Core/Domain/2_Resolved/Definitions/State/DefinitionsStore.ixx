@@ -21,6 +21,7 @@ export namespace Resolved::Definitions::State
         // Level
         TagStore<Type::Sbsp::Sbsp> Sbsp{};
         TagStore<Type::Scnr::Scnr> Scnr{};
+        TagStore<Type::Sddt::Sddt> Sddt{};
 
         // Model
         TagStore<Type::Coll::Coll> Coll{};
@@ -55,6 +56,7 @@ export namespace Resolved::Definitions::State
             f(Sbsp);
             f(Scen);
             f(Scnr);
+            f(Sddt);
             f(Vehi);
             f(Weap);
         }

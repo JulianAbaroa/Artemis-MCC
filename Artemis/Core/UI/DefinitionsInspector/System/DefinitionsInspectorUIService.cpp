@@ -38,9 +38,9 @@ namespace
     }
 
     // Classes that can be dumped.
-    constexpr std::array<const char*, 14> k_DumpFourCCs
+    constexpr std::array<const char*, 15> k_DumpFourCCs
     {
-        "bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "proj", "scen", "scnr", "vehi", "weap",
+        "bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "proj", "scen", "scnr", "sddt", "vehi", "weap",
     };
 
     // Escapes the text to be placed inside a JSON string.
@@ -235,6 +235,7 @@ namespace UI::DefinitionsInspector::System
         else if (fourCC == "proj") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Proj.All());
         else if (fourCC == "scen") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Scen.All());
         else if (fourCC == "scnr") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Scnr.All());
+        else if (fourCC == "sddt") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Sddt.All());
         else if (fourCC == "vehi") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Vehi.All());
         else if (fourCC == "weap") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Weap.All());
 
@@ -324,6 +325,7 @@ namespace UI::DefinitionsInspector::System
         else if (fourCC == "proj") this->DrawResolved(m_DefinitionsStore.Proj.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "scen") this->DrawResolved(m_DefinitionsStore.Scen.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "scnr") this->DrawResolved(m_DefinitionsStore.Scnr.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "sddt") this->DrawResolved(m_DefinitionsStore.Sddt.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "vehi") this->DrawResolved(m_DefinitionsStore.Vehi.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "weap") this->DrawResolved(m_DefinitionsStore.Weap.Get(tagName), fourCC, tagName, ownerHandle);
         else ImGui::TextDisabled("FourCC \"%s\" without Resolved::Definitions yet.", fourCC.c_str());

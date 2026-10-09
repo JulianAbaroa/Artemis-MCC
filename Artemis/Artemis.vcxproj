@@ -199,6 +199,8 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp\SbspBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp\SbspBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt\SddtBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt\SddtBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.cpp" />
@@ -230,6 +232,7 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\DefinitionsBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Damage\DefinitionsJpt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSbsp.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSddt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsScnr.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsColl.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsHlmt.ixx" />
@@ -246,6 +249,7 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsWeap.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Damage\Reflect.Jpt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sbsp.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sddt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Scnr.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Coll.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Hlmt.ixx" />

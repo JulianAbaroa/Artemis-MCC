@@ -21,12 +21,17 @@ namespace
     using TriggerVolumeKind = Resolved::Definitions::Type::Scnr::TriggerVolumeKind;
     using BoundaryTrigger = Resolved::Definitions::Type::Scnr::BoundaryTrigger;
     using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
+    using SoftCeilingKind = Resolved::Definitions::Type::Scnr::SoftCeilingKind;
+    using SoftCeilingMesh = Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
 
     using Platform::Render::Type::SurfaceMode;
     using Platform::Render::Type::VertexLayout;
 
     using Viewer::Style::Type::k_LimitKill;
     using Viewer::Style::Type::k_LimitSafe;
+    using Viewer::Style::Type::k_CeilingAcceleration;
+    using Viewer::Style::Type::k_CeilingSoftKill;
+    using Viewer::Style::Type::k_CeilingSlipSurface;
 
     constexpr UINT k_InitialCapacity{ 2048 };
     constexpr float k_Minimum{ 1e-4f };
@@ -281,23 +286,48 @@ namespace
         }
     }
 
-    auto KeyOf(const Viewer::Map::Type::LimitsPassOptions& options) -> std::uint32_t
+    auto ColorOfCeiling(SoftCeilingKind kind) -> Color
+    {
+        switch (kind)
+        {
+        case SoftCeilingKind::SoftKill: return k_CeilingSoftKill;
+        case SoftCeilingKind::SlipSurface: return k_CeilingSlipSurface;
+        default: return k_CeilingAcceleration;
+        }
+    }
+
+    // A soft ceiling has no outline, because its triangles would only fill the view with lines.
+    auto AppendCeiling(Mesh& mesh, const SoftCeilingMesh& ceiling) -> void
+    {
+        const Color color{ ColorOfCeiling(ceiling.Kind) };
+
+        for (const auto& triangle : ceiling.Triangles)
+        {
+            AppendTriangle(mesh, triangle.A, triangle.B, triangle.C, color);
+        }
+    }
+
+    auto KeyOf(const Viewer::Map::Type::LimitsPassOptions& options, bool hasScnrs, bool hasSddts) -> std::uint32_t
     {
         return (options.KillVolumes ? 1u : 0u)
-            | (options.SafeVolumes ? 2u : 0u);
+            | (options.SafeVolumes ? 2u : 0u)
+            | (options.SoftCeilings ? 4u : 0u)
+            | (hasScnrs ? 8u : 0u)
+            | (hasSddts ? 16u : 0u);
     }
 }
 
 namespace Viewer::Map::System
 {
     auto LimitsPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const std::shared_ptr<const MapScnrs>& scnrs, const LimitsPassOptions& options) -> void
+        const std::shared_ptr<const MapScnrs>& scnrs, const std::shared_ptr<const MapSddts>& sddts,
+        const LimitsPassOptions& options) -> void
     {
         if (!device || !context) return;
 
         m_Opacity = options.Opacity;
 
-        const std::uint32_t key{ KeyOf(options) };
+        const std::uint32_t key{ KeyOf(options, scnrs != nullptr, sddts != nullptr) };
         if (m_Gate.IsCurrent(k_Generation, key)) return;
 
         m_Gate.Mark(k_Generation, key);
@@ -307,20 +337,32 @@ namespace Viewer::Map::System
         m_Faces.Scratch.clear();
         m_Edges.Scratch.clear();
 
-        if (!scnrs) return;
-
         Mesh mesh{ m_Faces.Scratch, m_Edges.Scratch };
 
-        for (const auto& [tagName, scnr] : *scnrs)
+        if (scnrs)
         {
-            if (options.KillVolumes)
+            for (const auto& [tagName, scnr] : *scnrs)
             {
-                AppendTriggers(mesh, scnr, scnr.KillTriggers, k_LimitKill);
-            }
+                if (options.KillVolumes)
+                {
+                    AppendTriggers(mesh, scnr, scnr.KillTriggers, k_LimitKill);
+                }
 
-            if (options.SafeVolumes)
+                if (options.SafeVolumes)
+                {
+                    AppendTriggers(mesh, scnr, scnr.SafeZoneTriggers, k_LimitSafe);
+                }
+            }
+        }
+
+        if (sddts && options.SoftCeilings)
+        {
+            for (const auto& [tagName, sddt] : *sddts)
             {
-                AppendTriggers(mesh, scnr, scnr.SafeZoneTriggers, k_LimitSafe);
+                for (const SoftCeilingMesh& ceiling : sddt.SoftCeilings)
+                {
+                    AppendCeiling(mesh, ceiling);
+                }
             }
         }
 

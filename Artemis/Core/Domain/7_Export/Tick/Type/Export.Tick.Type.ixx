@@ -46,6 +46,7 @@ export namespace Export::Tick::Type
 	using Raycasts = Egocentric::Raycast::Type::Raycasts;
 	using MapSbsps = std::unordered_map<std::string, Resolved::Definitions::Type::Sbsp::Sbsp>;
 	using MapScnrs = std::unordered_map<std::string, Resolved::Definitions::Type::Scnr::Scnr>;
+	using MapSddts = std::unordered_map<std::string, Resolved::Definitions::Type::Sddt::Sddt>;
 
 	struct Tick
 	{
@@ -53,6 +54,7 @@ export namespace Export::Tick::Type
 
 		std::shared_ptr<const MapSbsps> Map;
 		std::shared_ptr<const MapScnrs> Limits;
+		std::shared_ptr<const MapSddts> Designs;
 
 		// --- Layer 3: Tables ---
 		std::shared_ptr<const ObjectTable> ObjectTable;

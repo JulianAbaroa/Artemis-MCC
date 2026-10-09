@@ -23,11 +23,12 @@ export namespace Viewer::Map::Type
         float ArrowLength{ 3.0f };
     };
 
-    // Which map limits the limits pass draws and how opaque the volumes are.
+    // Which map limits the limits pass draws and how opaque they are.
     struct LimitsPassOptions
     {
         bool KillVolumes{ true };
         bool SafeVolumes{ true };
+        bool SoftCeilings{ true };
         float Opacity{ 0.20f };
     };
 

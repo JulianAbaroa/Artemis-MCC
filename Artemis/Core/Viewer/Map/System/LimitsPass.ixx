@@ -13,7 +13,8 @@ import std;
 
 export namespace Viewer::Map::System
 {
-    // Draws the kill and safe zone volumes of the scenario as translucent solids with an outline.
+    // Draws the kill and safe zone volumes of the scenario as translucent solids with an outline,
+    // and the soft ceilings of the structure design as translucent surfaces.
     // The volumes never change while the map is loaded, so the vertices are rebuilt only when an option that shapes them changes.
     class LimitsPass
     {
@@ -27,6 +28,7 @@ export namespace Viewer::Map::System
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
         using MapScnrs = Export::Tick::Type::MapScnrs;
+        using MapSddts = Export::Tick::Type::MapSddts;
 
         using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
 
@@ -49,7 +51,8 @@ export namespace Viewer::Map::System
         // Rebuilds the vertices when an option that shapes them changes or when the limits appear.
         // note: The opacity is only remembered, so moving it never rebuilds.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-            const std::shared_ptr<const MapScnrs>& scnrs, const LimitsPassOptions& options) -> void;
+            const std::shared_ptr<const MapScnrs>& scnrs, const std::shared_ptr<const MapSddts>& sddts,
+            const LimitsPassOptions& options) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

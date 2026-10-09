@@ -6,6 +6,7 @@ export import :Jpt;
 // Level
 export import :Sbsp;
 export import :Scnr;
+export import :Sddt;
 
 // Model
 export import :Coll;
@@ -55,7 +56,7 @@ export namespace Resolved::Definitions::System
             m_Builders{ BipdBuilder{ m_ObjectBuilder }, BlocBuilder{ m_ObjectBuilder }, CollBuilder{},
                 CtrlBuilder{ m_ObjectBuilder }, EqipBuilder{ m_ObjectBuilder }, HlmtBuilder{ tagResolverService },
                 JptBuilder{}, MachBuilder{ m_ObjectBuilder }, ModeBuilder{}, ProjBuilder{ m_ObjectBuilder },
-                ScenBuilder{ m_ObjectBuilder }, ScnrBuilder{}, VehiBuilder{ m_ObjectBuilder },
+                ScenBuilder{ m_ObjectBuilder }, ScnrBuilder{}, SddtBuilder{}, VehiBuilder{ m_ObjectBuilder },
                 WeapBuilder{ m_ObjectBuilder } } {}
         ~DefinitionsBuilder() = default;
 
@@ -75,7 +76,7 @@ export namespace Resolved::Definitions::System
         ObjectBuilder m_ObjectBuilder;
         std::tuple<BipdBuilder, BlocBuilder, CollBuilder, CtrlBuilder, EqipBuilder, HlmtBuilder,
             JptBuilder, MachBuilder, ModeBuilder, ProjBuilder, ScenBuilder, ScnrBuilder,
-            VehiBuilder, WeapBuilder> m_Builders;
+            SddtBuilder, VehiBuilder, WeapBuilder> m_Builders;
         SbspBuilder m_SbspBuilder{};
 
         // return: Number of sbsp built.

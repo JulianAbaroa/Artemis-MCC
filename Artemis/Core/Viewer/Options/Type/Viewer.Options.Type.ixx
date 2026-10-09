@@ -83,6 +83,7 @@ export namespace Viewer::Options::Type
 
         LimitKillVolumes,
         LimitSafeVolumes,
+        LimitSoftCeilings,
 
         Count
     };
@@ -319,6 +320,9 @@ export namespace Viewer::Options::Type
 
         { Flag::LimitSafeVolumes, Group::Limits, "LimitSafeVolumes", "Safe zone volumes",
             "Draws the trigger volumes that the scenario uses as safe zone triggers.", true },
+
+        { Flag::LimitSoftCeilings, Group::Limits, "LimitSoftCeilings", "Soft ceilings",
+            "Draws the soft ceiling surfaces of the structure design: blue pushes back, orange kills softly and purple makes slip. Translucent, without outline.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
@@ -348,7 +352,7 @@ export namespace Viewer::Options::Type
             "Opacity of translucent shields. Lower values are more see-through.", 0.30f, 0.05f, 1.0f, "%.2f" },
 
         { Scalar::LimitOpacity, Group::Limits, "LimitOpacity", "Volume opacity",
-            "Opacity of the kill and safe zone volumes. Lower values are more see-through.", 0.20f, 0.02f, 1.0f, "%.2f" },
+            "Opacity of the kill and safe zone volumes and the soft ceilings. Lower values are more see-through.", 0.20f, 0.02f, 1.0f, "%.2f" },
     } };
 
     // return: True if every table has its entries in the order of its enum, so the enum values can index them.
