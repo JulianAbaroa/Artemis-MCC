@@ -35,9 +35,9 @@ namespace Resolved::Definitions::System
 
         out.TagName = scnr.TagName;
 
-        BuildTriggerVolumes(scnr, out);
-        BuildBoundaryTriggers(scnr, out);
-        BuildSoftCeilings(scnr, out);
+        this->BuildTriggerVolumes(scnr, out);
+        this->BuildBoundaryTriggers(scnr, out);
+        this->BuildSoftCeilings(scnr, out);
 
         return out;
     }
