@@ -29,6 +29,7 @@ export namespace Map::Reader::Type::Magic
         constexpr std::uint32_t k_Sbsp{ 0x73627370 };
         constexpr std::uint32_t k_Scen{ 0x7363656E };
         constexpr std::uint32_t k_Scnr{ 0x73636E72 };
+        constexpr std::uint32_t k_Sddt{ 0x73646474 };
         constexpr std::uint32_t k_Sldt{ 0x734C6454 };
         constexpr std::uint32_t k_Vehi{ 0x76656869 };
         constexpr std::uint32_t k_Weap{ 0x77656170 };

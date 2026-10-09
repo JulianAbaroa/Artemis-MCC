@@ -25,6 +25,7 @@ export namespace Map::Tag::State
 		Map::Reader::State::TagStore<Map::Tag::Type::Sbsp::Object::SbspObject> Sbsp;
 		Map::Reader::State::TagStore<Map::Tag::Type::Scen::Object::ScenObject> Scen;
 		Map::Reader::State::TagStore<Map::Tag::Type::Scnr::Object::ScnrObject> Scnr;
+		Map::Reader::State::TagStore<Map::Tag::Type::Sddt::Object::SddtObject> Sddt;
 		Map::Reader::State::TagStore<Map::Tag::Type::Sldt::Object::SldtObject> Sldt;
 		Map::Reader::State::TagStore<Map::Tag::Type::Vehi::Object::VehiObject> Vehi;
 		Map::Reader::State::TagStore<Map::Tag::Type::Weap::Object::WeapObject> Weap;
@@ -49,6 +50,7 @@ export namespace Map::Tag::State
 			f(Sbsp);
 			f(Scen);
 			f(Scnr);
+			f(Sddt);
 			f(Sldt);
 			f(Vehi);
 			f(Weap);

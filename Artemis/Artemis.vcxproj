@@ -606,6 +606,12 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrObject.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrOffset.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrStructure.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.System.Sddt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.Type.Sddt.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\System\SddtDescriptor.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtObject.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtOffset.ixx" />
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtStructure.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.Type.Sldt.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\SldtDescriptor.ixx" />

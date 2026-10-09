@@ -370,6 +370,15 @@
     <Filter Include="Core\Domain\1_Map\Tag\Scnr\System">
       <UniqueIdentifier>{4206f0f8-7ead-41d0-af5a-de388c7680aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sddt">
+      <UniqueIdentifier>{a2ba4d1e-7fbb-48d7-bd6b-2f1c52486974}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sddt\Type">
+      <UniqueIdentifier>{93e0202d-d668-40ff-99d7-fd020607b25d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\1_Map\Tag\Sddt\System">
+      <UniqueIdentifier>{a67312c7-f37f-49fa-9b7a-c05e137e6288}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Sldt">
       <UniqueIdentifier>{ffe77a1e-75e8-4530-9415-096b8a485304}</UniqueIdentifier>
     </Filter>
@@ -1603,6 +1612,24 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\ScnrDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Scnr\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.System.Sddt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.Type.Sddt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\System\SddtDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx">
       <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>

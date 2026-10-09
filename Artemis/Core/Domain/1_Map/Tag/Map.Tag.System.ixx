@@ -18,6 +18,7 @@ export import :Proj;
 export import :Sbsp;
 export import :Scen;
 export import :Scnr;
+export import :Sddt;
 export import :Sldt;
 export import :Vehi;
 export import :Weap;
