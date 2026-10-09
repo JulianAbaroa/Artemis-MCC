@@ -97,6 +97,17 @@ namespace Resolved::Definitions::System
         m_DefinitionsStore.Freeze();
 
         m_LogsService.Message("[DefinitionsBuilder] INFO: Definitions built. {}.", summary);
+
+        for (const auto& [tagName, scnr] : m_DefinitionsStore.Scnr.All())
+        {
+            m_LogsService.Message("[DefinitionsBuilder] INFO: Map limits of {}."
+                " Trigger volumes: {} | Kill triggers: {} | Safe zone triggers: {} | Soft ceilings: {}.",
+                tagName,
+                static_cast<int>(scnr.TriggerVolumes.size()),
+                static_cast<int>(scnr.KillTriggers.size()),
+                static_cast<int>(scnr.SafeZoneTriggers.size()),
+                static_cast<int>(scnr.SoftCeilings.size()));
+        }
     }
 
     auto DefinitionsBuilder::BuildSbsps() -> std::int32_t

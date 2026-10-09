@@ -6,7 +6,6 @@ import Resolved.Definitions.Type;
 export namespace Resolved::Definitions::System
 {
     // Builds the scenario definition.
-    // Waiting for some system to need this.
     class ScnrBuilder
     {
     private:
@@ -18,5 +17,10 @@ export namespace Resolved::Definitions::System
         ~ScnrBuilder() = default;
 
         auto Build(const ScnrObject& scnr) -> Scnr;
+
+    private:
+        static auto BuildTriggerVolumes(const ScnrObject& scnr, Scnr& out) -> void;
+        static auto BuildBoundaryTriggers(const ScnrObject& scnr, Scnr& out) -> void;
+        static auto BuildSoftCeilings(const ScnrObject& scnr, Scnr& out) -> void;
     };
 }
