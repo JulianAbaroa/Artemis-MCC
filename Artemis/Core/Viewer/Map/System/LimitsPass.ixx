@@ -31,15 +31,7 @@ export namespace Viewer::Map::System
         using MapSddts = Export::Tick::Type::MapSddts;
 
         using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
-
-        // Vertices of one kind of primitive and the buffer that holds them.
-        struct Batch
-        {
-            ComPtr<ID3D11Buffer> Buffer{};
-            UINT Capacity{ 0 };
-            UINT VertexCount{ 0 };
-            std::vector<Vertex> Scratch{};
-        };
+        using VertexBatch = Viewer::Map::Type::VertexBatch;
 
     public:
         explicit LimitsPass(LogsService& logsService) : m_LogsService(logsService) {}
@@ -61,14 +53,14 @@ export namespace Viewer::Map::System
     private:
         LogsService& m_LogsService;
 
-        Batch m_Faces{};
-        Batch m_Edges{};
+        VertexBatch m_Faces{};
+        VertexBatch m_Edges{};
 
         float m_Opacity{ 0.20f };
 
         Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
 
         // return: False if the batch could not be uploaded.
-        auto UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, Batch& batch, const char* tag) -> bool;
+        auto UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, VertexBatch& batch, const char* tag) -> bool;
     };
 }

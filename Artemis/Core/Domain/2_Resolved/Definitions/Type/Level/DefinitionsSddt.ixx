@@ -1,6 +1,7 @@
 export module Resolved.Definitions.Type:Sddt;
 
 import :Scnr;
+
 import Common.Math.Type;
 import std;
 

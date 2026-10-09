@@ -383,12 +383,12 @@ namespace Viewer::Map::System
         this->UploadBatch(device, context, m_Edges, "[LimitsPass] edges");
     }
 
-    auto LimitsPass::UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, Batch& batch,
+    auto LimitsPass::UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, VertexBatch& batch,
         const char* tag) -> bool
     {
         if (batch.Scratch.empty()) return true;
 
-        const UINT needed = static_cast<UINT>(batch.Scratch.size());
+        const UINT needed{ static_cast<UINT>(batch.Scratch.size()) };
 
         if (!Platform::Render::System::GpuBuffer::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, batch.Buffer, batch.Capacity, tag, m_LogsService))
@@ -430,7 +430,7 @@ namespace Viewer::Map::System
 
     auto LimitsPass::Release() -> void
     {
-        for (Batch* batch : { &m_Faces, &m_Edges })
+        for (VertexBatch* batch : { &m_Faces, &m_Edges })
         {
             batch->Buffer.Reset();
             batch->Capacity = 0;

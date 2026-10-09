@@ -76,7 +76,8 @@ namespace Resolved::Definitions::System
 
     auto ScnrBuilder::BuildBoundaryTriggers(const ScnrObject& scnr, Scnr& out) -> void
     {
-        const auto build = [](const auto& entries, std::vector<BoundaryTrigger>& triggers) {
+        const auto build = [](const auto& entries, std::vector<BoundaryTrigger>& triggers)
+        {
             triggers.reserve(entries.size());
 
             for (const auto& entry : entries)
