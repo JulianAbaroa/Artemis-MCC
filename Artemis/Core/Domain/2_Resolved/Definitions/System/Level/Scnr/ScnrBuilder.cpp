@@ -61,6 +61,8 @@ namespace Resolved::Definitions::System
             built.Extents = ToVec3(volume.Extents);
 
             built.ZSink = volume.ZSink;
+            built.SectorBoundsMin = { volume.SectorBoundsX.Min, volume.SectorBoundsY.Min, volume.SectorBoundsZ.Min };
+            built.SectorBoundsMax = { volume.SectorBoundsX.Max, volume.SectorBoundsY.Max, volume.SectorBoundsZ.Max };
 
             built.SectorPoints.reserve(volume.SectorPoints.size());
             for (const auto& point : volume.SectorPoints)

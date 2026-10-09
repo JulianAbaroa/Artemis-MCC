@@ -27,6 +27,8 @@ export namespace Common::Reflect::Type
             MakeField("Extents", &TriggerVolume::Extents),
             MakeField("ZSink", &TriggerVolume::ZSink),
             MakeField("SectorPoints", &TriggerVolume::SectorPoints),
+            MakeField("SectorBoundsMin", &TriggerVolume::SectorBoundsMin),
+            MakeField("SectorBoundsMax", &TriggerVolume::SectorBoundsMax),
         };
     };
 

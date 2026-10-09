@@ -2144,6 +2144,12 @@
     <ClCompile Include="Core\Viewer\Map\System\MapService.cpp">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\LimitsPass.ixx">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Map\System\LimitsPass.cpp">
+      <Filter>Core\Viewer\Map\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\ZonePass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>

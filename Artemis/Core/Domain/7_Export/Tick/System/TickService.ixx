@@ -40,6 +40,7 @@ export namespace Export::Tick::System
 		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 		using TickStore = Export::Tick::State::TickStore;
 		using MapSbsps = Export::Tick::Type::MapSbsps;
+		using MapScnrs = Export::Tick::Type::MapScnrs;
 
 	public:
 		TickService(ObjectTableStore& objectStore, PlayerTableStore& playerStore,
@@ -77,5 +78,6 @@ export namespace Export::Tick::System
 		DefinitionsStore& m_DefinitionsStore;
 		TickStore& m_TickStore;
 		std::shared_ptr<const MapSbsps> m_Map{};
+		std::shared_ptr<const MapScnrs> m_Limits{};
 	};
 }

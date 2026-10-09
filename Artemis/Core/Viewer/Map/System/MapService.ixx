@@ -9,6 +9,7 @@ import :DynamicPass;
 import :ZonePass;
 import :RaycastPass;
 import :FixturePass;
+import :LimitsPass;
 import :AimPass;
 
 import Service.Logs.System;
@@ -35,9 +36,10 @@ export namespace Viewer::Map::System
     static_assert(RenderPass<ZonePass>);
     static_assert(RenderPass<RaycastPass>);
     static_assert(RenderPass<FixturePass>);
+    static_assert(RenderPass<LimitsPass>);
     static_assert(RenderPass<AimPass>);
 
-    // Renders the map frame: the static map, the collidables, the zones, the raycasts, the fixture arrows and the aim spheres.
+    // Renders the map frame: the static map, the collidables, the zones, the raycasts, the fixture arrows, the aim spheres and the map limits.
     // It uploads what changed in the tick, draws every pass and times the frame with the profiler.
     // note: Render runs on the game render thread. Suspend, Resume and Release may come from other threads, so they share a mutex.
     class MapService
@@ -62,7 +64,7 @@ export namespace Viewer::Map::System
             m_TickStore(tickStore), m_SceneService(sceneService), m_OptionsStore(optionsStore),
             m_GpuPipeline(logsService), m_MapPass(logsService),
             m_DynamicPass(logsService), m_ZonePass(logsService),
-            m_RaycastPass(logsService), m_FixturePass(logsService), m_AimPass(logsService) {}
+            m_RaycastPass(logsService), m_FixturePass(logsService), m_LimitsPass(logsService), m_AimPass(logsService) {}
         ~MapService() = default;
 
         MapService(const MapService&) = delete;
@@ -92,6 +94,7 @@ export namespace Viewer::Map::System
         ZonePass m_ZonePass;
         RaycastPass m_RaycastPass;
         FixturePass m_FixturePass;
+        LimitsPass m_LimitsPass;
         AimPass m_AimPass;
         FrameProfiler m_Profiler{};
 

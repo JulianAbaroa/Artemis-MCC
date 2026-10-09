@@ -21,13 +21,21 @@ namespace Export::Tick::System
                 m_Map = std::shared_ptr<const Export::Tick::Type::MapSbsps>(
                     std::shared_ptr<void>{}, &m_DefinitionsStore.Sbsp.All());
             }
+
+            if (!m_Limits && m_DefinitionsStore.Scnr.IsFrozen())
+            {
+                m_Limits = std::shared_ptr<const Export::Tick::Type::MapScnrs>(
+                    std::shared_ptr<void>{}, &m_DefinitionsStore.Scnr.All());
+            }
         }
         else
         {
             m_Map.reset();
+            m_Limits.reset();
         }
 
         tick.Map = m_Map;
+        tick.Limits = m_Limits;
 
         // --- Layer 3: Tables ---
         tick.ObjectTable = m_ObjectStore.Acquire();

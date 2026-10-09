@@ -23,6 +23,14 @@ export namespace Viewer::Map::Type
         float ArrowLength{ 3.0f };
     };
 
+    // Which map limits the limits pass draws and how opaque the volumes are.
+    struct LimitsPassOptions
+    {
+        bool KillVolumes{ true };
+        bool SafeVolumes{ true };
+        float Opacity{ 0.20f };
+    };
+
     // A mesh stored once in the geometry buffer, with the instances to draw it with.
     // The translucent bucket holds the instances that are drawn translucent.
     struct Geometry

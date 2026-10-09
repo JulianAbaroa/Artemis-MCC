@@ -49,6 +49,9 @@ export namespace Viewer::Style::Type
     inline constexpr Color k_RayPerceptionHitStatic{ 1.0f, 1.0f, 0.0f };
     inline constexpr Color k_RayPerceptionNoHit{ 1.0f, 1.0f, 1.0f };
 
+    inline constexpr Color k_LimitKill{ 0.90f, 0.30f, 0.30f };
+    inline constexpr Color k_LimitSafe{ 0.40f, 0.85f, 0.50f };
+
     inline constexpr Color k_InteractionObject{ 0.95f, 0.78f, 0.24f };
     inline constexpr Color k_InteractionMelee{ 1.00f, 0.40f, 0.20f };
     inline constexpr Color k_InteractionAim{ 0.40f, 0.80f, 1.00f };

@@ -23,6 +23,7 @@ namespace
     using Counter = Viewer::Profiler::Type::Counter;
     using CpuTimer = Viewer::Profiler::System::CpuTimer;
     using FixturePassOptions = Viewer::Map::Type::FixturePassOptions;
+    using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
 
     using Viewer::Style::Type::k_Background;
 }
@@ -119,6 +120,15 @@ namespace Viewer::Map::System
             }
 
             {
+                LimitsPassOptions limitsOptions{};
+                limitsOptions.KillVolumes = m_OptionsStore.IsEnabled(Flag::LimitKillVolumes);
+                limitsOptions.SafeVolumes = m_OptionsStore.IsEnabled(Flag::LimitSafeVolumes);
+                limitsOptions.Opacity = m_OptionsStore.GetScalar(Scalar::LimitOpacity);
+
+                m_LimitsPass.Upload(frame.Device, frame.Context, tick->Limits, limitsOptions);
+            }
+
+            {
                 CpuTimer timer{ m_Profiler, Cpu::Aim };
                 m_AimPass.Upload(frame.Device, frame.Context, tick->Aims, tick->Healths,
                     m_OptionsStore.IsEnabled(Flag::HealthTintSpheres),
@@ -183,6 +193,8 @@ namespace Viewer::Map::System
         m_AimPass.Draw(context, m_GpuPipeline);
         m_Profiler.MarkGpu(context, Gpu::Aim);
 
+        m_LimitsPass.Draw(context, m_GpuPipeline);
+
         m_DynamicPass.DrawTranslucent(context, m_GpuPipeline,
             m_OptionsStore.GetScalar(Scalar::ShieldOpacity));
 
@@ -221,6 +233,7 @@ namespace Viewer::Map::System
         m_ZonePass.Release();
         m_RaycastPass.Release();
         m_FixturePass.Release();
+        m_LimitsPass.Release();
         m_AimPass.Release();
         m_SceneService.Reset();
     }

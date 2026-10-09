@@ -30,8 +30,7 @@ export namespace Resolved::Definitions::Type::Scnr
     };
 
     // Volume of the world that the scenario uses to trigger things.
-    // note: A bounding box starts at Position and spans Extents along Forward, the left axis and Up.
-    // Not confirmed yet.
+    // note: A bounding box starts at Position, which is a corner, and spans Extents along Forward, the left axis and Up.
     struct TriggerVolume
     {
         // Name as a string id. There is no string table reader yet.
@@ -47,6 +46,8 @@ export namespace Resolved::Definitions::Type::Scnr
         // Only valid for a sector.
         float ZSink{};
         std::vector<Vec3> SectorPoints{};
+        Vec3 SectorBoundsMin{};
+        Vec3 SectorBoundsMax{};
     };
 
     // Trigger volume that kills, or makes safe, whatever is inside.

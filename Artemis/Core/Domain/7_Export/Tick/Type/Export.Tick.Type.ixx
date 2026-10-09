@@ -45,12 +45,14 @@ export namespace Export::Tick::Type
 	using Self = Egocentric::Self::Type::Self;
 	using Raycasts = Egocentric::Raycast::Type::Raycasts;
 	using MapSbsps = std::unordered_map<std::string, Resolved::Definitions::Type::Sbsp::Sbsp>;
+	using MapScnrs = std::unordered_map<std::string, Resolved::Definitions::Type::Scnr::Scnr>;
 
 	struct Tick
 	{
 		std::uint64_t Generation = 0;
 
 		std::shared_ptr<const MapSbsps> Map;
+		std::shared_ptr<const MapScnrs> Limits;
 
 		// --- Layer 3: Tables ---
 		std::shared_ptr<const ObjectTable> ObjectTable;

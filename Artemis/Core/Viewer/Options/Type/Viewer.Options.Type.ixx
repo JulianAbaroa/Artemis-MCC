@@ -14,6 +14,7 @@ export namespace Viewer::Options::Type
         Health,
         Interaction,
         Fixtures,
+        Limits,
 
         Count
     };
@@ -80,6 +81,9 @@ export namespace Viewer::Options::Type
         FixtureSpawns,
         FixtureShieldTranslucent,
 
+        LimitKillVolumes,
+        LimitSafeVolumes,
+
         Count
     };
 
@@ -97,6 +101,8 @@ export namespace Viewer::Options::Type
 
         FixtureArrowLength,
         ShieldOpacity,
+
+        LimitOpacity,
 
         Count
     };
@@ -147,6 +153,7 @@ export namespace Viewer::Options::Type
         { Group::Health, "Health", true },
         { Group::Interaction, "Interaction", true },
         { Group::Fixtures, "Fixtures", true },
+        { Group::Limits, "Map limits", true },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags
@@ -306,6 +313,12 @@ export namespace Viewer::Options::Type
 
         { Flag::FixtureShieldTranslucent, Group::Fixtures, "FixtureShieldTranslucent", "Translucent shields",
             "Draws shield doors, walls and drop shields translucent so the geometry behind them stays visible.", true },
+
+        { Flag::LimitKillVolumes, Group::Limits, "LimitKillVolumes", "Kill volumes",
+            "Draws the trigger volumes that the scenario uses as kill triggers, translucent with an outline.", true },
+
+        { Flag::LimitSafeVolumes, Group::Limits, "LimitSafeVolumes", "Safe zone volumes",
+            "Draws the trigger volumes that the scenario uses as safe zone triggers.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
@@ -333,6 +346,9 @@ export namespace Viewer::Options::Type
 
         { Scalar::ShieldOpacity, Group::Fixtures, "ShieldOpacity", "Shield opacity",
             "Opacity of translucent shields. Lower values are more see-through.", 0.30f, 0.05f, 1.0f, "%.2f" },
+
+        { Scalar::LimitOpacity, Group::Limits, "LimitOpacity", "Volume opacity",
+            "Opacity of the kill and safe zone volumes. Lower values are more see-through.", 0.20f, 0.02f, 1.0f, "%.2f" },
     } };
 
     // return: True if every table has its entries in the order of its enum, so the enum values can index them.

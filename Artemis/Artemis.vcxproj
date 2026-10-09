@@ -781,6 +781,8 @@
     <ClCompile Include="Core\Viewer\Control\System\ControlService.ixx" />
     <ClCompile Include="Core\Viewer\Map\System\DynamicPass.cpp" />
     <ClCompile Include="Core\Viewer\Map\System\DynamicPass.ixx" />
+    <ClCompile Include="Core\Viewer\Map\System\LimitsPass.cpp" />
+    <ClCompile Include="Core\Viewer\Map\System\LimitsPass.ixx" />
     <ClCompile Include="Core\Viewer\Map\System\MapPass.cpp" />
     <ClCompile Include="Core\Viewer\Map\System\MapPass.ixx" />
     <ClCompile Include="Core\Viewer\Map\System\MapService.cpp" />
