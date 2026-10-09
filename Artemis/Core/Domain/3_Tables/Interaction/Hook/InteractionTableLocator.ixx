@@ -7,25 +7,32 @@ import std;
 
 export namespace Tables::Interaction::Hook
 {
-	class InteractionTableLocator
-	{
-	private:
-		using LogsService = Service::Logs::System::LogsService;
-		using AOBService = Platform::Memory::System::AOBService;
-		using InteractionStore = Tables::Interaction::State::InteractionStore;
+    // Finds the engine interaction table and stores its base address.
+    class InteractionTableLocator
+    {
+    private:
+        using LogsService = Service::Logs::System::LogsService;
 
-	public:
-		InteractionTableLocator(LogsService& logsService, AOBService& aobService,
-			InteractionStore& interactionStore) : m_LogsService(logsService),
-			m_AOBService(aobService), m_InteractionStore(interactionStore) {}
-		~InteractionTableLocator() = default;
+        using AOBService = Platform::Memory::System::AOBService;
 
-		auto FindAndStoreTableBase() -> void;
-		auto GetInteractionTable() -> std::uintptr_t;
+        using InteractionStore = Tables::Interaction::State::InteractionStore;
 
-	private:
-		LogsService& m_LogsService;
-		AOBService& m_AOBService;
-		InteractionStore& m_InteractionStore;
-	};
+    public:
+        InteractionTableLocator(LogsService& logsService, AOBService& aobService,
+            InteractionStore& interactionStore) : m_LogsService(logsService),
+            m_AOBService(aobService), m_InteractionStore(interactionStore) {}
+        ~InteractionTableLocator() = default;
+
+        // Stores the table base unless it is already stored.
+        // note: Logs an error and stores nothing if the table is not found. Call it again later.
+        auto FindAndStoreTableBase() -> void;
+
+    private:
+        LogsService& m_LogsService;
+        AOBService& m_AOBService;
+        InteractionStore& m_InteractionStore;
+
+        // return: Address of the interaction table, or 0 if the thread context is not ready.
+        auto GetInteractionTable() -> std::uintptr_t;
+    };
 }

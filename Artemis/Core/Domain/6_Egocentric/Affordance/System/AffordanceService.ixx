@@ -26,7 +26,7 @@ export namespace Egocentric::Affordance::System
         using Vec3 = Common::Math::Type::Vec3;
         using AliveObject = Tables::Object::Type::Alive::Object;
         using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
-        using AliveInteraction = Tables::Interaction::Type::Alive::Interaction;
+        using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
         using Vehicle = Tables::Object::Type::Vehicle::Vehicle;
         using SeatMarker = Tables::Object::Type::Vehicle::Seat::Marker;
         using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;

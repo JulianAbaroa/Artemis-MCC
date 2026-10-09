@@ -17,7 +17,7 @@ namespace
     using Tick = Export::Tick::Type::Tick;
     using ObjectTable = Export::Tick::Type::ObjectTable;
     using AliveObject = Export::Tick::Type::AliveObject;
-    using Interaction = Export::Tick::Type::Interaction;
+    using AliveInteraction = Export::Tick::Type::AliveInteraction;
     using Affordance = Export::Tick::Type::Affordance;
     using Activation = Egocentric::Affordance::Type::Activation;
     using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
@@ -54,7 +54,7 @@ namespace
         return (slash == std::string::npos) ? tag : tag.substr(slash + 1);
     }
 
-    auto DrawEngineInteraction(const Interaction& interaction) -> void
+    auto DrawEngineInteraction(const AliveInteraction& interaction) -> void
     {
         ImGui::TextColored(k_SectionColor, "Engine Interaction State");
         ImGui::Spacing();
@@ -253,8 +253,8 @@ namespace Viewer::Hud::System
 {
     auto AffordancesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
     {
-        const Interaction interaction = tick.Interaction ?
-            *tick.Interaction : Interaction{};
+        const AliveInteraction interaction = tick.Interaction ?
+            *tick.Interaction : AliveInteraction{};
 
         DrawEngineInteraction(interaction);
 

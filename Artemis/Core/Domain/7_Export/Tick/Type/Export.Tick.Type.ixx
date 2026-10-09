@@ -22,7 +22,7 @@ export namespace Export::Tick::Type
 	using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
 	using AlivePlayer = Tables::Player::Type::Alive::Player;
 	using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
-	using Interaction = Tables::Interaction::Type::Alive::Interaction;
+	using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
 
 	using Classified = Relations::Classifier::Type::Classified;
 	using Classifieds = std::vector<Classified>;
@@ -55,7 +55,7 @@ export namespace Export::Tick::Type
 		// --- Layer 3: Tables ---
 		std::shared_ptr<const ObjectTable> ObjectTable;
 		std::shared_ptr<const PlayerTable> PlayerTable;
-		std::shared_ptr<const Interaction> Interaction;
+		std::shared_ptr<const AliveInteraction> Interaction;
 
 		// --- Layer 4: Relations ---
 		std::shared_ptr<const Classifieds> Classifieds;

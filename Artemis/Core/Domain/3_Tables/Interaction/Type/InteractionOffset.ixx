@@ -4,39 +4,36 @@ import std;
 
 export namespace Tables::Interaction::Type::Offset
 {
-	// What kind of interaction is active. (GrabWeapon, EnterVehicle, etcetera)
-	constexpr std::uintptr_t Kind{ 0x00 };		// uint8.
+    // Kind of the active interaction (uint8). GrabWeapon, EnterVehicle, etcetera.
+    constexpr std::uintptr_t k_Kind{ 0x00 };
 
-	// Interaction detail, dependant on the interaction type.
-	// 0x00 = Driver, 0x01 = Passenger or 0x01 = Grab Weapon, 0x02 = Change Weapon.
-	constexpr std::uintptr_t Detail{ 0x04 };	// uint8.
+    // Detail of the interaction (uint8).
+    // note: Depends on the kind. A seat for vehicles, or grab and change for weapons.
+    constexpr std::uintptr_t k_Detail{ 0x04 };
 
-	// The handle of the selected object to interact with.
-	constexpr std::uintptr_t TargetObjectHandle{ 0x08 };	// uint32.
+    // Handle of the object selected to interact with (uint32).
+    constexpr std::uintptr_t k_TargetObjectHandle{ 0x08 };
 
-	// A flag that is 0x01 when a melee hit is available.
-	// This doesn't include hammer/sword melees.
-	// Its 0x0E when there's a melee available.
-	constexpr std::uintptr_t IsMeleeAvailable{ 0x0C };	// uint8.
+    // Melee flag (uint8). It is 0x0E when a melee hit is available.
+    // note: Does not cover the extended range of the sword.
+    constexpr std::uintptr_t k_IsMeleeAvailable{ 0x0C };
 
-	// The handle of the selected biped to melee.
-	constexpr std::uintptr_t MeleeTargetHandle{ 0x14 };	// uint32.
+    // Handle of the biped selected to melee (uint32).
+    constexpr std::uintptr_t k_MeleeTargetHandle{ 0x14 };
 
-	// A flag that is 0x01 when a biped is close or on to the crosshair.
-	constexpr std::uintptr_t IsAimAvailable{ 0x24 };		// uint8.
+    // Aim assist flag (uint8). It is 0x01 when a biped is close to or on the crosshair.
+    constexpr std::uintptr_t k_IsAimAvailable{ 0x24 };
 
-	// Each flag represents a part of thee body of any given biped.
-	// 0x00: Chest, 0x01: Head, etcetera.
-	constexpr std::uintptr_t BipedBodyPart{ 0x28 };		// unit8.
+    // Part of the body of the aim target (uint8). 0x00 is the chest and 0x01 is the head.
+    constexpr std::uintptr_t k_BipedBodyPart{ 0x28 };
 
-	// The handle of the selected biped.
-	constexpr std::uintptr_t AimTargetHandle{ 0x2C };		// uint32.
+    // Handle of the aimed biped (uint32).
+    constexpr std::uintptr_t k_AimTargetHandle{ 0x2C };
 
-	// The slot ID of the targeted player (PlayerOffsets::Handle).
-	constexpr std::uintptr_t AimTargetSlotID{ 0x30 };		// uint32.
+    // Slot ID of the aimed player (uint32).
+    constexpr std::uintptr_t k_AimTargetSlotID{ 0x30 };
 
-	// The offset of how far the crosshair is from the center of the target.
-	// Higher values = farther from the center.
-	// Smaller valuees = closer to the center.
-	constexpr std::uintptr_t AimHitLocalPosition{ 0x3C };	// 3 floats.
+    // How far the crosshair is from the center of the target (3 floats).
+    // note: Higher values are farther from the center.
+    constexpr std::uintptr_t k_AimHitLocalPosition{ 0x3C };
 }

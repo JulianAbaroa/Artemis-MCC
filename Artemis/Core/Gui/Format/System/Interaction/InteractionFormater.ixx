@@ -8,8 +8,8 @@ export namespace Gui::Format::System
     class InteractionFormater
     {
     private:
-        using InteractionKind = Tables::Interaction::Type::Alive::Kind;
-        using InteractionDetail = Tables::Interaction::Type::Alive::Detail;
+        using InteractionKind = Tables::Interaction::Type::Alive::InteractionKind;
+        using InteractionDetail = Tables::Interaction::Type::Alive::InteractionDetail;
 
     public:
         InteractionFormater() = default;
