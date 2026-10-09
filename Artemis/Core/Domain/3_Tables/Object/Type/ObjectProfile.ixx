@@ -14,17 +14,8 @@ export namespace Tables::Object::Type::Profile
     {
         ::ObjectKind ObjectKind{ ::ObjectKind::Invalid };
 
-        bool HasBipd{ false };
-        bool HasBloc{ false };
         bool HasColl{ false };
-        bool HasCtrl{ false };
-        bool HasEqip{ false };
         bool HasHlmt{ false };
-        bool HasMach{ false };
         bool HasMode{ false };
-        bool HasProj{ false };
-        bool HasScen{ false };
-        bool HasVehi{ false };
-        bool HasWeap{ false };
     };
 }

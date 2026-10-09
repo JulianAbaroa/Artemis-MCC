@@ -114,11 +114,7 @@ namespace
         if (!ImGui::BeginTable("##profile", 2)) return;
 
         const std::pair<const char*, bool> badges[] = {
-            { "HasBipd:", p.HasBipd }, { "HasVehi:", p.HasVehi },
-            { "HasWeap:", p.HasWeap }, { "HasEqip:", p.HasEqip },
-            { "HasProj:", p.HasProj }, { "HasScen:", p.HasScen },
-            { "HasMach:", p.HasMach }, { "HasCtrl:", p.HasCtrl },
-            { "HasBloc:", p.HasBloc }, { "HasColl:", p.HasColl },
+            { "HasColl:", p.HasColl }, { "HasHlmt:", p.HasHlmt },
             { "HasMode:", p.HasMode },
         };
 

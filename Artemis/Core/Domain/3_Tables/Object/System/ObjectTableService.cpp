@@ -75,18 +75,9 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::SetProfile(AliveObject& object, Profile& profile) -> void
 	{
-		profile.HasBipd = m_TagResolverService.HasBipd(object.TagName);
-		profile.HasBloc = m_TagResolverService.HasBloc(object.TagName);
 		profile.HasColl = m_TagResolverService.HasColl(object.TagName);
-		profile.HasCtrl = m_TagResolverService.HasCtrl(object.TagName);
-		profile.HasEqip = m_TagResolverService.HasEqip(object.TagName);
 		profile.HasHlmt = m_TagResolverService.HasHlmt(object.TagName);
-		profile.HasMach = m_TagResolverService.HasMach(object.TagName);
 		profile.HasMode = m_TagResolverService.HasMode(object.TagName);
-		profile.HasProj = m_TagResolverService.HasProj(object.TagName);
-		profile.HasScen = m_TagResolverService.HasScen(object.TagName);
-		profile.HasVehi = m_TagResolverService.HasVehi(object.TagName);
-		profile.HasWeap = m_TagResolverService.HasWeap(object.TagName);
 	}
 
 	auto ObjectTableService::DiscoverObjects(std::uintptr_t tableBase) -> void
