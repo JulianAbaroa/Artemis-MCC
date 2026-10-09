@@ -655,10 +655,6 @@
     <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionOffset.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.cpp" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx" />
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.cpp" />
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.ixx" />
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.cpp" />
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.cpp" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp" />

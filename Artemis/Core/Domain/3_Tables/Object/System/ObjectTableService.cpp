@@ -42,20 +42,19 @@ namespace
 
 	using Tables::Object::Type::Constant::k_DamageSectionStride;
 	using Tables::Object::Type::Constant::k_RegionBlockMaxSize;
+	using Tables::Object::Type::Constant::k_MaxObjects;
+	using Tables::Object::Type::Constant::k_EntrySize;
+	using Tables::Object::Type::Constant::k_EntrySaltOffset;
+	using Tables::Object::Type::Constant::k_EntryClassOffset;
+	using Tables::Object::Type::Constant::k_EntryAddressOffset;
 }
 
 namespace Tables::Object::System
 {
-	auto ObjectTableService::OnObjectCreated(std::uint32_t handle, std::uint32_t datumIndex) -> void
+	auto ObjectTableService::AddObject(std::uint32_t handle, std::uint32_t datumIndex) -> void
 	{
 		auto tag = m_TagResolverService.ResolveHandle(datumIndex);
-		if (!tag.IsValid)
-		{
-			m_LogsService.Message("[ObjectTableService] WARNING:"
-				" Failed to resolve DatumIndex 0x{:X} for handle 0x{:X}.",
-				datumIndex, handle);
-			return;
-		}
+		if (!tag.IsValid) return;
 
 		AliveObject object;
 		object.Handle = handle;
@@ -63,12 +62,7 @@ namespace Tables::Object::System
 		object.FourCC = tag.FourCC;
 		object.TagName = tag.TagName;
 
-		if (object.FourCC == "" || object.TagName == "")
-		{
-			m_LogsService.Message("[ObjectTableService] WARNING:"
-				" Invalid object created.");
-			return;
-		}
+		if (object.FourCC == "" || object.TagName == "") return;
 
 		Profile profile;
 		this->SetProfile(object, profile);
@@ -93,14 +87,25 @@ namespace Tables::Object::System
 		profile.HasWeap = m_TagResolverService.HasWeap(object.TagName);
 	}
 
-	auto ObjectTableService::OnObjectDestroyed(std::uint32_t handle) -> void
+	auto ObjectTableService::DiscoverObjects(std::uintptr_t tableBase) -> void
 	{
-		auto deletedObject = m_ObjectStore.RemoveObject(handle);
+		auto& reader = m_MemoryReaderService;
 
-		if (!deletedObject.has_value())
+		for (std::uint32_t index{ 0 }; index < k_MaxObjects; ++index)
 		{
-			m_LogsService.Message("[ObjectTableService] WARNING:"
-				" OnObjectDestroyed called for unknown handle 0x{:X}.", handle);
+			std::uintptr_t entryAddr{ tableBase + (index * k_EntrySize) };
+
+			std::uint16_t salt{ reader.Read<std::uint16_t>(entryAddr, k_EntrySaltOffset) };
+			if (salt == 0) continue;
+
+			std::uintptr_t entityPtr{ reader.Read<std::uintptr_t>(entryAddr, k_EntryAddressOffset) };
+			if (entityPtr == 0) continue;
+
+			std::uint32_t handle{ (static_cast<std::uint32_t>(salt) << 16) | index };
+			if (m_ObjectStore.HasObject(handle)) continue;
+
+			std::uint32_t datumIndex{ reader.Read<std::uint32_t>(entityPtr, Offset::DatumIndex) };
+			this->AddObject(handle, datumIndex);
 		}
 	}
 
@@ -112,25 +117,31 @@ namespace Tables::Object::System
 		m_BoneMatricesStore.Clear();
 		m_DamageSectionsStore.Clear();
 
+		this->DiscoverObjects(tableBase);
+
+		auto& reader = m_MemoryReaderService;
+
+		std::vector<std::uint32_t> deadHandles{};
+
 		m_ObjectStore.UpdateObjects(
 			[&](std::uint32_t handle, AliveObject& object) {
 				std::uint32_t index = handle & 0xFFFF;
-				std::uintptr_t offset = (std::uintptr_t)index * 0x18;
+				std::uintptr_t entryAddr = tableBase + (index * k_EntrySize);
 
-				std::uintptr_t entryAddr = tableBase + offset;
-
-				if (entryAddr == 0) return;
-
-				std::uint16_t tableSalt = *(std::uint16_t*)(entryAddr);
+				std::uint16_t tableSalt = reader.Read<std::uint16_t>(entryAddr, k_EntrySaltOffset);
 				std::uint16_t expectedSalt = (std::uint16_t)(handle >> 16);
-				std::uintptr_t entityPtr = *(std::uintptr_t*)(entryAddr + 0x10);
+				std::uintptr_t entityPtr = reader.Read<std::uintptr_t>(entryAddr, k_EntryAddressOffset);
 
 				const bool isAlive = (entityPtr != 0 && tableSalt == expectedSalt);
-				object.Address = isAlive ? entityPtr : 0;
+				if (!isAlive)
+				{
+					deadHandles.push_back(handle);
+					return;
+				}
 
-				if (!isAlive) return;
+				object.Address = entityPtr;
 
-				Class objectClass = *(Class*)(entryAddr + 0x04);
+				Class objectClass = reader.Read<Class>(entryAddr, k_EntryClassOffset);
 
 				if (object.Profile.Class == Class::Invalid &&
 					objectClass != Class::Invalid)
@@ -140,6 +151,11 @@ namespace Tables::Object::System
 
 				this->UpdateObjectData(object);
 			});
+
+		for (std::uint32_t handle : deadHandles)
+		{
+			m_ObjectStore.RemoveObject(handle);
+		}
 
 		m_ObjectStore.Publish();
 	}

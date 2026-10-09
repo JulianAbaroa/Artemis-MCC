@@ -45,9 +45,6 @@ export namespace Tables::Object::System
 		}
 		~ObjectTableService() = default;
 
-		auto OnObjectCreated(std::uint32_t handle, std::uint32_t datumIndex) -> void;
-		auto OnObjectDestroyed(std::uint32_t handle) -> void;
-
 		auto UpdateObjectTable() -> void;
 
 		auto Cleanup() -> void;
@@ -60,6 +57,13 @@ export namespace Tables::Object::System
 		BoneMatricesStore& m_BoneMatricesStore;
 		DamageSectionsStore& m_DamageSectionsStore;
 		TagResolverService& m_TagResolverService;
+
+		// Adds the live entries of the object table that are not stored yet.
+		auto DiscoverObjects(std::uintptr_t tableBase) -> void;
+
+		// Adds the object of a table entry.
+		// note: Does nothing if the tag of the datum index cannot be resolved.
+		auto AddObject(std::uint32_t handle, std::uint32_t datumIndex) -> void;
 
 		void UpdateObjectData(AliveObject& object);
 

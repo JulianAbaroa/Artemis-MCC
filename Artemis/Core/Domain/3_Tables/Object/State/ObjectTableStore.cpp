@@ -18,6 +18,12 @@ namespace Tables::Object::State
 		m_ObjectTable.emplace(handle, object);
 	}
 
+	auto ObjectTableStore::HasObject(std::uint32_t handle) const -> bool
+	{
+		std::lock_guard<std::mutex> lock(m_Mutex);
+		return m_ObjectTable.contains(handle);
+	}
+
 	auto ObjectTableStore::RemoveObject(std::uint32_t handle) -> std::optional<AliveObject>
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);

@@ -30,8 +30,6 @@ export namespace Tables
 		using InteractionService = Tables::Interaction::System::InteractionService;
 
 		using ObjectTableLocator = Tables::Object::Hook::ObjectTableLocator;
-		using CreateObjectDetour = Tables::Object::Hook::CreateObjectDetour;
-		using ReleaseObjectDetour = Tables::Object::Hook::ReleaseObjectDetour;
 		using InitRootNodeDetour = Tables::Object::Hook::InitRootNodeDetour;
 		using PlayerTableLocator = Tables::Player::Hook::PlayerTableLocator;
 		using InteractionTableLocator = Tables::Interaction::Hook::InteractionTableLocator;
@@ -42,8 +40,6 @@ export namespace Tables
 			m_PlayerService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore),
 			m_InteractionService(service.m_LogsService, platform.m_MemoryReaderService, m_InteractionStore),
 			m_ObjectTableLocator(service.m_LogsService, platform.m_AOBService, m_ObjectStore),
-			m_CreateObjectDetour(service.m_LogsService, platform.m_AOBService, m_ObjectService),
-			m_ReleaseObjectDetour(service.m_LogsService, platform.m_AOBService, m_ObjectService),
 			m_InitRootNodeDetour(service.m_LogsService, platform.m_AOBService, m_BoneOffsetsStore),
 			m_PlayerTableLocator(service.m_LogsService, platform.m_AOBService, m_PlayerStore),
 			m_InteractionTableLocator(service.m_LogsService, platform.m_AOBService, m_InteractionStore)
@@ -51,8 +47,6 @@ export namespace Tables
 			auto& lifecycle = platform.m_LifecycleService;
 
 			lifecycle.OnEngineInitialized([this] {
-				m_CreateObjectDetour.Install();
-				m_ReleaseObjectDetour.Install();
 				m_InitRootNodeDetour.Install();
 
 				m_ObjectTableLocator.FindAndStoreTableBase();
@@ -61,8 +55,6 @@ export namespace Tables
 			});
 
 			lifecycle.OnUnhook([this] {
-				m_CreateObjectDetour.Uninstall();
-				m_ReleaseObjectDetour.Uninstall();
 				m_InitRootNodeDetour.Uninstall();
 			});
 
@@ -92,8 +84,6 @@ export namespace Tables
 
 		// --- Hook ---
 		ObjectTableLocator m_ObjectTableLocator;
-		CreateObjectDetour m_CreateObjectDetour;
-		ReleaseObjectDetour m_ReleaseObjectDetour;
 		InitRootNodeDetour m_InitRootNodeDetour;
 		PlayerTableLocator m_PlayerTableLocator;
 		InteractionTableLocator m_InteractionTableLocator;

@@ -23,6 +23,7 @@ export namespace Tables::Object::State
 		auto SetBase(std::uintptr_t pointer) -> void;
 
 		auto AddObject(std::uint32_t handle, const AliveObject& object) -> void;
+		auto HasObject(std::uint32_t handle) const -> bool;
 		auto RemoveObject(std::uint32_t handle) -> std::optional<AliveObject>;
 
 		auto UpdateObjects(std::function<void(std::uint32_t, AliveObject&)> processor) -> void;

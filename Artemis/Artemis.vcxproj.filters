@@ -1850,18 +1850,6 @@
     <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx">
       <Filter>Core\Domain\3_Tables\Object\Hook\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.cpp">
-      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\CreateObjectDetour.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.cpp">
-      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ReleaseObjectDetour.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.cpp">
       <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
     </ClCompile>

@@ -36,18 +36,6 @@ export namespace Platform::Memory::Type::Signature
         "8B 0D ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 48 8B 04 C8",
     };
 
-    inline constexpr Signature CreateObject
-    {
-        "CreateObject",
-        "40 53 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ?? ?? ?? ?? 8B 41 ?? 49 83 CC"
-    };
-
-    inline constexpr Signature ReleaseObject
-    {
-        "ReleaseObjectByHandle",
-        "48 89 5C 24 08 57 48 83 EC 20 8B 15 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 8B D9"
-    };
-
     // Functions: Bone matrix
     inline constexpr Signature InitRootNode
     {
