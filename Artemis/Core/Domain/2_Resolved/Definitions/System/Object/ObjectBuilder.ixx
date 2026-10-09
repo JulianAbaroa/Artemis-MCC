@@ -12,7 +12,7 @@ export namespace Resolved::Definitions::System
     private:
         using Object = Resolved::Definitions::Type::Object::Object;
         using MultiplayerObject = Resolved::Definitions::Type::Object::MultiplayerObject;
-        using Kind = Resolved::Definitions::Type::Object::Kind;
+        using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
         using MultiplayerObjectKind = Resolved::Definitions::Type::Object::MultiplayerObjectKind;
         using TagResolverService = Map::Reader::System::TagResolverService;
 
@@ -31,13 +31,13 @@ export namespace Resolved::Definitions::System
             out.TagName = tagName;
 
             // Classification.
-            if (data.ObjectType <= static_cast<std::uint16_t>(Kind::EffectScenery))
+            if (data.ObjectType <= static_cast<std::uint16_t>(ObjectKind::EffectScenery))
             {
-                out.Kind = static_cast<Kind>(data.ObjectType);
+                out.ObjectKind = static_cast<ObjectKind>(data.ObjectType);
             }
             else
             {
-                out.Kind = Kind::Invalid;
+                out.ObjectKind = ObjectKind::Invalid;
             }
 
             out.BoundingRadius = data.BoundingRadius;
@@ -58,11 +58,11 @@ export namespace Resolved::Definitions::System
 
                 if (entry.Type <= static_cast<std::uint8_t>(MultiplayerObjectKind::CinematicCameraPosition))
                 {
-                    multiplayer.Kind = static_cast<MultiplayerObjectKind>(entry.Type);
+                    multiplayer.MultiplayerObjectKind = static_cast<MultiplayerObjectKind>(entry.Type);
                 }
                 else
                 {
-                    multiplayer.Kind = MultiplayerObjectKind::Invalid;
+                    multiplayer.MultiplayerObjectKind = MultiplayerObjectKind::Invalid;
                 }
 
                 out.MultiplayerObjects.push_back(std::move(multiplayer));

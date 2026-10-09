@@ -4,6 +4,7 @@ import Common.Math.Type;
 import Common.ZoneShape.Type;
 import Common.Tag.Type;
 import Common.Team.Type;
+import Resolved.Definitions.Type;
 
 namespace
 {
@@ -15,7 +16,7 @@ namespace
 	using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 	using ShapeKind = Common::ZoneShape::Type::Kind;
 	using Team = Common::Team::Type::Team;
-	using Class = Tables::Object::Type::Class::Class;
+	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
 	using BonesHeader = Tables::Object::Type::BoneMatrix::BonesHeader;
 	using BipedObject = Tables::Object::Type::Biped::Biped;
 	using CrateObject = Tables::Object::Type::Crate::Crate;
@@ -45,13 +46,13 @@ namespace
 	using Tables::Object::Type::Constant::k_MaxObjects;
 	using Tables::Object::Type::Constant::k_EntrySize;
 	using Tables::Object::Type::Constant::k_EntrySaltOffset;
-	using Tables::Object::Type::Constant::k_EntryClassOffset;
+	using Tables::Object::Type::Constant::k_EntryKindOffset;
 	using Tables::Object::Type::Constant::k_EntryAddressOffset;
 }
 
 namespace Tables::Object::System
 {
-	auto ObjectTableService::AddObject(std::uint32_t handle, std::uint32_t datumIndex) -> void
+	auto ObjectTableService::AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind objectKind) -> void
 	{
 		auto tag = m_TagResolverService.ResolveHandle(datumIndex);
 		if (!tag.IsValid) return;
@@ -66,6 +67,7 @@ namespace Tables::Object::System
 
 		Profile profile;
 		this->SetProfile(object, profile);
+		profile.ObjectKind = objectKind;
 		object.Profile = profile;
 
 		m_ObjectStore.AddObject(handle, object);
@@ -105,7 +107,11 @@ namespace Tables::Object::System
 			if (m_ObjectStore.HasObject(handle)) continue;
 
 			std::uint32_t datumIndex{ reader.Read<std::uint32_t>(entityPtr, Offset::DatumIndex) };
-			this->AddObject(handle, datumIndex);
+
+			std::uint8_t kindId{ reader.Read<std::uint8_t>(entryAddr, k_EntryKindOffset) };
+            ObjectKind objectKind{ kindId <= static_cast<std::uint8_t>(ObjectKind::EffectScenery) ? static_cast<ObjectKind>(kindId) : ObjectKind::Invalid };
+
+			this->AddObject(handle, datumIndex, objectKind);
 		}
 	}
 
@@ -140,14 +146,6 @@ namespace Tables::Object::System
 				}
 
 				object.Address = entityPtr;
-
-				Class objectClass = reader.Read<Class>(entryAddr, k_EntryClassOffset);
-
-				if (object.Profile.Class == Class::Invalid &&
-					objectClass != Class::Invalid)
-				{
-					object.Profile.Class = objectClass;
-				}
 
 				this->UpdateObjectData(object);
 			});
@@ -184,45 +182,45 @@ namespace Tables::Object::System
 		this->ReadBoneMatrixTable(reader, object);
 		this->ReadDamageSectionTable(reader, object);
 
-		switch (object.Profile.Class)
+		switch (object.Profile.ObjectKind)
 		{
-		case Class::Biped:
+		case ObjectKind::Biped:
 		{
 			this->UpdateBiped(reader, object);
 			break;
 		}
 
-		case Class::Vehicle:
+		case ObjectKind::Vehicle:
 		{
 			this->UpdateVehicle(reader, object);
 			break;
 		}
 
-		case Class::Weapon:
+		case ObjectKind::Weapon:
 		{
 			this->UpdateWeapon(reader, object);
 			break;
 		}
 
-		case Class::Equipment:
+		case ObjectKind::Equipment:
 		{
 			this->UpdateEquipment(reader, object);
 			break;
 		}
 
-		case Class::Projectile:
+		case ObjectKind::Projectile:
 		{
 			this->UpdateProjectiles(reader, object);
 			break;
 		}
 
-		case Class::Scenery:
+		case ObjectKind::Scenery:
 		{
 			this->UpdateScenery(reader, object);
 			break;
 		}
 
-		case Class::Crate:
+		case ObjectKind::Crate:
 		{
 			this->UpdateCrate(reader, object);
 			break;

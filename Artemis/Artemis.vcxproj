@@ -672,7 +672,6 @@
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectAlive.ixx" />
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectClass.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectOffset.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectProfile.ixx" />
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectSize.ixx" />

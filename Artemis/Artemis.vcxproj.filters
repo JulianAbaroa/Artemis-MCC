@@ -1799,9 +1799,6 @@
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectAlive.ixx">
       <Filter>Core\Domain\3_Tables\Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectClass.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectOffset.ixx">
       <Filter>Core\Domain\3_Tables\Object\Type</Filter>
     </ClCompile>

@@ -16,6 +16,6 @@ export namespace Tables::Object::Type::Constant
 
 	// Offsets inside an entry of the object table.
 	constexpr std::uintptr_t k_EntrySaltOffset{ 0x00 };
-	constexpr std::uintptr_t k_EntryClassOffset{ 0x04 };
+	constexpr std::uintptr_t k_EntryKindOffset{ 0x04 };
 	constexpr std::uintptr_t k_EntryAddressOffset{ 0x10 };
 }

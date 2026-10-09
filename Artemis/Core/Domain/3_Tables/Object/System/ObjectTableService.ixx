@@ -3,7 +3,7 @@ export module Tables.Object.System;
 import Service.Logs.System;
 import Platform.Memory.System;
 import Map.Reader.System;
-import Resolved.Definitions.State;
+import Resolved.Definitions.Type;
 import Resolved.Vitality.State;
 import Resolved.World.State;
 import Tables.Object.Type;
@@ -15,6 +15,7 @@ export namespace Tables::Object::System
 	class ObjectTableService
 	{
 	private:
+        using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
 		using AliveObject = Tables::Object::Type::Alive::Object;
 		using Profile = Tables::Object::Type::Profile::Profile;
 		using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
@@ -41,8 +42,7 @@ export namespace Tables::Object::System
 			m_ObjectStore(objectStore),
 			m_BoneOffsetsStore(boneOffsetsStore), m_BoneMatricesStore(boneMatricesStore),
 			m_DamageSectionsStore(damageSectionsStore),
-			m_TagResolverService(tagResolverService) {
-		}
+			m_TagResolverService(tagResolverService) {}
 		~ObjectTableService() = default;
 
 		auto UpdateObjectTable() -> void;
@@ -63,7 +63,7 @@ export namespace Tables::Object::System
 
 		// Adds the object of a table entry.
 		// note: Does nothing if the tag of the datum index cannot be resolved.
-		auto AddObject(std::uint32_t handle, std::uint32_t datumIndex) -> void;
+		auto AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind kind) -> void;
 
 		void UpdateObjectData(AliveObject& object);
 

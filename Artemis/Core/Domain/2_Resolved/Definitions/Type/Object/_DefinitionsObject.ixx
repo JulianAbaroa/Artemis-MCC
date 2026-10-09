@@ -11,7 +11,7 @@ namespace
 export namespace Resolved::Definitions::Type::Object
 {
     // Object family, same ids as the engine object type.
-    enum class Kind : std::uint16_t
+    enum class ObjectKind : std::uint16_t
     {
         Biped = 0x0000,
         Vehicle = 0x0001,
@@ -69,7 +69,7 @@ export namespace Resolved::Definitions::Type::Object
     // note: Planned for semantization.
     struct MultiplayerObject
     {
-        MultiplayerObjectKind Kind{ MultiplayerObjectKind::Invalid };
+        MultiplayerObjectKind MultiplayerObjectKind{ MultiplayerObjectKind::Invalid };
     };
 
     // Data shared by every object family.
@@ -78,7 +78,7 @@ export namespace Resolved::Definitions::Type::Object
         std::string TagName{};
 
         // Classification
-        Kind Kind{ Kind::Invalid };
+        ObjectKind ObjectKind{ ObjectKind::Invalid };
         float BoundingRadius{};
         Vec3 BoundingOffset{};
 

@@ -17,7 +17,7 @@ export namespace Common::Reflect::Type
     {
         static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
-            MakeField("Kind", &MultiplayerObject::Kind),
+            MakeField("ObjectKind", &MultiplayerObject::MultiplayerObjectKind),
         };
     };
 
@@ -27,7 +27,7 @@ export namespace Common::Reflect::Type
         static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Object::TagName),
-            MakeField("Kind", &Object::Kind),
+            MakeField("ObjectKind", &Object::ObjectKind),
             MakeField("BoundingRadius", &Object::BoundingRadius),
             MakeField("BoundingOffset", &Object::BoundingOffset),
             MakeField("CollisionDamageTagName", &Object::CollisionDamageTagName),

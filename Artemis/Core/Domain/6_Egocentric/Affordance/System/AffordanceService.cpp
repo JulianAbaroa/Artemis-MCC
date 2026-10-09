@@ -6,11 +6,12 @@ module;
 module Egocentric.Affordance.System;
 
 import Tables.Object.Type;
+import Resolved.Definitions.Type;
 import Egocentric.Self.Type;
 
 namespace
 {
-    using Class = Tables::Object::Type::Class::Class;
+    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
     using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
     using Seat = Tables::Object::Type::Vehicle::Seat::Seat;
     using Classified = Relations::Classifier::Type::Classified;
@@ -241,7 +242,7 @@ namespace Egocentric::Affordance::System
             {
                 auto childObjIt = objectTable.find(childHandle);
                 if (childObjIt == objectTable.end()) continue;
-                if (childObjIt->second.Profile.Class != Class::Vehicle) continue;
+                if (childObjIt->second.Profile.ObjectKind != ObjectKind::Vehicle) continue;
 
                 const AliveObject& partObj = childObjIt->second;
                 const Vehicle* partVehi =
@@ -290,7 +291,7 @@ namespace Egocentric::Affordance::System
         {
             auto objIt = objectTable.find(childHandle);
             if (objIt == objectTable.end()) continue;
-            if (objIt->second.Profile.Class == Class::Vehicle)
+            if (objIt->second.Profile.ObjectKind == ObjectKind::Vehicle)
                 parts.push_back(childHandle);
         }
 
@@ -309,7 +310,7 @@ namespace Egocentric::Affordance::System
         {
             auto objIt = objectTable.find(childHandle);
             if (objIt == objectTable.end()) continue;
-            if (objIt->second.Profile.Class == Class::Biped)
+            if (objIt->second.Profile.ObjectKind == ObjectKind::Biped)
                 bipeds.push_back(childHandle);
         }
 

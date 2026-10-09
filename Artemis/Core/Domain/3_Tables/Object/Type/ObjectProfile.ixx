@@ -1,10 +1,10 @@
 export module Tables.Object.Type:Profile;
 
-import :Class;
+import Resolved.Definitions.Type;
 
 namespace
 {
-    using Class = Tables::Object::Type::Class::Class;
+    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
 }
 
 export namespace Tables::Object::Type::Profile
@@ -12,7 +12,7 @@ export namespace Tables::Object::Type::Profile
     // Identification of a game engine's object.
     struct Profile
     {
-        ::Class Class{ ::Class::Invalid };
+        ::ObjectKind ObjectKind{ ::ObjectKind::Invalid };
 
         bool HasBipd{ false };
         bool HasBloc{ false };

@@ -121,11 +121,11 @@ export namespace Tables::Object::Type::Crate
 			// Objectives.
 			{ Name::Objective::k_FlagStand,				Kind::FlagStand			},
 			{ Name::Objective::k_CapturePlate,			Kind::CapturePlate		},
-			{ Name::Objective::k_HillMarker,				Kind::HillMarker		},
+			{ Name::Objective::k_HillMarker,			Kind::HillMarker		},
 
 			// Teleports.
 			{ Name::Teleport::k_TeleportSender,			Kind::TeleportSender	},
-			{ Name::Teleport::k_TeleportReceiver,			Kind::TeleportReceiver	},
+			{ Name::Teleport::k_TeleportReceiver,		Kind::TeleportReceiver	},
 			{ Name::Teleport::k_TeleportTwoWay,			Kind::TeleportTwoWay	},
 
 			// Palletes.
@@ -133,18 +133,18 @@ export namespace Tables::Object::Type::Crate
 			{ Name::Pallets::k_PalletLarge,				Kind::Pallete,			},
 
 			// Explosives.
-			{ Name::Explosive::k_FusionCoil,				Kind::FusionCoil		},
+			{ Name::Explosive::k_FusionCoil,			Kind::FusionCoil		},
 			{ Name::Explosive::k_Landmine,				Kind::Landmine			},
 			{ Name::Explosive::k_PlasmaBattery,			Kind::PlasmaBattery		},
-			{ Name::Explosive::k_PropaneTank,				Kind::PropaneTank		},
+			{ Name::Explosive::k_PropaneTank,			Kind::PropaneTank		},
 
 			// Lift.
 			{ Name::Lift::k_ManCannon,					Kind::Lift				},
 			{ Name::Lift::k_ManCannonHeavy,				Kind::Lift				},
 			{ Name::Lift::k_ManCannonLight,				Kind::Lift				},
-			{ Name::Lift::k_VehicleManCannon,				Kind::Lift				},
-			{ Name::Lift::k_GravityLift,					Kind::Lift				},
-			{ Name::Lift::k_ManCannonMCC,					Kind::Lift				},
+			{ Name::Lift::k_VehicleManCannon,			Kind::Lift				},
+			{ Name::Lift::k_GravityLift,				Kind::Lift				},
+			{ Name::Lift::k_ManCannonMCC,				Kind::Lift				},
 			{ Name::Lift::k_ManCannonHeavyMCC,			Kind::Lift				},
 			{ Name::Lift::k_ManCannonLightMCC,			Kind::Lift				},
 			{ Name::Lift::k_ForerunnerGravityLift,		Kind::Lift				},

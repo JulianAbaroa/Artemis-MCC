@@ -10,7 +10,6 @@ export import :Scenery;
 export import :Vehicle;
 export import :Weapon;
 export import :Alive;
-export import :Class;
 export import :Offset;
 export import :Profile;
 export import :Size;

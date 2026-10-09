@@ -1,10 +1,11 @@
 module Relations.PlayerGraph.System;
 
 import Relations.Classifier.Type;
+import Resolved.Definitions.Type;
 
 namespace
 {
-	using Class = Tables::Object::Type::Class::Class;
+	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
 	using Role = Relations::Classifier::Type::Role;
 	using Classified = Relations::Classifier::Type::Classified;
 	using Classifieds = std::vector<Classified>;
@@ -129,7 +130,7 @@ namespace Relations::PlayerGraph::System
 
 		auto parentIt = objectTable.find(parentHandle);
 		if (parentIt == objectTable.end() ||
-			parentIt->second.Profile.Class != Class::Vehicle)
+			parentIt->second.Profile.ObjectKind != ObjectKind::Vehicle)
 		{
 			return;
 		}
@@ -153,7 +154,7 @@ namespace Relations::PlayerGraph::System
 			if (it == objectTable.end()) continue;
 			auto& childrenObject = it->second;
 
-			if (childrenObject.Profile.Class != Class::Vehicle)
+			if (childrenObject.Profile.ObjectKind != ObjectKind::Vehicle)
 			{
 				continue;
 			}

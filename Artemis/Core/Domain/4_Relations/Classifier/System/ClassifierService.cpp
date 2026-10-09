@@ -1,12 +1,13 @@
 module Relations.Classifier.System;
 
 import Common.Tag.Type;
+import Resolved.Definitions.Type;
 
 namespace
 {
     namespace TagName = Common::Tag::Type;
 
-    using Class = Tables::Object::Type::Class::Class;
+    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
     using Classified = Relations::Classifier::Type::Classified;
     using Classifieds = std::vector<Classified>;
 }
@@ -44,33 +45,33 @@ namespace Relations::Classifier::System
     auto ClassifierService::ClassifyNode(uint32_t handle, const AliveObject& object,
         const ObjectTable& objectTable) const -> Role
     {
-        switch (object.Profile.Class)
+        switch (object.Profile.ObjectKind)
         {
-        case Class::Biped:
+        case ObjectKind::Biped:
             return Role::Biped;
 
-        case Class::Vehicle:
+        case ObjectKind::Vehicle:
             return this->ClassifyVehicle(object);
 
-        case Class::Weapon:
+        case ObjectKind::Weapon:
             return this->ClassifyWeapon(object);
 
-        case Class::Equipment:
+        case ObjectKind::Equipment:
             return this->ClassifyEquipment(object);
 
-        case Class::Projectile:
+        case ObjectKind::Projectile:
             return Role::Projectile;
 
-        case Class::Scenery:
+        case ObjectKind::Scenery:
             return this->ClassifyScenery(object);
 
-        case Class::DeviceMachine:
+        case ObjectKind::Machine:
             return Role::DeviceMachine;
 
-        case Class::DeviceControl:
+        case ObjectKind::Control:
             return this->ClassifyDeviceControl(object);
 
-        case Class::Crate:
+        case ObjectKind::Crate:
             return this->ClassifyBloc(object);
 
         default:
