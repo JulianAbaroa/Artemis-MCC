@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="mach" start="0x2C4" baseSize="0x2D4">
+	<uint32 name="Unknown 2C4" offset="0x2C4" confidence="unknown" tooltip="R16 W13 upd=0x0 src=INT_OR, INT_AND SHARED W:mach_place,mach_update,mach_s70" />
+	<uint32 name="Unknown 2C8" offset="0x2C8" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:mach_update" />
+	<uint16 name="Unknown 2CE" offset="0x2CE" confidence="unknown" tooltip="R4 W1 init=0xffff W:mach_init" />
+	<uint16 name="Unknown 2D0" offset="0x2D0" confidence="unknown" tooltip="R3 W1 init=0x0 W:mach_init" />
+	<uint16 name="Unknown 2D2" offset="0x2D2" confidence="unknown" tooltip="R3 W1 init=0xffff W:mach_init" />
+</plugin>

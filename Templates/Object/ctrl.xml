@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="ctrl" start="0x2C4" baseSize="0x2CC">
+	<uint32 name="Unknown 2C4" offset="0x2C4" confidence="unknown" tooltip="R3 W5 src=INT_AND, MULTIEQUAL SHARED W:ctrl_place" />
+	<uint16 name="Unknown 2C8" offset="0x2C8" confidence="unknown" tooltip="R0 W2 init=0x1 src=[param_2+0x7e] W:ctrl_init,ctrl_place" />
+	<uint16 name="Unknown 2CA" offset="0x2CA" confidence="unknown" tooltip="R0 W1 src=[param_2+0x80] known=Weapon.CurrentAmmo W:ctrl_place" />
+</plugin>
