@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="item" start="0x1A8" baseSize="0x1C4">
+	<flags16 name="Item Flags" offset="0x1A8" confidence="medium" tooltip="Item flags, OR-ed by place/update functions. Same offset as Projectile.RuntimeFlags in the old ObjectOffset (projectiles do not have the item component)." />
+	<uint16 name="Unknown 1AA" offset="0x1AA" confidence="unknown" tooltip="R2 W2 src=INT_SUB, SUBPIECE W:item_update,FUN_1804edf38" />
+	<uint32 name="Unknown 1AC" offset="0x1AC" confidence="unknown" tooltip="R0 W2 init=0xffffffff upd=0xffffffff W:item_init,item_update" />
+	<uint16 name="Unknown 1B2" offset="0x1B2" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_1804ac810,FUN_1804ac8c4" />
+	<uint32 name="Unknown 1B4" offset="0x1B4" confidence="unknown" tooltip="R15 W1 init=0xffffffff W:item_init" />
+	<uint32 name="Unknown 1B8" offset="0x1B8" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:item_init" />
+	<uint32 name="Item Self Handle" offset="0x1BC" confidence="low" tooltip="Written from param_1 in item_init (R15-ish reads elsewhere): probably the item's own handle." />
+	<uint16 name="Unknown 1C0" offset="0x1C0" confidence="unknown" tooltip="R0 W4 init=0x0 upd=0x0 src=INT_ADD W:FUN_180781484,item_init,item_s148" />
+</plugin>

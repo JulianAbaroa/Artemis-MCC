@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="weap" start="0x1C4" baseSize="0x338">
+	<flags16 name="Weapon Flags" offset="0x1C8" confidence="medium" tooltip="bits 4 and 5 = 'ready', each with a countdown (0x1DC, 0x1DD).">
+		<bit name="Ready A" index="4" />
+		<bit name="Ready B" index="5" />
+	</flags16>
+	<flags16 name="Input Mask" offset="0x1CA" confidence="high" exposed="true" tooltip="Written by FUN_1804bb2ac from the unit. Old name Weapon.ActionState (read as u8): 0x02 fire, 0x20 reload, 0x40 melee, 0x80 zoom, 0x100 (control bit 43) lives in the second byte. Bits 0x20 and 0x40 do not wake the weapon.">
+		<bit name="Control 34" index="0" />
+		<bit name="Fire" index="1" />
+		<bit name="Control 31" index="2" />
+		<bit name="Control 32" index="3" />
+		<bit name="Control 33" index="4" />
+		<bit name="Reload" index="5" />
+		<bit name="Melee" index="6" />
+		<bit name="Zoom" index="7" />
+		<bit name="Control 43" index="8" />
+	</flags16>
+	<uint8 name="Analog Trigger" offset="0x1CC" confidence="high" exposed="true" tooltip="(u8)(f * 255) of the unit's fire strength (1.0 while pressed)." />
+	<uint16 name="Unknown 1CE" offset="0x1CE" confidence="unknown" tooltip="R3 W1 upd=0x100 W:FUN_1804bf42c" />
+	<uint8 name="Unknown 1D0" offset="0x1D0" confidence="unknown" tooltip="R0 W3 upd=0x0 src=MULTIEQUAL W:FUN_1804bf42c,weap_update" />
+	<uint8 name="Unknown 1D1" offset="0x1D1" confidence="unknown" tooltip="R2 W1 src=SUBPIECE W:FUN_1804b7f4c" />
+	<uint8 name="Unknown 1D2" offset="0x1D2" confidence="unknown" tooltip="R1 W3 init=0x0 src=SUBPIECE, INT_ADD W:weap_update,weap_init" />
+	<uint8 name="Unknown 1D3" offset="0x1D3" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:weap_update" />
+	<uint16 name="Unknown 1D4" offset="0x1D4" confidence="unknown" tooltip="R2 W1 init=0x0 W:weap_init" />
+	<uint16 name="Unknown 1D6" offset="0x1D6" confidence="unknown" tooltip="R3 W1 src=INT_ADD W:weap_update" />
+	<uint16 name="Unknown 1D8" offset="0x1D8" confidence="unknown" tooltip="R3 W2 src=INT_ADD, MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:weap_update,FUN_1804bf7f0" />
+	<uint16 name="Own Index" offset="0x1DA" confidence="low" tooltip="Index written by weap_init." />
+	<uint8 name="Ready Countdown A" offset="0x1DC" confidence="medium" tooltip="Countdown for flag bit 4 of Weapon Flags." />
+	<uint8 name="Ready Countdown B" offset="0x1DD" confidence="medium" tooltip="Countdown for flag bit 5 of Weapon Flags." />
+	<uint16 name="Unknown 1DE" offset="0x1DE" confidence="unknown" tooltip="R3 W1 init=0x0 W:weap_init" />
+	<float32 name="Total Heat" offset="0x1E0" confidence="high" exposed="true" tooltip="Heat 0..1. Not initialised by weap_init." />
+	<float32 name="Total Energy" offset="0x1E4" confidence="high" exposed="true" tooltip="Used energy fraction 0..1 (inverse of what is left; 1 = no energy)." />
+	<uint16 name="Unknown 1EC" offset="0x1EC" confidence="unknown" tooltip="R0 W1 init=0x0 known=Equipment.TotalEnergy W:weap_init" />
+	<uint16 name="Unknown 1EE" offset="0x1EE" confidence="unknown" tooltip="R0 W1 init=0x0 W:weap_init" />
+	<uint32 name="Unknown 1F0" offset="0x1F0" confidence="unknown" tooltip="R2 W0 R:FUN_1804b9038,FUN_1804b9554" />
+	<float32 name="Smoothed Toggle" offset="0x1F4" confidence="low" tooltip="Smoothed towards the target at 0x238 (0 or 1.0) with the tag's rise/fall rates and sounds. Probably a flashlight fade." />
+	<uint8 name="Is Tracking" offset="0x1F8" confidence="medium" exposed="true" tooltip="Lock-on state." />
+	<uint32 name="Tracked Biped Handle" offset="0x200" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit's at 0x2E4)." />
+	<uint32 name="Tracked Handle 204" offset="0x204" confidence="low" default="0xFFFFFFFF" tooltip="3rd dword of the tracking structure." />
+	<float32 name="Unknown 214" offset="0x214" confidence="unknown" tooltip="R2 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4" />
+	<float32 name="Unknown 218" offset="0x218" confidence="unknown" tooltip="R1 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4" />
+	<uint16 name="Unknown 21C" offset="0x21C" confidence="unknown" tooltip="R0 W2 init=0xffffx2 SHARED W:FUN_18020ec44,FUN_18020eca4" />
+	<uint16 name="Unknown 21E" offset="0x21E" confidence="unknown" tooltip="R1 W2 init=0xffffx2 SHARED W:FUN_18020ec44,FUN_18020eca4" />
+	<uint32 name="Unknown 220" offset="0x220" confidence="unknown" tooltip="R2 W2 init=0x0x2 SHARED W:FUN_18020ec44,FUN_18020eca4" />
+	<uint8 name="Unknown 224" offset="0x224" confidence="unknown" tooltip="R0 W2 init=0x0x2 SHARED W:FUN_18020ec44,FUN_18020eca4" />
+	<uint32 name="Unknown 226" offset="0x226" confidence="unknown" tooltip="R0 W1 init=0x0 SHARED W:FUN_18020eca4" />
+	<uint16 name="Unknown 22A" offset="0x22A" confidence="unknown" tooltip="R0 W1 init=0x0 SHARED W:FUN_18020eca4" />
+	<uint32 name="Unknown 22C" offset="0x22C" confidence="unknown" tooltip="R0 W1 init=0x3000000 SHARED W:FUN_18020eca4" />
+	<uint8 name="Unknown 230" offset="0x230" confidence="unknown" tooltip="R0 W1 init=0x0 SHARED W:FUN_18020eca4" />
+	<uint8 name="Unknown 231" offset="0x231" confidence="unknown" tooltip="R0 W1 init=0xff SHARED W:FUN_18020eca4" />
+	<uint16 name="Unknown 232" offset="0x232" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_18020f91c" />
+	<uint32 name="Tracking Handle 234" offset="0x234" confidence="low" default="0xFFFFFFFF" tooltip="Second tracking structure at 0x218 ends here (-1 at init)." />
+	<float32 name="Toggle Target" offset="0x238" confidence="low" tooltip="0 or 1.0; flipped by input mask 0x100." />
+	<uint32 name="Unknown 23C" offset="0x23C" confidence="unknown" tooltip="R0 W3 init=0x0 upd=0x3f800000 src=SUBPIECE SHARED W:FUN_18020ec44,FUN_18020ef14,FUN_18020ee6c" />
+	<uint8 name="Barrel 0 State" offset="0x240" confidence="low" default="0x7F" tooltip="Byte 0 of the barrel element (0x7F at init)." />
+	<uint32 name="Unknown 250" offset="0x250" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804b9554" />
+	<uint32 name="Unknown 260" offset="0x260" confidence="unknown" tooltip="R2 W2 src=INT_OR SHARED known=Biped.MovementInput|Crate.ObjectiveSpawn.Top W:FUN_18020f91c" />
+	<uint32 name="Unknown 264" offset="0x264" confidence="unknown" tooltip="R2 W2 src=INT_OR SHARED known=Crate.ObjectiveSpawn.Bottom W:FUN_18020f91c" />
+	<uint32 name="Unknown 268" offset="0x268" confidence="unknown" tooltip="R2 W3 src=INT_OR, MULTIEQUAL SHARED known=Crate.ObjectiveSpawn.ShapeKind W:FUN_18020ee6c,FUN_18020ef14" />
+	<uint32 name="Barrel 0 Link" offset="0x26C" confidence="low" default="0xFFFFFFFF" tooltip="dword at +0x2C (-1 at init)." />
+	<uint8 name="Barrel 1 State" offset="0x274" confidence="low" default="0x7F" tooltip="Byte 0 of the barrel element (0x7F at init)." />
+	<uint32 name="Barrel 1 Link" offset="0x2A0" confidence="low" default="0xFFFFFFFF" tooltip="dword at +0x2C (-1 at init)." />
+	<uint8 name="Trigger 0 Charge State" offset="0x2A8" confidence="high" exposed="true" tooltip="Charge stage. Old name Weapon.ChargeState (only trigger 0 was read)." />
+	<uint8 name="Trigger 0 Charge Inverse" offset="0x2A9" confidence="medium" tooltip="Inverse of the stage (seen only on the plasma launcher)." />
+	<uint8 name="Trigger 0 Byte 2" offset="0x2AA" confidence="low" tooltip="Unidentified." />
+	<uint8 name="Trigger 0 Projectile Count" offset="0x2AB" confidence="medium" tooltip="Not always set." />
+	<float32 name="Trigger 0 Charge Progress" offset="0x2AC" confidence="low" tooltip="Float; user found it useless." />
+	<uint32 name="Trigger 0 Link" offset="0x2B0" confidence="low" default="0xFFFFFFFF" tooltip="-1 at init." />
+	<uint8 name="Trigger 1 Charge State" offset="0x2B4" confidence="high" tooltip="Charge stage. Old name Weapon.ChargeState (only trigger 0 was read)." />
+	<uint8 name="Trigger 1 Charge Inverse" offset="0x2B5" confidence="medium" tooltip="Inverse of the stage (seen only on the plasma launcher)." />
+	<uint8 name="Trigger 1 Byte 2" offset="0x2B6" confidence="low" tooltip="Unidentified." />
+	<uint8 name="Trigger 1 Projectile Count" offset="0x2B7" confidence="medium" tooltip="Not always set." />
+	<float32 name="Trigger 1 Charge Progress" offset="0x2B8" confidence="low" tooltip="Float; user found it useless." />
+	<uint32 name="Trigger 1 Link" offset="0x2BC" confidence="low" default="0xFFFFFFFF" tooltip="-1 at init." />
+	<uint16 name="Magazine 0 Reload State" offset="0x2C0" confidence="high" exposed="true" tooltip="Old name Weapon.IsReloading (read as u8)." />
+	<uint16 name="Magazine 0 Total Ammo" offset="0x2C6" confidence="high" exposed="true" tooltip="Reserve ammo. Old name Weapon.TotalAmmo." />
+	<uint16 name="Magazine 0 Current Ammo" offset="0x2CA" confidence="high" exposed="true" tooltip="Ammo loaded. Old name Weapon.CurrentAmmo." />
+	<uint16 name="Magazine 0 Link" offset="0x2D8" confidence="low" default="0xFFFF" tooltip="0xFFFF at init." />
+	<uint16 name="Magazine 1 Reload State" offset="0x2DA" confidence="high" tooltip="Old name Weapon.IsReloading (read as u8)." />
+	<uint16 name="Magazine 1 Total Ammo" offset="0x2E0" confidence="high" tooltip="Reserve ammo. Old name Weapon.TotalAmmo." />
+	<uint16 name="Magazine 1 Current Ammo" offset="0x2E4" confidence="high" tooltip="Ammo loaded. Old name Weapon.CurrentAmmo." />
+	<uint16 name="Magazine 1 Link" offset="0x2F2" confidence="low" default="0xFFFF" tooltip="0xFFFF at init." />
+	<uint32 name="Unknown 2F4" offset="0x2F4" confidence="unknown" tooltip="R1 W1 src=MULTIEQUAL W:FUN_1804b9038" />
+	<uint32 name="Unknown 2F8" offset="0x2F8" confidence="unknown" tooltip="R1 W1 src=[tmp23e00+0xc] SHARED W:FUN_1804c0554" />
+	<uint32 name="Unknown 2FC" offset="0x2FC" confidence="unknown" tooltip="R3 W1 src=INT_ADD SHARED W:FUN_1804bd9f4" />
+	<uint32 name="Unknown 300" offset="0x300" confidence="unknown" tooltip="R9 W1 upd=0xffffffff W:FUN_1804c0308" />
+	<uint32 name="Unknown 304" offset="0x304" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_1804b9554" />
+	<uint32 name="Unknown 308" offset="0x308" confidence="unknown" tooltip="R1 W1 src=MULTIEQUAL SHARED W:FUN_1804b9554" />
+	<float32 name="Unknown 30C" offset="0x30C" confidence="unknown" tooltip="R1 W1 src=FLOAT_DIV SHARED W:FUN_1804b9554" />
+	<uint32 name="Unknown 310" offset="0x310" confidence="unknown" tooltip="R2 W2 init=0xffffffff upd=0xffffffff W:weap_init,FUN_1804c5c74" />
+	<uint16 name="Unknown 314" offset="0x314" confidence="unknown" tooltip="R0 W2 init=0xffff upd=0xffff W:weap_init,FUN_1804c5c74" />
+	<uint16 name="Unknown 316" offset="0x316" confidence="unknown" tooltip="R1 W2 init=0xffff upd=0xffff W:weap_init,FUN_1804c5c74" />
+	<float32 name="Unknown 318" offset="0x318" confidence="unknown" tooltip="R1 W3 init=0x0 upd=0x0 src=FLOAT_DIV W:FUN_1804c5c74,weap_init" />
+	<uint32 name="Unknown 31C" offset="0x31C" confidence="unknown" tooltip="R0 W2 init=0xffffffff upd=0xffffffff W:weap_init,FUN_1804c5c74" />
+	<uint32 name="Unknown 320" offset="0x320" confidence="unknown" tooltip="R1 W2 init=0x0 upd=0x0 W:weap_init,FUN_1804c5c74" />
+	<uint16 name="Unknown 324" offset="0x324" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 326" offset="0x326" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 328" offset="0x328" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 32A" offset="0x32A" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 32C" offset="0x32C" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 32E" offset="0x32E" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 330" offset="0x330" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint16 name="Unknown 332" offset="0x332" confidence="unknown" tooltip="R0 W1 init=0xffff W:weap_init" />
+	<uint32 name="Fire Release Handle" offset="0x334" confidence="low" default="0xFFFFFFFF" tooltip="Handle cleared 15 ticks (0.25 s) after bits 0x02 and 0x04 of the input mask are released." />
+</plugin>

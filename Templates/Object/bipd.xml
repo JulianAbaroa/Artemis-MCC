@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="bipd" start="0x9D8" baseSize="0xE00">
+	<flags32 name="Biped Flags" offset="0x9D8" confidence="medium" tooltip="Biped flags. Bit 17 (0x20000) is a copy of control bit 10 of the unit (armor ability held), set each update.">
+		<bit name="Ability Held Copy" index="17" />
+	</flags32>
+	<uint16 name="Unknown 9DC" offset="0x9DC" confidence="unknown" tooltip="R0 W3 init=0xffff upd=0xffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint32 name="Unknown 9E0" offset="0x9E0" confidence="unknown" tooltip="R0 W3 init=0xffffffff upd=0xffffffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint32 name="Unknown 9E4" offset="0x9E4" confidence="unknown" tooltip="R0 W3 init=0xffffffff upd=0xffffffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint16 name="Unknown 9E8" offset="0x9E8" confidence="unknown" tooltip="R0 W3 init=0xffff upd=0xffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint16 name="Unknown 9EA" offset="0x9EA" confidence="unknown" tooltip="R0 W3 init=0xffff upd=0xffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint32 name="Unknown 9EC" offset="0x9EC" confidence="unknown" tooltip="R0 W3 init=0xffffffff upd=0xffffffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint32 name="Unknown 9F0" offset="0x9F0" confidence="unknown" tooltip="R1 W3 init=0xffffffff upd=0xffffffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint32 name="Unknown 9F4" offset="0x9F4" confidence="unknown" tooltip="R0 W3 init=0xffffffff upd=0xffffffff W:bipd_reset,bipd_sd8,bipd_s138" />
+	<uint16 name="Unknown A1C" offset="0xA1C" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_s138" />
+	<uint16 name="Unknown A1E" offset="0xA1E" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_s138" />
+	<uint16 name="Unknown A20" offset="0xA20" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_s138" />
+	<uint16 name="Unknown A22" offset="0xA22" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_s138" />
+	<uint16 name="Unknown A24" offset="0xA24" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_s138" />
+	<uint16 name="Unknown A26" offset="0xA26" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_s138" />
+	<uint8 name="Unknown A29" offset="0xA29" confidence="unknown" tooltip="R1 W2 upd=0x0 src=INT_ADD W:FUN_1804a1718" />
+	<uint8 name="Vehicle Interaction Counter" offset="0xA2A" confidence="low" tooltip="Counter decremented by bipd_update when the object has a +0xCC link." />
+	<uint16 name="Unknown A2C" offset="0xA2C" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown A2E" offset="0xA2E" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint32 name="Unknown A38" offset="0xA38" confidence="unknown" tooltip="R0 W1 src=call 1804a0d14 W:bipd_s138" />
+	<uint32 name="Unknown A4C" offset="0xA4C" confidence="unknown" tooltip="R4 W3 init=0xffffffff upd=0xffffffff src=call 180013464 W:bipd_init,FUN_180157a80,FUN_1801579cc" />
+	<uint16 name="Unknown A6C" offset="0xA6C" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint8 name="Unknown A6E" offset="0xA6E" confidence="unknown" tooltip="R6 W2 init=0x0 src=param_2 W:bipd_s138,FUN_180192e7c" />
+	<uint32 name="Unknown A70" offset="0xA70" confidence="unknown" tooltip="R3 W1 src=param_1 W:bipd_s138" />
+	<uint64 name="Unknown A74" offset="0xA74" confidence="unknown" tooltip="R0 W3 upd=0x0 src=INDIRECT W:FUN_180192e7c" />
+	<uint32 name="Unknown A7C" offset="0xA7C" confidence="unknown" tooltip="R1 W4 upd=0xffffffff src=INDIRECT W:FUN_180192e7c,bipd_sd8" />
+	<uint32 name="Unknown A80" offset="0xA80" confidence="unknown" tooltip="R0 W4 upd=0xffffffff, 0x0 src=INDIRECT W:FUN_180192e7c" />
+	<uint64 name="Unknown A84" offset="0xA84" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint64 name="Unknown A8C" offset="0xA8C" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint32 name="Unknown A94" offset="0xA94" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint64 name="Unknown A98" offset="0xA98" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint32 name="Unknown AA0" offset="0xAA0" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint32 name="Unknown AA4" offset="0xAA4" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:FUN_180192e7c" />
+	<uint32 name="Unknown AA8" offset="0xAA8" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:FUN_180192e7c" />
+	<uint32 name="Unknown AAC" offset="0xAAC" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:FUN_180192e7c" />
+	<uint64 name="Unknown AB0" offset="0xAB0" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint32 name="Unknown AB8" offset="0xAB8" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:FUN_180192e7c" />
+	<uint32 name="Ground Object Handle" offset="0xAD0" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Living object the biped stands on. Old name Biped.GroundObjectHandle (not seen by the static analysis)." />
+	<uint8 name="Unknown AD6" offset="0xAD6" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_180192e7c" />
+	<uint8 name="Unknown AD7" offset="0xAD7" confidence="unknown" tooltip="R1 W1 upd=0x0 W:FUN_180192e7c" />
+	<vector3 name="Surface Normal" offset="0xAD8" confidence="medium" exposed="true" tooltip="Normal of the last ground contact. Old name Biped.SurfaceNormal." />
+	<uint32 name="Unknown AEC" offset="0xAEC" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:FUN_180192e7c" />
+	<float32 name="Unknown AF8" offset="0xAF8" confidence="unknown" tooltip="R4 W3 src=FLOAT_MULT, FLOAT_ADD W:FUN_1804a9e5c" />
+	<float32 name="Unknown AFC" offset="0xAFC" confidence="unknown" tooltip="R5 W3 src=FLOAT_MULT, FLOAT_ADD W:FUN_1804a9e5c" />
+	<float32 name="Unknown B00" offset="0xB00" confidence="unknown" tooltip="R4 W4 src=FLOAT_MULT, INDIRECT W:FUN_1804a9e5c,bipd_s138" />
+	<float32 name="Unknown B04" offset="0xB04" confidence="unknown" tooltip="R2 W2 src=FLOAT_ADD, FLOAT_MULT W:FUN_1804a9e5c" />
+	<uint32 name="Unknown B08" offset="0xB08" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_180018214" />
+	<uint32 name="Unknown B0C" offset="0xB0C" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_180018214" />
+	<uint32 name="Unknown B10" offset="0xB10" confidence="unknown" tooltip="R2 W1 src=INDIRECT W:bipd_s138" />
+	<uint32 name="Unknown B14" offset="0xB14" confidence="unknown" tooltip="R0 W2 src=MULTIEQUAL W:FUN_1804a8248" />
+	<uint16 name="Unknown B18" offset="0xB18" confidence="unknown" tooltip="R0 W2 init=0x0 upd=0x0 W:bipd_s138,FUN_1804a8248" />
+	<uint16 name="Unknown B1A" offset="0xB1A" confidence="unknown" tooltip="R0 W2 init=0x0 upd=0x0 W:bipd_s138,FUN_1804a8248" />
+	<float32 name="Unknown B1C" offset="0xB1C" confidence="unknown" tooltip="R1 W1 src=FLOAT_ADD W:FUN_1804a8248" />
+	<float32 name="Unknown B20" offset="0xB20" confidence="unknown" tooltip="R2 W1 src=FLOAT_ADD W:FUN_1804a8248" />
+	<uint32 name="Unknown B24" offset="0xB24" confidence="unknown" tooltip="R0 W2 src=INDIRECT W:bipd_s138,FUN_1804a8248" />
+	<uint64 name="Unknown B28" offset="0xB28" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:bipd_s138" />
+	<uint16 name="Unknown C34" offset="0xC34" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C36" offset="0xC36" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C38" offset="0xC38" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C3A" offset="0xC3A" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C3C" offset="0xC3C" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C3E" offset="0xC3E" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C40" offset="0xC40" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown C42" offset="0xC42" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint64 name="Unknown C44" offset="0xC44" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:bipd_s138" />
+	<uint32 name="Unknown C4C" offset="0xC4C" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:bipd_s138" />
+	<int32 name="Matrix History Capacity" offset="0xCF8" confidence="medium" default="0x3" tooltip="Ring buffer of root-node matrices: capacity 3 at init." />
+	<int32 name="Matrix History Start" offset="0xCFC" confidence="medium" tooltip="Ring buffer start index. Entries (3 x 0x34 bytes, node 0 matrix) follow at 0xD04..0xDA0." />
+	<int32 name="Matrix History Count" offset="0xD00" confidence="medium" tooltip="Entries in use." />
+	<uint32 name="Unknown DA0" offset="0xDA0" confidence="unknown" tooltip="R1 W0 R:FUN_1804a9e5c" />
+	<uint32 name="Unknown DA4" offset="0xDA4" confidence="unknown" tooltip="R3 W4 src=INDIRECT, call 18001fcfc W:FUN_1804a1c2c,FUN_18017f294" />
+	<uint32 name="Unknown DA8" offset="0xDA8" confidence="unknown" tooltip="R2 W2 src=INDIRECT, [lVar7+0x1c4] W:FUN_18017f294" />
+	<uint32 name="Unknown DAC" offset="0xDAC" confidence="unknown" tooltip="R2 W3 src=[lVar1+0x28], INDIRECT W:FUN_18017f294,FUN_180471e90" />
+	<uint32 name="Unknown DB0" offset="0xDB0" confidence="unknown" tooltip="R2 W1 src=MULTIEQUAL W:FUN_1804a1c2c" />
+	<uint32 name="Unknown DB4" offset="0xDB4" confidence="unknown" tooltip="R0 W1 init=0x3f800000 (f32 1) W:bipd_s138" />
+	<uint32 name="Unknown DB8" offset="0xDB8" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:bipd_init" />
+	<uint16 name="Unknown DBC" offset="0xDBC" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_init" />
+	<uint8 name="Unknown DBE" offset="0xDBE" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint8 name="Actor Byte" offset="0xDBF" confidence="medium" tooltip="Copied each update from the AI actor entry +0x32A when unit 0x1BC != -1." />
+	<uint16 name="Unknown DC0" offset="0xDC0" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DC2" offset="0xDC2" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DC4" offset="0xDC4" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DC6" offset="0xDC6" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DC8" offset="0xDC8" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DCA" offset="0xDCA" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DCC" offset="0xDCC" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DCE" offset="0xDCE" confidence="unknown" tooltip="R0 W1 init=0x0 W:bipd_s138" />
+	<uint16 name="Unknown DD2" offset="0xDD2" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_init" />
+	<uint16 name="Unknown DD4" offset="0xDD4" confidence="unknown" tooltip="R0 W1 init=0xffff W:bipd_init" />
+	<uint8 name="Unknown DFE" offset="0xDFE" confidence="unknown" tooltip="R0 W1 init=0xff W:bipd_init" />
+</plugin>

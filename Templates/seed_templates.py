@@ -131,6 +131,8 @@ def process(comp, fields_dir, out_dir, dry):
     os.makedirs(out_dir, exist_ok=True)
     ET.indent(root, space="\t")
     ET.ElementTree(root).write(xpath, encoding="utf-8", xml_declaration=True)
+    raw = open(xpath, "rb").read().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")   # repo uses CRLF
+    open(xpath, "wb").write(raw)
 
 def main():
     ap = argparse.ArgumentParser(description="Create / merge runtime template XML files.")

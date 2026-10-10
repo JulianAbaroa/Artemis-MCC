@@ -1120,6 +1120,18 @@
     <Filter Include="Core\Infrastructure\Service\Preferences\Type">
       <UniqueIdentifier>{b156d511-5ac1-46c1-9b59-d69c02b8f074}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template">
+      <UniqueIdentifier>{9bed3f06-2185-4a94-b932-32803748bc22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template\Type">
+      <UniqueIdentifier>{573cbf0f-0a17-48fa-b824-1ce543d9f246}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template\Type\Obje">
+      <UniqueIdentifier>{af2757d5-d14b-4ba4-9307-47145e51d002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template\Type\Unit">
+      <UniqueIdentifier>{ef71be48-c78c-43f9-b5fb-8eaccbb945bf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imgui.h">
@@ -1322,15 +1334,6 @@
     <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Hook.ixx">
       <Filter>Core\Domain\1_Map\Reader</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx">
-      <Filter>Core\Domain\1_Map\Tag</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.System.ixx">
-      <Filter>Core\Domain\1_Map\Tag</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx">
-      <Filter>Core\Domain\1_Map\Tag</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.ixx">
       <Filter>Core\Domain\1_Map\Reader\State\File</Filter>
     </ClCompile>
@@ -1345,366 +1348,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.cpp">
       <Filter>Core\Domain\1_Map\Reader\State\TagIndex</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.Type.Bipd.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\BipdStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\System\BipdDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bipd\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.System.Bloc.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.Type.Bloc.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\BlocStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\System\BlocDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Bloc\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.System.Coll.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.Type.Coll.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\CollStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\System\CollDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Coll\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.System.Ctrl.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.Type.Ctrl.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\CtrlStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\System\CtrlDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Ctrl\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.System.Eqip.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.Type.Eqip.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\EqipStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\System\EqipDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Eqip\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.System.Hlmt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.Type.Hlmt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\HlmtStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\System\HlmtDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Hlmt\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.System.Lbsp.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.Type.Lbsp.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\LbspStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\System\LbspDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Lbsp\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.System.Mach.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.Type.Mach.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MachStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\System\MachDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mach\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.System.Mode.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.Type.Mode.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\ModeStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\System\ModeDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Mode\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.System.Phmo.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.Type.Phmo.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\PhmoStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\System\PhmoDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Phmo\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.System.Play.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.Type.Play.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\PlayStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\System\PlayDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Play\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.System.Proj.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.Type.Proj.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\ProjStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\System\ProjDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Proj\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.System.Sbsp.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.Type.Sbsp.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\SbspStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\System\SbspDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sbsp\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.System.Scen.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.Type.Scen.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\ScenStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\System\ScenDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scen\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.System.Scnr.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.Type.Scnr.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\ScnrStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\ScnrDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Scnr\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.System.Sddt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sddt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.Type.Sddt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sddt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\System\SddtDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sddt\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\SddtStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.Type.Sldt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\SldtStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\SldtDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Sldt\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.System.Vehi.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.Type.Vehi.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\VehiStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\System\VehiDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Vehi\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.System.Weap.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.Type.Weap.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\WeapStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\System\WeapDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Weap\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.System.Zone.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.Type.Zone.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\ZoneStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\ZoneDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\Vitality.ixx">
       <Filter>Core\Domain\2_Resolved\Vitality\Type</Filter>
@@ -2708,9 +2351,6 @@
     <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.ixx">
       <Filter>Core\Infrastructure\Service\Telemetry\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.TagCatalog.ixx">
-      <Filter>Core\Domain\1_Map\Tag</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderConstant.ixx">
       <Filter>Core\Domain\1_Map\Reader\Type</Filter>
     </ClCompile>
@@ -2815,24 +2455,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.cpp">
       <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.System.Jpt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Jpt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.Type.Jpt.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Jpt</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\JptObject.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\JptOffset.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\JptStructure.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\System\JptDescriptor.ixx">
-      <Filter>Core\Domain\1_Map\Tag\Jpt\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx">
       <Filter>Core\Common\Reflect\Type</Filter>
@@ -3101,6 +2723,414 @@
     <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx">
       <Filter>Core\Infrastructure\Service\Preferences\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Obje.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Unit.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Unit\TemplateUnitOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Unit</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Unit\TemplateUnitStructure.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Unit</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Obje\TemplateObjeOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Obje</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Obje\TemplateObjeStructure.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Obje</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.System.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Map.TagCatalog.ixx">
+      <Filter>Core\Domain\1_Map\Tag</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.Type.Bipd.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\System\MapBipdDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\MapBipdObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\MapBipdOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\MapBipdStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bipd\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.System.Bloc.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.Type.Bloc.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\System\MapBlocDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\MapBlocObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\MapBlocOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\MapBlocStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Bloc\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.System.Coll.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.Type.Coll.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\System\MapCollDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\MapCollObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\MapCollOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\MapCollStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Coll\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.System.Ctrl.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.Type.Ctrl.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\MapCtrlObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\MapCtrlOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\MapCtrlStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\System\MapCtrlDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Ctrl\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.System.Eqip.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.Type.Eqip.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\MapEqipObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\MapEqipOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\MapEqipStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\System\MapEqipDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Eqip\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.System.Hlmt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.Type.Hlmt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\MapHlmtObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\MapHlmtOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\MapHlmtStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\System\MapHlmtDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Hlmt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.System.Jpt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.Type.Jpt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\System\MapJptDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\MapJptObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\MapJptOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\MapJptStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Jpt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.System.Lbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.Type.Lbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\MapLbspObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\MapLbspOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\MapLbspStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\System\MapLbspDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Lbsp\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.System.Mach.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.Type.Mach.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MapMachObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MapMachOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MapMachStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\System\MapMachDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mach\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.System.Mode.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.Type.Mode.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\MapModeObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\MapModeOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\MapModeStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\System\MapModeDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Mode\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.System.Phmo.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.Type.Phmo.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\MapPhmoObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\MapPhmoOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\MapPhmoStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\System\MapPhmoDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Phmo\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.System.Play.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.Type.Play.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\MapPlayObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\MapPlayOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\MapPlayStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Play\System\MapPlayDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Play\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.System.Proj.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.Type.Proj.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\MapProjObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\MapProjOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\MapProjStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\System\MapProjDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Proj\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.System.Sbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.Type.Sbsp.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\MapSbspObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\MapSbspOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\MapSbspStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\System\MapSbspDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sbsp\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.System.Scen.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.Type.Scen.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\MapScenObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\MapScenOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\MapScenStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\System\MapScenDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scen\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.System.Scnr.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.Type.Scnr.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\MapScnrObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\MapScnrOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\MapScnrStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\MapScnrDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Scnr\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.System.Sddt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.Type.Sddt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\MapSddtObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\MapSddtOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\MapSddtStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\System\MapSddtDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sddt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.Type.Sldt.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\MapSldtObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\MapSldtOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\MapSldtStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\MapSldtDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Sldt\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.System.Vehi.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.Type.Vehi.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\MapVehiObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\MapVehiOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\MapVehiStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\System\MapVehiDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Vehi\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.System.Weap.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.Type.Weap.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\MapWeapObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\MapWeapOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\MapWeapStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\System\MapWeapDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Weap\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.System.Zone.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.Type.Zone.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\MapZoneObject.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\MapZoneOffset.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\MapZoneStructure.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\MapZoneDescriptor.ixx">
+      <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Icons\GenerateIconData.py">
@@ -3109,7 +3139,6 @@
     <None Include="Proxy\GenerateProxyExports.py">
       <Filter>Proxy</Filter>
     </None>
-    <None Include="..\.editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Icons\cube-solid.png">
@@ -3130,8 +3159,5 @@
     <Image Include="Resources\Icons\square-binary-solid.png">
       <Filter>Resources\Icons</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\Ignore\rules.txt" />
   </ItemGroup>
 </Project>

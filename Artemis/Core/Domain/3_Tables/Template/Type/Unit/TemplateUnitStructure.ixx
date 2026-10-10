@@ -64,9 +64,13 @@ export namespace Tables::Template::Type::Unit::Structure
         std::uint32_t Unknown2ac;  // 0xF4  uint32. | R3 W0 R:FUN_1804a9e5c,unit_sa8
         float        FireStrengthA;  // 0xF8  float32. | Float handed to the weapon A input (1.0 while the latch pulses bit 30).
         float        FireStrengthB;  // 0xFC  float32. | Float handed to the weapon B input.
-        std::uint8_t  _gap_0x100[0x12];
-        std::uint16_t Unknown2ca;  // 0x112  uint16. | R2 W0 SHARED known=Weapon.CurrentAmmo R:FUN_1804b9554
-        std::uint8_t  _gap_0x114[0x2C];
+        std::uint8_t  _gap_0x100[0x4];
+        std::uint32_t AimTargetHeader;  // 0x104  uint32. | Start of a record copied to the tracking structure at 0x2E4 by FUN_180480280. Value 0.
+        std::uint32_t AimedObjectHandle;  // 0x108  uint32. | Hypothesis (not measured): object under the unit's crosshair. MEASURE aiming at a wall, a floor weapon, a vehicle.
+        std::uint32_t AimedObjectHandle2;  // 0x10C  uint32. | Second handle of the same record (-1 at init).
+        std::uint32_t AimRecord2c8;  // 0x110  uint32. | -1 at init.
+        float        AimedDistance;  // 0x114  float32. | Hypothesis: distance to the aimed object (> 0 when something is aimed at).
+        std::uint8_t  _gap_0x118[0x28];
         std::uint32_t Unknown2f8;  // 0x140  uint32. | R1 W0 SHARED R:FUN_1804b9554
         std::uint32_t Unknown2fc;  // 0x144  uint32. | R1 W0 SHARED R:FUN_1804b9554
         std::uint32_t Unknown300;  // 0x148  uint32. | R8 W1 upd=0xffffffff SHARED W:FUN_1804c0308
@@ -89,25 +93,26 @@ export namespace Tables::Template::Type::Unit::Structure
         float        Unknown340;  // 0x188  float32. | R2 W1 src=FLOAT_ADD W:FUN_18049b3f8
         std::uint8_t  _gap_0x18C[0x4];
         std::uint16_t Unknown348;  // 0x190  uint16. | R1 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4
-        std::int8_t  WeaponAIndex;  // 0x192  int8. | Slot index of the current weapon A (-1 none). Not yet verified live.
-        std::int8_t  WeaponBIndex;  // 0x193  int8. | Slot index of weapon B (-1 none).
-        std::uint16_t Unknown34c;  // 0x194  uint16. | R0 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4
-        std::int8_t  PreviousWeaponAIndex;  // 0x196  int8. | Previous value.
-        std::int8_t  PreviousWeaponBIndex;  // 0x197  int8. | Previous value.
-        std::uint32_t WeaponSlot0Handle;  // 0x198  uint32. | Weapon handle in slot 0 (FFFFFFFF empty). Not yet verified live.
-        std::uint32_t WeaponSlot1Handle;  // 0x19C  uint32. | Weapon handle in slot 1 (FFFFFFFF empty). Not yet verified live.
-        std::uint32_t WeaponSlot2Handle;  // 0x1A0  uint32. | Weapon handle in slot 2 (FFFFFFFF empty). Not yet verified live.
-        std::uint32_t WeaponSlot3Handle;  // 0x1A4  uint32. | Weapon handle in slot 3 (FFFFFFFF empty). Not yet verified live.
+        std::uint8_t ActiveWeaponSlot;  // 0x192  uint8. | Measured live: 0 = primary in hand, 1 = secondary, 0xFF = in a vehicle / no usable weapon. Equipped weapon = handle at 0x350 + 4 * this value.
+        std::uint8_t Reserved34b;  // 0x193  uint8. | Always 0xFF (measured).
+        std::uint16_t WeaponChangeState;  // 0x194  uint16. | Changes when a floor weapon is picked up or swapped, values 0,1,2,4,5,6 in no clear order. Not the weapon type.
+        std::uint8_t PreviousWeaponByte34e;  // 0x196  uint8. | Previous-value byte written with 0x34A.
+        std::uint8_t PreviousWeaponByte34f;  // 0x197  uint8. | Previous-value byte.
+        std::uint32_t PrimaryWeaponHandle;  // 0x198  uint32. | Handle of the primary weapon. Not swapped when the active weapon changes (measured).
+        std::uint32_t SecondaryWeaponHandle;  // 0x19C  uint32. | Handle of the secondary weapon (measured).
+        std::uint32_t WeaponSlot2Handle;  // 0x1A0  uint32. | Always FFFFFFFF, also in vehicles (measured).
+        std::uint32_t WeaponSlot3Handle;  // 0x1A4  uint32. | Always FFFFFFFF (measured).
         std::uint32_t WeaponSlot0Tick;  // 0x1A8  uint32. | Tick written while the slot is current.
         std::uint32_t WeaponSlot1Tick;  // 0x1AC  uint32. | Tick written while the slot is current.
         std::uint32_t WeaponSlot2Tick;  // 0x1B0  uint32. | Tick written while the slot is current.
         std::uint32_t WeaponSlot3Tick;  // 0x1B4  uint32. | Tick written while the slot is current.
         std::uint8_t  _gap_0x1B8[0x4];
-        std::uint32_t ArmorAbilityHandle;  // 0x1BC  uint32. | Equipment object of the armor ability (FFFFFFFF none). Active = equipment +0x1D8 != -1 (hypothesis).
-        std::uint32_t Handle378;  // 0x1C0  uint32. | Handle initialised to -1.
-        std::uint8_t Unknown37c;  // 0x1C4  uint8. | R0 W2 init=0xff src=SUBPIECE W:unit_init,FUN_18047f0ac
-        std::uint8_t Unknown37d;  // 0x1C5  uint8. | R2 W2 init=0xff upd=0x0 W:unit_init,FUN_18047f0ac
-        std::uint16_t Unknown37e;  // 0x1C6  uint16. | R0 W1 upd=0x0 W:FUN_18047d780
+        std::uint32_t ArmorAbilityHandle;  // 0x1BC  uint32. | Equipment object of the equipped armor ability (measured). Ability active <=> that object's +0x1D8 != 0xFFFFFFFF.
+        std::uint32_t AbilityTick;  // 0x1C0  uint32. | Looks like a tick tied to the ability (0x61E94 measured).
+        std::uint8_t SelectedGrenadeType;  // 0x1C4  uint8. | Measured: 0 frag, 1 plasma. The index->type mapping depends on the biped tag (may differ for elites).
+        std::uint8_t AppliedGrenadeType;  // 0x1C5  uint8. | Copied from the selected type by FUN_18047f0ac when it changes (plays a tag sound).
+        std::uint8_t GrenadeCount0;  // 0x1C6  uint8. | Count of grenade type 0 (frag). Measured 1 and 2.
+        std::uint8_t GrenadeCount1;  // 0x1C7  uint8. | Count of grenade type 1 (plasma). Measured 1 and 2.
         std::uint16_t Unknown380;  // 0x1C8  uint16. | R0 W1 init=0x0 W:unit_init
         std::uint8_t Unknown382;  // 0x1CA  uint8. | R1 W2 init=0x0 src=INT_ADD W:unit_init,unit_update
         std::int8_t  ZoomLevel;  // 0x1CB  int8. | Applied zoom (0xFF = none). Confirmed.
@@ -115,7 +120,7 @@ export namespace Tables::Template::Type::Unit::Structure
         std::uint8_t  _gap_0x1CD[0x1];
         std::uint8_t AimTurnRate;  // 0x1CE  uint8. | Aim turn speed ratio 0-255.
         std::uint8_t  _gap_0x1CF[0x1];
-        std::uint32_t LastControlCopyTick;  // 0x1D0  uint32. | Tick of the last control copy from another unit.
+        std::uint32_t LastControlChangeTick;  // 0x1D0  uint32. | Tick of the last control change (0x666AE measured).
         std::uint32_t ControlSourceHandleA;  // 0x1D4  uint32. | Driver/gunner whose control is copied.
         std::uint32_t ControlSourceHandleB;  // 0x1D8  uint32. | Second control source.
         std::uint16_t Unknown394;  // 0x1DC  uint16. | R0 W1 init=0xffff W:unit_init

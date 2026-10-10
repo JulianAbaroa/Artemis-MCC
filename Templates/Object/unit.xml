@@ -62,7 +62,11 @@
 	<uint32 name="Unknown 2AC" offset="0x2AC" confidence="unknown" tooltip="R3 W0 R:FUN_1804a9e5c,unit_sa8" />
 	<float32 name="Fire Strength A" offset="0x2B0" confidence="medium" tooltip="Float handed to the weapon A input (1.0 while the latch pulses bit 30)." />
 	<float32 name="Fire Strength B" offset="0x2B4" confidence="medium" tooltip="Float handed to the weapon B input." />
-	<uint16 name="Unknown 2CA" offset="0x2CA" confidence="unknown" tooltip="R2 W0 SHARED known=Weapon.CurrentAmmo R:FUN_1804b9554" />
+	<uint32 name="Aim Target Header" offset="0x2BC" confidence="low" tooltip="Start of a record copied to the tracking structure at 0x2E4 by FUN_180480280. Value 0." />
+	<uint32 name="Aimed Object Handle" offset="0x2C0" confidence="low" default="0xFFFFFFFF" tooltip="Hypothesis (not measured): object under the unit's crosshair. MEASURE aiming at a wall, a floor weapon, a vehicle." />
+	<uint32 name="Aimed Object Handle 2" offset="0x2C4" confidence="low" default="0xFFFFFFFF" tooltip="Second handle of the same record (-1 at init)." />
+	<uint32 name="Aim Record 2C8" offset="0x2C8" confidence="low" default="0xFFFFFFFF" tooltip="-1 at init." />
+	<float32 name="Aimed Distance" offset="0x2CC" confidence="low" tooltip="Hypothesis: distance to the aimed object (&gt; 0 when something is aimed at)." />
 	<uint32 name="Unknown 2F8" offset="0x2F8" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804b9554" />
 	<uint32 name="Unknown 2FC" offset="0x2FC" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804b9554" />
 	<uint32 name="Unknown 300" offset="0x300" confidence="unknown" tooltip="R8 W1 upd=0xffffffff SHARED W:FUN_1804c0308" />
@@ -82,30 +86,31 @@
 	<uint16 name="Unknown 336" offset="0x336" confidence="unknown" tooltip="R8 W1 init=0xffff W:unit_init" />
 	<float32 name="Unknown 340" offset="0x340" confidence="unknown" tooltip="R2 W1 src=FLOAT_ADD W:FUN_18049b3f8" />
 	<uint16 name="Unknown 348" offset="0x348" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4" />
-	<int8 name="Weapon A Index" offset="0x34A" confidence="medium" default="0xFF" exposed="true" tooltip="Slot index of the current weapon A (-1 none). Not yet verified live." />
-	<int8 name="Weapon B Index" offset="0x34B" confidence="medium" default="0xFF" exposed="true" tooltip="Slot index of weapon B (-1 none)." />
-	<uint16 name="Unknown 34C" offset="0x34C" confidence="unknown" tooltip="R0 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4" />
-	<int8 name="Previous Weapon A Index" offset="0x34E" confidence="low" default="0xFF" tooltip="Previous value." />
-	<int8 name="Previous Weapon B Index" offset="0x34F" confidence="low" default="0xFF" tooltip="Previous value." />
-	<uint32 name="Weapon Slot 0 Handle" offset="0x350" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 0 (FFFFFFFF empty). Not yet verified live." />
-	<uint32 name="Weapon Slot 1 Handle" offset="0x354" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 1 (FFFFFFFF empty). Not yet verified live." />
-	<uint32 name="Weapon Slot 2 Handle" offset="0x358" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 2 (FFFFFFFF empty). Not yet verified live." />
-	<uint32 name="Weapon Slot 3 Handle" offset="0x35C" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 3 (FFFFFFFF empty). Not yet verified live." />
+	<uint8 name="Active Weapon Slot" offset="0x34A" confidence="high" default="0xFF" exposed="true" tooltip="Measured live: 0 = primary in hand, 1 = secondary, 0xFF = in a vehicle / no usable weapon. Equipped weapon = handle at 0x350 + 4 * this value." />
+	<uint8 name="Reserved 34B" offset="0x34B" confidence="high" default="0xFF" tooltip="Always 0xFF (measured)." />
+	<uint16 name="Weapon Change State" offset="0x34C" confidence="low" tooltip="Changes when a floor weapon is picked up or swapped, values 0,1,2,4,5,6 in no clear order. Not the weapon type." />
+	<uint8 name="Previous Weapon Byte 34E" offset="0x34E" confidence="low" default="0xFF" tooltip="Previous-value byte written with 0x34A." />
+	<uint8 name="Previous Weapon Byte 34F" offset="0x34F" confidence="low" default="0xFF" tooltip="Previous-value byte." />
+	<uint32 name="Primary Weapon Handle" offset="0x350" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Handle of the primary weapon. Not swapped when the active weapon changes (measured)." />
+	<uint32 name="Secondary Weapon Handle" offset="0x354" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Handle of the secondary weapon (measured)." />
+	<uint32 name="Weapon Slot 2 Handle" offset="0x358" confidence="medium" default="0xFFFFFFFF" tooltip="Always FFFFFFFF, also in vehicles (measured)." />
+	<uint32 name="Weapon Slot 3 Handle" offset="0x35C" confidence="medium" default="0xFFFFFFFF" tooltip="Always FFFFFFFF (measured)." />
 	<uint32 name="Weapon Slot 0 Tick" offset="0x360" confidence="low" tooltip="Tick written while the slot is current." />
 	<uint32 name="Weapon Slot 1 Tick" offset="0x364" confidence="low" tooltip="Tick written while the slot is current." />
 	<uint32 name="Weapon Slot 2 Tick" offset="0x368" confidence="low" tooltip="Tick written while the slot is current." />
 	<uint32 name="Weapon Slot 3 Tick" offset="0x36C" confidence="low" tooltip="Tick written while the slot is current." />
-	<uint32 name="Armor Ability Handle" offset="0x374" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Equipment object of the armor ability (FFFFFFFF none). Active = equipment +0x1D8 != -1 (hypothesis)." />
-	<uint32 name="Handle 378" offset="0x378" confidence="low" default="0xFFFFFFFF" tooltip="Handle initialised to -1." />
-	<uint8 name="Unknown 37C" offset="0x37C" confidence="unknown" tooltip="R0 W2 init=0xff src=SUBPIECE W:unit_init,FUN_18047f0ac" />
-	<uint8 name="Unknown 37D" offset="0x37D" confidence="unknown" tooltip="R2 W2 init=0xff upd=0x0 W:unit_init,FUN_18047f0ac" />
-	<uint16 name="Unknown 37E" offset="0x37E" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_18047d780" />
+	<uint32 name="Armor Ability Handle" offset="0x374" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Equipment object of the equipped armor ability (measured). Ability active &lt;=&gt; that object's +0x1D8 != 0xFFFFFFFF." />
+	<uint32 name="Ability Tick" offset="0x378" confidence="low" tooltip="Looks like a tick tied to the ability (0x61E94 measured)." />
+	<uint8 name="Selected Grenade Type" offset="0x37C" confidence="medium" exposed="true" tooltip="Measured: 0 frag, 1 plasma. The index-&gt;type mapping depends on the biped tag (may differ for elites)." />
+	<uint8 name="Applied Grenade Type" offset="0x37D" confidence="medium" exposed="true" tooltip="Copied from the selected type by FUN_18047f0ac when it changes (plays a tag sound)." />
+	<uint8 name="Grenade Count 0" offset="0x37E" confidence="medium" exposed="true" tooltip="Count of grenade type 0 (frag). Measured 1 and 2." />
+	<uint8 name="Grenade Count 1" offset="0x37F" confidence="medium" exposed="true" tooltip="Count of grenade type 1 (plasma). Measured 1 and 2." />
 	<uint16 name="Unknown 380" offset="0x380" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
 	<uint8 name="Unknown 382" offset="0x382" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,unit_update" />
 	<int8 name="Zoom Level" offset="0x383" confidence="high" default="0xFF" exposed="true" tooltip="Applied zoom (0xFF = none). Confirmed." />
 	<int8 name="Requested Zoom Level" offset="0x384" confidence="medium" default="0xFF" tooltip="Requested zoom (-1 none)." />
 	<uint8 name="Aim Turn Rate" offset="0x386" confidence="medium" tooltip="Aim turn speed ratio 0-255." />
-	<uint32 name="Last Control Copy Tick" offset="0x388" confidence="low" tooltip="Tick of the last control copy from another unit." />
+	<uint32 name="Last Control Change Tick" offset="0x388" confidence="medium" tooltip="Tick of the last control change (0x666AE measured)." />
 	<uint32 name="Control Source Handle A" offset="0x38C" confidence="medium" default="0xFFFFFFFF" tooltip="Driver/gunner whose control is copied." />
 	<uint32 name="Control Source Handle B" offset="0x390" confidence="medium" default="0xFFFFFFFF" tooltip="Second control source." />
 	<uint16 name="Unknown 394" offset="0x394" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
