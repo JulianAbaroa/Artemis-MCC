@@ -93,7 +93,7 @@ namespace Viewer::Hud::System
             const auto& object = objectIt->second;
 
             const Vec3 anchor{ object.Position.X, object.Position.Y,
-                object.Position.Z + object.CurrentRadius + 0.1f };
+                object.Position.Z + object.BoundingRadius + 0.1f };
 
             canvas.Add(anchor, std::move(rows), ToImColor(color), k_TargetPriority, handle);
 

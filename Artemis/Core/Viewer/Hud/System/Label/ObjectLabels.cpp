@@ -236,7 +236,7 @@ namespace Viewer::Hud::System
             }
 
             const Vec3 anchor{ object.Position.X, object.Position.Y,
-                object.Position.Z + object.CurrentRadius + 0.1f };
+                object.Position.Z + object.BoundingRadius + 0.1f };
 
             const ImU32 accent = isSelected
                 ? ToImColor(k_Selected) : ToImColor(AccentOf(category));

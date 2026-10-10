@@ -43,14 +43,17 @@ export namespace Tables::Object::Type::Alive
 		std::uint32_t ChildHandle{};
 		std::uint32_t ParentHandle{};
 
+		// note: center of the bounding sphere, world space (offset 0x20).
 		Vec3 Position{};
+		// note: object origin (offset 0x44), local to the parent if parented.
+		Vec3 Origin{};
 		Vec3 Forward{};
 		Vec3 Up{};
 
 		Vec3 LinearVelocity{};
 		Vec3 AngularVelocity{};
 
-		float CurrentRadius{};
+		float BoundingRadius{};
 		float DamageReceived{};
 
 		::Profile Profile{};

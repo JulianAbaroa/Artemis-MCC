@@ -12,8 +12,11 @@ export namespace Tables::Object::Type::Offset
 	constexpr std::uintptr_t ChildHandle{ 0x010 };				// uint32.
 	constexpr std::uintptr_t ParentHandle{ 0x014 };				// uint32.
 	constexpr std::uintptr_t UnknownVariant{ 0x1C };			// uint8.
-	constexpr std::uintptr_t CurrentPosition{ 0x020 };			// float (3).
-	constexpr std::uintptr_t CurrentRadius{ 0x02C };			// float (1).
+	// note: 0x20/0x2C are the bounding sphere in world space, not the origin.
+	constexpr std::uintptr_t BoundingCenter{ 0x020 };			// float (3).
+	constexpr std::uintptr_t BoundingRadius{ 0x02C };			// float (1).
+	// note: the origin is local to the parent when the object is parented.
+	constexpr std::uintptr_t Origin{ 0x044 };					// float (3).
 	constexpr std::uintptr_t Forward{ 0x050 };					// float (3).
 	constexpr std::uintptr_t Up{ 0x05C };						// float (3).
 	constexpr std::uintptr_t LinearVelocity{ 0x068 };			// float (3).

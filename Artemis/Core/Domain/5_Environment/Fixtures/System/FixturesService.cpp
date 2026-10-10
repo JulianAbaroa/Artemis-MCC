@@ -67,7 +67,7 @@ namespace Environment::Fixtures::System
             obstacle.Up = object.Up;
             obstacle.LinearVelocity = object.LinearVelocity;
             obstacle.AngularVelocity = object.AngularVelocity;
-            obstacle.BoundingRadius = object.CurrentRadius;
+            obstacle.BoundingRadius = object.BoundingRadius;
 
             obstacles.push_back(obstacle);
         }

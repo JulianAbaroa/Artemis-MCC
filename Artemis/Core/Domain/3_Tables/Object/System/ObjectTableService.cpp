@@ -165,13 +165,14 @@ namespace Tables::Object::System
 		object.ChildHandle = reader.Read<std::uint32_t>(object.Address, Offset::ChildHandle);
 		object.ParentHandle = reader.Read<std::uint32_t>(object.Address, Offset::ParentHandle);
 
-		object.Position = reader.Read<Vec3>(object.Address, Offset::CurrentPosition);
+		object.Position = reader.Read<Vec3>(object.Address, Offset::BoundingCenter);
+		object.Origin = reader.Read<Vec3>(object.Address, Offset::Origin);
 		object.Forward = reader.Read<Vec3>(object.Address, Offset::Forward);
 		object.Up = reader.Read<Vec3>(object.Address, Offset::Up);
 		object.LinearVelocity = reader.Read<Vec3>(object.Address, Offset::LinearVelocity);
 		object.AngularVelocity = reader.Read<Vec3>(object.Address, Offset::AngularVelocity);
 
-		object.CurrentRadius = reader.Read<float>(object.Address, Offset::CurrentRadius);
+		object.BoundingRadius = reader.Read<float>(object.Address, Offset::BoundingRadius);
 		object.DamageReceived = reader.Read<float>(object.Address, Offset::DamageReceived);
 
 		object.HlmtVariant = reader.Read<std::uint8_t>(object.Address, Offset::HlmtVariant);
