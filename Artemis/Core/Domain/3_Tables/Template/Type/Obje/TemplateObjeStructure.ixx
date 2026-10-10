@@ -62,7 +62,7 @@ export namespace Tables::Template::Type::Obje::Structure
         std::uint16_t UpdateFlags;  // 0xE4  uint16. | Set to 0x8000 by FUN_18047d780.
         std::uint8_t  _gap_0xE6[0x2];
         std::uint16_t ScaleTransitionTicks;  // 0xE8  uint16. | Ticks left in a scale transition (FUN_18046cc34).
-        std::uint16_t ModelVariant;  // 0xEA  uint16. | Variant index (starts 0xFF). Old name: HlmtVariant.
+        std::uint16_t ModelVariant;  // 0xEA  uint16. | Model (hlmt) variant. The engine reads it as u16 at 3 sites (obje_sa8, obje_delete, bipd_sa8) and obje_place writes 0xEB as u8; the low byte starts 0xFF. Old name: HlmtVariant (the repo reads only the low byte).
         std::uint8_t  _gap_0xEC[0x4];
         std::uint32_t OwnerPlayerHandle;  // 0xF0  uint32. | Player that owns the object (-1 = none).
         std::uint32_t OwnerBipedHandle;  // 0xF4  uint32. | Biped that owns the object (-1 = none).
@@ -80,7 +80,8 @@ export namespace Tables::Template::Type::Obje::Structure
         std::uint32_t Unknown114;  // 0x114  uint32. | R3 W0 R:FUN_180141830,FUN_180145a68,FUN_1801415b0
         std::uint64_t Unknown118;  // 0x118  uint64. | R4 W0 R:FUN_180141830,FUN_1804cd958,FUN_1801415b0
         std::uint32_t Unknown120;  // 0x120  uint32. | R3 W0 R:obje_sa8,FUN_1804cd958,FUN_1801415b0
-        std::uint8_t  _gap_0x124[0x8];
+        std::uint8_t  _gap_0x124[0x4];
+        float        DamageReceived;  // 0x128  float32. | Damage received (old name DamageReceived, read by the repo; not seen by the static analysis).
         std::uint16_t Unknown12c;  // 0x12C  uint16. | R1 W0 R:FUN_180145a68
         std::uint8_t  _gap_0x12E[0xA];
         std::uint32_t StateFlags;  // 0x138  flags32. | Written with OR by many functions (FUN_18047caa8, FUN_1804e3e98, ...).

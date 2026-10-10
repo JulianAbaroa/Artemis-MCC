@@ -35,7 +35,7 @@
 	<uint16 name="Unknown E2" offset="0xE2" confidence="unknown" tooltip="R1 W0 R:obje_sa8" />
 	<uint16 name="Update Flags" offset="0xE4" confidence="low" tooltip="Set to 0x8000 by FUN_18047d780." />
 	<uint16 name="Scale Transition Ticks" offset="0xE8" confidence="medium" tooltip="Ticks left in a scale transition (FUN_18046cc34)." />
-	<uint16 name="Model Variant" offset="0xEA" confidence="medium" default="0x00FF" exposed="true" tooltip="Variant index (starts 0xFF). Old name: HlmtVariant." />
+	<uint16 name="Model Variant" offset="0xEA" confidence="medium" exposed="true" tooltip="Model (hlmt) variant. The engine reads it as u16 at 3 sites (obje_sa8, obje_delete, bipd_sa8) and obje_place writes 0xEB as u8; the low byte starts 0xFF. Old name: HlmtVariant (the repo reads only the low byte)." />
 	<uint32 name="Owner Player Handle" offset="0xF0" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Player that owns the object (-1 = none)." />
 	<uint32 name="Owner Biped Handle" offset="0xF4" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Biped that owns the object (-1 = none)." />
 	<uint32 name="Unknown F8" offset="0xF8" confidence="unknown" tooltip="R7 W0 R:item_update,FUN_1804d3308,FUN_1804edf38" />
@@ -51,6 +51,7 @@
 	<uint32 name="Unknown 114" offset="0x114" confidence="unknown" tooltip="R3 W0 R:FUN_180141830,FUN_180145a68,FUN_1801415b0" />
 	<uint64 name="Unknown 118" offset="0x118" confidence="unknown" tooltip="R4 W0 R:FUN_180141830,FUN_1804cd958,FUN_1801415b0" />
 	<uint32 name="Unknown 120" offset="0x120" confidence="unknown" tooltip="R3 W0 R:obje_sa8,FUN_1804cd958,FUN_1801415b0" />
+	<float32 name="Damage Received" offset="0x128" confidence="medium" tooltip="Damage received (old name DamageReceived, read by the repo; not seen by the static analysis)." />
 	<uint16 name="Unknown 12C" offset="0x12C" confidence="unknown" tooltip="R1 W0 R:FUN_180145a68" />
 	<flags32 name="State Flags" offset="0x138" confidence="medium" tooltip="Written with OR by many functions (FUN_18047caa8, FUN_1804e3e98, ...)." />
 	<uint8 name="Unknown 13C" offset="0x13C" confidence="unknown" tooltip="R0 W1 src=param_4 W:FUN_18047caa8" />

@@ -59,6 +59,7 @@ export namespace Tables::Template::Type::Obje::Offset
     constexpr std::size_t k_Unknown114                                  = 0x114;  // uint32.
     constexpr std::size_t k_Unknown118                                  = 0x118;  // uint64.
     constexpr std::size_t k_Unknown120                                  = 0x120;  // uint32.
+    constexpr std::size_t k_DamageReceived                              = 0x128;  // float32.
     constexpr std::size_t k_Unknown12c                                  = 0x12C;  // uint16.
     constexpr std::size_t k_StateFlags                                  = 0x138;  // flags32.
     constexpr std::size_t k_Unknown13c                                  = 0x13C;  // uint8.
