@@ -1,0 +1,219 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="unit" start="0x1B8" baseSize="0x9D8">
+	<uint32 name="Tick Counter" offset="0x1B8" confidence="high" default="0x0" exposed="true" tooltip="Unit ticks, +1 per update (verified live; 60 ticks/s)." />
+	<uint32 name="AI Actor Handle" offset="0x1BC" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Handle into the actor table (TLS+8, stride 0xD00). FFFFFFFF in PvP." />
+	<uint32 name="Handle 1C0" offset="0x1C0" confidence="low" default="0xFFFFFFFF" tooltip="Handle initialised to -1." />
+	<flags32 name="Unit Flags" offset="0x1C4" confidence="medium" exposed="true" tooltip="bit1 = externally controlled (if 0 the engine zeroes the control block each tick); bit 0x12 derived control; bit 0x1B go-to-point mode. 3 live.">
+		<bit name="External Controller" index="1" />
+		<bit name="Derived Control" index="18" />
+		<bit name="Go To Point" index="27" />
+	</flags32>
+	<uint16 name="Unknown 1C8" offset="0x1C8" confidence="unknown" tooltip="R4 W1 init=0x0 W:unit_init" />
+	<uint8 name="Placement Team" offset="0x1CA" confidence="low" tooltip="Copied from placement +0x64 or tag +0x16C. Live: 0xFF." />
+	<uint8 name="Placement Team 2" offset="0x1CB" confidence="low" tooltip="Live: 0." />
+	<uint32 name="Controlling Player Handle" offset="0x1CC" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Player controlling this unit (indexes the player table, stride 0x490). FFFFFFFF = none." />
+	<uint32 name="Handle 1D0" offset="0x1D0" confidence="low" default="0xFFFFFFFF" tooltip="Handle initialised to -1." />
+	<uint32 name="Tick 1D4" offset="0x1D4" confidence="low" tooltip="Looks like a game tick (0x4C0C8 measured)." />
+	<flags64 name="Control Flags" offset="0x1D8" confidence="high" exposed="true" tooltip="All buttons. Idle = 0x800000 (bit 23 always set). Measured: bit0 crouch, bit1 jump, armor ability = bits 8+16, fire A = bit 30. Bit 21 cleared by the engine when consumed. Old names Biped.VerticalInput / Projectile.OwnerWeaponHandle were bytes/words of this field.">
+		<bit name="Crouch" index="0" />
+		<bit name="Jump" index="1" />
+		<bit name="Armor Ability" index="8" />
+		<bit name="Armor Ability Held" index="10" />
+		<bit name="Armor Ability 2" index="16" />
+		<bit name="Consumed Pulse" index="21" />
+		<bit name="Always Set" index="23" />
+		<bit name="Fire A" index="30" />
+		<bit name="Control 31" index="31" />
+		<bit name="Control 32" index="32" />
+		<bit name="Control 33" index="33" />
+		<bit name="Control 34" index="34" />
+		<bit name="Fire B" index="35" />
+		<bit name="Control 36" index="36" />
+		<bit name="Control 37" index="37" />
+		<bit name="Control 38" index="38" />
+		<bit name="Control 39" index="39" />
+		<bit name="Zoom Mask Source" index="43" />
+	</flags64>
+	<uint32 name="Unknown 1E0" offset="0x1E0" confidence="unknown" tooltip="R3 W2 init=0xae src=call 18005cc74 known=Weapon.TotalHeat W:unit_init,FUN_1804b5b04" />
+	<vector3 name="Facing" offset="0x1E4" confidence="high" exposed="true" tooltip="Yaw-only facing direction (z = 0). Measured." />
+	<vector3 name="Facing T-1" offset="0x1F0" confidence="medium" tooltip="Facing one tick ago (history shifts 1E4 -&gt; 1F0 -&gt; 1FC)." />
+	<vector3 name="Facing T-2" offset="0x1FC" confidence="medium" tooltip="Facing two ticks ago." />
+	<vector3 name="Desired Aim" offset="0x208" confidence="high" exposed="true" tooltip="Intended aim direction (3D with pitch). Measured." />
+	<vector3 name="Current Aim" offset="0x214" confidence="high" exposed="true" tooltip="Aim smoothed towards Desired Aim. Use this for the AI. Measured." />
+	<vector3 name="Aim Velocity" offset="0x220" confidence="medium" tooltip="Aim rate. 0x228 (its z) is also used as an angular-speed float by FUN_180480280." />
+	<vector3 name="Desired Look" offset="0x22C" confidence="high" exposed="true" tooltip="Desired head look direction. Measured." />
+	<vector3 name="Current Look" offset="0x238" confidence="high" exposed="true" tooltip="Smoothed head look direction. Measured." />
+	<vector3 name="Look Velocity" offset="0x244" confidence="medium" tooltip="Look rate." />
+	<uint32 name="Driver Control Copy" offset="0x250" confidence="low" tooltip="Copied from the driver." />
+	<vector3 name="Throttle" offset="0x260" confidence="high" exposed="true" tooltip="Movement input: X = forward/back, Y = lateral. Old name: Biped.MovementInput. Engine writes (1,0) = full forward." />
+	<vector3 name="Throttle T-1" offset="0x26C" confidence="medium" tooltip="Throttle history." />
+	<vector3 name="Throttle T-2" offset="0x278" confidence="medium" tooltip="Throttle history." />
+	<uint32 name="Control Copy 284" offset="0x284" confidence="low" tooltip="Copied from the driver." />
+	<uint8 name="Unknown 288" offset="0x288" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint8 name="Unknown 289" offset="0x289" confidence="unknown" tooltip="R1 W0 R:FUN_180480280" />
+	<uint16 name="Unknown 28C" offset="0x28C" confidence="unknown" tooltip="R0 W1 init=0xffff known=Scenery.Boundary.Radius W:unit_init" />
+	<uint16 name="Unknown 28E" offset="0x28E" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 290" offset="0x290" confidence="unknown" tooltip="R0 W1 init=0x0 known=Crate.Teleport.Radius|Scenery.Boundary.Length W:unit_init" />
+	<uint16 name="Unknown 292" offset="0x292" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint8 name="Unknown 294" offset="0x294" confidence="unknown" tooltip="R0 W1 init=0x0 known=Crate.Teleport.Length|Scenery.Boundary.Top W:unit_init" />
+	<uint64 name="Unknown 298" offset="0x298" confidence="unknown" tooltip="R0 W1 src=INDIRECT known=Crate.Teleport.Top|Scenery.Boundary.Bottom W:unit_init" />
+	<uint32 name="Unknown 2A0" offset="0x2A0" confidence="unknown" tooltip="R0 W1 src=INDIRECT known=Crate.Teleport.ShapeKind W:unit_init" />
+	<uint8 name="Unknown 2A9" offset="0x2A9" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804bf094" />
+	<uint32 name="Unknown 2AC" offset="0x2AC" confidence="unknown" tooltip="R3 W0 R:FUN_1804a9e5c,unit_sa8" />
+	<float32 name="Fire Strength A" offset="0x2B0" confidence="medium" tooltip="Float handed to the weapon A input (1.0 while the latch pulses bit 30)." />
+	<float32 name="Fire Strength B" offset="0x2B4" confidence="medium" tooltip="Float handed to the weapon B input." />
+	<uint16 name="Unknown 2CA" offset="0x2CA" confidence="unknown" tooltip="R2 W0 SHARED known=Weapon.CurrentAmmo R:FUN_1804b9554" />
+	<uint32 name="Unknown 2F8" offset="0x2F8" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804b9554" />
+	<uint32 name="Unknown 2FC" offset="0x2FC" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804b9554" />
+	<uint32 name="Unknown 300" offset="0x300" confidence="unknown" tooltip="R8 W1 upd=0xffffffff SHARED W:FUN_1804c0308" />
+	<uint32 name="Unknown 304" offset="0x304" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_1804b9554" />
+	<uint32 name="Unknown 308" offset="0x308" confidence="unknown" tooltip="R1 W1 src=MULTIEQUAL SHARED W:FUN_1804b9554" />
+	<float32 name="Unknown 30C" offset="0x30C" confidence="unknown" tooltip="R1 W1 src=FLOAT_DIV SHARED W:FUN_1804b9554" />
+	<uint16 name="Unknown 320" offset="0x320" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 322" offset="0x322" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<int32 name="Latch Ticks Remaining" offset="0x324" confidence="medium" tooltip="While &gt; 0, 0x328 is OR-ed into the control flags (why jump/crouch last several ticks)." />
+	<uint64 name="Latched Control Bits" offset="0x328" confidence="medium" tooltip="Bits OR-ed into Control Flags while the latch lasts." />
+	<uint8 name="Unknown 330" offset="0x330" confidence="unknown" tooltip="R0 W1 src=INT_ADD W:FUN_18047f0ac" />
+	<uint8 name="Unknown 331" offset="0x331" confidence="unknown" tooltip="R0 W2 init=0xff src=SUBPIECE W:unit_init" />
+	<uint8 name="Unknown 332" offset="0x332" confidence="unknown" tooltip="R0 W2 init=0xff src=SUBPIECE W:unit_init" />
+	<uint8 name="Look Turn Rate" offset="0x333" confidence="medium" tooltip="Look turn speed ratio 0-255." />
+	<uint8 name="Unknown 334" offset="0x334" confidence="unknown" tooltip="R0 W1 src=INT_ADD W:FUN_18047f0ac" />
+	<uint8 name="Unknown 335" offset="0x335" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:FUN_18047f0ac" />
+	<uint16 name="Unknown 336" offset="0x336" confidence="unknown" tooltip="R8 W1 init=0xffff W:unit_init" />
+	<float32 name="Unknown 340" offset="0x340" confidence="unknown" tooltip="R2 W1 src=FLOAT_ADD W:FUN_18049b3f8" />
+	<uint16 name="Unknown 348" offset="0x348" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4" />
+	<int8 name="Weapon A Index" offset="0x34A" confidence="medium" default="0xFF" exposed="true" tooltip="Slot index of the current weapon A (-1 none). Not yet verified live." />
+	<int8 name="Weapon B Index" offset="0x34B" confidence="medium" default="0xFF" exposed="true" tooltip="Slot index of weapon B (-1 none)." />
+	<uint16 name="Unknown 34C" offset="0x34C" confidence="unknown" tooltip="R0 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4" />
+	<int8 name="Previous Weapon A Index" offset="0x34E" confidence="low" default="0xFF" tooltip="Previous value." />
+	<int8 name="Previous Weapon B Index" offset="0x34F" confidence="low" default="0xFF" tooltip="Previous value." />
+	<uint32 name="Weapon Slot 0 Handle" offset="0x350" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 0 (FFFFFFFF empty). Not yet verified live." />
+	<uint32 name="Weapon Slot 1 Handle" offset="0x354" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 1 (FFFFFFFF empty). Not yet verified live." />
+	<uint32 name="Weapon Slot 2 Handle" offset="0x358" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 2 (FFFFFFFF empty). Not yet verified live." />
+	<uint32 name="Weapon Slot 3 Handle" offset="0x35C" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Weapon handle in slot 3 (FFFFFFFF empty). Not yet verified live." />
+	<uint32 name="Weapon Slot 0 Tick" offset="0x360" confidence="low" tooltip="Tick written while the slot is current." />
+	<uint32 name="Weapon Slot 1 Tick" offset="0x364" confidence="low" tooltip="Tick written while the slot is current." />
+	<uint32 name="Weapon Slot 2 Tick" offset="0x368" confidence="low" tooltip="Tick written while the slot is current." />
+	<uint32 name="Weapon Slot 3 Tick" offset="0x36C" confidence="low" tooltip="Tick written while the slot is current." />
+	<uint32 name="Armor Ability Handle" offset="0x374" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Equipment object of the armor ability (FFFFFFFF none). Active = equipment +0x1D8 != -1 (hypothesis)." />
+	<uint32 name="Handle 378" offset="0x378" confidence="low" default="0xFFFFFFFF" tooltip="Handle initialised to -1." />
+	<uint8 name="Unknown 37C" offset="0x37C" confidence="unknown" tooltip="R0 W2 init=0xff src=SUBPIECE W:unit_init,FUN_18047f0ac" />
+	<uint8 name="Unknown 37D" offset="0x37D" confidence="unknown" tooltip="R2 W2 init=0xff upd=0x0 W:unit_init,FUN_18047f0ac" />
+	<uint16 name="Unknown 37E" offset="0x37E" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_18047d780" />
+	<uint16 name="Unknown 380" offset="0x380" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint8 name="Unknown 382" offset="0x382" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,unit_update" />
+	<int8 name="Zoom Level" offset="0x383" confidence="high" default="0xFF" exposed="true" tooltip="Applied zoom (0xFF = none). Confirmed." />
+	<int8 name="Requested Zoom Level" offset="0x384" confidence="medium" default="0xFF" tooltip="Requested zoom (-1 none)." />
+	<uint8 name="Aim Turn Rate" offset="0x386" confidence="medium" tooltip="Aim turn speed ratio 0-255." />
+	<uint32 name="Last Control Copy Tick" offset="0x388" confidence="low" tooltip="Tick of the last control copy from another unit." />
+	<uint32 name="Control Source Handle A" offset="0x38C" confidence="medium" default="0xFFFFFFFF" tooltip="Driver/gunner whose control is copied." />
+	<uint32 name="Control Source Handle B" offset="0x390" confidence="medium" default="0xFFFFFFFF" tooltip="Second control source." />
+	<uint16 name="Unknown 394" offset="0x394" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 396" offset="0x396" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 398" offset="0x398" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 39A" offset="0x39A" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 39C" offset="0x39C" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint8 name="Unknown 39E" offset="0x39E" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint8 name="Unknown 39F" offset="0x39F" confidence="unknown" tooltip="R3 W2 init=0x0 src=INT_ADD W:unit_init" />
+	<uint32 name="Unknown 3A0" offset="0x3A0" confidence="unknown" tooltip="R6 W0 R:FUN_1804ad060,unit_sa8,vehi_update" />
+	<uint32 name="Unknown 3A4" offset="0x3A4" confidence="unknown" tooltip="R2 W0 R:unit_sa8,vehi_update" />
+	<uint32 name="Unknown 3A8" offset="0x3A8" confidence="unknown" tooltip="R1 W0 R:unit_sa8" />
+	<uint16 name="Unknown 3B0" offset="0x3B0" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_18047f0ac" />
+	<uint16 name="Unknown 3B2" offset="0x3B2" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_18047f0ac" />
+	<float32 name="Smoothed Float 3B4" offset="0x3B4" confidence="low" tooltip="Smoothed by FUN_18047FF94 each update." />
+	<uint32 name="Unknown 3B8" offset="0x3B8" confidence="unknown" tooltip="R1 W1 upd=0x3f800000 W:vehi_place" />
+	<uint32 name="Unknown 3BC" offset="0x3BC" confidence="unknown" tooltip="R3 W0 R:unit_sa8" />
+	<uint32 name="Unknown 3C0" offset="0x3C0" confidence="unknown" tooltip="R3 W0 R:unit_sa8" />
+	<uint32 name="Unknown 3C4" offset="0x3C4" confidence="unknown" tooltip="R3 W0 R:unit_sa8,FUN_1804ce898" />
+	<uint64 name="Unknown 3E0" offset="0x3E0" confidence="unknown" tooltip="R0 W2 src=[param_3+0x0] W:FUN_1807810d8" />
+	<uint32 name="Unknown 3E8" offset="0x3E8" confidence="unknown" tooltip="R1 W2 src=[param_3+0x8] W:FUN_1807810d8" />
+	<uint32 name="Unknown 3EC" offset="0x3EC" confidence="unknown" tooltip="R1 W0 R:unit_update" />
+	<uint16 name="Unknown 3F0" offset="0x3F0" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,FUN_180494808" />
+	<uint16 name="Unknown 3F2" offset="0x3F2" confidence="unknown" tooltip="R2 W3 init=0xffff upd=0xffff W:unit_init,unit_sd8,unit_sb8" />
+	<uint32 name="Unknown 3F4" offset="0x3F4" confidence="unknown" tooltip="R3 W2 upd=0xffffffff W:unit_sd8,unit_sb8" />
+	<uint32 name="Unknown 3F8" offset="0x3F8" confidence="unknown" tooltip="R1 W2 upd=0xffffffff W:unit_se8,unit_sb8" />
+	<uint32 name="Unknown 3FC" offset="0x3FC" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:unit_sb8" />
+	<uint32 name="Unknown 400" offset="0x400" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:unit_sb8" />
+	<uint32 name="Unknown 404" offset="0x404" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:unit_sb8" />
+	<uint32 name="Unknown 408" offset="0x408" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:unit_sb8" />
+	<uint32 name="Unknown 49C" offset="0x49C" confidence="unknown" tooltip="R4 W2 src=MULTIEQUAL W:FUN_180481314" />
+	<uint32 name="Unknown 4A0" offset="0x4A0" confidence="unknown" tooltip="R1 W1 src=MULTIEQUAL W:FUN_180481314" />
+	<uint32 name="Unknown 4A4" offset="0x4A4" confidence="unknown" tooltip="R2 W1 upd=0x0 W:FUN_180481314" />
+	<uint32 name="Unknown 4A8" offset="0x4A8" confidence="unknown" tooltip="R2 W0 R:FUN_180481314" />
+	<uint16 name="Unknown 4AE" offset="0x4AE" confidence="unknown" tooltip="R0 W2 init=0xffff upd=0xffff W:unit_init,unit_sb8" />
+	<uint16 name="Unknown 4B0" offset="0x4B0" confidence="unknown" tooltip="R4 W1 src=INT_ADD W:FUN_180481068" />
+	<uint16 name="Unknown 4B2" offset="0x4B2" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:FUN_180481068" />
+	<uint16 name="Unknown 4B8" offset="0x4B8" confidence="unknown" tooltip="R1 W2 init=0x0 upd=0x0 W:unit_init,FUN_180481068" />
+	<uint16 name="Unknown 4BA" offset="0x4BA" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,FUN_180481068" />
+	<uint64 name="Unknown 4BC" offset="0x4BC" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_180481068" />
+	<uint32 name="Unknown 4C4" offset="0x4C4" confidence="unknown" tooltip="R1 W1 upd=0xffffffff W:FUN_180481068" />
+	<uint16 name="Unknown 4C8" offset="0x4C8" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 4CA" offset="0x4CA" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint32 name="Unknown 4D4" offset="0x4D4" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_180481068" />
+	<uint16 name="Unknown 4D8" offset="0x4D8" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:FUN_180481068" />
+	<uint32 name="Damage 0 Tick" offset="0x4DC" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s." />
+	<float32 name="Damage 0 Value A" offset="0x4E0" confidence="low" default="0x0" tooltip="Float (0.4444 measured on a self-grenade)." />
+	<float32 name="Damage 0 Value B" offset="0x4E4" confidence="low" default="0x0" tooltip="Float (1.0 measured; maybe accumulated damage)." />
+	<uint32 name="Damage 0 Biped Handle" offset="0x4E8" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Biped that dealt the damage." />
+	<uint32 name="Damage 0 Player Handle" offset="0x4EC" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Player that dealt the damage." />
+	<uint16 name="Damage 0 Type" offset="0x4F0" confidence="low" tooltip="0xB measured; damage or weapon type?" />
+	<uint32 name="Damage 1 Tick" offset="0x4F4" confidence="medium" default="0xFFFFFFFF" tooltip="Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s." />
+	<float32 name="Damage 1 Value A" offset="0x4F8" confidence="low" default="0x0" tooltip="Float (0.4444 measured on a self-grenade)." />
+	<float32 name="Damage 1 Value B" offset="0x4FC" confidence="low" default="0x0" tooltip="Float (1.0 measured; maybe accumulated damage)." />
+	<uint32 name="Damage 1 Biped Handle" offset="0x500" confidence="medium" default="0xFFFFFFFF" tooltip="Biped that dealt the damage." />
+	<uint32 name="Damage 1 Player Handle" offset="0x504" confidence="medium" default="0xFFFFFFFF" tooltip="Player that dealt the damage." />
+	<uint16 name="Damage 1 Type" offset="0x508" confidence="low" tooltip="0xB measured; damage or weapon type?" />
+	<uint32 name="Damage 2 Tick" offset="0x50C" confidence="medium" default="0xFFFFFFFF" tooltip="Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s." />
+	<float32 name="Damage 2 Value A" offset="0x510" confidence="low" default="0x0" tooltip="Float (0.4444 measured on a self-grenade)." />
+	<float32 name="Damage 2 Value B" offset="0x514" confidence="low" default="0x0" tooltip="Float (1.0 measured; maybe accumulated damage)." />
+	<uint32 name="Damage 2 Biped Handle" offset="0x518" confidence="medium" default="0xFFFFFFFF" tooltip="Biped that dealt the damage." />
+	<uint32 name="Damage 2 Player Handle" offset="0x51C" confidence="medium" default="0xFFFFFFFF" tooltip="Player that dealt the damage." />
+	<uint16 name="Damage 2 Type" offset="0x520" confidence="low" tooltip="0xB measured; damage or weapon type?" />
+	<uint32 name="Damage 3 Tick" offset="0x524" confidence="medium" default="0xFFFFFFFF" tooltip="Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s." />
+	<float32 name="Damage 3 Value A" offset="0x528" confidence="low" default="0x0" tooltip="Float (0.4444 measured on a self-grenade)." />
+	<float32 name="Damage 3 Value B" offset="0x52C" confidence="low" default="0x0" tooltip="Float (1.0 measured; maybe accumulated damage)." />
+	<uint32 name="Damage 3 Biped Handle" offset="0x530" confidence="medium" default="0xFFFFFFFF" tooltip="Biped that dealt the damage." />
+	<uint32 name="Damage 3 Player Handle" offset="0x534" confidence="medium" default="0xFFFFFFFF" tooltip="Player that dealt the damage." />
+	<uint16 name="Damage 3 Type" offset="0x538" confidence="low" tooltip="0xB measured; damage or weapon type?" />
+	<uint32 name="Unknown 53C" offset="0x53C" confidence="unknown" tooltip="R1 W0 known=Vehicle.BoostThrottle R:FUN_180495188" />
+	<float32 name="Boost Value" offset="0x540" confidence="low" tooltip="Float 1.0 at init (doc). Old names Vehicle.BoostEnergy." />
+	<uint32 name="Unknown 544" offset="0x544" confidence="unknown" tooltip="R1 W0 known=Vehicle.BoostCooldown R:unit_sa8" />
+	<uint32 name="Damage Handle 548" offset="0x548" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
+	<uint32 name="Last Damage Tick" offset="0x54C" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Tick of the last damage received (matches Damage 0 Tick)." />
+	<uint32 name="Damage Handle 550" offset="0x550" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
+	<uint32 name="Damage Handle 554" offset="0x554" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
+	<uint16 name="Unit Block A Size" offset="0x558" confidence="medium" tooltip="Variable block descriptor (reserved if 0x18E != -1)." />
+	<uint16 name="Unit Block A Offset" offset="0x55A" confidence="medium" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Unit Block B Size" offset="0x55C" confidence="medium" tooltip="Variable block descriptor (reserved if 0x18E != -1)." />
+	<uint16 name="Unit Block B Offset" offset="0x55E" confidence="medium" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Unit Block C Size" offset="0x560" confidence="medium" tooltip="Variable block descriptor (reserved if 0x18E != -1)." />
+	<uint16 name="Unit Block C Offset" offset="0x562" confidence="medium" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Unit Block D Size" offset="0x564" confidence="medium" tooltip="Variable block descriptor (reserved if 0x18E != -1)." />
+	<uint16 name="Unit Block D Offset" offset="0x566" confidence="medium" tooltip="Offset of the block from the datum start." />
+	<uint32 name="Unknown 568" offset="0x568" confidence="unknown" tooltip="R1 W1 init=0x0 W:unit_init" />
+	<flags16 name="Action Slot Mask" offset="0x964" confidence="low" tooltip="Active slots of the 11 x 0x5C table at 0x570 (melee/reload/grenade?)." />
+	<uint16 name="Current Action Slot" offset="0x966" confidence="low" default="0xFFFF" tooltip="FFFF = none." />
+	<uint16 name="Next Action Slot" offset="0x968" confidence="low" default="0xFFFF" tooltip="FFFF = none." />
+	<uint32 name="Reserved 96C" offset="0x96C" confidence="low" default="0xFFFFFFFF" tooltip="-1 at init." />
+	<uint32 name="Reserved 970" offset="0x970" confidence="low" default="0xFFFFFFFF" tooltip="-1 at init." />
+	<uint64 name="Unknown 974" offset="0x974" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:unit_init" />
+	<uint32 name="Unknown 97C" offset="0x97C" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:unit_init" />
+	<uint32 name="Handle 980" offset="0x980" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
+	<uint16 name="Unknown 984" offset="0x984" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 986" offset="0x986" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 988" offset="0x988" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint16 name="Unknown 98A" offset="0x98A" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint16 name="Unknown 98C" offset="0x98C" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint16 name="Unknown 98E" offset="0x98E" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint16 name="Unknown 990" offset="0x990" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 992" offset="0x992" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 994" offset="0x994" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint16 name="Unknown 996" offset="0x996" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<float32 name="Go To X" offset="0x998" confidence="low" tooltip="Destination for go-to-point mode (flag 0x1B)." />
+	<float32 name="Go To Y" offset="0x99C" confidence="low" tooltip="Destination for go-to-point mode (flag 0x1B)." />
+	<uint32 name="Unknown 9A0" offset="0x9A0" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:unit_init" />
+	<uint16 name="Unknown 9A4" offset="0x9A4" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 9A6" offset="0x9A6" confidence="unknown" tooltip="R0 W1 init=0xffff W:unit_init" />
+	<uint16 name="Unknown 9D0" offset="0x9D0" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
+	<uint16 name="Unknown 9D2" offset="0x9D2" confidence="unknown" tooltip="R0 W1 init=0x3f80 W:unit_init" />
+</plugin>

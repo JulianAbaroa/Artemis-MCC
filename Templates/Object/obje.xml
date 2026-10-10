@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="obje" start="0x0" baseSize="0x1A8">
+	<uint32 name="Tag Handle" offset="0x0" confidence="high" exposed="true" tooltip="Handle of the object's definition tag (NOT a datum index). Old name: DatumIndex." />
+	<uint32 name="Unknown 4" offset="0x4" confidence="unknown" tooltip="R53 W27 src=INT_OR, INT_AND W:mach_place,bloc_place,scen_place" />
+	<uint16 name="Unknown 8" offset="0x8" confidence="unknown" tooltip="R9 W1 src=[param_3+0x0] W:FUN_18046f2d8" />
+	<uint16 name="Unknown A" offset="0xA" confidence="unknown" tooltip="R1 W1 src=INT_OR W:anim_s98" />
+	<uint32 name="Next Sibling Handle" offset="0xC" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Next object in the parent's child list." />
+	<uint32 name="Child Handle" offset="0x10" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="First child object (a biped's first child is its weapon)." />
+	<uint32 name="Parent Handle" offset="0x14" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Object this one is attached to (-1 = none)." />
+	<uint8 name="Unknown 18" offset="0x18" confidence="unknown" tooltip="R1 W1 upd=0xff W:FUN_180471264" />
+	<uint8 name="Unknown 19" offset="0x19" confidence="unknown" tooltip="R5 W4 src=INT_OR W:FUN_1804e08c4" />
+	<uint16 name="Placement Index" offset="0x1A" confidence="medium" default="0xFFFF" tooltip="Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject." />
+	<uint16 name="Unknown 1C" offset="0x1C" confidence="unknown" tooltip="R1 W0 known=UnknownVariant R:FUN_1804ed93c" />
+	<point3 name="Bounding Center" offset="0x20" confidence="high" exposed="true" tooltip="Center of the bounding sphere (NOT the origin; ~half body height above it). Not written by CreateObject." />
+	<float32 name="Bounding Radius" offset="0x2C" confidence="high" exposed="true" tooltip="Radius of the bounding sphere." />
+	<point3 name="Saved Bounding Center" offset="0x30" confidence="medium" tooltip="Copy of the sphere center kept by FUN_180479888." />
+	<float32 name="Saved Bounding Radius" offset="0x3C" confidence="medium" tooltip="Copy of the sphere radius kept by FUN_180479888." />
+	<point3 name="Origin" offset="0x44" confidence="high" exposed="true" tooltip="Object position (feet level for a biped). Copied from the placement." />
+	<vector3 name="Forward" offset="0x50" confidence="high" exposed="true" tooltip="Forward vector." />
+	<vector3 name="Up" offset="0x5C" confidence="high" exposed="true" tooltip="Up vector." />
+	<vector3 name="Linear Velocity" offset="0x68" confidence="high" exposed="true" tooltip="World-space velocity." />
+	<vector3 name="Angular Velocity" offset="0x74" confidence="medium" tooltip="Copied from the placement (+0x4C); no other access seen." />
+	<float32 name="Scale" offset="0x80" confidence="high" tooltip="Current scale (1.0 normal)." />
+	<float32 name="Target Scale" offset="0x84" confidence="medium" tooltip="Scale the object transitions to (FUN_18046cc34)." />
+	<uint32 name="Placement Id" offset="0x88" confidence="high" tooltip="Unique placement id (counter when the placement has none)." />
+	<uint16 name="BSP Index" offset="0x8C" confidence="medium" tooltip="BSP index of the placement." />
+	<uint8 name="Object Type" offset="0x8E" confidence="high" exposed="true" tooltip="Type index (0 bipd, 1 vehi, 2 weap ... see the type definition table). Used by RunComponentInitializers." />
+	<uint8 name="Placement Origin" offset="0x8F" confidence="medium" tooltip="2 = dynamic (created at runtime); matches table entry +4." />
+	<uint8 name="Placement Team" offset="0x92" confidence="low" tooltip="Byte copied from the placement (team candidate)." />
+	<uint32 name="Attached Entry Handle" offset="0xCC" confidence="low" default="0xFFFFFFFF" tooltip="Handle into another table (stride 0xC0, unidentified). Read by weapon/biped updates." />
+	<uint32 name="Unknown D4" offset="0xD4" confidence="unknown" tooltip="R2 W0 R:FUN_1804b0674,FUN_1804b1208" />
+	<uint32 name="Unknown D8" offset="0xD8" confidence="unknown" tooltip="R0 W3 src=[tmp23e00+0xc] W:item_update,bloc_update,FUN_1804ac750" />
+	<flags32 name="Object Flags 2" offset="0xDC" confidence="medium" tooltip="Second flags word (bit 10, 14 used by updates)." />
+	<uint8 name="Unknown E0" offset="0xE0" confidence="unknown" tooltip="R2 W4 upd=0x0 src=SUBPIECE W:FUN_1804b1434" />
+	<uint16 name="Unknown E2" offset="0xE2" confidence="unknown" tooltip="R1 W0 R:obje_sa8" />
+	<uint16 name="Update Flags" offset="0xE4" confidence="low" tooltip="Set to 0x8000 by FUN_18047d780." />
+	<uint16 name="Scale Transition Ticks" offset="0xE8" confidence="medium" tooltip="Ticks left in a scale transition (FUN_18046cc34)." />
+	<uint16 name="Model Variant" offset="0xEA" confidence="medium" default="0x00FF" exposed="true" tooltip="Variant index (starts 0xFF). Old name: HlmtVariant." />
+	<uint32 name="Owner Player Handle" offset="0xF0" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Player that owns the object (-1 = none)." />
+	<uint32 name="Owner Biped Handle" offset="0xF4" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Biped that owns the object (-1 = none)." />
+	<uint32 name="Unknown F8" offset="0xF8" confidence="unknown" tooltip="R7 W0 R:item_update,FUN_1804d3308,FUN_1804edf38" />
+	<uint32 name="Unknown FC" offset="0xFC" confidence="unknown" tooltip="R4 W0 R:FUN_1803a664c,FUN_1803a67a4,Entity_GetPositionOrFallback" />
+	<flags8 name="Object Flags 3" offset="0x100" confidence="medium" tooltip="Flag byte (placement flag bits 11/12)." />
+	<uint8 name="Unknown 101" offset="0x101" confidence="unknown" tooltip="R0 W1 upd=0xff W:FUN_1804713dc" />
+	<uint8 name="Unknown 102" offset="0x102" confidence="unknown" tooltip="R1 W1 init=0x3c W:FUN_1803a67a4" />
+	<uint8 name="Unknown 103" offset="0x103" confidence="unknown" tooltip="R0 W1 init=0x1 W:FUN_1803a67a4" />
+	<uint32 name="Unknown 104" offset="0x104" confidence="unknown" tooltip="R2 W2 src=call 180013464 W:FUN_1804dbddc" />
+	<uint16 name="Unknown 108" offset="0x108" confidence="unknown" tooltip="R2 W1 src=INT_OR W:FUN_1804e505c" />
+	<uint16 name="Unknown 10A" offset="0x10A" confidence="unknown" tooltip="R2 W1 src=INT_OR W:FUN_1804e505c" />
+	<uint32 name="Unknown 110" offset="0x110" confidence="unknown" tooltip="R1 W0 R:obje_sa8" />
+	<uint32 name="Unknown 114" offset="0x114" confidence="unknown" tooltip="R3 W0 R:FUN_180141830,FUN_180145a68,FUN_1801415b0" />
+	<uint64 name="Unknown 118" offset="0x118" confidence="unknown" tooltip="R4 W0 R:FUN_180141830,FUN_1804cd958,FUN_1801415b0" />
+	<uint32 name="Unknown 120" offset="0x120" confidence="unknown" tooltip="R3 W0 R:obje_sa8,FUN_1804cd958,FUN_1801415b0" />
+	<uint16 name="Unknown 12C" offset="0x12C" confidence="unknown" tooltip="R1 W0 R:FUN_180145a68" />
+	<flags32 name="State Flags" offset="0x138" confidence="medium" tooltip="Written with OR by many functions (FUN_18047caa8, FUN_1804e3e98, ...)." />
+	<uint8 name="Unknown 13C" offset="0x13C" confidence="unknown" tooltip="R0 W1 src=param_4 W:FUN_18047caa8" />
+	<uint8 name="Unknown 13D" offset="0x13D" confidence="unknown" tooltip="R0 W1 src=param_5 W:FUN_18047caa8" />
+	<uint8 name="Unknown 143" offset="0x143" confidence="unknown" tooltip="R4 W2 src=INT_OR, INT_AND W:FUN_18046c588,FUN_18046c69c" />
+	<uint32 name="Unknown 15C" offset="0x15C" confidence="unknown" tooltip="R1 W1 upd=0xffffffff W:FUN_18047c96c" />
+	<uint32 name="Unknown 160" offset="0x160" confidence="unknown" tooltip="R0 W1 upd=0x0 W:FUN_18047c96c" />
+	<uint32 name="Reserved 168" offset="0x168" confidence="low" default="0xFFFFFFFF" tooltip="Initialised to 0xFFFFFFFF by CreateObject. NOT the component list." />
+	<uint32 name="Initializer Mask" offset="0x16C" confidence="high" tooltip="Bit per component whose init already ran (0xE on a live biped)." />
+	<uint16 name="Node Orientations A Size" offset="0x170" confidence="medium" tooltip="Variable block descriptor: nodes x 0x20." />
+	<uint16 name="Node Orientations A Offset" offset="0x172" confidence="medium" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Node Orientations B Size" offset="0x174" confidence="medium" tooltip="Variable block descriptor: second copy of the node orientations." />
+	<uint16 name="Node Orientations B Offset" offset="0x176" confidence="medium" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Node Matrices Size" offset="0x178" confidence="high" exposed="true" tooltip="Variable block descriptor: nodes x 0x34 (BoneMatrix)." />
+	<uint16 name="Node Matrices Offset" offset="0x17A" confidence="high" exposed="true" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Region State Size" offset="0x17C" confidence="high" exposed="true" tooltip="Variable block descriptor: regions x 6 (+0x20 if flag 0x400)." />
+	<uint16 name="Region State Offset" offset="0x17E" confidence="high" exposed="true" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Block 180 Size" offset="0x180" confidence="low" tooltip="Variable block descriptor: obje tag +0x104 count x 8, init 0xFF." />
+	<uint16 name="Block 180 Offset" offset="0x182" confidence="low" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Damage Sections Size" offset="0x184" confidence="high" exposed="true" tooltip="Variable block descriptor: sections x 0x18." />
+	<uint16 name="Damage Sections Offset" offset="0x186" confidence="high" exposed="true" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Block 188 Size" offset="0x188" confidence="low" tooltip="Variable block descriptor: obje tag +0x134 count x 0x18." />
+	<uint16 name="Block 188 Offset" offset="0x18A" confidence="low" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Animation State Size" offset="0x18C" confidence="medium" exposed="true" tooltip="Variable block descriptor: 0x250 + config-table dependent part." />
+	<uint16 name="Animation State Offset" offset="0x18E" confidence="medium" exposed="true" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Color Data Size" offset="0x190" confidence="low" tooltip="Variable block descriptor: 0x88 bytes if the tag asks for it." />
+	<uint16 name="Color Data Offset" offset="0x192" confidence="low" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Mode Data Size" offset="0x194" confidence="low" tooltip="Variable block descriptor: 100 bytes, only in some game modes." />
+	<uint16 name="Mode Data Offset" offset="0x196" confidence="low" tooltip="Offset of the block from the datum start." />
+	<uint16 name="Block 198 Size" offset="0x198" confidence="low" tooltip="Variable block descriptor: obje tag +0xF8 count x 0xC." />
+	<uint16 name="Block 198 Offset" offset="0x19A" confidence="low" tooltip="Offset of the block from the datum start." />
+</plugin>
