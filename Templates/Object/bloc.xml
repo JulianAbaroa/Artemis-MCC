@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="bloc" start="0x1A8" baseSize="0x1B0">
+	<uint32 name="Unknown 1A8" offset="0x1A8" confidence="unknown" tooltip="R1 W3 init=0x0, 0x2 src=INT_OR known=Projectile.RuntimeFlags W:bloc_init" />
+	<uint32 name="Unknown 1AC" offset="0x1AC" confidence="unknown" tooltip="R1 W3 init=0xffffffff src=INT_MULT, INT_ADD W:bloc_init,bloc_update" />
+</plugin>

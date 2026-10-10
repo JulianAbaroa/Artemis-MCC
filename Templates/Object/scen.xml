@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="scen" start="0x1A8" baseSize="0x1E4">
+	<uint16 name="Unknown 1A8" offset="0x1A8" confidence="unknown" tooltip="R6 W7 init=0x0 src=INT_OR, INT_AND known=Projectile.RuntimeFlags W:scen_init,FUN_1804fdc1c,FUN_1804fde0c" />
+	<uint16 name="Unknown 1AA" offset="0x1AA" confidence="unknown" tooltip="R0 W2 init=0x3 src=MULTIEQUAL W:scen_place,scen_init" />
+	<uint32 name="Unknown 1AC" offset="0x1AC" confidence="unknown" tooltip="R0 W1 upd=0xffffffff W:scen_s48" />
+	<uint32 name="Unknown 1B0" offset="0x1B0" confidence="unknown" tooltip="R1 W1 src=param_4 W:FUN_1804fde0c" />
+	<uint32 name="Unknown 1CC" offset="0x1CC" confidence="unknown" tooltip="R2 W0 SHARED R:obje_sa8" />
+</plugin>

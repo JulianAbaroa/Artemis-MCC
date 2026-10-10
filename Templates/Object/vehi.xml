@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="vehi" start="0x9D8" baseSize="0xDE8">
+	<uint32 name="Unknown 9D8" offset="0x9D8" confidence="unknown" tooltip="R3 W0 SHARED R:FUN_180477fa0,FUN_180476f1c" />
+	<uint16 name="Unknown 9DE" offset="0x9DE" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_s138" />
+	<uint8 name="Unknown 9E0" offset="0x9E0" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_s138" />
+	<uint32 name="Unknown 9E4" offset="0x9E4" confidence="unknown" tooltip="R1 W0 R:vehi_sa8" />
+	<uint8 name="Unknown 9E8" offset="0x9E8" confidence="unknown" tooltip="R0 W1 src=SUBPIECE W:FUN_1804ac9f8" />
+	<uint8 name="Unknown A9E" offset="0xA9E" confidence="unknown" tooltip="R0 W2 init=0x0x2 W:FUN_1804ac9f8" />
+	<uint8 name="Unknown A9F" offset="0xA9F" confidence="unknown" tooltip="R0 W2 init=0xffx2 W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AA0" offset="0xAA0" confidence="unknown" tooltip="R9 W3 init=0xffffffff, 0x0 upd=0xffffffff W:FUN_1804ac9f8,vehi_sd8" />
+	<uint32 name="Unknown AA4" offset="0xAA4" confidence="unknown" tooltip="R32 W1 init=0xffffffff W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AA8" offset="0xAA8" confidence="unknown" tooltip="R6 W2 init=0xffffffffx2 W:FUN_1804ac9f8" />
+	<uint8 name="Unknown AAC" offset="0xAAC" confidence="unknown" tooltip="R7 W6 init=0xffx6 W:FUN_1804ac9f8" />
+	<uint8 name="Unknown AAD" offset="0xAAD" confidence="unknown" tooltip="R0 W6 init=0xfex6 W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AB0" offset="0xAB0" confidence="unknown" tooltip="R4 W7 init=0x0x6, 0xffffffff W:FUN_1804ac9f8" />
+	<uint16 name="Unknown AB4" offset="0xAB4" confidence="unknown" tooltip="R0 W6 init=0xffffx6 W:FUN_1804ac9f8" />
+	<uint16 name="Unknown AB6" offset="0xAB6" confidence="unknown" tooltip="R0 W6 init=0xffffx6 W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AB8" offset="0xAB8" confidence="unknown" tooltip="R5 W1 src=INDIRECT W:FUN_1804ac9f8" />
+	<uint32 name="Unknown ABC" offset="0xABC" confidence="unknown" tooltip="R3 W1 init=0xffffffff W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AC0" offset="0xAC0" confidence="unknown" tooltip="R1 W3 init=0xffffffff src=INDIRECT W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AC4" offset="0xAC4" confidence="unknown" tooltip="R1 W1 init=0x0 W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AC8" offset="0xAC8" confidence="unknown" tooltip="R1 W3 init=0xffffffff src=INDIRECT W:FUN_1804ac9f8" />
+	<uint32 name="Unknown ACC" offset="0xACC" confidence="unknown" tooltip="R3 W3 init=0x0, 0xffffffff src=INDIRECT W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AD0" offset="0xAD0" confidence="unknown" tooltip="R4 W2 init=0x0, 0xffffffff known=Biped.GroundObjectHandle W:FUN_1804ac9f8" />
+	<uint32 name="Unknown AD4" offset="0xAD4" confidence="unknown" tooltip="R1 W1 init=0x0 W:FUN_1804ac9f8" />
+	<uint16 name="Unknown AD8" offset="0xAD8" confidence="unknown" tooltip="R0 W2 init=0xfex2 known=Biped.SurfaceNormal W:FUN_1804ac9f8" />
+	<uint8 name="Unknown ADA" offset="0xADA" confidence="unknown" tooltip="R3 W0 R:FUN_180511e84,FUN_18051cf00" />
+	<uint32 name="Unknown B08" offset="0xB08" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_180018214" />
+	<uint32 name="Unknown B0C" offset="0xB0C" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_180018214" />
+	<uint32 name="Unknown B10" offset="0xB10" confidence="unknown" tooltip="R2 W0 SHARED R:FUN_180018214" />
+	<uint16 name="Unknown B20" offset="0xB20" confidence="unknown" tooltip="R0 W1 init=0xffff W:FUN_1804ac9f8" />
+	<uint16 name="Unknown B22" offset="0xB22" confidence="unknown" tooltip="R0 W1 init=0xffff W:FUN_1804ac9f8" />
+	<uint16 name="Unknown B24" offset="0xB24" confidence="unknown" tooltip="R0 W1 init=0xffff W:FUN_1804ac9f8" />
+	<uint16 name="Unknown B26" offset="0xB26" confidence="unknown" tooltip="R0 W1 init=0xffff W:FUN_1804ac9f8" />
+	<uint32 name="Unknown B28" offset="0xB28" confidence="unknown" tooltip="R1 W1 init=0x0 W:FUN_1804ac9f8" />
+	<uint32 name="Unknown B2C" offset="0xB2C" confidence="unknown" tooltip="R1 W0 R:FUN_18051b910" />
+	<uint32 name="Unknown B30" offset="0xB30" confidence="unknown" tooltip="R0 W1 init=0x0 W:FUN_1804ac9f8" />
+	<uint32 name="Unknown B34" offset="0xB34" confidence="unknown" tooltip="R0 W1 init=0xff7fffff W:FUN_1804ac9f8" />
+	<uint32 name="Unknown B38" offset="0xB38" confidence="unknown" tooltip="R0 W1 init=0x0 W:FUN_1804ac9f8" />
+	<uint8 name="Unknown B3C" offset="0xB3C" confidence="unknown" tooltip="R2 W0 R:FUN_18051b910" />
+	<uint16 name="Unknown B6C" offset="0xB6C" confidence="unknown" tooltip="R0 W1 init=0xffff W:vehi_init" />
+	<uint16 name="Unknown B6E" offset="0xB6E" confidence="unknown" tooltip="R0 W1 init=0xffff W:vehi_init" />
+	<uint16 name="Unknown B70" offset="0xB70" confidence="unknown" tooltip="R0 W1 init=0xffff W:vehi_init" />
+	<uint16 name="Unknown B72" offset="0xB72" confidence="unknown" tooltip="R0 W1 init=0xffff W:vehi_init" />
+	<uint16 name="Unknown B74" offset="0xB74" confidence="unknown" tooltip="R0 W1 init=0xffff W:vehi_init" />
+	<uint16 name="Unknown B76" offset="0xB76" confidence="unknown" tooltip="R0 W1 init=0xffff W:vehi_init" />
+	<uint16 name="Unknown B78" offset="0xB78" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_init" />
+	<uint16 name="Unknown B7A" offset="0xB7A" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_init" />
+	<uint32 name="Unknown B7C" offset="0xB7C" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_s138" />
+	<uint16 name="Unknown B80" offset="0xB80" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_init" />
+	<uint16 name="Unknown B82" offset="0xB82" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_init" />
+	<uint16 name="Unknown B84" offset="0xB84" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_init" />
+	<uint16 name="Unknown B86" offset="0xB86" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_init" />
+	<uint32 name="Unknown D88" offset="0xD88" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:vehi_s138" />
+	<uint16 name="Unknown D8C" offset="0xD8C" confidence="unknown" tooltip="R0 W2 init=0xffff upd=0xffff W:vehi_s138,vehi_update" />
+	<uint32 name="Unknown D90" offset="0xD90" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:vehi_s138" />
+	<uint16 name="Unknown D94" offset="0xD94" confidence="unknown" tooltip="R0 W2 init=0xffff upd=0xffff W:vehi_s138,vehi_update" />
+	<uint16 name="Unknown D96" offset="0xD96" confidence="unknown" tooltip="R0 W2 init=0xffff upd=0xffff W:vehi_s138,vehi_update" />
+	<uint16 name="Unknown D98" offset="0xD98" confidence="unknown" tooltip="R0 W1 upd=0xffff W:vehi_update" />
+	<uint16 name="Unknown D9A" offset="0xD9A" confidence="unknown" tooltip="R0 W1 upd=0xffff W:vehi_update" />
+	<uint32 name="Unknown D9C" offset="0xD9C" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:vehi_s138" />
+	<uint32 name="Unknown DA0" offset="0xDA0" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:vehi_s138" />
+	<uint32 name="Unknown DA4" offset="0xDA4" confidence="unknown" tooltip="R0 W2 src=INDIRECT, [lVar7+0x1c0] SHARED W:FUN_18017f294" />
+	<uint32 name="Unknown DA8" offset="0xDA8" confidence="unknown" tooltip="R0 W2 src=INDIRECT, [lVar7+0x1c4] SHARED W:FUN_18017f294" />
+	<uint32 name="Unknown DAC" offset="0xDAC" confidence="unknown" tooltip="R0 W3 src=[lVar1+0x28], INDIRECT SHARED W:FUN_18017f294,FUN_180471e90" />
+	<uint32 name="Unknown DB0" offset="0xDB0" confidence="unknown" tooltip="R0 W1 init=0xffffffff W:vehi_s138" />
+	<uint64 name="Unknown DC0" offset="0xDC0" confidence="unknown" tooltip="R0 W1 init=0x0 W:vehi_s138" />
+	<uint64 name="Unknown DC8" offset="0xDC8" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:vehi_s138" />
+	<uint32 name="Unknown DD0" offset="0xDD0" confidence="unknown" tooltip="R0 W1 src=INDIRECT W:vehi_s138" />
+	<uint32 name="Unknown DD4" offset="0xDD4" confidence="unknown" tooltip="R0 W1 init=0x47800000 (f32 65536) W:vehi_s138" />
+	<uint32 name="Unknown DD8" offset="0xDD8" confidence="unknown" tooltip="R0 W1 init=0x47800000 (f32 65536) W:vehi_s138" />
+	<uint32 name="Unknown DDC" offset="0xDDC" confidence="unknown" tooltip="R0 W1 init=0x47800000 (f32 65536) W:vehi_s138" />
+	<uint16 name="Unknown DE6" offset="0xDE6" confidence="unknown" tooltip="R1 W0 R:vehi_sa8" />
+</plugin>

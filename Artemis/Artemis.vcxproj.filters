@@ -1132,6 +1132,15 @@
     <Filter Include="Core\Domain\3_Tables\Template\Type\Unit">
       <UniqueIdentifier>{ef71be48-c78c-43f9-b5fb-8eaccbb945bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template\Type\Item">
+      <UniqueIdentifier>{c3571090-ca6a-4b7f-bec8-8dd3eae929df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template\Type\Weap">
+      <UniqueIdentifier>{0cd23e2b-d339-4188-9f68-eb3dd46dfa15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Tables\Template\Type\Bipd">
+      <UniqueIdentifier>{0d1bf0c7-5f26-442a-b7d8-c6c254f61371}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imgui.h">
@@ -3130,6 +3139,33 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\MapZoneDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Item\TemplateItemOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Item\TemplateItemStructure.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Bipd.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Item.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Weap.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Weap\TemplateWeapOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Weap\TemplateWeapStructure.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Bipd\TemplateBipdOffset.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Bipd\TemplateBipdStructure.ixx">
+      <Filter>Core\Domain\3_Tables\Template\Type\Bipd</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
