@@ -146,8 +146,8 @@ def Generate(xmlPath: str, typeOutDir: str, systemOutDir: str) -> None:
     os.makedirs(typeOutDir, exist_ok=True)
     os.makedirs(systemOutDir, exist_ok=True)
 
-    objectPath = os.path.join(typeOutDir, f"{prefix}Object.ixx")
-    systemPath = os.path.join(systemOutDir, f"{prefix}Descriptor.ixx")
+    objectPath = os.path.join(typeOutDir, f"Map{prefix}Object.ixx")
+    systemPath = os.path.join(systemOutDir, f"Map{prefix}Descriptor.ixx")
 
     with open(objectPath, "w", encoding="utf-8") as f:
         f.write(GenerateObjectHeader(prefix, rootNodes, xmlSource))

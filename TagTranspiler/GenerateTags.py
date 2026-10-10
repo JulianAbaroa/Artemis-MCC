@@ -78,8 +78,8 @@ def ProcessXml(xmlPath: str) -> str:
 
     print(f"[{prefix}] {xmlSource}")
     try:
-        GenerateOffset.Generate(xmlPath, os.path.join(typeDir, f"{prefix}Offset.ixx"))
-        GenerateStructure.Generate(xmlPath, os.path.join(typeDir, f"{prefix}Structure.ixx"))
+        GenerateOffset.Generate(xmlPath, os.path.join(typeDir, f"Map{prefix}Offset.ixx"))
+        GenerateStructure.Generate(xmlPath, os.path.join(typeDir, f"Map{prefix}Structure.ixx"))
         GenerateObject.Generate(xmlPath, typeDir, systemDir)
         GenerateTypeAggregate(prefix, xmlSource, tagRoot)
         GenerateSystemAggregate(prefix, xmlSource, tagRoot)
