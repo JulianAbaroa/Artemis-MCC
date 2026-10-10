@@ -451,193 +451,193 @@
     <Filter Include="Core\Domain\2_Resolved\World\System\RegionStates">
       <UniqueIdentifier>{16cab8bb-0bf4-4637-8d1a-9f9e2c88deec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables">
+    <Filter Include="Core\Domain\4_Tables">
       <UniqueIdentifier>{99edae77-a8bb-4d6e-aa04-96c7dbf06300}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Interaction">
+    <Filter Include="Core\Domain\4_Tables\Interaction">
       <UniqueIdentifier>{a5ca96b4-d973-48b8-b6c0-ea7328c84943}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Interaction\Type">
+    <Filter Include="Core\Domain\4_Tables\Interaction\Type">
       <UniqueIdentifier>{d56582bb-f1a3-4a91-887c-4e705900f590}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Interaction\State">
+    <Filter Include="Core\Domain\4_Tables\Interaction\State">
       <UniqueIdentifier>{5ea5512c-36f4-4b37-b6f6-64c71d552932}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Interaction\System">
+    <Filter Include="Core\Domain\4_Tables\Interaction\System">
       <UniqueIdentifier>{99e890f8-3c0c-4672-8114-2f8577a1d138}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Interaction\Hook">
+    <Filter Include="Core\Domain\4_Tables\Interaction\Hook">
       <UniqueIdentifier>{94a5065f-6c5e-476c-bf56-e5f6fd935626}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object">
+    <Filter Include="Core\Domain\4_Tables\Object">
       <UniqueIdentifier>{81b5843a-82b2-4881-a0ea-ad9676650c0d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\Hook">
+    <Filter Include="Core\Domain\4_Tables\Object\Hook">
       <UniqueIdentifier>{8555545b-2934-4149-8cc4-f336593eb4f1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\Hook\BoneMatrix">
+    <Filter Include="Core\Domain\4_Tables\Object\Hook\BoneMatrix">
       <UniqueIdentifier>{ec96a20d-9827-422a-8434-b90dbfbd65d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\State">
+    <Filter Include="Core\Domain\4_Tables\Object\State">
       <UniqueIdentifier>{fa043b7c-caed-4d41-8889-51b03bf6f2a9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\State\BoneMatrix">
+    <Filter Include="Core\Domain\4_Tables\Object\State\BoneMatrix">
       <UniqueIdentifier>{40dad825-1b14-4344-b432-d41fad18afe6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\State\DamageSection">
+    <Filter Include="Core\Domain\4_Tables\Object\State\DamageSection">
       <UniqueIdentifier>{4224ef2c-ebf4-4988-96f0-4b415258cc4c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\System">
+    <Filter Include="Core\Domain\4_Tables\Object\System">
       <UniqueIdentifier>{6a053864-0216-458e-93cf-29407cbb86f4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\Type">
+    <Filter Include="Core\Domain\4_Tables\Object\Type">
       <UniqueIdentifier>{ba2049a6-a885-44d0-ae87-49e52f6f0060}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\Type\BoneMatrix">
+    <Filter Include="Core\Domain\4_Tables\Object\Type\BoneMatrix">
       <UniqueIdentifier>{c4d8bc7e-ceea-41b7-a44c-94dbe8387b19}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\Type\DamageSection">
+    <Filter Include="Core\Domain\4_Tables\Object\Type\DamageSection">
       <UniqueIdentifier>{cca6f147-7824-409c-9602-c78c868efcb3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Object\Type\Specific">
+    <Filter Include="Core\Domain\4_Tables\Object\Type\Specific">
       <UniqueIdentifier>{d34848eb-7f47-424b-96d5-03b0af89e007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Player">
+    <Filter Include="Core\Domain\4_Tables\Player">
       <UniqueIdentifier>{66357dbe-e1f4-420e-bd1e-3d0ba21d87fc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Player\Hook">
+    <Filter Include="Core\Domain\4_Tables\Player\Hook">
       <UniqueIdentifier>{d3820057-bb61-479d-b317-e7bf57bf9884}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Player\State">
+    <Filter Include="Core\Domain\4_Tables\Player\State">
       <UniqueIdentifier>{50c13a6e-09b0-4c9f-b72d-a093bf6a915e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Player\System">
+    <Filter Include="Core\Domain\4_Tables\Player\System">
       <UniqueIdentifier>{1c5641ec-c8fa-4c2f-ac24-dc6861ae4a99}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Player\Type">
+    <Filter Include="Core\Domain\4_Tables\Player\Type">
       <UniqueIdentifier>{2b7f33fe-b9f2-4f7d-b88c-4339686fb42e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations">
+    <Filter Include="Core\Domain\5_Relations">
       <UniqueIdentifier>{c956f9d7-fa4d-4b1c-9d3f-de49ad9898fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\Classifier">
+    <Filter Include="Core\Domain\5_Relations\Classifier">
       <UniqueIdentifier>{52a51614-3c94-4df4-b7b2-3694c2087562}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\Classifier\Type">
+    <Filter Include="Core\Domain\5_Relations\Classifier\Type">
       <UniqueIdentifier>{7a6d0f7c-bcca-442c-927d-82afe2200566}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\Classifier\State">
+    <Filter Include="Core\Domain\5_Relations\Classifier\State">
       <UniqueIdentifier>{66b94e3e-41e7-4ee0-bda5-9500ff7b8185}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\Classifier\System">
+    <Filter Include="Core\Domain\5_Relations\Classifier\System">
       <UniqueIdentifier>{c655fb2c-407a-43fb-94cf-79f44c31fd48}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\ObjectGraph">
+    <Filter Include="Core\Domain\5_Relations\ObjectGraph">
       <UniqueIdentifier>{27a4f736-3440-491d-95aa-7926f936ec6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\ObjectGraph\Type">
+    <Filter Include="Core\Domain\5_Relations\ObjectGraph\Type">
       <UniqueIdentifier>{7d7ef5ef-2438-4b78-a236-7f35ae76fe97}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\ObjectGraph\State">
+    <Filter Include="Core\Domain\5_Relations\ObjectGraph\State">
       <UniqueIdentifier>{5129c154-7aa3-42ce-8a3a-bac3be713bb5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\ObjectGraph\System">
+    <Filter Include="Core\Domain\5_Relations\ObjectGraph\System">
       <UniqueIdentifier>{243ac1db-66ef-4c71-bd3e-687c6af032a8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\PlayerGraph">
+    <Filter Include="Core\Domain\5_Relations\PlayerGraph">
       <UniqueIdentifier>{6c4e2afc-68e1-4ba2-8fed-2064a251a21f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\PlayerGraph\Type">
+    <Filter Include="Core\Domain\5_Relations\PlayerGraph\Type">
       <UniqueIdentifier>{ba7bb4f7-504d-41fd-817a-e78b2641738b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\PlayerGraph\State">
+    <Filter Include="Core\Domain\5_Relations\PlayerGraph\State">
       <UniqueIdentifier>{ddc78b30-c6c0-4808-992a-b8589b319c3b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Relations\PlayerGraph\System">
+    <Filter Include="Core\Domain\5_Relations\PlayerGraph\System">
       <UniqueIdentifier>{9442ec32-d9b3-463f-aa22-9840fdb5998d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment">
+    <Filter Include="Core\Domain\6_Environment">
       <UniqueIdentifier>{ae9d5c10-0a62-4dbf-b244-47ff3fc76de9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Collidable">
+    <Filter Include="Core\Domain\6_Environment\Collidable">
       <UniqueIdentifier>{81192614-ecc6-4dc4-b5ef-a37aaec1bc0c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Collidable\Type">
+    <Filter Include="Core\Domain\6_Environment\Collidable\Type">
       <UniqueIdentifier>{224e8a7b-5b76-44ac-bc7b-202bc720168f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Collidable\State">
+    <Filter Include="Core\Domain\6_Environment\Collidable\State">
       <UniqueIdentifier>{049bca07-e1aa-4658-b7b4-4616934f1b13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Collidable\System">
+    <Filter Include="Core\Domain\6_Environment\Collidable\System">
       <UniqueIdentifier>{222341c2-07d5-47fd-ae9b-1b77917ca80d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Fixtures">
+    <Filter Include="Core\Domain\6_Environment\Fixtures">
       <UniqueIdentifier>{317214c6-5015-4dc7-9eed-d719dac5d1ca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Fixtures\Type">
+    <Filter Include="Core\Domain\6_Environment\Fixtures\Type">
       <UniqueIdentifier>{de99ca93-f71c-4d08-bdf9-09d13db9a1e9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Fixtures\State">
+    <Filter Include="Core\Domain\6_Environment\Fixtures\State">
       <UniqueIdentifier>{30d74ba4-d985-47fe-8b3a-4a09e45d7a1a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Fixtures\System">
+    <Filter Include="Core\Domain\6_Environment\Fixtures\System">
       <UniqueIdentifier>{7d54c5d8-0eff-472e-a088-b1e1963bb193}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Health">
+    <Filter Include="Core\Domain\6_Environment\Health">
       <UniqueIdentifier>{bf158fb4-af04-40f6-b380-da229f999f08}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Health\Type">
+    <Filter Include="Core\Domain\6_Environment\Health\Type">
       <UniqueIdentifier>{8d5871e2-368c-444c-9065-121d4119c476}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Health\State">
+    <Filter Include="Core\Domain\6_Environment\Health\State">
       <UniqueIdentifier>{0b8653d9-16b5-4a63-b1af-e0cd19055a3c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Health\System">
+    <Filter Include="Core\Domain\6_Environment\Health\System">
       <UniqueIdentifier>{021f8216-8ce3-4508-8177-82c91d74f6db}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric">
+    <Filter Include="Core\Domain\7_Egocentric">
       <UniqueIdentifier>{40efa74b-c5b9-447b-89e7-7ad9bed66f3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Affordance">
+    <Filter Include="Core\Domain\7_Egocentric\Affordance">
       <UniqueIdentifier>{35bdff82-fe65-4543-afc9-d9cb4e7b2dbf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Affordance\Type">
+    <Filter Include="Core\Domain\7_Egocentric\Affordance\Type">
       <UniqueIdentifier>{89537ffa-0186-41dc-8fd4-3bed7c8ad873}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Affordance\State">
+    <Filter Include="Core\Domain\7_Egocentric\Affordance\State">
       <UniqueIdentifier>{df93de62-fb0d-4d1f-b042-e5ff884bdd0c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Affordance\System">
+    <Filter Include="Core\Domain\7_Egocentric\Affordance\System">
       <UniqueIdentifier>{25fc4d7f-05e1-4794-8e24-a4362b4bf323}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Self">
+    <Filter Include="Core\Domain\7_Egocentric\Self">
       <UniqueIdentifier>{130a784e-f97f-4533-a504-d95ad6feae45}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Self\Type">
+    <Filter Include="Core\Domain\7_Egocentric\Self\Type">
       <UniqueIdentifier>{8065e5a4-b7bb-45b3-808e-d83fe1ac542b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Self\State">
+    <Filter Include="Core\Domain\7_Egocentric\Self\State">
       <UniqueIdentifier>{57d6dee4-ec7b-4351-b94b-ce390f422e5b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Self\System">
+    <Filter Include="Core\Domain\7_Egocentric\Self\System">
       <UniqueIdentifier>{2643f261-7f19-4b31-a157-ed2fc6322247}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Export">
+    <Filter Include="Core\Domain\8_Export">
       <UniqueIdentifier>{2bebb139-8c05-4a28-8c05-986961425058}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Export\Tick">
+    <Filter Include="Core\Domain\8_Export\Tick">
       <UniqueIdentifier>{9bb5ae9d-5dca-4c03-aff2-a2ebb5fa9b3d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Export\Tick\Type">
+    <Filter Include="Core\Domain\8_Export\Tick\Type">
       <UniqueIdentifier>{748c7a6a-32bd-49e2-bdf0-16ad14df6550}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Export\Tick\State">
+    <Filter Include="Core\Domain\8_Export\Tick\State">
       <UniqueIdentifier>{77b104ab-1e23-434c-8cca-be2c3894bf9c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Export\Tick\System">
+    <Filter Include="Core\Domain\8_Export\Tick\System">
       <UniqueIdentifier>{ad15f119-02ac-49c0-9ddc-d0a866c5881c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Export\Tick\Hook">
+    <Filter Include="Core\Domain\8_Export\Tick\Hook">
       <UniqueIdentifier>{ff1c2968-814a-4d49-a04a-8d2712eb0735}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Viewer">
@@ -910,16 +910,16 @@
     <Filter Include="Core\Domain\2_Resolved\World\System\Raycast">
       <UniqueIdentifier>{ad5d22f2-2451-48d5-b127-f78af2864f81}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Raycast">
+    <Filter Include="Core\Domain\7_Egocentric\Raycast">
       <UniqueIdentifier>{1e630758-4d1a-4dff-bc23-c79a861f3bc6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Raycast\Type">
+    <Filter Include="Core\Domain\7_Egocentric\Raycast\Type">
       <UniqueIdentifier>{095d9896-7fab-4c77-8003-c5604fafe304}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Raycast\State">
+    <Filter Include="Core\Domain\7_Egocentric\Raycast\State">
       <UniqueIdentifier>{d03e44e2-41b4-43a3-81b2-22cc5d016b89}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Egocentric\Raycast\System">
+    <Filter Include="Core\Domain\7_Egocentric\Raycast\System">
       <UniqueIdentifier>{9b25c79f-468b-4b9f-992f-1accf7740671}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Common">
@@ -1105,41 +1105,80 @@
     <Filter Include="Core\Domain\2_Resolved\World\System\ModelLink">
       <UniqueIdentifier>{2646e01d-9757-41a9-817b-f10a27eb9730}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Aim">
+    <Filter Include="Core\Domain\6_Environment\Aim">
       <UniqueIdentifier>{04e45202-3cec-4268-afca-dd9ff0e78d1d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Aim\Type">
+    <Filter Include="Core\Domain\6_Environment\Aim\Type">
       <UniqueIdentifier>{240427c7-c311-4a19-8d9d-e7d525fe203a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Aim\State">
+    <Filter Include="Core\Domain\6_Environment\Aim\State">
       <UniqueIdentifier>{47134b01-8389-495b-860c-4909b8ce4b5a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Environment\Aim\System">
+    <Filter Include="Core\Domain\6_Environment\Aim\System">
       <UniqueIdentifier>{8a441872-8e9b-46e9-b668-a3f2b363cf2f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Service\Preferences\Type">
       <UniqueIdentifier>{b156d511-5ac1-46c1-9b59-d69c02b8f074}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template">
-      <UniqueIdentifier>{9bed3f06-2185-4a94-b932-32803748bc22}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template">
+      <UniqueIdentifier>{aafafe2f-b76c-4d08-b57e-f8d827b1af7f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template\Type">
-      <UniqueIdentifier>{573cbf0f-0a17-48fa-b824-1ce543d9f246}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template\Object">
+      <UniqueIdentifier>{92d77475-0ae5-45e2-bddc-f7faab6ba522}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template\Type\Obje">
-      <UniqueIdentifier>{af2757d5-d14b-4ba4-9307-47145e51d002}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template\Object\Hook">
+      <UniqueIdentifier>{fae731d1-2185-42e8-8df6-5073c49e3417}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template\Type\Unit">
-      <UniqueIdentifier>{ef71be48-c78c-43f9-b5fb-8eaccbb945bf}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template\Object\State">
+      <UniqueIdentifier>{1440eca4-fa5e-447a-a141-ca56f24cb898}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template\Type\Item">
-      <UniqueIdentifier>{c3571090-ca6a-4b7f-bec8-8dd3eae929df}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template\Object\System">
+      <UniqueIdentifier>{db642b7c-19f9-4e42-880f-75668529ab41}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template\Type\Weap">
-      <UniqueIdentifier>{0cd23e2b-d339-4188-9f68-eb3dd46dfa15}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template\Object\Type">
+      <UniqueIdentifier>{d9fff4e3-d702-4372-b6f0-239d9648ef72}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Tables\Template\Type\Bipd">
-      <UniqueIdentifier>{0d1bf0c7-5f26-442a-b7d8-c6c254f61371}</UniqueIdentifier>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Anim">
+      <UniqueIdentifier>{c9ef926c-d870-4f00-b4cf-7f05c2ff1f6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Bipd">
+      <UniqueIdentifier>{9cfe40de-de13-421e-9485-abea04d07a26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Bloc">
+      <UniqueIdentifier>{1a543f15-249a-4d4f-a835-ea11ceeaaa0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Ctrl">
+      <UniqueIdentifier>{07c704a3-86ba-4d8c-bd55-f4ed2edb0d39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Devi">
+      <UniqueIdentifier>{b9d977f9-3a20-4126-8cdc-ddcf1a560d95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Eqip">
+      <UniqueIdentifier>{57269716-d89e-490d-85b2-a25bc79f825d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Item">
+      <UniqueIdentifier>{71b9896a-7794-4965-a040-a0681b0207dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Mach">
+      <UniqueIdentifier>{f1d780a0-2a1f-49fe-a4fd-50b72c20a6f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Obje">
+      <UniqueIdentifier>{d52cefe7-5218-4ed9-a4d8-3957abccc388}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Proj">
+      <UniqueIdentifier>{9641c04d-a7a0-4b1b-a7ad-02c10581769c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Scen">
+      <UniqueIdentifier>{01a1d84d-4ff4-47e6-b133-b28b7a8c665a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Unit">
+      <UniqueIdentifier>{a8ae9294-7e6f-4f4b-a462-4c3764032600}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Vehi">
+      <UniqueIdentifier>{f79d4195-3469-47b3-917e-6229c5473844}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\3_Template\Object\Type\Weap">
+      <UniqueIdentifier>{22b2eb7b-920c-4eea-9a3b-aca8e4d08d00}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1394,248 +1433,242 @@
     <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.cpp">
       <Filter>Core\Domain\1_Map\Builder\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionAlive.ixx">
-      <Filter>Core\Domain\3_Tables\Interaction\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionAlive.ixx">
+      <Filter>Core\Domain\4_Tables\Interaction\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\Type\InteractionOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Interaction\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionOffset.ixx">
+      <Filter>Core\Domain\4_Tables\Interaction\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\State\InteractionStore.cpp">
-      <Filter>Core\Domain\3_Tables\Interaction\State</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.cpp">
+      <Filter>Core\Domain\4_Tables\Interaction\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\State\InteractionStore.ixx">
-      <Filter>Core\Domain\3_Tables\Interaction\State</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.ixx">
+      <Filter>Core\Domain\4_Tables\Interaction\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\Tables.Interaction.Type.ixx">
-      <Filter>Core\Domain\3_Tables\Interaction</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\Tables.Interaction.Type.ixx">
+      <Filter>Core\Domain\4_Tables\Interaction</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\System\InteractionService.cpp">
-      <Filter>Core\Domain\3_Tables\Interaction\System</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.cpp">
+      <Filter>Core\Domain\4_Tables\Interaction\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\System\InteractionService.ixx">
-      <Filter>Core\Domain\3_Tables\Interaction\System</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.ixx">
+      <Filter>Core\Domain\4_Tables\Interaction\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\Hook\InteractionTableLocator.cpp">
-      <Filter>Core\Domain\3_Tables\Interaction\Hook</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.cpp">
+      <Filter>Core\Domain\4_Tables\Interaction\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Interaction\Hook\InteractionTableLocator.ixx">
-      <Filter>Core\Domain\3_Tables\Interaction\Hook</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.ixx">
+      <Filter>Core\Domain\4_Tables\Interaction\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerAlive.ixx">
-      <Filter>Core\Domain\3_Tables\Player\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx">
+      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Player\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerOffset.ixx">
+      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Type\PlayerSize.ixx">
-      <Filter>Core\Domain\3_Tables\Player\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerSize.ixx">
+      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Tables.Player.Type.ixx">
-      <Filter>Core\Domain\3_Tables\Player</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Tables.Player.Type.ixx">
+      <Filter>Core\Domain\4_Tables\Player</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.cpp">
-      <Filter>Core\Domain\3_Tables\Player\State</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.cpp">
+      <Filter>Core\Domain\4_Tables\Player\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\State\PlayerTableStore.ixx">
-      <Filter>Core\Domain\3_Tables\Player\State</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.ixx">
+      <Filter>Core\Domain\4_Tables\Player\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.cpp">
-      <Filter>Core\Domain\3_Tables\Player\System</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.cpp">
+      <Filter>Core\Domain\4_Tables\Player\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\System\PlayerTableService.ixx">
-      <Filter>Core\Domain\3_Tables\Player\System</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.ixx">
+      <Filter>Core\Domain\4_Tables\Player\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.cpp">
-      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Hook\PlayerTableLocator.cpp">
+      <Filter>Core\Domain\4_Tables\Player\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Player\Hook\PlayerTableLocator.ixx">
-      <Filter>Core\Domain\3_Tables\Player\Hook</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Hook\PlayerTableLocator.ixx">
+      <Filter>Core\Domain\4_Tables\Player\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\DamageSection</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\DamageSection</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectBiped.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectBiped.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectCrate.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectCrate.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectEquipment.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectEquipment.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectProjectile.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectProjectile.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectScenery.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectScenery.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectVehicle.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectVehicle.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\Specific\ObjectWeapon.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type\Specific</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectWeapon.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectAlive.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectAlive.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectOffset.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectProfile.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectSize.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectSize.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Tables.Object.Type.ixx">
-      <Filter>Core\Domain\3_Tables\Object</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Tables.Object.Type.ixx">
+      <Filter>Core\Domain\4_Tables\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp">
-      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp">
+      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx">
-      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx">
+      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneOffsetsStore.cpp">
-      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneOffsetsStore.cpp">
+      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\BoneMatrix\BoneOffsetsStore.ixx">
-      <Filter>Core\Domain\3_Tables\Object\State\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneOffsetsStore.ixx">
+      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\DamageSection\DamageSectionsStore.cpp">
-      <Filter>Core\Domain\3_Tables\Object\State\DamageSection</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.cpp">
+      <Filter>Core\Domain\4_Tables\Object\State\DamageSection</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\DamageSection\DamageSectionsStore.ixx">
-      <Filter>Core\Domain\3_Tables\Object\State\DamageSection</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.ixx">
+      <Filter>Core\Domain\4_Tables\Object\State\DamageSection</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\ObjectTableStore.cpp">
-      <Filter>Core\Domain\3_Tables\Object\State</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\ObjectTableStore.cpp">
+      <Filter>Core\Domain\4_Tables\Object\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\State\ObjectTableStore.ixx">
-      <Filter>Core\Domain\3_Tables\Object\State</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\State\ObjectTableStore.ixx">
+      <Filter>Core\Domain\4_Tables\Object\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\System\ObjectTableService.cpp">
-      <Filter>Core\Domain\3_Tables\Object\System</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.cpp">
+      <Filter>Core\Domain\4_Tables\Object\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\System\ObjectTableService.ixx">
-      <Filter>Core\Domain\3_Tables\Object\System</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.ixx">
+      <Filter>Core\Domain\4_Tables\Object\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.cpp">
-      <Filter>Core\Domain\3_Tables\Object\Hook\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.cpp">
+      <Filter>Core\Domain\4_Tables\Object\Hook\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Hook\BoneMatrix</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Hook\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.cpp">
-      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Tables.Object.Hook.ixx">
+      <Filter>Core\Domain\4_Tables\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Hook\ObjectTableLocator.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Hook</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
+      <Filter>Core\Domain\5_Relations\Classifier\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Tables.Object.Hook.ixx">
-      <Filter>Core\Domain\3_Tables\Object</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx">
+      <Filter>Core\Domain\5_Relations\Classifier\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
-      <Filter>Core\Domain\4_Relations\Classifier\Type</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.cpp">
+      <Filter>Core\Domain\5_Relations\Classifier\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\Classifier\State\ClassifierStore.ixx">
-      <Filter>Core\Domain\4_Relations\Classifier\State</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.ixx">
+      <Filter>Core\Domain\5_Relations\Classifier\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\Classifier\System\ClassifierService.cpp">
-      <Filter>Core\Domain\4_Relations\Classifier\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Collidable\Type\Environment.Collidable.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Collidable\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\Classifier\System\ClassifierService.ixx">
-      <Filter>Core\Domain\4_Relations\Classifier\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Collidable\State\CollidableStore.ixx">
+      <Filter>Core\Domain\6_Environment\Collidable\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Collidable\Type\Environment.Collidable.Type.ixx">
-      <Filter>Core\Domain\5_Environment\Collidable\Type</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.cpp">
+      <Filter>Core\Domain\6_Environment\Collidable\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Collidable\State\CollidableStore.ixx">
-      <Filter>Core\Domain\5_Environment\Collidable\State</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx">
+      <Filter>Core\Domain\6_Environment\Collidable\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Collidable\System\CollidableService.cpp">
-      <Filter>Core\Domain\5_Environment\Collidable\System</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
+      <Filter>Core\Domain\5_Relations\ObjectGraph\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Collidable\System\CollidableService.ixx">
-      <Filter>Core\Domain\5_Environment\Collidable\System</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\State\ObjectGraphStore.cpp">
+      <Filter>Core\Domain\5_Relations\ObjectGraph\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
-      <Filter>Core\Domain\4_Relations\ObjectGraph\Type</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\State\ObjectGraphStore.ixx">
+      <Filter>Core\Domain\5_Relations\ObjectGraph\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\State\ObjectGraphStore.cpp">
-      <Filter>Core\Domain\4_Relations\ObjectGraph\State</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.cpp">
+      <Filter>Core\Domain\5_Relations\ObjectGraph\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\State\ObjectGraphStore.ixx">
-      <Filter>Core\Domain\4_Relations\ObjectGraph\State</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.ixx">
+      <Filter>Core\Domain\5_Relations\ObjectGraph\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\System\ObjectGraphService.cpp">
-      <Filter>Core\Domain\4_Relations\ObjectGraph\System</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\Type\Relations.PlayerGraph.Type.ixx">
+      <Filter>Core\Domain\5_Relations\PlayerGraph\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\ObjectGraph\System\ObjectGraphService.ixx">
-      <Filter>Core\Domain\4_Relations\ObjectGraph\System</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\State\PlayerGraphStore.ixx">
+      <Filter>Core\Domain\5_Relations\PlayerGraph\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\Type\Relations.PlayerGraph.Type.ixx">
-      <Filter>Core\Domain\4_Relations\PlayerGraph\Type</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.cpp">
+      <Filter>Core\Domain\5_Relations\PlayerGraph\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\State\PlayerGraphStore.ixx">
-      <Filter>Core\Domain\4_Relations\PlayerGraph\State</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.ixx">
+      <Filter>Core\Domain\5_Relations\PlayerGraph\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\System\PlayerGraphService.cpp">
-      <Filter>Core\Domain\4_Relations\PlayerGraph\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Fixtures\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\PlayerGraph\System\PlayerGraphService.ixx">
-      <Filter>Core\Domain\4_Relations\PlayerGraph\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Fixtures\State\FixturesStore.ixx">
+      <Filter>Core\Domain\6_Environment\Fixtures\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx">
-      <Filter>Core\Domain\5_Environment\Fixtures\Type</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.cpp">
+      <Filter>Core\Domain\6_Environment\Fixtures\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Fixtures\State\FixturesStore.ixx">
-      <Filter>Core\Domain\5_Environment\Fixtures\State</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.ixx">
+      <Filter>Core\Domain\6_Environment\Fixtures\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Fixtures\System\FixturesService.cpp">
-      <Filter>Core\Domain\5_Environment\Fixtures\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Health\Type\Environment.Health.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Health\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Fixtures\System\FixturesService.ixx">
-      <Filter>Core\Domain\5_Environment\Fixtures\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Health\State\HealthStore.ixx">
+      <Filter>Core\Domain\6_Environment\Health\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Health\Type\Environment.Health.Type.ixx">
-      <Filter>Core\Domain\5_Environment\Health\Type</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Health\System\HealthService.cpp">
+      <Filter>Core\Domain\6_Environment\Health\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Health\State\HealthStore.ixx">
-      <Filter>Core\Domain\5_Environment\Health\State</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Health\System\HealthService.ixx">
+      <Filter>Core\Domain\6_Environment\Health\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Health\System\HealthService.cpp">
-      <Filter>Core\Domain\5_Environment\Health\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
+      <Filter>Core\Domain\7_Egocentric\Self\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Health\System\HealthService.ixx">
-      <Filter>Core\Domain\5_Environment\Health\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Self\State\SelfStore.ixx">
+      <Filter>Core\Domain\7_Egocentric\Self\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
-      <Filter>Core\Domain\6_Egocentric\Self\Type</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Self\System\SelfService.cpp">
+      <Filter>Core\Domain\7_Egocentric\Self\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Self\State\SelfStore.ixx">
-      <Filter>Core\Domain\6_Egocentric\Self\State</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Self\System\SelfService.ixx">
+      <Filter>Core\Domain\7_Egocentric\Self\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Self\System\SelfService.cpp">
-      <Filter>Core\Domain\6_Egocentric\Self\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\Type\Egocentric.Affordance.Type.ixx">
+      <Filter>Core\Domain\7_Egocentric\Affordance\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Self\System\SelfService.ixx">
-      <Filter>Core\Domain\6_Egocentric\Self\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\State\AffordanceStore.ixx">
+      <Filter>Core\Domain\7_Egocentric\Affordance\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\Type\Egocentric.Affordance.Type.ixx">
-      <Filter>Core\Domain\6_Egocentric\Affordance\Type</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.cpp">
+      <Filter>Core\Domain\7_Egocentric\Affordance\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\State\AffordanceStore.ixx">
-      <Filter>Core\Domain\6_Egocentric\Affordance\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\System\AffordanceService.cpp">
-      <Filter>Core\Domain\6_Egocentric\Affordance\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Affordance\System\AffordanceService.ixx">
-      <Filter>Core\Domain\6_Egocentric\Affordance\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.ixx">
+      <Filter>Core\Domain\7_Egocentric\Affordance\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRegionStates.ixx">
       <Filter>Core\Domain\2_Resolved\World\Type</Filter>
@@ -1721,17 +1754,17 @@
     <ClCompile Include="Core\Domain\2_Resolved\Resolved.Layer.ixx">
       <Filter>Core\Domain\2_Resolved</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Tables.Layer.ixx">
-      <Filter>Core\Domain\3_Tables</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Tables.Layer.ixx">
+      <Filter>Core\Domain\4_Tables</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Relations\Relations.Layer.ixx">
-      <Filter>Core\Domain\4_Relations</Filter>
+    <ClCompile Include="Core\Domain\5_Relations\Relations.Layer.ixx">
+      <Filter>Core\Domain\5_Relations</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Environment.Layer.ixx">
-      <Filter>Core\Domain\5_Environment</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Environment.Layer.ixx">
+      <Filter>Core\Domain\6_Environment</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Egocentric.Layer.ixx">
-      <Filter>Core\Domain\6_Egocentric</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Egocentric.Layer.ixx">
+      <Filter>Core\Domain\7_Egocentric</Filter>
     </ClCompile>
     <ClCompile Include="Core\Runtime\Runtime.Layer.ixx">
       <Filter>Core\Runtime</Filter>
@@ -1757,26 +1790,26 @@
     <ClCompile Include="Core\Runtime\AI\AIThread.ixx">
       <Filter>Core\Runtime\AI</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Export.Layer.ixx">
-      <Filter>Core\Domain\7_Export</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Export.Layer.ixx">
+      <Filter>Core\Domain\8_Export</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Tick\Type\Export.Tick.Type.ixx">
-      <Filter>Core\Domain\7_Export\Tick\Type</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Tick\Type\Export.Tick.Type.ixx">
+      <Filter>Core\Domain\8_Export\Tick\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Tick\State\TickStore.ixx">
-      <Filter>Core\Domain\7_Export\Tick\State</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Tick\State\TickStore.ixx">
+      <Filter>Core\Domain\8_Export\Tick\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.cpp">
-      <Filter>Core\Domain\7_Export\Tick\System</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.cpp">
+      <Filter>Core\Domain\8_Export\Tick\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Tick\System\TickService.ixx">
-      <Filter>Core\Domain\7_Export\Tick\System</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.ixx">
+      <Filter>Core\Domain\8_Export\Tick\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Tick\Hook\SimulationTicksDetour.cpp">
-      <Filter>Core\Domain\7_Export\Tick\Hook</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.cpp">
+      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Export\Tick\Hook\SimulationTicksDetour.ixx">
-      <Filter>Core\Domain\7_Export\Tick\Hook</Filter>
+    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.ixx">
+      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Viewer.Layer.ixx">
       <Filter>Core\Viewer</Filter>
@@ -2369,8 +2402,8 @@
     <ClCompile Include="Core\Domain\2_Resolved\Vitality\Resolved.Vitality.Type.ixx">
       <Filter>Core\Domain\2_Resolved\Vitality</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Object\Type\ObjectConstant.ixx">
-      <Filter>Core\Domain\3_Tables\Object\Type</Filter>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectConstant.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRaycast.ixx">
       <Filter>Core\Domain\2_Resolved\World\Type</Filter>
@@ -2381,23 +2414,23 @@
     <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.cpp">
       <Filter>Core\Domain\2_Resolved\World\System\Raycast</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Raycast\Type\Raycasts.ixx">
-      <Filter>Core\Domain\6_Egocentric\Raycast\Type</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\Raycasts.ixx">
+      <Filter>Core\Domain\7_Egocentric\Raycast\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Raycast\State\RaycastStore.ixx">
-      <Filter>Core\Domain\6_Egocentric\Raycast\State</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\State\RaycastStore.ixx">
+      <Filter>Core\Domain\7_Egocentric\Raycast\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Raycast\System\RaycastService.ixx">
-      <Filter>Core\Domain\6_Egocentric\Raycast\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\System\RaycastService.ixx">
+      <Filter>Core\Domain\7_Egocentric\Raycast\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Raycast\System\RaycastService.cpp">
-      <Filter>Core\Domain\6_Egocentric\Raycast\System</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\System\RaycastService.cpp">
+      <Filter>Core\Domain\7_Egocentric\Raycast\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Raycast\Type\RaycastConstant.ixx">
-      <Filter>Core\Domain\6_Egocentric\Raycast\Type</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\RaycastConstant.ixx">
+      <Filter>Core\Domain\7_Egocentric\Raycast\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Egocentric\Raycast\Egocentric.Raycast.Type.ixx">
-      <Filter>Core\Domain\6_Egocentric\Raycast</Filter>
+    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Egocentric.Raycast.Type.ixx">
+      <Filter>Core\Domain\7_Egocentric\Raycast</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\FixturePass.cpp">
       <Filter>Core\Viewer\Map\System</Filter>
@@ -2711,17 +2744,17 @@
     <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.ixx">
       <Filter>Core\Domain\2_Resolved\World\System\ModelLink</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\Type\Environment.Aim.Type.ixx">
-      <Filter>Core\Domain\5_Environment\Aim\Type</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Aim\Type\Environment.Aim.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Aim\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\State\AimStore.ixx">
-      <Filter>Core\Domain\5_Environment\Aim\State</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Aim\State\AimStore.ixx">
+      <Filter>Core\Domain\6_Environment\Aim\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.cpp">
-      <Filter>Core\Domain\5_Environment\Aim\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.cpp">
+      <Filter>Core\Domain\6_Environment\Aim\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Environment\Aim\System\AimService.ixx">
-      <Filter>Core\Domain\5_Environment\Aim\System</Filter>
+    <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.ixx">
+      <Filter>Core\Domain\6_Environment\Aim\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
       <Filter>Core\Viewer\Map\System</Filter>
@@ -2731,24 +2764,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx">
       <Filter>Core\Infrastructure\Service\Preferences\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Obje.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Unit.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Unit\TemplateUnitOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Unit</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Unit\TemplateUnitStructure.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Unit</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Obje\TemplateObjeOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Obje</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Obje\TemplateObjeStructure.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Obje</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx">
       <Filter>Core\Domain\1_Map\Tag</Filter>
@@ -3140,32 +3155,161 @@
     <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\MapZoneDescriptor.ixx">
       <Filter>Core\Domain\1_Map\Tag\Zone\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Item\TemplateItemOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Item</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\Hook\ObjectTableLocator.cpp">
+      <Filter>Core\Domain\3_Template\Object\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Item\TemplateItemStructure.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Item</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\Hook\ObjectTableLocator.ixx">
+      <Filter>Core\Domain\3_Template\Object\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Bipd.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\State\TemplateStore.cpp">
+      <Filter>Core\Domain\3_Template\Object\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Item.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\State\TemplateStore.ixx">
+      <Filter>Core\Domain\3_Template\Object\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Tables.Template.Type.Weap.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\System\TemplateService.cpp">
+      <Filter>Core\Domain\3_Template\Object\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Weap\TemplateWeapOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Weap</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\System\TemplateService.ixx">
+      <Filter>Core\Domain\3_Template\Object\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Weap\TemplateWeapStructure.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Weap</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Anim\TemplateAnimOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Anim</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Bipd\TemplateBipdOffset.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Bipd</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Anim\TemplateAnimStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Anim</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\3_Tables\Template\Type\Bipd\TemplateBipdStructure.ixx">
-      <Filter>Core\Domain\3_Tables\Template\Type\Bipd</Filter>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Bipd\TemplateBipdOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Bipd\TemplateBipdStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Bloc\TemplateBlocOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Bloc\TemplateBlocStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Ctrl\TemplateCtrlOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Ctrl\TemplateCtrlStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Devi\TemplateDeviOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Devi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Devi\TemplateDeviStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Devi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Eqip\TemplateEqipOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Eqip\TemplateEqipStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Item\TemplateItemOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Item\TemplateItemStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Mach\TemplateMachOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Mach\TemplateMachStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Obje\TemplateObjeOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Obje</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Obje\TemplateObjeStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Obje</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Proj\TemplateProjOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Proj\TemplateProjStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Scen\TemplateScenOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Scen\TemplateScenStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Anim.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Bipd.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Bloc.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Ctrl.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Devi.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Eqip.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Item.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Mach.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Obje.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Proj.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Scen.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Unit.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Vehi.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Weap.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateConstant.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateRaw.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Unit\TemplateUnitOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Unit</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Unit\TemplateUnitStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Unit</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Vehi\TemplateVehiOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Vehi\TemplateVehiStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Weap\TemplateWeapOffset.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\Weap\TemplateWeapStructure.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Template.Layer.ixx">
+      <Filter>Core\Domain\3_Template</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Template.Object.Type.ixx">
+      <Filter>Core\Domain\3_Template\Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

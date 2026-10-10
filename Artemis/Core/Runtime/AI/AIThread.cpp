@@ -106,6 +106,8 @@ namespace Runtime::Thread
 
     auto AIThread::ExecuteTick() -> void
     {
+        m_Template.m_TemplateService.UpdateObjectTable();
+
         m_Tables.m_ObjectService.UpdateObjectTable();
         m_Tables.m_PlayerService.UpdatePlayerTable();
         m_Tables.m_InteractionService.UpdateInteractionTable();

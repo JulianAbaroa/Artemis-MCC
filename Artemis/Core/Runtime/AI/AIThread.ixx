@@ -4,6 +4,7 @@ import Service.Layer;
 import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
+import Template.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -23,11 +24,11 @@ export namespace Runtime::Thread
 
     public:
         AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
-            Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
+            Resolved::Layer& resolved, Template::Layer& templateLayer, Tables::Layer& tables, Relations::Layer& relations,
             Environment::Layer& environment, Egocentric::Layer& egocentric,
             Export::Layer& exportLayer, CameraStore& cameraStore) :
             m_Service(service), m_Platform(platform), m_Map(map),
-            m_Resolved(resolved), m_Tables(tables), m_Relations(relations),
+            m_Resolved(resolved), m_Template(templateLayer), m_Tables(tables), m_Relations(relations),
             m_Environment(environment), m_Egocentric(egocentric),
             m_Export(exportLayer), m_ViewerCameraStore(cameraStore) {}
         ~AIThread() = default;
@@ -40,6 +41,7 @@ export namespace Runtime::Thread
         Platform::Layer& m_Platform;
         Map::Layer& m_Map;
         Resolved::Layer& m_Resolved;
+        Template::Layer& m_Template;
         Tables::Layer& m_Tables;
         Relations::Layer& m_Relations;
         Environment::Layer& m_Environment;

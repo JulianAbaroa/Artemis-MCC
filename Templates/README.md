@@ -40,8 +40,8 @@ Fields named `Unknown XXX` come from the automatic analysis; their tooltip lists
 
        python TagTranspiler/GenerateTemplate.py [Templates/Object/unit.xml]
 
-   Writes under `Artemis/Core/Domain/3_Tables/Template/Type/`:
-   `<Prefix>/Template<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Template<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Tables.Template.Type.<Prefix>.ixx`, module `Tables.Template.Type`. The `Template` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
+   Writes under `Artemis/Core/Domain/3_Template/Object/Type/`:
+   `<Prefix>/Template<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Template<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Template.Object.Type.<Prefix>.ixx`, module `Template.Object.Type`. The `Template` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
 
 ## Notes
 

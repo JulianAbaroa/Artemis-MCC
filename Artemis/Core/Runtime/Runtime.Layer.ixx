@@ -4,6 +4,7 @@ import Service.Layer;
 import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
+import Template.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -28,12 +29,12 @@ export namespace Runtime
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
-            Resolved::Layer& resolved, Tables::Layer& tables,
+            Resolved::Layer& resolved, Template::Layer& templateLayer, Tables::Layer& tables,
             Relations::Layer& relations, Environment::Layer& environment,
             Egocentric::Layer& egocentric, Export::Layer& exportLayer,
             CameraStore& viewerCameraStore) :
             m_Main(service, platform),
-            m_AI(service, platform, map, resolved, tables, relations,
+            m_AI(service, platform, map, resolved, templateLayer, tables, relations,
                 environment, egocentric, exportLayer, viewerCameraStore),
             m_Input(service, platform) {}
         ~Layer() = default;
