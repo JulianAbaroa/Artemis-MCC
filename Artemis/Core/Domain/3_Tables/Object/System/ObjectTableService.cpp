@@ -30,12 +30,14 @@ namespace
 	using Teleport = Tables::Object::Type::Crate::Teleport::Teleport;
 	using Allowed = Tables::Object::Type::Crate::Teleport::Allowed;
 	using CrateKind = Tables::Object::Type::Crate::Kind;
-	using ActionState = Tables::Object::Type::Weapon::ActionState;
+	using WeaponAction = Tables::Object::Type::Weapon::WeaponAction;
+	using ChargeState = Tables::Object::Type::Weapon::ChargeState;
 	using LiftAngle = Tables::Object::Type::Crate::Lift::Angle;
 	using LiftForce = Tables::Object::Type::Crate::Lift::Force;
 	using Lift = Tables::Object::Type::Crate::Lift::Lift;
 	using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
 	using ZoomLevel = Tables::Object::Type::Biped::ZoomLevel;
+	using VerticalInput = Tables::Object::Type::Biped::VerticalInput;
 	using Boundary = Tables::Object::Type::Scenery::Boundary::Boundary;
 	using SceneryKind = Tables::Object::Type::Scenery::Kind;
 	using Shield = Tables::Object::Type::Crate::Shield::Shield;
@@ -48,6 +50,10 @@ namespace
 	using Tables::Object::Type::Constant::k_EntrySaltOffset;
 	using Tables::Object::Type::Constant::k_EntryKindOffset;
 	using Tables::Object::Type::Constant::k_EntryAddressOffset;
+
+	constexpr std::uint8_t k_TriggerHeldBit{ 0x02 };
+	constexpr std::uint8_t k_ZoomedBit{ 0x80 };
+	constexpr std::uint8_t k_ActionMask{ 0x60 };
 }
 
 namespace Tables::Object::System
@@ -301,15 +307,13 @@ namespace Tables::Object::System
 	{
 		BipedObject biped{};
 
-		biped.IsCrouched = reader.Read<std::uint8_t>(object.Address, Offset::Biped::VerticalState);
-		biped.IsGrounded = reader.Read<std::uint8_t>(object.Address, Offset::Biped::IsGrounded);
+		biped.MovementInput = reader.Read<Vec2>(object.Address, Offset::Biped::MovementInput);
+		biped.VerticalInput = reader.Read<VerticalInput>(object.Address, Offset::Biped::VerticalInput);
 		biped.IsAbilityActive = reader.Read<std::uint8_t>(object.Address, Offset::Biped::IsAbilityActive);
 		biped.ZoomLevel = reader.Read<ZoomLevel>(object.Address, Offset::Biped::ZoomLevel);
 
-		biped.MovementDirection = reader.Read<Vec2>(object.Address, Offset::Biped::MovementDirection);
 		biped.SurfaceNormal = reader.Read<Vec3>(object.Address, Offset::Biped::SurfaceNormal);
 		biped.GroundObjectHandle = reader.Read<std::uint32_t>(object.Address, Offset::Biped::GroundObjectHandle);
-		biped.MaterialIndex = reader.Read<std::uint16_t>(object.Address, Offset::Biped::MaterialIndex);
 
 		biped.DamagerBipedHandle = reader.Read<std::uint32_t>(object.Address, Offset::Biped::DamagerBipedHandle);
 		biped.DamagerPlayerHandle = reader.Read<std::uint32_t>(object.Address, Offset::Biped::DamagerPlayerHandle);
@@ -344,10 +348,16 @@ namespace Tables::Object::System
 		weapon.TotalAmmo = reader.Read<std::uint16_t>(object.Address, Offset::Weapon::TotalAmmo);
 		weapon.CurrentAmmo = reader.Read<std::uint16_t>(object.Address, Offset::Weapon::CurrentAmmo);
 
-		weapon.IsFiring = reader.Read<std::uint8_t>(object.Address, Offset::Weapon::IsFiring);
+		const std::uint8_t actionByte = reader.Read<std::uint8_t>(object.Address, Offset::Weapon::ActionState);
+		weapon.IsTriggerHeld = (actionByte & k_TriggerHeldBit) != 0;
+		weapon.IsZoomed = (actionByte & k_ZoomedBit) != 0;
+		weapon.Action = static_cast<WeaponAction>(actionByte & k_ActionMask);
+
 		weapon.IsReloading = reader.Read<std::uint8_t>(object.Address, Offset::Weapon::IsReloading);
-		weapon.ChargeProgress = reader.Read<std::uint8_t>(object.Address, Offset::Weapon::ChargeProgress);
-		weapon.ActionState = reader.Read<ActionState>(object.Address, Offset::Weapon::ActionState);
+		weapon.ChargeState = reader.Read<ChargeState>(object.Address, Offset::Weapon::ChargeState);
+
+		weapon.IsTracking = reader.Read<std::uint8_t>(object.Address, Offset::Weapon::IsTracking);
+		weapon.TrackedBipedHandle = reader.Read<std::uint32_t>(object.Address, Offset::Weapon::TrackedBipedHandle);
 
 		if (object.TagName == TagName::Objective::k_Flag)
 		{

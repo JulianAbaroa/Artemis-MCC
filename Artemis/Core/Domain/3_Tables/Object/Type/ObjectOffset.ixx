@@ -29,16 +29,30 @@ export namespace Tables::Object::Type::Offset
 
 	namespace Biped
 	{
-		constexpr std::uintptr_t VerticalState{ 0x1D8 };		// uint8.
-		constexpr std::uintptr_t IsAbilityActive{ 0x1D9 };		// uint8.
-		constexpr std::uintptr_t MovementDirection{ 0x260 };	// float (2).
-		constexpr std::uintptr_t ZoomLevel{ 0x383 };			// uint8.
-		constexpr std::uintptr_t GroundObjectHandle{ 0xAD0 };	// uint32.
-		constexpr std::uintptr_t MaterialIndex{ 0xAD4 };		// uint16.
-		constexpr std::uintptr_t IsGrounded{ 0xAD7 };			// uint8.
-		constexpr std::uintptr_t SurfaceNormal{ 0xAD8 };		// float (3).
-		constexpr std::uintptr_t DamagerBipedHandle{ 0x4E8 };	// uint32.
-		constexpr std::uintptr_t DamagerPlayerHandle{ 0x4EC };	// uint32.
+		// Jump and crouch keys held (uint8).
+		constexpr std::uintptr_t VerticalInput{ 0x1D8 };
+
+		// Armor ability state (uint8).
+		constexpr std::uintptr_t IsAbilityActive{ 0x1D9 };
+
+		// Movement keys held (float 2).
+		// note: The block repeats at 0x26C and 0x278. The first two copies follow the keys and the third keeps the last non-zero input after release.
+		constexpr std::uintptr_t MovementInput{ 0x260 };
+
+		// Zoom stage (uint8).
+		constexpr std::uintptr_t ZoomLevel{ 0x383 };
+
+		// Handle of the biped that last damaged this one (uint32).
+		constexpr std::uintptr_t DamagerBipedHandle{ 0x4E8 };
+
+		// Handle of the player that last damaged this one (uint32).
+		constexpr std::uintptr_t DamagerPlayerHandle{ 0x4EC };
+
+		// Handle of the living object under the biped (uint32).
+		constexpr std::uintptr_t GroundObjectHandle{ 0xAD0 };
+
+		// Normal of the last ground contact (float 3).
+		constexpr std::uintptr_t SurfaceNormal{ 0xAD8 };
 	}
 
 	namespace Vehicle
@@ -173,16 +187,35 @@ export namespace Tables::Object::Type::Offset
 
 	namespace Weapon
 	{
-		constexpr std::uintptr_t ActionState{ 0x1CA };			// uint8.
-		constexpr std::uintptr_t TotalHeat{ 0x1E0 };			// float (1).
-		constexpr std::uintptr_t TotalEnergy{ 0x1E4 };			// float (1).
-		constexpr std::uintptr_t IsTracking{ 0x1F8 };			// uint8.
-		constexpr std::uintptr_t TrackedBipedHandle{ 0x200 };	// uint32.
-		constexpr std::uintptr_t IsFiring{ 0x2A8 };				// uint8.
-		constexpr std::uintptr_t ChargeProgress{ 0x2AC };		// uint8.
-		constexpr std::uintptr_t IsReloading{ 0x2C0 };			// uint8.
-		constexpr std::uintptr_t TotalAmmo{ 0x2C6 };			// uint16.
-		constexpr std::uintptr_t CurrentAmmo{ 0x2CA };			// uint16.
+		// Action byte (uint8).
+		// note: Parts combine, for example 0x62 or 0x82. Bit 0x02 is the fire key, 0x80 is zoom and bits 0x60 hold the animation (0x20 reload, 0x60 melee).
+		constexpr std::uintptr_t ActionState{ 0x1CA };
+
+		// Heat from 0 to 1 (float 1).
+		constexpr std::uintptr_t TotalHeat{ 0x1E0 };
+
+		// Used energy fraction from 0 to 1 (float 1).
+		// note: It is the inverse of the energy left. A value of 1 means no energy.
+		constexpr std::uintptr_t TotalEnergy{ 0x1E4 };
+
+		// Lock-on state (uint8).
+		constexpr std::uintptr_t IsTracking{ 0x1F8 };
+
+		// Handle of the tracked biped (uint32).
+		constexpr std::uintptr_t TrackedBipedHandle{ 0x200 };
+
+		// Charge stage (uint8).
+		// note: The four bytes here are the stage, its inverse (seen only on the plasma launcher), an unknown byte and a projectile count that is not always set. Only the first is read.
+		constexpr std::uintptr_t ChargeState{ 0x2A8 };
+
+		// Reload in progress (uint8).
+		constexpr std::uintptr_t IsReloading{ 0x2C0 };
+
+		// Ammo carried (uint16).
+		constexpr std::uintptr_t TotalAmmo{ 0x2C6 };
+
+		// Ammo loaded in the magazine (uint16).
+		constexpr std::uintptr_t CurrentAmmo{ 0x2CA };
 
 		namespace Flag
 		{

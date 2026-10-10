@@ -3,15 +3,14 @@ import :Object;
 
 namespace Gui::Format::System
 {
-    auto ObjectFormater::ActionStateToString(ActionState state) -> const char*
+    auto ObjectFormater::WeaponActionToString(WeaponAction action) -> const char*
     {
-        switch (state)
+        switch (action)
         {
-        case ActionState::Idle:     return "Idle";
-        case ActionState::Firing:   return "Firing";
-        case ActionState::Meleeing: return "Meleeing";
-        case ActionState::Zoomed:   return "Zoomed";
-        default:                    return "Unknown";
+        case WeaponAction::None:      return "None";
+        case WeaponAction::Reloading: return "Reloading";
+        case WeaponAction::Meleeing:  return "Meleeing";
+        default:                      return "Unknown";
         }
     }
 
