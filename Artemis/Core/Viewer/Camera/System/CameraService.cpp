@@ -10,6 +10,7 @@ namespace
     namespace VecMath = Common::Math::System;
 
     using Key = Viewer::Camera::Type::Key;
+    using Mode = Viewer::Camera::Type::Mode;
     using Vec3 = Viewer::Camera::Type::Vec3;
 
     constexpr float k_LookSpeed{ 0.0025f };
@@ -53,7 +54,11 @@ namespace Viewer::Camera::System
         m_CameraStore.ConsumeMouseDelta(mouseX, mouseY);
 
         Vec3 targetPosition{}, targetForward{};
-        if (m_CameraStore.IsFollowEnabled() && followHandle &&
+        if (m_CameraStore.GetMode() == Mode::Game)
+        {
+            this->FollowSelf(tick);
+        }
+        else if (m_CameraStore.IsFollowEnabled() && followHandle &&
             this->FindFollowTarget(tick, *followHandle, targetPosition, targetForward))
         {
             this->AimAlong(targetForward);
@@ -87,6 +92,14 @@ namespace Viewer::Camera::System
         }
 
         m_Eye = eye;
+    }
+
+    auto CameraService::FollowSelf(const std::shared_ptr<const Tick>& tick) -> void
+    {
+        if (!tick || !tick->Self || !tick->Self->IsAlive) return;
+
+        m_Eye = tick->Self->Position;
+        this->AimAlong(tick->Self->Forward);
     }
 
     auto CameraService::FindFollowTarget(const std::shared_ptr<const Tick>& tick,

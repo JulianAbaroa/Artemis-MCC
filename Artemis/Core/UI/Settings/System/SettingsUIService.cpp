@@ -5,6 +5,7 @@ module;
 module UI.Settings.System;
 
 import Viewer.Options.Type;
+import Viewer.Camera.Type;
 import UI.Hotkey.Type;
 import std;
 
@@ -225,7 +226,8 @@ namespace UI::Settings::System
 
             if (!ImGui::TreeNodeEx(group.Label, flags)) continue;
 
-            this->DrawViewerGroup(group.Id);
+            if (group.Id == Group::Camera) this->DrawCameraControls();
+            else this->DrawViewerGroup(group.Id);
 
             ImGui::TreePop();
             ImGui::Spacing();
@@ -235,6 +237,58 @@ namespace UI::Settings::System
         {
             m_OptionsStore.ResetToDefaults();
         }
+    }
+
+    auto SettingsUIService::DrawCameraControls() -> void
+    {
+        using Mode = Viewer::Camera::Type::Mode;
+
+        constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
+
+        SectionBox box{};
+
+        bool isActive{ m_CameraStore.IsActive() };
+        if (ImGui::Checkbox("Viewer active", &isActive))
+        {
+            m_CameraStore.SetActive(isActive);
+            if (!isActive) m_CameraStore.ResetKeys();
+        }
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Shows or hides the Viewer. Same as the F4 hotkey.");
+        }
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Mode");
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Free camera: the Viewer takes the keyboard and the mouse and flies on its own.\n"
+                "Game camera: the game keeps its controls and the Viewer sits on your view.");
+        }
+
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
+        ImGui::PushItemWidth(200.0f);
+
+        const int current{ static_cast<int>(m_CameraStore.GetMode()) };
+        if (ImGui::BeginCombo("##ViewerMode", k_ModeLabels[current]))
+        {
+            for (int i{ 0 }; i < static_cast<int>(k_ModeLabels.size()); ++i)
+            {
+                const bool isSelected{ i == current };
+                if (ImGui::Selectable(k_ModeLabels[i], isSelected))
+                {
+                    m_CameraStore.SetMode(static_cast<Mode>(i));
+                }
+
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
     }
 
     auto SettingsUIService::DrawViewerGroup(Group group) -> void

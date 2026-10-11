@@ -7,6 +7,7 @@ export namespace Viewer::Options::Type
     // Section of the options window.
     enum class Group : std::uint8_t
     {
+        Camera,
         General,
         Players,
         Objects,
@@ -147,6 +148,7 @@ export namespace Viewer::Options::Type
 
     inline constexpr std::array<GroupInfo, k_GroupCount> k_Groups
     { {
+        { Group::Camera, "Camera", false },
         { Group::General, "General", false },
         { Group::Players, "Players", false },
         { Group::Objects, "Objects", false },

@@ -31,6 +31,7 @@ export namespace Viewer::Camera::System
         auto operator=(const CameraService&) -> CameraService& = delete;
 
         // Advances the camera and rebuilds the matrices.
+        // note: In Game mode the camera sits on the local player view and keeps its last pose while the player is dead.
         // param acceptInput: If false, the pressed keys are released and the camera does not fly.
         // param followHandle: Object to follow. Used only if the follow flag is set and the object is in the tick.
         // note: The first update after Deactivate places the camera on the local player.
@@ -86,6 +87,9 @@ export namespace Viewer::Camera::System
         auto SeatOnPlayer(const std::shared_ptr<const Tick>& tick) -> void;
 
         // return: False if the object is neither a player biped nor a collidable of the tick.
+        // Places the camera on the local player view. Keeps the last pose if there is no living local player.
+        auto FollowSelf(const std::shared_ptr<const Tick>& tick) -> void;
+
         auto FindFollowTarget(const std::shared_ptr<const Tick>& tick,
             std::uint32_t handle, Vec3& outPosition, Vec3& outForward) const -> bool;
 

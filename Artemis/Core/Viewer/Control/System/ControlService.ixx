@@ -11,8 +11,9 @@ import std;
 export namespace Viewer::Control::System
 {
     // Turns window messages and raw mouse movement into viewer actions.
-    // F4 toggles the free camera, F5 toggles follow and F6 toggles the labels.
-    // While the camera is active it takes the movement keys, the arrows (overlay mode and page) and the left click (pick).
+    // F4 toggles the viewer, TAB switches between the Free and the Game mode, F5 toggles follow and F6 toggles the labels.
+    // In Free mode the viewer takes the movement keys, the arrows (overlay mode and page), the left click (pick) and the mouse.
+    // In Game mode it takes nothing but its own hotkeys, so the game keeps its controls.
     class ControlService
     {
     private:

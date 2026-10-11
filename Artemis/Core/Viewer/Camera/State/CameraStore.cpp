@@ -12,6 +12,26 @@ namespace Viewer::Camera::State
         m_IsActive.store(value);
     }
 
+    auto CameraStore::GetMode() const -> Mode
+    {
+        return m_Mode.load(std::memory_order_relaxed);
+    }
+
+    auto CameraStore::SetMode(Mode mode) -> void
+    {
+        if (m_Mode.exchange(mode, std::memory_order_relaxed) == mode) return;
+
+        this->ResetKeys();
+
+        float dx = 0.0f, dy = 0.0f;
+        this->ConsumeMouseDelta(dx, dy);
+    }
+
+    auto CameraStore::ToggleMode() -> void
+    {
+        this->SetMode(this->GetMode() == Mode::Free ? Mode::Game : Mode::Free);
+    }
+
     auto CameraStore::IsFollowEnabled() const -> bool
     {
         return m_IsFollowEnabled.load(std::memory_order_relaxed);

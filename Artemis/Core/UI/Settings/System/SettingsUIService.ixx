@@ -6,6 +6,7 @@ import Service.Logs.System;
 import Service.Preferences.System;
 import Viewer.Options.Type;
 import Viewer.Options.State;
+import Viewer.Camera.State;
 import UI.Hotkey.State;
 import std;
 
@@ -22,6 +23,7 @@ export namespace UI::Settings::System
 
         using Group = Viewer::Options::Type::Group;
         using OptionsStore = Viewer::Options::State::OptionsStore;
+        using CameraStore = Viewer::Camera::State::CameraStore;
 
         using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
 
@@ -30,10 +32,12 @@ export namespace UI::Settings::System
     public:
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,
             LogsService& logsService, HotkeyUIStore& hotkeyStore,
-            OptionsStore& optionsStore, PreferencesService& preferencesService) :
+            OptionsStore& optionsStore, PreferencesService& preferencesService,
+            CameraStore& cameraStore) :
             m_SettingsStore(settingsStore), m_SettingsService(settingsService),
             m_LogsService(logsService), m_HotkeyStore(hotkeyStore),
-            m_OptionsStore(optionsStore), m_PreferencesService(preferencesService) {}
+            m_OptionsStore(optionsStore), m_PreferencesService(preferencesService),
+            m_CameraStore(cameraStore) {}
         ~SettingsUIService() = default;
 
         SettingsUIService(const SettingsUIService&) = delete;
@@ -49,6 +53,7 @@ export namespace UI::Settings::System
         HotkeyUIStore& m_HotkeyStore;
         OptionsStore& m_OptionsStore;
         PreferencesService& m_PreferencesService;
+        CameraStore& m_CameraStore;
 
         // ImGui time until which the save button shows its confirmation.
         double m_SaveFeedbackUntil{ 0.0 };
@@ -65,6 +70,10 @@ export namespace UI::Settings::System
 
         // Draws the group of every viewer option and the reset button.
         auto DrawViewerOptions() -> void;
+
+        // Draws the camera state: whether the viewer is active and its mode.
+        // note: These are runtime states and are not saved with the preferences.
+        auto DrawCameraControls() -> void;
 
         // Draws the flags and the scalars of a viewer option group.
         auto DrawViewerGroup(Group group) -> void;

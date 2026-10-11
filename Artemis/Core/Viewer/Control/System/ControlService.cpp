@@ -55,6 +55,9 @@ namespace Viewer::Control::System
 
         if (m_SettingsStore.IsMenuVisible() || !m_CameraStore.IsActive()) return false;
 
+        // In Game mode the game keeps every key.
+        if (m_CameraStore.GetMode() == Viewer::Camera::Type::Mode::Game) return false;
+
         if (isKeyDown)
         {
             switch (message.WParam)
@@ -105,6 +108,15 @@ namespace Viewer::Control::System
             return true;
         }
 
+        case VK_TAB:
+        {
+            // Not a viewer key while the viewer is off or the menu uses it to move between widgets.
+            if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible()) return false;
+
+            if (!IsRepeat(message.LParam)) m_CameraStore.ToggleMode();
+            return true;
+        }
+
         case VK_F5:
         {
             if (!IsRepeat(message.LParam))
@@ -131,6 +143,7 @@ namespace Viewer::Control::System
     auto ControlService::HandleMouse(RawMouse& mouse) -> bool
     {
         if (m_SettingsStore.IsMenuVisible() || !m_CameraStore.IsActive()) return false;
+        if (m_CameraStore.GetMode() == Viewer::Camera::Type::Mode::Game) return false;
 
         m_CameraStore.AccumulateMouseDelta(
             static_cast<float>(mouse.DeltaX), static_cast<float>(mouse.DeltaY));
