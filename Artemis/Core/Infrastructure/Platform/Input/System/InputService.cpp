@@ -6,8 +6,14 @@ module Platform.Input.System;
 
 namespace Platform::Input::System
 {
-    auto InputService::OnWindowMessage(WindowMessageHandler handler) -> void
+    auto InputService::OnWindowMessage(WindowMessageHandler handler, bool runFirst) -> void
     {
+        if (runFirst)
+        {
+            m_OnWindowMessage.insert(m_OnWindowMessage.begin(), std::move(handler));
+            return;
+        }
+
         m_OnWindowMessage.push_back(std::move(handler));
     }
 

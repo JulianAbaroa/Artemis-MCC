@@ -82,9 +82,13 @@ export namespace UI
                 this->Shutdown();
             });
 
-            platform.m_InputService.OnWindowMessage([this, &gui](WindowMessage& message) {
-                return m_HotkeyUIService.HandleMessage(message) ||
-                    gui.m_WndProcGuiService.HandleMessage(message);
+            // The hotkeys run before every other handler, so the viewer cannot swallow them.
+            platform.m_InputService.OnWindowMessage([this](WindowMessage& message) {
+                return m_HotkeyUIService.HandleMessage(message);
+            }, true);
+
+            platform.m_InputService.OnWindowMessage([&gui](WindowMessage& message) {
+                return gui.m_WndProcGuiService.HandleMessage(message);
             });
         }
         ~Layer() = default;

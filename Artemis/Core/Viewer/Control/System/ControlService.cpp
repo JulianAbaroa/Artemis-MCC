@@ -130,7 +130,7 @@ namespace Viewer::Control::System
 
     auto ControlService::HandleMouse(RawMouse& mouse) -> bool
     {
-        if (!m_CameraStore.IsActive()) return false;
+        if (m_SettingsStore.IsMenuVisible() || !m_CameraStore.IsActive()) return false;
 
         m_CameraStore.AccumulateMouseDelta(
             static_cast<float>(mouse.DeltaX), static_cast<float>(mouse.DeltaY));

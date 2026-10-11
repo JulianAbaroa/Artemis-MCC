@@ -33,7 +33,8 @@ export namespace Platform::Input::System
         ~InputService() = default;
 
         // Registers a handler for window messages.
-        auto OnWindowMessage(WindowMessageHandler handler) -> void;
+        // param runFirst: True to call it before the handlers registered earlier, so they cannot swallow its messages.
+        auto OnWindowMessage(WindowMessageHandler handler, bool runFirst = false) -> void;
 
         // Registers a handler for raw mouse movement.
         auto OnRawMouse(RawMouseHandler handler) -> void;

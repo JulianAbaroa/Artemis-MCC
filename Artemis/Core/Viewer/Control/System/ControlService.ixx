@@ -39,7 +39,7 @@ export namespace Viewer::Control::System
         // return: True if the message was consumed. Nothing is consumed while the menu is visible.
         auto HandleMessage(WindowMessage& message) -> bool;
 
-        // return: True if the camera is active and took the movement.
+        // return: True if the camera is active and took the movement. Nothing is consumed while the menu is visible.
         auto HandleMouse(RawMouse& mouse) -> bool;
 
     private:
