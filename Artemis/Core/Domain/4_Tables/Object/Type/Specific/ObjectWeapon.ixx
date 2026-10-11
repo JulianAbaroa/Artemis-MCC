@@ -68,5 +68,12 @@ export namespace Tables::Object::Type::Weapon
         // Team of the flag or the bomb.
         // note: Only read for those two weapons.
         std::optional<Team> Team{};
+
+        // TODO: Fields of the vehicle weapons that are not read yet (the old Banshee offsets were removed).
+        // - IsFiring: the float at 0x250 of the weapon ramps 0 -> 0.5 -> 1.0 -> 0.5 -> 0 while the
+        //   weapon fires (the Banshee bomb gives a single 0.5 -> 0 pulse). Note that the horn of the
+        //   Warthog is a weapon too and gives the same pulse. Analog Trigger (0x1CC) is the other candidate.
+        // - IsCannonDepleted: probably Total Energy (0x1E4) or Total Heat (0x1E0) of the cannon.
+        // - HasActiveBomb: not found. Maybe a live projectile owned by the bomb weapon.
     };
 }

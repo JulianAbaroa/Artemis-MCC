@@ -59,6 +59,14 @@ namespace Environment::Collidable::System
         ctx.Coll = m_WorldStore.GetCollForObject(object.TagName, m_DefinitionsStore);
 
         const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
+
+        // Objects without a render model (like the invisible spawn points) reserve the bone block but never
+        // write it, so their matrices are not valid. They are placed like a rigid object instead.
+        if (bones != nullptr && !std::ranges::any_of(bones->Matrices, Tables::Object::Type::BoneMatrix::IsBoneMatrixValid))
+        {
+            bones = nullptr;
+        }
+
         const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
 
         if (ctx.Coll)

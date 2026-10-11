@@ -8,6 +8,7 @@ import :Biped;
 import :Crate;
 import :Scenery;
 import :Projectile;
+import :Multiplayer;
 import Common.Math.Type;
 import std;
 
@@ -22,6 +23,7 @@ namespace
 	using Crate = Tables::Object::Type::Crate::Crate;
 	using Scenery = Tables::Object::Type::Scenery::Scenery;
 	using Projectile = Tables::Object::Type::Projectile::Projectile;
+	using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
 
 	using Specific = std::variant<std::monostate, Equipment, Vehicle,
 		Weapon, Biped, Crate, Scenery, Projectile>;
@@ -47,6 +49,9 @@ export namespace Tables::Object::Type::Alive
 		Vec3 Position{};
 		// note: object origin (offset 0x44), local to the parent if parented.
 		Vec3 Origin{};
+		// note: origin resolved to world space through the parent chain.
+		// Zone shapes (Top/Bottom) are measured from here, not from Position.
+		Vec3 WorldOrigin{};
 		Vec3 Forward{};
 		Vec3 Up{};
 
@@ -57,6 +62,9 @@ export namespace Tables::Object::Type::Alive
 		float DamageReceived{};
 
 		::Profile Profile{};
+
+		// note: Only objects that have the multiplayer block.
+		std::optional<::Multiplayer> Multiplayer{};
 		Specific Specific{};
 	};
 }

@@ -170,6 +170,22 @@ namespace Viewer::Hud::System
             }
         }
 
+        if (options.IsEnabled(Flag::FixtureObjectives))
+        {
+            const ImU32 accent = ToImColor(k_Health);
+
+            for (const auto& zone : fixtures.ObjectiveZones)
+            {
+                std::vector<LabelRow> rows{};
+                rows.push_back(Row("OBJECTIVE ZONE", accent));
+                rows.push_back(Row(ShortTagName(zone.TagName)));
+                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(zone.Team)));
+                rows.push_back(Row(ZoneText(zone.ZoneShape), k_MutedColor));
+
+                canvas.Add(zone.Position, std::move(rows), accent, k_FixturePriority, zone.Handle);
+            }
+        }
+
         if (options.IsEnabled(Flag::FixtureDestructibles))
         {
             const ImU32 accent = ToImColor(k_Destructible);
@@ -200,6 +216,17 @@ namespace Viewer::Hud::System
                 rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(spawn.Team)));
 
                 canvas.Add(spawn.Position, std::move(rows), accent, k_FixturePriority, spawn.Handle);
+            }
+
+            for (const auto& boundary : fixtures.Boundaries)
+            {
+                std::vector<LabelRow> rows{};
+                rows.push_back(Row("BOUNDARY", accent));
+                rows.push_back(Row(FixturesFormater::BoundaryKindToString(boundary.Kind)));
+                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(boundary.Team)));
+                rows.push_back(Row(ZoneText(boundary.ZoneShape), k_MutedColor));
+
+                canvas.Add(boundary.Position, std::move(rows), accent, k_FixturePriority, boundary.Handle);
             }
         }
     }

@@ -199,7 +199,6 @@ namespace Relations::Classifier::System
             return Role::ObjectiveSpawn;
         }
 
-        // TODO: Add objective zone to other systems.
         if (TagName::Objective::IsObjectiveZone(tag))
         {
             return Role::ObjectiveZone;

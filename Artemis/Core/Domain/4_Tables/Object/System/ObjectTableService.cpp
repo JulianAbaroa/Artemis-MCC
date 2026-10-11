@@ -9,12 +9,11 @@ import Template.Object.Type;
 
 namespace
 {
-	namespace Offset = Tables::Object::Type::Offset;
 	namespace TagName = Common::Tag::Type;
+    namespace ObjeOffset = Template::Object::Type::Obje::Offset;
 
 	using Vec2 = Common::Math::Type::Vec2;
 	using Vec3 = Common::Math::Type::Vec3;
-	using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 	using ShapeKind = Common::ZoneShape::Type::Kind;
 	using Team = Common::Team::Type::Team;
 	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
@@ -46,6 +45,34 @@ namespace
 	using Shield = Tables::Object::Type::Crate::Shield::Shield;
 	using SpawnData = Tables::Object::Type::Scenery::Spawn::Spawn;
 
+	// note: The origin of a parented object is local to its parent, so it is carried
+	// through the parent chain. Halo frames are forward, left (up x forward) and up.
+	template <typename Raws>
+	auto ResolveWorldOrigin(const Raws& raws, const RawObject& datum, int depth = 0) -> Vec3
+	{
+		const Vec3 local = datum.Read<Vec3>(ObjeOffset::k_Origin);
+		const std::uint32_t parentHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle);
+
+		if (parentHandle == 0xFFFFFFFFu || depth >= 8) return local;
+
+		auto parentIt = raws.find(parentHandle);
+		if (parentIt == raws.end()) return local;
+
+		const RawObject& parent = parentIt->second;
+		const Vec3 parentOrigin = ResolveWorldOrigin(raws, parent, depth + 1);
+		const Vec3 forward = parent.Read<Vec3>(ObjeOffset::k_Forward);
+		const Vec3 up = parent.Read<Vec3>(ObjeOffset::k_Up);
+		const Vec3 left{
+			up.Y * forward.Z - up.Z * forward.Y,
+			up.Z * forward.X - up.X * forward.Z,
+			up.X * forward.Y - up.Y * forward.X };
+
+		return Vec3{
+			parentOrigin.X + forward.X * local.X + left.X * local.Y + up.X * local.Z,
+			parentOrigin.Y + forward.Y * local.X + left.Y * local.Y + up.Y * local.Z,
+			parentOrigin.Z + forward.Z * local.X + left.Z * local.Y + up.Z * local.Z };
+	}
+
 	using Tables::Object::Type::Constant::k_DamageSectionStride;
 	using Tables::Object::Type::Constant::k_RegionBlockMaxSize;
 
@@ -57,6 +84,8 @@ namespace
 	namespace WeapOffset = Template::Object::Type::Weap::Offset;
 	namespace ProjOffset = Template::Object::Type::Proj::Offset;
 	namespace EqipOffset = Template::Object::Type::Eqip::Offset;
+	namespace SeatBlock = Template::Object::Type::Block::Seat;
+	namespace MultiplayerBlock = Template::Object::Type::Block::Multiplayer;
 
 	// Fields that are not confirmed in the templates yet. They keep the name they had before the migration.
 	constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
@@ -72,6 +101,7 @@ namespace
 	constexpr std::uint8_t k_TriggerHeldBit{ 0x02 };
 	constexpr std::uint8_t k_ZoomedBit{ 0x80 };
 	constexpr std::uint8_t k_ActionMask{ 0x60 };
+
 }
 
 namespace Tables::Object::System
@@ -140,6 +170,7 @@ namespace Tables::Object::System
 				object.Address = it->second.Address;
 
 				this->UpdateObjectData(it->second, object);
+				object.WorldOrigin = ResolveWorldOrigin(snapshot->RawObjects, it->second);
 			});
 
 		for (std::uint32_t handle : deadHandles)
@@ -167,6 +198,8 @@ namespace Tables::Object::System
 		object.DamageReceived = datum.Read<float>(ObjeOffset::k_DamageReceived);
 
 		object.HlmtVariant = datum.Read<std::uint16_t>(ObjeOffset::k_ModelVariant);
+
+		object.Multiplayer = this->ReadMultiplayer(datum);
 
 		this->ReadBoneMatrixTable(datum, object);
 		this->ReadDamageSectionTable(datum, object);
@@ -219,6 +252,22 @@ namespace Tables::Object::System
 			object.Specific = std::monostate{};
 			break;
 		}
+	}
+
+	auto ObjectTableService::ReadMultiplayer(const RawObject& datum) -> std::optional<Multiplayer>
+	{
+		if (!datum.FindBlock(MultiplayerBlock::k_Descriptor)) return std::nullopt;
+
+		Multiplayer multiplayer{};
+
+		multiplayer.Shape.Radius = datum.ReadBlock<float>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Radius);
+		multiplayer.Shape.Length = datum.ReadBlock<float>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Length);
+		multiplayer.Shape.Top = datum.ReadBlock<float>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Top);
+		multiplayer.Shape.Bottom = datum.ReadBlock<float>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Bottom);
+		multiplayer.Shape.Kind = datum.ReadBlock<ShapeKind>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_ShapeKind);
+		multiplayer.Team = datum.ReadBlock<Team>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Team);
+
+		return multiplayer;
 	}
 
 	auto ObjectTableService::ResolveBonesHeader(const RawObject& datum) -> std::optional<BonesHeader>
@@ -339,6 +388,18 @@ namespace Tables::Object::System
 		vehicle.Kind = Tables::Object::Type::Vehicle::ResolveVehicleType(object.TagName);
 		vehicle.SeatLayout = Tables::Object::Type::Vehicle::GetSeatLayout(vehicle.Kind);
 
+		if (const auto seats = datum.FindBlock(SeatBlock::k_Descriptor))
+		{
+			const std::size_t seatCount = seats->Size / SeatBlock::k_ElementSize;
+
+			vehicle.SeatAvailability.reserve(seatCount);
+			for (std::size_t seat{ 0 }; seat < seatCount; ++seat)
+			{
+				vehicle.SeatAvailability.push_back(datum.ReadBlock<float>(
+					SeatBlock::k_Descriptor, (seat * SeatBlock::k_ElementSize) + SeatBlock::k_Target));
+			}
+		}
+
 		if (TagName::Vehicle::HasBoost(object.TagName))
 		{
 			vehicle.BoostThrottle = datum.Read<float>(k_VehicleBoostThrottle);
@@ -369,13 +430,10 @@ namespace Tables::Object::System
 		weapon.IsTracking = datum.Read<std::uint8_t>(WeapOffset::k_IsTracking);
 		weapon.TrackedBipedHandle = datum.Read<std::uint32_t>(WeapOffset::k_TrackedBipedHandle);
 
-		if (object.TagName == TagName::Objective::k_Flag)
+		if ((object.TagName == TagName::Objective::k_Flag ||
+			object.TagName == TagName::Objective::k_Bomb) && object.Multiplayer)
 		{
-			weapon.Team = datum.Read<Team>(Offset::Weapon::Flag::Team);
-		}
-		else if (object.TagName == TagName::Objective::k_Bomb)
-		{
-			weapon.Team = datum.Read<Team>(Offset::Weapon::Bomb::Team);
+			weapon.Team = object.Multiplayer->Team;
 		}
 
 		object.Specific = weapon;
@@ -423,16 +481,15 @@ namespace Tables::Object::System
 		crate.Base = object.Address;
 		crate.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
-		if (auto offsets = Tables::Object::Type::Crate::ResolveZoneOffsets(crate.Kind))
+		if (Tables::Object::Type::Crate::HasZone(crate.Kind))
 		{
 			Zone zone{};
 
-			zone.Shape.Radius = datum.Read<float>(offsets->Radius);
-			zone.Shape.Length = datum.Read<float>(offsets->Length);
-			zone.Shape.Top = datum.Read<float>(offsets->Top);
-			zone.Shape.Bottom = datum.Read<float>(offsets->Bottom);
-			zone.Shape.Kind = datum.Read<ShapeKind>(offsets->ZoneType);
-			zone.Team = datum.Read<Team>(offsets->Team);
+			if (object.Multiplayer)
+			{
+				zone.Shape = object.Multiplayer->Shape;
+				zone.Team = object.Multiplayer->Team;
+			}
 
 			crate.Zone = zone;
 		}
@@ -443,13 +500,9 @@ namespace Tables::Object::System
 		{
 			Teleport teleport{};
 
-			teleport.ZoneShape.Radius = datum.Read<float>(Offset::Crate::Teleport::Radius);
-			teleport.ZoneShape.Length = datum.Read<float>(Offset::Crate::Teleport::Length);
-			teleport.ZoneShape.Top = datum.Read<float>(Offset::Crate::Teleport::Top);
-			teleport.ZoneShape.Bottom = datum.Read<float>(Offset::Crate::Teleport::Bottom);
-			teleport.ZoneShape.Kind = datum.Read<ShapeKind>(Offset::Crate::Teleport::ShapeKind);
-			teleport.Channel = datum.Read<std::uint8_t>(Offset::Crate::Teleport::Channel);
-			teleport.Allowed = datum.Read<Allowed>(Offset::Crate::Teleport::Allowed);
+			if (object.Multiplayer) teleport.ZoneShape = object.Multiplayer->Shape;
+			teleport.Channel = datum.ReadBlock<std::uint8_t>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Channel);
+			teleport.Allowed = datum.ReadBlock<Allowed>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Allowed);
 
 			crate.Teleport = teleport;
 		}
@@ -535,7 +588,7 @@ namespace Tables::Object::System
 			}
 			else
 			{
-				spawn.Team = datum.Read<Team>(Offset::Scenery::SpawnPoint::Team);
+				if (object.Multiplayer) spawn.Team = object.Multiplayer->Team;
 			}
 
 			scenery.Spawn = spawn;
@@ -545,12 +598,11 @@ namespace Tables::Object::System
 		{
 			Boundary boundary{};
 
-			boundary.Shape.Radius = datum.Read<float>(Offset::Scenery::Boundary::Radius);
-			boundary.Shape.Length = datum.Read<float>(Offset::Scenery::Boundary::Length);
-			boundary.Shape.Top = datum.Read<float>(Offset::Scenery::Boundary::Top);
-			boundary.Shape.Bottom = datum.Read<float>(Offset::Scenery::Boundary::Bottom);
-			boundary.Shape.Kind = datum.Read<ShapeKind>(Offset::Scenery::Boundary::ShapeKind);
-			boundary.Team = datum.Read<Team>(Offset::Scenery::Boundary::Team);
+			if (object.Multiplayer)
+			{
+				boundary.Shape = object.Multiplayer->Shape;
+				boundary.Team = object.Multiplayer->Team;
+			}
 
 			scenery.Boundary = boundary;
 		}

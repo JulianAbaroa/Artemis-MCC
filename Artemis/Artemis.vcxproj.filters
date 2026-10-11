@@ -1514,7 +1514,7 @@
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectAlive.ixx">
       <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectOffset.ixx">
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectMultiplayer.ixx">
       <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx">
@@ -3258,6 +3258,9 @@
       <Filter>Core\Domain\3_Template\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Weap.ixx">
+      <Filter>Core\Domain\3_Template\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateBlock.ixx">
       <Filter>Core\Domain\3_Template\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateConstant.ixx">

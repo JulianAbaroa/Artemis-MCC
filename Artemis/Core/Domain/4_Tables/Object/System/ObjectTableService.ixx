@@ -21,6 +21,7 @@ export namespace Tables::Object::System
 		using Snapshot = Template::Object::Type::Raw::Snapshot;
 		using AliveObject = Tables::Object::Type::Alive::Object;
 		using Profile = Tables::Object::Type::Profile::Profile;
+		using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
 		using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
 		using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
 		using BonesHeader = Tables::Object::Type::BoneMatrix::BonesHeader;
@@ -82,6 +83,10 @@ export namespace Tables::Object::System
 		// Reads the block with the damage state of each region.
 		// note: Skipped when the header has no block or its size is not plausible.
 		auto ReadRegionBlock(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void;
+
+		// Reads the zone shape and the team from the multiplayer block (0x190).
+		// return: The data, or nothing if the object does not have the block.
+		auto ReadMultiplayer(const RawObject& datum) -> std::optional<Multiplayer>;
 
 		auto UpdateBiped(const RawObject& datum, AliveObject& object) -> void;
 		auto UpdateVehicle(const RawObject& datum, AliveObject& object) -> void;

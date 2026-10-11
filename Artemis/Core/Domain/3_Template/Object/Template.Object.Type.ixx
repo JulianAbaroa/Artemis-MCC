@@ -1,5 +1,6 @@
 export module Template.Object.Type;
 
+export import :Block;
 export import :Constant;
 export import :Raw;
 export import :Anim;

@@ -58,4 +58,16 @@ namespace Gui::Format::System
         default:                       return "Unknown";
         }
     }
+
+    auto FixturesFormater::BoundaryKindToString(BoundaryKind kind) -> const char*
+    {
+        switch (kind)
+        {
+        case BoundaryKind::Safe:     return "Safe";
+        case BoundaryKind::SoftSafe: return "Soft Safe";
+        case BoundaryKind::Kill:     return "Kill";
+        case BoundaryKind::SoftKill: return "Soft Kill";
+        default:                     return "Unknown";
+        }
+    }
 }

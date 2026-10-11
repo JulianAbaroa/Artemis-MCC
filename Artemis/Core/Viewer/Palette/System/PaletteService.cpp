@@ -67,6 +67,9 @@ namespace Viewer::Palette::System
 
             addByTeam(fixtures.Spawns);
             addByTeam(fixtures.ObjectiveSpawns);
+            addByTeam(fixtures.ObjectiveZones);
+            addByTeam(fixtures.Boundaries);
+            addByTeam(fixtures.Zones);
             addByTeam(fixtures.Objectives);
         }
 

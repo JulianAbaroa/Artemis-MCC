@@ -16,6 +16,8 @@ namespace Gui::Format::System
         case Role::ObjectiveSpawn:       return "Objective Spawn";
         case Role::ObjectivePickup:      return "Objective Pickup";
         case Role::ObjectiveEquipped:    return "Objective Equipped";
+        case Role::ObjectiveZone:        return "Objective Zone";
+        case Role::Boundary:             return "Boundary";
         case Role::Spawn:                return "Spawn";
         case Role::Projectile:           return "Projectile";
         case Role::AmmoPickup:           return "AmmoPickup";

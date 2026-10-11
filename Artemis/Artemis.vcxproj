@@ -438,6 +438,7 @@
     <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Unit.ixx" />
     <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Vehi.ixx" />
     <ClCompile Include="Core\Domain\3_Template\Object\Type\Template.Object.Type.Weap.ixx" />
+    <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateBlock.ixx" />
     <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateConstant.ixx" />
     <ClCompile Include="Core\Domain\3_Template\Object\Type\TemplateRaw.ixx" />
     <ClCompile Include="Core\Domain\3_Template\Object\Type\Unit\TemplateUnitOffset.ixx" />
@@ -727,7 +728,7 @@
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectOffset.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectMultiplayer.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectSize.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectBiped.ixx" />

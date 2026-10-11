@@ -1,6 +1,5 @@
 export module Tables.Object.Type:Vehicle;
 
-import :Offset;
 import Common.Math.Type;
 import Common.Tag.Type;
 import Resolved.Definitions.Type;
@@ -37,23 +36,22 @@ export namespace Tables::Object::Type::Vehicle
 
 	namespace Seat
 	{
-		// Inside the vehicle object in game's memory, there are specific offsets which
-		// holds information about the state of the seats. I haven't confirmed which specific
-		// state holds, probably related to animations and-or more things.
+		// The vehicle datum has a variable block (descriptor 0x560, see Template.Object.Type:Block) with
+		// one element of 12 bytes per seat of the vehicle tag: a pair of floats and one static flag '3'.
+		// The first float is a smoothed value that ramps towards the second one (the target) every tick.
+		// The target is 1.0f when the seat is free and 0.0f when the seat is occupied.
+		// The elements follow the order of the seats in the tag, so a seat is found by its index.
 		//
-		// Each seat of the vehicle has a pair of floats and one static flag '0x30'.
-		// Both floats are 1.0f when the seat is free, and 0.0f when the seat is occupied.
-		// And since the seats are written one after another, we can know exactly which
-		// seat is occupied at any given moment.
+		// The 'hijacker' seats are written after the normal seats, following the same structure and
+		// behaviour. So, we can know whenever a specific seat is being hijacked by another player.
+		// We don't know specificly which player, but with other data we get from other sides of this
+		// project, we might be able to do this connection.
 		//
-		// Not only that, but there are the 'hijacker' seats, which are written after the
-		// normal seats, following the same structure and behaviour. So, we can know whenever
-		// a specific seat is being hijacked by another player. We don't know specificly
-		// which player, but with other data we get from other sides of this project, we
-		// might be able to do this connection.
+		// note: The index of each seat was derived from the offsets that were used before the block was
+		// found. The Grenadier of the Falcon had inconsistent offsets, its indices are assumed.
 		struct Seat
 		{
-			std::uintptr_t Offset{};
+			std::size_t Index{};
 			const char* Name{};
 			bool IsHijackable{};
 			bool IsHijackerSlot{};
@@ -77,17 +75,6 @@ export namespace Tables::Object::Type::Vehicle
 		};
 	}
 
-	namespace Offset = Tables::Object::Type::Offset;
-	namespace Banshee = Offset::Vehicle::Banshee;
-	namespace Falcon = Offset::Vehicle::Falcon;
-	namespace Ghost = Offset::Vehicle::Ghost;
-	namespace Mongoose = Offset::Vehicle::Mongoose;
-	namespace Revenant = Offset::Vehicle::Revenant;
-	namespace Scorpion = Offset::Vehicle::Scorpion;
-	namespace ShadeTurret =	Offset::Vehicle::ShadeTurret;
-	namespace Warthog =	Offset::Vehicle::Warthog;
-	namespace Wraith = Offset::Vehicle::Wraith;
-
 	// TODO: Add the rest of the vehicles.
 	inline const std::vector<Seat::Layout> Layouts =
 	{
@@ -95,170 +82,170 @@ export namespace Tables::Object::Type::Vehicle
 			Kind::Banshee,
 			{
 				// Seat.
-				{ Banshee::DriverSeat,					"Driver",				true, false },
+				{ 0, "Driver",                true, false },
 
 				// Hijackers.
-				{ Banshee::DriverRightHijacker,			"RightHijacker",		false, true },
-				{ Banshee::DriverLeftHijacker,			"LeftHijacker",			false, true },
+				{ 1, "RightHijacker",         false, true },
+				{ 2, "LeftHijacker",          false, true },
 			}
 		},
 		{
 			Kind::Falcon,
 			{
 				// Seats.
-				{ Falcon::DriverSeat,					"Driver",				true, false },
-				{ Falcon::FrontRightPassengerSeat,		"FrontRightPassenger",	false, false },
-				{ Falcon::FrontLeftPassengerSeat,		"FrontLeftPassenger",	false, false },
-				{ Falcon::BackRightPassengerSeat,		"BackRightPassenger",	false, false },
-				{ Falcon::BackLeftPassengerSeat,		"BackLeftPassenger",	false, false },
-				{ Falcon::BackMiddlePassengerSeat,		"BackMiddlePassenger",	false, false },
+				{ 0, "Driver",                true, false },
+				{ 2, "FrontRightPassenger",   false, false },
+				{ 1, "FrontLeftPassenger",    false, false },
+				{ 4, "BackRightPassenger",    false, false },
+				{ 3, "BackLeftPassenger",     false, false },
+				{ 5, "BackMiddlePassenger",   false, false },
 
 				// Hijackers.
-				{ Falcon::RightDriverHijacker,			"DriverRightHijacker",	false, true },
-				{ Falcon::LeftDriverHijacker,			"DriverLeftHijacker",	false, true },
+				{ 7, "DriverRightHijacker",   false, true },
+				{ 6, "DriverLeftHijacker",    false, true },
 			}
 		},
 		{
 			Kind::FalconTurret,
 			{
 				// Gunners.
-				{ Falcon::Turret::GunnerSeat,			"Gunner",				true, false },
+				{ 0, "Gunner",                true, false },
 
 				// Hijackers.
-				{ Falcon::Turret::GunnerHijacker,		"GunnerHijacker",		false, true },
+				{ 1, "GunnerHijacker",        false, true },
 			}
 		},
 		{
 			Kind::FalconGrenadeTurret,
 			{
 				// Gunners.
-				{ Falcon::Grenadier::GrenadierSeat,		"Gunner",				true, false },
+				{ 0, "Gunner",                true, false },
 
 				// Hijackers.
-				{ Falcon::Grenadier::GrenadierHijacker, "GunnerHijacker",		false, true },
+				{ 1, "GunnerHijacker",        false, true },
 			}
 		},
 		{
 			Kind::Ghost,
 			{
 				// Seat.
-				{ Ghost::DriverSeat,					"Driver",				true, false },
+				{ 0, "Driver",                true, false },
 
 				// Hijackers.
-				{ Ghost::FrontRightDriverHijacker,		"FrontRightHijacker",	false, true },
-				{ Ghost::FrontLeftDriverHijacker,		"FrontLeftHijacker",	false, true },
-				{ Ghost::BackDriverHijacker,			"BackHijacker",			false, true },
+				{ 2, "FrontRightHijacker",    false, true },
+				{ 3, "FrontLeftHijacker",     false, true },
+				{ 1, "BackHijacker",          false, true },
 			}
 		},
 		{
 			Kind::Mongoose,
 			{
 				// Seats.
-				{ Mongoose::DriverSeat,					"Driver",				true, false },
-				{ Mongoose::PassengerSeat,				"Passenger",			false, false },
+				{ 0, "Driver",                true, false },
+				{ 1, "Passenger",             false, false },
 
 				// Hijackers.
-				{ Mongoose::DriverHijacker,				"DriverHijacker",		false, true },
-				{ Mongoose::PassengerHijacker,			"PassengerHijacker",	false, true },
+				{ 2, "DriverHijacker",        false, true },
+				{ 3, "PassengerHijacker",     false, true },
 			}
 		},
 		{
 			Kind::Revenant,
 			{
 				// Seats.
-				{ Revenant::DriverSeat,					"Driver",				true, false },
-				{ Revenant::PassengerSeat,				"Passenger",			true, false },
+				{ 0, "Driver",                true, false },
+				{ 1, "Passenger",             true, false },
 
 				// Hijackers.
-				{ Revenant::DriverHijacker,				"DriverHijacker",		false, true },
-				{ Revenant::PassengerHijacker,			"PassengerHijacker",	false, true },
+				{ 2, "DriverHijacker",        false, true },
+				{ 3, "PassengerHijacker",     false, true },
 			}
 		},
 		{
 			Kind::Scorpion,
 			{
 				// Seat.
-				{ Scorpion::DriverSeat,					"Driver",				true, false },
+				{ 0, "Driver",                true, false },
 
 				// Hijackers.
-				{ Scorpion::RightDriverHijacker,		"RightDriverHijacker",	false, true },
-				{ Scorpion::LeftDriverHijacker,			"LeftDriverHijacker",	false, true },
-				{ Scorpion::BackHijacker,				"BackHijacker",			false, true },
+				{ 5, "RightDriverHijacker",   false, true },
+				{ 6, "LeftDriverHijacker",    false, true },
+				{ 7, "BackHijacker",          false, true },
 			}
 		},
 		{
 			Kind::ScorpionTurret,
 			{
 				// Gunner.
-				{ Scorpion::Turret::GunnerSeat,			"Gunner",				false, false },
+				{ 0, "Gunner",                false, false },
 			}
 		},
 		{
 			Kind::ShadeTurret,
 			{
 				// Seat.
-				{ ShadeTurret::GunnerSeat,				"Gunner",				false, false },
+				{ 0, "Gunner",                false, false },
 			}
 		},
 		{
 			Kind::Warthog,
 			{
 				// Seats.
-				{ Warthog::DriverSeat,					"Driver",				true, false },
-				{ Warthog::PassengerSeat,				"Passenger",			true, false },
+				{ 0, "Driver",                true, false },
+				{ 1, "Passenger",             true, false },
 
 				// Hijackers.
-				{ Warthog::DriverHijacker,				"DriverHijacker",		false, true },
-				{ Warthog::PassengerHijacker,			"PassengerHijacker",	false, true },
+				{ 2, "DriverHijacker",        false, true },
+				{ 3, "PassengerHijacker",     false, true },
 			}
 		},
 		{
 			Kind::WarthogChaingun,
 			{
 				// Gunner.
-				{ Warthog::Turret::GunnerSeat,			"Gunner",				true, false },
+				{ 0, "Gunner",                true, false },
 
 				// Hijacker.
-				{ Warthog::Turret::GunnerHijackerSeat, "GunnerHijacker",		false, true },
+				{ 1, "GunnerHijacker",        false, true },
 			}
 		},
 		{
 			Kind::WarthogGauss,
 			{
 				// Gunner.
-				{ Warthog::Gauss::GunnerSeat,			"Gunner",				true, false },
+				{ 0, "Gunner",                true, false },
 
 				// Hijacker.
-				{ Warthog::Gauss::GunnerHijackerSeat,	"GunnerHijacker",		false, true },
+				{ 1, "GunnerHijacker",        false, true },
 			}
 		},
 		{
 			Kind::WarthogRocket,
 			{
 				// Gunner.
-				{ Warthog::Rocket::GunnerSeat,			"Gunner",				true, false },
+				{ 0, "Gunner",                true, false },
 
 				// Hijacker.
-				{ Warthog::Rocket::GunnerHijackerSeat,	"GunnerHijacker",		false, true },
+				{ 1, "GunnerHijacker",        false, true },
 			}
 		},
 		{
 			Kind::Wraith,
 			{
 				// Seat.
-				{ Wraith::DriverSeat,					"Driver",				true, false },
+				{ 0, "Driver",                true, false },
 
 				// Hijackers.
-				{ Wraith::RightDriverHijackerSeat,		"RightDriverHijacker",	false, true },
-				{ Wraith::LeftDriverHijackerSeat,		"LeftDriverHijacker",	false, true },
-				{ Wraith::BackHijackerSeat,				"BackHijacker",			false, true },
+				{ 2, "RightDriverHijacker",   false, true },
+				{ 1, "LeftDriverHijacker",    false, true },
+				{ 3, "BackHijacker",          false, true },
 			}
 		},
 		{
 			Kind::WraithPlasmaTurret,
 			{
 				// Gunner.
-				{ Wraith::PlasmaTurret::GunnerSeat,		"Gunner",				false, false },
+				{ 0, "Gunner",                false, false },
 			}
 		},
 	};
@@ -325,13 +312,17 @@ export namespace Tables::Object::Type::Vehicle
 		Kind Kind{};
 		const Seat::Layout* SeatLayout{};
 
+		// Target of each seat element, in the order of the tag. 1.0f = free, 0.0f = occupied.
+		std::vector<float> SeatAvailability{};
+
 		float BoostThrottle{};
 		float BoostEnergy{};
 		float BoostCooldown{};
 
+		// A seat that the vehicle does not have is reported free.
 		bool IsSeatFree(const Seat::Seat& seat) const
 		{
-			return *reinterpret_cast<const float*>(Base + seat.Offset) == 1.0f;
+			return seat.Index >= SeatAvailability.size() || SeatAvailability[seat.Index] == 1.0f;
 		}
 	};
 }

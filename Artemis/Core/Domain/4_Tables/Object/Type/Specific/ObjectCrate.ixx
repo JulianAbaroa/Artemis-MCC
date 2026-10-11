@@ -1,6 +1,5 @@
 export module Tables.Object.Type:Crate;
 
-import :Offset;
 import Common.Tag.Type;
 import Common.Team.Type;
 import Common.ZoneShape.Type;
@@ -178,60 +177,12 @@ export namespace Tables::Object::Type::Crate
 		return it != map.end() ? it->second : Kind::Unknown;
 	}
 
-	struct ZoneOffsets
+	// Crates that carry a zone (shape and team) in their multiplayer block.
+	inline bool HasZone(Kind kind)
 	{
-		std::uintptr_t Radius{};
-		std::uintptr_t Length{};
-		std::uintptr_t Top{};
-		std::uintptr_t Bottom{};
-		std::uintptr_t ZoneType{};
-		std::uintptr_t Team{};
-	};
-
-	inline std::optional<ZoneOffsets> ResolveZoneOffsets(Kind kind)
-	{
-		namespace Offset = Tables::Object::Type::Offset;
-
-		static const std::unordered_map<Kind, ZoneOffsets> map =
-		{
-			{
-				Kind::FlagStand,
-				{
-					Offset::Crate::ObjectiveSpawn::Radius,
-					Offset::Crate::ObjectiveSpawn::Length,
-					Offset::Crate::ObjectiveSpawn::Top,
-					Offset::Crate::ObjectiveSpawn::Bottom,
-					Offset::Crate::ObjectiveSpawn::ShapeKind,
-					Offset::Crate::ObjectiveSpawn::Team
-				}
-			},
-			{
-				Kind::CapturePlate,
-				{
-					Offset::Crate::ObjectiveSpawn::Radius,
-					Offset::Crate::ObjectiveSpawn::Length,
-					Offset::Crate::ObjectiveSpawn::Top,
-					Offset::Crate::ObjectiveSpawn::Bottom,
-					Offset::Crate::ObjectiveSpawn::ShapeKind,
-					Offset::Crate::ObjectiveSpawn::Team
-				}
-			},
-			{
-				Kind::HillMarker,
-				{
-					Offset::Crate::HillMarker::Radius,
-					Offset::Crate::HillMarker::Length,
-					Offset::Crate::HillMarker::Top,
-					Offset::Crate::HillMarker::Bottom,
-					Offset::Crate::HillMarker::ShapeKind,
-					Offset::Crate::HillMarker::Team
-				}
-			},
-		};
-
-		auto it = map.find(kind);
-		if (it == map.end()) return std::nullopt;
-			return it->second;
+		return kind == Kind::FlagStand
+			|| kind == Kind::CapturePlate
+			|| kind == Kind::HillMarker;
 	}
 
 	struct Crate

@@ -69,6 +69,24 @@ namespace Viewer::Map::System
                 spawn.Up, spawn.ZoneShape);
         }
 
+        for (const auto& objectiveZone : fixtures.ObjectiveZones)
+        {
+            emit(objectiveZone.Handle, objectiveZone.Position, objectiveZone.Forward,
+                objectiveZone.Up, objectiveZone.ZoneShape);
+        }
+
+        for (const auto& boundary : fixtures.Boundaries)
+        {
+            emit(boundary.Handle, boundary.Position, boundary.Forward,
+                boundary.Up, boundary.ZoneShape);
+        }
+
+        for (const auto& zone : fixtures.Zones)
+        {
+            emit(zone.Handle, zone.Position, zone.Forward,
+                zone.Up, zone.ZoneShape);
+        }
+
         if (vertices.empty()) return;
 
         const UINT needed = static_cast<UINT>(vertices.size());

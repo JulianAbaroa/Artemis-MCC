@@ -170,6 +170,43 @@ namespace
         DrawZoneShape(os.ZoneShape);
     }
 
+    auto DrawObjectiveZone(const Fixture::ObjectiveZone::ObjectiveZone& oz) -> void
+    {
+        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Objective Zone", oz.TagName, oz.Handle);
+        PanelGuiService::DrawVec3("Position:", oz.Position);
+        PanelGuiService::DrawVec3("Forward:", oz.Forward);
+        PanelGuiService::DrawVec3("Up:", oz.Up);
+        ImGui::Text("Team: %s", TeamFormater::TeamToString(oz.Team));
+
+        ImGui::Spacing();
+        DrawZoneShape(oz.ZoneShape);
+    }
+
+    auto DrawBoundary(const Fixture::Boundary::Boundary& b) -> void
+    {
+        PanelGuiService::DrawHeader(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "Boundary", b.TagName, b.Handle);
+        PanelGuiService::DrawVec3("Position:", b.Position);
+        PanelGuiService::DrawVec3("Forward:", b.Forward);
+        PanelGuiService::DrawVec3("Up:", b.Up);
+        ImGui::Text("Type: %s", FixturesFormater::BoundaryKindToString(b.Kind));
+        ImGui::Text("Team: %s", TeamFormater::TeamToString(b.Team));
+
+        ImGui::Spacing();
+        DrawZoneShape(b.ZoneShape);
+    }
+
+    auto DrawZone(const Fixture::Zone::Zone& z) -> void
+    {
+        PanelGuiService::DrawHeader(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Zone", z.TagName, z.Handle);
+        PanelGuiService::DrawVec3("Position:", z.Position);
+        PanelGuiService::DrawVec3("Forward:", z.Forward);
+        PanelGuiService::DrawVec3("Up:", z.Up);
+        ImGui::Text("Team: %s", TeamFormater::TeamToString(z.Team));
+
+        ImGui::Spacing();
+        DrawZoneShape(z.ZoneShape);
+    }
+
     auto DrawObjective(const Fixture::Objective::Objective& ob) -> void
     {
         PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -233,6 +270,9 @@ namespace Viewer::Hud::System
         if (TryDraw(fx.Lifts, handle, DrawLift)) return;
         if (TryDraw(fx.Shields, handle, DrawShield)) return;
         if (TryDraw(fx.ObjectiveSpawns, handle, DrawObjectiveSpawn)) return;
+        if (TryDraw(fx.ObjectiveZones, handle, DrawObjectiveZone)) return;
+        if (TryDraw(fx.Boundaries, handle, DrawBoundary)) return;
+        if (TryDraw(fx.Zones, handle, DrawZone)) return;
         if (TryDraw(fx.Objectives, handle, DrawObjective)) return;
         if (TryDraw(fx.Destructibles, handle, DrawDestructible)) return;
 

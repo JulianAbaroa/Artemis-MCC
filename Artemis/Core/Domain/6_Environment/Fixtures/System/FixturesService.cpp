@@ -17,6 +17,8 @@ namespace
     using WeaponObject = Tables::Object::Type::Weapon::Weapon;
     using Role = Relations::Classifier::Type::Role;
     using Fixtures = Environment::Fixtures::Type::Fixtures;
+    using BoundaryKind = Environment::Fixtures::Type::Boundary::Kind;
+    using ZoneKind = Common::ZoneShape::Type::Kind;
     using SpawnKind = Environment::Fixtures::Type::Spawn::Kind;
     using TeleportKind = Environment::Fixtures::Type::Teleport::Kind;
     using DestructibleKind = Environment::Fixtures::Type::Destructible::Kind;
@@ -40,6 +42,7 @@ namespace Environment::Fixtures::System
         this->CollectLifts(classifieds, objectTable, data.Lifts);
         this->CollectShields(classifieds, objectTable, data.Shields);
         this->CollectObjectives(classifieds, objectTable, data.Objectives, data.ObjectiveSpawns);
+        this->CollectZones(classifieds, objectTable, data.ObjectiveZones, data.Boundaries, data.Zones);
         this->CollectDestructibles(classifieds, objectTable, data.Destructibles);
 
         m_FixturesStore.Publish(std::move(data));
@@ -132,7 +135,7 @@ namespace Environment::Fixtures::System
             Teleport teleport{};
             teleport.Handle = classified.Handle;
             teleport.TagName = object.TagName;
-            teleport.Position = object.Position;
+            teleport.Position = object.WorldOrigin;
             teleport.Forward = object.Forward;
             teleport.Up = object.Up;
             teleport.Channel = crate->Teleport->Channel;
@@ -302,7 +305,7 @@ namespace Environment::Fixtures::System
                 ObjectiveSpawn objectiveSpawn{};
                 objectiveSpawn.Handle = classified.Handle;
                 objectiveSpawn.TagName = object.TagName;
-                objectiveSpawn.Position = object.Position;
+                objectiveSpawn.Position = object.WorldOrigin;
                 objectiveSpawn.Forward = object.Forward;
                 objectiveSpawn.Up = object.Up;
 
@@ -348,6 +351,75 @@ namespace Environment::Fixtures::System
                 }
 
                 objectives.push_back(objective);
+            }
+        }
+    }
+
+    void FixturesService::CollectZones(const Classifieds& classifieds,
+        const ObjectTable& objects, ObjectiveZones& objectiveZones,
+        Boundaries& boundaries, Zones& zones)
+    {
+        for (const auto& classified : classifieds)
+        {
+            auto objectIt = objects.find(classified.Handle);
+            if (objectIt == objects.end()) continue;
+
+            const AliveObject& object = objectIt->second;
+            if (object.Address == 0 || !object.Multiplayer.has_value()) continue;
+
+            const ZoneShape& shape = object.Multiplayer->Shape;
+            const Team team = object.Multiplayer->Team;
+
+            if (classified.Role == Role::ObjectiveZone)
+            {
+                ObjectiveZone objectiveZone{};
+                objectiveZone.Handle = classified.Handle;
+                objectiveZone.TagName = object.TagName;
+                objectiveZone.Position = object.WorldOrigin;
+                objectiveZone.Forward = object.Forward;
+                objectiveZone.Up = object.Up;
+                objectiveZone.Team = team;
+                objectiveZone.ZoneShape = shape;
+
+                objectiveZones.push_back(objectiveZone);
+            }
+            else if (classified.Role == Role::Boundary)
+            {
+                const auto* scenery = std::get_if<SceneryObject>(&object.Specific);
+                if (!scenery) continue;
+
+                Boundary boundary{};
+                boundary.Handle = classified.Handle;
+                boundary.TagName = object.TagName;
+                boundary.Position = object.WorldOrigin;
+                boundary.Forward = object.Forward;
+                boundary.Up = object.Up;
+                boundary.Team = team;
+                boundary.ZoneShape = shape;
+
+                if (scenery->Kind == SceneryKind::SafeBoundary) boundary.Kind = BoundaryKind::Safe;
+                else if (scenery->Kind == SceneryKind::SoftSafeBoundary) boundary.Kind = BoundaryKind::SoftSafe;
+                else if (scenery->Kind == SceneryKind::KillBoundary) boundary.Kind = BoundaryKind::Kill;
+                else if (scenery->Kind == SceneryKind::SoftKillBoundary) boundary.Kind = BoundaryKind::SoftKill;
+
+                boundaries.push_back(boundary);
+            }
+            else if (classified.Role != Role::Teleporter && classified.Role != Role::ObjectiveSpawn)
+            {
+                // The teleporters and the objective spawns already carry their own zone.
+                // note: Other kinds of shape (like the 1 seen on the bomb) are not drawable and are left out.
+                if (shape.Kind != ZoneKind::Cylinder && shape.Kind != ZoneKind::Box) continue;
+
+                Zone zone{};
+                zone.Handle = classified.Handle;
+                zone.TagName = object.TagName;
+                zone.Position = object.WorldOrigin;
+                zone.Forward = object.Forward;
+                zone.Up = object.Up;
+                zone.Team = team;
+                zone.ZoneShape = shape;
+
+                zones.push_back(zone);
             }
         }
     }
