@@ -52,6 +52,19 @@ namespace
 	using Template::Object::Type::Constant::k_MinDatumSize;
 
 	namespace ObjeOffset = Template::Object::Type::Obje::Offset;
+	namespace UnitOffset = Template::Object::Type::Unit::Offset;
+	namespace BipdOffset = Template::Object::Type::Bipd::Offset;
+	namespace WeapOffset = Template::Object::Type::Weap::Offset;
+	namespace ProjOffset = Template::Object::Type::Proj::Offset;
+	namespace EqipOffset = Template::Object::Type::Eqip::Offset;
+
+	// Fields that are not confirmed in the templates yet. They keep the name they had before the migration.
+	constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
+	constexpr std::size_t k_ProjectileOwnerBipedHandle{ ProjOffset::k_Unknown1c4 };
+	constexpr std::size_t k_ProjectileOwnerWeaponHandle{ ProjOffset::k_Unknown1d8 };
+	constexpr std::size_t k_EquipmentTotalEnergy{ EqipOffset::k_Unknown1ec };
+	constexpr std::size_t k_VehicleBoostThrottle{ UnitOffset::k_Unknown53c };
+	constexpr std::size_t k_VehicleBoostCooldown{ UnitOffset::k_Unknown544 };
 
 	// Nodes a model can have. Descriptors above it are not plausible.
 	constexpr std::uint32_t k_MaxNodes{ 1024 };
@@ -97,7 +110,7 @@ namespace Tables::Object::System
 		{
 			if (m_ObjectStore.HasObject(handle)) continue;
 
-			std::uint32_t datumIndex{ datum.Read<std::uint32_t>(Offset::DatumIndex) };
+			std::uint32_t datumIndex{ datum.Read<std::uint32_t>(ObjeOffset::k_TagHandle) };
 
 			this->AddObject(handle, datumIndex, datum.Kind);
 		}
@@ -139,21 +152,21 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::UpdateObjectData(const RawObject& datum, AliveObject& object) -> void
 	{
-		object.NextSiblingHandle = datum.Read<std::uint32_t>(Offset::NextSiblingHandle);
-		object.ChildHandle = datum.Read<std::uint32_t>(Offset::ChildHandle);
-		object.ParentHandle = datum.Read<std::uint32_t>(Offset::ParentHandle);
+		object.NextSiblingHandle = datum.Read<std::uint32_t>(ObjeOffset::k_NextSiblingHandle);
+		object.ChildHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ChildHandle);
+		object.ParentHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle);
 
-		object.Position = datum.Read<Vec3>(Offset::BoundingCenter);
-		object.Origin = datum.Read<Vec3>(Offset::Origin);
-		object.Forward = datum.Read<Vec3>(Offset::Forward);
-		object.Up = datum.Read<Vec3>(Offset::Up);
-		object.LinearVelocity = datum.Read<Vec3>(Offset::LinearVelocity);
-		object.AngularVelocity = datum.Read<Vec3>(Offset::AngularVelocity);
+		object.Position = datum.Read<Vec3>(ObjeOffset::k_BoundingCenter);
+		object.Origin = datum.Read<Vec3>(ObjeOffset::k_Origin);
+		object.Forward = datum.Read<Vec3>(ObjeOffset::k_Forward);
+		object.Up = datum.Read<Vec3>(ObjeOffset::k_Up);
+		object.LinearVelocity = datum.Read<Vec3>(ObjeOffset::k_LinearVelocity);
+		object.AngularVelocity = datum.Read<Vec3>(ObjeOffset::k_AngularVelocity);
 
-		object.BoundingRadius = datum.Read<float>(Offset::BoundingRadius);
-		object.DamageReceived = datum.Read<float>(Offset::DamageReceived);
+		object.BoundingRadius = datum.Read<float>(ObjeOffset::k_BoundingRadius);
+		object.DamageReceived = datum.Read<float>(ObjeOffset::k_DamageReceived);
 
-		object.HlmtVariant = datum.Read<std::uint8_t>(Offset::HlmtVariant);
+		object.HlmtVariant = datum.Read<std::uint16_t>(ObjeOffset::k_ModelVariant);
 
 		this->ReadBoneMatrixTable(datum, object);
 		this->ReadDamageSectionTable(datum, object);
@@ -260,8 +273,8 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::ReadDamageSections(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void
 	{
-		const std::uint16_t regionsSize = datum.Read<std::uint16_t>(Offset::DamageRegionsSize);
-		const std::uint16_t regionsOffsetRaw = datum.Read<std::uint16_t>(Offset::DamageRegionsOffset);
+		const std::uint16_t regionsSize = datum.Read<std::uint16_t>(ObjeOffset::k_DamageSectionsSize);
+		const std::uint16_t regionsOffsetRaw = datum.Read<std::uint16_t>(ObjeOffset::k_DamageSectionsOffset);
 
 		if (regionsOffsetRaw == 0xFFFF) return;
 		const std::uint16_t count = regionsSize / k_DamageSectionStride;
@@ -285,8 +298,8 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::ReadRegionBlock(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void
 	{
-		const std::uint16_t size = datum.Read<std::uint16_t>(Offset::RegionStateSize);
-		const std::uint16_t offset = datum.Read<std::uint16_t>(Offset::RegionStateOffset);
+		const std::uint16_t size = datum.Read<std::uint16_t>(ObjeOffset::k_RegionStateSize);
+		const std::uint16_t offset = datum.Read<std::uint16_t>(ObjeOffset::k_RegionStateOffset);
 
 		if (offset == 0xFFFF || size == 0 || size > k_RegionBlockMaxSize) return;
 
@@ -302,16 +315,18 @@ namespace Tables::Object::System
 	{
 		BipedObject biped{};
 
-		biped.MovementInput = datum.Read<Vec2>(Offset::Biped::MovementInput);
-		biped.VerticalInput = datum.Read<VerticalInput>(Offset::Biped::VerticalInput);
-		biped.IsAbilityActive = datum.Read<std::uint8_t>(Offset::Biped::IsAbilityActive);
-		biped.ZoomLevel = datum.Read<ZoomLevel>(Offset::Biped::ZoomLevel);
+		biped.MovementInput = datum.Read<Vec2>(UnitOffset::k_Throttle);
+		// note: The two bytes the repo read before are the low bytes of the control flags.
+		const std::uint64_t controlFlags = datum.Read<std::uint64_t>(UnitOffset::k_ControlFlags);
+		biped.VerticalInput = static_cast<VerticalInput>(controlFlags & 0xFF);
+		biped.IsAbilityActive = static_cast<std::uint8_t>((controlFlags >> 8) & 0xFF);
+		biped.ZoomLevel = datum.Read<ZoomLevel>(UnitOffset::k_ZoomLevel);
 
-		biped.SurfaceNormal = datum.Read<Vec3>(Offset::Biped::SurfaceNormal);
-		biped.GroundObjectHandle = datum.Read<std::uint32_t>(Offset::Biped::GroundObjectHandle);
+		biped.SurfaceNormal = datum.Read<Vec3>(BipdOffset::k_SurfaceNormal);
+		biped.GroundObjectHandle = datum.Read<std::uint32_t>(BipdOffset::k_GroundObjectHandle);
 
-		biped.DamagerBipedHandle = datum.Read<std::uint32_t>(Offset::Biped::DamagerBipedHandle);
-		biped.DamagerPlayerHandle = datum.Read<std::uint32_t>(Offset::Biped::DamagerPlayerHandle);
+		biped.DamagerBipedHandle = datum.Read<std::uint32_t>(UnitOffset::k_Damage0BipedHandle);
+		biped.DamagerPlayerHandle = datum.Read<std::uint32_t>(UnitOffset::k_Damage0PlayerHandle);
 
 		object.Specific = biped;
 	}
@@ -326,9 +341,9 @@ namespace Tables::Object::System
 
 		if (TagName::Vehicle::HasBoost(object.TagName))
 		{
-			vehicle.BoostThrottle = datum.Read<float>(Offset::Vehicle::BoostThrottle);
-			vehicle.BoostEnergy = datum.Read<float>(Offset::Vehicle::BoostEnergy);
-			vehicle.BoostCooldown = datum.Read<float>(Offset::Vehicle::BoostCooldown);
+			vehicle.BoostThrottle = datum.Read<float>(k_VehicleBoostThrottle);
+			vehicle.BoostEnergy = datum.Read<float>(UnitOffset::k_BoostValue);
+			vehicle.BoostCooldown = datum.Read<float>(k_VehicleBoostCooldown);
 		}
 
 		object.Specific = vehicle;
@@ -338,21 +353,21 @@ namespace Tables::Object::System
 	{
 		WeaponObject weapon{};
 
-		weapon.TotalHeat = datum.Read<float>(Offset::Weapon::TotalHeat);
-		weapon.TotalEnergy = 1.0f - datum.Read<float>(Offset::Weapon::TotalEnergy);
-		weapon.TotalAmmo = datum.Read<std::uint16_t>(Offset::Weapon::TotalAmmo);
-		weapon.CurrentAmmo = datum.Read<std::uint16_t>(Offset::Weapon::CurrentAmmo);
+		weapon.TotalHeat = datum.Read<float>(WeapOffset::k_TotalHeat);
+		weapon.TotalEnergy = 1.0f - datum.Read<float>(WeapOffset::k_TotalEnergy);
+		weapon.TotalAmmo = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0TotalAmmo);
+		weapon.CurrentAmmo = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0CurrentAmmo);
 
-		const std::uint8_t actionByte = datum.Read<std::uint8_t>(Offset::Weapon::ActionState);
+		const std::uint8_t actionByte = static_cast<std::uint8_t>(datum.Read<std::uint16_t>(WeapOffset::k_InputMask));
 		weapon.IsTriggerHeld = (actionByte & k_TriggerHeldBit) != 0;
 		weapon.IsZoomed = (actionByte & k_ZoomedBit) != 0;
 		weapon.Action = static_cast<WeaponAction>(actionByte & k_ActionMask);
 
-		weapon.IsReloading = datum.Read<std::uint8_t>(Offset::Weapon::IsReloading);
-		weapon.ChargeState = datum.Read<ChargeState>(Offset::Weapon::ChargeState);
+		weapon.IsReloading = static_cast<std::uint8_t>(datum.Read<std::uint16_t>(WeapOffset::k_Magazine0ReloadState));
+		weapon.ChargeState = datum.Read<ChargeState>(WeapOffset::k_Trigger0ChargeState);
 
-		weapon.IsTracking = datum.Read<std::uint8_t>(Offset::Weapon::IsTracking);
-		weapon.TrackedBipedHandle = datum.Read<std::uint32_t>(Offset::Weapon::TrackedBipedHandle);
+		weapon.IsTracking = datum.Read<std::uint8_t>(WeapOffset::k_IsTracking);
+		weapon.TrackedBipedHandle = datum.Read<std::uint32_t>(WeapOffset::k_TrackedBipedHandle);
 
 		if (object.TagName == TagName::Objective::k_Flag)
 		{
@@ -371,7 +386,7 @@ namespace Tables::Object::System
 		EquipmentObject equipment{};
 		equipment.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
-		equipment.Energy = datum.Read<float>(Offset::Equipment::TotalEnergy);
+		equipment.Energy = datum.Read<float>(k_EquipmentTotalEnergy);
 
 		if (equipment.Kind == CrateKind::Shield)
 		{
@@ -394,9 +409,9 @@ namespace Tables::Object::System
 	{
 		ProjectileObject projectile{};
 
-		projectile.Flags = datum.Read<ProjectileFlags>(Offset::Projectile::RuntimeFlags);
-		projectile.OwnerBipedHandle = datum.Read<std::uint32_t>(Offset::Projectile::OwnerBipedHandle);
-		projectile.OwnerWeaponHandle = datum.Read<std::uint32_t>(Offset::Projectile::OwnerWeaponHandle);
+		projectile.Flags = datum.Read<ProjectileFlags>(k_ProjectileFlags);
+		projectile.OwnerBipedHandle = datum.Read<std::uint32_t>(k_ProjectileOwnerBipedHandle);
+		projectile.OwnerWeaponHandle = datum.Read<std::uint32_t>(k_ProjectileOwnerWeaponHandle);
 
 		object.Specific = projectile;
 	}

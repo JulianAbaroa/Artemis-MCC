@@ -2,71 +2,16 @@ export module Tables.Object.Type:Offset;
 
 import std;
 
-// TODO: Add all the vehicles and their data.
-// TODO: See if there's a size/offset value for vehicle seats.
+// Offsets of the object datum that have no counterpart in Template.Object.Type yet.
+// note: Everything inside the fixed part of a datum was moved to Template.Object.Type. What is left lives in
+// the variable region after it (seats, shapes, teams), pending the generated block descriptors.
 
 export namespace Tables::Object::Type::Offset
 {
-	constexpr std::uintptr_t DatumIndex{ 0x000 };				// uint32.
-	constexpr std::uintptr_t NextSiblingHandle{ 0x00C };		// uint32.
-	constexpr std::uintptr_t ChildHandle{ 0x010 };				// uint32.
-	constexpr std::uintptr_t ParentHandle{ 0x014 };				// uint32.
-	constexpr std::uintptr_t UnknownVariant{ 0x1C };			// uint8.
-	// note: 0x20/0x2C are the bounding sphere in world space, not the origin.
-	constexpr std::uintptr_t BoundingCenter{ 0x020 };			// float (3).
-	constexpr std::uintptr_t BoundingRadius{ 0x02C };			// float (1).
-	// note: the origin is local to the parent when the object is parented.
-	constexpr std::uintptr_t Origin{ 0x044 };					// float (3).
-	constexpr std::uintptr_t Forward{ 0x050 };					// float (3).
-	constexpr std::uintptr_t Up{ 0x05C };						// float (3).
-	constexpr std::uintptr_t LinearVelocity{ 0x068 };			// float (3).
-	constexpr std::uintptr_t AngularVelocity{ 0x074 };			// float (3).
-	constexpr std::uintptr_t HlmtVariant{ 0xEA };				// uint8.
-	constexpr std::uintptr_t OwnerPlayerHandle{ 0xF0 };			// uint32.
-	constexpr std::uintptr_t OwnerBipedHandle{ 0xF4 };			// uint32.
-	constexpr std::uintptr_t DamageReceived{ 0x128 };			// float (1).
-	constexpr std::uintptr_t RegionStateSize{ 0x17C };			// uint16.
-	constexpr std::uintptr_t RegionStateOffset{ 0x17E };		// uint16.
-	constexpr std::uintptr_t DamageRegionsSize{ 0x184 };		// uint16.
-	constexpr std::uintptr_t DamageRegionsOffset{ 0x186 };		// uint16.
-
-	namespace Biped
-	{
-		// Jump and crouch keys held (uint8).
-		constexpr std::uintptr_t VerticalInput{ 0x1D8 };
-
-		// Armor ability state (uint8).
-		constexpr std::uintptr_t IsAbilityActive{ 0x1D9 };
-
-		// Movement keys held (float 2).
-		// note: The block repeats at 0x26C and 0x278. The first two copies follow the keys and the third keeps the last non-zero input after release.
-		constexpr std::uintptr_t MovementInput{ 0x260 };
-
-		// Zoom stage (uint8).
-		constexpr std::uintptr_t ZoomLevel{ 0x383 };
-
-		// Handle of the biped that last damaged this one (uint32).
-		constexpr std::uintptr_t DamagerBipedHandle{ 0x4E8 };
-
-		// Handle of the player that last damaged this one (uint32).
-		constexpr std::uintptr_t DamagerPlayerHandle{ 0x4EC };
-
-		// Handle of the living object under the biped (uint32).
-		constexpr std::uintptr_t GroundObjectHandle{ 0xAD0 };
-
-		// Normal of the last ground contact (float 3).
-		constexpr std::uintptr_t SurfaceNormal{ 0xAD8 };
-	}
-
 	namespace Vehicle
 	{
-		constexpr std::uintptr_t BoostThrottle{ 0x53C };		// float (1).
-		constexpr std::uintptr_t BoostEnergy{ 0x540 };			// float (1).
-		constexpr std::uintptr_t BoostCooldown{ 0x544 };		// float (1).
-
 		namespace Banshee
 		{
-			constexpr std::uintptr_t WeaponMode{ 0x34A };			// uint8.
 			constexpr std::uintptr_t DriverSeat{ 0x2718 };			// float (1).
 			constexpr std::uintptr_t DriverRightHijacker{ 0x2724 };	// float (1).
 			constexpr std::uintptr_t DriverLeftHijacker{ 0x2730 };	// float (1).
@@ -190,36 +135,6 @@ export namespace Tables::Object::Type::Offset
 
 	namespace Weapon
 	{
-		// Action byte (uint8).
-		// note: Parts combine, for example 0x62 or 0x82. Bit 0x02 is the fire key, 0x80 is zoom and bits 0x60 hold the animation (0x20 reload, 0x60 melee).
-		constexpr std::uintptr_t ActionState{ 0x1CA };
-
-		// Heat from 0 to 1 (float 1).
-		constexpr std::uintptr_t TotalHeat{ 0x1E0 };
-
-		// Used energy fraction from 0 to 1 (float 1).
-		// note: It is the inverse of the energy left. A value of 1 means no energy.
-		constexpr std::uintptr_t TotalEnergy{ 0x1E4 };
-
-		// Lock-on state (uint8).
-		constexpr std::uintptr_t IsTracking{ 0x1F8 };
-
-		// Handle of the tracked biped (uint32).
-		constexpr std::uintptr_t TrackedBipedHandle{ 0x200 };
-
-		// Charge stage (uint8).
-		// note: The four bytes here are the stage, its inverse (seen only on the plasma launcher), an unknown byte and a projectile count that is not always set. Only the first is read.
-		constexpr std::uintptr_t ChargeState{ 0x2A8 };
-
-		// Reload in progress (uint8).
-		constexpr std::uintptr_t IsReloading{ 0x2C0 };
-
-		// Ammo carried (uint16).
-		constexpr std::uintptr_t TotalAmmo{ 0x2C6 };
-
-		// Ammo loaded in the magazine (uint16).
-		constexpr std::uintptr_t CurrentAmmo{ 0x2CA };
-
 		namespace Flag
 		{
 			constexpr std::uintptr_t Team{ 0x6D1 };	// uint8.
@@ -229,18 +144,6 @@ export namespace Tables::Object::Type::Offset
 		{
 			constexpr std::uintptr_t Team{ 0x6E5 };	// uint8.
 		}
-	}
-
-	namespace Projectile
-	{
-		constexpr std::uintptr_t RuntimeFlags{ 0x1A8 };			// uint32.
-		constexpr std::uintptr_t OwnerBipedHandle{ 0x1C4 };		// uint32.
-		constexpr std::uintptr_t OwnerWeaponHandle{ 0x1D8 };	// uint32.
-	}
-
-	namespace Equipment
-	{
-		constexpr std::uintptr_t TotalEnergy{ 0x1EC };	// float (1).
 	}
 
 	namespace Crate
@@ -278,23 +181,23 @@ export namespace Tables::Object::Type::Offset
 		}
 	}
 
-	namespace Scenery
-	{
-		// Initial & Respawn.
-		namespace SpawnPoint
-		{
-			constexpr std::uintptr_t Team{ 0x2C1 };	// uint8.
-		}
+    namespace Scenery
+    {
+        // Initial & Respawn.
+        namespace SpawnPoint
+        {
+            constexpr std::uintptr_t Team{ 0x2C1 };	// uint8.
+        }
 
-		// Safe, SoftSafe, Kill & SoftKill.
-		namespace Boundary
-		{
-			constexpr std::uintptr_t Team{ 0x2A5 };			// uint8.
-			constexpr std::uintptr_t Radius{ 0x28C };		// float (1).
-			constexpr std::uintptr_t Length{ 0x290 };		// float (1).
-			constexpr std::uintptr_t Top{ 0x294 };			// float (1).
-			constexpr std::uintptr_t Bottom{ 0x298 };		// float (1).
-			constexpr std::uintptr_t ShapeKind{ 0x29C };	// uint8.
-		}
-	}
+        // Safe, SoftSafe, Kill & SoftKill.
+        namespace Boundary
+        {
+            constexpr std::uintptr_t Team{ 0x2A5 };			// uint8.
+            constexpr std::uintptr_t Radius{ 0x28C };		// float (1).
+            constexpr std::uintptr_t Length{ 0x290 };		// float (1).
+            constexpr std::uintptr_t Top{ 0x294 };			// float (1).
+            constexpr std::uintptr_t Bottom{ 0x298 };		// float (1).
+            constexpr std::uintptr_t ShapeKind{ 0x29C };	// uint8.
+        }
+    }
 }

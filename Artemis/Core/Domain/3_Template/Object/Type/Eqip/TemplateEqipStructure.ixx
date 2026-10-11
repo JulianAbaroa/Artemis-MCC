@@ -33,7 +33,7 @@ export namespace Template::Object::Type::Eqip::Structure
         std::uint16_t Unknown1e4;  // 0x20  uint16. | R0 W2 init=0xffff upd=0xffff known=Weapon.TotalEnergy W:eqip_init,FUN_1804b57f8
         std::uint16_t Unknown1e6;  // 0x22  uint16. | R0 W2 init=0xffff upd=0xffff W:eqip_init,FUN_1804b57f8
         std::uint32_t Unknown1e8;  // 0x24  uint32. | R1 W1 src=call 180521eb4 W:FUN_1804b502c
-        float        Unknown1ec;  // 0x28  float32. | R8 W4 src=MULTIEQUAL, FLOAT_ADD known=Equipment.TotalEnergy W:FUN_1804b34a0,FUN_1804b5158,FUN_1804b57f8
+        float        Unknown1ec;  // 0x28  float32. | Old name: Equipment.TotalEnergy (ObjectOffset.ixx). Not confirmed yet. R8 W4 src=MULTIEQUAL, FLOAT_ADD known=Equipment.TotalEnergy W:FUN_1804b34a0,FUN_1804b5158,FUN_1804b57f8
         std::uint16_t Unknown1f0;  // 0x2C  uint16. | R0 W1 init=0x0 W:eqip_init
         std::uint16_t Unknown1f2;  // 0x2E  uint16. | R0 W1 init=0x0 W:eqip_init
         std::uint16_t Unknown1f4;  // 0x30  uint16. | R0 W1 init=0x0 W:eqip_init

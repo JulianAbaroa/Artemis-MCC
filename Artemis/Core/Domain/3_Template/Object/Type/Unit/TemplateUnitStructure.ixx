@@ -201,9 +201,9 @@ export namespace Template::Object::Type::Unit::Structure
         std::uint32_t Damage3PlayerHandle;  // 0x37C  uint32. | Player that dealt the damage.
         std::uint16_t Damage3Type;  // 0x380  uint16. | 0xB measured; damage or weapon type?
         std::uint8_t  _gap_0x382[0x2];
-        std::uint32_t Unknown53c;  // 0x384  uint32. | R1 W0 known=Vehicle.BoostThrottle R:FUN_180495188
+        std::uint32_t Unknown53c;  // 0x384  uint32. | Old name: Vehicle.BoostThrottle (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostThrottle R:FUN_180495188
         float        BoostValue;  // 0x388  float32. | Float 1.0 at init (doc). Old names Vehicle.BoostEnergy.
-        std::uint32_t Unknown544;  // 0x38C  uint32. | R1 W0 known=Vehicle.BoostCooldown R:unit_sa8
+        std::uint32_t Unknown544;  // 0x38C  uint32. | Old name: Vehicle.BoostCooldown (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostCooldown R:unit_sa8
         std::uint32_t DamageHandle548;  // 0x390  uint32. | Handle -1.
         std::uint32_t LastDamageTick;  // 0x394  uint32. | Tick of the last damage received (matches Damage 0 Tick).
         std::uint32_t DamageHandle550;  // 0x398  uint32. | Handle -1.

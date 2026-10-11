@@ -36,7 +36,7 @@ export namespace Tables::Object::Type::Alive
 
 		std::string FourCC{};
 		std::string TagName{};
-		std::uint8_t HlmtVariant{};
+		std::uint16_t HlmtVariant{};
 
 		std::uint32_t Handle{};
 		std::uint32_t NextSiblingHandle{};

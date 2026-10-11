@@ -20,7 +20,7 @@ export namespace Template::Object::Type::Proj::Structure
     // Entry size: 0xB0
     struct ProjData
     {
-        std::uint32_t Unknown1a8;  // 0x0  uint32. | R44 W25 src=INT_OR, MULTIEQUAL known=Projectile.RuntimeFlags W:FUN_1804f2d00,proj_init,FUN_1804f03f0
+        std::uint32_t Unknown1a8;  // 0x0  uint32. | Old name: Projectile.RuntimeFlags (ObjectOffset.ixx). Not confirmed yet. R44 W25 src=INT_OR, MULTIEQUAL known=Projectile.RuntimeFlags W:FUN_1804f2d00,proj_init,FUN_1804f03f0
         std::uint32_t Unknown1ac;  // 0x4  uint32. | R5 W0 R:FUN_1804f03f0,FUN_1804f0218,FUN_1804f19bc
         std::uint16_t Unknown1b0;  // 0x8  uint16. | R0 W1 init=0x0 W:proj_init
         std::uint16_t Unknown1b2;  // 0xA  uint16. | R1 W1 init=0x0 W:proj_init
@@ -29,13 +29,13 @@ export namespace Template::Object::Type::Proj::Structure
         std::uint8_t  _gap_0x10[0x4];
         std::uint32_t Unknown1bc;  // 0x14  uint32. | R5 W0 SHARED R:FUN_180781484,FUN_180781920
         std::uint32_t Unknown1c0;  // 0x18  uint32. | R2 W2 src=INDIRECT, [param_2+0x34] W:proj_init,FUN_1804f2d00
-        std::uint32_t Unknown1c4;  // 0x1C  uint32. | R3 W1 src=call 180473dc0 known=Projectile.OwnerBipedHandle W:proj_init
+        std::uint32_t Unknown1c4;  // 0x1C  uint32. | Old name: Projectile.OwnerBipedHandle (ObjectOffset.ixx). Not confirmed yet. R3 W1 src=call 180473dc0 known=Projectile.OwnerBipedHandle W:proj_init
         std::uint32_t Unknown1c8;  // 0x20  uint32. | R2 W2 src=[param_2+0x40] W:FUN_1804f2d00
         std::uint16_t Unknown1cc;  // 0x24  uint16. | R4 W1 init=0x0 W:proj_init
         std::uint16_t Unknown1ce;  // 0x26  uint16. | R0 W1 init=0x0 W:proj_init
         std::uint32_t Unknown1d0;  // 0x28  uint32. | R1 W1 upd=0xffffffff W:proj_sd8
         std::uint32_t Unknown1d4;  // 0x2C  uint32. | R10 W1 upd=0xffffffff W:proj_sd8
-        std::uint32_t Unknown1d8;  // 0x30  uint32. | R2 W2 upd=0xffffffff src=MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:proj_init,proj_sd8
+        std::uint32_t Unknown1d8;  // 0x30  uint32. | Old name: Projectile.OwnerWeaponHandle (ObjectOffset.ixx). Not confirmed yet. R2 W2 upd=0xffffffff src=MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:proj_init,proj_sd8
         std::uint32_t Unknown1dc;  // 0x34  uint32. | R0 W2 src=[param_2+0x40], [lVar3+0x14] W:FUN_1804f2d00
         std::uint32_t Unknown1e0;  // 0x38  uint32. | R0 W1 src=MULTIEQUAL known=Weapon.TotalHeat W:FUN_1804f2d00
         std::uint64_t Unknown1e4;  // 0x3C  uint64. | R0 W1 src=[param_2+0x8] known=Weapon.TotalEnergy W:FUN_1804f2d00

@@ -180,9 +180,9 @@
 	<uint32 name="Damage 3 Biped Handle" offset="0x530" confidence="medium" default="0xFFFFFFFF" tooltip="Biped that dealt the damage." />
 	<uint32 name="Damage 3 Player Handle" offset="0x534" confidence="medium" default="0xFFFFFFFF" tooltip="Player that dealt the damage." />
 	<uint16 name="Damage 3 Type" offset="0x538" confidence="low" tooltip="0xB measured; damage or weapon type?" />
-	<uint32 name="Unknown 53C" offset="0x53C" confidence="unknown" tooltip="R1 W0 known=Vehicle.BoostThrottle R:FUN_180495188" />
+	<uint32 name="Unknown 53C" offset="0x53C" confidence="low" tooltip="Old name: Vehicle.BoostThrottle (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostThrottle R:FUN_180495188" />
 	<float32 name="Boost Value" offset="0x540" confidence="low" tooltip="Float 1.0 at init (doc). Old names Vehicle.BoostEnergy." />
-	<uint32 name="Unknown 544" offset="0x544" confidence="unknown" tooltip="R1 W0 known=Vehicle.BoostCooldown R:unit_sa8" />
+	<uint32 name="Unknown 544" offset="0x544" confidence="low" tooltip="Old name: Vehicle.BoostCooldown (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostCooldown R:unit_sa8" />
 	<uint32 name="Damage Handle 548" offset="0x548" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
 	<uint32 name="Last Damage Tick" offset="0x54C" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Tick of the last damage received (matches Damage 0 Tick)." />
 	<uint32 name="Damage Handle 550" offset="0x550" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
