@@ -71,7 +71,7 @@ export namespace UI::Settings::System
         // Draws the group of every viewer option and the reset button.
         auto DrawViewerOptions() -> void;
 
-        // Draws the camera state: whether the viewer is active and its mode.
+        // Draws the camera state: whether the viewer is active, its mode and the zoom. Called inside the box of the Camera group.
         // note: These are runtime states and are not saved with the preferences.
         auto DrawCameraControls() -> void;
 

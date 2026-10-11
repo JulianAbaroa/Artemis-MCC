@@ -32,6 +32,25 @@ namespace Viewer::Camera::State
         this->SetMode(this->GetMode() == Mode::Free ? Mode::Game : Mode::Free);
     }
 
+    auto CameraStore::IsZoomActive() const -> bool
+    {
+        return m_IsZoomActive.load(std::memory_order_relaxed);
+    }
+
+    auto CameraStore::SetZoomActive(bool value) -> void
+    {
+        m_IsZoomActive.store(value, std::memory_order_relaxed);
+    }
+
+    auto CameraStore::ToggleZoom() -> void
+    {
+        bool expected = m_IsZoomActive.load(std::memory_order_relaxed);
+
+        while (!m_IsZoomActive.compare_exchange_weak(expected, !expected, std::memory_order_relaxed))
+        {
+        }
+    }
+
     auto CameraStore::IsFollowEnabled() const -> bool
     {
         return m_IsFollowEnabled.load(std::memory_order_relaxed);

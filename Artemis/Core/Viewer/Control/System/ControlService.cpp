@@ -27,7 +27,7 @@ namespace
         case 'R':        outKey = Key::Up; return true;
         case 'F':        outKey = Key::Down; return true;
         case VK_SHIFT:   outKey = Key::Fast; return true;
-        case VK_CONTROL: outKey = Key::Slow; return true;
+        case VK_CONTROL: outKey = Key::Custom; return true;
         default:         return false;
         }
     }
@@ -36,6 +36,13 @@ namespace
     {
         return (lParam & 0x40000000) != 0;
     }
+
+    // One notch of the mouse wheel is 120 units.
+    constexpr float k_WheelNotch{ 120.0f };
+
+    // Factor applied to the custom speed for each notch. The inverse is applied to the field of view.
+    constexpr float k_SpeedStep{ 1.15f };
+    constexpr float k_FovStep{ 1.08f };
 }
 
 namespace Viewer::Control::System
@@ -89,7 +96,38 @@ namespace Viewer::Control::System
             return true;
         }
 
+        // Like the left click, only the press is consumed. The release always goes on, so the Gui and the game never miss it.
+        if (message.Message == WM_RBUTTONDOWN)
+        {
+            m_CameraStore.ToggleZoom();
+            return true;
+        }
+
+        if (message.Message == WM_MOUSEWHEEL)
+        {
+            this->HandleWheel(static_cast<int>(GET_WHEEL_DELTA_WPARAM(message.WParam)));
+            return true;
+        }
+
         return false;
+    }
+
+    auto ControlService::HandleWheel(int delta) -> void
+    {
+        using Scalar = Viewer::Options::Type::Scalar;
+
+        const float notches = static_cast<float>(delta) / k_WheelNotch;
+
+        // Wheel up raises the speed and narrows the field of view (zooms in).
+        if (m_CameraStore.IsKeyDown(Key::Custom))
+        {
+            const float speed = m_OptionsStore.GetScalar(Scalar::SpeedCustom);
+            m_OptionsStore.SetScalar(Scalar::SpeedCustom, speed * std::pow(k_SpeedStep, notches));
+            return;
+        }
+
+        const Scalar fov = m_CameraStore.IsZoomActive() ? Scalar::FovZoom : Scalar::FovNormal;
+        m_OptionsStore.SetScalar(fov, m_OptionsStore.GetScalar(fov) * std::pow(1.0f / k_FovStep, notches));
     }
 
     auto ControlService::HandleHotkey(const WindowMessage& message) -> bool

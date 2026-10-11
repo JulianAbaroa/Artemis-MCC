@@ -21,7 +21,7 @@ export namespace Viewer::Camera::Type
         Up,
         Down,
         Fast,
-        Slow,
+        Custom,
 
         Count
     };

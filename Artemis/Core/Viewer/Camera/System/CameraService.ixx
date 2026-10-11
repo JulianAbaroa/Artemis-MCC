@@ -3,6 +3,7 @@ export module Viewer.Camera.System;
 import Export.Tick.Type;
 import Viewer.Camera.Type;
 import Viewer.Camera.State;
+import Viewer.Options.State;
 import std;
 
 export namespace Viewer::Camera::System
@@ -21,10 +22,11 @@ export namespace Viewer::Camera::System
         using Viewport = Viewer::Camera::Type::Viewport;
         using Ray = Viewer::Camera::Type::Ray;
         using CameraStore = Viewer::Camera::State::CameraStore;
+        using OptionsStore = Viewer::Options::State::OptionsStore;
 
     public:
-        explicit CameraService(CameraStore& cameraStore) :
-            m_CameraStore(cameraStore) {}
+        CameraService(CameraStore& cameraStore, OptionsStore& optionsStore) :
+            m_CameraStore(cameraStore), m_OptionsStore(optionsStore) {}
         ~CameraService() = default;
 
         CameraService(const CameraService&) = delete;
@@ -66,6 +68,7 @@ export namespace Viewer::Camera::System
 
     private:
         CameraStore& m_CameraStore;
+        OptionsStore& m_OptionsStore;
 
         Vec3 m_Eye{};
         float m_Yaw{ 0.0f };
@@ -81,15 +84,20 @@ export namespace Viewer::Camera::System
 
         bool m_IsActive{ false };
         bool m_IsLastUpdateSet{ false };
+        bool m_IsFovSet{ false };
         steady_clock::time_point m_LastUpdate{};
 
         // Puts the eye on the local player and aims where it looks.
         auto SeatOnPlayer(const std::shared_ptr<const Tick>& tick) -> void;
 
-        // return: False if the object is neither a player biped nor a collidable of the tick.
+        // Moves the field of view toward the one the mode and the zoom ask for.
+        // note: The first call after the construction takes the target without a transition.
+        auto UpdateLens(float deltaTime) -> void;
+
         // Places the camera on the local player view. Keeps the last pose if there is no living local player.
         auto FollowSelf(const std::shared_ptr<const Tick>& tick) -> void;
 
+        // return: False if the object is neither a player biped nor a collidable of the tick.
         auto FindFollowTarget(const std::shared_ptr<const Tick>& tick,
             std::uint32_t handle, Vec3& outPosition, Vec3& outForward) const -> bool;
 

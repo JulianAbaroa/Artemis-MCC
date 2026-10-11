@@ -5,7 +5,7 @@ import std;
 
 export namespace Viewer::Camera::State
 {
-    // Holds the camera input: the active and follow flags, the mode, the pressed keys and the accumulated mouse movement.
+    // Holds the camera input: the active, zoom and follow flags, the mode, the pressed keys and the accumulated mouse movement.
     // The values are atomic because the window messages write them and the render frame reads them.
     class CameraStore
     {
@@ -31,6 +31,11 @@ export namespace Viewer::Camera::State
         // Switches between the Free and the Game mode.
         auto ToggleMode() -> void;
 
+        // The zoom only applies to the Free mode.
+        auto IsZoomActive() const -> bool;
+        auto SetZoomActive(bool value) -> void;
+        auto ToggleZoom() -> void;
+
         auto IsFollowEnabled() const -> bool;
         auto SetFollowEnabled(bool value) -> void;
 
@@ -51,6 +56,7 @@ export namespace Viewer::Camera::State
 
         std::atomic<bool> m_IsActive{ false };
         std::atomic<Mode> m_Mode{ Mode::Free };
+        std::atomic<bool> m_IsZoomActive{ false };
         std::atomic<bool> m_IsFollowEnabled{ false };
 
         std::array<std::atomic<bool>, k_KeyCount> m_Keys{};

@@ -1,6 +1,7 @@
 module Viewer.Camera.System;
 
 import Common.Math.System;
+import Viewer.Options.Type;
 import std;
 
 namespace
@@ -11,6 +12,7 @@ namespace
 
     using Key = Viewer::Camera::Type::Key;
     using Mode = Viewer::Camera::Type::Mode;
+    using Scalar = Viewer::Options::Type::Scalar;
     using Vec3 = Viewer::Camera::Type::Vec3;
 
     constexpr float k_LookSpeed{ 0.0025f };
@@ -19,7 +21,11 @@ namespace
 
     constexpr float k_MoveSpeed{ 3.0f };
     constexpr float k_FastSpeed{ 30.0f };
-    constexpr float k_SlowSpeed{ 0.6f };
+
+    constexpr float k_DegreesToRadians{ 0.0174532925f };
+
+    // Speed of the field of view transition. Higher is faster.
+    constexpr float k_FovSmoothing{ 12.0f };
 
     constexpr Vec3 k_WorldUp{ 0.0f, 0.0f, 1.0f };
 }
@@ -69,6 +75,7 @@ namespace Viewer::Camera::System
             this->Fly(deltaTime, mouseX, mouseY, acceptInput);
         }
 
+        this->UpdateLens(deltaTime);
         this->Build();
     }
 
@@ -92,6 +99,26 @@ namespace Viewer::Camera::System
         }
 
         m_Eye = eye;
+    }
+
+    auto CameraService::UpdateLens(float deltaTime) -> void
+    {
+        Scalar scalar = Scalar::FovNormal;
+
+        if (m_CameraStore.GetMode() == Mode::Game) scalar = Scalar::GameFov;
+        else if (m_CameraStore.IsZoomActive()) scalar = Scalar::FovZoom;
+
+        const float target = m_OptionsStore.GetScalar(scalar) * k_DegreesToRadians;
+
+        if (!m_IsFovSet)
+        {
+            m_Lens.FovY = target;
+            m_IsFovSet = true;
+            return;
+        }
+
+        const float blend = 1.0f - std::exp(-k_FovSmoothing * deltaTime);
+        m_Lens.FovY += (target - m_Lens.FovY) * blend;
     }
 
     auto CameraService::FollowSelf(const std::shared_ptr<const Tick>& tick) -> void
@@ -144,12 +171,18 @@ namespace Viewer::Camera::System
             return;
         }
 
-        this->SetPose(m_Eye, m_Yaw - mouseX * k_LookSpeed, m_Pitch - mouseY * k_LookSpeed);
+        // The look speed follows the field of view, so the aim keeps its angular feel while zoomed.
+        float lookScale = 1.0f;
+        const float normalHalf = std::tan(m_OptionsStore.GetScalar(Scalar::FovNormal) * k_DegreesToRadians * 0.5f);
+        if (normalHalf > 1e-4f) lookScale = std::tan(m_Lens.FovY * 0.5f) / normalHalf;
+
+        const float look = k_LookSpeed * lookScale;
+        this->SetPose(m_Eye, m_Yaw - mouseX * look, m_Pitch - mouseY * look);
         this->Build();
 
         float speed = k_MoveSpeed;
         if (m_CameraStore.IsKeyDown(Key::Fast)) speed = k_FastSpeed;
-        if (m_CameraStore.IsKeyDown(Key::Slow)) speed = k_SlowSpeed;
+        if (m_CameraStore.IsKeyDown(Key::Custom)) speed = m_OptionsStore.GetScalar(Scalar::SpeedCustom);
 
         const float step = speed * deltaTime;
 

@@ -37,7 +37,7 @@ export namespace UI::Hotkey::State
         auto Find(std::uint32_t virtualKey, bool isShiftDown) const -> const Binding*;
 
     private:
-        const std::array<Binding, 11> m_Bindings
+        const std::array<Binding, 14> m_Bindings
         { {
             { Action::ToggleLauncher, Scope::UI, k_VkF2, false,
                 "Toggle Launcher", "F2", "Show or hide the launcher." },
@@ -71,6 +71,15 @@ export namespace UI::Hotkey::State
 
             { Action::None, Scope::Viewer, k_VkUp, false,
                 "Overlay Page", "UP / DOWN", "Scrolls the overlay panel while the map is active." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Camera Speed", "CTRL + WHEEL", "Free camera. While Ctrl is held the camera moves at the custom speed and the wheel changes it." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Camera Field of View", "WHEEL", "Free camera. Changes the field of view of the current zoom state." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Camera Zoom", "RIGHT CLICK", "Free camera. Turns the zoom on or off." },
         } };
     };
 }

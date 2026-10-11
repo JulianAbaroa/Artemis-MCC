@@ -106,6 +106,11 @@ export namespace Viewer::Options::Type
 
         LimitOpacity,
 
+        SpeedCustom,
+        FovNormal,
+        FovZoom,
+        GameFov,
+
         Count
     };
 
@@ -355,6 +360,18 @@ export namespace Viewer::Options::Type
 
         { Scalar::LimitOpacity, Group::Limits, "LimitOpacity", "Volume opacity",
             "Opacity of the kill and safe zone volumes and the soft ceilings. Lower values are more see-through.", 0.20f, 0.02f, 1.0f, "%.2f" },
+
+        { Scalar::SpeedCustom, Group::Camera, "SpeedCustom", "Custom speed (wu/s)",
+            "Free camera speed while Ctrl is held. Ctrl + mouse wheel changes it.", 3.0f, 0.1f, 60.0f, "%.2f" },
+
+        { Scalar::FovNormal, Group::Camera, "FovNormal", "Field of view (deg)",
+            "Vertical field of view of the free camera. The mouse wheel changes it.", 60.0f, 30.0f, 110.0f, "%.0f" },
+
+        { Scalar::FovZoom, Group::Camera, "FovZoom", "Zoom field of view (deg)",
+            "Field of view of the free camera while the zoom is active. The mouse wheel changes it.", 25.0f, 5.0f, 60.0f, "%.0f" },
+
+        { Scalar::GameFov, Group::Camera, "GameFov", "Game camera field of view (deg)",
+            "Field of view of the game camera. Match it to the game view so the Viewer lines up with the crosshair.", 60.0f, 30.0f, 120.0f, "%.0f" },
     } };
 
     // return: True if every table has its entries in the order of its enum, so the enum values can index them.

@@ -50,7 +50,7 @@ export namespace Viewer
         Layer(Service::Layer& service, Platform::Layer& platform,
             Export::Layer& exportLayer, Gui::Layer& gui,
             PreferencesService& preferences) :
-            m_CameraService(m_CameraStore),
+            m_CameraService(m_CameraStore, m_OptionsStore),
             m_SelectionService(m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, m_CameraStore, m_CameraService, m_SelectionService),

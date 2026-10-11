@@ -226,8 +226,7 @@ namespace UI::Settings::System
 
             if (!ImGui::TreeNodeEx(group.Label, flags)) continue;
 
-            if (group.Id == Group::Camera) this->DrawCameraControls();
-            else this->DrawViewerGroup(group.Id);
+            this->DrawViewerGroup(group.Id);
 
             ImGui::TreePop();
             ImGui::Spacing();
@@ -244,8 +243,6 @@ namespace UI::Settings::System
         using Mode = Viewer::Camera::Type::Mode;
 
         constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
-
-        SectionBox box{};
 
         bool isActive{ m_CameraStore.IsActive() };
         if (ImGui::Checkbox("Viewer active", &isActive))
@@ -289,6 +286,17 @@ namespace UI::Settings::System
         }
 
         ImGui::PopItemWidth();
+
+        bool isZoomActive{ m_CameraStore.IsZoomActive() };
+        if (ImGui::Checkbox("Zoom active", &isZoomActive))
+        {
+            m_CameraStore.SetZoomActive(isZoomActive);
+        }
+
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Narrows the field of view of the free camera. Same as the right click.");
+        }
     }
 
     auto SettingsUIService::DrawViewerGroup(Group group) -> void
@@ -296,6 +304,8 @@ namespace UI::Settings::System
         const bool areLabelsEnabled{ m_OptionsStore.IsEnabled(Flag::Labels) };
 
         SectionBox box{};
+
+        if (group == Group::Camera) this->DrawCameraControls();
 
         for (const FlagInfo& info : k_Flags)
         {

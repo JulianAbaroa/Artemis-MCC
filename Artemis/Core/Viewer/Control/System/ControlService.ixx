@@ -12,7 +12,8 @@ export namespace Viewer::Control::System
 {
     // Turns window messages and raw mouse movement into viewer actions.
     // F4 toggles the viewer, TAB switches between the Free and the Game mode, F5 toggles follow and F6 toggles the labels.
-    // In Free mode the viewer takes the movement keys, the arrows (overlay mode and page), the left click (pick) and the mouse.
+    // In Free mode the viewer takes the movement keys, Ctrl (custom speed), the arrows (overlay mode and page), the left click (pick),
+    // the right click (zoom), the wheel (speed and field of view) and the mouse.
     // In Game mode it takes nothing but its own hotkeys, so the game keeps its controls.
     class ControlService
     {
@@ -49,6 +50,9 @@ export namespace Viewer::Control::System
         OverlayStore& m_OverlayStore;
         OptionsStore& m_OptionsStore;
         SettingsStore& m_SettingsStore;
+
+        // Ctrl + wheel changes the custom speed and the wheel alone changes the field of view of the current zoom state.
+        auto HandleWheel(int delta) -> void;
 
         // return: True if the key is a hotkey. A held key does not repeat the action.
         auto HandleHotkey(const WindowMessage& message) -> bool;
