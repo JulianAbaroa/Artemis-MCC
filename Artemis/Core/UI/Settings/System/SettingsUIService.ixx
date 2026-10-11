@@ -3,6 +3,7 @@ export module UI.Settings.System;
 import Service.Settings.State;
 import Service.Settings.System;
 import Service.Logs.System;
+import Service.Preferences.System;
 import Viewer.Options.Type;
 import Viewer.Options.State;
 import UI.Hotkey.State;
@@ -17,6 +18,7 @@ export namespace UI::Settings::System
         using SettingsStore = Service::Settings::State::SettingsStore;
         using SettingsService = Service::Settings::System::SettingsService;
         using LogsService = Service::Logs::System::LogsService;
+        using PreferencesService = Service::Preferences::System::PreferencesService;
 
         using Group = Viewer::Options::Type::Group;
         using OptionsStore = Viewer::Options::State::OptionsStore;
@@ -28,10 +30,10 @@ export namespace UI::Settings::System
     public:
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,
             LogsService& logsService, HotkeyUIStore& hotkeyStore,
-            OptionsStore& optionsStore) :
+            OptionsStore& optionsStore, PreferencesService& preferencesService) :
             m_SettingsStore(settingsStore), m_SettingsService(settingsService),
             m_LogsService(logsService), m_HotkeyStore(hotkeyStore),
-            m_OptionsStore(optionsStore) {}
+            m_OptionsStore(optionsStore), m_PreferencesService(preferencesService) {}
         ~SettingsUIService() = default;
 
         SettingsUIService(const SettingsUIService&) = delete;
@@ -46,6 +48,10 @@ export namespace UI::Settings::System
         LogsService& m_LogsService;
         HotkeyUIStore& m_HotkeyStore;
         OptionsStore& m_OptionsStore;
+        PreferencesService& m_PreferencesService;
+
+        // ImGui time until which the save button shows its confirmation.
+        double m_SaveFeedbackUntil{ 0.0 };
 
         std::string m_AnimatedPathLabel{};
         float m_AnimationStartTime{ 0.0f };
@@ -66,7 +72,7 @@ export namespace UI::Settings::System
         // Draws the table of the hotkeys.
         auto DrawHotkeysTable() -> void;
 
-        // Draws the local storage toggle and the delete data button.
+        // Draws the local storage toggle, the save preferences button and the delete data button.
         auto DrawDataPersistence() -> void;
 
         // Draws the paths used by Artemis.

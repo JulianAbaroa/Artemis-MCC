@@ -9,6 +9,7 @@ import Export.Layer;
 import Gui.Layer;
 import Gui.Backend.System;
 import Viewer.Layer;
+import Service.Preferences.System;
 
 import UI.Hotkey.State;
 import UI.Hotkey.System;
@@ -37,6 +38,7 @@ export namespace UI
         using WindowMessage = Platform::Input::Type::WindowMessage;
 
         using BackendGuiService = Gui::Backend::System::BackendGuiService;
+        using PreferencesService = Service::Preferences::System::PreferencesService;
 
         using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
         using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
@@ -56,14 +58,15 @@ export namespace UI
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
-            Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer) :
+            Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
+            PreferencesService& preferences) :
             m_BackendGuiService(gui.m_BackendGuiService),
             m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, viewer.m_OverlayStore),
             m_LauncherUIService(service.m_SettingsStore, m_LauncherUIStore),
             m_ObjectTableUIService(exportLayer.m_TickStore, m_ObjectTableUIStore),
             m_PlayerTableUIService(exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
-            m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore),
+            m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore, preferences),
             m_MemoryScannerUIService(platform.m_MemoryScannerStore, platform.m_MemoryScannerService, m_MemoryScannerUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
         {

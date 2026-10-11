@@ -358,7 +358,33 @@ namespace UI::Settings::System
             }
             ImGui::EndGroup();
 
-            ImGui::SameLine(ImGui::GetContentRegionAvail().x - 140.0f);
+            const float rowWidth{ ImGui::GetContentRegionAvail().x };
+
+            ImGui::SameLine(rowWidth - 280.0f);
+
+            ImGui::BeginGroup();
+            const bool justSaved{ ImGui::GetTime() < m_SaveFeedbackUntil };
+
+            if (!usesAppData) ImGui::BeginDisabled();
+
+            if (ImGui::Button(justSaved ? "Saved!##SavePreferences" : "Save Preferences##SavePreferences",
+                ImVec2(130, 0)))
+            {
+                m_PreferencesService.Save();
+                m_SaveFeedbackUntil = ImGui::GetTime() + 2.0;
+            }
+
+            if (!usesAppData) ImGui::EndDisabled();
+
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            {
+                ImGui::SetTooltip(usesAppData
+                    ? "Writes the user preferences to disk now."
+                    : "Enable Local Storage (AppData) to save the preferences.");
+            }
+            ImGui::EndGroup();
+
+            ImGui::SameLine(rowWidth - 140.0f);
 
             ImGui::BeginGroup();
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.15f, 0.15f, 1.0f));

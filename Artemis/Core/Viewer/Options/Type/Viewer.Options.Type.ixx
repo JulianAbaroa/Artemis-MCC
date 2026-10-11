@@ -147,14 +147,14 @@ export namespace Viewer::Options::Type
 
     inline constexpr std::array<GroupInfo, k_GroupCount> k_Groups
     { {
-        { Group::General, "General", true },
-        { Group::Players, "Players", true },
+        { Group::General, "General", false },
+        { Group::Players, "Players", false },
         { Group::Objects, "Objects", false },
         { Group::Vehicles, "Vehicles", false },
-        { Group::Health, "Health", true },
-        { Group::Interaction, "Interaction", true },
-        { Group::Fixtures, "Fixtures", true },
-        { Group::Limits, "Map limits", true },
+        { Group::Health, "Health", false },
+        { Group::Interaction, "Interaction", false },
+        { Group::Fixtures, "Fixtures", false },
+        { Group::Limits, "Map limits", false },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags

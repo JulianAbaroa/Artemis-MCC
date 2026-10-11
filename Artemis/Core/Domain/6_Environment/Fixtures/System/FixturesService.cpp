@@ -53,7 +53,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role != Role::CrateObstacle ||
+            if (classified.Role != Role::CrateObstacle &&
                 classified.Role != Role::SceneryObstacle) continue;
 
             auto objectIt = objects.find(classified.Handle);
