@@ -242,7 +242,10 @@ namespace UI::Settings::System
     {
         using Mode = Viewer::Camera::Type::Mode;
 
+        using Follow = Viewer::Camera::Type::Follow;
+
         constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
+        constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
 
         bool isActive{ m_CameraStore.IsActive() };
         if (ImGui::Checkbox("Viewer active", &isActive))
@@ -286,6 +289,44 @@ namespace UI::Settings::System
         }
 
         ImGui::PopItemWidth();
+
+        const bool isGameMode{ m_CameraStore.GetMode() == Mode::Game };
+        if (isGameMode) ImGui::BeginDisabled();
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Follow selection");
+
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        {
+            ImGui::SetTooltip("Off: flies on its own.\n"
+                "First person: sits on the view of the selected object.\n"
+                "Orbit: turns around the selected object (mouse rotates, wheel sets the distance).\n"
+                "Free camera only. Same as the key left of the 1.");
+        }
+
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
+        ImGui::PushItemWidth(200.0f);
+
+        const int currentFollow{ static_cast<int>(m_CameraStore.GetFollow()) };
+        if (ImGui::BeginCombo("##ViewerFollow", k_FollowLabels[currentFollow]))
+        {
+            for (int i{ 0 }; i < static_cast<int>(k_FollowLabels.size()); ++i)
+            {
+                const bool isSelected{ i == currentFollow };
+                if (ImGui::Selectable(k_FollowLabels[i], isSelected))
+                {
+                    m_CameraStore.SetFollow(static_cast<Follow>(i));
+                }
+
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
+
+        if (isGameMode) ImGui::EndDisabled();
 
         bool isZoomActive{ m_CameraStore.IsZoomActive() };
         if (ImGui::Checkbox("Zoom active", &isZoomActive))

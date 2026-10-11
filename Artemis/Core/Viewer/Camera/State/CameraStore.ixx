@@ -5,13 +5,14 @@ import std;
 
 export namespace Viewer::Camera::State
 {
-    // Holds the camera input: the active, zoom and follow flags, the mode, the pressed keys and the accumulated mouse movement.
+    // Holds the camera input: the active and zoom flags, the mode, the follow mode, the orbit distance, the pressed keys and the accumulated mouse movement.
     // The values are atomic because the window messages write them and the render frame reads them.
     class CameraStore
     {
     private:
         using Key = Viewer::Camera::Type::Key;
         using Mode = Viewer::Camera::Type::Mode;
+        using Follow = Viewer::Camera::Type::Follow;
 
     public:
         CameraStore() = default;
@@ -36,8 +37,15 @@ export namespace Viewer::Camera::State
         auto SetZoomActive(bool value) -> void;
         auto ToggleZoom() -> void;
 
-        auto IsFollowEnabled() const -> bool;
-        auto SetFollowEnabled(bool value) -> void;
+        auto GetFollow() const -> Follow;
+        auto SetFollow(Follow follow) -> void;
+
+        // Goes Off -> FirstPerson -> Orbit -> Off.
+        auto CycleFollow() -> void;
+
+        // Distance from the camera to the orbited object, in world units. Always inside the allowed range.
+        auto GetOrbitDistance() const -> float;
+        auto SetOrbitDistance(float value) -> void;
 
         auto IsKeyDown(Key key) const -> bool;
         auto SetKeyDown(Key key, bool down) -> void;
@@ -52,12 +60,16 @@ export namespace Viewer::Camera::State
         auto ConsumeMouseDelta(float& outX, float& outY) -> void;
 
     private:
+        static constexpr float k_MinOrbitDistance{ 0.5f };
+        static constexpr float k_MaxOrbitDistance{ 100.0f };
+
         static constexpr std::size_t k_KeyCount{ static_cast<std::size_t>(Key::Count) };
 
         std::atomic<bool> m_IsActive{ false };
         std::atomic<Mode> m_Mode{ Mode::Free };
         std::atomic<bool> m_IsZoomActive{ false };
-        std::atomic<bool> m_IsFollowEnabled{ false };
+        std::atomic<Follow> m_Follow{ Follow::Off };
+        std::atomic<float> m_OrbitDistance{ 5.0f };
 
         std::array<std::atomic<bool>, k_KeyCount> m_Keys{};
 

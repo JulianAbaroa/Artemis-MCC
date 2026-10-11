@@ -43,6 +43,9 @@ namespace
     // Factor applied to the custom speed for each notch. The inverse is applied to the field of view.
     constexpr float k_SpeedStep{ 1.15f };
     constexpr float k_FovStep{ 1.08f };
+
+    // Factor applied to the orbit distance for each notch.
+    constexpr float k_OrbitStep{ 1.15f };
 }
 
 namespace Viewer::Control::System
@@ -92,7 +95,17 @@ namespace Viewer::Control::System
 
         if (message.Message == WM_LBUTTONDOWN)
         {
-            m_SelectionStore.RequestPick();
+            // While following, the crosshair is on the followed object, so a pick would select it again.
+            // The click releases it instead; the follow mode stays armed and the next click picks and follows a new one.
+            if (m_CameraStore.GetFollow() != Viewer::Camera::Type::Follow::Off && m_SelectionStore.HasSelection())
+            {
+                m_SelectionStore.Clear();
+            }
+            else
+            {
+                m_SelectionStore.RequestPick();
+            }
+
             return true;
         }
 
@@ -118,11 +131,18 @@ namespace Viewer::Control::System
 
         const float notches = static_cast<float>(delta) / k_WheelNotch;
 
-        // Wheel up raises the speed and narrows the field of view (zooms in).
+        // Wheel up raises the speed, narrows the field of view (zooms in) and brings the orbit camera closer.
         if (m_CameraStore.IsKeyDown(Key::Custom))
         {
             const float speed = m_OptionsStore.GetScalar(Scalar::SpeedCustom);
             m_OptionsStore.SetScalar(Scalar::SpeedCustom, speed * std::pow(k_SpeedStep, notches));
+            return;
+        }
+
+        if (m_CameraStore.GetFollow() == Viewer::Camera::Type::Follow::Orbit)
+        {
+            const float distance = m_CameraStore.GetOrbitDistance();
+            m_CameraStore.SetOrbitDistance(distance * std::pow(1.0f / k_OrbitStep, notches));
             return;
         }
 
@@ -155,12 +175,13 @@ namespace Viewer::Control::System
             return true;
         }
 
-        case VK_F5:
+        case VK_OEM_5:
         {
-            if (!IsRepeat(message.LParam))
-            {
-                m_CameraStore.SetFollowEnabled(!m_CameraStore.IsFollowEnabled());
-            }
+            // The key left of the 1 (|). Only a Free mode key: in Game mode it goes to the game.
+            if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible() ||
+                m_CameraStore.GetMode() != Viewer::Camera::Type::Mode::Free) return false;
+
+            if (!IsRepeat(message.LParam)) m_CameraStore.CycleFollow();
             return true;
         }
 

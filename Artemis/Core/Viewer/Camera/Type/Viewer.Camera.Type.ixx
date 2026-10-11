@@ -35,6 +35,16 @@ export namespace Viewer::Camera::Type
         Game
     };
 
+    // What the Free mode camera does with the selected object.
+    // Off: flies on its own. FirstPerson: sits on the view of the object. Orbit: turns around the object at a distance.
+    // note: Without a selected object the camera flies as in Off and takes the object as soon as one is selected.
+    enum class Follow : std::uint8_t
+    {
+        Off,
+        FirstPerson,
+        Orbit
+    };
+
     // Perspective of the camera. FovY is the vertical field of view in radians.
     struct Lens
     {

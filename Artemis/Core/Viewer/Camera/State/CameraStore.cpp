@@ -51,14 +51,35 @@ namespace Viewer::Camera::State
         }
     }
 
-    auto CameraStore::IsFollowEnabled() const -> bool
+    auto CameraStore::GetFollow() const -> Follow
     {
-        return m_IsFollowEnabled.load(std::memory_order_relaxed);
+        return m_Follow.load(std::memory_order_relaxed);
     }
 
-    auto CameraStore::SetFollowEnabled(bool value) -> void
+    auto CameraStore::SetFollow(Follow follow) -> void
     {
-        m_IsFollowEnabled.store(value, std::memory_order_relaxed);
+        m_Follow.store(follow, std::memory_order_relaxed);
+    }
+
+    auto CameraStore::CycleFollow() -> void
+    {
+        switch (this->GetFollow())
+        {
+        case Follow::Off:         this->SetFollow(Follow::FirstPerson); break;
+        case Follow::FirstPerson: this->SetFollow(Follow::Orbit); break;
+        default:                  this->SetFollow(Follow::Off); break;
+        }
+    }
+
+    auto CameraStore::GetOrbitDistance() const -> float
+    {
+        return m_OrbitDistance.load(std::memory_order_relaxed);
+    }
+
+    auto CameraStore::SetOrbitDistance(float value) -> void
+    {
+        m_OrbitDistance.store(std::clamp(value, k_MinOrbitDistance, k_MaxOrbitDistance),
+            std::memory_order_relaxed);
     }
 
     auto CameraStore::IsKeyDown(Key key) const -> bool

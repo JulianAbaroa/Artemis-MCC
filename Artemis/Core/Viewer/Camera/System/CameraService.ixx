@@ -35,7 +35,7 @@ export namespace Viewer::Camera::System
         // Advances the camera and rebuilds the matrices.
         // note: In Game mode the camera sits on the local player view and keeps its last pose while the player is dead.
         // param acceptInput: If false, the pressed keys are released and the camera does not fly.
-        // param followHandle: Object to follow. Used only if the follow flag is set and the object is in the tick.
+        // param followHandle: Object to follow or orbit. Used only if the follow mode of the store asks for it and the object is in the tick.
         // note: The first update after Deactivate places the camera on the local player.
         auto Update(const std::shared_ptr<const Tick>& tick,
             const Viewport& viewport, bool acceptInput,
@@ -85,6 +85,9 @@ export namespace Viewer::Camera::System
         bool m_IsActive{ false };
         bool m_IsLastUpdateSet{ false };
         bool m_IsFovSet{ false };
+
+        // True if the last update orbited an object.
+        bool m_IsOrbiting{ false };
         steady_clock::time_point m_LastUpdate{};
 
         // Puts the eye on the local player and aims where it looks.
@@ -93,6 +96,19 @@ export namespace Viewer::Camera::System
         // Moves the field of view toward the one the mode and the zoom ask for.
         // note: The first call after the construction takes the target without a transition.
         auto UpdateLens(float deltaTime) -> void;
+
+        // Turns the mouse movement into yaw and pitch, scaled by the field of view, and rebuilds the matrices.
+        auto Look(float mouseX, float mouseY) -> void;
+
+        // return: False if the object is not a collidable nor the living biped of a player.
+        auto FindPivot(const std::shared_ptr<const Tick>& tick,
+            std::uint32_t selected, Vec3& outPivot) const -> bool;
+
+        // Turns around the object at the orbit distance. The mouse rotates, the wheel (ControlService) sets the distance.
+        // param wasOrbiting: False on the first frame, when the distance and the aim come from the current pose.
+        // return: False if the object is not in the tick, and the camera does not move.
+        auto OrbitAround(const std::shared_ptr<const Tick>& tick, std::uint32_t selected,
+            bool wasOrbiting, float mouseX, float mouseY, bool acceptInput) -> bool;
 
         // Places the camera on the local player view. Keeps the last pose if there is no living local player.
         auto FollowSelf(const std::shared_ptr<const Tick>& tick) -> void;

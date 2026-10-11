@@ -42,7 +42,7 @@ export namespace Viewer::Scene::System
         auto Deactivate() -> void;
 
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
-        // note: Follows the selected object if the follow flag of the camera is set.
+        // note: Follows or orbits the selected object according to the follow mode of the camera.
         auto Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport) -> void;
 
         auto ClearSelection() -> void;
