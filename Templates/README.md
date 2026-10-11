@@ -47,3 +47,26 @@ Fields named `Unknown XXX` come from the automatic analysis; their tooltip lists
 
 - XML comments are lost when the script rewrites a file; put notes in `tooltip`.
 - `Old name:` in a tooltip points to the name the field had in `ObjectOffset.ixx`.
+
+## Inheritance
+
+Every object type is built by stacking components in the datum; each component always occupies the same range. `obje` (0x0..0x1A8) is in all of them.
+
+| type | components | fixed size |
+|---|---|---|
+| biped | obje + anim + unit + bipd | 0xE00 |
+| vehicle | obje + anim + unit + vehi | 0xDE8 |
+| weapon | obje + item + weap | 0x338 |
+| equipment | obje + item + eqip | 0x210 |
+| terminal | obje + devi + term | 0x2C8 |
+| projectile | obje + proj | 0x258 |
+| scenery | obje + scen | 0x1E4 |
+| machine | obje + devi + mach | 0x2D4 |
+| control | obje + devi + ctrl | 0x2CC |
+| sound scenery | obje + ssce | 0x1DC |
+| crate | obje + bloc | 0x1B0 |
+| creature | obje + anim + crea | 0x294 |
+| giant | obje + anim + unit + gint | 0x3BE0 |
+| effect scenery | obje + efsc | 0x1AC |
+
+A field labeled in a component applies to every type that includes it.

@@ -36,13 +36,6 @@ export namespace Platform::Memory::Type::Signature
         "8B 0D ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 48 8B 04 C8",
     };
 
-    // Functions: Bone matrix
-    inline constexpr Signature InitRootNode
-    {
-        "InitRootNode",
-        "48 89 5C 24 08 48 89 74 24 10 57 48 81 EC 90 00 00 00 33 D2 48 8B D9 E8 ?? ?? ?? ?? 4C 8B 41 38 33 FF 48 63 D0 83 CE FF 3B D6"
-    };
-
     // Functions: Ticks
     inline constexpr Signature SimulationTicks
     {

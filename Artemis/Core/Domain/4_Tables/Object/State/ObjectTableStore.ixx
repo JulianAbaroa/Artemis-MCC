@@ -1,7 +1,6 @@
 export module Tables.Object.State;
 
 export import :BoneMatrices;
-export import :BoneOffsets;
 export import :DamageSections;
 
 import Tables.Object.Type;

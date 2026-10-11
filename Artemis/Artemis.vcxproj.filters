@@ -472,12 +472,6 @@
     <Filter Include="Core\Domain\4_Tables\Object">
       <UniqueIdentifier>{81b5843a-82b2-4881-a0ea-ad9676650c0d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\Hook">
-      <UniqueIdentifier>{8555545b-2934-4149-8cc4-f336593eb4f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\Hook\BoneMatrix">
-      <UniqueIdentifier>{ec96a20d-9827-422a-8434-b90dbfbd65d7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\4_Tables\Object\State">
       <UniqueIdentifier>{fa043b7c-caed-4d41-8889-51b03bf6f2a9}</UniqueIdentifier>
     </Filter>
@@ -1538,12 +1532,6 @@
     <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx">
       <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneOffsetsStore.cpp">
-      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneOffsetsStore.ixx">
-      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.cpp">
       <Filter>Core\Domain\4_Tables\Object\State\DamageSection</Filter>
     </ClCompile>
@@ -1561,15 +1549,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.ixx">
       <Filter>Core\Domain\4_Tables\Object\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.cpp">
-      <Filter>Core\Domain\4_Tables\Object\Hook\BoneMatrix</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Hook\BonesMatrix\InitRootNodeDetour.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Hook\BoneMatrix</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Tables.Object.Hook.ixx">
-      <Filter>Core\Domain\4_Tables\Object</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
       <Filter>Core\Domain\5_Relations\Classifier\Type</Filter>

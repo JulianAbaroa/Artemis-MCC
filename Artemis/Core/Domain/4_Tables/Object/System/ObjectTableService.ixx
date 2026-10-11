@@ -23,13 +23,13 @@ export namespace Tables::Object::System
 		using Profile = Tables::Object::Type::Profile::Profile;
 		using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
 		using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
+		using BonesHeader = Tables::Object::Type::BoneMatrix::BonesHeader;
 		using DamageSection = Tables::Object::Type::DamageSection::DamageSection;
 		using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
 
 		using LogsService = Service::Logs::System::LogsService;
 		using TemplateStore = Template::Object::State::TemplateStore;
 		using ObjectStore = Tables::Object::State::ObjectTableStore;
-		using BoneOffsetsStore = Tables::Object::State::BoneOffsetsStore;
 		using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
 		using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
 		using TagResolverService = Map::Reader::System::TagResolverService;
@@ -37,13 +37,13 @@ export namespace Tables::Object::System
 	public:
 		ObjectTableService(LogsService& logsService,
 			TemplateStore& templateStore,
-			ObjectStore& objectStore, BoneOffsetsStore& boneOffsetsStore,
+			ObjectStore& objectStore,
 			BoneMatricesStore& boneMatricesStore,
 			DamageSectionsStore& damageSectionsStore,
 			TagResolverService& tagResolverService) :
 			m_LogsService(logsService), m_TemplateStore(templateStore),
 			m_ObjectStore(objectStore),
-			m_BoneOffsetsStore(boneOffsetsStore), m_BoneMatricesStore(boneMatricesStore),
+			m_BoneMatricesStore(boneMatricesStore),
 			m_DamageSectionsStore(damageSectionsStore),
 			m_TagResolverService(tagResolverService) {}
 		~ObjectTableService() = default;
@@ -58,7 +58,6 @@ export namespace Tables::Object::System
 		LogsService& m_LogsService;
 		TemplateStore& m_TemplateStore;
 		ObjectStore& m_ObjectStore;
-		BoneOffsetsStore& m_BoneOffsetsStore;
 		BoneMatricesStore& m_BoneMatricesStore;
 		DamageSectionsStore& m_DamageSectionsStore;
 		TagResolverService& m_TagResolverService;
@@ -71,6 +70,10 @@ export namespace Tables::Object::System
 		auto AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind kind) -> void;
 
 		auto UpdateObjectData(const RawObject& datum, AliveObject& object) -> void;
+
+		// Reads the position and size of the bone block from the descriptor in the datum (0x178).
+		// return: The header, or nothing if the object has no bone block or the descriptor is not plausible.
+		auto ResolveBonesHeader(const RawObject& datum) -> std::optional<BonesHeader>;
 
 		auto ReadBoneMatrixTable(const RawObject& datum, AliveObject& object) -> void;
 		auto ReadDamageSectionTable(const RawObject& datum, AliveObject& object) -> void;

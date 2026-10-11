@@ -49,6 +49,13 @@ namespace
 	using Tables::Object::Type::Constant::k_DamageSectionStride;
 	using Tables::Object::Type::Constant::k_RegionBlockMaxSize;
 
+	using Template::Object::Type::Constant::k_MinDatumSize;
+
+	namespace ObjeOffset = Template::Object::Type::Obje::Offset;
+
+	// Nodes a model can have. Descriptors above it are not plausible.
+	constexpr std::uint32_t k_MaxNodes{ 1024 };
+
 	constexpr std::uint8_t k_TriggerHeldBit{ 0x02 };
 	constexpr std::uint8_t k_ZoomedBit{ 0x80 };
 	constexpr std::uint8_t k_ActionMask{ 0x60 };
@@ -201,11 +208,27 @@ namespace Tables::Object::System
 		}
 	}
 
+	auto ObjectTableService::ResolveBonesHeader(const RawObject& datum) -> std::optional<BonesHeader>
+	{
+		const std::uint16_t size = datum.Read<std::uint16_t>(ObjeOffset::k_NodeMatricesSize);
+		const std::uint16_t offset = datum.Read<std::uint16_t>(ObjeOffset::k_NodeMatricesOffset);
+
+		if (offset == 0xFFFF || offset < k_MinDatumSize) return std::nullopt;
+		if (size == 0 || size % sizeof(BoneMatrix) != 0) return std::nullopt;
+
+		const std::uint32_t nodeCount = static_cast<std::uint32_t>(size / sizeof(BoneMatrix));
+		if (nodeCount >= k_MaxNodes) return std::nullopt;
+
+		BonesHeader header{};
+		header.Offset = offset;
+		header.NodeCount = nodeCount;
+
+		return header;
+	}
+
 	auto ObjectTableService::ReadBoneMatrixTable(const RawObject& datum, AliveObject& object) -> void
 	{
-		const std::optional<BonesHeader> header =
-			m_BoneOffsetsStore.Get(object.Handle);
-
+		const std::optional<BonesHeader> header = this->ResolveBonesHeader(datum);
 		if (!header) return;
 
 		const std::uintptr_t offset = header->Offset;
@@ -523,7 +546,6 @@ namespace Tables::Object::System
 	auto ObjectTableService::Cleanup() -> void
 	{
 		m_ObjectStore.Cleanup();
-		m_BoneOffsetsStore.Cleanup();
 
 		m_LogsService.Message("[ObjectTableService] INFO: Cleanup completed.");
 	}
