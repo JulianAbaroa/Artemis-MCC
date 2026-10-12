@@ -28,6 +28,7 @@ namespace
     using Viewer::Style::Type::k_InteractionMelee;
     using Viewer::Style::Type::k_InteractionAim;
     using Viewer::Style::Type::k_Affordance;
+    using Viewer::Style::Type::k_TeamNeutral;
 
     constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
     constexpr float k_TargetPriority{ 3.0f };
@@ -95,7 +96,8 @@ namespace Viewer::Hud::System
             const Vec3 anchor{ object.Position.X, object.Position.Y,
                 object.Position.Z + object.BoundingRadius + 0.1f };
 
-            canvas.Add(anchor, std::move(rows), ToImColor(color), k_TargetPriority, handle);
+            canvas.Add(anchor, std::move(rows), ToImColor(color),
+                TeamColorOf(context, handle), k_TargetPriority, handle);
 
             if (showLink && context.HasSelf)
             {
@@ -181,7 +183,8 @@ namespace Viewer::Hud::System
             rows.push_back(LabelRow{ "AIM HIT", ToImColor(k_InteractionAim) });
             rows.push_back(LabelRow{ std::format("d: {:.1f} wu", hit.Distance), k_MutedColor });
 
-            canvas.Add(hit.Point, std::move(rows), ToImColor(k_InteractionAim), k_TargetPriority);
+            canvas.Add(hit.Point, std::move(rows), ToImColor(k_InteractionAim),
+                ToImColor(k_TeamNeutral), k_TargetPriority);
         }
 
         if (showAllAffordances && tick.Affordances)
@@ -198,8 +201,8 @@ namespace Viewer::Hud::System
                     AffordanceFormater::ActivationToString(affordance.Activation), k_InfoColor });
                 rows.push_back(LabelRow{ std::format("d: {:.1f} wu", affordance.DistanceToPlayer), k_MutedColor });
 
-                canvas.Add(affordance.Position, std::move(rows),
-                    ToImColor(k_Affordance), 0.0f, affordance.Handle);
+                canvas.Add(affordance.Position, std::move(rows), ToImColor(k_Affordance),
+                    TeamColorOf(context, affordance.Handle), 0.0f, affordance.Handle);
             }
         }
     }

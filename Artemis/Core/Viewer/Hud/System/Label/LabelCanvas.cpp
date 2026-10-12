@@ -17,6 +17,8 @@ namespace
 {
     using Viewer::Options::Type::Scalar;
     using Viewer::Hud::Type::k_NoLabelKey;
+    using Viewer::Style::Type::k_TeamNeutral;
+    using Viewer::Style::Type::ColorOfTeam;
 
     constexpr float k_ScreenMargin{ 48.0f };
     constexpr float k_PaddingX{ 6.0f };
@@ -24,7 +26,8 @@ namespace
     constexpr float k_RowSpacing{ 1.0f };
     constexpr float k_DividerHeight{ 6.0f };
     constexpr float k_StemLength{ 10.0f };
-    constexpr float k_AccentHeight{ 2.0f };
+    constexpr float k_AccentHeight{ 6.0f };
+    constexpr float k_TeamShare{ 0.25f };
     constexpr float k_FarFadeStart{ 0.6f };
     constexpr float k_FarFadeMinimum{ 0.35f };
     constexpr float k_ArrowHeadLength{ 10.0f };
@@ -82,6 +85,17 @@ namespace Viewer::Hud::System
         return Viewer::Hud::Type::LabelRow{ distance ? std::format("d: {:.1f} wu", *distance) : std::string{ "d: n/a" }, color };
     }
 
+    auto TeamColorOf(const Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32
+    {
+        const auto& table = context.Frame.ObjectTable;
+        if (!table) return ToImColor(k_TeamNeutral);
+
+        const auto it = table->find(handle);
+        if (it == table->end() || !it->second.Multiplayer) return ToImColor(k_TeamNeutral);
+
+        return ToImColor(ColorOfTeam(it->second.Multiplayer->Team));
+    }
+
     auto LabelCanvas::Reset() -> void
     {
         m_Entries.clear();
@@ -105,7 +119,7 @@ namespace Viewer::Hud::System
         return true;
     }
 
-    auto LabelCanvas::Add(const Vec3& world, std::vector<LabelRow> rows, ImU32 accent,
+    auto LabelCanvas::Add(const Vec3& world, std::vector<LabelRow> rows, ImU32 group, ImU32 team,
         float priority, std::uint32_t key) -> bool
     {
         if (rows.empty()) return false;
@@ -144,7 +158,8 @@ namespace Viewer::Hud::System
         entry.Screen = screen;
         entry.Distance = distance;
         entry.Priority = priority;
-        entry.Accent = accent;
+        entry.Group = group;
+        entry.Team = team;
         entry.Rows = std::move(rows);
 
         m_Entries.push_back(std::move(entry));
@@ -403,11 +418,17 @@ namespace Viewer::Hud::System
 
             drawList.AddRectFilled(boxMin, boxMax,
                 IM_COL32(12, 14, 18, static_cast<int>(255.0f * backgroundAlpha * fade)), 4.0f);
-            drawList.AddRectFilled(boxMin, ImVec2(boxMax.x, boxMin.y + k_AccentHeight),
-                WithAlpha(entry.Accent, fade), 4.0f, ImDrawFlags_RoundCornersTop);
 
-            drawList.AddLine(ImVec2(entry.Screen.x, boxMax.y), entry.Screen, WithAlpha(entry.Accent, fade), 1.0f);
-            drawList.AddCircleFilled(entry.Screen, 2.5f, WithAlpha(entry.Accent, fade));
+            const float splitX = boxMin.x + (boxMax.x - boxMin.x) * k_TeamShare;
+            const float barBottom = boxMin.y + k_AccentHeight;
+
+            drawList.AddRectFilled(boxMin, ImVec2(splitX, barBottom),
+                WithAlpha(entry.Team, fade), 4.0f, ImDrawFlags_RoundCornersTopLeft);
+            drawList.AddRectFilled(ImVec2(splitX, boxMin.y), ImVec2(boxMax.x, barBottom),
+                WithAlpha(entry.Group, fade), 4.0f, ImDrawFlags_RoundCornersTopRight);
+
+            drawList.AddLine(ImVec2(entry.Screen.x, boxMax.y), entry.Screen, WithAlpha(entry.Group, fade), 1.0f);
+            drawList.AddCircleFilled(entry.Screen, 2.5f, WithAlpha(entry.Group, fade));
 
             float cursorY = boxMin.y + k_AccentHeight + k_PaddingY;
             for (const LabelRow& row : entry.Rows)
@@ -416,7 +437,7 @@ namespace Viewer::Hud::System
                 {
                     const float lineY = cursorY + (k_DividerHeight - k_RowSpacing) * 0.5f;
                     drawList.AddLine(ImVec2(boxMin.x + k_PaddingX, lineY), ImVec2(boxMax.x - k_PaddingX, lineY),
-                        WithAlpha(entry.Accent, 0.5f * fade), 1.0f);
+                        WithAlpha(entry.Group, 0.5f * fade), 1.0f);
 
                     cursorY += k_DividerHeight;
                     continue;

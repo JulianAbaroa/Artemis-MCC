@@ -21,7 +21,8 @@ namespace
     using PlayerTree = Export::Tick::Type::PlayerTree;
     using LabelRow = Viewer::Hud::Type::LabelRow;
 
-    using Viewer::Style::Type::k_Selected;
+    using Viewer::Style::Type::k_Health;
+    using Viewer::Style::Type::ColorOfTeam;
 
     constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
     constexpr float k_HeadClearance{ 0.12f };
@@ -131,8 +132,7 @@ namespace Viewer::Hud::System
                 }
             }
 
-            const Viewer::Style::Type::Color teamColor = Viewer::Style::Type::ColorOfTeam(player.Team);
-            const ImU32 accent = ToImColor(useTeamColor ? teamColor : k_Selected);
+            const ImU32 teamColor = ToImColor(ColorOfTeam(player.Team));
 
             std::vector<LabelRow> rows{};
 
@@ -141,7 +141,7 @@ namespace Viewer::Hud::System
                 const std::string& name = player.Gamertag.empty() ? player.Tag : player.Gamertag;
 
                 rows.push_back(LabelRow{ name.empty() ? std::string{ "Player" } : name,
-                    useTeamColor ? ToImColor(teamColor) : IM_COL32(255, 255, 255, 255) });
+                    useTeamColor ? teamColor : IM_COL32(255, 255, 255, 255) });
             }
 
             std::vector<std::string> held{};
@@ -179,7 +179,7 @@ namespace Viewer::Hud::System
                 rows.push_back(DistanceRow(context, biped.Position, k_MutedColor));
             }
 
-            canvas.Add(anchor, std::move(rows), accent,
+            canvas.Add(anchor, std::move(rows), ToImColor(k_Health), teamColor,
                 player.AliveBipedHandle == context.Selected ? k_SelectedPriority : 0.0f,
                 player.AliveBipedHandle);
         }

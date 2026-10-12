@@ -20,9 +20,7 @@ namespace
 
     using Platform::Render::Type::VertexLayout;
 
-    using Viewer::Style::Type::k_Teleporter;
-    using Viewer::Style::Type::k_Lift;
-    using Viewer::Style::Type::k_Shield;
+    using Viewer::Style::Type::k_Fixture;
 
     constexpr UINT k_InitialCapacity{ 1024 };
     constexpr std::size_t k_MaxDestinations{ 8 };
@@ -139,7 +137,7 @@ namespace Viewer::Map::System
                 for (std::size_t i = 0; i < count; ++i)
                 {
                     AppendArrow(vertices, Raised(teleport.Position), Raised(teleport.DestinationPositions[i]),
-                        k_Teleporter, true);
+                        k_Fixture, true);
                 }
             }
         }
@@ -149,7 +147,7 @@ namespace Viewer::Map::System
             for (const auto& lift : fixtures->Lifts)
             {
                 AppendDirectional(vertices, lift.Position, lift.LaunchDirection,
-                    options.ArrowLength, k_Lift);
+                    options.ArrowLength, k_Fixture);
             }
         }
 
@@ -160,7 +158,7 @@ namespace Viewer::Map::System
                 if (!shield.BlockDirection) continue;
 
                 AppendDirectional(vertices, shield.Position, *shield.BlockDirection,
-                    options.ArrowLength, k_Shield);
+                    options.ArrowLength, k_Fixture);
             }
         }
 

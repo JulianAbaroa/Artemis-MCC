@@ -40,12 +40,14 @@ export namespace Viewer::Hud::Type
     };
 
     // Label already projected to the screen. Rows are drawn from top to bottom.
+    // Group is the semantic group color and Team is the team color. Both fill the top bar.
     struct Entry
     {
         ImVec2 Screen{};
         float Distance{};
         float Priority{};
-        ImU32 Accent{};
+        ImU32 Group{};
+        ImU32 Team{};
         std::vector<LabelRow> Rows{};
 
         ImVec2 BoxMin{};

@@ -7,6 +7,7 @@ import :VehicleLabels;
 
 import Common.Math.Type;
 import Viewer.Options.Type;
+import Viewer.Style.Type;
 import Viewer.Hud.Type;
 import std;
 
@@ -14,6 +15,8 @@ namespace
 {
     using Flag = Viewer::Options::Type::Flag;
     using LabelRow = Viewer::Hud::Type::LabelRow;
+
+    using Viewer::Style::Type::k_Affordance;
 
     constexpr ImU32 k_FreeSeatColor{ IM_COL32(120, 200, 130, 255) };
     constexpr ImU32 k_TakenSeatColor{ IM_COL32(215, 110, 110, 255) };
@@ -50,8 +53,8 @@ namespace Viewer::Hud::System
                 rows.push_back(LabelRow{ context.HasSelf
                     ? std::format("d: {:.1f} wu", seat.DistanceToPlayer) : std::string{ "d: n/a" }, k_MutedColor });
 
-                canvas.Add(position, std::move(rows), color,
-                    affordance.Handle == context.Selected ? 1.0f : 0.0f);
+                canvas.Add(position, std::move(rows), ToImColor(k_Affordance),
+                    TeamColorOf(context, affordance.Handle), affordance.Handle == context.Selected ? 1.0f : 0.0f);
             }
         }
     }

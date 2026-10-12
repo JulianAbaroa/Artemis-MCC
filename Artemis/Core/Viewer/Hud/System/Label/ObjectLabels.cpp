@@ -25,11 +25,8 @@ namespace
     using HexFormater = Gui::Format::System::HexFormater;
     using RoleFormater = Gui::Format::System::RoleFormater;
 
-    using Viewer::Style::Type::k_Lift;
     using Viewer::Style::Type::k_Health;
-    using Viewer::Style::Type::k_Shield;
-    using Viewer::Style::Type::k_Destructible;
-    using Viewer::Style::Type::k_Teleporter;
+    using Viewer::Style::Type::k_Affordance;
     using Viewer::Style::Type::k_Collidable;
     using Viewer::Style::Type::k_Selected;
 
@@ -99,15 +96,14 @@ namespace
         }
     }
 
-    auto AccentOf(Category category) -> Viewer::Style::Type::Color
+    auto GroupOf(Category category) -> Viewer::Style::Type::Color
     {
         switch (category)
         {
-        case Category::Vehicle: return k_Lift;
+        case Category::Vehicle:
+        case Category::Weapon:
+        case Category::Equipment: return k_Affordance;
         case Category::Biped: return k_Health;
-        case Category::Weapon: return k_Shield;
-        case Category::Equipment: return k_Destructible;
-        case Category::Projectile: return k_Teleporter;
         default: return k_Collidable;
         }
     }
@@ -238,10 +234,11 @@ namespace Viewer::Hud::System
             const Vec3 anchor{ object.Position.X, object.Position.Y,
                 object.Position.Z + object.BoundingRadius + 0.1f };
 
-            const ImU32 accent = isSelected
-                ? ToImColor(k_Selected) : ToImColor(AccentOf(category));
+            const ImU32 group = isSelected
+                ? ToImColor(k_Selected) : ToImColor(GroupOf(category));
 
-            canvas.Add(anchor, std::move(rows), accent, isSelected ? k_SelectedPriority : 0.0f, object.Handle);
+            canvas.Add(anchor, std::move(rows), group, TeamColorOf(context, object.Handle),
+                isSelected ? k_SelectedPriority : 0.0f, object.Handle);
 
             if (showArrow && speed > k_MinimumSpeed)
             {
@@ -252,7 +249,7 @@ namespace Viewer::Hud::System
                     object.Position.Y + object.LinearVelocity.Y * scale,
                     object.Position.Z + object.LinearVelocity.Z * scale };
 
-                canvas.AddArrow(object.Position, tip, accent);
+                canvas.AddArrow(object.Position, tip, group);
             }
         };
 

@@ -30,6 +30,9 @@ export namespace Viewer::Hud::System
     auto DistanceRow(const Viewer::Hud::Type::LabelContext& context,
         const Common::Math::Type::Vec3& point, ImU32 color) -> Viewer::Hud::Type::LabelRow;
 
+    // return: The color of the team of the object, or the neutral color if it has no team or is not in the table.
+    auto TeamColorOf(const Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32;
+
     // Collects labels, bars and arrows in world space during a frame and draws them together.
     // The collectors add to it and the HUD flushes it once.
     class LabelCanvas
@@ -56,10 +59,12 @@ export namespace Viewer::Hud::System
         auto Reset() -> void;
 
         // Adds a label anchored at a world position.
+        // param group: Color of the semantic group. It fills the right part of the top bar and tints the stem.
+        // param team: Color of the team. It fills the left part of the top bar.
         // param priority: Higher priority labels are placed first and survive the label limit.
         // param key: Labels with the same key are merged into one, with a divider between them.
         // return: False if the label was dropped. That happens if it has no rows, is too far or is off screen.
-        auto Add(const Vec3& world, std::vector<LabelRow> rows, ImU32 accent,
+        auto Add(const Vec3& world, std::vector<LabelRow> rows, ImU32 group, ImU32 team,
             float priority = 0.0f, std::uint32_t key = k_NoLabelKey) -> bool;
 
         // Adds an arrow between two world positions.

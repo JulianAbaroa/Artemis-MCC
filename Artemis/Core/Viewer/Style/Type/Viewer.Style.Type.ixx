@@ -13,28 +13,24 @@ export namespace Viewer::Style::Type
     inline constexpr float k_TranslucentAlpha{ 0.35f };
     inline constexpr float k_Background[4]{ 0.05f, 0.06f, 0.08f, 1.0f };
 
-    inline constexpr Color k_Map{ 0.34f, 0.52f, 0.64f };
     inline constexpr Color k_Selected{ 1.0f, 1.0f, 1.0f };
 
-    inline constexpr Color k_Collidable{ 0.37f, 0.55f, 0.40f };
-    inline constexpr Color k_Health{ 0.84f, 0.70f, 0.36f };
-    inline constexpr Color k_Affordance{ 0.66f, 0.44f, 0.72f };
+    // Semantic groups are pastel so they never compete with the saturated team colors.
+    inline constexpr Color k_Map{ 0.557f, 0.788f, 0.910f };
+    inline constexpr Color k_Collidable{ 0.620f, 0.847f, 0.651f };
+    inline constexpr Color k_Affordance{ 0.949f, 0.663f, 0.784f };
+    inline constexpr Color k_Health{ 0.945f, 0.863f, 0.541f };
+    inline constexpr Color k_Fixture{ 0.765f, 0.710f, 0.918f };
 
-    inline constexpr Color k_Obstacle{ 0.37f, 0.55f, 0.40f };
-    inline constexpr Color k_Teleporter{ 0.32f, 0.66f, 0.62f };
-    inline constexpr Color k_Shield{ 0.77f, 0.40f, 0.54f };
-    inline constexpr Color k_Lift{ 0.36f, 0.49f, 0.77f };
-    inline constexpr Color k_Destructible{ 0.80f, 0.46f, 0.32f };
-
-    inline constexpr Color k_TeamRed{ 0.77f, 0.31f, 0.31f };
-    inline constexpr Color k_TeamBlue{ 0.31f, 0.45f, 0.74f };
-    inline constexpr Color k_TeamGreen{ 0.36f, 0.66f, 0.41f };
-    inline constexpr Color k_TeamOrange{ 0.83f, 0.56f, 0.28f };
-    inline constexpr Color k_TeamPurple{ 0.59f, 0.41f, 0.75f };
-    inline constexpr Color k_TeamGold{ 0.84f, 0.71f, 0.35f };
-    inline constexpr Color k_TeamBrown{ 0.59f, 0.45f, 0.33f };
-    inline constexpr Color k_TeamPink{ 0.81f, 0.55f, 0.67f };
-    inline constexpr Color k_TeamNeutral{ 0.55f, 0.55f, 0.55f };
+    inline constexpr Color k_TeamRed{ 0.878f, 0.118f, 0.118f };
+    inline constexpr Color k_TeamBlue{ 0.118f, 0.361f, 0.910f };
+    inline constexpr Color k_TeamGreen{ 0.071f, 0.710f, 0.165f };
+    inline constexpr Color k_TeamOrange{ 1.000f, 0.541f, 0.000f };
+    inline constexpr Color k_TeamPurple{ 0.608f, 0.180f, 0.878f };
+    inline constexpr Color k_TeamGold{ 0.941f, 0.769f, 0.000f };
+    inline constexpr Color k_TeamBrown{ 0.541f, 0.353f, 0.169f };
+    inline constexpr Color k_TeamPink{ 1.000f, 0.310f, 0.627f };
+    inline constexpr Color k_TeamNeutral{ 0.500f, 0.500f, 0.500f };
 
     inline constexpr Color k_AimModelTarget{ 0.3f, 1.0f, 0.3f };
     inline constexpr Color k_AimHeadshotTarget{ 1.0f, 0.85f, 0.2f };

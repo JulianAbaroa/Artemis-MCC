@@ -8,11 +8,7 @@ import std;
 namespace
 {
     using Viewer::Style::Type::k_Health;
-    using Viewer::Style::Type::k_Obstacle;
-    using Viewer::Style::Type::k_Teleporter;
-    using Viewer::Style::Type::k_Lift;
-    using Viewer::Style::Type::k_Shield;
-    using Viewer::Style::Type::k_Destructible;
+    using Viewer::Style::Type::k_Fixture;
     using Viewer::Style::Type::k_Affordance;
     using Viewer::Style::Type::k_Collidable;
 }
@@ -49,9 +45,9 @@ namespace Viewer::Palette::System
         {
             const auto& fixtures = *tick->Fixtures;
 
-            auto addFixed = [&add](const auto& items, const Color& color)
+            auto addFixed = [&add](const auto& items)
             {
-                for (const auto& item : items) add(item.Handle, color);
+                for (const auto& item : items) add(item.Handle, k_Fixture);
             };
 
             auto addByTeam = [&add](const auto& items)
@@ -59,11 +55,11 @@ namespace Viewer::Palette::System
                 for (const auto& item : items) add(item.Handle, Viewer::Style::Type::ColorOfTeam(item.Team));
             };
 
-            addFixed(fixtures.Obstacles, k_Obstacle);
-            addFixed(fixtures.Teleporters, k_Teleporter);
-            addFixed(fixtures.Lifts, k_Lift);
-            addFixed(fixtures.Shields, k_Shield);
-            addFixed(fixtures.Destructibles, k_Destructible);
+            addFixed(fixtures.Obstacles);
+            addFixed(fixtures.Teleporters);
+            addFixed(fixtures.Lifts);
+            addFixed(fixtures.Shields);
+            addFixed(fixtures.Destructibles);
 
             addByTeam(fixtures.Spawns);
             addByTeam(fixtures.ObjectiveSpawns);
