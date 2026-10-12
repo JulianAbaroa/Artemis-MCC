@@ -138,9 +138,9 @@ export namespace Common::Tag::Type
         constexpr const char* k_ManCannonLight{ "objects\\levels\\forge\\ff_man_cannon_forge_light\\ff_man_cannon_forge_light" };
         constexpr const char* k_VehicleManCannon{ "objects\\levels\\forge\\ff_veh_man_cannon\\ff_veh_man_cannon" };
         constexpr const char* k_GravityLift{ "objects\\levels\\forge\\ff_grav_lift\\ff_grav_lift" };
-        constexpr const char* k_ManCannonMCC{ "objects\\multi\\dlc\\dlc_medium_mancannon\\dlc_medium_mancannon" };
-        constexpr const char* k_ManCannonHeavyMCC{ "objects\\multi\\dlc\\dlc_medium_mancannon_heavy\\dlc_medium_mancannon_heavy" };
-        constexpr const char* k_ManCannonLightMCC{ "objects\\multi\\dlc\\dlc_medium_mancannon_light\\dlc_medium_mancannon_light" };
+        constexpr const char* k_ManCannonMCC{ "levels\\multi\\dlc\\objects\\dlc_medium_mancannon\\dlc_medium_mancannon" };
+        constexpr const char* k_ManCannonHeavyMCC{ "levels\\multi\\dlc\\objects\\dlc_medium_mancannon_heavy\\dlc_medium_mancannon_heavy" };
+        constexpr const char* k_ManCannonLightMCC{ "levels\\multi\\dlc\\objects\\dlc_medium_mancannon_light\\dlc_medium_mancannon_light" };
         constexpr const char* k_ForerunnerGravityLift{ "objects\\cex\\cex_hangemhigh\\crates\\heh_gravlift_tunnels\\heh_gravlift_tunnels" };
         constexpr const char* k_ForerunnerGravityLiftTall{ "objects\\cex\\cex_hangemhigh\\crates\\heh_gravlift\\heh_gravlift" };
         constexpr const char* k_ManCannonHumanMCC{ "objects\\cex\\cex_headlong\\crates\\man_cannon\\man_cannon" };

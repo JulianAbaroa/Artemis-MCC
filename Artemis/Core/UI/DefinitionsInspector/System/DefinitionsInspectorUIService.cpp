@@ -71,6 +71,59 @@ namespace
         return out;
     }
 
+    // Folder inside the storage folder that receives one tag catalog file per map.
+    constexpr std::string_view k_CatalogFolder{ "TagCatalog" };
+
+    // Escapes the text to be placed inside an XML attribute.
+    auto XmlEscape(std::string_view text) -> std::string
+    {
+        std::string out{};
+        out.reserve(text.size());
+
+        for (const char c : text)
+        {
+            switch (c)
+            {
+            case '&': out += "&amp;"; break;
+            case '<': out += "&lt;"; break;
+            case '>': out += "&gt;"; break;
+            case '"': out += "&quot;"; break;
+            default: out += c; break;
+            }
+        }
+
+        return out;
+    }
+
+    // Writes one catalog element per tag of the map.
+    // note: kind and mp hold the numeric values of ObjectKind and MultiplayerObjectKind. The script names them from the enums.
+    // return: The number of tags written.
+    template <typename TMap>
+    auto WriteCatalogGroup(std::ofstream& file, std::string_view fourCC, const TMap& tags) -> std::size_t
+    {
+        std::size_t written{ 0 };
+
+        for (const auto& [tagName, resolved] : tags)
+        {
+            const auto& base{ resolved.Base };
+
+            std::string kinds{};
+            for (const auto& multiplayer : base.MultiplayerObjects)
+            {
+                if (!kinds.empty()) kinds += ",";
+
+                kinds += std::to_string(static_cast<int>(multiplayer.MultiplayerObjectKind));
+            }
+
+            file << std::format("  <tag name=\"{}\" group=\"{}\" kind=\"{}\" mp=\"{}\" />\n",
+                XmlEscape(tagName), fourCC, static_cast<int>(base.ObjectKind), kinds);
+
+            ++written;
+        }
+
+        return written;
+    }
+
     // Writes one JSON line per tag with the rows of its reflected fields.
     // return: The number of lines written, nullopt if the file could not be opened.
     template <typename TMap>
@@ -244,6 +297,44 @@ namespace UI::DefinitionsInspector::System
         return std::format("{} tags -> {}", *n, filePath.string());
     }
 
+    auto DefinitionsInspectorUIService::DumpCatalog() -> std::string
+    {
+        if (!m_DefinitionsStore.Sbsp.IsFrozen()) return "Definitions not ready (map not loaded).";
+
+        const std::string directory{ m_SettingsStore.GetAppDataDirectory() };
+        if (directory.empty()) return "Storage Folder is not set (Settings). Set it and try again.";
+
+        const auto& scenarios{ m_DefinitionsStore.Scnr.All() };
+        if (scenarios.empty()) return "The map has no scenario tag.";
+
+        const std::string mapName{ path(scenarios.begin()->first).stem().string() };
+
+        const path folder{ path(directory) / k_CatalogFolder };
+        std::error_code ec{};
+        std::filesystem::create_directories(folder, ec);
+        const path filePath{ folder / (mapName + ".xml") };
+
+        std::ofstream file{ filePath, std::ios::trunc };
+        if (!file) return std::format("Could not open {} for writing.", filePath.string());
+
+        file << std::format("<map name=\"{}\">\n", XmlEscape(mapName));
+
+        std::size_t written{ 0 };
+        written += WriteCatalogGroup(file, "bipd", m_DefinitionsStore.Bipd.All());
+        written += WriteCatalogGroup(file, "bloc", m_DefinitionsStore.Bloc.All());
+        written += WriteCatalogGroup(file, "ctrl", m_DefinitionsStore.Ctrl.All());
+        written += WriteCatalogGroup(file, "eqip", m_DefinitionsStore.Eqip.All());
+        written += WriteCatalogGroup(file, "mach", m_DefinitionsStore.Mach.All());
+        written += WriteCatalogGroup(file, "proj", m_DefinitionsStore.Proj.All());
+        written += WriteCatalogGroup(file, "scen", m_DefinitionsStore.Scen.All());
+        written += WriteCatalogGroup(file, "vehi", m_DefinitionsStore.Vehi.All());
+        written += WriteCatalogGroup(file, "weap", m_DefinitionsStore.Weap.All());
+
+        file << "</map>";
+
+        return std::format("{} object tags -> {}", written, filePath.string());
+    }
+
     auto DefinitionsInspectorUIService::DrawDump() -> void
     {
         if (!ImGui::CollapsingHeader("Dump for field-usage report##dump")) return;
@@ -256,6 +347,12 @@ namespace UI::DefinitionsInspector::System
             m_DumpStatus = this->DumpFourCC(k_DumpFourCCs[m_DumpFourCC]);
         }
         if (!m_DumpStatus.empty()) ImGui::TextWrapped("%s", m_DumpStatus.c_str());
+
+        if (ImGui::Button("Dump object tag catalog of this map"))
+        {
+            m_CatalogStatus = this->DumpCatalog();
+        }
+        if (!m_CatalogStatus.empty()) ImGui::TextWrapped("%s", m_CatalogStatus.c_str());
         ImGui::Separator();
     }
 

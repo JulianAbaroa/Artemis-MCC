@@ -12,7 +12,8 @@ import std;
 export namespace UI::DefinitionsInspector::System
 {
     // Draws the resolved definitions of the selected object and the tags linked from it.
-    // note: Can also dump the definitions of a class to a file for the field usage report.
+    // note: Can also dump the definitions of a class to a file for the field usage report, and the object tags of the map
+    // for the tag catalog of the semantization (Templates/seed_tags.py merges those files into Templates/Tags/ObjectTags.xml).
     class DefinitionsInspectorUIService
     {
     private:
@@ -55,13 +56,19 @@ export namespace UI::DefinitionsInspector::System
 
         int m_DumpFourCC{ 4 };
         std::string m_DumpStatus{};
+        std::string m_CatalogStatus{};
 
-        // Draws the combo and the button that dump the definitions of a class.
+        // Draws the combo and the button that dump the definitions of a class, and the button that dumps the tag catalog.
         auto DrawDump() -> void;
 
         // Writes the definitions of a class to the storage folder as NDJSON.
         // return: The text that tells the result of the dump.
         auto DumpFourCC(const std::string& fourCC) -> std::string;
+
+        // Writes the group, kind and multiplayer object kinds of every object tag of the map to TagCatalog/<map>.xml in the storage folder.
+        // note: Every object tag of the map file, not only the living objects. The map is named after its scenario tag.
+        // return: The text that tells the result of the dump.
+        auto DumpCatalog() -> std::string;
 
         // Returns the selected object of the Viewer, nullptr when there is none.
         auto FindSelected() const -> const AliveObject*;
