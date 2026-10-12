@@ -13,7 +13,8 @@ Edit it by hand and commit it. This script only brings in what the game and the 
   * Seed    : the hardcoded tag lists of Common.Tag.Type (the old classifier) give a first
               Function/Subtype with confidence="seed".
   * Labels  : function, subtype and confidence are only written while confidence is "unknown"
-              or "seed". Anything else (high, medium, low) is yours and is never touched.
+              or "seed". Anything else (review, low, medium, high) is yours and is never touched.
+              "note" holds the evidence or the doubt of a label; the script never writes it.
   * Nothing is deleted, except placeholders of seeds that no longer exist. Maps accumulate in the maps attribute.
   * A tag is identified by group + name: the same name can exist in several groups (a campaign map
     has a "magnum" scenery next to the "magnum" weapon). The seed only applies to the group the old
@@ -33,7 +34,7 @@ ENUMS = os.path.join(REPO, "Artemis", "Core", "Domain", "2_Resolved", "Definitio
 TAGS = os.path.join(REPO, "Artemis", "Core", "Common", "Tag", "Type", "Common.Tag.Type.ixx")
 
 EDITABLE = ("unknown", "seed")
-ATTRS = ("name", "group", "kind", "mp", "function", "subtype", "confidence", "maps")
+ATTRS = ("name", "group", "kind", "mp", "function", "subtype", "confidence", "maps", "note")
 
 # --- Enums (single source: the C++ definitions) ---
 
