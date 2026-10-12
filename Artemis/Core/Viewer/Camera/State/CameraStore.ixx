@@ -32,7 +32,7 @@ export namespace Viewer::Camera::State
         // Switches between the Free and the Game mode.
         auto ToggleMode() -> void;
 
-        // The zoom only applies to the Free mode.
+        // Reads, sets or toggles the zoom of the Free mode.
         auto IsZoomActive() const -> bool;
         auto SetZoomActive(bool value) -> void;
         auto ToggleZoom() -> void;
@@ -40,10 +40,11 @@ export namespace Viewer::Camera::State
         auto GetFollow() const -> Follow;
         auto SetFollow(Follow follow) -> void;
 
-        // Goes Off -> FirstPerson -> Orbit -> Off.
+        // Advances the follow mode: Off -> FirstPerson -> Orbit -> Off.
         auto CycleFollow() -> void;
 
-        // Distance from the camera to the orbited object, in world units. Always inside the allowed range.
+        // Reads or sets the distance from the camera to the orbited object, in world units.
+        // note: The value is clamped to the allowed range.
         auto GetOrbitDistance() const -> float;
         auto SetOrbitDistance(float value) -> void;
 

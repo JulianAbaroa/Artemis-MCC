@@ -13,6 +13,9 @@ import std;
 namespace
 {
     using Key = Viewer::Camera::Type::Key;
+    using Mode = Viewer::Camera::Type::Mode;
+    using Follow = Viewer::Camera::Type::Follow;
+    using Scalar = Viewer::Options::Type::Scalar;
 
     // Maps a virtual key to a camera key.
     // return: False if the key is not a camera key.
@@ -66,7 +69,7 @@ namespace Viewer::Control::System
         if (m_SettingsStore.IsMenuVisible() || !m_CameraStore.IsActive()) return false;
 
         // In Game mode the game keeps every key.
-        if (m_CameraStore.GetMode() == Viewer::Camera::Type::Mode::Game) return false;
+        if (m_CameraStore.GetMode() == Mode::Game) return false;
 
         if (isKeyDown)
         {
@@ -96,8 +99,8 @@ namespace Viewer::Control::System
         if (message.Message == WM_LBUTTONDOWN)
         {
             // While following, the crosshair is on the followed object, so a pick would select it again.
-            // The click releases it instead; the follow mode stays armed and the next click picks and follows a new one.
-            if (m_CameraStore.GetFollow() != Viewer::Camera::Type::Follow::Off && m_SelectionStore.HasSelection())
+            // The click releases it instead. The follow mode stays armed and the next click picks and follows a new one.
+            if (m_CameraStore.GetFollow() != Follow::Off && m_SelectionStore.HasSelection())
             {
                 m_SelectionStore.Clear();
             }
@@ -127,26 +130,24 @@ namespace Viewer::Control::System
 
     auto ControlService::HandleWheel(int delta) -> void
     {
-        using Scalar = Viewer::Options::Type::Scalar;
-
-        const float notches = static_cast<float>(delta) / k_WheelNotch;
+        const float notches{ static_cast<float>(delta) / k_WheelNotch };
 
         // Wheel up raises the speed, narrows the field of view (zooms in) and brings the orbit camera closer.
         if (m_CameraStore.IsKeyDown(Key::Custom))
         {
-            const float speed = m_OptionsStore.GetScalar(Scalar::SpeedCustom);
+            const float speed{ m_OptionsStore.GetScalar(Scalar::SpeedCustom) };
             m_OptionsStore.SetScalar(Scalar::SpeedCustom, speed * std::pow(k_SpeedStep, notches));
             return;
         }
 
-        if (m_CameraStore.GetFollow() == Viewer::Camera::Type::Follow::Orbit)
+        if (m_CameraStore.GetFollow() == Follow::Orbit)
         {
-            const float distance = m_CameraStore.GetOrbitDistance();
+            const float distance{ m_CameraStore.GetOrbitDistance() };
             m_CameraStore.SetOrbitDistance(distance * std::pow(1.0f / k_OrbitStep, notches));
             return;
         }
 
-        const Scalar fov = m_CameraStore.IsZoomActive() ? Scalar::FovZoom : Scalar::FovNormal;
+        const Scalar fov{ m_CameraStore.IsZoomActive() ? Scalar::FovZoom : Scalar::FovNormal };
         m_OptionsStore.SetScalar(fov, m_OptionsStore.GetScalar(fov) * std::pow(1.0f / k_FovStep, notches));
     }
 
@@ -179,7 +180,7 @@ namespace Viewer::Control::System
         {
             // The key left of the 1 (|). Only a Free mode key: in Game mode it goes to the game.
             if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible() ||
-                m_CameraStore.GetMode() != Viewer::Camera::Type::Mode::Free) return false;
+                m_CameraStore.GetMode() != Mode::Free) return false;
 
             if (!IsRepeat(message.LParam)) m_CameraStore.CycleFollow();
             return true;
@@ -202,7 +203,7 @@ namespace Viewer::Control::System
     auto ControlService::HandleMouse(RawMouse& mouse) -> bool
     {
         if (m_SettingsStore.IsMenuVisible() || !m_CameraStore.IsActive()) return false;
-        if (m_CameraStore.GetMode() == Viewer::Camera::Type::Mode::Game) return false;
+        if (m_CameraStore.GetMode() == Mode::Game) return false;
 
         m_CameraStore.AccumulateMouseDelta(
             static_cast<float>(mouse.DeltaX), static_cast<float>(mouse.DeltaY));

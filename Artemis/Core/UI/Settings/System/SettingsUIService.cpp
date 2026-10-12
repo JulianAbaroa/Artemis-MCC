@@ -15,6 +15,8 @@ namespace
     using GroupInfo = Viewer::Options::Type::GroupInfo;
     using FlagInfo = Viewer::Options::Type::FlagInfo;
     using ScalarInfo = Viewer::Options::Type::ScalarInfo;
+    using Mode = Viewer::Camera::Type::Mode;
+    using Follow = Viewer::Camera::Type::Follow;
 
     using Binding = UI::Hotkey::Type::Binding;
 
@@ -25,6 +27,9 @@ namespace
     constexpr float k_MinimumAlpha{ 0.20f };
     constexpr float k_MinimumScale{ 1.0f };
     constexpr float k_MaximumScale{ 4.0f };
+
+    constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
+    constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
 
     constexpr const char* k_DisablePopup{ "Confirm Disable AppData" };
     constexpr const char* k_DeletePopup{ "Delete AppData" };
@@ -240,13 +245,6 @@ namespace UI::Settings::System
 
     auto SettingsUIService::DrawCameraControls() -> void
     {
-        using Mode = Viewer::Camera::Type::Mode;
-
-        using Follow = Viewer::Camera::Type::Follow;
-
-        constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
-        constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
-
         bool isActive{ m_CameraStore.IsActive() };
         if (ImGui::Checkbox("Viewer active", &isActive))
         {

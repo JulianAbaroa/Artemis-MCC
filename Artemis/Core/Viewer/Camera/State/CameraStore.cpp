@@ -23,7 +23,8 @@ namespace Viewer::Camera::State
 
         this->ResetKeys();
 
-        float dx = 0.0f, dy = 0.0f;
+        float dx{ 0.0f };
+        float dy{ 0.0f };
         this->ConsumeMouseDelta(dx, dy);
     }
 
@@ -44,7 +45,7 @@ namespace Viewer::Camera::State
 
     auto CameraStore::ToggleZoom() -> void
     {
-        bool expected = m_IsZoomActive.load(std::memory_order_relaxed);
+        bool expected{ m_IsZoomActive.load(std::memory_order_relaxed) };
 
         while (!m_IsZoomActive.compare_exchange_weak(expected, !expected, std::memory_order_relaxed))
         {

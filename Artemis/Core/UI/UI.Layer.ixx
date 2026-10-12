@@ -1,6 +1,7 @@
 export module UI.Layer;
 
 import Service.Layer;
+import Service.Preferences.System;
 import Platform.Layer;
 import Platform.Input.Type;
 import Platform.Render.Type;
@@ -9,7 +10,6 @@ import Export.Layer;
 import Gui.Layer;
 import Gui.Backend.System;
 import Viewer.Layer;
-import Service.Preferences.System;
 
 import UI.Hotkey.State;
 import UI.Hotkey.System;
@@ -34,11 +34,12 @@ export namespace UI
     class Layer
     {
     private:
+        using PreferencesService = Service::Preferences::System::PreferencesService;
+
         using FrameContext = Platform::Render::Type::FrameContext;
         using WindowMessage = Platform::Input::Type::WindowMessage;
 
         using BackendGuiService = Gui::Backend::System::BackendGuiService;
-        using PreferencesService = Service::Preferences::System::PreferencesService;
 
         using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
         using LauncherUIStore = UI::Launcher::State::LauncherUIStore;

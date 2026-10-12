@@ -60,7 +60,7 @@ namespace Viewer::Camera::System
         float mouseX = 0.0f, mouseY = 0.0f;
         m_CameraStore.ConsumeMouseDelta(mouseX, mouseY);
 
-        const bool wasOrbiting = m_IsOrbiting;
+        const bool wasOrbiting{ m_IsOrbiting };
         m_IsOrbiting = false;
 
         Vec3 targetPosition{}, targetForward{};
@@ -68,7 +68,7 @@ namespace Viewer::Camera::System
         {
             this->FollowSelf(tick);
         }
-        else if (const Follow follow = m_CameraStore.GetFollow(); followHandle && follow == Follow::FirstPerson &&
+        else if (const Follow follow{ m_CameraStore.GetFollow() }; followHandle && follow == Follow::FirstPerson &&
             this->FindFollowTarget(tick, *followHandle, targetPosition, targetForward))
         {
             this->AimAlong(targetForward);
@@ -112,12 +112,12 @@ namespace Viewer::Camera::System
 
     auto CameraService::UpdateLens(float deltaTime) -> void
     {
-        Scalar scalar = Scalar::FovNormal;
+        Scalar scalar{ Scalar::FovNormal };
 
         if (m_CameraStore.GetMode() == Mode::Game) scalar = Scalar::GameFov;
         else if (m_CameraStore.IsZoomActive()) scalar = Scalar::FovZoom;
 
-        const float target = m_OptionsStore.GetScalar(scalar) * k_DegreesToRadians;
+        const float target{ m_OptionsStore.GetScalar(scalar) * k_DegreesToRadians };
 
         if (!m_IsFovSet)
         {
@@ -126,7 +126,7 @@ namespace Viewer::Camera::System
             return;
         }
 
-        const float blend = 1.0f - std::exp(-k_FovSmoothing * deltaTime);
+        const float blend{ 1.0f - std::exp(-k_FovSmoothing * deltaTime) };
         m_Lens.FovY += (target - m_Lens.FovY) * blend;
     }
 
@@ -174,11 +174,11 @@ namespace Viewer::Camera::System
     auto CameraService::Look(float mouseX, float mouseY) -> void
     {
         // The look speed follows the field of view, so the aim keeps its angular feel while zoomed.
-        float lookScale = 1.0f;
-        const float normalHalf = std::tan(m_OptionsStore.GetScalar(Scalar::FovNormal) * k_DegreesToRadians * 0.5f);
+        float lookScale{ 1.0f };
+        const float normalHalf{ std::tan(m_OptionsStore.GetScalar(Scalar::FovNormal) * k_DegreesToRadians * 0.5f) };
         if (normalHalf > 1e-4f) lookScale = std::tan(m_Lens.FovY * 0.5f) / normalHalf;
 
-        const float look = k_LookSpeed * lookScale;
+        const float look{ k_LookSpeed * lookScale };
         this->SetPose(m_Eye, m_Yaw - mouseX * look, m_Pitch - mouseY * look);
         this->Build();
     }
@@ -223,8 +223,8 @@ namespace Viewer::Camera::System
         if (!wasOrbiting)
         {
             // Starts from where the camera is: it turns toward the object and keeps its distance, so the view does not jump.
-            const Vec3 toPivot = VecMath::Subtract(pivot, m_Eye);
-            const float distance = VecMath::Length(toPivot);
+            const Vec3 toPivot{ VecMath::Subtract(pivot, m_Eye) };
+            const float distance{ VecMath::Length(toPivot) };
 
             if (distance > 1e-3f)
             {
