@@ -7,7 +7,7 @@ import std;
 
 export namespace Datum::Object::Hook
 {
-    // Finds the engine object table and stores its base address.
+    // Finds the engine thread context and the object table, and stores both.
     class ObjectTableLocator
     {
     private:
@@ -23,7 +23,7 @@ export namespace Datum::Object::Hook
             m_AOBService(aobService), m_DatumStore(datumStore) {}
         ~ObjectTableLocator() = default;
 
-        // Stores the table base unless it is already stored.
+        // Stores the thread context and the table base unless they are already stored.
         // note: Logs an error and stores nothing if the table is not found. Call it again later.
         auto FindAndStoreTableBase() -> void;
 
@@ -32,7 +32,11 @@ export namespace Datum::Object::Hook
         AOBService& m_AOBService;
         DatumStore& m_DatumStore;
 
+        // return: Engine thread context of the calling thread, or 0 if it is not ready.
+        // note: Read from the TLS slot of the engine, so it must run on the game thread.
+        auto GetThreadContext() -> std::uintptr_t;
+
         // return: Address of the object table, or 0 if the thread context is not ready.
-        auto GetObjectTable() -> std::uintptr_t;
+        auto GetObjectTable(std::uintptr_t threadContext) -> std::uintptr_t;
     };
 }

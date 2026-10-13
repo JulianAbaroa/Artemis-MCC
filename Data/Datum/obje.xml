@@ -9,8 +9,8 @@
 	<uint32 name="Parent Handle" offset="0x14" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Object this one is attached to (-1 = none)." />
 	<uint8 name="Unknown 18" offset="0x18" confidence="unknown" tooltip="R1 W1 upd=0xff W:FUN_180471264" />
 	<uint8 name="Unknown 19" offset="0x19" confidence="unknown" tooltip="R5 W4 src=INT_OR W:FUN_1804e08c4" />
-	<uint16 name="Placement Index" offset="0x1A" confidence="medium" default="0xFFFF" tooltip="Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject." />
-	<uint16 name="Unknown 1C" offset="0x1C" confidence="unknown" tooltip="R1 W0 known=UnknownVariant R:FUN_1804ed93c" />
+	<uint16 name="Scenario Placement Index" offset="0x1A" confidence="medium" default="0xFFFF" tooltip="Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject." />
+	<uint16 name="Variant Placement Index" offset="0x1C" confidence="high" default="0xFFFF" exposed="true" tooltip="Index of the placement in the map variant (0xFFFF = not from one). Used when 0x1A is -1 (FUN_1804ed93c, FUN_1800771bc). Verified in Forge and custom game: mapVariant + 0x14FC + index * 0x4C (mvar.xml)." />
 	<point3 name="Bounding Center" offset="0x20" confidence="high" exposed="true" tooltip="Center of the bounding sphere (NOT the origin; ~half body height above it). Not written by CreateObject." />
 	<float32 name="Bounding Radius" offset="0x2C" confidence="high" exposed="true" tooltip="Radius of the bounding sphere." />
 	<point3 name="Saved Bounding Center" offset="0x30" confidence="medium" tooltip="Copy of the sphere center kept by FUN_180479888." />

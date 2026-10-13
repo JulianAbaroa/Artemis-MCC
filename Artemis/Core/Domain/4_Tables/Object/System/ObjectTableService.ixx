@@ -22,6 +22,7 @@ export namespace Tables::Object::System
 		using AliveObject = Tables::Object::Type::Alive::Object;
 		using Profile = Tables::Object::Type::Profile::Profile;
 		using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
+		using Placement = Tables::Object::Type::Placement::Placement;
 		using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
 		using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
 		using BonesHeader = Tables::Object::Type::BoneMatrix::BonesHeader;
@@ -87,6 +88,10 @@ export namespace Tables::Object::System
 		// Reads the zone shape and the team from the multiplayer block (0x190).
 		// return: The data, or nothing if the object does not have the block.
 		auto ReadMultiplayer(const RawObject& datum) -> std::optional<Multiplayer>;
+
+		// Reads the Forge settings from the placement of the map variant that the datum points to (obje 0x1C).
+		// return: The settings, or nothing if the object was not placed by the map variant or its placement is empty.
+		auto ReadPlacement(const Snapshot& snapshot, const RawObject& datum) -> std::optional<Placement>;
 
 		auto UpdateBiped(const RawObject& datum, AliveObject& object) -> void;
 		auto UpdateVehicle(const RawObject& datum, AliveObject& object) -> void;

@@ -29,8 +29,8 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint32_t ParentHandle;  // 0x14  uint32. | Object this one is attached to (-1 = none).
         std::uint8_t Unknown18;  // 0x18  uint8. | R1 W1 upd=0xff W:FUN_180471264
         std::uint8_t Unknown19;  // 0x19  uint8. | R5 W4 src=INT_OR W:FUN_1804e08c4
-        std::uint16_t PlacementIndex;  // 0x1A  uint16. | Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject.
-        std::uint16_t Unknown1c;  // 0x1C  uint16. | R1 W0 known=UnknownVariant R:FUN_1804ed93c
+        std::uint16_t ScenarioPlacementIndex;  // 0x1A  uint16. | Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject.
+        std::uint16_t VariantPlacementIndex;  // 0x1C  uint16. | Index of the placement in the map variant (0xFFFF = not from one). Used when 0x1A is -1 (FUN_1804ed93c, FUN_1800771bc). Verified in Forge and custom game: mapVariant + 0x14FC + index * 0x4C (mvar.xml).
         std::uint8_t  _gap_0x1E[0x2];
         MapStructure::Primitive::Vec3 BoundingCenter;  // 0x20  point3. | Center of the bounding sphere (NOT the origin; ~half body height above it). Not written by CreateObject.
         float        BoundingRadius;  // 0x2C  float32. | Radius of the bounding sphere.

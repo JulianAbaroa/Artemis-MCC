@@ -1162,6 +1162,9 @@
     <Filter Include="Core\Domain\3_Datum\Object\Type\Mach">
       <UniqueIdentifier>{f1d780a0-2a1f-49fe-a4fd-50b72c20a6f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\3_Datum\Object\Type\Mvar">
+      <UniqueIdentifier>{dd527c71-0c5b-44c2-b191-255cb0d48ed8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\3_Datum\Object\Type\Obje">
       <UniqueIdentifier>{d52cefe7-5218-4ed9-a4d8-3957abccc388}</UniqueIdentifier>
     </Filter>
@@ -1521,6 +1524,9 @@
       <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectMultiplayer.ixx">
+      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectPlacement.ixx">
       <Filter>Core\Domain\4_Tables\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx">
@@ -3215,8 +3221,14 @@
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachOffset.ixx">
       <Filter>Core\Domain\3_Datum\Object\Type\Mach</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarOffset.ixx">
+      <Filter>Core\Domain\3_Datum\Object\Type\Mvar</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachStructure.ixx">
       <Filter>Core\Domain\3_Datum\Object\Type\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarStructure.ixx">
+      <Filter>Core\Domain\3_Datum\Object\Type\Mvar</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeOffset.ixx">
       <Filter>Core\Domain\3_Datum\Object\Type\Obje</Filter>
@@ -3258,6 +3270,9 @@
       <Filter>Core\Domain\3_Datum\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mach.ixx">
+      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mvar.ixx">
       <Filter>Core\Domain\3_Datum\Object\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Obje.ixx">

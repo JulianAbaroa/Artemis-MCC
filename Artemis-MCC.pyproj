@@ -48,6 +48,7 @@
     <Content Include="Data\Datum\eqip.xml" />
     <Content Include="Data\Datum\item.xml" />
     <Content Include="Data\Datum\mach.xml" />
+    <Content Include="Data\Datum\mvar.xml" />
     <Content Include="Data\Datum\obje.xml" />
     <Content Include="Data\Datum\proj.xml" />
     <Content Include="Data\Datum\scen.xml" />

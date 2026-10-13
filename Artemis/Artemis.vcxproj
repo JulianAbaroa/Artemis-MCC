@@ -421,7 +421,9 @@
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Item\DatumItemOffset.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Item\DatumItemStructure.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachOffset.ixx" />
+    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarOffset.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachStructure.ixx" />
+    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarStructure.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeOffset.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeStructure.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Proj\DatumProjOffset.ixx" />
@@ -436,6 +438,7 @@
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Eqip.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Item.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mach.ixx" />
+    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mvar.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Obje.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Proj.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Scen.ixx" />
@@ -733,6 +736,7 @@
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectAlive.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectMultiplayer.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectPlacement.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectSize.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectBiped.ixx" />

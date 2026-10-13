@@ -1,6 +1,7 @@
 module Tables.Object.System;
 
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Common.Tag.Type;
 import Common.Team.Type;
@@ -11,6 +12,7 @@ namespace
 {
 	namespace TagName = Common::Tag::Type;
     namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
+	namespace MvarOffset = Datum::Object::Type::Mvar::Offset;
 
 	using Vec2 = Common::Math::Type::Vec2;
 	using Vec3 = Common::Math::Type::Vec3;
@@ -44,6 +46,9 @@ namespace
 	using SceneryKind = Tables::Object::Type::Scenery::Kind;
 	using Shield = Tables::Object::Type::Crate::Shield::Shield;
 	using SpawnData = Tables::Object::Type::Scenery::Spawn::Spawn;
+	using Placement = Tables::Object::Type::Placement::Placement;
+	using Symmetry = Tables::Object::Type::Placement::Symmetry;
+	using Physics = Common::Semantic::Type::Physics;
 
 	// note: The origin of a parented object is local to its parent, so it is carried
 	// through the parent chain. Halo frames are forward, left (up x forward) and up.
@@ -97,6 +102,21 @@ namespace
 
 	// Nodes a model can have. Descriptors above it are not plausible.
 	constexpr std::uint32_t k_MaxNodes{ 1024 };
+
+	// Bit of the placement flags (Mvar +0x00) set when the slot holds a placement.
+	constexpr std::uint16_t k_PlacementInUseBit{ 0x0001 };
+
+	// Bits of the Forge flags of a placement (Mvar +0x46). Symmetry takes two bits from k_SymmetryShift.
+	// note: Phased sets both physics bits (0xC0), Fixed only 0x40.
+	constexpr std::uint8_t k_NotPlacedAtStartBit{ 0x02 };
+	constexpr std::uint8_t k_SymmetryShift{ 2 };
+	constexpr std::uint8_t k_SymmetryMask{ 0x03 };
+	constexpr std::uint8_t k_GameSpecificBit{ 0x20 };
+	constexpr std::uint8_t k_FixedBit{ 0x40 };
+	constexpr std::uint8_t k_PhasedBit{ 0x80 };
+
+	// Color of a placement left on the Forge default.
+	constexpr std::uint8_t k_DefaultColor{ 0xFF };
 
 	constexpr std::uint8_t k_TriggerHeldBit{ 0x02 };
 	constexpr std::uint8_t k_ZoomedBit{ 0x80 };
@@ -170,6 +190,7 @@ namespace Tables::Object::System
 				object.Address = it->second.Address;
 
 				this->UpdateObjectData(it->second, object);
+				object.Placement = this->ReadPlacement(*snapshot, it->second);
 				object.WorldOrigin = ResolveWorldOrigin(snapshot->RawObjects, it->second);
 			});
 
@@ -268,6 +289,34 @@ namespace Tables::Object::System
 		multiplayer.Team = datum.ReadBlock<Team>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Team);
 
 		return multiplayer;
+	}
+
+	auto ObjectTableService::ReadPlacement(const Snapshot& snapshot, const RawObject& datum) -> std::optional<Placement>
+	{
+		const std::uint16_t index = datum.Read<std::uint16_t>(ObjeOffset::k_VariantPlacementIndex);
+		if (index == 0xFFFF) return std::nullopt;
+
+		const std::optional<std::uint16_t> flags = snapshot.ReadPlacement<std::uint16_t>(index, MvarOffset::k_PlacementFlags);
+		if (!flags || (*flags & k_PlacementInUseBit) == 0) return std::nullopt;
+
+		const std::uint8_t forgeFlags = snapshot.ReadPlacement<std::uint8_t>(index, MvarOffset::k_ForgeFlags).value_or(0);
+
+		Placement placement{};
+		placement.Index = index;
+
+		if ((forgeFlags & k_PhasedBit) != 0) placement.Physics = Physics::Phased;
+		else if ((forgeFlags & k_FixedBit) != 0) placement.Physics = Physics::Fixed;
+		else placement.Physics = Physics::Normal;
+
+		placement.Symmetry = static_cast<Symmetry>((forgeFlags >> k_SymmetryShift) & k_SymmetryMask);
+		placement.IsPlacedAtStart = (forgeFlags & k_NotPlacedAtStartBit) == 0;
+		placement.IsGameSpecific = (forgeFlags & k_GameSpecificBit) != 0;
+
+		placement.SpawnSequence = snapshot.ReadPlacement<std::int8_t>(index, MvarOffset::k_SpawnSequence).value_or(0);
+		placement.SpawnTime = snapshot.ReadPlacement<std::uint8_t>(index, MvarOffset::k_SpawnTime).value_or(0);
+		placement.Color = snapshot.ReadPlacement<std::uint8_t>(index, MvarOffset::k_Color).value_or(k_DefaultColor);
+
+		return placement;
 	}
 
 	auto ObjectTableService::ResolveBonesHeader(const RawObject& datum) -> std::optional<BonesHeader>

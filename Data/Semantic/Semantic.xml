@@ -191,7 +191,7 @@
 		<value name="Seated" id="2" />
 		<value name="Attached" id="3" />
 	</enum>
-	<enum name="Physics" type="uint8" doc="Forge physics of the living object, read from the datum (None = no multiplayer block).">
+	<enum name="Physics" type="uint8" doc="Forge physics of the living object, read from its placement in the map variant (None = no placement).">
 		<value name="None" id="0" />
 		<value name="Normal" id="1" />
 		<value name="Fixed" id="2" />

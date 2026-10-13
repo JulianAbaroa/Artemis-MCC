@@ -94,7 +94,7 @@ export namespace Common::Semantic::Type
         Attached = 3,
     };
 
-    // Forge physics of the living object, read from the datum (None = no multiplayer block).
+    // Forge physics of the living object, read from its placement in the map variant (None = no placement).
     enum class Physics : std::uint8_t
     {
         None = 0,

@@ -10,6 +10,7 @@ export import :Scenery;
 export import :Vehicle;
 export import :Weapon;
 export import :Multiplayer;
+export import :Placement;
 export import :Alive;
 export import :Profile;
 export import :Size;

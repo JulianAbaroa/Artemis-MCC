@@ -4,16 +4,18 @@ module;
 
 module UI.ObjectTable.System;
 
+import Common.Semantic.Type;
 import Gui.Format.System;
 import std;
 
 namespace
 {
+    using Physics = Common::Semantic::Type::Physics;
     using HexFormater = Gui::Format::System::HexFormater;
 
     // Minimum width of an object card.
     constexpr float k_CardMinWidth{ 250.0f };
-    constexpr float k_CardHeight{ 270.0f };
+    constexpr float k_CardHeight{ 290.0f };
     constexpr float k_CardPadding{ 25.0f };
     constexpr float k_CardSpacing{ 8.0f };
 
@@ -22,6 +24,18 @@ namespace
     {
         const std::string text{ "Tag: " + tagName };
         return (std::max)(k_CardMinWidth, ImGui::CalcTextSize(text.c_str()).x + k_CardPadding);
+    }
+
+    // Returns the display name of a Forge physics.
+    auto PhysicsName(Physics physics) -> const char*
+    {
+        switch (physics)
+        {
+        case Physics::Normal: return "Normal";
+        case Physics::Fixed: return "Fixed";
+        case Physics::Phased: return "Phased";
+        default: return "None";
+        }
     }
 }
 
@@ -173,6 +187,12 @@ namespace UI::ObjectTable::System
 
         m_CopyableField.Draw("Address:",
             HexFormater::Hex64(object.Address), object.Handle);
+
+        if (object.Placement)
+        {
+            m_CopyableField.Draw("Placement:", std::format("{} ({})",
+                object.Placement->Index, PhysicsName(object.Placement->Physics)), object.Handle);
+        }
 
         ImGui::Unindent(5.0f);
     }

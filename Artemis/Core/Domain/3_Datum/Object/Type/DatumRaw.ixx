@@ -1,11 +1,15 @@
 export module Datum.Object.Type:Raw;
 
+import :Constant;
+
 import Resolved.Definitions.Type;
 import std;
 
 namespace
 {
     using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
+
+    using Datum::Object::Type::Constant::k_PlacementSize;
 }
 
 export namespace Datum::Object::Type::Raw
@@ -76,9 +80,29 @@ export namespace Datum::Object::Type::Raw
         }
     };
 
-    // Every live object of one read of the object table, by handle.
+    // Every live object of one read of the object table, by handle, and the placements of the map variant read in the same tick.
     struct Snapshot
     {
         std::unordered_map<std::uint32_t, RawObject> RawObjects{};
+
+        // Copy of the placement array of the map variant, k_PlacementSize bytes per placement.
+        // note: Empty outside multiplayer games and before the thread context is found.
+        std::vector<std::uint8_t> Placements{};
+
+        // return: The value at offset inside the placement, or nothing if the snapshot has no placements or it does not fit in the placement.
+        template<typename T>
+            requires std::is_trivially_copyable_v<T>
+        auto ReadPlacement(std::size_t index, std::size_t offset) const -> std::optional<T>
+        {
+            if (offset + sizeof(T) > k_PlacementSize) return std::nullopt;
+
+            const std::size_t start{ (index * k_PlacementSize) + offset };
+            if (start + sizeof(T) > Placements.size()) return std::nullopt;
+
+            T value{};
+            std::memcpy(&value, Placements.data() + start, sizeof(T));
+
+            return value;
+        }
     };
 }

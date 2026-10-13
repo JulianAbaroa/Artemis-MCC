@@ -12,6 +12,16 @@ namespace Datum::Object::State
         m_ObjectTableBase.store(pointer);
     }
 
+    auto DatumStore::GetThreadContext() const -> std::uintptr_t
+    {
+        return m_ThreadContext.load();
+    }
+
+    auto DatumStore::SetThreadContext(std::uintptr_t pointer) -> void
+    {
+        m_ThreadContext.store(pointer);
+    }
+
     auto DatumStore::Publish(Snapshot snapshot) -> void
     {
         auto published = std::make_shared<const Snapshot>(std::move(snapshot));
@@ -26,6 +36,7 @@ namespace Datum::Object::State
     auto DatumStore::Cleanup() -> void
     {
         m_ObjectTableBase.store(0);
+        m_ThreadContext.store(0);
         m_Snapshot.store(nullptr, std::memory_order_release);
     }
 }

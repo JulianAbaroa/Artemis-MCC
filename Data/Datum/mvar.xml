@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin game="Halo: Reach (MCC)" runtime="true" component="mvar" start="0x0" baseSize="0x4C">
+	<flags16 name="Placement Flags" offset="0x0" confidence="medium" tooltip="Bit 0 set when the slot holds a placement (0 in empty slots). Tested by FUN_18006e638.">
+		<bit name="In Use" index="0" />
+	</flags16>
+	<uint16 name="Palette Index" offset="0x2" confidence="low" default="0xFFFF" tooltip="0x46 in three placements of the same object type, 0xFFFF in empty slots. Probably the palette (object type) index." />
+	<uint32 name="Unknown 04" offset="0x4" confidence="unknown" default="0xFFFFFFFF" tooltip="0xFFFFFFFF in every placement measured." />
+	<point3 name="Position" offset="0x8" confidence="high" tooltip="World position of the placement. Matches the position of the object." />
+	<vector3 name="Forward" offset="0x14" confidence="medium" tooltip="Forward axis (1, 0, 0 measured)." />
+	<vector3 name="Up" offset="0x20" confidence="medium" tooltip="Up axis (0, 0, 1 measured)." />
+	<uint16 name="Unknown 2C" offset="0x2C" confidence="unknown" default="0xFFFF" tooltip="0xFFFF in every placement measured." />
+	<uint16 name="Unknown 2E" offset="0x2E" confidence="unknown" tooltip="1 and 2 in the placements 1 and 2. Maybe its own index or an order." />
+	<float32 name="Shape Radius" offset="0x30" confidence="high" tooltip="Zone shape: radius or width (box set to 0.1 in Forge reads 0.1466)." />
+	<float32 name="Shape Length" offset="0x34" confidence="high" tooltip="Zone shape: length (box only)." />
+	<float32 name="Shape Top" offset="0x38" confidence="high" tooltip="Zone shape: top." />
+	<float32 name="Shape Bottom" offset="0x3C" confidence="high" tooltip="Zone shape: bottom." />
+	<enum8 name="Shape Kind" offset="0x40" confidence="high" default="0x0" tooltip="0 none, 3 box. Same codes as the multiplayer block of the datum (+0x10)." />
+	<int8 name="Spawn Sequence" offset="0x41" confidence="high" tooltip="Forge spawn sequence (10 reads 0x0A). Signed is assumed." />
+	<uint8 name="Spawn Time" offset="0x42" confidence="high" default="0x0" tooltip="Forge spawn time (1 reads 0x01)." />
+	<uint8 name="Unknown 43" offset="0x43" confidence="unknown" default="0x0" tooltip="0 in every placement measured." />
+	<uint16 name="Gametype Label" offset="0x44" confidence="low" default="0xFFFF" tooltip="0xFFFF by default. Probably the gametype label index (Forge basic has no labels to test)." />
+	<flags8 name="Forge Flags" offset="0x46" confidence="high" tooltip="Measured in Forge and in a local custom game. Symmetry bits: 0x04 symmetric, 0x08 asymmetric, 0x0C both. Physics bits: 0x00 normal, 0x40 fixed, 0xC0 phased. Bits 0 and 4 not measured.">
+		<bit name="Not Placed At Start" index="1" />
+		<bit name="Symmetric" index="2" />
+		<bit name="Asymmetric" index="3" />
+		<bit name="Game Specific" index="5" />
+		<bit name="Fixed" index="6" />
+		<bit name="Phased" index="7" />
+	</flags8>
+	<uint8 name="Team" offset="0x47" confidence="high" default="0x8" tooltip="Forge team (8 neutral, 0 red). Same codes as the multiplayer block of the datum (+0x19)." />
+	<uint16 name="Unknown 48" offset="0x48" confidence="unknown" default="0x0" tooltip="0 in every placement measured." />
+	<uint8 name="Color" offset="0x4A" confidence="high" default="0xFF" tooltip="Forge object color (0xFF default, 0 red)." />
+	<uint8 name="Unknown 4B" offset="0x4B" confidence="unknown" default="0x0" tooltip="0 in every placement measured." />
+</plugin>

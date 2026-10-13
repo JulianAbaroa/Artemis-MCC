@@ -8,6 +8,7 @@ Sources of truth of Artemis: hand-edited XML, committed, with nothing executable
 
 - `Datum/obje.xml`: the base object component, datum `0x000..0x1A8`.
 - `Datum/unit.xml`: the unit component (bipd, vehi, gint), datum `0x1B8..0x9D8`.
+- `Datum/mvar.xml`: one placement of the map variant (Forge settings of a placed object, Physics included), `0x4C` bytes. Not part of the datum: the object points to it with obje `0x1C`.
 - `../Tools/seed_datum.py`: brings automatic discoveries into the XML (see below).
 - `Tags/ObjectTags.xml`: catalog of object tags with their semantic Function and Subtype (see "Tag catalog").
 - `../Tools/seed_tags.py`: builds and merges the tag catalog.

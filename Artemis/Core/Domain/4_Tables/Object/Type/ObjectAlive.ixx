@@ -9,6 +9,7 @@ import :Crate;
 import :Scenery;
 import :Projectile;
 import :Multiplayer;
+import :Placement;
 import Common.Math.Type;
 import std;
 
@@ -24,6 +25,7 @@ namespace
 	using Scenery = Tables::Object::Type::Scenery::Scenery;
 	using Projectile = Tables::Object::Type::Projectile::Projectile;
 	using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
+	using Placement = Tables::Object::Type::Placement::Placement;
 
 	using Specific = std::variant<std::monostate, Equipment, Vehicle,
 		Weapon, Biped, Crate, Scenery, Projectile>;
@@ -65,6 +67,8 @@ export namespace Tables::Object::Type::Alive
 
 		// note: Only objects that have the multiplayer block.
 		std::optional<::Multiplayer> Multiplayer{};
+		// note: Only objects placed by the map variant (obje 0x1C). Holds the Forge settings, Physics included.
+		std::optional<::Placement> Placement{};
 		Specific Specific{};
 	};
 }

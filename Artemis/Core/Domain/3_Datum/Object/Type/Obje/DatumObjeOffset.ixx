@@ -17,8 +17,8 @@ export namespace Datum::Object::Type::Obje::Offset
     constexpr std::size_t k_ParentHandle                                = 0x14;  // uint32.
     constexpr std::size_t k_Unknown18                                   = 0x18;  // uint8.
     constexpr std::size_t k_Unknown19                                   = 0x19;  // uint8.
-    constexpr std::size_t k_PlacementIndex                              = 0x1A;  // uint16.
-    constexpr std::size_t k_Unknown1c                                   = 0x1C;  // uint16.
+    constexpr std::size_t k_ScenarioPlacementIndex                      = 0x1A;  // uint16.
+    constexpr std::size_t k_VariantPlacementIndex                       = 0x1C;  // uint16.
     constexpr std::size_t k_BoundingCenter                              = 0x20;  // point3.
     constexpr std::size_t k_BoundingRadius                              = 0x2C;  // float32.
     constexpr std::size_t k_SavedBoundingCenter                         = 0x30;  // point3.
