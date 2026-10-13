@@ -9,6 +9,7 @@ Runtime ("dynamic") layouts of the objects living in Halo Reach MCC's object tab
 - `seed_templates.py`: brings automatic discoveries into the XML (see below).
 - `Tags/ObjectTags.xml`: catalog of object tags with their semantic Function and Subtype (see "Tag catalog").
 - `seed_tags.py`: builds and merges the tag catalog.
+- `Semantic/Semantic.xml`: single source of the semantic ids (functions, subtypes, groups, states, capabilities, events). See "Semantic ids".
 
 ## Format
 
@@ -90,3 +91,11 @@ Per tag: `name`, `group` (fourcc), `kind` (ObjectKind), `mp` (multiplayer object
    - A tag is identified by `group` + `name`: the same name can exist in several groups (campaign maps have scenery copies of weapons).
    - `python Templates/seed_tags.py --seed-only` applies only the seed.
 3. Label by hand: set `function`/`subtype` and change `confidence` to `high`, `medium` or `low`. That protects the tag from the script.
+
+## Semantic ids
+
+`Semantic/Semantic.xml` declares every semantic enum of Artemis with an explicit id: `Group`, `Function` (with its `group` and its `subtype` list), `Lifecycle`, `Binding`, `Physics`, `Relation`, `Event` and the `Capability` bits. **Ids are stable: only append, never renumber or reuse** (the export to Python and the recordings depend on them).
+
+    python TagTranspiler/GenerateSemantic.py
+
+Writes the module `Common.Semantic.Type` under `Artemis/Core/Common/Semantic/Type/`: the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.

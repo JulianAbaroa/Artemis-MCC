@@ -934,6 +934,12 @@
     <Filter Include="Core\Common\Tag\Type">
       <UniqueIdentifier>{ba54a298-48ba-4cfa-bcee-276345227488}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Common\Semantic">
+      <UniqueIdentifier>{a27aa2a9-f2c5-4f2d-92cc-aefd7d280e69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Semantic\Type">
+      <UniqueIdentifier>{8d3a4a6e-91e8-4e00-a53a-7c4b92b726a7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Common\Team">
       <UniqueIdentifier>{da8e7241-7d1c-4dcb-b0f5-55bd86c2f1aa}</UniqueIdentifier>
     </Filter>
@@ -2440,6 +2446,18 @@
     </ClCompile>
     <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx">
       <Filter>Core\Common\Tag\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Semantic\Type\Common.Semantic.Type.ixx">
+      <Filter>Core\Common\Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx">
+      <Filter>Core\Common\Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx">
+      <Filter>Core\Common\Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx">
+      <Filter>Core\Common\Semantic\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Team\Type\Common.Team.Type.ixx">
       <Filter>Core\Common\Team\Type</Filter>

@@ -1,0 +1,232 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Single source of the semantic ids of Artemis (Ignore/Semantizacion/05 and 07). Ids are stable: only append, never renumber or reuse.
+     TagTranspiler/GenerateSemantic.py generates the C++ (Common.Semantic.Type) and validates Templates/Tags/ObjectTags.xml against it. -->
+<semantic>
+	<enum name="Group" type="uint8" doc="Consumption group of a function. The order is the precedence.">
+		<value name="Unknown" id="0" />
+		<value name="Actor" id="1" />
+		<value name="Mobility" id="2" />
+		<value name="Item" id="3" />
+		<value name="Hazard" id="4" />
+		<value name="MapLogic" id="5" />
+		<value name="Scenery" id="6" />
+	</enum>
+	<enum name="Function" type="uint8" doc="Role of an object in the match. Stable for the whole life of the object.">
+		<value name="Unknown" id="0" group="Unknown" doc="Not classifiable. Visible and counted, never dropped." />
+		<value name="Combatant" id="1" group="Actor" doc="Body of a player, alive or dead.">
+			<subtype name="Spartan" id="1" />
+			<subtype name="Elite" id="2" />
+			<subtype name="Monitor" id="3" />
+		</value>
+		<value name="Vehicle" id="2" group="Mobility" doc="Drivable vehicle.">
+			<subtype name="Banshee" id="1" />
+			<subtype name="CartElectric" id="2" />
+			<subtype name="Falcon" id="3" />
+			<subtype name="Forklift" id="4" />
+			<subtype name="Ghost" id="5" />
+			<subtype name="Mongoose" id="6" />
+			<subtype name="OniVan" id="7" />
+			<subtype name="Pickup" id="8" />
+			<subtype name="Revenant" id="9" />
+			<subtype name="Sabre" id="10" />
+			<subtype name="Scorpion" id="11" />
+			<subtype name="Seraph" id="12" />
+			<subtype name="TruckCab" id="13" />
+			<subtype name="TruckCabBedLong" id="14" />
+			<subtype name="Warthog" id="15" />
+			<subtype name="WarthogTroop" id="16" />
+			<subtype name="Wraith" id="17" />
+		</value>
+		<value name="Turret" id="3" group="Mobility" doc="Vehicle object that holds a seat and a mounted weapon (vehi -> vehi -> weap).">
+			<subtype name="FalconChinGun" id="1" />
+			<subtype name="FalconGrenadeLeft" id="2" />
+			<subtype name="FalconGrenadeRight" id="3" />
+			<subtype name="FalconSensor" id="4" />
+			<subtype name="FalconTurretLeft" id="5" />
+			<subtype name="FalconTurretRight" id="6" />
+			<subtype name="RevenantPlasmaTurret" id="7" />
+			<subtype name="ScorpionCannon" id="8" />
+			<subtype name="ScorpionTurret" id="9" />
+			<subtype name="Shade" id="10" />
+			<subtype name="ShadeFlakCannon" id="11" />
+			<subtype name="ShadePlasmaCannon" id="12" />
+			<subtype name="VehicleMountedPlasmaTurret" id="13" />
+			<subtype name="WarthogChaingun" id="14" />
+			<subtype name="WarthogGauss" id="15" />
+			<subtype name="WarthogRocket" id="16" />
+			<subtype name="WraithCannon" id="17" />
+			<subtype name="WraithPlasmaTurret" id="18" />
+		</value>
+		<value name="Weapon" id="4" group="Item" doc="Hand weapon, or the weapon mounted on a vehicle or turret (subtype Mounted / Horn).">
+			<subtype name="AssaultRifle" id="1" />
+			<subtype name="ConcussionRifle" id="2" />
+			<subtype name="DMR" id="3" />
+			<subtype name="EnergySword" id="4" />
+			<subtype name="FocusRifle" id="5" />
+			<subtype name="FuelRod" id="6" />
+			<subtype name="GravityHammer" id="7" />
+			<subtype name="GrenadeLauncher" id="8" />
+			<subtype name="Machinegun" id="9" />
+			<subtype name="Magnum" id="10" />
+			<subtype name="MountedPlasmaTurret" id="11" />
+			<subtype name="NeedleRifle" id="12" />
+			<subtype name="Needler" id="13" />
+			<subtype name="PlasmaLauncher" id="14" />
+			<subtype name="PlasmaPistol" id="15" />
+			<subtype name="PlasmaRepeater" id="16" />
+			<subtype name="PlasmaRifle" id="17" />
+			<subtype name="PlasmaTurret" id="18" />
+			<subtype name="RocketLauncher" id="19" />
+			<subtype name="Shotgun" id="20" />
+			<subtype name="SniperRifle" id="21" />
+			<subtype name="SpartanLaser" id="22" />
+			<subtype name="Spiker" id="23" />
+			<subtype name="Mounted" id="24" />
+			<subtype name="Horn" id="25" />
+		</value>
+		<value name="ObjectiveItem" id="5" group="Item" doc="Item of a game mode: flag, bomb, ball.">
+			<subtype name="Flag" id="1" />
+			<subtype name="Bomb" id="2" />
+			<subtype name="Ball" id="3" />
+		</value>
+		<value name="ArmorAbility" id="6" group="Item" doc="Armor ability.">
+			<subtype name="Sprint" id="1" />
+			<subtype name="Jetpack" id="2" />
+			<subtype name="Hologram" id="3" />
+			<subtype name="Evade" id="4" />
+			<subtype name="DropShield" id="5" />
+			<subtype name="ArmorLock" id="6" />
+			<subtype name="ActiveCamo" id="7" />
+		</value>
+		<value name="Grenade" id="7" group="Item" doc="Grenade lying in the world.">
+			<subtype name="Frag" id="1" />
+			<subtype name="Plasma" id="2" />
+		</value>
+		<value name="AmmoPack" id="8" group="Item" doc="Ammo pickup or ammo cabinet.">
+			<subtype name="AmmoCabinet" id="1" />
+			<subtype name="RocketAmmo" id="2" />
+			<subtype name="SniperAmmo" id="3" />
+		</value>
+		<value name="Powerup" id="9" group="Item" doc="Powerup.">
+			<subtype name="Red" id="1" />
+			<subtype name="Blue" id="2" />
+			<subtype name="Yellow" id="3" />
+		</value>
+		<value name="Projectile" id="10" group="Hazard" doc="Projectile in flight." />
+		<value name="Explosive" id="11" group="Hazard" doc="Object that explodes when destroyed.">
+			<subtype name="FusionCoil" id="1" />
+			<subtype name="Landmine" id="2" />
+			<subtype name="PlasmaBattery" id="3" />
+			<subtype name="PropaneTank" id="4" />
+		</value>
+		<value name="SpawnPoint" id="12" group="MapLogic" doc="Point where players spawn.">
+			<subtype name="Initial" id="1" />
+			<subtype name="Respawn" id="2" />
+			<subtype name="Invisible" id="3" />
+		</value>
+		<value name="SpawnZone" id="13" group="MapLogic" doc="Volume that weights where players respawn.">
+			<subtype name="Normal" id="1" />
+			<subtype name="Weak" id="2" />
+			<subtype name="Anti" id="3" />
+			<subtype name="Fireteam1" id="4" />
+			<subtype name="Fireteam2" id="5" />
+			<subtype name="Fireteam3" id="6" />
+			<subtype name="Fireteam4" id="7" />
+		</value>
+		<value name="Boundary" id="14" group="MapLogic" doc="Safe or kill volume.">
+			<subtype name="Safe" id="1" />
+			<subtype name="SoftSafe" id="2" />
+			<subtype name="Kill" id="3" />
+			<subtype name="SoftKill" id="4" />
+		</value>
+		<value name="DangerZone" id="15" group="MapLogic" doc="Volume marked as dangerous." />
+		<value name="LocationArea" id="16" group="MapLogic" doc="Named area (callouts)." />
+		<value name="ObjectiveSpawn" id="17" group="MapLogic" doc="Where an objective spawns or is delivered.">
+			<subtype name="FlagStand" id="1" />
+			<subtype name="CapturePlate" id="2" />
+			<subtype name="BallSpawn" id="3" />
+		</value>
+		<value name="ObjectiveZone" id="18" group="MapLogic" doc="Area that is itself the objective.">
+			<subtype name="Hill" id="1" />
+			<subtype name="Territory" id="2" />
+			<subtype name="FlagCapture" id="3" />
+		</value>
+		<value name="Teleporter" id="19" group="MapLogic" doc="Teleporter.">
+			<subtype name="Sender" id="1" />
+			<subtype name="Receiver" id="2" />
+			<subtype name="TwoWay" id="3" />
+		</value>
+		<value name="Lift" id="20" group="MapLogic" doc="Man cannon or gravity lift.">
+			<subtype name="Vertical" id="1" />
+			<subtype name="Curved" id="2" />
+			<subtype name="Redirected" id="3" />
+		</value>
+		<value name="Barrier" id="21" group="MapLogic" doc="Energy door, wall or shield.">
+			<subtype name="OneWay" id="1" />
+			<subtype name="TwoWay" id="2" />
+			<subtype name="Blocker" id="3" />
+			<subtype name="DropShield" id="4" />
+			<subtype name="Portable" id="5" />
+		</value>
+		<value name="HealthStation" id="22" group="MapLogic" doc="Health station." />
+		<value name="Device" id="23" group="Scenery" doc="Machine or control without another role." />
+		<value name="Prop" id="24" group="Scenery" doc="Physical object without a game role." />
+		<value name="Decor" id="25" group="Scenery" doc="Object without a game role nor collision.">
+			<subtype name="Sky" id="1" />
+			<subtype name="Effect" id="2" />
+			<subtype name="Sound" id="3" />
+		</value>
+		<value name="CameraMarker" id="26" group="Scenery" doc="Cinematic camera position." />
+		<value name="Decoy" id="27" group="Actor" doc="Biped without a player that imitates one (hologram).">
+			<subtype name="Hologram" id="1" />
+		</value>
+	</enum>
+	<enum name="Lifecycle" type="uint8" doc="Whether the object is alive.">
+		<value name="Active" id="0" />
+		<value name="Dead" id="1" />
+	</enum>
+	<enum name="Binding" type="uint8" doc="Link of the object to its parent.">
+		<value name="Free" id="0" />
+		<value name="Carried" id="1" />
+		<value name="Seated" id="2" />
+		<value name="Attached" id="3" />
+	</enum>
+	<enum name="Physics" type="uint8" doc="Forge physics of the living object, read from the datum (None = no multiplayer block).">
+		<value name="None" id="0" />
+		<value name="Normal" id="1" />
+		<value name="Fixed" id="2" />
+		<value name="Phased" id="3" />
+	</enum>
+	<enum name="Relation" type="uint8" doc="Relation of an entity with an agent.">
+		<value name="Neutral" id="0" />
+		<value name="Self" id="1" />
+		<value name="Ally" id="2" />
+		<value name="Enemy" id="3" />
+	</enum>
+	<enum name="Event" type="uint8" doc="Kind of an event of the tick.">
+		<value name="Kill" id="0" />
+		<value name="Death" id="1" />
+		<value name="Spawn" id="2" />
+		<value name="Damage" id="3" />
+		<value name="Pickup" id="4" />
+		<value name="Drop" id="5" />
+		<value name="Fire" id="6" />
+		<value name="AbilityUsed" id="7" />
+		<value name="Teleported" id="8" />
+		<value name="Score" id="9" />
+	</enum>
+	<flags name="Capability" type="uint16" doc="Capabilities of an entity. They never decide the group.">
+		<bit name="HasVitality" index="0" />
+		<bit name="HasCollision" index="1" />
+		<bit name="HasZone" index="2" />
+		<bit name="IsPickable" index="3" />
+		<bit name="IsEnterable" index="4" />
+		<bit name="IsUsable" index="5" />
+		<bit name="IsDestructible" index="6" />
+		<bit name="IsDynamic" index="7" />
+		<bit name="BlocksMovement" index="8" />
+		<bit name="BlocksProjectiles" index="9" />
+		<bit name="CanDamage" index="10" />
+		<bit name="IsObjective" index="11" />
+	</flags>
+</semantic>
