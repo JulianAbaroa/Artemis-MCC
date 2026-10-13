@@ -22,7 +22,7 @@
     <Folder Include="Tools\" />
     <Folder Include="Tools\TagTranspiler\" />
     <Folder Include="Data\" />
-    <Folder Include="Data\Object\" />
+    <Folder Include="Data\Datum\" />
     <Folder Include="Data\Semantic\" />
     <Folder Include="Data\Tags\" />
   </ItemGroup>
@@ -34,26 +34,26 @@
     <Compile Include="Tools\TagTranspiler\GenerateSemantic.py" />
     <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
     <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
-    <Compile Include="Tools\TagTranspiler\GenerateTemplate.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateDatum.py" />
     <Compile Include="Tools\seed_tags.py" />
-    <Compile Include="Tools\seed_templates.py" />
+    <Compile Include="Tools\seed_datum.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\README.md" />
-    <Content Include="Data\Object\anim.xml" />
-    <Content Include="Data\Object\bipd.xml" />
-    <Content Include="Data\Object\bloc.xml" />
-    <Content Include="Data\Object\ctrl.xml" />
-    <Content Include="Data\Object\devi.xml" />
-    <Content Include="Data\Object\eqip.xml" />
-    <Content Include="Data\Object\item.xml" />
-    <Content Include="Data\Object\mach.xml" />
-    <Content Include="Data\Object\obje.xml" />
-    <Content Include="Data\Object\proj.xml" />
-    <Content Include="Data\Object\scen.xml" />
-    <Content Include="Data\Object\unit.xml" />
-    <Content Include="Data\Object\vehi.xml" />
-    <Content Include="Data\Object\weap.xml" />
+    <Content Include="Data\Datum\anim.xml" />
+    <Content Include="Data\Datum\bipd.xml" />
+    <Content Include="Data\Datum\bloc.xml" />
+    <Content Include="Data\Datum\ctrl.xml" />
+    <Content Include="Data\Datum\devi.xml" />
+    <Content Include="Data\Datum\eqip.xml" />
+    <Content Include="Data\Datum\item.xml" />
+    <Content Include="Data\Datum\mach.xml" />
+    <Content Include="Data\Datum\obje.xml" />
+    <Content Include="Data\Datum\proj.xml" />
+    <Content Include="Data\Datum\scen.xml" />
+    <Content Include="Data\Datum\unit.xml" />
+    <Content Include="Data\Datum\vehi.xml" />
+    <Content Include="Data\Datum\weap.xml" />
     <Content Include="Data\Semantic\Semantic.xml" />
     <Content Include="Data\Tags\ObjectTags.xml" />
   </ItemGroup>

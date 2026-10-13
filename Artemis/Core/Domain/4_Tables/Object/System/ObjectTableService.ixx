@@ -5,8 +5,8 @@ import Map.Reader.System;
 import Resolved.Definitions.Type;
 import Resolved.Vitality.State;
 import Resolved.World.State;
-import Template.Object.State;
-import Template.Object.Type;
+import Datum.Object.State;
+import Datum.Object.Type;
 import Tables.Object.Type;
 import Tables.Object.State;
 import std;
@@ -17,8 +17,8 @@ export namespace Tables::Object::System
 	{
 	private:
         using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-		using RawObject = Template::Object::Type::Raw::RawObject;
-		using Snapshot = Template::Object::Type::Raw::Snapshot;
+		using RawObject = Datum::Object::Type::Raw::RawObject;
+		using Snapshot = Datum::Object::Type::Raw::Snapshot;
 		using AliveObject = Tables::Object::Type::Alive::Object;
 		using Profile = Tables::Object::Type::Profile::Profile;
 		using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
@@ -29,7 +29,7 @@ export namespace Tables::Object::System
 		using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
 
 		using LogsService = Service::Logs::System::LogsService;
-		using TemplateStore = Template::Object::State::TemplateStore;
+		using DatumStore = Datum::Object::State::DatumStore;
 		using ObjectStore = Tables::Object::State::ObjectTableStore;
 		using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
 		using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
@@ -37,19 +37,19 @@ export namespace Tables::Object::System
 
 	public:
 		ObjectTableService(LogsService& logsService,
-			TemplateStore& templateStore,
+			DatumStore& datumStore,
 			ObjectStore& objectStore,
 			BoneMatricesStore& boneMatricesStore,
 			DamageSectionsStore& damageSectionsStore,
 			TagResolverService& tagResolverService) :
-			m_LogsService(logsService), m_TemplateStore(templateStore),
+			m_LogsService(logsService), m_DatumStore(datumStore),
 			m_ObjectStore(objectStore),
 			m_BoneMatricesStore(boneMatricesStore),
 			m_DamageSectionsStore(damageSectionsStore),
 			m_TagResolverService(tagResolverService) {}
 		~ObjectTableService() = default;
 
-		// Builds the alive objects from the last snapshot of the template layer.
+		// Builds the alive objects from the last snapshot of the datum layer.
 		// note: Does not read the game memory. Does nothing until a snapshot is published.
 		auto UpdateObjectTable() -> void;
 
@@ -57,7 +57,7 @@ export namespace Tables::Object::System
 
 	private:
 		LogsService& m_LogsService;
-		TemplateStore& m_TemplateStore;
+		DatumStore& m_DatumStore;
 		ObjectStore& m_ObjectStore;
 		BoneMatricesStore& m_BoneMatricesStore;
 		DamageSectionsStore& m_DamageSectionsStore;

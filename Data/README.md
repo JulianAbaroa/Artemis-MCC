@@ -2,13 +2,13 @@
 
 Sources of truth of Artemis: hand-edited XML, committed, with nothing executable next to them. The scripts that read and write them live in `Tools/` (generators in `Tools/TagTranspiler/`, seeds in `Tools/`).
 
-`Object/` holds the runtime ("dynamic") layouts of the objects living in Halo Reach MCC's object table, as opposed to the static tag layouts stored in the `.map` files. Same XML dialect as Assembly plugins, so they can be read, edited and shared the same way.
+`Datum/` holds the runtime ("dynamic") layouts of the objects living in Halo Reach MCC's object table, as opposed to the static tag layouts stored in the `.map` files. Same XML dialect as Assembly plugins, so they can be read, edited and shared the same way.
 
 ## Layout
 
-- `Object/obje.xml`: the base object component, datum `0x000..0x1A8`.
-- `Object/unit.xml`: the unit component (bipd, vehi, gint), datum `0x1B8..0x9D8`.
-- `../Tools/seed_templates.py`: brings automatic discoveries into the XML (see below).
+- `Datum/obje.xml`: the base object component, datum `0x000..0x1A8`.
+- `Datum/unit.xml`: the unit component (bipd, vehi, gint), datum `0x1B8..0x9D8`.
+- `../Tools/seed_datum.py`: brings automatic discoveries into the XML (see below).
 - `Tags/ObjectTags.xml`: catalog of object tags with their semantic Function and Subtype (see "Tag catalog").
 - `../Tools/seed_tags.py`: builds and merges the tag catalog.
 - `Semantic/Semantic.xml`: single source of the semantic ids (functions, subtypes, groups, states, capabilities, events). See "Semantic ids".
@@ -35,7 +35,7 @@ Fields named `Unknown XXX` come from the automatic analysis; their tooltip lists
    `ExportObjectTemplates.java` (Ghidra script) -> `analyze_templates.py` -> `Ignore/Ghidra/templates/fields_<comp>.txt`.
 2. Bring the discoveries into the XML:
 
-       python Tools/seed_templates.py [obje unit bipd ...] [--dry-run]
+       python Tools/seed_datum.py [obje unit bipd ...] [--dry-run]
 
    - No XML yet for the component: creates it with every candidate as `Unknown XXX`.
    - XML exists: **merges**. Adds candidates that do not overlap an existing field and refreshes the type guess and tooltip of fields still `confidence="unknown"`. Anything else is never touched or deleted. Run it as often as the analysis improves.
@@ -43,10 +43,10 @@ Fields named `Unknown XXX` come from the automatic analysis; their tooltip lists
 3. Label what you measured or decompiled (edit the XML).
 4. Generate the C++:
 
-       python Tools/TagTranspiler/GenerateTemplate.py [Data/Object/unit.xml]
+       python Tools/TagTranspiler/GenerateDatum.py [Data/Datum/unit.xml]
 
-   Writes under `Artemis/Core/Domain/3_Template/Object/Type/`:
-   `<Prefix>/Template<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Template<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Template.Object.Type.<Prefix>.ixx`, module `Template.Object.Type`. The `Template` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
+   Writes under `Artemis/Core/Domain/3_Datum/Object/Type/`:
+   `<Prefix>/Datum<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Datum<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Datum.Object.Type.<Prefix>.ixx`, module `Datum.Object.Type`. The `Datum` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
 
 ## Notes
 

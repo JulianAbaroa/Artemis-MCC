@@ -3,7 +3,7 @@ export module Tables.Layer;
 import Service.Layer;
 import Platform.Layer;
 import Map.Layer;
-import Template.Layer;
+import Datum.Layer;
 import Tables.Object.State;
 import Tables.Object.System;
 import Tables.Player.State;
@@ -32,8 +32,8 @@ export namespace Tables
 		using InteractionTableLocator = Tables::Interaction::Hook::InteractionTableLocator;
 
 	public:
-		Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map, Template::Layer& templateLayer) :
-			m_ObjectService(service.m_LogsService, templateLayer.m_TemplateStore, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
+		Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map, Datum::Layer& datumLayer) :
+			m_ObjectService(service.m_LogsService, datumLayer.m_DatumStore, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
 			m_PlayerService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore),
 			m_InteractionService(service.m_LogsService, platform.m_MemoryReaderService, m_InteractionStore),
 			m_PlayerTableLocator(service.m_LogsService, platform.m_AOBService, m_PlayerStore),

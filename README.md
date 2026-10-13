@@ -12,7 +12,7 @@ The data pipeline has two components:
 ## Repository layout
 - `Artemis/`: the C++ proxy DLL (Visual Studio project, submodules in `External/`).
 - `Tools/`: development tools in Python (`TagTranspiler/` generators, seed scripts). Not needed at runtime.
-- `Data/`: hand-edited XML that is the source of truth for the generated code (object templates, tag catalog, semantic ids). See `Data/README.md`.
+- `Data/`: hand-edited XML that is the source of truth for the generated code (datum layouts, tag catalog, semantic ids). See `Data/README.md`.
 - `docs/`: technical notes.
 
 `Artemis-MCC.sln` holds two projects: the C++ DLL and one Python project (`Artemis-MCC.pyproj`) that shows `Tools/` and `Data/`.

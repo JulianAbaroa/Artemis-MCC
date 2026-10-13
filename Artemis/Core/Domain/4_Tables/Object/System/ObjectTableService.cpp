@@ -5,20 +5,20 @@ import Common.ZoneShape.Type;
 import Common.Tag.Type;
 import Common.Team.Type;
 import Resolved.Definitions.Type;
-import Template.Object.Type;
+import Datum.Object.Type;
 
 namespace
 {
 	namespace TagName = Common::Tag::Type;
-    namespace ObjeOffset = Template::Object::Type::Obje::Offset;
+    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
 
 	using Vec2 = Common::Math::Type::Vec2;
 	using Vec3 = Common::Math::Type::Vec3;
 	using ShapeKind = Common::ZoneShape::Type::Kind;
 	using Team = Common::Team::Type::Team;
 	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-	using RawObject = Template::Object::Type::Raw::RawObject;
-	using Snapshot = Template::Object::Type::Raw::Snapshot;
+	using RawObject = Datum::Object::Type::Raw::RawObject;
+	using Snapshot = Datum::Object::Type::Raw::Snapshot;
 	using BonesHeader = Tables::Object::Type::BoneMatrix::BonesHeader;
 	using BipedObject = Tables::Object::Type::Biped::Biped;
 	using CrateObject = Tables::Object::Type::Crate::Crate;
@@ -76,18 +76,18 @@ namespace
 	using Tables::Object::Type::Constant::k_DamageSectionStride;
 	using Tables::Object::Type::Constant::k_RegionBlockMaxSize;
 
-	using Template::Object::Type::Constant::k_MinDatumSize;
+	using Datum::Object::Type::Constant::k_MinDatumSize;
 
-	namespace ObjeOffset = Template::Object::Type::Obje::Offset;
-	namespace UnitOffset = Template::Object::Type::Unit::Offset;
-	namespace BipdOffset = Template::Object::Type::Bipd::Offset;
-	namespace WeapOffset = Template::Object::Type::Weap::Offset;
-	namespace ProjOffset = Template::Object::Type::Proj::Offset;
-	namespace EqipOffset = Template::Object::Type::Eqip::Offset;
-	namespace SeatBlock = Template::Object::Type::Block::Seat;
-	namespace MultiplayerBlock = Template::Object::Type::Block::Multiplayer;
+	namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
+	namespace UnitOffset = Datum::Object::Type::Unit::Offset;
+	namespace BipdOffset = Datum::Object::Type::Bipd::Offset;
+	namespace WeapOffset = Datum::Object::Type::Weap::Offset;
+	namespace ProjOffset = Datum::Object::Type::Proj::Offset;
+	namespace EqipOffset = Datum::Object::Type::Eqip::Offset;
+	namespace SeatBlock = Datum::Object::Type::Block::Seat;
+	namespace MultiplayerBlock = Datum::Object::Type::Block::Multiplayer;
 
-	// Fields that are not confirmed in the templates yet. They keep the name they had before the migration.
+	// Fields that are not confirmed in the datum layouts yet. They keep the name they had before the migration.
 	constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
 	constexpr std::size_t k_ProjectileOwnerBipedHandle{ ProjOffset::k_Unknown1c4 };
 	constexpr std::size_t k_ProjectileOwnerWeaponHandle{ ProjOffset::k_Unknown1d8 };
@@ -148,7 +148,7 @@ namespace Tables::Object::System
 
 	auto ObjectTableService::UpdateObjectTable() -> void
 	{
-		auto snapshot = m_TemplateStore.Acquire();
+		auto snapshot = m_DatumStore.Acquire();
 		if (!snapshot) return;
 
 		m_BoneMatricesStore.Clear();

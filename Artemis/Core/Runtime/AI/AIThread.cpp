@@ -106,7 +106,7 @@ namespace Runtime::Thread
 
     auto AIThread::ExecuteTick() -> void
     {
-        m_Template.m_TemplateService.UpdateObjectTable();
+        m_Datum.m_DatumService.UpdateObjectTable();
 
         m_Tables.m_ObjectService.UpdateObjectTable();
         m_Tables.m_PlayerService.UpdatePlayerTable();
