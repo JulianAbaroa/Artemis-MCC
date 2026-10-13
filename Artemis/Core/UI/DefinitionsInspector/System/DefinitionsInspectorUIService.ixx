@@ -13,7 +13,7 @@ export namespace UI::DefinitionsInspector::System
 {
     // Draws the resolved definitions of the selected object and the tags linked from it.
     // note: Can also dump the definitions of a class to a file for the field usage report, and the object tags of the map
-    // for the tag catalog of the semantization (Templates/seed_tags.py merges those files into Templates/Tags/ObjectTags.xml).
+    // for the tag catalog of the semantization (Tools/seed_tags.py merges those files into Data/Tags/ObjectTags.xml).
     class DefinitionsInspectorUIService
     {
     private:

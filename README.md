@@ -7,7 +7,15 @@ Artemis operates as a proxy DLL (`wtsapi32.dll`), injecting into the game proces
 
 The data pipeline has two components:
 - **Artemis (C++):** The in-process module. Hooks into the game engine, reads tag and runtime data from memory, and exposes it for downstream use.
-- **TagTranspiler (Python):** A code generation tool that parses Halo Reach tag definition files to automatically generate the C++ headers used by Artemis to read tag structures from `.map` files.
+- **TagTranspiler (Python, `Tools/TagTranspiler/`):** A code generation tool that parses Halo Reach tag definition files to automatically generate the C++ headers used by Artemis to read tag structures from `.map` files.
+
+## Repository layout
+- `Artemis/`: the C++ proxy DLL (Visual Studio project, submodules in `External/`).
+- `Tools/`: development tools in Python (`TagTranspiler/` generators, seed scripts). Not needed at runtime.
+- `Data/`: hand-edited XML that is the source of truth for the generated code (object templates, tag catalog, semantic ids). See `Data/README.md`.
+- `docs/`: technical notes.
+
+`Artemis-MCC.sln` holds two projects: the C++ DLL and one Python project (`Artemis-MCC.pyproj`) that shows `Tools/` and `Data/`.
 
 ## Technical Requirements
 - **Language:** C++23
@@ -23,7 +31,7 @@ The data pipeline has two components:
 
 ### Prerequisites
 - **Visual Studio 2026** with the C++ Desktop Development workload (C++23 support).
-- **Python 3.10+** (for TagTranspiler).
+- **Python 3.10+** (for the tools in `Tools/`).
 - A copy of **[Assembly](https://github.com/XboxChaos/Assembly)** — its Halo Reach MCC plugin XML files are required to generate the tag headers (see step 2). These files are **not** included in this repository.
 - **Halo: The Master Chief Collection** (Steam), with Halo Reach installed and **Easy Anti-Cheat (EAC) disabled**.
 

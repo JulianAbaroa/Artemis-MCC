@@ -19,15 +19,43 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="TagTranspiler\" />
+    <Folder Include="Tools\" />
+    <Folder Include="Tools\TagTranspiler\" />
+    <Folder Include="Data\" />
+    <Folder Include="Data\Object\" />
+    <Folder Include="Data\Semantic\" />
+    <Folder Include="Data\Tags\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TagTranspiler\GenerateCatalog.py" />
-    <Compile Include="TagTranspiler\GenerateTags.py" />
-    <Compile Include="TagTranspiler\Common.py" />
-    <Compile Include="TagTranspiler\GenerateOffset.py" />
-    <Compile Include="TagTranspiler\GenerateObject.py" />
-    <Compile Include="TagTranspiler\GenerateStructure.py" />
+    <Compile Include="Tools\TagTranspiler\Common.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateCatalog.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateObject.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateOffset.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateSemantic.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateTemplate.py" />
+    <Compile Include="Tools\seed_tags.py" />
+    <Compile Include="Tools\seed_templates.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\README.md" />
+    <Content Include="Data\Object\anim.xml" />
+    <Content Include="Data\Object\bipd.xml" />
+    <Content Include="Data\Object\bloc.xml" />
+    <Content Include="Data\Object\ctrl.xml" />
+    <Content Include="Data\Object\devi.xml" />
+    <Content Include="Data\Object\eqip.xml" />
+    <Content Include="Data\Object\item.xml" />
+    <Content Include="Data\Object\mach.xml" />
+    <Content Include="Data\Object\obje.xml" />
+    <Content Include="Data\Object\proj.xml" />
+    <Content Include="Data\Object\scen.xml" />
+    <Content Include="Data\Object\unit.xml" />
+    <Content Include="Data\Object\vehi.xml" />
+    <Content Include="Data\Object\weap.xml" />
+    <Content Include="Data\Semantic\Semantic.xml" />
+    <Content Include="Data\Tags\ObjectTags.xml" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">

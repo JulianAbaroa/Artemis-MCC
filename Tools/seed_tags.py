@@ -2,7 +2,7 @@
 """
 seed_tags.py - build / update the object tag catalog of the semantization.
 
-Templates/Tags/ObjectTags.xml is the SOURCE OF TRUTH for the Function and Subtype of each object tag
+Data/Tags/ObjectTags.xml is the SOURCE OF TRUTH for the Function and Subtype of each object tag
 (Ignore/Semantizacion/05, section 3: catalog > MultiplayerObjectKind of the tag > Kind default).
 Edit it by hand and commit it. This script only brings in what the game and the old code already know:
 
@@ -21,15 +21,15 @@ Edit it by hand and commit it. This script only brings in what the game and the 
     classifier expected (SEED_GROUPS).
 
 Usage (from anywhere; defaults resolve relative to the repo):
-  python Templates/seed_tags.py "%LOCALAPPDATA%\Artemis\TagCatalog"      # merge every dump of the folder
-  python Templates/seed_tags.py "<folder>" --dry-run                # report only
-  python Templates/seed_tags.py --seed-only                         # only apply the Common.Tag.Type seed
+  python Tools/seed_tags.py "%LOCALAPPDATA%\Artemis\TagCatalog"          # merge every dump of the folder
+  python Tools/seed_tags.py "<folder>" --dry-run                    # report only
+  python Tools/seed_tags.py --seed-only                             # only apply the Common.Tag.Type seed
 """
 import argparse, os, re, sys
 import xml.etree.ElementTree as ET
 
 REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-CATALOG = os.path.join(REPO, "Templates", "Tags", "ObjectTags.xml")
+CATALOG = os.path.join(REPO, "Data", "Tags", "ObjectTags.xml")
 ENUMS = os.path.join(REPO, "Artemis", "Core", "Domain", "2_Resolved", "Definitions", "Type", "Object", "_DefinitionsObject.ixx")
 TAGS = os.path.join(REPO, "Artemis", "Core", "Common", "Tag", "Type", "Common.Tag.Type.ixx")
 

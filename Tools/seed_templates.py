@@ -2,7 +2,7 @@
 """
 seed_templates.py - create / update the runtime template XML files.
 
-The XML in Templates/Object/ is the SOURCE OF TRUTH: edit it by hand, commit it.
+The XML in Data/Object/ is the SOURCE OF TRUTH: edit it by hand, commit it.
 This script only brings in what the automatic analysis (analyze_templates.py ->
 fields_<comp>.txt) discovered:
 
@@ -16,9 +16,9 @@ fields_<comp>.txt) discovered:
                              are kept (nothing is deleted).
 
 Usage (from anywhere; defaults resolve relative to the repo):
-  python3 Templates/seed_templates.py                  # all known components
-  python3 Templates/seed_templates.py unit bipd        # only these
-  python3 Templates/seed_templates.py --fields DIR --out DIR --dry-run
+  python3 Tools/seed_templates.py                      # all known components
+  python3 Tools/seed_templates.py unit bipd            # only these
+  python3 Tools/seed_templates.py --fields DIR --out DIR --dry-run
 
 Notes: XML comments are not preserved (use tooltip / <comment> children instead).
 """
@@ -138,7 +138,7 @@ def main():
     ap = argparse.ArgumentParser(description="Create / merge runtime template XML files.")
     ap.add_argument("components", nargs="*", help="obje unit bipd ... (default: every component that has a fields file)")
     ap.add_argument("--fields", default=os.path.join(REPO, "Ignore", "Ghidra", "templates"))
-    ap.add_argument("--out", default=os.path.join(REPO, "Templates", "Object"))
+    ap.add_argument("--out", default=os.path.join(REPO, "Data", "Object"))
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     comps = a.components or list(RANGES)

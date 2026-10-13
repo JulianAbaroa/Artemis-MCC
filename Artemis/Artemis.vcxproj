@@ -135,7 +135,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/External/zlib;$(ProjectDir)/../TagTranspiler;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/External/zlib;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -157,7 +157,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/../TagTranspiler;$(ProjectDir)/External/zlib;$(ProjectDir)/External/stb;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/External/zlib;$(ProjectDir)/External/stb;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

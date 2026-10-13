@@ -1,10 +1,10 @@
 """
 GenerateTemplate.py
 Generates the runtime ("dynamic") object templates as C++23 module partitions of
-Template.Object.Type from the public XML files in Templates/.
+Template.Object.Type from the public XML files in Data/Object/.
 
-    python GenerateTemplate.py                 # every Templates/**/*.xml
-    python GenerateTemplate.py Templates/Object/unit.xml
+    python Tools/TagTranspiler/GenerateTemplate.py                    # every Data/Object/*.xml
+    python Tools/TagTranspiler/GenerateTemplate.py Data/Object/unit.xml
 
 Per XML (obje.xml -> prefix Obje) it writes, under
 Artemis/Core/Domain/3_Template/Object/Type/:
@@ -31,8 +31,8 @@ sys.path.insert(0, SCRIPT_DIR)
 import GenerateOffset, GenerateStructure
 from Common import XmlBaseName, ParseHex
 
-REPO = os.path.normpath(os.path.join(SCRIPT_DIR, ".."))
-TEMPLATES = os.path.join(REPO, "Templates")
+REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
+OBJECT_XML = os.path.join(REPO, "Data", "Object")
 OUT = os.path.join(REPO, "Artemis", "Core", "Domain", "3_Template", "Object", "Type")
 
 def Finish(text: str, xmlName: str) -> str:
@@ -107,7 +107,7 @@ def main() -> None:
     if len(sys.argv) > 1:
         files = sys.argv[1:]
     else:
-        files = sorted(glob.glob(os.path.join(TEMPLATES, "**", "*.xml"), recursive=True))
+        files = sorted(glob.glob(os.path.join(OBJECT_XML, "*.xml")))
     if not files:
         print("No XML found.")
         sys.exit(1)

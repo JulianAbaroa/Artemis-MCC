@@ -47,9 +47,6 @@ x86/
 *.sqliteno-wal
 *.sqlite-shm
 
-# TagTranspiler generated headers
-TagTranspiler/Generated/
-
 # Python
 env/
 venv/

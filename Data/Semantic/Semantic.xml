@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!-- Single source of the semantic ids of Artemis (Ignore/Semantizacion/05 and 07). Ids are stable: only append, never renumber or reuse.
-     TagTranspiler/GenerateSemantic.py generates the C++ (Common.Semantic.Type) and validates Templates/Tags/ObjectTags.xml against it. -->
+     Tools/TagTranspiler/GenerateSemantic.py generates the C++ (Common.Semantic.Type) and validates Data/Tags/ObjectTags.xml against it. -->
 <semantic>
 	<enum name="Group" type="uint8" doc="Consumption group of a function. The order is the precedence.">
 		<value name="Unknown" id="0" />

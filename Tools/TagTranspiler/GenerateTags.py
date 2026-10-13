@@ -3,10 +3,10 @@ GenerateTags.py
 Processes one or more Assembly XML files and generates C++23 Module interfaces (.ixx).
 
 Usage, a single XML:
-    python GenerateTags.py phmo.xml
+    python Tools/TagTranspiler/GenerateTags.py phmo.xml
 
 Usage, full directory of plugins:
-    python GenerateTags.py ".../Assembly/Plugins/ReachMCC"
+    python Tools/TagTranspiler/GenerateTags.py ".../Assembly/Plugins/ReachMCC"
 """
 import sys, os, re
 
@@ -18,7 +18,7 @@ import GenerateStructure
 import GenerateObject
 import GenerateCatalog
 
-_DOMAIN_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "Artemis", "Core", "Domain", "1_Map"))
+_DOMAIN_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "Artemis", "Core", "Domain", "1_Map"))
 
 TAGS_ROOT = os.path.join(_DOMAIN_ROOT, "Tag")
 
