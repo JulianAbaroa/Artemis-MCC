@@ -6,8 +6,8 @@ Templates/Tags/ObjectTags.xml (the tag catalog).
 
     python TagTranspiler/GenerateSemantic.py
 
-Writes under Artemis/Core/Common/Semantic/Type/:
-    Common.Semantic.Type.ixx   primary module, exports the partitions
+Writes the primary module in Artemis/Core/Common/Semantic/ and the partitions under Type/:
+    Common.Semantic.Type.ixx   primary module (Common/Semantic/), exports the partitions
     SemanticEnum.ixx           :Enum     Group, Function, Lifecycle, Binding, Physics, Relation, Event, Capability
     SemanticSubtype.ixx        :Subtype  one enum per function with subtypes (Subtype::<Function>)
     SemanticCatalog.ixx        :Catalog  labels of the catalog (confidence high, medium or low), sorted by group and name
@@ -23,7 +23,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(SCRIPT_DIR, ".."))
 SEMANTIC = os.path.join(REPO, "Templates", "Semantic", "Semantic.xml")
 CATALOG = os.path.join(REPO, "Templates", "Tags", "ObjectTags.xml")
-OUT = os.path.join(REPO, "Artemis", "Core", "Common", "Semantic", "Type")
+ROOT = os.path.join(REPO, "Artemis", "Core", "Common", "Semantic")
+OUT = os.path.join(ROOT, "Type")
 
 RUNTIME_CONFIDENCE = ("high", "medium", "low")
 CPP_TYPE = {"uint8": "std::uint8_t", "uint16": "std::uint16_t"}
@@ -36,8 +37,8 @@ def Finish(lines: list) -> str:
     # rules.txt: CRLF line endings, no final newline.
     return "\r\n".join(lines).rstrip("\r\n")
 
-def Write(name: str, lines: list) -> None:
-    path = os.path.join(OUT, name)
+def Write(name: str, lines: list, folder: str = OUT) -> None:
+    path = os.path.join(folder, name)
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(Finish(lines))
     print(f"  Generated: {os.path.relpath(path, REPO)}")
@@ -192,7 +193,7 @@ def main() -> None:
     os.makedirs(OUT, exist_ok=True)
     print(f"[Semantic] {len(functions)} functions, {sum(len(f['subtypes']) for f in functions)} subtypes, {len(labels)} catalog labels")
     Write("Common.Semantic.Type.ixx", [HEADER, "export module Common.Semantic.Type;", "",
-                                       "export import :Enum;", "export import :Subtype;", "export import :Catalog;"])
+                                       "export import :Enum;", "export import :Subtype;", "export import :Catalog;"], ROOT)
     Write("SemanticEnum.ixx", GenerateEnum(enums, functions, flags))
     Write("SemanticSubtype.ixx", GenerateSubtype(functions))
     Write("SemanticCatalog.ixx", GenerateCatalog(labels))

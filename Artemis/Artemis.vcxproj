@@ -182,7 +182,7 @@
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx" />
     <ClCompile Include="Core\Common\State\System\Common.State.System.ixx" />
     <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx" />
-    <ClCompile Include="Core\Common\Semantic\Type\Common.Semantic.Type.ixx" />
+    <ClCompile Include="Core\Common\Semantic\Common.Semantic.Type.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx" />

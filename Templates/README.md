@@ -98,4 +98,4 @@ Per tag: `name`, `group` (fourcc), `kind` (ObjectKind), `mp` (multiplayer object
 
     python TagTranspiler/GenerateSemantic.py
 
-Writes the module `Common.Semantic.Type` under `Artemis/Core/Common/Semantic/Type/`: the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.
+Writes the module `Common.Semantic.Type` (primary in `Artemis/Core/Common/Semantic/`, partitions under `Type/`): the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.

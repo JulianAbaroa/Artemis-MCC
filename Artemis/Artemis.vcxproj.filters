@@ -2447,8 +2447,8 @@
     <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx">
       <Filter>Core\Common\Tag\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Common\Semantic\Type\Common.Semantic.Type.ixx">
-      <Filter>Core\Common\Semantic\Type</Filter>
+    <ClCompile Include="Core\Common\Semantic\Common.Semantic.Type.ixx">
+      <Filter>Core\Common\Semantic</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx">
       <Filter>Core\Common\Semantic\Type</Filter>
