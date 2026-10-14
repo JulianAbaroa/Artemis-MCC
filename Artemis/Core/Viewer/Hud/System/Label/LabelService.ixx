@@ -22,7 +22,7 @@ export namespace Viewer::Hud::System
     class LabelService
     {
     private:
-        using Role = Relations::Classifier::Type::Role;
+        using Classified = Relations::Classifier::Type::Classified;
         using LabelContext = Viewer::Hud::Type::LabelContext;
 
         using TickStore = Export::Tick::State::TickStore;
@@ -54,6 +54,6 @@ export namespace Viewer::Hud::System
         SelectionStore& m_SelectionStore;
 
         LabelCanvas m_Canvas;
-        std::unordered_map<std::uint32_t, Role> m_Roles{};
+        std::unordered_map<std::uint32_t, const Classified*> m_Classifications{};
     };
 }

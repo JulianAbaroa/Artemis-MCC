@@ -6,6 +6,7 @@ module Viewer.Hud.System;
 import :ObjectLabels;
 
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Egocentric.Affordance.Type;
 import Gui.Format.System;
 import Relations.Classifier.Type;
@@ -20,10 +21,13 @@ namespace
     using Vec3 = Common::Math::Type::Vec3;
     using Flag = Viewer::Options::Type::Flag;
     using Scalar = Viewer::Options::Type::Scalar;
-    using Role = Relations::Classifier::Type::Role;
+    using Common::Semantic::Type::Function;
+    using Common::Semantic::Type::Binding;
+    using Relations::Classifier::Type::Classified;
     using LabelRow = Viewer::Hud::Type::LabelRow;
     using HexFormater = Gui::Format::System::HexFormater;
-    using RoleFormater = Gui::Format::System::RoleFormater;
+
+    namespace SemanticType = Common::Semantic::Type;
 
     using Viewer::Style::Type::k_Health;
     using Viewer::Style::Type::k_Affordance;
@@ -51,35 +55,53 @@ namespace
         Other,
     };
 
-    auto CategoryOf(Role role) -> Category
+    // Returns the label category of an object. Held, seated and attached objects are skipped: their holder carries the label.
+    auto CategoryOf(const Classified& classified) -> Category
     {
-        switch (role)
+        if (classified.Binding != Binding::Free) return Category::Skip;
+
+        switch (classified.Function)
         {
-        case Role::Unknown:
-        case Role::None:
-        case Role::VehiclePart:
-        case Role::WeaponEquipped:
-        case Role::ObjectiveEquipped:
-        case Role::ArmorAbilityEquipped:
+        case Function::Unknown:
+        case Function::Decor:
+        case Function::CameraMarker:
             return Category::Skip;
 
-        case Role::Vehicle: return Category::Vehicle;
-        case Role::Biped: return Category::Biped;
+        case Function::Vehicle:
+        case Function::Turret:
+            return Category::Vehicle;
 
-        case Role::WeaponPickup:
-        case Role::ObjectivePickup:
+        case Function::Combatant:
+        case Function::Decoy:
+            return Category::Biped;
+
+        case Function::Weapon:
+        case Function::ObjectiveItem:
             return Category::Weapon;
 
-        case Role::ArmorAbilityPickup:
-        case Role::GrenadePickup:
-        case Role::AmmoPickup:
-        case Role::Powerup:
+        case Function::ArmorAbility:
+        case Function::Grenade:
+        case Function::AmmoPack:
+        case Function::Powerup:
             return Category::Equipment;
 
-        case Role::Projectile: return Category::Projectile;
+        case Function::Projectile: return Category::Projectile;
 
         default: return Category::Other;
         }
+    }
+
+    // Returns the text of the function row: function, subtype if any, and binding if the object is not free.
+    auto FunctionText(const Classified& classified) -> std::string
+    {
+        std::string text{ SemanticType::NameOf(classified.Function) };
+
+        const std::string_view subtype{ SemanticType::Subtype::NameOf(classified.Function, classified.Subtype) };
+        if (!subtype.empty()) text += std::format(" {}", subtype);
+
+        if (classified.Binding != Binding::Free) text += std::format(" ({})", SemanticType::NameOf(classified.Binding));
+
+        return text;
     }
 
     auto IsCategoryEnabled(Category category, const Viewer::Options::State::OptionsStore& options) -> bool
@@ -167,9 +189,9 @@ namespace Viewer::Hud::System
 
             if (showRole)
             {
-                const auto roleIt = context.Roles.find(object.Handle);
-                rows.push_back(LabelRow{ roleIt == context.Roles.end() ? "Unknown"
-                    : RoleFormater::RoleToString(roleIt->second), k_InfoColor });
+                const auto classifiedIt = context.Classifications.find(object.Handle);
+                rows.push_back(LabelRow{ classifiedIt == context.Classifications.end() ? std::string{ "Unknown" }
+                    : FunctionText(*classifiedIt->second), k_InfoColor });
             }
 
             if (showHandle)
@@ -258,9 +280,9 @@ namespace Viewer::Hud::System
             const auto selectedIt = tick.ObjectTable->find(context.Selected);
             if (selectedIt != tick.ObjectTable->end())
             {
-                const auto roleIt = context.Roles.find(context.Selected);
-                const Category category = roleIt == context.Roles.end()
-                    ? Category::Other : CategoryOf(roleIt->second);
+                const auto classifiedIt = context.Classifications.find(context.Selected);
+                const Category category = classifiedIt == context.Classifications.end()
+                    ? Category::Other : CategoryOf(*classifiedIt->second);
 
                 collect(selectedIt->second, category, true);
             }
@@ -273,10 +295,10 @@ namespace Viewer::Hud::System
             const auto& object = entry.second;
             if (object.Handle == context.Selected) continue;
 
-            const auto roleIt = context.Roles.find(object.Handle);
-            if (roleIt == context.Roles.end()) continue;
+            const auto classifiedIt = context.Classifications.find(object.Handle);
+            if (classifiedIt == context.Classifications.end()) continue;
 
-            const Category category = CategoryOf(roleIt->second);
+            const Category category = CategoryOf(*classifiedIt->second);
             if (!IsCategoryEnabled(category, options)) continue;
 
             collect(object, category, false);

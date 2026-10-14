@@ -217,8 +217,8 @@ export namespace Viewer::Options::Type
         { Flag::ObjectTagName, Group::Objects, "ObjectTagName", "Tag name",
             "Shows the short tag name of the object.", true },
 
-        { Flag::ObjectRole, Group::Objects, "ObjectRole", "Role",
-            "Shows the role assigned by the classifier.", false },
+        { Flag::ObjectRole, Group::Objects, "ObjectRole", "Function",
+            "Shows the function, the subtype and the binding the classifier assigned.", false },
 
         { Flag::ObjectHandle, Group::Objects, "ObjectHandle", "Handle",
             "Shows the object handle in hexadecimal.", false },

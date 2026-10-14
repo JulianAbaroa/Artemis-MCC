@@ -69,8 +69,7 @@ namespace Egocentric::Affordance::System
 
             Affordance interactable;
 
-            // note: Only free objects. Carried and attached ones have garbage positions (they follow a bone of the parent),
-            // and a vehicle part is entered through its vehicle.
+            // note: Only free objects: a carried item cannot be picked up, and a vehicle part is entered through its vehicle.
             if (classified.Binding != Binding::Free) continue;
 
             switch (classified.Function)

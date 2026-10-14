@@ -30,7 +30,8 @@ export namespace Viewer::Hud::Type
     {
         const Export::Tick::Type::Tick& Frame;
         const Viewer::Options::State::OptionsStore& Options;
-        const std::unordered_map<std::uint32_t, Relations::Classifier::Type::Role>& Roles;
+        // Classification of each live object, by handle. The pointers live as long as Frame.
+        const std::unordered_map<std::uint32_t, const Relations::Classifier::Type::Classified*>& Classifications;
 
         std::uint32_t Selected{ 0xFFFFFFFF };
 

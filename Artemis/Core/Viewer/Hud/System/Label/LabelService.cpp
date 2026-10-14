@@ -24,16 +24,16 @@ namespace Viewer::Hud::System
         const auto tick = m_TickStore.Acquire();
         if (!tick) return;
 
-        m_Roles.clear();
+        m_Classifications.clear();
         if (tick->Classifieds)
         {
             for (const auto& classified : *tick->Classifieds)
             {
-                m_Roles[classified.Handle] = classified.Role;
+                m_Classifications[classified.Handle] = &classified;
             }
         }
 
-        LabelContext context{ *tick, m_OptionsStore, m_Roles };
+        LabelContext context{ *tick, m_OptionsStore, m_Classifications };
         context.Selected = m_SelectionStore.GetSelected();
 
         if (tick->Self && tick->Self->IsAlive)
