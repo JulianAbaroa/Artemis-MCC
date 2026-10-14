@@ -92,7 +92,6 @@ namespace
 	constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
 	constexpr std::size_t k_ProjectileOwnerBipedHandle{ ProjOffset::k_Unknown1c4 };
 	constexpr std::size_t k_ProjectileOwnerWeaponHandle{ ProjOffset::k_Unknown1d8 };
-	constexpr std::size_t k_EquipmentTotalEnergy{ EqipOffset::k_Unknown1ec };
 	constexpr std::size_t k_VehicleBoostThrottle{ UnitOffset::k_Unknown53c };
 	constexpr std::size_t k_VehicleBoostCooldown{ UnitOffset::k_Unknown544 };
 
@@ -483,7 +482,7 @@ namespace Tables::Object::System
 		EquipmentObject equipment{};
 		equipment.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
-		equipment.Energy = datum.Read<float>(k_EquipmentTotalEnergy);
+		equipment.Energy = datum.Read<float>(EqipOffset::k_Energy);
 
 		if (equipment.Kind == CrateKind::Shield)
 		{

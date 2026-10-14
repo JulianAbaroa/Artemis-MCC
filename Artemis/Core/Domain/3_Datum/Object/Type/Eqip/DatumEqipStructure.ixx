@@ -20,32 +20,27 @@ export namespace Datum::Object::Type::Eqip::Structure
     // Entry size: 0x4C
     struct EqipData
     {
-        std::uint16_t Unknown1c4;  // 0x0  uint16. | R7 W6 src=INT_AND, INT_OR known=Projectile.OwnerBipedHandle W:FUN_1804b5158,FUN_1804b33e4,FUN_1804b4f00
-        std::uint16_t Unknown1c6;  // 0x2  uint16. | R1 W1 init=0x0 W:eqip_init
+        std::uint16_t Unknown1c4;  // 0x0  uint16. | Flags (written with AND/OR). Live: 0, 0x4 while a jetpack is in use. R7 W6 W:FUN_1804b5158,FUN_1804b33e4,FUN_1804b4f00
+        std::uint16_t UseCounter;  // 0x2  uint16. | Grows by one or more on each use (armor lock 8, 9 in use, 10 depleted. Evade 0, 1, 3 after two uses). Not the ability type. R1 W1 init=0x0 W:eqip_init
         std::uint8_t  _gap_0x4[0x2];
         std::uint16_t Unknown1ca;  // 0x6  uint16. | R1 W0 SHARED known=Weapon.ActionState R:FUN_1804ecb3c
         std::uint32_t Unknown1cc;  // 0x8  uint32. | R7 W0 SHARED R:obje_sa8,FUN_1804ecb3c,FUN_1803a596c
         std::uint32_t Unknown1d0;  // 0xC  uint32. | R0 W1 src=INDIRECT W:eqip_init
-        std::uint32_t Unknown1d4;  // 0x10  uint32. | R1 W1 src=[tmp23e00+0xc] W:eqip_init
-        std::uint32_t Unknown1d8;  // 0x14  uint32. | R10 W3 src=[tmp23e00+0xc], [puVar2+0x208] known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:FUN_1804b5158,FUN_1804b5518,FUN_1804b4e74
-        std::uint32_t Unknown1dc;  // 0x18  uint32. | R1 W2 src=INT_ADD, call 18005cc74 W:FUN_1804b34a0,FUN_1804b57f8
+        std::uint32_t Unknown1d4;  // 0x10  uint32. | Constant per equipment object and larger for each new one (0x58D6 to 0x5BB3 across seven abilities). Maybe a creation tick. R1 W1 W:eqip_init
+        std::uint32_t ActivationTick;  // 0x14  uint32. | Tick the ability was activated. FFFFFFFF when idle. Set while camo, armor lock, jetpack and sprint run. Drop shield, hologram and evade are instant and never showed a value. Copied to 0x208. Measured on the seven armor abilities (2026-10-14).
+        std::uint32_t Unknown1dc;  // 0x18  uint32. | 0 when unused. Non-zero after a use or when depleted (armor lock depleted 0x42, drop shield used 0x0B, evade in use 0xA7, evade depleted 0x68). Maybe a cooldown timer. R1 W2 W:FUN_1804b34a0,FUN_1804b57f8
         std::uint32_t Unknown1e0;  // 0x1C  uint32. | R1 W2 src=INT_ADD, call 18005cc74 known=Weapon.TotalHeat W:eqip_update,FUN_1804b5b04
-        std::uint16_t Unknown1e4;  // 0x20  uint16. | R0 W2 init=0xffff upd=0xffff known=Weapon.TotalEnergy W:eqip_init,FUN_1804b57f8
-        std::uint16_t Unknown1e6;  // 0x22  uint16. | R0 W2 init=0xffff upd=0xffff W:eqip_init,FUN_1804b57f8
-        std::uint32_t Unknown1e8;  // 0x24  uint32. | R1 W1 src=call 180521eb4 W:FUN_1804b502c
-        float        Unknown1ec;  // 0x28  float32. | Old name: Equipment.TotalEnergy (ObjectOffset.ixx). Not confirmed yet. R8 W4 src=MULTIEQUAL, FLOAT_ADD known=Equipment.TotalEnergy W:FUN_1804b34a0,FUN_1804b5158,FUN_1804b57f8
-        std::uint16_t Unknown1f0;  // 0x2C  uint16. | R0 W1 init=0x0 W:eqip_init
-        std::uint16_t Unknown1f2;  // 0x2E  uint16. | R0 W1 init=0x0 W:eqip_init
+        std::uint32_t EffectHandle1e4;  // 0x20  uint32. | Handle of another table (salt 0x9Axx, not an object). Set while armor lock and jetpack run. Maybe a looping effect or sound. W:eqip_init,FUN_1804b57f8
+        std::uint32_t EffectHandle1e8;  // 0x24  uint32. | Same kind of handle as 0x1E4. Set while armor lock, jetpack and sprint run. R1 W1 src=call 180521eb4 W:FUN_1804b502c
+        float        Energy;  // 0x28  float32. | Remaining energy of the ability, 0 to 1. 1.0 when unused, drains while in use, 0.0 when depleted or after a drop shield. Armor lock cannot be used again until it recharges past a threshold. Measured on the seven armor abilities (2026-10-14).
+        float        Unknown1f0;  // 0x2C  float32. | 0. Read 1.0 while a jetpack was in use. W:eqip_init
         std::uint16_t Unknown1f4;  // 0x30  uint16. | R0 W1 init=0x0 W:eqip_init
         std::uint16_t Unknown1f6;  // 0x32  uint16. | R0 W1 init=0x0 W:eqip_init
-        std::uint16_t Unknown1f8;  // 0x34  uint16. | R0 W1 init=0xffff known=Weapon.IsTracking W:eqip_init
-        std::uint16_t Unknown1fa;  // 0x36  uint16. | R0 W1 init=0xffff W:eqip_init
-        std::uint16_t Unknown1fc;  // 0x38  uint16. | R0 W1 init=0xffff W:eqip_init
-        std::uint16_t Unknown1fe;  // 0x3A  uint16. | R0 W1 init=0xffff W:eqip_init
-        std::uint16_t Unknown200;  // 0x3C  uint16. | R0 W1 init=0xffff known=Weapon.TrackedBipedHandle W:eqip_init
-        std::uint16_t Unknown202;  // 0x3E  uint16. | R0 W1 init=0xffff W:eqip_init
+        std::uint32_t HologramObjectHandle;  // 0x34  uint32. | Object handle seen only on hologram. Changes on each use and may keep the previous hologram. W:eqip_init
+        std::uint32_t Unknown1fc;  // 0x38  uint32. | Always FFFFFFFF on the seven abilities. W:eqip_init
+        std::uint32_t DropShieldObjectHandle;  // 0x3C  uint32. | Object handle set after a drop shield spawns its bubble. W:eqip_init
         std::uint32_t Unknown204;  // 0x40  uint32. | R1 W0 SHARED R:FUN_18052204c
-        std::uint32_t Unknown208;  // 0x44  uint32. | R3 W1 src=[tmp23e00+0xc] W:FUN_1804b4e74
+        std::uint32_t ActivationTickCopy;  // 0x44  uint32. | Same value as 0x1D8 on every measure. R3 W1 W:FUN_1804b4e74
         std::uint32_t Unknown20c;  // 0x48  uint32. | R4 W3 src=call 18005cc74, INT_ADD W:FUN_1804b3324,FUN_1804b5b04,FUN_1804b5158
     };
     static_assert(sizeof(EqipData) == 0x4C, "EqipData size mismatch");

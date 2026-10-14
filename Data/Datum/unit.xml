@@ -101,10 +101,10 @@
 	<uint32 name="Weapon Slot 3 Tick" offset="0x36C" confidence="low" tooltip="Tick written while the slot is current." />
 	<uint32 name="Armor Ability Handle" offset="0x374" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Equipment object of the equipped armor ability (measured). Ability active &lt;=&gt; that object's +0x1D8 != 0xFFFFFFFF." />
 	<uint32 name="Ability Tick" offset="0x378" confidence="low" tooltip="Looks like a tick tied to the ability (0x61E94 measured)." />
-	<uint8 name="Selected Grenade Type" offset="0x37C" confidence="medium" exposed="true" tooltip="Measured: 0 frag, 1 plasma. The index-&gt;type mapping depends on the biped tag (may differ for elites)." />
-	<uint8 name="Applied Grenade Type" offset="0x37D" confidence="medium" exposed="true" tooltip="Copied from the selected type by FUN_18047f0ac when it changes (plays a tag sound)." />
-	<uint8 name="Grenade Count 0" offset="0x37E" confidence="medium" exposed="true" tooltip="Count of grenade type 0 (frag). Measured 1 and 2." />
-	<uint8 name="Grenade Count 1" offset="0x37F" confidence="medium" exposed="true" tooltip="Count of grenade type 1 (plasma). Measured 1 and 2." />
+	<uint8 name="Selected Grenade Type" offset="0x37C" confidence="high" exposed="true" tooltip="0 frag, 1 plasma. Measured on spartan and elite (2026-10-14): same indices. Kept when the grenades run out and the switch key does nothing then. Picking up the other type while empty selects it at once: the selected type is always one the unit holds." />
+	<uint8 name="Applied Grenade Type" offset="0x37D" confidence="high" exposed="true" tooltip="Follows the selected type (copied by FUN_18047f0ac on change, plays a tag sound). Measured on spartan and elite (2026-10-14): same indices." />
+	<uint8 name="Frag Grenade Count" offset="0x37E" confidence="high" exposed="true" tooltip="Frag grenades held. Default limit 2, the game type can raise it up to 4. Measured on spartan and elite (2026-10-14): same indices." />
+	<uint8 name="Plasma Grenade Count" offset="0x37F" confidence="high" exposed="true" tooltip="Plasma grenades held. Default limit 2, the game type can raise it up to 4. Measured on spartan and elite (2026-10-14): same indices." />
 	<uint16 name="Unknown 380" offset="0x380" confidence="unknown" tooltip="R0 W1 init=0x0 W:unit_init" />
 	<uint8 name="Unknown 382" offset="0x382" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,unit_update" />
 	<int8 name="Zoom Level" offset="0x383" confidence="high" default="0xFF" exposed="true" tooltip="Applied zoom (0xFF = none). Confirmed." />
@@ -184,7 +184,7 @@
 	<float32 name="Boost Value" offset="0x540" confidence="low" tooltip="Float 1.0 at init (doc). Old names Vehicle.BoostEnergy." />
 	<uint32 name="Unknown 544" offset="0x544" confidence="low" tooltip="Old name: Vehicle.BoostCooldown (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostCooldown R:unit_sa8" />
 	<uint32 name="Damage Handle 548" offset="0x548" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
-	<uint32 name="Last Damage Tick" offset="0x54C" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Tick of the last damage received (matches Damage 0 Tick)." />
+	<uint32 name="Last Damage Tick" offset="0x54C" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Tick of the last damage received (matches Damage 0 Tick). Changes on assault rifle, melee and fall damage. 0x548, 0x550 and 0x554 stay FFFFFFFF. Clock not identified yet." />
 	<uint32 name="Damage Handle 550" offset="0x550" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
 	<uint32 name="Damage Handle 554" offset="0x554" confidence="low" default="0xFFFFFFFF" tooltip="Handle -1." />
 	<uint16 name="Unit Block A Size" offset="0x558" confidence="medium" tooltip="Variable block descriptor (reserved if 0x18E != -1)." />

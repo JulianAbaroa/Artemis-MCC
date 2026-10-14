@@ -88,8 +88,8 @@ export namespace Datum::Object::Type::Unit::Offset
     constexpr std::size_t k_AbilityTick                                 = 0x378;  // uint32.
     constexpr std::size_t k_SelectedGrenadeType                         = 0x37C;  // uint8.
     constexpr std::size_t k_AppliedGrenadeType                          = 0x37D;  // uint8.
-    constexpr std::size_t k_GrenadeCount0                               = 0x37E;  // uint8.
-    constexpr std::size_t k_GrenadeCount1                               = 0x37F;  // uint8.
+    constexpr std::size_t k_FragGrenadeCount                            = 0x37E;  // uint8.
+    constexpr std::size_t k_PlasmaGrenadeCount                          = 0x37F;  // uint8.
     constexpr std::size_t k_Unknown380                                  = 0x380;  // uint16.
     constexpr std::size_t k_Unknown382                                  = 0x382;  // uint8.
     constexpr std::size_t k_ZoomLevel                                   = 0x383;  // int8.

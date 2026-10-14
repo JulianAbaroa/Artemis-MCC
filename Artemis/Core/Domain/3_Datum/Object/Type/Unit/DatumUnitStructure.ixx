@@ -109,10 +109,10 @@ export namespace Datum::Object::Type::Unit::Structure
         std::uint8_t  _gap_0x1B8[0x4];
         std::uint32_t ArmorAbilityHandle;  // 0x1BC  uint32. | Equipment object of the equipped armor ability (measured). Ability active <=> that object's +0x1D8 != 0xFFFFFFFF.
         std::uint32_t AbilityTick;  // 0x1C0  uint32. | Looks like a tick tied to the ability (0x61E94 measured).
-        std::uint8_t SelectedGrenadeType;  // 0x1C4  uint8. | Measured: 0 frag, 1 plasma. The index->type mapping depends on the biped tag (may differ for elites).
-        std::uint8_t AppliedGrenadeType;  // 0x1C5  uint8. | Copied from the selected type by FUN_18047f0ac when it changes (plays a tag sound).
-        std::uint8_t GrenadeCount0;  // 0x1C6  uint8. | Count of grenade type 0 (frag). Measured 1 and 2.
-        std::uint8_t GrenadeCount1;  // 0x1C7  uint8. | Count of grenade type 1 (plasma). Measured 1 and 2.
+        std::uint8_t SelectedGrenadeType;  // 0x1C4  uint8. | 0 frag, 1 plasma. Measured on spartan and elite (2026-10-14): same indices. Kept when the grenades run out and the switch key does nothing then. Picking up the other type while empty selects it at once: the selected type is always one the unit holds.
+        std::uint8_t AppliedGrenadeType;  // 0x1C5  uint8. | Follows the selected type (copied by FUN_18047f0ac on change, plays a tag sound). Measured on spartan and elite (2026-10-14): same indices.
+        std::uint8_t FragGrenadeCount;  // 0x1C6  uint8. | Frag grenades held. Default limit 2, the game type can raise it up to 4. Measured on spartan and elite (2026-10-14): same indices.
+        std::uint8_t PlasmaGrenadeCount;  // 0x1C7  uint8. | Plasma grenades held. Default limit 2, the game type can raise it up to 4. Measured on spartan and elite (2026-10-14): same indices.
         std::uint16_t Unknown380;  // 0x1C8  uint16. | R0 W1 init=0x0 W:unit_init
         std::uint8_t Unknown382;  // 0x1CA  uint8. | R1 W2 init=0x0 src=INT_ADD W:unit_init,unit_update
         std::int8_t  ZoomLevel;  // 0x1CB  int8. | Applied zoom (0xFF = none). Confirmed.
@@ -205,7 +205,7 @@ export namespace Datum::Object::Type::Unit::Structure
         float        BoostValue;  // 0x388  float32. | Float 1.0 at init (doc). Old names Vehicle.BoostEnergy.
         std::uint32_t Unknown544;  // 0x38C  uint32. | Old name: Vehicle.BoostCooldown (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostCooldown R:unit_sa8
         std::uint32_t DamageHandle548;  // 0x390  uint32. | Handle -1.
-        std::uint32_t LastDamageTick;  // 0x394  uint32. | Tick of the last damage received (matches Damage 0 Tick).
+        std::uint32_t LastDamageTick;  // 0x394  uint32. | Tick of the last damage received (matches Damage 0 Tick). Changes on assault rifle, melee and fall damage. 0x548, 0x550 and 0x554 stay FFFFFFFF. Clock not identified yet.
         std::uint32_t DamageHandle550;  // 0x398  uint32. | Handle -1.
         std::uint32_t DamageHandle554;  // 0x39C  uint32. | Handle -1.
         std::uint16_t UnitBlockASize;  // 0x3A0  uint16. | Variable block descriptor (reserved if 0x18E != -1).
