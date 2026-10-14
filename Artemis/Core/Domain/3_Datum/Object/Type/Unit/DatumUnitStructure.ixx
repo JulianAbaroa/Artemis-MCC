@@ -173,41 +173,41 @@ export namespace Datum::Object::Type::Unit::Structure
         std::uint32_t Unknown4d4;  // 0x31C  uint32. | R0 W1 upd=0x0 W:FUN_180481068
         std::uint16_t Unknown4d8;  // 0x320  uint16. | R1 W1 src=INT_ADD W:FUN_180481068
         std::uint8_t  _gap_0x322[0x2];
-        std::uint32_t Damage0Tick;  // 0x324  uint32. | Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s.
-        float        Damage0ValueA;  // 0x328  float32. | Float (0.4444 measured on a self-grenade).
-        float        Damage0ValueB;  // 0x32C  float32. | Float (1.0 measured; maybe accumulated damage).
-        std::uint32_t Damage0BipedHandle;  // 0x330  uint32. | Biped that dealt the damage.
-        std::uint32_t Damage0PlayerHandle;  // 0x334  uint32. | Player that dealt the damage.
-        std::uint16_t Damage0Type;  // 0x338  uint16. | 0xB measured; damage or weapon type?
+        std::uint32_t Damage0Tick;  // 0x324  uint32. | Game tick of the last hit of this attacker (FFFFFFFF = empty slot). One slot per attacker, filled in order of the first hit: a second attacker takes the next slot. All slots clear once the shield starts recharging. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage0Health;  // 0x328  float32. | Health damage of this attacker as a fraction of the maximum. Zero while the shield absorbed everything (AR, melee, fall). DMR after the shield was down: 0.3889. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage0Shield;  // 0x32C  float32. | Shield damage of this attacker as a fraction of the maximum (melee 1.0, fall 0.632, AR burst 0.552). Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage0BipedHandle;  // 0x330  uint32. | Biped that dealt the damage. The victim itself on a self grenade or a fall. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage0PlayerHandle;  // 0x334  uint32. | Player that dealt the damage. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint16_t Damage0ReportingType;  // 0x338  uint16. | DamageReportingType of the hit (enum of the weapon and equipment tags): 0x05 assault rifle, 0x06 DMR, 0x2B melee, 0x16 plasma grenade, 0x0B frag grenade. A fall reported 0x2A (Collision), not 0x29 (Falling). Captured 2026-10-14 (Ignore/20261014_122128.txt).
         std::uint8_t  _gap_0x33A[0x2];
-        std::uint32_t Damage1Tick;  // 0x33C  uint32. | Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s.
-        float        Damage1ValueA;  // 0x340  float32. | Float (0.4444 measured on a self-grenade).
-        float        Damage1ValueB;  // 0x344  float32. | Float (1.0 measured; maybe accumulated damage).
-        std::uint32_t Damage1BipedHandle;  // 0x348  uint32. | Biped that dealt the damage.
-        std::uint32_t Damage1PlayerHandle;  // 0x34C  uint32. | Player that dealt the damage.
-        std::uint16_t Damage1Type;  // 0x350  uint16. | 0xB measured; damage or weapon type?
+        std::uint32_t Damage1Tick;  // 0x33C  uint32. | Game tick of the last hit of this attacker (FFFFFFFF = empty slot). One slot per attacker, filled in order of the first hit: a second attacker takes the next slot. All slots clear once the shield starts recharging. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage1Health;  // 0x340  float32. | Health damage of this attacker as a fraction of the maximum. Zero while the shield absorbed everything (AR, melee, fall). DMR after the shield was down: 0.3889. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage1Shield;  // 0x344  float32. | Shield damage of this attacker as a fraction of the maximum (melee 1.0, fall 0.632, AR burst 0.552). Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage1BipedHandle;  // 0x348  uint32. | Biped that dealt the damage. The victim itself on a self grenade or a fall. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage1PlayerHandle;  // 0x34C  uint32. | Player that dealt the damage. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint16_t Damage1ReportingType;  // 0x350  uint16. | DamageReportingType of the hit (enum of the weapon and equipment tags): 0x05 assault rifle, 0x06 DMR, 0x2B melee, 0x16 plasma grenade, 0x0B frag grenade. A fall reported 0x2A (Collision), not 0x29 (Falling). Captured 2026-10-14 (Ignore/20261014_122128.txt).
         std::uint8_t  _gap_0x352[0x2];
-        std::uint32_t Damage2Tick;  // 0x354  uint32. | Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s.
-        float        Damage2ValueA;  // 0x358  float32. | Float (0.4444 measured on a self-grenade).
-        float        Damage2ValueB;  // 0x35C  float32. | Float (1.0 measured; maybe accumulated damage).
-        std::uint32_t Damage2BipedHandle;  // 0x360  uint32. | Biped that dealt the damage.
-        std::uint32_t Damage2PlayerHandle;  // 0x364  uint32. | Player that dealt the damage.
-        std::uint16_t Damage2Type;  // 0x368  uint16. | 0xB measured; damage or weapon type?
+        std::uint32_t Damage2Tick;  // 0x354  uint32. | Game tick of the last hit of this attacker (FFFFFFFF = empty slot). One slot per attacker, filled in order of the first hit: a second attacker takes the next slot. All slots clear once the shield starts recharging. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage2Health;  // 0x358  float32. | Health damage of this attacker as a fraction of the maximum. Zero while the shield absorbed everything (AR, melee, fall). DMR after the shield was down: 0.3889. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage2Shield;  // 0x35C  float32. | Shield damage of this attacker as a fraction of the maximum (melee 1.0, fall 0.632, AR burst 0.552). Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage2BipedHandle;  // 0x360  uint32. | Biped that dealt the damage. The victim itself on a self grenade or a fall. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage2PlayerHandle;  // 0x364  uint32. | Player that dealt the damage. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint16_t Damage2ReportingType;  // 0x368  uint16. | DamageReportingType of the hit (enum of the weapon and equipment tags): 0x05 assault rifle, 0x06 DMR, 0x2B melee, 0x16 plasma grenade, 0x0B frag grenade. A fall reported 0x2A (Collision), not 0x29 (Falling). Captured 2026-10-14 (Ignore/20261014_122128.txt).
         std::uint8_t  _gap_0x36A[0x2];
-        std::uint32_t Damage3Tick;  // 0x36C  uint32. | Tick of the last damage (FFFFFFFF = empty). Record expires after 5 s.
-        float        Damage3ValueA;  // 0x370  float32. | Float (0.4444 measured on a self-grenade).
-        float        Damage3ValueB;  // 0x374  float32. | Float (1.0 measured; maybe accumulated damage).
-        std::uint32_t Damage3BipedHandle;  // 0x378  uint32. | Biped that dealt the damage.
-        std::uint32_t Damage3PlayerHandle;  // 0x37C  uint32. | Player that dealt the damage.
-        std::uint16_t Damage3Type;  // 0x380  uint16. | 0xB measured; damage or weapon type?
+        std::uint32_t Damage3Tick;  // 0x36C  uint32. | Game tick of the last hit of this attacker (FFFFFFFF = empty slot). One slot per attacker, filled in order of the first hit: a second attacker takes the next slot. All slots clear once the shield starts recharging. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage3Health;  // 0x370  float32. | Health damage of this attacker as a fraction of the maximum. Zero while the shield absorbed everything (AR, melee, fall). DMR after the shield was down: 0.3889. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        float        Damage3Shield;  // 0x374  float32. | Shield damage of this attacker as a fraction of the maximum (melee 1.0, fall 0.632, AR burst 0.552). Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage3BipedHandle;  // 0x378  uint32. | Biped that dealt the damage. The victim itself on a self grenade or a fall. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint32_t Damage3PlayerHandle;  // 0x37C  uint32. | Player that dealt the damage. Captured 2026-10-14 (Ignore/20261014_122128.txt).
+        std::uint16_t Damage3ReportingType;  // 0x380  uint16. | DamageReportingType of the hit (enum of the weapon and equipment tags): 0x05 assault rifle, 0x06 DMR, 0x2B melee, 0x16 plasma grenade, 0x0B frag grenade. A fall reported 0x2A (Collision), not 0x29 (Falling). Captured 2026-10-14 (Ignore/20261014_122128.txt).
         std::uint8_t  _gap_0x382[0x2];
         std::uint32_t Unknown53c;  // 0x384  uint32. | Old name: Vehicle.BoostThrottle (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostThrottle R:FUN_180495188
         float        BoostValue;  // 0x388  float32. | Float 1.0 at init (doc). Old names Vehicle.BoostEnergy.
         std::uint32_t Unknown544;  // 0x38C  uint32. | Old name: Vehicle.BoostCooldown (ObjectOffset.ixx). Not confirmed yet. Read as float. R1 W0 known=Vehicle.BoostCooldown R:unit_sa8
         std::uint32_t DamageHandle548;  // 0x390  uint32. | Handle -1.
-        std::uint32_t LastDamageTick;  // 0x394  uint32. | Tick of the last damage received (matches Damage 0 Tick). Changes on assault rifle, melee and fall damage. 0x548, 0x550 and 0x554 stay FFFFFFFF. Clock not identified yet.
+        std::uint32_t LastDamageTick;  // 0x394  uint32. | Game tick of the last damage received, the latest of the Damage N Tick slots. Kept after the slots clear. Same clock as the Damage N Tick: the Export generation ran 56 to 102 ticks ahead when captured right after a hit. Captured 2026-10-14 (Ignore/20261014_122128.txt).
         std::uint32_t DamageHandle550;  // 0x398  uint32. | Handle -1.
-        std::uint32_t DamageHandle554;  // 0x39C  uint32. | Handle -1.
+        std::uint32_t DamageHandle554;  // 0x39C  uint32. | Handle -1. Read 0x40C2 (a tick?) on the primary biped after a fall, between two captures. Captured 2026-10-14 (Ignore/20261014_122128.txt).
         std::uint16_t UnitBlockASize;  // 0x3A0  uint16. | Variable block descriptor (reserved if 0x18E != -1).
         std::uint16_t UnitBlockAOffset;  // 0x3A2  uint16. | Offset of the block from the datum start.
         std::uint16_t UnitBlockBSize;  // 0x3A4  uint16. | Variable block descriptor (reserved if 0x18E != -1).
