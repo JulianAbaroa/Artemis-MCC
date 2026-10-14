@@ -30,7 +30,6 @@ namespace
 	using VehicleObject = Tables::Object::Type::Vehicle::Vehicle;
 	using WeaponObject = Tables::Object::Type::Weapon::Weapon;
 	using ProjectileFlags = Tables::Object::Type::Projectile::Flags;
-	using Zone = Tables::Object::Type::Crate::Zone::Zone;
 	using Teleport = Tables::Object::Type::Crate::Teleport::Teleport;
 	using Allowed = Tables::Object::Type::Crate::Teleport::Allowed;
 	using CrateKind = Tables::Object::Type::Crate::Kind;
@@ -42,10 +41,7 @@ namespace
 	using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
 	using ZoomLevel = Tables::Object::Type::Biped::ZoomLevel;
 	using VerticalInput = Tables::Object::Type::Biped::VerticalInput;
-	using Boundary = Tables::Object::Type::Scenery::Boundary::Boundary;
-	using SceneryKind = Tables::Object::Type::Scenery::Kind;
 	using Shield = Tables::Object::Type::Crate::Shield::Shield;
-	using SpawnData = Tables::Object::Type::Scenery::Spawn::Spawn;
 	using Placement = Tables::Object::Type::Placement::Placement;
 	using Symmetry = Tables::Object::Type::Placement::Symmetry;
 	using Physics = Common::Semantic::Type::Physics;
@@ -208,7 +204,7 @@ namespace Tables::Object::System
 		object.ChildHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ChildHandle);
 		object.ParentHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle);
 
-		object.Position = datum.Read<Vec3>(ObjeOffset::k_BoundingCenter);
+		object.BoundingCenter = datum.Read<Vec3>(ObjeOffset::k_BoundingCenter);
 		object.Origin = datum.Read<Vec3>(ObjeOffset::k_Origin);
 		object.Forward = datum.Read<Vec3>(ObjeOffset::k_Forward);
 		object.Up = datum.Read<Vec3>(ObjeOffset::k_Up);
@@ -479,12 +475,6 @@ namespace Tables::Object::System
 		weapon.IsTracking = datum.Read<std::uint8_t>(WeapOffset::k_IsTracking);
 		weapon.TrackedBipedHandle = datum.Read<std::uint32_t>(WeapOffset::k_TrackedBipedHandle);
 
-		if ((object.TagName == TagName::Objective::k_Flag ||
-			object.TagName == TagName::Objective::k_Bomb) && object.Multiplayer)
-		{
-			weapon.Team = object.Multiplayer->Team;
-		}
-
 		object.Specific = weapon;
 	}
 
@@ -530,20 +520,7 @@ namespace Tables::Object::System
 		crate.Base = object.Address;
 		crate.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
-		if (Tables::Object::Type::Crate::HasZone(crate.Kind))
-		{
-			Zone zone{};
-
-			if (object.Multiplayer)
-			{
-				zone.Shape = object.Multiplayer->Shape;
-				zone.Team = object.Multiplayer->Team;
-			}
-
-			crate.Zone = zone;
-		}
-
-		else if (crate.Kind == CrateKind::TeleportSender ||
+		if (crate.Kind == CrateKind::TeleportSender ||
 			crate.Kind == CrateKind::TeleportReceiver ||
 			crate.Kind == CrateKind::TeleportTwoWay)
 		{
@@ -626,35 +603,6 @@ namespace Tables::Object::System
 		SceneryObject scenery{};
 		scenery.Base = object.Address;
 		scenery.Kind = Tables::Object::Type::Scenery::ResolveSceneryType(object.TagName);
-
-		if (Tables::Object::Type::Scenery::IsSpawnPoint(scenery.Kind))
-		{
-			SpawnData spawn{};
-
-			if (scenery.Kind == SceneryKind::InvisibleRespawnPoint)
-			{
-				spawn.Team = Team::Neutral;
-			}
-			else
-			{
-				if (object.Multiplayer) spawn.Team = object.Multiplayer->Team;
-			}
-
-			scenery.Spawn = spawn;
-		}
-
-		else if (Tables::Object::Type::Scenery::IsBoundary(scenery.Kind))
-		{
-			Boundary boundary{};
-
-			if (object.Multiplayer)
-			{
-				boundary.Shape = object.Multiplayer->Shape;
-				boundary.Team = object.Multiplayer->Team;
-			}
-
-			scenery.Boundary = boundary;
-		}
 
 		object.Specific = scenery;
 	}

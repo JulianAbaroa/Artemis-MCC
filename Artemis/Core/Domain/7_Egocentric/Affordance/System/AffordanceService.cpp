@@ -127,14 +127,14 @@ namespace Egocentric::Affordance::System
             object.Handle, objectGraph, objectTable);
 
         out.Handle = object.Handle;
-        out.Position = object.Position;
+        out.Position = object.BoundingCenter;
         out.Role = Role::Vehicle;
         out.Behaviors = this->DeriveBehaviors(Role::Vehicle);
         out.Activation = this->DeriveActivation(Role::Vehicle);
         out.Seats = std::move(seats);
         out.ChildHandles = std::move(partHandles);
         out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
-        out.DistanceToPlayer = this->Distance(object.Position, selfPosition);
+        out.DistanceToPlayer = this->Distance(object.BoundingCenter, selfPosition);
 
         return true;
     }
@@ -144,11 +144,11 @@ namespace Egocentric::Affordance::System
     {
         Affordance out;
         out.Handle = object.Handle;
-        out.Position = object.Position;
+        out.Position = object.BoundingCenter;
         out.Role = role;
         out.Behaviors = this->DeriveBehaviors(role);
         out.Activation = this->DeriveActivation(role);
-        out.DistanceToPlayer = this->Distance(object.Position, selfPosition);
+        out.DistanceToPlayer = this->Distance(object.BoundingCenter, selfPosition);
         out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
         return out;
     }
@@ -223,7 +223,7 @@ namespace Egocentric::Affordance::System
             }
             else
             {
-                worldPos = Vec3{ object.Position.X, object.Position.Y, object.Position.Z };
+                worldPos = Vec3{ object.BoundingCenter.X, object.BoundingCenter.Y, object.BoundingCenter.Z };
             }
 
             if (worldPos)
@@ -260,7 +260,7 @@ namespace Egocentric::Affordance::System
                         != std::string::npos);
                     seat.IsOccupied = !partVehi->IsSeatFree(seatInfo);
 
-                    seat.SeatWorldPosition = partObj.Position;
+                    seat.SeatWorldPosition = partObj.BoundingCenter;
                     seat.DistanceToPlayer =
                         this->Distance(seat.SeatWorldPosition, selfPosition);
 
@@ -322,9 +322,9 @@ namespace Egocentric::Affordance::System
     {
         if (seatMarker.NodeIndex < 0)
         {
-            return Vec3{ vehicleObject.Position.X,
-                         vehicleObject.Position.Y,
-                         vehicleObject.Position.Z };
+            return Vec3{ vehicleObject.BoundingCenter.X,
+                         vehicleObject.BoundingCenter.Y,
+                         vehicleObject.BoundingCenter.Z };
         }
 
         if (static_cast<std::size_t>(seatMarker.NodeIndex) >= bones.Matrices.size())

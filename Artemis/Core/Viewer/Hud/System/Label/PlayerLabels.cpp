@@ -103,7 +103,7 @@ namespace Viewer::Hud::System
 
             const auto& biped = bipedIt->second;
 
-            Vec3 anchor{ biped.Position.X, biped.Position.Y, biped.Position.Z + 0.8f };
+            Vec3 anchor{ biped.BoundingCenter.X, biped.BoundingCenter.Y, biped.BoundingCenter.Z + 0.8f };
             bool hasAnchor{ false };
 
             if (tick.Aims)
@@ -176,7 +176,7 @@ namespace Viewer::Hud::System
 
             if (showDistance && !isSelf)
             {
-                rows.push_back(DistanceRow(context, biped.Position, k_MutedColor));
+                rows.push_back(DistanceRow(context, biped.BoundingCenter, k_MutedColor));
             }
 
             canvas.Add(anchor, std::move(rows), ToImColor(k_Health), teamColor,

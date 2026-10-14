@@ -310,7 +310,7 @@ namespace Egocentric::Raycast::System
 		auto objectIt = objectTablePtr->find(targetHandle);
 		if (objectIt == objectTablePtr->end()) return {};
 
-		return { objectIt->second.Position, objectIt->second.Forward, true };
+		return { objectIt->second.BoundingCenter, objectIt->second.Forward, true };
 	}
 
 	auto RaycastService::BuildDynamicCache(const Vec3& origin, float radius,

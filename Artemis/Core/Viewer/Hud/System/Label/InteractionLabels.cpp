@@ -93,8 +93,8 @@ namespace Viewer::Hud::System
 
             const auto& object = objectIt->second;
 
-            const Vec3 anchor{ object.Position.X, object.Position.Y,
-                object.Position.Z + object.BoundingRadius + 0.1f };
+            const Vec3 anchor{ object.BoundingCenter.X, object.BoundingCenter.Y,
+                object.BoundingCenter.Z + object.BoundingRadius + 0.1f };
 
             canvas.Add(anchor, std::move(rows), ToImColor(color),
                 TeamColorOf(context, handle), k_TargetPriority, handle);
@@ -104,7 +104,7 @@ namespace Viewer::Hud::System
                 const Vec3 origin{ context.SelfPosition.X, context.SelfPosition.Y,
                     context.SelfPosition.Z + k_LinkLift };
 
-                canvas.AddArrow(origin, object.Position, ToImColor(color));
+                canvas.AddArrow(origin, object.BoundingCenter, ToImColor(color));
             }
         };
 
@@ -128,7 +128,7 @@ namespace Viewer::Hud::System
 
                 if (objectIt != tick.ObjectTable->end())
                 {
-                    rows.push_back(distanceRow(objectIt->second.Position));
+                    rows.push_back(distanceRow(objectIt->second.BoundingCenter));
                 }
 
                 if (showAffordance)
@@ -152,7 +152,7 @@ namespace Viewer::Hud::System
                 const auto objectIt = tick.ObjectTable->find(interaction.MeleeTargetHandle);
                 if (objectIt != tick.ObjectTable->end())
                 {
-                    rows.push_back(distanceRow(objectIt->second.Position));
+                    rows.push_back(distanceRow(objectIt->second.BoundingCenter));
                 }
 
                 mark(interaction.MeleeTargetHandle, std::move(rows), k_InteractionMelee);
@@ -168,7 +168,7 @@ namespace Viewer::Hud::System
                 const auto objectIt = tick.ObjectTable->find(interaction.AimTargetHandle);
                 if (objectIt != tick.ObjectTable->end())
                 {
-                    rows.push_back(distanceRow(objectIt->second.Position));
+                    rows.push_back(distanceRow(objectIt->second.BoundingCenter));
                 }
 
                 mark(interaction.AimTargetHandle, std::move(rows), k_InteractionAim);

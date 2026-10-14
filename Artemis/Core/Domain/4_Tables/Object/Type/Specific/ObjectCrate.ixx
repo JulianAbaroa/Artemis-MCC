@@ -1,13 +1,11 @@
 export module Tables.Object.Type:Crate;
 
 import Common.Tag.Type;
-import Common.Team.Type;
 import Common.ZoneShape.Type;
 import std;
 
 namespace
 {
-	using Team = Common::Team::Type::Team;
 	using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 }
 
@@ -93,15 +91,6 @@ export namespace Tables::Object::Type::Crate
 		};
 	}
 
-	namespace Zone
-	{
-		struct Zone
-		{
-			ZoneShape Shape{};
-			Team Team{};
-		};
-	}
-
 	namespace Destructible
 	{
 		struct Destructible
@@ -177,7 +166,7 @@ export namespace Tables::Object::Type::Crate
 		return it != map.end() ? it->second : Kind::Unknown;
 	}
 
-	// Crates that carry a zone (shape and team) in their multiplayer block.
+	// Crates that carry a zone (shape and team) in their multiplayer block (read from AliveObject::Multiplayer).
 	inline bool HasZone(Kind kind)
 	{
 		return kind == Kind::FlagStand
@@ -190,7 +179,6 @@ export namespace Tables::Object::Type::Crate
 		std::uintptr_t Base{};
 		Kind Kind{};
 
-		std::optional<Zone::Zone> Zone{};
 		std::optional<Teleport::Teleport> Teleport{};
 		std::optional<Destructible::Destructible> Destructible{};
 		std::optional<Lift::Lift> Lift{};

@@ -184,7 +184,7 @@ namespace Viewer::Hud::System
 
             if (showDistance)
             {
-                rows.push_back(DistanceRow(context, object.Position, k_MutedColor));
+                rows.push_back(DistanceRow(context, object.BoundingCenter, k_MutedColor));
             }
 
             const float speed = Magnitude(object.LinearVelocity);
@@ -231,8 +231,8 @@ namespace Viewer::Hud::System
                 }
             }
 
-            const Vec3 anchor{ object.Position.X, object.Position.Y,
-                object.Position.Z + object.BoundingRadius + 0.1f };
+            const Vec3 anchor{ object.BoundingCenter.X, object.BoundingCenter.Y,
+                object.BoundingCenter.Z + object.BoundingRadius + 0.1f };
 
             const ImU32 group = isSelected
                 ? ToImColor(k_Selected) : ToImColor(GroupOf(category));
@@ -245,11 +245,11 @@ namespace Viewer::Hud::System
                 const float scale = arrowLength / speed;
 
                 const Vec3 tip{
-                    object.Position.X + object.LinearVelocity.X * scale,
-                    object.Position.Y + object.LinearVelocity.Y * scale,
-                    object.Position.Z + object.LinearVelocity.Z * scale };
+                    object.BoundingCenter.X + object.LinearVelocity.X * scale,
+                    object.BoundingCenter.Y + object.LinearVelocity.Y * scale,
+                    object.BoundingCenter.Z + object.LinearVelocity.Z * scale };
 
-                canvas.AddArrow(object.Position, tip, group);
+                canvas.AddArrow(object.BoundingCenter, tip, group);
             }
         };
 

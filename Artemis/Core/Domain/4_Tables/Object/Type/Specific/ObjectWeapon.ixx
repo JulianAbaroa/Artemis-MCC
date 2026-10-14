@@ -1,12 +1,6 @@
 export module Tables.Object.Type:Weapon;
 
-import Common.Team.Type;
 import std;
-
-namespace
-{
-    using Common::Team::Type::Team;
-}
 
 export namespace Tables::Object::Type::Weapon
 {
@@ -64,10 +58,6 @@ export namespace Tables::Object::Type::Weapon
         // note: Not observed yet.
         std::uint8_t IsTracking{};
         std::uint32_t TrackedBipedHandle{};
-
-        // Team of the flag or the bomb.
-        // note: Only read for those two weapons.
-        std::optional<Team> Team{};
 
         // TODO: Fields of the vehicle weapons that are not read yet (the old Banshee offsets were removed).
         // - IsFiring: the float at 0x250 of the weapon ramps 0 -> 0.5 -> 1.0 -> 0.5 -> 0 while the

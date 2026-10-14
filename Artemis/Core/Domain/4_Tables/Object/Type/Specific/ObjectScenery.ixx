@@ -1,15 +1,7 @@
 export module Tables.Object.Type:Scenery;
 
 import Common.Tag.Type;
-import Common.Team.Type;
-import Common.ZoneShape.Type;
 import std;
-
-namespace
-{
-    using Team = Common::Team::Type::Team;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
-}
 
 export namespace Tables::Object::Type::Scenery
 {
@@ -30,23 +22,6 @@ export namespace Tables::Object::Type::Scenery
 
         PortableShield,
     };
-
-    namespace Spawn
-    {
-        struct Spawn
-        {
-            Team Team{};
-        };
-    }
-
-    namespace Boundary
-    {
-        struct Boundary
-        {
-            ZoneShape Shape{};
-            Team Team{};
-        };
-    }
 
     namespace PortableShield
     {
@@ -106,8 +81,6 @@ export namespace Tables::Object::Type::Scenery
         std::uintptr_t Base{};
         Kind Kind{};
 
-        std::optional<Spawn::Spawn> Spawn{};
-        std::optional<Boundary::Boundary> Boundary{};
         std::optional<PortableShield::PortableShield> PortableShield{};
     };
 }

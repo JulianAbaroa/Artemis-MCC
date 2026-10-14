@@ -47,12 +47,12 @@ export namespace Tables::Object::Type::Alive
 		std::uint32_t ChildHandle{};
 		std::uint32_t ParentHandle{};
 
-		// note: center of the bounding sphere, world space (offset 0x20).
-		Vec3 Position{};
+		// note: Center of the bounding sphere, world space (offset 0x20). Not the origin of the object (D27).
+		Vec3 BoundingCenter{};
 		// note: object origin (offset 0x44), local to the parent if parented.
 		Vec3 Origin{};
 		// note: origin resolved to world space through the parent chain.
-		// Zone shapes (Top/Bottom) are measured from here, not from Position.
+		// Zone shapes (Top/Bottom) are measured from here, not from BoundingCenter.
 		Vec3 WorldOrigin{};
 		Vec3 Forward{};
 		Vec3 Up{};

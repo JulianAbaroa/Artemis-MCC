@@ -51,7 +51,7 @@ namespace Environment::Collidable::System
         Collidable instance{};
         instance.Handle = object.Handle;
         instance.TagName = object.TagName;
-        instance.Position = object.Position;
+        instance.Position = object.BoundingCenter;
         instance.Forward = object.Forward;
         instance.Up = object.Up;
 
@@ -110,9 +110,9 @@ namespace Environment::Collidable::System
         {
             if (object.Address == 0) continue;
 
-            const float dx = object.Position.X - origin.X;
-            const float dy = object.Position.Y - origin.Y;
-            const float dz = object.Position.Z - origin.Z;
+            const float dx = object.BoundingCenter.X - origin.X;
+            const float dy = object.BoundingCenter.Y - origin.Y;
+            const float dz = object.BoundingCenter.Z - origin.Z;
 
             if (dx * dx + dy * dy + dz * dz <= radiusSq)
             {

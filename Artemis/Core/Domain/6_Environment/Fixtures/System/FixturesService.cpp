@@ -65,7 +65,7 @@ namespace Environment::Fixtures::System
             Obstacle obstacle{};
             obstacle.Handle = classified.Handle;
             obstacle.TagName = object.TagName;
-            obstacle.Position = object.Position;
+            obstacle.Position = object.BoundingCenter;
             obstacle.Forward = object.Forward;
             obstacle.Up = object.Up;
             obstacle.LinearVelocity = object.LinearVelocity;
@@ -90,14 +90,17 @@ namespace Environment::Fixtures::System
             if (object.Address == 0) continue;
 
             const auto* scenery = std::get_if<SceneryObject>(&object.Specific);
-            if (!scenery || !scenery->Spawn.has_value()) continue;
+            if (!scenery || !Tables::Object::Type::Scenery::IsSpawnPoint(scenery->Kind)) continue;
 
             Spawn spawn{};
             spawn.Handle = classified.Handle;
             spawn.TagName = object.TagName;
-            spawn.Position = object.Position;
+            spawn.Position = object.BoundingCenter;
             spawn.Forward = object.Forward;
-            spawn.Team = scenery->Spawn->Team;
+
+            // note: Invisible respawn points are map defaults without a team.
+            if (scenery->Kind == SceneryKind::InvisibleRespawnPoint) spawn.Team = Team::Neutral;
+            else if (object.Multiplayer) spawn.Team = object.Multiplayer->Team;
 
             if (scenery->Kind == SceneryKind::InitialSpawnPoint)
             {
@@ -203,7 +206,7 @@ namespace Environment::Fixtures::System
             Lift lift{};
             lift.Handle = classified.Handle;
             lift.TagName = object.TagName;
-            lift.Position = object.Position;
+            lift.Position = object.BoundingCenter;
             lift.Forward = object.Forward;
             lift.Up = object.Up;
             lift.Angle = crate->Lift->Angle;
@@ -260,7 +263,7 @@ namespace Environment::Fixtures::System
             Shield shield{};
             shield.Handle = classified.Handle;
             shield.TagName = object.TagName;
-            shield.Position = object.Position;
+            shield.Position = object.BoundingCenter;
             shield.Forward = object.Forward;
             shield.Up = object.Up;
             shield.Kind = data->Kind;
@@ -309,11 +312,12 @@ namespace Environment::Fixtures::System
                 objectiveSpawn.Forward = object.Forward;
                 objectiveSpawn.Up = object.Up;
 
-                objectiveSpawn.ZoneShape = (crate->Zone.has_value()) ?
-                    crate->Zone->Shape : ZoneShape{};
-
-                objectiveSpawn.Team = (crate->Zone.has_value()) ?
-                    crate->Zone->Team : Team::Neutral;
+                objectiveSpawn.Team = Team::Neutral;
+                if (Tables::Object::Type::Crate::HasZone(crate->Kind))
+                {
+                    objectiveSpawn.ZoneShape = object.Multiplayer ? object.Multiplayer->Shape : ZoneShape{};
+                    objectiveSpawn.Team = object.Multiplayer ? object.Multiplayer->Team : Team{};
+                }
 
                 objectiveSpawns.push_back(objectiveSpawn);
             }
@@ -332,7 +336,7 @@ namespace Environment::Fixtures::System
                 Objective objective{};
                 objective.Handle = classified.Handle;
                 objective.TagName = object.TagName;
-                objective.Position = object.Position;
+                objective.Position = object.BoundingCenter;
                 objective.Forward = object.Forward;
                 objective.Up = object.Up;
                 objective.LinearVelocity = object.LinearVelocity;
@@ -345,10 +349,7 @@ namespace Environment::Fixtures::System
                     objective.CarrierHandle = object.ParentHandle;
                 }
 
-                if (weap->Team.has_value())
-                {
-                    objective.Team = weap->Team.value();
-                }
+                if (object.Multiplayer) objective.Team = object.Multiplayer->Team;
 
                 objectives.push_back(objective);
             }
@@ -444,7 +445,7 @@ namespace Environment::Fixtures::System
             Destructible destructible{};
             destructible.Handle = classified.Handle;
             destructible.TagName = object.TagName;
-            destructible.Position = object.Position;
+            destructible.Position = object.BoundingCenter;
             destructible.Forward = object.Forward;
             destructible.Up = object.Up;
             destructible.LinearVelocity = object.LinearVelocity;

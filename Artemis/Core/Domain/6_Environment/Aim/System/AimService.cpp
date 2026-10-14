@@ -79,9 +79,9 @@ namespace Environment::Aim::System
         const float lz = u.X * f.Y - u.Y * f.X;
 
         aim.Position = Vec3{
-            object.Position.X + offset.X * f.X + offset.Y * lx + offset.Z * u.X,
-            object.Position.Y + offset.X * f.Y + offset.Y * ly + offset.Z * u.Y,
-            object.Position.Z + offset.X * f.Z + offset.Y * lz + offset.Z * u.Z
+            object.BoundingCenter.X + offset.X * f.X + offset.Y * lx + offset.Z * u.X,
+            object.BoundingCenter.Y + offset.X * f.Y + offset.Y * ly + offset.Z * u.Y,
+            object.BoundingCenter.Z + offset.X * f.Z + offset.Y * lz + offset.Z * u.Z
         };
         aim.Valid = true;
         return aim;
