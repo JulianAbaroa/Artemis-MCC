@@ -58,7 +58,6 @@ namespace Export::Tick::System
         // --- Layer 5: Environment ---
         tick.Entities = m_EntitiesStore.Acquire();
         tick.Vitalities = m_VitalitiesStore.Acquire();
-        tick.Collidables = m_CollidableStore.Acquire();
         tick.Fixtures = m_FixturesStore.Acquire();
 		tick.Aims = m_AimStore.Acquire();
 

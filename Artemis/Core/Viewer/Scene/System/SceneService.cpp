@@ -32,7 +32,7 @@ namespace Viewer::Scene::System
 
         m_PaletteService.Build(tick);
 
-        m_SelectionService.Update(tick, m_CameraService.GetCenterRay());
+        m_SelectionService.Update(m_CameraService.GetCenterRay());
     }
 
     auto SceneService::ClearSelection() -> void

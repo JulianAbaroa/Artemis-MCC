@@ -5,14 +5,14 @@ module;
 module Viewer.Hud.System;
 import :Collidables;
 
+import Environment.Collidable.Type;
 import Gui.Widget.System;
 import std;
 
 namespace
 {
-    using Tick = Export::Tick::Type::Tick;
-    using Collidable = Export::Tick::Type::Collidable;
-    using RegionDiagnostic = Export::Tick::Type::RegionDiagnostic;
+    using Environment::Collidable::Type::Collidable;
+    using Environment::Collidable::Type::RegionDiagnostic;
 
     using PanelGuiService = Gui::Widget::System::PanelGuiService;
 
@@ -207,15 +207,15 @@ namespace
 
 namespace Viewer::Hud::System
 {
-    auto CollidablesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
+    auto CollidablesHud::Draw(const std::shared_ptr<const Collidables>& collidables, std::uint32_t handle) -> void
     {
-        if (!tick.Collidables)
+        if (!collidables)
         {
             ImGui::TextDisabled("No collidable data.");
             return;
         }
 
-        for (const Collidable& instance : *tick.Collidables)
+        for (const Collidable& instance : *collidables)
         {
             if (instance.Handle == handle)
             {

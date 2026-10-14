@@ -15,6 +15,7 @@ export import :Labels;
 
 import Service.Telemetry.State;
 import Platform.Render.State;
+import Environment.Collidable.State;
 import Export.Tick.Type;
 import Export.Tick.State;
 import Viewer.Overlay.State;
@@ -36,15 +37,16 @@ export namespace Viewer::Hud::System
 
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
         using RenderStore = Platform::Render::State::RenderStore;
+        using CollidableStore = Environment::Collidable::State::CollidableStore;
         using TickStore = Export::Tick::State::TickStore;
         using OverlayStore = Viewer::Overlay::State::OverlayStore;
         using SelectionStore = Viewer::Selection::State::SelectionStore;
 
     public:
-        HudService(TelemetryStore& telemetryStore, RenderStore& renderStore,
+        HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, CollidableStore& collidableStore,
             TickStore& tickStore, OverlayStore& overlayStore,
             SelectionStore& selectionStore) :
-            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore),
+            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_CollidableStore(collidableStore),
             m_TickStore(tickStore),
             m_OverlayStore(overlayStore), m_SelectionStore(selectionStore) {}
         ~HudService() = default;
@@ -59,6 +61,7 @@ export namespace Viewer::Hud::System
     private:
         TelemetryStore& m_TelemetryStore;
         RenderStore& m_RenderStore;
+        CollidableStore& m_CollidableStore;
         TickStore& m_TickStore;
         OverlayStore& m_OverlayStore;
         SelectionStore& m_SelectionStore;

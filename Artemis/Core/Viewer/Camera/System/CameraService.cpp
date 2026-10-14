@@ -156,14 +156,12 @@ namespace Viewer::Camera::System
             }
         }
 
-        if (tick->Collidables)
+        if (tick->Entities)
         {
-            for (const auto& collidable : *tick->Collidables)
+            if (const auto* entity{ tick->Entities->Find(selected) }; entity != nullptr)
             {
-                if (collidable.Handle != selected) continue;
-
-                outPosition = collidable.Position;
-                outForward = collidable.Forward;
+                outPosition = entity->BoundingCenter;
+                outForward = entity->Forward;
                 return true;
             }
         }
@@ -188,13 +186,11 @@ namespace Viewer::Camera::System
     {
         if (!tick) return false;
 
-        if (tick->Collidables)
+        if (tick->Entities)
         {
-            for (const auto& collidable : *tick->Collidables)
+            if (const auto* entity{ tick->Entities->Find(selected) }; entity != nullptr)
             {
-                if (collidable.Handle != selected) continue;
-
-                outPivot = collidable.Position;
+                outPivot = entity->BoundingCenter;
                 return true;
             }
         }

@@ -143,7 +143,7 @@ namespace Viewer::Hud::System
         switch (m_OverlayStore.GetMode())
         {
         case Mode::Collidable:
-            CollidablesHud::Draw(tick, handle);
+            CollidablesHud::Draw(m_CollidableStore.Acquire(), handle);
             break;
 
         case Mode::Health:

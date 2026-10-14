@@ -7,7 +7,6 @@ import Relations.Classifier.Type;
 import Relations.ObjectGraph.Type;
 import Relations.PlayerGraph.Type;
 import Environment.Entities.Type;
-import Environment.Collidable.Type;
 import Environment.Fixtures.Type;
 import Environment.Aim.Type;
 import Egocentric.Affordance.Type;
@@ -35,9 +34,6 @@ export namespace Export::Tick::Type
 	using Entities = Environment::Entities::Type::Entities;
 	using VitalityDetail = Environment::Entities::Type::VitalityDetail;
 	using Vitalities = Environment::Entities::Type::Vitalities;
-	using Collidable = Environment::Collidable::Type::Collidable;
-	using Collidables = std::vector<Collidable>;
-	using RegionDiagnostic = Environment::Collidable::Type::RegionDiagnostic;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;
 	using Aim = Environment::Aim::Type::Aim;
 	using Aims = std::unordered_map<std::uint32_t, Aim>;
@@ -71,7 +67,6 @@ export namespace Export::Tick::Type
 		// --- Layer 5: Environment ---
 		std::shared_ptr<const Entities> Entities;
 		std::shared_ptr<const Vitalities> Vitalities;
-		std::shared_ptr<const Collidables> Collidables;
 		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Aims> Aims;
 

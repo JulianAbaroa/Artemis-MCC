@@ -10,9 +10,9 @@ namespace
 
 namespace Viewer::Selection::System
 {
-    auto SelectionService::Update(const std::shared_ptr<const Tick>& tick, const Ray& ray) -> void
+    auto SelectionService::Update(const Ray& ray) -> void
     {
-        if (tick) this->Rebuild(tick);
+        this->Rebuild(m_CollidableStore.Acquire());
 
         this->Pick(ray);
     }
@@ -32,22 +32,20 @@ namespace Viewer::Selection::System
         m_MeshBounds.clear();
         std::vector<ObjectBounds>().swap(m_Bounds);
 
-        m_LastGeneration = 0;
-        m_IsGenerationSet = false;
+        m_Collidables.reset();
     }
 
-    auto SelectionService::Rebuild(const std::shared_ptr<const Tick>& tick) -> void
+    auto SelectionService::Rebuild(const std::shared_ptr<const Collidables>& collidables) -> void
     {
-        if (m_IsGenerationSet && tick->Generation == m_LastGeneration) return;
+        if (collidables == m_Collidables) return;
 
-        m_LastGeneration = tick->Generation;
-        m_IsGenerationSet = true;
+        m_Collidables = collidables;
 
         m_Bounds.clear();
 
-        if (!tick->Collidables) return;
+        if (!collidables) return;
 
-        m_Bounds.reserve(tick->Collidables->size());
+        m_Bounds.reserve(collidables->size());
 
         auto localOf = [this](const auto* mesh) -> const LocalBounds*
         {
@@ -82,7 +80,7 @@ namespace Viewer::Selection::System
             return &local;
         };
 
-        for (const auto& collidable : *tick->Collidables)
+        for (const auto& collidable : *collidables)
         {
             ObjectBounds bounds{};
             bounds.Handle = collidable.Handle;

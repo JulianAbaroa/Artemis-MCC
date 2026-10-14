@@ -53,6 +53,8 @@ export namespace Environment::Collidable::System
             m_WorldStore(worldStore), m_CollidableStore(collidableStore) {}
         ~CollidableService() = default;
 
+        // Publishes the collision meshes of every live object for the viewer, or an empty list when the free camera is off.
+        // note: Debug only. The collidables are not part of the Tick (07, D23, D84): the viewer reads this store directly.
         auto Update(bool isDebugViewActive) -> void;
 
         // Builds one object with its parts only.

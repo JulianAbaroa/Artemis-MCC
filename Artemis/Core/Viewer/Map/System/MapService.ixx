@@ -15,6 +15,7 @@ import :AimPass;
 import Service.Logs.System;
 import Platform.Render.Type;
 import Platform.Render.System;
+import Environment.Collidable.State;
 import Export.Tick.State;
 import Viewer.Profiler.System;
 import Viewer.Scene.System;
@@ -51,6 +52,7 @@ export namespace Viewer::Map::System
         using GpuPipeline = Platform::Render::System::GpuPipeline;
         using GpuStateGuard = Platform::Render::System::GpuStateGuard;
 
+        using CollidableStore = Environment::Collidable::State::CollidableStore;
         using TickStore = Export::Tick::State::TickStore;
 
         using FrameProfiler = Viewer::Profiler::System::FrameProfiler;
@@ -58,9 +60,9 @@ export namespace Viewer::Map::System
         using OptionsStore = Viewer::Options::State::OptionsStore;
 
     public:
-        MapService(LogsService& logsService,
+        MapService(LogsService& logsService, CollidableStore& collidableStore,
             TickStore& tickStore, SceneService& sceneService, OptionsStore& optionsStore) :
-            m_LogsService(logsService),
+            m_LogsService(logsService), m_CollidableStore(collidableStore),
             m_TickStore(tickStore), m_SceneService(sceneService), m_OptionsStore(optionsStore),
             m_GpuPipeline(logsService), m_MapPass(logsService),
             m_DynamicPass(logsService), m_ZonePass(logsService),
@@ -84,6 +86,7 @@ export namespace Viewer::Map::System
 
     private:
         LogsService& m_LogsService;
+        CollidableStore& m_CollidableStore;
         TickStore& m_TickStore;
         SceneService& m_SceneService;
         OptionsStore& m_OptionsStore;

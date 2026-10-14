@@ -5,6 +5,7 @@ import Service.Preferences.System;
 import Platform.Layer;
 import Platform.Render.Type;
 import Platform.Input.Type;
+import Environment.Layer;
 import Export.Layer;
 import Gui.Layer;
 import Gui.Backend.System;
@@ -47,15 +48,16 @@ export namespace Viewer
         using LabelService = Viewer::Hud::System::LabelService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform,
+        // param environment: Source of the debug collidables, which are not part of the Tick.
+        Layer(Service::Layer& service, Platform::Layer& platform, Environment::Layer& environment,
             Export::Layer& exportLayer, Gui::Layer& gui,
             PreferencesService& preferences) :
             m_CameraService(m_CameraStore, m_OptionsStore),
-            m_SelectionService(m_SelectionStore),
+            m_SelectionService(environment.m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, m_CameraStore, m_CameraService, m_SelectionService),
-            m_MapService(service.m_LogsService, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
-            m_HudService(service.m_TelemetryStore, platform.m_RenderStore, exportLayer.m_TickStore, m_OverlayStore, m_SelectionStore),
+            m_MapService(service.m_LogsService, environment.m_CollidableStore, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
+            m_HudService(service.m_TelemetryStore, platform.m_RenderStore, environment.m_CollidableStore, exportLayer.m_TickStore, m_OverlayStore, m_SelectionStore),
             m_LabelService(exportLayer.m_TickStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
         {
             auto& lifecycle = platform.m_LifecycleService;

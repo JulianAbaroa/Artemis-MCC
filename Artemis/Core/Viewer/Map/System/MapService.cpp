@@ -95,7 +95,8 @@ namespace Viewer::Map::System
                     for (const auto& shield : tick->Fixtures->Shields) translucentHandles.insert(shield.Handle);
                 }
 
-                m_DynamicPass.Upload(frame.Device, frame.Context, tick->Collidables,
+                // note: The debug collidables are not part of the Tick. They come from their own store.
+                m_DynamicPass.Upload(frame.Device, frame.Context, m_CollidableStore.Acquire(),
                     palette, selected, translucentHandles, tick->Generation);
             }
 

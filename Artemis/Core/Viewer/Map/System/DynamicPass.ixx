@@ -7,7 +7,7 @@ export module Viewer.Map.System:DynamicPass;
 import Service.Logs.System;
 import Platform.Render.Type;
 import Platform.Render.System;
-import Export.Tick.Type;
+import Environment.Collidable.State;
 import Viewer.Palette.System;
 import Viewer.Map.Type;
 import std;
@@ -27,7 +27,7 @@ export namespace Viewer::Map::System
         using MeshInstance = Platform::Render::Type::MeshInstance;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using Collidables = Export::Tick::Type::Collidables;
+        using Collidables = Environment::Collidable::State::Collidables;
 
         using PaletteService = Viewer::Palette::System::PaletteService;
         using Geometry = Viewer::Map::Type::Geometry;
