@@ -90,6 +90,8 @@ namespace Environment::Entities::System
         Entities entities{};
         entities.Rows.reserve(classifiedsPtr->size());
 
+        Vitalities vitalities{};
+
         for (const Classified& classified : *classifiedsPtr)
         {
             const auto objectIt{ objectTable.find(classified.Handle) };
@@ -97,7 +99,7 @@ namespace Environment::Entities::System
 
             if (classified.Binding == Binding::Carried) m_CarriedHandlesStore.Add(classified.Handle);
 
-            entities.Rows.push_back(this->MakeEntity(classified, objectIt->second, objectTable));
+            entities.Rows.push_back(this->MakeEntity(classified, objectIt->second, objectTable, vitalities));
         }
 
         std::ranges::sort(entities.Rows, {}, &Entity::Handle);
@@ -109,9 +111,11 @@ namespace Environment::Entities::System
         }
 
         m_EntitiesStore.Publish(std::move(entities));
+        m_VitalitiesStore.Publish(std::move(vitalities));
     }
 
-    auto EntitiesService::MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable) -> Entity
+    auto EntitiesService::MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable,
+        Vitalities& vitalities) -> Entity
     {
         Entity entity{};
         entity.Handle = classified.Handle;
@@ -136,11 +140,19 @@ namespace Environment::Entities::System
 
         if (HasCapability(capabilities, Capability::HasVitality))
         {
-            capabilities = capabilities | Capability::IsDestructible;
-            entity.Vitality = this->FindVitality(object);
+            if (std::optional<VitalityDetail> detail{ this->MakeVitality(object) })
+            {
+                entity.Vitality = detail->Sections[k_LifeSection];
+                vitalities.emplace(entity.Handle, std::move(*detail));
+            }
         }
 
+        // note: A dead object cannot die again, so it is no longer destructible.
         if (entity.Vitality && *entity.Vitality <= 0.0f) entity.Lifecycle = Lifecycle::Dead;
+        if (HasCapability(capabilities, Capability::HasVitality) && entity.Lifecycle == Lifecycle::Active)
+        {
+            capabilities = capabilities | Capability::IsDestructible;
+        }
 
         // note: A child follows the root of its parent chain: a carried weapon or a seated biped moves with its holder.
         const AliveObject& root{ this->RootOf(object, objectTable) };
@@ -182,6 +194,31 @@ namespace Environment::Entities::System
         return *root;
     }
 
+    auto EntitiesService::MakeVitality(const AliveObject& object) const -> std::optional<VitalityDetail>
+    {
+        std::shared_ptr<const Vitality> layout{ m_VitalityStore.GetShared(object.TagName) };
+        if (!layout || layout->Sections.empty()) return std::nullopt;
+
+        const auto* damage{ m_DamageSectionsStore.Get(object.Handle) };
+        if (damage == nullptr || damage->Sections.size() <= k_LifeSection) return std::nullopt;
+
+        VitalityDetail detail{};
+        detail.Handle = object.Handle;
+        detail.Sections.assign(layout->Sections.size(), 0.0f);
+
+        for (std::size_t i{ 0 }; i < layout->Sections.size(); ++i)
+        {
+            const int sectionIndex{ layout->Sections[i].SectionIndex };
+            if (sectionIndex < 0 || static_cast<std::size_t>(sectionIndex) >= damage->Sections.size()) continue;
+
+            detail.Sections[i] = damage->Sections[sectionIndex].Vitality;
+        }
+
+        detail.Layout = std::move(layout);
+
+        return detail;
+    }
+
     auto EntitiesService::FindVitality(const AliveObject& object) const -> std::optional<float>
     {
         const Vitality* layout{ m_VitalityStore.Get(object.TagName) };
@@ -196,6 +233,7 @@ namespace Environment::Entities::System
     auto EntitiesService::Cleanup() -> void
     {
         m_EntitiesStore.Cleanup();
+        m_VitalitiesStore.Cleanup();
         m_CarriedHandlesStore.Cleanup();
 
         m_LogsService.Message("[EntitiesService] INFO: Cleanup completed.");

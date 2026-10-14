@@ -200,7 +200,7 @@ namespace Viewer::Map::System
 
     auto AimPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Aims>& aims,
-        const std::shared_ptr<const Healths>& healths, bool tintByHealth,
+        const std::shared_ptr<const Vitalities>& vitalities, bool tintByHealth,
         std::uint32_t selectedHandle, std::uint64_t generation) -> void
     {
         if (!device || !context) return;
@@ -221,11 +221,11 @@ namespace Viewer::Map::System
 
         auto emit = [&](const Aim& aim)
         {
-            const Health* health{ nullptr };
-            if (tintByHealth && healths)
+            const VitalityDetail* detail{ nullptr };
+            if (tintByHealth && vitalities)
             {
-                const auto healthIt = healths->find(aim.Handle);
-                if (healthIt != healths->end()) health = &healthIt->second;
+                const auto detailIt = vitalities->find(aim.Handle);
+                if (detailIt != vitalities->end()) detail = &detailIt->second;
             }
 
             for (std::size_t i = 0; i < aim.Sections.size(); ++i)
@@ -234,9 +234,9 @@ namespace Viewer::Map::System
                 if (!section.Valid) continue;
 
                 Color c = ColorOf(section.AimSource);
-                if (health && section.AimSource != AnchorSource::ObjectCenter && i < health->SectionVitalities.size())
+                if (detail && section.AimSource != AnchorSource::ObjectCenter && i < detail->Sections.size())
                 {
-                    c = Viewer::Style::Type::ColorOfVitality(health->SectionVitalities[i]);
+                    c = Viewer::Style::Type::ColorOfVitality(detail->Sections[i]);
                 }
 
                 const SphereInstance instance{

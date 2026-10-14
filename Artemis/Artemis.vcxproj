@@ -787,10 +787,6 @@
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Health\State\HealthStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Health\System\HealthService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Health\System\HealthService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Health\Type\Environment.Health.Type.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\State\AffordanceStore.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.cpp" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.ixx" />

@@ -9,4 +9,5 @@ import std;
 export namespace Environment::Entities::State
 {
     using EntitiesStore = Common::State::System::Snapshot<Environment::Entities::Type::Entities>;
+    using VitalitiesStore = Common::State::System::Snapshot<Environment::Entities::Type::Vitalities>;
 }

@@ -6,8 +6,8 @@ module Viewer.Hud.System;
 import :Vitalities;
 
 import Common.Semantic.Type;
+import Resolved.Vitality.Type;
 import Resolved.World.Type;
-import Environment.Health.Type;
 import Gui.Format.System;
 import Gui.Widget.System;
 import std;
@@ -16,13 +16,13 @@ namespace
 {
     using Tick = Export::Tick::Type::Tick;
     using Export::Tick::Type::Entity;
-    using Health = Export::Tick::Type::Health;
+    using Export::Tick::Type::VitalityDetail;
     using ObjectTable = Export::Tick::Type::ObjectTable;
-    using Section = Environment::Health::Type::VitalitySection;
-    using SectionKind = Environment::Health::Type::VitalityKind;
+    using Section = Resolved::Vitality::Type::Vitality::Section;
+    using SectionKind = Resolved::Vitality::Type::Vitality::Kind;
     using Anchor = Resolved::World::Type::ModelLink::Anchor;
     using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
-    using ResolvedVitality = Environment::Health::Type::VitalityLayout;
+    using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
     using HexFormater = Gui::Format::System::HexFormater;
 
     using PanelGuiService = Gui::Widget::System::PanelGuiService;
@@ -235,32 +235,27 @@ namespace
         ImGui::Spacing();
     }
 
-    auto DrawHealth(const Health& health, const ResolvedVitality* layout) -> void
+    auto DrawHealth(const VitalityDetail& detail, const ResolvedVitality* layout) -> void
     {
         ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Health");
         ImGui::Separator();
         ImGui::Spacing();
 
-        ImGui::Text("Handle: %s", HexFormater::Hex32(health.Handle).c_str());
+        ImGui::Text("Handle: %s", HexFormater::Hex32(detail.Handle).c_str());
 
-        ImGui::Spacing();
-        if (health.IsDead)
-            ImGui::TextColored({ 1.0f, 0.35f, 0.35f, 1.0f }, "[ DEAD ]");
-        else
-            ImGui::TextColored({ 0.4f, 1.0f, 0.4f, 1.0f }, "[ ALIVE ]");
-
+        // note: The lifecycle is in the Entity block above.
         PanelGuiService::DrawSectionSeparator(nullptr);
 
         ImGui::TextColored({ 0.8f, 0.8f, 0.8f, 1.0f }, "Damage Sections (%d)",
-            static_cast<int>(health.SectionVitalities.size()));
+            static_cast<int>(detail.Sections.size()));
         ImGui::Spacing();
 
-        for (std::size_t i = 0; i < health.SectionVitalities.size(); ++i)
+        for (std::size_t i = 0; i < detail.Sections.size(); ++i)
         {
             const Section* section = (layout && i < layout->Sections.size())
                 ? &layout->Sections[i] : nullptr;
 
-            DrawHealthRow(i, health.SectionVitalities[i], section);
+            DrawHealthRow(i, detail.Sections[i], section);
         }
     }
 }
@@ -277,14 +272,14 @@ namespace Viewer::Hud::System
             if (it != tick.ObjectTable->end()) tagName = &it->second.TagName;
         }
 
-        const Health* health = nullptr;
-        if (tick.Healths)
+        const VitalityDetail* detail = nullptr;
+        if (tick.Vitalities)
         {
-            auto healthIt = tick.Healths->find(handle);
-            if (healthIt != tick.Healths->end()) health = &healthIt->second;
+            auto detailIt = tick.Vitalities->find(handle);
+            if (detailIt != tick.Vitalities->end()) detail = &detailIt->second;
         }
 
-        const ResolvedVitality* layout = health ? health->Layout.get() : nullptr;
+        const ResolvedVitality* layout = detail ? detail->Layout.get() : nullptr;
 
         DrawEntity(tick, handle);
 
@@ -296,7 +291,7 @@ namespace Viewer::Hud::System
         ImGui::Spacing();
         ImGui::Spacing();
 
-        if (!tick.Healths)
+        if (!tick.Vitalities)
         {
             ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Health");
             ImGui::Separator();
@@ -304,7 +299,7 @@ namespace Viewer::Hud::System
             return;
         }
 
-        if (!health)
+        if (!detail)
         {
             ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Health");
             ImGui::Separator();
@@ -312,6 +307,6 @@ namespace Viewer::Hud::System
             return;
         }
 
-        DrawHealth(*health, layout);
+        DrawHealth(*detail, layout);
     }
 }

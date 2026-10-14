@@ -6,8 +6,8 @@ module Viewer.Hud.System;
 import :HealthLabels;
 
 import Common.Math.Type;
+import Resolved.Vitality.Type;
 import Resolved.World.Type;
-import Environment.Health.Type;
 import Viewer.Options.State;
 import Viewer.Options.Type;
 import Viewer.Style.Type;
@@ -18,8 +18,8 @@ namespace
 {
     using Flag = Viewer::Options::Type::Flag;
     using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
-    using Section = Environment::Health::Type::VitalitySection;
-    using SectionKind = Environment::Health::Type::VitalityKind;
+    using Section = Resolved::Vitality::Type::Vitality::Section;
+    using SectionKind = Resolved::Vitality::Type::Vitality::Kind;
 
     using Viewer::Style::Type::k_VitalityShield;
 
@@ -47,7 +47,7 @@ namespace Viewer::Hud::System
         const auto& options = context.Options;
 
         if (!options.IsEnabled(Flag::HealthBars)) return;
-        if (!tick.Aims || !tick.Healths) return;
+        if (!tick.Aims || !tick.Vitalities) return;
 
         const bool selectedOnly = options.IsEnabled(Flag::HealthSelectedOnly);
         const bool showValue = options.IsEnabled(Flag::HealthBarValue);
@@ -58,13 +58,13 @@ namespace Viewer::Hud::System
         auto emit = [&](std::uint32_t handle)
         {
             const auto aimIt = tick.Aims->find(handle);
-            const auto healthIt = tick.Healths->find(handle);
-            if (aimIt == tick.Aims->end() || healthIt == tick.Healths->end()) return;
+            const auto detailIt = tick.Vitalities->find(handle);
+            if (aimIt == tick.Aims->end() || detailIt == tick.Vitalities->end()) return;
 
-            const auto& layout = healthIt->second.Layout;
+            const auto& layout = detailIt->second.Layout;
 
             const auto& sections = aimIt->second.Sections;
-            const auto& vitalities = healthIt->second.SectionVitalities;
+            const auto& vitalities = detailIt->second.Sections;
             const float priority = handle == context.Selected ? k_SelectedPriority : 0.0f;
 
             for (std::size_t i = 0; i < sections.size() && i < vitalities.size(); ++i)
@@ -104,7 +104,7 @@ namespace Viewer::Hud::System
             return;
         }
 
-        for (const auto& entry : *tick.Healths)
+        for (const auto& entry : *tick.Vitalities)
         {
             emit(entry.first);
         }

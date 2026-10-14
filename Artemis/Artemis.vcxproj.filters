@@ -595,18 +595,6 @@
     <Filter Include="Core\Domain\6_Environment\Fixtures\System">
       <UniqueIdentifier>{7d54c5d8-0eff-472e-a088-b1e1963bb193}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Environment\Health">
-      <UniqueIdentifier>{bf158fb4-af04-40f6-b380-da229f999f08}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Health\Type">
-      <UniqueIdentifier>{8d5871e2-368c-444c-9065-121d4119c476}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Health\State">
-      <UniqueIdentifier>{0b8653d9-16b5-4a63-b1af-e0cd19055a3c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Health\System">
-      <UniqueIdentifier>{021f8216-8ce3-4508-8177-82c91d74f6db}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\7_Egocentric">
       <UniqueIdentifier>{40efa74b-c5b9-447b-89e7-7ad9bed66f3f}</UniqueIdentifier>
     </Filter>
@@ -1675,18 +1663,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.ixx">
       <Filter>Core\Domain\6_Environment\Fixtures\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Health\Type\Environment.Health.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Health\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Health\State\HealthStore.ixx">
-      <Filter>Core\Domain\6_Environment\Health\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Health\System\HealthService.cpp">
-      <Filter>Core\Domain\6_Environment\Health\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Health\System\HealthService.ixx">
-      <Filter>Core\Domain\6_Environment\Health\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\7_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
       <Filter>Core\Domain\7_Egocentric\Self\Type</Filter>
