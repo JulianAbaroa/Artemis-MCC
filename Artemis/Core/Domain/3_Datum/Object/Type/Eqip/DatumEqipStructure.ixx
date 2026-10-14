@@ -26,7 +26,7 @@ export namespace Datum::Object::Type::Eqip::Structure
         std::uint16_t Unknown1ca;  // 0x6  uint16. | R1 W0 SHARED known=Weapon.ActionState R:FUN_1804ecb3c
         std::uint32_t Unknown1cc;  // 0x8  uint32. | R7 W0 SHARED R:obje_sa8,FUN_1804ecb3c,FUN_1803a596c
         std::uint32_t Unknown1d0;  // 0xC  uint32. | R0 W1 src=INDIRECT W:eqip_init
-        std::uint32_t Unknown1d4;  // 0x10  uint32. | Constant per equipment object and larger for each new one (0x58D6 to 0x5BB3 across seven abilities). Maybe a creation tick. R1 W1 W:eqip_init
+        std::uint32_t CreationTick;  // 0x10  uint32. | Game tick when the equipment was created: written once at init from the game time global [tmp23e00+0xc], like obje 0xD8. Constant per object, larger for each new one. R1 W1 W:eqip_init
         std::uint32_t ActivationTick;  // 0x14  uint32. | Tick the ability was activated. FFFFFFFF when idle. Set while camo, armor lock, jetpack and sprint run. Drop shield, hologram and evade are instant and never showed a value. Copied to 0x208. Measured on the seven armor abilities (2026-10-14).
         std::uint32_t Unknown1dc;  // 0x18  uint32. | 0 when unused. Non-zero after a use or when depleted (armor lock depleted 0x42, drop shield used 0x0B, evade in use 0xA7, evade depleted 0x68). Maybe a cooldown timer. R1 W2 W:FUN_1804b34a0,FUN_1804b57f8
         std::uint32_t Unknown1e0;  // 0x1C  uint32. | R1 W2 src=INT_ADD, call 18005cc74 known=Weapon.TotalHeat W:eqip_update,FUN_1804b5b04

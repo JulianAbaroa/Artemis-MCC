@@ -17,7 +17,7 @@ export namespace Datum::Object::Type::Eqip::Offset
     constexpr std::size_t k_Unknown1ca                                  = 0x1CA;  // uint16.
     constexpr std::size_t k_Unknown1cc                                  = 0x1CC;  // uint32.
     constexpr std::size_t k_Unknown1d0                                  = 0x1D0;  // uint32.
-    constexpr std::size_t k_Unknown1d4                                  = 0x1D4;  // uint32.
+    constexpr std::size_t k_CreationTick                                = 0x1D4;  // uint32.
     constexpr std::size_t k_ActivationTick                              = 0x1D8;  // uint32.
     constexpr std::size_t k_Unknown1dc                                  = 0x1DC;  // uint32.
     constexpr std::size_t k_Unknown1e0                                  = 0x1E0;  // uint32.

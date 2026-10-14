@@ -41,7 +41,7 @@ export namespace Datum::Object::Type::Obje::Offset
     constexpr std::size_t k_PlacementTeam                               = 0x92;  // uint8.
     constexpr std::size_t k_AttachedEntryHandle                         = 0xCC;  // uint32.
     constexpr std::size_t k_UnknownD4                                   = 0xD4;  // uint32.
-    constexpr std::size_t k_UnknownD8                                   = 0xD8;  // uint32.
+    constexpr std::size_t k_LastUpdateTick                              = 0xD8;  // uint32.
     constexpr std::size_t k_ObjectFlags2                                = 0xDC;  // flags32.
     constexpr std::size_t k_UnknownE0                                   = 0xE0;  // uint8.
     constexpr std::size_t k_UnknownE2                                   = 0xE2;  // uint16.

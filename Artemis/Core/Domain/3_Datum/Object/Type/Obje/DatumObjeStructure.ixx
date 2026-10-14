@@ -54,7 +54,7 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint32_t AttachedEntryHandle;  // 0xCC  uint32. | Handle into another table (stride 0xC0, unidentified). Read by weapon/biped updates.
         std::uint8_t  _gap_0xD0[0x4];
         std::uint32_t UnknownD4;  // 0xD4  uint32. | R2 W0 R:FUN_1804b0674,FUN_1804b1208
-        std::uint32_t UnknownD8;  // 0xD8  uint32. | R0 W3 src=[tmp23e00+0xc] W:item_update,bloc_update,FUN_1804ac750
+        std::uint32_t LastUpdateTick;  // 0xD8  uint32. | Game tick, from the game time global [tmp23e00+0xc]. Bipeds: always the current tick, so it is the clock of the damage ticks (unit 0x54C) and the ability activation (eqip 0x1D8). Weapons and equipment: frozen while idle, it moves when they are used. Captured 2026-10-14 (Ignore/20261014_122128.txt). R0 W3 W:item_update,bloc_update,FUN_1804ac750
         std::uint32_t ObjectFlags2;  // 0xDC  flags32. | Second flags word (bit 10, 14 used by updates).
         std::uint8_t UnknownE0;  // 0xE0  uint8. | R2 W4 upd=0x0 src=SUBPIECE W:FUN_1804b1434
         std::uint8_t  _gap_0xE1[0x1];
