@@ -2,6 +2,7 @@ export module Egocentric.Affordance.System;
 
 import Service.Logs.System;
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Tables.Object.Type;
 import Tables.Object.State;
 import Tables.Interaction.Type;
@@ -33,7 +34,8 @@ export namespace Egocentric::Affordance::System
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
         using InteractionStore = Tables::Interaction::State::InteractionStore;
-        using Role = Relations::Classifier::Type::Role;
+        using Function = Common::Semantic::Type::Function;
+        using Classified = Relations::Classifier::Type::Classified;
         using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
         using ObjectGraph = std::unordered_map<std::uint32_t, ObjectNode>;
         using PlayerTree = Relations::PlayerGraph::Type::PlayerTree;
@@ -87,7 +89,7 @@ export namespace Egocentric::Affordance::System
             const ObjectGraph& objectGraph, const PlayerGraph& playerGraph,
             const ObjectTable& objectTable, Affordance& out) const -> bool;
 
-        auto BuildAffordance(const AliveObject& object, Role role,
+        auto BuildAffordance(const AliveObject& object, const Classified& classified,
             const Vec3& selfPosition, const AliveInteraction& interaction) const -> Affordance;
 
         auto ResolveSeatStatuses(const Vehicle& vehi,
@@ -108,7 +110,7 @@ export namespace Egocentric::Affordance::System
         auto Distance(const float a[3], const float b[3]) const -> float;
         auto Distance(const Vec3& a, const Vec3& b) const -> float;
 
-        auto DeriveBehaviors(Role role) const -> std::vector<AffordanceBehavior>;
-        auto DeriveActivation(Role role) const -> AffordanceActivation;
+        auto DeriveBehaviors(Function function) const -> std::vector<AffordanceBehavior>;
+        auto DeriveActivation(Function function) const -> AffordanceActivation;
     };
 }

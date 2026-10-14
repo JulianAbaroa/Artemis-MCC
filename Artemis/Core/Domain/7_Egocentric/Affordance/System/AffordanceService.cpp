@@ -5,6 +5,7 @@ module;
 
 module Egocentric.Affordance.System;
 
+import Common.Semantic.Type;
 import Tables.Object.Type;
 import Resolved.Definitions.Type;
 import Egocentric.Self.Type;
@@ -17,6 +18,10 @@ namespace
     using Classified = Relations::Classifier::Type::Classified;
     using Classifieds = std::vector<Classified>;
     using Self = Egocentric::Self::Type::Self;
+
+    using Common::Semantic::Type::Binding;
+    using Common::Semantic::Type::Capability;
+    using Common::Semantic::Type::HasCapability;
 }
 
 namespace Egocentric::Affordance::System
@@ -64,35 +69,38 @@ namespace Egocentric::Affordance::System
 
             Affordance interactable;
 
-            switch (classified.Role)
+            // note: Only free objects. Carried and attached ones have garbage positions (they follow a bone of the parent),
+            // and a vehicle part is entered through its vehicle.
+            if (classified.Binding != Binding::Free) continue;
+
+            switch (classified.Function)
             {
-            case Role::Vehicle:
+            case Function::Vehicle:
+            case Function::Turret:
             {
+                if (!HasCapability(classified.Capabilities, Capability::IsEnterable)) continue;
+
                 if (!this->BuildVehicleAffordance(
                     object, selfPosition, selfBipedHandle, interaction,
                     nodes, playerTrees, objectTable, interactable))
                 {
                     continue;
                 }
+
+                interactable.Function = classified.Function;
+                interactable.Subtype = classified.Subtype;
                 break;
             }
 
-            // TODO: Equipped objects/objects with parents has garbage positions.
-            // Find a way to get the actual position, probably by looking up the
-            // bone indexes and binding them to the position of srthe correct bone.
-            //case ObjectRole::VehiclePart:
-            case Role::WeaponPickup:
-                //case ObjectRole::WeaponEquipped:
-            case Role::ArmorAbilityPickup:
-                //case ObjectRole::ArmorAbilityEquipped:
-            case Role::ObjectivePickup:
-                //case ObjectRole::ObjectiveEquipped:
-            case Role::GrenadePickup:
-            case Role::AmmoPickup:
-            case Role::Powerup:
-            case Role::HealthStation:
+            case Function::Weapon:
+            case Function::ArmorAbility:
+            case Function::ObjectiveItem:
+            case Function::Grenade:
+            case Function::AmmoPack:
+            case Function::Powerup:
+            case Function::HealthStation:
                 interactable = this->BuildAffordance(
-                    object, classified.Role, selfPosition, interaction);
+                    object, classified, selfPosition, interaction);
                 break;
 
             default:
@@ -128,9 +136,8 @@ namespace Egocentric::Affordance::System
 
         out.Handle = object.Handle;
         out.Position = object.BoundingCenter;
-        out.Role = Role::Vehicle;
-        out.Behaviors = this->DeriveBehaviors(Role::Vehicle);
-        out.Activation = this->DeriveActivation(Role::Vehicle);
+        out.Behaviors = this->DeriveBehaviors(Function::Vehicle);
+        out.Activation = this->DeriveActivation(Function::Vehicle);
         out.Seats = std::move(seats);
         out.ChildHandles = std::move(partHandles);
         out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
@@ -139,15 +146,16 @@ namespace Egocentric::Affordance::System
         return true;
     }
 
-    auto AffordanceService::BuildAffordance(const AliveObject& object, Role role,
+    auto AffordanceService::BuildAffordance(const AliveObject& object, const Classified& classified,
         const Vec3& selfPosition, const AliveInteraction& interaction) const -> Affordance
     {
         Affordance out;
         out.Handle = object.Handle;
         out.Position = object.BoundingCenter;
-        out.Role = role;
-        out.Behaviors = this->DeriveBehaviors(role);
-        out.Activation = this->DeriveActivation(role);
+        out.Function = classified.Function;
+        out.Subtype = classified.Subtype;
+        out.Behaviors = this->DeriveBehaviors(classified.Function);
+        out.Activation = this->DeriveActivation(classified.Function);
         out.DistanceToPlayer = this->Distance(object.BoundingCenter, selfPosition);
         out.IsEngineSelected = (interaction.TargetObjectHandle == object.Handle);
         return out;
@@ -362,20 +370,20 @@ namespace Egocentric::Affordance::System
         return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    auto AffordanceService::DeriveBehaviors(Role role) const -> std::vector<AffordanceBehavior>
+    auto AffordanceService::DeriveBehaviors(Function function) const -> std::vector<AffordanceBehavior>
     {
         std::vector<AffordanceBehavior> behaviors;
-        switch (role)
+        switch (function)
         {
-        case Role::AmmoPickup:
-        case Role::WeaponPickup:
-        case Role::ArmorAbilityPickup:
+        case Function::AmmoPack:
+        case Function::Weapon:
+        case Function::ArmorAbility:
             behaviors.push_back(AffordanceBehavior::Pickup);
             break;
-        case Role::Vehicle:
+        case Function::Vehicle:
             behaviors.push_back(AffordanceBehavior::EnterVehicle);
             break;
-        case Role::HealthStation:
+        case Function::HealthStation:
             behaviors.push_back(AffordanceBehavior::Interact);
             break;
         default:
@@ -384,17 +392,17 @@ namespace Egocentric::Affordance::System
         return behaviors;
     }
 
-    auto AffordanceService::DeriveActivation(Role role) const -> AffordanceActivation
+    auto AffordanceService::DeriveActivation(Function function) const -> AffordanceActivation
     {
-        switch (role)
+        switch (function)
         {
-        case Role::WeaponPickup:
-        case Role::ArmorAbilityPickup:
-        case Role::Vehicle:
-        case Role::HealthStation:
+        case Function::Weapon:
+        case Function::ArmorAbility:
+        case Function::Vehicle:
+        case Function::HealthStation:
             return AffordanceActivation::KeyPress;
 
-        case Role::AmmoPickup:
+        case Function::AmmoPack:
             return AffordanceActivation::Proximity;
         default:
             return AffordanceActivation::None;

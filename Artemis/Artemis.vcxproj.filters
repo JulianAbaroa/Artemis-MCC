@@ -859,7 +859,7 @@
     <Filter Include="Core\Gui\Color\System">
       <UniqueIdentifier>{fac0316f-622a-4d2d-b5dd-214c74de2b1b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Gui\Color\System\Role">
+    <Filter Include="Core\Gui\Color\System\Group">
       <UniqueIdentifier>{41a1bbc4-ddc1-46b6-88fb-b8a68bd83d95}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Gui\Color\System\Team">
@@ -2141,11 +2141,11 @@
     <ClCompile Include="Core\Gui\Widget\Gui.Widget.System.ixx">
       <Filter>Core\Gui\Widget</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.ixx">
-      <Filter>Core\Gui\Color\System\Role</Filter>
+    <ClCompile Include="Core\Gui\Color\System\Group\GroupToColor.ixx">
+      <Filter>Core\Gui\Color\System\Group</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.cpp">
-      <Filter>Core\Gui\Color\System\Role</Filter>
+    <ClCompile Include="Core\Gui\Color\System\Group\GroupToColor.cpp">
+      <Filter>Core\Gui\Color\System\Group</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.ixx">
       <Filter>Core\Gui\Color\System\Team</Filter>

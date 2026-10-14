@@ -1,13 +1,13 @@
 export module Egocentric.Affordance.Type;
 
 import Common.Math.Type;
-import Relations.Classifier.Type;
+import Common.Semantic.Type;
 import std;
 
 namespace
 {
     using Vec3 = Common::Math::Type::Vec3;
-    using Role = Relations::Classifier::Type::Role;
+    using Common::Semantic::Type::Function;
 }
 
 export namespace Egocentric::Affordance::Type
@@ -46,7 +46,10 @@ export namespace Egocentric::Affordance::Type
     struct Affordance
     {
         std::uint32_t Handle = 0xFFFFFFFF;
-        Role Role = Role::Unknown;
+        ::Function Function{ ::Function::Unknown };
+
+        // Value of the subtype enum of the function (Subtype::<Function>). 0 is None.
+        std::uint8_t Subtype{};
 
         Vec3 Position{};
 

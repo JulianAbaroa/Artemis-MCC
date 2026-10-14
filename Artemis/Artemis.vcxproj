@@ -565,8 +565,8 @@
     <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.cpp" />
     <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.ixx" />
     <ClCompile Include="Core\Gui\Backend\Gui.Backend.System.ixx" />
-    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.cpp" />
-    <ClCompile Include="Core\Gui\Color\System\Role\RoleToColor.ixx" />
+    <ClCompile Include="Core\Gui\Color\System\Group\GroupToColor.cpp" />
+    <ClCompile Include="Core\Gui\Color\System\Group\GroupToColor.ixx" />
     <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.cpp" />
     <ClCompile Include="Core\Gui\Color\System\Team\TeamToColor.ixx" />
     <ClCompile Include="Core\Gui\Color\Gui.Color.System.ixx" />

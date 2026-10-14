@@ -5,6 +5,7 @@ module;
 module Viewer.Hud.System;
 import :Affordances;
 
+import Common.Semantic.Type;
 import Tables.Object.Type;
 import Egocentric.Affordance.Type;
 import Gui.Color.System;
@@ -23,8 +24,10 @@ namespace
     using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
     using Profile = Tables::Object::Type::Profile::Profile;
 
-    using RoleToColor = Gui::Color::System::RoleToColor;
-    using RoleFormater = Gui::Format::System::RoleFormater;
+    using Common::Semantic::Type::GroupOf;
+    using Common::Semantic::Type::NameOf;
+
+    using GroupToColor = Gui::Color::System::GroupToColor;
     using AffordanceFormater = Gui::Format::System::AffordanceFormater;
     using InteractionFormater = Gui::Format::System::InteractionFormater;
 
@@ -175,13 +178,14 @@ namespace
         const AliveObject* object = FindObject(objects, item.Handle);
 
         // --- Identity ---
-        ImGui::PushStyleColor(ImGuiCol_Text, RoleToColor::FromRole(item.Role));
+        ImGui::PushStyleColor(ImGuiCol_Text, GroupToColor::FromGroup(GroupOf(item.Function)));
         if (object) ImGui::TextWrapped("%s", object->TagName.c_str());
         else        ImGui::TextWrapped("0x%08X", item.Handle);
         ImGui::PopStyleColor();
 
         ImGui::Text("Handle: 0x%08X", item.Handle);
-        ImGui::Text("Role:   %s", RoleFormater::RoleToString(item.Role));
+        const std::string function{ NameOf(item.Function) };
+        ImGui::Text("Function: %s", function.c_str());
 
         if (object && object->ParentHandle != k_InvalidHandle)
         {

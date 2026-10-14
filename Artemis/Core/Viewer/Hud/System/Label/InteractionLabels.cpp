@@ -6,6 +6,7 @@ module Viewer.Hud.System;
 import :InteractionLabels;
 
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Egocentric.Affordance.Type;
 import Gui.Format.System;
 import Viewer.Options.State;
@@ -21,7 +22,7 @@ namespace
     using LabelRow = Viewer::Hud::Type::LabelRow;
     using InteractionFormater = Gui::Format::System::InteractionFormater;
     using AffordanceFormater = Gui::Format::System::AffordanceFormater;
-    using RoleFormater = Gui::Format::System::RoleFormater;
+    using Common::Semantic::Type::NameOf;
     using Affordance = Egocentric::Affordance::Type::Affordance;
 
     using Viewer::Style::Type::k_InteractionObject;
@@ -194,7 +195,7 @@ namespace Viewer::Hud::System
                 if (affordance.Handle == engineTarget) continue;
 
                 std::vector<LabelRow> rows{};
-                rows.push_back(LabelRow{ RoleFormater::RoleToString(affordance.Role),
+                rows.push_back(LabelRow{ std::string{ NameOf(affordance.Function) },
                     ToImColor(k_Affordance) });
                 rows.push_back(LabelRow{ "Behaviors: " + JoinBehaviors(affordance), k_InfoColor });
                 rows.push_back(LabelRow{ std::string{ "Activation: " } +
