@@ -63,19 +63,6 @@ export namespace Tables::Object::Type::Scenery
             || kind == Kind::InvisibleRespawnPoint;
     }
 
-    inline bool IsBoundary(Kind kind)
-    {
-        return kind == Kind::SafeBoundary
-            || kind == Kind::SoftSafeBoundary
-            || kind == Kind::KillBoundary
-            || kind == Kind::SoftKillBoundary;
-    }
-
-    inline bool IsPortableShield(Kind kind)
-    {
-        return kind == Kind::PortableShield;
-    }
-
     struct Scenery
     {
         std::uintptr_t Base{};

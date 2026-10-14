@@ -15,69 +15,6 @@ namespace
 
 export namespace Relations::Classifier::Type
 {
-    // Legacy role of an object.
-    // note: Kept until B3e, while its consumers move to Function, Binding and the capabilities (Ignore/Semantizacion/08).
-    enum class Role : std::uint8_t
-    {
-        Unknown = 0,
-        None,
-
-        // --- bipd ---
-
-        Biped,
-
-        // --- vehi ---
-
-        Vehicle,
-        VehiclePart,
-
-        // --- weap ---
-
-        WeaponPickup,
-        WeaponEquipped,
-
-        ObjectivePickup,
-        ObjectiveEquipped,
-
-        // --- eqip ---
-
-        ArmorAbilityPickup,
-        ArmorAbilityEquipped,
-        GrenadePickup,
-        AmmoPickup,
-        Powerup,
-
-        // --- proj ---
-
-        Projectile,
-
-        // --- scen ---
-
-        Spawn,
-        Boundary,
-        PortableShield,
-        SceneryObstacle,
-
-        // --- mach ---
-
-        DeviceMachine,
-
-        // --- bloc ---
-
-        ObjectiveSpawn,
-        ObjectiveZone,
-        Teleporter,
-        Explosive,
-        Pallet,
-        Lift,
-        Shield,
-        CrateObstacle,
-
-        // --- ctrl ---
-
-        HealthStation,
-    };
-
     // Rule that decided the function of a tag (Ignore/Semantizacion/05, section 3).
     enum class Source : std::uint8_t
     {
@@ -115,9 +52,6 @@ export namespace Relations::Classifier::Type
     struct Classified
     {
         std::uint32_t Handle{};
-
-        // note: Legacy. Removed in B3e.
-        Type::Role Role{ Type::Role::Unknown };
 
         ::ObjectKind Kind{ ::ObjectKind::Invalid };
         ::Function Function{ ::Function::Unknown };

@@ -886,9 +886,6 @@
     <Filter Include="Core\Gui\Format\System\Object">
       <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Gui\Format\System\Role">
-      <UniqueIdentifier>{556816c9-bc66-4f46-8682-295639c03e08}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Gui\Format\System\Team">
       <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
     </Filter>
@@ -2116,12 +2113,6 @@
     </ClCompile>
     <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.ixx">
       <Filter>Core\Gui\Format\System\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.cpp">
-      <Filter>Core\Gui\Format\System\Role</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.ixx">
-      <Filter>Core\Gui\Format\System\Role</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.cpp">
       <Filter>Core\Gui\Format\System\Team</Filter>

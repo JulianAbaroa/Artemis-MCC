@@ -26,7 +26,6 @@ export namespace Relations::Classifier::System
         using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
-        using Role = Relations::Classifier::Type::Role;
         using TagClassification = Relations::Classifier::Type::TagClassification;
         using ClassifierStore = Relations::Classifier::State::ClassifierStore;
         using TagClassificationsStore = Relations::Classifier::State::TagClassificationsStore;
@@ -65,15 +64,5 @@ export namespace Relations::Classifier::System
 
         // Classifies a tag: catalog, then multiplayer object kind, then kind default. Subtypes follow the same order.
         auto ClassifyTag(const AliveObject& object) const -> TagClassification;
-
-        auto ClassifyNode(std::uint32_t handle, const AliveObject& node,
-            const std::unordered_map<std::uint32_t, AliveObject>& nodes) const -> Role;
-
-        auto ClassifyVehicle(const AliveObject& object) const -> Role;
-        auto ClassifyWeapon(const AliveObject& object) const -> Role;
-        auto ClassifyEquipment(const AliveObject& object) const -> Role;
-        auto ClassifyScenery(const AliveObject& object) const -> Role;
-        auto ClassifyBloc(const AliveObject& object) const -> Role;
-        auto ClassifyDeviceControl(const AliveObject& object) const -> Role;
     };
 }

@@ -1,13 +1,11 @@
 module Relations.Classifier.System;
 
 import Common.Semantic.Type;
-import Common.Tag.Type;
 import Common.ZoneShape.Type;
 import Resolved.Definitions.Type;
 
 namespace
 {
-    namespace TagName = Common::Tag::Type;
     namespace Subtype = Common::Semantic::Type::Subtype;
 
     using Common::Semantic::Type::Function;
@@ -204,7 +202,6 @@ namespace Relations::Classifier::System
 
             Classified classified{};
             classified.Handle = handle;
-            classified.Role = this->ClassifyNode(handle, object, objectTable);
             classified.Kind = object.Profile.ObjectKind;
             classified.Function = tag.Function;
             classified.Subtype = tag.Subtype;
@@ -361,207 +358,6 @@ namespace Relations::Classifier::System
         classification.Capabilities = StaticCapabilities(classification.Function, classification.Subtype, hasCollision, hasVitality);
 
         return classification;
-    }
-
-    auto ClassifierService::ClassifyNode(uint32_t handle, const AliveObject& object,
-        const ObjectTable& objectTable) const -> Role
-    {
-        switch (object.Profile.ObjectKind)
-        {
-        case ObjectKind::Biped:
-            return Role::Biped;
-
-        case ObjectKind::Vehicle:
-            return this->ClassifyVehicle(object);
-
-        case ObjectKind::Weapon:
-            return this->ClassifyWeapon(object);
-
-        case ObjectKind::Equipment:
-            return this->ClassifyEquipment(object);
-
-        case ObjectKind::Projectile:
-            return Role::Projectile;
-
-        case ObjectKind::Scenery:
-            return this->ClassifyScenery(object);
-
-        case ObjectKind::Machine:
-            return Role::DeviceMachine;
-
-        case ObjectKind::Control:
-            return this->ClassifyDeviceControl(object);
-
-        case ObjectKind::Crate:
-            return this->ClassifyBloc(object);
-
-        default:
-            return Role::Unknown;
-        }
-    }
-
-    auto ClassifierService::ClassifyVehicle(const AliveObject& object) const -> Role
-    {
-        const std::string& tag = object.TagName;
-
-        if (TagName::Vehicle::IsVehicle(tag))
-        {
-            if (object.ParentHandle != 0xFFFFFFFF)
-            {
-                return Role::VehiclePart;
-            }
-
-            return Role::Vehicle;
-        }
-
-        if (TagName::Weapon::IsVehicle(tag))
-        {
-            return Role::Vehicle;
-        }
-
-        return Role::Unknown;
-    }
-
-    auto ClassifierService::ClassifyWeapon(const AliveObject& object) const -> Role
-    {
-        const std::string& tag = object.TagName;
-
-        using namespace TagName;
-
-        if (Objective::IsObjective(tag))
-        {
-            if (object.ParentHandle != 0xFFFFFFFF)
-            {
-                return Role::ObjectiveEquipped;
-            }
-
-            return Role::ObjectivePickup;
-        }
-
-        if (object.ParentHandle != 0xFFFFFFFF)
-        {
-            return Role::WeaponEquipped;
-        }
-
-        return Role::WeaponPickup;
-    }
-
-    auto ClassifierService::ClassifyEquipment(const AliveObject& object) const -> Role
-    {
-        const std::string& tag = object.TagName;
-
-        if (TagName::Ammo::IsAmmo(tag))
-        {
-            return Role::AmmoPickup;
-        }
-
-        if (TagName::ArmorAbility::IsArmorAbility(tag))
-        {
-            if (object.ParentHandle != 0xFFFFFFFF)
-            {
-                return Role::ArmorAbilityEquipped;
-            }
-
-            return Role::ArmorAbilityPickup;
-        }
-
-        if (TagName::Weapon::IsGrenade(tag))
-        {
-            return Role::GrenadePickup;
-        }
-
-        if (TagName::Powerup::IsPowerup(tag))
-        {
-            return Role::Powerup;
-        }
-
-        if (TagName::Shield::IsShield(tag))
-        {
-            return Role::Shield;
-        }
-
-        return Role::Unknown;
-    }
-
-    auto ClassifierService::ClassifyScenery(const AliveObject& object) const -> Role
-    {
-        const std::string& tag = object.TagName;
-
-        if (TagName::Spawn::IsSpawn(tag))
-        {
-            return Role::Spawn;
-        }
-
-        if (TagName::Boundary::IsBoundary(tag))
-        {
-            return Role::Boundary;
-        }
-
-        if (TagName::Shield::IsPortableShield(tag))
-        {
-            return Role::PortableShield;
-        }
-
-        if (TagName::SkyBox::IsSkyBox(tag))
-        {
-            return Role::None;
-        }
-
-        // TODO: More filters needs to be applied here.
-        return Role::SceneryObstacle;
-    }
-
-    auto ClassifierService::ClassifyBloc(const AliveObject& object) const -> Role
-    {
-        const std::string& tag = object.TagName;
-
-        if (TagName::Objective::IsObjectiveSpawn(tag))
-        {
-            return Role::ObjectiveSpawn;
-        }
-
-        if (TagName::Objective::IsObjectiveZone(tag))
-        {
-            return Role::ObjectiveZone;
-        }
-
-        if (TagName::Teleport::IsTeleport(tag))
-        {
-            return Role::Teleporter;
-        }
-
-        if (TagName::Explosive::IsExplosive(tag))
-        {
-            return Role::Explosive;
-        }
-
-        if (TagName::Pallets::IsPallet(tag))
-        {
-            return Role::Pallet;
-        }
-
-        if (TagName::Lift::IsLift(tag))
-        {
-            return Role::Lift;
-        }
-
-        if (TagName::Shield::IsShield(tag))
-        {
-            return Role::Shield;
-        }
-
-        // TODO: More filters needs to be applied here.
-        return Role::CrateObstacle;
-    }
-
-    auto ClassifierService::ClassifyDeviceControl(const AliveObject& object) const -> Role
-    {
-        if (TagName::ControlDevice::IsHealthStation(object.TagName))
-        {
-            return Role::HealthStation;
-        }
-
-        return Role::Unknown;
     }
 
     auto ClassifierService::Cleanup() -> void

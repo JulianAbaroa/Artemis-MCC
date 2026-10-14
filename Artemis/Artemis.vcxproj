@@ -580,8 +580,6 @@
     <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.ixx" />
     <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.cpp" />
     <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.ixx" />
-    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.cpp" />
-    <ClCompile Include="Core\Gui\Format\System\Role\RoleFormater.ixx" />
     <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.cpp" />
     <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.ixx" />
     <ClCompile Include="Core\Gui\Format\Gui.Format.System.ixx" />
