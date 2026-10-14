@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin game="Halo: Reach (MCC)" runtime="true" component="unit" start="0x1B8" baseSize="0x9D8">
-	<uint32 name="Tick Counter" offset="0x1B8" confidence="high" default="0x0" exposed="true" tooltip="Unit ticks, +1 per update (verified live; 60 ticks/s)." />
+	<uint32 name="Ticks Alive" offset="0x1B8" confidence="high" default="0x0" exposed="true" tooltip="Ticks since the unit started updating, +1 per update (60 ticks/s). Always the game clock (obje 0xD8) minus a constant: both bipeds of a game read 600 and 601 below it in every capture, so they were created at game tick 600. Captured 2026-10-14." />
 	<uint32 name="AI Actor Handle" offset="0x1BC" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Handle into the actor table (TLS+8, stride 0xD00). FFFFFFFF in PvP." />
 	<uint32 name="Handle 1C0" offset="0x1C0" confidence="low" default="0xFFFFFFFF" tooltip="Handle initialised to -1." />
 	<flags32 name="Unit Flags" offset="0x1C4" confidence="medium" exposed="true" tooltip="bit1 = externally controlled (if 0 the engine zeroes the control block each tick); bit 0x12 derived control; bit 0x1B go-to-point mode. 3 live.">

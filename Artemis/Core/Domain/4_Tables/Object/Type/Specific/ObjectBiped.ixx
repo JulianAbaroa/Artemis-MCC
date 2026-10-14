@@ -1,12 +1,14 @@
 export module Tables.Object.Type:Biped;
 
 import Common.Math.Type;
+import Resolved.Definitions.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec2;
     using Common::Math::Type::Vec3;
+    using Resolved::Definitions::Type::Object::DamageReportingType;
 }
 
 export namespace Tables::Object::Type::Biped
@@ -29,8 +31,41 @@ export namespace Tables::Object::Type::Biped
         JumpCrouch = 3,
     };
 
+    // Type of the selected grenade. The same indices hold for spartans and elites.
+    enum class GrenadeType : std::uint8_t
+    {
+        Frag = 0,
+        Plasma = 1,
+    };
+
+    // Last hit of one attacker (unit 0x4DC, one slot of 0x18 bytes per attacker).
+    struct Damage
+    {
+        // Game tick of the last hit, the clock of TicksAlive and TicksSinceDamage.
+        std::uint32_t Tick{};
+
+        // Health and shield damage of the last hit, as fractions of their maximum.
+        // note: Not accumulated. Several hits of the same attacker keep only the values of the last one.
+        float Health{};
+        float Shield{};
+
+        // Biped and player that dealt it. The victim itself on its own grenade or a fall.
+        std::uint32_t BipedHandle{};
+        std::uint32_t PlayerHandle{};
+
+        // Weapon or cause of the last hit.
+        // note: A fall that slid down a slope reported Collision, not Falling.
+        DamageReportingType ReportingType{};
+    };
+
     struct Biped
     {
+        // Ticks since the unit started updating, usually since it spawned.
+        std::uint32_t TicksAlive{};
+
+        // Aim direction of the unit, smoothed by the engine towards the desired aim.
+        Vec3 Aim{};
+
         // Movement keys held by the controlling player. It is an input, not a world direction.
         // note: X is forward (+1 W, -1 S) and Y is strafe (+1 A, -1 D). It does not depend on the camera. Reads zero when no key is held.
         // note: Only keyboard was observed. Analog values from a gamepad are untested.
@@ -38,7 +73,7 @@ export namespace Tables::Object::Type::Biped
 
         VerticalInput VerticalInput{};
 
-        // Armor ability state. Its meaning depends on the ability.
+        // Armor ability key state. Its meaning depends on the ability. The Equipment of ArmorAbilityHandle has the real state.
         // note: Sprint and camo stay 1 for as long as the ability runs, even with the key released.
         // note: Jetpack stays 1 only while the key is held. Armor lock is assumed to behave the same, but it is untested.
         // note: Drop shield, hologram and evade follow the key, not the effect. A canceled drop shield animation returns to 0.
@@ -57,11 +92,30 @@ export namespace Tables::Object::Type::Biped
         // note: 0xFFFFFFFF on static geometry and in the air. It lags the real contact by a fraction of a second.
         std::uint32_t GroundObjectHandle{};
 
-        // Handle of the biped that last damaged this one.
-        // note: 0xFFFFFFFF when nobody did. Reset to 0xFFFFFFFF once the shield starts recharging. Kept after death, so it identifies the killer.
-        std::uint32_t DamagerBipedHandle{};
+        // Weapons held, by slot. They do not swap when the biped switches weapons.
+        std::uint32_t PrimaryWeaponHandle{};
+        std::uint32_t SecondaryWeaponHandle{};
 
-        // Handle of the player that last damaged this one. It follows the same lifetime as DamagerBipedHandle.
-        std::uint32_t DamagerPlayerHandle{};
+        // Weapon in the hands of the biped.
+        // note: 0xFFFFFFFF in a vehicle or without a usable weapon.
+        std::uint32_t EquippedWeaponHandle{};
+
+        // Equipment object of the armor ability. Its state is in the Equipment of that handle.
+        std::uint32_t ArmorAbilityHandle{};
+
+        // note: Kept when the grenades run out. Picking up the other type while empty selects it, so it is always a type the biped holds, if any.
+        GrenadeType SelectedGrenade{};
+        std::uint8_t FragGrenades{};
+        std::uint8_t PlasmaGrenades{};
+
+        // Attackers since the shield last started recharging, at most four, in order of their first hit.
+        // note: Empty once the shield starts recharging. Kept after death, so the killer is the one with the latest Tick.
+        std::vector<Damage> Damages{};
+
+        // Game tick of the last damage, or 0xFFFFFFFF if the biped was never damaged. Kept when Damages empties.
+        std::uint32_t LastDamageTick{};
+
+        // Ticks since the last damage, or nothing if the biped was never damaged.
+        std::optional<std::uint32_t> TicksSinceDamage{};
     };
 }

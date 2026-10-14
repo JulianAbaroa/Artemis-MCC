@@ -41,6 +41,9 @@ namespace
 	using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
 	using ZoomLevel = Tables::Object::Type::Biped::ZoomLevel;
 	using VerticalInput = Tables::Object::Type::Biped::VerticalInput;
+	using GrenadeType = Tables::Object::Type::Biped::GrenadeType;
+	using Damage = Tables::Object::Type::Biped::Damage;
+	using DamageReportingType = Resolved::Definitions::Type::Object::DamageReportingType;
 	using Shield = Tables::Object::Type::Crate::Shield::Shield;
 	using Placement = Tables::Object::Type::Placement::Placement;
 	using Symmetry = Tables::Object::Type::Placement::Symmetry;
@@ -94,6 +97,17 @@ namespace
 	constexpr std::size_t k_ProjectileOwnerWeaponHandle{ ProjOffset::k_Unknown1d8 };
 	constexpr std::size_t k_VehicleBoostThrottle{ UnitOffset::k_Unknown53c };
 	constexpr std::size_t k_VehicleBoostCooldown{ UnitOffset::k_Unknown544 };
+
+	// Damage slots of a unit and the bytes between two of them.
+	constexpr std::size_t k_DamageSlots{ 4 };
+	constexpr std::size_t k_DamageSlotStride{ UnitOffset::k_Damage1Tick - UnitOffset::k_Damage0Tick };
+
+	// Weapon slots of a unit, as ActiveWeaponSlot indexes them, and the bytes between two handles.
+	constexpr std::uint8_t k_WeaponSlots{ 4 };
+	constexpr std::size_t k_WeaponSlotStride{ sizeof(std::uint32_t) };
+
+	// Value of an empty handle or tick.
+	constexpr std::uint32_t k_None{ 0xFFFFFFFF };
 
 	// Nodes a model can have. Descriptors above it are not plausible.
 	constexpr std::uint32_t k_MaxNodes{ 1024 };
@@ -408,6 +422,9 @@ namespace Tables::Object::System
 	{
 		BipedObject biped{};
 
+		biped.TicksAlive = datum.Read<std::uint32_t>(UnitOffset::k_TicksAlive);
+		biped.Aim = datum.Read<Vec3>(UnitOffset::k_CurrentAim);
+
 		biped.MovementInput = datum.Read<Vec2>(UnitOffset::k_Throttle);
 		// note: The two bytes the repo read before are the low bytes of the control flags.
 		const std::uint64_t controlFlags = datum.Read<std::uint64_t>(UnitOffset::k_ControlFlags);
@@ -418,8 +435,46 @@ namespace Tables::Object::System
 		biped.SurfaceNormal = datum.Read<Vec3>(BipdOffset::k_SurfaceNormal);
 		biped.GroundObjectHandle = datum.Read<std::uint32_t>(BipdOffset::k_GroundObjectHandle);
 
-		biped.DamagerBipedHandle = datum.Read<std::uint32_t>(UnitOffset::k_Damage0BipedHandle);
-		biped.DamagerPlayerHandle = datum.Read<std::uint32_t>(UnitOffset::k_Damage0PlayerHandle);
+		biped.PrimaryWeaponHandle = datum.Read<std::uint32_t>(UnitOffset::k_PrimaryWeaponHandle);
+		biped.SecondaryWeaponHandle = datum.Read<std::uint32_t>(UnitOffset::k_SecondaryWeaponHandle);
+
+		// note: The slot reads 0xFF in a vehicle, where the engine hides the weapons.
+		const std::uint8_t slot{ datum.Read<std::uint8_t>(UnitOffset::k_ActiveWeaponSlot) };
+		biped.EquippedWeaponHandle = slot < k_WeaponSlots
+			? datum.Read<std::uint32_t>(UnitOffset::k_PrimaryWeaponHandle + (slot * k_WeaponSlotStride))
+			: k_None;
+
+		biped.ArmorAbilityHandle = datum.Read<std::uint32_t>(UnitOffset::k_ArmorAbilityHandle);
+
+		biped.SelectedGrenade = datum.Read<GrenadeType>(UnitOffset::k_SelectedGrenadeType);
+		biped.FragGrenades = datum.Read<std::uint8_t>(UnitOffset::k_FragGrenadeCount);
+		biped.PlasmaGrenades = datum.Read<std::uint8_t>(UnitOffset::k_PlasmaGrenadeCount);
+
+		for (std::size_t i{ 0 }; i < k_DamageSlots; ++i)
+		{
+			const std::size_t slotOffset{ i * k_DamageSlotStride };
+
+			const std::uint32_t tick{ datum.Read<std::uint32_t>(UnitOffset::k_Damage0Tick + slotOffset) };
+			if (tick == k_None) continue;
+
+			biped.Damages.push_back(Damage{
+				.Tick = tick,
+				.Health = datum.Read<float>(UnitOffset::k_Damage0Health + slotOffset),
+				.Shield = datum.Read<float>(UnitOffset::k_Damage0Shield + slotOffset),
+				.BipedHandle = datum.Read<std::uint32_t>(UnitOffset::k_Damage0BipedHandle + slotOffset),
+				.PlayerHandle = datum.Read<std::uint32_t>(UnitOffset::k_Damage0PlayerHandle + slotOffset),
+				.ReportingType = static_cast<DamageReportingType>(datum.Read<std::uint16_t>(UnitOffset::k_Damage0ReportingType + slotOffset)),
+			});
+		}
+
+		biped.LastDamageTick = datum.Read<std::uint32_t>(UnitOffset::k_LastDamageTick);
+
+		// note: The game clock of a biped (obje 0xD8) is the current tick on every update, so it needs no global.
+		const std::uint32_t gameTick{ datum.Read<std::uint32_t>(ObjeOffset::k_LastUpdateTick) };
+		if (biped.LastDamageTick != k_None && gameTick >= biped.LastDamageTick)
+		{
+			biped.TicksSinceDamage = gameTick - biped.LastDamageTick;
+		}
 
 		object.Specific = biped;
 	}
@@ -483,6 +538,7 @@ namespace Tables::Object::System
 		equipment.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
 		equipment.Energy = datum.Read<float>(EqipOffset::k_Energy);
+		equipment.IsActive = datum.Read<std::uint32_t>(EqipOffset::k_ActivationTick) != k_None;
 
 		if (equipment.Kind == CrateKind::Shield)
 		{

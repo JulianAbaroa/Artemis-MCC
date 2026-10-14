@@ -20,7 +20,7 @@ export namespace Datum::Object::Type::Unit::Structure
     // Entry size: 0x820
     struct UnitData
     {
-        std::uint32_t TickCounter;  // 0x0  uint32. | Unit ticks, +1 per update (verified live; 60 ticks/s).
+        std::uint32_t TicksAlive;  // 0x0  uint32. | Ticks since the unit started updating, +1 per update (60 ticks/s). Always the game clock (obje 0xD8) minus a constant: both bipeds of a game read 600 and 601 below it in every capture, so they were created at game tick 600. Captured 2026-10-14.
         std::uint32_t AiActorHandle;  // 0x4  uint32. | Handle into the actor table (TLS+8, stride 0xD00). FFFFFFFF in PvP.
         std::uint32_t Handle1c0;  // 0x8  uint32. | Handle initialised to -1.
         std::uint32_t UnitFlags;  // 0xC  flags32. [External Controller=1, Derived Control=18, Go To Point=27] | bit1 = externally controlled (if 0 the engine zeroes the control block each tick); bit 0x12 derived control; bit 0x1B go-to-point mode. 3 live.

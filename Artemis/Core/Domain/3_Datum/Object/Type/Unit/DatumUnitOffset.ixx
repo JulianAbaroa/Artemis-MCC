@@ -12,7 +12,7 @@ export namespace Datum::Object::Type::Unit::Offset
     constexpr std::size_t k_ComponentStart = 0x1B8;
     constexpr std::size_t k_ComponentEnd = 0x9D8;
 
-    constexpr std::size_t k_TickCounter                                 = 0x1B8;  // uint32.
+    constexpr std::size_t k_TicksAlive                                  = 0x1B8;  // uint32.
     constexpr std::size_t k_AiActorHandle                               = 0x1BC;  // uint32.
     constexpr std::size_t k_Handle1c0                                   = 0x1C0;  // uint32.
     constexpr std::size_t k_UnitFlags                                   = 0x1C4;  // flags32. [External Controller=1, Derived Control=18, Go To Point=27]
