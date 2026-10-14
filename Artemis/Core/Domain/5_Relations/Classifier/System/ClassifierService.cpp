@@ -161,10 +161,15 @@ namespace
     }
 
     // Checks whether the catalog and the multiplayer kind of the tag give different functions.
+    // note: A turret the engine calls a vehicle is a refinement, not a conflict (D83): the engine gives the seat objects of a vehicle,
+    // and the fixed turrets, a vehicle kind, while the model splits them as Turret (05, section 4).
     auto IsCatalogConflict(const TagClassification& classification) -> bool
     {
-        return classification.Source == Source::Catalog && classification.MultiplayerFunction != Function::Unknown
-            && classification.MultiplayerFunction != classification.Function;
+        if (classification.Source != Source::Catalog) return false;
+        if (classification.MultiplayerFunction == Function::Unknown) return false;
+        if (classification.Function == Function::Turret && classification.MultiplayerFunction == Function::Vehicle) return false;
+
+        return classification.MultiplayerFunction != classification.Function;
     }
 
     // Link of a child object to its parent (05, section 5).
