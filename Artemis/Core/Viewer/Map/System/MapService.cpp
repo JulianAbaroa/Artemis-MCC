@@ -132,7 +132,7 @@ namespace Viewer::Map::System
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Aim };
-                m_AimPass.Upload(frame.Device, frame.Context, tick->Aims, tick->Vitalities,
+                m_AimPass.Upload(frame.Device, frame.Context, tick->Aims, tick->VitalityDetails,
                     m_OptionsStore.IsEnabled(Flag::HealthTintSpheres),
                     selected, tick->Generation);
             }

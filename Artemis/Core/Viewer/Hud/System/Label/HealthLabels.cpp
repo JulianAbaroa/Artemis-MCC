@@ -47,7 +47,7 @@ namespace Viewer::Hud::System
         const auto& options = context.Options;
 
         if (!options.IsEnabled(Flag::HealthBars)) return;
-        if (!tick.Aims || !tick.Vitalities) return;
+        if (!tick.Aims || !tick.VitalityDetails) return;
 
         const bool selectedOnly = options.IsEnabled(Flag::HealthSelectedOnly);
         const bool showValue = options.IsEnabled(Flag::HealthBarValue);
@@ -58,8 +58,8 @@ namespace Viewer::Hud::System
         auto emit = [&](std::uint32_t handle)
         {
             const auto aimIt = tick.Aims->find(handle);
-            const auto detailIt = tick.Vitalities->find(handle);
-            if (aimIt == tick.Aims->end() || detailIt == tick.Vitalities->end()) return;
+            const auto detailIt = tick.VitalityDetails->find(handle);
+            if (aimIt == tick.Aims->end() || detailIt == tick.VitalityDetails->end()) return;
 
             const auto& layout = detailIt->second.Layout;
 
@@ -104,7 +104,7 @@ namespace Viewer::Hud::System
             return;
         }
 
-        for (const auto& entry : *tick.Vitalities)
+        for (const auto& entry : *tick.VitalityDetails)
         {
             emit(entry.first);
         }

@@ -17,17 +17,15 @@ namespace
     using Common::Team::Type::Team;
     using Resolved::Definitions::Type::Object::ObjectKind;
     using Tables::Object::Type::Placement::Placement;
+    using Environment::Details::Type::VitalityDetails;
+
+    using Environment::Details::Type::k_LifeSection;
 
     // Value of an empty handle.
     constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
 
     // Parents walked up to the root of an object. Guards against a broken chain.
     constexpr int k_MaxParentDepth{ 16 };
-
-    // Damage section whose vitality kills the object at 0 (D85).
-    // note: The sections the layout marks critical are not reliable: the headshot section of a Spartan stays at 1 after a body kill,
-    // and the Ghost, the Falcon and the plasma battery have none.
-    constexpr std::size_t k_LifeSection{ 0 };
 
     // Removes a capability from a set.
     auto Without(Capability set, Capability capability) -> Capability
@@ -67,6 +65,16 @@ namespace
         }
     }
 
+    // Returns the vitality of the section that kills the object, from 0 to 1 (D85).
+    // return: Empty when the object has no vitality detail.
+    auto FindLife(const VitalityDetails& vitalities, std::uint32_t handle) -> std::optional<float>
+    {
+        const auto it{ vitalities.find(handle) };
+        if (it == vitalities.end()) return std::nullopt;
+
+        return it->second.Sections[k_LifeSection];
+    }
+
     // Checks whether a weapon belongs to a vehicle: mounted guns and horns are never picked up (D74).
     auto IsVehicleWeapon(Function function, std::uint8_t subtype) -> bool
     {
@@ -87,10 +95,13 @@ namespace Environment::Entities::System
 
         const ObjectTable& objectTable{ *objectTablePtr };
 
+        // note: Before the first publish of the vitalities every object is Active.
+        const auto vitalitiesPtr{ m_VitalityDetailsStore.Acquire() };
+        const VitalityDetails empty{};
+        const VitalityDetails& vitalities{ vitalitiesPtr ? *vitalitiesPtr : empty };
+
         Entities entities{};
         entities.Rows.reserve(classifiedsPtr->size());
-
-        Vitalities vitalities{};
 
         for (const Classified& classified : *classifiedsPtr)
         {
@@ -111,11 +122,10 @@ namespace Environment::Entities::System
         }
 
         m_EntitiesStore.Publish(std::move(entities));
-        m_VitalitiesStore.Publish(std::move(vitalities));
     }
 
     auto EntitiesService::MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable,
-        Vitalities& vitalities) -> Entity
+        const VitalityDetails& vitalities) -> Entity
     {
         Entity entity{};
         entity.Handle = classified.Handle;
@@ -138,14 +148,7 @@ namespace Environment::Entities::System
 
         Capability capabilities{ classified.Capabilities };
 
-        if (HasCapability(capabilities, Capability::HasVitality))
-        {
-            if (std::optional<VitalityDetail> detail{ this->MakeVitality(object) })
-            {
-                entity.Vitality = detail->Sections[k_LifeSection];
-                vitalities.emplace(entity.Handle, std::move(*detail));
-            }
-        }
+        entity.Vitality = FindLife(vitalities, entity.Handle);
 
         // note: A dead object cannot die again, so it is no longer destructible.
         if (entity.Vitality && *entity.Vitality <= 0.0f) entity.Lifecycle = Lifecycle::Dead;
@@ -161,7 +164,7 @@ namespace Environment::Entities::System
         // note: A destroyed vehicle, and the turrets attached to it, cannot be entered. Free and occupied seats are per seat (Details, View).
         if (HasCapability(capabilities, Capability::IsEnterable))
         {
-            const bool isRootDead{ &root != &object && this->FindVitality(root).value_or(1.0f) <= 0.0f };
+            const bool isRootDead{ &root != &object && FindLife(vitalities, root.Handle).value_or(1.0f) <= 0.0f };
             if (entity.Lifecycle == Lifecycle::Dead || isRootDead) capabilities = Without(capabilities, Capability::IsEnterable);
         }
 
@@ -194,46 +197,9 @@ namespace Environment::Entities::System
         return *root;
     }
 
-    auto EntitiesService::MakeVitality(const AliveObject& object) const -> std::optional<VitalityDetail>
-    {
-        std::shared_ptr<const Vitality> layout{ m_VitalityStore.GetShared(object.TagName) };
-        if (!layout || layout->Sections.empty()) return std::nullopt;
-
-        const auto* damage{ m_DamageSectionsStore.Get(object.Handle) };
-        if (damage == nullptr || damage->Sections.size() <= k_LifeSection) return std::nullopt;
-
-        VitalityDetail detail{};
-        detail.Handle = object.Handle;
-        detail.Sections.assign(layout->Sections.size(), 0.0f);
-
-        for (std::size_t i{ 0 }; i < layout->Sections.size(); ++i)
-        {
-            const int sectionIndex{ layout->Sections[i].SectionIndex };
-            if (sectionIndex < 0 || static_cast<std::size_t>(sectionIndex) >= damage->Sections.size()) continue;
-
-            detail.Sections[i] = damage->Sections[sectionIndex].Vitality;
-        }
-
-        detail.Layout = std::move(layout);
-
-        return detail;
-    }
-
-    auto EntitiesService::FindVitality(const AliveObject& object) const -> std::optional<float>
-    {
-        const Vitality* layout{ m_VitalityStore.Get(object.TagName) };
-        if (layout == nullptr || layout->Sections.empty()) return std::nullopt;
-
-        const auto* damage{ m_DamageSectionsStore.Get(object.Handle) };
-        if (damage == nullptr || damage->Sections.size() <= k_LifeSection) return std::nullopt;
-
-        return damage->Sections[k_LifeSection].Vitality;
-    }
-
     auto EntitiesService::Cleanup() -> void
     {
         m_EntitiesStore.Cleanup();
-        m_VitalitiesStore.Cleanup();
         m_CarriedHandlesStore.Cleanup();
 
         m_LogsService.Message("[EntitiesService] INFO: Cleanup completed.");

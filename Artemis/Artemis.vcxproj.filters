@@ -568,6 +568,24 @@
     <Filter Include="Core\Domain\6_Environment\Collidable\System">
       <UniqueIdentifier>{222341c2-07d5-47fd-ae9b-1b77917ca80d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details">
+      <UniqueIdentifier>{b44988e8-bb60-49fc-a6de-b7ce862390df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\Type">
+      <UniqueIdentifier>{440a80a7-4e88-4d1d-a1fe-02bdfa55fb27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\Type\Vitality">
+      <UniqueIdentifier>{64f06385-23b4-4dfc-9dc8-926964173393}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\State">
+      <UniqueIdentifier>{c2292f12-ef33-436e-b2df-2345f4805ce0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\System">
+      <UniqueIdentifier>{04bd4357-12cb-4004-88fb-f34deb5f63e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\System\Vitality">
+      <UniqueIdentifier>{53f04a06-2756-457e-96eb-f4ae4231ac92}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\6_Environment\Entities">
       <UniqueIdentifier>{359e4fd3-c29a-4875-88c5-e97af7f3713e}</UniqueIdentifier>
     </Filter>
@@ -1606,6 +1624,24 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx">
       <Filter>Core\Domain\6_Environment\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\State\DetailsStore.ixx">
+      <Filter>Core\Domain\6_Environment\Details\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Environment.Details.System.ixx">
+      <Filter>Core\Domain\6_Environment\Details\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.cpp">
+      <Filter>Core\Domain\6_Environment\Details\System\Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.ixx">
+      <Filter>Core\Domain\6_Environment\Details\System\Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Environment.Details.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Details\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Vitality\DetailsVitality.ixx">
+      <Filter>Core\Domain\6_Environment\Details\Type\Vitality</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx">
       <Filter>Core\Domain\6_Environment\Entities\Type</Filter>

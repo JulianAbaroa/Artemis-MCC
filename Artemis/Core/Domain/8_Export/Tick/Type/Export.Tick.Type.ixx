@@ -6,6 +6,7 @@ import Tables.Interaction.Type;
 import Relations.Classifier.Type;
 import Relations.ObjectGraph.Type;
 import Relations.PlayerGraph.Type;
+import Environment.Details.Type;
 import Environment.Entities.Type;
 import Environment.Fixtures.Type;
 import Environment.Aim.Type;
@@ -32,8 +33,8 @@ export namespace Export::Tick::Type
 
 	using Entity = Environment::Entities::Type::Entity;
 	using Entities = Environment::Entities::Type::Entities;
-	using VitalityDetail = Environment::Entities::Type::VitalityDetail;
-	using Vitalities = Environment::Entities::Type::Vitalities;
+	using VitalityDetail = Environment::Details::Type::VitalityDetail;
+	using VitalityDetails = Environment::Details::Type::VitalityDetails;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;
 	using Aim = Environment::Aim::Type::Aim;
 	using Aims = std::unordered_map<std::uint32_t, Aim>;
@@ -66,7 +67,7 @@ export namespace Export::Tick::Type
 
 		// --- Layer 5: Environment ---
 		std::shared_ptr<const Entities> Entities;
-		std::shared_ptr<const Vitalities> Vitalities;
+		std::shared_ptr<const VitalityDetails> VitalityDetails;
 		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Aims> Aims;
 

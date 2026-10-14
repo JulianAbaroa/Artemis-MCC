@@ -4,7 +4,6 @@ import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Resolved.Definitions.Type;
-import Resolved.Vitality.Type;
 import std;
 
 namespace
@@ -18,7 +17,6 @@ namespace
     using Common::Semantic::Type::Capability;
     using Common::Team::Type::Team;
     using Resolved::Definitions::Type::Object::ObjectKind;
-    using Resolved::Vitality::Type::Vitality::Vitality;
 }
 
 export namespace Environment::Entities::Type
@@ -60,7 +58,7 @@ export namespace Environment::Entities::Type
         Vec3 LinearVelocity{};
         Vec3 AngularVelocity{};
 
-        // Vitality of the first damage section, from 0 to 1.
+        // Vitality of the first damage section, from 0 to 1 (VitalityDetails, D85).
         // note: Only objects with HasVitality and damage sections in the datum.
         std::optional<float> Vitality{};
     };
@@ -78,19 +76,4 @@ export namespace Environment::Entities::Type
             return it == Index.end() ? nullptr : &Rows[it->second];
         }
     };
-
-    // Vitality of every damage section of one entity with HasVitality (Detail, D84).
-    // note: Used by the panels of the viewer and later by Players (shield and health).
-    struct VitalityDetail
-    {
-        std::uint32_t Handle{};
-
-        // Vitality of each section, from 0 to 1, in the order of the layout. Index i is damage section i of the datum.
-        std::vector<float> Sections{};
-
-        // Layout of the tag: names, kinds and roles of the sections.
-        std::shared_ptr<const ::Vitality> Layout{};
-    };
-
-    using Vitalities = std::unordered_map<std::uint32_t, VitalityDetail>;
 }

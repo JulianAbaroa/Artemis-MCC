@@ -36,9 +36,9 @@ namespace Viewer::Palette::System
             m_Entries.push_back(Entry{ handle, rank++, color });
         };
 
-        if (tick->Vitalities)
+        if (tick->VitalityDetails)
         {
-            for (const auto& entry : *tick->Vitalities) add(entry.first, k_Health);
+            for (const auto& entry : *tick->VitalityDetails) add(entry.first, k_Health);
         }
 
         if (tick->Fixtures)

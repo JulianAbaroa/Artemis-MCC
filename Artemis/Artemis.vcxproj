@@ -777,6 +777,12 @@
     <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Collidable\Type\Environment.Collidable.Type.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Environment.Layer.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\State\DetailsStore.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Environment.Details.System.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Environment.Details.Type.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Vitality\DetailsVitality.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx" />

@@ -200,7 +200,7 @@ namespace Viewer::Map::System
 
     auto AimPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Aims>& aims,
-        const std::shared_ptr<const Vitalities>& vitalities, bool tintByHealth,
+        const std::shared_ptr<const VitalityDetails>& vitalities, bool tintByHealth,
         std::uint32_t selectedHandle, std::uint64_t generation) -> void
     {
         if (!device || !context) return;

@@ -27,7 +27,7 @@ export namespace Viewer::Map::System
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
         using VitalityDetail = Export::Tick::Type::VitalityDetail;
-        using Vitalities = Export::Tick::Type::Vitalities;
+        using VitalityDetails = Export::Tick::Type::VitalityDetails;
         using Aim = Export::Tick::Type::Aim;
         using Aims = Export::Tick::Type::Aims;
 
@@ -43,7 +43,7 @@ export namespace Viewer::Map::System
         // param tintByHealth: Colors each sphere by the vitality of its section.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Aims>& aims,
-            const std::shared_ptr<const Vitalities>& vitalities, bool tintByHealth,
+            const std::shared_ptr<const VitalityDetails>& vitalities, bool tintByHealth,
             std::uint32_t selectedHandle, std::uint64_t generation) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;

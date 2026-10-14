@@ -273,10 +273,10 @@ namespace Viewer::Hud::System
         }
 
         const VitalityDetail* detail = nullptr;
-        if (tick.Vitalities)
+        if (tick.VitalityDetails)
         {
-            auto detailIt = tick.Vitalities->find(handle);
-            if (detailIt != tick.Vitalities->end()) detail = &detailIt->second;
+            auto detailIt = tick.VitalityDetails->find(handle);
+            if (detailIt != tick.VitalityDetails->end()) detail = &detailIt->second;
         }
 
         const ResolvedVitality* layout = detail ? detail->Layout.get() : nullptr;
@@ -291,7 +291,7 @@ namespace Viewer::Hud::System
         ImGui::Spacing();
         ImGui::Spacing();
 
-        if (!tick.Vitalities)
+        if (!tick.VitalityDetails)
         {
             ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Health");
             ImGui::Separator();
