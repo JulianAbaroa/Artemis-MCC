@@ -29,19 +29,19 @@ export namespace Relations::Classifier::System
         using Role = Relations::Classifier::Type::Role;
         using TagClassification = Relations::Classifier::Type::TagClassification;
         using ClassifierStore = Relations::Classifier::State::ClassifierStore;
+        using TagClassificationsStore = Relations::Classifier::State::TagClassificationsStore;
 
     public:
         ClassifierService(LogsService& logsService, DefinitionsStore& definitionsStore, VitalityStore& vitalityStore,
-            ObjectTableStore& objectStore, ClassifierStore& classifierStore) :
+            ObjectTableStore& objectStore, ClassifierStore& classifierStore, TagClassificationsStore& tagClassificationsStore) :
             m_LogsService(logsService), m_DefinitionsStore(definitionsStore), m_VitalityStore(vitalityStore),
-            m_ObjectStore(objectStore), m_ClassifierStore(classifierStore) {}
+            m_ObjectStore(objectStore), m_ClassifierStore(classifierStore), m_TagClassificationsStore(tagClassificationsStore) {}
         ~ClassifierService() = default;
 
         // Publishes the classification of every live object, Unknown ones included (D28).
         auto UpdateClassification() -> void;
 
-        // Drops the published classification. The tag cache is dropped on the next update.
-        // note: Called from the cleanup of the lifecycle, so it only marks the cache.
+        // Drops the published classification and the classifications of the tags.
         auto Cleanup() -> void;
 
     private:
@@ -50,13 +50,16 @@ export namespace Relations::Classifier::System
         VitalityStore& m_VitalityStore;
         ObjectTableStore& m_ObjectStore;
         ClassifierStore& m_ClassifierStore;
+        TagClassificationsStore& m_TagClassificationsStore;
 
-        // Classification of each tag of the map, by group and tag name.
-        // note: Used from the update thread only.
-        std::unordered_map<std::string, TagClassification> m_TagClassifications{};
-        std::atomic<bool> m_IsCacheStale{ false };
+        // Checks whether the definitions and the vitality of the map are built, so tag classifications can be kept.
+        auto IsDefinitionsReady() const -> bool;
 
-        // Returns the classification of the tag of the object, from the cache when the map definitions are ready.
+        // Logs once per map how many tags each rule classified and the functions the kind default gave.
+        // note: Runs on the first update with the definitions ready, so it covers the objects the map starts with.
+        auto LogSummary() -> void;
+
+        // Returns the classification of the tag of the object, from the store once the map definitions are ready.
         // note: Logs a warning the first time a tag ends Unknown.
         auto FindTagClassification(const AliveObject& object) -> TagClassification;
 

@@ -1,5 +1,7 @@
 export module Relations.Classifier.State;
 
+export import :TagClassifications;
+
 import Common.State.System;
 import Relations.Classifier.Type;
 import std;

@@ -17,6 +17,7 @@ export namespace Relations
 	{
 	private:
 		using ClassifierStore = Relations::Classifier::State::ClassifierStore;
+		using TagClassificationsStore = Relations::Classifier::State::TagClassificationsStore;
 		using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
 		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
 
@@ -26,7 +27,7 @@ export namespace Relations
 
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved, Tables::Layer& tables) :
-			m_ClassifierService(service.m_LogsService, resolved.m_DefinitionsStore, resolved.m_VitalityStore, tables.m_ObjectStore, m_ClassifierStore),
+			m_ClassifierService(service.m_LogsService, resolved.m_DefinitionsStore, resolved.m_VitalityStore, tables.m_ObjectStore, m_ClassifierStore, m_TagClassificationsStore),
 			m_ObjectGraphService(service.m_LogsService, tables.m_ObjectStore, m_ObjectGraphStore),
 			m_PlayerGraphService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_ObjectGraphStore, m_PlayerGraphStore)
 		{
@@ -43,6 +44,7 @@ export namespace Relations
 
 		// --- State ---
 		ClassifierStore m_ClassifierStore;
+		TagClassificationsStore m_TagClassificationsStore;
 		ObjectGraphStore m_ObjectGraphStore;
 		PlayerGraphStore m_PlayerGraphStore;
 

@@ -520,6 +520,9 @@
     <Filter Include="Core\Domain\5_Relations\Classifier\Type">
       <UniqueIdentifier>{7a6d0f7c-bcca-442c-927d-82afe2200566}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\5_Relations\Classifier\State\TagClassification">
+      <UniqueIdentifier>{1ed60dc0-714a-44b7-add8-7b871006c223}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\5_Relations\Classifier\State">
       <UniqueIdentifier>{66b94e3e-41e7-4ee0-bda5-9500ff7b8185}</UniqueIdentifier>
     </Filter>
@@ -1576,6 +1579,12 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
       <Filter>Core\Domain\5_Relations\Classifier\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.ixx">
+      <Filter>Core\Domain\5_Relations\Classifier\State\TagClassification</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp">
+      <Filter>Core\Domain\5_Relations\Classifier\State\TagClassification</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx">
       <Filter>Core\Domain\5_Relations\Classifier\State</Filter>

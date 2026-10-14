@@ -14,6 +14,7 @@ namespace
     using Common::Semantic::Type::Binding;
     using Common::Semantic::Type::Capability;
     using Common::Semantic::Type::GroupOf;
+    using Common::Semantic::Type::NameOf;
     using Common::Semantic::Type::Catalog::TagLabel;
     using Common::Semantic::Type::Catalog::FindTagLabel;
     using Common::ZoneShape::Type::Kind;
@@ -176,8 +177,6 @@ namespace Relations::Classifier::System
 {
     auto ClassifierService::UpdateClassification() -> void
     {
-        if (m_IsCacheStale.exchange(false)) m_TagClassifications.clear();
-
         auto objectTablePtr = m_ObjectStore.Acquire();
         if (!objectTablePtr) return;
         const ObjectTable& objectTable = *objectTablePtr;
@@ -218,21 +217,60 @@ namespace Relations::Classifier::System
         }
 
         m_ClassifierStore.Publish(std::move(results));
+
+        if (this->IsDefinitionsReady() && !m_TagClassificationsStore.IsSummaryLogged()) this->LogSummary();
+    }
+
+    auto ClassifierService::IsDefinitionsReady() const -> bool
+    {
+        return m_DefinitionsStore.Bipd.IsFrozen() && m_VitalityStore.IsFrozen();
+    }
+
+    auto ClassifierService::LogSummary() -> void
+    {
+        m_TagClassificationsStore.SetSummaryLogged(true);
+
+        std::size_t catalog{ 0 };
+        std::size_t multiplayerKind{ 0 };
+        std::size_t kindDefault{ 0 };
+        std::size_t unknown{ 0 };
+        std::map<Function, std::size_t> defaults{};
+
+        for (const auto& [key, classification] : m_TagClassificationsStore.GetAll())
+        {
+            switch (classification.Source)
+            {
+            case Source::Catalog: ++catalog; break;
+            case Source::MultiplayerKind: ++multiplayerKind; break;
+            case Source::KindDefault: ++kindDefault; ++defaults[classification.Function]; break;
+            default: ++unknown; break;
+            }
+        }
+
+        std::string defaultText{};
+        for (const auto& [function, count] : defaults)
+        {
+            if (!defaultText.empty()) defaultText += ", ";
+            defaultText += std::format("{} {}", NameOf(function), count);
+        }
+
+        m_LogsService.Message("[ClassifierService] INFO: Classified {} tags. Catalog {} | MultiplayerKind {} | KindDefault {} ({}) | Unknown {}.",
+            catalog + multiplayerKind + kindDefault + unknown, catalog, multiplayerKind, kindDefault,
+            defaultText.empty() ? "none" : defaultText, unknown);
     }
 
     auto ClassifierService::FindTagClassification(const AliveObject& object) -> TagClassification
     {
         // note: Before the definitions are frozen the multiplayer kinds and the vitality are missing, so nothing is cached.
-        const bool isReady{ m_DefinitionsStore.Bipd.IsFrozen() && m_VitalityStore.IsFrozen() };
-        if (!isReady) return this->ClassifyTag(object);
+        if (!this->IsDefinitionsReady()) return this->ClassifyTag(object);
 
-        const std::string key{ object.FourCC + '|' + object.TagName };
-
-        const auto it{ m_TagClassifications.find(key) };
-        if (it != m_TagClassifications.end()) return it->second;
+        if (const TagClassification* stored{ m_TagClassificationsStore.Find(object.FourCC, object.TagName) }; stored != nullptr)
+        {
+            return *stored;
+        }
 
         const TagClassification classification{ this->ClassifyTag(object) };
-        m_TagClassifications.emplace(key, classification);
+        m_TagClassificationsStore.Add(object.FourCC, object.TagName, classification);
 
         if (classification.Function == Function::Unknown)
         {
@@ -507,7 +545,7 @@ namespace Relations::Classifier::System
     auto ClassifierService::Cleanup() -> void
     {
         m_ClassifierStore.Cleanup();
-        m_IsCacheStale.store(true);
+        m_TagClassificationsStore.Cleanup();
 
         m_LogsService.Message("[ClassifierService] INFO: Cleanup completed.");
     }

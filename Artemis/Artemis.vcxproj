@@ -759,6 +759,8 @@
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerSize.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Tables.Layer.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx" />
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp" />
+    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.cpp" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx" />
