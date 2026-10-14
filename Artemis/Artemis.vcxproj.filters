@@ -568,6 +568,21 @@
     <Filter Include="Core\Domain\6_Environment\Collidable\System">
       <UniqueIdentifier>{222341c2-07d5-47fd-ae9b-1b77917ca80d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\6_Environment\Entities">
+      <UniqueIdentifier>{359e4fd3-c29a-4875-88c5-e97af7f3713e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Entities\Type">
+      <UniqueIdentifier>{d553b791-40c5-4d89-bcf8-e1192e0151f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Entities\State">
+      <UniqueIdentifier>{4d7a3a39-f9dc-4448-b721-b081c97b0390}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Entities\State\CarriedHandle">
+      <UniqueIdentifier>{d2946d93-73cc-46a5-bfe9-a7fef1eda4b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Entities\System">
+      <UniqueIdentifier>{edbc0e99-a560-4b12-a33c-d453e2237b04}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\6_Environment\Fixtures">
       <UniqueIdentifier>{317214c6-5015-4dc7-9eed-d719dac5d1ca}</UniqueIdentifier>
     </Filter>
@@ -1603,6 +1618,24 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx">
       <Filter>Core\Domain\6_Environment\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Entities\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx">
+      <Filter>Core\Domain\6_Environment\Entities\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp">
+      <Filter>Core\Domain\6_Environment\Entities\State\CarriedHandle</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx">
+      <Filter>Core\Domain\6_Environment\Entities\State\CarriedHandle</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.cpp">
+      <Filter>Core\Domain\6_Environment\Entities\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx">
+      <Filter>Core\Domain\6_Environment\Entities\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
       <Filter>Core\Domain\5_Relations\ObjectGraph\Type</Filter>

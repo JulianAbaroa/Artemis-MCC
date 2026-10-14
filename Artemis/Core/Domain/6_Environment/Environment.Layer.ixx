@@ -5,6 +5,8 @@ import Platform.Layer;
 import Resolved.Layer;
 import Tables.Layer;
 import Relations.Layer;
+import Environment.Entities.State;
+import Environment.Entities.System;
 import Environment.Collidable.State;
 import Environment.Collidable.System;
 import Environment.Fixtures.State;
@@ -19,11 +21,14 @@ export namespace Environment
 	class Layer
 	{
 	private:
+		using EntitiesStore = Environment::Entities::State::EntitiesStore;
+		using CarriedHandlesStore = Environment::Entities::State::CarriedHandlesStore;
 		using CollidableStore = Environment::Collidable::State::CollidableStore;
 		using FixturesStore = Environment::Fixtures::State::FixturesStore;
 		using HealthStore = Environment::Health::State::HealthStore;
 		using AimStore = Environment::Aim::State::AimStore;
 
+		using EntitiesService = Environment::Entities::System::EntitiesService;
 		using CollidableService = Environment::Collidable::System::CollidableService;
 		using FixturesService = Environment::Fixtures::System::FixturesService;
 		using HealthService = Environment::Health::System::HealthService;
@@ -32,12 +37,14 @@ export namespace Environment
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
 			Tables::Layer& tables, Relations::Layer& relations) :
+			m_EntitiesService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, m_EntitiesStore, m_CarriedHandlesStore),
 			m_CollidableService(service.m_LogsService, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
 			m_FixturesService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_FixturesStore),
 			m_HealthService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, m_HealthStore),
 			m_AimService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore)
 		{
 			platform.m_LifecycleService.OnCleanup([this] {
+				m_EntitiesService.Cleanup();
 				m_CollidableService.Cleanup();
 				m_FixturesService.Cleanup();
 				m_HealthService.Cleanup();
@@ -50,12 +57,15 @@ export namespace Environment
 		Layer& operator=(const Layer&) = delete;
 
 		// --- State ---
+		EntitiesStore m_EntitiesStore;
+		CarriedHandlesStore m_CarriedHandlesStore;
 		CollidableStore m_CollidableStore;
 		FixturesStore m_FixturesStore;
 		HealthStore m_HealthStore;
 		AimStore m_AimStore;
 
 		// --- System ---
+		EntitiesService m_EntitiesService;
 		CollidableService m_CollidableService;
 		FixturesService m_FixturesService;
 		HealthService m_HealthService;

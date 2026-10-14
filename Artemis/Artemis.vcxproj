@@ -777,6 +777,12 @@
     <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Collidable\Type\Environment.Collidable.Type.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Environment.Layer.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\State\FixturesStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.ixx" />

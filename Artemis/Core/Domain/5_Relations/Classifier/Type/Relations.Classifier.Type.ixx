@@ -64,7 +64,7 @@ export namespace Relations::Classifier::Type
         std::uint32_t BoundTo{ 0xFFFFFFFF };
 
         // Static capabilities of the tag, plus HasZone from the multiplayer block of the object.
-        // note: The dynamic ones (IsDynamic, IsPickable, IsDestructible...) come with Entities in B4a.
+        // note: Environment Entities adds the ones that depend on the object (IsDynamic, IsPickable, IsDestructible).
         Capability Capabilities{ Capability::None };
     };
 }

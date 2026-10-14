@@ -6,6 +6,7 @@ import Tables.Interaction.State;
 import Relations.Classifier.State;
 import Relations.ObjectGraph.State;
 import Relations.PlayerGraph.State;
+import Environment.Entities.State;
 import Environment.Collidable.State;
 import Environment.Fixtures.State;
 import Environment.Health.State;
@@ -30,6 +31,7 @@ export namespace Export::Tick::System
 		using ClassifierStore = Relations::Classifier::State::ClassifierStore;
 		using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
 		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
+		using EntitiesStore = Environment::Entities::State::EntitiesStore;
 		using CollidableStore = Environment::Collidable::State::CollidableStore;
 		using FixturesStore = Environment::Fixtures::State::FixturesStore;
 		using HealthStore = Environment::Health::State::HealthStore;
@@ -47,14 +49,14 @@ export namespace Export::Tick::System
 		TickService(ObjectTableStore& objectStore, PlayerTableStore& playerStore,
 			InteractionStore& interactionStore, ClassifierStore& classifierStore,
 			ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
-			CollidableStore& collidableStore, FixturesStore& fixturesStore,
+			EntitiesStore& entitiesStore, CollidableStore& collidableStore, FixturesStore& fixturesStore,
 			HealthStore& healthStore, AimStore& aimStore, SelfStore& selfStore,
 			AffordanceStore& affordanceStore, RaycastStore& raycastStore,
 			DefinitionsStore& definitionsStore, TickStore& tickStore) :
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
 			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
-			m_CollidableStore(collidableStore), m_FixturesStore(fixturesStore),
+			m_EntitiesStore(entitiesStore), m_CollidableStore(collidableStore), m_FixturesStore(fixturesStore),
 			m_HealthStore(healthStore), m_AimStore(aimStore), m_SelfStore(selfStore),
 			m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
 			m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
@@ -69,6 +71,7 @@ export namespace Export::Tick::System
 		ClassifierStore& m_ClassifierStore;
 		ObjectGraphStore& m_ObjectGraphStore;
 		PlayerGraphStore& m_PlayerGraphStore;
+		EntitiesStore& m_EntitiesStore;
 		CollidableStore& m_CollidableStore;
 		FixturesStore& m_FixturesStore;
 		HealthStore& m_HealthStore;

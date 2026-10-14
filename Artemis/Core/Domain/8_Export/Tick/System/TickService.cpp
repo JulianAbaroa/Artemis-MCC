@@ -56,6 +56,7 @@ namespace Export::Tick::System
         tick.PlayerGraph = m_PlayerGraphStore.Acquire();
 
         // --- Layer 5: Environment ---
+        tick.Entities = m_EntitiesStore.Acquire();
         tick.Collidables = m_CollidableStore.Acquire();
         tick.Fixtures = m_FixturesStore.Acquire();
         tick.Healths = m_HealthStore.Acquire();

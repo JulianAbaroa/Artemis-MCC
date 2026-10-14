@@ -6,6 +6,7 @@ import Tables.Interaction.Type;
 import Relations.Classifier.Type;
 import Relations.ObjectGraph.Type;
 import Relations.PlayerGraph.Type;
+import Environment.Entities.Type;
 import Environment.Collidable.Type;
 import Environment.Health.Type;
 import Environment.Fixtures.Type;
@@ -31,6 +32,8 @@ export namespace Export::Tick::Type
 	using PlayerTree = Relations::PlayerGraph::Type::PlayerTree;
 	using PlayerGraph = std::vector<PlayerTree>;
 
+	using Entity = Environment::Entities::Type::Entity;
+	using Entities = Environment::Entities::Type::Entities;
 	using Collidable = Environment::Collidable::Type::Collidable;
 	using Collidables = std::vector<Collidable>;
 	using RegionDiagnostic = Environment::Collidable::Type::RegionDiagnostic;
@@ -67,6 +70,7 @@ export namespace Export::Tick::Type
 		std::shared_ptr<const PlayerGraph> PlayerGraph;
 
 		// --- Layer 5: Environment ---
+		std::shared_ptr<const Entities> Entities;
 		std::shared_ptr<const Collidables> Collidables;
 		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Healths> Healths;
@@ -76,6 +80,5 @@ export namespace Export::Tick::Type
 		std::shared_ptr<const Self> Self;
 		std::shared_ptr<const Affordances> Affordances;
 		std::shared_ptr<const Raycasts> Raycasts;
-		// std::shared_ptr<const Entities> Entities;
 	};
 }
