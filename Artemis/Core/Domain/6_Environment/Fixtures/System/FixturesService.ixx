@@ -23,10 +23,6 @@ export namespace Environment::Fixtures::System
         using Teleport = Environment::Fixtures::Type::Teleport::Teleport;
         using Lift = Environment::Fixtures::Type::Lift::Lift;
         using Shield = Environment::Fixtures::Type::Shield::Shield;
-        using ObjectiveSpawn = Environment::Fixtures::Type::ObjectiveSpawn::ObjectiveSpawn;
-        using ObjectiveZone = Environment::Fixtures::Type::ObjectiveZone::ObjectiveZone;
-        using Boundary = Environment::Fixtures::Type::Boundary::Boundary;
-        using Zone = Environment::Fixtures::Type::Zone::Zone;
         using Objective = Environment::Fixtures::Type::Objective::Objective;
         using Destructible = Environment::Fixtures::Type::Destructible::Destructible;
         using Obstacles = std::vector<Obstacle>;
@@ -34,10 +30,6 @@ export namespace Environment::Fixtures::System
         using Teleporters = std::vector<Teleport>;
         using Lifts = std::vector<Lift>;
         using Shields = std::vector<Shield>;
-        using ObjectiveSpawns = std::vector<ObjectiveSpawn>;
-        using ObjectiveZones = std::vector<ObjectiveZone>;
-        using Boundaries = std::vector<Boundary>;
-        using Zones = std::vector<Zone>;
         using Objectives = std::vector<Objective>;
         using Destructibles = std::vector<Destructible>;
 
@@ -78,14 +70,10 @@ export namespace Environment::Fixtures::System
         auto CollectShields(const Classifieds& classifieds,
             const ObjectTable& objects, Shields& shields) -> void;
 
+        // Collects the objective items, carried or not.
+        // note: Objective spawns and zones, boundaries and the other zones are Entities with ZoneDetails now (D88).
         auto CollectObjectives(const Classifieds& classifieds,
-            const ObjectTable& objects, Objectives& objectives,
-            ObjectiveSpawns& objectiveSpawns) -> void;
-
-        // Collects the zones: the objective zones, the boundaries and the zones that other objects carry.
-        auto CollectZones(const Classifieds& classifieds,
-            const ObjectTable& objects, ObjectiveZones& objectiveZones,
-            Boundaries& boundaries, Zones& zones) -> void;
+            const ObjectTable& objects, Objectives& objectives) -> void;
 
         auto CollectDestructibles(const Classifieds& classifieds,
             const ObjectTable& objects, Destructibles& destructibles) -> void;

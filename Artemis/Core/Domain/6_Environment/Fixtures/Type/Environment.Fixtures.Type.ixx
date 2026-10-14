@@ -129,81 +129,6 @@ export namespace Environment::Fixtures::Type
         };
     }
 
-    namespace ObjectiveSpawn
-    {
-        struct ObjectiveSpawn
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Team Team;
-            ZoneShape ZoneShape;
-        };
-    }
-
-    namespace ObjectiveZone
-    {
-        // Zone that is itself the objective (like the hill).
-        struct ObjectiveZone
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Team Team;
-            ZoneShape ZoneShape;
-        };
-    }
-
-    namespace Boundary
-    {
-        enum class Kind : std::uint8_t
-        {
-            Safe,
-            SoftSafe,
-            Kill,
-            SoftKill,
-        };
-
-        struct Boundary
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Kind Kind;
-            Team Team;
-            ZoneShape ZoneShape;
-        };
-    }
-
-    namespace Zone
-    {
-        // Zone of any other object. Every multiplayer object can carry one, but most keep it empty.
-        struct Zone
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Team Team;
-            ZoneShape ZoneShape;
-        };
-    }
-
     namespace Objective
     {
         struct Objective
@@ -257,10 +182,6 @@ export namespace Environment::Fixtures::Type
         std::vector<Teleport::Teleport> Teleporters;
         std::vector<Lift::Lift> Lifts;
         std::vector<Shield::Shield> Shields;
-        std::vector<ObjectiveSpawn::ObjectiveSpawn> ObjectiveSpawns;
-        std::vector<ObjectiveZone::ObjectiveZone> ObjectiveZones;
-        std::vector<Boundary::Boundary> Boundaries;
-        std::vector<Zone::Zone> Zones;
         std::vector<Objective::Objective> Objectives;
         std::vector<Destructible::Destructible> Destructibles;
     };

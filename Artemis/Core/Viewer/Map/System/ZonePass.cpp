@@ -41,9 +41,7 @@ namespace Viewer::Map::System
         m_Gate.Mark(generation);
         m_VertexCount = 0;
 
-        if (!tick || !tick->Fixtures) return;
-
-        const auto& fixtures = *tick->Fixtures;
+        if (!tick || !tick->ZoneDetails || !tick->Entities) return;
 
         std::vector<Vertex>& vertices = m_Scratch;
         vertices.clear();
@@ -57,34 +55,13 @@ namespace Viewer::Map::System
                 zone, palette.ColorOf(handle));
         };
 
-        for (const auto& teleporter : fixtures.Teleporters)
+        // note: Every zone, teleporters included, comes from the ZoneDetails. The pose is the WorldOrigin of its entity (D88).
+        for (const auto& [handle, zone] : *tick->ZoneDetails)
         {
-            emit(teleporter.Handle, teleporter.Position, teleporter.Forward,
-                teleporter.Up, teleporter.ZoneShape);
-        }
+            const auto* entity = tick->Entities->Find(handle);
+            if (!entity) continue;
 
-        for (const auto& spawn : fixtures.ObjectiveSpawns)
-        {
-            emit(spawn.Handle, spawn.Position, spawn.Forward,
-                spawn.Up, spawn.ZoneShape);
-        }
-
-        for (const auto& objectiveZone : fixtures.ObjectiveZones)
-        {
-            emit(objectiveZone.Handle, objectiveZone.Position, objectiveZone.Forward,
-                objectiveZone.Up, objectiveZone.ZoneShape);
-        }
-
-        for (const auto& boundary : fixtures.Boundaries)
-        {
-            emit(boundary.Handle, boundary.Position, boundary.Forward,
-                boundary.Up, boundary.ZoneShape);
-        }
-
-        for (const auto& zone : fixtures.Zones)
-        {
-            emit(zone.Handle, zone.Position, zone.Forward,
-                zone.Up, zone.ZoneShape);
+            emit(handle, entity->WorldOrigin, entity->Forward, entity->Up, zone.Shape);
         }
 
         if (vertices.empty()) return;

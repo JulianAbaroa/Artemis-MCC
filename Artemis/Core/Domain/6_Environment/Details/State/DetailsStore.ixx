@@ -7,4 +7,5 @@ import std;
 export namespace Environment::Details::State
 {
     using VitalityDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::VitalityDetails>;
+    using ZoneDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::ZoneDetails>;
 }

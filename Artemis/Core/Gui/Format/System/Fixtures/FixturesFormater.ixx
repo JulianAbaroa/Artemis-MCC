@@ -15,7 +15,6 @@ export namespace Gui::Format::System
         using ForceKind = Tables::Object::Type::Crate::Lift::Force;
         using DestructibleKind = Environment::Fixtures::Type::Destructible::Kind;
         using TeleporterKind = Environment::Fixtures::Type::Teleport::Kind;
-        using BoundaryKind = Environment::Fixtures::Type::Boundary::Kind;
 
     public:
         FixturesFormater() = default;
@@ -26,6 +25,5 @@ export namespace Gui::Format::System
         static auto ForceKindToString(ForceKind kind) -> const char*;
         static auto DestructibleKindToString(DestructibleKind kind) -> const char*;
         static auto TeleporterKindToString(TeleporterKind kind) -> const char*;
-        static auto BoundaryKindToString(BoundaryKind kind) -> const char*;
     };
 }

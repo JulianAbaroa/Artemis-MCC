@@ -586,6 +586,12 @@
     <Filter Include="Core\Domain\6_Environment\Details\System\Vitality">
       <UniqueIdentifier>{53f04a06-2756-457e-96eb-f4ae4231ac92}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\Type\Zone">
+      <UniqueIdentifier>{9780b89d-48cc-4616-a42e-afcf18157c16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\System\Zone">
+      <UniqueIdentifier>{c8c2689b-092c-4612-8501-8a1d69afd4f3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\6_Environment\Entities">
       <UniqueIdentifier>{359e4fd3-c29a-4875-88c5-e97af7f3713e}</UniqueIdentifier>
     </Filter>
@@ -1642,6 +1648,15 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Details\Type\Vitality\DetailsVitality.ixx">
       <Filter>Core\Domain\6_Environment\Details\Type\Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.cpp">
+      <Filter>Core\Domain\6_Environment\Details\System\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.ixx">
+      <Filter>Core\Domain\6_Environment\Details\System\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Zone\DetailsZone.ixx">
+      <Filter>Core\Domain\6_Environment\Details\Type\Zone</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx">
       <Filter>Core\Domain\6_Environment\Entities\Type</Filter>

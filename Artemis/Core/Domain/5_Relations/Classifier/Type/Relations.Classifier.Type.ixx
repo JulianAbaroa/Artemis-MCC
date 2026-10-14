@@ -63,7 +63,7 @@ export namespace Relations::Classifier::Type
         ::Binding Binding{ ::Binding::Free };
         std::uint32_t BoundTo{ 0xFFFFFFFF };
 
-        // Static capabilities of the tag, plus HasZone from the multiplayer block of the object.
+        // Static capabilities of the tag, plus HasZone from the multiplayer block of the object (cylinder or box shape only).
         // note: Environment Entities adds the ones that depend on the object (IsDynamic, IsPickable, IsDestructible).
         Capability Capabilities{ Capability::None };
     };

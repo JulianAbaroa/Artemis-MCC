@@ -166,14 +166,6 @@ export namespace Tables::Object::Type::Crate
 		return it != map.end() ? it->second : Kind::Unknown;
 	}
 
-	// Crates that carry a zone (shape and team) in their multiplayer block (read from AliveObject::Multiplayer).
-	inline bool HasZone(Kind kind)
-	{
-		return kind == Kind::FlagStand
-			|| kind == Kind::CapturePlate
-			|| kind == Kind::HillMarker;
-	}
-
 	struct Crate
 	{
 		std::uintptr_t Base{};

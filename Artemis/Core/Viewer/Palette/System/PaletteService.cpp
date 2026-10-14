@@ -1,5 +1,6 @@
 module Viewer.Palette.System;
 
+import Common.Semantic.Type;
 import Viewer.Style.Type;
 import std;
 
@@ -11,6 +12,7 @@ namespace
     using Viewer::Style::Type::k_Fixture;
     using Viewer::Style::Type::k_Affordance;
     using Viewer::Style::Type::k_Collidable;
+    using Common::Semantic::Type::Function;
 }
 
 namespace Viewer::Palette::System
@@ -62,11 +64,20 @@ namespace Viewer::Palette::System
             addFixed(fixtures.Destructibles);
 
             addByTeam(fixtures.Spawns);
-            addByTeam(fixtures.ObjectiveSpawns);
-            addByTeam(fixtures.ObjectiveZones);
-            addByTeam(fixtures.Boundaries);
-            addByTeam(fixtures.Zones);
             addByTeam(fixtures.Objectives);
+        }
+
+        // note: Zones and objective spawns take the team of their entity (D88). Teleporters keep the fixture color above.
+        if (tick->Entities)
+        {
+            for (const auto& entity : tick->Entities->Rows)
+            {
+                const bool hasZone{ tick->ZoneDetails && tick->ZoneDetails->contains(entity.Handle) };
+                const bool isTeleporter{ entity.Function == Function::Teleporter };
+                const bool isObjectiveSpawn{ entity.Function == Function::ObjectiveSpawn };
+
+                if ((hasZone && !isTeleporter) || isObjectiveSpawn) add(entity.Handle, Viewer::Style::Type::ColorOfTeam(entity.Team));
+            }
         }
 
         if (tick->Affordances)

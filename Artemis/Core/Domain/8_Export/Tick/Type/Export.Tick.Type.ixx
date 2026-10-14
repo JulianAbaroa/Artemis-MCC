@@ -35,6 +35,8 @@ export namespace Export::Tick::Type
 	using Entities = Environment::Entities::Type::Entities;
 	using VitalityDetail = Environment::Details::Type::VitalityDetail;
 	using VitalityDetails = Environment::Details::Type::VitalityDetails;
+	using ZoneDetail = Environment::Details::Type::ZoneDetail;
+	using ZoneDetails = Environment::Details::Type::ZoneDetails;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;
 	using Aim = Environment::Aim::Type::Aim;
 	using Aims = std::unordered_map<std::uint32_t, Aim>;
@@ -68,6 +70,7 @@ export namespace Export::Tick::Type
 		// --- Layer 5: Environment ---
 		std::shared_ptr<const Entities> Entities;
 		std::shared_ptr<const VitalityDetails> VitalityDetails;
+		std::shared_ptr<const ZoneDetails> ZoneDetails;
 		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Aims> Aims;
 

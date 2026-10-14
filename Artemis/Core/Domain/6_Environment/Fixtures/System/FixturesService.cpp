@@ -2,12 +2,10 @@ module Environment.Fixtures.System;
 
 import Common.Semantic.Type;
 import Common.Team.Type;
-import Common.ZoneShape.Type;
 
 namespace
 {
     using Team = Common::Team::Type::Team;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
     using SceneryObject = Tables::Object::Type::Scenery::Scenery;
     using SceneryKind = Tables::Object::Type::Scenery::Kind;
     using CrateObject = Tables::Object::Type::Crate::Crate;
@@ -21,8 +19,6 @@ namespace
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
     using Fixtures = Environment::Fixtures::Type::Fixtures;
-    using BoundaryKind = Environment::Fixtures::Type::Boundary::Kind;
-    using ZoneKind = Common::ZoneShape::Type::Kind;
     using SpawnKind = Environment::Fixtures::Type::Spawn::Kind;
     using TeleportKind = Environment::Fixtures::Type::Teleport::Kind;
     using DestructibleKind = Environment::Fixtures::Type::Destructible::Kind;
@@ -45,8 +41,7 @@ namespace Environment::Fixtures::System
         this->CollectTeleports(classifieds, objectTable, data.Teleporters);
         this->CollectLifts(classifieds, objectTable, data.Lifts);
         this->CollectShields(classifieds, objectTable, data.Shields);
-        this->CollectObjectives(classifieds, objectTable, data.Objectives, data.ObjectiveSpawns);
-        this->CollectZones(classifieds, objectTable, data.ObjectiveZones, data.Boundaries, data.Zones);
+        this->CollectObjectives(classifieds, objectTable, data.Objectives);
         this->CollectDestructibles(classifieds, objectTable, data.Destructibles);
 
         m_FixturesStore.Publish(std::move(data));
@@ -292,39 +287,11 @@ namespace Environment::Fixtures::System
     }
 
     void FixturesService::CollectObjectives(const Classifieds& classifieds,
-        const ObjectTable& objects, Objectives& objectives,
-        ObjectiveSpawns& objectiveSpawns)
+        const ObjectTable& objects, Objectives& objectives)
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Function == Function::ObjectiveSpawn)
-            {
-                auto objectIt = objects.find(classified.Handle);
-                if (objectIt == objects.end()) continue;
-
-                const AliveObject& object = objectIt->second;
-                if (object.Address == 0) continue;
-
-                const auto* crate = std::get_if<CrateObject>(&object.Specific);
-                if (!crate) continue;
-
-                ObjectiveSpawn objectiveSpawn{};
-                objectiveSpawn.Handle = classified.Handle;
-                objectiveSpawn.TagName = object.TagName;
-                objectiveSpawn.Position = object.WorldOrigin;
-                objectiveSpawn.Forward = object.Forward;
-                objectiveSpawn.Up = object.Up;
-
-                objectiveSpawn.Team = Team::Neutral;
-                if (Tables::Object::Type::Crate::HasZone(crate->Kind))
-                {
-                    objectiveSpawn.ZoneShape = object.Multiplayer ? object.Multiplayer->Shape : ZoneShape{};
-                    objectiveSpawn.Team = object.Multiplayer ? object.Multiplayer->Team : Team{};
-                }
-
-                objectiveSpawns.push_back(objectiveSpawn);
-            }
-            else if (classified.Function == Function::ObjectiveItem)
+            if (classified.Function == Function::ObjectiveItem)
             {
                 auto objectIt = objects.find(classified.Handle);
                 if (objectIt == objects.end()) continue;
@@ -354,73 +321,6 @@ namespace Environment::Fixtures::System
                 if (object.Multiplayer) objective.Team = object.Multiplayer->Team;
 
                 objectives.push_back(objective);
-            }
-        }
-    }
-
-    void FixturesService::CollectZones(const Classifieds& classifieds,
-        const ObjectTable& objects, ObjectiveZones& objectiveZones,
-        Boundaries& boundaries, Zones& zones)
-    {
-        for (const auto& classified : classifieds)
-        {
-            auto objectIt = objects.find(classified.Handle);
-            if (objectIt == objects.end()) continue;
-
-            const AliveObject& object = objectIt->second;
-            if (object.Address == 0 || !object.Multiplayer.has_value()) continue;
-
-            const ZoneShape& shape = object.Multiplayer->Shape;
-            const Team team = object.Multiplayer->Team;
-
-            if (classified.Function == Function::ObjectiveZone)
-            {
-                ObjectiveZone objectiveZone{};
-                objectiveZone.Handle = classified.Handle;
-                objectiveZone.TagName = object.TagName;
-                objectiveZone.Position = object.WorldOrigin;
-                objectiveZone.Forward = object.Forward;
-                objectiveZone.Up = object.Up;
-                objectiveZone.Team = team;
-                objectiveZone.ZoneShape = shape;
-
-                objectiveZones.push_back(objectiveZone);
-            }
-            else if (classified.Function == Function::Boundary)
-            {
-                Boundary boundary{};
-                boundary.Handle = classified.Handle;
-                boundary.TagName = object.TagName;
-                boundary.Position = object.WorldOrigin;
-                boundary.Forward = object.Forward;
-                boundary.Up = object.Up;
-                boundary.Team = team;
-                boundary.ZoneShape = shape;
-
-                const auto subtype{ static_cast<Subtype::Boundary>(classified.Subtype) };
-                if (subtype == Subtype::Boundary::Safe) boundary.Kind = BoundaryKind::Safe;
-                else if (subtype == Subtype::Boundary::SoftSafe) boundary.Kind = BoundaryKind::SoftSafe;
-                else if (subtype == Subtype::Boundary::Kill) boundary.Kind = BoundaryKind::Kill;
-                else if (subtype == Subtype::Boundary::SoftKill) boundary.Kind = BoundaryKind::SoftKill;
-
-                boundaries.push_back(boundary);
-            }
-            else if (classified.Function != Function::Teleporter && classified.Function != Function::ObjectiveSpawn)
-            {
-                // The teleporters and the objective spawns already carry their own zone.
-                // note: Other kinds of shape (like the 1 seen on the bomb) are not drawable and are left out.
-                if (shape.Kind != ZoneKind::Cylinder && shape.Kind != ZoneKind::Box) continue;
-
-                Zone zone{};
-                zone.Handle = classified.Handle;
-                zone.TagName = object.TagName;
-                zone.Position = object.WorldOrigin;
-                zone.Forward = object.Forward;
-                zone.Up = object.Up;
-                zone.Team = team;
-                zone.ZoneShape = shape;
-
-                zones.push_back(zone);
             }
         }
     }

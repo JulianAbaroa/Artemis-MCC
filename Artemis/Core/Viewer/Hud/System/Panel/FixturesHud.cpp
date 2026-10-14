@@ -5,6 +5,7 @@ module;
 module Viewer.Hud.System;
 import :Fixtures;
 
+import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Tables.Object.Type;
 import Environment.Fixtures.Type;
@@ -18,6 +19,8 @@ namespace
 
     using Tick = Export::Tick::Type::Tick;
     using Fixtures = Export::Tick::Type::Fixtures;
+    using Export::Tick::Type::Entity;
+    using Export::Tick::Type::ZoneDetail;
     using ZoneShape = Common::ZoneShape::Type::ZoneShape;
     using ZoneKind = Common::ZoneShape::Type::Kind;
     using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
@@ -28,6 +31,10 @@ namespace
     using FixturesFormater = Gui::Format::System::FixturesFormater;
 
     using PanelGuiService = Gui::Widget::System::PanelGuiService;
+
+    using Common::Semantic::Type::Function;
+
+    namespace SemanticType = Common::Semantic::Type;
 
     auto SpawnKindToString(SpawnKind kind) -> const char*
     {
@@ -158,53 +165,22 @@ namespace
         }
     }
 
-    auto DrawObjectiveSpawn(const Fixture::ObjectiveSpawn::ObjectiveSpawn& os) -> void
+    // Draws an entity with a zone detail: objective spawn, objective zone, boundary or any other zone (D88).
+    // param shape: Empty when the entity has no zone detail.
+    auto DrawZoneEntity(const Entity& entity, const ZoneShape& shape, const std::string& tagName) -> void
     {
-        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Objective Spawn", os.TagName, os.Handle);
-        PanelGuiService::DrawVec3("Position:", os.Position);
-        PanelGuiService::DrawVec3("Forward:", os.Forward);
-        PanelGuiService::DrawVec3("Up:", os.Up);
-        ImGui::Text("Team: %s", TeamFormater::TeamToString(os.Team));
+        std::string title{ SemanticType::NameOf(entity.Function) };
+        const std::string_view subtype{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) };
+        if (!subtype.empty()) title += std::format(" {}", subtype);
+
+        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), title.c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawVec3("World Origin:", entity.WorldOrigin);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+        ImGui::Text("Team: %s", TeamFormater::TeamToString(entity.Team));
 
         ImGui::Spacing();
-        DrawZoneShape(os.ZoneShape);
-    }
-
-    auto DrawObjectiveZone(const Fixture::ObjectiveZone::ObjectiveZone& oz) -> void
-    {
-        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "Objective Zone", oz.TagName, oz.Handle);
-        PanelGuiService::DrawVec3("Position:", oz.Position);
-        PanelGuiService::DrawVec3("Forward:", oz.Forward);
-        PanelGuiService::DrawVec3("Up:", oz.Up);
-        ImGui::Text("Team: %s", TeamFormater::TeamToString(oz.Team));
-
-        ImGui::Spacing();
-        DrawZoneShape(oz.ZoneShape);
-    }
-
-    auto DrawBoundary(const Fixture::Boundary::Boundary& b) -> void
-    {
-        PanelGuiService::DrawHeader(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "Boundary", b.TagName, b.Handle);
-        PanelGuiService::DrawVec3("Position:", b.Position);
-        PanelGuiService::DrawVec3("Forward:", b.Forward);
-        PanelGuiService::DrawVec3("Up:", b.Up);
-        ImGui::Text("Type: %s", FixturesFormater::BoundaryKindToString(b.Kind));
-        ImGui::Text("Team: %s", TeamFormater::TeamToString(b.Team));
-
-        ImGui::Spacing();
-        DrawZoneShape(b.ZoneShape);
-    }
-
-    auto DrawZone(const Fixture::Zone::Zone& z) -> void
-    {
-        PanelGuiService::DrawHeader(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Zone", z.TagName, z.Handle);
-        PanelGuiService::DrawVec3("Position:", z.Position);
-        PanelGuiService::DrawVec3("Forward:", z.Forward);
-        PanelGuiService::DrawVec3("Up:", z.Up);
-        ImGui::Text("Team: %s", TeamFormater::TeamToString(z.Team));
-
-        ImGui::Spacing();
-        DrawZoneShape(z.ZoneShape);
+        DrawZoneShape(shape);
     }
 
     auto DrawObjective(const Fixture::Objective::Objective& ob) -> void
@@ -269,10 +245,35 @@ namespace Viewer::Hud::System
         if (TryDraw(fx.Teleporters, handle, DrawTeleporter)) return;
         if (TryDraw(fx.Lifts, handle, DrawLift)) return;
         if (TryDraw(fx.Shields, handle, DrawShield)) return;
-        if (TryDraw(fx.ObjectiveSpawns, handle, DrawObjectiveSpawn)) return;
-        if (TryDraw(fx.ObjectiveZones, handle, DrawObjectiveZone)) return;
-        if (TryDraw(fx.Boundaries, handle, DrawBoundary)) return;
-        if (TryDraw(fx.Zones, handle, DrawZone)) return;
+
+        // note: Zones come from the Entities and the ZoneDetails, not from the Fixtures (D88).
+        const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };
+        if (entity != nullptr)
+        {
+            const ZoneDetail* zone{ nullptr };
+            if (tick.ZoneDetails)
+            {
+                const auto zoneIt = tick.ZoneDetails->find(handle);
+                if (zoneIt != tick.ZoneDetails->end()) zone = &zoneIt->second;
+            }
+
+            const bool isZoneFunction{ entity->Function == Function::ObjectiveSpawn || entity->Function == Function::ObjectiveZone
+                || entity->Function == Function::Boundary };
+
+            if (zone != nullptr || isZoneFunction)
+            {
+                std::string tagName{};
+                if (tick.ObjectTable)
+                {
+                    const auto objectIt = tick.ObjectTable->find(handle);
+                    if (objectIt != tick.ObjectTable->end()) tagName = objectIt->second.TagName;
+                }
+
+                DrawZoneEntity(*entity, zone != nullptr ? zone->Shape : ZoneShape{}, tagName);
+                return;
+            }
+        }
+
         if (TryDraw(fx.Objectives, handle, DrawObjective)) return;
         if (TryDraw(fx.Destructibles, handle, DrawDestructible)) return;
 

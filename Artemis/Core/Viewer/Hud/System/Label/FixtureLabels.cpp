@@ -6,6 +6,7 @@ module Viewer.Hud.System;
 import :FixtureLabels;
 
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Environment.Fixtures.Type;
 import Gui.Format.System;
@@ -27,6 +28,9 @@ namespace
 
     namespace Crate = Tables::Object::Type::Crate;
     namespace Fixture = Environment::Fixtures::Type;
+    namespace SemanticType = Common::Semantic::Type;
+
+    using Common::Semantic::Type::Function;
 
     using Viewer::Style::Type::k_Fixture;
     using Viewer::Style::Type::k_TeamNeutral;
@@ -99,6 +103,43 @@ namespace Viewer::Hud::System
             return ToImColor(ColorOfTeam(item.Team));
         };
 
+        // note: Objective spawns, objective zones and boundaries are entities with a zone detail (D88). The tag name is for debugging.
+        auto addZoneEntities = [&](Function function, const char* title, bool isSubtypeShown)
+        {
+            if (!tick.Entities) return;
+
+            for (const auto& entity : tick.Entities->Rows)
+            {
+                if (entity.Function != function) continue;
+
+                ZoneShape shape{};
+                if (tick.ZoneDetails)
+                {
+                    const auto zoneIt = tick.ZoneDetails->find(entity.Handle);
+                    if (zoneIt != tick.ZoneDetails->end()) shape = zoneIt->second.Shape;
+                }
+
+                std::string detail{};
+                if (isSubtypeShown)
+                {
+                    detail = std::string{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) };
+                }
+                else if (tick.ObjectTable)
+                {
+                    const auto objectIt = tick.ObjectTable->find(entity.Handle);
+                    if (objectIt != tick.ObjectTable->end()) detail = ShortTagName(objectIt->second.TagName);
+                }
+
+                std::vector<LabelRow> rows{};
+                rows.push_back(Row(title, accent));
+                rows.push_back(Row(std::move(detail)));
+                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(entity.Team)));
+                rows.push_back(Row(ZoneText(shape), k_MutedColor));
+
+                canvas.Add(entity.WorldOrigin, std::move(rows), accent, teamOf(entity), k_FixturePriority, entity.Handle);
+            }
+        };
+
         if (options.IsEnabled(Flag::FixtureTeleportLabels))
         {
             for (const auto& teleport : fixtures.Teleporters)
@@ -155,30 +196,8 @@ namespace Viewer::Hud::System
                 canvas.Add(objective.Position, std::move(rows), accent, teamOf(objective), k_FixturePriority, objective.Handle);
             }
 
-            for (const auto& spawn : fixtures.ObjectiveSpawns)
-            {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("OBJECTIVE SPAWN", accent));
-                rows.push_back(Row(ShortTagName(spawn.TagName)));
-                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(spawn.Team)));
-                rows.push_back(Row(ZoneText(spawn.ZoneShape), k_MutedColor));
-
-                canvas.Add(spawn.Position, std::move(rows), accent, teamOf(spawn), k_FixturePriority, spawn.Handle);
-            }
-        }
-
-        if (options.IsEnabled(Flag::FixtureObjectives))
-        {
-            for (const auto& zone : fixtures.ObjectiveZones)
-            {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("OBJECTIVE ZONE", accent));
-                rows.push_back(Row(ShortTagName(zone.TagName)));
-                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(zone.Team)));
-                rows.push_back(Row(ZoneText(zone.ZoneShape), k_MutedColor));
-
-                canvas.Add(zone.Position, std::move(rows), accent, teamOf(zone), k_FixturePriority, zone.Handle);
-            }
+            addZoneEntities(Function::ObjectiveSpawn, "OBJECTIVE SPAWN", false);
+            addZoneEntities(Function::ObjectiveZone, "OBJECTIVE ZONE", false);
         }
 
         if (options.IsEnabled(Flag::FixtureDestructibles))
@@ -209,16 +228,7 @@ namespace Viewer::Hud::System
                 canvas.Add(spawn.Position, std::move(rows), accent, teamOf(spawn), k_FixturePriority, spawn.Handle);
             }
 
-            for (const auto& boundary : fixtures.Boundaries)
-            {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("BOUNDARY", accent));
-                rows.push_back(Row(FixturesFormater::BoundaryKindToString(boundary.Kind)));
-                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(boundary.Team)));
-                rows.push_back(Row(ZoneText(boundary.ZoneShape), k_MutedColor));
-
-                canvas.Add(boundary.Position, std::move(rows), accent, teamOf(boundary), k_FixturePriority, boundary.Handle);
-            }
+            addZoneEntities(Function::Boundary, "BOUNDARY", true);
         }
     }
 }

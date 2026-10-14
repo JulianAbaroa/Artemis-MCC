@@ -217,7 +217,10 @@ namespace Relations::Classifier::System
             }
             classified.Capabilities = tag.Capabilities;
 
-            if (object.Multiplayer && object.Multiplayer->Shape.Kind != Kind::None)
+            // note: Only cylinders and boxes are zones (05, section 6, D88). Other shape kinds, like the 0x01 on the bomb, are not drawable.
+            const bool hasZoneShape{ object.Multiplayer
+                && (object.Multiplayer->Shape.Kind == Kind::Cylinder || object.Multiplayer->Shape.Kind == Kind::Box) };
+            if (hasZoneShape)
             {
                 classified.Capabilities = classified.Capabilities | Capability::HasZone;
             }
