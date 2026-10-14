@@ -6,6 +6,7 @@ import Platform.Layer;
 import Platform.Input.Type;
 import Platform.Render.Type;
 import Resolved.Layer;
+import Datum.Layer;
 import Export.Layer;
 import Gui.Layer;
 import Gui.Backend.System;
@@ -23,6 +24,8 @@ import UI.DefinitionsInspector.System;
 import UI.Settings.System;
 import UI.MemoryScanner.State;
 import UI.MemoryScanner.System;
+import UI.Capture.State;
+import UI.Capture.System;
 import UI.Logs.State;
 import UI.Logs.System;
 import std;
@@ -46,6 +49,7 @@ export namespace UI
         using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
         using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
         using MemoryScannerUIStore = UI::MemoryScanner::State::MemoryScannerUIStore;
+        using CaptureUIStore = UI::Capture::State::CaptureUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
         using HotkeyUIService = UI::Hotkey::System::HotkeyUIService;
@@ -55,20 +59,22 @@ export namespace UI
         using DefinitionsInspectorUIService = UI::DefinitionsInspector::System::DefinitionsInspectorUIService;
         using SettingsUIService = UI::Settings::System::SettingsUIService;
         using MemoryScannerUIService = UI::MemoryScanner::System::MemoryScannerUIService;
+        using CaptureUIService = UI::Capture::System::CaptureUIService;
         using LogsUIService = UI::Logs::System::LogsUIService;
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
-            Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
+            Datum::Layer& datum, Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
             PreferencesService& preferences) :
             m_BackendGuiService(gui.m_BackendGuiService),
-            m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, viewer.m_OverlayStore),
+            m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, m_CaptureUIStore, viewer.m_OverlayStore),
             m_LauncherUIService(service.m_SettingsStore, m_LauncherUIStore),
-            m_ObjectTableUIService(exportLayer.m_TickStore, m_ObjectTableUIStore),
+            m_ObjectTableUIService(exportLayer.m_TickStore, m_ObjectTableUIStore, m_CaptureUIStore),
             m_PlayerTableUIService(exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
             m_MemoryScannerUIService(platform.m_MemoryScannerStore, platform.m_MemoryScannerService, m_MemoryScannerUIStore),
+            m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
         {
             platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {
@@ -106,6 +112,7 @@ export namespace UI
         ObjectTableUIStore m_ObjectTableUIStore{};
         PlayerTableUIStore m_PlayerTableUIStore{};
         MemoryScannerUIStore m_MemoryScannerUIStore{};
+        CaptureUIStore m_CaptureUIStore{};
         LogsUIStore m_LogsUIStore{};
 
         // --- System ---
@@ -116,6 +123,7 @@ export namespace UI
         DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
         SettingsUIService m_SettingsUIService;
         MemoryScannerUIService m_MemoryScannerUIService;
+        CaptureUIService m_CaptureUIService;
         LogsUIService m_LogsUIService;
 
     private:
@@ -125,7 +133,7 @@ export namespace UI
         // Releases the icons and drops the table snapshots.
         auto Shutdown() -> void;
 
-        // Draws the launcher and the visible tab windows.
+        // Runs a pending datum capture, then draws the launcher and the visible tab windows.
         auto DrawFrame(const FrameContext& frame) -> void;
     };
 }

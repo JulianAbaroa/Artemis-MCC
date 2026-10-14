@@ -594,6 +594,7 @@
     <ClCompile Include="Core\UI\Launcher\Type\UI.Launcher.Type.ixx" />
     <ClCompile Include="Core\UI\Logs\Type\UI.Logs.Type.ixx" />
     <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx" />
+    <ClCompile Include="Core\UI\Capture\Type\UI.Capture.Type.ixx" />
     <ClCompile Include="Core\UI\DefinitionsInspector\System\DefinitionsInspectorUIService.cpp" />
     <ClCompile Include="Core\UI\DefinitionsInspector\Type\UI.DefinitionsInspector.Type.ixx" />
     <ClCompile Include="Core\UI\DefinitionsInspector\System\DefinitionsInspectorUIService.ixx" />
@@ -814,6 +815,10 @@
     <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.ixx" />
     <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.cpp" />
     <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.ixx" />
+    <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.cpp" />
+    <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.ixx" />
+    <ClCompile Include="Core\UI\Capture\System\CaptureUIService.cpp" />
+    <ClCompile Include="Core\UI\Capture\System\CaptureUIService.ixx" />
     <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.cpp" />
     <ClCompile Include="Core\UI\ObjectTable\State\ObjectTableUIStore.ixx" />
     <ClCompile Include="Core\UI\ObjectTable\System\ObjectTableUIService.cpp" />

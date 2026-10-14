@@ -86,6 +86,14 @@ def ProcessXml(xmlPath: str) -> None:
         shutil.rmtree(tmp, ignore_errors=True)
 
     off = off.replace(f"// Base size: 0x{end:X}.", f"// Component range: 0x{start:X}..0x{end:X} (absolute datum offsets).")
+    # Range of the component, so tools can cut a datum by component without repeating the XML.
+    marker = "::Offset\n{\n"
+    if marker not in off.replace("\r\n", "\n"):
+        raise SystemExit(f"{xmlName}: Offset namespace not found")
+    off = off.replace("\r\n", "\n").replace(marker, marker +
+        "    // First datum byte of the component and the byte after its last one.\n"
+        f"    constexpr std::size_t k_ComponentStart = 0x{start:X};\n"
+        f"    constexpr std::size_t k_ComponentEnd = 0x{end:X};\n\n", 1)
     st = st.replace("// Root struct size:", f"// Component starts at datum offset 0x{start:X}; field offsets in comments are relative to it.\n// Root struct size:")
     compDir = os.path.join(OUT, prefix)
     os.makedirs(compDir, exist_ok=True)

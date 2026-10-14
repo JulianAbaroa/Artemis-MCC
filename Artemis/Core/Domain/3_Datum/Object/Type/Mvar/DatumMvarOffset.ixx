@@ -8,6 +8,10 @@ import std;
 
 export namespace Datum::Object::Type::Mvar::Offset
 {
+    // First datum byte of the component and the byte after its last one.
+    constexpr std::size_t k_ComponentStart = 0x0;
+    constexpr std::size_t k_ComponentEnd = 0x4C;
+
     constexpr std::size_t k_PlacementFlags                              = 0x0;  // flags16. [In Use=0]
     constexpr std::size_t k_PaletteIndex                                = 0x2;  // uint16.
     constexpr std::size_t k_Unknown04                                   = 0x4;  // uint32.

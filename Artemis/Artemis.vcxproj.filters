@@ -826,6 +826,18 @@
     <Filter Include="Core\UI\MemoryScanner\Type">
       <UniqueIdentifier>{052d1b1b-1a9d-4f48-bc5a-0ba115adef1e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\UI\Capture">
+      <UniqueIdentifier>{02863328-1fbe-4c98-927f-dc40f5b6b65e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Capture\State">
+      <UniqueIdentifier>{c88847c4-1749-442e-8265-d31d9d43a97d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Capture\System">
+      <UniqueIdentifier>{f40f9c07-590c-46c1-817a-11cc83d4b7d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Capture\Type">
+      <UniqueIdentifier>{19ef4eb0-a035-4f25-aea8-53bb8876164b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI\Logs">
       <UniqueIdentifier>{89b89d4c-5e87-4e59-a0ed-b195ff80375c}</UniqueIdentifier>
     </Filter>
@@ -2026,6 +2038,21 @@
     </ClCompile>
     <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.cpp">
       <Filter>Core\UI\MemoryScanner\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.ixx">
+      <Filter>Core\UI\Capture\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.cpp">
+      <Filter>Core\UI\Capture\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Capture\System\CaptureUIService.ixx">
+      <Filter>Core\UI\Capture\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Capture\System\CaptureUIService.cpp">
+      <Filter>Core\UI\Capture\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Capture\Type\UI.Capture.Type.ixx">
+      <Filter>Core\UI\Capture\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\Logs\State\LogsUIStore.ixx">
       <Filter>Core\UI\Logs\State</Filter>

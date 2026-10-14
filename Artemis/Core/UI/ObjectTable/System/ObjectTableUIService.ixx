@@ -5,6 +5,7 @@ import Export.Tick.State;
 import Gui.Widget.System;
 import UI.ObjectTable.Type;
 import UI.ObjectTable.State;
+import UI.Capture.State;
 import std;
 
 export namespace UI::ObjectTable::System
@@ -23,10 +24,11 @@ export namespace UI::ObjectTable::System
 
         using Groups = UI::ObjectTable::Type::Groups;
         using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
+        using CaptureUIStore = UI::Capture::State::CaptureUIStore;
 
     public:
-        ObjectTableUIService(TickStore& tickStore, ObjectTableUIStore& objectTableUIStore) :
-            m_TickStore(tickStore), m_ObjectTableUIStore(objectTableUIStore) {}
+        ObjectTableUIService(TickStore& tickStore, ObjectTableUIStore& objectTableUIStore, CaptureUIStore& captureUIStore) :
+            m_TickStore(tickStore), m_ObjectTableUIStore(objectTableUIStore), m_CaptureUIStore(captureUIStore) {}
         ~ObjectTableUIService() = default;
 
         ObjectTableUIService(const ObjectTableUIService&) = delete;
@@ -38,6 +40,7 @@ export namespace UI::ObjectTable::System
     private:
         TickStore& m_TickStore;
         ObjectTableUIStore& m_ObjectTableUIStore;
+        CaptureUIStore& m_CaptureUIStore;
 
         SearchFilterGuiService m_SearchFilter{};
         CopyableFieldGuiService m_CopyableField{};
@@ -51,7 +54,7 @@ export namespace UI::ObjectTable::System
         // Draws the card of an object.
         auto DrawObjectCard(const AliveObject& object) -> void;
 
-        // Draws the tag name of the card.
+        // Draws the pin box of the captures and the tag name of the card.
         auto DrawCardHeader(const AliveObject& object) -> void;
 
         // Draws the copyable fields of the card.

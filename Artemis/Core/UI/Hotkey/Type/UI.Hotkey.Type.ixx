@@ -14,6 +14,7 @@ export namespace UI::Hotkey::Type
         ToggleMenu,
         ResetMenu,
         LockMenu,
+        CaptureDatum,
     };
 
     // Layer that handles the hotkey.

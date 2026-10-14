@@ -6,6 +6,7 @@ import Viewer.Overlay.State;
 import UI.Hotkey.Type;
 import UI.Hotkey.State;
 import UI.Launcher.State;
+import UI.Capture.State;
 
 export namespace UI::Hotkey::System
 {
@@ -22,12 +23,13 @@ export namespace UI::Hotkey::System
         using Action = UI::Hotkey::Type::Action;
         using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
         using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
+        using CaptureUIStore = UI::Capture::State::CaptureUIStore;
 
     public:
         HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,
-            LauncherUIStore& launcherStore, OverlayStore& overlayStore) :
+            LauncherUIStore& launcherStore, CaptureUIStore& captureStore, OverlayStore& overlayStore) :
             m_SettingsStore(settingsStore), m_HotkeyStore(hotkeyStore),
-            m_LauncherStore(launcherStore), m_OverlayStore(overlayStore) {}
+            m_LauncherStore(launcherStore), m_CaptureStore(captureStore), m_OverlayStore(overlayStore) {}
         ~HotkeyUIService() = default;
 
         HotkeyUIService(const HotkeyUIService&) = delete;
@@ -41,6 +43,7 @@ export namespace UI::Hotkey::System
         SettingsStore& m_SettingsStore;
         HotkeyUIStore& m_HotkeyStore;
         LauncherUIStore& m_LauncherStore;
+        CaptureUIStore& m_CaptureStore;
         OverlayStore& m_OverlayStore;
 
         // Runs the action of a hotkey.

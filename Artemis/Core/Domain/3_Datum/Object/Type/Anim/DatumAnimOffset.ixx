@@ -8,6 +8,10 @@ import std;
 
 export namespace Datum::Object::Type::Anim::Offset
 {
+    // First datum byte of the component and the byte after its last one.
+    constexpr std::size_t k_ComponentStart = 0x1A8;
+    constexpr std::size_t k_ComponentEnd = 0x1B8;
+
     constexpr std::size_t k_Unknown1a9                                  = 0x1A9;  // uint8.
     constexpr std::size_t k_Unknown1ae                                  = 0x1AE;  // uint16.
     constexpr std::size_t k_Unknown1b0                                  = 0x1B0;  // uint16.

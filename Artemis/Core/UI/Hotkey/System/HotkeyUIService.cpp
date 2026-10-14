@@ -66,6 +66,10 @@ namespace UI::Hotkey::System
             m_SettingsStore.SetMenuLocked(!m_SettingsStore.IsMenuLocked());
             break;
 
+        case Action::CaptureDatum:
+            m_CaptureStore.RequestCapture();
+            break;
+
         default:
             break;
         }

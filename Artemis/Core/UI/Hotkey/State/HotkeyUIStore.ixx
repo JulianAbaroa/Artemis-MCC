@@ -19,6 +19,7 @@ export namespace UI::Hotkey::State
         static constexpr std::uint32_t k_VkF3{ 0x72 };
         static constexpr std::uint32_t k_VkF4{ 0x73 };
         static constexpr std::uint32_t k_VkF6{ 0x75 };
+        static constexpr std::uint32_t k_VkF7{ 0x76 };
         static constexpr std::uint32_t k_VkLeft{ 0x25 };
         static constexpr std::uint32_t k_VkUp{ 0x26 };
 
@@ -37,7 +38,7 @@ export namespace UI::Hotkey::State
         auto Find(std::uint32_t virtualKey, bool isShiftDown) const -> const Binding*;
 
     private:
-        const std::array<Binding, 15> m_Bindings
+        const std::array<Binding, 16> m_Bindings
         { {
             { Action::ToggleLauncher, Scope::UI, k_VkF2, false,
                 "Toggle Launcher", "F2", "Show or hide the launcher." },
@@ -65,6 +66,9 @@ export namespace UI::Hotkey::State
 
             { Action::LockMenu, Scope::UI, '3', true,
                 "Lock Menu", "SHIFT + 3", "Lock the menu position and disable mouse dragging." },
+
+            { Action::CaptureDatum, Scope::UI, k_VkF7, false,
+                "Capture Datum", "F7", "Copies the datum of the local biped, its linked objects and the pinned objects to the capture file (Capture tab)." },
 
             { Action::None, Scope::Viewer, k_VkLeft, false,
                 "Overlay Mode", "LEFT / RIGHT", "Cycles the overlay panel while the map is active." },

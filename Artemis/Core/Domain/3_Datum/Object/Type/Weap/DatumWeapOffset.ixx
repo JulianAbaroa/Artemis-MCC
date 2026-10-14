@@ -8,6 +8,10 @@ import std;
 
 export namespace Datum::Object::Type::Weap::Offset
 {
+    // First datum byte of the component and the byte after its last one.
+    constexpr std::size_t k_ComponentStart = 0x1C4;
+    constexpr std::size_t k_ComponentEnd = 0x338;
+
     constexpr std::size_t k_WeaponFlags                                 = 0x1C8;  // flags16. [Ready A=4, Ready B=5]
     constexpr std::size_t k_InputMask                                   = 0x1CA;  // flags16. [Control 34=0, Fire=1, Control 31=2, Control 32=3, Control 33=4, Reload=5, Melee=6, Zoom=7, Control 43=8]
     constexpr std::size_t k_AnalogTrigger                               = 0x1CC;  // uint8.

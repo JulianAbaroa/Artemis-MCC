@@ -12,6 +12,7 @@ export namespace UI::Launcher::Type
         DefinitionsInspector,
         Settings,
         MemoryScanner,
+        Capture,
         Logs,
 
         Count

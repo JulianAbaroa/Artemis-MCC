@@ -17,13 +17,16 @@ namespace
     constexpr float k_CardMinWidth{ 250.0f };
     constexpr float k_CardHeight{ 290.0f };
     constexpr float k_CardPadding{ 25.0f };
+
+    // Room the pin box takes before the tag name.
+    constexpr float k_PinWidth{ 30.0f };
     constexpr float k_CardSpacing{ 8.0f };
 
     // Returns the card width that fits the tag name.
     auto CardWidth(const std::string& tagName) -> float
     {
         const std::string text{ "Tag: " + tagName };
-        return (std::max)(k_CardMinWidth, ImGui::CalcTextSize(text.c_str()).x + k_CardPadding);
+        return (std::max)(k_CardMinWidth, ImGui::CalcTextSize(text.c_str()).x + k_CardPadding + k_PinWidth);
     }
 
     // Returns the display name of a Forge physics.
@@ -153,6 +156,11 @@ namespace UI::ObjectTable::System
 
     auto ObjectTableUIService::DrawCardHeader(const AliveObject& object) -> void
     {
+        bool isPinned{ m_CaptureUIStore.IsPinned(object.Handle) };
+        if (ImGui::Checkbox("##pin", &isPinned)) m_CaptureUIStore.SetPinned(object.Handle, isPinned);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Pin for the datum captures (F7).");
+        ImGui::SameLine();
+
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
 
         ImGui::TextUnformatted("Tag:");

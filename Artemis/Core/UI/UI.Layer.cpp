@@ -25,6 +25,9 @@ namespace UI
 
     auto Layer::DrawFrame(const FrameContext& frame) -> void
     {
+        // The capture hotkey works with the UI closed, so it runs before the backend check.
+        m_CaptureUIService.Update();
+
         if (!m_BackendGuiService.IsReady()) return;
 
         const bool isMenuVisible{ m_LauncherUIService.Update() };
@@ -45,6 +48,9 @@ namespace UI
         });
         m_LauncherUIService.DrawTab(Tab::MemoryScanner, "Memory Scanner", [this] {
             m_MemoryScannerUIService.Draw();
+        });
+        m_LauncherUIService.DrawTab(Tab::Capture, "Datum Capture", [this] {
+            m_CaptureUIService.Draw();
         });
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();
