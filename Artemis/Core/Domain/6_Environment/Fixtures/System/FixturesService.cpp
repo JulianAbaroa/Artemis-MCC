@@ -1,5 +1,6 @@
 module Environment.Fixtures.System;
 
+import Common.Semantic.Type;
 import Common.Team.Type;
 import Common.ZoneShape.Type;
 
@@ -15,7 +16,10 @@ namespace
     using AngleType = Tables::Object::Type::Crate::Lift::Angle;
     using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
     using WeaponObject = Tables::Object::Type::Weapon::Weapon;
-    using Role = Relations::Classifier::Type::Role;
+    namespace Subtype = Common::Semantic::Type::Subtype;
+
+    using Common::Semantic::Type::Function;
+    using Common::Semantic::Type::Binding;
     using Fixtures = Environment::Fixtures::Type::Fixtures;
     using BoundaryKind = Environment::Fixtures::Type::Boundary::Kind;
     using ZoneKind = Common::ZoneShape::Type::Kind;
@@ -53,8 +57,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role != Role::CrateObstacle &&
-                classified.Role != Role::SceneryObstacle) continue;
+            if (classified.Function != Function::Prop) continue;
 
             auto objectIt = objects.find(classified.Handle);
             if (objectIt == objects.end()) continue;
@@ -81,7 +84,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role != Role::Spawn) continue;
+            if (classified.Function != Function::SpawnPoint) continue;
 
             auto objectIt = objects.find(classified.Handle);
             if (objectIt == objects.end()) continue;
@@ -124,7 +127,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role != Role::Teleporter) continue;
+            if (classified.Function != Function::Teleporter) continue;
 
             auto objectIt = objects.find(classified.Handle);
             if (objectIt == objects.end()) continue;
@@ -192,7 +195,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role != Role::Lift) continue;
+            if (classified.Function != Function::Lift) continue;
 
             auto objectIt = objects.find(classified.Handle);
             if (objectIt == objects.end()) continue;
@@ -244,7 +247,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role != Role::Shield) continue;
+            if (classified.Function != Function::Barrier) continue;
 
             auto objectIt = objects.find(classified.Handle);
             if (objectIt == objects.end()) continue;
@@ -294,7 +297,7 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            if (classified.Role == Role::ObjectiveSpawn)
+            if (classified.Function == Function::ObjectiveSpawn)
             {
                 auto objectIt = objects.find(classified.Handle);
                 if (objectIt == objects.end()) continue;
@@ -321,8 +324,7 @@ namespace Environment::Fixtures::System
 
                 objectiveSpawns.push_back(objectiveSpawn);
             }
-            else if (classified.Role == Role::ObjectivePickup ||
-                classified.Role == Role::ObjectiveEquipped)
+            else if (classified.Function == Function::ObjectiveItem)
             {
                 auto objectIt = objects.find(classified.Handle);
                 if (objectIt == objects.end()) continue;
@@ -342,11 +344,11 @@ namespace Environment::Fixtures::System
                 objective.LinearVelocity = object.LinearVelocity;
                 objective.AngularVelocity = object.AngularVelocity;
 
-                objective.IsEquipped = (classified.Role == Role::ObjectiveEquipped);
+                objective.IsEquipped = (classified.Binding == Binding::Carried);
 
                 if (objective.IsEquipped)
                 {
-                    objective.CarrierHandle = object.ParentHandle;
+                    objective.CarrierHandle = classified.BoundTo;
                 }
 
                 if (object.Multiplayer) objective.Team = object.Multiplayer->Team;
@@ -371,7 +373,7 @@ namespace Environment::Fixtures::System
             const ZoneShape& shape = object.Multiplayer->Shape;
             const Team team = object.Multiplayer->Team;
 
-            if (classified.Role == Role::ObjectiveZone)
+            if (classified.Function == Function::ObjectiveZone)
             {
                 ObjectiveZone objectiveZone{};
                 objectiveZone.Handle = classified.Handle;
@@ -384,11 +386,8 @@ namespace Environment::Fixtures::System
 
                 objectiveZones.push_back(objectiveZone);
             }
-            else if (classified.Role == Role::Boundary)
+            else if (classified.Function == Function::Boundary)
             {
-                const auto* scenery = std::get_if<SceneryObject>(&object.Specific);
-                if (!scenery) continue;
-
                 Boundary boundary{};
                 boundary.Handle = classified.Handle;
                 boundary.TagName = object.TagName;
@@ -398,14 +397,15 @@ namespace Environment::Fixtures::System
                 boundary.Team = team;
                 boundary.ZoneShape = shape;
 
-                if (scenery->Kind == SceneryKind::SafeBoundary) boundary.Kind = BoundaryKind::Safe;
-                else if (scenery->Kind == SceneryKind::SoftSafeBoundary) boundary.Kind = BoundaryKind::SoftSafe;
-                else if (scenery->Kind == SceneryKind::KillBoundary) boundary.Kind = BoundaryKind::Kill;
-                else if (scenery->Kind == SceneryKind::SoftKillBoundary) boundary.Kind = BoundaryKind::SoftKill;
+                const auto subtype{ static_cast<Subtype::Boundary>(classified.Subtype) };
+                if (subtype == Subtype::Boundary::Safe) boundary.Kind = BoundaryKind::Safe;
+                else if (subtype == Subtype::Boundary::SoftSafe) boundary.Kind = BoundaryKind::SoftSafe;
+                else if (subtype == Subtype::Boundary::Kill) boundary.Kind = BoundaryKind::Kill;
+                else if (subtype == Subtype::Boundary::SoftKill) boundary.Kind = BoundaryKind::SoftKill;
 
                 boundaries.push_back(boundary);
             }
-            else if (classified.Role != Role::Teleporter && classified.Role != Role::ObjectiveSpawn)
+            else if (classified.Function != Function::Teleporter && classified.Function != Function::ObjectiveSpawn)
             {
                 // The teleporters and the objective spawns already carry their own zone.
                 // note: Other kinds of shape (like the 1 seen on the bomb) are not drawable and are left out.
@@ -430,9 +430,11 @@ namespace Environment::Fixtures::System
     {
         for (const auto& classified : classifieds)
         {
-            const bool isExplosive = (classified.Role == Role::Explosive);
-            const bool isPallet = (classified.Role == Role::Pallet);
-            const bool isPortable = (classified.Role == Role::PortableShield);
+            // note: Pallets are props now. Neither they nor the explosives reach the list, since Tables never fills Crate::Destructible.
+            // Kept until Fixtures is split in B4b.
+            const bool isExplosive = (classified.Function == Function::Explosive);
+            const bool isPallet = (classified.Function == Function::Prop);
+            const bool isPortable = (classified.Function == Function::Barrier && classified.Subtype == static_cast<std::uint8_t>(Subtype::Barrier::Portable));
 
             if (!isExplosive && !isPallet && !isPortable) continue;
 

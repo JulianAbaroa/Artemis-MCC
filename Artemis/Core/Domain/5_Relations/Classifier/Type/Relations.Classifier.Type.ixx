@@ -104,6 +104,9 @@ export namespace Relations::Classifier::Type
 
         Type::Source Source{ Type::Source::None };
 
+        // Function the multiplayer object kind of the tag gives, Unknown if none. Kept to audit the catalog against the engine.
+        ::Function MultiplayerFunction{ ::Function::Unknown };
+
         // Capabilities that follow from the tag and the function only.
         Capability Capabilities{ Capability::None };
     };

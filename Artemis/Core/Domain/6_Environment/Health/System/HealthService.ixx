@@ -18,7 +18,6 @@ export namespace Environment::Health::System
     private:
         using AliveObject = Tables::Object::Type::Alive::Object;
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
-        using Classified = Relations::Classifier::Type::Classified;
         using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
         using Health = Environment::Health::Type::Health;
 
@@ -49,8 +48,6 @@ export namespace Environment::Health::System
         DamageSectionsStore& m_DamageSectionsStore;
         ClassifierStore& m_ClassifierStore;
         HealthStore& m_HealthStore;
-
-        static auto HasHealth(const Classified& classified) -> bool;
 
         auto MakeHealth(const AliveObject& object, const ResolvedVitality& layout,
             const DamageSectionTable& damage) const -> Health;

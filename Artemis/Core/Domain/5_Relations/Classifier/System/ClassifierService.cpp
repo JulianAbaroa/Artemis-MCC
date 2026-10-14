@@ -160,6 +160,13 @@ namespace
         return capabilities;
     }
 
+    // Checks whether the catalog and the multiplayer kind of the tag give different functions.
+    auto IsCatalogConflict(const TagClassification& classification) -> bool
+    {
+        return classification.Source == Source::Catalog && classification.MultiplayerFunction != Function::Unknown
+            && classification.MultiplayerFunction != classification.Function;
+    }
+
     // Link of a child object to its parent (05, section 5).
     // param parentKind: Invalid when the parent is not in the object table.
     // note: Carried = item held by a biped. Seated = biped inside a vehicle. Attached = any other child.
@@ -234,6 +241,7 @@ namespace Relations::Classifier::System
         std::size_t multiplayerKind{ 0 };
         std::size_t kindDefault{ 0 };
         std::size_t unknown{ 0 };
+        std::size_t conflicts{ 0 };
         std::map<Function, std::size_t> defaults{};
 
         for (const auto& [key, classification] : m_TagClassificationsStore.GetAll())
@@ -245,6 +253,8 @@ namespace Relations::Classifier::System
             case Source::KindDefault: ++kindDefault; ++defaults[classification.Function]; break;
             default: ++unknown; break;
             }
+
+            if (IsCatalogConflict(classification)) ++conflicts;
         }
 
         std::string defaultText{};
@@ -254,9 +264,9 @@ namespace Relations::Classifier::System
             defaultText += std::format("{} {}", NameOf(function), count);
         }
 
-        m_LogsService.Message("[ClassifierService] INFO: Classified {} tags. Catalog {} | MultiplayerKind {} | KindDefault {} ({}) | Unknown {}.",
+        m_LogsService.Message("[ClassifierService] INFO: Classified {} tags. Catalog {} | MultiplayerKind {} | KindDefault {} ({}) | Unknown {} | Conflicts {}.",
             catalog + multiplayerKind + kindDefault + unknown, catalog, multiplayerKind, kindDefault,
-            defaultText.empty() ? "none" : defaultText, unknown);
+            defaultText.empty() ? "none" : defaultText, unknown, conflicts);
     }
 
     auto ClassifierService::FindTagClassification(const AliveObject& object) -> TagClassification
@@ -275,6 +285,12 @@ namespace Relations::Classifier::System
         if (classification.Function == Function::Unknown)
         {
             m_LogsService.Message("[ClassifierService] WARNING: No function for the {} tag {}.", object.FourCC, object.TagName);
+        }
+
+        if (IsCatalogConflict(classification))
+        {
+            m_LogsService.Message("[ClassifierService] WARNING: The catalog labels the {} tag {} as {}, its multiplayer kind says {}.",
+                object.FourCC, object.TagName, NameOf(classification.Function), NameOf(classification.MultiplayerFunction));
         }
 
         return classification;
@@ -314,6 +330,7 @@ namespace Relations::Classifier::System
         }
 
         TagClassification classification{};
+        classification.MultiplayerFunction = multiplayer.Function;
 
         if (const TagLabel* label{ FindTagLabel(object.FourCC, object.TagName) }; label != nullptr)
         {

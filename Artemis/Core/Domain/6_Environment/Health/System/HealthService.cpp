@@ -1,5 +1,7 @@
 module Environment.Health.System;
 
+import Common.Semantic.Type;
+
 namespace
 {
     using AliveObject = Tables::Object::Type::Alive::Object;
@@ -7,7 +9,8 @@ namespace
     using VitalitySection = Resolved::Vitality::Type::Vitality::Section;
     using Classified = Relations::Classifier::Type::Classified;
     using Classifieds = std::vector<Classified>;
-    using Role = Relations::Classifier::Type::Role;
+    using Common::Semantic::Type::Capability;
+    using Common::Semantic::Type::HasCapability;
 }
 
 namespace Environment::Health::System
@@ -26,7 +29,7 @@ namespace Environment::Health::System
 
         for (const Classified& classified : classifieds)
         {
-            if (!this->HasHealth(classified)) continue;
+            if (!HasCapability(classified.Capabilities, Capability::HasVitality)) continue;
 
             auto objectIt = objectTable.find(classified.Handle);
             if (objectIt == objectTable.end()) continue;
@@ -75,22 +78,6 @@ namespace Environment::Health::System
         }
 
         return health;
-    }
-
-    auto HealthService::HasHealth(const Classified& classified) -> bool
-    {
-        switch (classified.Role)
-        {
-        case Role::Biped:
-        case Role::Vehicle:
-        case Role::VehiclePart:
-        case Role::PortableShield:
-        case Role::Explosive:
-        case Role::Pallet:
-            return true;
-        default:
-            return false;
-        }
     }
 
     auto HealthService::Cleanup() -> void

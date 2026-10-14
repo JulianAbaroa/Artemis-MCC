@@ -60,7 +60,7 @@ export namespace Relations::Classifier::System
         auto LogSummary() -> void;
 
         // Returns the classification of the tag of the object, from the store once the map definitions are ready.
-        // note: Logs a warning the first time a tag ends Unknown.
+        // note: Logs a warning the first time a tag ends Unknown, or when the catalog and the multiplayer kind disagree on its function.
         auto FindTagClassification(const AliveObject& object) -> TagClassification;
 
         // Classifies a tag: catalog, then multiplayer object kind, then kind default. Subtypes follow the same order.

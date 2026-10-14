@@ -1,12 +1,14 @@
 module Relations.PlayerGraph.System;
 
-import Relations.Classifier.Type;
+import Common.Semantic.Type;
 import Resolved.Definitions.Type;
+import Relations.Classifier.Type;
 
 namespace
 {
 	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-	using Role = Relations::Classifier::Type::Role;
+	using Common::Semantic::Type::Function;
+	using Common::Semantic::Type::Binding;
 	using Classified = Relations::Classifier::Type::Classified;
 	using Classifieds = std::vector<Classified>;
 }
@@ -34,9 +36,9 @@ namespace Relations::PlayerGraph::System
 		const ObjectNodes& objectNodes = *objectGraphPtr;
 		const Classifieds& classifieds = *classifiedsPtr;
 
-		std::unordered_map<std::uint32_t, Role> roles;
-		roles.reserve(classifieds.size());
-		for (const auto& classified : classifieds) roles[classified.Handle] = classified.Role;
+		std::unordered_map<std::uint32_t, Function> functions;
+		functions.reserve(classifieds.size());
+		for (const auto& classified : classifieds) functions[classified.Handle] = classified.Function;
 
 		for (const auto& [handle, player] : playerTable)
 		{
@@ -78,15 +80,9 @@ namespace Relations::PlayerGraph::System
 
 			for (const auto& classified : classifieds)
 			{
-				if (classified.Role != Role::ArmorAbilityEquipped)
-				{
-					continue;
-				}
+				if (classified.Function != Function::ArmorAbility || classified.Binding != Binding::Carried) continue;
 
-				auto it = objectNodes.find(classified.Handle);
-				if (it == objectNodes.end()) continue;
-
-				if (it->second.ParentHandle == tree.BipedHandle)
+				if (classified.BoundTo == tree.BipedHandle)
 				{
 					tree.AbilityHandle = classified.Handle;
 					break;
@@ -100,8 +96,8 @@ namespace Relations::PlayerGraph::System
 				{
 					for (const std::uint32_t child : bipedNodeIt->second.ChildrenHandles)
 					{
-						const auto roleIt = roles.find(child);
-						if (roleIt == roles.end() || roleIt->second != Role::WeaponEquipped) continue;
+						const auto functionIt = functions.find(child);
+						if (functionIt == functions.end() || functionIt->second != Function::Weapon) continue;
 
 						tree.HeldWeaponHandles.push_back(child);
 					}
