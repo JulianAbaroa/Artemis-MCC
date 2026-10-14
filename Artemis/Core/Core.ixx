@@ -69,7 +69,7 @@ export namespace Core
         Resolved::Layer m_Resolved{ m_Service, m_Platform, m_Map };
         Datum::Layer m_Datum{ m_Service, m_Platform };
         Tables::Layer m_Tables{ m_Service, m_Platform, m_Map, m_Datum };
-        Relations::Layer m_Relations{ m_Service, m_Platform, m_Tables };
+        Relations::Layer m_Relations{ m_Service, m_Platform, m_Resolved, m_Tables };
         Environment::Layer m_Environment{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations };
         Egocentric::Layer m_Egocentric{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment };
         Export::Layer m_Export{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };

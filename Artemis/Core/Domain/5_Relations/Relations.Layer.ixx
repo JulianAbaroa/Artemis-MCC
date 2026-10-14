@@ -2,6 +2,7 @@ export module Relations.Layer;
 
 import Service.Layer;
 import Platform.Layer;
+import Resolved.Layer;
 import Tables.Layer;
 import Relations.Classifier.State;
 import Relations.Classifier.System;
@@ -24,8 +25,8 @@ export namespace Relations
 		using PlayerGraphService = Relations::PlayerGraph::System::PlayerGraphService;
 
 	public:
-		Layer(Service::Layer& service, Platform::Layer& platform, Tables::Layer& tables) :
-			m_ClassifierService(service.m_LogsService, tables.m_ObjectStore, m_ClassifierStore),
+		Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved, Tables::Layer& tables) :
+			m_ClassifierService(service.m_LogsService, resolved.m_DefinitionsStore, resolved.m_VitalityStore, tables.m_ObjectStore, m_ClassifierStore),
 			m_ObjectGraphService(service.m_LogsService, tables.m_ObjectStore, m_ObjectGraphStore),
 			m_PlayerGraphService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_ObjectGraphStore, m_PlayerGraphStore)
 		{
