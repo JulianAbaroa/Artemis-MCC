@@ -14,13 +14,13 @@ namespace
     using std::chrono::seconds;
     using std::chrono::zoned_time;
 
-    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-    using RawObject = Datum::Object::Type::Raw::RawObject;
-    using Snapshot = Datum::Object::Type::Raw::Snapshot;
-    using ComponentRange = UI::Capture::Type::ComponentRange;
-    using Source = UI::Capture::Type::Source;
-    using Target = UI::Capture::Type::Target;
-    using ByteChange = UI::Capture::Type::ByteChange;
+    using Resolved::Definitions::Type::Object::ObjectKind;
+    using Datum::Object::Type::Raw::RawObject;
+    using Datum::Object::Type::Raw::Snapshot;
+    using UI::Capture::Type::ComponentRange;
+    using UI::Capture::Type::Source;
+    using UI::Capture::Type::Target;
+    using UI::Capture::Type::ByteChange;
 
     using UI::Capture::Type::k_LabelSize;
 
