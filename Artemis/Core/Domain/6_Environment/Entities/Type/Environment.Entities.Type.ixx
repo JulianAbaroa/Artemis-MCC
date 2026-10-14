@@ -34,7 +34,7 @@ export namespace Environment::Entities::Type
         std::uint8_t Subtype{};
         ::Group Group{ ::Group::Unknown };
 
-        // Dead when the critical section has no vitality left. Objects without vitality are always Active.
+        // Dead when the first damage section has no vitality left (D85). Objects without vitality are always Active.
         ::Lifecycle Lifecycle{ ::Lifecycle::Active };
 
         // Link to the parent and the parent handle, or 0xFFFFFFFF when Free.
@@ -58,8 +58,8 @@ export namespace Environment::Entities::Type
         Vec3 LinearVelocity{};
         Vec3 AngularVelocity{};
 
-        // Vitality of the critical section, from 0 to 1.
-        // note: Only objects with HasVitality, a critical section and damage sections in the datum.
+        // Vitality of the first damage section, from 0 to 1.
+        // note: Only objects with HasVitality and damage sections in the datum.
         std::optional<float> Vitality{};
     };
 

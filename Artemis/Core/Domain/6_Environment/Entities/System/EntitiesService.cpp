@@ -24,6 +24,17 @@ namespace
     // Parents walked up to the root of an object. Guards against a broken chain.
     constexpr int k_MaxParentDepth{ 16 };
 
+    // Damage section whose vitality kills the object at 0 (D85).
+    // note: The sections the layout marks critical are not reliable: the headshot section of a Spartan stays at 1 after a body kill,
+    // and the Ghost, the Falcon and the plasma battery have none.
+    constexpr std::size_t k_LifeSection{ 0 };
+
+    // Removes a capability from a set.
+    auto Without(Capability set, Capability capability) -> Capability
+    {
+        return static_cast<Capability>(static_cast<std::uint16_t>(set) & ~static_cast<std::uint16_t>(capability));
+    }
+
     // Checks whether an object moves with physics on its own (05, section 6, D79, D80).
     // note: The Forge physics of its placement decides, and only Normal moves. Without placement, the kinds that always move.
     auto IsOwnDynamic(ObjectKind kind, const std::optional<Placement>& placement) -> bool
@@ -123,20 +134,24 @@ namespace Environment::Entities::System
 
         Capability capabilities{ classified.Capabilities };
 
-        // note: A layout with a critical section is what lets the object die. Its vitality decides the lifecycle.
         if (HasCapability(capabilities, Capability::HasVitality))
         {
-            const Vitality* layout{ m_VitalityStore.Get(object.TagName) };
-            if (layout != nullptr && layout->CriticalSection >= 0)
-            {
-                capabilities = capabilities | Capability::IsDestructible;
-                entity.Vitality = this->FindCriticalVitality(object, *layout);
-            }
+            capabilities = capabilities | Capability::IsDestructible;
+            entity.Vitality = this->FindVitality(object);
         }
 
         if (entity.Vitality && *entity.Vitality <= 0.0f) entity.Lifecycle = Lifecycle::Dead;
 
-        if (this->IsDynamic(object, objectTable)) capabilities = capabilities | Capability::IsDynamic;
+        // note: A child follows the root of its parent chain: a carried weapon or a seated biped moves with its holder.
+        const AliveObject& root{ this->RootOf(object, objectTable) };
+        if (IsOwnDynamic(root.Profile.ObjectKind, root.Placement)) capabilities = capabilities | Capability::IsDynamic;
+
+        // note: A destroyed vehicle, and the turrets attached to it, cannot be entered. Free and occupied seats are per seat (Details, View).
+        if (HasCapability(capabilities, Capability::IsEnterable))
+        {
+            const bool isRootDead{ &root != &object && this->FindVitality(root).value_or(1.0f) <= 0.0f };
+            if (entity.Lifecycle == Lifecycle::Dead || isRootDead) capabilities = Without(capabilities, Capability::IsEnterable);
+        }
 
         // note: A Fixed or Phased item stays where it was dropped and cannot be picked up again (D80).
         const bool isStatic{ entity.Physics == Physics::Fixed || entity.Physics == Physics::Phased };
@@ -152,7 +167,7 @@ namespace Environment::Entities::System
         return entity;
     }
 
-    auto EntitiesService::IsDynamic(const AliveObject& object, const ObjectTable& objectTable) const -> bool
+    auto EntitiesService::RootOf(const AliveObject& object, const ObjectTable& objectTable) const -> const AliveObject&
     {
         const AliveObject* root{ &object };
 
@@ -164,20 +179,18 @@ namespace Environment::Entities::System
             root = &parentIt->second;
         }
 
-        return IsOwnDynamic(root->Profile.ObjectKind, root->Placement);
+        return *root;
     }
 
-    auto EntitiesService::FindCriticalVitality(const AliveObject& object, const Vitality& layout) const -> std::optional<float>
+    auto EntitiesService::FindVitality(const AliveObject& object) const -> std::optional<float>
     {
-        if (static_cast<std::size_t>(layout.CriticalSection) >= layout.Sections.size()) return std::nullopt;
+        const Vitality* layout{ m_VitalityStore.Get(object.TagName) };
+        if (layout == nullptr || layout->Sections.empty()) return std::nullopt;
 
         const auto* damage{ m_DamageSectionsStore.Get(object.Handle) };
-        if (damage == nullptr) return std::nullopt;
+        if (damage == nullptr || damage->Sections.size() <= k_LifeSection) return std::nullopt;
 
-        const int sectionIndex{ layout.Sections[layout.CriticalSection].SectionIndex };
-        if (sectionIndex < 0 || static_cast<std::size_t>(sectionIndex) >= damage->Sections.size()) return std::nullopt;
-
-        return damage->Sections[sectionIndex].Vitality;
+        return damage->Sections[k_LifeSection].Vitality;
     }
 
     auto EntitiesService::Cleanup() -> void

@@ -65,12 +65,11 @@ export namespace Environment::Entities::System
         // Builds the entity of a classified object with its lifecycle and its dynamic capabilities.
         auto MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable) -> Entity;
 
-        // Checks whether the object moves with physics (05, section 6).
-        // note: A child follows the root of its parent chain, so a carried weapon or a seated biped moves with its holder.
-        auto IsDynamic(const AliveObject& object, const ObjectTable& objectTable) const -> bool;
+        // Returns the last object of the parent chain, or the object itself when it is Free.
+        auto RootOf(const AliveObject& object, const ObjectTable& objectTable) const -> const AliveObject&;
 
-        // Returns the vitality of the critical section of the layout, from 0 to 1.
-        // return: Empty when the datum has no damage section for it.
-        auto FindCriticalVitality(const AliveObject& object, const Vitality& layout) const -> std::optional<float>;
+        // Returns the vitality of the first damage section, from 0 to 1. The object is dead when it reaches 0 (D85).
+        // return: Empty when the tag has no vitality layout or the datum has no damage sections.
+        auto FindVitality(const AliveObject& object) const -> std::optional<float>;
     };
 }
