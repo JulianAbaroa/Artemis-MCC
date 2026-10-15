@@ -57,6 +57,7 @@ namespace Export::Tick::System
 
         // --- Layer 5: Environment ---
         tick.Entities = m_EntitiesStore.Acquire();
+        tick.Players = m_PlayersStore.Acquire();
         tick.VitalityDetails = m_VitalityDetailsStore.Acquire();
         tick.ZoneDetails = m_ZoneDetailsStore.Acquire();
         tick.TeleporterDetails = m_TeleporterDetailsStore.Acquire();

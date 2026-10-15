@@ -625,6 +625,18 @@
     <Filter Include="Core\Domain\6_Environment\Entities\System">
       <UniqueIdentifier>{edbc0e99-a560-4b12-a33c-d453e2237b04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\6_Environment\Players">
+      <UniqueIdentifier>{eb8e4a17-d082-4ecd-9a1f-4456ca7e7326}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Players\Type">
+      <UniqueIdentifier>{ae2db257-5e85-4759-89e8-cf6810881691}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Players\State">
+      <UniqueIdentifier>{7cfe0a56-958a-468d-be6d-74ef2ea1ee6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Players\System">
+      <UniqueIdentifier>{a753318d-5ead-43be-a516-7b3f2b3e8059}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\7_Egocentric">
       <UniqueIdentifier>{40efa74b-c5b9-447b-89e7-7ad9bed66f3f}</UniqueIdentifier>
     </Filter>
@@ -1708,6 +1720,18 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx">
       <Filter>Core\Domain\6_Environment\Entities\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Players\Type\Environment.Players.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Players\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Players\State\PlayersStore.ixx">
+      <Filter>Core\Domain\6_Environment\Players\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.cpp">
+      <Filter>Core\Domain\6_Environment\Players\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.ixx">
+      <Filter>Core\Domain\6_Environment\Players\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
       <Filter>Core\Domain\5_Relations\ObjectGraph\Type</Filter>

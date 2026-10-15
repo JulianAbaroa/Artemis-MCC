@@ -8,6 +8,7 @@ import Relations.ObjectGraph.State;
 import Relations.PlayerGraph.State;
 import Environment.Details.State;
 import Environment.Entities.State;
+import Environment.Players.State;
 import Environment.Aim.State;
 import Egocentric.Self.State;
 import Egocentric.Affordance.State;
@@ -30,6 +31,7 @@ export namespace Export::Tick::System
 		using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
 		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
 		using EntitiesStore = Environment::Entities::State::EntitiesStore;
+		using PlayersStore = Environment::Players::State::PlayersStore;
 		using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
 		using ZoneDetailsStore = Environment::Details::State::ZoneDetailsStore;
 		using TeleporterDetailsStore = Environment::Details::State::TeleporterDetailsStore;
@@ -49,7 +51,7 @@ export namespace Export::Tick::System
 		TickService(ObjectTableStore& objectStore, PlayerTableStore& playerStore,
 			InteractionStore& interactionStore, ClassifierStore& classifierStore,
 			ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
-			EntitiesStore& entitiesStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
+			EntitiesStore& entitiesStore, PlayersStore& playersStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
 			TeleporterDetailsStore& teleporterDetailsStore, LiftDetailsStore& liftDetailsStore, BarrierDetailsStore& barrierDetailsStore,
 			AimStore& aimStore, SelfStore& selfStore,
 			AffordanceStore& affordanceStore, RaycastStore& raycastStore,
@@ -57,7 +59,7 @@ export namespace Export::Tick::System
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
 			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
-			m_EntitiesStore(entitiesStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
+			m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
 			m_TeleporterDetailsStore(teleporterDetailsStore), m_LiftDetailsStore(liftDetailsStore), m_BarrierDetailsStore(barrierDetailsStore),
 			m_AimStore(aimStore), m_SelfStore(selfStore),
 			m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
@@ -74,6 +76,7 @@ export namespace Export::Tick::System
 		ObjectGraphStore& m_ObjectGraphStore;
 		PlayerGraphStore& m_PlayerGraphStore;
 		EntitiesStore& m_EntitiesStore;
+		PlayersStore& m_PlayersStore;
 		VitalityDetailsStore& m_VitalityDetailsStore;
 		ZoneDetailsStore& m_ZoneDetailsStore;
 		TeleporterDetailsStore& m_TeleporterDetailsStore;

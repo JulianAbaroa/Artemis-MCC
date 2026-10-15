@@ -801,6 +801,10 @@
     <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Players\State\PlayersStore.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Players\Type\Environment.Players.Type.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\State\AffordanceStore.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.cpp" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.ixx" />

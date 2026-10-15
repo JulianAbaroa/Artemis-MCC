@@ -16,7 +16,7 @@ export namespace Viewer::Hud::System
         PlayerLabels() = default;
         ~PlayerLabels() = default;
 
-        // Adds the gamertag, weapons and distance of every player to the canvas.
+        // Adds the gamertag, vitality, weapons and distance of every live player to the canvas.
         static auto Collect(LabelCanvas& canvas, const LabelContext& context) -> void;
     };
 }

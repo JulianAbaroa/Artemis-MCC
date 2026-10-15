@@ -8,6 +8,7 @@ import Relations.ObjectGraph.Type;
 import Relations.PlayerGraph.Type;
 import Environment.Details.Type;
 import Environment.Entities.Type;
+import Environment.Players.Type;
 import Environment.Aim.Type;
 import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
@@ -32,6 +33,9 @@ export namespace Export::Tick::Type
 
 	using Entity = Environment::Entities::Type::Entity;
 	using Entities = Environment::Entities::Type::Entities;
+	using Body = Environment::Players::Type::Body;
+	using Player = Environment::Players::Type::Player;
+	using Players = Environment::Players::Type::Players;
 	using VitalityDetail = Environment::Details::Type::VitalityDetail;
 	using VitalityDetails = Environment::Details::Type::VitalityDetails;
 	using ZoneDetail = Environment::Details::Type::ZoneDetail;
@@ -73,6 +77,7 @@ export namespace Export::Tick::Type
 
 		// --- Layer 5: Environment ---
 		std::shared_ptr<const Entities> Entities;
+		std::shared_ptr<const Players> Players;
 		std::shared_ptr<const VitalityDetails> VitalityDetails;
 		std::shared_ptr<const ZoneDetails> ZoneDetails;
 		std::shared_ptr<const TeleporterDetails> TeleporterDetails;

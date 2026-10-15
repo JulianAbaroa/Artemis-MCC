@@ -9,6 +9,8 @@ import Environment.Details.State;
 import Environment.Details.System;
 import Environment.Entities.State;
 import Environment.Entities.System;
+import Environment.Players.State;
+import Environment.Players.System;
 import Environment.Collidable.State;
 import Environment.Collidable.System;
 import Environment.Aim.State;
@@ -26,6 +28,7 @@ export namespace Environment
 		using BarrierDetailsStore = Environment::Details::State::BarrierDetailsStore;
 		using EntitiesStore = Environment::Entities::State::EntitiesStore;
 		using CarriedHandlesStore = Environment::Entities::State::CarriedHandlesStore;
+		using PlayersStore = Environment::Players::State::PlayersStore;
 		using CollidableStore = Environment::Collidable::State::CollidableStore;
 		using AimStore = Environment::Aim::State::AimStore;
 
@@ -35,6 +38,7 @@ export namespace Environment
 		using LiftDetailsService = Environment::Details::System::LiftDetailsService;
 		using BarrierDetailsService = Environment::Details::System::BarrierDetailsService;
 		using EntitiesService = Environment::Entities::System::EntitiesService;
+		using PlayersService = Environment::Players::System::PlayersService;
 		using CollidableService = Environment::Collidable::System::CollidableService;
 		using AimService = Environment::Aim::System::AimService;
 
@@ -47,6 +51,7 @@ export namespace Environment
 			m_LiftDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_LiftDetailsStore),
 			m_BarrierDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_BarrierDetailsStore),
 			m_EntitiesService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
+			m_PlayersService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
 			m_CollidableService(service.m_LogsService, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
 			m_AimService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore)
 		{
@@ -57,6 +62,7 @@ export namespace Environment
 				m_LiftDetailsService.Cleanup();
 				m_BarrierDetailsService.Cleanup();
 				m_EntitiesService.Cleanup();
+				m_PlayersService.Cleanup();
 				m_CollidableService.Cleanup();
 				m_AimService.Cleanup();
 			});
@@ -74,6 +80,7 @@ export namespace Environment
 		BarrierDetailsStore m_BarrierDetailsStore;
 		EntitiesStore m_EntitiesStore;
 		CarriedHandlesStore m_CarriedHandlesStore;
+		PlayersStore m_PlayersStore;
 		CollidableStore m_CollidableStore;
 		AimStore m_AimStore;
 
@@ -84,6 +91,7 @@ export namespace Environment
 		LiftDetailsService m_LiftDetailsService;
 		BarrierDetailsService m_BarrierDetailsService;
 		EntitiesService m_EntitiesService;
+		PlayersService m_PlayersService;
 		CollidableService m_CollidableService;
 		AimService m_AimService;
 	};

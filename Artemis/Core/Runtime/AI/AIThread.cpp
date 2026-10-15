@@ -122,6 +122,7 @@ namespace Runtime::Thread
         m_Environment.m_LiftDetailsService.Update();
         m_Environment.m_BarrierDetailsService.Update();
         m_Environment.m_EntitiesService.Update();
+        m_Environment.m_PlayersService.Update();
         m_Environment.m_CollidableService.Update(m_ViewerCameraStore.IsActive());
         m_Environment.m_AimService.Update();
 

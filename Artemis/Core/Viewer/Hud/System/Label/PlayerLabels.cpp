@@ -6,6 +6,7 @@ module Viewer.Hud.System;
 import :PlayerLabels;
 
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Export.Tick.Type;
 import Resolved.World.Type;
 import Viewer.Options.Type;
@@ -18,7 +19,11 @@ namespace
     using Vec3 = Common::Math::Type::Vec3;
     using Flag = Viewer::Options::Type::Flag;
     using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
-    using PlayerTree = Export::Tick::Type::PlayerTree;
+    using Common::Semantic::Type::Function;
+    using Common::Semantic::Type::Binding;
+    using Export::Tick::Type::Entity;
+    using Export::Tick::Type::Player;
+    using Export::Tick::Type::Body;
     using LabelRow = Viewer::Hud::Type::LabelRow;
 
     using Viewer::Style::Type::k_Health;
@@ -40,46 +45,31 @@ namespace Viewer::Hud::System
         const auto& tick = context.Frame;
         const auto& options = context.Options;
 
-        if (!tick.PlayerTable || !tick.ObjectTable) return;
+        if (!tick.Players || !tick.Entities || !tick.ObjectTable) return;
 
         const bool showGamertag = options.IsEnabled(Flag::PlayerGamertag);
         const bool useTeamColor = options.IsEnabled(Flag::PlayerTeamColor);
         const bool showDistance = options.IsEnabled(Flag::PlayerDistance);
+        const bool showVitality = options.IsEnabled(Flag::PlayerVitality);
         const bool showPrimary = options.IsEnabled(Flag::PlayerWeaponPrimary);
         const bool showSecondary = options.IsEnabled(Flag::PlayerWeaponSecondary);
         const bool showHeld = options.IsEnabled(Flag::PlayerWeaponHeld);
         const bool showEquipped = options.IsEnabled(Flag::PlayerWeaponEquipped);
         const bool showSelf = options.IsEnabled(Flag::PlayerSelf);
 
-        if (!showGamertag && !showDistance && !showPrimary && !showSecondary && !showHeld && !showEquipped) return;
+        if (!showGamertag && !showDistance && !showVitality && !showPrimary && !showSecondary && !showHeld && !showEquipped) return;
 
-        auto treeOf = [&](std::uint32_t playerHandle) -> const PlayerTree*
+        // note: Weapons carried by each biped, to compare against the slots of the loadout.
+        std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> heldByBiped{};
+        if (showHeld)
         {
-            if (!tick.PlayerGraph) return nullptr;
-
-            for (const auto& tree : *tick.PlayerGraph)
+            for (const Entity& entity : tick.Entities->Rows)
             {
-                if (tree.Handle == playerHandle) return &tree;
+                if (entity.Function != Function::Weapon || entity.Binding != Binding::Carried) continue;
+
+                heldByBiped[entity.BoundTo].push_back(entity.Handle);
             }
-
-            return nullptr;
-        };
-
-        auto heldNames = [&](const PlayerTree* tree) -> std::vector<std::string>
-        {
-            std::vector<std::string> names{};
-            if (!tree) return names;
-
-            for (const std::uint32_t weapon : tree->HeldWeaponHandles)
-            {
-                const auto objectIt = tick.ObjectTable->find(weapon);
-                if (objectIt == tick.ObjectTable->end()) continue;
-
-                names.push_back(ShortTagName(objectIt->second.TagName));
-            }
-
-            return names;
-        };
+        }
 
         auto weaponName = [&](std::uint32_t handle) -> std::string
         {
@@ -91,24 +81,24 @@ namespace Viewer::Hud::System
             return ShortTagName(it->second.TagName);
         };
 
-        for (const auto& entry : *tick.PlayerTable)
+        for (const Player& player : tick.Players->Rows)
         {
-            const auto& player = entry.second;
+            if (!player.IsAlive()) continue;
 
-            const auto bipedIt = tick.ObjectTable->find(player.AliveBipedHandle);
-            if (bipedIt == tick.ObjectTable->end()) continue;
+            const Entity* biped = tick.Entities->Find(player.BipedHandle);
+            if (!biped) continue;
 
-            const bool isSelf = player.AliveBipedHandle == context.SelfBiped;
+            const bool isSelf = player.BipedHandle == context.SelfBiped;
             if (!showSelf && isSelf) continue;
 
-            const auto& biped = bipedIt->second;
+            const Body& body = *player.Body;
 
-            Vec3 anchor{ biped.BoundingCenter.X, biped.BoundingCenter.Y, biped.BoundingCenter.Z + 0.8f };
+            Vec3 anchor{ biped->BoundingCenter.X, biped->BoundingCenter.Y, biped->BoundingCenter.Z + 0.8f };
             bool hasAnchor{ false };
 
             if (tick.Aims)
             {
-                const auto aimIt = tick.Aims->find(player.AliveBipedHandle);
+                const auto aimIt = tick.Aims->find(player.BipedHandle);
                 if (aimIt != tick.Aims->end())
                 {
                     for (const auto& section : aimIt->second.Sections)
@@ -138,37 +128,45 @@ namespace Viewer::Hud::System
 
             if (showGamertag)
             {
-                const std::string& name = player.Gamertag.empty() ? player.Tag : player.Gamertag;
-
-                rows.push_back(LabelRow{ name.empty() ? std::string{ "Player" } : name,
+                rows.push_back(LabelRow{ player.Name.empty() ? std::string{ "Player" } : player.Name,
                     useTeamColor ? teamColor : IM_COL32(255, 255, 255, 255) });
             }
 
-            std::vector<std::string> held{};
-            if (showHeld || showEquipped) held = heldNames(treeOf(entry.first));
+            if (showVitality)
+            {
+                const std::string shield = body.Shield ? std::format("{:.2f}", *body.Shield) : std::string{ "-" };
+                const std::string health = biped->Vitality ? std::format("{:.2f}", *biped->Vitality) : std::string{ "-" };
+
+                rows.push_back(LabelRow{ "Sh: " + shield + "  Hp: " + health, ToImColor(k_Health) });
+            }
 
             if (showEquipped)
             {
-                rows.push_back(LabelRow{ "W: " + (held.empty() ? std::string{ "none" } : held.front()), k_WeaponColor });
+                rows.push_back(LabelRow{ "W: " + weaponName(body.Loadout.EquippedWeapon), k_WeaponColor });
             }
 
             if (showPrimary)
             {
-                rows.push_back(LabelRow{ "P: " + weaponName(player.PrimaryWeaponHandle), k_WeaponColor });
+                rows.push_back(LabelRow{ "P: " + weaponName(body.Loadout.PrimaryWeapon), k_WeaponColor });
             }
 
             if (showSecondary)
             {
-                rows.push_back(LabelRow{ "S: " + weaponName(player.SecondaryWeaponHandle), k_WeaponColor });
+                rows.push_back(LabelRow{ "S: " + weaponName(body.Loadout.SecondaryWeapon), k_WeaponColor });
             }
 
             if (showHeld)
             {
                 std::string joined{};
-                for (const std::string& name : held)
+
+                const auto heldIt = heldByBiped.find(player.BipedHandle);
+                if (heldIt != heldByBiped.end())
                 {
-                    if (!joined.empty()) joined += ", ";
-                    joined += name;
+                    for (const std::uint32_t weapon : heldIt->second)
+                    {
+                        if (!joined.empty()) joined += ", ";
+                        joined += weaponName(weapon);
+                    }
                 }
 
                 rows.push_back(LabelRow{ "H: " + (joined.empty() ? std::string{ "none" } : joined), k_WeaponColor });
@@ -176,12 +174,12 @@ namespace Viewer::Hud::System
 
             if (showDistance && !isSelf)
             {
-                rows.push_back(DistanceRow(context, biped.BoundingCenter, k_MutedColor));
+                rows.push_back(DistanceRow(context, biped->BoundingCenter, k_MutedColor));
             }
 
             canvas.Add(anchor, std::move(rows), ToImColor(k_Health), teamColor,
-                player.AliveBipedHandle == context.Selected ? k_SelectedPriority : 0.0f,
-                player.AliveBipedHandle);
+                player.BipedHandle == context.Selected ? k_SelectedPriority : 0.0f,
+                player.BipedHandle);
         }
     }
 }

@@ -28,6 +28,7 @@ export namespace Viewer::Options::Type
         PlayerGamertag,
         PlayerTeamColor,
         PlayerDistance,
+        PlayerVitality,
         PlayerWeaponEquipped,
         PlayerWeaponPrimary,
         PlayerWeaponSecondary,
@@ -177,17 +178,20 @@ export namespace Viewer::Options::Type
         { Flag::PlayerDistance, Group::Players, "PlayerDistance", "Distance to local player",
             "Shows the distance in world units from the local player to each player. Shows n/a while the local player is dead.", false },
 
+        { Flag::PlayerVitality, Group::Players, "PlayerVitality", "Shield and health",
+            "Shield (first shield section) and health (life section) of the player's biped, from 0 to 1.", false },
+
         { Flag::PlayerWeaponEquipped, Group::Players, "PlayerWeaponEquipped", "Equipped weapon",
-            "Tag of the first weapon attached to the player's biped, which is the weapon in use.", true },
+            "Tag of the weapon in the hands of the player's biped (loadout). None in a vehicle.", true },
 
-        { Flag::PlayerWeaponPrimary, Group::Players, "PlayerWeaponPrimary", "Primary weapon (player table)",
-            "Tag of the weapon referenced by the player's primary weapon slot.", false },
+        { Flag::PlayerWeaponPrimary, Group::Players, "PlayerWeaponPrimary", "Primary weapon",
+            "Tag of the weapon in the primary slot of the loadout.", false },
 
-        { Flag::PlayerWeaponSecondary, Group::Players, "PlayerWeaponSecondary", "Secondary weapon (player table)",
-            "Tag of the weapon referenced by the player's secondary weapon slot.", false },
+        { Flag::PlayerWeaponSecondary, Group::Players, "PlayerWeaponSecondary", "Secondary weapon",
+            "Tag of the weapon in the secondary slot of the loadout.", false },
 
-        { Flag::PlayerWeaponHeld, Group::Players, "PlayerWeaponHeld", "Weapons attached to biped",
-            "Tags of the weapon objects whose parent is the player's biped. Useful to compare against the player table slots.", false },
+        { Flag::PlayerWeaponHeld, Group::Players, "PlayerWeaponHeld", "Weapons carried by biped",
+            "Tags of the weapon entities carried by the player's biped. Useful to compare against the loadout slots.", false },
 
         { Flag::PlayerSelf, Group::Players, "PlayerSelf", "Include local player",
             "Also labels the local player.", false },
