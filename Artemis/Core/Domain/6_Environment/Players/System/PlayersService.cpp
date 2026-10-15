@@ -49,17 +49,12 @@ namespace Environment::Players::System
         const VitalityDetails empty{};
         const VitalityDetails& vitalities{ vitalitiesPtr ? *vitalitiesPtr : empty };
 
-        const auto previousPtr{ m_PlayersStore.Acquire() };
-
         Players players{};
         players.Rows.reserve(playerTablePtr->size());
 
         for (const auto& [handle, alive] : *playerTablePtr)
         {
-            Player player{ this->MakePlayer(alive, *objectTablePtr, *entitiesPtr, vitalities) };
-            this->CheckTeam(player, previousPtr.get(), *objectTablePtr);
-
-            players.Rows.push_back(std::move(player));
+            players.Rows.push_back(this->MakePlayer(alive, *objectTablePtr, *entitiesPtr, vitalities));
         }
 
         std::ranges::sort(players.Rows, {}, &Player::Handle);
@@ -134,26 +129,6 @@ namespace Environment::Players::System
         }
 
         return body;
-    }
-
-    auto PlayersService::CheckTeam(const Player& player, const Players* previous, const ObjectTable& objectTable) -> void
-    {
-        if (!player.IsAlive()) return;
-
-        if (previous)
-        {
-            const Player* before{ previous->Find(player.Handle) };
-            if (before && before->IsAlive() && before->BipedHandle == player.BipedHandle) return;
-        }
-
-        const auto objectIt{ objectTable.find(player.BipedHandle) };
-        if (objectIt == objectTable.end() || !objectIt->second.Multiplayer) return;
-
-        const auto bipedTeam{ objectIt->second.Multiplayer->Team };
-        if (bipedTeam == player.Team) return;
-
-        m_LogsService.Message("[PlayersService] WARNING: The biped 0x{:08X} has team {}, its player 0x{:08X} ({}) has team {}.",
-            player.BipedHandle, static_cast<int>(bipedTeam), player.Handle, player.Name, static_cast<int>(player.Team));
     }
 
     auto PlayersService::Cleanup() -> void

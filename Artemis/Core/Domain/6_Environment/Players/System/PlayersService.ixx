@@ -16,7 +16,6 @@ import std;
 export namespace Environment::Players::System
 {
     // Builds the Players table: one row per entry of the player table with the body and the loadout of its live biped (D30, D93).
-    // note: Logs when the multiplayer block of a new biped has a team other than the one of its player (05, section 8).
     class PlayersService
     {
     private:
@@ -70,9 +69,5 @@ export namespace Environment::Players::System
         // return: Empty when the player has no live biped.
         auto MakeBody(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
             const VitalityDetails& vitalities) const -> std::optional<Body>;
-
-        // Logs a team mismatch between a player and the multiplayer block of its biped.
-        // note: Only checks a body that was not in the previous snapshot, so a mismatch is logged once per spawn.
-        auto CheckTeam(const Player& player, const Players* previous, const ObjectTable& objectTable) -> void;
     };
 }
