@@ -9,6 +9,9 @@ import Platform.Render.Type;
 import Platform.Render.System;
 import Common.Math.Type;
 import Environment.Fixtures.Type;
+import Environment.Details.Type;
+import Environment.Entities.Type;
+import Export.Tick.Type;
 import Viewer.Style.Type;
 import std;
 
@@ -120,40 +123,45 @@ namespace
 namespace Viewer::Map::System
 {
     auto FixturePass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const std::shared_ptr<const Fixtures>& fixtures, const FixturePassOptions& options) -> void
+        const std::shared_ptr<const Tick>& tick, const FixturePassOptions& options) -> void
     {
         m_VertexCount = 0;
 
-        if (!device || !context || !fixtures) return;
+        if (!device || !context || !tick) return;
 
         std::vector<Vertex> vertices{};
 
-        if (options.TeleportLinks)
+        if (options.TeleportLinks && tick->TeleporterDetails && tick->Entities)
         {
-            for (const auto& teleport : fixtures->Teleporters)
+            for (const auto& [handle, teleporter] : *tick->TeleporterDetails)
             {
-                const std::size_t count = (std::min)(teleport.DestinationPositions.size(), k_MaxDestinations);
+                const auto* from{ tick->Entities->Find(handle) };
+                if (!from) continue;
+
+                const std::size_t count{ (std::min)(teleporter.Destinations.size(), k_MaxDestinations) };
 
                 for (std::size_t i = 0; i < count; ++i)
                 {
-                    AppendArrow(vertices, Raised(teleport.Position), Raised(teleport.DestinationPositions[i]),
-                        k_Fixture, true);
+                    const auto* to{ tick->Entities->Find(teleporter.Destinations[i]) };
+                    if (!to) continue;
+
+                    AppendArrow(vertices, Raised(from->WorldOrigin), Raised(to->WorldOrigin), k_Fixture, true);
                 }
             }
         }
 
-        if (options.LiftArrows)
+        if (options.LiftArrows && tick->Fixtures)
         {
-            for (const auto& lift : fixtures->Lifts)
+            for (const auto& lift : tick->Fixtures->Lifts)
             {
                 AppendDirectional(vertices, lift.Position, lift.LaunchDirection,
                     options.ArrowLength, k_Fixture);
             }
         }
 
-        if (options.ShieldArrows)
+        if (options.ShieldArrows && tick->Fixtures)
         {
-            for (const auto& shield : fixtures->Shields)
+            for (const auto& shield : tick->Fixtures->Shields)
             {
                 if (!shield.BlockDirection) continue;
 

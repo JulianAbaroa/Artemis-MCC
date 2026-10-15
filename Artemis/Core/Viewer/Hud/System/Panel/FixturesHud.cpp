@@ -9,6 +9,7 @@ import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Tables.Object.Type;
 import Environment.Fixtures.Type;
+import Environment.Details.Type;
 import Gui.Widget.System;
 import Gui.Format.System;
 import std;
@@ -21,6 +22,9 @@ namespace
     using Fixtures = Export::Tick::Type::Fixtures;
     using Export::Tick::Type::Entity;
     using Export::Tick::Type::ZoneDetail;
+    using Export::Tick::Type::TeleporterDetail;
+    using Environment::Details::Type::TeleporterPass;
+    using Environment::Details::Type::HasPass;
     using ZoneShape = Common::ZoneShape::Type::ZoneShape;
     using ZoneKind = Common::ZoneShape::Type::Kind;
     using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
@@ -83,16 +87,16 @@ namespace
         }
     }
 
-    auto DrawAllowedObjects(const Fixture::Teleport::Passes& passes) -> void
+    auto DrawAllowedObjects(TeleporterPass passes) -> void
     {
         struct Entry { bool IsActive; const char* Label; };
 
         const Entry entries[] = {
-            { passes.Players,     "Players" },
-            { passes.Ground,      "Ground Vehicles" },
-            { passes.Heavy,       "Heavy Vehicles" },
-            { passes.Flying,      "Flying Vehicles" },
-            { passes.Projectiles, "Projectiles" },
+            { HasPass(passes, TeleporterPass::Players),        "Players" },
+            { HasPass(passes, TeleporterPass::GroundVehicles), "Ground Vehicles" },
+            { HasPass(passes, TeleporterPass::HeavyVehicles),  "Heavy Vehicles" },
+            { HasPass(passes, TeleporterPass::FlyingVehicles), "Flying Vehicles" },
+            { HasPass(passes, TeleporterPass::Projectiles),    "Projectiles" },
         };
 
         for (const Entry& entry : entries)
@@ -122,22 +126,32 @@ namespace
         ImGui::Text("Team: %s", TeamFormater::TeamToString(s.Team));
     }
 
-    auto DrawTeleporter(const Fixture::Teleport::Teleport& t) -> void
+    // Draws an entity with a teleporter detail (D90).
+    // param shape: Empty when the entity has no zone detail.
+    auto DrawTeleporter(const Entity& entity, const TeleporterDetail& teleporter, const ZoneShape& shape,
+        const std::string& tagName) -> void
     {
-        PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 0.4f, 1.0f), "Teleporter", t.TagName, t.Handle);
-        PanelGuiService::DrawVec3("Position:", t.Position);
-        PanelGuiService::DrawVec3("Forward:", t.Forward);
-        PanelGuiService::DrawVec3("Up:", t.Up);
-        ImGui::Text("Channel: %d", static_cast<int>(t.Channel));
-        ImGui::Text("Type: %s", FixturesFormater::TeleporterKindToString(t.Kind));
-        ImGui::Text("Destinations: %d", static_cast<int>(t.DestinationPositions.size()));
+        const std::string_view subtype{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) };
+
+        PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 0.4f, 1.0f), "Teleporter", tagName, entity.Handle);
+        PanelGuiService::DrawVec3("World Origin:", entity.WorldOrigin);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+        ImGui::Text("Channel: %d", static_cast<int>(teleporter.Channel));
+        ImGui::Text("Type: %.*s", static_cast<int>(subtype.size()), subtype.data());
+        ImGui::Text("Destinations: %d", static_cast<int>(teleporter.Destinations.size()));
+
+        for (const std::uint32_t destination : teleporter.Destinations)
+        {
+            ImGui::BulletText("%s", HexFormater::Hex32(destination).c_str());
+        }
 
         ImGui::Spacing();
-        DrawZoneShape(t.ZoneShape);
+        DrawZoneShape(shape);
 
         ImGui::Spacing();
         ImGui::TextDisabled("Allowed Objects:");
-        DrawAllowedObjects(t.Passes);
+        DrawAllowedObjects(teleporter.Passes);
     }
 
     auto DrawLift(const Fixture::Lift::Lift& l) -> void
@@ -242,11 +256,10 @@ namespace Viewer::Hud::System
 
         if (TryDraw(fx.Obstacles, handle, DrawObstacle)) return;
         if (TryDraw(fx.Spawns, handle, DrawSpawn)) return;
-        if (TryDraw(fx.Teleporters, handle, DrawTeleporter)) return;
         if (TryDraw(fx.Lifts, handle, DrawLift)) return;
         if (TryDraw(fx.Shields, handle, DrawShield)) return;
 
-        // note: Zones come from the Entities and the ZoneDetails, not from the Fixtures (D88).
+        // note: Zones and teleporters come from the Entities and their details, not from the Fixtures (D88, D90).
         const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };
         if (entity != nullptr)
         {
@@ -257,19 +270,31 @@ namespace Viewer::Hud::System
                 if (zoneIt != tick.ZoneDetails->end()) zone = &zoneIt->second;
             }
 
+            std::string tagName{};
+            if (tick.ObjectTable)
+            {
+                const auto objectIt = tick.ObjectTable->find(handle);
+                if (objectIt != tick.ObjectTable->end()) tagName = objectIt->second.TagName;
+            }
+
+            const ZoneShape shape{ zone != nullptr ? zone->Shape : ZoneShape{} };
+
+            if (entity->Function == Function::Teleporter && tick.TeleporterDetails)
+            {
+                const auto teleporterIt = tick.TeleporterDetails->find(handle);
+                if (teleporterIt != tick.TeleporterDetails->end())
+                {
+                    DrawTeleporter(*entity, teleporterIt->second, shape, tagName);
+                    return;
+                }
+            }
+
             const bool isZoneFunction{ entity->Function == Function::ObjectiveSpawn || entity->Function == Function::ObjectiveZone
                 || entity->Function == Function::Boundary };
 
             if (zone != nullptr || isZoneFunction)
             {
-                std::string tagName{};
-                if (tick.ObjectTable)
-                {
-                    const auto objectIt = tick.ObjectTable->find(handle);
-                    if (objectIt != tick.ObjectTable->end()) tagName = objectIt->second.TagName;
-                }
-
-                DrawZoneEntity(*entity, zone != nullptr ? zone->Shape : ZoneShape{}, tagName);
+                DrawZoneEntity(*entity, shape, tagName);
                 return;
             }
         }

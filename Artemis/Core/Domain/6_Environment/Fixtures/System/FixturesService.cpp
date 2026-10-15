@@ -10,7 +10,6 @@ namespace
     using SceneryKind = Tables::Object::Type::Scenery::Kind;
     using CrateObject = Tables::Object::Type::Crate::Crate;
     using EquipmentObject = Tables::Object::Type::Equipment::Equipment;
-    using CrateKind = Tables::Object::Type::Crate::Kind;
     using AngleType = Tables::Object::Type::Crate::Lift::Angle;
     using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
     using WeaponObject = Tables::Object::Type::Weapon::Weapon;
@@ -20,7 +19,6 @@ namespace
     using Common::Semantic::Type::Binding;
     using Fixtures = Environment::Fixtures::Type::Fixtures;
     using SpawnKind = Environment::Fixtures::Type::Spawn::Kind;
-    using TeleportKind = Environment::Fixtures::Type::Teleport::Kind;
     using DestructibleKind = Environment::Fixtures::Type::Destructible::Kind;
 }
 
@@ -38,7 +36,6 @@ namespace Environment::Fixtures::System
         ::Fixtures data;
         this->CollectObstacles(classifieds, objectTable, data.Obstacles);
         this->CollectSpawns(classifieds, objectTable, data.Spawns);
-        this->CollectTeleports(classifieds, objectTable, data.Teleporters);
         this->CollectLifts(classifieds, objectTable, data.Lifts);
         this->CollectShields(classifieds, objectTable, data.Shields);
         this->CollectObjectives(classifieds, objectTable, data.Objectives);
@@ -114,74 +111,6 @@ namespace Environment::Fixtures::System
             }
 
             spawns.push_back(spawn);
-        }
-    }
-
-    void FixturesService::CollectTeleports(const Classifieds& classifieds,
-        const ObjectTable& objects, Teleporters& teleporters)
-    {
-        for (const auto& classified : classifieds)
-        {
-            if (classified.Function != Function::Teleporter) continue;
-
-            auto objectIt = objects.find(classified.Handle);
-            if (objectIt == objects.end()) continue;
-
-            const AliveObject& object = objectIt->second;
-            if (object.Address == 0) continue;
-
-            const auto* crate = std::get_if<CrateObject>(&object.Specific);
-            if (!crate || !crate->Teleport.has_value()) continue;
-
-            Teleport teleport{};
-            teleport.Handle = classified.Handle;
-            teleport.TagName = object.TagName;
-            teleport.Position = object.WorldOrigin;
-            teleport.Forward = object.Forward;
-            teleport.Up = object.Up;
-            teleport.Channel = crate->Teleport->Channel;
-            teleport.ZoneShape = crate->Teleport->ZoneShape;
-            teleport.Allowed = crate->Teleport->Allowed;
-
-            using Allowed = Tables::Object::Type::Crate::Teleport::Allowed;
-            const auto allowed = crate->Teleport->Allowed;
-            teleport.Passes.Players = !Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::NoPlayers);
-            teleport.Passes.Ground = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowGround);
-            teleport.Passes.Heavy = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowHeavy);
-            teleport.Passes.Flying = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowFlying);
-            teleport.Passes.Projectiles = Tables::Object::Type::Crate::Teleport::HasFlag(allowed, Allowed::AllowProjctile);
-
-            if (crate->Kind == CrateKind::TeleportReceiver)
-            {
-                teleport.Kind = TeleportKind::Receiver;
-            }
-            else if (crate->Kind == CrateKind::TeleportSender)
-            {
-                teleport.Kind = TeleportKind::Sender;
-            }
-            else if (crate->Kind == CrateKind::TeleportTwoWay)
-            {
-                teleport.Kind = TeleportKind::TwoWay;
-            }
-
-            teleporters.push_back(teleport);
-        }
-
-        for (auto& teleporter : teleporters)
-        {
-            if (teleporter.Kind == TeleportKind::Receiver) continue;
-
-            TeleportKind targetRole = (teleporter.Kind == TeleportKind::Sender) ?
-                TeleportKind::Receiver : TeleportKind::TwoWay;
-
-            for (const auto& other : teleporters)
-            {
-                if (other.Handle == teleporter.Handle) continue;
-                if (other.Channel != teleporter.Channel) continue;
-                if (other.Kind != targetRole) continue;
-
-                teleporter.DestinationPositions.push_back(other.Position);
-            }
         }
     }
 

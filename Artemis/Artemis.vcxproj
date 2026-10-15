@@ -786,6 +786,9 @@
     <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Details\Type\Zone\DetailsZone.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Teleporter\DetailsTeleporter.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx" />

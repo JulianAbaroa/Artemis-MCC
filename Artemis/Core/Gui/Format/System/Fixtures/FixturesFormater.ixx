@@ -14,7 +14,6 @@ export namespace Gui::Format::System
         using AngleKind = Tables::Object::Type::Crate::Lift::Angle;
         using ForceKind = Tables::Object::Type::Crate::Lift::Force;
         using DestructibleKind = Environment::Fixtures::Type::Destructible::Kind;
-        using TeleporterKind = Environment::Fixtures::Type::Teleport::Kind;
 
     public:
         FixturesFormater() = default;
@@ -24,6 +23,5 @@ export namespace Gui::Format::System
         static auto AngleKindToString(AngleKind kind) -> const char*;
         static auto ForceKindToString(ForceKind kind) -> const char*;
         static auto DestructibleKindToString(DestructibleKind kind) -> const char*;
-        static auto TeleporterKindToString(TeleporterKind kind) -> const char*;
     };
 }

@@ -33,6 +33,7 @@ export namespace Export::Tick::System
 		using EntitiesStore = Environment::Entities::State::EntitiesStore;
 		using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
 		using ZoneDetailsStore = Environment::Details::State::ZoneDetailsStore;
+		using TeleporterDetailsStore = Environment::Details::State::TeleporterDetailsStore;
 		using FixturesStore = Environment::Fixtures::State::FixturesStore;
 		using AimStore = Environment::Aim::State::AimStore;
 		using SelfStore = Egocentric::Self::State::SelfStore;
@@ -49,14 +50,14 @@ export namespace Export::Tick::System
 			InteractionStore& interactionStore, ClassifierStore& classifierStore,
 			ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
 			EntitiesStore& entitiesStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
-			FixturesStore& fixturesStore, AimStore& aimStore, SelfStore& selfStore,
+			TeleporterDetailsStore& teleporterDetailsStore, FixturesStore& fixturesStore, AimStore& aimStore, SelfStore& selfStore,
 			AffordanceStore& affordanceStore, RaycastStore& raycastStore,
 			DefinitionsStore& definitionsStore, TickStore& tickStore) :
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
 			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
 			m_EntitiesStore(entitiesStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
-			m_FixturesStore(fixturesStore),
+			m_TeleporterDetailsStore(teleporterDetailsStore), m_FixturesStore(fixturesStore),
 			m_AimStore(aimStore), m_SelfStore(selfStore),
 			m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
 			m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
@@ -74,6 +75,7 @@ export namespace Export::Tick::System
 		EntitiesStore& m_EntitiesStore;
 		VitalityDetailsStore& m_VitalityDetailsStore;
 		ZoneDetailsStore& m_ZoneDetailsStore;
+		TeleporterDetailsStore& m_TeleporterDetailsStore;
 		FixturesStore& m_FixturesStore;
 		AimStore& m_AimStore;
 		SelfStore& m_SelfStore;

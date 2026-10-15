@@ -117,7 +117,7 @@ namespace Viewer::Map::System
                 fixtureOptions.ShieldArrows = m_OptionsStore.IsEnabled(Flag::FixtureShieldArrows);
                 fixtureOptions.ArrowLength = m_OptionsStore.GetScalar(Scalar::FixtureArrowLength);
 
-                m_FixturePass.Upload(frame.Device, frame.Context, tick->Fixtures, fixtureOptions);
+                m_FixturePass.Upload(frame.Device, frame.Context, tick, fixtureOptions);
             }
 
             {

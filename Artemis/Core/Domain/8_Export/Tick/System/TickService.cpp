@@ -59,6 +59,7 @@ namespace Export::Tick::System
         tick.Entities = m_EntitiesStore.Acquire();
         tick.VitalityDetails = m_VitalityDetailsStore.Acquire();
         tick.ZoneDetails = m_ZoneDetailsStore.Acquire();
+        tick.TeleporterDetails = m_TeleporterDetailsStore.Acquire();
         tick.Fixtures = m_FixturesStore.Acquire();
 		tick.Aims = m_AimStore.Acquire();
 

@@ -47,15 +47,4 @@ namespace Gui::Format::System
         default:                               return "Unknown";
         }
     }
-
-    auto FixturesFormater::TeleporterKindToString(TeleporterKind kind) -> const char*
-    {
-        switch (kind)
-        {
-        case TeleporterKind::Receiver: return "Receiver";
-        case TeleporterKind::Sender:   return "Sender";
-        case TeleporterKind::TwoWay:   return "TwoWay";
-        default:                       return "Unknown";
-        }
-    }
 }

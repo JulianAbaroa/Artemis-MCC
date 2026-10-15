@@ -6,13 +6,13 @@ export module Viewer.Map.System:FixturePass;
 
 import Service.Logs.System;
 import Platform.Render.System;
-import Environment.Fixtures.Type;
+import Export.Tick.Type;
 import Viewer.Map.Type;
 import std;
 
 export namespace Viewer::Map::System
 {
-    // Draws the arrows of the fixtures: teleporter links, lift launch directions and shield block directions.
+    // Draws the arrows of the map logic: teleporter links, lift launch directions and shield block directions.
     class FixturePass
     {
     private:
@@ -23,7 +23,7 @@ export namespace Viewer::Map::System
 
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using Fixtures = Environment::Fixtures::Type::Fixtures;
+        using Tick = Export::Tick::Type::Tick;
 
         using FixturePassOptions = Viewer::Map::Type::FixturePassOptions;
 
@@ -34,9 +34,10 @@ export namespace Viewer::Map::System
         FixturePass(const FixturePass&) = delete;
         auto operator=(const FixturePass&) -> FixturePass& = delete;
 
-        // Rebuilds the arrows from the fixtures. Draws nothing if the fixtures are missing.
+        // Rebuilds the arrows from the tick. Draws nothing if the tick is missing.
+        // note: Teleporter links come from the TeleporterDetails and the Entities (D90), lifts and shields still from the Fixtures.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-            const std::shared_ptr<const Fixtures>& fixtures, const FixturePassOptions& options) -> void;
+            const std::shared_ptr<const Tick>& tick, const FixturePassOptions& options) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

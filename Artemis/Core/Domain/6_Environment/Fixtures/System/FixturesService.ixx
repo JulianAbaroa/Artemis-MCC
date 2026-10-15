@@ -20,14 +20,12 @@ export namespace Environment::Fixtures::System
         using Classifieds = std::vector<Classified>;
         using Obstacle = Environment::Fixtures::Type::Obstacle::Obstacle;
         using Spawn = Environment::Fixtures::Type::Spawn::Spawn;
-        using Teleport = Environment::Fixtures::Type::Teleport::Teleport;
         using Lift = Environment::Fixtures::Type::Lift::Lift;
         using Shield = Environment::Fixtures::Type::Shield::Shield;
         using Objective = Environment::Fixtures::Type::Objective::Objective;
         using Destructible = Environment::Fixtures::Type::Destructible::Destructible;
         using Obstacles = std::vector<Obstacle>;
         using Spawns = std::vector<Spawn>;
-        using Teleporters = std::vector<Teleport>;
         using Lifts = std::vector<Lift>;
         using Shields = std::vector<Shield>;
         using Objectives = std::vector<Objective>;
@@ -60,9 +58,6 @@ export namespace Environment::Fixtures::System
 
         auto CollectSpawns(const Classifieds& classifieds,
             const ObjectTable& objects, Spawns& spawns) -> void;
-
-        auto CollectTeleports(const Classifieds& classifieds,
-            const ObjectTable& objects, Teleporters& teleporters) -> void;
 
         auto CollectLifts(const Classifieds& classifieds,
             const ObjectTable& objects, Lifts& lifts) -> void;

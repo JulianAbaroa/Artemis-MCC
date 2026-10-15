@@ -9,6 +9,7 @@ import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Environment.Fixtures.Type;
+import Environment.Details.Type;
 import Gui.Format.System;
 import Tables.Object.Type;
 import Viewer.Options.State;
@@ -31,6 +32,8 @@ namespace
     namespace SemanticType = Common::Semantic::Type;
 
     using Common::Semantic::Type::Function;
+    using Environment::Details::Type::TeleporterPass;
+    using Environment::Details::Type::HasPass;
 
     using Viewer::Style::Type::k_Fixture;
     using Viewer::Style::Type::k_TeamNeutral;
@@ -53,7 +56,7 @@ namespace
         return std::format("zone: {} {:.1f}", FixturesFormater::ZoneKindToString(zone.Kind), zone.Radius);
     }
 
-    auto AllowedText(const Fixture::Teleport::Passes& passes) -> std::string
+    auto AllowedText(TeleporterPass passes) -> std::string
     {
         std::string text{};
         auto append = [&](const char* name)
@@ -62,11 +65,11 @@ namespace
             text += name;
         };
 
-        if (passes.Players) append("players");
-        if (passes.Ground) append("ground");
-        if (passes.Heavy) append("heavy");
-        if (passes.Flying) append("flying");
-        if (passes.Projectiles) append("projectiles");
+        if (HasPass(passes, TeleporterPass::Players)) append("players");
+        if (HasPass(passes, TeleporterPass::GroundVehicles)) append("ground");
+        if (HasPass(passes, TeleporterPass::HeavyVehicles)) append("heavy");
+        if (HasPass(passes, TeleporterPass::FlyingVehicles)) append("flying");
+        if (HasPass(passes, TeleporterPass::Projectiles)) append("projectiles");
 
         return text.empty() ? std::string{ "nothing" } : text;
     }
@@ -140,18 +143,28 @@ namespace Viewer::Hud::System
             }
         };
 
-        if (options.IsEnabled(Flag::FixtureTeleportLabels))
+        // note: Teleporters are entities with a teleporter detail and a zone detail (D90).
+        if (options.IsEnabled(Flag::FixtureTeleportLabels) && tick.TeleporterDetails && tick.Entities)
         {
-            for (const auto& teleport : fixtures.Teleporters)
+            for (const auto& [handle, teleporter] : *tick.TeleporterDetails)
             {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row(std::string{ "TELEPORT " } +
-                    FixturesFormater::TeleporterKindToString(teleport.Kind), accent));
-                rows.push_back(Row(std::format("channel: {}", teleport.Channel)));
-                rows.push_back(Row(ZoneText(teleport.ZoneShape)));
-                rows.push_back(Row("allows: " + AllowedText(teleport.Passes), k_MutedColor));
+                const auto* entity{ tick.Entities->Find(handle) };
+                if (!entity) continue;
 
-                canvas.Add(teleport.Position, std::move(rows), accent, neutral, k_FixturePriority, teleport.Handle);
+                ZoneShape shape{};
+                if (tick.ZoneDetails)
+                {
+                    const auto zoneIt = tick.ZoneDetails->find(handle);
+                    if (zoneIt != tick.ZoneDetails->end()) shape = zoneIt->second.Shape;
+                }
+
+                std::vector<LabelRow> rows{};
+                rows.push_back(Row(std::format("TELEPORT {}", SemanticType::Subtype::NameOf(entity->Function, entity->Subtype)), accent));
+                rows.push_back(Row(std::format("channel: {}", teleporter.Channel)));
+                rows.push_back(Row(ZoneText(shape)));
+                rows.push_back(Row("allows: " + AllowedText(teleporter.Passes), k_MutedColor));
+
+                canvas.Add(entity->WorldOrigin, std::move(rows), accent, neutral, k_FixturePriority, handle);
             }
         }
 

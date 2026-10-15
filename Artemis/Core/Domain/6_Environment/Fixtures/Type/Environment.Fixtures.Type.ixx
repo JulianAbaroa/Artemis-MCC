@@ -1,7 +1,6 @@
 export module Environment.Fixtures.Type;
 
 import Tables.Object.Type;
-import Common.ZoneShape.Type;
 import Common.Team.Type;
 import Common.Math.Type;
 import std;
@@ -12,7 +11,6 @@ namespace
 
     using Vec3 = Common::Math::Type::Vec3;
     using Team = Common::Team::Type::Team;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 }
 
 export namespace Environment::Fixtures::Type
@@ -54,43 +52,6 @@ export namespace Environment::Fixtures::Type
 
             Kind Kind;
             Team Team;
-        };
-    }
-
-    namespace Teleport
-    {
-        enum class Kind : std::uint8_t
-        {
-            Sender,
-            Receiver,
-            TwoWay,
-        };
-
-        struct Passes
-        {
-            bool Players{ false };
-            bool Ground{ false };
-            bool Heavy{ false };
-            bool Flying{ false };
-            bool Projectiles{ false };
-        };
-
-        struct Teleport
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Kind Kind;
-            std::uint8_t Channel;
-            ZoneShape ZoneShape;
-            Crate::Teleport::Allowed Allowed;
-            Passes Passes;
-
-            std::vector<Vec3> DestinationPositions;
         };
     }
 
@@ -179,7 +140,6 @@ export namespace Environment::Fixtures::Type
     {
         std::vector<Obstacle::Obstacle> Obstacles;
         std::vector<Spawn::Spawn> Spawns;
-        std::vector<Teleport::Teleport> Teleporters;
         std::vector<Lift::Lift> Lifts;
         std::vector<Shield::Shield> Shields;
         std::vector<Objective::Objective> Objectives;
