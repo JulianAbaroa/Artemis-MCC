@@ -111,6 +111,7 @@ namespace Resolved::Definitions::System
 
         out.RenderModelTagName = m_TagResolverService.ResolveTagReferenceName(hlmt.Data.RenderModel);
         out.CollisionModelTagName = m_TagResolverService.ResolveTagReferenceName(hlmt.Data.CollisionModel);
+        out.PhysicsModelTagName = m_TagResolverService.ResolveTagReferenceName(hlmt.Data.PhysicsModel);
 
         out.MaximumVitality = hlmt.Data.MaximumVitality;
         out.ShieldedStateDamageSectionIndex = hlmt.Data.ShieldedStateDamageSectionIndex;

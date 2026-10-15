@@ -43,6 +43,10 @@ class Obj:
         self.Ranges = []  # (component, start, end)
         self.Havok = None  # dict of the hk-component line, {} when the object has no component
         self.Bodies = []   # dicts of the hk-body lines
+        self.Phantoms = [] # dicts of the hk-phantom lines
+        self.Phmo = None   # dict of the hk-phmo line, {} when the object has no physics model
+        self.Rigids = []   # dicts of the hk-rigid lines, each with its "shapes" (dicts of the hk-shape lines)
+        self.PhantomTypes = []  # dicts of the hk-phantomtype lines
 
     def ComponentAt(self, offset):
         for name, start, end in self.Ranges:
@@ -104,6 +108,37 @@ def LoadHavokLine(line, cap, obj):
             obj.Havok = {"handle": words[0], "unreadable": True}
         else:
             obj.Havok = {"handle": words[0], **Pairs(" ".join(words[1:]))}
+    elif kind == "hk-phmo":
+        words = rest.split()
+        obj.Phmo = {} if words[0] == "none" else {"tag": words[0], **Pairs(" ".join(words[1:]))}
+    elif kind == "hk-rigid":
+        index, _, fields = rest.partition(" ")
+        words = fields.split()
+        root = words.index("root")
+        rigid = Pairs(" ".join(words[:root] + words[root + 3:]))
+        rigid.update({"index": int(index), "roottype": words[root + 1], "rootindex": words[root + 2], "shapes": []})
+        obj.Rigids.append(rigid)
+    elif kind == "hk-shape":
+        body, shapeIndex, fields = rest.split(" ", 2)
+        shape = Pairs(fields)
+        shape["index_in_body"] = int(shapeIndex)
+        obj.Rigids[int(body)]["shapes"].append(shape)
+    elif kind == "hk-phantomtype":
+        index, _, fields = rest.partition(" ")
+        words = fields.split()
+        entry = {"index": int(index)}
+        i = 0
+        while i < len(words):
+            if words[i] in ("direction", "center", "axis", "orbit"):
+                entry[words[i]] = (words[i + 1], words[i + 2]); i += 3
+            else:
+                entry[words[i]] = words[i + 1]; i += 2
+        obj.PhantomTypes.append(entry)
+    elif kind == "hk-phantom":
+        slot, _, fields = rest.partition(" ")
+        phantom = Pairs(fields)
+        phantom["slot"] = slot
+        obj.Phantoms.append(phantom)
     elif kind == "hk-body":
         index, _, fields = rest.partition(" ")
         body = Pairs(fields)
@@ -309,6 +344,39 @@ def Infos(obj):
         return []
     return [int(b["info"], 16) for b in obj.Bodies if b.get("address", "0x0") != "0x0"]
 
+SHAPES = {0: "sphere", 1: "pill", 2: "box", 3: "triangle", 4: "polyhedron", 5: "multi sphere", 6: "phantom", 14: "list", 15: "mopp"}
+NO_GROUP = 255
+
+def EffectiveGroup(shape):
+    # H7 (A10): the shape override wins, then the material override; 255 keeps the layer of the rigid body.
+    group, material = int(shape["group"]), int(shape["materialgroup"])
+    if group != NO_GROUP:
+        return group, "shape"
+    if material != NO_GROUP:
+        return material, "material"
+    return None, "body"
+
+def PrintPhmo(o):
+    if o.Phmo is None:
+        return
+    if not o.Phmo:
+        print("      phmo: none")
+        return
+    print(f"      phmo {o.Phmo['tag']}  rigid bodies {o.Phmo['rigidbodies']}  materials {o.Phmo['materials']}  phantom types {o.Phmo['phantomtypes']}")
+    for r in o.Rigids:
+        root = SHAPES.get(int(r["roottype"]), r["roottype"])
+        print(f"        rigid {r['index']}: tag motion {r['motion']} size {r['size']} flags {r['flags']} mask {r['mask']} root {root} {r['rootindex']}, {len(r['shapes'])} shapes")
+        groups = {}
+        for s in r["shapes"]:
+            group, source = EffectiveGroup(s)
+            key = ("body layer" if group is None else f"{LayerName(group)} (from {source})") + (" PHANTOM" if s["phantom"] == "1" else "")
+            groups.setdefault(key, []).append(f"{SHAPES.get(int(s['type']), s['type'])} {s['index']}")
+        for key, shapes in groups.items():
+            shown = ", ".join(shapes[:6]) + (f" ... +{len(shapes) - 6}" if len(shapes) > 6 else "")
+            print(f"          {key:<44} {len(shapes):>3} shapes: {shown}")
+    for p in o.PhantomTypes:
+        print(f"        phantom type {p['index']}: flags {p['flags']} marker {p['marker']} direction {p['direction']} center {p['center']} axis {p['axis']} orbit {p['orbit']}")
+
 def CmdHavok(captures, fields, args):
     selected = Groups(captures, args.label) if args.label else captures
     if not selected:
@@ -353,6 +421,10 @@ def CmdHavok(captures, fields, args):
                 motion = int(b["motion"])
                 print(f"      body {b['index']}: layer {LayerName(info & 0x1F):<26} motion {motion} {MOTIONS.get(motion, '?'):<14} "
                       f"group {b['group']} subsystem {b['subsystem']} ignores {b['ignores']}")
+            PrintPhmo(o)
+            for ph in o.Phantoms:
+                info = int(ph["info"], 16)
+                print(f"      phantom {ph['slot']}: layer {LayerName(info & 0x1F):<26} group {ph['group']} subsystem {ph['subsystem']} ignores {ph['ignores']}")
     if args.pairs and withTable:
         lookup = withTable[-1].Lookup
         objs = []

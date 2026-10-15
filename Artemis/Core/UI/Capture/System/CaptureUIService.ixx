@@ -3,6 +3,8 @@ export module UI.Capture.System;
 import Service.Logs.System;
 import Service.Settings.State;
 import Platform.Memory.System;
+import Resolved.Definitions.Type;
+import Resolved.Definitions.State;
 import Datum.Object.Type;
 import Datum.Object.State;
 import Export.Tick.Type;
@@ -14,7 +16,8 @@ import std;
 export namespace UI::Capture::System
 {
     // Copies the datum of the local biped, its linked objects and the pinned objects to a session file, cut by component (D81).
-    // Each object also gets its Havok component and rigid bodies, and each capture the layer table of the Havok collision filter (A10).
+    // Each object also gets its Havok component and rigid bodies, the shapes of its physics model (phmo), and each capture the layer
+    // table of the Havok collision filter (A10).
     // note: A development tool (D72). The datum comes from the copy DatumService already makes each tick. The Havok lines are read live
     // from the render thread, through the safe reader, at fixed RVAs of haloreach.dll (Ignore/Tareas/Transversal/A10_Colisiones.txt).
     class CaptureUIService
@@ -24,6 +27,10 @@ export namespace UI::Capture::System
         using SettingsStore = Service::Settings::State::SettingsStore;
 
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
+
+        using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
+        using Phmo = Resolved::Definitions::Type::Phmo::Phmo;
+        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 
         using Snapshot = Datum::Object::Type::Raw::Snapshot;
         using DatumStore = Datum::Object::State::DatumStore;
@@ -38,9 +45,9 @@ export namespace UI::Capture::System
 
     public:
         CaptureUIService(LogsService& logsService, SettingsStore& settingsStore, MemoryReaderService& memoryReaderService,
-            DatumStore& datumStore, TickStore& tickStore, CaptureUIStore& captureUIStore) :
+            DefinitionsStore& definitionsStore, DatumStore& datumStore, TickStore& tickStore, CaptureUIStore& captureUIStore) :
             m_LogsService(logsService), m_SettingsStore(settingsStore), m_MemoryReaderService(memoryReaderService),
-            m_DatumStore(datumStore), m_TickStore(tickStore), m_CaptureUIStore(captureUIStore) {}
+            m_DefinitionsStore(definitionsStore), m_DatumStore(datumStore), m_TickStore(tickStore), m_CaptureUIStore(captureUIStore) {}
         ~CaptureUIService() = default;
 
         CaptureUIService(const CaptureUIService&) = delete;
@@ -57,6 +64,7 @@ export namespace UI::Capture::System
         LogsService& m_LogsService;
         SettingsStore& m_SettingsStore;
         MemoryReaderService& m_MemoryReaderService;
+        DefinitionsStore& m_DefinitionsStore;
         DatumStore& m_DatumStore;
         TickStore& m_TickStore;
         CaptureUIStore& m_CaptureUIStore;
@@ -77,6 +85,10 @@ export namespace UI::Capture::System
         // param handle: Value of obje 0xCC.
         // return: Nothing if the handle is empty or the component data array is not found.
         auto ReadHavokComponent(std::uint32_t handle) -> std::optional<HavokComponent>;
+
+        // Finds the physics model of an object through its definition and its model (hlmt).
+        // return: Null if the definitions are not built yet or a link of the chain is missing.
+        auto FindPhmo(ObjectKind kind, const std::string& tagName) const -> const Phmo*;
 
         // Opens the session file to append. The first capture of a session creates it in the Captures folder of the storage folder.
         // return: The open file, or nothing if the storage folder is not set or the file cannot be opened.

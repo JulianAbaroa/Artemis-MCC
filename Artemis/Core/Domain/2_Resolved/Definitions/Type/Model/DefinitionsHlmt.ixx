@@ -98,6 +98,7 @@ export namespace Resolved::Definitions::Type::Hlmt
 
         std::string RenderModelTagName{};
         std::string CollisionModelTagName{};
+        std::string PhysicsModelTagName{};
 
         float MaximumVitality{};
         float MaximumShieldVitality{};

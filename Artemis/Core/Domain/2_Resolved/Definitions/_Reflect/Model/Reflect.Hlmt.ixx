@@ -141,6 +141,7 @@ export namespace Common::Reflect::Type
             MakeField("TagName", &Hlmt::TagName),
             MakeField("RenderModelTagName", &Hlmt::RenderModelTagName),
             MakeField("CollisionModelTagName", &Hlmt::CollisionModelTagName),
+            MakeField("PhysicsModelTagName", &Hlmt::PhysicsModelTagName),
             MakeField("MaximumVitality", &Hlmt::MaximumVitality),
             MakeField("MaximumShieldVitality", &Hlmt::MaximumShieldVitality),
             MakeField("ShieldedStateDamageSectionIndex", &Hlmt::ShieldedStateDamageSectionIndex),

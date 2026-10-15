@@ -74,6 +74,17 @@ export namespace UI::Capture::Type
         std::uint8_t MotionType{};
     };
 
+    // Havok phantom of an object: a volume that reports overlaps without a contact response (lifts, pickups candidates, A10).
+    struct HavokPhantom
+    {
+        // Offset of the phantom pointer inside the component.
+        std::uintptr_t Slot{};
+        std::uintptr_t Address{};
+
+        // hkpGroupFilter info, same layout as HavokBody::FilterInfo.
+        std::uint32_t FilterInfo{};
+    };
+
     // Havok component of an object, read live from the component data array (A10).
     struct HavokComponent
     {
@@ -93,5 +104,8 @@ export namespace UI::Capture::Type
         // Count as read from memory. Bodies stays empty when it is out of range.
         std::int32_t BodyCount{};
         std::vector<HavokBody> Bodies{};
+
+        // Phantoms the component holds (only the slots that are set).
+        std::vector<HavokPhantom> Phantoms{};
     };
 }

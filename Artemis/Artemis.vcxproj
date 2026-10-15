@@ -332,6 +332,8 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo\PhmoBuilder.cpp" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo\PhmoBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.cpp" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode\ModeBuilder.cpp" />
@@ -362,6 +364,7 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSddt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsScnr.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsColl.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsPhmo.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsHlmt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsMode.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsBipd.ixx" />
@@ -379,6 +382,7 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sddt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Scnr.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Coll.ixx" />
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Phmo.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Hlmt.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Mode.ixx" />
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Bipd.ixx" />

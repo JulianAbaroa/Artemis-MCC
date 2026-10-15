@@ -31,6 +31,7 @@ namespace
         if (field == "TagName") return {};
         if (field == "ModelTagName") return "hlmt";
         if (field == "CollisionModelTagName") return "coll";
+        if (field == "PhysicsModelTagName") return "phmo";
         if (field == "RenderModelTagName") return "mode";
         if (field.ends_with("ProjectileTagName")) return "proj";
         if (field.ends_with("TagName")) return "jpt!";
@@ -38,9 +39,9 @@ namespace
     }
 
     // Classes that can be dumped.
-    constexpr std::array<const char*, 15> k_DumpFourCCs
+    constexpr std::array<const char*, 16> k_DumpFourCCs
     {
-        "bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "proj", "scen", "scnr", "sddt", "vehi", "weap",
+        "bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "phmo", "proj", "scen", "scnr", "sddt", "vehi", "weap",
     };
 
     // Escapes the text to be placed inside a JSON string.
@@ -257,6 +258,7 @@ namespace UI::DefinitionsInspector::System
         if (fourCC == "coll") return m_DefinitionsStore.Coll.Has(tagName);
         if (fourCC == "jpt!") return m_DefinitionsStore.Jpt.Has(tagName);
         if (fourCC == "mode") return m_DefinitionsStore.Mode.Has(tagName);
+        if (fourCC == "phmo") return m_DefinitionsStore.Phmo.Has(tagName);
         if (fourCC == "proj") return m_DefinitionsStore.Proj.Has(tagName);
         if (fourCC == "vehi") return m_DefinitionsStore.Vehi.Has(tagName);
         if (fourCC == "weap") return m_DefinitionsStore.Weap.Has(tagName);
@@ -285,6 +287,7 @@ namespace UI::DefinitionsInspector::System
         else if (fourCC == "jpt!") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Jpt.All());
         else if (fourCC == "mach") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Mach.All());
         else if (fourCC == "mode") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Mode.All());
+        else if (fourCC == "phmo") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Phmo.All());
         else if (fourCC == "proj") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Proj.All());
         else if (fourCC == "scen") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Scen.All());
         else if (fourCC == "scnr") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Scnr.All());
@@ -419,6 +422,7 @@ namespace UI::DefinitionsInspector::System
         else if (fourCC == "jpt!") this->DrawResolved(m_DefinitionsStore.Jpt.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "mach") this->DrawResolved(m_DefinitionsStore.Mach.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "mode") this->DrawResolved(m_DefinitionsStore.Mode.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "phmo") this->DrawResolved(m_DefinitionsStore.Phmo.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "proj") this->DrawResolved(m_DefinitionsStore.Proj.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "scen") this->DrawResolved(m_DefinitionsStore.Scen.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "scnr") this->DrawResolved(m_DefinitionsStore.Scnr.Get(tagName), fourCC, tagName, ownerHandle);

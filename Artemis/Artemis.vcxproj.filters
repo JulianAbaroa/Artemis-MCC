@@ -1078,6 +1078,9 @@
     <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll">
       <UniqueIdentifier>{48c58afd-ddff-421d-8340-856890d148ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo">
+      <UniqueIdentifier>{bb07105d-0a86-424d-a116-07f92deaee9a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode">
       <UniqueIdentifier>{0c32a808-fc02-4920-a370-ae5355d795ba}</UniqueIdentifier>
     </Filter>
@@ -2582,6 +2585,9 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsColl.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\Type\Model</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsPhmo.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\Type\Model</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsHlmt.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\Type\Model</Filter>
     </ClCompile>
@@ -2632,6 +2638,12 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo\PhmoBuilder.cpp">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo\PhmoBuilder.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Phmo</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.cpp">
       <Filter>Core\Domain\2_Resolved\Definitions\System\Model\Hlmt</Filter>
@@ -2733,6 +2745,9 @@
       <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Object</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Coll.ixx">
+      <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Phmo.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Model</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Hlmt.ixx">

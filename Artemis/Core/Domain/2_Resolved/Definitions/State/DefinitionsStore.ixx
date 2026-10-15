@@ -27,6 +27,7 @@ export namespace Resolved::Definitions::State
         TagStore<Type::Coll::Coll> Coll{};
         TagStore<Type::Hlmt::Hlmt> Hlmt{};
         TagStore<Type::Mode::Mode> Mode{};
+        TagStore<Type::Phmo::Phmo> Phmo{};
 
         // Object
         TagStore<Type::Bipd::Bipd> Bipd{};
@@ -52,6 +53,7 @@ export namespace Resolved::Definitions::State
             f(Jpt);
             f(Mach);
             f(Mode);
+            f(Phmo);
             f(Proj);
             f(Sbsp);
             f(Scen);

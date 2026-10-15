@@ -7,6 +7,7 @@ module;
 module UI.Capture.System;
 
 import Resolved.Definitions.Type;
+import Resolved.Definitions.State;
 import std;
 
 namespace
@@ -17,6 +18,11 @@ namespace
     using std::chrono::zoned_time;
 
     using Resolved::Definitions::Type::Object::ObjectKind;
+    using Resolved::Definitions::Type::Phmo::Phmo;
+    using Resolved::Definitions::Type::Phmo::RigidBody;
+    using Resolved::Definitions::Type::Phmo::Shape;
+    using Resolved::Definitions::Type::Phmo::PhantomType;
+    using Resolved::Definitions::State::DefinitionsStore;
     using Datum::Object::Type::Raw::RawObject;
     using Datum::Object::Type::Raw::Snapshot;
     using UI::Capture::Type::ComponentRange;
@@ -25,9 +31,11 @@ namespace
     using UI::Capture::Type::ByteChange;
     using UI::Capture::Type::HavokFilter;
     using UI::Capture::Type::HavokBody;
+    using UI::Capture::Type::HavokPhantom;
     using UI::Capture::Type::HavokComponent;
 
     using UI::Capture::Type::k_LabelSize;
+    using Resolved::Definitions::Type::Phmo::k_NoCollisionGroup;
 
     namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
     namespace AnimOffset = Datum::Object::Type::Anim::Offset;
@@ -90,7 +98,10 @@ namespace
     constexpr std::uintptr_t k_BodyEntrySize{ 0x50 };
     constexpr std::uintptr_t k_BodyEntryRigidBodyOffset{ 0x40 };
 
-    // hkpRigidBody fields: collidable filter info and motion type.
+    // Phantom pointers of the component, removed from the world by FUN_18017fd78 and queried by FUN_180180c04.
+    constexpr std::array<std::uintptr_t, 2> k_ComponentPhantomOffsets{ 0xA8, 0xB0 };
+
+    // hkpRigidBody fields: collidable filter info and motion type. The filter info is at the same offset in a phantom (hkpWorldObject).
     constexpr std::uintptr_t k_RigidBodyFilterInfoOffset{ 0x4C };
     constexpr std::uintptr_t k_RigidBodyMotionTypeOffset{ 0x160 };
 
@@ -310,6 +321,87 @@ namespace
                 index, body.Address, info, info & k_FilterFieldMask, (info >> k_SubsystemShift) & k_FilterFieldMask,
                 (info >> k_IgnoredSubsystemShift) & k_FilterFieldMask, info >> k_SystemGroupShift, static_cast<int>(body.MotionType));
         }
+
+        for (const HavokPhantom& phantom : component->Phantoms)
+        {
+            const std::uint32_t info{ phantom.FilterInfo };
+
+            file << std::format("hk-phantom 0x{:X} address 0x{:X} info {:08X} layer {} subsystem {} ignores {} group {}\n",
+                phantom.Slot, phantom.Address, info, info & k_FilterFieldMask, (info >> k_SubsystemShift) & k_FilterFieldMask,
+                (info >> k_IgnoredSubsystemShift) & k_FilterFieldMask, info >> k_SystemGroupShift);
+        }
+    }
+
+    // return: Model tag name of the object definition, or empty if its class has no definition or the tag is missing.
+    // note: The definition stores must be frozen.
+    auto ModelTagNameOf(const DefinitionsStore& definitions, ObjectKind kind, const std::string& tagName) -> std::string
+    {
+        const auto modelOf = [&tagName](const auto& store) -> std::string
+        {
+            const auto* definition{ store.Get(tagName) };
+            return definition ? definition->Base.ModelTagName : std::string{};
+        };
+
+        switch (kind)
+        {
+        case ObjectKind::Biped: return modelOf(definitions.Bipd);
+        case ObjectKind::Vehicle: return modelOf(definitions.Vehi);
+        case ObjectKind::Weapon: return modelOf(definitions.Weap);
+        case ObjectKind::Equipment: return modelOf(definitions.Eqip);
+        case ObjectKind::Projectile: return modelOf(definitions.Proj);
+        case ObjectKind::Scenery: return modelOf(definitions.Scen);
+        case ObjectKind::Machine: return modelOf(definitions.Mach);
+        case ObjectKind::Control: return modelOf(definitions.Ctrl);
+        case ObjectKind::Crate: return modelOf(definitions.Bloc);
+        default: return {};
+        }
+    }
+
+    // Writes the physics model of an object: its rigid bodies, their primitive shapes with the layer overrides of the shape and of
+    // its material, and its phantom types. Static tag data, written with every capture for convenience.
+    auto WritePhmo(std::ofstream& file, const Phmo* phmo) -> void
+    {
+        if (!phmo)
+        {
+            file << "hk-phmo none\n";
+            return;
+        }
+
+        file << std::format("hk-phmo {} rigidbodies {} materials {} phantomtypes {}\n",
+            phmo->TagName, phmo->RigidBodies.size(), phmo->Materials.size(), phmo->PhantomTypes.size());
+
+        for (std::size_t bodyIndex{ 0 }; bodyIndex < phmo->RigidBodies.size(); ++bodyIndex)
+        {
+            const RigidBody& body{ phmo->RigidBodies[bodyIndex] };
+
+            file << std::format("hk-rigid {} node {} region {} permutation {} motion {} size {} flags {:04X} mask {:08X} root {} {} shapes {}\n",
+                bodyIndex, body.NodeIndex, body.RegionIndex, body.PermutationIndex, static_cast<int>(body.MotionType), body.Size,
+                body.Flags, body.CollisionGroupMask, static_cast<int>(body.RootShapeType), body.RootShapeIndex, body.Shapes.size());
+
+            for (std::size_t shapeIndex{ 0 }; shapeIndex < body.Shapes.size(); ++shapeIndex)
+            {
+                const Shape& shape{ body.Shapes[shapeIndex] };
+
+                std::uint8_t materialGroup{ k_NoCollisionGroup };
+                const auto material{ static_cast<std::size_t>(shape.MaterialIndex) };
+                if (shape.MaterialIndex >= 0 && material < phmo->Materials.size()) materialGroup = phmo->Materials[material].CollisionGroup;
+
+                file << std::format("hk-shape {} {} type {} index {} material {} group {} materialgroup {} phantomtype {} flags {:02X} phantom {}\n",
+                    bodyIndex, shapeIndex, static_cast<int>(shape.Type), shape.Index, static_cast<int>(shape.MaterialIndex),
+                    static_cast<int>(shape.CollisionGroup), static_cast<int>(materialGroup), static_cast<int>(shape.PhantomTypeIndex),
+                    shape.MaterialFlags, shape.IsPhantom ? 1 : 0);
+            }
+        }
+
+        for (std::size_t index{ 0 }; index < phmo->PhantomTypes.size(); ++index)
+        {
+            const PhantomType& type{ phmo->PhantomTypes[index] };
+
+            file << std::format("hk-phantomtype {} flags {:08X} marker {:08X} alignment {:08X} direction {} {} center {} {} axis {} {} orbit {} {}\n",
+                index, type.Flags, type.MarkerName, type.AlignmentMarkerName, type.DirectionAcceleration, type.DirectionMaximumVelocity,
+                type.CenterAcceleration, type.CenterMaximumVelocity, type.AxisAcceleration, type.AxisMaximumVelocity,
+                type.OrbitAcceleration, type.OrbitMaximumVelocity);
+        }
     }
 
     // Appends the runs of bytes that differ from the previous capture, one run never crossing a range.
@@ -417,6 +509,7 @@ namespace UI::Capture::System
 
             const std::uint32_t havokHandle{ datum.Read<std::uint32_t>(ObjeOffset::k_HavokComponentHandle) };
             WriteHavokComponent(*file, havokHandle, this->ReadHavokComponent(havokHandle));
+            WritePhmo(*file, this->FindPhmo(datum.Kind, tagName));
 
             const std::vector<std::uint8_t>* previous{ m_CaptureUIStore.FindPrevious(target.Handle) };
             const bool isComparable{ previous != nullptr && previous->size() == datum.Bytes.size() };
@@ -509,6 +602,19 @@ namespace UI::Capture::System
             .BodyCount = m_MemoryReaderService.Read<std::int32_t>(address, k_ComponentBodyCountOffset),
         };
 
+        for (const std::uintptr_t slot : k_ComponentPhantomOffsets)
+        {
+            const auto phantom{ m_MemoryReaderService.Read<std::uintptr_t>(address, slot) };
+            if (phantom == 0) continue;
+
+            component.Phantoms.push_back(HavokPhantom
+            {
+                .Slot = slot,
+                .Address = phantom,
+                .FilterInfo = m_MemoryReaderService.Read<std::uint32_t>(phantom, k_RigidBodyFilterInfoOffset),
+            });
+        }
+
         if (component.BodyCount <= 0 || component.BodyCount > k_MaxHavokBodies) return component;
 
         const auto entries{ m_MemoryReaderService.Read<std::uintptr_t>(address, k_ComponentBodiesOffset) };
@@ -529,6 +635,19 @@ namespace UI::Capture::System
         }
 
         return component;
+    }
+
+    auto CaptureUIService::FindPhmo(ObjectKind kind, const std::string& tagName) const -> const Phmo*
+    {
+        if (!m_DefinitionsStore.Phmo.IsFrozen()) return nullptr;
+
+        const std::string modelTagName{ ModelTagNameOf(m_DefinitionsStore, kind, tagName) };
+        if (modelTagName.empty()) return nullptr;
+
+        const auto* hlmt{ m_DefinitionsStore.Hlmt.Get(modelTagName) };
+        if (!hlmt || hlmt->PhysicsModelTagName.empty()) return nullptr;
+
+        return m_DefinitionsStore.Phmo.Get(hlmt->PhysicsModelTagName);
     }
 
     auto CaptureUIService::OpenSessionFile() -> std::optional<std::ofstream>
@@ -553,7 +672,7 @@ namespace UI::Capture::System
         if (isNewSession)
         {
             file << "# Artemis datum captures (D81). Offsets and ranges are absolute datum offsets.\n";
-            file << "# hk-* lines: Havok filter layer table per capture and Havok component of each object (A10).\n";
+            file << "# hk-* lines: Havok filter layer table per capture, Havok component and physics model of each object (A10).\n";
         }
 
         return file;

@@ -12,6 +12,7 @@ export import :Sddt;
 export import :Coll;
 export import :Hlmt;
 export import :Mode;
+export import :Phmo;
 
 // Object
 export import :Object;
@@ -55,7 +56,7 @@ export namespace Resolved::Definitions::System
             m_ObjectBuilder(tagResolverService),
             m_Builders{ BipdBuilder{ m_ObjectBuilder }, BlocBuilder{ m_ObjectBuilder }, CollBuilder{},
                 CtrlBuilder{ m_ObjectBuilder }, EqipBuilder{ m_ObjectBuilder }, HlmtBuilder{ tagResolverService },
-                JptBuilder{}, MachBuilder{ m_ObjectBuilder }, ModeBuilder{}, ProjBuilder{ m_ObjectBuilder },
+                JptBuilder{}, MachBuilder{ m_ObjectBuilder }, ModeBuilder{}, PhmoBuilder{}, ProjBuilder{ m_ObjectBuilder },
                 ScenBuilder{ m_ObjectBuilder }, ScnrBuilder{}, SddtBuilder{}, VehiBuilder{ m_ObjectBuilder },
                 WeapBuilder{ m_ObjectBuilder } } {}
         ~DefinitionsBuilder() = default;
@@ -75,7 +76,7 @@ export namespace Resolved::Definitions::System
 
         ObjectBuilder m_ObjectBuilder;
         std::tuple<BipdBuilder, BlocBuilder, CollBuilder, CtrlBuilder, EqipBuilder, HlmtBuilder,
-            JptBuilder, MachBuilder, ModeBuilder, ProjBuilder, ScenBuilder, ScnrBuilder,
+            JptBuilder, MachBuilder, ModeBuilder, PhmoBuilder, ProjBuilder, ScenBuilder, ScnrBuilder,
             SddtBuilder, VehiBuilder, WeapBuilder> m_Builders;
         SbspBuilder m_SbspBuilder{};
 
