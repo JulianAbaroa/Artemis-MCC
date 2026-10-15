@@ -23,15 +23,6 @@ export namespace Tables::Object::Type::Scenery
         PortableShield,
     };
 
-    namespace PortableShield
-    {
-        struct PortableShield
-        {
-            std::uint16_t RegenerationDelay{};
-            float Health{};
-        };
-    }
-
     inline Kind ResolveSceneryType(const std::string& tagName)
     {
     	namespace Name = Common::Tag::Type;
@@ -56,18 +47,9 @@ export namespace Tables::Object::Type::Scenery
         return it != map.end() ? it->second : Kind::Unknown;
     }
 
-    inline bool IsSpawnPoint(Kind kind)
-    {
-        return kind == Kind::InitialSpawnPoint
-            || kind == Kind::RespawnPoint
-            || kind == Kind::InvisibleRespawnPoint;
-    }
-
     struct Scenery
     {
         std::uintptr_t Base{};
         Kind Kind{};
-
-        std::optional<PortableShield::PortableShield> PortableShield{};
     };
 }

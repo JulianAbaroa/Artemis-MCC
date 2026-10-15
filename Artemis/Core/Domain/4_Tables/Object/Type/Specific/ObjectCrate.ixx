@@ -56,15 +56,6 @@ export namespace Tables::Object::Type::Crate
 		};
 	}
 
-	namespace Destructible
-	{
-		struct Destructible
-		{
-			float Health{};
-			std::optional<std::uint16_t> RegenerationDelay{};
-		};
-	}
-
 	inline Kind ResolveCrateType(const std::string& tagName)
 	{
 		namespace Name = Common::Tag::Type;
@@ -102,6 +93,5 @@ export namespace Tables::Object::Type::Crate
 		Kind Kind{};
 
 		std::optional<Teleport::Teleport> Teleport{};
-		std::optional<Destructible::Destructible> Destructible{};
 	};
 }

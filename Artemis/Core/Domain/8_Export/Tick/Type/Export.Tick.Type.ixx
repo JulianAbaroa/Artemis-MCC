@@ -8,7 +8,6 @@ import Relations.ObjectGraph.Type;
 import Relations.PlayerGraph.Type;
 import Environment.Details.Type;
 import Environment.Entities.Type;
-import Environment.Fixtures.Type;
 import Environment.Aim.Type;
 import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
@@ -43,7 +42,6 @@ export namespace Export::Tick::Type
 	using LiftDetails = Environment::Details::Type::LiftDetails;
 	using BarrierDetail = Environment::Details::Type::BarrierDetail;
 	using BarrierDetails = Environment::Details::Type::BarrierDetails;
-	using Fixtures = Environment::Fixtures::Type::Fixtures;
 	using Aim = Environment::Aim::Type::Aim;
 	using Aims = std::unordered_map<std::uint32_t, Aim>;
 
@@ -80,7 +78,6 @@ export namespace Export::Tick::Type
 		std::shared_ptr<const TeleporterDetails> TeleporterDetails;
 		std::shared_ptr<const LiftDetails> LiftDetails;
 		std::shared_ptr<const BarrierDetails> BarrierDetails;
-		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Aims> Aims;
 
 		// --- Layer 6: Egocentric ---

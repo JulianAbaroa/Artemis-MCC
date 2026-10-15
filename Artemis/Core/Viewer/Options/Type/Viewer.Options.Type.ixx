@@ -78,7 +78,6 @@ export namespace Viewer::Options::Type
         FixtureShieldLabels,
         FixtureShieldArrows,
         FixtureObjectives,
-        FixtureDestructibles,
         FixtureSpawns,
         FixtureShieldTranslucent,
 
@@ -299,22 +298,19 @@ export namespace Viewer::Options::Type
             "Draws dashed arrows from each teleporter to its destinations.", true },
 
         { Flag::FixtureLiftLabels, Group::Fixtures, "FixtureLiftLabels", "Lift labels",
-            "Labels each lift with its angle and force.", true },
+            "Labels each lift with its kind (vertical, curved, redirected) and tag.", true },
 
         { Flag::FixtureLiftArrows, Group::Fixtures, "FixtureLiftArrows", "Lift launch arrows",
             "Draws an arrow along the launch direction of each lift.", true },
 
         { Flag::FixtureShieldLabels, Group::Fixtures, "FixtureShieldLabels", "Shield labels",
-            "Labels each shield door or wall with its kind (one-way, two-way, blocker).", true },
+            "Labels each barrier with its kind (one-way, two-way, blocker, drop shield, portable) and tag.", true },
 
         { Flag::FixtureShieldArrows, Group::Fixtures, "FixtureShieldArrows", "Shield direction arrows",
-            "Draws an arrow along the block direction of one-way shields.", true },
+            "Draws an arrow along the pass direction of one-way barriers.", true },
 
         { Flag::FixtureObjectives, Group::Fixtures, "FixtureObjectives", "Objectives",
             "Labels objectives (flags, bombs) and objective spawn zones with team and carrier.", true },
-
-        { Flag::FixtureDestructibles, Group::Fixtures, "FixtureDestructibles", "Destructibles",
-            "Labels pallets, explosives and portable shields with kind and health.", false },
 
         { Flag::FixtureSpawns, Group::Fixtures, "FixtureSpawns", "Spawn points",
             "Labels player spawn points with kind and team.", false },

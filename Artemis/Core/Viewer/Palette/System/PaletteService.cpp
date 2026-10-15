@@ -43,39 +43,20 @@ namespace Viewer::Palette::System
             for (const auto& entry : *tick->VitalityDetails) add(entry.first, k_Health);
         }
 
-        if (tick->Fixtures)
-        {
-            const auto& fixtures = *tick->Fixtures;
-
-            auto addFixed = [&add](const auto& items)
-            {
-                for (const auto& item : items) add(item.Handle, k_Fixture);
-            };
-
-            auto addByTeam = [&add](const auto& items)
-            {
-                for (const auto& item : items) add(item.Handle, Viewer::Style::Type::ColorOfTeam(item.Team));
-            };
-
-            addFixed(fixtures.Obstacles);
-            addFixed(fixtures.Destructibles);
-
-            addByTeam(fixtures.Spawns);
-            addByTeam(fixtures.Objectives);
-        }
-
-        // note: Zones and objective spawns take the team of their entity (D88). Teleporters, lifts and barriers keep the fixture color (D90, D91).
+        // note: Zones, objective spawns, spawn points and objective items take the team of their entity (D88, D92).
+        // Teleporters, lifts, barriers and props keep the fixture color (D90, D91, D92).
         if (tick->Entities)
         {
             for (const auto& entity : tick->Entities->Rows)
             {
                 const bool hasZone{ tick->ZoneDetails && tick->ZoneDetails->contains(entity.Handle) };
                 const bool isFixture{ entity.Function == Function::Teleporter || entity.Function == Function::Lift
-                    || entity.Function == Function::Barrier };
+                    || entity.Function == Function::Barrier || entity.Function == Function::Prop };
+                const bool isByTeam{ entity.Function == Function::SpawnPoint || entity.Function == Function::ObjectiveItem };
                 const bool isObjectiveSpawn{ entity.Function == Function::ObjectiveSpawn };
 
                 if (isFixture) add(entity.Handle, k_Fixture);
-                else if (hasZone || isObjectiveSpawn) add(entity.Handle, Viewer::Style::Type::ColorOfTeam(entity.Team));
+                else if (hasZone || isObjectiveSpawn || isByTeam) add(entity.Handle, Viewer::Style::Type::ColorOfTeam(entity.Team));
             }
         }
 

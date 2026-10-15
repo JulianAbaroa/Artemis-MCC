@@ -7,7 +7,6 @@ import :Fixtures;
 
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
-import Environment.Fixtures.Type;
 import Environment.Details.Type;
 import Gui.Widget.System;
 import Gui.Format.System;
@@ -15,10 +14,7 @@ import std;
 
 namespace
 {
-    namespace Fixture = Environment::Fixtures::Type;
-
     using Tick = Export::Tick::Type::Tick;
-    using Fixtures = Export::Tick::Type::Fixtures;
     using Export::Tick::Type::Entity;
     using Export::Tick::Type::ZoneDetail;
     using Export::Tick::Type::TeleporterDetail;
@@ -28,7 +24,6 @@ namespace
     using Environment::Details::Type::HasPass;
     using ZoneShape = Common::ZoneShape::Type::ZoneShape;
     using ZoneKind = Common::ZoneShape::Type::Kind;
-    using SpawnKind = Fixture::Spawn::Kind;
 
     using HexFormater = Gui::Format::System::HexFormater;
     using TeamFormater = Gui::Format::System::TeamFormater;
@@ -37,19 +32,9 @@ namespace
     using PanelGuiService = Gui::Widget::System::PanelGuiService;
 
     using Common::Semantic::Type::Function;
+    using Common::Semantic::Type::Binding;
 
     namespace SemanticType = Common::Semantic::Type;
-
-    auto SpawnKindToString(SpawnKind kind) -> const char*
-    {
-        switch (kind)
-        {
-        case SpawnKind::Initial: return "Initial Spawn";
-        case SpawnKind::Respawn: return "Respawn";
-        case SpawnKind::Invisible: return "Invisible";
-        default: return "Unknown";
-        }
-    }
 
     auto DrawZoneShape(const ZoneShape& zoneShape) -> void
     {
@@ -94,25 +79,6 @@ namespace
                 ImVec4(0.4f, 1.0f, 0.4f, 1.0f) : ImVec4(1.0f, 0.4f, 0.4f, 1.0f),
                 "%s %s", entry.IsActive ? "[+]" : "[-]", entry.Label);
         }
-    }
-
-    auto DrawObstacle(const Fixture::Obstacle::Obstacle& o) -> void
-    {
-        PanelGuiService::DrawHeader(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), "Obstacle", o.TagName, o.Handle);
-        PanelGuiService::DrawVec3("Position:", o.Position);
-        PanelGuiService::DrawVec3("Forward:", o.Forward);
-        PanelGuiService::DrawVec3("Up:", o.Up);
-        PanelGuiService::DrawVec3("Linear Velocity:", o.LinearVelocity);
-        PanelGuiService::DrawVec3("Angular Velocity:", o.AngularVelocity);
-        ImGui::Text("Radius: %.2f", o.BoundingRadius);
-    }
-
-    auto DrawSpawn(const Fixture::Spawn::Spawn& s) -> void
-    {
-        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), SpawnKindToString(s.Kind), s.TagName, s.Handle);
-        PanelGuiService::DrawVec3("Position:", s.Position);
-        PanelGuiService::DrawVec3("Forward:", s.Forward);
-        ImGui::Text("Team: %s", TeamFormater::TeamToString(s.Team));
     }
 
     // Draws an entity with a teleporter detail (D90).
@@ -188,48 +154,46 @@ namespace
         DrawZoneShape(shape);
     }
 
-    auto DrawObjective(const Fixture::Objective::Objective& ob) -> void
+    // Draws a prop entity: a physical object without a game role (D92).
+    auto DrawProp(const Entity& entity, const std::string& tagName) -> void
     {
-        PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
-            ob.IsEquipped ? "Objective (Carried)" : "Objective", ob.TagName, ob.Handle);
-        PanelGuiService::DrawVec3("Position:", ob.Position);
-        PanelGuiService::DrawVec3("Forward:", ob.Forward);
-        PanelGuiService::DrawVec3("Up:", ob.Up);
-        PanelGuiService::DrawVec3("Linear Velocity:", ob.LinearVelocity);
-        PanelGuiService::DrawVec3("Angular Velocity:", ob.AngularVelocity);
-        ImGui::Text("Team: %s", TeamFormater::TeamToString(ob.Team));
-        ImGui::Text("Is Equipped: %s", ob.IsEquipped ? "Yes" : "No");
-
-        if (ob.IsEquipped)
-        {
-            ImGui::Text("Carrier Handle: %s", HexFormater::Hex32(ob.CarrierHandle).c_str());
-        }
+        PanelGuiService::DrawHeader(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+        PanelGuiService::DrawVec3("Linear Velocity:", entity.LinearVelocity);
+        PanelGuiService::DrawVec3("Angular Velocity:", entity.AngularVelocity);
+        ImGui::Text("Radius: %.2f", entity.BoundingRadius);
     }
 
-    auto DrawDestructible(const Fixture::Destructible::Destructible& d) -> void
+    // Draws a spawn point entity (D92). The kind is the subtype.
+    auto DrawSpawnPoint(const Entity& entity, const std::string& tagName) -> void
     {
-        PanelGuiService::DrawHeader(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Destructible", d.TagName, d.Handle);
-        PanelGuiService::DrawVec3("Position:", d.Position);
-        PanelGuiService::DrawVec3("Forward:", d.Forward);
-        PanelGuiService::DrawVec3("Up:", d.Up);
-        PanelGuiService::DrawVec3("Linear Velocity:", d.LinearVelocity);
-        PanelGuiService::DrawVec3("Angular Velocity:", d.AngularVelocity);
-        ImGui::Text("Type: %s", FixturesFormater::DestructibleKindToString(d.Kind));
-        ImGui::Text("Health: %.2f", d.Health);
+        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        ImGui::Text("Team: %s", TeamFormater::TeamToString(entity.Team));
     }
 
-    template <typename T, typename Drawer>
-    auto TryDraw(const std::vector<T>& items, std::uint32_t handle, Drawer drawer) -> bool
+    // Draws an objective item entity: flag, bomb or ball (D92).
+    // note: Carried is the binding of the entity and the carrier is its BoundTo.
+    auto DrawObjectiveItem(const Entity& entity, const std::string& tagName) -> void
     {
-        for (const T& item : items)
+        const bool isCarried{ entity.Binding == Binding::Carried };
+        const std::string title{ TitleOf(entity) + (isCarried ? " (Carried)" : "") };
+
+        PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), title.c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+        PanelGuiService::DrawVec3("Linear Velocity:", entity.LinearVelocity);
+        PanelGuiService::DrawVec3("Angular Velocity:", entity.AngularVelocity);
+        ImGui::Text("Team: %s", TeamFormater::TeamToString(entity.Team));
+
+        if (isCarried)
         {
-            if (item.Handle != handle) continue;
-
-            drawer(item);
-            return true;
+            ImGui::Text("Carrier Handle: %s", HexFormater::Hex32(entity.BoundTo).c_str());
         }
-
-        return false;
     }
 }
 
@@ -237,79 +201,86 @@ namespace Viewer::Hud::System
 {
     auto FixturesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
     {
-        if (!tick.Fixtures)
+        // note: Every fixture is an entity, with its details when it has them (D88, D90, D91, D92).
+        const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };
+        if (entity == nullptr)
         {
-            ImGui::TextDisabled("No fixture data.");
+            ImGui::TextDisabled("Selected object is not a live entity.");
             return;
         }
 
-        const Fixtures& fx = *tick.Fixtures;
-
-        if (TryDraw(fx.Obstacles, handle, DrawObstacle)) return;
-        if (TryDraw(fx.Spawns, handle, DrawSpawn)) return;
-
-        // note: Zones, teleporters, lifts and barriers come from the Entities and their details, not from the Fixtures (D88, D90, D91).
-        const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };
-        if (entity != nullptr)
+        const ZoneDetail* zone{ nullptr };
+        if (tick.ZoneDetails)
         {
-            const ZoneDetail* zone{ nullptr };
-            if (tick.ZoneDetails)
+            const auto zoneIt = tick.ZoneDetails->find(handle);
+            if (zoneIt != tick.ZoneDetails->end()) zone = &zoneIt->second;
+        }
+
+        std::string tagName{};
+        if (tick.ObjectTable)
+        {
+            const auto objectIt = tick.ObjectTable->find(handle);
+            if (objectIt != tick.ObjectTable->end()) tagName = objectIt->second.TagName;
+        }
+
+        const ZoneShape shape{ zone != nullptr ? zone->Shape : ZoneShape{} };
+
+        if (entity->Function == Function::Teleporter && tick.TeleporterDetails)
+        {
+            const auto teleporterIt = tick.TeleporterDetails->find(handle);
+            if (teleporterIt != tick.TeleporterDetails->end())
             {
-                const auto zoneIt = tick.ZoneDetails->find(handle);
-                if (zoneIt != tick.ZoneDetails->end()) zone = &zoneIt->second;
-            }
-
-            std::string tagName{};
-            if (tick.ObjectTable)
-            {
-                const auto objectIt = tick.ObjectTable->find(handle);
-                if (objectIt != tick.ObjectTable->end()) tagName = objectIt->second.TagName;
-            }
-
-            const ZoneShape shape{ zone != nullptr ? zone->Shape : ZoneShape{} };
-
-            if (entity->Function == Function::Teleporter && tick.TeleporterDetails)
-            {
-                const auto teleporterIt = tick.TeleporterDetails->find(handle);
-                if (teleporterIt != tick.TeleporterDetails->end())
-                {
-                    DrawTeleporter(*entity, teleporterIt->second, shape, tagName);
-                    return;
-                }
-            }
-
-            if (entity->Function == Function::Lift && tick.LiftDetails)
-            {
-                const auto liftIt = tick.LiftDetails->find(handle);
-                if (liftIt != tick.LiftDetails->end())
-                {
-                    DrawLift(*entity, liftIt->second, tagName);
-                    return;
-                }
-            }
-
-            if (entity->Function == Function::Barrier && tick.BarrierDetails)
-            {
-                const auto barrierIt = tick.BarrierDetails->find(handle);
-                if (barrierIt != tick.BarrierDetails->end())
-                {
-                    DrawBarrier(*entity, barrierIt->second, tagName);
-                    return;
-                }
-            }
-
-            const bool isZoneFunction{ entity->Function == Function::ObjectiveSpawn || entity->Function == Function::ObjectiveZone
-                || entity->Function == Function::Boundary };
-
-            if (zone != nullptr || isZoneFunction)
-            {
-                DrawZoneEntity(*entity, shape, tagName);
+                DrawTeleporter(*entity, teleporterIt->second, shape, tagName);
                 return;
             }
         }
 
-        if (TryDraw(fx.Objectives, handle, DrawObjective)) return;
-        if (TryDraw(fx.Destructibles, handle, DrawDestructible)) return;
+        if (entity->Function == Function::Lift && tick.LiftDetails)
+        {
+            const auto liftIt = tick.LiftDetails->find(handle);
+            if (liftIt != tick.LiftDetails->end())
+            {
+                DrawLift(*entity, liftIt->second, tagName);
+                return;
+            }
+        }
+
+        if (entity->Function == Function::Barrier && tick.BarrierDetails)
+        {
+            const auto barrierIt = tick.BarrierDetails->find(handle);
+            if (barrierIt != tick.BarrierDetails->end())
+            {
+                DrawBarrier(*entity, barrierIt->second, tagName);
+                return;
+            }
+        }
+
+        const bool isZoneFunction{ entity->Function == Function::ObjectiveSpawn || entity->Function == Function::ObjectiveZone
+            || entity->Function == Function::Boundary };
+
+        if (zone != nullptr || isZoneFunction)
+        {
+            DrawZoneEntity(*entity, shape, tagName);
+            return;
+        }
+
+        switch (entity->Function)
+        {
+        case Function::Prop:
+            DrawProp(*entity, tagName);
+            return;
+
+        case Function::SpawnPoint:
+            DrawSpawnPoint(*entity, tagName);
+            return;
+
+        case Function::ObjectiveItem:
+            DrawObjectiveItem(*entity, tagName);
+            return;
+
+        default:
+            break;
+        }
 
         ImGui::TextDisabled("Selected object is not a fixture.");
     }

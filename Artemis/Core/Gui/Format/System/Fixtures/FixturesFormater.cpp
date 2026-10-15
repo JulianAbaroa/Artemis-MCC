@@ -13,15 +13,4 @@ namespace Gui::Format::System
         default:                 return "Unknown";
         }
     }
-
-    auto FixturesFormater::DestructibleKindToString(DestructibleKind kind) -> const char*
-    {
-        switch (kind)
-        {
-        case DestructibleKind::Explosive:      return "Explosive";
-        case DestructibleKind::Pallet:         return "Pallet";
-        case DestructibleKind::PortableShield: return "Portable Shield";
-        default:                               return "Unknown";
-        }
-    }
 }

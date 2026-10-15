@@ -8,7 +8,6 @@ import :FixtureLabels;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
-import Environment.Fixtures.Type;
 import Environment.Details.Type;
 import Gui.Format.System;
 import Viewer.Options.State;
@@ -26,10 +25,10 @@ namespace
     using TeamFormater = Gui::Format::System::TeamFormater;
     using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 
-    namespace Fixture = Environment::Fixtures::Type;
     namespace SemanticType = Common::Semantic::Type;
 
     using Common::Semantic::Type::Function;
+    using Common::Semantic::Type::Binding;
     using Environment::Details::Type::TeleporterPass;
     using Environment::Details::Type::HasPass;
 
@@ -79,10 +78,6 @@ namespace Viewer::Hud::System
     {
         const auto& tick = context.Frame;
         const auto& options = context.Options;
-
-        if (!tick.Fixtures) return;
-
-        const auto& fixtures = *tick.Fixtures;
 
         const ImU32 accent = ToImColor(k_Fixture);
         const ImU32 neutral = ToImColor(k_TeamNeutral);
@@ -195,49 +190,45 @@ namespace Viewer::Hud::System
 
         if (options.IsEnabled(Flag::FixtureObjectives))
         {
-            for (const auto& objective : fixtures.Objectives)
+            // note: Objective items are entities (D92). Carried is the binding and the carrier is BoundTo.
+            if (tick.Entities)
             {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("OBJECTIVE", accent));
-                rows.push_back(Row(ShortTagName(objective.TagName)));
-                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(objective.Team)));
-                rows.push_back(Row(objective.IsEquipped
-                    ? std::format("carrier: 0x{:08X}", objective.CarrierHandle)
-                    : std::string{ "carrier: none" }, k_MutedColor));
+                for (const auto& entity : tick.Entities->Rows)
+                {
+                    if (entity.Function != Function::ObjectiveItem) continue;
 
-                canvas.Add(objective.Position, std::move(rows), accent, teamOf(objective), k_FixturePriority, objective.Handle);
+                    const bool isCarried{ entity.Binding == Binding::Carried };
+
+                    std::vector<LabelRow> rows{};
+                    rows.push_back(Row(std::format("OBJECTIVE {}", SemanticType::Subtype::NameOf(entity.Function, entity.Subtype)), accent));
+                    rows.push_back(Row(tagNameOf(entity.Handle)));
+                    rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(entity.Team)));
+                    rows.push_back(Row(isCarried ? std::format("carrier: 0x{:08X}", entity.BoundTo) : std::string{ "carrier: none" }, k_MutedColor));
+
+                    canvas.Add(entity.BoundingCenter, std::move(rows), accent, teamOf(entity), k_FixturePriority, entity.Handle);
+                }
             }
 
             addZoneEntities(Function::ObjectiveSpawn, "OBJECTIVE SPAWN", false);
             addZoneEntities(Function::ObjectiveZone, "OBJECTIVE ZONE", false);
         }
 
-        if (options.IsEnabled(Flag::FixtureDestructibles))
-        {
-            for (const auto& destructible : fixtures.Destructibles)
-            {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row(FixturesFormater::DestructibleKindToString(destructible.Kind), accent));
-                rows.push_back(Row(std::format("health: {:.2f}", destructible.Health)));
-
-                canvas.Add(destructible.Position, std::move(rows), accent, neutral, k_FixturePriority, destructible.Handle);
-            }
-        }
-
         if (options.IsEnabled(Flag::FixtureSpawns))
         {
-            for (const auto& spawn : fixtures.Spawns)
+            // note: Spawn points are entities (D92). The kind (Initial, Respawn, Invisible) is the subtype.
+            if (tick.Entities)
             {
-                const char* kind = "Initial";
-                if (spawn.Kind == Fixture::Spawn::Kind::Respawn) kind = "Respawn";
-                else if (spawn.Kind == Fixture::Spawn::Kind::Invisible) kind = "Invisible";
+                for (const auto& entity : tick.Entities->Rows)
+                {
+                    if (entity.Function != Function::SpawnPoint) continue;
 
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("SPAWN", accent));
-                rows.push_back(Row(kind));
-                rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(spawn.Team)));
+                    std::vector<LabelRow> rows{};
+                    rows.push_back(Row("SPAWN", accent));
+                    rows.push_back(Row(std::string{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) }));
+                    rows.push_back(Row(std::string{ "team: " } + TeamFormater::TeamToString(entity.Team)));
 
-                canvas.Add(spawn.Position, std::move(rows), accent, teamOf(spawn), k_FixturePriority, spawn.Handle);
+                    canvas.Add(entity.BoundingCenter, std::move(rows), accent, teamOf(entity), k_FixturePriority, entity.Handle);
+                }
             }
 
             addZoneEntities(Function::Boundary, "BOUNDARY", true);

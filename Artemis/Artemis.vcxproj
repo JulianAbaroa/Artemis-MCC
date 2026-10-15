@@ -801,10 +801,6 @@
     <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\State\FixturesStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\State\AffordanceStore.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.cpp" />
     <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.ixx" />

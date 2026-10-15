@@ -625,18 +625,6 @@
     <Filter Include="Core\Domain\6_Environment\Entities\System">
       <UniqueIdentifier>{edbc0e99-a560-4b12-a33c-d453e2237b04}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Environment\Fixtures">
-      <UniqueIdentifier>{317214c6-5015-4dc7-9eed-d719dac5d1ca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Fixtures\Type">
-      <UniqueIdentifier>{de99ca93-f71c-4d08-bdf9-09d13db9a1e9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Fixtures\State">
-      <UniqueIdentifier>{30d74ba4-d985-47fe-8b3a-4a09e45d7a1a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Fixtures\System">
-      <UniqueIdentifier>{7d54c5d8-0eff-472e-a088-b1e1963bb193}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\7_Egocentric">
       <UniqueIdentifier>{40efa74b-c5b9-447b-89e7-7ad9bed66f3f}</UniqueIdentifier>
     </Filter>
@@ -1747,18 +1735,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.ixx">
       <Filter>Core\Domain\5_Relations\PlayerGraph\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\Type\Environment.Fixtures.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Fixtures\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\State\FixturesStore.ixx">
-      <Filter>Core\Domain\6_Environment\Fixtures\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.cpp">
-      <Filter>Core\Domain\6_Environment\Fixtures\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Fixtures\System\FixturesService.ixx">
-      <Filter>Core\Domain\6_Environment\Fixtures\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\7_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
       <Filter>Core\Domain\7_Egocentric\Self\Type</Filter>

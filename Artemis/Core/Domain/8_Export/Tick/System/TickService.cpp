@@ -62,7 +62,6 @@ namespace Export::Tick::System
         tick.TeleporterDetails = m_TeleporterDetailsStore.Acquire();
         tick.LiftDetails = m_LiftDetailsStore.Acquire();
         tick.BarrierDetails = m_BarrierDetailsStore.Acquire();
-        tick.Fixtures = m_FixturesStore.Acquire();
 		tick.Aims = m_AimStore.Acquire();
 
         // --- Layer 6: Egocentric ---
