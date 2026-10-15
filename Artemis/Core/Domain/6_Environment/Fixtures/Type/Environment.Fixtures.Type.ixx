@@ -1,14 +1,11 @@
 export module Environment.Fixtures.Type;
 
-import Tables.Object.Type;
 import Common.Team.Type;
 import Common.Math.Type;
 import std;
 
 namespace
 {
-    namespace Crate = Tables::Object::Type::Crate;
-
     using Vec3 = Common::Math::Type::Vec3;
     using Team = Common::Team::Type::Team;
 }
@@ -52,41 +49,6 @@ export namespace Environment::Fixtures::Type
 
             Kind Kind;
             Team Team;
-        };
-    }
-
-    namespace Lift
-    {
-        struct Lift
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Crate::Lift::Angle Angle;
-            Crate::Lift::Force Force;
-
-            Vec3 LaunchDirection;
-        };
-    }
-
-    namespace Shield
-    {
-        struct Shield
-        {
-            std::uint32_t Handle;
-            std::string TagName;
-
-            Vec3 Position;
-            Vec3 Forward;
-            Vec3 Up;
-
-            Crate::Shield::Kind Kind;
-
-            std::optional<Vec3> BlockDirection;
         };
     }
 
@@ -140,8 +102,6 @@ export namespace Environment::Fixtures::Type
     {
         std::vector<Obstacle::Obstacle> Obstacles;
         std::vector<Spawn::Spawn> Spawns;
-        std::vector<Lift::Lift> Lifts;
-        std::vector<Shield::Shield> Shields;
         std::vector<Objective::Objective> Objectives;
         std::vector<Destructible::Destructible> Destructibles;
     };

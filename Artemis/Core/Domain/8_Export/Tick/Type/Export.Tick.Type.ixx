@@ -39,6 +39,10 @@ export namespace Export::Tick::Type
 	using ZoneDetails = Environment::Details::Type::ZoneDetails;
 	using TeleporterDetail = Environment::Details::Type::TeleporterDetail;
 	using TeleporterDetails = Environment::Details::Type::TeleporterDetails;
+	using LiftDetail = Environment::Details::Type::LiftDetail;
+	using LiftDetails = Environment::Details::Type::LiftDetails;
+	using BarrierDetail = Environment::Details::Type::BarrierDetail;
+	using BarrierDetails = Environment::Details::Type::BarrierDetails;
 	using Fixtures = Environment::Fixtures::Type::Fixtures;
 	using Aim = Environment::Aim::Type::Aim;
 	using Aims = std::unordered_map<std::uint32_t, Aim>;
@@ -74,6 +78,8 @@ export namespace Export::Tick::Type
 		std::shared_ptr<const VitalityDetails> VitalityDetails;
 		std::shared_ptr<const ZoneDetails> ZoneDetails;
 		std::shared_ptr<const TeleporterDetails> TeleporterDetails;
+		std::shared_ptr<const LiftDetails> LiftDetails;
+		std::shared_ptr<const BarrierDetails> BarrierDetails;
 		std::shared_ptr<const Fixtures> Fixtures;
 		std::shared_ptr<const Aims> Aims;
 

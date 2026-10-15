@@ -9,9 +9,6 @@ namespace
     using SceneryObject = Tables::Object::Type::Scenery::Scenery;
     using SceneryKind = Tables::Object::Type::Scenery::Kind;
     using CrateObject = Tables::Object::Type::Crate::Crate;
-    using EquipmentObject = Tables::Object::Type::Equipment::Equipment;
-    using AngleType = Tables::Object::Type::Crate::Lift::Angle;
-    using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
     using WeaponObject = Tables::Object::Type::Weapon::Weapon;
     namespace Subtype = Common::Semantic::Type::Subtype;
 
@@ -36,8 +33,6 @@ namespace Environment::Fixtures::System
         ::Fixtures data;
         this->CollectObstacles(classifieds, objectTable, data.Obstacles);
         this->CollectSpawns(classifieds, objectTable, data.Spawns);
-        this->CollectLifts(classifieds, objectTable, data.Lifts);
-        this->CollectShields(classifieds, objectTable, data.Shields);
         this->CollectObjectives(classifieds, objectTable, data.Objectives);
         this->CollectDestructibles(classifieds, objectTable, data.Destructibles);
 
@@ -111,107 +106,6 @@ namespace Environment::Fixtures::System
             }
 
             spawns.push_back(spawn);
-        }
-    }
-
-    void FixturesService::CollectLifts(const Classifieds& classifieds,
-        const ObjectTable& objects, Lifts& lifts)
-    {
-        for (const auto& classified : classifieds)
-        {
-            if (classified.Function != Function::Lift) continue;
-
-            auto objectIt = objects.find(classified.Handle);
-            if (objectIt == objects.end()) continue;
-
-            const AliveObject& object = objectIt->second;
-            if (object.Address == 0) continue;
-
-            const auto* crate = std::get_if<CrateObject>(&object.Specific);
-            if (!crate || !crate->Lift.has_value()) continue;
-
-            Lift lift{};
-            lift.Handle = classified.Handle;
-            lift.TagName = object.TagName;
-            lift.Position = object.BoundingCenter;
-            lift.Forward = object.Forward;
-            lift.Up = object.Up;
-            lift.Angle = crate->Lift->Angle;
-            lift.Force = crate->Lift->Force;
-
-            switch (lift.Angle)
-            {
-            case AngleType::Vertical:
-                lift.LaunchDirection = { 0.0f, 0.0f, 1.0f };
-                break;
-
-            case AngleType::Curved:
-                lift.LaunchDirection = lift.Forward;
-                break;
-
-            case AngleType::Redirected:
-            {
-                lift.LaunchDirection = {
-                    lift.Forward.Y * lift.Up.Z - lift.Forward.Z * lift.Up.Y,
-                    lift.Forward.Z * lift.Up.X - lift.Forward.X * lift.Up.Z,
-                    lift.Forward.X * lift.Up.Y - lift.Forward.Y * lift.Up.X,
-                };
-                break;
-            }
-            default:
-                lift.LaunchDirection = { 0.0f, 0.0f, 0.0f, };
-            }
-
-            lifts.push_back(lift);
-        }
-    }
-
-    void FixturesService::CollectShields(const Classifieds& classifieds,
-        const ObjectTable& objects, Shields& shields)
-    {
-        for (const auto& classified : classifieds)
-        {
-            if (classified.Function != Function::Barrier) continue;
-
-            auto objectIt = objects.find(classified.Handle);
-            if (objectIt == objects.end()) continue;
-
-            const AliveObject& object = objectIt->second;
-            if (object.Address == 0) continue;
-
-            const auto* crate = std::get_if<CrateObject>(&object.Specific);
-            const auto* equipment = std::get_if<EquipmentObject>(&object.Specific);
-
-            const auto* data = (crate && crate->Shield.has_value()) ? &*crate->Shield
-                : (equipment && equipment->Shield.has_value()) ? &*equipment->Shield
-                : nullptr;
-            if (!data) continue;
-
-            Shield shield{};
-            shield.Handle = classified.Handle;
-            shield.TagName = object.TagName;
-            shield.Position = object.BoundingCenter;
-            shield.Forward = object.Forward;
-            shield.Up = object.Up;
-            shield.Kind = data->Kind;
-
-            if (shield.Kind == ShieldKind::OneWay)
-            {
-                if (data->IsShieldDoor)
-                {
-                    shield.BlockDirection = {
-                        -shield.Forward.X,
-                        -shield.Forward.Y,
-                        -shield.Forward.Z,
-                    };
-                }
-                else
-                {
-                    shield.BlockDirection = shield.Forward;
-                }
-            }
-
-            shields.push_back(shield);
         }
     }
 

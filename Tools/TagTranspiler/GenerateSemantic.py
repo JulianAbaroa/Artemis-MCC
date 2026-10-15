@@ -87,7 +87,9 @@ def ReadCatalog(functions):
         if subtype:
             subId = dict(f["subtypes"]).get(subtype)
             if subId is None: Fail(f"catalog {group} {name}: subtype {function}/{subtype} not declared in Semantic.xml")
-        labels.append((group, name, function, subId))
+        facing = e.get("facing", "")
+        if facing not in ("", "reversed"): Fail(f"catalog {group} {name}: facing {facing} is not 'reversed'")
+        labels.append((group, name, function, subId, facing == "reversed"))
     labels.sort(key=lambda l: (l[0], l[1]))
     for a, b in zip(labels, labels[1:]):
         if (a[0], a[1]) == (b[0], b[1]): Fail(f"catalog: {a[0]} {a[1]} repeated")
@@ -165,12 +167,16 @@ def GenerateCatalog(labels) -> list:
          "        // Four letter group of the tag (fourcc).",
          "        std::string_view Group{};", "        std::string_view TagName{};", "        Function Function{};", "",
          "        // Value of the subtype enum of the function (Subtype::<Function>). 0 is None.",
-         "        std::uint8_t Subtype{};", "    };", "",
+         "        std::uint8_t Subtype{};", "",
+         "        // The Forward of the model points against the meaning of the function (facing=\"reversed\" in the catalog).",
+         "        // note: A OneWay Barrier with it passes along -Forward (the ff_one_way_door tags).",
+         "        bool IsFacingReversed{};", "    };", "",
          "    // Labels sorted by group and tag name.",
          f"    inline constexpr std::array<TagLabel, {len(labels)}> k_TagLabels", "    {{"]
-    for g, n, f, s in labels:
+    for g, n, f, s, r in labels:
         cn = n.replace("\\", "\\\\").replace('"', '\\"')
-        L.append(f"        {{ .Group = \"{g}\", .TagName = \"{cn}\", .Function = Function::{f}, .Subtype = {s} }},")
+        reversed_ = ", .IsFacingReversed = true" if r else ""
+        L.append(f"        {{ .Group = \"{g}\", .TagName = \"{cn}\", .Function = Function::{f}, .Subtype = {s}{reversed_} }},")
     L += ["    }};", "",
           "    // Finds the label of an object tag.",
           "    // param group: Four letter group of the tag (fourcc).",

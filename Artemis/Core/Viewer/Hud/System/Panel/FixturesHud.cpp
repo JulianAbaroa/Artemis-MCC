@@ -7,7 +7,6 @@ import :Fixtures;
 
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
-import Tables.Object.Type;
 import Environment.Fixtures.Type;
 import Environment.Details.Type;
 import Gui.Widget.System;
@@ -23,11 +22,12 @@ namespace
     using Export::Tick::Type::Entity;
     using Export::Tick::Type::ZoneDetail;
     using Export::Tick::Type::TeleporterDetail;
+    using Export::Tick::Type::LiftDetail;
+    using Export::Tick::Type::BarrierDetail;
     using Environment::Details::Type::TeleporterPass;
     using Environment::Details::Type::HasPass;
     using ZoneShape = Common::ZoneShape::Type::ZoneShape;
     using ZoneKind = Common::ZoneShape::Type::Kind;
-    using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
     using SpawnKind = Fixture::Spawn::Kind;
 
     using HexFormater = Gui::Format::System::HexFormater;
@@ -47,17 +47,6 @@ namespace
         case SpawnKind::Initial: return "Initial Spawn";
         case SpawnKind::Respawn: return "Respawn";
         case SpawnKind::Invisible: return "Invisible";
-        default: return "Unknown";
-        }
-    }
-
-    auto ShieldKindToString(ShieldKind kind) -> const char*
-    {
-        switch (kind)
-        {
-        case ShieldKind::OneWay: return "One-Way";
-        case ShieldKind::TwoWay: return "Two-Way";
-        case ShieldKind::Blocker: return "Blocker";
         default: return "Unknown";
         }
     }
@@ -154,40 +143,42 @@ namespace
         DrawAllowedObjects(teleporter.Passes);
     }
 
-    auto DrawLift(const Fixture::Lift::Lift& l) -> void
+    // return: The title of an entity: function and subtype.
+    auto TitleOf(const Entity& entity) -> std::string
     {
-        PanelGuiService::DrawHeader(ImVec4(0.6f, 1.0f, 1.0f, 1.0f), "Lift", l.TagName, l.Handle);
-        PanelGuiService::DrawVec3("Position:", l.Position);
-        PanelGuiService::DrawVec3("Forward:", l.Forward);
-        PanelGuiService::DrawVec3("Up:", l.Up);
-        ImGui::Text("Angle Type: %s", FixturesFormater::AngleKindToString(l.Angle));
-        ImGui::Text("Force Type: %s", FixturesFormater::ForceKindToString(l.Force));
-        PanelGuiService::DrawVec3("Launch Direction:", l.LaunchDirection);
+        std::string title{ SemanticType::NameOf(entity.Function) };
+        const std::string_view subtype{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) };
+        if (!subtype.empty()) title += std::format(" {}", subtype);
+
+        return title;
     }
 
-    auto DrawShield(const Fixture::Shield::Shield& sh) -> void
+    // Draws an entity with a lift detail (D91).
+    // note: The force waits for A12 and the launch direction is provisional.
+    auto DrawLift(const Entity& entity, const LiftDetail& lift, const std::string& tagName) -> void
     {
-        PanelGuiService::DrawHeader(ImVec4(0.85f, 0.4f, 1.0f, 1.0f), "Shield", sh.TagName, sh.Handle);
-        PanelGuiService::DrawVec3("Position:", sh.Position);
-        PanelGuiService::DrawVec3("Forward:", sh.Forward);
-        PanelGuiService::DrawVec3("Up:", sh.Up);
-        ImGui::Text("Type: %s", ShieldKindToString(sh.Kind));
+        PanelGuiService::DrawHeader(ImVec4(0.6f, 1.0f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+        PanelGuiService::DrawVec3("Launch Direction:", lift.LaunchDirection);
+    }
 
-        if (sh.BlockDirection.has_value())
-        {
-            PanelGuiService::DrawVec3("Block Direction:", *sh.BlockDirection);
-        }
+    // Draws an entity with a barrier detail (D91).
+    auto DrawBarrier(const Entity& entity, const BarrierDetail& barrier, const std::string& tagName) -> void
+    {
+        PanelGuiService::DrawHeader(ImVec4(0.85f, 0.4f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+        PanelGuiService::DrawVec3("Pass Direction:", barrier.PassDirection);
     }
 
     // Draws an entity with a zone detail: objective spawn, objective zone, boundary or any other zone (D88).
     // param shape: Empty when the entity has no zone detail.
     auto DrawZoneEntity(const Entity& entity, const ZoneShape& shape, const std::string& tagName) -> void
     {
-        std::string title{ SemanticType::NameOf(entity.Function) };
-        const std::string_view subtype{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) };
-        if (!subtype.empty()) title += std::format(" {}", subtype);
-
-        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), title.c_str(), tagName, entity.Handle);
+        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
         PanelGuiService::DrawVec3("World Origin:", entity.WorldOrigin);
         PanelGuiService::DrawVec3("Forward:", entity.Forward);
         PanelGuiService::DrawVec3("Up:", entity.Up);
@@ -256,10 +247,8 @@ namespace Viewer::Hud::System
 
         if (TryDraw(fx.Obstacles, handle, DrawObstacle)) return;
         if (TryDraw(fx.Spawns, handle, DrawSpawn)) return;
-        if (TryDraw(fx.Lifts, handle, DrawLift)) return;
-        if (TryDraw(fx.Shields, handle, DrawShield)) return;
 
-        // note: Zones and teleporters come from the Entities and their details, not from the Fixtures (D88, D90).
+        // note: Zones, teleporters, lifts and barriers come from the Entities and their details, not from the Fixtures (D88, D90, D91).
         const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };
         if (entity != nullptr)
         {
@@ -285,6 +274,26 @@ namespace Viewer::Hud::System
                 if (teleporterIt != tick.TeleporterDetails->end())
                 {
                     DrawTeleporter(*entity, teleporterIt->second, shape, tagName);
+                    return;
+                }
+            }
+
+            if (entity->Function == Function::Lift && tick.LiftDetails)
+            {
+                const auto liftIt = tick.LiftDetails->find(handle);
+                if (liftIt != tick.LiftDetails->end())
+                {
+                    DrawLift(*entity, liftIt->second, tagName);
+                    return;
+                }
+            }
+
+            if (entity->Function == Function::Barrier && tick.BarrierDetails)
+            {
+                const auto barrierIt = tick.BarrierDetails->find(handle);
+                if (barrierIt != tick.BarrierDetails->end())
+                {
+                    DrawBarrier(*entity, barrierIt->second, tagName);
                     return;
                 }
             }

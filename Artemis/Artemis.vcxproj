@@ -789,6 +789,12 @@
     <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Details\Type\Teleporter\DetailsTeleporter.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Lift\DetailsLift.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.cpp" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.ixx" />
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Barrier\DetailsBarrier.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx" />

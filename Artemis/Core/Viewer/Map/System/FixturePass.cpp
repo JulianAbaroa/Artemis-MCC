@@ -8,7 +8,6 @@ import :FixturePass;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Common.Math.Type;
-import Environment.Fixtures.Type;
 import Environment.Details.Type;
 import Environment.Entities.Type;
 import Export.Tick.Type;
@@ -150,23 +149,26 @@ namespace Viewer::Map::System
             }
         }
 
-        if (options.LiftArrows && tick->Fixtures)
+        if (options.LiftArrows && tick->LiftDetails && tick->Entities)
         {
-            for (const auto& lift : tick->Fixtures->Lifts)
+            for (const auto& [handle, lift] : *tick->LiftDetails)
             {
-                AppendDirectional(vertices, lift.Position, lift.LaunchDirection,
-                    options.ArrowLength, k_Fixture);
+                const auto* entity{ tick->Entities->Find(handle) };
+                if (!entity) continue;
+
+                AppendDirectional(vertices, entity->BoundingCenter, lift.LaunchDirection, options.ArrowLength, k_Fixture);
             }
         }
 
-        if (options.ShieldArrows && tick->Fixtures)
+        // note: Only OneWay barriers have a pass direction. A zero direction draws nothing.
+        if (options.ShieldArrows && tick->BarrierDetails && tick->Entities)
         {
-            for (const auto& shield : tick->Fixtures->Shields)
+            for (const auto& [handle, barrier] : *tick->BarrierDetails)
             {
-                if (!shield.BlockDirection) continue;
+                const auto* entity{ tick->Entities->Find(handle) };
+                if (!entity) continue;
 
-                AppendDirectional(vertices, shield.Position, *shield.BlockDirection,
-                    options.ArrowLength, k_Fixture);
+                AppendDirectional(vertices, entity->BoundingCenter, barrier.PassDirection, options.ArrowLength, k_Fixture);
             }
         }
 

@@ -119,6 +119,8 @@ namespace Runtime::Thread
         m_Environment.m_VitalityDetailsService.Update();
         m_Environment.m_ZoneDetailsService.Update();
         m_Environment.m_TeleporterDetailsService.Update();
+        m_Environment.m_LiftDetailsService.Update();
+        m_Environment.m_BarrierDetailsService.Update();
         m_Environment.m_EntitiesService.Update();
         m_Environment.m_CollidableService.Update(m_ViewerCameraStore.IsActive());
         m_Environment.m_FixturesService.Update();

@@ -11,7 +11,6 @@ import Common.ZoneShape.Type;
 import Environment.Fixtures.Type;
 import Environment.Details.Type;
 import Gui.Format.System;
-import Tables.Object.Type;
 import Viewer.Options.State;
 import Viewer.Options.Type;
 import Viewer.Style.Type;
@@ -27,7 +26,6 @@ namespace
     using TeamFormater = Gui::Format::System::TeamFormater;
     using ZoneShape = Common::ZoneShape::Type::ZoneShape;
 
-    namespace Crate = Tables::Object::Type::Crate;
     namespace Fixture = Environment::Fixtures::Type;
     namespace SemanticType = Common::Semantic::Type;
 
@@ -72,18 +70,6 @@ namespace
         if (HasPass(passes, TeleporterPass::Projectiles)) append("projectiles");
 
         return text.empty() ? std::string{ "nothing" } : text;
-    }
-
-    auto ShieldKindText(Crate::Shield::Kind kind) -> const char*
-    {
-        switch (kind)
-        {
-        case Crate::Shield::Kind::OneWay: return "One-way";
-        case Crate::Shield::Kind::TwoWay: return "Two-way";
-        case Crate::Shield::Kind::Blocker: return "Blocker";
-        }
-
-        return "Unknown";
     }
 }
 
@@ -168,29 +154,42 @@ namespace Viewer::Hud::System
             }
         }
 
-        if (options.IsEnabled(Flag::FixtureLiftLabels))
+        // note: Lifts and barriers are entities with their detail (D91). The kind is the subtype. The force of a lift waits for A12.
+        auto tagNameOf = [&tick](std::uint32_t handle) -> std::string
         {
-            for (const auto& lift : fixtures.Lifts)
-            {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("LIFT", accent));
-                rows.push_back(Row(ShortTagName(lift.TagName), k_MutedColor));
-                rows.push_back(Row(std::string{ "angle: " } + FixturesFormater::AngleKindToString(lift.Angle)));
-                rows.push_back(Row(std::string{ "force: " } + FixturesFormater::ForceKindToString(lift.Force)));
+            if (!tick.ObjectTable) return {};
 
-                canvas.Add(lift.Position, std::move(rows), accent, neutral, k_FixturePriority, lift.Handle);
+            const auto objectIt = tick.ObjectTable->find(handle);
+            return objectIt != tick.ObjectTable->end() ? ShortTagName(objectIt->second.TagName) : std::string{};
+        };
+
+        if (options.IsEnabled(Flag::FixtureLiftLabels) && tick.LiftDetails && tick.Entities)
+        {
+            for (const auto& [handle, lift] : *tick.LiftDetails)
+            {
+                const auto* entity{ tick.Entities->Find(handle) };
+                if (!entity) continue;
+
+                std::vector<LabelRow> rows{};
+                rows.push_back(Row(std::format("LIFT {}", SemanticType::Subtype::NameOf(entity->Function, entity->Subtype)), accent));
+                rows.push_back(Row(tagNameOf(handle), k_MutedColor));
+
+                canvas.Add(entity->BoundingCenter, std::move(rows), accent, neutral, k_FixturePriority, handle);
             }
         }
 
-        if (options.IsEnabled(Flag::FixtureShieldLabels))
+        if (options.IsEnabled(Flag::FixtureShieldLabels) && tick.BarrierDetails && tick.Entities)
         {
-            for (const auto& shield : fixtures.Shields)
+            for (const auto& [handle, barrier] : *tick.BarrierDetails)
             {
-                std::vector<LabelRow> rows{};
-                rows.push_back(Row("SHIELD", accent));
-                rows.push_back(Row(ShieldKindText(shield.Kind)));
+                const auto* entity{ tick.Entities->Find(handle) };
+                if (!entity) continue;
 
-                canvas.Add(shield.Position, std::move(rows), accent, neutral, k_FixturePriority, shield.Handle);
+                std::vector<LabelRow> rows{};
+                rows.push_back(Row(std::format("BARRIER {}", SemanticType::Subtype::NameOf(entity->Function, entity->Subtype)), accent));
+                rows.push_back(Row(tagNameOf(handle), k_MutedColor));
+
+                canvas.Add(entity->BoundingCenter, std::move(rows), accent, neutral, k_FixturePriority, handle);
             }
         }
 

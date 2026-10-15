@@ -598,6 +598,18 @@
     <Filter Include="Core\Domain\6_Environment\Details\System\Teleporter">
       <UniqueIdentifier>{defcf7d3-5845-4e74-ac7b-133062ce7640}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\Type\Lift">
+      <UniqueIdentifier>{396801f6-ce9d-4694-9b2d-2ef432cf3e31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\System\Lift">
+      <UniqueIdentifier>{8ac41c46-acff-450b-b081-d664cfab624e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\Type\Barrier">
+      <UniqueIdentifier>{59a740f9-cb95-422b-96ca-babf8daaaa26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Details\System\Barrier">
+      <UniqueIdentifier>{9f193407-7dd2-41f6-b319-ae90cab8ec82}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\6_Environment\Entities">
       <UniqueIdentifier>{359e4fd3-c29a-4875-88c5-e97af7f3713e}</UniqueIdentifier>
     </Filter>
@@ -1672,6 +1684,24 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Details\Type\Teleporter\DetailsTeleporter.ixx">
       <Filter>Core\Domain\6_Environment\Details\Type\Teleporter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.cpp">
+      <Filter>Core\Domain\6_Environment\Details\System\Lift</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.ixx">
+      <Filter>Core\Domain\6_Environment\Details\System\Lift</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Lift\DetailsLift.ixx">
+      <Filter>Core\Domain\6_Environment\Details\Type\Lift</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.cpp">
+      <Filter>Core\Domain\6_Environment\Details\System\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.ixx">
+      <Filter>Core\Domain\6_Environment\Details\System\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Barrier\DetailsBarrier.ixx">
+      <Filter>Core\Domain\6_Environment\Details\Type\Barrier</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx">
       <Filter>Core\Domain\6_Environment\Entities\Type</Filter>

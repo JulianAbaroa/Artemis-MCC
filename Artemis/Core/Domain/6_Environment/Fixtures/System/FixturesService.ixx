@@ -20,14 +20,10 @@ export namespace Environment::Fixtures::System
         using Classifieds = std::vector<Classified>;
         using Obstacle = Environment::Fixtures::Type::Obstacle::Obstacle;
         using Spawn = Environment::Fixtures::Type::Spawn::Spawn;
-        using Lift = Environment::Fixtures::Type::Lift::Lift;
-        using Shield = Environment::Fixtures::Type::Shield::Shield;
         using Objective = Environment::Fixtures::Type::Objective::Objective;
         using Destructible = Environment::Fixtures::Type::Destructible::Destructible;
         using Obstacles = std::vector<Obstacle>;
         using Spawns = std::vector<Spawn>;
-        using Lifts = std::vector<Lift>;
-        using Shields = std::vector<Shield>;
         using Objectives = std::vector<Objective>;
         using Destructibles = std::vector<Destructible>;
 
@@ -58,12 +54,6 @@ export namespace Environment::Fixtures::System
 
         auto CollectSpawns(const Classifieds& classifieds,
             const ObjectTable& objects, Spawns& spawns) -> void;
-
-        auto CollectLifts(const Classifieds& classifieds,
-            const ObjectTable& objects, Lifts& lifts) -> void;
-
-        auto CollectShields(const Classifieds& classifieds,
-            const ObjectTable& objects, Shields& shields) -> void;
 
         // Collects the objective items, carried or not.
         // note: Objective spawns and zones, boundaries and the other zones are Entities with ZoneDetails now (D88).

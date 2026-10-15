@@ -35,7 +35,7 @@ export namespace Viewer::Map::System
         auto operator=(const FixturePass&) -> FixturePass& = delete;
 
         // Rebuilds the arrows from the tick. Draws nothing if the tick is missing.
-        // note: Teleporter links come from the TeleporterDetails and the Entities (D90), lifts and shields still from the Fixtures.
+        // note: Every arrow comes from the Details and the Entities: teleporter links (D90), lift launches and barrier pass directions (D91).
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Tick>& tick, const FixturePassOptions& options) -> void;
 

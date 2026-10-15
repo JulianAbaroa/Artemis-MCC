@@ -22,8 +22,6 @@ export namespace Tables::Object::Type::Crate
 		// Destructible.
 		FusionCoil, Landmine, PlasmaBattery,
 		PropaneTank, Pallete,
-
-		Lift, Shield,
 	};
 
 	namespace Teleport
@@ -55,39 +53,6 @@ export namespace Tables::Object::Type::Crate
 			ZoneShape ZoneShape{};
 			std::uint8_t Channel{};
 			Allowed Allowed{};
-		};
-	}
-
-	namespace Lift
-	{
-		enum class Angle : std::uint8_t
-		{
-			Curved, Vertical, Redirected,
-		};
-
-		enum class Force : std::uint8_t
-		{
-			Default, Light, Heavy, Vehicle,
-		};
-
-		struct Lift
-		{
-			Angle Angle{};
-			Force Force{};
-		};
-	}
-
-	namespace Shield
-	{
-		enum class Kind : std::uint8_t
-		{
-			OneWay, TwoWay, Blocker,
-		};
-
-		struct Shield
-		{
-			Kind Kind{};
-			bool IsShieldDoor{};
 		};
 	}
 
@@ -125,41 +90,6 @@ export namespace Tables::Object::Type::Crate
 			{ Name::Explosive::k_Landmine,				Kind::Landmine			},
 			{ Name::Explosive::k_PlasmaBattery,			Kind::PlasmaBattery		},
 			{ Name::Explosive::k_PropaneTank,			Kind::PropaneTank		},
-
-			// Lift.
-			{ Name::Lift::k_ManCannon,					Kind::Lift				},
-			{ Name::Lift::k_ManCannonHeavy,				Kind::Lift				},
-			{ Name::Lift::k_ManCannonLight,				Kind::Lift				},
-			{ Name::Lift::k_VehicleManCannon,			Kind::Lift				},
-			{ Name::Lift::k_GravityLift,				Kind::Lift				},
-			{ Name::Lift::k_ManCannonMCC,				Kind::Lift				},
-			{ Name::Lift::k_ManCannonHeavyMCC,			Kind::Lift				},
-			{ Name::Lift::k_ManCannonLightMCC,			Kind::Lift				},
-			{ Name::Lift::k_ForerunnerGravityLift,		Kind::Lift				},
-			{ Name::Lift::k_ForerunnerGravityLiftTall,	Kind::Lift				},
-			{ Name::Lift::k_ManCannonHumanMCC,			Kind::Lift				},
-
-			// Shield.
-			{ Name::Shield::k_OneWayDoorSmall,			Kind::Shield			},
-			{ Name::Shield::k_OneWayDoorMedium,			Kind::Shield			},
-			{ Name::Shield::k_OneWayDoorLarge,			Kind::Shield			},
-			{ Name::Shield::k_TwoWayDoorSmall,			Kind::Shield			},
-			{ Name::Shield::k_TwoWayDoorMedium,			Kind::Shield			},
-			{ Name::Shield::k_TwoWayDoorLarge,			Kind::Shield			},
-			{ Name::Shield::k_OneWayDoorXSmall,			Kind::Shield			},
-			{ Name::Shield::k_OneWayDoorGarage,			Kind::Shield			},
-			{ Name::Shield::k_ShieldWallSmall,			Kind::Shield			},
-			{ Name::Shield::k_ShieldWallMedium,			Kind::Shield			},
-			{ Name::Shield::k_ShieldWallLarge,			Kind::Shield			},
-			{ Name::Shield::k_ShieldWallXLarge,			Kind::Shield			},
-			{ Name::Shield::k_ShieldDoorSmall,			Kind::Shield			},
-			{ Name::Shield::k_ShieldDoorMedium,			Kind::Shield			},
-			{ Name::Shield::k_ShieldDoorLarge,			Kind::Shield			},
-			{ Name::Shield::k_HangarShieldDoorSmall,		Kind::Shield			},
-			{ Name::Shield::k_HangarShieldDoorSmallSolid,	Kind::Shield			},
-			{ Name::Shield::k_HangarShieldDoorLarge,		Kind::Shield			},
-			{ Name::Shield::k_HangarShieldDoorLargeSolid,	Kind::Shield			},
-			{ Name::Shield::k_DropShield,					Kind::Shield			},
 		};
 
 		auto it = map.find(tagName);
@@ -173,7 +103,5 @@ export namespace Tables::Object::Type::Crate
 
 		std::optional<Teleport::Teleport> Teleport{};
 		std::optional<Destructible::Destructible> Destructible{};
-		std::optional<Lift::Lift> Lift{};
-		std::optional<Shield::Shield> Shield{};
 	};
 }

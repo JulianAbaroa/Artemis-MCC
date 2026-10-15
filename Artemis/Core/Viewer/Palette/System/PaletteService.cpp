@@ -58,24 +58,23 @@ namespace Viewer::Palette::System
             };
 
             addFixed(fixtures.Obstacles);
-            addFixed(fixtures.Lifts);
-            addFixed(fixtures.Shields);
             addFixed(fixtures.Destructibles);
 
             addByTeam(fixtures.Spawns);
             addByTeam(fixtures.Objectives);
         }
 
-        // note: Zones and objective spawns take the team of their entity (D88). Teleporters keep the fixture color (D90).
+        // note: Zones and objective spawns take the team of their entity (D88). Teleporters, lifts and barriers keep the fixture color (D90, D91).
         if (tick->Entities)
         {
             for (const auto& entity : tick->Entities->Rows)
             {
                 const bool hasZone{ tick->ZoneDetails && tick->ZoneDetails->contains(entity.Handle) };
-                const bool isTeleporter{ entity.Function == Function::Teleporter };
+                const bool isFixture{ entity.Function == Function::Teleporter || entity.Function == Function::Lift
+                    || entity.Function == Function::Barrier };
                 const bool isObjectiveSpawn{ entity.Function == Function::ObjectiveSpawn };
 
-                if (isTeleporter) add(entity.Handle, k_Fixture);
+                if (isFixture) add(entity.Handle, k_Fixture);
                 else if (hasZone || isObjectiveSpawn) add(entity.Handle, Viewer::Style::Type::ColorOfTeam(entity.Team));
             }
         }

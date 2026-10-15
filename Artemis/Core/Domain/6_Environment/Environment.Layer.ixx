@@ -24,6 +24,8 @@ export namespace Environment
 		using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
 		using ZoneDetailsStore = Environment::Details::State::ZoneDetailsStore;
 		using TeleporterDetailsStore = Environment::Details::State::TeleporterDetailsStore;
+		using LiftDetailsStore = Environment::Details::State::LiftDetailsStore;
+		using BarrierDetailsStore = Environment::Details::State::BarrierDetailsStore;
 		using EntitiesStore = Environment::Entities::State::EntitiesStore;
 		using CarriedHandlesStore = Environment::Entities::State::CarriedHandlesStore;
 		using CollidableStore = Environment::Collidable::State::CollidableStore;
@@ -33,6 +35,8 @@ export namespace Environment
 		using VitalityDetailsService = Environment::Details::System::VitalityDetailsService;
 		using ZoneDetailsService = Environment::Details::System::ZoneDetailsService;
 		using TeleporterDetailsService = Environment::Details::System::TeleporterDetailsService;
+		using LiftDetailsService = Environment::Details::System::LiftDetailsService;
+		using BarrierDetailsService = Environment::Details::System::BarrierDetailsService;
 		using EntitiesService = Environment::Entities::System::EntitiesService;
 		using CollidableService = Environment::Collidable::System::CollidableService;
 		using FixturesService = Environment::Fixtures::System::FixturesService;
@@ -44,6 +48,8 @@ export namespace Environment
 			m_VitalityDetailsService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, m_VitalityDetailsStore),
 			m_ZoneDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_ZoneDetailsStore),
 			m_TeleporterDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_TeleporterDetailsStore),
+			m_LiftDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_LiftDetailsStore),
+			m_BarrierDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_BarrierDetailsStore),
 			m_EntitiesService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
 			m_CollidableService(service.m_LogsService, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
 			m_FixturesService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_FixturesStore),
@@ -53,6 +59,8 @@ export namespace Environment
 				m_VitalityDetailsService.Cleanup();
 				m_ZoneDetailsService.Cleanup();
 				m_TeleporterDetailsService.Cleanup();
+				m_LiftDetailsService.Cleanup();
+				m_BarrierDetailsService.Cleanup();
 				m_EntitiesService.Cleanup();
 				m_CollidableService.Cleanup();
 				m_FixturesService.Cleanup();
@@ -68,6 +76,8 @@ export namespace Environment
 		VitalityDetailsStore m_VitalityDetailsStore;
 		ZoneDetailsStore m_ZoneDetailsStore;
 		TeleporterDetailsStore m_TeleporterDetailsStore;
+		LiftDetailsStore m_LiftDetailsStore;
+		BarrierDetailsStore m_BarrierDetailsStore;
 		EntitiesStore m_EntitiesStore;
 		CarriedHandlesStore m_CarriedHandlesStore;
 		CollidableStore m_CollidableStore;
@@ -78,6 +88,8 @@ export namespace Environment
 		VitalityDetailsService m_VitalityDetailsService;
 		ZoneDetailsService m_ZoneDetailsService;
 		TeleporterDetailsService m_TeleporterDetailsService;
+		LiftDetailsService m_LiftDetailsService;
+		BarrierDetailsService m_BarrierDetailsService;
 		EntitiesService m_EntitiesService;
 		CollidableService m_CollidableService;
 		FixturesService m_FixturesService;

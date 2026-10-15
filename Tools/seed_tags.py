@@ -15,6 +15,9 @@ Edit it by hand and commit it. This script only brings in what the game and the 
   * Labels  : function, subtype and confidence are only written while confidence is "unknown"
               or "seed". Anything else (review, low, medium, high) is yours and is never touched.
               "note" holds the evidence or the doubt of a label; the script never writes it.
+  * Optional: attributes written by hand only on the tags that need them (OPTIONAL). The script keeps
+              them and never writes them. facing="reversed": the Forward of the model points against the
+              meaning of the function (a OneWay Barrier passes along -Forward).
   * Nothing is deleted, except placeholders of seeds that no longer exist. Maps accumulate in the maps attribute.
   * A tag is identified by group + name: the same name can exist in several groups (a campaign map
     has a "magnum" scenery next to the "magnum" weapon). The seed only applies to the group the old
@@ -35,6 +38,9 @@ TAGS = os.path.join(REPO, "Artemis", "Core", "Common", "Tag", "Type", "Common.Ta
 
 EDITABLE = ("unknown", "seed")
 ATTRS = ("name", "group", "kind", "mp", "function", "subtype", "confidence", "maps", "note")
+OPTIONAL = ("facing",)
+# Order of the attributes in the file: the optional ones go after subtype.
+ORDER = ("name", "group", "kind", "mp", "function", "subtype", "facing", "confidence", "maps", "note")
 
 # --- Enums (single source: the C++ definitions) ---
 
@@ -150,14 +156,14 @@ def load_catalog():
     root = ET.parse(CATALOG).getroot()
     tags = {}
     for e in root.iter("tag"):
-        t = {a: e.get(a, "") for a in ATTRS}
+        t = {a: e.get(a, "") for a in ATTRS + OPTIONAL}
         tags[(t["group"], t["name"])] = t
     return tags
 
 def save_catalog(tags):
     root = ET.Element("catalog", {"game": "Halo: Reach (MCC)"})
     for t in sorted(tags.values(), key=lambda t: (t["group"] or "~", t["name"])):
-        ET.SubElement(root, "tag", {a: t[a] for a in ATTRS})
+        ET.SubElement(root, "tag", {a: t.get(a, "") for a in ORDER if a in ATTRS or t.get(a, "")})
     ET.indent(root, space="\t")
     text = "<?xml version='1.0' encoding='utf-8'?>\n" + ET.tostring(root, encoding="unicode") + "\n"
     os.makedirs(os.path.dirname(CATALOG), exist_ok=True)

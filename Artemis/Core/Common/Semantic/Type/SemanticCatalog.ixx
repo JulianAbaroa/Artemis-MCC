@@ -17,6 +17,10 @@ export namespace Common::Semantic::Type::Catalog
 
         // Value of the subtype enum of the function (Subtype::<Function>). 0 is None.
         std::uint8_t Subtype{};
+
+        // The Forward of the model points against the meaning of the function (facing="reversed" in the catalog).
+        // note: A OneWay Barrier with it passes along -Forward (the ff_one_way_door tags).
+        bool IsFacingReversed{};
     };
 
     // Labels sorted by group and tag name.
@@ -64,11 +68,11 @@ export namespace Common::Semantic::Type::Catalog
         { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_man_cannon_forge\\ff_man_cannon_forge", .Function = Function::Lift, .Subtype = 2 },
         { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_man_cannon_forge_heavy\\ff_man_cannon_forge_heavy", .Function = Function::Lift, .Subtype = 2 },
         { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_man_cannon_forge_light\\ff_man_cannon_forge_light", .Function = Function::Lift, .Subtype = 2 },
-        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_garage\\ff_one_way_door_garage", .Function = Function::Barrier, .Subtype = 1 },
-        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_large\\ff_one_way_door_large", .Function = Function::Barrier, .Subtype = 1 },
-        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_medium\\ff_one_way_door_medium", .Function = Function::Barrier, .Subtype = 1 },
-        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_small\\ff_one_way_door_small", .Function = Function::Barrier, .Subtype = 1 },
-        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_xsmall\\ff_one_way_door_xsmall", .Function = Function::Barrier, .Subtype = 1 },
+        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_garage\\ff_one_way_door_garage", .Function = Function::Barrier, .Subtype = 1, .IsFacingReversed = true },
+        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_large\\ff_one_way_door_large", .Function = Function::Barrier, .Subtype = 1, .IsFacingReversed = true },
+        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_medium\\ff_one_way_door_medium", .Function = Function::Barrier, .Subtype = 1, .IsFacingReversed = true },
+        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_small\\ff_one_way_door_small", .Function = Function::Barrier, .Subtype = 1, .IsFacingReversed = true },
+        { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_one_way_door_xsmall\\ff_one_way_door_xsmall", .Function = Function::Barrier, .Subtype = 1, .IsFacingReversed = true },
         { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_shield_door_large\\ff_shield_door_large", .Function = Function::Barrier, .Subtype = 1 },
         { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_shield_door_medium\\ff_shield_door_medium", .Function = Function::Barrier, .Subtype = 1 },
         { .Group = "bloc", .TagName = "objects\\levels\\forge\\ff_shield_door_small\\ff_shield_door_small", .Function = Function::Barrier, .Subtype = 1 },

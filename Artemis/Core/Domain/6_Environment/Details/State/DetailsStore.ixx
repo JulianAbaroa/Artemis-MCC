@@ -9,4 +9,6 @@ export namespace Environment::Details::State
     using VitalityDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::VitalityDetails>;
     using ZoneDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::ZoneDetails>;
     using TeleporterDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::TeleporterDetails>;
+    using LiftDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::LiftDetails>;
+    using BarrierDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::BarrierDetails>;
 }

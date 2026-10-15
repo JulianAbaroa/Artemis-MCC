@@ -11,6 +11,7 @@ import Viewer.Profiler.Type;
 import Viewer.Profiler.System;
 import Viewer.Map.Type;
 import Viewer.Style.Type;
+import Common.Semantic.Type;
 import std;
 
 namespace
@@ -24,6 +25,7 @@ namespace
     using CpuTimer = Viewer::Profiler::System::CpuTimer;
     using FixturePassOptions = Viewer::Map::Type::FixturePassOptions;
     using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
+    using Common::Semantic::Type::Function;
 
     using Viewer::Style::Type::k_Background;
 }
@@ -90,9 +92,13 @@ namespace Viewer::Map::System
                 CpuTimer timer{ m_Profiler, Cpu::Dynamic };
                 std::unordered_set<std::uint32_t> translucentHandles{};
 
-                if (tick->Fixtures && m_OptionsStore.IsEnabled(Flag::FixtureShieldTranslucent))
+                // note: Every Barrier entity, drop shield bubbles and portable shields included (D91).
+                if (tick->Entities && m_OptionsStore.IsEnabled(Flag::FixtureShieldTranslucent))
                 {
-                    for (const auto& shield : tick->Fixtures->Shields) translucentHandles.insert(shield.Handle);
+                    for (const auto& entity : tick->Entities->Rows)
+                    {
+                        if (entity.Function == Function::Barrier) translucentHandles.insert(entity.Handle);
+                    }
                 }
 
                 // note: The debug collidables are not part of the Tick. They come from their own store.

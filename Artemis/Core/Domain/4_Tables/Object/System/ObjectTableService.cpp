@@ -35,16 +35,11 @@ namespace
 	using CrateKind = Tables::Object::Type::Crate::Kind;
 	using WeaponAction = Tables::Object::Type::Weapon::WeaponAction;
 	using ChargeState = Tables::Object::Type::Weapon::ChargeState;
-	using LiftAngle = Tables::Object::Type::Crate::Lift::Angle;
-	using LiftForce = Tables::Object::Type::Crate::Lift::Force;
-	using Lift = Tables::Object::Type::Crate::Lift::Lift;
-	using ShieldKind = Tables::Object::Type::Crate::Shield::Kind;
 	using ZoomLevel = Tables::Object::Type::Biped::ZoomLevel;
 	using VerticalInput = Tables::Object::Type::Biped::VerticalInput;
 	using GrenadeType = Tables::Object::Type::Biped::GrenadeType;
 	using Damage = Tables::Object::Type::Biped::Damage;
 	using DamageReportingType = Resolved::Definitions::Type::Object::DamageReportingType;
-	using Shield = Tables::Object::Type::Crate::Shield::Shield;
 	using Placement = Tables::Object::Type::Placement::Placement;
 	using Symmetry = Tables::Object::Type::Placement::Symmetry;
 	using Physics = Common::Semantic::Type::Physics;
@@ -535,24 +530,9 @@ namespace Tables::Object::System
 	auto ObjectTableService::UpdateEquipment(const RawObject& datum, AliveObject& object) -> void
 	{
 		EquipmentObject equipment{};
-		equipment.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
 		equipment.Energy = datum.Read<float>(EqipOffset::k_Energy);
 		equipment.IsActive = datum.Read<std::uint32_t>(EqipOffset::k_ActivationTick) != k_None;
-
-		if (equipment.Kind == CrateKind::Shield)
-		{
-			Shield shield{};
-
-			// As far as I know, the only equipment that is a shield,
-			// is the drop shield, and it can only be two-way
-			if (TagName::Shield::IsTwoWay(object.TagName))
-			{
-				shield.Kind = ShieldKind::TwoWay;
-			}
-
-			equipment.Shield = shield;
-		}
 
 		object.Specific = equipment;
 	}
@@ -586,68 +566,6 @@ namespace Tables::Object::System
 			teleport.Allowed = datum.ReadBlock<Allowed>(MultiplayerBlock::k_Descriptor, MultiplayerBlock::k_Allowed);
 
 			crate.Teleport = teleport;
-		}
-
-		else if (crate.Kind == CrateKind::Lift)
-		{
-			Lift lift{};
-
-			if (TagName::Lift::IsCurved(object.TagName))
-			{
-				lift.Angle = LiftAngle::Curved;
-			}
-			else if (TagName::Lift::IsVertical(object.TagName))
-			{
-				lift.Angle = LiftAngle::Vertical;
-			}
-			else if (TagName::Lift::IsRedirected(object.TagName))
-			{
-				lift.Angle = LiftAngle::Redirected;
-			}
-
-			if (TagName::Lift::IsDefault(object.TagName))
-			{
-				lift.Force = LiftForce::Default;
-			}
-			else if (TagName::Lift::IsLight(object.TagName))
-			{
-				lift.Force = LiftForce::Light;
-			}
-			else if (TagName::Lift::IsHeavy(object.TagName))
-			{
-				lift.Force = LiftForce::Heavy;
-			}
-			else if (TagName::Lift::IsVehicle(object.TagName))
-			{
-				lift.Force = LiftForce::Vehicle;
-			}
-
-			crate.Lift = lift;
-		}
-
-		else if (crate.Kind == CrateKind::Shield)
-		{
-			Shield shield{};
-
-			if (TagName::Shield::IsOneWay(object.TagName))
-			{
-				shield.Kind = ShieldKind::OneWay;
-			}
-			else if (TagName::Shield::IsTwoWay(object.TagName))
-			{
-				shield.Kind = ShieldKind::TwoWay;
-
-				if (TagName::Shield::IsShieldDoor(object.TagName))
-				{
-					shield.IsShieldDoor = true;
-				}
-			}
-			else if (TagName::Shield::IsBlocker(object.TagName))
-			{
-				shield.Kind = ShieldKind::Blocker;
-			}
-
-			crate.Shield = shield;
 		}
 
 		object.Specific = crate;
