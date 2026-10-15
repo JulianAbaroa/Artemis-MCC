@@ -5,7 +5,6 @@ import Tables.Player.State;
 import Tables.Interaction.State;
 import Relations.Classifier.State;
 import Relations.ObjectGraph.State;
-import Relations.PlayerGraph.State;
 import Environment.Details.State;
 import Environment.Entities.State;
 import Environment.Players.State;
@@ -29,7 +28,6 @@ export namespace Export::Tick::System
 		using InteractionStore = Tables::Interaction::State::InteractionStore;
 		using ClassifierStore = Relations::Classifier::State::ClassifierStore;
 		using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
-		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
 		using EntitiesStore = Environment::Entities::State::EntitiesStore;
 		using PlayersStore = Environment::Players::State::PlayersStore;
 		using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
@@ -50,7 +48,7 @@ export namespace Export::Tick::System
 	public:
 		TickService(ObjectTableStore& objectStore, PlayerTableStore& playerStore,
 			InteractionStore& interactionStore, ClassifierStore& classifierStore,
-			ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
+			ObjectGraphStore& objectGraphStore,
 			EntitiesStore& entitiesStore, PlayersStore& playersStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
 			TeleporterDetailsStore& teleporterDetailsStore, LiftDetailsStore& liftDetailsStore, BarrierDetailsStore& barrierDetailsStore,
 			AimStore& aimStore, SelfStore& selfStore,
@@ -58,7 +56,7 @@ export namespace Export::Tick::System
 			DefinitionsStore& definitionsStore, TickStore& tickStore) :
 			m_ObjectStore(objectStore), m_PlayerStore(playerStore),
 			m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
-			m_ObjectGraphStore(objectGraphStore), m_PlayerGraphStore(playerGraphStore),
+			m_ObjectGraphStore(objectGraphStore),
 			m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
 			m_TeleporterDetailsStore(teleporterDetailsStore), m_LiftDetailsStore(liftDetailsStore), m_BarrierDetailsStore(barrierDetailsStore),
 			m_AimStore(aimStore), m_SelfStore(selfStore),
@@ -74,7 +72,6 @@ export namespace Export::Tick::System
 		InteractionStore& m_InteractionStore;
 		ClassifierStore& m_ClassifierStore;
 		ObjectGraphStore& m_ObjectGraphStore;
-		PlayerGraphStore& m_PlayerGraphStore;
 		EntitiesStore& m_EntitiesStore;
 		PlayersStore& m_PlayersStore;
 		VitalityDetailsStore& m_VitalityDetailsStore;

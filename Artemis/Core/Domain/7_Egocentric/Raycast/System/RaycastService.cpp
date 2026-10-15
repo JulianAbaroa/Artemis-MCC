@@ -13,12 +13,20 @@ namespace
 	using CachedPart = Egocentric::Raycast::Type::CachedPart;
 	using CollidablePart = Environment::Collidable::Type::CollidablePart;
 	using HitKind = Egocentric::Raycast::Type::HitKind;
+	using Resolved::Definitions::Type::Object::ObjectKind;
+	using Environment::Entities::Type::Entity;
+	using Environment::Entities::Type::Entities;
+	using Environment::Players::Type::Player;
+	using Environment::Players::Type::Loadout;
 
 	using Egocentric::Raycast::Type::Constant::k_FallbackAimRange;
 	using Egocentric::Raycast::Type::Constant::k_MaxRayRange;
 	using Egocentric::Raycast::Type::Constant::k_DynamicRejectMargin;
 	using Egocentric::Raycast::Type::Constant::k_PerceptionRange;
 	using Egocentric::Raycast::Type::Constant::k_PerceptionRayCount;
+
+	// Parents walked up to the root of a biped. Guards against a broken chain.
+	constexpr int k_MaxParentDepth{ 16 };
 
 	constexpr float k_InvSqrt3 = 0.57735026918962576451f;
 
@@ -38,6 +46,24 @@ namespace
 			{ -k_InvSqrt3, -k_InvSqrt3,  k_InvSqrt3 },
 			{ -k_InvSqrt3, -k_InvSqrt3, -k_InvSqrt3 },
 	} };
+
+	// Returns the vehicle at the root of the parent chain of a biped, or 0xFFFFFFFF when it rides none.
+	// note: A turret is a vehicle attached to another one, so the root is the vehicle that carries every part.
+	auto FindVehicleRoot(const Entities& entities, std::uint32_t bipedHandle) -> std::uint32_t
+	{
+		const Entity* current = entities.Find(bipedHandle);
+		if (!current || current->ParentHandle == 0xFFFFFFFF) return 0xFFFFFFFF;
+
+		for (int depth{ 0 }; depth < k_MaxParentDepth && current->ParentHandle != 0xFFFFFFFF; ++depth)
+		{
+			const Entity* parent = entities.Find(current->ParentHandle);
+			if (!parent) break;
+
+			current = parent;
+		}
+
+		return current->Kind == ObjectKind::Vehicle ? current->Handle : 0xFFFFFFFF;
+	}
 
 	// Padding of the boxes, so rays that graze a triangle edge are not lost to rounding.
 	constexpr float k_BoxPadding{ 1.0e-3f };
@@ -176,7 +202,7 @@ namespace Egocentric::Raycast::System
 			this->BuildSelfExclusion(selfPtr->Handle, selfPtr->BipedHandle);
 
 		const PerceptionOrigin perceptionOrigin =
-			this->ResolvePerceptionOrigin(selfPtr->Handle, selfPtr->BipedHandle);
+			this->ResolvePerceptionOrigin(selfPtr->BipedHandle);
 
 		const Vec3 originPosition = perceptionOrigin.Valid ?
 			perceptionOrigin.Position : selfPtr->Position;
@@ -252,25 +278,30 @@ namespace Egocentric::Raycast::System
 
 		exclusion.insert(selfBipedHandle);
 
-		auto playerGraphPtr = m_PlayerGraphStore.Acquire();
-		if (playerGraphPtr)
+		auto playersPtr = m_PlayersStore.Acquire();
+		const Player* player = playersPtr ? playersPtr->Find(selfPlayerHandle) : nullptr;
+		if (player && player->IsAlive())
 		{
-			for (const PlayerTree& tree : *playerGraphPtr)
+			const Loadout& loadout = player->Body->Loadout;
+
+			for (const std::uint32_t handle : { loadout.PrimaryWeapon, loadout.SecondaryWeapon, loadout.Ability, loadout.Objective })
 			{
-				if (tree.Handle != selfPlayerHandle) continue;
+				if (handle != 0xFFFFFFFF) exclusion.insert(handle);
+			}
+		}
 
-				if (tree.PrimaryWeaponHandle != 0xFFFFFFFF) exclusion.insert(tree.PrimaryWeaponHandle);
-				if (tree.SecondaryWeaponHandle != 0xFFFFFFFF) exclusion.insert(tree.SecondaryWeaponHandle);
-				if (tree.AbilityHandle != 0xFFFFFFFF) exclusion.insert(tree.AbilityHandle);
-				if (tree.ObjectiveHandle != 0xFFFFFFFF) exclusion.insert(tree.ObjectiveHandle);
+		auto entitiesPtr = m_EntitiesStore.Acquire();
+		if (entitiesPtr)
+		{
+			const std::uint32_t vehicleHandle = FindVehicleRoot(*entitiesPtr, selfBipedHandle);
+			if (vehicleHandle != 0xFFFFFFFF)
+			{
+				exclusion.insert(vehicleHandle);
 
-				if (tree.IsInVehicle())
+				for (const Entity& entity : entitiesPtr->Rows)
 				{
-					exclusion.insert(tree.ParentHandle);
-					for (std::uint32_t part : tree.VehiclePartHandles) exclusion.insert(part);
+					if (entity.Kind == ObjectKind::Vehicle && entity.ParentHandle == vehicleHandle) exclusion.insert(entity.Handle);
 				}
-
-				break;
 			}
 		}
 
@@ -286,20 +317,15 @@ namespace Egocentric::Raycast::System
 		return exclusion;
 	}
 
-	auto RaycastService::ResolvePerceptionOrigin(std::uint32_t selfPlayerHandle,
-		std::uint32_t selfBipedHandle) const -> PerceptionOrigin
+	auto RaycastService::ResolvePerceptionOrigin(std::uint32_t selfBipedHandle) const -> PerceptionOrigin
 	{
 		std::uint32_t targetHandle = selfBipedHandle;
 
-		auto playerGraphPtr = m_PlayerGraphStore.Acquire();
-		if (playerGraphPtr)
+		auto entitiesPtr = m_EntitiesStore.Acquire();
+		if (entitiesPtr && selfBipedHandle != 0xFFFFFFFF)
 		{
-			for (const PlayerTree& tree : *playerGraphPtr)
-			{
-				if (tree.Handle != selfPlayerHandle) continue;
-				if (tree.IsInVehicle()) targetHandle = tree.ParentHandle;
-				break;
-			}
+			const std::uint32_t vehicleHandle = FindVehicleRoot(*entitiesPtr, selfBipedHandle);
+			if (vehicleHandle != 0xFFFFFFFF) targetHandle = vehicleHandle;
 		}
 
 		if (targetHandle == 0xFFFFFFFF) return {};

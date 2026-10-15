@@ -8,8 +8,6 @@ import Relations.Classifier.State;
 import Relations.Classifier.System;
 import Relations.ObjectGraph.State;
 import Relations.ObjectGraph.System;
-import Relations.PlayerGraph.State;
-import Relations.PlayerGraph.System;
 
 export namespace Relations
 {
@@ -19,22 +17,18 @@ export namespace Relations
 		using ClassifierStore = Relations::Classifier::State::ClassifierStore;
 		using TagClassificationsStore = Relations::Classifier::State::TagClassificationsStore;
 		using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
-		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
 
 		using ClassifierService = Relations::Classifier::System::ClassifierService;
 		using ObjectGraphService = Relations::ObjectGraph::System::ObjectGraphService;
-		using PlayerGraphService = Relations::PlayerGraph::System::PlayerGraphService;
 
 	public:
 		Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved, Tables::Layer& tables) :
 			m_ClassifierService(service.m_LogsService, resolved.m_DefinitionsStore, resolved.m_VitalityStore, tables.m_ObjectStore, m_ClassifierStore, m_TagClassificationsStore),
-			m_ObjectGraphService(service.m_LogsService, tables.m_ObjectStore, m_ObjectGraphStore),
-			m_PlayerGraphService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_ObjectGraphStore, m_PlayerGraphStore)
+			m_ObjectGraphService(service.m_LogsService, tables.m_ObjectStore, m_ObjectGraphStore)
 		{
 			platform.m_LifecycleService.OnCleanup([this] {
 				m_ClassifierService.Cleanup();
 				m_ObjectGraphService.Cleanup();
-				m_PlayerGraphService.Cleanup();
 			});
 		}
 		~Layer() = default;
@@ -46,11 +40,9 @@ export namespace Relations
 		ClassifierStore m_ClassifierStore;
 		TagClassificationsStore m_TagClassificationsStore;
 		ObjectGraphStore m_ObjectGraphStore;
-		PlayerGraphStore m_PlayerGraphStore;
 
 		// --- System ---
 		ClassifierService m_ClassifierService;
 		ObjectGraphService m_ObjectGraphService;
-		PlayerGraphService m_PlayerGraphService;
 	};
 }

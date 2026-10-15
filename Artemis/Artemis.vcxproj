@@ -767,10 +767,6 @@
     <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.cpp" />
     <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\State\PlayerGraphStore.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.cpp" />
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\Type\Relations.PlayerGraph.Type.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Relations.Layer.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Collidable\State\CollidableStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.cpp" />

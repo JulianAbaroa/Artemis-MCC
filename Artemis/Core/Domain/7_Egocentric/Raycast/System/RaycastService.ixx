@@ -11,8 +11,10 @@ import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Environment.Collidable.Type;
 import Environment.Collidable.System;
-import Relations.PlayerGraph.Type;
-import Relations.PlayerGraph.State;
+import Environment.Entities.Type;
+import Environment.Entities.State;
+import Environment.Players.Type;
+import Environment.Players.State;
 import Egocentric.Self.Type;
 import Egocentric.Self.State;
 import Egocentric.Raycast.Type;
@@ -31,8 +33,6 @@ export namespace Egocentric::Raycast::System
 		using AliveObject = Tables::Object::Type::Alive::Object;
 		using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
 		using ResolvedWeap = Resolved::Definitions::Type::Weap::Weap;
-		using PlayerTree = Relations::PlayerGraph::Type::PlayerTree;
-		using PlayerGraph = std::vector<PlayerTree>;
 		using Collidable = Environment::Collidable::Type::Collidable;
 		using CachedDynamic = Egocentric::Raycast::Type::CachedDynamic;
 		using DynamicCache = std::unordered_map<std::uint32_t, CachedDynamic>;
@@ -47,7 +47,8 @@ export namespace Egocentric::Raycast::System
 		using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 		using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 		using Raycaster = Resolved::World::System::Raycaster;
-		using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
+		using EntitiesStore = Environment::Entities::State::EntitiesStore;
+		using PlayersStore = Environment::Players::State::PlayersStore;
 		using CollidableService = Environment::Collidable::System::CollidableService;
 		using SelfStore = Egocentric::Self::State::SelfStore;
 		using RaycastStore = Egocentric::Raycast::State::RaycastStore;
@@ -56,13 +57,13 @@ export namespace Egocentric::Raycast::System
 		RaycastService(LogsService& logsService, PlayerTableStore& playerStore,
 			ObjectTableStore& objectStore, DefinitionsStore& definitionsStore,
 			Raycaster& raycaster, SelfStore& selfStore,
-			CollidableService& collidableService, PlayerGraphStore& playerGraphStore,
-			RaycastStore& raycastStore) :
+			CollidableService& collidableService, EntitiesStore& entitiesStore,
+			PlayersStore& playersStore, RaycastStore& raycastStore) :
 			m_LogsService(logsService), m_PlayerStore(playerStore),
 			m_ObjectStore(objectStore), m_DefinitionsStore(definitionsStore),
 			m_Raycaster(raycaster), m_SelfStore(selfStore),
-			m_CollidableService(collidableService), m_PlayerGraphStore(playerGraphStore),
-			m_RaycastStore(raycastStore) {
+			m_CollidableService(collidableService), m_EntitiesStore(entitiesStore),
+			m_PlayersStore(playersStore), m_RaycastStore(raycastStore) {
 		}
 		~RaycastService() = default;
 
@@ -78,17 +79,19 @@ export namespace Egocentric::Raycast::System
 		Raycaster& m_Raycaster;
 		SelfStore& m_SelfStore;
 		CollidableService& m_CollidableService;
-		PlayerGraphStore& m_PlayerGraphStore;
+		EntitiesStore& m_EntitiesStore;
+		PlayersStore& m_PlayersStore;
 		RaycastStore& m_RaycastStore;
 
 		auto ResolveAimRange(std::uint32_t selfPlayerHandle) const -> float;
 		auto ResolveAimRangeUncapped(std::uint32_t selfPlayerHandle) const -> float;
 
+		// Collects the handles the rays of the agent ignore: its biped, its loadout and the vehicle it rides with its parts.
 		auto BuildSelfExclusion(std::uint32_t selfPlayerHandle,
 			std::uint32_t selfBipedHandle) const -> SelfExclusion;
 
-		auto ResolvePerceptionOrigin(std::uint32_t selfPlayerHandle,
-			std::uint32_t selfBipedHandle) const -> PerceptionOrigin;
+		// Returns the center and the forward of the biped, or of its vehicle when it rides one.
+		auto ResolvePerceptionOrigin(std::uint32_t selfBipedHandle) const -> PerceptionOrigin;
 
 		auto BuildDynamicCache(const Vec3& origin, float radius,
 			const SelfExclusion& selfExclusion) -> DynamicCache;

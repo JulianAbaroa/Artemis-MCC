@@ -5,7 +5,6 @@ import Tables.Player.Type;
 import Tables.Interaction.Type;
 import Relations.Classifier.Type;
 import Relations.ObjectGraph.Type;
-import Relations.PlayerGraph.Type;
 import Environment.Details.Type;
 import Environment.Entities.Type;
 import Environment.Players.Type;
@@ -28,8 +27,6 @@ export namespace Export::Tick::Type
 	using Classifieds = std::vector<Classified>;
 	using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
 	using ObjectGraph = std::unordered_map<uint32_t, ObjectNode>;
-	using PlayerTree = Relations::PlayerGraph::Type::PlayerTree;
-	using PlayerGraph = std::vector<PlayerTree>;
 
 	using Entity = Environment::Entities::Type::Entity;
 	using Entities = Environment::Entities::Type::Entities;
@@ -73,7 +70,6 @@ export namespace Export::Tick::Type
 		// --- Layer 4: Relations ---
 		std::shared_ptr<const Classifieds> Classifieds;
 		std::shared_ptr<const ObjectGraph> ObjectGraph;
-		std::shared_ptr<const PlayerGraph> PlayerGraph;
 
 		// --- Layer 5: Environment ---
 		std::shared_ptr<const Entities> Entities;

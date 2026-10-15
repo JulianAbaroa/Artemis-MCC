@@ -38,7 +38,7 @@ export namespace Tables::Player::Type::Offset
     constexpr std::uintptr_t k_AimOffset{ 0x050 };
 
     // Handle of the primary weapon (uint32).
-    // note: It does not change when the weapons are swapped in game. The equipped weapon is the first child of the biped (see PlayerGraph).
+    // note: It does not change when the weapons are swapped in game. The unit has the equipped weapon (Players Loadout).
     constexpr std::uintptr_t k_PrimaryWeaponHandle{ 0x05C };
 
     // Handle of the secondary weapon (uint32).

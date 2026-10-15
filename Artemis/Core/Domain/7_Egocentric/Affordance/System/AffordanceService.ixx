@@ -11,8 +11,6 @@ import Relations.Classifier.Type;
 import Relations.Classifier.State;
 import Relations.ObjectGraph.Type;
 import Relations.ObjectGraph.State;
-import Relations.PlayerGraph.Type;
-import Relations.PlayerGraph.State;
 import Environment.Collidable.System;
 import Egocentric.Self.State;
 import Egocentric.Affordance.Type;
@@ -38,11 +36,8 @@ export namespace Egocentric::Affordance::System
         using Classified = Relations::Classifier::Type::Classified;
         using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
         using ObjectGraph = std::unordered_map<std::uint32_t, ObjectNode>;
-        using PlayerTree = Relations::PlayerGraph::Type::PlayerTree;
-        using PlayerGraph = std::vector<PlayerTree>;
         using ClassifierStore = Relations::Classifier::State::ClassifierStore;
         using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
-        using PlayerGraphStore = Relations::PlayerGraph::State::PlayerGraphStore;
         using CollidableService = Environment::Collidable::System::CollidableService;
         using Affordance = Egocentric::Affordance::Type::Affordance;
         using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
@@ -57,13 +52,12 @@ export namespace Egocentric::Affordance::System
         AffordanceService(LogsService& logsService, ObjectTableStore& objectStore,
             BoneMatricesStore& boneMatricesStore, InteractionStore& interactionStore,
             SelfStore& selfStore, ClassifierStore& classifierStore,
-            ObjectGraphStore& objectGraphStore, PlayerGraphStore& playerGraphStore,
-            AffordanceStore& affordanceStore, CollidableService& collidableService) :
+            ObjectGraphStore& objectGraphStore, AffordanceStore& affordanceStore, CollidableService& collidableService) :
             m_LogsService(logsService), m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore),
             m_InteractionStore(interactionStore), m_SelfStore(selfStore),
             m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
-            m_PlayerGraphStore(playerGraphStore), m_AffordanceStore(affordanceStore),
+            m_AffordanceStore(affordanceStore),
             m_CollidableService(collidableService)  {}
         ~AffordanceService() = default;
 
@@ -79,23 +73,20 @@ export namespace Egocentric::Affordance::System
         SelfStore& m_SelfStore;
         ClassifierStore& m_ClassifierStore;
         ObjectGraphStore& m_ObjectGraphStore;
-        PlayerGraphStore& m_PlayerGraphStore;
         AffordanceStore& m_AffordanceStore;
         CollidableService& m_CollidableService;
 
         auto BuildVehicleAffordance(const AliveObject& object,
             const Vec3& selfPosition,
             std::uint32_t selfBipedHandle, const AliveInteraction& interaction,
-            const ObjectGraph& objectGraph, const PlayerGraph& playerGraph,
-            const ObjectTable& objectTable, Affordance& out) const -> bool;
+            const ObjectGraph& objectGraph, const ObjectTable& objectTable, Affordance& out) const -> bool;
 
         auto BuildAffordance(const AliveObject& object, const Classified& classified,
             const Vec3& selfPosition, const AliveInteraction& interaction) const -> Affordance;
 
         auto ResolveSeatStatuses(const Vehicle& vehi,
             const AliveObject& object, const ObjectGraph& objectGraph,
-            const ObjectTable& objectTable, const PlayerGraph& playerGraph,
-            const Vec3& selfPosition, std::uint32_t selfBipedHandle,
+            const ObjectTable& objectTable, const Vec3& selfPosition, std::uint32_t selfBipedHandle,
             std::vector<SeatStatus>& outSeats) const -> bool;
 
         auto CollectVehiclePartHandles(std::uint32_t vehicleHandle,

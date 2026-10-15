@@ -541,18 +541,6 @@
     <Filter Include="Core\Domain\5_Relations\ObjectGraph\System">
       <UniqueIdentifier>{243ac1db-66ef-4c71-bd3e-687c6af032a8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\5_Relations\PlayerGraph">
-      <UniqueIdentifier>{6c4e2afc-68e1-4ba2-8fed-2064a251a21f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\PlayerGraph\Type">
-      <UniqueIdentifier>{ba7bb4f7-504d-41fd-817a-e78b2641738b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\PlayerGraph\State">
-      <UniqueIdentifier>{ddc78b30-c6c0-4808-992a-b8589b319c3b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\PlayerGraph\System">
-      <UniqueIdentifier>{9442ec32-d9b3-463f-aa22-9840fdb5998d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\6_Environment">
       <UniqueIdentifier>{ae9d5c10-0a62-4dbf-b244-47ff3fc76de9}</UniqueIdentifier>
     </Filter>
@@ -1747,18 +1735,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.ixx">
       <Filter>Core\Domain\5_Relations\ObjectGraph\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\Type\Relations.PlayerGraph.Type.ixx">
-      <Filter>Core\Domain\5_Relations\PlayerGraph\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\State\PlayerGraphStore.ixx">
-      <Filter>Core\Domain\5_Relations\PlayerGraph\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.cpp">
-      <Filter>Core\Domain\5_Relations\PlayerGraph\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\PlayerGraph\System\PlayerGraphService.ixx">
-      <Filter>Core\Domain\5_Relations\PlayerGraph\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\7_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
       <Filter>Core\Domain\7_Egocentric\Self\Type</Filter>

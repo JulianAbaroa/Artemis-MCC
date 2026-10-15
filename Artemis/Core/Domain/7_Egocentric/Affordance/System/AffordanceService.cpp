@@ -44,16 +44,13 @@ namespace Egocentric::Affordance::System
         auto interactionPtr = m_InteractionStore.Acquire();
         auto classifiedsPtr = m_ClassifierStore.Acquire();
         auto objectGraphPtr = m_ObjectGraphStore.Acquire();
-        auto playerGraphPtr = m_PlayerGraphStore.Acquire();
         auto objectTablePtr = m_ObjectStore.Acquire();
 
-        if (!interactionPtr || !classifiedsPtr || !objectGraphPtr ||
-            !playerGraphPtr || !objectTablePtr) return;
+        if (!interactionPtr || !classifiedsPtr || !objectGraphPtr || !objectTablePtr) return;
 
         const AliveInteraction& interaction = *interactionPtr;
         const Classifieds& classifieds = *classifiedsPtr;
         const ObjectGraph& nodes = *objectGraphPtr;
-        const PlayerGraph& playerTrees = *playerGraphPtr;
         const ObjectTable& objectTable = *objectTablePtr;
 
         std::vector<Affordance> results;
@@ -81,7 +78,7 @@ namespace Egocentric::Affordance::System
 
                 if (!this->BuildVehicleAffordance(
                     object, selfPosition, selfBipedHandle, interaction,
-                    nodes, playerTrees, objectTable, interactable))
+                    nodes, objectTable, interactable))
                 {
                     continue;
                 }
@@ -115,7 +112,7 @@ namespace Egocentric::Affordance::System
     auto AffordanceService::BuildVehicleAffordance(const AliveObject& object,
         const Vec3& selfPosition, std::uint32_t selfBipedHandle,
         const AliveInteraction& interaction, const ObjectGraph& objectGraph,
-        const PlayerGraph& playerGraph, const ObjectTable& objectTable, Affordance& out) const -> bool
+        const ObjectTable& objectTable, Affordance& out) const -> bool
     {
         const Vehicle* vehiPtr = std::get_if<Vehicle>(&object.Specific);
         if (!vehiPtr) return false;
@@ -124,7 +121,7 @@ namespace Egocentric::Affordance::System
 
         std::vector<SeatStatus> seats;
         if (!this->ResolveSeatStatuses(
-            vehi, object, objectGraph, objectTable, playerGraph,
+            vehi, object, objectGraph, objectTable,
             selfPosition, selfBipedHandle, seats))
         {
             return false;
@@ -162,8 +159,7 @@ namespace Egocentric::Affordance::System
 
     auto AffordanceService::ResolveSeatStatuses(const Vehicle& vehi,
         const AliveObject& object, const ObjectGraph& objectGraph,
-        const ObjectTable& objectTable, const PlayerGraph& playerGraph,
-        const Vec3& selfPosition, std::uint32_t selfBipedHandle,
+        const ObjectTable& objectTable, const Vec3& selfPosition, std::uint32_t selfBipedHandle,
         std::vector<SeatStatus>& outSeats) const -> bool
     {
         if (!vehi.SeatLayout) return false;

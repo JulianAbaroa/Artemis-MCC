@@ -114,7 +114,6 @@ namespace Runtime::Thread
 
         m_Relations.m_ClassifierService.UpdateClassification();
         m_Relations.m_ObjectGraphService.UpdateGraph();
-        m_Relations.m_PlayerGraphService.UpdateGraph();
 
         m_Environment.m_VitalityDetailsService.Update();
         m_Environment.m_ZoneDetailsService.Update();

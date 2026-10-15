@@ -53,7 +53,6 @@ namespace Export::Tick::System
         // --- Layer 4: Relations ---
         tick.Classifieds = m_ClassifierStore.Acquire();
         tick.ObjectGraph = m_ObjectGraphStore.Acquire();
-        tick.PlayerGraph = m_PlayerGraphStore.Acquire();
 
         // --- Layer 5: Environment ---
         tick.Entities = m_EntitiesStore.Acquire();
