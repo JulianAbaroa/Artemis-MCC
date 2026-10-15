@@ -4,7 +4,7 @@ import sys
 LICENSE_HEADER = (
     "// ============================================================\n"
     "// Icon data embedded from Font Awesome Free (https://fontawesome.com)\n"
-    "// Icons: cube, person-rifle, gear, square-binary, file-lines, map\n"
+    "// Icons: cube, person-rifle, gear, file-lines, map\n"
     "// License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)\n"
     "// Changes: downloaded as PNG, embedded as byte arrays.\n"
     "// This attribution applies to the icon byte data below, not to\n"
@@ -17,7 +17,6 @@ ICONS = {
     "person-rifle-solid.png":  "Players",
     "map-solid.png":           "Map",
     "gear-solid.png":          "Settings",
-    "square-binary-solid.png": "Scanner",
     "file-lines-solid.png":    "Logs",
 }
 

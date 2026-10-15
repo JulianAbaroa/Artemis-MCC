@@ -22,8 +22,6 @@ import UI.PlayerTable.State;
 import UI.PlayerTable.System;
 import UI.DefinitionsInspector.System;
 import UI.Settings.System;
-import UI.MemoryScanner.State;
-import UI.MemoryScanner.System;
 import UI.Capture.State;
 import UI.Capture.System;
 import UI.Logs.State;
@@ -48,7 +46,6 @@ export namespace UI
         using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
         using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
         using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
-        using MemoryScannerUIStore = UI::MemoryScanner::State::MemoryScannerUIStore;
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
@@ -58,7 +55,6 @@ export namespace UI
         using PlayerTableUIService = UI::PlayerTable::System::PlayerTableUIService;
         using DefinitionsInspectorUIService = UI::DefinitionsInspector::System::DefinitionsInspectorUIService;
         using SettingsUIService = UI::Settings::System::SettingsUIService;
-        using MemoryScannerUIService = UI::MemoryScanner::System::MemoryScannerUIService;
         using CaptureUIService = UI::Capture::System::CaptureUIService;
         using LogsUIService = UI::Logs::System::LogsUIService;
 
@@ -73,7 +69,6 @@ export namespace UI
             m_PlayerTableUIService(exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
-            m_MemoryScannerUIService(platform.m_MemoryScannerStore, platform.m_MemoryScannerService, m_MemoryScannerUIStore),
             m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
         {
@@ -111,7 +106,6 @@ export namespace UI
         LauncherUIStore m_LauncherUIStore{};
         ObjectTableUIStore m_ObjectTableUIStore{};
         PlayerTableUIStore m_PlayerTableUIStore{};
-        MemoryScannerUIStore m_MemoryScannerUIStore{};
         CaptureUIStore m_CaptureUIStore{};
         LogsUIStore m_LogsUIStore{};
 
@@ -122,7 +116,6 @@ export namespace UI
         PlayerTableUIService m_PlayerTableUIService;
         DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
         SettingsUIService m_SettingsUIService;
-        MemoryScannerUIService m_MemoryScannerUIService;
         CaptureUIService m_CaptureUIService;
         LogsUIService m_LogsUIService;
 

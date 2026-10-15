@@ -11,7 +11,6 @@ export namespace UI::Launcher::Type
         PlayerTable,
         DefinitionsInspector,
         Settings,
-        MemoryScanner,
         Capture,
         Logs,
 

@@ -7,7 +7,6 @@ import Platform.Lifecycle.Hook;
 import Platform.Input.State;
 import Platform.Input.System;
 import Platform.Input.Hook;
-import Platform.Memory.State;
 import Platform.Memory.System;
 import Platform.Render.Type;
 import Platform.Render.State;
@@ -37,10 +36,8 @@ export namespace Platform
         using GetRawInputDataDetour = Platform::Input::Hook::GetRawInputDataDetour;
         using WndProcDetour = Platform::Input::Hook::WndProcDetour;
 
-        using MemoryScannerStore = Platform::Memory::State::MemoryScannerStore;
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
-        using MemoryScannerService = Platform::Memory::System::MemoryScannerService;
 
         using FrameContext = Platform::Render::Type::FrameContext;
         using RenderStore = Platform::Render::State::RenderStore;
@@ -54,7 +51,6 @@ export namespace Platform
             m_LifecycleService(service.m_LogsService, m_LifecycleStore),
             m_InputService(service.m_LogsService, m_InputStore, m_MouseDeltaStore),
             m_AOBService(service.m_LogsService),
-            m_MemoryScannerService(service.m_LogsService, m_MemoryScannerStore),
             m_RenderService(service.m_LogsService, m_RenderStore),
             m_SwapChainLocator(service.m_LogsService),
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
@@ -99,7 +95,6 @@ export namespace Platform
         LifecycleStore m_LifecycleStore;
         InputStore m_InputStore;
         MouseDeltaStore m_MouseDeltaStore;
-        MemoryScannerStore m_MemoryScannerStore;
         RenderStore m_RenderStore;
 
         // --- System ---
@@ -107,7 +102,6 @@ export namespace Platform
         InputService m_InputService;
         AOBService m_AOBService;
         MemoryReaderService m_MemoryReaderService;
-        MemoryScannerService m_MemoryScannerService;
         RenderService m_RenderService;
         SwapChainLocator m_SwapChainLocator;
 

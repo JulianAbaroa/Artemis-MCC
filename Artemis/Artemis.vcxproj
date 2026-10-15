@@ -500,18 +500,12 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.State.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemoryScanner.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.cpp" />
@@ -591,7 +585,6 @@
     <ClCompile Include="Core\UI\Icon\Type\UI.Icon.Type.ixx" />
     <ClCompile Include="Core\UI\Launcher\Type\UI.Launcher.Type.ixx" />
     <ClCompile Include="Core\UI\Logs\Type\UI.Logs.Type.ixx" />
-    <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx" />
     <ClCompile Include="Core\UI\Capture\Type\UI.Capture.Type.ixx" />
     <ClCompile Include="Core\UI\DefinitionsInspector\System\DefinitionsInspectorUIService.cpp" />
     <ClCompile Include="Core\UI\DefinitionsInspector\Type\UI.DefinitionsInspector.Type.ixx" />
@@ -827,10 +820,6 @@
     <ClCompile Include="Core\UI\Logs\State\LogsUIStore.ixx" />
     <ClCompile Include="Core\UI\Logs\System\LogsUIService.cpp" />
     <ClCompile Include="Core\UI\Logs\System\LogsUIService.ixx" />
-    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.cpp" />
-    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.ixx" />
-    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.cpp" />
-    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.ixx" />
     <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.cpp" />
     <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.ixx" />
     <ClCompile Include="Core\UI\Capture\System\CaptureUIService.cpp" />
@@ -1014,7 +1003,6 @@
     <Image Include="Resources\Icons\gear-solid.png" />
     <Image Include="Resources\Icons\map-solid.png" />
     <Image Include="Resources\Icons\person-rifle-solid.png" />
-    <Image Include="Resources\Icons\square-binary-solid.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

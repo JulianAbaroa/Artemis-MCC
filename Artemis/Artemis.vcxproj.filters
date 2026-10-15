@@ -88,14 +88,8 @@
     <Filter Include="Core\Infrastructure\Platform\Memory\Type">
       <UniqueIdentifier>{5881ed28-56e7-4fe0-aa94-8eb7fe29a61b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory\State">
-      <UniqueIdentifier>{b8f087a3-afbb-464b-b378-0afee3390d9f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Memory\System">
       <UniqueIdentifier>{31d732ce-1054-4a29-9825-84dbd8d0db2b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory\System\Scanner">
-      <UniqueIdentifier>{4be2985f-6a46-4a23-863a-5f2e718bb0d6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Memory\System\AOB">
       <UniqueIdentifier>{9a67a9b4-2f97-4bc5-bb79-564d26c037ea}</UniqueIdentifier>
@@ -849,18 +843,6 @@
     </Filter>
     <Filter Include="Core\UI\Settings\System">
       <UniqueIdentifier>{7ef7422e-884e-4f0a-9b1f-3c4e893cd01c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\MemoryScanner">
-      <UniqueIdentifier>{19cf5bf9-9238-4920-ab85-9a30ba66d665}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\MemoryScanner\State">
-      <UniqueIdentifier>{83f4d304-e8bc-40e0-ba64-dd83743882f2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\MemoryScanner\System">
-      <UniqueIdentifier>{21809807-e161-4ec7-a674-347589ac4cff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UI\MemoryScanner\Type">
-      <UniqueIdentifier>{052d1b1b-1a9d-4f48-bc5a-0ba115adef1e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\UI\Capture">
       <UniqueIdentifier>{02863328-1fbe-4c98-927f-dc40f5b6b65e}</UniqueIdentifier>
@@ -2114,18 +2096,6 @@
     <ClCompile Include="Core\UI\Settings\System\SettingsUIService.cpp">
       <Filter>Core\UI\Settings\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.ixx">
-      <Filter>Core\UI\MemoryScanner\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\MemoryScanner\State\MemoryScannerUIStore.cpp">
-      <Filter>Core\UI\MemoryScanner\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.ixx">
-      <Filter>Core\UI\MemoryScanner\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\UI\MemoryScanner\System\MemoryScannerUIService.cpp">
-      <Filter>Core\UI\MemoryScanner\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\Capture\State\CaptureUIStore.ixx">
       <Filter>Core\UI\Capture\State</Filter>
     </ClCompile>
@@ -2264,9 +2234,6 @@
     <ClCompile Include="Core\UI\Logs\Type\UI.Logs.Type.ixx">
       <Filter>Core\UI\Logs\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UI\MemoryScanner\Type\UI.MemoryScanner.Type.ixx">
-      <Filter>Core\UI\MemoryScanner\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Gui\Backend\System\WndProcGuiService.ixx">
       <Filter>Core\Gui\Backend\System</Filter>
     </ClCompile>
@@ -2345,23 +2312,11 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.State.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx">
       <Filter>Core\Infrastructure\Platform\Memory</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Memory</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Memory\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\State\MemoryScannerStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemoryScanner.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx">
       <Filter>Core\Infrastructure\Platform\Memory\Type</Filter>
@@ -2377,12 +2332,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx">
       <Filter>Core\Infrastructure\Platform\Memory\System\Reader</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.cpp">
-      <Filter>Core\Infrastructure\Platform\Memory\System\Scanner</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Scanner\MemoryScannerService.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory\System\Scanner</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.Hook.ixx">
       <Filter>Core\Infrastructure\Platform\Render</Filter>
@@ -3457,9 +3406,6 @@
       <Filter>Resources\Icons</Filter>
     </Image>
     <Image Include="Resources\Icons\person-rifle-solid.png">
-      <Filter>Resources\Icons</Filter>
-    </Image>
-    <Image Include="Resources\Icons\square-binary-solid.png">
       <Filter>Resources\Icons</Filter>
     </Image>
   </ItemGroup>

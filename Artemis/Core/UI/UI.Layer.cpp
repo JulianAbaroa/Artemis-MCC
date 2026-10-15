@@ -46,9 +46,6 @@ namespace UI
         m_LauncherUIService.DrawTab(Tab::Settings, "Settings", [this] {
             m_SettingsUIService.Draw();
         });
-        m_LauncherUIService.DrawTab(Tab::MemoryScanner, "Memory Scanner", [this] {
-            m_MemoryScannerUIService.Draw();
-        });
         m_LauncherUIService.DrawTab(Tab::Capture, "Datum Capture", [this] {
             m_CaptureUIService.Draw();
         });
