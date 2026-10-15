@@ -22,6 +22,7 @@ Field names come from Data/Datum/<component>.xml, so known fields show their nam
         (symmetry check, rows of the layers in use, --matrix for all of them), and per object its component and rigid bodies
         (layer, motion type, system group). --pairs prints which captured objects collide with each other, with the
         isCollisionEnabled rule of the hkpGroupFilter (FUN_180882080). --label keeps the captures whose label contains TEXT.
+        Also prints the projectile collision test flags (ct-flags, A13) and the collision model (coll) of each object.
 
 Objects are matched across captures by handle. --self follows the local biped even if it respawns with a new handle.
 """
@@ -47,6 +48,7 @@ class Obj:
         self.Phmo = None   # dict of the hk-phmo line, {} when the object has no physics model
         self.Rigids = []   # dicts of the hk-rigid lines, each with its "shapes" (dicts of the hk-shape lines)
         self.PhantomTypes = []  # dicts of the hk-phantomtype lines
+        self.Coll = None   # tag of the collision model (ct-coll), "none" without one
 
     def ComponentAt(self, offset):
         for name, start, end in self.Ranges:
@@ -60,6 +62,7 @@ class Capture:
         self.Objects = {}
         self.Filter = None  # dict of the hk-filter line
         self.Lookup = []    # 32 rows of the Havok layer table
+        self.TestFlags = None  # u64 of the projectile collision test (ct-flags), None if not read
 
     def Self(self):
         return next((o for o in self.Objects.values() if o.Source == "self"), None)
@@ -77,6 +80,11 @@ def Load(path):
                 m = re.match(r"-- object (\w+) source (\w+) class (\S+) size 0x(\w+) address 0x(\w+) tag ?(.*)", line)
                 obj = Obj(m[1], m[2], m[3], int(m[4], 16), m[5], m[6])
                 cap.Objects[obj.Handle] = obj
+            elif line.startswith("ct-flags"):
+                value = line.split()[1]
+                cap.TestFlags = None if value == "none" else int(value, 16)
+            elif line.startswith("ct-coll"):
+                obj.Coll = line.split(" ", 1)[1]
             elif line.startswith("hk-"):
                 LoadHavokLine(line, cap, obj)
             elif line.startswith(".. "):
@@ -377,10 +385,30 @@ def PrintPhmo(o):
     for p in o.PhantomTypes:
         print(f"        phantom type {p['index']}: flags {p['flags']} marker {p['marker']} direction {p['direction']} center {p['center']} axis {p['axis']} orbit {p['orbit']}")
 
+OBJECT_TYPES = ["biped", "vehicle", "weapon", "equipment", "terminal", "projectile", "scenery", "machine", "control",
+                "sound scenery", "crate", "creature", "giant", "effect scenery"]
+
+def DescribeTestFlags(flags):
+    high = flags >> 32
+    types = [name for i, name in enumerate(OBJECT_TYPES) if (high >> (i + 1)) & 1]
+    missing = [name for i, name in enumerate(OBJECT_TYPES) if not (high >> (i + 1)) & 1]
+    low_bits = [str(b) for b in range(32) if (flags >> b) & 1]
+    # An empty type mask means no type filter: FUN_1804f4e88 only sets type bits to restrict the test to one type.
+    typeText = (f"    types in the mask: {', '.join(types)}\n    types NOT in the mask: {', '.join(missing) or '-'}"
+                if types else "    type mask empty: no type filter, every object type is tested")
+    return (f"0x{flags:016X}  objects tested: {'yes' if high & 1 else 'NO'}\n{typeText}\n"
+            f"    low collision flag bits: {' '.join(low_bits) or '-'}")
+
 def CmdHavok(captures, fields, args):
     selected = Groups(captures, args.label) if args.label else captures
     if not selected:
         sys.exit("No captures match.")
+    withFlags = [c for c in selected if c.TestFlags is not None]
+    if withFlags:
+        print(f"Projectile collision test flags (capture {withFlags[-1].Index}): {DescribeTestFlags(withFlags[-1].TestFlags)}")
+        changed = sorted({c.TestFlags for c in withFlags})
+        if len(changed) > 1:
+            print(f"warning: the flags differ between captures: {[f'0x{v:016X}' for v in changed]}")
     withTable = [c for c in selected if len(c.Lookup) == 32]
     if not withTable:
         print("No Havok layer table in the selected captures (hk-filter none or an old capture file).")
@@ -401,6 +429,8 @@ def CmdHavok(captures, fields, args):
         print(f"\ncapture {c.Index}  \"{c.Label}\"")
         for o in Pick(c, args):
             print(f"  {o.Class} {o.Handle} {o.Source:<6} {o.Tag}")
+            if o.Coll is not None:
+                print(f"      coll: {o.Coll}")
             if o.Havok is None:
                 print("      no hk-component line")
                 continue

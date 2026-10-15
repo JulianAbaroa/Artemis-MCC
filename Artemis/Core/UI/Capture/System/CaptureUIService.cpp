@@ -105,6 +105,9 @@ namespace
     constexpr std::uintptr_t k_RigidBodyFilterInfoOffset{ 0x4C };
     constexpr std::uintptr_t k_RigidBodyMotionTypeOffset{ 0x160 };
 
+    // RVA of the u64 flags of the collision test of projectiles (DAT_1828ffcf0 in Ghidra, read by FUN_1804f4e88).
+    constexpr std::uintptr_t k_CollisionTestFlagsRva{ 0x28FFCF0 };
+
     // Bodies read at most per component. A larger count means the component address is wrong.
     constexpr std::int32_t k_MaxHavokBodies{ 64 };
 
@@ -332,6 +335,18 @@ namespace
         }
     }
 
+    // Writes the flags of the collision test of projectiles, or a line saying they were not read.
+    auto WriteCollisionTestFlags(std::ofstream& file, const std::optional<std::uint64_t>& flags) -> void
+    {
+        if (!flags)
+        {
+            file << "ct-flags none\n";
+            return;
+        }
+
+        file << std::format("ct-flags {:016X}\n", *flags);
+    }
+
     // return: Model tag name of the object definition, or empty if its class has no definition or the tag is missing.
     // note: The definition stores must be frozen.
     auto ModelTagNameOf(const DefinitionsStore& definitions, ObjectKind kind, const std::string& tagName) -> std::string
@@ -483,6 +498,7 @@ namespace UI::Capture::System
 
         *file << std::format("== capture {} generation {} time {:%H:%M:%S} label \"{}\"\n", index, tick->Generation, LocalNow(), label);
         WriteHavokFilter(*file, this->ReadHavokFilter());
+        WriteCollisionTestFlags(*file, this->ReadCollisionTestFlags());
 
         std::vector<ByteChange> changes{};
         std::string details{};
@@ -510,6 +526,10 @@ namespace UI::Capture::System
             const std::uint32_t havokHandle{ datum.Read<std::uint32_t>(ObjeOffset::k_HavokComponentHandle) };
             WriteHavokComponent(*file, havokHandle, this->ReadHavokComponent(havokHandle));
             WritePhmo(*file, this->FindPhmo(datum.Kind, tagName));
+
+            const Hlmt* hlmt{ this->FindHlmt(datum.Kind, tagName) };
+            const bool hasColl{ hlmt && !hlmt->CollisionModelTagName.empty() };
+            *file << std::format("ct-coll {}\n", hasColl ? hlmt->CollisionModelTagName : std::string{ "none" });
 
             const std::vector<std::uint8_t>* previous{ m_CaptureUIStore.FindPrevious(target.Handle) };
             const bool isComparable{ previous != nullptr && previous->size() == datum.Bytes.size() };
@@ -637,14 +657,32 @@ namespace UI::Capture::System
         return component;
     }
 
-    auto CaptureUIService::FindPhmo(ObjectKind kind, const std::string& tagName) const -> const Phmo*
+    auto CaptureUIService::ReadCollisionTestFlags() -> std::optional<std::uint64_t>
     {
-        if (!m_DefinitionsStore.Phmo.IsFrozen()) return nullptr;
+        const std::uintptr_t module{ GameModuleBase() };
+        if (module == 0) return std::nullopt;
+
+        std::uint64_t flags{};
+        if (!m_MemoryReaderService.ReadRaw(module + k_CollisionTestFlagsRva, &flags, sizeof(flags))) return std::nullopt;
+
+        return flags;
+    }
+
+    auto CaptureUIService::FindHlmt(ObjectKind kind, const std::string& tagName) const -> const Hlmt*
+    {
+        if (!m_DefinitionsStore.Hlmt.IsFrozen()) return nullptr;
 
         const std::string modelTagName{ ModelTagNameOf(m_DefinitionsStore, kind, tagName) };
         if (modelTagName.empty()) return nullptr;
 
-        const auto* hlmt{ m_DefinitionsStore.Hlmt.Get(modelTagName) };
+        return m_DefinitionsStore.Hlmt.Get(modelTagName);
+    }
+
+    auto CaptureUIService::FindPhmo(ObjectKind kind, const std::string& tagName) const -> const Phmo*
+    {
+        if (!m_DefinitionsStore.Phmo.IsFrozen()) return nullptr;
+
+        const Hlmt* hlmt{ this->FindHlmt(kind, tagName) };
         if (!hlmt || hlmt->PhysicsModelTagName.empty()) return nullptr;
 
         return m_DefinitionsStore.Phmo.Get(hlmt->PhysicsModelTagName);
@@ -673,6 +711,7 @@ namespace UI::Capture::System
         {
             file << "# Artemis datum captures (D81). Offsets and ranges are absolute datum offsets.\n";
             file << "# hk-* lines: Havok filter layer table per capture, Havok component and physics model of each object (A10).\n";
+            file << "# ct-* lines: flags of the projectile collision test per capture and collision model of each object (A13).\n";
         }
 
         return file;
