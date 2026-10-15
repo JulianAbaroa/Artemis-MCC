@@ -1,5 +1,7 @@
 module;
 
+#include <windows.h>
+
 #include "External/imgui/imgui.h"
 
 module UI.Capture.System;
@@ -21,6 +23,9 @@ namespace
     using UI::Capture::Type::Source;
     using UI::Capture::Type::Target;
     using UI::Capture::Type::ByteChange;
+    using UI::Capture::Type::HavokFilter;
+    using UI::Capture::Type::HavokBody;
+    using UI::Capture::Type::HavokComponent;
 
     using UI::Capture::Type::k_LabelSize;
 
@@ -53,6 +58,50 @@ namespace
 
     // Name of the range after the last component: the variable blocks of the datum.
     constexpr const char* k_BlocksName{ "blocks" };
+
+    // Module whose globals hold the Havok world and the Havok component data array (A10).
+    constexpr const wchar_t* k_GameModuleName{ L"haloreach.dll" };
+
+    // RVA of the hkpWorld pointer (DAT_184e2fe68 in Ghidra).
+    constexpr std::uintptr_t k_HavokWorldRva{ 0x4E2FE68 };
+
+    // Collision filter pointer inside the hkpWorld (FUN_18017d680, FUN_18012e500).
+    constexpr std::uintptr_t k_WorldFilterOffset{ 0xD0 };
+
+    // Layer table inside the hkpGroupFilter (FUN_180882080, its isCollisionEnabled).
+    constexpr std::uintptr_t k_FilterLookupOffset{ 0x4C };
+
+    // RVA of the pointer to the Havok component data array (DAT_180c519b8 in Ghidra).
+    constexpr std::uintptr_t k_HavokComponentArrayRva{ 0xC519B8 };
+
+    // Pointer to the first element inside a data array.
+    constexpr std::uintptr_t k_DataArrayElementsOffset{ 0x50 };
+
+    // Low half of a handle: the element index.
+    constexpr std::uint32_t k_HandleIndexMask{ 0xFFFF };
+
+    // Havok component layout (FUN_18012e1e8, FUN_18012e7cc, FUN_18017d680).
+    constexpr std::uintptr_t k_HavokComponentSize{ 0xC0 };
+    constexpr std::uintptr_t k_ComponentFlagsOffset{ 0x18 };
+    constexpr std::uintptr_t k_ComponentOwnerOffset{ 0x1C };
+    constexpr std::uintptr_t k_ComponentSizeOffset{ 0x22 };
+    constexpr std::uintptr_t k_ComponentBodiesOffset{ 0x30 };
+    constexpr std::uintptr_t k_ComponentBodyCountOffset{ 0x38 };
+    constexpr std::uintptr_t k_BodyEntrySize{ 0x50 };
+    constexpr std::uintptr_t k_BodyEntryRigidBodyOffset{ 0x40 };
+
+    // hkpRigidBody fields: collidable filter info and motion type.
+    constexpr std::uintptr_t k_RigidBodyFilterInfoOffset{ 0x4C };
+    constexpr std::uintptr_t k_RigidBodyMotionTypeOffset{ 0x160 };
+
+    // Bodies read at most per component. A larger count means the component address is wrong.
+    constexpr std::int32_t k_MaxHavokBodies{ 64 };
+
+    // Fields of the hkpGroupFilter info: 5 bits each, the system group in the high half.
+    constexpr std::uint32_t k_FilterFieldMask{ 0x1F };
+    constexpr std::uint32_t k_SubsystemShift{ 5 };
+    constexpr std::uint32_t k_IgnoredSubsystemShift{ 10 };
+    constexpr std::uint32_t k_SystemGroupShift{ 16 };
 
     constexpr ComponentRange k_Obje{ .Name = "obje", .Start = ObjeOffset::k_ComponentStart, .End = ObjeOffset::k_ComponentEnd };
     constexpr ComponentRange k_Anim{ .Name = "anim", .Start = AnimOffset::k_ComponentStart, .End = AnimOffset::k_ComponentEnd };
@@ -209,6 +258,60 @@ namespace
         }
     }
 
+    // return: Base address of the game module, or 0 if it is not loaded.
+    auto GameModuleBase() -> std::uintptr_t
+    {
+        return reinterpret_cast<std::uintptr_t>(GetModuleHandleW(k_GameModuleName));
+    }
+
+    // Writes the layer table of the Havok collision filter, one row per layer, or a line saying it was not found.
+    auto WriteHavokFilter(std::ofstream& file, const std::optional<HavokFilter>& filter) -> void
+    {
+        if (!filter)
+        {
+            file << "hk-filter none\n";
+            return;
+        }
+
+        file << std::format("hk-filter world 0x{:X} filter 0x{:X}\n", filter->World, filter->Filter);
+
+        for (std::size_t layer{ 0 }; layer < filter->Lookup.size(); ++layer)
+        {
+            file << std::format("hk-lookup {:02} {:08X}\n", layer, filter->Lookup[layer]);
+        }
+    }
+
+    // Writes the Havok component of an object and one line per rigid body, with the fields of its filter info.
+    // param handle: Value of obje 0xCC.
+    auto WriteHavokComponent(std::ofstream& file, std::uint32_t handle, const std::optional<HavokComponent>& component) -> void
+    {
+        if (handle == k_NoHandle)
+        {
+            file << "hk-component none\n";
+            return;
+        }
+
+        if (!component)
+        {
+            file << std::format("hk-component {:08X} unreadable\n", handle);
+            return;
+        }
+
+        file << std::format("hk-component {:08X} address 0x{:X} salt {:04X} flags {:08X} owner {:08X} size {} bodies {}\n",
+            component->Handle, component->Address, component->Salt, component->Flags, component->Owner,
+            static_cast<int>(component->Size), component->BodyCount);
+
+        for (std::size_t index{ 0 }; index < component->Bodies.size(); ++index)
+        {
+            const HavokBody& body{ component->Bodies[index] };
+            const std::uint32_t info{ body.FilterInfo };
+
+            file << std::format("hk-body {} address 0x{:X} info {:08X} layer {} subsystem {} ignores {} group {} motion {}\n",
+                index, body.Address, info, info & k_FilterFieldMask, (info >> k_SubsystemShift) & k_FilterFieldMask,
+                (info >> k_IgnoredSubsystemShift) & k_FilterFieldMask, info >> k_SystemGroupShift, static_cast<int>(body.MotionType));
+        }
+    }
+
     // Appends the runs of bytes that differ from the previous capture, one run never crossing a range.
     // return: Changed bytes per range, as "unit 12, eqip 9", or empty if nothing changed.
     // note: previous has the same size as the datum.
@@ -287,6 +390,7 @@ namespace UI::Capture::System
         std::erase(label, '"');
 
         *file << std::format("== capture {} generation {} time {:%H:%M:%S} label \"{}\"\n", index, tick->Generation, LocalNow(), label);
+        WriteHavokFilter(*file, this->ReadHavokFilter());
 
         std::vector<ByteChange> changes{};
         std::string details{};
@@ -310,6 +414,9 @@ namespace UI::Capture::System
 
             const std::vector<ComponentRange> cuts{ CutDatum(datum) };
             WriteObject(*file, datum, target.Source, fourCC, tagName, cuts);
+
+            const std::uint32_t havokHandle{ datum.Read<std::uint32_t>(ObjeOffset::k_HavokComponentHandle) };
+            WriteHavokComponent(*file, havokHandle, this->ReadHavokComponent(havokHandle));
 
             const std::vector<std::uint8_t>* previous{ m_CaptureUIStore.FindPrevious(target.Handle) };
             const bool isComparable{ previous != nullptr && previous->size() == datum.Bytes.size() };
@@ -357,6 +464,73 @@ namespace UI::Capture::System
         return targets;
     }
 
+    auto CaptureUIService::ReadHavokFilter() -> std::optional<HavokFilter>
+    {
+        const std::uintptr_t module{ GameModuleBase() };
+        if (module == 0) return std::nullopt;
+
+        HavokFilter filter{};
+
+        filter.World = m_MemoryReaderService.Read<std::uintptr_t>(module, k_HavokWorldRva);
+        if (filter.World == 0) return std::nullopt;
+
+        filter.Filter = m_MemoryReaderService.Read<std::uintptr_t>(filter.World, k_WorldFilterOffset);
+        if (filter.Filter == 0) return std::nullopt;
+
+        const std::size_t bytes{ sizeof(std::uint32_t) * filter.Lookup.size() };
+        if (!m_MemoryReaderService.ReadRaw(filter.Filter + k_FilterLookupOffset, filter.Lookup.data(), bytes)) return std::nullopt;
+
+        return filter;
+    }
+
+    auto CaptureUIService::ReadHavokComponent(std::uint32_t handle) -> std::optional<HavokComponent>
+    {
+        if (handle == k_NoHandle) return std::nullopt;
+
+        const std::uintptr_t module{ GameModuleBase() };
+        if (module == 0) return std::nullopt;
+
+        const auto array{ m_MemoryReaderService.Read<std::uintptr_t>(module, k_HavokComponentArrayRva) };
+        if (array == 0) return std::nullopt;
+
+        const auto elements{ m_MemoryReaderService.Read<std::uintptr_t>(array, k_DataArrayElementsOffset) };
+        if (elements == 0) return std::nullopt;
+
+        const std::uintptr_t address{ elements + (handle & k_HandleIndexMask) * k_HavokComponentSize };
+
+        HavokComponent component
+        {
+            .Handle = handle,
+            .Address = address,
+            .Salt = m_MemoryReaderService.Read<std::uint16_t>(address, 0),
+            .Flags = m_MemoryReaderService.Read<std::uint32_t>(address, k_ComponentFlagsOffset),
+            .Owner = m_MemoryReaderService.Read<std::uint32_t>(address, k_ComponentOwnerOffset),
+            .Size = m_MemoryReaderService.Read<std::int8_t>(address, k_ComponentSizeOffset),
+            .BodyCount = m_MemoryReaderService.Read<std::int32_t>(address, k_ComponentBodyCountOffset),
+        };
+
+        if (component.BodyCount <= 0 || component.BodyCount > k_MaxHavokBodies) return component;
+
+        const auto entries{ m_MemoryReaderService.Read<std::uintptr_t>(address, k_ComponentBodiesOffset) };
+        if (entries == 0) return component;
+
+        for (std::int32_t index{ 0 }; index < component.BodyCount; ++index)
+        {
+            const std::uintptr_t entry{ entries + static_cast<std::uintptr_t>(index) * k_BodyEntrySize };
+            HavokBody body{ .Address = m_MemoryReaderService.Read<std::uintptr_t>(entry, k_BodyEntryRigidBodyOffset) };
+
+            if (body.Address != 0)
+            {
+                body.FilterInfo = m_MemoryReaderService.Read<std::uint32_t>(body.Address, k_RigidBodyFilterInfoOffset);
+                body.MotionType = m_MemoryReaderService.Read<std::uint8_t>(body.Address, k_RigidBodyMotionTypeOffset);
+            }
+
+            component.Bodies.push_back(body);
+        }
+
+        return component;
+    }
+
     auto CaptureUIService::OpenSessionFile() -> std::optional<std::ofstream>
     {
         const std::string directory{ m_SettingsStore.GetAppDataDirectory() };
@@ -376,7 +550,11 @@ namespace UI::Capture::System
         std::ofstream file{ m_CaptureUIStore.GetFilePath(), std::ios::app };
         if (!file) return std::nullopt;
 
-        if (isNewSession) file << "# Artemis datum captures (D81). Offsets and ranges are absolute datum offsets.\n";
+        if (isNewSession)
+        {
+            file << "# Artemis datum captures (D81). Offsets and ranges are absolute datum offsets.\n";
+            file << "# hk-* lines: Havok filter layer table per capture and Havok component of each object (A10).\n";
+        }
 
         return file;
     }
@@ -384,7 +562,8 @@ namespace UI::Capture::System
     auto CaptureUIService::DrawControls() -> void
     {
         ImGui::TextWrapped("F7 or Capture copies the datum of the local biped, its weapons, its armor ability, its vehicle and the pinned objects "
-            "to a session file in the storage folder. Pin objects from the Object Table cards.");
+            "to a session file in the storage folder, with the Havok component of each one and the Havok layer table (A10). "
+            "Pin objects from the Object Table cards.");
 
         std::array<char, k_LabelSize>& label{ m_CaptureUIStore.GetLabel() };
         ImGui::SetNextItemWidth(260.0f);

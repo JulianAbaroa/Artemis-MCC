@@ -17,6 +17,11 @@ Field names come from Data/Datum/<component>.xml, so known fields show their nam
         --all also lists offsets whose A and B values never overlap but are not constant (energy, timers).
     python Tools/analyze_captures.py FILE clocks [--class bipd]
         u32 offsets that grow in every capture: ticks and counters (noise for split, useful as clocks).
+    python Tools/analyze_captures.py FILE havok [--label TEXT] [--class bipd] [--pairs] [--matrix]
+        Havok data of the captures (A10, Ignore/Tareas/Transversal/A10_Colisiones.txt): layer table of the collision filter
+        (symmetry check, rows of the layers in use, --matrix for all of them), and per object its component and rigid bodies
+        (layer, motion type, system group). --pairs prints which captured objects collide with each other, with the
+        isCollisionEnabled rule of the hkpGroupFilter (FUN_180882080). --label keeps the captures whose label contains TEXT.
 
 Objects are matched across captures by handle. --self follows the local biped even if it respawns with a new handle.
 """
@@ -36,6 +41,8 @@ class Obj:
         self.Handle, self.Source, self.Class, self.Address, self.Tag = handle, source, cls, address, tag
         self.Bytes = bytearray(size)
         self.Ranges = []  # (component, start, end)
+        self.Havok = None  # dict of the hk-component line, {} when the object has no component
+        self.Bodies = []   # dicts of the hk-body lines
 
     def ComponentAt(self, offset):
         for name, start, end in self.Ranges:
@@ -47,6 +54,8 @@ class Capture:
     def __init__(self, index, generation, time, label):
         self.Index, self.Generation, self.Time, self.Label = index, generation, time, label
         self.Objects = {}
+        self.Filter = None  # dict of the hk-filter line
+        self.Lookup = []    # 32 rows of the Havok layer table
 
     def Self(self):
         return next((o for o in self.Objects.values() if o.Source == "self"), None)
@@ -64,6 +73,8 @@ def Load(path):
                 m = re.match(r"-- object (\w+) source (\w+) class (\S+) size 0x(\w+) address 0x(\w+) tag ?(.*)", line)
                 obj = Obj(m[1], m[2], m[3], int(m[4], 16), m[5], m[6])
                 cap.Objects[obj.Handle] = obj
+            elif line.startswith("hk-"):
+                LoadHavokLine(line, cap, obj)
             elif line.startswith(".. "):
                 name, start, end = line[3:].split()
                 obj.Ranges.append((name, int(start, 16), int(end, 16)))
@@ -73,6 +84,31 @@ def Load(path):
                 o = int(offset, 16)
                 obj.Bytes[o:o + len(data)] = data
     return captures
+
+def Pairs(text):
+    words = text.split()
+    return {words[i]: words[i + 1] for i in range(0, len(words) - 1, 2)}
+
+def LoadHavokLine(line, cap, obj):
+    kind, _, rest = line.partition(" ")
+    if kind == "hk-filter":
+        cap.Filter = None if rest == "none" else Pairs(rest)
+    elif kind == "hk-lookup":
+        layer, value = rest.split()
+        cap.Lookup.append(int(value, 16))
+    elif kind == "hk-component":
+        words = rest.split()
+        if words[0] == "none":
+            obj.Havok = {}
+        elif len(words) > 1 and words[1] == "unreadable":
+            obj.Havok = {"handle": words[0], "unreadable": True}
+        else:
+            obj.Havok = {"handle": words[0], **Pairs(" ".join(words[1:]))}
+    elif kind == "hk-body":
+        index, _, fields = rest.partition(" ")
+        body = Pairs(fields)
+        body["index"] = int(index)
+        obj.Bodies.append(body)
 
 # --- Field names -----------------------------------------------------------------------------------------------------
 
@@ -245,6 +281,96 @@ def CmdClocks(captures, fields, args):
                 component = objs[0].ComponentAt(offset)
                 print(f"{objs[0].Class} {handle} {component:<6} 0x{offset:04X}  {values[0]} .. {values[-1]}   {FieldAt(fields, component, offset)}")
 
+# --- Havok (A10) -----------------------------------------------------------------------------------------------------
+
+LAYERS = ["Everything", "Environment Default", "Environment Only", "Small Crate", "Crate", "Huge Crate", "Item", "Projectile",
+          "Machine", "Early Mover Machine", "Creature", "Biped", "Dead Biped", "Super Collidable Ragdoll", "Ragdoll", "Vehicle",
+          "Decal", "Forge Dynamic Scenery", "Small Expensive Plant", "Tech Art Custom"]
+MOTIONS = {0: "invalid", 1: "dynamic", 2: "sphere inertia", 3: "box inertia", 4: "keyframed", 5: "fixed", 6: "thin box", 7: "character"}
+
+def LayerName(layer):
+    return f"{layer} {LAYERS[layer]}" if layer < len(LAYERS) else f"{layer} (unnamed)"
+
+def IsCollisionEnabled(lookup, a, b):
+    # Same logic as FUN_180882080 (hkpGroupFilter::isCollisionEnabled).
+    if ((a ^ b) & 0xFFFF0000) != 0 or (a & 0xFFFF0000) == 0:
+        return (lookup[a & 0x1F] >> (b & 0x1F)) & 1 != 0
+    return ((b >> 5 ^ a) & 0x3E0) != 0 and ((a >> 5 ^ b) & 0x3E0) != 0
+
+# Component flags (+0x18): bit 2 set while the bodies are in the Havok world (FUN_18017fd78 removes them and clears it),
+# bit 0 set when some body is not fixed (FUN_18017d680).
+FLAG_IN_WORLD = 0x4
+
+def IsInWorld(obj):
+    return bool(obj.Havok) and "flags" in obj.Havok and (int(obj.Havok["flags"], 16) & FLAG_IN_WORLD) != 0
+
+def Infos(obj):
+    if not IsInWorld(obj):
+        return []
+    return [int(b["info"], 16) for b in obj.Bodies if b.get("address", "0x0") != "0x0"]
+
+def CmdHavok(captures, fields, args):
+    selected = Groups(captures, args.label) if args.label else captures
+    if not selected:
+        sys.exit("No captures match.")
+    withTable = [c for c in selected if len(c.Lookup) == 32]
+    if not withTable:
+        print("No Havok layer table in the selected captures (hk-filter none or an old capture file).")
+    else:
+        lookup = withTable[-1].Lookup
+        print(f"Layer table of capture {withTable[-1].Index}: world {withTable[-1].Filter.get('world')} filter {withTable[-1].Filter.get('filter')}")
+        changed = [c.Index for c in withTable if c.Lookup != lookup]
+        if changed:
+            print(f"warning: the table differs in captures {changed}.")
+        broken = [(i, j) for i in range(32) for j in range(32) if ((lookup[i] >> j) & 1) != ((lookup[j] >> i) & 1)]
+        print("symmetric: yes" if not broken else f"symmetric: NO, {len(broken)} pairs differ, first {broken[:5]} (offset of the table may be wrong)")
+        used = sorted({info & 0x1F for c in selected for o in Pick(c, args) for info in Infos(o)})
+        rows = range(32) if args.matrix else used
+        for layer in rows:
+            hits = [j for j in range(32) if (lookup[layer] >> j) & 1]
+            print(f"  {LayerName(layer):<28} {lookup[layer]:08X}  collides with {', '.join(str(j) for j in hits) or '-'}")
+    for c in selected:
+        print(f"\ncapture {c.Index}  \"{c.Label}\"")
+        for o in Pick(c, args):
+            print(f"  {o.Class} {o.Handle} {o.Source:<6} {o.Tag}")
+            if o.Havok is None:
+                print("      no hk-component line")
+                continue
+            if not o.Havok:
+                print("      no Havok component (obje 0xCC = -1)")
+                continue
+            if o.Havok.get("unreadable"):
+                print(f"      component {o.Havok['handle']} unreadable")
+                continue
+            handle = int(o.Havok["handle"], 16)
+            checks = []
+            checks.append("salt ok" if int(o.Havok["salt"], 16) == handle >> 16 else f"salt {o.Havok['salt']} != {handle >> 16:04X}")
+            checks.append("owner ok" if o.Havok["owner"].upper() == o.Handle.upper() else f"owner {o.Havok['owner']}")
+            checks.append("in world" if IsInWorld(o) else "OUT of world")
+            print(f"      component {o.Havok['handle']} flags {o.Havok['flags']} size {o.Havok['size']} bodies {o.Havok['bodies']}  ({', '.join(checks)})")
+            for b in o.Bodies:
+                info = int(b["info"], 16)
+                motion = int(b["motion"])
+                print(f"      body {b['index']}: layer {LayerName(info & 0x1F):<26} motion {motion} {MOTIONS.get(motion, '?'):<14} "
+                      f"group {b['group']} subsystem {b['subsystem']} ignores {b['ignores']}")
+    if args.pairs and withTable:
+        lookup = withTable[-1].Lookup
+        objs = []
+        for c in selected:
+            for o in Pick(c, args):
+                if Infos(o):
+                    objs.append((f"c{c.Index} {o.Class} {o.Handle[-4:]}", Infos(o), c.Label, o.Tag))
+        print("\nPairs (Y = some body of the row collides with some body of the column; objects out of the world are left out).")
+        print("note: Havok makes no contact between two non-dynamic bodies (motion 4 keyframed or 5 fixed), even when the layers collide.")
+        for i, (name, _, label, tag) in enumerate(objs):
+            print(f"  [{i}] {name}  \"{label}\"  {tag}")
+        print("      " + " ".join(f"{i:>3}" for i in range(len(objs))))
+        for i, (_, infosA, _, _) in enumerate(objs):
+            cells = []
+            for j, (_, infosB, _, _) in enumerate(objs):
+                cells.append("  ." if i == j else ("  Y" if any(IsCollisionEnabled(lookup, a, b) for a in infosA for b in infosB) else "  -"))
+            print(f"  {i:>3} " + " ".join(cells))
+
 def main():
     parser = argparse.ArgumentParser(description="Analyze an Artemis datum capture file (D81).")
     parser.add_argument("file")
@@ -261,11 +387,12 @@ def main():
     p = sub.add_parser("field"); p.add_argument("offset"); p.add_argument("--type", default="u32", choices=FORMATS); Filters(p, True)
     p = sub.add_parser("split"); p.add_argument("a"); p.add_argument("b"); p.add_argument("--component"); p.add_argument("--all", action="store_true"); Filters(p, True)
     p = sub.add_parser("clocks"); Filters(p, True)
+    p = sub.add_parser("havok"); p.add_argument("--label"); p.add_argument("--pairs", action="store_true"); p.add_argument("--matrix", action="store_true"); Filters(p)
 
     args = parser.parse_args()
     captures = Load(args.file)
     fields = LoadFields()
-    {"list": CmdList, "diff": CmdDiff, "field": CmdField, "split": CmdSplit, "clocks": CmdClocks}[args.command](captures, fields, args)
+    {"list": CmdList, "diff": CmdDiff, "field": CmdField, "split": CmdSplit, "clocks": CmdClocks, "havok": CmdHavok}[args.command](captures, fields, args)
 
 if __name__ == "__main__":
     main()

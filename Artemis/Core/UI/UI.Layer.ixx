@@ -69,7 +69,7 @@ export namespace UI
             m_PlayerTableUIService(exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
-            m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
+            m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, platform.m_MemoryReaderService, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
         {
             platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {

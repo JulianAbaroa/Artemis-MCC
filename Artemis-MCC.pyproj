@@ -27,6 +27,7 @@
     <Folder Include="Data\Tags\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tools\analyze_captures.py" />
     <Compile Include="Tools\TagTranspiler\Common.py" />
     <Compile Include="Tools\TagTranspiler\GenerateCatalog.py" />
     <Compile Include="Tools\TagTranspiler\GenerateObject.py" />

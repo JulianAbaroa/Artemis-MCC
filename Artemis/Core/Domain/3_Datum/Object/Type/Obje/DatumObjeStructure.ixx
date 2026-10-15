@@ -51,7 +51,7 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint8_t  _gap_0x90[0x2];
         std::uint8_t PlacementTeam;  // 0x92  uint8. | Byte copied from the placement (team candidate).
         std::uint8_t  _gap_0x93[0x39];
-        std::uint32_t AttachedEntryHandle;  // 0xCC  uint32. | Handle into another table (stride 0xC0, unidentified). Read by weapon/biped updates.
+        std::uint32_t HavokComponentHandle;  // 0xCC  uint32. | Handle of the Havok component of the object (-1 = none). Data array at the global RVA 0xC519B8 (data at +0x50, stride 0xC0): +0x30 rigid body entries (stride 0x50, hkpRigidBody* at +0x40), +0x38 count. Read by FUN_18012e1e8, FUN_18012e7cc, FUN_18017d680 (A10, Ignore/Tareas/Transversal/A10_Colisiones.txt). Verified 2026-10-15 (Ignore/20261015_152018.txt): salt and owner (+0x1C) match in every object. The component changes when a weapon is picked up or dropped: resolve it every tick.
         std::uint8_t  _gap_0xD0[0x4];
         std::uint32_t UnknownD4;  // 0xD4  uint32. | R2 W0 R:FUN_1804b0674,FUN_1804b1208
         std::uint32_t LastUpdateTick;  // 0xD8  uint32. | Game tick, from the game time global [tmp23e00+0xc]. Bipeds: always the current tick, so it is the clock of the damage ticks (unit 0x54C) and the ability activation (eqip 0x1D8). Weapons and equipment: frozen while idle, it moves when they are used. Captured 2026-10-14 (Ignore/20261014_122128.txt). R0 W3 W:item_update,bloc_update,FUN_1804ac750
