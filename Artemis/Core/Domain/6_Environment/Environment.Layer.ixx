@@ -50,7 +50,7 @@ export namespace Environment
 			m_TeleporterDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_TeleporterDetailsStore),
 			m_LiftDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_LiftDetailsStore),
 			m_BarrierDetailsService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_BarrierDetailsStore),
-			m_EntitiesService(service.m_LogsService, tables.m_ObjectStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
+			m_EntitiesService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
 			m_PlayersService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
 			m_CollidableService(service.m_LogsService, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
 			m_AimService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore)

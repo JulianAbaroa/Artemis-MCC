@@ -43,6 +43,7 @@ export namespace Environment::Entities::Type
         std::uint32_t ParentHandle{ 0xFFFFFFFF };
 
         // From the multiplayer block of the object only (D54). Neutral without it.
+        // note: A biped takes the team of its player from the player table, or Neutral without a player (D94).
         ::Team Team{ ::Team::Neutral };
 
         // Forge physics of the placement (D79). None without placement.

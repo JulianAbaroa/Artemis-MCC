@@ -3,6 +3,7 @@ module Environment.Entities.System;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Resolved.Definitions.Type;
+import Tables.Player.Type;
 
 namespace
 {
@@ -17,6 +18,7 @@ namespace
     using Common::Team::Type::Team;
     using Resolved::Definitions::Type::Object::ObjectKind;
     using Tables::Object::Type::Placement::Placement;
+    using Tables::Player::Type::Alive::PlayerTable;
     using Environment::Details::Type::VitalityDetails;
 
     using Environment::Details::Type::k_LifeSection;
@@ -75,6 +77,23 @@ namespace
         return it->second.Sections[k_LifeSection];
     }
 
+    // Maps every biped of a player, alive or a corpse, to the team of the player (D94).
+    auto CollectBipedTeams(const PlayerTable& playerTable) -> std::unordered_map<std::uint32_t, Team>
+    {
+        std::unordered_map<std::uint32_t, Team> teams{};
+        teams.reserve(playerTable.size() * 2);
+
+        for (const auto& [handle, player] : playerTable)
+        {
+            for (const std::uint32_t biped : { player.AliveBipedHandle, player.DeadBipedHandle, player.CurrentBipedHandle })
+            {
+                if (biped != k_NoHandle) teams[biped] = player.Team;
+            }
+        }
+
+        return teams;
+    }
+
     // Checks whether a weapon belongs to a vehicle: mounted guns and horns are never picked up (D74).
     auto IsVehicleWeapon(Function function, std::uint8_t subtype) -> bool
     {
@@ -100,6 +119,10 @@ namespace Environment::Entities::System
         const VitalityDetails empty{};
         const VitalityDetails& vitalities{ vitalitiesPtr ? *vitalitiesPtr : empty };
 
+        // note: Before the first publish of the player table every biped is Neutral.
+        const auto playerTablePtr{ m_PlayerStore.Acquire() };
+        const auto bipedTeams{ playerTablePtr ? CollectBipedTeams(*playerTablePtr) : std::unordered_map<std::uint32_t, Team>{} };
+
         Entities entities{};
         entities.Rows.reserve(classifiedsPtr->size());
 
@@ -110,7 +133,7 @@ namespace Environment::Entities::System
 
             if (classified.Binding == Binding::Carried) m_CarriedHandlesStore.Add(classified.Handle);
 
-            entities.Rows.push_back(this->MakeEntity(classified, objectIt->second, objectTable, vitalities));
+            entities.Rows.push_back(this->MakeEntity(classified, objectIt->second, objectTable, vitalities, bipedTeams));
         }
 
         std::ranges::sort(entities.Rows, {}, &Entity::Handle);
@@ -125,7 +148,7 @@ namespace Environment::Entities::System
     }
 
     auto EntitiesService::MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable,
-        const VitalityDetails& vitalities) -> Entity
+        const VitalityDetails& vitalities, const std::unordered_map<std::uint32_t, Team>& bipedTeams) -> Entity
     {
         Entity entity{};
         entity.Handle = classified.Handle;
@@ -137,6 +160,13 @@ namespace Environment::Entities::System
         entity.BoundTo = classified.BoundTo;
         entity.ParentHandle = object.ParentHandle;
         entity.Team = object.Multiplayer ? object.Multiplayer->Team : Team::Neutral;
+
+        // note: The multiplayer block of a biped reads Red for every player (D94). A biped without a player is Neutral.
+        if (entity.Kind == ObjectKind::Biped)
+        {
+            const auto teamIt{ bipedTeams.find(entity.Handle) };
+            entity.Team = teamIt == bipedTeams.end() ? Team::Neutral : teamIt->second;
+        }
         entity.Physics = object.Placement ? object.Placement->Physics : Physics::None;
         entity.BoundingCenter = object.BoundingCenter;
         entity.BoundingRadius = object.BoundingRadius;
