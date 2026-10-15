@@ -7,6 +7,7 @@ and its marker resolved in the render model (node, position and +X direction in 
 (H1 of Ignore/Tareas/Transversal/A12_Lifts.txt) checked against the tag catalog (Data/Tags/ObjectTags.xml).
 
     python Tools/analyze_phantoms.py [DUMP_FOLDER]      (default: Ignore/Temporal)
+    phmo, mode and hlmt are required. Object groups without a dump are skipped.
 """
 import json, os, re, sys
 
@@ -15,7 +16,12 @@ D = (sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, "Ignore", "Tempora
 CATALOG = os.path.join(REPO, "Data", "Tags", "ObjectTags.xml")
 def load(g):
     out={}
-    for l in open(D+f'definitions_dump_{g}.ndjson',encoding='utf-8'):
+    path=D+f'definitions_dump_{g}.ndjson'
+    if not os.path.exists(path):
+        if g in ('phmo','mode','hlmt'): sys.exit(f"Missing {path}.")
+        print(f"note: no {g} dump, its objects are skipped.")
+        return out
+    for l in open(path,encoding='utf-8'):
         j=json.loads(l); out[j['tag']]=j['fields']
     return out
 phmo,mode,hlmt=load('phmo'),load('mode'),load('hlmt')

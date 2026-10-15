@@ -24,7 +24,7 @@ export namespace Common::Semantic::Type::Catalog
     };
 
     // Labels sorted by group and tag name.
-    inline constexpr std::array<TagLabel, 284> k_TagLabels
+    inline constexpr std::array<TagLabel, 285> k_TagLabels
     {{
         { .Group = "bipd", .TagName = "objects\\characters\\elite\\elite", .Function = Function::Combatant, .Subtype = 2 },
         { .Group = "bipd", .TagName = "objects\\characters\\monitor\\monitor_editor", .Function = Function::Combatant, .Subtype = 3 },
@@ -87,6 +87,7 @@ export namespace Common::Semantic::Type::Catalog
         { .Group = "bloc", .TagName = "objects\\levels\\multi\\20_sword_slayer\\sword_grav_lift_a\\sword_grav_lift_a", .Function = Function::Lift, .Subtype = 1 },
         { .Group = "bloc", .TagName = "objects\\levels\\multi\\20_sword_slayer\\sword_grav_lift_b\\sword_grav_lift_b", .Function = Function::Lift, .Subtype = 1 },
         { .Group = "bloc", .TagName = "objects\\levels\\multi\\20_sword_slayer\\sword_grav_lift_c\\sword_grav_lift_c", .Function = Function::Lift, .Subtype = 1 },
+        { .Group = "bloc", .TagName = "objects\\levels\\multi\\45_aftship\\mid_cannon\\mid_cannon", .Function = Function::Lift, .Subtype = 2 },
         { .Group = "bloc", .TagName = "objects\\levels\\multi\\70_boneyard\\frigate_laser_field_gate\\frigate_laser_field_gate", .Function = Function::Barrier, .Subtype = 3 },
         { .Group = "bloc", .TagName = "objects\\levels\\multi\\70_boneyard\\frigate_laser_field_med\\frigate_laser_field_med", .Function = Function::Barrier, .Subtype = 3 },
         { .Group = "bloc", .TagName = "objects\\levels\\multi\\70_boneyard\\frigate_laser_field_small\\frigate_laser_field_small", .Function = Function::Barrier, .Subtype = 3 },
