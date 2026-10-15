@@ -28,6 +28,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tools\analyze_captures.py" />
+    <Compile Include="Tools\analyze_phantoms.py" />
+    <Compile Include="Tools\field_usage_report.py" />
+    <Compile Include="Tools\profiler_stats.py" />
     <Compile Include="Tools\TagTranspiler\Common.py" />
     <Compile Include="Tools\TagTranspiler\GenerateCatalog.py" />
     <Compile Include="Tools\TagTranspiler\GenerateObject.py" />
