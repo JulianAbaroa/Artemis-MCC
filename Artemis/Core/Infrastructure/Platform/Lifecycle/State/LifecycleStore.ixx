@@ -35,9 +35,19 @@ export namespace Platform::Lifecycle::State
         auto GetShutdownMutex() const -> std::mutex&;
         auto GetShutdownCV() const -> std::condition_variable&;
 
-        // Signals that the game finished a logic tick, so the AI thread can read a stable object table.
-        // note: Called from the game main thread through the SimulationTicks hook. See docs/Tick Synchronization.md.
-        auto SignalTick() -> void;
+        // Signals that the game finished a logic tick, so the AI thread can read a stable object table. While a reader is active,
+        // blocks until it ends the read of this tick, so the engine never writes the next tick while Artemis reads this one.
+        // return: False if the wait timed out (the tick may be dropped or read mixed with the next one).
+        // note: Called from the game main thread through the tick hooks. See docs/Tick Synchronization.md.
+        auto SignalTick() -> bool;
+
+        // Sets whether the AI thread is consuming ticks. While false, SignalTick does not wait.
+        // note: Setting false wakes the game thread if it is waiting.
+        auto SetReaderActive(bool value) -> void;
+
+        // Marks that the AI thread finished reading game memory for a tick, so the game thread can go on.
+        // param generation: Tick generation that was read (returned by WaitForTick).
+        auto EndRead(std::uint64_t generation) -> void;
 
         // Blocks until a new tick is signaled, Artemis stops, or the engine starts tearing down.
         // param last: Last tick generation the AI thread processed.
@@ -81,6 +91,12 @@ export namespace Platform::Lifecycle::State
         std::condition_variable m_TickCV{};
         std::mutex m_TickMutex{};
 
+        std::atomic<bool> m_IsReaderActive{ false };
+        // Last tick generation whose read the AI thread ended.
+        std::atomic<std::uint64_t> m_ReadGeneration{ 0 };
+        std::condition_variable m_ReadCV{};
+        std::mutex m_ReadMutex{};
+
         std::condition_variable m_BlamCV{};
         std::mutex m_BlamMutex{};
 
@@ -90,5 +106,8 @@ export namespace Platform::Lifecycle::State
 
         // Same as WakeTickWaiters, for the Blam condition variable.
         auto WakeBlamWaiters() -> void;
+
+        // Same as WakeTickWaiters, for the read condition variable (the game thread waiting in SignalTick).
+        auto WakeReadWaiters() -> void;
     };
 }

@@ -12,7 +12,7 @@ import std;
 export namespace Export::Tick::Hook
 {
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, records the telemetry of the
-    // call and signals its last tick (ExecuteGameFrameDetour signals the others).
+    // call and closes its last tick (ExecuteGameFrameDetour closes the others).
     // note: Without the ExecuteGameFrame hook it signals once per call that advanced ticks, so only the last tick of a frame is seen.
     // note: Game main thread only. See docs/Tick Synchronization.md.
     class SimulationTicksDetour

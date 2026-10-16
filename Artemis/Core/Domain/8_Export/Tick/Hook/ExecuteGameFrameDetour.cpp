@@ -23,7 +23,7 @@ namespace Export::Tick::Hook
         if (self->m_IsInSimulation)
         {
             // The previous tick of this call is complete once the next one starts.
-            if (self->m_SimulationTicks > 0) self->m_LifecycleStore.SignalTick();
+            if (self->m_SimulationTicks > 0) self->CloseTick();
             self->m_SimulationTicks++;
         }
 
@@ -70,11 +70,28 @@ namespace Export::Tick::Hook
     {
         m_IsInSimulation = true;
         m_SimulationTicks = 0;
+        m_SimulationWaitNs = 0;
     }
 
     auto ExecuteGameFrameDetour::EndSimulation() -> int
     {
         m_IsInSimulation = false;
         return m_SimulationTicks;
+    }
+
+    auto ExecuteGameFrameDetour::GetSimulationWaitNs() const -> std::uint64_t
+    {
+        return m_SimulationWaitNs;
+    }
+
+    auto ExecuteGameFrameDetour::CloseTick() -> void
+    {
+        auto start{ steady_clock::now() };
+        const bool isRead{ m_LifecycleStore.SignalTick() };
+        auto end{ steady_clock::now() };
+
+        const auto waitNs{ static_cast<std::uint64_t>(std::chrono::duration_cast<nanoseconds>(end - start).count()) };
+        m_SimulationWaitNs += waitNs;
+        m_TelemetryStore.RecordReadWait(waitNs, !isRead);
     }
 }

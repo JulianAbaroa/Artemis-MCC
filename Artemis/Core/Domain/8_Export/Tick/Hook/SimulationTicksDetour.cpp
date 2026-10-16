@@ -32,14 +32,24 @@ namespace Export::Tick::Hook
         s_OriginalFunction(ticksToAdvance, remainingTime);
         auto end{ steady_clock::now() };
 
-        // The engine can stop before ticksToAdvance (pause, menus), so the hook count is the real one.
-        const int ticks{ isCounting ? frameDetour.EndSimulation() : (std::max)(ticksToAdvance, 0) };
+        const auto callNs{ static_cast<std::uint64_t>(std::chrono::duration_cast<nanoseconds>(end - start).count()) };
 
-        self->m_TelemetryStore.RecordSimTick(ticks, static_cast<std::uint64_t>(
-            std::chrono::duration_cast<nanoseconds>(end - start).count()));
+        if (!isCounting)
+        {
+            const int ticks{ (std::max)(ticksToAdvance, 0) };
+            self->m_TelemetryStore.RecordSimTick(ticks, callNs);
+            if (ticks > 0) self->m_LifecycleStore.SignalTick();
+            return;
+        }
+
+        // The engine can stop before ticksToAdvance (pause, menus), so the hook count is the real one.
+        const int ticks{ frameDetour.EndSimulation() };
+        const std::uint64_t waitNs{ frameDetour.GetSimulationWaitNs() };
+
+        self->m_TelemetryStore.RecordSimTick(ticks, callNs > waitNs ? callNs - waitNs : 0);
 
         // The last tick of the call is complete now.
-        if (ticks > 0) self->m_LifecycleStore.SignalTick();
+        if (ticks > 0) frameDetour.CloseTick();
     }
 
     auto SimulationTicksDetour::Install() -> void

@@ -26,7 +26,12 @@ namespace Runtime::Thread
 
         while (lifecycle.IsRunning())
         {
-            switch (lifecycle.GetStatus())
+            const Status status{ lifecycle.GetStatus() };
+
+            // The game thread waits for each tick read only while this thread is consuming ticks.
+            lifecycle.SetReaderActive(status == Status::Running);
+
+            switch (status)
             {
             case Status::Waiting:
             case Status::Destroyed:
@@ -65,6 +70,7 @@ namespace Runtime::Thread
                 lifecycle.BeginTick();
                 if (!this->IsStable())
                 {
+                    lifecycle.EndRead(current);
                     lifecycle.EndTick();
                     break;
                 }
@@ -93,6 +99,8 @@ namespace Runtime::Thread
             }
         }
 
+        lifecycle.SetReaderActive(false);
+
         logs.Message("[AIThread] INFO: Stopped.");
     }
 
@@ -111,6 +119,9 @@ namespace Runtime::Thread
         m_Tables.m_ObjectService.UpdateObjectTable();
         m_Tables.m_PlayerService.UpdatePlayerTable();
         m_Tables.m_InteractionService.UpdateInteractionTable();
+
+        // Last read of game memory: from here on the services work on their own copies, so the game thread can run the next tick.
+        m_Platform.m_LifecycleStore.EndRead(m_Last);
 
         m_Relations.m_ClassifierService.UpdateClassification();
         m_Relations.m_ObjectGraphService.UpdateGraph();

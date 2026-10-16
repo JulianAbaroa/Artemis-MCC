@@ -14,6 +14,8 @@ namespace Service::Telemetry::System
         std::uint64_t calls = m_TelemetryStore.m_SimCalls.exchange(0, std::memory_order_relaxed);
         std::uint64_t tickTotal = m_TelemetryStore.m_Ticks.exchange(0, std::memory_order_relaxed);
         std::uint64_t tickNs = m_TelemetryStore.m_SimNs.exchange(0, std::memory_order_relaxed);
+        std::uint64_t readWaitNs = m_TelemetryStore.m_ReadWaitNs.exchange(0, std::memory_order_relaxed);
+        std::uint64_t readTimeouts = m_TelemetryStore.m_ReadTimeouts.exchange(0, std::memory_order_relaxed);
         std::uint64_t sweeps = m_TelemetryStore.m_Sweeps.exchange(0, std::memory_order_relaxed);
         std::uint64_t sweepNs = m_TelemetryStore.m_SweepNs.exchange(0, std::memory_order_relaxed);
         std::uint64_t presents = m_TelemetryStore.m_Presents.exchange(0, std::memory_order_relaxed);
@@ -22,6 +24,8 @@ namespace Service::Telemetry::System
         m_TelemetryStore.m_PresentHz.store((float)(presents / seconds), std::memory_order_relaxed);
         m_TelemetryStore.m_TicksPerCall.store(calls ? (float)(tickTotal / (double)calls) : 0.0f, std::memory_order_relaxed);
         m_TelemetryStore.m_SimMs.store(tickTotal ? (float)((tickNs / (double)tickTotal) / 1e6) : 0.0f, std::memory_order_relaxed);
+        m_TelemetryStore.m_ReadWaitMs.store(tickTotal ? (float)((readWaitNs / (double)tickTotal) / 1e6) : 0.0f, std::memory_order_relaxed);
+        m_TelemetryStore.m_ReadTimeoutsOut.store((std::uint32_t)readTimeouts, std::memory_order_relaxed);
         m_TelemetryStore.m_SweepMs.store(sweeps ? (float)((sweepNs / (double)sweeps) / 1e6) : 0.0f, std::memory_order_relaxed);
 
         std::uint64_t dropped = m_TelemetryStore.m_Dropped.exchange(0, std::memory_order_relaxed);

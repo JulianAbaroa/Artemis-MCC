@@ -1,6 +1,7 @@
 export module Export.Tick.Hook:ExecuteGameFrame;
 
 import Service.Logs.System;
+import Service.Telemetry.State;
 import Platform.Memory.System;
 import Platform.Lifecycle.State;
 import Export.Tick.Type;
@@ -13,18 +14,25 @@ export namespace Export::Tick::Hook
     // note: SimulationTicks runs ExecuteGameFrame once per tick in a loop. A tick is complete when the next ExecuteGameFrame of the same
     // call starts, so this hook signals the previous one there. SimulationTicksDetour signals the last one when the call returns.
     // note: ExecuteGameFrame has other callers (network code). Outside a SimulationTicks call nothing is counted or signaled.
+    // note: Signaling can block the game thread until the AI thread reads the tick (LifecycleStore::SignalTick).
     // note: Game main thread only. Uninstall runs on that thread too (DestroySubsystems), so no call is in flight then.
     class ExecuteGameFrameDetour
     {
     private:
+        using steady_clock = std::chrono::steady_clock;
+        using nanoseconds = std::chrono::nanoseconds;
+
         using LogsService = Service::Logs::System::LogsService;
+        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
         using AOBService = Platform::Memory::System::AOBService;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using ExecuteGameFrameFunction = Export::Tick::Type::ExecuteGameFrameFunction;
 
     public:
-        ExecuteGameFrameDetour(LogsService& logsService, AOBService& aobService, LifecycleStore& lifecycleStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_LifecycleStore(lifecycleStore) {}
+        ExecuteGameFrameDetour(LogsService& logsService, TelemetryStore& telemetryStore, AOBService& aobService,
+            LifecycleStore& lifecycleStore) :
+            m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
+            m_LifecycleStore(lifecycleStore) {}
         ~ExecuteGameFrameDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -44,8 +52,16 @@ export namespace Export::Tick::Hook
         // return: Ticks run by the call.
         auto EndSimulation() -> int;
 
+        // Time the game thread waited for the AI read inside the current or last SimulationTicks call, in nanoseconds.
+        auto GetSimulationWaitNs() const -> std::uint64_t;
+
+        // Signals a complete tick and records how long the game thread waited for the AI read.
+        // note: Called here between ticks and by SimulationTicksDetour for the last tick of a call.
+        auto CloseTick() -> void;
+
     private:
         LogsService& m_LogsService;
+        TelemetryStore& m_TelemetryStore;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;
 
@@ -59,6 +75,8 @@ export namespace Export::Tick::Hook
         bool m_IsInSimulation{ false };
         // Ticks started by the current SimulationTicks call.
         int m_SimulationTicks{ 0 };
+        // Read wait inside the current SimulationTicks call, in nanoseconds.
+        std::uint64_t m_SimulationWaitNs{ 0 };
 
         static auto __fastcall HookedExecuteGameFrame() -> void;
     };

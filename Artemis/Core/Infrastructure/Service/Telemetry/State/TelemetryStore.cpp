@@ -15,6 +15,12 @@ namespace Service::Telemetry::State
         m_SimNs.fetch_add(durationNs, std::memory_order_relaxed);
     }
 
+    auto TelemetryStore::RecordReadWait(std::uint64_t waitNs, bool isTimedOut) -> void
+    {
+        m_ReadWaitNs.fetch_add(waitNs, std::memory_order_relaxed);
+        if (isTimedOut) m_ReadTimeouts.fetch_add(1, std::memory_order_relaxed);
+    }
+
     auto TelemetryStore::RecordSweepTime(std::uint64_t durationNs) -> void
     {
         m_Sweeps.fetch_add(1, std::memory_order_relaxed);

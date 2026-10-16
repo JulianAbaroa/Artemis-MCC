@@ -3,9 +3,14 @@ module Platform.Lifecycle.State;
 namespace
 {
     using std::chrono::microseconds;
+    using std::chrono::milliseconds;
     using std::chrono::steady_clock;
 
     constexpr std::uint64_t k_ExpectedSkips{ 1 };
+
+    // Longest time the game thread waits for the AI thread to read one tick. Past it the game goes on, so a stuck AI thread
+    // slows the game down but never freezes it.
+    constexpr milliseconds k_ReadTimeout{ 100 };
 }
 
 namespace Platform::Lifecycle::State
@@ -23,6 +28,7 @@ namespace Platform::Lifecycle::State
         {
             this->WakeTickWaiters();
             this->WakeBlamWaiters();
+            this->WakeReadWaiters();
         }
     }
 
@@ -49,14 +55,38 @@ namespace Platform::Lifecycle::State
         return m_ShutdownCV;
     }
 
-    auto LifecycleStore::SignalTick() -> void
+    auto LifecycleStore::SignalTick() -> bool
     {
         // Release ensures all of Blam's logic-tick writes are visible to the
         // AI thread before it observes the incremented counter, otherwise
         // the AI thread could see the new tick but still read the previous
         // tick's data.
-        m_TickGeneration.fetch_add(1, std::memory_order_release);
+        const std::uint64_t generation{ m_TickGeneration.fetch_add(1, std::memory_order_release) + 1 };
         m_TickCV.notify_one();
+
+        if (!m_IsReaderActive.load(std::memory_order_acquire)) return true;
+
+        std::unique_lock<std::mutex> lock(m_ReadMutex);
+
+        return m_ReadCV.wait_for(lock, k_ReadTimeout, [&] {
+            return m_ReadGeneration.load(std::memory_order_acquire) >= generation ||
+                !m_IsReaderActive.load(std::memory_order_acquire) || !m_IsRunning.load();
+            });
+    }
+
+    auto LifecycleStore::SetReaderActive(bool value) -> void
+    {
+        if (m_IsReaderActive.exchange(value, std::memory_order_acq_rel) && !value) this->WakeReadWaiters();
+    }
+
+    auto LifecycleStore::EndRead(std::uint64_t generation) -> void
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_ReadMutex);
+            m_ReadGeneration.store(generation, std::memory_order_release);
+        }
+
+        m_ReadCV.notify_one();
     }
 
     auto LifecycleStore::WaitForTick(std::uint64_t last, std::uint64_t& dropped) -> std::uint64_t
@@ -94,6 +124,7 @@ namespace Platform::Lifecycle::State
     auto LifecycleStore::ResetTickGeneration() -> void
     {
         m_TickGeneration.store(0);
+        m_ReadGeneration.store(0);
     }
 
     auto LifecycleStore::BeginTick() -> void
@@ -136,6 +167,15 @@ namespace Platform::Lifecycle::State
         }
 
         m_BlamCV.notify_all();
+    }
+
+    auto LifecycleStore::WakeReadWaiters() -> void
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_ReadMutex);
+        }
+
+        m_ReadCV.notify_all();
     }
 
     auto LifecycleStore::BeginLoad() -> void

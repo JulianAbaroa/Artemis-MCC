@@ -16,6 +16,10 @@ Also, we have to consider the context where we are working on, a game engine wit
 
 SimulationTicks runs all the logic-ticks of a frame in a loop, calling ExecuteGameFrame once per tick. When the engine runs several ticks in one frame (a slow frame, or a game speed above 1x), signaling only after SimulationTicks returns means Artemis sees only the last tick of that frame. So Artemis also hooks FUN_1800575AC (ExecuteGameFrame): inside a SimulationTicks call, a tick is complete when the next ExecuteGameFrame starts, and the SimulationTicks hook signals the last one when the call returns. ExecuteGameFrame has other callers (network code), and those calls are not counted.
 
+## The game waits for the read
+
+Signaling alone is not enough when the engine runs several ticks in a row: right after the signal the game thread starts writing the next tick while the AI thread may still be reading this one. So SignalTick also blocks the game thread until the AI thread ends the read of that tick (EndRead), but only while the AI thread is consuming ticks (SetReaderActive). The read is short: DatumService copies the object table and the Tables services read the player and interaction tables. Everything after that works on Artemis' own copies, so the game runs the next tick while Artemis processes the rest of this one. If the AI thread is busy with the previous tick, the game waits for it: no tick is ever skipped, the game just runs slower. A wait longer than 100 ms gives up and is counted as a read timeout, so a stuck AI thread slows the game down but never freezes it.
+
 ## Design Decisions
 
 Because of the multi-threading context, the use of atomic variables was practically a necessity. But, I could have used a ```std::atomic<bool>``` as a signal to determine if Artemis had to execute a logic-tick, but, as I mentioned earlier, a boolean wouldn't allow me to quantify if I **lost** Blam logic-ticks. For this reason, I decided to use a ```std::atomic<uint64_t>```, not only to save the dropped ticks, but to be able to know the executed Artemis logic-ticks, and to be able to allow the lambda to  compare the tick counter value with the last seen one.

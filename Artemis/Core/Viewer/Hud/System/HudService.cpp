@@ -185,6 +185,8 @@ namespace Viewer::Hud::System
         const float averageTickMs = telemetry.m_SimMs.load(std::memory_order_relaxed);
         const float averageSweepMs = telemetry.m_SweepMs.load(std::memory_order_relaxed);
         const std::uint32_t dropped = telemetry.m_DroppedOut.load(std::memory_order_relaxed);
+        const float readWaitMs = telemetry.m_ReadWaitMs.load(std::memory_order_relaxed);
+        const std::uint32_t readTimeouts = telemetry.m_ReadTimeoutsOut.load(std::memory_order_relaxed);
 
         ImGui::Separator();
 
@@ -219,5 +221,15 @@ namespace Viewer::Hud::System
         ImGui::Text("Dropped:");
         ImGui::SameLine();
         ImGui::TextColored(dropColor, "%u /s", dropped);
+
+        ImGui::Text("Read wait:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.3f ms", readWaitMs);
+
+        const ImVec4 timeoutColor = readTimeouts == 0 ? k_Green : ImVec4(1.0f, 0.4f, 0.0f, 1.0f);
+
+        ImGui::Text("Read timeouts:");
+        ImGui::SameLine();
+        ImGui::TextColored(timeoutColor, "%u /s", readTimeouts);
     }
 }
