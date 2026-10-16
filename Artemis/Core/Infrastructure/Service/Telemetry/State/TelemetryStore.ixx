@@ -43,7 +43,7 @@ export namespace Service::Telemetry::State
         auto RecordDroppedTicks(std::uint64_t dropped) -> void;
 
         // Records one call of the simulation tick hook.
-        // param ticks: Ticks advanced by the call. A negative value counts as 0.
+        // param ticks: Ticks the call ran. A negative value counts as 0.
         // param durationNs: Time spent in the call.
         auto RecordSimTick(int ticks, std::uint64_t durationNs) -> void;
 

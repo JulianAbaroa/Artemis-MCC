@@ -471,6 +471,9 @@
     <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\RaycastConstant.ixx" />
     <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\Raycasts.ixx" />
     <ClCompile Include="Core\Domain\8_Export\Export.Layer.ixx" />
+    <ClCompile Include="Core\Domain\8_Export\Tick\Export.Tick.Hook.ixx" />
+    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.cpp" />
+    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.ixx" />
     <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.cpp" />
     <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.ixx" />
     <ClCompile Include="Core\Domain\8_Export\Tick\State\TickStore.ixx" />

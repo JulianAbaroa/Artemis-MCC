@@ -43,6 +43,12 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 70 20 41 57 48 83 EC 20 8B 05 ? ? ? ? 4C 8B F2 65 48 8B 04 25 58 00 00 00 8B F9 44 8B 05 ? ? ? ? 41 BF 48 00 00 00"
     };
 
+    inline constexpr Signature ExecuteGameFrame
+    {
+        "ExecuteGameFrame",
+        "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 60 20 55 41 56 41 57 48 8D A8 28 29 FF FF B8 C0 D7 00 00 E8 ?? ?? ?? ?? 48 2B E0 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 B8 D6 00 00"
+    };
+
     // Functions: High-level Data
     inline constexpr Signature BuildGameEvent
     {

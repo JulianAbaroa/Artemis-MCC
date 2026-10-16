@@ -1880,6 +1880,12 @@
     <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.ixx">
       <Filter>Core\Domain\8_Export\Tick\System</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.cpp">
+      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.ixx">
+      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.cpp">
       <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
     </ClCompile>
@@ -3397,6 +3403,9 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\3_Datum\Object\Datum.Object.Type.ixx">
       <Filter>Core\Domain\3_Datum\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Tick\Export.Tick.Hook.ixx">
+      <Filter>Core\Domain\8_Export\Tick</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

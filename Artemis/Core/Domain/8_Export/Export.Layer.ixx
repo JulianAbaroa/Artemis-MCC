@@ -13,46 +13,53 @@ import Export.Tick.Hook;
 
 export namespace Export
 {
-	class Layer
-	{
-	private:
-		using TickStore = Export::Tick::State::TickStore;
-		using TickService = Export::Tick::System::TickService;
-		using SimulationTicksDetour = Export::Tick::Hook::SimulationTicksDetour;
+    class Layer
+    {
+    private:
+        using TickStore = Export::Tick::State::TickStore;
+        using TickService = Export::Tick::System::TickService;
+        using ExecuteGameFrameDetour = Export::Tick::Hook::ExecuteGameFrameDetour;
+        using SimulationTicksDetour = Export::Tick::Hook::SimulationTicksDetour;
 
-	public:
-		Layer(Service::Layer& service, Platform::Layer& platform,
-			Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
-			Environment::Layer& environment, Egocentric::Layer& egocentric) :
-			m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_VitalityDetailsStore, environment.m_ZoneDetailsStore, environment.m_TeleporterDetailsStore, environment.m_LiftDetailsStore, environment.m_BarrierDetailsStore, environment.m_AimStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, resolved.m_DefinitionsStore, m_TickStore),
-			m_SimulationTicksDetour(service.m_LogsService, service.m_TelemetryStore, platform.m_AOBService, platform.m_LifecycleStore)
-		{
-			auto& lifecycle = platform.m_LifecycleService;
+    public:
+        Layer(Service::Layer& service, Platform::Layer& platform,
+            Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
+            Environment::Layer& environment, Egocentric::Layer& egocentric) :
+            m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_VitalityDetailsStore, environment.m_ZoneDetailsStore, environment.m_TeleporterDetailsStore, environment.m_LiftDetailsStore, environment.m_BarrierDetailsStore, environment.m_AimStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, resolved.m_DefinitionsStore, m_TickStore),
+            m_ExecuteGameFrameDetour(service.m_LogsService, platform.m_AOBService, platform.m_LifecycleStore),
+            m_SimulationTicksDetour(service.m_LogsService, service.m_TelemetryStore, platform.m_AOBService, platform.m_LifecycleStore,
+                m_ExecuteGameFrameDetour)
+        {
+            auto& lifecycle = platform.m_LifecycleService;
 
-			lifecycle.OnEngineInitialized([this] {
-				m_SimulationTicksDetour.Install();
-			});
+            // ExecuteGameFrame goes first, so the first SimulationTicks call already counts every tick.
+            lifecycle.OnEngineInitialized([this] {
+                m_ExecuteGameFrameDetour.Install();
+                m_SimulationTicksDetour.Install();
+            });
 
-			lifecycle.OnUnhook([this] {
-				m_SimulationTicksDetour.Uninstall();
-			});
+            lifecycle.OnUnhook([this] {
+                m_SimulationTicksDetour.Uninstall();
+                m_ExecuteGameFrameDetour.Uninstall();
+            });
 
-			lifecycle.OnCleanup([this] {
-				m_TickStore.Cleanup();
-			});
-		}
-		~Layer() = default;
+            lifecycle.OnCleanup([this] {
+                m_TickStore.Cleanup();
+            });
+        }
+        ~Layer() = default;
 
-		Layer(const Layer&) = delete;
-		Layer& operator=(const Layer&) = delete;
+        Layer(const Layer&) = delete;
+        auto operator=(const Layer&) -> Layer& = delete;
 
-		// --- State ---
-		TickStore m_TickStore;
+        // --- State ---
+        TickStore m_TickStore;
 
-		// --- System ---
-		TickService m_TickService;
+        // --- System ---
+        TickService m_TickService;
 
-		// --- Hook ---
-		SimulationTicksDetour m_SimulationTicksDetour;
-	};
+        // --- Hook ---
+        ExecuteGameFrameDetour m_ExecuteGameFrameDetour;
+        SimulationTicksDetour m_SimulationTicksDetour;
+    };
 }

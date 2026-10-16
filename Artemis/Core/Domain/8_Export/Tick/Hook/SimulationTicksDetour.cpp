@@ -3,69 +3,73 @@ module;
 #include "External/minhook/include/MinHook.h"
 
 module Export.Tick.Hook;
+import :SimulationTicks;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
 import Platform.Hook.System;
+import std;
 
 namespace
 {
-	namespace Signature = Platform::Memory::Type::Signature;
-
-	using Status = Platform::Lifecycle::Type::Status;
+    namespace Signature = Platform::Memory::Type::Signature;
+    using Platform::Lifecycle::Type::Status;
 }
 
 namespace Export::Tick::Hook
 {
-	auto SimulationTicksDetour::HookedSimulationTicks(int ticksToAdvance, float* param_2) -> void
-	{
-		s_Instance->m_LifecycleStore.SetStatus({ Status::Running });
+    auto __fastcall SimulationTicksDetour::HookedSimulationTicks(int ticksToAdvance, float* remainingTime) -> void
+    {
+        auto* self{ s_Instance };
+        auto& frameDetour{ self->m_ExecuteGameFrameDetour };
+        const bool isCounting{ frameDetour.IsInstalled() };
 
-		auto start = SteadyClock::now();
-		m_OriginalFunction(ticksToAdvance, param_2);
-		auto end = SteadyClock::now();
+        self->m_LifecycleStore.SetStatus(Status::Running);
 
-		auto elapsed = end - start;
-		uint64_t durationNS = std::chrono::duration_cast<NanoSeconds>(elapsed).count();
+        if (isCounting) frameDetour.BeginSimulation();
 
-		s_Instance->m_TelemetryStore.RecordSimTick(
-			ticksToAdvance, durationNS);
+        auto start{ steady_clock::now() };
+        s_OriginalFunction(ticksToAdvance, remainingTime);
+        auto end{ steady_clock::now() };
 
-		if (ticksToAdvance > 0)
-		{
-			s_Instance->m_LifecycleStore.SignalTick();
-		}
-	}
+        // The engine can stop before ticksToAdvance (pause, menus), so the hook count is the real one.
+        const int ticks{ isCounting ? frameDetour.EndSimulation() : (std::max)(ticksToAdvance, 0) };
 
-	SimulationTicksDetour* SimulationTicksDetour::s_Instance = nullptr;
+        self->m_TelemetryStore.RecordSimTick(ticks, static_cast<std::uint64_t>(
+            std::chrono::duration_cast<nanoseconds>(end - start).count()));
 
-	void SimulationTicksDetour::Install()
-	{
-		if (m_IsHookInstalled.load()) return;
-		s_Instance = this;
+        // The last tick of the call is complete now.
+        if (ticks > 0) self->m_LifecycleStore.SignalTick();
+    }
 
-		void* functionAddress = (void*)m_AOBService.FindPattern(Signature::SimulationTicks);
-		m_FunctionAddress.store(functionAddress);
+    auto SimulationTicksDetour::Install() -> void
+    {
+        if (m_IsHookInstalled.load()) return;
+        s_Instance = this;
 
-		if (!Platform::Hook::System::InstallDetour(functionAddress,
-			reinterpret_cast<void*>(&HookedSimulationTicks),
-			reinterpret_cast<void**>(&m_OriginalFunction),
-			"[SimulationTicksDetour]", m_LogsService))
-		{
-			return;
-		}
+        void* functionAddress{ reinterpret_cast<void*>(
+            m_AOBService.FindPattern(Signature::SimulationTicks)) };
+        m_FunctionAddress.store(functionAddress);
 
-		m_IsHookInstalled.store(true);
-	}
+        if (!Platform::Hook::System::InstallDetour(functionAddress,
+            reinterpret_cast<void*>(&HookedSimulationTicks),
+            reinterpret_cast<void**>(&s_OriginalFunction),
+            "[SimulationTicksDetour]", m_LogsService))
+        {
+            return;
+        }
 
-	void SimulationTicksDetour::Uninstall()
-	{
-		if (!m_IsHookInstalled.load()) return;
+        m_IsHookInstalled.store(true);
+    }
 
-		Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
-			"[SimulationTicksDetour]", m_LogsService);
+    auto SimulationTicksDetour::Uninstall() -> void
+    {
+        if (!m_IsHookInstalled.load()) return;
 
-		m_IsHookInstalled.store(false);
-		s_Instance = nullptr;
-	}
+        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
+            "[SimulationTicksDetour]", m_LogsService);
+
+        m_IsHookInstalled.store(false);
+        s_Instance = nullptr;
+    }
 }
