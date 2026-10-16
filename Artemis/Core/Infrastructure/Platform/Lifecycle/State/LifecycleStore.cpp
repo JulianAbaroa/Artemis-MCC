@@ -57,11 +57,21 @@ namespace Platform::Lifecycle::State
 
     auto LifecycleStore::SignalTick() -> bool
     {
-        // Release ensures all of Blam's logic-tick writes are visible to the
-        // AI thread before it observes the incremented counter, otherwise
-        // the AI thread could see the new tick but still read the previous
-        // tick's data.
-        const std::uint64_t generation{ m_TickGeneration.fetch_add(1, std::memory_order_release) + 1 };
+        std::uint64_t generation{ 0 };
+
+        {
+            // The increment happens under the mutex of WaitForTick. Without it the AI thread can check the counter, miss this
+            // increment and the notify before it blocks, and sleep through the tick (a lost wakeup: the read never comes, the wait
+            // below times out and the tick is dropped).
+            std::lock_guard<std::mutex> lock(m_TickMutex);
+
+            // Release ensures all of Blam's logic-tick writes are visible to the
+            // AI thread before it observes the incremented counter, otherwise
+            // the AI thread could see the new tick but still read the previous
+            // tick's data.
+            generation = m_TickGeneration.fetch_add(1, std::memory_order_release) + 1;
+        }
+
         m_TickCV.notify_one();
 
         if (!m_IsReaderActive.load(std::memory_order_acquire)) return true;
