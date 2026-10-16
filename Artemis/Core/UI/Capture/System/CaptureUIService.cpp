@@ -92,8 +92,8 @@ namespace
     // Global of the thread context whose allocation is the game state (game globals).
     constexpr std::uintptr_t k_GameStateAnchorOffset{ 0x48 };
 
-    // Largest game state copied, a guard against walking an unrelated allocation.
-    constexpr std::size_t k_MaxGameStateSize{ 0x4000000 };
+    // Largest game state copied. The allocation is 64 MB but past ~10 MB it holds copies of the game state (A5).
+    constexpr std::size_t k_MaxGameStateSize{ 0xC00000 };
 
     // First fake handle of the engine blocks.
     constexpr std::uint32_t k_EngineHandleBase{ 0xEEEE0000 };
