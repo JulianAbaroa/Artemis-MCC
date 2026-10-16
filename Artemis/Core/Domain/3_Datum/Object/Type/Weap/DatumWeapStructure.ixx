@@ -21,7 +21,7 @@ export namespace Datum::Object::Type::Weap::Structure
     struct WeapData
     {
         std::uint8_t  _gap_0x0[0x4];
-        std::uint16_t WeaponFlags;  // 0x4  flags16. [Ready A=4, Ready B=5] | bits 4 and 5 = 'ready', each with a countdown (0x1DC, 0x1DD).
+        std::uint16_t WeaponFlags;  // 0x4  flags16. [Overheated=1, Ready A=4, Ready B=5] | Bit 1 = overheated (A6, 2026-10-16, Ignore/20261016_120906.txt): set on the plasma rifle at overheat and still set with Total Heat 0.796, below the tag OverheatedThreshold (1.0), so the engine keeps the hysteresis itself. Bits 4 and 5 = ready, each with a countdown (0x1DC, 0x1DD); 0x30 on every idle weapon.
         std::uint16_t InputMask;  // 0x6  flags16. [Control 34=0, Fire=1, Control 31=2, Control 32=3, Control 33=4, Reload=5, Melee=6, Zoom=7, Control 43=8] | Written by FUN_1804bb2ac from the unit. Old name Weapon.ActionState (read as u8): 0x02 fire, 0x20 reload, 0x40 melee, 0x80 zoom, 0x100 (control bit 43) lives in the second byte. Bits 0x20 and 0x40 do not wake the weapon.
         std::uint8_t AnalogTrigger;  // 0x8  uint8. | (u8)(f * 255) of the unit's fire strength (1.0 while pressed).
         std::uint8_t  _gap_0x9[0x1];
@@ -31,7 +31,7 @@ export namespace Datum::Object::Type::Weap::Structure
         std::uint8_t Unknown1d2;  // 0xE  uint8. | R1 W3 init=0x0 src=SUBPIECE, INT_ADD W:weap_update,weap_init
         std::uint8_t Unknown1d3;  // 0xF  uint8. | R1 W1 src=INT_ADD W:weap_update
         std::uint16_t Unknown1d4;  // 0x10  uint16. | R2 W1 init=0x0 W:weap_init
-        std::uint16_t Unknown1d6;  // 0x12  uint16. | R3 W1 src=INT_ADD W:weap_update
+        std::uint16_t ReloadTimer;  // 0x12  uint16. | Non-zero only during the reload animation (A6, 2026-10-16, Ignore/20261016_120906.txt): DMR 70 mid reload, 0 once it can fire again, while Magazine 0 Reload State 0x2C0 stays 1. CanFire after a reload = this is 0. R3 W1 src=INT_ADD W:weap_update
         std::uint16_t Unknown1d8;  // 0x14  uint16. | R3 W2 src=INT_ADD, MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:weap_update,FUN_1804bf7f0
         std::uint16_t OwnIndex;  // 0x16  uint16. | Index written by weap_init.
         std::uint8_t ReadyCountdownA;  // 0x18  uint8. | Countdown for flag bit 4 of Weapon Flags.
@@ -44,10 +44,10 @@ export namespace Datum::Object::Type::Weap::Structure
         std::uint16_t Unknown1ee;  // 0x2A  uint16. | R0 W1 init=0x0 W:weap_init
         std::uint32_t Unknown1f0;  // 0x2C  uint32. | R2 W0 R:FUN_1804b9038,FUN_1804b9554
         float        SmoothedToggle;  // 0x30  float32. | Smoothed towards the target at 0x238 (0 or 1.0) with the tag's rise/fall rates and sounds. Probably a flashlight fade.
-        std::uint8_t IsTracking;  // 0x34  uint8. | Lock-on state.
+        std::uint8_t IsTracking;  // 0x34  uint8. | 1 while the weapon tracks an object (0x200), with or without lock (A6, 2026-10-16, Ignore/20261016_120906.txt). Lock = Tracking State 0x204 = 2.
         std::uint8_t  _gap_0x35[0x7];
-        std::uint32_t TrackedBipedHandle;  // 0x3C  uint32. | 2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit's at 0x2E4).
-        std::uint32_t TrackedHandle204;  // 0x40  uint32. | 3rd dword of the tracking structure.
+        std::uint32_t TrackedBipedHandle;  // 0x3C  uint32. | Object the weapon tracks, any object kind (a Falcon for the rocket launcher (A6, 2026-10-16, Ignore/20261016_120906.txt)). 2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit at 0x2E4). The name says biped for history.
+        std::uint32_t TrackingState;  // 0x40  uint32. | Lock-on progress of the tracked object (A6, 2026-10-16, Ignore/20261016_120906.txt): 1 tracking (aimed, not locked), 2 locked. 0 on weapons without a target. 3rd dword of the tracking structure.
         std::uint8_t  _gap_0x44[0xC];
         float        Unknown214;  // 0x50  float32. | R2 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4
         float        Unknown218;  // 0x54  float32. | R1 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4
@@ -78,8 +78,8 @@ export namespace Datum::Object::Type::Weap::Structure
         std::uint8_t  _gap_0xB1[0x2B];
         std::uint32_t Barrel1Link;  // 0xDC  uint32. | dword at +0x2C (-1 at init).
         std::uint8_t  _gap_0xE0[0x4];
-        std::uint8_t Trigger0ChargeState;  // 0xE4  uint8. | Charge stage. Old name Weapon.ChargeState (only trigger 0 was read).
-        std::uint8_t Trigger0ChargeInverse;  // 0xE5  uint8. | Inverse of the stage (seen only on the plasma launcher).
+        std::uint8_t Trigger0ChargeState;  // 0xE4  uint8. | Charge stage. 2 = fully charged on the plasma pistol (A6, 2026-10-16, Ignore/20261016_120906.txt), 0 idle. Old name Weapon.ChargeState (only trigger 0 was read).
+        std::uint8_t Trigger0StateTicks;  // 0xE5  uint8. | Counter of the current trigger state (A6, 2026-10-16, Ignore/20261016_120906.txt): 17 on a charged plasma pistol, 32 on a plasma rifle firing, 0 after the overheat. Old name Charge Inverse (plasma launcher).
         std::uint8_t Trigger0Byte2;  // 0xE6  uint8. | Unidentified.
         std::uint8_t Trigger0ProjectileCount;  // 0xE7  uint8. | Not always set.
         float        Trigger0ChargeProgress;  // 0xE8  float32. | Float; user found it useless.
@@ -114,7 +114,7 @@ export namespace Datum::Object::Type::Weap::Structure
         std::uint32_t Unknown310;  // 0x14C  uint32. | R2 W2 init=0xffffffff upd=0xffffffff W:weap_init,FUN_1804c5c74
         std::uint16_t Unknown314;  // 0x150  uint16. | R0 W2 init=0xffff upd=0xffff W:weap_init,FUN_1804c5c74
         std::uint16_t Unknown316;  // 0x152  uint16. | R1 W2 init=0xffff upd=0xffff W:weap_init,FUN_1804c5c74
-        float        Unknown318;  // 0x154  float32. | R1 W3 init=0x0 upd=0x0 src=FLOAT_DIV W:FUN_1804c5c74,weap_init
+        float        Unknown318;  // 0x154  float32. | 0.567 on the plasma rifle 0.58 s after overheating (heat 1.0 to 0.796 at 0.35/s): seconds since the overheat or a venting timer (A6, 2026-10-16, Ignore/20261016_120906.txt). 0 when cool. R1 W3 init=0x0 upd=0x0 src=FLOAT_DIV W:FUN_1804c5c74,weap_init
         std::uint32_t Unknown31c;  // 0x158  uint32. | R0 W2 init=0xffffffff upd=0xffffffff W:weap_init,FUN_1804c5c74
         std::uint32_t Unknown320;  // 0x15C  uint32. | R1 W2 init=0x0 upd=0x0 W:weap_init,FUN_1804c5c74
         std::uint16_t Unknown324;  // 0x160  uint16. | R0 W1 init=0xffff W:weap_init

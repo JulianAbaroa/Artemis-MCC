@@ -35,7 +35,7 @@ export namespace Datum::Object::Type::Proj::Structure
         std::uint16_t Unknown1ce;  // 0x26  uint16. | R0 W1 init=0x0 W:proj_init
         std::uint32_t Unknown1d0;  // 0x28  uint32. | R1 W1 upd=0xffffffff W:proj_sd8
         std::uint32_t Unknown1d4;  // 0x2C  uint32. | R10 W1 upd=0xffffffff W:proj_sd8
-        std::uint32_t Unknown1d8;  // 0x30  uint32. | Old name: Projectile.OwnerWeaponHandle. proj_init writes placement +0x60 if it passes the weapon type check (GetTagPointerWithPermissionCheck(handle, 4)), else -1. proj_sd8 sets it back to -1. Measured -1 on a thrown frag, a stuck plasma, a Wraith mortar round and stuck needles (A3, 2026-10-16); a weapon bullet in flight was not captured. R2 W2 W:proj_init,proj_sd8
+        std::uint32_t Unknown1d8;  // 0x30  uint32. | Old name: Projectile.OwnerWeaponHandle. NOT the weapon that fired. proj_init writes placement +0x60 if it passes the type check GetTagPointerWithPermissionCheck(handle, 4), else -1, and proj_sd8 sets it back to -1. Measured -1 on every projectile captured: thrown frag, stuck plasma, Wraith mortar round, stuck needles (A3) and plasma pistol and plasma rifle bolts in flight (A6, 2026-10-16). Meaning unknown, no use. R2 W2 W:proj_init,proj_sd8
         std::uint32_t Unknown1dc;  // 0x34  uint32. | Stuck plasma grenade: the biped it is stuck to (A3). 0 on a flying frag, the mortar and stuck needles. Use obje 0x14/0x18 (parent and node) for what a projectile is stuck to. R0 W2 src=[param_2+0x40], [lVar3+0x14] W:FUN_1804f2d00
         std::uint32_t Unknown1e0;  // 0x38  uint32. | R0 W1 src=MULTIEQUAL known=Weapon.TotalHeat W:FUN_1804f2d00
         std::uint64_t Unknown1e4;  // 0x3C  uint64. | R0 W1 src=[param_2+0x8] known=Weapon.TotalEnergy W:FUN_1804f2d00

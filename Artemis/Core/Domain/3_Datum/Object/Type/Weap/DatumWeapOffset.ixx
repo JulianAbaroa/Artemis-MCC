@@ -12,7 +12,7 @@ export namespace Datum::Object::Type::Weap::Offset
     constexpr std::size_t k_ComponentStart = 0x1C4;
     constexpr std::size_t k_ComponentEnd = 0x338;
 
-    constexpr std::size_t k_WeaponFlags                                 = 0x1C8;  // flags16. [Ready A=4, Ready B=5]
+    constexpr std::size_t k_WeaponFlags                                 = 0x1C8;  // flags16. [Overheated=1, Ready A=4, Ready B=5]
     constexpr std::size_t k_InputMask                                   = 0x1CA;  // flags16. [Control 34=0, Fire=1, Control 31=2, Control 32=3, Control 33=4, Reload=5, Melee=6, Zoom=7, Control 43=8]
     constexpr std::size_t k_AnalogTrigger                               = 0x1CC;  // uint8.
     constexpr std::size_t k_Unknown1ce                                  = 0x1CE;  // uint16.
@@ -21,7 +21,7 @@ export namespace Datum::Object::Type::Weap::Offset
     constexpr std::size_t k_Unknown1d2                                  = 0x1D2;  // uint8.
     constexpr std::size_t k_Unknown1d3                                  = 0x1D3;  // uint8.
     constexpr std::size_t k_Unknown1d4                                  = 0x1D4;  // uint16.
-    constexpr std::size_t k_Unknown1d6                                  = 0x1D6;  // uint16.
+    constexpr std::size_t k_ReloadTimer                                 = 0x1D6;  // uint16.
     constexpr std::size_t k_Unknown1d8                                  = 0x1D8;  // uint16.
     constexpr std::size_t k_OwnIndex                                    = 0x1DA;  // uint16.
     constexpr std::size_t k_ReadyCountdownA                             = 0x1DC;  // uint8.
@@ -35,7 +35,7 @@ export namespace Datum::Object::Type::Weap::Offset
     constexpr std::size_t k_SmoothedToggle                              = 0x1F4;  // float32.
     constexpr std::size_t k_IsTracking                                  = 0x1F8;  // uint8.
     constexpr std::size_t k_TrackedBipedHandle                          = 0x200;  // uint32.
-    constexpr std::size_t k_TrackedHandle204                            = 0x204;  // uint32.
+    constexpr std::size_t k_TrackingState                               = 0x204;  // uint32.
     constexpr std::size_t k_Unknown214                                  = 0x214;  // float32.
     constexpr std::size_t k_Unknown218                                  = 0x218;  // float32.
     constexpr std::size_t k_Unknown21c                                  = 0x21C;  // uint16.
@@ -60,7 +60,7 @@ export namespace Datum::Object::Type::Weap::Offset
     constexpr std::size_t k_Barrel1State                                = 0x274;  // uint8.
     constexpr std::size_t k_Barrel1Link                                 = 0x2A0;  // uint32.
     constexpr std::size_t k_Trigger0ChargeState                         = 0x2A8;  // uint8.
-    constexpr std::size_t k_Trigger0ChargeInverse                       = 0x2A9;  // uint8.
+    constexpr std::size_t k_Trigger0StateTicks                          = 0x2A9;  // uint8.
     constexpr std::size_t k_Trigger0Byte2                               = 0x2AA;  // uint8.
     constexpr std::size_t k_Trigger0ProjectileCount                     = 0x2AB;  // uint8.
     constexpr std::size_t k_Trigger0ChargeProgress                      = 0x2AC;  // float32.
