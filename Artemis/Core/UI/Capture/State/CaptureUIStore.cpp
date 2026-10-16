@@ -63,6 +63,16 @@ namespace UI::Capture::State
         m_IsProjectilesIncluded = value;
     }
 
+    auto CaptureUIStore::IsEngineIncluded() const -> bool
+    {
+        return m_IsEngineIncluded;
+    }
+
+    auto CaptureUIStore::SetEngineIncluded(bool value) -> void
+    {
+        m_IsEngineIncluded = value;
+    }
+
     auto CaptureUIStore::FindPrevious(std::uint32_t handle) const -> const std::vector<std::uint8_t>*
     {
         const auto it{ m_Previous.find(handle) };

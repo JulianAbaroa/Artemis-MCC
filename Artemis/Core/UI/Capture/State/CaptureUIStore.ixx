@@ -51,6 +51,10 @@ export namespace UI::Capture::State
         auto IsProjectilesIncluded() const -> bool;
         auto SetProjectilesIncluded(bool value) -> void;
 
+        // Checks whether the engine globals reached from the thread context are captured (A5).
+        auto IsEngineIncluded() const -> bool;
+        auto SetEngineIncluded(bool value) -> void;
+
         // return: The bytes of the previous capture of the object, or null if it was not captured in this session.
         auto FindPrevious(std::uint32_t handle) const -> const std::vector<std::uint8_t>*;
 
@@ -86,6 +90,7 @@ export namespace UI::Capture::State
         std::vector<std::uint32_t> m_Pinned{};
         bool m_IsPlayersIncluded{ false };
         bool m_IsProjectilesIncluded{ false };
+        bool m_IsEngineIncluded{ false };
 
         std::unordered_map<std::uint32_t, std::vector<std::uint8_t>> m_Previous{};
         std::vector<ByteChange> m_Changes{};

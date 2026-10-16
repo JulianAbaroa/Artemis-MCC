@@ -64,6 +64,37 @@ namespace
     // Rows the change table draws at most.
     constexpr int k_MaxChangeRows{ 2000 };
 
+    // Engine globals copied with the engine option (A5), reached from the engine thread context.
+    // note: Fake handles keep each block apart in the analysis script. Pointer offsets from Ignore/Tareas/Transversal/Indice_Reverse.txt.
+    struct EngineBlock
+    {
+        const char* Name{ "" };
+
+        // Offset of the block pointer in the thread context. The context itself when 0 and not indirect.
+        std::uintptr_t PointerOffset{};
+        bool IsIndirect{};
+
+        // Second pointer to follow inside the first block, 0 for none.
+        std::uintptr_t InnerOffset{};
+
+        std::size_t MaximumSize{};
+    };
+
+    constexpr std::array<EngineBlock, 5> k_EngineBlocks
+    {{
+        { .Name = "context", .PointerOffset = 0x0, .IsIndirect = false, .InnerOffset = 0x0, .MaximumSize = 0x400 },
+        { .Name = "game", .PointerOffset = 0x48, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x1000 },
+        { .Name = "time", .PointerOffset = 0xA0, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x200 },
+        { .Name = "engine", .PointerOffset = 0x290, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x20000 },
+        { .Name = "players", .PointerOffset = 0x18, .IsIndirect = true, .InnerOffset = 0x50, .MaximumSize = 0x4900 },
+    }};
+
+    // First fake handle of the engine blocks.
+    constexpr std::uint32_t k_EngineHandleBase{ 0xEEEE0000 };
+
+    // Bytes read at once when copying an engine block.
+    constexpr std::size_t k_PageSize{ 0x1000 };
+
     // Name of the range after the last component: the variable blocks of the datum.
     constexpr const char* k_BlocksName{ "blocks" };
 
@@ -508,6 +539,8 @@ namespace UI::Capture::System
         WriteHavokFilter(*file, this->ReadHavokFilter());
         WriteCollisionTestFlags(*file, this->ReadCollisionTestFlags());
 
+        const std::size_t engineBlocks{ m_CaptureUIStore.IsEngineIncluded() ? this->WriteEngineBlocks(*file, m_DatumStore.GetThreadContext()) : 0 };
+
         std::vector<ByteChange> changes{};
         std::string details{};
 
@@ -558,7 +591,8 @@ namespace UI::Capture::System
         const std::string labelText{ label.empty() ? "" : std::format(" ({})", label) };
         if (details.empty()) details = "Nothing changed";
 
-        m_LogsService.Message("[CaptureUIService] INFO: Capture {}{}, {} objects. {}.", index, labelText, targets.size(), details);
+        m_LogsService.Message("[CaptureUIService] INFO: Capture {}{}, {} objects, {} engine blocks. {}.", index, labelText, targets.size(),
+            engineBlocks, details);
 
         return std::format("Capture {}{}: {} objects -> {}", index, labelText, targets.size(), m_CaptureUIStore.GetFilePath().string());
     }
@@ -673,6 +707,62 @@ namespace UI::Capture::System
         return component;
     }
 
+    auto CaptureUIService::WriteEngineBlocks(std::ofstream& file, std::uintptr_t threadContext) -> std::size_t
+    {
+        if (threadContext == 0) return 0;
+
+        std::size_t written{ 0 };
+
+        for (std::size_t index{ 0 }; index < k_EngineBlocks.size(); ++index)
+        {
+            const EngineBlock& block{ k_EngineBlocks[index] };
+
+            std::uintptr_t address{ threadContext };
+            if (block.IsIndirect) address = m_MemoryReaderService.Read<std::uintptr_t>(threadContext, block.PointerOffset);
+            if (address != 0 && block.InnerOffset != 0) address = m_MemoryReaderService.Read<std::uintptr_t>(address, block.InnerOffset);
+            if (address == 0) continue;
+
+            const std::vector<std::uint8_t> bytes{ this->ReadPages(address, block.MaximumSize) };
+            if (bytes.empty()) continue;
+
+            file << std::format("-- object {:08X} source engine class {} size 0x{:X} address 0x{:X} tag engine\\{}\n",
+                k_EngineHandleBase + static_cast<std::uint32_t>(index), block.Name, bytes.size(), address, block.Name);
+            file << std::format(".. {} 0x0 0x{:X}\n", block.Name, bytes.size());
+
+            for (std::size_t offset{ 0 }; offset < bytes.size(); offset += k_BytesPerRow)
+            {
+                const std::size_t count{ (std::min)(k_BytesPerRow, bytes.size() - offset) };
+                file << std::format("{:04X}  {}\n", offset, HexBytes(std::span<const std::uint8_t>{ bytes.data() + offset, count }));
+            }
+
+            ++written;
+        }
+
+        return written;
+    }
+
+    auto CaptureUIService::ReadPages(std::uintptr_t address, std::size_t maximum) -> std::vector<std::uint8_t>
+    {
+        std::vector<std::uint8_t> bytes{};
+        bytes.reserve(maximum);
+
+        std::uintptr_t cursor{ address };
+
+        while (bytes.size() < maximum)
+        {
+            const std::uintptr_t pageEnd{ (cursor & ~(k_PageSize - 1)) + k_PageSize };
+            const std::size_t count{ (std::min)(static_cast<std::size_t>(pageEnd - cursor), maximum - bytes.size()) };
+
+            std::vector<std::uint8_t> chunk(count);
+            if (!m_MemoryReaderService.ReadRaw(cursor, chunk.data(), count)) break;
+
+            bytes.insert(bytes.end(), chunk.begin(), chunk.end());
+            cursor += count;
+        }
+
+        return bytes;
+    }
+
     auto CaptureUIService::ReadCollisionTestFlags() -> std::optional<std::uint64_t>
     {
         const std::uintptr_t module{ GameModuleBase() };
@@ -753,6 +843,11 @@ namespace UI::Capture::System
         bool isProjectilesIncluded{ m_CaptureUIStore.IsProjectilesIncluded() };
         if (ImGui::Checkbox("Every projectile", &isProjectilesIncluded)) m_CaptureUIStore.SetProjectilesIncluded(isProjectilesIncluded);
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("Also captures every projectile alive: grenades, rockets, stuck needles (A3).");
+
+        ImGui::SameLine();
+        bool isEngineIncluded{ m_CaptureUIStore.IsEngineIncluded() };
+        if (ImGui::Checkbox("Engine globals", &isEngineIncluded)) m_CaptureUIStore.SetEngineIncluded(isEngineIncluded);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Also captures the engine globals of the thread context: game, time, game engine and players (A5).");
 
         if (ImGui::Button("Capture")) m_CaptureUIStore.RequestCapture();
         ImGui::SameLine();

@@ -19,6 +19,7 @@ export namespace UI::Capture::System
     // Each object also gets its Havok component and rigid bodies, the shapes of its physics model (phmo), and each capture the layer
     // table of the Havok collision filter (A10). Each object also gets its collision model (coll), and each capture the flags of the
     // projectile collision test (A13).
+    // With the engine option it also copies the engine globals of the thread context (A5: match, scores, clock, respawn).
     // note: A development tool (D72). The datum comes from the copy DatumService already makes each tick. The Havok lines are read live
     // from the render thread, through the safe reader, at fixed RVAs of haloreach.dll (Ignore/Tareas/Transversal/A10_Colisiones.txt).
     class CaptureUIService
@@ -87,6 +88,16 @@ export namespace UI::Capture::System
         // param handle: Value of obje 0xCC.
         // return: Nothing if the handle is empty or the component data array is not found.
         auto ReadHavokComponent(std::uint32_t handle) -> std::optional<HavokComponent>;
+
+        // Writes the engine globals reached from the thread context (A5) as objects of the session file, so the analysis script
+        // splits and diffs them like a datum: the thread context, the game globals, the time globals, the game engine globals and
+        // the player table. Each block is read page by page and ends at the first page that cannot be read.
+        // param threadContext: Engine thread context kept by the object table locator, 0 if not found yet.
+        // return: How many blocks were written.
+        auto WriteEngineBlocks(std::ofstream& file, std::uintptr_t threadContext) -> std::size_t;
+
+        // Copies up to maximum bytes from address, stopping at the first page that cannot be read.
+        auto ReadPages(std::uintptr_t address, std::size_t maximum) -> std::vector<std::uint8_t>;
 
         // Reads the flags of the collision test projectiles trace with (low half: collision flags, high half: object types).
         // return: Nothing if haloreach.dll is not loaded or the read fails.
