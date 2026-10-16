@@ -182,7 +182,7 @@ namespace Viewer::Hud::System
         const float tickHz = telemetry.m_TickHz.load(std::memory_order_relaxed);
         const float presentHz = telemetry.m_PresentHz.load(std::memory_order_relaxed);
         const float ticksPerCall = telemetry.m_TicksPerCall.load(std::memory_order_relaxed);
-        const float averageTickMs = telemetry.m_SimMs.load(std::memory_order_relaxed);
+        const float engineMs = telemetry.m_SimMs.load(std::memory_order_relaxed);
         const float averageSweepMs = telemetry.m_SweepMs.load(std::memory_order_relaxed);
         const std::uint32_t dropped = telemetry.m_DroppedOut.load(std::memory_order_relaxed);
         const float readWaitMs = telemetry.m_ReadWaitMs.load(std::memory_order_relaxed);
@@ -202,19 +202,18 @@ namespace Viewer::Hud::System
         ImGui::SameLine();
         ImGui::TextColored(k_Info, "%.2f", ticksPerCall);
 
-        const float intervalMs = tickHz > 0.0f ? (1000.0f / tickHz) : 16.67f;
-        const float budgetMs = (std::max)(intervalMs - averageTickMs, 0.0f);
+        ImGui::Text("Engine:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.3f ms/tick", engineMs);
 
-        const ImVec4 sweepColor =
-            (budgetMs > 0.0f && averageSweepMs < budgetMs * 0.5f) ? k_Green
-            : (budgetMs > 0.0f && averageSweepMs < budgetMs * 0.9f) ? k_Orange
-            : k_Red;
+        // The game waits for Artemis on every tick, so the sweep sets the most ticks per second Artemis can follow.
+        const float maxTickHz = averageSweepMs > 0.0f ? (1000.0f / averageSweepMs) : 0.0f;
 
         ImGui::Text("Sweep:");
         ImGui::SameLine();
-        ImGui::TextColored(sweepColor, "%.3f ms", averageSweepMs);
+        ImGui::TextColored(k_Info, "%.3f ms", averageSweepMs);
         ImGui::SameLine();
-        ImGui::Text("/ budget %.2f ms", budgetMs);
+        ImGui::Text("(max %.0f ticks/s)", maxTickHz);
 
         const ImVec4 dropColor = dropped == 0 ? k_Green : ImVec4(1.0f, 0.4f, 0.0f, 1.0f);
 

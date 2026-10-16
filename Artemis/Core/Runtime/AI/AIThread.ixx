@@ -20,6 +20,8 @@ export namespace Runtime::Thread
     class AIThread
     {
     private:
+        using steady_clock = std::chrono::steady_clock;
+
         using CameraStore = Viewer::Camera::State::CameraStore;
 
     public:
@@ -49,16 +51,35 @@ export namespace Runtime::Thread
         Export::Layer& m_Export;
         CameraStore& m_ViewerCameraStore;
 
+        // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
+        static constexpr std::array<std::string_view, 21> k_StageNames{
+            "Input", "Datum", "ObjectTable", "PlayerTable", "InteractionTable", "Classifier", "ObjectGraph",
+            "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "Entities", "Players",
+            "Collidable", "Aim", "Self", "Affordance", "Raycast", "Assemble", "Other" };
+
         bool m_IsLoaded{ false };
 
         std::uint64_t m_Last{ 0 };
         std::uint64_t m_Dropped{ 0 };
+
+        // Time of each stage in the current sweep, in nanoseconds.
+        std::array<std::uint64_t, k_StageNames.size()> m_StageNs{};
+        // Next stage to record.
+        std::size_t m_Stage{ 0 };
+        steady_clock::time_point m_StageStart{};
 
         // Builds the map, definitions, world and vitality data once the map file is loaded.
         auto LoadResources() -> void;
 
         // Updates the tables, relations, environment and egocentric services in order.
         auto ExecuteTick() -> void;
+
+        // Records the time since the previous stage ended as the next stage of k_StageNames.
+        auto EndStage() -> void;
+
+        // Logs the time of every stage when a sweep is slow enough to stall the game.
+        // note: The game waits for the read of each tick for up to 100 ms (LifecycleStore), so a sweep near that drops ticks.
+        auto ReportSlowSweep(std::uint64_t sweepNs) -> void;
 
         // Checks whether the lifecycle is running and not tearing down.
         auto IsStable() -> bool;
