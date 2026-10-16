@@ -53,6 +53,16 @@ namespace UI::Capture::State
         m_IsPlayersIncluded = value;
     }
 
+    auto CaptureUIStore::IsProjectilesIncluded() const -> bool
+    {
+        return m_IsProjectilesIncluded;
+    }
+
+    auto CaptureUIStore::SetProjectilesIncluded(bool value) -> void
+    {
+        m_IsProjectilesIncluded = value;
+    }
+
     auto CaptureUIStore::FindPrevious(std::uint32_t handle) const -> const std::vector<std::uint8_t>*
     {
         const auto it{ m_Previous.find(handle) };

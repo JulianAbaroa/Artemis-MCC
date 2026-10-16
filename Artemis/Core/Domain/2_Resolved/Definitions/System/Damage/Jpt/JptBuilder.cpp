@@ -8,6 +8,11 @@ namespace Resolved::Definitions::System
         Jpt out{};
 
         out.TagName = jpt.TagName;
+        out.Category = jpt.Data.Category;
+        out.DamageFlags = jpt.Data.Flags_2;
+        out.DamageLowerBound = jpt.Data.DamageLowerBound;
+        out.DamageUpperBoundMin = jpt.Data.DamageUpperBound.Min;
+        out.DamageUpperBoundMax = jpt.Data.DamageUpperBound.Max;
 
         return out;
     }

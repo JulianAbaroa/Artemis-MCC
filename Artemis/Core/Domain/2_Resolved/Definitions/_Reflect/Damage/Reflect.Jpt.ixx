@@ -17,6 +17,11 @@ export namespace Common::Reflect::Type
         static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("TagName", &Jpt::TagName),
+            MakeField("Category", &Jpt::Category),
+            MakeField("DamageFlags", &Jpt::DamageFlags),
+            MakeField("DamageLowerBound", &Jpt::DamageLowerBound),
+            MakeField("DamageUpperBoundMin", &Jpt::DamageUpperBoundMin),
+            MakeField("DamageUpperBoundMax", &Jpt::DamageUpperBoundMax),
         };
     };
 }

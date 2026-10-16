@@ -7,9 +7,15 @@ import std;
 export namespace Resolved::Definitions::Type::Bipd
 {
     // Holds the biped definition.
-    // Waiting for some system to need this.
     struct Bipd
     {
         Object::Object Base{};
+
+        // Bit 0 centered at origin (else the origin is at the bottom of the shape), bit 1 spherical shape.
+        std::uint32_t PhysicsFlags{};
+
+        float HeightStanding{};
+        float HeightCrouching{};
+        float PhysicsRadius{};
     };
 }

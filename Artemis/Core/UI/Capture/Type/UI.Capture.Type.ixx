@@ -32,6 +32,9 @@ export namespace UI::Capture::Type
 
         // Object pinned from the object table.
         Pinned,
+
+        // Projectile alive at the time of the capture.
+        Projectile,
     };
 
     // Object a capture copies.

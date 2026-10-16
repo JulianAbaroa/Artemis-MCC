@@ -199,6 +199,7 @@ namespace
         case Source::Linked: return "linked";
         case Source::Player: return "player";
         case Source::Pinned: return "pinned";
+        case Source::Projectile: return "projectile";
         default: return "unknown";
         }
     }
@@ -234,7 +235,8 @@ namespace
         targets.push_back(Target{ .Handle = handle, .Source = source });
     }
 
-    // Adds an object and, if it is a biped, its weapons, its armor ability and its parent (the vehicle it sits in).
+    // Adds an object and, if it is a biped, its weapons, its armor ability, the drop shield bubble or hologram of the ability
+    // and its parent (the vehicle it sits in).
     auto AddWithLinks(std::vector<Target>& targets, const Snapshot& snapshot, std::uint32_t handle, Source source) -> void
     {
         AddTarget(targets, snapshot, handle, source);
@@ -249,6 +251,12 @@ namespace
         AddTarget(targets, snapshot, datum.Read<std::uint32_t>(UnitOffset::k_SecondaryWeaponHandle), Source::Linked);
         AddTarget(targets, snapshot, datum.Read<std::uint32_t>(UnitOffset::k_ArmorAbilityHandle), Source::Linked);
         AddTarget(targets, snapshot, datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle), Source::Linked);
+
+        const auto ability{ snapshot.RawObjects.find(datum.Read<std::uint32_t>(UnitOffset::k_ArmorAbilityHandle)) };
+        if (ability == snapshot.RawObjects.end() || ability->second.Kind != ObjectKind::Equipment) return;
+
+        AddTarget(targets, snapshot, ability->second.Read<std::uint32_t>(EqipOffset::k_HologramObjectHandle), Source::Linked);
+        AddTarget(targets, snapshot, ability->second.Read<std::uint32_t>(EqipOffset::k_DropShieldObjectHandle), Source::Linked);
     }
 
     // Writes the header of an object and the hex rows of each of its ranges.
@@ -574,6 +582,14 @@ namespace UI::Capture::System
             AddWithLinks(targets, snapshot, handle, Source::Pinned);
         }
 
+        if (m_CaptureUIStore.IsProjectilesIncluded())
+        {
+            for (const auto& [handle, datum] : snapshot.RawObjects)
+            {
+                if (datum.Kind == ObjectKind::Projectile) AddTarget(targets, snapshot, handle, Source::Projectile);
+            }
+        }
+
         return targets;
     }
 
@@ -719,7 +735,8 @@ namespace UI::Capture::System
 
     auto CaptureUIService::DrawControls() -> void
     {
-        ImGui::TextWrapped("F7 or Capture copies the datum of the local biped, its weapons, its armor ability, its vehicle and the pinned objects "
+        ImGui::TextWrapped("F7 or Capture copies the datum of the local biped, its weapons, its armor ability (with its bubble or hologram), "
+            "its vehicle and the pinned objects "
             "to a session file in the storage folder, with the Havok component of each one and the Havok layer table (A10). "
             "Pin objects from the Object Table cards.");
 
@@ -731,6 +748,11 @@ namespace UI::Capture::System
         bool isPlayersIncluded{ m_CaptureUIStore.IsPlayersIncluded() };
         if (ImGui::Checkbox("Every player", &isPlayersIncluded)) m_CaptureUIStore.SetPlayersIncluded(isPlayersIncluded);
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("Also captures the biped of every other player, with its weapons, armor ability and vehicle.");
+
+        ImGui::SameLine();
+        bool isProjectilesIncluded{ m_CaptureUIStore.IsProjectilesIncluded() };
+        if (ImGui::Checkbox("Every projectile", &isProjectilesIncluded)) m_CaptureUIStore.SetProjectilesIncluded(isProjectilesIncluded);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Also captures every projectile alive: grenades, rockets, stuck needles (A3).");
 
         if (ImGui::Button("Capture")) m_CaptureUIStore.RequestCapture();
         ImGui::SameLine();

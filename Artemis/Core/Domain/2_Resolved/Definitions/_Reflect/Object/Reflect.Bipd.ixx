@@ -19,6 +19,10 @@ export namespace Common::Reflect::Type
         static constexpr bool HasFields{ true };
         static constexpr auto Value = std::tuple{
             MakeField("Base", &Bipd::Base),
+            MakeField("PhysicsFlags", &Bipd::PhysicsFlags),
+            MakeField("HeightStanding", &Bipd::HeightStanding),
+            MakeField("HeightCrouching", &Bipd::HeightCrouching),
+            MakeField("PhysicsRadius", &Bipd::PhysicsRadius),
         };
     };
 }
