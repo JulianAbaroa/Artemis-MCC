@@ -181,6 +181,7 @@ namespace Viewer::Hud::System
 
         const float tickHz = telemetry.m_TickHz.load(std::memory_order_relaxed);
         const float presentHz = telemetry.m_PresentHz.load(std::memory_order_relaxed);
+        const float ticksPerCall = telemetry.m_TicksPerCall.load(std::memory_order_relaxed);
         const float averageTickMs = telemetry.m_SimMs.load(std::memory_order_relaxed);
         const float averageSweepMs = telemetry.m_SweepMs.load(std::memory_order_relaxed);
         const std::uint32_t dropped = telemetry.m_DroppedOut.load(std::memory_order_relaxed);
@@ -194,6 +195,10 @@ namespace Viewer::Hud::System
         ImGui::Text("Present:");
         ImGui::SameLine();
         ImGui::TextColored(k_Info, "%.1f Hz", presentHz);
+
+        ImGui::Text("Ticks/frame:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.2f", ticksPerCall);
 
         const float intervalMs = tickHz > 0.0f ? (1000.0f / tickHz) : 16.67f;
         const float budgetMs = (std::max)(intervalMs - averageTickMs, 0.0f);

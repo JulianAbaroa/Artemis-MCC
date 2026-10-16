@@ -20,7 +20,8 @@ namespace Service::Telemetry::System
 
         m_TelemetryStore.m_TickHz.store((float)(tickTotal / seconds), std::memory_order_relaxed);
         m_TelemetryStore.m_PresentHz.store((float)(presents / seconds), std::memory_order_relaxed);
-        m_TelemetryStore.m_SimMs.store(calls ? (float)((tickNs / (double)calls) / 1e6) : 0.0f, std::memory_order_relaxed);
+        m_TelemetryStore.m_TicksPerCall.store(calls ? (float)(tickTotal / (double)calls) : 0.0f, std::memory_order_relaxed);
+        m_TelemetryStore.m_SimMs.store(tickTotal ? (float)((tickNs / (double)tickTotal) / 1e6) : 0.0f, std::memory_order_relaxed);
         m_TelemetryStore.m_SweepMs.store(sweeps ? (float)((sweepNs / (double)sweeps) / 1e6) : 0.0f, std::memory_order_relaxed);
 
         std::uint64_t dropped = m_TelemetryStore.m_Dropped.exchange(0, std::memory_order_relaxed);

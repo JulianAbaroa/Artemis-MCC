@@ -34,7 +34,10 @@ export namespace Service::Telemetry::State
         std::atomic<float> m_TickHz{ 0.0f };
         // Output. Frames per second.
         std::atomic<float> m_PresentHz{ 0.0f };
-        // Output. Average time of a simulation tick call, in milliseconds.
+        // Output. Average logic ticks per simulation call (one call per frame).
+        std::atomic<float> m_TicksPerCall{ 0.0f };
+        // Output. Average engine time per logic tick, in milliseconds.
+        // note: Per tick, not per call. A call runs several ticks when the game goes faster than the frame rate.
         std::atomic<float> m_SimMs{ 0.0f };
         // Output. Average sweep time, in milliseconds.
         std::atomic<float> m_SweepMs{ 0.0f };
