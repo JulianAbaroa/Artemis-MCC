@@ -89,6 +89,12 @@ namespace
         { .Name = "players", .PointerOffset = 0x18, .IsIndirect = true, .InnerOffset = 0x50, .MaximumSize = 0x4900 },
     }};
 
+    // Global of the thread context whose allocation is the game state (game globals).
+    constexpr std::uintptr_t k_GameStateAnchorOffset{ 0x48 };
+
+    // Largest game state copied, a guard against walking an unrelated allocation.
+    constexpr std::size_t k_MaxGameStateSize{ 0x4000000 };
+
     // First fake handle of the engine blocks.
     constexpr std::uint32_t k_EngineHandleBase{ 0xEEEE0000 };
 
@@ -525,7 +531,7 @@ namespace UI::Capture::System
         if (!tick) return "No tick yet. Load a map and try again.";
 
         const std::vector<Target> targets{ this->CollectTargets(*tick, *snapshot) };
-        if (targets.empty()) return "Nothing to capture: no local biped and no pinned object alive.";
+        if (targets.empty() && !m_CaptureUIStore.IsEngineIncluded()) return "Nothing to capture: no local biped and no pinned object alive.";
 
         std::optional<std::ofstream> file{ this->OpenSessionFile() };
         if (!file) return "Storage Folder is not set (Settings) or the capture file cannot be opened.";
@@ -540,6 +546,7 @@ namespace UI::Capture::System
         WriteCollisionTestFlags(*file, this->ReadCollisionTestFlags());
 
         const std::size_t engineBlocks{ m_CaptureUIStore.IsEngineIncluded() ? this->WriteEngineBlocks(*file, m_DatumStore.GetThreadContext()) : 0 };
+        if (m_CaptureUIStore.IsEngineIncluded()) this->WriteGameState(*file, m_DatumStore.GetThreadContext(), index);
 
         std::vector<ByteChange> changes{};
         std::string details{};
@@ -741,6 +748,62 @@ namespace UI::Capture::System
         return written;
     }
 
+    auto CaptureUIService::WriteGameState(std::ofstream& file, std::uintptr_t threadContext, std::uint32_t index) -> std::size_t
+    {
+        if (threadContext == 0) return 0;
+
+        const auto anchor{ m_MemoryReaderService.Read<std::uintptr_t>(threadContext, k_GameStateAnchorOffset) };
+        if (anchor == 0) return 0;
+
+        MEMORY_BASIC_INFORMATION info{};
+        if (VirtualQuery(reinterpret_cast<const void*>(anchor), &info, sizeof(info)) == 0) return 0;
+
+        const auto base{ reinterpret_cast<std::uintptr_t>(info.AllocationBase) };
+
+        std::vector<MEMORY_BASIC_INFORMATION> regions{};
+        std::uintptr_t cursor{ base };
+
+        while (cursor - base < k_MaxGameStateSize)
+        {
+            MEMORY_BASIC_INFORMATION region{};
+            if (VirtualQuery(reinterpret_cast<const void*>(cursor), &region, sizeof(region)) == 0) break;
+            if (region.AllocationBase != info.AllocationBase) break;
+
+            regions.push_back(region);
+            cursor = reinterpret_cast<std::uintptr_t>(region.BaseAddress) + region.RegionSize;
+        }
+
+        const std::size_t size{ (std::min)(static_cast<std::size_t>(cursor - base), k_MaxGameStateSize) };
+        if (size == 0) return 0;
+
+        std::vector<std::uint8_t> bytes(size);
+
+        for (const MEMORY_BASIC_INFORMATION& region : regions)
+        {
+            if (region.State != MEM_COMMIT || (region.Protect & (PAGE_NOACCESS | PAGE_GUARD)) != 0) continue;
+
+            const std::size_t offset{ reinterpret_cast<std::uintptr_t>(region.BaseAddress) - base };
+            const std::size_t count{ (std::min)(region.RegionSize, size - offset) };
+
+            for (std::size_t page{ 0 }; page < count; page += k_PageSize)
+            {
+                const std::size_t pageCount{ (std::min)(k_PageSize, count - page) };
+                m_MemoryReaderService.ReadRaw(base + offset + page, bytes.data() + offset + page, pageCount);
+            }
+        }
+
+        const path sessionPath{ m_CaptureUIStore.GetFilePath() };
+        const std::string fileName{ std::format("{}_gs{}.bin", sessionPath.stem().string(), index) };
+
+        std::ofstream binary{ sessionPath.parent_path() / fileName, std::ios::binary | std::ios::trunc };
+        if (!binary) return 0;
+
+        binary.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        file << std::format("gs-dump {} base 0x{:X} size 0x{:X} context 0x{:X}\n", fileName, base, size, threadContext);
+
+        return size;
+    }
+
     auto CaptureUIService::ReadPages(std::uintptr_t address, std::size_t maximum) -> std::vector<std::uint8_t>
     {
         std::vector<std::uint8_t> bytes{};
@@ -847,7 +910,8 @@ namespace UI::Capture::System
         ImGui::SameLine();
         bool isEngineIncluded{ m_CaptureUIStore.IsEngineIncluded() };
         if (ImGui::Checkbox("Engine globals", &isEngineIncluded)) m_CaptureUIStore.SetEngineIncluded(isEngineIncluded);
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Also captures the engine globals of the thread context: game, time, game engine and players (A5).");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Also captures the engine globals of the thread context (game, time, game engine, players) and "
+            "copies the whole game state to a .bin file per capture next to the session file (A5). Works without a local biped.");
 
         if (ImGui::Button("Capture")) m_CaptureUIStore.RequestCapture();
         ImGui::SameLine();

@@ -96,6 +96,12 @@ export namespace UI::Capture::System
         // return: How many blocks were written.
         auto WriteEngineBlocks(std::ofstream& file, std::uintptr_t threadContext) -> std::size_t;
 
+        // Copies the whole game state allocation (the block every global of the thread context points into) to a binary file next to
+        // the session file, one per capture, and writes a gs-dump line with its name, base and size (A5, A8).
+        // note: Pages that are not committed or cannot be read stay zero. Tools/analyze_gamestate.py searches the files by label.
+        // return: Bytes written, 0 if the allocation is not found.
+        auto WriteGameState(std::ofstream& file, std::uintptr_t threadContext, std::uint32_t index) -> std::size_t;
+
         // Copies up to maximum bytes from address, stopping at the first page that cannot be read.
         auto ReadPages(std::uintptr_t address, std::size_t maximum) -> std::vector<std::uint8_t>;
 
