@@ -19,7 +19,7 @@ export namespace Datum::Object::Type::Obje::Offset
     constexpr std::size_t k_NextSiblingHandle                           = 0xC;  // uint32.
     constexpr std::size_t k_ChildHandle                                 = 0x10;  // uint32.
     constexpr std::size_t k_ParentHandle                                = 0x14;  // uint32.
-    constexpr std::size_t k_Unknown18                                   = 0x18;  // uint8.
+    constexpr std::size_t k_ParentNodeIndex                             = 0x18;  // int8.
     constexpr std::size_t k_Unknown19                                   = 0x19;  // uint8.
     constexpr std::size_t k_ScenarioPlacementIndex                      = 0x1A;  // uint16.
     constexpr std::size_t k_VariantPlacementIndex                       = 0x1C;  // uint16.

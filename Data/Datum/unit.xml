@@ -83,7 +83,7 @@
 	<uint8 name="Look Turn Rate" offset="0x333" confidence="medium" tooltip="Look turn speed ratio 0-255." />
 	<uint8 name="Unknown 334" offset="0x334" confidence="unknown" tooltip="R0 W1 src=INT_ADD W:FUN_18047f0ac" />
 	<uint8 name="Unknown 335" offset="0x335" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:FUN_18047f0ac" />
-	<uint16 name="Unknown 336" offset="0x336" confidence="unknown" tooltip="R8 W1 init=0xffff W:unit_init" />
+	<int16 name="Parent Seat Index" offset="0x336" confidence="high" default="0xFFFF" exposed="true" tooltip="Seat of the parent vehicle (obje 0x14) the unit sits in, index in the seat block of the vehi tag and in the seat elements of the vehicle datum (block 0x560). -1 = not seated. Measured (A11, 2026-10-16): Warthog driver 0, passenger 1, chaingun gunner 0 (parent = the turret), Ghost 0, machinegun 0, Mongoose passenger 1." />
 	<float32 name="Unknown 340" offset="0x340" confidence="unknown" tooltip="R2 W1 src=FLOAT_ADD W:FUN_18049b3f8" />
 	<uint16 name="Unknown 348" offset="0x348" confidence="unknown" tooltip="R1 W2 init=0x0 src=INT_ADD W:unit_init,FUN_18048f6f4" />
 	<uint8 name="Active Weapon Slot" offset="0x34A" confidence="high" default="0xFF" exposed="true" tooltip="Measured live: 0 = primary in hand, 1 = secondary, 0xFF = in a vehicle / no usable weapon. Equipped weapon = handle at 0x350 + 4 * this value." />

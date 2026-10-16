@@ -88,7 +88,7 @@ export namespace Datum::Object::Type::Unit::Structure
         std::uint8_t LookTurnRate;  // 0x17B  uint8. | Look turn speed ratio 0-255.
         std::uint8_t Unknown334;  // 0x17C  uint8. | R0 W1 src=INT_ADD W:FUN_18047f0ac
         std::uint8_t Unknown335;  // 0x17D  uint8. | R1 W1 src=INT_ADD W:FUN_18047f0ac
-        std::uint16_t Unknown336;  // 0x17E  uint16. | R8 W1 init=0xffff W:unit_init
+        std::int16_t ParentSeatIndex;  // 0x17E  int16. | Seat of the parent vehicle (obje 0x14) the unit sits in, index in the seat block of the vehi tag and in the seat elements of the vehicle datum (block 0x560). -1 = not seated. Measured (A11, 2026-10-16): Warthog driver 0, passenger 1, chaingun gunner 0 (parent = the turret), Ghost 0, machinegun 0, Mongoose passenger 1.
         std::uint8_t  _gap_0x180[0x8];
         float        Unknown340;  // 0x188  float32. | R2 W1 src=FLOAT_ADD W:FUN_18049b3f8
         std::uint8_t  _gap_0x18C[0x4];

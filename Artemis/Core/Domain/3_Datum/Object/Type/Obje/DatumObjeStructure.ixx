@@ -27,7 +27,7 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint32_t NextSiblingHandle;  // 0xC  uint32. | Next object in the parent's child list.
         std::uint32_t ChildHandle;  // 0x10  uint32. | First child object (a biped's first child is its weapon).
         std::uint32_t ParentHandle;  // 0x14  uint32. | Object this one is attached to (-1 = none).
-        std::uint8_t Unknown18;  // 0x18  uint8. | R1 W1 upd=0xff W:FUN_180471264
+        std::int8_t  ParentNodeIndex;  // 0x18  int8. | Node of the parent the object hangs from (-1 = no parent). Written by the attach (180470f1c) with the node of the parent marker, 0xFF by the detach (FUN_180471264). Measured (A11, 2026-10-16): a seated biped holds the node of its seat marker (Warthog driver 2, chaingun gunner 3, Ghost 5, machinegun 1, Mongoose passenger 2); Origin 0x44 is then the marker translation in that node.
         std::uint8_t Unknown19;  // 0x19  uint8. | R5 W4 src=INT_OR W:FUN_1804e08c4
         std::uint16_t ScenarioPlacementIndex;  // 0x1A  uint16. | Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject.
         std::uint16_t VariantPlacementIndex;  // 0x1C  uint16. | Index of the placement in the map variant (0xFFFF = not from one). Used when 0x1A is -1 (FUN_1804ed93c, FUN_1800771bc). Verified in Forge and custom game: mapVariant + 0x14FC + index * 0x4C (mvar.xml).

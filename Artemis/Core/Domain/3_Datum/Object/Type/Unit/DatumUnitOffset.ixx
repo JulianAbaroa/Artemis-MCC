@@ -72,7 +72,7 @@ export namespace Datum::Object::Type::Unit::Offset
     constexpr std::size_t k_LookTurnRate                                = 0x333;  // uint8.
     constexpr std::size_t k_Unknown334                                  = 0x334;  // uint8.
     constexpr std::size_t k_Unknown335                                  = 0x335;  // uint8.
-    constexpr std::size_t k_Unknown336                                  = 0x336;  // uint16.
+    constexpr std::size_t k_ParentSeatIndex                             = 0x336;  // int16.
     constexpr std::size_t k_Unknown340                                  = 0x340;  // float32.
     constexpr std::size_t k_Unknown348                                  = 0x348;  // uint16.
     constexpr std::size_t k_ActiveWeaponSlot                            = 0x34A;  // uint8.
