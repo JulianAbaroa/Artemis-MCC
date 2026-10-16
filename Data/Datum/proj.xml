@@ -8,14 +8,14 @@
 	<uint16 name="Unknown 1B6" offset="0x1B6" confidence="unknown" tooltip="R1 W2 src=INDIRECT, MULTIEQUAL W:proj_init,FUN_1804f2d00" />
 	<uint32 name="Unknown 1BC" offset="0x1BC" confidence="unknown" tooltip="R5 W0 SHARED R:FUN_180781484,FUN_180781920" />
 	<uint32 name="Unknown 1C0" offset="0x1C0" confidence="unknown" tooltip="R2 W2 src=INDIRECT, [param_2+0x34] W:proj_init,FUN_1804f2d00" />
-	<uint32 name="Unknown 1C4" offset="0x1C4" confidence="low" tooltip="Old name: Projectile.OwnerBipedHandle (ObjectOffset.ixx). Not confirmed yet. R3 W1 src=call 180473dc0 known=Projectile.OwnerBipedHandle W:proj_init" />
-	<uint32 name="Unknown 1C8" offset="0x1C8" confidence="unknown" tooltip="R2 W2 src=[param_2+0x40] W:FUN_1804f2d00" />
+	<uint32 name="Shooter Root Handle" offset="0x1C4" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Root of the parent chain of the object that created the projectile (proj_init: FUN_180473dc0 of placement +0x60). The shooter biped on foot, the root vehicle when seated (Wraith mortar: the Wraith). Ignored by the projectile ray (A13, D99). NOT the owner: use obje 0xF0/0xF4 (A3, 2026-10-16). Old name: Projectile.OwnerBipedHandle." />
+	<uint32 name="Last Hit Object Handle" offset="0x1C8" confidence="medium" default="0xFFFFFFFF" tooltip="Object the projectile last hit and went through or bounced off (FUN_1804f2d00, collision type 4), ignored by the next ray (A13). Init -1 in proj_init. -1 in every capture of A3 (frag, stuck plasma, mortar, stuck needles)." />
 	<uint16 name="Unknown 1CC" offset="0x1CC" confidence="unknown" tooltip="R4 W1 init=0x0 W:proj_init" />
 	<uint16 name="Unknown 1CE" offset="0x1CE" confidence="unknown" tooltip="R0 W1 init=0x0 W:proj_init" />
 	<uint32 name="Unknown 1D0" offset="0x1D0" confidence="unknown" tooltip="R1 W1 upd=0xffffffff W:proj_sd8" />
 	<uint32 name="Unknown 1D4" offset="0x1D4" confidence="unknown" tooltip="R10 W1 upd=0xffffffff W:proj_sd8" />
-	<uint32 name="Unknown 1D8" offset="0x1D8" confidence="low" tooltip="Old name: Projectile.OwnerWeaponHandle (ObjectOffset.ixx). Not confirmed yet. R2 W2 upd=0xffffffff src=MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:proj_init,proj_sd8" />
-	<uint32 name="Unknown 1DC" offset="0x1DC" confidence="unknown" tooltip="R0 W2 src=[param_2+0x40], [lVar3+0x14] W:FUN_1804f2d00" />
+	<uint32 name="Unknown 1D8" offset="0x1D8" confidence="low" default="0xFFFFFFFF" tooltip="Old name: Projectile.OwnerWeaponHandle. proj_init writes placement +0x60 if it passes the weapon type check (GetTagPointerWithPermissionCheck(handle, 4)), else -1. proj_sd8 sets it back to -1. Measured -1 on a thrown frag, a stuck plasma, a Wraith mortar round and stuck needles (A3, 2026-10-16); a weapon bullet in flight was not captured. R2 W2 W:proj_init,proj_sd8" />
+	<uint32 name="Unknown 1DC" offset="0x1DC" confidence="low" tooltip="Stuck plasma grenade: the biped it is stuck to (A3). 0 on a flying frag, the mortar and stuck needles. Use obje 0x14/0x18 (parent and node) for what a projectile is stuck to. R0 W2 src=[param_2+0x40], [lVar3+0x14] W:FUN_1804f2d00" />
 	<uint32 name="Unknown 1E0" offset="0x1E0" confidence="unknown" tooltip="R0 W1 src=MULTIEQUAL known=Weapon.TotalHeat W:FUN_1804f2d00" />
 	<uint64 name="Unknown 1E4" offset="0x1E4" confidence="unknown" tooltip="R0 W1 src=[param_2+0x8] known=Weapon.TotalEnergy W:FUN_1804f2d00" />
 	<uint32 name="Unknown 1EC" offset="0x1EC" confidence="unknown" tooltip="R0 W1 src=[param_2+0x10] known=Equipment.TotalEnergy W:FUN_1804f2d00" />

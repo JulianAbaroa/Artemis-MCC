@@ -20,8 +20,8 @@ export namespace Datum::Object::Type::Proj::Offset
     constexpr std::size_t k_Unknown1b6                                  = 0x1B6;  // uint16.
     constexpr std::size_t k_Unknown1bc                                  = 0x1BC;  // uint32.
     constexpr std::size_t k_Unknown1c0                                  = 0x1C0;  // uint32.
-    constexpr std::size_t k_Unknown1c4                                  = 0x1C4;  // uint32.
-    constexpr std::size_t k_Unknown1c8                                  = 0x1C8;  // uint32.
+    constexpr std::size_t k_ShooterRootHandle                           = 0x1C4;  // uint32.
+    constexpr std::size_t k_LastHitObjectHandle                         = 0x1C8;  // uint32.
     constexpr std::size_t k_Unknown1cc                                  = 0x1CC;  // uint16.
     constexpr std::size_t k_Unknown1ce                                  = 0x1CE;  // uint16.
     constexpr std::size_t k_Unknown1d0                                  = 0x1D0;  // uint32.

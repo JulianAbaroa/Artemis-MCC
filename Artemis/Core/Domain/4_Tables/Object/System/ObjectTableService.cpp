@@ -88,7 +88,7 @@ namespace
 
 	// Fields that are not confirmed in the datum layouts yet. They keep the name they had before the migration.
 	constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
-	constexpr std::size_t k_ProjectileOwnerBipedHandle{ ProjOffset::k_Unknown1c4 };
+	constexpr std::size_t k_ProjectileOwnerBipedHandle{ ProjOffset::k_ShooterRootHandle };
 	constexpr std::size_t k_ProjectileOwnerWeaponHandle{ ProjOffset::k_Unknown1d8 };
 	constexpr std::size_t k_VehicleBoostThrottle{ UnitOffset::k_Unknown53c };
 	constexpr std::size_t k_VehicleBoostCooldown{ UnitOffset::k_Unknown544 };

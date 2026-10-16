@@ -29,14 +29,14 @@ export namespace Datum::Object::Type::Proj::Structure
         std::uint8_t  _gap_0x10[0x4];
         std::uint32_t Unknown1bc;  // 0x14  uint32. | R5 W0 SHARED R:FUN_180781484,FUN_180781920
         std::uint32_t Unknown1c0;  // 0x18  uint32. | R2 W2 src=INDIRECT, [param_2+0x34] W:proj_init,FUN_1804f2d00
-        std::uint32_t Unknown1c4;  // 0x1C  uint32. | Old name: Projectile.OwnerBipedHandle (ObjectOffset.ixx). Not confirmed yet. R3 W1 src=call 180473dc0 known=Projectile.OwnerBipedHandle W:proj_init
-        std::uint32_t Unknown1c8;  // 0x20  uint32. | R2 W2 src=[param_2+0x40] W:FUN_1804f2d00
+        std::uint32_t ShooterRootHandle;  // 0x1C  uint32. | Root of the parent chain of the object that created the projectile (proj_init: FUN_180473dc0 of placement +0x60). The shooter biped on foot, the root vehicle when seated (Wraith mortar: the Wraith). Ignored by the projectile ray (A13, D99). NOT the owner: use obje 0xF0/0xF4 (A3, 2026-10-16). Old name: Projectile.OwnerBipedHandle.
+        std::uint32_t LastHitObjectHandle;  // 0x20  uint32. | Object the projectile last hit and went through or bounced off (FUN_1804f2d00, collision type 4), ignored by the next ray (A13). Init -1 in proj_init. -1 in every capture of A3 (frag, stuck plasma, mortar, stuck needles).
         std::uint16_t Unknown1cc;  // 0x24  uint16. | R4 W1 init=0x0 W:proj_init
         std::uint16_t Unknown1ce;  // 0x26  uint16. | R0 W1 init=0x0 W:proj_init
         std::uint32_t Unknown1d0;  // 0x28  uint32. | R1 W1 upd=0xffffffff W:proj_sd8
         std::uint32_t Unknown1d4;  // 0x2C  uint32. | R10 W1 upd=0xffffffff W:proj_sd8
-        std::uint32_t Unknown1d8;  // 0x30  uint32. | Old name: Projectile.OwnerWeaponHandle (ObjectOffset.ixx). Not confirmed yet. R2 W2 upd=0xffffffff src=MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:proj_init,proj_sd8
-        std::uint32_t Unknown1dc;  // 0x34  uint32. | R0 W2 src=[param_2+0x40], [lVar3+0x14] W:FUN_1804f2d00
+        std::uint32_t Unknown1d8;  // 0x30  uint32. | Old name: Projectile.OwnerWeaponHandle. proj_init writes placement +0x60 if it passes the weapon type check (GetTagPointerWithPermissionCheck(handle, 4)), else -1. proj_sd8 sets it back to -1. Measured -1 on a thrown frag, a stuck plasma, a Wraith mortar round and stuck needles (A3, 2026-10-16); a weapon bullet in flight was not captured. R2 W2 W:proj_init,proj_sd8
+        std::uint32_t Unknown1dc;  // 0x34  uint32. | Stuck plasma grenade: the biped it is stuck to (A3). 0 on a flying frag, the mortar and stuck needles. Use obje 0x14/0x18 (parent and node) for what a projectile is stuck to. R0 W2 src=[param_2+0x40], [lVar3+0x14] W:FUN_1804f2d00
         std::uint32_t Unknown1e0;  // 0x38  uint32. | R0 W1 src=MULTIEQUAL known=Weapon.TotalHeat W:FUN_1804f2d00
         std::uint64_t Unknown1e4;  // 0x3C  uint64. | R0 W1 src=[param_2+0x8] known=Weapon.TotalEnergy W:FUN_1804f2d00
         std::uint32_t Unknown1ec;  // 0x44  uint32. | R0 W1 src=[param_2+0x10] known=Equipment.TotalEnergy W:FUN_1804f2d00

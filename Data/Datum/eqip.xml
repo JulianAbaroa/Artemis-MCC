@@ -15,9 +15,9 @@
 	<float32 name="Unknown 1F0" offset="0x1F0" confidence="low" tooltip="0. Read 1.0 while a jetpack was in use. W:eqip_init" />
 	<uint16 name="Unknown 1F4" offset="0x1F4" confidence="unknown" tooltip="R0 W1 init=0x0 W:eqip_init" />
 	<uint16 name="Unknown 1F6" offset="0x1F6" confidence="unknown" tooltip="R0 W1 init=0x0 W:eqip_init" />
-	<uint32 name="Hologram Object Handle" offset="0x1F8" confidence="low" default="0xFFFFFFFF" tooltip="Object handle seen only on hologram. Changes on each use and may keep the previous hologram. W:eqip_init" />
+	<uint32 name="Hologram Object Handle" offset="0x1F8" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Hologram biped (hologram_spartan, class bipd) spawned by the ability; its obje 0xF0/0xF4 are the owner player and biped (A3, 2026-10-16). Changes on each use and may keep the previous hologram. W:eqip_init" />
 	<uint32 name="Unknown 1FC" offset="0x1FC" confidence="low" default="0xFFFFFFFF" tooltip="Always FFFFFFFF on the seven abilities. W:eqip_init" />
-	<uint32 name="Drop Shield Object Handle" offset="0x200" confidence="low" default="0xFFFFFFFF" tooltip="Object handle set after a drop shield spawns its bubble. W:eqip_init" />
+	<uint32 name="Drop Shield Object Handle" offset="0x200" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Bubble spawned by the drop shield (drop_shield_shield, class eqip, its 0x1D8 holds the activation tick); its obje 0xF0/0xF4 are the owner player and biped (A3, 2026-10-16). W:eqip_init" />
 	<uint32 name="Unknown 204" offset="0x204" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_18052204c" />
 	<uint32 name="Activation Tick Copy" offset="0x208" confidence="medium" default="0xFFFFFFFF" tooltip="Same value as 0x1D8 on every measure. R3 W1 W:FUN_1804b4e74" />
 	<uint32 name="Unknown 20C" offset="0x20C" confidence="unknown" tooltip="R4 W3 src=call 18005cc74, INT_ADD W:FUN_1804b3324,FUN_1804b5b04,FUN_1804b5158" />

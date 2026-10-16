@@ -37,7 +37,7 @@ export namespace Datum::Object::Type::Obje::Structure
         MapStructure::Primitive::Vec3 SavedBoundingCenter;  // 0x30  point3. | Copy of the sphere center kept by FUN_180479888.
         float        SavedBoundingRadius;  // 0x3C  float32. | Copy of the sphere radius kept by FUN_180479888.
         std::uint8_t  _gap_0x40[0x4];
-        MapStructure::Primitive::Vec3 Origin;  // 0x44  point3. | Object position (feet level for a biped). Copied from the placement.
+        MapStructure::Primitive::Vec3 Origin;  // 0x44  point3. | Object position. Copied from the placement. Local to the parent node when 0x14 is set (A11). Bipeds: feet level (A3, 2026-10-16): the bipd tag has Physics Flags bit 0 Centered At Origin = 0 (origin at the bottom of the pill, height 0.65, radius 0.175 for the spartan) and node 0 of the skeleton sits on it.
         MapStructure::Primitive::Vec3 Forward;  // 0x50  vector3. | Forward vector.
         MapStructure::Primitive::Vec3 Up;  // 0x5C  vector3. | Up vector.
         MapStructure::Primitive::Vec3 LinearVelocity;  // 0x68  vector3. | World-space velocity.
@@ -64,8 +64,8 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint16_t ScaleTransitionTicks;  // 0xE8  uint16. | Ticks left in a scale transition (FUN_18046cc34).
         std::uint16_t ModelVariant;  // 0xEA  uint16. | Model (hlmt) variant. The engine reads it as u16 at 3 sites (obje_sa8, obje_delete, bipd_sa8) and obje_place writes 0xEB as u8; the low byte starts 0xFF. Old name: HlmtVariant (the repo reads only the low byte).
         std::uint8_t  _gap_0xEC[0x4];
-        std::uint32_t OwnerPlayerHandle;  // 0xF0  uint32. | Player that owns the object (-1 = none).
-        std::uint32_t OwnerBipedHandle;  // 0xF4  uint32. | Biped that owns the object (-1 = none).
+        std::uint32_t OwnerPlayerHandle;  // 0xF0  uint32. | Player that owns the object (-1 = none). Measured (A3, 2026-10-16, Ignore/20261016_114347.txt): projectiles = player that fired them, also from a vehicle seat (Wraith mortar: the driver, while proj 0x1C4 is the Wraith) and when stuck; drop shield bubble, hologram and the armor ability = the player that owns the ability. On BIPEDS it is not the owner: -1 until hurt, then the player of the last attacker (overwritten by damage, also by self damage).
+        std::uint32_t OwnerBipedHandle;  // 0xF4  uint32. | Biped that owns the object (-1 = none). Same meaning as 0xF0 (A3): the shooter biped for projectiles, the ability user for bubble and hologram, the last attacker on a biped.
         std::uint32_t UnknownF8;  // 0xF8  uint32. | R7 W0 R:item_update,FUN_1804d3308,FUN_1804edf38
         std::uint32_t UnknownFc;  // 0xFC  uint32. | R4 W0 R:FUN_1803a664c,FUN_1803a67a4,Entity_GetPositionOrFallback
         std::uint8_t ObjectFlags3;  // 0x100  flags8. | Flag byte (placement flag bits 11/12).
@@ -105,7 +105,7 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint16_t RegionStateOffset;  // 0x17E  uint16. | Offset of the block from the datum start.
         std::uint16_t Block180Size;  // 0x180  uint16. | Variable block descriptor: obje tag +0x104 count x 8, init 0xFF.
         std::uint16_t Block180Offset;  // 0x182  uint16. | Offset of the block from the datum start.
-        std::uint16_t DamageSectionsSize;  // 0x184  uint16. | Variable block descriptor: sections x 0x18.
+        std::uint16_t DamageSectionsSize;  // 0x184  uint16. | Variable block descriptor: sections x 0x18 in the order of the hlmt damage sections. Element: +0x10 f32 vitality as a FRACTION of the section maximum (1 full), +0xC u16 grows after a hit (0x7FFF on unused sections; recharge timer candidate), +0x14 FFFFFFFF. Scale measured (A3): shield section drops jpt damage / hlmt MaximumShieldVitality (DMR 17.5 / 70 = 0.25, plasma impact 2 / 70); body section maximum = VitalityPercentage x MaximumVitality (spartan 0.642857 x 70 = 45).
         std::uint16_t DamageSectionsOffset;  // 0x186  uint16. | Offset of the block from the datum start.
         std::uint16_t Block188Size;  // 0x188  uint16. | Variable block descriptor: obje tag +0x134 count x 0x18.
         std::uint16_t Block188Offset;  // 0x18A  uint16. | Offset of the block from the datum start.

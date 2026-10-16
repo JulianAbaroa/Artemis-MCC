@@ -36,9 +36,9 @@ export namespace Datum::Object::Type::Eqip::Structure
         float        Unknown1f0;  // 0x2C  float32. | 0. Read 1.0 while a jetpack was in use. W:eqip_init
         std::uint16_t Unknown1f4;  // 0x30  uint16. | R0 W1 init=0x0 W:eqip_init
         std::uint16_t Unknown1f6;  // 0x32  uint16. | R0 W1 init=0x0 W:eqip_init
-        std::uint32_t HologramObjectHandle;  // 0x34  uint32. | Object handle seen only on hologram. Changes on each use and may keep the previous hologram. W:eqip_init
+        std::uint32_t HologramObjectHandle;  // 0x34  uint32. | Hologram biped (hologram_spartan, class bipd) spawned by the ability; its obje 0xF0/0xF4 are the owner player and biped (A3, 2026-10-16). Changes on each use and may keep the previous hologram. W:eqip_init
         std::uint32_t Unknown1fc;  // 0x38  uint32. | Always FFFFFFFF on the seven abilities. W:eqip_init
-        std::uint32_t DropShieldObjectHandle;  // 0x3C  uint32. | Object handle set after a drop shield spawns its bubble. W:eqip_init
+        std::uint32_t DropShieldObjectHandle;  // 0x3C  uint32. | Bubble spawned by the drop shield (drop_shield_shield, class eqip, its 0x1D8 holds the activation tick); its obje 0xF0/0xF4 are the owner player and biped (A3, 2026-10-16). W:eqip_init
         std::uint32_t Unknown204;  // 0x40  uint32. | R1 W0 SHARED R:FUN_18052204c
         std::uint32_t ActivationTickCopy;  // 0x44  uint32. | Same value as 0x1D8 on every measure. R3 W1 W:FUN_1804b4e74
         std::uint32_t Unknown20c;  // 0x48  uint32. | R4 W3 src=call 18005cc74, INT_ADD W:FUN_1804b3324,FUN_1804b5b04,FUN_1804b5158
