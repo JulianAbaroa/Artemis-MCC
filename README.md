@@ -1,17 +1,21 @@
 # Artemis-MCC
 Artemis-MCC is an AI training framework for Halo: The Master Chief Collection, targeting Halo Reach on Windows (Steam). The project's goal is to train a reinforcement learning agent to play Halo Reach by extracting real-time game state data directly from the engine.
-The project is in its early stages, currently focused on the data extraction layer.
+The project is in active development. The data extraction layer works, the semantic layers that turn raw engine data into an observation for the agent are being built, and the Python side (training) has not started yet.
 
 ## How it works
-Artemis operates as a proxy DLL (`wtsapi32.dll`), injecting into the game process via auto-proxy injection. Once inside, it uses function hooking to read game state data in real-time from the engine — player table, object table, read .map files, and other relevant data extracted directly from memory and disk.
+Artemis operates as a proxy DLL (`wtsapi32.dll`), injecting into the game process via auto-proxy injection. Once inside, it uses function hooking to read game state data in real-time from the engine, player table, object table, read .map files, and other relevant data extracted directly from memory and disk.
+
+Artemis works in engine logic ticks (60 per second of game time), never in milliseconds. It hooks the functions that run the simulation so it sees every tick, and the game waits for Artemis to copy the data of each tick before it writes the next one. Because of that the data stays consistent at any game speed, and no tick is ever skipped: if Artemis is slower than the game, the game slows down. See [`docs/Tick Synchronization.md`](docs/Tick%20Synchronization.md).
+
+Training needs the game to run faster than real time. Halo Reach simulates with a fixed time step, and the engine has its own time scale (the same mechanism Theater uses to fast-forward films), so the game can run many times faster without changing the length of a tick or the physics.
 
 The data pipeline has two components:
-- **Artemis (C++):** The in-process module. Hooks into the game engine, reads tag and runtime data from memory, and exposes it for downstream use.
-- **TagTranspiler (Python, `Tools/TagTranspiler/`):** A code generation tool that parses Halo Reach tag definition files to automatically generate the C++ headers used by Artemis to read tag structures from `.map` files.
+- **Artemis (C++):** The in-process module. Hooks into the game engine, reads tag and runtime data from memory, and turns it into a per-tick snapshot for downstream use.
+- **Tools (Python, `Tools/`):** `TagTranspiler/` parses Halo Reach tag definition files to generate the C++ headers used by Artemis to read tag structures from `.map` files. The other scripts analyze the captures and dumps that Artemis writes during reverse engineering.
 
 ## Repository layout
 - `Artemis/`: the C++ proxy DLL (Visual Studio project, submodules in `External/`).
-- `Tools/`: development tools in Python (`TagTranspiler/` generators, seed scripts). Not needed at runtime.
+- `Tools/`: development tools in Python (`TagTranspiler/` generators, seed scripts, capture and dump analysis). Not needed at runtime.
 - `Data/`: hand-edited XML that is the source of truth for the generated code (datum layouts, tag catalog, semantic ids). See `Data/README.md`.
 - `docs/`: technical notes.
 
@@ -22,17 +26,17 @@ The data pipeline has two components:
 - **Compiler:** Visual Studio 2026
 - **Platform:** Windows 10/11 (x64)
 - **Dependencies:**
-  - [MinHook](https://github.com/TsudaKageyu/minhook) — BSD-2-Clause
-  - [Dear ImGui](https://github.com/ocornut/imgui) — MIT
-  - [zlib](https://zlib.net) — zlib License
-  - [stb_image](https://github.com/nothings/stb) — Public Domain / MIT
+  - [MinHook](https://github.com/TsudaKageyu/minhook), BSD-2-Clause
+  - [Dear ImGui](https://github.com/ocornut/imgui), MIT
+  - [zlib](https://zlib.net), zlib License
+  - [stb_image](https://github.com/nothings/stb), Public Domain / MIT
 
 ## Building
 
 ### Prerequisites
 - **Visual Studio 2026** with the C++ Desktop Development workload (C++23 support).
 - **Python 3.10+** (for the tools in `Tools/`).
-- A copy of **[Assembly](https://github.com/XboxChaos/Assembly)** — its Halo Reach MCC plugin XML files are required to generate the tag headers (see step 2). These files are **not** included in this repository.
+- A copy of **[Assembly](https://github.com/XboxChaos/Assembly)**, its Halo Reach MCC plugin XML files are required to generate the tag headers (see step 2). These files are **not** included in this repository.
 - **Halo: The Master Chief Collection** (Steam), with Halo Reach installed and **Easy Anti-Cheat (EAC) disabled**.
 
 ### 1. Clone with submodules
@@ -56,10 +60,11 @@ Artemis injects into the Halo Reach MCC process via DLL proxy injection. Place t
 
 ## Credits and Acknowledgments
 - **[Assembly](https://github.com/XboxChaos/Assembly):** Tag definition plugin XML files, consumed by TagTranspiler to generate the C++ tag structure headers used by Artemis. Licensed under GPL-3.0.
-- **[Reclaimer](https://github.com/Gravemind2401/Reclaimer):** Reference implementation for Halo Reach MCC geometry extraction. The mesh-reading logic in System_MeshReader was derived/ported from Reclaimer's C# code. Licensed under GPL-3.0.
+- **[Reclaimer](https://github.com/Gravemind2401/Reclaimer):** Reference implementation for Halo Reach MCC geometry extraction. The mesh-reading logic of the map geometry reader was derived/ported from Reclaimer's C# code (see `docs/MeshReader.md`). Licensed under GPL-3.0.
 - **[AlphaRing](https://github.com/WinterSquire/AlphaRing):** Conceptual DLL proxy injection approach using wtsapi32.dll.
+- **[HaloCheckpointManager](https://github.com/Burnt-o/HaloCheckpointManager):** Studied as a reference while researching how to run the game faster than real time. No code from it is used.
 - **[Mjolnir-Forge-Editor](https://github.com/Waffle1434/Mjolnir-Forge-Editor):** The author's inspiration and entry point into Halo modding at the game-engine level.
-- **[Font Awesome Free](https://fontawesome.com):** UI icons (cube, person-rifle, gear, square-binary, file-lines, map). Licensed under CC BY 4.0. Icons were downloaded as PNG and embedded as C++ byte arrays via `GenerateIconData.py`.
+- **[Font Awesome Free](https://fontawesome.com):** UI icons (cube, person-rifle, gear, file-lines, map). Licensed under CC BY 4.0. Icons were downloaded as PNG and embedded as C++ byte arrays via `GenerateIconData.py`.
 - **Halo Modding Community:** Contributions to the understanding of the Blam! engine.
 
 ## License
