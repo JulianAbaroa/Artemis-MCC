@@ -67,6 +67,18 @@
     <Filter Include="Core\Infrastructure\Platform\Host\Hook">
       <UniqueIdentifier>{bc4ae9e1-18e9-4160-85f5-4366adec55ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\UI\TickTrace">
+      <UniqueIdentifier>{511bbd30-310e-4d9c-a272-b1419b431aaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickTrace\Type">
+      <UniqueIdentifier>{18428efb-2619-4ed9-82ce-3958749a7b03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickTrace\State">
+      <UniqueIdentifier>{c9b750fb-1fdd-41df-8c40-8497fcb63c8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickTrace\System">
+      <UniqueIdentifier>{8df185b5-2626-42ea-a7f3-e482fc172b29}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI\Simulation">
       <UniqueIdentifier>{d15b8d3f-7e13-42a8-9456-35a824cbf5c2}</UniqueIdentifier>
     </Filter>
@@ -2647,6 +2659,21 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.cpp">
       <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickTrace\Type\UI.TickTrace.Type.ixx">
+      <Filter>Core\UI\TickTrace\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickTrace\State\TickTraceUIStore.ixx">
+      <Filter>Core\UI\TickTrace\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickTrace\State\TickTraceUIStore.cpp">
+      <Filter>Core\UI\TickTrace\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.ixx">
+      <Filter>Core\UI\TickTrace\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.cpp">
+      <Filter>Core\UI\TickTrace\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\Simulation\Type\UI.Simulation.Type.ixx">
       <Filter>Core\UI\Simulation\Type</Filter>

@@ -97,6 +97,8 @@ namespace Runtime::Thread
                 m_Export.m_TickService.Assemble(current);
                 this->EndStage();
 
+                m_TickTraceUIService.Record(current);
+
                 auto tickEnd{ steady_clock::now() };
                 lifecycle.EndTick();
 
@@ -140,6 +142,9 @@ namespace Runtime::Thread
         this->EndStage();
         m_Tables.m_InteractionService.UpdateInteractionTable();
         this->EndStage();
+
+        // The engine clock of the trace is read here too, so it matches the copied tables.
+        m_TickTraceUIService.CaptureClock();
 
         // Last read of game memory: from here on the services work on their own copies, so the game thread can run the next tick.
         m_Platform.m_LifecycleStore.EndRead(m_Last);

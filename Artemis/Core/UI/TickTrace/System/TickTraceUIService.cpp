@@ -1,0 +1,268 @@
+module;
+
+#include "External/imgui/imgui.h"
+
+module UI.TickTrace.System;
+
+import Common.Math.Type;
+import Tables.Object.Type;
+import std;
+
+namespace
+{
+    using std::chrono::steady_clock;
+    using std::chrono::system_clock;
+    using std::chrono::nanoseconds;
+    using std::chrono::seconds;
+    using std::chrono::zoned_time;
+    using std::filesystem::path;
+
+    using UI::TickTrace::Type::TraceFileHeader;
+    using UI::TickTrace::Type::TickRecord;
+    using UI::TickTrace::Type::ObjectRecord;
+
+    // Subfolder of the storage folder that holds the traces.
+    constexpr std::string_view k_TraceFolder{ "TickTraces" };
+
+    // Time globals: *(thread context + 0xA0) (Indice_Reverse sec. 3, D105).
+    constexpr std::uintptr_t k_TimeGlobalsOffset{ 0xA0 };
+    constexpr std::uintptr_t k_EngineTickOffset{ 0x0C };
+    constexpr std::uintptr_t k_TimeScaleOffset{ 0x10 };
+    constexpr std::uintptr_t k_TickFractionOffset{ 0x14 };
+
+    // Events and statistics: *(thread context + 0x98), last sequence of the event ring at +0x10B30 (D104).
+    constexpr std::uintptr_t k_EventGlobalsOffset{ 0x98 };
+    constexpr std::uintptr_t k_EventSequenceOffset{ 0x10B30 };
+
+    // TickRecord::Flags bit set when the clock fields are valid.
+    constexpr std::uint32_t k_ClockValidFlag{ 1 };
+
+    // Object groups written to the trace.
+    constexpr std::array<std::string_view, 4> k_TracedGroups{ "bipd", "vehi", "proj", "weap" };
+
+    constexpr double k_BytesPerMegabyte{ 1024.0 * 1024.0 };
+
+    auto LocalNow() -> zoned_time<seconds>
+    {
+        return zoned_time{ std::chrono::current_zone(), std::chrono::floor<seconds>(system_clock::now()) };
+    }
+
+    // Copies text into a zero padded buffer, cut to leave the last byte as terminator.
+    template <std::size_t N>
+    auto CopyText(std::string_view text, std::array<char, N>& out) -> void
+    {
+        const std::size_t length{ (std::min)(text.size(), N - 1) };
+        std::copy_n(text.data(), length, out.begin());
+    }
+
+    // return: The value at the address of the game memory.
+    // note: The caller checks the base pointer. Called inside the read window, so the engine does not write it meanwhile.
+    template <typename T>
+    auto ReadValue(std::uintptr_t address) -> T
+    {
+        T value{};
+        std::memcpy(&value, reinterpret_cast<const void*>(address), sizeof(T));
+        return value;
+    }
+
+    auto IsTraced(std::string_view fourCC) -> bool
+    {
+        return std::ranges::find(k_TracedGroups, fourCC) != k_TracedGroups.end();
+    }
+}
+
+namespace UI::TickTrace::System
+{
+    auto TickTraceUIService::CaptureClock() -> void
+    {
+        if (!m_TickTraceUIStore.IsRecording()) return;
+
+        m_TickTraceUIStore.SetPendingClock(this->ReadClock());
+    }
+
+    auto TickTraceUIService::Record(std::uint64_t generation) -> void
+    {
+        if (!m_TickTraceUIStore.IsRecording()) return;
+
+        std::vector<ObjectRecord> objects{};
+
+        if (const auto table{ m_ObjectStore.Acquire() })
+        {
+            objects.reserve(table->size());
+
+            for (const auto& [handle, object] : *table)
+            {
+                if (!IsTraced(object.FourCC)) continue;
+
+                ObjectRecord record{};
+                record.Handle = object.Handle;
+                record.ParentHandle = object.ParentHandle;
+                std::copy_n(object.FourCC.data(), (std::min)(object.FourCC.size(), record.FourCC.size()), record.FourCC.begin());
+                record.DamageReceived = object.DamageReceived;
+                record.BoundingCenter = object.BoundingCenter;
+                record.WorldOrigin = object.WorldOrigin;
+                record.Forward = object.Forward;
+                record.Up = object.Up;
+                record.LinearVelocity = object.LinearVelocity;
+                record.AngularVelocity = object.AngularVelocity;
+
+                objects.push_back(record);
+            }
+        }
+
+        // The table is a hash map, so the order is sorted here to compare traces object by object.
+        std::ranges::sort(objects, {}, &ObjectRecord::Handle);
+
+        const TickClock clock{ m_TickTraceUIStore.GetPendingClock() };
+
+        TickRecord tick{};
+        tick.Generation = generation;
+        tick.RealTimeNs = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<nanoseconds>(steady_clock::now() - m_TickTraceUIStore.GetStartTime()).count());
+        tick.EngineTick = clock.EngineTick;
+        tick.TimeScale = clock.TimeScale;
+        tick.TickFraction = clock.TickFraction;
+        tick.EventSequence = clock.EventSequence;
+        tick.ObjectCount = static_cast<std::uint32_t>(objects.size());
+        tick.Flags = clock.IsValid ? k_ClockValidFlag : 0;
+
+        std::vector<std::byte> bytes(sizeof(TickRecord) + objects.size() * sizeof(ObjectRecord));
+        std::memcpy(bytes.data(), &tick, sizeof(TickRecord));
+
+        if (!objects.empty())
+        {
+            std::memcpy(bytes.data() + sizeof(TickRecord), objects.data(), objects.size() * sizeof(ObjectRecord));
+        }
+
+        if (m_TickTraceUIStore.Append(bytes)) m_TickTraceUIStore.AddRecordedTick();
+    }
+
+    auto TickTraceUIService::Update() -> void
+    {
+        std::vector<std::byte> pending{};
+        m_TickTraceUIStore.TakePending(pending);
+        if (pending.empty()) return;
+
+        std::ofstream& file{ m_TickTraceUIStore.GetFile() };
+        if (!file.is_open()) return;
+
+        file.write(reinterpret_cast<const char*>(pending.data()), static_cast<std::streamsize>(pending.size()));
+        m_TickTraceUIStore.AddWrittenBytes(pending.size());
+    }
+
+    auto TickTraceUIService::Stop() -> void
+    {
+        if (!m_TickTraceUIStore.IsRecording()) return;
+
+        // No record is appended after this, so the last Update writes everything.
+        m_TickTraceUIStore.SetRecording(false);
+        this->Update();
+
+        m_TickTraceUIStore.GetFile().close();
+
+        const std::uint64_t ticks{ m_TickTraceUIStore.GetRecordedTicks() };
+        m_TickTraceUIStore.SetStatus(std::format("Saved {} ticks.", ticks));
+
+        m_LogsService.Message("[TickTraceUIService] INFO: Trace saved, {} ticks, {} bytes.",
+            ticks, m_TickTraceUIStore.GetWrittenBytes());
+    }
+
+    auto TickTraceUIService::Draw() -> void
+    {
+        ImGui::SeparatorText("Tick trace");
+
+        ImGui::TextWrapped("Records every tick (engine clock, bipeds, vehicles, projectiles and weapons) to TickTraces in the storage"
+            " folder. Tools/analyze_ticktrace.py compares two traces tick by tick.");
+
+        if (m_TickTraceUIStore.IsRecording())
+        {
+            if (ImGui::Button("Stop")) this->Stop();
+        }
+        else
+        {
+            if (ImGui::Button("Start")) this->Start();
+        }
+
+        ImGui::SameLine();
+        ImGui::Text("Ticks: %llu  Size: %.1f MB", static_cast<unsigned long long>(m_TickTraceUIStore.GetRecordedTicks()),
+            static_cast<double>(m_TickTraceUIStore.GetWrittenBytes()) / k_BytesPerMegabyte);
+
+        const path& filePath{ m_TickTraceUIStore.GetFilePath() };
+        if (!filePath.empty()) ImGui::TextDisabled("%s", filePath.string().c_str());
+
+        const std::string& status{ m_TickTraceUIStore.GetStatus() };
+        if (!status.empty()) ImGui::TextUnformatted(status.c_str());
+    }
+
+    auto TickTraceUIService::Start() -> void
+    {
+        if (m_TickTraceUIStore.IsRecording()) return;
+
+        const std::string directory{ m_SettingsStore.GetAppDataDirectory() };
+        if (directory.empty())
+        {
+            m_TickTraceUIStore.SetStatus("Storage Folder is not set (Settings).");
+            return;
+        }
+
+        const path folder{ path(directory) / k_TraceFolder };
+        std::error_code error{};
+        std::filesystem::create_directories(folder, error);
+
+        const std::string mapName{ path(m_FileStore.GetMapFilePath()).stem().string() };
+        const auto now{ LocalNow() };
+        const path filePath{ folder / std::format("{:%Y%m%d_%H%M%S}_{}.attrace", now, mapName.empty() ? "nomap" : mapName) };
+
+        std::ofstream& file{ m_TickTraceUIStore.GetFile() };
+        file.open(filePath, std::ios::binary | std::ios::trunc);
+
+        if (!file)
+        {
+            m_TickTraceUIStore.SetStatus("The trace file cannot be opened.");
+            m_LogsService.Message("[TickTraceUIService] ERROR: Failed to open the trace file.");
+            return;
+        }
+
+        TraceFileHeader header{};
+        header.TickRecordSize = sizeof(TickRecord);
+        header.ObjectRecordSize = sizeof(ObjectRecord);
+        CopyText(mapName, header.MapName);
+        CopyText(std::format("{:%Y-%m-%d %H:%M:%S}", now), header.StartTime);
+
+        file.write(reinterpret_cast<const char*>(&header), sizeof(header));
+
+        // Drops records a previous recording left behind.
+        std::vector<std::byte> stale{};
+        m_TickTraceUIStore.TakePending(stale);
+
+        m_TickTraceUIStore.ResetCounters();
+        m_TickTraceUIStore.AddWrittenBytes(sizeof(header));
+        m_TickTraceUIStore.SetFilePath(filePath);
+        m_TickTraceUIStore.SetStatus({});
+        m_TickTraceUIStore.SetStartTime(steady_clock::now());
+        m_TickTraceUIStore.SetRecording(true);
+
+        m_LogsService.Message("[TickTraceUIService] INFO: Recording ticks to '{}'.", filePath.string());
+    }
+
+    auto TickTraceUIService::ReadClock() const -> TickClock
+    {
+        TickClock clock{};
+
+        const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
+        if (threadContext == 0) return clock;
+
+        const auto timeGlobals{ ReadValue<std::uintptr_t>(threadContext + k_TimeGlobalsOffset) };
+        if (timeGlobals == 0) return clock;
+
+        clock.EngineTick = ReadValue<std::uint32_t>(timeGlobals + k_EngineTickOffset);
+        clock.TimeScale = ReadValue<float>(timeGlobals + k_TimeScaleOffset);
+        clock.TickFraction = ReadValue<float>(timeGlobals + k_TickFractionOffset);
+
+        const auto eventGlobals{ ReadValue<std::uintptr_t>(threadContext + k_EventGlobalsOffset) };
+        if (eventGlobals != 0) clock.EventSequence = ReadValue<std::uint32_t>(eventGlobals + k_EventSequenceOffset);
+
+        clock.IsValid = true;
+        return clock;
+    }
+}

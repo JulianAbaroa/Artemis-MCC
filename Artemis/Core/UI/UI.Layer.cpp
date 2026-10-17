@@ -21,12 +21,14 @@ namespace UI
         m_LauncherUIService.ReleaseIcons();
         m_ObjectTableUIStore.Cleanup();
         m_PlayerTableUIStore.Cleanup();
+        m_TickTraceUIService.Stop();
     }
 
     auto Layer::DrawFrame(const FrameContext& frame) -> void
     {
-        // The capture hotkey works with the UI closed, so it runs before the backend check.
+        // The capture hotkey and the tick trace writing work with the UI closed, so they run before the backend check.
         m_CaptureUIService.Update();
+        m_TickTraceUIService.Update();
 
         if (!m_BackendGuiService.IsReady()) return;
 
@@ -51,6 +53,7 @@ namespace UI
         });
         m_LauncherUIService.DrawTab(Tab::Simulation, "Simulation", [this] {
             m_SimulationUIService.Draw();
+            m_TickTraceUIService.Draw();
         });
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();

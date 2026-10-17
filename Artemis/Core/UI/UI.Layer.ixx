@@ -5,8 +5,10 @@ import Service.Preferences.System;
 import Platform.Layer;
 import Platform.Input.Type;
 import Platform.Render.Type;
+import Map.Layer;
 import Resolved.Layer;
 import Datum.Layer;
+import Tables.Layer;
 import Export.Layer;
 import Gui.Layer;
 import Gui.Backend.System;
@@ -26,6 +28,8 @@ import UI.Capture.State;
 import UI.Capture.System;
 import UI.Simulation.State;
 import UI.Simulation.System;
+import UI.TickTrace.State;
+import UI.TickTrace.System;
 import UI.Logs.State;
 import UI.Logs.System;
 import std;
@@ -50,6 +54,7 @@ export namespace UI
         using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
+        using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
         using HotkeyUIService = UI::Hotkey::System::HotkeyUIService;
@@ -60,11 +65,12 @@ export namespace UI
         using SettingsUIService = UI::Settings::System::SettingsUIService;
         using CaptureUIService = UI::Capture::System::CaptureUIService;
         using SimulationUIService = UI::Simulation::System::SimulationUIService;
+        using TickTraceUIService = UI::TickTrace::System::TickTraceUIService;
         using LogsUIService = UI::Logs::System::LogsUIService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
-            Datum::Layer& datum, Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
+        Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map, Resolved::Layer& resolved,
+            Datum::Layer& datum, Tables::Layer& tables, Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
             PreferencesService& preferences) :
             m_BackendGuiService(gui.m_BackendGuiService),
             m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, m_CaptureUIStore, viewer.m_OverlayStore),
@@ -76,6 +82,8 @@ export namespace UI
             m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, platform.m_MemoryReaderService, resolved.m_DefinitionsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
             m_SimulationUIService(service.m_TelemetryStore, platform.m_LifecycleStore, platform.m_LocalUserStore, platform.m_VirtualInputStore,
                 m_SimulationUIStore),
+            m_TickTraceUIService(service.m_LogsService, service.m_SettingsStore, map.m_FileStore, datum.m_DatumStore, tables.m_ObjectStore,
+                m_TickTraceUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
         {
             platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {
@@ -114,6 +122,7 @@ export namespace UI
         PlayerTableUIStore m_PlayerTableUIStore{};
         CaptureUIStore m_CaptureUIStore{};
         SimulationUIStore m_SimulationUIStore{};
+        TickTraceUIStore m_TickTraceUIStore{};
         LogsUIStore m_LogsUIStore{};
 
         // --- System ---
@@ -125,6 +134,7 @@ export namespace UI
         SettingsUIService m_SettingsUIService;
         CaptureUIService m_CaptureUIService;
         SimulationUIService m_SimulationUIService;
+        TickTraceUIService m_TickTraceUIService;
         LogsUIService m_LogsUIService;
 
     private:

@@ -11,6 +11,7 @@ import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
 import Viewer.Camera.State;
+import UI.TickTrace.System;
 import std;
 
 export namespace Runtime::Thread
@@ -24,15 +25,17 @@ export namespace Runtime::Thread
 
         using CameraStore = Viewer::Camera::State::CameraStore;
 
+        using TickTraceUIService = UI::TickTrace::System::TickTraceUIService;
+
     public:
         AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
             Resolved::Layer& resolved, Datum::Layer& datumLayer, Tables::Layer& tables, Relations::Layer& relations,
             Environment::Layer& environment, Egocentric::Layer& egocentric,
-            Export::Layer& exportLayer, CameraStore& cameraStore) :
+            Export::Layer& exportLayer, CameraStore& cameraStore, TickTraceUIService& tickTraceUIService) :
             m_Service(service), m_Platform(platform), m_Map(map),
             m_Resolved(resolved), m_Datum(datumLayer), m_Tables(tables), m_Relations(relations),
             m_Environment(environment), m_Egocentric(egocentric),
-            m_Export(exportLayer), m_ViewerCameraStore(cameraStore) {}
+            m_Export(exportLayer), m_ViewerCameraStore(cameraStore), m_TickTraceUIService(tickTraceUIService) {}
         ~AIThread() = default;
 
         // Runs the thread loop until the lifecycle stops.
@@ -50,6 +53,8 @@ export namespace Runtime::Thread
         Egocentric::Layer& m_Egocentric;
         Export::Layer& m_Export;
         CameraStore& m_ViewerCameraStore;
+        // Development tool (D72): records every tick while the Simulation tab has the tick trace on.
+        TickTraceUIService& m_TickTraceUIService;
 
         // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
         static constexpr std::array<std::string_view, 21> k_StageNames{

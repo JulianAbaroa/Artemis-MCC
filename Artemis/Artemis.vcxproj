@@ -519,6 +519,11 @@
     <ClCompile Include="Core\UI\Simulation\State\SimulationUIStore.cpp" />
     <ClCompile Include="Core\UI\Simulation\System\SimulationUIService.ixx" />
     <ClCompile Include="Core\UI\Simulation\System\SimulationUIService.cpp" />
+    <ClCompile Include="Core\UI\TickTrace\Type\UI.TickTrace.Type.ixx" />
+    <ClCompile Include="Core\UI\TickTrace\State\TickTraceUIStore.ixx" />
+    <ClCompile Include="Core\UI\TickTrace\State\TickTraceUIStore.cpp" />
+    <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.ixx" />
+    <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx" />

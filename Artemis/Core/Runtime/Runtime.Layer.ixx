@@ -11,6 +11,7 @@ import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
 import Viewer.Camera.State;
+import UI.Layer;
 import Runtime.Thread;
 import std;
 
@@ -32,10 +33,10 @@ export namespace Runtime
             Resolved::Layer& resolved, Datum::Layer& datumLayer, Tables::Layer& tables,
             Relations::Layer& relations, Environment::Layer& environment,
             Egocentric::Layer& egocentric, Export::Layer& exportLayer,
-            CameraStore& viewerCameraStore) :
+            CameraStore& viewerCameraStore, UI::Layer& ui) :
             m_Main(service, platform),
             m_AI(service, platform, map, resolved, datumLayer, tables, relations,
-                environment, egocentric, exportLayer, viewerCameraStore),
+                environment, egocentric, exportLayer, viewerCameraStore, ui.m_TickTraceUIService),
             m_Input(service, platform) {}
         ~Layer() = default;
 
