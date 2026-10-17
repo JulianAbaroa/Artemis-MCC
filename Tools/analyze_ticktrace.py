@@ -10,8 +10,11 @@ one record per engine tick with the engine clock, plus the bipeds, vehicles, pro
         Compares the event sequence and every object field. Speed, tick fraction, generation and real time are not compared.
     python Tools/analyze_ticktrace.py FILE dump TICK
         Prints one engine tick and its objects.
+    python Tools/analyze_ticktrace.py FILE motion
+        Horizontal step and yaw change per engine tick of every biped (A9 M4, V2 of A8: an action written per tick must give the
+        same step and turn per tick at every speed).
 """
-import argparse, math, struct, sys
+import argparse, math, statistics, struct, sys
 
 HEADER = struct.Struct("<8s4I64s32s")
 TICK = struct.Struct("<QQIffIII")
@@ -150,6 +153,36 @@ def Dump(trace, engineTick):
             x, y, z = f[2 + 3 * i: 5 + 3 * i]
             print(f"      {name:16} {x: .6f} {y: .6f} {z: .6f}")
 
+def Motion(trace):
+    ticks = [t for t in trace["Ticks"] if t["IsClockValid"]]
+    if len(ticks) < 2:
+        sys.exit("not enough ticks with a valid clock")
+    seconds = (ticks[-1]["RealNs"] - ticks[0]["RealNs"]) / 1e9
+    speeds = sorted({round(t["Scale"], 2) for t in ticks})
+    print(f"{trace['Path']}\n  {len(ticks)} ticks in {seconds:.2f} s real ({len(ticks) / max(seconds, 1e-9):.0f} ticks/s), speeds {speeds}")
+    bipeds = sorted({h for t in ticks for h, o in t["Objects"].items() if o["FourCC"] in ("bipd", "dpib")})
+    origin = 2 + 3 * VECTORS.index("WorldOrigin")
+    forward = 2 + 3 * VECTORS.index("Forward")
+    for handle in bipeds:
+        steps, turns, gaps = [], [], 0
+        for a, b in zip(ticks, ticks[1:]):
+            if b["EngineTick"] != a["EngineTick"] + 1:
+                gaps += 1
+                continue
+            oa, ob = a["Objects"].get(handle), b["Objects"].get(handle)
+            if not oa or not ob:
+                continue
+            fa, fb = oa["Fields"], ob["Fields"]
+            steps.append(math.hypot(fb[origin] - fa[origin], fb[origin + 1] - fa[origin + 1]))
+            yawA = math.atan2(fa[forward + 1], fa[forward])
+            yawB = math.atan2(fb[forward + 1], fb[forward])
+            turns.append(math.degrees((yawB - yawA + math.pi) % (2 * math.pi) - math.pi))
+        if len(steps) < 2:
+            continue
+        print(f"  biped {handle:08X}: {len(steps)} steps, {gaps} gaps | step per tick median {statistics.median(steps):.5f} "
+              f"sd {statistics.pstdev(steps):.5f} | yaw per tick median {statistics.median(turns):.3f} deg "
+              f"sd {statistics.pstdev(turns):.3f}")
+
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("args", nargs="+")
@@ -163,6 +196,8 @@ def Main():
         sys.exit(1 if Diff(Load(args[0]), Load(args[1]), options.tol, options.max) else 0)
     elif len(args) == 3 and args[1] == "dump":
         Dump(Load(args[0]), int(args[2]))
+    elif len(args) == 2 and args[1] == "motion":
+        Motion(Load(args[0]))
     else:
         parser.print_help()
 
