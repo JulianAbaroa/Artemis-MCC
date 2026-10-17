@@ -61,7 +61,8 @@ Artemis injects into the Halo Reach MCC process via DLL proxy injection. Place t
 ## Credits and Acknowledgments
 - **[Assembly](https://github.com/XboxChaos/Assembly):** Tag definition plugin XML files, consumed by TagTranspiler to generate the C++ tag structure headers used by Artemis. Licensed under GPL-3.0.
 - **[Reclaimer](https://github.com/Gravemind2401/Reclaimer):** Reference implementation for Halo Reach MCC geometry extraction. The mesh-reading logic of the map geometry reader was derived/ported from Reclaimer's C# code (see `docs/MeshReader.md`). Licensed under GPL-3.0.
-- **[AlphaRing](https://github.com/WinterSquire/AlphaRing):** Conceptual DLL proxy injection approach using wtsapi32.dll.
+- **[AlphaRing](https://github.com/WinterSquire/AlphaRing):** Conceptual DLL proxy injection approach using wtsapi32.dll, and the split-screen technique Artemis uses for its local players: reporting extra local users and per-player input through the game manager interface MCC gives the game, plus the two network session changes that let those users join. Studied as a reference; no code from it is used.
+- **[libmcc](https://github.com/SpringContingency/libmcc):** Reference for the MCC game manager interface (vtable layout, input state structure). No code from it is used.
 - **[HaloCheckpointManager](https://github.com/Burnt-o/HaloCheckpointManager):** Studied as a reference while researching how to run the game faster than real time. No code from it is used.
 - **[Mjolnir-Forge-Editor](https://github.com/Waffle1434/Mjolnir-Forge-Editor):** The author's inspiration and entry point into Halo modding at the game-engine level.
 - **[Font Awesome Free](https://fontawesome.com):** UI icons (cube, person-rifle, gear, file-lines, map). Licensed under CC BY 4.0. Icons were downloaded as PNG and embedded as C++ byte arrays via `GenerateIconData.py`.

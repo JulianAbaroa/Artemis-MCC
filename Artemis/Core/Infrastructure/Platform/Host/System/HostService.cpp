@@ -10,9 +10,9 @@ namespace
 
     using Platform::Host::Type::k_HostModuleName;
 
-    // Inside the GameManager signature, "mov [rip + disp32], rax" stores the object: disp32 at +15, next instruction at +19.
-    constexpr std::size_t k_StoreDisplacementOffset{ 15 };
-    constexpr std::size_t k_StoreNextInstructionOffset{ 19 };
+    // Inside the GameManager signature, "mov [rip + disp32], rax" stores the vtable in the object: disp32 at +10, next instruction at +14.
+    constexpr std::size_t k_StoreDisplacementOffset{ 10 };
+    constexpr std::size_t k_StoreNextInstructionOffset{ 14 };
 }
 
 namespace Platform::Host::System

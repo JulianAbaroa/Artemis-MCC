@@ -53,11 +53,21 @@ namespace UI::Simulation::System
     {
         ImGui::TextWrapped("Split-screen users Artemis adds next to yours. The count applies when the next match starts.");
 
-        int count{ static_cast<int>(m_LocalUserStore.GetRequestedCount()) };
+        const std::size_t previousCount{ m_LocalUserStore.GetRequestedCount() };
+        int count{ static_cast<int>(previousCount) };
 
         if (ImGui::SliderInt("Players", &count, 1, static_cast<int>(k_MaxLocalUsers)))
         {
             m_LocalUserStore.SetRequestedCount(static_cast<std::size_t>(count));
+
+            // Without a real gamepad, Device pauses the game for an Artemis user (gamepad disconnected), so new users start Idle.
+            for (std::size_t player{ previousCount }; player < static_cast<std::size_t>(count); ++player)
+            {
+                if (m_SimulationUIStore.GetLocalPlayerInput(player) != LocalPlayerInput::Device) continue;
+
+                m_SimulationUIStore.SetLocalPlayerInput(player, LocalPlayerInput::Idle);
+                this->ApplyLocalPlayerInput(player, LocalPlayerInput::Idle);
+            }
         }
 
         const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };

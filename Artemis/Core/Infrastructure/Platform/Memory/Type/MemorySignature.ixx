@@ -57,11 +57,12 @@ export namespace Platform::Memory::Type::Signature
     };
 
     // Functions: Host
-    // Code of MCC-Win64-Shipping.exe that stores the game manager: call, lea rax, [vtable], mov [game manager], rax.
+    // Constructor of the game manager in MCC-Win64-Shipping.exe: lea rax, [vtable], mov [game manager], rax, then it clears the
+    // first members (xor eax, eax, mov [+0x8], rax, mov [+0x10], eax, and [+0x18], rax, and [+0x20], rax).
     inline constexpr Signature GameManager
     {
         "GameManager",
-        "E8 ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 05 ?? ?? ?? ?? 33 C0"
+        "48 8D 05 ?? ?? ?? ?? 48 89 05 ?? ?? ?? ?? 33 C0 48 89 05 ?? ?? ?? ?? 89 05 ?? ?? ?? ?? 48 21 05 ?? ?? ?? ?? 48 21 05"
     };
 
     inline constexpr Signature CanAcceptAnyJoinRequest
