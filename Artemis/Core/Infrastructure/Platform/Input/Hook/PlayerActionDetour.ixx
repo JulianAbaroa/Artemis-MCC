@@ -8,9 +8,8 @@ import std;
 
 export namespace Platform::Input::Hook
 {
-    // Hooks the engine function that applies the player actions of each tick, to read them (A9 M4a).
-    // note: Does not change the actions yet. Writing the action of the AI here is A9 M4b (D109).
-    // note: Called by ExecuteGameFrame once per tick on the game thread.
+    // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
+    // note: Players without an override keep the action the engine built. Called by ExecuteGameFrame once per tick on the game thread.
     class PlayerActionDetour
     {
     private:
@@ -51,6 +50,22 @@ export namespace Platform::Input::Hook
         // Ticks seen since the hook was installed. Game thread only.
         std::uint64_t m_Sequence{ 0 };
 
+        // Variable of the engine that holds the thread local storage index of its thread context, or null if not found.
+        const std::uint32_t* m_EngineTlsIndex{ nullptr };
+
         static auto __fastcall HookedApplyPlayerActions(void* update) -> void;
+
+        // Writes the override of every player that has one into the update, and marks those players as having an action.
+        auto ApplyOverrides(std::uint8_t* update) -> void;
+
+        // return: Player control globals of the engine, or 0 if they are not found.
+        // note: Reads the thread local storage of the current thread. Call it from the game thread.
+        auto GetControlGlobals() const -> std::uintptr_t;
+
+        // return: Variable that holds the engine thread local storage index, or null if the signature is not found.
+        auto FindEngineTlsIndex() -> const std::uint32_t*;
+
+        // Copies the mask and the actions of the update to the store.
+        auto PublishActions(const std::uint8_t* update) -> void;
     };
 }

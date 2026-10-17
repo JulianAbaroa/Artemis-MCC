@@ -32,13 +32,13 @@ namespace UI::Simulation::State
         m_ActionLocalPlayer = player;
     }
 
-    auto SimulationUIStore::GetActionBaseline() const -> const std::optional<PlayerAction>&
+    auto SimulationUIStore::GetLocalPlayerAction(std::size_t player) const -> LocalPlayerAction
     {
-        return m_ActionBaseline;
+        return m_LocalPlayerActions[player];
     }
 
-    auto SimulationUIStore::SetActionBaseline(std::optional<PlayerAction> baseline) -> void
+    auto SimulationUIStore::SetLocalPlayerAction(std::size_t player, LocalPlayerAction action) -> void
     {
-        m_ActionBaseline = std::move(baseline);
+        m_LocalPlayerActions[player] = action;
     }
 }

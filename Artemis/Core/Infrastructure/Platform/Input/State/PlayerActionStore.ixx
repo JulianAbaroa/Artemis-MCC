@@ -10,12 +10,15 @@ namespace
 
 export namespace Platform::Input::State
 {
-    // Player actions of the latest tick, and the buttons each player held at any tick since they were cleared (A9 M4a).
-    // note: Thread-safe. Written by the PlayerAction hook on the game thread once per tick, read by the UI.
+    // Player actions of the latest tick, what each action did since the watch was cleared, and the overrides Artemis writes (A9 M4).
+    // note: Thread-safe. The PlayerAction hook reads the overrides and publishes the actions on the game thread once per tick.
+    // Players are indexed by their player table index.
     class PlayerActionStore
     {
     private:
         using PlayerActions = Platform::Input::Type::PlayerActions;
+        using ActionOverride = Platform::Input::Type::ActionOverride;
+        using ActionWatch = Platform::Input::Type::ActionWatch;
 
     public:
         PlayerActionStore() = default;
@@ -24,24 +27,34 @@ export namespace Platform::Input::State
         PlayerActionStore(const PlayerActionStore&) = delete;
         auto operator=(const PlayerActionStore&) -> PlayerActionStore& = delete;
 
-        // Replaces the latest actions and adds their buttons to the buttons seen.
+        // Replaces the latest actions and adds them to the watch of every player with an action.
         auto Publish(const PlayerActions& actions) -> void;
 
         // param out: Out. Actions of the latest tick.
         auto CopyLatest(PlayerActions& out) const -> void;
 
-        // return: Every button bit the player held at some tick since the last ClearSeenButtons.
-        // param playerIndex: Index of the player in the player table.
-        auto GetSeenButtons(std::size_t playerIndex) const -> std::uint64_t;
+        // param out: Out. Watch of the player.
+        auto CopyWatch(std::size_t playerIndex, ActionWatch& out) const -> void;
 
-        auto ClearSeenButtons() -> void;
+        // Clears every watch. The next action of each player becomes its reference.
+        auto ClearWatches() -> void;
 
-        // Drops the actions and the buttons seen.
+        // Sets the fields Artemis writes into the action of the player every tick, or empty to leave the engine action.
+        auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void;
+
+        // param out: Out. Override of every player.
+        auto CopyOverrides(std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& out) const -> void;
+
+        // Adds the radians to the yaw of the override of the player, if it still has one, and keeps it in [0, 2 pi).
+        auto AdvanceOverrideYaw(std::size_t playerIndex, float radians) -> void;
+
+        // Drops the actions, the watches and the overrides.
         auto Cleanup() -> void;
 
     private:
         PlayerActions m_Latest{};
-        std::array<std::uint64_t, k_MaxActionPlayers> m_SeenButtons{};
+        std::array<ActionWatch, k_MaxActionPlayers> m_Watches{};
+        std::array<std::optional<ActionOverride>, k_MaxActionPlayers> m_Overrides{};
 
         mutable std::mutex m_Mutex{};
     };

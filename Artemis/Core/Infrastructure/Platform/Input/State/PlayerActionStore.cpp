@@ -6,6 +6,11 @@ import std;
 namespace
 {
     using Platform::Input::Type::k_ActionButtonsOffset;
+    using Platform::Input::Type::k_MaxActionPlayers;
+    using Platform::Input::Type::k_PlayerActionSize;
+
+    // Full turn in radians.
+    constexpr float k_TwoPi{ 6.28318531f };
 }
 
 namespace Platform::Input::State
@@ -15,13 +20,31 @@ namespace Platform::Input::State
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_Latest = actions;
 
-        for (std::size_t player{ 0 }; player < m_SeenButtons.size(); ++player)
+        for (std::size_t player{ 0 }; player < m_Watches.size(); ++player)
         {
             if ((actions.Mask & (1u << player)) == 0) continue;
 
+            const auto& action{ actions.Actions[player] };
+            auto& watch{ m_Watches[player] };
+
             std::uint64_t buttons{ 0 };
-            std::memcpy(&buttons, actions.Actions[player].Data.data() + k_ActionButtonsOffset, sizeof(buttons));
-            m_SeenButtons[player] |= buttons;
+            std::memcpy(&buttons, action.Data.data() + k_ActionButtonsOffset, sizeof(buttons));
+            watch.SeenButtons |= buttons;
+
+            if (!watch.HasReference)
+            {
+                watch.Reference = action;
+                watch.HasReference = true;
+                continue;
+            }
+
+            for (std::size_t offset{ 0 }; offset < k_PlayerActionSize; ++offset)
+            {
+                if (action.Data[offset] == watch.Reference.Data[offset]) continue;
+
+                watch.IsChanged[offset] = true;
+                watch.LastChanged.Data[offset] = action.Data[offset];
+            }
         }
     }
 
@@ -31,22 +54,48 @@ namespace Platform::Input::State
         out = m_Latest;
     }
 
-    auto PlayerActionStore::GetSeenButtons(std::size_t playerIndex) const -> std::uint64_t
+    auto PlayerActionStore::CopyWatch(std::size_t playerIndex, ActionWatch& out) const -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        return m_SeenButtons[playerIndex];
+        out = m_Watches[playerIndex];
     }
 
-    auto PlayerActionStore::ClearSeenButtons() -> void
+    auto PlayerActionStore::ClearWatches() -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        m_SeenButtons.fill(0);
+        m_Watches.fill(ActionWatch{});
+    }
+
+    auto PlayerActionStore::SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_Overrides[playerIndex] = actionOverride;
+    }
+
+    auto PlayerActionStore::CopyOverrides(std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& out) const -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        out = m_Overrides;
+    }
+
+    auto PlayerActionStore::AdvanceOverrideYaw(std::size_t playerIndex, float radians) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+
+        auto& actionOverride{ m_Overrides[playerIndex] };
+        if (!actionOverride) return;
+
+        float yaw{ std::fmod(actionOverride->Yaw + radians, k_TwoPi) };
+        if (yaw < 0.0f) yaw += k_TwoPi;
+
+        actionOverride->Yaw = yaw;
     }
 
     auto PlayerActionStore::Cleanup() -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_Latest = PlayerActions{};
-        m_SeenButtons.fill(0);
+        m_Watches.fill(ActionWatch{});
+        m_Overrides.fill(std::nullopt);
     }
 }

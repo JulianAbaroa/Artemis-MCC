@@ -144,13 +144,14 @@ export namespace Platform::Input::Type
     // First action inside the simulation update. The action of a player is at this offset + k_PlayerActionSize * its table index.
     inline constexpr std::uintptr_t k_UpdateActionsOffset{ 0x10 };
 
-    // Buttons of the action (uint64). The meaning of each bit is being measured (A9 M4a).
+    // Buttons of the action (uint64). Bits measured in A9 sec. 12.7 (crouch 0, jump 1, melee 11, zoom 18, fire 30, grenade 40...).
     inline constexpr std::uintptr_t k_ActionButtonsOffset{ 0x08 };
 
-    // Desired yaw, pitch and roll of the action (3 floats, absolute).
+    // Desired yaw, pitch and roll of the action (3 floats, absolute, radians). The roll is always 0.
+    // note: The engine keeps the yaw in [0, 2 pi).
     inline constexpr std::uintptr_t k_ActionFacingOffset{ 0x10 };
 
-    // Throttle of the action (2 floats).
+    // Throttle of the action (2 floats, -1 to 1): forward, then left.
     inline constexpr std::uintptr_t k_ActionThrottleOffset{ 0x1C };
 
     // Command of one player for one tick, as the simulation applies it.
@@ -172,6 +173,50 @@ export namespace Platform::Input::Type
         std::uint32_t Mask{ 0 };
 
         std::array<PlayerAction, k_MaxActionPlayers> Actions{};
+    };
+
+    // Player control globals: pointer inside the thread context of the engine, one block per local player (A9 sec. 11.2 and 12.1).
+    // note: The view of each split-screen player and the interaction the engine picks follow the facing of its block, not the action.
+    inline constexpr std::uintptr_t k_ControlGlobalsSlot{ 0xD8 };
+    inline constexpr std::uintptr_t k_ControlBlockStride{ 0x180 };
+
+    // Desired yaw and pitch of a control block (2 floats, radians), as the frame input left them.
+    inline constexpr std::uintptr_t k_ControlFacingOffset{ 0x94 };
+
+    // Fields Artemis writes into the action of a player, every tick (A9 M4b, D109).
+    // note: The rest of the action (interaction, weapon, hold states) stays as the engine built it from the input of the frame.
+    struct ActionOverride
+    {
+        std::uint64_t Buttons{ 0 };
+
+        // Desired facing, absolute, in radians.
+        float Yaw{ 0.0f };
+        float Pitch{ 0.0f };
+
+        float ThrottleForward{ 0.0f };
+        float ThrottleLeft{ 0.0f };
+
+        // Radians added to Yaw after every tick. Test only (the AI will write the yaw of each tick).
+        float YawPerTick{ 0.0f };
+
+        // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view and its
+        // interaction follow the action. Empty for a player that is not local.
+        std::optional<std::size_t> LocalIndex{};
+    };
+
+    // What the action of one player did since the watch was cleared, so presses of a single tick are not missed (A9 M4a).
+    struct ActionWatch
+    {
+        // Every button bit held at some tick.
+        std::uint64_t SeenButtons{ 0 };
+
+        // First action after the clear. The bytes are compared with it.
+        bool HasReference{ false };
+        PlayerAction Reference{};
+
+        // Bytes that differed from the reference at some tick, and the last value they had then.
+        std::array<bool, k_PlayerActionSize> IsChanged{};
+        PlayerAction LastChanged{};
     };
 
     // Signature of the engine function that applies the player actions of one tick (haloreach.dll rva 0x47050).

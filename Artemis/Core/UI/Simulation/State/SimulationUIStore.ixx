@@ -1,7 +1,6 @@
 export module UI.Simulation.State;
 
 import Platform.Host.Type;
-import Platform.Input.Type;
 import UI.Simulation.Type;
 import std;
 
@@ -17,9 +16,8 @@ export namespace UI::Simulation::State
     class SimulationUIStore
     {
     private:
-        using PlayerAction = Platform::Input::Type::PlayerAction;
-
         using LocalPlayerInput = UI::Simulation::Type::LocalPlayerInput;
+        using LocalPlayerAction = UI::Simulation::Type::LocalPlayerAction;
 
     public:
         SimulationUIStore() = default;
@@ -39,14 +37,13 @@ export namespace UI::Simulation::State
         auto GetActionLocalPlayer() const -> std::size_t;
         auto SetActionLocalPlayer(std::size_t player) -> void;
 
-        // Action the bytes are compared with, or empty without one.
-        auto GetActionBaseline() const -> const std::optional<PlayerAction>&;
-        auto SetActionBaseline(std::optional<PlayerAction> baseline) -> void;
+        auto GetLocalPlayerAction(std::size_t player) const -> LocalPlayerAction;
+        auto SetLocalPlayerAction(std::size_t player, LocalPlayerAction action) -> void;
 
     private:
         std::array<LocalPlayerInput, k_MaxLocalUsers> m_LocalPlayerInputs{};
         float m_CustomTimeScale{ 1.0f };
         std::size_t m_ActionLocalPlayer{ 0 };
-        std::optional<PlayerAction> m_ActionBaseline{};
+        std::array<LocalPlayerAction, k_MaxLocalUsers> m_LocalPlayerActions{};
     };
 }

@@ -12,6 +12,7 @@ namespace
     using Platform::Input::Type::LocalInputSource;
     using Platform::Input::Type::PlayerAction;
     using Platform::Input::Type::PlayerActions;
+    using Platform::Input::Type::ActionOverride;
     using Export::Tick::Type::Player;
     using Export::Tick::Type::Players;
 
@@ -23,6 +24,8 @@ namespace
     using Platform::Input::Type::k_ActionThrottleOffset;
     using UI::Simulation::Type::k_LocalPlayerInputCount;
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
+    using UI::Simulation::Type::k_LocalPlayerActionCount;
+    using UI::Simulation::Type::k_LocalPlayerActionLabels;
 
     // Logic ticks per second at x1.
     constexpr float k_TicksPerSecond{ 60.0f };
@@ -55,13 +58,17 @@ namespace
     // Bytes of the action drawn per row.
     constexpr std::size_t k_BytesPerRow{ 16 };
 
-    // Colors of a button bit held this tick, held since the last clear, and of a byte that differs from the baseline.
+    // Colors of a button bit held this tick, held since the last clear, and of a byte that changed since the last clear.
     constexpr ImVec4 k_HeldColor{ 0.3f, 1.0f, 0.3f, 1.0f };
     constexpr ImVec4 k_SeenColor{ 1.0f, 0.8f, 0.2f, 1.0f };
     constexpr ImVec4 k_ChangedColor{ 1.0f, 0.4f, 0.3f, 1.0f };
 
     // Radians to degrees.
     constexpr float k_RadiansToDegrees{ 57.2957795f };
+
+    // Test action: full throttle forward and one degree of yaw per tick.
+    constexpr float k_TestThrottle{ 1.0f };
+    constexpr float k_TestYawPerTick{ 0.0174532925f };
 
     // return: The value of type T at the offset of the action.
     template<typename T>
@@ -288,9 +295,9 @@ namespace UI::Simulation::System
 
     auto SimulationUIService::DrawPlayerActions() -> void
     {
-        ImGui::TextWrapped("Command of a local player for the latest tick, as the simulation applies it (A9 M4a). Press a control in the"
-            " game and note the button bit that lights up. Yellow bits were held at some tick since the last clear, so short presses"
-            " are not missed. Set a baseline standing still to highlight the bytes a control changes.");
+        ImGui::TextWrapped("Command of a local player for the latest tick, as the simulation applies it (A9 M4, D109). Press Clear,"
+            " then a control in the game: yellow bits and red bytes changed at some tick since the clear, so presses of a single"
+            " tick are not missed. The mode writes the action of the player every tick instead of the engine.");
 
         int localPlayer{ static_cast<int>(m_SimulationUIStore.GetActionLocalPlayer()) + 1 };
         ImGui::SetNextItemWidth(120.0f);
@@ -323,21 +330,40 @@ namespace UI::Simulation::System
             return;
         }
 
+        ActionWatch watch{};
+        m_PlayerActionStore.CopyWatch(index, watch);
+
         const auto& action{ actions.Actions[index] };
         const bool hasAction{ (actions.Mask & (1u << index)) != 0 };
         const std::uint64_t buttons{ ReadAction<std::uint64_t>(action, k_ActionButtonsOffset) };
-        const std::uint64_t seen{ m_PlayerActionStore.GetSeenButtons(index) };
 
         ImGui::Text("Player %08X (table index %zu), tick %llu, action this tick: %s", engine->Handle, index,
             static_cast<unsigned long long>(actions.Sequence), hasAction ? "yes" : "no");
 
+        const LocalPlayerAction current{ m_SimulationUIStore.GetLocalPlayerAction(local) };
+
+        // note: The labels repeat other widgets of the tab (the Engine column), so the radios get their own ID scope.
+        ImGui::PushID("ActionMode");
+        for (std::size_t i{ 0 }; i < k_LocalPlayerActionCount; ++i)
+        {
+            if (i != 0) ImGui::SameLine();
+
+            const auto mode{ static_cast<LocalPlayerAction>(i) };
+            if (ImGui::RadioButton(k_LocalPlayerActionLabels[i], mode == current) && mode != current)
+            {
+                m_SimulationUIStore.SetLocalPlayerAction(local, mode);
+                this->ApplyLocalPlayerAction(local, index, mode, action);
+            }
+        }
+        ImGui::PopID();
+
         ImGui::Text("Buttons: %016llX", static_cast<unsigned long long>(buttons));
         ImGui::SameLine();
-        if (ImGui::SmallButton("Clear seen")) m_PlayerActionStore.ClearSeenButtons();
+        if (ImGui::SmallButton("Clear")) m_PlayerActionStore.ClearWatches();
         ImGui::SameLine();
-        if (ImGui::SmallButton("Log")) this->LogAction(local, actions.Sequence, action, seen);
+        if (ImGui::SmallButton("Log")) this->LogAction(local, actions.Sequence, action, watch);
 
-        this->DrawButtonBits(buttons, seen);
+        this->DrawButtonBits(buttons, watch.SeenButtons);
 
         const float yaw{ ReadAction<float>(action, k_ActionFacingOffset) };
         const float pitch{ ReadAction<float>(action, k_ActionFacingOffset + sizeof(float)) };
@@ -345,15 +371,11 @@ namespace UI::Simulation::System
         ImGui::Text("Facing: yaw %.4f (%.1f deg), pitch %.4f (%.1f deg), roll %.4f", yaw, yaw * k_RadiansToDegrees, pitch,
             pitch * k_RadiansToDegrees, roll);
 
-        const float throttleX{ ReadAction<float>(action, k_ActionThrottleOffset) };
-        const float throttleY{ ReadAction<float>(action, k_ActionThrottleOffset + sizeof(float)) };
-        ImGui::Text("Throttle: %.3f, %.3f", throttleX, throttleY);
+        const float throttleForward{ ReadAction<float>(action, k_ActionThrottleOffset) };
+        const float throttleLeft{ ReadAction<float>(action, k_ActionThrottleOffset + sizeof(float)) };
+        ImGui::Text("Throttle: forward %.3f, left %.3f", throttleForward, throttleLeft);
 
-        if (ImGui::SmallButton("Set baseline")) m_SimulationUIStore.SetActionBaseline(action);
-        ImGui::SameLine();
-        if (ImGui::SmallButton("Clear baseline")) m_SimulationUIStore.SetActionBaseline(std::nullopt);
-
-        this->DrawActionBytes(action);
+        this->DrawActionBytes(action, watch);
     }
 
     auto SimulationUIService::DrawButtonBits(std::uint64_t buttons, std::uint64_t seen) -> void
@@ -370,10 +392,8 @@ namespace UI::Simulation::System
         }
     }
 
-    auto SimulationUIService::DrawActionBytes(const PlayerAction& action) -> void
+    auto SimulationUIService::DrawActionBytes(const PlayerAction& action, const ActionWatch& watch) -> void
     {
-        const auto& baseline{ m_SimulationUIStore.GetActionBaseline() };
-
         for (std::size_t offset{ 0 }; offset < k_PlayerActionSize; ++offset)
         {
             if (offset % k_BytesPerRow == 0)
@@ -385,13 +405,48 @@ namespace UI::Simulation::System
 
             const std::uint8_t value{ action.Data[offset] };
 
-            if (baseline && baseline->Data[offset] != value) ImGui::TextColored(k_ChangedColor, "%02X", value);
-            else                                             ImGui::Text("%02X", value);
+            if (watch.IsChanged[offset])
+            {
+                ImGui::TextColored(k_ChangedColor, "%02X", value);
+
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("+0x%02zX: was %02X at the clear, last different value %02X.", offset,
+                        watch.Reference.Data[offset], watch.LastChanged.Data[offset]);
+                }
+            }
+            else
+            {
+                ImGui::Text("%02X", value);
+            }
         }
     }
 
+    auto SimulationUIService::ApplyLocalPlayerAction(std::size_t localPlayer, std::size_t playerIndex, LocalPlayerAction mode,
+        const PlayerAction& action) -> void
+    {
+        if (mode == LocalPlayerAction::Engine)
+        {
+            m_PlayerActionStore.SetOverride(playerIndex, std::nullopt);
+            return;
+        }
+
+        ActionOverride actionOverride{};
+        actionOverride.Yaw = ReadAction<float>(action, k_ActionFacingOffset);
+        actionOverride.Pitch = ReadAction<float>(action, k_ActionFacingOffset + sizeof(float));
+        actionOverride.LocalIndex = localPlayer;
+
+        if (mode == LocalPlayerAction::TestAction)
+        {
+            actionOverride.ThrottleForward = k_TestThrottle;
+            actionOverride.YawPerTick = k_TestYawPerTick;
+        }
+
+        m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
+    }
+
     auto SimulationUIService::LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action,
-        std::uint64_t seen) -> void
+        const ActionWatch& watch) -> void
     {
         std::string bytes{};
         bytes.reserve(k_PlayerActionSize * 2);
@@ -401,8 +456,18 @@ namespace UI::Simulation::System
             bytes += std::format("{:02X}", value);
         }
 
-        m_LogsService.Message("[SimulationUIService] INFO: Action of local player {} at tick {}: buttons seen {:016X}, bytes {}.",
-            localPlayer + 1, sequence, seen, bytes);
+        std::string changed{};
+
+        for (std::size_t offset{ 0 }; offset < k_PlayerActionSize; ++offset)
+        {
+            if (!watch.IsChanged[offset]) continue;
+
+            changed += std::format(" +{:02X}:{:02X}->{:02X}", offset, watch.Reference.Data[offset], watch.LastChanged.Data[offset]);
+        }
+
+        m_LogsService.Message("[SimulationUIService] INFO: Action of local player {} at tick {}: buttons seen {:016X},"
+            " changed since the clear{}, bytes {}.", localPlayer + 1, sequence, watch.SeenButtons,
+            changed.empty() ? std::string{ " none" } : changed, bytes);
     }
 
     auto SimulationUIService::BuildTestState(LocalPlayerInput input) -> InputState

@@ -29,4 +29,27 @@ export namespace UI::Simulation::Type
         "Test keyboard and mouse",
         "Test gamepad",
     };
+
+    // Action the simulation tab writes for a local player every tick (A9 M4b, D109).
+    enum class LocalPlayerAction : std::uint8_t
+    {
+        // The action the engine built from the input.
+        Engine = 0,
+        // Nothing pressed, no throttle, and the facing it had when picked.
+        HoldStill,
+        // Full throttle forward and the yaw turning one degree per tick.
+        TestAction,
+
+        Count
+    };
+
+    inline constexpr std::size_t k_LocalPlayerActionCount{ static_cast<std::size_t>(LocalPlayerAction::Count) };
+
+    // Radio labels, in the order of LocalPlayerAction.
+    inline constexpr std::array<const char*, k_LocalPlayerActionCount> k_LocalPlayerActionLabels
+    {
+        "Engine",
+        "Hold still",
+        "Test action",
+    };
 }

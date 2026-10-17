@@ -26,6 +26,7 @@ export namespace UI::Simulation::System
 
         using InputState = Platform::Input::Type::InputState;
         using PlayerAction = Platform::Input::Type::PlayerAction;
+        using ActionWatch = Platform::Input::Type::ActionWatch;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
@@ -33,6 +34,7 @@ export namespace UI::Simulation::System
         using TickStore = Export::Tick::State::TickStore;
 
         using LocalPlayerInput = UI::Simulation::Type::LocalPlayerInput;
+        using LocalPlayerAction = UI::Simulation::Type::LocalPlayerAction;
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
 
     public:
@@ -73,17 +75,22 @@ export namespace UI::Simulation::System
         // Applies an input choice to the virtual input of a player.
         auto ApplyLocalPlayerInput(std::size_t player, LocalPlayerInput input) -> void;
 
-        // Draws the action of one local player in the latest tick: buttons, facing, throttle and bytes (A9 M4a).
+        // Draws the action of one local player in the latest tick (buttons, facing, throttle, bytes) and its action mode (A9 M4).
         auto DrawPlayerActions() -> void;
 
         // Draws the 64 button bits: held this tick, held at some tick since the last clear, or never.
         static auto DrawButtonBits(std::uint64_t buttons, std::uint64_t seen) -> void;
 
-        // Draws the bytes of the action, 16 per row, the ones that differ from the baseline highlighted.
-        auto DrawActionBytes(const PlayerAction& action) -> void;
+        // Draws the bytes of the action, 16 per row, the ones that changed at some tick since the last clear highlighted.
+        static auto DrawActionBytes(const PlayerAction& action, const ActionWatch& watch) -> void;
 
-        // Writes the action and the buttons seen to the log, so a measurement can be shared.
-        auto LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action, std::uint64_t seen) -> void;
+        // Writes the override of the action mode of a local player, by its player table index.
+        // param action: Latest action of the player. Hold still and Test action start from its facing.
+        auto ApplyLocalPlayerAction(std::size_t localPlayer, std::size_t playerIndex, LocalPlayerAction mode,
+            const PlayerAction& action) -> void;
+
+        // Writes the action and what changed since the last clear to the log, so a measurement can be shared.
+        auto LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action, const ActionWatch& watch) -> void;
 
         // return: The virtual state of a test input. Empty for Idle.
         static auto BuildTestState(LocalPlayerInput input) -> InputState;
