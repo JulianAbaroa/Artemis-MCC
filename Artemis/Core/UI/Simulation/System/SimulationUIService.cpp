@@ -10,6 +10,8 @@ import std;
 namespace
 {
     using Platform::Input::Type::LocalInputSource;
+    using Export::Tick::Type::Player;
+    using Export::Tick::Type::Players;
 
     using Platform::Host::Type::k_MaxLocalUsers;
     using UI::Simulation::Type::k_LocalPlayerInputCount;
@@ -32,6 +34,22 @@ namespace
     // Stick values of the gamepad test: full forward on the left stick and a steady turn on the right stick.
     constexpr std::int16_t k_StickForward{ 32767 };
     constexpr std::int16_t k_TestStickTurn{ 12000 };
+
+    // Handle of no biped.
+    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
+
+    // return: The player the engine maps to the local index, or null.
+    auto FindLocalPlayer(const Players* players, std::size_t localIndex) -> const Player*
+    {
+        if (!players) return nullptr;
+
+        for (const Player& player : players->Rows)
+        {
+            if (player.LocalIndex == localIndex) return &player;
+        }
+
+        return nullptr;
+    }
 
     // return: The name as ASCII. Artemis names are ASCII.
     auto ToNarrow(std::wstring_view text) -> std::string
@@ -127,25 +145,30 @@ namespace UI::Simulation::System
 
         const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
 
-        if (!ImGui::BeginTable("LocalPlayers", 4, flags)) return;
+        if (!ImGui::BeginTable("LocalPlayers", 6, flags)) return;
 
         ImGui::TableSetupColumn("Player", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("Engine");
+        ImGui::TableSetupColumn("Handle");
+        ImGui::TableSetupColumn("Biped");
         ImGui::TableSetupColumn("Input");
         ImGui::TableHeadersRow();
 
         const std::size_t requestedCount{ m_LocalUserStore.GetRequestedCount() };
 
+        const auto tick{ m_TickStore.Acquire() };
+        const Players* players{ tick && tick->Players ? tick->Players.get() : nullptr };
+
         for (std::size_t player{ 0 }; player < k_MaxLocalUsers; ++player)
         {
-            this->DrawLocalPlayerRow(player, requestedCount);
+            this->DrawLocalPlayerRow(player, requestedCount, players);
         }
 
         ImGui::EndTable();
     }
 
-    auto SimulationUIService::DrawLocalPlayerRow(std::size_t player, std::size_t requestedCount) -> void
+    auto SimulationUIService::DrawLocalPlayerRow(std::size_t player, std::size_t requestedCount, const Players* players) -> void
     {
         ImGui::TableNextRow();
 
@@ -175,6 +198,17 @@ namespace UI::Simulation::System
         {
             ImGui::TextUnformatted(m_LocalUserStore.IsReported(player) ? "In match" : "Waiting for a match");
         }
+
+        // note: The local index comes from the player mapping of the engine (A9 M3), not from Artemis.
+        const Player* engine{ FindLocalPlayer(players, player) };
+
+        ImGui::TableNextColumn();
+        if (engine) ImGui::Text("%08X", engine->Handle);
+        else        ImGui::TextDisabled("-");
+
+        ImGui::TableNextColumn();
+        if (engine && engine->BipedHandle != k_NoHandle) ImGui::Text("%08X", engine->BipedHandle);
+        else                                              ImGui::TextDisabled("-");
 
         ImGui::TableNextColumn();
         ImGui::PushID(static_cast<int>(player));

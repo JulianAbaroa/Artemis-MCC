@@ -5,6 +5,8 @@ import Platform.Lifecycle.State;
 import Platform.Host.State;
 import Platform.Input.Type;
 import Platform.Input.State;
+import Export.Tick.Type;
+import Export.Tick.State;
 import UI.Simulation.Type;
 import UI.Simulation.State;
 import std;
@@ -23,14 +25,17 @@ export namespace UI::Simulation::System
         using InputState = Platform::Input::Type::InputState;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
 
+        using Players = Export::Tick::Type::Players;
+        using TickStore = Export::Tick::State::TickStore;
+
         using LocalPlayerInput = UI::Simulation::Type::LocalPlayerInput;
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
 
     public:
         SimulationUIService(TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore, LocalUserStore& localUserStore,
-            VirtualInputStore& virtualInputStore, SimulationUIStore& simulationUIStore) :
+            VirtualInputStore& virtualInputStore, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
             m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore), m_LocalUserStore(localUserStore),
-            m_VirtualInputStore(virtualInputStore), m_SimulationUIStore(simulationUIStore) {}
+            m_VirtualInputStore(virtualInputStore), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
         ~SimulationUIService() = default;
 
         SimulationUIService(const SimulationUIService&) = delete;
@@ -44,6 +49,7 @@ export namespace UI::Simulation::System
         LifecycleStore& m_LifecycleStore;
         LocalUserStore& m_LocalUserStore;
         VirtualInputStore& m_VirtualInputStore;
+        TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
 
         // Draws the requested and the real engine speed, the presets and the custom field.
@@ -52,8 +58,9 @@ export namespace UI::Simulation::System
         // Draws the local player count and one row per player.
         auto DrawLocalPlayers() -> void;
 
-        // Draws the name, the engine status and the input combo of a player.
-        auto DrawLocalPlayerRow(std::size_t player, std::size_t requestedCount) -> void;
+        // Draws the name, the engine status, the engine player and biped, and the input combo of a player.
+        // param players: Players of the latest tick, or null before the first one.
+        auto DrawLocalPlayerRow(std::size_t player, std::size_t requestedCount, const Players* players) -> void;
 
         // Applies an input choice to the virtual input of a player.
         auto ApplyLocalPlayerInput(std::size_t player, LocalPlayerInput input) -> void;
