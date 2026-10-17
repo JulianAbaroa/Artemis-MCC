@@ -13,11 +13,11 @@ namespace
     // Sanity limit of the telemetry index. Anything above it is not a valid thread slot.
     constexpr std::uint32_t k_MaxTelemetryId{ 1000 };
 
-    // Offset of the HUD globals pointer inside the thread context.
-    constexpr std::uintptr_t k_HudGlobalsOffset{ 0xD8 };
+    // Offset of the player control globals pointer inside the thread context.
+    constexpr std::uintptr_t k_ControlGlobalsOffset{ 0xD8 };
 
-    // Offset of the interaction table inside the HUD globals.
-    constexpr std::uintptr_t k_InteractionTableOffset{ 0x6D0 };
+    // Offset of the output user (view) entries inside the player control globals (A9_SplitScreen.txt sec. 11.2).
+    constexpr std::uintptr_t k_OutputUserTableOffset{ 0x680 };
 }
 
 namespace Tables::Interaction::Hook
@@ -32,13 +32,13 @@ namespace Tables::Interaction::Hook
             if (!tableBase)
             {
                 m_LogsService.Message("[InteractionTableLocator] ERROR:"
-                    " Failed to find the interaction table.");
+                    " Failed to find the interaction tables.");
 
                 return;
             }
 
             m_LogsService.Message("[InteractionTableLocator] INFO:"
-                " Interaction table found at {:016X}.", tableBase);
+                " Interaction tables found at {:016X}.", tableBase);
 
             m_InteractionStore.SetBase(tableBase);
         }
@@ -67,12 +67,12 @@ namespace Tables::Interaction::Hook
 
                     if (threadContext)
                     {
-                        std::uintptr_t hudGlobalsPtr{
-                            *(std::uintptr_t*)(threadContext + k_HudGlobalsOffset) };
+                        std::uintptr_t controlGlobals{
+                            *(std::uintptr_t*)(threadContext + k_ControlGlobalsOffset) };
 
-                        if (hudGlobalsPtr)
+                        if (controlGlobals)
                         {
-                            return hudGlobalsPtr + k_InteractionTableOffset;
+                            return controlGlobals + k_OutputUserTableOffset;
                         }
                     }
                 }

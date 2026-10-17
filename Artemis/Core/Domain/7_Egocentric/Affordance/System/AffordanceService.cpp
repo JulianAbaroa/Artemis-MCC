@@ -19,6 +19,8 @@ namespace
     using Classifieds = std::vector<Classified>;
     using Self = Egocentric::Self::Type::Self;
 
+    using Egocentric::Self::Type::k_SelfLocalIndex;
+
     using Common::Semantic::Type::Binding;
     using Common::Semantic::Type::Capability;
     using Common::Semantic::Type::HasCapability;
@@ -41,14 +43,14 @@ namespace Egocentric::Affordance::System
         const Vec3& selfPosition = self.Position;
         const std::uint32_t selfBipedHandle = self.BipedHandle;
 
-        auto interactionPtr = m_InteractionStore.Acquire();
+        auto interactionsPtr = m_InteractionStore.Acquire();
         auto classifiedsPtr = m_ClassifierStore.Acquire();
         auto objectGraphPtr = m_ObjectGraphStore.Acquire();
         auto objectTablePtr = m_ObjectStore.Acquire();
 
-        if (!interactionPtr || !classifiedsPtr || !objectGraphPtr || !objectTablePtr) return;
+        if (!interactionsPtr || !classifiedsPtr || !objectGraphPtr || !objectTablePtr) return;
 
-        const AliveInteraction& interaction = *interactionPtr;
+        const AliveInteraction& interaction = (*interactionsPtr)[k_SelfLocalIndex];
         const Classifieds& classifieds = *classifiedsPtr;
         const ObjectGraph& nodes = *objectGraphPtr;
         const ObjectTable& objectTable = *objectTablePtr;

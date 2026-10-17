@@ -72,6 +72,7 @@ export namespace Export::Tick::Type
         // --- Layer 3: Tables ---
         std::shared_ptr<const ObjectTable> ObjectTable;
         std::shared_ptr<const PlayerTable> PlayerTable;
+        // Interaction of the agent (local player Egocentric::Self::Type::k_SelfLocalIndex).
         std::shared_ptr<const AliveInteraction> Interaction;
 
         // --- Layer 4: Relations ---

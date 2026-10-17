@@ -36,7 +36,7 @@ export namespace Egocentric::Self::System
         PlayerTableStore& m_PlayerStore;
         SelfStore& m_SelfStore;
 
-        // TODO: replace name lookup with in-game local-player resolution.
+        // return: Handle of the local player of the agent (A9 M3), or 0 when it is not in the table.
         auto ResolveSelfHandle(const PlayerTable& playerTable) const -> std::uint32_t;
     };
 }

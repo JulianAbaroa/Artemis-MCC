@@ -12,20 +12,20 @@ namespace Tables::Interaction::State
         m_InteractionTableBase.store(pointer);
     }
 
-    auto InteractionStore::Publish(AliveInteraction interaction) -> void
+    auto InteractionStore::Publish(LocalInteractions interactions) -> void
     {
-        auto snapshot = std::make_shared<const AliveInteraction>(std::move(interaction));
-        m_AliveInteraction.store(snapshot, std::memory_order_release);
+        auto snapshot = std::make_shared<const LocalInteractions>(std::move(interactions));
+        m_LocalInteractions.store(snapshot, std::memory_order_release);
     }
 
-    auto InteractionStore::Acquire() const -> std::shared_ptr<const AliveInteraction>
+    auto InteractionStore::Acquire() const -> std::shared_ptr<const LocalInteractions>
     {
-        return m_AliveInteraction.load(std::memory_order_acquire);
+        return m_LocalInteractions.load(std::memory_order_acquire);
     }
 
     auto InteractionStore::Cleanup() -> void
     {
         m_InteractionTableBase.store(0);
-        m_AliveInteraction.store(nullptr, std::memory_order_release);
+        m_LocalInteractions.store(nullptr, std::memory_order_release);
     }
 }

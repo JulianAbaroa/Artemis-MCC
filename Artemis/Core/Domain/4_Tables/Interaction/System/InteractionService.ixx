@@ -2,11 +2,14 @@ export module Tables.Interaction.System;
 
 import Service.Logs.System;
 import Platform.Memory.System;
+import Tables.Player.State;
+import Tables.Interaction.Type;
 import Tables.Interaction.State;
+import std;
 
 export namespace Tables::Interaction::System
 {
-    // Reads the engine interaction table and publishes it to the store.
+    // Reads the engine interaction tables and publishes the interaction of every local player to the store.
     class InteractionService
     {
     private:
@@ -14,26 +17,34 @@ export namespace Tables::Interaction::System
 
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
+        using PlayerTableStore = Tables::Player::State::PlayerTableStore;
+
+        using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
         using InteractionStore = Tables::Interaction::State::InteractionStore;
 
     public:
         InteractionService(LogsService& logsService,
-            MemoryReaderService& memoryReaderService,
+            MemoryReaderService& memoryReaderService, PlayerTableStore& playerStore,
             InteractionStore& interactionStore) :
             m_LogsService(logsService), m_MemoryReaderService(memoryReaderService),
-            m_InteractionStore(interactionStore) {}
+            m_PlayerStore(playerStore), m_InteractionStore(interactionStore) {}
         ~InteractionService() = default;
 
-        // Reads the interaction table and publishes it as the new interaction.
-        // note: Publishes an empty interaction while the table base is not found.
+        // Reads the table of every view and publishes it under the local player the view shows.
+        // note: Publishes empty interactions while the table base or the player mapping is not found.
+        // A local player without a view keeps an empty interaction.
         auto UpdateInteractionTable() -> void;
 
-        // Clears the stored table base and interaction.
+        // Clears the stored table base and interactions.
         auto Cleanup() -> void;
 
     private:
         LogsService& m_LogsService;
         MemoryReaderService& m_MemoryReaderService;
+        PlayerTableStore& m_PlayerStore;
         InteractionStore& m_InteractionStore;
+
+        // Reads the interaction that starts at the address.
+        auto ReadInteraction(std::uintptr_t interactionBase) -> AliveInteraction;
     };
 }

@@ -4,11 +4,9 @@ import Egocentric.Self.Type;
 
 namespace
 {
-    // Placeholder agent name. Centralized here so the day an in-game
-    // local-player resolution is found, only ResolveSelfHandle changes.
-    constexpr const char* k_SelfPlayerName = "PlaceHolder021";
-
     using Self = Egocentric::Self::Type::Self;
+
+    using Egocentric::Self::Type::k_SelfLocalIndex;
 }
 
 namespace Egocentric::Self::System
@@ -45,7 +43,7 @@ namespace Egocentric::Self::System
     {
         for (const auto& [handle, player] : playerTable)
         {
-            if (player.Gamertag == k_SelfPlayerName) return handle;
+            if (player.LocalIndex == k_SelfLocalIndex) return handle;
         }
 
         return 0;

@@ -7,7 +7,7 @@ import std;
 
 export namespace Tables::Interaction::Hook
 {
-    // Finds the engine interaction table and stores its base address.
+    // Finds the engine interaction tables (one per view) and stores the address of the first one.
     class InteractionTableLocator
     {
     private:
@@ -32,7 +32,7 @@ export namespace Tables::Interaction::Hook
         AOBService& m_AOBService;
         InteractionStore& m_InteractionStore;
 
-        // return: Address of the interaction table, or 0 if the thread context is not ready.
+        // return: Address of the first output user entry, or 0 if the thread context is not ready.
         auto GetInteractionTable() -> std::uintptr_t;
     };
 }

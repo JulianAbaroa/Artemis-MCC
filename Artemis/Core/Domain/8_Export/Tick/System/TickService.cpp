@@ -1,10 +1,14 @@
 module Export.Tick.System;
 
+import Egocentric.Self.Type;
 import Export.Tick.Type;
 
 namespace
 {
     using Tick = Export::Tick::Type::Tick;
+    using AliveInteraction = Export::Tick::Type::AliveInteraction;
+
+    using Egocentric::Self::Type::k_SelfLocalIndex;
 }
 
 namespace Export::Tick::System
@@ -48,7 +52,11 @@ namespace Export::Tick::System
         // --- Layer 3: Tables ---
         tick.ObjectTable = m_ObjectStore.Acquire();
         tick.PlayerTable = m_PlayerStore.Acquire();
-        tick.Interaction = m_InteractionStore.Acquire();
+        // note: Shares the published interactions and points to the one of the agent.
+        const auto interactions{ m_InteractionStore.Acquire() };
+        tick.Interaction = interactions
+            ? std::shared_ptr<const AliveInteraction>(interactions, &(*interactions)[k_SelfLocalIndex])
+            : nullptr;
 
         // --- Layer 4: Relations ---
         tick.Classifieds = m_ClassifierStore.Acquire();

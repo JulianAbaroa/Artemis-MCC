@@ -12,6 +12,10 @@ namespace
 
 export namespace Egocentric::Self::Type
 {
+    // Local player (split-screen input user) the agent is.
+    // note: One agent per process until B5 Views gives every local player its own (A9 M3).
+    inline constexpr std::uint8_t k_SelfLocalIndex{ 0 };
+
     struct Self
     {
         std::uint32_t Handle{ 0xFFFFFFFF };

@@ -4,6 +4,13 @@ import std;
 
 export namespace Tables::Interaction::Type::Offset
 {
+    // Bytes of one output user (view) entry of the player control globals (A9_SplitScreen.txt sec. 11.2).
+    // note: The entries start at *(thread context + 0xD8) + 0x680, one per view. The unit handle of the view is at +0x0.
+    constexpr std::uintptr_t k_OutputUserStride{ 0xB0 };
+
+    // Interaction inside an output user entry. The offsets below are relative to it.
+    constexpr std::uintptr_t k_Interaction{ 0x50 };
+
     // Kind of the active interaction (uint8). GrabWeapon, EnterVehicle, etcetera.
     constexpr std::uintptr_t k_Kind{ 0x00 };
 

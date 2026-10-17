@@ -1,11 +1,14 @@
 export module Tables.Interaction.Type:Alive;
 
+import Platform.Host.Type;
 import Common.Math.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
+
+    using Platform::Host::Type::k_MaxLocalUsers;
 }
 
 export namespace Tables::Interaction::Type::Alive
@@ -37,9 +40,12 @@ export namespace Tables::Interaction::Type::Alive
         ChangeWeapon = 0x02
     };
 
-    // Snapshot of the engine interaction table: the object, melee and aim targets of the local player.
+    // Snapshot of the engine interaction table of one local player: its object, melee and aim targets.
     struct AliveInteraction
     {
+        // Player the interaction belongs to, or 0xFFFFFFFF when the local player has no view.
+        std::uint32_t PlayerHandle{ 0xFFFFFFFF };
+
         // Objects.
         InteractionKind Kind{ InteractionKind::None };
         InteractionDetail InteractionSlotID{ InteractionDetail::None };
@@ -87,4 +93,7 @@ export namespace Tables::Interaction::Type::Alive
             return IsAimAvailable == k_AimAvailable && this->IsValidHandle(AimTargetHandle);
         }
     };
+
+    // Interaction of every local player, by local index (split-screen input user).
+    using LocalInteractions = std::array<AliveInteraction, k_MaxLocalUsers>;
 }
