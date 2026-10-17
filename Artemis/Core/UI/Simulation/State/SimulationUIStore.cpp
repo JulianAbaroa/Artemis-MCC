@@ -21,4 +21,24 @@ namespace UI::Simulation::State
     {
         m_CustomTimeScale = scale;
     }
+
+    auto SimulationUIStore::GetActionLocalPlayer() const -> std::size_t
+    {
+        return m_ActionLocalPlayer;
+    }
+
+    auto SimulationUIStore::SetActionLocalPlayer(std::size_t player) -> void
+    {
+        m_ActionLocalPlayer = player;
+    }
+
+    auto SimulationUIStore::GetActionBaseline() const -> const std::optional<PlayerAction>&
+    {
+        return m_ActionBaseline;
+    }
+
+    auto SimulationUIStore::SetActionBaseline(std::optional<PlayerAction> baseline) -> void
+    {
+        m_ActionBaseline = std::move(baseline);
+    }
 }

@@ -43,11 +43,13 @@ export namespace Platform
         using InputStore = Platform::Input::State::InputStore;
         using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
+        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
         using InputService = Platform::Input::System::InputService;
         using GetButtonStateDetour = Platform::Input::Hook::GetButtonStateDetour;
         using GetRawInputDataDetour = Platform::Input::Hook::GetRawInputDataDetour;
         using WndProcDetour = Platform::Input::Hook::WndProcDetour;
         using InputUpdateDetour = Platform::Input::Hook::InputUpdateDetour;
+        using PlayerActionDetour = Platform::Input::Hook::PlayerActionDetour;
 
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
@@ -78,6 +80,7 @@ export namespace Platform
             m_GetRawInputDataDetour(service.m_LogsService, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
             m_WndProcDetour(service.m_LogsService, m_InputService, m_LifecycleStore, m_LifecycleService),
             m_InputUpdateDetour(service.m_LogsService, m_HostService, m_VirtualInputStore),
+            m_PlayerActionDetour(service.m_LogsService, m_AOBService, m_PlayerActionStore),
             m_PresentDetour(service.m_LogsService, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
             m_ResizeBuffersDetour(service.m_LogsService, m_RenderStore, m_RenderService, m_SwapChainLocator)
         {
@@ -85,11 +88,13 @@ export namespace Platform
             // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
             m_LifecycleService.OnEngineInitialized([this] {
                 m_GetButtonStateDetour.Install();
+                m_PlayerActionDetour.Install();
                 this->InstallHostHooks();
             });
 
             m_LifecycleService.OnUnhook([this] {
                 this->UninstallHostHooks();
+                m_PlayerActionDetour.Uninstall();
                 m_GetButtonStateDetour.Uninstall();
             });
 
@@ -98,6 +103,7 @@ export namespace Platform
                 m_InputStore.Cleanup();
                 m_MouseDeltaStore.Cleanup();
                 m_LocalUserStore.Cleanup();
+                m_PlayerActionStore.Cleanup();
             });
 
             // The game window is only known once the swap chain is bound.
@@ -122,6 +128,7 @@ export namespace Platform
         InputStore m_InputStore;
         MouseDeltaStore m_MouseDeltaStore;
         VirtualInputStore m_VirtualInputStore;
+        PlayerActionStore m_PlayerActionStore;
         RenderStore m_RenderStore;
 
         // --- System ---
@@ -145,6 +152,7 @@ export namespace Platform
         GetRawInputDataDetour m_GetRawInputDataDetour;
         WndProcDetour m_WndProcDetour;
         InputUpdateDetour m_InputUpdateDetour;
+        PlayerActionDetour m_PlayerActionDetour;
         PresentDetour m_PresentDetour;
         ResizeBuffersDetour m_ResizeBuffersDetour;
 

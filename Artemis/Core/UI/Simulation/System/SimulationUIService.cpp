@@ -10,10 +10,17 @@ import std;
 namespace
 {
     using Platform::Input::Type::LocalInputSource;
+    using Platform::Input::Type::PlayerAction;
+    using Platform::Input::Type::PlayerActions;
     using Export::Tick::Type::Player;
     using Export::Tick::Type::Players;
 
     using Platform::Host::Type::k_MaxLocalUsers;
+    using Platform::Input::Type::k_MaxActionPlayers;
+    using Platform::Input::Type::k_PlayerActionSize;
+    using Platform::Input::Type::k_ActionButtonsOffset;
+    using Platform::Input::Type::k_ActionFacingOffset;
+    using Platform::Input::Type::k_ActionThrottleOffset;
     using UI::Simulation::Type::k_LocalPlayerInputCount;
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
 
@@ -37,6 +44,33 @@ namespace
 
     // Handle of no biped.
     constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
+
+    // Mask of the table index inside a player handle.
+    constexpr std::uint32_t k_IndexMask{ 0xFFFF };
+
+    // Bits of the buttons of an action, and bits drawn per row.
+    constexpr std::size_t k_ButtonBits{ 64 };
+    constexpr std::size_t k_ButtonBitsPerRow{ 16 };
+
+    // Bytes of the action drawn per row.
+    constexpr std::size_t k_BytesPerRow{ 16 };
+
+    // Colors of a button bit held this tick, held since the last clear, and of a byte that differs from the baseline.
+    constexpr ImVec4 k_HeldColor{ 0.3f, 1.0f, 0.3f, 1.0f };
+    constexpr ImVec4 k_SeenColor{ 1.0f, 0.8f, 0.2f, 1.0f };
+    constexpr ImVec4 k_ChangedColor{ 1.0f, 0.4f, 0.3f, 1.0f };
+
+    // Radians to degrees.
+    constexpr float k_RadiansToDegrees{ 57.2957795f };
+
+    // return: The value of type T at the offset of the action.
+    template<typename T>
+    auto ReadAction(const PlayerAction& action, std::uintptr_t offset) -> T
+    {
+        T value{};
+        std::memcpy(&value, action.Data.data() + offset, sizeof(T));
+        return value;
+    }
 
     // return: The player the engine maps to the local index, or null.
     auto FindLocalPlayer(const Players* players, std::size_t localIndex) -> const Player*
@@ -78,6 +112,11 @@ namespace UI::Simulation::System
         ImGui::SeparatorText("Local players");
 
         this->DrawLocalPlayers();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Player actions");
+
+        this->DrawPlayerActions();
     }
 
     auto SimulationUIService::DrawGameSpeed() -> void
@@ -245,6 +284,125 @@ namespace UI::Simulation::System
 
         m_VirtualInputStore.SetState(player, this->BuildTestState(input));
         m_VirtualInputStore.SetSource(player, LocalInputSource::Virtual);
+    }
+
+    auto SimulationUIService::DrawPlayerActions() -> void
+    {
+        ImGui::TextWrapped("Command of a local player for the latest tick, as the simulation applies it (A9 M4a). Press a control in the"
+            " game and note the button bit that lights up. Yellow bits were held at some tick since the last clear, so short presses"
+            " are not missed. Set a baseline standing still to highlight the bytes a control changes.");
+
+        int localPlayer{ static_cast<int>(m_SimulationUIStore.GetActionLocalPlayer()) + 1 };
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::SliderInt("Local player", &localPlayer, 1, static_cast<int>(k_MaxLocalUsers)))
+        {
+            m_SimulationUIStore.SetActionLocalPlayer(static_cast<std::size_t>(localPlayer - 1));
+        }
+
+        const std::size_t local{ m_SimulationUIStore.GetActionLocalPlayer() };
+
+        const auto tick{ m_TickStore.Acquire() };
+        const Players* players{ tick && tick->Players ? tick->Players.get() : nullptr };
+
+        const Player* engine{ FindLocalPlayer(players, local) };
+        if (!engine)
+        {
+            ImGui::TextDisabled("The engine has no player for this local player.");
+            return;
+        }
+
+        const std::size_t index{ engine->Handle & k_IndexMask };
+        if (index >= k_MaxActionPlayers) return;
+
+        PlayerActions actions{};
+        m_PlayerActionStore.CopyLatest(actions);
+
+        if (actions.Sequence == 0)
+        {
+            ImGui::TextDisabled("No tick seen yet (the hook is installed when the engine starts).");
+            return;
+        }
+
+        const auto& action{ actions.Actions[index] };
+        const bool hasAction{ (actions.Mask & (1u << index)) != 0 };
+        const std::uint64_t buttons{ ReadAction<std::uint64_t>(action, k_ActionButtonsOffset) };
+        const std::uint64_t seen{ m_PlayerActionStore.GetSeenButtons(index) };
+
+        ImGui::Text("Player %08X (table index %zu), tick %llu, action this tick: %s", engine->Handle, index,
+            static_cast<unsigned long long>(actions.Sequence), hasAction ? "yes" : "no");
+
+        ImGui::Text("Buttons: %016llX", static_cast<unsigned long long>(buttons));
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Clear seen")) m_PlayerActionStore.ClearSeenButtons();
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Log")) this->LogAction(local, actions.Sequence, action, seen);
+
+        this->DrawButtonBits(buttons, seen);
+
+        const float yaw{ ReadAction<float>(action, k_ActionFacingOffset) };
+        const float pitch{ ReadAction<float>(action, k_ActionFacingOffset + sizeof(float)) };
+        const float roll{ ReadAction<float>(action, k_ActionFacingOffset + (2 * sizeof(float))) };
+        ImGui::Text("Facing: yaw %.4f (%.1f deg), pitch %.4f (%.1f deg), roll %.4f", yaw, yaw * k_RadiansToDegrees, pitch,
+            pitch * k_RadiansToDegrees, roll);
+
+        const float throttleX{ ReadAction<float>(action, k_ActionThrottleOffset) };
+        const float throttleY{ ReadAction<float>(action, k_ActionThrottleOffset + sizeof(float)) };
+        ImGui::Text("Throttle: %.3f, %.3f", throttleX, throttleY);
+
+        if (ImGui::SmallButton("Set baseline")) m_SimulationUIStore.SetActionBaseline(action);
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Clear baseline")) m_SimulationUIStore.SetActionBaseline(std::nullopt);
+
+        this->DrawActionBytes(action);
+    }
+
+    auto SimulationUIService::DrawButtonBits(std::uint64_t buttons, std::uint64_t seen) -> void
+    {
+        for (std::size_t bit{ 0 }; bit < k_ButtonBits; ++bit)
+        {
+            if (bit % k_ButtonBitsPerRow != 0) ImGui::SameLine();
+
+            const std::uint64_t mask{ std::uint64_t{ 1 } << bit };
+
+            if ((buttons & mask) != 0)   ImGui::TextColored(k_HeldColor, "%02zu", bit);
+            else if ((seen & mask) != 0) ImGui::TextColored(k_SeenColor, "%02zu", bit);
+            else                         ImGui::TextDisabled("%02zu", bit);
+        }
+    }
+
+    auto SimulationUIService::DrawActionBytes(const PlayerAction& action) -> void
+    {
+        const auto& baseline{ m_SimulationUIStore.GetActionBaseline() };
+
+        for (std::size_t offset{ 0 }; offset < k_PlayerActionSize; ++offset)
+        {
+            if (offset % k_BytesPerRow == 0)
+            {
+                ImGui::TextDisabled("+%02zX", offset);
+            }
+
+            ImGui::SameLine();
+
+            const std::uint8_t value{ action.Data[offset] };
+
+            if (baseline && baseline->Data[offset] != value) ImGui::TextColored(k_ChangedColor, "%02X", value);
+            else                                             ImGui::Text("%02X", value);
+        }
+    }
+
+    auto SimulationUIService::LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action,
+        std::uint64_t seen) -> void
+    {
+        std::string bytes{};
+        bytes.reserve(k_PlayerActionSize * 2);
+
+        for (const std::uint8_t value : action.Data)
+        {
+            bytes += std::format("{:02X}", value);
+        }
+
+        m_LogsService.Message("[SimulationUIService] INFO: Action of local player {} at tick {}: buttons seen {:016X}, bytes {}.",
+            localPlayer + 1, sequence, seen, bytes);
     }
 
     auto SimulationUIService::BuildTestState(LocalPlayerInput input) -> InputState

@@ -49,6 +49,13 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 60 20 55 41 56 41 57 48 8D A8 28 29 FF FF B8 C0 D7 00 00 E8 ?? ?? ?? ?? 48 2B E0 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 B8 D6 00 00"
     };
 
+    // Applies the player actions of one tick: void(simulation update). ExecuteGameFrame calls it (A9_SplitScreen.txt sec. 12.4).
+    inline constexpr Signature ApplyPlayerActions
+    {
+        "ApplyPlayerActions",
+        "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D A8 38 FF FF FF 48 81 EC A0 01 00 00 48 C7 44 24 78 FE FF FF FF 48 89 58 10 48 89 70 18 48 89 78 20 0F 29 70 C8 0F 29 78 B8 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 48 8B F9 48 89 4C 24 70 8B 15 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 4C 8B 34 D0 B8 30 01 00 00"
+    };
+
     // Functions: High-level Data
     inline constexpr Signature BuildGameEvent
     {

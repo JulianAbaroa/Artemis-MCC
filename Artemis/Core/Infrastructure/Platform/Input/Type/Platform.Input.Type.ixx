@@ -132,6 +132,52 @@ export namespace Platform::Input::Type
     // return: True if the state is valid for this frame.
     using InputUpdateFunction = auto(__fastcall*)(void* gameManager, std::int32_t player, InputState* state) -> bool;
 
+    // Players a simulation update holds actions for, by player table index (A9_SplitScreen.txt sec. 12).
+    inline constexpr std::size_t k_MaxActionPlayers{ 16 };
+
+    // Bytes of the action of one player.
+    inline constexpr std::size_t k_PlayerActionSize{ 0xA8 };
+
+    // Mask of the players with an action (uint32, one bit per player table index), inside the simulation update.
+    inline constexpr std::uintptr_t k_UpdateActionMaskOffset{ 0x08 };
+
+    // First action inside the simulation update. The action of a player is at this offset + k_PlayerActionSize * its table index.
+    inline constexpr std::uintptr_t k_UpdateActionsOffset{ 0x10 };
+
+    // Buttons of the action (uint64). The meaning of each bit is being measured (A9 M4a).
+    inline constexpr std::uintptr_t k_ActionButtonsOffset{ 0x08 };
+
+    // Desired yaw, pitch and roll of the action (3 floats, absolute).
+    inline constexpr std::uintptr_t k_ActionFacingOffset{ 0x10 };
+
+    // Throttle of the action (2 floats).
+    inline constexpr std::uintptr_t k_ActionThrottleOffset{ 0x1C };
+
+    // Command of one player for one tick, as the simulation applies it.
+    // note: Opaque except the offsets above. The engine builds it once per frame from the player control of each local player.
+    struct PlayerAction
+    {
+        std::array<std::uint8_t, k_PlayerActionSize> Data{};
+    };
+
+    static_assert(sizeof(PlayerAction) == k_PlayerActionSize);
+
+    // Actions of every player in one tick.
+    struct PlayerActions
+    {
+        // Ticks seen by the hook since it was installed.
+        std::uint64_t Sequence{ 0 };
+
+        // One bit per player table index with an action this tick.
+        std::uint32_t Mask{ 0 };
+
+        std::array<PlayerAction, k_MaxActionPlayers> Actions{};
+    };
+
+    // Signature of the engine function that applies the player actions of one tick (haloreach.dll rva 0x47050).
+    // note: ExecuteGameFrame calls it once per tick with the simulation update of that tick.
+    using ApplyPlayerActionsFunction = auto(__fastcall*)(void* update) -> void;
+
     // Window message captured by the WndProc hook.
     struct WindowMessage
     {

@@ -1,5 +1,6 @@
 export module UI.Simulation.System;
 
+import Service.Logs.System;
 import Service.Telemetry.State;
 import Platform.Lifecycle.State;
 import Platform.Host.State;
@@ -13,17 +14,20 @@ import std;
 
 export namespace UI::Simulation::System
 {
-    // Draws the simulation tab (D107): game speed, and local players (split-screen) with their input.
+    // Draws the simulation tab (D107): game speed, local players (split-screen) with their input, and the player actions of each tick.
     class SimulationUIService
     {
     private:
+        using LogsService = Service::Logs::System::LogsService;
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using LocalUserStore = Platform::Host::State::LocalUserStore;
 
         using InputState = Platform::Input::Type::InputState;
+        using PlayerAction = Platform::Input::Type::PlayerAction;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
+        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
         using Players = Export::Tick::Type::Players;
         using TickStore = Export::Tick::State::TickStore;
@@ -32,10 +36,12 @@ export namespace UI::Simulation::System
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
 
     public:
-        SimulationUIService(TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore, LocalUserStore& localUserStore,
-            VirtualInputStore& virtualInputStore, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
-            m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore), m_LocalUserStore(localUserStore),
-            m_VirtualInputStore(virtualInputStore), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
+        SimulationUIService(LogsService& logsService, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
+            LocalUserStore& localUserStore, VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore,
+            TickStore& tickStore, SimulationUIStore& simulationUIStore) :
+            m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
+            m_LocalUserStore(localUserStore), m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
+            m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
         ~SimulationUIService() = default;
 
         SimulationUIService(const SimulationUIService&) = delete;
@@ -45,10 +51,12 @@ export namespace UI::Simulation::System
         auto Draw() -> void;
 
     private:
+        LogsService& m_LogsService;
         TelemetryStore& m_TelemetryStore;
         LifecycleStore& m_LifecycleStore;
         LocalUserStore& m_LocalUserStore;
         VirtualInputStore& m_VirtualInputStore;
+        PlayerActionStore& m_PlayerActionStore;
         TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
 
@@ -64,6 +72,18 @@ export namespace UI::Simulation::System
 
         // Applies an input choice to the virtual input of a player.
         auto ApplyLocalPlayerInput(std::size_t player, LocalPlayerInput input) -> void;
+
+        // Draws the action of one local player in the latest tick: buttons, facing, throttle and bytes (A9 M4a).
+        auto DrawPlayerActions() -> void;
+
+        // Draws the 64 button bits: held this tick, held at some tick since the last clear, or never.
+        static auto DrawButtonBits(std::uint64_t buttons, std::uint64_t seen) -> void;
+
+        // Draws the bytes of the action, 16 per row, the ones that differ from the baseline highlighted.
+        auto DrawActionBytes(const PlayerAction& action) -> void;
+
+        // Writes the action and the buttons seen to the log, so a measurement can be shared.
+        auto LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action, std::uint64_t seen) -> void;
 
         // return: The virtual state of a test input. Empty for Idle.
         static auto BuildTestState(LocalPlayerInput input) -> InputState;
