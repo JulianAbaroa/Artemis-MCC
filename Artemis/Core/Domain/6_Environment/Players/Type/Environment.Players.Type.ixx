@@ -74,7 +74,7 @@ export namespace Environment::Players::Type
     };
 
     // One player of the player table with its body and loadout (Ignore/Semantizacion/05, section 9, D30, D93).
-    // note: IsLocal, LocalIndex and IsAgent wait for the multi-view (Q31, A9), RespawnTicks and Score for Q25 and the seat for A11.
+    // note: IsAgent waits for the multi-view (B5 Views), RespawnTicks and Score for Q25 and the seat for A11.
     struct Player
     {
         std::uint32_t Handle{};
@@ -83,6 +83,9 @@ export namespace Environment::Players::Type
         std::string Name{};
 
         ConnectionState Connection{};
+
+        // Local player (split-screen input user, 0 to 3), or empty when the player is not local (A9 M3).
+        std::optional<std::uint8_t> LocalIndex{};
 
         // From the player table only (D54).
         ::Team Team{ ::Team::Neutral };

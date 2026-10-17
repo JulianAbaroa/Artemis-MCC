@@ -75,6 +75,7 @@ namespace Environment::Players::System
         player.Handle = alive.Handle;
         player.Name = alive.Gamertag.empty() ? alive.Tag : alive.Gamertag;
         player.Connection = alive.ConnectionState;
+        player.LocalIndex = alive.LocalIndex;
         player.Team = alive.Team;
         player.CameraPosition = alive.CameraPosition;
         player.CameraForward = alive.CameraForward;

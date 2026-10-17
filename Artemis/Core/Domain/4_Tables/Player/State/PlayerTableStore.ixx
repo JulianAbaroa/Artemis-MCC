@@ -21,6 +21,10 @@ export namespace Tables::Player::State
         auto GetBase() const -> std::uintptr_t;
         auto SetBase(std::uintptr_t pointer) -> void;
 
+        // return: Address of the player mapping globals, or 0 if they were not found yet.
+        auto GetMappingBase() const -> std::uintptr_t;
+        auto SetMappingBase(std::uintptr_t pointer) -> void;
+
         auto AddPlayer(std::uint32_t handle, const AlivePlayer& player) -> void;
         auto HasPlayer(std::uint32_t handle) const -> bool;
         auto RemovePlayer(std::uint32_t handle) -> void;
@@ -44,11 +48,12 @@ export namespace Tables::Player::State
         // return: Last published table, or null before the first one and after Cleanup.
         auto Acquire() const -> std::shared_ptr<const PlayerTable>;
 
-        // Clears the players, the base address and the published table.
+        // Clears the players, the base addresses and the published table.
         auto Cleanup() -> void;
 
     private:
         std::atomic<std::uintptr_t> m_PlayerTableBase{ 0 };
+        std::atomic<std::uintptr_t> m_MappingBase{ 0 };
         std::atomic<std::shared_ptr<const PlayerTable>> m_PublishedPlayerTable{};
 
         PlayerTable m_PlayerTable{};

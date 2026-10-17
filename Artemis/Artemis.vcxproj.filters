@@ -1535,6 +1535,9 @@
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx">
       <Filter>Core\Domain\4_Tables\Player\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerMapping.ixx">
+      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerOffset.ixx">
       <Filter>Core\Domain\4_Tables\Player\Type</Filter>
     </ClCompile>

@@ -783,6 +783,7 @@
     <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\Tables.Player.Type.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerMapping.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerOffset.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerSize.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Tables.Layer.ixx" />

@@ -47,6 +47,9 @@ export namespace Tables::Player::System
 
         auto UpdatePlayerData() -> void;
 
+        // return: Local player of the table index, or empty when it is not local or the mapping is not found.
+        auto ReadLocalIndex(std::uint32_t index) -> std::optional<std::uint8_t>;
+
         auto WideToUtf8(const wchar_t* source, std::size_t maxLength) -> std::string;
     };
 }

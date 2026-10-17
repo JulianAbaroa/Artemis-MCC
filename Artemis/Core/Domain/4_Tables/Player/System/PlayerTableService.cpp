@@ -4,6 +4,7 @@ module;
 
 module Tables.Player.System;
 
+import Platform.Host.Type;
 import Common.Math.Type;
 import Common.Team.Type;
 
@@ -30,6 +31,11 @@ namespace
     using Tables::Player::Type::Offset::k_Team;
     using Tables::Player::Type::Offset::k_GamerTag;
     using Tables::Player::Type::Offset::k_Tag;
+
+    using Tables::Player::Type::Mapping::k_PlayerInputUser;
+    using Tables::Player::Type::Mapping::k_EntryStride;
+
+    using Platform::Host::Type::k_MaxLocalUsers;
 
     // Mask of the table index inside a player handle.
     constexpr std::uint32_t k_IndexMask{ 0xFFFF };
@@ -86,6 +92,7 @@ namespace Tables::Player::System
         player.CameraPosition = reader.Read<Vec3>(playerBase, k_CameraPosition);
         player.CameraForward = reader.Read<Vec3>(playerBase, k_CameraForward);
         player.AimOffset = reader.Read<Vec3>(playerBase, k_AimOffset);
+        player.LocalIndex = this->ReadLocalIndex(handle & k_IndexMask);
 
         return player;
     }
@@ -154,12 +161,26 @@ namespace Tables::Player::System
             player.CameraPosition = reader.Read<Vec3>(playerBase, k_CameraPosition);
             player.CameraForward = reader.Read<Vec3>(playerBase, k_CameraForward);
             player.AimOffset = reader.Read<Vec3>(playerBase, k_AimOffset);
+            player.LocalIndex = this->ReadLocalIndex(index);
         });
 
         for (std::uint32_t handle : handlesToRemove)
         {
             m_PlayerStore.RemovePlayer(handle);
         }
+    }
+
+    auto PlayerTableService::ReadLocalIndex(std::uint32_t index) -> std::optional<std::uint8_t>
+    {
+        const std::uintptr_t mappingBase{ m_PlayerStore.GetMappingBase() };
+        if (mappingBase == 0) return std::nullopt;
+
+        const std::int32_t inputUser{ m_MemoryReaderService.Read<std::int32_t>(mappingBase,
+            k_PlayerInputUser + (index * k_EntryStride)) };
+
+        if (inputUser < 0 || static_cast<std::size_t>(inputUser) >= k_MaxLocalUsers) return std::nullopt;
+
+        return static_cast<std::uint8_t>(inputUser);
     }
 
     auto PlayerTableService::Cleanup() -> void

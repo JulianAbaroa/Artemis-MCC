@@ -47,6 +47,9 @@ export namespace Tables::Player::Type::Alive
         std::uint32_t AliveBipedHandle{};
         std::uint32_t DeadBipedHandle{};
         std::uint32_t CurrentBipedHandle{};
+
+        // Local player (split-screen input user, 0 to 3) the player is, or empty when it is not local.
+        std::optional<std::uint8_t> LocalIndex{};
     };
 
     // Players by handle.

@@ -12,6 +12,16 @@ namespace Tables::Player::State
         m_PlayerTableBase.store(pointer);
     }
 
+    auto PlayerTableStore::GetMappingBase() const -> std::uintptr_t
+    {
+        return m_MappingBase.load();
+    }
+
+    auto PlayerTableStore::SetMappingBase(std::uintptr_t pointer) -> void
+    {
+        m_MappingBase.store(pointer);
+    }
+
     auto PlayerTableStore::AddPlayer(std::uint32_t handle, const AlivePlayer& player) -> void
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
@@ -51,6 +61,7 @@ namespace Tables::Player::State
 
         m_PlayerTable.clear();
         m_PlayerTableBase.store(0);
+        m_MappingBase.store(0);
         m_PublishedPlayerTable.store(nullptr, std::memory_order_release);
     }
 }
