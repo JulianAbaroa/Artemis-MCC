@@ -8,6 +8,22 @@ module Platform.Hook.System;
 namespace
 {
     using Service::Logs::System::LogsService;
+
+    // Copies bytes over code, restoring the page protection after.
+    // return: False if the page cannot be made writable.
+    auto WriteCode(void* address, const std::uint8_t* data, std::size_t size) -> bool
+    {
+        DWORD oldProtection{ 0 };
+        if (!VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &oldProtection)) return false;
+
+        std::memcpy(address, data, size);
+
+        DWORD unusedProtection{ 0 };
+        VirtualProtect(address, size, oldProtection, &unusedProtection);
+        FlushInstructionCache(GetCurrentProcess(), address, size);
+
+        return true;
+    }
 }
 
 namespace Platform::Hook::System
@@ -58,6 +74,43 @@ namespace Platform::Hook::System
     {
         DisableDetour(functionAddress);
         RemoveDetour(functionAddress, tag, logsService);
+    }
+
+    auto WritePatch(void* address, std::span<const std::uint8_t> bytes,
+        std::vector<std::uint8_t>& outOriginal, const char* tag, LogsService& logsService) -> bool
+    {
+        if (!address)
+        {
+            logsService.Message("{} ERROR: Failed to obtain the patch address.", tag);
+            return false;
+        }
+
+        const auto* current{ static_cast<const std::uint8_t*>(address) };
+        outOriginal.assign(current, current + bytes.size());
+
+        if (!WriteCode(address, bytes.data(), bytes.size()))
+        {
+            logsService.Message("{} ERROR: Failed to make the code writable.", tag);
+            outOriginal.clear();
+            return false;
+        }
+
+        logsService.Message("{} INFO: Patch written, address: {:016X}.", tag, reinterpret_cast<std::uintptr_t>(address));
+        return true;
+    }
+
+    auto RestorePatch(void* address, std::span<const std::uint8_t> original,
+        const char* tag, LogsService& logsService) -> void
+    {
+        if (!address || original.empty()) return;
+
+        if (!WriteCode(address, original.data(), original.size()))
+        {
+            logsService.Message("{} ERROR: Failed to restore the patch.", tag);
+            return;
+        }
+
+        logsService.Message("{} INFO: Patch restored.", tag);
     }
 
     auto WaitForDrain(std::atomic<int>& counter,

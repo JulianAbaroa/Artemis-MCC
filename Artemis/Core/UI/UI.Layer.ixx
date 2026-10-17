@@ -24,6 +24,8 @@ import UI.DefinitionsInspector.System;
 import UI.Settings.System;
 import UI.Capture.State;
 import UI.Capture.System;
+import UI.Simulation.State;
+import UI.Simulation.System;
 import UI.Logs.State;
 import UI.Logs.System;
 import std;
@@ -47,6 +49,7 @@ export namespace UI
         using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
         using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
+        using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
         using HotkeyUIService = UI::Hotkey::System::HotkeyUIService;
@@ -56,6 +59,7 @@ export namespace UI
         using DefinitionsInspectorUIService = UI::DefinitionsInspector::System::DefinitionsInspectorUIService;
         using SettingsUIService = UI::Settings::System::SettingsUIService;
         using CaptureUIService = UI::Capture::System::CaptureUIService;
+        using SimulationUIService = UI::Simulation::System::SimulationUIService;
         using LogsUIService = UI::Logs::System::LogsUIService;
 
     public:
@@ -70,6 +74,7 @@ export namespace UI
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
             m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, platform.m_MemoryReaderService, resolved.m_DefinitionsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
+            m_SimulationUIService(platform.m_LocalUserStore, platform.m_VirtualInputStore, m_SimulationUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
         {
             platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {
@@ -107,6 +112,7 @@ export namespace UI
         ObjectTableUIStore m_ObjectTableUIStore{};
         PlayerTableUIStore m_PlayerTableUIStore{};
         CaptureUIStore m_CaptureUIStore{};
+        SimulationUIStore m_SimulationUIStore{};
         LogsUIStore m_LogsUIStore{};
 
         // --- System ---
@@ -117,6 +123,7 @@ export namespace UI
         DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
         SettingsUIService m_SettingsUIService;
         CaptureUIService m_CaptureUIService;
+        SimulationUIService m_SimulationUIService;
         LogsUIService m_LogsUIService;
 
     private:

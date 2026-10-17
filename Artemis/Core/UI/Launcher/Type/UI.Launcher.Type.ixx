@@ -12,6 +12,7 @@ export namespace UI::Launcher::Type
         DefinitionsInspector,
         Settings,
         Capture,
+        Simulation,
         Logs,
 
         Count

@@ -31,6 +31,19 @@ export namespace Platform::Hook::System
     auto UninstallDetour(void* functionAddress, const char* tag,
         LogsService& logsService) -> void;
 
+    // Overwrites bytes of the game code.
+    // param address: First byte to overwrite.
+    // param bytes: New bytes.
+    // param outOriginal: Out. The bytes that were there, for RestorePatch.
+    // param tag: Log tag of the caller, such as "[SessionJoinCheckPatch]".
+    // return: False if the address is null or the memory cannot be made writable. The cause is logged.
+    auto WritePatch(void* address, std::span<const std::uint8_t> bytes,
+        std::vector<std::uint8_t>& outOriginal, const char* tag, LogsService& logsService) -> bool;
+
+    // Writes back the bytes saved by WritePatch.
+    auto RestorePatch(void* address, std::span<const std::uint8_t> original,
+        const char* tag, LogsService& logsService) -> void;
+
     // Counts one call inside a hooked function for as long as it lives.
     // note: Lets WaitForDrain know when the hook can be removed safely.
     class InFlightScope

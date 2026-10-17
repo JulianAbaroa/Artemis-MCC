@@ -49,6 +49,9 @@ namespace UI
         m_LauncherUIService.DrawTab(Tab::Capture, "Datum Capture", [this] {
             m_CaptureUIService.Draw();
         });
+        m_LauncherUIService.DrawTab(Tab::Simulation, "Simulation", [this] {
+            m_SimulationUIService.Draw();
+        });
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();
         });

@@ -27,6 +27,7 @@ namespace
         Tab::DefinitionsInspector,
         Tab::Settings,
         Tab::Capture,
+        Tab::Simulation,
         Tab::Logs,
     };
 
@@ -40,7 +41,7 @@ namespace
     };
 
     // Returns the texts and the icon of a tab.
-    // note: The definitions inspector and the capture have no icon, their buttons show the short label.
+    // note: The definitions inspector, the capture and the simulation have no icon, their buttons show the short label.
     auto GetTabInfo(Tab tab) -> TabInfo
     {
         namespace Data = ::Icons::Data;
@@ -52,6 +53,7 @@ namespace
         case Tab::DefinitionsInspector: return { "Definitions", "Definitions Inspector", nullptr, 0 };
         case Tab::Settings: return { "Settings", "Settings", Data::Settings, Data::SettingsSize };
         case Tab::Capture: return { "Capture", "Datum Capture", nullptr, 0 };
+        case Tab::Simulation: return { "Simulation", "Simulation", nullptr, 0 };
         case Tab::Logs: return { "Logs", "Logs", Data::Logs, Data::LogsSize };
         default: return { "?", "?", nullptr, 0 };
         }

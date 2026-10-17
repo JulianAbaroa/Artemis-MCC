@@ -1,0 +1,44 @@
+export module Platform.Host.Hook:SessionJoinCheck;
+
+import Service.Logs.System;
+import Platform.Memory.System;
+import Platform.Host.State;
+import std;
+
+export namespace Platform::Host::Hook
+{
+    // Patches a network session check so the Artemis users can join the match: the conditional jump after
+    // "cmp (session state - 6), 3" becomes unconditional (77 -> EB), skipping that call for session states 6 to 9.
+    // note: Same change as AlphaRing. What the skipped call checks is not measured yet (A9_SplitScreen.txt sec. 6).
+    // note: Applied only when more than one local user is requested at install time.
+    class SessionJoinCheckPatch
+    {
+    private:
+        using LogsService = Service::Logs::System::LogsService;
+
+        using LocalUserStore = Platform::Host::State::LocalUserStore;
+
+        using AOBService = Platform::Memory::System::AOBService;
+
+    public:
+        SessionJoinCheckPatch(LogsService& logsService, AOBService& aobService, LocalUserStore& localUserStore) :
+            m_LogsService(logsService), m_AOBService(aobService), m_LocalUserStore(localUserStore) {}
+        ~SessionJoinCheckPatch() = default;
+
+        // Finds the jump by signature and patches it. Does nothing if already patched or if only one local user is requested.
+        // return: False if the jump is not found, has unexpected bytes, or cannot be written.
+        auto Install() -> bool;
+
+        // Restores the original jump. Does nothing if not patched.
+        auto Uninstall() -> void;
+
+    private:
+        LogsService& m_LogsService;
+        AOBService& m_AOBService;
+        LocalUserStore& m_LocalUserStore;
+
+        void* m_PatchAddress{ nullptr };
+        std::vector<std::uint8_t> m_OriginalBytes{};
+        bool m_IsPatched{ false };
+    };
+}

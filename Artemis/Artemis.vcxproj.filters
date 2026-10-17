@@ -52,6 +52,33 @@
     <Filter Include="Core\Infrastructure\Platform">
       <UniqueIdentifier>{d3a7bcbf-9247-4ee8-92cf-c91e3bbe2522}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Host">
+      <UniqueIdentifier>{307d15b9-3017-4119-ae84-abc40b4d9c0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Host\Type">
+      <UniqueIdentifier>{f5f5212b-be1b-4c88-961a-97b41c8ece1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Host\System">
+      <UniqueIdentifier>{fe57e77c-3915-4619-a88d-e9915b402523}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Host\State">
+      <UniqueIdentifier>{20de43d5-9f05-4a3c-a6aa-7f0a2390b3d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Host\Hook">
+      <UniqueIdentifier>{bc4ae9e1-18e9-4160-85f5-4366adec55ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Simulation">
+      <UniqueIdentifier>{d15b8d3f-7e13-42a8-9456-35a824cbf5c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Simulation\Type">
+      <UniqueIdentifier>{9962e43c-f883-4135-b430-3c6d076cfd35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Simulation\State">
+      <UniqueIdentifier>{3af9a249-5118-460a-af52-1245a0d8d053}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Simulation\System">
+      <UniqueIdentifier>{f7edd5c2-4a4f-478a-a999-c7a7b82f27ff}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Input">
       <UniqueIdentifier>{80ebe4ff-c500-4ece-b37c-82334d45d983}</UniqueIdentifier>
     </Filter>
@@ -2560,6 +2587,81 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx">
       <Filter>Core\Infrastructure\Platform\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Type\Platform.Host.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\System\HostService.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\System\HostService.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\State\LocalUserStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\State\LocalUserStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Platform.Host.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetPlayerDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetPlayerDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetProfileDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetProfileDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetGamepadMappingDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetGamepadMappingDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.ixx">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp">
+      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Simulation\Type\UI.Simulation.Type.ixx">
+      <Filter>Core\UI\Simulation\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Simulation\State\SimulationUIStore.ixx">
+      <Filter>Core\UI\Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Simulation\State\SimulationUIStore.cpp">
+      <Filter>Core\UI\Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Simulation\System\SimulationUIService.ixx">
+      <Filter>Core\UI\Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Simulation\System\SimulationUIService.cpp">
+      <Filter>Core\UI\Simulation\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.ixx">
       <Filter>Core\Infrastructure\Platform\Input\State</Filter>

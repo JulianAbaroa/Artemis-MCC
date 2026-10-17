@@ -4,6 +4,9 @@ import Service.Layer;
 import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
 import Platform.Lifecycle.Hook;
+import Platform.Host.State;
+import Platform.Host.System;
+import Platform.Host.Hook;
 import Platform.Input.State;
 import Platform.Input.System;
 import Platform.Input.Hook;
@@ -17,7 +20,7 @@ import std;
 export namespace Platform
 {
     // Root of the Platform layer. Owns the stores, services and hooks that talk to the game process:
-    // lifecycle, input, memory and render. The hooks are installed by the Runtime layer.
+    // lifecycle, host (MCC), input, memory and render. The hooks are installed by the Runtime layer.
     // note: Members are built in declaration order, so stores come first, then services, then hooks.
     class Layer
     {
@@ -29,12 +32,22 @@ export namespace Platform
         using EngineInitializeDetour = Platform::Lifecycle::Hook::EngineInitializeDetour;
         using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
 
+        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using HostService = Platform::Host::System::HostService;
+        using LocalUserGetPlayerDetour = Platform::Host::Hook::LocalUserGetPlayerDetour;
+        using LocalUserGetProfileDetour = Platform::Host::Hook::LocalUserGetProfileDetour;
+        using LocalUserGetGamepadMappingDetour = Platform::Host::Hook::LocalUserGetGamepadMappingDetour;
+        using CanAcceptAnyJoinRequestDetour = Platform::Host::Hook::CanAcceptAnyJoinRequestDetour;
+        using SessionJoinCheckPatch = Platform::Host::Hook::SessionJoinCheckPatch;
+
         using InputStore = Platform::Input::State::InputStore;
         using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
+        using VirtualInputStore = Platform::Input::State::VirtualInputStore;
         using InputService = Platform::Input::System::InputService;
         using GetButtonStateDetour = Platform::Input::Hook::GetButtonStateDetour;
         using GetRawInputDataDetour = Platform::Input::Hook::GetRawInputDataDetour;
         using WndProcDetour = Platform::Input::Hook::WndProcDetour;
+        using InputUpdateDetour = Platform::Input::Hook::InputUpdateDetour;
 
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
@@ -51,28 +64,40 @@ export namespace Platform
             m_LifecycleService(service.m_LogsService, m_LifecycleStore),
             m_InputService(service.m_LogsService, m_InputStore, m_MouseDeltaStore),
             m_AOBService(service.m_LogsService),
+            m_HostService(service.m_LogsService, m_AOBService),
             m_RenderService(service.m_LogsService, m_RenderStore),
             m_SwapChainLocator(service.m_LogsService),
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
+            m_LocalUserGetPlayerDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
+            m_LocalUserGetProfileDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
+            m_LocalUserGetGamepadMappingDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
+            m_CanAcceptAnyJoinRequestDetour(service.m_LogsService, m_AOBService, m_LocalUserStore),
+            m_SessionJoinCheckPatch(service.m_LogsService, m_AOBService, m_LocalUserStore),
             m_GetButtonStateDetour(service.m_LogsService, m_AOBService, m_InputStore),
             m_GetRawInputDataDetour(service.m_LogsService, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
             m_WndProcDetour(service.m_LogsService, m_InputService, m_LifecycleStore, m_LifecycleService),
+            m_InputUpdateDetour(service.m_LogsService, m_HostService, m_VirtualInputStore),
             m_PresentDetour(service.m_LogsService, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
             m_ResizeBuffersDetour(service.m_LogsService, m_RenderStore, m_RenderService, m_SwapChainLocator)
         {
             // The button hook needs the engine up, so it is installed on engine initialization.
+            // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
             m_LifecycleService.OnEngineInitialized([this] {
                 m_GetButtonStateDetour.Install();
+                this->InstallHostHooks();
             });
 
             m_LifecycleService.OnUnhook([this] {
+                this->UninstallHostHooks();
                 m_GetButtonStateDetour.Uninstall();
             });
 
+            // The virtual input is not cleared: the sources picked in the UI stay across matches.
             m_LifecycleService.OnCleanup([this] {
                 m_InputStore.Cleanup();
                 m_MouseDeltaStore.Cleanup();
+                m_LocalUserStore.Cleanup();
             });
 
             // The game window is only known once the swap chain is bound.
@@ -93,14 +118,17 @@ export namespace Platform
 
         // --- State ---
         LifecycleStore m_LifecycleStore;
+        LocalUserStore m_LocalUserStore;
         InputStore m_InputStore;
         MouseDeltaStore m_MouseDeltaStore;
+        VirtualInputStore m_VirtualInputStore;
         RenderStore m_RenderStore;
 
         // --- System ---
         LifecycleService m_LifecycleService;
         InputService m_InputService;
         AOBService m_AOBService;
+        HostService m_HostService;
         MemoryReaderService m_MemoryReaderService;
         RenderService m_RenderService;
         SwapChainLocator m_SwapChainLocator;
@@ -108,9 +136,15 @@ export namespace Platform
         // --- Hook ---
         EngineInitializeDetour m_EngineInitializeDetour;
         DestroySubsystemsDetour m_DestroySubsystemsDetour;
+        LocalUserGetPlayerDetour m_LocalUserGetPlayerDetour;
+        LocalUserGetProfileDetour m_LocalUserGetProfileDetour;
+        LocalUserGetGamepadMappingDetour m_LocalUserGetGamepadMappingDetour;
+        CanAcceptAnyJoinRequestDetour m_CanAcceptAnyJoinRequestDetour;
+        SessionJoinCheckPatch m_SessionJoinCheckPatch;
         GetButtonStateDetour m_GetButtonStateDetour;
         GetRawInputDataDetour m_GetRawInputDataDetour;
         WndProcDetour m_WndProcDetour;
+        InputUpdateDetour m_InputUpdateDetour;
         PresentDetour m_PresentDetour;
         ResizeBuffersDetour m_ResizeBuffersDetour;
 
@@ -131,6 +165,29 @@ export namespace Platform
             m_ResizeBuffersDetour.Uninstall();
 
             m_RenderService.Shutdown();
+        }
+
+        // Installs the hooks on the game manager of MCC (local users, input) and on the session checks of the engine.
+        // note: A failed hook is logged and the rest still go in.
+        auto InstallHostHooks() -> void
+        {
+            m_LocalUserGetPlayerDetour.Install();
+            m_LocalUserGetProfileDetour.Install();
+            m_LocalUserGetGamepadMappingDetour.Install();
+            m_CanAcceptAnyJoinRequestDetour.Install();
+            m_SessionJoinCheckPatch.Install();
+            m_InputUpdateDetour.Install();
+        }
+
+        // Removes the host hooks in reverse order.
+        auto UninstallHostHooks() -> void
+        {
+            m_InputUpdateDetour.Uninstall();
+            m_SessionJoinCheckPatch.Uninstall();
+            m_CanAcceptAnyJoinRequestDetour.Uninstall();
+            m_LocalUserGetGamepadMappingDetour.Uninstall();
+            m_LocalUserGetProfileDetour.Uninstall();
+            m_LocalUserGetPlayerDetour.Uninstall();
         }
     };
 }

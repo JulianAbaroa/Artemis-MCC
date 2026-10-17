@@ -1,0 +1,53 @@
+export module Platform.Host.Hook:LocalUserGetGamepadMapping;
+
+import Service.Logs.System;
+import Platform.Host.Type;
+import Platform.Host.State;
+import Platform.Host.System;
+import std;
+
+export namespace Platform::Host::Hook
+{
+    // Hooks the MCC function that returns the gamepad mapping of a user, so an Artemis user gets a valid mapping.
+    // note: MCC does not know the Artemis XUIDs. Their mapping is a copy of the mapping of user 0.
+    class LocalUserGetGamepadMappingDetour
+    {
+    private:
+        using LogsService = Service::Logs::System::LogsService;
+
+        using LocalUserGetGamepadMappingFunction = Platform::Host::Type::LocalUserGetGamepadMappingFunction;
+        using GamepadMapping = Platform::Host::Type::GamepadMapping;
+
+        using LocalUserStore = Platform::Host::State::LocalUserStore;
+
+        using HostService = Platform::Host::System::HostService;
+
+    public:
+        LocalUserGetGamepadMappingDetour(LogsService& logsService, HostService& hostService, LocalUserStore& localUserStore) :
+            m_LogsService(logsService), m_HostService(hostService), m_LocalUserStore(localUserStore) {}
+        ~LocalUserGetGamepadMappingDetour() = default;
+
+        // Finds the target in the game manager vtable and installs the hook. Does nothing if already installed.
+        // return: False if the target is not found or the hook fails.
+        auto Install() -> bool;
+
+        // Waits for the calls in flight to drain, then removes the hook. Does nothing if not installed.
+        auto Uninstall() -> void;
+
+    private:
+        LogsService& m_LogsService;
+        HostService& m_HostService;
+        LocalUserStore& m_LocalUserStore;
+
+        static inline LocalUserGetGamepadMappingDetour* s_Instance{ nullptr };
+        static inline LocalUserGetGamepadMappingFunction s_OriginalFunction{ nullptr };
+
+        // Calls currently inside the hook. Uninstall waits for it to reach zero.
+        static inline std::atomic<int> s_InFlight{ 0 };
+
+        std::atomic<void*> m_FunctionAddress{ nullptr };
+        std::atomic<bool> m_IsHookInstalled{ false };
+
+        static auto __fastcall HookedLocalUserGetGamepadMapping(void* gameManager, std::uint64_t xuid) -> GamepadMapping*;
+    };
+}

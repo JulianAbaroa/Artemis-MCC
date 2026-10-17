@@ -56,6 +56,27 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 44 89 48 20 57 41 54 41 55 41 56 41 57 48 83 EC 40 4C 8B B4 24 90 00 00 00",
     };
 
+    // Functions: Host
+    // Code of MCC-Win64-Shipping.exe that stores the game manager: call, lea rax, [vtable], mov [game manager], rax.
+    inline constexpr Signature GameManager
+    {
+        "GameManager",
+        "E8 ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 89 05 ?? ?? ?? ?? 33 C0"
+    };
+
+    inline constexpr Signature CanAcceptAnyJoinRequest
+    {
+        "CanAcceptAnyJoinRequest",
+        "40 53 48 83 EC 20 33 DB F6 81 00 49 00 00 01 74 4D 48 81 C1 80 48 00 00"
+    };
+
+    // Session state check: mov ecx, [state], lea eax, [rcx - 6], cmp eax, 3, ja.
+    inline constexpr Signature SessionJoinCheck
+    {
+        "SessionJoinCheck",
+        "8B 8B F8 0E 06 00 8D 41 FA 83 F8 03 77 56"
+    };
+
     // Functions: Input Injection
     inline constexpr Signature GetButtonState
     {
