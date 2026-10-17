@@ -28,7 +28,12 @@ export namespace UI::Simulation::State
         auto GetLocalPlayerInput(std::size_t player) const -> LocalPlayerInput;
         auto SetLocalPlayerInput(std::size_t player, LocalPlayerInput input) -> void;
 
+        // Value of the custom speed field, applied with its button.
+        auto GetCustomTimeScale() const -> float;
+        auto SetCustomTimeScale(float scale) -> void;
+
     private:
         std::array<LocalPlayerInput, k_MaxLocalUsers> m_LocalPlayerInputs{};
+        float m_CustomTimeScale{ 1.0f };
     };
 }

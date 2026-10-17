@@ -72,7 +72,7 @@ export namespace Core
         Relations::Layer m_Relations{ m_Service, m_Platform, m_Resolved, m_Tables };
         Environment::Layer m_Environment{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations };
         Egocentric::Layer m_Egocentric{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment };
-        Export::Layer m_Export{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };
+        Export::Layer m_Export{ m_Service, m_Platform, m_Resolved, m_Datum, m_Tables, m_Relations, m_Environment, m_Egocentric };
         Gui::Layer m_Gui{ m_Service, m_Platform };
         Viewer::Layer m_Viewer{ m_Service, m_Platform, m_Environment, m_Export, m_Gui, m_Preferences };
         UI::Layer m_UI{ m_Service, m_Platform, m_Resolved, m_Datum, m_Export, m_Gui, m_Viewer, m_Preferences };

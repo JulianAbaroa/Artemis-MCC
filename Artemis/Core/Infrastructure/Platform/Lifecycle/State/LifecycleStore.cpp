@@ -210,4 +210,14 @@ namespace Platform::Lifecycle::State
 
         return true;
     }
+
+    auto LifecycleStore::SetRequestedTimeScale(float scale) -> void
+    {
+        m_RequestedTimeScale.store(scale, std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::GetRequestedTimeScale() const -> float
+    {
+        return m_RequestedTimeScale.load(std::memory_order_relaxed);
+    }
 }

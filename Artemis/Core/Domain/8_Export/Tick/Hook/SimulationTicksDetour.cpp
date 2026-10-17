@@ -14,6 +14,12 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
     using Platform::Lifecycle::Type::Status;
+
+    // Time globals: *(thread context + 0xA0). Speed of the engine: f32 at +0x10 (A8_Velocidad, D105).
+    constexpr std::uintptr_t k_TimeGlobalsOffset{ 0xA0 };
+    constexpr std::uintptr_t k_TimeScaleOffset{ 0x10 };
+
+    constexpr float k_DefaultTimeScale{ 1.0f };
 }
 
 namespace Export::Tick::Hook
@@ -25,6 +31,7 @@ namespace Export::Tick::Hook
         const bool isCounting{ frameDetour.IsInstalled() };
 
         self->m_LifecycleStore.SetStatus(Status::Running);
+        self->ApplyTimeScale();
 
         if (isCounting) frameDetour.BeginSimulation();
 
@@ -50,6 +57,25 @@ namespace Export::Tick::Hook
 
         // The last tick of the call is complete now.
         if (ticks > 0) frameDetour.CloseTick();
+    }
+
+    auto SimulationTicksDetour::ApplyTimeScale() -> void
+    {
+        const float requested{ m_LifecycleStore.GetRequestedTimeScale() };
+        if (requested <= 0.0f && !m_IsTimeScaleOverridden) return;
+
+        const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
+        if (threadContext == 0) return;
+
+        const std::uintptr_t timeGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_TimeGlobalsOffset) };
+        if (timeGlobals == 0) return;
+
+        auto* scale{ reinterpret_cast<float*>(timeGlobals + k_TimeScaleOffset) };
+        const float target{ requested > 0.0f ? requested : k_DefaultTimeScale };
+
+        if (*scale != target) *scale = target;
+
+        m_IsTimeScaleOverridden = requested > 0.0f;
     }
 
     auto SimulationTicksDetour::Install() -> void

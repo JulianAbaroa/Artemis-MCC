@@ -1,5 +1,7 @@
 export module UI.Simulation.System;
 
+import Service.Telemetry.State;
+import Platform.Lifecycle.State;
 import Platform.Host.State;
 import Platform.Input.Type;
 import Platform.Input.State;
@@ -9,10 +11,13 @@ import std;
 
 export namespace UI::Simulation::System
 {
-    // Draws the simulation tab (D107): local players (split-screen) and their input. Game speed joins it when A8 resumes.
+    // Draws the simulation tab (D107): game speed, and local players (split-screen) with their input.
     class SimulationUIService
     {
     private:
+        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
+
+        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using LocalUserStore = Platform::Host::State::LocalUserStore;
 
         using InputState = Platform::Input::Type::InputState;
@@ -22,10 +27,10 @@ export namespace UI::Simulation::System
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
 
     public:
-        SimulationUIService(LocalUserStore& localUserStore, VirtualInputStore& virtualInputStore,
-            SimulationUIStore& simulationUIStore) :
-            m_LocalUserStore(localUserStore), m_VirtualInputStore(virtualInputStore),
-            m_SimulationUIStore(simulationUIStore) {}
+        SimulationUIService(TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore, LocalUserStore& localUserStore,
+            VirtualInputStore& virtualInputStore, SimulationUIStore& simulationUIStore) :
+            m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore), m_LocalUserStore(localUserStore),
+            m_VirtualInputStore(virtualInputStore), m_SimulationUIStore(simulationUIStore) {}
         ~SimulationUIService() = default;
 
         SimulationUIService(const SimulationUIService&) = delete;
@@ -35,9 +40,14 @@ export namespace UI::Simulation::System
         auto Draw() -> void;
 
     private:
+        TelemetryStore& m_TelemetryStore;
+        LifecycleStore& m_LifecycleStore;
         LocalUserStore& m_LocalUserStore;
         VirtualInputStore& m_VirtualInputStore;
         SimulationUIStore& m_SimulationUIStore;
+
+        // Draws the requested and the real engine speed, the presets and the custom field.
+        auto DrawGameSpeed() -> void;
 
         // Draws the local player count and one row per player.
         auto DrawLocalPlayers() -> void;

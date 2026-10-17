@@ -77,6 +77,11 @@ export namespace Platform::Lifecycle::State
         // return: False if the timeout expired first.
         auto WaitForLoadEnd(milliseconds timeout) -> bool;
 
+        // Engine speed Artemis keeps in the time globals (+0x10, D105). 0 means Artemis does not write it and the engine decides.
+        // note: Not saved in the settings: Artemis always starts without changing the speed. Written by the UI (later the bridge, D106).
+        auto SetRequestedTimeScale(float scale) -> void;
+        auto GetRequestedTimeScale() const -> float;
+
     private:
         std::atomic<bool> m_IsRunning{ false };
         std::atomic<Status> m_Status{ Status::Waiting };
@@ -99,6 +104,8 @@ export namespace Platform::Lifecycle::State
 
         std::condition_variable m_BlamCV{};
         std::mutex m_BlamMutex{};
+
+        std::atomic<float> m_RequestedTimeScale{ 0.0f };
 
         // Wakes every thread blocked on the tick condition variable so they re-check their predicate.
         // note: Takes the mutex first, so a waiter between its check and its wait cannot miss the wake.

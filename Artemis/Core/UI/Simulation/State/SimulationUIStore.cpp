@@ -11,4 +11,14 @@ namespace UI::Simulation::State
     {
         m_LocalPlayerInputs[player] = input;
     }
+
+    auto SimulationUIStore::GetCustomTimeScale() const -> float
+    {
+        return m_CustomTimeScale;
+    }
+
+    auto SimulationUIStore::SetCustomTimeScale(float scale) -> void
+    {
+        m_CustomTimeScale = scale;
+    }
 }

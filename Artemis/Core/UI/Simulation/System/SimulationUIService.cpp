@@ -15,6 +15,14 @@ namespace
     using UI::Simulation::Type::k_LocalPlayerInputCount;
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
 
+    // Logic ticks per second at x1.
+    constexpr float k_TicksPerSecond{ 60.0f };
+
+    // Speeds tested in A8 (0.1 to 100). Above x5 the engine caps at 10 ticks per frame.
+    constexpr float k_MinTimeScale{ 0.1f };
+    constexpr float k_MaxTimeScale{ 100.0f };
+    constexpr std::array<float, 7> k_TimeScalePresets{ 1.0f, 2.0f, 5.0f, 10.0f, 20.0f, 50.0f, 100.0f };
+
     // Virtual-key code of W. The engine button W (32) reads it through its key table.
     constexpr std::size_t k_ForwardKey{ 0x57 };
 
@@ -44,9 +52,56 @@ namespace UI::Simulation::System
 {
     auto SimulationUIService::Draw() -> void
     {
+        ImGui::SeparatorText("Game speed");
+
+        this->DrawGameSpeed();
+
+        ImGui::Spacing();
         ImGui::SeparatorText("Local players");
 
         this->DrawLocalPlayers();
+    }
+
+    auto SimulationUIService::DrawGameSpeed() -> void
+    {
+        ImGui::TextWrapped("Engine time scale. Above x5 the engine runs at most 10 ticks per frame, so the real speed is capped at"
+            " fps x 10 / 60. Not saved: Artemis always starts without changing the speed.");
+
+        const float requested{ m_LifecycleStore.GetRequestedTimeScale() };
+
+        if (requested > 0.0f)
+        {
+            ImGui::Text("Requested: x%.2f", requested);
+        }
+        else
+        {
+            ImGui::TextUnformatted("Requested: engine default");
+        }
+
+        const float tickHz{ m_TelemetryStore.m_TickHz.load(std::memory_order_relaxed) };
+        ImGui::Text("Real: %.0f ticks/s (x%.2f)", tickHz, tickHz / k_TicksPerSecond);
+
+        if (ImGui::Button("Engine")) m_LifecycleStore.SetRequestedTimeScale(0.0f);
+        ImGui::SetItemTooltip("Stop writing the speed. The engine goes back to x1.");
+
+        for (const float preset : k_TimeScalePresets)
+        {
+            ImGui::SameLine();
+
+            const std::string label{ std::format("x{:g}", preset) };
+            if (ImGui::Button(label.c_str())) m_LifecycleStore.SetRequestedTimeScale(preset);
+        }
+
+        float custom{ m_SimulationUIStore.GetCustomTimeScale() };
+
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::InputFloat("##CustomTimeScale", &custom, 0.0f, 0.0f, "%.2f"))
+        {
+            m_SimulationUIStore.SetCustomTimeScale(std::clamp(custom, k_MinTimeScale, k_MaxTimeScale));
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Apply")) m_LifecycleStore.SetRequestedTimeScale(m_SimulationUIStore.GetCustomTimeScale());
     }
 
     auto SimulationUIService::DrawLocalPlayers() -> void
