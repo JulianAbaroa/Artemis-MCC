@@ -4,12 +4,14 @@ import Service.Logs.System;
 import Platform.Memory.System;
 import Platform.Input.Type;
 import Platform.Input.State;
+import Platform.Simulation.System;
 import std;
 
 export namespace Platform::Input::Hook
 {
     // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
     // note: Players without an override keep the action the engine built. Called by ExecuteGameFrame once per tick on the game thread.
+    // Before the actions, the bot service adds the bots asked for and publishes the session snapshot (A9 M5).
     class PlayerActionDetour
     {
     private:
@@ -21,9 +23,12 @@ export namespace Platform::Input::Hook
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
+        using BotService = Platform::Simulation::System::BotService;
+
     public:
-        PlayerActionDetour(LogsService& logsService, AOBService& aobService, PlayerActionStore& playerActionStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_PlayerActionStore(playerActionStore) {}
+        PlayerActionDetour(LogsService& logsService, AOBService& aobService, PlayerActionStore& playerActionStore,
+            BotService& botService) :
+            m_LogsService(logsService), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService) {}
         ~PlayerActionDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -37,6 +42,7 @@ export namespace Platform::Input::Hook
         LogsService& m_LogsService;
         AOBService& m_AOBService;
         PlayerActionStore& m_PlayerActionStore;
+        BotService& m_BotService;
 
         static inline PlayerActionDetour* s_Instance{ nullptr };
         static inline ApplyPlayerActionsFunction s_OriginalFunction{ nullptr };
@@ -56,11 +62,12 @@ export namespace Platform::Input::Hook
         static auto __fastcall HookedApplyPlayerActions(void* update) -> void;
 
         // Writes the override of every player that has one into the update, and marks those players as having an action.
-        auto ApplyOverrides(std::uint8_t* update) -> void;
+        // param threadContext: Thread context of the engine, or 0 if unknown (then the views do not follow the overrides).
+        auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
 
-        // return: Player control globals of the engine, or 0 if they are not found.
+        // return: Thread context of the engine, or 0 if it is not found.
         // note: Reads the thread local storage of the current thread. Call it from the game thread.
-        auto GetControlGlobals() const -> std::uintptr_t;
+        auto GetThreadContext() const -> std::uintptr_t;
 
         // return: Variable that holds the engine thread local storage index, or null if the signature is not found.
         auto FindEngineTlsIndex() -> const std::uint32_t*;

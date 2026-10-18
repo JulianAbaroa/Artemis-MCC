@@ -10,6 +10,9 @@ import Platform.Host.Hook;
 import Platform.Input.State;
 import Platform.Input.System;
 import Platform.Input.Hook;
+import Platform.Simulation.State;
+import Platform.Simulation.System;
+import Platform.Simulation.Hook;
 import Platform.Memory.System;
 import Platform.Render.Type;
 import Platform.Render.State;
@@ -20,7 +23,7 @@ import std;
 export namespace Platform
 {
     // Root of the Platform layer. Owns the stores, services and hooks that talk to the game process:
-    // lifecycle, host (MCC), input, memory and render. The hooks are installed by the Runtime layer.
+    // lifecycle, host (MCC), input, simulation (bots), memory and render. The hooks are installed by the Runtime layer.
     // note: Members are built in declaration order, so stores come first, then services, then hooks.
     class Layer
     {
@@ -51,6 +54,10 @@ export namespace Platform
         using InputUpdateDetour = Platform::Input::Hook::InputUpdateDetour;
         using PlayerActionDetour = Platform::Input::Hook::PlayerActionDetour;
 
+        using BotStore = Platform::Simulation::State::BotStore;
+        using BotService = Platform::Simulation::System::BotService;
+        using SetMachinesDetour = Platform::Simulation::Hook::SetMachinesDetour;
+
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
@@ -67,6 +74,7 @@ export namespace Platform
             m_InputService(service.m_LogsService, m_InputStore, m_MouseDeltaStore),
             m_AOBService(service.m_LogsService),
             m_HostService(service.m_LogsService, m_AOBService),
+            m_BotService(service.m_LogsService, m_AOBService, m_BotStore),
             m_RenderService(service.m_LogsService, m_RenderStore),
             m_SwapChainLocator(service.m_LogsService),
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
@@ -80,20 +88,25 @@ export namespace Platform
             m_GetRawInputDataDetour(service.m_LogsService, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
             m_WndProcDetour(service.m_LogsService, m_InputService, m_LifecycleStore, m_LifecycleService),
             m_InputUpdateDetour(service.m_LogsService, m_HostService, m_VirtualInputStore),
-            m_PlayerActionDetour(service.m_LogsService, m_AOBService, m_PlayerActionStore),
+            m_PlayerActionDetour(service.m_LogsService, m_AOBService, m_PlayerActionStore, m_BotService),
+            m_SetMachinesDetour(service.m_LogsService, m_AOBService, m_BotStore),
             m_PresentDetour(service.m_LogsService, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
             m_ResizeBuffersDetour(service.m_LogsService, m_RenderStore, m_RenderService, m_SwapChainLocator)
         {
             // The button hook needs the engine up, so it is installed on engine initialization.
             // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
+            // The bot service finds its functions before the SetMachines hook overwrites the bytes of their signature.
             m_LifecycleService.OnEngineInitialized([this] {
                 m_GetButtonStateDetour.Install();
                 m_PlayerActionDetour.Install();
+                m_BotService.ResolveFunctions();
+                m_SetMachinesDetour.Install();
                 this->InstallHostHooks();
             });
 
             m_LifecycleService.OnUnhook([this] {
                 this->UninstallHostHooks();
+                m_SetMachinesDetour.Uninstall();
                 m_PlayerActionDetour.Uninstall();
                 m_GetButtonStateDetour.Uninstall();
             });
@@ -104,6 +117,7 @@ export namespace Platform
                 m_MouseDeltaStore.Cleanup();
                 m_LocalUserStore.Cleanup();
                 m_PlayerActionStore.Cleanup();
+                m_BotStore.Cleanup();
             });
 
             // The game window is only known once the swap chain is bound.
@@ -129,6 +143,7 @@ export namespace Platform
         MouseDeltaStore m_MouseDeltaStore;
         VirtualInputStore m_VirtualInputStore;
         PlayerActionStore m_PlayerActionStore;
+        BotStore m_BotStore;
         RenderStore m_RenderStore;
 
         // --- System ---
@@ -136,6 +151,7 @@ export namespace Platform
         InputService m_InputService;
         AOBService m_AOBService;
         HostService m_HostService;
+        BotService m_BotService;
         MemoryReaderService m_MemoryReaderService;
         RenderService m_RenderService;
         SwapChainLocator m_SwapChainLocator;
@@ -153,6 +169,7 @@ export namespace Platform
         WndProcDetour m_WndProcDetour;
         InputUpdateDetour m_InputUpdateDetour;
         PlayerActionDetour m_PlayerActionDetour;
+        SetMachinesDetour m_SetMachinesDetour;
         PresentDetour m_PresentDetour;
         ResizeBuffersDetour m_ResizeBuffersDetour;
 

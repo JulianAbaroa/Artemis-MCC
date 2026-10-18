@@ -510,6 +510,14 @@
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Platform.Simulation.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.ixx" />

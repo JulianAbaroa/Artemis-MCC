@@ -1,0 +1,359 @@
+module Platform.Simulation.System;
+
+import Platform.Memory.Type;
+import std;
+
+namespace
+{
+    namespace Signature = Platform::Memory::Type::Signature;
+
+    using Platform::Simulation::Type::SessionSnapshot;
+    using Platform::Simulation::Type::SessionPlayer;
+    using Platform::Simulation::Type::MachineIdentifier;
+    using Platform::Simulation::Type::Bot;
+    using Platform::Simulation::Type::FakeMachine;
+    using Platform::Simulation::Type::SetMachinesFunction;
+    using Platform::Simulation::Type::ApplyPlayerAddedFunction;
+
+    using Platform::Simulation::Type::k_MaxMachines;
+    using Platform::Simulation::Type::k_MaxPlayers;
+    using Platform::Simulation::Type::k_MaxPlayersPerMachine;
+    using Platform::Simulation::Type::k_PlayersSlot;
+    using Platform::Simulation::Type::k_PlayersGlobalsSlot;
+    using Platform::Simulation::Type::k_GameOptionsSlot;
+    using Platform::Simulation::Type::k_DataArrayCapacity;
+    using Platform::Simulation::Type::k_DataArrayElementSize;
+    using Platform::Simulation::Type::k_DataArrayData;
+    using Platform::Simulation::Type::k_PlayerSalt;
+    using Platform::Simulation::Type::k_PlayerIdentifier;
+    using Platform::Simulation::Type::k_PlayerMachineIndex;
+    using Platform::Simulation::Type::k_PlayerUserIndex;
+    using Platform::Simulation::Type::k_PlayerController;
+    using Platform::Simulation::Type::k_PlayerGamerTag;
+    using Platform::Simulation::Type::k_GamerTagLength;
+    using Platform::Simulation::Type::k_MachineMask;
+    using Platform::Simulation::Type::k_MachineIdentifiers;
+    using Platform::Simulation::Type::k_LocalMachineIndex;
+    using Platform::Simulation::Type::k_OptionsPlayers;
+    using Platform::Simulation::Type::k_OptionsPlayerSize;
+    using Platform::Simulation::Type::k_OptionsPlayerConfiguration;
+    using Platform::Simulation::Type::k_PlayerConfigurationSize;
+    using Platform::Simulation::Type::k_PlayerUpdateSize;
+    using Platform::Simulation::Type::k_UpdatePlayerIndex;
+    using Platform::Simulation::Type::k_UpdateIdentifier;
+    using Platform::Simulation::Type::k_UpdateType;
+    using Platform::Simulation::Type::k_UpdateMachine;
+    using Platform::Simulation::Type::k_UpdateUserIndex;
+    using Platform::Simulation::Type::k_UpdateController;
+    using Platform::Simulation::Type::k_UpdateJoinedInProgress;
+    using Platform::Simulation::Type::k_UpdateConfiguration;
+    using Platform::Simulation::Type::k_PlayerUpdateAdded;
+
+    // Bots one instance can hold: 4 per fake machine, on every machine slot except the first one (the local machine).
+    constexpr std::size_t k_MaxBots{ (k_MaxMachines - 1) * k_MaxPlayersPerMachine };
+
+    // High bytes of the identifier of a bot ("ARTE"). The low bytes are its number.
+    constexpr std::uint64_t k_BotIdentifierBase{ 0x4152544500000000 };
+
+    // First bytes of the identifier of a fake machine ("ARTM"). The last byte is its index.
+    constexpr std::array<std::uint8_t, 4> k_FakeMachinePrefix{ 0x41, 0x52, 0x54, 0x4D };
+
+    // return: The value of type T at the address.
+    template<typename T>
+    auto Read(std::uintptr_t address) -> T
+    {
+        T value{};
+        std::memcpy(&value, reinterpret_cast<const void*>(address), sizeof(T));
+        return value;
+    }
+
+    // return: The address of the player datum of the index, or 0 if the slot is outside the array.
+    auto GetPlayerDatum(std::uintptr_t players, std::size_t index) -> std::uintptr_t
+    {
+        const auto capacity{ Read<std::int32_t>(players + k_DataArrayCapacity) };
+        if (capacity <= 0 || index >= static_cast<std::size_t>(capacity)) return 0;
+
+        const auto elementSize{ Read<std::int32_t>(players + k_DataArrayElementSize) };
+        const auto data{ Read<std::uintptr_t>(players + k_DataArrayData) };
+        if (elementSize <= 0 || data == 0) return 0;
+
+        return data + (index * static_cast<std::size_t>(elementSize));
+    }
+
+    // Replaces every copy of the gamertag inside a player configuration with the name of the bot.
+    // return: How many copies were replaced (the configuration of Reach has two, at +0x00 and +0x58).
+    auto RenameConfiguration(std::span<std::uint8_t> configuration, std::span<const wchar_t> gamerTag, std::wstring_view name)
+        -> std::size_t
+    {
+        std::size_t length{ 0 };
+        while (length < gamerTag.size() && gamerTag[length] != L'\0') ++length;
+        if (length == 0) return 0;
+
+        const std::size_t bytes{ length * sizeof(wchar_t) };
+        const auto* pattern{ reinterpret_cast<const std::uint8_t*>(gamerTag.data()) };
+        std::size_t replaced{ 0 };
+
+        for (std::size_t offset{ 0 }; offset + bytes <= configuration.size(); offset += sizeof(wchar_t))
+        {
+            if (std::memcmp(configuration.data() + offset, pattern, bytes) != 0) continue;
+
+            // note: The whole gamertag field is rewritten, so the old name does not leak past the new terminator.
+            const std::size_t field{ (std::min)(k_GamerTagLength * sizeof(wchar_t), configuration.size() - offset) };
+            std::memset(configuration.data() + offset, 0, field);
+
+            const std::size_t copy{ (std::min)(name.size() * sizeof(wchar_t), field - sizeof(wchar_t)) };
+            std::memcpy(configuration.data() + offset, name.data(), copy);
+
+            ++replaced;
+            offset += field - sizeof(wchar_t);
+        }
+
+        return replaced;
+    }
+
+    // Replaces every copy of the identifier of the local player inside a player configuration (Reach keeps one at +0x20).
+    // return: How many copies were replaced.
+    auto ReplaceIdentifier(std::span<std::uint8_t> configuration, std::uint64_t from, std::uint64_t to) -> std::size_t
+    {
+        std::size_t replaced{ 0 };
+
+        for (std::size_t offset{ 0 }; offset + sizeof(from) <= configuration.size(); ++offset)
+        {
+            if (std::memcmp(configuration.data() + offset, &from, sizeof(from)) != 0) continue;
+
+            std::memcpy(configuration.data() + offset, &to, sizeof(to));
+            ++replaced;
+            offset += sizeof(from) - 1;
+        }
+
+        return replaced;
+    }
+}
+
+namespace Platform::Simulation::System
+{
+    auto BotService::Update(std::uintptr_t threadContext) -> void
+    {
+        if (threadContext == 0) return;
+
+        this->PublishSnapshot(threadContext);
+
+        std::size_t requests{ m_BotStore.TakeRequests() };
+        while (requests-- > 0)
+        {
+            if (!this->AddBot(threadContext)) break;
+        }
+    }
+
+    auto BotService::PublishSnapshot(std::uintptr_t threadContext) -> void
+    {
+        SessionSnapshot snapshot{};
+        snapshot.Sequence = ++m_Sequence;
+
+        const auto globals{ Read<std::uintptr_t>(threadContext + k_PlayersGlobalsSlot) };
+        if (globals != 0)
+        {
+            snapshot.MachineMask = Read<std::uint32_t>(globals + k_MachineMask);
+            std::memcpy(snapshot.Machines.data(), reinterpret_cast<const void*>(globals + k_MachineIdentifiers),
+                sizeof(snapshot.Machines));
+            snapshot.LocalMachineIndex = Read<std::int32_t>(globals + k_LocalMachineIndex);
+        }
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        if (players != 0)
+        {
+            for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
+            {
+                const std::uintptr_t datum{ GetPlayerDatum(players, index) };
+                if (datum == 0) break;
+
+                const auto salt{ Read<std::uint16_t>(datum + k_PlayerSalt) };
+                if (salt == 0) continue;
+
+                SessionPlayer& player{ snapshot.Players[index] };
+                player.IsValid = true;
+                player.Handle = (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(index);
+                player.Identifier = Read<std::uint64_t>(datum + k_PlayerIdentifier);
+                player.MachineIndex = Read<std::int16_t>(datum + k_PlayerMachineIndex);
+                player.UserIndex = Read<std::int32_t>(datum + k_PlayerUserIndex);
+                player.Controller = Read<std::int32_t>(datum + k_PlayerController);
+                std::memcpy(player.GamerTag.data(), reinterpret_cast<const void*>(datum + k_PlayerGamerTag), sizeof(player.GamerTag));
+            }
+        }
+
+        const auto options{ Read<std::uintptr_t>(threadContext + k_GameOptionsSlot) };
+        if (options != 0)
+        {
+            std::memcpy(snapshot.Options.data(), reinterpret_cast<const void*>(options + k_OptionsPlayers), sizeof(snapshot.Options));
+        }
+
+        m_BotStore.PublishSnapshot(snapshot);
+    }
+
+    auto BotService::AddBot(std::uintptr_t threadContext) -> bool
+    {
+        if (!m_IsResolved)
+        {
+            m_LogsService.Message("[BotService] ERROR: Failed to add a bot: the engine functions were not found.");
+            return false;
+        }
+
+        const std::size_t count{ m_BotStore.GetBotCount() };
+        if (count >= k_MaxBots)
+        {
+            m_LogsService.Message("[BotService] WARNING: No machine slot left for another bot.");
+            return false;
+        }
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        const auto globals{ Read<std::uintptr_t>(threadContext + k_PlayersGlobalsSlot) };
+        const auto options{ Read<std::uintptr_t>(threadContext + k_GameOptionsSlot) };
+        if (players == 0 || globals == 0 || options == 0)
+        {
+            m_LogsService.Message("[BotService] ERROR: Failed to read the players, the machines or the game options of the engine.");
+            return false;
+        }
+
+        // The first player of the local machine (user 0) lends its configuration. Free slots are taken from the top.
+        const auto localMachine{ Read<std::int32_t>(globals + k_LocalMachineIndex) };
+        std::optional<std::size_t> localPlayer{};
+        std::optional<std::size_t> freeIndex{};
+
+        for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
+        {
+            const std::uintptr_t datum{ GetPlayerDatum(players, index) };
+            if (datum == 0) break;
+
+            if (Read<std::uint16_t>(datum + k_PlayerSalt) == 0)
+            {
+                freeIndex = index;
+                continue;
+            }
+
+            if (!localPlayer && Read<std::int16_t>(datum + k_PlayerMachineIndex) == localMachine
+                && Read<std::int32_t>(datum + k_PlayerUserIndex) == 0)
+            {
+                localPlayer = index;
+            }
+        }
+
+        if (!localPlayer || !freeIndex)
+        {
+            m_LogsService.Message("[BotService] ERROR: Failed to find {}.", !localPlayer ? "the local player" : "a free player slot");
+            return false;
+        }
+
+        const std::size_t number{ count + 1 };
+        const std::size_t machineIndex{ (k_MaxMachines - 1) - (count / k_MaxPlayersPerMachine) };
+        const std::size_t slot{ count % k_MaxPlayersPerMachine };
+
+        if (!this->EnsureFakeMachine(globals, machineIndex)) return false;
+
+        std::array<std::uint8_t, k_PlayerUpdateSize> update{};
+        const auto playerIndex{ static_cast<std::int32_t>(*freeIndex) };
+        const std::uint64_t identifier{ k_BotIdentifierBase | number };
+        const auto userIndex{ static_cast<std::int32_t>(slot) };
+
+        MachineIdentifier machine{};
+        std::memcpy(machine.Bytes.data(), reinterpret_cast<const void*>(globals + k_MachineIdentifiers
+            + (machineIndex * sizeof(MachineIdentifier))), sizeof(machine));
+
+        std::memcpy(update.data() + k_UpdatePlayerIndex, &playerIndex, sizeof(playerIndex));
+        std::memcpy(update.data() + k_UpdateIdentifier, &identifier, sizeof(identifier));
+        std::memcpy(update.data() + k_UpdateType, &k_PlayerUpdateAdded, sizeof(k_PlayerUpdateAdded));
+        std::memcpy(update.data() + k_UpdateMachine, machine.Bytes.data(), sizeof(machine));
+        std::memcpy(update.data() + k_UpdateUserIndex, &userIndex, sizeof(userIndex));
+        std::memcpy(update.data() + k_UpdateController, &userIndex, sizeof(userIndex));
+        update[k_UpdateJoinedInProgress] = 1;
+
+        std::span<std::uint8_t> configuration{ update.data() + k_UpdateConfiguration, k_PlayerConfigurationSize };
+        std::memcpy(configuration.data(), reinterpret_cast<const void*>(options + k_OptionsPlayers
+            + (*localPlayer * k_OptionsPlayerSize) + k_OptionsPlayerConfiguration), k_PlayerConfigurationSize);
+
+        const std::uintptr_t localDatum{ GetPlayerDatum(players, *localPlayer) };
+
+        std::array<wchar_t, k_GamerTagLength> gamerTag{};
+        std::memcpy(gamerTag.data(), reinterpret_cast<const void*>(localDatum + k_PlayerGamerTag), sizeof(gamerTag));
+
+        const std::wstring name{ std::format(L"Bot {}", number) };
+        const std::size_t names{ RenameConfiguration(configuration, gamerTag, name) };
+        const std::size_t identifiers{ ReplaceIdentifier(configuration, Read<std::uint64_t>(localDatum + k_PlayerIdentifier),
+            identifier) };
+
+        if (!m_ApplyPlayerAdded(update.data()))
+        {
+            m_LogsService.Message("[BotService] ERROR: The engine refused bot {} (player {}, machine {}, user {}).", number,
+                *freeIndex, machineIndex, slot);
+            return false;
+        }
+
+        m_BotStore.AddBot(Bot{ .Number = number, .PlayerIndex = *freeIndex, .MachineIndex = machineIndex, .Slot = slot,
+            .Identifier = identifier });
+
+        m_LogsService.Message("[BotService] INFO: Bot {} added as player {} on machine {} (user {}). Configuration: {} names and {}"
+            " identifiers replaced.", number, *freeIndex, machineIndex, slot, names, identifiers);
+        return true;
+    }
+
+    auto BotService::EnsureFakeMachine(std::uintptr_t playersGlobals, std::size_t machineIndex) -> bool
+    {
+        std::vector<FakeMachine> fakeMachines{};
+        m_BotStore.CopyFakeMachines(fakeMachines);
+
+        const bool isKnown{ std::ranges::any_of(fakeMachines, [machineIndex](const FakeMachine& machine) {
+            return machine.Index == machineIndex;
+        }) };
+
+        const std::uint32_t bit{ 1u << machineIndex };
+        auto mask{ Read<std::uint32_t>(playersGlobals + k_MachineMask) };
+
+        if (isKnown && (mask & bit) != 0) return true;
+
+        if (!isKnown)
+        {
+            if ((mask & bit) != 0)
+            {
+                m_LogsService.Message("[BotService] ERROR: Machine slot {} belongs to a real machine.", machineIndex);
+                return false;
+            }
+
+            FakeMachine machine{ .Index = machineIndex };
+            std::copy(k_FakeMachinePrefix.begin(), k_FakeMachinePrefix.end(), machine.Identifier.Bytes.begin());
+            machine.Identifier.Bytes.back() = static_cast<std::uint8_t>(machineIndex);
+            m_BotStore.AddFakeMachine(machine);
+        }
+
+        // note: The current machines go in unchanged. The SetMachines hook adds the fake ones before the engine applies them.
+        std::array<MachineIdentifier, k_MaxMachines> identifiers{};
+        std::memcpy(identifiers.data(), reinterpret_cast<const void*>(playersGlobals + k_MachineIdentifiers), sizeof(identifiers));
+        m_SetMachines(mask, identifiers.data());
+
+        mask = Read<std::uint32_t>(playersGlobals + k_MachineMask);
+        if ((mask & bit) == 0)
+        {
+            m_LogsService.Message("[BotService] ERROR: The engine did not take fake machine {} (is the SetMachines hook installed?).",
+                machineIndex);
+            return false;
+        }
+
+        m_LogsService.Message("[BotService] INFO: Fake machine {} added. Machine mask {:05X}.", machineIndex, mask);
+        return true;
+    }
+
+    auto BotService::ResolveFunctions() -> bool
+    {
+        if (m_IsResolved) return true;
+
+        m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::SetMachines));
+        m_ApplyPlayerAdded = reinterpret_cast<ApplyPlayerAddedFunction>(m_AOBService.FindPattern(Signature::ApplyPlayerAdded));
+
+        if (!m_SetMachines || !m_ApplyPlayerAdded)
+        {
+            m_LogsService.Message("[BotService] ERROR: Failed to find {}.", !m_SetMachines ? "SetMachines" : "ApplyPlayerAdded");
+            return false;
+        }
+
+        m_IsResolved = true;
+        return true;
+    }
+}

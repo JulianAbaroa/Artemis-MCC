@@ -40,15 +40,17 @@ namespace Platform::Input::Hook
         if (update != nullptr)
         {
             auto* bytes{ static_cast<std::uint8_t*>(update) };
+            const std::uintptr_t threadContext{ s_Instance->GetThreadContext() };
 
-            s_Instance->ApplyOverrides(bytes);
+            s_Instance->m_BotService.Update(threadContext);
+            s_Instance->ApplyOverrides(bytes, threadContext);
             s_Instance->PublishActions(bytes);
         }
 
         s_OriginalFunction(update);
     }
 
-    auto PlayerActionDetour::ApplyOverrides(std::uint8_t* update) -> void
+    auto PlayerActionDetour::ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void
     {
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> overrides{};
         m_PlayerActionStore.CopyOverrides(overrides);
@@ -56,7 +58,8 @@ namespace Platform::Input::Hook
         std::uint32_t mask{ 0 };
         std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
 
-        const std::uintptr_t controlGlobals{ this->GetControlGlobals() };
+        const std::uintptr_t controlGlobals{ threadContext != 0
+            ? *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot) : 0 };
 
         for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
         {
@@ -89,7 +92,7 @@ namespace Platform::Input::Hook
         std::memcpy(update + k_UpdateActionMaskOffset, &mask, sizeof(mask));
     }
 
-    auto PlayerActionDetour::GetControlGlobals() const -> std::uintptr_t
+    auto PlayerActionDetour::GetThreadContext() const -> std::uintptr_t
     {
         if (!m_EngineTlsIndex) return 0;
 
@@ -99,10 +102,7 @@ namespace Platform::Input::Hook
         // note: gs:[0x58] is the thread local storage array of the current thread.
         const auto tlsArray{ static_cast<std::uintptr_t>(__readgsqword(0x58)) };
 
-        const std::uintptr_t threadContext{ *reinterpret_cast<const std::uintptr_t*>(tlsArray + (tlsIndex * sizeof(std::uintptr_t))) };
-        if (threadContext == 0) return 0;
-
-        return *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot);
+        return *reinterpret_cast<const std::uintptr_t*>(tlsArray + (tlsIndex * sizeof(std::uintptr_t)));
     }
 
     auto PlayerActionDetour::FindEngineTlsIndex() -> const std::uint32_t*
@@ -140,7 +140,7 @@ namespace Platform::Input::Hook
         if (!m_EngineTlsIndex)
         {
             m_LogsService.Message("[PlayerActionDetour] WARNING: Failed to find the engine thread context. Views will not follow"
-                " the overrides.");
+                " the overrides and no bot can be added.");
         }
 
         void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::ApplyPlayerActions)) };

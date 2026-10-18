@@ -85,6 +85,21 @@ export namespace Platform::Memory::Type::Signature
         "8B 8B F8 0E 06 00 8D 41 FA 83 F8 03 77 56"
     };
 
+    // Functions: Simulation
+    // players_set_machines(mask, identifiers): replaces the machines of the engine (A9 sec. 13.2).
+    inline constexpr Signature SetMachines
+    {
+        "SetMachines",
+        "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 55 41 54 41 55 41 56 41 57 48 8D 68 C8 48 81 EC 10 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 00 44 8B 05 ?? ?? ?? ?? 48 8B F2 65 48 8B 04 25 58 00 00 00"
+    };
+
+    // simulation_player_update_apply_added(update): creates the player of an "added" player update (A9 sec. 13.2).
+    inline constexpr Signature ApplyPlayerAdded
+    {
+        "ApplyPlayerAdded",
+        "48 8B C4 48 89 58 10 48 89 70 18 48 89 78 20 55 41 54 41 55 41 56 41 57 48 8D 68 A1 48 81 EC 00 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 27 4C 63 39 33 DB 65 48 8B 04 25 58 00 00 00"
+    };
+
     // Functions: Input Injection
     inline constexpr Signature GetButtonState
     {

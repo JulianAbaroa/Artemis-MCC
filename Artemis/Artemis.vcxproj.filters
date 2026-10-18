@@ -67,6 +67,21 @@
     <Filter Include="Core\Infrastructure\Platform\Host\Hook">
       <UniqueIdentifier>{bc4ae9e1-18e9-4160-85f5-4366adec55ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Simulation">
+      <UniqueIdentifier>{beb54f71-89d1-48de-874e-576db9829d18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Simulation\Type">
+      <UniqueIdentifier>{70f1dc75-6826-4131-9c49-6aea59199f57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Simulation\State">
+      <UniqueIdentifier>{e21a4b46-c66a-4183-b0b0-e57630aeeb23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Simulation\System">
+      <UniqueIdentifier>{9ee5aed1-1718-4d82-b81f-245fe284a9b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Simulation\Hook">
+      <UniqueIdentifier>{9c5077ba-6b66-4756-9d5c-a0d5636497e1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI\TickTrace">
       <UniqueIdentifier>{511bbd30-310e-4d9c-a272-b1419b431aaf}</UniqueIdentifier>
     </Filter>
@@ -2650,6 +2665,30 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp">
       <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Simulation\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.ixx">
+      <Filter>Core\Infrastructure\Platform\Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.cpp">
+      <Filter>Core\Infrastructure\Platform\Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Platform.Simulation.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Simulation\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Simulation\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.ixx">
       <Filter>Core\Infrastructure\Platform\Input\State</Filter>
