@@ -485,6 +485,9 @@ namespace UI::Simulation::System
             actionOverride.YawPerTick = k_TestYawPerTick;
         }
 
+        // note: A local player already has the interaction of its view, so Test use + copy only presses use.
+        actionOverride.IsUseTest = mode == LocalPlayerAction::TestUse || mode == LocalPlayerAction::TestUseCopy;
+
         m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
     }
 
@@ -791,6 +794,23 @@ namespace UI::Simulation::System
         {
             actionOverride.ThrottleForward = k_TestThrottle;
             actionOverride.YawPerTick = k_TestYawPerTick;
+        }
+
+        actionOverride.IsUseTest = mode == LocalPlayerAction::TestUse || mode == LocalPlayerAction::TestUseCopy;
+
+        if (mode == LocalPlayerAction::TestUseCopy)
+        {
+            const auto tick{ m_TickStore.Acquire() };
+            const Player* local{ FindLocalPlayer(tick && tick->Players ? tick->Players.get() : nullptr, 0) };
+
+            if (local)
+            {
+                actionOverride.InteractionSource = local->Handle & k_IndexMask;
+            }
+            else
+            {
+                m_LogsService.Message("[SimulationUIService] WARNING: Local player 1 has no player, the bot only presses use.");
+            }
         }
 
         m_PlayerActionStore.SetOverride(playerIndex, actionOverride);

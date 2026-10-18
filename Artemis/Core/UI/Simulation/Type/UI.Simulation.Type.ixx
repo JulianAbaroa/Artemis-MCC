@@ -39,6 +39,11 @@ export namespace UI::Simulation::Type
         HoldStill,
         // Full throttle forward and the yaw turning one degree per tick.
         TestAction,
+        // Hold still and keep pressing use (A9 M5d, hypothesis H1: the engine resolves the interaction by itself).
+        TestUse,
+        // Test use plus the interaction of local player 1 copied into the action (A9 M5d, hypothesis H2). A local player keeps its
+        // own interaction, so for it this is Test use.
+        TestUseCopy,
 
         Count
     };
@@ -51,5 +56,7 @@ export namespace UI::Simulation::Type
         "Engine",
         "Hold still",
         "Test action",
+        "Test use",
+        "Test use + copy P1",
     };
 }

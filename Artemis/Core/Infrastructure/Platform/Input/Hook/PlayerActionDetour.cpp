@@ -23,6 +23,11 @@ namespace
     using Platform::Input::Type::k_ActionButtonsOffset;
     using Platform::Input::Type::k_ActionFacingOffset;
     using Platform::Input::Type::k_ActionThrottleOffset;
+    using Platform::Input::Type::k_ActionUseLaneOffset;
+    using Platform::Input::Type::k_UsePressed;
+    using Platform::Input::Type::k_UseHeld;
+    using Platform::Input::Type::k_ActionInteractionOffset;
+    using Platform::Input::Type::k_ActionInteractionSize;
     using Platform::Input::Type::k_ControlGlobalsSlot;
     using Platform::Input::Type::k_ControlBlockStride;
     using Platform::Input::Type::k_ControlFacingOffset;
@@ -41,6 +46,21 @@ namespace
 
     // Marks an action as aimed at the unit in that slot (+0x00 = 1, +0x04 = slot), so the engine moves the unit with it.
     constexpr std::uintptr_t k_ActionHasUnitOffset{ 0x00 };
+
+    // Use test (A9 M5d), in ticks of a cycle: pressed until the first end tick, held until the second, then released, so the
+    // engine sees new presses, long holds and releases.
+    constexpr std::uint64_t k_UseTestCycle{ 64 };
+    constexpr std::uint64_t k_UseTestPressedEndTick{ 30 };
+    constexpr std::uint64_t k_UseTestHeldEndTick{ 60 };
+
+    // return: The use lane of the use test at that tick.
+    auto GetUseTestLane(std::uint64_t tick) -> std::uint8_t
+    {
+        const std::uint64_t phase{ tick % k_UseTestCycle };
+        if (phase < k_UseTestPressedEndTick) return k_UsePressed;
+        if (phase < k_UseTestHeldEndTick) return k_UseHeld;
+        return 0;
+    }
 
     // Writes an action that does nothing and passes the engine validation.
     // param unitSlot: Action slot of the unit of the player (unit +0x288), or nullopt without a unit.
@@ -90,6 +110,9 @@ namespace Platform::Input::Hook
         std::uint32_t mask{ 0 };
         std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
 
+        // note: Only the actions the engine built this tick have an interaction worth copying.
+        const std::uint32_t engineMask{ mask };
+
         const std::uintptr_t controlGlobals{ threadContext != 0
             ? *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot) : 0 };
 
@@ -112,6 +135,18 @@ namespace Platform::Input::Hook
             std::memcpy(action + k_ActionButtonsOffset, &actionOverride->Buttons, sizeof(actionOverride->Buttons));
             std::memcpy(action + k_ActionFacingOffset, facing.data(), sizeof(facing));
             std::memcpy(action + k_ActionThrottleOffset, throttle.data(), sizeof(throttle));
+
+            if (actionOverride->IsUseTest)
+            {
+                action[k_ActionUseLaneOffset] = GetUseTestLane(m_Sequence);
+            }
+
+            const auto& source{ actionOverride->InteractionSource };
+            if (source && *source < k_MaxActionPlayers && *source != player && (engineMask & (1u << *source)) != 0)
+            {
+                const std::uint8_t* sourceAction{ update + k_UpdateActionsOffset + (*source * k_PlayerActionSize) };
+                std::memcpy(action + k_ActionInteractionOffset, sourceAction + k_ActionInteractionOffset, k_ActionInteractionSize);
+            }
 
             mask |= 1u << player;
 

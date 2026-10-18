@@ -154,6 +154,16 @@ export namespace Platform::Input::Type
     // Throttle of the action (2 floats, -1 to 1): forward, then left.
     inline constexpr std::uintptr_t k_ActionThrottleOffset{ 0x1C };
 
+    // Hold lane of use, grab and enter (E) in the action (byte): pressed, then held past about half a second (A9 sec. 12.7).
+    inline constexpr std::uintptr_t k_ActionUseLaneOffset{ 0x42 };
+    inline constexpr std::uint8_t k_UsePressed{ 0x10 };
+    inline constexpr std::uint8_t k_UseHeld{ 0x30 };
+
+    // Interaction of the action: the object the engine picked for the player, kind first (A9 sec. 12.2).
+    // note: The engine fills it every frame from the view of a local player. A bot has none (A9 M5d).
+    inline constexpr std::uintptr_t k_ActionInteractionOffset{ 0x54 };
+    inline constexpr std::size_t k_ActionInteractionSize{ 0x24 };
+
     // Command of one player for one tick, as the simulation applies it.
     // note: Opaque except the offsets above. The engine builds it once per frame from the player control of each local player.
     struct PlayerAction
@@ -184,7 +194,8 @@ export namespace Platform::Input::Type
     inline constexpr std::uintptr_t k_ControlFacingOffset{ 0x94 };
 
     // Fields Artemis writes into the action of a player, every tick (A9 M4b, D109).
-    // note: The rest of the action (interaction, weapon, hold states) stays as the engine built it from the input of the frame.
+    // note: The rest of the action (interaction, weapon, hold states) stays as the engine built it from the input of the frame,
+    // except the use lane (IsUseTest) and the interaction (InteractionSource) of the use tests.
     struct ActionOverride
     {
         std::uint64_t Buttons{ 0 };
@@ -198,6 +209,13 @@ export namespace Platform::Input::Type
 
         // Radians added to Yaw after every tick. Test only (the AI will write the yaw of each tick).
         float YawPerTick{ 0.0f };
+
+        // Cycles the use lane (pressed, held, released) every tick. Test only (A9 M5d: can a bot pick up the flag).
+        bool IsUseTest{ false };
+
+        // Player table index whose interaction of this tick is copied into this action. Test only (A9 M5d, hypothesis H2).
+        // note: Resolved once, when the test is picked. Nothing is copied while that player has no engine action.
+        std::optional<std::size_t> InteractionSource{};
 
         // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view and its
         // interaction follow the action. Empty for a player that is not local.
