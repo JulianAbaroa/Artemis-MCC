@@ -14,6 +14,8 @@ namespace
     using Platform::Simulation::Type::FakeMachine;
     using Platform::Simulation::Type::SetMachinesFunction;
     using Platform::Simulation::Type::ApplyPlayerAddedFunction;
+    using Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
+    using Platform::Simulation::Type::TeamRequest;
 
     using Platform::Simulation::Type::k_MaxMachines;
     using Platform::Simulation::Type::k_MaxPlayers;
@@ -38,6 +40,10 @@ namespace
     using Platform::Simulation::Type::k_UnitFlags;
     using Platform::Simulation::Type::k_UnitActionSlot;
     using Platform::Simulation::Type::k_PlayerGamerTag;
+    using Platform::Simulation::Type::k_PlayerTeam;
+    using Platform::Simulation::Type::k_PlayerConfiguration;
+    using Platform::Simulation::Type::k_ConfigurationTeam;
+    using Platform::Simulation::Type::k_MaxTeams;
     using Platform::Simulation::Type::k_GamerTagLength;
     using Platform::Simulation::Type::k_MachineMask;
     using Platform::Simulation::Type::k_MachineIdentifiers;
@@ -164,10 +170,14 @@ namespace Platform::Simulation::System
 
         this->PublishSnapshot(threadContext);
 
-        std::size_t requests{ m_BotStore.TakeRequests() };
-        while (requests-- > 0)
+        for (const std::optional<std::int8_t> team : m_BotStore.TakeRequests())
         {
-            if (!this->AddBot(threadContext)) break;
+            if (!this->AddBot(threadContext, team)) break;
+        }
+
+        for (const TeamRequest& request : m_BotStore.TakeTeamRequests())
+        {
+            this->ApplyTeam(threadContext, request);
         }
     }
 
@@ -204,6 +214,7 @@ namespace Platform::Simulation::System
                 player.MachineIndex = Read<std::int16_t>(datum + k_PlayerMachineIndex);
                 player.UserIndex = Read<std::int32_t>(datum + k_PlayerUserIndex);
                 player.Controller = Read<std::int32_t>(datum + k_PlayerController);
+                player.Team = Read<std::int8_t>(datum + k_PlayerTeam);
                 player.UnitHandle = Read<std::uint32_t>(datum + k_PlayerUnit);
                 const std::uintptr_t unit{ GetObjectData(threadContext, player.UnitHandle) };
                 if (unit != 0) player.UnitFlags = Read<std::uint32_t>(unit + k_UnitFlags);
@@ -220,7 +231,7 @@ namespace Platform::Simulation::System
         m_BotStore.PublishSnapshot(snapshot);
     }
 
-    auto BotService::AddBot(std::uintptr_t threadContext) -> bool
+    auto BotService::AddBot(std::uintptr_t threadContext, std::optional<std::int8_t> team) -> bool
     {
         if (!m_IsResolved)
         {
@@ -310,6 +321,8 @@ namespace Platform::Simulation::System
         const std::size_t identifiers{ ReplaceIdentifier(configuration, Read<std::uint64_t>(localDatum + k_PlayerIdentifier),
             identifier) };
 
+        if (team) configuration[k_ConfigurationTeam] = static_cast<std::uint8_t>(*team);
+
         if (!m_ApplyPlayerAdded(update.data()))
         {
             m_LogsService.Message("[BotService] ERROR: The engine refused bot {} (player {}, machine {}, user {}).", number,
@@ -378,6 +391,32 @@ namespace Platform::Simulation::System
         return true;
     }
 
+    auto BotService::ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> void
+    {
+        if (!m_IsResolved || request.Team < 0 || static_cast<std::size_t>(request.Team) >= k_MaxTeams) return;
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        if (players == 0) return;
+
+        const std::uintptr_t datum{ GetPlayerDatum(players, request.PlayerIndex) };
+        const auto salt{ datum != 0 ? Read<std::uint16_t>(datum + k_PlayerSalt) : std::uint16_t{ 0 } };
+        if (salt == 0)
+        {
+            m_LogsService.Message("[BotService] WARNING: Player {} is gone, its team was not changed.", request.PlayerIndex);
+            return;
+        }
+
+        std::array<std::uint8_t, k_PlayerConfigurationSize> configuration{};
+        std::memcpy(configuration.data(), reinterpret_cast<const void*>(datum + k_PlayerConfiguration), configuration.size());
+        configuration[k_ConfigurationTeam] = static_cast<std::uint8_t>(request.Team);
+
+        const std::uint32_t handle{ (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(request.PlayerIndex) };
+        m_ApplyPlayerConfiguration(handle, configuration.data());
+
+        m_LogsService.Message("[BotService] INFO: Player {} moved to team {} (now {}).", request.PlayerIndex, request.Team,
+            Read<std::int8_t>(datum + k_PlayerTeam));
+    }
+
     auto BotService::GetUnitActionSlot(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint8_t>
     {
         if (threadContext == 0) return std::nullopt;
@@ -400,10 +439,13 @@ namespace Platform::Simulation::System
 
         m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::SetMachines));
         m_ApplyPlayerAdded = reinterpret_cast<ApplyPlayerAddedFunction>(m_AOBService.FindPattern(Signature::ApplyPlayerAdded));
+        m_ApplyPlayerConfiguration = reinterpret_cast<ApplyPlayerConfigurationFunction>(
+            m_AOBService.FindPattern(Signature::ApplyPlayerConfiguration));
 
-        if (!m_SetMachines || !m_ApplyPlayerAdded)
+        if (!m_SetMachines || !m_ApplyPlayerAdded || !m_ApplyPlayerConfiguration)
         {
-            m_LogsService.Message("[BotService] ERROR: Failed to find {}.", !m_SetMachines ? "SetMachines" : "ApplyPlayerAdded");
+            m_LogsService.Message("[BotService] ERROR: Failed to find {}.", !m_SetMachines ? "SetMachines"
+                : (!m_ApplyPlayerAdded ? "ApplyPlayerAdded" : "ApplyPlayerConfiguration"));
             return false;
         }
 

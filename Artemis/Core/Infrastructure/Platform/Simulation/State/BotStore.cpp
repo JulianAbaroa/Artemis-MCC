@@ -2,16 +2,28 @@ module Platform.Simulation.State;
 
 namespace Platform::Simulation::State
 {
-    auto BotStore::RequestBot() -> void
+    auto BotStore::RequestBot(std::optional<std::int8_t> team) -> void
     {
         std::scoped_lock lock(m_Mutex);
-        ++m_Requests;
+        m_Requests.push_back(team);
     }
 
-    auto BotStore::TakeRequests() -> std::size_t
+    auto BotStore::TakeRequests() -> std::vector<std::optional<std::int8_t>>
     {
         std::scoped_lock lock(m_Mutex);
-        return std::exchange(m_Requests, 0);
+        return std::exchange(m_Requests, {});
+    }
+
+    auto BotStore::RequestTeam(const TeamRequest& request) -> void
+    {
+        std::scoped_lock lock(m_Mutex);
+        m_TeamRequests.push_back(request);
+    }
+
+    auto BotStore::TakeTeamRequests() -> std::vector<TeamRequest>
+    {
+        std::scoped_lock lock(m_Mutex);
+        return std::exchange(m_TeamRequests, {});
     }
 
     auto BotStore::AddBot(const Bot& bot) -> void
@@ -59,7 +71,8 @@ namespace Platform::Simulation::State
     auto BotStore::Cleanup() -> void
     {
         std::scoped_lock lock(m_Mutex);
-        m_Requests = 0;
+        m_Requests.clear();
+        m_TeamRequests.clear();
         m_Bots.clear();
         m_FakeMachines.clear();
         m_Snapshot = SessionSnapshot{};

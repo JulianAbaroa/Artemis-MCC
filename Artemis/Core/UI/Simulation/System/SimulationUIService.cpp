@@ -20,10 +20,12 @@ namespace
     using Platform::Simulation::Type::SessionPlayer;
     using Platform::Simulation::Type::Bot;
     using Platform::Simulation::Type::FakeMachine;
+    using Platform::Simulation::Type::TeamRequest;
 
     using Platform::Host::Type::k_MaxLocalUsers;
     using Platform::Simulation::Type::k_MaxMachines;
     using Platform::Simulation::Type::k_MaxPlayers;
+    using Platform::Simulation::Type::k_MaxTeams;
     using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Input::Type::k_PlayerActionSize;
     using Platform::Input::Type::k_ActionButtonsOffset;
@@ -69,6 +71,16 @@ namespace
     constexpr ImVec4 k_HeldColor{ 0.3f, 1.0f, 0.3f, 1.0f };
     constexpr ImVec4 k_SeenColor{ 1.0f, 0.8f, 0.2f, 1.0f };
     constexpr ImVec4 k_ChangedColor{ 1.0f, 0.4f, 0.3f, 1.0f };
+
+    // Names of the teams of a team game, by team index.
+    constexpr std::array<const char*, k_MaxTeams> k_TeamLabels{ "Red", "Blue", "Green", "Orange", "Purple", "Gold", "Brown", "Pink" };
+
+    // return: The name of a team, or "-" outside 0..7.
+    auto GetTeamLabel(std::int8_t team) -> const char*
+    {
+        if (team < 0 || static_cast<std::size_t>(team) >= k_TeamLabels.size()) return "-";
+        return k_TeamLabels[static_cast<std::size_t>(team)];
+    }
 
     // Radians to degrees.
     constexpr float k_RadiansToDegrees{ 57.2957795f };
@@ -633,9 +645,28 @@ namespace UI::Simulation::System
     auto SimulationUIService::DrawBots() -> void
     {
         ImGui::TextWrapped("Players on machines of their own, added in the match like a player that joins in progress (A9 M5b)."
-            " They have no view and no input: their action is the mode below. The film does not have them.");
+            " They have no view and no input: their action is the mode below. In Engine mode the engine repeats the last action it"
+            " applied (as for a remote player), so a bot keeps walking after Test action. The film does not have them.");
 
-        if (ImGui::Button("Add bot")) m_BotStore.RequestBot();
+        const std::optional<std::int8_t> newTeam{ m_SimulationUIStore.GetNewBotTeam() };
+
+        ImGui::SetNextItemWidth(160.0f);
+        if (ImGui::BeginCombo("Team of new bots", newTeam ? GetTeamLabel(*newTeam) : "Same as the local player"))
+        {
+            if (ImGui::Selectable("Same as the local player", !newTeam)) m_SimulationUIStore.SetNewBotTeam(std::nullopt);
+
+            for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+            {
+                const auto value{ static_cast<std::int8_t>(team) };
+                if (ImGui::Selectable(k_TeamLabels[team], newTeam == value)) m_SimulationUIStore.SetNewBotTeam(value);
+            }
+
+            ImGui::EndCombo();
+        }
+        ImGui::SetItemTooltip("Only team games use it. Other games give each player its own team.");
+
+        ImGui::SameLine();
+        if (ImGui::Button("Add bot")) m_BotStore.RequestBot(newTeam);
         ImGui::SetItemTooltip("Applied on the next tick of a match. The result is in the log.");
 
         std::vector<Bot> bots{};
@@ -651,13 +682,14 @@ namespace UI::Simulation::System
         PlayerActions actions{};
         m_PlayerActionStore.CopyLatest(actions);
 
-        if (!ImGui::BeginTable("Bots", 8, flags)) return;
+        if (!ImGui::BeginTable("Bots", 9, flags)) return;
 
         ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Player");
         ImGui::TableSetupColumn("Machine");
         ImGui::TableSetupColumn("User");
         ImGui::TableSetupColumn("In engine");
+        ImGui::TableSetupColumn("Team");
         ImGui::TableSetupColumn("Unit (flags)");
         ImGui::TableSetupColumn("Action this tick");
         ImGui::TableSetupColumn("Action");
@@ -681,11 +713,27 @@ namespace UI::Simulation::System
             if (player.IsValid && player.Identifier == bot.Identifier) ImGui::Text("%08X", player.Handle);
             else                                                       ImGui::TextDisabled("Gone");
 
+            ImGui::PushID(static_cast<int>(bot.PlayerIndex));
+
+            ImGui::TableNextColumn();
+            ImGui::SetNextItemWidth(-1.0f);
+            if (ImGui::BeginCombo("##Team", GetTeamLabel(player.Team)))
+            {
+                for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+                {
+                    const auto value{ static_cast<std::int8_t>(team) };
+                    if (ImGui::Selectable(k_TeamLabels[team], player.Team == value) && player.Team != value)
+                    {
+                        m_BotStore.RequestTeam(TeamRequest{ .PlayerIndex = bot.PlayerIndex, .Team = value });
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
             ImGui::TableNextColumn();
             if (player.UnitHandle != k_NoHandle) ImGui::Text("%08X (%08X)", player.UnitHandle, player.UnitFlags);
             else                                 ImGui::TextDisabled("-");
-
-            ImGui::PushID(static_cast<int>(bot.PlayerIndex));
 
             ImGui::TableNextColumn();
             const bool hasAction{ (actions.Mask & (1u << bot.PlayerIndex)) != 0 };

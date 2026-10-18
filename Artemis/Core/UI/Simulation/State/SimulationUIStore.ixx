@@ -46,6 +46,10 @@ export namespace UI::Simulation::State
         auto GetBotAction(std::size_t playerIndex) const -> LocalPlayerAction;
         auto SetBotAction(std::size_t playerIndex, LocalPlayerAction action) -> void;
 
+        // Team of the next bots in team games, or nullopt for the team of the local player.
+        auto GetNewBotTeam() const -> std::optional<std::int8_t>;
+        auto SetNewBotTeam(std::optional<std::int8_t> team) -> void;
+
         // Player whose game options entry the session section shows.
         auto GetOptionsPlayer() const -> std::size_t;
         auto SetOptionsPlayer(std::size_t playerIndex) -> void;
@@ -57,5 +61,6 @@ export namespace UI::Simulation::State
         std::array<LocalPlayerAction, k_MaxLocalUsers> m_LocalPlayerActions{};
         std::array<LocalPlayerAction, k_MaxPlayers> m_BotActions{};
         std::size_t m_OptionsPlayer{ 0 };
+        std::optional<std::int8_t> m_NewBotTeam{};
     };
 }

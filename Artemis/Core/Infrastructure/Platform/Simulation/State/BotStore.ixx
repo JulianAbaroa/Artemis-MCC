@@ -13,6 +13,7 @@ export namespace Platform::Simulation::State
         using SessionSnapshot = Platform::Simulation::Type::SessionSnapshot;
         using Bot = Platform::Simulation::Type::Bot;
         using FakeMachine = Platform::Simulation::Type::FakeMachine;
+        using TeamRequest = Platform::Simulation::Type::TeamRequest;
 
     public:
         BotStore() = default;
@@ -22,10 +23,17 @@ export namespace Platform::Simulation::State
         auto operator=(const BotStore&) -> BotStore& = delete;
 
         // Asks for one more bot. The game thread adds it on its next tick.
-        auto RequestBot() -> void;
+        // param team: Team of the bot in team games, or nullopt for the team of the local player.
+        auto RequestBot(std::optional<std::int8_t> team) -> void;
 
-        // return: The bots asked for and not added yet, and clears them.
-        auto TakeRequests() -> std::size_t;
+        // return: The teams of the bots asked for and not added yet (one entry per bot), and clears them.
+        auto TakeRequests() -> std::vector<std::optional<std::int8_t>>;
+
+        // Asks to move a bot to another team. The game thread applies it on its next tick.
+        auto RequestTeam(const TeamRequest& request) -> void;
+
+        // return: The team changes asked for and not applied yet, and clears them.
+        auto TakeTeamRequests() -> std::vector<TeamRequest>;
 
         auto AddBot(const Bot& bot) -> void;
         auto GetBotCount() const -> std::size_t;
@@ -42,7 +50,8 @@ export namespace Platform::Simulation::State
 
     private:
         mutable std::mutex m_Mutex{};
-        std::size_t m_Requests{ 0 };
+        std::vector<std::optional<std::int8_t>> m_Requests{};
+        std::vector<TeamRequest> m_TeamRequests{};
         std::vector<Bot> m_Bots{};
         std::vector<FakeMachine> m_FakeMachines{};
         SessionSnapshot m_Snapshot{};

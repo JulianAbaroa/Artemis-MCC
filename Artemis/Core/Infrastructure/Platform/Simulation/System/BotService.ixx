@@ -21,6 +21,8 @@ export namespace Platform::Simulation::System
 
         using SetMachinesFunction = Platform::Simulation::Type::SetMachinesFunction;
         using ApplyPlayerAddedFunction = Platform::Simulation::Type::ApplyPlayerAddedFunction;
+        using ApplyPlayerConfigurationFunction = Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
+        using TeamRequest = Platform::Simulation::Type::TeamRequest;
 
         using BotStore = Platform::Simulation::State::BotStore;
 
@@ -32,7 +34,7 @@ export namespace Platform::Simulation::System
         BotService(const BotService&) = delete;
         auto operator=(const BotService&) -> BotService& = delete;
 
-        // Publishes the session snapshot and adds the bots asked for since the last tick.
+        // Publishes the session snapshot, adds the bots asked for since the last tick and applies their team changes.
         // param threadContext: Thread context of the engine, or 0 if unknown (then it does nothing).
         // note: Game thread only, before the player actions of the tick are applied.
         auto Update(std::uintptr_t threadContext) -> void;
@@ -57,14 +59,19 @@ export namespace Platform::Simulation::System
         // Engine functions. The SetMachines call goes through its hook, which keeps the fake machines.
         SetMachinesFunction m_SetMachines{ nullptr };
         ApplyPlayerAddedFunction m_ApplyPlayerAdded{ nullptr };
+        ApplyPlayerConfigurationFunction m_ApplyPlayerConfiguration{ nullptr };
         bool m_IsResolved{ false };
 
         // Reads the machines, the players and the game options of the engine into the store.
         auto PublishSnapshot(std::uintptr_t threadContext) -> void;
 
         // Creates the machine of the next bot if needed, then the bot.
+        // param team: Team in team games, or nullopt for the team of the local player.
         // return: False if the engine refused it. The cause is logged.
-        auto AddBot(std::uintptr_t threadContext) -> bool;
+        auto AddBot(std::uintptr_t threadContext, std::optional<std::int8_t> team) -> bool;
+
+        // Moves a player to another team through its configuration, as a team change in the game does (the unit dies and respawns).
+        auto ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> void;
 
         // Makes sure the fake machine exists in the engine.
         // return: False if the slot belongs to a real machine or the engine did not take it.

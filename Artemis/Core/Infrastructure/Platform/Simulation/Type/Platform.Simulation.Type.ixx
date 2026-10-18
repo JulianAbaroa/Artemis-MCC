@@ -47,6 +47,10 @@ export namespace Platform::Simulation::Type
     inline constexpr std::uintptr_t k_PlayerUnit{ 0x28 };
     inline constexpr std::uintptr_t k_PlayerGamerTag{ 0xB0 };
 
+    // Team of the player datum (int8) and its copy of the configuration (k_PlayerConfigurationSize bytes, starts with the gamertag).
+    inline constexpr std::uintptr_t k_PlayerTeam{ 0xAD };
+    inline constexpr std::uintptr_t k_PlayerConfiguration{ 0xB0 };
+
     // Object header (0x18 bytes per object in the objects data array): pointer to the object data at +0x10.
     inline constexpr std::size_t k_ObjectHeaderSize{ 0x18 };
     inline constexpr std::uintptr_t k_ObjectHeaderData{ 0x10 };
@@ -73,6 +77,12 @@ export namespace Platform::Simulation::Type
 
     // Bytes of a player configuration (name, team, appearance).
     inline constexpr std::size_t k_PlayerConfigurationSize{ 0x80 };
+
+    // Team inside a player configuration (int8). Team games clamp it to 0..7, other games use the player index.
+    inline constexpr std::uintptr_t k_ConfigurationTeam{ 0x78 };
+
+    // Teams of a team game (0 red, 1 blue, 2 green, 3 orange, 4 purple, 5 gold, 6 brown, 7 pink).
+    inline constexpr std::size_t k_MaxTeams{ 8 };
 
     // Player update of the simulation (simulation_player_update).
     inline constexpr std::size_t k_PlayerUpdateSize{ 0xB8 };
@@ -106,6 +116,7 @@ export namespace Platform::Simulation::Type
         std::int16_t MachineIndex{ -1 };
         std::int32_t UserIndex{ -1 };
         std::int32_t Controller{ -1 };
+        std::int8_t Team{ -1 };
         std::uint32_t UnitHandle{ 0xFFFFFFFF };
         std::uint32_t UnitFlags{ 0 };
         std::array<wchar_t, k_GamerTagLength> GamerTag{};
@@ -134,6 +145,13 @@ export namespace Platform::Simulation::Type
         std::uint64_t Identifier{ 0 };
     };
 
+    // Team change asked for a bot, applied on the next tick.
+    struct TeamRequest
+    {
+        std::size_t PlayerIndex{ 0 };
+        std::int8_t Team{ 0 };
+    };
+
     // A machine that only exists for the bots.
     struct FakeMachine
     {
@@ -146,4 +164,7 @@ export namespace Platform::Simulation::Type
 
     // Signature of simulation_player_update_apply_added: creates the player of an "added" update.
     using ApplyPlayerAddedFunction = auto(__fastcall*)(const void* update) -> bool;
+
+    // Signature of player_set_configuration: applies a configuration to the player (handle with salt).
+    using ApplyPlayerConfigurationFunction = auto(__fastcall*)(std::uint32_t player, const void* configuration) -> void;
 }

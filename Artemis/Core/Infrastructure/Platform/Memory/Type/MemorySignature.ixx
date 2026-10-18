@@ -100,6 +100,14 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 48 89 58 10 48 89 70 18 48 89 78 20 55 41 54 41 55 41 56 41 57 48 8D 68 A1 48 81 EC 00 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 27 4C 63 39 33 DB 65 48 8B 04 25 58 00 00 00"
     };
 
+    // player_set_configuration(player, configuration): applies a "configuration" player update (name, appearance, team; a team change
+    // kills the unit and starts the respawn timer) (A9 sec. 13.11).
+    inline constexpr Signature ApplyPlayerConfiguration
+    {
+        "ApplyPlayerConfiguration",
+        "48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 30 FF FF FF 48 81 EC D0 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 C0 00 00 00 65 48 8B 04 25 58 00 00 00 48 8B DA 44 8B E1 8B 0D ?? ?? ?? ??"
+    };
+
     // Functions: Input Injection
     inline constexpr Signature GetButtonState
     {

@@ -61,4 +61,14 @@ namespace UI::Simulation::State
     {
         m_OptionsPlayer = playerIndex;
     }
+
+    auto SimulationUIStore::GetNewBotTeam() const -> std::optional<std::int8_t>
+    {
+        return m_NewBotTeam;
+    }
+
+    auto SimulationUIStore::SetNewBotTeam(std::optional<std::int8_t> team) -> void
+    {
+        m_NewBotTeam = team;
+    }
 }
