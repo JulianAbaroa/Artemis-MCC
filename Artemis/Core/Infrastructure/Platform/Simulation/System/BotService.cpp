@@ -25,7 +25,9 @@ namespace
     using Platform::Simulation::Type::k_DataArrayElementSize;
     using Platform::Simulation::Type::k_DataArrayData;
     using Platform::Simulation::Type::k_PlayerSalt;
+    using Platform::Simulation::Type::k_PlayerFlags;
     using Platform::Simulation::Type::k_PlayerIdentifier;
+    using Platform::Simulation::Type::k_PlayerMachineIdentifier;
     using Platform::Simulation::Type::k_PlayerMachineIndex;
     using Platform::Simulation::Type::k_PlayerUserIndex;
     using Platform::Simulation::Type::k_PlayerController;
@@ -173,6 +175,7 @@ namespace Platform::Simulation::System
                 SessionPlayer& player{ snapshot.Players[index] };
                 player.IsValid = true;
                 player.Handle = (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(index);
+                player.Flags = Read<std::uint32_t>(datum + k_PlayerFlags);
                 player.Identifier = Read<std::uint64_t>(datum + k_PlayerIdentifier);
                 player.MachineIndex = Read<std::int16_t>(datum + k_PlayerMachineIndex);
                 player.UserIndex = Read<std::int32_t>(datum + k_PlayerUserIndex);
@@ -286,6 +289,14 @@ namespace Platform::Simulation::System
                 *freeIndex, machineIndex, slot);
             return false;
         }
+
+        // EXPERIMENT (A9 sec. 13.8): the engine only activates a remote player when the simulation world has a view of its machine,
+        // and a fake machine has none, so the bot stayed inactive (never spawned). The player keeps the index of its fake machine (+0x1A,
+        // used for the local mapping and players_set_machines) but takes the identifier of the local machine, which the activation
+        // check treats as active. The player was already created as remote, so the simulation world keeps it remote.
+        const std::uintptr_t botDatum{ GetPlayerDatum(players, *freeIndex) };
+        std::memcpy(reinterpret_cast<void*>(botDatum + k_PlayerMachineIdentifier), reinterpret_cast<const void*>(globals
+            + k_MachineIdentifiers + (static_cast<std::size_t>(localMachine) * sizeof(MachineIdentifier))), sizeof(MachineIdentifier));
 
         m_BotStore.AddBot(Bot{ .Number = number, .PlayerIndex = *freeIndex, .MachineIndex = machineIndex, .Slot = slot,
             .Identifier = identifier });

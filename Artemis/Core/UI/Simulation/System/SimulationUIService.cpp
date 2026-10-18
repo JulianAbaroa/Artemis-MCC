@@ -554,11 +554,12 @@ namespace UI::Simulation::System
             ImGui::EndTable();
         }
 
-        if (ImGui::BeginTable("SessionPlayers", 7, flags))
+        if (ImGui::BeginTable("SessionPlayers", 8, flags))
         {
             ImGui::TableSetupColumn("Index", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Handle");
             ImGui::TableSetupColumn("Name");
+            ImGui::TableSetupColumn("Flags");
             ImGui::TableSetupColumn("Identifier");
             ImGui::TableSetupColumn("Machine");
             ImGui::TableSetupColumn("User");
@@ -578,6 +579,8 @@ namespace UI::Simulation::System
                 ImGui::TableNextColumn();
                 const auto nameLength{ static_cast<std::size_t>(std::ranges::find(player.GamerTag, L'\0') - player.GamerTag.begin()) };
                 ImGui::TextUnformatted(ToNarrow(std::wstring_view{ player.GamerTag.data(), nameLength }).c_str());
+                ImGui::TableNextColumn();
+                ImGui::Text("%08X", player.Flags);
                 ImGui::TableNextColumn();
                 ImGui::Text("%016llX", static_cast<unsigned long long>(player.Identifier));
                 ImGui::TableNextColumn();

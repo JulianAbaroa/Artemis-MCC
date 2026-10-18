@@ -31,7 +31,15 @@ export namespace Platform::Simulation::Type
     // Player datum: salt (uint16, 0 = free slot), identifier (uint64), machine index (int16), user index (int32), controller (int32)
     // and gamertag (16 wchar_t).
     inline constexpr std::uintptr_t k_PlayerSalt{ 0x00 };
+
+    // Player flags (uint32): bit 0 active in game (set by the activation events of the simulation queue), bit 3 set on creation in
+    // network games, bit 15 joined in progress.
+    inline constexpr std::uintptr_t k_PlayerFlags{ 0x04 };
     inline constexpr std::uintptr_t k_PlayerIdentifier{ 0x08 };
+
+    // Machine identifier of the player datum (6 bytes). The engine keeps it next to the machine index, and players_update_activation
+    // (0x46e6c) reads it to find the simulation view of the machine (A9 sec. 13.8).
+    inline constexpr std::uintptr_t k_PlayerMachineIdentifier{ 0x14 };
     inline constexpr std::uintptr_t k_PlayerMachineIndex{ 0x1A };
     inline constexpr std::uintptr_t k_PlayerUserIndex{ 0x1C };
     inline constexpr std::uintptr_t k_PlayerController{ 0x20 };
@@ -80,6 +88,7 @@ export namespace Platform::Simulation::Type
     {
         bool IsValid{ false };
         std::uint32_t Handle{ 0 };
+        std::uint32_t Flags{ 0 };
         std::uint64_t Identifier{ 0 };
         std::int16_t MachineIndex{ -1 };
         std::int32_t UserIndex{ -1 };
