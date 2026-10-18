@@ -39,11 +39,23 @@ namespace
     constexpr std::uintptr_t k_ActionGrenadeOffset{ 0x48 };
     constexpr std::uintptr_t k_ActionZoomOffset{ 0x4A };
 
+    // Marks an action as aimed at the unit in that slot (+0x00 = 1, +0x04 = slot), so the engine moves the unit with it.
+    constexpr std::uintptr_t k_ActionHasUnitOffset{ 0x00 };
+
     // Writes an action that does nothing and passes the engine validation.
-    auto WriteNeutralAction(std::uint8_t* action) -> void
+    // param unitSlot: Action slot of the unit of the player (unit +0x288), or nullopt without a unit.
+    auto WriteNeutralAction(std::uint8_t* action, std::optional<std::uint8_t> unitSlot) -> void
     {
         std::memset(action, 0, k_PlayerActionSize);
         action[k_ActionUnitSlotOffset] = 0xFF;
+
+        if (unitSlot)
+        {
+            constexpr std::uint32_t hasUnit{ 1 };
+            std::memcpy(action + k_ActionHasUnitOffset, &hasUnit, sizeof(hasUnit));
+            action[k_ActionUnitSlotOffset] = *unitSlot;
+        }
+
         action[k_ActionWeaponOffset] = 0xFF;
         action[k_ActionSecondWeaponOffset] = 0xFF;
         std::memset(action + k_ActionGrenadeOffset, 0xFF, sizeof(std::uint16_t));
@@ -89,7 +101,10 @@ namespace Platform::Input::Hook
             std::uint8_t* action{ update + k_UpdateActionsOffset + (player * k_PlayerActionSize) };
 
             // note: The engine only builds actions for local players. A bot has none, and a zeroed action fails the validation.
-            if ((mask & (1u << player)) == 0) WriteNeutralAction(action);
+            if ((mask & (1u << player)) == 0)
+            {
+                WriteNeutralAction(action, m_BotService.GetUnitActionSlot(threadContext, player));
+            }
 
             const std::array<float, 2> facing{ actionOverride->Yaw, actionOverride->Pitch };
             const std::array<float, 2> throttle{ actionOverride->ThrottleForward, actionOverride->ThrottleLeft };

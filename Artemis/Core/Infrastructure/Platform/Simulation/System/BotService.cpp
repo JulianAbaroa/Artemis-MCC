@@ -18,6 +18,7 @@ namespace
     using Platform::Simulation::Type::k_MaxMachines;
     using Platform::Simulation::Type::k_MaxPlayers;
     using Platform::Simulation::Type::k_MaxPlayersPerMachine;
+    using Platform::Simulation::Type::k_ObjectsSlot;
     using Platform::Simulation::Type::k_PlayersSlot;
     using Platform::Simulation::Type::k_PlayersGlobalsSlot;
     using Platform::Simulation::Type::k_GameOptionsSlot;
@@ -31,6 +32,11 @@ namespace
     using Platform::Simulation::Type::k_PlayerMachineIndex;
     using Platform::Simulation::Type::k_PlayerUserIndex;
     using Platform::Simulation::Type::k_PlayerController;
+    using Platform::Simulation::Type::k_PlayerUnit;
+    using Platform::Simulation::Type::k_ObjectHeaderSize;
+    using Platform::Simulation::Type::k_ObjectHeaderData;
+    using Platform::Simulation::Type::k_UnitFlags;
+    using Platform::Simulation::Type::k_UnitActionSlot;
     using Platform::Simulation::Type::k_PlayerGamerTag;
     using Platform::Simulation::Type::k_GamerTagLength;
     using Platform::Simulation::Type::k_MachineMask;
@@ -80,6 +86,24 @@ namespace
         if (elementSize <= 0 || data == 0) return 0;
 
         return data + (index * static_cast<std::size_t>(elementSize));
+    }
+
+    // return: The address of the data of the object, or 0 if the handle is not a live object.
+    auto GetObjectData(std::uintptr_t threadContext, std::uint32_t handle) -> std::uintptr_t
+    {
+        if (handle == 0xFFFFFFFF) return 0;
+
+        const auto objects{ Read<std::uintptr_t>(threadContext + k_ObjectsSlot) };
+        if (objects == 0) return 0;
+
+        const std::size_t index{ handle & 0xFFFF };
+        const auto capacity{ Read<std::int32_t>(objects + k_DataArrayCapacity) };
+        if (capacity <= 0 || index >= static_cast<std::size_t>(capacity)) return 0;
+
+        const auto headers{ Read<std::uintptr_t>(objects + k_DataArrayData) };
+        if (headers == 0) return 0;
+
+        return Read<std::uintptr_t>(headers + (index * k_ObjectHeaderSize) + k_ObjectHeaderData);
     }
 
     // Replaces every copy of the gamertag inside a player configuration with the name of the bot.
@@ -180,6 +204,9 @@ namespace Platform::Simulation::System
                 player.MachineIndex = Read<std::int16_t>(datum + k_PlayerMachineIndex);
                 player.UserIndex = Read<std::int32_t>(datum + k_PlayerUserIndex);
                 player.Controller = Read<std::int32_t>(datum + k_PlayerController);
+                player.UnitHandle = Read<std::uint32_t>(datum + k_PlayerUnit);
+                const std::uintptr_t unit{ GetObjectData(threadContext, player.UnitHandle) };
+                if (unit != 0) player.UnitFlags = Read<std::uint32_t>(unit + k_UnitFlags);
                 std::memcpy(player.GamerTag.data(), reinterpret_cast<const void*>(datum + k_PlayerGamerTag), sizeof(player.GamerTag));
             }
         }
@@ -349,6 +376,22 @@ namespace Platform::Simulation::System
 
         m_LogsService.Message("[BotService] INFO: Fake machine {} added. Machine mask {:05X}.", machineIndex, mask);
         return true;
+    }
+
+    auto BotService::GetUnitActionSlot(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint8_t>
+    {
+        if (threadContext == 0) return std::nullopt;
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        if (players == 0) return std::nullopt;
+
+        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
+        if (datum == 0 || Read<std::uint16_t>(datum + k_PlayerSalt) == 0) return std::nullopt;
+
+        const std::uintptr_t unit{ GetObjectData(threadContext, Read<std::uint32_t>(datum + k_PlayerUnit)) };
+        if (unit == 0) return std::nullopt;
+
+        return Read<std::uint8_t>(unit + k_UnitActionSlot);
     }
 
     auto BotService::ResolveFunctions() -> bool

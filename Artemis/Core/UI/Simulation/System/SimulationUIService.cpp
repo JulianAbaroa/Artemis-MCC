@@ -648,13 +648,18 @@ namespace UI::Simulation::System
 
         const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
 
-        if (!ImGui::BeginTable("Bots", 6, flags)) return;
+        PlayerActions actions{};
+        m_PlayerActionStore.CopyLatest(actions);
+
+        if (!ImGui::BeginTable("Bots", 8, flags)) return;
 
         ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Player");
         ImGui::TableSetupColumn("Machine");
         ImGui::TableSetupColumn("User");
         ImGui::TableSetupColumn("In engine");
+        ImGui::TableSetupColumn("Unit (flags)");
+        ImGui::TableSetupColumn("Action this tick");
         ImGui::TableSetupColumn("Action");
         ImGui::TableHeadersRow();
 
@@ -677,7 +682,18 @@ namespace UI::Simulation::System
             else                                                       ImGui::TextDisabled("Gone");
 
             ImGui::TableNextColumn();
+            if (player.UnitHandle != k_NoHandle) ImGui::Text("%08X (%08X)", player.UnitHandle, player.UnitFlags);
+            else                                 ImGui::TextDisabled("-");
+
             ImGui::PushID(static_cast<int>(bot.PlayerIndex));
+
+            ImGui::TableNextColumn();
+            const bool hasAction{ (actions.Mask & (1u << bot.PlayerIndex)) != 0 };
+            ImGui::TextUnformatted(hasAction ? "yes" : "no");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Log")) this->LogBotAction(bot.Number, bot.PlayerIndex, actions);
+
+            ImGui::TableNextColumn();
 
             const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex) };
 
@@ -697,6 +713,13 @@ namespace UI::Simulation::System
         }
 
         ImGui::EndTable();
+    }
+
+    auto SimulationUIService::LogBotAction(std::size_t number, std::size_t playerIndex, const PlayerActions& actions) -> void
+    {
+        m_LogsService.Message("[SimulationUIService] INFO: Action of bot {} (player {}) at tick {}: in the mask {}, bytes {}.", number,
+            playerIndex, actions.Sequence, (actions.Mask & (1u << playerIndex)) != 0 ? "yes" : "no",
+            ToHex(actions.Actions[playerIndex].Data));
     }
 
     auto SimulationUIService::ApplyBotAction(std::size_t playerIndex, LocalPlayerAction mode) -> void

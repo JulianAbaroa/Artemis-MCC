@@ -28,6 +28,7 @@ export namespace UI::Simulation::System
 
         using InputState = Platform::Input::Type::InputState;
         using PlayerAction = Platform::Input::Type::PlayerAction;
+        using PlayerActions = Platform::Input::Type::PlayerActions;
         using ActionWatch = Platform::Input::Type::ActionWatch;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
@@ -105,6 +106,9 @@ export namespace UI::Simulation::System
 
         // Draws the add button and one row per bot with its action mode (A9 M5b).
         auto DrawBots() -> void;
+
+        // Writes the latest action of a bot to the log (bytes and whether it is in the mask).
+        auto LogBotAction(std::size_t number, std::size_t playerIndex, const PlayerActions& actions) -> void;
 
         // Writes the override of the action mode of a bot, by its player table index. Hold still and Test action start from the
         // facing of its latest action.

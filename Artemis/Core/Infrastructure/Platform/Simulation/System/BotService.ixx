@@ -37,6 +37,10 @@ export namespace Platform::Simulation::System
         // note: Game thread only, before the player actions of the tick are applied.
         auto Update(std::uintptr_t threadContext) -> void;
 
+        // return: The action slot of the unit of the player (unit +0x288), or nullopt if the player has no live unit.
+        // note: Game thread only. A bot needs it in its action so the engine moves its unit (A9 sec. 13.10).
+        auto GetUnitActionSlot(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint8_t>;
+
         // Finds the engine functions by signature.
         // return: False if one is not found. The cause is logged.
         // note: Call it before the SetMachines hook is installed: the hook overwrites the bytes the signature matches.

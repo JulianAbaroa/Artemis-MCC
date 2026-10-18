@@ -17,7 +17,8 @@ export namespace Platform::Simulation::Type
     // Bytes of a machine identifier.
     inline constexpr std::size_t k_MachineIdentifierSize{ 6 };
 
-    // Slots of the thread context: players data array, players globals and game options.
+    // Slots of the thread context: objects data array, players data array, players globals and game options.
+    inline constexpr std::uintptr_t k_ObjectsSlot{ 0x10 };
     inline constexpr std::uintptr_t k_PlayersSlot{ 0x18 };
     inline constexpr std::uintptr_t k_PlayersGlobalsSlot{ 0x118 };
     inline constexpr std::uintptr_t k_GameOptionsSlot{ 0x48 };
@@ -43,7 +44,19 @@ export namespace Platform::Simulation::Type
     inline constexpr std::uintptr_t k_PlayerMachineIndex{ 0x1A };
     inline constexpr std::uintptr_t k_PlayerUserIndex{ 0x1C };
     inline constexpr std::uintptr_t k_PlayerController{ 0x20 };
+    inline constexpr std::uintptr_t k_PlayerUnit{ 0x28 };
     inline constexpr std::uintptr_t k_PlayerGamerTag{ 0xB0 };
+
+    // Object header (0x18 bytes per object in the objects data array): pointer to the object data at +0x10.
+    inline constexpr std::size_t k_ObjectHeaderSize{ 0x18 };
+    inline constexpr std::uintptr_t k_ObjectHeaderData{ 0x10 };
+
+    // Unit flags (uint32). 0x47050 applies the action of a player only if bit 0 of its unit is set.
+    inline constexpr std::uintptr_t k_UnitFlags{ 0x1C4 };
+
+    // Action slot of a unit (uint8). 0x47050 moves the unit with the action (0x4d7d0, unit_control) only if the action has +0x00 = 1
+    // and +0x04 equal to this byte. The engine builds that for local players. A bot needs it written (A9 sec. 13.10).
+    inline constexpr std::uintptr_t k_UnitActionSlot{ 0x288 };
 
     // Characters of a gamertag, terminator included.
     inline constexpr std::size_t k_GamerTagLength{ 16 };
@@ -93,6 +106,8 @@ export namespace Platform::Simulation::Type
         std::int16_t MachineIndex{ -1 };
         std::int32_t UserIndex{ -1 };
         std::int32_t Controller{ -1 };
+        std::uint32_t UnitHandle{ 0xFFFFFFFF };
+        std::uint32_t UnitFlags{ 0 };
         std::array<wchar_t, k_GamerTagLength> GamerTag{};
     };
 
