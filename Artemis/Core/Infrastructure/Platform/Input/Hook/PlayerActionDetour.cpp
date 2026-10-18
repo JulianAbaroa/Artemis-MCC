@@ -29,6 +29,26 @@ namespace
 
     // Sanity limit of the thread local storage index. Anything above it is not a valid slot.
     constexpr std::uint32_t k_MaxTlsIndex{ 1000 };
+
+    // Fields of an action that the engine validation (0x46ac8) rejects when they are zero (A9 sec. 13.9). A player without an action
+    // from the engine this tick (a bot) gets them as "nothing": no unit slot (+0x00 = 0 with +0x04 = 0xFF), no weapon or grenade
+    // change (+0x46, +0x47 = 0xFF, the same value would be rejected), no grenade pick (+0x48 = 0xFFFF) and no zoom level (+0x4A = 0xFFFF).
+    constexpr std::uintptr_t k_ActionUnitSlotOffset{ 0x04 };
+    constexpr std::uintptr_t k_ActionWeaponOffset{ 0x46 };
+    constexpr std::uintptr_t k_ActionSecondWeaponOffset{ 0x47 };
+    constexpr std::uintptr_t k_ActionGrenadeOffset{ 0x48 };
+    constexpr std::uintptr_t k_ActionZoomOffset{ 0x4A };
+
+    // Writes an action that does nothing and passes the engine validation.
+    auto WriteNeutralAction(std::uint8_t* action) -> void
+    {
+        std::memset(action, 0, k_PlayerActionSize);
+        action[k_ActionUnitSlotOffset] = 0xFF;
+        action[k_ActionWeaponOffset] = 0xFF;
+        action[k_ActionSecondWeaponOffset] = 0xFF;
+        std::memset(action + k_ActionGrenadeOffset, 0xFF, sizeof(std::uint16_t));
+        std::memset(action + k_ActionZoomOffset, 0xFF, sizeof(std::uint16_t));
+    }
 }
 
 namespace Platform::Input::Hook
@@ -67,6 +87,9 @@ namespace Platform::Input::Hook
             if (!actionOverride) continue;
 
             std::uint8_t* action{ update + k_UpdateActionsOffset + (player * k_PlayerActionSize) };
+
+            // note: The engine only builds actions for local players. A bot has none, and a zeroed action fails the validation.
+            if ((mask & (1u << player)) == 0) WriteNeutralAction(action);
 
             const std::array<float, 2> facing{ actionOverride->Yaw, actionOverride->Pitch };
             const std::array<float, 2> throttle{ actionOverride->ThrottleForward, actionOverride->ThrottleLeft };
