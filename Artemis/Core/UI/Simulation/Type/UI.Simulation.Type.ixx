@@ -30,7 +30,7 @@ export namespace UI::Simulation::Type
         "Test gamepad",
     };
 
-    // Action the simulation tab writes for a local player every tick (A9 M4b, D109).
+    // Action the simulation tab writes for a local player or a bot every tick (A9 M4b and M5b, D109).
     enum class LocalPlayerAction : std::uint8_t
     {
         // The action the engine built from the input.

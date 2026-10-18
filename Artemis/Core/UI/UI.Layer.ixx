@@ -81,7 +81,7 @@ export namespace UI
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_LogsService, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
             m_CaptureUIService(service.m_LogsService, service.m_SettingsStore, platform.m_MemoryReaderService, resolved.m_DefinitionsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
             m_SimulationUIService(service.m_LogsService, service.m_TelemetryStore, platform.m_LifecycleStore, platform.m_LocalUserStore,
-                platform.m_VirtualInputStore, platform.m_PlayerActionStore, exportLayer.m_TickStore, m_SimulationUIStore),
+                platform.m_VirtualInputStore, platform.m_PlayerActionStore, platform.m_BotStore, exportLayer.m_TickStore, m_SimulationUIStore),
             m_TickTraceUIService(service.m_LogsService, service.m_SettingsStore, map.m_FileStore, datum.m_DatumStore, tables.m_ObjectStore,
                 m_TickTraceUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)

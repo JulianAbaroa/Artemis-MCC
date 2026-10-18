@@ -5,6 +5,7 @@ module;
 module UI.Simulation.System;
 
 import Platform.Host.Type;
+import Platform.Simulation.Type;
 import std;
 
 namespace
@@ -15,8 +16,14 @@ namespace
     using Platform::Input::Type::ActionOverride;
     using Export::Tick::Type::Player;
     using Export::Tick::Type::Players;
+    using Platform::Simulation::Type::SessionSnapshot;
+    using Platform::Simulation::Type::SessionPlayer;
+    using Platform::Simulation::Type::Bot;
+    using Platform::Simulation::Type::FakeMachine;
 
     using Platform::Host::Type::k_MaxLocalUsers;
+    using Platform::Simulation::Type::k_MaxMachines;
+    using Platform::Simulation::Type::k_MaxPlayers;
     using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Input::Type::k_PlayerActionSize;
     using Platform::Input::Type::k_ActionButtonsOffset;
@@ -105,6 +112,20 @@ namespace
 
         return out;
     }
+
+    // return: The bytes as uppercase hex, two characters each.
+    auto ToHex(std::span<const std::uint8_t> bytes) -> std::string
+    {
+        std::string out{};
+        out.reserve(bytes.size() * 2);
+
+        for (const std::uint8_t value : bytes)
+        {
+            out += std::format("{:02X}", value);
+        }
+
+        return out;
+    }
 }
 
 namespace UI::Simulation::System
@@ -124,6 +145,16 @@ namespace UI::Simulation::System
         ImGui::SeparatorText("Player actions");
 
         this->DrawPlayerActions();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Session");
+
+        this->DrawSession();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Bots");
+
+        this->DrawBots();
     }
 
     auto SimulationUIService::DrawGameSpeed() -> void
@@ -468,6 +499,227 @@ namespace UI::Simulation::System
         m_LogsService.Message("[SimulationUIService] INFO: Action of local player {} at tick {}: buttons seen {:016X},"
             " changed since the clear{}, bytes {}.", localPlayer + 1, sequence, watch.SeenButtons,
             changed.empty() ? std::string{ " none" } : changed, bytes);
+    }
+
+    auto SimulationUIService::DrawSession() -> void
+    {
+        ImGui::TextWrapped("Machines and players as the engine has them (A9 M5a). Up to 4 players per machine. Bots live on machines"
+            " Artemis adds from slot 16 down.");
+
+        SessionSnapshot snapshot{};
+        m_BotStore.CopySnapshot(snapshot);
+
+        if (snapshot.Sequence == 0)
+        {
+            ImGui::TextDisabled("No tick seen yet.");
+            return;
+        }
+
+        std::vector<FakeMachine> fakeMachines{};
+        m_BotStore.CopyFakeMachines(fakeMachines);
+
+        ImGui::Text("Tick %llu, machine mask %05X, local machine %d", static_cast<unsigned long long>(snapshot.Sequence),
+            snapshot.MachineMask, snapshot.LocalMachineIndex);
+
+        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
+
+        if (ImGui::BeginTable("Machines", 3, flags))
+        {
+            ImGui::TableSetupColumn("Machine", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Identifier");
+            ImGui::TableSetupColumn("Kind");
+            ImGui::TableHeadersRow();
+
+            for (std::size_t machine{ 0 }; machine < k_MaxMachines; ++machine)
+            {
+                if ((snapshot.MachineMask & (1u << machine)) == 0) continue;
+
+                const bool isFake{ std::ranges::any_of(fakeMachines, [machine](const FakeMachine& fake) {
+                    return fake.Index == machine;
+                }) };
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("%zu", machine);
+
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(ToHex(snapshot.Machines[machine].Bytes).c_str());
+
+                ImGui::TableNextColumn();
+                if (static_cast<std::int32_t>(machine) == snapshot.LocalMachineIndex) ImGui::TextUnformatted("Local");
+                else if (isFake)                                                       ImGui::TextUnformatted("Artemis (bots)");
+                else                                                                   ImGui::TextUnformatted("Remote");
+            }
+
+            ImGui::EndTable();
+        }
+
+        if (ImGui::BeginTable("SessionPlayers", 7, flags))
+        {
+            ImGui::TableSetupColumn("Index", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Handle");
+            ImGui::TableSetupColumn("Name");
+            ImGui::TableSetupColumn("Identifier");
+            ImGui::TableSetupColumn("Machine");
+            ImGui::TableSetupColumn("User");
+            ImGui::TableSetupColumn("Controller");
+            ImGui::TableHeadersRow();
+
+            for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
+            {
+                const SessionPlayer& player{ snapshot.Players[index] };
+                if (!player.IsValid) continue;
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("%zu", index);
+                ImGui::TableNextColumn();
+                ImGui::Text("%08X", player.Handle);
+                ImGui::TableNextColumn();
+                const auto nameLength{ static_cast<std::size_t>(std::ranges::find(player.GamerTag, L'\0') - player.GamerTag.begin()) };
+                ImGui::TextUnformatted(ToNarrow(std::wstring_view{ player.GamerTag.data(), nameLength }).c_str());
+                ImGui::TableNextColumn();
+                ImGui::Text("%016llX", static_cast<unsigned long long>(player.Identifier));
+                ImGui::TableNextColumn();
+                ImGui::Text("%d", player.MachineIndex);
+                ImGui::TableNextColumn();
+                ImGui::Text("%d", player.UserIndex);
+                ImGui::TableNextColumn();
+                ImGui::Text("%d", player.Controller);
+            }
+
+            ImGui::EndTable();
+        }
+
+        int optionsPlayer{ static_cast<int>(m_SimulationUIStore.GetOptionsPlayer()) };
+        ImGui::SetNextItemWidth(120.0f);
+        if (ImGui::SliderInt("Game options of player", &optionsPlayer, 0, static_cast<int>(k_MaxPlayers) - 1))
+        {
+            m_SimulationUIStore.SetOptionsPlayer(static_cast<std::size_t>(optionsPlayer));
+        }
+
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Log options")) this->LogOptions();
+
+        const auto& entry{ snapshot.Options[m_SimulationUIStore.GetOptionsPlayer()] };
+
+        for (std::size_t offset{ 0 }; offset < entry.size(); ++offset)
+        {
+            if (offset % k_BytesPerRow == 0) ImGui::TextDisabled("+%02zX", offset);
+
+            ImGui::SameLine();
+            ImGui::Text("%02X", entry[offset]);
+        }
+    }
+
+    auto SimulationUIService::LogOptions() -> void
+    {
+        SessionSnapshot snapshot{};
+        m_BotStore.CopySnapshot(snapshot);
+
+        for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
+        {
+            const auto& entry{ snapshot.Options[index] };
+            if (entry[0] == 0) continue;
+
+            m_LogsService.Message("[SimulationUIService] INFO: Game options of player {} at tick {}: {}.", index, snapshot.Sequence,
+                ToHex(entry));
+        }
+    }
+
+    auto SimulationUIService::DrawBots() -> void
+    {
+        ImGui::TextWrapped("Players on machines of their own, added in the match like a player that joins in progress (A9 M5b)."
+            " They have no view and no input: their action is the mode below. The film does not have them.");
+
+        if (ImGui::Button("Add bot")) m_BotStore.RequestBot();
+        ImGui::SetItemTooltip("Applied on the next tick of a match. The result is in the log.");
+
+        std::vector<Bot> bots{};
+        m_BotStore.CopyBots(bots);
+
+        if (bots.empty()) return;
+
+        SessionSnapshot snapshot{};
+        m_BotStore.CopySnapshot(snapshot);
+
+        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
+
+        if (!ImGui::BeginTable("Bots", 6, flags)) return;
+
+        ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Player");
+        ImGui::TableSetupColumn("Machine");
+        ImGui::TableSetupColumn("User");
+        ImGui::TableSetupColumn("In engine");
+        ImGui::TableSetupColumn("Action");
+        ImGui::TableHeadersRow();
+
+        for (const Bot& bot : bots)
+        {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("%zu", bot.Number);
+            ImGui::TableNextColumn();
+            ImGui::Text("%zu", bot.PlayerIndex);
+            ImGui::TableNextColumn();
+            ImGui::Text("%zu", bot.MachineIndex);
+            ImGui::TableNextColumn();
+            ImGui::Text("%zu", bot.Slot);
+
+            const SessionPlayer& player{ snapshot.Players[bot.PlayerIndex] };
+
+            ImGui::TableNextColumn();
+            if (player.IsValid && player.Identifier == bot.Identifier) ImGui::Text("%08X", player.Handle);
+            else                                                       ImGui::TextDisabled("Gone");
+
+            ImGui::TableNextColumn();
+            ImGui::PushID(static_cast<int>(bot.PlayerIndex));
+
+            const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex) };
+
+            for (std::size_t i{ 0 }; i < k_LocalPlayerActionCount; ++i)
+            {
+                if (i != 0) ImGui::SameLine();
+
+                const auto mode{ static_cast<LocalPlayerAction>(i) };
+                if (ImGui::RadioButton(k_LocalPlayerActionLabels[i], mode == current) && mode != current)
+                {
+                    m_SimulationUIStore.SetBotAction(bot.PlayerIndex, mode);
+                    this->ApplyBotAction(bot.PlayerIndex, mode);
+                }
+            }
+
+            ImGui::PopID();
+        }
+
+        ImGui::EndTable();
+    }
+
+    auto SimulationUIService::ApplyBotAction(std::size_t playerIndex, LocalPlayerAction mode) -> void
+    {
+        if (mode == LocalPlayerAction::Engine)
+        {
+            m_PlayerActionStore.SetOverride(playerIndex, std::nullopt);
+            return;
+        }
+
+        PlayerActions actions{};
+        m_PlayerActionStore.CopyLatest(actions);
+
+        const PlayerAction& action{ actions.Actions[playerIndex] };
+
+        ActionOverride actionOverride{};
+        actionOverride.Yaw = ReadAction<float>(action, k_ActionFacingOffset);
+        actionOverride.Pitch = ReadAction<float>(action, k_ActionFacingOffset + sizeof(float));
+
+        if (mode == LocalPlayerAction::TestAction)
+        {
+            actionOverride.ThrottleForward = k_TestThrottle;
+            actionOverride.YawPerTick = k_TestYawPerTick;
+        }
+
+        m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
     }
 
     auto SimulationUIService::BuildTestState(LocalPlayerInput input) -> InputState

@@ -41,4 +41,24 @@ namespace UI::Simulation::State
     {
         m_LocalPlayerActions[player] = action;
     }
+
+    auto SimulationUIStore::GetBotAction(std::size_t playerIndex) const -> LocalPlayerAction
+    {
+        return m_BotActions[playerIndex];
+    }
+
+    auto SimulationUIStore::SetBotAction(std::size_t playerIndex, LocalPlayerAction action) -> void
+    {
+        m_BotActions[playerIndex] = action;
+    }
+
+    auto SimulationUIStore::GetOptionsPlayer() const -> std::size_t
+    {
+        return m_OptionsPlayer;
+    }
+
+    auto SimulationUIStore::SetOptionsPlayer(std::size_t playerIndex) -> void
+    {
+        m_OptionsPlayer = playerIndex;
+    }
 }
