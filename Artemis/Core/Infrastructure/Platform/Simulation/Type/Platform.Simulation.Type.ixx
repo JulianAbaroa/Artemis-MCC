@@ -98,6 +98,13 @@ export namespace Platform::Simulation::Type
     // Type of a player update that adds a player.
     inline constexpr std::int32_t k_PlayerUpdateAdded{ 3 };
 
+    // Interaction of a player as the engine builds it (A9 M5d): records of the objects the player can use, best first. A record has
+    // the kind (uint16) at +0x00 and the object handle (uint32) at k_InteractionRecordObject. An empty record is zeros with the handle
+    // at 0xFFFFFFFF.
+    inline constexpr std::size_t k_InteractionRecordCount{ 3 };
+    inline constexpr std::size_t k_InteractionRecordSize{ 0x0C };
+    inline constexpr std::uintptr_t k_InteractionRecordObject{ 0x08 };
+
     // Identifier of a machine, as the engine stores it.
     struct MachineIdentifier
     {
@@ -167,4 +174,7 @@ export namespace Platform::Simulation::Type
 
     // Signature of player_set_configuration: applies a configuration to the player (handle with salt).
     using ApplyPlayerConfigurationFunction = auto(__fastcall*)(std::uint32_t player, const void* configuration) -> void;
+
+    // Signature of the two steps that fill the interaction of a player (handle with salt) once it was cleared (0x4ef34, 0x4eb54).
+    using GatherInteractionsFunction = auto(__fastcall*)(std::uint32_t player, void* interaction) -> void;
 }

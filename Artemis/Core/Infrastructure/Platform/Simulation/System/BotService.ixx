@@ -22,6 +22,7 @@ export namespace Platform::Simulation::System
         using SetMachinesFunction = Platform::Simulation::Type::SetMachinesFunction;
         using ApplyPlayerAddedFunction = Platform::Simulation::Type::ApplyPlayerAddedFunction;
         using ApplyPlayerConfigurationFunction = Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
+        using GatherInteractionsFunction = Platform::Simulation::Type::GatherInteractionsFunction;
         using TeamRequest = Platform::Simulation::Type::TeamRequest;
 
         using BotStore = Platform::Simulation::State::BotStore;
@@ -43,8 +44,19 @@ export namespace Platform::Simulation::System
         // note: Game thread only. A bot needs it in its action so the engine moves its unit (A9 sec. 13.10).
         auto GetUnitActionSlot(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint8_t>;
 
-        // Finds the engine functions by signature.
-        // return: False if one is not found. The cause is logged.
+        // Writes the interaction of the player with the engine functions that build it for a local player (0x4f280), so every agent,
+        // local or bot, gets the interaction of the engine at every tick (A9 M5d, D118).
+        // param interaction: k_InteractionRecordCount records (the interaction of the action of the player).
+        // return: False if the functions were not found or the player is gone. The interaction is then left as it was.
+        // note: Game thread only. The interaction comes from the unit (its position and its weapon), not from a view. Without a unit
+        // it is empty, as the engine leaves it. The call 0x4f280 makes to tell MCC that the prompt changed (/enableSingleInteract) is
+        // skipped: it belongs to the HUD of the local user, not to this player.
+        auto WriteInteraction(std::uintptr_t threadContext, std::size_t playerIndex, std::span<std::uint8_t> interaction) const
+            -> bool;
+
+        // Finds the engine functions by signature: the ones that add bots and the ones that build the interaction, each set on its own.
+        // return: False if one is not found. The cause is logged. Without the first set no bot can be added, without the second the
+        // agents keep the interaction the engine built (none for a bot).
         // note: Call it before the SetMachines hook is installed: the hook overwrites the bytes the signature matches.
         auto ResolveFunctions() -> bool;
 
@@ -61,6 +73,10 @@ export namespace Platform::Simulation::System
         ApplyPlayerAddedFunction m_ApplyPlayerAdded{ nullptr };
         ApplyPlayerConfigurationFunction m_ApplyPlayerConfiguration{ nullptr };
         bool m_IsResolved{ false };
+
+        GatherInteractionsFunction m_GatherNearbyInteractions{ nullptr };
+        GatherInteractionsFunction m_GatherAimedInteractions{ nullptr };
+        bool m_IsInteractionResolved{ false };
 
         // Reads the machines, the players and the game options of the engine into the store.
         auto PublishSnapshot(std::uintptr_t threadContext) -> void;

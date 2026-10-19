@@ -159,8 +159,9 @@ export namespace Platform::Input::Type
     inline constexpr std::uint8_t k_UsePressed{ 0x10 };
     inline constexpr std::uint8_t k_UseHeld{ 0x30 };
 
-    // Interaction of the action: the object the engine picked for the player, kind first (A9 sec. 12.2).
-    // note: The engine fills it every frame from the view of a local player. A bot has none (A9 M5d).
+    // Interaction of the action: the objects the engine picked for the player, best first (A9 sec. 12.2, M5d).
+    // note: The engine fills it every frame for local players only, from their unit (0x4f280). The PlayerAction hook fills it every
+    // tick for every player with an override, with the same engine functions (D118).
     inline constexpr std::uintptr_t k_ActionInteractionOffset{ 0x54 };
     inline constexpr std::size_t k_ActionInteractionSize{ 0x24 };
 
@@ -186,7 +187,7 @@ export namespace Platform::Input::Type
     };
 
     // Player control globals: pointer inside the thread context of the engine, one block per local player (A9 sec. 11.2 and 12.1).
-    // note: The view of each split-screen player and the interaction the engine picks follow the facing of its block, not the action.
+    // note: The view of each split-screen player follows the facing of its block, not the action.
     inline constexpr std::uintptr_t k_ControlGlobalsSlot{ 0xD8 };
     inline constexpr std::uintptr_t k_ControlBlockStride{ 0x180 };
 
@@ -194,8 +195,8 @@ export namespace Platform::Input::Type
     inline constexpr std::uintptr_t k_ControlFacingOffset{ 0x94 };
 
     // Fields Artemis writes into the action of a player, every tick (A9 M4b, D109).
-    // note: The rest of the action (interaction, weapon, hold states) stays as the engine built it from the input of the frame,
-    // except the use lane (IsUseTest) and the interaction (InteractionSource) of the use tests.
+    // note: The interaction is rebuilt by the hook with the engine functions (D118). The rest of the action (weapon, hold states)
+    // stays as the engine built it from the input of the frame, except the use lane of the use test (IsUseTest).
     struct ActionOverride
     {
         std::uint64_t Buttons{ 0 };
@@ -213,12 +214,8 @@ export namespace Platform::Input::Type
         // Cycles the use lane (pressed, held, released) every tick. Test only (A9 M5d: can a bot pick up the flag).
         bool IsUseTest{ false };
 
-        // Player table index whose interaction of this tick is copied into this action. Test only (A9 M5d, hypothesis H2).
-        // note: Resolved once, when the test is picked. Nothing is copied while that player has no engine action.
-        std::optional<std::size_t> InteractionSource{};
-
-        // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view and its
-        // interaction follow the action. Empty for a player that is not local.
+        // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view follows the
+        // action. Empty for a player that is not local.
         std::optional<std::size_t> LocalIndex{};
     };
 

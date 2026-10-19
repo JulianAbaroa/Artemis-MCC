@@ -16,6 +16,7 @@ namespace
     using Platform::Simulation::Type::ApplyPlayerAddedFunction;
     using Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
     using Platform::Simulation::Type::TeamRequest;
+    using Platform::Simulation::Type::GatherInteractionsFunction;
 
     using Platform::Simulation::Type::k_MaxMachines;
     using Platform::Simulation::Type::k_MaxPlayers;
@@ -62,6 +63,9 @@ namespace
     using Platform::Simulation::Type::k_UpdateJoinedInProgress;
     using Platform::Simulation::Type::k_UpdateConfiguration;
     using Platform::Simulation::Type::k_PlayerUpdateAdded;
+    using Platform::Simulation::Type::k_InteractionRecordCount;
+    using Platform::Simulation::Type::k_InteractionRecordSize;
+    using Platform::Simulation::Type::k_InteractionRecordObject;
 
     // Bots one instance can hold: 4 per fake machine, on every machine slot except the first one (the local machine).
     constexpr std::size_t k_MaxBots{ (k_MaxMachines - 1) * k_MaxPlayersPerMachine };
@@ -92,6 +96,12 @@ namespace
         if (elementSize <= 0 || data == 0) return 0;
 
         return data + (index * static_cast<std::size_t>(elementSize));
+    }
+
+    // return: The handle of the player in that slot (salt in the high half, index in the low half).
+    auto MakePlayerHandle(std::uint16_t salt, std::size_t index) -> std::uint32_t
+    {
+        return (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(index);
     }
 
     // return: The address of the data of the object, or 0 if the handle is not a live object.
@@ -208,7 +218,7 @@ namespace Platform::Simulation::System
 
                 SessionPlayer& player{ snapshot.Players[index] };
                 player.IsValid = true;
-                player.Handle = (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(index);
+                player.Handle = MakePlayerHandle(salt, index);
                 player.Flags = Read<std::uint32_t>(datum + k_PlayerFlags);
                 player.Identifier = Read<std::uint64_t>(datum + k_PlayerIdentifier);
                 player.MachineIndex = Read<std::int16_t>(datum + k_PlayerMachineIndex);
@@ -410,7 +420,7 @@ namespace Platform::Simulation::System
         std::memcpy(configuration.data(), reinterpret_cast<const void*>(datum + k_PlayerConfiguration), configuration.size());
         configuration[k_ConfigurationTeam] = static_cast<std::uint8_t>(request.Team);
 
-        const std::uint32_t handle{ (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(request.PlayerIndex) };
+        const std::uint32_t handle{ MakePlayerHandle(salt, request.PlayerIndex) };
         m_ApplyPlayerConfiguration(handle, configuration.data());
 
         m_LogsService.Message("[BotService] INFO: Player {} moved to team {} (now {}).", request.PlayerIndex, request.Team,
@@ -433,23 +443,66 @@ namespace Platform::Simulation::System
         return Read<std::uint8_t>(unit + k_UnitActionSlot);
     }
 
-    auto BotService::ResolveFunctions() -> bool
+    auto BotService::WriteInteraction(std::uintptr_t threadContext, std::size_t playerIndex, std::span<std::uint8_t> interaction) const
+        -> bool
     {
-        if (m_IsResolved) return true;
+        if (!m_IsInteractionResolved || threadContext == 0) return false;
+        if (interaction.size() != k_InteractionRecordCount * k_InteractionRecordSize) return false;
 
-        m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::SetMachines));
-        m_ApplyPlayerAdded = reinterpret_cast<ApplyPlayerAddedFunction>(m_AOBService.FindPattern(Signature::ApplyPlayerAdded));
-        m_ApplyPlayerConfiguration = reinterpret_cast<ApplyPlayerConfigurationFunction>(
-            m_AOBService.FindPattern(Signature::ApplyPlayerConfiguration));
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        if (players == 0) return false;
 
-        if (!m_SetMachines || !m_ApplyPlayerAdded || !m_ApplyPlayerConfiguration)
+        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
+        const auto salt{ datum != 0 ? Read<std::uint16_t>(datum + k_PlayerSalt) : std::uint16_t{ 0 } };
+        if (salt == 0) return false;
+
+        // note: Same steps as 0x4f280: clear the records, then fill them only if the player has a unit (the steps read it unchecked).
+        std::ranges::fill(interaction, std::uint8_t{ 0 });
+        for (std::size_t record{ 0 }; record < k_InteractionRecordCount; ++record)
         {
-            m_LogsService.Message("[BotService] ERROR: Failed to find {}.", !m_SetMachines ? "SetMachines"
-                : (!m_ApplyPlayerAdded ? "ApplyPlayerAdded" : "ApplyPlayerConfiguration"));
-            return false;
+            std::memset(interaction.data() + (record * k_InteractionRecordSize) + k_InteractionRecordObject, 0xFF, sizeof(std::uint32_t));
         }
 
-        m_IsResolved = true;
+        if (Read<std::uint32_t>(datum + k_PlayerUnit) == 0xFFFFFFFF) return true;
+
+        const std::uint32_t handle{ MakePlayerHandle(salt, playerIndex) };
+        m_GatherNearbyInteractions(handle, interaction.data());
+        m_GatherAimedInteractions(handle, interaction.data());
         return true;
+    }
+
+    auto BotService::ResolveFunctions() -> bool
+    {
+        if (!m_IsResolved)
+        {
+            m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::SetMachines));
+            m_ApplyPlayerAdded = reinterpret_cast<ApplyPlayerAddedFunction>(m_AOBService.FindPattern(Signature::ApplyPlayerAdded));
+            m_ApplyPlayerConfiguration = reinterpret_cast<ApplyPlayerConfigurationFunction>(
+                m_AOBService.FindPattern(Signature::ApplyPlayerConfiguration));
+
+            m_IsResolved = m_SetMachines && m_ApplyPlayerAdded && m_ApplyPlayerConfiguration;
+            if (!m_IsResolved)
+            {
+                m_LogsService.Message("[BotService] ERROR: Failed to find {}. No bot can be added.", !m_SetMachines ? "SetMachines"
+                    : (!m_ApplyPlayerAdded ? "ApplyPlayerAdded" : "ApplyPlayerConfiguration"));
+            }
+        }
+
+        if (!m_IsInteractionResolved)
+        {
+            m_GatherNearbyInteractions = reinterpret_cast<GatherInteractionsFunction>(
+                m_AOBService.FindPattern(Signature::GatherNearbyInteractions));
+            m_GatherAimedInteractions = reinterpret_cast<GatherInteractionsFunction>(
+                m_AOBService.FindPattern(Signature::GatherAimedInteractions));
+
+            m_IsInteractionResolved = m_GatherNearbyInteractions && m_GatherAimedInteractions;
+            if (!m_IsInteractionResolved)
+            {
+                m_LogsService.Message("[BotService] ERROR: Failed to find {}. Bots will have no interaction.",
+                    !m_GatherNearbyInteractions ? "GatherNearbyInteractions" : "GatherAimedInteractions");
+            }
+        }
+
+        return m_IsResolved && m_IsInteractionResolved;
     }
 }

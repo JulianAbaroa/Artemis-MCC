@@ -108,6 +108,21 @@ export namespace Platform::Memory::Type::Signature
         "48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 30 FF FF FF 48 81 EC D0 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 C0 00 00 00 65 48 8B 04 25 58 00 00 00 48 8B DA 44 8B E1 8B 0D ?? ?? ?? ??"
     };
 
+    // First step of the interaction of a player (0x4ef34): the objects next to its unit (weapons, vehicles, equipment, objectives).
+    // void(player, interaction). The engine runs both steps every frame for each local player only, through 0x4f280 (A9 M5d).
+    inline constexpr Signature GatherNearbyInteractions
+    {
+        "GatherNearbyInteractions",
+        "48 8B C4 48 89 58 18 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 38 FC FF FF 48 81 EC 90 04 00 00 0F 29 70 B8 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 70 03 00 00 44 8B 05 ?? ?? ?? ?? 4C 8B FA 65 48 8B 04 25 58 00 00 00 8B F9"
+    };
+
+    // Second step of the interaction of a player (0x4eb54): objects inside a cone of its weapon. Same arguments (A9 M5d).
+    inline constexpr Signature GatherAimedInteractions
+    {
+        "GatherAimedInteractions",
+        "48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 B8 C0 22 00 00 E8 ?? ?? ?? ?? 48 2B E0 0F 29 B4 24 B0 22 00 00 0F 29 BC 24 A0 22 00 00 44 0F 29 84 24 90 22 00 00 44 0F 29 8C 24 80 22 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 70 22 00 00 44 8B 05 ?? ?? ?? ?? 45 33 E4 65 48 8B 04 25 58 00 00 00 4C 8B FA"
+    };
+
     // Functions: Input Injection
     inline constexpr Signature GetButtonState
     {

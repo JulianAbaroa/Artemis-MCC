@@ -7,6 +7,7 @@ import :PlayerAction;
 
 import Platform.Hook.System;
 import Platform.Memory.Type;
+import Platform.Simulation.Type;
 import std;
 
 namespace
@@ -31,6 +32,13 @@ namespace
     using Platform::Input::Type::k_ControlGlobalsSlot;
     using Platform::Input::Type::k_ControlBlockStride;
     using Platform::Input::Type::k_ControlFacingOffset;
+
+    using Platform::Simulation::Type::k_InteractionRecordCount;
+    using Platform::Simulation::Type::k_InteractionRecordSize;
+    using Platform::Simulation::Type::k_InteractionRecordObject;
+
+    static_assert(k_ActionInteractionSize == k_InteractionRecordCount * k_InteractionRecordSize,
+        "The interaction of the action must hold the records the engine builds.");
 
     // Sanity limit of the thread local storage index. Anything above it is not a valid slot.
     constexpr std::uint32_t k_MaxTlsIndex{ 1000 };
@@ -76,6 +84,13 @@ namespace
             action[k_ActionUnitSlotOffset] = *unitSlot;
         }
 
+        // note: Empty interaction records, as the engine clears them: no object (handle 0xFFFFFFFF).
+        for (std::size_t record{ 0 }; record < k_InteractionRecordCount; ++record)
+        {
+            std::memset(action + k_ActionInteractionOffset + (record * k_InteractionRecordSize) + k_InteractionRecordObject, 0xFF,
+                sizeof(std::uint32_t));
+        }
+
         action[k_ActionWeaponOffset] = 0xFF;
         action[k_ActionSecondWeaponOffset] = 0xFF;
         std::memset(action + k_ActionGrenadeOffset, 0xFF, sizeof(std::uint16_t));
@@ -110,9 +125,6 @@ namespace Platform::Input::Hook
         std::uint32_t mask{ 0 };
         std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
 
-        // note: Only the actions the engine built this tick have an interaction worth copying.
-        const std::uint32_t engineMask{ mask };
-
         const std::uintptr_t controlGlobals{ threadContext != 0
             ? *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot) : 0 };
 
@@ -141,12 +153,10 @@ namespace Platform::Input::Hook
                 action[k_ActionUseLaneOffset] = GetUseTestLane(m_Sequence);
             }
 
-            const auto& source{ actionOverride->InteractionSource };
-            if (source && *source < k_MaxActionPlayers && *source != player && (engineMask & (1u << *source)) != 0)
-            {
-                const std::uint8_t* sourceAction{ update + k_UpdateActionsOffset + (*source * k_PlayerActionSize) };
-                std::memcpy(action + k_ActionInteractionOffset, sourceAction + k_ActionInteractionOffset, k_ActionInteractionSize);
-            }
+            // note: The engine builds the interaction once per frame and only for local players. Every agent gets it here from the
+            // same engine functions, once per tick, so locals and bots are treated alike (A9 M5d, D118).
+            m_BotService.WriteInteraction(threadContext, player,
+                std::span<std::uint8_t>{ action + k_ActionInteractionOffset, k_ActionInteractionSize });
 
             mask |= 1u << player;
 
