@@ -304,6 +304,8 @@ export namespace Platform::Input::Type
     {
         // Interaction records (+0x54), byte for byte.
         Interaction = 0,
+        // Interaction mismatches where the engine matches what Artemis built one tick before (the local pipeline is one tick late).
+        InteractionLate,
         // Held bit of every hold lane that is down (+0x40), within one tick.
         HeldLane,
         // Weapon slot asked for (+0x46) when it differs from the one in the hands.
@@ -322,6 +324,7 @@ export namespace Platform::Input::Type
     inline constexpr std::array<const char*, k_ShadowFieldCount> k_ShadowFieldNames
     {
         "Interaction",
+        "Interaction (1 tick late)",
         "Held lane",
         "Weapon",
         "Grenade",
@@ -337,6 +340,10 @@ export namespace Platform::Input::Type
         // Ticks each hold lane has been down, and whether it was seen up since the check started (else its count is unknown).
         std::array<std::uint32_t, k_HoldLanes.size()> LaneTicks{};
         std::array<bool, k_HoldLanes.size()> IsLaneSeenUp{};
+
+        // Interaction Artemis built on the previous tick, and whether there is one.
+        std::array<std::uint8_t, k_ActionInteractionSize> PreviousInteraction{};
+        bool HasPreviousInteraction{ false };
 
         // Weapon slot and grenade type the engine asked for on the previous tick (the empty action values at first).
         std::uint8_t WeaponSlot{ 0xFF };

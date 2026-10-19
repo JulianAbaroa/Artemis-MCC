@@ -256,7 +256,14 @@ namespace Platform::Input::Hook
                 std::memcpy(&artemisObject, interaction.data() + k_InteractionRecordObject, sizeof(artemisObject));
 
                 const bool isMatch{ std::memcmp(action + k_ActionInteractionOffset, interaction.data(), interaction.size()) == 0 };
-                this->ReportShadow(ShadowField::Interaction, player, isMatch, engineObject, artemisObject);
+                const bool isLate{ !isMatch && shadow.HasPreviousInteraction && std::memcmp(action + k_ActionInteractionOffset,
+                    shadow.PreviousInteraction.data(), shadow.PreviousInteraction.size()) == 0 };
+
+                if (isLate) this->ReportShadow(ShadowField::InteractionLate, player, false, engineObject, artemisObject);
+                else        this->ReportShadow(ShadowField::Interaction, player, isMatch, engineObject, artemisObject);
+
+                std::memcpy(shadow.PreviousInteraction.data(), interaction.data(), interaction.size());
+                shadow.HasPreviousInteraction = true;
             }
 
             std::uint32_t lanes{ 0 };
