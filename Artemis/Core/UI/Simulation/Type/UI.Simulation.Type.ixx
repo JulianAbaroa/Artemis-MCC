@@ -41,6 +41,8 @@ export namespace UI::Simulation::Type
         TestAction,
         // Hold still and keep pressing use. The interaction comes from the engine functions, for bots too (A9 M5d, D118).
         TestUse,
+        // Hold still and hold use without releasing it (D121: the held bit appears at the hold threshold of the engine).
+        HoldUse,
 
         Count
     };
@@ -54,5 +56,6 @@ export namespace UI::Simulation::Type
         "Hold still",
         "Test action",
         "Test use",
+        "Hold use",
     };
 }

@@ -10,6 +10,7 @@ import std;
 namespace
 {
     using Platform::Input::Type::k_MaxActionPlayers;
+    using Platform::Input::Type::k_HoldLanes;
 }
 
 export namespace Platform::Input::Hook
@@ -28,6 +29,7 @@ export namespace Platform::Input::Hook
         using ClearPlayerActionFunction = Platform::Input::Type::ClearPlayerActionFunction;
         using ClientRequests = Platform::Input::Type::ClientRequests;
         using WeaponRequest = Platform::Input::Type::WeaponRequest;
+        using ResolveTagAddressFunction = Platform::Input::Type::ResolveTagAddressFunction;
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
@@ -67,6 +69,14 @@ export namespace Platform::Input::Hook
         // Weapon slot each agent asked for and does not hold yet (D120). Game thread only.
         std::array<std::optional<WeaponRequest>, k_MaxActionPlayers> m_WeaponRequests{};
 
+        // Ticks each hold lane of each agent has been down (D121). Game thread only.
+        std::array<std::array<std::uint32_t, k_HoldLanes.size()>, k_MaxActionPlayers> m_LaneTicks{};
+
+        // Variable of the engine that points to the globals table with the player control tag, and the engine function that resolves
+        // a tag address. Null if not found (then no lane is ever held).
+        const std::uintptr_t* m_PlayerControlTable{ nullptr };
+        ResolveTagAddressFunction m_ResolveTagAddress{ nullptr };
+
         // Engine function that clears an action, or null if not found (then no override is applied).
         ClearPlayerActionFunction m_ClearPlayerAction{ nullptr };
 
@@ -79,6 +89,18 @@ export namespace Platform::Input::Hook
         // note: The action starts from the empty action of the engine, then the unit slot, the override and the interaction (D119).
         // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
+
+        // Writes the hold lanes of the agent into its action: the down bits it holds, plus the held bit of every lane down for the
+        // hold threshold of the engine (D121).
+        // param holdTicks: Hold threshold in ticks, or nullopt if unknown (then no held bit is set).
+        // note: Game thread only. Counted in ticks of game time, so the speed of the engine does not change it.
+        auto WriteLanes(std::uint8_t* action, std::size_t player, std::uint32_t lanes, std::optional<std::uint32_t> holdTicks)
+            -> void;
+
+        // return: The hold threshold of buttons in ticks, read from the player control tag of the engine globals, or nullopt if it
+        // cannot be read.
+        // note: Game thread only. Read every tick: the globals belong to the map.
+        auto GetHoldThresholdTicks() const -> std::optional<std::uint32_t>;
 
         // Writes the client requests of the agent (weapon, grenade, zoom) into its action, with the engine selectors (D120).
         // note: Without a request the action asks for nothing and keeps the zoom of the unit. For a local player with an override the

@@ -159,10 +159,46 @@ export namespace Platform::Input::Type
     // Throttle of the action (2 floats, -1 to 1): forward, then left.
     inline constexpr std::uintptr_t k_ActionThrottleOffset{ 0x1C };
 
-    // Hold lane of use, grab and enter (E) in the action (byte): pressed, then held past about half a second (A9 sec. 12.7).
-    inline constexpr std::uintptr_t k_ActionUseLaneOffset{ 0x42 };
-    inline constexpr std::uint8_t k_UsePressed{ 0x10 };
-    inline constexpr std::uint8_t k_UseHeld{ 0x30 };
+    // Hold lanes of the action (uint32): a "down" bit per button and a "held" bit once it was down for the hold threshold of the
+    // engine (A17 sec. 8, D121). The host takes the presses, holds and releases from them (0x4b534).
+    inline constexpr std::uintptr_t k_ActionLanesOffset{ 0x40 };
+
+    // A button with a hold lane: its down bit and its held bit in the lanes of the action (0x5df80).
+    struct HoldLane
+    {
+        std::uint8_t DownBit{ 0 };
+        std::uint8_t HeldBit{ 0 };
+    };
+
+    // Lanes the local client fills: use, grab and enter (E, event 3: byte +0x42 is 0x10 down and 0x30 held), events 0x10, 2 (switch
+    // weapon held), 5, 0x3E and 0x37.
+    inline constexpr std::array<HoldLane, 6> k_HoldLanes
+    {
+        HoldLane{ .DownBit = 20, .HeldBit = 21 },
+        HoldLane{ .DownBit = 4, .HeldBit = 5 },
+        HoldLane{ .DownBit = 8, .HeldBit = 9 },
+        HoldLane{ .DownBit = 12, .HeldBit = 13 },
+        HoldLane{ .DownBit = 16, .HeldBit = 17 },
+        HoldLane{ .DownBit = 27, .HeldBit = 29 },
+    };
+
+    // Down bit of use, grab and enter (E), the first hold lane.
+    inline constexpr std::uint32_t k_UseLane{ 1u << k_HoldLanes[0].DownBit };
+
+    // Player control tag of the engine globals (A17 sec. 8): the tag address is at the table + k_PlayerControlTagOffset, and the
+    // hold threshold (float, seconds) at k_HoldThresholdOffset of the tag data.
+    inline constexpr std::uintptr_t k_PlayerControlTagOffset{ 0x418 };
+    inline constexpr std::uintptr_t k_HoldThresholdOffset{ 0x48 };
+
+    // Inside the PlayerControlTagLoad match: rel32 of the table variable (+3, next instruction at +7) and rel32 of the call to the
+    // tag address resolver (+0x30, next instruction at +0x34).
+    inline constexpr std::uintptr_t k_TagLoadTableRelOffset{ 0x03 };
+    inline constexpr std::uintptr_t k_TagLoadTableNextOffset{ 0x07 };
+    inline constexpr std::uintptr_t k_TagLoadCallRelOffset{ 0x30 };
+    inline constexpr std::uintptr_t k_TagLoadCallNextOffset{ 0x34 };
+
+    // Signature of the engine function that turns a tag address into a pointer (haloreach.dll rva 0x15918).
+    using ResolveTagAddressFunction = auto(__fastcall*)(const std::uint32_t* address) -> std::uintptr_t;
 
     // Client requests of the action (A17 sec. 3, D120): echo of the inventory version of the unit (uint16), weapon slot (uint8),
     // grenade type (uint16) and zoom level (uint16). The empty action asks for nothing: 0xFFFF, 0xFF, 0xFFFF and 0xFFFF.
@@ -228,7 +264,10 @@ export namespace Platform::Input::Type
         // Radians added to Yaw after every tick. Test only (the AI will write the yaw of each tick).
         float YawPerTick{ 0.0f };
 
-        // Cycles the use lane (pressed, held, released) every tick. Test only (A9 M5d: can a bot pick up the flag).
+        // Down bits of the hold lanes the agent holds this tick (k_HoldLanes). The held bits are added by the hook (D121).
+        std::uint32_t Lanes{ 0 };
+
+        // Holds use, then releases it, in a cycle. Test only (A9 M5d: can a bot pick up the flag).
         bool IsUseTest{ false };
 
         // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view follows the

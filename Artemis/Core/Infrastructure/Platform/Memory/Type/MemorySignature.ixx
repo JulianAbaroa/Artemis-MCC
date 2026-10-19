@@ -64,6 +64,15 @@ export namespace Platform::Memory::Type::Signature
         "48 89 5C 24 08 57 48 83 EC 20 48 8D 59 7B 33 D2 41 B8 A8 00 00 00 48 83 E3 FC 48 8B F9 E8 ?? ?? ?? ?? 41 83 C8 FF C6 47 04 FF 66 44 89 47 44"
     };
 
+    // Place in 0x5df80 (player control of a local player) that loads the player control tag of the globals: mov rcx, [table]
+    // (rel32 at +3), add rcx, 0x418, then call the tag address resolver (0x15918, rel32 at +0x30). Its field +0x48 is the hold
+    // threshold of buttons in seconds (A17 sec. 8, D121).
+    inline constexpr Signature PlayerControlTagLoad
+    {
+        "PlayerControlTagLoad",
+        "48 8B 0D ?? ?? ?? ?? 48 63 FA 48 81 C1 18 04 00 00 F3 44 0F 11 64 24 50 F3 44 0F 11 4C 24 60 89 7C 24 4C 89 5C 24 54 4C 89 65 18 48 89 45 00 E8 ?? ?? ?? ??"
+    };
+
     // Functions: High-level Data
     inline constexpr Signature BuildGameEvent
     {

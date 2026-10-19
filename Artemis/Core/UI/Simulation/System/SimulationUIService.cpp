@@ -4,6 +4,7 @@ module;
 
 module UI.Simulation.System;
 
+import Platform.Lifecycle.Type;
 import Platform.Host.Type;
 import Platform.Simulation.Type;
 import std;
@@ -32,13 +33,12 @@ namespace
     using Platform::Input::Type::k_ActionButtonsOffset;
     using Platform::Input::Type::k_ActionFacingOffset;
     using Platform::Input::Type::k_ActionThrottleOffset;
+    using Platform::Input::Type::k_UseLane;
+    using Platform::Lifecycle::Type::k_TicksPerSecond;
     using UI::Simulation::Type::k_LocalPlayerInputCount;
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
     using UI::Simulation::Type::k_LocalPlayerActionCount;
     using UI::Simulation::Type::k_LocalPlayerActionLabels;
-
-    // Logic ticks per second at x1.
-    constexpr float k_TicksPerSecond{ 60.0f };
 
     // Speeds tested in A8 (0.1 to 100). Above x5 the engine caps at 10 ticks per frame.
     constexpr float k_MinTimeScale{ 0.1f };
@@ -487,6 +487,7 @@ namespace UI::Simulation::System
         }
 
         actionOverride.IsUseTest = mode == LocalPlayerAction::TestUse;
+        if (mode == LocalPlayerAction::HoldUse) actionOverride.Lanes = k_UseLane;
 
         m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
     }
@@ -819,6 +820,7 @@ namespace UI::Simulation::System
         }
 
         actionOverride.IsUseTest = mode == LocalPlayerAction::TestUse;
+        if (mode == LocalPlayerAction::HoldUse) actionOverride.Lanes = k_UseLane;
 
         m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
     }

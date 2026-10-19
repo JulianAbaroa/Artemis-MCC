@@ -5,6 +5,7 @@ module;
 module Platform.Input.Hook;
 import :PlayerAction;
 
+import Platform.Lifecycle.Type;
 import Platform.Hook.System;
 import Platform.Memory.Type;
 import Platform.Simulation.Type;
@@ -21,6 +22,8 @@ namespace
     using Platform::Simulation::Type::UnitClientState;
     using Platform::Simulation::Type::k_NoZoomLevel;
 
+    using Platform::Lifecycle::Type::k_TicksPerSecond;
+
     using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Input::Type::k_PlayerActionSize;
     using Platform::Input::Type::k_UpdateActionMaskOffset;
@@ -30,9 +33,15 @@ namespace
     using Platform::Input::Type::k_ActionButtonsOffset;
     using Platform::Input::Type::k_ActionFacingOffset;
     using Platform::Input::Type::k_ActionThrottleOffset;
-    using Platform::Input::Type::k_ActionUseLaneOffset;
-    using Platform::Input::Type::k_UsePressed;
-    using Platform::Input::Type::k_UseHeld;
+    using Platform::Input::Type::k_ActionLanesOffset;
+    using Platform::Input::Type::k_HoldLanes;
+    using Platform::Input::Type::k_UseLane;
+    using Platform::Input::Type::k_PlayerControlTagOffset;
+    using Platform::Input::Type::k_HoldThresholdOffset;
+    using Platform::Input::Type::k_TagLoadTableRelOffset;
+    using Platform::Input::Type::k_TagLoadTableNextOffset;
+    using Platform::Input::Type::k_TagLoadCallRelOffset;
+    using Platform::Input::Type::k_TagLoadCallNextOffset;
     using Platform::Input::Type::k_ActionInteractionOffset;
     using Platform::Input::Type::k_ActionInteractionSize;
     using Platform::Input::Type::k_ActionInventoryVersionOffset;
@@ -56,19 +65,28 @@ namespace
     // Ticks a weapon request is sent while the unit does not hold the slot (half a second at 60 ticks per second).
     constexpr std::uint32_t k_WeaponRequestTicks{ 30 };
 
-    // Use test (A9 M5d), in ticks of a cycle: pressed until the first end tick, held until the second, then released, so the
-    // engine sees new presses, long holds and releases.
+    // Use test (A9 M5d), in ticks of a cycle: use is down until the end tick, then released, so the engine sees new presses, long
+    // holds and releases.
     constexpr std::uint64_t k_UseTestCycle{ 64 };
-    constexpr std::uint64_t k_UseTestPressedEndTick{ 30 };
-    constexpr std::uint64_t k_UseTestHeldEndTick{ 60 };
+    constexpr std::uint64_t k_UseTestDownEndTick{ 60 };
 
-    // return: The use lane of the use test at that tick.
-    auto GetUseTestLane(std::uint64_t tick) -> std::uint8_t
+    // Sanity limit of the hold threshold read from the engine. Anything outside (0, limit) is not a threshold.
+    constexpr float k_MaxHoldThresholdSeconds{ 5.0f };
+
+    // Milliseconds per second. The local client keeps the hold time and the threshold in whole milliseconds (0x5df80).
+    constexpr std::uint32_t k_MillisecondsPerSecond{ 1000 };
+
+    // return: True if use is down in the use test at that tick.
+    auto IsUseTestDown(std::uint64_t tick) -> bool
     {
-        const std::uint64_t phase{ tick % k_UseTestCycle };
-        if (phase < k_UseTestPressedEndTick) return k_UsePressed;
-        if (phase < k_UseTestHeldEndTick) return k_UseHeld;
-        return 0;
+        return (tick % k_UseTestCycle) < k_UseTestDownEndTick;
+    }
+
+    // return: The target of the rel32 at that offset of the match, with the next instruction at the next offset.
+    auto ResolveRelative(std::uintptr_t match, std::uintptr_t relOffset, std::uintptr_t nextOffset) -> std::uintptr_t
+    {
+        const std::int32_t relative{ *reinterpret_cast<const std::int32_t*>(match + relOffset) };
+        return (match + nextOffset) + relative;
     }
 
     // Aims the action at the unit in that slot.
@@ -109,11 +127,18 @@ namespace Platform::Input::Hook
         if (!m_ClearPlayerAction || threadContext == 0)
         {
             m_WeaponRequests.fill(std::nullopt);
+            for (auto& ticks : m_LaneTicks) ticks.fill(0);
             return;
         }
 
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> overrides{};
         m_PlayerActionStore.CopyOverrides(overrides);
+
+        // note: The tag is only read while some agent plays, never in menus or loading screens.
+        const bool hasOverride{ std::ranges::any_of(overrides, [](const std::optional<ActionOverride>& value) {
+            return value.has_value();
+        }) };
+        const std::optional<std::uint32_t> holdTicks{ hasOverride ? this->GetHoldThresholdTicks() : std::nullopt };
 
         std::uint32_t mask{ 0 };
         std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
@@ -126,6 +151,7 @@ namespace Platform::Input::Hook
             if (!actionOverride)
             {
                 m_WeaponRequests[player].reset();
+                m_LaneTicks[player].fill(0);
                 continue;
             }
 
@@ -151,10 +177,10 @@ namespace Platform::Input::Hook
             std::memcpy(action + k_ActionFacingOffset, facing.data(), sizeof(facing));
             std::memcpy(action + k_ActionThrottleOffset, throttle.data(), sizeof(throttle));
 
-            if (actionOverride->IsUseTest)
-            {
-                action[k_ActionUseLaneOffset] = GetUseTestLane(m_Sequence);
-            }
+            std::uint32_t lanes{ actionOverride->Lanes };
+            if (actionOverride->IsUseTest && IsUseTestDown(m_Sequence)) lanes |= k_UseLane;
+
+            this->WriteLanes(action, player, lanes, holdTicks);
 
             this->WriteClientRequests(action, threadContext, player, requests[player]);
 
@@ -178,6 +204,50 @@ namespace Platform::Input::Hook
         }
 
         std::memcpy(update + k_UpdateActionMaskOffset, &mask, sizeof(mask));
+    }
+
+    auto PlayerActionDetour::WriteLanes(std::uint8_t* action, std::size_t player, std::uint32_t lanes,
+        std::optional<std::uint32_t> holdTicks) -> void
+    {
+        auto& ticks{ m_LaneTicks[player] };
+
+        for (std::size_t lane{ 0 }; lane < k_HoldLanes.size(); ++lane)
+        {
+            if ((lanes & (1u << k_HoldLanes[lane].DownBit)) == 0)
+            {
+                ticks[lane] = 0;
+                continue;
+            }
+
+            if (ticks[lane] < (std::numeric_limits<std::uint32_t>::max)()) ++ticks[lane];
+            if (holdTicks && ticks[lane] >= *holdTicks) lanes |= 1u << k_HoldLanes[lane].HeldBit;
+        }
+
+        std::memcpy(action + k_ActionLanesOffset, &lanes, sizeof(lanes));
+    }
+
+    auto PlayerActionDetour::GetHoldThresholdTicks() const -> std::optional<std::uint32_t>
+    {
+        if (!m_PlayerControlTable || !m_ResolveTagAddress) return std::nullopt;
+
+        const std::uintptr_t table{ *m_PlayerControlTable };
+        if (table == 0) return std::nullopt;
+
+        // note: Between maps the address can be empty. Resolving it would give a pointer to nothing.
+        const auto* address{ reinterpret_cast<const std::uint32_t*>(table + k_PlayerControlTagOffset) };
+        if (*address == 0 || *address == 0xFFFFFFFF) return std::nullopt;
+
+        const std::uintptr_t tag{ m_ResolveTagAddress(address) };
+        if (tag == 0) return std::nullopt;
+
+        const float seconds{ *reinterpret_cast<const float*>(tag + k_HoldThresholdOffset) };
+        if (!(seconds > 0.0f && seconds < k_MaxHoldThresholdSeconds)) return std::nullopt;
+
+        // note: The local client compares whole milliseconds held with (int)(seconds * 1000), so a lane is held from the first tick
+        // whose time reaches it.
+        const auto milliseconds{ static_cast<std::uint32_t>(seconds * static_cast<float>(k_MillisecondsPerSecond)) };
+        const auto ticksPerSecond{ static_cast<std::uint32_t>(k_TicksPerSecond) };
+        return ((milliseconds * ticksPerSecond) + (k_MillisecondsPerSecond - 1)) / k_MillisecondsPerSecond;
     }
 
     auto PlayerActionDetour::WriteClientRequests(std::uint8_t* action, std::uintptr_t threadContext, std::size_t player,
@@ -300,6 +370,20 @@ namespace Platform::Input::Hook
         {
             m_LogsService.Message("[PlayerActionDetour] ERROR: Failed to find ClearPlayerAction. No action override will be"
                 " applied.");
+        }
+
+        const std::uintptr_t tagLoad{ m_AOBService.FindPattern(Signature::PlayerControlTagLoad) };
+        if (tagLoad != 0)
+        {
+            m_PlayerControlTable = reinterpret_cast<const std::uintptr_t*>(
+                ResolveRelative(tagLoad, k_TagLoadTableRelOffset, k_TagLoadTableNextOffset));
+            m_ResolveTagAddress = reinterpret_cast<ResolveTagAddressFunction>(
+                ResolveRelative(tagLoad, k_TagLoadCallRelOffset, k_TagLoadCallNextOffset));
+        }
+        else
+        {
+            m_LogsService.Message("[PlayerActionDetour] ERROR: Failed to find PlayerControlTagLoad. Held buttons of the agents will"
+                " never count as held.");
         }
 
         m_EngineTlsIndex = this->FindEngineTlsIndex();
