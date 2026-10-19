@@ -20,6 +20,7 @@ export namespace Platform::Input::Hook
         using AOBService = Platform::Memory::System::AOBService;
 
         using ApplyPlayerActionsFunction = Platform::Input::Type::ApplyPlayerActionsFunction;
+        using ClearPlayerActionFunction = Platform::Input::Type::ClearPlayerActionFunction;
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
@@ -56,13 +57,17 @@ export namespace Platform::Input::Hook
         // Ticks seen since the hook was installed. Game thread only.
         std::uint64_t m_Sequence{ 0 };
 
+        // Engine function that clears an action, or null if not found (then no override is applied).
+        ClearPlayerActionFunction m_ClearPlayerAction{ nullptr };
+
         // Variable of the engine that holds the thread local storage index of its thread context, or null if not found.
         const std::uint32_t* m_EngineTlsIndex{ nullptr };
 
         static auto __fastcall HookedApplyPlayerActions(void* update) -> void;
 
-        // Writes the override of every player that has one into the update, and marks those players as having an action.
-        // param threadContext: Thread context of the engine, or 0 if unknown (then the views do not follow the overrides).
+        // Writes the action of every player that has an override into the update, and marks those players as having an action.
+        // note: The action starts from the empty action of the engine, then the unit slot, the override and the interaction (D119).
+        // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
 
         // return: Thread context of the engine, or 0 if it is not found.

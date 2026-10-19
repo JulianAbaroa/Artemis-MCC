@@ -21,6 +21,8 @@ namespace
     using Platform::Input::Type::k_PlayerActionSize;
     using Platform::Input::Type::k_UpdateActionMaskOffset;
     using Platform::Input::Type::k_UpdateActionsOffset;
+    using Platform::Input::Type::k_ActionHasUnitOffset;
+    using Platform::Input::Type::k_ActionUnitSlotOffset;
     using Platform::Input::Type::k_ActionButtonsOffset;
     using Platform::Input::Type::k_ActionFacingOffset;
     using Platform::Input::Type::k_ActionThrottleOffset;
@@ -35,25 +37,12 @@ namespace
 
     using Platform::Simulation::Type::k_InteractionRecordCount;
     using Platform::Simulation::Type::k_InteractionRecordSize;
-    using Platform::Simulation::Type::k_InteractionRecordObject;
 
     static_assert(k_ActionInteractionSize == k_InteractionRecordCount * k_InteractionRecordSize,
         "The interaction of the action must hold the records the engine builds.");
 
     // Sanity limit of the thread local storage index. Anything above it is not a valid slot.
     constexpr std::uint32_t k_MaxTlsIndex{ 1000 };
-
-    // Fields of an action that the engine validation (0x46ac8) rejects when they are zero (A9 sec. 13.9). A player without an action
-    // from the engine this tick (a bot) gets them as "nothing": no unit slot (+0x00 = 0 with +0x04 = 0xFF), no weapon or grenade
-    // change (+0x46, +0x47 = 0xFF, the same value would be rejected), no grenade pick (+0x48 = 0xFFFF) and no zoom level (+0x4A = 0xFFFF).
-    constexpr std::uintptr_t k_ActionUnitSlotOffset{ 0x04 };
-    constexpr std::uintptr_t k_ActionWeaponOffset{ 0x46 };
-    constexpr std::uintptr_t k_ActionSecondWeaponOffset{ 0x47 };
-    constexpr std::uintptr_t k_ActionGrenadeOffset{ 0x48 };
-    constexpr std::uintptr_t k_ActionZoomOffset{ 0x4A };
-
-    // Marks an action as aimed at the unit in that slot (+0x00 = 1, +0x04 = slot), so the engine moves the unit with it.
-    constexpr std::uintptr_t k_ActionHasUnitOffset{ 0x00 };
 
     // Use test (A9 M5d), in ticks of a cycle: pressed until the first end tick, held until the second, then released, so the
     // engine sees new presses, long holds and releases.
@@ -70,31 +59,12 @@ namespace
         return 0;
     }
 
-    // Writes an action that does nothing and passes the engine validation.
-    // param unitSlot: Action slot of the unit of the player (unit +0x288), or nullopt without a unit.
-    auto WriteNeutralAction(std::uint8_t* action, std::optional<std::uint8_t> unitSlot) -> void
+    // Aims the action at the unit in that slot.
+    auto WriteUnitSlot(std::uint8_t* action, std::uint8_t unitSlot) -> void
     {
-        std::memset(action, 0, k_PlayerActionSize);
-        action[k_ActionUnitSlotOffset] = 0xFF;
-
-        if (unitSlot)
-        {
-            constexpr std::uint32_t hasUnit{ 1 };
-            std::memcpy(action + k_ActionHasUnitOffset, &hasUnit, sizeof(hasUnit));
-            action[k_ActionUnitSlotOffset] = *unitSlot;
-        }
-
-        // note: Empty interaction records, as the engine clears them: no object (handle 0xFFFFFFFF).
-        for (std::size_t record{ 0 }; record < k_InteractionRecordCount; ++record)
-        {
-            std::memset(action + k_ActionInteractionOffset + (record * k_InteractionRecordSize) + k_InteractionRecordObject, 0xFF,
-                sizeof(std::uint32_t));
-        }
-
-        action[k_ActionWeaponOffset] = 0xFF;
-        action[k_ActionSecondWeaponOffset] = 0xFF;
-        std::memset(action + k_ActionGrenadeOffset, 0xFF, sizeof(std::uint16_t));
-        std::memset(action + k_ActionZoomOffset, 0xFF, sizeof(std::uint16_t));
+        constexpr std::uint32_t hasUnit{ 1 };
+        std::memcpy(action + k_ActionHasUnitOffset, &hasUnit, sizeof(hasUnit));
+        action[k_ActionUnitSlotOffset] = unitSlot;
     }
 }
 
@@ -119,14 +89,16 @@ namespace Platform::Input::Hook
 
     auto PlayerActionDetour::ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void
     {
+        // note: Without the thread context the unit slot is unknown, and a cleared action would leave the unit without control.
+        if (!m_ClearPlayerAction || threadContext == 0) return;
+
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> overrides{};
         m_PlayerActionStore.CopyOverrides(overrides);
 
         std::uint32_t mask{ 0 };
         std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
 
-        const std::uintptr_t controlGlobals{ threadContext != 0
-            ? *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot) : 0 };
+        const std::uintptr_t controlGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot) };
 
         for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
         {
@@ -135,10 +107,14 @@ namespace Platform::Input::Hook
 
             std::uint8_t* action{ update + k_UpdateActionsOffset + (player * k_PlayerActionSize) };
 
-            // note: The engine only builds actions for local players. A bot has none, and a zeroed action fails the validation.
-            if ((mask & (1u << player)) == 0)
+            // note: The engine only builds actions for local players. Every agent, local or bot, starts from the empty action of the
+            // engine instead, so they all send the same fields (D119). A zeroed action would fail the validation.
+            m_ClearPlayerAction(action);
+
+            const std::optional<std::uint8_t> unitSlot{ m_BotService.GetUnitActionSlot(threadContext, player) };
+            if (unitSlot)
             {
-                WriteNeutralAction(action, m_BotService.GetUnitActionSlot(threadContext, player));
+                WriteUnitSlot(action, *unitSlot);
             }
 
             const std::array<float, 2> facing{ actionOverride->Yaw, actionOverride->Pitch };
@@ -219,11 +195,17 @@ namespace Platform::Input::Hook
         s_Instance = this;
         m_Sequence = 0;
 
+        m_ClearPlayerAction = reinterpret_cast<ClearPlayerActionFunction>(m_AOBService.FindPattern(Signature::ClearPlayerAction));
+        if (!m_ClearPlayerAction)
+        {
+            m_LogsService.Message("[PlayerActionDetour] ERROR: Failed to find ClearPlayerAction. No action override will be applied.");
+        }
+
         m_EngineTlsIndex = this->FindEngineTlsIndex();
         if (!m_EngineTlsIndex)
         {
-            m_LogsService.Message("[PlayerActionDetour] WARNING: Failed to find the engine thread context. Views will not follow"
-                " the overrides and no bot can be added.");
+            m_LogsService.Message("[PlayerActionDetour] WARNING: Failed to find the engine thread context. No action override"
+                " will be applied and no bot can be added.");
         }
 
         void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::ApplyPlayerActions)) };

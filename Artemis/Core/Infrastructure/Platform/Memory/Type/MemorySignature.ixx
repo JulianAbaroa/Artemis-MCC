@@ -56,6 +56,14 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D A8 38 FF FF FF 48 81 EC A0 01 00 00 48 C7 44 24 78 FE FF FF FF 48 89 58 10 48 89 70 18 48 89 78 20 0F 29 70 C8 0F 29 78 B8 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 48 8B F9 48 89 4C 24 70 8B 15 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 4C 8B 34 D0 B8 30 01 00 00"
     };
 
+    // Clears a player action to the empty action of the engine: void(action). Every action the engine builds starts with it (0x628b0)
+    // (A17 sec. 2, D119).
+    inline constexpr Signature ClearPlayerAction
+    {
+        "ClearPlayerAction",
+        "48 89 5C 24 08 57 48 83 EC 20 48 8D 59 7B 33 D2 41 B8 A8 00 00 00 48 83 E3 FC 48 8B F9 E8 ?? ?? ?? ?? 41 83 C8 FF C6 47 04 FF 66 44 89 47 44"
+    };
+
     // Functions: High-level Data
     inline constexpr Signature BuildGameEvent
     {

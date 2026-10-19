@@ -144,6 +144,11 @@ export namespace Platform::Input::Type
     // First action inside the simulation update. The action of a player is at this offset + k_PlayerActionSize * its table index.
     inline constexpr std::uintptr_t k_UpdateActionsOffset{ 0x10 };
 
+    // Unit of the action: +0x00 (uint32) = 1 and +0x04 (uint8) = action slot of the unit (unit +0x288), so the engine moves that
+    // unit with the action (A9 sec. 13.10). The empty action has 0 and 0xFF. The engine writes them for a local player (0x628b0).
+    inline constexpr std::uintptr_t k_ActionHasUnitOffset{ 0x00 };
+    inline constexpr std::uintptr_t k_ActionUnitSlotOffset{ 0x04 };
+
     // Buttons of the action (uint64). Bits measured in A9 sec. 12.7 (crouch 0, jump 1, melee 11, zoom 18, fire 30, grenade 40...).
     inline constexpr std::uintptr_t k_ActionButtonsOffset{ 0x08 };
 
@@ -195,8 +200,8 @@ export namespace Platform::Input::Type
     inline constexpr std::uintptr_t k_ControlFacingOffset{ 0x94 };
 
     // Fields Artemis writes into the action of a player, every tick (A9 M4b, D109).
-    // note: The interaction is rebuilt by the hook with the engine functions (D118). The rest of the action (weapon, hold states)
-    // stays as the engine built it from the input of the frame, except the use lane of the use test (IsUseTest).
+    // note: The action of a player with an override starts from the empty action of the engine (D119): the unit slot, the interaction
+    // (D118) and these fields go on top. The rest (weapon, grenade and zoom requests, aim assist) stays empty for locals and bots.
     struct ActionOverride
     {
         std::uint64_t Buttons{ 0 };
@@ -237,6 +242,10 @@ export namespace Platform::Input::Type
     // Signature of the engine function that applies the player actions of one tick (haloreach.dll rva 0x47050).
     // note: ExecuteGameFrame calls it once per tick with the simulation update of that tick.
     using ApplyPlayerActionsFunction = auto(__fastcall*)(void* update) -> void;
+
+    // Signature of the engine function that clears an action to the empty action of the engine (haloreach.dll rva 0x46a34).
+    // note: Empty means no unit, no weapon, grenade or zoom request, no interaction and no aim assist target (A17 sec. 4).
+    using ClearPlayerActionFunction = auto(__fastcall*)(void* action) -> void;
 
     // Window message captured by the WndProc hook.
     struct WindowMessage
