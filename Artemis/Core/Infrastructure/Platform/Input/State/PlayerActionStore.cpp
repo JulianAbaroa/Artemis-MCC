@@ -91,11 +91,31 @@ namespace Platform::Input::State
         actionOverride->Yaw = yaw;
     }
 
+    auto PlayerActionStore::RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void
+    {
+        if (playerIndex >= k_MaxActionPlayers) return;
+
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+
+        ClientRequests& pending{ m_ClientRequests[playerIndex] };
+        pending.IsWeaponSwitch = pending.IsWeaponSwitch || requests.IsWeaponSwitch;
+        pending.IsGrenadeSwitch = pending.IsGrenadeSwitch || requests.IsGrenadeSwitch;
+        pending.IsZoom = pending.IsZoom || requests.IsZoom;
+    }
+
+    auto PlayerActionStore::TakeClientRequests(std::array<ClientRequests, k_MaxActionPlayers>& out) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        out = m_ClientRequests;
+        m_ClientRequests.fill(ClientRequests{});
+    }
+
     auto PlayerActionStore::Cleanup() -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_Latest = PlayerActions{};
         m_Watches.fill(ActionWatch{});
         m_Overrides.fill(std::nullopt);
+        m_ClientRequests.fill(ClientRequests{});
     }
 }

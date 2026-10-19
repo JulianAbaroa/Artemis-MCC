@@ -14,6 +14,7 @@ namespace
     using Platform::Input::Type::PlayerAction;
     using Platform::Input::Type::PlayerActions;
     using Platform::Input::Type::ActionOverride;
+    using Platform::Input::Type::ClientRequests;
     using Export::Tick::Type::Player;
     using Export::Tick::Type::Players;
     using Platform::Simulation::Type::SessionSnapshot;
@@ -684,7 +685,7 @@ namespace UI::Simulation::System
         PlayerActions actions{};
         m_PlayerActionStore.CopyLatest(actions);
 
-        if (!ImGui::BeginTable("Bots", 9, flags)) return;
+        if (!ImGui::BeginTable("Bots", 10, flags)) return;
 
         ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Player");
@@ -695,6 +696,7 @@ namespace UI::Simulation::System
         ImGui::TableSetupColumn("Unit (flags)");
         ImGui::TableSetupColumn("Action this tick");
         ImGui::TableSetupColumn("Action");
+        ImGui::TableSetupColumn("Requests");
         ImGui::TableHeadersRow();
 
         for (const Bot& bot : bots)
@@ -757,6 +759,27 @@ namespace UI::Simulation::System
                     m_SimulationUIStore.SetBotAction(bot.PlayerIndex, mode);
                     this->ApplyBotAction(bot.PlayerIndex, mode);
                 }
+            }
+
+            // note: One-tick presses of the client (D120). They only reach the bot while its action is not Engine.
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Weapon"))
+            {
+                m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsWeaponSwitch = true });
+            }
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Grenade"))
+            {
+                m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsGrenadeSwitch = true });
+            }
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Zoom")) m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsZoom = true });
+
+            if (player.Client)
+            {
+                ImGui::Text("Slot %d, inventory %u, grenade %d, zoom %d%s", player.Client->WeaponSlot,
+                    player.Client->InventoryVersion, player.Client->GrenadeType, player.Client->ZoomLevel,
+                    player.Client->IsSeated ? ", seated" : "");
             }
 
             ImGui::PopID();

@@ -62,6 +62,22 @@ export namespace Platform::Simulation::Type
     // and +0x04 equal to this byte. The engine builds that for local players. A bot needs it written (A9 sec. 13.10).
     inline constexpr std::uintptr_t k_UnitActionSlot{ 0x288 };
 
+    // Client state of a unit, the fields a client reads to ask for a weapon, a grenade or a zoom level (A17 sec. 2 and 6, D120):
+    // weapon slot in the hands (int8, -1 none), version of the inventory (uint16, (+1) % 7 on every change: a weapon request is
+    // only taken if the action carries this value), grenade type (int8) and zoom level (int8, -1 not zoomed).
+    inline constexpr std::uintptr_t k_UnitWeaponSlot{ 0x34A };
+    inline constexpr std::uintptr_t k_UnitInventoryVersion{ 0x34C };
+    inline constexpr std::uintptr_t k_UnitGrenadeType{ 0x37D };
+    inline constexpr std::uintptr_t k_UnitZoomLevel{ 0x384 };
+
+    // Zoom level of a unit that is not zoomed.
+    inline constexpr std::int8_t k_NoZoomLevel{ -1 };
+
+    // Parent object of an object (uint32 handle, 0xFFFFFFFF none) and seat of a unit inside its parent (int16, -1 none). A unit with
+    // both sits in a vehicle or a turret.
+    inline constexpr std::uintptr_t k_ObjectParent{ 0x14 };
+    inline constexpr std::uintptr_t k_UnitSeat{ 0x336 };
+
     // Characters of a gamertag, terminator included.
     inline constexpr std::size_t k_GamerTagLength{ 16 };
 
@@ -113,6 +129,19 @@ export namespace Platform::Simulation::Type
 
     static_assert(sizeof(MachineIdentifier) == k_MachineIdentifierSize);
 
+    // Client state of the unit of a player on one tick (A17 sec. 6).
+    struct UnitClientState
+    {
+        std::uint32_t Unit{ 0xFFFFFFFF };
+        std::int8_t WeaponSlot{ -1 };
+        std::uint16_t InventoryVersion{ 0 };
+        std::int8_t GrenadeType{ -1 };
+        std::int8_t ZoomLevel{ k_NoZoomLevel };
+
+        // The unit sits in a vehicle or a turret.
+        bool IsSeated{ false };
+    };
+
     // One player of the engine, as the session section shows it.
     struct SessionPlayer
     {
@@ -127,6 +156,9 @@ export namespace Platform::Simulation::Type
         std::uint32_t UnitHandle{ 0xFFFFFFFF };
         std::uint32_t UnitFlags{ 0 };
         std::array<wchar_t, k_GamerTagLength> GamerTag{};
+
+        // Client state of the unit (D120). Empty without a live unit.
+        std::optional<UnitClientState> Client{};
     };
 
     // Machines and players of the engine on one tick, plus the game options entry of every player (A9 M5a).
@@ -174,6 +206,17 @@ export namespace Platform::Simulation::Type
 
     // Signature of player_set_configuration: applies a configuration to the player (handle with salt).
     using ApplyPlayerConfigurationFunction = auto(__fastcall*)(std::uint32_t player, const void* configuration) -> void;
+
+    // Signature of the engine selectors of the next weapon slot (0x48b618) and the next grenade type (0x48b58c) of a unit.
+    // return: The slot or type, or -1 if there is none.
+    using UnitSelectorFunction = auto(__fastcall*)(std::uint32_t unit, std::int16_t from, std::int16_t step) -> std::int16_t;
+
+    // Signature of the engine selector of the next zoom level of the weapon of a unit (0x485838).
+    // return: The level, or -1 at the end of the cycle (not zoomed).
+    using NextZoomLevelFunction = auto(__fastcall*)(std::uint32_t unit, std::int16_t level) -> std::int16_t;
+
+    // Signature of the engine check of whether a unit can zoom now (0x4852a0).
+    using CanUnitZoomFunction = auto(__fastcall*)(std::uint32_t unit) -> bool;
 
     // Signature of the two steps that fill the interaction of a player (handle with salt) once it was cleared (0x4ef34, 0x4eb54).
     using GatherInteractionsFunction = auto(__fastcall*)(std::uint32_t player, void* interaction) -> void;

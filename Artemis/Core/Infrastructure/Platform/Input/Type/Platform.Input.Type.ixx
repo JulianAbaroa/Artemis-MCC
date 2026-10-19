@@ -164,6 +164,18 @@ export namespace Platform::Input::Type
     inline constexpr std::uint8_t k_UsePressed{ 0x10 };
     inline constexpr std::uint8_t k_UseHeld{ 0x30 };
 
+    // Client requests of the action (A17 sec. 3, D120): echo of the inventory version of the unit (uint16), weapon slot (uint8),
+    // grenade type (uint16) and zoom level (uint16). The empty action asks for nothing: 0xFFFF, 0xFF, 0xFFFF and 0xFFFF.
+    // note: A weapon request only counts if the echo matches unit +0x34C.
+    inline constexpr std::uintptr_t k_ActionInventoryVersionOffset{ 0x44 };
+    inline constexpr std::uintptr_t k_ActionWeaponSlotOffset{ 0x46 };
+    inline constexpr std::uintptr_t k_ActionGrenadeTypeOffset{ 0x48 };
+    inline constexpr std::uintptr_t k_ActionZoomLevelOffset{ 0x4A };
+
+    // Button bit that tells the engine the zoom level of the action is absent, so the unit keeps its own (A17 sec. 2: unit_control
+    // copies the zoom level every tick unless this bit is set). The local client never sets it.
+    inline constexpr std::uint64_t k_ActionKeepZoomButton{ 1ull << 25 };
+
     // Interaction of the action: the objects the engine picked for the player, best first (A9 sec. 12.2, M5d).
     // note: The engine fills it every frame for local players only, from their unit (0x4f280). The PlayerAction hook fills it every
     // tick for every player with an override, with the same engine functions (D118).
@@ -222,6 +234,30 @@ export namespace Platform::Input::Type
         // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view follows the
         // action. Empty for a player that is not local.
         std::optional<std::size_t> LocalIndex{};
+    };
+
+    // One-tick presses of an agent that the client turns into requests (D120): the hook consumes them on its next tick.
+    struct ClientRequests
+    {
+        // Switch to the next weapon (a tap of switch weapon).
+        bool IsWeaponSwitch{ false };
+
+        // Switch to the next grenade type with grenades left.
+        bool IsGrenadeSwitch{ false };
+
+        // Go to the next zoom level of the weapon in the hands, or back to no zoom after the last one.
+        bool IsZoom{ false };
+    };
+
+    // Weapon slot an agent asked for, sent until the unit holds it or the ticks run out (the engine drops a request whose inventory
+    // version is stale).
+    // note: The request is dropped when the inventory version of the unit changes (a pickup or a drop by the host): its slot may no
+    // longer hold the same weapon.
+    struct WeaponRequest
+    {
+        std::int8_t Slot{ -1 };
+        std::uint16_t InventoryVersion{ 0 };
+        std::uint32_t TicksLeft{ 0 };
     };
 
     // What the action of one player did since the watch was cleared, so presses of a single tick are not missed (A9 M4a).

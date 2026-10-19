@@ -19,6 +19,7 @@ export namespace Platform::Input::State
         using PlayerActions = Platform::Input::Type::PlayerActions;
         using ActionOverride = Platform::Input::Type::ActionOverride;
         using ActionWatch = Platform::Input::Type::ActionWatch;
+        using ClientRequests = Platform::Input::Type::ClientRequests;
 
     public:
         PlayerActionStore() = default;
@@ -48,13 +49,21 @@ export namespace Platform::Input::State
         // Adds the radians to the yaw of the override of the player, if it still has one, and keeps it in [0, 2 pi).
         auto AdvanceOverrideYaw(std::size_t playerIndex, float radians) -> void;
 
-        // Drops the actions, the watches and the overrides.
+        // Adds client requests for the player (D120). They add up with the ones not taken yet.
+        auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void;
+
+        // Moves the pending client requests of every player out of the store.
+        // param out: Out. Requests of every player, empty for a player without one.
+        auto TakeClientRequests(std::array<ClientRequests, k_MaxActionPlayers>& out) -> void;
+
+        // Drops the actions, the watches, the overrides and the client requests.
         auto Cleanup() -> void;
 
     private:
         PlayerActions m_Latest{};
         std::array<ActionWatch, k_MaxActionPlayers> m_Watches{};
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> m_Overrides{};
+        std::array<ClientRequests, k_MaxActionPlayers> m_ClientRequests{};
 
         mutable std::mutex m_Mutex{};
     };

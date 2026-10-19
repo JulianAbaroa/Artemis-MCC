@@ -17,6 +17,10 @@ namespace
     using Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
     using Platform::Simulation::Type::TeamRequest;
     using Platform::Simulation::Type::GatherInteractionsFunction;
+    using Platform::Simulation::Type::UnitSelectorFunction;
+    using Platform::Simulation::Type::NextZoomLevelFunction;
+    using Platform::Simulation::Type::CanUnitZoomFunction;
+    using Platform::Simulation::Type::UnitClientState;
 
     using Platform::Simulation::Type::k_MaxMachines;
     using Platform::Simulation::Type::k_MaxPlayers;
@@ -66,6 +70,15 @@ namespace
     using Platform::Simulation::Type::k_InteractionRecordCount;
     using Platform::Simulation::Type::k_InteractionRecordSize;
     using Platform::Simulation::Type::k_InteractionRecordObject;
+    using Platform::Simulation::Type::k_UnitWeaponSlot;
+    using Platform::Simulation::Type::k_UnitInventoryVersion;
+    using Platform::Simulation::Type::k_UnitGrenadeType;
+    using Platform::Simulation::Type::k_UnitZoomLevel;
+    using Platform::Simulation::Type::k_ObjectParent;
+    using Platform::Simulation::Type::k_UnitSeat;
+
+    // Step of the weapon and grenade selectors: the next one, as a local client asks for it (0x61a38).
+    constexpr std::int16_t k_SelectorStep{ 1 };
 
     // Bots one instance can hold: 4 per fake machine, on every machine slot except the first one (the local machine).
     constexpr std::size_t k_MaxBots{ (k_MaxMachines - 1) * k_MaxPlayersPerMachine };
@@ -228,6 +241,7 @@ namespace Platform::Simulation::System
                 player.UnitHandle = Read<std::uint32_t>(datum + k_PlayerUnit);
                 const std::uintptr_t unit{ GetObjectData(threadContext, player.UnitHandle) };
                 if (unit != 0) player.UnitFlags = Read<std::uint32_t>(unit + k_UnitFlags);
+                player.Client = this->GetUnitClientState(threadContext, index);
                 std::memcpy(player.GamerTag.data(), reinterpret_cast<const void*>(datum + k_PlayerGamerTag), sizeof(player.GamerTag));
             }
         }
@@ -460,7 +474,8 @@ namespace Platform::Simulation::System
         std::ranges::fill(interaction, std::uint8_t{ 0 });
         for (std::size_t record{ 0 }; record < k_InteractionRecordCount; ++record)
         {
-            std::memset(interaction.data() + (record * k_InteractionRecordSize) + k_InteractionRecordObject, 0xFF, sizeof(std::uint32_t));
+            std::memset(interaction.data() + (record * k_InteractionRecordSize) + k_InteractionRecordObject, 0xFF,
+                sizeof(std::uint32_t));
         }
 
         if (Read<std::uint32_t>(datum + k_PlayerUnit) == 0xFFFFFFFF) return true;
@@ -469,6 +484,56 @@ namespace Platform::Simulation::System
         m_GatherNearbyInteractions(handle, interaction.data());
         m_GatherAimedInteractions(handle, interaction.data());
         return true;
+    }
+
+    auto BotService::GetUnitClientState(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<UnitClientState>
+    {
+        if (threadContext == 0) return std::nullopt;
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        if (players == 0) return std::nullopt;
+
+        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
+        if (datum == 0 || Read<std::uint16_t>(datum + k_PlayerSalt) == 0) return std::nullopt;
+
+        const auto unitHandle{ Read<std::uint32_t>(datum + k_PlayerUnit) };
+        const std::uintptr_t unit{ GetObjectData(threadContext, unitHandle) };
+        if (unit == 0) return std::nullopt;
+
+        return UnitClientState{
+            .Unit = unitHandle,
+            .WeaponSlot = Read<std::int8_t>(unit + k_UnitWeaponSlot),
+            .InventoryVersion = Read<std::uint16_t>(unit + k_UnitInventoryVersion),
+            .GrenadeType = Read<std::int8_t>(unit + k_UnitGrenadeType),
+            .ZoomLevel = Read<std::int8_t>(unit + k_UnitZoomLevel),
+            .IsSeated = Read<std::uint32_t>(unit + k_ObjectParent) != 0xFFFFFFFF && Read<std::int16_t>(unit + k_UnitSeat) != -1 };
+    }
+
+    auto BotService::GetNextWeaponSlot(const UnitClientState& state) const -> std::optional<std::int8_t>
+    {
+        if (!m_IsClientResolved || state.IsSeated) return std::nullopt;
+
+        const std::int16_t slot{ m_NextWeaponSlot(state.Unit, state.WeaponSlot, k_SelectorStep) };
+        if (slot < 0 || slot == state.WeaponSlot) return std::nullopt;
+
+        return static_cast<std::int8_t>(slot);
+    }
+
+    auto BotService::GetNextGrenadeType(const UnitClientState& state) const -> std::optional<std::int8_t>
+    {
+        if (!m_IsClientResolved) return std::nullopt;
+
+        const std::int16_t type{ m_NextGrenadeType(state.Unit, state.GrenadeType, k_SelectorStep) };
+        if (type < 0 || type == state.GrenadeType) return std::nullopt;
+
+        return static_cast<std::int8_t>(type);
+    }
+
+    auto BotService::GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t>
+    {
+        if (!m_IsClientResolved || !m_CanUnitZoom(state.Unit)) return std::nullopt;
+
+        return static_cast<std::int8_t>(m_NextZoomLevel(state.Unit, state.ZoomLevel));
     }
 
     auto BotService::ResolveFunctions() -> bool
@@ -503,6 +568,22 @@ namespace Platform::Simulation::System
             }
         }
 
-        return m_IsResolved && m_IsInteractionResolved;
+        if (!m_IsClientResolved)
+        {
+            m_NextWeaponSlot = reinterpret_cast<UnitSelectorFunction>(m_AOBService.FindPattern(Signature::NextWeaponSlot));
+            m_NextGrenadeType = reinterpret_cast<UnitSelectorFunction>(m_AOBService.FindPattern(Signature::NextGrenadeType));
+            m_NextZoomLevel = reinterpret_cast<NextZoomLevelFunction>(m_AOBService.FindPattern(Signature::NextZoomLevel));
+            m_CanUnitZoom = reinterpret_cast<CanUnitZoomFunction>(m_AOBService.FindPattern(Signature::CanUnitZoom));
+
+            m_IsClientResolved = m_NextWeaponSlot && m_NextGrenadeType && m_NextZoomLevel && m_CanUnitZoom;
+            if (!m_IsClientResolved)
+            {
+                m_LogsService.Message("[BotService] ERROR: Failed to find {}. Agents cannot switch weapon, grenade or zoom.",
+                    !m_NextWeaponSlot ? "NextWeaponSlot" : (!m_NextGrenadeType ? "NextGrenadeType"
+                    : (!m_NextZoomLevel ? "NextZoomLevel" : "CanUnitZoom")));
+            }
+        }
+
+        return m_IsResolved && m_IsInteractionResolved && m_IsClientResolved;
     }
 }

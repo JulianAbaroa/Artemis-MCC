@@ -23,6 +23,10 @@ export namespace Platform::Simulation::System
         using ApplyPlayerAddedFunction = Platform::Simulation::Type::ApplyPlayerAddedFunction;
         using ApplyPlayerConfigurationFunction = Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
         using GatherInteractionsFunction = Platform::Simulation::Type::GatherInteractionsFunction;
+        using UnitSelectorFunction = Platform::Simulation::Type::UnitSelectorFunction;
+        using NextZoomLevelFunction = Platform::Simulation::Type::NextZoomLevelFunction;
+        using CanUnitZoomFunction = Platform::Simulation::Type::CanUnitZoomFunction;
+        using UnitClientState = Platform::Simulation::Type::UnitClientState;
         using TeamRequest = Platform::Simulation::Type::TeamRequest;
 
         using BotStore = Platform::Simulation::State::BotStore;
@@ -54,9 +58,30 @@ export namespace Platform::Simulation::System
         auto WriteInteraction(std::uintptr_t threadContext, std::size_t playerIndex, std::span<std::uint8_t> interaction) const
             -> bool;
 
-        // Finds the engine functions by signature: the ones that add bots and the ones that build the interaction, each set on its own.
+        // return: The client state of the unit of the player, or nullopt if the player is gone or has no live unit.
+        // note: Game thread only.
+        auto GetUnitClientState(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<UnitClientState>;
+
+        // return: The slot the engine picks when the player switches weapon (0x48b618 from the slot in the state, as a local client
+        // asks for it), or nullopt if it has no other weapon, sits in a seat or the functions were not found (D120).
+        // note: Game thread only. A local client only switches in a seat whose tag allows it (seat flag bit 5, 0x61a38). That flag is
+        // not read yet, so a seated unit never asks (v1 has no vehicles, D115).
+        auto GetNextWeaponSlot(const UnitClientState& state) const -> std::optional<std::int8_t>;
+
+        // return: The next grenade type with grenades left (0x48b58c), or nullopt if there is no other one (D120).
+        // note: Game thread only.
+        auto GetNextGrenadeType(const UnitClientState& state) const -> std::optional<std::int8_t>;
+
+        // return: The next zoom level of the weapon in the hands (0x485838, -1 = not zoomed), or nullopt if the unit cannot zoom
+        // now (0x4852a0) (D120).
+        // note: Game thread only.
+        auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t>;
+
+        // Finds the engine functions by signature, in three sets: the ones that add bots, the ones that build the interaction and the
+        // client selectors (weapon, grenade, zoom).
         // return: False if one is not found. The cause is logged. Without the first set no bot can be added, without the second the
-        // agents keep the interaction the engine built (none for a bot).
+        // agents keep the interaction the engine built (none for a bot), without the third the agents cannot switch weapon,
+        // grenade or zoom.
         // note: Call it before the SetMachines hook is installed: the hook overwrites the bytes the signature matches.
         auto ResolveFunctions() -> bool;
 
@@ -77,6 +102,12 @@ export namespace Platform::Simulation::System
         GatherInteractionsFunction m_GatherNearbyInteractions{ nullptr };
         GatherInteractionsFunction m_GatherAimedInteractions{ nullptr };
         bool m_IsInteractionResolved{ false };
+
+        UnitSelectorFunction m_NextWeaponSlot{ nullptr };
+        UnitSelectorFunction m_NextGrenadeType{ nullptr };
+        NextZoomLevelFunction m_NextZoomLevel{ nullptr };
+        CanUnitZoomFunction m_CanUnitZoom{ nullptr };
+        bool m_IsClientResolved{ false };
 
         // Reads the machines, the players and the game options of the engine into the store.
         auto PublishSnapshot(std::uintptr_t threadContext) -> void;

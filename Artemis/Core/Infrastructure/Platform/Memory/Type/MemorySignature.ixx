@@ -124,6 +124,35 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 48 89 58 18 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 38 FC FF FF 48 81 EC 90 04 00 00 0F 29 70 B8 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 70 03 00 00 44 8B 05 ?? ?? ?? ?? 4C 8B FA 65 48 8B 04 25 58 00 00 00 8B F9"
     };
 
+    // Next weapon slot of a unit (0x48b618): int16(unit, from slot, direction). What a local client asks for when its player
+    // switches weapon (A17 sec. 6, D120).
+    inline constexpr Signature NextWeaponSlot
+    {
+        "NextWeaponSlot",
+        "40 53 48 83 EC 20 44 8B 0D ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 41 BB 10 00 00 00 4A 8B 04 C8 44 0F B7 C9 4E 8B 1C 18 4F 8D 14 49 49 8B 43 50 4E 8B 4C D0 10 49 0F BF 99 8E 01 00 00"
+    };
+
+    // Next grenade type of a unit with grenades left (0x48b58c): int16(unit, from type, cycle) (A17 sec. 6, D120).
+    inline constexpr Signature NextGrenadeType
+    {
+        "NextGrenadeType",
+        "48 89 5C 24 08 44 8B 0D ?? ?? ?? ?? 33 DB 65 48 8B 04 25 58 00 00 00 45 0F B7 D8 41 BA 10 00 00 00 41 83 C8 FF 66 44 3B C2 0F B7 C9"
+    };
+
+    // Next zoom level of the weapon of a unit (0x485838): int16(unit, current level), -1 at the end of the cycle (A17 sec. 6, D120).
+    inline constexpr Signature NextZoomLevel
+    {
+        "NextZoomLevel",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56 41 57 48 83 EC 20 41 BF 01 00 00 00 0F B7 FA 41 8A F7 48 83 CB FF E8 ?? ?? ?? ?? 8B 0D ?? ?? ?? ?? 44 8B C0"
+    };
+
+    // Whether a unit can zoom now (0x4852a0): bool(unit) (A17 sec. 6, D120).
+    inline constexpr Signature CanUnitZoom
+    {
+        "CanUnitZoom",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56 41 57 48 83 EC 20 8B 15 ?? ?? ?? ?? 41 83 CF FF 65 48 8B 04 25 58 00 00 00 40 B7 01 41 BC 10 00 00 00 8B D9"
+    };
+
     // Second step of the interaction of a player (0x4eb54): objects inside a cone of its weapon. Same arguments (A9 M5d).
     inline constexpr Signature GatherAimedInteractions
     {

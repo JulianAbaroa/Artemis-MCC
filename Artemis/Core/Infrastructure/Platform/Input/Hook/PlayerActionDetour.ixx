@@ -7,6 +7,11 @@ import Platform.Input.State;
 import Platform.Simulation.System;
 import std;
 
+namespace
+{
+    using Platform::Input::Type::k_MaxActionPlayers;
+}
+
 export namespace Platform::Input::Hook
 {
     // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
@@ -21,6 +26,8 @@ export namespace Platform::Input::Hook
 
         using ApplyPlayerActionsFunction = Platform::Input::Type::ApplyPlayerActionsFunction;
         using ClearPlayerActionFunction = Platform::Input::Type::ClearPlayerActionFunction;
+        using ClientRequests = Platform::Input::Type::ClientRequests;
+        using WeaponRequest = Platform::Input::Type::WeaponRequest;
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
@@ -57,6 +64,9 @@ export namespace Platform::Input::Hook
         // Ticks seen since the hook was installed. Game thread only.
         std::uint64_t m_Sequence{ 0 };
 
+        // Weapon slot each agent asked for and does not hold yet (D120). Game thread only.
+        std::array<std::optional<WeaponRequest>, k_MaxActionPlayers> m_WeaponRequests{};
+
         // Engine function that clears an action, or null if not found (then no override is applied).
         ClearPlayerActionFunction m_ClearPlayerAction{ nullptr };
 
@@ -69,6 +79,13 @@ export namespace Platform::Input::Hook
         // note: The action starts from the empty action of the engine, then the unit slot, the override and the interaction (D119).
         // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
+
+        // Writes the client requests of the agent (weapon, grenade, zoom) into its action, with the engine selectors (D120).
+        // note: Without a request the action asks for nothing and keeps the zoom of the unit. For a local player with an override the
+        // zoom its own input asks for is ignored. A weapon request is sent again every tick until the unit holds that slot,
+        // k_WeaponRequestTicks pass or the inventory changes. Game thread only.
+        auto WriteClientRequests(std::uint8_t* action, std::uintptr_t threadContext, std::size_t player,
+            const ClientRequests& requests) -> void;
 
         // return: Thread context of the engine, or 0 if it is not found.
         // note: Reads the thread local storage of the current thread. Call it from the game thread.
