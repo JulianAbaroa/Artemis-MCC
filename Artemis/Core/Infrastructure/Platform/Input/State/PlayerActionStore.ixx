@@ -6,6 +6,7 @@ import std;
 namespace
 {
     using Platform::Input::Type::k_MaxActionPlayers;
+    using Platform::Input::Type::k_ShadowFieldCount;
 }
 
 export namespace Platform::Input::State
@@ -20,6 +21,8 @@ export namespace Platform::Input::State
         using ActionOverride = Platform::Input::Type::ActionOverride;
         using ActionWatch = Platform::Input::Type::ActionWatch;
         using ClientRequests = Platform::Input::Type::ClientRequests;
+        using ShadowField = Platform::Input::Type::ShadowField;
+        using ShadowCount = Platform::Input::Type::ShadowCount;
 
     public:
         PlayerActionStore() = default;
@@ -56,6 +59,20 @@ export namespace Platform::Input::State
         // param out: Out. Requests of every player, empty for a player without one.
         auto TakeClientRequests(std::array<ClientRequests, k_MaxActionPlayers>& out) -> void;
 
+        // Turns the shadow check on or off (D122). Off by default.
+        auto SetShadowEnabled(bool isEnabled) -> void;
+        auto IsShadowEnabled() const -> bool;
+
+        // Counts one comparison of the shadow check.
+        // return: The mismatches of the field so far, this one included.
+        auto AddShadow(ShadowField field, bool isMatch) -> std::uint64_t;
+
+        // param out: Out. Comparisons of every field since the last clear.
+        auto CopyShadow(std::array<ShadowCount, k_ShadowFieldCount>& out) const -> void;
+
+        // Zeroes the comparisons of the shadow check.
+        auto ClearShadow() -> void;
+
         // Drops the actions, the watches, the overrides and the client requests.
         auto Cleanup() -> void;
 
@@ -64,6 +81,8 @@ export namespace Platform::Input::State
         std::array<ActionWatch, k_MaxActionPlayers> m_Watches{};
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> m_Overrides{};
         std::array<ClientRequests, k_MaxActionPlayers> m_ClientRequests{};
+        std::array<ShadowCount, k_ShadowFieldCount> m_Shadow{};
+        bool m_IsShadowEnabled{ false };
 
         mutable std::mutex m_Mutex{};
     };

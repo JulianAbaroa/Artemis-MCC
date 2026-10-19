@@ -30,6 +30,9 @@ export namespace Platform::Input::Hook
         using ClientRequests = Platform::Input::Type::ClientRequests;
         using WeaponRequest = Platform::Input::Type::WeaponRequest;
         using ResolveTagAddressFunction = Platform::Input::Type::ResolveTagAddressFunction;
+        using ActionOverride = Platform::Input::Type::ActionOverride;
+        using ShadowField = Platform::Input::Type::ShadowField;
+        using ShadowPlayer = Platform::Input::Type::ShadowPlayer;
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
@@ -72,6 +75,9 @@ export namespace Platform::Input::Hook
         // Ticks each hold lane of each agent has been down (D121). Game thread only.
         std::array<std::array<std::uint32_t, k_HoldLanes.size()>, k_MaxActionPlayers> m_LaneTicks{};
 
+        // What the shadow check remembers of each local player (D122). Reset while the check is off. Game thread only.
+        std::array<ShadowPlayer, k_MaxActionPlayers> m_ShadowPlayers{};
+
         // Variable of the engine that points to the globals table with the player control tag, and the engine function that resolves
         // a tag address. Null if not found (then no lane is ever held).
         const std::uintptr_t* m_PlayerControlTable{ nullptr };
@@ -89,6 +95,18 @@ export namespace Platform::Input::Hook
         // note: The action starts from the empty action of the engine, then the unit slot, the override and the interaction (D119).
         // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
+
+        // Shadow check (D122): for every local player without an override, compares the client fields Artemis would send for its
+        // unit with the ones the engine built this tick, and counts the results in the store.
+        // note: Game thread only. Development tool, off by default. Mismatches near the hold threshold within one tick count as
+        // matches: the engine counts milliseconds of real frames.
+        auto CheckShadow(const std::uint8_t* update, std::uintptr_t threadContext, std::uint32_t engineMask,
+            const std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::optional<std::uint32_t> holdTicks)
+            -> void;
+
+        // Counts one comparison and logs the first mismatches of each field.
+        auto ReportShadow(ShadowField field, std::size_t player, bool isMatch, std::int64_t engineValue, std::int64_t artemisValue)
+            -> void;
 
         // Writes the hold lanes of the agent into its action: the down bits it holds, plus the held bit of every lane down for the
         // hold threshold of the engine (D121).

@@ -299,6 +299,57 @@ export namespace Platform::Input::Type
         std::uint32_t TicksLeft{ 0 };
     };
 
+    // Fields the shadow check compares (D122): what Artemis would send as the client of a local player against what the engine built.
+    enum class ShadowField : std::uint8_t
+    {
+        // Interaction records (+0x54), byte for byte.
+        Interaction = 0,
+        // Held bit of every hold lane that is down (+0x40), within one tick.
+        HeldLane,
+        // Weapon slot asked for (+0x46) when it differs from the one in the hands.
+        Weapon,
+        // Grenade type asked for (+0x48) when it differs from the current one.
+        Grenade,
+        // Zoom level asked for (+0x4A) when it differs from the current one and is not "no zoom".
+        Zoom,
+
+        Count
+    };
+
+    inline constexpr std::size_t k_ShadowFieldCount{ static_cast<std::size_t>(ShadowField::Count) };
+
+    // Names of the fields, in the order of ShadowField (log and UI).
+    inline constexpr std::array<const char*, k_ShadowFieldCount> k_ShadowFieldNames
+    {
+        "Interaction",
+        "Held lane",
+        "Weapon",
+        "Grenade",
+        "Zoom",
+    };
+
+    // Mismatches of each field the shadow check logs. The rest are only counted.
+    inline constexpr std::uint64_t k_ShadowLogLimit{ 20 };
+
+    // What the shadow check remembers of one local player between ticks (D122).
+    struct ShadowPlayer
+    {
+        // Ticks each hold lane has been down, and whether it was seen up since the check started (else its count is unknown).
+        std::array<std::uint32_t, k_HoldLanes.size()> LaneTicks{};
+        std::array<bool, k_HoldLanes.size()> IsLaneSeenUp{};
+
+        // Weapon slot and grenade type the engine asked for on the previous tick (the empty action values at first).
+        std::uint8_t WeaponSlot{ 0xFF };
+        std::uint16_t GrenadeType{ 0xFFFF };
+    };
+
+    // Comparisons of one field since the shadow check was cleared.
+    struct ShadowCount
+    {
+        std::uint64_t Checked{ 0 };
+        std::uint64_t Mismatched{ 0 };
+    };
+
     // What the action of one player did since the watch was cleared, so presses of a single tick are not missed (A9 M4a).
     struct ActionWatch
     {

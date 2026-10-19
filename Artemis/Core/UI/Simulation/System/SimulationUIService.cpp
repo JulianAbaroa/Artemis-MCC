@@ -16,6 +16,7 @@ namespace
     using Platform::Input::Type::PlayerActions;
     using Platform::Input::Type::ActionOverride;
     using Platform::Input::Type::ClientRequests;
+    using Platform::Input::Type::ShadowCount;
     using Export::Tick::Type::Player;
     using Export::Tick::Type::Players;
     using Platform::Simulation::Type::SessionSnapshot;
@@ -34,6 +35,9 @@ namespace
     using Platform::Input::Type::k_ActionFacingOffset;
     using Platform::Input::Type::k_ActionThrottleOffset;
     using Platform::Input::Type::k_UseLane;
+    using Platform::Input::Type::k_ShadowFieldCount;
+    using Platform::Input::Type::k_ShadowFieldNames;
+    using Platform::Input::Type::k_ShadowLogLimit;
     using Platform::Lifecycle::Type::k_TicksPerSecond;
     using UI::Simulation::Type::k_LocalPlayerInputCount;
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
@@ -168,6 +172,11 @@ namespace UI::Simulation::System
         ImGui::SeparatorText("Bots");
 
         this->DrawBots();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Shadow check");
+
+        this->DrawShadow();
     }
 
     auto SimulationUIService::DrawGameSpeed() -> void
@@ -784,6 +793,43 @@ namespace UI::Simulation::System
             }
 
             ImGui::PopID();
+        }
+
+        ImGui::EndTable();
+    }
+
+    auto SimulationUIService::DrawShadow() -> void
+    {
+        ImGui::TextWrapped("For every local player without an override, compares what Artemis would send as its client with what the"
+            " engine built (D122). Play normally: switch weapons and grenades, zoom, hold buttons, walk over objects.");
+        ImGui::Text("Mismatches logged per field: %llu.", static_cast<unsigned long long>(k_ShadowLogLimit));
+
+        bool isEnabled{ m_PlayerActionStore.IsShadowEnabled() };
+        if (ImGui::Checkbox("Enabled", &isEnabled)) m_PlayerActionStore.SetShadowEnabled(isEnabled);
+
+        ImGui::SameLine();
+        if (ImGui::Button("Clear")) m_PlayerActionStore.ClearShadow();
+
+        std::array<ShadowCount, k_ShadowFieldCount> counts{};
+        m_PlayerActionStore.CopyShadow(counts);
+
+        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
+        if (!ImGui::BeginTable("Shadow", 3, flags)) return;
+
+        ImGui::TableSetupColumn("Field");
+        ImGui::TableSetupColumn("Checked");
+        ImGui::TableSetupColumn("Mismatched");
+        ImGui::TableHeadersRow();
+
+        for (std::size_t field{ 0 }; field < k_ShadowFieldCount; ++field)
+        {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(k_ShadowFieldNames[field]);
+            ImGui::TableNextColumn();
+            ImGui::Text("%llu", static_cast<unsigned long long>(counts[field].Checked));
+            ImGui::TableNextColumn();
+            ImGui::Text("%llu", static_cast<unsigned long long>(counts[field].Mismatched));
         }
 
         ImGui::EndTable();

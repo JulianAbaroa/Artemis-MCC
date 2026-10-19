@@ -107,6 +107,9 @@ export namespace UI::Simulation::System
         // Draws the add button and one row per bot with its action mode (A9 M5b).
         auto DrawBots() -> void;
 
+        // Draws the shadow check (D122): its switch and the comparisons of every field.
+        auto DrawShadow() -> void;
+
         // Writes the latest action of a bot to the log (bytes and whether it is in the mask).
         auto LogBotAction(std::size_t number, std::size_t playerIndex, const PlayerActions& actions) -> void;
 

@@ -19,6 +19,7 @@ namespace
     using Platform::Input::Type::ActionOverride;
     using Platform::Input::Type::ClientRequests;
     using Platform::Input::Type::WeaponRequest;
+    using Platform::Input::Type::ShadowField;
     using Platform::Simulation::Type::UnitClientState;
     using Platform::Simulation::Type::k_NoZoomLevel;
 
@@ -49,12 +50,14 @@ namespace
     using Platform::Input::Type::k_ActionGrenadeTypeOffset;
     using Platform::Input::Type::k_ActionZoomLevelOffset;
     using Platform::Input::Type::k_ActionKeepZoomButton;
+    using Platform::Input::Type::k_ShadowFieldNames;
     using Platform::Input::Type::k_ControlGlobalsSlot;
     using Platform::Input::Type::k_ControlBlockStride;
     using Platform::Input::Type::k_ControlFacingOffset;
 
     using Platform::Simulation::Type::k_InteractionRecordCount;
     using Platform::Simulation::Type::k_InteractionRecordSize;
+    using Platform::Simulation::Type::k_InteractionRecordObject;
 
     static_assert(k_ActionInteractionSize == k_InteractionRecordCount * k_InteractionRecordSize,
         "The interaction of the action must hold the records the engine builds.");
@@ -72,6 +75,11 @@ namespace
 
     // Sanity limit of the hold threshold read from the engine. Anything outside (0, limit) is not a threshold.
     constexpr float k_MaxHoldThresholdSeconds{ 5.0f };
+
+    using Platform::Input::Type::k_ShadowLogLimit;
+
+    // Weapon slot of the action that asks for nothing.
+    constexpr std::uint8_t k_NoWeaponRequest{ 0xFF };
 
     // Milliseconds per second. The local client keeps the hold time and the threshold in whole milliseconds (0x5df80).
     constexpr std::uint32_t k_MillisecondsPerSecond{ 1000 };
@@ -134,14 +142,29 @@ namespace Platform::Input::Hook
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> overrides{};
         m_PlayerActionStore.CopyOverrides(overrides);
 
-        // note: The tag is only read while some agent plays, never in menus or loading screens.
+        std::uint32_t mask{ 0 };
+        std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
+
+        // note: Players with an action from the engine this tick, before the overrides are added.
+        const std::uint32_t engineMask{ mask };
+
+        // note: The tag is only read while some agent or (for the shadow check) some local player plays, never in menus or loading
+        // screens.
         const bool hasOverride{ std::ranges::any_of(overrides, [](const std::optional<ActionOverride>& value) {
             return value.has_value();
         }) };
-        const std::optional<std::uint32_t> holdTicks{ hasOverride ? this->GetHoldThresholdTicks() : std::nullopt };
+        const bool isShadowEnabled{ m_PlayerActionStore.IsShadowEnabled() };
+        const bool isTagNeeded{ hasOverride || (isShadowEnabled && engineMask != 0) };
+        const std::optional<std::uint32_t> holdTicks{ isTagNeeded ? this->GetHoldThresholdTicks() : std::nullopt };
 
-        std::uint32_t mask{ 0 };
-        std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
+        if (isShadowEnabled)
+        {
+            this->CheckShadow(update, threadContext, engineMask, overrides, holdTicks);
+        }
+        else
+        {
+            m_ShadowPlayers.fill(ShadowPlayer{});
+        }
 
         const std::uintptr_t controlGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ControlGlobalsSlot) };
 
@@ -204,6 +227,121 @@ namespace Platform::Input::Hook
         }
 
         std::memcpy(update + k_UpdateActionMaskOffset, &mask, sizeof(mask));
+    }
+
+    auto PlayerActionDetour::CheckShadow(const std::uint8_t* update, std::uintptr_t threadContext, std::uint32_t engineMask,
+        const std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::optional<std::uint32_t> holdTicks)
+        -> void
+    {
+        for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
+        {
+            ShadowPlayer& shadow{ m_ShadowPlayers[player] };
+
+            const std::optional<UnitClientState> state{ (overrides[player] || (engineMask & (1u << player)) == 0)
+                ? std::nullopt : m_BotService.GetUnitClientState(threadContext, player) };
+            if (!state)
+            {
+                shadow = ShadowPlayer{};
+                continue;
+            }
+
+            const std::uint8_t* action{ update + k_UpdateActionsOffset + (player * k_PlayerActionSize) };
+
+            std::array<std::uint8_t, k_ActionInteractionSize> interaction{};
+            if (m_BotService.WriteInteraction(threadContext, player, interaction))
+            {
+                std::uint32_t engineObject{ 0 };
+                std::uint32_t artemisObject{ 0 };
+                std::memcpy(&engineObject, action + k_ActionInteractionOffset + k_InteractionRecordObject, sizeof(engineObject));
+                std::memcpy(&artemisObject, interaction.data() + k_InteractionRecordObject, sizeof(artemisObject));
+
+                const bool isMatch{ std::memcmp(action + k_ActionInteractionOffset, interaction.data(), interaction.size()) == 0 };
+                this->ReportShadow(ShadowField::Interaction, player, isMatch, engineObject, artemisObject);
+            }
+
+            std::uint32_t lanes{ 0 };
+            std::memcpy(&lanes, action + k_ActionLanesOffset, sizeof(lanes));
+
+            for (std::size_t lane{ 0 }; lane < k_HoldLanes.size(); ++lane)
+            {
+                std::uint32_t& ticks{ shadow.LaneTicks[lane] };
+
+                if ((lanes & (1u << k_HoldLanes[lane].DownBit)) == 0)
+                {
+                    ticks = 0;
+                    shadow.IsLaneSeenUp[lane] = true;
+                    continue;
+                }
+
+                if (ticks < (std::numeric_limits<std::uint32_t>::max)()) ++ticks;
+
+                // note: A lane already down when the check started has an unknown count.
+                if (!holdTicks || !shadow.IsLaneSeenUp[lane]) continue;
+
+                const bool isEngineHeld{ (lanes & (1u << k_HoldLanes[lane].HeldBit)) != 0 };
+                const bool isArtemisHeld{ ticks >= *holdTicks };
+                const bool isNearThreshold{ ticks + 1 >= *holdTicks && ticks <= *holdTicks + 1 };
+                this->ReportShadow(ShadowField::HeldLane, player, isEngineHeld == isArtemisHeld || isNearThreshold, isEngineHeld,
+                    isArtemisHeld);
+            }
+
+            const std::uint8_t slot{ action[k_ActionWeaponSlotOffset] };
+            std::uint16_t echo{ 0 };
+            std::memcpy(&echo, action + k_ActionInventoryVersionOffset, sizeof(echo));
+            // note: Checked once per request, on the tick it changes. A press while the previous request is still pending goes on
+            // from that one, as a double tap does.
+            const std::uint8_t previousSlot{ shadow.WeaponSlot };
+            shadow.WeaponSlot = slot;
+            if (slot != previousSlot && slot != k_NoWeaponRequest && static_cast<std::int8_t>(slot) != state->WeaponSlot
+                && echo == state->InventoryVersion)
+            {
+                UnitClientState from{ *state };
+                if (previousSlot != k_NoWeaponRequest && static_cast<std::int8_t>(previousSlot) != state->WeaponSlot)
+                {
+                    from.WeaponSlot = static_cast<std::int8_t>(previousSlot);
+                }
+
+                const std::optional<std::int8_t> expected{ m_BotService.GetNextWeaponSlot(from) };
+                this->ReportShadow(ShadowField::Weapon, player, expected == static_cast<std::int8_t>(slot), slot,
+                    expected.value_or(-1));
+            }
+
+            std::uint16_t grenade{ 0 };
+            std::memcpy(&grenade, action + k_ActionGrenadeTypeOffset, sizeof(grenade));
+            const std::uint16_t previousGrenade{ shadow.GrenadeType };
+            shadow.GrenadeType = grenade;
+            if (grenade != previousGrenade && grenade != 0xFFFF && static_cast<std::int8_t>(grenade) != state->GrenadeType)
+            {
+                UnitClientState from{ *state };
+                if (previousGrenade != 0xFFFF && static_cast<std::int8_t>(previousGrenade) != state->GrenadeType)
+                {
+                    from.GrenadeType = static_cast<std::int8_t>(previousGrenade);
+                }
+
+                const std::optional<std::int8_t> expected{ m_BotService.GetNextGrenadeType(from) };
+                this->ReportShadow(ShadowField::Grenade, player, expected == static_cast<std::int8_t>(grenade), grenade,
+                    expected.value_or(-1));
+            }
+
+            std::int16_t zoom{ 0 };
+            std::memcpy(&zoom, action + k_ActionZoomLevelOffset, sizeof(zoom));
+            if (zoom > k_NoZoomLevel && zoom != state->ZoomLevel)
+            {
+                const std::optional<std::int8_t> expected{ m_BotService.GetNextZoomLevel(*state) };
+                this->ReportShadow(ShadowField::Zoom, player, expected == static_cast<std::int8_t>(zoom), zoom,
+                    expected.value_or(-1));
+            }
+        }
+    }
+
+    auto PlayerActionDetour::ReportShadow(ShadowField field, std::size_t player, bool isMatch, std::int64_t engineValue,
+        std::int64_t artemisValue) -> void
+    {
+        const std::uint64_t mismatched{ m_PlayerActionStore.AddShadow(field, isMatch) };
+        if (isMatch || mismatched > k_ShadowLogLimit) return;
+
+        m_LogsService.Message("[PlayerActionDetour] WARNING: Shadow check: {} of player {} differs (engine {:X}, Artemis {:X}).",
+            k_ShadowFieldNames[static_cast<std::size_t>(field)], player, engineValue, artemisValue);
     }
 
     auto PlayerActionDetour::WriteLanes(std::uint8_t* action, std::size_t player, std::uint32_t lanes,

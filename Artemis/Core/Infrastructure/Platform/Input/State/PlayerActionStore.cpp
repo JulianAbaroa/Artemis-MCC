@@ -8,6 +8,7 @@ namespace
     using Platform::Input::Type::k_ActionButtonsOffset;
     using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Input::Type::k_PlayerActionSize;
+    using Platform::Input::Type::k_ShadowFieldCount;
 
     // Full turn in radians.
     constexpr float k_TwoPi{ 6.28318531f };
@@ -108,6 +109,41 @@ namespace Platform::Input::State
         std::lock_guard<std::mutex> lock{ m_Mutex };
         out = m_ClientRequests;
         m_ClientRequests.fill(ClientRequests{});
+    }
+
+    auto PlayerActionStore::SetShadowEnabled(bool isEnabled) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_IsShadowEnabled = isEnabled;
+    }
+
+    auto PlayerActionStore::IsShadowEnabled() const -> bool
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_IsShadowEnabled;
+    }
+
+    auto PlayerActionStore::AddShadow(ShadowField field, bool isMatch) -> std::uint64_t
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+
+        ShadowCount& count{ m_Shadow[static_cast<std::size_t>(field)] };
+        ++count.Checked;
+        if (!isMatch) ++count.Mismatched;
+
+        return count.Mismatched;
+    }
+
+    auto PlayerActionStore::CopyShadow(std::array<ShadowCount, k_ShadowFieldCount>& out) const -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        out = m_Shadow;
+    }
+
+    auto PlayerActionStore::ClearShadow() -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_Shadow.fill(ShadowCount{});
     }
 
     auto PlayerActionStore::Cleanup() -> void
