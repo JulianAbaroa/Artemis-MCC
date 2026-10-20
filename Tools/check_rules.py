@@ -10,6 +10,7 @@ Each finding has the id of its check (see CHECKS below) and points to a file and
     python Tools/check_rules.py --only S1,U1      Only these checks.
     python Tools/check_rules.py --update-baseline Accept every current finding (Tools/check_rules_baseline.txt).
     python Tools/check_rules.py --self-test       Checks the checker: Tools/check_rules_cases/ has one violation of each file rule.
+    python Tools/check_rules.py --dead            Possibly dead methods (X1). Informative, never fails.
 
 The baseline holds the findings that already existed when a check was added, so only new code has to be clean. A finding is
 matched by file, check and the text of its line (not the line number), so moving code does not make it new. When old code is
@@ -60,6 +61,25 @@ CHECKS = {
     "A1": "Import goes up the layers (a layer only imports lower layers).",
     "D1": "Same constant (name and value) defined in more than one file.",
     "D2": "Same engine value under different constant names in different files.",
+    # Added with deps.py / refs.py (rules 2, 3, 4, 6)
+    "A2": "Singleton outside a hook (static s_Instance only in Hook modules).",
+    "A3": "Specialization imports go up (Type imports only Type, State only Type and State).",
+    "M4": "Third level of the module name is not Type, State, System or Hook.",
+    "M5": "Namespace does not match the module name (+1 level for a Type partition).",
+    "W1": "std::max / std::min without parentheses (windows.h defines max: write (std::max)).",
+    "N6": "Hungarian prefix in a parameter or local (pSwapChain -> swapChain).",
+    "C3": "Comment cites an Ignore/ path (cite the decision id, D97).",
+    "C6": "Comment starts with 'This function/method/class...' (verb phrase).",
+    "C7": "Comment not in English.",
+    "H2": "Function pointer type outside a Type module, not named <Name>Function, or typedef.",
+    "H3": "Aggregating .ixx of a Hook module inside Hook/ (it lives in the folder of the specialization).",
+    "H4": "Hooked function without in-flight count (InFlightScope / HookScope).",
+    "O1": "Raw hex value in a System, Hook or .cpp body (offsets and RVAs only in Type modules).",
+    "Y1": "Layer groups not in order '// --- State ---', '// --- System ---', '// --- Hook ---'.",
+    "Y2": "File layout: blank lines around the module line and imports, 'module;' only with includes.",
+    "Y3": "Class sections not in order [private: usings] public: [private:].",
+    "P1": "Source not listed in Artemis.vcxproj / .filters / Artemis-MCC.pyproj.",
+    "X1": "Possibly dead method: declared, name used nowhere else (only with --dead, does not fail).",
 }
 
 # Rank of each module prefix. A module may import modules of its own rank or lower (A1), and imports go in rank order (M3).
@@ -536,6 +556,7 @@ def CheckFile(source, findings):
     Walk(source, OnStatementWrapper, OnBlockHeader)
     CheckTypeDefinitions(source, Add)
     CheckThis(source, Add)
+    CheckMore(source, Add)
 
 
 def CheckTypeDefinitions(source, Add):
@@ -600,6 +621,194 @@ def CheckThis(source, Add):
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------
+# More file checks: math, naming, comments, hooks, modules, specializations, layout, offsets
+# ---------------------------------------------------------------------------------------------------------------------------------
+
+SPANISH = re.compile(r"\b(que|para|del|los|las|una|esto|cuando|porque|pero|segun|tambien|este|esta|hay|sin|con)\b", re.I)
+ACCESS_ORDERS = {(), ("private",), ("public",), ("private", "public"), ("public", "private"), ("private", "public", "private")}
+
+
+def CheckMore(source, Add):
+    parts = source.Module.split(".") if source.Module else []
+    spec = parts[2] if len(parts) >= 3 else None
+    isLayer = bool(parts) and parts[-1] == "Layer"
+    isType, isHook = spec == "Type", spec == "Hook"
+    declIndex, decl = None, None
+    for index, line in enumerate(source.Code):
+        decl = re.match(r"\s*(export\s+)?module\s+([\w.]+)(?::([\w.]+))?\s*;", line)
+        if decl:
+            declIndex = index
+            break
+    partition = decl.group(3) if decl else None
+
+    # M4: the third level of a module is its specialization
+    if len(parts) >= 3 and spec not in ("Type", "State", "System", "Hook", "Reflect") and not isLayer:
+        Add("M4", declIndex or 0, source.Module)
+
+    # M5: namespaces map 1:1 to the module (+1 level for a Type partition, the Layer uses the layer name). Reflect modules specialize
+    # templates of Common::Reflect, which must be done in their namespace.
+    if parts and spec != "Reflect":
+        expected = "::".join(parts[:-1] if isLayer else parts)
+        allowed = {expected}
+        if isType and partition:
+            allowed |= {expected + "::" + partition.split(".")[0], expected + "::" + partition.replace(".", "::")}
+        depth = 0
+        for index, line in enumerate(source.Code):
+            if depth == 0:
+                match = re.match(r"\s*(?:export\s+)?namespace\s+([\w:]+)\s*(?:\{.*)?$", line)
+                if match and match.group(1) not in allowed:
+                    Add("M5", index, f"{match.group(1)}, module {source.Module}")
+            depth += line.count("{") - line.count("}")
+
+    # A3: Type imports only Type, State imports only Type and State
+    allowedSpecs = {"Type": {"Type"}, "State": {"Type", "State"}}.get(spec)
+    for index, line in enumerate(source.Code):
+        match = re.match(r"\s*(?:export\s+)?import\s+([\w.]+)(?::[\w.]+)?\s*;", line)
+        if allowedSpecs and match:
+            target = match.group(1).split(".")
+            if len(target) >= 3 and target[2] in ("State", "System", "Hook") and target[2] not in allowedSpecs:
+                Add("A3", index, f"{spec} imports {match.group(1)}")
+
+    # W1, N6, A2, H2, O1: code lines
+    offsets = not isType and (spec in ("System", "Hook") or source.IsCpp)
+    for index, line in enumerate(source.Code):
+        if re.search(r"(?<![(\w:])std::(?:max|min)\s*\(", line):
+            Add("W1", index)
+        if (re.search(r"[(,]\s*(?:const\s+)?[\w:<>]+(?:\s*[*&]+\s*|\s+)(?:p|pp|lp|sz|dw)[A-Z]\w*\s*(?=[,)=\[])", line)
+                or re.search(r"\bauto\s*[*&]*\s*(?:p|pp|lp)[A-Z]\w*\s*[={]", line)):
+            Add("N6", index)
+        if not isHook and re.search(r"\bstatic\b[^;(]*\bs_Instance\b", line):
+            Add("A2", index)
+        match = re.match(r"\s*using\s+(\w+)\s*=\s*[^;]*\(\s*(?:__\w+\s*)?\*\s*\)", line)
+        if match and (not isType or not match.group(1).endswith("Function")):
+            Add("H2", index, match.group(1))
+        if re.match(r"\s*typedef\b[^;]*\(\s*(?:__\w+\s*)?\*", line):
+            Add("H2", index, "typedef")
+        if offsets and not re.search(r"IM_COL32|ImColor|Color", line):
+            for match in re.finditer(r"\b0x([0-9A-Fa-f]{2,})\b", line):
+                if not re.fullmatch(r"[Ff0]+", match.group(1)):
+                    Add("O1", index, "0x" + match.group(1))
+                    break
+
+    # H3: the aggregating .ixx of a Hook module lives in the folder of its specialization, not in Hook/
+    if (decl and decl.group(1) and not partition and isHook and "/Hook/" in source.Path
+            and any(re.match(r"\s*export\s+import\s+:", line) for line in source.Code)):
+        Add("H3", declIndex)
+
+    # H4: hooked functions count the calls in flight
+    if source.IsCpp and isHook:
+        text = "\n".join(source.Code)
+        match = re.search(r"::(Hooked\w+)\s*\(", text)
+        if match and not re.search(r"InFlightScope|HookScope", text):
+            Add("H4", text[:match.start()].count("\n"), match.group(1))
+
+    # C3, C6, C7: comments
+    for index, comment in enumerate(source.Comments):
+        if re.search(r"\bIgnore[/\\]|\b(?:Referencia|Historia|Temporal|Tareas)[/\\]", comment):
+            Add("C3", index)
+        if re.match(r"\s*This\s+(?:function|method|class|struct|file)\b", comment):
+            Add("C6", index)
+        if re.search("[áéíóúñÁÉÍÓÚÑ¿¡]", comment) or len(SPANISH.findall(comment)) >= 2:
+            Add("C7", index)
+
+    # Y1: Layer members grouped State, System, Hook
+    if isLayer:
+        order, last = {"State": 0, "System": 1, "Hook": 2}, -1
+        for index, comment in enumerate(source.Comments):
+            match = re.match(r"\s*---\s*(\w+)\s*---", comment)
+            if match:
+                rank = order.get(match.group(1))
+                if rank is None or rank < last:
+                    Add("Y1", index, match.group(1))
+                else:
+                    last = rank
+
+    # Y2: file layout around 'module;', the module line and the imports
+    code, blank = source.Code, lambda i: 0 <= i < len(source.Code) and not source.Lines[i].strip()
+    hasInclude = any(line.lstrip().startswith("#include") for line in source.Lines)
+    if code and code[0].strip() == "module;" and not hasInclude:
+        Add("Y2", 0, "'module;' without includes")
+    if declIndex:
+        if hasInclude and not blank(declIndex - 1):
+            Add("Y2", declIndex, "blank line before the module line")
+        if not source.IsCpp and not blank(declIndex + 1):
+            Add("Y2", declIndex, "blank line after the module line")
+    imports = [i for i, line in enumerate(code) if re.match(r"\s*(?:export\s+)?import\s", line)]
+    if imports:
+        for i in imports:
+            if re.match(r"\s*import\s+std\s*;", code[i]) and len(imports) > 1 and blank(i - 1):
+                Add("Y2", i, "no blank line before 'import std;'")
+        if not blank(imports[-1] + 1) and imports[-1] + 1 < len(code):
+            Add("Y2", imports[-1], "blank line after the imports")
+        if not source.IsCpp:
+            partitions = [i for i in imports if re.match(r"\s*(?:export\s+)?import\s+:", code[i])]
+            named = [i for i in imports if i not in partitions]
+            if partitions and named and named[0] > partitions[-1] and not blank(partitions[-1] + 1):
+                Add("Y2", partitions[-1], "blank line between partition imports and other imports")
+
+    # Y3: sections of a class in an .ixx: [private: usings] public: [private:]
+    if not source.IsCpp:
+        depth, pending, classes = 0, None, []
+        for index, line in enumerate(code):
+            match = re.match(r"\s*(?:export\s+)?(?:template\s*<.*>\s*)?class\s+(\w+)(?!.*;\s*$)", line)
+            if match:
+                pending = (match.group(1), index)
+            label = re.match(r"\s*(public|private|protected)\s*:(?!:)", line)
+            if label and classes and depth == classes[-1][0] + 1:
+                classes[-1][2].append(label.group(1))
+            for ch in line:
+                if ch == "{":
+                    if pending:
+                        classes.append((depth, pending[0], [], pending[1]))
+                        pending = None
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if classes and depth == classes[-1][0]:
+                        _, name, labels, at = classes.pop()
+                        if tuple(labels) not in ACCESS_ORDERS:
+                            Add("Y3", at, f"{name}: {', '.join(labels)}")
+                elif ch == ";" and pending and pending[1] == index:
+                    pending = None
+
+
+def CheckProjectMore(sources, findings):
+    # P1: every source is in the Visual Studio projects
+    def Read(path):
+        full = os.path.join(ROOT, path)
+        return open(full, encoding="utf-8-sig", errors="replace").read() if os.path.exists(full) else None
+    vcxproj, filters, pyproj = Read("Artemis/Artemis.vcxproj"), Read("Artemis/Artemis.vcxproj.filters"), Read("Artemis-MCC.pyproj")
+    for source in sources:
+        name = source.Path[len("Artemis/"):].replace("/", "\\")
+        for text, label in ((vcxproj, "Artemis.vcxproj"), (filters, "Artemis.vcxproj.filters")):
+            if text is not None and f'"{name}"' not in text:
+                findings.append((source.Path, 1, "P1", f"missing in {label}", ""))
+    if pyproj is not None:
+        out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", "Tools/*.py", "Tools/**/*.py"],
+                             cwd=ROOT, capture_output=True, text=True).stdout
+        for path in sorted(set(out.splitlines())):
+            if f'"{path.replace("/", chr(92))}"' not in pyproj:
+                findings.append((path, 1, "P1", "missing in Artemis-MCC.pyproj", ""))
+
+
+def DeadMethods(sources):
+    """X1 (only with --dead): methods declared in an .ixx whose name appears at most twice in the code (declaration and definition)."""
+    words = collections.Counter()
+    for source in sources:
+        for line in source.Code:
+            words.update(re.findall(r"\b[A-Za-z_]\w*\b", line))
+    findings = []
+    for source in sources:
+        if source.IsCpp or source.IsGenerated:
+            continue
+        for index, line in enumerate(source.Code):
+            match = re.match(r"\s*(?:(?:static|virtual|inline|constexpr|\[\[nodiscard\]\])\s+)*auto\s+([A-Z]\w*)\s*\(", line)
+            if match and "override" not in line and not match.group(1).startswith("Hooked") and words[match.group(1)] <= 2:
+                findings.append((source.Path, index + 1, "X1", match.group(1), line.strip()))
+    return findings
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------
 # Project checks
 # ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -643,6 +852,7 @@ def CheckProject(sources, findings):
         if len(names) > 1 and len(files) > 1:
             for name, path, index in places:
                 findings.append((path, index + 1, "D2", f"{value} as {', '.join(sorted(names))}", ""))
+    CheckProjectMore(sources, findings)
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------
@@ -674,13 +884,17 @@ def SaveBaseline(findings):
 
 # Checks that the files in Tools/check_rules_cases/ must trigger (one deliberate violation each).
 SELF_TEST_EXPECTED = {"F1", "F2", "S1", "S2", "S3", "S4", "N1", "N2", "N3", "N4", "N5", "U1", "U2", "U3", "U4", "T1", "M1", "M2", "M3",
-                      "C1", "C2", "L1"}
+                      "C1", "C2", "L1", "A2", "A3", "M4", "M5", "W1", "N6", "C3", "C6", "C7", "H2", "H3", "H4", "O1", "Y1", "Y2",
+                      "Y3"}
 
 
 def SelfTest():
     findings = []
-    for name in ("Fake.ixx", "Fake.cpp"):
-        CheckFile(Source("Tools/check_rules_cases/" + name), findings)
+    cases = os.path.join(ROOT, "Tools", "check_rules_cases")
+    for folder, _, names in os.walk(cases):
+        for name in sorted(names):
+            if name.endswith((".ixx", ".cpp")):
+                CheckFile(Source(os.path.relpath(os.path.join(folder, name), ROOT).replace(os.sep, "/")), findings)
     found = {f[2] for f in findings}
     missing = sorted(SELF_TEST_EXPECTED - found)
     for path, line, check, detail, _ in findings:
@@ -697,12 +911,19 @@ def Main():
     parser.add_argument("--files", nargs="*")
     parser.add_argument("--only")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--dead", action="store_true")
     arguments = parser.parse_args()
     if arguments.self_test:
         return SelfTest()
 
     paths = ListSources()
     sources = [Source(p) for p in paths]
+    if arguments.dead:
+        dead = DeadMethods(sources)
+        for path, line, check, detail, _ in dead:
+            print(f"{path}:{line}: X1 {detail}")
+        print(f"{len(dead)} possibly dead methods (check each one: planned systems are kept, rules 2).")
+        return 0
     findings = []
     selected = set(arguments.files or [])
     for source in sources:

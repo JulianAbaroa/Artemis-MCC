@@ -23,6 +23,7 @@ Artemis/Core/Common/Reflect/Type/Common.Reflect.Type.Math.ixx	U3	using Triangle 
 Artemis/Core/Common/Reflect/Type/Common.Reflect.Type.Math.ixx	U3	using Vec2 = Common::Math::Type::Vec2;
 Artemis/Core/Common/Reflect/Type/Common.Reflect.Type.Math.ixx	U3	using Vec3 = Common::Math::Type::Vec3;
 Artemis/Core/Common/Reflect/Type/Common.Reflect.Type.Math.ixx	U3	using Vec4 = Common::Math::Type::Vec4;
+Artemis/Core/Common/Reflect/Type/Common.Reflect.Type.Math.ixx	Y2	import :Core;
 Artemis/Core/Core.ixx	M3	import Resolved.Layer;
 Artemis/Core/Core.ixx	S2	HMODULE m_Module;
 Artemis/Core/DllMain.cpp	S1	DWORD WINAPI Bootstrap(LPVOID param)
@@ -45,8 +46,11 @@ Artemis/Core/Domain/1_Map/Map.Layer.ixx	S2	TagIndexStore m_TagIndexStore;
 Artemis/Core/Domain/1_Map/Map.Layer.ixx	S2	TagResolverService m_TagResolverService;
 Artemis/Core/Domain/1_Map/Map.Layer.ixx	S2	TagStructureService m_TagStructureService;
 Artemis/Core/Domain/1_Map/Reader/State/Tag/TagStore.ixx	U2	using ObjectType = TObject;
+Artemis/Core/Domain/1_Map/Reader/State/Tag/TagStore.ixx	Y3	class TagStore
 Artemis/Core/Domain/1_Map/Reader/State/TagIndex/TagIndexStore.ixx	U2	using TagTableEntry = Map::Reader::Type::Structure::TagTable::Entry;
 Artemis/Core/Domain/1_Map/Reader/State/TagIndex/TagIndexStore.ixx	U2	using TagTableGroupEntry = Map::Reader::Type::Structure::TagTable::GroupEntry;
+Artemis/Core/Domain/1_Map/Reader/System/DataStream/DataStreamService.cpp	W1	std::int32_t length = std::min(segmentLength,
+Artemis/Core/Domain/1_Map/Reader/System/DataStream/DataStreamService.cpp	W1	std::int32_t length = std::min(segmentLength,
 Artemis/Core/Domain/1_Map/Reader/System/Geometry/Info/GeometryInfoService.ixx	U2	using TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
 Artemis/Core/Domain/1_Map/Reader/System/Geometry/Loader/GeometryLoaderService.cpp	U2	using MeshesObject = Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
 Artemis/Core/Domain/1_Map/Reader/System/Geometry/Loader/GeometryLoaderService.cpp	U2	using TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
@@ -91,8 +95,27 @@ Artemis/Core/Domain/2_Resolved/Definitions/System/DefinitionsBuilder.ixx	S2	Obje
 Artemis/Core/Domain/2_Resolved/Definitions/System/DefinitionsBuilder.ixx	S2	std::tuple<BipdBuilder, BlocBuilder, CollBuilder, CtrlBuilder, EqipBuilder, HlmtBuilder,
 Artemis/Core/Domain/2_Resolved/Definitions/System/Level/Scnr/ScnrBuilder.cpp	D1	k_LastSoftCeilingKind { 0x0002 } in 2 files
 Artemis/Core/Domain/2_Resolved/Definitions/System/Level/Scnr/ScnrBuilder.cpp	D2	0X0001 as k_LastTriggerVolumeKind, k_PlacementInUseBit
+Artemis/Core/Domain/2_Resolved/Definitions/System/Level/Scnr/ScnrBuilder.cpp	O1	constexpr std::uint16_t k_LastSoftCeilingKind{ 0x0002 };
+Artemis/Core/Domain/2_Resolved/Definitions/System/Level/Scnr/ScnrBuilder.cpp	O1	constexpr std::uint16_t k_LastTriggerVolumeKind{ 0x0001 };
 Artemis/Core/Domain/2_Resolved/Definitions/System/Level/Sddt/SddtBuilder.cpp	D1	k_LastSoftCeilingKind { 0x0002 } in 2 files
+Artemis/Core/Domain/2_Resolved/Definitions/System/Level/Sddt/SddtBuilder.cpp	O1	constexpr std::uint16_t k_LastSoftCeilingKind{ 0x0002 };
 Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Coll/CollBuilder.cpp	D1	k_Max { (std::numeric_limits<float>::max)() } in 2 files
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Coll/CollBuilder.cpp	O1	if (permutations[i].Name == 0x0001)
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Mode/ModeBuilder.cpp	W1	max.X = std::max(max.X, ci.PositionBoundsX.Max);
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Mode/ModeBuilder.cpp	W1	max.Y = std::max(max.Y, ci.PositionBoundsY.Max);
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Mode/ModeBuilder.cpp	W1	max.Z = std::max(max.Z, ci.PositionBoundsZ.Max);
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Mode/ModeBuilder.cpp	W1	min.X = std::min(min.X, ci.PositionBoundsX.Min);
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Mode/ModeBuilder.cpp	W1	min.Y = std::min(min.Y, ci.PositionBoundsY.Min);
+Artemis/Core/Domain/2_Resolved/Definitions/System/Model/Mode/ModeBuilder.cpp	W1	min.Z = std::min(min.Z, ci.PositionBoundsZ.Min);
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsBipd.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsBloc.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsCtrl.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsEqip.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsMach.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsProj.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsScen.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsVehi.ixx	Y2	import std;
+Artemis/Core/Domain/2_Resolved/Definitions/Type/Object/DefinitionsWeap.ixx	Y2	import std;
 Artemis/Core/Domain/2_Resolved/Definitions/_Reflect/Damage/Reflect.Jpt.ixx	N2	static constexpr auto Value = std::tuple{
 Artemis/Core/Domain/2_Resolved/Definitions/_Reflect/Damage/Reflect.Jpt.ixx	N2	static constexpr bool HasFields{ true };
 Artemis/Core/Domain/2_Resolved/Definitions/_Reflect/Level/Reflect.Sbsp.ixx	N2	static constexpr auto Value = std::tuple{
@@ -200,12 +223,18 @@ Artemis/Core/Domain/2_Resolved/World/System/Raycast/Raycaster.cpp	D1	k_Max { (st
 Artemis/Core/Domain/3_Datum/Datum.Layer.ixx	S2	DatumService m_DatumService;
 Artemis/Core/Domain/3_Datum/Datum.Layer.ixx	S2	DatumStore m_DatumStore;
 Artemis/Core/Domain/3_Datum/Datum.Layer.ixx	S2	ObjectTableLocator m_ObjectTableLocator;
+Artemis/Core/Domain/3_Datum/Object/Hook/ObjectTableLocator.cpp	O1	*(std::uintptr_t*)(threadContext + 0x10);
+Artemis/Core/Domain/3_Datum/Object/Hook/ObjectTableLocator.cpp	O1	return *(std::uintptr_t*)(telemetryData + 0x50);
+Artemis/Core/Domain/3_Datum/Object/Hook/ObjectTableLocator.cpp	O1	std::uintptr_t tlsArray = (std::uintptr_t)__readgsqword(0x58);
 Artemis/Core/Domain/3_Datum/Object/System/DatumService.cpp	U3	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
 Artemis/Core/Domain/3_Datum/Object/System/DatumService.cpp	U3	using RawObject = Datum::Object::Type::Raw::RawObject;
 Artemis/Core/Domain/3_Datum/Object/System/DatumService.cpp	U3	using Snapshot = Datum::Object::Type::Raw::Snapshot;
 Artemis/Core/Domain/3_Datum/Object/Type/DatumRaw.ixx	F2	template<typename T>
 Artemis/Core/Domain/3_Datum/Object/Type/DatumRaw.ixx	U3	using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
 Artemis/Core/Domain/4_Tables/Interaction/Hook/InteractionTableLocator.cpp	D1	k_MaxTelemetryId { 1000 } in 2 files
+Artemis/Core/Domain/4_Tables/Interaction/Hook/InteractionTableLocator.cpp	O1	constexpr std::uintptr_t k_ControlGlobalsOffset{ 0xD8 };
+Artemis/Core/Domain/4_Tables/Interaction/Hook/InteractionTableLocator.cpp	O1	constexpr std::uintptr_t k_OutputUserTableOffset{ 0x680 };
+Artemis/Core/Domain/4_Tables/Interaction/Hook/InteractionTableLocator.cpp	O1	std::uintptr_t tlsArray{ (std::uintptr_t)__readgsqword(0x58) };
 Artemis/Core/Domain/4_Tables/Interaction/System/InteractionService.cpp	D1	k_IndexMask { 0xFFFF } in 3 files
 Artemis/Core/Domain/4_Tables/Interaction/System/InteractionService.cpp	D2	0XFFFF as k_HandleIndexMask, k_IndexMask, k_SaltMask
 Artemis/Core/Domain/4_Tables/Interaction/System/InteractionService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
@@ -730,6 +759,15 @@ Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	F1	}
 Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	F1	}
 Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	F1	});
 Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	F1	});
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint16_t k_PlacementInUseBit{ 0x0001 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_ActionMask{ 0x60 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_FixedBit{ 0x40 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_GameSpecificBit{ 0x20 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_NotPlacedAtStartBit{ 0x02 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_PhasedBit{ 0x80 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_SymmetryMask{ 0x03 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_TriggerHeldBit{ 0x02 };
+Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	O1	constexpr std::uint8_t k_ZoomedBit{ 0x80 };
 Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	U2	using BipedObject = Tables::Object::Type::Biped::Biped;
 Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	U2	using CrateKind = Tables::Object::Type::Crate::Kind;
 Artemis/Core/Domain/4_Tables/Object/System/ObjectTableService.cpp	U2	using CrateObject = Tables::Object::Type::Crate::Crate;
@@ -894,6 +932,7 @@ Artemis/Core/Domain/4_Tables/Object/Type/ObjectAlive.ixx	U3	using Scenery = Tabl
 Artemis/Core/Domain/4_Tables/Object/Type/ObjectAlive.ixx	U3	using Vec3 = Common::Math::Type::Vec3;
 Artemis/Core/Domain/4_Tables/Object/Type/ObjectAlive.ixx	U3	using Vehicle = Tables::Object::Type::Vehicle::Vehicle;
 Artemis/Core/Domain/4_Tables/Object/Type/ObjectAlive.ixx	U3	using Weapon = Tables::Object::Type::Weapon::Weapon;
+Artemis/Core/Domain/4_Tables/Object/Type/ObjectAlive.ixx	Y2	import :Placement;
 Artemis/Core/Domain/4_Tables/Object/Type/ObjectConstant.ixx	F1	constexpr std::uint16_t k_RegionBlockMaxSize{ 0x400 };
 Artemis/Core/Domain/4_Tables/Object/Type/ObjectConstant.ixx	F1	constexpr std::uint8_t k_DamageSectionStride{ 0x18 };
 Artemis/Core/Domain/4_Tables/Object/Type/ObjectMultiplayer.ixx	U3	using Team = Common::Team::Type::Team;
@@ -1324,6 +1363,10 @@ Artemis/Core/Domain/4_Tables/Object/Type/Specific/ObjectVehicle.ixx	S1	inline co
 Artemis/Core/Domain/4_Tables/Object/Type/Specific/ObjectVehicle.ixx	U3	using SeatKind = Resolved::Definitions::Type::Vehi::SeatKind;
 Artemis/Core/Domain/4_Tables/Object/Type/Specific/ObjectVehicle.ixx	U3	using Vec3 = Common::Math::Type::Vec3;
 Artemis/Core/Domain/4_Tables/Player/Hook/PlayerTableLocator.cpp	D1	k_MaxTelemetryId { 1000 } in 2 files
+Artemis/Core/Domain/4_Tables/Player/Hook/PlayerTableLocator.cpp	O1	constexpr std::uintptr_t k_MappingOffset{ 0x158 };
+Artemis/Core/Domain/4_Tables/Player/Hook/PlayerTableLocator.cpp	O1	constexpr std::uintptr_t k_PlayerTableOffset{ 0x50 };
+Artemis/Core/Domain/4_Tables/Player/Hook/PlayerTableLocator.cpp	O1	constexpr std::uintptr_t k_TelemetryDataOffset{ 0x18 };
+Artemis/Core/Domain/4_Tables/Player/Hook/PlayerTableLocator.cpp	O1	std::uintptr_t tlsArray{ (std::uintptr_t)__readgsqword(0x58) };
 Artemis/Core/Domain/4_Tables/Player/System/PlayerTableService.cpp	D1	k_GamerTagLength { 16 } in 2 files
 Artemis/Core/Domain/4_Tables/Player/System/PlayerTableService.cpp	D1	k_IndexMask { 0xFFFF } in 3 files
 Artemis/Core/Domain/4_Tables/Player/System/PlayerTableService.cpp	D1	k_MaxPlayers { 16 } in 2 files
@@ -1391,14 +1434,18 @@ Artemis/Core/Domain/4_Tables/Tables.Layer.ixx	S2	ObjectTableStore m_ObjectStore;
 Artemis/Core/Domain/4_Tables/Tables.Layer.ixx	S2	PlayerTableLocator m_PlayerTableLocator;
 Artemis/Core/Domain/4_Tables/Tables.Layer.ixx	S2	PlayerTableService m_PlayerService;
 Artemis/Core/Domain/4_Tables/Tables.Layer.ixx	S2	PlayerTableStore m_PlayerStore;
+Artemis/Core/Domain/5_Relations/Classifier/State/ClassifierStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/5_Relations/Classifier/State/ClassifierStore.ixx	U2	using Classifieds = std::vector<Relations::Classifier::Type::Classified>;
 Artemis/Core/Domain/5_Relations/Classifier/State/ClassifierStore.ixx	U2	using ClassifierStore = Common::State::System::Snapshot<Classifieds>;
 Artemis/Core/Domain/5_Relations/Classifier/State/TagClassification/TagClassificationsStore.ixx	U2	using TagClassifications = std::unordered_map<std::string, TagClassification>;
 Artemis/Core/Domain/5_Relations/Classifier/System/ClassifierService.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/Domain/5_Relations/Classifier/System/ClassifierService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
 Artemis/Core/Domain/5_Relations/Classifier/System/ClassifierService.cpp	U2	using Classifieds = std::vector<Classified>;
+Artemis/Core/Domain/5_Relations/Classifier/System/ClassifierService.ixx	C3	// Classifies every live object: Kind, Function, Subtype, Group, Binding and the static capabilities (Ignore/Semantizacion/05).
 Artemis/Core/Domain/5_Relations/Classifier/System/ClassifierService.ixx	U2	using AliveObject = Tables::Object::Type::Alive::Object;
 Artemis/Core/Domain/5_Relations/Classifier/System/ClassifierService.ixx	U2	using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+Artemis/Core/Domain/5_Relations/Classifier/Type/Relations.Classifier.Type.ixx	C3	// Rule that decided the function of a tag (Ignore/Semantizacion/05, section 3).
+Artemis/Core/Domain/5_Relations/ObjectGraph/State/ObjectGraphStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/5_Relations/ObjectGraph/State/ObjectGraphStore.ixx	U2	using ObjectNodes = std::unordered_map<std::uint32_t, ObjectNode>;
 Artemis/Core/Domain/5_Relations/ObjectGraph/System/ObjectGraphService.cpp	F1	ObjectNode node{};
 Artemis/Core/Domain/5_Relations/ObjectGraph/System/ObjectGraphService.cpp	F1	ObjectNodes nodes;
@@ -1502,6 +1549,7 @@ Artemis/Core/Domain/5_Relations/Relations.Layer.ixx	S2	ClassifierStore m_Classif
 Artemis/Core/Domain/5_Relations/Relations.Layer.ixx	S2	ObjectGraphService m_ObjectGraphService;
 Artemis/Core/Domain/5_Relations/Relations.Layer.ixx	S2	ObjectGraphStore m_ObjectGraphStore;
 Artemis/Core/Domain/5_Relations/Relations.Layer.ixx	S2	TagClassificationsStore m_TagClassificationsStore;
+Artemis/Core/Domain/6_Environment/Aim/State/AimStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/6_Environment/Aim/State/AimStore.ixx	F1	using AimStore = Common::State::System::Snapshot<Aims>;
 Artemis/Core/Domain/6_Environment/Aim/State/AimStore.ixx	F1	using Aims = std::unordered_map<std::uint32_t, Environment::Aim::Type::Aim>;
 Artemis/Core/Domain/6_Environment/Aim/State/AimStore.ixx	U2	using AimStore = Common::State::System::Snapshot<Aims>;
@@ -1530,9 +1578,12 @@ Artemis/Core/Domain/6_Environment/Aim/Type/Environment.Aim.Type.ixx	F1	};
 Artemis/Core/Domain/6_Environment/Aim/Type/Environment.Aim.Type.ixx	F1	};
 Artemis/Core/Domain/6_Environment/Aim/Type/Environment.Aim.Type.ixx	U3	using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
 Artemis/Core/Domain/6_Environment/Aim/Type/Environment.Aim.Type.ixx	U3	using Vec3 = Common::Math::Type::Vec3;
+Artemis/Core/Domain/6_Environment/Collidable/State/CollidableStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/6_Environment/Collidable/State/CollidableStore.ixx	U2	using CollidableStore = Common::State::System::Snapshot<Collidables>;
 Artemis/Core/Domain/6_Environment/Collidable/State/CollidableStore.ixx	U2	using Collidables = std::vector<Environment::Collidable::Type::Collidable>;
 Artemis/Core/Domain/6_Environment/Collidable/System/CollidableService.cpp	F4	
+Artemis/Core/Domain/6_Environment/Collidable/System/CollidableService.cpp	O1	constexpr std::size_t k_RegionStateStride{ 0x04 };
+Artemis/Core/Domain/6_Environment/Collidable/System/CollidableService.cpp	O1	constexpr std::size_t k_RegionStateValue{ 0x01 };
 Artemis/Core/Domain/6_Environment/Collidable/System/CollidableService.cpp	U3	using RegionDiagnostic = Environment::Collidable::Type::RegionDiagnostic;
 Artemis/Core/Domain/6_Environment/Collidable/System/CollidableService.cpp	U3	using Triangle = Common::Math::Type::Triangle;
 Artemis/Core/Domain/6_Environment/Collidable/System/CollidableService.ixx	M3	import Common.Math.Type;
@@ -1546,6 +1597,7 @@ Artemis/Core/Domain/6_Environment/Collidable/Type/Environment.Collidable.Type.ix
 Artemis/Core/Domain/6_Environment/Collidable/Type/Environment.Collidable.Type.ixx	U2	using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
 Artemis/Core/Domain/6_Environment/Collidable/Type/Environment.Collidable.Type.ixx	U3	using Mesh = Resolved::Definitions::Type::Coll::Mesh;
 Artemis/Core/Domain/6_Environment/Collidable/Type/Environment.Collidable.Type.ixx	U3	using Vec3 = Common::Math::Type::Vec3;
+Artemis/Core/Domain/6_Environment/Details/State/DetailsStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/6_Environment/Details/State/DetailsStore.ixx	U2	using BarrierDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::BarrierDetails>;
 Artemis/Core/Domain/6_Environment/Details/State/DetailsStore.ixx	U2	using LiftDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::LiftDetails>;
 Artemis/Core/Domain/6_Environment/Details/State/DetailsStore.ixx	U2	using TeleporterDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::TeleporterDetails>;
@@ -1557,12 +1609,15 @@ Artemis/Core/Domain/6_Environment/Details/Type/Lift/DetailsLift.ixx	U2	using Lif
 Artemis/Core/Domain/6_Environment/Details/Type/Teleporter/DetailsTeleporter.ixx	U2	using TeleporterDetails = std::unordered_map<std::uint32_t, TeleporterDetail>;
 Artemis/Core/Domain/6_Environment/Details/Type/Vitality/DetailsVitality.ixx	U2	using VitalityDetails = std::unordered_map<std::uint32_t, VitalityDetail>;
 Artemis/Core/Domain/6_Environment/Details/Type/Zone/DetailsZone.ixx	U2	using ZoneDetails = std::unordered_map<std::uint32_t, ZoneDetail>;
+Artemis/Core/Domain/6_Environment/Entities/State/EntitiesStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/6_Environment/Entities/State/EntitiesStore.ixx	U2	using EntitiesStore = Common::State::System::Snapshot<Environment::Entities::Type::Entities>;
 Artemis/Core/Domain/6_Environment/Entities/System/EntitiesService.cpp	D1	k_MaxParentDepth { 16 } in 2 files
 Artemis/Core/Domain/6_Environment/Entities/System/EntitiesService.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/Domain/6_Environment/Entities/System/EntitiesService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
+Artemis/Core/Domain/6_Environment/Entities/System/EntitiesService.ixx	C3	// Builds the Entities table: one uniform row per live object (Ignore/Semantizacion/05, section 9).
 Artemis/Core/Domain/6_Environment/Entities/System/EntitiesService.ixx	U2	using AliveObject = Tables::Object::Type::Alive::Object;
 Artemis/Core/Domain/6_Environment/Entities/System/EntitiesService.ixx	U2	using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+Artemis/Core/Domain/6_Environment/Entities/Type/Environment.Entities.Type.ixx	C3	// One live object with its meaning: classification, state, team, pose and capabilities (Ignore/Semantizacion/05, section 9).
 Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	F1	// --- State ---
 Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	F1	// --- System ---
 Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	F1	AimService m_AimService;
@@ -1655,11 +1710,14 @@ Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	S2	VitalityDetailsServic
 Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	S2	VitalityDetailsStore m_VitalityDetailsStore;
 Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	S2	ZoneDetailsService m_ZoneDetailsService;
 Artemis/Core/Domain/6_Environment/Environment.Layer.ixx	S2	ZoneDetailsStore m_ZoneDetailsStore;
+Artemis/Core/Domain/6_Environment/Players/State/PlayersStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/6_Environment/Players/State/PlayersStore.ixx	U2	using PlayersStore = Common::State::System::Snapshot<Environment::Players::Type::Players>;
 Artemis/Core/Domain/6_Environment/Players/System/PlayersService.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/Domain/6_Environment/Players/System/PlayersService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
 Artemis/Core/Domain/6_Environment/Players/System/PlayersService.ixx	U2	using AliveObject = Tables::Object::Type::Alive::Object;
 Artemis/Core/Domain/6_Environment/Players/System/PlayersService.ixx	U2	using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+Artemis/Core/Domain/6_Environment/Players/Type/Environment.Players.Type.ixx	C3	// One player of the player table with its body and loadout (Ignore/Semantizacion/05, section 9, D30, D93).
+Artemis/Core/Domain/7_Egocentric/Affordance/State/AffordanceStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/7_Egocentric/Affordance/State/AffordanceStore.ixx	U2	using AffordanceStore = Common::State::System::Snapshot<Affordances>;
 Artemis/Core/Domain/7_Egocentric/Affordance/State/AffordanceStore.ixx	U2	using Affordances = std::vector<Egocentric::Affordance::Type::Affordance>;
 Artemis/Core/Domain/7_Egocentric/Affordance/System/AffordanceService.cpp	M3	import Resolved.Definitions.Type;
@@ -1723,6 +1781,7 @@ Artemis/Core/Domain/7_Egocentric/Egocentric.Layer.ixx	S2	RaycastService m_Raycas
 Artemis/Core/Domain/7_Egocentric/Egocentric.Layer.ixx	S2	RaycastStore m_RaycastStore;
 Artemis/Core/Domain/7_Egocentric/Egocentric.Layer.ixx	S2	SelfService m_SelfService;
 Artemis/Core/Domain/7_Egocentric/Egocentric.Layer.ixx	S2	SelfStore m_SelfStore;
+Artemis/Core/Domain/7_Egocentric/Raycast/State/RaycastStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/7_Egocentric/Raycast/State/RaycastStore.ixx	F1	using RaycastStore = Common::State::System::Snapshot<Egocentric::Raycast::Type::Raycasts>;
 Artemis/Core/Domain/7_Egocentric/Raycast/State/RaycastStore.ixx	U2	using RaycastStore = Common::State::System::Snapshot<Egocentric::Raycast::Type::Raycasts>;
 Artemis/Core/Domain/7_Egocentric/Raycast/System/RaycastService.cpp	D1	k_BoxPadding { 1.0e-3f } in 2 files
@@ -2217,6 +2276,7 @@ Artemis/Core/Domain/7_Egocentric/Raycast/Type/Raycasts.ixx	F1	};
 Artemis/Core/Domain/7_Egocentric/Raycast/Type/Raycasts.ixx	U3	using Collidable = Environment::Collidable::Type::Collidable;
 Artemis/Core/Domain/7_Egocentric/Raycast/Type/Raycasts.ixx	U3	using Mesh = Resolved::Definitions::Type::Coll::Mesh;
 Artemis/Core/Domain/7_Egocentric/Raycast/Type/Raycasts.ixx	U3	using Vec3 = Common::Math::Type::Vec3;
+Artemis/Core/Domain/7_Egocentric/Self/State/SelfStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/7_Egocentric/Self/State/SelfStore.ixx	U2	using SelfStore = Common::State::System::Snapshot<Egocentric::Self::Type::Self>;
 Artemis/Core/Domain/7_Egocentric/Self/System/SelfService.cpp	U3	using Self = Egocentric::Self::Type::Self;
 Artemis/Core/Domain/7_Egocentric/Self/System/SelfService.ixx	M3	import Common.Math.Type;
@@ -2226,8 +2286,13 @@ Artemis/Core/Domain/8_Export/Export.Layer.ixx	S2	ExecuteGameFrameDetour m_Execut
 Artemis/Core/Domain/8_Export/Export.Layer.ixx	S2	SimulationTicksDetour m_SimulationTicksDetour;
 Artemis/Core/Domain/8_Export/Export.Layer.ixx	S2	TickService m_TickService;
 Artemis/Core/Domain/8_Export/Export.Layer.ixx	S2	TickStore m_TickStore;
+Artemis/Core/Domain/8_Export/Tick/Hook/ExecuteGameFrameDetour.cpp	H4	auto __fastcall ExecuteGameFrameDetour::HookedExecuteGameFrame() -> void
 Artemis/Core/Domain/8_Export/Tick/Hook/SimulationTicksDetour.cpp	D1	k_TimeGlobalsOffset { 0xA0 } in 2 files
 Artemis/Core/Domain/8_Export/Tick/Hook/SimulationTicksDetour.cpp	D1	k_TimeScaleOffset { 0x10 } in 2 files
+Artemis/Core/Domain/8_Export/Tick/Hook/SimulationTicksDetour.cpp	H4	auto __fastcall SimulationTicksDetour::HookedSimulationTicks(int ticksToAdvance, float* remainingTime) -> void
+Artemis/Core/Domain/8_Export/Tick/Hook/SimulationTicksDetour.cpp	O1	constexpr std::uintptr_t k_TimeGlobalsOffset{ 0xA0 };
+Artemis/Core/Domain/8_Export/Tick/Hook/SimulationTicksDetour.cpp	O1	constexpr std::uintptr_t k_TimeScaleOffset{ 0x10 };
+Artemis/Core/Domain/8_Export/Tick/State/TickStore.ixx	A3	import Common.State.System;
 Artemis/Core/Domain/8_Export/Tick/State/TickStore.ixx	U2	using TickStore = Common::State::System::Snapshot<Export::Tick::Type::Tick>;
 Artemis/Core/Domain/8_Export/Tick/System/TickService.cpp	F1	tick.Aims = m_AimStore.Acquire();
 Artemis/Core/Domain/8_Export/Tick/System/TickService.cpp	U3	using AliveInteraction = Export::Tick::Type::AliveInteraction;
@@ -2331,21 +2396,40 @@ Artemis/Core/Domain/8_Export/Tick/Type/Export.Tick.Type.ixx	U2	using ObjectTable
 Artemis/Core/Gui/Backend/System/BackendGuiService.cpp	D1	k_MaximumScale { 4.0f } in 2 files
 Artemis/Core/Gui/Backend/System/BackendGuiService.cpp	D1	k_MinimumAlpha { 0.20f } in 2 files
 Artemis/Core/Gui/Backend/System/BackendGuiService.cpp	D1	k_MinimumScale { 1.0f } in 2 files
+Artemis/Core/Gui/Backend/System/BackendGuiService.cpp	Y2	import std;
 Artemis/Core/Gui/Format/System/Fixtures/FixturesFormater.ixx	U2	using ZoneKind = Common::ZoneShape::Type::Kind;
+Artemis/Core/Gui/Format/System/Hex/HexFormater.cpp	Y2	import std;
 Artemis/Core/Gui/Format/System/Object/ObjectFormater.ixx	U2	using CrateKind = Tables::Object::Type::Crate::Kind;
 Artemis/Core/Gui/Format/System/Object/ObjectFormater.ixx	U2	using SceneryKind = Tables::Object::Type::Scenery::Kind;
 Artemis/Core/Gui/Format/System/Object/ObjectFormater.ixx	U2	using VehicleKind = Tables::Object::Type::Vehicle::Kind;
 Artemis/Core/Gui/Gui.Layer.ixx	S2	BackendGuiService m_BackendGuiService;
 Artemis/Core/Gui/Gui.Layer.ixx	S2	WndProcGuiService m_WndProcGuiService;
+Artemis/Core/Gui/Widget/System/CopyableField/CopyableFieldGuiService.cpp	Y2	import std;
 Artemis/Core/Gui/Widget/System/CopyableField/CopyableFieldGuiService.ixx	D1	k_AnimationDuration { 0.6f } in 2 files
 Artemis/Core/Gui/Widget/System/HandleDrawer/HandleDrawerGuiService.cpp	D1	k_InvalidHandle { 0xFFFFFFFF } in 2 files
 Artemis/Core/Gui/Widget/System/HandleDrawer/HandleDrawerGuiService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
 Artemis/Core/Gui/Widget/System/HandleDrawer/HandleDrawerGuiService.cpp	U3	using HexFormater = Gui::Format::System::HexFormater;
+Artemis/Core/Gui/Widget/System/HandleDrawer/HandleDrawerGuiService.ixx	Y2	import std;
 Artemis/Core/Gui/Widget/System/Panel/PanelGuiService.cpp	D1	k_SectionColor { 0.8f, 0.8f, 0.8f, 1.0f } in 2 files
 Artemis/Core/Gui/Widget/System/Panel/PanelGuiService.cpp	U3	using HexFormater = Gui::Format::System::HexFormater;
+Artemis/Core/Gui/Widget/System/SearchFilter/SearchFilterGuiService.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Host/Hook/SessionJoinCheckPatch.cpp	O1	constexpr std::array<std::uint8_t, 1> k_JumpAlways{ 0xEB };
+Artemis/Core/Infrastructure/Platform/Host/Hook/SessionJoinCheckPatch.cpp	O1	constexpr std::uint8_t k_JumpIfAbove{ 0x77 };
+Artemis/Core/Infrastructure/Platform/Input/Hook/GetButtonStateDetour.cpp	C6	// This function polls keyboard events at a high frequency
+Artemis/Core/Infrastructure/Platform/Input/Hook/GetButtonStateDetour.cpp	H4	auto __fastcall GetButtonStateDetour::HookedGetButtonState(short buttonID) -> char
+Artemis/Core/Infrastructure/Platform/Input/Hook/GetRawInputDataDetour.cpp	N6	UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) -> UINT
 Artemis/Core/Infrastructure/Platform/Input/Hook/GetRawInputDataDetour.cpp	U3	using RawMouse = Platform::Input::Type::RawMouse;
+Artemis/Core/Infrastructure/Platform/Input/Hook/GetRawInputDataDetour.ixx	N6	UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) -> UINT;
+Artemis/Core/Infrastructure/Platform/Input/Hook/PlayerActionDetour.cpp	O1	const auto tlsArray{ static_cast<std::uintptr_t>(__readgsqword(0x58)) };
 Artemis/Core/Infrastructure/Platform/Input/Hook/WndProcDetour.cpp	U3	using WindowMessage = Platform::Input::Type::WindowMessage;
 Artemis/Core/Infrastructure/Platform/Input/State/InputStore.cpp	S4	return ToIndex(static_cast<short>(action));
+Artemis/Core/Infrastructure/Platform/Input/State/PlayerActionStore.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Input/State/VirtualInputStore.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Input/System/InputService.cpp	O1	static_cast<std::uintptr_t>(0xA1A1A1A1));
+Artemis/Core/Infrastructure/Platform/Lifecycle/Hook/DestroySubsystemsDetour.cpp	H4	auto __fastcall DestroySubsystemsDetour::HookedDestroySubsystems() -> void
+Artemis/Core/Infrastructure/Platform/Lifecycle/Hook/EngineInitializeDetour.cpp	H4	auto __fastcall EngineInitializeDetour::HookedEngineInitialize() -> void
+Artemis/Core/Infrastructure/Platform/Lifecycle/State/LifecycleStore.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Lifecycle/System/LifecycleService.cpp	Y2	import std;
 Artemis/Core/Infrastructure/Platform/Memory/Type/MemorySignature.ixx	C2	// player_set_configuration(player, configuration): applies a "configuration" player update (name, appearance, team; a team change
 Artemis/Core/Infrastructure/Platform/Memory/Type/MemorySignature.ixx	N2	inline constexpr Signature ApplyPlayerActions
 Artemis/Core/Infrastructure/Platform/Memory/Type/MemorySignature.ixx	N2	inline constexpr Signature ApplyPlayerAdded
@@ -2397,18 +2481,30 @@ Artemis/Core/Infrastructure/Platform/Platform.Layer.ixx	S2	VirtualInputStore m_V
 Artemis/Core/Infrastructure/Platform/Platform.Layer.ixx	S2	WndProcDetour m_WndProcDetour;
 Artemis/Core/Infrastructure/Platform/Render/Hook/PresentDetour.cpp	D1	k_IdleTimeout { 1000 } in 2 files
 Artemis/Core/Infrastructure/Platform/Render/Hook/ResizeBuffersDetour.cpp	D1	k_IdleTimeout { 1000 } in 2 files
+Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.cpp	M5	namespace Platform::Render::System::GpuBuffer
 Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.cpp	U3	using LogsService = Service::Logs::System::LogsService;
 Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.cpp	U3	using Vertex = Platform::Render::Type::Vertex;
+Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.ixx	M5	export namespace Platform::Render::System::GpuBuffer
 Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.ixx	U3	using LogsService = Service::Logs::System::LogsService;
 Artemis/Core/Infrastructure/Platform/Render/System/GpuBuffer.ixx	U3	using Vertex = Platform::Render::Type::Vertex;
 Artemis/Core/Infrastructure/Platform/Render/System/GpuPipeline.cpp	U3	template <typename T>
 Artemis/Core/Infrastructure/Platform/Render/System/GpuPipeline.cpp	U3	using LogsService = Service::Logs::System::LogsService;
+Artemis/Core/Infrastructure/Platform/Render/System/GpuPipeline.cpp	Y2	import std;
 Artemis/Core/Infrastructure/Platform/Render/System/GpuPipeline.ixx	U2	using Matrix = std::array<float, 16>;
+Artemis/Core/Infrastructure/Platform/Render/System/GpuStateGuard.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Render/System/RenderService.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Render/System/Shaders.ixx	M5	export namespace Platform::Render::System::Shaders
 Artemis/Core/Infrastructure/Platform/Render/System/SwapChainLocator.cpp	U3	template <typename T>
+Artemis/Core/Infrastructure/Platform/Render/System/SwapChainLocator.cpp	Y2	import std;
+Artemis/Core/Infrastructure/Platform/Simulation/System/BotService.cpp	O1	constexpr std::array<std::uint8_t, 4> k_FakeMachinePrefix{ 0x41, 0x52, 0x54, 0x4D };
+Artemis/Core/Infrastructure/Platform/Simulation/System/BotService.cpp	O1	constexpr std::uint64_t k_BotIdentifierBase{ 0x4152544500000000 };
 Artemis/Core/Infrastructure/Platform/Simulation/Type/Platform.Simulation.Type.ixx	D1	k_GamerTagLength { 16 } in 2 files
 Artemis/Core/Infrastructure/Platform/Simulation/Type/Platform.Simulation.Type.ixx	D1	k_MaxPlayers { 16 } in 2 files
 Artemis/Core/Infrastructure/Service/Preferences/System/PreferencesService.cpp	F4	
 Artemis/Core/Runtime/AI/AIThread.cpp	U3	using Status = Platform::Lifecycle::Type::Status;
+Artemis/Core/Runtime/Input/InputThread.cpp	Y2	import std;
+Artemis/Core/Runtime/Main/MainThread.cpp	O1	return firstByte == 0xE9;
 Artemis/Core/Runtime/Main/MainThread.cpp	U3	using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
 Artemis/Core/Runtime/Main/MainThread.cpp	U3	using Status = Platform::Lifecycle::Type::Status;
 Artemis/Core/Runtime/Runtime.Layer.ixx	S2	AIThread m_AI;
@@ -2416,10 +2512,41 @@ Artemis/Core/Runtime/Runtime.Layer.ixx	S2	InputThread m_Input;
 Artemis/Core/Runtime/Runtime.Layer.ixx	S2	MainThread m_Main;
 Artemis/Core/Runtime/Runtime.Layer.ixx	S2	std::jthread m_AIThread;
 Artemis/Core/Runtime/Runtime.Layer.ixx	S2	std::jthread m_InputThread;
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	C3	// Components of each object class, in datum order (Tareas/Transversal/CreateObject.txt).
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	C3	// note: Fake handles keep each block apart in the analysis script. Pointer offsets from Ignore/Tareas/Transversal/Indice_Reverse.txt.
 Artemis/Core/UI/Capture/System/CaptureUIService.cpp	D1	k_BytesPerRow { 16 } in 3 files
 Artemis/Core/UI/Capture/System/CaptureUIService.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/UI/Capture/System/CaptureUIService.cpp	D2	0XFFFF as k_HandleIndexMask, k_IndexMask, k_SaltMask
 Artemis/Core/UI/Capture/System/CaptureUIService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::array<std::uintptr_t, 2> k_ComponentPhantomOffsets{ 0xA8, 0xB0 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::size_t k_MaxGameStateSize{ 0xC00000 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::size_t k_PageSize{ 0x1000 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uint32_t k_EngineHandleBase{ 0xEEEE0000 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uint32_t k_FilterFieldMask{ 0x1F };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_BodyEntryRigidBodyOffset{ 0x40 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_BodyEntrySize{ 0x50 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_CollisionTestFlagsRva{ 0x28FFCF0 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_ComponentBodiesOffset{ 0x30 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_ComponentBodyCountOffset{ 0x38 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_ComponentFlagsOffset{ 0x18 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_ComponentOwnerOffset{ 0x1C };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_ComponentSizeOffset{ 0x22 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_DataArrayElementsOffset{ 0x50 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_FilterLookupOffset{ 0x4C };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_GameStateAnchorOffset{ 0x48 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_HavokComponentArrayRva{ 0xC519B8 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_HavokComponentSize{ 0xC0 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_HavokWorldRva{ 0x4E2FE68 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_RigidBodyFilterInfoOffset{ 0x4C };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_RigidBodyMotionTypeOffset{ 0x160 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	constexpr std::uintptr_t k_WorldFilterOffset{ 0xD0 };
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	{ .Name = "context", .PointerOffset = 0x0, .IsIndirect = false, .InnerOffset = 0x0, .MaximumSize = 0x400 },
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	{ .Name = "engine", .PointerOffset = 0x290, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x20000 },
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	{ .Name = "game", .PointerOffset = 0x48, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x1000 },
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	{ .Name = "players", .PointerOffset = 0x18, .IsIndirect = true, .InnerOffset = 0x50, .MaximumSize = 0x4900 },
+Artemis/Core/UI/Capture/System/CaptureUIService.cpp	O1	{ .Name = "time", .PointerOffset = 0xA0, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x200 },
+Artemis/Core/UI/Capture/System/CaptureUIService.ixx	C3	// from the render thread, through the safe reader, at fixed RVAs of haloreach.dll (Ignore/Tareas/Transversal/A10_Colisiones.txt).
+Artemis/Core/UI/DefinitionsInspector/System/DefinitionsInspectorUIService.cpp	O1	if (static_cast<unsigned char>(c) < 0x20)
 Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t k_VkF2{ 0x71 };
 Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t k_VkF3{ 0x72 };
 Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t k_VkF4{ 0x73 };
@@ -2429,6 +2556,8 @@ Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t
 Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t k_VkOem5{ 0xDC };
 Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t k_VkTab{ 0x09 };
 Artemis/Core/UI/Hotkey/State/HotkeyUIStore.ixx	U1	static constexpr std::uint32_t k_VkUp{ 0x26 };
+Artemis/Core/UI/Hotkey/System/HotkeyUIService.cpp	O1	return (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+Artemis/Core/UI/Hotkey/System/HotkeyUIService.cpp	O1	return (lParam & 0x40000000) != 0;
 Artemis/Core/UI/Launcher/System/LauncherUIService.cpp	U3	using IconLoader = UI::Icon::System::IconLoader;
 Artemis/Core/UI/Launcher/System/LauncherUIService.cpp	U3	using Tab = UI::Launcher::Type::Tab;
 Artemis/Core/UI/Logs/System/LogsUIService.ixx	U1	static constexpr float k_AnimationDuration{ 0.8f };
@@ -2464,8 +2593,15 @@ Artemis/Core/UI/Simulation/System/SimulationUIService.cpp	D1	k_IndexMask { 0xFFF
 Artemis/Core/UI/Simulation/System/SimulationUIService.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/UI/Simulation/System/SimulationUIService.cpp	D2	0XFFFF as k_HandleIndexMask, k_IndexMask, k_SaltMask
 Artemis/Core/UI/Simulation/System/SimulationUIService.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
+Artemis/Core/UI/Simulation/System/SimulationUIService.cpp	O1	constexpr std::size_t k_ForwardKey{ 0x57 };
 Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	D1	k_TimeGlobalsOffset { 0xA0 } in 2 files
 Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	D1	k_TimeScaleOffset { 0x10 } in 2 files
+Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	O1	constexpr std::uintptr_t k_EngineTickOffset{ 0x0C };
+Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	O1	constexpr std::uintptr_t k_EventGlobalsOffset{ 0x98 };
+Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	O1	constexpr std::uintptr_t k_EventSequenceOffset{ 0x10B30 };
+Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	O1	constexpr std::uintptr_t k_TickFractionOffset{ 0x14 };
+Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	O1	constexpr std::uintptr_t k_TimeGlobalsOffset{ 0xA0 };
+Artemis/Core/UI/TickTrace/System/TickTraceUIService.cpp	O1	constexpr std::uintptr_t k_TimeScaleOffset{ 0x10 };
 Artemis/Core/UI/UI.Layer.cpp	U3	using Tab = UI::Launcher::Type::Tab;
 Artemis/Core/UI/UI.Layer.ixx	S2	CaptureUIService m_CaptureUIService;
 Artemis/Core/UI/UI.Layer.ixx	S2	DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
@@ -2484,15 +2620,18 @@ Artemis/Core/Viewer/Camera/System/CameraService.cpp	U3	using Mode = Viewer::Came
 Artemis/Core/Viewer/Camera/System/CameraService.cpp	U3	using Scalar = Viewer::Options::Type::Scalar;
 Artemis/Core/Viewer/Camera/System/CameraService.cpp	U3	using Vec3 = Viewer::Camera::Type::Vec3;
 Artemis/Core/Viewer/Camera/Type/Viewer.Camera.Type.ixx	U2	using Matrix = std::array<float, 16>;
+Artemis/Core/Viewer/Control/System/ControlService.cpp	O1	return (lParam & 0x40000000) != 0;
 Artemis/Core/Viewer/Control/System/ControlService.cpp	U3	using Follow = Viewer::Camera::Type::Follow;
 Artemis/Core/Viewer/Control/System/ControlService.cpp	U3	using Key = Viewer::Camera::Type::Key;
 Artemis/Core/Viewer/Control/System/ControlService.cpp	U3	using Mode = Viewer::Camera::Type::Mode;
 Artemis/Core/Viewer/Control/System/ControlService.cpp	U3	using Scalar = Viewer::Options::Type::Scalar;
+Artemis/Core/Viewer/Geometry/System/ZoneGeometry.cpp	M5	namespace Viewer::Geometry::System::ZoneGeometry
 Artemis/Core/Viewer/Geometry/System/ZoneGeometry.cpp	U2	using ZoneKind = Common::ZoneShape::Type::Kind;
 Artemis/Core/Viewer/Geometry/System/ZoneGeometry.cpp	U3	using Color = Viewer::Style::Type::Color;
 Artemis/Core/Viewer/Geometry/System/ZoneGeometry.cpp	U3	using Vec3 = Common::Math::Type::Vec3;
 Artemis/Core/Viewer/Geometry/System/ZoneGeometry.cpp	U3	using Vertex = Platform::Render::Type::Vertex;
 Artemis/Core/Viewer/Geometry/System/ZoneGeometry.ixx	M3	import Common.Math.Type;
+Artemis/Core/Viewer/Geometry/System/ZoneGeometry.ixx	M5	export namespace Viewer::Geometry::System::ZoneGeometry
 Artemis/Core/Viewer/Hud/System/HudService.cpp	U3	using Mode = Viewer::Overlay::Type::Mode;
 Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.cpp	D1	k_InfoColor { IM_COL32(190, 200, 215, 255) } in 3 files
 Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.cpp	D1	k_MutedColor { IM_COL32(150, 160, 175, 255) } in 5 files
@@ -2503,6 +2642,7 @@ Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.cpp	U3	using LabelRow = Viewe
 Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.cpp	U3	using TeamFormater = Gui::Format::System::TeamFormater;
 Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.cpp	U3	using Vec3 = Common::Math::Type::Vec3;
 Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.cpp	U3	using ZoneShape = Common::ZoneShape::Type::ZoneShape;
+Artemis/Core/Viewer/Hud/System/Label/FixtureLabels.ixx	Y2	import :Canvas;
 Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	D1	k_SelectedPriority { 1.0f } in 2 files
 Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
@@ -2511,6 +2651,7 @@ Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	U2	using SectionKind = Res
 Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	U3	using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
 Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	U3	using Flag = Viewer::Options::Type::Flag;
 Artemis/Core/Viewer/Hud/System/Label/HealthLabels.cpp	U3	using Section = Resolved::Vitality::Type::Vitality::Section;
+Artemis/Core/Viewer/Hud/System/Label/HealthLabels.ixx	Y2	import :Canvas;
 Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	D1	k_InfoColor { IM_COL32(190, 200, 215, 255) } in 3 files
 Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	D1	k_MutedColor { IM_COL32(150, 160, 175, 255) } in 5 files
 Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
@@ -2522,9 +2663,11 @@ Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	U3	using Flag = Viewe
 Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	U3	using InteractionFormater = Gui::Format::System::InteractionFormater;
 Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	U3	using LabelRow = Viewer::Hud::Type::LabelRow;
 Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.cpp	U3	using Vec3 = Common::Math::Type::Vec3;
+Artemis/Core/Viewer/Hud/System/Label/InteractionLabels.ixx	Y2	import :Canvas;
 Artemis/Core/Viewer/Hud/System/Label/LabelCanvas.cpp	M3	import Viewer.Camera.Type;
 Artemis/Core/Viewer/Hud/System/Label/LabelCanvas.cpp	M3	import Viewer.Options.Type;
 Artemis/Core/Viewer/Hud/System/Label/LabelService.ixx	S2	LabelCanvas m_Canvas;
+Artemis/Core/Viewer/Hud/System/Label/LabelService.ixx	Y2	import :FixtureLabels;
 Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	D1	k_FreeSeatColor { IM_COL32(120, 200, 130, 255) } in 2 files
 Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	D1	k_InfoColor { IM_COL32(190, 200, 215, 255) } in 3 files
 Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	D1	k_MutedColor { IM_COL32(150, 160, 175, 255) } in 5 files
@@ -2538,6 +2681,7 @@ Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	U3	using HexFormater = Gui
 Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	U3	using LabelRow = Viewer::Hud::Type::LabelRow;
 Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	U3	using Scalar = Viewer::Options::Type::Scalar;
 Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.cpp	U3	using Vec3 = Common::Math::Type::Vec3;
+Artemis/Core/Viewer/Hud/System/Label/ObjectLabels.ixx	Y2	import :Canvas;
 Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	D1	k_MutedColor { IM_COL32(150, 160, 175, 255) } in 5 files
 Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	D1	k_NoHandle { 0xFFFFFFFF } in 9 files
 Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	D1	k_SelectedPriority { 1.0f } in 2 files
@@ -2547,11 +2691,13 @@ Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	U3	using AnchorSource = Re
 Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	U3	using Flag = Viewer::Options::Type::Flag;
 Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	U3	using LabelRow = Viewer::Hud::Type::LabelRow;
 Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.cpp	U3	using Vec3 = Common::Math::Type::Vec3;
+Artemis/Core/Viewer/Hud/System/Label/PlayerLabels.ixx	Y2	import :Canvas;
 Artemis/Core/Viewer/Hud/System/Label/VehicleLabels.cpp	D1	k_FreeSeatColor { IM_COL32(120, 200, 130, 255) } in 2 files
 Artemis/Core/Viewer/Hud/System/Label/VehicleLabels.cpp	D1	k_MutedColor { IM_COL32(150, 160, 175, 255) } in 5 files
 Artemis/Core/Viewer/Hud/System/Label/VehicleLabels.cpp	D1	k_TakenSeatColor { IM_COL32(215, 110, 110, 255) } in 2 files
 Artemis/Core/Viewer/Hud/System/Label/VehicleLabels.cpp	U3	using Flag = Viewer::Options::Type::Flag;
 Artemis/Core/Viewer/Hud/System/Label/VehicleLabels.cpp	U3	using LabelRow = Viewer::Hud::Type::LabelRow;
+Artemis/Core/Viewer/Hud/System/Label/VehicleLabels.ixx	Y2	import :Canvas;
 Artemis/Core/Viewer/Hud/System/Panel/AffordancesHud.cpp	D1	k_InvalidHandle { 0xFFFFFFFF } in 2 files
 Artemis/Core/Viewer/Hud/System/Panel/AffordancesHud.cpp	D1	k_SectionColor { 0.8f, 0.8f, 0.8f, 1.0f } in 2 files
 Artemis/Core/Viewer/Hud/System/Panel/AffordancesHud.cpp	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
@@ -2585,6 +2731,7 @@ Artemis/Core/Viewer/Hud/System/Panel/HealthsHud.cpp	U3	using ObjectTable = Expor
 Artemis/Core/Viewer/Hud/System/Panel/HealthsHud.cpp	U3	using PanelGuiService = Gui::Widget::System::PanelGuiService;
 Artemis/Core/Viewer/Hud/System/Panel/HealthsHud.cpp	U3	using Section = Resolved::Vitality::Type::Vitality::Section;
 Artemis/Core/Viewer/Hud/System/Panel/HealthsHud.cpp	U3	using Tick = Export::Tick::Type::Tick;
+Artemis/Core/Viewer/Hud/Type/Viewer.Hud.Type.ixx	A3	import Viewer.Options.State;
 Artemis/Core/Viewer/Hud/Type/Viewer.Hud.Type.ixx	D2	0XFFFFFFFF as k_InvalidHandle, k_NoHandle, k_NoLabelKey, k_NoPlayer, k_NoSelection, k_None
 Artemis/Core/Viewer/Map/System/AimPass.cpp	M3	import Common.Math.Type;
 Artemis/Core/Viewer/Map/System/AimPass.cpp	U3	using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
