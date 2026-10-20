@@ -192,8 +192,8 @@ namespace UI::Simulation::System
     {
         ImGui::TextWrapped("Recorded match configurations (D123). Record: type a name, arm it and start a custom game from the MCC"
             " lobby. Its configuration is saved to the MatchConfigs folder of the storage folder. Use: pick a recorded one, then start any"
-            " custom game from the MCC lobby. That start plays the base map, map variant and game variant of the picked one. A pick"
-            " applies to one start only.");
+            " custom game from the MCC lobby, or press Launch now while MCC is in the lobby. That start plays the base map, map"
+            " variant and game variant of the picked one. A pick applies to one start only.");
 
         std::array<char, k_RecordNameSize>& recordName{ m_SimulationUIStore.GetRecordNameField() };
         ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
@@ -245,6 +245,19 @@ namespace UI::Simulation::System
         if (ImGui::Button("Use for next start")) m_MatchConfigService.LoadPending(names[selected]);
         ImGui::EndDisabled();
 
+        if (m_MatchConfigStore.IsLaunchRequested())
+        {
+            ImGui::TextUnformatted("Launch requested, waiting for the next frame of MCC.");
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel##Launch")) m_MatchConfigService.CancelLaunch();
+        }
+        else
+        {
+            if (ImGui::Button("Launch now")) m_MatchConfigService.RequestLaunch();
+            ImGui::SetItemTooltip("Starts the match of the custom games lobby of MCC, as its START does but without the countdown"
+                " (D124). MCC must be in the lobby. The pending configuration, if any, is transplanted into that start.");
+        }
+
         const auto pending{ m_MatchConfigStore.GetPending() };
 
         if (pending)
@@ -263,6 +276,9 @@ namespace UI::Simulation::System
 
         ImGui::Text("Last applied: %s", lastApplied.empty() ? "-" : lastApplied.c_str());
         ImGui::Text("Last recorded: %s", lastRecorded.empty() ? "-" : lastRecorded.c_str());
+
+        const std::string lastLaunch{ m_MatchConfigStore.GetLastLaunch() };
+        ImGui::Text("Last launch: %s", lastLaunch.empty() ? "-" : lastLaunch.c_str());
     }
 
     auto SimulationUIService::DrawGameSpeed() -> void

@@ -29,6 +29,20 @@ export namespace Platform::Memory::Type::Signature
         "48 89 5C 24 10 57 48 83 EC 30 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 28 48 8B D9 48 63 FA 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 39 BB EC BF 02 00"
     };
 
+    // MCC-Win64-Shipping.exe: updates the lifecycle manager of the online layer, once per frame on the MCC thread (D124).
+    inline constexpr Signature LifecycleUpdate
+    {
+        "LifecycleUpdate",
+        "48 8B C4 57 48 83 EC 70 48 C7 40 B8 FE FF FF FF 48 89 58 10 48 89 70 18 48 8B F9 48 8D B1 C8 01 00 00 48 8B CE E8 ?? ?? ?? ?? 8A 87 98 00 00 00 84 C0 74 ?? C6 87 98 00 00 00 00"
+    };
+
+    // MCC-Win64-Shipping.exe: starts the countdown of the session, what the START of the custom games lobby does (D124).
+    inline constexpr Signature StartCountdown
+    {
+        "StartCountdown",
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 40 8A F1 33 FF FF 15 ?? ?? ?? ?? 84 C0 74 ?? 8D 4F 01 E8 ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 8D 4F"
+    };
+
     // Functions: Map
     inline constexpr Signature BlamOpenMap
     {

@@ -2375,6 +2375,12 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\LifecycleUpdateDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\LifecycleUpdateDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp">
       <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
     </ClCompile>

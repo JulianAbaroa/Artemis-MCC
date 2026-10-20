@@ -11,9 +11,8 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
-    using std::chrono::milliseconds;
-
     using Platform::Host::Type::k_HostModuleName;
+    using Platform::Hook::System::k_DrainTimeout;
     using Platform::Lifecycle::Type::k_EngineGlobalDisplacementOffset;
     using Platform::Lifecycle::Type::k_EngineGlobalNextInstructionOffset;
     using Platform::Lifecycle::Type::k_EngineVTableSize;
@@ -29,9 +28,6 @@ namespace
     // Longest string read from a payload or a text command, and the bytes read at once while looking for its end.
     constexpr std::size_t k_MaxTextLength{ 256 };
     constexpr std::size_t k_TextChunkSize{ 16 };
-
-    // Longest wait for the calls in flight when the hook is removed.
-    constexpr milliseconds k_DrainTimeout{ 500 };
 
     // return: Bytes of the payload of the state, 0 if it carries none.
     auto PayloadSize(std::int32_t state) -> std::size_t

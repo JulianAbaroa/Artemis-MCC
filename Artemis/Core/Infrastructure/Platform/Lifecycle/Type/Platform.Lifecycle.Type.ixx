@@ -99,6 +99,22 @@ export namespace Platform::Lifecycle::Type
     // Signature of the text command of the engine (entry 9): queues a string for the game thread ("HS: " runs HaloScript).
     using EngineCommandFunction = auto(__fastcall*)(void* engine, const char* command) -> void;
 
+    // Signature of the MCC function that updates the lifecycle manager of the online layer (UFG::eLifeCycleState), once per frame on
+    // the MCC thread (D124, A15 sec. 2.14).
+    using LifecycleUpdateFunction = auto(__fastcall*)(void* manager) -> void;
+
+    // Signature of the MCC function behind the START of the custom games lobby: starts the countdown of the session.
+    // return: True if the session took the countdown. False if this machine does not lead the lobby, a countdown runs already or the
+    // session refused it (the function returns its own flag, A15 sec. 2.14).
+    using StartCountdownFunction = auto(__fastcall*)(std::uint8_t seconds) -> bool;
+
+    // Offset of the current state in the lifecycle manager, and the state of the lobby before a match (PreGame).
+    inline constexpr std::size_t k_LifecycleStateOffset{ 0x40 };
+    inline constexpr std::int32_t k_PreGameLifecycleState{ 2 };
+
+    // Seconds of the countdown Artemis starts. With 0 the PreGame state starts the match on its next update.
+    inline constexpr std::uint8_t k_LaunchCountdownSeconds{ 0 };
+
     // State of the game engine as seen by Artemis.
     enum class Status
     {

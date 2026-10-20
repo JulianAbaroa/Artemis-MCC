@@ -45,6 +45,13 @@ export namespace Platform::Lifecycle::System
         // letters, digits, spaces, '_', '-' and '.'.
         auto ArmRecord(std::string_view name) -> bool;
 
+        // Asks the lifecycle hook to launch the match of the custom games lobby on the next frame of MCC (D124).
+        // note: Without a pending configuration, the match of the lobby starts unchanged.
+        auto RequestLaunch() -> void;
+
+        // Withdraws the launch request if the lifecycle hook did not take it yet.
+        auto CancelLaunch() -> void;
+
         // Disarms the record of the next engine start.
         auto CancelRecord() -> void;
 

@@ -65,6 +65,9 @@ export namespace Platform::Hook::System
         std::atomic<int>& m_Counter;
     };
 
+    // Longest wait for the calls in flight when a hook is removed.
+    inline constexpr std::chrono::milliseconds k_DrainTimeout{ 500 };
+
     // Waits until the counter reaches zero.
     // return: False if the timeout expired with calls still in flight.
     auto WaitForDrain(std::atomic<int>& counter,

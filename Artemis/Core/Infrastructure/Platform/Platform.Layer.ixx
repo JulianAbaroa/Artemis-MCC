@@ -37,6 +37,7 @@ export namespace Platform
         using EngineInitializeDetour = Platform::Lifecycle::Hook::EngineInitializeDetour;
         using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
         using EngineInterfaceDetour = Platform::Lifecycle::Hook::EngineInterfaceDetour;
+        using LifecycleUpdateDetour = Platform::Lifecycle::Hook::LifecycleUpdateDetour;
 
         using LocalUserStore = Platform::Host::State::LocalUserStore;
         using HostService = Platform::Host::System::HostService;
@@ -84,6 +85,7 @@ export namespace Platform
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_EngineInterfaceDetour(service.m_LogsService, m_AOBService, m_MemoryReaderService, m_MatchConfigService),
+            m_LifecycleUpdateDetour(service.m_LogsService, m_AOBService, m_MatchConfigStore),
             m_LocalUserGetPlayerDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
             m_LocalUserGetProfileDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
             m_LocalUserGetGamepadMappingDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
@@ -167,6 +169,7 @@ export namespace Platform
         EngineInitializeDetour m_EngineInitializeDetour;
         DestroySubsystemsDetour m_DestroySubsystemsDetour;
         EngineInterfaceDetour m_EngineInterfaceDetour;
+        LifecycleUpdateDetour m_LifecycleUpdateDetour;
         LocalUserGetPlayerDetour m_LocalUserGetPlayerDetour;
         LocalUserGetProfileDetour m_LocalUserGetProfileDetour;
         LocalUserGetGamepadMappingDetour m_LocalUserGetGamepadMappingDetour;

@@ -5,8 +5,8 @@ import std;
 
 export namespace Platform::Lifecycle::State
 {
-    // Match configuration the next engine start transplants, the name the next start is recorded under, and what the last starts
-    // did (D123).
+    // Match configuration the next engine start transplants, the name the next start is recorded under, what the last starts did
+    // (D123), and the request to launch the match of the lobby (D124).
     // note: Thread-safe. Written by the UI thread, taken by the start hook on the MCC thread.
     class MatchConfigStore
     {
@@ -44,11 +44,25 @@ export namespace Platform::Lifecycle::State
         auto GetLastRecorded() const -> std::string;
         auto SetLastRecorded(std::string file) -> void;
 
+        // Whether a launch from the lobby is requested and the lifecycle hook did not take it yet (D124).
+        auto IsLaunchRequested() const -> bool;
+        auto SetLaunchRequested(bool value) -> void;
+
+        // Takes the launch request, so it launches one match only.
+        // return: Whether a launch was requested.
+        auto TakeLaunchRequest() -> bool;
+
+        // What the lifecycle hook did with the last launch request. Empty before the first one.
+        auto GetLastLaunch() const -> std::string;
+        auto SetLastLaunch(std::string result) -> void;
+
     private:
         mutable std::mutex m_Mutex{};
         std::shared_ptr<const MatchConfig> m_Pending{};
         std::string m_RecordName{};
         std::string m_LastApplied{};
         std::string m_LastRecorded{};
+        std::string m_LastLaunch{};
+        std::atomic<bool> m_IsLaunchRequested{ false };
     };
 }

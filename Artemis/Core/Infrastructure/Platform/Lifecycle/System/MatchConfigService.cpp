@@ -165,6 +165,20 @@ namespace Platform::Lifecycle::System
         return true;
     }
 
+    auto MatchConfigService::RequestLaunch() -> void
+    {
+        m_MatchConfigStore.SetLaunchRequested(true);
+
+        m_LogsService.Message("[MatchConfigService] INFO: Launch of the lobby requested.");
+    }
+
+    auto MatchConfigService::CancelLaunch() -> void
+    {
+        if (!m_MatchConfigStore.TakeLaunchRequest()) return;
+
+        m_LogsService.Message("[MatchConfigService] INFO: Launch of the lobby withdrawn.");
+    }
+
     auto MatchConfigService::CancelRecord() -> void
     {
         if (m_MatchConfigStore.TakeRecordName().empty()) return;

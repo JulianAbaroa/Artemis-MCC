@@ -33,6 +33,9 @@ namespace Runtime::Thread
         // MCC creates the engine right after loading the game module, before the lifecycle hooks can go in. This hook lives in MCC.
         m_Platform.m_EngineInterfaceDetour.Install();
 
+        // The lobby launch (D124) also hooks MCC, which stays loaded for the whole process.
+        m_Platform.m_LifecycleUpdateDetour.Install();
+
         if (!this->InstallLifecycleHooks()) this->Shutdown();
 
         if (lifecycle.IsRunning()) this->InstallRenderHooks();
@@ -77,6 +80,7 @@ namespace Runtime::Thread
 
         m_Platform.m_EngineInitializeDetour.Uninstall();
         m_Platform.m_DestroySubsystemsDetour.Uninstall();
+        m_Platform.m_LifecycleUpdateDetour.Uninstall();
         m_Platform.m_EngineInterfaceDetour.Uninstall();
 
         logs.Message("[MainThread] INFO: Stopped.");

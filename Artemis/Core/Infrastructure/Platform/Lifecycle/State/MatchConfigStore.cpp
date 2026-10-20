@@ -65,4 +65,31 @@ namespace Platform::Lifecycle::State
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_LastRecorded = std::move(file);
     }
+
+    auto MatchConfigStore::IsLaunchRequested() const -> bool
+    {
+        return m_IsLaunchRequested.load();
+    }
+
+    auto MatchConfigStore::SetLaunchRequested(bool value) -> void
+    {
+        m_IsLaunchRequested.store(value);
+    }
+
+    auto MatchConfigStore::TakeLaunchRequest() -> bool
+    {
+        return m_IsLaunchRequested.exchange(false);
+    }
+
+    auto MatchConfigStore::GetLastLaunch() const -> std::string
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_LastLaunch;
+    }
+
+    auto MatchConfigStore::SetLastLaunch(std::string result) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_LastLaunch = std::move(result);
+    }
 }
