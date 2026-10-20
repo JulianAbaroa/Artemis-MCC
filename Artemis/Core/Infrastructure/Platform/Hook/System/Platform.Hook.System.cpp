@@ -113,6 +113,14 @@ namespace Platform::Hook::System
         logsService.Message("{} INFO: Patch restored.", tag);
     }
 
+    auto ResolveRelative(std::uintptr_t match, std::uintptr_t relOffset, std::uintptr_t nextOffset) -> std::uintptr_t
+    {
+        std::int32_t relative{ 0 };
+        std::memcpy(&relative, reinterpret_cast<const void*>(match + relOffset), sizeof(relative));
+
+        return static_cast<std::uintptr_t>(static_cast<std::intptr_t>(match + nextOffset) + relative);
+    }
+
     auto WaitForDrain(std::atomic<int>& counter,
         std::chrono::milliseconds timeout) -> bool
     {

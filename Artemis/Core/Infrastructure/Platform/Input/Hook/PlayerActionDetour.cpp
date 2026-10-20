@@ -15,6 +15,8 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
+    using Platform::Hook::System::ResolveRelative;
+
     using Platform::Input::Type::PlayerActions;
     using Platform::Input::Type::ActionOverride;
     using Platform::Input::Type::ClientRequests;
@@ -88,13 +90,6 @@ namespace
     auto IsUseTestDown(std::uint64_t tick) -> bool
     {
         return (tick % k_UseTestCycle) < k_UseTestDownEndTick;
-    }
-
-    // return: The target of the rel32 at that offset of the match, with the next instruction at the next offset.
-    auto ResolveRelative(std::uintptr_t match, std::uintptr_t relOffset, std::uintptr_t nextOffset) -> std::uintptr_t
-    {
-        const std::int32_t relative{ *reinterpret_cast<const std::int32_t*>(match + relOffset) };
-        return (match + nextOffset) + relative;
     }
 
     // Aims the action at the unit in that slot.

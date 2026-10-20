@@ -254,8 +254,8 @@ namespace UI::Simulation::System
         else
         {
             if (ImGui::Button("Launch now")) m_MatchConfigService.RequestLaunch();
-            ImGui::SetItemTooltip("Starts the match of the custom games lobby of MCC, as its START does but without the countdown"
-                " (D124). MCC must be in the lobby. The pending configuration, if any, is transplanted into that start.");
+            ImGui::SetItemTooltip("Presses the START of the custom games lobby of MCC (D124): MCC counts down and launches. MCC must be"
+                " in the lobby. The pending configuration, if any, is transplanted into that start.");
         }
 
         const auto pending{ m_MatchConfigStore.GetPending() };

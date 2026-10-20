@@ -103,17 +103,43 @@ export namespace Platform::Lifecycle::Type
     // the MCC thread (D124, A15 sec. 2.14).
     using LifecycleUpdateFunction = auto(__fastcall*)(void* manager) -> void;
 
-    // Signature of the MCC function behind the START of the custom games lobby: starts the countdown of the session.
-    // return: True if the session took the countdown. False if this machine does not lead the lobby, a countdown runs already or the
-    // session refused it (the function returns its own flag, A15 sec. 2.14).
-    using StartCountdownFunction = auto(__fastcall*)(std::uint8_t seconds) -> bool;
-
-    // Offset of the current state in the lifecycle manager, and the state of the lobby before a match (PreGame).
+    // Offset of the current state in the lifecycle manager, and the PreGame state (the lobby and also the main menu).
     inline constexpr std::size_t k_LifecycleStateOffset{ 0x40 };
     inline constexpr std::int32_t k_PreGameLifecycleState{ 2 };
 
-    // Seconds of the countdown Artemis starts. With 0 the PreGame state starts the match on its next update.
-    inline constexpr std::uint8_t k_LaunchCountdownSeconds{ 0 };
+    // Signature of the MCC function that finds a screen of the UI manager by name. Returns null if that screen is not open.
+    using FindScreenFunction = auto(__fastcall*)(void* uiManager, const char* name) -> void*;
+
+    // Signature of the START of the custom games lobby screen (entry k_LobbyStartIndex of its vtable): validates the lobby, writes
+    // the chosen map and variants to the session, fills the loading screen and starts the countdown (A15 sec. 2.16).
+    using LobbyStartFunction = auto(__fastcall*)(void* screen) -> void;
+
+    // Entry of the START in the vtable of the custom games lobby screen (+0x1B8).
+    inline constexpr std::size_t k_LobbyStartIndex{ 0x1B8 / sizeof(void*) };
+
+    // Inside the FindLobbyScreen signature: "mov rcx, [rip + disp32]" reads the UI manager global (disp32 at +0x3, next instruction
+    // at +0x7), "lea rdx, [rip + disp32]" loads the name of the lobby screen (+0xA, +0xE) and "call rel32" calls FindScreen (+0xF,
+    // +0x13).
+    inline constexpr std::size_t k_UiManagerDisplacementOffset{ 0x3 };
+    inline constexpr std::size_t k_UiManagerNextInstructionOffset{ 0x7 };
+    inline constexpr std::size_t k_LobbyNameDisplacementOffset{ 0xA };
+    inline constexpr std::size_t k_LobbyNameNextInstructionOffset{ 0xE };
+    inline constexpr std::size_t k_FindScreenDisplacementOffset{ 0xF };
+    inline constexpr std::size_t k_FindScreenNextInstructionOffset{ 0x13 };
+
+    // Signature of the MCC function that returns its session object. MCC always asks for kind 1.
+    using GetSessionFunction = auto(__fastcall*)(std::int32_t kind) -> void*;
+    inline constexpr std::int32_t k_SessionKind{ 1 };
+
+    // Signature of the MCC function that tells whether the countdown of the lobby runs (bit 7 of +0xE of the session properties).
+    using IsCountdownActiveFunction = auto(__fastcall*)(void* session) -> bool;
+
+    // Inside the StartCountdown signature: "call rel32" to the session getter (+0x22, next instruction at +0x26) and to the countdown
+    // check (+0x2A, +0x2E).
+    inline constexpr std::size_t k_GetSessionDisplacementOffset{ 0x22 };
+    inline constexpr std::size_t k_GetSessionNextInstructionOffset{ 0x26 };
+    inline constexpr std::size_t k_IsCountdownActiveDisplacementOffset{ 0x2A };
+    inline constexpr std::size_t k_IsCountdownActiveNextInstructionOffset{ 0x2E };
 
     // State of the game engine as seen by Artemis.
     enum class Status

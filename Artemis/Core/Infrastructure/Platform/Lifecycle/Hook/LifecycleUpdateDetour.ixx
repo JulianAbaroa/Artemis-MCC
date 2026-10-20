@@ -8,9 +8,9 @@ import std;
 
 export namespace Platform::Lifecycle::Hook
 {
-    // Launches the match of the custom games lobby without its screen when Artemis requests it (D124): before the lifecycle update of
-    // MCC runs, starts the countdown of the lobby with 0 seconds, so the PreGame state starts the match on that same update and MCC
-    // goes on by its normal path (A15 sec. 2.14).
+    // Launches the match of the custom games lobby when Artemis requests it (D124): before the lifecycle update of MCC runs, calls
+    // the START of the lobby screen, as pressing it does. MCC then counts down and launches the match by its normal path (A15 sec.
+    // 2.14 and 2.16).
     // note: Hooks an MCC function that runs once per frame on the MCC thread and stays loaded for the whole process. Without a request
     // the hook only calls the original.
     class LifecycleUpdateDetour
@@ -21,7 +21,10 @@ export namespace Platform::Lifecycle::Hook
         using AOBService = Platform::Memory::System::AOBService;
 
         using LifecycleUpdateFunction = Platform::Lifecycle::Type::LifecycleUpdateFunction;
-        using StartCountdownFunction = Platform::Lifecycle::Type::StartCountdownFunction;
+        using FindScreenFunction = Platform::Lifecycle::Type::FindScreenFunction;
+        using LobbyStartFunction = Platform::Lifecycle::Type::LobbyStartFunction;
+        using GetSessionFunction = Platform::Lifecycle::Type::GetSessionFunction;
+        using IsCountdownActiveFunction = Platform::Lifecycle::Type::IsCountdownActiveFunction;
         using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
 
     public:
@@ -32,7 +35,7 @@ export namespace Platform::Lifecycle::Hook
         LifecycleUpdateDetour(const LifecycleUpdateDetour&) = delete;
         auto operator=(const LifecycleUpdateDetour&) -> LifecycleUpdateDetour& = delete;
 
-        // Finds the lifecycle update and the countdown function of MCC by signature and installs the hook. Does nothing if already
+        // Finds the lifecycle update, the lobby screen lookup and the countdown check of MCC by signature and installs the hook. Does nothing if already
         // installed.
         // return: False if a function is not found or the hook fails.
         auto Install() -> bool;
@@ -52,15 +55,23 @@ export namespace Platform::Lifecycle::Hook
         // Calls currently inside the hook. Uninstall waits for it to reach zero.
         static inline std::atomic<int> s_InFlight{ 0 };
 
-        // MCC function behind the START of the lobby, found at install.
-        StartCountdownFunction m_StartCountdown{ nullptr };
+        // UI manager global of MCC, name of the custom games lobby screen and the function that finds a screen, read at install.
+        void** m_UiManagerGlobal{ nullptr };
+        const char* m_LobbyScreenName{ nullptr };
+        FindScreenFunction m_FindScreen{ nullptr };
+
+        // Session getter and countdown check of MCC, read at install. The START of the lobby cancels nothing, so a running countdown
+        // is checked first.
+        GetSessionFunction m_GetSession{ nullptr };
+        IsCountdownActiveFunction m_IsCountdownActive{ nullptr };
 
         std::atomic<void*> m_FunctionAddress{ nullptr };
         std::atomic<bool> m_IsHookInstalled{ false };
 
         static auto __fastcall HookedLifecycleUpdate(void* manager) -> void;
 
-        // Starts the countdown of the lobby if the lifecycle is in PreGame, or logs why it does not.
+        // Presses the START of the custom games lobby screen if it is open, the lifecycle is in PreGame and no countdown runs, or logs
+        // why it does not.
         // note: MCC thread, inside the hook, before the original update.
         auto Launch(const void* manager) -> void;
     };

@@ -65,6 +65,10 @@ export namespace Platform::Hook::System
         std::atomic<int>& m_Counter;
     };
 
+    // return: The address a RIP-relative operand inside a signature match points to: the instruction that ends at nextOffset, plus
+    // the rel32 or disp32 at relOffset.
+    auto ResolveRelative(std::uintptr_t match, std::uintptr_t relOffset, std::uintptr_t nextOffset) -> std::uintptr_t;
+
     // Longest wait for the calls in flight when a hook is removed.
     inline constexpr std::chrono::milliseconds k_DrainTimeout{ 500 };
 
