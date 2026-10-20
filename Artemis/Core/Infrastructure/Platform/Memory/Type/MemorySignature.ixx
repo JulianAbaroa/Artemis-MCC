@@ -22,6 +22,13 @@ export namespace Platform::Memory::Type::Signature
         "40 56 57 41 57 48 83 EC 40 48 C7 44 24 20 FE FF FF FF 48 89 5C 24 68 48 89 6C 24 70 33 F6",
     };
 
+    // MCC-Win64-Shipping.exe: picks the module of a game and creates its engine with the CreateGameEngine export (A15).
+    inline constexpr Signature LoadGameEngine
+    {
+        "LoadGameEngine",
+        "48 89 5C 24 10 57 48 83 EC 30 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 28 48 8B D9 48 63 FA 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 39 BB EC BF 02 00"
+    };
+
     // Functions: Map
     inline constexpr Signature BlamOpenMap
     {

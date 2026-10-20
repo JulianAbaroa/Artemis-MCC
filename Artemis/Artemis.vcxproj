@@ -543,6 +543,8 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx" />

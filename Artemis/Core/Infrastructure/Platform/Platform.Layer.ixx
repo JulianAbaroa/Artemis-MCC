@@ -34,6 +34,7 @@ export namespace Platform
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;
         using EngineInitializeDetour = Platform::Lifecycle::Hook::EngineInitializeDetour;
         using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
+        using EngineInterfaceDetour = Platform::Lifecycle::Hook::EngineInterfaceDetour;
 
         using LocalUserStore = Platform::Host::State::LocalUserStore;
         using HostService = Platform::Host::System::HostService;
@@ -79,6 +80,7 @@ export namespace Platform
             m_SwapChainLocator(service.m_LogsService),
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
+            m_EngineInterfaceDetour(service.m_LogsService, service.m_SettingsStore, m_AOBService, m_MemoryReaderService),
             m_LocalUserGetPlayerDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
             m_LocalUserGetProfileDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
             m_LocalUserGetGamepadMappingDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
@@ -159,6 +161,7 @@ export namespace Platform
         // --- Hook ---
         EngineInitializeDetour m_EngineInitializeDetour;
         DestroySubsystemsDetour m_DestroySubsystemsDetour;
+        EngineInterfaceDetour m_EngineInterfaceDetour;
         LocalUserGetPlayerDetour m_LocalUserGetPlayerDetour;
         LocalUserGetProfileDetour m_LocalUserGetProfileDetour;
         LocalUserGetGamepadMappingDetour m_LocalUserGetGamepadMappingDetour;
