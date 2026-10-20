@@ -1,6 +1,6 @@
 """
 check_rules.py
-Checks the C++ code of Artemis against the mechanical rules of Ignore/rules.txt, file by file and across the project.
+Checks the C++ code of Artemis against the mechanical rules of Ignore/rules_cpp.txt, file by file and across the project.
 Each finding has the id of its check (see CHECKS below) and points to a file and a line.
 
     python Tools/check_rules.py                   New findings only (the ones not in the baseline). Exit code 1 if there are any.
@@ -922,7 +922,7 @@ def Main():
         dead = DeadMethods(sources)
         for path, line, check, detail, _ in dead:
             print(f"{path}:{line}: X1 {detail}")
-        print(f"{len(dead)} possibly dead methods (check each one: planned systems are kept, rules 2).")
+        print(f"{len(dead)} possibly dead methods (check each one: planned systems are kept, rules_cpp.txt 1).")
         return 0
     findings = []
     selected = set(arguments.files or [])

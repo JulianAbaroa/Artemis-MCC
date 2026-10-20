@@ -36,6 +36,7 @@
     <Compile Include="Tools\check_rules.py" />
     <Compile Include="Tools\deps.py" />
     <Compile Include="Tools\field_usage_report.py" />
+    <Compile Include="Tools\outline.py" />
     <Compile Include="Tools\profiler_stats.py" />
     <Compile Include="Tools\refs.py" />
     <Compile Include="Tools\TagTranspiler\Common.py" />
