@@ -7,11 +7,13 @@ export module Viewer.Profiler.Type;
 
 import std;
 
+namespace
+{
+    using Microsoft::WRL::ComPtr;
+}
+
 export namespace Viewer::Profiler::Type
 {
-    template <typename T>
-    using ComPtr = Microsoft::WRL::ComPtr<T>;
-
     // CPU section of the frame. Count is the number of sections and is not a section.
     enum class Cpu : std::size_t { Scene, Dynamic, Zone, Raycast, Aim, Draw, Frame, Count };
 

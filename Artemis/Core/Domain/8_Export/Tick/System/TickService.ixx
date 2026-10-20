@@ -2,6 +2,7 @@ export module Export.Tick.System;
 
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
+import Tables.Interaction.Type;
 import Tables.Object.State;
 import Tables.Player.State;
 import Tables.Interaction.State;

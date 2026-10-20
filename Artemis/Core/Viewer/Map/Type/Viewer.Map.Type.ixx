@@ -8,13 +8,14 @@ export module Viewer.Map.Type;
 import Platform.Render.Type;
 import std;
 
+namespace
+{
+    using Platform::Render::Type::MeshInstance;
+    using Microsoft::WRL::ComPtr;
+}
+
 export namespace Viewer::Map::Type
 {
-    using MeshInstance = Platform::Render::Type::MeshInstance;
-
-    template <typename T>
-    using ComPtr = Microsoft::WRL::ComPtr<T>;
-
     // Which fixture arrows the fixture pass draws, and how long the direction arrows are in world units.
     struct FixturePassOptions
     {

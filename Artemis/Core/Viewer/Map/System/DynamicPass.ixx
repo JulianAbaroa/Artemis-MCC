@@ -1,12 +1,14 @@
 module;
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 export module Viewer.Map.System:DynamicPass;
 
 import Service.Logs.System;
 import Platform.Render.Type;
 import Platform.Render.System;
+import Environment.Collidable.Type;
 import Environment.Collidable.State;
 import Viewer.Palette.System;
 import Viewer.Map.Type;
@@ -20,14 +22,14 @@ export namespace Viewer::Map::System
     {
     private:
         template <typename T>
-        using ComPtr = Viewer::Map::Type::ComPtr<T>;
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         using LogsService = Service::Logs::System::LogsService;
 
         using MeshInstance = Platform::Render::Type::MeshInstance;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using Collidables = Environment::Collidable::State::Collidables;
+        using Collidables = Environment::Collidable::Type::Collidables;
 
         using PaletteService = Viewer::Palette::System::PaletteService;
         using Geometry = Viewer::Map::Type::Geometry;

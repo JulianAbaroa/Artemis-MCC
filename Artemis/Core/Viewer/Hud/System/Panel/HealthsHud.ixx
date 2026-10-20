@@ -1,5 +1,8 @@
 export module Viewer.Hud.System:Vitalities;
 
+import Tables.Object.Type;
+import Environment.Details.Type;
+import Environment.Entities.Type;
 import Export.Tick.Type;
 import std;
 

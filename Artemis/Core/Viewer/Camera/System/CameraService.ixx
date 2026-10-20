@@ -1,5 +1,6 @@
 export module Viewer.Camera.System;
 
+import Common.Math.Type;
 import Export.Tick.Type;
 import Viewer.Camera.Type;
 import Viewer.Camera.State;
@@ -15,9 +16,9 @@ export namespace Viewer::Camera::System
     private:
         using steady_clock = std::chrono::steady_clock;
         using Tick = Export::Tick::Type::Tick;
-        using Vec2 = Viewer::Camera::Type::Vec2;
-        using Vec3 = Viewer::Camera::Type::Vec3;
-        using Matrix = Viewer::Camera::Type::Matrix;
+        using Vec2 = Common::Math::Type::Vec2;
+        using Vec3 = Common::Math::Type::Vec3;
+        using Matrix = Common::Math::Type::Matrix;
         using Lens = Viewer::Camera::Type::Lens;
         using Viewport = Viewer::Camera::Type::Viewport;
         using Ray = Viewer::Camera::Type::Ray;

@@ -19,8 +19,8 @@ namespace
     using Platform::Input::Type::ActionOverride;
     using Platform::Input::Type::ClientRequests;
     using Platform::Input::Type::ShadowCount;
-    using Export::Tick::Type::Player;
-    using Export::Tick::Type::Players;
+    using Environment::Players::Type::Player;
+    using Environment::Players::Type::Players;
     using Platform::Simulation::Type::SessionSnapshot;
     using Platform::Simulation::Type::SessionPlayer;
     using Platform::Simulation::Type::Bot;

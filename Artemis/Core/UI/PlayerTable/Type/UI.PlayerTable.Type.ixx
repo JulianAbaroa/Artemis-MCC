@@ -1,11 +1,12 @@
 export module UI.PlayerTable.Type;
 
+import Tables.Player.Type;
 import Export.Tick.Type;
 import std;
 
 namespace
 {
-    using Export::Tick::Type::AlivePlayer;
+    using Tables::Player::Type::Alive::AlivePlayer;
 }
 
 export namespace UI::PlayerTable::Type

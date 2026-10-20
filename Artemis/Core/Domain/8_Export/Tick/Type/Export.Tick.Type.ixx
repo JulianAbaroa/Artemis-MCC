@@ -15,42 +15,45 @@ import Egocentric.Self.Type;
 import Egocentric.Raycast.Type;
 import std;
 
-export namespace Export::Tick::Type
+namespace
 {
-    using AliveObject = Tables::Object::Type::Alive::AliveObject;
+    using Tables::Object::Type::Alive::AliveObject;
     using Tables::Object::Type::Alive::ObjectTable;
-    using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
-    using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
-    using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
+    using Tables::Player::Type::Alive::AlivePlayer;
+    using Tables::Player::Type::Alive::PlayerTable;
+    using Tables::Interaction::Type::Alive::AliveInteraction;
 
-    using Classified = Relations::Classifier::Type::Classified;
+    using Relations::Classifier::Type::Classified;
     using Relations::Classifier::Type::Classifieds;
-    using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
+    using Relations::ObjectGraph::Type::ObjectNode;
     using Relations::ObjectGraph::Type::ObjectNodes;
 
-    using Entity = Environment::Entities::Type::Entity;
-    using Entities = Environment::Entities::Type::Entities;
-    using Body = Environment::Players::Type::Body;
-    using Player = Environment::Players::Type::Player;
-    using Players = Environment::Players::Type::Players;
-    using VitalityDetail = Environment::Details::Type::VitalityDetail;
-    using VitalityDetails = Environment::Details::Type::VitalityDetails;
-    using ZoneDetail = Environment::Details::Type::ZoneDetail;
-    using ZoneDetails = Environment::Details::Type::ZoneDetails;
-    using TeleporterDetail = Environment::Details::Type::TeleporterDetail;
-    using TeleporterDetails = Environment::Details::Type::TeleporterDetails;
-    using LiftDetail = Environment::Details::Type::LiftDetail;
-    using LiftDetails = Environment::Details::Type::LiftDetails;
-    using BarrierDetail = Environment::Details::Type::BarrierDetail;
-    using BarrierDetails = Environment::Details::Type::BarrierDetails;
-    using Aim = Environment::Aim::Type::Aim;
+    using Environment::Entities::Type::Entity;
+    using Environment::Entities::Type::Entities;
+    using Environment::Players::Type::Body;
+    using Environment::Players::Type::Player;
+    using Environment::Players::Type::Players;
+    using Environment::Details::Type::VitalityDetail;
+    using Environment::Details::Type::VitalityDetails;
+    using Environment::Details::Type::ZoneDetail;
+    using Environment::Details::Type::ZoneDetails;
+    using Environment::Details::Type::TeleporterDetail;
+    using Environment::Details::Type::TeleporterDetails;
+    using Environment::Details::Type::LiftDetail;
+    using Environment::Details::Type::LiftDetails;
+    using Environment::Details::Type::BarrierDetail;
+    using Environment::Details::Type::BarrierDetails;
+    using Environment::Aim::Type::Aim;
     using Environment::Aim::Type::Aims;
 
-    using Affordance = Egocentric::Affordance::Type::Affordance;
+    using Egocentric::Affordance::Type::Affordance;
     using Egocentric::Affordance::Type::Affordances;
-    using Self = Egocentric::Self::Type::Self;
-    using Raycasts = Egocentric::Raycast::Type::Raycasts;
+    using Egocentric::Self::Type::Self;
+    using Egocentric::Raycast::Type::Raycasts;
+}
 
+export namespace Export::Tick::Type
+{
     // Engine function that runs the logic ticks of one frame (FUN_180057434).
     // note: remainingTime is the frame time left after the ticks. The engine lowers it if it stops before ticksToAdvance.
     using SimulationTicksFunction = auto(__fastcall*)(int ticksToAdvance, float* remainingTime) -> void;

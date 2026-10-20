@@ -18,10 +18,10 @@ import std;
 namespace
 {
     using Export::Tick::Type::Tick;
-    using Export::Tick::Type::ObjectTable;
-    using Export::Tick::Type::AliveObject;
-    using Export::Tick::Type::AliveInteraction;
-    using Export::Tick::Type::Affordance;
+    using Tables::Object::Type::Alive::ObjectTable;
+    using Tables::Object::Type::Alive::AliveObject;
+    using Tables::Interaction::Type::Alive::AliveInteraction;
+    using Egocentric::Affordance::Type::Affordance;
     using Egocentric::Affordance::Type::AffordanceActivation;
     using Egocentric::Affordance::Type::SeatStatus;
     using Tables::Object::Type::Profile::Profile;

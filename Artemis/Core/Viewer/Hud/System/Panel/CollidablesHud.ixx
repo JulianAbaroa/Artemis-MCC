@@ -1,5 +1,6 @@
 export module Viewer.Hud.System:Collidables;
 
+import Environment.Collidable.Type;
 import Environment.Collidable.State;
 import std;
 
@@ -9,7 +10,7 @@ export namespace Viewer::Hud::System
     class CollidablesHud
     {
     private:
-        using Collidables = Environment::Collidable::State::Collidables;
+        using Collidables = Environment::Collidable::Type::Collidables;
 
     public:
         CollidablesHud() = default;

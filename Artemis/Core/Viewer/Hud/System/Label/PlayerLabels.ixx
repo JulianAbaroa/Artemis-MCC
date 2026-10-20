@@ -2,6 +2,8 @@ export module Viewer.Hud.System:PlayerLabels;
 
 import :Canvas;
 
+import Environment.Entities.Type;
+import Environment.Players.Type;
 import Viewer.Hud.Type;
 import std;
 

@@ -1,6 +1,7 @@
 module;
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 module Viewer.Map.System;
 import :AimPass;
@@ -22,6 +23,7 @@ namespace
     using Resolved::World::Type::ModelLink::AnchorSource;
     using Environment::Aim::Type::SectionAim;
     using Viewer::Style::Type::Color;
+    using Microsoft::WRL::ComPtr;
 
     using Platform::Render::Type::SurfaceMode;
     using Platform::Render::Type::VertexLayout;
@@ -142,7 +144,7 @@ namespace
     };
 
     auto CreateImmutableBuffer(ID3D11Device* device, const std::vector<float>& data,
-        Viewer::Map::Type::ComPtr<ID3D11Buffer>& buffer) -> bool
+        ComPtr<ID3D11Buffer>& buffer) -> bool
     {
         D3D11_BUFFER_DESC desc{};
         desc.Usage = D3D11_USAGE_IMMUTABLE;

@@ -1,5 +1,7 @@
 export module Viewer.Hud.System:Fixtures;
 
+import Environment.Details.Type;
+import Environment.Entities.Type;
 import Export.Tick.Type;
 import std;
 

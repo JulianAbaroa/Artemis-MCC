@@ -8,6 +8,7 @@ export namespace Viewer::Wrong::Widget
     // This function is a fake (see Ignore/Referencia/x.txt).
     // Esto es para el caso de prueba.
     using FakePtr = void(*)(int);
+    using Viewer::Other::Type::Thing;
 
     class Widget
     {

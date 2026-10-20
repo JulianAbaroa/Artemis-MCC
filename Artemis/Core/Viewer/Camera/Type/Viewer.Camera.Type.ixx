@@ -3,14 +3,16 @@ export module Viewer.Camera.Type;
 import Common.Math.Type;
 import std;
 
-export namespace Viewer::Camera::Type
+namespace
 {
-    using Vec2 = Common::Math::Type::Vec2;
-    using Vec3 = Common::Math::Type::Vec3;
-
+    using Common::Math::Type::Vec2;
+    using Common::Math::Type::Vec3;
     // 4x4 matrix stored row by row.
     using Common::Math::Type::Matrix;
+}
 
+export namespace Viewer::Camera::Type
+{
     // Camera movement control. Count is the number of keys and is not a key.
     enum class Key : std::uint8_t
     {

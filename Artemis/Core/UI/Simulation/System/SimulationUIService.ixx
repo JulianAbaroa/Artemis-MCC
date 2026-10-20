@@ -8,6 +8,7 @@ import Platform.Host.State;
 import Platform.Input.Type;
 import Platform.Input.State;
 import Platform.Simulation.State;
+import Environment.Players.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
 import UI.Simulation.Type;
@@ -38,7 +39,7 @@ export namespace UI::Simulation::System
 
         using BotStore = Platform::Simulation::State::BotStore;
 
-        using Players = Export::Tick::Type::Players;
+        using Players = Environment::Players::Type::Players;
         using TickStore = Export::Tick::State::TickStore;
 
         using LocalPlayerInput = UI::Simulation::Type::LocalPlayerInput;

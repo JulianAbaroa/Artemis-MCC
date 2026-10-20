@@ -1,12 +1,15 @@
 module;
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 export module Viewer.Map.System:AimPass;
 
 import Service.Logs.System;
 import Platform.Render.Type;
 import Platform.Render.System;
+import Environment.Aim.Type;
+import Environment.Details.Type;
 import Export.Tick.Type;
 import Viewer.Map.Type;
 import std;
@@ -19,17 +22,17 @@ export namespace Viewer::Map::System
     {
     private:
         template <typename T>
-        using ComPtr = Viewer::Map::Type::ComPtr<T>;
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         using LogsService = Service::Logs::System::LogsService;
 
         using SphereInstance = Platform::Render::Type::SphereInstance;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using VitalityDetail = Export::Tick::Type::VitalityDetail;
-        using VitalityDetails = Export::Tick::Type::VitalityDetails;
-        using Aim = Export::Tick::Type::Aim;
-        using Aims = Export::Tick::Type::Aims;
+        using VitalityDetail = Environment::Details::Type::VitalityDetail;
+        using VitalityDetails = Environment::Details::Type::VitalityDetails;
+        using Aim = Environment::Aim::Type::Aim;
+        using Aims = Environment::Aim::Type::Aims;
 
     public:
         explicit AimPass(LogsService& logsService) : m_LogsService(logsService) {}

@@ -3,10 +3,13 @@ export module Viewer.Selection.Type;
 import Common.Math.Type;
 import std;
 
+namespace
+{
+    using Common::Math::Type::Vec3;
+}
+
 export namespace Viewer::Selection::Type
 {
-    using Vec3 = Common::Math::Type::Vec3;
-
     // Axis-aligned box of an object in world space.
     struct ObjectBounds
     {

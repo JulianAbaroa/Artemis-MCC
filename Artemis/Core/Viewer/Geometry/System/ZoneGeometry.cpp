@@ -10,6 +10,7 @@ namespace
     using Platform::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
     using Viewer::Style::Type::Color;
+    using Common::ZoneShape::Type::ZoneShape;
     using Common::ZoneShape::Type::ZoneShapeKind;
 
     constexpr int k_CylinderSegments{ 24 };

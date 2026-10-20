@@ -15,11 +15,11 @@ import std;
 namespace
 {
     using Export::Tick::Type::Tick;
-    using Export::Tick::Type::Entity;
-    using Export::Tick::Type::ZoneDetail;
-    using Export::Tick::Type::TeleporterDetail;
-    using Export::Tick::Type::LiftDetail;
-    using Export::Tick::Type::BarrierDetail;
+    using Environment::Entities::Type::Entity;
+    using Environment::Details::Type::ZoneDetail;
+    using Environment::Details::Type::TeleporterDetail;
+    using Environment::Details::Type::LiftDetail;
+    using Environment::Details::Type::BarrierDetail;
     using Environment::Details::Type::TeleporterPass;
     using Environment::Details::Type::HasPass;
     using Common::ZoneShape::Type::ZoneShape;

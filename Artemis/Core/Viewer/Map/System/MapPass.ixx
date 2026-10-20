@@ -1,6 +1,7 @@
 module;
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 export module Viewer.Map.System:MapPass;
 
@@ -18,7 +19,7 @@ export namespace Viewer::Map::System
     {
     private:
         template <typename T>
-        using ComPtr = Viewer::Map::Type::ComPtr<T>;
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         using LogsService = Service::Logs::System::LogsService;
 

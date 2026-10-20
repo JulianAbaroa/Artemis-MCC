@@ -1,5 +1,6 @@
 export module UI.PlayerTable.State;
 
+import Tables.Player.Type;
 import Export.Tick.Type;
 import UI.PlayerTable.Type;
 import std;
@@ -10,8 +11,8 @@ export namespace UI::PlayerTable::State
     class PlayerTableUIStore
     {
     private:
-        using PlayerTable = Export::Tick::Type::PlayerTable;
-        using AlivePlayer = Export::Tick::Type::AlivePlayer;
+        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
+        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
 
         using Players = UI::PlayerTable::Type::Players;
 

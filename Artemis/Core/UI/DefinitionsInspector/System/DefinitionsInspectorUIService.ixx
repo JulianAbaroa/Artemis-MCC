@@ -2,6 +2,7 @@ export module UI.DefinitionsInspector.System;
 
 import Service.Settings.State;
 import Resolved.Definitions.State;
+import Tables.Object.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
 import Gui.Widget.System;
@@ -21,7 +22,7 @@ export namespace UI::DefinitionsInspector::System
 
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 
-        using AliveObject = Export::Tick::Type::AliveObject;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
         using TickStore = Export::Tick::State::TickStore;
 
         using InspectorGuiService = Gui::Widget::System::InspectorGuiService;

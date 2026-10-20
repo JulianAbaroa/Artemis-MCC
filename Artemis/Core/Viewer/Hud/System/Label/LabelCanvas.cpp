@@ -114,7 +114,7 @@ namespace Viewer::Hud::System
 
     auto LabelCanvas::Project(const Vec3& world, ImVec2& outScreen) const -> bool
     {
-        Viewer::Camera::Type::Vec2 pixel{};
+        Common::Math::Type::Vec2 pixel{};
         if (!m_Camera.ToScreen(world, pixel)) return false;
 
         outScreen = ImVec2(pixel.X, pixel.Y);

@@ -15,7 +15,7 @@ namespace
     using Viewer::Camera::Type::Mode;
     using Viewer::Camera::Type::Follow;
     using Viewer::Options::Type::Scalar;
-    using Viewer::Camera::Type::Vec3;
+    using Common::Math::Type::Vec3;
 
     using Common::Math::Type::k_WorldUp;
 

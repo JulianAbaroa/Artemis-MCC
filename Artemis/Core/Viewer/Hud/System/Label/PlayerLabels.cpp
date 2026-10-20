@@ -22,9 +22,9 @@ namespace
     using Resolved::World::Type::ModelLink::AnchorSource;
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
-    using Export::Tick::Type::Entity;
-    using Export::Tick::Type::Player;
-    using Export::Tick::Type::Body;
+    using Environment::Entities::Type::Entity;
+    using Environment::Players::Type::Player;
+    using Environment::Players::Type::Body;
     using Viewer::Hud::Type::LabelRow;
 
     using Viewer::Style::Type::k_Health;

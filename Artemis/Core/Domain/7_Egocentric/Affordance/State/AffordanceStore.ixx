@@ -4,9 +4,13 @@ import Common.State.Type;
 import Egocentric.Affordance.Type;
 import std;
 
-export namespace Egocentric::Affordance::State
+namespace
 {
     using Egocentric::Affordance::Type::Affordances;
+}
+
+export namespace Egocentric::Affordance::State
+{
     class AffordanceStore : public Common::State::Type::Snapshot<Affordances>
     {
     };

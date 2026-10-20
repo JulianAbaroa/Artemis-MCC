@@ -1,5 +1,6 @@
 export module Viewer.Selection.System;
 
+import Environment.Collidable.Type;
 import Environment.Collidable.State;
 import Viewer.Selection.Type;
 import Viewer.Selection.State;
@@ -14,7 +15,7 @@ export namespace Viewer::Selection::System
     class SelectionService
     {
     private:
-        using Collidables = Environment::Collidable::State::Collidables;
+        using Collidables = Environment::Collidable::Type::Collidables;
         using CollidableStore = Environment::Collidable::State::CollidableStore;
 
         using SelectionStore = Viewer::Selection::State::SelectionStore;

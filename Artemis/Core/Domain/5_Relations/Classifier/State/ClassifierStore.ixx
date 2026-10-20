@@ -6,8 +6,12 @@ import Common.State.Type;
 import Relations.Classifier.Type;
 import std;
 
-export namespace Relations::Classifier::State
+namespace
 {
     using Relations::Classifier::Type::Classifieds;
+}
+
+export namespace Relations::Classifier::State
+{
     class ClassifierStore : public Common::State::Type::Snapshot<Classifieds> {};
 }

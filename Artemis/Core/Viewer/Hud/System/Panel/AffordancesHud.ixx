@@ -1,5 +1,8 @@
 export module Viewer.Hud.System:Affordances;
 
+import Tables.Interaction.Type;
+import Tables.Object.Type;
+import Egocentric.Affordance.Type;
 import Export.Tick.Type;
 import std;
 

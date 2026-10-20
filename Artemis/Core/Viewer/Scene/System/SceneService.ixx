@@ -1,5 +1,6 @@
 export module Viewer.Scene.System;
 
+import Common.Math.Type;
 import Service.Settings.State;
 import Export.Tick.Type;
 import Viewer.Camera.Type;
@@ -21,7 +22,7 @@ export namespace Viewer::Scene::System
         using CameraStore = Viewer::Camera::State::CameraStore;
         using CameraService = Viewer::Camera::System::CameraService;
         using Viewport = Viewer::Camera::Type::Viewport;
-        using Matrix = Viewer::Camera::Type::Matrix;
+        using Matrix = Common::Math::Type::Matrix;
         using SelectionService = Viewer::Selection::System::SelectionService;
         using PaletteService = Viewer::Palette::System::PaletteService;
 

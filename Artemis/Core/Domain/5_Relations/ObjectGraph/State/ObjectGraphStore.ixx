@@ -4,11 +4,14 @@ import Common.State.Type;
 import Relations.ObjectGraph.Type;
 import std;
 
+namespace
+{
+    using Relations::ObjectGraph::Type::ObjectNode;
+    using Relations::ObjectGraph::Type::ObjectNodes;
+}
+
 export namespace Relations::ObjectGraph::State
 {
-    using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
-    using Relations::ObjectGraph::Type::ObjectNodes;
-
     class ObjectGraphStore : public Common::State::Type::Snapshot<ObjectNodes>
     {
     public:

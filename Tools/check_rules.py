@@ -46,6 +46,7 @@ CHECKS = {
     "U2": "Type renamed with 'using X = Y' (one name per type).",
     "U3": "Anonymous namespace uses 'using X = A::B::X' (use 'using A::B::X;').",
     "U4": "Constant written with its full namespace chain (bring it with 'using' and write k_Name).",
+    "U5": "Type of another namespace brought into a named namespace (it is exported with it: use the anonymous namespace).",
     "T1": "struct/enum defined outside a Type module (or inside a class).",
     # Modules and imports (rules 4)
     "M1": ".cpp imports a partition of its own module by full name (use 'module A.B.C;' then 'import :Part;').",
@@ -470,10 +471,16 @@ def CheckFile(source, findings):
                 Add("U1", line, "use 'using X = A::B::X;' in the first private scope of a class")
         if match:
             name, target = match.group(1), match.group(2)
-            if "(" not in target and LastIdentifier(re.sub(r"<.*>", "", target)) != name:
+            if "(" in target:
+                pass        # function type: a new type of this namespace, not a renamed one
+            elif LastIdentifier(re.sub(r"<.*>", "", target)) != name:
                 Add("U2", line, f"{name} = {target}")
             elif scope.Kind == "anonymous":
                 Add("U3", line)
+            elif scope.Kind == "namespace":
+                Add("U5", line, name)
+        elif scope.Kind == "namespace" and not text.startswith("using namespace"):
+            Add("U5", line, text[6:].rstrip(";"))
         elif scope.Kind == "class" and not text.startswith("using namespace"):
             if not (scope.AccessCount == 1 and scope.Access == "private"):
                 Add("U1", line, "'using A::B::X;' is ill-formed in a class")
@@ -896,7 +903,7 @@ def SaveBaseline(findings):
 
 
 # Checks that the files in Tools/check_rules_cases/ must trigger (one deliberate violation each).
-SELF_TEST_EXPECTED = {"F1", "F2", "S1", "S2", "S3", "S4", "N1", "N2", "N3", "N4", "N5", "U1", "U2", "U3", "U4", "T1", "M1", "M2", "M3",
+SELF_TEST_EXPECTED = {"F1", "F2", "S1", "S2", "S3", "S4", "N1", "N2", "N3", "N4", "N5", "U1", "U2", "U3", "U4", "U5", "T1", "M1", "M2", "M3",
                       "C1", "C2", "L1", "A2", "A3", "M4", "M5", "W1", "N6", "C3", "C6", "C7", "H2", "H3", "H4", "O1", "Y1", "Y2",
                       "Y3"}
 

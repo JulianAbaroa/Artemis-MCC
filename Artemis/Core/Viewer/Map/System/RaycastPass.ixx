@@ -1,11 +1,13 @@
 module;
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 export module Viewer.Map.System:RaycastPass;
 
 import Service.Logs.System;
 import Platform.Render.System;
+import Egocentric.Raycast.Type;
 import Export.Tick.Type;
 import Viewer.Map.Type;
 import std;
@@ -17,13 +19,13 @@ export namespace Viewer::Map::System
     {
     private:
         template <typename T>
-        using ComPtr = Viewer::Map::Type::ComPtr<T>;
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
 
         using LogsService = Service::Logs::System::LogsService;
 
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using Raycasts = Export::Tick::Type::Raycasts;
+        using Raycasts = Egocentric::Raycast::Type::Raycasts;
 
     public:
         explicit RaycastPass(LogsService& logsService) : m_LogsService(logsService) {}

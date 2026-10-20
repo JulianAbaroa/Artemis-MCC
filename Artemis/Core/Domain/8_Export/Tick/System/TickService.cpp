@@ -6,7 +6,7 @@ import Export.Tick.Type;
 namespace
 {
     using Export::Tick::Type::Tick;
-    using Export::Tick::Type::AliveInteraction;
+    using Tables::Interaction::Type::Alive::AliveInteraction;
 
     using Egocentric::Self::Type::k_SelfLocalIndex;
 }

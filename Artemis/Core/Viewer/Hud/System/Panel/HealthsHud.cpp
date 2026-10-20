@@ -15,9 +15,9 @@ import std;
 namespace
 {
     using Export::Tick::Type::Tick;
-    using Export::Tick::Type::Entity;
-    using Export::Tick::Type::VitalityDetail;
-    using Export::Tick::Type::ObjectTable;
+    using Environment::Entities::Type::Entity;
+    using Environment::Details::Type::VitalityDetail;
+    using Tables::Object::Type::Alive::ObjectTable;
     using Resolved::Vitality::Type::Vitality::Section;
     using Resolved::Vitality::Type::Vitality::VitalityKind;
     using Resolved::World::Type::ModelLink::ModelLinkAnchor;

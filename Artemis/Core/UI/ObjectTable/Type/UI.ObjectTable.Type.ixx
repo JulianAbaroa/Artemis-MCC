@@ -1,11 +1,12 @@
 export module UI.ObjectTable.Type;
 
+import Tables.Object.Type;
 import Export.Tick.Type;
 import std;
 
 namespace
 {
-    using Export::Tick::Type::AliveObject;
+    using Tables::Object::Type::Alive::AliveObject;
 }
 
 export namespace UI::ObjectTable::Type

@@ -1,5 +1,6 @@
 export module UI.ObjectTable.System;
 
+import Tables.Object.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
 import Gui.Widget.System;
@@ -14,7 +15,7 @@ export namespace UI::ObjectTable::System
     class ObjectTableUIService
     {
     private:
-        using AliveObject = Export::Tick::Type::AliveObject;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
 
         using TickStore = Export::Tick::State::TickStore;
 

@@ -1,5 +1,6 @@
 export module UI.PlayerTable.System;
 
+import Tables.Player.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
 import Gui.Widget.System;
@@ -13,7 +14,7 @@ export namespace UI::PlayerTable::System
     class PlayerTableUIService
     {
     private:
-        using AlivePlayer = Export::Tick::Type::AlivePlayer;
+        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
 
         using TickStore = Export::Tick::State::TickStore;
 

@@ -1,5 +1,6 @@
 export module UI.ObjectTable.State;
 
+import Tables.Object.Type;
 import Export.Tick.Type;
 import UI.ObjectTable.Type;
 import std;
@@ -10,8 +11,8 @@ export namespace UI::ObjectTable::State
     class ObjectTableUIStore
     {
     private:
-        using ObjectTable = Export::Tick::Type::ObjectTable;
-        using AliveObject = Export::Tick::Type::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
 
         using Groups = UI::ObjectTable::Type::Groups;
 
