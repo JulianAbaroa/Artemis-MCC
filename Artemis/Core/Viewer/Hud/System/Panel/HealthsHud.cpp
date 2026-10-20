@@ -14,18 +14,18 @@ import std;
 
 namespace
 {
-    using Tick = Export::Tick::Type::Tick;
+    using Export::Tick::Type::Tick;
     using Export::Tick::Type::Entity;
     using Export::Tick::Type::VitalityDetail;
-    using ObjectTable = Export::Tick::Type::ObjectTable;
-    using Section = Resolved::Vitality::Type::Vitality::Section;
-    using SectionKind = Resolved::Vitality::Type::Vitality::Kind;
-    using Anchor = Resolved::World::Type::ModelLink::Anchor;
-    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
-    using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
-    using HexFormater = Gui::Format::System::HexFormater;
+    using Export::Tick::Type::ObjectTable;
+    using Resolved::Vitality::Type::Vitality::Section;
+    using Resolved::Vitality::Type::Vitality::VitalityKind;
+    using Resolved::World::Type::ModelLink::ModelLinkAnchor;
+    using Resolved::World::Type::ModelLink::AnchorSource;
+    using Resolved::Vitality::Type::Vitality::Vitality;
+    using Gui::Format::System::HexFormater;
 
-    using PanelGuiService = Gui::Widget::System::PanelGuiService;
+    using Gui::Widget::System::PanelGuiService;
 
     using Common::Semantic::Type::Capability;
     using Common::Semantic::Type::Lifecycle;
@@ -87,14 +87,14 @@ namespace
             ImGui::TextColored(k_Destroys, "[destroys]");
         }
 
-        if (section.Kind == SectionKind::Shield)
+        if (section.Kind == VitalityKind::Shield)
         {
             ImGui::SameLine();
             ImGui::TextColored(k_Shield, "[shield]");
         }
     }
 
-    auto DrawAimLine(const Anchor& aim) -> void
+    auto DrawAimLine(const ModelLinkAnchor& aim) -> void
     {
         if (aim.Source == AnchorSource::None)
         {
@@ -162,7 +162,7 @@ namespace
         ImGui::Text("Section %u", static_cast<unsigned>(section.NameId));
         DrawRoleTags(section);
 
-        if (section.CollRegion < 0 && section.Kind != SectionKind::Shield)
+        if (section.CollRegion < 0 && section.Kind != VitalityKind::Shield)
         {
             ImGui::SameLine();
             ImGui::TextDisabled("(no coll)");
@@ -171,7 +171,7 @@ namespace
         DrawAimLine(section.Aim);
     }
 
-    auto DrawVitality(const std::string* tagName, const ResolvedVitality* layout) -> void
+    auto DrawVitality(const std::string* tagName, const Vitality* layout) -> void
     {
         ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Vitality");
         ImGui::Separator();
@@ -210,7 +210,7 @@ namespace
 
     auto DrawHealthRow(std::size_t index, float vitality, const Section* section) -> void
     {
-        const bool isShield = section && section->Kind == SectionKind::Shield;
+        const bool isShield = section && section->Kind == VitalityKind::Shield;
         const bool isCritical = section && section->IsCritical;
 
         if (section) ImGui::Text("Section %u", static_cast<unsigned>(section->NameId));
@@ -235,7 +235,7 @@ namespace
         ImGui::Spacing();
     }
 
-    auto DrawHealth(const VitalityDetail& detail, const ResolvedVitality* layout) -> void
+    auto DrawHealth(const VitalityDetail& detail, const Vitality* layout) -> void
     {
         ImGui::TextColored(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Health");
         ImGui::Separator();
@@ -279,7 +279,7 @@ namespace Viewer::Hud::System
             if (detailIt != tick.VitalityDetails->end()) detail = &detailIt->second;
         }
 
-        const ResolvedVitality* layout = detail ? detail->Layout.get() : nullptr;
+        const Vitality* layout = detail ? detail->Layout.get() : nullptr;
 
         DrawEntity(tick, handle);
 

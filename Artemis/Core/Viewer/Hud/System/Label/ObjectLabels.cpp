@@ -5,27 +5,28 @@ module;
 module Viewer.Hud.System;
 import :ObjectLabels;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
+import Relations.Classifier.Type;
 import Egocentric.Affordance.Type;
 import Gui.Format.System;
-import Relations.Classifier.Type;
-import Viewer.Options.State;
 import Viewer.Options.Type;
+import Viewer.Options.State;
 import Viewer.Style.Type;
 import Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Flag = Viewer::Options::Type::Flag;
-    using Scalar = Viewer::Options::Type::Scalar;
+    using Common::Math::Type::Vec3;
+    using Viewer::Options::Type::Flag;
+    using Viewer::Options::Type::Scalar;
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
     using Relations::Classifier::Type::Classified;
-    using LabelRow = Viewer::Hud::Type::LabelRow;
-    using HexFormater = Gui::Format::System::HexFormater;
+    using Viewer::Hud::Type::LabelRow;
+    using Gui::Format::System::HexFormater;
 
     namespace SemanticType = Common::Semantic::Type;
 
@@ -33,16 +34,17 @@ namespace
     using Viewer::Style::Type::k_Affordance;
     using Viewer::Style::Type::k_Collidable;
     using Viewer::Style::Type::k_Selected;
+    using Common::Engine::Type::k_NoHandle;
+    using Viewer::Hud::Type::k_InfoColor;
+    using Viewer::Hud::Type::k_MutedColor;
+    using Viewer::Hud::Type::k_FreeSeatColor;
+    using Viewer::Hud::Type::k_TakenSeatColor;
 
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
-    constexpr float k_SelectedPriority{ 2.0f };
+    // Above the other selected labels: the object label is the main one.
+    constexpr float k_SelectedObjectPriority{ 2.0f };
     constexpr float k_MinimumSpeed{ 1e-5f };
 
     constexpr ImU32 k_TagColor{ IM_COL32(255, 255, 255, 255) };
-    constexpr ImU32 k_InfoColor{ IM_COL32(190, 200, 215, 255) };
-    constexpr ImU32 k_MutedColor{ IM_COL32(150, 160, 175, 255) };
-    constexpr ImU32 k_FreeSeatColor{ IM_COL32(120, 200, 130, 255) };
-    constexpr ImU32 k_TakenSeatColor{ IM_COL32(215, 110, 110, 255) };
 
     enum class Category : std::uint8_t
     {
@@ -141,7 +143,7 @@ namespace Viewer::Hud::System
     auto ObjectLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
         const auto& tick = context.Frame;
-        const auto& options = context.Options;
+        const auto& options = canvas.GetOptions();
 
         if (!tick.ObjectTable) return;
 
@@ -260,7 +262,7 @@ namespace Viewer::Hud::System
                 ? ToImColor(k_Selected) : ToImColor(GroupOf(category));
 
             canvas.Add(anchor, std::move(rows), group, TeamColorOf(context, object.Handle),
-                isSelected ? k_SelectedPriority : 0.0f, object.Handle);
+                isSelected ? k_SelectedObjectPriority : 0.0f, object.Handle);
 
             if (showArrow && speed > k_MinimumSpeed)
             {

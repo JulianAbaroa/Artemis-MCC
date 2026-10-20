@@ -11,7 +11,9 @@ import std;
 
 namespace
 {
-    using WindowMessage = Platform::Input::Type::WindowMessage;
+    using Platform::Input::Type::WindowMessage;
+
+    using Platform::Hook::System::k_DrainTimeout;
 }
 
 namespace Platform::Input::Hook
@@ -105,7 +107,7 @@ namespace Platform::Input::Hook
 
         const HWND window = s_Window.load();
 
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
 
         const auto current = GetWindowLongPtrW(window, GWLP_WNDPROC);
         if (current == reinterpret_cast<LONG_PTR>(&HookedWndProc))

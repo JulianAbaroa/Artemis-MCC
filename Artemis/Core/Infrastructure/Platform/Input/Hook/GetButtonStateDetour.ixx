@@ -37,6 +37,7 @@ export namespace Platform::Input::Hook
         InputStore& m_InputStore;
 
         static inline GetButtonStateDetour* s_Instance{ nullptr };
+        static inline std::atomic<int> s_InFlight{ 0 };
         static inline GetButtonStateFunction s_OriginalFunction{ nullptr };
 
         std::atomic<void*> m_FunctionAddress{ nullptr };

@@ -6,24 +6,28 @@ module;
 module Egocentric.Affordance.System;
 
 import Common.Semantic.Type;
-import Tables.Object.Type;
 import Resolved.Definitions.Type;
+import Tables.Object.Type;
+import Relations.Classifier.Type;
+import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
 
 namespace
 {
-    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-    using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
-    using Seat = Tables::Object::Type::Vehicle::Seat::Seat;
-    using Classified = Relations::Classifier::Type::Classified;
-    using Classifieds = std::vector<Classified>;
-    using Self = Egocentric::Self::Type::Self;
+    using Resolved::Definitions::Type::Object::ObjectKind;
+    using Tables::Object::Type::BoneMatrix::BoneMatrix;
+    using Tables::Object::Type::Vehicle::Seat::Seat;
+    using Relations::Classifier::Type::Classified;
+    using Relations::Classifier::Type::Classifieds;
+    using Egocentric::Self::Type::Self;
 
     using Egocentric::Self::Type::k_SelfLocalIndex;
 
     using Common::Semantic::Type::Binding;
     using Common::Semantic::Type::Capability;
     using Common::Semantic::Type::HasCapability;
+
+    using Egocentric::Affordance::Type::Affordances;
 }
 
 namespace Egocentric::Affordance::System
@@ -52,10 +56,10 @@ namespace Egocentric::Affordance::System
 
         const AliveInteraction& interaction = (*interactionsPtr)[k_SelfLocalIndex];
         const Classifieds& classifieds = *classifiedsPtr;
-        const ObjectGraph& nodes = *objectGraphPtr;
+        const ObjectNodes& nodes = *objectGraphPtr;
         const ObjectTable& objectTable = *objectTablePtr;
 
-        std::vector<Affordance> results;
+        Affordances results{};
         results.reserve(32);
 
         for (const Classified& classified : classifieds)
@@ -113,7 +117,7 @@ namespace Egocentric::Affordance::System
 
     auto AffordanceService::BuildVehicleAffordance(const AliveObject& object,
         const Vec3& selfPosition, std::uint32_t selfBipedHandle,
-        const AliveInteraction& interaction, const ObjectGraph& objectGraph,
+        const AliveInteraction& interaction, const ObjectNodes& objectGraph,
         const ObjectTable& objectTable, Affordance& out) const -> bool
     {
         const Vehicle* vehiPtr = std::get_if<Vehicle>(&object.Specific);
@@ -160,7 +164,7 @@ namespace Egocentric::Affordance::System
     }
 
     auto AffordanceService::ResolveSeatStatuses(const Vehicle& vehi,
-        const AliveObject& object, const ObjectGraph& objectGraph,
+        const AliveObject& object, const ObjectNodes& objectGraph,
         const ObjectTable& objectTable, const Vec3& selfPosition, std::uint32_t selfBipedHandle,
         std::vector<SeatStatus>& outSeats) const -> bool
     {
@@ -284,7 +288,7 @@ namespace Egocentric::Affordance::System
     }
 
     auto AffordanceService::CollectVehiclePartHandles(
-        std::uint32_t vehicleHandle, const ObjectGraph& objectGraph,
+        std::uint32_t vehicleHandle, const ObjectNodes& objectGraph,
         const ObjectTable& objectTable) const -> std::vector<std::uint32_t>
     {
         std::vector<std::uint32_t> parts;
@@ -304,7 +308,7 @@ namespace Egocentric::Affordance::System
     }
 
     auto AffordanceService::CollectBipedChildHandles(std::uint32_t vehicleHandle,
-        const ObjectGraph& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>
+        const ObjectNodes& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>
     {
         std::vector<std::uint32_t> bipeds;
 

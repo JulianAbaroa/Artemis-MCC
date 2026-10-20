@@ -49,4 +49,8 @@ export namespace Platform::Host::Type
     // Signature of the engine function that decides if the network session accepts join requests.
     // return: 0 when it accepts them, an error code otherwise.
     using CanAcceptAnyJoinRequestFunction = auto(__fastcall*)(void* session) -> std::int32_t;
+
+    // Jump of the SessionJoinCheck signature: the "ja" opcode of the engine, and the patch bytes ("jmp") that replace it.
+    inline constexpr std::uint8_t k_JumpIfAboveOpcode{ 0x77 };
+    inline constexpr std::array<std::uint8_t, 1> k_JumpAlwaysPatch{ 0xEB };
 }

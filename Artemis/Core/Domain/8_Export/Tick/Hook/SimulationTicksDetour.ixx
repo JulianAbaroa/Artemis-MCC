@@ -51,6 +51,7 @@ export namespace Export::Tick::Hook
         ExecuteGameFrameDetour& m_ExecuteGameFrameDetour;
 
         static inline SimulationTicksDetour* s_Instance{ nullptr };
+        static inline std::atomic<int> s_InFlight{ 0 };
         static inline SimulationTicksFunction s_OriginalFunction{ nullptr };
 
         std::atomic<void*> m_FunctionAddress{ nullptr };

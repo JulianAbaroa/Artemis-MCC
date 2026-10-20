@@ -1,6 +1,5 @@
 module Platform.Input.State;
 import :PlayerAction;
-
 import std;
 
 namespace

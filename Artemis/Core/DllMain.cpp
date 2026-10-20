@@ -8,7 +8,7 @@ namespace
     // Thread entry. Runs Artemis (Start, then Run until shutdown) off the loader lock.
     // param: HMODULE of this DLL.
     // note: Exceptions must not escape the thread. Any failure just ends it.
-    DWORD WINAPI Bootstrap(LPVOID param)
+    auto WINAPI Bootstrap(LPVOID param) -> DWORD
     {
         const auto handleModule = static_cast<HMODULE>(param);
 

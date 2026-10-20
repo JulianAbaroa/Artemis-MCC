@@ -3,9 +3,21 @@ export module Tables.Object.Type:Scenery;
 import Common.Tag.Type;
 import std;
 
+namespace
+{
+    using Common::Tag::Type::Spawn::k_InvisibleRespawnPoint;
+    using Common::Tag::Type::Boundary::k_SoftSafeBoundary;
+    using Common::Tag::Type::Boundary::k_SoftKillBoundary;
+    using Common::Tag::Type::Spawn::k_InitialSpawnPoint;
+    using Common::Tag::Type::Boundary::k_KillBoundary;
+    using Common::Tag::Type::Shield::k_PortableShield;
+    using Common::Tag::Type::Boundary::k_SafeBoundary;
+    using Common::Tag::Type::Spawn::k_RespawnPoint;
+}
+
 export namespace Tables::Object::Type::Scenery
 {
-    enum class Kind : std::uint8_t
+    enum class SceneryKind : std::uint8_t
     {
         Unknown = 0,
 
@@ -23,33 +35,31 @@ export namespace Tables::Object::Type::Scenery
         PortableShield,
     };
 
-    inline Kind ResolveSceneryType(const std::string& tagName)
+    inline auto ResolveSceneryType(const std::string& tagName) -> SceneryKind
     {
-    	namespace Name = Common::Tag::Type;
-
-        static const std::unordered_map<std::string, Kind> map =
+        static const std::unordered_map<std::string, SceneryKind> map =
         {
             // Spawns.
-            { Name::Spawn::k_InvisibleRespawnPoint,Kind::InvisibleRespawnPoint  },
-            { Name::Spawn::k_InitialSpawnPoint,    Kind::InitialSpawnPoint      },
-            { Name::Spawn::k_RespawnPoint,         Kind::RespawnPoint           },
+            { k_InvisibleRespawnPoint,SceneryKind::InvisibleRespawnPoint  },
+            { k_InitialSpawnPoint,    SceneryKind::InitialSpawnPoint      },
+            { k_RespawnPoint,         SceneryKind::RespawnPoint           },
 
             // Boundaries
-            { Name::Boundary::k_SafeBoundary,      Kind::SafeBoundary           },
-            { Name::Boundary::k_SoftSafeBoundary,  Kind::SoftSafeBoundary       },
-            { Name::Boundary::k_KillBoundary,      Kind::KillBoundary           },
-            { Name::Boundary::k_SoftKillBoundary,  Kind::SoftKillBoundary       },
+            { k_SafeBoundary,      SceneryKind::SafeBoundary           },
+            { k_SoftSafeBoundary,  SceneryKind::SoftSafeBoundary       },
+            { k_KillBoundary,      SceneryKind::KillBoundary           },
+            { k_SoftKillBoundary,  SceneryKind::SoftKillBoundary       },
 
-            { Name::Shield::k_PortableShield,      Kind::PortableShield         },
+            { k_PortableShield,      SceneryKind::PortableShield         },
         };
 
         auto it = map.find(tagName);
-        return it != map.end() ? it->second : Kind::Unknown;
+        return it != map.end() ? it->second : SceneryKind::Unknown;
     }
 
     struct Scenery
     {
         std::uintptr_t Base{};
-        Kind Kind{};
+        SceneryKind Kind{};
     };
 }

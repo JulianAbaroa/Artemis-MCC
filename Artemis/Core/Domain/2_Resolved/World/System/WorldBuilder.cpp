@@ -26,15 +26,15 @@ namespace Resolved::World::System
     {
         std::unordered_set<std::string> builtRegionStates{};
 
-        this->LinkObjectFamily(m_DefinitionsStore.Bipd, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Bloc, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Ctrl, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Eqip, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Mach, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Proj, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Scen, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Vehi, builtRegionStates);
-        this->LinkObjectFamily(m_DefinitionsStore.Weap, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Bipd, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Bloc, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Ctrl, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Eqip, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Mach, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Proj, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Scen, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Vehi, builtRegionStates);
+        this->LinkObjectFamily(m_DefinitionsStore.m_Weap, builtRegionStates);
     }
 
     template <typename TStore>
@@ -46,7 +46,7 @@ namespace Resolved::World::System
             const std::string& hlmtName = object.Base.ModelTagName;
             if (hlmtName.empty()) continue;
 
-            const Hlmt* hlmt = m_DefinitionsStore.Hlmt.Get(hlmtName);
+            const Hlmt* hlmt = m_DefinitionsStore.m_Hlmt.Get(hlmtName);
             if (!hlmt) continue;
 
             m_WorldStore.LinkObjectHlmt(objectTagName, hlmtName);
@@ -64,11 +64,11 @@ namespace Resolved::World::System
 
     auto WorldBuilder::BuildRegionStates(const std::string& hlmtName, const Hlmt& hlmt) -> void
     {
-        const Coll* coll = m_DefinitionsStore.Coll.Get(hlmt.CollisionModelTagName);
+        const Coll* coll = m_DefinitionsStore.m_Coll.Get(hlmt.CollisionModelTagName);
         if (!coll) return;
 
         const Mode* mode = hlmt.RenderModelTagName.empty()
-            ? nullptr : m_DefinitionsStore.Mode.Get(hlmt.RenderModelTagName);
+            ? nullptr : m_DefinitionsStore.m_Mode.Get(hlmt.RenderModelTagName);
 
         m_WorldStore.AddRegionStates(hlmtName,
             m_RegionStatesBuilder.Build(*coll, mode));
@@ -80,14 +80,14 @@ namespace Resolved::World::System
         std::int32_t withoutColl{};
         std::int32_t withoutMode{};
 
-        for (const auto& [hlmtName, hlmt] : m_DefinitionsStore.Hlmt.All())
+        for (const auto& [hlmtName, hlmt] : m_DefinitionsStore.m_Hlmt.All())
         {
             if (hlmt.DamageSections.empty()) continue;
 
             const Coll* coll = hlmt.CollisionModelTagName.empty()
-                ? nullptr : m_DefinitionsStore.Coll.Get(hlmt.CollisionModelTagName);
+                ? nullptr : m_DefinitionsStore.m_Coll.Get(hlmt.CollisionModelTagName);
             const Mode* mode = hlmt.RenderModelTagName.empty()
-                ? nullptr : m_DefinitionsStore.Mode.Get(hlmt.RenderModelTagName);
+                ? nullptr : m_DefinitionsStore.m_Mode.Get(hlmt.RenderModelTagName);
 
             if (!coll) ++withoutColl;
             if (!mode) ++withoutMode;

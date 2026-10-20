@@ -6,6 +6,7 @@ export module Viewer.Map.System:MapPass;
 
 import Service.Logs.System;
 import Platform.Render.System;
+import Resolved.Definitions.Type;
 import Export.Tick.Type;
 import Viewer.Map.Type;
 import std;
@@ -23,7 +24,7 @@ export namespace Viewer::Map::System
 
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using MapSbsps = Export::Tick::Type::MapSbsps;
+        using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
 
     public:
         explicit MapPass(LogsService& logsService) : m_LogsService(logsService) {}
@@ -34,7 +35,7 @@ export namespace Viewer::Map::System
 
         // Builds and uploads the vertex buffer. Does nothing if it was already uploaded.
         // note: The map counts as uploaded even if it failed, so it is not retried until Release.
-        auto Upload(ID3D11Device* device, const MapSbsps& sbsps) -> void;
+        auto Upload(ID3D11Device* device, const std::unordered_map<std::string, Sbsp>& sbsps) -> void;
 
         auto IsUploaded() const -> bool;
 

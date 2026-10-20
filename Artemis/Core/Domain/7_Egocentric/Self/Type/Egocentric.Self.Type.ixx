@@ -6,8 +6,8 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Team = Common::Team::Type::Team;
+    using Common::Math::Type::Vec3;
+    using Common::Team::Type::Team;
 }
 
 export namespace Egocentric::Self::Type

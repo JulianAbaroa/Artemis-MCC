@@ -4,6 +4,7 @@ module;
 
 module UI.Settings.System;
 
+import Gui.Style.Type;
 import Viewer.Options.Type;
 import Viewer.Camera.Type;
 import UI.Hotkey.Type;
@@ -11,22 +12,22 @@ import std;
 
 namespace
 {
-    using Flag = Viewer::Options::Type::Flag;
-    using GroupInfo = Viewer::Options::Type::GroupInfo;
-    using FlagInfo = Viewer::Options::Type::FlagInfo;
-    using ScalarInfo = Viewer::Options::Type::ScalarInfo;
-    using Mode = Viewer::Camera::Type::Mode;
-    using Follow = Viewer::Camera::Type::Follow;
+    using Viewer::Options::Type::Flag;
+    using Viewer::Options::Type::GroupInfo;
+    using Viewer::Options::Type::FlagInfo;
+    using Viewer::Options::Type::ScalarInfo;
+    using Viewer::Camera::Type::Mode;
+    using Viewer::Camera::Type::Follow;
 
-    using Binding = UI::Hotkey::Type::Binding;
+    using UI::Hotkey::Type::Binding;
 
     using Viewer::Options::Type::k_Groups;
     using Viewer::Options::Type::k_Flags;
     using Viewer::Options::Type::k_Scalars;
-
-    constexpr float k_MinimumAlpha{ 0.20f };
-    constexpr float k_MinimumScale{ 1.0f };
-    constexpr float k_MaximumScale{ 4.0f };
+    using Gui::Style::Type::k_MinimumAlpha;
+    using Gui::Style::Type::k_MinimumScale;
+    using Gui::Style::Type::k_MaximumScale;
+    using Gui::Style::Type::k_AnimationDuration;
 
     constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
     constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
@@ -40,7 +41,7 @@ namespace
     {
     public:
         explicit SectionBox(bool useFullWidth = false) :
-            m_UseFullWidth(useFullWidth),
+            m_IsFullWidth(useFullWidth),
             m_Min(ImGui::GetCursorScreenPos()),
             m_Width(ImGui::GetContentRegionAvail().x)
         {
@@ -58,7 +59,7 @@ namespace
             ImGui::EndGroup();
 
             const ImVec2 size{ ImGui::GetItemRectSize() };
-            const float width{ m_UseFullWidth ? m_Width : size.x + 20.0f };
+            const float width{ m_IsFullWidth ? m_Width : size.x + 20.0f };
             const ImVec2 max{ m_Min.x + width, m_Min.y + size.y };
 
             ImDrawList* drawList{ ImGui::GetWindowDrawList() };
@@ -70,7 +71,7 @@ namespace
         auto operator=(const SectionBox&) -> SectionBox& = delete;
 
     private:
-        bool m_UseFullWidth{};
+        bool m_IsFullWidth{};
         ImVec2 m_Min{};
         float m_Width{};
     };

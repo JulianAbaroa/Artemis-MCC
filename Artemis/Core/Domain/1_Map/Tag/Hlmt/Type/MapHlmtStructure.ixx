@@ -36,7 +36,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::int16_t Unknown;  // 0x6  int16.
         float        Probability;  // 0x8  float32.
         // -> Hlmt_Variants_Regions_Permutations_StatesEntry[]
-        MapStructure::Tag::Block   States;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   States;  // 0xC  tagblock.
         std::int8_t  RuntimeStatePermutationIndex0;  // 0x18  int8.
         std::int8_t  RuntimeStatePermutationIndex1;  // 0x19  int8.
         std::int8_t  RuntimeStatePermutationIndex2;  // 0x1A  int8.
@@ -56,7 +56,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint8_t RuntimeFlags;  // 0x5  flags8. [Bit 0=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7]
         std::int16_t ParentVariantIndex;  // 0x6  int16.
         // -> Hlmt_Variants_Regions_PermutationsEntry[]
-        MapStructure::Tag::Block   Permutations;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   Permutations;  // 0x8  tagblock.
         std::uint16_t SortOrder;  // 0x14  enum16. [No Sorting=0x0, -5 (Closest)=0x1, -4=0x2, -3=0x3, -2=0x4, -1=0x5, 0 (Same As Model)=0x6, 1=0x7, 2=0x8, 3=0x9, 4=0xA, 5 (Farthest)=0xB] | negative values mean closer to the camera
         std::int16_t Unknown;  // 0x16  int16.
     };
@@ -68,7 +68,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint32_t ParentMarker;  // 0x0  stringid.
         std::uint32_t ChildMarker;  // 0x4  stringid.
         std::uint32_t ChildVariantName;  // 0x8  stringid. | optional
-        MapStructure::Tag::Reference ChildObject;  // 0xC  tagref.
+        MapStructure::Tag::TagReference ChildObject;  // 0xC  tagref.
         std::int16_t DamageSectionIndex;  // 0x1C  int16.
         std::int16_t Unknown;  // 0x1E  int16.
     };
@@ -95,9 +95,9 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::int8_t  RuntimeModelRegion14Index;  // 0x12  int8.
         std::int8_t  RuntimeModelRegion15Index;  // 0x13  int8.
         // -> Hlmt_Variants_RegionsEntry[]
-        MapStructure::Tag::Block   Regions;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   Regions;  // 0x14  tagblock.
         // -> Hlmt_Variants_ObjectsEntry[]
-        MapStructure::Tag::Block   Objects;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Objects;  // 0x20  tagblock.
         std::int32_t InstanceGroupIndex;  // 0x2C  int32. | selects an instance group for this variant
         std::uint8_t  _pad_0x30[0x4];  // undefined.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
@@ -130,7 +130,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint32_t Name;  // 0x0  stringid. | name of this instance group
         std::uint32_t Choice;  // 0x4  enum32. [Choose One Member=0x0, Choose All Members=0x1] | how to choose members
         // -> Hlmt_InstanceGroups_MemberListEntry[]
-        MapStructure::Tag::Block   MemberList;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   MemberList;  // 0x8  tagblock.
         float        TotalProbability;  // 0x14  float32.
     };
     static_assert(sizeof(Hlmt_InstanceGroupsEntry) == 0x18, "Hlmt_InstanceGroupsEntry size mismatch");
@@ -173,9 +173,9 @@ export namespace Map::Tag::Type::Hlmt::Structure
         float        DamageThreshold;  // 0xC  float32. | response fires after crossing this threshold. 1=full health
         std::uint32_t BodyThresholdFlags;  // 0x10  flags32. [Body Threshold Active=0]
         float        BodyDamageThreshold;  // 0x14  float32. | response fires after object body damage crosses this threshold, numbers can be negative. You need to set the flag "body threshold active" for this number to be used. 1=full health
-        MapStructure::Tag::Reference GenericTransitionEffect;  // 0x18  tagref.
-        MapStructure::Tag::Reference SpecificTransitionEffect;  // 0x28  tagref.
-        MapStructure::Tag::Reference TransitionDamageEffect;  // 0x38  tagref.
+        MapStructure::Tag::TagReference GenericTransitionEffect;  // 0x18  tagref.
+        MapStructure::Tag::TagReference SpecificTransitionEffect;  // 0x28  tagref.
+        MapStructure::Tag::TagReference TransitionDamageEffect;  // 0x38  tagref.
         std::uint32_t Region;  // 0x48  stringid.
         std::uint16_t NewState;  // 0x4C  enum16. [Default=0x0, Minor Damage=0x1, Medium Damage=0x2, Major Damage=0x3, Destroyed=0x4]
         std::int16_t RuntimeRegionIndex;  // 0x4E  int16.
@@ -188,7 +188,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint32_t EffectMarkerName;  // 0x60  stringid.
         std::uint32_t DamageEffectMarkerName;  // 0x64  stringid.
         float        ResponseDelay;  // 0x68  float32. | in seconds
-        MapStructure::Tag::Reference DelayEffect;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference DelayEffect;  // 0x6C  tagref.
         std::uint32_t DelayEffectMarkerName;  // 0x7C  stringid.
         std::uint32_t EjectingSeatLabel;  // 0x80  stringid.
         float        SkipFraction;  // 0x84  float32. | 0.0 always fires, 1.0 never fires
@@ -204,7 +204,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint32_t Flags;  // 0x4  flags32. [Absorbs Body Damage=0, Takes Full Damage When Object Dies=1, Cannot Die With Riders=2, Takes Full Damage When Object Destroyed=3, Restored On Ressurection=4, Bit 5=5, Bit 6=6, Headshotable=7, Ignores Shields=8, Takes Full Damage When Shield Depleted=9, Networked (e.g. Armor Lock)=10, Allow Damage Response Overflow=11]
         float        VitalityPercentage;  // 0x8  float32. | percentage of total object vitality
         // -> Hlmt_OldDamageInfo_DamageSections_InstantResponsesEntry[]
-        MapStructure::Tag::Block   InstantResponses;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   InstantResponses;  // 0xC  tagblock.
         std::uint32_t NullBlockHere1;  // 0x18  uint32.
         std::uint32_t NullBlockHere1_2;  // 0x1C  uint32.
         std::uint32_t NullBlockHere1_3;  // 0x20  uint32.
@@ -258,7 +258,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         float        MaximumTransferDamageScale;  // 0xC  float32.
         float        MinimumTransferDamageScale;  // 0x10  float32.
         // -> Hlmt_OldDamageInfo_DamageSeats_RegionSpecificDamageEntry[]
-        MapStructure::Tag::Block   RegionSpecificDamage;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   RegionSpecificDamage;  // 0x14  tagblock.
     };
     static_assert(sizeof(Hlmt_OldDamageInfo_DamageSeatsEntry) == 0x20, "Hlmt_OldDamageInfo_DamageSeatsEntry size mismatch");
 
@@ -319,22 +319,22 @@ export namespace Map::Tag::Type::Hlmt::Structure
         float        ShieldOverchargeFraction;  // 0x90  float32. | fraction to which shields will automatically overcharge, values <= 1.0 are ignored
         float        ShieldOverchargeTime;  // 0x94  float32. | time it takes to reach full "shield overcharge fraction"
         float        ShieldDamagedThreshold;  // 0x98  float32.
-        MapStructure::Tag::Reference ShieldDamagedEffect;  // 0x9C  tagref.
-        MapStructure::Tag::Reference ShieldDepletedEffect;  // 0xAC  tagref.
-        MapStructure::Tag::Reference ShieldRechargingEffect;  // 0xBC  tagref.
+        MapStructure::Tag::TagReference ShieldDamagedEffect;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference ShieldDepletedEffect;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference ShieldRechargingEffect;  // 0xBC  tagref.
         // -> Hlmt_OldDamageInfo_DamageSectionsEntry[]
-        MapStructure::Tag::Block   DamageSections;  // 0xCC  tagblock.
+        MapStructure::Tag::TagBlock   DamageSections;  // 0xCC  tagblock.
         // -> Hlmt_OldDamageInfo_NodesEntry[]
-        MapStructure::Tag::Block   Nodes;  // 0xD8  tagblock.
+        MapStructure::Tag::TagBlock   Nodes;  // 0xD8  tagblock.
         std::int16_t ShieldGlobalMaterialIndex;  // 0xE4  int16.
         std::int16_t IndirectGlobalMaterialIndex;  // 0xE6  int16.
         float        ShieldRechargeVelocity;  // 0xE8  float32.
         float        OverchargeVelocity;  // 0xEC  float32.
         float        HealthRechargeVelocity;  // 0xF0  float32.
         // -> Hlmt_OldDamageInfo_DamageSeatsEntry[]
-        MapStructure::Tag::Block   DamageSeats;  // 0xF4  tagblock.
+        MapStructure::Tag::TagBlock   DamageSeats;  // 0xF4  tagblock.
         // -> Hlmt_OldDamageInfo_DamageConstraintsEntry[]
-        MapStructure::Tag::Block   DamageConstraints;  // 0x100  tagblock.
+        MapStructure::Tag::TagBlock   DamageConstraints;  // 0x100  tagblock.
     };
     static_assert(sizeof(Hlmt_OldDamageInfoEntry) == 0x10C, "Hlmt_OldDamageInfoEntry size mismatch");
 
@@ -385,25 +385,25 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint32_t Flags;  // 0x0  flags32. [Kills Object=0, Inhibits Melee Attack=1, Inhibits Weapon Attack=2, Inhibits Walking=3, Forces Drop Weapon=4, Kills Weapon Primary Trigger=5, Kills Weapon Secondary Trigger=6, Destroys Object=7, Damages Weapon Primary Trigger=8, Damages Weapon Secondary Trigger=9, Kills Object (No Player Solo)=10, Causes Detonation=11, Kills Variant Objects=12, Force Unattached Effects=13, Fires Under Threshold=14, Triggers Special Death=15, ...(26 total)]
         std::uint32_t Label;  // 0x4  stringid.
         float        DamageThreshold;  // 0x8  float32. | response fires after crossing this threshold. 1=full health
-        MapStructure::Tag::Reference GenericTransitionEffect;  // 0xC  tagref.
+        MapStructure::Tag::TagReference GenericTransitionEffect;  // 0xC  tagref.
         std::uint32_t GenericEffectMarker;  // 0x1C  stringid.
-        MapStructure::Tag::Reference SpecificTransitionEffect;  // 0x20  tagref.
+        MapStructure::Tag::TagReference SpecificTransitionEffect;  // 0x20  tagref.
         std::uint32_t SpecificEffectMarker;  // 0x30  stringid.
-        MapStructure::Tag::Reference TransitionDamageEffect;  // 0x34  tagref.
+        MapStructure::Tag::TagReference TransitionDamageEffect;  // 0x34  tagref.
         std::uint32_t DamageEffectMarkerName;  // 0x44  stringid.
-        MapStructure::Tag::Reference LoopingEffect;  // 0x48  tagref. | will play until the next response is triggered.
+        MapStructure::Tag::TagReference LoopingEffect;  // 0x48  tagref. | will play until the next response is triggered.
         // -> Hlmt_DamageSections_InstantResponses_RegionTransitionsEntry[]
-        MapStructure::Tag::Block   RegionTransitions;  // 0x58  tagblock.
+        MapStructure::Tag::TagBlock   RegionTransitions;  // 0x58  tagblock.
         // -> Hlmt_DamageSections_InstantResponses_ResponseDamageTransfersEntry[]
-        MapStructure::Tag::Block   ResponseDamageTransfers;  // 0x64  tagblock.
+        MapStructure::Tag::TagBlock   ResponseDamageTransfers;  // 0x64  tagblock.
         std::int16_t DestroyInstanceGroupIndex;  // 0x70  int16. | all possible instances from this group will be destroyed
         std::uint16_t CustomResponseBehavior;  // 0x72  enum16. [Plays Always=0x0, Plays If Labels Match=0x1, Plays If Labels Differ=0x2]
         std::uint32_t CustomResponseLabel;  // 0x74  stringid.
         float        ResponseDelay;  // 0x78  float32. | time to wait until firing the response. This delay is pre-empted if another timed response for the same section fires.
-        MapStructure::Tag::Reference DelayEffect;  // 0x7C  tagref. | plays while the timer is counting down
+        MapStructure::Tag::TagReference DelayEffect;  // 0x7C  tagref. | plays while the timer is counting down
         std::uint32_t DelayEffectMarkerName;  // 0x8C  stringid.
         // -> Hlmt_DamageSections_InstantResponses_SeatEjectEntry[]
-        MapStructure::Tag::Block   SeatEject;  // 0x90  tagblock.
+        MapStructure::Tag::TagBlock   SeatEject;  // 0x90  tagblock.
         float        SkipFraction;  // 0x9C  float32. | 0.0 always fires, 1.0 never fires
         std::uint32_t DestroyedChildObjectMarkerName;  // 0xA0  stringid. | when this response fires, any children objects created at the supplied marker name will be destroyed
         float        TotalDamageThreshold;  // 0xA4  float32. | scale on total damage section vitality
@@ -438,8 +438,8 @@ export namespace Map::Tag::Type::Hlmt::Structure
     // Entry size: 0x20
     struct Hlmt_DamageSections_RenderingEntry
     {
-        MapStructure::Tag::Reference _3rdPersonImpactParameters;  // 0x0  tagref.
-        MapStructure::Tag::Reference _1stPersonImpactParameters;  // 0x10  tagref.
+        MapStructure::Tag::TagReference _3rdPersonImpactParameters;  // 0x0  tagref.
+        MapStructure::Tag::TagReference _1stPersonImpactParameters;  // 0x10  tagref.
     };
     static_assert(sizeof(Hlmt_DamageSections_RenderingEntry) == 0x20, "Hlmt_DamageSections_RenderingEntry size mismatch");
 
@@ -454,14 +454,14 @@ export namespace Map::Tag::Type::Hlmt::Structure
         float        MinimumStunDamage;  // 0x14  float32. | the minimum damage required to stun this object's health
         float        RechargeTime;  // 0x18  float32.
         // -> Hlmt_DamageSections_RechargeSpeedCurveEntry[]
-        MapStructure::Tag::Block   RechargeSpeedCurve;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   RechargeSpeedCurve;  // 0x1C  tagblock.
         // -> Hlmt_DamageSections_RechargeFractionsEntry[]
-        MapStructure::Tag::Block   RechargeFractions;  // 0x28  tagblock.
-        MapStructure::Tag::Reference RechargingEffect;  // 0x34  tagref.
+        MapStructure::Tag::TagBlock   RechargeFractions;  // 0x28  tagblock.
+        MapStructure::Tag::TagReference RechargingEffect;  // 0x34  tagref.
         float        PreRechargeEffectWarnTime;  // 0x44  float32. | (main shield only) how long before the recharge begins the pre-recharge effect fires
-        MapStructure::Tag::Reference PreRechargeEffect;  // 0x48  tagref. | (main shield only)
+        MapStructure::Tag::TagReference PreRechargeEffect;  // 0x48  tagref. | (main shield only)
         std::uint32_t PreRechargeEffectMarker;  // 0x58  stringid. | (main shield only)
-        MapStructure::Tag::Reference PreRechargeAbortEffect;  // 0x5C  tagref. | (main shield only) if the pre-recharge effect is aborted before the actual recharge starts, this effect plays
+        MapStructure::Tag::TagReference PreRechargeAbortEffect;  // 0x5C  tagref. | (main shield only) if the pre-recharge effect is aborted before the actual recharge starts, this effect plays
         std::uint32_t PreRechargeAbortEffectMarker;  // 0x6C  stringid. | (main shield only)
         float        OverchargeTime;  // 0x70  float32. | time it takes to reach full "overcharge fraction"
         float        OverchargeFraction;  // 0x74  float32. | fraction to which shields will automatically overcharge, values <= 1.0 are ignored
@@ -469,13 +469,13 @@ export namespace Map::Tag::Type::Hlmt::Structure
         float        DecayTime;  // 0x7C  float32. | time for need for this section to fully decay with full health.
         std::uint32_t ResurrectionRestoredRegionName;  // 0x80  stringid.
         // -> Hlmt_DamageSections_InstantResponsesEntry[]
-        MapStructure::Tag::Block   InstantResponses;  // 0x84  tagblock.
+        MapStructure::Tag::TagBlock   InstantResponses;  // 0x84  tagblock.
         // -> Hlmt_DamageSections_SectionDamageTransfersEntry[]
-        MapStructure::Tag::Block   SectionDamageTransfers;  // 0x90  tagblock.
+        MapStructure::Tag::TagBlock   SectionDamageTransfers;  // 0x90  tagblock.
         // -> Hlmt_DamageSections_HealthTransfersEntry[]
-        MapStructure::Tag::Block   HealthTransfers;  // 0x9C  tagblock.
+        MapStructure::Tag::TagBlock   HealthTransfers;  // 0x9C  tagblock.
         // -> Hlmt_DamageSections_RenderingEntry[]
-        MapStructure::Tag::Block   Rendering;  // 0xA8  tagblock.
+        MapStructure::Tag::TagBlock   Rendering;  // 0xA8  tagblock.
         float        RechargeVelocity;  // 0xB4  float32.
         float        OverchargeVelocity;  // 0xB8  float32.
         std::int16_t ResurrectionRestoredRegionIndex;  // 0xBC  int16.
@@ -564,7 +564,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::int8_t  PhysicsRegionIndex;  // 0x5  int8.
         std::int16_t Unknown;  // 0x6  int16.
         // -> Hlmt_CollisionRegions_PermutationsEntry[]
-        MapStructure::Tag::Block   Permutations;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   Permutations;  // 0x8  tagblock.
     };
     static_assert(sizeof(Hlmt_CollisionRegionsEntry) == 0x14, "Hlmt_CollisionRegionsEntry size mismatch");
 
@@ -589,7 +589,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
     // Entry size: 0x44
     struct Hlmt_ScenarioLoadParametersEntry
     {
-        MapStructure::Tag::Reference Scenario;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Scenario;  // 0x0  tagref.
         MapStructure::Data::Reference Parameters;  // 0x10  dataref.
         std::uint8_t  _pad_0x24[0x4];  // undefined.
         std::uint8_t  _pad_0x28[0x4];  // undefined.
@@ -632,11 +632,11 @@ export namespace Map::Tag::Type::Hlmt::Structure
     // Entry size: 0x220
     struct HlmtData
     {
-        MapStructure::Tag::Reference RenderModel;  // 0x0  tagref.
-        MapStructure::Tag::Reference CollisionModel;  // 0x10  tagref.
-        MapStructure::Tag::Reference Animation;  // 0x20  tagref.
-        MapStructure::Tag::Reference PhysicsModel;  // 0x30  tagref.
-        MapStructure::Tag::Reference ImposterModel;  // 0x40  tagref.
+        MapStructure::Tag::TagReference RenderModel;  // 0x0  tagref.
+        MapStructure::Tag::TagReference CollisionModel;  // 0x10  tagref.
+        MapStructure::Tag::TagReference Animation;  // 0x20  tagref.
+        MapStructure::Tag::TagReference PhysicsModel;  // 0x30  tagref.
+        MapStructure::Tag::TagReference ImposterModel;  // 0x40  tagref.
         std::int32_t ModelChecksum;  // 0x50  int32.
         std::int32_t CollisionModelChecksum;  // 0x54  int32.
         float        DisappearDistance;  // 0x58  float32.
@@ -652,17 +652,17 @@ export namespace Map::Tag::Type::Hlmt::Structure
         float        CloseDetailDisappearDistance;  // 0x7C  float32. | distance at which the close detail disappears
         float        TessellationMaximumDrawDistance;  // 0x80  float32.
         // -> Hlmt_VariantsEntry[]
-        MapStructure::Tag::Block   Variants;  // 0x84  tagblock.
+        MapStructure::Tag::TagBlock   Variants;  // 0x84  tagblock.
         // -> Hlmt_RegionSortEntry[]
-        MapStructure::Tag::Block   RegionSort;  // 0x90  tagblock.
+        MapStructure::Tag::TagBlock   RegionSort;  // 0x90  tagblock.
         // -> Hlmt_InstanceGroupsEntry[]
-        MapStructure::Tag::Block   InstanceGroups;  // 0x9C  tagblock.
+        MapStructure::Tag::TagBlock   InstanceGroups;  // 0x9C  tagblock.
         // -> Hlmt_OldMaterialsEntry[]
-        MapStructure::Tag::Block   OldMaterials;  // 0xA8  tagblock.
+        MapStructure::Tag::TagBlock   OldMaterials;  // 0xA8  tagblock.
         // -> Hlmt_ModelMaterialsEntry[]
-        MapStructure::Tag::Block   ModelMaterials;  // 0xB4  tagblock.
+        MapStructure::Tag::TagBlock   ModelMaterials;  // 0xB4  tagblock.
         // -> Hlmt_OldDamageInfoEntry[]
-        MapStructure::Tag::Block   OldDamageInfo;  // 0xC0  tagblock.
+        MapStructure::Tag::TagBlock   OldDamageInfo;  // 0xC0  tagblock.
         std::uint32_t Flags;  // 0xCC  flags32. [Takes Damage For Children=0, Parent Never Takes Damage For Us=1, Cannot Die From Damage=2, Dies With Riders=3, Passes Area Damage To Children=4]
         float        MaximumVitality;  // 0xD0  float32. | value of zero implies 'damage sections' should be empty
         std::uint32_t IndirectGlobalMaterialName;  // 0xD4  stringid. | absorbes AOE or child damage
@@ -672,24 +672,24 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint8_t ResponseDamageReportingType;  // 0xDD  enum8. [Guardians (Unknown)=0x0, Guardians (Default)=0x1, Guardians (Scripting)=0x2, Suicide=0x3, Magnum=0x4, Assault Rifle=0x5, DMR=0x6, Shotgun=0x7, Sniper Rifle=0x8, Rocket Launcher=0x9, Spartan Laser=0xA, Frag Grenade=0xB, Grenade Launcher=0xC, Plasma Pistol=0xD, Needler=0xE, Plasma Rifle=0xF, ...(82 total)]
         std::int16_t Unknown;  // 0xDE  int16.
         // -> Hlmt_DamageSectionsEntry[]
-        MapStructure::Tag::Block   DamageSections;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   DamageSections;  // 0xE0  tagblock.
         // -> Hlmt_DamageConstraintsEntry[]
-        MapStructure::Tag::Block   DamageConstraints;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   DamageConstraints;  // 0xEC  tagblock.
         // -> Hlmt_NodesEntry[]
-        MapStructure::Tag::Block   Nodes;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   Nodes;  // 0xF8  tagblock.
         std::int16_t IndirectGlobalMaterialIndex;  // 0x104  int16.
         std::int16_t Unknown_2;  // 0x106  int16.
         // -> Hlmt_OldTargetsEntry[]
-        MapStructure::Tag::Block   OldTargets;  // 0x108  tagblock.
+        MapStructure::Tag::TagBlock   OldTargets;  // 0x108  tagblock.
         // -> Hlmt_ModelTargetsEntry[]
-        MapStructure::Tag::Block   ModelTargets;  // 0x114  tagblock.
+        MapStructure::Tag::TagBlock   ModelTargets;  // 0x114  tagblock.
         // -> Hlmt_CollisionRegionsEntry[]
-        MapStructure::Tag::Block   CollisionRegions;  // 0x120  tagblock.
+        MapStructure::Tag::TagBlock   CollisionRegions;  // 0x120  tagblock.
         // -> Hlmt_NodesEntry_2[]
-        MapStructure::Tag::Block   Nodes_2;  // 0x12C  tagblock.
+        MapStructure::Tag::TagBlock   Nodes_2;  // 0x12C  tagblock.
         std::uint32_t NodeListChecksum;  // 0x138  uint32.
-        MapStructure::Tag::Reference DefaultDialogue;  // 0x13C  tagref. | The default dialogue tag for this model (overriden by variants)
-        MapStructure::Tag::Reference DefaultDialogueFemale;  // 0x14C  tagref. | The default FEMALE dialogue tag for this model (overriden by variants)
+        MapStructure::Tag::TagReference DefaultDialogue;  // 0x13C  tagref. | The default dialogue tag for this model (overriden by variants)
+        MapStructure::Tag::TagReference DefaultDialogueFemale;  // 0x14C  tagref. | The default FEMALE dialogue tag for this model (overriden by variants)
         std::uint32_t Flags_2;  // 0x15C  flags32. [Active Camo Always On=0, Active Camo Never=1, Inconsequential Target=2, Model Use Airprobe Lighting First=3, Locked Precomputed Probes=4, If Sky Attaches To Camera=5, Model Is Big Battle Object=6, Model Never Uses Compressed Vertex Position=7, Model Is Invisible, Even Attachments=8, Model Can Have Shield Impact Effect=9, Model Is Good z Occluder=10, No Child Objects In Lightmap Shadow=11, Should Include Model In Floating Shadow=12, Bit 13=13, Damage Section Unknown?=14, Damage Section Recharging?=15, ...(32 total)]
         std::uint32_t DefaultDialogueEffect;  // 0x160  stringid. | The default dialogue tag for this model (overriden by variants)
         std::uint32_t RenderOnlyNodeFlags1;  // 0x164  flags32. [Node 0=0, Node 1=1, Node 2=2, Node 3=3, Node 4=4, Node 5=5, Node 6=6, Node 7=7, Node 8=8, Node 9=9, Node 10=10, Node 11=11, Node 12=12, Node 13=13, Node 14=14, Node 15=15, ...(32 total)]
@@ -710,7 +710,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint32_t RenderOnlySectionFlags8;  // 0x1A0  flags32. [Section 224=0, Section 225=1, Section 226=2, Section 227=3, Section 228=4, Section 229=5, Section 230=6, Section 231=7, Section 232=8, Section 233=9, Section 234=10, Section 235=11, Section 236=12, Section 237=13, Section 238=14, Section 239=15, ...(32 total)]
         std::uint32_t RuntimeFlags;  // 0x1A4  flags32. [Contains Runtime Nodes=0]
         // -> Hlmt_ScenarioLoadParametersEntry[]
-        MapStructure::Tag::Block   ScenarioLoadParameters;  // 0x1A8  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioLoadParameters;  // 0x1A8  tagblock.
         float        SkyParallaxPercent;  // 0x1B4  float32. | If flag checked % between sky pos and camera pos 0=camera
         float        ShadowDepthCompareBias;  // 0x1B8  float32. | Default is 0.002
         float        ShadowSlopeScaleBias;  // 0x1BC  float32. | controls cutoff point for shadows around edges. Default is 81 degrees
@@ -720,13 +720,13 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::uint8_t PrtShadowBounces;  // 0x1C9  enum8. [0 Bounces (Very Fast, Direct Light Only)=0x0, 1 Bounce (Slower, Pretty Good)=0x1, 2 Bounces (Molasses, Very Good)=0x2, 3 Bounces (Sloth In Molasses, Overkill Really)=0x3] | 0 means direct light only
         std::int16_t Unknown_3;  // 0x1CA  int16.
         // -> Hlmt_ShadowCastOverrideEntry[]
-        MapStructure::Tag::Block   ShadowCastOverride;  // 0x1CC  tagblock.
+        MapStructure::Tag::TagBlock   ShadowCastOverride;  // 0x1CC  tagblock.
         // -> Hlmt_ShadowReceiveOverrideEntry[]
-        MapStructure::Tag::Block   ShadowReceiveOverride;  // 0x1D8  tagblock.
+        MapStructure::Tag::TagBlock   ShadowReceiveOverride;  // 0x1D8  tagblock.
         // -> Hlmt_OcclusionSpheresEntry[]
-        MapStructure::Tag::Block   OcclusionSpheres;  // 0x1E4  tagblock.
-        MapStructure::Tag::Reference ShieldImpactParameterOverride;  // 0x1F0  tagref.
-        MapStructure::Tag::Reference _1stPersonShieldImpactParameterOverride;  // 0x200  tagref.
+        MapStructure::Tag::TagBlock   OcclusionSpheres;  // 0x1E4  tagblock.
+        MapStructure::Tag::TagReference ShieldImpactParameterOverride;  // 0x1F0  tagref.
+        MapStructure::Tag::TagReference _1stPersonShieldImpactParameterOverride;  // 0x200  tagref.
         float        BoundingRadius;  // 0x210  float32.
         MapStructure::Primitive::Vec3 BoundingOffset;  // 0x214  point3.
     };

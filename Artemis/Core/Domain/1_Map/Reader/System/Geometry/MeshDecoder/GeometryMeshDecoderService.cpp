@@ -22,10 +22,10 @@ namespace
 namespace Map::Reader::System
 {
     auto GeometryMeshDecoderService::EmitSection(const std::vector<std::uint8_t>& pageData,
-        const TagResourcesObject& entry, std::int32_t vbCount,
+        const Zone_TagResourcesObject& entry, std::int32_t vbCount,
         const std::vector<BufferInfo>& vbInfo,
-        const std::vector<BufferInfo>& ibInfo, const MeshesObject& section,
-        const CompressionInfoEntry3* compressionInfo,
+        const std::vector<BufferInfo>& ibInfo, const Lbsp_MeshesObject& section,
+        const Sbsp_CompressionInfoEntry_3* compressionInfo,
         const char* tagName, const float* transformMatrix,
         std::vector<Triangle>& out) const -> std::uint32_t
     {
@@ -171,7 +171,7 @@ namespace Map::Reader::System
 
     auto GeometryMeshDecoderService::EmitInstancedGeometry(
         const std::vector<std::uint8_t>& pageData,
-        const TagResourcesObject& lbspEntry,
+        const Zone_TagResourcesObject& lbspEntry,
         std::int32_t vbCount, const std::vector<BufferInfo>& vbInfo,
         const std::vector<BufferInfo>& ibInfo, const SbspObject* sbsp,
         const LbspObject* lbsp, const ZoneObject* zone,
@@ -183,7 +183,7 @@ namespace Map::Reader::System
         int instResIdx = (int)(sbsp->Data.ZoneAssetDatum5 & k_ResourceDatumMask);
         if (instResIdx < 0 || instResIdx >= (int)zone->TagResources.size()) return 0;
 
-        const TagResourcesObject& instEntry = zone->TagResources[instResIdx];
+        const Zone_TagResourcesObject& instEntry = zone->TagResources[instResIdx];
 
         int fixupIdx = (int)instEntry.ResourceFixups.size() - k_InstanceFixupFromEnd;
         if (fixupIdx < 0 || fixupIdx >= (int)instEntry.ResourceFixups.size())
@@ -239,7 +239,7 @@ namespace Map::Reader::System
             int sectionIdx = (int)sectionIdx16;
             if (sectionIdx < 0 || sectionIdx >= (int)lbsp->Meshes.size()) continue;
 
-            const MeshesObject& section = lbsp->Meshes[sectionIdx];
+            const Lbsp_MeshesObject& section = lbsp->Meshes[sectionIdx];
 
             emitted += this->EmitSection(pageData, lbspEntry, vbCount,
                 vbInfo, ibInfo, section, this->GetCompressionInfo(sectionIdx, sbsp),
@@ -250,7 +250,7 @@ namespace Map::Reader::System
     }
 
     auto GeometryMeshDecoderService::GetCompressionInfo(int sectionIdx,
-        const SbspObject* sbsp) const -> const CompressionInfoEntry3*
+        const SbspObject* sbsp) const -> const Sbsp_CompressionInfoEntry_3*
     {
         if (sectionIdx < 0 || sectionIdx >= (int)sbsp->CompressionInfo_3.size())
         {

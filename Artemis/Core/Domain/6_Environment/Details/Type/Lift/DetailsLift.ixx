@@ -22,5 +22,8 @@ export namespace Environment::Details::Type
         Vec3 LaunchDirection{};
     };
 
-    using LiftDetails = std::unordered_map<std::uint32_t, LiftDetail>;
+    struct LiftDetails : std::unordered_map<std::uint32_t, LiftDetail>
+    {
+        using unordered_map::unordered_map;
+    };
 }

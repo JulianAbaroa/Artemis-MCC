@@ -1,12 +1,15 @@
 export module Viewer.Selection.State;
 
+import Common.Engine.Type;
 import std;
+
+namespace
+{
+    using Common::Engine::Type::k_NoHandle;
+}
 
 export namespace Viewer::Selection::State
 {
-    // Handle that means no object is selected.
-    constexpr std::uint32_t k_NoSelection{ 0xFFFFFFFF };
-
     // Holds the selected object handle and the pending pick request.
     // The values are atomic because the input writes them and the render frame reads them.
     class SelectionStore
@@ -30,7 +33,7 @@ export namespace Viewer::Selection::State
         auto ConsumePick() -> bool;
 
     private:
-        std::atomic<std::uint32_t> m_Selected{ k_NoSelection };
+        std::atomic<std::uint32_t> m_Selected{ k_NoHandle };
         std::atomic<bool> m_IsPickPending{ false };
     };
 }

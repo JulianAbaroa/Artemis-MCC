@@ -1,5 +1,6 @@
 module Viewer.Camera.System;
 
+import Common.Math.Type;
 import Common.Math.System;
 import Viewer.Options.Type;
 import std;
@@ -10,11 +11,13 @@ namespace
 
     namespace VecMath = Common::Math::System;
 
-    using Key = Viewer::Camera::Type::Key;
-    using Mode = Viewer::Camera::Type::Mode;
-    using Follow = Viewer::Camera::Type::Follow;
-    using Scalar = Viewer::Options::Type::Scalar;
-    using Vec3 = Viewer::Camera::Type::Vec3;
+    using Viewer::Camera::Type::Key;
+    using Viewer::Camera::Type::Mode;
+    using Viewer::Camera::Type::Follow;
+    using Viewer::Options::Type::Scalar;
+    using Viewer::Camera::Type::Vec3;
+
+    using Common::Math::Type::k_WorldUp;
 
     constexpr float k_LookSpeed{ 0.0025f };
     constexpr float k_MaxPitch{ 1.55334f };
@@ -27,8 +30,6 @@ namespace
 
     // Speed of the field of view transition. Higher is faster.
     constexpr float k_FovSmoothing{ 12.0f };
-
-    constexpr Vec3 k_WorldUp{ 0.0f, 0.0f, 1.0f };
 }
 
 namespace Viewer::Camera::System

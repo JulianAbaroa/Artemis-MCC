@@ -34,7 +34,7 @@ namespace Platform::Host::System
 
     auto HostService::ResolveVTable() -> void**
     {
-        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::GameManager, k_HostModuleName) };
+        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::k_GameManager, k_HostModuleName) };
         if (match == 0) return nullptr;
 
         std::int32_t displacement{ 0 };

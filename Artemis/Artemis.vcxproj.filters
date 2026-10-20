@@ -1003,6 +1003,21 @@
     <Filter Include="Core\Common\Math">
       <UniqueIdentifier>{35a3d382-b37a-4ea6-894f-5496598875ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Common\Engine">
+      <UniqueIdentifier>{1d3ee940-bc8d-4e36-a0ae-32e6cddd07c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Engine\Type">
+      <UniqueIdentifier>{287e274f-2eff-4af2-aef3-d05edb2df2a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Style">
+      <UniqueIdentifier>{78164a2a-6422-49a0-876e-f5e38b94bb16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Gui\Style\Type">
+      <UniqueIdentifier>{5ebb5890-d1f1-419c-a2d4-55d416d5e5cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Hook\Type">
+      <UniqueIdentifier>{64471c90-a3b4-41a0-a737-5477d00ad0b2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Common\Math\Type">
       <UniqueIdentifier>{1b6af01c-f252-44d0-8415-78ae222cae42}</UniqueIdentifier>
     </Filter>
@@ -1042,7 +1057,7 @@
     <Filter Include="Core\Common\State">
       <UniqueIdentifier>{d5f4ab06-adaf-4469-a26b-7d1bbe182b99}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Common\State\System">
+    <Filter Include="Core\Common\State\Type">
       <UniqueIdentifier>{d56baa17-9959-42d9-9d95-6c4e634b716b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Hook">
@@ -2480,9 +2495,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.ixx">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\Shaders.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
@@ -2588,6 +2600,15 @@
     <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Common\Engine\Type\Common.Engine.Type.ixx">
+      <Filter>Core\Common\Engine\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Hook\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx">
+      <Filter>Core\Gui\Style\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Common\Math\Type\Common.Math.Type.ixx">
       <Filter>Core\Common\Math\Type</Filter>
     </ClCompile>
@@ -2624,8 +2645,8 @@
     <ClCompile Include="Core\Common\ZoneShape\Type\Common.ZoneShape.Type.ixx">
       <Filter>Core\Common\ZoneShape\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Common\State\System\Common.State.System.ixx">
-      <Filter>Core\Common\State\System</Filter>
+    <ClCompile Include="Core\Common\State\Type\Common.State.Type.ixx">
+      <Filter>Core\Common\State\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>

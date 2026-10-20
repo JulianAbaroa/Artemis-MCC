@@ -5,26 +5,26 @@ module;
 module Viewer.Hud.System;
 import :HealthLabels;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Resolved.Vitality.Type;
 import Resolved.World.Type;
-import Viewer.Options.State;
 import Viewer.Options.Type;
+import Viewer.Options.State;
 import Viewer.Style.Type;
 import Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Flag = Viewer::Options::Type::Flag;
-    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
-    using Section = Resolved::Vitality::Type::Vitality::Section;
-    using SectionKind = Resolved::Vitality::Type::Vitality::Kind;
+    using Viewer::Options::Type::Flag;
+    using Resolved::World::Type::ModelLink::AnchorSource;
+    using Resolved::Vitality::Type::Vitality::Section;
+    using Resolved::Vitality::Type::Vitality::VitalityKind;
 
     using Viewer::Style::Type::k_VitalityShield;
-
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
-    constexpr float k_SelectedPriority{ 1.0f };
+    using Common::Engine::Type::k_NoHandle;
+    using Viewer::Hud::Type::k_SelectedPriority;
 
     auto TagsOf(const Section& section) -> std::string
     {
@@ -33,7 +33,7 @@ namespace
         if (section.IsCritical) tags += 'K';
         if (section.IsHeadshot) tags += 'H';
         if (section.DestroysObject) tags += 'D';
-        if (section.Kind == SectionKind::Shield) tags += 'S';
+        if (section.Kind == VitalityKind::Shield) tags += 'S';
 
         return tags;
     }
@@ -44,7 +44,7 @@ namespace Viewer::Hud::System
     auto HealthLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
         const auto& tick = context.Frame;
-        const auto& options = context.Options;
+        const auto& options = canvas.GetOptions();
 
         if (!options.IsEnabled(Flag::HealthBars)) return;
         if (!tick.Aims || !tick.VitalityDetails) return;
@@ -76,7 +76,7 @@ namespace Viewer::Hud::System
                 const Section* layoutSection = (layout && i < layout->Sections.size())
                     ? &layout->Sections[i] : nullptr;
 
-                const bool isShield = layoutSection && layoutSection->Kind == SectionKind::Shield;
+                const bool isShield = layoutSection && layoutSection->Kind == VitalityKind::Shield;
                 if (isShield && !showShields) continue;
 
                 const float vitality = vitalities[i];

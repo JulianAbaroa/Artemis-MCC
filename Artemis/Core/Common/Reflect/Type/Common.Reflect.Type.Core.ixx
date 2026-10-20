@@ -19,23 +19,30 @@ export namespace Common::Reflect::Type
         return FieldDesc<T, M>{ name, ptr };
     }
 
-    // Field list of T. Specialize it with HasFields set to true and a Value tuple of MakeField entries.
+    // Field list of T. Specialize it with a k_Value tuple of MakeField entries.
     template <typename T>
     struct Fields
     {
-        static constexpr bool HasFields{ false };
     };
 
     // Satisfied by the types that specialize Fields.
     template <typename T>
-    concept Reflectable = Fields<std::remove_cvref_t<T>>::HasFields;
+    concept Reflectable = requires { Fields<std::remove_cvref_t<T>>::k_Value; };
 
-    // Calls fn(name, value) for every field of obj, in the order of the Value tuple.
+    // Calls fn(name, value) for every field of obj, in the order of the k_Value tuple.
     template <typename T, typename Fn> requires Reflectable<T>
     constexpr auto ForEachField(const T& obj, Fn&& fn) -> void
     {
         std::apply([&](auto const&... field) {
             (fn(field.Name, obj.*(field.Ptr)), ...);
-        }, Fields<T>::Value);
+        }, Fields<T>::k_Value);
     }
+
+    // One flattened field of a reflected object.
+    struct FieldRow
+    {
+        // Dotted path of the field, with [index] for the elements of a container.
+        std::string Path{};
+        std::string Value{};
+    };
 }

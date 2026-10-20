@@ -20,5 +20,8 @@ export namespace Environment::Details::Type
         ZoneShape Shape{};
     };
 
-    using ZoneDetails = std::unordered_map<std::uint32_t, ZoneDetail>;
+    struct ZoneDetails : std::unordered_map<std::uint32_t, ZoneDetail>
+    {
+        using unordered_map::unordered_map;
+    };
 }

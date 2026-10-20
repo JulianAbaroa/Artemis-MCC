@@ -1,5 +1,6 @@
 export module Environment.Entities.Type;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
@@ -17,11 +18,13 @@ namespace
     using Common::Semantic::Type::Capability;
     using Common::Team::Type::Team;
     using Resolved::Definitions::Type::Object::ObjectKind;
+
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Environment::Entities::Type
 {
-    // One live object with its meaning: classification, state, team, pose and capabilities (Ignore/Semantizacion/05, section 9).
+    // One live object with its meaning: classification, state, team, pose and capabilities (D19).
     // note: FirstSeenTick waits for a global game tick (A8, D82) and OwnerPlayer for the owners of projectiles and bubbles (A3, Q48).
     struct Entity
     {
@@ -39,8 +42,8 @@ export namespace Environment::Entities::Type
 
         // Link to the parent and the parent handle, or 0xFFFFFFFF when Free.
         ::Binding Binding{ ::Binding::Free };
-        std::uint32_t BoundTo{ 0xFFFFFFFF };
-        std::uint32_t ParentHandle{ 0xFFFFFFFF };
+        std::uint32_t BoundTo{ k_NoHandle };
+        std::uint32_t ParentHandle{ k_NoHandle };
 
         // From the multiplayer block of the object only (D54). Neutral without it.
         // note: A biped takes the team of its player from the player table, or Neutral without a player (D94).

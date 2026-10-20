@@ -16,8 +16,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Bipd>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Base", &Bipd::Base),
             MakeField("PhysicsFlags", &Bipd::PhysicsFlags),
             MakeField("HeightStanding", &Bipd::HeightStanding),

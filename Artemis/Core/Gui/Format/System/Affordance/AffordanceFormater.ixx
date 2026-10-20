@@ -8,14 +8,14 @@ export namespace Gui::Format::System
     class AffordanceFormater
     {
     private:
-        using Behavior = Egocentric::Affordance::Type::Behavior;
-        using Activation = Egocentric::Affordance::Type::Activation;
+        using AffordanceBehavior = Egocentric::Affordance::Type::AffordanceBehavior;
+        using AffordanceActivation = Egocentric::Affordance::Type::AffordanceActivation;
 
     public:
         AffordanceFormater() = default;
         ~AffordanceFormater() = default;
 
-        static auto BehaviorToString(Behavior behavior) -> const char*;
-        static auto ActivationToString(Activation activation) -> const char*;
+        static auto BehaviorToString(AffordanceBehavior behavior) -> const char*;
+        static auto ActivationToString(AffordanceActivation activation) -> const char*;
     };
 }

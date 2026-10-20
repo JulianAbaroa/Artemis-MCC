@@ -8,6 +8,8 @@ import std;
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
+
+    using Platform::Hook::System::k_DrainTimeout;
 }
 
 namespace Platform::Host::Hook
@@ -26,7 +28,7 @@ namespace Platform::Host::Hook
         if (m_IsHookInstalled.load()) return true;
         s_Instance = this;
 
-        void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::CanAcceptAnyJoinRequest)) };
+        void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::k_CanAcceptAnyJoinRequest)) };
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -46,7 +48,7 @@ namespace Platform::Host::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[CanAcceptAnyJoinRequestDetour]", m_LogsService);
 

@@ -24,7 +24,7 @@ export namespace Map::Reader::Type::Structure
             std::int32_t Magic{};
         };
 
-        struct Section
+        struct HeaderSection
         {
             std::uint32_t VirtualAddress{};
             std::uint32_t Size{};
@@ -77,7 +77,7 @@ export namespace Map::Reader::Type::Structure
 
             Partition Partitions{};
             OffsetMask OffsetMasks{};
-            Section Sections{};
+            HeaderSection Sections{};
         };
     }
 
@@ -85,7 +85,7 @@ export namespace Map::Reader::Type::Structure
     namespace Tag
     {
         // Reference to another tag. Size: 0x10.
-        struct Reference
+        struct TagReference
         {
             std::int32_t TagGroupMagic{};
             std::byte _pad_0x04[8]{};
@@ -93,7 +93,7 @@ export namespace Map::Reader::Type::Structure
         };
 
         // Header of a block of entries. Size: 0xC.
-        struct Block
+        struct TagBlock
         {
             std::int32_t EntryCount{};
             std::uint32_t Pointer{};
@@ -110,14 +110,14 @@ export namespace Map::Reader::Type::Structure
     // Entries of the tag index tables.
     namespace TagTable
     {
-        struct Entry
+        struct TagTableEntry
         {
             std::int16_t TagGroupIndex{};
             std::uint16_t DatumIndexSalt{};
             std::uint32_t MemoryAddress{};
         };
 
-        struct GroupEntry
+        struct TagTableGroupEntry
         {
             std::int32_t Magic{};
             std::int32_t ParentMagic{};

@@ -4,14 +4,16 @@ module;
 
 module Viewer.Hud.System;
 
+import Common.Engine.Type;
 import Viewer.Overlay.Type;
 import std;
 
 namespace
 {
-    using Mode = Viewer::Overlay::Type::Mode;
+    using Viewer::Overlay::Type::Mode;
 
-    using Viewer::Selection::State::k_NoSelection;
+    using Common::Engine::Type::k_NoHandle;
+
 
     const ImVec4 k_Green{ 0.0f, 1.0f, 0.0f, 1.0f };
     const ImVec4 k_Orange{ 1.0f, 0.6f, 0.0f, 1.0f };
@@ -92,10 +94,10 @@ namespace Viewer::Hud::System
     {
         const std::uint32_t handle = m_SelectionStore.GetSelected();
 
-        if (handle == k_NoSelection)
+        if (handle == k_NoHandle)
         {
             ImGui::TextDisabled("No selection.");
-            m_LastHandle = k_NoSelection;
+            m_LastHandle = k_NoHandle;
             return;
         }
 

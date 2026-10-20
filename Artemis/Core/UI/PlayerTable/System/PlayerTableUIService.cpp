@@ -7,20 +7,22 @@ module UI.PlayerTable.System;
 import Tables.Player.Type;
 import Gui.Color.System;
 import Gui.Format.System;
+import Gui.Style.Type;
 import std;
 
 namespace
 {
-    using ConnectionState = Tables::Player::Type::Alive::ConnectionState;
+    using Tables::Player::Type::Alive::ConnectionState;
 
-    using TeamToColor = Gui::Color::System::TeamToColor;
-    using HexFormater = Gui::Format::System::HexFormater;
-    using TeamFormater = Gui::Format::System::TeamFormater;
-    using HandleDrawerGuiService = Gui::Widget::System::HandleDrawerGuiService;
+    using Gui::Color::System::TeamToColor;
+    using Gui::Format::System::HexFormater;
+    using Gui::Format::System::TeamFormater;
+    using Gui::Widget::System::HandleDrawerGuiService;
+
+    using Gui::Style::Type::k_CardSpacing;
 
     // Size of a player card.
     const ImVec2 k_CardSize{ 320.0f, 480.0f };
-    constexpr float k_CardSpacing{ 8.0f };
 
     const ImVec4 k_SectionColor{ 1.0f, 0.8f, 0.4f, 1.0f };
 }

@@ -63,7 +63,7 @@ export namespace Map::Tag::Type::Bloc::Structure
         MapStructure::Data::Reference DefaultFunction;  // 0x18  dataref.
         std::uint32_t ScaleBy;  // 0x2C  stringid.
         // -> Bloc_Functions_InterpolationEntry[]
-        MapStructure::Tag::Block   Interpolation;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Interpolation;  // 0x30  tagblock.
         std::int32_t RuntimeInterpolatorIndex;  // 0x3C  int32.
     };
     static_assert(sizeof(Bloc_FunctionsEntry) == 0x40, "Bloc_FunctionsEntry size mismatch");
@@ -78,7 +78,7 @@ export namespace Map::Tag::Type::Bloc::Structure
     // Entry size: 0x20
     struct Bloc_AttachmentsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
         std::uint32_t Marker;  // 0x10  stringid.
         std::uint8_t ChangeColor;  // 0x14  enum8. [None=0x0, Primary=0x1, Secondary=0x2, Tertiary=0x3, Quaternary=0x4]
         std::uint8_t Flags;  // 0x15  flags8. [Force Always On=0, Effect Size Scale From Object Scale=1]
@@ -109,7 +109,7 @@ export namespace Map::Tag::Type::Bloc::Structure
         std::uint32_t MarkerName;  // 0x4  stringid.
         float        Radius;  // 0x8  float32.
         // -> Bloc_HullSurfaces_DragEntry[]
-        MapStructure::Tag::Block   Drag;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Drag;  // 0xC  tagblock.
     };
     static_assert(sizeof(Bloc_HullSurfacesEntry) == 0x18, "Bloc_HullSurfacesEntry size mismatch");
 
@@ -129,7 +129,7 @@ export namespace Map::Tag::Type::Bloc::Structure
     // Entry size: 0x10
     struct Bloc_WidgetsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
     };
     static_assert(sizeof(Bloc_WidgetsEntry) == 0x10, "Bloc_WidgetsEntry size mismatch");
 
@@ -158,9 +158,9 @@ export namespace Map::Tag::Type::Bloc::Structure
     struct Bloc_ChangeColorsEntry
     {
         // -> Bloc_ChangeColors_InitialPermutationsEntry[]
-        MapStructure::Tag::Block   InitialPermutations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   InitialPermutations;  // 0x0  tagblock.
         // -> Bloc_ChangeColors_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xC  tagblock.
     };
     static_assert(sizeof(Bloc_ChangeColorsEntry) == 0x18, "Bloc_ChangeColorsEntry size mismatch");
 
@@ -183,25 +183,25 @@ export namespace Map::Tag::Type::Bloc::Structure
         float        NormalWeight;  // 0x1C  float32.
         std::uint32_t BoundaryCenterMarker;  // 0x20  stringid.
         std::uint32_t SpawnedObjectMarkerName;  // 0x24  stringid.
-        MapStructure::Tag::Reference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
         std::uint32_t BoundaryMaterialNotYetImplemented;  // 0x38  stringid.
-        MapStructure::Tag::Reference DefaultBoundaryStandardShader;  // 0x3C  tagref.
-        MapStructure::Tag::Reference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
-        MapStructure::Tag::Reference SphereStandardShader;  // 0x5C  tagref.
-        MapStructure::Tag::Reference SphereOpaqueShader;  // 0x6C  tagref.
-        MapStructure::Tag::Reference CylinderStandardShader;  // 0x7C  tagref.
-        MapStructure::Tag::Reference CylinderOpaqueShader;  // 0x8C  tagref.
-        MapStructure::Tag::Reference BoxStandardShader;  // 0x9C  tagref.
-        MapStructure::Tag::Reference BoxOpaqueShader;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryStandardShader;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
+        MapStructure::Tag::TagReference SphereStandardShader;  // 0x5C  tagref.
+        MapStructure::Tag::TagReference SphereOpaqueShader;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference CylinderStandardShader;  // 0x7C  tagref.
+        MapStructure::Tag::TagReference CylinderOpaqueShader;  // 0x8C  tagref.
+        MapStructure::Tag::TagReference BoxStandardShader;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference BoxOpaqueShader;  // 0xAC  tagref.
     };
     static_assert(sizeof(Bloc_MultiplayerObjectEntry) == 0xBC, "Bloc_MultiplayerObjectEntry size mismatch");
 
     // Entry size: 0x30
     struct Bloc_SpawnEffectsEntry
     {
-        MapStructure::Tag::Reference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
-        MapStructure::Tag::Reference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
-        MapStructure::Tag::Reference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
+        MapStructure::Tag::TagReference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
+        MapStructure::Tag::TagReference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
+        MapStructure::Tag::TagReference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
     };
     static_assert(sizeof(Bloc_SpawnEffectsEntry) == 0x30, "Bloc_SpawnEffectsEntry size mismatch");
 
@@ -235,43 +235,43 @@ export namespace Map::Tag::Type::Bloc::Structure
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
         MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GenericNameList;  // 0x40  tagref.
-        MapStructure::Tag::Reference GenericServiceTagList;  // 0x50  tagref.
+        MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
         std::uint32_t DefaultModelVariant;  // 0x60  stringid.
-        MapStructure::Tag::Reference Model;  // 0x64  tagref.
-        MapStructure::Tag::Reference CrateObject;  // 0x74  tagref.
-        MapStructure::Tag::Reference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
-        MapStructure::Tag::Reference BrittleCollisionDamage;  // 0x94  tagref.
+        MapStructure::Tag::TagReference Model;  // 0x64  tagref.
+        MapStructure::Tag::TagReference CrateObject;  // 0x74  tagref.
+        MapStructure::Tag::TagReference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
+        MapStructure::Tag::TagReference BrittleCollisionDamage;  // 0x94  tagref.
         // -> Bloc_EarlyMoverOrientedBoundingBoxEntry[]
-        MapStructure::Tag::Block   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
-        MapStructure::Tag::Reference CreationEffect;  // 0xB0  tagref.
-        MapStructure::Tag::Reference MaterialEffects;  // 0xC0  tagref.
-        MapStructure::Tag::Reference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
+        MapStructure::Tag::TagBlock   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
+        MapStructure::Tag::TagReference CreationEffect;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference MaterialEffects;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
         // -> Bloc_AiPropertiesEntry[]
-        MapStructure::Tag::Block   AiProperties;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   AiProperties;  // 0xE0  tagblock.
         // -> Bloc_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xEC  tagblock.
         // -> Bloc_RuntimeInterpolatorFunctionsEntry[]
-        MapStructure::Tag::Block   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
         // -> Bloc_AttachmentsEntry[]
-        MapStructure::Tag::Block   Attachments;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   Attachments;  // 0x104  tagblock.
         // -> Bloc_HullSurfacesEntry[]
-        MapStructure::Tag::Block   HullSurfaces;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   HullSurfaces;  // 0x110  tagblock.
         // -> Bloc_JetwashEntry[]
-        MapStructure::Tag::Block   Jetwash;  // 0x11C  tagblock.
+        MapStructure::Tag::TagBlock   Jetwash;  // 0x11C  tagblock.
         // -> Bloc_WidgetsEntry[]
-        MapStructure::Tag::Block   Widgets;  // 0x128  tagblock.
+        MapStructure::Tag::TagBlock   Widgets;  // 0x128  tagblock.
         // -> Bloc_ChangeColorsEntry[]
-        MapStructure::Tag::Block   ChangeColors;  // 0x134  tagblock.
+        MapStructure::Tag::TagBlock   ChangeColors;  // 0x134  tagblock.
         // -> Bloc_MultiplayerObjectEntry[]
-        MapStructure::Tag::Block   MultiplayerObject;  // 0x140  tagblock.
-        MapStructure::Tag::Reference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
+        MapStructure::Tag::TagBlock   MultiplayerObject;  // 0x140  tagblock.
+        MapStructure::Tag::TagReference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
         // -> Bloc_SpawnEffectsEntry[]
-        MapStructure::Tag::Block   SpawnEffects;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnEffects;  // 0x15C  tagblock.
         std::uint16_t Flags_2;  // 0x168  flags16. [Does Not Block Area Of Effect=0, Camera=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15]
         std::int16_t Unknown;  // 0x16A  int16.
         // -> Bloc_MetagamePropertiesEntry[]
-        MapStructure::Tag::Block   MetagameProperties;  // 0x16C  tagblock.
+        MapStructure::Tag::TagBlock   MetagameProperties;  // 0x16C  tagblock.
         std::int8_t  Unknown_2;  // 0x178  int8.
         std::int8_t  Unknown_3;  // 0x179  int8.
         std::int8_t  Unknown_4;  // 0x17A  int8.

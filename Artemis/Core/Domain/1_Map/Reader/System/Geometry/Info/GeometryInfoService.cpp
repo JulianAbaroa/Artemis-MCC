@@ -14,7 +14,7 @@ namespace
 
 namespace Map::Reader::System
 {
-    auto GeometryInfoService::ReadFooter(const TagResourcesObject& entry,
+    auto GeometryInfoService::ReadFooter(const Zone_TagResourcesObject& entry,
         std::int32_t& outVBCount, std::int32_t& outIBCount,
         std::int64_t fixupDataBase) const -> bool
     {
@@ -33,7 +33,7 @@ namespace Map::Reader::System
         return true;
     }
 
-    auto GeometryInfoService::ReadBufferInfoTables(const TagResourcesObject& entry,
+    auto GeometryInfoService::ReadBufferInfoTables(const Zone_TagResourcesObject& entry,
         std::int32_t vbCount, std::int32_t ibCount,
         std::vector<BufferInfo>& outVBTable, std::vector<BufferInfo>& outIBTable,
         std::int64_t fixupDataBase) const -> bool

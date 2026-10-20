@@ -14,8 +14,6 @@ export namespace Map::Reader::State
     class TagStore
     {
     public:
-        using ObjectType = TObject;
-
         auto Has(const std::string& tagName) const -> bool
         {
             assert(m_IsFrozen.load(std::memory_order_acquire));
@@ -67,7 +65,7 @@ export namespace Map::Reader::State
             m_Map.clear();
         }
 
-    protected:
+    private:
         std::unordered_map<std::string, TObject> m_Map{};
         std::atomic<bool> m_IsFrozen{ false };
     };

@@ -6,17 +6,16 @@ module;
 module Platform.Render.System;
 import :GpuBuffer;
 import :GpuPipeline;
-
 import std;
 
 namespace
 {
-    using LogsService = Service::Logs::System::LogsService;
+    using Service::Logs::System::LogsService;
 
-    using Vertex = Platform::Render::Type::Vertex;
+    using Platform::Render::Type::Vertex;
 }
 
-namespace Platform::Render::System::GpuBuffer
+namespace Platform::Render::System
 {
     auto CreateDynamicVertexBuffer(ID3D11Device* device, UINT vertexCapacity,
         Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, UINT& capacity, const char* tag,

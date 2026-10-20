@@ -102,9 +102,9 @@ export namespace Map::Tag::Type::Phmo::Structure
     struct Phmo_PoweredChainsEntry
     {
         // -> Phmo_PoweredChains_NodesEntry[]
-        MapStructure::Tag::Block   Nodes;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Nodes;  // 0x0  tagblock.
         // -> Phmo_PoweredChains_ConstraintsEntry[]
-        MapStructure::Tag::Block   Constraints;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Constraints;  // 0xC  tagblock.
     };
     static_assert(sizeof(Phmo_PoweredChainsEntry) == 0x18, "Phmo_PoweredChainsEntry size mismatch");
 
@@ -136,9 +136,9 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint32_t Flags;  // 0x4  flags32. [Is Physical Child=0, Is Rigid=1, Disable Effects=2, Not Created Automatically=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        Friction;  // 0x8  float32. | 0 is the default (takes what it was set in max) anything else overrides that value
         // -> Phmo_NodeEdges_Constraints_RagdollMotorsEntry[]
-        MapStructure::Tag::Block   RagdollMotors;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   RagdollMotors;  // 0xC  tagblock.
         // -> Phmo_NodeEdges_Constraints_LimitedHingeMotorsEntry[]
-        MapStructure::Tag::Block   LimitedHingeMotors;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   LimitedHingeMotors;  // 0x18  tagblock.
     };
     static_assert(sizeof(Phmo_NodeEdges_ConstraintsEntry) == 0x24, "Phmo_NodeEdges_ConstraintsEntry size mismatch");
 
@@ -150,7 +150,7 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         // -> Phmo_NodeEdges_ConstraintsEntry[]
-        MapStructure::Tag::Block   Constraints;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   Constraints;  // 0x8  tagblock.
         std::uint32_t NodeAGlobalMaterialName;  // 0x14  stringid. | if you don't fill this out we will pluck the material from the first primitive, of the first rigid body attached to node a
         std::uint32_t NodeBGlobalMaterialName;  // 0x18  stringid. | if you don't fill this out we will pluck the material from the first primitive, of the first rigid body attached to node b, if node b is none we use whatever material a has
     };
@@ -671,7 +671,7 @@ export namespace Map::Tag::Type::Phmo::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         // -> Phmo_Regions_Permutations_RigidBodiesEntry[]
-        MapStructure::Tag::Block   RigidBodies;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   RigidBodies;  // 0x4  tagblock.
     };
     static_assert(sizeof(Phmo_Regions_PermutationsEntry) == 0x10, "Phmo_Regions_PermutationsEntry size mismatch");
 
@@ -680,7 +680,7 @@ export namespace Map::Tag::Type::Phmo::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         // -> Phmo_Regions_PermutationsEntry[]
-        MapStructure::Tag::Block   Permutations;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Permutations;  // 0x4  tagblock.
     };
     static_assert(sizeof(Phmo_RegionsEntry) == 0x10, "Phmo_RegionsEntry size mismatch");
 
@@ -710,7 +710,7 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeIndex;  // 0x4  int16.
         std::int16_t Unknown;  // 0x6  int16.
         // -> Phmo_PointToPathCurves_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x8  tagblock.
     };
     static_assert(sizeof(Phmo_PointToPathCurvesEntry) == 0x14, "Phmo_PointToPathCurvesEntry size mismatch");
 
@@ -846,67 +846,67 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int8_t  Unknown;  // 0x1D  int8.
         std::int16_t Unknown_2;  // 0x1E  int16.
         // -> Phmo_DampedSpringMotorsEntry[]
-        MapStructure::Tag::Block   DampedSpringMotors;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   DampedSpringMotors;  // 0x20  tagblock.
         // -> Phmo_PositionMotorsEntry[]
-        MapStructure::Tag::Block   PositionMotors;  // 0x2C  tagblock.
+        MapStructure::Tag::TagBlock   PositionMotors;  // 0x2C  tagblock.
         // -> Phmo_PhantomTypesEntry[]
-        MapStructure::Tag::Block   PhantomTypes;  // 0x38  tagblock.
+        MapStructure::Tag::TagBlock   PhantomTypes;  // 0x38  tagblock.
         // -> Phmo_PoweredChainsEntry[]
-        MapStructure::Tag::Block   PoweredChains;  // 0x44  tagblock.
+        MapStructure::Tag::TagBlock   PoweredChains;  // 0x44  tagblock.
         // -> Phmo_NodeEdgesEntry[]
-        MapStructure::Tag::Block   NodeEdges;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   NodeEdges;  // 0x50  tagblock.
         // -> Phmo_RigidBodiesEntry[]
-        MapStructure::Tag::Block   RigidBodies;  // 0x5C  tagblock.
+        MapStructure::Tag::TagBlock   RigidBodies;  // 0x5C  tagblock.
         // -> Phmo_MaterialsEntry[]
-        MapStructure::Tag::Block   Materials;  // 0x68  tagblock.
+        MapStructure::Tag::TagBlock   Materials;  // 0x68  tagblock.
         // -> Phmo_SpheresEntry[]
-        MapStructure::Tag::Block   Spheres;  // 0x74  tagblock.
+        MapStructure::Tag::TagBlock   Spheres;  // 0x74  tagblock.
         // -> Phmo_MultiSpheresEntry[]
-        MapStructure::Tag::Block   MultiSpheres;  // 0x80  tagblock.
+        MapStructure::Tag::TagBlock   MultiSpheres;  // 0x80  tagblock.
         // -> Phmo_PillsEntry[]
-        MapStructure::Tag::Block   Pills;  // 0x8C  tagblock.
+        MapStructure::Tag::TagBlock   Pills;  // 0x8C  tagblock.
         // -> Phmo_BoxesEntry[]
-        MapStructure::Tag::Block   Boxes;  // 0x98  tagblock.
+        MapStructure::Tag::TagBlock   Boxes;  // 0x98  tagblock.
         // -> Phmo_TrianglesEntry[]
-        MapStructure::Tag::Block   Triangles;  // 0xA4  tagblock.
+        MapStructure::Tag::TagBlock   Triangles;  // 0xA4  tagblock.
         // -> Phmo_PolyhedraEntry[]
-        MapStructure::Tag::Block   Polyhedra;  // 0xB0  tagblock.
+        MapStructure::Tag::TagBlock   Polyhedra;  // 0xB0  tagblock.
         // -> Phmo_PolyhedronFourVectorsEntry[]
-        MapStructure::Tag::Block   PolyhedronFourVectors;  // 0xBC  tagblock.
+        MapStructure::Tag::TagBlock   PolyhedronFourVectors;  // 0xBC  tagblock.
         // -> Phmo_PolyhedronPlaneEquationsEntry[]
-        MapStructure::Tag::Block   PolyhedronPlaneEquations;  // 0xC8  tagblock.
+        MapStructure::Tag::TagBlock   PolyhedronPlaneEquations;  // 0xC8  tagblock.
         // -> Phmo_MassDistributionsEntry[]
-        MapStructure::Tag::Block   MassDistributions;  // 0xD4  tagblock.
+        MapStructure::Tag::TagBlock   MassDistributions;  // 0xD4  tagblock.
         // -> Phmo_ListsEntry[]
-        MapStructure::Tag::Block   Lists;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   Lists;  // 0xE0  tagblock.
         // -> Phmo_ListShapesEntry[]
-        MapStructure::Tag::Block   ListShapes;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   ListShapes;  // 0xEC  tagblock.
         // -> Phmo_MoppsEntry[]
-        MapStructure::Tag::Block   Mopps;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   Mopps;  // 0xF8  tagblock.
         MapStructure::Data::Reference MoppCodes;  // 0x104  dataref.
         // -> Phmo_HingeConstraintsEntry[]
-        MapStructure::Tag::Block   HingeConstraints;  // 0x118  tagblock.
+        MapStructure::Tag::TagBlock   HingeConstraints;  // 0x118  tagblock.
         // -> Phmo_RagdollConstraintsEntry[]
-        MapStructure::Tag::Block   RagdollConstraints;  // 0x124  tagblock.
+        MapStructure::Tag::TagBlock   RagdollConstraints;  // 0x124  tagblock.
         // -> Phmo_RegionsEntry[]
-        MapStructure::Tag::Block   Regions;  // 0x130  tagblock.
+        MapStructure::Tag::TagBlock   Regions;  // 0x130  tagblock.
         // -> Phmo_NodesEntry[]
-        MapStructure::Tag::Block   Nodes;  // 0x13C  tagblock.
+        MapStructure::Tag::TagBlock   Nodes;  // 0x13C  tagblock.
         std::uint8_t  _pad_0x148[0x4];  // undefined.
         std::uint8_t  _pad_0x14C[0x4];  // undefined.
         std::uint8_t  _pad_0x150[0x4];  // undefined.
         // -> Phmo_PointToPathCurvesEntry[]
-        MapStructure::Tag::Block   PointToPathCurves;  // 0x154  tagblock.
+        MapStructure::Tag::TagBlock   PointToPathCurves;  // 0x154  tagblock.
         // -> Phmo_LimitedHingeConstraintsEntry[]
-        MapStructure::Tag::Block   LimitedHingeConstraints;  // 0x160  tagblock.
+        MapStructure::Tag::TagBlock   LimitedHingeConstraints;  // 0x160  tagblock.
         // -> Phmo_BallAndSocketConstraintsEntry[]
-        MapStructure::Tag::Block   BallAndSocketConstraints;  // 0x16C  tagblock.
+        MapStructure::Tag::TagBlock   BallAndSocketConstraints;  // 0x16C  tagblock.
         // -> Phmo_StiffSpringConstraintsEntry[]
-        MapStructure::Tag::Block   StiffSpringConstraints;  // 0x178  tagblock.
+        MapStructure::Tag::TagBlock   StiffSpringConstraints;  // 0x178  tagblock.
         // -> Phmo_PrismaticConstraintsEntry[]
-        MapStructure::Tag::Block   PrismaticConstraints;  // 0x184  tagblock.
+        MapStructure::Tag::TagBlock   PrismaticConstraints;  // 0x184  tagblock.
         // -> Phmo_PhantomsEntry[]
-        MapStructure::Tag::Block   Phantoms;  // 0x190  tagblock.
+        MapStructure::Tag::TagBlock   Phantoms;  // 0x190  tagblock.
     };
     static_assert(sizeof(PhmoData) == 0x19C, "PhmoData size mismatch");
 

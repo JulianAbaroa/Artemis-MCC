@@ -1,6 +1,8 @@
 module Map.Reader.System;
 import :TagResolver;
 
+import Common.Engine.Type;
+
 namespace
 {
     using Map::Reader::Type::Magic::Tag::k_Bipd;
@@ -15,6 +17,7 @@ namespace
     using Map::Reader::Type::Magic::Tag::k_Scen;
     using Map::Reader::Type::Magic::Tag::k_Vehi;
     using Map::Reader::Type::Magic::Tag::k_Weap;
+    using Common::Engine::Type::k_NoHandle;
 
     // Gets the bit that marks a group in the group mask of a tag name.
     // Only the groups that objects of the object table, or tags derived from them, belong to have a bit.
@@ -116,7 +119,7 @@ namespace Map::Reader::System
     auto TagResolverService::ResolveTagReferenceName(
         const TagReference& ref) const -> std::string
     {
-        if (ref.DatumIndex == 0xFFFFFFFF || ref.DatumIndex == 0)
+        if (ref.DatumIndex == k_NoHandle || ref.DatumIndex == 0)
         {
             return {};
         }

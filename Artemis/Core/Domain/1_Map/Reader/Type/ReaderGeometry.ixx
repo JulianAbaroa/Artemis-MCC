@@ -5,7 +5,7 @@ import std;
 
 namespace
 {
-    using Triangle = Common::Math::Type::Triangle;
+    using Common::Math::Type::Triangle;
 }
 
 export namespace Map::Reader::Type::Geometry

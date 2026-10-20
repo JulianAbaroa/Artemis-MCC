@@ -22,7 +22,7 @@ export namespace Environment::Details::System
         using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
 
-        using AliveObject = Tables::Object::Type::Alive::Object;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
 

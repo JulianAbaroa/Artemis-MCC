@@ -5,14 +5,15 @@ module;
 module Gui.Widget.System;
 import :HandleDrawer;
 
+import Common.Engine.Type;
 import Gui.Format.System;
 import std;
 
 namespace
 {
-    using HexFormater = Gui::Format::System::HexFormater;
+    using Gui::Format::System::HexFormater;
 
-    constexpr std::uint32_t k_InvalidHandle{ 0xFFFFFFFF };
+    using Common::Engine::Type::k_NoHandle;
 }
 
 namespace Gui::Widget::System
@@ -20,7 +21,7 @@ namespace Gui::Widget::System
     auto HandleDrawerGuiService::DrawU32(const char* label, std::uint32_t handle,
         std::uint32_t ownerHandle, CopyableFieldGuiService& copyableField) -> void
     {
-        if (handle == k_InvalidHandle)
+        if (handle == k_NoHandle)
         {
             ImGui::TextDisabled("%s", label);
             ImGui::SameLine();

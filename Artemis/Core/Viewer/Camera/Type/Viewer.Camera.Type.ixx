@@ -9,7 +9,7 @@ export namespace Viewer::Camera::Type
     using Vec3 = Common::Math::Type::Vec3;
 
     // 4x4 matrix stored row by row.
-    using Matrix = std::array<float, 16>;
+    using Common::Math::Type::Matrix;
 
     // Camera movement control. Count is the number of keys and is not a key.
     enum class Key : std::uint8_t

@@ -7,10 +7,15 @@ namespace
 {
     namespace Offset = Map::Reader::Type::Offset;
 
-    using TagTableEntry = Map::Reader::Type::Structure::TagTable::Entry;
-    using TagTableGroupEntry = Map::Reader::Type::Structure::TagTable::GroupEntry;
+    using Map::Reader::Type::Structure::TagTable::TagTableEntry;
+    using Map::Reader::Type::Structure::TagTable::TagTableGroupEntry;
 
     using Map::Reader::Type::Magic::k_IndexHeader;
+    using Map::Reader::Type::Offset::IndexTableHeader::k_TagGroupTableAddress;
+    using Map::Reader::Type::Offset::IndexTableHeader::k_NumberOfTagGroups;
+    using Map::Reader::Type::Offset::IndexTableHeader::k_TagTableAddress;
+    using Map::Reader::Type::Offset::IndexTableHeader::k_NumberOfTags;
+    using Map::Reader::Type::Offset::IndexTableHeader::k_Magic;
 }
 
 namespace Map::Reader::System
@@ -31,7 +36,7 @@ namespace Map::Reader::System
         };
 
         std::uint32_t magic{};
-        if (!seek(Offset::IndexTableHeader::k_Magic) || !readBytes(&magic, sizeof(magic)))
+        if (!seek(k_Magic) || !readBytes(&magic, sizeof(magic)))
         {
             return false;
         }
@@ -42,25 +47,25 @@ namespace Map::Reader::System
         }
 
         std::int32_t groupCount{};
-        if (!seek(Offset::IndexTableHeader::k_NumberOfTagGroups) || !readBytes(&groupCount, sizeof(groupCount)))
+        if (!seek(k_NumberOfTagGroups) || !readBytes(&groupCount, sizeof(groupCount)))
         {
             return false;
         }
 
         std::uint64_t groupTableAddress{};
-        if (!seek(Offset::IndexTableHeader::k_TagGroupTableAddress) || !readBytes(&groupTableAddress, sizeof(groupTableAddress)))
+        if (!seek(k_TagGroupTableAddress) || !readBytes(&groupTableAddress, sizeof(groupTableAddress)))
         {
             return false;
         }
 
         std::int32_t tagCount{};
-        if (!seek(Offset::IndexTableHeader::k_NumberOfTags) || !readBytes(&tagCount, sizeof(tagCount)))
+        if (!seek(k_NumberOfTags) || !readBytes(&tagCount, sizeof(tagCount)))
         {
             return false;
         }
 
         std::uint64_t tagTableAddress{};
-        if (!seek(Offset::IndexTableHeader::k_TagTableAddress) || !readBytes(&tagTableAddress, sizeof(tagTableAddress)))
+        if (!seek(k_TagTableAddress) || !readBytes(&tagTableAddress, sizeof(tagTableAddress)))
         {
             return false;
         }

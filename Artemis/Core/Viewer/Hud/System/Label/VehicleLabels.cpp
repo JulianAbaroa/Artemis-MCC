@@ -13,15 +13,15 @@ import std;
 
 namespace
 {
-    using Flag = Viewer::Options::Type::Flag;
-    using LabelRow = Viewer::Hud::Type::LabelRow;
+    using Viewer::Options::Type::Flag;
+    using Viewer::Hud::Type::LabelRow;
 
     using Viewer::Style::Type::k_Affordance;
+    using Viewer::Hud::Type::k_FreeSeatColor;
+    using Viewer::Hud::Type::k_TakenSeatColor;
+    using Viewer::Hud::Type::k_MutedColor;
 
-    constexpr ImU32 k_FreeSeatColor{ IM_COL32(120, 200, 130, 255) };
-    constexpr ImU32 k_TakenSeatColor{ IM_COL32(215, 110, 110, 255) };
     constexpr ImU32 k_HijackerColor{ IM_COL32(230, 170, 90, 255) };
-    constexpr ImU32 k_MutedColor{ IM_COL32(150, 160, 175, 255) };
 }
 
 namespace Viewer::Hud::System
@@ -29,7 +29,7 @@ namespace Viewer::Hud::System
     auto VehicleLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
         const auto& tick = context.Frame;
-        const auto& options = context.Options;
+        const auto& options = canvas.GetOptions();
 
         if (!options.IsEnabled(Flag::VehicleSeatMarkers) || !tick.Affordances) return;
 

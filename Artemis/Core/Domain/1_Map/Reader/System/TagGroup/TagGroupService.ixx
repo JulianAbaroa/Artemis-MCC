@@ -16,7 +16,7 @@ export namespace Map::Reader::System
     class TagGroupService
     {
     private:
-        using TagBlock = Map::Reader::Type::Structure::Tag::Block;
+        using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
 
         using TagResolverService = Map::Reader::System::TagResolverService;
 

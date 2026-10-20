@@ -10,6 +10,9 @@ namespace
 
 export namespace Resolved::World::Type::Raycast
 {
+    // Padding of every box of a ray tree, so rays that graze a triangle edge are not lost to rounding.
+    inline constexpr float k_BoxPadding{ 1.0e-3f };
+
     // Node of the bounding volume hierarchy.
     // note: An inner node has its children at Left and Left + 1. A leaf has Count triangles starting at Left.
     struct BvhNode

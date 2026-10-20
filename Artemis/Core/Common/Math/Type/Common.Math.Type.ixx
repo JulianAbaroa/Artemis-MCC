@@ -55,4 +55,13 @@ export namespace Common::Math::Type
 
         bool DoesNotAnimate{ false };
     };
+
+    // Up axis of the world. The engine is Z-up.
+    inline constexpr Vec3 k_WorldUp{ 0.0f, 0.0f, 1.0f };
+
+    // Largest float, the start value of a running minimum.
+    inline constexpr float k_FloatMax{ (std::numeric_limits<float>::max)() };
+
+    // Row-major 4x4 matrix.
+    struct Matrix : std::array<float, 16> {};
 }

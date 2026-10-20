@@ -2,8 +2,8 @@ module Environment.Aim.System;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
+    using Common::Math::Type::Vec3;
+    using Resolved::World::Type::ModelLink::AnchorSource;
 }
 
 namespace Environment::Aim::System
@@ -21,7 +21,7 @@ namespace Environment::Aim::System
         {
             if (object.Address == 0) continue;
 
-            const ResolvedVitality* layout = m_VitalityStore.Get(object.TagName);
+            const Vitality* layout = m_VitalityStore.Get(object.TagName);
             if (!layout || !this->HasAnchors(*layout)) continue;
 
             const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
@@ -41,7 +41,7 @@ namespace Environment::Aim::System
         m_AimStore.Publish(std::move(result));
     }
 
-    auto AimService::MakeAim(const AimAnchor& anchor, const AliveObject& object,
+    auto AimService::MakeAim(const ModelLinkAnchor& anchor, const AliveObject& object,
         const BoneMatrixTable* bones) -> SectionAim
     {
         SectionAim aim;
@@ -68,7 +68,7 @@ namespace Environment::Aim::System
             return aim;
         }
 
-        // Object space (center of the model): origin = Position, axes = forward, left, up
+        // AliveObject space (center of the model): origin = Position, axes = forward, left, up
         // Note: rigid objects (no bones) place their collision centered on its bounds,
         // so this may not match them. Not handled yet.
         const Vec3& f = object.Forward;
@@ -87,7 +87,7 @@ namespace Environment::Aim::System
         return aim;
     }
 
-    auto AimService::HasAnchors(const ResolvedVitality& layout) -> bool
+    auto AimService::HasAnchors(const Vitality& layout) -> bool
     {
         for (const auto& section : layout.Sections)
         {

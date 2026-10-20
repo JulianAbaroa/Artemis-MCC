@@ -144,15 +144,15 @@ export namespace Platform
         auto operator=(const Layer&) -> Layer& = delete;
 
         // --- State ---
-        LifecycleStore m_LifecycleStore;
+        LifecycleStore m_LifecycleStore{};
         MatchConfigStore m_MatchConfigStore{};
-        LocalUserStore m_LocalUserStore;
-        InputStore m_InputStore;
-        MouseDeltaStore m_MouseDeltaStore;
-        VirtualInputStore m_VirtualInputStore;
-        PlayerActionStore m_PlayerActionStore;
-        BotStore m_BotStore;
-        RenderStore m_RenderStore;
+        LocalUserStore m_LocalUserStore{};
+        InputStore m_InputStore{};
+        MouseDeltaStore m_MouseDeltaStore{};
+        VirtualInputStore m_VirtualInputStore{};
+        PlayerActionStore m_PlayerActionStore{};
+        BotStore m_BotStore{};
+        RenderStore m_RenderStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
@@ -161,7 +161,7 @@ export namespace Platform
         AOBService m_AOBService;
         HostService m_HostService;
         BotService m_BotService;
-        MemoryReaderService m_MemoryReaderService;
+        MemoryReaderService m_MemoryReaderService{};
         RenderService m_RenderService;
         SwapChainLocator m_SwapChainLocator;
 

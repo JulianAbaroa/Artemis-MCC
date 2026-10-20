@@ -13,54 +13,55 @@ export namespace Resolved::Definitions::State
 {
     // Resolved definitions by group, in the same shape as the map layer TagCatalog.
     // note: The builder adds the definitions, then freezes the stores and they are only read.
-    struct DefinitionsStore
+    class DefinitionsStore
     {
+    public:
         // Damage
-        TagStore<Type::Jpt::Jpt> Jpt{};
+        TagStore<Type::Jpt::Jpt> m_Jpt{};
 
         // Level
-        TagStore<Type::Sbsp::Sbsp> Sbsp{};
-        TagStore<Type::Scnr::Scnr> Scnr{};
-        TagStore<Type::Sddt::Sddt> Sddt{};
+        TagStore<Type::Sbsp::Sbsp> m_Sbsp{};
+        TagStore<Type::Scnr::Scnr> m_Scnr{};
+        TagStore<Type::Sddt::Sddt> m_Sddt{};
 
         // Model
-        TagStore<Type::Coll::Coll> Coll{};
-        TagStore<Type::Hlmt::Hlmt> Hlmt{};
-        TagStore<Type::Mode::Mode> Mode{};
-        TagStore<Type::Phmo::Phmo> Phmo{};
+        TagStore<Type::Coll::Coll> m_Coll{};
+        TagStore<Type::Hlmt::Hlmt> m_Hlmt{};
+        TagStore<Type::Mode::Mode> m_Mode{};
+        TagStore<Type::Phmo::Phmo> m_Phmo{};
 
         // Object
-        TagStore<Type::Bipd::Bipd> Bipd{};
-        TagStore<Type::Bloc::Bloc> Bloc{};
-        TagStore<Type::Ctrl::Ctrl> Ctrl{};
-        TagStore<Type::Eqip::Eqip> Eqip{};
-        TagStore<Type::Mach::Mach> Mach{};
-        TagStore<Type::Proj::Proj> Proj{};
-        TagStore<Type::Scen::Scen> Scen{};
-        TagStore<Type::Vehi::Vehi> Vehi{};
-        TagStore<Type::Weap::Weap> Weap{};
+        TagStore<Type::Bipd::Bipd> m_Bipd{};
+        TagStore<Type::Bloc::Bloc> m_Bloc{};
+        TagStore<Type::Ctrl::Ctrl> m_Ctrl{};
+        TagStore<Type::Eqip::Eqip> m_Eqip{};
+        TagStore<Type::Mach::Mach> m_Mach{};
+        TagStore<Type::Proj::Proj> m_Proj{};
+        TagStore<Type::Scen::Scen> m_Scen{};
+        TagStore<Type::Vehi::Vehi> m_Vehi{};
+        TagStore<Type::Weap::Weap> m_Weap{};
 
         // Calls the function with the store of every group.
         template <typename F>
         auto ForEach(F&& f) -> void
         {
-            f(Bipd);
-            f(Bloc);
-            f(Coll);
-            f(Ctrl);
-            f(Eqip);
-            f(Hlmt);
-            f(Jpt);
-            f(Mach);
-            f(Mode);
-            f(Phmo);
-            f(Proj);
-            f(Sbsp);
-            f(Scen);
-            f(Scnr);
-            f(Sddt);
-            f(Vehi);
-            f(Weap);
+            f(m_Bipd);
+            f(m_Bloc);
+            f(m_Coll);
+            f(m_Ctrl);
+            f(m_Eqip);
+            f(m_Hlmt);
+            f(m_Jpt);
+            f(m_Mach);
+            f(m_Mode);
+            f(m_Phmo);
+            f(m_Proj);
+            f(m_Sbsp);
+            f(m_Scen);
+            f(m_Scnr);
+            f(m_Sddt);
+            f(m_Vehi);
+            f(m_Weap);
         }
 
         // Ends the build. From now on the stores can only be read.

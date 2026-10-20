@@ -75,4 +75,7 @@ export namespace Platform::Render::Type
 
     using FrameHandler = std::function<void(const FrameContext&)>;
     using ShutdownCallback = std::function<void()>;
+
+    // Longest wait of a render hook for the frame in flight when it is removed.
+    inline constexpr std::chrono::milliseconds k_IdleTimeout{ 1000 };
 }

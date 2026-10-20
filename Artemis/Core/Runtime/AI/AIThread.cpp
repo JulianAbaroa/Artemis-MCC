@@ -8,7 +8,7 @@ using namespace std::chrono_literals;
 
 namespace
 {
-    using Status = Platform::Lifecycle::Type::Status;
+    using Platform::Lifecycle::Type::Status;
 
     using std::chrono::steady_clock;
     using std::chrono::nanoseconds;

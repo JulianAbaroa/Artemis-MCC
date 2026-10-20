@@ -1,7 +1,8 @@
 export module Tables.Interaction.Type:Alive;
 
-import Platform.Host.Type;
+import Common.Engine.Type;
 import Common.Math.Type;
+import Platform.Host.Type;
 import std;
 
 namespace
@@ -9,6 +10,7 @@ namespace
     using Common::Math::Type::Vec3;
 
     using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Tables::Interaction::Type::Alive
@@ -44,17 +46,17 @@ export namespace Tables::Interaction::Type::Alive
     struct AliveInteraction
     {
         // Player the interaction belongs to, or 0xFFFFFFFF when the local player has no view.
-        std::uint32_t PlayerHandle{ 0xFFFFFFFF };
+        std::uint32_t PlayerHandle{ k_NoHandle };
 
         // Objects.
         InteractionKind Kind{ InteractionKind::None };
         InteractionDetail InteractionSlotID{ InteractionDetail::None };
-        std::uint32_t TargetObjectHandle{ 0xFFFFFFFF };
+        std::uint32_t TargetObjectHandle{ k_NoHandle };
 
         // Players: Melee.
         // note: Does not cover the extended range of the sword.
         std::uint8_t IsMeleeAvailable{ 0x00 };
-        std::uint32_t MeleeTargetHandle{ 0xFFFFFFFF };
+        std::uint32_t MeleeTargetHandle{ k_NoHandle };
 
         // Players: Aim.
         // note: Follows the aim assist, so it can be set while the crosshair is not on the target.
@@ -62,10 +64,10 @@ export namespace Tables::Interaction::Type::Alive
 
         // Part of the body of the aim target, as the engine reports it.
         std::uint8_t ModelPart{ 0x00 };
-        std::uint32_t AimTargetHandle{ 0xFFFFFFFF };
+        std::uint32_t AimTargetHandle{ k_NoHandle };
 
         // note: Can hold the slot of an enemy player that is not directly under the crosshair.
-        std::uint32_t AimTargetSlotID{ 0xFFFFFFFF };
+        std::uint32_t AimTargetSlotID{ k_NoHandle };
         Vec3 AimHitLocalPosition{};
 
         static constexpr std::uint8_t k_MeleeAvailable{ 0x0E };
@@ -73,7 +75,7 @@ export namespace Tables::Interaction::Type::Alive
 
         static constexpr auto IsValidHandle(std::uint32_t handle) -> bool
         {
-            return handle != 0xFFFFFFFF && handle != 0;
+            return handle != k_NoHandle && handle != 0;
         }
 
         auto HasObjectTarget() const -> bool
@@ -95,5 +97,5 @@ export namespace Tables::Interaction::Type::Alive
     };
 
     // Interaction of every local player, by local index (split-screen input user).
-    using LocalInteractions = std::array<AliveInteraction, k_MaxLocalUsers>;
+    struct LocalInteractions : std::array<AliveInteraction, k_MaxLocalUsers> {};
 }

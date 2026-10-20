@@ -4,6 +4,7 @@ module;
 
 export module Viewer.Hud.System:Canvas;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Viewer.Camera.System;
 import Viewer.Options.State;
@@ -13,7 +14,7 @@ import std;
 
 namespace
 {
-    using Viewer::Hud::Type::k_NoLabelKey;
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Viewer::Hud::System
@@ -55,6 +56,9 @@ export namespace Viewer::Hud::System
         LabelCanvas(const LabelCanvas&) = delete;
         auto operator=(const LabelCanvas&) -> LabelCanvas& = delete;
 
+        // return: The options the canvas filters and scales with.
+        auto GetOptions() const -> const OptionsStore&;
+
         // Clears everything collected and reads the eye position of the camera.
         auto Reset() -> void;
 
@@ -65,7 +69,7 @@ export namespace Viewer::Hud::System
         // param key: Labels with the same key are merged into one, with a divider between them.
         // return: False if the label was dropped. That happens if it has no rows, is too far or is off screen.
         auto Add(const Vec3& world, std::vector<LabelRow> rows, ImU32 group, ImU32 team,
-            float priority = 0.0f, std::uint32_t key = k_NoLabelKey) -> bool;
+            float priority = 0.0f, std::uint32_t key = k_NoHandle) -> bool;
 
         // Adds an arrow between two world positions.
         // return: False if the arrow was dropped. That happens if it is too far or too short on screen.

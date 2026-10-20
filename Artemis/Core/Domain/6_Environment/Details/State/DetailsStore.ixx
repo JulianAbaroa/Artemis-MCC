@@ -1,14 +1,24 @@
 export module Environment.Details.State;
 
-import Common.State.System;
+import Common.State.Type;
 import Environment.Details.Type;
 import std;
 
 export namespace Environment::Details::State
 {
-    using VitalityDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::VitalityDetails>;
-    using ZoneDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::ZoneDetails>;
-    using TeleporterDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::TeleporterDetails>;
-    using LiftDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::LiftDetails>;
-    using BarrierDetailsStore = Common::State::System::Snapshot<Environment::Details::Type::BarrierDetails>;
+    class VitalityDetailsStore : public Common::State::Type::Snapshot<Environment::Details::Type::VitalityDetails>
+    {
+    };
+    class ZoneDetailsStore : public Common::State::Type::Snapshot<Environment::Details::Type::ZoneDetails>
+    {
+    };
+    class TeleporterDetailsStore : public Common::State::Type::Snapshot<Environment::Details::Type::TeleporterDetails>
+    {
+    };
+    class LiftDetailsStore : public Common::State::Type::Snapshot<Environment::Details::Type::LiftDetails>
+    {
+    };
+    class BarrierDetailsStore : public Common::State::Type::Snapshot<Environment::Details::Type::BarrierDetails>
+    {
+    };
 }

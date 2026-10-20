@@ -5,6 +5,7 @@ module;
 module Runtime.Thread;
 import :Main;
 
+import Platform.Hook.Type;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.Hook;
 import Platform.Input.Hook;
@@ -15,8 +16,10 @@ using namespace std::chrono_literals;
 
 namespace
 {
-    using Status = Platform::Lifecycle::Type::Status;
-    using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
+    using Platform::Lifecycle::Type::Status;
+    using Platform::Lifecycle::Hook::DestroySubsystemsDetour;
+
+    using Platform::Hook::Type::k_JumpRel32Opcode;
 }
 
 namespace Runtime::Thread
@@ -179,7 +182,7 @@ namespace Runtime::Thread
         if (ReadProcessMemory(GetCurrentProcess(), address,
             &firstByte, 1, &bytesRead))
         {
-            return firstByte == 0xE9;
+            return firstByte == k_JumpRel32Opcode;
         }
 
         return false;

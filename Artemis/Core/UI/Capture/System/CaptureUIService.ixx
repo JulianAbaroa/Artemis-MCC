@@ -21,7 +21,7 @@ export namespace UI::Capture::System
     // projectile collision test (A13).
     // With the engine option it also copies the engine globals of the thread context (A5: match, scores, clock, respawn).
     // note: A development tool (D72). The datum comes from the copy DatumService already makes each tick. The Havok lines are read live
-    // from the render thread, through the safe reader, at fixed RVAs of haloreach.dll (Ignore/Tareas/Transversal/A10_Colisiones.txt).
+    // from the render thread, through the safe reader, at fixed RVAs of haloreach.dll (A10).
     class CaptureUIService
     {
     private:

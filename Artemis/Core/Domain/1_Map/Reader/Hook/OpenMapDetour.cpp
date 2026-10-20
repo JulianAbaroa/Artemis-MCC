@@ -12,6 +12,8 @@ import std;
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
+
+    using Platform::Hook::System::k_DrainTimeout;
 }
 
 namespace Map::Reader::Hook
@@ -60,7 +62,7 @@ namespace Map::Reader::Hook
         s_Instance = this;
 
         void* functionAddress = reinterpret_cast<void*>(
-            m_AOBService.FindPattern(Signature::BlamOpenMap));
+            m_AOBService.FindPattern(Signature::k_BlamOpenMap));
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -79,7 +81,7 @@ namespace Map::Reader::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[OpenMapDetour]", m_LogsService);
 

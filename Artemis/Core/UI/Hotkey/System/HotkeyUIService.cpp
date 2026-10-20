@@ -13,13 +13,13 @@ namespace
     // Checks the auto repeat bit of a key message.
     auto IsRepeat(std::intptr_t lParam) -> bool
     {
-        return (lParam & 0x40000000) != 0;
+        return (HIWORD(lParam) & KF_REPEAT) != 0;
     }
 
     // Checks whether the Shift key is pressed.
     auto IsShiftDown() -> bool
     {
-        return (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+        return GetKeyState(VK_SHIFT) < 0;
     }
 }
 

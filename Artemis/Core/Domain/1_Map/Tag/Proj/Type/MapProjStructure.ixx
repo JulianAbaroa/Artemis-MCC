@@ -63,7 +63,7 @@ export namespace Map::Tag::Type::Proj::Structure
         MapStructure::Data::Reference DefaultFunction;  // 0x18  dataref.
         std::uint32_t ScaleBy;  // 0x2C  stringid.
         // -> Proj_Functions_InterpolationEntry[]
-        MapStructure::Tag::Block   Interpolation;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Interpolation;  // 0x30  tagblock.
         std::int32_t RuntimeInterpolatorIndex;  // 0x3C  int32.
     };
     static_assert(sizeof(Proj_FunctionsEntry) == 0x40, "Proj_FunctionsEntry size mismatch");
@@ -78,7 +78,7 @@ export namespace Map::Tag::Type::Proj::Structure
     // Entry size: 0x20
     struct Proj_AttachmentsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
         std::uint32_t Marker;  // 0x10  stringid.
         std::uint8_t ChangeColor;  // 0x14  enum8. [None=0x0, Primary=0x1, Secondary=0x2, Tertiary=0x3, Quaternary=0x4]
         std::uint8_t Flags;  // 0x15  flags8. [Force Always On=0, Effect Size Scale From Object Scale=1]
@@ -109,7 +109,7 @@ export namespace Map::Tag::Type::Proj::Structure
         std::uint32_t MarkerName;  // 0x4  stringid.
         float        Radius;  // 0x8  float32.
         // -> Proj_HullSurfaces_DragEntry[]
-        MapStructure::Tag::Block   Drag;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Drag;  // 0xC  tagblock.
     };
     static_assert(sizeof(Proj_HullSurfacesEntry) == 0x18, "Proj_HullSurfacesEntry size mismatch");
 
@@ -129,7 +129,7 @@ export namespace Map::Tag::Type::Proj::Structure
     // Entry size: 0x10
     struct Proj_WidgetsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
     };
     static_assert(sizeof(Proj_WidgetsEntry) == 0x10, "Proj_WidgetsEntry size mismatch");
 
@@ -158,9 +158,9 @@ export namespace Map::Tag::Type::Proj::Structure
     struct Proj_ChangeColorsEntry
     {
         // -> Proj_ChangeColors_InitialPermutationsEntry[]
-        MapStructure::Tag::Block   InitialPermutations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   InitialPermutations;  // 0x0  tagblock.
         // -> Proj_ChangeColors_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xC  tagblock.
     };
     static_assert(sizeof(Proj_ChangeColorsEntry) == 0x18, "Proj_ChangeColorsEntry size mismatch");
 
@@ -183,25 +183,25 @@ export namespace Map::Tag::Type::Proj::Structure
         float        NormalWeight;  // 0x1C  float32.
         std::uint32_t BoundaryCenterMarker;  // 0x20  stringid.
         std::uint32_t SpawnedObjectMarkerName;  // 0x24  stringid.
-        MapStructure::Tag::Reference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
         std::uint32_t BoundaryMaterialNotYetImplemented;  // 0x38  stringid.
-        MapStructure::Tag::Reference DefaultBoundaryStandardShader;  // 0x3C  tagref.
-        MapStructure::Tag::Reference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
-        MapStructure::Tag::Reference SphereStandardShader;  // 0x5C  tagref.
-        MapStructure::Tag::Reference SphereOpaqueShader;  // 0x6C  tagref.
-        MapStructure::Tag::Reference CylinderStandardShader;  // 0x7C  tagref.
-        MapStructure::Tag::Reference CylinderOpaqueShader;  // 0x8C  tagref.
-        MapStructure::Tag::Reference BoxStandardShader;  // 0x9C  tagref.
-        MapStructure::Tag::Reference BoxOpaqueShader;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryStandardShader;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
+        MapStructure::Tag::TagReference SphereStandardShader;  // 0x5C  tagref.
+        MapStructure::Tag::TagReference SphereOpaqueShader;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference CylinderStandardShader;  // 0x7C  tagref.
+        MapStructure::Tag::TagReference CylinderOpaqueShader;  // 0x8C  tagref.
+        MapStructure::Tag::TagReference BoxStandardShader;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference BoxOpaqueShader;  // 0xAC  tagref.
     };
     static_assert(sizeof(Proj_MultiplayerObjectEntry) == 0xBC, "Proj_MultiplayerObjectEntry size mismatch");
 
     // Entry size: 0x30
     struct Proj_SpawnEffectsEntry
     {
-        MapStructure::Tag::Reference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
-        MapStructure::Tag::Reference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
-        MapStructure::Tag::Reference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
+        MapStructure::Tag::TagReference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
+        MapStructure::Tag::TagReference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
+        MapStructure::Tag::TagReference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
     };
     static_assert(sizeof(Proj_SpawnEffectsEntry) == 0x30, "Proj_SpawnEffectsEntry size mismatch");
 
@@ -300,39 +300,39 @@ export namespace Map::Tag::Type::Proj::Structure
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
         MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GenericNameList;  // 0x40  tagref.
-        MapStructure::Tag::Reference GenericServiceTagList;  // 0x50  tagref.
+        MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
         std::uint32_t DefaultModelVariant;  // 0x60  stringid.
-        MapStructure::Tag::Reference Model;  // 0x64  tagref.
-        MapStructure::Tag::Reference CrateObject;  // 0x74  tagref.
-        MapStructure::Tag::Reference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
-        MapStructure::Tag::Reference BrittleCollisionDamage;  // 0x94  tagref.
+        MapStructure::Tag::TagReference Model;  // 0x64  tagref.
+        MapStructure::Tag::TagReference CrateObject;  // 0x74  tagref.
+        MapStructure::Tag::TagReference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
+        MapStructure::Tag::TagReference BrittleCollisionDamage;  // 0x94  tagref.
         // -> Proj_EarlyMoverOrientedBoundingBoxEntry[]
-        MapStructure::Tag::Block   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
-        MapStructure::Tag::Reference CreationEffect;  // 0xB0  tagref.
-        MapStructure::Tag::Reference MaterialEffects;  // 0xC0  tagref.
-        MapStructure::Tag::Reference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
+        MapStructure::Tag::TagBlock   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
+        MapStructure::Tag::TagReference CreationEffect;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference MaterialEffects;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
         // -> Proj_AiPropertiesEntry[]
-        MapStructure::Tag::Block   AiProperties;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   AiProperties;  // 0xE0  tagblock.
         // -> Proj_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xEC  tagblock.
         // -> Proj_RuntimeInterpolatorFunctionsEntry[]
-        MapStructure::Tag::Block   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
         // -> Proj_AttachmentsEntry[]
-        MapStructure::Tag::Block   Attachments;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   Attachments;  // 0x104  tagblock.
         // -> Proj_HullSurfacesEntry[]
-        MapStructure::Tag::Block   HullSurfaces;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   HullSurfaces;  // 0x110  tagblock.
         // -> Proj_JetwashEntry[]
-        MapStructure::Tag::Block   Jetwash;  // 0x11C  tagblock.
+        MapStructure::Tag::TagBlock   Jetwash;  // 0x11C  tagblock.
         // -> Proj_WidgetsEntry[]
-        MapStructure::Tag::Block   Widgets;  // 0x128  tagblock.
+        MapStructure::Tag::TagBlock   Widgets;  // 0x128  tagblock.
         // -> Proj_ChangeColorsEntry[]
-        MapStructure::Tag::Block   ChangeColors;  // 0x134  tagblock.
+        MapStructure::Tag::TagBlock   ChangeColors;  // 0x134  tagblock.
         // -> Proj_MultiplayerObjectEntry[]
-        MapStructure::Tag::Block   MultiplayerObject;  // 0x140  tagblock.
-        MapStructure::Tag::Reference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
+        MapStructure::Tag::TagBlock   MultiplayerObject;  // 0x140  tagblock.
+        MapStructure::Tag::TagReference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
         // -> Proj_SpawnEffectsEntry[]
-        MapStructure::Tag::Block   SpawnEffects;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnEffects;  // 0x15C  tagblock.
         std::uint32_t Flags_2;  // 0x168  flags32. [Oriented Along Velocity=0, AI Must Use Ballistic Aiming=1, Detonation Maximum Time If Attached=2, Damage Scales Based On Distance=3, Steering Adjusts Orientation=4, Don't Noise Up Steering=5, Can Track Behind Itself=6, Robotron Steering=7, Affected By Phantom Volumes=8, Bit 9=9, Notifies Target Units=10, Use Ground Detonation When Attached=11, AI Minor Tracking Threat=12, Dangerous When Inactive=13, AI Stimulus When Attached=14, Overpenetration Detonation=15, ...(32 total)]
         std::uint16_t DetonationTimerStarts;  // 0x16C  enum16. [Immediately=0x0, After First Bounce Off Floor=0x1, When At Rest=0x2, After First Bounce Off Any Surface=0x3]
         std::uint16_t ImpactNoise;  // 0x16E  enum16. [Silent=0x0, Quiet=0x1, Medium=0x2, Shout=0x3, Loud=0x4]
@@ -351,28 +351,28 @@ export namespace Map::Tag::Type::Proj::Structure
         std::uint16_t DetonationNoise;  // 0x1A0  enum16. [Silent=0x0, Quiet=0x1, Medium=0x2, Shout=0x3, Loud=0x4]
         std::int16_t SuperDetonationProjectileCount;  // 0x1A2  int16.
         float        SuperDetonationTime;  // 0x1A4  float32.
-        MapStructure::Tag::Reference DetonationStarted;  // 0x1A8  tagref. | effect
-        MapStructure::Tag::Reference AirborneDetonationEffect;  // 0x1B8  tagref.
-        MapStructure::Tag::Reference GroundDetonationEffect;  // 0x1C8  tagref.
-        MapStructure::Tag::Reference DetonationDamage;  // 0x1D8  tagref.
-        MapStructure::Tag::Reference AttachedDetonationDamage;  // 0x1E8  tagref.
-        MapStructure::Tag::Reference SuperDetonation;  // 0x1F8  tagref.
-        MapStructure::Tag::Reference SuperDetonationDamage;  // 0x208  tagref.
-        MapStructure::Tag::Reference DetonationSound;  // 0x218  tagref.
+        MapStructure::Tag::TagReference DetonationStarted;  // 0x1A8  tagref. | effect
+        MapStructure::Tag::TagReference AirborneDetonationEffect;  // 0x1B8  tagref.
+        MapStructure::Tag::TagReference GroundDetonationEffect;  // 0x1C8  tagref.
+        MapStructure::Tag::TagReference DetonationDamage;  // 0x1D8  tagref.
+        MapStructure::Tag::TagReference AttachedDetonationDamage;  // 0x1E8  tagref.
+        MapStructure::Tag::TagReference SuperDetonation;  // 0x1F8  tagref.
+        MapStructure::Tag::TagReference SuperDetonationDamage;  // 0x208  tagref.
+        MapStructure::Tag::TagReference DetonationSound;  // 0x218  tagref.
         std::uint8_t DamageReportingType;  // 0x228  enum8. [Guardians (Unknown)=0x0, Guardians (Default)=0x1, Guardians (Scripting)=0x2, Suicide=0x3, Magnum=0x4, Assault Rifle=0x5, DMR=0x6, Shotgun=0x7, Sniper Rifle=0x8, Rocket Launcher=0x9, Spartan Laser=0xA, Frag Grenade=0xB, Grenade Launcher=0xC, Plasma Pistol=0xD, Needler=0xE, Plasma Rifle=0xF, ...(82 total)]
         std::int8_t  Unknown;  // 0x229  int8.
         std::uint16_t SuperDetonationObjectTypes;  // 0x22A  flags16. [Biped=0, Vehicle=1, Weapon=2, Equipment=3, Terminal=4, Projectile=5, Scenery=6, Machine=7, Control=8, Sound Scenery=9, Crate=10, Creature=11, Giant=12, Effect Scenery=13]
-        MapStructure::Tag::Reference AttachedSuperDetonationDamage;  // 0x22C  tagref.
+        MapStructure::Tag::TagReference AttachedSuperDetonationDamage;  // 0x22C  tagref.
         float        MaterialEffectRadius;  // 0x23C  float32. | radius within we will generate material effects
-        MapStructure::Tag::Reference FlybySound;  // 0x240  tagref.
-        MapStructure::Tag::Reference FlybyDamageResponse;  // 0x250  tagref.
+        MapStructure::Tag::TagReference FlybySound;  // 0x240  tagref.
+        MapStructure::Tag::TagReference FlybyDamageResponse;  // 0x250  tagref.
         float        FlybyDamageResponseMaximumDistance;  // 0x260  float32.
-        MapStructure::Tag::Reference ImpactEffect;  // 0x264  tagref.
-        MapStructure::Tag::Reference ObjectImpactEffect;  // 0x274  tagref.
-        MapStructure::Tag::Reference ImpactDamage;  // 0x284  tagref.
+        MapStructure::Tag::TagReference ImpactEffect;  // 0x264  tagref.
+        MapStructure::Tag::TagReference ObjectImpactEffect;  // 0x274  tagref.
+        MapStructure::Tag::TagReference ImpactDamage;  // 0x284  tagref.
         float        BoardingDetonationTime;  // 0x294  float32.
-        MapStructure::Tag::Reference BoardingDetonationDamage;  // 0x298  tagref.
-        MapStructure::Tag::Reference BoardingAttachedDetonationDamage;  // 0x2A8  tagref.
+        MapStructure::Tag::TagReference BoardingDetonationDamage;  // 0x298  tagref.
+        MapStructure::Tag::TagReference BoardingAttachedDetonationDamage;  // 0x2A8  tagref.
         float        AirGravityScale;  // 0x2B8  float32. | the proportion of normal gravity applied to the projectile when in air.
         MapStructure::Primitive::RangeF AirDamageRange;  // 0x2BC  rangef. | the range over which damage is scaled when the projectile is in air.
         float        WaterGravityScale;  // 0x2C4  float32. | the proportion of normal gravity applied to the projectile when in water.
@@ -394,16 +394,16 @@ export namespace Map::Tag::Type::Proj::Structure
         float        GuidedProjectileOuterRangeErrorRadius;  // 0x30C  float32.
         float        AutoaimLeadingMaximumLeadTime;  // 0x310  float32.
         // -> Proj_OldMaterialResponsesEntry[]
-        MapStructure::Tag::Block   OldMaterialResponses;  // 0x314  tagblock.
+        MapStructure::Tag::TagBlock   OldMaterialResponses;  // 0x314  tagblock.
         // -> Proj_MaterialResponseEntry[]
-        MapStructure::Tag::Block   MaterialResponse;  // 0x320  tagblock.
+        MapStructure::Tag::TagBlock   MaterialResponse;  // 0x320  tagblock.
         // -> Proj_BruteGrenadeEntry[]
-        MapStructure::Tag::Block   BruteGrenade;  // 0x32C  tagblock.
+        MapStructure::Tag::TagBlock   BruteGrenade;  // 0x32C  tagblock.
         // -> Proj_FireBombGrenadeEntry[]
-        MapStructure::Tag::Block   FireBombGrenade;  // 0x338  tagblock.
+        MapStructure::Tag::TagBlock   FireBombGrenade;  // 0x338  tagblock.
         // -> Proj_ConicalSpreadEntry[]
-        MapStructure::Tag::Block   ConicalSpread;  // 0x344  tagblock.
-        MapStructure::Tag::Reference GroundedFrictionSettings;  // 0x350  tagref. | If not present, the default from global.globals is used.
+        MapStructure::Tag::TagBlock   ConicalSpread;  // 0x344  tagblock.
+        MapStructure::Tag::TagReference GroundedFrictionSettings;  // 0x350  tagref. | If not present, the default from global.globals is used.
     };
     static_assert(sizeof(ProjData) == 0x360, "ProjData size mismatch");
 

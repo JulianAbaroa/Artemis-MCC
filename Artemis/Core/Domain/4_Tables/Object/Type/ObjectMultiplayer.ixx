@@ -5,8 +5,8 @@ import Common.ZoneShape.Type;
 
 namespace
 {
-    using Team = Common::Team::Type::Team;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
+    using Common::Team::Type::Team;
+    using Common::ZoneShape::Type::ZoneShape;
 }
 
 export namespace Tables::Object::Type::Multiplayer

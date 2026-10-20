@@ -11,7 +11,7 @@ import std;
 
 export namespace Relations::Classifier::System
 {
-    // Classifies every live object: Kind, Function, Subtype, Group, Binding and the static capabilities (Ignore/Semantizacion/05).
+    // Classifies every live object: Kind, Function, Subtype, Group, Binding and the static capabilities (D19).
     // note: The function of a tag comes from the catalog, then the multiplayer object kind of the tag, then the default of the kind.
     // It depends on the tag only, so it is cached per tag for the whole map.
     class ClassifierService
@@ -22,8 +22,8 @@ export namespace Relations::Classifier::System
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
 
-        using AliveObject = Tables::Object::Type::Alive::Object;
-        using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
         using TagClassification = Relations::Classifier::Type::TagClassification;

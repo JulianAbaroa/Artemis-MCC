@@ -15,12 +15,16 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
     using Platform::Lifecycle::Type::Status;
+
+    using Platform::Hook::System::k_DrainTimeout;
 }
 
 namespace Platform::Lifecycle::Hook
 {
     auto __fastcall EngineInitializeDetour::HookedEngineInitialize() -> void
     {
+        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+
         s_OriginalFunction();
 
         s_Instance->m_LifecycleService.RaiseEngineInitialized();
@@ -37,7 +41,7 @@ namespace Platform::Lifecycle::Hook
         s_Instance = this;
 
         void* functionAddress = reinterpret_cast<void*>(
-            m_AOBService.FindPattern(Signature::EngineInitialize));
+            m_AOBService.FindPattern(Signature::k_EngineInitialize));
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -56,7 +60,13 @@ namespace Platform::Lifecycle::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
+        if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
+        {
+            m_LogsService.Message("[EngineInitializeDetour] WARNING:"
+                " A call was still running when the hook was removed.");
+        }
+        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[EngineInitializeDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

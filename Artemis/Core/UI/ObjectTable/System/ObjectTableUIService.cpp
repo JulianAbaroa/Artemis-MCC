@@ -6,12 +6,15 @@ module UI.ObjectTable.System;
 
 import Common.Semantic.Type;
 import Gui.Format.System;
+import Gui.Style.Type;
 import std;
 
 namespace
 {
-    using Physics = Common::Semantic::Type::Physics;
-    using HexFormater = Gui::Format::System::HexFormater;
+    using Common::Semantic::Type::Physics;
+    using Gui::Format::System::HexFormater;
+
+    using Gui::Style::Type::k_CardSpacing;
 
     // Minimum width of an object card.
     constexpr float k_CardMinWidth{ 250.0f };
@@ -20,7 +23,6 @@ namespace
 
     // Room the pin box takes before the tag name.
     constexpr float k_PinWidth{ 30.0f };
-    constexpr float k_CardSpacing{ 8.0f };
 
     // Returns the card width that fits the tag name.
     auto CardWidth(const std::string& tagName) -> float

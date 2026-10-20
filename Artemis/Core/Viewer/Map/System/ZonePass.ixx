@@ -52,7 +52,7 @@ export namespace Viewer::Map::System
         UINT m_Capacity{ 0 };
         UINT m_VertexCount{ 0 };
 
-        Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
+        Platform::Render::System::UploadGate m_Gate{};
 
         std::vector<Vertex> m_Scratch{};
     };

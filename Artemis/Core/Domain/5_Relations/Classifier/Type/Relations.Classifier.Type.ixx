@@ -1,5 +1,6 @@
 export module Relations.Classifier.Type;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Resolved.Definitions.Type;
 import std;
@@ -11,11 +12,13 @@ namespace
     using Common::Semantic::Type::Binding;
     using Common::Semantic::Type::Capability;
     using Resolved::Definitions::Type::Object::ObjectKind;
+
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Relations::Classifier::Type
 {
-    // Rule that decided the function of a tag (Ignore/Semantizacion/05, section 3).
+    // Rule that decided the function of a tag (D19).
     enum class Source : std::uint8_t
     {
         // No rule matched. The function is Unknown.
@@ -61,10 +64,22 @@ export namespace Relations::Classifier::Type
 
         // Link to the parent and the parent handle, or 0xFFFFFFFF when Free.
         ::Binding Binding{ ::Binding::Free };
-        std::uint32_t BoundTo{ 0xFFFFFFFF };
+        std::uint32_t BoundTo{ k_NoHandle };
 
         // Static capabilities of the tag, plus HasZone from the multiplayer block of the object (cylinder or box shape only).
         // note: Environment Entities adds the ones that depend on the object (IsDynamic, IsPickable, IsDestructible).
         Capability Capabilities{ Capability::None };
+    };
+
+    // Classification of every live object.
+    struct Classifieds : std::vector<Classified>
+    {
+        using vector::vector;
+    };
+
+    // Classification of every tag, by tag name.
+    struct TagClassifications : std::unordered_map<std::string, TagClassification>
+    {
+        using unordered_map::unordered_map;
     };
 }

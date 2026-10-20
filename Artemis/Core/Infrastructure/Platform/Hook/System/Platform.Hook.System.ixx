@@ -27,10 +27,6 @@ export namespace Platform::Hook::System
     auto RemoveDetour(void* functionAddress, const char* tag,
         LogsService& logsService) -> void;
 
-    // Disables and removes the hook. For hooks that don't track calls in flight.
-    auto UninstallDetour(void* functionAddress, const char* tag,
-        LogsService& logsService) -> void;
-
     // Overwrites bytes of the game code.
     // param address: First byte to overwrite.
     // param bytes: New bytes.
@@ -45,7 +41,8 @@ export namespace Platform::Hook::System
         const char* tag, LogsService& logsService) -> void;
 
     // Counts one call inside a hooked function for as long as it lives.
-    // note: Lets WaitForDrain know when the hook can be removed safely.
+    // note: Lets WaitForDrain know when the hook can be removed safely. A thread that entered the detour but has not built the scope
+    // yet is not counted: the window is a few instructions and every hook shares it.
     class InFlightScope
     {
     public:
@@ -68,6 +65,16 @@ export namespace Platform::Hook::System
     // return: The address a RIP-relative operand inside a signature match points to: the instruction that ends at nextOffset, plus
     // the rel32 or disp32 at relOffset.
     auto ResolveRelative(std::uintptr_t match, std::uintptr_t relOffset, std::uintptr_t nextOffset) -> std::uintptr_t;
+
+    // return: Address of the engine global that holds the TLS slot of the thread context, resolved from the match of
+    // Signature::k_TelemetryIdModifier, or nullptr if there is no match. The slot is read through it on every call.
+    // note: Reads the code bytes of the match. The caller guards it with __try if the match can be stale.
+    auto ResolveTlsIndex(std::uintptr_t match) -> const std::uint32_t*;
+
+    // return: The engine thread context of the current thread, or 0 if the slot is out of range or holds no context.
+    // note: The context lives in the thread local storage of the threads that run the engine (the game thread). Reads raw memory:
+    // the caller guards it with __try where the slot can be wrong.
+    auto ReadThreadContext(std::uint32_t tlsIndex) -> std::uintptr_t;
 
     // Longest wait for the calls in flight when a hook is removed.
     inline constexpr std::chrono::milliseconds k_DrainTimeout{ 500 };

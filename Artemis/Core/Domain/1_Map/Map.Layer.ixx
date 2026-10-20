@@ -78,13 +78,13 @@ export namespace Map
         auto operator=(const Layer&) -> Layer& = delete;
 
         // --- State ---
-        TagCatalog m_TagCatalog;
-        FileStore m_FileStore;
-        TagIndexStore m_TagIndexStore;
+        TagCatalog m_TagCatalog{};
+        FileStore m_FileStore{};
+        TagIndexStore m_TagIndexStore{};
 
         // --- System ---
-        FormulaService m_FormulaService;
-        DataStreamService m_DataStreamService;
+        FormulaService m_FormulaService{};
+        DataStreamService m_DataStreamService{};
         FileLocatorService m_FileLocatorService;
         HeaderService m_HeaderService;
         TagIndexService m_TagIndexService;

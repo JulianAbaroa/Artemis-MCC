@@ -1,5 +1,6 @@
 module Platform.Simulation.System;
 
+import Common.Engine.Type;
 import Platform.Memory.Type;
 import std;
 
@@ -23,7 +24,7 @@ namespace
     using Platform::Simulation::Type::UnitClientState;
 
     using Platform::Simulation::Type::k_MaxMachines;
-    using Platform::Simulation::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_MaxPlayers;
     using Platform::Simulation::Type::k_MaxPlayersPerMachine;
     using Platform::Simulation::Type::k_ObjectsSlot;
     using Platform::Simulation::Type::k_PlayersSlot;
@@ -49,7 +50,7 @@ namespace
     using Platform::Simulation::Type::k_PlayerConfiguration;
     using Platform::Simulation::Type::k_ConfigurationTeam;
     using Platform::Simulation::Type::k_MaxTeams;
-    using Platform::Simulation::Type::k_GamerTagLength;
+    using Common::Engine::Type::k_GamerTagLength;
     using Platform::Simulation::Type::k_MachineMask;
     using Platform::Simulation::Type::k_MachineIdentifiers;
     using Platform::Simulation::Type::k_LocalMachineIndex;
@@ -540,10 +541,10 @@ namespace Platform::Simulation::System
     {
         if (!m_IsResolved)
         {
-            m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::SetMachines));
-            m_ApplyPlayerAdded = reinterpret_cast<ApplyPlayerAddedFunction>(m_AOBService.FindPattern(Signature::ApplyPlayerAdded));
+            m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::k_SetMachines));
+            m_ApplyPlayerAdded = reinterpret_cast<ApplyPlayerAddedFunction>(m_AOBService.FindPattern(Signature::k_ApplyPlayerAdded));
             m_ApplyPlayerConfiguration = reinterpret_cast<ApplyPlayerConfigurationFunction>(
-                m_AOBService.FindPattern(Signature::ApplyPlayerConfiguration));
+                m_AOBService.FindPattern(Signature::k_ApplyPlayerConfiguration));
 
             m_IsResolved = m_SetMachines && m_ApplyPlayerAdded && m_ApplyPlayerConfiguration;
             if (!m_IsResolved)
@@ -556,9 +557,9 @@ namespace Platform::Simulation::System
         if (!m_IsInteractionResolved)
         {
             m_GatherNearbyInteractions = reinterpret_cast<GatherInteractionsFunction>(
-                m_AOBService.FindPattern(Signature::GatherNearbyInteractions));
+                m_AOBService.FindPattern(Signature::k_GatherNearbyInteractions));
             m_GatherAimedInteractions = reinterpret_cast<GatherInteractionsFunction>(
-                m_AOBService.FindPattern(Signature::GatherAimedInteractions));
+                m_AOBService.FindPattern(Signature::k_GatherAimedInteractions));
 
             m_IsInteractionResolved = m_GatherNearbyInteractions && m_GatherAimedInteractions;
             if (!m_IsInteractionResolved)
@@ -570,10 +571,10 @@ namespace Platform::Simulation::System
 
         if (!m_IsClientResolved)
         {
-            m_NextWeaponSlot = reinterpret_cast<UnitSelectorFunction>(m_AOBService.FindPattern(Signature::NextWeaponSlot));
-            m_NextGrenadeType = reinterpret_cast<UnitSelectorFunction>(m_AOBService.FindPattern(Signature::NextGrenadeType));
-            m_NextZoomLevel = reinterpret_cast<NextZoomLevelFunction>(m_AOBService.FindPattern(Signature::NextZoomLevel));
-            m_CanUnitZoom = reinterpret_cast<CanUnitZoomFunction>(m_AOBService.FindPattern(Signature::CanUnitZoom));
+            m_NextWeaponSlot = reinterpret_cast<UnitSelectorFunction>(m_AOBService.FindPattern(Signature::k_NextWeaponSlot));
+            m_NextGrenadeType = reinterpret_cast<UnitSelectorFunction>(m_AOBService.FindPattern(Signature::k_NextGrenadeType));
+            m_NextZoomLevel = reinterpret_cast<NextZoomLevelFunction>(m_AOBService.FindPattern(Signature::k_NextZoomLevel));
+            m_CanUnitZoom = reinterpret_cast<CanUnitZoomFunction>(m_AOBService.FindPattern(Signature::k_CanUnitZoom));
 
             m_IsClientResolved = m_NextWeaponSlot && m_NextGrenadeType && m_NextZoomLevel && m_CanUnitZoom;
             if (!m_IsClientResolved)

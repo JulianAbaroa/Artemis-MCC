@@ -22,5 +22,8 @@ export namespace Environment::Details::Type
         Vec3 PassDirection{};
     };
 
-    using BarrierDetails = std::unordered_map<std::uint32_t, BarrierDetail>;
+    struct BarrierDetails : std::unordered_map<std::uint32_t, BarrierDetail>
+    {
+        using unordered_map::unordered_map;
+    };
 }

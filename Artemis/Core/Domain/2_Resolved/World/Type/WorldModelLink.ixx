@@ -21,7 +21,7 @@ export namespace Resolved::World::Type::ModelLink
     };
 
     // Point of a render model, in the space of one of its nodes.
-    struct Anchor
+    struct ModelLinkAnchor
     {
         std::int32_t ModelNodeIndex{ -1 };
         Vec3 LocalOffset{};
@@ -50,11 +50,11 @@ export namespace Resolved::World::Type::ModelLink
         std::vector<std::int32_t> SectionToRegion{};
 
         // Anchors of the model targets, in the same order.
-        std::vector<Anchor> Targets{};
+        std::vector<ModelLinkAnchor> Targets{};
 
         // Anchor of each collision region.
-        std::vector<Anchor> RegionAnchors{};
+        std::vector<ModelLinkAnchor> RegionAnchors{};
 
-        Anchor ObjectCenter{};
+        ModelLinkAnchor ObjectCenter{};
     };
 }

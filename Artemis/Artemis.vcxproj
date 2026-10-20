@@ -177,11 +177,14 @@
     <ClCompile Include="Core\Common\Math\System\Common.Math.System.cpp" />
     <ClCompile Include="Core\Common\Math\System\Common.Math.System.ixx" />
     <ClCompile Include="Core\Common\Math\Type\Common.Math.Type.ixx" />
+    <ClCompile Include="Core\Common\Engine\Type\Common.Engine.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx" />
+    <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx" />
     <ClCompile Include="Core\Common\Reflect\Common.Reflect.Type.ixx" />
     <ClCompile Include="Core\Common\Reflect\System\Common.Reflect.System.ixx" />
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx" />
     <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx" />
-    <ClCompile Include="Core\Common\State\System\Common.State.System.ixx" />
+    <ClCompile Include="Core\Common\State\Type\Common.State.Type.ixx" />
     <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx" />
     <ClCompile Include="Core\Common\Semantic\Common.Semantic.Type.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx" />
@@ -584,7 +587,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\Shaders.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx" />

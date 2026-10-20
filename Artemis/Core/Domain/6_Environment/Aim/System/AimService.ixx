@@ -1,7 +1,7 @@
 export module Environment.Aim.System;
 
-import Service.Logs.System;
 import Common.Math.Type;
+import Service.Logs.System;
 import Resolved.World.Type;
 import Resolved.Vitality.Type;
 import Resolved.Vitality.State;
@@ -17,13 +17,13 @@ export namespace Environment::Aim::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using AliveObject = Tables::Object::Type::Alive::Object;
-        using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
-        using ResolvedVitality = Resolved::Vitality::Type::Vitality::Vitality;
-        using AimAnchor = Resolved::World::Type::ModelLink::Anchor;
+        using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
+        using ModelLinkAnchor = Resolved::World::Type::ModelLink::ModelLinkAnchor;
         using Aim = Environment::Aim::Type::Aim;
-        using Aims = std::unordered_map<std::uint32_t, Environment::Aim::Type::Aim>;
+        using Aims = Environment::Aim::Type::Aims;
         using SectionAim = Environment::Aim::Type::SectionAim;
 
         using LogsService = Service::Logs::System::LogsService;
@@ -51,9 +51,9 @@ export namespace Environment::Aim::System
         BoneMatricesStore& m_BoneMatricesStore;
         AimStore& m_AimStore;
 
-        static auto MakeAim(const AimAnchor& anchor, const AliveObject& object,
+        static auto MakeAim(const ModelLinkAnchor& anchor, const AliveObject& object,
             const BoneMatrixTable* bones) -> SectionAim;
 
-        static auto HasAnchors(const ResolvedVitality& layout) -> bool;
+        static auto HasAnchors(const Vitality& layout) -> bool;
     };
 }

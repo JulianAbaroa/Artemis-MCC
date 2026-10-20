@@ -5,8 +5,8 @@ module;
 export module Viewer.Map.System:RaycastPass;
 
 import Service.Logs.System;
-import Export.Tick.Type;
 import Platform.Render.System;
+import Export.Tick.Type;
 import Viewer.Map.Type;
 import std;
 
@@ -47,6 +47,6 @@ export namespace Viewer::Map::System
         UINT m_Capacity{ 0 };
         UINT m_VertexCount{ 0 };
 
-        Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
+        Platform::Render::System::UploadGate m_Gate{};
     };
 }

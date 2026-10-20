@@ -61,4 +61,7 @@ export namespace Viewer::Map::Type
         std::uint32_t FirstInstance{ 0 };
         std::uint32_t InstanceCount{ 0 };
     };
+
+    // Instances a pass buffer holds before its first growth.
+    inline constexpr UINT k_InitialCapacity{ 2048 };
 }

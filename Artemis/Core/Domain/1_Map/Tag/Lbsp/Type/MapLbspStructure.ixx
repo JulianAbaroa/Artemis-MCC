@@ -99,7 +99,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t DefinitionIndex;  // 0x2  int16.
         // -> Lbsp_Meshes_InstanceBuckets_InstancesEntry[]
-        MapStructure::Tag::Block   Instances;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Instances;  // 0x4  tagblock.
     };
     static_assert(sizeof(Lbsp_Meshes_InstanceBucketsEntry) == 0x10, "Lbsp_Meshes_InstanceBucketsEntry size mismatch");
 
@@ -114,9 +114,9 @@ export namespace Map::Tag::Type::Lbsp::Structure
     struct Lbsp_MeshesEntry
     {
         // -> Lbsp_Meshes_PartsEntry[]
-        MapStructure::Tag::Block   Parts;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Parts;  // 0x0  tagblock.
         // -> Lbsp_Meshes_SubpartsEntry[]
-        MapStructure::Tag::Block   Subparts;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Subparts;  // 0xC  tagblock.
         std::int16_t VertexBufferIndex1;  // 0x18  int16.
         std::int16_t VertexBufferIndex2;  // 0x1A  int16.
         std::int16_t VertexBufferIndex3;  // 0x1C  int16.
@@ -135,9 +135,9 @@ export namespace Map::Tag::Type::Lbsp::Structure
         std::uint8_t IndexBufferType;  // 0x32  enum8. [Point List=0x0, Line List=0x1, Line Strip=0x2, Triangle List=0x3, Triangle Fan=0x4, Triangle Strip=0x5]
         std::int8_t  Unknown;  // 0x33  int8.
         // -> Lbsp_Meshes_InstanceBucketsEntry[]
-        MapStructure::Tag::Block   InstanceBuckets;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   InstanceBuckets;  // 0x34  tagblock.
         // -> Lbsp_Meshes_WaterIndicesStartEntry[]
-        MapStructure::Tag::Block   WaterIndicesStart;  // 0x40  tagblock.
+        MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
         MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
     };
@@ -238,9 +238,9 @@ export namespace Map::Tag::Type::Lbsp::Structure
     struct Lbsp_PerMeshTemporary_RawWaterDataEntry
     {
         // -> Lbsp_PerMeshTemporary_RawWaterData_RawWaterIndicesEntry[]
-        MapStructure::Tag::Block   RawWaterIndices;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RawWaterIndices;  // 0x0  tagblock.
         // -> Lbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry[]
-        MapStructure::Tag::Block   RawWaterVertices;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   RawWaterVertices;  // 0xC  tagblock.
     };
     static_assert(sizeof(Lbsp_PerMeshTemporary_RawWaterDataEntry) == 0x18, "Lbsp_PerMeshTemporary_RawWaterDataEntry size mismatch");
 
@@ -270,17 +270,17 @@ export namespace Map::Tag::Type::Lbsp::Structure
     struct Lbsp_PerMeshTemporaryEntry
     {
         // -> Lbsp_PerMeshTemporary_RawVerticesEntry[]
-        MapStructure::Tag::Block   RawVertices;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RawVertices;  // 0x0  tagblock.
         // -> Lbsp_PerMeshTemporary_RawIndicesEntry[]
-        MapStructure::Tag::Block   RawIndices;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   RawIndices;  // 0xC  tagblock.
         // -> Lbsp_PerMeshTemporary_RawIndices32Entry[]
-        MapStructure::Tag::Block   RawIndices32;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   RawIndices32;  // 0x18  tagblock.
         // -> Lbsp_PerMeshTemporary_RawWaterDataEntry[]
-        MapStructure::Tag::Block   RawWaterData;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   RawWaterData;  // 0x24  tagblock.
         // -> Lbsp_PerMeshTemporary_RawImposterDataEntry[]
-        MapStructure::Tag::Block   RawImposterData;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   RawImposterData;  // 0x30  tagblock.
         // -> Lbsp_PerMeshTemporary_RawInstanceImposterVertsEntry[]
-        MapStructure::Tag::Block   RawInstanceImposterVerts;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   RawInstanceImposterVerts;  // 0x3C  tagblock.
         std::int32_t PerVertexLightingVertexSize;  // 0x48  int32.
         std::int16_t ParameterizedTextureWidth;  // 0x4C  int16.
         std::int16_t ParameterizedTextureHeight;  // 0x4E  int16.
@@ -299,7 +299,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     struct Lbsp_PerMeshNodeMapEntry
     {
         // -> Lbsp_PerMeshNodeMap_NodeMapEntry[]
-        MapStructure::Tag::Block   NodeMap;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   NodeMap;  // 0x0  tagblock.
     };
     static_assert(sizeof(Lbsp_PerMeshNodeMapEntry) == 0xC, "Lbsp_PerMeshNodeMapEntry size mismatch");
 
@@ -324,7 +324,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     struct Lbsp_PerMeshSubpartVisibilityEntry
     {
         // -> Lbsp_PerMeshSubpartVisibility_BoundingSphereEntry[]
-        MapStructure::Tag::Block   BoundingSphere;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   BoundingSphere;  // 0x0  tagblock.
     };
     static_assert(sizeof(Lbsp_PerMeshSubpartVisibilityEntry) == 0xC, "Lbsp_PerMeshSubpartVisibilityEntry size mismatch");
 
@@ -365,7 +365,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     struct Lbsp_UnknownEntry
     {
         // -> Lbsp_Unknown_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
     };
     static_assert(sizeof(Lbsp_UnknownEntry) == 0xC, "Lbsp_UnknownEntry size mismatch");
 
@@ -434,7 +434,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
         std::uint8_t  _pad_0x18[0x4];  // undefined.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
         // -> Lbsp_Unknown_3_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_9;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_9;  // 0x20  tagblock.
     };
     static_assert(sizeof(Lbsp_UnknownEntry_3) == 0x2C, "Lbsp_UnknownEntry_3 size mismatch");
 
@@ -458,39 +458,39 @@ export namespace Map::Tag::Type::Lbsp::Structure
         std::uint16_t Flags;  // 0x0  flags16. [Compressed=0, Xsynced Geometry=1, Relightmapped=2, Generate Fake Small Lightmaps=3, Generated From Match Data=4, Only A Checker Board=5, Surface To Triangle Mapping Pruned=6, Faked Lightmap Tag For Cache Build=7, Optimized For Less DP All=8, Floating Shadows Enabled=9, Atlas Unrefined Packing=10, Atlas Repacked=11, Using Simplified Irradiance Lighting=12, Disable Shadow Geometry=13, Disable Hybrid Refinement=14]
         std::int16_t BspReferenceIndex;  // 0x2  int16.
         std::int32_t ChecksumFromStructureBsp;  // 0x4  int32.
-        MapStructure::Tag::Reference Unknown;  // 0x8  tagref.
+        MapStructure::Tag::TagReference Unknown;  // 0x8  tagref.
         float        Brightness;  // 0x18  float32.
-        MapStructure::Tag::Reference PrimaryMap;  // 0x1C  tagref.
-        MapStructure::Tag::Reference IntensityMap;  // 0x2C  tagref.
+        MapStructure::Tag::TagReference PrimaryMap;  // 0x1C  tagref.
+        MapStructure::Tag::TagReference IntensityMap;  // 0x2C  tagref.
         std::uint8_t  _pad_0x3C[0x4];  // undefined.
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Lbsp_UnknownAEntry[]
-        MapStructure::Tag::Block   UnknownA;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   UnknownA;  // 0x48  tagblock.
         // -> Lbsp_UnknownBEntry[]
-        MapStructure::Tag::Block   UnknownB;  // 0x54  tagblock.
+        MapStructure::Tag::TagBlock   UnknownB;  // 0x54  tagblock.
         // -> Lbsp_InstancedGeometryEntry[]
-        MapStructure::Tag::Block   InstancedGeometry;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   InstancedGeometry;  // 0x60  tagblock.
         // -> Lbsp_ColorsEntry[]
-        MapStructure::Tag::Block   Colors;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   Colors;  // 0x6C  tagblock.
         std::uint32_t Flags_2;  // 0x78  flags32. [Processed=0, Available=1, Has Valid Budgets (Really)=2, Manual Resource Creation=3, Keep Raw Geometry=4, Don't Use Compressed Vertex Positions=5]
         // -> Lbsp_MeshesEntry[]
-        MapStructure::Tag::Block   Meshes;  // 0x7C  tagblock.
+        MapStructure::Tag::TagBlock   Meshes;  // 0x7C  tagblock.
         // -> Lbsp_CompressionInfoEntry[]
-        MapStructure::Tag::Block   CompressionInfo;  // 0x88  tagblock.
+        MapStructure::Tag::TagBlock   CompressionInfo;  // 0x88  tagblock.
         // -> Lbsp_PartSortingPositionEntry[]
-        MapStructure::Tag::Block   PartSortingPosition;  // 0x94  tagblock.
+        MapStructure::Tag::TagBlock   PartSortingPosition;  // 0x94  tagblock.
         // -> Lbsp_UserDataEntry[]
-        MapStructure::Tag::Block   UserData;  // 0xA0  tagblock.
+        MapStructure::Tag::TagBlock   UserData;  // 0xA0  tagblock.
         // -> Lbsp_PerMeshTemporaryEntry[]
-        MapStructure::Tag::Block   PerMeshTemporary;  // 0xAC  tagblock.
+        MapStructure::Tag::TagBlock   PerMeshTemporary;  // 0xAC  tagblock.
         std::uint8_t  _pad_0xB8[0x4];  // undefined.
         std::uint8_t  _pad_0xBC[0x4];  // undefined.
         std::uint8_t  _pad_0xC0[0x4];  // undefined.
         // -> Lbsp_PerMeshNodeMapEntry[]
-        MapStructure::Tag::Block   PerMeshNodeMap;  // 0xC4  tagblock.
+        MapStructure::Tag::TagBlock   PerMeshNodeMap;  // 0xC4  tagblock.
         // -> Lbsp_PerMeshSubpartVisibilityEntry[]
-        MapStructure::Tag::Block   PerMeshSubpartVisibility;  // 0xD0  tagblock.
+        MapStructure::Tag::TagBlock   PerMeshSubpartVisibility;  // 0xD0  tagblock.
         std::uint32_t BlockHere1;  // 0xDC  uint32.
         std::uint32_t BlockHere1_2;  // 0xE0  uint32.
         std::uint32_t BlockHere1_3;  // 0xE4  uint32.
@@ -498,26 +498,26 @@ export namespace Map::Tag::Type::Lbsp::Structure
         std::uint32_t BlockHere2_2;  // 0xEC  uint32.
         std::uint32_t BlockHere2_3;  // 0xF0  uint32.
         // -> Lbsp_PerInstanceLightmapTexcoordsEntry[]
-        MapStructure::Tag::Block   PerInstanceLightmapTexcoords;  // 0xF4  tagblock.
+        MapStructure::Tag::TagBlock   PerInstanceLightmapTexcoords;  // 0xF4  tagblock.
         // -> Lbsp_WaterBoundingBoxEntry[]
-        MapStructure::Tag::Block   WaterBoundingBox;  // 0x100  tagblock.
+        MapStructure::Tag::TagBlock   WaterBoundingBox;  // 0x100  tagblock.
         std::uint32_t ZoneAssetDatum;  // 0x10C  datum.
         std::int32_t UselessPadding;  // 0x110  int32.
         // -> Lbsp_ConstantBufferInteropEntry[]
-        MapStructure::Tag::Block   ConstantBufferInterop;  // 0x114  tagblock.
+        MapStructure::Tag::TagBlock   ConstantBufferInterop;  // 0x114  tagblock.
         // -> Lbsp_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_8;  // 0x120  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_8;  // 0x120  tagblock.
         // -> Lbsp_AirprobesEntry[]
-        MapStructure::Tag::Block   Airprobes;  // 0x12C  tagblock.
+        MapStructure::Tag::TagBlock   Airprobes;  // 0x12C  tagblock.
         // -> Lbsp_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_9;  // 0x138  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_9;  // 0x138  tagblock.
         // -> Lbsp_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_10;  // 0x144  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_10;  // 0x144  tagblock.
         std::uint8_t  _pad_0x150[0x4];  // undefined.
         std::uint8_t  _pad_0x154[0x4];  // undefined.
         std::uint8_t  _pad_0x158[0x4];  // undefined.
         // -> Lbsp_SelfTrackEntry[]
-        MapStructure::Tag::Block   SelfTrack;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SelfTrack;  // 0x15C  tagblock.
     };
     static_assert(sizeof(LbspData) == 0x168, "LbspData size mismatch");
 

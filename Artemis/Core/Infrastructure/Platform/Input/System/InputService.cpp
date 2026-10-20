@@ -4,6 +4,12 @@ module;
 
 module Platform.Input.System;
 
+namespace
+{
+    // Handle of the injected raw input. The value is arbitrary: the GetRawInputData hook serves the injected data.
+    constexpr std::uintptr_t k_SyntheticHandle{ 0xA1A1A1A1 };
+}
+
 namespace Platform::Input::System
 {
     auto InputService::OnWindowMessage(WindowMessageHandler handler, bool runFirst) -> void
@@ -75,12 +81,8 @@ namespace Platform::Input::System
 
         m_MouseDeltaStore.AddPendingDelta(deltaX, deltaY);
 
-        // The handle value is arbitrary. The GetRawInputData hook serves the injected data instead of reading it from the OS.
-        const auto k_SyntheticHandle = reinterpret_cast<HRAWINPUT>(
-            static_cast<std::uintptr_t>(0xA1A1A1A1));
-
         return PostMessageW(window, WM_INPUT, MAKEWPARAM(RIM_INPUT, 0),
-            reinterpret_cast<LPARAM>(k_SyntheticHandle)) != FALSE;
+            static_cast<LPARAM>(k_SyntheticHandle)) != FALSE;
     }
 
     auto InputService::SetActionRequested(InputAction action, bool requested) -> void

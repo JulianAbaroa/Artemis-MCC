@@ -46,14 +46,14 @@ export namespace Resolved
         auto operator=(const Layer&) -> Layer& = delete;
 
         // --- State ---
-        DefinitionsStore m_DefinitionsStore;
-        WorldStore m_WorldStore;
-        VitalityStore m_VitalityStore;
+        DefinitionsStore m_DefinitionsStore{};
+        WorldStore m_WorldStore{};
+        VitalityStore m_VitalityStore{};
 
         // --- System ---
         DefinitionsBuilder m_DefinitionsBuilder;
-        RegionStatesBuilder m_RegionStatesBuilder;
-        ModelLinkBuilder m_ModelLinkBuilder;
+        RegionStatesBuilder m_RegionStatesBuilder{};
+        ModelLinkBuilder m_ModelLinkBuilder{};
         Raycaster m_Raycaster{};
         WorldBuilder m_WorldBuilder;
         VitalityBuilder m_VitalityBuilder;

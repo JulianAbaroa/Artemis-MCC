@@ -77,15 +77,15 @@ namespace Resolved::World::System
         return sectionToRegion;
     }
 
-    auto ModelLinkBuilder::BuildTargets(const Hlmt& hlmt, const Mode* mode) const -> std::vector<Anchor>
+    auto ModelLinkBuilder::BuildTargets(const Hlmt& hlmt, const Mode* mode) const -> std::vector<ModelLinkAnchor>
     {
-        std::vector<Anchor> targets(hlmt.ModelTargets.size());
+        std::vector<ModelLinkAnchor> targets(hlmt.ModelTargets.size());
         if (!mode) return targets;
 
         for (std::size_t i = 0; i < hlmt.ModelTargets.size(); ++i)
         {
             const auto& target = hlmt.ModelTargets[i];
-            Anchor& out = targets[i];
+            ModelLinkAnchor& out = targets[i];
 
             out.Radius = target.Size;
             out.Relevance = target.TargetingRelevance;
@@ -116,12 +116,12 @@ namespace Resolved::World::System
     }
 
     auto ModelLinkBuilder::BuildRegionAnchors(const Coll* coll,
-        const std::vector<std::int32_t>& nodeMap) const -> std::vector<Anchor>
+        const std::vector<std::int32_t>& nodeMap) const -> std::vector<ModelLinkAnchor>
     {
-        std::vector<Anchor> anchors{};
+        std::vector<ModelLinkAnchor> anchors{};
         if (!coll) return anchors;
 
-        anchors.assign(coll->RegionNames.size(), Anchor{});
+        anchors.assign(coll->RegionNames.size(), ModelLinkAnchor{});
 
         for (std::size_t region = 0; region < coll->RegionNames.size(); ++region)
         {
@@ -184,7 +184,7 @@ namespace Resolved::World::System
             if (bestNode < 0) continue;
 
             const NodeBounds& bounds = perNode[bestNode];
-            Anchor& out = anchors[region];
+            ModelLinkAnchor& out = anchors[region];
             out.ModelNodeIndex = nodeMap[bestNode];
             out.LocalOffset.X = (bounds.MinX + bounds.MaxX) * 0.5f;
             out.LocalOffset.Y = (bounds.MinY + bounds.MaxY) * 0.5f;
@@ -196,9 +196,9 @@ namespace Resolved::World::System
         return anchors;
     }
 
-    auto ModelLinkBuilder::BuildObjectCenter(const Mode* mode) const -> Anchor
+    auto ModelLinkBuilder::BuildObjectCenter(const Mode* mode) const -> ModelLinkAnchor
     {
-        Anchor out{};
+        ModelLinkAnchor out{};
         if (!mode) return out;
 
         const auto& bounds = mode->ModelBounds;

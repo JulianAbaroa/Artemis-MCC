@@ -4,9 +4,11 @@ module;
 
 module UI.Simulation.System;
 
+import Common.Engine.Type;
 import Platform.Lifecycle.Type;
 import Platform.Host.Type;
 import Platform.Simulation.Type;
+import Gui.Style.Type;
 import std;
 
 namespace
@@ -27,7 +29,7 @@ namespace
 
     using Platform::Host::Type::k_MaxLocalUsers;
     using Platform::Simulation::Type::k_MaxMachines;
-    using Platform::Simulation::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_MaxPlayers;
     using Platform::Simulation::Type::k_MaxTeams;
     using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Input::Type::k_PlayerActionSize;
@@ -44,6 +46,9 @@ namespace
     using UI::Simulation::Type::k_LocalPlayerActionCount;
     using UI::Simulation::Type::k_LocalPlayerActionLabels;
     using UI::Simulation::Type::k_RecordNameSize;
+    using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_HandleIndexMask;
+    using Gui::Style::Type::k_BytesPerRow;
 
     // Width of the name field and of the list of the match config section.
     constexpr float k_MatchConfigFieldWidth{ 260.0f };
@@ -54,7 +59,7 @@ namespace
     constexpr std::array<float, 7> k_TimeScalePresets{ 1.0f, 2.0f, 5.0f, 10.0f, 20.0f, 50.0f, 100.0f };
 
     // Virtual-key code of W. The engine button W (32) reads it through its key table.
-    constexpr std::size_t k_ForwardKey{ 0x57 };
+    constexpr std::size_t k_ForwardKey{ 'W' };
 
     // Mouse movement delivered on every frame by the keyboard and mouse test, in mouse counts.
     constexpr float k_TestMouseDelta{ 1.0f };
@@ -63,18 +68,9 @@ namespace
     constexpr std::int16_t k_StickForward{ 32767 };
     constexpr std::int16_t k_TestStickTurn{ 12000 };
 
-    // Handle of no biped.
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
-
-    // Mask of the table index inside a player handle.
-    constexpr std::uint32_t k_IndexMask{ 0xFFFF };
-
     // Bits of the buttons of an action, and bits drawn per row.
     constexpr std::size_t k_ButtonBits{ 64 };
     constexpr std::size_t k_ButtonBitsPerRow{ 16 };
-
-    // Bytes of the action drawn per row.
-    constexpr std::size_t k_BytesPerRow{ 16 };
 
     // Colors of a button bit held this tick, held since the last clear, and of a byte that changed since the last clear.
     constexpr ImVec4 k_HeldColor{ 0.3f, 1.0f, 0.3f, 1.0f };
@@ -473,7 +469,7 @@ namespace UI::Simulation::System
             return;
         }
 
-        const std::size_t index{ engine->Handle & k_IndexMask };
+        const std::size_t index{ engine->Handle & k_HandleIndexMask };
         if (index >= k_MaxActionPlayers) return;
 
         PlayerActions actions{};

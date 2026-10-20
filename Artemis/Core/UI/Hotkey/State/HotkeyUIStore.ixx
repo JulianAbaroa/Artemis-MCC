@@ -13,16 +13,6 @@ export namespace UI::Hotkey::State
         using Scope = UI::Hotkey::Type::Scope;
         using Binding = UI::Hotkey::Type::Binding;
 
-        static constexpr std::uint32_t k_VkTab{ 0x09 };
-        static constexpr std::uint32_t k_VkOem5{ 0xDC };
-        static constexpr std::uint32_t k_VkF2{ 0x71 };
-        static constexpr std::uint32_t k_VkF3{ 0x72 };
-        static constexpr std::uint32_t k_VkF4{ 0x73 };
-        static constexpr std::uint32_t k_VkF6{ 0x75 };
-        static constexpr std::uint32_t k_VkF7{ 0x76 };
-        static constexpr std::uint32_t k_VkLeft{ 0x25 };
-        static constexpr std::uint32_t k_VkUp{ 0x26 };
-
     public:
         HotkeyUIStore() = default;
         ~HotkeyUIStore() = default;
@@ -38,6 +28,16 @@ export namespace UI::Hotkey::State
         auto Find(std::uint32_t virtualKey, bool isShiftDown) const -> const Binding*;
 
     private:
+        static constexpr std::uint32_t k_VkTab{ 0x09 };
+        static constexpr std::uint32_t k_VkOem5{ 0xDC };
+        static constexpr std::uint32_t k_VkF2{ 0x71 };
+        static constexpr std::uint32_t k_VkF3{ 0x72 };
+        static constexpr std::uint32_t k_VkF4{ 0x73 };
+        static constexpr std::uint32_t k_VkF6{ 0x75 };
+        static constexpr std::uint32_t k_VkF7{ 0x76 };
+        static constexpr std::uint32_t k_VkLeft{ 0x25 };
+        static constexpr std::uint32_t k_VkUp{ 0x26 };
+
         const std::array<Binding, 16> m_Bindings
         { {
             { Action::ToggleLauncher, Scope::UI, k_VkF2, false,

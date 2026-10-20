@@ -5,9 +5,16 @@ module;
 
 module Platform.Hook.System;
 
+import Platform.Hook.Type;
+
 namespace
 {
     using Service::Logs::System::LogsService;
+
+    using Platform::Hook::Type::k_TlsArrayOffset;
+    using Platform::Hook::Type::k_MaxTlsIndex;
+    using Platform::Hook::Type::k_TlsIndexRelOffset;
+    using Platform::Hook::Type::k_TlsIndexNextOffset;
 
     // Copies bytes over code, restoring the page protection after.
     // return: False if the page cannot be made writable.
@@ -69,13 +76,6 @@ namespace Platform::Hook::System
         logsService.Message("{} INFO: Hook uninstalled.", tag);
     }
 
-    auto UninstallDetour(void* functionAddress, const char* tag,
-        LogsService& logsService) -> void
-    {
-        DisableDetour(functionAddress);
-        RemoveDetour(functionAddress, tag, logsService);
-    }
-
     auto WritePatch(void* address, std::span<const std::uint8_t> bytes,
         std::vector<std::uint8_t>& outOriginal, const char* tag, LogsService& logsService) -> bool
     {
@@ -119,6 +119,21 @@ namespace Platform::Hook::System
         std::memcpy(&relative, reinterpret_cast<const void*>(match + relOffset), sizeof(relative));
 
         return static_cast<std::uintptr_t>(static_cast<std::intptr_t>(match + nextOffset) + relative);
+    }
+
+    auto ResolveTlsIndex(std::uintptr_t match) -> const std::uint32_t*
+    {
+        if (match == 0) return nullptr;
+
+        return reinterpret_cast<const std::uint32_t*>(ResolveRelative(match, k_TlsIndexRelOffset, k_TlsIndexNextOffset));
+    }
+
+    auto ReadThreadContext(std::uint32_t tlsIndex) -> std::uintptr_t
+    {
+        if (tlsIndex > k_MaxTlsIndex) return 0;
+
+        const auto tlsArray{ static_cast<std::uintptr_t>(__readgsqword(static_cast<unsigned long>(k_TlsArrayOffset))) };
+        return *reinterpret_cast<const std::uintptr_t*>(tlsArray + (tlsIndex * sizeof(std::uintptr_t)));
     }
 
     auto WaitForDrain(std::atomic<int>& counter,

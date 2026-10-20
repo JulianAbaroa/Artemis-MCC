@@ -9,10 +9,10 @@ export namespace Gui::Format::System
     {
     private:
         using WeaponAction = Tables::Object::Type::Weapon::WeaponAction;
-        using VehicleKind = Tables::Object::Type::Vehicle::Kind;
+        using VehicleKind = Tables::Object::Type::Vehicle::VehicleKind;
         using ZoomLevel = Tables::Object::Type::Biped::ZoomLevel;
-        using CrateKind = Tables::Object::Type::Crate::Kind;
-        using SceneryKind = Tables::Object::Type::Scenery::Kind;
+        using CrateKind = Tables::Object::Type::Crate::CrateKind;
+        using SceneryKind = Tables::Object::Type::Scenery::SceneryKind;
 
     public:
         ObjectFormater() = default;

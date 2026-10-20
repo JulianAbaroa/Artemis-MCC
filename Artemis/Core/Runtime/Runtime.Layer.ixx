@@ -57,7 +57,7 @@ export namespace Runtime
         AIThread m_AI;
         InputThread m_Input;
 
-        std::jthread m_AIThread;
-        std::jthread m_InputThread;
+        std::jthread m_AIThread{};
+        std::jthread m_InputThread{};
     };
 }

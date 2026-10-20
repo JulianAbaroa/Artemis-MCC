@@ -44,6 +44,7 @@ export namespace Platform::Lifecycle::Hook
         LifecycleService& m_LifecycleService;
 
         static inline EngineInitializeDetour* s_Instance{ nullptr };
+        static inline std::atomic<int> s_InFlight{ 0 };
         static inline EngineInitializeFunction s_OriginalFunction{ nullptr };
 
         std::atomic<void*> m_FunctionAddress{ nullptr };

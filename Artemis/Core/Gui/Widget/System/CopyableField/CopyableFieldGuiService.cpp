@@ -5,7 +5,13 @@ module;
 module Gui.Widget.System;
 import :CopyableField;
 
+import Gui.Style.Type;
 import std;
+
+namespace
+{
+    using Gui::Style::Type::k_AnimationDuration;
+}
 
 namespace Gui::Widget::System
 {

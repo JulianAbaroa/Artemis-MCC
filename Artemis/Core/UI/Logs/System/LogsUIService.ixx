@@ -20,8 +20,6 @@ export namespace UI::Logs::System
         using LogsStore = Service::Logs::State::LogsStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
-        static constexpr float k_AnimationDuration{ 0.8f };
-
     public:
         LogsUIService(SettingsStore& settingsStore, LogsStore& logsStore,
             LogsUIStore& logsUIStore) :
@@ -36,6 +34,8 @@ export namespace UI::Logs::System
         auto Draw() -> void;
 
     private:
+        static constexpr float k_AnimationDuration{ 0.8f };
+
         SettingsStore& m_SettingsStore;
         LogsStore& m_LogsStore;
         LogsUIStore& m_LogsUIStore;

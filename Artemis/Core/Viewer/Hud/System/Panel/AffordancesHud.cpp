@@ -5,38 +5,40 @@ module;
 module Viewer.Hud.System;
 import :Affordances;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Tables.Object.Type;
 import Egocentric.Affordance.Type;
 import Gui.Color.System;
 import Gui.Format.System;
+import Gui.Style.Type;
 import Gui.Widget.System;
 import std;
 
 namespace
 {
-    using Tick = Export::Tick::Type::Tick;
-    using ObjectTable = Export::Tick::Type::ObjectTable;
-    using AliveObject = Export::Tick::Type::AliveObject;
-    using AliveInteraction = Export::Tick::Type::AliveInteraction;
-    using Affordance = Export::Tick::Type::Affordance;
-    using Activation = Egocentric::Affordance::Type::Activation;
-    using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
-    using Profile = Tables::Object::Type::Profile::Profile;
+    using Export::Tick::Type::Tick;
+    using Export::Tick::Type::ObjectTable;
+    using Export::Tick::Type::AliveObject;
+    using Export::Tick::Type::AliveInteraction;
+    using Export::Tick::Type::Affordance;
+    using Egocentric::Affordance::Type::AffordanceActivation;
+    using Egocentric::Affordance::Type::SeatStatus;
+    using Tables::Object::Type::Profile::Profile;
 
     using Common::Semantic::Type::GroupOf;
     using Common::Semantic::Type::NameOf;
 
-    using GroupToColor = Gui::Color::System::GroupToColor;
-    using AffordanceFormater = Gui::Format::System::AffordanceFormater;
-    using InteractionFormater = Gui::Format::System::InteractionFormater;
+    using Gui::Color::System::GroupToColor;
+    using Gui::Format::System::AffordanceFormater;
+    using Gui::Format::System::InteractionFormater;
 
-    using PanelGuiService = Gui::Widget::System::PanelGuiService;
+    using Gui::Widget::System::PanelGuiService;
 
-    constexpr std::uint32_t k_InvalidHandle{ 0xFFFFFFFF };
+    using Common::Engine::Type::k_NoHandle;
+    using Gui::Style::Type::k_SectionColor;
 
     constexpr ImVec4 k_PositiveColor{ 0.4f, 1.0f, 0.4f, 1.0f };
-    const ImVec4 k_SectionColor{ 0.8f, 0.8f, 0.8f, 1.0f };
 
     auto FindObject(const ObjectTable* objects, std::uint32_t handle) -> const AliveObject*
     {
@@ -163,7 +165,7 @@ namespace
             else                 ImGui::TextColored({ 0.4f, 1.f, 0.4f, 1.f }, "Free");
 
             ImGui::TableSetColumnIndex(3);
-            if (seat.OccupyingBipedHandle == k_InvalidHandle) ImGui::TextDisabled("-");
+            if (seat.OccupyingBipedHandle == k_NoHandle) ImGui::TextDisabled("-");
             else ImGui::Text("0x%08X", seat.OccupyingBipedHandle);
 
             ImGui::TableSetColumnIndex(4);
@@ -187,7 +189,7 @@ namespace
         const std::string function{ NameOf(item.Function) };
         ImGui::Text("Function: %s", function.c_str());
 
-        if (object && object->ParentHandle != k_InvalidHandle)
+        if (object && object->ParentHandle != k_NoHandle)
         {
             ImGui::Text("Parent: 0x%08X", object->ParentHandle);
         }
@@ -197,7 +199,7 @@ namespace
 
         if (item.IsEngineSelected)
             ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f }, "[ ACTION READY - ENGINE SELECTED ]");
-        else if (item.Activation == Activation::None)
+        else if (item.Activation == AffordanceActivation::None)
             ImGui::TextColored({ 0.6f, 0.6f, 0.6f, 1.f }, "[ WORLD ENTITY - NO DIRECT INTERACTION ]");
         else
             ImGui::TextColored({ 1.f, 0.4f, 0.4f, 1.f }, "[ OUT OF RANGE ]");

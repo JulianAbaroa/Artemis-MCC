@@ -24,8 +24,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<RegionTransition>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Region", &RegionTransition::Region),
             MakeField("NewState", &RegionTransition::NewState),
         };
@@ -34,8 +33,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<InstantResponse>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Flags", &InstantResponse::Flags),
             MakeField("DamageThreshold", &InstantResponse::DamageThreshold),
             MakeField("RegionTransitions", &InstantResponse::RegionTransitions),
@@ -45,8 +43,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<DamageTransfer>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Flags", &DamageTransfer::Flags),
             MakeField("TransferAmount", &DamageTransfer::TransferAmount),
             MakeField("DamageSectionIndex", &DamageTransfer::DamageSectionIndex),
@@ -56,8 +53,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<DamageSection>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &DamageSection::Name),
             MakeField("Flags", &DamageSection::Flags),
             MakeField("VitalityPercentage", &DamageSection::VitalityPercentage),
@@ -72,8 +68,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<ModelTarget>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("MarkerName", &ModelTarget::MarkerName),
             MakeField("Size", &ModelTarget::Size),
             MakeField("ConeAngle", &ModelTarget::ConeAngle),
@@ -87,8 +82,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<CollisionRegion>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &CollisionRegion::Name),
             MakeField("CollisionRegionIndex", &CollisionRegion::CollisionRegionIndex),
             MakeField("PhysicsRegionIndex", &CollisionRegion::PhysicsRegionIndex),
@@ -98,8 +92,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<VariantState>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("PermutationName", &VariantState::PermutationName),
             MakeField("State", &VariantState::State),
         };
@@ -108,8 +101,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<VariantPermutation>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("States", &VariantPermutation::States),
         };
     };
@@ -117,8 +109,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<VariantRegion>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("RegionName", &VariantRegion::RegionName),
             MakeField("Permutations", &VariantRegion::Permutations),
         };
@@ -127,8 +118,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Variant>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Regions", &Variant::Regions),
         };
     };
@@ -136,8 +126,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Hlmt>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Hlmt::TagName),
             MakeField("RenderModelTagName", &Hlmt::RenderModelTagName),
             MakeField("CollisionModelTagName", &Hlmt::CollisionModelTagName),

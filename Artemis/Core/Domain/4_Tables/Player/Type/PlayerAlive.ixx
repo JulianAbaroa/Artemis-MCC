@@ -53,5 +53,8 @@ export namespace Tables::Player::Type::Alive
     };
 
     // Players by handle.
-    using PlayerTable = std::unordered_map<std::uint32_t, AlivePlayer>;
+    struct PlayerTable : std::unordered_map<std::uint32_t, AlivePlayer>
+    {
+        using unordered_map::unordered_map;
+    };
 }

@@ -66,6 +66,7 @@ export namespace Export::Tick::Hook
         LifecycleStore& m_LifecycleStore;
 
         static inline ExecuteGameFrameDetour* s_Instance{ nullptr };
+        static inline std::atomic<int> s_InFlight{ 0 };
         static inline ExecuteGameFrameFunction s_OriginalFunction{ nullptr };
 
         std::atomic<void*> m_FunctionAddress{ nullptr };

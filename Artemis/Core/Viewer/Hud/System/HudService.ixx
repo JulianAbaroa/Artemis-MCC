@@ -13,6 +13,7 @@ export import :InteractionLabels;
 export import :FixtureLabels;
 export import :Labels;
 
+import Common.Engine.Type;
 import Service.Telemetry.State;
 import Platform.Render.State;
 import Environment.Collidable.State;
@@ -24,7 +25,7 @@ import std;
 
 namespace
 {
-    using Viewer::Selection::State::k_NoSelection;
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Viewer::Hud::System
@@ -66,7 +67,7 @@ export namespace Viewer::Hud::System
         OverlayStore& m_OverlayStore;
         SelectionStore& m_SelectionStore;
 
-        std::uint32_t m_LastHandle{ k_NoSelection };
+        std::uint32_t m_LastHandle{ k_NoHandle };
 
         auto DrawNavBar() -> void;
         auto DrawDefault() -> void;

@@ -5,6 +5,7 @@ module;
 
 export module Platform.Render.System:GpuPipeline;
 
+import Common.Math.Type;
 import Service.Logs.System;
 import Platform.Render.Type;
 import std;
@@ -27,7 +28,7 @@ export namespace Platform::Render::System
         using VertexLayout = Platform::Render::Type::VertexLayout;
         using SurfaceMode = Platform::Render::Type::SurfaceMode;
 
-        using Matrix = std::array<float, 16>;
+        using Matrix = Common::Math::Type::Matrix;
 
     public:
         // Strides of the vertex buffers.

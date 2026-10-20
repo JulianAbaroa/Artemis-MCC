@@ -5,6 +5,7 @@ module;
 module UI.TickTrace.System;
 
 import Common.Math.Type;
+import Datum.Object.Type;
 import Tables.Object.Type;
 import std;
 
@@ -21,18 +22,15 @@ namespace
     using UI::TickTrace::Type::TickRecord;
     using UI::TickTrace::Type::ObjectRecord;
 
+    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
+    using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
+    using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
+    using Datum::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
+    using Datum::Object::Type::Constant::k_ThreadContextEventGlobalsOffset;
+    using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+
     // Subfolder of the storage folder that holds the traces.
     constexpr std::string_view k_TraceFolder{ "TickTraces" };
-
-    // Time globals: *(thread context + 0xA0) (Indice_Reverse sec. 3, D105).
-    constexpr std::uintptr_t k_TimeGlobalsOffset{ 0xA0 };
-    constexpr std::uintptr_t k_EngineTickOffset{ 0x0C };
-    constexpr std::uintptr_t k_TimeScaleOffset{ 0x10 };
-    constexpr std::uintptr_t k_TickFractionOffset{ 0x14 };
-
-    // Events and statistics: *(thread context + 0x98), last sequence of the event ring at +0x10B30 (D104).
-    constexpr std::uintptr_t k_EventGlobalsOffset{ 0x98 };
-    constexpr std::uintptr_t k_EventSequenceOffset{ 0x10B30 };
 
     // TickRecord::Flags bit set when the clock fields are valid.
     constexpr std::uint32_t k_ClockValidFlag{ 1 };
@@ -252,15 +250,15 @@ namespace UI::TickTrace::System
         const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
         if (threadContext == 0) return clock;
 
-        const auto timeGlobals{ ReadValue<std::uintptr_t>(threadContext + k_TimeGlobalsOffset) };
+        const auto timeGlobals{ ReadValue<std::uintptr_t>(threadContext + k_ThreadContextTimeGlobalsOffset) };
         if (timeGlobals == 0) return clock;
 
-        clock.EngineTick = ReadValue<std::uint32_t>(timeGlobals + k_EngineTickOffset);
-        clock.TimeScale = ReadValue<float>(timeGlobals + k_TimeScaleOffset);
-        clock.TickFraction = ReadValue<float>(timeGlobals + k_TickFractionOffset);
+        clock.EngineTick = ReadValue<std::uint32_t>(timeGlobals + k_TimeGlobalsEngineTickOffset);
+        clock.TimeScale = ReadValue<float>(timeGlobals + k_TimeGlobalsScaleOffset);
+        clock.TickFraction = ReadValue<float>(timeGlobals + k_TimeGlobalsTickFractionOffset);
 
-        const auto eventGlobals{ ReadValue<std::uintptr_t>(threadContext + k_EventGlobalsOffset) };
-        if (eventGlobals != 0) clock.EventSequence = ReadValue<std::uint32_t>(eventGlobals + k_EventSequenceOffset);
+        const auto eventGlobals{ ReadValue<std::uintptr_t>(threadContext + k_ThreadContextEventGlobalsOffset) };
+        if (eventGlobals != 0) clock.EventSequence = ReadValue<std::uint32_t>(eventGlobals + k_EventGlobalsSequenceOffset);
 
         clock.IsValid = true;
         return clock;

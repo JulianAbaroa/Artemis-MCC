@@ -63,7 +63,7 @@ export namespace Map::Tag::Type::Weap::Structure
         MapStructure::Data::Reference DefaultFunction;  // 0x18  dataref.
         std::uint32_t ScaleBy;  // 0x2C  stringid.
         // -> Weap_Functions_InterpolationEntry[]
-        MapStructure::Tag::Block   Interpolation;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Interpolation;  // 0x30  tagblock.
         std::int32_t RuntimeInterpolatorIndex;  // 0x3C  int32.
     };
     static_assert(sizeof(Weap_FunctionsEntry) == 0x40, "Weap_FunctionsEntry size mismatch");
@@ -78,7 +78,7 @@ export namespace Map::Tag::Type::Weap::Structure
     // Entry size: 0x20
     struct Weap_AttachmentsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
         std::uint32_t Marker;  // 0x10  stringid.
         std::uint8_t ChangeColor;  // 0x14  enum8. [None=0x0, Primary=0x1, Secondary=0x2, Tertiary=0x3, Quaternary=0x4]
         std::uint8_t Flags;  // 0x15  flags8. [Force Always On=0, Effect Size Scale From Object Scale=1]
@@ -109,7 +109,7 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint32_t MarkerName;  // 0x4  stringid.
         float        Radius;  // 0x8  float32.
         // -> Weap_HullSurfaces_DragEntry[]
-        MapStructure::Tag::Block   Drag;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Drag;  // 0xC  tagblock.
     };
     static_assert(sizeof(Weap_HullSurfacesEntry) == 0x18, "Weap_HullSurfacesEntry size mismatch");
 
@@ -129,7 +129,7 @@ export namespace Map::Tag::Type::Weap::Structure
     // Entry size: 0x10
     struct Weap_WidgetsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
     };
     static_assert(sizeof(Weap_WidgetsEntry) == 0x10, "Weap_WidgetsEntry size mismatch");
 
@@ -158,9 +158,9 @@ export namespace Map::Tag::Type::Weap::Structure
     struct Weap_ChangeColorsEntry
     {
         // -> Weap_ChangeColors_InitialPermutationsEntry[]
-        MapStructure::Tag::Block   InitialPermutations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   InitialPermutations;  // 0x0  tagblock.
         // -> Weap_ChangeColors_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xC  tagblock.
     };
     static_assert(sizeof(Weap_ChangeColorsEntry) == 0x18, "Weap_ChangeColorsEntry size mismatch");
 
@@ -183,25 +183,25 @@ export namespace Map::Tag::Type::Weap::Structure
         float        NormalWeight;  // 0x1C  float32.
         std::uint32_t BoundaryCenterMarker;  // 0x20  stringid.
         std::uint32_t SpawnedObjectMarkerName;  // 0x24  stringid.
-        MapStructure::Tag::Reference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
         std::uint32_t BoundaryMaterialNotYetImplemented;  // 0x38  stringid.
-        MapStructure::Tag::Reference DefaultBoundaryStandardShader;  // 0x3C  tagref.
-        MapStructure::Tag::Reference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
-        MapStructure::Tag::Reference SphereStandardShader;  // 0x5C  tagref.
-        MapStructure::Tag::Reference SphereOpaqueShader;  // 0x6C  tagref.
-        MapStructure::Tag::Reference CylinderStandardShader;  // 0x7C  tagref.
-        MapStructure::Tag::Reference CylinderOpaqueShader;  // 0x8C  tagref.
-        MapStructure::Tag::Reference BoxStandardShader;  // 0x9C  tagref.
-        MapStructure::Tag::Reference BoxOpaqueShader;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryStandardShader;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
+        MapStructure::Tag::TagReference SphereStandardShader;  // 0x5C  tagref.
+        MapStructure::Tag::TagReference SphereOpaqueShader;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference CylinderStandardShader;  // 0x7C  tagref.
+        MapStructure::Tag::TagReference CylinderOpaqueShader;  // 0x8C  tagref.
+        MapStructure::Tag::TagReference BoxStandardShader;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference BoxOpaqueShader;  // 0xAC  tagref.
     };
     static_assert(sizeof(Weap_MultiplayerObjectEntry) == 0xBC, "Weap_MultiplayerObjectEntry size mismatch");
 
     // Entry size: 0x30
     struct Weap_SpawnEffectsEntry
     {
-        MapStructure::Tag::Reference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
-        MapStructure::Tag::Reference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
-        MapStructure::Tag::Reference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
+        MapStructure::Tag::TagReference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
+        MapStructure::Tag::TagReference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
+        MapStructure::Tag::TagReference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
     };
     static_assert(sizeof(Weap_SpawnEffectsEntry) == 0x30, "Weap_SpawnEffectsEntry size mismatch");
 
@@ -214,17 +214,17 @@ export namespace Map::Tag::Type::Weap::Structure
         float        MaximumLungeRange;  // 0xC  float32. | 0 defaults to 1.22f
         float        DamageLungeExplosiveDepth;  // 0x10  float32. | the distance out from the pyramid center to spawn explosive effects. This value will be clamped to the damage pyramid depth. 0 defaults to the damage pyramid depth
         float        DamageLungeExplosiveFraction;  // 0x14  float32.
-        MapStructure::Tag::Reference MeleeDamage;  // 0x18  tagref.
-        MapStructure::Tag::Reference MeleeResponse;  // 0x28  tagref.
-        MapStructure::Tag::Reference LungeMeleeDamage;  // 0x38  tagref. | this is only important for the energy sword
-        MapStructure::Tag::Reference LungeMeleeResponse;  // 0x48  tagref. | this is only important for the energy sword
-        MapStructure::Tag::Reference EmptyMeleeDamage;  // 0x58  tagref. | this is only important for the energy sword
-        MapStructure::Tag::Reference EmptyMeleeResponse;  // 0x68  tagref. | this is only important for the energy sword
-        MapStructure::Tag::Reference ClangMeleeDamage;  // 0x78  tagref. | this is only important for the energy sword
-        MapStructure::Tag::Reference ClangMeleeResponse;  // 0x88  tagref. | this is only important for the energy sword
-        MapStructure::Tag::Reference ClangMeleeAgainstMeleeWeaponDamage;  // 0x98  tagref. | e.g. used by AR to damage sword guy when clanging sword attack
-        MapStructure::Tag::Reference ClangMeleeAgainstMeleeWeaponDamageResponse;  // 0xA8  tagref. | e.g. used by AR to damage sword guy when clanging sword attack
-        MapStructure::Tag::Reference LungeMeleeExplosiveDamage;  // 0xB8  tagref.
+        MapStructure::Tag::TagReference MeleeDamage;  // 0x18  tagref.
+        MapStructure::Tag::TagReference MeleeResponse;  // 0x28  tagref.
+        MapStructure::Tag::TagReference LungeMeleeDamage;  // 0x38  tagref. | this is only important for the energy sword
+        MapStructure::Tag::TagReference LungeMeleeResponse;  // 0x48  tagref. | this is only important for the energy sword
+        MapStructure::Tag::TagReference EmptyMeleeDamage;  // 0x58  tagref. | this is only important for the energy sword
+        MapStructure::Tag::TagReference EmptyMeleeResponse;  // 0x68  tagref. | this is only important for the energy sword
+        MapStructure::Tag::TagReference ClangMeleeDamage;  // 0x78  tagref. | this is only important for the energy sword
+        MapStructure::Tag::TagReference ClangMeleeResponse;  // 0x88  tagref. | this is only important for the energy sword
+        MapStructure::Tag::TagReference ClangMeleeAgainstMeleeWeaponDamage;  // 0x98  tagref. | e.g. used by AR to damage sword guy when clanging sword attack
+        MapStructure::Tag::TagReference ClangMeleeAgainstMeleeWeaponDamageResponse;  // 0xA8  tagref. | e.g. used by AR to damage sword guy when clanging sword attack
+        MapStructure::Tag::TagReference LungeMeleeExplosiveDamage;  // 0xB8  tagref.
     };
     static_assert(sizeof(Weap_MeleeDamageParametersEntry) == 0xC8, "Weap_MeleeDamageParametersEntry size mismatch");
 
@@ -239,20 +239,20 @@ export namespace Map::Tag::Type::Weap::Structure
     struct Weap_TargetTrackingEntry
     {
         // -> Weap_TargetTracking_TrackingTypesEntry[]
-        MapStructure::Tag::Block   TrackingTypes;  // 0x0  tagblock. | specify the kinds of targets this tracking system can lock on
+        MapStructure::Tag::TagBlock   TrackingTypes;  // 0x0  tagblock. | specify the kinds of targets this tracking system can lock on
         float        AcquireTime;  // 0xC  float32.
         float        GraceTime;  // 0x10  float32.
         float        DecayTime;  // 0x14  float32.
-        MapStructure::Tag::Reference TrackingSound;  // 0x18  tagref.
-        MapStructure::Tag::Reference LockedSound;  // 0x28  tagref.
+        MapStructure::Tag::TagReference TrackingSound;  // 0x18  tagref.
+        MapStructure::Tag::TagReference LockedSound;  // 0x28  tagref.
     };
     static_assert(sizeof(Weap_TargetTrackingEntry) == 0x38, "Weap_TargetTrackingEntry size mismatch");
 
     // Entry size: 0x20
     struct Weap_FirstPersonEntry
     {
-        MapStructure::Tag::Reference FirstPersonModel;  // 0x0  tagref.
-        MapStructure::Tag::Reference FirstPersonAnimations;  // 0x10  tagref.
+        MapStructure::Tag::TagReference FirstPersonModel;  // 0x0  tagref.
+        MapStructure::Tag::TagReference FirstPersonAnimations;  // 0x10  tagref.
     };
     static_assert(sizeof(Weap_FirstPersonEntry) == 0x20, "Weap_FirstPersonEntry size mismatch");
 
@@ -266,7 +266,7 @@ export namespace Map::Tag::Type::Weap::Structure
     {
         std::int16_t Rounds;  // 0x0  int16. | 0 for maximum
         std::int16_t Unknown;  // 0x2  int16.
-        MapStructure::Tag::Reference Equipment;  // 0x4  tagref.
+        MapStructure::Tag::TagReference Equipment;  // 0x4  tagref.
     };
     static_assert(sizeof(Weap_Magazines_MagazinesEntry) == 0x14, "Weap_Magazines_MagazinesEntry size mismatch");
 
@@ -281,12 +281,12 @@ export namespace Map::Tag::Type::Weap::Structure
         std::int16_t RoundsInventoryMaximum;  // 0xC  int16.
         std::int16_t RoundsReloaded;  // 0xE  int16.
         float        ReloadDialogueTime;  // 0x10  float32. | the length of time we wait before saying the reload dialogue
-        MapStructure::Tag::Reference ReloadingEffect;  // 0x14  tagref.
-        MapStructure::Tag::Reference ReloadingDamageEffect;  // 0x24  tagref.
-        MapStructure::Tag::Reference ChamberingEffect;  // 0x34  tagref.
-        MapStructure::Tag::Reference ChamberingDamageEffect;  // 0x44  tagref.
+        MapStructure::Tag::TagReference ReloadingEffect;  // 0x14  tagref.
+        MapStructure::Tag::TagReference ReloadingDamageEffect;  // 0x24  tagref.
+        MapStructure::Tag::TagReference ChamberingEffect;  // 0x34  tagref.
+        MapStructure::Tag::TagReference ChamberingDamageEffect;  // 0x44  tagref.
         // -> Weap_Magazines_MagazinesEntry[]
-        MapStructure::Tag::Block   Magazines;  // 0x54  tagblock.
+        MapStructure::Tag::TagBlock   Magazines;  // 0x54  tagblock.
     };
     static_assert(sizeof(Weap_MagazinesEntry) == 0x60, "Weap_MagazinesEntry size mismatch");
 
@@ -317,14 +317,14 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint8_t ChargeFlags;  // 0x25  flags8. [Can Fire From Partial Charge=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7]
         std::int16_t CancelledTriggerThrow;  // 0x26  int16. | 96 was the constant in code for the pp
         float        ChargedIllumination;  // 0x28  float32. | the amount of illumination given off when the weapon is fully charged
-        MapStructure::Tag::Reference ChargingEffect;  // 0x2C  tagref. | the charging effect is created once when the trigger begins to charge
-        MapStructure::Tag::Reference ChargingDamageEffect;  // 0x3C  tagref. | the charging effect is created once when the trigger begins to charge
-        MapStructure::Tag::Reference ChargingContinuousDamageResponse;  // 0x4C  tagref. | plays every tick you're charging or charged, scaled to charging fraction
+        MapStructure::Tag::TagReference ChargingEffect;  // 0x2C  tagref. | the charging effect is created once when the trigger begins to charge
+        MapStructure::Tag::TagReference ChargingDamageEffect;  // 0x3C  tagref. | the charging effect is created once when the trigger begins to charge
+        MapStructure::Tag::TagReference ChargingContinuousDamageResponse;  // 0x4C  tagref. | plays every tick you're charging or charged, scaled to charging fraction
         float        ChargedDrainRate;  // 0x5C  float32. | how much battery to drain per second when charged
-        MapStructure::Tag::Reference DischargeEffect;  // 0x60  tagref. | the discharging effect is created once when the trigger releases its charge
-        MapStructure::Tag::Reference DischargeDamageEffect;  // 0x70  tagref. | the discharging effect is created once when the trigger releases its charge
+        MapStructure::Tag::TagReference DischargeEffect;  // 0x60  tagref. | the discharging effect is created once when the trigger releases its charge
+        MapStructure::Tag::TagReference DischargeDamageEffect;  // 0x70  tagref. | the discharging effect is created once when the trigger releases its charge
         // -> Weap_NewTriggers_FireFractionsEntry[]
-        MapStructure::Tag::Block   FireFractions;  // 0x80  tagblock.
+        MapStructure::Tag::TagBlock   FireFractions;  // 0x80  tagblock.
     };
     static_assert(sizeof(Weap_NewTriggersEntry) == 0x8C, "Weap_NewTriggersEntry size mismatch");
 
@@ -396,18 +396,18 @@ export namespace Map::Tag::Type::Weap::Structure
     {
         std::int16_t ShotCountLowerBound;  // 0x0  int16. | the minimum number of times this firing effect will be used, once it has been chosen
         std::int16_t ShotCountUpperBound;  // 0x2  int16. | the maximum number of times this firing effect will be used, once it has been chosen
-        MapStructure::Tag::Reference FiringEffect;  // 0x4  tagref. | this effect is used when the weapon is loaded and fired normally
-        MapStructure::Tag::Reference MisfireEffect;  // 0x14  tagref. | this effect is used when the weapon is loaded but fired while overheated
-        MapStructure::Tag::Reference EmptyEffect;  // 0x24  tagref. | this effect is used when the weapon is not loaded
-        MapStructure::Tag::Reference OptionalSecondaryFiringEffect;  // 0x34  tagref.
-        MapStructure::Tag::Reference FiringDamage;  // 0x44  tagref. | this effect is used when the weapon is loaded and fired normally
-        MapStructure::Tag::Reference MisfireDamage;  // 0x54  tagref. | this effect is used when the weapon is loaded but fired while overheated
-        MapStructure::Tag::Reference EmptyDamage;  // 0x64  tagref. | this effect is used when the weapon is not loaded
-        MapStructure::Tag::Reference OptionalSecondaryFiringDamage;  // 0x74  tagref.
-        MapStructure::Tag::Reference FiringRiderResponse;  // 0x84  tagref. | this effect is used when the weapon is loaded and fired normally
-        MapStructure::Tag::Reference MisfireRiderResponse;  // 0x94  tagref. | this effect is used when the weapon is loaded but fired while overheated
-        MapStructure::Tag::Reference EmptyRiderResponse;  // 0xA4  tagref. | this effect is used when the weapon is not loaded
-        MapStructure::Tag::Reference OptionalSecondaryFiringRiderDamage;  // 0xB4  tagref.
+        MapStructure::Tag::TagReference FiringEffect;  // 0x4  tagref. | this effect is used when the weapon is loaded and fired normally
+        MapStructure::Tag::TagReference MisfireEffect;  // 0x14  tagref. | this effect is used when the weapon is loaded but fired while overheated
+        MapStructure::Tag::TagReference EmptyEffect;  // 0x24  tagref. | this effect is used when the weapon is not loaded
+        MapStructure::Tag::TagReference OptionalSecondaryFiringEffect;  // 0x34  tagref.
+        MapStructure::Tag::TagReference FiringDamage;  // 0x44  tagref. | this effect is used when the weapon is loaded and fired normally
+        MapStructure::Tag::TagReference MisfireDamage;  // 0x54  tagref. | this effect is used when the weapon is loaded but fired while overheated
+        MapStructure::Tag::TagReference EmptyDamage;  // 0x64  tagref. | this effect is used when the weapon is not loaded
+        MapStructure::Tag::TagReference OptionalSecondaryFiringDamage;  // 0x74  tagref.
+        MapStructure::Tag::TagReference FiringRiderResponse;  // 0x84  tagref. | this effect is used when the weapon is loaded and fired normally
+        MapStructure::Tag::TagReference MisfireRiderResponse;  // 0x94  tagref. | this effect is used when the weapon is loaded but fired while overheated
+        MapStructure::Tag::TagReference EmptyRiderResponse;  // 0xA4  tagref. | this effect is used when the weapon is not loaded
+        MapStructure::Tag::TagReference OptionalSecondaryFiringRiderDamage;  // 0xB4  tagref.
     };
     static_assert(sizeof(Weap_Barrels_FiringEffectsEntry) == 0xC4, "Weap_Barrels_FiringEffectsEntry size mismatch");
 
@@ -451,32 +451,32 @@ export namespace Map::Tag::Type::Weap::Structure
         float        ZoomPenalty;  // 0x84  float32. | percentage accuracy lost when zooming in/out
         float        JumpPenalty;  // 0x88  float32. | percentage accuracy lost when jumping
         // -> Weap_Barrels_FiringPenaltyFunctionEntry[]
-        MapStructure::Tag::Block   FiringPenaltyFunction;  // 0x8C  tagblock. | percentage accuracy lost when the barrel has fired
+        MapStructure::Tag::TagBlock   FiringPenaltyFunction;  // 0x8C  tagblock. | percentage accuracy lost when the barrel has fired
         // -> Weap_Barrels_FiringCrouchedPenaltyFunctionEntry[]
-        MapStructure::Tag::Block   FiringCrouchedPenaltyFunction;  // 0x98  tagblock. | percentage accuracy lost when the barrel has fired from a crouched position
+        MapStructure::Tag::TagBlock   FiringCrouchedPenaltyFunction;  // 0x98  tagblock. | percentage accuracy lost when the barrel has fired from a crouched position
         // -> Weap_Barrels_MovingPenaltyFunctionEntry[]
-        MapStructure::Tag::Block   MovingPenaltyFunction;  // 0xA4  tagblock. | percentage accuracy lost when moving
+        MapStructure::Tag::TagBlock   MovingPenaltyFunction;  // 0xA4  tagblock. | percentage accuracy lost when moving
         // -> Weap_Barrels_TurningPenaltyFunctionEntry[]
-        MapStructure::Tag::Block   TurningPenaltyFunction;  // 0xB0  tagblock. | percentage accuracy lost when turning the camera
+        MapStructure::Tag::TagBlock   TurningPenaltyFunction;  // 0xB0  tagblock. | percentage accuracy lost when turning the camera
         float        ErrorAngleMaximumRotation;  // 0xBC  float32. | angle which represents the maximum input to the turning penalty function.
         // -> Weap_Barrels_FiringPenaltyFunctionEntry_2[]
-        MapStructure::Tag::Block   FiringPenaltyFunction_2;  // 0xC0  tagblock. | percentage accuracy lost when the barrel has fired
+        MapStructure::Tag::TagBlock   FiringPenaltyFunction_2;  // 0xC0  tagblock. | percentage accuracy lost when the barrel has fired
         // -> Weap_Barrels_FiringCrouchedPenaltyFunctionEntry_2[]
-        MapStructure::Tag::Block   FiringCrouchedPenaltyFunction_2;  // 0xCC  tagblock. | percentage accuracy lost when the barrel has fired from a crouched position
+        MapStructure::Tag::TagBlock   FiringCrouchedPenaltyFunction_2;  // 0xCC  tagblock. | percentage accuracy lost when the barrel has fired from a crouched position
         // -> Weap_Barrels_MovingPenaltyFunctionEntry_2[]
-        MapStructure::Tag::Block   MovingPenaltyFunction_2;  // 0xD8  tagblock. | percentage accuracy lost when moving
+        MapStructure::Tag::TagBlock   MovingPenaltyFunction_2;  // 0xD8  tagblock. | percentage accuracy lost when moving
         // -> Weap_Barrels_TurningPenaltyFunctionEntry_2[]
-        MapStructure::Tag::Block   TurningPenaltyFunction_2;  // 0xE4  tagblock. | percentage accuracy lost when turning the camera
+        MapStructure::Tag::TagBlock   TurningPenaltyFunction_2;  // 0xE4  tagblock. | percentage accuracy lost when turning the camera
         float        ErrorAngleMaximumRotation_2;  // 0xF0  float32. | angle which represents the maximum input to the turning penalty function.
         // -> Weap_Barrels_FirstPersonOffsetEntry[]
-        MapStructure::Tag::Block   FirstPersonOffset;  // 0xF4  tagblock.
+        MapStructure::Tag::TagBlock   FirstPersonOffset;  // 0xF4  tagblock.
         std::uint8_t DamageEffectReportingType;  // 0x100  enum8. [Guardians (Unknown)=0x0, Guardians (Default)=0x1, Guardians (Scripting)=0x2, Suicide=0x3, Magnum=0x4, Assault Rifle=0x5, DMR=0x6, Shotgun=0x7, Sniper Rifle=0x8, Rocket Launcher=0x9, Spartan Laser=0xA, Frag Grenade=0xB, Grenade Launcher=0xC, Plasma Pistol=0xD, Needler=0xE, Plasma Rifle=0xF, ...(82 total)]
         std::int8_t  Unknown;  // 0x101  int8.
         std::int16_t Unknown_2;  // 0x102  int16.
-        MapStructure::Tag::Reference Projectile;  // 0x104  tagref.
-        MapStructure::Tag::Reference OptionalSecondaryProjectile;  // 0x114  tagref.
-        MapStructure::Tag::Reference DamageEffect;  // 0x124  tagref.
-        MapStructure::Tag::Reference CrateProjectile;  // 0x134  tagref.
+        MapStructure::Tag::TagReference Projectile;  // 0x104  tagref.
+        MapStructure::Tag::TagReference OptionalSecondaryProjectile;  // 0x114  tagref.
+        MapStructure::Tag::TagReference DamageEffect;  // 0x124  tagref.
+        MapStructure::Tag::TagReference CrateProjectile;  // 0x134  tagref.
         float        CrateProjectileSpeed;  // 0x144  float32.
         float        EjectionPortRecoveryTime;  // 0x148  float32. | the amount of time (in seconds) it takes for the ejection port to transition from 1.0 (open) to 0.0 (closed) after a shot has been fired
         float        IlluminationRecoveryTime;  // 0x14C  float32. | the amount of time (in seconds) it takes the illumination function to transition from 1.0 (bright) to 0.0 (dark) after a shot has been fired
@@ -491,7 +491,7 @@ export namespace Map::Tag::Type::Weap::Structure
         float        RateOfFireDecelerationRate;  // 0x170  float32.
         float        ErrorDecelerationRate;  // 0x174  float32.
         // -> Weap_Barrels_FiringEffectsEntry[]
-        MapStructure::Tag::Block   FiringEffects;  // 0x178  tagblock. | firing effects determine what happens when this trigger is fired
+        MapStructure::Tag::TagBlock   FiringEffects;  // 0x178  tagblock. | firing effects determine what happens when this trigger is fired
     };
     static_assert(sizeof(Weap_BarrelsEntry) == 0x184, "Weap_BarrelsEntry size mismatch");
 
@@ -501,7 +501,7 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint8_t Flags;  // 0x0  flags8. [Overrides Unit And Camera Screen Effects=0, Unzoomed=1, Zoom Level 1=2, Zoom Level 2=3]
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
-        MapStructure::Tag::Reference ScreenEffect;  // 0x4  tagref.
+        MapStructure::Tag::TagReference ScreenEffect;  // 0x4  tagref.
     };
     static_assert(sizeof(Weap_ScreenEffectsEntry) == 0x14, "Weap_ScreenEffectsEntry size mismatch");
 
@@ -523,39 +523,39 @@ export namespace Map::Tag::Type::Weap::Structure
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
         MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GenericNameList;  // 0x40  tagref.
-        MapStructure::Tag::Reference GenericServiceTagList;  // 0x50  tagref.
+        MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
         std::uint32_t DefaultModelVariant;  // 0x60  stringid.
-        MapStructure::Tag::Reference Model;  // 0x64  tagref.
-        MapStructure::Tag::Reference CrateObject;  // 0x74  tagref.
-        MapStructure::Tag::Reference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
-        MapStructure::Tag::Reference BrittleCollisionDamage;  // 0x94  tagref.
+        MapStructure::Tag::TagReference Model;  // 0x64  tagref.
+        MapStructure::Tag::TagReference CrateObject;  // 0x74  tagref.
+        MapStructure::Tag::TagReference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
+        MapStructure::Tag::TagReference BrittleCollisionDamage;  // 0x94  tagref.
         // -> Weap_EarlyMoverOrientedBoundingBoxEntry[]
-        MapStructure::Tag::Block   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
-        MapStructure::Tag::Reference CreationEffect;  // 0xB0  tagref.
-        MapStructure::Tag::Reference MaterialEffects;  // 0xC0  tagref.
-        MapStructure::Tag::Reference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
+        MapStructure::Tag::TagBlock   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
+        MapStructure::Tag::TagReference CreationEffect;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference MaterialEffects;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
         // -> Weap_AiPropertiesEntry[]
-        MapStructure::Tag::Block   AiProperties;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   AiProperties;  // 0xE0  tagblock.
         // -> Weap_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xEC  tagblock.
         // -> Weap_RuntimeInterpolatorFunctionsEntry[]
-        MapStructure::Tag::Block   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
         // -> Weap_AttachmentsEntry[]
-        MapStructure::Tag::Block   Attachments;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   Attachments;  // 0x104  tagblock.
         // -> Weap_HullSurfacesEntry[]
-        MapStructure::Tag::Block   HullSurfaces;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   HullSurfaces;  // 0x110  tagblock.
         // -> Weap_JetwashEntry[]
-        MapStructure::Tag::Block   Jetwash;  // 0x11C  tagblock.
+        MapStructure::Tag::TagBlock   Jetwash;  // 0x11C  tagblock.
         // -> Weap_WidgetsEntry[]
-        MapStructure::Tag::Block   Widgets;  // 0x128  tagblock.
+        MapStructure::Tag::TagBlock   Widgets;  // 0x128  tagblock.
         // -> Weap_ChangeColorsEntry[]
-        MapStructure::Tag::Block   ChangeColors;  // 0x134  tagblock.
+        MapStructure::Tag::TagBlock   ChangeColors;  // 0x134  tagblock.
         // -> Weap_MultiplayerObjectEntry[]
-        MapStructure::Tag::Block   MultiplayerObject;  // 0x140  tagblock.
-        MapStructure::Tag::Reference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
+        MapStructure::Tag::TagBlock   MultiplayerObject;  // 0x140  tagblock.
+        MapStructure::Tag::TagReference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
         // -> Weap_SpawnEffectsEntry[]
-        MapStructure::Tag::Block   SpawnEffects;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnEffects;  // 0x15C  tagblock.
         std::uint32_t Flags_2;  // 0x168  flags32. [Always Maintains z Up=0, Destroyed by Explosions=1, Unaffected by Gravity=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         std::uint32_t PickupMessage;  // 0x16C  stringid.
         std::uint32_t SwapMessage;  // 0x170  stringid.
@@ -568,10 +568,10 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint32_t OverheatedMessage;  // 0x18C  stringid.
         std::int32_t PrivateUseFontIcon;  // 0x190  int32. | private use character for the item's icon
         std::int32_t PrivateUseFontIconDual;  // 0x194  int32. | private use character for the item's left-hand icon
-        MapStructure::Tag::Reference DetonationDamageEffect;  // 0x198  tagref.
+        MapStructure::Tag::TagReference DetonationDamageEffect;  // 0x198  tagref.
         MapStructure::Primitive::RangeF DetonationDelay;  // 0x1A8  rangef.
-        MapStructure::Tag::Reference DetonatingEffect;  // 0x1B0  tagref.
-        MapStructure::Tag::Reference DetonationEffect;  // 0x1C0  tagref.
+        MapStructure::Tag::TagReference DetonatingEffect;  // 0x1B0  tagref.
+        MapStructure::Tag::TagReference DetonationEffect;  // 0x1C0  tagref.
         float        GroundScale;  // 0x1D0  float32.
         float        SmallUnitArmedScale;  // 0x1D4  float32.
         float        SmallUnitStowedScale;  // 0x1D8  float32.
@@ -581,15 +581,15 @@ export namespace Map::Tag::Type::Weap::Structure
         float        LargeUnitStowedScale;  // 0x1E8  float32.
         float        HugeUnitArmedScale;  // 0x1EC  float32.
         float        HugeUnitStowedScale;  // 0x1F0  float32.
-        MapStructure::Tag::Reference GroundedFrictionSettings;  // 0x1F4  tagref. | If not present, the default from global.globals is used.
+        MapStructure::Tag::TagReference GroundedFrictionSettings;  // 0x1F4  tagref. | If not present, the default from global.globals is used.
         std::uint32_t Flags_3;  // 0x204  flags32. [Must Be Readied=0, Doesn't Count Toward Maximum=1, Aim Assists Only When Zoomed=2, Prevents Grenade Throwing=3, Prevents Melee Attack=4, Detonates When Dropped=5, Cannot Fire At Maximum Age=6, Secondary Trigger Overrides Grenades=7, Support Weapon=8, AIs Use Weapon Melee Damage=9, Allows Binoculars=10, Loop FP Firing Animation=11, Prevents Crouching=12, Cannot Fire While Boosting=13, Use Empty Melee On Empty=14, Uses 3rd Person Camera=15, ...(26 total)]
         std::uint32_t SecondaryFlags_2;  // 0x208  flags32. [Magnetizes Only When Zoomed=0, Force Enable Equipment Tossing=1, Non-Lunge Melee Dash Disabled=2, Don't Drop On Dual Wield Melee=3, Is Equipment Special Weapon=4]
         std::uint16_t SecondaryTriggerMode;  // 0x20C  enum16. [Normal=0x0, Slaved To Primary=0x1, Inhibits Primary=0x2, Loads Alternate Ammunition=0x3, Loads Multiple Primary Ammunition=0x4]
         std::int16_t MaximumAlternateShotsLoaded;  // 0x20E  int16. | if the second trigger loads alternate ammunition, this is the maximum number of shots that can be loaded at a time
         float        TurnOnTime;  // 0x210  float32. | how long after being readied it takes this weapon to switch its 'turned_on' attachment to 1.0
         float        ReadyTime;  // 0x214  float32.
-        MapStructure::Tag::Reference ReadyEffect;  // 0x218  tagref.
-        MapStructure::Tag::Reference ReadyDamageEffect;  // 0x228  tagref.
+        MapStructure::Tag::TagReference ReadyEffect;  // 0x218  tagref.
+        MapStructure::Tag::TagReference ReadyDamageEffect;  // 0x228  tagref.
         float        HeatRecoveryThreshold;  // 0x238  float32. | the heat value a weapon must return to before leaving the overheated state, once it has become overheated in the first place
         float        OverheatedThreshold;  // 0x23C  float32. | the heat value over which a weapon first becomes overheated (should be greater than the heat recovery threshold)
         float        HeatDetonationThreshold;  // 0x240  float32. | the heat value above which the weapon has a chance of exploding each time it is fired
@@ -603,13 +603,13 @@ export namespace Map::Tag::Type::Weap::Structure
         float        HeatWarningThreshold;  // 0x260  float32. | the amount of heat at which a warning will be displayed on the hud
         float        OverheatedHeatLossPerSecond;  // 0x264  float32. | the amount of heat lost each second when the weapon is not being fired
         std::uint32_t OverheatedHeatLossFunction;  // 0x268  stringid. | function values sets the heat loss per second when weapon is overheated
-        MapStructure::Tag::Reference Overheated;  // 0x26C  tagref.
-        MapStructure::Tag::Reference OverheatedDamageEffect;  // 0x27C  tagref.
-        MapStructure::Tag::Reference Detonation;  // 0x28C  tagref.
-        MapStructure::Tag::Reference DetonationDamageEffect_2;  // 0x29C  tagref.
+        MapStructure::Tag::TagReference Overheated;  // 0x26C  tagref.
+        MapStructure::Tag::TagReference OverheatedDamageEffect;  // 0x27C  tagref.
+        MapStructure::Tag::TagReference Detonation;  // 0x28C  tagref.
+        MapStructure::Tag::TagReference DetonationDamageEffect_2;  // 0x29C  tagref.
         // -> Weap_MeleeDamageParametersEntry[]
-        MapStructure::Tag::Block   MeleeDamageParameters;  // 0x2AC  tagblock.
-        MapStructure::Tag::Reference ClangEffect;  // 0x2B8  tagref. | effect that is played in the air between two players that clang with this weapon
+        MapStructure::Tag::TagBlock   MeleeDamageParameters;  // 0x2AC  tagblock.
+        MapStructure::Tag::TagReference ClangEffect;  // 0x2B8  tagref. | effect that is played in the air between two players that clang with this weapon
         std::uint8_t MeleeDamageReportingType;  // 0x2C8  enum8. [Guardians (Unknown)=0x0, Guardians (Default)=0x1, Guardians (Scripting)=0x2, Suicide=0x3, Magnum=0x4, Assault Rifle=0x5, DMR=0x6, Shotgun=0x7, Sniper Rifle=0x8, Rocket Launcher=0x9, Spartan Laser=0xA, Frag Grenade=0xB, Grenade Launcher=0xC, Plasma Pistol=0xD, Needler=0xE, Plasma Rifle=0xF, ...(82 total)]
         std::int8_t  Unknown;  // 0x2C9  int8.
         std::int16_t MagnificationLevels;  // 0x2CA  int16. | the number of magnification levels this weapon allows
@@ -630,7 +630,7 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint8_t  _pad_0x308[0x4];  // undefined.
         std::uint8_t  _pad_0x30C[0x4];  // undefined.
         // -> Weap_TargetTrackingEntry[]
-        MapStructure::Tag::Block   TargetTracking;  // 0x310  tagblock.
+        MapStructure::Tag::TagBlock   TargetTracking;  // 0x310  tagblock.
         MapStructure::Primitive::RangeF BallisticArcingFiringBounds;  // 0x31C  rangef. | At the min range (or closer), the minimum ballistic arcing is used, at the max (or farther away), the maximum arcing is used
         MapStructure::Primitive::RangeF BallisticArcingFractionBounds;  // 0x324  rangef. | Controls speed and degree of arc. 0 = low, fast, 1 = high, slow
         std::uint16_t MovementPenalized;  // 0x32C  enum16. [Always=0x0, When Zoomed=0x1, When Zoomed Or Reloading=0x2]
@@ -640,15 +640,15 @@ export namespace Map::Tag::Type::Weap::Structure
         float        AiScariness;  // 0x338  float32.
         float        WeaponPowerOnTime;  // 0x33C  float32.
         float        WeaponPowerOffTime;  // 0x340  float32.
-        MapStructure::Tag::Reference WeaponPowerOnEffect;  // 0x344  tagref.
-        MapStructure::Tag::Reference WeaponPowerOffEffect;  // 0x354  tagref.
+        MapStructure::Tag::TagReference WeaponPowerOnEffect;  // 0x344  tagref.
+        MapStructure::Tag::TagReference WeaponPowerOffEffect;  // 0x354  tagref.
         float        AgeHeatRecoveryPenalty;  // 0x364  float32. | how much the weapon's heat recovery is penalized as it ages
         float        AgeRateOfFirePenalty;  // 0x368  float32. | how much the weapon's rate of fire is penalized as it ages
         float        AgeMisfireStart;  // 0x36C  float32. | the age threshold when the weapon begins to misfire
         float        AgeMisfireChance;  // 0x370  float32. | at age 1.0, the misfire chance per shot
-        MapStructure::Tag::Reference PickupSound;  // 0x374  tagref.
-        MapStructure::Tag::Reference ZoomInSound;  // 0x384  tagref.
-        MapStructure::Tag::Reference ZoomOutSound;  // 0x394  tagref.
+        MapStructure::Tag::TagReference PickupSound;  // 0x374  tagref.
+        MapStructure::Tag::TagReference ZoomInSound;  // 0x384  tagref.
+        MapStructure::Tag::TagReference ZoomOutSound;  // 0x394  tagref.
         float        ActiveCamoDing;  // 0x3A4  float32. | how much to decrease active camo when a round is fired
         std::uint32_t HandleNode;  // 0x3A8  stringid. | the node that get's attached to the unit's hand
         std::uint32_t WeaponClass;  // 0x3AC  stringid.
@@ -656,27 +656,27 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint16_t WeaponType;  // 0x3B4  enum16. [Undefined=0x0, Shotgun=0x1, Needler=0x2, Plasma Pistol=0x3, Plasma Rifle=0x4, Rocket Launcher=0x5, Energy Blade=0x6, Splaser=0x7, Shield=0x8, Scarab Gun=0x9, Wolverine Quad=0xA, Flak Cannon=0xB, Plasma Launcher=0xC, Laser Designator=0xD]
         std::int16_t Unknown_9;  // 0x3B6  int16.
         // -> Weap_FirstPersonEntry[]
-        MapStructure::Tag::Block   FirstPerson;  // 0x3B8  tagblock.
-        MapStructure::Tag::Reference HudInterface;  // 0x3C4  tagref.
-        MapStructure::Tag::Reference AlternateHudInterface;  // 0x3D4  tagref. | the parent of the weapon can indicate that this hud should be used instead of the default
+        MapStructure::Tag::TagBlock   FirstPerson;  // 0x3B8  tagblock.
+        MapStructure::Tag::TagReference HudInterface;  // 0x3C4  tagref.
+        MapStructure::Tag::TagReference AlternateHudInterface;  // 0x3D4  tagref. | the parent of the weapon can indicate that this hud should be used instead of the default
         // -> Weap_PredictedResourcesEntry[]
-        MapStructure::Tag::Block   PredictedResources;  // 0x3E4  tagblock.
+        MapStructure::Tag::TagBlock   PredictedResources;  // 0x3E4  tagblock.
         // -> Weap_MagazinesEntry[]
-        MapStructure::Tag::Block   Magazines;  // 0x3F0  tagblock.
+        MapStructure::Tag::TagBlock   Magazines;  // 0x3F0  tagblock.
         // -> Weap_NewTriggersEntry[]
-        MapStructure::Tag::Block   NewTriggers;  // 0x3FC  tagblock.
+        MapStructure::Tag::TagBlock   NewTriggers;  // 0x3FC  tagblock.
         // -> Weap_BarrelsEntry[]
-        MapStructure::Tag::Block   Barrels;  // 0x408  tagblock.
+        MapStructure::Tag::TagBlock   Barrels;  // 0x408  tagblock.
         float        WeaponPowerOnVelocity;  // 0x414  float32.
         float        WeaponPowerOffVelocity;  // 0x418  float32.
         float        MaximumMovementAcceleration;  // 0x41C  float32.
         float        MaximumMovementVelocity;  // 0x420  float32.
         float        MaximumTurningAcceleration;  // 0x424  float32.
         float        MaximumTurningVelocity;  // 0x428  float32.
-        MapStructure::Tag::Reference DeployedVehicle;  // 0x42C  tagref.
-        MapStructure::Tag::Reference TossedWeapon;  // 0x43C  tagref.
-        MapStructure::Tag::Reference AgeEffect;  // 0x44C  tagref.
-        MapStructure::Tag::Reference AgedMaterialEffects;  // 0x45C  tagref.
+        MapStructure::Tag::TagReference DeployedVehicle;  // 0x42C  tagref.
+        MapStructure::Tag::TagReference TossedWeapon;  // 0x43C  tagref.
+        MapStructure::Tag::TagReference AgeEffect;  // 0x44C  tagref.
+        MapStructure::Tag::TagReference AgedMaterialEffects;  // 0x45C  tagref.
         float        ExternalAgingAmount;  // 0x46C  float32.
         float        CampaignExternalAgingAmount;  // 0x470  float32.
         float        ExternalHeatAmount;  // 0x474  float32.
@@ -689,7 +689,7 @@ export namespace Map::Tag::Type::Weap::Structure
         float        WeaponReadyForUseTime;  // 0x4A4  float32. | seconds
         std::uint32_t UnitStowAnchorName;  // 0x4A8  stringid.
         // -> Weap_ScreenEffectsEntry[]
-        MapStructure::Tag::Block   ScreenEffects;  // 0x4AC  tagblock.
+        MapStructure::Tag::TagBlock   ScreenEffects;  // 0x4AC  tagblock.
     };
     static_assert(sizeof(WeapData) == 0x4B8, "WeapData size mismatch");
 

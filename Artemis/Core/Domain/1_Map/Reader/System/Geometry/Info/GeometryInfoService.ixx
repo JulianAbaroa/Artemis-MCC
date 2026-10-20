@@ -13,7 +13,7 @@ export namespace Map::Reader::System
     class GeometryInfoService
     {
     private:
-        using TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+        using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
         using BufferInfo = Map::Reader::Type::Geometry::BufferInfo;
 
         using FileStore = Map::Reader::State::FileStore;
@@ -30,7 +30,7 @@ export namespace Map::Reader::System
         // param outIBCount: Out. Number of index buffers.
         // param fixupDataBase: File offset where the fixup data of the zone starts.
         // return: False if the footer cannot be read.
-        auto ReadFooter(const TagResourcesObject& entry,
+        auto ReadFooter(const Zone_TagResourcesObject& entry,
             std::int32_t& outVBCount, std::int32_t& outIBCount,
             std::int64_t fixupDataBase) const -> bool;
 
@@ -38,7 +38,7 @@ export namespace Map::Reader::System
         // param outVBTable: Out. One entry per vertex buffer.
         // param outIBTable: Out. One entry per index buffer.
         // return: False if there is nothing to read or the tables are cut short.
-        auto ReadBufferInfoTables(const TagResourcesObject& entry,
+        auto ReadBufferInfoTables(const Zone_TagResourcesObject& entry,
             std::int32_t vbCount, std::int32_t ibCount,
             std::vector<BufferInfo>& outVBTable,
             std::vector<BufferInfo>& outIBTable,

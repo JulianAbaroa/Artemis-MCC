@@ -7,24 +7,30 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Mesh = Resolved::Definitions::Type::Coll::Mesh;
-    using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
-    using ResolvedRegionStates = Resolved::World::Type::RegionStates::RegionStates;
+    using Common::Math::Type::Vec3;
+    using Resolved::Definitions::Type::Coll::CollMesh;
+    using Resolved::Definitions::Type::Coll::Coll;
+    using Resolved::World::Type::RegionStates::RegionStates;
 }
 
 export namespace Environment::Collidable::Type
 {
+    // Layout of the region block of an object: one state entry per region of the render model, then one permutation byte per
+    // region. A permutation byte of k_NoPermutation means the region has none.
+    inline constexpr std::size_t k_RegionStateStride{ 0x04 };
+    inline constexpr std::size_t k_RegionStateValue{ 0x01 };
+    inline constexpr std::uint8_t k_NoPermutation{ 0xFF };
+
     struct Context
     {
-        const ResolvedColl* Coll{ nullptr };
+        const Coll* Coll{ nullptr };
 
-        const ResolvedRegionStates* States{ nullptr };
+        const RegionStates* States{ nullptr };
     };
 
     struct CollidablePart
     {
-        const Mesh* Source{ nullptr };
+        const CollMesh* Source{ nullptr };
         std::array<float, 12> Transform{};
     };
 
@@ -59,12 +65,18 @@ export namespace Environment::Collidable::Type
         Vec3 Forward{};
         Vec3 Up{};
 
-        Mesh WorldMesh{};
+        CollMesh WorldMesh{};
         std::vector<CollidablePart> Parts{};
 
         std::uint16_t RegionBlockSize{};
         std::uint16_t RegionBlockOffset{};
         std::vector<std::uint8_t> RegionBlock{};
         std::vector<RegionDiagnostic> Regions{};
+    };
+
+    // Collidables of the tick.
+    struct Collidables : std::vector<Collidable>
+    {
+        using vector::vector;
     };
 }

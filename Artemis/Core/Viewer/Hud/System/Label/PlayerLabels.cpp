@@ -5,10 +5,11 @@ module;
 module Viewer.Hud.System;
 import :PlayerLabels;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
-import Export.Tick.Type;
 import Resolved.World.Type;
+import Export.Tick.Type;
 import Viewer.Options.Type;
 import Viewer.Style.Type;
 import Viewer.Hud.Type;
@@ -16,26 +17,27 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Flag = Viewer::Options::Type::Flag;
-    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
+    using Common::Math::Type::Vec3;
+    using Viewer::Options::Type::Flag;
+    using Resolved::World::Type::ModelLink::AnchorSource;
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
     using Export::Tick::Type::Entity;
     using Export::Tick::Type::Player;
     using Export::Tick::Type::Body;
-    using LabelRow = Viewer::Hud::Type::LabelRow;
+    using Viewer::Hud::Type::LabelRow;
 
     using Viewer::Style::Type::k_Health;
     using Viewer::Style::Type::ColorOfTeam;
 
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
+    using Common::Engine::Type::k_NoHandle;
+    using Viewer::Hud::Type::k_MutedColor;
+    using Viewer::Hud::Type::k_SelectedPriority;
+
     constexpr float k_HeadClearance{ 0.12f };
     constexpr float k_FallbackEyeClearance{ 0.25f };
-    constexpr float k_SelectedPriority{ 1.0f };
 
     constexpr ImU32 k_WeaponColor{ IM_COL32(190, 200, 215, 255) };
-    constexpr ImU32 k_MutedColor{ IM_COL32(150, 160, 175, 255) };
 }
 
 namespace Viewer::Hud::System
@@ -43,7 +45,7 @@ namespace Viewer::Hud::System
     auto PlayerLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
         const auto& tick = context.Frame;
-        const auto& options = context.Options;
+        const auto& options = canvas.GetOptions();
 
         if (!tick.Players || !tick.Entities || !tick.ObjectTable) return;
 

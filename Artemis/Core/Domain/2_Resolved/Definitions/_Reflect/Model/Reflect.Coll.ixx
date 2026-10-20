@@ -8,7 +8,7 @@ import std;
 namespace
 {
     using Common::Math::Type::Node;
-    using Resolved::Definitions::Type::Coll::Mesh;
+    using Resolved::Definitions::Type::Coll::CollMesh;
     using Resolved::Definitions::Type::Coll::Material;
     using Resolved::Definitions::Type::Coll::Coll;
 }
@@ -18,8 +18,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Node>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &Node::Name),
             MakeField("ParentIndex", &Node::ParentIndex),
             MakeField("NextSiblingIndex", &Node::NextSiblingIndex),
@@ -28,24 +27,22 @@ export namespace Common::Reflect::Type
     };
 
     template <>
-    struct Fields<Mesh>
+    struct Fields<CollMesh>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
-            MakeField("NodeIndex", &Mesh::NodeIndex),
-            MakeField("RegionIndex", &Mesh::RegionIndex),
-            MakeField("PermutationIndex", &Mesh::PermutationIndex),
-            MakeField("Triangles", &Mesh::Triangles),
-            MakeField("LocalMin", &Mesh::LocalMin),
-            MakeField("LocalMax", &Mesh::LocalMax),
+        static constexpr auto k_Value = std::tuple{
+            MakeField("NodeIndex", &CollMesh::NodeIndex),
+            MakeField("RegionIndex", &CollMesh::RegionIndex),
+            MakeField("PermutationIndex", &CollMesh::PermutationIndex),
+            MakeField("Triangles", &CollMesh::Triangles),
+            MakeField("LocalMin", &CollMesh::LocalMin),
+            MakeField("LocalMax", &CollMesh::LocalMax),
         };
     };
 
     template <>
     struct Fields<Material>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple {
+        static constexpr auto k_Value = std::tuple {
             MakeField("Name", &Material::Name),
         };
     };
@@ -53,8 +50,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Coll>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Coll::TagName),
             MakeField("Nodes", &Coll::Nodes),
             MakeField("Meshes", &Coll::Meshes),

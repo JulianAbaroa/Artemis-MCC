@@ -1,6 +1,5 @@
 module Platform.Input.State;
 import :VirtualInput;
-
 import std;
 
 namespace Platform::Input::State

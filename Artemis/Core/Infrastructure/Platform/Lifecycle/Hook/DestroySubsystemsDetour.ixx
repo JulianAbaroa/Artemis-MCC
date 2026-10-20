@@ -48,6 +48,7 @@ export namespace Platform::Lifecycle::Hook
         LifecycleService& m_LifecycleService;
 
         static inline DestroySubsystemsDetour* s_Instance{ nullptr };
+        static inline std::atomic<int> s_InFlight{ 0 };
         static inline std::atomic<bool> s_InProgress{ false };
         static inline DestroySubsystemsFunction s_OriginalFunction{ nullptr };
 

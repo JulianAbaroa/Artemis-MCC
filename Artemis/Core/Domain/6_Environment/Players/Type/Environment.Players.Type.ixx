@@ -1,5 +1,6 @@
 export module Environment.Players.Type;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Team.Type;
 import Tables.Object.Type;
@@ -13,6 +14,8 @@ namespace
     using Tables::Object::Type::Biped::ZoomLevel;
     using Tables::Object::Type::Biped::GrenadeType;
     using Tables::Player::Type::Alive::ConnectionState;
+
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Environment::Players::Type
@@ -22,15 +25,15 @@ export namespace Environment::Players::Type
     struct Loadout
     {
         // Weapons by slot, or 0xFFFFFFFF when empty. They do not swap when the player switches weapons.
-        std::uint32_t PrimaryWeapon{ 0xFFFFFFFF };
-        std::uint32_t SecondaryWeapon{ 0xFFFFFFFF };
+        std::uint32_t PrimaryWeapon{ k_NoHandle };
+        std::uint32_t SecondaryWeapon{ k_NoHandle };
 
         // Weapon in the hands.
         // note: 0xFFFFFFFF in a vehicle or without a usable weapon.
-        std::uint32_t EquippedWeapon{ 0xFFFFFFFF };
+        std::uint32_t EquippedWeapon{ k_NoHandle };
 
         // Equipment of the armor ability, or 0xFFFFFFFF without one.
-        std::uint32_t Ability{ 0xFFFFFFFF };
+        std::uint32_t Ability{ k_NoHandle };
 
         // Energy left of the armor ability, from 0 (depleted) to 1 (full).
         float AbilityEnergy{};
@@ -44,7 +47,7 @@ export namespace Environment::Players::Type
         std::uint8_t PlasmaGrenades{};
 
         // Objective item carried, or 0xFFFFFFFF without one.
-        std::uint32_t Objective{ 0xFFFFFFFF };
+        std::uint32_t Objective{ k_NoHandle };
     };
 
     // State of the live biped of a player that its Entity does not have (D93).
@@ -67,13 +70,13 @@ export namespace Environment::Players::Type
 
         // Player of the latest hit since the shield last started recharging, or 0xFFFFFFFF.
         // note: The player itself after its own grenade or a fall.
-        std::uint32_t LastDamagerPlayer{ 0xFFFFFFFF };
+        std::uint32_t LastDamagerPlayer{ k_NoHandle };
 
         // Ticks since the last damage, or empty if the biped was never damaged.
         std::optional<std::uint32_t> TicksSinceDamage{};
     };
 
-    // One player of the player table with its body and loadout (Ignore/Semantizacion/05, section 9, D30, D93).
+    // One player of the player table with its body and loadout (D19, D30, D93).
     // note: IsAgent waits for the multi-view (B5 Views), RespawnTicks and Score for Q25 and the seat for A11.
     struct Player
     {
@@ -91,7 +94,7 @@ export namespace Environment::Players::Type
         ::Team Team{ ::Team::Neutral };
 
         // Current biped, alive or a corpse, or 0xFFFFFFFF without one.
-        std::uint32_t BipedHandle{ 0xFFFFFFFF };
+        std::uint32_t BipedHandle{ k_NoHandle };
 
         Vec3 CameraPosition{};
         Vec3 CameraForward{};

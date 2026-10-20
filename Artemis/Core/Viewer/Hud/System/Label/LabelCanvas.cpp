@@ -5,10 +5,11 @@ module;
 module Viewer.Hud.System;
 import :Canvas;
 
-import Viewer.Camera.System;
+import Common.Engine.Type;
 import Viewer.Camera.Type;
-import Viewer.Options.State;
+import Viewer.Camera.System;
 import Viewer.Options.Type;
+import Viewer.Options.State;
 import Viewer.Style.Type;
 import Viewer.Hud.Type;
 import std;
@@ -16,9 +17,10 @@ import std;
 namespace
 {
     using Viewer::Options::Type::Scalar;
-    using Viewer::Hud::Type::k_NoLabelKey;
     using Viewer::Style::Type::k_TeamNeutral;
     using Viewer::Style::Type::ColorOfTeam;
+
+    using Common::Engine::Type::k_NoHandle;
 
     constexpr float k_ScreenMargin{ 48.0f };
     constexpr float k_PaddingX{ 6.0f };
@@ -124,7 +126,7 @@ namespace Viewer::Hud::System
     {
         if (rows.empty()) return false;
 
-        if (key != k_NoLabelKey)
+        if (key != k_NoHandle)
         {
             const auto existing = m_KeyIndex.find(key);
             if (existing != m_KeyIndex.end())
@@ -163,7 +165,7 @@ namespace Viewer::Hud::System
         entry.Rows = std::move(rows);
 
         m_Entries.push_back(std::move(entry));
-        if (key != k_NoLabelKey) m_KeyIndex[key] = m_Entries.size() - 1;
+        if (key != k_NoHandle) m_KeyIndex[key] = m_Entries.size() - 1;
 
         return true;
     }
@@ -450,5 +452,10 @@ namespace Viewer::Hud::System
                 cursorY += rowHeight;
             }
         }
+    }
+
+    auto LabelCanvas::GetOptions() const -> const OptionsStore&
+    {
+        return m_Options;
     }
 }

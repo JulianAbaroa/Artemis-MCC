@@ -1,9 +1,11 @@
 export module Export.Tick.State;
 
-import Common.State.System;
+import Common.State.Type;
 import Export.Tick.Type;
 
 export namespace Export::Tick::State
 {
-    using TickStore = Common::State::System::Snapshot<Export::Tick::Type::Tick>;
+    class TickStore : public Common::State::Type::Snapshot<Export::Tick::Type::Tick>
+    {
+    };
 }

@@ -3,8 +3,8 @@ export module Map.Reader.System:Geometry.MeshDecoder;
 import :DataStream;
 import :Formula;
 
-import Service.Logs.System;
 import Common.Math.Type;
+import Service.Logs.System;
 import Map.Reader.Type;
 import Map.Reader.State;
 import Map.Tag.Type;
@@ -21,9 +21,9 @@ export namespace Map::Reader::System
         using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
         using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
         using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
-        using MeshesObject = Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
-        using CompressionInfoEntry3 = Map::Tag::Type::Sbsp::Structure::Sbsp_CompressionInfoEntry_3;
-        using TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+        using Lbsp_MeshesObject = Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
+        using Sbsp_CompressionInfoEntry_3 = Map::Tag::Type::Sbsp::Structure::Sbsp_CompressionInfoEntry_3;
+        using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
         using VertexDecodeContext = Map::Reader::Type::Geometry::VertexDecodeContext;
         using BufferInfo = Map::Reader::Type::Geometry::BufferInfo;
 
@@ -51,11 +51,11 @@ export namespace Map::Reader::System
         // param out: Out. The triangles are appended to it.
         // return: Number of triangles added.
         auto EmitSection(const std::vector<std::uint8_t>& pageData,
-            const TagResourcesObject& entry, std::int32_t vbCount,
+            const Zone_TagResourcesObject& entry, std::int32_t vbCount,
             const std::vector<BufferInfo>& vbInfo,
             const std::vector<BufferInfo>& ibInfo,
-            const MeshesObject& section,
-            const CompressionInfoEntry3* compressionInfo,
+            const Lbsp_MeshesObject& section,
+            const Sbsp_CompressionInfoEntry_3* compressionInfo,
             const char* tagName, const float* transformMatrix,
             std::vector<Triangle>& out) const -> std::uint32_t;
 
@@ -64,7 +64,7 @@ export namespace Map::Reader::System
         // param fixupDataBase: File offset where the fixup data of the zone starts.
         // return: Number of triangles added.
         auto EmitInstancedGeometry(const std::vector<std::uint8_t>& pageData,
-            const TagResourcesObject& lbspEntry, std::int32_t vbCount,
+            const Zone_TagResourcesObject& lbspEntry, std::int32_t vbCount,
             const std::vector<BufferInfo>& vbInfo,
             const std::vector<BufferInfo>& ibInfo,
             const SbspObject* sbsp, const LbspObject* lbsp,
@@ -73,7 +73,7 @@ export namespace Map::Reader::System
 
         // return: Null if the section has no compression info.
         auto GetCompressionInfo(int sectionIdx,
-            const SbspObject* sbsp) const -> const CompressionInfoEntry3*;
+            const SbspObject* sbsp) const -> const Sbsp_CompressionInfoEntry_3*;
 
     private:
         LogsService& m_LogsService;

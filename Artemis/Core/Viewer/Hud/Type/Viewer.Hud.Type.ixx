@@ -4,16 +4,27 @@ module;
 
 export module Viewer.Hud.Type;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Relations.Classifier.Type;
 import Export.Tick.Type;
-import Viewer.Options.State;
 import std;
+
+namespace
+{
+    using Common::Engine::Type::k_NoHandle;
+}
 
 export namespace Viewer::Hud::Type
 {
-    // Key of a label that is not merged with any other.
-    inline constexpr std::uint32_t k_NoLabelKey{ 0xFFFFFFFF };
+    // Colors of the rows of a label: secondary information, muted information, free and taken seats.
+    inline constexpr ImU32 k_InfoColor{ IM_COL32(190, 200, 215, 255) };
+    inline constexpr ImU32 k_MutedColor{ IM_COL32(150, 160, 175, 255) };
+    inline constexpr ImU32 k_FreeSeatColor{ IM_COL32(120, 200, 130, 255) };
+    inline constexpr ImU32 k_TakenSeatColor{ IM_COL32(215, 110, 110, 255) };
+
+    // Priority of the label of the selected object, so it survives the label limit.
+    inline constexpr float k_SelectedPriority{ 1.0f };
 
     // One line of a label. A divider draws a rule and ignores the text.
     struct LabelRow
@@ -29,15 +40,14 @@ export namespace Viewer::Hud::Type
     struct LabelContext
     {
         const Export::Tick::Type::Tick& Frame;
-        const Viewer::Options::State::OptionsStore& Options;
         // Classification of each live object, by handle. The pointers live as long as Frame.
         const std::unordered_map<std::uint32_t, const Relations::Classifier::Type::Classified*>& Classifications;
 
-        std::uint32_t Selected{ 0xFFFFFFFF };
+        std::uint32_t Selected{ k_NoHandle };
 
         bool HasSelf{ false };
         Common::Math::Type::Vec3 SelfPosition{};
-        std::uint32_t SelfBiped{ 0xFFFFFFFF };
+        std::uint32_t SelfBiped{ k_NoHandle };
     };
 
     // Label already projected to the screen. Rows are drawn from top to bottom.

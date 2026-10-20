@@ -19,10 +19,10 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0xAC
     struct Scnr_StructureBspsEntry
     {
-        MapStructure::Tag::Reference StructureBsp;  // 0x0  tagref.
-        MapStructure::Tag::Reference LocalStructureBsp;  // 0x10  tagref.
-        MapStructure::Tag::Reference StructureLighting;  // 0x20  tagref.
-        MapStructure::Tag::Reference LocalStructureLighting;  // 0x30  tagref.
+        MapStructure::Tag::TagReference StructureBsp;  // 0x0  tagref.
+        MapStructure::Tag::TagReference LocalStructureBsp;  // 0x10  tagref.
+        MapStructure::Tag::TagReference StructureLighting;  // 0x20  tagref.
+        MapStructure::Tag::TagReference LocalStructureLighting;  // 0x30  tagref.
         std::uint32_t SizeClass;  // 0x40  enum32. [32x32=0x0, 64x64=0x1, 128x128=0x2, 256x256 - 0.4 Meg (0.3 Meg 256X256)=0x3, 512x512 - 1.5 Meg (1 Meg 512X512)=0x4, 768x768 - 3.4 Meg (2.25 Meg 768X768)=0x5, 1024x1024 - 6 Meg (4 Meg 1024X1024)=0x6, 1280x1280 - 9.4 Meg (6.3 Meg 1280X1280)=0x7, 1536x1536 - 13.5 Meg (9 Meg 1536X1536)=0x8, 1792x1792 - 18.4 Meg (12.3 Meg 1792X1792)=0x9] | Tells lightmapper desired res for structure bitmaps. Numbers in parenthesis are final sizes after compression
         float        HackyAmbientMinimumLuminance;  // 0x44  float32.
         float        DirectDraftAmbientMinimumLuminance;  // 0x48  float32.
@@ -31,8 +31,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t DefaultSkyIndex;  // 0x52  int16.
         std::int16_t Unknown;  // 0x54  int16.
         std::int16_t Unknown_2;  // 0x56  int16.
-        MapStructure::Tag::Reference BspSpecificCubemap;  // 0x58  tagref.
-        MapStructure::Tag::Reference Wind;  // 0x68  tagref.
+        MapStructure::Tag::TagReference BspSpecificCubemap;  // 0x58  tagref.
+        MapStructure::Tag::TagReference Wind;  // 0x68  tagref.
         std::uint32_t ClonedBspFlags;  // 0x78  flags32. [Index 0=0, Index 1=1, Index 2=2, Index 3=3, Index 4=4, Index 5=5, Index 6=6, Index 7=7, Index 8=8, Index 9=9, Index 10=10, Index 11=11, Index 12=12, Index 13=13, Index 14=14, Index 15=15, ...(32 total)]
         float        LightmapResolutionLowest;  // 0x7C  float32.
         float        LightmapResolution2ndLow;  // 0x80  float32.
@@ -54,19 +54,19 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x20
     struct Scnr_StructureDesignsEntry
     {
-        MapStructure::Tag::Reference Design;  // 0x0  tagref.
-        MapStructure::Tag::Reference Unknown;  // 0x10  tagref.
+        MapStructure::Tag::TagReference Design;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Unknown;  // 0x10  tagref.
     };
     static_assert(sizeof(Scnr_StructureDesignsEntry) == 0x20, "Scnr_StructureDesignsEntry size mismatch");
 
     // Entry size: 0x30
     struct Scnr_SkiesEntry
     {
-        MapStructure::Tag::Reference SkyObject;  // 0x0  tagref.
+        MapStructure::Tag::TagReference SkyObject;  // 0x0  tagref.
         float        CloudScale;  // 0x10  float32. | mapping to the world unit
         float        CloudSpeed;  // 0x14  float32. | cloud movement speed
         float        CloudDirection;  // 0x18  float32. | cloud movement direction, 0-360 degree
-        MapStructure::Tag::Reference CloudTexture;  // 0x1C  tagref. | red channel is used
+        MapStructure::Tag::TagReference CloudTexture;  // 0x1C  tagref. | red channel is used
         std::int16_t NameIndex;  // 0x2C  int16.
         std::uint16_t ActiveOnBsps;  // 0x2E  flags16. [Index 0=0, Index 1=1, Index 2=2, Index 3=3, Index 4=4, Index 5=5, Index 6=6, Index 7=7, Index 8=8, Index 9=9, Index 10=10, Index 11=11, Index 12=12, Index 13=13, Index 14=14, Index 15=15]
     };
@@ -90,7 +90,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSets_ClusterPotentiallyVisibleSetBitVectorsEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSets_ClusterPotentiallyVisibleSetBitVectors_BitsEntry[]
-        MapStructure::Tag::Block   Bits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Bits;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSets_ClusterPotentiallyVisibleSetBitVectorsEntry) == 0xC, "Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSets_ClusterPotentiallyVisibleSetBitVectorsEntry size mismatch");
 
@@ -98,7 +98,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSets_ClusterPotentiallyVisibleSetBitVectorsEntry[]
-        MapStructure::Tag::Block   ClusterPotentiallyVisibleSetBitVectors;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   ClusterPotentiallyVisibleSetBitVectors;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsEntry) == 0xC, "Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsEntry size mismatch");
 
@@ -113,7 +113,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosed_ClusterPotentiallyVisibleSetBitVectorsEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosed_ClusterPotentiallyVisibleSetBitVectors_BitsEntry[]
-        MapStructure::Tag::Block   Bits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Bits;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosed_ClusterPotentiallyVisibleSetBitVectorsEntry) == 0xC, "Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosed_ClusterPotentiallyVisibleSetBitVectorsEntry size mismatch");
 
@@ -121,7 +121,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosedEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosed_ClusterPotentiallyVisibleSetBitVectorsEntry[]
-        MapStructure::Tag::Block   ClusterPotentiallyVisibleSetBitVectors;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   ClusterPotentiallyVisibleSetBitVectors;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosedEntry) == 0xC, "Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosedEntry size mismatch");
 
@@ -174,11 +174,11 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappingsEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappings_RootClustersEntry[]
-        MapStructure::Tag::Block   RootClusters;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RootClusters;  // 0x0  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappings_AttachedClustersEntry[]
-        MapStructure::Tag::Block   AttachedClusters;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   AttachedClusters;  // 0xC  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappings_ConnectedClustersEntry[]
-        MapStructure::Tag::Block   ConnectedClusters;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   ConnectedClusters;  // 0x18  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappingsEntry) == 0x24, "Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappingsEntry size mismatch");
 
@@ -186,17 +186,17 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSetsEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsEntry[]
-        MapStructure::Tag::Block   ClusterPotentiallyVisibleSets;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   ClusterPotentiallyVisibleSets;  // 0x0  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterPotentiallyVisibleSetsDoorsClosedEntry[]
-        MapStructure::Tag::Block   ClusterPotentiallyVisibleSetsDoorsClosed;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   ClusterPotentiallyVisibleSetsDoorsClosed;  // 0xC  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterSkiesEntry[]
-        MapStructure::Tag::Block   ClusterSkies;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   ClusterSkies;  // 0x18  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_ClusterVisibleSkiesEntry[]
-        MapStructure::Tag::Block   ClusterVisibleSkies;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   ClusterVisibleSkies;  // 0x24  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x30  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSets_BspClusterMappingsEntry[]
-        MapStructure::Tag::Block   BspClusterMappings;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   BspClusterMappings;  // 0x3C  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSetsEntry) == 0x48, "Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSetsEntry size mismatch");
 
@@ -230,11 +230,11 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMappingEntry
     {
         // -> Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMapping_DevicePortalAssociationsEntry[]
-        MapStructure::Tag::Block   DevicePortalAssociations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   DevicePortalAssociations;  // 0x0  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMapping_GamePortalToPortalMapEntry[]
-        MapStructure::Tag::Block   GamePortalToPortalMap;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   GamePortalToPortalMap;  // 0xC  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMapping_OccludingPortalToPortalMapEntry[]
-        MapStructure::Tag::Block   OccludingPortalToPortalMap;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OccludingPortalToPortalMap;  // 0x18  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMappingEntry) == 0x24, "Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMappingEntry size mismatch");
 
@@ -245,11 +245,11 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t Version;  // 0x4  int16.
         std::uint16_t Flags;  // 0x6  flags16. [Empty Debug PVS=0]
         // -> Scnr_ZoneSetPotentiallyVisibleSets_BspChecksumsEntry[]
-        MapStructure::Tag::Block   BspChecksums;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   BspChecksums;  // 0x8  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_StructurePotentiallyVisibleSetsEntry[]
-        MapStructure::Tag::Block   StructurePotentiallyVisibleSets;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   StructurePotentiallyVisibleSets;  // 0x14  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSets_PortalToDeviceMappingEntry[]
-        MapStructure::Tag::Block   PortalToDeviceMapping;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   PortalToDeviceMapping;  // 0x20  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetPotentiallyVisibleSetsEntry) == 0x2C, "Scnr_ZoneSetPotentiallyVisibleSetsEntry size mismatch");
 
@@ -311,19 +311,19 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int32_t RoomCount;  // 0x4  int32.
         MapStructure::Primitive::RangeF RoomDistanceBounds;  // 0x8  rangef.
         // -> Scnr_ZoneSetAudibility_EncodedDoorPotentiallyAudibleSetsEntry[]
-        MapStructure::Tag::Block   EncodedDoorPotentiallyAudibleSets;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   EncodedDoorPotentiallyAudibleSets;  // 0x10  tagblock.
         // -> Scnr_ZoneSetAudibility_RoomDoorPortalEncodedPotentiallyAudibleSetsEntry[]
-        MapStructure::Tag::Block   RoomDoorPortalEncodedPotentiallyAudibleSets;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   RoomDoorPortalEncodedPotentiallyAudibleSets;  // 0x1C  tagblock.
         // -> Scnr_ZoneSetAudibility_AiDeafeningPotentiallyAudibleSetsEntry[]
-        MapStructure::Tag::Block   AiDeafeningPotentiallyAudibleSets;  // 0x28  tagblock.
+        MapStructure::Tag::TagBlock   AiDeafeningPotentiallyAudibleSets;  // 0x28  tagblock.
         // -> Scnr_ZoneSetAudibility_RoomDistancesEntry[]
-        MapStructure::Tag::Block   RoomDistances;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   RoomDistances;  // 0x34  tagblock.
         // -> Scnr_ZoneSetAudibility_GamePortalToDoorOccluderMappingEntry[]
-        MapStructure::Tag::Block   GamePortalToDoorOccluderMapping;  // 0x40  tagblock.
+        MapStructure::Tag::TagBlock   GamePortalToDoorOccluderMapping;  // 0x40  tagblock.
         // -> Scnr_ZoneSetAudibility_BspClusterToRoomBoundsEntry[]
-        MapStructure::Tag::Block   BspClusterToRoomBounds;  // 0x4C  tagblock.
+        MapStructure::Tag::TagBlock   BspClusterToRoomBounds;  // 0x4C  tagblock.
         // -> Scnr_ZoneSetAudibility_BspClusterToRoomIndicesEntry[]
-        MapStructure::Tag::Block   BspClusterToRoomIndices;  // 0x58  tagblock.
+        MapStructure::Tag::TagBlock   BspClusterToRoomIndices;  // 0x58  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetAudibilityEntry) == 0x64, "Scnr_ZoneSetAudibilityEntry size mismatch");
 
@@ -339,7 +339,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblity_ClusterVisiblityEntry
     {
         // -> Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblity_ClusterVisiblity_AttachedFogsEntry[]
-        MapStructure::Tag::Block   AttachedFogs;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   AttachedFogs;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblity_ClusterVisiblityEntry) == 0xC, "Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblity_ClusterVisiblityEntry size mismatch");
 
@@ -347,7 +347,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblityEntry
     {
         // -> Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblity_ClusterVisiblityEntry[]
-        MapStructure::Tag::Block   ClusterVisiblity;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   ClusterVisiblity;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblityEntry) == 0xC, "Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblityEntry size mismatch");
 
@@ -355,7 +355,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ZoneSets_PlanarFogVisibilityEntry
     {
         // -> Scnr_ZoneSets_PlanarFogVisibility_StructureVisiblityEntry[]
-        MapStructure::Tag::Block   StructureVisiblity;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   StructureVisiblity;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSets_PlanarFogVisibilityEntry) == 0xC, "Scnr_ZoneSets_PlanarFogVisibilityEntry size mismatch");
 
@@ -377,7 +377,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int32_t HintPreviousZoneSetIndex;  // 0x128  int32.
         std::int32_t AudibilityIndex;  // 0x12C  int32.
         // -> Scnr_ZoneSets_PlanarFogVisibilityEntry[]
-        MapStructure::Tag::Block   PlanarFogVisibility;  // 0x130  tagblock.
+        MapStructure::Tag::TagBlock   PlanarFogVisibility;  // 0x130  tagblock.
     };
     static_assert(sizeof(Scnr_ZoneSetsEntry) == 0x13C, "Scnr_ZoneSetsEntry size mismatch");
 
@@ -419,10 +419,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Scenery_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Scenery_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Scenery_NodeOrientationsEntry) == 0x1C, "Scnr_Scenery_NodeOrientationsEntry size mismatch");
@@ -445,7 +445,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Scenery_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -475,7 +475,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint16_t PathfindingPolicy;  // 0x70  enum16. [Tag Default=0x0, Dynamic=0x1, Cut-Out=0x2, Standard=0x3, None=0x4]
         std::uint16_t LightmappingPolicy;  // 0x72  enum16. [Tag Default=0x0, Dynamic=0x1, Per-Vertex=0x2]
         // -> Scnr_Scenery_PathfindingReferencesEntry[]
-        MapStructure::Tag::Block   PathfindingReferences;  // 0x74  tagblock.
+        MapStructure::Tag::TagBlock   PathfindingReferences;  // 0x74  tagblock.
         std::int16_t HavokMoppIndex;  // 0x80  int16.
         std::int16_t AiSpawningSquadIndex;  // 0x82  int16.
         std::uint32_t MegaloLabel;  // 0x84  ascii.
@@ -510,7 +510,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_SceneryPaletteEntry
     {
-        MapStructure::Tag::Reference Scenery;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Scenery;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_SceneryPaletteEntry) == 0x10, "Scnr_SceneryPaletteEntry size mismatch");
 
@@ -534,10 +534,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Bipeds_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Bipeds_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Bipeds_NodeOrientationsEntry) == 0x1C, "Scnr_Bipeds_NodeOrientationsEntry size mismatch");
@@ -552,7 +552,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Bipeds_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -587,7 +587,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_BipedPaletteEntry
     {
-        MapStructure::Tag::Reference Biped;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Biped;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_BipedPaletteEntry) == 0x10, "Scnr_BipedPaletteEntry size mismatch");
 
@@ -611,10 +611,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Vehicles_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Vehicles_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Vehicles_NodeOrientationsEntry) == 0x1C, "Scnr_Vehicles_NodeOrientationsEntry size mismatch");
@@ -629,7 +629,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Vehicles_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -690,7 +690,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_VehiclePaletteEntry
     {
-        MapStructure::Tag::Reference Vehicle;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Vehicle;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_VehiclePaletteEntry) == 0x10, "Scnr_VehiclePaletteEntry size mismatch");
 
@@ -714,10 +714,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Equipment_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Equipment_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Equipment_NodeOrientationsEntry) == 0x1C, "Scnr_Equipment_NodeOrientationsEntry size mismatch");
@@ -732,7 +732,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Equipment_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -784,7 +784,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_EquipmentPaletteEntry
     {
-        MapStructure::Tag::Reference Equipment;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Equipment;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_EquipmentPaletteEntry) == 0x10, "Scnr_EquipmentPaletteEntry size mismatch");
 
@@ -808,10 +808,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Weapons_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Weapons_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Weapons_NodeOrientationsEntry) == 0x1C, "Scnr_Weapons_NodeOrientationsEntry size mismatch");
@@ -826,7 +826,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Weapons_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -888,7 +888,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_WeaponPaletteEntry
     {
-        MapStructure::Tag::Reference Weapon;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Weapon;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_WeaponPaletteEntry) == 0x10, "Scnr_WeaponPaletteEntry size mismatch");
 
@@ -924,10 +924,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Machines_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Machines_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Machines_NodeOrientationsEntry) == 0x1C, "Scnr_Machines_NodeOrientationsEntry size mismatch");
@@ -950,7 +950,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Machines_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -982,7 +982,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t DeviceFlags;  // 0x74  flags32. [Initially Open (1.0)=0, Initially Off (0.0)=1, Can Only Change Once=2, Position Reversed=3, Not Usable From Any Side=4, Closes Without Power=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         std::uint32_t MachineFlags;  // 0x78  flags32. [Does Not Operate Automatically=0, One-Sided=1, Never Appears Locked=2, Opened by Melee Attack=3, One-Sided for Player=4, Does Not Close Automatically=5, Ignores Player=6, Ignores AI=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         // -> Scnr_Machines_PathfindingReferencesEntry[]
-        MapStructure::Tag::Block   PathfindingReferences;  // 0x7C  tagblock.
+        MapStructure::Tag::TagBlock   PathfindingReferences;  // 0x7C  tagblock.
         std::uint16_t PathfindingPolicy;  // 0x88  enum16. [Default=0x0, Discs=0x1, Sectors=0x2, Cut-Out=0x3, None=0x4]
         std::int16_t Unknown_8;  // 0x8A  int16.
         std::uint32_t MegaloLabel;  // 0x8C  ascii.
@@ -1017,7 +1017,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_MachinePaletteEntry
     {
-        MapStructure::Tag::Reference Machine;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Machine;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_MachinePaletteEntry) == 0x10, "Scnr_MachinePaletteEntry size mismatch");
 
@@ -1041,10 +1041,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Terminals_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Terminals_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Terminals_NodeOrientationsEntry) == 0x1C, "Scnr_Terminals_NodeOrientationsEntry size mismatch");
@@ -1059,7 +1059,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Terminals_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -1096,7 +1096,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_TerminalPaletteEntry
     {
-        MapStructure::Tag::Reference Terminal;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Terminal;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_TerminalPaletteEntry) == 0x10, "Scnr_TerminalPaletteEntry size mismatch");
 
@@ -1120,10 +1120,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Controls_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Controls_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Controls_NodeOrientationsEntry) == 0x1C, "Scnr_Controls_NodeOrientationsEntry size mismatch");
@@ -1138,7 +1138,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Controls_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -1205,7 +1205,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_ControlPaletteEntry
     {
-        MapStructure::Tag::Reference Control;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Control;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_ControlPaletteEntry) == 0x10, "Scnr_ControlPaletteEntry size mismatch");
 
@@ -1229,10 +1229,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_SoundScenery_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_SoundScenery_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_SoundScenery_NodeOrientationsEntry) == 0x1C, "Scnr_SoundScenery_NodeOrientationsEntry size mismatch");
@@ -1247,7 +1247,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_SoundScenery_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -1284,7 +1284,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_SoundSceneryPaletteEntry
     {
-        MapStructure::Tag::Reference SoundScenery;  // 0x0  tagref.
+        MapStructure::Tag::TagReference SoundScenery;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_SoundSceneryPaletteEntry) == 0x10, "Scnr_SoundSceneryPaletteEntry size mismatch");
 
@@ -1308,10 +1308,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Giants_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Giants_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Giants_NodeOrientationsEntry) == 0x1C, "Scnr_Giants_NodeOrientationsEntry size mismatch");
@@ -1334,7 +1334,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Giants_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -1366,14 +1366,14 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint16_t PathfindingPolicy;  // 0x78  enum16. [Tag Default=0x0, Dynamic=0x1, Cut-Out=0x2, Standard=0x3, None=0x4]
         std::int16_t Unknown_8;  // 0x7A  int16.
         // -> Scnr_Giants_PathfindingReferencesEntry[]
-        MapStructure::Tag::Block   PathfindingReferences;  // 0x7C  tagblock.
+        MapStructure::Tag::TagBlock   PathfindingReferences;  // 0x7C  tagblock.
     };
     static_assert(sizeof(Scnr_GiantsEntry) == 0x88, "Scnr_GiantsEntry size mismatch");
 
     // Entry size: 0x10
     struct Scnr_GiantPaletteEntry
     {
-        MapStructure::Tag::Reference Giant;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Giant;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_GiantPaletteEntry) == 0x10, "Scnr_GiantPaletteEntry size mismatch");
 
@@ -1397,10 +1397,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_EffectScenery_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_EffectScenery_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_EffectScenery_NodeOrientationsEntry) == 0x1C, "Scnr_EffectScenery_NodeOrientationsEntry size mismatch");
@@ -1415,7 +1415,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_EffectScenery_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -1466,7 +1466,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_EffectSceneryPaletteEntry
     {
-        MapStructure::Tag::Reference EffectScenery;  // 0x0  tagref.
+        MapStructure::Tag::TagReference EffectScenery;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_EffectSceneryPaletteEntry) == 0x10, "Scnr_EffectSceneryPaletteEntry size mismatch");
 
@@ -1490,10 +1490,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_LightVolumes_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_LightVolumes_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_LightVolumes_NodeOrientationsEntry) == 0x1C, "Scnr_LightVolumes_NodeOrientationsEntry size mismatch");
@@ -1508,7 +1508,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_LightVolumes_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -1548,7 +1548,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_LightVolumesPaletteEntry
     {
-        MapStructure::Tag::Reference LightVolume;  // 0x0  tagref.
+        MapStructure::Tag::TagReference LightVolume;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_LightVolumesPaletteEntry) == 0x10, "Scnr_LightVolumesPaletteEntry size mismatch");
 
@@ -1556,7 +1556,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_MapVariantPalettes_Entries_VariantsEntry
     {
         std::uint32_t DisplayName;  // 0x0  stringid.
-        MapStructure::Tag::Reference Object;  // 0x4  tagref.
+        MapStructure::Tag::TagReference Object;  // 0x4  tagref.
         std::uint32_t VariantName;  // 0x14  stringid.
     };
     static_assert(sizeof(Scnr_MapVariantPalettes_Entries_VariantsEntry) == 0x18, "Scnr_MapVariantPalettes_Entries_VariantsEntry size mismatch");
@@ -1566,7 +1566,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         // -> Scnr_MapVariantPalettes_Entries_VariantsEntry[]
-        MapStructure::Tag::Block   Variants;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Variants;  // 0x4  tagblock.
         std::int32_t MaximumAllowed;  // 0x10  int32. | if this is <= 0, these are 'unlimited' (up to a reasonable code-defined maximum)
         std::int32_t PricePerInstance;  // 0x14  int32.
         std::int8_t  Thorage;  // 0x18  int8.
@@ -1585,7 +1585,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int8_t  Thorage;  // 0x6  int8.
         std::int8_t  Unknown_2;  // 0x7  int8.
         // -> Scnr_MapVariantPalettes_EntriesEntry[]
-        MapStructure::Tag::Block   Entries;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   Entries;  // 0x8  tagblock.
     };
     static_assert(sizeof(Scnr_MapVariantPalettesEntry) == 0x14, "Scnr_MapVariantPalettesEntry size mismatch");
 
@@ -1605,7 +1605,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_LegacySandboxInfoEntry
     {
         // -> Scnr_LegacySandboxInfo_BuildsEntry[]
-        MapStructure::Tag::Block   Builds;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Builds;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_LegacySandboxInfoEntry) == 0xC, "Scnr_LegacySandboxInfoEntry size mismatch");
 
@@ -1627,17 +1627,17 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _gap_0x4[0x1C];
         float        StartingHealthDamage;  // 0x20  float32.
         float        StartingShieldDamage;  // 0x24  float32.
-        MapStructure::Tag::Reference PrimaryWeapon;  // 0x28  tagref.
+        MapStructure::Tag::TagReference PrimaryWeapon;  // 0x28  tagref.
         std::int16_t PrimaryRoundsLoaded;  // 0x38  int16. | -1 = weapon default
         std::int16_t PrimaryRoundsTotal;  // 0x3A  int16. | -1 = weapon default
-        MapStructure::Tag::Reference SecondaryWeapon;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference SecondaryWeapon;  // 0x3C  tagref.
         std::int16_t SecondaryRoundsLoaded;  // 0x4C  int16. | -1 = weapon default
         std::int16_t SecondaryRoundsTotal;  // 0x4E  int16. | -1 = weapon default
         std::uint8_t StartingFragGrenadeCount;  // 0x50  uint8.
         std::uint8_t StartingPlasmaGrenadeCount;  // 0x51  uint8.
         std::uint8_t StartingGrenade3Count;  // 0x52  uint8.
         std::uint8_t StartingGrenade4Count;  // 0x53  uint8.
-        MapStructure::Tag::Reference StartingEquipment;  // 0x54  tagref.
+        MapStructure::Tag::TagReference StartingEquipment;  // 0x54  tagref.
         std::int16_t EditorFolderIndex;  // 0x64  int16.
         std::int16_t Unknown;  // 0x66  int16.
     };
@@ -1701,9 +1701,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Extents;  // 0x34  point3.
         float        ZSink;  // 0x40  float32. | this is only valid for sector type trigger volumes
         // -> Scnr_TriggerVolumes_SectorPointsEntry[]
-        MapStructure::Tag::Block   SectorPoints;  // 0x44  tagblock.
+        MapStructure::Tag::TagBlock   SectorPoints;  // 0x44  tagblock.
         // -> Scnr_TriggerVolumes_TrianglesEntry[]
-        MapStructure::Tag::Block   Triangles;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   Triangles;  // 0x50  tagblock.
         MapStructure::Primitive::RangeF SectorBoundsX;  // 0x5C  rangef.
         MapStructure::Primitive::RangeF SectorBoundsY;  // 0x64  rangef.
         MapStructure::Primitive::RangeF SectorBoundsZ;  // 0x6C  rangef.
@@ -1724,7 +1724,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_UnknownEntry
     {
         // -> Scnr_Unknown_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
         float        Unknown_2;  // 0xC  float32.
         float        Unknown_3;  // 0x10  float32.
         float        Unknown_4;  // 0x14  float32.
@@ -1793,9 +1793,9 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_UnknownEntry_3
     {
         // -> Scnr_Unknown_3_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
         // -> Scnr_Unknown_3_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_2;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_2;  // 0xC  tagblock.
         float        Unknown_3;  // 0x18  float32.
         float        Unknown_4;  // 0x1C  float32.
         float        Unknown_5;  // 0x20  float32.
@@ -1832,7 +1832,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_NamedLocationVolumesEntry
     {
         // -> Scnr_NamedLocationVolumes_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x0  tagblock.
         float        Height;  // 0xC  float32.
         float        Sink;  // 0x10  float32.
         std::uint32_t LocationName;  // 0x14  stringid.
@@ -1909,7 +1909,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_DecalsPaletteEntry
     {
-        MapStructure::Tag::Reference Decal;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Decal;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_DecalsPaletteEntry) == 0x10, "Scnr_DecalsPaletteEntry size mismatch");
 
@@ -1965,7 +1965,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PointSetIndex;  // 0x44  int16.
         std::uint16_t PatrolMode;  // 0x46  enum16. [Ping-Pong=0x0, Loop=0x1, Random=0x2]
         // -> Scnr_Squads_SpawnFormations_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x48  tagblock.
     };
     static_assert(sizeof(Scnr_Squads_SpawnFormationsEntry) == 0x54, "Scnr_Squads_SpawnFormationsEntry size mismatch");
 
@@ -2027,7 +2027,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PointSetIndex;  // 0x6C  int16.
         std::uint16_t PatrolMode;  // 0x6E  enum16. [Ping-Pong=0x0, Loop=0x1, Random=0x2]
         // -> Scnr_Squads_SpawnPoints_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x70  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x70  tagblock.
     };
     static_assert(sizeof(Scnr_Squads_SpawnPointsEntry) == 0x7C, "Scnr_Squads_SpawnPointsEntry size mismatch");
 
@@ -2116,13 +2116,13 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NormalDifficultyCount;  // 0x10  int16. | initial number of actors on normal difficulty
         std::uint16_t MajorUpgrade;  // 0x12  enum16. [Normal=0x0, Few=0x1, Many=0x2, None=0x3, All=0x4]
         // -> Scnr_Squads_DesignerCells_CharacterTypeEntry[]
-        MapStructure::Tag::Block   CharacterType;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   CharacterType;  // 0x14  tagblock.
         // -> Scnr_Squads_DesignerCells_InitialWeaponEntry[]
-        MapStructure::Tag::Block   InitialWeapon;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   InitialWeapon;  // 0x20  tagblock.
         // -> Scnr_Squads_DesignerCells_InitialSecondaryWeaponEntry[]
-        MapStructure::Tag::Block   InitialSecondaryWeapon;  // 0x2C  tagblock.
+        MapStructure::Tag::TagBlock   InitialSecondaryWeapon;  // 0x2C  tagblock.
         // -> Scnr_Squads_DesignerCells_InitialEquipmentEntry[]
-        MapStructure::Tag::Block   InitialEquipment;  // 0x38  tagblock.
+        MapStructure::Tag::TagBlock   InitialEquipment;  // 0x38  tagblock.
         std::uint16_t GrenadeType;  // 0x44  enum16. [Default=0x0, Frag=0x1, Plasma=0x2, Pulse=0x3]
         std::int16_t VehicleTypeIndex;  // 0x46  int16.
         std::uint32_t VehicleVariant;  // 0x48  stringid.
@@ -2134,7 +2134,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PointSetIndex;  // 0x5C  int16.
         std::uint16_t PatrolMode;  // 0x5E  enum16. [Ping-Pong=0x0, Loop=0x1, Random=0x2]
         // -> Scnr_Squads_DesignerCells_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x60  tagblock.
     };
     static_assert(sizeof(Scnr_Squads_DesignerCellsEntry) == 0x6C, "Scnr_Squads_DesignerCellsEntry size mismatch");
 
@@ -2223,13 +2223,13 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NormalDifficultyCount;  // 0x10  int16. | initial number of actors on normal difficulty
         std::uint16_t MajorUpgrade;  // 0x12  enum16. [Normal=0x0, Few=0x1, Many=0x2, None=0x3, All=0x4]
         // -> Scnr_Squads_TemplatedCells_CharacterTypeEntry[]
-        MapStructure::Tag::Block   CharacterType;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   CharacterType;  // 0x14  tagblock.
         // -> Scnr_Squads_TemplatedCells_InitialWeaponEntry[]
-        MapStructure::Tag::Block   InitialWeapon;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   InitialWeapon;  // 0x20  tagblock.
         // -> Scnr_Squads_TemplatedCells_InitialSecondaryWeaponEntry[]
-        MapStructure::Tag::Block   InitialSecondaryWeapon;  // 0x2C  tagblock.
+        MapStructure::Tag::TagBlock   InitialSecondaryWeapon;  // 0x2C  tagblock.
         // -> Scnr_Squads_TemplatedCells_InitialEquipmentEntry[]
-        MapStructure::Tag::Block   InitialEquipment;  // 0x38  tagblock.
+        MapStructure::Tag::TagBlock   InitialEquipment;  // 0x38  tagblock.
         std::uint16_t GrenadeType;  // 0x44  enum16. [Default=0x0, Frag=0x1, Plasma=0x2, Pulse=0x3]
         std::int16_t VehicleTypeIndex;  // 0x46  int16.
         std::uint32_t VehicleVariant;  // 0x48  stringid.
@@ -2241,7 +2241,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PointSetIndex;  // 0x5C  int16.
         std::uint16_t PatrolMode;  // 0x5E  enum16. [Ping-Pong=0x0, Loop=0x1, Random=0x2]
         // -> Scnr_Squads_TemplatedCells_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x60  tagblock.
     };
     static_assert(sizeof(Scnr_Squads_TemplatedCellsEntry) == 0x6C, "Scnr_Squads_TemplatedCellsEntry size mismatch");
 
@@ -2258,16 +2258,16 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t InitialTaskIndex;  // 0x2C  int16.
         std::int16_t EditorFolderIndex;  // 0x2E  int16.
         // -> Scnr_Squads_SpawnFormationsEntry[]
-        MapStructure::Tag::Block   SpawnFormations;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   SpawnFormations;  // 0x30  tagblock.
         // -> Scnr_Squads_SpawnPointsEntry[]
-        MapStructure::Tag::Block   SpawnPoints;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnPoints;  // 0x3C  tagblock.
         std::uint32_t WavePlacementFilter;  // 0x48  enum32. [None=0x0, Heavy Infantry=0x1, Boss Infantry=0x2, Light Vehicle=0x3, Heavy Vehicle=0x4, Flying Infantry=0x5, Flying Vehicle=0x6, Bonus=0x7] | Filter which squads in Firefight waves can be spawned into this squad
         std::uint32_t SquadTemplateName;  // 0x4C  stringid.
         std::uint32_t SquadTemplate;  // 0x50  tagref. [Truncated to 4 bytes]
         // -> Scnr_Squads_DesignerCellsEntry[]
-        MapStructure::Tag::Block   DesignerCells;  // 0x54  tagblock. | editable
+        MapStructure::Tag::TagBlock   DesignerCells;  // 0x54  tagblock. | editable
         // -> Scnr_Squads_TemplatedCellsEntry[]
-        MapStructure::Tag::Block   TemplatedCells;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   TemplatedCells;  // 0x60  tagblock.
     };
     static_assert(sizeof(Scnr_SquadsEntry) == 0x6C, "Scnr_SquadsEntry size mismatch");
 
@@ -2331,9 +2331,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
         // -> Scnr_Zones_Areas_FlightHintsEntry[]
-        MapStructure::Tag::Block   FlightHints;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   FlightHints;  // 0x60  tagblock.
         // -> Scnr_Zones_Areas_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_12;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_12;  // 0x6C  tagblock.
         std::int16_t Unknown_13;  // 0x78  int16.
         std::int16_t Unknown_14;  // 0x7A  int16.
         std::uint8_t  _pad_0x7C[0x4];  // undefined.
@@ -2357,9 +2357,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _gap_0x4[0x1C];
         std::uint32_t Bsps;  // 0x20  flags32. [BSP 0=0, BSP 1=1, BSP 2=2, BSP 3=3, BSP 4=4, BSP 5=5, BSP 6=6, BSP 7=7, BSP 8=8, BSP 9=9, BSP 10=10, BSP 11=11, BSP 12=12, BSP 13=13, BSP 14=14, BSP 15=15, ...(32 total)]
         // -> Scnr_Zones_FiringPositionsEntry[]
-        MapStructure::Tag::Block   FiringPositions;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   FiringPositions;  // 0x24  tagblock.
         // -> Scnr_Zones_AreasEntry[]
-        MapStructure::Tag::Block   Areas;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Areas;  // 0x30  tagblock.
         std::int16_t Unknown;  // 0x3C  int16.
         std::int16_t Unknown_2;  // 0x3E  int16.
     };
@@ -2390,9 +2390,9 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::uint32_t Unknown;  // 0x0  stringid.
         // -> Scnr_Unknown_8_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_2;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_2;  // 0x4  tagblock.
         // -> Scnr_Unknown_8_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_3;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_3;  // 0x10  tagblock.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
         std::uint8_t  _pad_0x20[0x4];  // undefined.
         std::uint8_t  _pad_0x24[0x4];  // undefined.
@@ -2466,17 +2466,17 @@ export namespace Map::Tag::Type::Scnr::Structure
         float        Unknown_6;  // 0x1C  float32.
         float        Unknown_7;  // 0x20  float32.
         // -> Scnr_AiCues_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_8;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_8;  // 0x24  tagblock.
         // -> Scnr_AiCues_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_9;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_9;  // 0x30  tagblock.
         // -> Scnr_AiCues_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_10;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_10;  // 0x3C  tagblock.
         // -> Scnr_AiCues_UnknownEntry_4[]
-        MapStructure::Tag::Block   Unknown_11;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_11;  // 0x48  tagblock.
         // -> Scnr_AiCues_UnknownEntry_5[]
-        MapStructure::Tag::Block   Unknown_12;  // 0x54  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_12;  // 0x54  tagblock.
         // -> Scnr_AiCues_UnknownEntry_6[]
-        MapStructure::Tag::Block   Unknown_13;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_13;  // 0x60  tagblock.
         std::uint8_t  _pad_0x6C[0x4];  // undefined.
         std::uint8_t  _pad_0x70[0x4];  // undefined.
         std::uint8_t  _pad_0x74[0x4];  // undefined.
@@ -2484,7 +2484,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x7C[0x4];  // undefined.
         std::uint8_t  _pad_0x80[0x4];  // undefined.
         // -> Scnr_AiCues_ActorStimuliEntry[]
-        MapStructure::Tag::Block   ActorStimuli;  // 0x84  tagblock.
+        MapStructure::Tag::TagBlock   ActorStimuli;  // 0x84  tagblock.
         std::uint8_t  _pad_0x90[0x4];  // undefined.
         std::uint8_t  _pad_0x94[0x4];  // undefined.
         std::uint8_t  _pad_0x98[0x4];  // undefined.
@@ -2495,7 +2495,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_CharacterPaletteEntry
     {
-        MapStructure::Tag::Reference Character;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Character;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_CharacterPaletteEntry) == 0x10, "Scnr_CharacterPaletteEntry size mismatch");
 
@@ -2578,7 +2578,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingData_UnknownEntry_5
     {
         // -> Scnr_AiPathfindingData_Unknown_5_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_AiPathfindingData_UnknownEntry_5) == 0xC, "Scnr_AiPathfindingData_UnknownEntry_5 size mismatch");
 
@@ -2635,11 +2635,11 @@ export namespace Map::Tag::Type::Scnr::Structure
         float        Unknown_2;  // 0x4  float32.
         float        Unknown_3;  // 0x8  float32.
         // -> Scnr_AiPathfindingData_Unknown_7_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_4;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_4;  // 0xC  tagblock.
         std::int16_t Unknown_5;  // 0x18  int16.
         std::int16_t Unknown_6;  // 0x1A  int16.
         // -> Scnr_AiPathfindingData_Unknown_7_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_7;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_7;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Scnr_AiPathfindingData_UnknownEntry_7) == 0x28, "Scnr_AiPathfindingData_UnknownEntry_7 size mismatch");
 
@@ -2660,7 +2660,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingData_UnknownEntry_8
     {
         // -> Scnr_AiPathfindingData_Unknown_8_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
         float        Unknown_2;  // 0xC  float32.
         float        Unknown_3;  // 0x10  float32.
     };
@@ -2682,7 +2682,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingData_Unknown_9_UnknownEntry
     {
         // -> Scnr_AiPathfindingData_Unknown_9_Unknown_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_AiPathfindingData_Unknown_9_UnknownEntry) == 0xC, "Scnr_AiPathfindingData_Unknown_9_UnknownEntry size mismatch");
 
@@ -2690,7 +2690,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingData_UnknownEntry_9
     {
         // -> Scnr_AiPathfindingData_Unknown_9_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
@@ -2712,7 +2712,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingData_FloodHints_FloodSectorHintsEntry
     {
         // -> Scnr_AiPathfindingData_FloodHints_FloodSectorHints_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_AiPathfindingData_FloodHints_FloodSectorHintsEntry) == 0xC, "Scnr_AiPathfindingData_FloodHints_FloodSectorHintsEntry size mismatch");
 
@@ -2720,7 +2720,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingData_FloodHintsEntry
     {
         // -> Scnr_AiPathfindingData_FloodHints_FloodSectorHintsEntry[]
-        MapStructure::Tag::Block   FloodSectorHints;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   FloodSectorHints;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_AiPathfindingData_FloodHintsEntry) == 0xC, "Scnr_AiPathfindingData_FloodHintsEntry size mismatch");
 
@@ -2728,28 +2728,28 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiPathfindingDataEntry
     {
         // -> Scnr_AiPathfindingData_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x0  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_2;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_2;  // 0xC  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_3;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_3;  // 0x18  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_4[]
-        MapStructure::Tag::Block   Unknown_4;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_4;  // 0x24  tagblock.
         std::uint8_t  _pad_0x30[0x4];  // undefined.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
         // -> Scnr_AiPathfindingData_UnknownEntry_5[]
-        MapStructure::Tag::Block   Unknown_8;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_8;  // 0x3C  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_6[]
-        MapStructure::Tag::Block   Unknown_9;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_9;  // 0x48  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_7[]
-        MapStructure::Tag::Block   Unknown_10;  // 0x54  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_10;  // 0x54  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_8[]
-        MapStructure::Tag::Block   Unknown_11;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_11;  // 0x60  tagblock.
         // -> Scnr_AiPathfindingData_UnknownEntry_9[]
-        MapStructure::Tag::Block   Unknown_12;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_12;  // 0x6C  tagblock.
         // -> Scnr_AiPathfindingData_FloodHintsEntry[]
-        MapStructure::Tag::Block   FloodHints;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   FloodHints;  // 0x78  tagblock.
     };
     static_assert(sizeof(Scnr_AiPathfindingDataEntry) == 0x84, "Scnr_AiPathfindingDataEntry size mismatch");
 
@@ -2771,7 +2771,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint16_t ReturnType;  // 0x6  enum16. [unparsed=0x0, special_form=0x1, function_name=0x2, passthrough=0x3, void=0x4, boolean=0x5, real=0x6, short=0x7, long=0x8, string=0x9, script=0xA, string_id=0xB, unit_seat_mapping=0xC, trigger_volume=0xD, cutscene_flag=0xE, cutscene_camera_point=0xF, ...(89 total)]
         std::uint32_t RootExpression;  // 0x8  datum.
         // -> Scnr_Scripts_ParametersEntry[]
-        MapStructure::Tag::Block   Parameters;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Parameters;  // 0xC  tagblock.
     };
     static_assert(sizeof(Scnr_ScriptsEntry) == 0x18, "Scnr_ScriptsEntry size mismatch");
 
@@ -2789,7 +2789,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_ScriptReferencesEntry
     {
-        MapStructure::Tag::Reference References;  // 0x0  tagref.
+        MapStructure::Tag::TagReference References;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_ScriptReferencesEntry) == 0x10, "Scnr_ScriptReferencesEntry size mismatch");
 
@@ -2814,7 +2814,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Name;  // 0x0  ascii.
         std::uint8_t  _gap_0x4[0x1C];
         // -> Scnr_ScriptingData_PointSets_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x20  tagblock.
         std::int16_t BspIndex;  // 0x2C  int16.
         std::int16_t ManualReferenceFrame;  // 0x2E  int16.
         std::uint32_t Flags;  // 0x30  flags32. [Bit 0=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
@@ -2827,7 +2827,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_ScriptingDataEntry
     {
         // -> Scnr_ScriptingData_PointSetsEntry[]
-        MapStructure::Tag::Block   PointSets;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   PointSets;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
@@ -2908,41 +2908,41 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_ScenarioResources_ScriptSourceEntry
     {
-        MapStructure::Tag::Reference HsSourceFile;  // 0x0  tagref.
+        MapStructure::Tag::TagReference HsSourceFile;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_ScenarioResources_ScriptSourceEntry) == 0x10, "Scnr_ScenarioResources_ScriptSourceEntry size mismatch");
 
     // Entry size: 0x10
     struct Scnr_ScenarioResources_AiResourcesEntry
     {
-        MapStructure::Tag::Reference AiResource;  // 0x0  tagref.
+        MapStructure::Tag::TagReference AiResource;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_ScenarioResources_AiResourcesEntry) == 0x10, "Scnr_ScenarioResources_AiResourcesEntry size mismatch");
 
     // Entry size: 0x150
     struct Scnr_ScenarioResources_ReferencesEntry
     {
-        MapStructure::Tag::Reference SceneryResource;  // 0x0  tagref.
-        MapStructure::Tag::Reference BipedsResource;  // 0x10  tagref.
-        MapStructure::Tag::Reference VehiclesResource;  // 0x20  tagref.
-        MapStructure::Tag::Reference EquipmentResource;  // 0x30  tagref.
-        MapStructure::Tag::Reference WeaponsResource;  // 0x40  tagref.
-        MapStructure::Tag::Reference SoundSceneryResource;  // 0x50  tagref.
-        MapStructure::Tag::Reference LightsResource;  // 0x60  tagref.
-        MapStructure::Tag::Reference DevicesResource;  // 0x70  tagref.
-        MapStructure::Tag::Reference EffectSceneryResource;  // 0x80  tagref.
-        MapStructure::Tag::Reference DecalsResource;  // 0x90  tagref.
-        MapStructure::Tag::Reference CinematicsResource;  // 0xA0  tagref.
-        MapStructure::Tag::Reference TriggerVolumesResource;  // 0xB0  tagref.
-        MapStructure::Tag::Reference ClusterDataResource;  // 0xC0  tagref.
-        MapStructure::Tag::Reference CommentsResource;  // 0xD0  tagref.
-        MapStructure::Tag::Reference CreatureResource;  // 0xE0  tagref.
-        MapStructure::Tag::Reference StructureLightingResource;  // 0xF0  tagref.
-        MapStructure::Tag::Reference DecoratorsResource;  // 0x100  tagref.
-        MapStructure::Tag::Reference SkyReferencesResource;  // 0x110  tagref.
-        MapStructure::Tag::Reference CubemapResource;  // 0x120  tagref.
-        MapStructure::Tag::Reference PerformancesResource;  // 0x130  tagref.
-        MapStructure::Tag::Reference DumplingsResource;  // 0x140  tagref.
+        MapStructure::Tag::TagReference SceneryResource;  // 0x0  tagref.
+        MapStructure::Tag::TagReference BipedsResource;  // 0x10  tagref.
+        MapStructure::Tag::TagReference VehiclesResource;  // 0x20  tagref.
+        MapStructure::Tag::TagReference EquipmentResource;  // 0x30  tagref.
+        MapStructure::Tag::TagReference WeaponsResource;  // 0x40  tagref.
+        MapStructure::Tag::TagReference SoundSceneryResource;  // 0x50  tagref.
+        MapStructure::Tag::TagReference LightsResource;  // 0x60  tagref.
+        MapStructure::Tag::TagReference DevicesResource;  // 0x70  tagref.
+        MapStructure::Tag::TagReference EffectSceneryResource;  // 0x80  tagref.
+        MapStructure::Tag::TagReference DecalsResource;  // 0x90  tagref.
+        MapStructure::Tag::TagReference CinematicsResource;  // 0xA0  tagref.
+        MapStructure::Tag::TagReference TriggerVolumesResource;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference ClusterDataResource;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference CommentsResource;  // 0xD0  tagref.
+        MapStructure::Tag::TagReference CreatureResource;  // 0xE0  tagref.
+        MapStructure::Tag::TagReference StructureLightingResource;  // 0xF0  tagref.
+        MapStructure::Tag::TagReference DecoratorsResource;  // 0x100  tagref.
+        MapStructure::Tag::TagReference SkyReferencesResource;  // 0x110  tagref.
+        MapStructure::Tag::TagReference CubemapResource;  // 0x120  tagref.
+        MapStructure::Tag::TagReference PerformancesResource;  // 0x130  tagref.
+        MapStructure::Tag::TagReference DumplingsResource;  // 0x140  tagref.
     };
     static_assert(sizeof(Scnr_ScenarioResources_ReferencesEntry) == 0x150, "Scnr_ScenarioResources_ReferencesEntry size mismatch");
 
@@ -2951,11 +2951,11 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::int32_t Unknown;  // 0x0  int32.
         // -> Scnr_ScenarioResources_ScriptSourceEntry[]
-        MapStructure::Tag::Block   ScriptSource;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   ScriptSource;  // 0x4  tagblock.
         // -> Scnr_ScenarioResources_AiResourcesEntry[]
-        MapStructure::Tag::Block   AiResources;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   AiResources;  // 0x10  tagblock.
         // -> Scnr_ScenarioResources_ReferencesEntry[]
-        MapStructure::Tag::Block   References;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   References;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Scnr_ScenarioResourcesEntry) == 0x28, "Scnr_ScenarioResourcesEntry size mismatch");
 
@@ -3015,7 +3015,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         // -> Scnr_ScenarioMoppTriggers_MoppCodes_MoppDataEntry[]
-        MapStructure::Tag::Block   MoppData;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   MoppData;  // 0x50  tagblock.
         std::int8_t  MoppBuildType;  // 0x5C  int8.
         std::int8_t  Unknown_8;  // 0x5D  int8.
         std::int16_t Unknown_9;  // 0x5E  int16.
@@ -3027,7 +3027,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::int32_t Unknown;  // 0x0  int32.
         // -> Scnr_ScenarioMoppTriggers_MoppCodesEntry[]
-        MapStructure::Tag::Block   MoppCodes;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   MoppCodes;  // 0x4  tagblock.
     };
     static_assert(sizeof(Scnr_ScenarioMoppTriggersEntry) == 0x10, "Scnr_ScenarioMoppTriggersEntry size mismatch");
 
@@ -3053,14 +3053,14 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_BackgroundSoundEnvironmentPaletteEntry
     {
         std::uint32_t Name;  // 0x0  stringid.
-        MapStructure::Tag::Reference SoundEnvironment;  // 0x4  tagref.
+        MapStructure::Tag::TagReference SoundEnvironment;  // 0x4  tagref.
         std::int32_t Unknown;  // 0x14  int32.
         float        CutoffDistance;  // 0x18  float32.
         float        InterpolationSpeed;  // 0x1C  float32.
-        MapStructure::Tag::Reference BackgroundSound;  // 0x20  tagref.
-        MapStructure::Tag::Reference InsideClusterSound;  // 0x30  tagref. | play only when player is inside cluster.
-        MapStructure::Tag::Reference TransitionIn;  // 0x40  tagref.
-        MapStructure::Tag::Reference TransitionOut;  // 0x50  tagref.
+        MapStructure::Tag::TagReference BackgroundSound;  // 0x20  tagref.
+        MapStructure::Tag::TagReference InsideClusterSound;  // 0x30  tagref. | play only when player is inside cluster.
+        MapStructure::Tag::TagReference TransitionIn;  // 0x40  tagref.
+        MapStructure::Tag::TagReference TransitionOut;  // 0x50  tagref.
         float        CutoffDistance_2;  // 0x60  float32.
         std::uint32_t ScaleFlags;  // 0x64  flags32. [Bit 0=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        InteriorScale;  // 0x68  float32.
@@ -3076,7 +3076,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Name;  // 0x0  stringid.
         std::int16_t Unknown;  // 0x4  int16.
         std::int16_t Unknown_2;  // 0x6  int16.
-        MapStructure::Tag::Reference Fog;  // 0x8  tagref.
+        MapStructure::Tag::TagReference Fog;  // 0x8  tagref.
     };
     static_assert(sizeof(Scnr_FogEntry) == 0x18, "Scnr_FogEntry size mismatch");
 
@@ -3084,7 +3084,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_CameraFxEntry
     {
         std::uint32_t Name;  // 0x0  stringid.
-        MapStructure::Tag::Reference CameraFx;  // 0x4  tagref.
+        MapStructure::Tag::TagReference CameraFx;  // 0x4  tagref.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         std::uint8_t  _pad_0x18[0x4];  // undefined.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
@@ -3099,7 +3099,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_WeatherEntry
     {
         std::uint32_t Name;  // 0x0  stringid.
-        MapStructure::Tag::Reference Weather;  // 0x4  tagref.
+        MapStructure::Tag::TagReference Weather;  // 0x4  tagref.
     };
     static_assert(sizeof(Scnr_WeatherEntry) == 0x14, "Scnr_WeatherEntry size mismatch");
 
@@ -3145,19 +3145,19 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x54
     struct Scnr_ScenarioClusterDataEntry
     {
-        MapStructure::Tag::Reference Bsp;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Bsp;  // 0x0  tagref.
         std::int32_t BspChecksum;  // 0x10  int32.
         // -> Scnr_ScenarioClusterData_ClusterCentroidsEntry[]
-        MapStructure::Tag::Block   ClusterCentroids;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   ClusterCentroids;  // 0x14  tagblock.
         std::int32_t Unknown;  // 0x20  int32.
         // -> Scnr_ScenarioClusterData_BackgroundSoundEnvironmentsEntry[]
-        MapStructure::Tag::Block   BackgroundSoundEnvironments;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   BackgroundSoundEnvironments;  // 0x24  tagblock.
         // -> Scnr_ScenarioClusterData_FogEntry[]
-        MapStructure::Tag::Block   Fog;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Fog;  // 0x30  tagblock.
         // -> Scnr_ScenarioClusterData_CameraFxEntry[]
-        MapStructure::Tag::Block   CameraFx;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   CameraFx;  // 0x3C  tagblock.
         // -> Scnr_ScenarioClusterData_WeatherEntry[]
-        MapStructure::Tag::Block   Weather;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   Weather;  // 0x48  tagblock.
     };
     static_assert(sizeof(Scnr_ScenarioClusterDataEntry) == 0x54, "Scnr_ScenarioClusterDataEntry size mismatch");
 
@@ -3188,10 +3188,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NodeCount;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Scnr_Crates_NodeOrientations_NodeFlagsEntry[]
-        MapStructure::Tag::Block   NodeFlags;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   NodeFlags;  // 0x4  tagblock.
         // [overlay] NodeFlagsReadable: overlay (same offset as previous field, skipped)
         // -> Scnr_Crates_NodeOrientations_OrientationsEntry[]
-        MapStructure::Tag::Block   Orientations;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Orientations;  // 0x10  tagblock.
         // [overlay] OrientationsReadable: overlay (same offset as previous field, skipped)
     };
     static_assert(sizeof(Scnr_Crates_NodeOrientationsEntry) == 0x1C, "Scnr_Crates_NodeOrientationsEntry size mismatch");
@@ -3214,7 +3214,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Crates_NodeOrientationsEntry[]
-        MapStructure::Tag::Block   NodeOrientations;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
         std::int16_t Unknown;  // 0x30  int16.
         std::int8_t  Unknown_2;  // 0x32  int8.
         std::uint8_t BspPolicy;  // 0x33  enum8. [Default=0x0, Always Placed=0x1, Manual BSP Index=0x2]
@@ -3244,7 +3244,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint16_t PathfindingPolicy;  // 0x70  enum16. [Tag Default=0x0, Dynamic=0x1, Cut-Out=0x2, Standard=0x3, None=0x4]
         std::int16_t Unknown_8;  // 0x72  int16.
         // -> Scnr_Crates_PathfindingReferencesEntry[]
-        MapStructure::Tag::Block   PathfindingReferences;  // 0x74  tagblock.
+        MapStructure::Tag::TagBlock   PathfindingReferences;  // 0x74  tagblock.
         std::uint32_t MegaloLabel;  // 0x80  ascii.
         std::uint8_t  _gap_0x84[0x1C];
         std::uint32_t SymmetricPlacement;  // 0xA0  enum32. [Ignore=0x0, Symmetric=0x1, Asymmetric=0x2]
@@ -3277,14 +3277,14 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_CratesPaletteEntry
     {
-        MapStructure::Tag::Reference Crate;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Crate;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_CratesPaletteEntry) == 0x10, "Scnr_CratesPaletteEntry size mismatch");
 
     // Entry size: 0x10
     struct Scnr_FlockPaletteEntry
     {
-        MapStructure::Tag::Reference Flock;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Flock;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_FlockPaletteEntry) == 0x10, "Scnr_FlockPaletteEntry size mismatch");
 
@@ -3328,9 +3328,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t Unknown;  // 0xA  int16.
         float        Unknown_2;  // 0xC  float32.
         // -> Scnr_Flocks_SourcesEntry[]
-        MapStructure::Tag::Block   Sources;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Sources;  // 0x10  tagblock.
         // -> Scnr_Flocks_SinksEntry[]
-        MapStructure::Tag::Block   Sinks;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   Sinks;  // 0x1C  tagblock.
         MapStructure::Primitive::RangeF ProductionFrequency;  // 0x28  rangef.
         MapStructure::Primitive::RangeF Scale;  // 0x30  rangef.
         float        Unknown_3;  // 0x38  float32.
@@ -3348,14 +3348,14 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_CreaturesPaletteEntry
     {
-        MapStructure::Tag::Reference Creature;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Creature;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_CreaturesPaletteEntry) == 0x10, "Scnr_CreaturesPaletteEntry size mismatch");
 
     // Entry size: 0x10
     struct Scnr_BigBattleCreaturesEntry
     {
-        MapStructure::Tag::Reference BigBattleCreature;  // 0x0  tagref.
+        MapStructure::Tag::TagReference BigBattleCreature;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_BigBattleCreaturesEntry) == 0x10, "Scnr_BigBattleCreaturesEntry size mismatch");
 
@@ -3371,7 +3371,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_MissionDialogueEntry
     {
-        MapStructure::Tag::Reference MissionDialogue;  // 0x0  tagref.
+        MapStructure::Tag::TagReference MissionDialogue;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_MissionDialogueEntry) == 0x10, "Scnr_MissionDialogueEntry size mismatch");
 
@@ -3437,7 +3437,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_AiObjectives_Roles_PointGeometryEntry
     {
         // -> Scnr_AiObjectives_Roles_PointGeometry_PointsEntry[]
-        MapStructure::Tag::Block   Points;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Points;  // 0x0  tagblock.
     };
     static_assert(sizeof(Scnr_AiObjectives_Roles_PointGeometryEntry) == 0xC, "Scnr_AiObjectives_Roles_PointGeometryEntry size mismatch");
 
@@ -3474,7 +3474,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t NextRole;  // 0x48  int16.
         std::int16_t ParentRole;  // 0x4A  int16.
         // -> Scnr_AiObjectives_Roles_ConditionsEntry[]
-        MapStructure::Tag::Block   Conditions;  // 0x4C  tagblock.
+        MapStructure::Tag::TagBlock   Conditions;  // 0x4C  tagblock.
         std::int16_t ScriptIndex;  // 0x58  int16.
         std::int16_t Unknown_18;  // 0x5A  int16.
         std::int16_t Unknown_19;  // 0x5C  int16.
@@ -3484,9 +3484,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t Unknown_20;  // 0x66  int16.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Scnr_AiObjectives_Roles_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_22;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_22;  // 0x6C  tagblock.
         // -> Scnr_AiObjectives_Roles_PointGeometryEntry[]
-        MapStructure::Tag::Block   PointGeometry;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   PointGeometry;  // 0x78  tagblock.
     };
     static_assert(sizeof(Scnr_AiObjectives_RolesEntry) == 0x84, "Scnr_AiObjectives_RolesEntry size mismatch");
 
@@ -3495,13 +3495,13 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         // -> Scnr_AiObjectives_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x4  tagblock.
         std::int16_t Unknown_2;  // 0x10  int16.
         std::int16_t Zone;  // 0x12  int16.
         std::int16_t UnknownRoleIndex;  // 0x14  int16.
         std::int16_t EditorFolderIndex;  // 0x16  int16.
         // -> Scnr_AiObjectives_RolesEntry[]
-        MapStructure::Tag::Block   Roles;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   Roles;  // 0x18  tagblock.
     };
     static_assert(sizeof(Scnr_AiObjectivesEntry) == 0x24, "Scnr_AiObjectivesEntry size mismatch");
 
@@ -3609,33 +3609,33 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Name;  // 0x0  stringid.
         std::uint8_t  _pad_0x4[0x4];  // undefined.
         // -> Scnr_DesignerZonesets_BipedsEntry[]
-        MapStructure::Tag::Block   Bipeds;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   Bipeds;  // 0x8  tagblock.
         // -> Scnr_DesignerZonesets_VehiclesEntry[]
-        MapStructure::Tag::Block   Vehicles;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   Vehicles;  // 0x14  tagblock.
         // -> Scnr_DesignerZonesets_WeaponsEntry[]
-        MapStructure::Tag::Block   Weapons;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Weapons;  // 0x20  tagblock.
         // -> Scnr_DesignerZonesets_EquipmentEntry[]
-        MapStructure::Tag::Block   Equipment;  // 0x2C  tagblock.
+        MapStructure::Tag::TagBlock   Equipment;  // 0x2C  tagblock.
         // -> Scnr_DesignerZonesets_SceneryEntry[]
-        MapStructure::Tag::Block   Scenery;  // 0x38  tagblock.
+        MapStructure::Tag::TagBlock   Scenery;  // 0x38  tagblock.
         // -> Scnr_DesignerZonesets_MachinesEntry[]
-        MapStructure::Tag::Block   Machines;  // 0x44  tagblock.
+        MapStructure::Tag::TagBlock   Machines;  // 0x44  tagblock.
         // -> Scnr_DesignerZonesets_TerminalsEntry[]
-        MapStructure::Tag::Block   Terminals;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   Terminals;  // 0x50  tagblock.
         // -> Scnr_DesignerZonesets_ControlsEntry[]
-        MapStructure::Tag::Block   Controls;  // 0x5C  tagblock.
+        MapStructure::Tag::TagBlock   Controls;  // 0x5C  tagblock.
         // -> Scnr_DesignerZonesets_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_2;  // 0x68  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_2;  // 0x68  tagblock.
         // -> Scnr_DesignerZonesets_CratesEntry[]
-        MapStructure::Tag::Block   Crates;  // 0x74  tagblock.
+        MapStructure::Tag::TagBlock   Crates;  // 0x74  tagblock.
         // -> Scnr_DesignerZonesets_CreaturesEntry[]
-        MapStructure::Tag::Block   Creatures;  // 0x80  tagblock.
+        MapStructure::Tag::TagBlock   Creatures;  // 0x80  tagblock.
         // -> Scnr_DesignerZonesets_GiantsEntry[]
-        MapStructure::Tag::Block   Giants;  // 0x8C  tagblock.
+        MapStructure::Tag::TagBlock   Giants;  // 0x8C  tagblock.
         // -> Scnr_DesignerZonesets_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_3;  // 0x98  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_3;  // 0x98  tagblock.
         // -> Scnr_DesignerZonesets_CharactersEntry[]
-        MapStructure::Tag::Block   Characters;  // 0xA4  tagblock.
+        MapStructure::Tag::TagBlock   Characters;  // 0xA4  tagblock.
         std::uint8_t  _pad_0xB0[0x4];  // undefined.
         std::uint8_t  _pad_0xB4[0x4];  // undefined.
         std::uint8_t  _pad_0xB8[0x4];  // undefined.
@@ -3653,7 +3653,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_ParticleEmittersEntry
     {
-        MapStructure::Tag::Reference Emitter;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Emitter;  // 0x0  tagref.
     };
     static_assert(sizeof(Scnr_ParticleEmittersEntry) == 0x10, "Scnr_ParticleEmittersEntry size mismatch");
 
@@ -3674,7 +3674,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_CinematicsEntry
     {
         std::uint32_t Name;  // 0x0  stringid.
-        MapStructure::Tag::Reference Cinematic;  // 0x4  tagref.
+        MapStructure::Tag::TagReference Cinematic;  // 0x4  tagref.
     };
     static_assert(sizeof(Scnr_CinematicsEntry) == 0x14, "Scnr_CinematicsEntry size mismatch");
 
@@ -3682,7 +3682,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     struct Scnr_CinematicLightsEntry
     {
         std::uint32_t Name;  // 0x0  stringid.
-        MapStructure::Tag::Reference Light;  // 0x4  tagref.
+        MapStructure::Tag::TagReference Light;  // 0x4  tagref.
     };
     static_assert(sizeof(Scnr_CinematicLightsEntry) == 0x14, "Scnr_CinematicLightsEntry size mismatch");
 
@@ -3692,13 +3692,13 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t Flags;  // 0x0  flags8. [Can Use Health Packs=0]
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
-        MapStructure::Tag::Reference HudReference;  // 0x4  tagref.
-        MapStructure::Tag::Reference FirstPersonHandsModel;  // 0x14  tagref.
-        MapStructure::Tag::Reference FirstPersonBodyModel;  // 0x24  tagref.
-        MapStructure::Tag::Reference ThirdPersonUnit;  // 0x34  tagref.
+        MapStructure::Tag::TagReference HudReference;  // 0x4  tagref.
+        MapStructure::Tag::TagReference FirstPersonHandsModel;  // 0x14  tagref.
+        MapStructure::Tag::TagReference FirstPersonBodyModel;  // 0x24  tagref.
+        MapStructure::Tag::TagReference ThirdPersonUnit;  // 0x34  tagref.
         std::uint32_t ThirdPersonVariant;  // 0x44  stringid.
-        MapStructure::Tag::Reference BinocularsZoomInSound;  // 0x48  tagref.
-        MapStructure::Tag::Reference BinocularsZoomOutSound;  // 0x58  tagref.
+        MapStructure::Tag::TagReference BinocularsZoomInSound;  // 0x48  tagref.
+        MapStructure::Tag::TagReference BinocularsZoomOutSound;  // 0x58  tagref.
         std::int32_t PlayerInformationIndex;  // 0x68  int32.
     };
     static_assert(sizeof(Scnr_OverridePlayerRepresentationsEntry) == 0x6C, "Scnr_OverridePlayerRepresentationsEntry size mismatch");
@@ -3716,7 +3716,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         float        ParScore;  // 0x0  float32.
         // -> Scnr_CampaignMetagame_TimeBonusesEntry[]
-        MapStructure::Tag::Block   TimeBonuses;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   TimeBonuses;  // 0x4  tagblock.
     };
     static_assert(sizeof(Scnr_CampaignMetagameEntry) == 0x10, "Scnr_CampaignMetagameEntry size mismatch");
 
@@ -3752,7 +3752,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t Unknown_5;  // 0x10  int16.
         std::int16_t Unknown_6;  // 0x12  int16.
         // -> Scnr_Unknown_11_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_7;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_7;  // 0x14  tagblock.
     };
     static_assert(sizeof(Scnr_UnknownEntry_11) == 0x20, "Scnr_UnknownEntry_11 size mismatch");
 
@@ -3836,18 +3836,18 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t Unknown_5;  // 0xA  int16.
         std::int32_t Unknown_6;  // 0xC  int32.
         // -> Scnr_Vignettes_Unknown_2_ScriptEntry[]
-        MapStructure::Tag::Block   Script;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Script;  // 0x10  tagblock.
         // -> Scnr_Vignettes_Unknown_2_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_7;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_7;  // 0x1C  tagblock.
         // -> Scnr_Vignettes_Unknown_2_AnimationEntry[]
-        MapStructure::Tag::Block   Animation;  // 0x28  tagblock.
+        MapStructure::Tag::TagBlock   Animation;  // 0x28  tagblock.
         // -> Scnr_Vignettes_Unknown_2_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_8;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_8;  // 0x34  tagblock.
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         // -> Scnr_Vignettes_Unknown_2_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_12;  // 0x4C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_12;  // 0x4C  tagblock.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
         std::uint8_t  _pad_0x60[0x4];  // undefined.
@@ -3873,9 +3873,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t Unknown_6;  // 0x10  int16.
         std::int16_t Unknown_7;  // 0x12  int16.
         // -> Scnr_Vignettes_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_8;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_8;  // 0x14  tagblock.
         // -> Scnr_Vignettes_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_9;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_9;  // 0x20  tagblock.
         MapStructure::Primitive::Vec3 Position;  // 0x2C  point3.
         std::uint32_t Direction;  // 0x38  degree2.
         std::uint8_t  _gap_0x3C[0x4];
@@ -3885,7 +3885,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t PerformanceTemplateName;  // 0x4C  stringid.
         std::uint32_t PerformanceTemplate;  // 0x50  tagref. [Truncated to 4 bytes]
         // -> Scnr_Vignettes_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_13;  // 0x54  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_13;  // 0x54  tagblock.
     };
     static_assert(sizeof(Scnr_VignettesEntry) == 0x60, "Scnr_VignettesEntry size mismatch");
 
@@ -3949,23 +3949,23 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Primitive::Vec3 SandboxOriginPoint;  // 0x2C  point3. | forge coordinates are relative to this point
         float        SandboxBudget;  // 0x38  float32.
         std::uint32_t DefaultVehicleSet;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GamePerformanceThrottles;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GamePerformanceThrottles;  // 0x40  tagref.
         // -> Scnr_StructureBspsEntry[]
-        MapStructure::Tag::Block   StructureBsps;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   StructureBsps;  // 0x50  tagblock.
         // -> Scnr_StructureDesignsEntry[]
-        MapStructure::Tag::Block   StructureDesigns;  // 0x5C  tagblock.
-        MapStructure::Tag::Reference StructureSeams;  // 0x68  tagref.
-        MapStructure::Tag::Reference LocalStructureSeams;  // 0x78  tagref.
+        MapStructure::Tag::TagBlock   StructureDesigns;  // 0x5C  tagblock.
+        MapStructure::Tag::TagReference StructureSeams;  // 0x68  tagref.
+        MapStructure::Tag::TagReference LocalStructureSeams;  // 0x78  tagref.
         // -> Scnr_SkiesEntry[]
-        MapStructure::Tag::Block   Skies;  // 0x88  tagblock.
+        MapStructure::Tag::TagBlock   Skies;  // 0x88  tagblock.
         // -> Scnr_ZoneSetPotentiallyVisibleSetsEntry[]
-        MapStructure::Tag::Block   ZoneSetPotentiallyVisibleSets;  // 0x94  tagblock.
+        MapStructure::Tag::TagBlock   ZoneSetPotentiallyVisibleSets;  // 0x94  tagblock.
         // -> Scnr_ZoneSetAudibilityEntry[]
-        MapStructure::Tag::Block   ZoneSetAudibility;  // 0xA0  tagblock.
+        MapStructure::Tag::TagBlock   ZoneSetAudibility;  // 0xA0  tagblock.
         // -> Scnr_ZoneSetsEntry[]
-        MapStructure::Tag::Block   ZoneSets;  // 0xAC  tagblock.
+        MapStructure::Tag::TagBlock   ZoneSets;  // 0xAC  tagblock.
         // -> Scnr_LightingZoneSetsEntry[]
-        MapStructure::Tag::Block   LightingZoneSets;  // 0xB8  tagblock.
+        MapStructure::Tag::TagBlock   LightingZoneSets;  // 0xB8  tagblock.
         MapStructure::Data::Reference EditorScenarioData;  // 0xC4  dataref.
         std::uint8_t  _pad_0xD8[0x4];  // undefined.
         std::uint8_t  _pad_0xDC[0x4];  // undefined.
@@ -3974,79 +3974,79 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0xE8[0x4];  // undefined.
         std::uint8_t  _pad_0xEC[0x4];  // undefined.
         // -> Scnr_ObjectNamesEntry[]
-        MapStructure::Tag::Block   ObjectNames;  // 0xF0  tagblock.
+        MapStructure::Tag::TagBlock   ObjectNames;  // 0xF0  tagblock.
         // -> Scnr_SceneryEntry[]
-        MapStructure::Tag::Block   Scenery;  // 0xFC  tagblock.
+        MapStructure::Tag::TagBlock   Scenery;  // 0xFC  tagblock.
         // -> Scnr_SceneryPaletteEntry[]
-        MapStructure::Tag::Block   SceneryPalette;  // 0x108  tagblock.
+        MapStructure::Tag::TagBlock   SceneryPalette;  // 0x108  tagblock.
         // -> Scnr_BipedsEntry[]
-        MapStructure::Tag::Block   Bipeds;  // 0x114  tagblock.
+        MapStructure::Tag::TagBlock   Bipeds;  // 0x114  tagblock.
         // -> Scnr_BipedPaletteEntry[]
-        MapStructure::Tag::Block   BipedPalette;  // 0x120  tagblock.
+        MapStructure::Tag::TagBlock   BipedPalette;  // 0x120  tagblock.
         // -> Scnr_VehiclesEntry[]
-        MapStructure::Tag::Block   Vehicles;  // 0x12C  tagblock.
+        MapStructure::Tag::TagBlock   Vehicles;  // 0x12C  tagblock.
         // -> Scnr_VehiclePaletteEntry[]
-        MapStructure::Tag::Block   VehiclePalette;  // 0x138  tagblock.
+        MapStructure::Tag::TagBlock   VehiclePalette;  // 0x138  tagblock.
         // -> Scnr_EquipmentEntry[]
-        MapStructure::Tag::Block   Equipment;  // 0x144  tagblock.
+        MapStructure::Tag::TagBlock   Equipment;  // 0x144  tagblock.
         // -> Scnr_EquipmentPaletteEntry[]
-        MapStructure::Tag::Block   EquipmentPalette;  // 0x150  tagblock.
+        MapStructure::Tag::TagBlock   EquipmentPalette;  // 0x150  tagblock.
         // -> Scnr_WeaponsEntry[]
-        MapStructure::Tag::Block   Weapons;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   Weapons;  // 0x15C  tagblock.
         // -> Scnr_WeaponPaletteEntry[]
-        MapStructure::Tag::Block   WeaponPalette;  // 0x168  tagblock.
+        MapStructure::Tag::TagBlock   WeaponPalette;  // 0x168  tagblock.
         // -> Scnr_DeviceGroupsEntry[]
-        MapStructure::Tag::Block   DeviceGroups;  // 0x174  tagblock.
+        MapStructure::Tag::TagBlock   DeviceGroups;  // 0x174  tagblock.
         // -> Scnr_MachinesEntry[]
-        MapStructure::Tag::Block   Machines;  // 0x180  tagblock.
+        MapStructure::Tag::TagBlock   Machines;  // 0x180  tagblock.
         // -> Scnr_MachinePaletteEntry[]
-        MapStructure::Tag::Block   MachinePalette;  // 0x18C  tagblock.
+        MapStructure::Tag::TagBlock   MachinePalette;  // 0x18C  tagblock.
         // -> Scnr_TerminalsEntry[]
-        MapStructure::Tag::Block   Terminals;  // 0x198  tagblock.
+        MapStructure::Tag::TagBlock   Terminals;  // 0x198  tagblock.
         // -> Scnr_TerminalPaletteEntry[]
-        MapStructure::Tag::Block   TerminalPalette;  // 0x1A4  tagblock.
+        MapStructure::Tag::TagBlock   TerminalPalette;  // 0x1A4  tagblock.
         // -> Scnr_ControlsEntry[]
-        MapStructure::Tag::Block   Controls;  // 0x1B0  tagblock.
+        MapStructure::Tag::TagBlock   Controls;  // 0x1B0  tagblock.
         // -> Scnr_ControlPaletteEntry[]
-        MapStructure::Tag::Block   ControlPalette;  // 0x1BC  tagblock.
+        MapStructure::Tag::TagBlock   ControlPalette;  // 0x1BC  tagblock.
         // -> Scnr_SoundSceneryEntry[]
-        MapStructure::Tag::Block   SoundScenery;  // 0x1C8  tagblock.
+        MapStructure::Tag::TagBlock   SoundScenery;  // 0x1C8  tagblock.
         // -> Scnr_SoundSceneryPaletteEntry[]
-        MapStructure::Tag::Block   SoundSceneryPalette;  // 0x1D4  tagblock.
+        MapStructure::Tag::TagBlock   SoundSceneryPalette;  // 0x1D4  tagblock.
         // -> Scnr_GiantsEntry[]
-        MapStructure::Tag::Block   Giants;  // 0x1E0  tagblock.
+        MapStructure::Tag::TagBlock   Giants;  // 0x1E0  tagblock.
         // -> Scnr_GiantPaletteEntry[]
-        MapStructure::Tag::Block   GiantPalette;  // 0x1EC  tagblock.
+        MapStructure::Tag::TagBlock   GiantPalette;  // 0x1EC  tagblock.
         // -> Scnr_EffectSceneryEntry[]
-        MapStructure::Tag::Block   EffectScenery;  // 0x1F8  tagblock.
+        MapStructure::Tag::TagBlock   EffectScenery;  // 0x1F8  tagblock.
         // -> Scnr_EffectSceneryPaletteEntry[]
-        MapStructure::Tag::Block   EffectSceneryPalette;  // 0x204  tagblock.
+        MapStructure::Tag::TagBlock   EffectSceneryPalette;  // 0x204  tagblock.
         // -> Scnr_LightVolumesEntry[]
-        MapStructure::Tag::Block   LightVolumes;  // 0x210  tagblock.
+        MapStructure::Tag::TagBlock   LightVolumes;  // 0x210  tagblock.
         // -> Scnr_LightVolumesPaletteEntry[]
-        MapStructure::Tag::Block   LightVolumesPalette;  // 0x21C  tagblock.
+        MapStructure::Tag::TagBlock   LightVolumesPalette;  // 0x21C  tagblock.
         // -> Scnr_MapVariantPalettesEntry[]
-        MapStructure::Tag::Block   MapVariantPalettes;  // 0x228  tagblock.
+        MapStructure::Tag::TagBlock   MapVariantPalettes;  // 0x228  tagblock.
         // -> Scnr_LegacySandboxInfoEntry[]
-        MapStructure::Tag::Block   LegacySandboxInfo;  // 0x234  tagblock.
-        MapStructure::Tag::Reference Unknown_10;  // 0x240  tagref.
+        MapStructure::Tag::TagBlock   LegacySandboxInfo;  // 0x234  tagblock.
+        MapStructure::Tag::TagReference Unknown_10;  // 0x240  tagref.
         std::uint8_t  _pad_0x250[0x4];  // undefined.
         std::uint8_t  _pad_0x254[0x4];  // undefined.
         std::uint8_t  _pad_0x258[0x4];  // undefined.
         // -> Scnr_SoftCeilingsEntry[]
-        MapStructure::Tag::Block   SoftCeilings;  // 0x25C  tagblock.
+        MapStructure::Tag::TagBlock   SoftCeilings;  // 0x25C  tagblock.
         // -> Scnr_PlayerStartingProfileEntry[]
-        MapStructure::Tag::Block   PlayerStartingProfile;  // 0x268  tagblock.
+        MapStructure::Tag::TagBlock   PlayerStartingProfile;  // 0x268  tagblock.
         // -> Scnr_PlayerStartingLocationsEntry[]
-        MapStructure::Tag::Block   PlayerStartingLocations;  // 0x274  tagblock.
+        MapStructure::Tag::TagBlock   PlayerStartingLocations;  // 0x274  tagblock.
         // -> Scnr_TriggerVolumesEntry[]
-        MapStructure::Tag::Block   TriggerVolumes;  // 0x280  tagblock.
+        MapStructure::Tag::TagBlock   TriggerVolumes;  // 0x280  tagblock.
         // -> Scnr_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_14;  // 0x28C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_14;  // 0x28C  tagblock.
         // -> Scnr_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_15;  // 0x298  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_15;  // 0x298  tagblock.
         // -> Scnr_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_16;  // 0x2A4  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_16;  // 0x2A4  tagblock.
         std::uint8_t  _pad_0x2B0[0x4];  // undefined.
         std::uint8_t  _pad_0x2B4[0x4];  // undefined.
         std::uint8_t  _pad_0x2B8[0x4];  // undefined.
@@ -4054,21 +4054,21 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x2C0[0x4];  // undefined.
         std::uint8_t  _pad_0x2C4[0x4];  // undefined.
         // -> Scnr_ZoneSetSwitchTriggerVolumesEntry[]
-        MapStructure::Tag::Block   ZoneSetSwitchTriggerVolumes;  // 0x2C8  tagblock.
+        MapStructure::Tag::TagBlock   ZoneSetSwitchTriggerVolumes;  // 0x2C8  tagblock.
         // -> Scnr_NamedLocationVolumesEntry[]
-        MapStructure::Tag::Block   NamedLocationVolumes;  // 0x2D4  tagblock.
-        MapStructure::Tag::Reference AirstrikeGlobals;  // 0x2E0  tagref.
+        MapStructure::Tag::TagBlock   NamedLocationVolumes;  // 0x2D4  tagblock.
+        MapStructure::Tag::TagReference AirstrikeGlobals;  // 0x2E0  tagref.
         std::uint8_t  _pad_0x2F0[0x4];  // undefined.
         std::uint8_t  _pad_0x2F4[0x4];  // undefined.
         std::uint8_t  _pad_0x2F8[0x4];  // undefined.
         // -> Scnr_UnknownEntry_4[]
-        MapStructure::Tag::Block   Unknown_26;  // 0x2FC  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_26;  // 0x2FC  tagblock.
         // -> Scnr_UnknownEntry_5[]
-        MapStructure::Tag::Block   Unknown_27;  // 0x308  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_27;  // 0x308  tagblock.
         // -> Scnr_UnknownEntry_6[]
-        MapStructure::Tag::Block   Unknown_28;  // 0x314  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_28;  // 0x314  tagblock.
         // -> Scnr_UnknownEntry_7[]
-        MapStructure::Tag::Block   Unknown_29;  // 0x320  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_29;  // 0x320  tagblock.
         std::uint8_t  _pad_0x32C[0x4];  // undefined.
         std::uint8_t  _pad_0x330[0x4];  // undefined.
         std::uint8_t  _pad_0x334[0x4];  // undefined.
@@ -4082,9 +4082,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x354[0x4];  // undefined.
         std::uint8_t  _pad_0x358[0x4];  // undefined.
         // -> Scnr_DecalsEntry[]
-        MapStructure::Tag::Block   Decals;  // 0x35C  tagblock.
+        MapStructure::Tag::TagBlock   Decals;  // 0x35C  tagblock.
         // -> Scnr_DecalsPaletteEntry[]
-        MapStructure::Tag::Block   DecalsPalette;  // 0x368  tagblock.
+        MapStructure::Tag::TagBlock   DecalsPalette;  // 0x368  tagblock.
         std::uint8_t  _pad_0x374[0x4];  // undefined.
         std::uint8_t  _pad_0x378[0x4];  // undefined.
         std::uint8_t  _pad_0x37C[0x4];  // undefined.
@@ -4092,15 +4092,15 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x384[0x4];  // undefined.
         std::uint8_t  _pad_0x388[0x4];  // undefined.
         // -> Scnr_SquadGroupsEntry[]
-        MapStructure::Tag::Block   SquadGroups;  // 0x38C  tagblock.
+        MapStructure::Tag::TagBlock   SquadGroups;  // 0x38C  tagblock.
         // -> Scnr_SquadsEntry[]
-        MapStructure::Tag::Block   Squads;  // 0x398  tagblock.
+        MapStructure::Tag::TagBlock   Squads;  // 0x398  tagblock.
         // -> Scnr_ZonesEntry[]
-        MapStructure::Tag::Block   Zones;  // 0x3A4  tagblock.
+        MapStructure::Tag::TagBlock   Zones;  // 0x3A4  tagblock.
         // -> Scnr_UnknownEntry_8[]
-        MapStructure::Tag::Block   Unknown_48;  // 0x3B0  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_48;  // 0x3B0  tagblock.
         // -> Scnr_AiCuesEntry[]
-        MapStructure::Tag::Block   AiCues;  // 0x3BC  tagblock.
+        MapStructure::Tag::TagBlock   AiCues;  // 0x3BC  tagblock.
         std::uint8_t  _pad_0x3C8[0x4];  // undefined.
         std::uint8_t  _pad_0x3CC[0x4];  // undefined.
         std::uint8_t  _pad_0x3D0[0x4];  // undefined.
@@ -4111,45 +4111,45 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x3E4[0x4];  // undefined.
         std::uint8_t  _pad_0x3E8[0x4];  // undefined.
         // -> Scnr_CharacterPaletteEntry[]
-        MapStructure::Tag::Block   CharacterPalette;  // 0x3EC  tagblock.
+        MapStructure::Tag::TagBlock   CharacterPalette;  // 0x3EC  tagblock.
         std::uint8_t  _pad_0x3F8[0x4];  // undefined.
         std::uint8_t  _pad_0x3FC[0x4];  // undefined.
         std::uint8_t  _pad_0x400[0x4];  // undefined.
         // -> Scnr_AiPathfindingDataEntry[]
-        MapStructure::Tag::Block   AiPathfindingData;  // 0x404  tagblock.
+        MapStructure::Tag::TagBlock   AiPathfindingData;  // 0x404  tagblock.
         std::uint8_t  _pad_0x410[0x4];  // undefined.
         std::uint8_t  _pad_0x414[0x4];  // undefined.
         std::uint8_t  _pad_0x418[0x4];  // undefined.
         MapStructure::Data::Reference ScriptStrings;  // 0x41C  dataref.
         // -> Scnr_ScriptsEntry[]
-        MapStructure::Tag::Block   Scripts;  // 0x430  tagblock.
+        MapStructure::Tag::TagBlock   Scripts;  // 0x430  tagblock.
         // -> Scnr_GlobalsEntry[]
-        MapStructure::Tag::Block   Globals;  // 0x43C  tagblock.
+        MapStructure::Tag::TagBlock   Globals;  // 0x43C  tagblock.
         // -> Scnr_ScriptReferencesEntry[]
-        MapStructure::Tag::Block   ScriptReferences;  // 0x448  tagblock.
+        MapStructure::Tag::TagBlock   ScriptReferences;  // 0x448  tagblock.
         std::uint8_t  _pad_0x454[0x4];  // undefined.
         std::uint8_t  _pad_0x458[0x4];  // undefined.
         std::uint8_t  _pad_0x45C[0x4];  // undefined.
         // -> Scnr_ScriptingDataEntry[]
-        MapStructure::Tag::Block   ScriptingData;  // 0x460  tagblock.
+        MapStructure::Tag::TagBlock   ScriptingData;  // 0x460  tagblock.
         // -> Scnr_CutsceneFlagsEntry[]
-        MapStructure::Tag::Block   CutsceneFlags;  // 0x46C  tagblock.
+        MapStructure::Tag::TagBlock   CutsceneFlags;  // 0x46C  tagblock.
         // -> Scnr_CutsceneCameraPointsEntry[]
-        MapStructure::Tag::Block   CutsceneCameraPoints;  // 0x478  tagblock.
+        MapStructure::Tag::TagBlock   CutsceneCameraPoints;  // 0x478  tagblock.
         // -> Scnr_CutsceneTitlesEntry[]
-        MapStructure::Tag::Block   CutsceneTitles;  // 0x484  tagblock.
-        MapStructure::Tag::Reference CustomObjectNameStrings;  // 0x490  tagref.
-        MapStructure::Tag::Reference ChapterTitleStrings;  // 0x4A0  tagref.
+        MapStructure::Tag::TagBlock   CutsceneTitles;  // 0x484  tagblock.
+        MapStructure::Tag::TagReference CustomObjectNameStrings;  // 0x490  tagref.
+        MapStructure::Tag::TagReference ChapterTitleStrings;  // 0x4A0  tagref.
         // -> Scnr_ScenarioResourcesEntry[]
-        MapStructure::Tag::Block   ScenarioResources;  // 0x4B0  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioResources;  // 0x4B0  tagblock.
         // -> Scnr_UnitSeatsMappingEntry[]
-        MapStructure::Tag::Block   UnitSeatsMapping;  // 0x4BC  tagblock.
+        MapStructure::Tag::TagBlock   UnitSeatsMapping;  // 0x4BC  tagblock.
         // -> Scnr_ScenarioKillTriggersEntry[]
-        MapStructure::Tag::Block   ScenarioKillTriggers;  // 0x4C8  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioKillTriggers;  // 0x4C8  tagblock.
         // -> Scnr_ScenarioSafeZoneTriggersEntry[]
-        MapStructure::Tag::Block   ScenarioSafeZoneTriggers;  // 0x4D4  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioSafeZoneTriggers;  // 0x4D4  tagblock.
         // -> Scnr_ScenarioMoppTriggersEntry[]
-        MapStructure::Tag::Block   ScenarioMoppTriggers;  // 0x4E0  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioMoppTriggers;  // 0x4E0  tagblock.
         std::uint8_t  _pad_0x4EC[0x4];  // undefined.
         std::uint8_t  _pad_0x4F0[0x4];  // undefined.
         std::uint8_t  _pad_0x4F4[0x4];  // undefined.
@@ -4157,7 +4157,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x4FC[0x4];  // undefined.
         std::uint8_t  _pad_0x500[0x4];  // undefined.
         // -> Scnr_ScriptExpressionsEntry[]
-        MapStructure::Tag::Block   ScriptExpressions;  // 0x504  tagblock.
+        MapStructure::Tag::TagBlock   ScriptExpressions;  // 0x504  tagblock.
         std::uint8_t  _pad_0x510[0x4];  // undefined.
         std::uint8_t  _pad_0x514[0x4];  // undefined.
         std::uint8_t  _pad_0x518[0x4];  // undefined.
@@ -4165,15 +4165,15 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x520[0x4];  // undefined.
         std::uint8_t  _pad_0x524[0x4];  // undefined.
         // -> Scnr_BackgroundSoundEnvironmentPaletteEntry[]
-        MapStructure::Tag::Block   BackgroundSoundEnvironmentPalette;  // 0x528  tagblock.
+        MapStructure::Tag::TagBlock   BackgroundSoundEnvironmentPalette;  // 0x528  tagblock.
         // -> Scnr_FogEntry[]
-        MapStructure::Tag::Block   Fog;  // 0x534  tagblock.
+        MapStructure::Tag::TagBlock   Fog;  // 0x534  tagblock.
         // -> Scnr_CameraFxEntry[]
-        MapStructure::Tag::Block   CameraFx;  // 0x540  tagblock.
+        MapStructure::Tag::TagBlock   CameraFx;  // 0x540  tagblock.
         // -> Scnr_WeatherEntry[]
-        MapStructure::Tag::Block   Weather;  // 0x54C  tagblock.
+        MapStructure::Tag::TagBlock   Weather;  // 0x54C  tagblock.
         // -> Scnr_ScenarioClusterDataEntry[]
-        MapStructure::Tag::Block   ScenarioClusterData;  // 0x558  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioClusterData;  // 0x558  tagblock.
         std::int32_t ObjectSalts1;  // 0x564  int32.
         std::int32_t ObjectSalts2;  // 0x568  int32.
         std::int32_t ObjectSalts3;  // 0x56C  int32.
@@ -4207,68 +4207,68 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int32_t ObjectSalts31;  // 0x5DC  int32.
         std::int32_t ObjectSalts32;  // 0x5E0  int32.
         // -> Scnr_SpawnDataEntry[]
-        MapStructure::Tag::Block   SpawnData;  // 0x5E4  tagblock.
-        MapStructure::Tag::Reference SoundEffectCollection;  // 0x5F0  tagref.
+        MapStructure::Tag::TagBlock   SpawnData;  // 0x5E4  tagblock.
+        MapStructure::Tag::TagReference SoundEffectCollection;  // 0x5F0  tagref.
         // -> Scnr_CratesEntry[]
-        MapStructure::Tag::Block   Crates;  // 0x600  tagblock.
+        MapStructure::Tag::TagBlock   Crates;  // 0x600  tagblock.
         // -> Scnr_CratesPaletteEntry[]
-        MapStructure::Tag::Block   CratesPalette;  // 0x60C  tagblock.
+        MapStructure::Tag::TagBlock   CratesPalette;  // 0x60C  tagblock.
         // -> Scnr_FlockPaletteEntry[]
-        MapStructure::Tag::Block   FlockPalette;  // 0x618  tagblock.
+        MapStructure::Tag::TagBlock   FlockPalette;  // 0x618  tagblock.
         // -> Scnr_FlocksEntry[]
-        MapStructure::Tag::Block   Flocks;  // 0x624  tagblock.
-        MapStructure::Tag::Reference SubtitleStrings;  // 0x630  tagref.
+        MapStructure::Tag::TagBlock   Flocks;  // 0x624  tagblock.
+        MapStructure::Tag::TagReference SubtitleStrings;  // 0x630  tagref.
         std::uint8_t  _pad_0x640[0x4];  // undefined.
         std::uint8_t  _pad_0x644[0x4];  // undefined.
         std::uint8_t  _pad_0x648[0x4];  // undefined.
         // -> Scnr_CreaturesPaletteEntry[]
-        MapStructure::Tag::Block   CreaturesPalette;  // 0x64C  tagblock.
+        MapStructure::Tag::TagBlock   CreaturesPalette;  // 0x64C  tagblock.
         // -> Scnr_BigBattleCreaturesEntry[]
-        MapStructure::Tag::Block   BigBattleCreatures;  // 0x658  tagblock.
+        MapStructure::Tag::TagBlock   BigBattleCreatures;  // 0x658  tagblock.
         // -> Scnr_EditorFoldersEntry[]
-        MapStructure::Tag::Block   EditorFolders;  // 0x664  tagblock.
+        MapStructure::Tag::TagBlock   EditorFolders;  // 0x664  tagblock.
         // -> Scnr_MissionDialogueEntry[]
-        MapStructure::Tag::Block   MissionDialogue;  // 0x670  tagblock.
-        MapStructure::Tag::Reference ObjectiveStrings;  // 0x67C  tagref.
-        MapStructure::Tag::Reference ScenarioInterpolator;  // 0x68C  tagref.
+        MapStructure::Tag::TagBlock   MissionDialogue;  // 0x670  tagblock.
+        MapStructure::Tag::TagReference ObjectiveStrings;  // 0x67C  tagref.
+        MapStructure::Tag::TagReference ScenarioInterpolator;  // 0x68C  tagref.
         std::uint8_t  _pad_0x69C[0x4];  // undefined.
         std::uint8_t  _pad_0x6A0[0x4];  // undefined.
         std::uint8_t  _pad_0x6A4[0x4];  // undefined.
-        MapStructure::Tag::Reference DefaultCameraFx;  // 0x6A8  tagref.
-        MapStructure::Tag::Reference DefaultScreenFx;  // 0x6B8  tagref.
-        MapStructure::Tag::Reference AmbientOcclusionProfile;  // 0x6C8  tagref.
-        MapStructure::Tag::Reference SkyParameters;  // 0x6D8  tagref.
-        MapStructure::Tag::Reference FogParameters;  // 0x6E8  tagref.
-        MapStructure::Tag::Reference GlobalLighting;  // 0x6F8  tagref.
-        MapStructure::Tag::Reference Lightmap;  // 0x708  tagref.
-        MapStructure::Tag::Reference PerformanceThrottles;  // 0x718  tagref.
+        MapStructure::Tag::TagReference DefaultCameraFx;  // 0x6A8  tagref.
+        MapStructure::Tag::TagReference DefaultScreenFx;  // 0x6B8  tagref.
+        MapStructure::Tag::TagReference AmbientOcclusionProfile;  // 0x6C8  tagref.
+        MapStructure::Tag::TagReference SkyParameters;  // 0x6D8  tagref.
+        MapStructure::Tag::TagReference FogParameters;  // 0x6E8  tagref.
+        MapStructure::Tag::TagReference GlobalLighting;  // 0x6F8  tagref.
+        MapStructure::Tag::TagReference Lightmap;  // 0x708  tagref.
+        MapStructure::Tag::TagReference PerformanceThrottles;  // 0x718  tagref.
         // -> Scnr_UnknownObjectsEntry[]
-        MapStructure::Tag::Block   UnknownObjects;  // 0x728  tagblock.
+        MapStructure::Tag::TagBlock   UnknownObjects;  // 0x728  tagblock.
         // -> Scnr_AiObjectivesEntry[]
-        MapStructure::Tag::Block   AiObjectives;  // 0x734  tagblock.
+        MapStructure::Tag::TagBlock   AiObjectives;  // 0x734  tagblock.
         // -> Scnr_DesignerZonesetsEntry[]
-        MapStructure::Tag::Block   DesignerZonesets;  // 0x740  tagblock.
+        MapStructure::Tag::TagBlock   DesignerZonesets;  // 0x740  tagblock.
         // -> Scnr_UnknownEntry_9[]
-        MapStructure::Tag::Block   Unknown_85;  // 0x74C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_85;  // 0x74C  tagblock.
         std::uint8_t  _pad_0x758[0x4];  // undefined.
         std::uint8_t  _pad_0x75C[0x4];  // undefined.
         std::uint8_t  _pad_0x760[0x4];  // undefined.
         // -> Scnr_ParticleEmittersEntry[]
-        MapStructure::Tag::Block   ParticleEmitters;  // 0x764  tagblock.
+        MapStructure::Tag::TagBlock   ParticleEmitters;  // 0x764  tagblock.
         // -> Scnr_UnknownEntry_10[]
-        MapStructure::Tag::Block   Unknown_89;  // 0x770  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_89;  // 0x770  tagblock.
         // -> Scnr_CinematicsEntry[]
-        MapStructure::Tag::Block   Cinematics;  // 0x77C  tagblock.
+        MapStructure::Tag::TagBlock   Cinematics;  // 0x77C  tagblock.
         // -> Scnr_CinematicLightsEntry[]
-        MapStructure::Tag::Block   CinematicLights;  // 0x788  tagblock.
+        MapStructure::Tag::TagBlock   CinematicLights;  // 0x788  tagblock.
         // -> Scnr_OverridePlayerRepresentationsEntry[]
-        MapStructure::Tag::Block   OverridePlayerRepresentations;  // 0x794  tagblock.
+        MapStructure::Tag::TagBlock   OverridePlayerRepresentations;  // 0x794  tagblock.
         // -> Scnr_CampaignMetagameEntry[]
-        MapStructure::Tag::Block   CampaignMetagame;  // 0x7A0  tagblock.
+        MapStructure::Tag::TagBlock   CampaignMetagame;  // 0x7A0  tagblock.
         // -> Scnr_SoftSurfacesEntry[]
-        MapStructure::Tag::Block   SoftSurfaces;  // 0x7AC  tagblock.
+        MapStructure::Tag::TagBlock   SoftSurfaces;  // 0x7AC  tagblock.
         // -> Scnr_UnknownEntry_11[]
-        MapStructure::Tag::Block   Unknown_90;  // 0x7B8  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_90;  // 0x7B8  tagblock.
         std::uint8_t  _pad_0x7C4[0x4];  // undefined.
         std::uint8_t  _pad_0x7C8[0x4];  // undefined.
         std::uint8_t  _pad_0x7CC[0x4];  // undefined.
@@ -4279,17 +4279,17 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x7E0[0x4];  // undefined.
         std::uint8_t  _pad_0x7E4[0x4];  // undefined.
         // -> Scnr_VignettesEntry[]
-        MapStructure::Tag::Block   Vignettes;  // 0x7E8  tagblock.
-        MapStructure::Tag::Reference MapLocationGlobals;  // 0x7F4  tagref.
+        MapStructure::Tag::TagBlock   Vignettes;  // 0x7E8  tagblock.
+        MapStructure::Tag::TagReference MapLocationGlobals;  // 0x7F4  tagref.
         // -> Scnr_GarbageCollectionEntry[]
-        MapStructure::Tag::Block   GarbageCollection;  // 0x804  tagblock. | specify zero for values that should use the data in the globals tag.
-        MapStructure::Tag::Reference MissionHud;  // 0x810  tagref.
-        MapStructure::Tag::Reference RequiredResources;  // 0x820  tagref.
-        MapStructure::Tag::Reference VariantGlobals;  // 0x830  tagref.
+        MapStructure::Tag::TagBlock   GarbageCollection;  // 0x804  tagblock. | specify zero for values that should use the data in the globals tag.
+        MapStructure::Tag::TagReference MissionHud;  // 0x810  tagref.
+        MapStructure::Tag::TagReference RequiredResources;  // 0x820  tagref.
+        MapStructure::Tag::TagReference VariantGlobals;  // 0x830  tagref.
         // -> Scnr_StructuredBufferInteropsEntry[]
-        MapStructure::Tag::Block   StructuredBufferInterops;  // 0x840  tagblock.
+        MapStructure::Tag::TagBlock   StructuredBufferInterops;  // 0x840  tagblock.
         // -> Scnr_ScavengerHuntObjectsEntry[]
-        MapStructure::Tag::Block   ScavengerHuntObjects;  // 0x84C  tagblock.
+        MapStructure::Tag::TagBlock   ScavengerHuntObjects;  // 0x84C  tagblock.
     };
     static_assert(sizeof(ScnrData) == 0x858, "ScnrData size mismatch");
 

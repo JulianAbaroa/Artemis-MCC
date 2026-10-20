@@ -7,18 +7,12 @@ namespace
 {
     using Common::Reflect::Type::ForEachField;
     using Common::Reflect::Type::Reflectable;
+
+    using Common::Reflect::Type::FieldRow;
 }
 
 export namespace Common::Reflect::System
 {
-    // One flattened field of a reflected object.
-    struct FieldRow
-    {
-        // Dotted path of the field, with [index] for the elements of a container.
-        std::string Path{};
-        std::string Value{};
-    };
-
     namespace Detail
     {
         // Appends the field and, recursively, its nested fields and elements.

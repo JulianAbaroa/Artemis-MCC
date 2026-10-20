@@ -9,6 +9,8 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
+    using Platform::Hook::System::k_DrainTimeout;
+
     using Platform::Simulation::Type::MachineIdentifier;
     using Platform::Simulation::Type::FakeMachine;
 
@@ -56,7 +58,7 @@ namespace Platform::Simulation::Hook
         if (m_IsHookInstalled.load()) return true;
         s_Instance = this;
 
-        void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::SetMachines)) };
+        void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::k_SetMachines)) };
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -76,7 +78,7 @@ namespace Platform::Simulation::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[SetMachinesDetour]", m_LogsService);
 

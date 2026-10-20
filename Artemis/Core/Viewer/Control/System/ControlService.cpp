@@ -12,10 +12,10 @@ import std;
 
 namespace
 {
-    using Key = Viewer::Camera::Type::Key;
-    using Mode = Viewer::Camera::Type::Mode;
-    using Follow = Viewer::Camera::Type::Follow;
-    using Scalar = Viewer::Options::Type::Scalar;
+    using Viewer::Camera::Type::Key;
+    using Viewer::Camera::Type::Mode;
+    using Viewer::Camera::Type::Follow;
+    using Viewer::Options::Type::Scalar;
 
     // Maps a virtual key to a camera key.
     // return: False if the key is not a camera key.
@@ -37,7 +37,7 @@ namespace
 
     auto IsRepeat(std::intptr_t lParam) -> bool
     {
-        return (lParam & 0x40000000) != 0;
+        return (HIWORD(lParam) & KF_REPEAT) != 0;
     }
 
     // One notch of the mouse wheel is 120 units.

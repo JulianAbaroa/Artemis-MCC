@@ -5,7 +5,7 @@ import std;
 
 namespace
 {
-	using Vec3 = Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec3;
 }
 
 export namespace Tables::Object::Type::BoneMatrix
@@ -78,4 +78,10 @@ export namespace Tables::Object::Type::BoneMatrix
 
         return true;
     }
+
+    // Bone matrix tables, by object handle.
+    struct BoneMatrixTables : std::unordered_map<std::uint32_t, BoneMatrixTable>
+    {
+        using unordered_map::unordered_map;
+    };
 }

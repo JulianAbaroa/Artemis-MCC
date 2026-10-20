@@ -26,7 +26,7 @@ export namespace Map::Tag::Type::Jpt::Structure
     // Entry size: 0x14
     struct Jpt_DamageSoundsEntry
     {
-        MapStructure::Tag::Reference Sound;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Sound;  // 0x0  tagref.
         std::uint16_t DamageTypes;  // 0x10  flags16. [None=0, Lethal Instantaneous=1, Lethal=2, Non Lethal=3]
         std::uint16_t ObjectTypes;  // 0x12  flags16. [Biped=0, Vehicle=1, Weapon=2, Equipment=3, Terminal=4, Projectile=5, Scenery=6, Machine=7, Control=8, Dispenser=9, Sound Scenery=10, Crate=11, Creature=12, Giant=13, Effect Scenery=14]
     };
@@ -61,7 +61,7 @@ export namespace Map::Tag::Type::Jpt::Structure
         std::uint32_t GeneralDamage;  // 0x70  stringid.
         std::uint32_t SpecificDamage;  // 0x74  stringid.
         // -> Jpt_CustomResponseLabelsEntry[]
-        MapStructure::Tag::Block   CustomResponseLabels;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   CustomResponseLabels;  // 0x78  tagblock.
         float        AiStunRadius;  // 0x84  float32.
         MapStructure::Primitive::RangeF AiStunBounds;  // 0x88  rangef.
         float        ShakeRadius;  // 0x90  float32.
@@ -69,10 +69,10 @@ export namespace Map::Tag::Type::Jpt::Structure
         float        AreaOfEffectSpikeRadius;  // 0x98  float32.
         float        AreaOfEffectSpikeDamageBump;  // 0x9C  float32.
         float        ShieldRenderEffectsScale;  // 0xA0  float32.
-        MapStructure::Tag::Reference DamageResponse;  // 0xA4  tagref.
-        MapStructure::Tag::Reference OldMeleeSound;  // 0xB4  tagref.
+        MapStructure::Tag::TagReference DamageResponse;  // 0xA4  tagref.
+        MapStructure::Tag::TagReference OldMeleeSound;  // 0xB4  tagref.
         // -> Jpt_DamageSoundsEntry[]
-        MapStructure::Tag::Block   DamageSounds;  // 0xC4  tagblock.
+        MapStructure::Tag::TagBlock   DamageSounds;  // 0xC4  tagblock.
         float        ForwardVelocity;  // 0xD0  float32.
         float        ForwardRadius;  // 0xD4  float32.
         float        ForwardExponent;  // 0xD8  float32.

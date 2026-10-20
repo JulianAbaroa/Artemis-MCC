@@ -6,9 +6,9 @@ import std;
 
 namespace
 {
-    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-    using RawObject = Datum::Object::Type::Raw::RawObject;
-    using Snapshot = Datum::Object::Type::Raw::Snapshot;
+    using Resolved::Definitions::Type::Object::ObjectKind;
+    using Datum::Object::Type::Raw::RawObject;
+    using Datum::Object::Type::Raw::Snapshot;
 
     using Datum::Object::Type::Constant::k_MaxObjects;
     using Datum::Object::Type::Constant::k_EntrySize;

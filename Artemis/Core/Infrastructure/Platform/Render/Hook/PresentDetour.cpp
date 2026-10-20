@@ -7,13 +7,14 @@ module Platform.Render.Hook;
 import :Present;
 
 import Platform.Hook.System;
+import Platform.Render.Type;
 import std;
 
 namespace
 {
     using std::chrono::milliseconds;
 
-    constexpr milliseconds k_IdleTimeout{ 1000 };
+    using Platform::Render::Type::k_IdleTimeout;
 }
 
 namespace Platform::Render::Hook

@@ -2,12 +2,12 @@ export module Relations.Classifier.State;
 
 export import :TagClassifications;
 
-import Common.State.System;
+import Common.State.Type;
 import Relations.Classifier.Type;
 import std;
 
 export namespace Relations::Classifier::State
 {
-    using Classifieds = std::vector<Relations::Classifier::Type::Classified>;
-    using ClassifierStore = Common::State::System::Snapshot<Classifieds>;
+    using Relations::Classifier::Type::Classifieds;
+    class ClassifierStore : public Common::State::Type::Snapshot<Classifieds> {};
 }

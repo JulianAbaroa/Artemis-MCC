@@ -1,11 +1,12 @@
 module Viewer.Selection.System;
 
+import Common.Engine.Type;
 import Viewer.Selection.State;
 import std;
 
 namespace
 {
-    using Viewer::Selection::State::k_NoSelection;
+    using Common::Engine::Type::k_NoHandle;
 }
 
 namespace Viewer::Selection::System
@@ -131,7 +132,7 @@ namespace Viewer::Selection::System
     {
         if (!m_SelectionStore.ConsumePick()) return;
 
-        std::uint32_t best = k_NoSelection;
+        std::uint32_t best = k_NoHandle;
         float bestDistance = (std::numeric_limits<float>::max)();
 
         for (const ObjectBounds& box : m_Bounds)

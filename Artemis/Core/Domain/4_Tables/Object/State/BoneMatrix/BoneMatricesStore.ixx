@@ -9,7 +9,7 @@ export namespace Tables::Object::State
     {
     private:
         using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
-        using BoneMatrixTables = std::unordered_map<std::uint32_t, BoneMatrixTable>;
+        using BoneMatrixTables = Tables::Object::Type::BoneMatrix::BoneMatrixTables;
 
     public:
         BoneMatricesStore() = default;

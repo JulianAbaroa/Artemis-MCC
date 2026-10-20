@@ -17,8 +17,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Marker>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("NodeIndex", &Marker::NodeIndex),
             MakeField("Flags", &Marker::Flags),
             MakeField("Translation", &Marker::Translation),
@@ -31,8 +30,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<MarkerGroup>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("NameId", &MarkerGroup::NameId),
             MakeField("Markers", &MarkerGroup::Markers),
         };
@@ -41,8 +39,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Bounds>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Min", &Bounds::Min),
             MakeField("Max", &Bounds::Max),
         };
@@ -51,8 +48,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Mode>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Mode::TagName),
             MakeField("MarkerGroups", &Mode::MarkerGroups),
             MakeField("Nodes", &Mode::Nodes),

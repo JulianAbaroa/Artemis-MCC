@@ -15,7 +15,7 @@ namespace Platform::Input::State
 
     auto InputStore::ToIndex(InputAction action) -> std::size_t
     {
-        return ToIndex(static_cast<short>(action));
+        return InputStore::ToIndex(static_cast<short>(action));
     }
 
     auto InputStore::SetActionRequested(InputAction action, bool requested) -> void

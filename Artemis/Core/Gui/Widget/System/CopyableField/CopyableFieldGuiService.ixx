@@ -1,6 +1,12 @@
 export module Gui.Widget.System:CopyableField;
 
+import Gui.Style.Type;
 import std;
+
+namespace
+{
+    using Gui::Style::Type::k_AnimationDuration;
+}
 
 export namespace Gui::Widget::System
 {
@@ -19,7 +25,5 @@ export namespace Gui::Widget::System
     private:
         std::string m_AnimateCopyLabel{};
         float m_AnimationStartTime{ 0.0f };
-
-        static constexpr float k_AnimationDuration{ 0.6f };
     };
 }

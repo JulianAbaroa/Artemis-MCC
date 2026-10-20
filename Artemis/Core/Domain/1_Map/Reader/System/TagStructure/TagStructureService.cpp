@@ -1,9 +1,13 @@
 module Map.Reader.System;
 import :TagStructure;
 
+import Common.Engine.Type;
+
 namespace
 {
-    using TagReference = Map::Reader::Type::Structure::Tag::Reference;
+    using Map::Reader::Type::Structure::Tag::TagReference;
+
+    using Common::Engine::Type::k_NoHandle;
 }
 
 namespace Map::Reader::System
@@ -26,7 +30,7 @@ namespace Map::Reader::System
             return {};
         }
 
-        if (datumIndex == 0xFFFFFFFF || datumIndex == 0)
+        if (datumIndex == k_NoHandle || datumIndex == 0)
         {
             return {};
         }

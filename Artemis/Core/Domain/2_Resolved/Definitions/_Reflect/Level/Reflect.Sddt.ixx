@@ -15,8 +15,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<SoftCeilingMesh>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &SoftCeilingMesh::Name),
             MakeField("Kind", &SoftCeilingMesh::Kind),
             MakeField("Triangles", &SoftCeilingMesh::Triangles),
@@ -26,8 +25,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Sddt>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Sddt::TagName),
             MakeField("SoftCeilings", &Sddt::SoftCeilings),
         };

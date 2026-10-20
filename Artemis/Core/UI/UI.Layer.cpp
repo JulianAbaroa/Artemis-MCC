@@ -5,7 +5,7 @@ import std;
 
 namespace
 {
-    using Tab = UI::Launcher::Type::Tab;
+    using UI::Launcher::Type::Tab;
 }
 
 namespace UI

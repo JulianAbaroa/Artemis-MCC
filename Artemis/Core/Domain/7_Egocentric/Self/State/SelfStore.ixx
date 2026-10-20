@@ -1,9 +1,11 @@
 export module Egocentric.Self.State;
 
-import Common.State.System;
+import Common.State.Type;
 import Egocentric.Self.Type;
 
 export namespace Egocentric::Self::State
 {
-    using SelfStore = Common::State::System::Snapshot<Egocentric::Self::Type::Self>;
+    class SelfStore : public Common::State::Type::Snapshot<Egocentric::Self::Type::Self>
+    {
+    };
 }

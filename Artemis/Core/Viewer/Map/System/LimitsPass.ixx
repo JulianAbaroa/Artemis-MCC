@@ -7,6 +7,7 @@ export module Viewer.Map.System:LimitsPass;
 import Service.Logs.System;
 import Platform.Render.Type;
 import Platform.Render.System;
+import Resolved.Definitions.Type;
 import Export.Tick.Type;
 import Viewer.Map.Type;
 import std;
@@ -27,8 +28,8 @@ export namespace Viewer::Map::System
         using Vertex = Platform::Render::Type::Vertex;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
-        using MapScnrs = Export::Tick::Type::MapScnrs;
-        using MapSddts = Export::Tick::Type::MapSddts;
+        using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
+        using Sddt = Resolved::Definitions::Type::Sddt::Sddt;
 
         using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
         using VertexBatch = Viewer::Map::Type::VertexBatch;
@@ -43,7 +44,7 @@ export namespace Viewer::Map::System
         // Rebuilds the vertices when an option that shapes them changes or when the limits appear.
         // note: The opacity is only remembered, so moving it never rebuilds.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-            const std::shared_ptr<const MapScnrs>& scnrs, const std::shared_ptr<const MapSddts>& sddts,
+            const std::shared_ptr<const std::unordered_map<std::string, Scnr>>& scnrs, const std::shared_ptr<const std::unordered_map<std::string, Sddt>>& sddts,
             const LimitsPassOptions& options) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
@@ -58,7 +59,7 @@ export namespace Viewer::Map::System
 
         float m_Opacity{ 0.20f };
 
-        Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
+        Platform::Render::System::UploadGate m_Gate{};
 
         // return: False if the batch could not be uploaded.
         auto UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, VertexBatch& batch, const char* tag) -> bool;

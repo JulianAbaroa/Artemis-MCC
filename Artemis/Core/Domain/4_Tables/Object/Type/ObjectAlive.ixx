@@ -10,65 +10,76 @@ import :Scenery;
 import :Projectile;
 import :Multiplayer;
 import :Placement;
+
 import Common.Math.Type;
 import std;
 
 namespace
 {
-	using Vec3 = Common::Math::Type::Vec3;
-	using Profile = Tables::Object::Type::Profile::Profile;
-	using Equipment = Tables::Object::Type::Equipment::Equipment;
-	using Vehicle = Tables::Object::Type::Vehicle::Vehicle;
-	using Weapon = Tables::Object::Type::Weapon::Weapon;
-	using Biped = Tables::Object::Type::Biped::Biped;
-	using Crate = Tables::Object::Type::Crate::Crate;
-	using Scenery = Tables::Object::Type::Scenery::Scenery;
-	using Projectile = Tables::Object::Type::Projectile::Projectile;
-	using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
-	using Placement = Tables::Object::Type::Placement::Placement;
-
-	using Specific = std::variant<std::monostate, Equipment, Vehicle,
-		Weapon, Biped, Crate, Scenery, Projectile>;
+    using Common::Math::Type::Vec3;
+    using Tables::Object::Type::Profile::Profile;
+    using Tables::Object::Type::Equipment::Equipment;
+    using Tables::Object::Type::Vehicle::Vehicle;
+    using Tables::Object::Type::Weapon::Weapon;
+    using Tables::Object::Type::Biped::Biped;
+    using Tables::Object::Type::Crate::Crate;
+    using Tables::Object::Type::Scenery::Scenery;
+    using Tables::Object::Type::Projectile::Projectile;
+    using Tables::Object::Type::Multiplayer::Multiplayer;
+    using Tables::Object::Type::Placement::Placement;
 }
 
 export namespace Tables::Object::Type::Alive
 {
-	struct Object
-	{
-		std::uint32_t DatumIndex{};
-		std::uintptr_t Address{};
+    // Data of the kind of the object. Monostate for the kinds without specific data.
+    struct Specific : std::variant<std::monostate, Equipment::Equipment, Vehicle::Vehicle, Weapon::Weapon, Biped::Biped, Crate::Crate,
+        Scenery::Scenery, Projectile::Projectile>
+    {
+        using variant::variant;
+    };
 
-		std::string FourCC{};
-		std::string TagName{};
-		std::uint16_t HlmtVariant{};
+    struct AliveObject
+    {
+        std::uint32_t DatumIndex{};
+        std::uintptr_t Address{};
 
-		std::uint32_t Handle{};
-		std::uint32_t NextSiblingHandle{};
-		std::uint32_t ChildHandle{};
-		std::uint32_t ParentHandle{};
+        std::string FourCC{};
+        std::string TagName{};
+        std::uint16_t HlmtVariant{};
 
-		// note: Center of the bounding sphere, world space (offset 0x20). Not the origin of the object (D27).
-		Vec3 BoundingCenter{};
-		// note: object origin (offset 0x44), local to the parent if parented.
-		Vec3 Origin{};
-		// note: origin resolved to world space through the parent chain.
-		// Zone shapes (Top/Bottom) are measured from here, not from BoundingCenter.
-		Vec3 WorldOrigin{};
-		Vec3 Forward{};
-		Vec3 Up{};
+        std::uint32_t Handle{};
+        std::uint32_t NextSiblingHandle{};
+        std::uint32_t ChildHandle{};
+        std::uint32_t ParentHandle{};
 
-		Vec3 LinearVelocity{};
-		Vec3 AngularVelocity{};
+        // note: Center of the bounding sphere, world space (offset 0x20). Not the origin of the object (D27).
+        Vec3 BoundingCenter{};
+        // note: object origin (offset 0x44), local to the parent if parented.
+        Vec3 Origin{};
+        // note: origin resolved to world space through the parent chain.
+        // Zone shapes (Top/Bottom) are measured from here, not from BoundingCenter.
+        Vec3 WorldOrigin{};
+        Vec3 Forward{};
+        Vec3 Up{};
 
-		float BoundingRadius{};
-		float DamageReceived{};
+        Vec3 LinearVelocity{};
+        Vec3 AngularVelocity{};
 
-		::Profile Profile{};
+        float BoundingRadius{};
+        float DamageReceived{};
 
-		// note: Only objects that have the multiplayer block.
-		std::optional<::Multiplayer> Multiplayer{};
-		// note: Only objects placed by the map variant (obje 0x1C). Holds the Forge settings, Physics included.
-		std::optional<::Placement> Placement{};
-		Specific Specific{};
-	};
+        ::Profile Profile{};
+
+        // note: Only objects that have the multiplayer block.
+        std::optional<::Multiplayer> Multiplayer{};
+        // note: Only objects placed by the map variant (obje 0x1C). Holds the Forge settings, Physics included.
+        std::optional<::Placement> Placement{};
+        Specific Specific{};
+    };
+
+    // Live objects, by handle.
+    struct ObjectTable : std::unordered_map<std::uint32_t, AliveObject>
+    {
+        using unordered_map::unordered_map;
+    };
 }

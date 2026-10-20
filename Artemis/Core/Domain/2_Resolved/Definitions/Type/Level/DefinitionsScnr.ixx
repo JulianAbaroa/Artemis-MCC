@@ -10,6 +10,10 @@ namespace
 
 export namespace Resolved::Definitions::Type::Scnr
 {
+    // Last engine type of a trigger volume and of a soft ceiling that has a kind. Higher types are invalid.
+    inline constexpr std::uint16_t k_LastTriggerVolumeKind{ 1 };
+    inline constexpr std::uint16_t k_LastSoftCeilingKind{ 2 };
+
     // Shape of a trigger volume.
     enum class TriggerVolumeKind : std::uint16_t
     {

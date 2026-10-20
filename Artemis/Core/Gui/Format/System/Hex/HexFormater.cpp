@@ -1,6 +1,5 @@
 module Gui.Format.System;
 import :Hex;
-
 import std;
 
 namespace Gui::Format::System

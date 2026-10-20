@@ -1,11 +1,12 @@
 module Viewer.Scene.System;
 
+import Common.Engine.Type;
 import Viewer.Selection.State;
 import std;
 
 namespace
 {
-    using Viewer::Selection::State::k_NoSelection;
+    using Common::Engine::Type::k_NoHandle;
 }
 
 namespace Viewer::Scene::System
@@ -25,7 +26,7 @@ namespace Viewer::Scene::System
         const bool acceptInput = !m_SettingsStore.IsMenuVisible();
         const std::uint32_t selected = m_SelectionService.GetSelected();
         const std::optional<std::uint32_t> followHandle =
-            (selected == k_NoSelection)
+            (selected == k_NoHandle)
             ? std::nullopt : std::optional<std::uint32_t>{ selected };
 
         m_CameraService.Update(tick, viewport, acceptInput, followHandle);

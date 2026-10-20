@@ -63,7 +63,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Data::Reference DefaultFunction;  // 0x18  dataref.
         std::uint32_t ScaleBy;  // 0x2C  stringid.
         // -> Bipd_Functions_InterpolationEntry[]
-        MapStructure::Tag::Block   Interpolation;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Interpolation;  // 0x30  tagblock.
         std::int32_t RuntimeInterpolatorIndex;  // 0x3C  int32.
     };
     static_assert(sizeof(Bipd_FunctionsEntry) == 0x40, "Bipd_FunctionsEntry size mismatch");
@@ -78,7 +78,7 @@ export namespace Map::Tag::Type::Bipd::Structure
     // Entry size: 0x20
     struct Bipd_AttachmentsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
         std::uint32_t Marker;  // 0x10  stringid.
         std::uint8_t ChangeColor;  // 0x14  enum8. [None=0x0, Primary=0x1, Secondary=0x2, Tertiary=0x3, Quaternary=0x4]
         std::uint8_t Flags;  // 0x15  flags8. [Force Always On=0, Effect Size Scale From Object Scale=1]
@@ -109,7 +109,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint32_t MarkerName;  // 0x4  stringid.
         float        Radius;  // 0x8  float32.
         // -> Bipd_HullSurfaces_DragEntry[]
-        MapStructure::Tag::Block   Drag;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Drag;  // 0xC  tagblock.
     };
     static_assert(sizeof(Bipd_HullSurfacesEntry) == 0x18, "Bipd_HullSurfacesEntry size mismatch");
 
@@ -129,7 +129,7 @@ export namespace Map::Tag::Type::Bipd::Structure
     // Entry size: 0x10
     struct Bipd_WidgetsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
     };
     static_assert(sizeof(Bipd_WidgetsEntry) == 0x10, "Bipd_WidgetsEntry size mismatch");
 
@@ -158,9 +158,9 @@ export namespace Map::Tag::Type::Bipd::Structure
     struct Bipd_ChangeColorsEntry
     {
         // -> Bipd_ChangeColors_InitialPermutationsEntry[]
-        MapStructure::Tag::Block   InitialPermutations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   InitialPermutations;  // 0x0  tagblock.
         // -> Bipd_ChangeColors_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xC  tagblock.
     };
     static_assert(sizeof(Bipd_ChangeColorsEntry) == 0x18, "Bipd_ChangeColorsEntry size mismatch");
 
@@ -183,25 +183,25 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        NormalWeight;  // 0x1C  float32.
         std::uint32_t BoundaryCenterMarker;  // 0x20  stringid.
         std::uint32_t SpawnedObjectMarkerName;  // 0x24  stringid.
-        MapStructure::Tag::Reference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
         std::uint32_t BoundaryMaterialNotYetImplemented;  // 0x38  stringid.
-        MapStructure::Tag::Reference DefaultBoundaryStandardShader;  // 0x3C  tagref.
-        MapStructure::Tag::Reference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
-        MapStructure::Tag::Reference SphereStandardShader;  // 0x5C  tagref.
-        MapStructure::Tag::Reference SphereOpaqueShader;  // 0x6C  tagref.
-        MapStructure::Tag::Reference CylinderStandardShader;  // 0x7C  tagref.
-        MapStructure::Tag::Reference CylinderOpaqueShader;  // 0x8C  tagref.
-        MapStructure::Tag::Reference BoxStandardShader;  // 0x9C  tagref.
-        MapStructure::Tag::Reference BoxOpaqueShader;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryStandardShader;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
+        MapStructure::Tag::TagReference SphereStandardShader;  // 0x5C  tagref.
+        MapStructure::Tag::TagReference SphereOpaqueShader;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference CylinderStandardShader;  // 0x7C  tagref.
+        MapStructure::Tag::TagReference CylinderOpaqueShader;  // 0x8C  tagref.
+        MapStructure::Tag::TagReference BoxStandardShader;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference BoxOpaqueShader;  // 0xAC  tagref.
     };
     static_assert(sizeof(Bipd_MultiplayerObjectEntry) == 0xBC, "Bipd_MultiplayerObjectEntry size mismatch");
 
     // Entry size: 0x30
     struct Bipd_SpawnEffectsEntry
     {
-        MapStructure::Tag::Reference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
-        MapStructure::Tag::Reference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
-        MapStructure::Tag::Reference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
+        MapStructure::Tag::TagReference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
+        MapStructure::Tag::TagReference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
+        MapStructure::Tag::TagReference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
     };
     static_assert(sizeof(Bipd_SpawnEffectsEntry) == 0x30, "Bipd_SpawnEffectsEntry size mismatch");
 
@@ -220,15 +220,15 @@ export namespace Map::Tag::Type::Bipd::Structure
     // Entry size: 0x10
     struct Bipd_ScreenEffectsEntry
     {
-        MapStructure::Tag::Reference ScreenEffect;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ScreenEffect;  // 0x0  tagref.
     };
     static_assert(sizeof(Bipd_ScreenEffectsEntry) == 0x10, "Bipd_ScreenEffectsEntry size mismatch");
 
     // Entry size: 0x20
     struct Bipd_CameraTracksEntry
     {
-        MapStructure::Tag::Reference Track;  // 0x0  tagref.
-        MapStructure::Tag::Reference ScreenEffect;  // 0x10  tagref.
+        MapStructure::Tag::TagReference Track;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ScreenEffect;  // 0x10  tagref.
     };
     static_assert(sizeof(Bipd_CameraTracksEntry) == 0x20, "Bipd_CameraTracksEntry size mismatch");
 
@@ -278,7 +278,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_MoveStickOverrides_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Bipd_MoveStickOverridesEntry) == 0x28, "Bipd_MoveStickOverridesEntry size mismatch");
 
@@ -300,15 +300,15 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_LookStickOverrides_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Bipd_LookStickOverridesEntry) == 0x28, "Bipd_LookStickOverridesEntry size mismatch");
 
     // Entry size: 0x20
     struct Bipd_CameraTracksEntry_2
     {
-        MapStructure::Tag::Reference Track;  // 0x0  tagref.
-        MapStructure::Tag::Reference ScreenEffect;  // 0x10  tagref.
+        MapStructure::Tag::TagReference Track;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ScreenEffect;  // 0x10  tagref.
     };
     static_assert(sizeof(Bipd_CameraTracksEntry_2) == 0x20, "Bipd_CameraTracksEntry_2 size mismatch");
 
@@ -358,7 +358,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_MoveStickOverrides_2_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Bipd_MoveStickOverridesEntry_2) == 0x28, "Bipd_MoveStickOverridesEntry_2 size mismatch");
 
@@ -380,14 +380,14 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_LookStickOverrides_2_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Bipd_LookStickOverridesEntry_2) == 0x28, "Bipd_LookStickOverridesEntry_2 size mismatch");
 
     // Entry size: 0x10
     struct Bipd_HudInterfacesEntry
     {
-        MapStructure::Tag::Reference UnitHudInterface;  // 0x0  tagref.
+        MapStructure::Tag::TagReference UnitHudInterface;  // 0x0  tagref.
     };
     static_assert(sizeof(Bipd_HudInterfacesEntry) == 0x10, "Bipd_HudInterfacesEntry size mismatch");
 
@@ -402,7 +402,7 @@ export namespace Map::Tag::Type::Bipd::Structure
     // Entry size: 0x14
     struct Bipd_WeaponsEntry
     {
-        MapStructure::Tag::Reference Weapon;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Weapon;  // 0x0  tagref.
         std::uint32_t VariantName;  // 0x10  stringid.
     };
     static_assert(sizeof(Bipd_WeaponsEntry) == 0x14, "Bipd_WeaponsEntry size mismatch");
@@ -418,12 +418,12 @@ export namespace Map::Tag::Type::Bipd::Structure
     struct Bipd_TargetTrackingEntry
     {
         // -> Bipd_TargetTracking_TrackingTypesEntry[]
-        MapStructure::Tag::Block   TrackingTypes;  // 0x0  tagblock. | specify the kinds of targets this tracking system can lock on
+        MapStructure::Tag::TagBlock   TrackingTypes;  // 0x0  tagblock. | specify the kinds of targets this tracking system can lock on
         float        AcquireTime;  // 0xC  float32.
         float        GraceTime;  // 0x10  float32.
         float        DecayTime;  // 0x14  float32.
-        MapStructure::Tag::Reference TrackingSound;  // 0x18  tagref.
-        MapStructure::Tag::Reference LockedSound;  // 0x28  tagref.
+        MapStructure::Tag::TagReference TrackingSound;  // 0x18  tagref.
+        MapStructure::Tag::TagReference LockedSound;  // 0x28  tagref.
     };
     static_assert(sizeof(Bipd_TargetTrackingEntry) == 0x38, "Bipd_TargetTrackingEntry size mismatch");
 
@@ -438,8 +438,8 @@ export namespace Map::Tag::Type::Bipd::Structure
     // Entry size: 0x20
     struct Bipd_Seats_CameraTracksEntry
     {
-        MapStructure::Tag::Reference Track;  // 0x0  tagref.
-        MapStructure::Tag::Reference ScreenEffect;  // 0x10  tagref.
+        MapStructure::Tag::TagReference Track;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ScreenEffect;  // 0x10  tagref.
     };
     static_assert(sizeof(Bipd_Seats_CameraTracksEntry) == 0x20, "Bipd_Seats_CameraTracksEntry size mismatch");
 
@@ -489,7 +489,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_Seats_MoveStickOverrides_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Bipd_Seats_MoveStickOverridesEntry) == 0x28, "Bipd_Seats_MoveStickOverridesEntry size mismatch");
 
@@ -511,14 +511,14 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_Seats_LookStickOverrides_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Bipd_Seats_LookStickOverridesEntry) == 0x28, "Bipd_Seats_LookStickOverridesEntry size mismatch");
 
     // Entry size: 0x10
     struct Bipd_Seats_SeatHudInterfacesEntry
     {
-        MapStructure::Tag::Reference HudInterface;  // 0x0  tagref.
+        MapStructure::Tag::TagReference HudInterface;  // 0x0  tagref.
     };
     static_assert(sizeof(Bipd_Seats_SeatHudInterfacesEntry) == 0x10, "Bipd_Seats_SeatHudInterfacesEntry size mismatch");
 
@@ -535,12 +535,12 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint32_t InSeatString;  // 0x1C  stringid.
         float        PingScale;  // 0x20  float32.
         float        TurnoverTime;  // 0x24  float32. | how much time it takes to evict a rider from a flipped vehicle
-        MapStructure::Tag::Reference SeatAcceleration;  // 0x28  tagref.
+        MapStructure::Tag::TagReference SeatAcceleration;  // 0x28  tagref.
         float        AiScariness;  // 0x38  float32.
         std::uint16_t AiSeatType;  // 0x3C  enum16. [None=0x0, Passenger=0x1, Gunner=0x2, Small Cargo=0x3, Large Cargo=0x4, Driver=0x5]
         std::int16_t BoardingSeatIndex;  // 0x3E  int16.
         // -> Bipd_Seats_AdditionalBoardingSeatsEntry[]
-        MapStructure::Tag::Block   AdditionalBoardingSeats;  // 0x40  tagblock. | additional seats to eject
+        MapStructure::Tag::TagBlock   AdditionalBoardingSeats;  // 0x40  tagblock. | additional seats to eject
         float        ListenerInterpolationFactor;  // 0x4C  float32. | how far to interpolate listener position from camera to occupant's head
         MapStructure::Primitive::RangeF YawRateBounds;  // 0x50  rangef.
         MapStructure::Primitive::RangeF PitchRateBounds;  // 0x58  rangef.
@@ -554,7 +554,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        PitchAutoLevel;  // 0x78  degree.
         MapStructure::Primitive::RangeF PitchRange;  // 0x7C  ranged.
         // -> Bipd_Seats_CameraTracksEntry[]
-        MapStructure::Tag::Block   CameraTracks;  // 0x84  tagblock.
+        MapStructure::Tag::TagBlock   CameraTracks;  // 0x84  tagblock.
         float        PitchMinimumSpring;  // 0x90  degree.
         float        PitchMaximumSpring;  // 0x94  degree.
         float        SpringVelocity;  // 0x98  degree.
@@ -569,13 +569,13 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        ObstructionMaximumVelocity;  // 0xBC  float32. | maximum speed the camera can move
         float        ObstructionReturnDelay;  // 0xC0  float32. | when the camera wants to start moving back out, wait this long before doing so
         // -> Bipd_Seats_CameraAccelerationEntry[]
-        MapStructure::Tag::Block   CameraAcceleration;  // 0xC4  tagblock.
+        MapStructure::Tag::TagBlock   CameraAcceleration;  // 0xC4  tagblock.
         // -> Bipd_Seats_MoveStickOverridesEntry[]
-        MapStructure::Tag::Block   MoveStickOverrides;  // 0xD0  tagblock.
+        MapStructure::Tag::TagBlock   MoveStickOverrides;  // 0xD0  tagblock.
         // -> Bipd_Seats_LookStickOverridesEntry[]
-        MapStructure::Tag::Block   LookStickOverrides;  // 0xDC  tagblock.
+        MapStructure::Tag::TagBlock   LookStickOverrides;  // 0xDC  tagblock.
         // -> Bipd_Seats_SeatHudInterfacesEntry[]
-        MapStructure::Tag::Block   SeatHudInterfaces;  // 0xE8  tagblock.
+        MapStructure::Tag::TagBlock   SeatHudInterfaces;  // 0xE8  tagblock.
         std::uint32_t EnterSeatString;  // 0xF4  stringid.
         MapStructure::Primitive::RangeF Yaw;  // 0xF8  ranged.
         float        EntryRadius;  // 0x100  float32. | how close to the entry marker a unit must be
@@ -811,54 +811,54 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
         MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GenericNameList;  // 0x40  tagref.
-        MapStructure::Tag::Reference GenericServiceTagList;  // 0x50  tagref.
+        MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
         std::uint32_t DefaultModelVariant;  // 0x60  stringid.
-        MapStructure::Tag::Reference Model;  // 0x64  tagref.
-        MapStructure::Tag::Reference CrateObject;  // 0x74  tagref.
-        MapStructure::Tag::Reference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
-        MapStructure::Tag::Reference BrittleCollisionDamage;  // 0x94  tagref.
+        MapStructure::Tag::TagReference Model;  // 0x64  tagref.
+        MapStructure::Tag::TagReference CrateObject;  // 0x74  tagref.
+        MapStructure::Tag::TagReference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
+        MapStructure::Tag::TagReference BrittleCollisionDamage;  // 0x94  tagref.
         // -> Bipd_EarlyMoverOrientedBoundingBoxEntry[]
-        MapStructure::Tag::Block   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
-        MapStructure::Tag::Reference CreationEffect;  // 0xB0  tagref.
-        MapStructure::Tag::Reference MaterialEffects;  // 0xC0  tagref.
-        MapStructure::Tag::Reference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
+        MapStructure::Tag::TagBlock   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
+        MapStructure::Tag::TagReference CreationEffect;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference MaterialEffects;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
         // -> Bipd_AiPropertiesEntry[]
-        MapStructure::Tag::Block   AiProperties;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   AiProperties;  // 0xE0  tagblock.
         // -> Bipd_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xEC  tagblock.
         // -> Bipd_RuntimeInterpolatorFunctionsEntry[]
-        MapStructure::Tag::Block   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
         // -> Bipd_AttachmentsEntry[]
-        MapStructure::Tag::Block   Attachments;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   Attachments;  // 0x104  tagblock.
         // -> Bipd_HullSurfacesEntry[]
-        MapStructure::Tag::Block   HullSurfaces;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   HullSurfaces;  // 0x110  tagblock.
         // -> Bipd_JetwashEntry[]
-        MapStructure::Tag::Block   Jetwash;  // 0x11C  tagblock.
+        MapStructure::Tag::TagBlock   Jetwash;  // 0x11C  tagblock.
         // -> Bipd_WidgetsEntry[]
-        MapStructure::Tag::Block   Widgets;  // 0x128  tagblock.
+        MapStructure::Tag::TagBlock   Widgets;  // 0x128  tagblock.
         // -> Bipd_ChangeColorsEntry[]
-        MapStructure::Tag::Block   ChangeColors;  // 0x134  tagblock.
+        MapStructure::Tag::TagBlock   ChangeColors;  // 0x134  tagblock.
         // -> Bipd_MultiplayerObjectEntry[]
-        MapStructure::Tag::Block   MultiplayerObject;  // 0x140  tagblock.
-        MapStructure::Tag::Reference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
+        MapStructure::Tag::TagBlock   MultiplayerObject;  // 0x140  tagblock.
+        MapStructure::Tag::TagReference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
         // -> Bipd_SpawnEffectsEntry[]
-        MapStructure::Tag::Block   SpawnEffects;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnEffects;  // 0x15C  tagblock.
         std::uint32_t Flags_2;  // 0x168  flags32. [Circular Aiming=0, Destroyed After Dying=1, Half-Speed Interpolation=2, Fires From Camera=3, Entrance Inside Bounding Sphere=4, Doesn't Show Readied Weapon=5, Causes Passenger Dialogue=6, Resists Pings=7, Melee Attack Is Fatal=8, Don't Reface During Pings=9, Has No Aiming=10, Impact Melee Attaches To Unit=11, Impact Melee Dies On Shields=12, Cannot Open Doors Automatically=13, Melee Attackers Cannot Attach=14, Not Instantly Killed By Melee=15, ...(32 total)]
         std::uint16_t DefaultTeam;  // 0x16C  enum16. [Default=0x0, Player=0x1, Human=0x2, Covenant=0x3, Brute=0x4, Mule=0x5, Spare=0x6, Covenant Player=0x7]
         std::uint16_t ConstantSoundVolume;  // 0x16E  enum16. [Silent=0x0, Quiet=0x1, Medium=0x2, Shout=0x3, Loud=0x4]
-        MapStructure::Tag::Reference HologramUnit;  // 0x170  tagref.
+        MapStructure::Tag::TagReference HologramUnit;  // 0x170  tagref.
         // -> Bipd_CampaignMetagameBucketEntry[]
-        MapStructure::Tag::Block   CampaignMetagameBucket;  // 0x180  tagblock.
+        MapStructure::Tag::TagBlock   CampaignMetagameBucket;  // 0x180  tagblock.
         // -> Bipd_ScreenEffectsEntry[]
-        MapStructure::Tag::Block   ScreenEffects;  // 0x18C  tagblock.
+        MapStructure::Tag::TagBlock   ScreenEffects;  // 0x18C  tagblock.
         std::uint16_t Flags_3;  // 0x198  flags16. [Pitch Bounds Absolute Space=0, Only Collides With Environment=1, Hides Player-Unit From Camera=2, Use Aiming Vector Instead Of Marker Forward=3]
         std::int16_t Unknown;  // 0x19A  int16.
         std::uint32_t CameraMarkerName;  // 0x19C  stringid.
         float        PitchAutoLevel;  // 0x1A0  degree.
         MapStructure::Primitive::RangeF PitchRange;  // 0x1A4  ranged.
         // -> Bipd_CameraTracksEntry[]
-        MapStructure::Tag::Block   CameraTracks;  // 0x1AC  tagblock.
+        MapStructure::Tag::TagBlock   CameraTracks;  // 0x1AC  tagblock.
         float        PitchMinimumSpring;  // 0x1B8  degree.
         float        PitchMaximumSpring;  // 0x1BC  degree.
         float        SpringVelocity;  // 0x1C0  degree.
@@ -873,18 +873,18 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        ObstructionMaximumVelocity;  // 0x1E4  float32. | maximum speed the camera can move
         float        ObstructionReturnDelay;  // 0x1E8  float32. | when the camera wants to start moving back out, wait this long before doing so
         // -> Bipd_CameraAccelerationEntry[]
-        MapStructure::Tag::Block   CameraAcceleration;  // 0x1EC  tagblock.
+        MapStructure::Tag::TagBlock   CameraAcceleration;  // 0x1EC  tagblock.
         // -> Bipd_MoveStickOverridesEntry[]
-        MapStructure::Tag::Block   MoveStickOverrides;  // 0x1F8  tagblock.
+        MapStructure::Tag::TagBlock   MoveStickOverrides;  // 0x1F8  tagblock.
         // -> Bipd_LookStickOverridesEntry[]
-        MapStructure::Tag::Block   LookStickOverrides;  // 0x204  tagblock.
+        MapStructure::Tag::TagBlock   LookStickOverrides;  // 0x204  tagblock.
         std::uint16_t Flags_4;  // 0x210  flags16. [Pitch Bounds Absolute Space=0, Only Collides With Environment=1, Hides Player-Unit From Camera=2, Use Aiming Vector Instead Of Marker Forward=3]
         std::int16_t Unknown_2;  // 0x212  int16.
         std::uint32_t CameraMarkerName_2;  // 0x214  stringid.
         float        PitchAutoLevel_2;  // 0x218  degree.
         MapStructure::Primitive::RangeF PitchRange_2;  // 0x21C  ranged.
         // -> Bipd_CameraTracksEntry_2[]
-        MapStructure::Tag::Block   CameraTracks_2;  // 0x224  tagblock.
+        MapStructure::Tag::TagBlock   CameraTracks_2;  // 0x224  tagblock.
         float        PitchMinimumSpring_2;  // 0x230  degree.
         float        PitchMaximumSpring_2;  // 0x234  degree.
         float        SpringVelocity_2;  // 0x238  degree.
@@ -899,17 +899,17 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        ObstructionMaximumVelocity_2;  // 0x25C  float32. | maximum speed the camera can move
         float        ObstructionReturnDelay_2;  // 0x260  float32. | when the camera wants to start moving back out, wait this long before doing so
         // -> Bipd_CameraAccelerationEntry_2[]
-        MapStructure::Tag::Block   CameraAcceleration_2;  // 0x264  tagblock.
+        MapStructure::Tag::TagBlock   CameraAcceleration_2;  // 0x264  tagblock.
         // -> Bipd_MoveStickOverridesEntry_2[]
-        MapStructure::Tag::Block   MoveStickOverrides_2;  // 0x270  tagblock.
+        MapStructure::Tag::TagBlock   MoveStickOverrides_2;  // 0x270  tagblock.
         // -> Bipd_LookStickOverridesEntry_2[]
-        MapStructure::Tag::Block   LookStickOverrides_2;  // 0x27C  tagblock.
-        MapStructure::Tag::Reference AssassinationStartDamageResponse;  // 0x288  tagref.
-        MapStructure::Tag::Reference AssassinationWeapon;  // 0x298  tagref.
+        MapStructure::Tag::TagBlock   LookStickOverrides_2;  // 0x27C  tagblock.
+        MapStructure::Tag::TagReference AssassinationStartDamageResponse;  // 0x288  tagref.
+        MapStructure::Tag::TagReference AssassinationWeapon;  // 0x298  tagref.
         std::uint32_t AssassinationWeaponStowMarker;  // 0x2A8  stringid. | the anchor we attach the knife to when we stow it
         std::uint32_t AssassinationWeaponOutMarker;  // 0x2AC  stringid. | the anchor we attach the knife to when we pull it out
         std::uint32_t AssassinationWeaponAnchorMarker;  // 0x2B0  stringid. | the marker on the knife that we anchor to the biped
-        MapStructure::Tag::Reference SeatAcceleration;  // 0x2B4  tagref.
+        MapStructure::Tag::TagReference SeatAcceleration;  // 0x2B4  tagref.
         float        SoftPingThreshold;  // 0x2C4  float32.
         float        SoftPingInterruptTime;  // 0x2C8  float32.
         float        HardPingThreshold;  // 0x2CC  float32.
@@ -930,7 +930,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        StunJumpingPenalty;  // 0x308  float32. | 1.0 prevents jumping while stunned
         float        MinimumStunTime;  // 0x30C  float32. | all stunning damage will last for at least this long
         float        MaximumStunTime;  // 0x310  float32. | no stunning damage will last for longer than this
-        MapStructure::Tag::Reference SpawnedTurretCharacter;  // 0x314  tagref. | automatically created character when this unit is driven
+        MapStructure::Tag::TagReference SpawnedTurretCharacter;  // 0x314  tagref. | automatically created character when this unit is driven
         std::uint32_t TargetAimingPivotMarkerName;  // 0x324  stringid. | set this to have your weapon barrel point at its calcualed target instead of matching the aiming of the unit controlling it. This marker should be along the barrel at point that doesn't move when the barrel pitches up and down.
         float        AimingVelocityMaximum;  // 0x328  degree.
         float        AimingAccelerationMaximum;  // 0x32C  degree.
@@ -944,22 +944,22 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint32_t PreferredGrenadeMarker;  // 0x34C  stringid. | if found, use this marker to attach live grenades to
         std::uint16_t MeleeDamageClass;  // 0x350  enum16. [Default Class=0x0, Elite Class=0x1]
         std::int16_t Unknown_3;  // 0x352  int16.
-        MapStructure::Tag::Reference MeleeDamage;  // 0x354  tagref.
-        MapStructure::Tag::Reference NativeMeleeOverride;  // 0x364  tagref. | when set, characters will melee with these settings rather than their actual held weapon. (for characters that melee with an off hand)
-        MapStructure::Tag::Reference BoardingMeleeDamage;  // 0x374  tagref.
-        MapStructure::Tag::Reference BoardingMeleeResponse;  // 0x384  tagref.
-        MapStructure::Tag::Reference EvictionMeleeDamage;  // 0x394  tagref.
-        MapStructure::Tag::Reference EvictionMeleeResponse;  // 0x3A4  tagref.
-        MapStructure::Tag::Reference LandingMeleeDamage;  // 0x3B4  tagref.
-        MapStructure::Tag::Reference FlurryMeleeDamage;  // 0x3C4  tagref.
-        MapStructure::Tag::Reference ObstacleSmashDamage;  // 0x3D4  tagref.
-        MapStructure::Tag::Reference AssassinationDamage;  // 0x3E4  tagref.
+        MapStructure::Tag::TagReference MeleeDamage;  // 0x354  tagref.
+        MapStructure::Tag::TagReference NativeMeleeOverride;  // 0x364  tagref. | when set, characters will melee with these settings rather than their actual held weapon. (for characters that melee with an off hand)
+        MapStructure::Tag::TagReference BoardingMeleeDamage;  // 0x374  tagref.
+        MapStructure::Tag::TagReference BoardingMeleeResponse;  // 0x384  tagref.
+        MapStructure::Tag::TagReference EvictionMeleeDamage;  // 0x394  tagref.
+        MapStructure::Tag::TagReference EvictionMeleeResponse;  // 0x3A4  tagref.
+        MapStructure::Tag::TagReference LandingMeleeDamage;  // 0x3B4  tagref.
+        MapStructure::Tag::TagReference FlurryMeleeDamage;  // 0x3C4  tagref.
+        MapStructure::Tag::TagReference ObstacleSmashDamage;  // 0x3D4  tagref.
+        MapStructure::Tag::TagReference AssassinationDamage;  // 0x3E4  tagref.
         std::uint16_t MotionSensorBlipSize;  // 0x3F4  enum16. [Medium=0x0, Small=0x1, Large=0x2]
         std::uint16_t ItemOwnerSize;  // 0x3F6  enum16. [Small=0x0, Medium=0x1, Large=0x2, Huge=0x3]
         std::uint32_t EquipmentVariant;  // 0x3F8  stringid.
         std::uint32_t GroundedEquipmentVariant;  // 0x3FC  stringid.
         // -> Bipd_HudInterfacesEntry[]
-        MapStructure::Tag::Block   HudInterfaces;  // 0x400  tagblock.
+        MapStructure::Tag::TagBlock   HudInterfaces;  // 0x400  tagblock.
         float        GrenadeAngle;  // 0x40C  float32.
         float        GrenadeAngleMaximumElevation;  // 0x410  float32.
         float        GrenadeAngleMinimumElevation;  // 0x414  float32.
@@ -967,18 +967,18 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint16_t GrenadeType;  // 0x41C  enum16. [Human Fragmentation=0x0, Covenant Plasma=0x1, Grenade Type 2=0x2, Grenade Type 3=0x3, Grenade Type 4=0x4, Grenade Type 5=0x5, Grenade Type 6=0x6, Grenade Type 7=0x7]
         std::int16_t GrenadeCount;  // 0x41E  int16.
         // -> Bipd_PoweredSeatsEntry[]
-        MapStructure::Tag::Block   PoweredSeats;  // 0x420  tagblock.
+        MapStructure::Tag::TagBlock   PoweredSeats;  // 0x420  tagblock.
         // -> Bipd_WeaponsEntry[]
-        MapStructure::Tag::Block   Weapons;  // 0x42C  tagblock.
+        MapStructure::Tag::TagBlock   Weapons;  // 0x42C  tagblock.
         // -> Bipd_TargetTrackingEntry[]
-        MapStructure::Tag::Block   TargetTracking;  // 0x438  tagblock.
+        MapStructure::Tag::TagBlock   TargetTracking;  // 0x438  tagblock.
         // -> Bipd_SeatsEntry[]
-        MapStructure::Tag::Block   Seats;  // 0x444  tagblock.
+        MapStructure::Tag::TagBlock   Seats;  // 0x444  tagblock.
         float        OpeningTime;  // 0x450  float32. | how long the unit takes to open when the hs_function unit_open is called. The current open state can be retrieved from the object function unit_open
         float        ClosingTime;  // 0x454  float32. | you don't have to go home, but you can't stay here
         float        EmpDisabledTime;  // 0x458  float32.
-        MapStructure::Tag::Reference EmpDisabledEffect;  // 0x45C  tagref.
-        MapStructure::Tag::Reference BoostCollisionDamage;  // 0x46C  tagref.
+        MapStructure::Tag::TagReference EmpDisabledEffect;  // 0x45C  tagref.
+        MapStructure::Tag::TagReference BoostCollisionDamage;  // 0x46C  tagref.
         std::uint32_t BoostFlags;  // 0x47C  flags32. [Pegs Throttle=0]
         float        BoostPeakPower;  // 0x480  float32.
         float        BoostRiseTime;  // 0x484  float32. | if the trigger is fully down, takes this long to reach peak power
@@ -987,17 +987,17 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        BoostRechargeRate;  // 0x490  float32. | 1 means you recharge fully in 1 second. .1 means you rechage fully in 10 seconds
         float        BoostRechargeDelay;  // 0x494  float32. | how long do you have to be off the tirgger for before boost starts recharging
         MapStructure::Data::Reference TriggerToBoostFunction;  // 0x498  dataref.
-        MapStructure::Tag::Reference ExitAndDetachDamage;  // 0x4AC  tagref.
-        MapStructure::Tag::Reference ExitAndDetachWeapon;  // 0x4BC  tagref.
+        MapStructure::Tag::TagReference ExitAndDetachDamage;  // 0x4AC  tagref.
+        MapStructure::Tag::TagReference ExitAndDetachWeapon;  // 0x4BC  tagref.
         float        MovingTurningSpeed;  // 0x4CC  degree.
         std::uint32_t Flags_5;  // 0x4D0  flags32. [Turns Without Animating=0, Has Physical Rigid Bodies When Alive=1, Immune To Falling Damage=2, Has Animated Jetpack=3, Bit 4=4, Bit 5=5, Random Speed Increase=6, Bit 7=7, Spawn Death Children On Destroy=8, Stunned By EMP Damage=9, Dead Physics When Stunned=10, Always Ragdoll When Dead=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        StationaryTurningThreshold;  // 0x4D4  degree.
-        MapStructure::Tag::Reference DeathProgramSelector;  // 0x4D8  tagref.
+        MapStructure::Tag::TagReference DeathProgramSelector;  // 0x4D8  tagref.
         std::uint32_t RagdollRegionName;  // 0x4E8  stringid. | when the biped transitions to ragdoll, this region will change to the destroyed state
         std::uint32_t AssassinationChudText;  // 0x4EC  stringid. | The string id for the assassination action text in the CHUD
         float        JumpVelocity;  // 0x4F0  float32.
         // -> Bipd_TricksEntry[]
-        MapStructure::Tag::Block   Tricks;  // 0x4F4  tagblock.
+        MapStructure::Tag::TagBlock   Tricks;  // 0x4F4  tagblock.
         std::uint8_t  _pad_0x500[0x4];  // undefined.
         std::uint8_t  _pad_0x504[0x4];  // undefined.
         std::uint8_t  _pad_0x508[0x4];  // undefined.
@@ -1014,7 +1014,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        CrouchTransitionTime;  // 0x534  float32.
         MapStructure::Data::Reference CameraHeightVelocityFunction;  // 0x538  dataref.
         // -> Bipd_CameraHeightsEntry[]
-        MapStructure::Tag::Block   CameraHeights;  // 0x54C  tagblock.
+        MapStructure::Tag::TagBlock   CameraHeights;  // 0x54C  tagblock.
         float        CameraInterpolationStart;  // 0x558  degree. | looking-downward angle that starts camera interpolation to fp position
         float        CameraInterpolationEnd;  // 0x55C  degree. | looking-downward angle at which camera interpolation to fp position is complete
         MapStructure::Primitive::Vec3 CameraOffset;  // 0x560  vector3. | amount of fp camera movement in (forward, right, down) when pitched down by 'camera interpolation end' above
@@ -1029,13 +1029,13 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int16_t PelvisNodeIndex;  // 0x588  int16.
         std::int16_t HeadNodeIndex;  // 0x58A  int16.
         // -> Bipd_WallProximityFeelersEntry[]
-        MapStructure::Tag::Block   WallProximityFeelers;  // 0x58C  tagblock.
-        MapStructure::Tag::Reference AreaDamageEffect;  // 0x598  tagref.
-        MapStructure::Tag::Reference HealthStationRechargeEffect;  // 0x5A8  tagref.
+        MapStructure::Tag::TagBlock   WallProximityFeelers;  // 0x58C  tagblock.
+        MapStructure::Tag::TagReference AreaDamageEffect;  // 0x598  tagref.
+        MapStructure::Tag::TagReference HealthStationRechargeEffect;  // 0x5A8  tagref.
         // -> Bipd_MovementGatesEntry[]
-        MapStructure::Tag::Block   MovementGates;  // 0x5B8  tagblock.
+        MapStructure::Tag::TagBlock   MovementGates;  // 0x5B8  tagblock.
         // -> Bipd_MovementGatesCrouchingEntry[]
-        MapStructure::Tag::Block   MovementGatesCrouching;  // 0x5C4  tagblock.
+        MapStructure::Tag::TagBlock   MovementGatesCrouching;  // 0x5C4  tagblock.
         float        JumpAimOffsetDistance;  // 0x5D0  float32.
         float        JumpAimOffsetDuration;  // 0x5D4  float32.
         float        LandAimOffsetDistance;  // 0x5D8  float32.
@@ -1052,11 +1052,11 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int16_t LivingGlobalMaterialIndex;  // 0x604  int16.
         std::int16_t DeadGlobalMaterialIndex;  // 0x606  int16.
         // -> Bipd_DeadSphereShapesEntry[]
-        MapStructure::Tag::Block   DeadSphereShapes;  // 0x608  tagblock.
+        MapStructure::Tag::TagBlock   DeadSphereShapes;  // 0x608  tagblock.
         // -> Bipd_PillShapesEntry[]
-        MapStructure::Tag::Block   PillShapes;  // 0x614  tagblock.
+        MapStructure::Tag::TagBlock   PillShapes;  // 0x614  tagblock.
         // -> Bipd_SphereShapesEntry[]
-        MapStructure::Tag::Block   SphereShapes;  // 0x620  tagblock.
+        MapStructure::Tag::TagBlock   SphereShapes;  // 0x620  tagblock.
         float        MaximumSlopeAngle;  // 0x62C  degree.
         float        DownhillFalloffAngle;  // 0x630  degree.
         float        DownhillCutoffAngle;  // 0x634  degree.
@@ -1087,10 +1087,10 @@ export namespace Map::Tag::Type::Bipd::Structure
         float        CrouchVelocityModifier;  // 0x698  float32. | how much slower we fly if crouching (zero = same speed)
         std::uint32_t Flags_7;  // 0x69C  flags32. [Use World Up=0]
         // -> Bipd_ContactPointsEntry[]
-        MapStructure::Tag::Block   ContactPoints;  // 0x6A0  tagblock. | these are the points where the biped touches the ground
-        MapStructure::Tag::Reference ReanimationCharacter;  // 0x6AC  tagref. | when the flood reanimate this guy, he turns into a ...
-        MapStructure::Tag::Reference ReanimationMorphMuffins;  // 0x6BC  tagref. | the kind of muffins I create to cover my horrible transformation
-        MapStructure::Tag::Reference DeathSpawnCharacter;  // 0x6CC  tagref. | when I die, out of the ashes of my death crawls a ...
+        MapStructure::Tag::TagBlock   ContactPoints;  // 0x6A0  tagblock. | these are the points where the biped touches the ground
+        MapStructure::Tag::TagReference ReanimationCharacter;  // 0x6AC  tagref. | when the flood reanimate this guy, he turns into a ...
+        MapStructure::Tag::TagReference ReanimationMorphMuffins;  // 0x6BC  tagref. | the kind of muffins I create to cover my horrible transformation
+        MapStructure::Tag::TagReference DeathSpawnCharacter;  // 0x6CC  tagref. | when I die, out of the ashes of my death crawls a ...
         std::int16_t DeathSpawnCount;  // 0x6DC  int16.
         std::int16_t Unknown_5;  // 0x6DE  int16.
         std::uint32_t LeapFlags;  // 0x6E0  flags32. [Force Early Roll=0]

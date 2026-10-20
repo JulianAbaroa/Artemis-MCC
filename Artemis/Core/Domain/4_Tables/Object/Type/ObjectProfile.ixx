@@ -4,7 +4,7 @@ import Resolved.Definitions.Type;
 
 namespace
 {
-    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
+    using Resolved::Definitions::Type::Object::ObjectKind;
 }
 
 export namespace Tables::Object::Type::Profile

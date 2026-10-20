@@ -4,11 +4,17 @@ import Service.Settings.State;
 import Service.Settings.System;
 import Service.Logs.System;
 import Service.Preferences.System;
+import Gui.Style.Type;
 import Viewer.Options.Type;
 import Viewer.Options.State;
 import Viewer.Camera.State;
 import UI.Hotkey.State;
 import std;
+
+namespace
+{
+    using Gui::Style::Type::k_AnimationDuration;
+}
 
 export namespace UI::Settings::System
 {
@@ -26,8 +32,6 @@ export namespace UI::Settings::System
         using CameraStore = Viewer::Camera::State::CameraStore;
 
         using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
-
-        static constexpr float k_AnimationDuration{ 0.6f };
 
     public:
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,

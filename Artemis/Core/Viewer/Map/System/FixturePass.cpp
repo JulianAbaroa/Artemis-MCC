@@ -5,9 +5,9 @@ module;
 module Viewer.Map.System;
 import :FixturePass;
 
+import Common.Math.Type;
 import Platform.Render.Type;
 import Platform.Render.System;
-import Common.Math.Type;
 import Environment.Details.Type;
 import Environment.Entities.Type;
 import Export.Tick.Type;
@@ -16,9 +16,9 @@ import std;
 
 namespace
 {
-    using Vertex = Platform::Render::Type::Vertex;
-    using Vec3 = Common::Math::Type::Vec3;
-    using Color = Viewer::Style::Type::Color;
+    using Platform::Render::Type::Vertex;
+    using Common::Math::Type::Vec3;
+    using Viewer::Style::Type::Color;
 
     using Platform::Render::Type::VertexLayout;
 
@@ -176,13 +176,13 @@ namespace Viewer::Map::System
 
         const UINT needed = static_cast<UINT>(vertices.size());
 
-        if (!Platform::Render::System::GpuBuffer::GrowDynamicVertexBuffer(device, needed,
+        if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, m_VertexBuffer, m_Capacity, "[FixturePass]", m_LogsService))
         {
             return;
         }
 
-        if (!Platform::Render::System::GpuBuffer::UploadDynamicVertices(context, m_VertexBuffer.Get(),
+        if (!Platform::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
             vertices, "[FixturePass]", m_LogsService))
         {
             return;
@@ -197,7 +197,7 @@ namespace Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::Colored);
 
-        Platform::Render::System::GpuBuffer::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+        Platform::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
     }
 

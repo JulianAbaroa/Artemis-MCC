@@ -9,6 +9,8 @@ namespace
 {
     using Platform::Input::Type::LocalInputSource;
 
+    using Platform::Hook::System::k_DrainTimeout;
+
     using Platform::Host::Type::k_InputUpdateIndex;
     using Platform::Host::Type::k_MaxLocalUsers;
 }
@@ -60,7 +62,7 @@ namespace Platform::Input::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[InputUpdateDetour]", m_LogsService);
 

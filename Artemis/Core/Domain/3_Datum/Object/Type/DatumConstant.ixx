@@ -39,4 +39,29 @@ export namespace Datum::Object::Type::Constant
     constexpr std::uintptr_t k_PlacementsOffset{ 0x14FC };
     constexpr std::uint32_t k_MaxPlacements{ 0x28B };
     constexpr std::uintptr_t k_PlacementSize{ 0x4C };
+
+    // Pointer of the thread context to the object data, and the object table inside it.
+    constexpr std::uintptr_t k_ThreadContextObjectDataOffset{ 0x10 };
+    constexpr std::uintptr_t k_ObjectDataTableOffset{ 0x50 };
+
+    // Pointer of the thread context to the telemetry data, and the player table inside it.
+    constexpr std::uintptr_t k_ThreadContextTelemetryDataOffset{ 0x18 };
+    constexpr std::uintptr_t k_TelemetryDataPlayerTableOffset{ 0x50 };
+
+    // Pointer of the thread context to the player mapping globals (A9 sec. 11.1).
+    constexpr std::uintptr_t k_ThreadContextMappingOffset{ 0x158 };
+
+    // Pointer of the thread context to the player control globals, and the output user (view) entries inside them (A9 sec. 11.2).
+    constexpr std::uintptr_t k_ThreadContextControlGlobalsOffset{ 0xD8 };
+    constexpr std::uintptr_t k_ControlGlobalsOutputUserTableOffset{ 0x680 };
+
+    // Pointer of the thread context to the time globals, and their fields: engine tick, speed of the engine (D105), tick fraction.
+    constexpr std::uintptr_t k_ThreadContextTimeGlobalsOffset{ 0xA0 };
+    constexpr std::uintptr_t k_TimeGlobalsEngineTickOffset{ 0x0C };
+    constexpr std::uintptr_t k_TimeGlobalsScaleOffset{ 0x10 };
+    constexpr std::uintptr_t k_TimeGlobalsTickFractionOffset{ 0x14 };
+
+    // Pointer of the thread context to the event globals, and the last sequence of the event ring inside them (D104).
+    constexpr std::uintptr_t k_ThreadContextEventGlobalsOffset{ 0x98 };
+    constexpr std::uintptr_t k_EventGlobalsSequenceOffset{ 0x10B30 };
 }

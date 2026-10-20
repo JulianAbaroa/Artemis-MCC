@@ -1,8 +1,8 @@
-export module Common.State.System;
+export module Common.State.Type;
 
 import std;
 
-export namespace Common::State::System
+export namespace Common::State::Type
 {
     // Holds the latest published value and hands it out as an immutable snapshot.
     // The writer publishes a new value and the readers keep using the snapshot they acquired.

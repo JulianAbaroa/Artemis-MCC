@@ -7,10 +7,10 @@ namespace
 {
     namespace VecMath = Common::Math::System;
 
-    using Vertex = Platform::Render::Type::Vertex;
-    using Vec3 = Common::Math::Type::Vec3;
-    using Color = Viewer::Style::Type::Color;
-    using ZoneKind = Common::ZoneShape::Type::Kind;
+    using Platform::Render::Type::Vertex;
+    using Common::Math::Type::Vec3;
+    using Viewer::Style::Type::Color;
+    using Common::ZoneShape::Type::ZoneShapeKind;
 
     constexpr int k_CylinderSegments{ 24 };
     constexpr float k_TwoPi{ 6.2831853f };
@@ -49,7 +49,7 @@ namespace
     }
 }
 
-namespace Viewer::Geometry::System::ZoneGeometry
+namespace Viewer::Geometry::System
 {
     auto AppendSolid(std::vector<Vertex>& out, const Vec3& position,
         const Vec3& forward, const Vec3& up, const ZoneShape& zone,
@@ -70,7 +70,7 @@ namespace Viewer::Geometry::System::ZoneGeometry
             out.push_back(MakeVertex(point, color));
         };
 
-        if (zone.Kind == ZoneKind::Cylinder)
+        if (zone.Kind == ZoneShapeKind::Cylinder)
         {
             const float radius = zone.Radius;
 
@@ -95,7 +95,7 @@ namespace Viewer::Geometry::System::ZoneGeometry
                 push(world(0.0f, 0.0f, bottom)); push(bottomRight); push(bottomLeft);
             }
         }
-        else if (zone.Kind == ZoneKind::Box)
+        else if (zone.Kind == ZoneShapeKind::Box)
         {
             const float halfWidth = zone.Radius * 0.5f;
             const float halfLength = zone.Length * 0.5f;

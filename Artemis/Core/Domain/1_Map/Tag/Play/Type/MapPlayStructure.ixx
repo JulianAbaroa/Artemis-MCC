@@ -71,7 +71,7 @@ export namespace Map::Tag::Type::Play::Structure
     {
         std::int32_t OverallSize;  // 0x0  int32.
         // -> Play_Sizes_PartsEntry[]
-        MapStructure::Tag::Block   Parts;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Parts;  // 0x4  tagblock.
     };
     static_assert(sizeof(Play_SizesEntry) == 0x10, "Play_SizesEntry size mismatch");
 
@@ -100,17 +100,17 @@ export namespace Map::Tag::Type::Play::Structure
     struct PlayData
     {
         // -> Play_CompressionCodecsEntry[]
-        MapStructure::Tag::Block   CompressionCodecs;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   CompressionCodecs;  // 0x0  tagblock.
         // -> Play_ExternalCacheReferencesEntry[]
-        MapStructure::Tag::Block   ExternalCacheReferences;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   ExternalCacheReferences;  // 0xC  tagblock.
         // -> Play_RawPagesEntry[]
-        MapStructure::Tag::Block   RawPages;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   RawPages;  // 0x18  tagblock.
         // -> Play_SizesEntry[]
-        MapStructure::Tag::Block   Sizes;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   Sizes;  // 0x24  tagblock.
         // -> Play_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x30  tagblock.
         // -> Play_SegmentsEntry[]
-        MapStructure::Tag::Block   Segments;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   Segments;  // 0x3C  tagblock.
         std::int32_t HeaderPrecacheCount;  // 0x48  int32.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
     };

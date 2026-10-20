@@ -1,8 +1,8 @@
 module Resolved.Definitions.System;
 
 import Common.Math.Type;
-import Map.Reader.State;
 import Map.Reader.Type;
+import Map.Reader.State;
 import Map.Tag.Type;
 
 namespace
@@ -98,7 +98,7 @@ namespace Resolved::Definitions::System
 
         m_LogsService.Message("[DefinitionsBuilder] INFO: Definitions built. {}.", summary);
 
-        for (const auto& [tagName, scnr] : m_DefinitionsStore.Scnr.All())
+        for (const auto& [tagName, scnr] : m_DefinitionsStore.m_Scnr.All())
         {
             m_LogsService.Message("[DefinitionsBuilder] INFO: Map limits of {}."
                 " Trigger volumes: {} | Kill triggers: {} | Safe zone triggers: {} | Soft ceilings: {}.",
@@ -158,7 +158,7 @@ namespace Resolved::Definitions::System
                 renderGeometry = std::move(it->second);
             }
 
-            m_DefinitionsStore.Sbsp.Add(tagName, m_SbspBuilder.Build(sbsp, std::move(renderGeometry)));
+            m_DefinitionsStore.m_Sbsp.Add(tagName, m_SbspBuilder.Build(sbsp, std::move(renderGeometry)));
             ++built;
         }
 

@@ -5,24 +5,25 @@ module;
 module Viewer.Map.System;
 import :LimitsPass;
 
+import Common.Math.Type;
 import Platform.Render.Type;
 import Platform.Render.System;
-import Common.Math.Type;
 import Resolved.Definitions.Type;
+import Viewer.Map.Type;
 import Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Vertex = Platform::Render::Type::Vertex;
-    using Vec3 = Common::Math::Type::Vec3;
-    using Color = Viewer::Style::Type::Color;
-    using TriggerVolume = Resolved::Definitions::Type::Scnr::TriggerVolume;
-    using TriggerVolumeKind = Resolved::Definitions::Type::Scnr::TriggerVolumeKind;
-    using BoundaryTrigger = Resolved::Definitions::Type::Scnr::BoundaryTrigger;
-    using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
-    using SoftCeilingKind = Resolved::Definitions::Type::Scnr::SoftCeilingKind;
-    using SoftCeilingMesh = Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
+    using Platform::Render::Type::Vertex;
+    using Common::Math::Type::Vec3;
+    using Viewer::Style::Type::Color;
+    using Resolved::Definitions::Type::Scnr::TriggerVolume;
+    using Resolved::Definitions::Type::Scnr::TriggerVolumeKind;
+    using Resolved::Definitions::Type::Scnr::BoundaryTrigger;
+    using Resolved::Definitions::Type::Scnr::Scnr;
+    using Resolved::Definitions::Type::Scnr::SoftCeilingKind;
+    using Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
 
     using Platform::Render::Type::SurfaceMode;
     using Platform::Render::Type::VertexLayout;
@@ -33,8 +34,8 @@ namespace
     using Viewer::Style::Type::k_CeilingAcceleration;
     using Viewer::Style::Type::k_CeilingSoftKill;
     using Viewer::Style::Type::k_CeilingSlipSurface;
+    using Viewer::Map::Type::k_InitialCapacity;
 
-    constexpr UINT k_InitialCapacity{ 2048 };
     constexpr float k_Minimum{ 1e-4f };
 
     // The volumes are static, so the generation of the gate is always the same.
@@ -333,7 +334,7 @@ namespace
 namespace Viewer::Map::System
 {
     auto LimitsPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const std::shared_ptr<const MapScnrs>& scnrs, const std::shared_ptr<const MapSddts>& sddts,
+        const std::shared_ptr<const std::unordered_map<std::string, Scnr>>& scnrs, const std::shared_ptr<const std::unordered_map<std::string, Sddt>>& sddts,
         const LimitsPassOptions& options) -> void
     {
         if (!device || !context) return;
@@ -379,8 +380,8 @@ namespace Viewer::Map::System
             }
         }
 
-        this->UploadBatch(device, context, m_Faces, "[LimitsPass] faces");
-        this->UploadBatch(device, context, m_Edges, "[LimitsPass] edges");
+        this->UploadBatch(device, context, m_Faces, "[LimitsPass]");
+        this->UploadBatch(device, context, m_Edges, "[LimitsPass]");
     }
 
     auto LimitsPass::UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, VertexBatch& batch,
@@ -390,13 +391,13 @@ namespace Viewer::Map::System
 
         const UINT needed{ static_cast<UINT>(batch.Scratch.size()) };
 
-        if (!Platform::Render::System::GpuBuffer::GrowDynamicVertexBuffer(device, needed,
+        if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, batch.Buffer, batch.Capacity, tag, m_LogsService))
         {
             return false;
         }
 
-        if (!Platform::Render::System::GpuBuffer::UploadDynamicVertices(context, batch.Buffer.Get(),
+        if (!Platform::Render::System::UploadDynamicVertices(context, batch.Buffer.Get(),
             batch.Scratch, tag, m_LogsService))
         {
             return false;
@@ -415,7 +416,7 @@ namespace Viewer::Map::System
         {
             pipeline.Bind(context, VertexLayout::Colored, SurfaceMode::Translucent, m_Opacity);
 
-            Platform::Render::System::GpuBuffer::DrawVertexBuffer(context, m_Faces.Buffer.Get(),
+            Platform::Render::System::DrawVertexBuffer(context, m_Faces.Buffer.Get(),
                 m_Faces.VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         }
 
@@ -423,7 +424,7 @@ namespace Viewer::Map::System
         {
             pipeline.Bind(context, VertexLayout::Colored);
 
-            Platform::Render::System::GpuBuffer::DrawVertexBuffer(context, m_Edges.Buffer.Get(),
+            Platform::Render::System::DrawVertexBuffer(context, m_Edges.Buffer.Get(),
                 m_Edges.VertexCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         }
     }

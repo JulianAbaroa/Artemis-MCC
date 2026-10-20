@@ -5,38 +5,38 @@ module;
 module Viewer.Hud.System;
 import :InteractionLabels;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Egocentric.Affordance.Type;
 import Gui.Format.System;
-import Viewer.Options.State;
 import Viewer.Options.Type;
+import Viewer.Options.State;
 import Viewer.Style.Type;
 import Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Flag = Viewer::Options::Type::Flag;
-    using LabelRow = Viewer::Hud::Type::LabelRow;
-    using InteractionFormater = Gui::Format::System::InteractionFormater;
-    using AffordanceFormater = Gui::Format::System::AffordanceFormater;
+    using Common::Math::Type::Vec3;
+    using Viewer::Options::Type::Flag;
+    using Viewer::Hud::Type::LabelRow;
+    using Gui::Format::System::InteractionFormater;
+    using Gui::Format::System::AffordanceFormater;
     using Common::Semantic::Type::NameOf;
-    using Affordance = Egocentric::Affordance::Type::Affordance;
+    using Egocentric::Affordance::Type::Affordance;
 
     using Viewer::Style::Type::k_InteractionObject;
     using Viewer::Style::Type::k_InteractionMelee;
     using Viewer::Style::Type::k_InteractionAim;
     using Viewer::Style::Type::k_Affordance;
     using Viewer::Style::Type::k_TeamNeutral;
+    using Common::Engine::Type::k_NoHandle;
+    using Viewer::Hud::Type::k_InfoColor;
+    using Viewer::Hud::Type::k_MutedColor;
 
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
     constexpr float k_TargetPriority{ 3.0f };
     constexpr float k_LinkLift{ 0.5f };
-
-    constexpr ImU32 k_InfoColor{ IM_COL32(190, 200, 215, 255) };
-    constexpr ImU32 k_MutedColor{ IM_COL32(150, 160, 175, 255) };
 
     auto JoinBehaviors(const Affordance& affordance) -> std::string
     {
@@ -57,7 +57,7 @@ namespace Viewer::Hud::System
     auto InteractionLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
         const auto& tick = context.Frame;
-        const auto& options = context.Options;
+        const auto& options = canvas.GetOptions();
 
         const bool showObject = options.IsEnabled(Flag::InteractionObject);
         const bool showMelee = options.IsEnabled(Flag::InteractionMelee);

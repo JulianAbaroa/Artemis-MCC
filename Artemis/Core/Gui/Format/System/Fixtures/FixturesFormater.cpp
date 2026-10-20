@@ -3,13 +3,13 @@ import :Fixtures;
 
 namespace Gui::Format::System
 {
-    auto FixturesFormater::ZoneKindToString(ZoneKind kind) -> const char*
+    auto FixturesFormater::ZoneKindToString(ZoneShapeKind kind) -> const char*
     {
         switch (kind)
         {
-        case ZoneKind::None:     return "None";
-        case ZoneKind::Cylinder: return "Cylinder";
-        case ZoneKind::Box:      return "Box";
+        case ZoneShapeKind::None:     return "None";
+        case ZoneShapeKind::Cylinder: return "Cylinder";
+        case ZoneShapeKind::Box:      return "Box";
         default:                 return "Unknown";
         }
     }

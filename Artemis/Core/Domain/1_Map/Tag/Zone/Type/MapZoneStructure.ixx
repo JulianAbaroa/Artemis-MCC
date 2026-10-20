@@ -93,7 +93,7 @@ export namespace Map::Tag::Type::Zone::Structure
     {
         std::int32_t OverallSize;  // 0x0  int32.
         // -> Zone_Sizes_PartsEntry[]
-        MapStructure::Tag::Block   Parts;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Parts;  // 0x4  tagblock.
     };
     static_assert(sizeof(Zone_SizesEntry) == 0x10, "Zone_SizesEntry size mismatch");
 
@@ -141,7 +141,7 @@ export namespace Map::Tag::Type::Zone::Structure
     // Entry size: 0x40
     struct Zone_TagResourcesEntry
     {
-        MapStructure::Tag::Reference ParentTag;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ParentTag;  // 0x0  tagref.
         std::uint16_t Salt;  // 0x10  uint16.
         std::uint8_t ResourceTypeIndex;  // 0x12  uint8.
         std::uint8_t Flags;  // 0x13  uint8.
@@ -154,9 +154,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t RootDefinitionAddressUpperBits;  // 0x26  uint8.
         std::uint8_t RootDefinitionAddressLocationHighBits;  // 0x27  flags8. [Bit 0=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Fixup=5, Raw Page=6, Bit 7=7]
         // -> Zone_TagResources_ResourceFixupsEntry[]
-        MapStructure::Tag::Block   ResourceFixups;  // 0x28  tagblock.
+        MapStructure::Tag::TagBlock   ResourceFixups;  // 0x28  tagblock.
         // -> Zone_TagResources_ResourceDefinitionFixupsEntry[]
-        MapStructure::Tag::Block   ResourceDefinitionFixups;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   ResourceDefinitionFixups;  // 0x34  tagblock.
     };
     static_assert(sizeof(Zone_TagResourcesEntry) == 0x40, "Zone_TagResourcesEntry size mismatch");
 
@@ -211,14 +211,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_DesignerZonesetsEntry
     {
         // -> Zone_DesignerZonesets_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_DesignerZonesets_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_DesignerZonesets_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -226,7 +226,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_DesignerZonesets_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -234,9 +234,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_DesignerZonesets_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_DesignerZonesets_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -298,14 +298,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_GlobalZonesetEntry
     {
         // -> Zone_GlobalZoneset_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_GlobalZoneset_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_GlobalZoneset_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -313,7 +313,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_GlobalZoneset_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -321,9 +321,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_GlobalZoneset_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_GlobalZoneset_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -385,14 +385,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_UnattachedZonesetEntry
     {
         // -> Zone_UnattachedZoneset_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_UnattachedZoneset_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_UnattachedZoneset_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -400,7 +400,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_UnattachedZoneset_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -408,9 +408,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_UnattachedZoneset_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_UnattachedZoneset_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -472,14 +472,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_DiscForbiddenZonesetEntry
     {
         // -> Zone_DiscForbiddenZoneset_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_DiscForbiddenZoneset_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_DiscForbiddenZoneset_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -487,7 +487,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_DiscForbiddenZoneset_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -495,9 +495,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_DiscForbiddenZoneset_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_DiscForbiddenZoneset_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -559,14 +559,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_DiscAlwaysStreamingZonesetEntry
     {
         // -> Zone_DiscAlwaysStreamingZoneset_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_DiscAlwaysStreamingZoneset_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_DiscAlwaysStreamingZoneset_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -574,7 +574,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_DiscAlwaysStreamingZoneset_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -582,9 +582,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_DiscAlwaysStreamingZoneset_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_DiscAlwaysStreamingZoneset_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -646,14 +646,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_BspZonesetsEntry
     {
         // -> Zone_BspZonesets_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_BspZonesets_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_BspZonesets_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -661,7 +661,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_BspZonesets_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -669,9 +669,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_BspZonesets_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_BspZonesets_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -733,14 +733,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_BspZonesets2Entry
     {
         // -> Zone_BspZonesets2_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_BspZonesets2_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_BspZonesets2_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -748,7 +748,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_BspZonesets2_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -756,9 +756,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_BspZonesets2_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_BspZonesets2_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -820,14 +820,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_BspZonesets3Entry
     {
         // -> Zone_BspZonesets3_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_BspZonesets3_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_BspZonesets3_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -835,7 +835,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_BspZonesets3_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -843,9 +843,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_BspZonesets3_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_BspZonesets3_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -907,14 +907,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_CinematicZonesetsEntry
     {
         // -> Zone_CinematicZonesets_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_CinematicZonesets_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_CinematicZonesets_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -922,7 +922,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_CinematicZonesets_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -930,9 +930,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_CinematicZonesets_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_CinematicZonesets_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -994,14 +994,14 @@ export namespace Map::Tag::Type::Zone::Structure
     struct Zone_ScenarioZonesetsEntry
     {
         // -> Zone_ScenarioZonesets_RequiredRawPoolEntry[]
-        MapStructure::Tag::Block   RequiredRawPool;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RequiredRawPool;  // 0x0  tagblock.
         std::uint8_t  _pad_0xC[0x4];  // undefined.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.
         // -> Zone_ScenarioZonesets_OptionalRawPoolEntry[]
-        MapStructure::Tag::Block   OptionalRawPool;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool;  // 0x18  tagblock.
         // -> Zone_ScenarioZonesets_OptionalRawPool2Entry[]
-        MapStructure::Tag::Block   OptionalRawPool2;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   OptionalRawPool2;  // 0x24  tagblock.
         std::uint32_t SetName;  // 0x30  stringid.
         std::uint8_t  _pad_0x34[0x4];  // undefined.
         std::uint8_t  _pad_0x38[0x4];  // undefined.
@@ -1009,7 +1009,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x40[0x4];  // undefined.
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         // -> Zone_ScenarioZonesets_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x48  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x48  tagblock.
         std::uint8_t  _pad_0x54[0x4];  // undefined.
         std::uint8_t  _pad_0x58[0x4];  // undefined.
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
@@ -1017,9 +1017,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x64[0x4];  // undefined.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         // -> Zone_ScenarioZonesets_RequiredTagPoolEntry[]
-        MapStructure::Tag::Block   RequiredTagPool;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   RequiredTagPool;  // 0x6C  tagblock.
         // -> Zone_ScenarioZonesets_OptionalTagPoolEntry[]
-        MapStructure::Tag::Block   OptionalTagPool;  // 0x78  tagblock.
+        MapStructure::Tag::TagBlock   OptionalTagPool;  // 0x78  tagblock.
         std::uint8_t  _pad_0x84[0x4];  // undefined.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
@@ -1048,7 +1048,7 @@ export namespace Map::Tag::Type::Zone::Structure
     // Entry size: 0x10
     struct Zone_ScenarioBspsEntry
     {
-        MapStructure::Tag::Reference Bsp;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Bsp;  // 0x0  tagref.
     };
     static_assert(sizeof(Zone_ScenarioBspsEntry) == 0x10, "Zone_ScenarioBspsEntry size mismatch");
 
@@ -1112,46 +1112,46 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint16_t ScenarioType;  // 0x0  enum16. [Solo=0x0, Multiplayer=0x1, Main Menu=0x2]
         std::int16_t Flags;  // 0x2  int16.
         // -> Zone_ResourceTypesEntry[]
-        MapStructure::Tag::Block   ResourceTypes;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   ResourceTypes;  // 0x4  tagblock.
         // -> Zone_ResourceStructureTypesEntry[]
-        MapStructure::Tag::Block   ResourceStructureTypes;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   ResourceStructureTypes;  // 0x10  tagblock.
         // -> Zone_CompressionCodecsEntry[]
-        MapStructure::Tag::Block   CompressionCodecs;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   CompressionCodecs;  // 0x1C  tagblock.
         // -> Zone_ExternalCacheReferencesEntry[]
-        MapStructure::Tag::Block   ExternalCacheReferences;  // 0x28  tagblock.
+        MapStructure::Tag::TagBlock   ExternalCacheReferences;  // 0x28  tagblock.
         // -> Zone_RawPagesEntry[]
-        MapStructure::Tag::Block   RawPages;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   RawPages;  // 0x34  tagblock.
         // -> Zone_SizesEntry[]
-        MapStructure::Tag::Block   Sizes;  // 0x40  tagblock.
+        MapStructure::Tag::TagBlock   Sizes;  // 0x40  tagblock.
         // -> Zone_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown;  // 0x4C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown;  // 0x4C  tagblock.
         // -> Zone_SegmentsEntry[]
-        MapStructure::Tag::Block   Segments;  // 0x58  tagblock.
+        MapStructure::Tag::TagBlock   Segments;  // 0x58  tagblock.
         // -> Zone_TagResourcesEntry[]
-        MapStructure::Tag::Block   TagResources;  // 0x64  tagblock.
+        MapStructure::Tag::TagBlock   TagResources;  // 0x64  tagblock.
         // -> Zone_DesignerZonesetsEntry[]
-        MapStructure::Tag::Block   DesignerZonesets;  // 0x70  tagblock.
+        MapStructure::Tag::TagBlock   DesignerZonesets;  // 0x70  tagblock.
         // -> Zone_GlobalZonesetEntry[]
-        MapStructure::Tag::Block   GlobalZoneset;  // 0x7C  tagblock.
+        MapStructure::Tag::TagBlock   GlobalZoneset;  // 0x7C  tagblock.
         std::uint8_t  _pad_0x88[0x4];  // undefined.
         std::uint8_t  _pad_0x8C[0x4];  // undefined.
         std::uint8_t  _pad_0x90[0x4];  // undefined.
         // -> Zone_UnattachedZonesetEntry[]
-        MapStructure::Tag::Block   UnattachedZoneset;  // 0x94  tagblock.
+        MapStructure::Tag::TagBlock   UnattachedZoneset;  // 0x94  tagblock.
         // -> Zone_DiscForbiddenZonesetEntry[]
-        MapStructure::Tag::Block   DiscForbiddenZoneset;  // 0xA0  tagblock.
+        MapStructure::Tag::TagBlock   DiscForbiddenZoneset;  // 0xA0  tagblock.
         // -> Zone_DiscAlwaysStreamingZonesetEntry[]
-        MapStructure::Tag::Block   DiscAlwaysStreamingZoneset;  // 0xAC  tagblock.
+        MapStructure::Tag::TagBlock   DiscAlwaysStreamingZoneset;  // 0xAC  tagblock.
         // -> Zone_BspZonesetsEntry[]
-        MapStructure::Tag::Block   BspZonesets;  // 0xB8  tagblock.
+        MapStructure::Tag::TagBlock   BspZonesets;  // 0xB8  tagblock.
         // -> Zone_BspZonesets2Entry[]
-        MapStructure::Tag::Block   BspZonesets2;  // 0xC4  tagblock.
+        MapStructure::Tag::TagBlock   BspZonesets2;  // 0xC4  tagblock.
         // -> Zone_BspZonesets3Entry[]
-        MapStructure::Tag::Block   BspZonesets3;  // 0xD0  tagblock.
+        MapStructure::Tag::TagBlock   BspZonesets3;  // 0xD0  tagblock.
         // -> Zone_CinematicZonesetsEntry[]
-        MapStructure::Tag::Block   CinematicZonesets;  // 0xDC  tagblock.
+        MapStructure::Tag::TagBlock   CinematicZonesets;  // 0xDC  tagblock.
         // -> Zone_ScenarioZonesetsEntry[]
-        MapStructure::Tag::Block   ScenarioZonesets;  // 0xE8  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioZonesets;  // 0xE8  tagblock.
         std::uint8_t  _pad_0xF4[0x4];  // undefined.
         std::uint8_t  _pad_0xF8[0x4];  // undefined.
         std::uint8_t  _pad_0xFC[0x4];  // undefined.
@@ -1159,9 +1159,9 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x104[0x4];  // undefined.
         std::uint8_t  _pad_0x108[0x4];  // undefined.
         // -> Zone_ScenarioZonesetGroupsEntry[]
-        MapStructure::Tag::Block   ScenarioZonesetGroups;  // 0x10C  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioZonesetGroups;  // 0x10C  tagblock.
         // -> Zone_ScenarioBspsEntry[]
-        MapStructure::Tag::Block   ScenarioBsps;  // 0x118  tagblock.
+        MapStructure::Tag::TagBlock   ScenarioBsps;  // 0x118  tagblock.
         std::uint8_t  _pad_0x124[0x4];  // undefined.
         std::uint8_t  _pad_0x128[0x4];  // undefined.
         std::uint8_t  _pad_0x12C[0x4];  // undefined.
@@ -1178,7 +1178,7 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x168[0x4];  // undefined.
         std::uint8_t  _pad_0x16C[0x4];  // undefined.
         // -> Zone_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_25;  // 0x170  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_25;  // 0x170  tagblock.
         std::uint8_t  _pad_0x17C[0x4];  // undefined.
         std::uint8_t  _pad_0x180[0x4];  // undefined.
         std::uint8_t  _pad_0x184[0x4];  // undefined.
@@ -1204,15 +1204,15 @@ export namespace Map::Tag::Type::Zone::Structure
         std::uint8_t  _pad_0x1D4[0x4];  // undefined.
         std::uint8_t  _pad_0x1D8[0x4];  // undefined.
         // -> Zone_PredictionAEntry[]
-        MapStructure::Tag::Block   PredictionA;  // 0x1DC  tagblock.
+        MapStructure::Tag::TagBlock   PredictionA;  // 0x1DC  tagblock.
         // -> Zone_PredictionBEntry[]
-        MapStructure::Tag::Block   PredictionB;  // 0x1E8  tagblock.
+        MapStructure::Tag::TagBlock   PredictionB;  // 0x1E8  tagblock.
         // -> Zone_PredictionCEntry[]
-        MapStructure::Tag::Block   PredictionC;  // 0x1F4  tagblock.
+        MapStructure::Tag::TagBlock   PredictionC;  // 0x1F4  tagblock.
         // -> Zone_PredictionDTagsEntry[]
-        MapStructure::Tag::Block   PredictionDTags;  // 0x200  tagblock.
+        MapStructure::Tag::TagBlock   PredictionDTags;  // 0x200  tagblock.
         // -> Zone_PredictionD2TagsEntry[]
-        MapStructure::Tag::Block   PredictionD2Tags;  // 0x20C  tagblock.
+        MapStructure::Tag::TagBlock   PredictionD2Tags;  // 0x20C  tagblock.
         std::uint8_t  _pad_0x218[0x4];  // undefined.
         std::uint8_t  _pad_0x21C[0x4];  // undefined.
         std::uint8_t  _pad_0x220[0x4];  // undefined.

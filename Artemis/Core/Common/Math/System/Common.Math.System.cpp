@@ -5,9 +5,10 @@ import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec3;
 
-    constexpr Vec3 k_WorldUp{ 0.0f, 0.0f, 1.0f };
+    using Common::Math::Type::k_WorldUp;
+
     constexpr Vec3 k_WorldX{ 1.0f, 0.0f, 0.0f };
     constexpr float k_ParallelEpsilon{ 1e-4f };
 }

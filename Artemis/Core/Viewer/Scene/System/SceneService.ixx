@@ -2,9 +2,9 @@ export module Viewer.Scene.System;
 
 import Service.Settings.State;
 import Export.Tick.Type;
+import Viewer.Camera.Type;
 import Viewer.Camera.State;
 import Viewer.Camera.System;
-import Viewer.Camera.Type;
 import Viewer.Palette.System;
 import Viewer.Selection.System;
 import std;
@@ -53,7 +53,7 @@ export namespace Viewer::Scene::System
 
         auto GetViewProjection() const -> const Matrix&;
 
-        // return: The selected handle, or k_NoSelection.
+        // return: The selected handle, or k_NoHandle.
         auto GetSelected() const -> std::uint32_t;
         auto GetPalette() const -> const PaletteService&;
 

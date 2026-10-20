@@ -7,6 +7,8 @@ import std;
 namespace
 {
     using Platform::Host::Type::k_LocalUserGetProfileIndex;
+
+    using Platform::Hook::System::k_DrainTimeout;
 }
 
 namespace Platform::Host::Hook
@@ -56,7 +58,7 @@ namespace Platform::Host::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[LocalUserGetProfileDetour]", m_LogsService);
 

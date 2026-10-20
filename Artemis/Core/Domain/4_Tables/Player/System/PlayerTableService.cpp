@@ -4,9 +4,10 @@ module;
 
 module Tables.Player.System;
 
-import Platform.Host.Type;
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Team.Type;
+import Platform.Host.Type;
 
 namespace
 {
@@ -36,19 +37,12 @@ namespace
     using Tables::Player::Type::Mapping::k_EntryStride;
 
     using Platform::Host::Type::k_MaxLocalUsers;
-
-    // Mask of the table index inside a player handle.
-    constexpr std::uint32_t k_IndexMask{ 0xFFFF };
-
-    // Mask of the salt inside the handle field of a table entry.
-    constexpr std::uint32_t k_SaltMask{ 0xFFFF };
+    using Common::Engine::Type::k_HandleIndexMask;
+    using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_GamerTagLength;
 
     // Bits the salt is shifted by inside a player handle.
     constexpr std::uint32_t k_SaltShift{ 16 };
-
-    // Slots the player table is scanned for.
-    // note: Assumed from the maximum players of a match. Not read from the engine.
-    constexpr std::uint32_t k_MaxPlayers{ 16 };
 
     // Whether the value is a connection state the engine uses.
     auto IsKnownConnectionState(ConnectionState state) -> bool
@@ -59,7 +53,6 @@ namespace
     }
 
     // Characters of the gamertag and of the service tag in the table.
-    constexpr std::size_t k_GamerTagLength{ 16 };
     constexpr std::size_t k_TagLength{ 4 };
 }
 
@@ -92,7 +85,7 @@ namespace Tables::Player::System
         player.CameraPosition = reader.Read<Vec3>(playerBase, k_CameraPosition);
         player.CameraForward = reader.Read<Vec3>(playerBase, k_CameraForward);
         player.AimOffset = reader.Read<Vec3>(playerBase, k_AimOffset);
-        player.LocalIndex = this->ReadLocalIndex(handle & k_IndexMask);
+        player.LocalIndex = this->ReadLocalIndex(handle & k_HandleIndexMask);
 
         return player;
     }
@@ -111,7 +104,7 @@ namespace Tables::Player::System
         {
             std::uintptr_t playerBase{ tableBase + (index * k_Base) };
 
-            std::uint32_t salt{ reader.Read<std::uint32_t>(playerBase, k_Handle) & k_SaltMask };
+            std::uint32_t salt{ reader.Read<std::uint16_t>(playerBase, k_Handle) };
             if (salt == 0) continue;
 
             std::uint32_t handle{ (salt << k_SaltShift) | index };
@@ -135,7 +128,7 @@ namespace Tables::Player::System
         std::vector<std::uint32_t> handlesToRemove{};
 
         m_PlayerStore.UpdatePlayers([&](std::uint32_t handle, AlivePlayer& player) {
-            std::uint32_t index{ handle & k_IndexMask };
+            std::uint32_t index{ handle & k_HandleIndexMask };
             std::uintptr_t playerBase{ tableBase + (index * k_Base) };
 
             std::uint32_t rawHandleInMemory{ reader.Read<std::uint32_t>(playerBase, k_Handle) };

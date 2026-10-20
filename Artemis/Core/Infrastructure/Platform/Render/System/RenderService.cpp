@@ -6,7 +6,6 @@ module;
 
 module Platform.Render.System;
 import :RenderService;
-
 import std;
 
 namespace

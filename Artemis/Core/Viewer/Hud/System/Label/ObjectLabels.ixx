@@ -1,6 +1,7 @@
 export module Viewer.Hud.System:ObjectLabels;
 
 import :Canvas;
+
 import Viewer.Hud.Type;
 import std;
 

@@ -10,20 +10,20 @@ import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Environment.Details.Type;
 import Gui.Format.System;
-import Viewer.Options.State;
 import Viewer.Options.Type;
+import Viewer.Options.State;
 import Viewer.Style.Type;
 import Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Flag = Viewer::Options::Type::Flag;
-    using LabelRow = Viewer::Hud::Type::LabelRow;
-    using FixturesFormater = Gui::Format::System::FixturesFormater;
-    using TeamFormater = Gui::Format::System::TeamFormater;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
+    using Common::Math::Type::Vec3;
+    using Viewer::Options::Type::Flag;
+    using Viewer::Hud::Type::LabelRow;
+    using Gui::Format::System::FixturesFormater;
+    using Gui::Format::System::TeamFormater;
+    using Common::ZoneShape::Type::ZoneShape;
 
     namespace SemanticType = Common::Semantic::Type;
 
@@ -36,10 +36,10 @@ namespace
     using Viewer::Style::Type::k_TeamNeutral;
     using Viewer::Style::Type::ColorOfTeam;
 
-    constexpr float k_FixturePriority{ 0.5f };
+    using Viewer::Hud::Type::k_InfoColor;
+    using Viewer::Hud::Type::k_MutedColor;
 
-    constexpr ImU32 k_InfoColor{ IM_COL32(190, 200, 215, 255) };
-    constexpr ImU32 k_MutedColor{ IM_COL32(150, 160, 175, 255) };
+    constexpr float k_FixturePriority{ 0.5f };
 
     auto Row(std::string text, ImU32 color = k_InfoColor) -> LabelRow
     {
@@ -48,7 +48,7 @@ namespace
 
     auto ZoneText(const ZoneShape& zone) -> std::string
     {
-        if (zone.Kind == Common::ZoneShape::Type::Kind::None) return "zone: none";
+        if (zone.Kind == Common::ZoneShape::Type::ZoneShapeKind::None) return "zone: none";
 
         return std::format("zone: {} {:.1f}", FixturesFormater::ZoneKindToString(zone.Kind), zone.Radius);
     }
@@ -77,7 +77,7 @@ namespace Viewer::Hud::System
     auto FixtureLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
         const auto& tick = context.Frame;
-        const auto& options = context.Options;
+        const auto& options = canvas.GetOptions();
 
         const ImU32 accent = ToImColor(k_Fixture);
         const ImU32 neutral = ToImColor(k_TeamNeutral);

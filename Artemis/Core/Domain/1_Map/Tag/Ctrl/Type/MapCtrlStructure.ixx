@@ -63,7 +63,7 @@ export namespace Map::Tag::Type::Ctrl::Structure
         MapStructure::Data::Reference DefaultFunction;  // 0x18  dataref.
         std::uint32_t ScaleBy;  // 0x2C  stringid.
         // -> Ctrl_Functions_InterpolationEntry[]
-        MapStructure::Tag::Block   Interpolation;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Interpolation;  // 0x30  tagblock.
         std::int32_t RuntimeInterpolatorIndex;  // 0x3C  int32.
     };
     static_assert(sizeof(Ctrl_FunctionsEntry) == 0x40, "Ctrl_FunctionsEntry size mismatch");
@@ -78,7 +78,7 @@ export namespace Map::Tag::Type::Ctrl::Structure
     // Entry size: 0x20
     struct Ctrl_AttachmentsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
         std::uint32_t Marker;  // 0x10  stringid.
         std::uint8_t ChangeColor;  // 0x14  enum8. [None=0x0, Primary=0x1, Secondary=0x2, Tertiary=0x3, Quaternary=0x4]
         std::uint8_t Flags;  // 0x15  flags8. [Force Always On=0, Effect Size Scale From Object Scale=1]
@@ -109,7 +109,7 @@ export namespace Map::Tag::Type::Ctrl::Structure
         std::uint32_t MarkerName;  // 0x4  stringid.
         float        Radius;  // 0x8  float32.
         // -> Ctrl_HullSurfaces_DragEntry[]
-        MapStructure::Tag::Block   Drag;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Drag;  // 0xC  tagblock.
     };
     static_assert(sizeof(Ctrl_HullSurfacesEntry) == 0x18, "Ctrl_HullSurfacesEntry size mismatch");
 
@@ -129,7 +129,7 @@ export namespace Map::Tag::Type::Ctrl::Structure
     // Entry size: 0x10
     struct Ctrl_WidgetsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
     };
     static_assert(sizeof(Ctrl_WidgetsEntry) == 0x10, "Ctrl_WidgetsEntry size mismatch");
 
@@ -158,9 +158,9 @@ export namespace Map::Tag::Type::Ctrl::Structure
     struct Ctrl_ChangeColorsEntry
     {
         // -> Ctrl_ChangeColors_InitialPermutationsEntry[]
-        MapStructure::Tag::Block   InitialPermutations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   InitialPermutations;  // 0x0  tagblock.
         // -> Ctrl_ChangeColors_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xC  tagblock.
     };
     static_assert(sizeof(Ctrl_ChangeColorsEntry) == 0x18, "Ctrl_ChangeColorsEntry size mismatch");
 
@@ -183,25 +183,25 @@ export namespace Map::Tag::Type::Ctrl::Structure
         float        NormalWeight;  // 0x1C  float32.
         std::uint32_t BoundaryCenterMarker;  // 0x20  stringid.
         std::uint32_t SpawnedObjectMarkerName;  // 0x24  stringid.
-        MapStructure::Tag::Reference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
         std::uint32_t BoundaryMaterialNotYetImplemented;  // 0x38  stringid.
-        MapStructure::Tag::Reference DefaultBoundaryStandardShader;  // 0x3C  tagref.
-        MapStructure::Tag::Reference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
-        MapStructure::Tag::Reference SphereStandardShader;  // 0x5C  tagref.
-        MapStructure::Tag::Reference SphereOpaqueShader;  // 0x6C  tagref.
-        MapStructure::Tag::Reference CylinderStandardShader;  // 0x7C  tagref.
-        MapStructure::Tag::Reference CylinderOpaqueShader;  // 0x8C  tagref.
-        MapStructure::Tag::Reference BoxStandardShader;  // 0x9C  tagref.
-        MapStructure::Tag::Reference BoxOpaqueShader;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryStandardShader;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
+        MapStructure::Tag::TagReference SphereStandardShader;  // 0x5C  tagref.
+        MapStructure::Tag::TagReference SphereOpaqueShader;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference CylinderStandardShader;  // 0x7C  tagref.
+        MapStructure::Tag::TagReference CylinderOpaqueShader;  // 0x8C  tagref.
+        MapStructure::Tag::TagReference BoxStandardShader;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference BoxOpaqueShader;  // 0xAC  tagref.
     };
     static_assert(sizeof(Ctrl_MultiplayerObjectEntry) == 0xBC, "Ctrl_MultiplayerObjectEntry size mismatch");
 
     // Entry size: 0x30
     struct Ctrl_SpawnEffectsEntry
     {
-        MapStructure::Tag::Reference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
-        MapStructure::Tag::Reference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
-        MapStructure::Tag::Reference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
+        MapStructure::Tag::TagReference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
+        MapStructure::Tag::TagReference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
+        MapStructure::Tag::TagReference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
     };
     static_assert(sizeof(Ctrl_SpawnEffectsEntry) == 0x30, "Ctrl_SpawnEffectsEntry size mismatch");
 
@@ -223,39 +223,39 @@ export namespace Map::Tag::Type::Ctrl::Structure
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
         MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GenericNameList;  // 0x40  tagref.
-        MapStructure::Tag::Reference GenericServiceTagList;  // 0x50  tagref.
+        MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
         std::uint32_t DefaultModelVariant;  // 0x60  stringid.
-        MapStructure::Tag::Reference Model;  // 0x64  tagref.
-        MapStructure::Tag::Reference CrateObject;  // 0x74  tagref.
-        MapStructure::Tag::Reference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
-        MapStructure::Tag::Reference BrittleCollisionDamage;  // 0x94  tagref.
+        MapStructure::Tag::TagReference Model;  // 0x64  tagref.
+        MapStructure::Tag::TagReference CrateObject;  // 0x74  tagref.
+        MapStructure::Tag::TagReference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
+        MapStructure::Tag::TagReference BrittleCollisionDamage;  // 0x94  tagref.
         // -> Ctrl_EarlyMoverOrientedBoundingBoxEntry[]
-        MapStructure::Tag::Block   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
-        MapStructure::Tag::Reference CreationEffect;  // 0xB0  tagref.
-        MapStructure::Tag::Reference MaterialEffects;  // 0xC0  tagref.
-        MapStructure::Tag::Reference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
+        MapStructure::Tag::TagBlock   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
+        MapStructure::Tag::TagReference CreationEffect;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference MaterialEffects;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
         // -> Ctrl_AiPropertiesEntry[]
-        MapStructure::Tag::Block   AiProperties;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   AiProperties;  // 0xE0  tagblock.
         // -> Ctrl_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xEC  tagblock.
         // -> Ctrl_RuntimeInterpolatorFunctionsEntry[]
-        MapStructure::Tag::Block   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
         // -> Ctrl_AttachmentsEntry[]
-        MapStructure::Tag::Block   Attachments;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   Attachments;  // 0x104  tagblock.
         // -> Ctrl_HullSurfacesEntry[]
-        MapStructure::Tag::Block   HullSurfaces;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   HullSurfaces;  // 0x110  tagblock.
         // -> Ctrl_JetwashEntry[]
-        MapStructure::Tag::Block   Jetwash;  // 0x11C  tagblock.
+        MapStructure::Tag::TagBlock   Jetwash;  // 0x11C  tagblock.
         // -> Ctrl_WidgetsEntry[]
-        MapStructure::Tag::Block   Widgets;  // 0x128  tagblock.
+        MapStructure::Tag::TagBlock   Widgets;  // 0x128  tagblock.
         // -> Ctrl_ChangeColorsEntry[]
-        MapStructure::Tag::Block   ChangeColors;  // 0x134  tagblock.
+        MapStructure::Tag::TagBlock   ChangeColors;  // 0x134  tagblock.
         // -> Ctrl_MultiplayerObjectEntry[]
-        MapStructure::Tag::Block   MultiplayerObject;  // 0x140  tagblock.
-        MapStructure::Tag::Reference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
+        MapStructure::Tag::TagBlock   MultiplayerObject;  // 0x140  tagblock.
+        MapStructure::Tag::TagReference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
         // -> Ctrl_SpawnEffectsEntry[]
-        MapStructure::Tag::Block   SpawnEffects;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnEffects;  // 0x15C  tagblock.
         std::uint32_t Flags_2;  // 0x168  flags32. [Position Loops=0, Bit 1=1, Position Interpolation=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        PowerTransitionTime;  // 0x16C  float32.
         float        PowerAccelerationTime;  // 0x170  float32.
@@ -264,22 +264,22 @@ export namespace Map::Tag::Type::Ctrl::Structure
         float        DepoweredPositionTransitionTime;  // 0x17C  float32.
         float        DepoweredPositionAccelerationTime;  // 0x180  float32.
         std::uint32_t LightmapFlags;  // 0x184  flags32. [Don't Use In Lightmap=0, Don't Use In Lightprobe=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Tag::Reference OpenUp;  // 0x188  tagref.
-        MapStructure::Tag::Reference CloseDown;  // 0x198  tagref.
-        MapStructure::Tag::Reference Opened;  // 0x1A8  tagref.
-        MapStructure::Tag::Reference Closed;  // 0x1B8  tagref.
-        MapStructure::Tag::Reference Depowered;  // 0x1C8  tagref.
-        MapStructure::Tag::Reference Repowered;  // 0x1D8  tagref.
+        MapStructure::Tag::TagReference OpenUp;  // 0x188  tagref.
+        MapStructure::Tag::TagReference CloseDown;  // 0x198  tagref.
+        MapStructure::Tag::TagReference Opened;  // 0x1A8  tagref.
+        MapStructure::Tag::TagReference Closed;  // 0x1B8  tagref.
+        MapStructure::Tag::TagReference Depowered;  // 0x1C8  tagref.
+        MapStructure::Tag::TagReference Repowered;  // 0x1D8  tagref.
         float        DelayTime;  // 0x1E8  float32.
-        MapStructure::Tag::Reference DelayEffect;  // 0x1EC  tagref.
+        MapStructure::Tag::TagReference DelayEffect;  // 0x1EC  tagref.
         float        AutomaticActivationRadius;  // 0x1FC  float32.
         std::uint16_t Type;  // 0x200  enum16. [Toggle=0x0, On=0x1, Off=0x2, Call=0x3, Health=0x4]
         std::uint16_t TriggersWhen;  // 0x202  enum16. [Touched By Player=0x0, Destroyed=0x1]
         float        CallValue;  // 0x204  float32.
         std::uint32_t ActionString;  // 0x208  stringid.
-        MapStructure::Tag::Reference On;  // 0x20C  tagref.
-        MapStructure::Tag::Reference Off;  // 0x21C  tagref.
-        MapStructure::Tag::Reference Deny;  // 0x22C  tagref.
+        MapStructure::Tag::TagReference On;  // 0x20C  tagref.
+        MapStructure::Tag::TagReference Off;  // 0x21C  tagref.
+        MapStructure::Tag::TagReference Deny;  // 0x22C  tagref.
     };
     static_assert(sizeof(CtrlData) == 0x23C, "CtrlData size mismatch");
 

@@ -5,26 +5,26 @@ module;
 module Viewer.Map.System;
 import :MapService;
 
+import Common.Semantic.Type;
 import Viewer.Camera.Type;
 import Viewer.Options.Type;
 import Viewer.Profiler.Type;
 import Viewer.Profiler.System;
 import Viewer.Map.Type;
 import Viewer.Style.Type;
-import Common.Semantic.Type;
 import std;
 
 namespace
 {
-    using Viewport = Viewer::Camera::Type::Viewport;
-    using Flag = Viewer::Options::Type::Flag;
-    using Scalar = Viewer::Options::Type::Scalar;
-    using Cpu = Viewer::Profiler::Type::Cpu;
-    using Gpu = Viewer::Profiler::Type::Gpu;
-    using Counter = Viewer::Profiler::Type::Counter;
-    using CpuTimer = Viewer::Profiler::System::CpuTimer;
-    using FixturePassOptions = Viewer::Map::Type::FixturePassOptions;
-    using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
+    using Viewer::Camera::Type::Viewport;
+    using Viewer::Options::Type::Flag;
+    using Viewer::Options::Type::Scalar;
+    using Viewer::Profiler::Type::Cpu;
+    using Viewer::Profiler::Type::Gpu;
+    using Viewer::Profiler::Type::Counter;
+    using Viewer::Profiler::System::CpuTimer;
+    using Viewer::Map::Type::FixturePassOptions;
+    using Viewer::Map::Type::LimitsPassOptions;
     using Common::Semantic::Type::Function;
 
     using Viewer::Style::Type::k_Background;

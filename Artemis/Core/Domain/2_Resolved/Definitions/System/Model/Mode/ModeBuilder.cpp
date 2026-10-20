@@ -1,11 +1,14 @@
 module Resolved.Definitions.System;
 import :Mode;
 
+import Common.Math.Type;
+
 namespace
 {
+    using Common::Math::Type::k_FloatMax;
+
     // Bit 0 of the compression flags of the compression info: compressed position.
     constexpr std::uint16_t k_CompressedPositionFlag{ 1u << 0 };
-    constexpr float k_Max{ std::numeric_limits<float>::max() };
 }
 
 namespace Resolved::Definitions::System
@@ -97,8 +100,8 @@ namespace Resolved::Definitions::System
 
     auto ModeBuilder::BuildBounds(const ModeObject& mode, Mode& out) -> void
     {
-        Vec3 min{ k_Max, k_Max, k_Max };
-        Vec3 max{ -k_Max, -k_Max, -k_Max };
+        Vec3 min{ k_FloatMax, k_FloatMax, k_FloatMax };
+        Vec3 max{ -k_FloatMax, -k_FloatMax, -k_FloatMax };
 
         bool found{};
 
@@ -107,13 +110,13 @@ namespace Resolved::Definitions::System
             if ((ci.CompressionFlags & k_CompressedPositionFlag) == 0)
                 continue;
 
-            min.X = std::min(min.X, ci.PositionBoundsX.Min);
-            min.Y = std::min(min.Y, ci.PositionBoundsY.Min);
-            min.Z = std::min(min.Z, ci.PositionBoundsZ.Min);
+            min.X = (std::min)(min.X, ci.PositionBoundsX.Min);
+            min.Y = (std::min)(min.Y, ci.PositionBoundsY.Min);
+            min.Z = (std::min)(min.Z, ci.PositionBoundsZ.Min);
 
-            max.X = std::max(max.X, ci.PositionBoundsX.Max);
-            max.Y = std::max(max.Y, ci.PositionBoundsY.Max);
-            max.Z = std::max(max.Z, ci.PositionBoundsZ.Max);
+            max.X = (std::max)(max.X, ci.PositionBoundsX.Max);
+            max.Y = (std::max)(max.Y, ci.PositionBoundsY.Max);
+            max.Z = (std::max)(max.Z, ci.PositionBoundsZ.Max);
 
             found = true;
         }

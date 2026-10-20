@@ -1,7 +1,8 @@
 module Tables.Interaction.System;
 
-import Platform.Host.Type;
+import Common.Engine.Type;
 import Common.Math.Type;
+import Platform.Host.Type;
 import Tables.Player.Type;
 import Tables.Interaction.Type;
 import std;
@@ -32,12 +33,8 @@ namespace
     using Tables::Player::Type::Mapping::k_EntryStride;
 
     using Platform::Host::Type::k_MaxLocalUsers;
-
-    // Handle of an empty view.
-    constexpr std::uint32_t k_NoPlayer{ 0xFFFFFFFF };
-
-    // Mask of the table index inside a player handle.
-    constexpr std::uint32_t k_IndexMask{ 0xFFFF };
+    using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_HandleIndexMask;
 }
 
 namespace Tables::Interaction::System
@@ -60,10 +57,10 @@ namespace Tables::Interaction::System
         for (std::size_t view{ 0 }; view < k_MaxLocalUsers; ++view)
         {
             const std::uint32_t playerHandle{ reader.Read<std::uint32_t>(mappingBase, k_OutputUserPlayer + (view * k_EntryStride)) };
-            if (playerHandle == k_NoPlayer) continue;
+            if (playerHandle == k_NoHandle) continue;
 
             const std::int32_t localIndex{ reader.Read<std::int32_t>(mappingBase,
-                k_PlayerInputUser + ((playerHandle & k_IndexMask) * k_EntryStride)) };
+                k_PlayerInputUser + ((playerHandle & k_HandleIndexMask) * k_EntryStride)) };
 
             if (localIndex < 0 || static_cast<std::size_t>(localIndex) >= k_MaxLocalUsers) continue;
 

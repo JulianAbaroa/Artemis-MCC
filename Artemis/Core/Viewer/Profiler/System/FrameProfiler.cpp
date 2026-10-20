@@ -204,7 +204,6 @@ namespace Viewer::Profiler::System
             m_Counters[static_cast<std::size_t>(Counter::AimInstances)]);
         text += ".";
 
-        //logsService.Message("{}", text);
 
         this->Reset();
     }

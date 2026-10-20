@@ -1,16 +1,17 @@
 module Environment.Collidable.System;
 
 import Tables.Object.Type;
+import Environment.Collidable.Type;
 
 namespace
 {
-    using Triangle = Common::Math::Type::Triangle;
-    using RegionDiagnostic = Environment::Collidable::Type::RegionDiagnostic;
+    using Common::Math::Type::Triangle;
+    using Environment::Collidable::Type::RegionDiagnostic;
 
-    // Layout of the region block: one state entry per region of the render model, then one permutation byte per region.
-    constexpr std::size_t k_RegionStateStride{ 0x04 };
-    constexpr std::size_t k_RegionStateValue{ 0x01 };
-    constexpr std::uint8_t k_NoPermutation{ 0xFF };
+    using Environment::Collidable::Type::k_RegionStateStride;
+    using Environment::Collidable::Type::k_RegionStateValue;
+    using Environment::Collidable::Type::k_NoPermutation;
+    using Environment::Collidable::Type::Collidables;
 }
 
 namespace Environment::Collidable::System
@@ -33,7 +34,7 @@ namespace Environment::Collidable::System
     auto CollidableService::CollectCollidables(const Classifieds& classifieds,
         const ObjectTable& objectTable) -> void
     {
-        std::vector<Collidable> instances;
+        Collidables instances{};
         instances.reserve(objectTable.size());
 
         for (const auto& [handle, object] : objectTable)
@@ -224,7 +225,6 @@ namespace Environment::Collidable::System
             triTotal += mesh.Triangles.size();
         }
         out.Triangles.reserve(triTotal);
-
 
         for (const auto& mesh : ctx.Coll->Meshes)
         {

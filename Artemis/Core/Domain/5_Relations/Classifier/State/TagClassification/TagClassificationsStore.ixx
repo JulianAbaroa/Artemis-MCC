@@ -11,7 +11,7 @@ export namespace Relations::Classifier::State
     {
     private:
         using TagClassification = Relations::Classifier::Type::TagClassification;
-        using TagClassifications = std::unordered_map<std::string, TagClassification>;
+        using TagClassifications = Relations::Classifier::Type::TagClassifications;
 
     public:
         TagClassificationsStore() = default;

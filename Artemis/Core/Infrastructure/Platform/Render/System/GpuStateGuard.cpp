@@ -5,7 +5,6 @@ module;
 
 module Platform.Render.System;
 import :GpuStateGuard;
-
 import std;
 
 namespace Platform::Render::System

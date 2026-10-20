@@ -8,8 +8,8 @@ import Service.Layer;
 import Service.Preferences.System;
 import Platform.Layer;
 import Map.Layer;
-import Datum.Layer;
 import Resolved.Layer;
+import Datum.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -55,7 +55,7 @@ export namespace Core
         auto RequestShutdown() -> void;
 
     private:
-        HMODULE m_Module;
+        HMODULE m_Module{};
 
         // Set once MH_Initialize succeeds. Gates MH_Uninitialize in the destructor.
         bool m_IsMinHookReady{ false };

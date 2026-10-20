@@ -49,7 +49,7 @@ export namespace Map::Reader::Type::Offset
             constexpr std::size_t k_LoadAddress{ 0x0 };    // uint64.
             constexpr std::size_t k_Size{ 0x8 };           // uint64.
 
-            constexpr std::size_t EntryOffset(std::size_t index)
+            constexpr auto EntryOffset(std::size_t index) -> std::size_t
             {
                 return k_Base + (index * k_EntrySize);
             }
@@ -65,7 +65,7 @@ export namespace Map::Reader::Type::Offset
 
             constexpr std::size_t k_Mask{ 0x0 };   // uint32.
 
-            constexpr std::size_t EntryOffset(std::size_t index)
+            constexpr auto EntryOffset(std::size_t index) -> std::size_t
             {
                 return k_Base + (index * k_EntrySize);
             }
@@ -81,7 +81,7 @@ export namespace Map::Reader::Type::Offset
             constexpr std::size_t k_VirtualAddress{ 0x0 }; // uint32.
             constexpr std::size_t k_Size{ 0x4 };           // uint32.
 
-            constexpr std::size_t EntryOffset(std::size_t index)
+            constexpr auto EntryOffset(std::size_t index) -> std::size_t
             {
                 return k_Base + (index * k_EntrySize);
             }
@@ -153,7 +153,7 @@ export namespace Map::Reader::Type::Offset
             constexpr std::size_t k_StringDataHash{ 0x24 };
             constexpr std::size_t k_StringDataHashSize{ 0x14 };
 
-            constexpr std::size_t EntryOffset(std::size_t index)
+            constexpr auto EntryOffset(std::size_t index) -> std::size_t
             {
                 return k_Base + (index * k_EntrySize);
             }
@@ -201,7 +201,7 @@ export namespace Map::Reader::Type::Offset
             constexpr std::size_t k_RangeStartIndex{ 0x0 };    // int16.
             constexpr std::size_t k_RangeSize{ 0x2 };          // int16.
 
-            constexpr std::size_t EntryOffset(std::size_t index)
+            constexpr auto EntryOffset(std::size_t index) -> std::size_t
             {
                 return k_Base + (index * k_EntrySize);
             }

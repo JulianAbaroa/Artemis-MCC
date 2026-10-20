@@ -5,7 +5,7 @@ import Resolved.World.Type;
 namespace
 {
     using Resolved::Definitions::Type::Hlmt::DamageSection;
-    using Resolved::Vitality::Type::Vitality::Kind;
+    using Resolved::Vitality::Type::Vitality::VitalityKind;
     using Resolved::Vitality::Type::Vitality::Transfer;
     using Resolved::World::Type::ModelLink::AnchorSource;
 
@@ -25,7 +25,7 @@ namespace Resolved::Vitality::System
         std::int32_t headshotSections{};
         std::int32_t headshotAnchored{};
 
-        for (const auto& [tagName, hlmt] : m_DefinitionsStore.Hlmt.All())
+        for (const auto& [tagName, hlmt] : m_DefinitionsStore.m_Hlmt.All())
         {
             if (hlmt.DamageSections.empty())
             {
@@ -100,7 +100,7 @@ namespace Resolved::Vitality::System
 
             if (ds.ShieldGlobalMaterialName != 0)
             {
-                out.Kind = Kind::Shield;
+                out.Kind = VitalityKind::Shield;
             }
 
             if (ds.Flags & k_FlagHeadshot)
@@ -140,7 +140,7 @@ namespace Resolved::Vitality::System
             if (index >= 0 &&
                 static_cast<std::size_t>(index) < vitality.Sections.size())
             {
-                vitality.Sections[index].Kind = Kind::Shield;
+                vitality.Sections[index].Kind = VitalityKind::Shield;
             }
         }
 
@@ -152,7 +152,7 @@ namespace Resolved::Vitality::System
 
             if (section.IsCritical) vitality.KillSections.push_back(index);
             if (section.IsHeadshot) vitality.HeadshotSections.push_back(index);
-            if (section.Kind == Kind::Shield) vitality.ShieldSections.push_back(index);
+            if (section.Kind == VitalityKind::Shield) vitality.ShieldSections.push_back(index);
         }
 
         if (!vitality.KillSections.empty()) vitality.CriticalSection = vitality.KillSections.front();
@@ -170,11 +170,11 @@ namespace Resolved::Vitality::System
     }
 
     auto VitalityBuilder::ResolveAnchor(const Section& section,
-        const ModelLink& link) const -> Anchor
+        const ModelLink& link) const -> ModelLinkAnchor
     {
         // 1. Model target that the hlmt assigns to this section (the most relevant one).
-        const Anchor* best{};
-        for (const Anchor& target : link.Targets)
+        const ModelLinkAnchor* best{};
+        for (const ModelLinkAnchor& target : link.Targets)
         {
             if (target.Source != AnchorSource::ModelTarget) continue;
             if (target.SectionIndex != section.SectionIndex) continue;
@@ -190,7 +190,7 @@ namespace Resolved::Vitality::System
         if (section.CollRegion >= 0 &&
             static_cast<std::size_t>(section.CollRegion) < link.RegionAnchors.size())
         {
-            const Anchor& region = link.RegionAnchors[section.CollRegion];
+            const ModelLinkAnchor& region = link.RegionAnchors[section.CollRegion];
             if (region.Source != AnchorSource::None) return region;
         }
 
@@ -199,7 +199,7 @@ namespace Resolved::Vitality::System
         if (section.IsHeadshot)
         {
             best = nullptr;
-            for (const Anchor& target : link.Targets)
+            for (const ModelLinkAnchor& target : link.Targets)
             {
                 if (target.Source != AnchorSource::ModelTarget || !target.Headshot) continue;
 
@@ -207,16 +207,16 @@ namespace Resolved::Vitality::System
             }
             if (best)
             {
-                Anchor anchor{ *best };
+                ModelLinkAnchor anchor{ *best };
                 anchor.Source = AnchorSource::HeadshotTarget;
                 return anchor;
             }
         }
 
         // 4. Center of the model, which is imprecise. Not for shield sections.
-        if (section.Kind != Kind::Shield) return link.ObjectCenter;
+        if (section.Kind != VitalityKind::Shield) return link.ObjectCenter;
 
-        return Anchor{};
+        return ModelLinkAnchor{};
     }
 
     auto VitalityBuilder::Cleanup() -> void

@@ -4,7 +4,6 @@ module;
 
 module Gui.Widget.System;
 import :SearchFilter;
-
 import std;
 
 namespace

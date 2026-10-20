@@ -5,8 +5,8 @@ import Common.Math.System;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Triangle = Common::Math::Type::Triangle;
+    using Common::Math::Type::Vec3;
+    using Common::Math::Type::Triangle;
 
     using Common::Math::System::Cross;
     using Common::Math::System::Dot;

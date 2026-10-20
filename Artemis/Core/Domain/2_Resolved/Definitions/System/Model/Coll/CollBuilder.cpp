@@ -1,13 +1,17 @@
 module Resolved.Definitions.System;
 import :Coll;
 
+import Common.Math.Type;
+import Resolved.Definitions.Type;
+
 namespace
 {
     using Common::Math::Type::Triangle;
-    using Resolved::Definitions::Type::Coll::Mesh;
+    using Resolved::Definitions::Type::Coll::CollMesh;
     using Resolved::Definitions::Type::Coll::Material;
 
-    constexpr float k_Max{ (std::numeric_limits<float>::max)() };
+    using Common::Math::Type::k_FloatMax;
+    using Resolved::Definitions::Type::Coll::k_DefaultPermutationName;
 }
 
 namespace Resolved::Definitions::System
@@ -59,7 +63,7 @@ namespace Resolved::Definitions::System
 
                 for (const auto& bsp : permutation.Bsps)
                 {
-                    Mesh mesh{};
+                    CollMesh mesh{};
 
                     mesh.NodeIndex = bsp.NodeIndex;
                     mesh.RegionIndex = i;
@@ -82,7 +86,6 @@ namespace Resolved::Definitions::System
                         {
                             Triangle triangle{};
 
-
                             triangle.A = this->MakeVec3(
                                 bsp.Vertices[indices[0]].Point);
 
@@ -100,8 +103,8 @@ namespace Resolved::Definitions::System
 
                     if (mesh.Triangles.empty()) continue;
 
-                    mesh.LocalMin = { k_Max, k_Max, k_Max };
-                    mesh.LocalMax = { -k_Max, -k_Max, -k_Max };
+                    mesh.LocalMin = { k_FloatMax, k_FloatMax, k_FloatMax };
+                    mesh.LocalMax = { -k_FloatMax, -k_FloatMax, -k_FloatMax };
 
                     auto expandBounds = [&](const Vec3& q)
                     {
@@ -140,8 +143,7 @@ namespace Resolved::Definitions::System
             {
                 out.PermutationNames[region][i] = permutations[i].Name;
 
-                // 0x0001 is "default" on the StringTable.
-                if (permutations[i].Name == 0x0001)
+                if (permutations[i].Name == k_DefaultPermutationName)
                 {
                     out.DefaultPermutationIndex[region] = static_cast<int>(i);
                 }
@@ -172,8 +174,8 @@ namespace Resolved::Definitions::System
             return;
         }
 
-        out.BoundsMin = { k_Max, k_Max, k_Max };
-        out.BoundsMax = { -k_Max, -k_Max, -k_Max };
+        out.BoundsMin = { k_FloatMax, k_FloatMax, k_FloatMax };
+        out.BoundsMax = { -k_FloatMax, -k_FloatMax, -k_FloatMax };
 
         for (const auto& mesh : out.Meshes)
         {

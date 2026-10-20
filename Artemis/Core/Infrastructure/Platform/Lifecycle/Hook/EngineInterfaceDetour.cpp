@@ -12,6 +12,7 @@ namespace
     namespace Signature = Platform::Memory::Type::Signature;
 
     using Platform::Host::Type::k_HostModuleName;
+
     using Platform::Hook::System::k_DrainTimeout;
     using Platform::Lifecycle::Type::k_EngineGlobalDisplacementOffset;
     using Platform::Lifecycle::Type::k_EngineGlobalNextInstructionOffset;
@@ -166,7 +167,7 @@ namespace Platform::Lifecycle::Hook
         if (m_IsHookInstalled.load()) return true;
         s_Instance = this;
 
-        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::LoadGameEngine, k_HostModuleName) };
+        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::k_LoadGameEngine, k_HostModuleName) };
 
         if (match == 0)
         {

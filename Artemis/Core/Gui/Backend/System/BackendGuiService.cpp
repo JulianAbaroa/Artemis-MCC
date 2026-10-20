@@ -9,6 +9,7 @@ module;
 module Gui.Backend.System;
 import :Backend;
 
+import Gui.Style.Type;
 import std;
 
 extern "C++"
@@ -19,9 +20,9 @@ extern "C++"
 
 namespace
 {
-    constexpr float k_MinimumAlpha{ 0.20f };
-    constexpr float k_MinimumScale{ 1.0f };
-    constexpr float k_MaximumScale{ 4.0f };
+    using Gui::Style::Type::k_MinimumAlpha;
+    using Gui::Style::Type::k_MinimumScale;
+    using Gui::Style::Type::k_MaximumScale;
 
     // Resets the style to the Artemis look. The scale is applied separately.
     auto ApplyDefaultStyle() -> void

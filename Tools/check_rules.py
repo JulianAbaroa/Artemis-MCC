@@ -74,7 +74,7 @@ CHECKS = {
     "H2": "Function pointer type outside a Type module, not named <Name>Function, or typedef.",
     "H3": "Aggregating .ixx of a Hook module inside Hook/ (it lives in the folder of the specialization).",
     "H4": "Hooked function without in-flight count (InFlightScope / HookScope).",
-    "O1": "Raw hex value in a System, Hook or .cpp body (offsets and RVAs only in Type modules).",
+    "O1": "Raw hex value in a System, Hook or .cpp body (engine offsets, RVAs, bits, masks and opcodes only in Type modules).",
     "Y1": "Layer groups not in order '// --- State ---', '// --- System ---', '// --- Hook ---'.",
     "Y2": "File layout: blank lines around the module line and imports, 'module;' only with includes.",
     "Y3": "Class sections not in order [private: usings] public: [private:].",
@@ -102,7 +102,8 @@ IDENT = r"[A-Za-z_]\w*"
 def ListSources():
     out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", SOURCE_ROOT],
                          cwd=ROOT, capture_output=True, text=True, check=True).stdout
-    return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")))
+    # A file moved or deleted since the last commit is still in the index: only the ones on disk count.
+    return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")) and os.path.isfile(os.path.join(ROOT, p)))
 
 
 class Source:
@@ -441,6 +442,10 @@ def CheckFile(source, findings):
         for line in lines:
             for match in re.finditer(r"(?:^\s*:|^\s*,|,)\s*(m_\w+)\s*[({]", line):
                 initialized.add(match.group(1))
+            # Mem-initializer with the comma at the end of the line, or split over several lines: "    m_Name(args,".
+            match = re.match(r"\s*(m_\w+)\s*[({]", line)
+            if match and ";" not in line:
+                initialized.add(match.group(1))
 
     def OnStatement(scope, text, line):
         text = DropTemplate(text)
@@ -684,7 +689,12 @@ def CheckMore(source, Add):
             Add("H2", index, match.group(1))
         if re.match(r"\s*typedef\b[^;]*\(\s*(?:__\w+\s*)?\*", line):
             Add("H2", index, "typedef")
-        if offsets and not re.search(r"IM_COL32|ImColor|Color", line):
+        # A named constant of Artemis itself (a fake handle, a marker, an own size) may be hex. Engine values may not: their names end
+        # in Offset, Rva, Bit, Mask or Opcode, and they live in Type modules (D126).
+        ownConstant = re.match(r"\s*(?:static\s+)?(?:inline\s+)?constexpr\b[^;(]*\bk_(\w+)\s*\{", line)
+        if ownConstant and re.search(r"(Offsets?|Rva|Bits?|Mask|Opcode)$", ownConstant.group(1)):
+            ownConstant = None
+        if offsets and not ownConstant and not re.search(r"IM_COL32|ImColor|Color", line):
             for match in re.finditer(r"\b0x([0-9A-Fa-f]{2,})\b", line):
                 if not re.fullmatch(r"[Ff0]+", match.group(1)):
                     Add("O1", index, "0x" + match.group(1))
@@ -736,7 +746,10 @@ def CheckMore(source, Add):
     imports = [i for i, line in enumerate(code) if re.match(r"\s*(?:export\s+)?import\s", line)]
     if imports:
         for i in imports:
-            if re.match(r"\s*import\s+std\s*;", code[i]) and len(imports) > 1 and blank(i - 1):
+            # std goes right after the other imports. After partition imports only, it is the first other import: blank line before.
+            previous = [j for j in imports if j < i]
+            afterPartitions = previous and re.match(r"\s*(?:export\s+)?import\s+:", code[previous[-1]])
+            if re.match(r"\s*import\s+std\s*;", code[i]) and len(imports) > 1 and blank(i - 1) and not afterPartitions:
                 Add("Y2", i, "no blank line before 'import std;'")
         if not blank(imports[-1] + 1) and imports[-1] + 1 < len(code):
             Add("Y2", imports[-1], "blank line after the imports")

@@ -4,8 +4,8 @@ import Common.Math.Type;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
-    using Triangle = Common::Math::Type::Triangle;
+    using Common::Math::Type::Vec3;
+    using Common::Math::Type::Triangle;
 }
 
 export namespace Common::Geometry::System

@@ -12,8 +12,11 @@ namespace
 
 export namespace Resolved::Definitions::Type::Coll
 {
+    // String id of "default", the name of the default permutation of a region.
+    inline constexpr std::uint32_t k_DefaultPermutationName{ 1 };
+
     // Collision triangles of one region and permutation, in the space of its node.
-    struct Mesh
+    struct CollMesh
     {
         std::int16_t NodeIndex{ -1 };
 
@@ -37,7 +40,7 @@ export namespace Resolved::Definitions::Type::Coll
         std::string TagName{};
 
         std::vector<Node> Nodes{};
-        std::vector<Mesh> Meshes{};
+        std::vector<CollMesh> Meshes{};
 
         std::vector<std::uint32_t> RegionNames{};
         std::vector<std::vector<std::uint32_t>> PermutationNames{};

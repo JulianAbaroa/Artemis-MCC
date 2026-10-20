@@ -5,7 +5,7 @@ import std;
 
 namespace
 {
-    using Physics = Common::Semantic::Type::Physics;
+    using Common::Semantic::Type::Physics;
 }
 
 export namespace Tables::Object::Type::Placement

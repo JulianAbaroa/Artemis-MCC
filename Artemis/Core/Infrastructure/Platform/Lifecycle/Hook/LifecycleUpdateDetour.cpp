@@ -12,6 +12,7 @@ namespace
     namespace Signature = Platform::Memory::Type::Signature;
 
     using Platform::Host::Type::k_HostModuleName;
+
     using Platform::Hook::System::k_DrainTimeout;
     using Platform::Hook::System::ResolveRelative;
     using Platform::Lifecycle::Type::k_LifecycleStateOffset;
@@ -48,7 +49,7 @@ namespace Platform::Lifecycle::Hook
         if (m_IsHookInstalled.load()) return true;
         s_Instance = this;
 
-        const std::uintptr_t lookup{ m_AOBService.FindPattern(Signature::FindLobbyScreen, k_HostModuleName) };
+        const std::uintptr_t lookup{ m_AOBService.FindPattern(Signature::k_FindLobbyScreen, k_HostModuleName) };
 
         if (lookup == 0)
         {
@@ -63,7 +64,7 @@ namespace Platform::Lifecycle::Hook
         m_FindScreen = reinterpret_cast<FindScreenFunction>(ResolveRelative(lookup, k_FindScreenDisplacementOffset,
             k_FindScreenNextInstructionOffset));
 
-        const std::uintptr_t countdown{ m_AOBService.FindPattern(Signature::StartCountdown, k_HostModuleName) };
+        const std::uintptr_t countdown{ m_AOBService.FindPattern(Signature::k_StartCountdown, k_HostModuleName) };
 
         if (countdown == 0)
         {
@@ -76,7 +77,7 @@ namespace Platform::Lifecycle::Hook
         m_IsCountdownActive = reinterpret_cast<IsCountdownActiveFunction>(ResolveRelative(countdown,
             k_IsCountdownActiveDisplacementOffset, k_IsCountdownActiveNextInstructionOffset));
 
-        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::LifecycleUpdate, k_HostModuleName) };
+        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::k_LifecycleUpdate, k_HostModuleName) };
 
         if (match == 0)
         {

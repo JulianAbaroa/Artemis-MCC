@@ -12,7 +12,9 @@ import std;
 
 namespace
 {
-    using RawMouse = Platform::Input::Type::RawMouse;
+    using Platform::Input::Type::RawMouse;
+
+    using Platform::Hook::System::k_DrainTimeout;
 
     inline auto SwallowMouse(RAWMOUSE& mouse) -> void
     {
@@ -25,11 +27,11 @@ namespace
 namespace Platform::Input::Hook
 {
     auto WINAPI GetRawInputDataDetour::HookedGetRawInputData(HRAWINPUT hRawInput,
-        UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) -> UINT
+        UINT command, LPVOID data, PUINT dataSize, UINT headerSize) -> UINT
     {
         auto* self = s_Instance;
 
-        if (self && uiCommand == RID_INPUT &&
+        if (self && command == RID_INPUT &&
             self->m_MouseDeltaStore.IsAIControlActive())
         {
             std::int32_t injectX = 0;
@@ -41,18 +43,18 @@ namespace Platform::Input::Hook
 
                 const UINT requiredSize = sizeof(RAWINPUT);
 
-                if (!pData)
+                if (!data)
                 {
-                    if (pcbSize) *pcbSize = requiredSize;
+                    if (dataSize) *dataSize = requiredSize;
                     return 0;
                 }
 
-                if (!pcbSize || *pcbSize < requiredSize)
+                if (!dataSize || *dataSize < requiredSize)
                 {
                     return static_cast<UINT>(-1);
                 }
 
-                auto* raw = static_cast<RAWINPUT*>(pData);
+                auto* raw = static_cast<RAWINPUT*>(data);
                 raw->header.dwType = RIM_TYPEMOUSE;
                 raw->header.dwSize = requiredSize;
                 raw->header.hDevice = self->m_MouseDeltaStore.GetKnownDeviceHandle();
@@ -68,15 +70,15 @@ namespace Platform::Input::Hook
         }
 
         const UINT size = s_OriginalFunction(
-            hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+            hRawInput, command, data, dataSize, headerSize);
 
         if (!self) return size;
 
         Platform::Hook::System::InFlightScope scope(s_InFlight);
 
-        if (size == static_cast<UINT>(-1) || !pData || uiCommand != RID_INPUT) return size;
+        if (size == static_cast<UINT>(-1) || !data || command != RID_INPUT) return size;
 
-        auto* raw = static_cast<RAWINPUT*>(pData);
+        auto* raw = static_cast<RAWINPUT*>(data);
         if (raw->header.dwType != RIM_TYPEMOUSE) return size;
 
         RAWMOUSE& mouse = raw->data.mouse;
@@ -135,7 +137,7 @@ namespace Platform::Input::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[GetRawInputDataDetour]", m_LogsService);
 

@@ -17,7 +17,7 @@ export namespace Resolved::Vitality::System
     private:
         using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
         using ModelLink = Resolved::World::Type::ModelLink::ModelLink;
-        using Anchor = Resolved::World::Type::ModelLink::Anchor;
+        using ModelLinkAnchor = Resolved::World::Type::ModelLink::ModelLinkAnchor;
         using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
         using Section = Resolved::Vitality::Type::Vitality::Section;
 
@@ -52,6 +52,6 @@ export namespace Resolved::Vitality::System
         // Finds where to aim for a section.
         // note: Cascade: model target of the section, coll region of the section,
         // headshot lock-on model target (headshot sections), object center (non-shield sections).
-        auto ResolveAnchor(const Section& section, const ModelLink& link) const -> Anchor;
+        auto ResolveAnchor(const Section& section, const ModelLink& link) const -> ModelLinkAnchor;
     };
 }

@@ -9,13 +9,11 @@ module;
 
 module Platform.Render.System;
 import :SwapChainLocator;
-
 import std;
 
 namespace
 {
-    template <typename T>
-    using ComPtr = Microsoft::WRL::ComPtr<T>;
+    using Microsoft::WRL::ComPtr;
 
     // Position of the methods in the IDXGISwapChain vtable.
     constexpr std::size_t k_PresentIndex{ 8 };

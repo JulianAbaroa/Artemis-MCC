@@ -4,11 +4,16 @@ module;
 
 module Datum.Object.Hook;
 
+import Platform.Hook.System;
 import Platform.Memory.Type;
+import Datum.Object.Type;
 
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
+
+    using Datum::Object::Type::Constant::k_ThreadContextObjectDataOffset;
+    using Datum::Object::Type::Constant::k_ObjectDataTableOffset;
 }
 
 namespace Datum::Object::Hook
@@ -37,24 +42,11 @@ namespace Datum::Object::Hook
     {
         __try
         {
-            std::uintptr_t tlsArray = (std::uintptr_t)__readgsqword(0x58);
-            std::uintptr_t match = m_AOBService.FindPattern(
-                Signature::TelemetryIdModifier);
+            const std::uint32_t* tlsIndex{ Platform::Hook::System::ResolveTlsIndex(
+                m_AOBService.FindPattern(Signature::k_TelemetryIdModifier)) };
+            if (!tlsIndex) return 0;
 
-            if (match)
-            {
-                std::int32_t relativeOffset = *(std::int32_t*)(match + 2);
-                std::uintptr_t telemetryIdAddr = (match + 6) + relativeOffset;
-                std::uint32_t telemetryIdx = *(std::uint32_t*)(telemetryIdAddr);
-
-                if (telemetryIdx <= 1000)
-                {
-                    return *(std::uintptr_t*)(tlsArray +
-                        (static_cast<unsigned long long>(telemetryIdx) * 8));
-                }
-            }
-
-            return 0;
+            return Platform::Hook::System::ReadThreadContext(*tlsIndex);
         }
         __except (EXCEPTION_EXECUTE_HANDLER)
         {
@@ -77,11 +69,11 @@ namespace Datum::Object::Hook
         __try
         {
             std::uintptr_t telemetryData =
-                *(std::uintptr_t*)(threadContext + 0x10);
+                *(std::uintptr_t*)(threadContext + k_ThreadContextObjectDataOffset);
 
             if (telemetryData)
             {
-                return *(std::uintptr_t*)(telemetryData + 0x50);
+                return *(std::uintptr_t*)(telemetryData + k_ObjectDataTableOffset);
             }
 
             return 0;

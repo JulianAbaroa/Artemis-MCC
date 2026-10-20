@@ -21,8 +21,8 @@ export namespace Environment::Players::System
     private:
         using LogsService = Service::Logs::System::LogsService;
 
-        using AliveObject = Tables::Object::Type::Alive::Object;
-        using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
         using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;

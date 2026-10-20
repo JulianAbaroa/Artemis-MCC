@@ -5,7 +5,7 @@ import std;
 export namespace Common::ZoneShape::Type
 {
     // Shape of a zone. The values match the game.
-    enum class Kind : std::uint8_t
+    enum class ZoneShapeKind : std::uint8_t
     {
         None = 0x00,
         // 0x01 is the sphere. It is unused.
@@ -21,6 +21,6 @@ export namespace Common::ZoneShape::Type
         float Length{};
         float Top{};
         float Bottom{};
-        Kind Kind{ Kind::None };
+        ZoneShapeKind Kind{ ZoneShapeKind::None };
     };
 }

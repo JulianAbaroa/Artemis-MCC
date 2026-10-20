@@ -1,15 +1,19 @@
 export module Platform.Simulation.Type;
 
+import Common.Engine.Type;
 import std;
 
 // Layout of the engine simulation players and machines (A9_SplitScreen.txt sec. 13).
+namespace
+{
+    using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_GamerTagLength;
+}
+
 export namespace Platform::Simulation::Type
 {
     // Machines the engine tracks (16 players and the host).
     inline constexpr std::size_t k_MaxMachines{ 17 };
-
-    // Players the engine tracks.
-    inline constexpr std::size_t k_MaxPlayers{ 16 };
 
     // Players one machine can have: the user index and the controller (0 to 3) cannot repeat inside a machine.
     inline constexpr std::size_t k_MaxPlayersPerMachine{ 4 };
@@ -77,9 +81,6 @@ export namespace Platform::Simulation::Type
     // both sits in a vehicle or a turret.
     inline constexpr std::uintptr_t k_ObjectParent{ 0x14 };
     inline constexpr std::uintptr_t k_UnitSeat{ 0x336 };
-
-    // Characters of a gamertag, terminator included.
-    inline constexpr std::size_t k_GamerTagLength{ 16 };
 
     // Players globals: machine mask (uint32), machine identifiers (17 x 6 bytes) and local machine index (int32).
     inline constexpr std::uintptr_t k_MachineMask{ 0x04 };

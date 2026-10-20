@@ -1,9 +1,11 @@
 module Environment.Entities.System;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Resolved.Definitions.Type;
 import Tables.Player.Type;
+import Relations.ObjectGraph.Type;
 
 namespace
 {
@@ -22,12 +24,8 @@ namespace
     using Environment::Details::Type::VitalityDetails;
 
     using Environment::Details::Type::k_LifeSection;
-
-    // Value of an empty handle.
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
-
-    // Parents walked up to the root of an object. Guards against a broken chain.
-    constexpr int k_MaxParentDepth{ 16 };
+    using Common::Engine::Type::k_NoHandle;
+    using Relations::ObjectGraph::Type::k_MaxParentDepth;
 
     // Removes a capability from a set.
     auto Without(Capability set, Capability capability) -> Capability

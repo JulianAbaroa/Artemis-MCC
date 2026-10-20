@@ -14,9 +14,9 @@ export namespace Map::Reader::System
     {
     private:
         using TagInfo = Map::Reader::Type::Info::TagInfo;
-        using TagTableEntry = Map::Reader::Type::Structure::TagTable::Entry;
-        using TagReference = Map::Reader::Type::Structure::Tag::Reference;
-        using TagBlock = Map::Reader::Type::Structure::Tag::Block;
+        using TagTableEntry = Map::Reader::Type::Structure::TagTable::TagTableEntry;
+        using TagReference = Map::Reader::Type::Structure::Tag::TagReference;
+        using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
 
         using LogsService = Service::Logs::System::LogsService;
         using FileStore = Map::Reader::State::FileStore;

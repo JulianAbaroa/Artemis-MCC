@@ -10,8 +10,8 @@ export namespace Map::Reader::System
     class TagStructureService
     {
     private:
-        using TagBlock = Map::Reader::Type::Structure::Tag::Block;
-        using TagTableEntry = Map::Reader::Type::Structure::TagTable::Entry;
+        using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
+        using TagTableEntry = Map::Reader::Type::Structure::TagTable::TagTableEntry;
 
         using TagIndexStore = Map::Reader::State::TagIndexStore;
 

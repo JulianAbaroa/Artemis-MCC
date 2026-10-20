@@ -15,8 +15,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<MultiplayerObject>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("ObjectKind", &MultiplayerObject::MultiplayerObjectKind),
         };
     };
@@ -24,8 +23,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Object>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Object::TagName),
             MakeField("ObjectKind", &Object::ObjectKind),
             MakeField("BoundingRadius", &Object::BoundingRadius),

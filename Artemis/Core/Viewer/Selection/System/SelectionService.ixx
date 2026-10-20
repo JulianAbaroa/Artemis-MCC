@@ -1,8 +1,8 @@
 export module Viewer.Selection.System;
 
 import Environment.Collidable.State;
-import Viewer.Selection.State;
 import Viewer.Selection.Type;
+import Viewer.Selection.State;
 import Viewer.Camera.Type;
 import std;
 

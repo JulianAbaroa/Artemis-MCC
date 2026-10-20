@@ -16,7 +16,7 @@ namespace Resolved::World::State
         {
             return nullptr;
         }
-        return definitionsStore.Coll.Get(it->second);
+        return definitionsStore.m_Coll.Get(it->second);
     }
 
     auto WorldStore::GetRegionStates(

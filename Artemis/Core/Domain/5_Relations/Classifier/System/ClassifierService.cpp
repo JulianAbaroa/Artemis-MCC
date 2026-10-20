@@ -1,8 +1,10 @@
 module Relations.Classifier.System;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Resolved.Definitions.Type;
+import Relations.Classifier.Type;
 
 namespace
 {
@@ -15,7 +17,7 @@ namespace
     using Common::Semantic::Type::NameOf;
     using Common::Semantic::Type::Catalog::TagLabel;
     using Common::Semantic::Type::Catalog::FindTagLabel;
-    using Common::ZoneShape::Type::Kind;
+    using Common::ZoneShape::Type::ZoneShapeKind;
     using Resolved::Definitions::Type::Object::ObjectKind;
     using Resolved::Definitions::Type::Object::MultiplayerObject;
     using Resolved::Definitions::Type::Object::MultiplayerObjectKind;
@@ -23,10 +25,9 @@ namespace
     using Relations::Classifier::Type::Classified;
     using Relations::Classifier::Type::TagClassification;
 
-    using Classifieds = std::vector<Classified>;
+    using Relations::Classifier::Type::Classifieds;
 
-    // Value of an empty handle.
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
+    using Common::Engine::Type::k_NoHandle;
 
     // Function and subtype one rule gives.
     struct Label
@@ -219,7 +220,7 @@ namespace Relations::Classifier::System
 
             // note: Only cylinders and boxes are zones (05, section 6, D88). Other shape kinds, like the 0x01 on the bomb, are not drawable.
             const bool hasZoneShape{ object.Multiplayer
-                && (object.Multiplayer->Shape.Kind == Kind::Cylinder || object.Multiplayer->Shape.Kind == Kind::Box) };
+                && (object.Multiplayer->Shape.Kind == ZoneShapeKind::Cylinder || object.Multiplayer->Shape.Kind == ZoneShapeKind::Box) };
             if (hasZoneShape)
             {
                 classified.Capabilities = classified.Capabilities | Capability::HasZone;
@@ -235,7 +236,7 @@ namespace Relations::Classifier::System
 
     auto ClassifierService::IsDefinitionsReady() const -> bool
     {
-        return m_DefinitionsStore.Bipd.IsFrozen() && m_VitalityStore.IsFrozen();
+        return m_DefinitionsStore.m_Bipd.IsFrozen() && m_VitalityStore.IsFrozen();
     }
 
     auto ClassifierService::LogSummary() -> void
@@ -313,15 +314,15 @@ namespace Relations::Classifier::System
 
         switch (kind)
         {
-        case ObjectKind::Biped: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Bipd, object.TagName); break;
-        case ObjectKind::Vehicle: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Vehi, object.TagName); break;
-        case ObjectKind::Weapon: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Weap, object.TagName); break;
-        case ObjectKind::Equipment: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Eqip, object.TagName); break;
-        case ObjectKind::Projectile: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Proj, object.TagName); break;
-        case ObjectKind::Scenery: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Scen, object.TagName); break;
-        case ObjectKind::Machine: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Mach, object.TagName); break;
-        case ObjectKind::Control: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Ctrl, object.TagName); break;
-        case ObjectKind::Crate: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.Bloc, object.TagName); break;
+        case ObjectKind::Biped: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Bipd, object.TagName); break;
+        case ObjectKind::Vehicle: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Vehi, object.TagName); break;
+        case ObjectKind::Weapon: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Weap, object.TagName); break;
+        case ObjectKind::Equipment: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Eqip, object.TagName); break;
+        case ObjectKind::Projectile: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Proj, object.TagName); break;
+        case ObjectKind::Scenery: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Scen, object.TagName); break;
+        case ObjectKind::Machine: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Mach, object.TagName); break;
+        case ObjectKind::Control: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Ctrl, object.TagName); break;
+        case ObjectKind::Crate: multiplayerObjects = MultiplayerObjectsIn(m_DefinitionsStore.m_Bloc, object.TagName); break;
         default: break;
         }
 

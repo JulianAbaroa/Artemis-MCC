@@ -1,8 +1,8 @@
 export module Egocentric.Self.System;
 
-import Service.Logs.System;
 import Common.Math.Type;
 import Common.Math.System;
+import Service.Logs.System;
 import Tables.Player.Type;
 import Tables.Player.State;
 import Egocentric.Self.State;

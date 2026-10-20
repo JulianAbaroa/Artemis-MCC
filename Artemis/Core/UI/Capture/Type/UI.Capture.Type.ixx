@@ -111,4 +111,47 @@ export namespace UI::Capture::Type
         // Phantoms the component holds (only the slots that are set).
         std::vector<HavokPhantom> Phantoms{};
     };
+
+    // RVA of the hkpWorld pointer (DAT_184e2fe68 in Ghidra).
+    inline constexpr std::uintptr_t k_HavokWorldRva{ 0x4E2FE68 };
+
+    // Collision filter pointer inside the hkpWorld (FUN_18017d680, FUN_18012e500).
+    inline constexpr std::uintptr_t k_WorldFilterOffset{ 0xD0 };
+
+    // Layer table inside the hkpGroupFilter (FUN_180882080, its isCollisionEnabled).
+    inline constexpr std::uintptr_t k_FilterLookupOffset{ 0x4C };
+
+    // RVA of the pointer to the Havok component data array (DAT_180c519b8 in Ghidra).
+    inline constexpr std::uintptr_t k_HavokComponentArrayRva{ 0xC519B8 };
+
+    // Pointer to the first element inside a data array.
+    inline constexpr std::uintptr_t k_DataArrayElementsOffset{ 0x50 };
+
+
+    // Havok component layout (FUN_18012e1e8, FUN_18012e7cc, FUN_18017d680).
+    inline constexpr std::uintptr_t k_HavokComponentSize{ 0xC0 };
+    inline constexpr std::uintptr_t k_ComponentFlagsOffset{ 0x18 };
+    inline constexpr std::uintptr_t k_ComponentOwnerOffset{ 0x1C };
+    inline constexpr std::uintptr_t k_ComponentSizeOffset{ 0x22 };
+    inline constexpr std::uintptr_t k_ComponentBodiesOffset{ 0x30 };
+    inline constexpr std::uintptr_t k_ComponentBodyCountOffset{ 0x38 };
+    inline constexpr std::uintptr_t k_BodyEntrySize{ 0x50 };
+    inline constexpr std::uintptr_t k_BodyEntryRigidBodyOffset{ 0x40 };
+
+    // Phantom pointers of the component, removed from the world by FUN_18017fd78 and queried by FUN_180180c04.
+    inline constexpr std::array<std::uintptr_t, 2> k_ComponentPhantomOffsets{ 0xA8, 0xB0 };
+
+    // hkpRigidBody fields: collidable filter info and motion type. The filter info is at the same offset in a phantom (hkpWorldObject).
+    inline constexpr std::uintptr_t k_RigidBodyFilterInfoOffset{ 0x4C };
+    inline constexpr std::uintptr_t k_RigidBodyMotionTypeOffset{ 0x160 };
+
+    // RVA of the u64 flags of the collision test of projectiles (DAT_1828ffcf0 in Ghidra, read by FUN_1804f4e88).
+    inline constexpr std::uintptr_t k_CollisionTestFlagsRva{ 0x28FFCF0 };
+
+
+    // Fields of the hkpGroupFilter info: 5 bits each, the system group in the high half.
+    inline constexpr std::uint32_t k_FilterFieldMask{ 0x1F };
+    inline constexpr std::uint32_t k_SubsystemShift{ 5 };
+    inline constexpr std::uint32_t k_IgnoredSubsystemShift{ 10 };
+    inline constexpr std::uint32_t k_SystemGroupShift{ 16 };
 }

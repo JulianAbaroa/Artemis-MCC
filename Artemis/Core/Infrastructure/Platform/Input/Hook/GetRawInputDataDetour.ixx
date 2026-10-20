@@ -56,6 +56,6 @@ export namespace Platform::Input::Hook
         std::atomic<bool> m_IsHookInstalled{ false };
 
         static auto WINAPI HookedGetRawInputData(HRAWINPUT hRawInput,
-            UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader) -> UINT;
+            UINT command, LPVOID data, PUINT dataSize, UINT headerSize) -> UINT;
     };
 }

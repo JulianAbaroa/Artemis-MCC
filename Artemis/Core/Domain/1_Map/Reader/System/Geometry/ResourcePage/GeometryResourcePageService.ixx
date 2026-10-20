@@ -16,7 +16,7 @@ export namespace Map::Reader::System
     {
     private:
         using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
-        using TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+        using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
         using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
 
         using LogsService = Service::Logs::System::LogsService;
@@ -42,7 +42,7 @@ export namespace Map::Reader::System
         // param zone: Zone tag that lists the resources.
         // param play: Play tag that lists the segments and pages.
         // return: The bytes of the resource, or empty if an index is out of range or the page cannot be read.
-        auto Read(std::uint32_t datum, const TagResourcesObject** outEntry,
+        auto Read(std::uint32_t datum, const Zone_TagResourcesObject** outEntry,
             const ZoneObject* zone, const PlayObject* play) const
             -> std::vector<std::uint8_t>;
 

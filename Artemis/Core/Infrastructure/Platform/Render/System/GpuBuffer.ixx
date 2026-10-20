@@ -11,12 +11,12 @@ import std;
 
 namespace
 {
-    using LogsService = Service::Logs::System::LogsService;
+    using Service::Logs::System::LogsService;
 
-    using Vertex = Platform::Render::Type::Vertex;
+    using Platform::Render::Type::Vertex;
 }
 
-export namespace Platform::Render::System::GpuBuffer
+export namespace Platform::Render::System
 {
     // Creates a dynamic vertex buffer for vertexCapacity vertices, replacing the previous one.
     // param capacity: Receives the new capacity, 0 if it fails.

@@ -19,8 +19,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Magazine>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("RoundsRecharged", &Magazine::RoundsRecharged),
             MakeField("RoundsTotalInitial", &Magazine::RoundsTotalInitial),
             MakeField("RoundsTotalMaximum", &Magazine::RoundsTotalMaximum),
@@ -32,8 +31,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Trigger>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Behavior", &Trigger::Behavior),
             MakeField("PrimaryAction", &Trigger::PrimaryAction),
             MakeField("SecondaryAction", &Trigger::SecondaryAction),
@@ -50,8 +48,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Barrel>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("RoundsPerSecondMin", &Barrel::RoundsPerSecondMin),
             MakeField("RoundsPerSecondMax", &Barrel::RoundsPerSecondMax),
             MakeField("MagazineIndex", &Barrel::MagazineIndex),
@@ -67,8 +64,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Weap>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Base", &Weap::Base),
             MakeField("AutoaimRange", &Weap::AutoaimRange),
             MakeField("WeaponType", &Weap::WeaponType),

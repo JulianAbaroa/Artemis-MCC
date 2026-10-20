@@ -3,14 +3,14 @@ import :Geometry.ResourcePage;
 
 namespace
 {
-    using SegmentsEntry = Map::Tag::Type::Play::Structure::Play_SegmentsEntry;
-    using RawPagesEntry = Map::Tag::Type::Play::Structure::Play_RawPagesEntry;
+    using Map::Tag::Type::Play::Structure::Play_SegmentsEntry;
+    using Map::Tag::Type::Play::Structure::Play_RawPagesEntry;
 }
 
 namespace Map::Reader::System
 {
     auto GeometryResourcePageService::Read(std::uint32_t datum,
-        const TagResourcesObject** outEntry, const ZoneObject* zone,
+        const Zone_TagResourcesObject** outEntry, const ZoneObject* zone,
         const PlayObject* play) const -> std::vector<std::uint8_t>
     {
         int resourceIdx = (int)(datum & 0xFFFF);
@@ -19,7 +19,7 @@ namespace Map::Reader::System
             return {};
         }
 
-        const TagResourcesObject& entry = zone->TagResources[resourceIdx];
+        const Zone_TagResourcesObject& entry = zone->TagResources[resourceIdx];
         if (outEntry) *outEntry = &entry;
 
         int segmentIdx = (int)entry.PlaySegmentIndex;
@@ -28,7 +28,7 @@ namespace Map::Reader::System
             return {};
         }
 
-        const SegmentsEntry& segment = play->Segments[segmentIdx];
+        const Play_SegmentsEntry& segment = play->Segments[segmentIdx];
 
         int pageIdx = (int)segment.PrimaryPageIndex;
         std::int32_t segmentOffset = segment.PrimarySegmentOffset;
@@ -44,7 +44,7 @@ namespace Map::Reader::System
             return {};
         }
 
-        const RawPagesEntry* page = &play->RawPages[pageIdx];
+        const Play_RawPagesEntry* page = &play->RawPages[pageIdx];
 
         if (page->BlockOffset == 0xFFFFFFFFu ||
             page->CompressedBlockSize == 0)

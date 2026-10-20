@@ -38,7 +38,7 @@ namespace Map::Builder::System
 
         for (std::int32_t i = 0; i < tagCount; ++i)
         {
-            const TagTable::Entry& entry = m_TagIndexStore.GetTag(i);
+            const TagTable::TagTableEntry& entry = m_TagIndexStore.GetTag(i);
             if (entry.TagGroupIndex < 0) continue;
 
             const std::uint32_t magic = m_TagIndexStore.GetGroupMagic(entry.TagGroupIndex);
@@ -48,7 +48,7 @@ namespace Map::Builder::System
 
             std::size_t slot{};
             m_TagCatalog.ForEach([&]<typename TStore>(TStore& store) {
-                using TObject = typename TStore::ObjectType;
+                using TObject = typename std::remove_cvref_t<decltype(std::declval<TStore&>().All())>::mapped_type;
                 using Descriptor = Map::Reader::System::GroupDescriptor<TObject>;
 
                 if (magic == Descriptor::Magic && !store.Contains(tagName))

@@ -6,6 +6,7 @@ module Viewer.Hud.System;
 import :Collidables;
 
 import Environment.Collidable.Type;
+import Gui.Style.Type;
 import Gui.Widget.System;
 import std;
 
@@ -14,10 +15,11 @@ namespace
     using Environment::Collidable::Type::Collidable;
     using Environment::Collidable::Type::RegionDiagnostic;
 
-    using PanelGuiService = Gui::Widget::System::PanelGuiService;
+    using Gui::Widget::System::PanelGuiService;
+
+    using Gui::Style::Type::k_BytesPerRow;
 
     constexpr ImVec4 k_AlertColor{ 1.0f, 0.4f, 0.4f, 1.0f };
-    constexpr std::size_t k_BytesPerRow{ 16 };
 
     // Formats a permutation or state index, or a dash when it is missing.
     auto FormatIndex(int value) -> std::string

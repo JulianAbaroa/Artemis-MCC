@@ -15,7 +15,7 @@ import std;
 
 export namespace Environment::Entities::System
 {
-    // Builds the Entities table: one uniform row per live object (Ignore/Semantizacion/05, section 9).
+    // Builds the Entities table: one uniform row per live object (D19).
     // note: Adds to the classification the state and the capabilities that change with the object: Lifecycle, IsDynamic, IsPickable
     // and IsDestructible. The lifecycle comes from the VitalityDetails of the same tick (D87).
     // note: The team of a biped comes from its player in the player table, not from its multiplayer block (D94).
@@ -26,8 +26,8 @@ export namespace Environment::Entities::System
 
         using LogsService = Service::Logs::System::LogsService;
 
-        using AliveObject = Tables::Object::Type::Alive::Object;
-        using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
         using PlayerTableStore = Tables::Player::State::PlayerTableStore;

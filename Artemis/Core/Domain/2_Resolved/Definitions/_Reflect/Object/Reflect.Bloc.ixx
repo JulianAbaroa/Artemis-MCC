@@ -16,8 +16,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Bloc>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Base", &Bloc::Base),
         };
     };

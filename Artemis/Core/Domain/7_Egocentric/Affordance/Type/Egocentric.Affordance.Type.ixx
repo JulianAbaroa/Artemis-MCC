@@ -1,18 +1,21 @@
 export module Egocentric.Affordance.Type;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import std;
 
 namespace
 {
-    using Vec3 = Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec3;
     using Common::Semantic::Type::Function;
+
+    using Common::Engine::Type::k_NoHandle;
 }
 
 export namespace Egocentric::Affordance::Type
 {
-    enum class Behavior : std::uint8_t
+    enum class AffordanceBehavior : std::uint8_t
     {
         None,
         Pickup,
@@ -21,7 +24,7 @@ export namespace Egocentric::Affordance::Type
         Interact,
     };
 
-    enum class Activation : std::uint8_t
+    enum class AffordanceActivation : std::uint8_t
     {
         None,
         KeyPress,
@@ -30,12 +33,12 @@ export namespace Egocentric::Affordance::Type
 
     struct SeatStatus
     {
-        std::string SeatName;
+        std::string SeatName{};
 
         bool IsHijackerSlot = false;
         bool IsOccupied = false;
 
-        std::uint32_t OccupyingBipedHandle = 0xFFFFFFFF;
+        std::uint32_t OccupyingBipedHandle = k_NoHandle;
 
         // TODO: resolve from ModeGeometry markers when available.
         Vec3 SeatWorldPosition{};
@@ -45,7 +48,7 @@ export namespace Egocentric::Affordance::Type
 
     struct Affordance
     {
-        std::uint32_t Handle = 0xFFFFFFFF;
+        std::uint32_t Handle = k_NoHandle;
         ::Function Function{ ::Function::Unknown };
 
         // Value of the subtype enum of the function (Subtype::<Function>). 0 is None.
@@ -56,10 +59,16 @@ export namespace Egocentric::Affordance::Type
         float DistanceToPlayer = 0.0f;
         bool IsEngineSelected = false;
 
-        std::vector<Behavior> Behaviors;
-        Activation Activation = Activation::None;
+        std::vector<AffordanceBehavior> Behaviors{};
+        AffordanceActivation Activation = AffordanceActivation::None;
 
-        std::vector<SeatStatus> Seats;
-        std::vector<uint32_t> ChildHandles;
+        std::vector<SeatStatus> Seats{};
+        std::vector<uint32_t> ChildHandles{};
+    };
+
+    // Affordances of a view.
+    struct Affordances : std::vector<Affordance>
+    {
+        using vector::vector;
     };
 }

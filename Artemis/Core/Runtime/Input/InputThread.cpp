@@ -1,6 +1,5 @@
 module Runtime.Thread;
 import :Input;
-
 import std;
 
 namespace Runtime::Thread

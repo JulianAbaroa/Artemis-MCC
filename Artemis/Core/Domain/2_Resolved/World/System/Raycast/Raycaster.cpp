@@ -12,7 +12,8 @@ import std;
 
 namespace
 {
-    constexpr float k_Max{ (std::numeric_limits<float>::max)() };
+    using Common::Math::Type::k_FloatMax;
+    using Resolved::World::Type::Raycast::k_BoxPadding;
 
     // Triangles a leaf holds before it is split.
     constexpr int k_LeafSize{ 4 };
@@ -25,9 +26,6 @@ namespace
 
     // Bins used to choose where a node splits.
     constexpr int k_Bins{ 16 };
-
-    // Padding of every box, so rays that graze a triangle edge are not lost to rounding.
-    constexpr float k_BoxPadding{ 1.0e-3f };
 
     // Inverse of a direction component, finite when the component is zero.
     auto SafeInverse(float value) -> float
@@ -48,8 +46,8 @@ namespace
     // Box that grows to hold the points and boxes it is given.
     struct Bounds
     {
-        std::array<float, 3> Min{ k_Max, k_Max, k_Max };
-        std::array<float, 3> Max{ -k_Max, -k_Max, -k_Max };
+        std::array<float, 3> Min{ k_FloatMax, k_FloatMax, k_FloatMax };
+        std::array<float, 3> Max{ -k_FloatMax, -k_FloatMax, -k_FloatMax };
 
         auto Include(const std::array<float, 3>& point) -> void
         {
@@ -157,7 +155,7 @@ namespace
         }
 
         int bestSplit{ 0 };
-        float bestCost{ k_Max };
+        float bestCost{ k_FloatMax };
         for (int i = 0; i < k_Bins - 1; ++i)
         {
             const float cost = leftCost[i] + rightCost[i + 1];
@@ -225,7 +223,7 @@ namespace Resolved::World::System
         std::vector<const Sbsp*> sbsps{};
 
         // The store is unordered, so the list is sorted for a deterministic hierarchy.
-        for (const auto& [tagName, sbsp] : definitionsStore.Sbsp.All())
+        for (const auto& [tagName, sbsp] : definitionsStore.m_Sbsp.All())
         {
             sbsps.push_back(&sbsp);
         }
@@ -239,7 +237,6 @@ namespace Resolved::World::System
 
     auto Raycaster::BuildBvh(const std::vector<const Sbsp*>& sbsps) -> void
     {
-
         std::vector<Prim> prims{};
         for (const Sbsp* sbsp : sbsps)
         {
@@ -276,7 +273,6 @@ namespace Resolved::World::System
         {
             m_Triangles.push_back(prim.Tri);
         }
-
     }
 
     auto Raycaster::Cast(const Vec3& origin, const Vec3& direction, float maxDistance) const -> Hit

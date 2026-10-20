@@ -1,6 +1,5 @@
 module Platform.Lifecycle.System;
 import :Lifecycle;
-
 import std;
 
 namespace Platform::Lifecycle::System

@@ -14,7 +14,7 @@ export namespace Resolved::World::System
         using Coll = Resolved::Definitions::Type::Coll::Coll;
         using Mode = Resolved::Definitions::Type::Mode::Mode;
         using ModelLink = Resolved::World::Type::ModelLink::ModelLink;
-        using Anchor = Resolved::World::Type::ModelLink::Anchor;
+        using ModelLinkAnchor = Resolved::World::Type::ModelLink::ModelLinkAnchor;
 
     public:
         ModelLinkBuilder() = default;
@@ -32,13 +32,13 @@ export namespace Resolved::World::System
         auto BuildSectionToRegion(const Hlmt& hlmt, const Coll* coll) const -> std::vector<std::int32_t>;
 
         // Places each model target on the marker it names.
-        auto BuildTargets(const Hlmt& hlmt, const Mode* mode) const -> std::vector<Anchor>;
+        auto BuildTargets(const Hlmt& hlmt, const Mode* mode) const -> std::vector<ModelLinkAnchor>;
 
         // Centers each collision region on the largest node of its default permutation.
         auto BuildRegionAnchors(const Coll* coll,
-            const std::vector<std::int32_t>& nodeMap) const -> std::vector<Anchor>;
+            const std::vector<std::int32_t>& nodeMap) const -> std::vector<ModelLinkAnchor>;
 
         // Centers the anchor on the bounds of the render model.
-        auto BuildObjectCenter(const Mode* mode) const -> Anchor;
+        auto BuildObjectCenter(const Mode* mode) const -> ModelLinkAnchor;
     };
 }

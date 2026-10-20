@@ -45,7 +45,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         // -> Sddt_SoftCeilingMoppCodes_MoppDataEntry[]
-        MapStructure::Tag::Block   MoppData;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   MoppData;  // 0x50  tagblock.
         std::int8_t  MoppBuildType;  // 0x5C  int8.
         std::int8_t  Unknown_8;  // 0x5D  int8.
         std::int16_t Unknown_9;  // 0x5E  int16.
@@ -72,7 +72,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint16_t Type;  // 0x4  enum16. [Acceleration=0x0, Soft Kill=0x1, Slip Surface=0x2]
         std::int16_t Unknown;  // 0x6  int16.
         // -> Sddt_SoftCeilings_SoftCeilingTrianglesEntry[]
-        MapStructure::Tag::Block   SoftCeilingTriangles;  // 0x8  tagblock.
+        MapStructure::Tag::TagBlock   SoftCeilingTriangles;  // 0x8  tagblock.
     };
     static_assert(sizeof(Sddt_SoftCeilingsEntry) == 0x14, "Sddt_SoftCeilingsEntry size mismatch");
 
@@ -105,7 +105,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         // -> Sddt_WaterMoppCodes_MoppDataEntry[]
-        MapStructure::Tag::Block   MoppData;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   MoppData;  // 0x50  tagblock.
         std::int8_t  MoppBuildType;  // 0x5C  int8.
         std::int8_t  Unknown_8;  // 0x5D  int8.
         std::int16_t Unknown_9;  // 0x5E  int16.
@@ -145,9 +145,9 @@ export namespace Map::Tag::Type::Sddt::Structure
         MapStructure::Primitive::ColorRGBA FogColor;  // 0x10  colorf.
         float        FogMurkiness;  // 0x20  float32.
         // -> Sddt_WaterInstances_WaterPlanesEntry[]
-        MapStructure::Tag::Block   WaterPlanes;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   WaterPlanes;  // 0x24  tagblock.
         // -> Sddt_WaterInstances_WaterDebugTrianglesEntry[]
-        MapStructure::Tag::Block   WaterDebugTriangles;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   WaterDebugTriangles;  // 0x30  tagblock.
         MapStructure::Primitive::RangeF BoundsX;  // 0x3C  rangef.
         MapStructure::Primitive::RangeF BoundsY;  // 0x44  rangef.
         MapStructure::Primitive::RangeF BoundsZ;  // 0x4C  rangef.
@@ -173,7 +173,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_PlanarFog_TrianglesEntry
     {
         // -> Sddt_PlanarFog_Triangles_PlanesEntry[]
-        MapStructure::Tag::Block   Planes;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Planes;  // 0x0  tagblock.
     };
     static_assert(sizeof(Sddt_PlanarFog_TrianglesEntry) == 0xC, "Sddt_PlanarFog_TrianglesEntry size mismatch");
 
@@ -181,11 +181,11 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_PlanarFogEntry
     {
         std::uint32_t Name;  // 0x0  stringid.
-        MapStructure::Tag::Reference AppearanceSettings;  // 0x4  tagref.
+        MapStructure::Tag::TagReference AppearanceSettings;  // 0x4  tagref.
         // -> Sddt_PlanarFog_VerticesEntry[]
-        MapStructure::Tag::Block   Vertices;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   Vertices;  // 0x14  tagblock.
         // -> Sddt_PlanarFog_TrianglesEntry[]
-        MapStructure::Tag::Block   Triangles;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Triangles;  // 0x20  tagblock.
         float        Depth;  // 0x2C  float32.
         MapStructure::Primitive::Vec3 Normal;  // 0x30  vector3.
     };
@@ -220,7 +220,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         // -> Sddt_MoppCodes_MoppDataEntry[]
-        MapStructure::Tag::Block   MoppData;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   MoppData;  // 0x50  tagblock.
         std::int8_t  MoppBuildType;  // 0x5C  int8.
         std::int8_t  Unknown_8;  // 0x5D  int8.
         std::int16_t Unknown_9;  // 0x5E  int16.
@@ -268,7 +268,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t DefinitionIndex;  // 0x2  int16.
         // -> Sddt_Meshes_InstanceBuckets_InstancesEntry[]
-        MapStructure::Tag::Block   Instances;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Instances;  // 0x4  tagblock.
     };
     static_assert(sizeof(Sddt_Meshes_InstanceBucketsEntry) == 0x10, "Sddt_Meshes_InstanceBucketsEntry size mismatch");
 
@@ -283,9 +283,9 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_MeshesEntry
     {
         // -> Sddt_Meshes_PartsEntry[]
-        MapStructure::Tag::Block   Parts;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   Parts;  // 0x0  tagblock.
         // -> Sddt_Meshes_SubpartsEntry[]
-        MapStructure::Tag::Block   Subparts;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Subparts;  // 0xC  tagblock.
         std::int16_t VertexBufferIndex1;  // 0x18  int16.
         std::int16_t VertexBufferIndex2;  // 0x1A  int16.
         std::int16_t VertexBufferIndex3;  // 0x1C  int16.
@@ -304,9 +304,9 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint8_t IndexBufferType;  // 0x32  enum8. [Point List=0x0, Line List=0x1, Line Strip=0x2, Triangle List=0x3, Triangle Fan=0x4, Triangle Strip=0x5]
         std::int8_t  Unknown;  // 0x33  int8.
         // -> Sddt_Meshes_InstanceBucketsEntry[]
-        MapStructure::Tag::Block   InstanceBuckets;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   InstanceBuckets;  // 0x34  tagblock.
         // -> Sddt_Meshes_WaterIndicesStartEntry[]
-        MapStructure::Tag::Block   WaterIndicesStart;  // 0x40  tagblock.
+        MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
         MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
     };
@@ -407,9 +407,9 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_PerMeshTemporary_RawWaterDataEntry
     {
         // -> Sddt_PerMeshTemporary_RawWaterData_RawWaterIndicesEntry[]
-        MapStructure::Tag::Block   RawWaterIndices;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RawWaterIndices;  // 0x0  tagblock.
         // -> Sddt_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry[]
-        MapStructure::Tag::Block   RawWaterVertices;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   RawWaterVertices;  // 0xC  tagblock.
     };
     static_assert(sizeof(Sddt_PerMeshTemporary_RawWaterDataEntry) == 0x18, "Sddt_PerMeshTemporary_RawWaterDataEntry size mismatch");
 
@@ -439,17 +439,17 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_PerMeshTemporaryEntry
     {
         // -> Sddt_PerMeshTemporary_RawVerticesEntry[]
-        MapStructure::Tag::Block   RawVertices;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   RawVertices;  // 0x0  tagblock.
         // -> Sddt_PerMeshTemporary_RawIndicesEntry[]
-        MapStructure::Tag::Block   RawIndices;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   RawIndices;  // 0xC  tagblock.
         // -> Sddt_PerMeshTemporary_RawIndices32Entry[]
-        MapStructure::Tag::Block   RawIndices32;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   RawIndices32;  // 0x18  tagblock.
         // -> Sddt_PerMeshTemporary_RawWaterDataEntry[]
-        MapStructure::Tag::Block   RawWaterData;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   RawWaterData;  // 0x24  tagblock.
         // -> Sddt_PerMeshTemporary_RawImposterDataEntry[]
-        MapStructure::Tag::Block   RawImposterData;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   RawImposterData;  // 0x30  tagblock.
         // -> Sddt_PerMeshTemporary_RawInstanceImposterVertsEntry[]
-        MapStructure::Tag::Block   RawInstanceImposterVerts;  // 0x3C  tagblock.
+        MapStructure::Tag::TagBlock   RawInstanceImposterVerts;  // 0x3C  tagblock.
         std::int32_t PerVertexLightingVertexSize;  // 0x48  int32.
         std::int16_t ParameterizedTextureWidth;  // 0x4C  int16.
         std::int16_t ParameterizedTextureHeight;  // 0x4E  int16.
@@ -468,7 +468,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_PerMeshNodeMapEntry
     {
         // -> Sddt_PerMeshNodeMap_NodeMapEntry[]
-        MapStructure::Tag::Block   NodeMap;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   NodeMap;  // 0x0  tagblock.
     };
     static_assert(sizeof(Sddt_PerMeshNodeMapEntry) == 0xC, "Sddt_PerMeshNodeMapEntry size mismatch");
 
@@ -493,7 +493,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_PerMeshSubpartVisibilityEntry
     {
         // -> Sddt_PerMeshSubpartVisibility_BoundingSphereEntry[]
-        MapStructure::Tag::Block   BoundingSphere;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   BoundingSphere;  // 0x0  tagblock.
     };
     static_assert(sizeof(Sddt_PerMeshSubpartVisibilityEntry) == 0xC, "Sddt_PerMeshSubpartVisibilityEntry size mismatch");
 
@@ -652,7 +652,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     // Entry size: 0x2C
     struct Sddt_MaterialsEntry
     {
-        MapStructure::Tag::Reference RenderMethod;  // 0x0  tagref.
+        MapStructure::Tag::TagReference RenderMethod;  // 0x0  tagref.
         std::int32_t ImportedMaterialIndex;  // 0x10  int32.
         float        LightmapResolutionScale;  // 0x14  float32.
         std::int32_t LightmapAdditiveTransparencyColor;  // 0x18  int32.
@@ -694,7 +694,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         // -> Sddt_RainBlockerMoppCodes_MoppDataEntry[]
-        MapStructure::Tag::Block   MoppData;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   MoppData;  // 0x50  tagblock.
         std::int8_t  MoppBuildType;  // 0x5C  int8.
         std::int8_t  Unknown_8;  // 0x5D  int8.
         std::int16_t Unknown_9;  // 0x5E  int16.
@@ -718,37 +718,37 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint32_t StructureImporterVersion_2;  // 0x2C  uint32.
         std::uint32_t ImporterVersion;  // 0x30  uint32.
         // -> Sddt_SoftCeilingMoppCodesEntry[]
-        MapStructure::Tag::Block   SoftCeilingMoppCodes;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   SoftCeilingMoppCodes;  // 0x34  tagblock.
         // -> Sddt_SoftCeilingsEntry[]
-        MapStructure::Tag::Block   SoftCeilings;  // 0x40  tagblock.
+        MapStructure::Tag::TagBlock   SoftCeilings;  // 0x40  tagblock.
         // -> Sddt_WaterMoppCodesEntry[]
-        MapStructure::Tag::Block   WaterMoppCodes;  // 0x4C  tagblock.
+        MapStructure::Tag::TagBlock   WaterMoppCodes;  // 0x4C  tagblock.
         // -> Sddt_WaterGroupsEntry[]
-        MapStructure::Tag::Block   WaterGroups;  // 0x58  tagblock.
+        MapStructure::Tag::TagBlock   WaterGroups;  // 0x58  tagblock.
         // -> Sddt_WaterInstancesEntry[]
-        MapStructure::Tag::Block   WaterInstances;  // 0x64  tagblock.
+        MapStructure::Tag::TagBlock   WaterInstances;  // 0x64  tagblock.
         // -> Sddt_PlanarFogEntry[]
-        MapStructure::Tag::Block   PlanarFog;  // 0x70  tagblock.
+        MapStructure::Tag::TagBlock   PlanarFog;  // 0x70  tagblock.
         // -> Sddt_MoppCodesEntry[]
-        MapStructure::Tag::Block   MoppCodes;  // 0x7C  tagblock.
+        MapStructure::Tag::TagBlock   MoppCodes;  // 0x7C  tagblock.
         std::uint32_t Flags;  // 0x88  flags32. [Processed=0, Available=1, Has Valid Budgets (Really)=2, Manual Resource Creation=3, Keep Raw Geometry=4, Don't Use Compressed Vertex Positions=5]
         // -> Sddt_MeshesEntry[]
-        MapStructure::Tag::Block   Meshes;  // 0x8C  tagblock.
+        MapStructure::Tag::TagBlock   Meshes;  // 0x8C  tagblock.
         // -> Sddt_CompressionInfoEntry[]
-        MapStructure::Tag::Block   CompressionInfo;  // 0x98  tagblock.
+        MapStructure::Tag::TagBlock   CompressionInfo;  // 0x98  tagblock.
         // -> Sddt_PartSortingPositionEntry[]
-        MapStructure::Tag::Block   PartSortingPosition;  // 0xA4  tagblock.
+        MapStructure::Tag::TagBlock   PartSortingPosition;  // 0xA4  tagblock.
         // -> Sddt_UserDataEntry[]
-        MapStructure::Tag::Block   UserData;  // 0xB0  tagblock.
+        MapStructure::Tag::TagBlock   UserData;  // 0xB0  tagblock.
         // -> Sddt_PerMeshTemporaryEntry[]
-        MapStructure::Tag::Block   PerMeshTemporary;  // 0xBC  tagblock.
+        MapStructure::Tag::TagBlock   PerMeshTemporary;  // 0xBC  tagblock.
         std::uint8_t  _pad_0xC8[0x4];  // undefined.
         std::uint8_t  _pad_0xCC[0x4];  // undefined.
         std::uint8_t  _pad_0xD0[0x4];  // undefined.
         // -> Sddt_PerMeshNodeMapEntry[]
-        MapStructure::Tag::Block   PerMeshNodeMap;  // 0xD4  tagblock.
+        MapStructure::Tag::TagBlock   PerMeshNodeMap;  // 0xD4  tagblock.
         // -> Sddt_PerMeshSubpartVisibilityEntry[]
-        MapStructure::Tag::Block   PerMeshSubpartVisibility;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   PerMeshSubpartVisibility;  // 0xE0  tagblock.
         std::uint32_t BlockHere1;  // 0xEC  uint32.
         std::uint32_t BlockHere1_2;  // 0xF0  uint32.
         std::uint32_t BlockHere1_3;  // 0xF4  uint32.
@@ -756,21 +756,21 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint32_t BlockHere2_2;  // 0xFC  uint32.
         std::uint32_t BlockHere2_3;  // 0x100  uint32.
         // -> Sddt_PerInstanceLightmapTexcoordsEntry[]
-        MapStructure::Tag::Block   PerInstanceLightmapTexcoords;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   PerInstanceLightmapTexcoords;  // 0x104  tagblock.
         // -> Sddt_WaterBoundingBoxEntry[]
-        MapStructure::Tag::Block   WaterBoundingBox;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   WaterBoundingBox;  // 0x110  tagblock.
         std::uint32_t ZoneAssetDatum;  // 0x11C  datum.
         std::int32_t UselessPadding;  // 0x120  int32.
         // -> Sddt_ConstantBufferInteropEntry[]
-        MapStructure::Tag::Block   ConstantBufferInterop;  // 0x124  tagblock.
+        MapStructure::Tag::TagBlock   ConstantBufferInterop;  // 0x124  tagblock.
         // -> Sddt_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_4;  // 0x130  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_4;  // 0x130  tagblock.
         // -> Sddt_InstancedGeometryInstancesEntry[]
-        MapStructure::Tag::Block   InstancedGeometryInstances;  // 0x13C  tagblock.
+        MapStructure::Tag::TagBlock   InstancedGeometryInstances;  // 0x13C  tagblock.
         // -> Sddt_MaterialsEntry[]
-        MapStructure::Tag::Block   Materials;  // 0x148  tagblock.
+        MapStructure::Tag::TagBlock   Materials;  // 0x148  tagblock.
         // -> Sddt_RainBlockerMoppCodesEntry[]
-        MapStructure::Tag::Block   RainBlockerMoppCodes;  // 0x154  tagblock.
+        MapStructure::Tag::TagBlock   RainBlockerMoppCodes;  // 0x154  tagblock.
     };
     static_assert(sizeof(SddtData) == 0x160, "SddtData size mismatch");
 

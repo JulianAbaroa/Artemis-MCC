@@ -18,8 +18,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Shape>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Type", &Shape::Type),
             MakeField("Index", &Shape::Index),
             MakeField("Name", &Shape::Name),
@@ -34,8 +33,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Material>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &Material::Name),
             MakeField("GlobalMaterialName", &Material::GlobalMaterialName),
             MakeField("Flags", &Material::Flags),
@@ -48,8 +46,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<RigidBody>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("NodeIndex", &RigidBody::NodeIndex),
             MakeField("RegionIndex", &RigidBody::RegionIndex),
             MakeField("PermutationIndex", &RigidBody::PermutationIndex),
@@ -68,8 +65,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<PhantomType>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Flags", &PhantomType::Flags),
             MakeField("MinimumSize", &PhantomType::MinimumSize),
             MakeField("MaximumSize", &PhantomType::MaximumSize),
@@ -94,8 +90,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Phmo>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Phmo::TagName),
             MakeField("RigidBodies", &Phmo::RigidBodies),
             MakeField("Materials", &Phmo::Materials),

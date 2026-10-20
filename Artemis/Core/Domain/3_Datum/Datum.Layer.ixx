@@ -40,7 +40,7 @@ export namespace Datum
         auto operator=(const Layer&) -> Layer& = delete;
 
         // --- State ---
-        DatumStore m_DatumStore;
+        DatumStore m_DatumStore{};
 
         // --- System ---
         DatumService m_DatumService;

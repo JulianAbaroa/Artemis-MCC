@@ -6,8 +6,11 @@ module;
 
 module UI.Capture.System;
 
+import Common.Engine.Type;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
+import Datum.Object.Type;
+import Gui.Style.Type;
 import std;
 
 namespace
@@ -52,20 +55,44 @@ namespace
     namespace MachOffset = Datum::Object::Type::Mach::Offset;
     namespace CtrlOffset = Datum::Object::Type::Ctrl::Offset;
 
+    using Datum::Object::Type::Constant::k_ThreadContextGameModeOffset;
+    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
+    using Datum::Object::Type::Constant::k_ThreadContextMapVariantOffset;
+    using Datum::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
+    using Datum::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
+    using UI::Capture::Type::k_HavokWorldRva;
+    using UI::Capture::Type::k_WorldFilterOffset;
+    using UI::Capture::Type::k_FilterLookupOffset;
+    using UI::Capture::Type::k_HavokComponentArrayRva;
+    using UI::Capture::Type::k_DataArrayElementsOffset;
+    using UI::Capture::Type::k_HavokComponentSize;
+    using UI::Capture::Type::k_ComponentFlagsOffset;
+    using UI::Capture::Type::k_ComponentOwnerOffset;
+    using UI::Capture::Type::k_ComponentSizeOffset;
+    using UI::Capture::Type::k_ComponentBodiesOffset;
+    using UI::Capture::Type::k_ComponentBodyCountOffset;
+    using UI::Capture::Type::k_BodyEntrySize;
+    using UI::Capture::Type::k_BodyEntryRigidBodyOffset;
+    using UI::Capture::Type::k_ComponentPhantomOffsets;
+    using UI::Capture::Type::k_RigidBodyFilterInfoOffset;
+    using UI::Capture::Type::k_RigidBodyMotionTypeOffset;
+    using UI::Capture::Type::k_CollisionTestFlagsRva;
+    using UI::Capture::Type::k_FilterFieldMask;
+    using UI::Capture::Type::k_SubsystemShift;
+    using UI::Capture::Type::k_IgnoredSubsystemShift;
+    using UI::Capture::Type::k_SystemGroupShift;
+    using Common::Engine::Type::k_NoHandle;
+    using Gui::Style::Type::k_BytesPerRow;
+    using Common::Engine::Type::k_HandleIndexMask;
+
     // Folder inside the storage folder that receives one file per capture session.
     constexpr std::string_view k_CaptureFolder{ "Captures" };
-
-    // Handle of an empty slot.
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
-
-    // Bytes per hex row of the session file.
-    constexpr std::size_t k_BytesPerRow{ 16 };
 
     // Rows the change table draws at most.
     constexpr int k_MaxChangeRows{ 2000 };
 
     // Engine globals copied with the engine option (A5), reached from the engine thread context.
-    // note: Fake handles keep each block apart in the analysis script. Pointer offsets from Ignore/Tareas/Transversal/Indice_Reverse.txt.
+    // note: Fake handles keep each block apart in the analysis script. Pointer offsets in DatumConstant.
     struct EngineBlock
     {
         const char* Name{ "" };
@@ -82,24 +109,22 @@ namespace
 
     constexpr std::array<EngineBlock, 5> k_EngineBlocks
     {{
-        { .Name = "context", .PointerOffset = 0x0, .IsIndirect = false, .InnerOffset = 0x0, .MaximumSize = 0x400 },
-        { .Name = "game", .PointerOffset = 0x48, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x1000 },
-        { .Name = "time", .PointerOffset = 0xA0, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x200 },
-        { .Name = "engine", .PointerOffset = 0x290, .IsIndirect = true, .InnerOffset = 0x0, .MaximumSize = 0x20000 },
-        { .Name = "players", .PointerOffset = 0x18, .IsIndirect = true, .InnerOffset = 0x50, .MaximumSize = 0x4900 },
+        { .Name = "context", .PointerOffset = 0, .IsIndirect = false, .InnerOffset = 0, .MaximumSize = 1024 },
+        { .Name = "game", .PointerOffset = k_ThreadContextGameModeOffset, .IsIndirect = true, .InnerOffset = 0, .MaximumSize = 4096 },
+        { .Name = "time", .PointerOffset = k_ThreadContextTimeGlobalsOffset, .IsIndirect = true, .InnerOffset = 0, .MaximumSize = 512 },
+        { .Name = "engine", .PointerOffset = k_ThreadContextMapVariantOffset, .IsIndirect = true, .InnerOffset = 0, .MaximumSize = 131072 },
+        { .Name = "players", .PointerOffset = k_ThreadContextTelemetryDataOffset, .IsIndirect = true,
+            .InnerOffset = k_TelemetryDataPlayerTableOffset, .MaximumSize = 18688 },
     }};
 
-    // Global of the thread context whose allocation is the game state (game globals).
-    constexpr std::uintptr_t k_GameStateAnchorOffset{ 0x48 };
-
     // Largest game state copied. The allocation is 64 MB but past ~10 MB it holds copies of the game state (A5).
-    constexpr std::size_t k_MaxGameStateSize{ 0xC00000 };
+    constexpr std::size_t k_MaxGameStateSize{ 12 * 1024 * 1024 };
 
     // First fake handle of the engine blocks.
     constexpr std::uint32_t k_EngineHandleBase{ 0xEEEE0000 };
 
     // Bytes read at once when copying an engine block.
-    constexpr std::size_t k_PageSize{ 0x1000 };
+    constexpr std::size_t k_PageSize{ 4096 };
 
     // Name of the range after the last component: the variable blocks of the datum.
     constexpr const char* k_BlocksName{ "blocks" };
@@ -107,52 +132,8 @@ namespace
     // Module whose globals hold the Havok world and the Havok component data array (A10).
     constexpr const wchar_t* k_GameModuleName{ L"haloreach.dll" };
 
-    // RVA of the hkpWorld pointer (DAT_184e2fe68 in Ghidra).
-    constexpr std::uintptr_t k_HavokWorldRva{ 0x4E2FE68 };
-
-    // Collision filter pointer inside the hkpWorld (FUN_18017d680, FUN_18012e500).
-    constexpr std::uintptr_t k_WorldFilterOffset{ 0xD0 };
-
-    // Layer table inside the hkpGroupFilter (FUN_180882080, its isCollisionEnabled).
-    constexpr std::uintptr_t k_FilterLookupOffset{ 0x4C };
-
-    // RVA of the pointer to the Havok component data array (DAT_180c519b8 in Ghidra).
-    constexpr std::uintptr_t k_HavokComponentArrayRva{ 0xC519B8 };
-
-    // Pointer to the first element inside a data array.
-    constexpr std::uintptr_t k_DataArrayElementsOffset{ 0x50 };
-
-    // Low half of a handle: the element index.
-    constexpr std::uint32_t k_HandleIndexMask{ 0xFFFF };
-
-    // Havok component layout (FUN_18012e1e8, FUN_18012e7cc, FUN_18017d680).
-    constexpr std::uintptr_t k_HavokComponentSize{ 0xC0 };
-    constexpr std::uintptr_t k_ComponentFlagsOffset{ 0x18 };
-    constexpr std::uintptr_t k_ComponentOwnerOffset{ 0x1C };
-    constexpr std::uintptr_t k_ComponentSizeOffset{ 0x22 };
-    constexpr std::uintptr_t k_ComponentBodiesOffset{ 0x30 };
-    constexpr std::uintptr_t k_ComponentBodyCountOffset{ 0x38 };
-    constexpr std::uintptr_t k_BodyEntrySize{ 0x50 };
-    constexpr std::uintptr_t k_BodyEntryRigidBodyOffset{ 0x40 };
-
-    // Phantom pointers of the component, removed from the world by FUN_18017fd78 and queried by FUN_180180c04.
-    constexpr std::array<std::uintptr_t, 2> k_ComponentPhantomOffsets{ 0xA8, 0xB0 };
-
-    // hkpRigidBody fields: collidable filter info and motion type. The filter info is at the same offset in a phantom (hkpWorldObject).
-    constexpr std::uintptr_t k_RigidBodyFilterInfoOffset{ 0x4C };
-    constexpr std::uintptr_t k_RigidBodyMotionTypeOffset{ 0x160 };
-
-    // RVA of the u64 flags of the collision test of projectiles (DAT_1828ffcf0 in Ghidra, read by FUN_1804f4e88).
-    constexpr std::uintptr_t k_CollisionTestFlagsRva{ 0x28FFCF0 };
-
     // Bodies read at most per component. A larger count means the component address is wrong.
     constexpr std::int32_t k_MaxHavokBodies{ 64 };
-
-    // Fields of the hkpGroupFilter info: 5 bits each, the system group in the high half.
-    constexpr std::uint32_t k_FilterFieldMask{ 0x1F };
-    constexpr std::uint32_t k_SubsystemShift{ 5 };
-    constexpr std::uint32_t k_IgnoredSubsystemShift{ 10 };
-    constexpr std::uint32_t k_SystemGroupShift{ 16 };
 
     constexpr ComponentRange k_Obje{ .Name = "obje", .Start = ObjeOffset::k_ComponentStart, .End = ObjeOffset::k_ComponentEnd };
     constexpr ComponentRange k_Anim{ .Name = "anim", .Start = AnimOffset::k_ComponentStart, .End = AnimOffset::k_ComponentEnd };
@@ -169,7 +150,7 @@ namespace
     constexpr ComponentRange k_Mach{ .Name = "mach", .Start = MachOffset::k_ComponentStart, .End = MachOffset::k_ComponentEnd };
     constexpr ComponentRange k_Ctrl{ .Name = "ctrl", .Start = CtrlOffset::k_ComponentStart, .End = CtrlOffset::k_ComponentEnd };
 
-    // Components of each object class, in datum order (Tareas/Transversal/CreateObject.txt).
+    // Components of each object class, in datum order (reverse notes of CreateObject).
     // note: Weapons, equipment and the classes below the unit have no animation component.
     constexpr std::array<ComponentRange, 4> k_BipedComponents{ k_Obje, k_Anim, k_Unit, k_Bipd };
     constexpr std::array<ComponentRange, 4> k_VehicleComponents{ k_Obje, k_Anim, k_Unit, k_Vehi };
@@ -404,15 +385,15 @@ namespace
 
         switch (kind)
         {
-        case ObjectKind::Biped: return modelOf(definitions.Bipd);
-        case ObjectKind::Vehicle: return modelOf(definitions.Vehi);
-        case ObjectKind::Weapon: return modelOf(definitions.Weap);
-        case ObjectKind::Equipment: return modelOf(definitions.Eqip);
-        case ObjectKind::Projectile: return modelOf(definitions.Proj);
-        case ObjectKind::Scenery: return modelOf(definitions.Scen);
-        case ObjectKind::Machine: return modelOf(definitions.Mach);
-        case ObjectKind::Control: return modelOf(definitions.Ctrl);
-        case ObjectKind::Crate: return modelOf(definitions.Bloc);
+        case ObjectKind::Biped: return modelOf(definitions.m_Bipd);
+        case ObjectKind::Vehicle: return modelOf(definitions.m_Vehi);
+        case ObjectKind::Weapon: return modelOf(definitions.m_Weap);
+        case ObjectKind::Equipment: return modelOf(definitions.m_Eqip);
+        case ObjectKind::Projectile: return modelOf(definitions.m_Proj);
+        case ObjectKind::Scenery: return modelOf(definitions.m_Scen);
+        case ObjectKind::Machine: return modelOf(definitions.m_Mach);
+        case ObjectKind::Control: return modelOf(definitions.m_Ctrl);
+        case ObjectKind::Crate: return modelOf(definitions.m_Bloc);
         default: return {};
         }
     }
@@ -752,7 +733,7 @@ namespace UI::Capture::System
     {
         if (threadContext == 0) return 0;
 
-        const auto anchor{ m_MemoryReaderService.Read<std::uintptr_t>(threadContext, k_GameStateAnchorOffset) };
+        const auto anchor{ m_MemoryReaderService.Read<std::uintptr_t>(threadContext, k_ThreadContextGameModeOffset) };
         if (anchor == 0) return 0;
 
         MEMORY_BASIC_INFORMATION info{};
@@ -839,22 +820,22 @@ namespace UI::Capture::System
 
     auto CaptureUIService::FindHlmt(ObjectKind kind, const std::string& tagName) const -> const Hlmt*
     {
-        if (!m_DefinitionsStore.Hlmt.IsFrozen()) return nullptr;
+        if (!m_DefinitionsStore.m_Hlmt.IsFrozen()) return nullptr;
 
         const std::string modelTagName{ ModelTagNameOf(m_DefinitionsStore, kind, tagName) };
         if (modelTagName.empty()) return nullptr;
 
-        return m_DefinitionsStore.Hlmt.Get(modelTagName);
+        return m_DefinitionsStore.m_Hlmt.Get(modelTagName);
     }
 
     auto CaptureUIService::FindPhmo(ObjectKind kind, const std::string& tagName) const -> const Phmo*
     {
-        if (!m_DefinitionsStore.Phmo.IsFrozen()) return nullptr;
+        if (!m_DefinitionsStore.m_Phmo.IsFrozen()) return nullptr;
 
         const Hlmt* hlmt{ this->FindHlmt(kind, tagName) };
         if (!hlmt || hlmt->PhysicsModelTagName.empty()) return nullptr;
 
-        return m_DefinitionsStore.Phmo.Get(hlmt->PhysicsModelTagName);
+        return m_DefinitionsStore.m_Phmo.Get(hlmt->PhysicsModelTagName);
     }
 
     auto CaptureUIService::OpenSessionFile() -> std::optional<std::ofstream>

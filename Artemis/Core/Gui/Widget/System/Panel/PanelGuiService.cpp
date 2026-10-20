@@ -6,13 +6,15 @@ module Gui.Widget.System;
 import :Panel;
 
 import Gui.Format.System;
+import Gui.Style.Type;
 import std;
 
 namespace
 {
-    using HexFormater = Gui::Format::System::HexFormater;
+    using Gui::Format::System::HexFormater;
 
-    const ImVec4 k_SectionColor{ 0.8f, 0.8f, 0.8f, 1.0f };
+    using Gui::Style::Type::k_SectionColor;
+
     const ImVec4 k_FalseColor{ 0.4f, 0.4f, 0.4f, 1.0f };
 }
 

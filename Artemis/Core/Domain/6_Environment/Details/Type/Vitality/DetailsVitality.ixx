@@ -29,5 +29,8 @@ export namespace Environment::Details::Type
         std::shared_ptr<const ::Vitality> Layout{};
     };
 
-    using VitalityDetails = std::unordered_map<std::uint32_t, VitalityDetail>;
+    struct VitalityDetails : std::unordered_map<std::uint32_t, VitalityDetail>
+    {
+        using unordered_map::unordered_map;
+    };
 }

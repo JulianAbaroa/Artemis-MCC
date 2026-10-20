@@ -8,12 +8,12 @@ export namespace Gui::Format::System
     class FixturesFormater
     {
     private:
-        using ZoneKind = Common::ZoneShape::Type::Kind;
+        using ZoneShapeKind = Common::ZoneShape::Type::ZoneShapeKind;
 
     public:
         FixturesFormater() = default;
         ~FixturesFormater() = default;
 
-        static auto ZoneKindToString(ZoneKind kind) -> const char*;
+        static auto ZoneKindToString(ZoneShapeKind kind) -> const char*;
     };
 }

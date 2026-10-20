@@ -1,6 +1,12 @@
 module Viewer.Selection.State;
 
+import Common.Engine.Type;
 import std;
+
+namespace
+{
+    using Common::Engine::Type::k_NoHandle;
+}
 
 namespace Viewer::Selection::State
 {
@@ -16,12 +22,12 @@ namespace Viewer::Selection::State
 
     auto SelectionStore::HasSelection() const -> bool
     {
-        return m_Selected.load(std::memory_order_relaxed) != k_NoSelection;
+        return m_Selected.load(std::memory_order_relaxed) != k_NoHandle;
     }
 
     auto SelectionStore::Clear() -> void
     {
-        m_Selected.store(k_NoSelection, std::memory_order_relaxed);
+        m_Selected.store(k_NoHandle, std::memory_order_relaxed);
     }
 
     auto SelectionStore::RequestPick() -> void

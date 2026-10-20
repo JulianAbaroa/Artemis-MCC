@@ -14,14 +14,14 @@ namespace
 {
     using Platform::Render::Type::VertexLayout;
 
-    using Vertex = Platform::Render::Type::Vertex;
+    using Platform::Render::Type::Vertex;
 
     using Viewer::Style::Type::k_Map;
 }
 
 namespace Viewer::Map::System
 {
-    auto MapPass::Upload(ID3D11Device* device, const MapSbsps& sbsps) -> void
+    auto MapPass::Upload(ID3D11Device* device, const std::unordered_map<std::string, Sbsp>& sbsps) -> void
     {
         if (m_IsUploaded || !device) return;
 
@@ -98,7 +98,7 @@ namespace Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::Colored);
 
-        Platform::Render::System::GpuBuffer::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+        Platform::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 

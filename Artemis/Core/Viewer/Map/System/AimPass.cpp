@@ -5,9 +5,10 @@ module;
 module Viewer.Map.System;
 import :AimPass;
 
+import Common.Engine.Type;
+import Common.Math.Type;
 import Platform.Render.Type;
 import Platform.Render.System;
-import Common.Math.Type;
 import Resolved.World.Type;
 import Environment.Aim.Type;
 import Viewer.Selection.State;
@@ -17,20 +18,20 @@ import std;
 
 namespace
 {
-    using SphereInstance = Platform::Render::Type::SphereInstance;
-    using AnchorSource = Resolved::World::Type::ModelLink::AnchorSource;
-    using SectionAim = Environment::Aim::Type::SectionAim;
-    using Color = Viewer::Style::Type::Color;
+    using Platform::Render::Type::SphereInstance;
+    using Resolved::World::Type::ModelLink::AnchorSource;
+    using Environment::Aim::Type::SectionAim;
+    using Viewer::Style::Type::Color;
 
     using Platform::Render::Type::SurfaceMode;
     using Platform::Render::Type::VertexLayout;
-    using Viewer::Selection::State::k_NoSelection;
 
     using Viewer::Style::Type::k_AimModelTarget;
     using Viewer::Style::Type::k_AimHeadshotTarget;
     using Viewer::Style::Type::k_AimCollRegion;
     using Viewer::Style::Type::k_AimObjectCenter;
     using Viewer::Style::Type::k_TranslucentAlpha;
+    using Common::Engine::Type::k_NoHandle;
 
     constexpr UINT k_InitialInstances{ 256 };
 
@@ -254,7 +255,7 @@ namespace Viewer::Map::System
             }
         };
 
-        if (selectedHandle != k_NoSelection)
+        if (selectedHandle != k_NoHandle)
         {
             auto it = aims->find(selectedHandle);
             if (it != aims->end()) emit(it->second);

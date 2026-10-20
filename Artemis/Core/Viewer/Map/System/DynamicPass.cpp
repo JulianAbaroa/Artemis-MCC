@@ -5,6 +5,7 @@ module;
 module Viewer.Map.System;
 import :DynamicPass;
 
+import Common.Engine.Type;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Viewer.Selection.State;
@@ -13,14 +14,14 @@ import std;
 
 namespace
 {
-    using MeshInstance = Platform::Render::Type::MeshInstance;
-    using Color = Viewer::Style::Type::Color;
+    using Platform::Render::Type::MeshInstance;
+    using Viewer::Style::Type::Color;
 
     using Platform::Render::Type::SurfaceMode;
     using Platform::Render::Type::VertexLayout;
-    using Viewer::Selection::State::k_NoSelection;
 
     using Viewer::Style::Type::k_Selected;
+    using Common::Engine::Type::k_NoHandle;
 
     constexpr UINT k_InitialGeometryVertices{ 1u << 16 };
     constexpr UINT k_InitialInstances{ 512 };
@@ -95,7 +96,7 @@ namespace Viewer::Map::System
         {
             if (collidable.Parts.empty()) continue;
 
-            const bool isSelected = selectedHandle != k_NoSelection &&
+            const bool isSelected = selectedHandle != k_NoHandle &&
                 collidable.Handle == selectedHandle;
 
             const bool isTranslucent = translucentHandles.contains(collidable.Handle);

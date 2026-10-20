@@ -8,6 +8,7 @@ import :SimulationTicks;
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
 import Platform.Hook.System;
+import Datum.Object.Type;
 import std;
 
 namespace
@@ -15,9 +16,9 @@ namespace
     namespace Signature = Platform::Memory::Type::Signature;
     using Platform::Lifecycle::Type::Status;
 
-    // Time globals: *(thread context + 0xA0). Speed of the engine: f32 at +0x10 (A8_Velocidad, D105).
-    constexpr std::uintptr_t k_TimeGlobalsOffset{ 0xA0 };
-    constexpr std::uintptr_t k_TimeScaleOffset{ 0x10 };
+    using Platform::Hook::System::k_DrainTimeout;
+    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
+    using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
 
     constexpr float k_DefaultTimeScale{ 1.0f };
 }
@@ -26,6 +27,8 @@ namespace Export::Tick::Hook
 {
     auto __fastcall SimulationTicksDetour::HookedSimulationTicks(int ticksToAdvance, float* remainingTime) -> void
     {
+        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+
         auto* self{ s_Instance };
         auto& frameDetour{ self->m_ExecuteGameFrameDetour };
         const bool isCounting{ frameDetour.IsInstalled() };
@@ -67,10 +70,10 @@ namespace Export::Tick::Hook
         const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
         if (threadContext == 0) return;
 
-        const std::uintptr_t timeGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_TimeGlobalsOffset) };
+        const std::uintptr_t timeGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextTimeGlobalsOffset) };
         if (timeGlobals == 0) return;
 
-        auto* scale{ reinterpret_cast<float*>(timeGlobals + k_TimeScaleOffset) };
+        auto* scale{ reinterpret_cast<float*>(timeGlobals + k_TimeGlobalsScaleOffset) };
         const float target{ requested > 0.0f ? requested : k_DefaultTimeScale };
 
         if (*scale != target) *scale = target;
@@ -84,7 +87,7 @@ namespace Export::Tick::Hook
         s_Instance = this;
 
         void* functionAddress{ reinterpret_cast<void*>(
-            m_AOBService.FindPattern(Signature::SimulationTicks)) };
+            m_AOBService.FindPattern(Signature::k_SimulationTicks)) };
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -102,7 +105,15 @@ namespace Export::Tick::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
+        // note: Uninstalled from RaiseUnhook, which runs on the game thread inside DestroySubsystems, outside the tick loop, so no
+        // call of this hook is in flight on that thread. On eject the tick wait wakes with the shutdown signal.
+        if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
+        {
+            m_LogsService.Message("[SimulationTicksDetour] WARNING:"
+                " A call was still running when the hook was removed.");
+        }
+        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[SimulationTicksDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

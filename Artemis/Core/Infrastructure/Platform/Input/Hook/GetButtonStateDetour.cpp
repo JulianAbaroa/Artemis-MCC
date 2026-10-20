@@ -12,27 +12,20 @@ import Platform.Hook.System;
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
+
+    using Platform::Hook::System::k_DrainTimeout;
 }
 
 namespace Platform::Input::Hook
 {
-    // This function polls keyboard events at a high frequency
-    // (approximately every 3ms).
-    //
-    // Note: This specific handler does not process mouse events.
-    //
-    // Critical: This function is extremely sensitive to stack manipulation
-    // and timing. Avoid using blocking mechanisms (e.g., std::mutex) as they
-    // generate undefined behavior.
-    //
-    // Observed behavior: Blocking or desynchronizing this thread causes
-    // the engine to repeatedly execute the received action every 3ms,
-    // leading to input flooding.
-    //
-    // Input Data: Receives a unique 'buttonID', which represents the engine's
-    // internal mapping for each physical key.
+    // Polls the keyboard at a high frequency (about every 3 ms). Mouse events do not go through it.
+    // param buttonID: Engine mapping of a physical key.
+    // note: Very sensitive to stack manipulation and timing. Blocking it (a std::mutex, for example) desynchronizes the thread
+    // and the engine repeats the received action every 3 ms (input flooding).
     auto __fastcall GetButtonStateDetour::HookedGetButtonState(short buttonID) -> char
     {
+        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+
         if (s_Instance->m_InputStore.IsActionHeld(buttonID)) return 1;
 
         return s_OriginalFunction(buttonID);
@@ -43,7 +36,7 @@ namespace Platform::Input::Hook
         if (m_IsHookInstalled.load()) return;
         s_Instance = this;
 
-        void* functionAddress = (void*)m_AOBService.FindPattern(Signature::GetButtonState);
+        void* functionAddress = (void*)m_AOBService.FindPattern(Signature::k_GetButtonState);
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -61,7 +54,13 @@ namespace Platform::Input::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::UninstallDetour(m_FunctionAddress.load(),
+        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
+        if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
+        {
+            m_LogsService.Message("[GetButtonStateDetour] WARNING:"
+                " A call was still running when the hook was removed.");
+        }
+        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[GetButtonStateDetour]", m_LogsService);
 
         m_IsHookInstalled.store(false);

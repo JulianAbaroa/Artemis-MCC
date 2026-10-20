@@ -75,14 +75,14 @@ export namespace Viewer::Map::System
         std::vector<std::uint32_t> m_Active{};
         std::vector<std::uint32_t> m_ActiveTranslucent{};
 
-        Platform::Render::System::GpuBuffer::InstanceBuffer m_InstanceBuffer{};
+        Platform::Render::System::InstanceBuffer m_InstanceBuffer{};
         UINT m_InstanceCount{ 0 };
 
         std::vector<MeshInstance> m_InstanceScratch{};
         std::vector<DrawRange> m_Draws{};
         std::vector<DrawRange> m_TranslucentDraws{};
 
-        Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
+        Platform::Render::System::UploadGate m_Gate{};
 
         // Copies the pending vertices to the geometry buffer and grows it if needed.
         // return: False if the buffer could not be created.

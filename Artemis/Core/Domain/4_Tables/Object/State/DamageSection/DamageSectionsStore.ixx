@@ -9,7 +9,7 @@ export namespace Tables::Object::State
     {
     private:
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
-        using DamageSectionTables = std::unordered_map<std::uint32_t, DamageSectionTable>;
+        using DamageSectionTables = Tables::Object::Type::DamageSection::DamageSectionTables;
 
     public:
         DamageSectionsStore() = default;

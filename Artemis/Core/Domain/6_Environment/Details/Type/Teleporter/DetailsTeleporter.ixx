@@ -39,5 +39,8 @@ export namespace Environment::Details::Type
         std::vector<std::uint32_t> Destinations{};
     };
 
-    using TeleporterDetails = std::unordered_map<std::uint32_t, TeleporterDetail>;
+    struct TeleporterDetails : std::unordered_map<std::uint32_t, TeleporterDetail>
+    {
+        using unordered_map::unordered_map;
+    };
 }

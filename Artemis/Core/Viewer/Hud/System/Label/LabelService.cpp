@@ -33,7 +33,7 @@ namespace Viewer::Hud::System
             }
         }
 
-        LabelContext context{ *tick, m_OptionsStore, m_Classifications };
+        LabelContext context{ *tick, m_Classifications };
         context.Selected = m_SelectionStore.GetSelected();
 
         if (tick->Self && tick->Self->IsAlive)

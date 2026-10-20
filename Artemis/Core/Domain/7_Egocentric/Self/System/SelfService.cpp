@@ -4,7 +4,7 @@ import Egocentric.Self.Type;
 
 namespace
 {
-    using Self = Egocentric::Self::Type::Self;
+    using Egocentric::Self::Type::Self;
 
     using Egocentric::Self::Type::k_SelfLocalIndex;
 }

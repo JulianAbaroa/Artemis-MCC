@@ -5,12 +5,12 @@ import std;
 
 namespace
 {
-    using Resolved::World::Type::ModelLink::Anchor;
+    using Resolved::World::Type::ModelLink::ModelLinkAnchor;
 }
 
 export namespace Resolved::Vitality::Type::Vitality
 {
-    enum class Kind : std::uint8_t
+    enum class VitalityKind : std::uint8_t
     {
         Normal,
         Shield,
@@ -39,7 +39,7 @@ export namespace Resolved::Vitality::Type::Vitality
         bool DestroysObject{};
         bool IsHeadshot{};
 
-        Kind Kind{ Kind::Normal };
+        VitalityKind Kind{ VitalityKind::Normal };
 
         float StunTime{};
         float RechargeTime{};
@@ -47,7 +47,7 @@ export namespace Resolved::Vitality::Type::Vitality
         std::vector<Transfer> Transfers{};
 
         // Where to aim for this section: mode node and local offset.
-        Anchor Aim{};
+        ModelLinkAnchor Aim{};
     };
 
     // Vitality layout of a model: its damage sections and which of them kill, shield or take headshots.
@@ -61,7 +61,7 @@ export namespace Resolved::Vitality::Type::Vitality
         std::vector<int> ShieldSections{};
 
         // Center of the render model, fallback when a section has no anchor.
-        Anchor ObjectCenter{};
+        ModelLinkAnchor ObjectCenter{};
 
         // First match of the lists above, or -1 if none.
         int CriticalSection{ -1 };

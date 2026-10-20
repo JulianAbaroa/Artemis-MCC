@@ -60,12 +60,12 @@ export namespace Viewer::Map::System
         UINT m_UnitFillCount{ 0 };
         UINT m_UnitWireCount{ 0 };
 
-        Platform::Render::System::GpuBuffer::InstanceBuffer m_InstanceBuffer{};
+        Platform::Render::System::InstanceBuffer m_InstanceBuffer{};
         UINT m_InstanceCount{ 0 };
         UINT m_FillInstanceCount{ 0 };
         bool m_IsTintByHealth{ false };
 
-        Platform::Render::System::GpuBuffer::UploadGate m_Gate{};
+        Platform::Render::System::UploadGate m_Gate{};
 
         std::vector<SphereInstance> m_FillScratch{};
         std::vector<SphereInstance> m_CenterScratch{};

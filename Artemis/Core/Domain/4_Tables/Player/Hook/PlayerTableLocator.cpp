@@ -4,23 +4,17 @@ module;
 
 module Tables.Player.Hook;
 
+import Platform.Hook.System;
 import Platform.Memory.Type;
+import Datum.Object.Type;
 
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
-    // Sanity limit of the telemetry index. Anything above it is not a valid thread slot.
-    constexpr std::uint32_t k_MaxTelemetryId{ 1000 };
-
-    // Offset of the telemetry data pointer inside the thread context.
-    constexpr std::uintptr_t k_TelemetryDataOffset{ 0x18 };
-
-    // Offset of the player table pointer inside the telemetry data.
-    constexpr std::uintptr_t k_PlayerTableOffset{ 0x50 };
-
-    // Offset of the player mapping globals pointer inside the thread context (A9_SplitScreen.txt sec. 11.1).
-    constexpr std::uintptr_t k_MappingOffset{ 0x158 };
+    using Datum::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
+    using Datum::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
+    using Datum::Object::Type::Constant::k_ThreadContextMappingOffset;
 }
 
 namespace Tables::Player::Hook
@@ -72,22 +66,11 @@ namespace Tables::Player::Hook
     {
         __try
         {
-            // note: gs:[0x58] is the thread local storage array of the current thread.
-            std::uintptr_t tlsArray{ (std::uintptr_t)__readgsqword(0x58) };
+            const std::uint32_t* tlsIndex{ Platform::Hook::System::ResolveTlsIndex(
+                m_AOBService.FindPattern(Signature::k_TelemetryIdModifier)) };
+            if (!tlsIndex) return 0;
 
-            std::uintptr_t match{ m_AOBService.FindPattern(
-                Signature::TelemetryIdModifier) };
-
-            if (!match) return 0;
-
-            // note: The match is a "mov ecx, [rip+rel32]". The rel32 is at +2 and the instruction is 6 bytes long.
-            std::int32_t relativeOffset{ *(std::int32_t*)(match + 2) };
-            std::uintptr_t telemetryIdAddr{ (match + 6) + relativeOffset };
-            std::uint32_t telemetryIdx{ *(std::uint32_t*)(telemetryIdAddr) };
-
-            if (telemetryIdx > k_MaxTelemetryId) return 0;
-
-            return *(std::uintptr_t*)(tlsArray + (static_cast<unsigned long long>(telemetryIdx) * 8));
+            return Platform::Hook::System::ReadThreadContext(*tlsIndex);
         }
         __except (EXCEPTION_EXECUTE_HANDLER)
         {
@@ -101,10 +84,10 @@ namespace Tables::Player::Hook
 
         __try
         {
-            std::uintptr_t telemetryData{ *(std::uintptr_t*)(threadContext + k_TelemetryDataOffset) };
+            std::uintptr_t telemetryData{ *(std::uintptr_t*)(threadContext + k_ThreadContextTelemetryDataOffset) };
             if (!telemetryData) return 0;
 
-            return *(std::uintptr_t*)(telemetryData + k_PlayerTableOffset);
+            return *(std::uintptr_t*)(telemetryData + k_TelemetryDataPlayerTableOffset);
         }
         __except (EXCEPTION_EXECUTE_HANDLER)
         {
@@ -118,7 +101,7 @@ namespace Tables::Player::Hook
 
         __try
         {
-            return *(std::uintptr_t*)(threadContext + k_MappingOffset);
+            return *(std::uintptr_t*)(threadContext + k_ThreadContextMappingOffset);
         }
         __except (EXCEPTION_EXECUTE_HANDLER)
         {

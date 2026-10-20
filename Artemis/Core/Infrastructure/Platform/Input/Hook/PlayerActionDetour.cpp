@@ -15,6 +15,8 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
+    using Platform::Hook::System::k_DrainTimeout;
+
     using Platform::Hook::System::ResolveRelative;
 
     using Platform::Input::Type::PlayerActions;
@@ -63,9 +65,6 @@ namespace
 
     static_assert(k_ActionInteractionSize == k_InteractionRecordCount * k_InteractionRecordSize,
         "The interaction of the action must hold the records the engine builds.");
-
-    // Sanity limit of the thread local storage index. Anything above it is not a valid slot.
-    constexpr std::uint32_t k_MaxTlsIndex{ 1000 };
 
     // Ticks a weapon request is sent while the unit does not hold the slot (half a second at 60 ticks per second).
     constexpr std::uint32_t k_WeaponRequestTicks{ 30 };
@@ -465,23 +464,12 @@ namespace Platform::Input::Hook
     {
         if (!m_EngineTlsIndex) return 0;
 
-        const std::uint32_t tlsIndex{ *m_EngineTlsIndex };
-        if (tlsIndex > k_MaxTlsIndex) return 0;
-
-        // note: gs:[0x58] is the thread local storage array of the current thread.
-        const auto tlsArray{ static_cast<std::uintptr_t>(__readgsqword(0x58)) };
-
-        return *reinterpret_cast<const std::uintptr_t*>(tlsArray + (tlsIndex * sizeof(std::uintptr_t)));
+        return Platform::Hook::System::ReadThreadContext(*m_EngineTlsIndex);
     }
 
     auto PlayerActionDetour::FindEngineTlsIndex() -> const std::uint32_t*
     {
-        const std::uintptr_t match{ m_AOBService.FindPattern(Signature::TelemetryIdModifier) };
-        if (!match) return nullptr;
-
-        // note: The match is a "mov ecx, [rip+rel32]". The rel32 is at +2 and the instruction is 6 bytes long.
-        const std::int32_t relativeOffset{ *reinterpret_cast<const std::int32_t*>(match + 2) };
-        return reinterpret_cast<const std::uint32_t*>((match + 6) + relativeOffset);
+        return Platform::Hook::System::ResolveTlsIndex(m_AOBService.FindPattern(Signature::k_TelemetryIdModifier));
     }
 
     auto PlayerActionDetour::PublishActions(const std::uint8_t* update) -> void
@@ -505,14 +493,14 @@ namespace Platform::Input::Hook
         s_Instance = this;
         m_Sequence = 0;
 
-        m_ClearPlayerAction = reinterpret_cast<ClearPlayerActionFunction>(m_AOBService.FindPattern(Signature::ClearPlayerAction));
+        m_ClearPlayerAction = reinterpret_cast<ClearPlayerActionFunction>(m_AOBService.FindPattern(Signature::k_ClearPlayerAction));
         if (!m_ClearPlayerAction)
         {
             m_LogsService.Message("[PlayerActionDetour] ERROR: Failed to find ClearPlayerAction. No action override will be"
                 " applied.");
         }
 
-        const std::uintptr_t tagLoad{ m_AOBService.FindPattern(Signature::PlayerControlTagLoad) };
+        const std::uintptr_t tagLoad{ m_AOBService.FindPattern(Signature::k_PlayerControlTagLoad) };
         if (tagLoad != 0)
         {
             m_PlayerControlTable = reinterpret_cast<const std::uintptr_t*>(
@@ -533,7 +521,7 @@ namespace Platform::Input::Hook
                 " will be applied and no bot can be added.");
         }
 
-        void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::ApplyPlayerActions)) };
+        void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::k_ApplyPlayerActions)) };
         m_FunctionAddress.store(functionAddress);
 
         if (!Platform::Hook::System::InstallDetour(functionAddress,
@@ -553,7 +541,7 @@ namespace Platform::Input::Hook
         if (!m_IsHookInstalled.load()) return;
 
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, std::chrono::milliseconds(500));
+        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[PlayerActionDetour]", m_LogsService);
 

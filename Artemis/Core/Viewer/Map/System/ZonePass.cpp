@@ -5,27 +5,27 @@ module;
 module Viewer.Map.System;
 import :ZonePass;
 
-import Platform.Render.Type;
-import Platform.Render.System;
 import Common.Math.Type;
 import Common.ZoneShape.Type;
+import Platform.Render.Type;
+import Platform.Render.System;
 import Viewer.Geometry.System;
+import Viewer.Map.Type;
 import Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Vertex = Platform::Render::Type::Vertex;
-    using Vec3 = Common::Math::Type::Vec3;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
-    using ZoneKind = Common::ZoneShape::Type::Kind;
+    using Platform::Render::Type::Vertex;
+    using Common::Math::Type::Vec3;
+    using Common::ZoneShape::Type::ZoneShape;
+    using Common::ZoneShape::Type::ZoneShapeKind;
 
     using Platform::Render::Type::SurfaceMode;
     using Platform::Render::Type::VertexLayout;
 
     using Viewer::Style::Type::k_TranslucentAlpha;
-
-    constexpr UINT k_InitialCapacity{ 2048 };
+    using Viewer::Map::Type::k_InitialCapacity;
 }
 
 namespace Viewer::Map::System
@@ -49,9 +49,9 @@ namespace Viewer::Map::System
         auto emit = [&](std::uint32_t handle, const Vec3& position,
             const Vec3& forward, const Vec3& up, const ZoneShape& zone)
         {
-            if (zone.Kind == ZoneKind::None) return;
+            if (zone.Kind == ZoneShapeKind::None) return;
 
-            Viewer::Geometry::System::ZoneGeometry::AppendSolid(vertices, position, forward, up,
+            Viewer::Geometry::System::AppendSolid(vertices, position, forward, up,
                 zone, palette.ColorOf(handle));
         };
 
@@ -68,13 +68,13 @@ namespace Viewer::Map::System
 
         const UINT needed = static_cast<UINT>(vertices.size());
 
-        if (!Platform::Render::System::GpuBuffer::GrowDynamicVertexBuffer(device, needed,
+        if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, m_VertexBuffer, m_Capacity, "[ZonePass]", m_LogsService))
         {
             return;
         }
 
-        if (!Platform::Render::System::GpuBuffer::UploadDynamicVertices(context, m_VertexBuffer.Get(),
+        if (!Platform::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
             vertices, "[ZonePass]", m_LogsService))
         {
             return;
@@ -90,7 +90,7 @@ namespace Viewer::Map::System
         pipeline.Bind(context, VertexLayout::Colored, SurfaceMode::Translucent,
             k_TranslucentAlpha);
 
-        Platform::Render::System::GpuBuffer::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+        Platform::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 

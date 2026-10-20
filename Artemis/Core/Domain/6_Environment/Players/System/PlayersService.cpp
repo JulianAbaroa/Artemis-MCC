@@ -1,5 +1,6 @@
 module Environment.Players.System;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 
 namespace
@@ -10,8 +11,7 @@ namespace
     using Tables::Object::Type::Equipment::Equipment;
     using Environment::Details::Type::VitalityDetails;
 
-    // Value of an empty handle.
-    constexpr std::uint32_t k_NoHandle{ 0xFFFFFFFF };
+    using Common::Engine::Type::k_NoHandle;
 
     // Returns the vitality of the first shield section of an object, from 0 to 1.
     // return: Empty when the object has no vitality detail or its layout has no shield section.

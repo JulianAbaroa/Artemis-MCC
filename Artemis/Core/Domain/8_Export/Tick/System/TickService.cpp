@@ -5,8 +5,8 @@ import Export.Tick.Type;
 
 namespace
 {
-    using Tick = Export::Tick::Type::Tick;
-    using AliveInteraction = Export::Tick::Type::AliveInteraction;
+    using Export::Tick::Type::Tick;
+    using Export::Tick::Type::AliveInteraction;
 
     using Egocentric::Self::Type::k_SelfLocalIndex;
 }
@@ -18,24 +18,24 @@ namespace Export::Tick::System
         ::Tick tick;
         tick.Generation = generation;
 
-        if (m_DefinitionsStore.Sbsp.IsFrozen())
+        if (m_DefinitionsStore.m_Sbsp.IsFrozen())
         {
             if (!m_Map)
             {
-                m_Map = std::shared_ptr<const Export::Tick::Type::MapSbsps>(
-                    std::shared_ptr<void>{}, &m_DefinitionsStore.Sbsp.All());
+                m_Map = std::shared_ptr<const std::unordered_map<std::string, Resolved::Definitions::Type::Sbsp::Sbsp>>(
+                    std::shared_ptr<void>{}, &m_DefinitionsStore.m_Sbsp.All());
             }
 
-            if (!m_Limits && m_DefinitionsStore.Scnr.IsFrozen())
+            if (!m_Limits && m_DefinitionsStore.m_Scnr.IsFrozen())
             {
-                m_Limits = std::shared_ptr<const Export::Tick::Type::MapScnrs>(
-                    std::shared_ptr<void>{}, &m_DefinitionsStore.Scnr.All());
+                m_Limits = std::shared_ptr<const std::unordered_map<std::string, Resolved::Definitions::Type::Scnr::Scnr>>(
+                    std::shared_ptr<void>{}, &m_DefinitionsStore.m_Scnr.All());
             }
 
-            if (!m_Designs && m_DefinitionsStore.Sddt.IsFrozen())
+            if (!m_Designs && m_DefinitionsStore.m_Sddt.IsFrozen())
             {
-                m_Designs = std::shared_ptr<const Export::Tick::Type::MapSddts>(
-                    std::shared_ptr<void>{}, &m_DefinitionsStore.Sddt.All());
+                m_Designs = std::shared_ptr<const std::unordered_map<std::string, Resolved::Definitions::Type::Sddt::Sddt>>(
+                    std::shared_ptr<void>{}, &m_DefinitionsStore.m_Sddt.All());
             }
         }
         else
@@ -70,7 +70,7 @@ namespace Export::Tick::System
         tick.TeleporterDetails = m_TeleporterDetailsStore.Acquire();
         tick.LiftDetails = m_LiftDetailsStore.Acquire();
         tick.BarrierDetails = m_BarrierDetailsStore.Acquire();
-		tick.Aims = m_AimStore.Acquire();
+        tick.Aims = m_AimStore.Acquire();
 
         // --- Layer 6: Egocentric ---
         tick.Self = m_SelfStore.Acquire();

@@ -1,9 +1,11 @@
 export module Egocentric.Raycast.State;
 
-import Common.State.System;
+import Common.State.Type;
 import Egocentric.Raycast.Type;
 
 export namespace Egocentric::Raycast::State
 {
-	using RaycastStore = Common::State::System::Snapshot<Egocentric::Raycast::Type::Raycasts>;
+    class RaycastStore : public Common::State::Type::Snapshot<Egocentric::Raycast::Type::Raycasts>
+    {
+    };
 }

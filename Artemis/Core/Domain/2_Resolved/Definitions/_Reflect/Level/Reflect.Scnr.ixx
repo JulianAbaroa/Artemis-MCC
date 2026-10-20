@@ -17,8 +17,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<TriggerVolume>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &TriggerVolume::Name),
             MakeField("Kind", &TriggerVolume::Kind),
             MakeField("Position", &TriggerVolume::Position),
@@ -35,8 +34,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<BoundaryTrigger>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TriggerVolumeIndex", &BoundaryTrigger::TriggerVolumeIndex),
             MakeField("DontKillImmediately", &BoundaryTrigger::DontKillImmediately),
             MakeField("OnlyKillPlayers", &BoundaryTrigger::OnlyKillPlayers),
@@ -46,8 +44,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<SoftCeiling>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Name", &SoftCeiling::Name),
             MakeField("Kind", &SoftCeiling::Kind),
             MakeField("IgnoreBipeds", &SoftCeiling::IgnoreBipeds),
@@ -60,8 +57,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Scnr>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Scnr::TagName),
             MakeField("TriggerVolumes", &Scnr::TriggerVolumes),
             MakeField("KillTriggers", &Scnr::KillTriggers),

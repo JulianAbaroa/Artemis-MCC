@@ -1,8 +1,8 @@
 export module Egocentric.Affordance.System;
 
-import Service.Logs.System;
 import Common.Math.Type;
 import Common.Semantic.Type;
+import Service.Logs.System;
 import Tables.Object.Type;
 import Tables.Object.State;
 import Tables.Interaction.Type;
@@ -23,11 +23,11 @@ export namespace Egocentric::Affordance::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using AliveObject = Tables::Object::Type::Alive::Object;
-        using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
         using Vehicle = Tables::Object::Type::Vehicle::Vehicle;
-        using SeatMarker = Tables::Object::Type::Vehicle::Seat::Marker;
+        using SeatMarker = Tables::Object::Type::Vehicle::Seat::SeatMarker;
         using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
@@ -35,14 +35,14 @@ export namespace Egocentric::Affordance::System
         using Function = Common::Semantic::Type::Function;
         using Classified = Relations::Classifier::Type::Classified;
         using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
-        using ObjectGraph = std::unordered_map<std::uint32_t, ObjectNode>;
+        using ObjectNodes = Relations::ObjectGraph::Type::ObjectNodes;
         using ClassifierStore = Relations::Classifier::State::ClassifierStore;
         using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
         using CollidableService = Environment::Collidable::System::CollidableService;
         using Affordance = Egocentric::Affordance::Type::Affordance;
         using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
-        using AffordanceBehavior = Egocentric::Affordance::Type::Behavior;
-        using AffordanceActivation = Egocentric::Affordance::Type::Activation;
+        using AffordanceBehavior = Egocentric::Affordance::Type::AffordanceBehavior;
+        using AffordanceActivation = Egocentric::Affordance::Type::AffordanceActivation;
 
         using SelfStore = Egocentric::Self::State::SelfStore;
         using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
@@ -79,21 +79,21 @@ export namespace Egocentric::Affordance::System
         auto BuildVehicleAffordance(const AliveObject& object,
             const Vec3& selfPosition,
             std::uint32_t selfBipedHandle, const AliveInteraction& interaction,
-            const ObjectGraph& objectGraph, const ObjectTable& objectTable, Affordance& out) const -> bool;
+            const ObjectNodes& objectGraph, const ObjectTable& objectTable, Affordance& out) const -> bool;
 
         auto BuildAffordance(const AliveObject& object, const Classified& classified,
             const Vec3& selfPosition, const AliveInteraction& interaction) const -> Affordance;
 
         auto ResolveSeatStatuses(const Vehicle& vehi,
-            const AliveObject& object, const ObjectGraph& objectGraph,
+            const AliveObject& object, const ObjectNodes& objectGraph,
             const ObjectTable& objectTable, const Vec3& selfPosition, std::uint32_t selfBipedHandle,
             std::vector<SeatStatus>& outSeats) const -> bool;
 
         auto CollectVehiclePartHandles(std::uint32_t vehicleHandle,
-            const ObjectGraph& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>;
+            const ObjectNodes& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>;
 
         auto CollectBipedChildHandles(std::uint32_t vehicleHandle,
-            const ObjectGraph& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>;
+            const ObjectNodes& objectGraph, const ObjectTable& objectTable) const -> std::vector<std::uint32_t>;
 
         auto GetSeatWorldPosition(const BoneMatrixTable& bones, const SeatMarker& seatMarker,
             const AliveObject& vehicleObject) const -> std::optional<Vec3>;

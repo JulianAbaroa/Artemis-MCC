@@ -7,7 +7,7 @@ import std;
 
 namespace
 {
-    using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
+    using Resolved::Definitions::Type::Object::ObjectKind;
 
     using Datum::Object::Type::Constant::k_PlacementSize;
 }
@@ -30,7 +30,7 @@ export namespace Datum::Object::Type::Raw
         std::vector<std::uint8_t> Bytes{};
 
         // return: The value at offset, or a zero-initialized value if it does not fit in the datum.
-        template<typename T> 
+        template<typename T>
             requires std::is_trivially_copyable_v<T>
         auto Read(std::size_t offset) const -> T
         {

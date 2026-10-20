@@ -19,8 +19,8 @@ export namespace Map::Tag::Type::Sldt::Structure
     // Entry size: 0x20
     struct Sldt_LightmapDataReferencesEntry
     {
-        MapStructure::Tag::Reference LightmapData;  // 0x0  tagref.
-        MapStructure::Tag::Reference WetnessData;  // 0x10  tagref.
+        MapStructure::Tag::TagReference LightmapData;  // 0x0  tagref.
+        MapStructure::Tag::TagReference WetnessData;  // 0x10  tagref.
     };
     static_assert(sizeof(Sldt_LightmapDataReferencesEntry) == 0x20, "Sldt_LightmapDataReferencesEntry size mismatch");
 
@@ -91,7 +91,7 @@ export namespace Map::Tag::Type::Sldt::Structure
         std::uint8_t  _pad_0x18[0x4];  // undefined.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
         // -> Sldt_Unknown_2_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_9;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_9;  // 0x20  tagblock.
     };
     static_assert(sizeof(Sldt_UnknownEntry_2) == 0x2C, "Sldt_UnknownEntry_2 size mismatch");
 
@@ -110,15 +110,15 @@ export namespace Map::Tag::Type::Sldt::Structure
     {
         std::uint8_t  _pad_0x0[0x4];  // undefined.
         // -> Sldt_LightmapDataReferencesEntry[]
-        MapStructure::Tag::Block   LightmapDataReferences;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   LightmapDataReferences;  // 0x4  tagblock.
         // -> Sldt_AirprobesEntry[]
-        MapStructure::Tag::Block   Airprobes;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Airprobes;  // 0x10  tagblock.
         // -> Sldt_UnknownEntry[]
-        MapStructure::Tag::Block   Unknown_2;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_2;  // 0x1C  tagblock.
         // -> Sldt_UnknownEntry_2[]
-        MapStructure::Tag::Block   Unknown_3;  // 0x28  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_3;  // 0x28  tagblock.
         // -> Sldt_UnknownEntry_3[]
-        MapStructure::Tag::Block   Unknown_4;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   Unknown_4;  // 0x34  tagblock.
     };
     static_assert(sizeof(SldtData) == 0x40, "SldtData size mismatch");
 

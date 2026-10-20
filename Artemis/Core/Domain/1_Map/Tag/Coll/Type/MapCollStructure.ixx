@@ -150,23 +150,23 @@ export namespace Map::Tag::Type::Coll::Structure
         std::int16_t NodeIndex;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
         // -> Coll_Regions_Permutations_Bsps_Bsp3dNodesEntry[]
-        MapStructure::Tag::Block   Bsp3dNodes;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Bsp3dNodes;  // 0x4  tagblock.
         // -> Coll_Regions_Permutations_Bsps_Bsp3dSupernodesEntry[]
-        MapStructure::Tag::Block   Bsp3dSupernodes;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   Bsp3dSupernodes;  // 0x10  tagblock.
         // -> Coll_Regions_Permutations_Bsps_PlanesEntry[]
-        MapStructure::Tag::Block   Planes;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   Planes;  // 0x1C  tagblock.
         // -> Coll_Regions_Permutations_Bsps_LeavesEntry[]
-        MapStructure::Tag::Block   Leaves;  // 0x28  tagblock.
+        MapStructure::Tag::TagBlock   Leaves;  // 0x28  tagblock.
         // -> Coll_Regions_Permutations_Bsps_Bsp2dReferencesEntry[]
-        MapStructure::Tag::Block   Bsp2dReferences;  // 0x34  tagblock.
+        MapStructure::Tag::TagBlock   Bsp2dReferences;  // 0x34  tagblock.
         // -> Coll_Regions_Permutations_Bsps_Bsp2dNodesEntry[]
-        MapStructure::Tag::Block   Bsp2dNodes;  // 0x40  tagblock.
+        MapStructure::Tag::TagBlock   Bsp2dNodes;  // 0x40  tagblock.
         // -> Coll_Regions_Permutations_Bsps_SurfacesEntry[]
-        MapStructure::Tag::Block   Surfaces;  // 0x4C  tagblock.
+        MapStructure::Tag::TagBlock   Surfaces;  // 0x4C  tagblock.
         // -> Coll_Regions_Permutations_Bsps_EdgesEntry[]
-        MapStructure::Tag::Block   Edges;  // 0x58  tagblock.
+        MapStructure::Tag::TagBlock   Edges;  // 0x58  tagblock.
         // -> Coll_Regions_Permutations_Bsps_VerticesEntry[]
-        MapStructure::Tag::Block   Vertices;  // 0x64  tagblock.
+        MapStructure::Tag::TagBlock   Vertices;  // 0x64  tagblock.
     };
     static_assert(sizeof(Coll_Regions_Permutations_BspsEntry) == 0x70, "Coll_Regions_Permutations_BspsEntry size mismatch");
 
@@ -260,7 +260,7 @@ export namespace Map::Tag::Type::Coll::Structure
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         // -> Coll_Regions_Permutations_MoppCodes_MoppDataEntry[]
-        MapStructure::Tag::Block   MoppData;  // 0x50  tagblock.
+        MapStructure::Tag::TagBlock   MoppData;  // 0x50  tagblock.
         std::int8_t  MoppBuildType;  // 0x5C  int8.
         std::int8_t  Unknown_8;  // 0x5D  int8.
         std::int16_t Unknown_9;  // 0x5E  int16.
@@ -272,11 +272,11 @@ export namespace Map::Tag::Type::Coll::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         // -> Coll_Regions_Permutations_BspsEntry[]
-        MapStructure::Tag::Block   Bsps;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Bsps;  // 0x4  tagblock.
         // -> Coll_Regions_Permutations_BspPhysicsEntry[]
-        MapStructure::Tag::Block   BspPhysics;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   BspPhysics;  // 0x10  tagblock.
         // -> Coll_Regions_Permutations_MoppCodesEntry[]
-        MapStructure::Tag::Block   MoppCodes;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   MoppCodes;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Coll_Regions_PermutationsEntry) == 0x28, "Coll_Regions_PermutationsEntry size mismatch");
 
@@ -285,7 +285,7 @@ export namespace Map::Tag::Type::Coll::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         // -> Coll_Regions_PermutationsEntry[]
-        MapStructure::Tag::Block   Permutations;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   Permutations;  // 0x4  tagblock.
     };
     static_assert(sizeof(Coll_RegionsEntry) == 0x10, "Coll_RegionsEntry size mismatch");
 
@@ -319,16 +319,16 @@ export namespace Map::Tag::Type::Coll::Structure
         std::uint32_t ErrorsBlock_3;  // 0xC  uint32.
         std::uint32_t Flags;  // 0x10  flags32. [Contains Open Edges=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         // -> Coll_MaterialsEntry[]
-        MapStructure::Tag::Block   Materials;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   Materials;  // 0x14  tagblock.
         // -> Coll_RegionsEntry[]
-        MapStructure::Tag::Block   Regions;  // 0x20  tagblock.
+        MapStructure::Tag::TagBlock   Regions;  // 0x20  tagblock.
         std::uint32_t CookieCuttersBlock;  // 0x2C  uint32.
         std::uint32_t CookieCuttersBlock_2;  // 0x30  uint32.
         std::uint32_t CookieCuttersBlock_3;  // 0x34  uint32.
         // -> Coll_PathfindingSpheresEntry[]
-        MapStructure::Tag::Block   PathfindingSpheres;  // 0x38  tagblock.
+        MapStructure::Tag::TagBlock   PathfindingSpheres;  // 0x38  tagblock.
         // -> Coll_NodesEntry[]
-        MapStructure::Tag::Block   Nodes;  // 0x44  tagblock.
+        MapStructure::Tag::TagBlock   Nodes;  // 0x44  tagblock.
     };
     static_assert(sizeof(CollData) == 0x50, "CollData size mismatch");
 

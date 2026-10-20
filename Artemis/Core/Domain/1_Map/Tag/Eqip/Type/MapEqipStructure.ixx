@@ -63,7 +63,7 @@ export namespace Map::Tag::Type::Eqip::Structure
         MapStructure::Data::Reference DefaultFunction;  // 0x18  dataref.
         std::uint32_t ScaleBy;  // 0x2C  stringid.
         // -> Eqip_Functions_InterpolationEntry[]
-        MapStructure::Tag::Block   Interpolation;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   Interpolation;  // 0x30  tagblock.
         std::int32_t RuntimeInterpolatorIndex;  // 0x3C  int32.
     };
     static_assert(sizeof(Eqip_FunctionsEntry) == 0x40, "Eqip_FunctionsEntry size mismatch");
@@ -78,7 +78,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x20
     struct Eqip_AttachmentsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
         std::uint32_t Marker;  // 0x10  stringid.
         std::uint8_t ChangeColor;  // 0x14  enum8. [None=0x0, Primary=0x1, Secondary=0x2, Tertiary=0x3, Quaternary=0x4]
         std::uint8_t Flags;  // 0x15  flags8. [Force Always On=0, Effect Size Scale From Object Scale=1]
@@ -109,7 +109,7 @@ export namespace Map::Tag::Type::Eqip::Structure
         std::uint32_t MarkerName;  // 0x4  stringid.
         float        Radius;  // 0x8  float32.
         // -> Eqip_HullSurfaces_DragEntry[]
-        MapStructure::Tag::Block   Drag;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Drag;  // 0xC  tagblock.
     };
     static_assert(sizeof(Eqip_HullSurfacesEntry) == 0x18, "Eqip_HullSurfacesEntry size mismatch");
 
@@ -129,7 +129,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x10
     struct Eqip_WidgetsEntry
     {
-        MapStructure::Tag::Reference Type;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Type;  // 0x0  tagref.
     };
     static_assert(sizeof(Eqip_WidgetsEntry) == 0x10, "Eqip_WidgetsEntry size mismatch");
 
@@ -158,9 +158,9 @@ export namespace Map::Tag::Type::Eqip::Structure
     struct Eqip_ChangeColorsEntry
     {
         // -> Eqip_ChangeColors_InitialPermutationsEntry[]
-        MapStructure::Tag::Block   InitialPermutations;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   InitialPermutations;  // 0x0  tagblock.
         // -> Eqip_ChangeColors_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xC  tagblock.
     };
     static_assert(sizeof(Eqip_ChangeColorsEntry) == 0x18, "Eqip_ChangeColorsEntry size mismatch");
 
@@ -183,33 +183,33 @@ export namespace Map::Tag::Type::Eqip::Structure
         float        NormalWeight;  // 0x1C  float32.
         std::uint32_t BoundaryCenterMarker;  // 0x20  stringid.
         std::uint32_t SpawnedObjectMarkerName;  // 0x24  stringid.
-        MapStructure::Tag::Reference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x28  tagref. | If this object is intended to spawn something, the object it spawns should be specified here
         std::uint32_t BoundaryMaterialNotYetImplemented;  // 0x38  stringid.
-        MapStructure::Tag::Reference DefaultBoundaryStandardShader;  // 0x3C  tagref.
-        MapStructure::Tag::Reference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
-        MapStructure::Tag::Reference SphereStandardShader;  // 0x5C  tagref.
-        MapStructure::Tag::Reference SphereOpaqueShader;  // 0x6C  tagref.
-        MapStructure::Tag::Reference CylinderStandardShader;  // 0x7C  tagref.
-        MapStructure::Tag::Reference CylinderOpaqueShader;  // 0x8C  tagref.
-        MapStructure::Tag::Reference BoxStandardShader;  // 0x9C  tagref.
-        MapStructure::Tag::Reference BoxOpaqueShader;  // 0xAC  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryStandardShader;  // 0x3C  tagref.
+        MapStructure::Tag::TagReference DefaultBoundaryOpaqueShader;  // 0x4C  tagref.
+        MapStructure::Tag::TagReference SphereStandardShader;  // 0x5C  tagref.
+        MapStructure::Tag::TagReference SphereOpaqueShader;  // 0x6C  tagref.
+        MapStructure::Tag::TagReference CylinderStandardShader;  // 0x7C  tagref.
+        MapStructure::Tag::TagReference CylinderOpaqueShader;  // 0x8C  tagref.
+        MapStructure::Tag::TagReference BoxStandardShader;  // 0x9C  tagref.
+        MapStructure::Tag::TagReference BoxOpaqueShader;  // 0xAC  tagref.
     };
     static_assert(sizeof(Eqip_MultiplayerObjectEntry) == 0xBC, "Eqip_MultiplayerObjectEntry size mismatch");
 
     // Entry size: 0x30
     struct Eqip_SpawnEffectsEntry
     {
-        MapStructure::Tag::Reference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
-        MapStructure::Tag::Reference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
-        MapStructure::Tag::Reference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
+        MapStructure::Tag::TagReference MultiplayerSpawnEffect;  // 0x0  tagref. | effect played when this object spawns in MP games
+        MapStructure::Tag::TagReference SurvivalSpawnEffect;  // 0x10  tagref. | effect played when this object spawns in Firefight games
+        MapStructure::Tag::TagReference CampaignSpawnEffect;  // 0x20  tagref. | effect played when this object spawns in Campaign games
     };
     static_assert(sizeof(Eqip_SpawnEffectsEntry) == 0x30, "Eqip_SpawnEffectsEntry size mismatch");
 
     // Entry size: 0x20
     struct Eqip_OverrideCamera_CameraTracksEntry
     {
-        MapStructure::Tag::Reference Track;  // 0x0  tagref.
-        MapStructure::Tag::Reference ScreenEffect;  // 0x10  tagref.
+        MapStructure::Tag::TagReference Track;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ScreenEffect;  // 0x10  tagref.
     };
     static_assert(sizeof(Eqip_OverrideCamera_CameraTracksEntry) == 0x20, "Eqip_OverrideCamera_CameraTracksEntry size mismatch");
 
@@ -259,7 +259,7 @@ export namespace Map::Tag::Type::Eqip::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Eqip_OverrideCamera_MoveStickOverrides_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Eqip_OverrideCamera_MoveStickOverridesEntry) == 0x28, "Eqip_OverrideCamera_MoveStickOverridesEntry size mismatch");
 
@@ -281,7 +281,7 @@ export namespace Map::Tag::Type::Eqip::Structure
         MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Eqip_OverrideCamera_LookStickOverrides_InputMappingFunctionEntry[]
-        MapStructure::Tag::Block   InputMappingFunction;  // 0x1C  tagblock.
+        MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
     };
     static_assert(sizeof(Eqip_OverrideCamera_LookStickOverridesEntry) == 0x28, "Eqip_OverrideCamera_LookStickOverridesEntry size mismatch");
 
@@ -294,7 +294,7 @@ export namespace Map::Tag::Type::Eqip::Structure
         float        PitchAutoLevel;  // 0x8  degree.
         MapStructure::Primitive::RangeF PitchRange;  // 0xC  ranged.
         // -> Eqip_OverrideCamera_CameraTracksEntry[]
-        MapStructure::Tag::Block   CameraTracks;  // 0x14  tagblock.
+        MapStructure::Tag::TagBlock   CameraTracks;  // 0x14  tagblock.
         float        PitchMinimumSpring;  // 0x20  degree.
         float        PitchMaximumSpring;  // 0x24  degree.
         float        SpringVelocity;  // 0x28  degree.
@@ -309,11 +309,11 @@ export namespace Map::Tag::Type::Eqip::Structure
         float        ObstructionMaximumVelocity;  // 0x4C  float32. | maximum speed the camera can move
         float        ObstructionReturnDelay;  // 0x50  float32. | when the camera wants to start moving back out, wait this long before doing so
         // -> Eqip_OverrideCamera_CameraAccelerationEntry[]
-        MapStructure::Tag::Block   CameraAcceleration;  // 0x54  tagblock.
+        MapStructure::Tag::TagBlock   CameraAcceleration;  // 0x54  tagblock.
         // -> Eqip_OverrideCamera_MoveStickOverridesEntry[]
-        MapStructure::Tag::Block   MoveStickOverrides;  // 0x60  tagblock.
+        MapStructure::Tag::TagBlock   MoveStickOverrides;  // 0x60  tagblock.
         // -> Eqip_OverrideCamera_LookStickOverridesEntry[]
-        MapStructure::Tag::Block   LookStickOverrides;  // 0x6C  tagblock.
+        MapStructure::Tag::TagBlock   LookStickOverrides;  // 0x6C  tagblock.
     };
     static_assert(sizeof(Eqip_OverrideCameraEntry) == 0x78, "Eqip_OverrideCameraEntry size mismatch");
 
@@ -327,8 +327,8 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x34
     struct Eqip_SpawnerEntry
     {
-        MapStructure::Tag::Reference SpawnedObject;  // 0x0  tagref.
-        MapStructure::Tag::Reference SpawnedEffect;  // 0x10  tagref.
+        MapStructure::Tag::TagReference SpawnedObject;  // 0x0  tagref.
+        MapStructure::Tag::TagReference SpawnedEffect;  // 0x10  tagref.
         float        SpawnRadius;  // 0x20  float32. | distance from players eyeball on the z-plane that this effect spawns
         float        SpawnZOffset;  // 0x24  float32. | z-offset of effect spawn
         float        SpawnAreaRadius;  // 0x28  float32. | need a sphere of radius r's free space in order to spawn, otherwise we pick a new spawn location
@@ -341,8 +341,8 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x30
     struct Eqip_ProximityMineEntry
     {
-        MapStructure::Tag::Reference ExplosionEffect;  // 0x0  tagref.
-        MapStructure::Tag::Reference ExplosionDamageEffect;  // 0x10  tagref.
+        MapStructure::Tag::TagReference ExplosionEffect;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ExplosionDamageEffect;  // 0x10  tagref.
         float        ArmTime;  // 0x20  float32. | time before it becomes a proximity mine
         float        SelfDestructTime;  // 0x24  float32. | seconds after it is created that it must self destruct. 0 means never destroy
         float        TriggerTime;  // 0x28  float32. | seconds object moving at trigger velocity takes to trigger explosion. This will smooth out sensitivity to velocity noise
@@ -365,7 +365,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     {
         float        ThresholdEnergyBurned;  // 0x0  float32. | how much energy you have to burn to play this effect
         float        EnergyAdjustment;  // 0x4  float32. | how much energy to add when playing this effect
-        MapStructure::Tag::Reference Effect;  // 0x8  tagref.
+        MapStructure::Tag::TagReference Effect;  // 0x8  tagref.
     };
     static_assert(sizeof(Eqip_InvincibilityMode_ThresholdEffectsEntry) == 0x18, "Eqip_InvincibilityMode_ThresholdEffectsEntry size mismatch");
 
@@ -377,16 +377,16 @@ export namespace Map::Tag::Type::Eqip::Structure
         std::int16_t Unknown;  // 0x6  int16.
         float        ShieldRechargeRate;  // 0x8  float32. | while active, shields recharge at this fraction per second
         float        ShieldMaximumRechargeLevel;  // 0xC  float32. | highest level shield can recharge to (can be up to 4)
-        MapStructure::Tag::Reference OverrideCollisionDamage;  // 0x10  tagref.
-        MapStructure::Tag::Reference AiMeleeReflectDamage;  // 0x20  tagref.
-        MapStructure::Tag::Reference PlayerMeleeReflectDamage;  // 0x30  tagref.
+        MapStructure::Tag::TagReference OverrideCollisionDamage;  // 0x10  tagref.
+        MapStructure::Tag::TagReference AiMeleeReflectDamage;  // 0x20  tagref.
+        MapStructure::Tag::TagReference PlayerMeleeReflectDamage;  // 0x30  tagref.
         std::uint32_t LoopInvincibilityShieldName;  // 0x40  stringid. | active while the equipment is in use (used for shield rendering effects)
         std::uint32_t PostInvincibilityShieldName;  // 0x44  stringid. | active once the equipment is no longer in use
         MapStructure::Data::Reference PostInvincibilityTimeToShieldLevelFunction;  // 0x48  dataref.
         float        MaximumVerticalVelocity;  // 0x5C  float32. | we use this to specify the domain of the active vertical velocity function
         MapStructure::Data::Reference ActiveVerticalVelocityDampingFunction;  // 0x60  dataref.
         // -> Eqip_InvincibilityMode_ThresholdEffectsEntry[]
-        MapStructure::Tag::Block   ThresholdEffects;  // 0x74  tagblock. | the effect with the highest threshold will play on deactivation
+        MapStructure::Tag::TagBlock   ThresholdEffects;  // 0x74  tagblock. | the effect with the highest threshold will play on deactivation
     };
     static_assert(sizeof(Eqip_InvincibilityModeEntry) == 0x80, "Eqip_InvincibilityModeEntry size mismatch");
 
@@ -486,15 +486,15 @@ export namespace Map::Tag::Type::Eqip::Structure
     struct Eqip_PlayerTraitField_ActivePlayerTraitsEntry
     {
         // -> Eqip_PlayerTraitField_ActivePlayerTraits_VitalityTraitsEntry[]
-        MapStructure::Tag::Block   VitalityTraits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   VitalityTraits;  // 0x0  tagblock.
         // -> Eqip_PlayerTraitField_ActivePlayerTraits_WeaponTraitsEntry[]
-        MapStructure::Tag::Block   WeaponTraits;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   WeaponTraits;  // 0xC  tagblock.
         // -> Eqip_PlayerTraitField_ActivePlayerTraits_MovementTraitsEntry[]
-        MapStructure::Tag::Block   MovementTraits;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   MovementTraits;  // 0x18  tagblock.
         // -> Eqip_PlayerTraitField_ActivePlayerTraits_AppearanceTraitsEntry[]
-        MapStructure::Tag::Block   AppearanceTraits;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   AppearanceTraits;  // 0x24  tagblock.
         // -> Eqip_PlayerTraitField_ActivePlayerTraits_SensorTraitsEntry[]
-        MapStructure::Tag::Block   SensorTraits;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   SensorTraits;  // 0x30  tagblock.
     };
     static_assert(sizeof(Eqip_PlayerTraitField_ActivePlayerTraitsEntry) == 0x3C, "Eqip_PlayerTraitField_ActivePlayerTraitsEntry size mismatch");
 
@@ -576,15 +576,15 @@ export namespace Map::Tag::Type::Eqip::Structure
     struct Eqip_PlayerTraitField_InactivePlayerTraitsEntry
     {
         // -> Eqip_PlayerTraitField_InactivePlayerTraits_VitalityTraitsEntry[]
-        MapStructure::Tag::Block   VitalityTraits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   VitalityTraits;  // 0x0  tagblock.
         // -> Eqip_PlayerTraitField_InactivePlayerTraits_WeaponTraitsEntry[]
-        MapStructure::Tag::Block   WeaponTraits;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   WeaponTraits;  // 0xC  tagblock.
         // -> Eqip_PlayerTraitField_InactivePlayerTraits_MovementTraitsEntry[]
-        MapStructure::Tag::Block   MovementTraits;  // 0x18  tagblock.
+        MapStructure::Tag::TagBlock   MovementTraits;  // 0x18  tagblock.
         // -> Eqip_PlayerTraitField_InactivePlayerTraits_AppearanceTraitsEntry[]
-        MapStructure::Tag::Block   AppearanceTraits;  // 0x24  tagblock.
+        MapStructure::Tag::TagBlock   AppearanceTraits;  // 0x24  tagblock.
         // -> Eqip_PlayerTraitField_InactivePlayerTraits_SensorTraitsEntry[]
-        MapStructure::Tag::Block   SensorTraits;  // 0x30  tagblock.
+        MapStructure::Tag::TagBlock   SensorTraits;  // 0x30  tagblock.
     };
     static_assert(sizeof(Eqip_PlayerTraitField_InactivePlayerTraitsEntry) == 0x3C, "Eqip_PlayerTraitField_InactivePlayerTraitsEntry size mismatch");
 
@@ -593,9 +593,9 @@ export namespace Map::Tag::Type::Eqip::Structure
     {
         std::uint8_t  _pad_0x0[0x4];  // undefined.
         // -> Eqip_PlayerTraitField_ActivePlayerTraitsEntry[]
-        MapStructure::Tag::Block   ActivePlayerTraits;  // 0x4  tagblock.
+        MapStructure::Tag::TagBlock   ActivePlayerTraits;  // 0x4  tagblock.
         // -> Eqip_PlayerTraitField_InactivePlayerTraitsEntry[]
-        MapStructure::Tag::Block   InactivePlayerTraits;  // 0x10  tagblock.
+        MapStructure::Tag::TagBlock   InactivePlayerTraits;  // 0x10  tagblock.
     };
     static_assert(sizeof(Eqip_PlayerTraitFieldEntry) == 0x1C, "Eqip_PlayerTraitFieldEntry size mismatch");
 
@@ -612,7 +612,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     struct Eqip_AiTraitField_ActiveAiEquipmentTraitsEntry
     {
         // -> Eqip_AiTraitField_ActiveAiEquipmentTraits_AppearanceTraitsEntry[]
-        MapStructure::Tag::Block   AppearanceTraits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   AppearanceTraits;  // 0x0  tagblock.
     };
     static_assert(sizeof(Eqip_AiTraitField_ActiveAiEquipmentTraitsEntry) == 0xC, "Eqip_AiTraitField_ActiveAiEquipmentTraitsEntry size mismatch");
 
@@ -629,7 +629,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     struct Eqip_AiTraitField_InactiveAiEquipmentTraitsEntry
     {
         // -> Eqip_AiTraitField_InactiveAiEquipmentTraits_AppearanceTraitsEntry[]
-        MapStructure::Tag::Block   AppearanceTraits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   AppearanceTraits;  // 0x0  tagblock.
     };
     static_assert(sizeof(Eqip_AiTraitField_InactiveAiEquipmentTraitsEntry) == 0xC, "Eqip_AiTraitField_InactiveAiEquipmentTraitsEntry size mismatch");
 
@@ -637,9 +637,9 @@ export namespace Map::Tag::Type::Eqip::Structure
     struct Eqip_AiTraitFieldEntry
     {
         // -> Eqip_AiTraitField_ActiveAiEquipmentTraitsEntry[]
-        MapStructure::Tag::Block   ActiveAiEquipmentTraits;  // 0x0  tagblock.
+        MapStructure::Tag::TagBlock   ActiveAiEquipmentTraits;  // 0x0  tagblock.
         // -> Eqip_AiTraitField_InactiveAiEquipmentTraitsEntry[]
-        MapStructure::Tag::Block   InactiveAiEquipmentTraits;  // 0xC  tagblock.
+        MapStructure::Tag::TagBlock   InactiveAiEquipmentTraits;  // 0xC  tagblock.
     };
     static_assert(sizeof(Eqip_AiTraitFieldEntry) == 0x18, "Eqip_AiTraitFieldEntry size mismatch");
 
@@ -655,7 +655,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x18
     struct Eqip_IwhbydaddyEntry
     {
-        MapStructure::Tag::Reference ChildObject;  // 0x0  tagref.
+        MapStructure::Tag::TagReference ChildObject;  // 0x0  tagref.
         std::uint32_t VisibilityFlags;  // 0x10  flags32. [Inactive Unstowed=0, Inactive Stowed=1, Active Unstowed=2, Active Stowed=3]
         float        ShieldDamageToEnergyScale;  // 0x14  float32. | scale factor for energy gain from shield damage to child. Damage is normalized, so if this value is -1.0 then the equipment will lose all its energy when its child's shield is depleted.
     };
@@ -680,10 +680,10 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x40
     struct Eqip_PowerFistEntry
     {
-        MapStructure::Tag::Reference MeleeDamage;  // 0x0  tagref.
-        MapStructure::Tag::Reference MeleeResponse;  // 0x10  tagref.
-        MapStructure::Tag::Reference ClangDamage;  // 0x20  tagref.
-        MapStructure::Tag::Reference ClangResponse;  // 0x30  tagref.
+        MapStructure::Tag::TagReference MeleeDamage;  // 0x0  tagref.
+        MapStructure::Tag::TagReference MeleeResponse;  // 0x10  tagref.
+        MapStructure::Tag::TagReference ClangDamage;  // 0x20  tagref.
+        MapStructure::Tag::TagReference ClangResponse;  // 0x30  tagref.
     };
     static_assert(sizeof(Eqip_PowerFistEntry) == 0x40, "Eqip_PowerFistEntry size mismatch");
 
@@ -712,12 +712,12 @@ export namespace Map::Tag::Type::Eqip::Structure
     {
         float        HologramDuration;  // 0x0  float32.
         std::uint32_t CollisionGroup;  // 0x4  enum32. [No Override=0xFF, Everything=0x0, Environment Default=0x1, Environment Only=0x2, Small Crate=0x3, Crate=0x4, Huge Crate=0x5, Item=0x6, Projectile=0x7, Machine=0x8, Early Mover Machine=0x9, Creature=0xA, Biped=0xB, Dead Biped=0xC, Super Collidable Ragdoll=0xD, Ragdoll=0xE, ...(28 total)]
-        MapStructure::Tag::Reference CreationEffect;  // 0x8  tagref.
-        MapStructure::Tag::Reference AttachedEffect;  // 0x18  tagref.
+        MapStructure::Tag::TagReference CreationEffect;  // 0x8  tagref.
+        MapStructure::Tag::TagReference AttachedEffect;  // 0x18  tagref.
         std::uint32_t AttachedEffectMarker;  // 0x28  stringid.
         std::uint32_t AttachedEffectPrimaryScale;  // 0x2C  stringid.
         std::uint32_t AttachedEffectSecondaryScale;  // 0x30  stringid.
-        MapStructure::Tag::Reference DestructionEffect;  // 0x34  tagref.
+        MapStructure::Tag::TagReference DestructionEffect;  // 0x34  tagref.
         float        ShimmerDecreaseRate;  // 0x44  float32. | how fast shimmer decreases
         float        ShimmerBulletPing;  // 0x48  float32. | how much to ping shimmer when hit by a bullet
         MapStructure::Data::Reference ShimmerToCamoFunction;  // 0x4C  dataref.
@@ -727,7 +727,7 @@ export namespace Map::Tag::Type::Eqip::Structure
     // Entry size: 0x10
     struct Eqip_SpecialWeaponEntry
     {
-        MapStructure::Tag::Reference Weapon;  // 0x0  tagref.
+        MapStructure::Tag::TagReference Weapon;  // 0x0  tagref.
     };
     static_assert(sizeof(Eqip_SpecialWeaponEntry) == 0x10, "Eqip_SpecialWeaponEntry size mismatch");
 
@@ -775,39 +775,39 @@ export namespace Map::Tag::Type::Eqip::Structure
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
         MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
-        MapStructure::Tag::Reference GenericNameList;  // 0x40  tagref.
-        MapStructure::Tag::Reference GenericServiceTagList;  // 0x50  tagref.
+        MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
+        MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
         std::uint32_t DefaultModelVariant;  // 0x60  stringid.
-        MapStructure::Tag::Reference Model;  // 0x64  tagref.
-        MapStructure::Tag::Reference CrateObject;  // 0x74  tagref.
-        MapStructure::Tag::Reference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
-        MapStructure::Tag::Reference BrittleCollisionDamage;  // 0x94  tagref.
+        MapStructure::Tag::TagReference Model;  // 0x64  tagref.
+        MapStructure::Tag::TagReference CrateObject;  // 0x74  tagref.
+        MapStructure::Tag::TagReference CollisionDamage;  // 0x84  tagref. | only set this tag if you want to override the default collision damage values in globals.globals
+        MapStructure::Tag::TagReference BrittleCollisionDamage;  // 0x94  tagref.
         // -> Eqip_EarlyMoverOrientedBoundingBoxEntry[]
-        MapStructure::Tag::Block   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
-        MapStructure::Tag::Reference CreationEffect;  // 0xB0  tagref.
-        MapStructure::Tag::Reference MaterialEffects;  // 0xC0  tagref.
-        MapStructure::Tag::Reference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
+        MapStructure::Tag::TagBlock   EarlyMoverOrientedBoundingBox;  // 0xA4  tagblock.
+        MapStructure::Tag::TagReference CreationEffect;  // 0xB0  tagref.
+        MapStructure::Tag::TagReference MaterialEffects;  // 0xC0  tagref.
+        MapStructure::Tag::TagReference MeleeSound;  // 0xD0  tagref. | this is the sound that is made when I am meleed. This overrides the sweetener sound of my material.
         // -> Eqip_AiPropertiesEntry[]
-        MapStructure::Tag::Block   AiProperties;  // 0xE0  tagblock.
+        MapStructure::Tag::TagBlock   AiProperties;  // 0xE0  tagblock.
         // -> Eqip_FunctionsEntry[]
-        MapStructure::Tag::Block   Functions;  // 0xEC  tagblock.
+        MapStructure::Tag::TagBlock   Functions;  // 0xEC  tagblock.
         // -> Eqip_RuntimeInterpolatorFunctionsEntry[]
-        MapStructure::Tag::Block   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
+        MapStructure::Tag::TagBlock   RuntimeInterpolatorFunctions;  // 0xF8  tagblock.
         // -> Eqip_AttachmentsEntry[]
-        MapStructure::Tag::Block   Attachments;  // 0x104  tagblock.
+        MapStructure::Tag::TagBlock   Attachments;  // 0x104  tagblock.
         // -> Eqip_HullSurfacesEntry[]
-        MapStructure::Tag::Block   HullSurfaces;  // 0x110  tagblock.
+        MapStructure::Tag::TagBlock   HullSurfaces;  // 0x110  tagblock.
         // -> Eqip_JetwashEntry[]
-        MapStructure::Tag::Block   Jetwash;  // 0x11C  tagblock.
+        MapStructure::Tag::TagBlock   Jetwash;  // 0x11C  tagblock.
         // -> Eqip_WidgetsEntry[]
-        MapStructure::Tag::Block   Widgets;  // 0x128  tagblock.
+        MapStructure::Tag::TagBlock   Widgets;  // 0x128  tagblock.
         // -> Eqip_ChangeColorsEntry[]
-        MapStructure::Tag::Block   ChangeColors;  // 0x134  tagblock.
+        MapStructure::Tag::TagBlock   ChangeColors;  // 0x134  tagblock.
         // -> Eqip_MultiplayerObjectEntry[]
-        MapStructure::Tag::Block   MultiplayerObject;  // 0x140  tagblock.
-        MapStructure::Tag::Reference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
+        MapStructure::Tag::TagBlock   MultiplayerObject;  // 0x140  tagblock.
+        MapStructure::Tag::TagReference SimulationInterpolation;  // 0x14C  tagref. | Set to a specific interpolation definition, or leave blank to inherit the default for the object type (there are defaults for bipeds, vehicles, and crates in multiplayer_globals).
         // -> Eqip_SpawnEffectsEntry[]
-        MapStructure::Tag::Block   SpawnEffects;  // 0x15C  tagblock.
+        MapStructure::Tag::TagBlock   SpawnEffects;  // 0x15C  tagblock.
         std::uint32_t Flags_2;  // 0x168  flags32. [Always Maintains z Up=0, Destroyed by Explosions=1, Unaffected by Gravity=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         std::uint32_t PickupMessage;  // 0x16C  stringid.
         std::uint32_t SwapMessage;  // 0x170  stringid.
@@ -820,10 +820,10 @@ export namespace Map::Tag::Type::Eqip::Structure
         std::uint32_t OverheatedMessage;  // 0x18C  stringid.
         std::int32_t PrivateUseFontIcon;  // 0x190  int32. | private use character for the item's icon
         std::int32_t PrivateUseFontIconDual;  // 0x194  int32. | private use character for the item's left-hand icon
-        MapStructure::Tag::Reference DetonationDamageEffect;  // 0x198  tagref.
+        MapStructure::Tag::TagReference DetonationDamageEffect;  // 0x198  tagref.
         MapStructure::Primitive::RangeF DetonationDelay;  // 0x1A8  rangef.
-        MapStructure::Tag::Reference DetonatingEffect;  // 0x1B0  tagref.
-        MapStructure::Tag::Reference DetonationEffect;  // 0x1C0  tagref.
+        MapStructure::Tag::TagReference DetonatingEffect;  // 0x1B0  tagref.
+        MapStructure::Tag::TagReference DetonationEffect;  // 0x1C0  tagref.
         float        GroundScale;  // 0x1D0  float32.
         float        SmallUnitArmedScale;  // 0x1D4  float32.
         float        SmallUnitStowedScale;  // 0x1D8  float32.
@@ -833,7 +833,7 @@ export namespace Map::Tag::Type::Eqip::Structure
         float        LargeUnitStowedScale;  // 0x1E8  float32.
         float        HugeUnitArmedScale;  // 0x1EC  float32.
         float        HugeUnitStowedScale;  // 0x1F0  float32.
-        MapStructure::Tag::Reference GroundedFrictionSettings;  // 0x1F4  tagref. | If not present, the default from global.globals is used.
+        MapStructure::Tag::TagReference GroundedFrictionSettings;  // 0x1F4  tagref. | If not present, the default from global.globals is used.
         float        WarmupTime;  // 0x204  float32. | time before the equipment truly becomes active
         float        Duration;  // 0x208  float32. | use negative numbers for infinite duration
         float        CooldownTime;  // 0x20C  float32. | for equipment that suppresses combat actions, these actions remain suppressed for this long after the equipment deactivates. Note that if this equipment also readies weapons when deactivated, the weapon will not be usable until both this timer expires and the ready animation has finished, whichever is longer
@@ -858,66 +858,66 @@ export namespace Map::Tag::Type::Eqip::Structure
         float        AwarenessTime;  // 0x278  float32. | How long I should go unnoticed by nearby enemies
         std::uint32_t AiDialogueEquipmentType;  // 0x27C  stringid. | The equipment ability type name used by the ai dialog system used to filter equipment activation dialogue events.
         // -> Eqip_OverrideCameraEntry[]
-        MapStructure::Tag::Block   OverrideCamera;  // 0x280  tagblock.
+        MapStructure::Tag::TagBlock   OverrideCamera;  // 0x280  tagblock.
         // -> Eqip_MultiplayerPowerupEntry[]
-        MapStructure::Tag::Block   MultiplayerPowerup;  // 0x28C  tagblock.
+        MapStructure::Tag::TagBlock   MultiplayerPowerup;  // 0x28C  tagblock.
         // -> Eqip_SpawnerEntry[]
-        MapStructure::Tag::Block   Spawner;  // 0x298  tagblock.
+        MapStructure::Tag::TagBlock   Spawner;  // 0x298  tagblock.
         // -> Eqip_ProximityMineEntry[]
-        MapStructure::Tag::Block   ProximityMine;  // 0x2A4  tagblock.
+        MapStructure::Tag::TagBlock   ProximityMine;  // 0x2A4  tagblock.
         // -> Eqip_MotionTrackerNoiseEntry[]
-        MapStructure::Tag::Block   MotionTrackerNoise;  // 0x2B0  tagblock.
+        MapStructure::Tag::TagBlock   MotionTrackerNoise;  // 0x2B0  tagblock.
         std::uint32_t Unknown;  // 0x2BC  uint32.
         std::uint32_t Unknown_2;  // 0x2C0  uint32.
         std::uint32_t Unknown_3;  // 0x2C4  uint32.
         // -> Eqip_InvincibilityModeEntry[]
-        MapStructure::Tag::Block   InvincibilityMode;  // 0x2C8  tagblock.
+        MapStructure::Tag::TagBlock   InvincibilityMode;  // 0x2C8  tagblock.
         // -> Eqip_TreeOfLifeEntry[]
-        MapStructure::Tag::Block   TreeOfLife;  // 0x2D4  tagblock.
+        MapStructure::Tag::TagBlock   TreeOfLife;  // 0x2D4  tagblock.
         // -> Eqip_ShapeshifterEntry[]
-        MapStructure::Tag::Block   Shapeshifter;  // 0x2E0  tagblock.
+        MapStructure::Tag::TagBlock   Shapeshifter;  // 0x2E0  tagblock.
         // -> Eqip_PlayerTraitFieldEntry[]
-        MapStructure::Tag::Block   PlayerTraitField;  // 0x2EC  tagblock.
+        MapStructure::Tag::TagBlock   PlayerTraitField;  // 0x2EC  tagblock.
         // -> Eqip_AiTraitFieldEntry[]
-        MapStructure::Tag::Block   AiTraitField;  // 0x2F8  tagblock.
+        MapStructure::Tag::TagBlock   AiTraitField;  // 0x2F8  tagblock.
         // -> Eqip_RepulsorFieldEntry[]
-        MapStructure::Tag::Block   RepulsorField;  // 0x304  tagblock.
+        MapStructure::Tag::TagBlock   RepulsorField;  // 0x304  tagblock.
         // -> Eqip_IwhbydaddyEntry[]
-        MapStructure::Tag::Block   Iwhbydaddy;  // 0x310  tagblock.
+        MapStructure::Tag::TagBlock   Iwhbydaddy;  // 0x310  tagblock.
         std::uint32_t Unknown_4;  // 0x31C  uint32.
         std::uint32_t Unknown_5;  // 0x320  uint32.
         std::uint32_t Unknown_6;  // 0x324  uint32.
         // -> Eqip_SuperJumpEntry[]
-        MapStructure::Tag::Block   SuperJump;  // 0x328  tagblock.
+        MapStructure::Tag::TagBlock   SuperJump;  // 0x328  tagblock.
         // -> Eqip_AmmoPackEntry[]
-        MapStructure::Tag::Block   AmmoPack;  // 0x334  tagblock.
+        MapStructure::Tag::TagBlock   AmmoPack;  // 0x334  tagblock.
         // -> Eqip_PowerFistEntry[]
-        MapStructure::Tag::Block   PowerFist;  // 0x340  tagblock.
+        MapStructure::Tag::TagBlock   PowerFist;  // 0x340  tagblock.
         // -> Eqip_HealthPackEntry[]
-        MapStructure::Tag::Block   HealthPack;  // 0x34C  tagblock.
+        MapStructure::Tag::TagBlock   HealthPack;  // 0x34C  tagblock.
         // -> Eqip_JetpackEntry[]
-        MapStructure::Tag::Block   Jetpack;  // 0x358  tagblock.
+        MapStructure::Tag::TagBlock   Jetpack;  // 0x358  tagblock.
         // -> Eqip_HologramEntry[]
-        MapStructure::Tag::Block   Hologram;  // 0x364  tagblock.
+        MapStructure::Tag::TagBlock   Hologram;  // 0x364  tagblock.
         // -> Eqip_SpecialWeaponEntry[]
-        MapStructure::Tag::Block   SpecialWeapon;  // 0x370  tagblock.
+        MapStructure::Tag::TagBlock   SpecialWeapon;  // 0x370  tagblock.
         // -> Eqip_SpecialMoveEntry[]
-        MapStructure::Tag::Block   SpecialMove;  // 0x37C  tagblock.
+        MapStructure::Tag::TagBlock   SpecialMove;  // 0x37C  tagblock.
         // -> Eqip_EngineerShieldsEntry[]
-        MapStructure::Tag::Block   EngineerShields;  // 0x388  tagblock.
+        MapStructure::Tag::TagBlock   EngineerShields;  // 0x388  tagblock.
         // -> Eqip_SprintEntry[]
-        MapStructure::Tag::Block   Sprint;  // 0x394  tagblock.
+        MapStructure::Tag::TagBlock   Sprint;  // 0x394  tagblock.
         std::uint8_t DamageReportingType;  // 0x3A0  enum8. [Guardians (Unknown)=0x0, Guardians (Default)=0x1, Guardians (Scripting)=0x2, Suicide=0x3, Magnum=0x4, Assault Rifle=0x5, DMR=0x6, Shotgun=0x7, Sniper Rifle=0x8, Rocket Launcher=0x9, Spartan Laser=0xA, Frag Grenade=0xB, Grenade Launcher=0xC, Plasma Pistol=0xD, Needler=0xE, Plasma Rifle=0xF, ...(82 total)]
         std::int8_t  Unknown_7;  // 0x3A1  int8.
         std::int8_t  Unknown_8;  // 0x3A2  int8.
         std::int8_t  Unknown_9;  // 0x3A3  int8.
-        MapStructure::Tag::Reference HudInterface;  // 0x3A4  tagref.
-        MapStructure::Tag::Reference PickupSound;  // 0x3B4  tagref.
-        MapStructure::Tag::Reference ActivationWhileDisabledByPlayerTraitsSound;  // 0x3C4  tagref.
-        MapStructure::Tag::Reference ActivateEffect;  // 0x3D4  tagref.
-        MapStructure::Tag::Reference LoopingEffect;  // 0x3E4  tagref.
-        MapStructure::Tag::Reference DeactivationEffect;  // 0x3F4  tagref.
-        MapStructure::Tag::Reference EnergyChargedEffect;  // 0x404  tagref.
+        MapStructure::Tag::TagReference HudInterface;  // 0x3A4  tagref.
+        MapStructure::Tag::TagReference PickupSound;  // 0x3B4  tagref.
+        MapStructure::Tag::TagReference ActivationWhileDisabledByPlayerTraitsSound;  // 0x3C4  tagref.
+        MapStructure::Tag::TagReference ActivateEffect;  // 0x3D4  tagref.
+        MapStructure::Tag::TagReference LoopingEffect;  // 0x3E4  tagref.
+        MapStructure::Tag::TagReference DeactivationEffect;  // 0x3F4  tagref.
+        MapStructure::Tag::TagReference EnergyChargedEffect;  // 0x404  tagref.
         std::uint32_t ActivationAnimation;  // 0x414  stringid.
         std::uint32_t ActiveAnimation;  // 0x418  stringid.
         std::uint32_t DeactivateAnimation;  // 0x41C  stringid.

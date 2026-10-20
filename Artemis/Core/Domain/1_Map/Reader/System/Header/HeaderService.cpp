@@ -3,8 +3,13 @@ import :Header;
 
 namespace
 {
+    namespace Sections = Map::Reader::Type::Offset::Header::Sections;
+    namespace OffsetMasks = Map::Reader::Type::Offset::Header::OffsetMasks;
     namespace Offset = Map::Reader::Type::Offset;
-    using HeaderSection = Map::Reader::Type::Structure::Header::Section;
+    using Map::Reader::Type::Structure::Header::HeaderSection;
+
+    using Map::Reader::Type::Offset::Header::k_VirtualBaseAddress;
+    using Map::Reader::Type::Offset::Header::k_FileTableCount;
 }
 
 namespace Map::Reader::System
@@ -19,7 +24,7 @@ namespace Map::Reader::System
             return file.gcount() == bytes;
         };
 
-        file.seekg(Offset::Header::k_VirtualBaseAddress, std::ios::beg);
+        file.seekg(k_VirtualBaseAddress, std::ios::beg);
         if (!readBytes(&headerInfo.VirtualBaseAddress, sizeof(headerInfo.VirtualBaseAddress)))
         {
             return std::nullopt;
@@ -31,7 +36,7 @@ namespace Map::Reader::System
             return std::nullopt;
         }
 
-        file.seekg(Offset::Header::k_FileTableCount, std::ios::beg);
+        file.seekg(k_FileTableCount, std::ios::beg);
         if (!readBytes(&headerInfo.FileTableCount, sizeof(headerInfo.FileTableCount)))
         {
             return std::nullopt;
@@ -52,9 +57,9 @@ namespace Map::Reader::System
             return std::nullopt;
         }
 
-        constexpr std::size_t masksCount = Offset::Header::OffsetMasks::k_Count;
+        constexpr std::size_t masksCount = OffsetMasks::k_Count;
         std::uint32_t offsetMasks[masksCount]{};
-        file.seekg(Offset::Header::OffsetMasks::k_Base, std::ios::beg);
+        file.seekg(OffsetMasks::k_Base, std::ios::beg);
         if (!readBytes(offsetMasks, sizeof(offsetMasks)))
         {
             return std::nullopt;
@@ -64,9 +69,9 @@ namespace Map::Reader::System
         headerInfo.ResourceOffsetMask = offsetMasks[1];
         headerInfo.TagOffsetMask = offsetMasks[2];
 
-        constexpr std::size_t sectionsCount = Offset::Header::Sections::k_Count;
+        constexpr std::size_t sectionsCount = Sections::k_Count;
         HeaderSection sections[sectionsCount]{};
-        file.seekg(Offset::Header::Sections::k_Base, std::ios::beg);
+        file.seekg(Sections::k_Base, std::ios::beg);
         if (!readBytes(sections, sizeof(sections)))
         {
             return std::nullopt;

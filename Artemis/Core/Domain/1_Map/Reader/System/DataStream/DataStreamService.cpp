@@ -41,7 +41,7 @@ namespace Map::Reader::System
 
         if (compressedSize == decompressedSize)
         {
-            std::int32_t length = std::min(segmentLength,
+            std::int32_t length = (std::min)(segmentLength,
                 decompressedSize - segmentOffset);
             if (length <= 0) return {};
 
@@ -58,7 +58,7 @@ namespace Map::Reader::System
         auto decompressed = this->Inflate(compressed, compressedSize, decompressedSize);
         if (decompressed.empty()) return {};
 
-        std::int32_t length = std::min(segmentLength,
+        std::int32_t length = (std::min)(segmentLength,
             decompressedSize - segmentOffset);
         if (length <= 0) return {};
 

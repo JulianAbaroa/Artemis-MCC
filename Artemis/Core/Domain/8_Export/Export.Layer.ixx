@@ -55,7 +55,7 @@ export namespace Export
         auto operator=(const Layer&) -> Layer& = delete;
 
         // --- State ---
-        TickStore m_TickStore;
+        TickStore m_TickStore{};
 
         // --- System ---
         TickService m_TickService;

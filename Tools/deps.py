@@ -28,7 +28,9 @@ IMPORT = re.compile(r"^\s*(?:export\s+)?import\s+([\w.]+)?(:[\w.]+)?\s*;")
 def ListSources():
     out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", "Artemis/"],
                          cwd=ROOT, capture_output=True, text=True, check=True).stdout
-    return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")) and not p.startswith("Artemis/External/"))
+    # A file moved or deleted since the last commit is still in the index: only the ones on disk count.
+    return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")) and not p.startswith("Artemis/External/")
+                  and os.path.isfile(os.path.join(ROOT, p)))
 
 
 class Graph:

@@ -2,6 +2,7 @@ module Resolved.Definitions.System;
 import :Sddt;
 
 import Common.Math.Type;
+import Resolved.Definitions.Type;
 
 namespace
 {
@@ -10,7 +11,7 @@ namespace
     using Resolved::Definitions::Type::Scnr::SoftCeilingKind;
     using Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
 
-    constexpr std::uint16_t k_LastSoftCeilingKind{ 0x0002 };
+    using Resolved::Definitions::Type::Scnr::k_LastSoftCeilingKind;
 
     template <typename TVec3>
     constexpr auto ToVec3(const TVec3& value) -> Vec3

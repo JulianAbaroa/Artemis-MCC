@@ -59,7 +59,7 @@ namespace
             case '\r': out += "\\r"; break;
             case '\t': out += "\\t"; break;
             default:
-                if (static_cast<unsigned char>(c) < 0x20)
+                if (static_cast<unsigned char>(c) < ' ')
                 {
                     out += std::format("\\u{:04x}", static_cast<int>(c));
                 }
@@ -254,20 +254,20 @@ namespace UI::DefinitionsInspector::System
 
     auto DefinitionsInspectorUIService::IsResolved(const std::string& fourCC, const std::string& tagName) const -> bool
     {
-        if (fourCC == "hlmt") return m_DefinitionsStore.Hlmt.Has(tagName);
-        if (fourCC == "coll") return m_DefinitionsStore.Coll.Has(tagName);
-        if (fourCC == "jpt!") return m_DefinitionsStore.Jpt.Has(tagName);
-        if (fourCC == "mode") return m_DefinitionsStore.Mode.Has(tagName);
-        if (fourCC == "phmo") return m_DefinitionsStore.Phmo.Has(tagName);
-        if (fourCC == "proj") return m_DefinitionsStore.Proj.Has(tagName);
-        if (fourCC == "vehi") return m_DefinitionsStore.Vehi.Has(tagName);
-        if (fourCC == "weap") return m_DefinitionsStore.Weap.Has(tagName);
+        if (fourCC == "hlmt") return m_DefinitionsStore.m_Hlmt.Has(tagName);
+        if (fourCC == "coll") return m_DefinitionsStore.m_Coll.Has(tagName);
+        if (fourCC == "jpt!") return m_DefinitionsStore.m_Jpt.Has(tagName);
+        if (fourCC == "mode") return m_DefinitionsStore.m_Mode.Has(tagName);
+        if (fourCC == "phmo") return m_DefinitionsStore.m_Phmo.Has(tagName);
+        if (fourCC == "proj") return m_DefinitionsStore.m_Proj.Has(tagName);
+        if (fourCC == "vehi") return m_DefinitionsStore.m_Vehi.Has(tagName);
+        if (fourCC == "weap") return m_DefinitionsStore.m_Weap.Has(tagName);
         return false;
     }
 
     auto DefinitionsInspectorUIService::DumpFourCC(const std::string& fourCC) -> std::string
     {
-        if (!m_DefinitionsStore.Sbsp.IsFrozen()) return "Definitions not ready (map not loaded).";
+        if (!m_DefinitionsStore.m_Sbsp.IsFrozen()) return "Definitions not ready (map not loaded).";
 
         const std::string directory{ m_SettingsStore.GetAppDataDirectory() };
         if (directory.empty()) return "Storage Folder is not set (Settings). Set it and try again.";
@@ -278,22 +278,22 @@ namespace UI::DefinitionsInspector::System
         const path filePath{ path(directory) / ("definitions_dump_" + fileTag + ".ndjson") };
 
         std::optional<std::size_t> n{};
-        if (fourCC == "bipd") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Bipd.All());
-        else if (fourCC == "bloc") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Bloc.All());
-        else if (fourCC == "coll") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Coll.All());
-        else if (fourCC == "ctrl") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Ctrl.All());
-        else if (fourCC == "eqip") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Eqip.All());
-        else if (fourCC == "hlmt") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Hlmt.All());
-        else if (fourCC == "jpt!") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Jpt.All());
-        else if (fourCC == "mach") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Mach.All());
-        else if (fourCC == "mode") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Mode.All());
-        else if (fourCC == "phmo") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Phmo.All());
-        else if (fourCC == "proj") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Proj.All());
-        else if (fourCC == "scen") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Scen.All());
-        else if (fourCC == "scnr") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Scnr.All());
-        else if (fourCC == "sddt") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Sddt.All());
-        else if (fourCC == "vehi") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Vehi.All());
-        else if (fourCC == "weap") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.Weap.All());
+        if (fourCC == "bipd") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Bipd.All());
+        else if (fourCC == "bloc") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Bloc.All());
+        else if (fourCC == "coll") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Coll.All());
+        else if (fourCC == "ctrl") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Ctrl.All());
+        else if (fourCC == "eqip") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Eqip.All());
+        else if (fourCC == "hlmt") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Hlmt.All());
+        else if (fourCC == "jpt!") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Jpt.All());
+        else if (fourCC == "mach") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Mach.All());
+        else if (fourCC == "mode") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Mode.All());
+        else if (fourCC == "phmo") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Phmo.All());
+        else if (fourCC == "proj") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Proj.All());
+        else if (fourCC == "scen") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Scen.All());
+        else if (fourCC == "scnr") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Scnr.All());
+        else if (fourCC == "sddt") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Sddt.All());
+        else if (fourCC == "vehi") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Vehi.All());
+        else if (fourCC == "weap") n = WriteNdjson(filePath, fourCC, m_DefinitionsStore.m_Weap.All());
 
         if (!n) return std::format("Could not open {} for writing.", filePath.string());
         if (*n == 0) return std::format("No {} tags in this map's Definitions (file written empty: {}).", fourCC, filePath.string());
@@ -302,12 +302,12 @@ namespace UI::DefinitionsInspector::System
 
     auto DefinitionsInspectorUIService::DumpCatalog() -> std::string
     {
-        if (!m_DefinitionsStore.Sbsp.IsFrozen()) return "Definitions not ready (map not loaded).";
+        if (!m_DefinitionsStore.m_Sbsp.IsFrozen()) return "Definitions not ready (map not loaded).";
 
         const std::string directory{ m_SettingsStore.GetAppDataDirectory() };
         if (directory.empty()) return "Storage Folder is not set (Settings). Set it and try again.";
 
-        const auto& scenarios{ m_DefinitionsStore.Scnr.All() };
+        const auto& scenarios{ m_DefinitionsStore.m_Scnr.All() };
         if (scenarios.empty()) return "The map has no scenario tag.";
 
         const std::string mapName{ path(scenarios.begin()->first).stem().string() };
@@ -323,15 +323,15 @@ namespace UI::DefinitionsInspector::System
         file << std::format("<map name=\"{}\">\n", XmlEscape(mapName));
 
         std::size_t written{ 0 };
-        written += WriteCatalogGroup(file, "bipd", m_DefinitionsStore.Bipd.All());
-        written += WriteCatalogGroup(file, "bloc", m_DefinitionsStore.Bloc.All());
-        written += WriteCatalogGroup(file, "ctrl", m_DefinitionsStore.Ctrl.All());
-        written += WriteCatalogGroup(file, "eqip", m_DefinitionsStore.Eqip.All());
-        written += WriteCatalogGroup(file, "mach", m_DefinitionsStore.Mach.All());
-        written += WriteCatalogGroup(file, "proj", m_DefinitionsStore.Proj.All());
-        written += WriteCatalogGroup(file, "scen", m_DefinitionsStore.Scen.All());
-        written += WriteCatalogGroup(file, "vehi", m_DefinitionsStore.Vehi.All());
-        written += WriteCatalogGroup(file, "weap", m_DefinitionsStore.Weap.All());
+        written += WriteCatalogGroup(file, "bipd", m_DefinitionsStore.m_Bipd.All());
+        written += WriteCatalogGroup(file, "bloc", m_DefinitionsStore.m_Bloc.All());
+        written += WriteCatalogGroup(file, "ctrl", m_DefinitionsStore.m_Ctrl.All());
+        written += WriteCatalogGroup(file, "eqip", m_DefinitionsStore.m_Eqip.All());
+        written += WriteCatalogGroup(file, "mach", m_DefinitionsStore.m_Mach.All());
+        written += WriteCatalogGroup(file, "proj", m_DefinitionsStore.m_Proj.All());
+        written += WriteCatalogGroup(file, "scen", m_DefinitionsStore.m_Scen.All());
+        written += WriteCatalogGroup(file, "vehi", m_DefinitionsStore.m_Vehi.All());
+        written += WriteCatalogGroup(file, "weap", m_DefinitionsStore.m_Weap.All());
 
         file << "</map>";
 
@@ -413,22 +413,22 @@ namespace UI::DefinitionsInspector::System
     auto DefinitionsInspectorUIService::DrawTag(const std::string& fourCC, const std::string& tagName,
         std::uint32_t ownerHandle) -> void
     {
-        if (fourCC == "bipd") this->DrawResolved(m_DefinitionsStore.Bipd.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "bloc") this->DrawResolved(m_DefinitionsStore.Bloc.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "coll") this->DrawResolved(m_DefinitionsStore.Coll.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "ctrl") this->DrawResolved(m_DefinitionsStore.Ctrl.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "eqip") this->DrawResolved(m_DefinitionsStore.Eqip.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "hlmt") this->DrawResolved(m_DefinitionsStore.Hlmt.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "jpt!") this->DrawResolved(m_DefinitionsStore.Jpt.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "mach") this->DrawResolved(m_DefinitionsStore.Mach.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "mode") this->DrawResolved(m_DefinitionsStore.Mode.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "phmo") this->DrawResolved(m_DefinitionsStore.Phmo.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "proj") this->DrawResolved(m_DefinitionsStore.Proj.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "scen") this->DrawResolved(m_DefinitionsStore.Scen.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "scnr") this->DrawResolved(m_DefinitionsStore.Scnr.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "sddt") this->DrawResolved(m_DefinitionsStore.Sddt.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "vehi") this->DrawResolved(m_DefinitionsStore.Vehi.Get(tagName), fourCC, tagName, ownerHandle);
-        else if (fourCC == "weap") this->DrawResolved(m_DefinitionsStore.Weap.Get(tagName), fourCC, tagName, ownerHandle);
+        if (fourCC == "bipd") this->DrawResolved(m_DefinitionsStore.m_Bipd.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "bloc") this->DrawResolved(m_DefinitionsStore.m_Bloc.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "coll") this->DrawResolved(m_DefinitionsStore.m_Coll.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "ctrl") this->DrawResolved(m_DefinitionsStore.m_Ctrl.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "eqip") this->DrawResolved(m_DefinitionsStore.m_Eqip.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "hlmt") this->DrawResolved(m_DefinitionsStore.m_Hlmt.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "jpt!") this->DrawResolved(m_DefinitionsStore.m_Jpt.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "mach") this->DrawResolved(m_DefinitionsStore.m_Mach.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "mode") this->DrawResolved(m_DefinitionsStore.m_Mode.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "phmo") this->DrawResolved(m_DefinitionsStore.m_Phmo.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "proj") this->DrawResolved(m_DefinitionsStore.m_Proj.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "scen") this->DrawResolved(m_DefinitionsStore.m_Scen.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "scnr") this->DrawResolved(m_DefinitionsStore.m_Scnr.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "sddt") this->DrawResolved(m_DefinitionsStore.m_Sddt.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "vehi") this->DrawResolved(m_DefinitionsStore.m_Vehi.Get(tagName), fourCC, tagName, ownerHandle);
+        else if (fourCC == "weap") this->DrawResolved(m_DefinitionsStore.m_Weap.Get(tagName), fourCC, tagName, ownerHandle);
         else ImGui::TextDisabled("FourCC \"%s\" without Resolved::Definitions yet.", fourCC.c_str());
     }
 }

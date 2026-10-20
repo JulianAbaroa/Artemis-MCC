@@ -12,8 +12,8 @@ import std;
 
 namespace
 {
-    using Tab = UI::Launcher::Type::Tab;
-    using IconLoader = UI::Icon::System::IconLoader;
+    using UI::Launcher::Type::Tab;
+    using UI::Icon::System::IconLoader;
 
     using UI::Launcher::Type::ToIndex;
 

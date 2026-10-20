@@ -3,9 +3,9 @@ import :Geometry.Loader;
 
 namespace
 {
-    using MeshesObject = Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
-    using TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
-    using BufferInfo = Map::Reader::Type::Geometry::BufferInfo;
+    using Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
+    using Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+    using Map::Reader::Type::Geometry::BufferInfo;
 }
 
 namespace Map::Reader::System
@@ -34,7 +34,7 @@ namespace Map::Reader::System
             const LbspObject* lbsp = m_TagCatalog.Lbsp.Get(tagName);
             if (!lbsp || lbsp->Meshes.empty()) continue;
 
-            const TagResourcesObject* lbspEntry{ nullptr };
+            const Zone_TagResourcesObject* lbspEntry{ nullptr };
 
             std::vector<std::uint8_t> pageData = m_GeometryResourcePageService.Read(
                 lbsp->Data.ZoneAssetDatum, &lbspEntry, zone, play);
@@ -79,7 +79,7 @@ namespace Map::Reader::System
                     continue;
                 }
 
-                const MeshesObject& section = lbsp->Meshes[sectionIdx];
+                const Lbsp_MeshesObject& section = lbsp->Meshes[sectionIdx];
 
                 trianglesWorld += m_GeometryMeshDecoderService.EmitSection(
                     pageData, *lbspEntry, vbCount, vbInfo, ibInfo, section,

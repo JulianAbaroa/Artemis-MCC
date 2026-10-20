@@ -14,7 +14,7 @@ import std;
 
 namespace
 {
-    using Tick = Export::Tick::Type::Tick;
+    using Export::Tick::Type::Tick;
     using Export::Tick::Type::Entity;
     using Export::Tick::Type::ZoneDetail;
     using Export::Tick::Type::TeleporterDetail;
@@ -22,14 +22,14 @@ namespace
     using Export::Tick::Type::BarrierDetail;
     using Environment::Details::Type::TeleporterPass;
     using Environment::Details::Type::HasPass;
-    using ZoneShape = Common::ZoneShape::Type::ZoneShape;
-    using ZoneKind = Common::ZoneShape::Type::Kind;
+    using Common::ZoneShape::Type::ZoneShape;
+    using Common::ZoneShape::Type::ZoneShapeKind;
 
-    using HexFormater = Gui::Format::System::HexFormater;
-    using TeamFormater = Gui::Format::System::TeamFormater;
-    using FixturesFormater = Gui::Format::System::FixturesFormater;
+    using Gui::Format::System::HexFormater;
+    using Gui::Format::System::TeamFormater;
+    using Gui::Format::System::FixturesFormater;
 
-    using PanelGuiService = Gui::Widget::System::PanelGuiService;
+    using Gui::Widget::System::PanelGuiService;
 
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
@@ -43,13 +43,13 @@ namespace
 
         switch (zoneShape.Kind)
         {
-        case ZoneKind::Cylinder:
+        case ZoneShapeKind::Cylinder:
             ImGui::Text("Radius: %.2f", zoneShape.Radius);
             ImGui::Text("Top: %.2f", zoneShape.Top);
             ImGui::Text("Bottom: %.2f", zoneShape.Bottom);
             break;
 
-        case ZoneKind::Box:
+        case ZoneShapeKind::Box:
             ImGui::Text("Width: %.2f", zoneShape.Radius);
             ImGui::Text("Length: %.2f", zoneShape.Length);
             ImGui::Text("Top: %.2f", zoneShape.Top);

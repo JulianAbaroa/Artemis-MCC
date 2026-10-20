@@ -6,92 +6,103 @@ import std;
 
 namespace
 {
-	using ZoneShape = Common::ZoneShape::Type::ZoneShape;
+    using Common::ZoneShape::Type::ZoneShape;
+
+    using Common::Tag::Type::Teleport::k_TeleportReceiver;
+    using Common::Tag::Type::Teleport::k_TeleportTwoWay;
+    using Common::Tag::Type::Explosive::k_PlasmaBattery;
+    using Common::Tag::Type::Teleport::k_TeleportSender;
+    using Common::Tag::Type::Objective::k_CapturePlate;
+    using Common::Tag::Type::Explosive::k_PropaneTank;
+    using Common::Tag::Type::Objective::k_HillMarker;
+    using Common::Tag::Type::Explosive::k_FusionCoil;
+    using Common::Tag::Type::Objective::k_FlagStand;
+    using Common::Tag::Type::Pallets::k_PalletLarge;
+    using Common::Tag::Type::Explosive::k_Landmine;
+    using Common::Tag::Type::Pallets::k_Pallet;
 }
 
 export namespace Tables::Object::Type::Crate
 {
-	enum class Kind : std::uint8_t
-	{
-		Unknown = 0,
+    enum class CrateKind : std::uint8_t
+    {
+        Unknown = 0,
 
-		// Zone / Objective.
-		FlagStand, CapturePlate, HillMarker,
-		TeleportSender, TeleportReceiver, TeleportTwoWay,
+        // Zone / Objective.
+        FlagStand, CapturePlate, HillMarker,
+        TeleportSender, TeleportReceiver, TeleportTwoWay,
 
-		// Destructible.
-		FusionCoil, Landmine, PlasmaBattery,
-		PropaneTank, Pallete,
-	};
+        // Destructible.
+        FusionCoil, Landmine, PlasmaBattery,
+        PropaneTank, Pallete,
+    };
 
-	namespace Teleport
-	{
-		enum class Allowed : std::uint8_t
-		{
-			None = 0x00,
-			NoPlayers = 0x01,
-			AllowGround = 0x02,
-			AllowHeavy = 0x04,
-			AllowFlying = 0x08,
-			AllowProjctile = 0x10,
-		};
+    namespace Teleport
+    {
+        enum class Allowed : std::uint8_t
+        {
+            None = 0x00,
+            NoPlayers = 0x01,
+            AllowGround = 0x02,
+            AllowHeavy = 0x04,
+            AllowFlying = 0x08,
+            AllowProjctile = 0x10,
+        };
 
-		inline Allowed operator|(Allowed a, Allowed b)
-		{
-			return static_cast<Allowed>(
-				static_cast<std::uint8_t>(a) | static_cast<std::uint8_t>(b));
-		}
+        inline Allowed operator|(Allowed a, Allowed b)
+        {
+            return static_cast<Allowed>(
+                static_cast<std::uint8_t>(a) | static_cast<std::uint8_t>(b));
+        }
 
-		inline bool HasFlag(Allowed mask, Allowed flag)
-		{
-			return (static_cast<std::uint8_t>(mask) &
-				static_cast<std::uint8_t>(flag)) != 0;
-		}
+        inline auto HasFlag(Allowed mask, Allowed flag) -> bool
+        {
+            return (static_cast<std::uint8_t>(mask) &
+                static_cast<std::uint8_t>(flag)) != 0;
+        }
 
-		struct Teleport
-		{
-			ZoneShape ZoneShape{};
-			std::uint8_t Channel{};
-			Allowed Allowed{};
-		};
-	}
+        struct Teleport
+        {
+            ZoneShape ZoneShape{};
+            std::uint8_t Channel{};
+            Allowed Allowed{};
+        };
+    }
 
-	inline Kind ResolveCrateType(const std::string& tagName)
-	{
-		namespace Name = Common::Tag::Type;
+    inline auto ResolveCrateType(const std::string& tagName) -> CrateKind
+    {
+        static const std::unordered_map<std::string, CrateKind> map =
+        {
+            // Objectives.
+            { k_FlagStand,             CrateKind::FlagStand         },
+            { k_CapturePlate,          CrateKind::CapturePlate      },
+            { k_HillMarker,            CrateKind::HillMarker        },
 
-		static const std::unordered_map<std::string, Kind> map =
-		{
-			// Objectives.
-			{ Name::Objective::k_FlagStand,				Kind::FlagStand			},
-			{ Name::Objective::k_CapturePlate,			Kind::CapturePlate		},
-			{ Name::Objective::k_HillMarker,			Kind::HillMarker		},
+            // Teleports.
+            { k_TeleportSender,         CrateKind::TeleportSender    },
+            { k_TeleportReceiver,       CrateKind::TeleportReceiver  },
+            { k_TeleportTwoWay,         CrateKind::TeleportTwoWay    },
 
-			// Teleports.
-			{ Name::Teleport::k_TeleportSender,			Kind::TeleportSender	},
-			{ Name::Teleport::k_TeleportReceiver,		Kind::TeleportReceiver	},
-			{ Name::Teleport::k_TeleportTwoWay,			Kind::TeleportTwoWay	},
+            // Palletes.
+            { k_Pallet,                  CrateKind::Pallete,          },
+            { k_PalletLarge,             CrateKind::Pallete,          },
 
-			// Palletes.
-			{ Name::Pallets::k_Pallet,					Kind::Pallete,			},
-			{ Name::Pallets::k_PalletLarge,				Kind::Pallete,			},
+            // Explosives.
+            { k_FusionCoil,            CrateKind::FusionCoil        },
+            { k_Landmine,              CrateKind::Landmine          },
+            { k_PlasmaBattery,         CrateKind::PlasmaBattery     },
+            { k_PropaneTank,           CrateKind::PropaneTank       },
+        };
 
-			// Explosives.
-			{ Name::Explosive::k_FusionCoil,			Kind::FusionCoil		},
-			{ Name::Explosive::k_Landmine,				Kind::Landmine			},
-			{ Name::Explosive::k_PlasmaBattery,			Kind::PlasmaBattery		},
-			{ Name::Explosive::k_PropaneTank,			Kind::PropaneTank		},
-		};
+        auto it = map.find(tagName);
+        return it != map.end() ? it->second : CrateKind::Unknown;
+    }
 
-		auto it = map.find(tagName);
-		return it != map.end() ? it->second : Kind::Unknown;
-	}
+    struct Crate
+    {
+        std::uintptr_t Base{};
+        CrateKind Kind{};
 
-	struct Crate
-	{
-		std::uintptr_t Base{};
-		Kind Kind{};
-
-		std::optional<Teleport::Teleport> Teleport{};
-	};
+        std::optional<Teleport::Teleport> Teleport{};
+    };
 }

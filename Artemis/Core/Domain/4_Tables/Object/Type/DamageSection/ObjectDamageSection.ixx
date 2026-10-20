@@ -38,4 +38,10 @@ export namespace Tables::Object::Type::DamageSection
 
         RegionBlock Regions{};
     };
+
+    // Damage section tables, by object handle.
+    struct DamageSectionTables : std::unordered_map<std::uint32_t, DamageSectionTable>
+    {
+        using unordered_map::unordered_map;
+    };
 }

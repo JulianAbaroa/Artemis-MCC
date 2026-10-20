@@ -17,8 +17,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Seat>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Flags", &Seat::Flags),
             MakeField("Kind", &Seat::Kind),
             MakeField("SeatMarkerName", &Seat::SeatMarkerName),
@@ -35,8 +34,7 @@ export namespace Common::Reflect::Type
     template <>
     struct Fields<Vehi>
     {
-        static constexpr bool HasFields{ true };
-        static constexpr auto Value = std::tuple{
+        static constexpr auto k_Value = std::tuple{
             MakeField("Base", &Vehi::Base),
             MakeField("Seats", &Vehi::Seats),
         };

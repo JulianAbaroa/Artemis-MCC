@@ -10,8 +10,8 @@ export namespace Map::Reader::State
     class TagIndexStore
     {
     private:
-        using TagTableEntry = Map::Reader::Type::Structure::TagTable::Entry;
-        using TagTableGroupEntry = Map::Reader::Type::Structure::TagTable::GroupEntry;
+        using TagTableEntry = Map::Reader::Type::Structure::TagTable::TagTableEntry;
+        using TagTableGroupEntry = Map::Reader::Type::Structure::TagTable::TagTableGroupEntry;
 
     public:
         TagIndexStore() = default;

@@ -1,15 +1,15 @@
 export module Environment.Collidable.System;
 
-import Service.Logs.System;
 import Common.Math.Type;
+import Service.Logs.System;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Resolved.World.Type;
 import Resolved.World.State;
 import Tables.Object.Type;
 import Tables.Object.State;
-import Relations.Classifier.State;
 import Relations.Classifier.Type;
+import Relations.Classifier.State;
 import Environment.Collidable.Type;
 import Environment.Collidable.State;
 import std;
@@ -20,15 +20,15 @@ export namespace Environment::Collidable::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using CollMesh = Resolved::Definitions::Type::Coll::Mesh;
-        using ResolvedColl = Resolved::Definitions::Type::Coll::Coll;
-        using AliveObject = Tables::Object::Type::Alive::Object;
-        using ObjectTable = std::unordered_map<std::uint32_t, AliveObject>;
+        using CollMesh = Resolved::Definitions::Type::Coll::CollMesh;
+        using Coll = Resolved::Definitions::Type::Coll::Coll;
+        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
         using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
         using Classified = Relations::Classifier::Type::Classified;
-        using Classifieds = std::vector<Classified>;
+        using Classifieds = Relations::Classifier::Type::Classifieds;
         using Collidable = Environment::Collidable::Type::Collidable;
         using CollidablePart = Environment::Collidable::Type::CollidablePart;
         using Context = Environment::Collidable::Type::Context;
