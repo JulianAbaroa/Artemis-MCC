@@ -31,7 +31,9 @@ export namespace Platform
         using milliseconds = std::chrono::milliseconds;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
+        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;
+        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
         using EngineInitializeDetour = Platform::Lifecycle::Hook::EngineInitializeDetour;
         using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
         using EngineInterfaceDetour = Platform::Lifecycle::Hook::EngineInterfaceDetour;
@@ -72,6 +74,7 @@ export namespace Platform
     public:
         explicit Layer(Service::Layer& service) :
             m_LifecycleService(service.m_LogsService, m_LifecycleStore),
+            m_MatchConfigService(service.m_LogsService, service.m_SettingsStore, m_MatchConfigStore),
             m_InputService(service.m_LogsService, m_InputStore, m_MouseDeltaStore),
             m_AOBService(service.m_LogsService),
             m_HostService(service.m_LogsService, m_AOBService),
@@ -80,7 +83,7 @@ export namespace Platform
             m_SwapChainLocator(service.m_LogsService),
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
-            m_EngineInterfaceDetour(service.m_LogsService, service.m_SettingsStore, m_AOBService, m_MemoryReaderService),
+            m_EngineInterfaceDetour(service.m_LogsService, m_AOBService, m_MemoryReaderService, m_MatchConfigService),
             m_LocalUserGetPlayerDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
             m_LocalUserGetProfileDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
             m_LocalUserGetGamepadMappingDetour(service.m_LogsService, m_HostService, m_LocalUserStore),
@@ -140,6 +143,7 @@ export namespace Platform
 
         // --- State ---
         LifecycleStore m_LifecycleStore;
+        MatchConfigStore m_MatchConfigStore{};
         LocalUserStore m_LocalUserStore;
         InputStore m_InputStore;
         MouseDeltaStore m_MouseDeltaStore;
@@ -150,6 +154,7 @@ export namespace Platform
 
         // --- System ---
         LifecycleService m_LifecycleService;
+        MatchConfigService m_MatchConfigService;
         InputService m_InputService;
         AOBService m_AOBService;
         HostService m_HostService;

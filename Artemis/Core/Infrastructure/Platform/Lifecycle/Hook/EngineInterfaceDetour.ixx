@@ -1,9 +1,9 @@
 export module Platform.Lifecycle.Hook:EngineInterface;
 
 import Service.Logs.System;
-import Service.Settings.State;
 import Platform.Memory.System;
 import Platform.Lifecycle.Type;
+import Platform.Lifecycle.System;
 import std;
 
 namespace
@@ -14,15 +14,16 @@ namespace
 
 export namespace Platform::Lifecycle::Hook
 {
-    // Logs every call of MCC to the engine interface: creation, start (with a dump of the match configuration), state commands, text
-    // commands and destruction (A15).
+    // Logs every call of MCC to the engine interface (creation, start, state commands, text commands and destruction, A15) and is the
+    // point where Artemis changes which match starts (D123): at the start it records the configuration of MCC if a record is armed,
+    // and transplants the pending recorded configuration into a copy of it.
     // note: Hooks the MCC function that creates the engine, which stays loaded for the whole process. Each new engine gets a copy of its
-    // vtable with the logged entries replaced, so nothing is patched inside the game module. Development tool: it only logs.
+    // vtable with the logged entries replaced, so nothing is patched inside the game module. Without a record armed or a configuration
+    // pending, the start is only logged and gets the configuration of MCC unchanged.
     class EngineInterfaceDetour
     {
     private:
         using LogsService = Service::Logs::System::LogsService;
-        using SettingsStore = Service::Settings::State::SettingsStore;
 
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
@@ -32,12 +33,13 @@ export namespace Platform::Lifecycle::Hook
         using EngineStartFunction = Platform::Lifecycle::Type::EngineStartFunction;
         using EngineUpdateStateFunction = Platform::Lifecycle::Type::EngineUpdateStateFunction;
         using EngineCommandFunction = Platform::Lifecycle::Type::EngineCommandFunction;
+        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
 
     public:
-        EngineInterfaceDetour(LogsService& logsService, SettingsStore& settingsStore, AOBService& aobService,
-            MemoryReaderService& memoryReaderService) :
-            m_LogsService(logsService), m_SettingsStore(settingsStore), m_AOBService(aobService),
-            m_MemoryReaderService(memoryReaderService) {}
+        EngineInterfaceDetour(LogsService& logsService, AOBService& aobService, MemoryReaderService& memoryReaderService,
+            MatchConfigService& matchConfigService) :
+            m_LogsService(logsService), m_AOBService(aobService), m_MemoryReaderService(memoryReaderService),
+            m_MatchConfigService(matchConfigService) {}
         ~EngineInterfaceDetour() = default;
 
         // Finds the MCC function by signature and installs the hook. Does nothing if already installed.
@@ -50,9 +52,9 @@ export namespace Platform::Lifecycle::Hook
 
     private:
         LogsService& m_LogsService;
-        SettingsStore& m_SettingsStore;
         AOBService& m_AOBService;
         MemoryReaderService& m_MemoryReaderService;
+        MatchConfigService& m_MatchConfigService;
 
         static inline EngineInterfaceDetour* s_Instance{ nullptr };
         static inline LoadGameEngineFunction s_OriginalFunction{ nullptr };
@@ -78,8 +80,6 @@ export namespace Platform::Lifecycle::Hook
         // Serializes tracing, untracing and the destruction of the traced engine (MCC threads and the main thread).
         std::mutex m_TraceMutex{};
 
-        // Engine starts seen by this process. Numbers the configuration dumps.
-        std::atomic<std::uint32_t> m_StartCount{ 0 };
 
         // Last state command logged and how many times it repeated since. Equal consecutive commands are folded into a count.
         std::mutex m_StateMutex{};
@@ -99,9 +99,6 @@ export namespace Platform::Lifecycle::Hook
 
         // Gives the traced engine its original vtable back, if it is still the engine of MCC and points to the copy.
         auto Untrace() -> void;
-
-        // Writes the match configuration to a file in the storage folder.
-        auto DumpConfiguration(const std::byte* configuration) -> void;
 
         // Logs a state command, or counts it if it equals the previous one.
         auto LogState(std::int32_t state, const void* payload) -> void;

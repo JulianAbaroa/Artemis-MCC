@@ -11,9 +11,6 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
-    using std::filesystem::path;
-    using std::chrono::system_clock;
-    using std::chrono::seconds;
     using std::chrono::milliseconds;
 
     using Platform::Host::Type::k_HostModuleName;
@@ -24,14 +21,10 @@ namespace
     using Platform::Lifecycle::Type::k_EngineStartIndex;
     using Platform::Lifecycle::Type::k_EngineUpdateStateIndex;
     using Platform::Lifecycle::Type::k_EngineCommandIndex;
-    using Platform::Lifecycle::Type::k_EngineConfigurationSize;
     using Platform::Lifecycle::Type::k_EngineStatePayloads;
     using Platform::Lifecycle::Type::k_EngineStatePayloadMaxSize;
     using Platform::Lifecycle::Type::k_EngineFirstTextState;
     using Platform::Lifecycle::Type::k_EngineLastTextState;
-
-    // Folder inside the storage folder that receives one file per engine start.
-    constexpr std::string_view k_ConfigurationFolder{ "EngineConfigurations" };
 
     // Longest string read from a payload or a text command, and the bytes read at once while looking for its end.
     constexpr std::size_t k_MaxTextLength{ 256 };
@@ -119,9 +112,30 @@ namespace Platform::Lifecycle::Hook
             " configuration {:016X}.", reinterpret_cast<std::uintptr_t>(engine),
             reinterpret_cast<std::uintptr_t>(systemInterface), reinterpret_cast<std::uintptr_t>(configuration));
 
-        if (configuration != nullptr) self->DumpConfiguration(configuration);
+        // The configuration of MCC is never written: if the transplant goes wrong, the next match of MCC is the normal one. The engine
+        // copies the configuration it receives to its runtime configuration before the call returns (A15 sec. 2.5), so the transplanted
+        // copy only lives for the call.
+        const std::byte* startConfiguration{ configuration };
+        std::vector<std::byte> transplanted{};
 
-        reinterpret_cast<EngineStartFunction>(s_OriginalVTable[k_EngineStartIndex])(engine, systemInterface, configuration);
+        if (configuration != nullptr)
+        {
+            // An exception must not reach MCC. The start then gets the configuration of MCC.
+            try
+            {
+                self->m_MatchConfigService.Record(configuration);
+
+                if (self->m_MatchConfigService.Transplant(configuration, transplanted)) startConfiguration = transplanted.data();
+            }
+            catch (const std::exception& exception)
+            {
+                startConfiguration = configuration;
+                self->m_LogsService.Message("[EngineInterfaceDetour] ERROR: Failed to record or transplant the configuration ({}).",
+                    exception.what());
+            }
+        }
+
+        reinterpret_cast<EngineStartFunction>(s_OriginalVTable[k_EngineStartIndex])(engine, systemInterface, startConfiguration);
     }
 
     auto __fastcall EngineInterfaceDetour::HookedEngineUpdateState(void* engine, std::int32_t state, const void* payload) -> void
@@ -244,37 +258,6 @@ namespace Platform::Lifecycle::Hook
         auto** vtableSlot{ static_cast<void***>(engine) };
 
         if (*vtableSlot == s_TracedVTable.data()) *vtableSlot = s_OriginalVTable;
-    }
-
-    auto EngineInterfaceDetour::DumpConfiguration(const std::byte* configuration) -> void
-    {
-        const std::uint32_t number{ m_StartCount.fetch_add(1) };
-        const std::string directory{ m_SettingsStore.GetAppDataDirectory() };
-
-        if (directory.empty())
-        {
-            m_LogsService.Message("[EngineInterfaceDetour] WARNING: Storage Folder is not set, the configuration is not dumped.");
-            return;
-        }
-
-        const path folder{ path{ directory } / k_ConfigurationFolder };
-        std::error_code error{};
-        std::filesystem::create_directories(folder, error);
-
-        const path file{ folder / std::format("{:%Y%m%d_%H%M%S}_{}.bin",
-            std::chrono::floor<seconds>(system_clock::now()), number) };
-
-        std::ofstream stream{ file, std::ios::binary };
-
-        if (!stream)
-        {
-            m_LogsService.Message("[EngineInterfaceDetour] ERROR: Failed to open {}.", file.string());
-            return;
-        }
-
-        stream.write(reinterpret_cast<const char*>(configuration), static_cast<std::streamsize>(k_EngineConfigurationSize));
-
-        m_LogsService.Message("[EngineInterfaceDetour] INFO: Configuration dumped to {}.", file.string());
     }
 
     auto EngineInterfaceDetour::LogState(std::int32_t state, const void* payload) -> void

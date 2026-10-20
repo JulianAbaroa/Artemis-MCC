@@ -1,4 +1,4 @@
-export module Platform.Lifecycle.State;
+export module Platform.Lifecycle.State:Lifecycle;
 
 import Platform.Lifecycle.Type;
 import std;

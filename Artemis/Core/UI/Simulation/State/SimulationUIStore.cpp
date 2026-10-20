@@ -1,5 +1,10 @@
 module UI.Simulation.State;
 
+namespace
+{
+    using UI::Simulation::Type::k_RecordNameSize;
+}
+
 namespace UI::Simulation::State
 {
     auto SimulationUIStore::GetLocalPlayerInput(std::size_t player) const -> LocalPlayerInput
@@ -70,5 +75,30 @@ namespace UI::Simulation::State
     auto SimulationUIStore::SetNewBotTeam(std::optional<std::int8_t> team) -> void
     {
         m_NewBotTeam = team;
+    }
+
+    auto SimulationUIStore::GetRecordNameField() -> std::array<char, k_RecordNameSize>&
+    {
+        return m_RecordNameField;
+    }
+
+    auto SimulationUIStore::GetMatchConfigNames() const -> const std::vector<std::string>&
+    {
+        return m_MatchConfigNames;
+    }
+
+    auto SimulationUIStore::SetMatchConfigNames(std::vector<std::string> names) -> void
+    {
+        m_MatchConfigNames = std::move(names);
+    }
+
+    auto SimulationUIStore::GetSelectedMatchConfig() const -> std::size_t
+    {
+        return m_SelectedMatchConfig;
+    }
+
+    auto SimulationUIStore::SetSelectedMatchConfig(std::size_t index) -> void
+    {
+        m_SelectedMatchConfig = index;
     }
 }

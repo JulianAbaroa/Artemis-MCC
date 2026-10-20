@@ -9,6 +9,7 @@ namespace
 {
     using Platform::Host::Type::k_MaxLocalUsers;
     using Platform::Simulation::Type::k_MaxPlayers;
+    using UI::Simulation::Type::k_RecordNameSize;
 }
 
 export namespace UI::Simulation::State
@@ -54,6 +55,15 @@ export namespace UI::Simulation::State
         auto GetOptionsPlayer() const -> std::size_t;
         auto SetOptionsPlayer(std::size_t playerIndex) -> void;
 
+        // Name typed for the next record of the match config section (D123).
+        auto GetRecordNameField() -> std::array<char, k_RecordNameSize>&;
+
+        // Recorded match configurations the last refresh listed, and the one picked in the list.
+        auto GetMatchConfigNames() const -> const std::vector<std::string>&;
+        auto SetMatchConfigNames(std::vector<std::string> names) -> void;
+        auto GetSelectedMatchConfig() const -> std::size_t;
+        auto SetSelectedMatchConfig(std::size_t index) -> void;
+
     private:
         std::array<LocalPlayerInput, k_MaxLocalUsers> m_LocalPlayerInputs{};
         float m_CustomTimeScale{ 1.0f };
@@ -62,5 +72,8 @@ export namespace UI::Simulation::State
         std::array<LocalPlayerAction, k_MaxPlayers> m_BotActions{};
         std::size_t m_OptionsPlayer{ 0 };
         std::optional<std::int8_t> m_NewBotTeam{};
+        std::array<char, k_RecordNameSize> m_RecordNameField{};
+        std::vector<std::string> m_MatchConfigNames{};
+        std::size_t m_SelectedMatchConfig{ 0 };
     };
 }

@@ -1,0 +1,68 @@
+module Platform.Lifecycle.State;
+import :MatchConfig;
+
+import Platform.Lifecycle.Type;
+import std;
+
+namespace Platform::Lifecycle::State
+{
+    auto MatchConfigStore::GetPending() const -> std::shared_ptr<const MatchConfig>
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_Pending;
+    }
+
+    auto MatchConfigStore::SetPending(std::shared_ptr<const MatchConfig> config) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_Pending = std::move(config);
+    }
+
+    auto MatchConfigStore::TakePending() -> std::shared_ptr<const MatchConfig>
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return std::exchange(m_Pending, nullptr);
+    }
+
+    auto MatchConfigStore::GetRecordName() const -> std::string
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_RecordName;
+    }
+
+    auto MatchConfigStore::SetRecordName(std::string name) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_RecordName = std::move(name);
+    }
+
+    auto MatchConfigStore::TakeRecordName() -> std::string
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return std::exchange(m_RecordName, std::string{});
+    }
+
+    auto MatchConfigStore::GetLastApplied() const -> std::string
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_LastApplied;
+    }
+
+    auto MatchConfigStore::SetLastApplied(std::string name) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_LastApplied = std::move(name);
+    }
+
+    auto MatchConfigStore::GetLastRecorded() const -> std::string
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_LastRecorded;
+    }
+
+    auto MatchConfigStore::SetLastRecorded(std::string file) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_LastRecorded = std::move(file);
+    }
+}

@@ -1,4 +1,4 @@
-export module Platform.Lifecycle.System;
+export module Platform.Lifecycle.System:Lifecycle;
 
 import Service.Logs.System;
 import Platform.Lifecycle.Type;

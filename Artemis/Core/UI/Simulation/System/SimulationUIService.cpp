@@ -43,6 +43,10 @@ namespace
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
     using UI::Simulation::Type::k_LocalPlayerActionCount;
     using UI::Simulation::Type::k_LocalPlayerActionLabels;
+    using UI::Simulation::Type::k_RecordNameSize;
+
+    // Width of the name field and of the list of the match config section.
+    constexpr float k_MatchConfigFieldWidth{ 260.0f };
 
     // Speeds tested in A8 (0.1 to 100). Above x5 the engine caps at 10 ticks per frame.
     constexpr float k_MinTimeScale{ 0.1f };
@@ -149,6 +153,11 @@ namespace UI::Simulation::System
 {
     auto SimulationUIService::Draw() -> void
     {
+        ImGui::SeparatorText("Match config");
+
+        this->DrawMatchConfig();
+
+        ImGui::Spacing();
         ImGui::SeparatorText("Game speed");
 
         this->DrawGameSpeed();
@@ -177,6 +186,83 @@ namespace UI::Simulation::System
         ImGui::SeparatorText("Shadow check");
 
         this->DrawShadow();
+    }
+
+    auto SimulationUIService::DrawMatchConfig() -> void
+    {
+        ImGui::TextWrapped("Recorded match configurations (D123). Record: type a name, arm it and start a custom game from the MCC"
+            " lobby. Its configuration is saved to the MatchConfigs folder of the storage folder. Use: pick a recorded one, then start any"
+            " custom game from the MCC lobby. That start plays the base map, map variant and game variant of the picked one. A pick"
+            " applies to one start only.");
+
+        std::array<char, k_RecordNameSize>& recordName{ m_SimulationUIStore.GetRecordNameField() };
+        ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
+        ImGui::InputText("Name", recordName.data(), recordName.size());
+
+        ImGui::SameLine();
+        if (ImGui::Button("Record next start")) m_MatchConfigService.ArmRecord(recordName.data());
+        ImGui::SetItemTooltip("Saves the configuration of the next start of MCC under this name, before any transplant. A recorded"
+            " configuration with the same name is replaced.");
+
+        const std::string armedName{ m_MatchConfigStore.GetRecordName() };
+
+        if (!armedName.empty())
+        {
+            ImGui::Text("Recording the next start as \"%s\".", armedName.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel##Record")) m_MatchConfigService.CancelRecord();
+        }
+
+        if (ImGui::Button("Refresh")) m_SimulationUIStore.SetMatchConfigNames(m_MatchConfigService.ListConfigs());
+        ImGui::SetItemTooltip("Lists the recorded configurations of the storage folder.");
+
+        const std::vector<std::string>& names{ m_SimulationUIStore.GetMatchConfigNames() };
+        std::size_t selected{ m_SimulationUIStore.GetSelectedMatchConfig() };
+
+        if (selected >= names.size())
+        {
+            selected = 0;
+            m_SimulationUIStore.SetSelectedMatchConfig(selected);
+        }
+
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
+
+        const char* preview{ names.empty() ? "None, press Refresh" : names[selected].c_str() };
+
+        if (ImGui::BeginCombo("Recorded", preview))
+        {
+            for (std::size_t index{ 0 }; index < names.size(); ++index)
+            {
+                if (ImGui::Selectable(names[index].c_str(), index == selected)) m_SimulationUIStore.SetSelectedMatchConfig(index);
+            }
+
+            ImGui::EndCombo();
+        }
+
+        ImGui::SameLine();
+        ImGui::BeginDisabled(names.empty());
+        if (ImGui::Button("Use for next start")) m_MatchConfigService.LoadPending(names[selected]);
+        ImGui::EndDisabled();
+
+        const auto pending{ m_MatchConfigStore.GetPending() };
+
+        if (pending)
+        {
+            ImGui::Text("Pending for the next start: \"%s\".", pending->Name.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Clear##Pending")) m_MatchConfigService.ClearPending();
+        }
+        else
+        {
+            ImGui::TextUnformatted("Pending for the next start: none. The match of MCC starts unchanged.");
+        }
+
+        const std::string lastApplied{ m_MatchConfigStore.GetLastApplied() };
+        const std::string lastRecorded{ m_MatchConfigStore.GetLastRecorded() };
+
+        ImGui::Text("Last applied: %s", lastApplied.empty() ? "-" : lastApplied.c_str());
+        ImGui::Text("Last recorded: %s", lastRecorded.empty() ? "-" : lastRecorded.c_str());
     }
 
     auto SimulationUIService::DrawGameSpeed() -> void

@@ -1,9 +1,18 @@
 export module UI.Simulation.Type;
 
+import Platform.Lifecycle.Type;
 import std;
+
+namespace
+{
+    using Platform::Lifecycle::Type::k_MaxMatchConfigNameLength;
+}
 
 export namespace UI::Simulation::Type
 {
+    // Characters of the name field of the match config section, with the final null.
+    inline constexpr std::size_t k_RecordNameSize{ k_MaxMatchConfigNameLength + 1 };
+
     // Input the simulation tab gives a local player (A9 M2 test).
     enum class LocalPlayerInput : std::uint8_t
     {

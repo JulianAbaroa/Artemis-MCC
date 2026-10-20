@@ -33,6 +33,36 @@ export namespace Platform::Lifecycle::Type
     // Bytes of the match configuration MCC passes to the engine start. The engine copies it to its runtime configuration.
     inline constexpr std::size_t k_EngineConfigurationSize{ 0x2BF30 };
 
+    // Offset of the id of the base map in the match configuration. It is an id of MCC, not the one of Reach (A15 sec. 2.10).
+    inline constexpr std::size_t k_ConfigurationBaseMapOffset{ 0x10 };
+
+    // Range of bytes of a match configuration.
+    struct ConfigurationBlock
+    {
+        std::size_t Offset{};
+        std::size_t Size{};
+    };
+
+    // Blocks a recorded configuration gives to the configuration of MCC at the engine start (D123, A15 sec. 5.2): the id of the base
+    // map (+0x10 and +0x14), +0x40 (changes with the base map, not identified), the game variant with its content header and its
+    // metadata, and the map variant. The rest (flags, match id, lobby players, pointer to the game module) stays the one of MCC.
+    inline constexpr std::array<ConfigurationBlock, 4> k_TransplantBlocks{ {
+        { .Offset = k_ConfigurationBaseMapOffset, .Size = 0x8 },
+        { .Offset = 0x40, .Size = 0x4 },
+        { .Offset = 0x310, .Size = 0x10000 - 0x310 },
+        { .Offset = 0x1CF00, .Size = k_EngineConfigurationSize - 0x1CF00 },
+    } };
+
+    // Longest name of a recorded match configuration, in characters.
+    inline constexpr std::size_t k_MaxMatchConfigNameLength{ 64 };
+
+    // Match configuration recorded at an engine start, with the name it was saved under (D123).
+    struct MatchConfig
+    {
+        std::string Name{};
+        std::vector<std::byte> Bytes{};
+    };
+
     // State command of the engine interface that carries a payload, and the bytes of that payload.
     struct EngineStatePayload
     {

@@ -546,10 +546,16 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.State.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchConfigStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchConfigStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\MatchConfigService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\MatchConfigService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx" />

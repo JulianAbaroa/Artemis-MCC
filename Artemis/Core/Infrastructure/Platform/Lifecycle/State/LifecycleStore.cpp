@@ -1,4 +1,7 @@
 module Platform.Lifecycle.State;
+import :Lifecycle;
+
+import std;
 
 namespace
 {

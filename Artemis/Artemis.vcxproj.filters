@@ -2351,6 +2351,12 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.State.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.cpp">
       <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
@@ -2375,10 +2381,22 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchConfigStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchConfigStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp">
       <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\MatchConfigService.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\MatchConfigService.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx">

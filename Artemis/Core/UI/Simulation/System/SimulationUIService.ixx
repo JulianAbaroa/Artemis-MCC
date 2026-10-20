@@ -3,6 +3,7 @@ export module UI.Simulation.System;
 import Service.Logs.System;
 import Service.Telemetry.State;
 import Platform.Lifecycle.State;
+import Platform.Lifecycle.System;
 import Platform.Host.State;
 import Platform.Input.Type;
 import Platform.Input.State;
@@ -15,8 +16,8 @@ import std;
 
 export namespace UI::Simulation::System
 {
-    // Draws the simulation tab (D107): game speed, local players (split-screen) with their input, the player actions of each tick, the
-    // machines and players of the engine, and the bots (A9 M5).
+    // Draws the simulation tab (D107): the match config of the next start (D123), game speed, local players (split-screen) with their
+    // input, the player actions of each tick, the machines and players of the engine, and the bots (A9 M5).
     class SimulationUIService
     {
     private:
@@ -24,6 +25,8 @@ export namespace UI::Simulation::System
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
+        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
+        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
         using LocalUserStore = Platform::Host::State::LocalUserStore;
 
         using InputState = Platform::Input::Type::InputState;
@@ -44,10 +47,12 @@ export namespace UI::Simulation::System
 
     public:
         SimulationUIService(LogsService& logsService, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
-            LocalUserStore& localUserStore, VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore,
-            BotStore& botStore, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
+            MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
+            VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore, TickStore& tickStore,
+            SimulationUIStore& simulationUIStore) :
             m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
-            m_LocalUserStore(localUserStore), m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
+            m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
+            m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
             m_BotStore(botStore), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
         ~SimulationUIService() = default;
 
@@ -61,12 +66,17 @@ export namespace UI::Simulation::System
         LogsService& m_LogsService;
         TelemetryStore& m_TelemetryStore;
         LifecycleStore& m_LifecycleStore;
+        MatchConfigStore& m_MatchConfigStore;
+        MatchConfigService& m_MatchConfigService;
         LocalUserStore& m_LocalUserStore;
         VirtualInputStore& m_VirtualInputStore;
         PlayerActionStore& m_PlayerActionStore;
         BotStore& m_BotStore;
         TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
+
+        // Draws the record of the next start, the library of recorded configurations and the one the next start transplants (D123).
+        auto DrawMatchConfig() -> void;
 
         // Draws the requested and the real engine speed, the presets and the custom field.
         auto DrawGameSpeed() -> void;
