@@ -30,6 +30,8 @@ import UI.Simulation.State;
 import UI.Simulation.System;
 import UI.TickTrace.State;
 import UI.TickTrace.System;
+import UI.Bench.State;
+import UI.Bench.System;
 import UI.Logs.State;
 import UI.Logs.System;
 import std;
@@ -55,6 +57,7 @@ export namespace UI
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
         using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
+        using BenchUIStore = UI::Bench::State::BenchUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
         using HotkeyUIService = UI::Hotkey::System::HotkeyUIService;
@@ -66,6 +69,7 @@ export namespace UI
         using CaptureUIService = UI::Capture::System::CaptureUIService;
         using SimulationUIService = UI::Simulation::System::SimulationUIService;
         using TickTraceUIService = UI::TickTrace::System::TickTraceUIService;
+        using BenchUIService = UI::Bench::System::BenchUIService;
         using LogsUIService = UI::Logs::System::LogsUIService;
 
     public:
@@ -85,7 +89,11 @@ export namespace UI
                 platform.m_BotStore, exportLayer.m_TickStore, m_SimulationUIStore),
             m_TickTraceUIService(service.m_LogsService, service.m_SettingsStore, map.m_FileStore, datum.m_DatumStore, tables.m_ObjectStore,
                 m_TickTraceUIStore),
-            m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore)
+            m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore),
+            m_BenchUIService(service.m_LogsStore, service.m_LogsService, service.m_SettingsStore, platform.m_MemoryReaderService,
+                platform.m_LocalUserStore, platform.m_PlayerActionStore, platform.m_VirtualInputStore, platform.m_LifecycleStore,
+                platform.m_MatchConfigStore, platform.m_MatchCycleStore, platform.m_MatchConfigService, platform.m_BotStore,
+                exportLayer.m_TickStore, m_TickTraceUIStore, m_BenchUIStore)
         {
             platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {
                 this->Initialize(frame);
@@ -125,6 +133,7 @@ export namespace UI
         SimulationUIStore m_SimulationUIStore{};
         TickTraceUIStore m_TickTraceUIStore{};
         LogsUIStore m_LogsUIStore{};
+        BenchUIStore m_BenchUIStore{};
 
         // --- System ---
         HotkeyUIService m_HotkeyUIService;
@@ -137,6 +146,7 @@ export namespace UI
         SimulationUIService m_SimulationUIService;
         TickTraceUIService m_TickTraceUIService;
         LogsUIService m_LogsUIService;
+        BenchUIService m_BenchUIService;
 
     private:
         // Releases the old icons and opens the launcher if the setting asks for it.

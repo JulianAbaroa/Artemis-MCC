@@ -14,6 +14,26 @@ namespace UI::TickTrace::State
         return m_IsRecording;
     }
 
+    auto TickTraceUIStore::RequestStart() -> void
+    {
+        m_IsStartRequested.store(true);
+    }
+
+    auto TickTraceUIStore::TakeStartRequest() -> bool
+    {
+        return m_IsStartRequested.exchange(false);
+    }
+
+    auto TickTraceUIStore::RequestStop() -> void
+    {
+        m_IsStopRequested.store(true);
+    }
+
+    auto TickTraceUIStore::TakeStopRequest() -> bool
+    {
+        return m_IsStopRequested.exchange(false);
+    }
+
     auto TickTraceUIStore::SetPendingClock(const TickClock& clock) -> void
     {
         m_PendingClock = clock;

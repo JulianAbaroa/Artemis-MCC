@@ -26,6 +26,12 @@ export namespace UI::TickTrace::State
         auto SetRecording(bool value) -> void;
         auto IsRecording() const -> bool;
 
+        // Start or stop asked for by another thread (the test bench, D129). The UI thread takes them in Update, where the file lives.
+        auto RequestStart() -> void;
+        auto TakeStartRequest() -> bool;
+        auto RequestStop() -> void;
+        auto TakeStopRequest() -> bool;
+
         // Clock of the tick being processed, from CaptureClock to Record.
         auto SetPendingClock(const TickClock& clock) -> void;
         auto GetPendingClock() const -> TickClock;
@@ -63,6 +69,8 @@ export namespace UI::TickTrace::State
 
     private:
         bool m_IsRecording{ false };
+        std::atomic<bool> m_IsStartRequested{ false };
+        std::atomic<bool> m_IsStopRequested{ false };
         std::vector<std::byte> m_Pending{};
         mutable std::mutex m_PendingMutex{};
 

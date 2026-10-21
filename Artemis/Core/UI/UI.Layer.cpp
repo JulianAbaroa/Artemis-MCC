@@ -54,6 +54,7 @@ namespace UI
         m_LauncherUIService.DrawTab(Tab::Simulation, "Simulation", [this] {
             m_SimulationUIService.Draw();
             m_TickTraceUIService.Draw();
+            m_BenchUIService.Draw();
         });
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();

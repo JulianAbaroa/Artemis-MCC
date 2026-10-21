@@ -172,6 +172,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Runtime\Bench\BenchThread.cpp" />
+    <ClCompile Include="Core\Runtime\Bench\BenchThread.ixx" />
+    <ClCompile Include="Core\UI\Bench\System\BenchUIService.cpp" />
+    <ClCompile Include="Core\UI\Bench\System\BenchUIService.ixx" />
+    <ClCompile Include="Core\UI\Bench\State\BenchUIStore.cpp" />
+    <ClCompile Include="Core\UI\Bench\State\BenchUIStore.ixx" />
+    <ClCompile Include="Core\UI\Bench\Type\UI.Bench.Type.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx" />
+    <ClCompile Include="Core\Common\Text\System\Common.Text.System.cpp" />
+    <ClCompile Include="Core\Common\Text\System\Common.Text.System.ixx" />
     <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.cpp" />
     <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.ixx" />
     <ClCompile Include="Core\Common\Math\System\Common.Math.System.cpp" />

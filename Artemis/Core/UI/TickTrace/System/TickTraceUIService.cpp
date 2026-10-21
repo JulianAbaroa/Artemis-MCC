@@ -137,6 +137,13 @@ namespace UI::TickTrace::System
 
     auto TickTraceUIService::Update() -> void
     {
+        if (m_TickTraceUIStore.TakeStartRequest()) this->Start();
+        if (m_TickTraceUIStore.TakeStopRequest())
+        {
+            this->Stop();
+            return;
+        }
+
         std::vector<std::byte> pending{};
         m_TickTraceUIStore.TakePending(pending);
         if (pending.empty()) return;

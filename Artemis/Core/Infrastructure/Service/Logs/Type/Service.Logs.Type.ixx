@@ -27,5 +27,8 @@ export namespace Service::Logs::Type
         std::string MessagePrefix{};
         std::string Message{};
         LogLevel Level{};
+
+        // Number of the entry since Artemis started, from 1. Set by LogsStore::PushBack.
+        std::uint64_t Sequence{ 0 };
     };
 }

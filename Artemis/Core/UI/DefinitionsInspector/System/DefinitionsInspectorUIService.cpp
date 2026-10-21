@@ -6,6 +6,7 @@ module UI.DefinitionsInspector.System;
 
 import Common.Reflect.Type;
 import Common.Reflect.System;
+import Common.Text.System;
 import Resolved.Definitions.Reflect;
 import std;
 
@@ -15,6 +16,7 @@ namespace
 
     using Common::Reflect::Type::Reflectable;
     using Common::Reflect::Type::ForEachField;
+    using Common::Text::System::JsonEscape;
 
     // Tag referenced by a field of a definition.
     struct Link
@@ -44,33 +46,6 @@ namespace
         "bipd", "bloc", "coll", "ctrl", "eqip", "hlmt", "jpt!", "mach", "mode", "phmo", "proj", "scen", "scnr", "sddt", "vehi", "weap",
     };
 
-    // Escapes the text to be placed inside a JSON string.
-    auto JsonEscape(std::string_view text) -> std::string
-    {
-        std::string out{};
-        out.reserve(text.size() + 2);
-        for (const char c : text)
-        {
-            switch (c)
-            {
-            case '\\': out += "\\\\"; break;
-            case '"': out += "\\\""; break;
-            case '\n': out += "\\n"; break;
-            case '\r': out += "\\r"; break;
-            case '\t': out += "\\t"; break;
-            default:
-                if (static_cast<unsigned char>(c) < ' ')
-                {
-                    out += std::format("\\u{:04x}", static_cast<int>(c));
-                }
-                else
-                {
-                    out += c;
-                }
-            }
-        }
-        return out;
-    }
 
     // Folder inside the storage folder that receives one tag catalog file per map.
     constexpr std::string_view k_CatalogFolder{ "TagCatalog" };

@@ -26,6 +26,7 @@ namespace
     using Platform::Simulation::Type::Bot;
     using Platform::Simulation::Type::FakeMachine;
     using Platform::Simulation::Type::TeamRequest;
+    using UI::Simulation::Type::LocalPlayerAction;
 
     using Platform::Host::Type::k_MaxLocalUsers;
     using Platform::Simulation::Type::k_MaxMachines;
@@ -573,14 +574,10 @@ namespace UI::Simulation::System
         }
     }
 
-    auto SimulationUIService::ApplyLocalPlayerAction(std::size_t localPlayer, std::size_t playerIndex, LocalPlayerAction mode,
-        const PlayerAction& action) -> void
+    auto BuildActionOverride(LocalPlayerAction mode, const PlayerAction& action, std::optional<std::size_t> localPlayer)
+        -> std::optional<ActionOverride>
     {
-        if (mode == LocalPlayerAction::Engine)
-        {
-            m_PlayerActionStore.SetOverride(playerIndex, std::nullopt);
-            return;
-        }
+        if (mode == LocalPlayerAction::Engine) return std::nullopt;
 
         ActionOverride actionOverride{};
         actionOverride.Yaw = ReadAction<float>(action, k_ActionFacingOffset);
@@ -596,7 +593,13 @@ namespace UI::Simulation::System
         actionOverride.IsUseTest = mode == LocalPlayerAction::TestUse;
         if (mode == LocalPlayerAction::HoldUse) actionOverride.Lanes = k_UseLane;
 
-        m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
+        return actionOverride;
+    }
+
+    auto SimulationUIService::ApplyLocalPlayerAction(std::size_t localPlayer, std::size_t playerIndex, LocalPlayerAction mode,
+        const PlayerAction& action) -> void
+    {
+        m_PlayerActionStore.SetOverride(playerIndex, BuildActionOverride(mode, action, localPlayer));
     }
 
     auto SimulationUIService::LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action,
@@ -942,31 +945,10 @@ namespace UI::Simulation::System
 
     auto SimulationUIService::ApplyBotAction(std::size_t playerIndex, LocalPlayerAction mode) -> void
     {
-        if (mode == LocalPlayerAction::Engine)
-        {
-            m_PlayerActionStore.SetOverride(playerIndex, std::nullopt);
-            return;
-        }
-
         PlayerActions actions{};
         m_PlayerActionStore.CopyLatest(actions);
 
-        const PlayerAction& action{ actions.Actions[playerIndex] };
-
-        ActionOverride actionOverride{};
-        actionOverride.Yaw = ReadAction<float>(action, k_ActionFacingOffset);
-        actionOverride.Pitch = ReadAction<float>(action, k_ActionFacingOffset + sizeof(float));
-
-        if (mode == LocalPlayerAction::TestAction)
-        {
-            actionOverride.ThrottleForward = k_TestThrottle;
-            actionOverride.YawPerTick = k_TestYawPerTick;
-        }
-
-        actionOverride.IsUseTest = mode == LocalPlayerAction::TestUse;
-        if (mode == LocalPlayerAction::HoldUse) actionOverride.Lanes = k_UseLane;
-
-        m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
+        m_PlayerActionStore.SetOverride(playerIndex, BuildActionOverride(mode, actions.Actions[playerIndex], std::nullopt));
     }
 
     auto SimulationUIService::BuildTestState(LocalPlayerInput input) -> InputState

@@ -15,8 +15,22 @@ import UI.Simulation.Type;
 import UI.Simulation.State;
 import std;
 
+namespace
+{
+    using Platform::Input::Type::PlayerAction;
+    using Platform::Input::Type::ActionOverride;
+    using UI::Simulation::Type::LocalPlayerAction;
+}
+
 export namespace UI::Simulation::System
 {
+    // Builds the override that plays a test mode for one player, keeping the facing of its last action (D109, D119). Used by the
+    // simulation tab and by the test bench (D129).
+    // param localPlayer: Local index for a local player, empty for a bot.
+    // return: Empty for LocalPlayerAction::Engine: the action the engine built plays.
+    auto BuildActionOverride(LocalPlayerAction mode, const PlayerAction& action, std::optional<std::size_t> localPlayer)
+        -> std::optional<ActionOverride>;
+
     // Draws the simulation tab (D107): the match config of the next start (D123), game speed, local players (split-screen) with their
     // input, the player actions of each tick, the machines and players of the engine, and the bots (A9 M5).
     class SimulationUIService

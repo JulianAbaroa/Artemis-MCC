@@ -7,6 +7,9 @@ export namespace Platform::Host::Type
     // Module of MCC, the host that loads the game DLLs and gives them the game manager.
     inline constexpr const wchar_t* k_HostModuleName{ L"MCC-Win64-Shipping.exe" };
 
+    // Module of the game MCC loads for Reach. It is loaded again for every match, so its base changes.
+    inline constexpr const wchar_t* k_GameModuleName{ L"haloreach.dll" };
+
     // Local players (split-screen) the engine supports.
     inline constexpr std::size_t k_MaxLocalUsers{ 4 };
 

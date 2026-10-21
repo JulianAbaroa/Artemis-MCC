@@ -7,6 +7,7 @@ module;
 module UI.Capture.System;
 
 import Common.Engine.Type;
+import Platform.Host.Type;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Datum.Object.Type;
@@ -37,6 +38,7 @@ namespace
     using UI::Capture::Type::HavokPhantom;
     using UI::Capture::Type::HavokComponent;
 
+    using Platform::Host::Type::k_GameModuleName;
     using UI::Capture::Type::k_LabelSize;
     using Resolved::Definitions::Type::Phmo::k_NoCollisionGroup;
 
@@ -129,8 +131,6 @@ namespace
     // Name of the range after the last component: the variable blocks of the datum.
     constexpr const char* k_BlocksName{ "blocks" };
 
-    // Module whose globals hold the Havok world and the Havok component data array (A10).
-    constexpr const wchar_t* k_GameModuleName{ L"haloreach.dll" };
 
     // Bodies read at most per component. A larger count means the component address is wrong.
     constexpr std::int32_t k_MaxHavokBodies{ 64 };

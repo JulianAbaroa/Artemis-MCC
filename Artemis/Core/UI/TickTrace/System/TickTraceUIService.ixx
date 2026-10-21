@@ -45,7 +45,7 @@ export namespace UI::TickTrace::System
         // note: AI thread, after the object table of the tick is published.
         auto Record(std::uint64_t generation) -> void;
 
-        // Writes the pending records to the file.
+        // Starts or stops the recording if another thread asked for it, then writes the pending records to the file.
         // note: UI thread, every frame, also with the UI hidden.
         auto Update() -> void;
 

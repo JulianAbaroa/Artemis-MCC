@@ -1,6 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Core\Runtime\Bench">
+      <UniqueIdentifier>{d0464667-42ef-42a1-9cac-003c9d707a9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Bench\System">
+      <UniqueIdentifier>{c1821685-630d-4a2c-9ff9-a3f6a17fa09a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Bench\State">
+      <UniqueIdentifier>{a1deda40-0972-4029-805b-32344e123979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Bench\Type">
+      <UniqueIdentifier>{9e932389-101f-4026-95f1-1b4717886124}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\Bench">
+      <UniqueIdentifier>{24cf16ae-7afa-4327-afea-81f1264185ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Text\System">
+      <UniqueIdentifier>{5019c4e5-0bfa-4086-929c-5f9f606d09b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Text">
+      <UniqueIdentifier>{bce199d8-4027-40b8-be89-21549848f656}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core">
       <UniqueIdentifier>{5451e5d0-65dd-45a7-97b0-8c1c47408481}</UniqueIdentifier>
     </Filter>
@@ -1310,6 +1331,39 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Runtime\Bench\BenchThread.cpp">
+      <Filter>Core\Runtime\Bench</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Bench\BenchThread.ixx">
+      <Filter>Core\Runtime\Bench</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Bench\System\BenchUIService.cpp">
+      <Filter>Core\UI\Bench\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Bench\System\BenchUIService.ixx">
+      <Filter>Core\UI\Bench\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Bench\State\BenchUIStore.cpp">
+      <Filter>Core\UI\Bench\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Bench\State\BenchUIStore.ixx">
+      <Filter>Core\UI\Bench\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\Bench\Type\UI.Bench.Type.ixx">
+      <Filter>Core\UI\Bench\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Text\System\Common.Text.System.cpp">
+      <Filter>Core\Common\Text\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Text\System\Common.Text.System.ixx">
+      <Filter>Core\Common\Text\System</Filter>
+    </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
