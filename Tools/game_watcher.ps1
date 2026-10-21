@@ -2,13 +2,14 @@
 # Deploys the Artemis DLL, launches and closes MCC and watches it for crashes, when Tools/game.py asks for it (Diseno/11, D129).
 # Start it with Tools\game_watcher.bat and leave the window open while working with Claude. It does nothing to MCC on its own.
 # Exchange folder build\game\ (gitignored):
-#   request.json  {id, kind: deploy|launch|kill|status, launch: bool}   written by game.py
+#   request.json  {id, kind: deploy|launch|kill|status|info|python, launch: bool, script, args}   written by game.py
+#   python\<id>.json/.out/.err  run of a script of Agent\ with the venv Agent\.venv (kind python, D137): state, stdout, stderr
 #   result.json   {id, ok, message}                                     answer to the last request
 #   watcher.json  {heartbeat, mccRunning, pid, launchedAt, artemisLoaded, crashes, mccDir}   refreshed every second
 #   Artemis.txt   copy of the Artemis log (next to the DLL in Binaries\Win64), refreshed when it changes
 #   crashes\<time>\   Artemis log, MCC crash files and state.json of a run that ended without a kill request
 #   config.json   optional overrides: {mccDir, launchMode: steam|exe, launchUrl}
-# Files are only overwritten, never deleted.
+# Files are only overwritten, never deleted (except a venv whose numpy install failed, so the next Python version can be tried).
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $game = Join-Path $root 'build\game'
@@ -48,6 +49,61 @@ function Find-MccDir($config)
         if (Test-Path $dir) { return $dir }
     }
     return $null
+}
+
+# Python of Agent\.venv (D137). Created on first use with the newest Python of the py launcher that installs Agent\requirements.txt.
+function Get-Venv
+{
+    $venv = Join-Path $root 'Agent\.venv'
+    $python = Join-Path $venv 'Scripts\python.exe'
+    if (Test-Path $python) { return $python }
+    $requirements = Join-Path $root 'Agent\requirements.txt'
+    foreach ($version in '3.14', '3.13', '3.12', '3.11', '3.10')
+    {
+        & py "-$version" -c "pass" 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) { continue }
+        Write-Host "[game_watcher] Creating Agent\.venv with Python $version."
+        & py "-$version" -m venv $venv 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $python))
+        {
+            & $python -m pip install -q --disable-pip-version-check -r $requirements 2>&1 | ForEach-Object { Write-Host "  $_" }
+            if ($LASTEXITCODE -eq 0) { return $python }
+        }
+        Write-Host "[game_watcher] Python $version failed: trying the next one."
+        if (Test-Path $venv) { Remove-Item -Recurse -Force $venv }
+    }
+    throw 'no Python of the py launcher could create Agent\.venv with Agent\requirements.txt (py -0 lists them)'
+}
+
+# Starts a script of Agent\ with the venv. The loop writes python\<id>.json when it ends.
+function Start-Python($req)
+{
+    $python = Get-Venv
+    $dir = Join-Path $game 'python'
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    $script = Join-Path $root $req.script
+    if (-not (Test-Path $script)) { throw "script not found: $($req.script)" }
+    $arguments = @('-u', "`"$script`"") + @($req.args | Where-Object { $_ -ne $null } | ForEach-Object { "`"$_`"" })
+    $process = Start-Process -FilePath $python -ArgumentList $arguments -WorkingDirectory $root -NoNewWindow -PassThru `
+        -RedirectStandardOutput (Join-Path $dir "$($req.id).out") -RedirectStandardError (Join-Path $dir "$($req.id).err")
+    # note: Reading Handle now keeps ExitCode readable after the process ends (Start-Process -PassThru).
+    $null = $process.Handle
+    $script:pythonRuns[$req.id] = $process
+    Write-Json "python\$($req.id).json" @{ id = $req.id; pid = $process.Id; done = $false }
+    $version = (& $python --version) 2>&1
+    return "started $($req.script) (pid $($process.Id), $version)"
+}
+
+function Update-Python
+{
+    foreach ($id in @($script:pythonRuns.Keys))
+    {
+        $process = $script:pythonRuns[$id]
+        if (-not $process.HasExited) { continue }
+        Write-Json "python\$id.json" @{ id = $id; pid = $process.Id; done = $true; exit = $process.ExitCode }
+        Write-Host "[game_watcher] $(Get-Date -Format HH:mm:ss) python $id ended (exit $($process.ExitCode))"
+        $script:pythonRuns.Remove($id)
+    }
 }
 
 function Get-Mcc { return Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1 }
@@ -121,6 +177,7 @@ $lastCrash = $null
 $wasRunning = [bool](Get-Mcc)
 $logTime = $null
 $beat = 0
+$pythonRuns = @{}
 $last = $null
 if (Test-Path $request) { try { $last = (Get-Content $request -Raw | ConvertFrom-Json).id } catch { } }
 Write-Host "[game_watcher] MCC: $mccDir"
@@ -140,6 +197,7 @@ while ($true)
         $process = Get-Mcc
         if ($wasRunning -and -not $process -and -not $killRequested) { Save-Crash }
         $wasRunning = [bool]$process
+        Update-Python
 
         $log = Join-Path $mccDir 'Artemis.txt'
         if (Test-Path $log)
@@ -177,6 +235,7 @@ while ($true)
             'launch' { $message = Start-Mcc $config }
             'kill' { $message = 'MCC ' + (Stop-Mcc) }
             'status' { $message = 'ok' }
+            'python' { $message = Start-Python $req }
             'info'
             {
                 # Settings of Artemis next to the DLL and the recorded match configs of the storage folder (%LOCALAPPDATA%\Artemis).

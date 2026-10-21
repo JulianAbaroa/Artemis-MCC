@@ -24,6 +24,10 @@
     <Folder Include="Data\" />
     <Folder Include="Data\Datum\" />
     <Folder Include="Data\Semantic\" />
+    <Folder Include="Data\Bridge\" />
+    <Folder Include="Agent\" />
+    <Folder Include="Agent\artemis\" />
+    <Folder Include="Agent\scripts\" />
     <Folder Include="Data\Tags\" />
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +50,13 @@
     <Compile Include="Tools\TagTranspiler\GenerateObject.py" />
     <Compile Include="Tools\TagTranspiler\GenerateOffset.py" />
     <Compile Include="Tools\TagTranspiler\GenerateSemantic.py" />
+    <Compile Include="Tools\TagTranspiler\GenerateBridge.py" />
+    <Compile Include="Agent\artemis\__init__.py" />
+    <Compile Include="Agent\artemis\bridge.py" />
+    <Compile Include="Agent\artemis\bridge_layout.py" />
+    <Compile Include="Agent\artemis\semantic.py" />
+    <Compile Include="Agent\scripts\bridge_check.py" />
+    <Compile Include="Agent\scripts\hello.py" />
     <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
     <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
     <Compile Include="Tools\TagTranspiler\GenerateDatum.py" />
@@ -70,6 +81,8 @@
     <Content Include="Data\Datum\vehi.xml" />
     <Content Include="Data\Datum\weap.xml" />
     <Content Include="Data\Semantic\Semantic.xml" />
+    <Content Include="Data\Bridge\Bridge.xml" />
+    <Content Include="Agent\requirements.txt" />
     <Content Include="Data\Tags\ObjectTags.xml" />
   </ItemGroup>
   <ItemGroup>

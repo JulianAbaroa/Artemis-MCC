@@ -50,6 +50,7 @@ x86/
 # Python
 env/
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo

@@ -15,6 +15,8 @@ keep waiting.
     python Tools/game.py log [-n N] [--all] [--grep RE]   Last WARNING/ERROR lines of the Artemis log (--all: every line).
     python Tools/game.py crashes                 Crashes saved by the watcher.
     python Tools/game.py export                  Compile Tools/scenarios/*.json for the bench panel of the Simulation tab.
+    python Tools/game.py py SCRIPT [ARGS...] [--no-wait]   Run a script of Agent/ with the Windows venv (D137) and print its output.
+    python Tools/game.py py --id ID [--wait]     Print (or keep waiting for) the output of an earlier run.
 
 Exit code: 0 ok, 1 failed (request or scenario), 2 still waiting (run the same wait again), 3 the watcher is not running,
 4 a LiveChat message arrived (Tools/livechat.py; it is printed with the command that resumes the wait).
@@ -79,9 +81,9 @@ def Bench():
     return state
 
 
-def Request(kind, **extra):
+def Request(kind, id=None, **extra):
     NeedWatcher()
-    id = time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:6]
+    id = id or time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:6]
     WriteJson("request.json", dict(id=id, kind=kind, **extra))
     start = time.time()
     while time.time() - start < 60:
@@ -290,9 +292,46 @@ def Log(n, every, pattern):
     return 0
 
 
+def PrintPython(id, n):
+    for suffix in ("out", "err"):
+        path = os.path.join(GAME, "python", f"{id}.{suffix}")
+        try:
+            with open(path, encoding="utf-8", errors="replace") as handle:
+                lines = handle.read().splitlines()
+        except OSError:
+            continue
+        if lines:
+            print(f"--- {suffix} ({len(lines)} lines{', last ' + str(n) if len(lines) > n else ''})")
+            print("\n".join(lines[-n:]))
+
+
+def WaitPython(id, timeout, n):
+    start = time.time()
+    while time.time() - start < timeout:
+        state = ReadJson(os.path.join("python", id + ".json"))
+        if state and state.get("done"):
+            PrintPython(id, n)
+            print(f"python {id}: exit {state.get('exit')}")
+            return 0 if state.get("exit") == 0 else 1
+        livechat.Interrupt(f"python Tools/game.py py --id {id} --wait")
+        time.sleep(2)
+    PrintPython(id, n)
+    print(f"python {id}: still running after {timeout} s. Run: python Tools/game.py py --id {id} --wait")
+    return 2
+
+
+def Py(script, rest, wait, timeout, n):
+    id = time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:4]
+    script = script.replace("/", "\\")
+    if Request("python", id=id, script=script, args=rest) != 0:
+        return 1
+    print(f"python run id {id}")
+    return WaitPython(id, timeout, n) if wait else 0
+
+
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["status", "info", "deploy", "launch", "kill", "wait", "run", "report", "log", "crashes", "export"])
+    parser.add_argument("command", choices=["status", "info", "deploy", "launch", "kill", "wait", "run", "report", "log", "crashes", "export", "py"])
     parser.add_argument("arg", nargs="?")
     parser.add_argument("--launch", action="store_true")
     parser.add_argument("--no-wait", action="store_true")
@@ -301,7 +340,10 @@ def Main():
     parser.add_argument("-n", type=int, default=30)
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--grep")
-    args = parser.parse_args()
+    parser.add_argument("--id", help="py: an earlier run")
+    args, rest = parser.parse_known_args()
+    if rest and args.command != "py":
+        parser.error("unrecognized arguments: " + " ".join(rest))
     os.makedirs(GAME, exist_ok=True)
     if args.command == "status":
         return Status()
@@ -330,6 +372,15 @@ def Main():
         return Log(args.n, args.all, args.grep)
     if args.command == "export":
         return Export()
+    if args.command == "py":
+        if args.id:
+            if args.wait:
+                return WaitPython(args.id, args.timeout, args.n)
+            PrintPython(args.id, args.n)
+            return 0
+        if not args.arg:
+            parser.error("py needs a script (Agent/scripts/...)")
+        return Py(args.arg, rest, not args.no_wait, args.timeout, args.n)
     if args.command == "crashes":
         dirs = sorted(glob.glob(os.path.join(GAME, "crashes", "*")))
         for d in dirs[-10:]:
