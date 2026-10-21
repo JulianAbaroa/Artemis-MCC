@@ -341,7 +341,8 @@ namespace Platform::Simulation::System
         std::array<wchar_t, k_GamerTagLength> gamerTag{};
         std::memcpy(gamerTag.data(), reinterpret_cast<const void*>(localDatum + k_PlayerGamerTag), sizeof(gamerTag));
 
-        const std::wstring name{ std::format(L"Bot {}", number) };
+        // note: "Mini-Place 16" fits the 15 characters of a gamertag (user request 2026-10-21).
+        const std::wstring name{ std::format(L"Mini-Place {}", number) };
         const std::size_t names{ RenameConfiguration(configuration, gamerTag, name) };
         const std::size_t identifiers{ ReplaceIdentifier(configuration, Read<std::uint64_t>(localDatum + k_PlayerIdentifier),
             identifier) };
