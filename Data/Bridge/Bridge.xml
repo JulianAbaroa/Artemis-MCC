@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Single source of the shared memory of the bridge between Artemis and Python (D65, D135-D138). Tools/TagTranspiler/GenerateBridge.py
+     generates the C++ (Platform.Bridge.Type:Layout, with static_asserts of every offset) and Agent/artemis/bridge_layout.py (numpy
+     dtypes with the same offsets) plus a LayoutHash both sides compare. Layout: natural alignment, align= raises it.
+     Field types: u8 u16 u32 u64 i8 f32 or a struct of this file. count= makes an array (a number or a const). enum= names an enum
+     of this file (C++ uses the enum class, a flags field keeps the raw integer). semantic= names an enum of
+     Data/Semantic/Semantic.xml or Common (C++ keeps the raw integer). A const takes type= (default u32). A const with owner= is an
+     existing C++ constant (module:name): C++ uses it and asserts the value. -->
+<bridge version="1">
+	<const name="Magic" value="0x42544241" doc="'ABTB' read as little endian u32: the region is an Artemis bridge." />
+	<const name="MaxPlayers" value="16" owner="Common.Engine.Type:k_MaxPlayers" doc="Players of a match (Common.Engine k_MaxPlayers) and action slots, by player table index." />
+	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a frame (Common.Engine k_MaxObjects)." />
+	<const name="FrameBuffers" value="2" doc="Frame buffers: Artemis writes the one Python is not reading." />
+	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
+	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
+	<string name="RegionPrefix" value="Local\Artemis.Bridge." doc="Name of the region: prefix + pid of MCC (D136)." />
+	<string name="FrameEventSuffix" value=".Frame" doc="Auto-reset event Artemis sets after it publishes a frame." />
+	<string name="ActionEventSuffix" value=".Action" doc="Auto-reset event Python sets after it publishes the actions of a decision." />
+	<string name="DiscoveryFolder" value="Bridge" doc="Folder inside %LOCALAPPDATA%\Artemis with one pid.json per open region." />
+
+	<enum name="BridgeOwner" type="u8" doc="Who controls the scale and the players of the AgentMask (D106).">
+		<value name="UI" id="0" />
+		<value name="Python" id="1" />
+	</enum>
+	<enum name="BridgeMode" type="u8" doc="Whether the game waits for the actions (D105).">
+		<value name="Free" id="0" doc="Never waits. A late decision is applied when it arrives and counted." />
+		<value name="Lockstep" id="1" doc="The tick of a decision plus the latency waits for its actions, with a cap." />
+	</enum>
+	<enum name="BridgePhase" type="u8" doc="State of the engine as Artemis sees it.">
+		<value name="Idle" id="0" doc="No match: menus, lobby or teardown." />
+		<value name="Loading" id="1" />
+		<value name="Running" id="2" doc="Ticks are running and frames are published." />
+	</enum>
+	<flags name="BridgeRequest" type="u8" doc="One-shot client requests of a decision (D120).">
+		<bit name="WeaponSwitch" index="0" />
+		<bit name="GrenadeSwitch" index="1" />
+		<bit name="Zoom" index="2" />
+	</flags>
+	<flags name="BridgeFrameFlag" type="u32" doc="Flags of a frame.">
+		<bit name="EntitiesTruncated" index="0" doc="The tick had more live objects than MaxEntities." />
+	</flags>
+
+	<struct name="BridgeVec3" doc="Vector of three floats, world units or a direction.">
+		<field name="X" type="f32" />
+		<field name="Y" type="f32" />
+		<field name="Z" type="f32" />
+	</struct>
+
+	<struct name="BridgeArtemisControl" align="64" doc="Part of the control block written by Artemis only.">
+		<field name="Magic" type="u32" />
+		<field name="LayoutVersion" type="u32" />
+		<field name="LayoutHash" type="u64" />
+		<field name="RegionSize" type="u32" />
+		<field name="Pid" type="u32" />
+		<field name="Heartbeat" type="u64" doc="Counter Artemis raises about every 50 ms while it is loaded." />
+		<field name="QpcFrequency" type="u64" doc="Ticks per second of QueryPerformanceCounter (PublishQpc)." />
+		<field name="Phase" type="u8" enum="BridgePhase" />
+		<field name="Owner" type="u8" enum="BridgeOwner" doc="Effective owner." />
+		<field name="Mode" type="u8" enum="BridgeMode" doc="Effective mode." />
+		<field name="DecisionPeriod" type="u8" doc="Effective N: a frame every N action ticks (D114)." />
+		<field name="Latency" type="u8" doc="Effective d: a decision is applied d action ticks after its frame." />
+		<field name="IsClientConnected" type="u8" />
+		<field name="MatchId" type="u32" doc="Engine starts since Artemis loaded. Changes with every match." />
+		<field name="ActionTick" type="u64" doc="Last action tick applied by the engine (the clock of the bridge)." />
+		<field name="Scale" type="f32" doc="Requested time scale in effect (0 = the engine default)." />
+		<field name="ActiveBuffer" type="u32" doc="Frame buffer with the last published frame." />
+		<field name="FrameCount" type="u64" doc="Frames published since Artemis loaded." />
+		<field name="LateActions" type="u64" doc="Free mode: decisions applied after their tick plus the latency." />
+		<field name="LockstepWaits" type="u64" doc="Ticks the game waited for a decision." />
+		<field name="LockstepWaitNs" type="u64" doc="Total time the game waited for decisions." />
+		<field name="LockstepTimeouts" type="u64" doc="Waits that hit the cap (the previous decision was kept)." />
+		<field name="HandleMismatches" type="u64" doc="Actions dropped because their handle is not the player of the slot." />
+		<field name="RejectedActions" type="u64" doc="Actions with values out of range (fixed before use)." />
+		<field name="ClockSkips" type="u64" doc="Ticks read where the action tick did not advance by exactly one (must stay 0)." />
+	</struct>
+
+	<struct name="BridgeClientControl" align="64" doc="Part of the control block written by Python only.">
+		<field name="ClientPid" type="u32" />
+		<field name="RequestOwner" type="u8" enum="BridgeOwner" />
+		<field name="RequestMode" type="u8" enum="BridgeMode" />
+		<field name="RequestPeriod" type="u8" doc="N wanted, 1 to 60 (0 = keep)." />
+		<field name="RequestLatency" type="u8" doc="d wanted, 1 to N (0 = keep)." />
+		<field name="RequestScale" type="f32" doc="Time scale wanted while Python owns the instance (0 = the engine default)." />
+		<field name="AgentMask" type="u32" doc="Player table indices Python controls, one bit each." />
+		<field name="ClientHeartbeat" type="u64" doc="Counter Python raises at least every 500 ms." />
+		<field name="ActionSequence" type="u64" doc="Action tick of the last decision whose actions are complete. Written last." />
+	</struct>
+
+	<struct name="BridgeControl" doc="Control block at the start of the region.">
+		<field name="Artemis" type="BridgeArtemisControl" />
+		<field name="Client" type="BridgeClientControl" />
+	</struct>
+
+	<struct name="BridgeFrameHeader" doc="What the frame is: which match and which action tick.">
+		<field name="MatchId" type="u32" />
+		<field name="PlayerCount" type="u16" />
+		<field name="EntityCount" type="u16" />
+		<field name="ActionTick" type="u64" doc="Action tick of the state of the frame. Answers carry it as DecisionTick." />
+		<field name="Generation" type="u64" doc="Id of the Tick snapshot (not game time)." />
+		<field name="PublishQpc" type="u64" doc="QueryPerformanceCounter when the frame was published." />
+		<field name="Flags" type="u32" enum="BridgeFrameFlag" />
+	</struct>
+
+	<struct name="BridgePlayer" doc="One player of the Tick (Environment Players), without its name.">
+		<field name="Handle" type="u32" />
+		<field name="BipedHandle" type="u32" />
+		<field name="Team" type="u8" semantic="Team" />
+		<field name="LocalIndex" type="u8" doc="Split-screen index, 0xFF when not local." />
+		<field name="Connection" type="u8" semantic="ConnectionState" />
+		<field name="IsAlive" type="u8" />
+		<field name="HasBody" type="u8" doc="0: the fields from Aim on are zero." />
+		<field name="Zoom" type="u8" semantic="ZoomLevel" />
+		<field name="SelectedGrenade" type="u8" semantic="GrenadeType" />
+		<field name="FragGrenades" type="u8" />
+		<field name="PlasmaGrenades" type="u8" />
+		<field name="IsAbilityActive" type="u8" />
+		<field name="CameraPosition" type="BridgeVec3" />
+		<field name="CameraForward" type="BridgeVec3" />
+		<field name="Aim" type="BridgeVec3" />
+		<field name="TicksAlive" type="u32" />
+		<field name="Shield" type="f32" doc="NaN without shield." />
+		<field name="PrimaryWeapon" type="u32" />
+		<field name="SecondaryWeapon" type="u32" />
+		<field name="EquippedWeapon" type="u32" />
+		<field name="Ability" type="u32" />
+		<field name="AbilityEnergy" type="f32" />
+		<field name="Objective" type="u32" />
+		<field name="LastDamagerPlayer" type="u32" />
+		<field name="TicksSinceDamage" type="u32" doc="NoHandle (0xFFFFFFFF) when unknown." />
+		<field name="AppliedDecision" type="u64" doc="DecisionTick of the bridge action the engine applied to this player up to this frame (0 = none)." />
+	</struct>
+
+	<struct name="BridgeEntity" doc="One live object of the Tick (Environment Entities).">
+		<field name="Handle" type="u32" />
+		<field name="Kind" type="u16" semantic="ObjectKind" />
+		<field name="Function" type="u8" semantic="Function" />
+		<field name="Subtype" type="u8" />
+		<field name="Group" type="u8" semantic="Group" />
+		<field name="Lifecycle" type="u8" semantic="Lifecycle" />
+		<field name="Binding" type="u8" semantic="Binding" />
+		<field name="Team" type="u8" semantic="Team" />
+		<field name="Physics" type="u8" semantic="Physics" />
+		<field name="Capabilities" type="u16" semantic="Capability" />
+		<field name="BoundTo" type="u32" />
+		<field name="ParentHandle" type="u32" />
+		<field name="BoundingRadius" type="f32" />
+		<field name="Vitality" type="f32" doc="NaN without vitality." />
+		<field name="BoundingCenter" type="BridgeVec3" />
+		<field name="WorldOrigin" type="BridgeVec3" />
+		<field name="Forward" type="BridgeVec3" />
+		<field name="Up" type="BridgeVec3" />
+		<field name="LinearVelocity" type="BridgeVec3" />
+		<field name="AngularVelocity" type="BridgeVec3" />
+	</struct>
+
+	<struct name="BridgeFrame" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the frame is complete.">
+		<field name="Sequence" type="u64" />
+		<field name="Header" type="BridgeFrameHeader" />
+		<field name="Players" type="BridgePlayer" count="MaxPlayers" />
+		<field name="Entities" type="BridgeEntity" count="MaxEntities" />
+		<field name="SequenceEnd" type="u64" />
+	</struct>
+
+	<struct name="BridgeAction" doc="Action of one player for one decision, written by Python (D109, D119).">
+		<field name="PlayerHandle" type="u32" doc="Full handle of the player of the slot (D40). Another handle drops the action." />
+		<field name="Lanes" type="u32" doc="Down bits of the hold lanes (D121)." />
+		<field name="DecisionTick" type="u64" doc="ActionTick of the frame this action answers. Written 0 first, then the fields, then the tick." />
+		<field name="Buttons" type="u64" />
+		<field name="Yaw" type="f32" doc="Absolute, radians." />
+		<field name="Pitch" type="f32" doc="Absolute, radians." />
+		<field name="ThrottleForward" type="f32" doc="-1 to 1." />
+		<field name="ThrottleLeft" type="f32" doc="-1 to 1." />
+		<field name="Requests" type="u8" enum="BridgeRequest" />
+	</struct>
+
+	<struct name="BridgeRegion" doc="The whole shared memory of one instance.">
+		<field name="Control" type="BridgeControl" />
+		<field name="Frames" type="BridgeFrame" count="FrameBuffers" />
+		<field name="Actions" type="BridgeAction" count="MaxPlayers" align="64" />
+	</struct>
+</bridge>

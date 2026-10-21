@@ -1,0 +1,9 @@
+{
+    "name": "bridge_smoke",
+    "defaults": { "config": "Forge World with Reach Bus", "checks": ["no_errors"] },
+    "matches": [
+        { "name": "bridge with 1 bot", "bots": ["auto"], "max_seconds": 240 },
+        { "name": "bridge with 15 bots", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto"], "max_seconds": 240 },
+        { "name": "bridge across matches", "bots": ["auto", "auto"], "max_seconds": 40, "repeat": 2 }
+    ]
+}
