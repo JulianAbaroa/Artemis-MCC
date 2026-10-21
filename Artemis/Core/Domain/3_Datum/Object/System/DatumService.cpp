@@ -1,5 +1,6 @@
 module Datum.Object.System;
 
+import Common.Engine.Type;
 import Resolved.Definitions.Type;
 import Datum.Object.Type;
 import std;
@@ -10,7 +11,7 @@ namespace
     using Datum::Object::Type::Raw::RawObject;
     using Datum::Object::Type::Raw::Snapshot;
 
-    using Datum::Object::Type::Constant::k_MaxObjects;
+    using Common::Engine::Type::k_MaxObjects;
     using Datum::Object::Type::Constant::k_EntrySize;
     using Datum::Object::Type::Constant::k_EntrySaltOffset;
     using Datum::Object::Type::Constant::k_EntryKindOffset;

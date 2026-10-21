@@ -11,6 +11,8 @@ import Egocentric.Layer;
 import Export.Tick.State;
 import Export.Tick.System;
 import Export.Tick.Hook;
+import Export.Flat.State;
+import Export.Flat.System;
 
 export namespace Export
 {
@@ -21,6 +23,8 @@ export namespace Export
         using TickService = Export::Tick::System::TickService;
         using ExecuteGameFrameDetour = Export::Tick::Hook::ExecuteGameFrameDetour;
         using SimulationTicksDetour = Export::Tick::Hook::SimulationTicksDetour;
+        using FlatStore = Export::Flat::State::FlatStore;
+        using FlatService = Export::Flat::System::FlatService;
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform,
@@ -47,6 +51,7 @@ export namespace Export
 
             lifecycle.OnCleanup([this] {
                 m_TickStore.Cleanup();
+                m_FlatStore.Cleanup();
             });
         }
         ~Layer() = default;
@@ -56,9 +61,11 @@ export namespace Export
 
         // --- State ---
         TickStore m_TickStore{};
+        FlatStore m_FlatStore{};
 
         // --- System ---
         TickService m_TickService;
+        FlatService m_FlatService{};
 
         // --- Hook ---
         ExecuteGameFrameDetour m_ExecuteGameFrameDetour;

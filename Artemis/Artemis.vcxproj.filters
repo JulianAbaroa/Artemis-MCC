@@ -88,6 +88,33 @@
     <Filter Include="Core\Infrastructure\Platform\Host\Hook">
       <UniqueIdentifier>{bc4ae9e1-18e9-4160-85f5-4366adec55ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Bridge">
+      <UniqueIdentifier>{f861fcea-78d1-47c2-b9bc-d5bbf592a2a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Bridge\Type">
+      <UniqueIdentifier>{f7caed5b-4bb1-4281-b081-05fc57e2a912}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Bridge\State">
+      <UniqueIdentifier>{be179231-23a6-4ced-b7a7-059046f4d4aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Bridge\System">
+      <UniqueIdentifier>{987218d9-2764-4405-806f-c55b8e2f885b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\8_Export\Flat">
+      <UniqueIdentifier>{46cb86cb-e21d-4a41-99db-d487ce7f1132}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\8_Export\Flat\Type">
+      <UniqueIdentifier>{8e52f922-5122-4fad-9213-4d3371221093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\8_Export\Flat\State">
+      <UniqueIdentifier>{fab50192-04ef-47ca-925c-6f24a848fbb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\8_Export\Flat\System">
+      <UniqueIdentifier>{caf8cf32-5cab-429a-acd3-189dbdd07e75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Runtime\Bridge">
+      <UniqueIdentifier>{a9716d0e-cb24-4b98-846e-5345822dc127}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Simulation">
       <UniqueIdentifier>{beb54f71-89d1-48de-874e-576db9829d18}</UniqueIdentifier>
     </Filter>
@@ -2773,6 +2800,45 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Simulation\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\BridgeLayout.ixx">
+      <Filter>Core\Infrastructure\Platform\Bridge\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\Platform.Bridge.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Bridge\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Bridge\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Bridge\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.ixx">
+      <Filter>Core\Infrastructure\Platform\Bridge\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.cpp">
+      <Filter>Core\Infrastructure\Platform\Bridge\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Flat\Type\Export.Flat.Type.ixx">
+      <Filter>Core\Domain\8_Export\Flat\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Flat\State\FlatStore.ixx">
+      <Filter>Core\Domain\8_Export\Flat\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Flat\State\FlatStore.cpp">
+      <Filter>Core\Domain\8_Export\Flat\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Flat\System\FlatService.ixx">
+      <Filter>Core\Domain\8_Export\Flat\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\8_Export\Flat\System\FlatService.cpp">
+      <Filter>Core\Domain\8_Export\Flat\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx">
+      <Filter>Core\Runtime\Bridge</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Bridge\BridgeThread.cpp">
+      <Filter>Core\Runtime\Bridge</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.ixx">
       <Filter>Core\Infrastructure\Platform\Simulation\State</Filter>

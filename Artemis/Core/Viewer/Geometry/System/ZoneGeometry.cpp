@@ -1,5 +1,6 @@
 module Viewer.Geometry.System;
 
+import Common.Math.Type;
 import Common.Math.System;
 import std;
 
@@ -13,8 +14,9 @@ namespace
     using Common::ZoneShape::Type::ZoneShape;
     using Common::ZoneShape::Type::ZoneShapeKind;
 
+    using Common::Math::Type::k_TwoPi;
+
     constexpr int k_CylinderSegments{ 24 };
-    constexpr float k_TwoPi{ 6.2831853f };
 
     struct Basis
     {

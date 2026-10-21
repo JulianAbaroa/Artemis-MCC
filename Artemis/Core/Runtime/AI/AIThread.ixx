@@ -2,6 +2,7 @@ export module Runtime.Thread:AI;
 
 import Service.Layer;
 import Platform.Layer;
+import Platform.Bridge.Type;
 import Map.Layer;
 import Resolved.Layer;
 import Datum.Layer;
@@ -22,6 +23,8 @@ export namespace Runtime::Thread
     {
     private:
         using steady_clock = std::chrono::steady_clock;
+
+        using BridgeClock = Platform::Bridge::Type::BridgeClock;
 
         using CameraStore = Viewer::Camera::State::CameraStore;
 
@@ -66,6 +69,9 @@ export namespace Runtime::Thread
 
         std::uint64_t m_Last{ 0 };
         std::uint64_t m_Dropped{ 0 };
+
+        // Clock of the bridge read with the current tick (D135): its action tick and whether a frame goes to Python.
+        BridgeClock m_BridgeClock{};
 
         // Time of each stage in the current sweep, in nanoseconds.
         std::array<std::uint64_t, k_StageNames.size()> m_StageNs{};

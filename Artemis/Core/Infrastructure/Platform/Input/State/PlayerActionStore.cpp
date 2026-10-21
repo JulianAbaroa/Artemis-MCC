@@ -1,5 +1,7 @@
 module Platform.Input.State;
 import :PlayerAction;
+
+import Common.Math.Type;
 import std;
 
 namespace
@@ -8,9 +10,7 @@ namespace
     using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Input::Type::k_PlayerActionSize;
     using Platform::Input::Type::k_ShadowFieldCount;
-
-    // Full turn in radians.
-    constexpr float k_TwoPi{ 6.28318531f };
+    using Common::Math::Type::k_TwoPi;
 }
 
 namespace Platform::Input::State

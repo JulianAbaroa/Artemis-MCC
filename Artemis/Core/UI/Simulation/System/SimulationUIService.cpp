@@ -8,6 +8,7 @@ import Common.Engine.Type;
 import Platform.Lifecycle.Type;
 import Platform.Host.Type;
 import Platform.Simulation.Type;
+import Platform.Bridge.Type;
 import Gui.Style.Type;
 import std;
 
@@ -27,6 +28,9 @@ namespace
     using Platform::Simulation::Type::FakeMachine;
     using Platform::Simulation::Type::TeamRequest;
     using UI::Simulation::Type::LocalPlayerAction;
+    using Platform::Bridge::Type::BridgeStatus;
+    using Platform::Bridge::Type::BridgeOwner;
+    using Platform::Bridge::Type::BridgeMode;
 
     using Platform::Host::Type::k_MaxLocalUsers;
     using Platform::Simulation::Type::k_MaxMachines;
@@ -158,6 +162,11 @@ namespace UI::Simulation::System
         ImGui::SeparatorText("Game speed");
 
         this->DrawGameSpeed();
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Python bridge");
+
+        this->DrawBridge();
 
         ImGui::Spacing();
         ImGui::SeparatorText("Local players");
@@ -297,6 +306,13 @@ namespace UI::Simulation::System
         const float tickHz{ m_TelemetryStore.m_TickHz.load(std::memory_order_relaxed) };
         ImGui::Text("Real: %.0f ticks/s (x%.2f)", tickHz, tickHz / k_TicksPerSecond);
 
+        // The client owns the speed while it owns the instance (D106).
+        BridgeStatus bridge{};
+        m_BridgeService.CopyStatus(bridge);
+        const bool isPythonOwned{ bridge.Owner == BridgeOwner::Python };
+        if (isPythonOwned) ImGui::TextUnformatted("Python owns the speed.");
+        ImGui::BeginDisabled(isPythonOwned);
+
         if (ImGui::Button("Engine")) m_LifecycleStore.SetRequestedTimeScale(0.0f);
         ImGui::SetItemTooltip("Stop writing the speed. The engine goes back to x1.");
 
@@ -318,6 +334,32 @@ namespace UI::Simulation::System
 
         ImGui::SameLine();
         if (ImGui::Button("Apply")) m_LifecycleStore.SetRequestedTimeScale(m_SimulationUIStore.GetCustomTimeScale());
+
+        ImGui::EndDisabled();
+    }
+
+    auto SimulationUIService::DrawBridge() -> void
+    {
+        BridgeStatus status{};
+        m_BridgeService.CopyStatus(status);
+
+        if (!status.IsOpen)
+        {
+            ImGui::TextUnformatted("Off: the shared memory is not open (see the log).");
+            return;
+        }
+
+        ImGui::Text("Shared memory Artemis.Bridge.%u | client %s | owner %s | mode %s | N %u, d %u | agents 0x%04X", status.Pid,
+            status.IsClientConnected ? "connected" : "none", status.Owner == BridgeOwner::Python ? "Python" : "UI",
+            status.Mode == BridgeMode::Lockstep ? "Lockstep" : "Free", static_cast<unsigned>(status.DecisionPeriod),
+            static_cast<unsigned>(status.Latency), status.AgentMask);
+
+        const auto& counters{ status.Counters };
+        const double waitMs{ counters.LockstepWaits > 0
+            ? static_cast<double>(counters.LockstepWaitNs) / static_cast<double>(counters.LockstepWaits) / 1.0e6 : 0.0 };
+        ImGui::Text("Frames %llu | late %llu | waits %llu (avg %.3f ms) | timeouts %llu | handle mismatches %llu | rejected %llu"
+            " | clock skips %llu", counters.Frames, counters.LateActions, counters.LockstepWaits, waitMs, counters.LockstepTimeouts,
+            counters.HandleMismatches, counters.RejectedActions, counters.ClockSkips);
     }
 
     auto SimulationUIService::DrawLocalPlayers() -> void

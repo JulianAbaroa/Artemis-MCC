@@ -4,10 +4,6 @@ import std;
 
 export namespace Datum::Object::Type::Constant
 {
-    // Slots the object table is scanned for.
-    // note: Assumed from the object limit of the engine. Not read from it.
-    constexpr std::uint32_t k_MaxObjects{ 1024 };
-
     // Bytes of one entry of the object table.
     constexpr std::uintptr_t k_EntrySize{ 0x18 };
 

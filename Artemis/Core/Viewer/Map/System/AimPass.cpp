@@ -34,6 +34,7 @@ namespace
     using Viewer::Style::Type::k_AimObjectCenter;
     using Viewer::Style::Type::k_TranslucentAlpha;
     using Common::Engine::Type::k_NoHandle;
+    using Common::Math::Type::k_TwoPi;
 
     constexpr UINT k_InitialInstances{ 256 };
 
@@ -52,7 +53,6 @@ namespace
     constexpr float k_CenterMarkerRadius{ 0.05f };
 
     constexpr float k_Pi{ 3.14159265359f };
-    constexpr float k_TwoPi{ 6.28318530718f };
 
     auto ColorOf(AnchorSource source) -> Color
     {

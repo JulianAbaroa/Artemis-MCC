@@ -2,6 +2,7 @@ module Runtime.Thread;
 import :AI;
 
 import Platform.Lifecycle.Type;
+import Export.Flat.Type;
 import std;
 
 using namespace std::chrono_literals;
@@ -9,6 +10,7 @@ using namespace std::chrono_literals;
 namespace
 {
     using Platform::Lifecycle::Type::Status;
+    using Export::Flat::Type::FlatRequest;
 
     using std::chrono::steady_clock;
     using std::chrono::nanoseconds;
@@ -69,6 +71,9 @@ namespace Runtime::Thread
                 std::uint64_t current{ lifecycle.WaitForTick(m_Last, m_Dropped) };
                 m_Last = current;
 
+                // The game thread waits for this read, so the action tick of the bridge is the one of the state about to be copied.
+                m_Platform.m_BridgeService.CaptureClock(m_Dropped == 0, m_BridgeClock);
+
                 if (m_Dropped > 0)
                 {
                     telemetry.RecordDroppedTicks(m_Dropped);
@@ -95,6 +100,11 @@ namespace Runtime::Thread
                 this->ExecuteTick();
 
                 m_Export.m_TickService.Assemble(current);
+                if (m_BridgeClock.IsDecision)
+                {
+                    m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = m_BridgeClock });
+                    m_Platform.m_BridgeService.MarkPushed(m_BridgeClock.ActionTick);
+                }
                 this->EndStage();
 
                 m_TickTraceUIService.Record(current);
@@ -227,5 +237,6 @@ namespace Runtime::Thread
         m_Platform.m_LifecycleStore.ResetTickGeneration();
         m_IsLoaded = false;
         m_Last = 0;
+        m_Platform.m_BridgeService.ResetClock();
     }
 }

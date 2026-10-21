@@ -8,6 +8,7 @@ import Platform.Host.State;
 import Platform.Input.Type;
 import Platform.Input.State;
 import Platform.Simulation.State;
+import Platform.Bridge.System;
 import Environment.Players.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
@@ -53,6 +54,8 @@ export namespace UI::Simulation::System
 
         using BotStore = Platform::Simulation::State::BotStore;
 
+        using BridgeService = Platform::Bridge::System::BridgeService;
+
         using Players = Environment::Players::Type::Players;
         using TickStore = Export::Tick::State::TickStore;
 
@@ -63,12 +66,12 @@ export namespace UI::Simulation::System
     public:
         SimulationUIService(LogsService& logsService, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
             MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
-            VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore, TickStore& tickStore,
-            SimulationUIStore& simulationUIStore) :
+            VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore,
+            BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
             m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
             m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
             m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
-            m_BotStore(botStore), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
+            m_BotStore(botStore), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
         ~SimulationUIService() = default;
 
         SimulationUIService(const SimulationUIService&) = delete;
@@ -87,6 +90,7 @@ export namespace UI::Simulation::System
         VirtualInputStore& m_VirtualInputStore;
         PlayerActionStore& m_PlayerActionStore;
         BotStore& m_BotStore;
+        BridgeService& m_BridgeService;
         TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
 
@@ -95,6 +99,9 @@ export namespace UI::Simulation::System
 
         // Draws the requested and the real engine speed, the presets and the custom field.
         auto DrawGameSpeed() -> void;
+
+        // Draws the state of the bridge with Python (D135): client, owner, mode and counters. Read only.
+        auto DrawBridge() -> void;
 
         // Draws the local player count and one row per player.
         auto DrawLocalPlayers() -> void;

@@ -14,6 +14,8 @@ import Platform.Simulation.State;
 import Platform.Simulation.System;
 import Platform.Simulation.Hook;
 import Platform.Memory.System;
+import Platform.Bridge.State;
+import Platform.Bridge.System;
 import Platform.Render.Type;
 import Platform.Render.State;
 import Platform.Render.System;
@@ -23,7 +25,7 @@ import std;
 export namespace Platform
 {
     // Root of the Platform layer. Owns the stores, services and hooks that talk to the game process:
-    // lifecycle, host (MCC), input, simulation (bots), memory and render. The hooks are installed by the Runtime layer.
+    // lifecycle, host (MCC), input, simulation (bots), bridge (Python), memory and render. The hooks are installed by the Runtime layer.
     // note: Members are built in declaration order, so stores come first, then services, then hooks.
     class Layer
     {
@@ -63,6 +65,9 @@ export namespace Platform
         using BotService = Platform::Simulation::System::BotService;
         using SetMachinesDetour = Platform::Simulation::Hook::SetMachinesDetour;
 
+        using BridgeStore = Platform::Bridge::State::BridgeStore;
+        using BridgeService = Platform::Bridge::System::BridgeService;
+
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
@@ -81,6 +86,8 @@ export namespace Platform
             m_AOBService(service.m_LogsService),
             m_HostService(service.m_LogsService, m_AOBService),
             m_BotService(service.m_LogsService, m_AOBService, m_BotStore),
+            m_BridgeService(service.m_LogsService, service.m_SettingsStore, m_LifecycleStore, m_MatchCycleStore, m_PlayerActionStore,
+                m_BridgeStore),
             m_RenderService(service.m_LogsService, m_RenderStore),
             m_SwapChainLocator(service.m_LogsService),
             m_EngineInitializeDetour(service.m_LogsService, m_AOBService, m_LifecycleStore, m_LifecycleService),
@@ -96,7 +103,7 @@ export namespace Platform
             m_GetRawInputDataDetour(service.m_LogsService, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
             m_WndProcDetour(service.m_LogsService, m_InputService, m_LifecycleStore, m_LifecycleService),
             m_InputUpdateDetour(service.m_LogsService, m_HostService, m_VirtualInputStore),
-            m_PlayerActionDetour(service.m_LogsService, m_AOBService, m_PlayerActionStore, m_BotService),
+            m_PlayerActionDetour(service.m_LogsService, m_AOBService, m_PlayerActionStore, m_BotService, m_BridgeService),
             m_SetMachinesDetour(service.m_LogsService, m_AOBService, m_BotStore),
             m_PresentDetour(service.m_LogsService, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
             m_ResizeBuffersDetour(service.m_LogsService, m_RenderStore, m_RenderService, m_SwapChainLocator)
@@ -106,13 +113,16 @@ export namespace Platform
             // The bot service finds its functions before the SetMachines hook overwrites the bytes of their signature.
             m_LifecycleService.OnEngineInitialized([this] {
                 m_GetButtonStateDetour.Install();
+                m_BridgeService.BeginMatch();
                 m_PlayerActionDetour.Install();
                 m_BotService.ResolveFunctions();
                 m_SetMachinesDetour.Install();
                 this->InstallHostHooks();
             });
 
+            // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
             m_LifecycleService.OnUnhook([this] {
+                m_BridgeService.Stop();
                 this->UninstallHostHooks();
                 m_SetMachinesDetour.Uninstall();
                 m_PlayerActionDetour.Uninstall();
@@ -154,6 +164,7 @@ export namespace Platform
         VirtualInputStore m_VirtualInputStore{};
         PlayerActionStore m_PlayerActionStore{};
         BotStore m_BotStore{};
+        BridgeStore m_BridgeStore{};
         RenderStore m_RenderStore{};
 
         // --- System ---
@@ -163,6 +174,7 @@ export namespace Platform
         AOBService m_AOBService;
         HostService m_HostService;
         BotService m_BotService;
+        BridgeService m_BridgeService;
         MemoryReaderService m_MemoryReaderService{};
         RenderService m_RenderService;
         SwapChainLocator m_SwapChainLocator;

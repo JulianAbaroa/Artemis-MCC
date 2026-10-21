@@ -5,6 +5,7 @@ import Platform.Memory.System;
 import Platform.Input.Type;
 import Platform.Input.State;
 import Platform.Simulation.System;
+import Platform.Bridge.System;
 import std;
 
 namespace
@@ -17,7 +18,9 @@ export namespace Platform::Input::Hook
 {
     // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
     // note: Players without an override keep the action the engine built. Called by ExecuteGameFrame once per tick on the game thread.
-    // Before the actions, the bot service adds the bots asked for and publishes the session snapshot (A9 M5).
+    // Before the actions, the bot service adds the bots asked for and publishes the session snapshot (A9 M5), and the bridge sets the
+    // overrides of the players of the Python client (waiting for them in Lockstep, D105).
+    // note: The action tick of the bridge is the number this hook publishes (m_Sequence): one per tick it sees.
     class PlayerActionDetour
     {
     private:
@@ -38,10 +41,13 @@ export namespace Platform::Input::Hook
 
         using BotService = Platform::Simulation::System::BotService;
 
+        using BridgeService = Platform::Bridge::System::BridgeService;
+
     public:
         PlayerActionDetour(LogsService& logsService, AOBService& aobService, PlayerActionStore& playerActionStore,
-            BotService& botService) :
-            m_LogsService(logsService), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService) {}
+            BotService& botService, BridgeService& bridgeService) :
+            m_LogsService(logsService), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService),
+            m_BridgeService(bridgeService) {}
         ~PlayerActionDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -56,6 +62,7 @@ export namespace Platform::Input::Hook
         AOBService& m_AOBService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
+        BridgeService& m_BridgeService;
 
         static inline PlayerActionDetour* s_Instance{ nullptr };
         static inline ApplyPlayerActionsFunction s_OriginalFunction{ nullptr };
