@@ -12,9 +12,11 @@ in compact form: one line per diagnostic, relative paths, no duplicates, errors 
 
     -n N   cap on diagnostic lines printed (default 40; 0 = no cap)
 
-Exit code: 0 build ok, 1 build failed, 2 still building (use --wait), 3 the watcher is not running.
+Exit code: 0 build ok, 1 build failed, 2 still building (use --wait), 3 the watcher is not running, 4 a LiveChat
+message arrived (Tools/livechat.py; the build keeps going, resume with --wait).
 """
 import argparse, collections, json, os, re, subprocess, sys, time, uuid
+import livechat
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WATCH = os.path.join(ROOT, "build", "watch")
@@ -117,6 +119,7 @@ def Wait(id, timeout):
                 print("The build watcher did not pick up the request: ask the user to open Tools\\build_watcher.bat.")
                 print(f"The request stays queued: once it is open, run python Tools/build.py --wait {id}")
                 sys.exit(3)
+        livechat.Interrupt(f"python Tools/build.py --wait {id}")
         time.sleep(2)
     print(f"Still building after {timeout} s. Run: python Tools/build.py --wait {id}")
     sys.exit(2)

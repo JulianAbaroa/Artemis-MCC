@@ -33,6 +33,8 @@
     <Compile Include="Tools\analyze_seats.py" />
     <Compile Include="Tools\analyze_ticktrace.py" />
     <Compile Include="Tools\build.py" />
+    <Compile Include="Tools\game.py" />
+    <Compile Include="Tools\livechat.py" />
     <Compile Include="Tools\check_rules.py" />
     <Compile Include="Tools\deps.py" />
     <Compile Include="Tools\field_usage_report.py" />
