@@ -1,0 +1,19 @@
+{
+    "name": "bots stress",
+    "defaults": { "config": "Forge World with Reach Bus", "locals": 1, "scale": 0, "max_seconds": 15,
+                  "checks": ["no_errors", ["ended_by", "limit"]] },
+    "matches": [
+        { "name": "3 bots", "bots": ["auto", "auto", "auto"], "repeat": 3 },
+        { "name": "7 bots acting", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto"],
+          "actions": [["bots", "test_action", 30, 0]], "ticktrace": true, "repeat": 3,
+          "checks": ["no_errors", ["ended_by", "limit"], ["min_players", 8]] },
+        { "name": "15 bots", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto",
+                                     "auto", "auto", "auto"],
+          "actions": [["bots", "test_action", 30, 0]], "requests": [["bots", "weapon", 300]], "repeat": 3,
+          "checks": ["no_errors", ["ended_by", "limit"], ["min_players", 16]] },
+        { "name": "15 bots at 8x", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto",
+                                           "auto", "auto", "auto", "auto"],
+          "scale": 8, "max_seconds": 15, "actions": [["bots", "test_action", 30, 0]],
+          "checks": ["no_errors", ["ended_by", "limit"], ["min_players", 16], ["min_ticks", 3000]] }
+    ]
+}

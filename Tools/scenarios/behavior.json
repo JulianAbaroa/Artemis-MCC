@@ -1,0 +1,23 @@
+{
+    "name": "behavior",
+    "defaults": { "config": "Forge World with Reach Bus", "max_seconds": 45 },
+    "matches": [
+        {
+            "name": "bots move and switch weapon",
+            "bots": ["auto", "auto"],
+            "actions": [["bots", "test_action", 120, 0]],
+            "requests": [["bots", "weapon", 600]],
+            "ticktrace": true,
+            "checks": ["no_errors", ["min_players", 3], ["alive", "bots", 2], ["moved", "bots", 3.0], ["weapon_changed", "bots"]]
+        },
+        {
+            "name": "bots hold still at 4x",
+            "bots": ["auto"],
+            "scale": 4,
+            "max_seconds": 20,
+            "actions": [["bots", "hold_still"]],
+            "probes": [["tick", "haloreach+0x0", 4]],
+            "checks": ["no_errors", ["min_ticks", 3000], ["ended_by", "limit"]]
+        }
+    ]
+}

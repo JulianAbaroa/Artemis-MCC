@@ -1,0 +1,9 @@
+{
+    "name": "rotation smoke",
+    "defaults": { "max_seconds": 40, "checks": ["no_errors", ["min_ticks", 300], ["ended_by", "limit"]] },
+    "matches": [
+        { "name": "desert bus", "config": "Forge World with Desert Bus" },
+        { "name": "reach bus", "config": "Forge World with Reach Bus" },
+        { "name": "desert bus again", "config": "Forge World with Desert Bus" }
+    ]
+}

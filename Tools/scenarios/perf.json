@@ -1,0 +1,15 @@
+{
+    "name": "perf",
+    "defaults": { "config": "Forge World with Reach Bus", "locals": 1, "scale": 10, "max_seconds": 20,
+                  "checks": ["no_errors", ["ended_by", "limit"]] },
+    "matches": [
+        { "name": "1 player x10" },
+        { "name": "16 players x10", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto",
+                                            "auto", "auto", "auto", "auto"], "checks": ["no_errors", ["min_players", 16]] },
+        { "name": "16 players acting x10", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto",
+                                                   "auto", "auto", "auto", "auto", "auto"],
+          "actions": [["bots", "test_action", 30, 0]], "checks": ["no_errors", ["min_players", 16]] },
+        { "name": "4 locals + 12 bots x10", "locals": 4, "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto",
+                                                               "auto", "auto", "auto"], "checks": ["no_errors", ["min_players", 16]] }
+    ]
+}

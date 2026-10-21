@@ -1,0 +1,40 @@
+{
+    "name": "regression",
+    "defaults": { "config": "Forge World with Reach Bus", "locals": 1, "scale": 0, "max_seconds": 30,
+                  "checks": ["no_errors", ["ended_by", "limit"]] },
+    "matches": [
+        {
+            "name": "4 locals",
+            "locals": 4,
+            "checks": ["no_errors", ["ended_by", "limit"], ["min_players", 4], ["alive", "all", 4], ["min_ticks", 1200]]
+        },
+        {
+            "name": "bots act and request",
+            "bots": ["auto", "auto", "auto"],
+            "max_seconds": 40,
+            "actions": [["bots", "test_action", 60, 0]],
+            "requests": [["bots", "weapon", 600], ["bots", "grenade", 900]],
+            "ticktrace": true,
+            "checks": ["no_errors", ["ended_by", "limit"], ["min_players", 4], ["alive", "bots", 3], ["moved", "bots", 3.0],
+                       ["weapon_changed", "bots"]]
+        },
+        {
+            "name": "bots by team",
+            "bots": [0, 1, 1],
+            "checks": ["no_errors", ["ended_by", "limit"], ["team_players", 1, 2]]
+        },
+        {
+            "name": "speed x8",
+            "bots": ["auto"],
+            "scale": 8,
+            "max_seconds": 20,
+            "checks": ["no_errors", ["ended_by", "limit"], ["min_ticks", 6000]]
+        },
+        {
+            "name": "other config after speed",
+            "config": "Forge World with Desert Bus",
+            "bots": ["auto"],
+            "checks": ["no_errors", ["ended_by", "limit"], ["min_ticks", 1500], ["alive", "bots", 1]]
+        }
+    ]
+}
