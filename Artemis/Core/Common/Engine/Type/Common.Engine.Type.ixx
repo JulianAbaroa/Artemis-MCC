@@ -17,6 +17,10 @@ export namespace Common::Engine::Type
     // note: Assumed from the maximum players of a match. Not read from the engine.
     inline constexpr std::size_t k_MaxPlayers{ 16 };
 
+    // Slots of the object table: Artemis scans this many objects per tick and the bridge exports this many entities.
+    // note: Assumed from the object limit of the engine. Not read from it.
+    inline constexpr std::uint32_t k_MaxObjects{ 1024 };
+
     // Characters of a gamertag, terminator included.
     inline constexpr std::size_t k_GamerTagLength{ 16 };
 }
