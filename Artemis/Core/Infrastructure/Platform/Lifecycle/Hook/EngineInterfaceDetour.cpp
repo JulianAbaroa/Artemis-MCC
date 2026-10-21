@@ -90,6 +90,8 @@ namespace Platform::Lifecycle::Hook
             reinterpret_cast<std::uintptr_t>(engine));
 
         reinterpret_cast<EngineDestroyFunction>(s_OriginalVTable[k_EngineDestroyIndex])(engine);
+
+        self->m_MatchCycleStore.AddEngineDestroy();
     }
 
     auto __fastcall EngineInterfaceDetour::HookedEngineStart(void* engine, void* systemInterface,
@@ -133,6 +135,8 @@ namespace Platform::Lifecycle::Hook
         }
 
         reinterpret_cast<EngineStartFunction>(s_OriginalVTable[k_EngineStartIndex])(engine, systemInterface, startConfiguration);
+
+        self->m_MatchCycleStore.AddEngineStart();
     }
 
     auto __fastcall EngineInterfaceDetour::HookedEngineUpdateState(void* engine, std::int32_t state, const void* payload) -> void
@@ -192,6 +196,7 @@ namespace Platform::Lifecycle::Hook
         }
 
         // An engine created before the hook went in is not traced: MCC only creates it when a game starts, after Artemis loads.
+        m_MatchCycleStore.SetEngineGlobal(m_EngineGlobal);
         m_IsHookInstalled.store(true);
         return true;
     }
@@ -208,6 +213,7 @@ namespace Platform::Lifecycle::Hook
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[EngineInterfaceDetour]", m_LogsService);
 
+        m_MatchCycleStore.SetEngineGlobal(nullptr);
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;
     }

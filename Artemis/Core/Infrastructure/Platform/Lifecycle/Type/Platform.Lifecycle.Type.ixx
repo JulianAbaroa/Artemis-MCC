@@ -30,6 +30,9 @@ export namespace Platform::Lifecycle::Type
     inline constexpr std::size_t k_EngineUpdateStateIndex{ 3 };
     inline constexpr std::size_t k_EngineCommandIndex{ 9 };
 
+    // State command that leaves the match, as the Leave of the pause menu (A15 sec. 2.11). It carries no payload.
+    inline constexpr std::int32_t k_EngineLeaveState{ 0x02 };
+
     // Bytes of the match configuration MCC passes to the engine start. The engine copies it to its runtime configuration.
     inline constexpr std::size_t k_EngineConfigurationSize{ 0x2BF30 };
 
@@ -133,6 +136,11 @@ export namespace Platform::Lifecycle::Type
 
     // Signature of the MCC function that tells whether the countdown of the lobby runs (bit 7 of +0xE of the session properties).
     using IsCountdownActiveFunction = auto(__fastcall*)(void* session) -> bool;
+
+    // Signature of the MCC check that the map variant of the lobby supports its game variant. The START of the lobby shows the
+    // "incompatible variants" dialog when it fails. The registers are passed through as they come (bench, 2026-10-21).
+    using VariantsCompatibleFunction = auto(__fastcall*)(std::uint64_t first, std::uint64_t second, std::uint64_t third,
+        std::uint64_t fourth) -> bool;
 
     // Inside the StartCountdown signature: "call rel32" to the session getter (+0x22, next instruction at +0x26) and to the countdown
     // check (+0x2A, +0x2E).

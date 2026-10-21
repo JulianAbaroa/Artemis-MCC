@@ -11,6 +11,8 @@ export namespace Platform::Lifecycle::State
     class MatchConfigStore
     {
     private:
+        using steady_clock = std::chrono::steady_clock;
+
         using MatchConfig = Platform::Lifecycle::Type::MatchConfig;
 
     public:
@@ -45,8 +47,10 @@ export namespace Platform::Lifecycle::State
         auto SetLastRecorded(std::string file) -> void;
 
         // Whether a launch from the lobby is requested and the lifecycle hook did not take it yet (D124).
+        // note: Setting it to true also stamps the request time, from which the hook waits for the lobby.
         auto IsLaunchRequested() const -> bool;
         auto SetLaunchRequested(bool value) -> void;
+        auto GetLaunchRequestTime() const -> steady_clock::time_point;
 
         // Takes the launch request, so it launches one match only.
         // return: Whether a launch was requested.
@@ -63,6 +67,7 @@ export namespace Platform::Lifecycle::State
         std::string m_LastApplied{};
         std::string m_LastRecorded{};
         std::string m_LastLaunch{};
+        steady_clock::time_point m_LaunchRequestTime{};
         std::atomic<bool> m_IsLaunchRequested{ false };
     };
 }

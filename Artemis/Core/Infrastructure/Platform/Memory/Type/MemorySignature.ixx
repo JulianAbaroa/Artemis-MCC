@@ -44,6 +44,14 @@ export namespace Platform::Memory::Type::Signature
         "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 40 8A F1 33 FF FF 15 ?? ?? ?? ?? 84 C0 74 ?? 8D 4F 01 E8 ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 8D 4F"
     };
 
+    // MCC-Win64-Shipping.exe: the check that the map variant of the lobby supports its game variant, called by the START of the
+    // lobby (rva 0x43e768 on MCC 1.3528).
+    inline constexpr Signature k_VariantsCompatible
+    {
+        "VariantsCompatible",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 45 8B D9 8B EA 33 FF E8 ?? ?? ?? ?? 8B D5 45 8B C3 48 8B F0 E8"
+    };
+
     // MCC-Win64-Shipping.exe: inside the StartGame state, finds the custom games lobby screen by name in the UI manager (D124).
     // note: Not a function start. The UI manager global, the screen name and the FindScreen function are read from its operands.
     inline constexpr Signature k_FindLobbyScreen

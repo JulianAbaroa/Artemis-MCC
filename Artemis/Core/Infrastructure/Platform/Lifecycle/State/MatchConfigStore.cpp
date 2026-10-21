@@ -73,7 +73,18 @@ namespace Platform::Lifecycle::State
 
     auto MatchConfigStore::SetLaunchRequested(bool value) -> void
     {
+        if (value)
+        {
+            std::lock_guard<std::mutex> lock{ m_Mutex };
+            m_LaunchRequestTime = steady_clock::now();
+        }
         m_IsLaunchRequested.store(value);
+    }
+
+    auto MatchConfigStore::GetLaunchRequestTime() const -> steady_clock::time_point
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_LaunchRequestTime;
     }
 
     auto MatchConfigStore::TakeLaunchRequest() -> bool

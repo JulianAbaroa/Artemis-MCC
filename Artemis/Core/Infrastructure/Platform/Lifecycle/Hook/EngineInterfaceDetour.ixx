@@ -3,6 +3,7 @@ export module Platform.Lifecycle.Hook:EngineInterface;
 import Service.Logs.System;
 import Platform.Memory.System;
 import Platform.Lifecycle.Type;
+import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
 import std;
 
@@ -33,13 +34,14 @@ export namespace Platform::Lifecycle::Hook
         using EngineStartFunction = Platform::Lifecycle::Type::EngineStartFunction;
         using EngineUpdateStateFunction = Platform::Lifecycle::Type::EngineUpdateStateFunction;
         using EngineCommandFunction = Platform::Lifecycle::Type::EngineCommandFunction;
+        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
         using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
 
     public:
         EngineInterfaceDetour(LogsService& logsService, AOBService& aobService, MemoryReaderService& memoryReaderService,
-            MatchConfigService& matchConfigService) :
+            MatchCycleStore& matchCycleStore, MatchConfigService& matchConfigService) :
             m_LogsService(logsService), m_AOBService(aobService), m_MemoryReaderService(memoryReaderService),
-            m_MatchConfigService(matchConfigService) {}
+            m_MatchCycleStore(matchCycleStore), m_MatchConfigService(matchConfigService) {}
         ~EngineInterfaceDetour() = default;
 
         // Finds the MCC function by signature and installs the hook. Does nothing if already installed.
@@ -54,6 +56,7 @@ export namespace Platform::Lifecycle::Hook
         LogsService& m_LogsService;
         AOBService& m_AOBService;
         MemoryReaderService& m_MemoryReaderService;
+        MatchCycleStore& m_MatchCycleStore;
         MatchConfigService& m_MatchConfigService;
 
         static inline EngineInterfaceDetour* s_Instance{ nullptr };
