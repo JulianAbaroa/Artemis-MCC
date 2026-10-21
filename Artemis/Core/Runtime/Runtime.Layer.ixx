@@ -17,8 +17,8 @@ import std;
 
 export namespace Runtime
 {
-    // Root of the Runtime layer. Owns the main, AI and input threads.
-    // note: Run() starts the AI and input threads and then runs the main thread on the caller.
+    // Root of the Runtime layer. Owns the main, AI, input and bench threads.
+    // note: Run() starts the AI, input and bench threads and then runs the main thread on the caller.
     class Layer
     {
     private:
@@ -27,6 +27,7 @@ export namespace Runtime
         using MainThread = Runtime::Thread::MainThread;
         using AIThread = Runtime::Thread::AIThread;
         using InputThread = Runtime::Thread::InputThread;
+        using BenchThread = Runtime::Thread::BenchThread;
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
@@ -37,17 +38,19 @@ export namespace Runtime
             m_Main(service, platform),
             m_AI(service, platform, map, resolved, datumLayer, tables, relations,
                 environment, egocentric, exportLayer, viewerCameraStore, ui.m_TickTraceUIService),
-            m_Input(service, platform) {}
+            m_Input(service, platform),
+            m_Bench(service, platform, ui.m_BenchUIService) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
         auto operator=(const Layer&) -> Layer& = delete;
 
-        // Starts the AI and input threads and runs the main thread until the lifecycle stops.
+        // Starts the AI, input and bench threads and runs the main thread until the lifecycle stops.
         auto Run() -> void
         {
             m_AIThread = std::jthread([this] { m_AI.Run(); });
             m_InputThread = std::jthread([this] { m_Input.Run(); });
+            m_BenchThread = std::jthread([this] { m_Bench.Run(); });
 
             m_Main.Run();
         }
@@ -56,8 +59,10 @@ export namespace Runtime
         MainThread m_Main;
         AIThread m_AI;
         InputThread m_Input;
+        BenchThread m_Bench;
 
         std::jthread m_AIThread{};
         std::jthread m_InputThread{};
+        std::jthread m_BenchThread{};
     };
 }
