@@ -6,12 +6,14 @@ module;
 module UI.Bench.System;
 
 import Common.Engine.Type;
+import Common.Semantic.Type;
 import Common.Math.System;
 import Common.Text.System;
 import Service.Logs.Type;
 import Platform.Host.Type;
 import Platform.Input.Type;
 import Environment.Players.Type;
+import Environment.Events.Type;
 import Export.Tick.Type;
 import UI.Simulation.Type;
 import UI.Simulation.System;
@@ -36,6 +38,9 @@ namespace
     using Service::Logs::Type::LogEntry;
     using Service::Logs::Type::LogLevel;
     using Environment::Players::Type::Player;
+    using Environment::Events::Type::GameEvent;
+    using Common::Semantic::Type::EventKey::EventKeyLabel;
+    using Common::Semantic::Type::EventKey::FindEventKey;
     using UI::Bench::Type::BenchAction;
     using UI::Bench::Type::BenchCheck;
     using UI::Bench::Type::BenchPlayers;
@@ -256,7 +261,7 @@ namespace UI::Bench::System
             return;
         }
 
-        for (const char* name : { "inbox", "taken", "report", "probes", "scenarios" })
+        for (const char* name : { "inbox", "taken", "report", "probes", "events", "scenarios" })
         {
             std::filesystem::create_directories(folder / name, error);
             if (error) break;
@@ -549,6 +554,10 @@ namespace UI::Bench::System
             {
                 match.IsTickTrace = true;
             }
+            else if (key == "events")
+            {
+                match.IsEvents = true;
+            }
             else if (key == "check")
             {
                 std::vector<std::string> words{ SplitWords(value) };
@@ -761,6 +770,15 @@ namespace UI::Bench::System
             run.Probes.push_back(std::move(state));
         }
 
+        run.EventCursor = 0;
+        if (match.IsEvents)
+        {
+            run.EventsFile = m_BenchUIStore.GetFolder() / "events" / std::format("{}_m{}.csv", run.Scenario->Id, report.Index);
+            std::ofstream output{ run.EventsFile, std::ios::trunc };
+            output << "sequence,game_tick,seconds,key,name,kind,cause_player,cause_object,effect_player,effect_object,drt,modifier,extra,data\n";
+            report.Files.emplace_back("events", run.EventsFile.string());
+        }
+
         if (match.IsTickTrace) m_TickTraceUIStore.RequestStart();
     }
 
@@ -856,6 +874,23 @@ namespace UI::Bench::System
             state.Last = std::move(bytes);
             state.IsReadable = isReadable;
             ++state.Rows;
+        }
+
+        const auto& events{ run.LastTick ? run.LastTick->Events : nullptr };
+        if (match.IsEvents && events && events->LastSequence > run.EventCursor)
+        {
+            std::ofstream output{ run.EventsFile, std::ios::app };
+            for (const GameEvent& event : events->Rows)
+            {
+                if (event.Sequence <= run.EventCursor) continue;
+
+                const EventKeyLabel* label{ FindEventKey(event.Key) };
+                output << std::format("{},{},{:.3f},{:06X},{},{},{:08X},{:08X},{:08X},{:08X},{},{},{:08X},{}\n", event.Sequence,
+                    event.GameTick, SecondsSince(run.PhaseStart), event.Key, label ? label->Name : std::string_view{},
+                    NameOf(event.Kind), event.CausePlayer, event.CauseObject, event.EffectPlayer, event.EffectObject,
+                    event.DamageReportingType, event.Modifier, event.Extra, ToHexValue(std::as_bytes(std::span{ event.Data })));
+            }
+            run.EventCursor = events->LastSequence;
         }
     }
 

@@ -1,0 +1,7 @@
+{
+    "name": "bridge_ctf",
+    "defaults": { "config": "Desert Bus Sky Roads Desert Bus 2.1 Short", "checks": ["no_errors"] },
+    "matches": [
+        { "name": "bridge events in CTF (D141)", "bots": [1], "events": true, "max_seconds": 240 }
+    ]
+}

@@ -172,7 +172,7 @@ def PrintReport(report):
 
 
 MATCH_KEYS = {"name", "config", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
-              "probes", "ticktrace"}
+              "probes", "ticktrace", "events"}
 
 
 def Compile(scenario, configs):
@@ -210,6 +210,8 @@ def Compile(scenario, configs):
                     lines.append(f"{key[:-1]} " + " ".join(str(w) for w in words))
             if match.get("ticktrace"):
                 lines.append("ticktrace")
+            if match.get("events"):
+                lines.append("events")
     if not count:
         raise ValueError("the scenario has no matches")
     return "\n".join(lines) + "\n", count

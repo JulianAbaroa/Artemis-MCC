@@ -2,7 +2,7 @@
 <!-- Single source of the shared memory of the bridge between Artemis and Python (D65, D135-D138). Tools/TagTranspiler/GenerateBridge.py
      generates the C++ (Platform.Bridge.Type:Layout, with static_asserts of every offset) and Agent/artemis/bridge_layout.py (numpy
      dtypes with the same offsets) plus a LayoutHash both sides compare. Layout: natural alignment, align= raises it.
-     Field types: u8 u16 u32 u64 i8 f32 or a struct of this file. count= makes an array (a number or a const). enum= names an enum
+     Field types: u8 u16 u32 u64 i8 i16 f32 or a struct of this file. count= makes an array (a number or a const). enum= names an enum
      of this file (C++ uses the enum class, a flags field keeps the raw integer). semantic= names an enum of
      Data/Semantic/Semantic.xml or Common (C++ keeps the raw integer). A const takes type= (default u32). A const with owner= is an
      existing C++ constant (module:name): C++ uses it and asserts the value. -->
@@ -11,6 +11,7 @@
 	<const name="MaxPlayers" value="16" owner="Common.Engine.Type:k_MaxPlayers" doc="Players of a match (Common.Engine k_MaxPlayers) and action slots, by player table index." />
 	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a frame (Common.Engine k_MaxObjects)." />
 	<const name="FrameBuffers" value="2" doc="Frame buffers: Artemis writes the one Python is not reading." />
+	<const name="MaxFrameEvents" value="64" doc="Newest events of the match a frame carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
 	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
 	<string name="RegionPrefix" value="Local\Artemis.Bridge." doc="Name of the region: prefix + pid of MCC (D136)." />
@@ -99,6 +100,28 @@
 		<field name="Generation" type="u64" doc="Id of the Tick snapshot (not game time)." />
 		<field name="PublishQpc" type="u64" doc="QueryPerformanceCounter when the frame was published." />
 		<field name="Flags" type="u32" enum="BridgeFrameFlag" />
+		<field name="EventCount" type="u16" doc="Rows of Events in use, oldest first." />
+		<field name="LastEventSequence" type="u32" doc="Sequence of the newest event of the match up to this frame (0 = none yet)." />
+	</struct>
+
+	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
+		<field name="GameTick" type="u32" doc="Ticks since the start of the match (60 per second). Does not restart between rounds." />
+		<field name="Phase" type="u8" semantic="MatchPhase" />
+		<field name="PlayerScores" type="i16" count="MaxPlayers" doc="Score of each player, by player table index." />
+	</struct>
+
+	<struct name="BridgeEvent" doc="One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).">
+		<field name="Sequence" type="u32" doc="From 1 in each match, without gaps." />
+		<field name="GameTick" type="u32" />
+		<field name="Key" type="u32" />
+		<field name="CausePlayer" type="u32" />
+		<field name="CauseObject" type="u32" />
+		<field name="EffectPlayer" type="u32" />
+		<field name="EffectObject" type="u32" />
+		<field name="Kind" type="u8" semantic="Event" />
+		<field name="DamageReportingType" type="u8" />
+		<field name="IsHeadshot" type="u8" />
+		<field name="IsStuck" type="u8" />
 	</struct>
 
 	<struct name="BridgePlayer" doc="One player of the Tick (Environment Players), without its name.">
@@ -158,6 +181,8 @@
 		<field name="Header" type="BridgeFrameHeader" />
 		<field name="Players" type="BridgePlayer" count="MaxPlayers" />
 		<field name="Entities" type="BridgeEntity" count="MaxEntities" />
+		<field name="Match" type="BridgeMatch" />
+		<field name="Events" type="BridgeEvent" count="MaxFrameEvents" />
 		<field name="SequenceEnd" type="u64" />
 	</struct>
 

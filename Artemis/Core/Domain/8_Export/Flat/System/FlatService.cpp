@@ -4,6 +4,8 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Environment.Entities.Type;
 import Environment.Players.Type;
+import Environment.Events.Type;
+import Environment.Match.Type;
 import std;
 
 namespace
@@ -11,12 +13,17 @@ namespace
     using Common::Math::Type::Vec3;
     using Environment::Entities::Type::Entity;
     using Environment::Players::Type::Player;
+    using Environment::Events::Type::GameEvent;
+    using Environment::Match::Type::MatchScore;
     using Platform::Bridge::Type::BridgeVec3;
     using Platform::Bridge::Type::BridgePlayer;
     using Platform::Bridge::Type::BridgeEntity;
+    using Platform::Bridge::Type::BridgeMatch;
+    using Platform::Bridge::Type::BridgeEvent;
     using Platform::Bridge::Type::BridgeFrameFlag;
 
     using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_HandleIndexMask;
     using Platform::Bridge::Type::k_BridgeNotLocal;
 
     // Value of an optional float that is absent (Shield, Vitality).
@@ -88,6 +95,23 @@ namespace
         row.AngularVelocity = ToBridge(entity.AngularVelocity);
         return row;
     }
+
+    auto ToBridge(const GameEvent& event) -> BridgeEvent
+    {
+        BridgeEvent row{};
+        row.Sequence = event.Sequence;
+        row.GameTick = event.GameTick;
+        row.Key = event.Key;
+        row.CausePlayer = event.CausePlayer;
+        row.CauseObject = event.CauseObject;
+        row.EffectPlayer = event.EffectPlayer;
+        row.EffectObject = event.EffectObject;
+        row.Kind = static_cast<std::uint8_t>(event.Kind);
+        row.DamageReportingType = event.DamageReportingType;
+        row.IsHeadshot = event.IsHeadshot ? 1 : 0;
+        row.IsStuck = event.IsStuck ? 1 : 0;
+        return row;
+    }
 }
 
 namespace Export::Flat::System
@@ -120,6 +144,35 @@ namespace Export::Flat::System
             }
         }
 
+        frame.Match = BridgeMatch{};
+        if (tick.Match)
+        {
+            frame.Match.GameTick = tick.Match->GameTick;
+            frame.Match.Phase = static_cast<std::uint8_t>(tick.Match->Phase);
+
+            for (const MatchScore& score : tick.Match->Scores)
+            {
+                const std::size_t index{ score.PlayerHandle & k_HandleIndexMask };
+                if (index < frame.Match.PlayerScores.size()) frame.Match.PlayerScores[index] = score.Score;
+            }
+        }
+
+        // The newest events of the log: Python keeps its cursor by sequence and skips the ones it already has.
+        std::size_t eventCount{ 0 };
+        std::uint32_t lastEventSequence{ 0 };
+        if (tick.Events)
+        {
+            const auto& rows{ tick.Events->Rows };
+            const std::size_t first{ rows.size() > frame.Events.size() ? rows.size() - frame.Events.size() : 0 };
+            for (std::size_t i{ first }; i < rows.size(); ++i)
+            {
+                frame.Events[eventCount++] = ToBridge(rows[i]);
+            }
+            lastEventSequence = tick.Events->LastSequence;
+        }
+
+        frame.Header.EventCount = static_cast<std::uint16_t>(eventCount);
+        frame.Header.LastEventSequence = lastEventSequence;
         frame.Header.PlayerCount = static_cast<std::uint16_t>(playerCount);
         frame.Header.EntityCount = static_cast<std::uint16_t>(entityCount);
         frame.Header.Generation = tick.Generation;

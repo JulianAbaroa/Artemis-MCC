@@ -23,6 +23,7 @@ import numpy as np  # noqa: E402
 
 from artemis import bridge_layout as L  # noqa: E402
 from artemis.bridge import Action, Bridge, BridgeError, BridgeMode, BridgeOwner, BridgePhase, discover, qpc  # noqa: E402
+from artemis.semantic import Event, MatchPhase  # noqa: E402
 
 YAW_STEP = 0.25
 AIM_TOLERANCE = 0.02
@@ -74,6 +75,7 @@ def Frames(args):
         before = bridge.counters()
         period = int(bridge.artemis["DecisionPeriod"])
         frames, gaps, bad, ticks, entities = 0, 0, [], [], []
+        events, kinds, game_ticks = 0, {}, []
         start = time.time()
         while frames < args.count and time.time() - start < args.count + 30:
             frame = bridge.wait_frame(2.0)
@@ -93,6 +95,17 @@ def Frames(args):
                 bad.append(f"entity handles not sorted or NONE at tick {frame.action_tick}")
             if np.any((frame.players["Handle"] & 0xFFFF) >= L.MAX_PLAYERS):
                 bad.append(f"player index out of range at tick {frame.action_tick}")
+            fresh = bridge.new_events(frame)
+            if len(fresh) > 1 and np.any(np.diff(fresh["Sequence"].astype(np.int64)) != 1):
+                bad.append(f"event sequences not consecutive at tick {frame.action_tick}")
+            events += len(fresh)
+            for kind in fresh["Kind"]:
+                name = Event(int(kind)).name if int(kind) in Event._value2member_map_ else str(int(kind))
+                kinds[name] = kinds.get(name, 0) + 1
+            game_tick = int(frame.match["GameTick"])
+            if game_ticks and game_tick < game_ticks[-1]:
+                bad.append(f"match game tick went back {game_ticks[-1]} -> {game_tick}")
+            game_ticks.append(game_tick)
         elapsed = time.time() - start
         after = bridge.counters()
         steps = np.diff(ticks) if len(ticks) > 1 else np.array([])
@@ -100,10 +113,13 @@ def Frames(args):
         print(f"frames {frames} in {elapsed:.1f} s, skipped {gaps}, steps != N: {irregular} (with skips), copies retried {bridge.tears}")
         print(f"entities avg {np.mean(entities) if entities else 0:.0f} max {max(entities) if entities else 0}, "
               f"players {len(frame.players) if frames else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
+        phase = MatchPhase(int(frame.match["Phase"])).name if frames else "-"
+        print(f"events {events} (lost {bridge.event_gaps}) {kinds}, match ticks {game_ticks[0] if game_ticks else 0}-"
+              f"{game_ticks[-1] if game_ticks else 0}, phase {phase}, scores {[int(s) for s in frame.match['PlayerScores'][:4]] if frames else []}")
         for line in bad[:10]:
             print("  bad:", line)
         bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
-        ok = frames >= args.count and not bad and after["ClockSkips"] == before["ClockSkips"]
+        ok = frames >= args.count and not bad and after["ClockSkips"] == before["ClockSkips"] and bridge.event_gaps == 0
         print("PASS" if ok else "FAIL")
         return 0 if ok else 1
 

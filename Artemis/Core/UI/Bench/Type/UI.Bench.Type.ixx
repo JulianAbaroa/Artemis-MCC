@@ -89,6 +89,8 @@ export namespace UI::Bench::Type
         std::vector<BenchProbe> Probes{};
         // Records a TickTrace of the match (the storage folder of the TickTrace tool).
         bool IsTickTrace{ false };
+        // Writes every event of the match to a CSV in the events folder of the bench (D104, A14).
+        bool IsEvents{ false };
     };
 
     // List of matches the bench plays in order (H3). The same list is a rotation or a list of tests (D130).
@@ -191,6 +193,9 @@ export namespace UI::Bench::Type
         std::unordered_map<std::size_t, LocalPlayerAction> AppliedModes{};
         std::vector<bool> SentRequests{};
         std::vector<BenchProbeState> Probes{};
+        // CSV of the events of the match, and the sequence of the last event written to it.
+        std::filesystem::path EventsFile{};
+        std::uint32_t EventCursor{ 0 };
         bool IsTickTraceNoted{ false };
         std::chrono::steady_clock::time_point LastStateWrite{};
         std::string Message{};

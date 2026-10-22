@@ -8,11 +8,12 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0xB4D8BF599C4B37D4
+LAYOUT_HASH = 0x0354332B2E37E2DE
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
 FRAME_BUFFERS = 2
+MAX_FRAME_EVENTS = 64
 NO_HANDLE = 0xffffffff
 NOT_LOCAL = 255
 REGION_PREFIX = 'Local\\Artemis.Bridge.'
@@ -86,10 +87,26 @@ BridgeControl = np.dtype({
 
 # What the frame is: which match and which action tick.
 BridgeFrameHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4'],
-    'offsets': [0, 4, 6, 8, 16, 24, 32],
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4'],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40],
+    'itemsize': 48,
+})
+
+# State of the match (Environment Match, D103).
+BridgeMatch = np.dtype({
+    'names': ['GameTick', 'Phase', 'PlayerScores'],
+    'formats': ['<u4', 'u1', ('<i2', (16,))],
+    'offsets': [0, 4, 6],
     'itemsize': 40,
+})
+
+# One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).
+BridgeEvent = np.dtype({
+    'names': ['Sequence', 'GameTick', 'Key', 'CausePlayer', 'CauseObject', 'EffectPlayer', 'EffectObject', 'Kind', 'DamageReportingType', 'IsHeadshot', 'IsStuck'],
+    'formats': ['<u4', '<u4', '<u4', '<u4', '<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1'],
+    'offsets': [0, 4, 8, 12, 16, 20, 24, 28, 29, 30, 31],
+    'itemsize': 32,
 })
 
 # One player of the Tick (Environment Players), without its name.
@@ -110,10 +127,10 @@ BridgeEntity = np.dtype({
 
 # One flattened Tick. Sequence and SequenceEnd are equal and even when the frame is complete.
 BridgeFrame = np.dtype({
-    'names': ['Sequence', 'Header', 'Players', 'Entities', 'SequenceEnd'],
-    'formats': ['<u8', BridgeFrameHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), '<u8'],
-    'offsets': [0, 8, 48, 1712, 108208],
-    'itemsize': 108224,
+    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Events', 'SequenceEnd'],
+    'formats': ['<u8', BridgeFrameHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeEvent, (64,)), '<u8'],
+    'offsets': [0, 8, 56, 1720, 108216, 108256, 110304],
+    'itemsize': 110336,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -128,12 +145,14 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Frames', 'Actions'],
     'formats': [BridgeControl, (BridgeFrame, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 216704],
-    'itemsize': 217472,
+    'offsets': [0, 256, 220928],
+    'itemsize': 221696,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
 SEMANTIC_FIELDS = {
+    ('BridgeMatch', 'Phase'): 'MatchPhase',
+    ('BridgeEvent', 'Kind'): 'Event',
     ('BridgePlayer', 'Team'): 'Team',
     ('BridgePlayer', 'Connection'): 'ConnectionState',
     ('BridgePlayer', 'Zoom'): 'ZoomLevel',
@@ -188,7 +207,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 208,
     'Control.Client.ActionSequence': 216,
     'Frames': 256,
-    'Actions': 216704,
+    'Actions': 220928,
 }
 
-REGION_SIZE = 217472
+REGION_SIZE = 221696

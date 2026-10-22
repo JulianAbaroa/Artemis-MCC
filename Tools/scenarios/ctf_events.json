@@ -1,0 +1,12 @@
+{
+    "name": "ctf_events",
+    "defaults": { "config": "Desert Bus Sky Roads Desert Bus 2.1 Short", "max_seconds": 900 },
+    "matches": [
+        {
+            "name": "ctf events by hand (A14, Q83)",
+            "bots": [1],
+            "events": true,
+            "checks": ["no_errors"]
+        }
+    ]
+}

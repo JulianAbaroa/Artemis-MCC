@@ -105,6 +105,10 @@ class Frame:
         self.header = data["Header"]
         self.players = data["Players"][: int(self.header["PlayerCount"])]
         self.entities = data["Entities"][: int(self.header["EntityCount"])]
+        self.match = data["Match"]
+        # The newest events of the match up to this frame, oldest first. Bridge.new_events keeps only the unseen ones (D141).
+        self.events = data["Events"][: int(self.header["EventCount"])]
+        self.last_event_sequence = int(self.header["LastEventSequence"])
         self.action_tick = int(self.header["ActionTick"])
         self.match_id = int(self.header["MatchId"])
         self.received_qpc = received_qpc
@@ -138,6 +142,10 @@ class Bridge:
         self.qpc_frequency = int(self.artemis["QpcFrequency"]) or 1
         self.last_frame_count = int(self.artemis["FrameCount"])
         self.tears = 0
+        # Cursor of new_events: last event sequence returned, the match it belongs to, and events lost from the window.
+        self.event_cursor = 0
+        self.event_gaps = 0
+        self._event_match = None
         # A new client starts clean: requests left by a client that died must not be taken as this one's.
         self.client["AgentMask"] = 0
         self.client["RequestMode"] = BridgeMode.Free
@@ -225,6 +233,20 @@ class Bridge:
             if left <= 0 or not self.is_alive:
                 return None
             _kernel32.WaitForSingleObject(self._frame_event, int(min(left, 0.05) * 1000) + 1)
+
+    def new_events(self, frame):
+        """The events of the frame this client has not seen yet (by Sequence), oldest first. Starts over with each match.
+        Events that left the window of MaxFrameEvents before a frame was read are counted in event_gaps."""
+        if frame.match_id != self._event_match or frame.last_event_sequence < self.event_cursor:
+            self._event_match = frame.match_id
+            self.event_cursor = 0
+        fresh = frame.events[frame.events["Sequence"] > self.event_cursor]
+        if len(fresh):
+            oldest = int(fresh["Sequence"][0])
+            if self.event_cursor and oldest > self.event_cursor + 1:
+                self.event_gaps += oldest - self.event_cursor - 1
+            self.event_cursor = int(fresh["Sequence"][-1])
+        return fresh
 
     def write_actions(self, decision_tick: int, actions: dict):
         """Writes the actions of one decision ({player table index: Action}) and publishes it. Players left out keep their previous
