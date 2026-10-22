@@ -5,6 +5,7 @@ module;
 module Platform.Input.Hook;
 import :PlayerAction;
 
+import Common.Math.System;
 import Platform.Lifecycle.Type;
 import Platform.Hook.System;
 import Platform.Memory.Type;
@@ -15,12 +16,16 @@ namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
+    using Common::Math::System::TurnToward;
+    using Common::Math::System::MoveToward;
+
     using Platform::Hook::System::k_DrainTimeout;
 
     using Platform::Hook::System::ResolveRelative;
 
     using Platform::Input::Type::PlayerActions;
     using Platform::Input::Type::ActionOverride;
+    using Platform::Input::Type::AppliedFacing;
     using Platform::Input::Type::ClientRequests;
     using Platform::Input::Type::WeaponRequest;
     using Platform::Input::Type::ShadowField;
@@ -170,6 +175,7 @@ namespace Platform::Input::Hook
             {
                 m_WeaponRequests[player].reset();
                 m_LaneTicks[player].fill(0);
+                m_Facings[player].reset();
                 continue;
             }
 
@@ -185,7 +191,22 @@ namespace Platform::Input::Hook
                 WriteUnitSlot(action, *unitSlot);
             }
 
-            const std::array<float, 2> facing{ actionOverride->Yaw, actionOverride->Pitch };
+            // note: The turn goes on from the facing written last tick while the unit is the same. A new unit (first tick of an
+            // override, a spawn, another player in the slot, a new match) starts from the aim the unit has, so it never jumps.
+            const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, player) };
+            const auto& previous{ m_Facings[player] };
+            std::array<float, 2> facing{ actionOverride->Yaw, actionOverride->Pitch };
+            if (unitState)
+            {
+                const std::array<float, 2> from{ previous && previous->Unit == unitState->Unit ? previous->Facing : unitState->Facing };
+                facing = { TurnToward(from[0], actionOverride->Yaw, actionOverride->TurnLimit),
+                    MoveToward(from[1], actionOverride->Pitch, actionOverride->TurnLimit) };
+                m_Facings[player] = AppliedFacing{ .Unit = unitState->Unit, .Facing = facing };
+            }
+            else
+            {
+                m_Facings[player].reset();
+            }
             const std::array<float, 2> throttle{ actionOverride->ThrottleForward, actionOverride->ThrottleLeft };
 
             // note: The zoom level of the action is marked absent unless the agent asks for one, so the unit keeps its zoom (D120).

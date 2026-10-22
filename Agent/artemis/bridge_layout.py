@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0xA1824730F1165F92
+LAYOUT_HASH = 0x8F6CF2FE9C0210AD
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -71,9 +71,9 @@ BridgeArtemisControl = np.dtype({
 
 # Part of the control block written by Python only.
 BridgeClientControl = np.dtype({
-    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'AgentMask', 'RequestEndRound', 'ClientHeartbeat', 'ActionSequence'],
-    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', '<u4', '<u4', '<u8', '<u8'],
-    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32],
+    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'AgentMask', 'RequestEndRound', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
+    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', '<u4', '<u4', '<f4', '<u8', '<u8'],
+    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 40],
     'itemsize': 64,
 })
 
@@ -212,8 +212,9 @@ OFFSETS = {
     'Control.Client.RequestPause': 204,
     'Control.Client.AgentMask': 208,
     'Control.Client.RequestEndRound': 212,
-    'Control.Client.ClientHeartbeat': 216,
-    'Control.Client.ActionSequence': 224,
+    'Control.Client.RequestTurnLimit': 216,
+    'Control.Client.ClientHeartbeat': 224,
+    'Control.Client.ActionSequence': 232,
     'Frames': 256,
     'Actions': 220928,
 }

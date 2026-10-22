@@ -17,6 +17,10 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            the first Spawn after a RoundEnd) and checks that RoundEnd follows, or GameOver in the
                                            last round. Python owns the instance without agents (Free mode). --stale first asks
                                            for one outside a match (start it in the lobby): it must not end the first round.
+    turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
+                                           D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
+                                           pitch +-0.4). The aim seen between two frames never turns faster than --turn-limit rad
+                                           per tick and reaches each target before the next one.
 Exit code 0 when every check of the command passes.
 """
 import argparse
@@ -339,9 +343,89 @@ def EndRound(args):
         return 0 if not failed else 1
 
 
+def AimAngles(player):
+    """Yaw in [0, 2 pi) and pitch of the aim of a player, in radians."""
+    aim = player["Aim"]
+    x, y, z = float(aim["X"]), float(aim["Y"]), float(aim["Z"])
+    return math.atan2(y, x) % (2 * math.pi), math.atan2(z, math.hypot(x, y))
+
+
+def AngleGap(a, b):
+    return abs((a - b + math.pi) % (2 * math.pi) - math.pi)
+
+
+def Turn(args):
+    limit, period = args.turn_limit, args.period
+    with Open(args) as bridge:
+        if not WaitRunning(bridge, args.wait):
+            print(f"FAIL no match running after {args.wait} s")
+            return 1
+        bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, period=period, latency=args.latency,
+                           scale=args.scale, agents=0, turn_limit=limit)
+        if not bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1):
+            print("FAIL Artemis did not hand the instance over")
+            return 1
+        targets, last_aim, over = {}, {}, []
+        mask = decisions = settled_ok = settled_total = 0
+        max_rate = 0.0
+        start = time.time()
+        while time.time() - start < args.seconds:
+            frame = bridge.wait_frame(2.0)
+            if frame is None:
+                if not bridge.is_alive:
+                    print("Artemis closed the bridge")
+                    break
+                continue
+            tick = frame.action_tick
+            is_change = decisions > 0 and decisions % args.hold == 0
+            actions, new_mask = {}, 0
+            for p in frame.players:
+                if int(p["LocalIndex"]) != L.NOT_LOCAL:
+                    continue
+                index = int(p["Handle"]) & 0xFFFF
+                new_mask |= 1 << index
+                if not (int(p["HasBody"]) and int(p["IsAlive"])):
+                    last_aim.pop(index, None)
+                    continue
+                yaw, pitch = AimAngles(p)
+                if index in last_aim:
+                    seen_tick, seen_yaw, seen_pitch = last_aim[index]
+                    ticks = tick - seen_tick
+                    if 0 < ticks <= 4 * period:
+                        rate = max(AngleGap(yaw, seen_yaw), abs(pitch - seen_pitch)) / ticks
+                        max_rate = max(max_rate, rate)
+                        if rate > limit + AIM_TOLERANCE / period:
+                            over.append(f"player {index} turned {rate:.4f} rad per tick at action tick {tick}")
+                last_aim[index] = (tick, yaw, pitch)
+                if index not in targets:
+                    targets[index] = (yaw, 0.0)
+                elif is_change:
+                    target_yaw, target_pitch = targets[index]
+                    settled_total += 1
+                    settled_ok += AngleGap(yaw, target_yaw) < AIM_TOLERANCE and abs(pitch - target_pitch) < AIM_TOLERANCE
+                    targets[index] = ((target_yaw + args.turn_step) % (2 * math.pi), -target_pitch if target_pitch else 0.4)
+                target_yaw, target_pitch = targets[index]
+                actions[index] = Action(handle=int(p["Handle"]), yaw=target_yaw, pitch=target_pitch)
+            if new_mask != mask:
+                bridge.set_control(agents=new_mask)
+                mask = new_mask
+            bridge.write_actions(tick, actions)
+            decisions += 1
+        bridge.set_control(owner=BridgeOwner.UI, scale=0.0, agents=0, turn_limit=0.0)
+        print(f"decisions {decisions}, agents {bin(mask).count('1')}, limit {limit:.4f} rad per tick, "
+              f"fastest turn seen {max_rate:.4f} rad per tick, targets reached {settled_ok}/{settled_total}")
+        for line in over[:10]:
+            print("  over:", line)
+        checks = [("agents turned", max_rate > 0.5 * limit), ("never over the limit", not over),
+                  ("every target reached before the next", settled_total > 0 and settled_ok == settled_total)]
+        failed = [name for name, ok in checks if not ok]
+        print("PASS" if not failed else "FAIL " + ", ".join(failed))
+        return 0 if not failed else 1
+
+
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "frames", "run", "endround"])
+    parser.add_argument("command", choices=["info", "frames", "run", "endround", "turn"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
@@ -357,9 +441,12 @@ def Main():
     parser.add_argument("--stale", action="store_true", help="endround: ask for one in the lobby first")
     parser.add_argument("--round-seconds", type=float, default=10.0, help="endround: play before each request")
     parser.add_argument("--yaw-step", type=float, default=YAW_STEP, help="run: radians the yaw turns per decision")
+    parser.add_argument("--turn-limit", type=float, default=0.1, help="turn: radians per tick")
+    parser.add_argument("--turn-step", type=float, default=2.5, help="turn: radians the target yaw moves each time")
+    parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
     args = parser.parse_args()
     try:
-        return {"info": Info, "frames": Frames, "run": Run, "endround": EndRound}[args.command](args)
+        return {"info": Info, "frames": Frames, "run": Run, "endround": EndRound, "turn": Turn}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2

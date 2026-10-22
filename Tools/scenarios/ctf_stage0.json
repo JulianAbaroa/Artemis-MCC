@@ -1,0 +1,7 @@
+{
+    "name": "ctf_stage0",
+    "defaults": { "config": "Desert Bus Sky Roads Desert Bus 2.1 Short", "checks": ["no_errors"] },
+    "matches": [
+        { "name": "stage 0: one bot against the flag (D146, D148)", "bots": [1], "events": true, "max_seconds": 1800, "repeat": 60 }
+    ]
+}

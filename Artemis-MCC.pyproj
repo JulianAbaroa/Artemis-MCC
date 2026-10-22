@@ -27,6 +27,8 @@
     <Folder Include="Data\Bridge\" />
     <Folder Include="Agent\" />
     <Folder Include="Agent\artemis\" />
+    <Folder Include="Agent\artemis\env\" />
+    <Folder Include="Agent\artemis\train\" />
     <Folder Include="Agent\scripts\" />
     <Folder Include="Data\Tags\" />
   </ItemGroup>
@@ -55,8 +57,16 @@
     <Compile Include="Agent\artemis\bridge.py" />
     <Compile Include="Agent\artemis\bridge_layout.py" />
     <Compile Include="Agent\artemis\semantic.py" />
+    <Compile Include="Agent\artemis\env\__init__.py" />
+    <Compile Include="Agent\artemis\env\ctf.py" />
+    <Compile Include="Agent\artemis\train\__init__.py" />
+    <Compile Include="Agent\artemis\train\ppo.py" />
     <Compile Include="Agent\scripts\bridge_check.py" />
+    <Compile Include="Agent\scripts\env_check.py" />
     <Compile Include="Agent\scripts\hello.py" />
+    <Compile Include="Agent\scripts\probe_ctf.py" />
+    <Compile Include="Agent\scripts\setup_env.py" />
+    <Compile Include="Agent\scripts\train_stage0.py" />
     <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
     <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
     <Compile Include="Tools\TagTranspiler\GenerateDatum.py" />

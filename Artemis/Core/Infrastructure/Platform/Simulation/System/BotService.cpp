@@ -1,6 +1,7 @@
 module Platform.Simulation.System;
 
 import Common.Engine.Type;
+import Common.Math.Type;
 import Platform.Memory.Type;
 import std;
 
@@ -77,6 +78,8 @@ namespace
     using Platform::Simulation::Type::k_UnitZoomLevel;
     using Platform::Simulation::Type::k_ObjectParent;
     using Platform::Simulation::Type::k_UnitSeat;
+    using Platform::Simulation::Type::k_UnitDesiredAim;
+    using Common::Math::Type::k_TwoPi;
 
     // Step of the weapon and grenade selectors: the next one, as a local client asks for it (0x61a38).
     constexpr std::int16_t k_SelectorStep{ 1 };
@@ -502,13 +505,20 @@ namespace Platform::Simulation::System
         const std::uintptr_t unit{ GetObjectData(threadContext, unitHandle) };
         if (unit == 0) return std::nullopt;
 
+        const float aimX{ Read<float>(unit + k_UnitDesiredAim) };
+        const float aimY{ Read<float>(unit + k_UnitDesiredAim + sizeof(float)) };
+        const float aimZ{ Read<float>(unit + k_UnitDesiredAim + (2 * sizeof(float))) };
+        float yaw{ std::atan2(aimY, aimX) };
+        if (yaw < 0.0f) yaw += k_TwoPi;
+
         return UnitClientState{
             .Unit = unitHandle,
             .WeaponSlot = Read<std::int8_t>(unit + k_UnitWeaponSlot),
             .InventoryVersion = Read<std::uint16_t>(unit + k_UnitInventoryVersion),
             .GrenadeType = Read<std::int8_t>(unit + k_UnitGrenadeType),
             .ZoomLevel = Read<std::int8_t>(unit + k_UnitZoomLevel),
-            .IsSeated = Read<std::uint32_t>(unit + k_ObjectParent) != 0xFFFFFFFF && Read<std::int16_t>(unit + k_UnitSeat) != -1 };
+            .IsSeated = Read<std::uint32_t>(unit + k_ObjectParent) != 0xFFFFFFFF && Read<std::int16_t>(unit + k_UnitSeat) != -1,
+            .Facing = { yaw, std::atan2(aimZ, std::hypot(aimX, aimY)) } };
     }
 
     auto BotService::GetNextWeaponSlot(const UnitClientState& state) const -> std::optional<std::int8_t>

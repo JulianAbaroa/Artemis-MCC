@@ -34,6 +34,14 @@ export namespace Common::Math::System
     // param fallback: Returned if the length is too small to normalize.
     auto Normalize(const Vec3& v, const Vec3& fallback = Vec3{ 0.0f, 0.0f, 1.0f }) -> Vec3;
 
+    // Returns the angle 'from' turned toward 'to' by at most maxStep radians, the short way around, in [0, 2 pi).
+    // param to: In [0, 2 pi). Returned as is when it is within maxStep, or when maxStep is 0 or less.
+    auto TurnToward(float from, float to, float maxStep) -> float;
+
+    // Returns 'from' moved toward 'to' by at most maxStep.
+    // param maxStep: 0 or less returns 'to'.
+    auto MoveToward(float from, float to, float maxStep) -> float;
+
     // Builds an orthonormal frame from a forward direction, using Z as the world up.
     // param normalizeFallback: Used when a direction is too small to normalize.
     // note: If forward is nearly parallel to the world up, the world X axis is used to find the right vector.

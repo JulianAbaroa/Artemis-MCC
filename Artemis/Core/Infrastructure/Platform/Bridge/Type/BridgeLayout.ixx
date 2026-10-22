@@ -21,7 +21,7 @@ export namespace Platform::Bridge::Type
     inline constexpr std::uint32_t k_BridgeLayoutVersion{ 1 };
 
     // FNV-1a 64 of the computed layout. Python compares it with the hash of its generated module.
-    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0xA1824730F1165F92 };
+    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0x8F6CF2FE9C0210AD };
 
     // 'ABTB' read as little endian u32: the region is an Artemis bridge.
     inline constexpr std::uint32_t k_BridgeMagic{ 0x42544241 };
@@ -180,6 +180,8 @@ export namespace Platform::Bridge::Type
         std::uint32_t AgentMask{};
         // Counter: a raise ends the round, as the end_round action of Megalo (D144). Raises before Artemis takes one count as one. Starts from EndRoundSequence.
         std::uint32_t RequestEndRound{};
+        // Most radians the yaw and the pitch of each agent turn per tick toward those of its action (D114). 0 = straight to them.
+        float RequestTurnLimit{};
         // Counter Python raises at least every 500 ms.
         std::uint64_t ClientHeartbeat{};
         // Action tick of the last decision whose actions are complete. Written last.
@@ -392,8 +394,9 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeClientControl, RequestPause) == 12);
     static_assert(offsetof(BridgeClientControl, AgentMask) == 16);
     static_assert(offsetof(BridgeClientControl, RequestEndRound) == 20);
-    static_assert(offsetof(BridgeClientControl, ClientHeartbeat) == 24);
-    static_assert(offsetof(BridgeClientControl, ActionSequence) == 32);
+    static_assert(offsetof(BridgeClientControl, RequestTurnLimit) == 24);
+    static_assert(offsetof(BridgeClientControl, ClientHeartbeat) == 32);
+    static_assert(offsetof(BridgeClientControl, ActionSequence) == 40);
     static_assert(sizeof(BridgeControl) == 256 && alignof(BridgeControl) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeControl> && std::is_standard_layout_v<BridgeControl>);
     static_assert(offsetof(BridgeControl, Artemis) == 0);

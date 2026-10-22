@@ -82,6 +82,9 @@ export namespace Platform::Simulation::Type
     inline constexpr std::uintptr_t k_ObjectParent{ 0x14 };
     inline constexpr std::uintptr_t k_UnitSeat{ 0x336 };
 
+    // Desired aim of a unit: 3 floats, the direction its aim turns toward (unit datum, measured).
+    inline constexpr std::uintptr_t k_UnitDesiredAim{ 0x208 };
+
     // Players globals: machine mask (uint32), machine identifiers (17 x 6 bytes) and local machine index (int32).
     inline constexpr std::uintptr_t k_MachineMask{ 0x04 };
     inline constexpr std::uintptr_t k_MachineIdentifiers{ 0x08 };
@@ -141,6 +144,9 @@ export namespace Platform::Simulation::Type
 
         // The unit sits in a vehicle or a turret.
         bool IsSeated{ false };
+
+        // Yaw in [0, 2 pi) and pitch of the desired aim of the unit, in radians.
+        std::array<float, 2> Facing{};
     };
 
     // One player of the engine, as the session section shows it.

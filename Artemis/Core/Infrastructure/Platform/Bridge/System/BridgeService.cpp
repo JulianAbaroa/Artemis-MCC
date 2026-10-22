@@ -603,6 +603,9 @@ namespace Platform::Bridge::System
         std::array<BridgeSlot, k_MaxPlayers> slots{};
         m_BridgeStore.CopySlots(slots);
 
+        // The turn limit of the client goes with each decision, so all its agents turn alike from the tick it is applied (D114).
+        const float turnLimit{ region.Control.Client.RequestTurnLimit };
+
         for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player)
         {
             if ((agentMask & (1u << player)) == 0) continue;
@@ -624,7 +627,7 @@ namespace Platform::Bridge::System
                 continue;
             }
 
-            ActionOverride actionOverride{ this->BuildOverride(action) };
+            ActionOverride actionOverride{ this->BuildOverride(action, turnLimit) };
             actionOverride.LocalIndex = slots[player].LocalIndex;
             hook.Overrides[player] = actionOverride;
             hook.ControlledMask |= 1u << player;
@@ -643,7 +646,7 @@ namespace Platform::Bridge::System
         hook.AppliedSequence = decision;
     }
 
-    auto BridgeService::BuildOverride(const BridgeAction& action) -> ActionOverride
+    auto BridgeService::BuildOverride(const BridgeAction& action, float turnLimit) -> ActionOverride
     {
         bool isRejected{ false };
 
@@ -658,6 +661,7 @@ namespace Platform::Bridge::System
         actionOverride.ThrottleForward = Clamp(Finite(action.ThrottleForward, isRejected), 1.0f, isRejected);
         actionOverride.ThrottleLeft = Clamp(Finite(action.ThrottleLeft, isRejected), 1.0f, isRejected);
         actionOverride.Lanes = action.Lanes;
+        actionOverride.TurnLimit = std::isfinite(turnLimit) && turnLimit > 0.0f ? turnLimit : 0.0f;
 
         if (isRejected) m_BridgeStore.AddRejectedAction();
         return actionOverride;

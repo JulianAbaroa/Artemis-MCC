@@ -49,8 +49,10 @@ x86/
 
 # Python
 env/
+!Agent/artemis/env/
 venv/
 .venv/
+Agent/runs/
 __pycache__/
 *.pyc
 *.pyo

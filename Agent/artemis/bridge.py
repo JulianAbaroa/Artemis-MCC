@@ -150,6 +150,7 @@ class Bridge:
         # A new client starts clean: requests left by a client that died must not be taken as this one's.
         self.client["AgentMask"] = 0
         self.client["RequestPause"] = 0
+        self.client["RequestTurnLimit"] = 0.0
         self.client["RequestEndRound"] = int(self.artemis["EndRoundSequence"])
         self.client["RequestMode"] = BridgeMode.Free
         self.client["RequestOwner"] = BridgeOwner.UI
@@ -180,9 +181,13 @@ class Bridge:
         """Artemis still has the region open with this layout."""
         return int(self.artemis["Magic"]) == L.MAGIC
 
-    def set_control(self, owner=None, mode=None, period=None, latency=None, scale=None, agents=None):
+    def set_control(self, owner=None, mode=None, period=None, latency=None, scale=None, agents=None, turn_limit=None):
         """Asks for the owner, the mode, N, d, the time scale and the players (mask of player table indices) Python controls.
-        Artemis applies them in its next control update (50 ms) and reports what is in effect in the Artemis part of the control."""
+        Artemis applies them in its next control update (50 ms) and reports what is in effect in the Artemis part of the control.
+        turn_limit: most radians per tick the facing of each agent turns toward the yaw and pitch of its action (D114), 0 = straight
+        to them. Artemis reads it when it applies each decision, so a decision applied after the change already turns with it."""
+        if turn_limit is not None:
+            self.client["RequestTurnLimit"] = turn_limit
         if period is not None:
             self.client["RequestPeriod"] = period
         if latency is not None:

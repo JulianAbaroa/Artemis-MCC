@@ -34,6 +34,7 @@ export namespace Platform::Input::Hook
         using WeaponRequest = Platform::Input::Type::WeaponRequest;
         using ResolveTagAddressFunction = Platform::Input::Type::ResolveTagAddressFunction;
         using ActionOverride = Platform::Input::Type::ActionOverride;
+        using AppliedFacing = Platform::Input::Type::AppliedFacing;
         using ShadowField = Platform::Input::Type::ShadowField;
         using ShadowPlayer = Platform::Input::Type::ShadowPlayer;
 
@@ -81,6 +82,10 @@ export namespace Platform::Input::Hook
 
         // Ticks each hold lane of each agent has been down (D121). Game thread only.
         std::array<std::array<std::uint32_t, k_HoldLanes.size()>, k_MaxActionPlayers> m_LaneTicks{};
+
+        // Facing each agent got on its last tick, where its turn toward the facing of its action goes on from while its unit is the
+        // same (D114). Empty without an override or a unit. Game thread only.
+        std::array<std::optional<AppliedFacing>, k_MaxActionPlayers> m_Facings{};
 
         // What the shadow check remembers of each local player (D122). Reset while the check is off. Game thread only.
         std::array<ShadowPlayer, k_MaxActionPlayers> m_ShadowPlayers{};

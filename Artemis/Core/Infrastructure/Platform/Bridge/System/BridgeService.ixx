@@ -114,7 +114,7 @@ export namespace Platform::Bridge::System
 
         auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t;
         auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, BridgeHookState& hook) -> void;
-        auto BuildOverride(const BridgeAction& action) -> ActionOverride;
+        auto BuildOverride(const BridgeAction& action, float turnLimit) -> ActionOverride;
         auto ReleasePlayers(BridgeHookState& hook, std::uint32_t keepMask) -> void;
         auto ReleasePlayer(BridgeHookState& hook, std::size_t player) -> void;
     };
