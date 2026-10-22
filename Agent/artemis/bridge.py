@@ -150,6 +150,7 @@ class Bridge:
         # A new client starts clean: requests left by a client that died must not be taken as this one's.
         self.client["AgentMask"] = 0
         self.client["RequestPause"] = 0
+        self.client["RequestEndRound"] = int(self.artemis["EndRoundSequence"])
         self.client["RequestMode"] = BridgeMode.Free
         self.client["RequestOwner"] = BridgeOwner.UI
         self.client["ClientPid"] = os.getpid()
@@ -206,6 +207,15 @@ class Bridge:
         """Lets the ticks run again. The cap of the Lockstep wait starts over from now."""
         self.client["RequestPause"] = 0
         return self.wait_control(timeout, IsPaused=0) if wait else True
+
+    def end_round(self, wait=True, timeout=2.0) -> bool:
+        """Ends the round once while Python owns the instance (D144), as the end_round action of Megalo: the team or player with the
+        highest score wins, and the last round ends the match. With wait, returns once Artemis saw the request, which is not proof:
+        it is dropped without ownership or outside a match. The proof, and the end of the episode, is the RoundEnd or GameOver event
+        of a later frame (after the pause, inside bridge.paused(): the engine posts it in a tick)."""
+        sequence = (int(self.client["RequestEndRound"]) + 1) & 0xFFFFFFFF
+        self.client["RequestEndRound"] = sequence
+        return self.wait_control(timeout, EndRoundSequence=sequence) if wait else True
 
     @contextlib.contextmanager
     def paused(self):

@@ -13,8 +13,8 @@ import std;
 export namespace Export::Tick::Hook
 {
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, keeps the engine speed requested by
-    // Artemis, holds the ticks while a pause is requested (D143), records the telemetry of the call and closes its last tick
-    // (ExecuteGameFrameDetour closes the others).
+    // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), records the telemetry of the call
+    // and closes its last tick (ExecuteGameFrameDetour closes the others).
     // note: Without the ExecuteGameFrame hook it signals once per call that advanced ticks, so only the last tick of a frame is seen.
     // note: Game main thread only. See docs/Tick Synchronization.md.
     class SimulationTicksDetour
@@ -29,6 +29,7 @@ export namespace Export::Tick::Hook
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using DatumStore = Datum::Object::State::DatumStore;
         using SimulationTicksFunction = Export::Tick::Type::SimulationTicksFunction;
+        using EndRoundFunction = Export::Tick::Type::EndRoundFunction;
 
     public:
         SimulationTicksDetour(LogsService& logsService, TelemetryStore& telemetryStore, AOBService& aobService,
@@ -61,11 +62,18 @@ export namespace Export::Tick::Hook
         // Whether the time scale in the engine is one Artemis wrote. Game thread only.
         bool m_IsTimeScaleOverridden{ false };
 
+        // Resolved on Install. Null if its signature was not found.
+        EndRoundFunction m_EndRound{ nullptr };
+
         static auto __fastcall HookedSimulationTicks(int ticksToAdvance, float* remainingTime) -> void;
 
         // Writes the requested speed into the time globals when it differs. With no request, restores 1 once after an override.
         // note: The engine turns the scale into ticks before calling SimulationTicks, so a change applies from the next frame.
         // note: In theater the engine writes its own scale (g_GameTimeScale). A request fights it, so leave it at 0 there.
         auto ApplyTimeScale() -> void;
+
+        // Ends the round as the end_round action of Megalo does, if a request is pending (D144).
+        // note: Runs before the ticks of the frame, also in a pause. The engine ignores it when no round is running.
+        auto ApplyEndRound() -> void;
     };
 }

@@ -21,7 +21,7 @@ export namespace Platform::Bridge::Type
     inline constexpr std::uint32_t k_BridgeLayoutVersion{ 1 };
 
     // FNV-1a 64 of the computed layout. Python compares it with the hash of its generated module.
-    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0xDFCD643BDADC8A27 };
+    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0xA1824730F1165F92 };
 
     // 'ABTB' read as little endian u32: the region is an Artemis bridge.
     inline constexpr std::uint32_t k_BridgeMagic{ 0x42544241 };
@@ -158,6 +158,8 @@ export namespace Platform::Bridge::Type
         std::uint64_t FlattenMaxNs{};
         // Game frames that ran without ticks because of a pause.
         std::uint64_t PausedFrames{};
+        // Last RequestEndRound seen (D144). Seen is not done: dropped without Python owning the instance or a match running. The proof is the RoundEnd or GameOver event.
+        std::uint32_t EndRoundSequence{};
     };
 
     // Part of the control block written by Python only.
@@ -176,6 +178,8 @@ export namespace Platform::Bridge::Type
         std::uint8_t RequestPause{};
         // Player table indices Python controls, one bit each.
         std::uint32_t AgentMask{};
+        // Counter: a raise ends the round, as the end_round action of Megalo (D144). Raises before Artemis takes one count as one. Starts from EndRoundSequence.
+        std::uint32_t RequestEndRound{};
         // Counter Python raises at least every 500 ms.
         std::uint64_t ClientHeartbeat{};
         // Action tick of the last decision whose actions are complete. Written last.
@@ -376,6 +380,7 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeArtemisControl, FlattenNs) == 144);
     static_assert(offsetof(BridgeArtemisControl, FlattenMaxNs) == 152);
     static_assert(offsetof(BridgeArtemisControl, PausedFrames) == 160);
+    static_assert(offsetof(BridgeArtemisControl, EndRoundSequence) == 168);
     static_assert(sizeof(BridgeClientControl) == 64 && alignof(BridgeClientControl) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeClientControl> && std::is_standard_layout_v<BridgeClientControl>);
     static_assert(offsetof(BridgeClientControl, ClientPid) == 0);
@@ -386,6 +391,7 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeClientControl, RequestScale) == 8);
     static_assert(offsetof(BridgeClientControl, RequestPause) == 12);
     static_assert(offsetof(BridgeClientControl, AgentMask) == 16);
+    static_assert(offsetof(BridgeClientControl, RequestEndRound) == 20);
     static_assert(offsetof(BridgeClientControl, ClientHeartbeat) == 24);
     static_assert(offsetof(BridgeClientControl, ActionSequence) == 32);
     static_assert(sizeof(BridgeControl) == 256 && alignof(BridgeControl) == 64);

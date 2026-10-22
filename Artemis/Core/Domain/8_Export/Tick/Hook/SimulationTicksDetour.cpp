@@ -9,6 +9,7 @@ import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
 import Platform.Hook.System;
 import Datum.Object.Type;
+import Export.Tick.Type;
 import std;
 
 namespace
@@ -19,6 +20,8 @@ namespace
     using Platform::Hook::System::k_DrainTimeout;
     using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
+    using Export::Tick::Type::k_EndRoundNoWinner;
+    using Export::Tick::Type::k_EndRoundScriptReason;
 
     constexpr float k_DefaultTimeScale{ 1.0f };
 }
@@ -35,6 +38,7 @@ namespace Export::Tick::Hook
 
         self->m_LifecycleStore.SetStatus(Status::Running);
         self->ApplyTimeScale();
+        self->ApplyEndRound();
 
         // A pause runs the frame without ticks (D143): the engine returns at once when asked for none, and the time left is dropped
         // as its own pause check does, so nothing piles up for the frames after it.
@@ -92,10 +96,26 @@ namespace Export::Tick::Hook
         m_IsTimeScaleOverridden = requested > 0.0f;
     }
 
+    auto SimulationTicksDetour::ApplyEndRound() -> void
+    {
+        if (!m_LifecycleStore.TakeEndRound()) return;
+
+        if (m_EndRound == nullptr || m_DatumStore.GetThreadContext() == 0)
+        {
+            m_LogsService.Message("[SimulationTicksDetour] WARNING: End of round dropped (no engine function or no game).");
+            return;
+        }
+
+        m_EndRound(k_EndRoundNoWinner, false, k_EndRoundScriptReason);
+        m_LogsService.Message("[SimulationTicksDetour] INFO: Round ended on request.");
+    }
+
     auto SimulationTicksDetour::Install() -> void
     {
         if (m_IsHookInstalled.load()) return;
         s_Instance = this;
+
+        m_EndRound = reinterpret_cast<EndRoundFunction>(m_AOBService.FindPattern(Signature::k_EndRound));
 
         void* functionAddress{ reinterpret_cast<void*>(
             m_AOBService.FindPattern(Signature::k_SimulationTicks)) };

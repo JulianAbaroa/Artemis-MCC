@@ -81,6 +81,13 @@ export namespace Platform::Memory::Type::Signature
         "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 70 20 41 57 48 83 EC 20 8B 05 ? ? ? ? 4C 8B F2 65 48 8B 04 25 58 00 00 00 8B F9 44 8B 05 ? ? ? ? 41 BF 48 00 00 00"
     };
 
+    // Ends the round of the game engine (0x7b3ec), the call of the end_round action of Megalo (opcode 21, D144).
+    inline constexpr Signature k_EndRound
+    {
+        "EndRound",
+        "48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 55 41 54 41 55 41 56 41 57 48 8B EC 48 83 EC 50 45 8B F8 8B D9 40 8A FA 45 33 E4 E8 ?? ?? ?? ?? 44 8B 2D ?? ?? ?? ?? 4C 8B F0 BA 20 00 00 00"
+    };
+
     inline constexpr Signature k_ExecuteGameFrame
     {
         "ExecuteGameFrame",

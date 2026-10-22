@@ -87,6 +87,15 @@ export namespace Platform::Lifecycle::State
         auto SetPauseRequested(bool value) -> void;
         auto IsPauseRequested() const -> bool;
 
+        // Whether the game thread ends the round on its next frame (D144). Requests not taken yet count as one. Cleared when a match
+        // starts or the client stops owning the instance, so a request never reaches another match or owner.
+        auto SetEndRoundRequested(bool value) -> void;
+
+        // Takes the pending end of round request.
+        // return: Whether there was one.
+        // note: Game thread only.
+        auto TakeEndRound() -> bool;
+
         // Frames that ran without ticks because of the pause, since Artemis loaded. Raised by the game thread.
         auto AddPausedFrame() -> void;
         auto GetPausedFrames() const -> std::uint64_t;
@@ -117,6 +126,7 @@ export namespace Platform::Lifecycle::State
         std::atomic<float> m_RequestedTimeScale{ 0.0f };
         std::atomic<bool> m_IsPauseRequested{ false };
         std::atomic<std::uint64_t> m_PausedFrames{ 0 };
+        std::atomic<bool> m_IsEndRoundRequested{ false };
 
         // Wakes every thread blocked on the tick condition variable so they re-check their predicate.
         // note: Takes the mutex first, so a waiter between its check and its wait cannot miss the wake.

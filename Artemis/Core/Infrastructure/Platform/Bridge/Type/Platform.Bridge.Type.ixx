@@ -112,6 +112,9 @@ export namespace Platform::Bridge::Type
         float SavedTimeScale{ 0.0f };
         bool IsSavedPauseRequested{ false };
 
+        // Last RequestEndRound of the client seen. A change while Python owns the instance is a request (D144).
+        std::uint32_t LastClientEndRound{ 0 };
+
         // When the frame being written started, to time the flatten.
         std::chrono::steady_clock::time_point FrameStart{};
     };

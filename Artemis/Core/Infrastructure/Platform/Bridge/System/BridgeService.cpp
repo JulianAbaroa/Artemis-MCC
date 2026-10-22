@@ -185,6 +185,8 @@ namespace Platform::Bridge::System
         for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player) m_BridgeStore.SetAppliedDecision(player, 0);
         m_BridgeStore.SetSlots({});
         m_BridgeStore.SetStopped(false);
+        // A request left from the previous match must not end the first round of this one (D144).
+        m_LifecycleStore.SetEndRoundRequested(false);
     }
 
     auto BridgeService::Update() -> void
@@ -235,7 +237,18 @@ namespace Platform::Bridge::System
         {
             m_LifecycleStore.SetRequestedTimeScale(link.SavedTimeScale);
             this->ApplyPause(link.IsSavedPauseRequested);
+            m_LifecycleStore.SetEndRoundRequested(false);
         }
+
+        // A raise of the counter is a request (D144). Raises seen between two updates, or before the game thread takes them, count as
+        // one. Seen also without ownership, so it is dropped and not queued.
+        const std::uint32_t endRound{ region->Control.Client.RequestEndRound };
+        if (endRound != link.LastClientEndRound && control.Owner == BridgeOwner::Python)
+        {
+            m_LifecycleStore.SetEndRoundRequested(true);
+            m_LogsService.Message("[BridgeService] INFO: End of round requested at action tick {}.", m_BridgeStore.GetActionTick());
+        }
+        link.LastClientEndRound = endRound;
 
         this->LogTransition(previous, control, isClientLeft);
         m_BridgeStore.SetControl(control);
@@ -499,6 +512,7 @@ namespace Platform::Bridge::System
         artemis.IsPaused = m_LifecycleStore.IsPauseRequested() ? 1 : 0;
         artemis.MatchId = static_cast<std::uint32_t>(m_MatchCycleStore.GetEngineStarts());
         artemis.Scale = m_LifecycleStore.GetRequestedTimeScale();
+        artemis.EndRoundSequence = m_BridgeStore.GetLinkState().LastClientEndRound;
 
         StoreShared(artemis.ActionTick, m_BridgeStore.GetActionTick());
         StoreShared(artemis.LateActions, counters.LateActions);

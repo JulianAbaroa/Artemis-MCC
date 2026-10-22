@@ -78,6 +78,7 @@
 		<field name="FlattenNs" type="u64" doc="Total time spent flattening and publishing frames (FrameCount of them)." />
 		<field name="FlattenMaxNs" type="u64" doc="Longest flatten and publish of one frame." />
 		<field name="PausedFrames" type="u64" doc="Game frames that ran without ticks because of a pause." />
+		<field name="EndRoundSequence" type="u32" doc="Last RequestEndRound seen (D144). Seen is not done: dropped without Python owning the instance or a match running. The proof is the RoundEnd or GameOver event." />
 	</struct>
 
 	<struct name="BridgeClientControl" align="64" doc="Part of the control block written by Python only.">
@@ -89,6 +90,7 @@
 		<field name="RequestScale" type="f32" doc="Time scale wanted while Python owns the instance (0 = the engine default)." />
 		<field name="RequestPause" type="u8" doc="1 holds the logic ticks while Python owns the instance (D143). Set it before a long step." />
 		<field name="AgentMask" type="u32" doc="Player table indices Python controls, one bit each." />
+		<field name="RequestEndRound" type="u32" doc="Counter: a raise ends the round, as the end_round action of Megalo (D144). Raises before Artemis takes one count as one. Starts from EndRoundSequence." />
 		<field name="ClientHeartbeat" type="u64" doc="Counter Python raises at least every 500 ms." />
 		<field name="ActionSequence" type="u64" doc="Action tick of the last decision whose actions are complete. Written last." />
 	</struct>

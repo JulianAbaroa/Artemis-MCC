@@ -12,6 +12,11 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
         [--pause-every K --pause-seconds S]  P.5 (D143): every K decisions holds a pause of S s, alternating after answering the
                                            decision and before answering it (the game waits inside the tick). No tick may run
                                            during a pause and the known answer must hold across it.
+    endround [--round-seconds 10] [--seconds 300] [--scale S] [--stale]
+                                           D144: asks for the end of each round after --round-seconds of play (from the start, or
+                                           the first Spawn after a RoundEnd) and checks that RoundEnd follows, or GameOver in the
+                                           last round. Python owns the instance without agents (Free mode). --stale first asks
+                                           for one outside a match (start it in the lobby): it must not end the first round.
 Exit code 0 when every check of the command passes.
 """
 import argparse
@@ -273,9 +278,70 @@ def Run(args):
         return 0 if not failed else 1
 
 
+def EndRound(args):
+    with Open(args) as bridge:
+        if args.stale:
+            bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Free, agents=0)
+            if int(bridge.artemis["Phase"]) == BridgePhase.Running or not bridge.wait_control(Owner=BridgeOwner.Python):
+                print("FAIL --stale needs the lobby and the instance handed to Python")
+                return 1
+            bridge.end_round()
+            print("  end of round requested outside a match")
+        if not WaitRunning(bridge, args.wait):
+            print(f"FAIL no match running after {args.wait} s")
+            return 1
+        bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Free, scale=args.scale, agents=0)
+        if not bridge.wait_control(Owner=BridgeOwner.Python):
+            print("FAIL Artemis did not hand the instance to Python")
+            return 1
+        rounds, bad, kinds = [], [], {}
+        requested, round_start, is_over = None, None, False
+        start = time.time()
+        while time.time() - start < args.seconds and not is_over:
+            frame = bridge.wait_frame(2.0)
+            if frame is None:
+                continue
+            tick = int(frame.match["GameTick"])
+            if round_start is None and not rounds:
+                round_start = tick
+            for event in bridge.new_events(frame):
+                kind, event_tick = int(event["Kind"]), int(event["GameTick"])
+                name = Event(kind).name if kind in Event._value2member_map_ else str(kind)
+                if kind in (Event.RoundEnd, Event.GameOver, Event.Spawn):
+                    kinds[name] = kinds.get(name, 0) + 1
+                if kind == Event.Spawn and round_start is None and requested is None:
+                    round_start = event_tick
+                elif kind in (Event.RoundEnd, Event.GameOver):
+                    if requested is None:
+                        bad.append(f"{name} at tick {event_tick} without a request")
+                    rounds.append((requested, event_tick, name))
+                    requested, round_start, is_over = None, None, kind == Event.GameOver
+            if requested is not None and tick - requested > 300:
+                bad.append(f"no RoundEnd or GameOver 300 ticks after the request at tick {requested}")
+                break
+            if requested is None and round_start is not None and tick - round_start >= args.round_seconds * 60:
+                if not bridge.end_round():
+                    bad.append(f"request not taken at tick {tick} (EndRoundSequence did not echo it)")
+                    break
+                requested = tick
+                print(f"  end of round requested at match tick {tick}")
+        bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
+        for asked, ended, name in rounds:
+            print(f"  {name} at match tick {ended}" + (f", {ended - asked} ticks after the request" if asked is not None else ""))
+        print(f"events {kinds}, lost {bridge.event_gaps}, game over {is_over}")
+        for line in bad[:10]:
+            print("  bad:", line)
+        checks = [("at least one round ended on request", any(asked is not None for asked, _, _ in rounds)),
+                  ("every request answered", not bad), ("match ended with GameOver", is_over),
+                  ("no lost events", bridge.event_gaps == 0)]
+        failed = [name for name, ok in checks if not ok]
+        print("PASS" if not failed else "FAIL " + ", ".join(failed))
+        return 0 if not failed else 1
+
+
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "frames", "run"])
+    parser.add_argument("command", choices=["info", "frames", "run", "endround"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
@@ -288,10 +354,12 @@ def Main():
     parser.add_argument("--crash-after", type=int, default=0)
     parser.add_argument("--pause-every", type=int, default=0, help="run: decisions between two pauses (0 = none)")
     parser.add_argument("--pause-seconds", type=float, default=30.0, help="run: length of each pause")
+    parser.add_argument("--stale", action="store_true", help="endround: ask for one in the lobby first")
+    parser.add_argument("--round-seconds", type=float, default=10.0, help="endround: play before each request")
     parser.add_argument("--yaw-step", type=float, default=YAW_STEP, help="run: radians the yaw turns per decision")
     args = parser.parse_args()
     try:
-        return {"info": Info, "frames": Frames, "run": Run}[args.command](args)
+        return {"info": Info, "frames": Frames, "run": Run, "endround": EndRound}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2

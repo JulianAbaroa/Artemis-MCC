@@ -1,0 +1,19 @@
+{
+    "name": "ctf_endround",
+    "defaults": {
+        "config": "Desert Bus Sky Roads Desert Bus 2.1 Short",
+        "max_seconds": 300
+    },
+    "matches": [
+        {
+            "name": "end of round on request (D144, Q83)",
+            "bots": [
+                1
+            ],
+            "events": true,
+            "checks": [
+                "no_errors"
+            ]
+        }
+    ]
+}

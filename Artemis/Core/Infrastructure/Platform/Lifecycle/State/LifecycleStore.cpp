@@ -233,6 +233,16 @@ namespace Platform::Lifecycle::State
         return m_IsPauseRequested.load(std::memory_order_relaxed);
     }
 
+    auto LifecycleStore::SetEndRoundRequested(bool value) -> void
+    {
+        m_IsEndRoundRequested.store(value, std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::TakeEndRound() -> bool
+    {
+        return m_IsEndRoundRequested.exchange(false, std::memory_order_relaxed);
+    }
+
     auto LifecycleStore::AddPausedFrame() -> void
     {
         m_PausedFrames.fetch_add(1, std::memory_order_relaxed);
