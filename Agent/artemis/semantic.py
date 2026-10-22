@@ -90,6 +90,24 @@ class Event(enum.IntEnum):
     AbilityUsed = 7
     Teleported = 8
     Score = 9
+    Suicide = 10
+    GameOver = 11
+    Medal = 12
+    Stat = 13
+    FlagTaken = 14
+    FlagDropped = 15
+    FlagReturned = 16
+    FlagReset = 17
+    FlagCaptured = 18
+    RoundEnd = 19
+    RoundStart = 20
+
+
+class MatchPhase(enum.IntEnum):
+    """Phase of the match (D103)."""
+    Unknown = 0
+    InGame = 1
+    Ended = 2
 
 
 class Capability(enum.IntFlag):
@@ -132,3 +150,37 @@ SUBTYPES = {
     Function.Decor: {1: 'Sky', 2: 'Effect', 3: 'Sound'},
     Function.Decoy: {1: 'Hologram'},
 }
+
+
+# Keys of the event ring of the engine (D104): key -> (name, kind).
+EVENT_KEYS = {
+    0x0079E0: ('FlagTaken', Event.FlagTaken),
+    0x0079EF: ('FlagDropped', Event.FlagDropped),
+    0x0079F2: ('FlagCaptured', Event.FlagCaptured),
+    0x0079F4: ('FlagReset', Event.FlagReset),
+    0x0079F6: ('FlagReturned', Event.FlagReturned),
+    0x007A70: ('RoundStart', Event.RoundStart),
+    0x780000: ('Kill', Event.Kill),
+    0x780002: ('Death', Event.Death),
+    0x780003: ('Suicide', Event.Suicide),
+    0x780008: ('PlayerLeft', Event.Stat),
+    0x780009: ('PlayerJoined', Event.Stat),
+    0x78000C: ('GrenadeKill', Event.Stat),
+    0x780018: ('MeleeKill', Event.Stat),
+    0x780019: ('HeadshotKill', Event.Stat),
+    0x78001B: ('RoundEnd', Event.RoundEnd),
+    0x780022: ('GameOver', Event.GameOver),
+    0x780024: ('FirstKill', Event.Stat),
+    0x780026: ('Spawn', Event.Spawn),
+    0x78002F: ('RespawnCountdown', Event.Stat),
+    0x780030: ('RespawnReady', Event.Stat),
+}
+STAT_CATEGORY = 0x78
+
+
+def event_kind(key: int) -> Event:
+    """Kind of an event key. Unlisted keys: Stat in the statistics category, Medal otherwise."""
+    label = EVENT_KEYS.get(key)
+    if label is not None:
+        return label[1]
+    return Event.Stat if (key >> 16) == STAT_CATEGORY else Event.Medal

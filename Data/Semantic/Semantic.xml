@@ -214,6 +214,22 @@
 		<value name="AbilityUsed" id="7" />
 		<value name="Teleported" id="8" />
 		<value name="Score" id="9" />
+		<value name="Suicide" id="10" />
+		<value name="GameOver" id="11" />
+		<value name="Medal" id="12" doc="Engine key outside the statistics category without a kind of its own (medals, incidents)." />
+		<value name="Stat" id="13" doc="Engine key of the statistics category without a kind of its own." />
+		<value name="FlagTaken" id="14" />
+		<value name="FlagDropped" id="15" />
+		<value name="FlagReturned" id="16" doc="Returned by the presence of its team." />
+		<value name="FlagReset" id="17" doc="Back to its stand by the timer." />
+		<value name="FlagCaptured" id="18" />
+		<value name="RoundEnd" id="19" doc="A round ended and another one follows. The last round ends with GameOver instead." />
+		<value name="RoundStart" id="20" doc="One per player, about 11 s after RoundEnd." />
+	</enum>
+	<enum name="MatchPhase" type="uint8" doc="Phase of the match (D103).">
+		<value name="Unknown" id="0" />
+		<value name="InGame" id="1" />
+		<value name="Ended" id="2" doc="After the end of a round (until the next one starts) or of the match." />
 	</enum>
 	<flags name="Capability" type="uint16" doc="Capabilities of an entity. They never decide the group.">
 		<bit name="HasVitality" index="0" />
@@ -229,4 +245,30 @@
 		<bit name="CanDamage" index="10" />
 		<bit name="IsObjective" index="11" />
 	</flags>
+	<!-- Keys of the event ring of the engine (D104, Q85) and the kind of event each one is. A key that is not listed is Stat when
+	     its category (key >> 16) is statcategory and Medal otherwise. Names by evidence until the incident tag names them all. -->
+	<eventkeys statcategory="0x78">
+		<key value="0x780000" name="Kill" kind="Kill" />
+		<key value="0x780002" name="Death" kind="Death" doc="Same data as the kill." />
+		<key value="0x780003" name="Suicide" kind="Suicide" doc="Cause and effect are the same player." />
+		<key value="0x780008" name="PlayerLeft" kind="Stat" doc="Deletes the statistics of the player." />
+		<key value="0x780009" name="PlayerJoined" kind="Stat" />
+		<key value="0x78000C" name="GrenadeKill" kind="Stat" doc="Frag and plasma." />
+		<key value="0x780018" name="MeleeKill" kind="Stat" />
+		<key value="0x780019" name="HeadshotKill" kind="Stat" />
+		<key value="0x78001B" name="RoundEnd" kind="RoundEnd" doc="Same tick as the capture that ends a round that is not the last. Resets the counters of the round (A4 5.3)." />
+		<key value="0x780022" name="GameOver" kind="GameOver" doc="Every field is -1." />
+		<key value="0x780024" name="FirstKill" kind="Stat" />
+		<key value="0x780026" name="Spawn" kind="Spawn" doc="Cause = the player, cause object = the new biped." />
+		<key value="0x78002F" name="RespawnCountdown" kind="Stat" doc="Once per second of the last seconds of the respawn wait." />
+		<key value="0x780030" name="RespawnReady" kind="Stat" />
+		<!-- CTF, measured 2026-10-22 (A14, Ignore/Temporal/ctf_events_20261022.csv). Byte +0x11 of the data: team of the flag on take
+		     and drop (meaning on the capture still unknown). Some drops carry no player (announcement for every machine). -->
+		<key value="0x79E0" name="FlagTaken" kind="FlagTaken" doc="Cause = the carrier and its biped." />
+		<key value="0x79EF" name="FlagDropped" kind="FlagDropped" doc="With or without the player (a drop by death has none)." />
+		<key value="0x79F2" name="FlagCaptured" kind="FlagCaptured" doc="Cause = the carrier." />
+		<key value="0x79F4" name="FlagReset" kind="FlagReset" doc="No player. Byte +0x10 = team." />
+		<key value="0x79F6" name="FlagReturned" kind="FlagReturned" doc="No player. Byte +0x10 = team." />
+		<key value="0x7A70" name="RoundStart" kind="RoundStart" doc="Cause = each player." />
+	</eventkeys>
 </semantic>

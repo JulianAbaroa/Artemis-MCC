@@ -125,6 +125,25 @@ export namespace Common::Semantic::Type
         AbilityUsed = 7,
         Teleported = 8,
         Score = 9,
+        Suicide = 10,
+        GameOver = 11,
+        Medal = 12,
+        Stat = 13,
+        FlagTaken = 14,
+        FlagDropped = 15,
+        FlagReturned = 16,
+        FlagReset = 17,
+        FlagCaptured = 18,
+        RoundEnd = 19,
+        RoundStart = 20,
+    };
+
+    // Phase of the match (D103).
+    enum class MatchPhase : std::uint8_t
+    {
+        Unknown = 0,
+        InGame = 1,
+        Ended = 2,
     };
 
     // Capabilities of an entity. They never decide the group.
@@ -313,6 +332,29 @@ export namespace Common::Semantic::Type
         case Event::AbilityUsed: return "AbilityUsed";
         case Event::Teleported: return "Teleported";
         case Event::Score: return "Score";
+        case Event::Suicide: return "Suicide";
+        case Event::GameOver: return "GameOver";
+        case Event::Medal: return "Medal";
+        case Event::Stat: return "Stat";
+        case Event::FlagTaken: return "FlagTaken";
+        case Event::FlagDropped: return "FlagDropped";
+        case Event::FlagReturned: return "FlagReturned";
+        case Event::FlagReset: return "FlagReset";
+        case Event::FlagCaptured: return "FlagCaptured";
+        case Event::RoundEnd: return "RoundEnd";
+        case Event::RoundStart: return "RoundStart";
+        default: return {};
+        }
+    }
+
+    // return: The name of the value, or an empty view if it is not known.
+    constexpr auto NameOf(MatchPhase value) -> std::string_view
+    {
+        switch (value)
+        {
+        case MatchPhase::Unknown: return "Unknown";
+        case MatchPhase::InGame: return "InGame";
+        case MatchPhase::Ended: return "Ended";
         default: return {};
         }
     }

@@ -4,3 +4,4 @@ export module Common.Semantic.Type;
 export import :Enum;
 export import :Subtype;
 export import :Catalog;
+export import :EventKey;
