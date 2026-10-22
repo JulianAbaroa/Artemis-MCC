@@ -12,6 +12,8 @@ import Tables.Player.Hook;
 import Tables.Interaction.State;
 import Tables.Interaction.System;
 import Tables.Interaction.Hook;
+import Tables.Game.State;
+import Tables.Game.System;
 
 export namespace Tables
 {
@@ -23,10 +25,12 @@ export namespace Tables
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
         using PlayerTableStore = Tables::Player::State::PlayerTableStore;
         using InteractionStore = Tables::Interaction::State::InteractionStore;
+        using GameStore = Tables::Game::State::GameStore;
 
         using ObjectTableService = Tables::Object::System::ObjectTableService;
         using PlayerTableService = Tables::Player::System::PlayerTableService;
         using InteractionService = Tables::Interaction::System::InteractionService;
+        using GameService = Tables::Game::System::GameService;
 
         using PlayerTableLocator = Tables::Player::Hook::PlayerTableLocator;
         using InteractionTableLocator = Tables::Interaction::Hook::InteractionTableLocator;
@@ -36,6 +40,7 @@ export namespace Tables
             m_ObjectService(service.m_LogsService, datumLayer.m_DatumStore, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
             m_PlayerService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore),
             m_InteractionService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore, m_InteractionStore),
+            m_GameService(service.m_LogsService, platform.m_MemoryReaderService, datumLayer.m_DatumStore, m_GameStore),
             m_PlayerTableLocator(service.m_LogsService, platform.m_AOBService, m_PlayerStore),
             m_InteractionTableLocator(service.m_LogsService, platform.m_AOBService, m_InteractionStore)
         {
@@ -50,6 +55,7 @@ export namespace Tables
                 m_ObjectService.Cleanup();
                 m_PlayerService.Cleanup();
                 m_InteractionService.Cleanup();
+                m_GameService.Cleanup();
             });
         }
         ~Layer() = default;
@@ -63,11 +69,13 @@ export namespace Tables
         DamageSectionsStore m_DamageSectionsStore{};
         PlayerTableStore m_PlayerStore{};
         InteractionStore m_InteractionStore{};
+        GameStore m_GameStore{};
 
         // --- System ---
         ObjectTableService m_ObjectService;
         PlayerTableService m_PlayerService;
         InteractionService m_InteractionService;
+        GameService m_GameService;
 
         // --- Hook ---
         PlayerTableLocator m_PlayerTableLocator;

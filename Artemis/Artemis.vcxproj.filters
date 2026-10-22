@@ -550,6 +550,42 @@
     <Filter Include="Core\Domain\4_Tables">
       <UniqueIdentifier>{99edae77-a8bb-4d6e-aa04-96c7dbf06300}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Domain\4_Tables\Game">
+      <UniqueIdentifier>{ceab3064-b1d8-49c7-b872-b77863a474a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Tables\Game\Type">
+      <UniqueIdentifier>{e7e36393-e084-43c8-a84a-de5804dffc5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Tables\Game\State">
+      <UniqueIdentifier>{cb1d1492-36ba-48cd-bf52-4c3b3553398d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Tables\Game\System">
+      <UniqueIdentifier>{b4a2a91e-41e0-403c-924a-02084590fac9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Events">
+      <UniqueIdentifier>{7c13fadc-c793-40bd-b1e2-f887522a8f2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Events\Type">
+      <UniqueIdentifier>{59b5c21e-e9e5-414a-adb4-4a344e701c17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Events\State">
+      <UniqueIdentifier>{60e4cbe5-59ff-449c-bf15-eab237c69421}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Events\System">
+      <UniqueIdentifier>{a8686c53-81d4-4fda-9b45-9e99208a2561}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Match">
+      <UniqueIdentifier>{360c7725-2dc0-430e-85d1-c7c48b5d165a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Match\Type">
+      <UniqueIdentifier>{0f2b9c5a-17bb-4a9d-9e15-fe586c1dd89b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Match\State">
+      <UniqueIdentifier>{50b59b06-b9f0-42dd-b9c3-757fcd6eb7c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\6_Environment\Match\System">
+      <UniqueIdentifier>{4bf5b3a9-279a-41be-857a-fe0e12a1a6a0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Domain\4_Tables\Interaction">
       <UniqueIdentifier>{a5ca96b4-d973-48b8-b6c0-ea7328c84943}</UniqueIdentifier>
     </Filter>
@@ -2716,6 +2752,54 @@
     </ClCompile>
     <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx">
       <Filter>Core\Common\Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Semantic\Type\SemanticEventKey.ixx">
+      <Filter>Core\Common\Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\Tables.Game.Type.ixx">
+      <Filter>Core\Domain\4_Tables\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameAlive.ixx">
+      <Filter>Core\Domain\4_Tables\Game\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameOffset.ixx">
+      <Filter>Core\Domain\4_Tables\Game\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.cpp">
+      <Filter>Core\Domain\4_Tables\Game\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.ixx">
+      <Filter>Core\Domain\4_Tables\Game\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.cpp">
+      <Filter>Core\Domain\4_Tables\Game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.ixx">
+      <Filter>Core\Domain\4_Tables\Game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Events\Type\Environment.Events.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Events\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Events\State\EventsStore.ixx">
+      <Filter>Core\Domain\6_Environment\Events\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.cpp">
+      <Filter>Core\Domain\6_Environment\Events\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.ixx">
+      <Filter>Core\Domain\6_Environment\Events\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Match\Type\Environment.Match.Type.ixx">
+      <Filter>Core\Domain\6_Environment\Match\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Match\State\MatchStore.ixx">
+      <Filter>Core\Domain\6_Environment\Match\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.cpp">
+      <Filter>Core\Domain\6_Environment\Match\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.ixx">
+      <Filter>Core\Domain\6_Environment\Match\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx">
       <Filter>Core\Common\Semantic\Type</Filter>

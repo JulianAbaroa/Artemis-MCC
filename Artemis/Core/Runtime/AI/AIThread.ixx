@@ -60,10 +60,10 @@ export namespace Runtime::Thread
         TickTraceUIService& m_TickTraceUIService;
 
         // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
-        static constexpr std::array<std::string_view, 21> k_StageNames{
-            "Input", "Datum", "ObjectTable", "PlayerTable", "InteractionTable", "Classifier", "ObjectGraph",
+        static constexpr std::array<std::string_view, 24> k_StageNames{
+            "Input", "Datum", "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
             "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "Entities", "Players",
-            "Collidable", "Aim", "Self", "Affordance", "Raycast", "Assemble", "Other" };
+            "Collidable", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble", "Other" };
 
         bool m_IsLoaded{ false };
 

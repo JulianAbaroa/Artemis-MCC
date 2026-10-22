@@ -152,6 +152,8 @@ namespace Runtime::Thread
         this->EndStage();
         m_Tables.m_InteractionService.UpdateInteractionTable();
         this->EndStage();
+        m_Tables.m_GameService.Update();
+        this->EndStage();
 
         // The engine clock of the trace is read here too, so it matches the copied tables.
         m_TickTraceUIService.CaptureClock();
@@ -181,6 +183,10 @@ namespace Runtime::Thread
         m_Environment.m_CollidableService.Update(m_ViewerCameraStore.IsActive());
         this->EndStage();
         m_Environment.m_AimService.Update();
+        this->EndStage();
+        m_Environment.m_EventsService.Update();
+        this->EndStage();
+        m_Environment.m_MatchService.Update();
         this->EndStage();
 
         m_Egocentric.m_SelfService.Update();

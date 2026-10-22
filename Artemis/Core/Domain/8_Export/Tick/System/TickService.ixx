@@ -12,6 +12,8 @@ import Environment.Details.State;
 import Environment.Entities.State;
 import Environment.Players.State;
 import Environment.Aim.State;
+import Environment.Events.State;
+import Environment.Match.State;
 import Egocentric.Self.State;
 import Egocentric.Affordance.State;
 import Egocentric.Raycast.State;
@@ -37,6 +39,8 @@ export namespace Export::Tick::System
         using LiftDetailsStore = Environment::Details::State::LiftDetailsStore;
         using BarrierDetailsStore = Environment::Details::State::BarrierDetailsStore;
         using AimStore = Environment::Aim::State::AimStore;
+        using EventsStore = Environment::Events::State::EventsStore;
+        using MatchStore = Environment::Match::State::MatchStore;
         using SelfStore = Egocentric::Self::State::SelfStore;
         using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
         using RaycastStore = Egocentric::Raycast::State::RaycastStore;
@@ -52,7 +56,7 @@ export namespace Export::Tick::System
             ObjectGraphStore& objectGraphStore,
             EntitiesStore& entitiesStore, PlayersStore& playersStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
             TeleporterDetailsStore& teleporterDetailsStore, LiftDetailsStore& liftDetailsStore, BarrierDetailsStore& barrierDetailsStore,
-            AimStore& aimStore, SelfStore& selfStore,
+            AimStore& aimStore, EventsStore& eventsStore, MatchStore& matchStore, SelfStore& selfStore,
             AffordanceStore& affordanceStore, RaycastStore& raycastStore,
             DefinitionsStore& definitionsStore, TickStore& tickStore) :
             m_ObjectStore(objectStore), m_PlayerStore(playerStore),
@@ -60,7 +64,7 @@ export namespace Export::Tick::System
             m_ObjectGraphStore(objectGraphStore),
             m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
             m_TeleporterDetailsStore(teleporterDetailsStore), m_LiftDetailsStore(liftDetailsStore), m_BarrierDetailsStore(barrierDetailsStore),
-            m_AimStore(aimStore), m_SelfStore(selfStore),
+            m_AimStore(aimStore), m_EventsStore(eventsStore), m_MatchStore(matchStore), m_SelfStore(selfStore),
             m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
             m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
         ~TickService() = default;
@@ -81,6 +85,8 @@ export namespace Export::Tick::System
         LiftDetailsStore& m_LiftDetailsStore;
         BarrierDetailsStore& m_BarrierDetailsStore;
         AimStore& m_AimStore;
+        EventsStore& m_EventsStore;
+        MatchStore& m_MatchStore;
         SelfStore& m_SelfStore;
         AffordanceStore& m_AffordanceStore;
         RaycastStore& m_RaycastStore;

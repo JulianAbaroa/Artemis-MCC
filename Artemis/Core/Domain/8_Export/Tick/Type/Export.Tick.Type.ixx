@@ -10,6 +10,8 @@ import Environment.Details.Type;
 import Environment.Entities.Type;
 import Environment.Players.Type;
 import Environment.Aim.Type;
+import Environment.Events.Type;
+import Environment.Match.Type;
 import Egocentric.Affordance.Type;
 import Egocentric.Self.Type;
 import Egocentric.Raycast.Type;
@@ -45,6 +47,8 @@ namespace
     using Environment::Details::Type::BarrierDetails;
     using Environment::Aim::Type::Aim;
     using Environment::Aim::Type::Aims;
+    using Environment::Events::Type::EventLog;
+    using Environment::Match::Type::MatchStatus;
 
     using Egocentric::Affordance::Type::Affordance;
     using Egocentric::Affordance::Type::Affordances;
@@ -88,6 +92,9 @@ export namespace Export::Tick::Type
         std::shared_ptr<const LiftDetails> LiftDetails{};
         std::shared_ptr<const BarrierDetails> BarrierDetails{};
         std::shared_ptr<const Aims> Aims{};
+        // Last events of the match. Readers keep their own cursor by sequence (D104).
+        std::shared_ptr<const EventLog> Events{};
+        std::shared_ptr<const MatchStatus> Match{};
 
         // --- Layer 6: Egocentric ---
         std::shared_ptr<const Self> Self{};

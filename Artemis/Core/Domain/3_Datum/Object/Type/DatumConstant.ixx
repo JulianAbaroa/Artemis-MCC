@@ -51,6 +51,9 @@ export namespace Datum::Object::Type::Constant
     constexpr std::uintptr_t k_ThreadContextControlGlobalsOffset{ 0xD8 };
     constexpr std::uintptr_t k_ControlGlobalsOutputUserTableOffset{ 0x680 };
 
+    // Pointer of the thread context to the game engine globals: phase and scores of the match (D103).
+    constexpr std::uintptr_t k_ThreadContextGameEngineOffset{ 0x20 };
+
     // Pointer of the thread context to the time globals, and their fields: engine tick, speed of the engine (D105), tick fraction.
     constexpr std::uintptr_t k_ThreadContextTimeGlobalsOffset{ 0xA0 };
     constexpr std::uintptr_t k_TimeGlobalsEngineTickOffset{ 0x0C };

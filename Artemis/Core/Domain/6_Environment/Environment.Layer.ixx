@@ -15,6 +15,10 @@ import Environment.Collidable.State;
 import Environment.Collidable.System;
 import Environment.Aim.State;
 import Environment.Aim.System;
+import Environment.Events.State;
+import Environment.Events.System;
+import Environment.Match.State;
+import Environment.Match.System;
 
 export namespace Environment
 {
@@ -31,6 +35,8 @@ export namespace Environment
         using PlayersStore = Environment::Players::State::PlayersStore;
         using CollidableStore = Environment::Collidable::State::CollidableStore;
         using AimStore = Environment::Aim::State::AimStore;
+        using EventsStore = Environment::Events::State::EventsStore;
+        using MatchStore = Environment::Match::State::MatchStore;
 
         using VitalityDetailsService = Environment::Details::System::VitalityDetailsService;
         using ZoneDetailsService = Environment::Details::System::ZoneDetailsService;
@@ -41,6 +47,8 @@ export namespace Environment
         using PlayersService = Environment::Players::System::PlayersService;
         using CollidableService = Environment::Collidable::System::CollidableService;
         using AimService = Environment::Aim::System::AimService;
+        using EventsService = Environment::Events::System::EventsService;
+        using MatchService = Environment::Match::System::MatchService;
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
@@ -53,7 +61,9 @@ export namespace Environment
             m_EntitiesService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
             m_PlayersService(service.m_LogsService, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
             m_CollidableService(service.m_LogsService, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
-            m_AimService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore)
+            m_AimService(service.m_LogsService, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
+            m_EventsService(tables.m_GameStore, m_EventsStore),
+            m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_MatchStore)
         {
             platform.m_LifecycleService.OnCleanup([this] {
                 m_VitalityDetailsService.Cleanup();
@@ -65,6 +75,8 @@ export namespace Environment
                 m_PlayersService.Cleanup();
                 m_CollidableService.Cleanup();
                 m_AimService.Cleanup();
+                m_EventsService.Cleanup();
+                m_MatchService.Cleanup();
             });
         }
         ~Layer() = default;
@@ -83,6 +95,8 @@ export namespace Environment
         PlayersStore m_PlayersStore{};
         CollidableStore m_CollidableStore{};
         AimStore m_AimStore{};
+        EventsStore m_EventsStore{};
+        MatchStore m_MatchStore{};
 
         // --- System ---
         VitalityDetailsService m_VitalityDetailsService;
@@ -94,5 +108,7 @@ export namespace Environment
         PlayersService m_PlayersService;
         CollidableService m_CollidableService;
         AimService m_AimService;
+        EventsService m_EventsService;
+        MatchService m_MatchService;
     };
 }

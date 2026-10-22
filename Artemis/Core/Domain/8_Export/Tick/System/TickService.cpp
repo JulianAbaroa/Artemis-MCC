@@ -71,6 +71,8 @@ namespace Export::Tick::System
         tick.LiftDetails = m_LiftDetailsStore.Acquire();
         tick.BarrierDetails = m_BarrierDetailsStore.Acquire();
         tick.Aims = m_AimStore.Acquire();
+        tick.Events = m_EventsStore.Acquire();
+        tick.Match = m_MatchStore.Acquire();
 
         // --- Layer 6: Egocentric ---
         tick.Self = m_SelfStore.Acquire();
