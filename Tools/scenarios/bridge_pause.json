@@ -1,0 +1,8 @@
+{
+    "name": "bridge_pause",
+    "defaults": { "config": "Desert Bus Sky Roads Desert Bus 2.1", "checks": ["no_errors"] },
+    "matches": [
+        { "name": "pause with 1 bot", "bots": ["auto"], "max_seconds": 200 },
+        { "name": "pause with 15 bots", "bots": ["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto"], "max_seconds": 200 }
+    ]
+}

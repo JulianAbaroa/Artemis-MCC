@@ -61,6 +61,7 @@
 		<field name="DecisionPeriod" type="u8" doc="Effective N: a frame every N action ticks (D114)." />
 		<field name="Latency" type="u8" doc="Effective d: a decision is applied d action ticks after its frame." />
 		<field name="IsClientConnected" type="u8" />
+		<field name="IsPaused" type="u8" doc="Whether the logic ticks are held (D143): frames run without ticks, the Lockstep wait has no cap." />
 		<field name="MatchId" type="u32" doc="Engine starts since Artemis loaded. Changes with every match." />
 		<field name="ActionTick" type="u64" doc="Last action tick applied by the engine (the clock of the bridge)." />
 		<field name="Scale" type="f32" doc="Requested time scale in effect (0 = the engine default)." />
@@ -72,7 +73,11 @@
 		<field name="LockstepTimeouts" type="u64" doc="Waits that hit the cap (the previous decision was kept)." />
 		<field name="HandleMismatches" type="u64" doc="Actions dropped because their handle is not the player of the slot." />
 		<field name="RejectedActions" type="u64" doc="Actions with values out of range (fixed before use)." />
-		<field name="ClockSkips" type="u64" doc="Ticks read where the action tick did not advance by exactly one (must stay 0)." />
+		<field name="ClockSkips" type="u64" doc="Ticks read where the action tick did not advance by exactly one (must stay 0). The restart of each match is not one." />
+		<field name="LockstepWaitMaxNs" type="u64" doc="Longest wait for a decision outside a pause." />
+		<field name="FlattenNs" type="u64" doc="Total time spent flattening and publishing frames (FrameCount of them)." />
+		<field name="FlattenMaxNs" type="u64" doc="Longest flatten and publish of one frame." />
+		<field name="PausedFrames" type="u64" doc="Game frames that ran without ticks because of a pause." />
 	</struct>
 
 	<struct name="BridgeClientControl" align="64" doc="Part of the control block written by Python only.">
@@ -82,6 +87,7 @@
 		<field name="RequestPeriod" type="u8" doc="N wanted, 1 to 60 (0 = keep)." />
 		<field name="RequestLatency" type="u8" doc="d wanted, 1 to N (0 = keep)." />
 		<field name="RequestScale" type="f32" doc="Time scale wanted while Python owns the instance (0 = the engine default)." />
+		<field name="RequestPause" type="u8" doc="1 holds the logic ticks while Python owns the instance (D143). Set it before a long step." />
 		<field name="AgentMask" type="u32" doc="Player table indices Python controls, one bit each." />
 		<field name="ClientHeartbeat" type="u64" doc="Counter Python raises at least every 500 ms." />
 		<field name="ActionSequence" type="u64" doc="Action tick of the last decision whose actions are complete. Written last." />

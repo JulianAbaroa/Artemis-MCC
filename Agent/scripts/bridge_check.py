@@ -9,6 +9,9 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            T3-T5: trivial policy (walk forward, turn --yaw-step rad per decision), the decision each
                                            player had applied (known answer), the aim against the yaw sent, latencies, ticks per
                                            second. --crash-after K exits without closing after K decisions (the client dies).
+        [--pause-every K --pause-seconds S]  P.5 (D143): every K decisions holds a pause of S s, alternating after answering the
+                                           decision and before answering it (the game waits inside the tick). No tick may run
+                                           during a pause and the known answer must hold across it.
 Exit code 0 when every check of the command passes.
 """
 import argparse
@@ -45,6 +48,19 @@ def WaitRunning(bridge, seconds) -> bool:
             return True
         time.sleep(0.2)
     return False
+
+
+def HoldPause(bridge, seconds):
+    """Pauses for the given time and returns the action ticks that ran in it after the first 0.5 s (must be 0), or None."""
+    try:
+        if not bridge.pause():
+            return None
+        time.sleep(0.5)
+        first = int(bridge.artemis["ActionTick"])
+        time.sleep(max(seconds - 0.5, 0.0))
+        return int(bridge.artemis["ActionTick"]) - first
+    finally:
+        bridge.resume()
 
 
 def Percentile(values, p):
@@ -142,6 +158,7 @@ def Run(args):
         recv, respond = [], []
         applied_ok = applied_total = aim_ok = aim_total = decisions = 0
         first_pos, last_pos = {}, {}
+        pauses, paused_seconds, pause_just_ended = [], 0.0, False
         start = time.time()
         while time.time() - start < args.seconds:
             frame = bridge.wait_frame(2.0)
@@ -150,7 +167,10 @@ def Run(args):
                     print("Artemis closed the bridge")
                     break
                 continue
-            recv.append((frame.received_qpc - int(frame.header["PublishQpc"])) / freq * 1000)
+            # note: A frame published just before a pause is read after it, so it is not a latency.
+            if not pause_just_ended:
+                recv.append((frame.received_qpc - int(frame.header["PublishQpc"])) / freq * 1000)
+            pause_just_ended = False
             tick = frame.action_tick
             stats = matches.setdefault(frame.match_id, {"decisions": 0, "players": 0, "first": tick, "last": tick})
             stats["decisions"] += 1
@@ -187,15 +207,28 @@ def Run(args):
             yaws[tick] = yaw
             for old in [t for t in yaws if t < tick - 16 * period]:
                 del yaws[old]
+            is_pause = bool(args.pause_every) and decisions > 0 and decisions % args.pause_every == 0
+            is_answered = len(pauses) % 2 == 0
+            if is_pause and not is_answered:
+                pause_start = time.time()
+                pauses.append(("before answering", tick, HoldPause(bridge, args.pause_seconds)))
+                paused_seconds += time.time() - pause_start
+                pause_just_ended = True
             bridge.write_actions(tick, {int(p["Handle"]) & 0xFFFF: Action(handle=int(p["Handle"]), yaw=yaw, forward=1.0)
                                         for p in agents})
-            respond.append((qpc() - int(frame.header["PublishQpc"])) / freq * 1000)
+            if not is_pause:
+                respond.append((qpc() - int(frame.header["PublishQpc"])) / freq * 1000)
+            if is_pause and is_answered:
+                pause_start = time.time()
+                pauses.append(("after answering", tick, HoldPause(bridge, args.pause_seconds)))
+                paused_seconds += time.time() - pause_start
+                pause_just_ended = True
             decisions += 1
             if args.crash_after and decisions >= args.crash_after:
                 print(f"crash: exiting after {decisions} decisions without closing (Lockstep was {lockstep})")
                 sys.stdout.flush()
                 os._exit(3)
-        elapsed = time.time() - start
+        elapsed = time.time() - start - paused_seconds
         after = bridge.counters()
         delta = {k: after[k] - before[k] for k in after}
         moved = list(last_pos.values())
@@ -214,8 +247,21 @@ def Run(args):
               f"{delta['LockstepTimeouts']}, late {delta['LateActions']}, handle mismatches {delta['HandleMismatches']}, rejected "
               f"{delta['RejectedActions']}, clock skips {delta['ClockSkips']}, frames skipped by the client "
               f"{delta['FrameCount'] - decisions}, copies retried {bridge.tears}")
-        # note: One clock skip per match seen is tolerated: they come at the start or the end of a match, never inside (BACKLOG).
-        checks = [("decisions", decisions > 0), ("clock skips only at match boundaries", delta["ClockSkips"] <= len(matches))]
+        print(f"since load: wait max {after['LockstepWaitMaxNs'] / 1e6:.3f} ms, flatten max {after['FlattenMaxNs'] / 1e6:.3f} ms | "
+              f"this run: flatten avg "
+              f"{(delta['FlattenNs'] / delta['FrameCount'] / 1e6) if delta['FrameCount'] else 0:.3f} ms, paused frames "
+              f"{delta['PausedFrames']}")
+        for when, tick, ran in pauses:
+            print(f"  pause {when} decision {tick}: {'not confirmed' if ran is None else f'{ran} ticks ran'}")
+        # note: The restart of the clock with every match is not a skip (P.5), so none is tolerated.
+        checks = [("decisions", decisions > 0), ("no clock skips", delta["ClockSkips"] == 0)]
+        if args.pause_every:
+            checks += [("pauses held", pauses and all(ran == 0 for _, _, ran in pauses)), ("resumed", int(bridge.artemis["IsPaused"]) == 0)]
+            if len(pauses) >= 2:
+                checks.append(("pauses of both kinds", len({when for when, _, _ in pauses}) == 2))
+            if not lockstep:
+                # note: In Lockstep the game mostly holds inside the wait. In Free mode only the frames without ticks hold it.
+                checks.append(("frames without ticks", delta["PausedFrames"] > 0))
         if lockstep:
             checks += [("applied = previous decision >= 99%", applied_total and applied_ok >= 0.99 * applied_total),
                        ("no Lockstep timeouts", delta["LockstepTimeouts"] == 0),
@@ -240,6 +286,8 @@ def Main():
     parser.add_argument("--period", type=int, default=4)
     parser.add_argument("--latency", type=int, default=2)
     parser.add_argument("--crash-after", type=int, default=0)
+    parser.add_argument("--pause-every", type=int, default=0, help="run: decisions between two pauses (0 = none)")
+    parser.add_argument("--pause-seconds", type=float, default=30.0, help="run: length of each pause")
     parser.add_argument("--yaw-step", type=float, default=YAW_STEP, help="run: radians the yaw turns per decision")
     args = parser.parse_args()
     try:

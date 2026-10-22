@@ -68,16 +68,20 @@ export namespace Platform::Bridge::State
         // note: Bridge thread only.
         auto GetLinkState() -> BridgeLinkState&;
 
-        // Last action tick the AI thread read, to count the reads where the clock did not advance by one. AI thread only.
+        // Last action tick the AI thread read and its match, to count the reads where the clock did not advance by one. AI thread only.
         auto GetLastReadTick() const -> std::uint64_t;
         auto SetLastReadTick(std::uint64_t tick) -> void;
+        auto GetLastReadMatch() const -> std::uint64_t;
+        auto SetLastReadMatch(std::uint64_t match) -> void;
 
         // Asks the game thread to stop waiting for actions (unhook, shutdown). Cleared when the bridge opens again.
         auto SetStopped(bool value) -> void;
         auto IsStopped() const -> bool;
 
-        auto AddFrame() -> void;
+        // param flattenNs: time spent flattening and publishing the frame. Bridge thread only.
+        auto AddFrame(std::uint64_t flattenNs) -> void;
         auto AddLateAction() -> void;
+        // note: Game thread only (the maximum is a plain load and store).
         auto AddLockstepWait(std::uint64_t waitNs) -> void;
         auto AddLockstepTimeout() -> void;
         auto AddHandleMismatch() -> void;
@@ -103,15 +107,19 @@ export namespace Platform::Bridge::State
         BridgeHookState m_HookState{};
         BridgeLinkState m_LinkState{};
         std::uint64_t m_LastReadTick{ 0 };
+        std::uint64_t m_LastReadMatch{ 0 };
         std::atomic<bool> m_IsStopped{ false };
 
         std::atomic<std::uint64_t> m_Frames{ 0 };
         std::atomic<std::uint64_t> m_LateActions{ 0 };
         std::atomic<std::uint64_t> m_LockstepWaits{ 0 };
         std::atomic<std::uint64_t> m_LockstepWaitNs{ 0 };
+        std::atomic<std::uint64_t> m_LockstepWaitMaxNs{ 0 };
         std::atomic<std::uint64_t> m_LockstepTimeouts{ 0 };
         std::atomic<std::uint64_t> m_HandleMismatches{ 0 };
         std::atomic<std::uint64_t> m_RejectedActions{ 0 };
         std::atomic<std::uint64_t> m_ClockSkips{ 0 };
+        std::atomic<std::uint64_t> m_FlattenNs{ 0 };
+        std::atomic<std::uint64_t> m_FlattenMaxNs{ 0 };
     };
 }

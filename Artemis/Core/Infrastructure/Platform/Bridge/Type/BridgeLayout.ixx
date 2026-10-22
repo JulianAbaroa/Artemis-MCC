@@ -21,7 +21,7 @@ export namespace Platform::Bridge::Type
     inline constexpr std::uint32_t k_BridgeLayoutVersion{ 1 };
 
     // FNV-1a 64 of the computed layout. Python compares it with the hash of its generated module.
-    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0x0354332B2E37E2DE };
+    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0xDFCD643BDADC8A27 };
 
     // 'ABTB' read as little endian u32: the region is an Artemis bridge.
     inline constexpr std::uint32_t k_BridgeMagic{ 0x42544241 };
@@ -124,6 +124,8 @@ export namespace Platform::Bridge::Type
         // Effective d: a decision is applied d action ticks after its frame.
         std::uint8_t Latency{};
         std::uint8_t IsClientConnected{};
+        // Whether the logic ticks are held (D143): frames run without ticks, the Lockstep wait has no cap.
+        std::uint8_t IsPaused{};
         // Engine starts since Artemis loaded. Changes with every match.
         std::uint32_t MatchId{};
         // Last action tick applied by the engine (the clock of the bridge).
@@ -146,8 +148,16 @@ export namespace Platform::Bridge::Type
         std::uint64_t HandleMismatches{};
         // Actions with values out of range (fixed before use).
         std::uint64_t RejectedActions{};
-        // Ticks read where the action tick did not advance by exactly one (must stay 0).
+        // Ticks read where the action tick did not advance by exactly one (must stay 0). The restart of each match is not one.
         std::uint64_t ClockSkips{};
+        // Longest wait for a decision outside a pause.
+        std::uint64_t LockstepWaitMaxNs{};
+        // Total time spent flattening and publishing frames (FrameCount of them).
+        std::uint64_t FlattenNs{};
+        // Longest flatten and publish of one frame.
+        std::uint64_t FlattenMaxNs{};
+        // Game frames that ran without ticks because of a pause.
+        std::uint64_t PausedFrames{};
     };
 
     // Part of the control block written by Python only.
@@ -162,6 +172,8 @@ export namespace Platform::Bridge::Type
         std::uint8_t RequestLatency{};
         // Time scale wanted while Python owns the instance (0 = the engine default).
         float RequestScale{};
+        // 1 holds the logic ticks while Python owns the instance (D143). Set it before a long step.
+        std::uint8_t RequestPause{};
         // Player table indices Python controls, one bit each.
         std::uint32_t AgentMask{};
         // Counter Python raises at least every 500 ms.
@@ -347,6 +359,7 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeArtemisControl, DecisionPeriod) == 43);
     static_assert(offsetof(BridgeArtemisControl, Latency) == 44);
     static_assert(offsetof(BridgeArtemisControl, IsClientConnected) == 45);
+    static_assert(offsetof(BridgeArtemisControl, IsPaused) == 46);
     static_assert(offsetof(BridgeArtemisControl, MatchId) == 48);
     static_assert(offsetof(BridgeArtemisControl, ActionTick) == 56);
     static_assert(offsetof(BridgeArtemisControl, Scale) == 64);
@@ -359,6 +372,10 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeArtemisControl, HandleMismatches) == 112);
     static_assert(offsetof(BridgeArtemisControl, RejectedActions) == 120);
     static_assert(offsetof(BridgeArtemisControl, ClockSkips) == 128);
+    static_assert(offsetof(BridgeArtemisControl, LockstepWaitMaxNs) == 136);
+    static_assert(offsetof(BridgeArtemisControl, FlattenNs) == 144);
+    static_assert(offsetof(BridgeArtemisControl, FlattenMaxNs) == 152);
+    static_assert(offsetof(BridgeArtemisControl, PausedFrames) == 160);
     static_assert(sizeof(BridgeClientControl) == 64 && alignof(BridgeClientControl) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeClientControl> && std::is_standard_layout_v<BridgeClientControl>);
     static_assert(offsetof(BridgeClientControl, ClientPid) == 0);
@@ -367,9 +384,10 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeClientControl, RequestPeriod) == 6);
     static_assert(offsetof(BridgeClientControl, RequestLatency) == 7);
     static_assert(offsetof(BridgeClientControl, RequestScale) == 8);
-    static_assert(offsetof(BridgeClientControl, AgentMask) == 12);
-    static_assert(offsetof(BridgeClientControl, ClientHeartbeat) == 16);
-    static_assert(offsetof(BridgeClientControl, ActionSequence) == 24);
+    static_assert(offsetof(BridgeClientControl, RequestPause) == 12);
+    static_assert(offsetof(BridgeClientControl, AgentMask) == 16);
+    static_assert(offsetof(BridgeClientControl, ClientHeartbeat) == 24);
+    static_assert(offsetof(BridgeClientControl, ActionSequence) == 32);
     static_assert(sizeof(BridgeControl) == 256 && alignof(BridgeControl) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeControl> && std::is_standard_layout_v<BridgeControl>);
     static_assert(offsetof(BridgeControl, Artemis) == 0);

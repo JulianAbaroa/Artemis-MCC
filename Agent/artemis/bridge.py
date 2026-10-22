@@ -10,6 +10,7 @@ writes the action of each player Python controls. Windows only (named shared mem
 
 The layout comes from bridge_layout.py, generated from Data/Bridge/Bridge.xml: a region with another LayoutHash is refused.
 """
+import contextlib
 import ctypes
 import glob
 import json
@@ -148,6 +149,7 @@ class Bridge:
         self._event_match = None
         # A new client starts clean: requests left by a client that died must not be taken as this one's.
         self.client["AgentMask"] = 0
+        self.client["RequestPause"] = 0
         self.client["RequestMode"] = BridgeMode.Free
         self.client["RequestOwner"] = BridgeOwner.UI
         self.client["ClientPid"] = os.getpid()
@@ -192,6 +194,27 @@ class Bridge:
             self.client["RequestMode"] = mode
         if owner is not None:
             self.client["RequestOwner"] = owner
+
+    def pause(self, wait=True, timeout=2.0) -> bool:
+        """Holds the logic ticks of the instance while Python owns it (D143): frames run without ticks and, in Lockstep, the wait
+        for a decision has no cap, so a long step (a PPO update) never times out and no action is ever applied stale. Safe at any
+        point, answered or not. The heartbeat keeps running on its own thread. With wait, returns once Artemis reports IsPaused."""
+        self.client["RequestPause"] = 1
+        return self.wait_control(timeout, IsPaused=1) if wait else True
+
+    def resume(self, wait=True, timeout=2.0) -> bool:
+        """Lets the ticks run again. The cap of the Lockstep wait starts over from now."""
+        self.client["RequestPause"] = 0
+        return self.wait_control(timeout, IsPaused=0) if wait else True
+
+    @contextlib.contextmanager
+    def paused(self):
+        """with bridge.paused(): train() -- pauses for the block and resumes after it, also on an exception."""
+        self.pause()
+        try:
+            yield self
+        finally:
+            self.resume()
 
     def wait_control(self, timeout=2.0, **expected) -> bool:
         """Waits until the Artemis part of the control has the expected values (e.g. Owner=1, Mode=1, IsClientConnected=1)."""
@@ -270,13 +293,15 @@ class Bridge:
     def counters(self) -> dict:
         """The counters of the Artemis part of the control."""
         names = ["FrameCount", "LateActions", "LockstepWaits", "LockstepWaitNs", "LockstepTimeouts", "HandleMismatches",
-                 "RejectedActions", "ClockSkips", "ActionTick", "MatchId"]
+                 "RejectedActions", "ClockSkips", "ActionTick", "MatchId", "LockstepWaitMaxNs", "FlattenNs", "FlattenMaxNs",
+                 "PausedFrames", "IsPaused"]
         return {name: int(self.artemis[name]) for name in names}
 
     def close(self):
         """Gives the instance back to the UI and leaves: heartbeat 0 tells Artemis at once (a client that dies is noticed in 2 s)."""
         if self._thread is not None:
             self.client["AgentMask"] = 0
+            self.client["RequestPause"] = 0
             self.client["RequestMode"] = BridgeMode.Free
             self.client["RequestOwner"] = BridgeOwner.UI
             self._stop.set()

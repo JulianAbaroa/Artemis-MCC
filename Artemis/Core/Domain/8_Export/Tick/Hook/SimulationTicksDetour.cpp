@@ -36,17 +36,28 @@ namespace Export::Tick::Hook
         self->m_LifecycleStore.SetStatus(Status::Running);
         self->ApplyTimeScale();
 
+        // A pause runs the frame without ticks (D143): the engine returns at once when asked for none, and the time left is dropped
+        // as its own pause check does, so nothing piles up for the frames after it.
+        const bool isPaused{ self->m_LifecycleStore.IsPauseRequested() };
+        const int requestedTicks{ isPaused ? 0 : ticksToAdvance };
+
         if (isCounting) frameDetour.BeginSimulation();
 
         auto start{ steady_clock::now() };
-        s_OriginalFunction(ticksToAdvance, remainingTime);
+        s_OriginalFunction(requestedTicks, remainingTime);
         auto end{ steady_clock::now() };
+
+        if (isPaused)
+        {
+            if (remainingTime != nullptr) *remainingTime = 0.0f;
+            self->m_LifecycleStore.AddPausedFrame();
+        }
 
         const auto callNs{ static_cast<std::uint64_t>(std::chrono::duration_cast<nanoseconds>(end - start).count()) };
 
         if (!isCounting)
         {
-            const int ticks{ (std::max)(ticksToAdvance, 0) };
+            const int ticks{ (std::max)(requestedTicks, 0) };
             self->m_TelemetryStore.RecordSimTick(ticks, callNs);
             if (ticks > 0) self->m_LifecycleStore.SignalTick();
             return;

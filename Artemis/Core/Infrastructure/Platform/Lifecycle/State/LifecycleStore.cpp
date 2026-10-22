@@ -222,4 +222,24 @@ namespace Platform::Lifecycle::State
     {
         return m_RequestedTimeScale.load(std::memory_order_relaxed);
     }
+
+    auto LifecycleStore::SetPauseRequested(bool value) -> void
+    {
+        m_IsPauseRequested.store(value, std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::IsPauseRequested() const -> bool
+    {
+        return m_IsPauseRequested.load(std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::AddPausedFrame() -> void
+    {
+        m_PausedFrames.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::GetPausedFrames() const -> std::uint64_t
+    {
+        return m_PausedFrames.load(std::memory_order_relaxed);
+    }
 }

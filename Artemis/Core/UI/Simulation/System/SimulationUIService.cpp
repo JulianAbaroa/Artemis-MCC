@@ -306,12 +306,19 @@ namespace UI::Simulation::System
         const float tickHz{ m_TelemetryStore.m_TickHz.load(std::memory_order_relaxed) };
         ImGui::Text("Real: %.0f ticks/s (x%.2f)", tickHz, tickHz / k_TicksPerSecond);
 
-        // The client owns the speed while it owns the instance (D106).
+        const bool isPaused{ m_LifecycleStore.IsPauseRequested() };
+        if (isPaused) ImGui::Text("Paused: frames run without ticks (%llu so far).", m_LifecycleStore.GetPausedFrames());
+
+        // The client owns the speed and the pause while it owns the instance (D106, D143).
         BridgeStatus bridge{};
         m_BridgeService.CopyStatus(bridge);
         const bool isPythonOwned{ bridge.Owner == BridgeOwner::Python };
-        if (isPythonOwned) ImGui::TextUnformatted("Python owns the speed.");
+        if (isPythonOwned) ImGui::TextUnformatted("Python owns the speed and the pause.");
         ImGui::BeginDisabled(isPythonOwned);
+
+        if (ImGui::Button(isPaused ? "Resume" : "Pause")) m_LifecycleStore.SetPauseRequested(!isPaused);
+        ImGui::SetItemTooltip("Holds the logic ticks. The game keeps drawing frames without advancing (D143).");
+        ImGui::SameLine();
 
         if (ImGui::Button("Engine")) m_LifecycleStore.SetRequestedTimeScale(0.0f);
         ImGui::SetItemTooltip("Stop writing the speed. The engine goes back to x1.");
@@ -357,9 +364,13 @@ namespace UI::Simulation::System
         const auto& counters{ status.Counters };
         const double waitMs{ counters.LockstepWaits > 0
             ? static_cast<double>(counters.LockstepWaitNs) / static_cast<double>(counters.LockstepWaits) / 1.0e6 : 0.0 };
-        ImGui::Text("Frames %llu | late %llu | waits %llu (avg %.3f ms) | timeouts %llu | handle mismatches %llu | rejected %llu"
-            " | clock skips %llu", counters.Frames, counters.LateActions, counters.LockstepWaits, waitMs, counters.LockstepTimeouts,
-            counters.HandleMismatches, counters.RejectedActions, counters.ClockSkips);
+        const double flattenMs{ counters.Frames > 0
+            ? static_cast<double>(counters.FlattenNs) / static_cast<double>(counters.Frames) / 1.0e6 : 0.0 };
+        ImGui::Text("Frames %llu (flatten avg %.3f ms, max %.3f) | late %llu | waits %llu (avg %.3f ms, max %.3f) | timeouts %llu",
+            counters.Frames, flattenMs, static_cast<double>(counters.FlattenMaxNs) / 1.0e6, counters.LateActions,
+            counters.LockstepWaits, waitMs, static_cast<double>(counters.LockstepWaitMaxNs) / 1.0e6, counters.LockstepTimeouts);
+        ImGui::Text("Handle mismatches %llu | rejected %llu | clock skips %llu", counters.HandleMismatches, counters.RejectedActions,
+            counters.ClockSkips);
     }
 
     auto SimulationUIService::DrawLocalPlayers() -> void

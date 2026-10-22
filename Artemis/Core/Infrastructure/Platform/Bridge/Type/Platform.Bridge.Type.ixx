@@ -108,8 +108,12 @@ export namespace Platform::Bridge::Type
         std::uint64_t LastClientHeartbeat{ 0 };
         std::chrono::steady_clock::time_point LastClientBeatTime{};
 
-        // Requested time scale of the UI when the client took the instance, given back when it leaves.
+        // Requested time scale and pause of the UI when the client took the instance, given back when it leaves.
         float SavedTimeScale{ 0.0f };
+        bool IsSavedPauseRequested{ false };
+
+        // When the frame being written started, to time the flatten.
+        std::chrono::steady_clock::time_point FrameStart{};
     };
 
     // Counters of the bridge, mirrored into the control block and shown in the UI.
@@ -119,10 +123,13 @@ export namespace Platform::Bridge::Type
         std::uint64_t LateActions{ 0 };
         std::uint64_t LockstepWaits{ 0 };
         std::uint64_t LockstepWaitNs{ 0 };
+        std::uint64_t LockstepWaitMaxNs{ 0 };
         std::uint64_t LockstepTimeouts{ 0 };
         std::uint64_t HandleMismatches{ 0 };
         std::uint64_t RejectedActions{ 0 };
         std::uint64_t ClockSkips{ 0 };
+        std::uint64_t FlattenNs{ 0 };
+        std::uint64_t FlattenMaxNs{ 0 };
     };
 
     // State of the bridge as the UI shows it.

@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x0354332B2E37E2DE
+LAYOUT_HASH = 0xDFCD643BDADC8A27
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -63,17 +63,17 @@ BridgeVec3 = np.dtype({
 
 # Part of the control block written by Artemis only.
 BridgeArtemisControl = np.dtype({
-    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'FrameCount', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips'],
-    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8'],
-    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128],
+    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'FrameCount', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames'],
+    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8'],
+    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160],
     'itemsize': 192,
 })
 
 # Part of the control block written by Python only.
 BridgeClientControl = np.dtype({
-    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'AgentMask', 'ClientHeartbeat', 'ActionSequence'],
-    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', '<u4', '<u8', '<u8'],
-    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 24],
+    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'AgentMask', 'ClientHeartbeat', 'ActionSequence'],
+    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', '<u4', '<u8', '<u8'],
+    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 24, 32],
     'itemsize': 64,
 })
 
@@ -184,6 +184,7 @@ OFFSETS = {
     'Control.Artemis.DecisionPeriod': 43,
     'Control.Artemis.Latency': 44,
     'Control.Artemis.IsClientConnected': 45,
+    'Control.Artemis.IsPaused': 46,
     'Control.Artemis.MatchId': 48,
     'Control.Artemis.ActionTick': 56,
     'Control.Artemis.Scale': 64,
@@ -196,6 +197,10 @@ OFFSETS = {
     'Control.Artemis.HandleMismatches': 112,
     'Control.Artemis.RejectedActions': 120,
     'Control.Artemis.ClockSkips': 128,
+    'Control.Artemis.LockstepWaitMaxNs': 136,
+    'Control.Artemis.FlattenNs': 144,
+    'Control.Artemis.FlattenMaxNs': 152,
+    'Control.Artemis.PausedFrames': 160,
     'Control.Client': 192,
     'Control.Client.ClientPid': 192,
     'Control.Client.RequestOwner': 196,
@@ -203,9 +208,10 @@ OFFSETS = {
     'Control.Client.RequestPeriod': 198,
     'Control.Client.RequestLatency': 199,
     'Control.Client.RequestScale': 200,
-    'Control.Client.AgentMask': 204,
-    'Control.Client.ClientHeartbeat': 208,
-    'Control.Client.ActionSequence': 216,
+    'Control.Client.RequestPause': 204,
+    'Control.Client.AgentMask': 208,
+    'Control.Client.ClientHeartbeat': 216,
+    'Control.Client.ActionSequence': 224,
     'Frames': 256,
     'Actions': 220928,
 }

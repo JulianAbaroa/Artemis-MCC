@@ -142,6 +142,16 @@ namespace Platform::Bridge::State
         m_LastReadTick = tick;
     }
 
+    auto BridgeStore::GetLastReadMatch() const -> std::uint64_t
+    {
+        return m_LastReadMatch;
+    }
+
+    auto BridgeStore::SetLastReadMatch(std::uint64_t match) -> void
+    {
+        m_LastReadMatch = match;
+    }
+
     auto BridgeStore::SetStopped(bool value) -> void
     {
         m_IsStopped.store(value, std::memory_order_release);
@@ -152,9 +162,11 @@ namespace Platform::Bridge::State
         return m_IsStopped.load(std::memory_order_acquire);
     }
 
-    auto BridgeStore::AddFrame() -> void
+    auto BridgeStore::AddFrame(std::uint64_t flattenNs) -> void
     {
         m_Frames.fetch_add(1, std::memory_order_relaxed);
+        m_FlattenNs.fetch_add(flattenNs, std::memory_order_relaxed);
+        if (flattenNs > m_FlattenMaxNs.load(std::memory_order_relaxed)) m_FlattenMaxNs.store(flattenNs, std::memory_order_relaxed);
     }
 
     auto BridgeStore::AddLateAction() -> void
@@ -166,6 +178,7 @@ namespace Platform::Bridge::State
     {
         m_LockstepWaits.fetch_add(1, std::memory_order_relaxed);
         m_LockstepWaitNs.fetch_add(waitNs, std::memory_order_relaxed);
+        if (waitNs > m_LockstepWaitMaxNs.load(std::memory_order_relaxed)) m_LockstepWaitMaxNs.store(waitNs, std::memory_order_relaxed);
     }
 
     auto BridgeStore::AddLockstepTimeout() -> void
@@ -194,9 +207,12 @@ namespace Platform::Bridge::State
         out.LateActions = m_LateActions.load(std::memory_order_relaxed);
         out.LockstepWaits = m_LockstepWaits.load(std::memory_order_relaxed);
         out.LockstepWaitNs = m_LockstepWaitNs.load(std::memory_order_relaxed);
+        out.LockstepWaitMaxNs = m_LockstepWaitMaxNs.load(std::memory_order_relaxed);
         out.LockstepTimeouts = m_LockstepTimeouts.load(std::memory_order_relaxed);
         out.HandleMismatches = m_HandleMismatches.load(std::memory_order_relaxed);
         out.RejectedActions = m_RejectedActions.load(std::memory_order_relaxed);
         out.ClockSkips = m_ClockSkips.load(std::memory_order_relaxed);
+        out.FlattenNs = m_FlattenNs.load(std::memory_order_relaxed);
+        out.FlattenMaxNs = m_FlattenMaxNs.load(std::memory_order_relaxed);
     }
 }

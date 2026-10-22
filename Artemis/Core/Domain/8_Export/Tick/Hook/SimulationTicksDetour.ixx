@@ -13,7 +13,8 @@ import std;
 export namespace Export::Tick::Hook
 {
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, keeps the engine speed requested by
-    // Artemis, records the telemetry of the call and closes its last tick (ExecuteGameFrameDetour closes the others).
+    // Artemis, holds the ticks while a pause is requested (D143), records the telemetry of the call and closes its last tick
+    // (ExecuteGameFrameDetour closes the others).
     // note: Without the ExecuteGameFrame hook it signals once per call that advanced ticks, so only the last tick of a frame is seen.
     // note: Game main thread only. See docs/Tick Synchronization.md.
     class SimulationTicksDetour

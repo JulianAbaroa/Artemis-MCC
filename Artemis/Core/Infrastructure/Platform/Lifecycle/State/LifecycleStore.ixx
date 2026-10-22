@@ -82,6 +82,15 @@ export namespace Platform::Lifecycle::State
         auto SetRequestedTimeScale(float scale) -> void;
         auto GetRequestedTimeScale() const -> float;
 
+        // Whether the logic ticks are held (D143): frames run without ticks and the Lockstep wait has no cap. Written by the owner of
+        // the instance (the UI, or the bridge for the client, D106). Not saved in the settings.
+        auto SetPauseRequested(bool value) -> void;
+        auto IsPauseRequested() const -> bool;
+
+        // Frames that ran without ticks because of the pause, since Artemis loaded. Raised by the game thread.
+        auto AddPausedFrame() -> void;
+        auto GetPausedFrames() const -> std::uint64_t;
+
     private:
         std::atomic<bool> m_IsRunning{ false };
         std::atomic<Status> m_Status{ Status::Waiting };
@@ -106,6 +115,8 @@ export namespace Platform::Lifecycle::State
         std::mutex m_BlamMutex{};
 
         std::atomic<float> m_RequestedTimeScale{ 0.0f };
+        std::atomic<bool> m_IsPauseRequested{ false };
+        std::atomic<std::uint64_t> m_PausedFrames{ 0 };
 
         // Wakes every thread blocked on the tick condition variable so they re-check their predicate.
         // note: Takes the mutex first, so a waiter between its check and its wait cannot miss the wake.

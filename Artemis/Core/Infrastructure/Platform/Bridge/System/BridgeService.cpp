@@ -215,9 +215,11 @@ namespace Platform::Bridge::System
         }
 
         // The client owns the scale while it owns the instance (D106). The UI gets its own back when the client leaves.
+        // The pause follows the same owner (D143).
         if (control.Owner == BridgeOwner::Python && previous.Owner != BridgeOwner::Python)
         {
             link.SavedTimeScale = m_LifecycleStore.GetRequestedTimeScale();
+            link.IsSavedPauseRequested = m_LifecycleStore.IsPauseRequested();
         }
         if (control.Owner == BridgeOwner::Python)
         {
@@ -226,10 +228,13 @@ namespace Platform::Bridge::System
             {
                 m_LifecycleStore.SetRequestedTimeScale(scale);
             }
+
+            this->ApplyPause(region->Control.Client.RequestPause != 0);
         }
         else if (previous.Owner == BridgeOwner::Python)
         {
             m_LifecycleStore.SetRequestedTimeScale(link.SavedTimeScale);
+            this->ApplyPause(link.IsSavedPauseRequested);
         }
 
         this->LogTransition(previous, control, isClientLeft);
@@ -243,9 +248,28 @@ namespace Platform::Bridge::System
     {
         out.ActionTick = m_BridgeStore.GetActionTick();
 
+        // Every engine starts its clock again (D139): the first read of a new match is not a skip. Neither is a tick where the engine
+        // applied no actions (the action tick repeats, seen when a match ends): it is not a new action tick, so not a decision either.
         const std::uint64_t last{ m_BridgeStore.GetLastReadTick() };
-        if (isConsecutive && last != 0 && out.ActionTick != last + 1) m_BridgeStore.AddClockSkip();
+        const std::uint64_t match{ m_MatchCycleStore.GetEngineStarts() };
+        const bool isNewMatch{ match != m_BridgeStore.GetLastReadMatch() };
+        const bool isRepeated{ !isNewMatch && last != 0 && out.ActionTick == last };
+        if (isNewMatch)
+        {
+            if (last != 0)
+            {
+                m_LogsService.Message("[BridgeService] INFO: Clock restarted for match {}: action tick {} after {}.", match,
+                    out.ActionTick, last);
+            }
+        }
+        else if (isConsecutive && last != 0 && !isRepeated && out.ActionTick != last + 1)
+        {
+            m_BridgeStore.AddClockSkip();
+            m_LogsService.Message("[BridgeService] WARNING: Clock skip in match {}: action tick {} after {}.", match, out.ActionTick,
+                last);
+        }
         m_BridgeStore.SetLastReadTick(out.ActionTick);
+        m_BridgeStore.SetLastReadMatch(match);
 
         for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player)
         {
@@ -253,7 +277,7 @@ namespace Platform::Bridge::System
         }
 
         const BridgeControlState control{ m_BridgeStore.GetControl() };
-        out.IsDecision = m_BridgeStore.GetRegion() != nullptr && control.IsClientConnected && out.ActionTick != 0 &&
+        out.IsDecision = m_BridgeStore.GetRegion() != nullptr && control.IsClientConnected && out.ActionTick != 0 && !isRepeated &&
             out.ActionTick % control.DecisionPeriod == 0;
     }
 
@@ -271,6 +295,8 @@ namespace Platform::Bridge::System
     {
         BridgeRegion* region{ m_BridgeStore.GetRegion() };
         if (region == nullptr) return nullptr;
+
+        m_BridgeStore.GetLinkState().FrameStart = steady_clock::now();
 
         const std::uint32_t active{ std::atomic_ref<std::uint32_t>(region->Control.Artemis.ActiveBuffer).load(std::memory_order_relaxed) };
         BridgeFrame& frame{ region->Frames[(active + 1) % region->Frames.size()] };
@@ -317,7 +343,8 @@ namespace Platform::Bridge::System
         const auto index{ static_cast<std::uint32_t>(&frame - region->Frames.data()) };
         std::atomic_ref<std::uint32_t>(region->Control.Artemis.ActiveBuffer).store(index, std::memory_order_release);
 
-        m_BridgeStore.AddFrame();
+        const auto flattenNs{ std::chrono::duration_cast<nanoseconds>(steady_clock::now() - m_BridgeStore.GetLinkState().FrameStart) };
+        m_BridgeStore.AddFrame(static_cast<std::uint64_t>(flattenNs.count()));
         BridgeCounters counters{};
         m_BridgeStore.CopyCounters(counters);
         StoreShared(region->Control.Artemis.FrameCount, counters.Frames);
@@ -469,6 +496,7 @@ namespace Platform::Bridge::System
         artemis.DecisionPeriod = control.DecisionPeriod;
         artemis.Latency = control.Latency;
         artemis.IsClientConnected = control.IsClientConnected ? 1 : 0;
+        artemis.IsPaused = m_LifecycleStore.IsPauseRequested() ? 1 : 0;
         artemis.MatchId = static_cast<std::uint32_t>(m_MatchCycleStore.GetEngineStarts());
         artemis.Scale = m_LifecycleStore.GetRequestedTimeScale();
 
@@ -480,25 +508,61 @@ namespace Platform::Bridge::System
         StoreShared(artemis.HandleMismatches, counters.HandleMismatches);
         StoreShared(artemis.RejectedActions, counters.RejectedActions);
         StoreShared(artemis.ClockSkips, counters.ClockSkips);
+        StoreShared(artemis.LockstepWaitMaxNs, counters.LockstepWaitMaxNs);
+        StoreShared(artemis.FlattenNs, counters.FlattenNs);
+        StoreShared(artemis.FlattenMaxNs, counters.FlattenMaxNs);
+        StoreShared(artemis.PausedFrames, m_LifecycleStore.GetPausedFrames());
         StoreShared(artemis.Heartbeat, m_BridgeStore.GetLinkState().Heartbeat);
+    }
+
+    auto BridgeService::ApplyPause(bool isRequested) -> void
+    {
+        if (isRequested == m_LifecycleStore.IsPauseRequested()) return;
+
+        m_LifecycleStore.SetPauseRequested(isRequested);
+        m_LogsService.Message("[BridgeService] INFO: {} at action tick {}.", isRequested ? "Paused" : "Resumed",
+            m_BridgeStore.GetActionTick());
     }
 
     auto BridgeService::WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t
     {
         const auto start{ steady_clock::now() };
-        const auto deadline{ start + k_LockstepTimeout };
+        auto deadline{ start + k_LockstepTimeout };
         const auto event{ static_cast<HANDLE>(m_BridgeStore.GetActionEvent()) };
         const auto slice{ static_cast<DWORD>(k_LockstepWaitSlice.count()) };
+        bool isPauseSeen{ false };
+        bool isClientGone{ false };
 
         std::uint64_t sequence{ LoadShared(region.Control.Client.ActionSequence) };
-        while (sequence < decision && !m_BridgeStore.IsStopped() && steady_clock::now() < deadline)
+        while (sequence < decision && !m_BridgeStore.IsStopped())
         {
+            // Only a live client that owns the instance can answer this wait: when it leaves or is lost the game goes on at once.
+            const BridgeControlState control{ m_BridgeStore.GetControl() };
+            isClientGone = control.Owner != BridgeOwner::Python || !control.IsClientConnected;
+            if (isClientGone) break;
+
+            // A pause of the client holds the wait without a cap (D143). The cap starts again when the pause ends.
+            const auto now{ steady_clock::now() };
+            if (m_LifecycleStore.IsPauseRequested())
+            {
+                isPauseSeen = true;
+                deadline = now + k_LockstepTimeout;
+            }
+            else if (now >= deadline)
+            {
+                break;
+            }
+
             WaitForSingleObject(event, slice);
             sequence = LoadShared(region.Control.Client.ActionSequence);
         }
 
-        const auto waitNs{ std::chrono::duration_cast<nanoseconds>(steady_clock::now() - start).count() };
-        m_BridgeStore.AddLockstepWait(static_cast<std::uint64_t>(waitNs));
+        // A wait that held a pause is pause time, and one cut by a client that left is not a decision: neither is a cost.
+        if (!isPauseSeen && !isClientGone)
+        {
+            const auto waitNs{ std::chrono::duration_cast<nanoseconds>(steady_clock::now() - start).count() };
+            m_BridgeStore.AddLockstepWait(static_cast<std::uint64_t>(waitNs));
+        }
 
         if (sequence >= decision)
         {
@@ -506,7 +570,7 @@ namespace Platform::Bridge::System
             return sequence;
         }
 
-        if (m_BridgeStore.IsStopped()) return sequence;
+        if (m_BridgeStore.IsStopped() || isClientGone) return sequence;
 
         m_BridgeStore.AddLockstepTimeout();
         if (++hook.TimeoutsInRow >= k_MaxLockstepTimeouts)

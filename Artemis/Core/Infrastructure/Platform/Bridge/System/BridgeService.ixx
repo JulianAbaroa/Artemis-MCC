@@ -68,13 +68,14 @@ export namespace Platform::Bridge::System
         // note: Game thread (engine initialization), before the PlayerAction hook is installed.
         auto BeginMatch() -> void;
 
-        // Heartbeat, client connection, owner, mode, scale and counters of the control block. Bridge thread, every k_ControlInterval.
+        // Heartbeat, client connection, owner, mode, scale, pause and counters of the control block. Bridge thread, every k_ControlInterval.
         // note: When the client leaves or is lost its players are released on the next tick: locals go back to their input, bots stand
         // still.
         auto Update() -> void;
 
         // Reads the clock of the tick being read. AI thread, while the game thread waits for the read (SyncRead).
         // param isConsecutive: False after dropped ticks or a reset, so a jump is not counted as a clock skip.
+        // note: The first read of a new match is not a skip either: every engine starts the clock again (D139).
         auto CaptureClock(bool isConsecutive, BridgeClock& out) -> void;
 
         // Forgets the last read tick (the AI thread starts over after a teardown).
@@ -109,6 +110,7 @@ export namespace Platform::Bridge::System
         auto DecideControl(const BridgeRegion& region, const BridgeControlState& previous) -> BridgeControlState;
         auto LogTransition(const BridgeControlState& previous, const BridgeControlState& control, bool isClientLeft) -> void;
         auto WriteArtemisControl(BridgeRegion& region, const BridgeControlState& control) -> void;
+        auto ApplyPause(bool isRequested) -> void;
 
         auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t;
         auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, BridgeHookState& hook) -> void;
