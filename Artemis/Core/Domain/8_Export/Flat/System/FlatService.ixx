@@ -6,11 +6,11 @@ import std;
 
 export namespace Export::Flat::System
 {
-    // Flattens a Tick into a bridge frame: Players, Entities, Match and the newest events as POD rows (D135, D141). Copies only, computes nothing (D37).
+    // Flattens a Tick into a BridgeTick: Players, Entities, Match and the newest events as POD rows (D135, D141). Copies only, computes nothing (D37).
     class FlatService
     {
     private:
-        using BridgeFrame = Platform::Bridge::Type::BridgeFrame;
+        using BridgeTick = Platform::Bridge::Type::BridgeTick;
 
         using Tick = Export::Tick::Type::Tick;
 
@@ -21,8 +21,8 @@ export namespace Export::Flat::System
         FlatService(const FlatService&) = delete;
         auto operator=(const FlatService&) -> FlatService& = delete;
 
-        // Fills the players, the entities, the match, the events, their counts, the flags and the generation of the frame.
-        // note: The clock fields of the header are the bridge's (BridgeService::EndFrame).
-        auto Flatten(const Tick& tick, BridgeFrame& frame) const -> void;
+        // Fills the players, the entities, the match, the events, their counts, the flags and the generation of the tick.
+        // note: The clock fields of the header are the bridge's (BridgeService::EndTick).
+        auto Flatten(const Tick& tick, BridgeTick& flat) const -> void;
     };
 }

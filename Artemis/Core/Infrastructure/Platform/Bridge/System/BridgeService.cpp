@@ -34,7 +34,7 @@ namespace
     using Platform::Bridge::Type::k_BridgeLayoutVersion;
     using Platform::Bridge::Type::k_BridgeLayoutHash;
     using Platform::Bridge::Type::k_BridgeRegionPrefix;
-    using Platform::Bridge::Type::k_BridgeFrameEventSuffix;
+    using Platform::Bridge::Type::k_BridgeTickEventSuffix;
     using Platform::Bridge::Type::k_BridgeActionEventSuffix;
     using Platform::Bridge::Type::k_BridgeDiscoveryFolder;
     using Platform::Bridge::Type::k_ClientTimeout;
@@ -108,14 +108,14 @@ namespace Platform::Bridge::System
         }
 
         void* view{ MapViewOfFile(mapping, FILE_MAP_ALL_ACCESS, 0, 0, size) };
-        HANDLE frameEvent{ CreateEventW(nullptr, FALSE, FALSE, Widen(name + std::string(k_BridgeFrameEventSuffix)).c_str()) };
+        HANDLE tickEvent{ CreateEventW(nullptr, FALSE, FALSE, Widen(name + std::string(k_BridgeTickEventSuffix)).c_str()) };
         HANDLE actionEvent{ CreateEventW(nullptr, FALSE, FALSE, Widen(name + std::string(k_BridgeActionEventSuffix)).c_str()) };
-        if (view == nullptr || frameEvent == nullptr || actionEvent == nullptr)
+        if (view == nullptr || tickEvent == nullptr || actionEvent == nullptr)
         {
             m_LogsService.Message("[BridgeService] ERROR: Failed to map the shared memory {} or create its events (error {}).", name,
                 GetLastError());
             if (view != nullptr) UnmapViewOfFile(view);
-            if (frameEvent != nullptr) CloseHandle(frameEvent);
+            if (tickEvent != nullptr) CloseHandle(tickEvent);
             if (actionEvent != nullptr) CloseHandle(actionEvent);
             CloseHandle(mapping);
             return false;
@@ -142,7 +142,7 @@ namespace Platform::Bridge::System
 
         const std::string discovery{ this->WriteDiscovery(pid, name) };
         m_BridgeStore.GetLinkState() = BridgeLinkState{};
-        m_BridgeStore.SetRegion(region, mapping, frameEvent, actionEvent, pid, discovery);
+        m_BridgeStore.SetRegion(region, mapping, tickEvent, actionEvent, pid, discovery);
 
         m_LogsService.Message("[BridgeService] INFO: Shared memory {} open ({} bytes).", name, sizeof(BridgeRegion));
         return true;
@@ -165,8 +165,8 @@ namespace Platform::Bridge::System
             std::filesystem::remove(discovery, error);
         }
 
-        // Wakes a client waiting for a frame, so it sees Magic 0.
-        SetEvent(static_cast<HANDLE>(m_BridgeStore.GetFrameEvent()));
+        // Wakes a client waiting for a tick, so it sees Magic 0.
+        SetEvent(static_cast<HANDLE>(m_BridgeStore.GetTickEvent()));
 
         m_BridgeStore.ClearRegion();
         m_LogsService.Message("[BridgeService] INFO: Shared memory closed.");
@@ -304,26 +304,26 @@ namespace Platform::Bridge::System
         m_BridgeStore.SetPushedDecision(tick);
     }
 
-    auto BridgeService::BeginFrame() -> BridgeFrame*
+    auto BridgeService::BeginTick() -> BridgeTick*
     {
         BridgeRegion* region{ m_BridgeStore.GetRegion() };
         if (region == nullptr) return nullptr;
 
-        m_BridgeStore.GetLinkState().FrameStart = steady_clock::now();
+        m_BridgeStore.GetLinkState().PublishStart = steady_clock::now();
 
         const std::uint32_t active{ std::atomic_ref<std::uint32_t>(region->Control.Artemis.ActiveBuffer).load(std::memory_order_relaxed) };
-        BridgeFrame& frame{ region->Frames[(active + 1) % region->Frames.size()] };
+        BridgeTick& flat{ region->Ticks[(active + 1) % region->Ticks.size()] };
 
         // Odd sequence: being written. A client that copies the buffer now sees it changed and reads again.
-        const std::uint64_t sequence{ frame.Sequence + 1 };
-        std::atomic_ref<std::uint64_t>(frame.Sequence).store(sequence, std::memory_order_relaxed);
-        std::atomic_ref<std::uint64_t>(frame.SequenceEnd).store(sequence, std::memory_order_relaxed);
+        const std::uint64_t sequence{ flat.Sequence + 1 };
+        std::atomic_ref<std::uint64_t>(flat.Sequence).store(sequence, std::memory_order_relaxed);
+        std::atomic_ref<std::uint64_t>(flat.SequenceEnd).store(sequence, std::memory_order_relaxed);
         std::atomic_thread_fence(std::memory_order_release);
 
-        return &frame;
+        return &flat;
     }
 
-    auto BridgeService::EndFrame(BridgeFrame& frame, const BridgeClock& clock) -> void
+    auto BridgeService::EndTick(BridgeTick& flat, const BridgeClock& clock) -> void
     {
         BridgeRegion* region{ m_BridgeStore.GetRegion() };
         if (region == nullptr) return;
@@ -331,15 +331,15 @@ namespace Platform::Bridge::System
         LARGE_INTEGER counter{};
         QueryPerformanceCounter(&counter);
 
-        frame.Header.MatchId = static_cast<std::uint32_t>(m_MatchCycleStore.GetEngineStarts());
-        frame.Header.ActionTick = clock.ActionTick;
-        frame.Header.PublishQpc = static_cast<std::uint64_t>(counter.QuadPart);
+        flat.Header.MatchId = static_cast<std::uint32_t>(m_MatchCycleStore.GetEngineStarts());
+        flat.Header.ActionTick = clock.ActionTick;
+        flat.Header.PublishQpc = static_cast<std::uint64_t>(counter.QuadPart);
 
-        // The actions of a slot must carry the handle of its player in this frame (D40).
+        // The actions of a slot must carry the handle of its player in this tick (D40).
         std::array<BridgeSlot, k_MaxPlayers> slots{};
-        for (std::size_t row{ 0 }; row < frame.Header.PlayerCount; ++row)
+        for (std::size_t row{ 0 }; row < flat.Header.PlayerCount; ++row)
         {
-            auto& player{ frame.Players[row] };
+            auto& player{ flat.Players[row] };
             const std::size_t index{ player.Handle & k_HandleIndexMask };
             if (index >= k_MaxPlayers) continue;
 
@@ -349,20 +349,20 @@ namespace Platform::Bridge::System
         }
         m_BridgeStore.SetSlots(slots);
 
-        const std::uint64_t sequence{ frame.Sequence + 1 };
-        std::atomic_ref<std::uint64_t>(frame.SequenceEnd).store(sequence, std::memory_order_release);
-        std::atomic_ref<std::uint64_t>(frame.Sequence).store(sequence, std::memory_order_release);
+        const std::uint64_t sequence{ flat.Sequence + 1 };
+        std::atomic_ref<std::uint64_t>(flat.SequenceEnd).store(sequence, std::memory_order_release);
+        std::atomic_ref<std::uint64_t>(flat.Sequence).store(sequence, std::memory_order_release);
 
-        const auto index{ static_cast<std::uint32_t>(&frame - region->Frames.data()) };
+        const auto index{ static_cast<std::uint32_t>(&flat - region->Ticks.data()) };
         std::atomic_ref<std::uint32_t>(region->Control.Artemis.ActiveBuffer).store(index, std::memory_order_release);
 
-        const auto flattenNs{ std::chrono::duration_cast<nanoseconds>(steady_clock::now() - m_BridgeStore.GetLinkState().FrameStart) };
-        m_BridgeStore.AddFrame(static_cast<std::uint64_t>(flattenNs.count()));
+        const auto flattenNs{ std::chrono::duration_cast<nanoseconds>(steady_clock::now() - m_BridgeStore.GetLinkState().PublishStart) };
+        m_BridgeStore.AddPublishedTick(static_cast<std::uint64_t>(flattenNs.count()));
         BridgeCounters counters{};
         m_BridgeStore.CopyCounters(counters);
-        StoreShared(region->Control.Artemis.FrameCount, counters.Frames);
+        StoreShared(region->Control.Artemis.PublishedTicks, counters.PublishedTicks);
 
-        SetEvent(static_cast<HANDLE>(m_BridgeStore.GetFrameEvent()));
+        SetEvent(static_cast<HANDLE>(m_BridgeStore.GetTickEvent()));
     }
 
     auto BridgeService::Apply(std::uint64_t actionTick) -> void
@@ -378,9 +378,9 @@ namespace Platform::Bridge::System
         {
             std::uint64_t sequence{ LoadShared(region->Control.Client.ActionSequence) };
 
-            // In Lockstep the tick of a decision plus the latency waits for the actions of that decision (D105), if its frame went out.
+            // In Lockstep the tick of a decision plus the latency waits for the actions of that decision (D105), if it was published.
             // note: The AI thread hands decision t over before it reads tick t + 1, and the game thread waits for that read, so at tick
-            // t + d (d >= 2) a decision that will have a frame is always pushed already.
+            // t + d (d >= 2) a decision that will be published is always pushed already.
             if (control.Mode == BridgeMode::Lockstep && !hook.IsLockstepSuspended && actionTick >= control.Latency)
             {
                 const std::uint64_t due{ (actionTick - control.Latency) / control.DecisionPeriod * control.DecisionPeriod };

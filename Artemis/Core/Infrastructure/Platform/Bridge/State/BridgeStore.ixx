@@ -12,7 +12,7 @@ namespace
 export namespace Platform::Bridge::State
 {
     // Shared memory of the bridge (D135, D136) and what the threads of Artemis share about it: the control in effect, the clock of
-    // the action ticks, the players of the last frame and the counters.
+    // the action ticks, the players of the last tick and the counters.
     // note: The region and its handles are set by BridgeService on the bridge thread, and the region pointer is cleared when it
     // closes (the view stays mapped: a hook in flight may still read it). The control and the slots are behind a mutex (a copy per tick). The clock is atomic: the game thread writes
     // it and the AI thread reads it while the game thread waits for the read of the tick.
@@ -33,14 +33,14 @@ export namespace Platform::Bridge::State
         BridgeStore(const BridgeStore&) = delete;
         auto operator=(const BridgeStore&) -> BridgeStore& = delete;
 
-        // param mapping, frameEvent, actionEvent: Win32 handles of the region and its two events.
-        auto SetRegion(BridgeRegion* region, void* mapping, void* frameEvent, void* actionEvent, std::uint32_t pid,
+        // param mapping, tickEvent, actionEvent: Win32 handles of the region and its two events.
+        auto SetRegion(BridgeRegion* region, void* mapping, void* tickEvent, void* actionEvent, std::uint32_t pid,
             std::string discoveryPath) -> void;
         auto ClearRegion() -> void;
 
         // return: The mapped region, or null when the bridge is closed.
         auto GetRegion() const -> BridgeRegion*;
-        auto GetFrameEvent() const -> void*;
+        auto GetTickEvent() const -> void*;
         auto GetActionEvent() const -> void*;
         auto GetPid() const -> std::uint32_t;
         auto GetDiscoveryPath() const -> std::string;
@@ -57,8 +57,8 @@ export namespace Platform::Bridge::State
         auto SetAppliedDecision(std::size_t player, std::uint64_t decision) -> void;
         auto GetAppliedDecision(std::size_t player) const -> std::uint64_t;
 
-        // Last decision tick the AI thread handed over for a frame. The game thread only waits for decisions up to it, because a tick
-        // the AI thread skipped (dropped, teardown) never becomes a frame.
+        // Last decision tick the AI thread handed over for publishing. The game thread only waits for decisions up to it, because a tick
+        // the AI thread skipped (dropped, teardown) is never published.
         auto SetPushedDecision(std::uint64_t tick) -> void;
         auto GetPushedDecision() const -> std::uint64_t;
 
@@ -78,8 +78,8 @@ export namespace Platform::Bridge::State
         auto SetStopped(bool value) -> void;
         auto IsStopped() const -> bool;
 
-        // param flattenNs: time spent flattening and publishing the frame. Bridge thread only.
-        auto AddFrame(std::uint64_t flattenNs) -> void;
+        // param flattenNs: time spent flattening and publishing the tick. Bridge thread only.
+        auto AddPublishedTick(std::uint64_t flattenNs) -> void;
         auto AddLateAction() -> void;
         // note: Game thread only (the maximum is a plain load and store).
         auto AddLockstepWait(std::uint64_t waitNs) -> void;
@@ -92,7 +92,7 @@ export namespace Platform::Bridge::State
     private:
         std::atomic<BridgeRegion*> m_Region{ nullptr };
         void* m_Mapping{ nullptr };
-        void* m_FrameEvent{ nullptr };
+        void* m_TickEvent{ nullptr };
         void* m_ActionEvent{ nullptr };
         std::uint32_t m_Pid{ 0 };
         std::string m_DiscoveryPath{};
@@ -110,7 +110,7 @@ export namespace Platform::Bridge::State
         std::uint64_t m_LastReadMatch{ 0 };
         std::atomic<bool> m_IsStopped{ false };
 
-        std::atomic<std::uint64_t> m_Frames{ 0 };
+        std::atomic<std::uint64_t> m_PublishedTicks{ 0 };
         std::atomic<std::uint64_t> m_LateActions{ 0 };
         std::atomic<std::uint64_t> m_LockstepWaits{ 0 };
         std::atomic<std::uint64_t> m_LockstepWaitNs{ 0 };

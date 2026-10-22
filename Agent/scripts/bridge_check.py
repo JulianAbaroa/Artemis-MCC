@@ -4,7 +4,7 @@ Tests of the bridge against a running MCC (D135, Diseno/12 sec. 8: T1-T5). Runs 
 python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
 
     info                                   The open regions and the control block of the newest one.
-    frames [--count 60] [--scale S]        T1/T2: consecutive frames, layout, copies that hit a write, clock of the frames.
+    ticks [--count 60] [--scale S]        T1/T2: consecutive ticks, layout, copies that hit a write, clock of the ticks.
     run [--mode lockstep|free] [--seconds 60] [--agents bots|all] [--scale S] [--period N] [--latency D] [--crash-after K]
                                            T3-T5: trivial policy (walk forward, turn --yaw-step rad per decision), the decision each
                                            player had applied (known answer), the aim against the yaw sent, latencies, ticks per
@@ -19,7 +19,7 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            for one outside a match (start it in the lobby): it must not end the first round.
     turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
                                            D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
-                                           pitch +-0.4). The aim seen between two frames never turns faster than --turn-limit rad
+                                           pitch +-0.4). The aim seen between two ticks never turns faster than --turn-limit rad
                                            per tick and reaches each target before the next one.
 Exit code 0 when every check of the command passes.
 """
@@ -83,14 +83,14 @@ def Info(args):
         time.sleep(0.3)
         a = bridge.artemis
         fields = ["Pid", "Phase", "Owner", "Mode", "DecisionPeriod", "Latency", "IsClientConnected", "MatchId", "ActionTick",
-                  "Scale", "FrameCount", "ClockSkips", "LockstepTimeouts", "HandleMismatches"]
+                  "Scale", "PublishedTicks", "ClockSkips", "LockstepTimeouts", "HandleMismatches"]
         print(f"layout {int(a['LayoutHash']):#018x} (client {L.LAYOUT_HASH:#018x}), version {int(a['LayoutVersion'])}, "
               f"{int(a['RegionSize'])} bytes, heartbeat {int(a['Heartbeat'])}")
         print(" | ".join(f"{name} {a[name]}" for name in fields))
     return 0
 
 
-def Frames(args):
+def Ticks(args):
     with Open(args) as bridge:
         if not WaitRunning(bridge, args.wait):
             print(f"FAIL no match running after {args.wait} s")
@@ -99,35 +99,35 @@ def Frames(args):
             bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Free, scale=args.scale, agents=0)
         before = bridge.counters()
         period = int(bridge.artemis["DecisionPeriod"])
-        frames, gaps, bad, ticks, entities = 0, 0, [], [], []
+        received, gaps, bad, ticks, entities = 0, 0, [], [], []
         events, kinds, game_ticks = 0, {}, []
         start = time.time()
-        while frames < args.count and time.time() - start < args.count + 30:
-            frame = bridge.wait_frame(2.0)
-            if frame is None:
+        while received < args.count and time.time() - start < args.count + 30:
+            published = bridge.wait_tick(2.0)
+            if published is None:
                 continue
-            frames += 1
-            gaps += frame.skipped
-            ticks.append(frame.action_tick)
-            entities.append(len(frame.entities))
-            h = frame.header
-            if frame.action_tick % period:
-                bad.append(f"tick {frame.action_tick} not a multiple of N {period}")
+            received += 1
+            gaps += published.skipped
+            ticks.append(published.action_tick)
+            entities.append(len(published.entities))
+            h = published.header
+            if published.action_tick % period:
+                bad.append(f"tick {published.action_tick} not a multiple of N {period}")
             if int(h["PlayerCount"]) > L.MAX_PLAYERS or int(h["EntityCount"]) > L.MAX_ENTITIES:
                 bad.append(f"counts {int(h['PlayerCount'])}/{int(h['EntityCount'])}")
-            handles = frame.entities["Handle"]
+            handles = published.entities["Handle"]
             if len(handles) and (np.any(handles == L.NO_HANDLE) or np.any(np.diff(handles.astype(np.int64)) <= 0)):
-                bad.append(f"entity handles not sorted or NONE at tick {frame.action_tick}")
-            if np.any((frame.players["Handle"] & 0xFFFF) >= L.MAX_PLAYERS):
-                bad.append(f"player index out of range at tick {frame.action_tick}")
-            fresh = bridge.new_events(frame)
+                bad.append(f"entity handles not sorted or NONE at tick {published.action_tick}")
+            if np.any((published.players["Handle"] & 0xFFFF) >= L.MAX_PLAYERS):
+                bad.append(f"player index out of range at tick {published.action_tick}")
+            fresh = bridge.new_events(published)
             if len(fresh) > 1 and np.any(np.diff(fresh["Sequence"].astype(np.int64)) != 1):
-                bad.append(f"event sequences not consecutive at tick {frame.action_tick}")
+                bad.append(f"event sequences not consecutive at tick {published.action_tick}")
             events += len(fresh)
             for kind in fresh["Kind"]:
                 name = Event(int(kind)).name if int(kind) in Event._value2member_map_ else str(int(kind))
                 kinds[name] = kinds.get(name, 0) + 1
-            game_tick = int(frame.match["GameTick"])
+            game_tick = int(published.match["GameTick"])
             if game_ticks and game_tick < game_ticks[-1]:
                 bad.append(f"match game tick went back {game_ticks[-1]} -> {game_tick}")
             game_ticks.append(game_tick)
@@ -135,16 +135,16 @@ def Frames(args):
         after = bridge.counters()
         steps = np.diff(ticks) if len(ticks) > 1 else np.array([])
         irregular = int(np.sum(steps != period)) if len(steps) else 0
-        print(f"frames {frames} in {elapsed:.1f} s, skipped {gaps}, steps != N: {irregular} (with skips), copies retried {bridge.tears}")
+        print(f"received {received} in {elapsed:.1f} s, skipped {gaps}, steps != N: {irregular} (with skips), copies retried {bridge.tears}")
         print(f"entities avg {np.mean(entities) if entities else 0:.0f} max {max(entities) if entities else 0}, "
-              f"players {len(frame.players) if frames else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
-        phase = MatchPhase(int(frame.match["Phase"])).name if frames else "-"
+              f"players {len(published.players) if received else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
+        phase = MatchPhase(int(published.match["Phase"])).name if received else "-"
         print(f"events {events} (lost {bridge.event_gaps}) {kinds}, match ticks {game_ticks[0] if game_ticks else 0}-"
-              f"{game_ticks[-1] if game_ticks else 0}, phase {phase}, scores {[int(s) for s in frame.match['PlayerScores'][:4]] if frames else []}")
+              f"{game_ticks[-1] if game_ticks else 0}, phase {phase}, scores {[int(s) for s in published.match['PlayerScores'][:4]] if received else []}")
         for line in bad[:10]:
             print("  bad:", line)
         bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
-        ok = frames >= args.count and not bad and after["ClockSkips"] == before["ClockSkips"] and bridge.event_gaps == 0
+        ok = received >= args.count and not bad and after["ClockSkips"] == before["ClockSkips"] and bridge.event_gaps == 0
         print("PASS" if ok else "FAIL")
         return 0 if ok else 1
 
@@ -170,26 +170,26 @@ def Run(args):
         pauses, paused_seconds, pause_just_ended = [], 0.0, False
         start = time.time()
         while time.time() - start < args.seconds:
-            frame = bridge.wait_frame(2.0)
-            if frame is None:
+            published = bridge.wait_tick(2.0)
+            if published is None:
                 if not bridge.is_alive:
                     print("Artemis closed the bridge")
                     break
                 continue
-            # note: A frame published just before a pause is read after it, so it is not a latency.
+            # note: A tick published just before a pause is read after it, so it is not a latency.
             if not pause_just_ended:
-                recv.append((frame.received_qpc - int(frame.header["PublishQpc"])) / freq * 1000)
+                recv.append((published.received_qpc - int(published.header["PublishQpc"])) / freq * 1000)
             pause_just_ended = False
-            tick = frame.action_tick
-            stats = matches.setdefault(frame.match_id, {"decisions": 0, "players": 0, "first": tick, "last": tick})
+            tick = published.action_tick
+            stats = matches.setdefault(published.match_id, {"decisions": 0, "players": 0, "first": tick, "last": tick})
             stats["decisions"] += 1
             stats["last"] = tick
-            agents = [p for p in frame.players if args.agents == "all" or int(p["LocalIndex"]) == L.NOT_LOCAL]
+            agents = [p for p in published.players if args.agents == "all" or int(p["LocalIndex"]) == L.NOT_LOCAL]
             stats["players"] = max(stats["players"], len(agents))
             new_mask = 0
             for p in agents:
                 new_mask |= 1 << (int(p["Handle"]) & 0xFFFF)
-            entities = {int(e["Handle"]): e for e in frame.entities}
+            entities = {int(e["Handle"]): e for e in published.entities}
             for p in agents:
                 index = int(p["Handle"]) & 0xFFFF
                 applied = int(p["AppliedDecision"])
@@ -206,7 +206,7 @@ def Run(args):
                 body = entities.get(int(p["BipedHandle"]))
                 if body is not None and int(p["IsAlive"]):
                     position = np.array([float(body["WorldOrigin"][k]) for k in ("X", "Y", "Z")])
-                    key = (frame.match_id, int(p["Handle"]))
+                    key = (published.match_id, int(p["Handle"]))
                     first_pos.setdefault(key, position)
                     last_pos[key] = max(last_pos.get(key, 0.0), float(np.linalg.norm(position - first_pos[key])))
             if new_mask != mask:
@@ -226,7 +226,7 @@ def Run(args):
             bridge.write_actions(tick, {int(p["Handle"]) & 0xFFFF: Action(handle=int(p["Handle"]), yaw=yaw, forward=1.0)
                                         for p in agents})
             if not is_pause:
-                respond.append((qpc() - int(frame.header["PublishQpc"])) / freq * 1000)
+                respond.append((qpc() - int(published.header["PublishQpc"])) / freq * 1000)
             if is_pause and is_answered:
                 pause_start = time.time()
                 pauses.append(("after answering", tick, HoldPause(bridge, args.pause_seconds)))
@@ -254,11 +254,11 @@ def Run(args):
               f"p50 {Percentile(respond, 50):.3f} p99 {Percentile(respond, 99):.3f}")
         print(f"game waits {waits} avg {(delta['LockstepWaitNs'] / waits / 1e6) if waits else 0:.3f} ms, timeouts "
               f"{delta['LockstepTimeouts']}, late {delta['LateActions']}, handle mismatches {delta['HandleMismatches']}, rejected "
-              f"{delta['RejectedActions']}, clock skips {delta['ClockSkips']}, frames skipped by the client "
-              f"{delta['FrameCount'] - decisions}, copies retried {bridge.tears}")
+              f"{delta['RejectedActions']}, clock skips {delta['ClockSkips']}, ticks skipped by the client "
+              f"{delta['PublishedTicks'] - decisions}, copies retried {bridge.tears}")
         print(f"since load: wait max {after['LockstepWaitMaxNs'] / 1e6:.3f} ms, flatten max {after['FlattenMaxNs'] / 1e6:.3f} ms | "
               f"this run: flatten avg "
-              f"{(delta['FlattenNs'] / delta['FrameCount'] / 1e6) if delta['FrameCount'] else 0:.3f} ms, paused frames "
+              f"{(delta['FlattenNs'] / delta['PublishedTicks'] / 1e6) if delta['PublishedTicks'] else 0:.3f} ms, paused frames "
               f"{delta['PausedFrames']}")
         for when, tick, ran in pauses:
             print(f"  pause {when} decision {tick}: {'not confirmed' if ran is None else f'{ran} ticks ran'}")
@@ -274,7 +274,7 @@ def Run(args):
         if lockstep:
             checks += [("applied = previous decision >= 99%", applied_total and applied_ok >= 0.99 * applied_total),
                        ("no Lockstep timeouts", delta["LockstepTimeouts"] == 0),
-                       ("no frame skipped", delta["FrameCount"] - decisions <= 1)]
+                       ("no tick skipped", delta["PublishedTicks"] - decisions <= 1)]
         if aim_total:
             checks.append(("aim = yaw sent >= 95%", aim_ok >= 0.95 * aim_total))
         failed = [name for name, ok in checks if not ok]
@@ -302,13 +302,13 @@ def EndRound(args):
         requested, round_start, is_over = None, None, False
         start = time.time()
         while time.time() - start < args.seconds and not is_over:
-            frame = bridge.wait_frame(2.0)
-            if frame is None:
+            published = bridge.wait_tick(2.0)
+            if published is None:
                 continue
-            tick = int(frame.match["GameTick"])
+            tick = int(published.match["GameTick"])
             if round_start is None and not rounds:
                 round_start = tick
-            for event in bridge.new_events(frame):
+            for event in bridge.new_events(published):
                 kind, event_tick = int(event["Kind"]), int(event["GameTick"])
                 name = Event(kind).name if kind in Event._value2member_map_ else str(kind)
                 if kind in (Event.RoundEnd, Event.GameOver, Event.Spawn):
@@ -370,16 +370,16 @@ def Turn(args):
         max_rate = 0.0
         start = time.time()
         while time.time() - start < args.seconds:
-            frame = bridge.wait_frame(2.0)
-            if frame is None:
+            published = bridge.wait_tick(2.0)
+            if published is None:
                 if not bridge.is_alive:
                     print("Artemis closed the bridge")
                     break
                 continue
-            tick = frame.action_tick
+            tick = published.action_tick
             is_change = decisions > 0 and decisions % args.hold == 0
             actions, new_mask = {}, 0
-            for p in frame.players:
+            for p in published.players:
                 if int(p["LocalIndex"]) != L.NOT_LOCAL:
                     continue
                 index = int(p["Handle"]) & 0xFFFF
@@ -425,7 +425,7 @@ def Turn(args):
 
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "frames", "run", "endround", "turn"])
+    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "turn"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
@@ -446,7 +446,7 @@ def Main():
     parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
     args = parser.parse_args()
     try:
-        return {"info": Info, "frames": Frames, "run": Run, "endround": EndRound, "turn": Turn}[args.command](args)
+        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "turn": Turn}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2

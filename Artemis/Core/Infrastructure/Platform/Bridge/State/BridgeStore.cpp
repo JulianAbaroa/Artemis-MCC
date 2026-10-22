@@ -10,13 +10,13 @@ namespace
 
 namespace Platform::Bridge::State
 {
-    auto BridgeStore::SetRegion(BridgeRegion* region, void* mapping, void* frameEvent, void* actionEvent, std::uint32_t pid,
+    auto BridgeStore::SetRegion(BridgeRegion* region, void* mapping, void* tickEvent, void* actionEvent, std::uint32_t pid,
         std::string discoveryPath) -> void
     {
         {
             std::lock_guard<std::mutex> lock(m_Mutex);
             m_Mapping = mapping;
-            m_FrameEvent = frameEvent;
+            m_TickEvent = tickEvent;
             m_ActionEvent = actionEvent;
             m_Pid = pid;
             m_DiscoveryPath = std::move(discoveryPath);
@@ -32,7 +32,7 @@ namespace Platform::Bridge::State
 
         std::lock_guard<std::mutex> lock(m_Mutex);
         m_Mapping = nullptr;
-        m_FrameEvent = nullptr;
+        m_TickEvent = nullptr;
         m_ActionEvent = nullptr;
         m_DiscoveryPath.clear();
         m_Control = {};
@@ -44,10 +44,10 @@ namespace Platform::Bridge::State
         return m_Region.load(std::memory_order_acquire);
     }
 
-    auto BridgeStore::GetFrameEvent() const -> void*
+    auto BridgeStore::GetTickEvent() const -> void*
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
-        return m_FrameEvent;
+        return m_TickEvent;
     }
 
     auto BridgeStore::GetActionEvent() const -> void*
@@ -162,9 +162,9 @@ namespace Platform::Bridge::State
         return m_IsStopped.load(std::memory_order_acquire);
     }
 
-    auto BridgeStore::AddFrame(std::uint64_t flattenNs) -> void
+    auto BridgeStore::AddPublishedTick(std::uint64_t flattenNs) -> void
     {
-        m_Frames.fetch_add(1, std::memory_order_relaxed);
+        m_PublishedTicks.fetch_add(1, std::memory_order_relaxed);
         m_FlattenNs.fetch_add(flattenNs, std::memory_order_relaxed);
         if (flattenNs > m_FlattenMaxNs.load(std::memory_order_relaxed)) m_FlattenMaxNs.store(flattenNs, std::memory_order_relaxed);
     }
@@ -203,7 +203,7 @@ namespace Platform::Bridge::State
 
     auto BridgeStore::CopyCounters(BridgeCounters& out) const -> void
     {
-        out.Frames = m_Frames.load(std::memory_order_relaxed);
+        out.PublishedTicks = m_PublishedTicks.load(std::memory_order_relaxed);
         out.LateActions = m_LateActions.load(std::memory_order_relaxed);
         out.LockstepWaits = m_LockstepWaits.load(std::memory_order_relaxed);
         out.LockstepWaitNs = m_LockstepWaitNs.load(std::memory_order_relaxed);

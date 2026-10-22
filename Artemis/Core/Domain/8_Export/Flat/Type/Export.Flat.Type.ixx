@@ -6,7 +6,7 @@ import std;
 
 export namespace Export::Flat::Type
 {
-    // A Tick of a decision tick waiting to be flattened into a bridge frame, with the clock read with it (D135).
+    // A Tick of a decision tick waiting to be flattened into a BridgeTick, with the clock read with it (D135).
     struct FlatRequest
     {
         std::shared_ptr<const Export::Tick::Type::Tick> Snapshot{};

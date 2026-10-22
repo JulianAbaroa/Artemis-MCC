@@ -12,8 +12,8 @@ import std;
 export namespace Platform::Bridge::System
 {
     // Bridge between Artemis and a Python client on the same PC (D135-D138): the shared memory, the control the client asks for, the
-    // frames of the decision ticks and the actions of the players the client controls.
-    // note: Three threads use it. The bridge thread opens and closes the region, runs Update and publishes the frames. The AI thread
+    // decision ticks and the actions of the players the client controls.
+    // note: Three threads use it. The bridge thread opens and closes the region, runs Update and publishes the ticks. The AI thread
     // captures the clock while the game thread waits for the read of a tick. The game thread applies the actions in the PlayerAction
     // hook and, in Lockstep, waits there for them (D105).
     class BridgeService
@@ -31,7 +31,7 @@ export namespace Platform::Bridge::System
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
         using BridgeRegion = Platform::Bridge::Type::BridgeRegion;
-        using BridgeFrame = Platform::Bridge::Type::BridgeFrame;
+        using BridgeTick = Platform::Bridge::Type::BridgeTick;
         using BridgeAction = Platform::Bridge::Type::BridgeAction;
         using BridgeClock = Platform::Bridge::Type::BridgeClock;
         using BridgeControlState = Platform::Bridge::Type::BridgeControlState;
@@ -81,15 +81,15 @@ export namespace Platform::Bridge::System
         // Forgets the last read tick (the AI thread starts over after a teardown).
         auto ResetClock() -> void;
 
-        // Records that the AI thread handed the frame of this decision tick to the bridge thread. AI thread.
+        // Records that the AI thread handed this decision tick to the bridge thread. AI thread.
         auto MarkPushed(std::uint64_t tick) -> void;
 
-        // return: The buffer the next frame goes to, marked as being written, or null when the bridge is closed.
-        // note: Bridge thread. Every BeginFrame is followed by EndFrame.
-        auto BeginFrame() -> BridgeFrame*;
+        // return: The buffer the next tick goes to, marked as being written, or null when the bridge is closed.
+        // note: Bridge thread. Every BeginTick is followed by EndTick.
+        auto BeginTick() -> BridgeTick*;
 
-        // Completes the frame of BeginFrame with the clock, publishes it and wakes the client.
-        auto EndFrame(BridgeFrame& frame, const BridgeClock& clock) -> void;
+        // Completes the BridgeTick of BeginTick with the clock, publishes it and wakes the client.
+        auto EndTick(BridgeTick& flat, const BridgeClock& clock) -> void;
 
         // Applies the actions of the client to its players before the engine applies the actions of a tick, waiting for them in
         // Lockstep. Game thread (PlayerAction hook), once per tick.

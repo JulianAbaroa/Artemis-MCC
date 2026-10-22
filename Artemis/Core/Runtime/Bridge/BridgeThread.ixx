@@ -7,9 +7,9 @@ import std;
 
 export namespace Runtime::Thread
 {
-    // Thread of the bridge with Python (D135): opens the shared memory, publishes the frame of each decision tick the AI thread hands
+    // Thread of the bridge with Python (D135): opens the shared memory, publishes each decision tick the AI thread hands
     // over and keeps the control block up to date. Closes the shared memory when the lifecycle stops.
-    // note: Without a client nothing is flattened: the AI thread only hands over frames while a client is connected.
+    // note: Without a client nothing is flattened: the AI thread only hands over ticks while a client is connected.
     class BridgeThread
     {
     public:

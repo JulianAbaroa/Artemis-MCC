@@ -21,7 +21,7 @@ export namespace Platform::Bridge::Type
     inline constexpr std::uint32_t k_BridgeLayoutVersion{ 1 };
 
     // FNV-1a 64 of the computed layout. Python compares it with the hash of its generated module.
-    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0x8F6CF2FE9C0210AD };
+    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0xC22D9BBA7E9B2483 };
 
     // 'ABTB' read as little endian u32: the region is an Artemis bridge.
     inline constexpr std::uint32_t k_BridgeMagic{ 0x42544241 };
@@ -30,11 +30,11 @@ export namespace Platform::Bridge::Type
 
     static_assert(k_MaxObjects == 0x400, "Bridge.xml MaxEntities must match k_MaxObjects.");
 
-    // Frame buffers: Artemis writes the one Python is not reading.
-    inline constexpr std::uint32_t k_BridgeFrameBuffers{ 2 };
+    // Tick buffers: Artemis writes the one Python is not reading.
+    inline constexpr std::uint32_t k_BridgeTickBuffers{ 2 };
 
-    // Newest events of the match a frame carries (D141). Python keeps its cursor by Sequence.
-    inline constexpr std::uint32_t k_BridgeMaxFrameEvents{ 64 };
+    // Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence.
+    inline constexpr std::uint32_t k_BridgeMaxTickEvents{ 64 };
 
     static_assert(k_NoHandle == 0xFFFFFFFF, "Bridge.xml NoHandle must match k_NoHandle.");
 
@@ -44,8 +44,8 @@ export namespace Platform::Bridge::Type
     // Name of the region: prefix + pid of MCC (D136).
     inline constexpr std::string_view k_BridgeRegionPrefix{ "Local\\Artemis.Bridge." };
 
-    // Auto-reset event Artemis sets after it publishes a frame.
-    inline constexpr std::string_view k_BridgeFrameEventSuffix{ ".Frame" };
+    // Auto-reset event Artemis sets after it publishes a tick.
+    inline constexpr std::string_view k_BridgeTickEventSuffix{ ".Tick" };
 
     // Auto-reset event Python sets after it publishes the actions of a decision.
     inline constexpr std::string_view k_BridgeActionEventSuffix{ ".Action" };
@@ -75,7 +75,7 @@ export namespace Platform::Bridge::Type
         // No match: menus, lobby or teardown.
         Idle = 0,
         Loading = 1,
-        // Ticks are running and frames are published.
+        // Ticks are running and decision ticks are published.
         Running = 2,
     };
 
@@ -87,8 +87,8 @@ export namespace Platform::Bridge::Type
         Zoom = 0x4,
     };
 
-    // Flags of a frame.
-    enum class BridgeFrameFlag : std::uint32_t
+    // Flags of a tick.
+    enum class BridgeTickFlag : std::uint32_t
     {
         // The tick had more live objects than MaxEntities.
         EntitiesTruncated = 0x1,
@@ -119,9 +119,9 @@ export namespace Platform::Bridge::Type
         BridgeOwner Owner{};
         // Effective mode.
         BridgeMode Mode{};
-        // Effective N: a frame every N action ticks (D114).
+        // Effective N: a published tick every N action ticks (D114).
         std::uint8_t DecisionPeriod{};
-        // Effective d: a decision is applied d action ticks after its frame.
+        // Effective d: a decision is applied d action ticks after its decision tick.
         std::uint8_t Latency{};
         std::uint8_t IsClientConnected{};
         // Whether the logic ticks are held (D143): frames run without ticks, the Lockstep wait has no cap.
@@ -132,10 +132,10 @@ export namespace Platform::Bridge::Type
         std::uint64_t ActionTick{};
         // Requested time scale in effect (0 = the engine default).
         float Scale{};
-        // Frame buffer with the last published frame.
+        // Tick buffer with the last published tick.
         std::uint32_t ActiveBuffer{};
-        // Frames published since Artemis loaded.
-        std::uint64_t FrameCount{};
+        // Ticks published since Artemis loaded.
+        std::uint64_t PublishedTicks{};
         // Free mode: decisions applied after their tick plus the latency.
         std::uint64_t LateActions{};
         // Ticks the game waited for a decision.
@@ -152,9 +152,9 @@ export namespace Platform::Bridge::Type
         std::uint64_t ClockSkips{};
         // Longest wait for a decision outside a pause.
         std::uint64_t LockstepWaitMaxNs{};
-        // Total time spent flattening and publishing frames (FrameCount of them).
+        // Total time spent flattening and publishing ticks (PublishedTicks of them).
         std::uint64_t FlattenNs{};
-        // Longest flatten and publish of one frame.
+        // Longest flatten and publish of one tick.
         std::uint64_t FlattenMaxNs{};
         // Game frames that ran without ticks because of a pause.
         std::uint64_t PausedFrames{};
@@ -195,22 +195,22 @@ export namespace Platform::Bridge::Type
         BridgeClientControl Client{};
     };
 
-    // What the frame is: which match and which action tick.
-    struct BridgeFrameHeader
+    // What the tick is: which match and which action tick.
+    struct BridgeTickHeader
     {
         std::uint32_t MatchId{};
         std::uint16_t PlayerCount{};
         std::uint16_t EntityCount{};
-        // Action tick of the state of the frame. Answers carry it as DecisionTick.
+        // Action tick of the state of the tick. Answers carry it as DecisionTick.
         std::uint64_t ActionTick{};
         // Id of the Tick snapshot (not game time).
         std::uint64_t Generation{};
-        // QueryPerformanceCounter when the frame was published.
+        // QueryPerformanceCounter when the tick was published.
         std::uint64_t PublishQpc{};
         std::uint32_t Flags{};
         // Rows of Events in use, oldest first.
         std::uint16_t EventCount{};
-        // Sequence of the newest event of the match up to this frame (0 = none yet).
+        // Sequence of the newest event of the match up to this tick (0 = none yet).
         std::uint32_t LastEventSequence{};
     };
 
@@ -273,7 +273,7 @@ export namespace Platform::Bridge::Type
         std::uint32_t LastDamagerPlayer{};
         // NoHandle (0xFFFFFFFF) when unknown.
         std::uint32_t TicksSinceDamage{};
-        // DecisionTick of the bridge action the engine applied to this player up to this frame (0 = none).
+        // DecisionTick of the bridge action the engine applied to this player up to this tick (0 = none).
         std::uint64_t AppliedDecision{};
     };
 
@@ -303,15 +303,15 @@ export namespace Platform::Bridge::Type
         BridgeVec3 AngularVelocity{};
     };
 
-    // One flattened Tick. Sequence and SequenceEnd are equal and even when the frame is complete.
-    struct alignas(64) BridgeFrame
+    // One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
+    struct alignas(64) BridgeTick
     {
         std::uint64_t Sequence{};
-        BridgeFrameHeader Header{};
+        BridgeTickHeader Header{};
         std::array<BridgePlayer, k_MaxPlayers> Players{};
         std::array<BridgeEntity, k_MaxObjects> Entities{};
         BridgeMatch Match{};
-        std::array<BridgeEvent, k_BridgeMaxFrameEvents> Events{};
+        std::array<BridgeEvent, k_BridgeMaxTickEvents> Events{};
         std::uint64_t SequenceEnd{};
     };
 
@@ -322,7 +322,7 @@ export namespace Platform::Bridge::Type
         std::uint32_t PlayerHandle{};
         // Down bits of the hold lanes (D121).
         std::uint32_t Lanes{};
-        // ActionTick of the frame this action answers. Written 0 first, then the fields, then the tick.
+        // ActionTick of the tick this action answers. Written 0 first, then the fields, then the tick.
         std::uint64_t DecisionTick{};
         std::uint64_t Buttons{};
         // Absolute, radians.
@@ -340,7 +340,7 @@ export namespace Platform::Bridge::Type
     struct BridgeRegion
     {
         BridgeControl Control{};
-        std::array<BridgeFrame, k_BridgeFrameBuffers> Frames{};
+        std::array<BridgeTick, k_BridgeTickBuffers> Ticks{};
         alignas(64) std::array<BridgeAction, k_MaxPlayers> Actions{};
     };
 
@@ -370,7 +370,7 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeArtemisControl, ActionTick) == 56);
     static_assert(offsetof(BridgeArtemisControl, Scale) == 64);
     static_assert(offsetof(BridgeArtemisControl, ActiveBuffer) == 68);
-    static_assert(offsetof(BridgeArtemisControl, FrameCount) == 72);
+    static_assert(offsetof(BridgeArtemisControl, PublishedTicks) == 72);
     static_assert(offsetof(BridgeArtemisControl, LateActions) == 80);
     static_assert(offsetof(BridgeArtemisControl, LockstepWaits) == 88);
     static_assert(offsetof(BridgeArtemisControl, LockstepWaitNs) == 96);
@@ -401,17 +401,17 @@ export namespace Platform::Bridge::Type
     static_assert(std::is_trivially_copyable_v<BridgeControl> && std::is_standard_layout_v<BridgeControl>);
     static_assert(offsetof(BridgeControl, Artemis) == 0);
     static_assert(offsetof(BridgeControl, Client) == 192);
-    static_assert(sizeof(BridgeFrameHeader) == 48 && alignof(BridgeFrameHeader) == 8);
-    static_assert(std::is_trivially_copyable_v<BridgeFrameHeader> && std::is_standard_layout_v<BridgeFrameHeader>);
-    static_assert(offsetof(BridgeFrameHeader, MatchId) == 0);
-    static_assert(offsetof(BridgeFrameHeader, PlayerCount) == 4);
-    static_assert(offsetof(BridgeFrameHeader, EntityCount) == 6);
-    static_assert(offsetof(BridgeFrameHeader, ActionTick) == 8);
-    static_assert(offsetof(BridgeFrameHeader, Generation) == 16);
-    static_assert(offsetof(BridgeFrameHeader, PublishQpc) == 24);
-    static_assert(offsetof(BridgeFrameHeader, Flags) == 32);
-    static_assert(offsetof(BridgeFrameHeader, EventCount) == 36);
-    static_assert(offsetof(BridgeFrameHeader, LastEventSequence) == 40);
+    static_assert(sizeof(BridgeTickHeader) == 48 && alignof(BridgeTickHeader) == 8);
+    static_assert(std::is_trivially_copyable_v<BridgeTickHeader> && std::is_standard_layout_v<BridgeTickHeader>);
+    static_assert(offsetof(BridgeTickHeader, MatchId) == 0);
+    static_assert(offsetof(BridgeTickHeader, PlayerCount) == 4);
+    static_assert(offsetof(BridgeTickHeader, EntityCount) == 6);
+    static_assert(offsetof(BridgeTickHeader, ActionTick) == 8);
+    static_assert(offsetof(BridgeTickHeader, Generation) == 16);
+    static_assert(offsetof(BridgeTickHeader, PublishQpc) == 24);
+    static_assert(offsetof(BridgeTickHeader, Flags) == 32);
+    static_assert(offsetof(BridgeTickHeader, EventCount) == 36);
+    static_assert(offsetof(BridgeTickHeader, LastEventSequence) == 40);
     static_assert(sizeof(BridgeMatch) == 40 && alignof(BridgeMatch) == 4);
     static_assert(std::is_trivially_copyable_v<BridgeMatch> && std::is_standard_layout_v<BridgeMatch>);
     static_assert(offsetof(BridgeMatch, GameTick) == 0);
@@ -480,15 +480,15 @@ export namespace Platform::Bridge::Type
     static_assert(offsetof(BridgeEntity, Up) == 68);
     static_assert(offsetof(BridgeEntity, LinearVelocity) == 80);
     static_assert(offsetof(BridgeEntity, AngularVelocity) == 92);
-    static_assert(sizeof(BridgeFrame) == 110336 && alignof(BridgeFrame) == 64);
-    static_assert(std::is_trivially_copyable_v<BridgeFrame> && std::is_standard_layout_v<BridgeFrame>);
-    static_assert(offsetof(BridgeFrame, Sequence) == 0);
-    static_assert(offsetof(BridgeFrame, Header) == 8);
-    static_assert(offsetof(BridgeFrame, Players) == 56);
-    static_assert(offsetof(BridgeFrame, Entities) == 1720);
-    static_assert(offsetof(BridgeFrame, Match) == 108216);
-    static_assert(offsetof(BridgeFrame, Events) == 108256);
-    static_assert(offsetof(BridgeFrame, SequenceEnd) == 110304);
+    static_assert(sizeof(BridgeTick) == 110336 && alignof(BridgeTick) == 64);
+    static_assert(std::is_trivially_copyable_v<BridgeTick> && std::is_standard_layout_v<BridgeTick>);
+    static_assert(offsetof(BridgeTick, Sequence) == 0);
+    static_assert(offsetof(BridgeTick, Header) == 8);
+    static_assert(offsetof(BridgeTick, Players) == 56);
+    static_assert(offsetof(BridgeTick, Entities) == 1720);
+    static_assert(offsetof(BridgeTick, Match) == 108216);
+    static_assert(offsetof(BridgeTick, Events) == 108256);
+    static_assert(offsetof(BridgeTick, SequenceEnd) == 110304);
     static_assert(sizeof(BridgeAction) == 48 && alignof(BridgeAction) == 8);
     static_assert(std::is_trivially_copyable_v<BridgeAction> && std::is_standard_layout_v<BridgeAction>);
     static_assert(offsetof(BridgeAction, PlayerHandle) == 0);
@@ -503,6 +503,6 @@ export namespace Platform::Bridge::Type
     static_assert(sizeof(BridgeRegion) == 221696 && alignof(BridgeRegion) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeRegion> && std::is_standard_layout_v<BridgeRegion>);
     static_assert(offsetof(BridgeRegion, Control) == 0);
-    static_assert(offsetof(BridgeRegion, Frames) == 256);
+    static_assert(offsetof(BridgeRegion, Ticks) == 256);
     static_assert(offsetof(BridgeRegion, Actions) == 220928);
 }

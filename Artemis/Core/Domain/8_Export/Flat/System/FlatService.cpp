@@ -20,7 +20,7 @@ namespace
     using Platform::Bridge::Type::BridgeEntity;
     using Platform::Bridge::Type::BridgeMatch;
     using Platform::Bridge::Type::BridgeEvent;
-    using Platform::Bridge::Type::BridgeFrameFlag;
+    using Platform::Bridge::Type::BridgeTickFlag;
 
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
@@ -116,7 +116,7 @@ namespace
 
 namespace Export::Flat::System
 {
-    auto FlatService::Flatten(const Tick& tick, BridgeFrame& frame) const -> void
+    auto FlatService::Flatten(const Tick& tick, BridgeTick& flat) const -> void
     {
         std::uint32_t flags{ 0 };
 
@@ -125,8 +125,8 @@ namespace Export::Flat::System
         {
             for (const Player& player : tick.Players->Rows)
             {
-                if (playerCount == frame.Players.size()) break;
-                frame.Players[playerCount++] = ToBridge(player);
+                if (playerCount == flat.Players.size()) break;
+                flat.Players[playerCount++] = ToBridge(player);
             }
         }
 
@@ -135,25 +135,25 @@ namespace Export::Flat::System
         {
             for (const Entity& entity : tick.Entities->Rows)
             {
-                if (entityCount == frame.Entities.size())
+                if (entityCount == flat.Entities.size())
                 {
-                    flags |= static_cast<std::uint32_t>(BridgeFrameFlag::EntitiesTruncated);
+                    flags |= static_cast<std::uint32_t>(BridgeTickFlag::EntitiesTruncated);
                     break;
                 }
-                frame.Entities[entityCount++] = ToBridge(entity);
+                flat.Entities[entityCount++] = ToBridge(entity);
             }
         }
 
-        frame.Match = BridgeMatch{};
+        flat.Match = BridgeMatch{};
         if (tick.Match)
         {
-            frame.Match.GameTick = tick.Match->GameTick;
-            frame.Match.Phase = static_cast<std::uint8_t>(tick.Match->Phase);
+            flat.Match.GameTick = tick.Match->GameTick;
+            flat.Match.Phase = static_cast<std::uint8_t>(tick.Match->Phase);
 
             for (const MatchScore& score : tick.Match->Scores)
             {
                 const std::size_t index{ score.PlayerHandle & k_HandleIndexMask };
-                if (index < frame.Match.PlayerScores.size()) frame.Match.PlayerScores[index] = score.Score;
+                if (index < flat.Match.PlayerScores.size()) flat.Match.PlayerScores[index] = score.Score;
             }
         }
 
@@ -163,19 +163,19 @@ namespace Export::Flat::System
         if (tick.Events)
         {
             const auto& rows{ tick.Events->Rows };
-            const std::size_t first{ rows.size() > frame.Events.size() ? rows.size() - frame.Events.size() : 0 };
+            const std::size_t first{ rows.size() > flat.Events.size() ? rows.size() - flat.Events.size() : 0 };
             for (std::size_t i{ first }; i < rows.size(); ++i)
             {
-                frame.Events[eventCount++] = ToBridge(rows[i]);
+                flat.Events[eventCount++] = ToBridge(rows[i]);
             }
             lastEventSequence = tick.Events->LastSequence;
         }
 
-        frame.Header.EventCount = static_cast<std::uint16_t>(eventCount);
-        frame.Header.LastEventSequence = lastEventSequence;
-        frame.Header.PlayerCount = static_cast<std::uint16_t>(playerCount);
-        frame.Header.EntityCount = static_cast<std::uint16_t>(entityCount);
-        frame.Header.Generation = tick.Generation;
-        frame.Header.Flags = flags;
+        flat.Header.EventCount = static_cast<std::uint16_t>(eventCount);
+        flat.Header.LastEventSequence = lastEventSequence;
+        flat.Header.PlayerCount = static_cast<std::uint16_t>(playerCount);
+        flat.Header.EntityCount = static_cast<std::uint16_t>(entityCount);
+        flat.Header.Generation = tick.Generation;
+        flat.Header.Flags = flags;
     }
 }

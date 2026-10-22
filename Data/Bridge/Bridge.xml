@@ -9,13 +9,13 @@
 <bridge version="1">
 	<const name="Magic" value="0x42544241" doc="'ABTB' read as little endian u32: the region is an Artemis bridge." />
 	<const name="MaxPlayers" value="16" owner="Common.Engine.Type:k_MaxPlayers" doc="Players of a match (Common.Engine k_MaxPlayers) and action slots, by player table index." />
-	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a frame (Common.Engine k_MaxObjects)." />
-	<const name="FrameBuffers" value="2" doc="Frame buffers: Artemis writes the one Python is not reading." />
-	<const name="MaxFrameEvents" value="64" doc="Newest events of the match a frame carries (D141). Python keeps its cursor by Sequence." />
+	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a tick (Common.Engine k_MaxObjects)." />
+	<const name="TickBuffers" value="2" doc="Tick buffers: Artemis writes the one Python is not reading." />
+	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
 	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
 	<string name="RegionPrefix" value="Local\Artemis.Bridge." doc="Name of the region: prefix + pid of MCC (D136)." />
-	<string name="FrameEventSuffix" value=".Frame" doc="Auto-reset event Artemis sets after it publishes a frame." />
+	<string name="TickEventSuffix" value=".Tick" doc="Auto-reset event Artemis sets after it publishes a tick." />
 	<string name="ActionEventSuffix" value=".Action" doc="Auto-reset event Python sets after it publishes the actions of a decision." />
 	<string name="DiscoveryFolder" value="Bridge" doc="Folder inside %LOCALAPPDATA%\Artemis with one pid.json per open region." />
 
@@ -30,14 +30,14 @@
 	<enum name="BridgePhase" type="u8" doc="State of the engine as Artemis sees it.">
 		<value name="Idle" id="0" doc="No match: menus, lobby or teardown." />
 		<value name="Loading" id="1" />
-		<value name="Running" id="2" doc="Ticks are running and frames are published." />
+		<value name="Running" id="2" doc="Ticks are running and decision ticks are published." />
 	</enum>
 	<flags name="BridgeRequest" type="u8" doc="One-shot client requests of a decision (D120).">
 		<bit name="WeaponSwitch" index="0" />
 		<bit name="GrenadeSwitch" index="1" />
 		<bit name="Zoom" index="2" />
 	</flags>
-	<flags name="BridgeFrameFlag" type="u32" doc="Flags of a frame.">
+	<flags name="BridgeTickFlag" type="u32" doc="Flags of a tick.">
 		<bit name="EntitiesTruncated" index="0" doc="The tick had more live objects than MaxEntities." />
 	</flags>
 
@@ -58,15 +58,15 @@
 		<field name="Phase" type="u8" enum="BridgePhase" />
 		<field name="Owner" type="u8" enum="BridgeOwner" doc="Effective owner." />
 		<field name="Mode" type="u8" enum="BridgeMode" doc="Effective mode." />
-		<field name="DecisionPeriod" type="u8" doc="Effective N: a frame every N action ticks (D114)." />
-		<field name="Latency" type="u8" doc="Effective d: a decision is applied d action ticks after its frame." />
+		<field name="DecisionPeriod" type="u8" doc="Effective N: a published tick every N action ticks (D114)." />
+		<field name="Latency" type="u8" doc="Effective d: a decision is applied d action ticks after its decision tick." />
 		<field name="IsClientConnected" type="u8" />
 		<field name="IsPaused" type="u8" doc="Whether the logic ticks are held (D143): frames run without ticks, the Lockstep wait has no cap." />
 		<field name="MatchId" type="u32" doc="Engine starts since Artemis loaded. Changes with every match." />
 		<field name="ActionTick" type="u64" doc="Last action tick applied by the engine (the clock of the bridge)." />
 		<field name="Scale" type="f32" doc="Requested time scale in effect (0 = the engine default)." />
-		<field name="ActiveBuffer" type="u32" doc="Frame buffer with the last published frame." />
-		<field name="FrameCount" type="u64" doc="Frames published since Artemis loaded." />
+		<field name="ActiveBuffer" type="u32" doc="Tick buffer with the last published tick." />
+		<field name="PublishedTicks" type="u64" doc="Ticks published since Artemis loaded." />
 		<field name="LateActions" type="u64" doc="Free mode: decisions applied after their tick plus the latency." />
 		<field name="LockstepWaits" type="u64" doc="Ticks the game waited for a decision." />
 		<field name="LockstepWaitNs" type="u64" doc="Total time the game waited for decisions." />
@@ -75,8 +75,8 @@
 		<field name="RejectedActions" type="u64" doc="Actions with values out of range (fixed before use)." />
 		<field name="ClockSkips" type="u64" doc="Ticks read where the action tick did not advance by exactly one (must stay 0). The restart of each match is not one." />
 		<field name="LockstepWaitMaxNs" type="u64" doc="Longest wait for a decision outside a pause." />
-		<field name="FlattenNs" type="u64" doc="Total time spent flattening and publishing frames (FrameCount of them)." />
-		<field name="FlattenMaxNs" type="u64" doc="Longest flatten and publish of one frame." />
+		<field name="FlattenNs" type="u64" doc="Total time spent flattening and publishing ticks (PublishedTicks of them)." />
+		<field name="FlattenMaxNs" type="u64" doc="Longest flatten and publish of one tick." />
 		<field name="PausedFrames" type="u64" doc="Game frames that ran without ticks because of a pause." />
 		<field name="EndRoundSequence" type="u32" doc="Last RequestEndRound seen (D144). Seen is not done: dropped without Python owning the instance or a match running. The proof is the RoundEnd or GameOver event." />
 	</struct>
@@ -101,16 +101,16 @@
 		<field name="Client" type="BridgeClientControl" />
 	</struct>
 
-	<struct name="BridgeFrameHeader" doc="What the frame is: which match and which action tick.">
+	<struct name="BridgeTickHeader" doc="What the tick is: which match and which action tick.">
 		<field name="MatchId" type="u32" />
 		<field name="PlayerCount" type="u16" />
 		<field name="EntityCount" type="u16" />
-		<field name="ActionTick" type="u64" doc="Action tick of the state of the frame. Answers carry it as DecisionTick." />
+		<field name="ActionTick" type="u64" doc="Action tick of the state of the tick. Answers carry it as DecisionTick." />
 		<field name="Generation" type="u64" doc="Id of the Tick snapshot (not game time)." />
-		<field name="PublishQpc" type="u64" doc="QueryPerformanceCounter when the frame was published." />
-		<field name="Flags" type="u32" enum="BridgeFrameFlag" />
+		<field name="PublishQpc" type="u64" doc="QueryPerformanceCounter when the tick was published." />
+		<field name="Flags" type="u32" enum="BridgeTickFlag" />
 		<field name="EventCount" type="u16" doc="Rows of Events in use, oldest first." />
-		<field name="LastEventSequence" type="u32" doc="Sequence of the newest event of the match up to this frame (0 = none yet)." />
+		<field name="LastEventSequence" type="u32" doc="Sequence of the newest event of the match up to this tick (0 = none yet)." />
 	</struct>
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
@@ -159,7 +159,7 @@
 		<field name="Objective" type="u32" />
 		<field name="LastDamagerPlayer" type="u32" />
 		<field name="TicksSinceDamage" type="u32" doc="NoHandle (0xFFFFFFFF) when unknown." />
-		<field name="AppliedDecision" type="u64" doc="DecisionTick of the bridge action the engine applied to this player up to this frame (0 = none)." />
+		<field name="AppliedDecision" type="u64" doc="DecisionTick of the bridge action the engine applied to this player up to this tick (0 = none)." />
 	</struct>
 
 	<struct name="BridgeEntity" doc="One live object of the Tick (Environment Entities).">
@@ -185,20 +185,20 @@
 		<field name="AngularVelocity" type="BridgeVec3" />
 	</struct>
 
-	<struct name="BridgeFrame" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the frame is complete.">
+	<struct name="BridgeTick" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.">
 		<field name="Sequence" type="u64" />
-		<field name="Header" type="BridgeFrameHeader" />
+		<field name="Header" type="BridgeTickHeader" />
 		<field name="Players" type="BridgePlayer" count="MaxPlayers" />
 		<field name="Entities" type="BridgeEntity" count="MaxEntities" />
 		<field name="Match" type="BridgeMatch" />
-		<field name="Events" type="BridgeEvent" count="MaxFrameEvents" />
+		<field name="Events" type="BridgeEvent" count="MaxTickEvents" />
 		<field name="SequenceEnd" type="u64" />
 	</struct>
 
 	<struct name="BridgeAction" doc="Action of one player for one decision, written by Python (D109, D119).">
 		<field name="PlayerHandle" type="u32" doc="Full handle of the player of the slot (D40). Another handle drops the action." />
 		<field name="Lanes" type="u32" doc="Down bits of the hold lanes (D121)." />
-		<field name="DecisionTick" type="u64" doc="ActionTick of the frame this action answers. Written 0 first, then the fields, then the tick." />
+		<field name="DecisionTick" type="u64" doc="ActionTick of the tick this action answers. Written 0 first, then the fields, then the tick." />
 		<field name="Buttons" type="u64" />
 		<field name="Yaw" type="f32" doc="Absolute, radians." />
 		<field name="Pitch" type="f32" doc="Absolute, radians." />
@@ -209,7 +209,7 @@
 
 	<struct name="BridgeRegion" doc="The whole shared memory of one instance.">
 		<field name="Control" type="BridgeControl" />
-		<field name="Frames" type="BridgeFrame" count="FrameBuffers" />
+		<field name="Ticks" type="BridgeTick" count="TickBuffers" />
 		<field name="Actions" type="BridgeAction" count="MaxPlayers" align="64" />
 	</struct>
 </bridge>

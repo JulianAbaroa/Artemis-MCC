@@ -6,7 +6,7 @@ import std;
 
 namespace
 {
-    using Platform::Bridge::Type::BridgeFrame;
+    using Platform::Bridge::Type::BridgeTick;
 
     using std::chrono::steady_clock;
 
@@ -58,10 +58,10 @@ namespace Runtime::Thread
         const auto request{ m_Export.m_FlatStore.WaitPop(k_ControlInterval) };
         if (!request || !request->Snapshot) return;
 
-        BridgeFrame* frame{ m_Platform.m_BridgeService.BeginFrame() };
-        if (frame == nullptr) return;
+        BridgeTick* flat{ m_Platform.m_BridgeService.BeginTick() };
+        if (flat == nullptr) return;
 
-        m_Export.m_FlatService.Flatten(*request->Snapshot, *frame);
-        m_Platform.m_BridgeService.EndFrame(*frame, request->Clock);
+        m_Export.m_FlatService.Flatten(*request->Snapshot, *flat);
+        m_Platform.m_BridgeService.EndTick(*flat, request->Clock);
     }
 }

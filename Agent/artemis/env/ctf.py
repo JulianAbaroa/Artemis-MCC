@@ -2,7 +2,7 @@
 ctf.py
 Environment of stage 0 of the curriculum (D115, D146, Diseno/14): every agent alone against the enemy flag, take it and bring it to
 its own flag stand. Parallel multi-agent API in the style of PettingZoo without the package: dicts keyed by agent (the full player
-handle, D40). One step = one decision of the bridge (N ticks, Lockstep). The observation is computed here from the omniscient frame
+handle, D40). One step = one decision of the bridge (N ticks, Lockstep). The observation is computed here from the omniscient tick
 (Full mode); it moves to the View of each agent with B5.
 """
 import math
@@ -42,7 +42,7 @@ class CtfConfig:
     take_reward: float = 0.2
     capture_reward: float = 1.0
     death_reward: float = -0.2
-    frame_timeout: float = 5.0
+    tick_timeout: float = 5.0
     reset_timeout: float = 120.0
 
 
@@ -76,7 +76,7 @@ class AgentState:
 
 class CtfEnv:
     """Stage 0 environment over one Artemis instance. reset() waits for the agents to spawn in a round; step() answers the current
-    frame with the actions and returns what the next one says. Episode = one round: it ends with RoundEnd or GameOver
+    tick with the actions and returns what the next one says. Episode = one round: it ends with RoundEnd or GameOver
     (terminated) or is cut after max_seconds of game time with Bridge.end_round (truncated)."""
 
     def __init__(self, bridge: Bridge, config: CtfConfig = None):
@@ -84,7 +84,7 @@ class CtfEnv:
         self.config = config or CtfConfig()
         self.agents = []
         self.states = {}
-        self.frame = None
+        self.published = None
         self.match_id = None
         self.start_tick = 0
         self.is_waiting_round = False
@@ -103,33 +103,33 @@ class CtfEnv:
     def release(self):
         self.bridge.set_control(owner=BridgeOwner.UI, scale=0.0, agents=0, turn_limit=0.0)
 
-    # --- Frames -----------------------------------------------------------------------------------------------------------------
+    # --- Ticks -----------------------------------------------------------------------------------------------------------------
 
-    def _next_frame(self, actions=None):
-        """Answers the current frame (Lockstep needs an answer for every frame) and waits for the next one."""
-        if self.frame is not None:
-            self.bridge.write_actions(self.frame.action_tick, actions or {})
-        frame = None
-        while frame is None:
-            frame = self.bridge.wait_frame(self.config.frame_timeout)
-            if frame is None and not self.bridge.is_alive:
+    def _next_tick(self, actions=None):
+        """Answers the current tick (Lockstep needs an answer for every tick) and waits for the next one."""
+        if self.published is not None:
+            self.bridge.write_actions(self.published.action_tick, actions or {})
+        published = None
+        while published is None:
+            published = self.bridge.wait_tick(self.config.tick_timeout)
+            if published is None and not self.bridge.is_alive:
                 raise RuntimeError("Artemis closed the bridge")
-        self.frame = frame
-        self.events = list(self.bridge.new_events(frame))
-        # The few rows the observation needs, found once per frame with numpy (a Python loop over 1024 rows costs ms).
-        entities = frame.entities
+        self.published = published
+        self.events = list(self.bridge.new_events(published))
+        # The few rows the observation needs, found once per decision tick with numpy (a Python loop over 1024 rows costs ms).
+        entities = published.entities
         is_flag = (entities["Function"] == Function.ObjectiveItem) & (entities["Subtype"] == FLAG_SUBTYPE)
         is_stand = (entities["Function"] == Function.ObjectiveSpawn) & (entities["Subtype"] == STAND_SUBTYPE)
         self.flags = entities[is_flag]
         self.stands = entities[is_stand]
-        return frame
+        return published
 
     def _entity(self, handle):
-        rows = self.frame.entities[self.frame.entities["Handle"] == handle]
+        rows = self.published.entities[self.published.entities["Handle"] == handle]
         return rows[0] if len(rows) else None
 
     def _players(self):
-        return {int(p["Handle"]): p for p in self.frame.players}
+        return {int(p["Handle"]): p for p in self.published.players}
 
     @staticmethod
     def _is_playing(player):
@@ -141,11 +141,11 @@ class CtfEnv:
         """Waits until every bot of the match is alive in a running round and returns {agent: observation}."""
         waited = 0.0
         while True:
-            frame = self._next_frame()
+            published = self._next_tick()
             waited += self.config.period / 60.0
-            is_new_match = frame.match_id != self.match_id
+            is_new_match = published.match_id != self.match_id
             if is_new_match:
-                self.match_id = frame.match_id
+                self.match_id = published.match_id
                 self.is_waiting_round = False
             for event in self.events:
                 # note: RoundStart comes ~5 s before the spawn of the round, while the bodies of the last one may still stand.
@@ -153,7 +153,7 @@ class CtfEnv:
                     self.is_waiting_round = False
                 elif int(event["Kind"]) in (Event.RoundEnd, Event.GameOver):
                     self.is_waiting_round = True
-            players = [p for p in frame.players if int(p["LocalIndex"]) == NOT_LOCAL]
+            players = [p for p in published.players if int(p["LocalIndex"]) == NOT_LOCAL]
             if players and not self.is_waiting_round and all(self._is_playing(p) for p in players):
                 break
             if waited > self.config.reset_timeout * 60:
@@ -166,7 +166,7 @@ class CtfEnv:
         for handle in self.agents:
             mask |= 1 << (handle & 0xFFFF)
         self.bridge.set_control(agents=mask)
-        self.start_tick = int(frame.match["GameTick"])
+        self.start_tick = int(published.match["GameTick"])
         self.is_cut = False
         observations = {}
         for handle in self.agents:
@@ -195,7 +195,7 @@ class CtfEnv:
             buttons = (JUMP_BIT if branches[4] else 0) | (CROUCH_BIT if branches[5] else 0)
             bridge_actions[state.index] = Action(handle=handle, buttons=buttons, yaw=yaw, pitch=pitch,
                                                  forward=THROTTLE[branches[0]], left=THROTTLE[branches[1]])
-        self._next_frame(bridge_actions)
+        self._next_tick(bridge_actions)
 
         rewards = {handle: 0.0 for handle in self.agents}
         infos = {handle: {"events": []} for handle in self.agents}
@@ -220,7 +220,7 @@ class CtfEnv:
         if is_round_over:
             self.is_waiting_round = True
 
-        elapsed = (int(self.frame.match["GameTick"]) - self.start_tick) / 60.0
+        elapsed = (int(self.published.match["GameTick"]) - self.start_tick) / 60.0
         is_timeout = not is_round_over and not self.is_cut and elapsed >= c.max_seconds
         if is_timeout:
             # The RoundEnd of the cut comes a few ticks later: reset() waits for the next round past it.
@@ -266,7 +266,7 @@ class CtfEnv:
         for branch, n in zip(state.last_action, ACTION_NVEC):
             obs[offset + int(branch)] = 1.0
             offset += n
-        elapsed = (int(self.frame.match["GameTick"]) - self.start_tick) / 60.0
+        elapsed = (int(self.published.match["GameTick"]) - self.start_tick) / 60.0
         obs[19] = max(0.0, 1.0 - elapsed / c.max_seconds)
         if not self._is_playing(player):
             return obs, None

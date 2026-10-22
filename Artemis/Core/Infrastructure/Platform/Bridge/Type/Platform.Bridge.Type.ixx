@@ -55,7 +55,7 @@ export namespace Platform::Bridge::Type
         // DecisionTick of the bridge action applied to each player (by player table index), 0 = none.
         std::array<std::uint64_t, k_MaxPlayers> AppliedDecisions{};
 
-        // Whether this state is a decision tick of a connected client (a frame goes out).
+        // Whether this state is a decision tick of a connected client (a tick goes out).
         bool IsDecision{ false };
     };
 
@@ -72,7 +72,7 @@ export namespace Platform::Bridge::Type
         std::uint32_t AgentMask{ 0 };
     };
 
-    // Player of each slot in the last published frame: the actions of a slot must carry its handle (D40).
+    // Player of each slot in the last published tick: the actions of a slot must carry its handle (D40).
     struct BridgeSlot
     {
         std::uint32_t Handle{ k_NoHandle };
@@ -115,14 +115,14 @@ export namespace Platform::Bridge::Type
         // Last RequestEndRound of the client seen. A change while Python owns the instance is a request (D144).
         std::uint32_t LastClientEndRound{ 0 };
 
-        // When the frame being written started, to time the flatten.
-        std::chrono::steady_clock::time_point FrameStart{};
+        // When the tick being written started, to time the flatten.
+        std::chrono::steady_clock::time_point PublishStart{};
     };
 
     // Counters of the bridge, mirrored into the control block and shown in the UI.
     struct BridgeCounters
     {
-        std::uint64_t Frames{ 0 };
+        std::uint64_t PublishedTicks{ 0 };
         std::uint64_t LateActions{ 0 };
         std::uint64_t LockstepWaits{ 0 };
         std::uint64_t LockstepWaitNs{ 0 };

@@ -364,10 +364,10 @@ namespace UI::Simulation::System
         const auto& counters{ status.Counters };
         const double waitMs{ counters.LockstepWaits > 0
             ? static_cast<double>(counters.LockstepWaitNs) / static_cast<double>(counters.LockstepWaits) / 1.0e6 : 0.0 };
-        const double flattenMs{ counters.Frames > 0
-            ? static_cast<double>(counters.FlattenNs) / static_cast<double>(counters.Frames) / 1.0e6 : 0.0 };
-        ImGui::Text("Frames %llu (flatten avg %.3f ms, max %.3f) | late %llu | waits %llu (avg %.3f ms, max %.3f) | timeouts %llu",
-            counters.Frames, flattenMs, static_cast<double>(counters.FlattenMaxNs) / 1.0e6, counters.LateActions,
+        const double flattenMs{ counters.PublishedTicks > 0
+            ? static_cast<double>(counters.FlattenNs) / static_cast<double>(counters.PublishedTicks) / 1.0e6 : 0.0 };
+        ImGui::Text("Published ticks %llu (flatten avg %.3f ms, max %.3f) | late %llu | waits %llu (avg %.3f ms, max %.3f) | timeouts %llu",
+            counters.PublishedTicks, flattenMs, static_cast<double>(counters.FlattenMaxNs) / 1.0e6, counters.LateActions,
             counters.LockstepWaits, waitMs, static_cast<double>(counters.LockstepWaitMaxNs) / 1.0e6, counters.LockstepTimeouts);
         ImGui::Text("Handle mismatches %llu | rejected %llu | clock skips %llu", counters.HandleMismatches, counters.RejectedActions,
             counters.ClockSkips);

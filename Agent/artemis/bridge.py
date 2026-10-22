@@ -1,12 +1,12 @@
 """
-Client of the Artemis bridge (D135-D138): opens the shared memory of one MCC instance, reads the frame of each decision tick and
+Client of the Artemis bridge (D135-D138): opens the shared memory of one MCC instance, reads the tick of each decision tick and
 writes the action of each player Python controls. Windows only (named shared memory and events of the same session).
 
     from artemis.bridge import Bridge, discover
     bridge = Bridge(discover()[0]["pid"])
     bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, agents=mask)
-    frame = bridge.wait_frame()
-    bridge.write_actions(frame.action_tick, {index: Action(handle=..., yaw=..., forward=1.0)})
+    tick = bridge.wait_tick()
+    bridge.write_actions(tick.action_tick, {index: Action(handle=..., yaw=..., forward=1.0)})
 
 The layout comes from bridge_layout.py, generated from Data/Bridge/Bridge.xml: a region with another LayoutHash is refused.
 """
@@ -44,7 +44,7 @@ _STILL_ACTIVE = 259
 # How often the client heartbeat is raised (Artemis drops a client after 2 s without it).
 HEARTBEAT_INTERVAL = 0.2
 
-# Copies of a frame tried before giving up on it (each failed copy means Artemis was writing that buffer).
+# Copies of a tick tried before giving up on it (each failed copy means Artemis was writing that buffer).
 READ_RETRIES = 8
 
 
@@ -98,8 +98,8 @@ class Action:
     requests: BridgeRequest = BridgeRequest(0)
 
 
-class Frame:
-    """A copy of one published frame: the header and the rows in use."""
+class PublishedTick:
+    """A copy of one published tick: the header and the rows in use."""
 
     def __init__(self, data: np.ndarray, received_qpc: int):
         self.data = data
@@ -107,7 +107,7 @@ class Frame:
         self.players = data["Players"][: int(self.header["PlayerCount"])]
         self.entities = data["Entities"][: int(self.header["EntityCount"])]
         self.match = data["Match"]
-        # The newest events of the match up to this frame, oldest first. Bridge.new_events keeps only the unseen ones (D141).
+        # The newest events of the match up to this tick, oldest first. Bridge.new_events keeps only the unseen ones (D141).
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])
         self.action_tick = int(self.header["ActionTick"])
@@ -126,7 +126,7 @@ class Bridge:
         self.region = np.ndarray((), dtype=L.BridgeRegion, buffer=self._mm)
         self.artemis = self.region["Control"]["Artemis"]
         self.client = self.region["Control"]["Client"]
-        self.frames = self.region["Frames"]
+        self.buffers = self.region["Ticks"]
         self.actions = self.region["Actions"]
         self._action_sequence = ctypes.c_uint64.from_buffer(self._mm, L.OFFSETS["Control.Client.ActionSequence"])
         self._heartbeat = ctypes.c_uint64.from_buffer(self._mm, L.OFFSETS["Control.Client.ClientHeartbeat"])
@@ -135,13 +135,13 @@ class Bridge:
         self._thread = None
         try:
             self._check()
-            self._frame_event = self._open_event(L.FRAME_EVENT_SUFFIX)
+            self._tick_event = self._open_event(L.TICK_EVENT_SUFFIX)
             self._action_event = self._open_event(L.ACTION_EVENT_SUFFIX)
         except BridgeError:
             self.close()
             raise
         self.qpc_frequency = int(self.artemis["QpcFrequency"]) or 1
-        self.last_frame_count = int(self.artemis["FrameCount"])
+        self.last_published_ticks = int(self.artemis["PublishedTicks"])
         self.tears = 0
         # Cursor of new_events: last event sequence returned, the match it belongs to, and events lost from the window.
         self.event_cursor = 0
@@ -217,7 +217,7 @@ class Bridge:
         """Ends the round once while Python owns the instance (D144), as the end_round action of Megalo: the team or player with the
         highest score wins, and the last round ends the match. With wait, returns once Artemis saw the request, which is not proof:
         it is dropped without ownership or outside a match. The proof, and the end of the episode, is the RoundEnd or GameOver event
-        of a later frame (after the pause, inside bridge.paused(): the engine posts it in a tick)."""
+        of a later tick (after the pause, inside bridge.paused(): the engine posts it in a tick)."""
         sequence = (int(self.client["RequestEndRound"]) + 1) & 0xFFFFFFFF
         self.client["RequestEndRound"] = sequence
         return self.wait_control(timeout, EndRoundSequence=sequence) if wait else True
@@ -240,45 +240,45 @@ class Bridge:
             time.sleep(0.02)
         return False
 
-    def read_frame(self):
-        """The last published frame, copied, or None if Artemis was writing it every time it was copied."""
+    def read_tick(self):
+        """The last published tick, copied, or None if Artemis was writing it every time it was copied."""
         for _ in range(READ_RETRIES):
             index = int(self.artemis["ActiveBuffer"])
-            before = int(self.frames["Sequence"][index])
+            before = int(self.buffers["Sequence"][index])
             if before & 1:
                 self.tears += 1
                 continue
-            data = self.frames[index:index + 1].copy()[0]
-            after = int(self.frames["Sequence"][index])
+            data = self.buffers[index:index + 1].copy()[0]
+            after = int(self.buffers["Sequence"][index])
             if after == before and int(data["Sequence"]) == before and int(data["SequenceEnd"]) == before:
-                return Frame(data, qpc())
+                return PublishedTick(data, qpc())
             self.tears += 1
         return None
 
-    def wait_frame(self, timeout=2.0):
-        """The next frame after the last one returned, or None after the timeout (no match running, or no client connected yet).
-        In Free mode frames may be skipped if this client is slower than the decisions (frame_count tells how many)."""
+    def wait_tick(self, timeout=2.0):
+        """The next tick after the last one returned, or None after the timeout (no match running, or no client connected yet).
+        In Free mode ticks may be skipped if this client is slower than the decisions (PublishedTick.skipped tells how many)."""
         end = time.time() + timeout
         while True:
-            count = int(self.artemis["FrameCount"])
-            if count != self.last_frame_count:
-                frame = self.read_frame()
-                if frame is not None:
-                    frame.skipped = max(0, count - self.last_frame_count - 1)
-                    self.last_frame_count = count
-                    return frame
+            count = int(self.artemis["PublishedTicks"])
+            if count != self.last_published_ticks:
+                published = self.read_tick()
+                if published is not None:
+                    published.skipped = max(0, count - self.last_published_ticks - 1)
+                    self.last_published_ticks = count
+                    return published
             left = end - time.time()
             if left <= 0 or not self.is_alive:
                 return None
-            _kernel32.WaitForSingleObject(self._frame_event, int(min(left, 0.05) * 1000) + 1)
+            _kernel32.WaitForSingleObject(self._tick_event, int(min(left, 0.05) * 1000) + 1)
 
-    def new_events(self, frame):
-        """The events of the frame this client has not seen yet (by Sequence), oldest first. Starts over with each match.
-        Events that left the window of MaxFrameEvents before a frame was read are counted in event_gaps."""
-        if frame.match_id != self._event_match or frame.last_event_sequence < self.event_cursor:
-            self._event_match = frame.match_id
+    def new_events(self, published):
+        """The events of the tick this client has not seen yet (by Sequence), oldest first. Starts over with each match.
+        Events that left the window of MaxTickEvents before a tick was read are counted in event_gaps."""
+        if published.match_id != self._event_match or published.last_event_sequence < self.event_cursor:
+            self._event_match = published.match_id
             self.event_cursor = 0
-        fresh = frame.events[frame.events["Sequence"] > self.event_cursor]
+        fresh = published.events[published.events["Sequence"] > self.event_cursor]
         if len(fresh):
             oldest = int(fresh["Sequence"][0])
             if self.event_cursor and oldest > self.event_cursor + 1:
@@ -288,7 +288,7 @@ class Bridge:
 
     def write_actions(self, decision_tick: int, actions: dict):
         """Writes the actions of one decision ({player table index: Action}) and publishes it. Players left out keep their previous
-        action. Must be called for every frame in Lockstep, even with no actions, or the game waits for it."""
+        action. Must be called for every tick in Lockstep, even with no actions, or the game waits for it."""
         for index, action in actions.items():
             # The slot is marked as being written (DecisionTick 0) until its fields are complete, so Artemis never copies it half done.
             self.actions["DecisionTick"][index] = 0
@@ -307,7 +307,7 @@ class Bridge:
 
     def counters(self) -> dict:
         """The counters of the Artemis part of the control."""
-        names = ["FrameCount", "LateActions", "LockstepWaits", "LockstepWaitNs", "LockstepTimeouts", "HandleMismatches",
+        names = ["PublishedTicks", "LateActions", "LockstepWaits", "LockstepWaitNs", "LockstepTimeouts", "HandleMismatches",
                  "RejectedActions", "ClockSkips", "ActionTick", "MatchId", "LockstepWaitMaxNs", "FlattenNs", "FlattenMaxNs",
                  "PausedFrames", "IsPaused"]
         return {name: int(self.artemis[name]) for name in names}
@@ -326,7 +326,7 @@ class Bridge:
         for handle in self._events:
             _kernel32.CloseHandle(handle)
         self._events = []
-        self.artemis = self.client = self.frames = self.actions = self.region = None
+        self.artemis = self.client = self.buffers = self.actions = self.region = None
         self._action_sequence = self._heartbeat = None
         self._mm.close()
 

@@ -1,6 +1,6 @@
 """
 probe_ctf.py
-Prints what the frame says about CTF (stage 0 design, D146): players (team, local, objective, aim) and the entities of the
+Prints what the tick says about CTF (stage 0 design, D146): players (team, local, objective, aim) and the entities of the
 objective functions (flags, flag stands, capture zones) with team and position, a few times over a match.
 python Tools/game.py py Agent/scripts/probe_ctf.py [--samples 3] [--every 5]
 """
@@ -33,24 +33,24 @@ def Main():
         return 1
     with Bridge(int(regions[0]["pid"])) as bridge:
         for sample in range(args.samples):
-            frame = bridge.read_frame()
-            if frame is None:
-                print("no frame")
+            published = bridge.read_tick()
+            if published is None:
+                print("no tick")
             else:
-                print(f"--- sample {sample} match {frame.match_id} tick {int(frame.match['GameTick'])} phase {int(frame.match['Phase'])}"
-                      f" scores {list(frame.match['PlayerScores'][:4])}")
-                for p in frame.players:
+                print(f"--- sample {sample} match {published.match_id} tick {int(published.match['GameTick'])} phase {int(published.match['Phase'])}"
+                      f" scores {list(published.match['PlayerScores'][:4])}")
+                for p in published.players:
                     aim = p["Aim"]
                     yaw = math.degrees(math.atan2(float(aim["Y"]), float(aim["X"])))
                     print(f"player {int(p['Handle']):#010x} team {int(p['Team'])}"
                           f" local {int(p['LocalIndex'])} alive {int(p['IsAlive'])} biped {int(p['BipedHandle']):#010x}"
                           f" objective {int(p['Objective']):#010x} yaw {yaw:7.1f}")
-                entities = {int(e["Handle"]): e for e in frame.entities}
-                for p in frame.players:
+                entities = {int(e["Handle"]): e for e in published.entities}
+                for p in published.players:
                     body = entities.get(int(p["BipedHandle"]))
                     if body is not None:
                         print(f"  biped of {int(p['Handle']):#010x} at {Vec(body['WorldOrigin'])}")
-                for e in frame.entities:
+                for e in published.entities:
                     if int(e["Function"]) in [int(f) for f in OBJECTIVE]:
                         team = int(e["Team"])
                         print(f"entity {int(e['Handle']):#010x} {Function(int(e['Function'])).name}/{int(e['Subtype'])} team {team}"

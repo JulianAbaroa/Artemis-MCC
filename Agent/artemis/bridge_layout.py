@@ -8,16 +8,16 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x8F6CF2FE9C0210AD
+LAYOUT_HASH = 0xC22D9BBA7E9B2483
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
-FRAME_BUFFERS = 2
-MAX_FRAME_EVENTS = 64
+TICK_BUFFERS = 2
+MAX_TICK_EVENTS = 64
 NO_HANDLE = 0xffffffff
 NOT_LOCAL = 255
 REGION_PREFIX = 'Local\\Artemis.Bridge.'
-FRAME_EVENT_SUFFIX = '.Frame'
+TICK_EVENT_SUFFIX = '.Tick'
 ACTION_EVENT_SUFFIX = '.Action'
 DISCOVERY_FOLDER = 'Bridge'
 
@@ -48,8 +48,8 @@ class BridgeRequest(enum.IntFlag):
     Zoom = 0x4
 
 
-class BridgeFrameFlag(enum.IntFlag):
-    """Flags of a frame."""
+class BridgeTickFlag(enum.IntFlag):
+    """Flags of a tick."""
     EntitiesTruncated = 0x1
 
 
@@ -63,7 +63,7 @@ BridgeVec3 = np.dtype({
 
 # Part of the control block written by Artemis only.
 BridgeArtemisControl = np.dtype({
-    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'FrameCount', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence'],
+    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence'],
     'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4'],
     'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168],
     'itemsize': 192,
@@ -85,8 +85,8 @@ BridgeControl = np.dtype({
     'itemsize': 256,
 })
 
-# What the frame is: which match and which action tick.
-BridgeFrameHeader = np.dtype({
+# What the tick is: which match and which action tick.
+BridgeTickHeader = np.dtype({
     'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence'],
     'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4'],
     'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40],
@@ -125,10 +125,10 @@ BridgeEntity = np.dtype({
     'itemsize': 104,
 })
 
-# One flattened Tick. Sequence and SequenceEnd are equal and even when the frame is complete.
-BridgeFrame = np.dtype({
+# One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
+BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Events', 'SequenceEnd'],
-    'formats': ['<u8', BridgeFrameHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeEvent, (64,)), '<u8'],
+    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeEvent, (64,)), '<u8'],
     'offsets': [0, 8, 56, 1720, 108216, 108256, 110304],
     'itemsize': 110336,
 })
@@ -143,8 +143,8 @@ BridgeAction = np.dtype({
 
 # The whole shared memory of one instance.
 BridgeRegion = np.dtype({
-    'names': ['Control', 'Frames', 'Actions'],
-    'formats': [BridgeControl, (BridgeFrame, (2,)), (BridgeAction, (16,))],
+    'names': ['Control', 'Ticks', 'Actions'],
+    'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
     'offsets': [0, 256, 220928],
     'itemsize': 221696,
 })
@@ -189,7 +189,7 @@ OFFSETS = {
     'Control.Artemis.ActionTick': 56,
     'Control.Artemis.Scale': 64,
     'Control.Artemis.ActiveBuffer': 68,
-    'Control.Artemis.FrameCount': 72,
+    'Control.Artemis.PublishedTicks': 72,
     'Control.Artemis.LateActions': 80,
     'Control.Artemis.LockstepWaits': 88,
     'Control.Artemis.LockstepWaitNs': 96,
@@ -215,7 +215,7 @@ OFFSETS = {
     'Control.Client.RequestTurnLimit': 216,
     'Control.Client.ClientHeartbeat': 224,
     'Control.Client.ActionSequence': 232,
-    'Frames': 256,
+    'Ticks': 256,
     'Actions': 220928,
 }
 
