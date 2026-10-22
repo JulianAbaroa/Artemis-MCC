@@ -16,6 +16,7 @@ align=), the same rule MSVC follows on x64, so the static_asserts prove that the
 computed layout) changes with any change of a field, a type, an offset or a constant: Python refuses a region with another hash.
 Fails (nothing written) on an unknown type, enum or constant, or a repeated name.
 """
+import json
 import os, sys
 import xml.etree.ElementTree as ET
 
@@ -134,11 +135,26 @@ def Hash(model, structs):
     return value
 
 
+def LayoutJson(model, structs, hash):
+    """The layout of every struct as compact JSON: a TickDump embeds it so an old dump stays readable after Bridge.xml changes
+    (D151). Field: [name, type, offset, count, enum]; type is a key of "primitives" (numpy format) or the name of a struct listed
+    earlier (the structs come in dependency order)."""
+    data = {"version": model["version"], "hash": f"0x{hash:016X}", "primitives": {k: v[2] for k, v in PRIMITIVES.items()},
+            "structs": [{"name": s["name"], "size": s["size"], "align": s["align"],
+                         "fields": [[f["name"], f["type"], f["offset"], f["n"], f["enum"] or ""] for f in s["fields"]]}
+                        for s in structs.values()]}
+    text = json.dumps(data, separators=(",", ":"))
+    # note: MSVC joins the pieces of a string literal up to about 64 KB, and ')json"' would end a raw piece early.
+    if len(text) > 60000: Fail(f"layout JSON of {len(text)} bytes: split k_BridgeLayoutJson before it passes the MSVC limit")
+    if ')json"' in text: Fail("layout JSON contains the raw string delimiter")
+    return text
+
+
 def Comment(doc, indent):
     return [f"{indent}// {doc}"] if doc else []
 
 
-def Cpp(model, structs, hash):
+def Cpp(model, structs, hash, layout_json):
     enums = {e["name"]: e for e in model["enums"]}
     owners = [c for c in model["consts"] if c["owner"]]
     # note: offsetof is a macro, so it comes from the global module fragment and not from import std.
@@ -154,6 +170,10 @@ def Cpp(model, structs, hash):
           f"    inline constexpr std::uint32_t k_BridgeLayoutVersion{{ {model['version']} }};", "",
           "    // FNV-1a 64 of the computed layout. Python compares it with the hash of its generated module.",
           f"    inline constexpr std::uint64_t k_BridgeLayoutHash{{ 0x{hash:016X} }};", ""]
+    # note: Raw string pieces of 2000 characters: MSVC caps one string literal at 16380 bytes.
+    pieces = [layout_json[i:i + 2000] for i in range(0, len(layout_json), 2000)]
+    L += ["    // Layout of every struct as JSON (GenerateBridge.py LayoutJson). Each TickDump embeds it (D151).",
+          "    inline constexpr std::string_view k_BridgeLayoutJson{"] + [f'        R"json({p})json"' for p in pieces] + ["    };", ""]
     for c in model["consts"]:
         if not c["cpp"]: continue
         if c["owner"]:
@@ -271,7 +291,7 @@ def main():
     structs = Layout(model)
     hash = Hash(model, structs)
     print(f"[Bridge] {len(structs)} structs, region {structs['BridgeRegion']['size']} bytes, hash 0x{hash:016X}")
-    Write(CPP_OUT, Cpp(model, structs, hash), False)
+    Write(CPP_OUT, Cpp(model, structs, hash, LayoutJson(model, structs, hash)), False)
     Write(PY_OUT, Python(model, structs, hash), True)
 
 

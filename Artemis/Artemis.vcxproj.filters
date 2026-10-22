@@ -1,6 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Core\Common\Time">
+      <UniqueIdentifier>{ed6d6335-43c2-4ba1-a6a7-5a609ddc8ae5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Common\Time\System">
+      <UniqueIdentifier>{d6a2a922-5aa9-4a48-9eb4-0630be696d3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickDump">
+      <UniqueIdentifier>{02b748e8-92d3-4d5b-90c4-486b043cbb25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickDump\Type">
+      <UniqueIdentifier>{3a3b3c01-60af-48ba-b2be-817c00443072}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickDump\State">
+      <UniqueIdentifier>{200100d0-17bc-44a3-a9c1-0bd9516b38f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UI\TickDump\System">
+      <UniqueIdentifier>{0e263185-b03d-4677-babc-28d1570e304a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Runtime\Dump">
+      <UniqueIdentifier>{4970efbd-9aae-4eb8-91a5-cfccda51e6b6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Runtime\Bench">
       <UniqueIdentifier>{d0464667-42ef-42a1-9cac-003c9d707a9d}</UniqueIdentifier>
     </Filter>
@@ -1394,6 +1415,33 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Common\Time\System\Common.Time.System.ixx">
+      <Filter>Core\Common\Time\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Common\Time\System\Common.Time.System.cpp">
+      <Filter>Core\Common\Time\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx">
+      <Filter>Core\UI\TickDump\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.ixx">
+      <Filter>Core\UI\TickDump\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.cpp">
+      <Filter>Core\UI\TickDump\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickDump\System\TickDumpUIService.ixx">
+      <Filter>Core\UI\TickDump\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UI\TickDump\System\TickDumpUIService.cpp">
+      <Filter>Core\UI\TickDump\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Dump\DumpThread.ixx">
+      <Filter>Core\Runtime\Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Runtime\Dump\DumpThread.cpp">
+      <Filter>Core\Runtime\Dump</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Runtime\Bench\BenchThread.cpp">
       <Filter>Core\Runtime\Bench</Filter>
     </ClCompile>

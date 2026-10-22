@@ -40,6 +40,7 @@
     <Compile Include="Tools\analyze_ticktrace.py" />
     <Compile Include="Tools\build.py" />
     <Compile Include="Tools\game.py" />
+    <Compile Include="Tools\tickdump.py" />
     <Compile Include="Tools\livechat.py" />
     <Compile Include="Tools\check_rules.py" />
     <Compile Include="Tools\deps.py" />

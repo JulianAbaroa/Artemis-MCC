@@ -5,6 +5,8 @@ module;
 module UI.TickTrace.System;
 
 import Common.Math.Type;
+import Common.Text.System;
+import Common.Time.System;
 import Datum.Object.Type;
 import Tables.Object.Type;
 import std;
@@ -12,16 +14,16 @@ import std;
 namespace
 {
     using std::chrono::steady_clock;
-    using std::chrono::system_clock;
     using std::chrono::nanoseconds;
-    using std::chrono::seconds;
-    using std::chrono::zoned_time;
     using std::filesystem::path;
+    using Common::Text::System::CopyText;
+    using Common::Time::System::LocalNow;
 
     using UI::TickTrace::Type::TraceFileHeader;
     using UI::TickTrace::Type::TickRecord;
     using UI::TickTrace::Type::ObjectRecord;
 
+    using Common::Text::System::k_BytesPerMegabyte;
     using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
@@ -38,20 +40,7 @@ namespace
     // Object groups written to the trace.
     constexpr std::array<std::string_view, 4> k_TracedGroups{ "bipd", "vehi", "proj", "weap" };
 
-    constexpr double k_BytesPerMegabyte{ 1024.0 * 1024.0 };
 
-    auto LocalNow() -> zoned_time<seconds>
-    {
-        return zoned_time{ std::chrono::current_zone(), std::chrono::floor<seconds>(system_clock::now()) };
-    }
-
-    // Copies text into a zero padded buffer, cut to leave the last byte as terminator.
-    template <std::size_t N>
-    auto CopyText(std::string_view text, std::array<char, N>& out) -> void
-    {
-        const std::size_t length{ (std::min)(text.size(), N - 1) };
-        std::copy_n(text.data(), length, out.begin());
-    }
 
     // return: The value at the address of the game memory.
     // note: The caller checks the base pointer. Called inside the read window, so the engine does not write it meanwhile.

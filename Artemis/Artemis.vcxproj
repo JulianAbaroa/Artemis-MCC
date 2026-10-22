@@ -172,6 +172,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Common\Time\System\Common.Time.System.ixx" />
+    <ClCompile Include="Core\Common\Time\System\Common.Time.System.cpp" />
+    <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx" />
+    <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.ixx" />
+    <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.cpp" />
+    <ClCompile Include="Core\UI\TickDump\System\TickDumpUIService.ixx" />
+    <ClCompile Include="Core\UI\TickDump\System\TickDumpUIService.cpp" />
+    <ClCompile Include="Core\Runtime\Dump\DumpThread.ixx" />
+    <ClCompile Include="Core\Runtime\Dump\DumpThread.cpp" />
     <ClCompile Include="Core\Runtime\Bench\BenchThread.cpp" />
     <ClCompile Include="Core\Runtime\Bench\BenchThread.ixx" />
     <ClCompile Include="Core\UI\Bench\System\BenchUIService.cpp" />

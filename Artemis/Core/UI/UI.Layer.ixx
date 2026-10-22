@@ -30,6 +30,8 @@ import UI.Simulation.State;
 import UI.Simulation.System;
 import UI.TickTrace.State;
 import UI.TickTrace.System;
+import UI.TickDump.State;
+import UI.TickDump.System;
 import UI.Bench.State;
 import UI.Bench.System;
 import UI.Logs.State;
@@ -57,6 +59,7 @@ export namespace UI
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
         using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
+        using TickDumpUIStore = UI::TickDump::State::TickDumpUIStore;
         using BenchUIStore = UI::Bench::State::BenchUIStore;
         using LogsUIStore = UI::Logs::State::LogsUIStore;
 
@@ -69,6 +72,7 @@ export namespace UI
         using CaptureUIService = UI::Capture::System::CaptureUIService;
         using SimulationUIService = UI::Simulation::System::SimulationUIService;
         using TickTraceUIService = UI::TickTrace::System::TickTraceUIService;
+        using TickDumpUIService = UI::TickDump::System::TickDumpUIService;
         using BenchUIService = UI::Bench::System::BenchUIService;
         using LogsUIService = UI::Logs::System::LogsUIService;
 
@@ -89,6 +93,8 @@ export namespace UI
                 platform.m_BotStore, platform.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
             m_TickTraceUIService(service.m_LogsService, service.m_SettingsStore, map.m_FileStore, datum.m_DatumStore, tables.m_ObjectStore,
                 m_TickTraceUIStore),
+            m_TickDumpUIService(service.m_LogsService, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
+                m_TickDumpUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore),
             m_BenchUIService(service.m_LogsStore, service.m_LogsService, service.m_SettingsStore, platform.m_MemoryReaderService,
                 platform.m_LocalUserStore, platform.m_PlayerActionStore, platform.m_VirtualInputStore, platform.m_LifecycleStore,
@@ -132,6 +138,7 @@ export namespace UI
         CaptureUIStore m_CaptureUIStore{};
         SimulationUIStore m_SimulationUIStore{};
         TickTraceUIStore m_TickTraceUIStore{};
+        TickDumpUIStore m_TickDumpUIStore{};
         LogsUIStore m_LogsUIStore{};
         BenchUIStore m_BenchUIStore{};
 
@@ -145,6 +152,7 @@ export namespace UI
         CaptureUIService m_CaptureUIService;
         SimulationUIService m_SimulationUIService;
         TickTraceUIService m_TickTraceUIService;
+        TickDumpUIService m_TickDumpUIService;
         LogsUIService m_LogsUIService;
         BenchUIService m_BenchUIService;
 

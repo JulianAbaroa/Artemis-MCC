@@ -70,6 +70,7 @@ namespace Runtime::Thread
             {
                 std::uint64_t current{ lifecycle.WaitForTick(m_Last, m_Dropped) };
                 m_Last = current;
+                const std::uint64_t droppedBefore{ m_Dropped };
 
                 // The game thread waits for this read, so the action tick of the bridge is the one of the state about to be copied.
                 m_Platform.m_BridgeService.CaptureClock(m_Dropped == 0, m_BridgeClock);
@@ -108,6 +109,7 @@ namespace Runtime::Thread
                 this->EndStage();
 
                 m_TickTraceUIService.Record(current);
+                if (m_TickDumpUIService.IsRecording()) m_TickDumpUIService.Push(m_Export.m_TickStore.Acquire(), droppedBefore);
 
                 auto tickEnd{ steady_clock::now() };
                 lifecycle.EndTick();

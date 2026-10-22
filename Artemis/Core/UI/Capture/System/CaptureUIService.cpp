@@ -7,6 +7,7 @@ module;
 module UI.Capture.System;
 
 import Common.Engine.Type;
+import Common.Time.System;
 import Platform.Host.Type;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
@@ -17,9 +18,7 @@ import std;
 namespace
 {
     using std::filesystem::path;
-    using std::chrono::system_clock;
-    using std::chrono::seconds;
-    using std::chrono::zoned_time;
+    using Common::Time::System::LocalNow;
 
     using Resolved::Definitions::Type::Object::ObjectKind;
     using Resolved::Definitions::Type::Phmo::Phmo;
@@ -220,12 +219,6 @@ namespace
         case Source::Projectile: return "projectile";
         default: return "unknown";
         }
-    }
-
-    // return: The current local time, to the second.
-    auto LocalNow() -> zoned_time<seconds>
-    {
-        return zoned_time{ std::chrono::current_zone(), std::chrono::floor<seconds>(system_clock::now()) };
     }
 
     // Formats bytes as space separated hex pairs.
