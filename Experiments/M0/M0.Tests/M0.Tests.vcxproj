@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{6b1e0a10-0007-4a00-9c01-00000000a007}</ProjectGuid>
+    <RootNamespace>M0_Tests</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>M0.Tests</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\M0.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\M0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\M0.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\..\Artemis\External\googletest\googletest\include;$(MSBuildThisFileDirectory)..\..\..\Artemis\External\googletest\googlemock\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="StoreTests.cpp" />
+    <ClCompile Include="LogTests.cpp" />
+    <ClCompile Include="MapPieceTests.cpp" />
+    <ClCompile Include="SkipTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\M0.GoogleTest\M0.GoogleTest.vcxproj">
+      <Project>{6b1e0a10-0006-4a00-9c01-00000000a006}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\M0.Common\M0.Common.vcxproj">
+      <Project>{6b1e0a10-0001-4a00-9c01-00000000a001}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\M0.BlamTypes\M0.BlamTypes.vcxproj">
+      <Project>{6b1e0a10-0002-4a00-9c01-00000000a002}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\M0.MapPiece\M0.MapPiece.vcxproj">
+      <Project>{6b1e0a10-0003-4a00-9c01-00000000a003}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\M0.Consumer\M0.Consumer.vcxproj">
+      <Project>{6b1e0a10-0004-4a00-9c01-00000000a004}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

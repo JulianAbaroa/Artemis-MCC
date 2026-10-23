@@ -73,6 +73,7 @@
     <Compile Include="Tools\TagTranspiler\GenerateDatum.py" />
     <Compile Include="Tools\seed_tags.py" />
     <Compile Include="Tools\seed_datum.py" />
+    <Compile Include="Tools\test.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\README.md" />

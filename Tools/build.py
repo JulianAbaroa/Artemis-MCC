@@ -6,6 +6,10 @@ in compact form: one line per diagnostic, relative paths, no duplicates, errors 
     python Tools/build.py                       Build Release|x64 and wait (up to --timeout seconds).
     python Tools/build.py --config Release|x64  Other configuration.
     python Tools/build.py --rebuild             Rebuild instead of an incremental build.
+    python Tools/build.py --detail LEVEL        Also write build/watch/detail.log (normal, detailed, diagnostic) with the MSBuild
+                                                performance summary (time per project).
+    python Tools/build.py --project PATH        Build another project or solution (path relative to the repo, e.g.
+                                                Experiments/M0/M0.sln). Default: Artemis/Artemis.vcxproj.
     python Tools/build.py --wait ID             Keep waiting for a build that outlived --timeout (the id is printed).
     python Tools/build.py --last                Print the result of the last build again, without building.
     python Tools/build.py --warnings            Every warning (default: only the ones in files changed according to git, plus counts).
@@ -72,7 +76,8 @@ def Report(result, args):
     errors, warnings = Parse("errors.log"), Parse("warnings.log")
     state = "OK" if result.get("exitCode") == 0 else f"FAILED (exit {result.get('exitCode')})"
     files = len({e[0] for e in errors})
-    print(f"Build {result.get('configuration')}|{result.get('platform')} {result.get('target')}: {state} in {result.get('seconds')} s. "
+    project = f" {result['project']}" if result.get("project") else ""
+    print(f"Build{project} {result.get('configuration')}|{result.get('platform')} {result.get('target')}: {state} in {result.get('seconds')} s. "
           f"{len(errors)} errors in {files} files, {len(warnings)} warnings.")
     if result.get("error"):
         print(f"  watcher error: {result['error']}")
@@ -129,6 +134,8 @@ def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", default="Release|x64")
     parser.add_argument("--rebuild", action="store_true")
+    parser.add_argument("--detail", choices=["normal", "detailed", "diagnostic"], help="also write build/watch/detail.log with that verbosity")
+    parser.add_argument("--project", help="project or solution to build, relative to the repo (default Artemis/Artemis.vcxproj)")
     parser.add_argument("--wait")
     parser.add_argument("--last", action="store_true")
     parser.add_argument("--warnings", action="store_true")
@@ -149,6 +156,10 @@ def Main():
     configuration, _, platform = args.config.partition("|")
     id = time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6]
     request = {"id": id, "configuration": configuration, "platform": platform or "x64", "target": "Rebuild" if args.rebuild else "Build"}
+    if args.detail:
+        request["detail"] = args.detail
+    if args.project:
+        request["project"] = args.project.replace("\\", "/")
     with open(os.path.join(WATCH, "request.json"), "w", encoding="utf-8") as handle:
         json.dump(request, handle)
     return Report(Wait(id, args.timeout), args)

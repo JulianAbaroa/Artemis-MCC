@@ -3,6 +3,10 @@
 # Start it with Tools\build_watcher.bat and leave the window open while working with Claude.
 # Exchange folder build\watch\ (gitignored): request.json (id, configuration, platform, target) -> status.json -> errors.log,
 # warnings.log, result.json. Files are only overwritten, never deleted (the device shell cannot delete).
+# request.json may also have "project" (path relative to the repo, a .vcxproj or .sln; default Artemis\Artemis.vcxproj) and
+# "run" {exe, args}: after an ok build the exe runs from the repo root, its output goes to run.log and its exit code to result.json
+# (runExitCode, runSeconds). "detail" (normal, detailed or diagnostic) also writes detail.log with that verbosity and the
+# MSBuild performance summary (time per project and task).
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $watch = Join-Path $root 'build\watch'
@@ -15,7 +19,7 @@ if (-not $msbuild) { Write-Host '[build_watcher] ERROR: MSBuild not found.'; Rea
 # The .vcxproj with the same Solution* properties Visual Studio passes (the .sln cannot be built from the command line: MSB5004,
 # two projects named Artemis-MCC). Any difference (even '/' instead of '\' at the end of SolutionDir) changes the compiler command
 # lines and makes every build after a Visual Studio build, and the other way round, a full rebuild.
-$project = Join-Path $root 'Artemis\Artemis.vcxproj'
+$defaultProject = Join-Path $root 'Artemis\Artemis.vcxproj'
 $solutionDir = $root.TrimEnd('\') + '\'
 # A trailing '\' before the closing quote that PowerShell adds to paths with spaces would escape it: double it in that case.
 $solutionDirArgument = if ($solutionDir.Contains(' ')) { $solutionDir + '\' } else { $solutionDir }
@@ -24,6 +28,7 @@ $solutionProperties = @("/p:SolutionDir=$solutionDirArgument", "/p:SolutionPath=
 $request = Join-Path $watch 'request.json'
 $errors = Join-Path $watch 'errors.log'
 $warnings = Join-Path $watch 'warnings.log'
+$runLog = Join-Path $watch 'run.log'
 $scriptTime = (Get-Item $PSCommandPath).LastWriteTime
 
 function Write-Json($name, $object)
@@ -56,16 +61,47 @@ while ($true)
         $configuration = if ($req.configuration) { $req.configuration } else { 'Debug' }
         $platform = if ($req.platform) { $req.platform } else { 'x64' }
         $target = if ($req.target) { $req.target } else { 'Build' }
+        # The default project keeps the Solution* properties of Visual Studio. Another project is built as MSBuild gets it.
+        $project = $defaultProject
+        $buildProperties = $solutionProperties
+        if ($req.project)
+        {
+            $project = Join-Path $root (([string]$req.project) -replace '/', '\')
+            $buildProperties = @()
+            if (-not (Test-Path $project)) { throw "Project not found: $project" }
+        }
+        $detailArguments = @()
+        if ($req.detail -and ([string]$req.detail) -match '^(normal|detailed|diagnostic)$')
+        {
+            $detailArguments = @("/flp3:logfile=$(Join-Path $watch 'detail.log');verbosity=$($req.detail);performancesummary;summary;encoding=utf-8")
+        }
         Write-Json 'status.json' @{ id = $req.id; state = 'running'; started = (Get-Date).ToString('o') }
         Write-Host ""
         Write-Host "[build_watcher] $(Get-Date -Format HH:mm:ss) $target $configuration|$platform ($($req.id))"
         $watchTime = [Diagnostics.Stopwatch]::StartNew()
-        & $msbuild $project "/t:$target" "/p:Configuration=$configuration" "/p:Platform=$platform" @solutionProperties `
+        & $msbuild $project "/t:$target" "/p:Configuration=$configuration" "/p:Platform=$platform" @buildProperties @detailArguments `
             /m /nologo /v:minimal "/flp1:errorsonly;logfile=$errors;encoding=utf-8" "/flp2:warningsonly;logfile=$warnings;encoding=utf-8" 2>&1 |
             Tee-Object -FilePath (Join-Path $watch 'console.log')
         $code = $LASTEXITCODE
         $seconds = [math]::Round($watchTime.Elapsed.TotalSeconds, 1)
-        Write-Json 'result.json' @{ id = $req.id; exitCode = $code; seconds = $seconds; configuration = $configuration; platform = $platform; target = $target; msbuild = $msbuild }
+        $result = @{ id = $req.id; exitCode = $code; seconds = $seconds; configuration = $configuration; platform = $platform; target = $target; msbuild = $msbuild }
+        if ($req.project) { $result.project = [string]$req.project }
+        if ($code -eq 0 -and $req.run -and $req.run.exe)
+        {
+            $exe = Join-Path $root (([string]$req.run.exe) -replace '/', '\')
+            $runArguments = @($req.run.args | ForEach-Object { [string]$_ })
+            Write-Host "[build_watcher] running $exe"
+            $runTime = [Diagnostics.Stopwatch]::StartNew()
+            $previousPreference = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            Push-Location $root
+            try { & $exe @runArguments 2>&1 | ForEach-Object { [string]$_ } | Out-File -FilePath $runLog -Encoding utf8 }
+            finally { Pop-Location; $ErrorActionPreference = $previousPreference }
+            $result.runExitCode = $LASTEXITCODE
+            $result.runSeconds = [math]::Round($runTime.Elapsed.TotalSeconds, 1)
+            Write-Host "[build_watcher] run exit code $($result.runExitCode) in $($result.runSeconds) s"
+        }
+        Write-Json 'result.json' $result
         Write-Json 'status.json' @{ id = $req.id; state = 'done' }
         Write-Host "[build_watcher] exit code $code in $seconds s"
     }

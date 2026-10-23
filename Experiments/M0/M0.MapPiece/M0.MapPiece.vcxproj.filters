@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MapScnrStructure.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MapScnrOffset.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MapScnrObject.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Map.Tag.Type.Scnr.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Map.Tag.Type.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
