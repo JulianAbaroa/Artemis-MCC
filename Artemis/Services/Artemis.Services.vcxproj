@@ -37,6 +37,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ProjectReference Include="..\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="Logs\State\LogsStore.cpp" />
     <ClCompile Include="Logs\State\LogsStore.ixx" />
     <ClCompile Include="Logs\System\LogsSink.cpp" />
@@ -54,11 +59,6 @@
     <ClCompile Include="Telemetry\State\TelemetryStore.ixx" />
     <ClCompile Include="Telemetry\System\TelemetryService.cpp" />
     <ClCompile Include="Telemetry\System\TelemetryService.ixx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Common\Artemis.Common.vcxproj">
-      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

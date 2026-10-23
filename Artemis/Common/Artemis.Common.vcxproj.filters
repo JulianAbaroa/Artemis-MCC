@@ -1,27 +1,136 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{2d02ffda-86f5-4d88-9319-c22d29e6088f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Type">
+      <UniqueIdentifier>{dbeef0c8-db67-41c2-b1b0-dedacfa9949a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry">
+      <UniqueIdentifier>{af0296e7-3f99-4ad9-85ce-99cfbabfab28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\System">
+      <UniqueIdentifier>{e6347d3e-4d36-4312-8584-107c53ecc877}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Log">
+      <UniqueIdentifier>{d206563b-d89e-4f19-b376-55356f31ce00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Log\Type">
+      <UniqueIdentifier>{70c01ef8-307d-4000-bcef-aaf783745255}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Log\System">
+      <UniqueIdentifier>{cfd20277-dae9-496b-94d6-f3adcb0edf8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{21315b89-b04a-4d6d-8fd4-4a43c51362a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math\Type">
+      <UniqueIdentifier>{2f6d2834-a71f-48bd-bcfb-d2b67ffc5f97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math\System">
+      <UniqueIdentifier>{ecf509a0-5db5-4ab9-bd23-d92e0f016ada}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflect">
+      <UniqueIdentifier>{2d974886-9afd-4960-842d-2d8af74364be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflect\Type">
+      <UniqueIdentifier>{b407f989-0544-486c-9688-11118afd3c1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflect\System">
+      <UniqueIdentifier>{26bf78ec-1075-40f5-bf13-e1ef37ddf378}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="State">
+      <UniqueIdentifier>{53a16d27-5090-498b-9cab-2cc88ba7e767}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="State\Type">
+      <UniqueIdentifier>{8c636d9f-8387-4266-b69b-c707f4f527c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Team">
+      <UniqueIdentifier>{e0b45423-250b-4178-88ca-eeef2ef70d33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Team\Type">
+      <UniqueIdentifier>{8a55dfc8-48cc-4cca-8113-0a0edb24bd9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Text">
+      <UniqueIdentifier>{ca4176ed-5147-4e49-82e8-262f5a845a12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Text\System">
+      <UniqueIdentifier>{d487c541-c3b8-4393-a105-f00f71fb823f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Time">
+      <UniqueIdentifier>{208da187-7da8-4195-b693-d5c30318708d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Time\System">
+      <UniqueIdentifier>{187cc125-d0db-413c-9f92-ea73122e8972}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZoneShape">
+      <UniqueIdentifier>{ecc98999-8850-49ba-ac0b-e975783aab80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ZoneShape\Type">
+      <UniqueIdentifier>{6c9010b5-5602-4dfd-8d33-e7f40e7b476f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Engine\Type\Common.Engine.Type.ixx" />
-    <ClCompile Include="Geometry\System\Common.Geometry.System.cpp" />
-    <ClCompile Include="Geometry\System\Common.Geometry.System.ixx" />
-    <ClCompile Include="Log\System\Common.Log.System.cpp" />
-    <ClCompile Include="Log\System\Common.Log.System.ixx" />
-    <ClCompile Include="Log\Type\Common.Log.Type.ixx" />
-    <ClCompile Include="Math\System\Common.Math.System.cpp" />
-    <ClCompile Include="Math\System\Common.Math.System.ixx" />
-    <ClCompile Include="Math\Type\Common.Math.Type.ixx" />
-    <ClCompile Include="Reflect\Common.Reflect.Type.ixx" />
-    <ClCompile Include="Reflect\System\Common.Reflect.System.ixx" />
-    <ClCompile Include="Reflect\Type\Common.Reflect.Type.Core.ixx" />
-    <ClCompile Include="Reflect\Type\Common.Reflect.Type.Math.ixx" />
-    <ClCompile Include="State\Type\Common.State.Type.ixx" />
-    <ClCompile Include="Team\Type\Common.Team.Type.ixx" />
-    <ClCompile Include="Text\System\Common.Text.System.cpp" />
-    <ClCompile Include="Text\System\Common.Text.System.ixx" />
-    <ClCompile Include="Time\System\Common.Time.System.cpp" />
-    <ClCompile Include="Time\System\Common.Time.System.ixx" />
-    <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx" />
+    <ClCompile Include="Engine\Type\Common.Engine.Type.ixx">
+      <Filter>Engine\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry\System\Common.Geometry.System.cpp">
+      <Filter>Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry\System\Common.Geometry.System.ixx">
+      <Filter>Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Log\Type\Common.Log.Type.ixx">
+      <Filter>Log\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Log\System\Common.Log.System.cpp">
+      <Filter>Log\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Log\System\Common.Log.System.ixx">
+      <Filter>Log\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Type\Common.Math.Type.ixx">
+      <Filter>Math\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\System\Common.Math.System.cpp">
+      <Filter>Math\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\System\Common.Math.System.ixx">
+      <Filter>Math\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Reflect\Common.Reflect.Type.ixx">
+      <Filter>Reflect</Filter>
+    </ClCompile>
+    <ClCompile Include="Reflect\Type\Common.Reflect.Type.Core.ixx">
+      <Filter>Reflect\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Reflect\Type\Common.Reflect.Type.Math.ixx">
+      <Filter>Reflect\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Reflect\System\Common.Reflect.System.ixx">
+      <Filter>Reflect\System</Filter>
+    </ClCompile>
+    <ClCompile Include="State\Type\Common.State.Type.ixx">
+      <Filter>State\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Team\Type\Common.Team.Type.ixx">
+      <Filter>Team\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Text\System\Common.Text.System.cpp">
+      <Filter>Text\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Text\System\Common.Text.System.ixx">
+      <Filter>Text\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Time\System\Common.Time.System.cpp">
+      <Filter>Time\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Time\System\Common.Time.System.ixx">
+      <Filter>Time\System</Filter>
+    </ClCompile>
+    <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx">
+      <Filter>ZoneShape\Type</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
