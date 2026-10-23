@@ -19,7 +19,7 @@ namespace Map::Builder::System
         std::ifstream file = m_FileLocatorService.OpenMapFile(filePath);
         if (!file)
         {
-            m_LogsService.Message("[MapBuilderService] ERROR: Could not open map file.");
+            m_Log.Message("[MapBuilderService] ERROR: Could not open map file.");
             return;
         }
 
@@ -27,7 +27,7 @@ namespace Map::Builder::System
 
         this->LoadTags(file, reader);
 
-        m_LogsService.Message("[MapBuilderService] INFO: Load completed.");
+        m_Log.Message("[MapBuilderService] INFO: Load completed.");
     }
 
     auto MapBuilderService::LoadTags(std::ifstream& file, TagGroupService& reader) -> void
@@ -75,7 +75,7 @@ namespace Map::Builder::System
 
         m_TagCatalog.Freeze();
 
-        m_LogsService.Message("[MapBuilderService] INFO: Raw built."
+        m_Log.Message("[MapBuilderService] INFO: Raw built."
             " Bipd loaded: {} | Bloc loaded: {} | Coll loaded: {} |"
             " Ctrl loaded: {} | Eqip loaded: {} | Hlmt loaded: {} |"
             " Jpt! loaded: {} | Lbsp loaded: {} | Mach loaded: {} |"
@@ -93,6 +93,6 @@ namespace Map::Builder::System
     {
         m_TagCatalog.Cleanup();
 
-        m_LogsService.Message("[MapBuilderService] INFO: Cleanup completed.");
+        m_Log.Message("[MapBuilderService] INFO: Cleanup completed.");
     }
 }

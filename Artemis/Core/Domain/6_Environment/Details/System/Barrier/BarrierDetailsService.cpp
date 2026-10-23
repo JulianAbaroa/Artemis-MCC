@@ -57,6 +57,6 @@ namespace Environment::Details::System
     {
         m_BarrierDetailsStore.Cleanup();
 
-        m_LogsService.Message("[BarrierDetailsService] INFO: Cleanup completed.");
+        m_Log.Message("[BarrierDetailsService] INFO: Cleanup completed.");
     }
 }

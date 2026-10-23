@@ -15,7 +15,7 @@ namespace Core
 
     auto Artemis::Start() -> bool
     {
-        auto& logs = m_Service.m_LogsService;
+        auto& logs = m_Service.m_Log;
 
         char buffer[MAX_PATH]{};
         GetModuleFileNameA(m_Module, buffer, MAX_PATH);

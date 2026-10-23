@@ -48,7 +48,7 @@ namespace Platform::Input::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedInputUpdate),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[InputUpdateDetour]", m_LogsService))
+            "[InputUpdateDetour]", m_Log))
         {
             return false;
         }
@@ -64,7 +64,7 @@ namespace Platform::Input::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[InputUpdateDetour]", m_LogsService);
+            "[InputUpdateDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

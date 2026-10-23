@@ -100,7 +100,7 @@ namespace Platform::Lifecycle::Hook
 
         if (lookup == 0)
         {
-            m_LogsService.Message("[LifecycleUpdateDetour] ERROR: Failed to find the lookup of the custom games lobby screen.");
+            m_Log.Message("[LifecycleUpdateDetour] ERROR: Failed to find the lookup of the custom games lobby screen.");
             return false;
         }
 
@@ -115,7 +115,7 @@ namespace Platform::Lifecycle::Hook
 
         if (countdown == 0)
         {
-            m_LogsService.Message("[LifecycleUpdateDetour] ERROR: Failed to find the countdown of the lobby.");
+            m_Log.Message("[LifecycleUpdateDetour] ERROR: Failed to find the countdown of the lobby.");
             return false;
         }
 
@@ -128,7 +128,7 @@ namespace Platform::Lifecycle::Hook
 
         if (match == 0)
         {
-            m_LogsService.Message("[LifecycleUpdateDetour] ERROR: Failed to find the lifecycle update of MCC.");
+            m_Log.Message("[LifecycleUpdateDetour] ERROR: Failed to find the lifecycle update of MCC.");
             return false;
         }
 
@@ -136,7 +136,7 @@ namespace Platform::Lifecycle::Hook
 
         if (variants == 0)
         {
-            m_LogsService.Message("[LifecycleUpdateDetour] ERROR: Failed to find the variants check of the lobby.");
+            m_Log.Message("[LifecycleUpdateDetour] ERROR: Failed to find the variants check of the lobby.");
             return false;
         }
 
@@ -145,7 +145,7 @@ namespace Platform::Lifecycle::Hook
         if (!Platform::Hook::System::InstallDetour(reinterpret_cast<void*>(variants),
             reinterpret_cast<void*>(&HookedVariantsCompatible),
             reinterpret_cast<void**>(&s_OriginalVariantsCompatible),
-            "[LifecycleUpdateDetour]", m_LogsService))
+            "[LifecycleUpdateDetour]", m_Log))
         {
             return false;
         }
@@ -156,12 +156,12 @@ namespace Platform::Lifecycle::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLifecycleUpdate),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[LifecycleUpdateDetour]", m_LogsService))
+            "[LifecycleUpdateDetour]", m_Log))
         {
             // Without the update nothing presses START, so the variants hook goes too.
             Platform::Hook::System::DisableDetour(m_VariantsAddress.load());
             Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-            Platform::Hook::System::RemoveDetour(m_VariantsAddress.load(), "[LifecycleUpdateDetour]", m_LogsService);
+            Platform::Hook::System::RemoveDetour(m_VariantsAddress.load(), "[LifecycleUpdateDetour]", m_Log);
             return false;
         }
 
@@ -177,9 +177,9 @@ namespace Platform::Lifecycle::Hook
         Platform::Hook::System::DisableDetour(m_VariantsAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[LifecycleUpdateDetour]", m_LogsService);
+            "[LifecycleUpdateDetour]", m_Log);
         Platform::Hook::System::RemoveDetour(m_VariantsAddress.load(),
-            "[LifecycleUpdateDetour]", m_LogsService);
+            "[LifecycleUpdateDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;
@@ -230,7 +230,7 @@ namespace Platform::Lifecycle::Hook
             m_IsLaunchWaiting = false;
             m_MatchConfigStore.TakeLaunchRequest();
             m_MatchConfigStore.SetLastLaunch("Dropped: MCC did not reach the custom games lobby in time.");
-            m_LogsService.Message("[LifecycleUpdateDetour] WARNING: MCC did not reach the custom games lobby in {} s, the launch is"
+            m_Log.Message("[LifecycleUpdateDetour] WARNING: MCC did not reach the custom games lobby in {} s, the launch is"
                 " dropped.", k_LaunchWaitTimeout.count());
             return;
         }
@@ -245,7 +245,7 @@ namespace Platform::Lifecycle::Hook
 
         // START may still refuse with a dialog of its own (too many players): the log only says it was pressed.
         m_MatchConfigStore.SetLastLaunch("START pressed: the lobby should count down and launch.");
-        m_LogsService.Message("[LifecycleUpdateDetour] INFO: START of the lobby pressed.");
+        m_Log.Message("[LifecycleUpdateDetour] INFO: START of the lobby pressed.");
     }
 
     auto LifecycleUpdateDetour::Leave() -> void
@@ -256,7 +256,7 @@ namespace Platform::Lifecycle::Hook
         if (engine == nullptr)
         {
             m_MatchCycleStore.SetLastLeave("Dropped: no live engine.");
-            m_LogsService.Message("[LifecycleUpdateDetour] WARNING: No live engine, the Leave is dropped.");
+            m_Log.Message("[LifecycleUpdateDetour] WARNING: No live engine, the Leave is dropped.");
             return;
         }
 
@@ -266,6 +266,6 @@ namespace Platform::Lifecycle::Hook
         reinterpret_cast<EngineUpdateStateFunction>(vtable[k_EngineUpdateStateIndex])(engine, k_EngineLeaveState, payload.data());
 
         m_MatchCycleStore.SetLastLeave("Leave sent to the engine.");
-        m_LogsService.Message("[LifecycleUpdateDetour] INFO: Leave sent to the engine.");
+        m_Log.Message("[LifecycleUpdateDetour] INFO: Leave sent to the engine.");
     }
 }

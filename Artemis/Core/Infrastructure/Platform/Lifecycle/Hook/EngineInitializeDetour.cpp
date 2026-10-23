@@ -31,7 +31,7 @@ namespace Platform::Lifecycle::Hook
 
         s_Instance->m_LifecycleStore.SetStatus(Status::Initialized);
 
-        s_Instance->m_LogsService.Message("[EngineInitializeDetour] INFO:"
+        s_Instance->m_Log.Message("[EngineInitializeDetour] INFO:"
             " Game engine initialized.");
     }
 
@@ -47,7 +47,7 @@ namespace Platform::Lifecycle::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedEngineInitialize),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[EngineInitializeDetour]", m_LogsService))
+            "[EngineInitializeDetour]", m_Log))
         {
             return false;
         }
@@ -63,11 +63,11 @@ namespace Platform::Lifecycle::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
-            m_LogsService.Message("[EngineInitializeDetour] WARNING:"
+            m_Log.Message("[EngineInitializeDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[EngineInitializeDetour]", m_LogsService);
+            "[EngineInitializeDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
     }

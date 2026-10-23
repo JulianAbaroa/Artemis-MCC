@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Map.System:RaycastPass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.System;
 import Egocentric.Raycast.Type;
 import Export.Tick.Type;
@@ -21,14 +21,14 @@ export namespace Viewer::Map::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
         using Raycasts = Egocentric::Raycast::Type::Raycasts;
 
     public:
-        explicit RaycastPass(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit RaycastPass(Log& log) : m_Log(log) {}
         ~RaycastPass() = default;
 
         RaycastPass(const RaycastPass&) = delete;
@@ -43,7 +43,7 @@ export namespace Viewer::Map::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         ComPtr<ID3D11Buffer> m_VertexBuffer{};
         UINT m_Capacity{ 0 };

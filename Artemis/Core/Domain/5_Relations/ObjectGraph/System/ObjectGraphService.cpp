@@ -50,6 +50,6 @@ namespace Relations::ObjectGraph::System
     {
         m_ObjectGraphStore.Cleanup();
 
-        m_LogsService.Message("[ObjectGraphService] INFO: Cleanup completed.");
+        m_Log.Message("[ObjectGraphService] INFO: Cleanup completed.");
     }
 }

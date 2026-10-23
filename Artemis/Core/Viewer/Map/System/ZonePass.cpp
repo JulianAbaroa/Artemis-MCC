@@ -69,13 +69,13 @@ namespace Viewer::Map::System
         const UINT needed = static_cast<UINT>(vertices.size());
 
         if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
-            k_InitialCapacity, m_VertexBuffer, m_Capacity, "[ZonePass]", m_LogsService))
+            k_InitialCapacity, m_VertexBuffer, m_Capacity, "[ZonePass]", m_Log))
         {
             return;
         }
 
         if (!Platform::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
-            vertices, "[ZonePass]", m_LogsService))
+            vertices, "[ZonePass]", m_Log))
         {
             return;
         }

@@ -1,6 +1,6 @@
 export module UI.TickTrace.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Settings.State;
 import Map.Reader.State;
 import Datum.Object.State;
@@ -17,7 +17,7 @@ export namespace UI::TickTrace::System
     class TickTraceUIService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
         using FileStore = Map::Reader::State::FileStore;
         using DatumStore = Datum::Object::State::DatumStore;
@@ -27,9 +27,9 @@ export namespace UI::TickTrace::System
         using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
 
     public:
-        TickTraceUIService(LogsService& logsService, SettingsStore& settingsStore, FileStore& fileStore, DatumStore& datumStore,
+        TickTraceUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore, DatumStore& datumStore,
             ObjectTableStore& objectStore, TickTraceUIStore& tickTraceUIStore) :
-            m_LogsService(logsService), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_DatumStore(datumStore),
+            m_Log(log), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_DatumStore(datumStore),
             m_ObjectStore(objectStore), m_TickTraceUIStore(tickTraceUIStore) {}
         ~TickTraceUIService() = default;
 
@@ -56,7 +56,7 @@ export namespace UI::TickTrace::System
         auto Draw() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         FileStore& m_FileStore;
         DatumStore& m_DatumStore;

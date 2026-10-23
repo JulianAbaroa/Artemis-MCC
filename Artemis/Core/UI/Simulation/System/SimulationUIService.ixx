@@ -1,6 +1,6 @@
 export module UI.Simulation.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Telemetry.State;
 import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
@@ -37,7 +37,7 @@ export namespace UI::Simulation::System
     class SimulationUIService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
@@ -64,11 +64,11 @@ export namespace UI::Simulation::System
         using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
 
     public:
-        SimulationUIService(LogsService& logsService, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
+        SimulationUIService(Log& log, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
             MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
             VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore,
             BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
-            m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
+            m_Log(log), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
             m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
             m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
             m_BotStore(botStore), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
@@ -81,7 +81,7 @@ export namespace UI::Simulation::System
         auto Draw() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TelemetryStore& m_TelemetryStore;
         LifecycleStore& m_LifecycleStore;
         MatchConfigStore& m_MatchConfigStore;

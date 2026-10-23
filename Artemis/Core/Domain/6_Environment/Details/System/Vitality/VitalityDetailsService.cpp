@@ -68,6 +68,6 @@ namespace Environment::Details::System
     {
         m_VitalityDetailsStore.Cleanup();
 
-        m_LogsService.Message("[VitalityDetailsService] INFO: Cleanup completed.");
+        m_Log.Message("[VitalityDetailsService] INFO: Cleanup completed.");
     }
 }

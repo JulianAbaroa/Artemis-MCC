@@ -1,6 +1,6 @@
 export module Platform.Host.Hook:LocalUserGetPlayer;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Host.Type;
 import Platform.Host.State;
 import Platform.Host.System;
@@ -13,7 +13,7 @@ export namespace Platform::Host::Hook
     class LocalUserGetPlayerDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using LocalUserGetPlayerFunction = Platform::Host::Type::LocalUserGetPlayerFunction;
 
@@ -22,8 +22,8 @@ export namespace Platform::Host::Hook
         using HostService = Platform::Host::System::HostService;
 
     public:
-        LocalUserGetPlayerDetour(LogsService& logsService, HostService& hostService, LocalUserStore& localUserStore) :
-            m_LogsService(logsService), m_HostService(hostService), m_LocalUserStore(localUserStore) {}
+        LocalUserGetPlayerDetour(Log& log, HostService& hostService, LocalUserStore& localUserStore) :
+            m_Log(log), m_HostService(hostService), m_LocalUserStore(localUserStore) {}
         ~LocalUserGetPlayerDetour() = default;
 
         // Finds the target in the game manager vtable and installs the hook. Does nothing if already installed.
@@ -34,7 +34,7 @@ export namespace Platform::Host::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         HostService& m_HostService;
         LocalUserStore& m_LocalUserStore;
 

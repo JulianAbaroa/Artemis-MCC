@@ -27,13 +27,13 @@ namespace Tables::Interaction::Hook
             tableBase = this->GetInteractionTable();
             if (!tableBase)
             {
-                m_LogsService.Message("[InteractionTableLocator] ERROR:"
+                m_Log.Message("[InteractionTableLocator] ERROR:"
                     " Failed to find the interaction tables.");
 
                 return;
             }
 
-            m_LogsService.Message("[InteractionTableLocator] INFO:"
+            m_Log.Message("[InteractionTableLocator] INFO:"
                 " Interaction tables found at {:016X}.", tableBase);
 
             m_InteractionStore.SetBase(tableBase);

@@ -22,7 +22,13 @@ import argparse, collections, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE = os.path.join(ROOT, "Tools", "check_rules_baseline.txt")
-SOURCE_ROOT = "Artemis/Core/"
+# Folders with C++ code of the DLL and its libraries. Each one has its own Visual Studio project (P1): Core is part of Artemis.vcxproj.
+SOURCE_ROOTS = ("Artemis/Core/", "Artemis/Common/", "Artemis/Services/")
+PROJECT_OF = {
+    "Artemis/Core/": "Artemis/Artemis",
+    "Artemis/Common/": "Artemis/Common/Artemis.Common",
+    "Artemis/Services/": "Artemis/Services/Artemis.Services",
+}
 
 CHECKS = {
     # Files (rules 6)
@@ -101,7 +107,7 @@ IDENT = r"[A-Za-z_]\w*"
 # ---------------------------------------------------------------------------------------------------------------------------------
 
 def ListSources():
-    out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", SOURCE_ROOT],
+    out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", *SOURCE_ROOTS],
                          cwd=ROOT, capture_output=True, text=True, check=True).stdout
     # A file moved or deleted since the last commit is still in the index: only the ones on disk count.
     return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")) and os.path.isfile(os.path.join(ROOT, p)))
@@ -797,10 +803,18 @@ def CheckProjectMore(sources, findings):
     def Read(path):
         full = os.path.join(ROOT, path)
         return open(full, encoding="utf-8-sig", errors="replace").read() if os.path.exists(full) else None
-    vcxproj, filters, pyproj = Read("Artemis/Artemis.vcxproj"), Read("Artemis/Artemis.vcxproj.filters"), Read("Artemis-MCC.pyproj")
+    pyproj = Read("Artemis-MCC.pyproj")
+    projects = {}
     for source in sources:
-        name = source.Path[len("Artemis/"):].replace("/", "\\")
-        for text, label in ((vcxproj, "Artemis.vcxproj"), (filters, "Artemis.vcxproj.filters")):
+        root = next((r for r in PROJECT_OF if source.Path.startswith(r)), None)
+        if root is None:
+            continue
+        project = PROJECT_OF[root]
+        if project not in projects:
+            projects[project] = (Read(project + ".vcxproj"), Read(project + ".vcxproj.filters"))
+        # A project lists its files relative to its own folder.
+        name = source.Path[len(os.path.dirname(project)) + 1:].replace("/", "\\")
+        for text, label in zip(projects[project], (os.path.basename(project) + ".vcxproj", os.path.basename(project) + ".vcxproj.filters")):
             if text is not None and f'"{name}"' not in text:
                 findings.append((source.Path, 1, "P1", f"missing in {label}", ""))
     if pyproj is not None:

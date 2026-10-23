@@ -1,6 +1,6 @@
 export module Resolved.Vitality.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Resolved.World.Type;
@@ -21,14 +21,14 @@ export namespace Resolved::Vitality::System
         using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
         using Section = Resolved::Vitality::Type::Vitality::Section;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using WorldStore = Resolved::World::State::WorldStore;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
 
     public:
-        VitalityBuilder(LogsService& logsService, DefinitionsStore& definitionsStore,
-            WorldStore& worldStore, VitalityStore& vitalityStore) : m_LogsService(logsService),
+        VitalityBuilder(Log& log, DefinitionsStore& definitionsStore,
+            WorldStore& worldStore, VitalityStore& vitalityStore) : m_Log(log),
             m_DefinitionsStore(definitionsStore), m_WorldStore(worldStore),
             m_VitalityStore(vitalityStore) {}
         ~VitalityBuilder() = default;
@@ -41,7 +41,7 @@ export namespace Resolved::Vitality::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         DefinitionsStore& m_DefinitionsStore;
         WorldStore& m_WorldStore;
         VitalityStore& m_VitalityStore;

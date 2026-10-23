@@ -1,8 +1,8 @@
 export module UI.Settings.System;
 
+import Common.Log.System;
 import Service.Settings.State;
 import Service.Settings.System;
-import Service.Logs.System;
 import Service.Preferences.System;
 import Gui.Style.Type;
 import Viewer.Options.Type;
@@ -22,9 +22,9 @@ export namespace UI::Settings::System
     class SettingsUIService
     {
     private:
+        using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
         using SettingsService = Service::Settings::System::SettingsService;
-        using LogsService = Service::Logs::System::LogsService;
         using PreferencesService = Service::Preferences::System::PreferencesService;
 
         using Group = Viewer::Options::Type::Group;
@@ -35,11 +35,11 @@ export namespace UI::Settings::System
 
     public:
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,
-            LogsService& logsService, HotkeyUIStore& hotkeyStore,
+            Log& log, HotkeyUIStore& hotkeyStore,
             OptionsStore& optionsStore, PreferencesService& preferencesService,
             CameraStore& cameraStore) :
             m_SettingsStore(settingsStore), m_SettingsService(settingsService),
-            m_LogsService(logsService), m_HotkeyStore(hotkeyStore),
+            m_Log(log), m_HotkeyStore(hotkeyStore),
             m_OptionsStore(optionsStore), m_PreferencesService(preferencesService),
             m_CameraStore(cameraStore) {}
         ~SettingsUIService() = default;
@@ -53,7 +53,7 @@ export namespace UI::Settings::System
     private:
         SettingsStore& m_SettingsStore;
         SettingsService& m_SettingsService;
-        LogsService& m_LogsService;
+        Log& m_Log;
         HotkeyUIStore& m_HotkeyStore;
         OptionsStore& m_OptionsStore;
         PreferencesService& m_PreferencesService;

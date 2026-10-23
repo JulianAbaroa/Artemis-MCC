@@ -43,17 +43,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <Import Project="Artemis.Toolset.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
@@ -68,9 +62,11 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Artemis.Common.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Artemis.Common.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -130,50 +126,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);LIBRARIAN_EXPORTS;_USRDLL</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/External/zlib;</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp23</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableUAC>false</EnableUAC>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;LIBRARIAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);LIBRARIAN_EXPORTS;_USRDLL</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/External/imgui;$(ProjectDir)/External/minhook;$(ProjectDir)/External/stb;$(ProjectDir)/External/zlib;$(ProjectDir)/External/stb;</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp23</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
-      <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableUAC>false</EnableUAC>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Common\Time\System\Common.Time.System.ixx" />
-    <ClCompile Include="Core\Common\Time\System\Common.Time.System.cpp" />
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.cpp" />
@@ -190,28 +153,13 @@
     <ClCompile Include="Core\UI\Bench\Type\UI.Bench.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx" />
-    <ClCompile Include="Core\Common\Text\System\Common.Text.System.cpp" />
-    <ClCompile Include="Core\Common\Text\System\Common.Text.System.ixx" />
-    <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.cpp" />
-    <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.ixx" />
-    <ClCompile Include="Core\Common\Math\System\Common.Math.System.cpp" />
-    <ClCompile Include="Core\Common\Math\System\Common.Math.System.ixx" />
-    <ClCompile Include="Core\Common\Math\Type\Common.Math.Type.ixx" />
-    <ClCompile Include="Core\Common\Engine\Type\Common.Engine.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx" />
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx" />
-    <ClCompile Include="Core\Common\Reflect\Common.Reflect.Type.ixx" />
-    <ClCompile Include="Core\Common\Reflect\System\Common.Reflect.System.ixx" />
-    <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx" />
-    <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx" />
-    <ClCompile Include="Core\Common\State\Type\Common.State.Type.ixx" />
     <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx" />
     <ClCompile Include="Core\Common\Semantic\Common.Semantic.Type.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx" />
-    <ClCompile Include="Core\Common\Team\Type\Common.Team.Type.ixx" />
-    <ClCompile Include="Core\Common\ZoneShape\Type\Common.ZoneShape.Type.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderConstant.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx" />
     <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.Type.Bipd.ixx" />
@@ -639,23 +587,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Logs\Type\Service.Logs.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Service.Layer.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.ixx" />
     <ClCompile Include="Core\Runtime\AI\AIThread.cpp" />
     <ClCompile Include="Core\Runtime\Input\InputThread.cpp" />
     <ClCompile Include="Core\Runtime\Main\MainThread.ixx">
@@ -1115,6 +1046,14 @@
     <Image Include="Resources\Icons\gear-solid.png" />
     <Image Include="Resources\Icons\map-solid.png" />
     <Image Include="Resources\Icons\person-rifle-solid.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Services\Artemis.Services.vcxproj">
+      <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

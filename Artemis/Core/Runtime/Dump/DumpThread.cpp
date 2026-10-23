@@ -17,7 +17,7 @@ namespace Runtime::Thread
     {
         auto& lifecycle{ m_Platform.m_LifecycleStore };
 
-        m_Service.m_LogsService.Message("[DumpThread] INFO: Started.");
+        m_Service.m_Log.Message("[DumpThread] INFO: Started.");
 
         while (lifecycle.IsRunning())
         {
@@ -28,11 +28,11 @@ namespace Runtime::Thread
             }
             catch (const std::exception& exception)
             {
-                m_Service.m_LogsService.Message("[DumpThread] ERROR: Dump update failed ({}).", exception.what());
+                m_Service.m_Log.Message("[DumpThread] ERROR: Dump update failed ({}).", exception.what());
             }
         }
 
         m_TickDumpUIService.Shutdown();
-        m_Service.m_LogsService.Message("[DumpThread] INFO: Stopped.");
+        m_Service.m_Log.Message("[DumpThread] INFO: Stopped.");
     }
 }

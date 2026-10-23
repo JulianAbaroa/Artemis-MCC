@@ -10,7 +10,7 @@ import std;
 
 namespace
 {
-    using Service::Logs::System::LogsService;
+    using Common::Log::System::Log;
 
     using Platform::Render::Type::Vertex;
 }
@@ -19,7 +19,7 @@ namespace Platform::Render::System
 {
     auto CreateDynamicVertexBuffer(ID3D11Device* device, UINT vertexCapacity,
         Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, UINT& capacity, const char* tag,
-        LogsService& logsService) -> bool
+        Log& log) -> bool
     {
         buffer.Reset();
         capacity = 0;
@@ -32,7 +32,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateBuffer(&desc, nullptr, buffer.GetAddressOf())))
         {
-            logsService.Message("{} ERROR: Failed to create the vertex buffer.", tag);
+            log.Message("{} ERROR: Failed to create the vertex buffer.", tag);
             return false;
         }
 
@@ -42,24 +42,24 @@ namespace Platform::Render::System
 
     auto GrowDynamicVertexBuffer(ID3D11Device* device, UINT needed,
         UINT initialCapacity, Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, UINT& capacity,
-        const char* tag, LogsService& logsService) -> bool
+        const char* tag, Log& log) -> bool
     {
         if (needed <= capacity) return true;
 
         UINT newCapacity = capacity ? capacity : initialCapacity;
         while (newCapacity < needed) newCapacity *= 2;
 
-        return CreateDynamicVertexBuffer(device, newCapacity, buffer, capacity, tag, logsService);
+        return CreateDynamicVertexBuffer(device, newCapacity, buffer, capacity, tag, log);
     }
 
     auto UploadDynamicVertices(ID3D11DeviceContext* context, ID3D11Buffer* buffer,
         std::span<const Vertex> vertices, const char* tag,
-        LogsService& logsService) -> bool
+        Log& log) -> bool
     {
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (FAILED(context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
         {
-            logsService.Message("{} ERROR: Failed to map the instance buffer.", tag);
+            log.Message("{} ERROR: Failed to map the instance buffer.", tag);
             return false;
         }
 
@@ -82,7 +82,7 @@ namespace Platform::Render::System
 
     auto InstanceBuffer::Update(ID3D11Device* device, ID3D11DeviceContext* context,
         const void* data, UINT count, UINT stride, UINT initialCapacity,
-        const char* tag, LogsService& logsService) -> bool
+        const char* tag, Log& log) -> bool
     {
         if (!device || !context || !data || count == 0) return false;
 
@@ -101,7 +101,7 @@ namespace Platform::Render::System
             if (FAILED(device->CreateBuffer(&desc, nullptr, m_Buffer.ReleaseAndGetAddressOf())))
             {
                 m_Buffer.Reset();
-                logsService.Message("{} ERROR: Failed to create the instance buffer.", tag);
+                log.Message("{} ERROR: Failed to create the instance buffer.", tag);
                 return false;
             }
 
@@ -111,7 +111,7 @@ namespace Platform::Render::System
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (FAILED(context->Map(m_Buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
         {
-            logsService.Message("{} ERROR: Failed to map the instance buffer.", tag);
+            log.Message("{} ERROR: Failed to map the instance buffer.", tag);
             return false;
         }
 

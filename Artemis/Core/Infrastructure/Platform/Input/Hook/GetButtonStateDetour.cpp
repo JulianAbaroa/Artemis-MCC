@@ -42,7 +42,7 @@ namespace Platform::Input::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedGetButtonState),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[GetButtonStateDetour]", m_LogsService))
+            "[GetButtonStateDetour]", m_Log))
         {
             return;
         }
@@ -57,11 +57,11 @@ namespace Platform::Input::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
-            m_LogsService.Message("[GetButtonStateDetour] WARNING:"
+            m_Log.Message("[GetButtonStateDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[GetButtonStateDetour]", m_LogsService);
+            "[GetButtonStateDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

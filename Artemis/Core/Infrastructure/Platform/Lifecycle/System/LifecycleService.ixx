@@ -1,6 +1,6 @@
 export module Platform.Lifecycle.System:Lifecycle;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.State;
 import std;
@@ -11,15 +11,15 @@ export namespace Platform::Lifecycle::System
     class LifecycleService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using LifecycleCallback = Platform::Lifecycle::Type::LifecycleCallback;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
 
     public:
-        LifecycleService(LogsService& logsService, LifecycleStore& lifecycleStore) :
-            m_LogsService(logsService), m_LifecycleStore(lifecycleStore) {}
+        LifecycleService(Log& log, LifecycleStore& lifecycleStore) :
+            m_Log(log), m_LifecycleStore(lifecycleStore) {}
         ~LifecycleService() = default;
 
         // Stops Artemis and wakes every thread waiting for shutdown.
@@ -51,7 +51,7 @@ export namespace Platform::Lifecycle::System
         auto RaiseShutdown() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         LifecycleStore& m_LifecycleStore;
 
         std::vector<LifecycleCallback> m_OnEngineInitialized{};

@@ -2,7 +2,7 @@ export module Map.Reader.System:TagResolver;
 
 import :Formula;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.Type;
 import Map.Reader.State;
 import std;
@@ -18,15 +18,15 @@ export namespace Map::Reader::System
         using TagReference = Map::Reader::Type::Structure::Tag::TagReference;
         using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using FileStore = Map::Reader::State::FileStore;
         using TagIndexStore = Map::Reader::State::TagIndexStore;
         using FormulaService = Map::Reader::System::FormulaService;
 
     public:
-        TagResolverService(LogsService& logsService, FileStore& fileStore,
+        TagResolverService(Log& log, FileStore& fileStore,
             TagIndexStore& tagIndexStore, FormulaService& formulaService) :
-            m_LogsService(logsService), m_FileStore(fileStore),
+            m_Log(log), m_FileStore(fileStore),
             m_TagIndexStore(tagIndexStore), m_FormulaService(formulaService) {}
         ~TagResolverService() = default;
 
@@ -67,7 +67,7 @@ export namespace Map::Reader::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         FileStore& m_FileStore;
         TagIndexStore& m_TagIndexStore;
         FormulaService& m_FormulaService;

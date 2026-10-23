@@ -1,6 +1,6 @@
 export module Platform.Lifecycle.Hook:EngineInitialize;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.State;
@@ -13,16 +13,16 @@ export namespace Platform::Lifecycle::Hook
     class EngineInitializeDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using AOBService = Platform::Memory::System::AOBService;
         using EngineInitializeFunction = Platform::Lifecycle::Type::EngineInitializeFunction;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;
 
     public:
-        EngineInitializeDetour(LogsService& logsService, AOBService& aobService,
+        EngineInitializeDetour(Log& log, AOBService& aobService,
             LifecycleStore& lifecycleStore, LifecycleService& lifecycleService) :
-            m_LogsService(logsService), m_AOBService(aobService),
+            m_Log(log), m_AOBService(aobService),
             m_LifecycleStore(lifecycleStore), m_LifecycleService(lifecycleService) {}
         ~EngineInitializeDetour() = default;
 
@@ -38,7 +38,7 @@ export namespace Platform::Lifecycle::Hook
         auto GetFunctionAddress() const -> void*;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;
         LifecycleService& m_LifecycleService;

@@ -2,7 +2,7 @@ export module Egocentric.Self.System;
 
 import Common.Math.Type;
 import Common.Math.System;
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Player.Type;
 import Tables.Player.State;
 import Egocentric.Self.State;
@@ -17,13 +17,13 @@ export namespace Egocentric::Self::System
         using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
         using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using PlayerTableStore = Tables::Player::State::PlayerTableStore;
         using SelfStore = Egocentric::Self::State::SelfStore;
 
     public:
-        SelfService(LogsService& logsService, PlayerTableStore& playerStore,
-            SelfStore& selfStore) : m_LogsService(logsService),
+        SelfService(Log& log, PlayerTableStore& playerStore,
+            SelfStore& selfStore) : m_Log(log),
             m_PlayerStore(playerStore), m_SelfStore(selfStore) {}
         ~SelfService() = default;
 
@@ -32,7 +32,7 @@ export namespace Egocentric::Self::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         PlayerTableStore& m_PlayerStore;
         SelfStore& m_SelfStore;
 

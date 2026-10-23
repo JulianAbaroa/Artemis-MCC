@@ -94,7 +94,7 @@ namespace Platform::Lifecycle::System
     {
         if (!IsValidName(name))
         {
-            m_LogsService.Message("[MatchConfigService] WARNING: \"{}\" is not a valid configuration name.", name);
+            m_Log.Message("[MatchConfigService] WARNING: \"{}\" is not a valid configuration name.", name);
             return false;
         }
 
@@ -102,7 +102,7 @@ namespace Platform::Lifecycle::System
 
         if (folder.empty())
         {
-            m_LogsService.Message("[MatchConfigService] WARNING: Storage Folder is not set, no configuration can be read.");
+            m_Log.Message("[MatchConfigService] WARNING: Storage Folder is not set, no configuration can be read.");
             return false;
         }
 
@@ -111,7 +111,7 @@ namespace Platform::Lifecycle::System
 
         if (!stream)
         {
-            m_LogsService.Message("[MatchConfigService] ERROR: Failed to open {}.", ToText(file));
+            m_Log.Message("[MatchConfigService] ERROR: Failed to open {}.", ToText(file));
             return false;
         }
 
@@ -119,7 +119,7 @@ namespace Platform::Lifecycle::System
 
         if (size != static_cast<std::streamoff>(k_EngineConfigurationSize))
         {
-            m_LogsService.Message("[MatchConfigService] ERROR: {} has {} bytes, a configuration has {}.", ToText(file),
+            m_Log.Message("[MatchConfigService] ERROR: {} has {} bytes, a configuration has {}.", ToText(file),
                 static_cast<long long>(size), k_EngineConfigurationSize);
             return false;
         }
@@ -132,14 +132,14 @@ namespace Platform::Lifecycle::System
 
         if (!stream.read(reinterpret_cast<char*>(config->Bytes.data()), static_cast<std::streamsize>(k_EngineConfigurationSize)))
         {
-            m_LogsService.Message("[MatchConfigService] ERROR: Failed to read {}.", ToText(file));
+            m_Log.Message("[MatchConfigService] ERROR: Failed to read {}.", ToText(file));
             return false;
         }
 
         const std::uint32_t baseMap{ ReadBaseMap(config->Bytes.data()) };
         m_MatchConfigStore.SetPending(std::move(config));
 
-        m_LogsService.Message("[MatchConfigService] INFO: Configuration \"{}\" (base map 0x{:X}) is pending for the next start.",
+        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" (base map 0x{:X}) is pending for the next start.",
             name, baseMap);
         return true;
     }
@@ -148,20 +148,20 @@ namespace Platform::Lifecycle::System
     {
         if (!m_MatchConfigStore.TakePending()) return;
 
-        m_LogsService.Message("[MatchConfigService] INFO: No configuration is pending, the next start is the match of MCC.");
+        m_Log.Message("[MatchConfigService] INFO: No configuration is pending, the next start is the match of MCC.");
     }
 
     auto MatchConfigService::ArmRecord(std::string_view name) -> bool
     {
         if (!IsValidName(name))
         {
-            m_LogsService.Message("[MatchConfigService] WARNING: \"{}\" is not a valid configuration name.", name);
+            m_Log.Message("[MatchConfigService] WARNING: \"{}\" is not a valid configuration name.", name);
             return false;
         }
 
         m_MatchConfigStore.SetRecordName(std::string{ name });
 
-        m_LogsService.Message("[MatchConfigService] INFO: The next start is recorded as \"{}\".", name);
+        m_Log.Message("[MatchConfigService] INFO: The next start is recorded as \"{}\".", name);
         return true;
     }
 
@@ -169,21 +169,21 @@ namespace Platform::Lifecycle::System
     {
         m_MatchConfigStore.SetLaunchRequested(true);
 
-        m_LogsService.Message("[MatchConfigService] INFO: Launch of the lobby requested.");
+        m_Log.Message("[MatchConfigService] INFO: Launch of the lobby requested.");
     }
 
     auto MatchConfigService::CancelLaunch() -> void
     {
         if (!m_MatchConfigStore.TakeLaunchRequest()) return;
 
-        m_LogsService.Message("[MatchConfigService] INFO: Launch of the lobby withdrawn.");
+        m_Log.Message("[MatchConfigService] INFO: Launch of the lobby withdrawn.");
     }
 
     auto MatchConfigService::CancelRecord() -> void
     {
         if (m_MatchConfigStore.TakeRecordName().empty()) return;
 
-        m_LogsService.Message("[MatchConfigService] INFO: The next start is not recorded.");
+        m_Log.Message("[MatchConfigService] INFO: The next start is not recorded.");
     }
 
     auto MatchConfigService::Record(const std::byte* configuration) -> void
@@ -195,7 +195,7 @@ namespace Platform::Lifecycle::System
 
         if (folder.empty())
         {
-            m_LogsService.Message("[MatchConfigService] WARNING: Storage Folder is not set, the start is not recorded.");
+            m_Log.Message("[MatchConfigService] WARNING: Storage Folder is not set, the start is not recorded.");
             return;
         }
 
@@ -207,19 +207,19 @@ namespace Platform::Lifecycle::System
 
         if (!stream)
         {
-            m_LogsService.Message("[MatchConfigService] ERROR: Failed to open {}.", ToText(file));
+            m_Log.Message("[MatchConfigService] ERROR: Failed to open {}.", ToText(file));
             return;
         }
 
         if (!stream.write(reinterpret_cast<const char*>(configuration), static_cast<std::streamsize>(k_EngineConfigurationSize)))
         {
-            m_LogsService.Message("[MatchConfigService] ERROR: Failed to write {}.", ToText(file));
+            m_Log.Message("[MatchConfigService] ERROR: Failed to write {}.", ToText(file));
             return;
         }
 
         m_MatchConfigStore.SetLastRecorded(ToText(file));
 
-        m_LogsService.Message("[MatchConfigService] INFO: Start recorded to {} (base map 0x{:X}).", ToText(file),
+        m_Log.Message("[MatchConfigService] INFO: Start recorded to {} (base map 0x{:X}).", ToText(file),
             ReadBaseMap(configuration));
     }
 
@@ -230,7 +230,7 @@ namespace Platform::Lifecycle::System
 
         if (pending->Bytes.size() != k_EngineConfigurationSize)
         {
-            m_LogsService.Message("[MatchConfigService] ERROR: Configuration \"{}\" has {} bytes, the start is not changed.",
+            m_Log.Message("[MatchConfigService] ERROR: Configuration \"{}\" has {} bytes, the start is not changed.",
                 pending->Name, pending->Bytes.size());
             return false;
         }
@@ -244,7 +244,7 @@ namespace Platform::Lifecycle::System
 
         m_MatchConfigStore.SetLastApplied(pending->Name);
 
-        m_LogsService.Message("[MatchConfigService] INFO: Configuration \"{}\" transplanted into the start, base map 0x{:X} of MCC"
+        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" transplanted into the start, base map 0x{:X} of MCC"
             " replaced by 0x{:X}.", pending->Name, ReadBaseMap(configuration), ReadBaseMap(start.data()));
         return true;
     }

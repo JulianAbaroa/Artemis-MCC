@@ -5,7 +5,7 @@ module;
 
 export module Platform.Render.Hook:Present;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Telemetry.State;
 import Platform.Render.Type;
 import Platform.Render.State;
@@ -18,7 +18,7 @@ export namespace Platform::Render::Hook
     class PresentDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
         using PresentFunction = Platform::Render::Type::PresentFunction;
@@ -29,9 +29,9 @@ export namespace Platform::Render::Hook
         using SwapChainLocator = Platform::Render::System::SwapChainLocator;
 
     public:
-        PresentDetour(LogsService& logsService, TelemetryStore& telemetryStore,
+        PresentDetour(Log& log, TelemetryStore& telemetryStore,
             RenderStore& renderStore, RenderService& renderService,
-            SwapChainLocator& swapChainLocator) : m_LogsService(logsService),
+            SwapChainLocator& swapChainLocator) : m_Log(log),
             m_TelemetryStore(telemetryStore), m_RenderStore(renderStore),
             m_RenderService(renderService), m_SwapChainLocator(swapChainLocator) {}
         ~PresentDetour() = default;
@@ -44,7 +44,7 @@ export namespace Platform::Render::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TelemetryStore& m_TelemetryStore;
         RenderStore& m_RenderStore;
         RenderService& m_RenderService;

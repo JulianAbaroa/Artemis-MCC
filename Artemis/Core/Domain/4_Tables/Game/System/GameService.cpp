@@ -73,7 +73,7 @@ namespace Tables::Game::System
         const auto previous{ m_GameStore.Acquire() };
         if (!previous || previous->Phase != game.Phase)
         {
-            m_LogsService.Message("[GameService] INFO: Game engine phase {} at engine tick {}.", game.Phase, game.EngineTick);
+            m_Log.Message("[GameService] INFO: Game engine phase {} at engine tick {}.", game.Phase, game.EngineTick);
         }
 
         game.DroppedEvents = m_GameStore.GetDroppedEvents();
@@ -108,7 +108,7 @@ namespace Tables::Game::System
             {
                 const std::uint64_t dropped{ first - cursor - 1 };
                 m_GameStore.AddDroppedEvents(dropped);
-                m_LogsService.Message("[GameService] WARNING: {} events of the ring were overwritten before they were read.", dropped);
+                m_Log.Message("[GameService] WARNING: {} events of the ring were overwritten before they were read.", dropped);
             }
         }
 
@@ -143,7 +143,7 @@ namespace Tables::Game::System
 
         if (mismatches > 0)
         {
-            m_LogsService.Message("[GameService] WARNING: {} entries of the event ring held another sequence (layout changed?).", mismatches);
+            m_Log.Message("[GameService] WARNING: {} entries of the event ring held another sequence (layout changed?).", mismatches);
         }
 
         m_GameStore.SetEventCursor(last);

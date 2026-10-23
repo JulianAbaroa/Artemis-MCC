@@ -37,12 +37,12 @@ export namespace Tables
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map, Datum::Layer& datumLayer) :
-            m_ObjectService(service.m_LogsService, datumLayer.m_DatumStore, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
-            m_PlayerService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore),
-            m_InteractionService(service.m_LogsService, platform.m_MemoryReaderService, m_PlayerStore, m_InteractionStore),
-            m_GameService(service.m_LogsService, platform.m_MemoryReaderService, datumLayer.m_DatumStore, m_GameStore),
-            m_PlayerTableLocator(service.m_LogsService, platform.m_AOBService, m_PlayerStore),
-            m_InteractionTableLocator(service.m_LogsService, platform.m_AOBService, m_InteractionStore)
+            m_ObjectService(service.m_Log, datumLayer.m_DatumStore, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, map.m_TagResolverService),
+            m_PlayerService(service.m_Log, platform.m_MemoryReaderService, m_PlayerStore),
+            m_InteractionService(service.m_Log, platform.m_MemoryReaderService, m_PlayerStore, m_InteractionStore),
+            m_GameService(service.m_Log, platform.m_MemoryReaderService, datumLayer.m_DatumStore, m_GameStore),
+            m_PlayerTableLocator(service.m_Log, platform.m_AOBService, m_PlayerStore),
+            m_InteractionTableLocator(service.m_Log, platform.m_AOBService, m_InteractionStore)
         {
             auto& lifecycle = platform.m_LifecycleService;
 

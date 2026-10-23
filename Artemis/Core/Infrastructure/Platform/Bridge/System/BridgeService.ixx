@@ -1,6 +1,6 @@
 export module Platform.Bridge.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Settings.State;
 import Platform.Lifecycle.State;
 import Platform.Input.Type;
@@ -19,7 +19,7 @@ export namespace Platform::Bridge::System
     class BridgeService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using SettingsStore = Service::Settings::State::SettingsStore;
 
@@ -42,9 +42,9 @@ export namespace Platform::Bridge::System
         using BridgeStore = Platform::Bridge::State::BridgeStore;
 
     public:
-        BridgeService(LogsService& logsService, SettingsStore& settingsStore, LifecycleStore& lifecycleStore,
+        BridgeService(Log& log, SettingsStore& settingsStore, LifecycleStore& lifecycleStore,
             MatchCycleStore& matchCycleStore, PlayerActionStore& playerActionStore, BridgeStore& bridgeStore) :
-            m_LogsService(logsService), m_SettingsStore(settingsStore), m_LifecycleStore(lifecycleStore),
+            m_Log(log), m_SettingsStore(settingsStore), m_LifecycleStore(lifecycleStore),
             m_MatchCycleStore(matchCycleStore), m_PlayerActionStore(playerActionStore), m_BridgeStore(bridgeStore) {}
         ~BridgeService() = default;
 
@@ -99,7 +99,7 @@ export namespace Platform::Bridge::System
         auto CopyStatus(BridgeStatus& out) const -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         LifecycleStore& m_LifecycleStore;
         MatchCycleStore& m_MatchCycleStore;

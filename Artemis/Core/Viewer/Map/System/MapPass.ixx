@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Map.System:MapPass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.System;
 import Resolved.Definitions.Type;
 import Export.Tick.Type;
@@ -21,14 +21,14 @@ export namespace Viewer::Map::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using GpuPipeline = Platform::Render::System::GpuPipeline;
 
         using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
 
     public:
-        explicit MapPass(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit MapPass(Log& log) : m_Log(log) {}
         ~MapPass() = default;
 
         MapPass(const MapPass&) = delete;
@@ -48,7 +48,7 @@ export namespace Viewer::Map::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         ComPtr<ID3D11Buffer> m_VertexBuffer{};
         UINT m_VertexCount{ 0 };

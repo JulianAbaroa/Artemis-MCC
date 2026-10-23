@@ -1,7 +1,7 @@
 export module Environment.Entities.System;
 
 import Common.Team.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Object.Type;
 import Tables.Object.State;
 import Tables.Player.State;
@@ -24,7 +24,7 @@ export namespace Environment::Entities::System
     private:
         using Team = Common::Team::Type::Team;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AliveObject = Tables::Object::Type::Alive::AliveObject;
         using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
@@ -44,9 +44,9 @@ export namespace Environment::Entities::System
         using CarriedHandlesStore = Environment::Entities::State::CarriedHandlesStore;
 
     public:
-        EntitiesService(LogsService& logsService, ObjectTableStore& objectStore, PlayerTableStore& playerStore, ClassifierStore& classifierStore,
+        EntitiesService(Log& log, ObjectTableStore& objectStore, PlayerTableStore& playerStore, ClassifierStore& classifierStore,
             VitalityDetailsStore& vitalityDetailsStore, EntitiesStore& entitiesStore, CarriedHandlesStore& carriedHandlesStore) :
-            m_LogsService(logsService), m_ObjectStore(objectStore), m_PlayerStore(playerStore), m_ClassifierStore(classifierStore),
+            m_Log(log), m_ObjectStore(objectStore), m_PlayerStore(playerStore), m_ClassifierStore(classifierStore),
             m_VitalityDetailsStore(vitalityDetailsStore), m_EntitiesStore(entitiesStore), m_CarriedHandlesStore(carriedHandlesStore) {}
         ~EntitiesService() = default;
 
@@ -58,7 +58,7 @@ export namespace Environment::Entities::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         PlayerTableStore& m_PlayerStore;
         ClassifierStore& m_ClassifierStore;

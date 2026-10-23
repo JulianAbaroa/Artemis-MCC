@@ -2,7 +2,7 @@ export module Export.Tick.Hook:SimulationTicks;
 
 import :ExecuteGameFrame;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Telemetry.State;
 import Platform.Memory.System;
 import Platform.Lifecycle.State;
@@ -23,7 +23,7 @@ export namespace Export::Tick::Hook
         using steady_clock = std::chrono::steady_clock;
         using nanoseconds = std::chrono::nanoseconds;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
         using AOBService = Platform::Memory::System::AOBService;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
@@ -32,9 +32,9 @@ export namespace Export::Tick::Hook
         using EndRoundFunction = Export::Tick::Type::EndRoundFunction;
 
     public:
-        SimulationTicksDetour(LogsService& logsService, TelemetryStore& telemetryStore, AOBService& aobService,
+        SimulationTicksDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,
             LifecycleStore& lifecycleStore, DatumStore& datumStore, ExecuteGameFrameDetour& executeGameFrameDetour) :
-            m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
+            m_Log(log), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
             m_LifecycleStore(lifecycleStore), m_DatumStore(datumStore), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
         ~SimulationTicksDetour() = default;
 
@@ -45,7 +45,7 @@ export namespace Export::Tick::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TelemetryStore& m_TelemetryStore;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;

@@ -136,6 +136,6 @@ namespace Environment::Players::System
     {
         m_PlayersStore.Cleanup();
 
-        m_LogsService.Message("[PlayersService] INFO: Cleanup completed.");
+        m_Log.Message("[PlayersService] INFO: Cleanup completed.");
     }
 }

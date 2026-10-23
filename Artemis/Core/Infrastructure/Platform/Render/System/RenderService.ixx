@@ -6,7 +6,7 @@ module;
 
 export module Platform.Render.System:RenderService;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.State;
 import std;
@@ -24,7 +24,7 @@ export namespace Platform::Render::System
 
         using milliseconds = std::chrono::milliseconds;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using FrameContext = Platform::Render::Type::FrameContext;
         using FrameHandler = Platform::Render::Type::FrameHandler;
@@ -33,8 +33,8 @@ export namespace Platform::Render::System
         using RenderStore = Platform::Render::State::RenderStore;
 
     public:
-        RenderService(LogsService& logsService, RenderStore& renderStore) :
-            m_LogsService(logsService), m_RenderStore(renderStore) {}
+        RenderService(Log& log, RenderStore& renderStore) :
+            m_Log(log), m_RenderStore(renderStore) {}
         ~RenderService() = default;
 
         RenderService(const RenderService&) = delete;
@@ -75,7 +75,7 @@ export namespace Platform::Render::System
         auto Shutdown() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         RenderStore& m_RenderStore;
 
         std::vector<FrameHandler> m_OnInitialized{};

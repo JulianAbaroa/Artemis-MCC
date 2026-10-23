@@ -1,6 +1,6 @@
 export module Platform.Memory.System:AOB;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.Type;
 import std;
 
@@ -10,12 +10,12 @@ export namespace Platform::Memory::System
     class AOBService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using Signature = Platform::Memory::Type::Signature::Signature;
 
     public:
-        AOBService(LogsService& logsService) : m_LogsService(logsService) {}
+        AOBService(Log& log) : m_Log(log) {}
         ~AOBService() = default;
 
         // return: Address of the first match, or 0 if the module or the pattern is not found.
@@ -28,7 +28,7 @@ export namespace Platform::Memory::System
             const char* name = "Unknown") -> std::uintptr_t;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         auto Scan(std::uintptr_t base, std::size_t size, const char* pattern,
             const char* name) -> std::uintptr_t;

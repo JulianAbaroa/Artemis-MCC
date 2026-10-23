@@ -1,6 +1,6 @@
 export module UI.Capture.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Settings.State;
 import Platform.Memory.System;
 import Resolved.Definitions.Type;
@@ -25,7 +25,7 @@ export namespace UI::Capture::System
     class CaptureUIService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
@@ -47,9 +47,9 @@ export namespace UI::Capture::System
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
 
     public:
-        CaptureUIService(LogsService& logsService, SettingsStore& settingsStore, MemoryReaderService& memoryReaderService,
+        CaptureUIService(Log& log, SettingsStore& settingsStore, MemoryReaderService& memoryReaderService,
             DefinitionsStore& definitionsStore, DatumStore& datumStore, TickStore& tickStore, CaptureUIStore& captureUIStore) :
-            m_LogsService(logsService), m_SettingsStore(settingsStore), m_MemoryReaderService(memoryReaderService),
+            m_Log(log), m_SettingsStore(settingsStore), m_MemoryReaderService(memoryReaderService),
             m_DefinitionsStore(definitionsStore), m_DatumStore(datumStore), m_TickStore(tickStore), m_CaptureUIStore(captureUIStore) {}
         ~CaptureUIService() = default;
 
@@ -64,7 +64,7 @@ export namespace UI::Capture::System
         auto Draw() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         MemoryReaderService& m_MemoryReaderService;
         DefinitionsStore& m_DefinitionsStore;

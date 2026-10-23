@@ -27,7 +27,7 @@ namespace Runtime::Thread
     auto MainThread::Run() -> void
     {
         auto& lifecycle{ m_Platform.m_LifecycleStore };
-        auto& logs{ m_Service.m_LogsService };
+        auto& logs{ m_Service.m_Log };
 
         this->WaitOrExit(5000ms);
 
@@ -135,7 +135,7 @@ namespace Runtime::Thread
             this->WaitOrExit(1000ms);
         }
 
-        m_Service.m_LogsService.Message("[MainThread] ERROR:"
+        m_Service.m_Log.Message("[MainThread] ERROR:"
             " Failed to install the render hooks, Artemis keeps running without them.");
 
         return false;
@@ -143,7 +143,7 @@ namespace Runtime::Thread
 
     auto MainThread::Shutdown() -> void
     {
-        m_Service.m_LogsService.Message("[MainThread] ERROR:"
+        m_Service.m_Log.Message("[MainThread] ERROR:"
             " Initiating emergency shutdown.");
 
         m_Platform.m_LifecycleService.SignalShutdown();
@@ -165,7 +165,7 @@ namespace Runtime::Thread
 
         if (areHooksCorrupted && lifecycle.IsRunning())
         {
-            m_Service.m_LogsService.Message("[MainThread] WARNING:"
+            m_Service.m_Log.Message("[MainThread] WARNING:"
                 " Hooks corrupted, rebooting.");
 
             lifecycle.SetStatus(Status::Destroyed);

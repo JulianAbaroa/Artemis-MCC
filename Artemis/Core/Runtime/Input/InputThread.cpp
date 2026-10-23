@@ -8,7 +8,7 @@ namespace Runtime::Thread
     {
         auto& lifecycle{ m_Platform.m_LifecycleStore };
 
-        m_Service.m_LogsService.Message("[InputThread] INFO: Started.");
+        m_Service.m_Log.Message("[InputThread] INFO: Started.");
 
         {
             std::unique_lock<std::mutex> lock{ lifecycle.GetShutdownMutex() };
@@ -18,6 +18,6 @@ namespace Runtime::Thread
             });
         }
 
-        m_Service.m_LogsService.Message("[InputThread] INFO: Stopped.");
+        m_Service.m_Log.Message("[InputThread] INFO: Stopped.");
     }
 }

@@ -41,7 +41,7 @@ namespace Platform::Simulation::Hook
 
             if ((mask & bit) != 0 && merged[machine.Index].Bytes != machine.Identifier.Bytes)
             {
-                s_Instance->m_LogsService.Message("[SetMachinesDetour] WARNING: A real machine took slot {}. Its bots will be dropped.",
+                s_Instance->m_Log.Message("[SetMachinesDetour] WARNING: A real machine took slot {}. Its bots will be dropped.",
                     machine.Index);
                 continue;
             }
@@ -64,7 +64,7 @@ namespace Platform::Simulation::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedSetMachines),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[SetMachinesDetour]", m_LogsService))
+            "[SetMachinesDetour]", m_Log))
         {
             return false;
         }
@@ -80,7 +80,7 @@ namespace Platform::Simulation::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[SetMachinesDetour]", m_LogsService);
+            "[SetMachinesDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

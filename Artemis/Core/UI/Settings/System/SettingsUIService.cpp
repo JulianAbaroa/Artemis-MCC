@@ -183,7 +183,7 @@ namespace UI::Settings::System
             m_UIScalePreview = std::clamp(m_UIScalePreview, k_MinimumScale, k_MaximumScale);
             m_SettingsStore.SetUIScale(m_UIScalePreview);
 
-            m_LogsService.Message("[SettingsUIService] INFO: Applied scale: {:.2f}.",
+            m_Log.Message("[SettingsUIService] INFO: Applied scale: {:.2f}.",
                 m_UIScalePreview);
         }
 

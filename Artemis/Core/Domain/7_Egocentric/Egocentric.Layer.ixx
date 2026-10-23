@@ -30,9 +30,9 @@ export namespace Egocentric
         Layer(Service::Layer& service, Platform::Layer& platform,
             Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
             Environment::Layer& environment) :
-            m_SelfService(service.m_LogsService, tables.m_PlayerStore, m_SelfStore),
-            m_AffordanceService(service.m_LogsService, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
-            m_RaycastService(service.m_LogsService, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore)
+            m_SelfService(service.m_Log, tables.m_PlayerStore, m_SelfStore),
+            m_AffordanceService(service.m_Log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
+            m_RaycastService(service.m_Log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore)
         {
             platform.m_LifecycleService.OnCleanup([this] {
                 m_SelfService.Cleanup();

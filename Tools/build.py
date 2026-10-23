@@ -9,7 +9,7 @@ in compact form: one line per diagnostic, relative paths, no duplicates, errors 
     python Tools/build.py --detail LEVEL        Also write build/watch/detail.log (normal, detailed, diagnostic) with the MSBuild
                                                 performance summary (time per project).
     python Tools/build.py --project PATH        Build another project or solution (path relative to the repo, e.g.
-                                                Experiments/M0/M0.sln). Default: Artemis/Artemis.vcxproj.
+                                                Artemis/Tests/Artemis.Tests.vcxproj). Default: Artemis/Artemis.vcxproj.
     python Tools/build.py --wait ID             Keep waiting for a build that outlived --timeout (the id is printed).
     python Tools/build.py --last                Print the result of the last build again, without building.
     python Tools/build.py --warnings            Every warning (default: only the ones in files changed according to git, plus counts).
@@ -44,7 +44,9 @@ def Relative(origin):
         path = path[index + len("/artemis-mcc/"):]
     elif path.lower().startswith(root.lower() + "/"):
         path = path[len(root) + 1:]
-    return path[len("Artemis/Core/"):] if path.startswith("Artemis/Core/") else path
+    if path.startswith("Artemis/Core/"):
+        return path[len("Artemis/Core/"):]
+    return path[len("Artemis/"):] if path.startswith("Artemis/") else path
 
 
 def Parse(name):

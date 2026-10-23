@@ -54,7 +54,7 @@ namespace Platform::Render::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedResizeBuffers),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[ResizeBuffersDetour]", m_LogsService))
+            "[ResizeBuffersDetour]", m_Log))
         {
             return false;
         }
@@ -71,12 +71,12 @@ namespace Platform::Render::Hook
 
         if (!m_RenderService.WaitForIdle(k_IdleTimeout))
         {
-            m_LogsService.Message("[ResizeBuffersDetour] WARNING:"
+            m_Log.Message("[ResizeBuffersDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
 
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[ResizeBuffersDetour]", m_LogsService);
+            "[ResizeBuffersDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

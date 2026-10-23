@@ -2,7 +2,7 @@ export module Egocentric.Affordance.System;
 
 import Common.Math.Type;
 import Common.Semantic.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Object.Type;
 import Tables.Object.State;
 import Tables.Interaction.Type;
@@ -44,16 +44,16 @@ export namespace Egocentric::Affordance::System
         using AffordanceBehavior = Egocentric::Affordance::Type::AffordanceBehavior;
         using AffordanceActivation = Egocentric::Affordance::Type::AffordanceActivation;
 
+        using Log = Common::Log::System::Log;
         using SelfStore = Egocentric::Self::State::SelfStore;
         using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
-        using LogsService = Service::Logs::System::LogsService;
 
     public:
-        AffordanceService(LogsService& logsService, ObjectTableStore& objectStore,
+        AffordanceService(Log& log, ObjectTableStore& objectStore,
             BoneMatricesStore& boneMatricesStore, InteractionStore& interactionStore,
             SelfStore& selfStore, ClassifierStore& classifierStore,
             ObjectGraphStore& objectGraphStore, AffordanceStore& affordanceStore, CollidableService& collidableService) :
-            m_LogsService(logsService), m_ObjectStore(objectStore),
+            m_Log(log), m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore),
             m_InteractionStore(interactionStore), m_SelfStore(selfStore),
             m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
@@ -66,7 +66,7 @@ export namespace Egocentric::Affordance::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         BoneMatricesStore& m_BoneMatricesStore;
         InteractionStore& m_InteractionStore;

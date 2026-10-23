@@ -9,7 +9,7 @@ import Platform.Hook.Type;
 
 namespace
 {
-    using Service::Logs::System::LogsService;
+    using Common::Log::System::Log;
 
     using Platform::Hook::Type::k_TlsArrayOffset;
     using Platform::Hook::Type::k_MaxTlsIndex;
@@ -36,11 +36,11 @@ namespace
 namespace Platform::Hook::System
 {
     auto InstallDetour(void* functionAddress, void* hookedFunction,
-        void** outOriginal, const char* tag, LogsService& logsService) -> bool
+        void** outOriginal, const char* tag, Log& log) -> bool
     {
         if (!functionAddress)
         {
-            logsService.Message("{} ERROR: Failed to obtain the function address.", tag);
+            log.Message("{} ERROR: Failed to obtain the function address.", tag);
             return false;
         }
 
@@ -49,18 +49,18 @@ namespace Platform::Hook::System
         if (MH_CreateHook(functionAddress, hookedFunction,
             reinterpret_cast<LPVOID*>(outOriginal)) != MH_OK)
         {
-            logsService.Message("{} ERROR: Failed to create the hook.", tag);
+            log.Message("{} ERROR: Failed to create the hook.", tag);
             return false;
         }
 
         if (MH_EnableHook(functionAddress) != MH_OK)
         {
-            logsService.Message("{} ERROR: Failed to enable the hook.", tag);
+            log.Message("{} ERROR: Failed to enable the hook.", tag);
             MH_RemoveHook(functionAddress);
             return false;
         }
 
-        logsService.Message("{} INFO: Hook installed, address: {:016X}", tag, reinterpret_cast<uintptr_t>(functionAddress));
+        log.Message("{} INFO: Hook installed, address: {:016X}", tag, reinterpret_cast<uintptr_t>(functionAddress));
         return true;
     }
 
@@ -70,18 +70,18 @@ namespace Platform::Hook::System
     }
 
     auto RemoveDetour(void* functionAddress, const char* tag,
-        LogsService& logsService) -> void
+        Log& log) -> void
     {
         MH_RemoveHook(functionAddress);
-        logsService.Message("{} INFO: Hook uninstalled.", tag);
+        log.Message("{} INFO: Hook uninstalled.", tag);
     }
 
     auto WritePatch(void* address, std::span<const std::uint8_t> bytes,
-        std::vector<std::uint8_t>& outOriginal, const char* tag, LogsService& logsService) -> bool
+        std::vector<std::uint8_t>& outOriginal, const char* tag, Log& log) -> bool
     {
         if (!address)
         {
-            logsService.Message("{} ERROR: Failed to obtain the patch address.", tag);
+            log.Message("{} ERROR: Failed to obtain the patch address.", tag);
             return false;
         }
 
@@ -90,27 +90,27 @@ namespace Platform::Hook::System
 
         if (!WriteCode(address, bytes.data(), bytes.size()))
         {
-            logsService.Message("{} ERROR: Failed to make the code writable.", tag);
+            log.Message("{} ERROR: Failed to make the code writable.", tag);
             outOriginal.clear();
             return false;
         }
 
-        logsService.Message("{} INFO: Patch written, address: {:016X}.", tag, reinterpret_cast<std::uintptr_t>(address));
+        log.Message("{} INFO: Patch written, address: {:016X}.", tag, reinterpret_cast<std::uintptr_t>(address));
         return true;
     }
 
     auto RestorePatch(void* address, std::span<const std::uint8_t> original,
-        const char* tag, LogsService& logsService) -> void
+        const char* tag, Log& log) -> void
     {
         if (!address || original.empty()) return;
 
         if (!WriteCode(address, original.data(), original.size()))
         {
-            logsService.Message("{} ERROR: Failed to restore the patch.", tag);
+            log.Message("{} ERROR: Failed to restore the patch.", tag);
             return;
         }
 
-        logsService.Message("{} INFO: Patch restored.", tag);
+        log.Message("{} INFO: Patch restored.", tag);
     }
 
     auto ResolveRelative(std::uintptr_t match, std::uintptr_t relOffset, std::uintptr_t nextOffset) -> std::uintptr_t

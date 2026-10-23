@@ -180,7 +180,7 @@ namespace Tables::Player::System
     {
         m_PlayerStore.Cleanup();
 
-        m_LogsService.Message("[PlayerTableService] INFO: Cleanup completed.");
+        m_Log.Message("[PlayerTableService] INFO: Cleanup completed.");
     }
 
     auto PlayerTableService::WideToUtf8(const wchar_t* source, std::size_t maxLength) -> std::string

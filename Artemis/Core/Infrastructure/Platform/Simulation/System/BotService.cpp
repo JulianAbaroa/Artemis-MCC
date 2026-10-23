@@ -263,14 +263,14 @@ namespace Platform::Simulation::System
     {
         if (!m_IsResolved)
         {
-            m_LogsService.Message("[BotService] ERROR: Failed to add a bot: the engine functions were not found.");
+            m_Log.Message("[BotService] ERROR: Failed to add a bot: the engine functions were not found.");
             return false;
         }
 
         const std::size_t count{ m_BotStore.GetBotCount() };
         if (count >= k_MaxBots)
         {
-            m_LogsService.Message("[BotService] WARNING: No machine slot left for another bot.");
+            m_Log.Message("[BotService] WARNING: No machine slot left for another bot.");
             return false;
         }
 
@@ -279,7 +279,7 @@ namespace Platform::Simulation::System
         const auto options{ Read<std::uintptr_t>(threadContext + k_GameOptionsSlot) };
         if (players == 0 || globals == 0 || options == 0)
         {
-            m_LogsService.Message("[BotService] ERROR: Failed to read the players, the machines or the game options of the engine.");
+            m_Log.Message("[BotService] ERROR: Failed to read the players, the machines or the game options of the engine.");
             return false;
         }
 
@@ -308,7 +308,7 @@ namespace Platform::Simulation::System
 
         if (!localPlayer || !freeIndex)
         {
-            m_LogsService.Message("[BotService] ERROR: Failed to find {}.", !localPlayer ? "the local player" : "a free player slot");
+            m_Log.Message("[BotService] ERROR: Failed to find {}.", !localPlayer ? "the local player" : "a free player slot");
             return false;
         }
 
@@ -354,7 +354,7 @@ namespace Platform::Simulation::System
 
         if (!m_ApplyPlayerAdded(update.data()))
         {
-            m_LogsService.Message("[BotService] ERROR: The engine refused bot {} (player {}, machine {}, user {}).", number,
+            m_Log.Message("[BotService] ERROR: The engine refused bot {} (player {}, machine {}, user {}).", number,
                 *freeIndex, machineIndex, slot);
             return false;
         }
@@ -370,7 +370,7 @@ namespace Platform::Simulation::System
         m_BotStore.AddBot(Bot{ .Number = number, .PlayerIndex = *freeIndex, .MachineIndex = machineIndex, .Slot = slot,
             .Identifier = identifier });
 
-        m_LogsService.Message("[BotService] INFO: Bot {} added as player {} on machine {} (user {}). Configuration: {} names and {}"
+        m_Log.Message("[BotService] INFO: Bot {} added as player {} on machine {} (user {}). Configuration: {} names and {}"
             " identifiers replaced.", number, *freeIndex, machineIndex, slot, names, identifiers);
         return true;
     }
@@ -393,7 +393,7 @@ namespace Platform::Simulation::System
         {
             if ((mask & bit) != 0)
             {
-                m_LogsService.Message("[BotService] ERROR: Machine slot {} belongs to a real machine.", machineIndex);
+                m_Log.Message("[BotService] ERROR: Machine slot {} belongs to a real machine.", machineIndex);
                 return false;
             }
 
@@ -411,12 +411,12 @@ namespace Platform::Simulation::System
         mask = Read<std::uint32_t>(playersGlobals + k_MachineMask);
         if ((mask & bit) == 0)
         {
-            m_LogsService.Message("[BotService] ERROR: The engine did not take fake machine {} (is the SetMachines hook installed?).",
+            m_Log.Message("[BotService] ERROR: The engine did not take fake machine {} (is the SetMachines hook installed?).",
                 machineIndex);
             return false;
         }
 
-        m_LogsService.Message("[BotService] INFO: Fake machine {} added. Machine mask {:05X}.", machineIndex, mask);
+        m_Log.Message("[BotService] INFO: Fake machine {} added. Machine mask {:05X}.", machineIndex, mask);
         return true;
     }
 
@@ -431,7 +431,7 @@ namespace Platform::Simulation::System
         const auto salt{ datum != 0 ? Read<std::uint16_t>(datum + k_PlayerSalt) : std::uint16_t{ 0 } };
         if (salt == 0)
         {
-            m_LogsService.Message("[BotService] WARNING: Player {} is gone, its team was not changed.", request.PlayerIndex);
+            m_Log.Message("[BotService] WARNING: Player {} is gone, its team was not changed.", request.PlayerIndex);
             return;
         }
 
@@ -442,7 +442,7 @@ namespace Platform::Simulation::System
         const std::uint32_t handle{ MakePlayerHandle(salt, request.PlayerIndex) };
         m_ApplyPlayerConfiguration(handle, configuration.data());
 
-        m_LogsService.Message("[BotService] INFO: Player {} moved to team {} (now {}).", request.PlayerIndex, request.Team,
+        m_Log.Message("[BotService] INFO: Player {} moved to team {} (now {}).", request.PlayerIndex, request.Team,
             Read<std::int8_t>(datum + k_PlayerTeam));
     }
 
@@ -560,7 +560,7 @@ namespace Platform::Simulation::System
             m_IsResolved = m_SetMachines && m_ApplyPlayerAdded && m_ApplyPlayerConfiguration;
             if (!m_IsResolved)
             {
-                m_LogsService.Message("[BotService] ERROR: Failed to find {}. No bot can be added.", !m_SetMachines ? "SetMachines"
+                m_Log.Message("[BotService] ERROR: Failed to find {}. No bot can be added.", !m_SetMachines ? "SetMachines"
                     : (!m_ApplyPlayerAdded ? "ApplyPlayerAdded" : "ApplyPlayerConfiguration"));
             }
         }
@@ -575,7 +575,7 @@ namespace Platform::Simulation::System
             m_IsInteractionResolved = m_GatherNearbyInteractions && m_GatherAimedInteractions;
             if (!m_IsInteractionResolved)
             {
-                m_LogsService.Message("[BotService] ERROR: Failed to find {}. Bots will have no interaction.",
+                m_Log.Message("[BotService] ERROR: Failed to find {}. Bots will have no interaction.",
                     !m_GatherNearbyInteractions ? "GatherNearbyInteractions" : "GatherAimedInteractions");
             }
         }
@@ -590,7 +590,7 @@ namespace Platform::Simulation::System
             m_IsClientResolved = m_NextWeaponSlot && m_NextGrenadeType && m_NextZoomLevel && m_CanUnitZoom;
             if (!m_IsClientResolved)
             {
-                m_LogsService.Message("[BotService] ERROR: Failed to find {}. Agents cannot switch weapon, grenade or zoom.",
+                m_Log.Message("[BotService] ERROR: Failed to find {}. Agents cannot switch weapon, grenade or zoom.",
                     !m_NextWeaponSlot ? "NextWeaponSlot" : (!m_NextGrenadeType ? "NextGrenadeType"
                     : (!m_NextZoomLevel ? "NextZoomLevel" : "CanUnitZoom")));
             }

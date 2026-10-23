@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{687DBFE3-1641-5AF5-B910-825E790EB11E}</ProjectGuid>
+    <RootNamespace>Artemis_Common</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.Common</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Artemis.Common.props" />
+    <Import Project="..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Artemis.Common.props" />
+    <Import Project="..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClCompile Include="Engine\Type\Common.Engine.Type.ixx" />
+    <ClCompile Include="Geometry\System\Common.Geometry.System.cpp" />
+    <ClCompile Include="Geometry\System\Common.Geometry.System.ixx" />
+    <ClCompile Include="Log\System\Common.Log.System.cpp" />
+    <ClCompile Include="Log\System\Common.Log.System.ixx" />
+    <ClCompile Include="Log\Type\Common.Log.Type.ixx" />
+    <ClCompile Include="Math\System\Common.Math.System.cpp" />
+    <ClCompile Include="Math\System\Common.Math.System.ixx" />
+    <ClCompile Include="Math\Type\Common.Math.Type.ixx" />
+    <ClCompile Include="Reflect\Common.Reflect.Type.ixx" />
+    <ClCompile Include="Reflect\System\Common.Reflect.System.ixx" />
+    <ClCompile Include="Reflect\Type\Common.Reflect.Type.Core.ixx" />
+    <ClCompile Include="Reflect\Type\Common.Reflect.Type.Math.ixx" />
+    <ClCompile Include="State\Type\Common.State.Type.ixx" />
+    <ClCompile Include="Team\Type\Common.Team.Type.ixx" />
+    <ClCompile Include="Text\System\Common.Text.System.cpp" />
+    <ClCompile Include="Text\System\Common.Text.System.ixx" />
+    <ClCompile Include="Time\System\Common.Time.System.cpp" />
+    <ClCompile Include="Time\System\Common.Time.System.ixx" />
+    <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

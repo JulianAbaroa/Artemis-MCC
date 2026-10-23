@@ -1,11 +1,11 @@
 export module Platform.Hook.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import std;
 
 namespace
 {
-    using Service::Logs::System::LogsService;
+    using Common::Log::System::Log;
 }
 
 export namespace Platform::Hook::System
@@ -17,7 +17,7 @@ export namespace Platform::Hook::System
     // param tag: Log tag of the caller, such as "[PresentDetour]".
     // return: False if the address is null or MinHook fails. The cause is logged.
     auto InstallDetour(void* functionAddress, void* hookedFunction,
-        void** outOriginal, const char* tag, LogsService& logsService) -> bool;
+        void** outOriginal, const char* tag, Log& log) -> bool;
 
     // Disables the hook but keeps it created, so calls already inside can finish.
     // note: Pair with WaitForDrain and RemoveDetour for a safe removal.
@@ -25,7 +25,7 @@ export namespace Platform::Hook::System
 
     // Removes the hook and logs it.
     auto RemoveDetour(void* functionAddress, const char* tag,
-        LogsService& logsService) -> void;
+        Log& log) -> void;
 
     // Overwrites bytes of the game code.
     // param address: First byte to overwrite.
@@ -34,11 +34,11 @@ export namespace Platform::Hook::System
     // param tag: Log tag of the caller, such as "[SessionJoinCheckPatch]".
     // return: False if the address is null or the memory cannot be made writable. The cause is logged.
     auto WritePatch(void* address, std::span<const std::uint8_t> bytes,
-        std::vector<std::uint8_t>& outOriginal, const char* tag, LogsService& logsService) -> bool;
+        std::vector<std::uint8_t>& outOriginal, const char* tag, Log& log) -> bool;
 
     // Writes back the bytes saved by WritePatch.
     auto RestorePatch(void* address, std::span<const std::uint8_t> original,
-        const char* tag, LogsService& logsService) -> void;
+        const char* tag, Log& log) -> void;
 
     // Counts one call inside a hooked function for as long as it lives.
     // note: Lets WaitForDrain know when the hook can be removed safely. A thread that entered the detour but has not built the scope

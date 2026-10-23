@@ -4,7 +4,7 @@ module;
 
 export module Platform.Input.Hook:WndProc;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Input.System;
 import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
@@ -17,7 +17,7 @@ export namespace Platform::Input::Hook
     class WndProcDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using InputService = Platform::Input::System::InputService;
 
@@ -25,9 +25,9 @@ export namespace Platform::Input::Hook
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;
 
     public:
-        WndProcDetour(LogsService& logsService, InputService& inputService,
+        WndProcDetour(Log& log, InputService& inputService,
             LifecycleStore& lifecycleStore, LifecycleService& lifecycleService) :
-            m_LogsService(logsService), m_InputService(inputService),
+            m_Log(log), m_InputService(inputService),
             m_LifecycleStore(lifecycleStore), m_LifecycleService(lifecycleService) {}
         ~WndProcDetour() = default;
 
@@ -40,7 +40,7 @@ export namespace Platform::Input::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         InputService& m_InputService;
         LifecycleStore& m_LifecycleStore;
         LifecycleService& m_LifecycleService;

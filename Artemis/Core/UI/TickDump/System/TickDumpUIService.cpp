@@ -157,7 +157,7 @@ namespace UI::TickDump::System
         if (!file)
         {
             m_TickDumpUIStore.SetStatus("The dump file cannot be opened.");
-            m_LogsService.Message("[TickDumpUIService] ERROR: Failed to open the dump file.");
+            m_Log.Message("[TickDumpUIService] ERROR: Failed to open the dump file.");
             return;
         }
 
@@ -183,7 +183,7 @@ namespace UI::TickDump::System
         m_TickDumpUIStore.SetStatus({});
         m_TickDumpUIStore.SetRecording(true);
 
-        m_LogsService.Message("[TickDumpUIService] INFO: Recording ticks to '{}' ({}).", filePath.string(), source);
+        m_Log.Message("[TickDumpUIService] INFO: Recording ticks to '{}' ({}).", filePath.string(), source);
     }
 
     auto TickDumpUIService::Finish() -> void
@@ -205,14 +205,14 @@ namespace UI::TickDump::System
         if (file.fail())
         {
             m_TickDumpUIStore.SetStatus("The footer could not be written: the file is cut.");
-            m_LogsService.Message("[TickDumpUIService] ERROR: Failed to write the footer of the dump.");
+            m_Log.Message("[TickDumpUIService] ERROR: Failed to write the footer of the dump.");
             return;
         }
 
         const std::string status{ std::format("Saved {} ticks ({} dropped, {} queue waits, {} event losses).", footer.RecordedTicks,
             footer.DroppedTicks, footer.QueueWaits, footer.EventLosses) };
         m_TickDumpUIStore.SetStatus(status);
-        m_LogsService.Message("[TickDumpUIService] INFO: Dump saved, {} ticks, {} bytes, {} dropped, {} queue waits, {} event losses.",
+        m_Log.Message("[TickDumpUIService] INFO: Dump saved, {} ticks, {} bytes, {} dropped, {} queue waits, {} event losses.",
             footer.RecordedTicks, m_TickDumpUIStore.GetWrittenBytes(), footer.DroppedTicks, footer.QueueWaits, footer.EventLosses);
     }
 
@@ -224,7 +224,7 @@ namespace UI::TickDump::System
 
         m_TickDumpUIStore.SetStatus(std::format("Stopped: the file stopped taking writes after {} ticks (disk full?).",
             m_TickDumpUIStore.GetRecordedTicks()));
-        m_LogsService.Message("[TickDumpUIService] ERROR: Failed to write the dump, recording stopped after {} ticks.",
+        m_Log.Message("[TickDumpUIService] ERROR: Failed to write the dump, recording stopped after {} ticks.",
             m_TickDumpUIStore.GetRecordedTicks());
     }
 

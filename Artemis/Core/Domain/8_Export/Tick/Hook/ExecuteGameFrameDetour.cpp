@@ -46,7 +46,7 @@ namespace Export::Tick::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedExecuteGameFrame),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[ExecuteGameFrameDetour]", m_LogsService))
+            "[ExecuteGameFrameDetour]", m_Log))
         {
             return false;
         }
@@ -64,11 +64,11 @@ namespace Export::Tick::Hook
         // call of this hook is in flight on that thread. On eject the tick wait wakes with the shutdown signal.
         if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
-            m_LogsService.Message("[ExecuteGameFrameDetour] WARNING:"
+            m_Log.Message("[ExecuteGameFrameDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[ExecuteGameFrameDetour]", m_LogsService);
+            "[ExecuteGameFrameDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
     }

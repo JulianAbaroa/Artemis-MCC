@@ -4,11 +4,12 @@ module;
 
 module UI.Logs.System;
 
+import Common.Log.Type;
 import std;
 
 namespace
 {
-    using Service::Logs::Type::LogLevel;
+    using Common::Log::Type::LogLevel;
 
     // Returns the text in lower case.
     auto ToLower(std::string_view text) -> std::string

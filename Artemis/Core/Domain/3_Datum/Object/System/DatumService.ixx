@@ -1,6 +1,6 @@
 export module Datum.Object.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Datum.Object.State;
 import std;
@@ -11,17 +11,17 @@ export namespace Datum::Object::System
     class DatumService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
         using DatumStore = Datum::Object::State::DatumStore;
 
     public:
-        DatumService(LogsService& logsService,
+        DatumService(Log& log,
             MemoryReaderService& memoryReaderService,
             DatumStore& datumStore) :
-            m_LogsService(logsService), m_MemoryReaderService(memoryReaderService),
+            m_Log(log), m_MemoryReaderService(memoryReaderService),
             m_DatumStore(datumStore) {}
         ~DatumService() = default;
 
@@ -33,7 +33,7 @@ export namespace Datum::Object::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         MemoryReaderService& m_MemoryReaderService;
         DatumStore& m_DatumStore;
 

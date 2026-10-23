@@ -11,7 +11,7 @@ namespace Resolved::World::System
 
         m_WorldStore.Freeze();
 
-        m_LogsService.Message("[WorldBuilder] INFO: World built.");
+        m_Log.Message("[WorldBuilder] INFO: World built.");
     }
 
     auto WorldBuilder::Cleanup() -> void
@@ -19,7 +19,7 @@ namespace Resolved::World::System
         m_Raycaster.Cleanup();
         m_WorldStore.Cleanup();
 
-        m_LogsService.Message("[WorldBuilder] INFO: Cleanup completed.");
+        m_Log.Message("[WorldBuilder] INFO: Cleanup completed.");
     }
 
     auto WorldBuilder::LinkObjects() -> void
@@ -97,7 +97,7 @@ namespace Resolved::World::System
             ++built;
         }
 
-        m_LogsService.Message("[WorldBuilder] INFO: Model links built."
+        m_Log.Message("[WorldBuilder] INFO: Model links built."
             " Links: {} | Without coll: {} | Without mode: {}.",
             built, withoutColl, withoutMode);
     }

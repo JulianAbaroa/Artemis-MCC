@@ -1,6 +1,6 @@
 export module Tables.Object.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.System;
 import Resolved.Definitions.Type;
 import Resolved.Vitality.State;
@@ -29,7 +29,7 @@ export namespace Tables::Object::System
         using DamageSection = Tables::Object::Type::DamageSection::DamageSection;
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using DatumStore = Datum::Object::State::DatumStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
@@ -37,13 +37,13 @@ export namespace Tables::Object::System
         using TagResolverService = Map::Reader::System::TagResolverService;
 
     public:
-        ObjectTableService(LogsService& logsService,
+        ObjectTableService(Log& log,
             DatumStore& datumStore,
             ObjectTableStore& objectStore,
             BoneMatricesStore& boneMatricesStore,
             DamageSectionsStore& damageSectionsStore,
             TagResolverService& tagResolverService) :
-            m_LogsService(logsService), m_DatumStore(datumStore),
+            m_Log(log), m_DatumStore(datumStore),
             m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore),
             m_DamageSectionsStore(damageSectionsStore),
@@ -57,7 +57,7 @@ export namespace Tables::Object::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         DatumStore& m_DatumStore;
         ObjectTableStore& m_ObjectStore;
         BoneMatricesStore& m_BoneMatricesStore;

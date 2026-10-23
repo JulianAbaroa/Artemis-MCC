@@ -572,7 +572,7 @@ namespace UI::Capture::System
         const std::string labelText{ label.empty() ? "" : std::format(" ({})", label) };
         if (details.empty()) details = "Nothing changed";
 
-        m_LogsService.Message("[CaptureUIService] INFO: Capture {}{}, {} objects, {} engine blocks. {}.", index, labelText, targets.size(),
+        m_Log.Message("[CaptureUIService] INFO: Capture {}{}, {} objects, {} engine blocks. {}.", index, labelText, targets.size(),
             engineBlocks, details);
 
         return std::format("Capture {}{}: {} objects -> {}", index, labelText, targets.size(), m_CaptureUIStore.GetFilePath().string());

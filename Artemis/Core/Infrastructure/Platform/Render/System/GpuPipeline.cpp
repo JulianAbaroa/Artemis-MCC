@@ -14,7 +14,7 @@ namespace
 {
     using Microsoft::WRL::ComPtr;
 
-    using Service::Logs::System::LogsService;
+    using Common::Log::System::Log;
 
     // HLSL source of the map pipeline, shared by every pass.
     // Vertex shaders: VSMain (Vertex), VSInstanced (SphereInstance) and VSInstancedMesh (MeshInstance).
@@ -104,7 +104,7 @@ float4 PSMain(VSOut input) : SV_TARGET
     // Compiles an entry point of the map shader source.
     // return: False if it fails. The compiler errors are logged.
     auto CompileShader(const char* entry, const char* target,
-        LogsService& logs, ComPtr<ID3DBlob>& blob) -> bool
+        Log& logs, ComPtr<ID3DBlob>& blob) -> bool
     {
         UINT flags = 0;
 #if defined(_DEBUG)
@@ -140,7 +140,7 @@ namespace Platform::Render::System
 
         if (!device)
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: No device.");
+            m_Log.Message("[GpuPipeline] ERROR: No device.");
             return false;
         }
 
@@ -152,7 +152,7 @@ namespace Platform::Render::System
         }
 
         m_IsReady = true;
-        m_LogsService.Message("[GpuPipeline] INFO: Ready.");
+        m_Log.Message("[GpuPipeline] INFO: Ready.");
         return true;
     }
 
@@ -163,29 +163,29 @@ namespace Platform::Render::System
         ComPtr<ID3DBlob> instancedBlob{};
         ComPtr<ID3DBlob> meshBlob{};
 
-        if (!CompileShader("VSInstanced", "vs_5_0", m_LogsService, instancedBlob)) return false;
-        if (!CompileShader("VSInstancedMesh", "vs_5_0", m_LogsService, meshBlob)) return false;
-        if (!CompileShader("VSMain", "vs_5_0", m_LogsService, vertexBlob)) return false;
-        if (!CompileShader("PSMain", "ps_5_0", m_LogsService, pixelBlob)) return false;
+        if (!CompileShader("VSInstanced", "vs_5_0", m_Log, instancedBlob)) return false;
+        if (!CompileShader("VSInstancedMesh", "vs_5_0", m_Log, meshBlob)) return false;
+        if (!CompileShader("VSMain", "vs_5_0", m_Log, vertexBlob)) return false;
+        if (!CompileShader("PSMain", "ps_5_0", m_Log, pixelBlob)) return false;
 
         if (FAILED(device->CreateVertexShader(vertexBlob->GetBufferPointer(),
             vertexBlob->GetBufferSize(), nullptr, m_VertexShader.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreateVertexShader failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreateVertexShader failed.");
             return false;
         }
 
         if (FAILED(device->CreatePixelShader(pixelBlob->GetBufferPointer(),
             pixelBlob->GetBufferSize(), nullptr, m_PixelShader.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreatePixelShader failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreatePixelShader failed.");
             return false;
         }
 
         if (FAILED(device->CreateVertexShader(instancedBlob->GetBufferPointer(),
             instancedBlob->GetBufferSize(), nullptr, m_InstancedVertexShader.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreateVertexShader (instanced) failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreateVertexShader (instanced) failed.");
             return false;
         }
 
@@ -203,14 +203,14 @@ namespace Platform::Render::System
             instancedBlob->GetBufferPointer(), instancedBlob->GetBufferSize(),
             m_InstancedInputLayout.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreateInputLayout (instanced) failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreateInputLayout (instanced) failed.");
             return false;
         }
 
         if (FAILED(device->CreateVertexShader(meshBlob->GetBufferPointer(),
             meshBlob->GetBufferSize(), nullptr, m_MeshVertexShader.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreateVertexShader (mesh) failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreateVertexShader (mesh) failed.");
             return false;
         }
 
@@ -232,7 +232,7 @@ namespace Platform::Render::System
             meshBlob->GetBufferPointer(), meshBlob->GetBufferSize(),
             m_MeshInputLayout.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreateInputLayout (mesh) failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreateInputLayout (mesh) failed.");
             return false;
         }
 
@@ -248,7 +248,7 @@ namespace Platform::Render::System
             vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize(),
             m_InputLayout.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: CreateInputLayout failed.");
+            m_Log.Message("[GpuPipeline] ERROR: CreateInputLayout failed.");
             return false;
         }
 
@@ -265,7 +265,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateBuffer(&desc, nullptr, m_CameraBuffer.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: Camera constant buffer failed.");
+            m_Log.Message("[GpuPipeline] ERROR: Camera constant buffer failed.");
             return false;
         }
 
@@ -282,7 +282,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateRasterizerState(&raster, m_Rasterizer.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: Rasterizer state failed.");
+            m_Log.Message("[GpuPipeline] ERROR: Rasterizer state failed.");
             return false;
         }
 
@@ -294,7 +294,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateDepthStencilState(&depth, m_DepthState.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: Depth state failed.");
+            m_Log.Message("[GpuPipeline] ERROR: Depth state failed.");
             return false;
         }
 
@@ -304,7 +304,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateBlendState(&blend, m_BlendState.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: Blend state failed.");
+            m_Log.Message("[GpuPipeline] ERROR: Blend state failed.");
             return false;
         }
 
@@ -313,7 +313,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateDepthStencilState(&overlay, m_OverlayDepthState.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: Overlay depth state failed.");
+            m_Log.Message("[GpuPipeline] ERROR: Overlay depth state failed.");
             return false;
         }
 
@@ -330,7 +330,7 @@ namespace Platform::Render::System
 
         if (FAILED(device->CreateBlendState(&translucent, m_TranslucentBlendState.GetAddressOf())))
         {
-            m_LogsService.Message("[GpuPipeline] ERROR: Translucent blend state failed.");
+            m_Log.Message("[GpuPipeline] ERROR: Translucent blend state failed.");
             return false;
         }
 

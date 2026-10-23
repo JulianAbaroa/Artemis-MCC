@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Map.System:AimPass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Environment.Aim.Type;
@@ -24,7 +24,7 @@ export namespace Viewer::Map::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using SphereInstance = Platform::Render::Type::SphereInstance;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
@@ -35,7 +35,7 @@ export namespace Viewer::Map::System
         using Aims = Environment::Aim::Type::Aims;
 
     public:
-        explicit AimPass(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit AimPass(Log& log) : m_Log(log) {}
         ~AimPass() = default;
 
         AimPass(const AimPass&) = delete;
@@ -56,7 +56,7 @@ export namespace Viewer::Map::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         ComPtr<ID3D11Buffer> m_UnitFillBuffer{};
         ComPtr<ID3D11Buffer> m_UnitWireBuffer{};

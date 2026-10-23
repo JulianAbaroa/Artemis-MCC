@@ -31,12 +31,12 @@ namespace Platform::Host::Hook
 
         if (*jump != k_JumpIfAboveOpcode)
         {
-            m_LogsService.Message("[SessionJoinCheckPatch] ERROR: Unexpected byte {:02X} at the jump.", *jump);
+            m_Log.Message("[SessionJoinCheckPatch] ERROR: Unexpected byte {:02X} at the jump.", *jump);
             return false;
         }
 
         if (!Platform::Hook::System::WritePatch(jump, k_JumpAlwaysPatch, m_OriginalBytes,
-            "[SessionJoinCheckPatch]", m_LogsService))
+            "[SessionJoinCheckPatch]", m_Log))
         {
             return false;
         }
@@ -51,7 +51,7 @@ namespace Platform::Host::Hook
         if (!m_IsPatched) return;
 
         Platform::Hook::System::RestorePatch(m_PatchAddress, m_OriginalBytes,
-            "[SessionJoinCheckPatch]", m_LogsService);
+            "[SessionJoinCheckPatch]", m_Log);
 
         m_PatchAddress = nullptr;
         m_OriginalBytes.clear();

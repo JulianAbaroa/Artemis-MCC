@@ -1,6 +1,6 @@
 export module Platform.Host.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import std;
 
@@ -12,12 +12,12 @@ export namespace Platform::Host::System
     class HostService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using AOBService = Platform::Memory::System::AOBService;
 
     public:
-        HostService(LogsService& logsService, AOBService& aobService) :
-            m_LogsService(logsService), m_AOBService(aobService) {}
+        HostService(Log& log, AOBService& aobService) :
+            m_Log(log), m_AOBService(aobService) {}
         ~HostService() = default;
 
         HostService(const HostService&) = delete;
@@ -30,7 +30,7 @@ export namespace Platform::Host::System
         auto GetFunctionAddress(std::size_t index) -> void*;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
 
         std::atomic<void**> m_VTable{ nullptr };

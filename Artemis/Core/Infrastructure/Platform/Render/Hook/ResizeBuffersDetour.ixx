@@ -5,7 +5,7 @@ module;
 
 export module Platform.Render.Hook:ResizeBuffers;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.State;
 import Platform.Render.System;
@@ -17,7 +17,7 @@ export namespace Platform::Render::Hook
     class ResizeBuffersDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using ResizeBuffersFunction = Platform::Render::Type::ResizeBuffersFunction;
 
@@ -27,9 +27,9 @@ export namespace Platform::Render::Hook
         using SwapChainLocator = Platform::Render::System::SwapChainLocator;
 
     public:
-        ResizeBuffersDetour(LogsService& logsService, RenderStore& renderStore,
+        ResizeBuffersDetour(Log& log, RenderStore& renderStore,
             RenderService& renderService, SwapChainLocator& swapChainLocator) :
-            m_LogsService(logsService), m_RenderStore(renderStore),
+            m_Log(log), m_RenderStore(renderStore),
             m_RenderService(renderService), m_SwapChainLocator(swapChainLocator) {}
         ~ResizeBuffersDetour() = default;
 
@@ -41,7 +41,7 @@ export namespace Platform::Render::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         RenderStore& m_RenderStore;
         RenderService& m_RenderService;
         SwapChainLocator& m_SwapChainLocator;

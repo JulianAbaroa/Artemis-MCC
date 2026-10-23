@@ -230,6 +230,6 @@ namespace Environment::Entities::System
         m_EntitiesStore.Cleanup();
         m_CarriedHandlesStore.Cleanup();
 
-        m_LogsService.Message("[EntitiesService] INFO: Cleanup completed.");
+        m_Log.Message("[EntitiesService] INFO: Cleanup completed.");
     }
 }

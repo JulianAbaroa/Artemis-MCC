@@ -44,6 +44,6 @@ namespace Environment::Details::System
     {
         m_ZoneDetailsStore.Cleanup();
 
-        m_LogsService.Message("[ZoneDetailsService] INFO: Cleanup completed.");
+        m_Log.Message("[ZoneDetailsService] INFO: Cleanup completed.");
     }
 }

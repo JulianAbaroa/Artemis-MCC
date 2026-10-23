@@ -103,7 +103,7 @@ namespace Platform::Bridge::System
         HANDLE mapping{ CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, size, wideName.c_str()) };
         if (mapping == nullptr)
         {
-            m_LogsService.Message("[BridgeService] ERROR: Failed to create the shared memory {} (error {}).", name, GetLastError());
+            m_Log.Message("[BridgeService] ERROR: Failed to create the shared memory {} (error {}).", name, GetLastError());
             return false;
         }
 
@@ -112,7 +112,7 @@ namespace Platform::Bridge::System
         HANDLE actionEvent{ CreateEventW(nullptr, FALSE, FALSE, Widen(name + std::string(k_BridgeActionEventSuffix)).c_str()) };
         if (view == nullptr || tickEvent == nullptr || actionEvent == nullptr)
         {
-            m_LogsService.Message("[BridgeService] ERROR: Failed to map the shared memory {} or create its events (error {}).", name,
+            m_Log.Message("[BridgeService] ERROR: Failed to map the shared memory {} or create its events (error {}).", name,
                 GetLastError());
             if (view != nullptr) UnmapViewOfFile(view);
             if (tickEvent != nullptr) CloseHandle(tickEvent);
@@ -144,7 +144,7 @@ namespace Platform::Bridge::System
         m_BridgeStore.GetLinkState() = BridgeLinkState{};
         m_BridgeStore.SetRegion(region, mapping, tickEvent, actionEvent, pid, discovery);
 
-        m_LogsService.Message("[BridgeService] INFO: Shared memory {} open ({} bytes).", name, sizeof(BridgeRegion));
+        m_Log.Message("[BridgeService] INFO: Shared memory {} open ({} bytes).", name, sizeof(BridgeRegion));
         return true;
     }
 
@@ -169,7 +169,7 @@ namespace Platform::Bridge::System
         SetEvent(static_cast<HANDLE>(m_BridgeStore.GetTickEvent()));
 
         m_BridgeStore.ClearRegion();
-        m_LogsService.Message("[BridgeService] INFO: Shared memory closed.");
+        m_Log.Message("[BridgeService] INFO: Shared memory closed.");
     }
 
     auto BridgeService::Stop() -> void
@@ -246,7 +246,7 @@ namespace Platform::Bridge::System
         if (endRound != link.LastClientEndRound && control.Owner == BridgeOwner::Python)
         {
             m_LifecycleStore.SetEndRoundRequested(true);
-            m_LogsService.Message("[BridgeService] INFO: End of round requested at action tick {}.", m_BridgeStore.GetActionTick());
+            m_Log.Message("[BridgeService] INFO: End of round requested at action tick {}.", m_BridgeStore.GetActionTick());
         }
         link.LastClientEndRound = endRound;
 
@@ -271,14 +271,14 @@ namespace Platform::Bridge::System
         {
             if (last != 0)
             {
-                m_LogsService.Message("[BridgeService] INFO: Clock restarted for match {}: action tick {} after {}.", match,
+                m_Log.Message("[BridgeService] INFO: Clock restarted for match {}: action tick {} after {}.", match,
                     out.ActionTick, last);
             }
         }
         else if (isConsecutive && last != 0 && !isRepeated && out.ActionTick != last + 1)
         {
             m_BridgeStore.AddClockSkip();
-            m_LogsService.Message("[BridgeService] WARNING: Clock skip in match {}: action tick {} after {}.", match, out.ActionTick,
+            m_Log.Message("[BridgeService] WARNING: Clock skip in match {}: action tick {} after {}.", match, out.ActionTick,
                 last);
         }
         m_BridgeStore.SetLastReadTick(out.ActionTick);
@@ -394,7 +394,7 @@ namespace Platform::Bridge::System
             {
                 hook.IsLockstepSuspended = false;
                 hook.TimeoutsInRow = 0;
-                m_LogsService.Message("[BridgeService] INFO: The client answers again: Lockstep resumed.");
+                m_Log.Message("[BridgeService] INFO: The client answers again: Lockstep resumed.");
             }
 
             // A decision is applied at its tick plus the latency, or as soon as it arrives when it is late.
@@ -432,7 +432,7 @@ namespace Platform::Bridge::System
         const std::string appData{ m_SettingsStore.GetAppDataDirectory() };
         if (appData.empty())
         {
-            m_LogsService.Message("[BridgeService] WARNING: No Artemis folder in LOCALAPPDATA: the client must be given the pid.");
+            m_Log.Message("[BridgeService] WARNING: No Artemis folder in LOCALAPPDATA: the client must be given the pid.");
             return {};
         }
 
@@ -455,7 +455,7 @@ namespace Platform::Bridge::System
             k_BridgeLayoutHash, k_BridgeLayoutVersion);
         if (!file)
         {
-            m_LogsService.Message("[BridgeService] WARNING: Failed to write the discovery file {}.", path.string());
+            m_Log.Message("[BridgeService] WARNING: Failed to write the discovery file {}.", path.string());
             return {};
         }
 
@@ -483,15 +483,15 @@ namespace Platform::Bridge::System
     {
         if (control.IsClientConnected != previous.IsClientConnected)
         {
-            if (control.IsClientConnected) m_LogsService.Message("[BridgeService] INFO: Client connected.");
-            else if (isClientLeft) m_LogsService.Message("[BridgeService] INFO: Client left.");
-            else m_LogsService.Message("[BridgeService] WARNING: Client lost (no heartbeat for {} ms).", k_ClientTimeout.count());
+            if (control.IsClientConnected) m_Log.Message("[BridgeService] INFO: Client connected.");
+            else if (isClientLeft) m_Log.Message("[BridgeService] INFO: Client left.");
+            else m_Log.Message("[BridgeService] WARNING: Client lost (no heartbeat for {} ms).", k_ClientTimeout.count());
         }
 
         if (control.Owner != previous.Owner || control.Mode != previous.Mode || control.AgentMask != previous.AgentMask ||
             control.DecisionPeriod != previous.DecisionPeriod || control.Latency != previous.Latency)
         {
-            m_LogsService.Message("[BridgeService] INFO: Owner {}, mode {}, N {}, d {}, agents 0x{:04X}.",
+            m_Log.Message("[BridgeService] INFO: Owner {}, mode {}, N {}, d {}, agents 0x{:04X}.",
                 control.Owner == BridgeOwner::Python ? "Python" : "UI", control.Mode == BridgeMode::Lockstep ? "Lockstep" : "Free",
                 control.DecisionPeriod, control.Latency, control.AgentMask);
         }
@@ -534,7 +534,7 @@ namespace Platform::Bridge::System
         if (isRequested == m_LifecycleStore.IsPauseRequested()) return;
 
         m_LifecycleStore.SetPauseRequested(isRequested);
-        m_LogsService.Message("[BridgeService] INFO: {} at action tick {}.", isRequested ? "Paused" : "Resumed",
+        m_Log.Message("[BridgeService] INFO: {} at action tick {}.", isRequested ? "Paused" : "Resumed",
             m_BridgeStore.GetActionTick());
     }
 
@@ -590,7 +590,7 @@ namespace Platform::Bridge::System
         if (++hook.TimeoutsInRow >= k_MaxLockstepTimeouts)
         {
             hook.IsLockstepSuspended = true;
-            m_LogsService.Message("[BridgeService] WARNING: No actions for decision {} after {} waits of {} ms: Lockstep suspended until "
+            m_Log.Message("[BridgeService] WARNING: No actions for decision {} after {} waits of {} ms: Lockstep suspended until "
                 "the client answers.", decision, hook.TimeoutsInRow, k_LockstepTimeout.count());
         }
 

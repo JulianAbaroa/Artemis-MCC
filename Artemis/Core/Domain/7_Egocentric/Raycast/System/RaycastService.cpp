@@ -454,6 +454,6 @@ namespace Egocentric::Raycast::System
     auto RaycastService::Cleanup() -> void
     {
         m_RaycastStore.Cleanup();
-        m_LogsService.Message("[RaycastService] INFO: Cleanup completed.");
+        m_Log.Message("[RaycastService] INFO: Cleanup completed.");
     }
 }

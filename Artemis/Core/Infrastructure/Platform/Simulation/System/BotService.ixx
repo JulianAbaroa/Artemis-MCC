@@ -1,6 +1,6 @@
 export module Platform.Simulation.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Simulation.Type;
 import Platform.Simulation.State;
@@ -15,7 +15,7 @@ export namespace Platform::Simulation::System
     class BotService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
@@ -32,8 +32,8 @@ export namespace Platform::Simulation::System
         using BotStore = Platform::Simulation::State::BotStore;
 
     public:
-        BotService(LogsService& logsService, AOBService& aobService, BotStore& botStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_BotStore(botStore) {}
+        BotService(Log& log, AOBService& aobService, BotStore& botStore) :
+            m_Log(log), m_AOBService(aobService), m_BotStore(botStore) {}
         ~BotService() = default;
 
         BotService(const BotService&) = delete;
@@ -86,7 +86,7 @@ export namespace Platform::Simulation::System
         auto ResolveFunctions() -> bool;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         BotStore& m_BotStore;
 

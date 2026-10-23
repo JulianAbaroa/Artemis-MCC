@@ -1,7 +1,7 @@
 export module Egocentric.Raycast.System;
 
 import Common.Math.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.World.System;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
@@ -42,7 +42,7 @@ export namespace Egocentric::Raycast::System
         using SelfExclusion = Egocentric::Raycast::Type::SelfExclusion;
         using PerceptionOrigin = Egocentric::Raycast::Type::PerceptionOrigin;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using PlayerTableStore = Tables::Player::State::PlayerTableStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
@@ -54,12 +54,12 @@ export namespace Egocentric::Raycast::System
         using RaycastStore = Egocentric::Raycast::State::RaycastStore;
 
     public:
-        RaycastService(LogsService& logsService, PlayerTableStore& playerStore,
+        RaycastService(Log& log, PlayerTableStore& playerStore,
             ObjectTableStore& objectStore, DefinitionsStore& definitionsStore,
             Raycaster& raycaster, SelfStore& selfStore,
             CollidableService& collidableService, EntitiesStore& entitiesStore,
             PlayersStore& playersStore, RaycastStore& raycastStore) :
-            m_LogsService(logsService), m_PlayerStore(playerStore),
+            m_Log(log), m_PlayerStore(playerStore),
             m_ObjectStore(objectStore), m_DefinitionsStore(definitionsStore),
             m_Raycaster(raycaster), m_SelfStore(selfStore),
             m_CollidableService(collidableService), m_EntitiesStore(entitiesStore),
@@ -73,7 +73,7 @@ export namespace Egocentric::Raycast::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         PlayerTableStore& m_PlayerStore;
         ObjectTableStore& m_ObjectStore;
         DefinitionsStore& m_DefinitionsStore;

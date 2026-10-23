@@ -61,13 +61,14 @@ while ($true)
         $configuration = if ($req.configuration) { $req.configuration } else { 'Debug' }
         $platform = if ($req.platform) { $req.platform } else { 'x64' }
         $target = if ($req.target) { $req.target } else { 'Build' }
-        # The default project keeps the Solution* properties of Visual Studio. Another project is built as MSBuild gets it.
+        # Every .vcxproj gets the Solution* properties of Visual Studio (the projects of the .sln are also built by Visual Studio, and
+        # different properties would break the shared incremental build). A .sln is built as MSBuild gets it.
         $project = $defaultProject
         $buildProperties = $solutionProperties
         if ($req.project)
         {
             $project = Join-Path $root (([string]$req.project) -replace '/', '\')
-            $buildProperties = @()
+            if ($project -like '*.sln') { $buildProperties = @() }
             if (-not (Test-Path $project)) { throw "Project not found: $project" }
         }
         $detailArguments = @()

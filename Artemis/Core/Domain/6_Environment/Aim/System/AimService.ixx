@@ -1,7 +1,7 @@
 export module Environment.Aim.System;
 
 import Common.Math.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.World.Type;
 import Resolved.Vitality.Type;
 import Resolved.Vitality.State;
@@ -26,16 +26,16 @@ export namespace Environment::Aim::System
         using Aims = Environment::Aim::Type::Aims;
         using SectionAim = Environment::Aim::Type::SectionAim;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
         using AimStore = Environment::Aim::State::AimStore;
 
     public:
-        AimService(LogsService& logsService, VitalityStore& vitalityStore,
+        AimService(Log& log, VitalityStore& vitalityStore,
             ObjectTableStore& objectStore, BoneMatricesStore& boneMatricesStore,
-            AimStore& aimStore) : m_LogsService(logsService),
+            AimStore& aimStore) : m_Log(log),
             m_VitalityStore(vitalityStore), m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore), m_AimStore(aimStore) {}
         ~AimService() = default;
@@ -45,7 +45,7 @@ export namespace Environment::Aim::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         VitalityStore& m_VitalityStore;
         ObjectTableStore& m_ObjectStore;
         BoneMatricesStore& m_BoneMatricesStore;

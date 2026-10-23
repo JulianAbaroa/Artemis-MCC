@@ -1,6 +1,6 @@
 export module Relations.Classifier.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.Definitions.State;
 import Resolved.Vitality.State;
 import Tables.Object.Type;
@@ -17,7 +17,7 @@ export namespace Relations::Classifier::System
     class ClassifierService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
@@ -31,9 +31,9 @@ export namespace Relations::Classifier::System
         using TagClassificationsStore = Relations::Classifier::State::TagClassificationsStore;
 
     public:
-        ClassifierService(LogsService& logsService, DefinitionsStore& definitionsStore, VitalityStore& vitalityStore,
+        ClassifierService(Log& log, DefinitionsStore& definitionsStore, VitalityStore& vitalityStore,
             ObjectTableStore& objectStore, ClassifierStore& classifierStore, TagClassificationsStore& tagClassificationsStore) :
-            m_LogsService(logsService), m_DefinitionsStore(definitionsStore), m_VitalityStore(vitalityStore),
+            m_Log(log), m_DefinitionsStore(definitionsStore), m_VitalityStore(vitalityStore),
             m_ObjectStore(objectStore), m_ClassifierStore(classifierStore), m_TagClassificationsStore(tagClassificationsStore) {}
         ~ClassifierService() = default;
 
@@ -44,7 +44,7 @@ export namespace Relations::Classifier::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         DefinitionsStore& m_DefinitionsStore;
         VitalityStore& m_VitalityStore;
         ObjectTableStore& m_ObjectStore;

@@ -101,7 +101,7 @@ namespace Platform::Render::System
         {
             if (!m_IsAttachFailed)
             {
-                m_LogsService.Message("[RenderService] ERROR: {}", reason);
+                m_Log.Message("[RenderService] ERROR: {}", reason);
                 m_IsAttachFailed = true;
             }
 
@@ -164,13 +164,13 @@ namespace Platform::Render::System
             if (FAILED(device->CreateDepthStencilView(depthTexture.Get(),
                 &viewDesc, depthStencil.GetAddressOf())))
             {
-                m_LogsService.Message("[RenderService] ERROR:"
+                m_Log.Message("[RenderService] ERROR:"
                     " CreateDepthStencilView failed.");
             }
         }
         else
         {
-            m_LogsService.Message("[RenderService] ERROR:"
+            m_Log.Message("[RenderService] ERROR:"
                 " Depth CreateTexture2D failed.");
         }
 
@@ -219,7 +219,7 @@ namespace Platform::Render::System
     {
         if (m_HandlerErrors.fetch_add(1) >= 5) return;
 
-        m_LogsService.Message("[RenderService] ERROR: A {} handler threw an exception.", stage);
+        m_Log.Message("[RenderService] ERROR: A {} handler threw an exception.", stage);
     }
 
     auto RenderService::RequestShutdown() -> void
@@ -274,6 +274,6 @@ namespace Platform::Render::System
         m_RenderStore.Cleanup();
         m_RenderStore.SetShutdownDone();
 
-        m_LogsService.Message("[RenderService] INFO: Shutdown complete.");
+        m_Log.Message("[RenderService] INFO: Shutdown complete.");
     }
 }

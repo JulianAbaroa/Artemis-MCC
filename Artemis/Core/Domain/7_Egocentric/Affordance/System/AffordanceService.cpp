@@ -413,6 +413,6 @@ namespace Egocentric::Affordance::System
     auto AffordanceService::Cleanup() -> void
     {
         m_AffordanceStore.Cleanup();
-        m_LogsService.Message("[AffordanceService] INFO: Cleanup completed.");
+        m_Log.Message("[AffordanceService] INFO: Cleanup completed.");
     }
 }

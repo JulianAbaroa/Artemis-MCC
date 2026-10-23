@@ -1,6 +1,6 @@
 export module Map.Builder.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.State;
 import Map.Reader.System;
 import Map.Tag.State;
@@ -15,7 +15,7 @@ export namespace Map::Builder::System
     private:
         using TagCatalog = Map::Tag::State::TagCatalog;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using FileStore = Map::Reader::State::FileStore;
         using TagIndexStore = Map::Reader::State::TagIndexStore;
         using FileLocatorService = Map::Reader::System::FileLocatorService;
@@ -23,11 +23,11 @@ export namespace Map::Builder::System
         using TagGroupService = Map::Reader::System::TagGroupService;
 
     public:
-        MapBuilderService(LogsService& logsService, TagCatalog& tagCatalog,
+        MapBuilderService(Log& log, TagCatalog& tagCatalog,
             FileStore& fileStore, TagIndexStore& tagIndexStore,
             FileLocatorService& fileLocatorService,
             TagResolverService& tagResolverService) :
-            m_LogsService(logsService), m_TagCatalog(tagCatalog), m_FileStore(fileStore),
+            m_Log(log), m_TagCatalog(tagCatalog), m_FileStore(fileStore),
             m_TagIndexStore(tagIndexStore), m_FileLocatorService(fileLocatorService),
             m_TagResolverService(tagResolverService) {}
         ~MapBuilderService() = default;
@@ -40,7 +40,7 @@ export namespace Map::Builder::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TagCatalog& m_TagCatalog;
         FileStore& m_FileStore;
         TagIndexStore& m_TagIndexStore;

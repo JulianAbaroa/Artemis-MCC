@@ -156,7 +156,7 @@ namespace Viewer::Map::System
             }
         }
 
-        m_Profiler.Report(m_LogsService);
+        m_Profiler.Report(m_Log);
     }
 
     auto MapService::Draw(const FrameContext& frame) -> void

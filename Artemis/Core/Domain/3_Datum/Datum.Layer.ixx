@@ -21,8 +21,8 @@ export namespace Datum
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform) :
-            m_DatumService(service.m_LogsService, platform.m_MemoryReaderService, m_DatumStore),
-            m_ObjectTableLocator(service.m_LogsService, platform.m_AOBService, m_DatumStore)
+            m_DatumService(service.m_Log, platform.m_MemoryReaderService, m_DatumStore),
+            m_ObjectTableLocator(service.m_Log, platform.m_AOBService, m_DatumStore)
         {
             auto& lifecycle = platform.m_LifecycleService;
 

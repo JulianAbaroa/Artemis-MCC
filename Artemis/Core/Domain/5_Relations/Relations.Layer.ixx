@@ -23,8 +23,8 @@ export namespace Relations
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved, Tables::Layer& tables) :
-            m_ClassifierService(service.m_LogsService, resolved.m_DefinitionsStore, resolved.m_VitalityStore, tables.m_ObjectStore, m_ClassifierStore, m_TagClassificationsStore),
-            m_ObjectGraphService(service.m_LogsService, tables.m_ObjectStore, m_ObjectGraphStore)
+            m_ClassifierService(service.m_Log, resolved.m_DefinitionsStore, resolved.m_VitalityStore, tables.m_ObjectStore, m_ClassifierStore, m_TagClassificationsStore),
+            m_ObjectGraphService(service.m_Log, tables.m_ObjectStore, m_ObjectGraphStore)
         {
             platform.m_LifecycleService.OnCleanup([this] {
                 m_ClassifierService.Cleanup();

@@ -102,12 +102,12 @@ namespace Export::Tick::Hook
 
         if (m_EndRound == nullptr || m_DatumStore.GetThreadContext() == 0)
         {
-            m_LogsService.Message("[SimulationTicksDetour] WARNING: End of round dropped (no engine function or no game).");
+            m_Log.Message("[SimulationTicksDetour] WARNING: End of round dropped (no engine function or no game).");
             return;
         }
 
         m_EndRound(k_EndRoundNoWinner, false, k_EndRoundScriptReason);
-        m_LogsService.Message("[SimulationTicksDetour] INFO: Round ended on request.");
+        m_Log.Message("[SimulationTicksDetour] INFO: Round ended on request.");
     }
 
     auto SimulationTicksDetour::Install() -> void
@@ -124,7 +124,7 @@ namespace Export::Tick::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedSimulationTicks),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[SimulationTicksDetour]", m_LogsService))
+            "[SimulationTicksDetour]", m_Log))
         {
             return;
         }
@@ -141,11 +141,11 @@ namespace Export::Tick::Hook
         // call of this hook is in flight on that thread. On eject the tick wait wakes with the shutdown signal.
         if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
-            m_LogsService.Message("[SimulationTicksDetour] WARNING:"
+            m_Log.Message("[SimulationTicksDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[SimulationTicksDetour]", m_LogsService);
+            "[SimulationTicksDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

@@ -576,6 +576,6 @@ namespace Tables::Object::System
     {
         m_ObjectStore.Cleanup();
 
-        m_LogsService.Message("[ObjectTableService] INFO: Cleanup completed.");
+        m_Log.Message("[ObjectTableService] INFO: Cleanup completed.");
     }
 }

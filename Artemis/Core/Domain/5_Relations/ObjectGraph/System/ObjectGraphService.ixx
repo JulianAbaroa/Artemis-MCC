@@ -1,6 +1,6 @@
 export module Relations.ObjectGraph.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Object.State;
 import Relations.ObjectGraph.Type;
 import Relations.ObjectGraph.State;
@@ -14,13 +14,13 @@ export namespace Relations::ObjectGraph::System
         using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
         using ObjectNodes = Relations::ObjectGraph::Type::ObjectNodes;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
 
     public:
-        ObjectGraphService(LogsService& logsService, ObjectTableStore& objectStore,
-            ObjectGraphStore& objectGraphStore) : m_LogsService(logsService),
+        ObjectGraphService(Log& log, ObjectTableStore& objectStore,
+            ObjectGraphStore& objectGraphStore) : m_Log(log),
             m_ObjectStore(objectStore), m_ObjectGraphStore(objectGraphStore) {}
         ~ObjectGraphService() = default;
 
@@ -29,7 +29,7 @@ export namespace Relations::ObjectGraph::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         ObjectGraphStore& m_ObjectGraphStore;
 

@@ -53,6 +53,6 @@ namespace Egocentric::Self::System
     {
         m_SelfStore.Cleanup();
 
-        m_LogsService.Message("[SelfService] INFO: Cleanup completed.");
+        m_Log.Message("[SelfService] INFO: Cleanup completed.");
     }
 }

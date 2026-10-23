@@ -1,6 +1,6 @@
 export module Environment.Players.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Object.Type;
 import Tables.Object.State;
 import Tables.Player.Type;
@@ -19,7 +19,7 @@ export namespace Environment::Players::System
     class PlayersService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AliveObject = Tables::Object::Type::Alive::AliveObject;
         using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
@@ -40,9 +40,9 @@ export namespace Environment::Players::System
         using PlayersStore = Environment::Players::State::PlayersStore;
 
     public:
-        PlayersService(LogsService& logsService, ObjectTableStore& objectStore, PlayerTableStore& playerStore,
+        PlayersService(Log& log, ObjectTableStore& objectStore, PlayerTableStore& playerStore,
             VitalityDetailsStore& vitalityDetailsStore, EntitiesStore& entitiesStore, PlayersStore& playersStore) :
-            m_LogsService(logsService), m_ObjectStore(objectStore), m_PlayerStore(playerStore),
+            m_Log(log), m_ObjectStore(objectStore), m_PlayerStore(playerStore),
             m_VitalityDetailsStore(vitalityDetailsStore), m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore) {}
         ~PlayersService() = default;
 
@@ -54,7 +54,7 @@ export namespace Environment::Players::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         PlayerTableStore& m_PlayerStore;
         VitalityDetailsStore& m_VitalityDetailsStore;

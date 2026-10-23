@@ -157,7 +157,7 @@ namespace UI::TickTrace::System
         const std::uint64_t ticks{ m_TickTraceUIStore.GetRecordedTicks() };
         m_TickTraceUIStore.SetStatus(std::format("Saved {} ticks.", ticks));
 
-        m_LogsService.Message("[TickTraceUIService] INFO: Trace saved, {} ticks, {} bytes.",
+        m_Log.Message("[TickTraceUIService] INFO: Trace saved, {} ticks, {} bytes.",
             ticks, m_TickTraceUIStore.GetWrittenBytes());
     }
 
@@ -213,7 +213,7 @@ namespace UI::TickTrace::System
         if (!file)
         {
             m_TickTraceUIStore.SetStatus("The trace file cannot be opened.");
-            m_LogsService.Message("[TickTraceUIService] ERROR: Failed to open the trace file.");
+            m_Log.Message("[TickTraceUIService] ERROR: Failed to open the trace file.");
             return;
         }
 
@@ -236,7 +236,7 @@ namespace UI::TickTrace::System
         m_TickTraceUIStore.SetStartTime(steady_clock::now());
         m_TickTraceUIStore.SetRecording(true);
 
-        m_LogsService.Message("[TickTraceUIService] INFO: Recording ticks to '{}'.", filePath.string());
+        m_Log.Message("[TickTraceUIService] INFO: Recording ticks to '{}'.", filePath.string());
     }
 
     auto TickTraceUIService::ReadClock() const -> TickClock

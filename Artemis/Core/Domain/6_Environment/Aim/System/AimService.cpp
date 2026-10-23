@@ -100,6 +100,6 @@ namespace Environment::Aim::System
     {
         m_AimStore.Cleanup();
 
-        m_LogsService.Message("[AimService] INFO: Cleanup completed.");
+        m_Log.Message("[AimService] INFO: Cleanup completed.");
     }
 }

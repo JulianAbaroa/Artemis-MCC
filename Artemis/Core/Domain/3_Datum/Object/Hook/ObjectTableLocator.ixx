@@ -1,6 +1,6 @@
 export module Datum.Object.Hook;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Datum.Object.State;
 import std;
@@ -11,15 +11,15 @@ export namespace Datum::Object::Hook
     class ObjectTableLocator
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
         using DatumStore = Datum::Object::State::DatumStore;
 
     public:
-        ObjectTableLocator(LogsService& logsService, AOBService& aobService,
-            DatumStore& datumStore) : m_LogsService(logsService),
+        ObjectTableLocator(Log& log, AOBService& aobService,
+            DatumStore& datumStore) : m_Log(log),
             m_AOBService(aobService), m_DatumStore(datumStore) {}
         ~ObjectTableLocator() = default;
 
@@ -28,7 +28,7 @@ export namespace Datum::Object::Hook
         auto FindAndStoreTableBase() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         DatumStore& m_DatumStore;
 

@@ -26,7 +26,7 @@ export import :Scen;
 export import :Vehi;
 export import :Weap;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.System;
 import Map.Tag.State;
 import Map.Tag.System;
@@ -41,17 +41,17 @@ export namespace Resolved::Definitions::System
     class DefinitionsBuilder
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using GeometryLoaderService = Map::Reader::System::GeometryLoaderService;
         using TagResolverService = Map::Reader::System::TagResolverService;
         using TagCatalog = Map::Tag::State::TagCatalog;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 
     public:
-        DefinitionsBuilder(LogsService& logsService, TagCatalog& tagCatalog,
+        DefinitionsBuilder(Log& log, TagCatalog& tagCatalog,
             GeometryLoaderService& geometryLoaderService, DefinitionsStore& definitionsStore,
             TagResolverService& tagResolverService) :
-            m_LogsService(logsService), m_TagCatalog(tagCatalog),
+            m_Log(log), m_TagCatalog(tagCatalog),
             m_GeometryLoaderService(geometryLoaderService), m_DefinitionsStore(definitionsStore),
             m_ObjectBuilder(tagResolverService),
             m_Builders{ BipdBuilder{ m_ObjectBuilder }, BlocBuilder{ m_ObjectBuilder }, CollBuilder{},
@@ -69,7 +69,7 @@ export namespace Resolved::Definitions::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TagCatalog& m_TagCatalog;
         GeometryLoaderService& m_GeometryLoaderService;
         DefinitionsStore& m_DefinitionsStore;

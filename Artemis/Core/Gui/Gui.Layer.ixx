@@ -20,7 +20,7 @@ export namespace Gui
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform) :
-            m_BackendGuiService(service.m_LogsService, service.m_SettingsStore, platform.m_RenderStore),
+            m_BackendGuiService(service.m_Log, service.m_SettingsStore, platform.m_RenderStore),
             m_WndProcGuiService(m_BackendGuiService, service.m_SettingsStore)
         {
             platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {

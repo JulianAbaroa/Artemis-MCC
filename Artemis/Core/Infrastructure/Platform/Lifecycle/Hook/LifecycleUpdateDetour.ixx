@@ -1,6 +1,6 @@
 export module Platform.Lifecycle.Hook:LifecycleUpdate;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.State;
@@ -20,7 +20,7 @@ export namespace Platform::Lifecycle::Hook
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
@@ -35,9 +35,9 @@ export namespace Platform::Lifecycle::Hook
         using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
 
     public:
-        LifecycleUpdateDetour(LogsService& logsService, AOBService& aobService, MatchConfigStore& matchConfigStore,
+        LifecycleUpdateDetour(Log& log, AOBService& aobService, MatchConfigStore& matchConfigStore,
             MatchCycleStore& matchCycleStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_MatchConfigStore(matchConfigStore),
+            m_Log(log), m_AOBService(aobService), m_MatchConfigStore(matchConfigStore),
             m_MatchCycleStore(matchCycleStore) {}
         ~LifecycleUpdateDetour() = default;
 
@@ -54,7 +54,7 @@ export namespace Platform::Lifecycle::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         MatchConfigStore& m_MatchConfigStore;
         MatchCycleStore& m_MatchCycleStore;

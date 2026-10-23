@@ -58,7 +58,7 @@ namespace Map::Reader::System
         }
         else if (vCountInfo > 0)
         {
-            m_LogsService.Message("[GeometryMeshDecoderService] WARNING: '{}':"
+            m_Log.Message("[GeometryMeshDecoderService] WARNING: '{}':"
                 " VB {} DataLength={} not divisible by VertexCount={},"
                 " stride fallback 0x{:X} (VertexType={}).", tagName ?
                 tagName : "?", vbIdx, vbLength, vCountInfo,
@@ -188,7 +188,7 @@ namespace Map::Reader::System
         int fixupIdx = (int)instEntry.ResourceFixups.size() - k_InstanceFixupFromEnd;
         if (fixupIdx < 0 || fixupIdx >= (int)instEntry.ResourceFixups.size())
         {
-            m_LogsService.Message("[GeometryMeshDecoderService] WARNING: '{}':"
+            m_Log.Message("[GeometryMeshDecoderService] WARNING: '{}':"
                 " InstancesEntry.ResourceFixups is too short (Count={}, need >={}).",
                 tagName, (int)instEntry.ResourceFixups.size(), k_InstanceFixupFromEnd);
             return 0;

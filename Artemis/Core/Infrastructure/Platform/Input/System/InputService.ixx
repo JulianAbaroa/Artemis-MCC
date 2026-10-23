@@ -4,7 +4,7 @@ module;
 
 export module Platform.Input.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Input.Type;
 import Platform.Input.State;
 import std;
@@ -15,7 +15,7 @@ export namespace Platform::Input::System
     class InputService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using InputAction = Platform::Input::Type::InputAction;
         using WindowMessage = Platform::Input::Type::WindowMessage;
@@ -27,8 +27,8 @@ export namespace Platform::Input::System
         using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
 
     public:
-        InputService(LogsService& logsService, InputStore& inputStore,
-            MouseDeltaStore& mouseDeltaStore) : m_LogsService(logsService),
+        InputService(Log& log, InputStore& inputStore,
+            MouseDeltaStore& mouseDeltaStore) : m_Log(log),
             m_InputStore(inputStore), m_MouseDeltaStore(mouseDeltaStore) {}
         ~InputService() = default;
 
@@ -67,7 +67,7 @@ export namespace Platform::Input::System
         auto AdvanceInputTick() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         InputStore& m_InputStore;
         MouseDeltaStore& m_MouseDeltaStore;
 

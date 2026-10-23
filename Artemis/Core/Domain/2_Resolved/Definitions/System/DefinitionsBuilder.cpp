@@ -96,11 +96,11 @@ namespace Resolved::Definitions::System
 
         m_DefinitionsStore.Freeze();
 
-        m_LogsService.Message("[DefinitionsBuilder] INFO: Definitions built. {}.", summary);
+        m_Log.Message("[DefinitionsBuilder] INFO: Definitions built. {}.", summary);
 
         for (const auto& [tagName, scnr] : m_DefinitionsStore.m_Scnr.All())
         {
-            m_LogsService.Message("[DefinitionsBuilder] INFO: Map limits of {}."
+            m_Log.Message("[DefinitionsBuilder] INFO: Map limits of {}."
                 " Trigger volumes: {} | Kill triggers: {} | Safe zone triggers: {} | Soft ceilings: {}.",
                 tagName,
                 static_cast<int>(scnr.TriggerVolumes.size()),
@@ -135,12 +135,12 @@ namespace Resolved::Definitions::System
 
         if (renderByName.empty())
         {
-            m_LogsService.Message("[DefinitionsBuilder] ERROR:"
+            m_Log.Message("[DefinitionsBuilder] ERROR:"
                 " Failed to read render geometry.");
         }
         else if (renderByName.size() < tagNames.size())
         {
-            m_LogsService.Message("[DefinitionsBuilder] WARNING:"
+            m_Log.Message("[DefinitionsBuilder] WARNING:"
                 " Render geometry read for {} of {} sbsp.",
                 static_cast<int>(renderByName.size()),
                 static_cast<int>(tagNames.size()));
@@ -169,6 +169,6 @@ namespace Resolved::Definitions::System
     {
         m_DefinitionsStore.Cleanup();
 
-        m_LogsService.Message("[DefinitionsBuilder] INFO: Cleanup completed.");
+        m_Log.Message("[DefinitionsBuilder] INFO: Cleanup completed.");
     }
 }

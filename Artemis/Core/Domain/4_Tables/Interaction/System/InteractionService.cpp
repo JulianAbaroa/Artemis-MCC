@@ -98,6 +98,6 @@ namespace Tables::Interaction::System
     {
         m_InteractionStore.Cleanup();
 
-        m_LogsService.Message("[InteractionService] INFO: Cleanup completed.");
+        m_Log.Message("[InteractionService] INFO: Cleanup completed.");
     }
 }

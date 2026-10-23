@@ -106,7 +106,7 @@ def Main():
         lines, entries = Outline(path, args.members)
         imports = sum(1 for e in entries if e[3] == "top" and re.match(r"(?:export\s+)?import\b", e[4]))
         module = next((e[4] for e in entries if e[3] == "top" and re.match(r"(?:export\s+)?module\s+\w", e[4])), "")
-        short = path[len("Artemis/Core/"):] if path.startswith("Artemis/Core/") else path
+        short = path[len("Artemis/Core/"):] if path.startswith("Artemis/Core/") else (path[len("Artemis/"):] if path.startswith("Artemis/") else path)
         print(f"{short}  ({len(lines)} lines)  {module}  imports: {imports}")
         rows = []
         for begin, end, depth, kind, text, acc in entries:

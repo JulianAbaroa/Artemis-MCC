@@ -30,9 +30,9 @@ export namespace Resolved
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map) :
-            m_DefinitionsBuilder(service.m_LogsService, map.m_TagCatalog, map.m_GeometryLoaderService, m_DefinitionsStore, map.m_TagResolverService),
-            m_WorldBuilder(service.m_LogsService, m_DefinitionsStore, m_WorldStore, m_Raycaster, m_RegionStatesBuilder, m_ModelLinkBuilder),
-            m_VitalityBuilder(service.m_LogsService, m_DefinitionsStore, m_WorldStore, m_VitalityStore)
+            m_DefinitionsBuilder(service.m_Log, map.m_TagCatalog, map.m_GeometryLoaderService, m_DefinitionsStore, map.m_TagResolverService),
+            m_WorldBuilder(service.m_Log, m_DefinitionsStore, m_WorldStore, m_Raycaster, m_RegionStatesBuilder, m_ModelLinkBuilder),
+            m_VitalityBuilder(service.m_Log, m_DefinitionsStore, m_WorldStore, m_VitalityStore)
         {
             platform.m_LifecycleService.OnCleanup([this] {
                 m_WorldBuilder.Cleanup();

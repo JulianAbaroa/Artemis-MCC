@@ -68,7 +68,7 @@ namespace Map::Reader::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedOpenMap),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[OpenMapDetour]", m_LogsService))
+            "[OpenMapDetour]", m_Log))
         {
             return;
         }
@@ -83,7 +83,7 @@ namespace Map::Reader::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[OpenMapDetour]", m_LogsService);
+            "[OpenMapDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

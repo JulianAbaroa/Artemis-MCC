@@ -32,7 +32,7 @@ namespace Viewer::Map::System
 
         if (triangleCount == 0)
         {
-            m_LogsService.Message("[MapPass] WARNING: The map has no render geometry.");
+            m_Log.Message("[MapPass] WARNING: The map has no render geometry.");
             return;
         }
 
@@ -58,7 +58,7 @@ namespace Viewer::Map::System
         const std::size_t byteWidth = vertices.size() * sizeof(Vertex);
         if (byteWidth > (std::numeric_limits<UINT>::max)())
         {
-            m_LogsService.Message("[MapPass] ERROR: Failed to upload the map mesh, it is too big for one buffer.");
+            m_Log.Message("[MapPass] ERROR: Failed to upload the map mesh, it is too big for one buffer.");
             return;
         }
 
@@ -72,13 +72,13 @@ namespace Viewer::Map::System
 
         if (FAILED(device->CreateBuffer(&desc, &data, m_VertexBuffer.GetAddressOf())))
         {
-            m_LogsService.Message("[MapPass] ERROR: Failed to create the map vertex buffer.");
+            m_Log.Message("[MapPass] ERROR: Failed to create the map vertex buffer.");
             return;
         }
 
         m_VertexCount = static_cast<UINT>(vertices.size());
 
-        m_LogsService.Message("[MapPass] INFO: Uploaded map mesh,"
+        m_Log.Message("[MapPass] INFO: Uploaded map mesh,"
             " {} vertices ({} triangles).", m_VertexCount, triangleCount);
     }
 

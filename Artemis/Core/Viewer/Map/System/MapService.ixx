@@ -12,7 +12,7 @@ import :FixturePass;
 import :LimitsPass;
 import :AimPass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Environment.Collidable.State;
@@ -46,7 +46,7 @@ export namespace Viewer::Map::System
     class MapService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using FrameContext = Platform::Render::Type::FrameContext;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
@@ -60,13 +60,13 @@ export namespace Viewer::Map::System
         using OptionsStore = Viewer::Options::State::OptionsStore;
 
     public:
-        MapService(LogsService& logsService, CollidableStore& collidableStore,
+        MapService(Log& log, CollidableStore& collidableStore,
             TickStore& tickStore, SceneService& sceneService, OptionsStore& optionsStore) :
-            m_LogsService(logsService), m_CollidableStore(collidableStore),
+            m_Log(log), m_CollidableStore(collidableStore),
             m_TickStore(tickStore), m_SceneService(sceneService), m_OptionsStore(optionsStore),
-            m_GpuPipeline(logsService), m_MapPass(logsService),
-            m_DynamicPass(logsService), m_ZonePass(logsService),
-            m_RaycastPass(logsService), m_FixturePass(logsService), m_LimitsPass(logsService), m_AimPass(logsService) {}
+            m_GpuPipeline(log), m_MapPass(log),
+            m_DynamicPass(log), m_ZonePass(log),
+            m_RaycastPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
         ~MapService() = default;
 
         MapService(const MapService&) = delete;
@@ -85,7 +85,7 @@ export namespace Viewer::Map::System
         auto Resume() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         CollidableStore& m_CollidableStore;
         TickStore& m_TickStore;
         SceneService& m_SceneService;

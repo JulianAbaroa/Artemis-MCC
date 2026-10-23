@@ -1,6 +1,6 @@
 export module Platform.Lifecycle.System:MatchConfig;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Settings.State;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.State;
@@ -16,14 +16,14 @@ export namespace Platform::Lifecycle::System
     private:
         using path = std::filesystem::path;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
         using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
 
     public:
-        MatchConfigService(LogsService& logsService, SettingsStore& settingsStore, MatchConfigStore& matchConfigStore) :
-            m_LogsService(logsService), m_SettingsStore(settingsStore), m_MatchConfigStore(matchConfigStore) {}
+        MatchConfigService(Log& log, SettingsStore& settingsStore, MatchConfigStore& matchConfigStore) :
+            m_Log(log), m_SettingsStore(settingsStore), m_MatchConfigStore(matchConfigStore) {}
         ~MatchConfigService() = default;
 
         MatchConfigService(const MatchConfigService&) = delete;
@@ -68,7 +68,7 @@ export namespace Platform::Lifecycle::System
         auto Transplant(const std::byte* configuration, std::vector<std::byte>& start) -> bool;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         MatchConfigStore& m_MatchConfigStore;
 

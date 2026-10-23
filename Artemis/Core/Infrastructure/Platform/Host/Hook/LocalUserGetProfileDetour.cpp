@@ -44,7 +44,7 @@ namespace Platform::Host::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLocalUserGetProfile),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[LocalUserGetProfileDetour]", m_LogsService))
+            "[LocalUserGetProfileDetour]", m_Log))
         {
             return false;
         }
@@ -60,7 +60,7 @@ namespace Platform::Host::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[LocalUserGetProfileDetour]", m_LogsService);
+            "[LocalUserGetProfileDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

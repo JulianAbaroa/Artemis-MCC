@@ -5,7 +5,7 @@ import :FileNames;
 import :Header;
 import :TagIndex;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.Type;
 import Map.Reader.State;
 import std;
@@ -19,7 +19,7 @@ export namespace Map::Reader::System
     private:
         using HeaderInfo = Map::Reader::Type::Info::HeaderInfo;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using FileStore = Map::Reader::State::FileStore;
         using TagIndexStore = Map::Reader::State::TagIndexStore;
         using FileLocatorService = Map::Reader::System::FileLocatorService;
@@ -28,10 +28,10 @@ export namespace Map::Reader::System
         using TagIndexService = Map::Reader::System::TagIndexService;
 
     public:
-        explicit MapLoaderService(LogsService& logsService, FileStore& fileStore,
+        explicit MapLoaderService(Log& log, FileStore& fileStore,
             TagIndexStore& tagIndexStore, FileLocatorService& fileLocatorService,
             FileNamesService& fileNamesService, HeaderService& headerService,
-            TagIndexService& tagIndexService) : m_LogsService(logsService),
+            TagIndexService& tagIndexService) : m_Log(log),
             m_FileStore(fileStore), m_TagIndexStore(tagIndexStore),
             m_FileLocatorService(fileLocatorService),
             m_FileNamesService(fileNamesService), m_HeaderService(headerService),
@@ -45,7 +45,7 @@ export namespace Map::Reader::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         FileStore& m_FileStore;
         TagIndexStore& m_TagIndexStore;
         FileLocatorService& m_FileLocatorService;

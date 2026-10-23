@@ -1,6 +1,6 @@
 export module Gui.Backend.System:Backend;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Settings.State;
 import Platform.Input.Type;
 import Platform.Render.Type;
@@ -15,7 +15,7 @@ export namespace Gui::Backend::System
     class BackendGuiService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
         using WindowMessage = Platform::Input::Type::WindowMessage;
@@ -23,8 +23,8 @@ export namespace Gui::Backend::System
         using RenderStore = Platform::Render::State::RenderStore;
 
     public:
-        BackendGuiService(LogsService& logsService, SettingsStore& settingsStore,
-            RenderStore& renderStore) : m_LogsService(logsService),
+        BackendGuiService(Log& log, SettingsStore& settingsStore,
+            RenderStore& renderStore) : m_Log(log),
             m_SettingsStore(settingsStore), m_RenderStore(renderStore) {}
         ~BackendGuiService() = default;
 
@@ -65,7 +65,7 @@ export namespace Gui::Backend::System
         auto IsReady() const -> bool;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         RenderStore& m_RenderStore;
 

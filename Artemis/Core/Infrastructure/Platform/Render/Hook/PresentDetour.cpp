@@ -46,7 +46,7 @@ namespace Platform::Render::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedPresent),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[PresentDetour]", m_LogsService))
+            "[PresentDetour]", m_Log))
         {
             return false;
         }
@@ -63,12 +63,12 @@ namespace Platform::Render::Hook
 
         if (!m_RenderService.WaitForIdle(k_IdleTimeout))
         {
-            m_LogsService.Message("[PresentDetour] WARNING:"
+            m_Log.Message("[PresentDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
 
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[PresentDetour]", m_LogsService);
+            "[PresentDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

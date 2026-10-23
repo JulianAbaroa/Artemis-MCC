@@ -56,7 +56,7 @@ export namespace Viewer
             m_SelectionService(environment.m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, m_CameraStore, m_CameraService, m_SelectionService),
-            m_MapService(service.m_LogsService, environment.m_CollidableStore, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
+            m_MapService(service.m_Log, environment.m_CollidableStore, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
             m_HudService(service.m_TelemetryStore, platform.m_RenderStore, environment.m_CollidableStore, exportLayer.m_TickStore, m_OverlayStore, m_SelectionStore),
             m_LabelService(exportLayer.m_TickStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
         {

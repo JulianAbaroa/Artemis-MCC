@@ -1,6 +1,6 @@
 export module UI.TickDump.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Settings.State;
 import Map.Reader.State;
 import Export.Tick.Type;
@@ -20,7 +20,7 @@ export namespace UI::TickDump::System
     private:
         using milliseconds = std::chrono::milliseconds;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
         using FileStore = Map::Reader::State::FileStore;
         using Tick = Export::Tick::Type::Tick;
@@ -29,9 +29,9 @@ export namespace UI::TickDump::System
         using TickDumpUIStore = UI::TickDump::State::TickDumpUIStore;
 
     public:
-        TickDumpUIService(LogsService& logsService, SettingsStore& settingsStore, FileStore& fileStore, FlatService& flatService,
+        TickDumpUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore, FlatService& flatService,
             TickDumpUIStore& tickDumpUIStore) :
-            m_LogsService(logsService), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_FlatService(flatService),
+            m_Log(log), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_FlatService(flatService),
             m_TickDumpUIStore(tickDumpUIStore) {}
         ~TickDumpUIService() = default;
 
@@ -57,7 +57,7 @@ export namespace UI::TickDump::System
         auto Draw() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         FileStore& m_FileStore;
         FlatService& m_FlatService;

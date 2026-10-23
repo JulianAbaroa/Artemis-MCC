@@ -1,12 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Core\Common\Time">
-      <UniqueIdentifier>{ed6d6335-43c2-4ba1-a6a7-5a609ddc8ae5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Time\System">
-      <UniqueIdentifier>{d6a2a922-5aa9-4a48-9eb4-0630be696d3d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\UI\TickDump">
       <UniqueIdentifier>{02b748e8-92d3-4d5b-90c4-486b043cbb25}</UniqueIdentifier>
     </Filter>
@@ -36,12 +30,6 @@
     </Filter>
     <Filter Include="Core\UI\Bench">
       <UniqueIdentifier>{24cf16ae-7afa-4327-afea-81f1264185ad}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Text\System">
-      <UniqueIdentifier>{5019c4e5-0bfa-4086-929c-5f9f606d09b1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Text">
-      <UniqueIdentifier>{bce199d8-4027-40b8-be89-21549848f656}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core">
       <UniqueIdentifier>{5451e5d0-65dd-45a7-97b0-8c1c47408481}</UniqueIdentifier>
@@ -234,45 +222,6 @@
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Render\Type">
       <UniqueIdentifier>{96694708-945e-402c-8207-32a77b6d2358}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service">
-      <UniqueIdentifier>{57f75382-cf31-4e2e-ae10-4b1616c4e509}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Telemetry">
-      <UniqueIdentifier>{01b3b43d-b8e6-455d-82a1-573f5912a19e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Telemetry\State">
-      <UniqueIdentifier>{7cd49cce-f6df-4bb3-96f7-0016879bb4f0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Telemetry\System">
-      <UniqueIdentifier>{46a24751-225d-4b56-bb1e-a5c5fc654f9b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Preferences">
-      <UniqueIdentifier>{54d00af3-8ceb-4f88-ba6f-e72ea89d1575}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Preferences\System">
-      <UniqueIdentifier>{a3e63258-6032-4cbc-b3f1-eeabf3cc769d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Settings">
-      <UniqueIdentifier>{294beb2f-3f92-4031-b027-2ae768056ed6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Settings\State">
-      <UniqueIdentifier>{a71b0d8f-8ff4-48c3-92a4-4367dea2e4f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Settings\System">
-      <UniqueIdentifier>{d3cc1a0d-1322-47a0-856b-47d4966dcf55}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Logs">
-      <UniqueIdentifier>{15bb9313-0ef1-4588-bbb4-3dfb99e361ee}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Logs\Type">
-      <UniqueIdentifier>{ad752c2c-5e68-4091-9e60-49c5bac053a9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Logs\State">
-      <UniqueIdentifier>{fc4f7099-f1bf-4a3d-a775-87f5cff617ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Service\Logs\System">
-      <UniqueIdentifier>{27404a82-5c61-4e68-a7b7-3cafd7d05350}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain">
       <UniqueIdentifier>{c9089062-e4df-43b3-9795-6cc54284f159}</UniqueIdentifier>
@@ -1105,15 +1054,6 @@
     <Filter Include="Core\Common">
       <UniqueIdentifier>{bb34dd4c-6ffe-4602-8311-9144de62727d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Common\Math">
-      <UniqueIdentifier>{35a3d382-b37a-4ea6-894f-5496598875ce}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Engine">
-      <UniqueIdentifier>{1d3ee940-bc8d-4e36-a0ae-32e6cddd07c0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Engine\Type">
-      <UniqueIdentifier>{287e274f-2eff-4af2-aef3-d05edb2df2a9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Gui\Style">
       <UniqueIdentifier>{78164a2a-6422-49a0-876e-f5e38b94bb16}</UniqueIdentifier>
     </Filter>
@@ -1122,12 +1062,6 @@
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Hook\Type">
       <UniqueIdentifier>{64471c90-a3b4-41a0-a737-5477d00ad0b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Math\Type">
-      <UniqueIdentifier>{1b6af01c-f252-44d0-8415-78ae222cae42}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Math\System">
-      <UniqueIdentifier>{1143c37d-85d7-4154-95b4-147cc015a628}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Common\Tag">
       <UniqueIdentifier>{2e4697de-ba11-4d62-92e6-d97d17722b2c}</UniqueIdentifier>
@@ -1140,30 +1074,6 @@
     </Filter>
     <Filter Include="Core\Common\Semantic\Type">
       <UniqueIdentifier>{8d3a4a6e-91e8-4e00-a53a-7c4b92b726a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Team">
-      <UniqueIdentifier>{da8e7241-7d1c-4dcb-b0f5-55bd86c2f1aa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Team\Type">
-      <UniqueIdentifier>{043eaa96-7864-4865-a640-96a9579b01a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\ZoneShape">
-      <UniqueIdentifier>{8d90489f-9ce2-47b2-a481-7835fb912d91}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\ZoneShape\Type">
-      <UniqueIdentifier>{1a855fe9-7bfb-4b05-b38c-d41cbdb56ee6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Geometry">
-      <UniqueIdentifier>{48af9b97-8824-45cf-9b36-869cb53beb2b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Geometry\System">
-      <UniqueIdentifier>{8de33c5c-f81b-4716-8d2e-066a7b1f7a43}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\State">
-      <UniqueIdentifier>{d5f4ab06-adaf-4469-a26b-7d1bbe182b99}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\State\Type">
-      <UniqueIdentifier>{d56baa17-9959-42d9-9d95-6c4e634b716b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Hook">
       <UniqueIdentifier>{069b409e-a3dd-4385-b657-4927292aa2a1}</UniqueIdentifier>
@@ -1185,15 +1095,6 @@
     </Filter>
     <Filter Include="Core\Domain\1_Map\Tag\Jpt\Type">
       <UniqueIdentifier>{a77a170a-2b81-4126-b48b-f9686affc709}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Reflect">
-      <UniqueIdentifier>{590315ad-1390-40e5-9b00-c411edcedbb6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Reflect\Type">
-      <UniqueIdentifier>{f7044b52-8576-4dd9-b973-93f93a6de2a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Reflect\System">
-      <UniqueIdentifier>{b7f1b12e-223a-4444-a975-b7008982fdd6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Gui\Widget\System\Inspector">
       <UniqueIdentifier>{4b9aafa2-045c-46a4-a259-1242fd0c7c77}</UniqueIdentifier>
@@ -1321,9 +1222,6 @@
     <Filter Include="Core\Domain\6_Environment\Aim\System">
       <UniqueIdentifier>{8a441872-8e9b-46e9-b668-a3f2b363cf2f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Service\Preferences\Type">
-      <UniqueIdentifier>{b156d511-5ac1-46c1-9b59-d69c02b8f074}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\3_Datum">
       <UniqueIdentifier>{aafafe2f-b76c-4d08-b57e-f8d827b1af7f}</UniqueIdentifier>
     </Filter>
@@ -1415,12 +1313,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Common\Time\System\Common.Time.System.ixx">
-      <Filter>Core\Common\Time\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Time\System\Common.Time.System.cpp">
-      <Filter>Core\Common\Time\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx">
       <Filter>Core\UI\TickDump\Type</Filter>
     </ClCompile>
@@ -1468,12 +1360,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Text\System\Common.Text.System.cpp">
-      <Filter>Core\Common\Text\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Text\System\Common.Text.System.ixx">
-      <Filter>Core\Common\Text\System</Filter>
     </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
@@ -2666,54 +2552,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Service.Layer.ixx">
-      <Filter>Core\Infrastructure\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.cpp">
-      <Filter>Core\Infrastructure\Service\Logs\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Logs\State\LogsStore.ixx">
-      <Filter>Core\Infrastructure\Service\Logs\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.cpp">
-      <Filter>Core\Infrastructure\Service\Logs\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Logs\System\LogsService.ixx">
-      <Filter>Core\Infrastructure\Service\Logs\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Logs\Type\Service.Logs.Type.ixx">
-      <Filter>Core\Infrastructure\Service\Logs\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.cpp">
-      <Filter>Core\Infrastructure\Service\Preferences\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Preferences\System\PreferencesService.ixx">
-      <Filter>Core\Infrastructure\Service\Preferences\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.cpp">
-      <Filter>Core\Infrastructure\Service\Settings\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Settings\State\SettingsStore.ixx">
-      <Filter>Core\Infrastructure\Service\Settings\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.cpp">
-      <Filter>Core\Infrastructure\Service\Settings\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Settings\System\SettingsService.ixx">
-      <Filter>Core\Infrastructure\Service\Settings\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.cpp">
-      <Filter>Core\Infrastructure\Service\Telemetry\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\State\TelemetryStore.ixx">
-      <Filter>Core\Infrastructure\Service\Telemetry\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.cpp">
-      <Filter>Core\Infrastructure\Service\Telemetry\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Telemetry\System\TelemetryService.ixx">
-      <Filter>Core\Infrastructure\Service\Telemetry\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderConstant.ixx">
       <Filter>Core\Domain\1_Map\Reader\Type</Filter>
     </ClCompile>
@@ -2765,29 +2603,11 @@
     <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Common\Engine\Type\Common.Engine.Type.ixx">
-      <Filter>Core\Common\Engine\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Hook\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx">
       <Filter>Core\Gui\Style\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Math\Type\Common.Math.Type.ixx">
-      <Filter>Core\Common\Math\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Math\System\Common.Math.System.cpp">
-      <Filter>Core\Common\Math\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Math\System\Common.Math.System.ixx">
-      <Filter>Core\Common\Math\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.cpp">
-      <Filter>Core\Common\Geometry\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Geometry\System\Common.Geometry.System.ixx">
-      <Filter>Core\Common\Geometry\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx">
       <Filter>Core\Common\Tag\Type</Filter>
@@ -2851,15 +2671,6 @@
     </ClCompile>
     <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx">
       <Filter>Core\Common\Semantic\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Team\Type\Common.Team.Type.ixx">
-      <Filter>Core\Common\Team\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\ZoneShape\Type\Common.ZoneShape.Type.ixx">
-      <Filter>Core\Common\ZoneShape\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\State\Type\Common.State.Type.ixx">
-      <Filter>Core\Common\State\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
@@ -3052,15 +2863,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.cpp">
       <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Math.ixx">
-      <Filter>Core\Common\Reflect\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Reflect\System\Common.Reflect.System.ixx">
-      <Filter>Core\Common\Reflect\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Reflect\Type\Common.Reflect.Type.Core.ixx">
-      <Filter>Core\Common\Reflect\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Widget\System\Inspector\InspectorGuiService.ixx">
       <Filter>Core\Gui\Widget\System\Inspector</Filter>
@@ -3299,9 +3101,6 @@
     <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sddt.ixx">
       <Filter>Core\Domain\2_Resolved\Definitions\_Reflect\Level</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Common\Reflect\Common.Reflect.Type.ixx">
-      <Filter>Core\Common\Reflect</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldModelLink.ixx">
       <Filter>Core\Domain\2_Resolved\World\Type</Filter>
     </ClCompile>
@@ -3328,9 +3127,6 @@
     </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Service\Preferences\Type\Service.Preferences.Type.ixx">
-      <Filter>Core\Infrastructure\Service\Preferences\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx">
       <Filter>Core\Domain\1_Map\Tag</Filter>

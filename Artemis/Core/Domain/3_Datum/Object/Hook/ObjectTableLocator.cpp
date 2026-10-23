@@ -26,12 +26,12 @@ namespace Datum::Object::Hook
         const std::uintptr_t tableBase{ this->GetObjectTable(threadContext) };
         if (!tableBase)
         {
-            m_LogsService.Message("[ObjectTableLocator] ERROR:"
+            m_Log.Message("[ObjectTableLocator] ERROR:"
                 " ObjectTableBase invalid.");
             return;
         }
 
-        m_LogsService.Message("[ObjectTableLocator] INFO: ObjectTable:"
+        m_Log.Message("[ObjectTableLocator] INFO: ObjectTable:"
             " {:016X}", tableBase);
 
         m_DatumStore.SetThreadContext(threadContext);

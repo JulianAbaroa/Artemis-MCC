@@ -99,7 +99,7 @@ namespace Platform::Input::System
     {
         if (m_HandlerErrors.fetch_add(1) >= 5) return;
 
-        m_LogsService.Message("[InputService] ERROR:"
+        m_Log.Message("[InputService] ERROR:"
             " A {} handler threw an exception", stage);
     }
 }

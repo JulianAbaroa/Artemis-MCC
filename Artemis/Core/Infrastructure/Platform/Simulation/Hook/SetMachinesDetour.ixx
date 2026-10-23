@@ -1,6 +1,6 @@
 export module Platform.Simulation.Hook:SetMachines;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Simulation.Type;
 import Platform.Simulation.State;
@@ -14,7 +14,7 @@ export namespace Platform::Simulation::Hook
     class SetMachinesDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
@@ -24,8 +24,8 @@ export namespace Platform::Simulation::Hook
         using BotStore = Platform::Simulation::State::BotStore;
 
     public:
-        SetMachinesDetour(LogsService& logsService, AOBService& aobService, BotStore& botStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_BotStore(botStore) {}
+        SetMachinesDetour(Log& log, AOBService& aobService, BotStore& botStore) :
+            m_Log(log), m_AOBService(aobService), m_BotStore(botStore) {}
         ~SetMachinesDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -36,7 +36,7 @@ export namespace Platform::Simulation::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         BotStore& m_BotStore;
 

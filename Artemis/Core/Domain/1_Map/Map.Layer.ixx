@@ -44,15 +44,15 @@ export namespace Map
             m_HeaderService(m_FormulaService),
             m_TagIndexService(m_TagIndexStore, m_FormulaService),
             m_FileNamesService(m_TagIndexStore, m_FormulaService),
-            m_TagResolverService(service.m_LogsService, m_FileStore, m_TagIndexStore, m_FormulaService),
+            m_TagResolverService(service.m_Log, m_FileStore, m_TagIndexStore, m_FormulaService),
             m_TagStructureService(m_TagIndexStore),
             m_GeometryInfoService(m_FileStore, m_DataStreamService),
-            m_GeometryMeshDecoderService(service.m_LogsService, m_FileStore, m_DataStreamService, m_FormulaService),
-            m_GeometryResourcePageService(service.m_LogsService, m_FileStore, m_FileLocatorService, m_DataStreamService, m_FormulaService),
-            m_GeometryLoaderService(service.m_LogsService, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService, m_FormulaService),
-            m_MapLoaderService(service.m_LogsService, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_FileNamesService, m_HeaderService, m_TagIndexService),
-            m_MapBuilderService(service.m_LogsService, m_TagCatalog, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_TagResolverService),
-            m_OpenMapDetour(service.m_LogsService, platform.m_AOBService, m_FileStore, m_MapLoaderService)
+            m_GeometryMeshDecoderService(service.m_Log, m_FileStore, m_DataStreamService, m_FormulaService),
+            m_GeometryResourcePageService(service.m_Log, m_FileStore, m_FileLocatorService, m_DataStreamService, m_FormulaService),
+            m_GeometryLoaderService(service.m_Log, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService, m_FormulaService),
+            m_MapLoaderService(service.m_Log, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_FileNamesService, m_HeaderService, m_TagIndexService),
+            m_MapBuilderService(service.m_Log, m_TagCatalog, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_TagResolverService),
+            m_OpenMapDetour(service.m_Log, platform.m_AOBService, m_FileStore, m_MapLoaderService)
         {
             auto& lifecycle = platform.m_LifecycleService;
 

@@ -32,12 +32,12 @@ namespace Tables::Player::Hook
             const std::uintptr_t tableBase{ this->GetPlayerTable(threadContext) };
             if (!tableBase)
             {
-                m_LogsService.Message("[PlayerTableLocator] ERROR:"
+                m_Log.Message("[PlayerTableLocator] ERROR:"
                     " Failed to find the player table.");
             }
             else
             {
-                m_LogsService.Message("[PlayerTableLocator] INFO:"
+                m_Log.Message("[PlayerTableLocator] INFO:"
                     " Player table found at {:016X}.", tableBase);
 
                 m_PlayerStore.SetBase(tableBase);
@@ -49,12 +49,12 @@ namespace Tables::Player::Hook
             const std::uintptr_t mappingBase{ this->GetMapping(threadContext) };
             if (!mappingBase)
             {
-                m_LogsService.Message("[PlayerTableLocator] ERROR:"
+                m_Log.Message("[PlayerTableLocator] ERROR:"
                     " Failed to find the player mapping.");
             }
             else
             {
-                m_LogsService.Message("[PlayerTableLocator] INFO:"
+                m_Log.Message("[PlayerTableLocator] INFO:"
                     " Player mapping found at {:016X}.", mappingBase);
 
                 m_PlayerStore.SetMappingBase(mappingBase);

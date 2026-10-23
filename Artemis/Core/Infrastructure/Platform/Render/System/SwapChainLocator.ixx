@@ -4,7 +4,7 @@ module;
 
 export module Platform.Render.System:SwapChainLocator;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import std;
 
@@ -14,13 +14,13 @@ export namespace Platform::Render::System
     class SwapChainLocator
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using SwapChainAddresses = Platform::Render::Type::SwapChainAddresses;
 
     public:
-        explicit SwapChainLocator(LogsService& logsService) :
-            m_LogsService(logsService) {}
+        explicit SwapChainLocator(Log& log) :
+            m_Log(log) {}
         ~SwapChainLocator() = default;
 
         SwapChainLocator(const SwapChainLocator&) = delete;
@@ -31,7 +31,7 @@ export namespace Platform::Render::System
         auto Locate() -> SwapChainAddresses;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         SwapChainAddresses m_Addresses{};
     };

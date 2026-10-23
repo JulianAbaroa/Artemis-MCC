@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Profiler.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Viewer.Profiler.Type;
 import std;
 
@@ -25,7 +25,7 @@ export namespace Viewer::Profiler::System
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using Cpu = Viewer::Profiler::Type::Cpu;
         using Gpu = Viewer::Profiler::Type::Gpu;
@@ -59,7 +59,7 @@ export namespace Viewer::Profiler::System
         auto EndGpu(ID3D11DeviceContext* context) -> void;
 
         // Logs the averages and resets the window if at least one second has passed.
-        auto Report(LogsService& logsService) -> void;
+        auto Report(Log& log) -> void;
 
         // Releases the GPU queries and resets the window. Call it before the device is released.
         auto Release() -> void;

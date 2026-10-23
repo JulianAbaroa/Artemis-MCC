@@ -75,7 +75,7 @@ namespace Map::Reader::System
 
             if (externalPath.empty())
             {
-                m_LogsService.Message("[GeometryResourcePageService] WARNING:"
+                m_Log.Message("[GeometryResourcePageService] WARNING:"
                     " External cache resource without a resolvable path (idx={}).", externalIdx);
                 return {};
             }

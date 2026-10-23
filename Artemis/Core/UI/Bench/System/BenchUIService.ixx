@@ -1,7 +1,7 @@
 export module UI.Bench.System;
 
+import Common.Log.System;
 import Service.Logs.State;
-import Service.Logs.System;
 import Service.Settings.State;
 import Platform.Memory.System;
 import Platform.Host.State;
@@ -28,8 +28,8 @@ export namespace UI::Bench::System
     private:
         using path = std::filesystem::path;
 
+        using Log = Common::Log::System::Log;
         using LogsStore = Service::Logs::State::LogsStore;
-        using LogsService = Service::Logs::System::LogsService;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
@@ -53,13 +53,13 @@ export namespace UI::Bench::System
         using BenchUIStore = UI::Bench::State::BenchUIStore;
 
     public:
-        BenchUIService(LogsStore& logsStore, LogsService& logsService, SettingsStore& settingsStore,
+        BenchUIService(LogsStore& logsStore, Log& log, SettingsStore& settingsStore,
             MemoryReaderService& memoryReaderService, LocalUserStore& localUserStore, PlayerActionStore& playerActionStore,
             VirtualInputStore& virtualInputStore,
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
             MatchConfigService& matchConfigService, BotStore& botStore, TickStore& tickStore, TickTraceUIStore& tickTraceUIStore,
             BenchUIStore& benchUIStore) :
-            m_LogsStore(logsStore), m_LogsService(logsService), m_SettingsStore(settingsStore),
+            m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
             m_VirtualInputStore(virtualInputStore),
             m_LifecycleStore(lifecycleStore), m_MatchConfigStore(matchConfigStore), m_MatchCycleStore(matchCycleStore),
@@ -83,7 +83,7 @@ export namespace UI::Bench::System
 
     private:
         LogsStore& m_LogsStore;
-        LogsService& m_LogsService;
+        Log& m_Log;
         SettingsStore& m_SettingsStore;
         MemoryReaderService& m_MemoryReaderService;
         LocalUserStore& m_LocalUserStore;

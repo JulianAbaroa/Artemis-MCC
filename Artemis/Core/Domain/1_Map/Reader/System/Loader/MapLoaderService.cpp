@@ -10,7 +10,7 @@ namespace Map::Reader::System
         std::ifstream file = m_FileLocatorService.OpenMapFile(filePath);
         if (!file.is_open())
         {
-            m_LogsService.Message("[MapLoaderService] ERROR: Could not open map file.");
+            m_Log.Message("[MapLoaderService] ERROR: Could not open map file.");
             m_FileStore.SetLoaded(false);
             return;
         }
@@ -33,11 +33,11 @@ namespace Map::Reader::System
 
         if (isValid)
         {
-            m_LogsService.Message("[MapLoaderService] INFO: Map loaded.");
+            m_Log.Message("[MapLoaderService] INFO: Map loaded.");
         }
         else
         {
-            m_LogsService.Message("[MapLoaderService] ERROR: Failed to load map.");
+            m_Log.Message("[MapLoaderService] ERROR: Failed to load map.");
         }
 
         m_FileStore.SetLoaded(isValid);
@@ -50,6 +50,6 @@ namespace Map::Reader::System
         m_FileStore.Cleanup();
         m_TagIndexStore.Cleanup();
 
-        m_LogsService.Message("[MapLoaderService] INFO: Cleanup completed.");
+        m_Log.Message("[MapLoaderService] INFO: Cleanup completed.");
     }
 }

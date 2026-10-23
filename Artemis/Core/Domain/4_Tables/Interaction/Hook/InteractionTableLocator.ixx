@@ -1,6 +1,6 @@
 export module Tables.Interaction.Hook;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Tables.Interaction.State;
 import std;
@@ -11,15 +11,15 @@ export namespace Tables::Interaction::Hook
     class InteractionTableLocator
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
         using InteractionStore = Tables::Interaction::State::InteractionStore;
 
     public:
-        InteractionTableLocator(LogsService& logsService, AOBService& aobService,
-            InteractionStore& interactionStore) : m_LogsService(logsService),
+        InteractionTableLocator(Log& log, AOBService& aobService,
+            InteractionStore& interactionStore) : m_Log(log),
             m_AOBService(aobService), m_InteractionStore(interactionStore) {}
         ~InteractionTableLocator() = default;
 
@@ -28,7 +28,7 @@ export namespace Tables::Interaction::Hook
         auto FindAndStoreTableBase() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         InteractionStore& m_InteractionStore;
 

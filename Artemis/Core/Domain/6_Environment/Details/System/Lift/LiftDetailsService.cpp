@@ -60,6 +60,6 @@ namespace Environment::Details::System
     {
         m_LiftDetailsStore.Cleanup();
 
-        m_LogsService.Message("[LiftDetailsService] INFO: Cleanup completed.");
+        m_Log.Message("[LiftDetailsService] INFO: Cleanup completed.");
     }
 }

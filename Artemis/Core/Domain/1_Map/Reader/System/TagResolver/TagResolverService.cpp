@@ -47,7 +47,7 @@ namespace Map::Reader::System
     {
         if (!m_FileStore.IsLoaded())
         {
-            m_LogsService.Message("[TagResolverService] WARNING: No map loaded.");
+            m_Log.Message("[TagResolverService] WARNING: No map loaded.");
             return {};
         }
 
@@ -56,26 +56,26 @@ namespace Map::Reader::System
 
         if (salt == 0xFFFF || index == 0xFFFF)
         {
-            m_LogsService.Message("[TagResolverService] WARNING: Salt or Index are invalid.");
+            m_Log.Message("[TagResolverService] WARNING: Salt or Index are invalid.");
             return {};
         }
 
         if (index >= m_TagIndexStore.GetTagsSize())
         {
-            m_LogsService.Message("[TagResolverService] WARNING: Index {} is out of range.", index);
+            m_Log.Message("[TagResolverService] WARNING: Index {} is out of range.", index);
             return {};
         }
 
         const TagTableEntry& tagEntry = m_TagIndexStore.GetTag(index);
         if (tagEntry.DatumIndexSalt == 0xFFFF)
         {
-            m_LogsService.Message("[TagResolverService] WARNING: DatumSalt is invalid.");
+            m_Log.Message("[TagResolverService] WARNING: DatumSalt is invalid.");
             return {};
         }
 
         if (tagEntry.DatumIndexSalt != salt)
         {
-            m_LogsService.Message("[TagResolverService] WARNING:"
+            m_Log.Message("[TagResolverService] WARNING:"
                 " DatumSalt mismatch. Expected: {}, Got: {}.",
                 salt, tagEntry.DatumIndexSalt);
             return {};

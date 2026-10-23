@@ -1,6 +1,6 @@
 export module Platform.Lifecycle.Hook:DestroySubsystems;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.State;
@@ -14,16 +14,16 @@ export namespace Platform::Lifecycle::Hook
     class DestroySubsystemsDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using AOBService = Platform::Memory::System::AOBService;
         using DestroySubsystemsFunction = Platform::Lifecycle::Type::DestroySubsystemsFunction;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;
 
     public:
-        DestroySubsystemsDetour(LogsService& logsService, AOBService& aobService,
+        DestroySubsystemsDetour(Log& log, AOBService& aobService,
             LifecycleStore& lifecycleStore, LifecycleService& lifecycleService) :
-            m_LogsService(logsService), m_AOBService(aobService),
+            m_Log(log), m_AOBService(aobService),
             m_LifecycleStore(lifecycleStore), m_LifecycleService(lifecycleService) {}
         ~DestroySubsystemsDetour() = default;
 
@@ -42,7 +42,7 @@ export namespace Platform::Lifecycle::Hook
         static auto IsInProgress() -> bool;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;
         LifecycleService& m_LifecycleService;

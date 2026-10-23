@@ -392,13 +392,13 @@ namespace Viewer::Map::System
         const UINT needed{ static_cast<UINT>(batch.Scratch.size()) };
 
         if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
-            k_InitialCapacity, batch.Buffer, batch.Capacity, tag, m_LogsService))
+            k_InitialCapacity, batch.Buffer, batch.Capacity, tag, m_Log))
         {
             return false;
         }
 
         if (!Platform::Render::System::UploadDynamicVertices(context, batch.Buffer.Get(),
-            batch.Scratch, tag, m_LogsService))
+            batch.Scratch, tag, m_Log))
         {
             return false;
         }

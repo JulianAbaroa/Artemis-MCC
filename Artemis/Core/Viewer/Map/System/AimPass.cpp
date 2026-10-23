@@ -171,7 +171,7 @@ namespace Viewer::Map::System
         {
             m_UnitFillBuffer.Reset();
             m_UnitWireBuffer.Reset();
-            m_LogsService.Message("[AimPass] ERROR: Failed to create the unit mesh buffers.");
+            m_Log.Message("[AimPass] ERROR: Failed to create the unit mesh buffers.");
             return false;
         }
 
@@ -192,7 +192,7 @@ namespace Viewer::Map::System
         if (total == 0) return;
 
         if (!m_InstanceBuffer.Update(device, context, m_FillScratch.data(), total,
-            GpuPipeline::k_InstanceStride, k_InitialInstances, "[AimPass]", m_LogsService))
+            GpuPipeline::k_InstanceStride, k_InitialInstances, "[AimPass]", m_Log))
         {
             return;
         }

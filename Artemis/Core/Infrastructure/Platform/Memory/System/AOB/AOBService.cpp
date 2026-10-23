@@ -74,7 +74,7 @@ namespace Platform::Memory::System
 
         const std::uintptr_t address = this->Scan(baseAddress, sizeOfImage, pattern, name);
 
-        if (address == 0) m_LogsService.Message("[AOBService] ERROR:"
+        if (address == 0) m_Log.Message("[AOBService] ERROR:"
             " Pattern '{}' not found.", name);
 
         return address;

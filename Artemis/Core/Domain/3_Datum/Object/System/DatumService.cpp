@@ -101,6 +101,6 @@ namespace Datum::Object::System
     {
         m_DatumStore.Cleanup();
 
-        m_LogsService.Message("[DatumService] INFO: Cleanup completed.");
+        m_Log.Message("[DatumService] INFO: Cleanup completed.");
     }
 }

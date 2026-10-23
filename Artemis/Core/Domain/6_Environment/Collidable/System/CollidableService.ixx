@@ -1,7 +1,7 @@
 export module Environment.Collidable.System;
 
 import Common.Math.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Resolved.World.Type;
@@ -33,7 +33,7 @@ export namespace Environment::Collidable::System
         using CollidablePart = Environment::Collidable::Type::CollidablePart;
         using Context = Environment::Collidable::Type::Context;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
@@ -43,10 +43,10 @@ export namespace Environment::Collidable::System
         using CollidableStore = Environment::Collidable::State::CollidableStore;
 
     public:
-        CollidableService(LogsService& logsService, DefinitionsStore& definitionsStore,
+        CollidableService(Log& log, DefinitionsStore& definitionsStore,
             ObjectTableStore& objectTableStore, BoneMatricesStore& boneMatricesStore,
             DamageSectionsStore& damageSectionsStore, ClassifierStore& classifierStore,
-            WorldStore& worldStore, CollidableStore& collidableStore) : m_LogsService(logsService),
+            WorldStore& worldStore, CollidableStore& collidableStore) : m_Log(log),
             m_DefinitionsStore(definitionsStore), m_ObjectTableStore(objectTableStore),
             m_BoneMatricesStore(boneMatricesStore), m_DamageSectionsStore(damageSectionsStore),
             m_ClassifierStore(classifierStore),
@@ -66,7 +66,7 @@ export namespace Environment::Collidable::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         DefinitionsStore& m_DefinitionsStore;
         ObjectTableStore& m_ObjectTableStore;
         BoneMatricesStore& m_BoneMatricesStore;

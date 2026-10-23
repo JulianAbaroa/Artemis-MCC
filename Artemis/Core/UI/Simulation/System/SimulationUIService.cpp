@@ -675,7 +675,7 @@ namespace UI::Simulation::System
             changed += std::format(" +{:02X}:{:02X}->{:02X}", offset, watch.Reference.Data[offset], watch.LastChanged.Data[offset]);
         }
 
-        m_LogsService.Message("[SimulationUIService] INFO: Action of local player {} at tick {}: buttons seen {:016X},"
+        m_Log.Message("[SimulationUIService] INFO: Action of local player {} at tick {}: buttons seen {:016X},"
             " changed since the clear{}, bytes {}.", localPlayer + 1, sequence, watch.SeenButtons,
             changed.empty() ? std::string{ " none" } : changed, bytes);
     }
@@ -804,7 +804,7 @@ namespace UI::Simulation::System
             const auto& entry{ snapshot.Options[index] };
             if (entry[0] == 0) continue;
 
-            m_LogsService.Message("[SimulationUIService] INFO: Game options of player {} at tick {}: {}.", index, snapshot.Sequence,
+            m_Log.Message("[SimulationUIService] INFO: Game options of player {} at tick {}: {}.", index, snapshot.Sequence,
                 ToHex(entry));
         }
     }
@@ -991,7 +991,7 @@ namespace UI::Simulation::System
 
     auto SimulationUIService::LogBotAction(std::size_t number, std::size_t playerIndex, const PlayerActions& actions) -> void
     {
-        m_LogsService.Message("[SimulationUIService] INFO: Action of bot {} (player {}) at tick {}: in the mask {}, bytes {}.", number,
+        m_Log.Message("[SimulationUIService] INFO: Action of bot {} (player {}) at tick {}: in the mask {}, bytes {}.", number,
             playerIndex, actions.Sequence, (actions.Mask & (1u << playerIndex)) != 0 ? "yes" : "no",
             ToHex(actions.Actions[playerIndex].Data));
     }

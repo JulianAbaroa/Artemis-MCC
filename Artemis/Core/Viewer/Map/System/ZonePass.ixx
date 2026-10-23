@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Map.System:ZonePass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Export.Tick.Type;
@@ -22,7 +22,7 @@ export namespace Viewer::Map::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using Vertex = Platform::Render::Type::Vertex;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
@@ -32,7 +32,7 @@ export namespace Viewer::Map::System
         using PaletteService = Viewer::Palette::System::PaletteService;
 
     public:
-        explicit ZonePass(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit ZonePass(Log& log) : m_Log(log) {}
         ~ZonePass() = default;
 
         ZonePass(const ZonePass&) = delete;
@@ -47,7 +47,7 @@ export namespace Viewer::Map::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         ComPtr<ID3D11Buffer> m_VertexBuffer{};
         UINT m_Capacity{ 0 };

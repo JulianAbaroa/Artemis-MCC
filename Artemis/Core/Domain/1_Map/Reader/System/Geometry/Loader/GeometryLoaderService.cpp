@@ -41,7 +41,7 @@ namespace Map::Reader::System
 
             if (pageData.empty() || !lbspEntry)
             {
-                m_LogsService.Message("[GeometryLoaderService] INFO: '{}':"
+                m_Log.Message("[GeometryLoaderService] INFO: '{}':"
                     " LBSP page is empty or omitted.", tagName);
                 continue;
             }
@@ -50,7 +50,7 @@ namespace Map::Reader::System
             if (!m_GeometryInfoService.ReadFooter(*lbspEntry, vbCount, ibCount,
                 fixupDataBase) || vbCount <= 0)
             {
-                m_LogsService.Message("[GeometryLoaderService] WARNING:"
+                m_Log.Message("[GeometryLoaderService] WARNING:"
                     " '{}': Invalid footer.", tagName);
                 continue;
             }
@@ -59,7 +59,7 @@ namespace Map::Reader::System
             if (!m_GeometryInfoService.ReadBufferInfoTables(*lbspEntry, vbCount,
                 ibCount, vbInfo, ibInfo, fixupDataBase))
             {
-                m_LogsService.Message("[GeometryLoaderService] WARNING:"
+                m_Log.Message("[GeometryLoaderService] WARNING:"
                     " '{}': Invalid buffer info tables.", tagName);
                 continue;
             }
@@ -90,7 +90,7 @@ namespace Map::Reader::System
                 EmitInstancedGeometry(pageData, *lbspEntry, vbCount, vbInfo, ibInfo,
                     sbsp, lbsp, zone, fixupDataBase, name, geometry.RenderGeometry);
 
-            m_LogsService.Message("[GeometryLoaderService] INFO:"
+            m_Log.Message("[GeometryLoaderService] INFO:"
                 " '{}': {} total tris ({} clusters + {} instances).",
                 tagName, trianglesWorld + trianglesInstances,
                 trianglesWorld, trianglesInstances);
@@ -100,7 +100,7 @@ namespace Map::Reader::System
             ++processed;
         }
 
-        m_LogsService.Message("[GeometryLoaderService] INFO:"
+        m_Log.Message("[GeometryLoaderService] INFO:"
             " Processed SBSPs: {}.", processed);
 
         return result;

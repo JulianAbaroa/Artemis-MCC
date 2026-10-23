@@ -68,7 +68,7 @@ namespace Platform::Render::System
         DummyWindow window{};
         if (!window.Create())
         {
-            m_LogsService.Message("[SwapChainLocator] ERROR:"
+            m_Log.Message("[SwapChainLocator] ERROR:"
                 " Failed to create the dummy window.");
             return {};
         }
@@ -95,7 +95,7 @@ namespace Platform::Render::System
 
         if (FAILED(result))
         {
-            m_LogsService.Message("[SwapChainLocator] ERROR:"
+            m_Log.Message("[SwapChainLocator] ERROR:"
                 " D3D11CreateDeviceAndSwapChain failed (0x{:08X}).",
                 static_cast<std::uint32_t>(result));
             return {};

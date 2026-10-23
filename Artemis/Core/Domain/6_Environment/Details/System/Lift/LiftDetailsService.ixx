@@ -1,6 +1,6 @@
 export module Environment.Details.System:LiftDetails;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Object.State;
 import Relations.Classifier.State;
 import Environment.Details.Type;
@@ -13,7 +13,7 @@ export namespace Environment::Details::System
     class LiftDetailsService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
@@ -22,9 +22,9 @@ export namespace Environment::Details::System
         using LiftDetailsStore = Environment::Details::State::LiftDetailsStore;
 
     public:
-        LiftDetailsService(LogsService& logsService, ObjectTableStore& objectStore, ClassifierStore& classifierStore,
+        LiftDetailsService(Log& log, ObjectTableStore& objectStore, ClassifierStore& classifierStore,
             LiftDetailsStore& liftDetailsStore) :
-            m_LogsService(logsService), m_ObjectStore(objectStore), m_ClassifierStore(classifierStore),
+            m_Log(log), m_ObjectStore(objectStore), m_ClassifierStore(classifierStore),
             m_LiftDetailsStore(liftDetailsStore) {}
         ~LiftDetailsService() = default;
 
@@ -36,7 +36,7 @@ export namespace Environment::Details::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         ClassifierStore& m_ClassifierStore;
         LiftDetailsStore& m_LiftDetailsStore;

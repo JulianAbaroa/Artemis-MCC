@@ -4,7 +4,7 @@ import :DataStream;
 import :Formula;
 
 import Common.Math.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.Type;
 import Map.Reader.State;
 import Map.Tag.Type;
@@ -27,15 +27,15 @@ export namespace Map::Reader::System
         using VertexDecodeContext = Map::Reader::Type::Geometry::VertexDecodeContext;
         using BufferInfo = Map::Reader::Type::Geometry::BufferInfo;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using FileStore = Map::Reader::State::FileStore;
         using DataStreamService = Map::Reader::System::DataStreamService;
         using FormulaService = Map::Reader::System::FormulaService;
 
     public:
-        GeometryMeshDecoderService(LogsService& logsService, FileStore& fileStore,
+        GeometryMeshDecoderService(Log& log, FileStore& fileStore,
             DataStreamService& dataStreamService, FormulaService& formulaService) :
-            m_LogsService(logsService), m_FileStore(fileStore),
+            m_Log(log), m_FileStore(fileStore),
             m_DataStreamService(dataStreamService), m_FormulaService(formulaService) {}
         ~GeometryMeshDecoderService() = default;
 
@@ -76,7 +76,7 @@ export namespace Map::Reader::System
             const SbspObject* sbsp) const -> const Sbsp_CompressionInfoEntry_3*;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         FileStore& m_FileStore;
         DataStreamService& m_DataStreamService;
         FormulaService& m_FormulaService;

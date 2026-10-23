@@ -478,6 +478,6 @@ namespace Environment::Collidable::System
     auto CollidableService::Cleanup() -> void
     {
         m_CollidableStore.Cleanup();
-        m_LogsService.Message("[CollidableService] INFO: Cleanup completed.");
+        m_Log.Message("[CollidableService] INFO: Cleanup completed.");
     }
 }

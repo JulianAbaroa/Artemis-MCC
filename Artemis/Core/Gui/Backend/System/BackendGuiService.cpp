@@ -78,7 +78,7 @@ namespace Gui::Backend::System
         if (frame.Device == nullptr || frame.Context == nullptr
             || frame.Window == nullptr)
         {
-            m_LogsService.Message("[BackendGuiService] ERROR:"
+            m_Log.Message("[BackendGuiService] ERROR:"
                 " Failed to initialize the backend, the frame context is incomplete.");
             return;
         }
@@ -98,21 +98,21 @@ namespace Gui::Backend::System
 
         if (!ImGui_ImplWin32_Init(frame.Window))
         {
-            m_LogsService.Message("[BackendGuiService] ERROR: Failed to initialize the Win32 backend.");
+            m_Log.Message("[BackendGuiService] ERROR: Failed to initialize the Win32 backend.");
             ImGui::DestroyContext();
             return;
         }
 
         if (!ImGui_ImplDX11_Init(frame.Device, frame.Context))
         {
-            m_LogsService.Message("[BackendGuiService] ERROR: Failed to initialize the DX11 backend.");
+            m_Log.Message("[BackendGuiService] ERROR: Failed to initialize the DX11 backend.");
             ImGui_ImplWin32_Shutdown();
             ImGui::DestroyContext();
             return;
         }
 
         m_IsInitialized.store(true);
-        m_LogsService.Message("[BackendGuiService] INFO: Backend initialized ({}x{}).",
+        m_Log.Message("[BackendGuiService] INFO: Backend initialized ({}x{}).",
             frame.Width, frame.Height);
     }
 
@@ -127,7 +127,7 @@ namespace Gui::Backend::System
         ImGui_ImplDX11_InvalidateDeviceObjects();
         ImGui_ImplDX11_CreateDeviceObjects();
 
-        m_LogsService.Message("[BackendGuiService] INFO: Refreshed the device objects ({}x{}).",
+        m_Log.Message("[BackendGuiService] INFO: Refreshed the device objects ({}x{}).",
             frame.Width, frame.Height);
     }
 
@@ -139,7 +139,7 @@ namespace Gui::Backend::System
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
 
-        m_LogsService.Message("[BackendGuiService] INFO: Backend shut down.");
+        m_Log.Message("[BackendGuiService] INFO: Backend shut down.");
     }
 
     auto BackendGuiService::NewFrame() -> void

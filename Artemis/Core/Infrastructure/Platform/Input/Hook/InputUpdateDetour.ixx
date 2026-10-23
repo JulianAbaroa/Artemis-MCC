@@ -1,6 +1,6 @@
 export module Platform.Input.Hook:InputUpdate;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Host.System;
 import Platform.Input.Type;
 import Platform.Input.State;
@@ -14,7 +14,7 @@ export namespace Platform::Input::Hook
     class InputUpdateDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using HostService = Platform::Host::System::HostService;
 
@@ -24,8 +24,8 @@ export namespace Platform::Input::Hook
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
 
     public:
-        InputUpdateDetour(LogsService& logsService, HostService& hostService, VirtualInputStore& virtualInputStore) :
-            m_LogsService(logsService), m_HostService(hostService), m_VirtualInputStore(virtualInputStore) {}
+        InputUpdateDetour(Log& log, HostService& hostService, VirtualInputStore& virtualInputStore) :
+            m_Log(log), m_HostService(hostService), m_VirtualInputStore(virtualInputStore) {}
         ~InputUpdateDetour() = default;
 
         // Finds the target in the game manager vtable and installs the hook. Does nothing if already installed.
@@ -36,7 +36,7 @@ export namespace Platform::Input::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         HostService& m_HostService;
         VirtualInputStore& m_VirtualInputStore;
 

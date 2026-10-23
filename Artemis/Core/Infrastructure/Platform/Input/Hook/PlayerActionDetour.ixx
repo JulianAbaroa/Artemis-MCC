@@ -1,6 +1,6 @@
 export module Platform.Input.Hook:PlayerAction;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Input.Type;
 import Platform.Input.State;
@@ -24,7 +24,7 @@ export namespace Platform::Input::Hook
     class PlayerActionDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
@@ -45,9 +45,9 @@ export namespace Platform::Input::Hook
         using BridgeService = Platform::Bridge::System::BridgeService;
 
     public:
-        PlayerActionDetour(LogsService& logsService, AOBService& aobService, PlayerActionStore& playerActionStore,
+        PlayerActionDetour(Log& log, AOBService& aobService, PlayerActionStore& playerActionStore,
             BotService& botService, BridgeService& bridgeService) :
-            m_LogsService(logsService), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService),
+            m_Log(log), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService),
             m_BridgeService(bridgeService) {}
         ~PlayerActionDetour() = default;
 
@@ -59,7 +59,7 @@ export namespace Platform::Input::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;

@@ -1,6 +1,6 @@
 export module Map.Reader.Hook:OpenMap;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Map.Reader.Type;
 import Map.Reader.State;
@@ -16,15 +16,15 @@ export namespace Map::Reader::Hook
     private:
         using OpenMapFunction = Map::Reader::Type::Hook::OpenMapFunction;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using AOBService = Platform::Memory::System::AOBService;
         using FileStore = Map::Reader::State::FileStore;
         using MapLoaderService = Map::Reader::System::MapLoaderService;
 
     public:
-        OpenMapDetour(LogsService& logsService, AOBService& aobService,
+        OpenMapDetour(Log& log, AOBService& aobService,
             FileStore& fileStore, MapLoaderService& mapLoaderService) :
-            m_LogsService(logsService), m_AOBService(aobService),
+            m_Log(log), m_AOBService(aobService),
             m_FileStore(fileStore), m_MapLoaderService(mapLoaderService) {}
         ~OpenMapDetour() = default;
 
@@ -35,7 +35,7 @@ export namespace Map::Reader::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         FileStore& m_FileStore;
         MapLoaderService& m_MapLoaderService;

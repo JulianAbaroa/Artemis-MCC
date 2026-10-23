@@ -61,7 +61,7 @@ namespace Resolved::Vitality::System
 
         m_VitalityStore.Freeze();
 
-        m_LogsService.Message("[VitalityBuilder] INFO: Built."
+        m_Log.Message("[VitalityBuilder] INFO: Built."
             " Layouts: {} | Skipped (no damage sections): {}"
             " | Kill sections: {} | Headshot sections: {} (anchored: {}).",
             built, skipped, killSections, headshotSections, headshotAnchored);
@@ -223,6 +223,6 @@ namespace Resolved::Vitality::System
     {
         m_VitalityStore.Cleanup();
 
-        m_LogsService.Message("[VitalityBuilder] INFO: Cleanup completed.");
+        m_Log.Message("[VitalityBuilder] INFO: Cleanup completed.");
     }
 }

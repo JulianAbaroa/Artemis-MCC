@@ -6,6 +6,7 @@ module;
 module UI.Bench.System;
 
 import Common.Engine.Type;
+import Common.Log.Type;
 import Common.Semantic.Type;
 import Common.Math.System;
 import Common.Text.System;
@@ -30,13 +31,13 @@ namespace
 
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
+    using Common::Log::Type::LogLevel;
     using Platform::Input::Type::InputState;
     using Platform::Input::Type::LocalInputSource;
     using Platform::Input::Type::PlayerActions;
     using UI::Simulation::Type::LocalPlayerAction;
     using UI::Simulation::System::BuildActionOverride;
     using Service::Logs::Type::LogEntry;
-    using Service::Logs::Type::LogLevel;
     using Environment::Players::Type::Player;
     using Environment::Events::Type::GameEvent;
     using Common::Semantic::Type::EventKey::EventKeyLabel;
@@ -257,7 +258,7 @@ namespace UI::Bench::System
 
         if (folder.empty())
         {
-            m_LogsService.Message("[BenchUIService] WARNING: The bench file is empty, the bench stays off.");
+            m_Log.Message("[BenchUIService] WARNING: The bench file is empty, the bench stays off.");
             return;
         }
 
@@ -269,14 +270,14 @@ namespace UI::Bench::System
 
         if (error)
         {
-            m_LogsService.Message("[BenchUIService] WARNING: Failed to create the folders of {} ({}), the bench stays off.",
+            m_Log.Message("[BenchUIService] WARNING: Failed to create the folders of {} ({}), the bench stays off.",
                 folder.string(), error.message());
             return;
         }
 
         m_BenchUIStore.SetFolder(folder);
         m_BenchUIStore.SetStatus("Waiting for a scenario.");
-        m_LogsService.Message("[BenchUIService] INFO: Bench on, exchange folder {}.", folder.string());
+        m_Log.Message("[BenchUIService] INFO: Bench on, exchange folder {}.", folder.string());
     }
 
     auto BenchUIService::Update() -> void
@@ -296,7 +297,7 @@ namespace UI::Bench::System
             if (run.Message != exception.what())
             {
                 run.Message = exception.what();
-                m_LogsService.Message("[BenchUIService] ERROR: Bench step failed ({}).", run.Message);
+                m_Log.Message("[BenchUIService] ERROR: Bench step failed ({}).", run.Message);
             }
         }
 
@@ -376,12 +377,12 @@ namespace UI::Bench::System
 
         if (error)
         {
-            m_LogsService.Message("[BenchUIService] WARNING: Failed to queue the scenario {} ({}).", file.stem().string(),
+            m_Log.Message("[BenchUIService] WARNING: Failed to queue the scenario {} ({}).", file.stem().string(),
                 error.message());
             return;
         }
 
-        m_LogsService.Message("[BenchUIService] INFO: Scenario {} queued from the Simulation tab.", file.stem().string());
+        m_Log.Message("[BenchUIService] INFO: Scenario {} queued from the Simulation tab.", file.stem().string());
     }
 
     auto BenchUIService::TakeScenario(BenchRun& run) -> void
@@ -426,13 +427,13 @@ namespace UI::Bench::System
         if (!problem.empty() || run.Scenario->Matches.empty())
         {
             run.Message = problem.empty() ? "The scenario has no matches." : problem;
-            m_LogsService.Message("[BenchUIService] WARNING: Scenario {} rejected: {}", run.Scenario->Id, run.Message);
+            m_Log.Message("[BenchUIService] WARNING: Scenario {} rejected: {}", run.Scenario->Id, run.Message);
             this->WriteReport(run, true);
             run = BenchRun{};
             return;
         }
 
-        m_LogsService.Message("[BenchUIService] INFO: Scenario {} ({}) started, {} matches.", run.Scenario->Id, run.Scenario->Name,
+        m_Log.Message("[BenchUIService] INFO: Scenario {} ({}) started, {} matches.", run.Scenario->Id, run.Scenario->Name,
             run.Scenario->Matches.size());
         this->WriteReport(run, false);
     }
@@ -591,7 +592,7 @@ namespace UI::Bench::System
         run.PhaseStart = steady_clock::now();
         report.Result = "running";
 
-        m_LogsService.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
+        m_Log.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
             match.Config);
 
         if (!m_MatchConfigService.LoadPending(match.Config))
@@ -664,7 +665,7 @@ namespace UI::Bench::System
             }
             else if (!m_MatchConfigStore.IsLaunchRequested() && steady_clock::now() - run.LaunchRequest > k_RelaunchAfter)
             {
-                m_LogsService.Message("[BenchUIService] WARNING: No engine start {} s after the launch (MCC ignored START or showed a dialog), "
+                m_Log.Message("[BenchUIService] WARNING: No engine start {} s after the launch (MCC ignored START or showed a dialog), "
                     "requesting it again.",
                     k_RelaunchAfter.count());
                 run.LaunchRequest = steady_clock::now();
@@ -935,7 +936,7 @@ namespace UI::Bench::System
         run.PhaseStart = steady_clock::now();
 
         m_MatchCycleStore.RequestLeave();
-        m_LogsService.Message("[BenchUIService] INFO: Leaving match {} ({}).", run.MatchIndex + 1, end);
+        m_Log.Message("[BenchUIService] INFO: Leaving match {} ({}).", run.MatchIndex + 1, end);
     }
 
     auto BenchUIService::EndMatch(BenchRun& run) -> void
@@ -965,7 +966,7 @@ namespace UI::Bench::System
             }) };
         report.Result = isOk ? "ok" : "fail";
 
-        m_LogsService.Message("[BenchUIService] INFO: Match {} ended ({}): {}, {} ticks.", report.Index, report.End, report.Result,
+        m_Log.Message("[BenchUIService] INFO: Match {} ended ({}): {}, {} ticks.", report.Index, report.End, report.Result,
             report.Ticks);
 
         run.Phase = BenchPhase::Idle;
@@ -978,7 +979,7 @@ namespace UI::Bench::System
         }
 
         this->WriteReport(run, true);
-        m_LogsService.Message("[BenchUIService] INFO: Scenario {} finished.", run.Scenario->Id);
+        m_Log.Message("[BenchUIService] INFO: Scenario {} finished.", run.Scenario->Id);
         run.Scenario.reset();
         run.Reports.clear();
         run.MatchIndex = 0;
@@ -1160,6 +1161,6 @@ namespace UI::Bench::System
             std::this_thread::sleep_for(k_RenameRetryDelay);
         }
 
-        m_LogsService.Message("[BenchUIService] WARNING: Failed to write {} ({}).", file.filename().string(), error.message());
+        m_Log.Message("[BenchUIService] WARNING: Failed to write {} ({}).", file.filename().string(), error.message());
     }
 }

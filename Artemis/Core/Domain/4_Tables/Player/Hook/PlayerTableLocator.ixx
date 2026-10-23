@@ -1,6 +1,6 @@
 export module Tables.Player.Hook;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Tables.Player.State;
 import std;
@@ -11,15 +11,15 @@ export namespace Tables::Player::Hook
     class PlayerTableLocator
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
 
         using PlayerTableStore = Tables::Player::State::PlayerTableStore;
 
     public:
-        PlayerTableLocator(LogsService& logsService, AOBService& aobService,
-            PlayerTableStore& playerStore) : m_LogsService(logsService),
+        PlayerTableLocator(Log& log, AOBService& aobService,
+            PlayerTableStore& playerStore) : m_Log(log),
             m_AOBService(aobService), m_PlayerStore(playerStore) {}
         ~PlayerTableLocator() = default;
 
@@ -28,7 +28,7 @@ export namespace Tables::Player::Hook
         auto FindAndStoreTableBase() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         PlayerTableStore& m_PlayerStore;
 

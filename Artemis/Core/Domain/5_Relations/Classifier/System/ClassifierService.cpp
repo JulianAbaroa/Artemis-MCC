@@ -270,7 +270,7 @@ namespace Relations::Classifier::System
             defaultText += std::format("{} {}", NameOf(function), count);
         }
 
-        m_LogsService.Message("[ClassifierService] INFO: Classified {} tags. Catalog {} | MultiplayerKind {} | KindDefault {} ({}) | Unknown {} | Conflicts {}.",
+        m_Log.Message("[ClassifierService] INFO: Classified {} tags. Catalog {} | MultiplayerKind {} | KindDefault {} ({}) | Unknown {} | Conflicts {}.",
             catalog + multiplayerKind + kindDefault + unknown, catalog, multiplayerKind, kindDefault,
             defaultText.empty() ? "none" : defaultText, unknown, conflicts);
     }
@@ -290,12 +290,12 @@ namespace Relations::Classifier::System
 
         if (classification.Function == Function::Unknown)
         {
-            m_LogsService.Message("[ClassifierService] WARNING: No function for the {} tag {}.", object.FourCC, object.TagName);
+            m_Log.Message("[ClassifierService] WARNING: No function for the {} tag {}.", object.FourCC, object.TagName);
         }
 
         if (IsCatalogConflict(classification))
         {
-            m_LogsService.Message("[ClassifierService] WARNING: The catalog labels the {} tag {} as {}, its multiplayer kind says {}.",
+            m_Log.Message("[ClassifierService] WARNING: The catalog labels the {} tag {} as {}, its multiplayer kind says {}.",
                 object.FourCC, object.TagName, NameOf(classification.Function), NameOf(classification.MultiplayerFunction));
         }
 
@@ -369,6 +369,6 @@ namespace Relations::Classifier::System
         m_ClassifierStore.Cleanup();
         m_TagClassificationsStore.Cleanup();
 
-        m_LogsService.Message("[ClassifierService] INFO: Cleanup completed.");
+        m_Log.Message("[ClassifierService] INFO: Cleanup completed.");
     }
 }

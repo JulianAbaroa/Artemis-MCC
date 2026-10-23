@@ -4,7 +4,7 @@ import :FileLocator;
 import :DataStream;
 import :Formula;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.State;
 import Map.Tag.Type;
 import std;
@@ -19,18 +19,18 @@ export namespace Map::Reader::System
         using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
         using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using FileStore = Map::Reader::State::FileStore;
         using FileLocatorService = Map::Reader::System::FileLocatorService;
         using DataStreamService = Map::Reader::System::DataStreamService;
         using FormulaService = Map::Reader::System::FormulaService;
 
     public:
-        GeometryResourcePageService(LogsService& logsService, FileStore& fileStore,
+        GeometryResourcePageService(Log& log, FileStore& fileStore,
             FileLocatorService& fileLocatorService,
             DataStreamService& dataStreamService,
             FormulaService& formulaService) :
-            m_LogsService(logsService), m_FileStore(fileStore),
+            m_Log(log), m_FileStore(fileStore),
             m_FileLocatorService(fileLocatorService),
             m_DataStreamService(dataStreamService),
             m_FormulaService(formulaService) {}
@@ -47,7 +47,7 @@ export namespace Map::Reader::System
             -> std::vector<std::uint8_t>;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         FileStore& m_FileStore;
         FileLocatorService& m_FileLocatorService;
         DataStreamService& m_DataStreamService;

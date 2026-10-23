@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Logs\State\LogsStore.cpp" />
+    <ClCompile Include="Logs\State\LogsStore.ixx" />
+    <ClCompile Include="Logs\System\LogsSink.cpp" />
+    <ClCompile Include="Logs\System\LogsSink.ixx" />
+    <ClCompile Include="Logs\Type\Service.Logs.Type.ixx" />
+    <ClCompile Include="Preferences\System\PreferencesService.cpp" />
+    <ClCompile Include="Preferences\System\PreferencesService.ixx" />
+    <ClCompile Include="Preferences\Type\Service.Preferences.Type.ixx" />
+    <ClCompile Include="Service.Layer.ixx" />
+    <ClCompile Include="Settings\State\SettingsStore.cpp" />
+    <ClCompile Include="Settings\State\SettingsStore.ixx" />
+    <ClCompile Include="Settings\System\SettingsService.cpp" />
+    <ClCompile Include="Settings\System\SettingsService.ixx" />
+    <ClCompile Include="Telemetry\State\TelemetryStore.cpp" />
+    <ClCompile Include="Telemetry\State\TelemetryStore.ixx" />
+    <ClCompile Include="Telemetry\System\TelemetryService.cpp" />
+    <ClCompile Include="Telemetry\System\TelemetryService.ixx" />
+  </ItemGroup>
+</Project>

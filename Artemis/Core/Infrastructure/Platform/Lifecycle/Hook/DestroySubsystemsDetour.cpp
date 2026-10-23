@@ -34,7 +34,7 @@ namespace Platform::Lifecycle::Hook
         s_InProgress.store(true, std::memory_order_release);
 
         auto& lifecycle = s_Instance->m_LifecycleStore;
-        auto& logs = s_Instance->m_LogsService;
+        auto& logs = s_Instance->m_Log;
 
         lifecycle.SetStatus(Status::TearingDown);
 
@@ -73,7 +73,7 @@ namespace Platform::Lifecycle::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedDestroySubsystems),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[DestroySubsystemsDetour]", m_LogsService))
+            "[DestroySubsystemsDetour]", m_Log))
         {
             return false;
         }
@@ -89,11 +89,11 @@ namespace Platform::Lifecycle::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
-            m_LogsService.Message("[DestroySubsystemsDetour] WARNING:"
+            m_Log.Message("[DestroySubsystemsDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[DestroySubsystemsDetour]", m_LogsService);
+            "[DestroySubsystemsDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
     }

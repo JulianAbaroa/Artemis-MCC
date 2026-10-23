@@ -48,7 +48,7 @@ namespace Platform::Host::Hook
 
         if (store.MarkReported(user))
         {
-            self->m_LogsService.Message("[LocalUserGetPlayerDetour] INFO: Local user {} reported to the engine.", user);
+            self->m_Log.Message("[LocalUserGetPlayerDetour] INFO: Local user {} reported to the engine.", user);
         }
 
         return true;
@@ -65,7 +65,7 @@ namespace Platform::Host::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLocalUserGetPlayer),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[LocalUserGetPlayerDetour]", m_LogsService))
+            "[LocalUserGetPlayerDetour]", m_Log))
         {
             return false;
         }
@@ -81,7 +81,7 @@ namespace Platform::Host::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[LocalUserGetPlayerDetour]", m_LogsService);
+            "[LocalUserGetPlayerDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

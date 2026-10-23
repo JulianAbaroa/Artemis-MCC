@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Map.System:LimitsPass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Resolved.Definitions.Type;
@@ -24,7 +24,7 @@ export namespace Viewer::Map::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using Vertex = Platform::Render::Type::Vertex;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
@@ -36,7 +36,7 @@ export namespace Viewer::Map::System
         using VertexBatch = Viewer::Map::Type::VertexBatch;
 
     public:
-        explicit LimitsPass(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit LimitsPass(Log& log) : m_Log(log) {}
         ~LimitsPass() = default;
 
         LimitsPass(const LimitsPass&) = delete;
@@ -53,7 +53,7 @@ export namespace Viewer::Map::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         VertexBatch m_Faces{};
         VertexBatch m_Edges{};

@@ -1,6 +1,6 @@
 export module Platform.Lifecycle.Hook:EngineInterface;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.State;
@@ -24,7 +24,7 @@ export namespace Platform::Lifecycle::Hook
     class EngineInterfaceDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
@@ -38,9 +38,9 @@ export namespace Platform::Lifecycle::Hook
         using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
 
     public:
-        EngineInterfaceDetour(LogsService& logsService, AOBService& aobService, MemoryReaderService& memoryReaderService,
+        EngineInterfaceDetour(Log& log, AOBService& aobService, MemoryReaderService& memoryReaderService,
             MatchCycleStore& matchCycleStore, MatchConfigService& matchConfigService) :
-            m_LogsService(logsService), m_AOBService(aobService), m_MemoryReaderService(memoryReaderService),
+            m_Log(log), m_AOBService(aobService), m_MemoryReaderService(memoryReaderService),
             m_MatchCycleStore(matchCycleStore), m_MatchConfigService(matchConfigService) {}
         ~EngineInterfaceDetour() = default;
 
@@ -53,7 +53,7 @@ export namespace Platform::Lifecycle::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         MemoryReaderService& m_MemoryReaderService;
         MatchCycleStore& m_MatchCycleStore;

@@ -5,13 +5,13 @@ module;
 
 export module Platform.Render.System:GpuBuffer;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import std;
 
 namespace
 {
-    using Service::Logs::System::LogsService;
+    using Common::Log::System::Log;
 
     using Platform::Render::Type::Vertex;
 }
@@ -24,21 +24,21 @@ export namespace Platform::Render::System
     // return: False if the buffer could not be created.
     auto CreateDynamicVertexBuffer(ID3D11Device* device, UINT vertexCapacity,
         Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, UINT& capacity, const char* tag,
-        LogsService& logsService) -> bool;
+        Log& log) -> bool;
 
     // Makes the buffer hold at least needed vertices, doubling the capacity from initialCapacity.
     // The content is lost when it grows.
     // return: False if the buffer could not be created.
     auto GrowDynamicVertexBuffer(ID3D11Device* device, UINT needed,
         UINT initialCapacity, Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, UINT& capacity,
-        const char* tag, LogsService& logsService) -> bool;
+        const char* tag, Log& log) -> bool;
 
     // Replaces the whole content of the buffer with the vertices.
     // note: The vertices must fit in the buffer.
     // return: False if the buffer could not be mapped.
     auto UploadDynamicVertices(ID3D11DeviceContext* context, ID3D11Buffer* buffer,
         std::span<const Vertex> vertices, const char* tag,
-        LogsService& logsService) -> bool;
+        Log& log) -> bool;
 
     // Binds the buffer to slot 0 and draws it.
     auto DrawVertexBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer,
@@ -85,7 +85,7 @@ export namespace Platform::Render::System
         // return: False if the input is invalid or a GPU call fails.
         auto Update(ID3D11Device* device, ID3D11DeviceContext* context,
             const void* data, UINT count, UINT stride, UINT initialCapacity,
-            const char* tag, LogsService& logsService) -> bool;
+            const char* tag, Log& log) -> bool;
 
         auto Get() const -> ID3D11Buffer*
         {

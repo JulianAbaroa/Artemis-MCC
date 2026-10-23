@@ -15,7 +15,7 @@ namespace Platform::Lifecycle::System
             m_LifecycleStore.GetShutdownCV().notify_all();
         }
 
-        m_LogsService.Message("[LifecycleService] WARNING:"
+        m_Log.Message("[LifecycleService] WARNING:"
             " Shutdown signaled to all threads.");
     }
 

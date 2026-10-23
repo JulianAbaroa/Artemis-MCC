@@ -6,7 +6,7 @@ module;
 export module Platform.Render.System:GpuPipeline;
 
 import Common.Math.Type;
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import std;
 
@@ -20,7 +20,7 @@ export namespace Platform::Render::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using Vertex = Platform::Render::Type::Vertex;
         using SphereInstance = Platform::Render::Type::SphereInstance;
@@ -37,7 +37,7 @@ export namespace Platform::Render::System
         static constexpr UINT k_InstanceStride{ sizeof(SphereInstance) };       // SphereInstanced, slot 1
         static constexpr UINT k_MeshInstanceStride{ sizeof(MeshInstance) };     // MeshInstanced, slot 1
 
-        explicit GpuPipeline(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit GpuPipeline(Log& log) : m_Log(log) {}
         ~GpuPipeline() = default;
 
         GpuPipeline(const GpuPipeline&) = delete;
@@ -59,7 +59,7 @@ export namespace Platform::Render::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         bool m_IsReady{ false };
 

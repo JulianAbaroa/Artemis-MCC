@@ -176,7 +176,7 @@ namespace Viewer::Map::System
             ComPtr<ID3D11Buffer> grown{};
             if (FAILED(device->CreateBuffer(&desc, nullptr, grown.GetAddressOf())))
             {
-                m_LogsService.Message("[DynamicPass] ERROR: Failed to create the geometry buffer.");
+                m_Log.Message("[DynamicPass] ERROR: Failed to create the geometry buffer.");
                 return false;
             }
 
@@ -217,7 +217,7 @@ namespace Viewer::Map::System
         if (total == 0) return;
 
         if (!m_InstanceBuffer.Update(device, context, m_InstanceScratch.data(), total,
-            GpuPipeline::k_MeshInstanceStride, k_InitialInstances, "[DynamicPass]", m_LogsService))
+            GpuPipeline::k_MeshInstanceStride, k_InitialInstances, "[DynamicPass]", m_Log))
         {
             return;
         }

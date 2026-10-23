@@ -1,6 +1,6 @@
 export module Tables.Interaction.System;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Tables.Player.State;
 import Tables.Interaction.Type;
@@ -13,7 +13,7 @@ export namespace Tables::Interaction::System
     class InteractionService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
@@ -23,10 +23,10 @@ export namespace Tables::Interaction::System
         using InteractionStore = Tables::Interaction::State::InteractionStore;
 
     public:
-        InteractionService(LogsService& logsService,
+        InteractionService(Log& log,
             MemoryReaderService& memoryReaderService, PlayerTableStore& playerStore,
             InteractionStore& interactionStore) :
-            m_LogsService(logsService), m_MemoryReaderService(memoryReaderService),
+            m_Log(log), m_MemoryReaderService(memoryReaderService),
             m_PlayerStore(playerStore), m_InteractionStore(interactionStore) {}
         ~InteractionService() = default;
 
@@ -39,7 +39,7 @@ export namespace Tables::Interaction::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         MemoryReaderService& m_MemoryReaderService;
         PlayerTableStore& m_PlayerStore;
         InteractionStore& m_InteractionStore;

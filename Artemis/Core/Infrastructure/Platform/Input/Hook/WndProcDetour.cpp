@@ -36,7 +36,7 @@ namespace Platform::Input::Hook
         {
             if (self->m_LifecycleStore.IsRunning())
             {
-                self->m_LogsService.Message("[WndProcDetour] WARNING:"
+                self->m_Log.Message("[WndProcDetour] WARNING:"
                     " MCC shutdown detected.");
 
                 self->m_LifecycleService.SignalShutdown();
@@ -85,7 +85,7 @@ namespace Platform::Input::Hook
 
         if (!previous && GetLastError() != 0)
         {
-            m_LogsService.Message("[WndProcDetour] ERROR:"
+            m_Log.Message("[WndProcDetour] ERROR:"
                 " Failed to hook the window procedure.");
 
             s_Instance = nullptr;
@@ -95,7 +95,7 @@ namespace Platform::Input::Hook
         s_Window.store(window);
         s_OriginalWndProc.store(previous);
 
-        m_LogsService.Message("[WndProcDetour] INFO: Hook installed.");
+        m_Log.Message("[WndProcDetour] INFO: Hook installed.");
     }
 
     auto WndProcDetour::Uninstall() -> void
@@ -117,11 +117,11 @@ namespace Platform::Input::Hook
             s_OriginalWndProc.store(nullptr);
             s_Window.store(nullptr);
 
-            m_LogsService.Message("[WndProcDetour] INFO: Hook uninstalled.");
+            m_Log.Message("[WndProcDetour] INFO: Hook uninstalled.");
             return;
         }
 
-        m_LogsService.Message("[WndProcDetour] WARNING: The window procedure was"
+        m_Log.Message("[WndProcDetour] WARNING: The window procedure was"
             " hooked by another module after Artemis. Left as passthrough.");
     }
 }

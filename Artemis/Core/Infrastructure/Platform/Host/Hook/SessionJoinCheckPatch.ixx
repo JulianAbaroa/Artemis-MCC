@@ -1,6 +1,6 @@
 export module Platform.Host.Hook:SessionJoinCheck;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Host.State;
 import std;
@@ -14,15 +14,15 @@ export namespace Platform::Host::Hook
     class SessionJoinCheckPatch
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using LocalUserStore = Platform::Host::State::LocalUserStore;
 
         using AOBService = Platform::Memory::System::AOBService;
 
     public:
-        SessionJoinCheckPatch(LogsService& logsService, AOBService& aobService, LocalUserStore& localUserStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_LocalUserStore(localUserStore) {}
+        SessionJoinCheckPatch(Log& log, AOBService& aobService, LocalUserStore& localUserStore) :
+            m_Log(log), m_AOBService(aobService), m_LocalUserStore(localUserStore) {}
         ~SessionJoinCheckPatch() = default;
 
         // Finds the jump by signature and patches it. Does nothing if already patched or if only one local user is requested.
@@ -33,7 +33,7 @@ export namespace Platform::Host::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         LocalUserStore& m_LocalUserStore;
 

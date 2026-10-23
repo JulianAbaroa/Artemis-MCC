@@ -18,7 +18,7 @@ namespace Runtime::Thread
         auto& lifecycle{ m_Platform.m_LifecycleStore };
 
         m_BenchUIService.Initialize();
-        m_Service.m_LogsService.Message("[BenchThread] INFO: Started.");
+        m_Service.m_Log.Message("[BenchThread] INFO: Started.");
 
         std::unique_lock<std::mutex> lock{ lifecycle.GetShutdownMutex() };
 
@@ -33,7 +33,7 @@ namespace Runtime::Thread
             }
             catch (const std::exception& exception)
             {
-                m_Service.m_LogsService.Message("[BenchThread] ERROR: Bench update failed ({}).", exception.what());
+                m_Service.m_Log.Message("[BenchThread] ERROR: Bench update failed ({}).", exception.what());
             }
 
             lock.lock();
@@ -43,6 +43,6 @@ namespace Runtime::Thread
         }
 
         lock.unlock();
-        m_Service.m_LogsService.Message("[BenchThread] INFO: Stopped.");
+        m_Service.m_Log.Message("[BenchThread] INFO: Stopped.");
     }
 }

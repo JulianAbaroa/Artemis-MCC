@@ -3,7 +3,7 @@ test.py
 Builds a test project through the build watcher (Tools/build_watcher.bat, open on the Windows side), runs its exe with GoogleTest
 JSON output and prints a compact summary: how many passed, failed (file:line and message) and were skipped (reason).
 
-    python Tools/test.py                              Release|x64 build + run of Experiments/M0/M0.Tests.
+    python Tools/test.py                              Release|x64 build + run of Artemis/Tests/Artemis.Tests.
     python Tools/test.py --config Debug|x64           Other configuration.
     python Tools/test.py --project PATH --exe PATH    Another test project and its exe (paths relative to the repo).
     python Tools/test.py --filter "Suite.*"           Passed to the exe as --gtest_filter.
@@ -17,8 +17,8 @@ run), 3 the watcher is not running, 4 a LiveChat message arrived (the build keep
 import argparse, json, os, re, sys, time, uuid
 import build, livechat
 
-DEFAULT_PROJECT = "Experiments/M0/M0.Tests/M0.Tests.vcxproj"
-DEFAULT_EXE = "Experiments/M0/build/{platform}/{configuration}/M0.Tests.exe"
+DEFAULT_PROJECT = "Artemis/Tests/Artemis.Tests.vcxproj"
+DEFAULT_EXE = "build/{platform}/{configuration}/Artemis.Tests.exe"
 RESULTS = "build/watch/tests.json"
 RUN_LOG = "run.log"
 

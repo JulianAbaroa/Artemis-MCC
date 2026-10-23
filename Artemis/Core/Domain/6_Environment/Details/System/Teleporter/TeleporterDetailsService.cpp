@@ -101,6 +101,6 @@ namespace Environment::Details::System
     {
         m_TeleporterDetailsStore.Cleanup();
 
-        m_LogsService.Message("[TeleporterDetailsService] INFO: Cleanup completed.");
+        m_Log.Message("[TeleporterDetailsService] INFO: Cleanup completed.");
     }
 }

@@ -1,6 +1,6 @@
 export module Export.Tick.Hook:ExecuteGameFrame;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Service.Telemetry.State;
 import Platform.Memory.System;
 import Platform.Lifecycle.State;
@@ -22,16 +22,16 @@ export namespace Export::Tick::Hook
         using steady_clock = std::chrono::steady_clock;
         using nanoseconds = std::chrono::nanoseconds;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
         using AOBService = Platform::Memory::System::AOBService;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using ExecuteGameFrameFunction = Export::Tick::Type::ExecuteGameFrameFunction;
 
     public:
-        ExecuteGameFrameDetour(LogsService& logsService, TelemetryStore& telemetryStore, AOBService& aobService,
+        ExecuteGameFrameDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,
             LifecycleStore& lifecycleStore) :
-            m_LogsService(logsService), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
+            m_Log(log), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
             m_LifecycleStore(lifecycleStore) {}
         ~ExecuteGameFrameDetour() = default;
 
@@ -60,7 +60,7 @@ export namespace Export::Tick::Hook
         auto CloseTick() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TelemetryStore& m_TelemetryStore;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;

@@ -93,13 +93,13 @@ namespace Viewer::Map::System
         const UINT needed = static_cast<UINT>(vertices.size());
 
         if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
-            k_InitialCapacity, m_VertexBuffer, m_Capacity, "[RaycastPass]", m_LogsService))
+            k_InitialCapacity, m_VertexBuffer, m_Capacity, "[RaycastPass]", m_Log))
         {
             return;
         }
 
         if (!Platform::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
-            vertices, "[RaycastPass]", m_LogsService))
+            vertices, "[RaycastPass]", m_Log))
         {
             return;
         }

@@ -1,6 +1,6 @@
 export module Environment.Details.System:VitalityDetails;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.Vitality.Type;
 import Resolved.Vitality.State;
 import Tables.Object.Type;
@@ -17,7 +17,7 @@ export namespace Environment::Details::System
     class VitalityDetailsService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
         using VitalityStore = Resolved::Vitality::State::VitalityStore;
@@ -32,9 +32,9 @@ export namespace Environment::Details::System
         using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
 
     public:
-        VitalityDetailsService(LogsService& logsService, VitalityStore& vitalityStore, ObjectTableStore& objectStore,
+        VitalityDetailsService(Log& log, VitalityStore& vitalityStore, ObjectTableStore& objectStore,
             DamageSectionsStore& damageSectionsStore, ClassifierStore& classifierStore, VitalityDetailsStore& vitalityDetailsStore) :
-            m_LogsService(logsService), m_VitalityStore(vitalityStore), m_ObjectStore(objectStore),
+            m_Log(log), m_VitalityStore(vitalityStore), m_ObjectStore(objectStore),
             m_DamageSectionsStore(damageSectionsStore), m_ClassifierStore(classifierStore), m_VitalityDetailsStore(vitalityDetailsStore) {}
         ~VitalityDetailsService() = default;
 
@@ -46,7 +46,7 @@ export namespace Environment::Details::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         VitalityStore& m_VitalityStore;
         ObjectTableStore& m_ObjectStore;
         DamageSectionsStore& m_DamageSectionsStore;

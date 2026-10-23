@@ -363,7 +363,7 @@ namespace Platform::Input::Hook
         const std::uint64_t mismatched{ m_PlayerActionStore.AddShadow(field, isMatch) };
         if (isMatch || mismatched > k_ShadowLogLimit) return;
 
-        m_LogsService.Message("[PlayerActionDetour] WARNING: Shadow check: {} of player {} differs (engine {:X}, Artemis {:X}).",
+        m_Log.Message("[PlayerActionDetour] WARNING: Shadow check: {} of player {} differs (engine {:X}, Artemis {:X}).",
             k_ShadowFieldNames[static_cast<std::size_t>(field)], player, engineValue, artemisValue);
     }
 
@@ -518,7 +518,7 @@ namespace Platform::Input::Hook
         m_ClearPlayerAction = reinterpret_cast<ClearPlayerActionFunction>(m_AOBService.FindPattern(Signature::k_ClearPlayerAction));
         if (!m_ClearPlayerAction)
         {
-            m_LogsService.Message("[PlayerActionDetour] ERROR: Failed to find ClearPlayerAction. No action override will be"
+            m_Log.Message("[PlayerActionDetour] ERROR: Failed to find ClearPlayerAction. No action override will be"
                 " applied.");
         }
 
@@ -532,14 +532,14 @@ namespace Platform::Input::Hook
         }
         else
         {
-            m_LogsService.Message("[PlayerActionDetour] ERROR: Failed to find PlayerControlTagLoad. Held buttons of the agents will"
+            m_Log.Message("[PlayerActionDetour] ERROR: Failed to find PlayerControlTagLoad. Held buttons of the agents will"
                 " never count as held.");
         }
 
         m_EngineTlsIndex = this->FindEngineTlsIndex();
         if (!m_EngineTlsIndex)
         {
-            m_LogsService.Message("[PlayerActionDetour] WARNING: Failed to find the engine thread context. No action override"
+            m_Log.Message("[PlayerActionDetour] WARNING: Failed to find the engine thread context. No action override"
                 " will be applied and no bot can be added.");
         }
 
@@ -549,7 +549,7 @@ namespace Platform::Input::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedApplyPlayerActions),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[PlayerActionDetour]", m_LogsService))
+            "[PlayerActionDetour]", m_Log))
         {
             return false;
         }
@@ -565,7 +565,7 @@ namespace Platform::Input::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[PlayerActionDetour]", m_LogsService);
+            "[PlayerActionDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

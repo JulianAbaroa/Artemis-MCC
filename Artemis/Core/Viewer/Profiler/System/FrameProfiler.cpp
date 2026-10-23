@@ -159,7 +159,7 @@ namespace Viewer::Profiler::System
         }
     }
 
-    auto FrameProfiler::Report(LogsService& logsService) -> void
+    auto FrameProfiler::Report(Log& log) -> void
     {
         if (!k_Enabled || !m_IsWindowStarted) return;
 

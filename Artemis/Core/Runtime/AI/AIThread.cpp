@@ -25,7 +25,7 @@ namespace Runtime::Thread
 {
     auto AIThread::Run() -> void
     {
-        auto& logs{ m_Service.m_LogsService };
+        auto& logs{ m_Service.m_Log };
         auto& telemetry{ m_Service.m_TelemetryStore };
         auto& lifecycle{ m_Platform.m_LifecycleStore };
 
@@ -229,7 +229,7 @@ namespace Runtime::Thread
             stages += std::format("{}{} {:.1f} ms", stages.empty() ? "" : ", ", k_StageNames[i], m_StageNs[i] / 1e6);
         }
 
-        m_Service.m_LogsService.Message("[AIThread] WARNING: Slow sweep of {:.1f} ms at tick {}: {}.", sweepNs / 1e6, m_Last, stages);
+        m_Service.m_Log.Message("[AIThread] WARNING: Slow sweep of {:.1f} ms at tick {}: {}.", sweepNs / 1e6, m_Last, stages);
     }
 
     auto AIThread::IsStable() -> bool

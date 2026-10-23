@@ -18,7 +18,7 @@ namespace Runtime::Thread
     auto BridgeThread::Run() -> void
     {
         auto& lifecycle{ m_Platform.m_LifecycleStore };
-        auto& logs{ m_Service.m_LogsService };
+        auto& logs{ m_Service.m_Log };
 
         if (!m_Platform.m_BridgeService.Open())
         {

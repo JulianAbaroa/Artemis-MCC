@@ -86,7 +86,7 @@ namespace Platform::Lifecycle::Hook
             if (self->m_TracedEngine == engine) self->m_TracedEngine = nullptr;
         }
 
-        self->m_LogsService.Message("[EngineInterfaceDetour] INFO: Engine {:016X} destroyed.",
+        self->m_Log.Message("[EngineInterfaceDetour] INFO: Engine {:016X} destroyed.",
             reinterpret_cast<std::uintptr_t>(engine));
 
         reinterpret_cast<EngineDestroyFunction>(s_OriginalVTable[k_EngineDestroyIndex])(engine);
@@ -107,7 +107,7 @@ namespace Platform::Lifecycle::Hook
             self->m_LastState = -1;
         }
 
-        self->m_LogsService.Message("[EngineInterfaceDetour] INFO: Engine {:016X} start, system interface {:016X},"
+        self->m_Log.Message("[EngineInterfaceDetour] INFO: Engine {:016X} start, system interface {:016X},"
             " configuration {:016X}.", reinterpret_cast<std::uintptr_t>(engine),
             reinterpret_cast<std::uintptr_t>(systemInterface), reinterpret_cast<std::uintptr_t>(configuration));
 
@@ -129,7 +129,7 @@ namespace Platform::Lifecycle::Hook
             catch (const std::exception& exception)
             {
                 startConfiguration = configuration;
-                self->m_LogsService.Message("[EngineInterfaceDetour] ERROR: Failed to record or transplant the configuration ({}).",
+                self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to record or transplant the configuration ({}).",
                     exception.what());
             }
         }
@@ -161,7 +161,7 @@ namespace Platform::Lifecycle::Hook
 
         const std::string text{ command != nullptr ? self->ReadText(reinterpret_cast<std::uintptr_t>(command)) : std::string{} };
 
-        self->m_LogsService.Message("[EngineInterfaceDetour] INFO: Text command \"{}\".", text);
+        self->m_Log.Message("[EngineInterfaceDetour] INFO: Text command \"{}\".", text);
 
         reinterpret_cast<EngineCommandFunction>(s_OriginalVTable[k_EngineCommandIndex])(engine, command);
     }
@@ -175,7 +175,7 @@ namespace Platform::Lifecycle::Hook
 
         if (match == 0)
         {
-            m_LogsService.Message("[EngineInterfaceDetour] ERROR: Failed to find the function that creates the engine.");
+            m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to find the function that creates the engine.");
             return false;
         }
 
@@ -190,7 +190,7 @@ namespace Platform::Lifecycle::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLoadGameEngine),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[EngineInterfaceDetour]", m_LogsService))
+            "[EngineInterfaceDetour]", m_Log))
         {
             return false;
         }
@@ -211,7 +211,7 @@ namespace Platform::Lifecycle::Hook
         this->Untrace();
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[EngineInterfaceDetour]", m_LogsService);
+            "[EngineInterfaceDetour]", m_Log);
 
         m_MatchCycleStore.SetEngineGlobal(nullptr);
         m_IsHookInstalled.store(false);
@@ -229,7 +229,7 @@ namespace Platform::Lifecycle::Hook
 
         if (m_TracedEngine != nullptr && m_TracedEngine != engine)
         {
-            m_LogsService.Message("[EngineInterfaceDetour] WARNING: Engine {:016X} was freed without the interface.",
+            m_Log.Message("[EngineInterfaceDetour] WARNING: Engine {:016X} was freed without the interface.",
                 reinterpret_cast<std::uintptr_t>(m_TracedEngine));
         }
 
@@ -244,7 +244,7 @@ namespace Platform::Lifecycle::Hook
         m_TracedEngine = engine;
         *vtableSlot = s_TracedVTable.data();
 
-        m_LogsService.Message("[EngineInterfaceDetour] INFO: Engine {:016X} of game {} created, vtable {:016X} traced.",
+        m_Log.Message("[EngineInterfaceDetour] INFO: Engine {:016X} of game {} created, vtable {:016X} traced.",
             reinterpret_cast<std::uintptr_t>(engine), game, reinterpret_cast<std::uintptr_t>(vtable));
     }
 
@@ -290,19 +290,19 @@ namespace Platform::Lifecycle::Hook
             std::uintptr_t address{ 0 };
             std::memcpy(&address, bytes.data(), sizeof(address));
 
-            m_LogsService.Message("[EngineInterfaceDetour] INFO: State 0x{:02X}, payload {}, text \"{}\".",
+            m_Log.Message("[EngineInterfaceDetour] INFO: State 0x{:02X}, payload {}, text \"{}\".",
                 state, hex, this->ReadText(address));
             return;
         }
 
-        m_LogsService.Message("[EngineInterfaceDetour] INFO: State 0x{:02X}, payload [{}].", state, hex);
+        m_Log.Message("[EngineInterfaceDetour] INFO: State 0x{:02X}, payload [{}].", state, hex);
     }
 
     auto EngineInterfaceDetour::FlushRepeats() -> void
     {
         if (m_RepeatCount == 0) return;
 
-        m_LogsService.Message("[EngineInterfaceDetour] INFO: State 0x{:02X} repeated {} more times.", m_LastState, m_RepeatCount);
+        m_Log.Message("[EngineInterfaceDetour] INFO: State 0x{:02X} repeated {} more times.", m_LastState, m_RepeatCount);
 
         m_RepeatCount = 0;
     }

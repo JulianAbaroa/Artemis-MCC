@@ -47,11 +47,11 @@ namespace Platform::Host::System
 
         if (vtable == nullptr)
         {
-            m_LogsService.Message("[HostService] ERROR: The game manager has no vtable yet.");
+            m_Log.Message("[HostService] ERROR: The game manager has no vtable yet.");
             return nullptr;
         }
 
-        m_LogsService.Message("[HostService] INFO: Game manager found at {:016X}, vtable at {:016X}.",
+        m_Log.Message("[HostService] INFO: Game manager found at {:016X}, vtable at {:016X}.",
             gameManager, reinterpret_cast<std::uintptr_t>(vtable));
 
         return vtable;

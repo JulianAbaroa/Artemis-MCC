@@ -12,7 +12,7 @@ import :Geometry.Info;
 import :Geometry.MeshDecoder;
 import :Geometry.ResourcePage;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Map.Reader.Type;
 import Map.Tag.Type;
 import Map.Tag.State;
@@ -30,7 +30,7 @@ export namespace Map::Reader::System
         using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
         using SbspGeometry = Map::Reader::Type::Geometry::SbspGeometry;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using TagCatalog = Map::Tag::State::TagCatalog;
         using FormulaService = Map::Reader::System::FormulaService;
         using GeometryInfoService = Map::Reader::System::GeometryInfoService;
@@ -38,12 +38,12 @@ export namespace Map::Reader::System
         using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
 
     public:
-        GeometryLoaderService(LogsService& logsService, TagCatalog& tagCatalog,
+        GeometryLoaderService(Log& log, TagCatalog& tagCatalog,
             GeometryResourcePageService& geometryResourcePageService,
             GeometryInfoService& geometryInfoService,
             GeometryMeshDecoderService& geometryMeshDecoderService,
             FormulaService& formulaService) :
-            m_LogsService(logsService), m_TagCatalog(tagCatalog),
+            m_Log(log), m_TagCatalog(tagCatalog),
             m_GeometryResourcePageService(geometryResourcePageService),
             m_GeometryInfoService(geometryInfoService),
             m_GeometryMeshDecoderService(geometryMeshDecoderService),
@@ -57,7 +57,7 @@ export namespace Map::Reader::System
             -> std::vector<SbspGeometry>;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         TagCatalog& m_TagCatalog;
         GeometryResourcePageService& m_GeometryResourcePageService;
         GeometryInfoService& m_GeometryInfoService;

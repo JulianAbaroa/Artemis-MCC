@@ -63,7 +63,7 @@ export namespace Core
         Service::Layer m_Service{};
         Platform::Layer m_Platform{ m_Service };
 
-        PreferencesService m_Preferences{ m_Service.m_SettingsStore, m_Service.m_LogsService };
+        PreferencesService m_Preferences{ m_Service.m_SettingsStore, m_Service.m_Log };
 
         Map::Layer m_Map{ m_Service, m_Platform };
         Resolved::Layer m_Resolved{ m_Service, m_Platform, m_Map };

@@ -5,7 +5,7 @@ module;
 
 export module Viewer.Map.System:DynamicPass;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Environment.Collidable.Type;
@@ -24,7 +24,7 @@ export namespace Viewer::Map::System
         template <typename T>
         using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using MeshInstance = Platform::Render::Type::MeshInstance;
         using GpuPipeline = Platform::Render::System::GpuPipeline;
@@ -36,7 +36,7 @@ export namespace Viewer::Map::System
         using DrawRange = Viewer::Map::Type::DrawRange;
 
     public:
-        explicit DynamicPass(LogsService& logsService) : m_LogsService(logsService) {}
+        explicit DynamicPass(Log& log) : m_Log(log) {}
         ~DynamicPass() = default;
 
         DynamicPass(const DynamicPass&) = delete;
@@ -64,7 +64,7 @@ export namespace Viewer::Map::System
         auto Release() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
 
         ComPtr<ID3D11Buffer> m_GeometryBuffer{};
         UINT m_GeometryCapacity{ 0 };

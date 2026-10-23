@@ -112,7 +112,7 @@ namespace Platform::Input::Hook
         HMODULE user32 = GetModuleHandleW(L"user32.dll");
         if (!user32)
         {
-            m_LogsService.Message("[GetRawInputDataDetour] ERROR:"
+            m_Log.Message("[GetRawInputDataDetour] ERROR:"
                 " Could not get the handle of user32.dll.");
             return;
         }
@@ -124,7 +124,7 @@ namespace Platform::Input::Hook
         if (!Platform::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedGetRawInputData),
             reinterpret_cast<void**>(&s_OriginalFunction),
-            "[GetRawInputDataDetour]", m_LogsService))
+            "[GetRawInputDataDetour]", m_Log))
         {
             return;
         }
@@ -139,7 +139,7 @@ namespace Platform::Input::Hook
         Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
         Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
-            "[GetRawInputDataDetour]", m_LogsService);
+            "[GetRawInputDataDetour]", m_Log);
 
         m_IsHookInstalled.store(false);
         s_Instance = nullptr;

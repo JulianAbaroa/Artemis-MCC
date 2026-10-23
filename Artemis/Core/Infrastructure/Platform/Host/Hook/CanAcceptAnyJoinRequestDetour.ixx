@@ -1,6 +1,6 @@
 export module Platform.Host.Hook:CanAcceptAnyJoinRequest;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Platform.Memory.System;
 import Platform.Host.Type;
 import Platform.Host.State;
@@ -13,7 +13,7 @@ export namespace Platform::Host::Hook
     class CanAcceptAnyJoinRequestDetour
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using CanAcceptAnyJoinRequestFunction = Platform::Host::Type::CanAcceptAnyJoinRequestFunction;
 
@@ -22,8 +22,8 @@ export namespace Platform::Host::Hook
         using AOBService = Platform::Memory::System::AOBService;
 
     public:
-        CanAcceptAnyJoinRequestDetour(LogsService& logsService, AOBService& aobService, LocalUserStore& localUserStore) :
-            m_LogsService(logsService), m_AOBService(aobService), m_LocalUserStore(localUserStore) {}
+        CanAcceptAnyJoinRequestDetour(Log& log, AOBService& aobService, LocalUserStore& localUserStore) :
+            m_Log(log), m_AOBService(aobService), m_LocalUserStore(localUserStore) {}
         ~CanAcceptAnyJoinRequestDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -34,7 +34,7 @@ export namespace Platform::Host::Hook
         auto Uninstall() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         AOBService& m_AOBService;
         LocalUserStore& m_LocalUserStore;
 

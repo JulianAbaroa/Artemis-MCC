@@ -4,7 +4,7 @@ export import :ModelLink;
 export import :Raycast;
 export import :RegionStates;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Resolved.World.State;
@@ -21,7 +21,7 @@ export namespace Resolved::World::System
         using Coll = Resolved::Definitions::Type::Coll::Coll;
         using Mode = Resolved::Definitions::Type::Mode::Mode;
 
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
         using WorldStore = Resolved::World::State::WorldStore;
         using Raycaster = Resolved::World::System::Raycaster;
@@ -29,10 +29,10 @@ export namespace Resolved::World::System
         using ModelLinkBuilder = Resolved::World::System::ModelLinkBuilder;
 
     public:
-        WorldBuilder(LogsService& logsService, DefinitionsStore& definitionsStore,
+        WorldBuilder(Log& log, DefinitionsStore& definitionsStore,
             WorldStore& worldStore, Raycaster& raycaster,
             RegionStatesBuilder& regionStatesBuilder,
-            ModelLinkBuilder& modelLinkBuilder) : m_LogsService(logsService),
+            ModelLinkBuilder& modelLinkBuilder) : m_Log(log),
             m_DefinitionsStore(definitionsStore), m_WorldStore(worldStore),
             m_Raycaster(raycaster), m_RegionStatesBuilder(regionStatesBuilder),
             m_ModelLinkBuilder(modelLinkBuilder) {}
@@ -46,7 +46,7 @@ export namespace Resolved::World::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         DefinitionsStore& m_DefinitionsStore;
         WorldStore& m_WorldStore;
         Raycaster& m_Raycaster;

@@ -1,6 +1,6 @@
 export module Environment.Details.System:TeleporterDetails;
 
-import Service.Logs.System;
+import Common.Log.System;
 import Tables.Object.State;
 import Relations.Classifier.State;
 import Environment.Details.Type;
@@ -13,7 +13,7 @@ export namespace Environment::Details::System
     class TeleporterDetailsService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using Log = Common::Log::System::Log;
 
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
@@ -22,9 +22,9 @@ export namespace Environment::Details::System
         using TeleporterDetailsStore = Environment::Details::State::TeleporterDetailsStore;
 
     public:
-        TeleporterDetailsService(LogsService& logsService, ObjectTableStore& objectStore, ClassifierStore& classifierStore,
+        TeleporterDetailsService(Log& log, ObjectTableStore& objectStore, ClassifierStore& classifierStore,
             TeleporterDetailsStore& teleporterDetailsStore) :
-            m_LogsService(logsService), m_ObjectStore(objectStore), m_ClassifierStore(classifierStore),
+            m_Log(log), m_ObjectStore(objectStore), m_ClassifierStore(classifierStore),
             m_TeleporterDetailsStore(teleporterDetailsStore) {}
         ~TeleporterDetailsService() = default;
 
@@ -36,7 +36,7 @@ export namespace Environment::Details::System
         auto Cleanup() -> void;
 
     private:
-        LogsService& m_LogsService;
+        Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         ClassifierStore& m_ClassifierStore;
         TeleporterDetailsStore& m_TeleporterDetailsStore;
