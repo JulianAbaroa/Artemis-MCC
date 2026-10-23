@@ -149,9 +149,9 @@ def Generate(xmlPath: str, typeOutDir: str, systemOutDir: str) -> None:
     objectPath = os.path.join(typeOutDir, f"Map{prefix}Object.ixx")
     systemPath = os.path.join(systemOutDir, f"Map{prefix}Descriptor.ixx")
 
-    with open(objectPath, "w", encoding="utf-8") as f:
+    with open(objectPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write(GenerateObjectHeader(prefix, rootNodes, xmlSource))
-    with open(systemPath, "w", encoding="utf-8") as f:
+    with open(systemPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write(GenerateDescriptorHeader(prefix, rootNodes, xmlSource))
     print(f"  Generated Partition: {objectPath}")
     print(f"  Generated Module:    {systemPath}")

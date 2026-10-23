@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Scnr.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -441,8 +443,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Scenery_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -548,8 +550,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Bipeds_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -625,8 +627,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Vehicles_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -728,8 +730,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Equipment_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -822,8 +824,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Weapons_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -946,8 +948,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Machines_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1055,8 +1057,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Terminals_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1134,8 +1136,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Controls_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1243,8 +1245,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_SoundScenery_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1330,8 +1332,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Giants_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1411,8 +1413,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_EffectScenery_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1504,8 +1506,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_LightVolumes_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -1536,7 +1538,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint16_t LightmapFlags;  // 0x66  flags16. [Bit 0=0]
         float        LightmapHalfLife;  // 0x68  float32.
         float        LightmapLightScale;  // 0x6C  float32.
-        MapStructure::Primitive::Vec3 TargetPoint;  // 0x70  point3.
+        MathType::Vec3 TargetPoint;  // 0x70  point3.
         float        Width;  // 0x7C  float32.
         float        HeightScale;  // 0x80  float32.
         float        FieldOfView;  // 0x84  degree.
@@ -1646,7 +1648,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x1C
     struct Scnr_PlayerStartingLocationsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         std::uint32_t Facing;  // 0xC  degree2.
         std::uint8_t  _gap_0x10[0x4];
         std::int16_t InsertionPointIndex;  // 0x14  int16.
@@ -1659,7 +1661,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x14
     struct Scnr_TriggerVolumes_SectorPointsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         std::uint32_t Normal;  // 0xC  degree2.
         std::uint8_t  _tail_0x10[0x4];  // trailing pad
     };
@@ -1678,9 +1680,9 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _gap_0x34[0xC];
         std::uint32_t Plane4;  // 0x40  plane3.
         std::uint8_t  _gap_0x44[0xC];
-        MapStructure::Primitive::Vec2 Vertex0;  // 0x50  point2.
-        MapStructure::Primitive::Vec2 Vertex1;  // 0x58  point2.
-        MapStructure::Primitive::Vec2 Vertex2;  // 0x60  point2.
+        MathType::Vec2 Vertex0;  // 0x50  point2.
+        MathType::Vec2 Vertex1;  // 0x58  point2.
+        MathType::Vec2 Vertex2;  // 0x60  point2.
         std::uint8_t  _pad_0x68[0x4];  // undefined.
         std::uint8_t  _pad_0x6C[0x4];  // undefined.
     };
@@ -1695,10 +1697,10 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t NodeName;  // 0x8  stringid.
         std::uint16_t Type;  // 0xC  enum16. [Bounding Box=0x0, Sector=0x1]
         std::int16_t Unknown;  // 0xE  int16.
-        MapStructure::Primitive::Vec3 Forward;  // 0x10  vector3.
-        MapStructure::Primitive::Vec3 Up;  // 0x1C  vector3.
-        MapStructure::Primitive::Vec3 Position;  // 0x28  point3.
-        MapStructure::Primitive::Vec3 Extents;  // 0x34  point3.
+        MathType::Vec3 Forward;  // 0x10  vector3.
+        MathType::Vec3 Up;  // 0x1C  vector3.
+        MathType::Vec3 Position;  // 0x28  point3.
+        MathType::Vec3 Extents;  // 0x34  point3.
         float        ZSink;  // 0x40  float32. | this is only valid for sector type trigger volumes
         // -> Scnr_TriggerVolumes_SectorPointsEntry[]
         MapStructure::Tag::TagBlock   SectorPoints;  // 0x44  tagblock.
@@ -1716,7 +1718,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0xC
     struct Scnr_Unknown_UnknownEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
     };
     static_assert(sizeof(Scnr_Unknown_UnknownEntry) == 0xC, "Scnr_Unknown_UnknownEntry size mismatch");
 
@@ -1822,7 +1824,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x14
     struct Scnr_NamedLocationVolumes_PointsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         std::uint32_t Normal;  // 0xC  degree2.
         std::uint8_t  _tail_0x10[0x4];  // trailing pad
     };
@@ -1900,9 +1902,9 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
-        MapStructure::Primitive::Vec4 Rotation;  // 0x4  vector4.
-        MapStructure::Primitive::Vec3 Position;  // 0x14  point3.
-        MapStructure::Primitive::Vec2 Scale;  // 0x20  point2.
+        MathType::Vec4 Rotation;  // 0x4  vector4.
+        MathType::Vec3 Position;  // 0x14  point3.
+        MathType::Vec2 Scale;  // 0x20  point2.
     };
     static_assert(sizeof(Scnr_DecalsEntry) == 0x28, "Scnr_DecalsEntry size mismatch");
 
@@ -1949,7 +1951,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint8_t  _pad_0x4[0x4];  // undefined.
         std::uint8_t  _pad_0x8[0x4];  // undefined.
         std::uint32_t Name;  // 0xC  stringid.
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         std::int16_t ReferenceFrame;  // 0x1C  int16.
         std::int16_t BspIndex;  // 0x1E  int16.
         std::uint32_t Facing;  // 0x20  degree2.
@@ -1995,7 +1997,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Name;  // 0xC  stringid.
         std::int16_t CellIndex;  // 0x10  int16.
         std::int16_t Unknown_4;  // 0x12  int16.
-        MapStructure::Primitive::Vec3 Position;  // 0x14  point3.
+        MathType::Vec3 Position;  // 0x14  point3.
         std::int16_t ReferenceFrame;  // 0x20  int16.
         std::int16_t BspIndex;  // 0x22  int16.
         std::uint32_t Facing;  // 0x24  degree2.
@@ -2274,7 +2276,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x28
     struct Scnr_Zones_FiringPositionsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         std::int16_t ReferenceFrame;  // 0xC  int16.
         std::int16_t BspIndex;  // 0xE  int16.
         std::uint16_t Flags;  // 0x10  flags16. [Open=0, Partial=1, Closed=2, Mobile=3, Wall Lean=4, Perch=5, Ground Point=6, Dynamic Cover Point=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15]
@@ -2300,7 +2302,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x18
     struct Scnr_Zones_Areas_UnknownEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         std::int16_t Unknown;  // 0xC  int16.
         std::int16_t Unknown_2;  // 0xE  int16.
         std::uint32_t Facing;  // 0x10  degree2.
@@ -2314,7 +2316,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Name;  // 0x0  ascii.
         std::uint8_t  _gap_0x4[0x1C];
         std::uint32_t AreaFlags;  // 0x20  flags32. [Vehicle Area=0, Perch=1, Manual Reference Frame=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x24  point3.
+        MathType::Vec3 Position;  // 0x24  point3.
         std::int16_t ReferenceFrame;  // 0x30  int16.
         std::int16_t BspIndex;  // 0x32  int16.
         float        Unknown;  // 0x34  float32.
@@ -2460,7 +2462,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Unknown;  // 0x0  stringid.
         std::int16_t Unknown_2;  // 0x4  int16.
         std::int16_t Unknown_3;  // 0x6  int16.
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Position;  // 0x8  point3.
         std::int32_t Unknown_4;  // 0x14  int32.
         float        Unknown_5;  // 0x18  float32.
         float        Unknown_6;  // 0x1C  float32.
@@ -2700,7 +2702,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x18
     struct Scnr_AiPathfindingData_FloodHints_FloodSectorHints_PointsEntry
     {
-        MapStructure::Primitive::Vec3 Point;  // 0x0  point3.
+        MathType::Vec3 Point;  // 0x0  point3.
         std::int16_t ReferenceFrameIndex;  // 0xC  int16.
         std::int16_t StructureBspIndex;  // 0xE  int16.
         std::uint32_t Normal;  // 0x10  degree2.
@@ -2799,7 +2801,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Name;  // 0x0  ascii.
         std::uint8_t  _gap_0x4[0x1C];
         std::uint32_t Name_2;  // 0x20  stringid.
-        MapStructure::Primitive::Vec3 Position;  // 0x24  point3.
+        MathType::Vec3 Position;  // 0x24  point3.
         std::int16_t ReferenceFrame;  // 0x30  int16.
         std::int16_t BspIndex;  // 0x32  int16.
         std::int32_t SurfaceIndex;  // 0x34  int32.
@@ -2866,7 +2868,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::uint8_t  _pad_0x0[0x4];  // undefined.
         std::uint32_t Name;  // 0x4  stringid.
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Position;  // 0x8  point3.
         std::uint32_t Facing;  // 0x14  degree2.
         std::uint8_t  _gap_0x18[0x4];
         std::int16_t EditorFolderIndex;  // 0x1C  int16.
@@ -2882,8 +2884,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint32_t Unknown;  // 0x4  ascii.
         std::uint8_t  _gap_0x8[0x1C];
         std::uint8_t  _pad_0x24[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Position;  // 0x28  point3.
-        MapStructure::Primitive::Vec3 Orientation;  // 0x34  degree3.
+        MathType::Vec3 Position;  // 0x28  point3.
+        MathType::Vec3 Orientation;  // 0x34  degree3.
     };
     static_assert(sizeof(Scnr_CutsceneCameraPointsEntry) == 0x40, "Scnr_CutsceneCameraPointsEntry size mismatch");
 
@@ -3003,7 +3005,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -3106,7 +3108,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0xC
     struct Scnr_ScenarioClusterData_ClusterCentroidsEntry
     {
-        MapStructure::Primitive::Vec3 Centroid;  // 0x0  point3.
+        MathType::Vec3 Centroid;  // 0x0  point3.
     };
     static_assert(sizeof(Scnr_ScenarioClusterData_ClusterCentroidsEntry) == 0xC, "Scnr_ScenarioClusterData_ClusterCentroidsEntry size mismatch");
 
@@ -3210,8 +3212,8 @@ export namespace Map::Tag::Type::Scnr::Structure
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t NameIndex;  // 0x2  int16.
         std::uint32_t PlacementFlags;  // 0x4  flags32. [Not Automatically=0, Not On Easy=1, Not On Normal=2, Not On Hard=3, Lock Type To Environment Object=4, Lock Transform To Environment Object=5, Never Placed=6, Lock Name to Environment Object=7, Create At Rest=8, Store Orientations=9, PVS Bound=10, Startup=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
-        MapStructure::Primitive::Vec3 Rotation;  // 0x14  degree3.
+        MathType::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Rotation;  // 0x14  degree3.
         float        Scale;  // 0x20  float32.
         // -> Scnr_Crates_NodeOrientationsEntry[]
         MapStructure::Tag::TagBlock   NodeOrientations;  // 0x24  tagblock.
@@ -3293,7 +3295,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         std::int32_t Unknown;  // 0x4  int32.
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Position;  // 0x8  point3.
         std::uint32_t Starting;  // 0x14  degree2.
         std::uint8_t  _gap_0x18[0x4];
         float        Radius;  // 0x1C  float32.
@@ -3310,7 +3312,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     {
         std::uint32_t Name;  // 0x0  stringid.
         std::uint8_t  _pad_0x4[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Position;  // 0x8  point3.
         float        Radius;  // 0x14  float32.
         std::uint8_t  _pad_0x18[0x4];  // undefined.
         std::int16_t Unknown_3;  // 0x1C  int16.
@@ -3427,7 +3429,7 @@ export namespace Map::Tag::Type::Scnr::Structure
     // Entry size: 0x10
     struct Scnr_AiObjectives_Roles_PointGeometry_PointsEntry
     {
-        MapStructure::Primitive::Vec3 Point;  // 0x0  point3.
+        MathType::Vec3 Point;  // 0x0  point3.
         std::int16_t ReferenceFrame;  // 0xC  int16.
         std::int16_t BspIndex;  // 0xE  int16.
     };
@@ -3876,7 +3878,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         MapStructure::Tag::TagBlock   Unknown_8;  // 0x14  tagblock.
         // -> Scnr_Vignettes_UnknownEntry_2[]
         MapStructure::Tag::TagBlock   Unknown_9;  // 0x20  tagblock.
-        MapStructure::Primitive::Vec3 Position;  // 0x2C  point3.
+        MathType::Vec3 Position;  // 0x2C  point3.
         std::uint32_t Direction;  // 0x38  degree2.
         std::uint8_t  _gap_0x3C[0x4];
         float        Unknown_10;  // 0x40  float32.
@@ -3946,7 +3948,7 @@ export namespace Map::Tag::Type::Scnr::Structure
         float        LocalNorth;  // 0x20  degree.
         float        LocalSeaLevel;  // 0x24  float32. | used to calculate aircraft altitude
         float        AltitudeCap;  // 0x28  float32.
-        MapStructure::Primitive::Vec3 SandboxOriginPoint;  // 0x2C  point3. | forge coordinates are relative to this point
+        MathType::Vec3 SandboxOriginPoint;  // 0x2C  point3. | forge coordinates are relative to this point
         float        SandboxBudget;  // 0x38  float32.
         std::uint32_t DefaultVehicleSet;  // 0x3C  stringid.
         MapStructure::Tag::TagReference GamePerformanceThrottles;  // 0x40  tagref.

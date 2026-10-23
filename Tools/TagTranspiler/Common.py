@@ -141,3 +141,40 @@ def BuildBlockTree(element: ET.Element, diskPrefix: str) -> list:
         ))
 
     return nodes
+
+def WriteText(path: str, text: str) -> None:
+    """Writes text with CRLF line endings on every OS (repo rule). The final newline of text is kept as it is."""
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(text.replace("\r\n", "\n").replace("\n", "\r\n"))
+
+def CompareTrees(generatedRoot: str, targetRoot: str, only=None) -> tuple[list, list]:
+    """Compares, byte by byte, every file under generatedRoot with the same relative path under targetRoot.
+    Returns (different, missing) as sorted relative paths with '/'. Files that exist only in targetRoot are not listed.
+    only: optional predicate on the relative path, files it rejects are not compared."""
+    different, missing = [], []
+    for folder, _, names in os.walk(generatedRoot):
+        for name in names:
+            path = os.path.join(folder, name)
+            rel = os.path.relpath(path, generatedRoot).replace(os.sep, "/")
+            if only is not None and not only(rel):
+                continue
+            other = os.path.join(targetRoot, *rel.split("/"))
+            if not os.path.isfile(other):
+                missing.append(rel)
+                continue
+            with open(path, "rb") as a, open(other, "rb") as b:
+                if a.read() != b.read():
+                    different.append(rel)
+    return sorted(different), sorted(missing)
+
+def ReportCheck(different: list, missing: list, targetRoot: str, total: int) -> int:
+    """Prints the result of --check and returns the exit code: 0 when everything is identical, 1 otherwise."""
+    if not different and not missing:
+        print(f"OK: {total} generated files are identical to {targetRoot}.")
+        return 0
+    for rel in different:
+        print(f"DIFFERENT: {rel}")
+    for rel in missing:
+        print(f"MISSING: {rel}")
+    print(f"FAILED: {len(different)} different, {len(missing)} missing of {total} generated files in {targetRoot}.")
+    return 1

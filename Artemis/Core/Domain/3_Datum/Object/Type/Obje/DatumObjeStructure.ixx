@@ -5,12 +5,12 @@
 
 export module Datum.Object.Type:Obje.Structure;
 
-import Map.Reader.Type;
+import Common.Math.Type;
 import std;
 
 namespace
 {
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MathType = Common::Math::Type;
 }
 
 #pragma pack(push, 1)
@@ -32,16 +32,16 @@ export namespace Datum::Object::Type::Obje::Structure
         std::uint16_t ScenarioPlacementIndex;  // 0x1A  uint16. | Index of the placement in the scenario (0xFFFF = not from one). Written by CreateObject.
         std::uint16_t VariantPlacementIndex;  // 0x1C  uint16. | Index of the placement in the map variant (0xFFFF = not from one). Used when 0x1A is -1 (FUN_1804ed93c, FUN_1800771bc). Verified in Forge and custom game: mapVariant + 0x14FC + index * 0x4C (mvar.xml).
         std::uint8_t  _gap_0x1E[0x2];
-        MapStructure::Primitive::Vec3 BoundingCenter;  // 0x20  point3. | Center of the bounding sphere (NOT the origin; ~half body height above it). Not written by CreateObject.
+        MathType::Vec3 BoundingCenter;  // 0x20  point3. | Center of the bounding sphere (NOT the origin; ~half body height above it). Not written by CreateObject.
         float        BoundingRadius;  // 0x2C  float32. | Radius of the bounding sphere.
-        MapStructure::Primitive::Vec3 SavedBoundingCenter;  // 0x30  point3. | Copy of the sphere center kept by FUN_180479888.
+        MathType::Vec3 SavedBoundingCenter;  // 0x30  point3. | Copy of the sphere center kept by FUN_180479888.
         float        SavedBoundingRadius;  // 0x3C  float32. | Copy of the sphere radius kept by FUN_180479888.
         std::uint8_t  _gap_0x40[0x4];
-        MapStructure::Primitive::Vec3 Origin;  // 0x44  point3. | Object position. Copied from the placement. Local to the parent node when 0x14 is set (A11). Bipeds: feet level (A3, 2026-10-16): the bipd tag has Physics Flags bit 0 Centered At Origin = 0 (origin at the bottom of the pill, height 0.65, radius 0.175 for the spartan) and node 0 of the skeleton sits on it.
-        MapStructure::Primitive::Vec3 Forward;  // 0x50  vector3. | Forward vector.
-        MapStructure::Primitive::Vec3 Up;  // 0x5C  vector3. | Up vector.
-        MapStructure::Primitive::Vec3 LinearVelocity;  // 0x68  vector3. | World-space velocity.
-        MapStructure::Primitive::Vec3 AngularVelocity;  // 0x74  vector3. | Copied from the placement (+0x4C); no other access seen.
+        MathType::Vec3 Origin;  // 0x44  point3. | Object position. Copied from the placement. Local to the parent node when 0x14 is set (A11). Bipeds: feet level (A3, 2026-10-16): the bipd tag has Physics Flags bit 0 Centered At Origin = 0 (origin at the bottom of the pill, height 0.65, radius 0.175 for the spartan) and node 0 of the skeleton sits on it.
+        MathType::Vec3 Forward;  // 0x50  vector3. | Forward vector.
+        MathType::Vec3 Up;  // 0x5C  vector3. | Up vector.
+        MathType::Vec3 LinearVelocity;  // 0x68  vector3. | World-space velocity.
+        MathType::Vec3 AngularVelocity;  // 0x74  vector3. | Copied from the placement (+0x4C); no other access seen.
         float        Scale;  // 0x80  float32. | Current scale (1.0 normal).
         float        TargetScale;  // 0x84  float32. | Scale the object transitions to (FUN_18046cc34).
         std::uint32_t PlacementId;  // 0x88  uint32. | Unique placement id (counter when the placement has none).

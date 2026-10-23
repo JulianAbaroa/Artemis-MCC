@@ -5,14 +5,20 @@ Processes one or more Assembly XML files and generates C++23 Module interfaces (
 Usage, a single XML:
     python Tools/TagTranspiler/GenerateTags.py phmo.xml
 
-Usage, full directory of plugins:
-    python Tools/TagTranspiler/GenerateTags.py ".../Assembly/Plugins/ReachMCC"
+Usage, full directory of plugins (the tag XMLs belong to Assembly and are not in the repo):
+    python Tools/TagTranspiler/GenerateTags.py ".../Assembly/Tags"
+
+Options (D176):
+    --out DIR    write under DIR (the root of Tag/) instead of the repo
+    --check      generate in a temporary folder and compare byte by byte with the output root, writing nothing there.
+                 Exit 0 when equal, 1 when something differs or is missing.
+The files are always written with CRLF line endings, whatever the OS.
 """
-import sys, os, re
+import sys, os, re, argparse, io, contextlib, tempfile, shutil
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
-from Common import XmlBaseName
+from Common import XmlBaseName, CompareTrees, ReportCheck
 import GenerateOffset
 import GenerateStructure
 import GenerateObject
@@ -36,7 +42,7 @@ def GenerateSystemAggregate(prefix: str, xmlSource: str, tagRoot: str) -> None:
     lines.append(f"")
 
     outPath = os.path.join(tagRoot, f"Map.Tag.System.{prefix}.ixx")
-    with open(outPath, "w", encoding="utf-8") as f:
+    with open(outPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines))
     print(f"  Generated Module:    {outPath}")
 
@@ -61,15 +67,15 @@ def GenerateTypeAggregate(prefix: str, xmlSource: str, tagRoot: str) -> None:
     lines.append(f"")
 
     outPath = os.path.join(tagRoot, f"Map.Tag.Type.{prefix}.ixx")
-    with open(outPath, "w", encoding="utf-8") as f:
+    with open(outPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines))
     print(f"  Generated Module:    {outPath}")
 
-def ProcessXml(xmlPath: str) -> str:
+def ProcessXml(xmlPath: str, tagsRoot: str) -> str:
     prefix = XmlBaseName(xmlPath)
     xmlSource = os.path.basename(xmlPath)
 
-    tagRoot   = os.path.join(TAGS_ROOT, prefix)
+    tagRoot   = os.path.join(tagsRoot, prefix)
     typeDir   = os.path.join(tagRoot, "Type")
     systemDir = os.path.join(tagRoot, "System")
 
@@ -90,45 +96,79 @@ def ProcessXml(xmlPath: str) -> str:
         traceback.print_exc()
         return None
 
-def ProcessDirectory(xmlDir: str) -> None:
+def ProcessDirectory(xmlDir: str, tagsRoot: str, catalog: bool = True) -> int:
     xmlFiles = sorted([
         os.path.join(xmlDir, f)
         for f in os.listdir(xmlDir)
         if f.lower().endswith(".xml")
     ])
     print(f"Processing {len(xmlFiles)} XML in: {xmlDir}")
-    print(f"Output: {TAGS_ROOT}")
+    print(f"Output: {tagsRoot}")
     print()
 
     prefixes = []
     for xmlPath in xmlFiles:
-        p = ProcessXml(xmlPath)
+        p = ProcessXml(xmlPath, tagsRoot)
         if p:
             prefixes.append(p)
 
     print(f"\nDone. {len(prefixes)}/{len(xmlFiles)} tag modules generated.")
 
-    print()
-    GenerateCatalog.GenerateAll(TAGS_ROOT)
+    if catalog:
+        print()
+        GenerateCatalog.GenerateAll(tagsRoot)
+    return len(xmlFiles) - len(prefixes)
+
+def Check(target: str, tagsRoot: str) -> int:
+    """Generates into a temporary folder and compares it, byte by byte, with tagsRoot. Writes nothing in tagsRoot."""
+    tmp = tempfile.mkdtemp(prefix="gentags_")
+    log = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(log), contextlib.redirect_stderr(log):
+            if os.path.isdir(target):
+                failed = ProcessDirectory(target, tmp)
+                only = None
+            else:
+                failed = 0 if ProcessXml(target, tmp) else 1
+                prefix = XmlBaseName(target)
+                # A single tag does not regenerate the catalog of the root: only its own folder and aggregates are compared.
+                only = lambda rel: rel.startswith(f"{prefix}/")
+        if failed:
+            print(log.getvalue())
+            print(f"FAILED: {failed} XML could not be generated.")
+            return 1
+        different, missing = CompareTrees(tmp, tagsRoot, only)
+        total = sum(1 for folder, _, names in os.walk(tmp) for n in names
+                    if only is None or only(os.path.relpath(os.path.join(folder, n), tmp).replace(os.sep, "/")))
+        return ReportCheck(different, missing, tagsRoot, total)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
+    parser = argparse.ArgumentParser(description="Generates the Map.Tag modules from Assembly tag XMLs.")
+    parser.add_argument("xml", help="folder with the tag XMLs (Assembly/Tags) or a single XML file")
+    parser.add_argument("--out", metavar="DIR", default=TAGS_ROOT, help="output root, the Tag/ folder (default: the repo)")
+    parser.add_argument("--check", action="store_true", help="compare with the output root and write nothing there")
+    args = parser.parse_args()
+    target = args.xml
+    tagsRoot = os.path.abspath(args.out)
+
+    if not (os.path.isdir(target) or (os.path.isfile(target) and target.lower().endswith(".xml"))):
+        print(f"Error: '{target}' is not a folder with tag XMLs or an XML file. "
+              f"Set the folder of Assembly/Tags (for example ARTEMIS_ASSEMBLY_TAGS).")
         sys.exit(1)
 
-    target = sys.argv[1]
+    if args.check:
+        sys.exit(Check(target, tagsRoot))
 
     if os.path.isdir(target):
-        ProcessDirectory(target)
-    elif os.path.isfile(target) and target.lower().endswith(".xml"):
-        print(f"Output: {TAGS_ROOT}")
-        p = ProcessXml(target)
+        ProcessDirectory(target, tagsRoot)
+    else:
+        print(f"Output: {tagsRoot}")
+        p = ProcessXml(target, tagsRoot)
         if p:
             print()
-            GenerateCatalog.GenerateAll(TAGS_ROOT)
-    else:
-        print(f"Error: '{target}' is not a valid XML file or directory.")
-        sys.exit(1)
+            GenerateCatalog.GenerateAll(tagsRoot)
 
 if __name__ == "__main__":
     main()

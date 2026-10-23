@@ -44,9 +44,9 @@ namespace Resolved::Definitions::System
 
                 marker.NodeIndex = srcMarker.NodeIndex;
                 marker.Flags = srcMarker.Flags;
-                marker.Translation = this->MakeVec3(srcMarker.Translation);
-                marker.Rotation = this->MakeVec4(srcMarker.Rotation);
-                marker.Direction = this->MakeVec3(srcMarker.Direction);
+                marker.Translation = srcMarker.Translation;
+                marker.Rotation = srcMarker.Rotation;
+                marker.Direction = srcMarker.Direction;
                 marker.Scale = srcMarker.Scale;
 
                 group.Markers.push_back(marker);
@@ -68,8 +68,8 @@ namespace Resolved::Definitions::System
             node.ParentIndex = src.ParentNodeIndex;
             node.FirstChildIndex = src.FirstChildNodeIndex;
             node.NextSiblingIndex = src.NextSiblingNodeIndex;
-            node.DefaultTranslation = this->MakeVec3(src.DefaultTranslation);
-            node.DefaultRotation = this->MakeVec4(src.DefaultRotation);
+            node.DefaultTranslation = src.DefaultTranslation;
+            node.DefaultRotation = src.DefaultRotation;
             node.InverseScale = src.InverseScale;
 
             out.Nodes.push_back(node);
@@ -122,15 +122,5 @@ namespace Resolved::Definitions::System
         }
 
         out.ModelBounds = found ? Bounds{ min, max } : Bounds{};
-    }
-
-    auto ModeBuilder::MakeVec3(const Map::Reader::Type::Structure::Primitive::Vec3& v) -> Vec3
-    {
-        return { v.X, v.Y, v.Z };
-    }
-
-    auto ModeBuilder::MakeVec4(const Map::Reader::Type::Structure::Primitive::Vec4& v) -> Vec4
-    {
-        return { v.X, v.Y, v.Z, v.W };
     }
 }

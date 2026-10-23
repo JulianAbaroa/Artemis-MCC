@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Mode.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -44,10 +46,10 @@ export namespace Map::Tag::Type::Mode::Structure
         std::uint32_t Name;  // 0x0  stringid.
         std::int32_t NodeIndex;  // 0x4  int32.
         float        Scale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 Forward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 Left;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 Up;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 Position;  // 0x30  point3.
+        MathType::Vec3 Forward;  // 0xC  vector3.
+        MathType::Vec3 Left;  // 0x18  vector3.
+        MathType::Vec3 Up;  // 0x24  vector3.
+        MathType::Vec3 Position;  // 0x30  point3.
     };
     static_assert(sizeof(Mode_InstancePlacementsEntry) == 0x3C, "Mode_InstancePlacementsEntry size mismatch");
 
@@ -59,13 +61,13 @@ export namespace Map::Tag::Type::Mode::Structure
         std::int16_t FirstChildNodeIndex;  // 0x6  int16.
         std::int16_t NextSiblingNodeIndex;  // 0x8  int16.
         std::int16_t Unknown;  // 0xA  int16.
-        MapStructure::Primitive::Vec3 DefaultTranslation;  // 0xC  point3.
-        MapStructure::Primitive::Vec4 DefaultRotation;  // 0x18  vector4.
+        MathType::Vec3 DefaultTranslation;  // 0xC  point3.
+        MathType::Vec4 DefaultRotation;  // 0x18  vector4.
         float        InverseScale;  // 0x28  float32.
-        MapStructure::Primitive::Vec3 InverseForward;  // 0x2C  vector3.
-        MapStructure::Primitive::Vec3 InverseLeft;  // 0x38  vector3.
-        MapStructure::Primitive::Vec3 InverseUp;  // 0x44  vector3.
-        MapStructure::Primitive::Vec3 InversePosition;  // 0x50  point3.
+        MathType::Vec3 InverseForward;  // 0x2C  vector3.
+        MathType::Vec3 InverseLeft;  // 0x38  vector3.
+        MathType::Vec3 InverseUp;  // 0x44  vector3.
+        MathType::Vec3 InversePosition;  // 0x50  point3.
         float        DistanceFromParent;  // 0x5C  float32.
     };
     static_assert(sizeof(Mode_NodesEntry) == 0x60, "Mode_NodesEntry size mismatch");
@@ -77,10 +79,10 @@ export namespace Map::Tag::Type::Mode::Structure
         std::int8_t  PermutationIndex;  // 0x1  int8.
         std::int8_t  NodeIndex;  // 0x2  int8.
         std::uint8_t Flags;  // 0x3  flags8. [Has Node Relative Direction=0]
-        MapStructure::Primitive::Vec3 Translation;  // 0x4  point3.
-        MapStructure::Primitive::Vec4 Rotation;  // 0x10  vector4.
+        MathType::Vec3 Translation;  // 0x4  point3.
+        MathType::Vec4 Rotation;  // 0x10  vector4.
         float        Scale;  // 0x20  float32.
-        MapStructure::Primitive::Vec3 Direction;  // 0x24  vector3.
+        MathType::Vec3 Direction;  // 0x24  vector3.
     };
     static_assert(sizeof(Mode_MarkerGroups_MarkersEntry) == 0x30, "Mode_MarkerGroups_MarkersEntry size mismatch");
 
@@ -190,7 +192,7 @@ export namespace Map::Tag::Type::Mode::Structure
         // -> Mode_Meshes_WaterIndicesStartEntry[]
         MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
+        MathType::Vec3 BoundingOffset;  // 0x50  point3.
     };
     static_assert(sizeof(Mode_MeshesEntry) == 0x5C, "Mode_MeshesEntry size mismatch");
 
@@ -214,7 +216,7 @@ export namespace Map::Tag::Type::Mode::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::int8_t  NodeIndex1;  // 0x20  int8.
         std::int8_t  NodeIndex2;  // 0x21  int8.
@@ -239,12 +241,12 @@ export namespace Map::Tag::Type::Mode::Structure
     // Entry size: 0x60
     struct Mode_PerMeshTemporary_RawVerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
-        MapStructure::Primitive::Vec2 Texcoord;  // 0xC  point2.
-        MapStructure::Primitive::Vec3 Normal;  // 0x14  point3.
-        MapStructure::Primitive::Vec3 Binormal;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Tangent;  // 0x2C  point3.
-        MapStructure::Primitive::Vec2 LightmapTexcoord;  // 0x38  point2.
+        MathType::Vec3 Position;  // 0x0  point3.
+        MathType::Vec2 Texcoord;  // 0xC  point2.
+        MathType::Vec3 Normal;  // 0x14  point3.
+        MathType::Vec3 Binormal;  // 0x20  point3.
+        MathType::Vec3 Tangent;  // 0x2C  point3.
+        MathType::Vec2 LightmapTexcoord;  // 0x38  point2.
         std::uint8_t NodeIndex1;  // 0x40  uint8.
         std::uint8_t NodeIndex2;  // 0x41  uint8.
         std::uint8_t NodeIndex3;  // 0x42  uint8.
@@ -253,7 +255,7 @@ export namespace Map::Tag::Type::Mode::Structure
         float        NodeWeight2;  // 0x48  float32.
         float        NodeWeight3;  // 0x4C  float32.
         float        NodeWeight4;  // 0x50  float32.
-        MapStructure::Primitive::Vec3 VertexColor;  // 0x54  point3.
+        MathType::Vec3 VertexColor;  // 0x54  point3.
     };
     static_assert(sizeof(Mode_PerMeshTemporary_RawVerticesEntry) == 0x60, "Mode_PerMeshTemporary_RawVerticesEntry size mismatch");
 
@@ -281,7 +283,7 @@ export namespace Map::Tag::Type::Mode::Structure
     // Entry size: 0x8
     struct Mode_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry
     {
-        MapStructure::Primitive::Vec2 BaseTexcoord;  // 0x0  point2.
+        MathType::Vec2 BaseTexcoord;  // 0x0  point2.
     };
     static_assert(sizeof(Mode_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry) == 0x8, "Mode_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry size mismatch");
 
@@ -311,7 +313,7 @@ export namespace Map::Tag::Type::Mode::Structure
     // Entry size: 0x14
     struct Mode_PerMeshTemporary_RawInstanceImposterVertsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         std::uint32_t Color;  // 0xC  uint32.
         float        HdrScaler;  // 0x10  float32.
     };
@@ -359,7 +361,7 @@ export namespace Map::Tag::Type::Mode::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::uint8_t NodeIndex1;  // 0x20  uint8.
         std::uint8_t NodeIndex2;  // 0x21  uint8.
@@ -391,8 +393,8 @@ export namespace Map::Tag::Type::Mode::Structure
     {
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t PartIndex;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 PositionBounds0;  // 0x4  point3.
-        MapStructure::Primitive::Vec3 PositionBounds1;  // 0x10  point3.
+        MathType::Vec3 PositionBounds0;  // 0x4  point3.
+        MathType::Vec3 PositionBounds1;  // 0x10  point3.
     };
     static_assert(sizeof(Mode_WaterBoundingBoxEntry) == 0x1C, "Mode_WaterBoundingBoxEntry size mismatch");
 
@@ -428,7 +430,7 @@ export namespace Map::Tag::Type::Mode::Structure
     // Entry size: 0x150
     struct Mode_VolumeSamplesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         float        Element;  // 0xC  float32.
         float        Element_2;  // 0x10  float32.
         float        Element_3;  // 0x14  float32.
@@ -516,8 +518,8 @@ export namespace Map::Tag::Type::Mode::Structure
     // Entry size: 0x20
     struct Mode_RuntimeNodeOrientationsEntry
     {
-        MapStructure::Primitive::Vec4 Rotation;  // 0x0  vector4.
-        MapStructure::Primitive::Vec3 Translation;  // 0x10  point3.
+        MathType::Vec4 Rotation;  // 0x0  vector4.
+        MathType::Vec3 Translation;  // 0x10  point3.
         float        Scale;  // 0x1C  float32.
     };
     static_assert(sizeof(Mode_RuntimeNodeOrientationsEntry) == 0x20, "Mode_RuntimeNodeOrientationsEntry size mismatch");
@@ -648,7 +650,7 @@ export namespace Map::Tag::Type::Mode::Structure
         std::uint8_t  _pad_0x218[0x4];  // undefined.
         std::uint8_t  _pad_0x21C[0x4];  // undefined.
         std::uint8_t  _pad_0x220[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 SkyLightLevels;  // 0x224  point3. | Negative for the opposite direction
+        MathType::Vec3 SkyLightLevels;  // 0x224  point3. | Negative for the opposite direction
         float        SkyLightRed;  // 0x230  float32.
         float        SkyLightGreen;  // 0x234  float32.
         float        SkyLightBlue;  // 0x238  float32.

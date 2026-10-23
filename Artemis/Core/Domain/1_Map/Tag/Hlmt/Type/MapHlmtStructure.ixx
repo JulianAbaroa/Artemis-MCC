@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Hlmt.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -576,13 +578,13 @@ export namespace Map::Tag::Type::Hlmt::Structure
         std::int16_t FirstChildNodeIndex;  // 0x6  int16.
         std::int16_t NextSiblingNodeIndex;  // 0x8  int16.
         std::int16_t Unknown;  // 0xA  int16.
-        MapStructure::Primitive::Vec3 DefaultTranslation;  // 0xC  point3.
-        MapStructure::Primitive::Vec4 DefaultRotation;  // 0x18  vector4.
+        MathType::Vec3 DefaultTranslation;  // 0xC  point3.
+        MathType::Vec4 DefaultRotation;  // 0x18  vector4.
         float        DefaultInverseScale;  // 0x28  float32.
-        MapStructure::Primitive::Vec3 DefaultInverseForward;  // 0x2C  vector3.
-        MapStructure::Primitive::Vec3 DefaultInverseLeft;  // 0x38  vector3.
-        MapStructure::Primitive::Vec3 DefaultInverseUp;  // 0x44  vector3.
-        MapStructure::Primitive::Vec3 DefaultInversePosition;  // 0x50  point3.
+        MathType::Vec3 DefaultInverseForward;  // 0x2C  vector3.
+        MathType::Vec3 DefaultInverseLeft;  // 0x38  vector3.
+        MathType::Vec3 DefaultInverseUp;  // 0x44  vector3.
+        MathType::Vec3 DefaultInversePosition;  // 0x50  point3.
     };
     static_assert(sizeof(Hlmt_NodesEntry_2) == 0x5C, "Hlmt_NodesEntry_2 size mismatch");
 
@@ -728,7 +730,7 @@ export namespace Map::Tag::Type::Hlmt::Structure
         MapStructure::Tag::TagReference ShieldImpactParameterOverride;  // 0x1F0  tagref.
         MapStructure::Tag::TagReference _1stPersonShieldImpactParameterOverride;  // 0x200  tagref.
         float        BoundingRadius;  // 0x210  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x214  point3.
+        MathType::Vec3 BoundingOffset;  // 0x214  point3.
     };
     static_assert(sizeof(HlmtData) == 0x220, "HlmtData size mismatch");
 

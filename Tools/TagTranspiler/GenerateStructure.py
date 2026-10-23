@@ -35,16 +35,16 @@ TYPE_INFO: dict[str, tuple[str, int]] = {
     "enum16":   ("std::uint16_t",            2),
     "enum32":   ("std::uint32_t",            4),
     "stringid": ("std::uint32_t",            4),
-    "vector3":  ("MapStructure::Primitive::Vec3",      12),
-    "point3":   ("MapStructure::Primitive::Vec3",      12),
-    "degree3":  ("MapStructure::Primitive::Vec3",      12),
-    "vector4":  ("MapStructure::Primitive::Vec4",      16),
-    "point2":   ("MapStructure::Primitive::Vec2",       8),
+    "vector3":  ("MathType::Vec3",      12),
+    "point3":   ("MathType::Vec3",      12),
+    "degree3":  ("MathType::Vec3",      12),
+    "vector4":  ("MathType::Vec4",      16),
+    "point2":   ("MathType::Vec2",       8),
     "colorf":   ("MapStructure::Primitive::ColorRGB",  12),
     "rangef":   ("MapStructure::Primitive::RangeF",     8),
     "undefined":("_pad_",               4),
     "tagblock": ("_TagBlock_",         12),
-    "tagref":   ("MapStructure::Tag::Reference", 16),
+    "tagref":   ("MapStructure::Tag::TagReference", 16),
     "dataref":  ("MapStructure::Data::Reference", 20),
 }
 
@@ -216,7 +216,7 @@ def EmitField(f: Field, cursor: int, lines: list[str]) -> int:
         return cursor + 4
     if f.CType == "_TagBlock_":
         lines.append(f"    // -> {f.EntryStruct}[]")
-        lines.append(f"    MapStructure::Tag::Block   {f.Name};  // 0x{f.Offset:X}  {f.Comment}")
+        lines.append(f"    MapStructure::Tag::TagBlock   {f.Name};  // 0x{f.Offset:X}  {f.Comment}")
         return cursor + 12
     lines.append(f"    {f.CType:<12} {f.Name};  // 0x{f.Offset:X}  {f.Comment}")
     return cursor + f.Size
@@ -254,15 +254,33 @@ def Generate(xmlPath: str, outPath: str) -> None:
     lines.append(f"export module Map.Tag.Type:{prefix}.Structure;")
     lines.append(f"")
 
-    lines.append(f"import Map.Reader.Type;")
+    # The body is built first: imports and aliases are written only for what the structs use (Common first).
+    body = []
+    for s in parser.Structs:
+        struct_lines = []
+        EmitStruct(s, struct_lines)
+        for sl in struct_lines:
+            body.append(f"    {sl}" if sl else "")
+    bodyText = "\n".join(body)
+    usesMath = "MathType::" in bodyText
+    usesMap = "MapStructure::" in bodyText
+
+    if usesMath:
+        lines.append(f"import Common.Math.Type;")
+    if usesMap:
+        lines.append(f"import Map.Reader.Type;")
     lines.append(f"import std;")
     lines.append(f"")
 
-    lines.append(f"namespace")
-    lines.append("{")
-    lines.append(f"    namespace MapStructure = Map::Reader::Type::Structure;")
-    lines.append("}")
-    lines.append(f"")
+    if usesMath or usesMap:
+        lines.append(f"namespace")
+        lines.append("{")
+        if usesMath:
+            lines.append(f"    namespace MathType = Common::Math::Type;")
+        if usesMap:
+            lines.append(f"    namespace MapStructure = Map::Reader::Type::Structure;")
+        lines.append("}")
+        lines.append(f"")
 
     lines.append(f"#pragma pack(push, 1)")
     lines.append(f"")
@@ -270,11 +288,7 @@ def Generate(xmlPath: str, outPath: str) -> None:
     lines.append(f"export namespace Map::Tag::Type::{prefix}::Structure")
     lines.append(f"{{")
 
-    for s in parser.Structs:
-        struct_lines = []
-        EmitStruct(s, struct_lines)
-        for sl in struct_lines:
-            lines.append(f"    {sl}" if sl else "")
+    lines.extend(body)
 
     lines.append(f"}}")
     lines.append(f"")
@@ -284,7 +298,7 @@ def Generate(xmlPath: str, outPath: str) -> None:
     if outPath.endswith(".h"):
         outPath = outPath[:-2] + ".ixx"
 
-    with open(outPath, "w", encoding="utf-8") as f:
+    with open(outPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines))
     print(f"  Generated Partition: {outPath}")
 

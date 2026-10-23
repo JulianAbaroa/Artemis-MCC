@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Phmo.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -163,7 +165,7 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t RegionIndex;  // 0x2  int16.
         std::int16_t PermutationIndex;  // 0x4  int16.
         std::int16_t Unknown;  // 0x6  int16.
-        MapStructure::Primitive::Vec3 BoundingSphereOffset;  // 0x8  point3.
+        MathType::Vec3 BoundingSphereOffset;  // 0x8  point3.
         float        BoundingSphereRadius;  // 0x14  float32.
         std::uint16_t Flags;  // 0x18  flags16. [Has No Phantom Power Version=0, Infinite Inertia Tensor=1, Can Use MOPPs=2, Havok Rigid Body=3, Explicit Mass=4, Absolute Center Of Mass=5, Force Keyframed=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15]
         std::int16_t NoPhantomPowerAlternativeRigidBodyIndex;  // 0x1A  int16.
@@ -171,10 +173,10 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint8_t ProxyCollisionGroup;  // 0x1D  enum8. [None=0x0, Small Crate=0x1, Crate=0x2, Huge Crate=0x3, Item=0x4, Projectile=0x5, Biped=0x6, Machine=0x7, Early Mover Machine=0x8, Only Collide With Environment=0x9, Tech Art Custom=0xA, Small Expensive Plant=0xB, Ignore Environment=0xC, Huge Vehicle=0xD, Ragdoll=0xE, Super Collidable Ragdoll=0xF, ...(21 total)] | does not affect anything, change the groups in the individual shapes instead.
         std::uint16_t Size;  // 0x1E  enum16. [Default=0x0, Tiny=0x1, Small=0x2, Medium=0x3, Large=0x4, Huge=0x5, Extra Huge=0x6]
         float        InertiaTensorScale;  // 0x20  float32. | 0.0 defaults to 1.0
-        MapStructure::Primitive::Vec3 InertiaTensorScale_2;  // 0x24  point3. | 0.0 defaults to 1.0
+        MathType::Vec3 InertiaTensorScale_2;  // 0x24  point3. | 0.0 defaults to 1.0
         float        LinearDamping;  // 0x30  float32. | this goes from 0-10 (10 is really, really high)
         float        AngularDamping;  // 0x34  float32. | this goes from 0-10 (10 is really, really high)
-        MapStructure::Primitive::Vec3 CenterOfMassOffset;  // 0x38  vector3.
+        MathType::Vec3 CenterOfMassOffset;  // 0x38  vector3.
         float        WaterPhysicsX0;  // 0x44  float32. | x0 value of the water physics Axis-Aligned Bounding Box
         float        WaterPhysicsX1;  // 0x48  float32. | x1 value of the water physics Axis-Aligned Bounding Box
         float        WaterPhysicsY0;  // 0x4C  float32. | y0 value of the water physics Axis-Aligned Bounding Box
@@ -182,13 +184,13 @@ export namespace Map::Tag::Type::Phmo::Structure
         float        WaterPhysicsZ0;  // 0x54  float32. | z0 value of the water physics Axis-Aligned Bounding Box
         float        WaterPhysicsZ1;  // 0x58  float32. | z1 value of the water physics Axis-Aligned Bounding Box
         std::uint8_t  _pad_0x5C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 CenterOfMass;  // 0x60  vector3.
+        MathType::Vec3 CenterOfMass;  // 0x60  vector3.
         float        WCenterOfMass;  // 0x6C  float32.
-        MapStructure::Primitive::Vec3 InertiaTensorX;  // 0x70  vector3.
+        MathType::Vec3 InertiaTensorX;  // 0x70  vector3.
         float        WInertiaTensorX;  // 0x7C  float32.
-        MapStructure::Primitive::Vec3 InertiaTensorY;  // 0x80  vector3.
+        MathType::Vec3 InertiaTensorY;  // 0x80  vector3.
         float        WInertiaTensorY;  // 0x8C  float32.
-        MapStructure::Primitive::Vec3 InertiaTensorZ;  // 0x90  vector3.
+        MathType::Vec3 InertiaTensorZ;  // 0x90  vector3.
         float        WInertiaTensorZ;  // 0x9C  float32.
         std::uint32_t CollisionGroupMask;  // 0xA0  flags32. [Everything=0, Environment Default=1, Environment Only=2, Small Crate=3, Crate=4, Huge Crate=5, Item=6, Projectile=7, Machine=8, Early Mover Machine=9, Creature=10, Biped=11, Dead Biped=12, Super Collidable Ragdoll=13, Ragdoll=14, Vehicle=15, ...(27 total)]
         std::uint8_t  _pad_0xA4[0x4];  // undefined.
@@ -267,7 +269,7 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint32_t RuntimeShapePointerPad;  // 0x94  uint32.
         std::int32_t ChildShapeSize;  // 0x98  int32.
         std::uint8_t  _pad_0x9C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Translation;  // 0xA0  vector3.
+        MathType::Vec3 Translation;  // 0xA0  vector3.
         float        WTranslation;  // 0xAC  float32.
     };
     static_assert(sizeof(Phmo_SpheresEntry) == 0xB0, "Phmo_SpheresEntry size mismatch");
@@ -298,21 +300,21 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Sphere0;  // 0x50  vector3.
+        MathType::Vec3 Sphere0;  // 0x50  vector3.
         float        WSphere0;  // 0x5C  float32.
-        MapStructure::Primitive::Vec3 Sphere1;  // 0x60  vector3.
+        MathType::Vec3 Sphere1;  // 0x60  vector3.
         float        WSphere1;  // 0x6C  float32.
-        MapStructure::Primitive::Vec3 Sphere2;  // 0x70  vector3.
+        MathType::Vec3 Sphere2;  // 0x70  vector3.
         float        WSphere2;  // 0x7C  float32.
-        MapStructure::Primitive::Vec3 Sphere3;  // 0x80  vector3.
+        MathType::Vec3 Sphere3;  // 0x80  vector3.
         float        WSphere3;  // 0x8C  float32.
-        MapStructure::Primitive::Vec3 Sphere4;  // 0x90  vector3.
+        MathType::Vec3 Sphere4;  // 0x90  vector3.
         float        WSphere4;  // 0x9C  float32.
-        MapStructure::Primitive::Vec3 Sphere5;  // 0xA0  vector3.
+        MathType::Vec3 Sphere5;  // 0xA0  vector3.
         float        WSphere5;  // 0xAC  float32.
-        MapStructure::Primitive::Vec3 Sphere6;  // 0xB0  vector3.
+        MathType::Vec3 Sphere6;  // 0xB0  vector3.
         float        WSphere6;  // 0xBC  float32.
-        MapStructure::Primitive::Vec3 Sphere7;  // 0xC0  vector3.
+        MathType::Vec3 Sphere7;  // 0xC0  vector3.
         float        WSphere7;  // 0xCC  float32.
     };
     static_assert(sizeof(Phmo_MultiSpheresEntry) == 0xD0, "Phmo_MultiSpheresEntry size mismatch");
@@ -343,9 +345,9 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Bottom;  // 0x50  vector3.
+        MathType::Vec3 Bottom;  // 0x50  vector3.
         float        WBottom;  // 0x5C  float32.
-        MapStructure::Primitive::Vec3 Top;  // 0x60  vector3.
+        MathType::Vec3 Top;  // 0x60  vector3.
         float        WTop;  // 0x6C  float32.
     };
     static_assert(sizeof(Phmo_PillsEntry) == 0x70, "Phmo_PillsEntry size mismatch");
@@ -376,7 +378,7 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 HalfExtents;  // 0x50  vector3.
+        MathType::Vec3 HalfExtents;  // 0x50  vector3.
         float        WHalfExtents;  // 0x5C  float32.
         std::uint64_t RuntimeCodePointer_2;  // 0x60  uint64. | becomes a pointer in memory at runtime. don't poke me
         std::int16_t Size_2;  // 0x68  int16.
@@ -393,13 +395,13 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint32_t RuntimeShapePointerPad;  // 0x94  uint32.
         std::int32_t ChildShapeSize;  // 0x98  int32.
         std::uint8_t  _pad_0x9C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 RotationI;  // 0xA0  vector3.
+        MathType::Vec3 RotationI;  // 0xA0  vector3.
         float        WRotationI;  // 0xAC  float32.
-        MapStructure::Primitive::Vec3 RotationJ;  // 0xB0  vector3.
+        MathType::Vec3 RotationJ;  // 0xB0  vector3.
         float        WRotationJ;  // 0xBC  float32.
-        MapStructure::Primitive::Vec3 RotationK;  // 0xC0  vector3.
+        MathType::Vec3 RotationK;  // 0xC0  vector3.
         float        WRotationK;  // 0xCC  float32.
-        MapStructure::Primitive::Vec3 Translation;  // 0xD0  vector3.
+        MathType::Vec3 Translation;  // 0xD0  vector3.
         float        WTranslation;  // 0xDC  float32.
     };
     static_assert(sizeof(Phmo_BoxesEntry) == 0xE0, "Phmo_BoxesEntry size mismatch");
@@ -432,13 +434,13 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int8_t  IsExtruded;  // 0x47  int8.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 PointA;  // 0x50  vector3.
+        MathType::Vec3 PointA;  // 0x50  vector3.
         float        WPointA;  // 0x5C  float32.
-        MapStructure::Primitive::Vec3 PointB;  // 0x60  vector3.
+        MathType::Vec3 PointB;  // 0x60  vector3.
         float        WPointB;  // 0x6C  float32.
-        MapStructure::Primitive::Vec3 PointC;  // 0x70  vector3.
+        MathType::Vec3 PointC;  // 0x70  vector3.
         float        WPointC;  // 0x7C  float32.
-        MapStructure::Primitive::Vec3 Extrusion;  // 0x80  vector3.
+        MathType::Vec3 Extrusion;  // 0x80  vector3.
         float        WExtrusion;  // 0x8C  float32.
     };
     static_assert(sizeof(Phmo_TrianglesEntry) == 0x90, "Phmo_TrianglesEntry size mismatch");
@@ -469,9 +471,9 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 AxisAlignedBoundingBoxHalfExtents;  // 0x50  vector3.
+        MathType::Vec3 AxisAlignedBoundingBoxHalfExtents;  // 0x50  vector3.
         float        WAxisAlignedBoundingBoxHalfExtents;  // 0x5C  float32.
-        MapStructure::Primitive::Vec3 AxisAlignedBoundingBoxCenter;  // 0x60  vector3.
+        MathType::Vec3 AxisAlignedBoundingBoxCenter;  // 0x60  vector3.
         float        WAxisAlignedBoundingBoxCenter;  // 0x6C  float32.
         std::uint64_t RuntimeFourVectorsPointer;  // 0x70  uint64. | becomes a pointer to where the four vectors for this list start in memory at runtime. don't poke me
         std::int32_t FourVectorsSize;  // 0x78  int32.
@@ -495,11 +497,11 @@ export namespace Map::Tag::Type::Phmo::Structure
     // Entry size: 0x30
     struct Phmo_PolyhedronFourVectorsEntry
     {
-        MapStructure::Primitive::Vec3 FourVectorsX;  // 0x0  vector3.
+        MathType::Vec3 FourVectorsX;  // 0x0  vector3.
         float        WFourVectorsX;  // 0xC  float32.
-        MapStructure::Primitive::Vec3 FourVectorsY;  // 0x10  vector3.
+        MathType::Vec3 FourVectorsY;  // 0x10  vector3.
         float        WFourVectorsY;  // 0x1C  float32.
-        MapStructure::Primitive::Vec3 FourVectorsZ;  // 0x20  vector3.
+        MathType::Vec3 FourVectorsZ;  // 0x20  vector3.
         float        WFourVectorsZ;  // 0x2C  float32.
     };
     static_assert(sizeof(Phmo_PolyhedronFourVectorsEntry) == 0x30, "Phmo_PolyhedronFourVectorsEntry size mismatch");
@@ -507,7 +509,7 @@ export namespace Map::Tag::Type::Phmo::Structure
     // Entry size: 0x10
     struct Phmo_PolyhedronPlaneEquationsEntry
     {
-        MapStructure::Primitive::Vec3 PlaneEquations;  // 0x0  vector3.
+        MathType::Vec3 PlaneEquations;  // 0x0  vector3.
         float        WPlaneEquations;  // 0xC  float32.
     };
     static_assert(sizeof(Phmo_PolyhedronPlaneEquationsEntry) == 0x10, "Phmo_PolyhedronPlaneEquationsEntry size mismatch");
@@ -515,13 +517,13 @@ export namespace Map::Tag::Type::Phmo::Structure
     // Entry size: 0x40
     struct Phmo_MassDistributionsEntry
     {
-        MapStructure::Primitive::Vec3 CenterOfMass;  // 0x0  vector3.
+        MathType::Vec3 CenterOfMass;  // 0x0  vector3.
         float        WCenterOfMass;  // 0xC  float32.
-        MapStructure::Primitive::Vec3 InertiaTensorI;  // 0x10  vector3.
+        MathType::Vec3 InertiaTensorI;  // 0x10  vector3.
         float        WInertiaTensorI;  // 0x1C  float32.
-        MapStructure::Primitive::Vec3 InertiaTensorJ;  // 0x20  vector3.
+        MathType::Vec3 InertiaTensorJ;  // 0x20  vector3.
         float        WInertiaTensorJ;  // 0x2C  float32.
-        MapStructure::Primitive::Vec3 InertiaTensorK;  // 0x30  vector3.
+        MathType::Vec3 InertiaTensorK;  // 0x30  vector3.
         float        WInertiaTensorK;  // 0x3C  float32.
     };
     static_assert(sizeof(Phmo_MassDistributionsEntry) == 0x40, "Phmo_MassDistributionsEntry size mismatch");
@@ -548,9 +550,9 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 AxisAlignedBoundingBoxHalfExtents;  // 0x50  vector3.
+        MathType::Vec3 AxisAlignedBoundingBoxHalfExtents;  // 0x50  vector3.
         float        WAxisAlignedBoundingBoxHalfExtents;  // 0x5C  float32.
-        MapStructure::Primitive::Vec3 AxisAlignedBoundingBoxCenter;  // 0x60  vector3.
+        MathType::Vec3 AxisAlignedBoundingBoxCenter;  // 0x60  vector3.
         float        WAxisAlignedBoundingBoxCenter;  // 0x6C  float32.
         std::int32_t EnabledChildren0;  // 0x70  int32.
         std::int32_t EnabledChildren1;  // 0x74  int32.
@@ -594,7 +596,7 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::uint64_t RuntimeMoppCodePointer2;  // 0x30  uint64. | becomes a pointer inside the MOPP code data in memory at runtime. don't poke me
         std::int32_t MoppDataSize;  // 0x38  int32.
         std::uint8_t  _pad_0x3C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 CodeInfoCopy;  // 0x40  vector3.
+        MathType::Vec3 CodeInfoCopy;  // 0x40  vector3.
         float        WCodeInfoCopy;  // 0x4C  float32.
         std::uint64_t RuntimeChildShapeVtablePointer;  // 0x50  uint64. | becomes a pointer in memory at runtime. don't poke me
         std::uint16_t ShapeType;  // 0x58  enum16. [Sphere=0x0, Pill=0x1, Box=0x2, Triangle=0x3, Polyhedron=0x4, Multi Sphere=0x5, Phantom=0x6, Unused 1=0x7, Unused 2=0x8, Unused 3=0x9, Unused 4=0xA, Unused 5=0xB, Unused 6=0xC, Unused 7=0xD, List=0xE, MOPP=0xF] | this and the shape index below becomes a pointer to the given shape in memory at runtime. don't poke me
@@ -618,15 +620,15 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         float        AScale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 AForward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 ALeft;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 AUp;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 APosition;  // 0x30  point3.
+        MathType::Vec3 AForward;  // 0xC  vector3.
+        MathType::Vec3 ALeft;  // 0x18  vector3.
+        MathType::Vec3 AUp;  // 0x24  vector3.
+        MathType::Vec3 APosition;  // 0x30  point3.
         float        BScale;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 BForward;  // 0x40  vector3.
-        MapStructure::Primitive::Vec3 BLeft;  // 0x4C  vector3.
-        MapStructure::Primitive::Vec3 BUp;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 BPosition;  // 0x64  point3.
+        MathType::Vec3 BForward;  // 0x40  vector3.
+        MathType::Vec3 BLeft;  // 0x4C  vector3.
+        MathType::Vec3 BUp;  // 0x58  vector3.
+        MathType::Vec3 BPosition;  // 0x64  point3.
         std::int16_t EdgeIndex;  // 0x70  int16.
         std::int16_t Unknown;  // 0x72  int16.
         std::uint8_t  _pad_0x74[0x4];  // undefined.
@@ -640,15 +642,15 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         float        AScale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 AForward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 ALeft;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 AUp;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 APosition;  // 0x30  point3.
+        MathType::Vec3 AForward;  // 0xC  vector3.
+        MathType::Vec3 ALeft;  // 0x18  vector3.
+        MathType::Vec3 AUp;  // 0x24  vector3.
+        MathType::Vec3 APosition;  // 0x30  point3.
         float        BScale;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 BForward;  // 0x40  vector3.
-        MapStructure::Primitive::Vec3 BLeft;  // 0x4C  vector3.
-        MapStructure::Primitive::Vec3 BUp;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 BPosition;  // 0x64  point3.
+        MathType::Vec3 BForward;  // 0x40  vector3.
+        MathType::Vec3 BLeft;  // 0x4C  vector3.
+        MathType::Vec3 BUp;  // 0x58  vector3.
+        MathType::Vec3 BPosition;  // 0x64  point3.
         std::int16_t EdgeIndex;  // 0x70  int16.
         std::int16_t Unknown;  // 0x72  int16.
         std::uint8_t  _pad_0x74[0x4];  // undefined.
@@ -698,7 +700,7 @@ export namespace Map::Tag::Type::Phmo::Structure
     // Entry size: 0x10
     struct Phmo_PointToPathCurves_PointsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         float        TValue;  // 0xC  float32.
     };
     static_assert(sizeof(Phmo_PointToPathCurves_PointsEntry) == 0x10, "Phmo_PointToPathCurves_PointsEntry size mismatch");
@@ -721,15 +723,15 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         float        AScale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 AForward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 ALeft;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 AUp;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 APosition;  // 0x30  point3.
+        MathType::Vec3 AForward;  // 0xC  vector3.
+        MathType::Vec3 ALeft;  // 0x18  vector3.
+        MathType::Vec3 AUp;  // 0x24  vector3.
+        MathType::Vec3 APosition;  // 0x30  point3.
         float        BScale;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 BForward;  // 0x40  vector3.
-        MapStructure::Primitive::Vec3 BLeft;  // 0x4C  vector3.
-        MapStructure::Primitive::Vec3 BUp;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 BPosition;  // 0x64  point3.
+        MathType::Vec3 BForward;  // 0x40  vector3.
+        MathType::Vec3 BLeft;  // 0x4C  vector3.
+        MathType::Vec3 BUp;  // 0x58  vector3.
+        MathType::Vec3 BPosition;  // 0x64  point3.
         std::int16_t EdgeIndex;  // 0x70  int16.
         std::int16_t Unknown;  // 0x72  int16.
         std::uint8_t  _pad_0x74[0x4];  // undefined.
@@ -745,15 +747,15 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         float        AScale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 AForward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 ALeft;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 AUp;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 APosition;  // 0x30  point3.
+        MathType::Vec3 AForward;  // 0xC  vector3.
+        MathType::Vec3 ALeft;  // 0x18  vector3.
+        MathType::Vec3 AUp;  // 0x24  vector3.
+        MathType::Vec3 APosition;  // 0x30  point3.
         float        BScale;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 BForward;  // 0x40  vector3.
-        MapStructure::Primitive::Vec3 BLeft;  // 0x4C  vector3.
-        MapStructure::Primitive::Vec3 BUp;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 BPosition;  // 0x64  point3.
+        MathType::Vec3 BForward;  // 0x40  vector3.
+        MathType::Vec3 BLeft;  // 0x4C  vector3.
+        MathType::Vec3 BUp;  // 0x58  vector3.
+        MathType::Vec3 BPosition;  // 0x64  point3.
         std::int16_t EdgeIndex;  // 0x70  int16.
         std::int16_t Unknown;  // 0x72  int16.
         std::uint8_t  _pad_0x74[0x4];  // undefined.
@@ -767,15 +769,15 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         float        AScale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 AForward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 ALeft;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 AUp;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 APosition;  // 0x30  point3.
+        MathType::Vec3 AForward;  // 0xC  vector3.
+        MathType::Vec3 ALeft;  // 0x18  vector3.
+        MathType::Vec3 AUp;  // 0x24  vector3.
+        MathType::Vec3 APosition;  // 0x30  point3.
         float        BScale;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 BForward;  // 0x40  vector3.
-        MapStructure::Primitive::Vec3 BLeft;  // 0x4C  vector3.
-        MapStructure::Primitive::Vec3 BUp;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 BPosition;  // 0x64  point3.
+        MathType::Vec3 BForward;  // 0x40  vector3.
+        MathType::Vec3 BLeft;  // 0x4C  vector3.
+        MathType::Vec3 BUp;  // 0x58  vector3.
+        MathType::Vec3 BPosition;  // 0x64  point3.
         std::int16_t EdgeIndex;  // 0x70  int16.
         std::int16_t Unknown;  // 0x72  int16.
         std::uint8_t  _pad_0x74[0x4];  // undefined.
@@ -790,15 +792,15 @@ export namespace Map::Tag::Type::Phmo::Structure
         std::int16_t NodeAIndex;  // 0x4  int16.
         std::int16_t NodeBIndex;  // 0x6  int16.
         float        AScale;  // 0x8  float32.
-        MapStructure::Primitive::Vec3 AForward;  // 0xC  vector3.
-        MapStructure::Primitive::Vec3 ALeft;  // 0x18  vector3.
-        MapStructure::Primitive::Vec3 AUp;  // 0x24  vector3.
-        MapStructure::Primitive::Vec3 APosition;  // 0x30  point3.
+        MathType::Vec3 AForward;  // 0xC  vector3.
+        MathType::Vec3 ALeft;  // 0x18  vector3.
+        MathType::Vec3 AUp;  // 0x24  vector3.
+        MathType::Vec3 APosition;  // 0x30  point3.
         float        BScale;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 BForward;  // 0x40  vector3.
-        MapStructure::Primitive::Vec3 BLeft;  // 0x4C  vector3.
-        MapStructure::Primitive::Vec3 BUp;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 BPosition;  // 0x64  point3.
+        MathType::Vec3 BForward;  // 0x40  vector3.
+        MathType::Vec3 BLeft;  // 0x4C  vector3.
+        MathType::Vec3 BUp;  // 0x58  vector3.
+        MathType::Vec3 BPosition;  // 0x64  point3.
         std::int16_t EdgeIndex;  // 0x70  int16.
         std::int16_t Unknown;  // 0x72  int16.
         std::uint8_t  _pad_0x74[0x4];  // undefined.

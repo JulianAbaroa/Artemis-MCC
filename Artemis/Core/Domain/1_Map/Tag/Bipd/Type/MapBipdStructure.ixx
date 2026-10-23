@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Bipd.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -24,7 +26,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Primitive::RangeF X;  // 0x8  rangef.
         MapStructure::Primitive::RangeF Y;  // 0x10  rangef.
         MapStructure::Primitive::RangeF Z;  // 0x18  rangef.
-        MapStructure::Primitive::Vec3 Angles;  // 0x20  degree3.
+        MathType::Vec3 Angles;  // 0x20  degree3.
     };
     static_assert(sizeof(Bipd_EarlyMoverOrientedBoundingBoxEntry) == 0x2C, "Bipd_EarlyMoverOrientedBoundingBoxEntry size mismatch");
 
@@ -274,8 +276,8 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_MoveStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -296,8 +298,8 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_LookStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -354,8 +356,8 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_MoveStickOverrides_2_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -376,8 +378,8 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_LookStickOverrides_2_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -485,8 +487,8 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_Seats_MoveStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -507,8 +509,8 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Bipd_Seats_LookStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -698,7 +700,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint32_t RuntimeShapePointerPad;  // 0x94  uint32.
         std::int32_t ChildShapeSize;  // 0x98  int32.
         std::uint8_t  _pad_0x9C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Translation;  // 0xA0  vector3.
+        MathType::Vec3 Translation;  // 0xA0  vector3.
         float        WTranslation;  // 0xAC  float32.
     };
     static_assert(sizeof(Bipd_DeadSphereShapesEntry) == 0xB0, "Bipd_DeadSphereShapesEntry size mismatch");
@@ -729,9 +731,9 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint8_t  _pad_0x44[0x4];  // undefined.
         std::uint8_t  _pad_0x48[0x4];  // undefined.
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Bottom;  // 0x50  vector3.
+        MathType::Vec3 Bottom;  // 0x50  vector3.
         float        WBottom;  // 0x5C  float32.
-        MapStructure::Primitive::Vec3 Top;  // 0x60  vector3.
+        MathType::Vec3 Top;  // 0x60  vector3.
         float        WTop;  // 0x6C  float32.
     };
     static_assert(sizeof(Bipd_PillShapesEntry) == 0x70, "Bipd_PillShapesEntry size mismatch");
@@ -781,7 +783,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint32_t RuntimeShapePointerPad;  // 0x94  uint32.
         std::int32_t ChildShapeSize;  // 0x98  int32.
         std::uint8_t  _pad_0x9C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Translation;  // 0xA0  vector3.
+        MathType::Vec3 Translation;  // 0xA0  vector3.
         float        WTranslation;  // 0xAC  float32.
     };
     static_assert(sizeof(Bipd_SphereShapesEntry) == 0xB0, "Bipd_SphereShapesEntry size mismatch");
@@ -801,7 +803,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint32_t Flags;  // 0x4  flags32. [Does Not Cast Shadow=0, Search Cardinal Direction Lightmaps on Failure=1, Preserves Initial Damage Owner=2, Not A Pathfinding Obstacle=3, Extension Of Parent=4, Does Not Cause Collision Damage=5, Early Mover=6, Early Mover Localized Physics=7, Object Scales Attachments=8, Object Is Always On The Ceiling=9, Sample Enviroment Lighting Only Ignore Object Lighting=10, Effects Created By This Object Do Not Spawn Objects In Multiplayer=11, Does Not Collide With Camera=12, Force Collide With Camera=13, Damage Not Blocked By Obstructions=14, Does Not Damage Breakable Surfaces=15, ...(17 total)]
         std::uint32_t RuntimeFlags;  // 0x8  flags32. [Runtime Change Colors Allowed=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        BoundingRadius;  // 0xC  float32. | If you edit this field manually, beware that the render model is no longer respected for radius calculation and that you need to set the bounding offset as well.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x10  point3.
+        MathType::Vec3 BoundingOffset;  // 0x10  point3.
         float        HorizontalAccelerationScale;  // 0x1C  float32.
         float        VerticalAccelerationScale;  // 0x20  float32.
         float        AngularAccelerationScale;  // 0x24  float32.
@@ -809,7 +811,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         std::uint8_t SweetenerSize;  // 0x2A  enum8. [Default=0x0, Small=0x1, Medium=0x2, Large=0x3]
         std::uint8_t WaterDensity;  // 0x2B  enum8. [Default=0x0, Super Floater=0x1, Floater=0x2, Neutral=0x3, Sinker=0x4, Super Sinker=0x5, None=0x6]
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
-        MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
+        MathType::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
         MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
         MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
@@ -1017,7 +1019,7 @@ export namespace Map::Tag::Type::Bipd::Structure
         MapStructure::Tag::TagBlock   CameraHeights;  // 0x54C  tagblock.
         float        CameraInterpolationStart;  // 0x558  degree. | looking-downward angle that starts camera interpolation to fp position
         float        CameraInterpolationEnd;  // 0x55C  degree. | looking-downward angle at which camera interpolation to fp position is complete
-        MapStructure::Primitive::Vec3 CameraOffset;  // 0x560  vector3. | amount of fp camera movement in (forward, right, down) when pitched down by 'camera interpolation end' above
+        MathType::Vec3 CameraOffset;  // 0x560  vector3. | amount of fp camera movement in (forward, right, down) when pitched down by 'camera interpolation end' above
         float        RootOffsetCameraScale;  // 0x56C  float32.
         float        RootOffsetCameraDampening;  // 0x570  float32.
         float        AutoaimWidth;  // 0x574  float32.

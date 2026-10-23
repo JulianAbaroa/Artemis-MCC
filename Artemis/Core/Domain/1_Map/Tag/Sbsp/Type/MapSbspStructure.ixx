@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Sbsp.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -27,7 +29,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     struct Sbsp_StructureSeams_SeamClustersEntry
     {
         std::int32_t ClusterIndex;  // 0x0  int32.
-        MapStructure::Primitive::Vec3 Centroid;  // 0x4  point3.
+        MathType::Vec3 Centroid;  // 0x4  point3.
     };
     static_assert(sizeof(Sbsp_StructureSeams_SeamClustersEntry) == 0x10, "Sbsp_StructureSeams_SeamClustersEntry size mismatch");
 
@@ -78,14 +80,14 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0xC
     struct Sbsp_ClusterPortals_VerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
     };
     static_assert(sizeof(Sbsp_ClusterPortals_VerticesEntry) == 0xC, "Sbsp_ClusterPortals_VerticesEntry size mismatch");
 
     // Entry size: 0x50
     struct Sbsp_ClusterPortalsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
         float        Unknown;  // 0xC  float32.
         float        Unknown_2;  // 0x10  float32.
         float        Unknown_3;  // 0x14  float32.
@@ -96,7 +98,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::int16_t BackCluster;  // 0x28  int16.
         std::int16_t FrontCluster;  // 0x2A  int16.
         std::int32_t PlaneIndex;  // 0x2C  int32.
-        MapStructure::Primitive::Vec3 Centroid;  // 0x30  point3.
+        MathType::Vec3 Centroid;  // 0x30  point3.
         float        BoundingRadius;  // 0x3C  float32.
         std::uint32_t Flags;  // 0x40  flags32. [Bit 0=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         // -> Sbsp_ClusterPortals_VerticesEntry[]
@@ -151,10 +153,10 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::int8_t  DecoratorIndex;  // 0x2  int8.
         std::int8_t  DecoratorIndexScattering;  // 0x3  int8.
         std::int32_t Unknown;  // 0x4  int32.
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3.
+        MathType::Vec3 Position;  // 0x8  point3.
         float        Radius;  // 0x14  float32.
-        MapStructure::Primitive::Vec3 GridSize;  // 0x18  point3.
-        MapStructure::Primitive::Vec3 BoundingSphere;  // 0x24  point3.
+        MathType::Vec3 GridSize;  // 0x18  point3.
+        MathType::Vec3 BoundingSphere;  // 0x24  point3.
         // -> Sbsp_Clusters_DecoratorGrids_UnknownEntry[]
         MapStructure::Tag::TagBlock   Unknown_2;  // 0x30  tagblock.
     };
@@ -280,8 +282,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::int16_t Unknown_2;  // 0x2  int16.
         std::uint32_t Name;  // 0x4  ascii.
         std::uint8_t  _gap_0x8[0x1C];
-        MapStructure::Primitive::Vec4 Rotation;  // 0x24  vector4.
-        MapStructure::Primitive::Vec3 Position;  // 0x34  point3.
+        MathType::Vec4 Rotation;  // 0x24  vector4.
+        MathType::Vec3 Position;  // 0x34  point3.
     };
     static_assert(sizeof(Sbsp_MarkersEntry) == 0x40, "Sbsp_MarkersEntry size mismatch");
 
@@ -297,9 +299,9 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::int16_t PaletteIndex;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
-        MapStructure::Primitive::Vec4 Rotation;  // 0x4  vector4.
-        MapStructure::Primitive::Vec3 Position;  // 0x14  point3.
-        MapStructure::Primitive::Vec2 Scale;  // 0x20  point2.
+        MathType::Vec4 Rotation;  // 0x4  vector4.
+        MathType::Vec3 Position;  // 0x14  point3.
+        MathType::Vec2 Scale;  // 0x20  point2.
     };
     static_assert(sizeof(Sbsp_RuntimeDecalsEntry) == 0x28, "Sbsp_RuntimeDecalsEntry size mismatch");
 
@@ -317,8 +319,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t NameString;  // 0x0  ascii.
         std::uint8_t  _gap_0x4[0x1C];
-        MapStructure::Primitive::Vec4 Rotation;  // 0x20  vector4.
-        MapStructure::Primitive::Vec3 Position;  // 0x30  point3.
+        MathType::Vec4 Rotation;  // 0x20  vector4.
+        MathType::Vec3 Position;  // 0x30  point3.
         float        Scale;  // 0x3C  float32.
         std::int16_t PaletteIndex;  // 0x40  int16.
         std::int16_t Unknown;  // 0x42  int16.
@@ -355,7 +357,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x28
     struct Sbsp_InstancedGeometrySubGroupsEntry
     {
-        MapStructure::Primitive::Vec3 Center;  // 0x0  point3.
+        MathType::Vec3 Center;  // 0x0  point3.
         float        Radius;  // 0xC  float32.
         std::int16_t ClusterCount;  // 0x10  int16.
         std::int16_t Unknown;  // 0x12  int16.
@@ -461,7 +463,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         // -> Sbsp_Meshes_WaterIndicesStartEntry[]
         MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
+        MathType::Vec3 BoundingOffset;  // 0x50  point3.
     };
     static_assert(sizeof(Sbsp_MeshesEntry) == 0x5C, "Sbsp_MeshesEntry size mismatch");
 
@@ -485,7 +487,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::int8_t  NodeIndex1;  // 0x20  int8.
         std::int8_t  NodeIndex2;  // 0x21  int8.
@@ -510,12 +512,12 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x60
     struct Sbsp_PerMeshTemporary_RawVerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
-        MapStructure::Primitive::Vec2 Texcoord;  // 0xC  point2.
-        MapStructure::Primitive::Vec3 Normal;  // 0x14  point3.
-        MapStructure::Primitive::Vec3 Binormal;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Tangent;  // 0x2C  point3.
-        MapStructure::Primitive::Vec2 LightmapTexcoord;  // 0x38  point2.
+        MathType::Vec3 Position;  // 0x0  point3.
+        MathType::Vec2 Texcoord;  // 0xC  point2.
+        MathType::Vec3 Normal;  // 0x14  point3.
+        MathType::Vec3 Binormal;  // 0x20  point3.
+        MathType::Vec3 Tangent;  // 0x2C  point3.
+        MathType::Vec2 LightmapTexcoord;  // 0x38  point2.
         std::uint8_t NodeIndex1;  // 0x40  uint8.
         std::uint8_t NodeIndex2;  // 0x41  uint8.
         std::uint8_t NodeIndex3;  // 0x42  uint8.
@@ -524,7 +526,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         float        NodeWeight2;  // 0x48  float32.
         float        NodeWeight3;  // 0x4C  float32.
         float        NodeWeight4;  // 0x50  float32.
-        MapStructure::Primitive::Vec3 VertexColor;  // 0x54  point3.
+        MathType::Vec3 VertexColor;  // 0x54  point3.
     };
     static_assert(sizeof(Sbsp_PerMeshTemporary_RawVerticesEntry) == 0x60, "Sbsp_PerMeshTemporary_RawVerticesEntry size mismatch");
 
@@ -552,7 +554,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x8
     struct Sbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry
     {
-        MapStructure::Primitive::Vec2 BaseTexcoord;  // 0x0  point2.
+        MathType::Vec2 BaseTexcoord;  // 0x0  point2.
     };
     static_assert(sizeof(Sbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry) == 0x8, "Sbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry size mismatch");
 
@@ -582,7 +584,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x14
     struct Sbsp_PerMeshTemporary_RawInstanceImposterVertsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         std::uint32_t Color;  // 0xC  uint32.
         float        HdrScaler;  // 0x10  float32.
     };
@@ -630,7 +632,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::uint8_t NodeIndex1;  // 0x20  uint8.
         std::uint8_t NodeIndex2;  // 0x21  uint8.
@@ -662,8 +664,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t PartIndex;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 PositionBounds0;  // 0x4  point3.
-        MapStructure::Primitive::Vec3 PositionBounds1;  // 0x10  point3.
+        MathType::Vec3 PositionBounds0;  // 0x4  point3.
+        MathType::Vec3 PositionBounds1;  // 0x10  point3.
     };
     static_assert(sizeof(Sbsp_WaterBoundingBoxEntry) == 0x1C, "Sbsp_WaterBoundingBoxEntry size mismatch");
 
@@ -684,7 +686,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::int16_t Unknown_2;  // 0x6  int16.
         std::int16_t Unknown_3;  // 0x8  int16.
         std::int16_t Unknown_4;  // 0xA  int16.
-        MapStructure::Primitive::Vec3 Position;  // 0xC  point3.
+        MathType::Vec3 Position;  // 0xC  point3.
         std::int16_t DecalPropertyIndex;  // 0x18  int16.
         std::int16_t Unknown_5;  // 0x1A  int16.
     };
@@ -698,8 +700,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::int16_t Unknown_3;  // 0x4  int16.
         std::int16_t Unknown_4;  // 0x6  int16.
         std::uint8_t  _pad_0x8[0x4];  // undefined.
-        MapStructure::Primitive::Vec2 Position;  // 0xC  point2.
-        MapStructure::Primitive::Vec2 Tile;  // 0x14  point2.
+        MathType::Vec2 Position;  // 0xC  point2.
+        MathType::Vec2 Tile;  // 0x14  point2.
     };
     static_assert(sizeof(Sbsp_DecalPropertiesEntry) == 0x1C, "Sbsp_DecalPropertiesEntry size mismatch");
 
@@ -784,7 +786,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         // -> Sbsp_Meshes_2_WaterIndicesStartEntry[]
         MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
+        MathType::Vec3 BoundingOffset;  // 0x50  point3.
     };
     static_assert(sizeof(Sbsp_MeshesEntry_2) == 0x5C, "Sbsp_MeshesEntry_2 size mismatch");
 
@@ -808,7 +810,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::int8_t  NodeIndex1;  // 0x20  int8.
         std::int8_t  NodeIndex2;  // 0x21  int8.
@@ -833,12 +835,12 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x60
     struct Sbsp_PerMeshTemporary_2_RawVerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
-        MapStructure::Primitive::Vec2 Texcoord;  // 0xC  point2.
-        MapStructure::Primitive::Vec3 Normal;  // 0x14  point3.
-        MapStructure::Primitive::Vec3 Binormal;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Tangent;  // 0x2C  point3.
-        MapStructure::Primitive::Vec2 LightmapTexcoord;  // 0x38  point2.
+        MathType::Vec3 Position;  // 0x0  point3.
+        MathType::Vec2 Texcoord;  // 0xC  point2.
+        MathType::Vec3 Normal;  // 0x14  point3.
+        MathType::Vec3 Binormal;  // 0x20  point3.
+        MathType::Vec3 Tangent;  // 0x2C  point3.
+        MathType::Vec2 LightmapTexcoord;  // 0x38  point2.
         std::uint8_t NodeIndex1;  // 0x40  uint8.
         std::uint8_t NodeIndex2;  // 0x41  uint8.
         std::uint8_t NodeIndex3;  // 0x42  uint8.
@@ -847,7 +849,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         float        NodeWeight2;  // 0x48  float32.
         float        NodeWeight3;  // 0x4C  float32.
         float        NodeWeight4;  // 0x50  float32.
-        MapStructure::Primitive::Vec3 VertexColor;  // 0x54  point3.
+        MathType::Vec3 VertexColor;  // 0x54  point3.
     };
     static_assert(sizeof(Sbsp_PerMeshTemporary_2_RawVerticesEntry) == 0x60, "Sbsp_PerMeshTemporary_2_RawVerticesEntry size mismatch");
 
@@ -875,7 +877,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x8
     struct Sbsp_PerMeshTemporary_2_RawWaterData_RawWaterVerticesEntry
     {
-        MapStructure::Primitive::Vec2 BaseTexcoord;  // 0x0  point2.
+        MathType::Vec2 BaseTexcoord;  // 0x0  point2.
     };
     static_assert(sizeof(Sbsp_PerMeshTemporary_2_RawWaterData_RawWaterVerticesEntry) == 0x8, "Sbsp_PerMeshTemporary_2_RawWaterData_RawWaterVerticesEntry size mismatch");
 
@@ -905,7 +907,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x14
     struct Sbsp_PerMeshTemporary_2_RawInstanceImposterVertsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         std::uint32_t Color;  // 0xC  uint32.
         float        HdrScaler;  // 0x10  float32.
     };
@@ -953,7 +955,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::uint8_t NodeIndex1;  // 0x20  uint8.
         std::uint8_t NodeIndex2;  // 0x21  uint8.
@@ -985,8 +987,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t PartIndex;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 PositionBounds0;  // 0x4  point3.
-        MapStructure::Primitive::Vec3 PositionBounds1;  // 0x10  point3.
+        MathType::Vec3 PositionBounds0;  // 0x4  point3.
+        MathType::Vec3 PositionBounds1;  // 0x10  point3.
     };
     static_assert(sizeof(Sbsp_WaterBoundingBoxEntry_2) == 0x1C, "Sbsp_WaterBoundingBoxEntry_2 size mismatch");
 
@@ -1052,7 +1054,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -1088,7 +1090,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -1204,7 +1206,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         // -> Sbsp_Meshes_3_WaterIndicesStartEntry[]
         MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
+        MathType::Vec3 BoundingOffset;  // 0x50  point3.
     };
     static_assert(sizeof(Sbsp_MeshesEntry_3) == 0x5C, "Sbsp_MeshesEntry_3 size mismatch");
 
@@ -1228,7 +1230,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::int8_t  NodeIndex1;  // 0x20  int8.
         std::int8_t  NodeIndex2;  // 0x21  int8.
@@ -1253,12 +1255,12 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x60
     struct Sbsp_PerMeshTemporary_3_RawVerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
-        MapStructure::Primitive::Vec2 Texcoord;  // 0xC  point2.
-        MapStructure::Primitive::Vec3 Normal;  // 0x14  point3.
-        MapStructure::Primitive::Vec3 Binormal;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Tangent;  // 0x2C  point3.
-        MapStructure::Primitive::Vec2 LightmapTexcoord;  // 0x38  point2.
+        MathType::Vec3 Position;  // 0x0  point3.
+        MathType::Vec2 Texcoord;  // 0xC  point2.
+        MathType::Vec3 Normal;  // 0x14  point3.
+        MathType::Vec3 Binormal;  // 0x20  point3.
+        MathType::Vec3 Tangent;  // 0x2C  point3.
+        MathType::Vec2 LightmapTexcoord;  // 0x38  point2.
         std::uint8_t NodeIndex1;  // 0x40  uint8.
         std::uint8_t NodeIndex2;  // 0x41  uint8.
         std::uint8_t NodeIndex3;  // 0x42  uint8.
@@ -1267,7 +1269,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
         float        NodeWeight2;  // 0x48  float32.
         float        NodeWeight3;  // 0x4C  float32.
         float        NodeWeight4;  // 0x50  float32.
-        MapStructure::Primitive::Vec3 VertexColor;  // 0x54  point3.
+        MathType::Vec3 VertexColor;  // 0x54  point3.
     };
     static_assert(sizeof(Sbsp_PerMeshTemporary_3_RawVerticesEntry) == 0x60, "Sbsp_PerMeshTemporary_3_RawVerticesEntry size mismatch");
 
@@ -1295,7 +1297,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x8
     struct Sbsp_PerMeshTemporary_3_RawWaterData_RawWaterVerticesEntry
     {
-        MapStructure::Primitive::Vec2 BaseTexcoord;  // 0x0  point2.
+        MathType::Vec2 BaseTexcoord;  // 0x0  point2.
     };
     static_assert(sizeof(Sbsp_PerMeshTemporary_3_RawWaterData_RawWaterVerticesEntry) == 0x8, "Sbsp_PerMeshTemporary_3_RawWaterData_RawWaterVerticesEntry size mismatch");
 
@@ -1325,7 +1327,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     // Entry size: 0x14
     struct Sbsp_PerMeshTemporary_3_RawInstanceImposterVertsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         std::uint32_t Color;  // 0xC  uint32.
         float        HdrScaler;  // 0x10  float32.
     };
@@ -1373,7 +1375,7 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::uint8_t NodeIndex1;  // 0x20  uint8.
         std::uint8_t NodeIndex2;  // 0x21  uint8.
@@ -1405,8 +1407,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
     {
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t PartIndex;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 PositionBounds0;  // 0x4  point3.
-        MapStructure::Primitive::Vec3 PositionBounds1;  // 0x10  point3.
+        MathType::Vec3 PositionBounds0;  // 0x4  point3.
+        MathType::Vec3 PositionBounds1;  // 0x10  point3.
     };
     static_assert(sizeof(Sbsp_WaterBoundingBoxEntry_3) == 0x1C, "Sbsp_WaterBoundingBoxEntry_3 size mismatch");
 
@@ -1633,8 +1635,8 @@ export namespace Map::Tag::Type::Sbsp::Structure
         // -> Sbsp_CollisionMoppCodesEntry[]
         MapStructure::Tag::TagBlock   CollisionMoppCodes;  // 0x40C  tagblock.
         std::uint8_t  _pad_0x418[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 MoppBoundsMinimum;  // 0x41C  point3.
-        MapStructure::Primitive::Vec3 MoppBoundsMaximum;  // 0x428  point3.
+        MathType::Vec3 MoppBoundsMinimum;  // 0x41C  point3.
+        MathType::Vec3 MoppBoundsMaximum;  // 0x428  point3.
         // -> Sbsp_BreakableSurfaceMoppCodesEntry[]
         MapStructure::Tag::TagBlock   BreakableSurfaceMoppCodes;  // 0x434  tagblock.
         // -> Sbsp_BreakableSurfaceKeyTableEntry[]

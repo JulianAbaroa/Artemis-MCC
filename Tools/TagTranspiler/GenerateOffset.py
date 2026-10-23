@@ -119,7 +119,7 @@ def Generate(xmlPath: str, outPath: str) -> None:
     lines.append("}")
     lines.append("")
 
-    with open(outPath, "w", encoding="utf-8") as f:
+    with open(outPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write("\n".join(lines))
     print(f"  Generated Partition: {outPath}")
 

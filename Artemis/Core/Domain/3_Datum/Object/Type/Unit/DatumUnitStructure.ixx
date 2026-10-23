@@ -5,12 +5,12 @@
 
 export module Datum.Object.Type:Unit.Structure;
 
-import Map.Reader.Type;
+import Common.Math.Type;
 import std;
 
 namespace
 {
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MathType = Common::Math::Type;
 }
 
 #pragma pack(push, 1)
@@ -32,20 +32,20 @@ export namespace Datum::Object::Type::Unit::Structure
         std::uint32_t Tick1d4;  // 0x1C  uint32. | Looks like a game tick (0x4C0C8 measured).
         std::uint64_t ControlFlags;  // 0x20  flags64. [Crouch=0, Jump=1, Armor Ability=8, Armor Ability Held=10, Armor Ability 2=16, Consumed Pulse=21, Always Set=23, Fire A=30, Control 31=31, Control 32=32, Control 33=33, Control 34=34, Fire B=35, Control 36=36, Control 37=37, Control 38=38, ...(18 total)] | All buttons. Idle = 0x800000 (bit 23 always set). Measured: bit0 crouch, bit1 jump, armor ability = bits 8+16, fire A = bit 30. Bit 21 cleared by the engine when consumed. Old names Biped.VerticalInput / Projectile.OwnerWeaponHandle were bytes/words of this field.
         std::uint32_t Unknown1e0;  // 0x28  uint32. | R3 W2 init=0xae src=call 18005cc74 known=Weapon.TotalHeat W:unit_init,FUN_1804b5b04
-        MapStructure::Primitive::Vec3 Facing;  // 0x2C  vector3. | Yaw-only facing direction (z = 0). Measured.
-        MapStructure::Primitive::Vec3 FacingT1;  // 0x38  vector3. | Facing one tick ago (history shifts 1E4 -> 1F0 -> 1FC).
-        MapStructure::Primitive::Vec3 FacingT2;  // 0x44  vector3. | Facing two ticks ago.
-        MapStructure::Primitive::Vec3 DesiredAim;  // 0x50  vector3. | Intended aim direction (3D with pitch). Measured.
-        MapStructure::Primitive::Vec3 CurrentAim;  // 0x5C  vector3. | Aim smoothed towards Desired Aim. Use this for the AI. Measured.
-        MapStructure::Primitive::Vec3 AimVelocity;  // 0x68  vector3. | Aim rate. 0x228 (its z) is also used as an angular-speed float by FUN_180480280.
-        MapStructure::Primitive::Vec3 DesiredLook;  // 0x74  vector3. | Desired head look direction. Measured.
-        MapStructure::Primitive::Vec3 CurrentLook;  // 0x80  vector3. | Smoothed head look direction. Measured.
-        MapStructure::Primitive::Vec3 LookVelocity;  // 0x8C  vector3. | Look rate.
+        MathType::Vec3 Facing;  // 0x2C  vector3. | Yaw-only facing direction (z = 0). Measured.
+        MathType::Vec3 FacingT1;  // 0x38  vector3. | Facing one tick ago (history shifts 1E4 -> 1F0 -> 1FC).
+        MathType::Vec3 FacingT2;  // 0x44  vector3. | Facing two ticks ago.
+        MathType::Vec3 DesiredAim;  // 0x50  vector3. | Intended aim direction (3D with pitch). Measured.
+        MathType::Vec3 CurrentAim;  // 0x5C  vector3. | Aim smoothed towards Desired Aim. Use this for the AI. Measured.
+        MathType::Vec3 AimVelocity;  // 0x68  vector3. | Aim rate. 0x228 (its z) is also used as an angular-speed float by FUN_180480280.
+        MathType::Vec3 DesiredLook;  // 0x74  vector3. | Desired head look direction. Measured.
+        MathType::Vec3 CurrentLook;  // 0x80  vector3. | Smoothed head look direction. Measured.
+        MathType::Vec3 LookVelocity;  // 0x8C  vector3. | Look rate.
         std::uint32_t DriverControlCopy;  // 0x98  uint32. | Copied from the driver.
         std::uint8_t  _gap_0x9C[0xC];
-        MapStructure::Primitive::Vec3 Throttle;  // 0xA8  vector3. | Movement input: X = forward/back, Y = lateral. Old name: Biped.MovementInput. Engine writes (1,0) = full forward.
-        MapStructure::Primitive::Vec3 ThrottleT1;  // 0xB4  vector3. | Throttle history.
-        MapStructure::Primitive::Vec3 ThrottleT2;  // 0xC0  vector3. | Throttle history.
+        MathType::Vec3 Throttle;  // 0xA8  vector3. | Movement input: X = forward/back, Y = lateral. Old name: Biped.MovementInput. Engine writes (1,0) = full forward.
+        MathType::Vec3 ThrottleT1;  // 0xB4  vector3. | Throttle history.
+        MathType::Vec3 ThrottleT2;  // 0xC0  vector3. | Throttle history.
         std::uint32_t ControlCopy284;  // 0xCC  uint32. | Copied from the driver.
         std::uint8_t Unknown288;  // 0xD0  uint8. | R0 W1 init=0x0 W:unit_init
         std::uint8_t Unknown289;  // 0xD1  uint8. | R1 W0 R:FUN_180480280

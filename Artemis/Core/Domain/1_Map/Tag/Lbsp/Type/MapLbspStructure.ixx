@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Lbsp.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -139,7 +141,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
         // -> Lbsp_Meshes_WaterIndicesStartEntry[]
         MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
+        MathType::Vec3 BoundingOffset;  // 0x50  point3.
     };
     static_assert(sizeof(Lbsp_MeshesEntry) == 0x5C, "Lbsp_MeshesEntry size mismatch");
 
@@ -163,7 +165,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::int8_t  NodeIndex1;  // 0x20  int8.
         std::int8_t  NodeIndex2;  // 0x21  int8.
@@ -188,12 +190,12 @@ export namespace Map::Tag::Type::Lbsp::Structure
     // Entry size: 0x60
     struct Lbsp_PerMeshTemporary_RawVerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
-        MapStructure::Primitive::Vec2 Texcoord;  // 0xC  point2.
-        MapStructure::Primitive::Vec3 Normal;  // 0x14  point3.
-        MapStructure::Primitive::Vec3 Binormal;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Tangent;  // 0x2C  point3.
-        MapStructure::Primitive::Vec2 LightmapTexcoord;  // 0x38  point2.
+        MathType::Vec3 Position;  // 0x0  point3.
+        MathType::Vec2 Texcoord;  // 0xC  point2.
+        MathType::Vec3 Normal;  // 0x14  point3.
+        MathType::Vec3 Binormal;  // 0x20  point3.
+        MathType::Vec3 Tangent;  // 0x2C  point3.
+        MathType::Vec2 LightmapTexcoord;  // 0x38  point2.
         std::uint8_t NodeIndex1;  // 0x40  uint8.
         std::uint8_t NodeIndex2;  // 0x41  uint8.
         std::uint8_t NodeIndex3;  // 0x42  uint8.
@@ -202,7 +204,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
         float        NodeWeight2;  // 0x48  float32.
         float        NodeWeight3;  // 0x4C  float32.
         float        NodeWeight4;  // 0x50  float32.
-        MapStructure::Primitive::Vec3 VertexColor;  // 0x54  point3.
+        MathType::Vec3 VertexColor;  // 0x54  point3.
     };
     static_assert(sizeof(Lbsp_PerMeshTemporary_RawVerticesEntry) == 0x60, "Lbsp_PerMeshTemporary_RawVerticesEntry size mismatch");
 
@@ -230,7 +232,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     // Entry size: 0x8
     struct Lbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry
     {
-        MapStructure::Primitive::Vec2 BaseTexcoord;  // 0x0  point2.
+        MathType::Vec2 BaseTexcoord;  // 0x0  point2.
     };
     static_assert(sizeof(Lbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry) == 0x8, "Lbsp_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry size mismatch");
 
@@ -260,7 +262,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     // Entry size: 0x14
     struct Lbsp_PerMeshTemporary_RawInstanceImposterVertsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         std::uint32_t Color;  // 0xC  uint32.
         float        HdrScaler;  // 0x10  float32.
     };
@@ -308,7 +310,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::uint8_t NodeIndex1;  // 0x20  uint8.
         std::uint8_t NodeIndex2;  // 0x21  uint8.
@@ -340,8 +342,8 @@ export namespace Map::Tag::Type::Lbsp::Structure
     {
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t PartIndex;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 PositionBounds0;  // 0x4  point3.
-        MapStructure::Primitive::Vec3 PositionBounds1;  // 0x10  point3.
+        MathType::Vec3 PositionBounds0;  // 0x4  point3.
+        MathType::Vec3 PositionBounds1;  // 0x10  point3.
     };
     static_assert(sizeof(Lbsp_WaterBoundingBoxEntry) == 0x1C, "Lbsp_WaterBoundingBoxEntry size mismatch");
 
@@ -372,7 +374,7 @@ export namespace Map::Tag::Type::Lbsp::Structure
     // Entry size: 0x38
     struct Lbsp_AirprobesEntry
     {
-        MapStructure::Primitive::Vec3 AirprobePosition;  // 0x0  point3.
+        MathType::Vec3 AirprobePosition;  // 0x0  point3.
         std::uint32_t AirprobeName;  // 0xC  stringid.
         std::uint8_t  _pad_0x10[0x4];  // undefined.
         std::uint8_t  _pad_0x14[0x4];  // undefined.

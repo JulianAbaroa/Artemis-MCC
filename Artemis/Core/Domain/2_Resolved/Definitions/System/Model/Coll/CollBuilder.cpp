@@ -86,14 +86,11 @@ namespace Resolved::Definitions::System
                         {
                             Triangle triangle{};
 
-                            triangle.A = this->MakeVec3(
-                                bsp.Vertices[indices[0]].Point);
+                            triangle.A = bsp.Vertices[indices[0]].Point;
 
-                            triangle.B = this->MakeVec3(
-                                bsp.Vertices[indices[fan]].Point);
+                            triangle.B = bsp.Vertices[indices[fan]].Point;
 
-                            triangle.C = this->MakeVec3(
-                                bsp.Vertices[indices[fan + 1]].Point);
+                            triangle.C = bsp.Vertices[indices[fan + 1]].Point;
 
                             triangle.SurfaceFlags = surface.Flags;
                             triangle.Material = surface.Material;
@@ -186,11 +183,6 @@ namespace Resolved::Definitions::System
             out.BoundsMax.Y = (std::max)(out.BoundsMax.Y, mesh.LocalMax.Y);
             out.BoundsMax.Z = (std::max)(out.BoundsMax.Z, mesh.LocalMax.Z);
         }
-    }
-
-    auto CollBuilder::MakeVec3(const Map::Reader::Type::Structure::Primitive::Vec3& v) -> Vec3
-    {
-        return { v.X, v.Y, v.Z };
     }
 
     auto CollBuilder::CollectSurfaceVertexIndices(

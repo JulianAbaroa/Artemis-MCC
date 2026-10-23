@@ -5,12 +5,12 @@
 
 export module Datum.Object.Type:Mvar.Structure;
 
-import Map.Reader.Type;
+import Common.Math.Type;
 import std;
 
 namespace
 {
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MathType = Common::Math::Type;
 }
 
 #pragma pack(push, 1)
@@ -23,9 +23,9 @@ export namespace Datum::Object::Type::Mvar::Structure
         std::uint16_t PlacementFlags;  // 0x0  flags16. [In Use=0] | Bit 0 set when the slot holds a placement (0 in empty slots). Tested by FUN_18006e638.
         std::uint16_t PaletteIndex;  // 0x2  uint16. | 0x46 in three placements of the same object type, 0xFFFF in empty slots. Probably the palette (object type) index.
         std::uint32_t Unknown04;  // 0x4  uint32. | 0xFFFFFFFF in every placement measured.
-        MapStructure::Primitive::Vec3 Position;  // 0x8  point3. | World position of the placement. Matches the position of the object.
-        MapStructure::Primitive::Vec3 Forward;  // 0x14  vector3. | Forward axis (1, 0, 0 measured).
-        MapStructure::Primitive::Vec3 Up;  // 0x20  vector3. | Up axis (0, 0, 1 measured).
+        MathType::Vec3 Position;  // 0x8  point3. | World position of the placement. Matches the position of the object.
+        MathType::Vec3 Forward;  // 0x14  vector3. | Forward axis (1, 0, 0 measured).
+        MathType::Vec3 Up;  // 0x20  vector3. | Up axis (0, 0, 1 measured).
         std::uint16_t Unknown2c;  // 0x2C  uint16. | 0xFFFF in every placement measured.
         std::uint16_t Unknown2e;  // 0x2E  uint16. | 1 and 2 in the placements 1 and 2. Maybe its own index or an order.
         float        ShapeRadius;  // 0x30  float32. | Zone shape: radius or width (box set to 0.1 in Forge reads 0.1466).

@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Coll.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -138,7 +140,7 @@ export namespace Map::Tag::Type::Coll::Structure
     // Entry size: 0x10
     struct Coll_Regions_Permutations_Bsps_VerticesEntry
     {
-        MapStructure::Primitive::Vec3 Point;  // 0x0  point3.
+        MathType::Vec3 Point;  // 0x0  point3.
         std::int16_t FirstEdge;  // 0xC  int16.
         std::int16_t Sink;  // 0xE  int16.
     };
@@ -185,9 +187,9 @@ export namespace Map::Tag::Type::Coll::Structure
         std::int8_t  CollectionType;  // 0x29  int8.
         std::int16_t Unknown_3;  // 0x2A  int16.
         std::uint8_t  _pad_0x2C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 Center;  // 0x30  vector3.
+        MathType::Vec3 Center;  // 0x30  vector3.
         float        WCenter;  // 0x3C  float32.
-        MapStructure::Primitive::Vec3 HalfExtent;  // 0x40  vector3.
+        MathType::Vec3 HalfExtent;  // 0x40  vector3.
         float        WHalfExtent;  // 0x4C  float32.
         std::uint32_t RuntimeModelTag;  // 0x50  tagref. [Truncated to 4 bytes]
         std::uint8_t  _pad_0x54[0x4];  // undefined.
@@ -214,7 +216,7 @@ export namespace Map::Tag::Type::Coll::Structure
         std::uint64_t RuntimeMoppCodePointer2;  // 0xB0  uint64. | becomes a pointer inside the MOPP code data in memory at runtime. don't poke me
         std::int32_t MoppDataSize;  // 0xB8  int32.
         std::uint8_t  _pad_0xBC[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 CodeInfoCopy;  // 0xC0  vector3.
+        MathType::Vec3 CodeInfoCopy;  // 0xC0  vector3.
         float        WCodeInfoCopy;  // 0xCC  float32.
         std::uint64_t RuntimeChildShapeVtablePointer;  // 0xD0  uint64. | becomes a pointer in memory at runtime. don't poke me
         std::uint16_t ShapeType;  // 0xD8  enum16. [Sphere=0x0, Pill=0x1, Box=0x2, Triangle=0x3, Polyhedron=0x4, Multi Sphere=0x5, Phantom=0x6, Unused 1=0x7, Unused 2=0x8, Unused 3=0x9, Unused 4=0xA, Unused 5=0xB, Unused 6=0xC, Unused 7=0xD, List=0xE, MOPP=0xF] | this and the shape index below becomes a pointer to the given shape in memory at runtime. don't poke me
@@ -248,7 +250,7 @@ export namespace Map::Tag::Type::Coll::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -294,7 +296,7 @@ export namespace Map::Tag::Type::Coll::Structure
     {
         std::int16_t Node;  // 0x0  int16.
         std::uint16_t Flags;  // 0x2  flags16. [Remains When Open=0, Vehicle Only=1, With Sectors=2]
-        MapStructure::Primitive::Vec3 Center;  // 0x4  point3.
+        MathType::Vec3 Center;  // 0x4  point3.
         float        Radius;  // 0x10  float32.
     };
     static_assert(sizeof(Coll_PathfindingSpheresEntry) == 0x14, "Coll_PathfindingSpheresEntry size mismatch");

@@ -55,6 +55,7 @@
   <ItemGroup>
     <ClCompile Include="Common\LogParseTests.cpp" />
     <ClCompile Include="Common\LogTests.cpp" />
+    <ClCompile Include="Common\MathTypeTests.cpp" />
     <ClCompile Include="Common\SnapshotTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
   </ItemGroup>

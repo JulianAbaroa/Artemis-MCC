@@ -202,27 +202,6 @@ export namespace Map::Reader::Type::Structure
     // Basic types that tag structures are made of.
     namespace Primitive
     {
-        struct Vec2
-        {
-            float X{};
-            float Y{};
-        };
-
-        struct Vec3
-        {
-            float X{};
-            float Y{};
-            float Z{};
-        };
-
-        struct Vec4
-        {
-            float X{};
-            float Y{};
-            float Z{};
-            float W{};
-        };
-
         struct ColorRGB
         {
             float Red{};

@@ -5,6 +5,7 @@ import std;
 export namespace Common::Math::Type
 {
     // Two-component vector.
+    // note: also the engine vector inside the generated datum and tag structs (packed floats). Do not add members, the layout is fixed.
     struct Vec2
     {
         float X{};
@@ -12,6 +13,7 @@ export namespace Common::Math::Type
     };
 
     // Three-component vector.
+    // note: also the engine vector inside the generated datum and tag structs (packed floats). Do not add members, the layout is fixed.
     struct Vec3
     {
         float X{};
@@ -20,6 +22,7 @@ export namespace Common::Math::Type
     };
 
     // Four-component vector. Also used for quaternions.
+    // note: also the engine vector inside the generated datum and tag structs (packed floats). Do not add members, the layout is fixed.
     struct Vec4
     {
         float X{};
@@ -27,6 +30,10 @@ export namespace Common::Math::Type
         float Z{};
         float W{};
     };
+
+    static_assert(sizeof(Vec2) == 8 && std::is_trivially_copyable_v<Vec2> && std::is_standard_layout_v<Vec2>);
+    static_assert(sizeof(Vec3) == 12 && std::is_trivially_copyable_v<Vec3> && std::is_standard_layout_v<Vec3>);
+    static_assert(sizeof(Vec4) == 16 && std::is_trivially_copyable_v<Vec4> && std::is_standard_layout_v<Vec4>);
 
     // Triangle of a mesh with its surface flags and material.
     struct Triangle

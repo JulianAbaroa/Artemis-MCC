@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Sddt.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -33,7 +35,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -57,11 +59,11 @@ export namespace Map::Tag::Type::Sddt::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 BoundingSphereCenter;  // 0x10  point3.
+        MathType::Vec3 BoundingSphereCenter;  // 0x10  point3.
         float        BoundingSphereRadius;  // 0x1C  float32.
-        MapStructure::Primitive::Vec3 Vertex0;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Vertex1;  // 0x2C  point3.
-        MapStructure::Primitive::Vec3 Vertex2;  // 0x38  point3.
+        MathType::Vec3 Vertex0;  // 0x20  point3.
+        MathType::Vec3 Vertex1;  // 0x2C  point3.
+        MathType::Vec3 Vertex2;  // 0x38  point3.
     };
     static_assert(sizeof(Sddt_SoftCeilings_SoftCeilingTrianglesEntry) == 0x44, "Sddt_SoftCeilings_SoftCeilingTrianglesEntry size mismatch");
 
@@ -93,7 +95,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -130,9 +132,9 @@ export namespace Map::Tag::Type::Sddt::Structure
     // Entry size: 0x24
     struct Sddt_WaterInstances_WaterDebugTrianglesEntry
     {
-        MapStructure::Primitive::Vec3 Point0;  // 0x0  point3.
-        MapStructure::Primitive::Vec3 Point1;  // 0xC  point3.
-        MapStructure::Primitive::Vec3 Point2;  // 0x18  point3.
+        MathType::Vec3 Point0;  // 0x0  point3.
+        MathType::Vec3 Point1;  // 0xC  point3.
+        MathType::Vec3 Point2;  // 0x18  point3.
     };
     static_assert(sizeof(Sddt_WaterInstances_WaterDebugTrianglesEntry) == 0x24, "Sddt_WaterInstances_WaterDebugTrianglesEntry size mismatch");
 
@@ -141,7 +143,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     {
         std::int16_t GroupIndex;  // 0x0  int16.
         std::int16_t Unknown;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 FlowVelocity;  // 0x4  vector3.
+        MathType::Vec3 FlowVelocity;  // 0x4  vector3.
         MapStructure::Primitive::ColorRGBA FogColor;  // 0x10  colorf.
         float        FogMurkiness;  // 0x20  float32.
         // -> Sddt_WaterInstances_WaterPlanesEntry[]
@@ -157,7 +159,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     // Entry size: 0xC
     struct Sddt_PlanarFog_VerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
+        MathType::Vec3 Position;  // 0x0  point3.
     };
     static_assert(sizeof(Sddt_PlanarFog_VerticesEntry) == 0xC, "Sddt_PlanarFog_VerticesEntry size mismatch");
 
@@ -187,7 +189,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         // -> Sddt_PlanarFog_TrianglesEntry[]
         MapStructure::Tag::TagBlock   Triangles;  // 0x20  tagblock.
         float        Depth;  // 0x2C  float32.
-        MapStructure::Primitive::Vec3 Normal;  // 0x30  vector3.
+        MathType::Vec3 Normal;  // 0x30  vector3.
     };
     static_assert(sizeof(Sddt_PlanarFogEntry) == 0x3C, "Sddt_PlanarFogEntry size mismatch");
 
@@ -208,7 +210,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.
@@ -308,7 +310,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         // -> Sddt_Meshes_WaterIndicesStartEntry[]
         MapStructure::Tag::TagBlock   WaterIndicesStart;  // 0x40  tagblock.
         float        BoundingRadius;  // 0x4C  float32.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x50  point3.
+        MathType::Vec3 BoundingOffset;  // 0x50  point3.
     };
     static_assert(sizeof(Sddt_MeshesEntry) == 0x5C, "Sddt_MeshesEntry size mismatch");
 
@@ -332,7 +334,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::int8_t  NodeIndex1;  // 0x20  int8.
         std::int8_t  NodeIndex2;  // 0x21  int8.
@@ -357,12 +359,12 @@ export namespace Map::Tag::Type::Sddt::Structure
     // Entry size: 0x60
     struct Sddt_PerMeshTemporary_RawVerticesEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  point3.
-        MapStructure::Primitive::Vec2 Texcoord;  // 0xC  point2.
-        MapStructure::Primitive::Vec3 Normal;  // 0x14  point3.
-        MapStructure::Primitive::Vec3 Binormal;  // 0x20  point3.
-        MapStructure::Primitive::Vec3 Tangent;  // 0x2C  point3.
-        MapStructure::Primitive::Vec2 LightmapTexcoord;  // 0x38  point2.
+        MathType::Vec3 Position;  // 0x0  point3.
+        MathType::Vec2 Texcoord;  // 0xC  point2.
+        MathType::Vec3 Normal;  // 0x14  point3.
+        MathType::Vec3 Binormal;  // 0x20  point3.
+        MathType::Vec3 Tangent;  // 0x2C  point3.
+        MathType::Vec2 LightmapTexcoord;  // 0x38  point2.
         std::uint8_t NodeIndex1;  // 0x40  uint8.
         std::uint8_t NodeIndex2;  // 0x41  uint8.
         std::uint8_t NodeIndex3;  // 0x42  uint8.
@@ -371,7 +373,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         float        NodeWeight2;  // 0x48  float32.
         float        NodeWeight3;  // 0x4C  float32.
         float        NodeWeight4;  // 0x50  float32.
-        MapStructure::Primitive::Vec3 VertexColor;  // 0x54  point3.
+        MathType::Vec3 VertexColor;  // 0x54  point3.
     };
     static_assert(sizeof(Sddt_PerMeshTemporary_RawVerticesEntry) == 0x60, "Sddt_PerMeshTemporary_RawVerticesEntry size mismatch");
 
@@ -399,7 +401,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     // Entry size: 0x8
     struct Sddt_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry
     {
-        MapStructure::Primitive::Vec2 BaseTexcoord;  // 0x0  point2.
+        MathType::Vec2 BaseTexcoord;  // 0x0  point2.
     };
     static_assert(sizeof(Sddt_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry) == 0x8, "Sddt_PerMeshTemporary_RawWaterData_RawWaterVerticesEntry size mismatch");
 
@@ -429,7 +431,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     // Entry size: 0x14
     struct Sddt_PerMeshTemporary_RawInstanceImposterVertsEntry
     {
-        MapStructure::Primitive::Vec3 Position;  // 0x0  vector3.
+        MathType::Vec3 Position;  // 0x0  vector3.
         std::uint32_t Color;  // 0xC  uint32.
         float        HdrScaler;  // 0x10  float32.
     };
@@ -477,7 +479,7 @@ export namespace Map::Tag::Type::Sddt::Structure
     {
         std::uint32_t Plane;  // 0x0  plane3.
         std::uint8_t  _gap_0x4[0xC];
-        MapStructure::Primitive::Vec3 Position;  // 0x10  point3.
+        MathType::Vec3 Position;  // 0x10  point3.
         float        Radius;  // 0x1C  float32.
         std::uint8_t NodeIndex1;  // 0x20  uint8.
         std::uint8_t NodeIndex2;  // 0x21  uint8.
@@ -509,8 +511,8 @@ export namespace Map::Tag::Type::Sddt::Structure
     {
         std::int16_t MeshIndex;  // 0x0  int16.
         std::int16_t PartIndex;  // 0x2  int16.
-        MapStructure::Primitive::Vec3 PositionBounds0;  // 0x4  point3.
-        MapStructure::Primitive::Vec3 PositionBounds1;  // 0x10  point3.
+        MathType::Vec3 PositionBounds0;  // 0x4  point3.
+        MathType::Vec3 PositionBounds1;  // 0x10  point3.
     };
     static_assert(sizeof(Sddt_WaterBoundingBoxEntry) == 0x1C, "Sddt_WaterBoundingBoxEntry size mismatch");
 
@@ -615,10 +617,10 @@ export namespace Map::Tag::Type::Sddt::Structure
     struct Sddt_InstancedGeometryInstancesEntry
     {
         float        Scale;  // 0x0  float32.
-        MapStructure::Primitive::Vec3 Forward;  // 0x4  vector3.
-        MapStructure::Primitive::Vec3 Left;  // 0x10  vector3.
-        MapStructure::Primitive::Vec3 Up;  // 0x1C  vector3.
-        MapStructure::Primitive::Vec3 Position;  // 0x28  point3.
+        MathType::Vec3 Forward;  // 0x4  vector3.
+        MathType::Vec3 Left;  // 0x10  vector3.
+        MathType::Vec3 Up;  // 0x1C  vector3.
+        MathType::Vec3 Position;  // 0x28  point3.
         std::int16_t InstanceDefinitionIndex;  // 0x34  int16.
         std::uint16_t Flags;  // 0x36  flags16. [Not In Lightprobes=0, Render Only=1, Does Not Block Aoe Damage=2, Collidable=3, Decal Spacing=4, Rain Blocker=5, Vertical Rain Sheet=6, Outside Map=7, Seam Colliding=8, (Mostly) Planar=9, Remove From Shadow Geometry=10, Cinema Only=11, Exclude From Cinema=12, Disallow Object Lighting Samples=13, Bit 14=14, Bit 15=15]
         std::int16_t MeshIndex;  // 0x38  int16.
@@ -630,7 +632,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         MapStructure::Primitive::RangeF BoundsX;  // 0x4C  rangef.
         MapStructure::Primitive::RangeF BoundsY;  // 0x54  rangef.
         MapStructure::Primitive::RangeF BoundsZ;  // 0x5C  rangef.
-        MapStructure::Primitive::Vec3 WorldBoundingSphereCenter;  // 0x64  point3.
+        MathType::Vec3 WorldBoundingSphereCenter;  // 0x64  point3.
         float        WorldBoundingSphereRadius;  // 0x70  float32.
         float        ImposterTransitionCompleteDistance;  // 0x74  float32.
         float        ImposterBrightness;  // 0x78  float32.
@@ -682,7 +684,7 @@ export namespace Map::Tag::Type::Sddt::Structure
         std::uint64_t UserData;  // 0x10  uint64. | The offset from the start of the block to the start of this shape (index * block element size). This becomes a pointer to this shape in memory at runtime. don't poke me
         std::int32_t Type;  // 0x18  int32.
         std::uint8_t  _pad_0x1C[0x4];  // undefined.
-        MapStructure::Primitive::Vec3 V;  // 0x20  vector3.
+        MathType::Vec3 V;  // 0x20  vector3.
         float        WV;  // 0x2C  float32.
         std::uint64_t RuntimeMoppCodePointer;  // 0x30  uint64. | becomes a pointer to the start of the MOPP code data in memory at runtime. don't poke me
         std::int32_t DataSize;  // 0x38  int32.

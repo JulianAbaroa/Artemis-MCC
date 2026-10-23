@@ -5,13 +5,7 @@
 
 export module Datum.Object.Type:Ctrl.Structure;
 
-import Map.Reader.Type;
 import std;
-
-namespace
-{
-    namespace MapStructure = Map::Reader::Type::Structure;
-}
 
 #pragma pack(push, 1)
 

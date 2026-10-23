@@ -5,12 +5,12 @@
 
 export module Datum.Object.Type:Bipd.Structure;
 
-import Map.Reader.Type;
+import Common.Math.Type;
 import std;
 
 namespace
 {
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MathType = Common::Math::Type;
 }
 
 #pragma pack(push, 1)
@@ -70,7 +70,7 @@ export namespace Datum::Object::Type::Bipd::Structure
         std::uint8_t  _gap_0xFC[0x2];
         std::uint8_t UnknownAd6;  // 0xFE  uint8. | R0 W1 upd=0x0 W:FUN_180192e7c
         std::uint8_t UnknownAd7;  // 0xFF  uint8. | R1 W1 upd=0x0 W:FUN_180192e7c
-        MapStructure::Primitive::Vec3 SurfaceNormal;  // 0x100  vector3. | Normal of the last ground contact. Old name Biped.SurfaceNormal.
+        MathType::Vec3 SurfaceNormal;  // 0x100  vector3. | Normal of the last ground contact. Old name Biped.SurfaceNormal.
         std::uint8_t  _gap_0x10C[0x8];
         std::uint32_t UnknownAec;  // 0x114  uint32. | R0 W1 upd=0xffffffff W:FUN_180192e7c
         std::uint8_t  _gap_0x118[0x8];

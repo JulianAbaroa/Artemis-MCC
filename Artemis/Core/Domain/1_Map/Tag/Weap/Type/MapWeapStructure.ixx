@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Weap.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -24,7 +26,7 @@ export namespace Map::Tag::Type::Weap::Structure
         MapStructure::Primitive::RangeF X;  // 0x8  rangef.
         MapStructure::Primitive::RangeF Y;  // 0x10  rangef.
         MapStructure::Primitive::RangeF Z;  // 0x18  rangef.
-        MapStructure::Primitive::Vec3 Angles;  // 0x20  degree3.
+        MathType::Vec3 Angles;  // 0x20  degree3.
     };
     static_assert(sizeof(Weap_EarlyMoverOrientedBoundingBoxEntry) == 0x2C, "Weap_EarlyMoverOrientedBoundingBoxEntry size mismatch");
 
@@ -387,7 +389,7 @@ export namespace Map::Tag::Type::Weap::Structure
     // Entry size: 0xC
     struct Weap_Barrels_FirstPersonOffsetEntry
     {
-        MapStructure::Primitive::Vec3 FirstPersonOffset;  // 0x0  point3. | +x is forward, +z is up, +y is left
+        MathType::Vec3 FirstPersonOffset;  // 0x0  point3. | +x is forward, +z is up, +y is left
     };
     static_assert(sizeof(Weap_Barrels_FirstPersonOffsetEntry) == 0xC, "Weap_Barrels_FirstPersonOffsetEntry size mismatch");
 
@@ -513,7 +515,7 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint32_t Flags;  // 0x4  flags32. [Does Not Cast Shadow=0, Search Cardinal Direction Lightmaps on Failure=1, Preserves Initial Damage Owner=2, Not A Pathfinding Obstacle=3, Extension Of Parent=4, Does Not Cause Collision Damage=5, Early Mover=6, Early Mover Localized Physics=7, Object Scales Attachments=8, Object Is Always On The Ceiling=9, Sample Enviroment Lighting Only Ignore Object Lighting=10, Effects Created By This Object Do Not Spawn Objects In Multiplayer=11, Does Not Collide With Camera=12, Force Collide With Camera=13, Damage Not Blocked By Obstructions=14, Does Not Damage Breakable Surfaces=15, ...(17 total)]
         std::uint32_t RuntimeFlags;  // 0x8  flags32. [Runtime Change Colors Allowed=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        BoundingRadius;  // 0xC  float32. | If you edit this field manually, beware that the render model is no longer respected for radius calculation and that you need to set the bounding offset as well.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x10  point3.
+        MathType::Vec3 BoundingOffset;  // 0x10  point3.
         float        HorizontalAccelerationScale;  // 0x1C  float32.
         float        VerticalAccelerationScale;  // 0x20  float32.
         float        AngularAccelerationScale;  // 0x24  float32.
@@ -521,7 +523,7 @@ export namespace Map::Tag::Type::Weap::Structure
         std::uint8_t SweetenerSize;  // 0x2A  enum8. [Default=0x0, Small=0x1, Medium=0x2, Large=0x3]
         std::uint8_t WaterDensity;  // 0x2B  enum8. [Default=0x0, Super Floater=0x1, Floater=0x2, Neutral=0x3, Sinker=0x4, Super Sinker=0x5, None=0x6]
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
-        MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
+        MathType::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
         MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
         MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.
@@ -680,8 +682,8 @@ export namespace Map::Tag::Type::Weap::Structure
         float        ExternalAgingAmount;  // 0x46C  float32.
         float        CampaignExternalAgingAmount;  // 0x470  float32.
         float        ExternalHeatAmount;  // 0x474  float32.
-        MapStructure::Primitive::Vec3 LoweredFirstPersonWeaponOffset;  // 0x478  vector3. | Weapon offset when the crosshair position is Lowered.
-        MapStructure::Primitive::Vec3 CenteredFirstPersonWeaponOffset;  // 0x484  vector3. | Weapon offset when the crosshair position is Centered.
+        MathType::Vec3 LoweredFirstPersonWeaponOffset;  // 0x478  vector3. | Weapon offset when the crosshair position is Lowered.
+        MathType::Vec3 CenteredFirstPersonWeaponOffset;  // 0x484  vector3. | Weapon offset when the crosshair position is Centered.
         std::uint32_t FirstPersonScopeSize;  // 0x490  vector2.
         std::uint8_t  _gap_0x494[0x4];
         MapStructure::Primitive::RangeF SupportThirdPersonCameraRange;  // 0x498  rangef. | range in degrees. 0 is straight, -90 is down, 90 is up

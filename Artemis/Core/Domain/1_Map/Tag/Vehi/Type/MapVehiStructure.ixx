@@ -4,11 +4,13 @@
 
 export module Map.Tag.Type:Vehi.Structure;
 
+import Common.Math.Type;
 import Map.Reader.Type;
 import std;
 
 namespace
 {
+    namespace MathType = Common::Math::Type;
     namespace MapStructure = Map::Reader::Type::Structure;
 }
 
@@ -24,7 +26,7 @@ export namespace Map::Tag::Type::Vehi::Structure
         MapStructure::Primitive::RangeF X;  // 0x8  rangef.
         MapStructure::Primitive::RangeF Y;  // 0x10  rangef.
         MapStructure::Primitive::RangeF Z;  // 0x18  rangef.
-        MapStructure::Primitive::Vec3 Angles;  // 0x20  degree3.
+        MathType::Vec3 Angles;  // 0x20  degree3.
     };
     static_assert(sizeof(Vehi_EarlyMoverOrientedBoundingBoxEntry) == 0x2C, "Vehi_EarlyMoverOrientedBoundingBoxEntry size mismatch");
 
@@ -274,8 +276,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Vehi_MoveStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -296,8 +298,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Vehi_LookStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -354,8 +356,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Vehi_MoveStickOverrides_2_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -376,8 +378,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Vehi_LookStickOverrides_2_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -485,8 +487,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Vehi_Seats_MoveStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -507,8 +509,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int8_t  Unknown;  // 0x1  int8.
         std::int16_t Unknown_2;  // 0x2  int16.
         float        PegThreshold;  // 0x4  float32. | [0,1] magnitude of analog input for pegged acceleration to kick in
-        MapStructure::Primitive::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
-        MapStructure::Primitive::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
+        MathType::Vec2 PeggedTime;  // 0x8  point2. | time for a pegged look to reach maximum effect
+        MathType::Vec2 PeggedScale;  // 0x10  point2. | the maximum effect achieved over the duration of the pegged time.
         float        PegMaximumAngularVelocity;  // 0x18  degree. | the maximum turning speed during peg
         // -> Vehi_Seats_LookStickOverrides_InputMappingFunctionEntry[]
         MapStructure::Tag::TagBlock   InputMappingFunction;  // 0x1C  tagblock.
@@ -893,8 +895,8 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::uint8_t  _pad_0x4C[0x4];  // undefined.
         std::uint8_t  _pad_0x50[0x4];  // undefined.
         std::uint32_t Flags;  // 0x54  flags32. [Constrained Plant=0]
-        MapStructure::Primitive::Vec3 RuntimeInitialOriginToHipOffset;  // 0x58  vector3.
-        MapStructure::Primitive::Vec3 RuntimePivotCenterToHipOffset;  // 0x64  vector3.
+        MathType::Vec3 RuntimeInitialOriginToHipOffset;  // 0x58  vector3.
+        MathType::Vec3 RuntimePivotCenterToHipOffset;  // 0x64  vector3.
         float        RuntimeUpperLegLength;  // 0x70  float32.
         float        RuntimeLowerLegLength;  // 0x74  float32.
         std::int16_t RuntimeHipNodeAIndex;  // 0x78  int16.
@@ -905,7 +907,7 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::int16_t RuntimeFootNodeIndex;  // 0x82  int16.
         std::int16_t RuntimeHipNodeIndex;  // 0x84  int16.
         std::int16_t RuntimeKneeNodeIndex;  // 0x86  int16.
-        MapStructure::Primitive::Vec3 PlantConstraintPosition;  // 0x88  vector3.
+        MathType::Vec3 PlantConstraintPosition;  // 0x88  vector3.
         std::uint8_t  _pad_0x94[0x4];  // undefined.
         std::uint8_t  _pad_0x98[0x4];  // undefined.
         std::uint8_t  _pad_0x9C[0x4];  // undefined.
@@ -928,14 +930,14 @@ export namespace Map::Tag::Type::Vehi::Structure
         float        MaximumRightSlide;  // 0x28  float32.
         float        SlideAcceleration;  // 0x2C  float32.
         float        SlideDeceleration;  // 0x30  float32.
-        MapStructure::Primitive::Vec3 MaximumLegMotion;  // 0x34  vector3. | in WU, how far can we displace the legs in x,y,z each step
+        MathType::Vec3 MaximumLegMotion;  // 0x34  vector3. | in WU, how far can we displace the legs in x,y,z each step
         float        MaximumTurn;  // 0x40  float32. | in degrees, how much can this walker turn in one step
         // -> Vehi_MantisType_LegsEntry[]
         MapStructure::Tag::TagBlock   Legs;  // 0x44  tagblock.
         float        LegApexFraction;  // 0x50  float32. | 0-1 fraction. where the leg tansitions from lift to drop
         float        LiftExponent;  // 0x54  float32. | x(0-1) power exponent
         float        DropExponent;  // 0x58  float32. | x(0-1) power exponent
-        MapStructure::Primitive::Vec3 ObjectSpacePivotPosition;  // 0x5C  vector3.
+        MathType::Vec3 ObjectSpacePivotPosition;  // 0x5C  vector3.
         float        WalkCyclePause;  // 0x68  float32. | fraction of walkcycle at end for pause
         std::int16_t StablePlantedLegs;  // 0x6C  int16. | number of legs mantis needs planted to be considered stable.
         std::int16_t Unknown;  // 0x6E  int16.
@@ -1457,7 +1459,7 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::uint32_t Flags;  // 0x4  flags32. [Does Not Cast Shadow=0, Search Cardinal Direction Lightmaps on Failure=1, Preserves Initial Damage Owner=2, Not A Pathfinding Obstacle=3, Extension Of Parent=4, Does Not Cause Collision Damage=5, Early Mover=6, Early Mover Localized Physics=7, Object Scales Attachments=8, Object Is Always On The Ceiling=9, Sample Enviroment Lighting Only Ignore Object Lighting=10, Effects Created By This Object Do Not Spawn Objects In Multiplayer=11, Does Not Collide With Camera=12, Force Collide With Camera=13, Damage Not Blocked By Obstructions=14, Does Not Damage Breakable Surfaces=15, ...(17 total)]
         std::uint32_t RuntimeFlags;  // 0x8  flags32. [Runtime Change Colors Allowed=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, ...(32 total)]
         float        BoundingRadius;  // 0xC  float32. | If you edit this field manually, beware that the render model is no longer respected for radius calculation and that you need to set the bounding offset as well.
-        MapStructure::Primitive::Vec3 BoundingOffset;  // 0x10  point3.
+        MathType::Vec3 BoundingOffset;  // 0x10  point3.
         float        HorizontalAccelerationScale;  // 0x1C  float32.
         float        VerticalAccelerationScale;  // 0x20  float32.
         float        AngularAccelerationScale;  // 0x24  float32.
@@ -1465,7 +1467,7 @@ export namespace Map::Tag::Type::Vehi::Structure
         std::uint8_t SweetenerSize;  // 0x2A  enum8. [Default=0x0, Small=0x1, Medium=0x2, Large=0x3]
         std::uint8_t WaterDensity;  // 0x2B  enum8. [Default=0x0, Super Floater=0x1, Floater=0x2, Neutral=0x3, Sinker=0x4, Super Sinker=0x5, None=0x6]
         float        DynamicLightSphereRadius;  // 0x2C  float32. | sphere to use for dynamic lights and shadows. only used if not 0
-        MapStructure::Primitive::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
+        MathType::Vec3 DynamicLightSphereOffset;  // 0x30  point3. | only used if radius not 0
         std::uint32_t GenericHudText;  // 0x3C  stringid.
         MapStructure::Tag::TagReference GenericNameList;  // 0x40  tagref.
         MapStructure::Tag::TagReference GenericServiceTagList;  // 0x50  tagref.

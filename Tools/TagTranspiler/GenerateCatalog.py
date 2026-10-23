@@ -44,7 +44,7 @@ def _WriteIfChanged(outPath: str, content: str) -> bool:
         with open(outPath, "r", encoding="utf-8") as f:
             if f.read() == content:
                 return False
-    with open(outPath, "w", encoding="utf-8") as f:
+    with open(outPath, "w", encoding="utf-8", newline="\r\n") as f:
         f.write(content)
     return True
 
