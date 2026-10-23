@@ -45,18 +45,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Common\LogParseTests.cpp" />
-    <ClCompile Include="Common\LogTests.cpp" />
-    <ClCompile Include="Common\SnapshotTests.cpp" />
-    <ClCompile Include="Support\Tests.Support.Log.ixx" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="GoogleTest\Artemis.GoogleTest.vcxproj">
       <Project>{8C833536-1445-59FA-9679-5677F063B66D}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Common\Artemis.Common.vcxproj">
       <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Common\LogParseTests.cpp" />
+    <ClCompile Include="Common\LogTests.cpp" />
+    <ClCompile Include="Common\SnapshotTests.cpp" />
+    <ClCompile Include="Support\Tests.Support.Log.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

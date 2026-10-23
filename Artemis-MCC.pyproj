@@ -21,6 +21,7 @@
   <ItemGroup>
     <Folder Include="Tools\" />
     <Folder Include="Tools\TagTranspiler\" />
+    <Folder Include="Tools\Tests\" />
     <Folder Include="Data\" />
     <Folder Include="Data\Datum\" />
     <Folder Include="Data\Semantic\" />
@@ -74,6 +75,9 @@
     <Compile Include="Tools\seed_tags.py" />
     <Compile Include="Tools\seed_datum.py" />
     <Compile Include="Tools\test.py" />
+    <Compile Include="Tools\Tests\conftest.py" />
+    <Compile Include="Tools\Tests\tdump_writer.py" />
+    <Compile Include="Tools\Tests\test_tickdump.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\README.md" />

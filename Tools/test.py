@@ -8,16 +8,21 @@ JSON output and prints a compact summary: how many passed, failed (file:line and
     python Tools/test.py --project PATH --exe PATH    Another test project and its exe (paths relative to the repo).
     python Tools/test.py --filter "Suite.*"           Passed to the exe as --gtest_filter.
     python Tools/test.py --wait ID                    Keep waiting for a build that outlived --timeout (the id is printed).
+    python Tools/test.py --python                     pytest of Tools/Tests (D173) in the shell where this runs, no watcher. Not
+                                                      combined with --project/--exe/--config. Needs pytest: pip install --user pytest.
 
     -n N   cap on lines printed (default 40; 0 = no cap)
 
 Exit code: 0 every test passed (skipped ones do not count), 1 a test failed, 2 the project did not compile (or the exe did not
 run), 3 the watcher is not running, 4 a LiveChat message arrived (the build keeps going, resume with --wait), 5 still building.
+With --python: 0 every test passed, 1 a test failed, 2 anything else (pytest missing, collection error, usage error).
 """
-import argparse, json, os, re, sys, time, uuid
+import argparse, importlib.util, json, os, re, subprocess, sys, time, uuid
 import build, livechat
 
 DEFAULT_PROJECT = "Artemis/Tests/Artemis.Tests.vcxproj"
+DEFAULT_CONFIG = "Release|x64"
+PYTHON_TESTS = "Tools/Tests"
 DEFAULT_EXE = "build/{platform}/{configuration}/Artemis.Tests.exe"
 RESULTS = "build/watch/tests.json"
 RUN_LOG = "run.log"
@@ -79,6 +84,20 @@ def Summarize(args, started):
     return 1 if failed else 0
 
 
+def RunPython(args):
+    """pytest over Tools/Tests from the root of the project, with the python that runs this script (no build watcher)."""
+    if importlib.util.find_spec("pytest") is None:
+        print("pytest is not installed for " + sys.executable + ": pip install --user pytest")
+        return 2
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    done = subprocess.run([sys.executable, "-m", "pytest", PYTHON_TESTS, "-q", "-p", "no:cacheprovider"], cwd=build.ROOT, env=env,
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+    lines = done.stdout.splitlines()
+    for line in lines[-args.n:] if args.n else lines:
+        print(line)
+    return done.returncode if done.returncode in (0, 1) else 2
+
+
 def Wait(id, timeout):
     start = time.time()
     while time.time() - start < timeout:
@@ -112,7 +131,8 @@ def Finish(result, args, started):
 
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", default="Release|x64")
+    parser.add_argument("--python", action="store_true", help="run the pytest tests of Tools/Tests instead of the C++ ones")
+    parser.add_argument("--config", default=DEFAULT_CONFIG)
     parser.add_argument("--project", default=DEFAULT_PROJECT)
     parser.add_argument("--exe")
     parser.add_argument("--filter")
@@ -121,6 +141,10 @@ def Main():
     parser.add_argument("-n", type=int, default=40)
     args = parser.parse_args()
     args.warnings = False
+    if args.python:
+        if args.exe or args.project != DEFAULT_PROJECT or args.config != DEFAULT_CONFIG:
+            parser.error("--python is not combined with --project, --exe or --config")
+        return RunPython(args)
     os.makedirs(build.WATCH, exist_ok=True)
     started = time.time()
 
