@@ -30,6 +30,7 @@ The data pipeline has two components:
   - [Dear ImGui](https://github.com/ocornut/imgui), MIT
   - [zlib](https://zlib.net), zlib License
   - [stb_image](https://github.com/nothings/stb), Public Domain / MIT
+  - [GoogleTest](https://github.com/google/googletest) (with gMock), BSD-3-Clause. Only for the test executable, not linked into the DLL.
 
 ## Building
 
@@ -40,7 +41,7 @@ The data pipeline has two components:
 - **Halo: The Master Chief Collection** (Steam), with Halo Reach installed and **Easy Anti-Cheat (EAC) disabled**.
 
 ### 1. Clone with submodules
-Artemis depends on MinHook, Dear ImGui and zlib as git submodules, so clone recursively:
+Artemis depends on MinHook, Dear ImGui, zlib and GoogleTest as git submodules, so clone recursively:
 
 ```bash
 git clone --recursive https://github.com/JulianAbaroa/Artemis-MCC.git
