@@ -41,6 +41,7 @@ export namespace Platform
         using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
         using EngineInterfaceDetour = Platform::Lifecycle::Hook::EngineInterfaceDetour;
         using LifecycleUpdateDetour = Platform::Lifecycle::Hook::LifecycleUpdateDetour;
+        using OpenMapDetour = Platform::Lifecycle::Hook::OpenMapDetour;
 
         using LocalUserStore = Platform::Host::State::LocalUserStore;
         using HostService = Platform::Host::System::HostService;
@@ -94,6 +95,7 @@ export namespace Platform
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_EngineInterfaceDetour(service.m_Log, m_AOBService, m_MemoryReaderService, m_MatchCycleStore, m_MatchConfigService),
             m_LifecycleUpdateDetour(service.m_Log, m_AOBService, m_MatchConfigStore, m_MatchCycleStore),
+            m_OpenMapDetour(service.m_Log, m_AOBService, m_LifecycleService),
             m_LocalUserGetPlayerDetour(service.m_Log, m_HostService, m_LocalUserStore),
             m_LocalUserGetProfileDetour(service.m_Log, m_HostService, m_LocalUserStore),
             m_LocalUserGetGamepadMappingDetour(service.m_Log, m_HostService, m_LocalUserStore),
@@ -118,6 +120,7 @@ export namespace Platform
                 m_BotService.ResolveFunctions();
                 m_SetMachinesDetour.Install();
                 this->InstallHostHooks();
+                m_OpenMapDetour.Install();
             });
 
             // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
@@ -127,6 +130,7 @@ export namespace Platform
                 m_SetMachinesDetour.Uninstall();
                 m_PlayerActionDetour.Uninstall();
                 m_GetButtonStateDetour.Uninstall();
+                m_OpenMapDetour.Uninstall();
             });
 
             // The virtual input is not cleared: the sources picked in the UI stay across matches.
@@ -184,6 +188,7 @@ export namespace Platform
         DestroySubsystemsDetour m_DestroySubsystemsDetour;
         EngineInterfaceDetour m_EngineInterfaceDetour;
         LifecycleUpdateDetour m_LifecycleUpdateDetour;
+        OpenMapDetour m_OpenMapDetour;
         LocalUserGetPlayerDetour m_LocalUserGetPlayerDetour;
         LocalUserGetProfileDetour m_LocalUserGetProfileDetour;
         LocalUserGetGamepadMappingDetour m_LocalUserGetGamepadMappingDetour;

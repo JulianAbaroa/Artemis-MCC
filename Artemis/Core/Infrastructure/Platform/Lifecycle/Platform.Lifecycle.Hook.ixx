@@ -4,3 +4,4 @@ export import :EngineInitialize;
 export import :DestroySubsystems;
 export import :EngineInterface;
 export import :LifecycleUpdate;
+export import :OpenMap;

@@ -65,10 +65,10 @@ export namespace Core
 
         PreferencesService m_Preferences{ m_Service.m_SettingsStore, m_Service.m_Log };
 
-        Map::Layer m_Map{ m_Service, m_Platform };
-        Resolved::Layer m_Resolved{ m_Service, m_Platform, m_Map };
+        Map::Layer m_Map{ m_Service.m_Log };
+        Resolved::Layer m_Resolved{ m_Service.m_Log, m_Map };
         Datum::Layer m_Datum{ m_Service, m_Platform };
-        Tables::Layer m_Tables{ m_Service, m_Platform, m_Map, m_Datum };
+        Tables::Layer m_Tables{ m_Service, m_Platform, m_Resolved, m_Datum };
         Relations::Layer m_Relations{ m_Service, m_Platform, m_Resolved, m_Tables };
         Environment::Layer m_Environment{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations };
         Egocentric::Layer m_Egocentric{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment };

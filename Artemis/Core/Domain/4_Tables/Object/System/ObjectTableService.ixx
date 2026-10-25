@@ -1,8 +1,8 @@
 export module Tables.Object.System;
 
 import Common.Log.System;
-import Map.Reader.System;
 import Resolved.Definitions.Type;
+import Resolved.Tag.System;
 import Resolved.Vitality.State;
 import Resolved.World.State;
 import Datum.Object.Type;
@@ -34,7 +34,7 @@ export namespace Tables::Object::System
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
-        using TagResolverService = Map::Reader::System::TagResolverService;
+        using TagResolverService = Resolved::Tag::System::TagResolverService;
 
     public:
         ObjectTableService(Log& log,

@@ -160,221 +160,6 @@
     <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderConstant.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.System.Bipd.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Map.Tag.Type.Bipd.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\System\MapBipdDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\MapBipdObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\MapBipdOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bipd\Type\MapBipdStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.System.Bloc.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Map.Tag.Type.Bloc.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\System\MapBlocDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\MapBlocObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\MapBlocOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Bloc\Type\MapBlocStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.System.Coll.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Map.Tag.Type.Coll.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\System\MapCollDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\MapCollObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\MapCollOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Coll\Type\MapCollStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.System.Ctrl.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Map.Tag.Type.Ctrl.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\System\MapCtrlDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\MapCtrlObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\MapCtrlOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Ctrl\Type\MapCtrlStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.System.Eqip.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Map.Tag.Type.Eqip.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\System\MapEqipDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\MapEqipObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\MapEqipOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Eqip\Type\MapEqipStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.System.Hlmt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Map.Tag.Type.Hlmt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\System\MapHlmtDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\MapHlmtObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\MapHlmtOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Hlmt\Type\MapHlmtStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.System.Jpt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Map.Tag.Type.Jpt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\System\MapJptDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\MapJptObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\MapJptOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Jpt\Type\MapJptStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.System.Lbsp.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Map.Tag.Type.Lbsp.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\System\MapLbspDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\MapLbspObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\MapLbspOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Lbsp\Type\MapLbspStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.System.Mach.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Map.Tag.Type.Mach.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\System\MapMachDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MapMachObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MapMachOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mach\Type\MapMachStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.State.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.System.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.Tag.Type.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Map.TagCatalog.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.System.Mode.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Map.Tag.Type.Mode.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\System\MapModeDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\MapModeObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\MapModeOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Mode\Type\MapModeStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.System.Phmo.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Map.Tag.Type.Phmo.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\System\MapPhmoDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\MapPhmoObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\MapPhmoOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Phmo\Type\MapPhmoStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.System.Play.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Map.Tag.Type.Play.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\System\MapPlayDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\MapPlayObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\MapPlayOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Play\Type\MapPlayStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.System.Proj.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Map.Tag.Type.Proj.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\System\MapProjDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\MapProjObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\MapProjOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Proj\Type\MapProjStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.System.Sbsp.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Map.Tag.Type.Sbsp.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\System\MapSbspDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\MapSbspObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\MapSbspOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sbsp\Type\MapSbspStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.System.Scen.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Map.Tag.Type.Scen.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\System\MapScenDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\MapScenObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\MapScenOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scen\Type\MapScenStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.System.Scnr.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Map.Tag.Type.Scnr.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\System\MapScnrDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\MapScnrObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\MapScnrOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Scnr\Type\MapScnrStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.System.Sddt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Map.Tag.Type.Sddt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\System\MapSddtDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\MapSddtObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\MapSddtOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sddt\Type\MapSddtStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.System.Sldt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Map.Tag.Type.Sldt.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\System\MapSldtDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\MapSldtObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\MapSldtOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Sldt\Type\MapSldtStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.System.Vehi.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Map.Tag.Type.Vehi.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\System\MapVehiDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\MapVehiObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\MapVehiOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Vehi\Type\MapVehiStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.System.Weap.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Map.Tag.Type.Weap.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\System\MapWeapDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\MapWeapObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\MapWeapOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Weap\Type\MapWeapStructure.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.System.Zone.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Map.Tag.Type.Zone.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\System\MapZoneDescriptor.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\MapZoneObject.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\MapZoneOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Tag\Zone\Type\MapZoneStructure.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Resolved.Definitions.Reflect.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Resolved.Definitions.Type.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\State\DefinitionsStore.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Damage\Jpt\JptBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp\SbspBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sbsp\SbspBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt\SddtBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Sddt\SddtBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Level\Scnr\ScnrBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Coll\CollBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo\PhmoBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Phmo\PhmoBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Hlmt\HlmtBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode\ModeBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Model\Mode\ModeBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bipd\BipdBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bipd\BipdBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bloc\BlocBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Bloc\BlocBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Ctrl\CtrlBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Ctrl\CtrlBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Eqip\EqipBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Eqip\EqipBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Mach\MachBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Mach\MachBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\ObjectBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Proj\ProjBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Proj\ProjBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Scen\ScenBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Scen\ScenBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Vehi\VehiBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Vehi\VehiBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Weap\WeapBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\Object\Weap\WeapBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\DefinitionsBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\System\DefinitionsBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Damage\DefinitionsJpt.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSbsp.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsSddt.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Level\DefinitionsScnr.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsColl.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsPhmo.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsHlmt.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Model\DefinitionsMode.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsBipd.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsBloc.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsCtrl.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsEqip.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsMach.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsScen.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\_DefinitionsObject.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsProj.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsVehi.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\Type\Object\DefinitionsWeap.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Damage\Reflect.Jpt.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sbsp.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Sddt.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Level\Reflect.Scnr.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Coll.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Phmo.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Hlmt.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Model\Reflect.Mode.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Bipd.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Bloc.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Ctrl.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Eqip.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Mach.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Scen.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\_Reflect.Object.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Proj.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Vehi.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Definitions\_Reflect\Object\Reflect.Weap.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Resolved.Vitality.Type.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\VitalityConstant.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\ModelLink\ModelLinkBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\Raycast\Raycaster.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldModelLink.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRaycast.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Hook\ObjectTableLocator.cpp" />
     <ClCompile Include="Core\Domain\3_Datum\Object\Hook\ObjectTableLocator.ixx" />
     <ClCompile Include="Core\Domain\3_Datum\Object\State\DatumStore.cpp" />
@@ -548,6 +333,8 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\LifecycleUpdateDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\LifecycleUpdateDetour.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.State.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.System.ixx" />
@@ -686,68 +473,6 @@
     <ClCompile Include="Core\Core.ixx" />
     <ClCompile Include="Core\Gui\Gui.Layer.ixx" />
     <ClCompile Include="Core\DllMain.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Builder\System\MapBuilderService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Map.Layer.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Hook\OpenMapDetour.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Hook\OpenMapDetour.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Hook.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.State.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.System.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Map.Reader.Type.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\State\File\FileStore.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\State\TagIndex\TagIndexStore.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\State\Tag\TagStore.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\DataStream\DataStreamService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\DataStream\DataStreamService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileLocator\FileLocatorService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileLocator\FileLocatorService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileNames\FileNamesService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\FileNames\FileNamesService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Formula\FormulaService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Formula\FormulaService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Info\GeometryInfoService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Info\GeometryInfoService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Loader\GeometryLoaderService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\Loader\GeometryLoaderService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder\GeometryMeshDecoderService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\MeshDecoder\GeometryMeshDecoderService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage\GeometryResourcePageService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Geometry\ResourcePage\GeometryResourcePageService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Header\HeaderService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Header\HeaderService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Loader\MapLoaderService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Loader\MapLoaderService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\Map.Reader.System.Geometry.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagGroup\TagGroupService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagIndex\TagIndexService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagIndex\TagIndexService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagResolver\TagResolverService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagResolver\TagResolverService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.cpp" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\System\TagStructure\TagStructureService.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderGeometry.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderHook.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderMagic.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderOffset.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderInfo.ixx" />
-    <ClCompile Include="Core\Domain\1_Map\Reader\Type\ReaderStructure.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Resolved.Layer.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\State\VitalityStore.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\System\VitalityBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\Vitality\Type\Vitality.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\Resolved.World.Type.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\State\WorldStore.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\RegionStates\RegionStatesBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\RegionStates\RegionStatesBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.cpp" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\System\WorldBuilder.ixx" />
-    <ClCompile Include="Core\Domain\2_Resolved\World\Type\WorldRegionStates.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.cpp" />
@@ -999,42 +724,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="External\stb\stb_implementation.cpp" />
-    <ClCompile Include="External\zlib\adler32.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="External\zlib\crc32.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="External\zlib\inffast.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="External\zlib\inflate.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="External\zlib\inftrees.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="External\zlib\zutil.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Proxy\GenerateProxyExports.py" />
@@ -1053,6 +742,12 @@
     </ProjectReference>
     <ProjectReference Include="Services\Artemis.Services.vcxproj">
       <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Blam.Map\Artemis.Blam.Map.vcxproj">
+      <Project>{9F65C23E-E36E-51DB-88A7-496F7A6CC46E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Blam.MapModel\Artemis.Blam.MapModel.vcxproj">
+      <Project>{DC8EE9AD-0601-534E-87A7-8FCCB10DA489}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

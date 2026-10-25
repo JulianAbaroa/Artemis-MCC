@@ -1,10 +1,10 @@
 """
 GenerateCatalog.py
-Regenerates the root of Domain/1_Map/Tag/ from whatever tag folders exist on
+Regenerates the root of Blam.Map/Tag/ from whatever tag folders exist on
 disk: the three umbrella modules (Map.Tag.Type.ixx, Map.Tag.System.ixx,
 Map.Tag.State.ixx) and Map.TagCatalog.ixx (Map.Tag.State:Catalog).
 
-This is the part of 1_Map/Tag/... that section 6.5 of the handoff flagged as
+This is the part of Blam.Map/Tag/... that section 6.5 of the handoff flagged as
 "la unica parte no 100% automatica": adding tag #20 used to mean hand-editing
 four files. This module makes all four fully derived from the set of tag
 folders present under Tag/, so GenerateTags.py can call it after every run
@@ -168,6 +168,6 @@ def GenerateAll(tagsRoot: str) -> list[str]:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print("Usage: python GenerateCatalog.py <Domain/1_Map/Tag path>")
+        print("Usage: python GenerateCatalog.py <Artemis/Blam.Map/Tag path>")
         sys.exit(1)
     GenerateAll(sys.argv[1])

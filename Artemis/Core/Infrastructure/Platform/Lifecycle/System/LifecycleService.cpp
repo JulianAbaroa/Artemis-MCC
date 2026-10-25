@@ -39,6 +39,11 @@ namespace Platform::Lifecycle::System
         m_OnShutdown.push_back(std::move(callback));
     }
 
+    auto LifecycleService::OnMapFileOpened(MapFileCallback callback) -> void
+    {
+        m_OnMapFileOpened.push_back(std::move(callback));
+    }
+
     auto LifecycleService::RaiseEngineInitialized() -> void
     {
         for (auto& callback : m_OnEngineInitialized) callback();
@@ -52,6 +57,11 @@ namespace Platform::Lifecycle::System
     auto LifecycleService::RaiseCleanup() -> void
     {
         for (auto& callback : m_OnCleanup) callback();
+    }
+
+    auto LifecycleService::RaiseMapFileOpened(const std::string& filePath) -> void
+    {
+        for (auto& callback : m_OnMapFileOpened) callback(filePath);
     }
 
     auto LifecycleService::RaiseShutdown() -> void

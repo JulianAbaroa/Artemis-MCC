@@ -1,0 +1,452 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Definitions">
+      <UniqueIdentifier>{584702e6-f09d-43ea-8312-20d171145dab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\_Reflect">
+      <UniqueIdentifier>{1b02a404-84d1-48d5-be90-e4239ebcc6bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\_Reflect\Damage">
+      <UniqueIdentifier>{f40f2e9f-338f-44b5-ad69-3b6e4f9c9e04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\_Reflect\Level">
+      <UniqueIdentifier>{230703ae-4c32-4237-bf9c-535f88a3cace}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\_Reflect\Model">
+      <UniqueIdentifier>{324a5085-f13c-444a-b930-d368120dad7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\_Reflect\Object">
+      <UniqueIdentifier>{8fd150bc-6449-4051-a457-72a1ba38f002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\State">
+      <UniqueIdentifier>{00e73b17-7f40-4190-881b-1ab8672ab5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System">
+      <UniqueIdentifier>{81b9d8c8-1fa0-4133-b28c-a1a419c23a37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Damage">
+      <UniqueIdentifier>{8592344f-40d6-4c12-a888-06488c337105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Damage\Jpt">
+      <UniqueIdentifier>{a7e8094e-242c-4971-94ab-3004ea1ffc64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Level">
+      <UniqueIdentifier>{a86898c6-f196-42d7-9f79-e4110ae595d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Level\Sbsp">
+      <UniqueIdentifier>{4be93b8e-212f-45ec-b1eb-ea34c248b3e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Level\Scnr">
+      <UniqueIdentifier>{f8c564a1-417e-44a6-a38b-e089d5e5ac50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Level\Sddt">
+      <UniqueIdentifier>{9af41633-e781-4e44-9ab4-12db497da9ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Model">
+      <UniqueIdentifier>{4e027ac2-6360-4466-8ef4-7c674d32122e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Model\Coll">
+      <UniqueIdentifier>{48c58afd-ddff-421d-8340-856890d148ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Model\Hlmt">
+      <UniqueIdentifier>{d94be7e9-8f5e-43d3-a968-7c1fd9747e35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Model\Mode">
+      <UniqueIdentifier>{0c32a808-fc02-4920-a370-ae5355d795ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Model\Phmo">
+      <UniqueIdentifier>{bb07105d-0a86-424d-a116-07f92deaee9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object">
+      <UniqueIdentifier>{631cf5d9-c80d-472d-b8e4-c4130cf46c38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Bipd">
+      <UniqueIdentifier>{f22e101f-05fc-4503-8665-8d4198136746}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Bloc">
+      <UniqueIdentifier>{60c2906c-51de-4c83-9b59-d5d978627493}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Ctrl">
+      <UniqueIdentifier>{d5f0ac0b-68bf-4dfd-aed3-bf1b142ce116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Eqip">
+      <UniqueIdentifier>{c451b627-e2fe-4214-b411-43fbdb496bb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Mach">
+      <UniqueIdentifier>{9e856027-f748-444f-8b26-87f42e68d9a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Proj">
+      <UniqueIdentifier>{c945eda3-4afe-431e-8c23-30e1a3057998}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Scen">
+      <UniqueIdentifier>{a8d80c52-496f-4458-b176-a573411562b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Vehi">
+      <UniqueIdentifier>{5a8d8da4-7897-4720-b65a-2fa48fc72240}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\System\Object\Weap">
+      <UniqueIdentifier>{8b62c522-3d63-4030-a776-add0cd063fc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\Type">
+      <UniqueIdentifier>{743acbf3-84f8-4e88-a2b3-1926d0aaa12d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\Type\Damage">
+      <UniqueIdentifier>{a81b4e2d-7608-4a58-93cb-07a01c7d3df9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\Type\Level">
+      <UniqueIdentifier>{a5616714-f287-489b-aebe-2d74e55936e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\Type\Model">
+      <UniqueIdentifier>{d84048fc-c152-4a47-921d-36dd15cfb8da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Definitions\Type\Object">
+      <UniqueIdentifier>{d2db672b-0096-4e49-9b22-154185ede8c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tag">
+      <UniqueIdentifier>{f8d2dbcb-2b80-4a8c-a870-2ce58ca1be90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tag\System">
+      <UniqueIdentifier>{45881a2b-3073-45cc-be81-f0c9e6647f6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tag\Type">
+      <UniqueIdentifier>{c5cb310a-6550-4530-8ce7-9876354776c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vitality">
+      <UniqueIdentifier>{1fc6861c-8525-41f9-894a-82fc017259ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vitality\State">
+      <UniqueIdentifier>{bf98a152-882b-4582-8668-3436770f0a57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vitality\System">
+      <UniqueIdentifier>{8f49aada-1ffe-4d3d-861e-2ae41674d588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vitality\Type">
+      <UniqueIdentifier>{f2625b89-bd65-4d35-8957-d0efa1018b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World">
+      <UniqueIdentifier>{b5a76e90-9835-4c7d-b50d-3122b4246d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\State">
+      <UniqueIdentifier>{804e4826-609b-465d-b85e-03926a3d18ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\System">
+      <UniqueIdentifier>{c748fb59-c272-4ed9-bd0b-bf78af8eb6dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\System\ModelLink">
+      <UniqueIdentifier>{2646e01d-9757-41a9-817b-f10a27eb9730}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\System\Raycast">
+      <UniqueIdentifier>{ad5d22f2-2451-48d5-b127-f78af2864f81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\System\RegionStates">
+      <UniqueIdentifier>{16cab8bb-0bf4-4637-8d1a-9f9e2c88deec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Type">
+      <UniqueIdentifier>{19bc8169-dff1-4e1d-bb90-c537bfc12960}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Definitions\_Reflect\Damage\Reflect.Jpt.ixx">
+      <Filter>Definitions\_Reflect\Damage</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Level\Reflect.Sbsp.ixx">
+      <Filter>Definitions\_Reflect\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Level\Reflect.Scnr.ixx">
+      <Filter>Definitions\_Reflect\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Level\Reflect.Sddt.ixx">
+      <Filter>Definitions\_Reflect\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Coll.ixx">
+      <Filter>Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Hlmt.ixx">
+      <Filter>Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Mode.ixx">
+      <Filter>Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Phmo.ixx">
+      <Filter>Definitions\_Reflect\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\_Reflect.Object.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Bipd.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Bloc.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Ctrl.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Eqip.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Mach.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Proj.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Scen.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Vehi.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Weap.ixx">
+      <Filter>Definitions\_Reflect\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Resolved.Definitions.Reflect.ixx">
+      <Filter>Definitions</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Resolved.Definitions.Type.ixx">
+      <Filter>Definitions</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\State\DefinitionsStore.ixx">
+      <Filter>Definitions\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Damage\Jpt\JptBuilder.cpp">
+      <Filter>Definitions\System\Damage\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Damage\Jpt\JptBuilder.ixx">
+      <Filter>Definitions\System\Damage\Jpt</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\DefinitionsBuilder.cpp">
+      <Filter>Definitions\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\DefinitionsBuilder.ixx">
+      <Filter>Definitions\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Level\Sbsp\SbspBuilder.cpp">
+      <Filter>Definitions\System\Level\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Level\Sbsp\SbspBuilder.ixx">
+      <Filter>Definitions\System\Level\Sbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Level\Scnr\ScnrBuilder.cpp">
+      <Filter>Definitions\System\Level\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Level\Scnr\ScnrBuilder.ixx">
+      <Filter>Definitions\System\Level\Scnr</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Level\Sddt\SddtBuilder.cpp">
+      <Filter>Definitions\System\Level\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Level\Sddt\SddtBuilder.ixx">
+      <Filter>Definitions\System\Level\Sddt</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Coll\CollBuilder.cpp">
+      <Filter>Definitions\System\Model\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Coll\CollBuilder.ixx">
+      <Filter>Definitions\System\Model\Coll</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Hlmt\HlmtBuilder.cpp">
+      <Filter>Definitions\System\Model\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Hlmt\HlmtBuilder.ixx">
+      <Filter>Definitions\System\Model\Hlmt</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Mode\ModeBuilder.cpp">
+      <Filter>Definitions\System\Model\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Mode\ModeBuilder.ixx">
+      <Filter>Definitions\System\Model\Mode</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Phmo\PhmoBuilder.cpp">
+      <Filter>Definitions\System\Model\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Model\Phmo\PhmoBuilder.ixx">
+      <Filter>Definitions\System\Model\Phmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Bipd\BipdBuilder.cpp">
+      <Filter>Definitions\System\Object\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Bipd\BipdBuilder.ixx">
+      <Filter>Definitions\System\Object\Bipd</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Bloc\BlocBuilder.cpp">
+      <Filter>Definitions\System\Object\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Bloc\BlocBuilder.ixx">
+      <Filter>Definitions\System\Object\Bloc</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Ctrl\CtrlBuilder.cpp">
+      <Filter>Definitions\System\Object\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Ctrl\CtrlBuilder.ixx">
+      <Filter>Definitions\System\Object\Ctrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Eqip\EqipBuilder.cpp">
+      <Filter>Definitions\System\Object\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Eqip\EqipBuilder.ixx">
+      <Filter>Definitions\System\Object\Eqip</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Mach\MachBuilder.cpp">
+      <Filter>Definitions\System\Object\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Mach\MachBuilder.ixx">
+      <Filter>Definitions\System\Object\Mach</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\ObjectBuilder.ixx">
+      <Filter>Definitions\System\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Proj\ProjBuilder.cpp">
+      <Filter>Definitions\System\Object\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Proj\ProjBuilder.ixx">
+      <Filter>Definitions\System\Object\Proj</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Scen\ScenBuilder.cpp">
+      <Filter>Definitions\System\Object\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Scen\ScenBuilder.ixx">
+      <Filter>Definitions\System\Object\Scen</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Vehi\VehiBuilder.cpp">
+      <Filter>Definitions\System\Object\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Vehi\VehiBuilder.ixx">
+      <Filter>Definitions\System\Object\Vehi</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Weap\WeapBuilder.cpp">
+      <Filter>Definitions\System\Object\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\System\Object\Weap\WeapBuilder.ixx">
+      <Filter>Definitions\System\Object\Weap</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Damage\DefinitionsJpt.ixx">
+      <Filter>Definitions\Type\Damage</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Level\DefinitionsSbsp.ixx">
+      <Filter>Definitions\Type\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Level\DefinitionsScnr.ixx">
+      <Filter>Definitions\Type\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Level\DefinitionsSddt.ixx">
+      <Filter>Definitions\Type\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Model\DefinitionsColl.ixx">
+      <Filter>Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Model\DefinitionsHlmt.ixx">
+      <Filter>Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Model\DefinitionsMode.ixx">
+      <Filter>Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Model\DefinitionsPhmo.ixx">
+      <Filter>Definitions\Type\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\_DefinitionsObject.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsBipd.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsBloc.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsCtrl.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsEqip.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsMach.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsProj.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsScen.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsVehi.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Definitions\Type\Object\DefinitionsWeap.ixx">
+      <Filter>Definitions\Type\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Resolved.Layer.ixx" />
+    <ClCompile Include="Tag\System\TagResolverService.cpp">
+      <Filter>Tag\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Tag\System\TagResolverService.ixx">
+      <Filter>Tag\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Tag\Type\Resolved.Tag.Type.ixx">
+      <Filter>Tag\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\Resolved.Vitality.Type.ixx">
+      <Filter>Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\State\VitalityStore.cpp">
+      <Filter>Vitality\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\State\VitalityStore.ixx">
+      <Filter>Vitality\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\System\VitalityBuilder.cpp">
+      <Filter>Vitality\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\System\VitalityBuilder.ixx">
+      <Filter>Vitality\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\Type\Vitality.ixx">
+      <Filter>Vitality\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Vitality\Type\VitalityConstant.ixx">
+      <Filter>Vitality\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="World\Resolved.World.Type.ixx">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="World\State\WorldStore.cpp">
+      <Filter>World\State</Filter>
+    </ClCompile>
+    <ClCompile Include="World\State\WorldStore.ixx">
+      <Filter>World\State</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\ModelLink\ModelLinkBuilder.cpp">
+      <Filter>World\System\ModelLink</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\ModelLink\ModelLinkBuilder.ixx">
+      <Filter>World\System\ModelLink</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\Raycast\Raycaster.cpp">
+      <Filter>World\System\Raycast</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\Raycast\Raycaster.ixx">
+      <Filter>World\System\Raycast</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\RegionStates\RegionStatesBuilder.cpp">
+      <Filter>World\System\RegionStates</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\RegionStates\RegionStatesBuilder.ixx">
+      <Filter>World\System\RegionStates</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\WorldBuilder.cpp">
+      <Filter>World\System</Filter>
+    </ClCompile>
+    <ClCompile Include="World\System\WorldBuilder.ixx">
+      <Filter>World\System</Filter>
+    </ClCompile>
+    <ClCompile Include="World\Type\WorldModelLink.ixx">
+      <Filter>World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="World\Type\WorldRaycast.ixx">
+      <Filter>World\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="World\Type\WorldRegionStates.ixx">
+      <Filter>World\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -11,7 +11,21 @@ using namespace std::chrono_literals;
 
 namespace Core
 {
-    Artemis::Artemis(HMODULE handleModule) : m_Module(handleModule) {}
+    Artemis::Artemis(HMODULE handleModule) : m_Module(handleModule)
+    {
+        // The lifecycle wiring of the pure components lives here, not in them (D178).
+        // Map and Resolved are cleaned up in this order: the resolved data is built from the map.
+        auto& lifecycle = m_Platform.m_LifecycleService;
+
+        lifecycle.OnMapFileOpened([this](const std::string& filePath) {
+            m_Map.m_MapLoaderService.OpenFile(filePath);
+        });
+
+        lifecycle.OnCleanup([this] {
+            m_Map.Cleanup();
+            m_Resolved.Cleanup();
+        });
+    }
 
     auto Artemis::Start() -> bool
     {

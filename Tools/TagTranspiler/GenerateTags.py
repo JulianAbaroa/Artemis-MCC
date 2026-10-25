@@ -24,9 +24,7 @@ import GenerateStructure
 import GenerateObject
 import GenerateCatalog
 
-_DOMAIN_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "Artemis", "Core", "Domain", "1_Map"))
-
-TAGS_ROOT = os.path.join(_DOMAIN_ROOT, "Tag")
+TAGS_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "Artemis", "Blam.Map", "Tag"))
 
 def GenerateSystemAggregate(prefix: str, xmlSource: str, tagRoot: str) -> None:
     """

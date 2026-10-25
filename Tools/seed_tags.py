@@ -33,7 +33,7 @@ import xml.etree.ElementTree as ET
 
 REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 CATALOG = os.path.join(REPO, "Data", "Tags", "ObjectTags.xml")
-ENUMS = os.path.join(REPO, "Artemis", "Core", "Domain", "2_Resolved", "Definitions", "Type", "Object", "_DefinitionsObject.ixx")
+ENUMS = os.path.join(REPO, "Artemis", "Blam.MapModel", "Definitions", "Type", "Object", "_DefinitionsObject.ixx")
 TAGS = os.path.join(REPO, "Artemis", "Core", "Common", "Tag", "Type", "Common.Tag.Type.ixx")
 
 EDITABLE = ("unknown", "seed")

@@ -1,0 +1,74 @@
+module Map.Reader.System;
+import :MapLoader;
+
+namespace Map::Reader::System
+{
+    auto MapLoaderService::OpenFile(const std::string& filePath) -> void
+    {
+        const std::string name = std::filesystem::path(filePath).filename().string();
+
+        if (name.contains("campaign"))
+        {
+            m_FileStore.SetCampaignFilePath(filePath);
+            return;
+        }
+
+        if (name.contains("shared"))
+        {
+            m_FileStore.SetSharedFilePath(filePath);
+            return;
+        }
+
+        this->LoadMap(filePath);
+    }
+
+    auto MapLoaderService::LoadMap(const std::string& filePath) -> void
+    {
+        m_FileStore.SetMapFilePath(filePath);
+
+        std::ifstream file = m_FileLocatorService.OpenMapFile(filePath);
+        if (!file.is_open())
+        {
+            m_Log.Message("[MapLoaderService] ERROR: Could not open map file.");
+            m_FileStore.SetLoaded(false);
+            return;
+        }
+
+        bool isValid{ false };
+
+        auto headerResult = m_HeaderService.Read(file);
+        if (headerResult)
+        {
+            m_HeaderInfo = *headerResult;
+
+            isValid = m_TagIndexService.Read(
+                file, m_HeaderInfo.IndexHeaderFileOffset) &&
+                m_FileNamesService.Read(file,
+                    m_HeaderInfo.FileTableCount,
+                    m_HeaderInfo.FileIndexTableOffset,
+                    m_HeaderInfo.FileTableOffset,
+                    m_HeaderInfo.FileTableSize);
+        }
+
+        if (isValid)
+        {
+            m_Log.Message("[MapLoaderService] INFO: Map loaded.");
+        }
+        else
+        {
+            m_Log.Message("[MapLoaderService] ERROR: Failed to load map.");
+        }
+
+        m_FileStore.SetLoaded(isValid);
+    }
+
+    auto MapLoaderService::Cleanup() -> void
+    {
+        m_HeaderInfo = {};
+
+        m_FileStore.Cleanup();
+        m_TagIndexStore.Cleanup();
+
+        m_Log.Message("[MapLoaderService] INFO: Cleanup completed.");
+    }
+}
