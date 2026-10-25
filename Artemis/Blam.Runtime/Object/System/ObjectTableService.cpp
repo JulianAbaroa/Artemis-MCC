@@ -184,8 +184,6 @@ namespace Tables::Object::System
                     return;
                 }
 
-                object.Address = it->second.Address;
-
                 this->UpdateObjectData(it->second, object);
                 object.Placement = this->ReadPlacement(snapshot, it->second);
                 object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, it->second);
@@ -345,7 +343,6 @@ namespace Tables::Object::System
         if (nodeCount == 0) return;
 
         BoneMatrixTable table;
-        table.BaseAddress = object.Address + offset;
         table.Matrices.resize(nodeCount);
 
         const std::size_t bytes = nodeCount * sizeof(BoneMatrix);
@@ -358,15 +355,15 @@ namespace Tables::Object::System
     {
         DamageSectionTable table{};
 
-        this->ReadDamageSections(datum, object, table);
-        this->ReadRegionBlock(datum, object, table);
+        this->ReadDamageSections(datum, table);
+        this->ReadRegionBlock(datum, table);
 
         if (table.Sections.empty() && table.Regions.Bytes.empty()) return;
 
         m_DamageSectionsStore.Set(object.Handle, std::move(table));
     }
 
-    auto ObjectTableService::ReadDamageSections(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void
+    auto ObjectTableService::ReadDamageSections(const RawObject& datum, DamageSectionTable& table) -> void
     {
         const std::uint16_t regionsSize = datum.Read<std::uint16_t>(ObjeOffset::k_DamageSectionsSize);
         const std::uint16_t regionsOffsetRaw = datum.Read<std::uint16_t>(ObjeOffset::k_DamageSectionsOffset);
@@ -375,12 +372,9 @@ namespace Tables::Object::System
         const std::uint16_t count = regionsSize / k_DamageSectionStride;
         if (count == 0 || count >= 256) return;
 
-        const std::uintptr_t baseAddress = object.Address + regionsOffsetRaw;
-
         std::vector<DamageSection> raw(count);
         if (!datum.ReadRaw(regionsOffsetRaw, raw.data(), count * sizeof(DamageSection))) return;
 
-        table.BaseAddress = baseAddress;
         table.Sections.resize(count);
 
         for (std::uint16_t section = 0; section < count; ++section)
@@ -391,7 +385,7 @@ namespace Tables::Object::System
         }
     }
 
-    auto ObjectTableService::ReadRegionBlock(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void
+    auto ObjectTableService::ReadRegionBlock(const RawObject& datum, DamageSectionTable& table) -> void
     {
         const std::uint16_t size = datum.Read<std::uint16_t>(ObjeOffset::k_RegionStateSize);
         const std::uint16_t offset = datum.Read<std::uint16_t>(ObjeOffset::k_RegionStateOffset);
@@ -471,7 +465,6 @@ namespace Tables::Object::System
     {
         Vehicle vehicle{};
 
-        vehicle.Base = object.Address;
         vehicle.Kind = Tables::Object::Type::Vehicle::ResolveVehicleType(object.TagName);
         vehicle.SeatLayout = Tables::Object::Type::Vehicle::GetSeatLayout(vehicle.Kind);
 
@@ -545,7 +538,6 @@ namespace Tables::Object::System
     {
         Crate crate{};
 
-        crate.Base = object.Address;
         crate.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
 
         if (crate.Kind == CrateKind::TeleportSender ||
@@ -567,7 +559,6 @@ namespace Tables::Object::System
     auto ObjectTableService::UpdateScenery(const RawObject& datum, AliveObject& object) -> void
     {
         Scenery scenery{};
-        scenery.Base = object.Address;
         scenery.Kind = Tables::Object::Type::Scenery::ResolveSceneryType(object.TagName);
 
         object.Specific = scenery;

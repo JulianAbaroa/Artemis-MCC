@@ -22,7 +22,6 @@ export namespace Tables::Object::Type::BoneMatrix
 
     struct BoneMatrixTable
     {
-        std::uintptr_t BaseAddress{};
         std::vector<BoneMatrix> Matrices{};
     };
 

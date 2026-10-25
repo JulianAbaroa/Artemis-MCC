@@ -1,5 +1,6 @@
 export module UI.PlayerTable.System;
 
+import Platform.Capture.State;
 import Tables.Player.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
@@ -16,6 +17,8 @@ export namespace UI::PlayerTable::System
     private:
         using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
 
+        using CaptureStore = Platform::Capture::State::CaptureStore;
+
         using TickStore = Export::Tick::State::TickStore;
 
         using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
@@ -26,8 +29,8 @@ export namespace UI::PlayerTable::System
         using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
 
     public:
-        PlayerTableUIService(TickStore& tickStore, PlayerTableUIStore& playerTableUIStore) :
-            m_TickStore(tickStore), m_PlayerTableUIStore(playerTableUIStore) {}
+        PlayerTableUIService(CaptureStore& captureStore, TickStore& tickStore, PlayerTableUIStore& playerTableUIStore) :
+            m_CaptureStore(captureStore), m_TickStore(tickStore), m_PlayerTableUIStore(playerTableUIStore) {}
         ~PlayerTableUIService() = default;
 
         PlayerTableUIService(const PlayerTableUIService&) = delete;
@@ -37,13 +40,14 @@ export namespace UI::PlayerTable::System
         auto Draw() -> void;
 
     private:
+        CaptureStore& m_CaptureStore;
         TickStore& m_TickStore;
         PlayerTableUIStore& m_PlayerTableUIStore;
 
         SearchFilterGuiService m_SearchFilter{};
         CopyableFieldGuiService m_CopyableField{};
 
-        // Rebuilds the player list when the tick has a new player table.
+        // Rebuilds the player list when the tick has a new player table and takes the player array address from the published snapshot (D196).
         auto RefreshSnapshot() -> void;
 
         // Checks whether the player matches the search text.

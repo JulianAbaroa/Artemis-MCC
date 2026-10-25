@@ -41,7 +41,6 @@ export namespace Tables::Object::Type::Alive
     struct AliveObject
     {
         std::uint32_t DatumIndex{};
-        std::uintptr_t Address{};
 
         std::string FourCC{};
         std::string TagName{};

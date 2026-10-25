@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Game">
+      <UniqueIdentifier>{ceab3064-b1d8-49c7-b872-b77863a474a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\State">
+      <UniqueIdentifier>{cb1d1492-36ba-48cd-bf52-4c3b3553398d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\System">
+      <UniqueIdentifier>{b4a2a91e-41e0-403c-924a-02084590fac9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Type">
+      <UniqueIdentifier>{e7e36393-e084-43c8-a84a-de5804dffc5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interaction">
+      <UniqueIdentifier>{a5ca96b4-d973-48b8-b6c0-ea7328c84943}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interaction\State">
+      <UniqueIdentifier>{5ea5512c-36f4-4b37-b6f6-64c71d552932}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interaction\System">
+      <UniqueIdentifier>{99e890f8-3c0c-4672-8114-2f8577a1d138}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interaction\Type">
+      <UniqueIdentifier>{d56582bb-f1a3-4a91-887c-4e705900f590}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{81b5843a-82b2-4881-a0ea-ad9676650c0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\State">
+      <UniqueIdentifier>{fa043b7c-caed-4d41-8889-51b03bf6f2a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\State\BoneMatrix">
+      <UniqueIdentifier>{40dad825-1b14-4344-b432-d41fad18afe6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\State\DamageSection">
+      <UniqueIdentifier>{4224ef2c-ebf4-4988-96f0-4b415258cc4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\System">
+      <UniqueIdentifier>{6a053864-0216-458e-93cf-29407cbb86f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type">
+      <UniqueIdentifier>{ba2049a6-a885-44d0-ae87-49e52f6f0060}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\BoneMatrix">
+      <UniqueIdentifier>{c4d8bc7e-ceea-41b7-a44c-94dbe8387b19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\DamageSection">
+      <UniqueIdentifier>{cca6f147-7824-409c-9602-c78c868efcb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Specific">
+      <UniqueIdentifier>{d34848eb-7f47-424b-96d5-03b0af89e007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Player">
+      <UniqueIdentifier>{66357dbe-e1f4-420e-bd1e-3d0ba21d87fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Player\State">
+      <UniqueIdentifier>{50c13a6e-09b0-4c9f-b72d-a093bf6a915e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Player\System">
+      <UniqueIdentifier>{1c5641ec-c8fa-4c2f-ac24-dc6861ae4a99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Player\Type">
+      <UniqueIdentifier>{2b7f33fe-b9f2-4f7d-b88c-4339686fb42e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Game\State\GameStore.cpp">
+      <Filter>Game\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\State\GameStore.ixx">
+      <Filter>Game\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\System\GameService.cpp">
+      <Filter>Game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\System\GameService.ixx">
+      <Filter>Game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Tables.Game.Type.ixx">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Type\GameAlive.ixx">
+      <Filter>Game\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Interaction\State\InteractionStore.cpp">
+      <Filter>Interaction\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Interaction\State\InteractionStore.ixx">
+      <Filter>Interaction\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Interaction\System\InteractionService.cpp">
+      <Filter>Interaction\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Interaction\System\InteractionService.ixx">
+      <Filter>Interaction\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Interaction\Tables.Interaction.Type.ixx">
+      <Filter>Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Interaction\Type\InteractionAlive.ixx">
+      <Filter>Interaction\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\State\BoneMatrix\BoneMatricesStore.cpp">
+      <Filter>Object\State\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\State\BoneMatrix\BoneMatricesStore.ixx">
+      <Filter>Object\State\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\State\DamageSection\DamageSectionsStore.cpp">
+      <Filter>Object\State\DamageSection</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\State\DamageSection\DamageSectionsStore.ixx">
+      <Filter>Object\State\DamageSection</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\State\ObjectTableStore.cpp">
+      <Filter>Object\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\State\ObjectTableStore.ixx">
+      <Filter>Object\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\System\ObjectTableService.cpp">
+      <Filter>Object\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\System\ObjectTableService.ixx">
+      <Filter>Object\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Tables.Object.Type.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
+      <Filter>Object\Type\BoneMatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\DamageSection\ObjectDamageSection.ixx">
+      <Filter>Object\Type\DamageSection</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\ObjectAlive.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\ObjectConstant.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\ObjectMultiplayer.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\ObjectPlacement.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\ObjectProfile.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\ObjectSize.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectBiped.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectCrate.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectEquipment.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectProjectile.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectScenery.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectVehicle.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Type\Specific\ObjectWeapon.ixx">
+      <Filter>Object\Type\Specific</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\State\PlayerTableStore.cpp">
+      <Filter>Player\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\State\PlayerTableStore.ixx">
+      <Filter>Player\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\System\PlayerTableService.cpp">
+      <Filter>Player\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\System\PlayerTableService.ixx">
+      <Filter>Player\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\Tables.Player.Type.ixx">
+      <Filter>Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\Type\PlayerAlive.ixx">
+      <Filter>Player\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Tables.Layer.ixx" />
+  </ItemGroup>
+</Project>

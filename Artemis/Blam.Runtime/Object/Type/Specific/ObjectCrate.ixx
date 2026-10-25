@@ -100,7 +100,6 @@ export namespace Tables::Object::Type::Crate
 
     struct Crate
     {
-        std::uintptr_t Base{};
         CrateKind Kind{};
 
         std::optional<Teleport::Teleport> Teleport{};

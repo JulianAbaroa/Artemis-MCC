@@ -166,23 +166,10 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx" />
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx" />
-    <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx" />
-    <ClCompile Include="Core\Common\Semantic\Common.Semantic.Type.ixx" />
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx" />
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx" />
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectConstant.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Aim\State\AimStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.cpp" />
     <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Aim\Type\Environment.Aim.Type.ixx" />
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticEventKey.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\Tables.Game.Type.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Events\Type\Environment.Events.Type.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Events\State\EventsStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.cpp" />
@@ -427,42 +414,6 @@
     <ClCompile Include="Core\Core.ixx" />
     <ClCompile Include="Core\Gui\Gui.Layer.ixx" />
     <ClCompile Include="Core\DllMain.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Tables.Interaction.Type.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\ObjectTableStore.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\ObjectTableStore.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Tables.Object.Type.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectMultiplayer.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectPlacement.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectSize.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectBiped.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectCrate.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectEquipment.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectProjectile.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectScenery.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectVehicle.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectWeapon.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Tables.Player.Type.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Tables.Layer.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.ixx" />
@@ -697,6 +648,9 @@
     </ProjectReference>
     <ProjectReference Include="Blam.Layout\Artemis.Blam.Layout.vcxproj">
       <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Blam.Runtime\Artemis.Blam.Runtime.vcxproj">
+      <Project>{E2A098F8-6B58-5B46-9131-61462C9FD8A6}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

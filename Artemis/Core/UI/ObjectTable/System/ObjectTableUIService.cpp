@@ -133,7 +133,16 @@ namespace UI::ObjectTable::System
             std::ranges::sort(group, {}, &AliveObject::Handle);
         }
 
-        m_ObjectTableUIStore.SetSnapshot(std::move(table), std::move(groups));
+        m_ObjectTableUIStore.SetSnapshot(std::move(table), std::move(groups), m_CaptureStore.Acquire());
+    }
+
+    auto ObjectTableUIService::AddressOf(const AliveObject& object) const -> std::uintptr_t
+    {
+        const auto* published{ m_ObjectTableUIStore.GetPublished() };
+        if (!published) return 0;
+
+        const auto it{ published->RawObjects.find(object.Handle) };
+        return it != published->RawObjects.end() ? it->second.Address : 0;
     }
 
     auto ObjectTableUIService::PassesFilter(const AliveObject& object) const -> bool
@@ -143,7 +152,7 @@ namespace UI::ObjectTable::System
         return m_SearchFilter.Matches(object.TagName) ||
             m_SearchFilter.Matches(object.FourCC) ||
             m_SearchFilter.Matches(HexFormater::Hex32(object.Handle)) ||
-            m_SearchFilter.Matches(HexFormater::Hex64(object.Address));
+            m_SearchFilter.Matches(HexFormater::Hex64(this->AddressOf(object)));
     }
 
     auto ObjectTableUIService::DrawObjectCard(const AliveObject& object) -> void
@@ -196,7 +205,7 @@ namespace UI::ObjectTable::System
             HexFormater::Hex32(object.ParentHandle), object.Handle);
 
         m_CopyableField.Draw("Address:",
-            HexFormater::Hex64(object.Address), object.Handle);
+            HexFormater::Hex64(this->AddressOf(object)), object.Handle);
 
         if (object.Placement)
         {

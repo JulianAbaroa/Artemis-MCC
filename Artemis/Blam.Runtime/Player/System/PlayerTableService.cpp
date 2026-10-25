@@ -1,12 +1,9 @@
-module;
-
-#include <windows.h>
-
 module Tables.Player.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Team.Type;
+import Common.Text.System;
 import Layout.Player.Type;
 import Layout.Snapshot.Type;
 
@@ -62,7 +59,6 @@ namespace Tables::Player::System
         AlivePlayer player{};
 
         player.Handle = handle;
-        player.Address = snapshot.Regions[static_cast<std::size_t>(RegionId::PlayerArray)].OriginalAddress + entry;
 
         player.ConnectionState = snapshot.Read<ConnectionState>(RegionId::PlayerArray, entry + k_ConnectionState);
 
@@ -70,11 +66,11 @@ namespace Tables::Player::System
         player.DeadBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_DeadBipedHandle);
         player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
 
-        auto rawGamerTag = snapshot.ReadArray<wchar_t, k_GamerTagLength>(RegionId::PlayerArray, entry + k_GamerTag);
-        player.Gamertag = this->WideToUtf8(rawGamerTag.data(), k_GamerTagLength);
+        auto rawGamerTag = snapshot.ReadArray<char16_t, k_GamerTagLength>(RegionId::PlayerArray, entry + k_GamerTag);
+        player.Gamertag = Common::Text::System::WideToUtf8(rawGamerTag);
 
-        auto rawTag = snapshot.ReadArray<wchar_t, k_TagLength>(RegionId::PlayerArray, entry + k_Tag);
-        player.Tag = this->WideToUtf8(rawTag.data(), k_TagLength);
+        auto rawTag = snapshot.ReadArray<char16_t, k_TagLength>(RegionId::PlayerArray, entry + k_Tag);
+        player.Tag = Common::Text::System::WideToUtf8(rawTag);
 
         player.PrimaryWeaponHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_PrimaryWeaponHandle);
         player.SecondaryWeaponHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_SecondaryWeaponHandle);
@@ -172,23 +168,5 @@ namespace Tables::Player::System
         m_PlayerStore.Cleanup();
 
         m_Log.Message("[PlayerTableService] INFO: Cleanup completed.");
-    }
-
-    auto PlayerTableService::WideToUtf8(const wchar_t* source, std::size_t maxLength) -> std::string
-    {
-        if (!source || maxLength == 0) return std::string{};
-
-        int wideLength{ (int)wcsnlen(source, maxLength) };
-        if (wideLength == 0) return std::string{};
-
-        int utf8Length{ WideCharToMultiByte(CP_UTF8, 0, source,
-            wideLength, NULL, 0, NULL, NULL) };
-
-        std::string result(utf8Length, 0);
-
-        WideCharToMultiByte(CP_UTF8, 0, source, wideLength,
-            &result[0], utf8Length, NULL, NULL);
-
-        return result;
     }
 }

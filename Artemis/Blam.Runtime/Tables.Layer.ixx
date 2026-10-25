@@ -1,7 +1,6 @@
 export module Tables.Layer;
 
-import Service.Layer;
-import Platform.Layer;
+import Common.Log.System;
 import Resolved.Layer;
 import Tables.Object.State;
 import Tables.Object.System;
@@ -14,9 +13,13 @@ import Tables.Game.System;
 
 export namespace Tables
 {
+    // Interprets the live objects, players, interaction and game state from the published Snapshot (D190: no process addresses).
+    // note: Pure: the owner connects the lifecycle (D178).
     class Layer
     {
     private:
+        using Log = Common::Log::System::Log;
+
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
@@ -30,21 +33,11 @@ export namespace Tables
         using GameService = Tables::Game::System::GameService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved) :
-            m_ObjectService(service.m_Log, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, resolved.m_TagResolverService),
-            m_PlayerService(service.m_Log, m_PlayerStore),
-            m_InteractionService(service.m_Log, m_InteractionStore),
-            m_GameService(service.m_Log, m_GameStore)
-        {
-            auto& lifecycle = platform.m_LifecycleService;
-
-            lifecycle.OnCleanup([this] {
-                m_ObjectService.Cleanup();
-                m_PlayerService.Cleanup();
-                m_InteractionService.Cleanup();
-                m_GameService.Cleanup();
-            });
-        }
+        Layer(Log& log, Resolved::Layer& resolved) :
+            m_ObjectService(log, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, resolved.m_TagResolverService),
+            m_PlayerService(log, m_PlayerStore),
+            m_InteractionService(log, m_InteractionStore),
+            m_GameService(log, m_GameStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
@@ -63,5 +56,14 @@ export namespace Tables
         PlayerTableService m_PlayerService;
         InteractionService m_InteractionService;
         GameService m_GameService;
+
+        // Removes the objects, players, interaction and game state.
+        auto Cleanup() -> void
+        {
+            m_ObjectService.Cleanup();
+            m_PlayerService.Cleanup();
+            m_InteractionService.Cleanup();
+            m_GameService.Cleanup();
+        }
     };
 }

@@ -26,9 +26,12 @@ export namespace UI::PlayerTable::State
         // Checks whether the table is the stored snapshot.
         auto IsSameSnapshot(const std::shared_ptr<const PlayerTable>& table) const -> bool;
 
-        // Replaces the snapshot and its players.
+        // Replaces the snapshot, its players and the address of the player array in the game process (0 if it was not captured).
         // note: The players point into the table, so both must be replaced together.
-        auto SetSnapshot(std::shared_ptr<const PlayerTable> table, Players players) -> void;
+        auto SetSnapshot(std::shared_ptr<const PlayerTable> table, Players players, std::uintptr_t arrayAddress) -> void;
+
+        // return: Address of the player entry in the game process, or 0 when the player array was not captured (D196).
+        auto GetAddress(std::uint32_t handle) const -> std::uintptr_t;
 
         // Returns the alive players sorted by handle.
         auto GetPlayers() const -> const Players&;
@@ -42,5 +45,6 @@ export namespace UI::PlayerTable::State
     private:
         std::shared_ptr<const PlayerTable> m_Snapshot{};
         Players m_Players{};
+        std::uintptr_t m_ArrayAddress{};
     };
 }

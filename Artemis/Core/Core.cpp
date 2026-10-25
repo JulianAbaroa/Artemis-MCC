@@ -14,7 +14,7 @@ namespace Core
     Artemis::Artemis(HMODULE handleModule) : m_Module(handleModule)
     {
         // The lifecycle wiring of the pure components lives here, not in them (D178).
-        // Map and Resolved are cleaned up in this order: the resolved data is built from the map.
+        // Tables, Map and Resolved are cleaned up in this order: the tables read the resolved data, which is built from the map (D195).
         auto& lifecycle = m_Platform.m_LifecycleService;
 
         lifecycle.OnMapFileOpened([this](const std::string& filePath) {
@@ -22,6 +22,7 @@ namespace Core
         });
 
         lifecycle.OnCleanup([this] {
+            m_Tables.Cleanup();
             m_Map.Cleanup();
             m_Resolved.Cleanup();
         });

@@ -33,7 +33,6 @@ export namespace Tables::Object::Type::DamageSection
 
     struct DamageSectionTable
     {
-        std::uintptr_t BaseAddress{};
         std::vector<DamageSectionState> Sections{};
 
         RegionBlock Regions{};

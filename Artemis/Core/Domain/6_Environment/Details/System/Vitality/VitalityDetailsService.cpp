@@ -28,7 +28,7 @@ namespace Environment::Details::System
             if (!HasCapability(classified.Capabilities, Capability::HasVitality)) continue;
 
             const auto objectIt{ objectTablePtr->find(classified.Handle) };
-            if (objectIt == objectTablePtr->end() || objectIt->second.Address == 0) continue;
+            if (objectIt == objectTablePtr->end()) continue;
 
             if (std::optional<VitalityDetail> detail{ this->MakeVitality(objectIt->second) })
             {

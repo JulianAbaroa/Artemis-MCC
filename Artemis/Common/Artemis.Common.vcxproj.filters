@@ -70,6 +70,18 @@
     <Filter Include="ZoneShape\Type">
       <UniqueIdentifier>{6c9010b5-5602-4dfd-8d33-e7f40e7b476f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tag">
+      <UniqueIdentifier>{2e4697de-ba11-4d62-92e6-d97d17722b2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tag\Type">
+      <UniqueIdentifier>{ba54a298-48ba-4cfa-bcee-276345227488}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Semantic">
+      <UniqueIdentifier>{a27aa2a9-f2c5-4f2d-92cc-aefd7d280e69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Semantic\Type">
+      <UniqueIdentifier>{8d3a4a6e-91e8-4e00-a53a-7c4b92b726a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Type\Common.Engine.Type.ixx">
@@ -131,6 +143,24 @@
     </ClCompile>
     <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx">
       <Filter>ZoneShape\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Common.Semantic.Type.ixx">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticCatalog.ixx">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticEnum.ixx">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticEventKey.ixx">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticSubtype.ixx">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="Tag\Type\Common.Tag.Type.ixx">
+      <Filter></Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

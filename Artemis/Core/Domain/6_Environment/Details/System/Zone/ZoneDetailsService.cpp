@@ -28,7 +28,7 @@ namespace Environment::Details::System
             if (!HasCapability(classified.Capabilities, Capability::HasZone)) continue;
 
             const auto objectIt{ objectTablePtr->find(classified.Handle) };
-            if (objectIt == objectTablePtr->end() || objectIt->second.Address == 0) continue;
+            if (objectIt == objectTablePtr->end()) continue;
 
             // note: HasZone comes from this block, so the check only guards.
             const auto& multiplayer{ objectIt->second.Multiplayer };

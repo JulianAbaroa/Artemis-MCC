@@ -238,21 +238,6 @@
     <Filter Include="Core\Domain">
       <UniqueIdentifier>{c9089062-e4df-43b3-9795-6cc54284f159}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Tables">
-      <UniqueIdentifier>{99edae77-a8bb-4d6e-aa04-96c7dbf06300}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Game">
-      <UniqueIdentifier>{ceab3064-b1d8-49c7-b872-b77863a474a9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Game\Type">
-      <UniqueIdentifier>{e7e36393-e084-43c8-a84a-de5804dffc5f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Game\State">
-      <UniqueIdentifier>{cb1d1492-36ba-48cd-bf52-4c3b3553398d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Game\System">
-      <UniqueIdentifier>{b4a2a91e-41e0-403c-924a-02084590fac9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\6_Environment\Events">
       <UniqueIdentifier>{7c13fadc-c793-40bd-b1e2-f887522a8f2e}</UniqueIdentifier>
     </Filter>
@@ -276,57 +261,6 @@
     </Filter>
     <Filter Include="Core\Domain\6_Environment\Match\System">
       <UniqueIdentifier>{4bf5b3a9-279a-41be-857a-fe0e12a1a6a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Interaction">
-      <UniqueIdentifier>{a5ca96b4-d973-48b8-b6c0-ea7328c84943}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Interaction\Type">
-      <UniqueIdentifier>{d56582bb-f1a3-4a91-887c-4e705900f590}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Interaction\State">
-      <UniqueIdentifier>{5ea5512c-36f4-4b37-b6f6-64c71d552932}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Interaction\System">
-      <UniqueIdentifier>{99e890f8-3c0c-4672-8114-2f8577a1d138}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object">
-      <UniqueIdentifier>{81b5843a-82b2-4881-a0ea-ad9676650c0d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\State">
-      <UniqueIdentifier>{fa043b7c-caed-4d41-8889-51b03bf6f2a9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\State\BoneMatrix">
-      <UniqueIdentifier>{40dad825-1b14-4344-b432-d41fad18afe6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\State\DamageSection">
-      <UniqueIdentifier>{4224ef2c-ebf4-4988-96f0-4b415258cc4c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\System">
-      <UniqueIdentifier>{6a053864-0216-458e-93cf-29407cbb86f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\Type">
-      <UniqueIdentifier>{ba2049a6-a885-44d0-ae87-49e52f6f0060}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\Type\BoneMatrix">
-      <UniqueIdentifier>{c4d8bc7e-ceea-41b7-a44c-94dbe8387b19}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\Type\DamageSection">
-      <UniqueIdentifier>{cca6f147-7824-409c-9602-c78c868efcb3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Object\Type\Specific">
-      <UniqueIdentifier>{d34848eb-7f47-424b-96d5-03b0af89e007}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Player">
-      <UniqueIdentifier>{66357dbe-e1f4-420e-bd1e-3d0ba21d87fc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Player\State">
-      <UniqueIdentifier>{50c13a6e-09b0-4c9f-b72d-a093bf6a915e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Player\System">
-      <UniqueIdentifier>{1c5641ec-c8fa-4c2f-ac24-dc6861ae4a99}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Player\Type">
-      <UniqueIdentifier>{2b7f33fe-b9f2-4f7d-b88c-4339686fb42e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\5_Relations">
       <UniqueIdentifier>{c956f9d7-fa4d-4b1c-9d3f-de49ad9898fb}</UniqueIdentifier>
@@ -763,9 +697,6 @@
     <Filter Include="Core\Domain\7_Egocentric\Raycast\System">
       <UniqueIdentifier>{9b25c79f-468b-4b9f-992f-1accf7740671}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Common">
-      <UniqueIdentifier>{bb34dd4c-6ffe-4602-8311-9144de62727d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Gui\Style">
       <UniqueIdentifier>{78164a2a-6422-49a0-876e-f5e38b94bb16}</UniqueIdentifier>
     </Filter>
@@ -774,18 +705,6 @@
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Hook\Type">
       <UniqueIdentifier>{64471c90-a3b4-41a0-a737-5477d00ad0b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Tag">
-      <UniqueIdentifier>{2e4697de-ba11-4d62-92e6-d97d17722b2c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Tag\Type">
-      <UniqueIdentifier>{ba54a298-48ba-4cfa-bcee-276345227488}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Semantic">
-      <UniqueIdentifier>{a27aa2a9-f2c5-4f2d-92cc-aefd7d280e69}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Common\Semantic\Type">
-      <UniqueIdentifier>{8d3a4a6e-91e8-4e00-a53a-7c4b92b726a7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Hook">
       <UniqueIdentifier>{069b409e-a3dd-4385-b657-4927292aa2a1}</UniqueIdentifier>
@@ -964,111 +883,6 @@
     </ClCompile>
     <ClCompile Include="External\minhook\src\hde\hde64.c">
       <Filter>External\minhook\hde</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionAlive.ixx">
-      <Filter>Core\Domain\4_Tables\Interaction\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.cpp">
-      <Filter>Core\Domain\4_Tables\Interaction\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.ixx">
-      <Filter>Core\Domain\4_Tables\Interaction\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Tables.Interaction.Type.ixx">
-      <Filter>Core\Domain\4_Tables\Interaction</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.cpp">
-      <Filter>Core\Domain\4_Tables\Interaction\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.ixx">
-      <Filter>Core\Domain\4_Tables\Interaction\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx">
-      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Tables.Player.Type.ixx">
-      <Filter>Core\Domain\4_Tables\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.cpp">
-      <Filter>Core\Domain\4_Tables\Player\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.ixx">
-      <Filter>Core\Domain\4_Tables\Player\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.cpp">
-      <Filter>Core\Domain\4_Tables\Player\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.ixx">
-      <Filter>Core\Domain\4_Tables\Player\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\BoneMatrix</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\DamageSection\ObjectDamageSection.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\DamageSection</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectBiped.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectCrate.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectEquipment.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectProjectile.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectScenery.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectVehicle.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectWeapon.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type\Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectAlive.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectMultiplayer.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectPlacement.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectProfile.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectSize.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Tables.Object.Type.ixx">
-      <Filter>Core\Domain\4_Tables\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp">
-      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx">
-      <Filter>Core\Domain\4_Tables\Object\State\BoneMatrix</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.cpp">
-      <Filter>Core\Domain\4_Tables\Object\State\DamageSection</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.ixx">
-      <Filter>Core\Domain\4_Tables\Object\State\DamageSection</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\ObjectTableStore.cpp">
-      <Filter>Core\Domain\4_Tables\Object\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\State\ObjectTableStore.ixx">
-      <Filter>Core\Domain\4_Tables\Object\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.cpp">
-      <Filter>Core\Domain\4_Tables\Object\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\System\ObjectTableService.ixx">
-      <Filter>Core\Domain\4_Tables\Object\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
       <Filter>Core\Domain\5_Relations\Classifier\Type</Filter>
@@ -1291,9 +1105,6 @@
     </ClCompile>
     <ClCompile Include="Core\Core.ixx">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Tables.Layer.ixx">
-      <Filter>Core\Domain\4_Tables</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\5_Relations\Relations.Layer.ixx">
       <Filter>Core\Domain\5_Relations</Filter>
@@ -1898,9 +1709,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectConstant.ixx">
-      <Filter>Core\Domain\4_Tables\Object\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\Raycasts.ixx">
       <Filter>Core\Domain\7_Egocentric\Raycast\Type</Filter>
     </ClCompile>
@@ -1937,39 +1745,6 @@
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx">
       <Filter>Core\Gui\Style\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Common\Tag\Type\Common.Tag.Type.ixx">
-      <Filter>Core\Common\Tag\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Semantic\Common.Semantic.Type.ixx">
-      <Filter>Core\Common\Semantic</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx">
-      <Filter>Core\Common\Semantic\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx">
-      <Filter>Core\Common\Semantic\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticEventKey.ixx">
-      <Filter>Core\Common\Semantic\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\Tables.Game.Type.ixx">
-      <Filter>Core\Domain\4_Tables\Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameAlive.ixx">
-      <Filter>Core\Domain\4_Tables\Game\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.cpp">
-      <Filter>Core\Domain\4_Tables\Game\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.ixx">
-      <Filter>Core\Domain\4_Tables\Game\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.cpp">
-      <Filter>Core\Domain\4_Tables\Game\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.ixx">
-      <Filter>Core\Domain\4_Tables\Game\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Events\Type\Environment.Events.Type.ixx">
       <Filter>Core\Domain\6_Environment\Events\Type</Filter>
     </ClCompile>
@@ -1993,9 +1768,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.ixx">
       <Filter>Core\Domain\6_Environment\Match\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx">
-      <Filter>Core\Common\Semantic\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>

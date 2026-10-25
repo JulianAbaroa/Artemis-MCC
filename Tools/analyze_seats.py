@@ -4,7 +4,7 @@ Lists the seats of every vehicle tag of a map (A11, Ignore/Tareas/Transversal/A1
 DefinitionsInspector (Dump for field-usage report): vehi, hlmt and mode.
 For each seat: flags, AI seat kind, boarding (hijack) target, entry radius and angles, the seat marker and the entry markers resolved
 in the render model (node, position in node space, +X direction). Ends with a check of the boarding seats against the fixed seat table
-of Tables (Artemis/Core/Domain/4_Tables/Object/Type/Specific/ObjectVehicle.ixx, Layouts).
+of Tables (Artemis/Blam.Runtime/Object/Type/Specific/ObjectVehicle.ixx, Layouts).
 
     python Tools/analyze_seats.py [DUMP_FOLDER]      (default: Ignore/Temporal/forge_all)
 """
@@ -12,7 +12,7 @@ import json, math, os, re, sys
 
 REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 D = (sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, "Ignore", "Temporal", "forge_all")).rstrip("/\\") + os.sep
-TABLE = os.path.join(REPO, "Artemis", "Core", "Domain", "4_Tables", "Object", "Type", "Specific", "ObjectVehicle.ixx")
+TABLE = os.path.join(REPO, "Artemis", "Blam.Runtime", "Object", "Type", "Specific", "ObjectVehicle.ixx")
 
 def load(g):
     path = D + f"definitions_dump_{g}.ndjson"

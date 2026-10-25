@@ -19,8 +19,6 @@ namespace Environment::Aim::System
 
         for (const auto& [handle, object] : objectTable)
         {
-            if (object.Address == 0) continue;
-
             const Vitality* layout = m_VitalityStore.Get(object.TagName);
             if (!layout || !this->HasAnchors(*layout)) continue;
 

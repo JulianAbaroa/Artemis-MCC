@@ -4,6 +4,7 @@ module;
 
 module UI.PlayerTable.System;
 
+import Layout.Snapshot.Type;
 import Tables.Player.Type;
 import Gui.Color.System;
 import Gui.Format.System;
@@ -12,6 +13,8 @@ import std;
 
 namespace
 {
+    using Layout::Snapshot::Type::RegionId;
+
     using Tables::Player::Type::Alive::ConnectionState;
 
     using Gui::Color::System::TeamToColor;
@@ -94,7 +97,11 @@ namespace UI::PlayerTable::System
 
         std::ranges::sort(players, {}, &AlivePlayer::Handle);
 
-        m_PlayerTableUIStore.SetSnapshot(std::move(table), std::move(players));
+        const auto published{ m_CaptureStore.Acquire() };
+        const std::uintptr_t arrayAddress{ published && published->IsCaptured(RegionId::PlayerArray) ?
+            published->Regions[static_cast<std::size_t>(RegionId::PlayerArray)].OriginalAddress : 0 };
+
+        m_PlayerTableUIStore.SetSnapshot(std::move(table), std::move(players), arrayAddress);
     }
 
     auto PlayerTableUIService::PassesFilter(const AlivePlayer& player) const -> bool
@@ -104,7 +111,7 @@ namespace UI::PlayerTable::System
         return m_SearchFilter.Matches(player.Gamertag) ||
             m_SearchFilter.Matches(player.Tag) ||
             m_SearchFilter.Matches(HexFormater::Hex32(player.Handle)) ||
-            m_SearchFilter.Matches(HexFormater::Hex64(player.Address));
+            m_SearchFilter.Matches(HexFormater::Hex64(m_PlayerTableUIStore.GetAddress(player.Handle)));
     }
 
     auto PlayerTableUIService::DrawPlayerCard(const AlivePlayer& player) -> void
@@ -140,7 +147,7 @@ namespace UI::PlayerTable::System
         ImGui::Indent(5.0f);
 
         m_CopyableField.Draw("Handle:", HexFormater::Hex32(player.Handle), player.Handle);
-        m_CopyableField.Draw("Address:", HexFormater::Hex64(player.Address), player.Handle);
+        m_CopyableField.Draw("Address:", HexFormater::Hex64(m_PlayerTableUIStore.GetAddress(player.Handle)), player.Handle);
 
         ImGui::Text("Team:");
         ImGui::SameLine();

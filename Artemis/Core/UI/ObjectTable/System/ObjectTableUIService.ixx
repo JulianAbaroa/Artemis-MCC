@@ -1,5 +1,6 @@
 export module UI.ObjectTable.System;
 
+import Platform.Capture.State;
 import Tables.Object.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
@@ -17,6 +18,8 @@ export namespace UI::ObjectTable::System
     private:
         using AliveObject = Tables::Object::Type::Alive::AliveObject;
 
+        using CaptureStore = Platform::Capture::State::CaptureStore;
+
         using TickStore = Export::Tick::State::TickStore;
 
         using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
@@ -28,8 +31,8 @@ export namespace UI::ObjectTable::System
         using CaptureUIStore = UI::Capture::State::CaptureUIStore;
 
     public:
-        ObjectTableUIService(TickStore& tickStore, ObjectTableUIStore& objectTableUIStore, CaptureUIStore& captureUIStore) :
-            m_TickStore(tickStore), m_ObjectTableUIStore(objectTableUIStore), m_CaptureUIStore(captureUIStore) {}
+        ObjectTableUIService(CaptureStore& captureStore, TickStore& tickStore, ObjectTableUIStore& objectTableUIStore, CaptureUIStore& captureUIStore) :
+            m_CaptureStore(captureStore), m_TickStore(tickStore), m_ObjectTableUIStore(objectTableUIStore), m_CaptureUIStore(captureUIStore) {}
         ~ObjectTableUIService() = default;
 
         ObjectTableUIService(const ObjectTableUIService&) = delete;
@@ -39,6 +42,7 @@ export namespace UI::ObjectTable::System
         auto Draw() -> void;
 
     private:
+        CaptureStore& m_CaptureStore;
         TickStore& m_TickStore;
         ObjectTableUIStore& m_ObjectTableUIStore;
         CaptureUIStore& m_CaptureUIStore;
@@ -46,8 +50,11 @@ export namespace UI::ObjectTable::System
         SearchFilterGuiService m_SearchFilter{};
         CopyableFieldGuiService m_CopyableField{};
 
-        // Rebuilds the groups when the tick has a new object table.
+        // Rebuilds the groups when the tick has a new object table and takes the published snapshot the addresses come from (D196).
         auto RefreshSnapshot() -> void;
+
+        // return: Address of the object in the game process, or 0 without a published snapshot or when the handle is not in it (D196).
+        auto AddressOf(const AliveObject& object) const -> std::uintptr_t;
 
         // Checks whether the object matches the search text.
         auto PassesFilter(const AliveObject& object) const -> bool;

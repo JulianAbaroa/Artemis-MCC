@@ -5,6 +5,7 @@ import Common.Log.System;
 import Map.Reader.Type;
 import Map.Reader.State;
 import Resolved.Tag.System;
+import Tests.Support.Blam;
 import Tests.Support.Log;
 import std;
 
@@ -18,57 +19,14 @@ namespace
     using Map::Reader::State::FileStore;
     using Map::Reader::State::TagIndexStore;
     using Resolved::Tag::System::TagResolverService;
+    using Tests::Support::Blam::SyntheticTag;
+    using Tests::Support::Blam::Fill;
+    using Tests::Support::Blam::MakeHandle;
     using Tests::Support::Log::CollectingSink;
 
     using Map::Reader::Type::Magic::Tag::k_Coll;
     using Map::Reader::Type::Magic::Tag::k_Hlmt;
     using Map::Reader::Type::Magic::Tag::k_Mode;
-
-    // A tag of the hand written index. An empty name is a tag without name (name offset -1).
-    struct SyntheticTag
-    {
-        std::int16_t Group{};
-        std::uint16_t Salt{};
-        std::string_view Name{};
-    };
-
-    // Fills the store the way TagIndexService does: groups, tags, name offsets and the names one after the other.
-    auto Fill(TagIndexStore& index, std::span<const std::uint32_t> groups, std::span<const SyntheticTag> tags) -> void
-    {
-        index.ResizeGroups(static_cast<std::int32_t>(groups.size()));
-        for (std::size_t g = 0; g < groups.size(); ++g)
-        {
-            index.GetGroupsData()[g].Magic = static_cast<std::int32_t>(groups[g]);
-        }
-
-        std::string names{};
-        std::vector<std::int32_t> offsets{};
-        for (const SyntheticTag& tag : tags)
-        {
-            offsets.push_back(tag.Name.empty() ? -1 : static_cast<std::int32_t>(names.size()));
-            if (!tag.Name.empty())
-            {
-                names += tag.Name;
-                names += '\0';
-            }
-        }
-
-        index.ResizeTags(static_cast<std::int32_t>(tags.size()));
-        index.ResizeNameOffsets(static_cast<std::int32_t>(offsets.size()));
-        index.ResizeNameData(static_cast<std::int32_t>(names.size()));
-        for (std::size_t i = 0; i < tags.size(); ++i)
-        {
-            index.GetTagsData()[i].TagGroupIndex = tags[i].Group;
-            index.GetTagsData()[i].DatumIndexSalt = tags[i].Salt;
-            index.GetNameOffsetsData()[i] = offsets[i];
-        }
-        std::ranges::copy(names, index.GetNameData());
-    }
-
-    auto MakeHandle(std::uint16_t salt, std::uint32_t index) -> std::uint32_t
-    {
-        return (static_cast<std::uint32_t>(salt) << 16) | (index & 0xFFFF);
-    }
 
     auto CountOf(const CollectingSink& sink, std::string_view message) -> std::size_t
     {

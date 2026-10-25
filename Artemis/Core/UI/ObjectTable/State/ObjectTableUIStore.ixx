@@ -1,5 +1,6 @@
 export module UI.ObjectTable.State;
 
+import Layout.Snapshot.Type;
 import Tables.Object.Type;
 import Export.Tick.Type;
 import UI.ObjectTable.Type;
@@ -11,6 +12,8 @@ export namespace UI::ObjectTable::State
     class ObjectTableUIStore
     {
     private:
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
+
         using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using AliveObject = Tables::Object::Type::Alive::AliveObject;
 
@@ -29,9 +32,12 @@ export namespace UI::ObjectTable::State
         // Checks whether the table is the stored snapshot.
         auto IsSameSnapshot(const std::shared_ptr<const ObjectTable>& table) const -> bool;
 
-        // Replaces the snapshot and its groups.
+        // Replaces the snapshot, its groups and the published snapshot the addresses are read from.
         // note: The groups point into the table, so both must be replaced together.
-        auto SetSnapshot(std::shared_ptr<const ObjectTable> table, Groups groups) -> void;
+        auto SetSnapshot(std::shared_ptr<const ObjectTable> table, Groups groups, std::shared_ptr<const Snapshot> published) -> void;
+
+        // return: The published snapshot taken with the table, or nullptr when there is none.
+        auto GetPublished() const -> const Snapshot*;
 
         // Returns the alive objects grouped by class.
         auto GetGroups() const -> const Groups&;
@@ -44,6 +50,7 @@ export namespace UI::ObjectTable::State
 
     private:
         std::shared_ptr<const ObjectTable> m_Snapshot{};
+        std::shared_ptr<const Snapshot> m_Published{};
         Groups m_Groups{};
     };
 }

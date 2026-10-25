@@ -197,8 +197,6 @@ namespace Relations::Classifier::System
 
         for (const auto& [handle, object] : objectTable)
         {
-            if (object.Address == 0) continue;
-
             const TagClassification tag{ this->FindTagClassification(object) };
 
             Classified classified{};

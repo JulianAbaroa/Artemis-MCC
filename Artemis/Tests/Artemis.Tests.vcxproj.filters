@@ -12,6 +12,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Support\Tests.Support.Blam.ixx">
+      <Filter>Support</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Log.ixx">
       <Filter>Support</Filter>
     </ClCompile>
@@ -30,6 +33,9 @@
     <ClCompile Include="Blam\ObjectKindTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
+    <ClCompile Include="Blam\RuntimeTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
     <ClCompile Include="Blam\TagResolverTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
@@ -43,6 +49,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Common\SnapshotTests.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\TextTests.cpp">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>

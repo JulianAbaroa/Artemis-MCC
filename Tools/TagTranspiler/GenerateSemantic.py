@@ -6,7 +6,7 @@ Data/Tags/ObjectTags.xml (the tag catalog).
 
     python Tools/TagTranspiler/GenerateSemantic.py
 
-Writes the primary module in Artemis/Core/Common/Semantic/ and the partitions under Type/:
+Writes the primary module in Artemis/Common/Semantic/ and the partitions under Type/:
     Common.Semantic.Type.ixx   primary module (Common/Semantic/), exports the partitions
     SemanticEnum.ixx           :Enum     Group, Function, Lifecycle, Binding, Physics, Relation, Event, Capability
     SemanticSubtype.ixx        :Subtype  one enum per function with subtypes (Subtype::<Function>)
@@ -26,7 +26,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
 SEMANTIC = os.path.join(REPO, "Data", "Semantic", "Semantic.xml")
 CATALOG = os.path.join(REPO, "Data", "Tags", "ObjectTags.xml")
-ROOT = os.path.join(REPO, "Artemis", "Core", "Common", "Semantic")
+ROOT = os.path.join(REPO, "Artemis", "Common", "Semantic")
 OUT = os.path.join(ROOT, "Type")
 
 RUNTIME_CONFIDENCE = ("high", "medium", "low")

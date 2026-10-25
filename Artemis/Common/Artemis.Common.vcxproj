@@ -24,7 +24,13 @@
     <ClCompile Include="Reflect\System\Common.Reflect.System.ixx" />
     <ClCompile Include="Reflect\Type\Common.Reflect.Type.Core.ixx" />
     <ClCompile Include="Reflect\Type\Common.Reflect.Type.Math.ixx" />
+    <ClCompile Include="Semantic\Common.Semantic.Type.ixx" />
+    <ClCompile Include="Semantic\Type\SemanticCatalog.ixx" />
+    <ClCompile Include="Semantic\Type\SemanticEnum.ixx" />
+    <ClCompile Include="Semantic\Type\SemanticEventKey.ixx" />
+    <ClCompile Include="Semantic\Type\SemanticSubtype.ixx" />
     <ClCompile Include="State\Type\Common.State.Type.ixx" />
+    <ClCompile Include="Tag\Type\Common.Tag.Type.ixx" />
     <ClCompile Include="Team\Type\Common.Team.Type.ixx" />
     <ClCompile Include="Text\System\Common.Text.System.cpp" />
     <ClCompile Include="Text\System\Common.Text.System.ixx" />

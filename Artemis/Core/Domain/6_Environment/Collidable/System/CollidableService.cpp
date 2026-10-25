@@ -39,8 +39,6 @@ namespace Environment::Collidable::System
 
         for (const auto& [handle, object] : objectTable)
         {
-            if (object.Address == 0) continue;
-
             instances.push_back(this->BuildInstance(object, true));
         }
 
@@ -93,7 +91,7 @@ namespace Environment::Collidable::System
         if (!objectTablePtr) return std::nullopt;
 
         auto it = objectTablePtr->find(handle);
-        if (it == objectTablePtr->end() || it->second.Address == 0) return std::nullopt;
+        if (it == objectTablePtr->end()) return std::nullopt;
 
         return this->BuildInstance(it->second, false);
     }
@@ -109,8 +107,6 @@ namespace Environment::Collidable::System
 
         for (const auto& [handle, object] : *objectTablePtr)
         {
-            if (object.Address == 0) continue;
-
             const float dx = object.BoundingCenter.X - origin.X;
             const float dy = object.BoundingCenter.Y - origin.Y;
             const float dz = object.BoundingCenter.Z - origin.Z;

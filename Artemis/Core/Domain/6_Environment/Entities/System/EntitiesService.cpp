@@ -127,7 +127,7 @@ namespace Environment::Entities::System
         for (const Classified& classified : *classifiedsPtr)
         {
             const auto objectIt{ objectTable.find(classified.Handle) };
-            if (objectIt == objectTable.end() || objectIt->second.Address == 0) continue;
+            if (objectIt == objectTable.end()) continue;
 
             if (classified.Binding == Binding::Carried) m_CarriedHandlesStore.Add(classified.Handle);
 

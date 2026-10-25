@@ -45,7 +45,7 @@ namespace Environment::Details::System
             if (classified.Function != Function::Lift) continue;
 
             const auto objectIt{ objectTablePtr->find(classified.Handle) };
-            if (objectIt == objectTablePtr->end() || objectIt->second.Address == 0) continue;
+            if (objectIt == objectTablePtr->end()) continue;
 
             const auto& object{ objectIt->second };
 

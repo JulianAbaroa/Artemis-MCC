@@ -14,10 +14,16 @@ namespace UI::ObjectTable::State
     }
 
     auto ObjectTableUIStore::SetSnapshot(std::shared_ptr<const ObjectTable> table,
-        Groups groups) -> void
+        Groups groups, std::shared_ptr<const Snapshot> published) -> void
     {
         m_Snapshot = std::move(table);
         m_Groups = std::move(groups);
+        m_Published = std::move(published);
+    }
+
+    auto ObjectTableUIStore::GetPublished() const -> const Snapshot*
+    {
+        return m_Published.get();
     }
 
     auto ObjectTableUIStore::GetGroups() const -> const Groups&
@@ -34,5 +40,6 @@ namespace UI::ObjectTable::State
     {
         m_Groups.clear();
         m_Snapshot.reset();
+        m_Published.reset();
     }
 }

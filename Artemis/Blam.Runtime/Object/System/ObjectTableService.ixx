@@ -75,11 +75,11 @@ export namespace Tables::Object::System
 
         auto ReadBoneMatrixTable(const RawObject& datum, AliveObject& object) -> void;
         auto ReadDamageSectionTable(const RawObject& datum, AliveObject& object) -> void;
-        auto ReadDamageSections(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void;
+        auto ReadDamageSections(const RawObject& datum, DamageSectionTable& table) -> void;
 
         // Reads the block with the damage state of each region.
         // note: Skipped when the header has no block or its size is not plausible.
-        auto ReadRegionBlock(const RawObject& datum, const AliveObject& object, DamageSectionTable& table) -> void;
+        auto ReadRegionBlock(const RawObject& datum, DamageSectionTable& table) -> void;
 
         // Reads the zone shape and the team from the multiplayer block (0x190).
         // return: The data, or nothing if the object does not have the block.

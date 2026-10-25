@@ -10,6 +10,10 @@ export namespace Common::Text::System
     // Escapes the text to be placed inside a JSON string.
     auto JsonEscape(std::string_view text) -> std::string;
 
+    // Converts UTF-16 code units to UTF-8, up to the first 0 or the end of the span.
+    // note: A lone surrogate becomes U+FFFD, the same bytes the Windows UTF-8 conversion wrote before (D191).
+    auto WideToUtf8(std::span<const char16_t> source) -> std::string;
+
     // Copies text into a zero padded buffer, cut to leave the last byte as terminator.
     template <std::size_t N>
     auto CopyText(std::string_view text, std::array<char, N>& out) -> void

@@ -2,8 +2,8 @@
 test_components.py
 Boundaries of the components that already are projects (redesign D153; Ignore Rediseno/02 sec. 3.5, D156, D165): each one imports
 only the modules of the components it may depend on, references only those projects, and lists every source it owns.
-Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a and M4b (D182-D188); each later step that creates a
-component adds it to COMPONENTS.
+Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a, M4b (D182-D188) and M5a (D189-D197); each later step
+that creates a component adds it to COMPONENTS.
 They read the files of the repo (git ls-files), they do not build.
 """
 import os
@@ -23,13 +23,12 @@ COMPONENTS = {
     "Artemis/Blam.Map": ("Artemis.Blam.Map.vcxproj", {"Common", "Map"}, {"Common"}),
     "Artemis/Blam.MapModel": ("Artemis.Blam.MapModel.vcxproj", {"Common", "Map", "Resolved"}, {"Common", "Blam.Map"}),
     "Artemis/Blam.Layout": ("Artemis.Blam.Layout.vcxproj", {"Common", "Datum", "Layout"}, {"Common"}),
+    "Artemis/Blam.Runtime": ("Artemis.Blam.Runtime.vcxproj", {"Common", "Datum", "Layout", "Resolved", "Tables"},
+                             {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout"}),
 }
 
-# The interpretation of the live objects (future Blam.Runtime, 02 sec. 3.2) reads only the Snapshot since M4a: these folders import
-# nothing of Platform, Service or the DLL wiring (D184).
-TABLES = ("Artemis/Core/Domain/4_Tables/Game/", "Artemis/Core/Domain/4_Tables/Interaction/", "Artemis/Core/Domain/4_Tables/Object/",
-          "Artemis/Core/Domain/4_Tables/Player/")
-TABLES_ROOTS = {"Common", "Datum", "Layout", "Resolved", "Tables"}
+# The interpretation of the live objects (02 sec. 3.2): a project since M5a (D189), it reads only the Snapshot (D184).
+RUNTIME = "Artemis/Blam.Runtime"
 
 # The three locators of the engine tables (Engine.Capture in 02, Platform/Capture until M6).
 LOCATORS = ("ObjectTableLocator", "PlayerTableLocator", "InteractionTableLocator")
@@ -99,12 +98,12 @@ def test_component_project_lists_every_source(folder):
 
 def test_dll_project_references_the_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
-    assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout"} <= found
+    assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime"} <= found
 
 
-def test_tests_project_references_blam_layout():
+def test_tests_project_references_the_blam_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Tests/Artemis.Tests.vcxproj"))}
-    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout"} <= found
+    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime"} <= found
 
 
 def test_old_map_folders_are_gone():
@@ -147,7 +146,7 @@ def test_old_datum_folder_is_gone():
 
 
 def test_engine_offsets_left_tables():
-    moved = [p for p in Sources("Artemis/Core/Domain/4_Tables")
+    moved = [p for p in Sources(RUNTIME)
              if os.path.basename(p) in ("PlayerOffset.ixx", "PlayerMapping.ixx", "PlayerSize.ixx", "InteractionOffset.ixx",
                                         "GameOffset.ixx")]
     assert not moved, moved
@@ -163,14 +162,49 @@ def test_raw_snapshot_lives_in_blam_layout():
     assert len(definitions) == 1 and definitions[0].startswith("Artemis/Blam.Layout/"), definitions
 
 
-@pytest.mark.parametrize("folder", TABLES)
-def test_tables_read_only_the_snapshot(folder):
-    sources = Sources(folder)
-    assert sources, f"{folder} has no sources"
-    wrong = {path: sorted(ImportRoots(path) - TABLES_ROOTS) for path in sources if ImportRoots(path) - TABLES_ROOTS}
-    assert not wrong, f"imports outside {sorted(TABLES_ROOTS)}: {wrong}"
-    readers = [p for p in sources if "MemoryReaderService" in Read(p) or "reader.Read" in Read(p)]
-    assert not readers, f"live reads of the game left in: {readers}"
+def test_old_tables_folder_is_gone():
+    assert Tracked("Artemis/Core/Domain/4_Tables") == []
+
+
+def test_blam_runtime_does_not_touch_the_process():
+    sources = Sources(RUNTIME)
+    assert sources, f"{RUNTIME} has no sources"
+    for path in sources:
+        text = Read(path)
+        for word in ("MemoryReaderService", "reader.Read", "windows.h", "reinterpret_cast", "OnCleanup"):
+            assert word not in text, f"{path}: {word}"
+        assert not re.search(r"\b(Platform|Service)::", text), f"{path}: the DLL wiring"
+
+
+def test_tables_hold_no_process_address():
+    member = re.compile(r"std::uintptr_t\s+\w+\s*\{\s*\}")
+    for path in Sources(RUNTIME):
+        text = Read(path)
+        assert not member.search(text), f"{path}: a member of type std::uintptr_t"
+        assert not re.search(r"\b(Address|BaseAddress)\b", text), path
+    wrong = [p for p in Sources("Artemis/Core/Domain") if re.search(r"\.Address\b", Read(p))]
+    assert not wrong, f"the Domain checks an address of the process: {wrong}"
+
+
+def test_dev_screens_take_the_address_from_the_snapshot():
+    objects = Read("Artemis/Core/UI/ObjectTable/System/ObjectTableUIService.cpp")
+    players = Read("Artemis/Core/UI/PlayerTable/System/PlayerTableUIService.cpp")
+    assert "RawObjects" in objects and "object.Address" not in objects
+    assert "OriginalAddress" in players and "player.Address" not in players
+
+
+def test_wide_to_utf8_is_portable_and_lives_in_common():
+    definitions = [p for p in Sources("Artemis") if p.endswith(".ixx") and re.search(r"\bauto\s+WideToUtf8\s*\(", Read(p))]
+    assert definitions == ["Artemis/Common/Text/System/Common.Text.System.ixx"], definitions
+    wrong = [p for p in Sources("Artemis") if "WideCharToMultiByte" in Read(p) and not p.startswith("Artemis/Tests/")]
+    assert not wrong, wrong
+
+
+def test_tables_layer_is_pure_and_core_cleans_it():
+    layer = Read(f"{RUNTIME}/Tables.Layer.ixx")
+    assert re.search(r"\bLayer\(\s*Log&\s+log\s*,\s*Resolved::Layer&\s+resolved\s*\)", layer)
+    assert re.search(r"auto\s+Cleanup\(\)\s*->\s*void", layer)
+    assert "m_Tables.Cleanup()" in Read("Artemis/Core/Core.cpp")
 
 
 def test_locators_live_in_platform_capture():

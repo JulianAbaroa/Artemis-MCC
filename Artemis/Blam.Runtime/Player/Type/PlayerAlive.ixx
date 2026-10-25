@@ -25,9 +25,6 @@ export namespace Tables::Player::Type::Alive
         // The salt is in the high 16 bits and the table index in the low 16 bits.
         std::uint32_t Handle{};
 
-        // Address of the entry inside the player table.
-        std::uintptr_t Address{};
-
         ConnectionState ConnectionState{};
         Team Team{};
 

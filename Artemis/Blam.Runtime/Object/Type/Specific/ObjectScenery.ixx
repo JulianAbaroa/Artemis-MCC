@@ -59,7 +59,6 @@ export namespace Tables::Object::Type::Scenery
 
     struct Scenery
     {
-        std::uintptr_t Base{};
         SceneryKind Kind{};
     };
 }

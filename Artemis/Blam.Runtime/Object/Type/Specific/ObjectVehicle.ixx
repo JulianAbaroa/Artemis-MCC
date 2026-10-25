@@ -308,7 +308,6 @@ export namespace Tables::Object::Type::Vehicle
 
     struct Vehicle
     {
-        std::uintptr_t Base{};
         VehicleKind Kind{};
         const Seat::Layout* SeatLayout{};
 

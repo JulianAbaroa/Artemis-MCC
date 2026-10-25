@@ -65,7 +65,7 @@ namespace Environment::Details::System
             if (classified.Function != Function::Teleporter) continue;
 
             const auto objectIt{ objectTablePtr->find(classified.Handle) };
-            if (objectIt == objectTablePtr->end() || objectIt->second.Address == 0) continue;
+            if (objectIt == objectTablePtr->end()) continue;
 
             const auto* crate{ std::get_if<Crate>(&objectIt->second.Specific) };
             if (!crate || !crate->Teleport) continue;

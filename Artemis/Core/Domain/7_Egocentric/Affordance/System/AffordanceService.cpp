@@ -68,7 +68,6 @@ namespace Egocentric::Affordance::System
             if (it == objectTable.end()) continue;
 
             const AliveObject& object = it->second;
-            if (object.Address == 0) continue;
 
             Affordance interactable;
 
