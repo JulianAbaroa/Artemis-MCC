@@ -3,17 +3,15 @@ export module Tables.Layer;
 import Service.Layer;
 import Platform.Layer;
 import Resolved.Layer;
-import Datum.Layer;
 import Tables.Object.State;
 import Tables.Object.System;
 import Tables.Player.State;
 import Tables.Player.System;
-import Tables.Player.Hook;
 import Tables.Interaction.State;
 import Tables.Interaction.System;
-import Tables.Interaction.Hook;
 import Tables.Game.State;
 import Tables.Game.System;
+import Tables.Shadow.System;
 
 export namespace Tables
 {
@@ -31,31 +29,24 @@ export namespace Tables
         using PlayerTableService = Tables::Player::System::PlayerTableService;
         using InteractionService = Tables::Interaction::System::InteractionService;
         using GameService = Tables::Game::System::GameService;
-
-        using PlayerTableLocator = Tables::Player::Hook::PlayerTableLocator;
-        using InteractionTableLocator = Tables::Interaction::Hook::InteractionTableLocator;
+        using ShadowService = Tables::Shadow::System::ShadowService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved, Datum::Layer& datumLayer) :
-            m_ObjectService(service.m_Log, datumLayer.m_DatumStore, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, resolved.m_TagResolverService),
-            m_PlayerService(service.m_Log, platform.m_MemoryReaderService, m_PlayerStore),
-            m_InteractionService(service.m_Log, platform.m_MemoryReaderService, m_PlayerStore, m_InteractionStore),
-            m_GameService(service.m_Log, platform.m_MemoryReaderService, datumLayer.m_DatumStore, m_GameStore),
-            m_PlayerTableLocator(service.m_Log, platform.m_AOBService, m_PlayerStore),
-            m_InteractionTableLocator(service.m_Log, platform.m_AOBService, m_InteractionStore)
+        Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved) :
+            m_ObjectService(service.m_Log, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, resolved.m_TagResolverService),
+            m_PlayerService(service.m_Log, m_PlayerStore),
+            m_InteractionService(service.m_Log, m_InteractionStore),
+            m_GameService(service.m_Log, m_GameStore),
+            m_ShadowService(service.m_Log, platform.m_MemoryReaderService, platform.m_CaptureStore, m_PlayerStore, m_InteractionStore, m_GameStore)
         {
             auto& lifecycle = platform.m_LifecycleService;
-
-            lifecycle.OnEngineInitialized([this] {
-                m_PlayerTableLocator.FindAndStoreTableBase();
-                m_InteractionTableLocator.FindAndStoreTableBase();
-            });
 
             lifecycle.OnCleanup([this] {
                 m_ObjectService.Cleanup();
                 m_PlayerService.Cleanup();
                 m_InteractionService.Cleanup();
                 m_GameService.Cleanup();
+                m_ShadowService.Cleanup();
             });
         }
         ~Layer() = default;
@@ -76,9 +67,6 @@ export namespace Tables
         PlayerTableService m_PlayerService;
         InteractionService m_InteractionService;
         GameService m_GameService;
-
-        // --- Hook ---
-        PlayerTableLocator m_PlayerTableLocator;
-        InteractionTableLocator m_InteractionTableLocator;
+        ShadowService m_ShadowService;
     };
 }

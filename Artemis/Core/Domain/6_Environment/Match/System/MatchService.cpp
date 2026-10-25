@@ -2,6 +2,7 @@ module Environment.Match.System;
 
 import Common.Engine.Type;
 import Common.Semantic.Type;
+import Layout.Game.Type;
 import Tables.Player.Type;
 import Tables.Game.Type;
 import Environment.Match.Type;
@@ -14,9 +15,9 @@ namespace
 
     using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_MaxPlayers;
-    using Tables::Game::Type::Offset::k_PhaseMask;
-    using Tables::Game::Type::Offset::k_PhaseInGame;
-    using Tables::Game::Type::Offset::k_PhaseEnded;
+    using Layout::Game::Type::Offset::k_PhaseMask;
+    using Layout::Game::Type::Offset::k_PhaseInGame;
+    using Layout::Game::Type::Offset::k_PhaseEnded;
 
     // return: The phase of the raw value of the engine.
     auto ToPhase(std::uint32_t phase) -> MatchPhase

@@ -8,6 +8,7 @@ import Common.Tag.Type;
 import Common.Team.Type;
 import Resolved.Definitions.Type;
 import Datum.Object.Type;
+import Layout.Snapshot.Type;
 
 namespace
 {
@@ -20,8 +21,9 @@ namespace
     using Common::ZoneShape::Type::ZoneShapeKind;
     using Common::Team::Type::Team;
     using Resolved::Definitions::Type::Object::ObjectKind;
-    using Datum::Object::Type::Raw::RawObject;
-    using Datum::Object::Type::Raw::Snapshot;
+    using Resolved::Definitions::Type::Object::ToObjectKind;
+    using Layout::Snapshot::Type::RawObject;
+    using Layout::Snapshot::Type::Snapshot;
     using Tables::Object::Type::BoneMatrix::BonesHeader;
     using Tables::Object::Type::Biped::Biped;
     using Tables::Object::Type::Crate::Crate;
@@ -158,26 +160,25 @@ namespace Tables::Object::System
 
             std::uint32_t datumIndex{ datum.Read<std::uint32_t>(ObjeOffset::k_TagHandle) };
 
-            this->AddObject(handle, datumIndex, datum.Kind);
+            this->AddObject(handle, datumIndex, ToObjectKind(datum.KindId));
         }
     }
 
-    auto ObjectTableService::UpdateObjectTable() -> void
+    auto ObjectTableService::UpdateObjectTable(const Snapshot& snapshot) -> void
     {
-        auto snapshot = m_DatumStore.Acquire();
-        if (!snapshot) return;
+        if (!snapshot.HasObjectTable) return;
 
         m_BoneMatricesStore.Clear();
         m_DamageSectionsStore.Clear();
 
-        this->DiscoverObjects(*snapshot);
+        this->DiscoverObjects(snapshot);
 
         std::vector<std::uint32_t> deadHandles{};
 
         m_ObjectStore.UpdateObjects(
             [&](std::uint32_t handle, AliveObject& object) {
-                auto it = snapshot->RawObjects.find(handle);
-                if (it == snapshot->RawObjects.end())
+                auto it = snapshot.RawObjects.find(handle);
+                if (it == snapshot.RawObjects.end())
                 {
                     deadHandles.push_back(handle);
                     return;
@@ -186,8 +187,8 @@ namespace Tables::Object::System
                 object.Address = it->second.Address;
 
                 this->UpdateObjectData(it->second, object);
-                object.Placement = this->ReadPlacement(*snapshot, it->second);
-                object.WorldOrigin = ResolveWorldOrigin(snapshot->RawObjects, it->second);
+                object.Placement = this->ReadPlacement(snapshot, it->second);
+                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, it->second);
             });
 
         for (std::uint32_t handle : deadHandles)

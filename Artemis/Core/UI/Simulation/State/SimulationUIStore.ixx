@@ -1,14 +1,13 @@
 export module UI.Simulation.State;
 
 import Common.Engine.Type;
-import Platform.Host.Type;
 import Platform.Simulation.Type;
 import UI.Simulation.Type;
 import std;
 
 namespace
 {
-    using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_MaxPlayers;
     using UI::Simulation::Type::k_RecordNameSize;
 }

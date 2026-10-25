@@ -2,35 +2,36 @@ module Tables.Game.System;
 
 import Common.Engine.Type;
 import Datum.Object.Type;
+import Layout.Game.Type;
+import Layout.Snapshot.Type;
 
 namespace
 {
     using Tables::Game::Type::Alive::AliveEvent;
 
+    using Layout::Snapshot::Type::RegionId;
+
     using Common::Engine::Type::k_MaxPlayers;
-    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextGameEngineOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextEventGlobalsOffset;
     using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
-    using Tables::Game::Type::Offset::k_GameEnginePhase;
-    using Tables::Game::Type::Offset::k_GameEnginePlayerScores;
-    using Tables::Game::Type::Offset::k_PlayerScoreStride;
-    using Tables::Game::Type::Offset::k_EventRing;
-    using Tables::Game::Type::Offset::k_EventRingSlots;
-    using Tables::Game::Type::Offset::k_EventEntrySize;
-    using Tables::Game::Type::Offset::k_EntryKey;
-    using Tables::Game::Type::Offset::k_EntryData;
-    using Tables::Game::Type::Offset::k_EntrySequence;
-    using Tables::Game::Type::Offset::k_EntryGameTick;
-    using Tables::Game::Type::Offset::k_EventDataSize;
-    using Tables::Game::Type::Offset::k_DataCausePlayer;
-    using Tables::Game::Type::Offset::k_DataCauseObject;
-    using Tables::Game::Type::Offset::k_DataEffectPlayer;
-    using Tables::Game::Type::Offset::k_DataEffectObject;
-    using Tables::Game::Type::Offset::k_DataDamageReportingType;
-    using Tables::Game::Type::Offset::k_DataModifier;
-    using Tables::Game::Type::Offset::k_DataExtra;
+    using Layout::Game::Type::Offset::k_GameEnginePhase;
+    using Layout::Game::Type::Offset::k_GameEnginePlayerScores;
+    using Layout::Game::Type::Offset::k_PlayerScoreStride;
+    using Layout::Game::Type::Offset::k_EventRing;
+    using Layout::Game::Type::Offset::k_EventRingSlots;
+    using Layout::Game::Type::Offset::k_EventEntrySize;
+    using Layout::Game::Type::Offset::k_EntryKey;
+    using Layout::Game::Type::Offset::k_EntryData;
+    using Layout::Game::Type::Offset::k_EntrySequence;
+    using Layout::Game::Type::Offset::k_EntryGameTick;
+    using Layout::Game::Type::Offset::k_EventDataSize;
+    using Layout::Game::Type::Offset::k_DataCausePlayer;
+    using Layout::Game::Type::Offset::k_DataCauseObject;
+    using Layout::Game::Type::Offset::k_DataEffectPlayer;
+    using Layout::Game::Type::Offset::k_DataEffectObject;
+    using Layout::Game::Type::Offset::k_DataDamageReportingType;
+    using Layout::Game::Type::Offset::k_DataModifier;
+    using Layout::Game::Type::Offset::k_DataExtra;
 
     // return: The field of type T at the offset of the event data.
     template <typename T>
@@ -44,30 +45,25 @@ namespace
 
 namespace Tables::Game::System
 {
-    auto GameService::Update() -> void
+    auto GameService::Update(const Snapshot& snapshot) -> void
     {
-        const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
-        if (threadContext == 0) return;
+        if (!snapshot.HasThreadContext) return;
 
-        auto& reader = m_MemoryReaderService;
         AliveGame game{};
 
-        const auto timeGlobals{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextTimeGlobalsOffset) };
-        if (timeGlobals != 0) game.EngineTick = reader.Read<std::uint32_t>(timeGlobals, k_TimeGlobalsEngineTickOffset);
+        if (snapshot.IsCaptured(RegionId::TimeGlobals)) game.EngineTick = snapshot.Read<std::uint32_t>(RegionId::TimeGlobals, k_TimeGlobalsEngineTickOffset);
 
-        const auto gameEngine{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameEngineOffset) };
-        if (gameEngine != 0)
+        if (snapshot.IsCaptured(RegionId::GameEngineGlobals))
         {
-            game.Phase = reader.Read<std::uint32_t>(gameEngine, k_GameEnginePhase);
+            game.Phase = snapshot.Read<std::uint32_t>(RegionId::GameEngineGlobals, k_GameEnginePhase);
 
             for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
             {
-                game.PlayerScores[index] = reader.Read<std::int16_t>(gameEngine, k_GameEnginePlayerScores + index * k_PlayerScoreStride);
+                game.PlayerScores[index] = snapshot.Read<std::int16_t>(RegionId::GameEngineGlobals, k_GameEnginePlayerScores + index * k_PlayerScoreStride);
             }
         }
 
-        const auto eventGlobals{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextEventGlobalsOffset) };
-        if (eventGlobals != 0) this->ReadEvents(eventGlobals, game);
+        if (snapshot.IsCaptured(RegionId::EventGlobals)) this->ReadEvents(snapshot, game);
 
         // The phase values are measured on few game modes (A5): every change is logged to confirm them on the others.
         const auto previous{ m_GameStore.Acquire() };
@@ -85,11 +81,9 @@ namespace Tables::Game::System
         m_GameStore.Cleanup();
     }
 
-    auto GameService::ReadEvents(std::uintptr_t eventGlobals, AliveGame& game) -> void
+    auto GameService::ReadEvents(const Snapshot& snapshot, AliveGame& game) -> void
     {
-        auto& reader = m_MemoryReaderService;
-
-        const auto last{ reader.Read<std::uint32_t>(eventGlobals, k_EventGlobalsSequenceOffset) };
+        const auto last{ snapshot.Read<std::uint32_t>(RegionId::EventGlobals, k_EventGlobalsSequenceOffset) };
         std::uint32_t cursor{ m_GameStore.GetEventCursor() };
 
         // A new engine starts the sequence again.
@@ -117,8 +111,8 @@ namespace Tables::Game::System
 
         for (std::uint32_t sequence{ first }; sequence <= last; ++sequence)
         {
-            const std::uintptr_t entry{ eventGlobals + k_EventRing + (sequence % k_EventRingSlots) * k_EventEntrySize };
-            if (reader.Read<std::uint32_t>(entry, k_EntrySequence) != sequence)
+            const std::size_t entry{ k_EventRing + (sequence % k_EventRingSlots) * k_EventEntrySize };
+            if (snapshot.Read<std::uint32_t>(RegionId::EventGlobals, entry + k_EntrySequence) != sequence)
             {
                 ++mismatches;
                 continue;
@@ -126,9 +120,9 @@ namespace Tables::Game::System
 
             AliveEvent event{};
             event.Sequence = sequence;
-            event.GameTick = reader.Read<std::uint32_t>(entry, k_EntryGameTick);
-            event.Key = reader.Read<std::uint32_t>(entry, k_EntryKey);
-            event.Data = reader.ReadArray<std::uint8_t, k_EventDataSize>(entry, k_EntryData);
+            event.GameTick = snapshot.Read<std::uint32_t>(RegionId::EventGlobals, entry + k_EntryGameTick);
+            event.Key = snapshot.Read<std::uint32_t>(RegionId::EventGlobals, entry + k_EntryKey);
+            event.Data = snapshot.ReadArray<std::uint8_t, k_EventDataSize>(RegionId::EventGlobals, entry + k_EntryData);
 
             event.CausePlayer = FieldOf<std::uint32_t>(event.Data, k_DataCausePlayer);
             event.CauseObject = FieldOf<std::uint32_t>(event.Data, k_DataCauseObject);

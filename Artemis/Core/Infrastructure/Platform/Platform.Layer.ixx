@@ -14,6 +14,9 @@ import Platform.Simulation.State;
 import Platform.Simulation.System;
 import Platform.Simulation.Hook;
 import Platform.Memory.System;
+import Platform.Capture.State;
+import Platform.Capture.System;
+import Platform.Capture.Hook;
 import Platform.Bridge.State;
 import Platform.Bridge.System;
 import Platform.Render.Type;
@@ -72,6 +75,12 @@ export namespace Platform
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
+        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using CaptureService = Platform::Capture::System::CaptureService;
+        using ObjectTableLocator = Platform::Capture::Hook::ObjectTableLocator;
+        using PlayerTableLocator = Platform::Capture::Hook::PlayerTableLocator;
+        using InteractionTableLocator = Platform::Capture::Hook::InteractionTableLocator;
+
         using FrameContext = Platform::Render::Type::FrameContext;
         using RenderStore = Platform::Render::State::RenderStore;
         using RenderService = Platform::Render::System::RenderService;
@@ -89,6 +98,7 @@ export namespace Platform
             m_BotService(service.m_Log, m_AOBService, m_BotStore),
             m_BridgeService(service.m_Log, service.m_SettingsStore, m_LifecycleStore, m_MatchCycleStore, m_PlayerActionStore,
                 m_BridgeStore),
+            m_CaptureService(service.m_Log, m_MemoryReaderService, m_CaptureStore),
             m_RenderService(service.m_Log, m_RenderStore),
             m_SwapChainLocator(service.m_Log),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
@@ -108,7 +118,10 @@ export namespace Platform
             m_PlayerActionDetour(service.m_Log, m_AOBService, m_PlayerActionStore, m_BotService, m_BridgeService),
             m_SetMachinesDetour(service.m_Log, m_AOBService, m_BotStore),
             m_PresentDetour(service.m_Log, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
-            m_ResizeBuffersDetour(service.m_Log, m_RenderStore, m_RenderService, m_SwapChainLocator)
+            m_ResizeBuffersDetour(service.m_Log, m_RenderStore, m_RenderService, m_SwapChainLocator),
+            m_ObjectTableLocator(service.m_Log, m_AOBService, m_CaptureStore),
+            m_PlayerTableLocator(service.m_Log, m_AOBService, m_CaptureStore),
+            m_InteractionTableLocator(service.m_Log, m_AOBService, m_CaptureStore)
         {
             // The button hook needs the engine up, so it is installed on engine initialization.
             // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
@@ -121,6 +134,9 @@ export namespace Platform
                 m_SetMachinesDetour.Install();
                 this->InstallHostHooks();
                 m_OpenMapDetour.Install();
+                m_ObjectTableLocator.FindAndStoreTableBase();
+                m_PlayerTableLocator.FindAndStoreTableBase();
+                m_InteractionTableLocator.FindAndStoreTableBase();
             });
 
             // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
@@ -140,6 +156,7 @@ export namespace Platform
                 m_LocalUserStore.Cleanup();
                 m_PlayerActionStore.Cleanup();
                 m_BotStore.Cleanup();
+                m_CaptureService.Cleanup();
             });
 
             // The game window is only known once the swap chain is bound.
@@ -170,6 +187,7 @@ export namespace Platform
         BotStore m_BotStore{};
         BridgeStore m_BridgeStore{};
         RenderStore m_RenderStore{};
+        CaptureStore m_CaptureStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
@@ -180,6 +198,7 @@ export namespace Platform
         BotService m_BotService;
         BridgeService m_BridgeService;
         MemoryReaderService m_MemoryReaderService{};
+        CaptureService m_CaptureService;
         RenderService m_RenderService;
         SwapChainLocator m_SwapChainLocator;
 
@@ -202,6 +221,9 @@ export namespace Platform
         SetMachinesDetour m_SetMachinesDetour;
         PresentDetour m_PresentDetour;
         ResizeBuffersDetour m_ResizeBuffersDetour;
+        ObjectTableLocator m_ObjectTableLocator;
+        PlayerTableLocator m_PlayerTableLocator;
+        InteractionTableLocator m_InteractionTableLocator;
 
     private:
         static constexpr milliseconds k_RenderShutdownTimeout{ 500 };

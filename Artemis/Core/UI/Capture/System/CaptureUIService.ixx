@@ -3,10 +3,11 @@ export module UI.Capture.System;
 import Common.Log.System;
 import Service.Settings.State;
 import Platform.Memory.System;
+import Platform.Capture.State;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Datum.Object.Type;
-import Datum.Object.State;
+import Layout.Snapshot.Type;
 import Export.Tick.Type;
 import Export.Tick.State;
 import UI.Capture.Type;
@@ -20,7 +21,7 @@ export namespace UI::Capture::System
     // table of the Havok collision filter (A10). Each object also gets its collision model (coll), and each capture the flags of the
     // projectile collision test (A13).
     // With the engine option it also copies the engine globals of the thread context (A5: match, scores, clock, respawn).
-    // note: A development tool (D72). The datum comes from the copy DatumService already makes each tick. The Havok lines are read live
+    // note: A development tool (D72). The datum comes from the copy CaptureService already makes each tick. The Havok lines are read live
     // from the render thread, through the safe reader, at fixed RVAs of haloreach.dll (A10).
     class CaptureUIService
     {
@@ -35,8 +36,8 @@ export namespace UI::Capture::System
         using Phmo = Resolved::Definitions::Type::Phmo::Phmo;
         using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
 
-        using Snapshot = Datum::Object::Type::Raw::Snapshot;
-        using DatumStore = Datum::Object::State::DatumStore;
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
+        using CaptureStore = Platform::Capture::State::CaptureStore;
 
         using Tick = Export::Tick::Type::Tick;
         using TickStore = Export::Tick::State::TickStore;
@@ -48,9 +49,9 @@ export namespace UI::Capture::System
 
     public:
         CaptureUIService(Log& log, SettingsStore& settingsStore, MemoryReaderService& memoryReaderService,
-            DefinitionsStore& definitionsStore, DatumStore& datumStore, TickStore& tickStore, CaptureUIStore& captureUIStore) :
+            DefinitionsStore& definitionsStore, CaptureStore& captureStore, TickStore& tickStore, CaptureUIStore& captureUIStore) :
             m_Log(log), m_SettingsStore(settingsStore), m_MemoryReaderService(memoryReaderService),
-            m_DefinitionsStore(definitionsStore), m_DatumStore(datumStore), m_TickStore(tickStore), m_CaptureUIStore(captureUIStore) {}
+            m_DefinitionsStore(definitionsStore), m_CaptureStore(captureStore), m_TickStore(tickStore), m_CaptureUIStore(captureUIStore) {}
         ~CaptureUIService() = default;
 
         CaptureUIService(const CaptureUIService&) = delete;
@@ -68,7 +69,7 @@ export namespace UI::Capture::System
         SettingsStore& m_SettingsStore;
         MemoryReaderService& m_MemoryReaderService;
         DefinitionsStore& m_DefinitionsStore;
-        DatumStore& m_DatumStore;
+        CaptureStore& m_CaptureStore;
         TickStore& m_TickStore;
         CaptureUIStore& m_CaptureUIStore;
 

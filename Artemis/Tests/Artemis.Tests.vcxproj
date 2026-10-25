@@ -57,10 +57,15 @@
     <ProjectReference Include="..\Blam.MapModel\Artemis.Blam.MapModel.vcxproj">
       <Project>{DC8EE9AD-0601-534E-87A7-8FCCB10DA489}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Blam.Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Blam\LayoutTests.cpp" />
     <ClCompile Include="Blam\MapModelTests.cpp" />
     <ClCompile Include="Blam\MapTests.cpp" />
+    <ClCompile Include="Blam\ObjectKindTests.cpp" />
     <ClCompile Include="Blam\TagResolverTests.cpp" />
     <ClCompile Include="Common\LogParseTests.cpp" />
     <ClCompile Include="Common\LogTests.cpp" />

@@ -1,10 +1,11 @@
 module Platform.Host.State;
 
+import Common.Engine.Type;
 import std;
 
 namespace
 {
-    using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxLocalUsers;
 }
 
 namespace Platform::Host::State

@@ -5,8 +5,7 @@ import Resolved.Definitions.Type;
 import Resolved.Tag.System;
 import Resolved.Vitality.State;
 import Resolved.World.State;
-import Datum.Object.Type;
-import Datum.Object.State;
+import Layout.Snapshot.Type;
 import Tables.Object.Type;
 import Tables.Object.State;
 import std;
@@ -17,8 +16,8 @@ export namespace Tables::Object::System
     {
     private:
         using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-        using RawObject = Datum::Object::Type::Raw::RawObject;
-        using Snapshot = Datum::Object::Type::Raw::Snapshot;
+        using RawObject = Layout::Snapshot::Type::RawObject;
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
         using AliveObject = Tables::Object::Type::Alive::AliveObject;
         using Profile = Tables::Object::Type::Profile::Profile;
         using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
@@ -30,7 +29,6 @@ export namespace Tables::Object::System
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
 
         using Log = Common::Log::System::Log;
-        using DatumStore = Datum::Object::State::DatumStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
         using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
@@ -38,27 +36,25 @@ export namespace Tables::Object::System
 
     public:
         ObjectTableService(Log& log,
-            DatumStore& datumStore,
             ObjectTableStore& objectStore,
             BoneMatricesStore& boneMatricesStore,
             DamageSectionsStore& damageSectionsStore,
             TagResolverService& tagResolverService) :
-            m_Log(log), m_DatumStore(datumStore),
+            m_Log(log),
             m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore),
             m_DamageSectionsStore(damageSectionsStore),
             m_TagResolverService(tagResolverService) {}
         ~ObjectTableService() = default;
 
-        // Builds the alive objects from the last snapshot of the datum layer.
-        // note: Does not read the game memory. Does nothing until a snapshot is published.
-        auto UpdateObjectTable() -> void;
+        // Builds the alive objects from the snapshot of the tick.
+        // note: Does not read the game memory. Does nothing while the snapshot has no object table.
+        auto UpdateObjectTable(const Snapshot& snapshot) -> void;
 
         auto Cleanup() -> void;
 
     private:
         Log& m_Log;
-        DatumStore& m_DatumStore;
         ObjectTableStore& m_ObjectStore;
         BoneMatricesStore& m_BoneMatricesStore;
         DamageSectionsStore& m_DamageSectionsStore;

@@ -10,9 +10,6 @@ export namespace Platform::Host::Type
     // Module of the game MCC loads for Reach. It is loaded again for every match, so its base changes.
     inline constexpr const wchar_t* k_GameModuleName{ L"haloreach.dll" };
 
-    // Local players (split-screen) the engine supports.
-    inline constexpr std::size_t k_MaxLocalUsers{ 4 };
-
     // Entries of the game manager vtable (byte offset / 8). Verified on MCC 1.3528 (A9_SplitScreen.txt sec. 6).
     inline constexpr std::size_t k_LocalUserGetProfileIndex{ 34 };
     inline constexpr std::size_t k_InputUpdateIndex{ 36 };

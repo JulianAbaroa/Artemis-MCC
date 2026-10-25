@@ -5,7 +5,6 @@ import Platform.Layer;
 import Platform.Bridge.Type;
 import Map.Layer;
 import Resolved.Layer;
-import Datum.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -34,12 +33,12 @@ export namespace Runtime::Thread
 
     public:
         AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
-            Resolved::Layer& resolved, Datum::Layer& datumLayer, Tables::Layer& tables, Relations::Layer& relations,
+            Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
             Environment::Layer& environment, Egocentric::Layer& egocentric,
             Export::Layer& exportLayer, CameraStore& cameraStore, TickTraceUIService& tickTraceUIService,
             TickDumpUIService& tickDumpUIService) :
             m_Service(service), m_Platform(platform), m_Map(map),
-            m_Resolved(resolved), m_Datum(datumLayer), m_Tables(tables), m_Relations(relations),
+            m_Resolved(resolved), m_Tables(tables), m_Relations(relations),
             m_Environment(environment), m_Egocentric(egocentric),
             m_Export(exportLayer), m_ViewerCameraStore(cameraStore), m_TickTraceUIService(tickTraceUIService),
             m_TickDumpUIService(tickDumpUIService) {}
@@ -53,7 +52,6 @@ export namespace Runtime::Thread
         Platform::Layer& m_Platform;
         Map::Layer& m_Map;
         Resolved::Layer& m_Resolved;
-        Datum::Layer& m_Datum;
         Tables::Layer& m_Tables;
         Relations::Layer& m_Relations;
         Environment::Layer& m_Environment;
@@ -65,8 +63,8 @@ export namespace Runtime::Thread
         TickDumpUIService& m_TickDumpUIService;
 
         // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
-        static constexpr std::array<std::string_view, 24> k_StageNames{
-            "Input", "Datum", "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
+        static constexpr std::array<std::string_view, 25> k_StageNames{
+            "Input", "Capture", "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Shadow", "Classifier", "ObjectGraph",
             "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "Entities", "Players",
             "Collidable", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble", "Other" };
 

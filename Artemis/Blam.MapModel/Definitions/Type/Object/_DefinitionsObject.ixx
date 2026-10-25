@@ -31,6 +31,12 @@ export namespace Resolved::Definitions::Type::Object
         Invalid = 0xFFFF,
     };
 
+    // return: The kind of an entry of the object table, or Invalid for an id the engine does not use.
+    constexpr auto ToObjectKind(std::uint8_t kindId) -> ObjectKind
+    {
+        return kindId <= static_cast<std::uint8_t>(ObjectKind::EffectScenery) ? static_cast<ObjectKind>(kindId) : ObjectKind::Invalid;
+    }
+
     enum class MultiplayerObjectKind : std::uint8_t
     {
         Ordinary = 0x00,

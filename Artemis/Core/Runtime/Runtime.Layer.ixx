@@ -4,7 +4,6 @@ import Service.Layer;
 import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
-import Datum.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -33,12 +32,12 @@ export namespace Runtime
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
-            Resolved::Layer& resolved, Datum::Layer& datumLayer, Tables::Layer& tables,
+            Resolved::Layer& resolved, Tables::Layer& tables,
             Relations::Layer& relations, Environment::Layer& environment,
             Egocentric::Layer& egocentric, Export::Layer& exportLayer,
             CameraStore& viewerCameraStore, UI::Layer& ui) :
             m_Main(service, platform),
-            m_AI(service, platform, map, resolved, datumLayer, tables, relations,
+            m_AI(service, platform, map, resolved, tables, relations,
                 environment, egocentric, exportLayer, viewerCameraStore, ui.m_TickTraceUIService, ui.m_TickDumpUIService),
             m_Input(service, platform),
             m_Bench(service, platform, ui.m_BenchUIService),

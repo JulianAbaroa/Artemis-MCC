@@ -1,12 +1,12 @@
 export module Platform.Input.State:VirtualInput;
 
-import Platform.Host.Type;
+import Common.Engine.Type;
 import Platform.Input.Type;
 import std;
 
 namespace
 {
-    using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxLocalUsers;
 }
 
 export namespace Platform::Input::State

@@ -1,6 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Core\Domain\4_Tables\Shadow">
+      <UniqueIdentifier>{7ed4850f-05ad-5c49-a007-2d4383c91b8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Domain\4_Tables\Shadow\System">
+      <UniqueIdentifier>{69774073-cbe8-57e6-98a6-8ef731ca6d1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Capture">
+      <UniqueIdentifier>{6c62a270-9add-5c00-9791-3f20a3c6ddd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Capture\Hook">
+      <UniqueIdentifier>{54387136-736b-5286-9ee5-6bf86b55551e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Capture\State">
+      <UniqueIdentifier>{c34cdba4-5f56-57c3-8a51-f7113ded2060}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Capture\System">
+      <UniqueIdentifier>{91134b9a-6ed1-5308-a0be-5d7a1b5770b3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\UI\TickDump">
       <UniqueIdentifier>{02b748e8-92d3-4d5b-90c4-486b043cbb25}</UniqueIdentifier>
     </Filter>
@@ -277,9 +295,6 @@
     <Filter Include="Core\Domain\4_Tables\Interaction\System">
       <UniqueIdentifier>{99e890f8-3c0c-4672-8114-2f8577a1d138}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\4_Tables\Interaction\Hook">
-      <UniqueIdentifier>{94a5065f-6c5e-476c-bf56-e5f6fd935626}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Domain\4_Tables\Object">
       <UniqueIdentifier>{81b5843a-82b2-4881-a0ea-ad9676650c0d}</UniqueIdentifier>
     </Filter>
@@ -309,9 +324,6 @@
     </Filter>
     <Filter Include="Core\Domain\4_Tables\Player">
       <UniqueIdentifier>{66357dbe-e1f4-420e-bd1e-3d0ba21d87fc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Player\Hook">
-      <UniqueIdentifier>{d3820057-bb61-479d-b317-e7bf57bf9884}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Domain\4_Tables\Player\State">
       <UniqueIdentifier>{50c13a6e-09b0-4c9f-b72d-a093bf6a915e}</UniqueIdentifier>
@@ -814,69 +826,6 @@
     <Filter Include="Core\Domain\6_Environment\Aim\System">
       <UniqueIdentifier>{8a441872-8e9b-46e9-b668-a3f2b363cf2f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\3_Datum">
-      <UniqueIdentifier>{aafafe2f-b76c-4d08-b57e-f8d827b1af7f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object">
-      <UniqueIdentifier>{92d77475-0ae5-45e2-bddc-f7faab6ba522}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Hook">
-      <UniqueIdentifier>{fae731d1-2185-42e8-8df6-5073c49e3417}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\State">
-      <UniqueIdentifier>{1440eca4-fa5e-447a-a141-ca56f24cb898}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\System">
-      <UniqueIdentifier>{db642b7c-19f9-4e42-880f-75668529ab41}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type">
-      <UniqueIdentifier>{d9fff4e3-d702-4372-b6f0-239d9648ef72}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Anim">
-      <UniqueIdentifier>{c9ef926c-d870-4f00-b4cf-7f05c2ff1f6a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Bipd">
-      <UniqueIdentifier>{9cfe40de-de13-421e-9485-abea04d07a26}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Bloc">
-      <UniqueIdentifier>{1a543f15-249a-4d4f-a835-ea11ceeaaa0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Ctrl">
-      <UniqueIdentifier>{07c704a3-86ba-4d8c-bd55-f4ed2edb0d39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Devi">
-      <UniqueIdentifier>{b9d977f9-3a20-4126-8cdc-ddcf1a560d95}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Eqip">
-      <UniqueIdentifier>{57269716-d89e-490d-85b2-a25bc79f825d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Item">
-      <UniqueIdentifier>{71b9896a-7794-4965-a040-a0681b0207dd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Mach">
-      <UniqueIdentifier>{f1d780a0-2a1f-49fe-a4fd-50b72c20a6f5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Mvar">
-      <UniqueIdentifier>{dd527c71-0c5b-44c2-b191-255cb0d48ed8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Obje">
-      <UniqueIdentifier>{d52cefe7-5218-4ed9-a4d8-3957abccc388}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Proj">
-      <UniqueIdentifier>{9641c04d-a7a0-4b1b-a7ad-02c10581769c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Scen">
-      <UniqueIdentifier>{01a1d84d-4ff4-47e6-b133-b28b7a8c665a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Unit">
-      <UniqueIdentifier>{a8ae9294-7e6f-4f4b-a462-4c3764032600}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Vehi">
-      <UniqueIdentifier>{f79d4195-3469-47b3-917e-6229c5473844}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\3_Datum\Object\Type\Weap">
-      <UniqueIdentifier>{22b2eb7b-920c-4eea-9a3b-aca8e4d08d00}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imgui.h">
@@ -905,6 +854,66 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.cpp">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.ixx">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.cpp">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.ixx">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.cpp">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.ixx">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.cpp">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.ixx">
+      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\Tables.Shadow.System.ixx">
+      <Filter>Core\Domain\4_Tables\Shadow</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Platform.Capture.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx">
       <Filter>Core\UI\TickDump\Type</Filter>
     </ClCompile>
@@ -992,9 +1001,6 @@
     <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionAlive.ixx">
       <Filter>Core\Domain\4_Tables\Interaction\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionOffset.ixx">
-      <Filter>Core\Domain\4_Tables\Interaction\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.cpp">
       <Filter>Core\Domain\4_Tables\Interaction\State</Filter>
     </ClCompile>
@@ -1010,22 +1016,7 @@
     <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.ixx">
       <Filter>Core\Domain\4_Tables\Interaction\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.cpp">
-      <Filter>Core\Domain\4_Tables\Interaction\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.ixx">
-      <Filter>Core\Domain\4_Tables\Interaction\Hook</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx">
-      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerMapping.ixx">
-      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerOffset.ixx">
-      <Filter>Core\Domain\4_Tables\Player\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerSize.ixx">
       <Filter>Core\Domain\4_Tables\Player\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Player\Tables.Player.Type.ixx">
@@ -1042,12 +1033,6 @@
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.ixx">
       <Filter>Core\Domain\4_Tables\Player\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Hook\PlayerTableLocator.cpp">
-      <Filter>Core\Domain\4_Tables\Player\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Player\Hook\PlayerTableLocator.ixx">
-      <Filter>Core\Domain\4_Tables\Player\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
       <Filter>Core\Domain\4_Tables\Object\Type\BoneMatrix</Filter>
@@ -2006,9 +1991,6 @@
     <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameAlive.ixx">
       <Filter>Core\Domain\4_Tables\Game\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameOffset.ixx">
-      <Filter>Core\Domain\4_Tables\Game\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.cpp">
       <Filter>Core\Domain\4_Tables\Game\State</Filter>
     </ClCompile>
@@ -2266,174 +2248,6 @@
     </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Hook\ObjectTableLocator.cpp">
-      <Filter>Core\Domain\3_Datum\Object\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Hook\ObjectTableLocator.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\State\DatumStore.cpp">
-      <Filter>Core\Domain\3_Datum\Object\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\State\DatumStore.ixx">
-      <Filter>Core\Domain\3_Datum\Object\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\System\DatumService.cpp">
-      <Filter>Core\Domain\3_Datum\Object\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\System\DatumService.ixx">
-      <Filter>Core\Domain\3_Datum\Object\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Anim\DatumAnimOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Anim</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Anim\DatumAnimStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Anim</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bipd\DatumBipdOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Bipd</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bipd\DatumBipdStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Bipd</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bloc\DatumBlocOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Bloc</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bloc\DatumBlocStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Bloc</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Ctrl\DatumCtrlOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Ctrl</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Ctrl\DatumCtrlStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Ctrl</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Devi\DatumDeviOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Devi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Devi\DatumDeviStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Devi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Eqip\DatumEqipOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Eqip</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Eqip\DatumEqipStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Eqip</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Item\DatumItemOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Item</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Item\DatumItemStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Item</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Mach</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Mvar</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Mach</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Mvar</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Obje</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Obje</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Proj\DatumProjOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Proj</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Proj\DatumProjStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Proj</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Scen\DatumScenOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Scen</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Scen\DatumScenStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Scen</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Anim.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Bipd.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Bloc.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Ctrl.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Devi.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Eqip.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Item.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mach.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mvar.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Obje.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Proj.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Scen.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Unit.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Vehi.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Weap.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\DatumBlock.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\DatumConstant.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\DatumRaw.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Unit\DatumUnitOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Unit</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Unit\DatumUnitStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Unit</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Vehi\DatumVehiOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Vehi\DatumVehiStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Vehi</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Weap\DatumWeapOffset.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Weap</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Weap\DatumWeapStructure.ixx">
-      <Filter>Core\Domain\3_Datum\Object\Type\Weap</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Datum.Layer.ixx">
-      <Filter>Core\Domain\3_Datum</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\3_Datum\Object\Datum.Object.Type.ixx">
-      <Filter>Core\Domain\3_Datum\Object</Filter>
     </ClCompile>
     <ClCompile Include="Core\Domain\8_Export\Tick\Export.Tick.Hook.ixx">
       <Filter>Core\Domain\8_Export\Tick</Filter>

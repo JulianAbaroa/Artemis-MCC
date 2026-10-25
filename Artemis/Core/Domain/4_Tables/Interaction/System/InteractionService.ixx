@@ -1,8 +1,7 @@
 export module Tables.Interaction.System;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Tables.Player.State;
+import Layout.Snapshot.Type;
 import Tables.Interaction.Type;
 import Tables.Interaction.State;
 import std;
@@ -15,36 +14,29 @@ export namespace Tables::Interaction::System
     private:
         using Log = Common::Log::System::Log;
 
-        using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
-
-        using PlayerTableStore = Tables::Player::State::PlayerTableStore;
-
         using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
         using InteractionStore = Tables::Interaction::State::InteractionStore;
 
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
+
     public:
-        InteractionService(Log& log,
-            MemoryReaderService& memoryReaderService, PlayerTableStore& playerStore,
-            InteractionStore& interactionStore) :
-            m_Log(log), m_MemoryReaderService(memoryReaderService),
-            m_PlayerStore(playerStore), m_InteractionStore(interactionStore) {}
+        InteractionService(Log& log, InteractionStore& interactionStore) :
+            m_Log(log), m_InteractionStore(interactionStore) {}
         ~InteractionService() = default;
 
-        // Reads the table of every view and publishes it under the local player the view shows.
-        // note: Publishes empty interactions while the table base or the player mapping is not found.
+        // Reads the table of every view from the snapshot and publishes it under the local player the view shows.
+        // note: Publishes empty interactions while the interaction tables or the player mapping are not captured.
         // A local player without a view keeps an empty interaction.
-        auto UpdateInteractionTable() -> void;
+        auto UpdateInteractionTable(const Snapshot& snapshot) -> void;
 
-        // Clears the stored table base and interactions.
+        // Clears the stored interactions.
         auto Cleanup() -> void;
 
     private:
         Log& m_Log;
-        MemoryReaderService& m_MemoryReaderService;
-        PlayerTableStore& m_PlayerStore;
         InteractionStore& m_InteractionStore;
 
-        // Reads the interaction that starts at the address.
-        auto ReadInteraction(std::uintptr_t interactionBase) -> AliveInteraction;
+        // Reads the interaction that starts at the offset of the interaction region.
+        auto ReadInteraction(const Snapshot& snapshot, std::size_t interactionOffset) -> AliveInteraction;
     };
 }

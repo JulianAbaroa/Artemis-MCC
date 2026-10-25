@@ -1,6 +1,7 @@
 export module Environment.Events.Type;
 
 import Common.Semantic.Type;
+import Layout.Game.Type;
 import Tables.Game.Type;
 import std;
 
@@ -8,7 +9,7 @@ namespace
 {
     using Common::Semantic::Type::Event;
 
-    using Tables::Game::Type::Offset::k_EventDataSize;
+    using Layout::Game::Type::Offset::k_EventDataSize;
 }
 
 export namespace Environment::Events::Type

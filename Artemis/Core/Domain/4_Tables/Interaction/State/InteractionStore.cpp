@@ -2,16 +2,6 @@ module Tables.Interaction.State;
 
 namespace Tables::Interaction::State
 {
-    auto InteractionStore::GetBase() const -> std::uintptr_t
-    {
-        return m_InteractionTableBase.load();
-    }
-
-    auto InteractionStore::SetBase(std::uintptr_t pointer) -> void
-    {
-        m_InteractionTableBase.store(pointer);
-    }
-
     auto InteractionStore::Publish(LocalInteractions interactions) -> void
     {
         auto snapshot = std::make_shared<const LocalInteractions>(std::move(interactions));
@@ -25,7 +15,6 @@ namespace Tables::Interaction::State
 
     auto InteractionStore::Cleanup() -> void
     {
-        m_InteractionTableBase.store(0);
         m_LocalInteractions.store(nullptr, std::memory_order_release);
     }
 }

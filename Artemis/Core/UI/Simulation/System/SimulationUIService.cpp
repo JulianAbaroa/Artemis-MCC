@@ -6,7 +6,6 @@ module UI.Simulation.System;
 
 import Common.Engine.Type;
 import Platform.Lifecycle.Type;
-import Platform.Host.Type;
 import Platform.Simulation.Type;
 import Platform.Bridge.Type;
 import Gui.Style.Type;
@@ -32,7 +31,7 @@ namespace
     using Platform::Bridge::Type::BridgeOwner;
     using Platform::Bridge::Type::BridgeMode;
 
-    using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxLocalUsers;
     using Platform::Simulation::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
     using Platform::Simulation::Type::k_MaxTeams;

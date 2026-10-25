@@ -243,7 +243,7 @@ namespace UI::TickTrace::System
     {
         TickClock clock{};
 
-        const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
+        const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
         if (threadContext == 0) return clock;
 
         const auto timeGlobals{ ReadValue<std::uintptr_t>(threadContext + k_ThreadContextTimeGlobalsOffset) };

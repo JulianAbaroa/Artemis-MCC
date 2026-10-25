@@ -5,7 +5,7 @@ import std;
 
 export namespace Tables::Player::State
 {
-    // Holds the base address of the engine player table and the players read from it.
+    // Holds the players read from the engine player table.
     // note: Writers lock a mutex. Readers use the published table and never wait.
     class PlayerTableStore
     {
@@ -16,14 +16,6 @@ export namespace Tables::Player::State
     public:
         PlayerTableStore() = default;
         ~PlayerTableStore() = default;
-
-        // return: Address of the player table, or 0 if it was not found yet.
-        auto GetBase() const -> std::uintptr_t;
-        auto SetBase(std::uintptr_t pointer) -> void;
-
-        // return: Address of the player mapping globals, or 0 if they were not found yet.
-        auto GetMappingBase() const -> std::uintptr_t;
-        auto SetMappingBase(std::uintptr_t pointer) -> void;
 
         auto AddPlayer(std::uint32_t handle, const AlivePlayer& player) -> void;
         auto HasPlayer(std::uint32_t handle) const -> bool;
@@ -48,12 +40,10 @@ export namespace Tables::Player::State
         // return: Last published table, or null before the first one and after Cleanup.
         auto Acquire() const -> std::shared_ptr<const PlayerTable>;
 
-        // Clears the players, the base addresses and the published table.
+        // Clears the players and the published table.
         auto Cleanup() -> void;
 
     private:
-        std::atomic<std::uintptr_t> m_PlayerTableBase{ 0 };
-        std::atomic<std::uintptr_t> m_MappingBase{ 0 };
         std::atomic<std::shared_ptr<const PlayerTable>> m_PublishedPlayerTable{};
 
         PlayerTable m_PlayerTable{};

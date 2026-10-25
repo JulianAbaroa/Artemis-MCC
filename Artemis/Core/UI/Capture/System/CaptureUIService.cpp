@@ -12,6 +12,7 @@ import Platform.Host.Type;
 import Resolved.Definitions.Type;
 import Resolved.Definitions.State;
 import Datum.Object.Type;
+import Layout.Snapshot.Type;
 import Gui.Style.Type;
 import std;
 
@@ -26,8 +27,9 @@ namespace
     using Resolved::Definitions::Type::Phmo::Shape;
     using Resolved::Definitions::Type::Phmo::PhantomType;
     using Resolved::Definitions::State::DefinitionsStore;
-    using Datum::Object::Type::Raw::RawObject;
-    using Datum::Object::Type::Raw::Snapshot;
+    using Resolved::Definitions::Type::Object::ToObjectKind;
+    using Layout::Snapshot::Type::RawObject;
+    using Layout::Snapshot::Type::Snapshot;
     using UI::Capture::Type::ComponentRange;
     using UI::Capture::Type::Source;
     using UI::Capture::Type::Target;
@@ -193,7 +195,7 @@ namespace
         const std::size_t size{ datum.Bytes.size() };
         std::size_t end{ 0 };
 
-        for (const ComponentRange& component : ComponentsOf(datum.Kind))
+        for (const ComponentRange& component : ComponentsOf(ToObjectKind(datum.KindId)))
         {
             if (component.Start >= size) break;
 
@@ -256,7 +258,7 @@ namespace
         if (it == snapshot.RawObjects.end()) return;
 
         const RawObject& datum{ it->second };
-        if (datum.Kind != ObjectKind::Biped) return;
+        if (ToObjectKind(datum.KindId) != ObjectKind::Biped) return;
 
         AddTarget(targets, snapshot, datum.Read<std::uint32_t>(UnitOffset::k_PrimaryWeaponHandle), Source::Linked);
         AddTarget(targets, snapshot, datum.Read<std::uint32_t>(UnitOffset::k_SecondaryWeaponHandle), Source::Linked);
@@ -264,7 +266,7 @@ namespace
         AddTarget(targets, snapshot, datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle), Source::Linked);
 
         const auto ability{ snapshot.RawObjects.find(datum.Read<std::uint32_t>(UnitOffset::k_ArmorAbilityHandle)) };
-        if (ability == snapshot.RawObjects.end() || ability->second.Kind != ObjectKind::Equipment) return;
+        if (ability == snapshot.RawObjects.end() || ToObjectKind(ability->second.KindId) != ObjectKind::Equipment) return;
 
         AddTarget(targets, snapshot, ability->second.Read<std::uint32_t>(EqipOffset::k_HologramObjectHandle), Source::Linked);
         AddTarget(targets, snapshot, ability->second.Read<std::uint32_t>(EqipOffset::k_DropShieldObjectHandle), Source::Linked);
@@ -498,7 +500,7 @@ namespace UI::Capture::System
 
     auto CaptureUIService::Capture() -> std::string
     {
-        const std::shared_ptr<const Snapshot> snapshot{ m_DatumStore.Acquire() };
+        const std::shared_ptr<const Snapshot> snapshot{ m_CaptureStore.Acquire() };
         if (!snapshot) return "No datum snapshot yet. Load a map and try again.";
 
         const std::shared_ptr<const Tick> tick{ m_TickStore.Acquire() };
@@ -519,8 +521,8 @@ namespace UI::Capture::System
         WriteHavokFilter(*file, this->ReadHavokFilter());
         WriteCollisionTestFlags(*file, this->ReadCollisionTestFlags());
 
-        const std::size_t engineBlocks{ m_CaptureUIStore.IsEngineIncluded() ? this->WriteEngineBlocks(*file, m_DatumStore.GetThreadContext()) : 0 };
-        if (m_CaptureUIStore.IsEngineIncluded()) this->WriteGameState(*file, m_DatumStore.GetThreadContext(), index);
+        const std::size_t engineBlocks{ m_CaptureUIStore.IsEngineIncluded() ? this->WriteEngineBlocks(*file, m_CaptureStore.GetThreadContext()) : 0 };
+        if (m_CaptureUIStore.IsEngineIncluded()) this->WriteGameState(*file, m_CaptureStore.GetThreadContext(), index);
 
         std::vector<ByteChange> changes{};
         std::string details{};
@@ -547,9 +549,9 @@ namespace UI::Capture::System
 
             const std::uint32_t havokHandle{ datum.Read<std::uint32_t>(ObjeOffset::k_HavokComponentHandle) };
             WriteHavokComponent(*file, havokHandle, this->ReadHavokComponent(havokHandle));
-            WritePhmo(*file, this->FindPhmo(datum.Kind, tagName));
+            WritePhmo(*file, this->FindPhmo(ToObjectKind(datum.KindId), tagName));
 
-            const Hlmt* hlmt{ this->FindHlmt(datum.Kind, tagName) };
+            const Hlmt* hlmt{ this->FindHlmt(ToObjectKind(datum.KindId), tagName) };
             const bool hasColl{ hlmt && !hlmt->CollisionModelTagName.empty() };
             *file << std::format("ct-coll {}\n", hasColl ? hlmt->CollisionModelTagName : std::string{ "none" });
 
@@ -601,7 +603,7 @@ namespace UI::Capture::System
         {
             for (const auto& [handle, datum] : snapshot.RawObjects)
             {
-                if (datum.Kind == ObjectKind::Projectile) AddTarget(targets, snapshot, handle, Source::Projectile);
+                if (ToObjectKind(datum.KindId) == ObjectKind::Projectile) AddTarget(targets, snapshot, handle, Source::Projectile);
             }
         }
 

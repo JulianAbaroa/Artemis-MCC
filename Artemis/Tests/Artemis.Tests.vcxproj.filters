@@ -18,10 +18,16 @@
     <ClCompile Include="Support\Tests.Support.Maps.ixx">
       <Filter>Support</Filter>
     </ClCompile>
+    <ClCompile Include="Blam\LayoutTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
     <ClCompile Include="Blam\MapModelTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
     <ClCompile Include="Blam\MapTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
+    <ClCompile Include="Blam\ObjectKindTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
     <ClCompile Include="Blam\TagResolverTests.cpp">

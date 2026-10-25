@@ -145,16 +145,18 @@ namespace Runtime::Thread
 
     auto AIThread::ExecuteTick() -> void
     {
-        m_Datum.m_DatumService.UpdateObjectTable();
+        const auto snapshot{ m_Platform.m_CaptureService.Capture() };
         this->EndStage();
 
-        m_Tables.m_ObjectService.UpdateObjectTable();
+        m_Tables.m_ObjectService.UpdateObjectTable(*snapshot);
         this->EndStage();
-        m_Tables.m_PlayerService.UpdatePlayerTable();
+        m_Tables.m_PlayerService.UpdatePlayerTable(*snapshot);
         this->EndStage();
-        m_Tables.m_InteractionService.UpdateInteractionTable();
+        m_Tables.m_InteractionService.UpdateInteractionTable(*snapshot);
         this->EndStage();
-        m_Tables.m_GameService.Update();
+        m_Tables.m_GameService.Update(*snapshot);
+        this->EndStage();
+        m_Tables.m_ShadowService.Check(m_Last);
         this->EndStage();
 
         // The engine clock of the trace is read here too, so it matches the copied tables.

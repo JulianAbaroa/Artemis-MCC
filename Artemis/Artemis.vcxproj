@@ -137,6 +137,26 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.cpp" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.cpp" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.cpp" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.cpp" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.ixx" />
+    <ClCompile Include="Core\Domain\4_Tables\Shadow\Tables.Shadow.System.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Platform.Capture.Hook.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.ixx" />
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.cpp" />
@@ -160,62 +180,6 @@
     <ClCompile Include="Core\Common\Semantic\Type\SemanticCatalog.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticEnum.ixx" />
     <ClCompile Include="Core\Common\Semantic\Type\SemanticSubtype.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Hook\ObjectTableLocator.cpp" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Hook\ObjectTableLocator.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\State\DatumStore.cpp" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\State\DatumStore.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\System\DatumService.cpp" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\System\DatumService.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Datum.Object.Type.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Anim\DatumAnimOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Anim\DatumAnimStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bipd\DatumBipdOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bipd\DatumBipdStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bloc\DatumBlocOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Bloc\DatumBlocStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Ctrl\DatumCtrlOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Ctrl\DatumCtrlStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Devi\DatumDeviOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Devi\DatumDeviStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Eqip\DatumEqipOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Eqip\DatumEqipStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Item\DatumItemOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Item\DatumItemStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mach\DatumMachStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Mvar\DatumMvarStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Obje\DatumObjeStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Proj\DatumProjOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Proj\DatumProjStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Scen\DatumScenOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Scen\DatumScenStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Anim.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Bipd.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Bloc.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Ctrl.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Devi.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Eqip.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Item.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mach.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Mvar.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Obje.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Proj.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Scen.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Unit.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Vehi.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Datum.Object.Type.Weap.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\DatumBlock.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\DatumConstant.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\DatumRaw.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Unit\DatumUnitOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Unit\DatumUnitStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Vehi\DatumVehiOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Vehi\DatumVehiStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Weap\DatumWeapOffset.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Object\Type\Weap\DatumWeapStructure.ixx" />
-    <ClCompile Include="Core\Domain\3_Datum\Datum.Layer.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\ObjectConstant.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Aim\State\AimStore.ixx" />
     <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.cpp" />
@@ -224,7 +188,6 @@
     <ClCompile Include="Core\Common\Semantic\Type\SemanticEventKey.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Game\Tables.Game.Type.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Game\Type\GameOffset.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Game\State\GameStore.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Game\System\GameService.cpp" />
@@ -473,15 +436,12 @@
     <ClCompile Include="Core\Core.ixx" />
     <ClCompile Include="Core\Gui\Gui.Layer.ixx" />
     <ClCompile Include="Core\DllMain.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Hook\InteractionTableLocator.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\State\InteractionStore.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\System\InteractionService.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\Tables.Interaction.Type.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Interaction\Type\InteractionOffset.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Object\State\BoneMatrix\BoneMatricesStore.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\State\DamageSection\DamageSectionsStore.cpp" />
@@ -505,17 +465,12 @@
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectScenery.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectVehicle.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Object\Type\Specific\ObjectWeapon.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Hook\PlayerTableLocator.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Hook\PlayerTableLocator.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Player\State\PlayerTableStore.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.cpp" />
     <ClCompile Include="Core\Domain\4_Tables\Player\System\PlayerTableService.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\Tables.Player.Type.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerAlive.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerMapping.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerOffset.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Player\Type\PlayerSize.ixx" />
     <ClCompile Include="Core\Domain\4_Tables\Tables.Layer.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx" />
     <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp" />
@@ -748,6 +703,9 @@
     </ProjectReference>
     <ProjectReference Include="Blam.MapModel\Artemis.Blam.MapModel.vcxproj">
       <Project>{DC8EE9AD-0601-534E-87A7-8FCCB10DA489}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Blam.Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

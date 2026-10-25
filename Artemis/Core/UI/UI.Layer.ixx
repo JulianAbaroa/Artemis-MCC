@@ -7,7 +7,6 @@ import Platform.Input.Type;
 import Platform.Render.Type;
 import Map.Layer;
 import Resolved.Layer;
-import Datum.Layer;
 import Tables.Layer;
 import Export.Layer;
 import Gui.Layer;
@@ -78,7 +77,7 @@ export namespace UI
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map, Resolved::Layer& resolved,
-            Datum::Layer& datum, Tables::Layer& tables, Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
+            Tables::Layer& tables, Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
             PreferencesService& preferences) :
             m_BackendGuiService(gui.m_BackendGuiService),
             m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, m_CaptureUIStore, viewer.m_OverlayStore),
@@ -87,11 +86,11 @@ export namespace UI
             m_PlayerTableUIService(exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
-            m_CaptureUIService(service.m_Log, service.m_SettingsStore, platform.m_MemoryReaderService, resolved.m_DefinitionsStore, datum.m_DatumStore, exportLayer.m_TickStore, m_CaptureUIStore),
+            m_CaptureUIService(service.m_Log, service.m_SettingsStore, platform.m_MemoryReaderService, resolved.m_DefinitionsStore, platform.m_CaptureStore, exportLayer.m_TickStore, m_CaptureUIStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, platform.m_LifecycleStore, platform.m_MatchConfigStore,
                 platform.m_MatchConfigService, platform.m_LocalUserStore, platform.m_VirtualInputStore, platform.m_PlayerActionStore,
                 platform.m_BotStore, platform.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
-            m_TickTraceUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, datum.m_DatumStore, tables.m_ObjectStore,
+            m_TickTraceUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, platform.m_CaptureStore, tables.m_ObjectStore,
                 m_TickTraceUIStore),
             m_TickDumpUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
                 m_TickDumpUIStore),

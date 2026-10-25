@@ -2,8 +2,8 @@ export module UI.TickTrace.System;
 
 import Common.Log.System;
 import Service.Settings.State;
+import Platform.Capture.State;
 import Map.Reader.State;
-import Datum.Object.State;
 import Tables.Object.State;
 import UI.TickTrace.Type;
 import UI.TickTrace.State;
@@ -20,16 +20,16 @@ export namespace UI::TickTrace::System
         using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
         using FileStore = Map::Reader::State::FileStore;
-        using DatumStore = Datum::Object::State::DatumStore;
+        using CaptureStore = Platform::Capture::State::CaptureStore;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
         using TickClock = UI::TickTrace::Type::TickClock;
         using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
 
     public:
-        TickTraceUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore, DatumStore& datumStore,
+        TickTraceUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore, CaptureStore& captureStore,
             ObjectTableStore& objectStore, TickTraceUIStore& tickTraceUIStore) :
-            m_Log(log), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_DatumStore(datumStore),
+            m_Log(log), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_CaptureStore(captureStore),
             m_ObjectStore(objectStore), m_TickTraceUIStore(tickTraceUIStore) {}
         ~TickTraceUIService() = default;
 
@@ -59,7 +59,7 @@ export namespace UI::TickTrace::System
         Log& m_Log;
         SettingsStore& m_SettingsStore;
         FileStore& m_FileStore;
-        DatumStore& m_DatumStore;
+        CaptureStore& m_CaptureStore;
         ObjectTableStore& m_ObjectStore;
         TickTraceUIStore& m_TickTraceUIStore;
 

@@ -2,7 +2,8 @@
 test_components.py
 Boundaries of the components that already are projects (redesign D153; Ignore Rediseno/02 sec. 3.5, D156, D165): each one imports
 only the modules of the components it may depend on, references only those projects, and lists every source it owns.
-Written by Opus before the code (D161) in M3 (D177-D181); each later step that creates a component adds it to COMPONENTS.
+Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a (D182-D188); each later step that creates a component
+adds it to COMPONENTS.
 They read the files of the repo (git ls-files), they do not build.
 """
 import os
@@ -21,7 +22,18 @@ COMPONENTS = {
     "Artemis/Services": ("Artemis.Services.vcxproj", {"Common", "Service"}, {"Common"}),
     "Artemis/Blam.Map": ("Artemis.Blam.Map.vcxproj", {"Common", "Map"}, {"Common"}),
     "Artemis/Blam.MapModel": ("Artemis.Blam.MapModel.vcxproj", {"Common", "Map", "Resolved"}, {"Common", "Blam.Map"}),
+    "Artemis/Blam.Layout": ("Artemis.Blam.Layout.vcxproj", {"Common", "Datum", "Layout"}, {"Common"}),
 }
+
+# The interpretation of the live objects (future Blam.Runtime, 02 sec. 3.2) reads only the Snapshot since M4a: these folders import
+# nothing of Platform, Service or the DLL wiring (D184).
+TABLES = ("Artemis/Core/Domain/4_Tables/Game/", "Artemis/Core/Domain/4_Tables/Interaction/", "Artemis/Core/Domain/4_Tables/Object/",
+          "Artemis/Core/Domain/4_Tables/Player/")
+TABLES_ROOTS = {"Common", "Datum", "Layout", "Resolved", "Tables"}
+
+# The three locators of the engine tables (Engine.Capture in 02, Platform/Capture until M6).
+LOCATORS = ("ObjectTableLocator", "PlayerTableLocator", "InteractionTableLocator")
+CAPTURE_HOOK = "Artemis/Core/Infrastructure/Platform/Capture/Hook/"
 
 # Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Map.*) are imported only by the wiring of the DLL (future Mod),
 # the development tools (future DevTools) and the tests (02 sec. 3.5, contract of Blam.Map).
@@ -87,7 +99,12 @@ def test_component_project_lists_every_source(folder):
 
 def test_dll_project_references_the_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
-    assert {"Common", "Services", "Blam.Map", "Blam.MapModel"} <= found
+    assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout"} <= found
+
+
+def test_tests_project_references_blam_layout():
+    found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Tests/Artemis.Tests.vcxproj"))}
+    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout"} <= found
 
 
 def test_old_map_folders_are_gone():
@@ -123,3 +140,53 @@ def test_the_engine_hook_of_the_map_lives_in_platform():
     for path in Sources("Artemis/Blam.Map") + Sources("Artemis/Blam.MapModel"):
         text = Read(path)
         assert "windows.h" not in text and "GetModuleFileName" not in text, path
+
+
+def test_old_datum_folder_is_gone():
+    assert Tracked("Artemis/Core/Domain/3_Datum") == []
+
+
+def test_engine_offsets_left_tables():
+    moved = [p for p in Sources("Artemis/Core/Domain/4_Tables")
+             if os.path.basename(p) in ("PlayerOffset.ixx", "PlayerMapping.ixx", "PlayerSize.ixx", "InteractionOffset.ixx",
+                                        "GameOffset.ixx")]
+    assert not moved, moved
+    old = re.compile(r"Tables::(Player|Interaction|Game)::Type::(Offset|Mapping|Size)::")
+    wrong = [p for p in Sources("Artemis") if old.search(Read(p))]
+    assert not wrong, f"old namespace of the offsets: {wrong}"
+
+
+def test_raw_snapshot_lives_in_blam_layout():
+    wrong = [p for p in Sources("Artemis") if "Datum::Object::Type::Raw" in Read(p) or "DatumStore" in Read(p)]
+    assert not wrong, wrong
+    definitions = [p for p in Sources("Artemis") if re.search(r"\bstruct\s+RawObject\b", Read(p))]
+    assert len(definitions) == 1 and definitions[0].startswith("Artemis/Blam.Layout/"), definitions
+
+
+@pytest.mark.parametrize("folder", TABLES)
+def test_tables_read_only_the_snapshot(folder):
+    sources = Sources(folder)
+    assert sources, f"{folder} has no sources"
+    wrong = {path: sorted(ImportRoots(path) - TABLES_ROOTS) for path in sources if ImportRoots(path) - TABLES_ROOTS}
+    assert not wrong, f"imports outside {sorted(TABLES_ROOTS)}: {wrong}"
+    readers = [p for p in sources if "MemoryReaderService" in Read(p) or "reader.Read" in Read(p)]
+    assert not readers, f"live reads of the game left in: {readers}"
+
+
+def test_locators_live_in_platform_capture():
+    found = [p for p in Sources("Artemis") if os.path.basename(p).split(".")[0] in LOCATORS]
+    assert sorted(os.path.basename(p) for p in found) == sorted(f"{name}.{ext}" for name in LOCATORS for ext in ("cpp", "ixx"))
+    assert all(p.startswith(CAPTURE_HOOK) for p in found), found
+
+
+def test_max_local_users_has_one_owner():
+    definitions = [p for p in Sources("Artemis") if re.search(r"\bk_MaxLocalUsers\s*\{", Read(p))]
+    assert definitions == ["Artemis/Common/Engine/Type/Common.Engine.Type.ixx"], definitions
+    wrong = [p for p in Sources("Artemis") if "Platform::Host::Type::k_MaxLocalUsers" in Read(p)]
+    assert not wrong, wrong
+
+
+def test_blam_layout_does_not_touch_the_process():
+    for path in Sources("Artemis/Blam.Layout"):
+        text = Read(path)
+        assert "windows.h" not in text and "std::uintptr_t*" not in text and "reinterpret_cast" not in text, path

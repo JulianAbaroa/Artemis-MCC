@@ -1,6 +1,7 @@
 module Environment.Events.System;
 
 import Common.Semantic.Type;
+import Layout.Game.Type;
 
 namespace
 {
@@ -8,8 +9,8 @@ namespace
 
     using Common::Semantic::Type::EventKey::KindOf;
     using Environment::Events::Type::k_EventLogCapacity;
-    using Tables::Game::Type::Offset::k_ModifierHeadshot;
-    using Tables::Game::Type::Offset::k_ModifierStuck;
+    using Layout::Game::Type::Offset::k_ModifierHeadshot;
+    using Layout::Game::Type::Offset::k_ModifierStuck;
 }
 
 namespace Environment::Events::System

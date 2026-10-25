@@ -1,6 +1,7 @@
 module Platform.Input.Hook;
 import :InputUpdate;
 
+import Common.Engine.Type;
 import Platform.Hook.System;
 import Platform.Host.Type;
 import std;
@@ -12,7 +13,7 @@ namespace
     using Platform::Hook::System::k_DrainTimeout;
 
     using Platform::Host::Type::k_InputUpdateIndex;
-    using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxLocalUsers;
 }
 
 namespace Platform::Input::Hook

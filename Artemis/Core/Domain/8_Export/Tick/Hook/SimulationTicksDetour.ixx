@@ -6,7 +6,7 @@ import Common.Log.System;
 import Service.Telemetry.State;
 import Platform.Memory.System;
 import Platform.Lifecycle.State;
-import Datum.Object.State;
+import Platform.Capture.State;
 import Export.Tick.Type;
 import std;
 
@@ -27,15 +27,15 @@ export namespace Export::Tick::Hook
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
         using AOBService = Platform::Memory::System::AOBService;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using DatumStore = Datum::Object::State::DatumStore;
+        using CaptureStore = Platform::Capture::State::CaptureStore;
         using SimulationTicksFunction = Export::Tick::Type::SimulationTicksFunction;
         using EndRoundFunction = Export::Tick::Type::EndRoundFunction;
 
     public:
         SimulationTicksDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,
-            LifecycleStore& lifecycleStore, DatumStore& datumStore, ExecuteGameFrameDetour& executeGameFrameDetour) :
+            LifecycleStore& lifecycleStore, CaptureStore& captureStore, ExecuteGameFrameDetour& executeGameFrameDetour) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
-            m_LifecycleStore(lifecycleStore), m_DatumStore(datumStore), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
+            m_LifecycleStore(lifecycleStore), m_CaptureStore(captureStore), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
         ~SimulationTicksDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -49,7 +49,7 @@ export namespace Export::Tick::Hook
         TelemetryStore& m_TelemetryStore;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;
-        DatumStore& m_DatumStore;
+        CaptureStore& m_CaptureStore;
         ExecuteGameFrameDetour& m_ExecuteGameFrameDetour;
 
         static inline SimulationTicksDetour* s_Instance{ nullptr };

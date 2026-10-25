@@ -82,7 +82,7 @@ namespace Export::Tick::Hook
         const float requested{ m_LifecycleStore.GetRequestedTimeScale() };
         if (requested <= 0.0f && !m_IsTimeScaleOverridden) return;
 
-        const std::uintptr_t threadContext{ m_DatumStore.GetThreadContext() };
+        const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
         if (threadContext == 0) return;
 
         const std::uintptr_t timeGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextTimeGlobalsOffset) };
@@ -100,7 +100,7 @@ namespace Export::Tick::Hook
     {
         if (!m_LifecycleStore.TakeEndRound()) return;
 
-        if (m_EndRound == nullptr || m_DatumStore.GetThreadContext() == 0)
+        if (m_EndRound == nullptr || m_CaptureStore.GetThreadContext() == 0)
         {
             m_Log.Message("[SimulationTicksDetour] WARNING: End of round dropped (no engine function or no game).");
             return;

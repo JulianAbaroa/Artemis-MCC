@@ -1,14 +1,13 @@
 export module Tables.Game.Type:Alive;
 
-import :Offset;
-
 import Common.Engine.Type;
+import Layout.Game.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
-    using Tables::Game::Type::Offset::k_EventDataSize;
+    using Layout::Game::Type::Offset::k_EventDataSize;
 }
 
 export namespace Tables::Game::Type::Alive

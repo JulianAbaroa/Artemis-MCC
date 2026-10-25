@@ -12,7 +12,7 @@ Datum.Object.Type from the public XML files in Data/Datum/.
 The files are always written with CRLF line endings and no final newline, whatever the OS (D176).
 
 Per XML (obje.xml -> prefix Obje) it writes, under
-Artemis/Core/Domain/3_Datum/Object/Type/:
+Artemis/Blam.Layout/Datum/Type/:
     Obje/DatumObjeOffset.ixx     export module Datum.Object.Type:Obje.Offset;
     Obje/DatumObjeStructure.ixx  export module Datum.Object.Type:Obje.Structure;
     Datum.Object.Type.Obje.ixx   aggregate (partition :Obje)
@@ -38,7 +38,7 @@ from Common import XmlBaseName, ParseHex, CompareTrees, ReportCheck
 
 REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
 DATUM_XML = os.path.join(REPO, "Data", "Datum")
-OUT = os.path.join(REPO, "Artemis", "Core", "Domain", "3_Datum", "Object", "Type")
+OUT = os.path.join(REPO, "Artemis", "Blam.Layout", "Datum", "Type")
 
 def Finish(text: str, xmlName: str) -> str:
     text = text.replace("export module Map.Tag.Type:", "export module Datum.Object.Type:")

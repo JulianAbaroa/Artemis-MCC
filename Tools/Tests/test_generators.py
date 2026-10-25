@@ -16,7 +16,7 @@ from tdump_writer import Repo
 
 REPO = Repo()
 TRANSPILER = os.path.join(REPO, "Tools", "TagTranspiler")
-DATUM_OUT = os.path.join(REPO, "Artemis", "Core", "Domain", "3_Datum", "Object", "Type")
+DATUM_OUT = os.path.join(REPO, "Artemis", "Blam.Layout", "Datum", "Type")
 TAG_OUT = os.path.join(REPO, "Artemis", "Blam.Map", "Tag")
 ASSEMBLY_TAGS = os.environ.get("ARTEMIS_ASSEMBLY_TAGS") or os.path.expanduser(os.path.join("~", "Documents", "Tools", "Assembly",
                                                                                             "Tags"))

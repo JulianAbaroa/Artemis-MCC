@@ -2,14 +2,13 @@ export module Tables.Interaction.Type:Alive;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Platform.Host.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
 
-    using Platform::Host::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_NoHandle;
 }
 

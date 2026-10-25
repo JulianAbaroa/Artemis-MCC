@@ -9,7 +9,6 @@ import Service.Preferences.System;
 import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
-import Datum.Layer;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
@@ -67,15 +66,14 @@ export namespace Core
 
         Map::Layer m_Map{ m_Service.m_Log };
         Resolved::Layer m_Resolved{ m_Service.m_Log, m_Map };
-        Datum::Layer m_Datum{ m_Service, m_Platform };
-        Tables::Layer m_Tables{ m_Service, m_Platform, m_Resolved, m_Datum };
+        Tables::Layer m_Tables{ m_Service, m_Platform, m_Resolved };
         Relations::Layer m_Relations{ m_Service, m_Platform, m_Resolved, m_Tables };
         Environment::Layer m_Environment{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations };
         Egocentric::Layer m_Egocentric{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment };
-        Export::Layer m_Export{ m_Service, m_Platform, m_Resolved, m_Datum, m_Tables, m_Relations, m_Environment, m_Egocentric };
+        Export::Layer m_Export{ m_Service, m_Platform, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };
         Gui::Layer m_Gui{ m_Service, m_Platform };
         Viewer::Layer m_Viewer{ m_Service, m_Platform, m_Environment, m_Export, m_Gui, m_Preferences };
-        UI::Layer m_UI{ m_Service, m_Platform, m_Map, m_Resolved, m_Datum, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
-        Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Datum, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export, m_Viewer.m_CameraStore, m_UI };
+        UI::Layer m_UI{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
+        Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export, m_Viewer.m_CameraStore, m_UI };
     };
 }
