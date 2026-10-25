@@ -2,8 +2,8 @@ export module UI.TickTrace.System;
 
 import Common.Log.System;
 import Service.Settings.State;
-import Platform.Capture.State;
 import Map.Reader.State;
+import Layout.Snapshot.Type;
 import Tables.Object.State;
 import UI.TickTrace.Type;
 import UI.TickTrace.State;
@@ -20,25 +20,25 @@ export namespace UI::TickTrace::System
         using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
         using FileStore = Map::Reader::State::FileStore;
-        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
         using ObjectTableStore = Tables::Object::State::ObjectTableStore;
 
         using TickClock = UI::TickTrace::Type::TickClock;
         using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
 
     public:
-        TickTraceUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore, CaptureStore& captureStore,
+        TickTraceUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore,
             ObjectTableStore& objectStore, TickTraceUIStore& tickTraceUIStore) :
-            m_Log(log), m_SettingsStore(settingsStore), m_FileStore(fileStore), m_CaptureStore(captureStore),
+            m_Log(log), m_SettingsStore(settingsStore), m_FileStore(fileStore),
             m_ObjectStore(objectStore), m_TickTraceUIStore(tickTraceUIStore) {}
         ~TickTraceUIService() = default;
 
         TickTraceUIService(const TickTraceUIService&) = delete;
         auto operator=(const TickTraceUIService&) -> TickTraceUIService& = delete;
 
-        // Reads the engine clock of the current tick while recording.
-        // note: AI thread, inside the read window (before LifecycleStore::EndRead), so the clock matches the copied tables.
-        auto CaptureClock() -> void;
+        // Takes the engine clock of the current tick from the snapshot while recording.
+        // note: AI thread, same copy as the tables.
+        auto CaptureClock(const Snapshot& snapshot) -> void;
 
         // Appends the record of the current tick while recording.
         // param generation: Tick generation of Artemis.
@@ -59,14 +59,13 @@ export namespace UI::TickTrace::System
         Log& m_Log;
         SettingsStore& m_SettingsStore;
         FileStore& m_FileStore;
-        CaptureStore& m_CaptureStore;
         ObjectTableStore& m_ObjectStore;
         TickTraceUIStore& m_TickTraceUIStore;
 
         // Opens a new trace file in the storage folder, writes its header and starts recording.
         auto Start() -> void;
 
-        // return: The clock of the engine, invalid if the thread context or the time globals are not available.
-        auto ReadClock() const -> TickClock;
+        // return: The clock of the engine, invalid if the snapshot has no thread context or time globals.
+        auto ReadClock(const Snapshot& snapshot) const -> TickClock;
     };
 }

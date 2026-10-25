@@ -1,12 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Core\Domain\4_Tables\Shadow">
-      <UniqueIdentifier>{7ed4850f-05ad-5c49-a007-2d4383c91b8a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\4_Tables\Shadow\System">
-      <UniqueIdentifier>{69774073-cbe8-57e6-98a6-8ef731ca6d1f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Capture">
       <UniqueIdentifier>{6c62a270-9add-5c00-9791-3f20a3c6ddd3}</UniqueIdentifier>
     </Filter>
@@ -854,33 +848,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.cpp">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.ixx">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.cpp">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.ixx">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.cpp">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.ixx">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.cpp">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.ixx">
-      <Filter>Core\Domain\4_Tables\Shadow\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\Tables.Shadow.System.ixx">
-      <Filter>Core\Domain\4_Tables\Shadow</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp">
       <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
     </ClCompile>

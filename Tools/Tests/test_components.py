@@ -2,8 +2,8 @@
 test_components.py
 Boundaries of the components that already are projects (redesign D153; Ignore Rediseno/02 sec. 3.5, D156, D165): each one imports
 only the modules of the components it may depend on, references only those projects, and lists every source it owns.
-Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a (D182-D188); each later step that creates a component
-adds it to COMPONENTS.
+Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a and M4b (D182-D188); each later step that creates a
+component adds it to COMPONENTS.
 They read the files of the repo (git ls-files), they do not build.
 """
 import os
@@ -190,3 +190,30 @@ def test_blam_layout_does_not_touch_the_process():
     for path in Sources("Artemis/Blam.Layout"):
         text = Read(path)
         assert "windows.h" not in text and "std::uintptr_t*" not in text and "reinterpret_cast" not in text, path
+
+
+def test_shadow_mode_is_gone():
+    assert Tracked("Artemis/Core/Domain/4_Tables/Shadow") == []
+    wrong = [p for p in Sources("Artemis") if re.search(r"\bShadow(Service|PlayerTableService|InteractionService|GameService)\b",
+                                                         Read(p))]
+    assert not wrong, wrong
+
+
+def test_the_domain_does_not_read_the_game():
+    wrong = [p for p in Sources("Artemis/Core/Domain") if "MemoryReaderService" in Read(p)]
+    assert not wrong, wrong
+
+
+def test_tick_trace_reads_its_clock_from_the_snapshot():
+    for path in Sources("Artemis/Core/UI/TickTrace"):
+        text = Read(path)
+        assert "ReadValue" not in text and "GetThreadContext" not in text and "reinterpret_cast" not in text, path
+
+
+def test_read_window_ends_right_after_the_copy():
+    text = Read("Artemis/Core/Runtime/AI/AIThread.cpp")
+    capture = text.index("m_CaptureService.Capture()")
+    end_read = text.index("EndRead(m_Last)")
+    first_table = text.index("UpdateObjectTable(")
+    assert capture < end_read < first_table
+

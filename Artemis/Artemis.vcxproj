@@ -137,15 +137,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowGameService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowInteractionService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowPlayerTableService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.cpp" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\System\ShadowService.ixx" />
-    <ClCompile Include="Core\Domain\4_Tables\Shadow\Tables.Shadow.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.cpp" />

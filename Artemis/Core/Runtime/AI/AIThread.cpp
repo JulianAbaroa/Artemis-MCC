@@ -148,6 +148,12 @@ namespace Runtime::Thread
         const auto snapshot{ m_Platform.m_CaptureService.Capture() };
         this->EndStage();
 
+        // The engine clock of the trace comes from the same copy as the tables.
+        m_TickTraceUIService.CaptureClock(*snapshot);
+
+        // Last use of game memory: from here on everything works on the Snapshot, so the game thread runs the next tick.
+        m_Platform.m_LifecycleStore.EndRead(m_Last);
+
         m_Tables.m_ObjectService.UpdateObjectTable(*snapshot);
         this->EndStage();
         m_Tables.m_PlayerService.UpdatePlayerTable(*snapshot);
@@ -156,14 +162,6 @@ namespace Runtime::Thread
         this->EndStage();
         m_Tables.m_GameService.Update(*snapshot);
         this->EndStage();
-        m_Tables.m_ShadowService.Check(m_Last);
-        this->EndStage();
-
-        // The engine clock of the trace is read here too, so it matches the copied tables.
-        m_TickTraceUIService.CaptureClock();
-
-        // Last read of game memory: from here on the services work on their own copies, so the game thread can run the next tick.
-        m_Platform.m_LifecycleStore.EndRead(m_Last);
 
         m_Relations.m_ClassifierService.UpdateClassification();
         this->EndStage();

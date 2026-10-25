@@ -11,7 +11,6 @@ import Tables.Interaction.State;
 import Tables.Interaction.System;
 import Tables.Game.State;
 import Tables.Game.System;
-import Tables.Shadow.System;
 
 export namespace Tables
 {
@@ -29,15 +28,13 @@ export namespace Tables
         using PlayerTableService = Tables::Player::System::PlayerTableService;
         using InteractionService = Tables::Interaction::System::InteractionService;
         using GameService = Tables::Game::System::GameService;
-        using ShadowService = Tables::Shadow::System::ShadowService;
 
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved) :
             m_ObjectService(service.m_Log, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, resolved.m_TagResolverService),
             m_PlayerService(service.m_Log, m_PlayerStore),
             m_InteractionService(service.m_Log, m_InteractionStore),
-            m_GameService(service.m_Log, m_GameStore),
-            m_ShadowService(service.m_Log, platform.m_MemoryReaderService, platform.m_CaptureStore, m_PlayerStore, m_InteractionStore, m_GameStore)
+            m_GameService(service.m_Log, m_GameStore)
         {
             auto& lifecycle = platform.m_LifecycleService;
 
@@ -46,7 +43,6 @@ export namespace Tables
                 m_PlayerService.Cleanup();
                 m_InteractionService.Cleanup();
                 m_GameService.Cleanup();
-                m_ShadowService.Cleanup();
             });
         }
         ~Layer() = default;
@@ -67,6 +63,5 @@ export namespace Tables
         PlayerTableService m_PlayerService;
         InteractionService m_InteractionService;
         GameService m_GameService;
-        ShadowService m_ShadowService;
     };
 }

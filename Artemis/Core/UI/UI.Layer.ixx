@@ -90,7 +90,7 @@ export namespace UI
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, platform.m_LifecycleStore, platform.m_MatchConfigStore,
                 platform.m_MatchConfigService, platform.m_LocalUserStore, platform.m_VirtualInputStore, platform.m_PlayerActionStore,
                 platform.m_BotStore, platform.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
-            m_TickTraceUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, platform.m_CaptureStore, tables.m_ObjectStore,
+            m_TickTraceUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, tables.m_ObjectStore,
                 m_TickTraceUIStore),
             m_TickDumpUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
                 m_TickDumpUIStore),

@@ -8,6 +8,7 @@ import Common.Math.Type;
 import Common.Text.System;
 import Common.Time.System;
 import Datum.Object.Type;
+import Layout.Snapshot.Type;
 import Tables.Object.Type;
 import std;
 
@@ -19,16 +20,17 @@ namespace
     using Common::Text::System::CopyText;
     using Common::Time::System::LocalNow;
 
+    using Layout::Snapshot::Type::RegionId;
+    using Layout::Snapshot::Type::Snapshot;
+
     using UI::TickTrace::Type::TraceFileHeader;
     using UI::TickTrace::Type::TickRecord;
     using UI::TickTrace::Type::ObjectRecord;
 
     using Common::Text::System::k_BytesPerMegabyte;
-    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextEventGlobalsOffset;
     using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
 
     // Subfolder of the storage folder that holds the traces.
@@ -40,16 +42,10 @@ namespace
     // Object groups written to the trace.
     constexpr std::array<std::string_view, 4> k_TracedGroups{ "bipd", "vehi", "proj", "weap" };
 
-
-
-    // return: The value at the address of the game memory.
-    // note: The caller checks the base pointer. Called inside the read window, so the engine does not write it meanwhile.
-    template <typename T>
-    auto ReadValue(std::uintptr_t address) -> T
+    // Writes size bytes starting at data to the trace file.
+    auto WriteBytes(std::ofstream& file, const void* data, std::size_t size) -> void
     {
-        T value{};
-        std::memcpy(&value, reinterpret_cast<const void*>(address), sizeof(T));
-        return value;
+        file.write(std::bit_cast<const char*>(data), static_cast<std::streamsize>(size));
     }
 
     auto IsTraced(std::string_view fourCC) -> bool
@@ -60,11 +56,11 @@ namespace
 
 namespace UI::TickTrace::System
 {
-    auto TickTraceUIService::CaptureClock() -> void
+    auto TickTraceUIService::CaptureClock(const Snapshot& snapshot) -> void
     {
         if (!m_TickTraceUIStore.IsRecording()) return;
 
-        m_TickTraceUIStore.SetPendingClock(this->ReadClock());
+        m_TickTraceUIStore.SetPendingClock(this->ReadClock(snapshot));
     }
 
     auto TickTraceUIService::Record(std::uint64_t generation) -> void
@@ -140,7 +136,7 @@ namespace UI::TickTrace::System
         std::ofstream& file{ m_TickTraceUIStore.GetFile() };
         if (!file.is_open()) return;
 
-        file.write(reinterpret_cast<const char*>(pending.data()), static_cast<std::streamsize>(pending.size()));
+        WriteBytes(file, pending.data(), pending.size());
         m_TickTraceUIStore.AddWrittenBytes(pending.size());
     }
 
@@ -223,7 +219,7 @@ namespace UI::TickTrace::System
         CopyText(mapName, header.MapName);
         CopyText(std::format("{:%Y-%m-%d %H:%M:%S}", now), header.StartTime);
 
-        file.write(reinterpret_cast<const char*>(&header), sizeof(header));
+        WriteBytes(file, &header, sizeof(header));
 
         // Drops records a previous recording left behind.
         std::vector<std::byte> stale{};
@@ -239,22 +235,20 @@ namespace UI::TickTrace::System
         m_Log.Message("[TickTraceUIService] INFO: Recording ticks to '{}'.", filePath.string());
     }
 
-    auto TickTraceUIService::ReadClock() const -> TickClock
+    auto TickTraceUIService::ReadClock(const Snapshot& snapshot) const -> TickClock
     {
         TickClock clock{};
 
-        const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
-        if (threadContext == 0) return clock;
+        if (!snapshot.HasThreadContext || !snapshot.IsCaptured(RegionId::TimeGlobals)) return clock;
 
-        const auto timeGlobals{ ReadValue<std::uintptr_t>(threadContext + k_ThreadContextTimeGlobalsOffset) };
-        if (timeGlobals == 0) return clock;
+        clock.EngineTick = snapshot.Read<std::uint32_t>(RegionId::TimeGlobals, k_TimeGlobalsEngineTickOffset);
+        clock.TimeScale = snapshot.Read<float>(RegionId::TimeGlobals, k_TimeGlobalsScaleOffset);
+        clock.TickFraction = snapshot.Read<float>(RegionId::TimeGlobals, k_TimeGlobalsTickFractionOffset);
 
-        clock.EngineTick = ReadValue<std::uint32_t>(timeGlobals + k_TimeGlobalsEngineTickOffset);
-        clock.TimeScale = ReadValue<float>(timeGlobals + k_TimeGlobalsScaleOffset);
-        clock.TickFraction = ReadValue<float>(timeGlobals + k_TimeGlobalsTickFractionOffset);
-
-        const auto eventGlobals{ ReadValue<std::uintptr_t>(threadContext + k_ThreadContextEventGlobalsOffset) };
-        if (eventGlobals != 0) clock.EventSequence = ReadValue<std::uint32_t>(eventGlobals + k_EventGlobalsSequenceOffset);
+        if (snapshot.IsCaptured(RegionId::EventGlobals))
+        {
+            clock.EventSequence = snapshot.Read<std::uint32_t>(RegionId::EventGlobals, k_EventGlobalsSequenceOffset);
+        }
 
         clock.IsValid = true;
         return clock;
