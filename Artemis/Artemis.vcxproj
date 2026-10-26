@@ -137,17 +137,22 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Platform.Capture.Hook.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Type\Platform.Capture.Type.ixx" />
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.cpp" />
@@ -166,34 +171,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx" />
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Aim\State\AimStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Aim\Type\Environment.Aim.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Events\Type\Environment.Events.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Events\State\EventsStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Match\Type\Environment.Match.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Match\State\MatchStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Egocentric.Raycast.Type.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\State\RaycastStore.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\System\RaycastService.cpp" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\System\RaycastService.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\RaycastConstant.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\Raycasts.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Export.Layer.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\Export.Tick.Hook.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.cpp" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.cpp" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\State\TickStore.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.cpp" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Tick\Type\Export.Tick.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.cpp" />
@@ -224,17 +201,11 @@
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\BridgeLayout.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\Platform.Bridge.Type.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.cpp" />
-    <ClCompile Include="Core\Domain\8_Export\Flat\Type\Export.Flat.Type.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Flat\State\FlatStore.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Flat\State\FlatStore.cpp" />
-    <ClCompile Include="Core\Domain\8_Export\Flat\System\FlatService.ixx" />
-    <ClCompile Include="Core\Domain\8_Export\Flat\System\FlatService.cpp" />
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx" />
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx" />
@@ -414,60 +385,6 @@
     <ClCompile Include="Core\Core.ixx" />
     <ClCompile Include="Core\Gui\Gui.Layer.ixx" />
     <ClCompile Include="Core\DllMain.cpp" />
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp" />
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.cpp" />
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\State\ObjectGraphStore.cpp" />
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\State\ObjectGraphStore.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.cpp" />
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx" />
-    <ClCompile Include="Core\Domain\5_Relations\Relations.Layer.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\State\CollidableStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\Type\Environment.Collidable.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Environment.Layer.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\State\DetailsStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Environment.Details.System.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Environment.Details.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Vitality\DetailsVitality.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Zone\DetailsZone.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Teleporter\DetailsTeleporter.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Lift\DetailsLift.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Barrier\DetailsBarrier.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Players\State\PlayersStore.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.cpp" />
-    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.ixx" />
-    <ClCompile Include="Core\Domain\6_Environment\Players\Type\Environment.Players.Type.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\State\AffordanceStore.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.cpp" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\Type\Egocentric.Affordance.Type.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Egocentric.Layer.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\State\SelfStore.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\System\SelfService.cpp" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\System\SelfService.ixx" />
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\Type\Egocentric.Self.Type.ixx" />
     <ClCompile Include="Core\Runtime\Main\MainThread.cpp" />
     <ClCompile Include="Core\Runtime\Runtime.Layer.ixx" />
     <ClCompile Include="Core\Runtime\Runtime.Thread.ixx" />
@@ -651,6 +568,18 @@
     </ProjectReference>
     <ProjectReference Include="Blam.Runtime\Artemis.Blam.Runtime.vcxproj">
       <Project>{E2A098F8-6B58-5B46-9131-61462C9FD8A6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Contract\Artemis.Contract.vcxproj">
+      <Project>{069C43CD-A84E-5139-BE63-DB6C494AF9C9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Perception\Artemis.Perception.vcxproj">
+      <Project>{17391791-CA10-5F6A-8A15-23AE6A6F6218}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Views\Artemis.Views.vcxproj">
+      <Project>{B9EA51AF-D05F-5CF0-9215-EF210F49C640}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Bridge.Codec\Artemis.Bridge.Codec.vcxproj">
+      <Project>{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,6 +1,6 @@
 export module Platform.Bridge.Type;
 
-export import :Layout;
+export import Contract.Bridge;
 
 import Common.Engine.Type;
 import Platform.Input.Type;
@@ -44,20 +44,6 @@ export namespace Platform::Bridge::Type
     // note: N is at least k_MinLatency and d at most N: each player has one action slot, so the client must not write decision t + N
     // while the game can still read decision t.
     inline constexpr std::uint8_t k_MinLatency{ 2 };
-
-    // Action tick and applied decisions read while the game thread waits for the read of a tick, so they match the state of the
-    // tables copied in that tick.
-    struct BridgeClock
-    {
-        // Last action tick the engine applied before this state.
-        std::uint64_t ActionTick{ 0 };
-
-        // DecisionTick of the bridge action applied to each player (by player table index), 0 = none.
-        std::array<std::uint64_t, k_MaxPlayers> AppliedDecisions{};
-
-        // Whether this state is a decision tick of a connected client (a tick goes out).
-        bool IsDecision{ false };
-    };
 
     // Owner, mode and agents in effect, decided by the bridge thread from the requests of the client (D106).
     struct BridgeControlState

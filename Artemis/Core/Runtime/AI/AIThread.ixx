@@ -2,7 +2,6 @@ export module Runtime.Thread:AI;
 
 import Service.Layer;
 import Platform.Layer;
-import Platform.Bridge.Type;
 import Map.Layer;
 import Resolved.Layer;
 import Tables.Layer;
@@ -10,6 +9,7 @@ import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
+import Export.Flat.Type;
 import Viewer.Camera.State;
 import UI.TickTrace.System;
 import UI.TickDump.System;
@@ -24,7 +24,7 @@ export namespace Runtime::Thread
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using BridgeClock = Platform::Bridge::Type::BridgeClock;
+        using BridgeClock = Export::Flat::Type::BridgeClock;
 
         using CameraStore = Viewer::Camera::State::CameraStore;
 

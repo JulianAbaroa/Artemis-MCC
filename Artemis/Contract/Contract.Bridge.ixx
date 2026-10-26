@@ -3,7 +3,7 @@ module;
 
 #include <cstddef>
 
-export module Platform.Bridge.Type:Layout;
+export module Contract.Bridge;
 
 import Common.Engine.Type;
 import std;

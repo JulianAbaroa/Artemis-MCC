@@ -1,0 +1,328 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Environment">
+      <UniqueIdentifier>{2588a7fc-fef6-5296-820b-f8c062f80bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Aim">
+      <UniqueIdentifier>{f9d92f16-c60d-5f98-bd49-8d734fbf798e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Aim\State">
+      <UniqueIdentifier>{14366fc5-e0c6-5104-bd18-952b39ef001d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Aim\System">
+      <UniqueIdentifier>{97733c69-d1f5-526f-b62d-13525abe203f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Aim\Type">
+      <UniqueIdentifier>{91526a91-8036-5470-9ad3-9d94ed77e12d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Collidable">
+      <UniqueIdentifier>{70470af0-98a9-5564-a987-a854962c0230}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Collidable\State">
+      <UniqueIdentifier>{198b7bf0-dc04-5ba7-8548-6078e77f4471}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Collidable\System">
+      <UniqueIdentifier>{a8547fef-950b-54e1-942f-1b15e6e76665}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Collidable\Type">
+      <UniqueIdentifier>{904f2687-27a0-5d7b-935a-925aa5ecb0cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details">
+      <UniqueIdentifier>{a499b91b-9e05-52cd-a60f-3c191d292289}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\State">
+      <UniqueIdentifier>{2c4159e4-beed-5c60-8f39-54038123f8ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\System">
+      <UniqueIdentifier>{ea475658-65a8-5b7f-ada4-2bb5ad881315}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\System\Barrier">
+      <UniqueIdentifier>{df3eafe7-6034-548c-98b9-5ea38c3b4b89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\System\Lift">
+      <UniqueIdentifier>{6092af24-208e-52d7-9e65-b252dd0bf1af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\System\Teleporter">
+      <UniqueIdentifier>{5d86305e-1b19-538a-9d8f-8e4c83fbc4e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\System\Vitality">
+      <UniqueIdentifier>{1443a58d-7aa2-533e-8f68-0bbe40095804}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\System\Zone">
+      <UniqueIdentifier>{91740040-d497-5669-9d48-79076aafe466}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\Type">
+      <UniqueIdentifier>{69e0b8c8-486f-5fc7-9d9f-d1203aef88b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\Type\Barrier">
+      <UniqueIdentifier>{fbf58689-3742-5956-93ba-f8c31644ebec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\Type\Lift">
+      <UniqueIdentifier>{c6963705-834a-5d12-b9bd-73f29129b194}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\Type\Teleporter">
+      <UniqueIdentifier>{b3a9dbe2-c247-59e9-93fa-13a75034fbe1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\Type\Vitality">
+      <UniqueIdentifier>{2dcdd8f8-60e1-5dfa-a779-c031f7400c99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Details\Type\Zone">
+      <UniqueIdentifier>{9dd0a42b-ea98-500e-949e-202be41ae658}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Entities">
+      <UniqueIdentifier>{2572e1ad-cb61-5698-bb13-d77aa556aab5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Entities\State">
+      <UniqueIdentifier>{6140def6-bff4-5f4c-8aab-a2b76e64e0ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Entities\State\CarriedHandle">
+      <UniqueIdentifier>{1bd62813-0b5a-5c84-b49d-40b709bf541c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Entities\System">
+      <UniqueIdentifier>{a74e3d17-829c-5b52-8496-7998240249b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Entities\Type">
+      <UniqueIdentifier>{94a41ce9-d752-5e45-80de-ddce06ed4a0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Events">
+      <UniqueIdentifier>{b3f8aafd-50c2-5cf5-a678-c350f8f909c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Events\State">
+      <UniqueIdentifier>{0776dbc9-f239-58df-8473-8733bf0b001d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Events\System">
+      <UniqueIdentifier>{5086b2f2-e75c-594f-b29e-b59dbdf86473}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Events\Type">
+      <UniqueIdentifier>{f1dc68c8-0064-5f51-8e27-c517d0f25243}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Match">
+      <UniqueIdentifier>{19a149ac-8353-57cf-a1ea-2c4a7610f909}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Match\State">
+      <UniqueIdentifier>{8fb427c6-6b30-5158-9746-dd588456b868}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Match\System">
+      <UniqueIdentifier>{594a6c3b-6ae2-51be-89b1-c7a387748208}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Match\Type">
+      <UniqueIdentifier>{e74e477c-2f86-57b7-a9b3-30da91324648}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Players">
+      <UniqueIdentifier>{c2b5e12b-4eba-5620-a60f-50c98b22eba1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Players\State">
+      <UniqueIdentifier>{b68895e9-0440-5411-a634-9df05d30cdc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Players\System">
+      <UniqueIdentifier>{7059f5fd-cdd6-5df4-8461-02995708a8a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Environment\Players\Type">
+      <UniqueIdentifier>{48eb9d32-0fa3-5aa7-883e-777c54320889}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations">
+      <UniqueIdentifier>{c44bbbd1-39b7-51d7-9c57-5674493eec73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\Classifier">
+      <UniqueIdentifier>{295962c4-8cff-512b-9b78-f02fa76c90c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\Classifier\State">
+      <UniqueIdentifier>{78454c1e-f81b-5316-a315-ab444813dc7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\Classifier\State\TagClassification">
+      <UniqueIdentifier>{ef4c50c8-402a-5ed1-9523-f528aa63aa21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\Classifier\System">
+      <UniqueIdentifier>{cf477fad-fa87-58db-a7bb-debc3ad47600}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\Classifier\Type">
+      <UniqueIdentifier>{21b14cbd-be42-5e62-9492-06156bdb96eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\ObjectGraph">
+      <UniqueIdentifier>{18d90b63-931f-5286-bf0d-dbd1101268a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\ObjectGraph\State">
+      <UniqueIdentifier>{7226d51d-1992-5d3a-ac75-22f9873befe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\ObjectGraph\System">
+      <UniqueIdentifier>{3389256f-9d3a-5712-9ada-295a555d7689}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Relations\ObjectGraph\Type">
+      <UniqueIdentifier>{556e392b-6ead-51b9-9bae-c0f91b3f6c48}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Environment\Aim\State\AimStore.ixx">
+      <Filter>Environment\Aim\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Aim\System\AimService.cpp">
+      <Filter>Environment\Aim\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Aim\System\AimService.ixx">
+      <Filter>Environment\Aim\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Aim\Type\Environment.Aim.Type.ixx">
+      <Filter>Environment\Aim\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Collidable\State\CollidableStore.ixx">
+      <Filter>Environment\Collidable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Collidable\System\CollidableService.cpp">
+      <Filter>Environment\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Collidable\System\CollidableService.ixx">
+      <Filter>Environment\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Collidable\Type\Environment.Collidable.Type.ixx">
+      <Filter>Environment\Collidable\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\State\DetailsStore.ixx">
+      <Filter>Environment\Details\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Barrier\BarrierDetailsService.cpp">
+      <Filter>Environment\Details\System\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Barrier\BarrierDetailsService.ixx">
+      <Filter>Environment\Details\System\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Environment.Details.System.ixx">
+      <Filter>Environment\Details\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Lift\LiftDetailsService.cpp">
+      <Filter>Environment\Details\System\Lift</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Lift\LiftDetailsService.ixx">
+      <Filter>Environment\Details\System\Lift</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Teleporter\TeleporterDetailsService.cpp">
+      <Filter>Environment\Details\System\Teleporter</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Teleporter\TeleporterDetailsService.ixx">
+      <Filter>Environment\Details\System\Teleporter</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Vitality\VitalityDetailsService.cpp">
+      <Filter>Environment\Details\System\Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Vitality\VitalityDetailsService.ixx">
+      <Filter>Environment\Details\System\Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Zone\ZoneDetailsService.cpp">
+      <Filter>Environment\Details\System\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\System\Zone\ZoneDetailsService.ixx">
+      <Filter>Environment\Details\System\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\Type\Barrier\DetailsBarrier.ixx">
+      <Filter>Environment\Details\Type\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\Type\Environment.Details.Type.ixx">
+      <Filter>Environment\Details\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\Type\Lift\DetailsLift.ixx">
+      <Filter>Environment\Details\Type\Lift</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\Type\Teleporter\DetailsTeleporter.ixx">
+      <Filter>Environment\Details\Type\Teleporter</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\Type\Vitality\DetailsVitality.ixx">
+      <Filter>Environment\Details\Type\Vitality</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Details\Type\Zone\DetailsZone.ixx">
+      <Filter>Environment\Details\Type\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp">
+      <Filter>Environment\Entities\State\CarriedHandle</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx">
+      <Filter>Environment\Entities\State\CarriedHandle</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Entities\State\EntitiesStore.ixx">
+      <Filter>Environment\Entities\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Entities\System\EntitiesService.cpp">
+      <Filter>Environment\Entities\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Entities\System\EntitiesService.ixx">
+      <Filter>Environment\Entities\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Entities\Type\Environment.Entities.Type.ixx">
+      <Filter>Environment\Entities\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Environment.Layer.ixx">
+      <Filter>Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Events\State\EventsStore.ixx">
+      <Filter>Environment\Events\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Events\System\EventsService.cpp">
+      <Filter>Environment\Events\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Events\System\EventsService.ixx">
+      <Filter>Environment\Events\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Events\Type\Environment.Events.Type.ixx">
+      <Filter>Environment\Events\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Match\State\MatchStore.ixx">
+      <Filter>Environment\Match\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Match\System\MatchService.cpp">
+      <Filter>Environment\Match\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Match\System\MatchService.ixx">
+      <Filter>Environment\Match\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Match\Type\Environment.Match.Type.ixx">
+      <Filter>Environment\Match\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Players\State\PlayersStore.ixx">
+      <Filter>Environment\Players\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Players\System\PlayersService.cpp">
+      <Filter>Environment\Players\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Players\System\PlayersService.ixx">
+      <Filter>Environment\Players\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment\Players\Type\Environment.Players.Type.ixx">
+      <Filter>Environment\Players\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Classifier\State\ClassifierStore.ixx">
+      <Filter>Relations\Classifier\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp">
+      <Filter>Relations\Classifier\State\TagClassification</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Classifier\State\TagClassification\TagClassificationsStore.ixx">
+      <Filter>Relations\Classifier\State\TagClassification</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Classifier\System\ClassifierService.cpp">
+      <Filter>Relations\Classifier\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Classifier\System\ClassifierService.ixx">
+      <Filter>Relations\Classifier\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Classifier\Type\Relations.Classifier.Type.ixx">
+      <Filter>Relations\Classifier\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\ObjectGraph\State\ObjectGraphStore.cpp">
+      <Filter>Relations\ObjectGraph\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\ObjectGraph\State\ObjectGraphStore.ixx">
+      <Filter>Relations\ObjectGraph\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\ObjectGraph\System\ObjectGraphService.cpp">
+      <Filter>Relations\ObjectGraph\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\ObjectGraph\System\ObjectGraphService.ixx">
+      <Filter>Relations\ObjectGraph\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
+      <Filter>Relations\ObjectGraph\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Relations\Relations.Layer.ixx">
+      <Filter>Relations</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

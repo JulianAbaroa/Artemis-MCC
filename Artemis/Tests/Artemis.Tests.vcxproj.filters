@@ -7,11 +7,17 @@
     <Filter Include="Common">
       <UniqueIdentifier>{18814560-6577-49c9-b9d5-355f846785b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Perception">
+      <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Support">
       <UniqueIdentifier>{10f96d0a-30c8-4e39-a948-e5ec6e1d76f8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Perception\PipelineTests.cpp">
+      <Filter>Perception</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Blam.ixx">
       <Filter>Support</Filter>
     </ClCompile>

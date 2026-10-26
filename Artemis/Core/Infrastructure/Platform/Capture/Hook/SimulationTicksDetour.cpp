@@ -2,14 +2,13 @@ module;
 
 #include "External/minhook/include/MinHook.h"
 
-module Export.Tick.Hook;
+module Platform.Capture.Hook;
 import :SimulationTicks;
 
 import Platform.Memory.Type;
 import Platform.Lifecycle.Type;
 import Platform.Hook.System;
 import Datum.Object.Type;
-import Export.Tick.Type;
 import std;
 
 namespace
@@ -20,13 +19,14 @@ namespace
     using Platform::Hook::System::k_DrainTimeout;
     using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
-    using Export::Tick::Type::k_EndRoundNoWinner;
-    using Export::Tick::Type::k_EndRoundScriptReason;
-
     constexpr float k_DefaultTimeScale{ 1.0f };
+
+    // Arguments of the end_round action of Megalo: no fixed winner, reason 0 (D144).
+    constexpr std::int32_t k_EndRoundNoWinner{ -1 };
+    constexpr std::int32_t k_EndRoundScriptReason{ 0 };
 }
 
-namespace Export::Tick::Hook
+namespace Platform::Capture::Hook
 {
     auto __fastcall SimulationTicksDetour::HookedSimulationTicks(int ticksToAdvance, float* remainingTime) -> void
     {

@@ -80,6 +80,8 @@ export namespace Platform
         using ObjectTableLocator = Platform::Capture::Hook::ObjectTableLocator;
         using PlayerTableLocator = Platform::Capture::Hook::PlayerTableLocator;
         using InteractionTableLocator = Platform::Capture::Hook::InteractionTableLocator;
+        using ExecuteGameFrameDetour = Platform::Capture::Hook::ExecuteGameFrameDetour;
+        using SimulationTicksDetour = Platform::Capture::Hook::SimulationTicksDetour;
 
         using FrameContext = Platform::Render::Type::FrameContext;
         using RenderStore = Platform::Render::State::RenderStore;
@@ -121,7 +123,10 @@ export namespace Platform
             m_ResizeBuffersDetour(service.m_Log, m_RenderStore, m_RenderService, m_SwapChainLocator),
             m_ObjectTableLocator(service.m_Log, m_AOBService, m_CaptureStore),
             m_PlayerTableLocator(service.m_Log, m_AOBService, m_CaptureStore),
-            m_InteractionTableLocator(service.m_Log, m_AOBService, m_CaptureStore)
+            m_InteractionTableLocator(service.m_Log, m_AOBService, m_CaptureStore),
+            m_ExecuteGameFrameDetour(service.m_Log, service.m_TelemetryStore, m_AOBService, m_LifecycleStore),
+            m_SimulationTicksDetour(service.m_Log, service.m_TelemetryStore, m_AOBService, m_LifecycleStore, m_CaptureStore,
+                m_ExecuteGameFrameDetour)
         {
             // The button hook needs the engine up, so it is installed on engine initialization.
             // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
@@ -137,6 +142,10 @@ export namespace Platform
                 m_ObjectTableLocator.FindAndStoreTableBase();
                 m_PlayerTableLocator.FindAndStoreTableBase();
                 m_InteractionTableLocator.FindAndStoreTableBase();
+
+                // ExecuteGameFrame goes first, so the first SimulationTicks call already counts every tick.
+                m_ExecuteGameFrameDetour.Install();
+                m_SimulationTicksDetour.Install();
             });
 
             // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
@@ -147,6 +156,8 @@ export namespace Platform
                 m_PlayerActionDetour.Uninstall();
                 m_GetButtonStateDetour.Uninstall();
                 m_OpenMapDetour.Uninstall();
+                m_SimulationTicksDetour.Uninstall();
+                m_ExecuteGameFrameDetour.Uninstall();
             });
 
             // The virtual input is not cleared: the sources picked in the UI stay across matches.
@@ -224,6 +235,8 @@ export namespace Platform
         ObjectTableLocator m_ObjectTableLocator;
         PlayerTableLocator m_PlayerTableLocator;
         InteractionTableLocator m_InteractionTableLocator;
+        ExecuteGameFrameDetour m_ExecuteGameFrameDetour;
+        SimulationTicksDetour m_SimulationTicksDetour;
 
     private:
         static constexpr milliseconds k_RenderShutdownTimeout{ 500 };

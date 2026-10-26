@@ -2,7 +2,7 @@
 test_components.py
 Boundaries of the components that already are projects (redesign D153; Ignore Rediseno/02 sec. 3.5, D156, D165): each one imports
 only the modules of the components it may depend on, references only those projects, and lists every source it owns.
-Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a, M4b (D182-D188) and M5a (D189-D197); each later step
+Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a, M4b (D182-D188), M5a (D189-D197) and M5b (D198-D201); each later step
 that creates a component adds it to COMPONENTS.
 They read the files of the repo (git ls-files), they do not build.
 """
@@ -25,7 +25,32 @@ COMPONENTS = {
     "Artemis/Blam.Layout": ("Artemis.Blam.Layout.vcxproj", {"Common", "Datum", "Layout"}, {"Common"}),
     "Artemis/Blam.Runtime": ("Artemis.Blam.Runtime.vcxproj", {"Common", "Datum", "Layout", "Resolved", "Tables"},
                              {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout"}),
+    "Artemis/Contract": ("Artemis.Contract.vcxproj", {"Common", "Contract"}, {"Common"}),
+    "Artemis/Perception": ("Artemis.Perception.vcxproj", {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment"},
+                           {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime"}),
+    "Artemis/Views": ("Artemis.Views.vcxproj",
+                      {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment", "Egocentric"},
+                      {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception"}),
+    "Artemis/Bridge.Codec": ("Artemis.Bridge.Codec.vcxproj",
+                             {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment", "Egocentric", "Export",
+                              "Contract"},
+                             {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Contract"}),
 }
+
+# The pure projects of M5b (D198): what was the Domain after Blam.Runtime. None of them touches the process, the wiring or a layer above.
+PURE_PROJECTS = ("Artemis/Contract", "Artemis/Perception", "Artemis/Views", "Artemis/Bridge.Codec")
+NOT_PURE_ROOTS = {"Service", "Platform", "Infrastructure", "Runtime", "UI", "Viewer", "Gui", "Core"}
+NOT_PURE_WORDS = ("windows.h", "MinHook", "reinterpret_cast", "OnCleanup(", "OnEngineInitialized(", "OnUnhook(")
+LAYERS = (("Relations", "Artemis/Perception/Relations/Relations.Layer.ixx", ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables")),
+          ("Environment", "Artemis/Perception/Environment/Environment.Layer.ixx",
+           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables", "Relations::Layer& relations")),
+          ("Egocentric", "Artemis/Views/Egocentric.Layer.ixx",
+           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables", "Relations::Layer& relations",
+            "Environment::Layer& environment")),
+          ("Export", "Artemis/Bridge.Codec/Export.Layer.ixx",
+           ("Resolved::Layer& resolved", "Tables::Layer& tables", "Relations::Layer& relations", "Environment::Layer& environment",
+            "Egocentric::Layer& egocentric")))
+TICK_DETOURS = ("ExecuteGameFrameDetour", "SimulationTicksDetour")
 
 # The interpretation of the live objects (02 sec. 3.2): a project since M5a (D189), it reads only the Snapshot (D184).
 RUNTIME = "Artemis/Blam.Runtime"
@@ -54,6 +79,10 @@ def Tracked(*paths):
 
 def Sources(folder):
     return [p for p in Tracked(folder) if p.endswith((".ixx", ".cpp")) and "/x64/" not in p]
+
+
+def PureSources():
+    return [path for folder in PURE_PROJECTS for path in Sources(folder)]
 
 
 def Read(path):
@@ -98,12 +127,13 @@ def test_component_project_lists_every_source(folder):
 
 def test_dll_project_references_the_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
-    assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime"} <= found
+    assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views",
+            "Bridge.Codec"} <= found
 
 
 def test_tests_project_references_the_blam_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Tests/Artemis.Tests.vcxproj"))}
-    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime"} <= found
+    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views", "Bridge.Codec"} <= found
 
 
 def test_old_map_folders_are_gone():
@@ -182,7 +212,7 @@ def test_tables_hold_no_process_address():
         text = Read(path)
         assert not member.search(text), f"{path}: a member of type std::uintptr_t"
         assert not re.search(r"\b(Address|BaseAddress)\b", text), path
-    wrong = [p for p in Sources("Artemis/Core/Domain") if re.search(r"\.Address\b", Read(p))]
+    wrong = [p for p in PureSources() if re.search(r"\.Address\b", Read(p))]
     assert not wrong, f"the Domain checks an address of the process: {wrong}"
 
 
@@ -234,7 +264,7 @@ def test_shadow_mode_is_gone():
 
 
 def test_the_domain_does_not_read_the_game():
-    wrong = [p for p in Sources("Artemis/Core/Domain") if "MemoryReaderService" in Read(p)]
+    wrong = [p for p in PureSources() if "MemoryReaderService" in Read(p)]
     assert not wrong, wrong
 
 
@@ -251,3 +281,76 @@ def test_read_window_ends_right_after_the_copy():
     first_table = text.index("UpdateObjectTable(")
     assert capture < end_read < first_table
 
+
+# ---- M5b: Perception, Views, Bridge.Codec and Contract (D198-D201)
+
+def test_old_domain_folder_is_gone():
+    assert Tracked("Artemis/Core/Domain") == []
+    assert not os.path.exists(os.path.join(REPO, "Artemis/Core/Domain"))
+
+
+def test_pure_projects_do_not_touch_the_process_or_the_wiring():
+    sources = PureSources()
+    assert sources
+    for path in sources:
+        text = Read(path)
+        assert not (ImportRoots(path) & NOT_PURE_ROOTS), f"{path}: imports {sorted(ImportRoots(path) & NOT_PURE_ROOTS)}"
+        for word in NOT_PURE_WORDS:
+            assert word not in text, f"{path}: {word}"
+
+
+def test_contract_is_the_generated_bridge_layout():
+    sources = Sources("Artemis/Contract")
+    assert sources == ["Artemis/Contract/Contract.Bridge.ixx"], sources
+    text = Read(sources[0])
+    assert text.splitlines()[0].startswith("// Generated by"), text.splitlines()[0]
+    assert re.search(r"^export module Contract\.Bridge;", text, re.MULTILINE)
+    assert ImportRoots(sources[0]) <= {"Common"}
+
+
+def test_bridge_type_reexports_the_contract_and_the_clock_moved_to_flat():
+    bridge = Read("Artemis/Core/Infrastructure/Platform/Bridge/Type/Platform.Bridge.Type.ixx")
+    assert "export import Contract.Bridge;" in bridge
+    assert not re.search(r"\bstruct\s+BridgeClock\b", bridge)
+    assert re.search(r"\bstruct\s+BridgeClock\b", Read("Artemis/Bridge.Codec/Flat/Type/Export.Flat.Type.ixx"))
+    assert not Tracked("Artemis/Core/Infrastructure/Platform/Bridge/Type/BridgeLayout.ixx")
+
+
+def test_tick_detours_live_in_platform_capture_hook():
+    found = [p for p in Sources("Artemis") if os.path.basename(p).split(".")[0] in TICK_DETOURS]
+    assert sorted(os.path.basename(p) for p in found) == sorted(f"{name}.{ext}" for name in TICK_DETOURS for ext in ("cpp", "ixx"))
+    assert all(p.startswith(CAPTURE_HOOK) for p in found), found
+    for name, part in (("ExecuteGameFrameDetour", "ExecuteGameFrame"), ("SimulationTicksDetour", "SimulationTicks")):
+        assert Read(f"{CAPTURE_HOOK}{name}.ixx").startswith(f"export module Platform.Capture.Hook:{part};")
+        assert f"export import :{part};" in Read(CAPTURE_HOOK + "../Platform.Capture.Hook.ixx")
+    layer = Read("Artemis/Core/Infrastructure/Platform/Platform.Layer.ixx")
+    for name in TICK_DETOURS:
+        assert f"m_{name}.Install();" in layer and f"m_{name}.Uninstall();" in layer
+    assert not [p for p in Tracked("Artemis") if os.path.basename(p) == "Export.Tick.Hook.ixx"]
+    for path in Sources("Artemis/Bridge.Codec"):
+        text = Read(path)
+        for word in ("ExecuteGameFrameFunction", "SimulationTicksFunction", "EndRoundFunction"):
+            assert word not in text, f"{path}: {word}"
+
+
+@pytest.mark.parametrize("name,path,parameters", LAYERS)
+def test_layers_are_pure_with_a_cleanup(name, path, parameters):
+    text = Read(path)
+    constructor = r"\bLayer\(\s*" + r"\s*,\s*".join(re.escape(p).replace(r"\ ", r"\s+") for p in parameters) + r"\s*\)"
+    assert re.search(constructor, text), f"{name}: constructor"
+    assert re.search(r"auto\s+Cleanup\(\)\s*->\s*void", text), f"{name}: Cleanup"
+    assert "Service::Layer" not in text and "Platform::Layer" not in text and "OnCleanup" not in text, name
+
+
+def test_core_cleans_the_seven_layers_in_order():
+    text = Read("Artemis/Core/Core.cpp")
+    order = ["m_Relations", "m_Environment", "m_Egocentric", "m_Export", "m_Tables", "m_Map", "m_Resolved"]
+    positions = [text.index(f"{member}.Cleanup()") for member in order]
+    assert positions == sorted(positions), positions
+
+
+def test_generate_bridge_writes_the_contract():
+    text = Read("Tools/TagTranspiler/GenerateBridge.py")
+    assert '"Artemis", "Contract", "Contract.Bridge.ixx"' in text
+    assert '"export module Contract.Bridge;"' in text
+    assert "BridgeLayout.ixx" not in text

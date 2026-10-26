@@ -64,6 +64,18 @@
     <ProjectReference Include="..\Blam.Runtime\Artemis.Blam.Runtime.vcxproj">
       <Project>{E2A098F8-6B58-5B46-9131-61462C9FD8A6}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Contract\Artemis.Contract.vcxproj">
+      <Project>{069C43CD-A84E-5139-BE63-DB6C494AF9C9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Perception\Artemis.Perception.vcxproj">
+      <Project>{17391791-CA10-5F6A-8A15-23AE6A6F6218}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Views\Artemis.Views.vcxproj">
+      <Project>{B9EA51AF-D05F-5CF0-9215-EF210F49C640}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Bridge.Codec\Artemis.Bridge.Codec.vcxproj">
+      <Project>{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Blam\LayoutTests.cpp" />
@@ -77,6 +89,7 @@
     <ClCompile Include="Common\MathTypeTests.cpp" />
     <ClCompile Include="Common\SnapshotTests.cpp" />
     <ClCompile Include="Common\TextTests.cpp" />
+    <ClCompile Include="Perception\PipelineTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />

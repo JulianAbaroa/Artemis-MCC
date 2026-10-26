@@ -2,7 +2,7 @@ module;
 
 #include "External/minhook/include/MinHook.h"
 
-module Export.Tick.Hook;
+module Platform.Capture.Hook;
 import :ExecuteGameFrame;
 
 import Platform.Memory.Type;
@@ -16,7 +16,7 @@ namespace
     using Platform::Hook::System::k_DrainTimeout;
 }
 
-namespace Export::Tick::Hook
+namespace Platform::Capture::Hook
 {
     auto __fastcall ExecuteGameFrameDetour::HookedExecuteGameFrame() -> void
     {

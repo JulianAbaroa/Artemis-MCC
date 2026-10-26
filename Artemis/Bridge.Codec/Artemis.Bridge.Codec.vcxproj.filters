@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Flat">
+      <UniqueIdentifier>{46a5951f-dc39-5969-892b-9e89628f7efe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Flat\State">
+      <UniqueIdentifier>{bb7b997f-fb32-5a51-a62e-79853b550b08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Flat\System">
+      <UniqueIdentifier>{8b9f9f3e-0b53-5246-93b1-7747deddafba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Flat\Type">
+      <UniqueIdentifier>{ba3356fe-5833-500f-8be8-bb31322926a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tick">
+      <UniqueIdentifier>{2892a409-564f-552d-a100-99dd88a34d24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tick\State">
+      <UniqueIdentifier>{04dd1fda-6b1b-5909-8122-1c64935189de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tick\System">
+      <UniqueIdentifier>{ebb4bdad-e8f1-5081-8166-f47b5ac2323b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tick\Type">
+      <UniqueIdentifier>{bd3c126e-1f3b-5c13-8d8b-c01ff9f51717}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Export.Layer.ixx" />
+    <ClCompile Include="Flat\State\FlatStore.cpp">
+      <Filter>Flat\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Flat\State\FlatStore.ixx">
+      <Filter>Flat\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Flat\System\FlatService.cpp">
+      <Filter>Flat\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Flat\System\FlatService.ixx">
+      <Filter>Flat\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Flat\Type\Export.Flat.Type.ixx">
+      <Filter>Flat\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Tick\State\TickStore.ixx">
+      <Filter>Tick\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Tick\System\TickService.cpp">
+      <Filter>Tick\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Tick\System\TickService.ixx">
+      <Filter>Tick\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Tick\Type\Export.Tick.Type.ixx">
+      <Filter>Tick\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

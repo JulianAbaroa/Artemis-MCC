@@ -1,6 +1,6 @@
 export module Export.Flat.System;
 
-import Platform.Bridge.Type;
+import Contract.Bridge;
 import Export.Tick.Type;
 import std;
 

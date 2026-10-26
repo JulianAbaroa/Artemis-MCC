@@ -7,6 +7,7 @@ import Platform.Input.Type;
 import Platform.Input.State;
 import Platform.Bridge.Type;
 import Platform.Bridge.State;
+import Export.Flat.Type;
 import std;
 
 export namespace Platform::Bridge::System
@@ -33,7 +34,7 @@ export namespace Platform::Bridge::System
         using BridgeRegion = Platform::Bridge::Type::BridgeRegion;
         using BridgeTick = Platform::Bridge::Type::BridgeTick;
         using BridgeAction = Platform::Bridge::Type::BridgeAction;
-        using BridgeClock = Platform::Bridge::Type::BridgeClock;
+        using BridgeClock = Export::Flat::Type::BridgeClock;
         using BridgeControlState = Platform::Bridge::Type::BridgeControlState;
         using BridgeHookState = Platform::Bridge::Type::BridgeHookState;
         using BridgeLinkState = Platform::Bridge::Type::BridgeLinkState;

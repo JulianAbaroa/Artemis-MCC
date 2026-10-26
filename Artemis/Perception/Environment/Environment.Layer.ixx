@@ -1,7 +1,6 @@
 export module Environment.Layer;
 
-import Service.Layer;
-import Platform.Layer;
+import Common.Log.System;
 import Resolved.Layer;
 import Tables.Layer;
 import Relations.Layer;
@@ -22,9 +21,13 @@ import Environment.Match.System;
 
 export namespace Environment
 {
+    // Builds the entities, players, details, aim, collidables, events and match status of the world from the tables.
+    // note: Pure: the owner connects the lifecycle (D178).
     class Layer
     {
     private:
+        using Log = Common::Log::System::Log;
+
         using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
         using ZoneDetailsStore = Environment::Details::State::ZoneDetailsStore;
         using TeleporterDetailsStore = Environment::Details::State::TeleporterDetailsStore;
@@ -51,34 +54,18 @@ export namespace Environment
         using MatchService = Environment::Match::System::MatchService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform, Resolved::Layer& resolved,
-            Tables::Layer& tables, Relations::Layer& relations) :
-            m_VitalityDetailsService(service.m_Log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, m_VitalityDetailsStore),
-            m_ZoneDetailsService(service.m_Log, tables.m_ObjectStore, relations.m_ClassifierStore, m_ZoneDetailsStore),
-            m_TeleporterDetailsService(service.m_Log, tables.m_ObjectStore, relations.m_ClassifierStore, m_TeleporterDetailsStore),
-            m_LiftDetailsService(service.m_Log, tables.m_ObjectStore, relations.m_ClassifierStore, m_LiftDetailsStore),
-            m_BarrierDetailsService(service.m_Log, tables.m_ObjectStore, relations.m_ClassifierStore, m_BarrierDetailsStore),
-            m_EntitiesService(service.m_Log, tables.m_ObjectStore, tables.m_PlayerStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
-            m_PlayersService(service.m_Log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
-            m_CollidableService(service.m_Log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
-            m_AimService(service.m_Log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
+        Layer(Log& log, Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations) :
+            m_VitalityDetailsService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, m_VitalityDetailsStore),
+            m_ZoneDetailsService(log, tables.m_ObjectStore, relations.m_ClassifierStore, m_ZoneDetailsStore),
+            m_TeleporterDetailsService(log, tables.m_ObjectStore, relations.m_ClassifierStore, m_TeleporterDetailsStore),
+            m_LiftDetailsService(log, tables.m_ObjectStore, relations.m_ClassifierStore, m_LiftDetailsStore),
+            m_BarrierDetailsService(log, tables.m_ObjectStore, relations.m_ClassifierStore, m_BarrierDetailsStore),
+            m_EntitiesService(log, tables.m_ObjectStore, tables.m_PlayerStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
+            m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
+            m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
+            m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
             m_EventsService(tables.m_GameStore, m_EventsStore),
-            m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_MatchStore)
-        {
-            platform.m_LifecycleService.OnCleanup([this] {
-                m_VitalityDetailsService.Cleanup();
-                m_ZoneDetailsService.Cleanup();
-                m_TeleporterDetailsService.Cleanup();
-                m_LiftDetailsService.Cleanup();
-                m_BarrierDetailsService.Cleanup();
-                m_EntitiesService.Cleanup();
-                m_PlayersService.Cleanup();
-                m_CollidableService.Cleanup();
-                m_AimService.Cleanup();
-                m_EventsService.Cleanup();
-                m_MatchService.Cleanup();
-            });
-        }
+            m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_MatchStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
@@ -110,5 +97,21 @@ export namespace Environment
         AimService m_AimService;
         EventsService m_EventsService;
         MatchService m_MatchService;
+
+        // Removes the details, entities, players, collidables, aim, events and match status.
+        auto Cleanup() -> void
+        {
+            m_VitalityDetailsService.Cleanup();
+            m_ZoneDetailsService.Cleanup();
+            m_TeleporterDetailsService.Cleanup();
+            m_LiftDetailsService.Cleanup();
+            m_BarrierDetailsService.Cleanup();
+            m_EntitiesService.Cleanup();
+            m_PlayersService.Cleanup();
+            m_CollidableService.Cleanup();
+            m_AimService.Cleanup();
+            m_EventsService.Cleanup();
+            m_MatchService.Cleanup();
+        }
     };
 }

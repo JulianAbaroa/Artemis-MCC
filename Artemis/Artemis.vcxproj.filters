@@ -4,6 +4,9 @@
     <Filter Include="Core\Infrastructure\Platform\Capture">
       <UniqueIdentifier>{6c62a270-9add-5c00-9791-3f20a3c6ddd3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Capture\Type">
+      <UniqueIdentifier>{8731cf6e-62ee-5996-8e82-f2b5e920c94b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Capture\Hook">
       <UniqueIdentifier>{54387136-736b-5286-9ee5-6bf86b55551e}</UniqueIdentifier>
     </Filter>
@@ -121,18 +124,6 @@
     <Filter Include="Core\Infrastructure\Platform\Bridge\System">
       <UniqueIdentifier>{987218d9-2764-4405-806f-c55b8e2f885b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\8_Export\Flat">
-      <UniqueIdentifier>{46cb86cb-e21d-4a41-99db-d487ce7f1132}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Flat\Type">
-      <UniqueIdentifier>{8e52f922-5122-4fad-9213-4d3371221093}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Flat\State">
-      <UniqueIdentifier>{fab50192-04ef-47ca-925c-6f24a848fbb3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Flat\System">
-      <UniqueIdentifier>{caf8cf32-5cab-429a-acd3-189dbdd07e75}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Runtime\Bridge">
       <UniqueIdentifier>{a9716d0e-cb24-4b98-846e-5345822dc127}</UniqueIdentifier>
     </Filter>
@@ -234,192 +225,6 @@
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Render\Type">
       <UniqueIdentifier>{96694708-945e-402c-8207-32a77b6d2358}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain">
-      <UniqueIdentifier>{c9089062-e4df-43b3-9795-6cc54284f159}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Events">
-      <UniqueIdentifier>{7c13fadc-c793-40bd-b1e2-f887522a8f2e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Events\Type">
-      <UniqueIdentifier>{59b5c21e-e9e5-414a-adb4-4a344e701c17}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Events\State">
-      <UniqueIdentifier>{60e4cbe5-59ff-449c-bf15-eab237c69421}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Events\System">
-      <UniqueIdentifier>{a8686c53-81d4-4fda-9b45-9e99208a2561}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Match">
-      <UniqueIdentifier>{360c7725-2dc0-430e-85d1-c7c48b5d165a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Match\Type">
-      <UniqueIdentifier>{0f2b9c5a-17bb-4a9d-9e15-fe586c1dd89b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Match\State">
-      <UniqueIdentifier>{50b59b06-b9f0-42dd-b9c3-757fcd6eb7c5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Match\System">
-      <UniqueIdentifier>{4bf5b3a9-279a-41be-857a-fe0e12a1a6a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations">
-      <UniqueIdentifier>{c956f9d7-fa4d-4b1c-9d3f-de49ad9898fb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\Classifier">
-      <UniqueIdentifier>{52a51614-3c94-4df4-b7b2-3694c2087562}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\Classifier\Type">
-      <UniqueIdentifier>{7a6d0f7c-bcca-442c-927d-82afe2200566}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\Classifier\State\TagClassification">
-      <UniqueIdentifier>{1ed60dc0-714a-44b7-add8-7b871006c223}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\Classifier\State">
-      <UniqueIdentifier>{66b94e3e-41e7-4ee0-bda5-9500ff7b8185}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\Classifier\System">
-      <UniqueIdentifier>{c655fb2c-407a-43fb-94cf-79f44c31fd48}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\ObjectGraph">
-      <UniqueIdentifier>{27a4f736-3440-491d-95aa-7926f936ec6d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\ObjectGraph\Type">
-      <UniqueIdentifier>{7d7ef5ef-2438-4b78-a236-7f35ae76fe97}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\ObjectGraph\State">
-      <UniqueIdentifier>{5129c154-7aa3-42ce-8a3a-bac3be713bb5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\5_Relations\ObjectGraph\System">
-      <UniqueIdentifier>{243ac1db-66ef-4c71-bd3e-687c6af032a8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment">
-      <UniqueIdentifier>{ae9d5c10-0a62-4dbf-b244-47ff3fc76de9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Collidable">
-      <UniqueIdentifier>{81192614-ecc6-4dc4-b5ef-a37aaec1bc0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Collidable\Type">
-      <UniqueIdentifier>{224e8a7b-5b76-44ac-bc7b-202bc720168f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Collidable\State">
-      <UniqueIdentifier>{049bca07-e1aa-4658-b7b4-4616934f1b13}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Collidable\System">
-      <UniqueIdentifier>{222341c2-07d5-47fd-ae9b-1b77917ca80d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details">
-      <UniqueIdentifier>{b44988e8-bb60-49fc-a6de-b7ce862390df}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\Type">
-      <UniqueIdentifier>{440a80a7-4e88-4d1d-a1fe-02bdfa55fb27}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\Type\Vitality">
-      <UniqueIdentifier>{64f06385-23b4-4dfc-9dc8-926964173393}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\State">
-      <UniqueIdentifier>{c2292f12-ef33-436e-b2df-2345f4805ce0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\System">
-      <UniqueIdentifier>{04bd4357-12cb-4004-88fb-f34deb5f63e9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\System\Vitality">
-      <UniqueIdentifier>{53f04a06-2756-457e-96eb-f4ae4231ac92}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\Type\Zone">
-      <UniqueIdentifier>{9780b89d-48cc-4616-a42e-afcf18157c16}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\System\Zone">
-      <UniqueIdentifier>{c8c2689b-092c-4612-8501-8a1d69afd4f3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\Type\Teleporter">
-      <UniqueIdentifier>{6e3af8af-47a9-4bd5-9631-6c4d72c309d9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\System\Teleporter">
-      <UniqueIdentifier>{defcf7d3-5845-4e74-ac7b-133062ce7640}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\Type\Lift">
-      <UniqueIdentifier>{396801f6-ce9d-4694-9b2d-2ef432cf3e31}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\System\Lift">
-      <UniqueIdentifier>{8ac41c46-acff-450b-b081-d664cfab624e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\Type\Barrier">
-      <UniqueIdentifier>{59a740f9-cb95-422b-96ca-babf8daaaa26}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Details\System\Barrier">
-      <UniqueIdentifier>{9f193407-7dd2-41f6-b319-ae90cab8ec82}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Entities">
-      <UniqueIdentifier>{359e4fd3-c29a-4875-88c5-e97af7f3713e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Entities\Type">
-      <UniqueIdentifier>{d553b791-40c5-4d89-bcf8-e1192e0151f6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Entities\State">
-      <UniqueIdentifier>{4d7a3a39-f9dc-4448-b721-b081c97b0390}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Entities\State\CarriedHandle">
-      <UniqueIdentifier>{d2946d93-73cc-46a5-bfe9-a7fef1eda4b4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Entities\System">
-      <UniqueIdentifier>{edbc0e99-a560-4b12-a33c-d453e2237b04}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Players">
-      <UniqueIdentifier>{eb8e4a17-d082-4ecd-9a1f-4456ca7e7326}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Players\Type">
-      <UniqueIdentifier>{ae2db257-5e85-4759-89e8-cf6810881691}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Players\State">
-      <UniqueIdentifier>{7cfe0a56-958a-468d-be6d-74ef2ea1ee6e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Players\System">
-      <UniqueIdentifier>{a753318d-5ead-43be-a516-7b3f2b3e8059}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric">
-      <UniqueIdentifier>{40efa74b-c5b9-447b-89e7-7ad9bed66f3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Affordance">
-      <UniqueIdentifier>{35bdff82-fe65-4543-afc9-d9cb4e7b2dbf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Affordance\Type">
-      <UniqueIdentifier>{89537ffa-0186-41dc-8fd4-3bed7c8ad873}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Affordance\State">
-      <UniqueIdentifier>{df93de62-fb0d-4d1f-b042-e5ff884bdd0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Affordance\System">
-      <UniqueIdentifier>{25fc4d7f-05e1-4794-8e24-a4362b4bf323}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Self">
-      <UniqueIdentifier>{130a784e-f97f-4533-a504-d95ad6feae45}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Self\Type">
-      <UniqueIdentifier>{8065e5a4-b7bb-45b3-808e-d83fe1ac542b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Self\State">
-      <UniqueIdentifier>{57d6dee4-ec7b-4351-b94b-ce390f422e5b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Self\System">
-      <UniqueIdentifier>{2643f261-7f19-4b31-a157-ed2fc6322247}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export">
-      <UniqueIdentifier>{2bebb139-8c05-4a28-8c05-986961425058}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Tick">
-      <UniqueIdentifier>{9bb5ae9d-5dca-4c03-aff2-a2ebb5fa9b3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Tick\Type">
-      <UniqueIdentifier>{748c7a6a-32bd-49e2-bdf0-16ad14df6550}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Tick\State">
-      <UniqueIdentifier>{77b104ab-1e23-434c-8cca-be2c3894bf9c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Tick\System">
-      <UniqueIdentifier>{ad15f119-02ac-49c0-9ddc-d0a866c5881c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\8_Export\Tick\Hook">
-      <UniqueIdentifier>{ff1c2968-814a-4d49-a04a-8d2712eb0735}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Viewer">
       <UniqueIdentifier>{75d4e7ce-0aa5-444c-a1cc-64e600b598fe}</UniqueIdentifier>
@@ -685,18 +490,6 @@
     <Filter Include="Core\Gui\Widget\System\SearchFilter">
       <UniqueIdentifier>{aa66a3bb-1dc5-4790-944b-b7ec51edf58d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Raycast">
-      <UniqueIdentifier>{1e630758-4d1a-4dff-bc23-c79a861f3bc6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Raycast\Type">
-      <UniqueIdentifier>{095d9896-7fab-4c77-8003-c5604fafe304}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Raycast\State">
-      <UniqueIdentifier>{d03e44e2-41b4-43a3-81b2-22cc5d016b89}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\7_Egocentric\Raycast\System">
-      <UniqueIdentifier>{9b25c79f-468b-4b9f-992f-1accf7740671}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Gui\Style">
       <UniqueIdentifier>{78164a2a-6422-49a0-876e-f5e38b94bb16}</UniqueIdentifier>
     </Filter>
@@ -727,18 +520,6 @@
     <Filter Include="Core\UI\DefinitionsInspector\System">
       <UniqueIdentifier>{73d74bdf-8611-4c8f-b416-fdf80ea5ad82}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Domain\6_Environment\Aim">
-      <UniqueIdentifier>{04e45202-3cec-4268-afca-dd9ff0e78d1d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Aim\Type">
-      <UniqueIdentifier>{240427c7-c311-4a19-8d9d-e7d525fe203a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Aim\State">
-      <UniqueIdentifier>{47134b01-8389-495b-860c-4909b8ce4b5a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Domain\6_Environment\Aim\System">
-      <UniqueIdentifier>{8a441872-8e9b-46e9-b668-a3f2b363cf2f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui\imgui.h">
@@ -767,6 +548,18 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp">
       <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
     </ClCompile>
@@ -799,6 +592,9 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.ixx">
       <Filter>Core\Infrastructure\Platform\Capture\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Capture\Type\Platform.Capture.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Capture\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx">
       <Filter>Core\UI\TickDump\Type</Filter>
@@ -884,159 +680,6 @@
     <ClCompile Include="External\minhook\src\hde\hde64.c">
       <Filter>External\minhook\hde</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\Type\Relations.Classifier.Type.ixx">
-      <Filter>Core\Domain\5_Relations\Classifier\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.ixx">
-      <Filter>Core\Domain\5_Relations\Classifier\State\TagClassification</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\TagClassification\TagClassificationsStore.cpp">
-      <Filter>Core\Domain\5_Relations\Classifier\State\TagClassification</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\State\ClassifierStore.ixx">
-      <Filter>Core\Domain\5_Relations\Classifier\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.cpp">
-      <Filter>Core\Domain\5_Relations\Classifier\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Classifier\System\ClassifierService.ixx">
-      <Filter>Core\Domain\5_Relations\Classifier\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\Type\Environment.Collidable.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Collidable\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\State\CollidableStore.ixx">
-      <Filter>Core\Domain\6_Environment\Collidable\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.cpp">
-      <Filter>Core\Domain\6_Environment\Collidable\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Collidable\System\CollidableService.ixx">
-      <Filter>Core\Domain\6_Environment\Collidable\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\State\DetailsStore.ixx">
-      <Filter>Core\Domain\6_Environment\Details\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Environment.Details.System.ixx">
-      <Filter>Core\Domain\6_Environment\Details\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.cpp">
-      <Filter>Core\Domain\6_Environment\Details\System\Vitality</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Vitality\VitalityDetailsService.ixx">
-      <Filter>Core\Domain\6_Environment\Details\System\Vitality</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Environment.Details.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Details\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Vitality\DetailsVitality.ixx">
-      <Filter>Core\Domain\6_Environment\Details\Type\Vitality</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.cpp">
-      <Filter>Core\Domain\6_Environment\Details\System\Zone</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Zone\ZoneDetailsService.ixx">
-      <Filter>Core\Domain\6_Environment\Details\System\Zone</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Zone\DetailsZone.ixx">
-      <Filter>Core\Domain\6_Environment\Details\Type\Zone</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.cpp">
-      <Filter>Core\Domain\6_Environment\Details\System\Teleporter</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Teleporter\TeleporterDetailsService.ixx">
-      <Filter>Core\Domain\6_Environment\Details\System\Teleporter</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Teleporter\DetailsTeleporter.ixx">
-      <Filter>Core\Domain\6_Environment\Details\Type\Teleporter</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.cpp">
-      <Filter>Core\Domain\6_Environment\Details\System\Lift</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Lift\LiftDetailsService.ixx">
-      <Filter>Core\Domain\6_Environment\Details\System\Lift</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Lift\DetailsLift.ixx">
-      <Filter>Core\Domain\6_Environment\Details\Type\Lift</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.cpp">
-      <Filter>Core\Domain\6_Environment\Details\System\Barrier</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\System\Barrier\BarrierDetailsService.ixx">
-      <Filter>Core\Domain\6_Environment\Details\System\Barrier</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Details\Type\Barrier\DetailsBarrier.ixx">
-      <Filter>Core\Domain\6_Environment\Details\Type\Barrier</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Entities\Type\Environment.Entities.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Entities\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Entities\State\EntitiesStore.ixx">
-      <Filter>Core\Domain\6_Environment\Entities\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.cpp">
-      <Filter>Core\Domain\6_Environment\Entities\State\CarriedHandle</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Entities\State\CarriedHandle\CarriedHandlesStore.ixx">
-      <Filter>Core\Domain\6_Environment\Entities\State\CarriedHandle</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.cpp">
-      <Filter>Core\Domain\6_Environment\Entities\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Entities\System\EntitiesService.ixx">
-      <Filter>Core\Domain\6_Environment\Entities\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Players\Type\Environment.Players.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Players\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Players\State\PlayersStore.ixx">
-      <Filter>Core\Domain\6_Environment\Players\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.cpp">
-      <Filter>Core\Domain\6_Environment\Players\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Players\System\PlayersService.ixx">
-      <Filter>Core\Domain\6_Environment\Players\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
-      <Filter>Core\Domain\5_Relations\ObjectGraph\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\State\ObjectGraphStore.cpp">
-      <Filter>Core\Domain\5_Relations\ObjectGraph\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\State\ObjectGraphStore.ixx">
-      <Filter>Core\Domain\5_Relations\ObjectGraph\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.cpp">
-      <Filter>Core\Domain\5_Relations\ObjectGraph\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\ObjectGraph\System\ObjectGraphService.ixx">
-      <Filter>Core\Domain\5_Relations\ObjectGraph\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\Type\Egocentric.Self.Type.ixx">
-      <Filter>Core\Domain\7_Egocentric\Self\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\State\SelfStore.ixx">
-      <Filter>Core\Domain\7_Egocentric\Self\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\System\SelfService.cpp">
-      <Filter>Core\Domain\7_Egocentric\Self\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Self\System\SelfService.ixx">
-      <Filter>Core\Domain\7_Egocentric\Self\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\Type\Egocentric.Affordance.Type.ixx">
-      <Filter>Core\Domain\7_Egocentric\Affordance\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\State\AffordanceStore.ixx">
-      <Filter>Core\Domain\7_Egocentric\Affordance\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.cpp">
-      <Filter>Core\Domain\7_Egocentric\Affordance\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Affordance\System\AffordanceService.ixx">
-      <Filter>Core\Domain\7_Egocentric\Affordance\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\DllMain.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -1106,15 +749,6 @@
     <ClCompile Include="Core\Core.ixx">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\5_Relations\Relations.Layer.ixx">
-      <Filter>Core\Domain\5_Relations</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Environment.Layer.ixx">
-      <Filter>Core\Domain\6_Environment</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Egocentric.Layer.ixx">
-      <Filter>Core\Domain\7_Egocentric</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Runtime\Runtime.Layer.ixx">
       <Filter>Core\Runtime</Filter>
     </ClCompile>
@@ -1138,33 +772,6 @@
     </ClCompile>
     <ClCompile Include="Core\Runtime\AI\AIThread.ixx">
       <Filter>Core\Runtime\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Export.Layer.ixx">
-      <Filter>Core\Domain\8_Export</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\Type\Export.Tick.Type.ixx">
-      <Filter>Core\Domain\8_Export\Tick\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\State\TickStore.ixx">
-      <Filter>Core\Domain\8_Export\Tick\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.cpp">
-      <Filter>Core\Domain\8_Export\Tick\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\System\TickService.ixx">
-      <Filter>Core\Domain\8_Export\Tick\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.cpp">
-      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\ExecuteGameFrameDetour.ixx">
-      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.cpp">
-      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\Hook\SimulationTicksDetour.ixx">
-      <Filter>Core\Domain\8_Export\Tick\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Viewer.Layer.ixx">
       <Filter>Core\Viewer</Filter>
@@ -1709,24 +1316,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx">
       <Filter>Core\Infrastructure\Platform\Render\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\Raycasts.ixx">
-      <Filter>Core\Domain\7_Egocentric\Raycast\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\State\RaycastStore.ixx">
-      <Filter>Core\Domain\7_Egocentric\Raycast\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\System\RaycastService.ixx">
-      <Filter>Core\Domain\7_Egocentric\Raycast\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\System\RaycastService.cpp">
-      <Filter>Core\Domain\7_Egocentric\Raycast\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Type\RaycastConstant.ixx">
-      <Filter>Core\Domain\7_Egocentric\Raycast\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\7_Egocentric\Raycast\Egocentric.Raycast.Type.ixx">
-      <Filter>Core\Domain\7_Egocentric\Raycast</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\FixturePass.cpp">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
@@ -1744,30 +1333,6 @@
     </ClCompile>
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx">
       <Filter>Core\Gui\Style\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Events\Type\Environment.Events.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Events\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Events\State\EventsStore.ixx">
-      <Filter>Core\Domain\6_Environment\Events\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.cpp">
-      <Filter>Core\Domain\6_Environment\Events\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Events\System\EventsService.ixx">
-      <Filter>Core\Domain\6_Environment\Events\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Match\Type\Environment.Match.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Match\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Match\State\MatchStore.ixx">
-      <Filter>Core\Domain\6_Environment\Match\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.cpp">
-      <Filter>Core\Domain\6_Environment\Match\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Match\System\MatchService.ixx">
-      <Filter>Core\Domain\6_Environment\Match\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
       <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
@@ -1841,9 +1406,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Simulation\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\BridgeLayout.ixx">
-      <Filter>Core\Infrastructure\Platform\Bridge\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\Platform.Bridge.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Bridge\Type</Filter>
     </ClCompile>
@@ -1858,21 +1420,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.cpp">
       <Filter>Core\Infrastructure\Platform\Bridge\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Flat\Type\Export.Flat.Type.ixx">
-      <Filter>Core\Domain\8_Export\Flat\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Flat\State\FlatStore.ixx">
-      <Filter>Core\Domain\8_Export\Flat\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Flat\State\FlatStore.cpp">
-      <Filter>Core\Domain\8_Export\Flat\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Flat\System\FlatService.ixx">
-      <Filter>Core\Domain\8_Export\Flat\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Flat\System\FlatService.cpp">
-      <Filter>Core\Domain\8_Export\Flat\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx">
       <Filter>Core\Runtime\Bridge</Filter>
@@ -1970,26 +1517,11 @@
     <ClCompile Include="Core\UI\DefinitionsInspector\System\DefinitionsInspectorUIService.ixx">
       <Filter>Core\UI\DefinitionsInspector\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Aim\Type\Environment.Aim.Type.ixx">
-      <Filter>Core\Domain\6_Environment\Aim\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Aim\State\AimStore.ixx">
-      <Filter>Core\Domain\6_Environment\Aim\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.cpp">
-      <Filter>Core\Domain\6_Environment\Aim\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\6_Environment\Aim\System\AimService.ixx">
-      <Filter>Core\Domain\6_Environment\Aim\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\AimPass.cpp">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\AimPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Domain\8_Export\Tick\Export.Tick.Hook.ixx">
-      <Filter>Core\Domain\8_Export\Tick</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

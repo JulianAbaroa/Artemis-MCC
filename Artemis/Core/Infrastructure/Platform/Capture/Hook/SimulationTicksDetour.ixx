@@ -1,4 +1,4 @@
-export module Export.Tick.Hook:SimulationTicks;
+export module Platform.Capture.Hook:SimulationTicks;
 
 import :ExecuteGameFrame;
 
@@ -6,11 +6,11 @@ import Common.Log.System;
 import Service.Telemetry.State;
 import Platform.Memory.System;
 import Platform.Lifecycle.State;
+import Platform.Capture.Type;
 import Platform.Capture.State;
-import Export.Tick.Type;
 import std;
 
-export namespace Export::Tick::Hook
+export namespace Platform::Capture::Hook
 {
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, keeps the engine speed requested by
     // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), records the telemetry of the call
@@ -28,8 +28,8 @@ export namespace Export::Tick::Hook
         using AOBService = Platform::Memory::System::AOBService;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using CaptureStore = Platform::Capture::State::CaptureStore;
-        using SimulationTicksFunction = Export::Tick::Type::SimulationTicksFunction;
-        using EndRoundFunction = Export::Tick::Type::EndRoundFunction;
+        using SimulationTicksFunction = Platform::Capture::Type::SimulationTicksFunction;
+        using EndRoundFunction = Platform::Capture::Type::EndRoundFunction;
 
     public:
         SimulationTicksDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,

@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Affordance">
+      <UniqueIdentifier>{bdf885c5-a604-5f4b-83aa-85135a1a747a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Affordance\State">
+      <UniqueIdentifier>{f5efa379-4e7f-5cea-8634-9067a7bd6c2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Affordance\System">
+      <UniqueIdentifier>{f10f87d0-e989-5115-b574-86bcf56e4fec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Affordance\Type">
+      <UniqueIdentifier>{ece87a75-44ed-5cc3-acf0-a177f6a39e5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Raycast">
+      <UniqueIdentifier>{09dd6b17-331a-57eb-bb0c-f977ed2f2c2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Raycast\State">
+      <UniqueIdentifier>{5ba72aa8-7b36-5145-800c-92ea2e9bdfd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Raycast\System">
+      <UniqueIdentifier>{c88e8860-ed12-534a-a041-fa178ed9e1ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Raycast\Type">
+      <UniqueIdentifier>{67dd28ad-e275-5621-a3fd-12a67f4c5362}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Self">
+      <UniqueIdentifier>{e7130c0d-03da-5222-ab34-5888cc08bec8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Self\State">
+      <UniqueIdentifier>{39fed804-0e6e-5208-b866-6c4dfb9e378b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Self\System">
+      <UniqueIdentifier>{2e964a5b-f6a2-5a8c-80ae-7faba8451894}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Self\Type">
+      <UniqueIdentifier>{24a6158c-fafd-5e60-92e8-741605e5143c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Affordance\State\AffordanceStore.ixx">
+      <Filter>Affordance\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Affordance\System\AffordanceService.cpp">
+      <Filter>Affordance\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Affordance\System\AffordanceService.ixx">
+      <Filter>Affordance\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Affordance\Type\Egocentric.Affordance.Type.ixx">
+      <Filter>Affordance\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Egocentric.Layer.ixx" />
+    <ClCompile Include="Raycast\Egocentric.Raycast.Type.ixx">
+      <Filter>Raycast</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\State\RaycastStore.ixx">
+      <Filter>Raycast\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastService.cpp">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastService.ixx">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\Type\RaycastConstant.ixx">
+      <Filter>Raycast\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\Type\Raycasts.ixx">
+      <Filter>Raycast\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Self\State\SelfStore.ixx">
+      <Filter>Self\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Self\System\SelfService.cpp">
+      <Filter>Self\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Self\System\SelfService.ixx">
+      <Filter>Self\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Self\Type\Egocentric.Self.Type.ixx">
+      <Filter>Self\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
