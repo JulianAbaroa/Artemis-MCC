@@ -501,7 +501,7 @@ def test_control_does_not_touch_the_process_the_wiring_or_the_clock():
 
 TRANSPORT = "Artemis/Bridge.Transport"
 PLATFORM = "Artemis/Core/Infrastructure/Platform"
-ENGINE_ROOTS = ("Platform.Lifecycle.", "Platform.Input.", "Platform.Simulation.", "Platform.Capture.", "Platform.Host.", "Platform.Hook.",
+ENGINE_ROOTS = ("Platform.Lifecycle.", "Platform.Match.", "Platform.Input.", "Platform.Window.", "Platform.Simulation.", "Platform.Capture.", "Platform.Host.", "Platform.Hook.",
                 "Platform.Memory.", "Platform.Render.", "Runtime.", "UI.", "Viewer.", "Gui.")
 VIRTUAL_METHOD = re.compile(r"\bvirtual\s+auto\s+(\w+)\s*\(")
 
@@ -554,3 +554,65 @@ def test_the_ports_declare_exactly_their_methods():
     assert re.search(r"^export module Platform\.Input\.System:ActionSource;", source, re.MULTILINE)
     assert re.search(r"\bclass\s+ActionSource\b", source)
     assert set(VIRTUAL_METHOD.findall(source)) == {"Prepare"}
+
+
+# ---- M6c.1: the old input is retired (L.1, D220) and the match and window modules leave Lifecycle and Input (D219)
+
+REMOVED_INPUT_NAMES = ("GetButtonState", "InputStore", "MouseDeltaStore", "InputAction", "SetAIControlActive", "InjectMouseDelta",
+                       "SetActionRequested", "AdvanceInputTick", "InputThread", "IsAIControlActive", "ConsumePendingDelta",
+                       "AddPendingDelta", "KnownDeviceHandle")
+REMOVED_INPUT_FILES = ("Input/Hook/GetButtonStateDetour.ixx", "Input/Hook/GetButtonStateDetour.cpp", "Input/State/InputStore.ixx",
+                       "Input/State/InputStore.cpp", "Input/State/MouseDeltaStore.ixx", "Input/State/MouseDeltaStore.cpp")
+MATCH_CLASSES = {"EngineInterfaceDetour", "LifecycleUpdateDetour", "MatchConfigStore", "MatchCycleStore", "MatchConfigService"}
+WINDOW_CLASSES = {"WndProcDetour", "GetRawInputDataDetour", "InputService"}
+CLASS_DECLARATION = re.compile(r"^\s*class\s+(\w+)", re.MULTILINE)
+
+
+def DeclaredClasses(folder):
+    return {name for path in Sources(folder) for name in CLASS_DECLARATION.findall(Read(path))}
+
+
+def test_the_old_input_is_gone():
+    result = subprocess.run(["git", "-C", REPO, "grep", "--untracked", "-n", "-w", "-E", "|".join(REMOVED_INPUT_NAMES), "--",
+                             "Artemis"], capture_output=True, text=True)
+    assert result.stdout == ""
+    for relative in REMOVED_INPUT_FILES:
+        assert not Tracked(f"{PLATFORM}/{relative}"), relative
+        assert not os.path.exists(os.path.join(REPO, PLATFORM, relative)), relative
+    assert not Tracked("Artemis/Core/Runtime/Input")
+    assert not os.path.exists(os.path.join(REPO, "Artemis/Core/Runtime/Input"))
+
+
+def test_the_match_and_window_modules_declare_their_classes():
+    assert DeclaredClasses(f"{PLATFORM}/Match") == MATCH_CLASSES
+    assert DeclaredClasses(f"{PLATFORM}/Window") == WINDOW_CLASSES
+    assert not DeclaredClasses(f"{PLATFORM}/Lifecycle") & MATCH_CLASSES
+    assert not DeclaredClasses(f"{PLATFORM}/Input") & WINDOW_CLASSES
+    for folder, name in (("Match", "Hook"), ("Match", "State"), ("Match", "System"), ("Match", "Type"),
+                         ("Window", "Hook"), ("Window", "System"), ("Window", "Type")):
+        module = f"Platform.{folder}.{name}"
+        path = f"{PLATFORM}/{folder}/{name}/{module}.ixx" if name == "Type" else f"{PLATFORM}/{folder}/{module}.ixx"
+        assert re.search(rf"^export module {re.escape(module)};", Read(path), re.MULTILINE), path
+
+
+def test_the_types_of_match_and_window_left_lifecycle_and_input():
+    lifecycle = Read(f"{PLATFORM}/Lifecycle/Type/Platform.Lifecycle.Type.ixx")
+    match = Read(f"{PLATFORM}/Match/Type/Platform.Match.Type.ixx")
+    for name in ("MatchConfig", "k_TransplantBlocks", "k_EngineConfigurationSize", "LifecycleUpdateFunction", "k_MaxMatchConfigNameLength"):
+        assert not re.search(rf"\b{name}\b", lifecycle), name
+        assert re.search(rf"\b{name}\b", match), name
+    assert re.search(r"\bStatus\b", lifecycle)
+    input_types = Read(f"{PLATFORM}/Input/Type/Platform.Input.Type.ixx")
+    window = Read(f"{PLATFORM}/Window/Type/Platform.Window.Type.ixx")
+    for name in ("WindowMessage", "RawMouse", "WindowMessageHandler", "RawMouseHandler", "GetRawInputDataFunction"):
+        assert not re.search(rf"\b{name}\b", input_types), name
+        assert re.search(rf"\b{name}\b", window), name
+
+
+def test_the_match_window_and_input_modules_import_in_one_direction():
+    for path in Sources(f"{PLATFORM}/Lifecycle"):
+        assert not [n for n in Imports(path) if n.startswith("Platform.Match.")], path
+    for path in Sources(f"{PLATFORM}/Input"):
+        assert not [n for n in Imports(path) if n.startswith("Platform.Window.")], path
+    for path in Sources(f"{PLATFORM}/Window"):
+        assert not [n for n in Imports(path) if n.startswith("Platform.Input.")], path

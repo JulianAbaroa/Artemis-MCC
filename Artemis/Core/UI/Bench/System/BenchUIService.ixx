@@ -7,7 +7,8 @@ import Platform.Memory.System;
 import Platform.Host.State;
 import Platform.Input.State;
 import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
+import Platform.Match.State;
+import Platform.Match.System;
 import Platform.Simulation.State;
 import Export.Tick.State;
 import UI.TickTrace.State;
@@ -37,9 +38,9 @@ export namespace UI::Bench::System
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
-        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
-        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
+        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
+        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
+        using MatchConfigService = Platform::Match::System::MatchConfigService;
         using BotStore = Platform::Simulation::State::BotStore;
 
         using TickStore = Export::Tick::State::TickStore;

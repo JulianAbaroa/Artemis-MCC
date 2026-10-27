@@ -4,7 +4,7 @@ import Service.Layer;
 import Service.Preferences.System;
 import Platform.Layer;
 import Platform.Render.Type;
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Environment.Layer;
 import Export.Layer;
 import Gui.Layer;
@@ -31,8 +31,8 @@ export namespace Viewer
         using PreferencesService = Service::Preferences::System::PreferencesService;
 
         using FrameContext = Platform::Render::Type::FrameContext;
-        using WindowMessage = Platform::Input::Type::WindowMessage;
-        using RawMouse = Platform::Input::Type::RawMouse;
+        using WindowMessage = Platform::Window::Type::WindowMessage;
+        using RawMouse = Platform::Window::Type::RawMouse;
 
         using CameraStore = Viewer::Camera::State::CameraStore;
         using SelectionStore = Viewer::Selection::State::SelectionStore;

@@ -1,12 +1,12 @@
-export module Platform.Lifecycle.Hook:LifecycleUpdate;
+export module Platform.Match.Hook:LifecycleUpdate;
 
 import Common.Log.System;
 import Platform.Memory.System;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.State;
+import Platform.Match.Type;
+import Platform.Match.State;
 import std;
 
-export namespace Platform::Lifecycle::Hook
+export namespace Platform::Match::Hook
 {
     // Launches the match of the custom games lobby when Artemis requests it (D124): before the lifecycle update of MCC runs, calls
     // the START of the lobby screen, as pressing it does. MCC then counts down and launches the match by its normal path (A15 sec.
@@ -24,15 +24,15 @@ export namespace Platform::Lifecycle::Hook
 
         using AOBService = Platform::Memory::System::AOBService;
 
-        using LifecycleUpdateFunction = Platform::Lifecycle::Type::LifecycleUpdateFunction;
-        using FindScreenFunction = Platform::Lifecycle::Type::FindScreenFunction;
-        using LobbyStartFunction = Platform::Lifecycle::Type::LobbyStartFunction;
-        using GetSessionFunction = Platform::Lifecycle::Type::GetSessionFunction;
-        using IsCountdownActiveFunction = Platform::Lifecycle::Type::IsCountdownActiveFunction;
-        using EngineUpdateStateFunction = Platform::Lifecycle::Type::EngineUpdateStateFunction;
-        using VariantsCompatibleFunction = Platform::Lifecycle::Type::VariantsCompatibleFunction;
-        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
-        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
+        using LifecycleUpdateFunction = Platform::Match::Type::LifecycleUpdateFunction;
+        using FindScreenFunction = Platform::Match::Type::FindScreenFunction;
+        using LobbyStartFunction = Platform::Match::Type::LobbyStartFunction;
+        using GetSessionFunction = Platform::Match::Type::GetSessionFunction;
+        using IsCountdownActiveFunction = Platform::Match::Type::IsCountdownActiveFunction;
+        using EngineUpdateStateFunction = Platform::Match::Type::EngineUpdateStateFunction;
+        using VariantsCompatibleFunction = Platform::Match::Type::VariantsCompatibleFunction;
+        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
+        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
 
     public:
         LifecycleUpdateDetour(Log& log, AOBService& aobService, MatchConfigStore& matchConfigStore,

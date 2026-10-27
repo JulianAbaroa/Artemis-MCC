@@ -72,9 +72,9 @@ export namespace Runtime::Thread
         TickDumpUIService& m_TickDumpUIService;
 
         // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
-        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 3> k_StageNames{ [] {
-            std::array<std::string_view, k_PipelineStageNames.size() + 3> names{ "Input", "Capture" };
-            std::ranges::copy(k_PipelineStageNames, names.begin() + 2);
+        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 2> k_StageNames{ [] {
+            std::array<std::string_view, k_PipelineStageNames.size() + 2> names{ "Capture" };
+            std::ranges::copy(k_PipelineStageNames, names.begin() + 1);
             names.back() = "Other";
             return names;
         }() };

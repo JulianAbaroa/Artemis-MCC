@@ -214,11 +214,4 @@ export namespace Platform::Memory::Type::Signature
         "48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 B8 C0 22 00 00 E8 ?? ?? ?? ?? 48 2B E0 0F 29 B4 24 B0 22 00 00 0F 29 BC 24 A0 22 00 00 44 0F 29 84 24 90 22 00 00 44 0F 29 8C 24 80 22 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 70 22 00 00 44 8B 05 ?? ?? ?? ?? 45 33 E4 65 48 8B 04 25 58 00 00 00 4C 8B FA"
     };
 
-    // Functions: Input Injection
-    inline constexpr Signature k_GetButtonState
-    {
-        "GetButtonState",
-        "?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 0F BF D1 83 EA 69 74 ?? 83 EA 01 74 ?? 83 EA 01 74 ?? 83 FA 01 74"
-    };
-
 }

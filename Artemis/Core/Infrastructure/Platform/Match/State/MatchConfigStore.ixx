@@ -1,9 +1,9 @@
-export module Platform.Lifecycle.State:MatchConfig;
+export module Platform.Match.State:MatchConfig;
 
-import Platform.Lifecycle.Type;
+import Platform.Match.Type;
 import std;
 
-export namespace Platform::Lifecycle::State
+export namespace Platform::Match::State
 {
     // Match configuration the next engine start transplants, the name the next start is recorded under, what the last starts did
     // (D123), and the request to launch the match of the lobby (D124).
@@ -13,7 +13,7 @@ export namespace Platform::Lifecycle::State
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using MatchConfig = Platform::Lifecycle::Type::MatchConfig;
+        using MatchConfig = Platform::Match::Type::MatchConfig;
 
     public:
         MatchConfigStore() = default;

@@ -1,12 +1,12 @@
-export module Platform.Lifecycle.System:MatchConfig;
+export module Platform.Match.System:MatchConfig;
 
 import Common.Log.System;
 import Service.Settings.State;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.State;
+import Platform.Match.Type;
+import Platform.Match.State;
 import std;
 
-export namespace Platform::Lifecycle::System
+export namespace Platform::Match::System
 {
     // Library of recorded match configurations and their transplant into the engine start (D123, A15 sec. 5).
     // note: Each configuration is a file <Storage Folder>/MatchConfigs/<name>.bin. It holds the XUID of the user, so it never goes
@@ -19,7 +19,7 @@ export namespace Platform::Lifecycle::System
         using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
-        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
+        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
 
     public:
         MatchConfigService(Log& log, SettingsStore& settingsStore, MatchConfigStore& matchConfigStore) :

@@ -2,21 +2,21 @@ module;
 
 #include <windows.h>
 
-module Platform.Input.Hook;
+module Platform.Window.Hook;
 import :WndProc;
 
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Platform.Hook.System;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::WindowMessage;
+    using Platform::Window::Type::WindowMessage;
 
     using Platform::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Input::Hook
+namespace Platform::Window::Hook
 {
     auto CALLBACK WndProcDetour::HookedWndProc(HWND window, UINT message,
         WPARAM wParam, LPARAM lParam) -> LRESULT

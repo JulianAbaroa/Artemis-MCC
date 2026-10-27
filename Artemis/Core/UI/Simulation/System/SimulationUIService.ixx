@@ -4,7 +4,8 @@ import Common.Log.System;
 import Service.Telemetry.State;
 import Control.Action.Type;
 import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
+import Platform.Match.State;
+import Platform.Match.System;
 import Platform.Host.State;
 import Platform.Input.Type;
 import Platform.Input.State;
@@ -42,8 +43,8 @@ export namespace UI::Simulation::System
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
-        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
+        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
+        using MatchConfigService = Platform::Match::System::MatchConfigService;
         using LocalUserStore = Platform::Host::State::LocalUserStore;
 
         using InputState = Platform::Input::Type::InputState;

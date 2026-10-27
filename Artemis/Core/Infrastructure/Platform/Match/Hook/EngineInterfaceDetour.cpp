@@ -1,9 +1,9 @@
-module Platform.Lifecycle.Hook;
+module Platform.Match.Hook;
 import :EngineInterface;
 
 import Platform.Memory.Type;
 import Platform.Host.Type;
-import Platform.Lifecycle.Type;
+import Platform.Match.Type;
 import Platform.Hook.System;
 import std;
 
@@ -14,17 +14,17 @@ namespace
     using Platform::Host::Type::k_HostModuleName;
 
     using Platform::Hook::System::k_DrainTimeout;
-    using Platform::Lifecycle::Type::k_EngineGlobalDisplacementOffset;
-    using Platform::Lifecycle::Type::k_EngineGlobalNextInstructionOffset;
-    using Platform::Lifecycle::Type::k_EngineVTableSize;
-    using Platform::Lifecycle::Type::k_EngineDestroyIndex;
-    using Platform::Lifecycle::Type::k_EngineStartIndex;
-    using Platform::Lifecycle::Type::k_EngineUpdateStateIndex;
-    using Platform::Lifecycle::Type::k_EngineCommandIndex;
-    using Platform::Lifecycle::Type::k_EngineStatePayloads;
-    using Platform::Lifecycle::Type::k_EngineStatePayloadMaxSize;
-    using Platform::Lifecycle::Type::k_EngineFirstTextState;
-    using Platform::Lifecycle::Type::k_EngineLastTextState;
+    using Platform::Match::Type::k_EngineGlobalDisplacementOffset;
+    using Platform::Match::Type::k_EngineGlobalNextInstructionOffset;
+    using Platform::Match::Type::k_EngineVTableSize;
+    using Platform::Match::Type::k_EngineDestroyIndex;
+    using Platform::Match::Type::k_EngineStartIndex;
+    using Platform::Match::Type::k_EngineUpdateStateIndex;
+    using Platform::Match::Type::k_EngineCommandIndex;
+    using Platform::Match::Type::k_EngineStatePayloads;
+    using Platform::Match::Type::k_EngineStatePayloadMaxSize;
+    using Platform::Match::Type::k_EngineFirstTextState;
+    using Platform::Match::Type::k_EngineLastTextState;
 
     // Longest string read from a payload or a text command, and the bytes read at once while looking for its end.
     constexpr std::size_t k_MaxTextLength{ 256 };
@@ -56,7 +56,7 @@ namespace
     }
 }
 
-namespace Platform::Lifecycle::Hook
+namespace Platform::Match::Hook
 {
     auto __fastcall EngineInterfaceDetour::HookedLoadGameEngine(void* gameLaunch, std::int32_t game) -> void
     {

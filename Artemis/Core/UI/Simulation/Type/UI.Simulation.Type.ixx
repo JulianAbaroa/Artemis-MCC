@@ -1,11 +1,11 @@
 export module UI.Simulation.Type;
 
-import Platform.Lifecycle.Type;
+import Platform.Match.Type;
 import std;
 
 namespace
 {
-    using Platform::Lifecycle::Type::k_MaxMatchConfigNameLength;
+    using Platform::Match::Type::k_MaxMatchConfigNameLength;
 }
 
 export namespace UI::Simulation::Type

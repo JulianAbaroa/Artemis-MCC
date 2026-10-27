@@ -2,36 +2,33 @@ module;
 
 #include <windows.h>
 
-export module Platform.Input.Hook:GetRawInputData;
+export module Platform.Window.Hook:GetRawInputData;
 
 import Common.Log.System;
 import Service.Settings.State;
-import Platform.Input.Type;
-import Platform.Input.State;
-import Platform.Input.System;
+import Platform.Window.Type;
+import Platform.Window.System;
 import std;
 
-export namespace Platform::Input::Hook
+export namespace Platform::Window::Hook
 {
     // Hooks GetRawInputData to filter mouse input.
-    // note: Serves AI injected movement, freezes the mouse while the menu is open, and lets handlers swallow movement.
+    // note: Freezes the mouse while the menu is open, and lets handlers swallow movement.
     class GetRawInputDataDetour
     {
     private:
         using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
-        using GetRawInputDataFunction = Platform::Input::Type::GetRawInputDataFunction;
+        using GetRawInputDataFunction = Platform::Window::Type::GetRawInputDataFunction;
 
-        using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
-
-        using InputService = Platform::Input::System::InputService;
+        using InputService = Platform::Window::System::InputService;
 
     public:
         GetRawInputDataDetour(Log& log, SettingsStore& settingsStore,
-            InputService& inputService, MouseDeltaStore& mouseDeltaStore) :
+            InputService& inputService) :
             m_Log(log), m_SettingsStore(settingsStore),
-            m_InputService(inputService), m_MouseDeltaStore(mouseDeltaStore) {}
+            m_InputService(inputService) {}
         ~GetRawInputDataDetour() = default;
 
         // Hooks GetRawInputData from user32. Does nothing if already installed.
@@ -44,7 +41,6 @@ export namespace Platform::Input::Hook
         Log& m_Log;
         SettingsStore& m_SettingsStore;
         InputService& m_InputService;
-        MouseDeltaStore& m_MouseDeltaStore;
 
         static inline GetRawInputDataDetour* s_Instance{ nullptr };
         static inline GetRawInputDataFunction s_OriginalFunction{ nullptr };

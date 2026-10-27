@@ -16,8 +16,8 @@ import std;
 
 export namespace Runtime
 {
-    // Root of the Runtime layer. Owns the main, AI, input, bench, bridge and dump threads.
-    // note: Run() starts the AI, input, bench, bridge and dump threads and then runs the main thread on the caller.
+    // Root of the Runtime layer. Owns the main, AI, bench, bridge and dump threads.
+    // note: Run() starts the AI, bench, bridge and dump threads and then runs the main thread on the caller.
     class Layer
     {
     private:
@@ -25,7 +25,6 @@ export namespace Runtime
 
         using MainThread = Runtime::Thread::MainThread;
         using AIThread = Runtime::Thread::AIThread;
-        using InputThread = Runtime::Thread::InputThread;
         using BenchThread = Runtime::Thread::BenchThread;
         using BridgeThread = Runtime::Thread::BridgeThread;
         using DumpThread = Runtime::Thread::DumpThread;
@@ -39,7 +38,6 @@ export namespace Runtime
             m_Main(service, platform),
             m_AI(service, platform, map, resolved, tables, relations,
                 environment, egocentric, exportLayer, viewerCameraStore, ui.m_TickTraceUIService, ui.m_TickDumpUIService),
-            m_Input(service, platform),
             m_Bench(service, platform, ui.m_BenchUIService),
             m_Bridge(service, platform, exportLayer),
             m_Dump(service, platform, ui.m_TickDumpUIService) {}
@@ -48,11 +46,10 @@ export namespace Runtime
         Layer(const Layer&) = delete;
         auto operator=(const Layer&) -> Layer& = delete;
 
-        // Starts the AI, input, bench, bridge and dump threads and runs the main thread until the lifecycle stops.
+        // Starts the AI, bench, bridge and dump threads and runs the main thread until the lifecycle stops.
         auto Run() -> void
         {
             m_AIThread = std::jthread([this] { m_AI.Run(); });
-            m_InputThread = std::jthread([this] { m_Input.Run(); });
             m_BenchThread = std::jthread([this] { m_Bench.Run(); });
             m_BridgeThread = std::jthread([this] { m_Bridge.Run(); });
             m_DumpThread = std::jthread([this] { m_Dump.Run(); });
@@ -63,13 +60,11 @@ export namespace Runtime
     private:
         MainThread m_Main;
         AIThread m_AI;
-        InputThread m_Input;
         BenchThread m_Bench;
         BridgeThread m_Bridge;
         DumpThread m_Dump;
 
         std::jthread m_AIThread{};
-        std::jthread m_InputThread{};
         std::jthread m_BenchThread{};
         std::jthread m_BridgeThread{};
         std::jthread m_DumpThread{};

@@ -1,18 +1,18 @@
-module Platform.Lifecycle.System;
+module Platform.Match.System;
 import :MatchConfig;
 
-import Platform.Lifecycle.Type;
+import Platform.Match.Type;
 import std;
 
 namespace
 {
     using std::filesystem::path;
-    using Platform::Lifecycle::Type::MatchConfig;
+    using Platform::Match::Type::MatchConfig;
 
-    using Platform::Lifecycle::Type::k_EngineConfigurationSize;
-    using Platform::Lifecycle::Type::k_ConfigurationBaseMapOffset;
-    using Platform::Lifecycle::Type::k_TransplantBlocks;
-    using Platform::Lifecycle::Type::k_MaxMatchConfigNameLength;
+    using Platform::Match::Type::k_EngineConfigurationSize;
+    using Platform::Match::Type::k_ConfigurationBaseMapOffset;
+    using Platform::Match::Type::k_TransplantBlocks;
+    using Platform::Match::Type::k_MaxMatchConfigNameLength;
 
     // Folder inside the storage folder that holds the recorded configurations, and the extension of their files.
     constexpr std::string_view k_LibraryFolder{ "MatchConfigs" };
@@ -64,7 +64,7 @@ namespace
     }
 }
 
-namespace Platform::Lifecycle::System
+namespace Platform::Match::System
 {
     auto MatchConfigService::ListConfigs() const -> std::vector<std::string>
     {

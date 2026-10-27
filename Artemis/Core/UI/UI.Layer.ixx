@@ -3,7 +3,7 @@ export module UI.Layer;
 import Service.Layer;
 import Service.Preferences.System;
 import Platform.Layer;
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Platform.Render.Type;
 import Map.Layer;
 import Resolved.Layer;
@@ -47,7 +47,7 @@ export namespace UI
         using PreferencesService = Service::Preferences::System::PreferencesService;
 
         using FrameContext = Platform::Render::Type::FrameContext;
-        using WindowMessage = Platform::Input::Type::WindowMessage;
+        using WindowMessage = Platform::Window::Type::WindowMessage;
 
         using BackendGuiService = Gui::Backend::System::BackendGuiService;
 

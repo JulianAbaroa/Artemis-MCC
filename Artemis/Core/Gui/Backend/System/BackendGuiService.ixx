@@ -2,7 +2,7 @@ export module Gui.Backend.System:Backend;
 
 import Common.Log.System;
 import Service.Settings.State;
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Platform.Render.Type;
 import Platform.Render.State;
 import std;
@@ -18,7 +18,7 @@ export namespace Gui::Backend::System
         using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
 
-        using WindowMessage = Platform::Input::Type::WindowMessage;
+        using WindowMessage = Platform::Window::Type::WindowMessage;
         using FrameContext = Platform::Render::Type::FrameContext;
         using RenderStore = Platform::Render::State::RenderStore;
 

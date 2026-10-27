@@ -95,9 +95,6 @@ namespace Runtime::Thread
                 m_Stage = 0;
                 m_StageStart = tickStart;
 
-                m_Platform.m_InputService.AdvanceInputTick();
-                this->EndStage();
-
                 // Read once: the pipeline and the recording of this tick must see the same value.
                 const bool isViewerActive{ m_ViewerCameraStore.IsActive() };
                 const bool isFirstAfterLoad{ std::exchange(m_IsFirstTickAfterLoad, false) };

@@ -1,10 +1,10 @@
-module Platform.Lifecycle.State;
+module Platform.Match.State;
 import :MatchConfig;
 
-import Platform.Lifecycle.Type;
+import Platform.Match.Type;
 import std;
 
-namespace Platform::Lifecycle::State
+namespace Platform::Match::State
 {
     auto MatchConfigStore::GetPending() const -> std::shared_ptr<const MatchConfig>
     {

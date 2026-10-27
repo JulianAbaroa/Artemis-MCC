@@ -8,7 +8,7 @@ import :Main;
 import Platform.Hook.Type;
 import Platform.Lifecycle.Type;
 import Platform.Lifecycle.Hook;
-import Platform.Input.Hook;
+import Platform.Window.Hook;
 import Platform.Render.Hook;
 import std;
 

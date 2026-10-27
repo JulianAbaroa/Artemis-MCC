@@ -2,15 +2,15 @@ module;
 
 #include <windows.h>
 
-export module Platform.Input.Hook:WndProc;
+export module Platform.Window.Hook:WndProc;
 
 import Common.Log.System;
-import Platform.Input.System;
+import Platform.Window.System;
 import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
 import std;
 
-export namespace Platform::Input::Hook
+export namespace Platform::Window::Hook
 {
     // Subclasses the game window procedure to forward window messages to the input handlers.
     // note: Signals shutdown when the window is closed or destroyed.
@@ -19,7 +19,7 @@ export namespace Platform::Input::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using InputService = Platform::Input::System::InputService;
+        using InputService = Platform::Window::System::InputService;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;

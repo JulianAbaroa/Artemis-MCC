@@ -3,7 +3,7 @@ export module Gui.Backend.System:WndProc;
 import :Backend;
 
 import Service.Settings.State;
-import Platform.Input.Type;
+import Platform.Window.Type;
 import std;
 
 export namespace Gui::Backend::System
@@ -14,7 +14,7 @@ export namespace Gui::Backend::System
     private:
         using SettingsStore = Service::Settings::State::SettingsStore;
 
-        using WindowMessage = Platform::Input::Type::WindowMessage;
+        using WindowMessage = Platform::Window::Type::WindowMessage;
 
         using BackendGuiService = Gui::Backend::System::BackendGuiService;
 

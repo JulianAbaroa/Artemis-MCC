@@ -1,7 +1,7 @@
 export module Viewer.Control.System;
 
 import Service.Settings.State;
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Viewer.Camera.State;
 import Viewer.Selection.State;
 import Viewer.Overlay.State;
@@ -19,8 +19,8 @@ export namespace Viewer::Control::System
     {
     private:
         using SettingsStore = Service::Settings::State::SettingsStore;
-        using WindowMessage = Platform::Input::Type::WindowMessage;
-        using RawMouse = Platform::Input::Type::RawMouse;
+        using WindowMessage = Platform::Window::Type::WindowMessage;
+        using RawMouse = Platform::Window::Type::RawMouse;
         using CameraStore = Viewer::Camera::State::CameraStore;
         using SelectionStore = Viewer::Selection::State::SelectionStore;
         using OverlayStore = Viewer::Overlay::State::OverlayStore;

@@ -1,19 +1,19 @@
-export module Platform.Lifecycle.Hook:EngineInterface;
+export module Platform.Match.Hook:EngineInterface;
 
 import Common.Log.System;
 import Platform.Memory.System;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
+import Platform.Match.Type;
+import Platform.Match.State;
+import Platform.Match.System;
 import std;
 
 namespace
 {
-    using Platform::Lifecycle::Type::k_EngineVTableSize;
-    using Platform::Lifecycle::Type::k_EngineStatePayloadMaxSize;
+    using Platform::Match::Type::k_EngineVTableSize;
+    using Platform::Match::Type::k_EngineStatePayloadMaxSize;
 }
 
-export namespace Platform::Lifecycle::Hook
+export namespace Platform::Match::Hook
 {
     // Logs every call of MCC to the engine interface (creation, start, state commands, text commands and destruction, A15) and is the
     // point where Artemis changes which match starts (D123): at the start it records the configuration of MCC if a record is armed,
@@ -29,13 +29,13 @@ export namespace Platform::Lifecycle::Hook
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
-        using LoadGameEngineFunction = Platform::Lifecycle::Type::LoadGameEngineFunction;
-        using EngineDestroyFunction = Platform::Lifecycle::Type::EngineDestroyFunction;
-        using EngineStartFunction = Platform::Lifecycle::Type::EngineStartFunction;
-        using EngineUpdateStateFunction = Platform::Lifecycle::Type::EngineUpdateStateFunction;
-        using EngineCommandFunction = Platform::Lifecycle::Type::EngineCommandFunction;
-        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
-        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
+        using LoadGameEngineFunction = Platform::Match::Type::LoadGameEngineFunction;
+        using EngineDestroyFunction = Platform::Match::Type::EngineDestroyFunction;
+        using EngineStartFunction = Platform::Match::Type::EngineStartFunction;
+        using EngineUpdateStateFunction = Platform::Match::Type::EngineUpdateStateFunction;
+        using EngineCommandFunction = Platform::Match::Type::EngineCommandFunction;
+        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
+        using MatchConfigService = Platform::Match::System::MatchConfigService;
 
     public:
         EngineInterfaceDetour(Log& log, AOBService& aobService, MemoryReaderService& memoryReaderService,

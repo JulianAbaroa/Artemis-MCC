@@ -1,9 +1,9 @@
-module Platform.Lifecycle.Hook;
+module Platform.Match.Hook;
 import :LifecycleUpdate;
 
 import Platform.Memory.Type;
 import Platform.Host.Type;
-import Platform.Lifecycle.Type;
+import Platform.Match.Type;
 import Platform.Hook.System;
 import std;
 
@@ -15,23 +15,23 @@ namespace
 
     using Platform::Hook::System::k_DrainTimeout;
     using Platform::Hook::System::ResolveRelative;
-    using Platform::Lifecycle::Type::k_LifecycleStateOffset;
-    using Platform::Lifecycle::Type::k_PreGameLifecycleState;
-    using Platform::Lifecycle::Type::k_LobbyStartIndex;
-    using Platform::Lifecycle::Type::k_UiManagerDisplacementOffset;
-    using Platform::Lifecycle::Type::k_UiManagerNextInstructionOffset;
-    using Platform::Lifecycle::Type::k_LobbyNameDisplacementOffset;
-    using Platform::Lifecycle::Type::k_LobbyNameNextInstructionOffset;
-    using Platform::Lifecycle::Type::k_FindScreenDisplacementOffset;
-    using Platform::Lifecycle::Type::k_FindScreenNextInstructionOffset;
-    using Platform::Lifecycle::Type::k_SessionKind;
-    using Platform::Lifecycle::Type::k_GetSessionDisplacementOffset;
-    using Platform::Lifecycle::Type::k_GetSessionNextInstructionOffset;
-    using Platform::Lifecycle::Type::k_IsCountdownActiveDisplacementOffset;
-    using Platform::Lifecycle::Type::k_IsCountdownActiveNextInstructionOffset;
-    using Platform::Lifecycle::Type::k_EngineUpdateStateIndex;
-    using Platform::Lifecycle::Type::k_EngineLeaveState;
-    using Platform::Lifecycle::Type::k_EngineStatePayloadMaxSize;
+    using Platform::Match::Type::k_LifecycleStateOffset;
+    using Platform::Match::Type::k_PreGameLifecycleState;
+    using Platform::Match::Type::k_LobbyStartIndex;
+    using Platform::Match::Type::k_UiManagerDisplacementOffset;
+    using Platform::Match::Type::k_UiManagerNextInstructionOffset;
+    using Platform::Match::Type::k_LobbyNameDisplacementOffset;
+    using Platform::Match::Type::k_LobbyNameNextInstructionOffset;
+    using Platform::Match::Type::k_FindScreenDisplacementOffset;
+    using Platform::Match::Type::k_FindScreenNextInstructionOffset;
+    using Platform::Match::Type::k_SessionKind;
+    using Platform::Match::Type::k_GetSessionDisplacementOffset;
+    using Platform::Match::Type::k_GetSessionNextInstructionOffset;
+    using Platform::Match::Type::k_IsCountdownActiveDisplacementOffset;
+    using Platform::Match::Type::k_IsCountdownActiveNextInstructionOffset;
+    using Platform::Match::Type::k_EngineUpdateStateIndex;
+    using Platform::Match::Type::k_EngineLeaveState;
+    using Platform::Match::Type::k_EngineStatePayloadMaxSize;
 
     using std::chrono::steady_clock;
     using std::chrono::seconds;
@@ -48,7 +48,7 @@ namespace
     constexpr milliseconds k_LobbySettleTime{ 3000 };
 }
 
-namespace Platform::Lifecycle::Hook
+namespace Platform::Match::Hook
 {
     auto __fastcall LifecycleUpdateDetour::HookedLifecycleUpdate(void* manager) -> void
     {

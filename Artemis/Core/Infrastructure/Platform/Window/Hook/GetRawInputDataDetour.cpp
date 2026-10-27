@@ -3,16 +3,16 @@ module;
 #include <windows.h>
 #include "External/minhook/include/MinHook.h"
 
-module Platform.Input.Hook;
+module Platform.Window.Hook;
 import :GetRawInputData;
 
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Platform.Hook.System;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::RawMouse;
+    using Platform::Window::Type::RawMouse;
 
     using Platform::Hook::System::k_DrainTimeout;
 
@@ -24,50 +24,12 @@ namespace
     }
 }
 
-namespace Platform::Input::Hook
+namespace Platform::Window::Hook
 {
     auto WINAPI GetRawInputDataDetour::HookedGetRawInputData(HRAWINPUT hRawInput,
         UINT command, LPVOID data, PUINT dataSize, UINT headerSize) -> UINT
     {
         auto* self = s_Instance;
-
-        if (self && command == RID_INPUT &&
-            self->m_MouseDeltaStore.IsAIControlActive())
-        {
-            std::int32_t injectX = 0;
-            std::int32_t injectY = 0;
-
-            if (self->m_MouseDeltaStore.ConsumePendingDelta(injectX, injectY))
-            {
-                Platform::Hook::System::InFlightScope scope(s_InFlight);
-
-                const UINT requiredSize = sizeof(RAWINPUT);
-
-                if (!data)
-                {
-                    if (dataSize) *dataSize = requiredSize;
-                    return 0;
-                }
-
-                if (!dataSize || *dataSize < requiredSize)
-                {
-                    return static_cast<UINT>(-1);
-                }
-
-                auto* raw = static_cast<RAWINPUT*>(data);
-                raw->header.dwType = RIM_TYPEMOUSE;
-                raw->header.dwSize = requiredSize;
-                raw->header.hDevice = self->m_MouseDeltaStore.GetKnownDeviceHandle();
-                raw->header.wParam = RIM_INPUT;
-
-                raw->data.mouse = {};
-                raw->data.mouse.usFlags = MOUSE_MOVE_RELATIVE;
-                raw->data.mouse.lLastX = injectX;
-                raw->data.mouse.lLastY = injectY;
-
-                return requiredSize;
-            }
-        }
 
         const UINT size = s_OriginalFunction(
             hRawInput, command, data, dataSize, headerSize);
@@ -82,8 +44,6 @@ namespace Platform::Input::Hook
         if (raw->header.dwType != RIM_TYPEMOUSE) return size;
 
         RAWMOUSE& mouse = raw->data.mouse;
-
-        self->m_MouseDeltaStore.SetKnownDeviceHandle(raw->header.hDevice);
 
         if (self->m_SettingsStore.IsMenuVisible())
         {

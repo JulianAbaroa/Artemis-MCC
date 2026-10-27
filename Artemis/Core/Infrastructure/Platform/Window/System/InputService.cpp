@@ -1,17 +1,7 @@
-module;
-
-#include <windows.h>
-
-module Platform.Input.System;
+module Platform.Window.System;
 import :Input;
 
-namespace
-{
-    // Handle of the injected raw input. The value is arbitrary: the GetRawInputData hook serves the injected data.
-    constexpr std::uintptr_t k_SyntheticHandle{ 0xA1A1A1A1 };
-}
-
-namespace Platform::Input::System
+namespace Platform::Window::System
 {
     auto InputService::OnWindowMessage(WindowMessageHandler handler, bool runFirst) -> void
     {
@@ -61,39 +51,6 @@ namespace Platform::Input::System
         }
 
         return false;
-    }
-
-    auto InputService::BindWindow(HWND window) -> void
-    {
-        m_Window.store(window);
-    }
-
-    auto InputService::SetAIControlActive(bool active) -> void
-    {
-        m_MouseDeltaStore.SetAIControlActive(active);
-    }
-
-    auto InputService::InjectMouseDelta(std::int32_t deltaX, std::int32_t deltaY) -> bool
-    {
-        if (!m_MouseDeltaStore.IsAIControlActive()) return false;
-
-        const HWND window = m_Window.load();
-        if (!window) return false;
-
-        m_MouseDeltaStore.AddPendingDelta(deltaX, deltaY);
-
-        return PostMessageW(window, WM_INPUT, MAKEWPARAM(RIM_INPUT, 0),
-            static_cast<LPARAM>(k_SyntheticHandle)) != FALSE;
-    }
-
-    auto InputService::SetActionRequested(InputAction action, bool requested) -> void
-    {
-        m_InputStore.SetActionRequested(action, requested);
-    }
-
-    auto InputService::AdvanceInputTick() -> void
-    {
-        m_InputStore.AdvanceTick();
     }
 
     auto InputService::ReportHandlerError(const char* stage) -> void

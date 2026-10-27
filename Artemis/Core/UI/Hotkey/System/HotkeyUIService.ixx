@@ -1,7 +1,7 @@
 export module UI.Hotkey.System;
 
 import Service.Settings.State;
-import Platform.Input.Type;
+import Platform.Window.Type;
 import Viewer.Overlay.State;
 import UI.Hotkey.Type;
 import UI.Hotkey.State;
@@ -16,7 +16,7 @@ export namespace UI::Hotkey::System
     private:
         using SettingsStore = Service::Settings::State::SettingsStore;
 
-        using WindowMessage = Platform::Input::Type::WindowMessage;
+        using WindowMessage = Platform::Window::Type::WindowMessage;
 
         using OverlayStore = Viewer::Overlay::State::OverlayStore;
 

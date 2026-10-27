@@ -2,6 +2,7 @@ export module Platform.Port.System:BridgeEngine;
 
 import Control.Action.Type;
 import Platform.Lifecycle.State;
+import Platform.Match.State;
 import Platform.Input.State;
 import Platform.Bridge.Type;
 import Platform.Bridge.System;
@@ -17,7 +18,7 @@ export namespace Platform::Port::System
         using ClientRequests = Control::Action::Type::ClientRequests;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
+        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 

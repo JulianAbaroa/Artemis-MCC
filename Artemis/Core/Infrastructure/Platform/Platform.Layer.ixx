@@ -4,12 +4,16 @@ import Service.Layer;
 import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
 import Platform.Lifecycle.Hook;
+import Platform.Match.State;
+import Platform.Match.System;
+import Platform.Match.Hook;
 import Platform.Host.State;
 import Platform.Host.System;
 import Platform.Host.Hook;
 import Platform.Input.State;
-import Platform.Input.System;
 import Platform.Input.Hook;
+import Platform.Window.System;
+import Platform.Window.Hook;
 import Platform.Simulation.State;
 import Platform.Simulation.System;
 import Platform.Simulation.Hook;
@@ -38,15 +42,16 @@ export namespace Platform
         using milliseconds = std::chrono::milliseconds;
 
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchConfigStore = Platform::Lifecycle::State::MatchConfigStore;
-        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
         using LifecycleService = Platform::Lifecycle::System::LifecycleService;
-        using MatchConfigService = Platform::Lifecycle::System::MatchConfigService;
         using EngineInitializeDetour = Platform::Lifecycle::Hook::EngineInitializeDetour;
         using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
-        using EngineInterfaceDetour = Platform::Lifecycle::Hook::EngineInterfaceDetour;
-        using LifecycleUpdateDetour = Platform::Lifecycle::Hook::LifecycleUpdateDetour;
         using OpenMapDetour = Platform::Lifecycle::Hook::OpenMapDetour;
+
+        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
+        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
+        using MatchConfigService = Platform::Match::System::MatchConfigService;
+        using EngineInterfaceDetour = Platform::Match::Hook::EngineInterfaceDetour;
+        using LifecycleUpdateDetour = Platform::Match::Hook::LifecycleUpdateDetour;
 
         using LocalUserStore = Platform::Host::State::LocalUserStore;
         using HostService = Platform::Host::System::HostService;
@@ -56,16 +61,14 @@ export namespace Platform
         using CanAcceptAnyJoinRequestDetour = Platform::Host::Hook::CanAcceptAnyJoinRequestDetour;
         using SessionJoinCheckPatch = Platform::Host::Hook::SessionJoinCheckPatch;
 
-        using InputStore = Platform::Input::State::InputStore;
-        using MouseDeltaStore = Platform::Input::State::MouseDeltaStore;
         using VirtualInputStore = Platform::Input::State::VirtualInputStore;
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
-        using InputService = Platform::Input::System::InputService;
-        using GetButtonStateDetour = Platform::Input::Hook::GetButtonStateDetour;
-        using GetRawInputDataDetour = Platform::Input::Hook::GetRawInputDataDetour;
-        using WndProcDetour = Platform::Input::Hook::WndProcDetour;
         using InputUpdateDetour = Platform::Input::Hook::InputUpdateDetour;
         using PlayerActionDetour = Platform::Input::Hook::PlayerActionDetour;
+
+        using InputService = Platform::Window::System::InputService;
+        using GetRawInputDataDetour = Platform::Window::Hook::GetRawInputDataDetour;
+        using WndProcDetour = Platform::Window::Hook::WndProcDetour;
 
         using BotStore = Platform::Simulation::State::BotStore;
         using BotService = Platform::Simulation::System::BotService;
@@ -99,7 +102,7 @@ export namespace Platform
         explicit Layer(Service::Layer& service) :
             m_LifecycleService(service.m_Log, m_LifecycleStore),
             m_MatchConfigService(service.m_Log, service.m_SettingsStore, m_MatchConfigStore),
-            m_InputService(service.m_Log, m_InputStore, m_MouseDeltaStore),
+            m_InputService(service.m_Log),
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),
             m_BotService(service.m_Log, m_AOBService, m_BotStore),
@@ -119,8 +122,7 @@ export namespace Platform
             m_LocalUserGetGamepadMappingDetour(service.m_Log, m_HostService, m_LocalUserStore),
             m_CanAcceptAnyJoinRequestDetour(service.m_Log, m_AOBService, m_LocalUserStore),
             m_SessionJoinCheckPatch(service.m_Log, m_AOBService, m_LocalUserStore),
-            m_GetButtonStateDetour(service.m_Log, m_AOBService, m_InputStore),
-            m_GetRawInputDataDetour(service.m_Log, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
+            m_GetRawInputDataDetour(service.m_Log, service.m_SettingsStore, m_InputService),
             m_WndProcDetour(service.m_Log, m_InputService, m_LifecycleStore, m_LifecycleService),
             m_InputUpdateDetour(service.m_Log, m_HostService, m_VirtualInputStore),
             m_PlayerActionDetour(service.m_Log, m_AOBService, m_PlayerActionStore, m_BotService, m_BridgeActionSource),
@@ -134,11 +136,9 @@ export namespace Platform
             m_SimulationTicksDetour(service.m_Log, service.m_TelemetryStore, m_AOBService, m_LifecycleStore, m_CaptureStore,
                 m_ExecuteGameFrameDetour)
         {
-            // The button hook needs the engine up, so it is installed on engine initialization.
             // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
             // The bot service finds its functions before the SetMachines hook overwrites the bytes of their signature.
             m_LifecycleService.OnEngineInitialized([this] {
-                m_GetButtonStateDetour.Install();
                 m_BridgeService.BeginMatch();
                 m_PlayerActionDetour.Install();
                 m_BotService.ResolveFunctions();
@@ -160,7 +160,6 @@ export namespace Platform
                 this->UninstallHostHooks();
                 m_SetMachinesDetour.Uninstall();
                 m_PlayerActionDetour.Uninstall();
-                m_GetButtonStateDetour.Uninstall();
                 m_OpenMapDetour.Uninstall();
                 m_SimulationTicksDetour.Uninstall();
                 m_ExecuteGameFrameDetour.Uninstall();
@@ -168,8 +167,6 @@ export namespace Platform
 
             // The virtual input is not cleared: the sources picked in the UI stay across matches.
             m_LifecycleService.OnCleanup([this] {
-                m_InputStore.Cleanup();
-                m_MouseDeltaStore.Cleanup();
                 m_LocalUserStore.Cleanup();
                 m_PlayerActionStore.Cleanup();
                 m_BotStore.Cleanup();
@@ -179,7 +176,6 @@ export namespace Platform
             // The game window is only known once the swap chain is bound.
             m_RenderService.OnInitialized([this](const FrameContext& frame) {
                 m_WndProcDetour.Install(frame.Window);
-                m_InputService.BindWindow(frame.Window);
             });
 
             m_LifecycleService.OnShutdown([this] {
@@ -197,8 +193,6 @@ export namespace Platform
         MatchConfigStore m_MatchConfigStore{};
         MatchCycleStore m_MatchCycleStore{};
         LocalUserStore m_LocalUserStore{};
-        InputStore m_InputStore{};
-        MouseDeltaStore m_MouseDeltaStore{};
         VirtualInputStore m_VirtualInputStore{};
         PlayerActionStore m_PlayerActionStore{};
         BotStore m_BotStore{};
@@ -232,7 +226,6 @@ export namespace Platform
         LocalUserGetGamepadMappingDetour m_LocalUserGetGamepadMappingDetour;
         CanAcceptAnyJoinRequestDetour m_CanAcceptAnyJoinRequestDetour;
         SessionJoinCheckPatch m_SessionJoinCheckPatch;
-        GetButtonStateDetour m_GetButtonStateDetour;
         GetRawInputDataDetour m_GetRawInputDataDetour;
         WndProcDetour m_WndProcDetour;
         InputUpdateDetour m_InputUpdateDetour;

@@ -85,9 +85,6 @@
     <Filter Include="Core\Runtime\AI">
       <UniqueIdentifier>{e5efb182-4483-4250-993c-096094cbc2fe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Runtime\Input">
-      <UniqueIdentifier>{7412080e-03c2-4831-b4e5-33f6b0ad26ce}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Runtime\Main">
       <UniqueIdentifier>{3baf5a76-5aa1-4579-bf18-27d76ba83f8d}</UniqueIdentifier>
     </Filter>
@@ -189,6 +186,33 @@
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Lifecycle\Type">
       <UniqueIdentifier>{fa612ca5-7820-4f17-bb94-e99667800daa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Match">
+      <UniqueIdentifier>{d2e4013c-719a-518e-b177-3412ff49750f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Match\Type">
+      <UniqueIdentifier>{87cbf15b-463b-5567-ac44-19c3c742198d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Match\State">
+      <UniqueIdentifier>{9d0c7a18-f03a-55a5-abe2-dccd8b78d00b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Match\System">
+      <UniqueIdentifier>{48972dcb-dcd0-550a-b100-fb8bef2d864d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Match\Hook">
+      <UniqueIdentifier>{edeca477-165f-5a59-a19d-3c2b8a816f8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Window">
+      <UniqueIdentifier>{5825270f-432f-562a-a077-3b351d2a8ce0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Window\Type">
+      <UniqueIdentifier>{fd1f0d3b-30fe-5d8b-b551-24ebb70be698}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Window\System">
+      <UniqueIdentifier>{947d4049-9a7a-5a60-9857-3a8bb9934f20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Window\Hook">
+      <UniqueIdentifier>{73afc90f-2e36-5648-a828-01ea9991d0cc}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Memory">
       <UniqueIdentifier>{371b4643-f75c-46a9-86a8-0768aa313428}</UniqueIdentifier>
@@ -632,11 +656,11 @@
     <ClCompile Include="Core\UI\Bench\Type\UI.Bench.Type.ixx">
       <Filter>Core\UI\Bench\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchCycleStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchCycleStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchCycleStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
     </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
@@ -754,12 +778,6 @@
     </ClCompile>
     <ClCompile Include="Core\Runtime\Main\MainThread.ixx">
       <Filter>Core\Runtime\Main</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Runtime\Input\InputThread.cpp">
-      <Filter>Core\Runtime\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Runtime\Input\InputThread.ixx">
-      <Filter>Core\Runtime\Input</Filter>
     </ClCompile>
     <ClCompile Include="Core\Runtime\AI\AIThread.cpp">
       <Filter>Core\Runtime\AI</Filter>
@@ -1148,29 +1166,17 @@
     <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.Hook.ixx">
       <Filter>Core\Infrastructure\Platform\Input</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\GetRawInputDataDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetButtonStateDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\GetRawInputDataDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\WndProcDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\GetRawInputDataDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\WndProcDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\WndProcDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.System.ixx">
       <Filter>Core\Infrastructure\Platform\Input</Filter>
@@ -1178,11 +1184,11 @@
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\ActionSource.ixx">
       <Filter>Core\Infrastructure\Platform\Input\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\System</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\System\InputService.cpp">
+      <Filter>Core\Infrastructure\Platform\Window\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\System</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\System\InputService.ixx">
+      <Filter>Core\Infrastructure\Platform\Window\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Input\Type</Filter>
@@ -1208,17 +1214,17 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\EngineInterfaceDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInterfaceDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\EngineInterfaceDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\LifecycleUpdateDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\LifecycleUpdateDetour.cpp">
+      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\LifecycleUpdateDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\LifecycleUpdateDetour.ixx">
+      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.cpp">
       <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
@@ -1232,11 +1238,11 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchConfigStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchConfigStore.cpp">
+      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\MatchConfigStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchConfigStore.ixx">
+      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp">
       <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
@@ -1244,14 +1250,35 @@
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\MatchConfigService.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\System\MatchConfigService.cpp">
+      <Filter>Core\Infrastructure\Platform\Match\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\MatchConfigService.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\System\MatchConfigService.ixx">
+      <Filter>Core\Infrastructure\Platform\Match\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Lifecycle\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Match</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.State.ixx">
+      <Filter>Core\Infrastructure\Platform\Match</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Match</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Match\Type\Platform.Match.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Match\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Platform.Window.Hook.ixx">
+      <Filter>Core\Infrastructure\Platform\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Platform.Window.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Window\Type\Platform.Window.Type.ixx">
+      <Filter>Core\Infrastructure\Platform\Window\Type</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx">
       <Filter>Core\Infrastructure\Platform\Memory</Filter>
@@ -1501,12 +1528,6 @@
     </ClCompile>
     <ClCompile Include="Core\UI\Simulation\System\SimulationUIService.cpp">
       <Filter>Core\UI\Simulation\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\MouseDeltaStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Widget\System\Inspector\InspectorGuiService.ixx">
       <Filter>Core\Gui\Widget\System\Inspector</Filter>
