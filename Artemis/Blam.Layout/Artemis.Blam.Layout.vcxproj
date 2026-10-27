@@ -99,8 +99,11 @@
     <ClCompile Include="Player\Type\PlayerOffset.ixx" />
     <ClCompile Include="Player\Type\PlayerSize.ixx" />
     <ClCompile Include="Snapshot\Layout.Snapshot.Type.ixx" />
+    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.cpp" />
+    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.ixx" />
     <ClCompile Include="Snapshot\Type\SnapshotData.ixx" />
     <ClCompile Include="Snapshot\Type\SnapshotRaw.ixx" />
+    <ClCompile Include="Snapshot\Type\SnapshotRecord.ixx" />
     <ClCompile Include="Snapshot\Type\SnapshotRegion.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

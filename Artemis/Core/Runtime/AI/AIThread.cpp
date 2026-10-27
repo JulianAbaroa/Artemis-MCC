@@ -98,9 +98,11 @@ namespace Runtime::Thread
                 m_Platform.m_InputService.AdvanceInputTick();
                 this->EndStage();
 
-                this->ExecuteTick();
+                // Read once: the pipeline and the recording of this tick must see the same value.
+                const bool isViewerActive{ m_ViewerCameraStore.IsActive() };
+                const bool isFirstAfterLoad{ std::exchange(m_IsFirstTickAfterLoad, false) };
+                const auto snapshot{ this->ExecuteTick(current, isViewerActive) };
 
-                m_Export.m_TickService.Assemble(current);
                 if (m_BridgeClock.IsDecision)
                 {
                     m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = m_BridgeClock });
@@ -109,7 +111,10 @@ namespace Runtime::Thread
                 this->EndStage();
 
                 m_TickTraceUIService.Record(current);
-                if (m_TickDumpUIService.IsRecording()) m_TickDumpUIService.Push(m_Export.m_TickStore.Acquire(), droppedBefore);
+                if (m_TickDumpUIService.IsRecording())
+                {
+                    m_TickDumpUIService.Push(m_Export.m_TickStore.Acquire(), snapshot, current, droppedBefore, isFirstAfterLoad, isViewerActive);
+                }
 
                 auto tickEnd{ steady_clock::now() };
                 lifecycle.EndTick();
@@ -141,64 +146,24 @@ namespace Runtime::Thread
         m_Resolved.m_DefinitionsBuilder.BuildForMap();
         m_Resolved.m_WorldBuilder.BuildForMap();
         m_Resolved.m_VitalityBuilder.BuildForMap();
+
+        m_IsFirstTickAfterLoad = true;
     }
 
-    auto AIThread::ExecuteTick() -> void
+    auto AIThread::ExecuteTick(std::uint64_t generation, bool isViewerActive) -> std::shared_ptr<const Snapshot>
     {
         const auto snapshot{ m_Platform.m_CaptureService.Capture() };
-        this->EndStage();
 
         // The engine clock of the trace comes from the same copy as the tables.
         m_TickTraceUIService.CaptureClock(*snapshot);
 
         // Last use of game memory: from here on everything works on the Snapshot, so the game thread runs the next tick.
         m_Platform.m_LifecycleStore.EndRead(m_Last);
-
-        m_Tables.m_ObjectService.UpdateObjectTable(*snapshot);
-        this->EndStage();
-        m_Tables.m_PlayerService.UpdatePlayerTable(*snapshot);
-        this->EndStage();
-        m_Tables.m_InteractionService.UpdateInteractionTable(*snapshot);
-        this->EndStage();
-        m_Tables.m_GameService.Update(*snapshot);
         this->EndStage();
 
-        m_Relations.m_ClassifierService.UpdateClassification();
-        this->EndStage();
-        m_Relations.m_ObjectGraphService.UpdateGraph();
-        this->EndStage();
+        m_Export.m_PipelineService.Run(*snapshot, generation, isViewerActive, m_EndStage);
 
-        m_Environment.m_VitalityDetailsService.Update();
-        this->EndStage();
-        m_Environment.m_ZoneDetailsService.Update();
-        this->EndStage();
-        m_Environment.m_TeleporterDetailsService.Update();
-        this->EndStage();
-        m_Environment.m_LiftDetailsService.Update();
-        this->EndStage();
-        m_Environment.m_BarrierDetailsService.Update();
-        this->EndStage();
-        m_Environment.m_EntitiesService.Update();
-        this->EndStage();
-        m_Environment.m_PlayersService.Update();
-        this->EndStage();
-        m_Environment.m_CollidableService.Update(m_ViewerCameraStore.IsActive());
-        this->EndStage();
-        m_Environment.m_AimService.Update();
-        this->EndStage();
-        m_Environment.m_EventsService.Update();
-        this->EndStage();
-        m_Environment.m_MatchService.Update();
-        this->EndStage();
-
-        m_Egocentric.m_SelfService.Update();
-        this->EndStage();
-        m_Egocentric.m_AffordanceService.Update();
-        this->EndStage();
-        m_Egocentric.m_RaycastService.Update();
-        this->EndStage();
-
-        // The export step is not here. Run() assembles it because it needs the tick generation.
+        return snapshot;
     }
 
     auto AIThread::EndStage() -> void

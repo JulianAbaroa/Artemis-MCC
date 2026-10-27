@@ -76,6 +76,9 @@
     <Filter Include="Snapshot\Type">
       <UniqueIdentifier>{554b74b4-f8fa-5025-bda0-7c9d97856c88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Snapshot\System">
+      <UniqueIdentifier>{d473fec3-01f5-5347-8ed7-4b88f742f6b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Datum\Datum.Object.Type.ixx">
@@ -257,6 +260,15 @@
     </ClCompile>
     <ClCompile Include="Snapshot\Type\SnapshotRegion.ixx">
       <Filter>Snapshot\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Snapshot\Type\SnapshotRecord.ixx">
+      <Filter>Snapshot\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.cpp">
+      <Filter>Snapshot\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.ixx">
+      <Filter>Snapshot\System</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -35,6 +35,16 @@ namespace UI::TickDump::State
         m_NotFull.notify_all();
     }
 
+    auto TickDumpUIStore::SetWaitingForLoad(bool value) -> void
+    {
+        m_IsWaitingForLoad.store(value, std::memory_order_release);
+    }
+
+    auto TickDumpUIStore::IsWaitingForLoad() const -> bool
+    {
+        return m_IsWaitingForLoad.load(std::memory_order_acquire);
+    }
+
     auto TickDumpUIStore::IsRecording() const -> bool
     {
         return m_IsRecording.load(std::memory_order_acquire);
@@ -90,34 +100,24 @@ namespace UI::TickDump::State
         return *m_Flat;
     }
 
-    auto TickDumpUIStore::GetPreviousEntities() -> std::vector<BridgeEntity>&
+    auto TickDumpUIStore::GetWriterState() -> TickDumpWriterState&
     {
-        return m_PreviousEntities;
+        return m_WriterState;
     }
 
-    auto TickDumpUIStore::GetRecordsSinceKeyframe() const -> std::uint32_t
+    auto TickDumpUIStore::GetSnapshotWriterState() -> SnapshotWriterState&
     {
-        return m_RecordsSinceKeyframe;
-    }
-
-    auto TickDumpUIStore::SetRecordsSinceKeyframe(std::uint32_t records) -> void
-    {
-        m_RecordsSinceKeyframe = records;
-    }
-
-    auto TickDumpUIStore::GetLastEventSequence() const -> std::uint32_t
-    {
-        return m_LastEventSequence;
-    }
-
-    auto TickDumpUIStore::SetLastEventSequence(std::uint32_t sequence) -> void
-    {
-        m_LastEventSequence = sequence;
+        return m_SnapshotWriterState;
     }
 
     auto TickDumpUIStore::GetFile() -> std::ofstream&
     {
         return m_File;
+    }
+
+    auto TickDumpUIStore::GetSnapshotFile() -> std::ofstream&
+    {
+        return m_SnapshotFile;
     }
 
     auto TickDumpUIStore::SetFilePath(path filePath) -> void
@@ -164,6 +164,16 @@ namespace UI::TickDump::State
         return m_WrittenBytes.load(std::memory_order_relaxed);
     }
 
+    auto TickDumpUIStore::AddSnapshotBytes(std::uint64_t bytes) -> void
+    {
+        m_SnapshotBytes.fetch_add(bytes, std::memory_order_relaxed);
+    }
+
+    auto TickDumpUIStore::GetSnapshotBytes() const -> std::uint64_t
+    {
+        return m_SnapshotBytes.load(std::memory_order_relaxed);
+    }
+
     auto TickDumpUIStore::AddDroppedTicks(std::uint64_t ticks) -> void
     {
         m_DroppedTicks.fetch_add(ticks, std::memory_order_relaxed);
@@ -193,6 +203,7 @@ namespace UI::TickDump::State
     {
         m_RecordedTicks.store(0, std::memory_order_relaxed);
         m_WrittenBytes.store(0, std::memory_order_relaxed);
+        m_SnapshotBytes.store(0, std::memory_order_relaxed);
         m_DroppedTicks.store(0, std::memory_order_relaxed);
         m_QueueWaits.store(0, std::memory_order_relaxed);
         m_EventLosses.store(0, std::memory_order_relaxed);

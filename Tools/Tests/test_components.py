@@ -278,7 +278,8 @@ def test_read_window_ends_right_after_the_copy():
     text = Read("Artemis/Core/Runtime/AI/AIThread.cpp")
     capture = text.index("m_CaptureService.Capture()")
     end_read = text.index("EndRead(m_Last)")
-    first_table = text.index("UpdateObjectTable(")
+    # The first table update is the first stage of the pipeline (M5c, D205).
+    first_table = text.index("m_PipelineService.Run(")
     assert capture < end_read < first_table
 
 
@@ -354,3 +355,68 @@ def test_generate_bridge_writes_the_contract():
     assert '"Artemis", "Contract", "Contract.Bridge.ixx"' in text
     assert '"export module Contract.Bridge;"' in text
     assert "BridgeLayout.ixx" not in text
+
+
+# --- M5c (D202-D207) ------------------------------------------------------------------------------------------------------------
+
+# Calls that run one step of the tick: only PipelineService.Run does it (D205).
+PIPELINE_STEP = re.compile(r"\.m_\w+Service\.(?:Update\w*|Assemble)\(")
+SNAPSHOT_CODEC = "Artemis/Blam.Layout/Snapshot/System/Layout.Snapshot.System"
+DUMP_CODEC = "Artemis/Bridge.Codec/Dump/"
+PIPELINE_SERVICE = "Artemis/Bridge.Codec/Pipeline/System/PipelineService"
+
+
+def test_common_hash_does_not_touch_windows():
+    sources = Sources("Artemis/Common/Hash")
+    assert sorted(os.path.basename(p) for p in sources) == ["Common.Hash.System.cpp", "Common.Hash.System.ixx"], sources
+    for path in sources:
+        assert "windows.h" not in Read(path), path
+        assert ImportRoots(path) == {"Common"} or ImportRoots(path) == set(), path
+    assert re.search(r"^export module Common\.Hash\.System;", Read("Artemis/Common/Hash/System/Common.Hash.System.ixx"), re.MULTILINE)
+
+
+def test_tests_support_maps_takes_the_crc_from_common():
+    text = Read("Artemis/Tests/Support/Tests.Support.Maps.ixx")
+    assert "import Common.Hash.System;" in text
+    assert "k_Crc32Polynomial" not in text and "MakeCrc32Table" not in text
+
+
+def test_snapshot_codec_imports_only_what_its_project_allows():
+    paths = [SNAPSHOT_CODEC + ".ixx", SNAPSHOT_CODEC + ".cpp"]
+    assert sorted(Tracked(*paths)) == sorted(paths)
+    assert "Artemis/Blam.Layout/Snapshot/Type/SnapshotRecord.ixx" in Tracked("Artemis/Blam.Layout")
+    for path in paths + ["Artemis/Blam.Layout/Snapshot/Type/SnapshotRecord.ixx"]:
+        assert ImportRoots(path) <= {"Common", "Layout"}, (path, ImportRoots(path))
+
+
+def test_dump_codec_and_pipeline_import_only_what_their_project_allows():
+    dump = [p for p in Sources("Artemis/Bridge.Codec") if p.startswith(DUMP_CODEC)]
+    assert sorted(os.path.basename(p) for p in dump) == ["Export.Dump.System.cpp", "Export.Dump.System.ixx", "Export.Dump.Type.ixx"], dump
+    for path in dump:
+        assert ImportRoots(path) <= {"Common", "Contract", "Export"}, (path, ImportRoots(path))
+    pipeline = [PIPELINE_SERVICE + ".ixx", PIPELINE_SERVICE + ".cpp"]
+    assert sorted(Tracked(*pipeline)) == sorted(pipeline)
+    for path in pipeline:
+        assert ImportRoots(path) <= {"Layout", "Tables", "Relations", "Environment", "Egocentric", "Export"}, (path, ImportRoots(path))
+    assert "export module Export.Pipeline.System;" in Read(pipeline[0])
+    assert re.search(r"\bPipelineService\s+m_PipelineService\b", Read("Artemis/Bridge.Codec/Export.Layer.ixx"))
+
+
+def test_the_order_of_the_tick_lives_in_the_pipeline_service():
+    thread = Read("Artemis/Core/Runtime/AI/AIThread.cpp")
+    assert not PIPELINE_STEP.search(thread), PIPELINE_STEP.search(thread).group(0)
+    assert "m_PipelineService.Run(" in thread
+    tests = Read("Artemis/Tests/Perception/PipelineTests.cpp")
+    assert not PIPELINE_STEP.search(tests), PIPELINE_STEP.search(tests).group(0)
+    assert "m_PipelineService.Run(" in tests
+    # Tables 4, Relations 2, Environment 11 and Egocentric 3. The Tick is assembled through TickService.
+    assert len(PIPELINE_STEP.findall(Read(PIPELINE_SERVICE + ".cpp"))) == 20
+
+
+def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
+    ui = Read("Artemis/Core/UI/TickDump/Type/UI.TickDump.Type.ixx")
+    assert not re.search(r"\bstruct\s+(?:TickRecordHeader|TickDumpFileHeader|TickDumpFooter)\b", ui)
+    assert "TickRecordHeader" not in ui
+    assert re.search(r"\bstruct\s+TickRecordHeader\b", Read("Artemis/Bridge.Codec/Dump/Type/Export.Dump.Type.ixx"))
+    for path in Sources("Artemis/Core/UI/TickDump"):
+        assert "UI::TickDump::Type::TickRecordHeader" not in Read(path), path

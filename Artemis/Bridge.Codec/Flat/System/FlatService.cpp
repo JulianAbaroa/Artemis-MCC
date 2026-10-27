@@ -29,6 +29,18 @@ namespace
     // Value of an optional float that is absent (Shield, Vitality).
     constexpr float k_Absent{ std::numeric_limits<float>::quiet_NaN() };
 
+    // return: A row with every byte zero, its padding included.
+    // note: The rows are compared and written byte by byte (TickDump delta, the offline test, D208), so the padding cannot carry
+    // what was on the stack. Copies of these trivially copyable rows keep the zeros.
+    template<typename T>
+        requires std::is_trivially_copyable_v<T>
+    auto Zeroed() -> T
+    {
+        T value{};
+        std::memset(&value, 0, sizeof(T));
+        return value;
+    }
+
     auto ToBridge(const Vec3& v) -> BridgeVec3
     {
         return BridgeVec3{ .X = v.X, .Y = v.Y, .Z = v.Z };
@@ -36,7 +48,7 @@ namespace
 
     auto ToBridge(const Player& player) -> BridgePlayer
     {
-        BridgePlayer row{};
+        BridgePlayer row{ Zeroed<BridgePlayer>() };
         row.Handle = player.Handle;
         row.BipedHandle = player.BipedHandle;
         row.Team = static_cast<std::uint8_t>(player.Team);
@@ -72,7 +84,7 @@ namespace
 
     auto ToBridge(const Entity& entity) -> BridgeEntity
     {
-        BridgeEntity row{};
+        BridgeEntity row{ Zeroed<BridgeEntity>() };
         row.Handle = entity.Handle;
         row.Kind = static_cast<std::uint16_t>(entity.Kind);
         row.Function = static_cast<std::uint8_t>(entity.Function);
@@ -98,7 +110,7 @@ namespace
 
     auto ToBridge(const GameEvent& event) -> BridgeEvent
     {
-        BridgeEvent row{};
+        BridgeEvent row{ Zeroed<BridgeEvent>() };
         row.Sequence = event.Sequence;
         row.GameTick = event.GameTick;
         row.Key = event.Key;
@@ -144,7 +156,7 @@ namespace Export::Flat::System
             }
         }
 
-        flat.Match = BridgeMatch{};
+        flat.Match = Zeroed<BridgeMatch>();
         if (tick.Match)
         {
             flat.Match.GameTick = tick.Match->GameTick;

@@ -4,16 +4,23 @@ import Service.Layer;
 import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
+import Layout.Snapshot.Type;
 import Tables.Layer;
 import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
 import Export.Flat.Type;
+import Export.Pipeline.System;
 import Viewer.Camera.State;
 import UI.TickTrace.System;
 import UI.TickDump.System;
 import std;
+
+namespace
+{
+    using Export::Pipeline::System::k_PipelineStageNames;
+}
 
 export namespace Runtime::Thread
 {
@@ -25,6 +32,8 @@ export namespace Runtime::Thread
         using steady_clock = std::chrono::steady_clock;
 
         using BridgeClock = Export::Flat::Type::BridgeClock;
+
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
 
         using CameraStore = Viewer::Camera::State::CameraStore;
 
@@ -63,12 +72,16 @@ export namespace Runtime::Thread
         TickDumpUIService& m_TickDumpUIService;
 
         // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
-        static constexpr std::array<std::string_view, 24> k_StageNames{
-            "Input", "Capture", "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
-            "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "Entities", "Players",
-            "Collidable", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble", "Other" };
+        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 3> k_StageNames{ [] {
+            std::array<std::string_view, k_PipelineStageNames.size() + 3> names{ "Input", "Capture" };
+            std::ranges::copy(k_PipelineStageNames, names.begin() + 2);
+            names.back() = "Other";
+            return names;
+        }() };
 
         bool m_IsLoaded{ false };
+        // The next tick that runs the pipeline is the first one after the map loaded (D207).
+        bool m_IsFirstTickAfterLoad{ true };
 
         std::uint64_t m_Last{ 0 };
         std::uint64_t m_Dropped{ 0 };
@@ -81,12 +94,16 @@ export namespace Runtime::Thread
         // Next stage to record.
         std::size_t m_Stage{ 0 };
         steady_clock::time_point m_StageStart{};
+        // Calls EndStage. Built once so the pipeline takes it without allocating every tick.
+        std::function<void()> m_EndStage{ [this] { this->EndStage(); } };
 
         // Builds the map, definitions, world and vitality data once the map file is loaded.
         auto LoadResources() -> void;
 
-        // Updates the tables, relations, environment and egocentric services in order.
-        auto ExecuteTick() -> void;
+        // Copies the game into a Snapshot, releases the game thread and runs the pipeline over the Snapshot.
+        // param isViewerActive: The viewer camera state of this tick.
+        // return: The Snapshot the tick was built from.
+        auto ExecuteTick(std::uint64_t generation, bool isViewerActive) -> std::shared_ptr<const Snapshot>;
 
         // Records the time since the previous stage ended as the next stage of k_StageNames.
         auto EndStage() -> void;

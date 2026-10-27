@@ -14,6 +14,8 @@
     <ClCompile Include="Engine\Type\Common.Engine.Type.ixx" />
     <ClCompile Include="Geometry\System\Common.Geometry.System.cpp" />
     <ClCompile Include="Geometry\System\Common.Geometry.System.ixx" />
+    <ClCompile Include="Hash\System\Common.Hash.System.cpp" />
+    <ClCompile Include="Hash\System\Common.Hash.System.ixx" />
     <ClCompile Include="Log\System\Common.Log.System.cpp" />
     <ClCompile Include="Log\System\Common.Log.System.ixx" />
     <ClCompile Include="Log\Type\Common.Log.Type.ixx" />
@@ -30,6 +32,8 @@
     <ClCompile Include="Semantic\Type\SemanticEventKey.ixx" />
     <ClCompile Include="Semantic\Type\SemanticSubtype.ixx" />
     <ClCompile Include="State\Type\Common.State.Type.ixx" />
+    <ClCompile Include="Stream\System\Common.Stream.System.cpp" />
+    <ClCompile Include="Stream\System\Common.Stream.System.ixx" />
     <ClCompile Include="Tag\Type\Common.Tag.Type.ixx" />
     <ClCompile Include="Team\Type\Common.Team.Type.ixx" />
     <ClCompile Include="Text\System\Common.Text.System.cpp" />

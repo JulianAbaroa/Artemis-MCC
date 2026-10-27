@@ -4,34 +4,30 @@ module;
 
 export module Tests.Support.Maps;
 
+import Common.Hash.System;
 import std;
 
 namespace
 {
+    using Common::Hash::System::FileCrc32;
+
     // Folder of the Reach maps in the default Steam install of MCC.
     constexpr std::string_view k_DefaultMapsFolder{
         "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Halo The Master Chief Collection\\haloreach\\maps" };
 
     constexpr std::string_view k_MapsFolderVariable{ "ARTEMIS_REACH_MAPS" };
 
-    // Reflected polynomial of CRC-32, the same as zlib and Python zlib.crc32.
-    constexpr std::uint32_t k_Crc32Polynomial{ 0xEDB88320 };
-
-    constexpr std::size_t k_ChunkSize{ 16 * 1024 * 1024 };
-
-    auto MakeCrc32Table() -> std::array<std::uint32_t, 256>
+    // Cached by path for the whole run: each map takes about a second to read.
+    auto CachedCrc32(const std::filesystem::path& path) -> std::optional<std::uint32_t>
     {
-        std::array<std::uint32_t, 256> table{};
-        for (std::uint32_t i = 0; i < 256; ++i)
-        {
-            std::uint32_t value{ i };
-            for (int bit = 0; bit < 8; ++bit)
-            {
-                value = (value & 1) ? (value >> 1) ^ k_Crc32Polynomial : value >> 1;
-            }
-            table[i] = value;
-        }
-        return table;
+        static std::unordered_map<std::string, std::uint32_t> s_Cache{};
+
+        const std::string key{ path.string() };
+        if (auto it = s_Cache.find(key); it != s_Cache.end()) return it->second;
+
+        const std::optional<std::uint32_t> crc{ FileCrc32(path) };
+        if (crc) s_Cache.emplace(key, *crc);
+        return crc;
     }
 }
 
@@ -77,35 +73,6 @@ export namespace Tests::Support::Maps
         return folder;
     }
 
-    // return: CRC-32 of the whole file.
-    // note: Cached by path for the whole run: each map takes about a second to read.
-    auto FileCrc32(const std::filesystem::path& path) -> std::uint32_t
-    {
-        static std::unordered_map<std::string, std::uint32_t> s_Cache{};
-        static const std::array<std::uint32_t, 256> s_Table{ MakeCrc32Table() };
-
-        const std::string key{ path.string() };
-        if (auto it = s_Cache.find(key); it != s_Cache.end()) return it->second;
-
-        std::ifstream file{ path, std::ios::binary };
-        std::vector<char> buffer(k_ChunkSize);
-        std::uint32_t crc{ 0xFFFFFFFF };
-
-        while (file)
-        {
-            file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-            const std::streamsize count{ file.gcount() };
-            for (std::streamsize i = 0; i < count; ++i)
-            {
-                crc = s_Table[(crc ^ static_cast<std::uint8_t>(buffer[i])) & 0xFF] ^ (crc >> 8);
-            }
-        }
-
-        crc ^= 0xFFFFFFFF;
-        s_Cache.emplace(key, crc);
-        return crc;
-    }
-
     // Finds a Reach file in the maps folder and checks that it is the copy the expected values come from.
     // return: The path, or an empty path and the reason (absent, other size, other CRC-32).
     auto Locate(const ReachFile& file) -> LocatedFile
@@ -126,11 +93,16 @@ export namespace Tests::Support::Maps
                 size, file.Size) };
         }
 
-        const std::uint32_t crc{ FileCrc32(path) };
-        if (crc != file.Crc32)
+        const std::optional<std::uint32_t> crc{ CachedCrc32(path) };
+        if (!crc)
+        {
+            return { .Reason = std::format("{} cannot be read.", path.string()) };
+        }
+
+        if (*crc != file.Crc32)
         {
             return { .Reason = std::format("{} has CRC-32 {:08X}, the tests expect {:08X} (another version of MCC).",
-                path.string(), crc, file.Crc32) };
+                path.string(), *crc, file.Crc32) };
         }
 
         return { .Path = path };

@@ -25,6 +25,21 @@
     <Filter Include="Tick\Type">
       <UniqueIdentifier>{bd3c126e-1f3b-5c13-8d8b-c01ff9f51717}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pipeline">
+      <UniqueIdentifier>{7a84e934-d941-566a-a543-839f9329c28e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline\System">
+      <UniqueIdentifier>{9da94678-6f15-5908-a53e-0850734548a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dump">
+      <UniqueIdentifier>{f77a2ef4-3243-55b6-b3aa-a5fdd9270c59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dump\Type">
+      <UniqueIdentifier>{7ac375c7-bd13-5e5d-8615-d492e5de14f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dump\System">
+      <UniqueIdentifier>{bf0c94a1-f763-55e6-b900-db4853ad807c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Export.Layer.ixx" />
@@ -54,6 +69,21 @@
     </ClCompile>
     <ClCompile Include="Tick\Type\Export.Tick.Type.ixx">
       <Filter>Tick\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipeline\System\PipelineService.cpp">
+      <Filter>Pipeline\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipeline\System\PipelineService.ixx">
+      <Filter>Pipeline\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Dump\Type\Export.Dump.Type.ixx">
+      <Filter>Dump\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Dump\System\Export.Dump.System.cpp">
+      <Filter>Dump\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Dump\System\Export.Dump.System.ixx">
+      <Filter>Dump\System</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

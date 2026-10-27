@@ -3,6 +3,7 @@ export module UI.TickDump.System;
 import Common.Log.System;
 import Service.Settings.State;
 import Map.Reader.State;
+import Layout.Snapshot.Type;
 import Export.Tick.Type;
 import Export.Flat.System;
 import UI.TickDump.Type;
@@ -11,8 +12,9 @@ import std;
 
 export namespace UI::TickDump::System
 {
-    // Records the Tick of every tick to a .tdump file (D151): the BridgeTick that Export.Flat builds, written by the dump thread with
-    // the layout of Bridge.xml embedded and the entities as a delta. Tools/tickdump.py reads the files.
+    // Records every tick to a .tdump file (D151) and a .sdump file with the same name (D202): the BridgeTick that Export.Flat builds,
+    // written by the dump thread with the layout of Bridge.xml embedded and the entities as a delta, and the Snapshot the tick was
+    // built from, as a delta of bytes. Tools/tickdump.py reads the .tdump and the tests replay the .sdump.
     // note: Development tool (D72) outside the Domain pipeline. The AI thread only pushes a pointer to the immutable Tick, the dump
     // thread flattens and writes, and the render thread draws the panel.
     class TickDumpUIService
@@ -23,6 +25,7 @@ export namespace UI::TickDump::System
         using Log = Common::Log::System::Log;
         using SettingsStore = Service::Settings::State::SettingsStore;
         using FileStore = Map::Reader::State::FileStore;
+        using Snapshot = Layout::Snapshot::Type::Snapshot;
         using Tick = Export::Tick::Type::Tick;
         using FlatService = Export::Flat::System::FlatService;
         using TickDumpEntry = UI::TickDump::Type::TickDumpEntry;
@@ -41,11 +44,14 @@ export namespace UI::TickDump::System
         // Whether a recording runs, so the AI thread only takes the Tick when it is needed.
         auto IsRecording() const -> bool;
 
-        // Queues the Tick just assembled while a recording runs. AI thread.
+        // Queues the Tick just assembled and the Snapshot it came from while a recording runs. AI thread.
         // param droppedBefore: ticks the AI thread dropped right before this one.
+        // param isFirstAfterLoad: The tick is the first one that ran after the map loaded.
+        // param isViewerActive: The viewer camera was active in the tick.
         // note: Waits while the queue is full. The game waits for the read up to its read timeout, after which the ticks it runs
         // count as dropped in the next record and in the footer (D151).
-        auto Push(std::shared_ptr<const Tick> snapshot, std::uint64_t droppedBefore) -> void;
+        auto Push(std::shared_ptr<const Tick> tick, std::shared_ptr<const Snapshot> snapshot, std::uint64_t generation,
+            std::uint64_t droppedBefore, bool isFirstAfterLoad, bool isViewerActive) -> void;
 
         // Takes the requests of the UI and writes the queued Ticks, waiting up to the timeout for the first one. Dump thread.
         auto Update(milliseconds timeout) -> void;
@@ -64,9 +70,9 @@ export namespace UI::TickDump::System
         TickDumpUIStore& m_TickDumpUIStore;
 
         auto Start(std::string_view source) -> void;
-        // Writes what is still queued and the footer, and closes the file.
+        // Writes what is still queued and the footers, and closes the files.
         auto Finish() -> void;
-        // Ends a recording the file can no longer take (full disk, removed folder), without a footer.
+        // Ends a recording a file can no longer take (full disk, removed folder), without footers.
         auto Fail() -> void;
         auto Write(const TickDumpEntry& entry) -> void;
     };

@@ -268,7 +268,7 @@ def test_ticks_in_one_file_only_count_unless_overlap(tmp_path):
 
 
 def test_events_before_the_compared_range_are_left_out(tmp_path):
-    # A recording armed late writes the whole event window of the BridgeTick in its first record (TickDumpUIService::Write).
+    # A recording armed late writes the whole event window of the BridgeTick in its first record (Export::Dump::System::WriteRecord).
     run = Film(range(4, 10), events=lambda t, rows: [Event(1, 2)] + rows if t == 4 else rows)
     assert DiffOf(tmp_path, Film(), run, overlap=True).is_equal
     late = Film(range(4, 10), events=lambda t, rows: rows)
@@ -472,3 +472,27 @@ def test_cli_approve(tmp_path):
     text = (folder / "manifest.txt").read_text("ascii")
     assert text.startswith("20") and text.endswith("| ticks 0-9 | run.tdump | M2: first golden")
     assert tickdump.Main(["approve", run, str(tmp_path / "nowhere"), "--reason", "x"]) == 2
+
+
+def test_approve_copies_the_sdump_of_the_run(tmp_path):
+    folder = Golden(tmp_path)
+    run = Save(tmp_path, "run1.tdump", Film())
+    (tmp_path / "run1.sdump").write_bytes(b"ASDUMP snapshots")
+
+    line = tickdump.Approve(run, str(folder), "M5c: with sdump", now=NOW, commit="abc1234")
+
+    assert (folder / "golden.sdump").read_bytes() == b"ASDUMP snapshots"
+    assert (folder / "golden.tdump").read_bytes() == open(run, "rb").read()
+    assert line.endswith("| ticks 0-9 | run1.tdump + run1.sdump | M5c: with sdump")
+
+
+def test_approve_without_sdump_deletes_the_old_golden_sdump(tmp_path):
+    folder = Golden(tmp_path)
+    (folder / "golden.sdump").write_bytes(b"old snapshots")
+    run = Save(tmp_path, "run2.tdump", Film())
+
+    line = tickdump.Approve(run, str(folder), "M5c: without sdump", now=NOW, commit="abc1234")
+
+    assert not (folder / "golden.sdump").exists()
+    assert (folder / "golden.tdump").exists()
+    assert line.endswith("| ticks 0-9 | run2.tdump | M5c: without sdump")

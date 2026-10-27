@@ -1,27 +1,11 @@
 #include <gtest/gtest.h>
 
-import Common.Engine.Type;
 import Common.Log.Type;
-import Common.Log.System;
-import Common.Math.Type;
-import Common.Team.Type;
 import Contract.Bridge;
-import Datum.Object.Type;
-import Egocentric.Layer;
-import Environment.Layer;
-import Export.Layer;
+import Export.Pipeline.System;
 import Export.Tick.Type;
-import Layout.Player.Type;
 import Layout.Snapshot.Type;
-import Map.Layer;
-import Map.Reader.Type;
-import Relations.Layer;
-import Resolved.Layer;
-import Resolved.Definitions.Type;
-import Tables.Layer;
-import Tables.Player.Type;
-import Tests.Support.Blam;
-import Tests.Support.Log;
+import Tests.Support.Pipeline;
 import std;
 
 // The pure chain of M5b (D198, D200): Tables, Relations, Environment, Egocentric and Export built and run without the DLL, from
@@ -30,51 +14,16 @@ import std;
 namespace
 {
     using Common::Log::Type::LogLevel;
-    using Common::Log::System::Log;
-    using Common::Math::Type::Vec3;
-    using Common::Team::Type::Team;
     using Export::Tick::Type::Tick;
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::RegionSize;
     using Layout::Snapshot::Type::Snapshot;
     using Platform::Bridge::Type::BridgeTick;
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Tables::Player::Type::Alive::ConnectionState;
-    using Tests::Support::Blam::SyntheticTag;
-    using Tests::Support::Blam::Fill;
-    using Tests::Support::Blam::MakeHandle;
-    using Tests::Support::Blam::Put;
-    using Tests::Support::Blam::CaptureRegion;
-    using Tests::Support::Log::CollectingSink;
+    using Tests::Support::Pipeline::Chain;
+    using Tests::Support::Pipeline::FillSyntheticTags;
+    using Tests::Support::Pipeline::WithBipedAndPlayer;
 
-    using Common::Engine::Type::k_NoHandle;
-    using Common::Engine::Type::k_NoTick;
-    using Common::Engine::Type::k_MaxLocalUsers;
-    using Common::Engine::Type::k_MaxPlayers;
-    using Map::Reader::Type::Magic::Tag::k_Bipd;
-
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
-    namespace UnitOffset = Datum::Object::Type::Unit::Offset;
-    namespace PlayerOffset = Layout::Player::Type::Offset;
-    namespace PlayerMapping = Layout::Player::Type::Mapping;
-
-    using Layout::Player::Type::Size::k_Base;
-
-    // Bytes of every hand made datum: more than the last field of a biped.
-    constexpr std::size_t k_DatumBytes{ 0x1000 };
-
-    const std::array<std::uint32_t, 1> k_Groups{ k_Bipd };
-
-    constexpr std::string_view k_SpartanName{ "objects\\characters\\spartans\\spartans" };
-
-    const std::array<SyntheticTag, 1> k_Tags{ {
-        { .Group = 0, .Salt = 0xE000, .Name = k_SpartanName },
-    } };
-
-    const std::uint32_t k_SpartanTag{ MakeHandle(0xE000, 0) };
-    const std::uint32_t k_BipedHandle{ MakeHandle(0xEC01, 3) };
-    const std::uint32_t k_PlayerHandle{ MakeHandle(0xE5A1, 2) };
+    using Export::Pipeline::System::k_PipelineStageNames;
+    using Tests::Support::Pipeline::k_BipedHandle;
+    using Tests::Support::Pipeline::k_PlayerHandle;
 
     // Services that write "Cleanup completed." when their layer is cleaned up, with the layer that owns them.
     const std::array<std::string_view, 22> k_CleanupTags{
@@ -87,100 +36,19 @@ namespace
         "[WorldBuilder]", "[DefinitionsBuilder]", "[VitalityBuilder]",
     };
 
-    // return: A biped of the spartan tag whose four damage slots are empty, at (10, 20, 30) looking along +Y with +Z up.
-    auto MakeBiped() -> RawObject
-    {
-        RawObject biped{};
-        biped.Handle = k_BipedHandle;
-        biped.Address = 0x7FF100000000 + (static_cast<std::uintptr_t>(k_BipedHandle & 0xFFFF) * k_DatumBytes);
-        biped.KindId = static_cast<std::uint8_t>(ObjectKind::Biped);
-        biped.Bytes.assign(k_DatumBytes, 0);
-
-        Put(biped.Bytes, ObjeOffset::k_TagHandle, k_SpartanTag);
-        Put(biped.Bytes, ObjeOffset::k_ParentHandle, k_NoHandle);
-        Put(biped.Bytes, ObjeOffset::k_VariantPlacementIndex, std::uint16_t{ 0xFFFF });
-        Put(biped.Bytes, ObjeOffset::k_Origin, Vec3{ 10.0f, 20.0f, 30.0f });
-        Put(biped.Bytes, ObjeOffset::k_Forward, Vec3{ 0.0f, 1.0f, 0.0f });
-        Put(biped.Bytes, ObjeOffset::k_Up, Vec3{ 0.0f, 0.0f, 1.0f });
-
-        const std::size_t slotStride{ UnitOffset::k_Damage1Tick - UnitOffset::k_Damage0Tick };
-        for (std::size_t slot{ 0 }; slot < 4; ++slot)
-        {
-            Put(biped.Bytes, UnitOffset::k_Damage0Tick + (slot * slotStride), k_NoTick);
-        }
-
-        return biped;
-    }
-
-    // return: A snapshot of a running game with the object table found, the biped and a connected player that owns it.
-    auto WithBipedAndPlayer() -> Snapshot
-    {
-        Snapshot snapshot{};
-        snapshot.HasThreadContext = true;
-        snapshot.HasObjectTable = true;
-        snapshot.RawObjects.emplace(k_BipedHandle, MakeBiped());
-
-        std::vector<std::uint8_t>& players{ CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)) };
-        const std::size_t entry{ 2 * k_Base };
-        Put(players, entry + PlayerOffset::k_Handle, std::uint16_t{ 0xE5A1 });
-        Put(players, entry + PlayerOffset::k_ConnectionState, ConnectionState::Connected);
-        Put(players, entry + PlayerOffset::k_Team, Team::Blue);
-        Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_BipedHandle);
-        Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_BipedHandle);
-        Put(players, entry + PlayerOffset::k_DeadBipedHandle, k_NoHandle);
-
-        // The player mapping with no player bound to any input user nor output view.
-        std::vector<std::uint8_t>& mapping{ CaptureRegion(snapshot, RegionId::PlayerMapping, RegionSize(RegionId::PlayerMapping)) };
-        for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
-        {
-            Put(mapping, PlayerMapping::k_PlayerInputUser + (index * PlayerMapping::k_EntryStride), std::int32_t{ -1 });
-        }
-        for (std::size_t view{ 0 }; view < k_MaxLocalUsers; ++view)
-        {
-            Put(mapping, PlayerMapping::k_OutputUserPlayer + (view * PlayerMapping::k_EntryStride), k_NoHandle);
-        }
-
-        return snapshot;
-    }
-
     // The seven layers of the pure chain over one Log and a tag index written by hand (D197).
-    class PipelineTests : public ::testing::Test
+    class PipelineTests : public ::testing::Test, protected Chain
     {
     protected:
         auto SetUp() -> void override
         {
-            Fill(m_Map.m_TagIndexStore, k_Groups, k_Tags);
-            m_Map.m_FileStore.SetLoaded(true);
+            FillSyntheticTags(m_Map);
         }
 
-        // Runs the services in the order of AIThread::ExecuteTick and assembles the Tick as Runtime::Thread does.
+        // Runs the pipeline as Runtime::Thread does (D205) and returns the Tick it assembled.
         auto RunTick(const Snapshot& snapshot, std::uint64_t generation) -> std::shared_ptr<const Tick>
         {
-            m_Tables.m_ObjectService.UpdateObjectTable(snapshot);
-            m_Tables.m_PlayerService.UpdatePlayerTable(snapshot);
-            m_Tables.m_InteractionService.UpdateInteractionTable(snapshot);
-            m_Tables.m_GameService.Update(snapshot);
-
-            m_Relations.m_ClassifierService.UpdateClassification();
-            m_Relations.m_ObjectGraphService.UpdateGraph();
-
-            m_Environment.m_VitalityDetailsService.Update();
-            m_Environment.m_ZoneDetailsService.Update();
-            m_Environment.m_TeleporterDetailsService.Update();
-            m_Environment.m_LiftDetailsService.Update();
-            m_Environment.m_BarrierDetailsService.Update();
-            m_Environment.m_EntitiesService.Update();
-            m_Environment.m_PlayersService.Update();
-            m_Environment.m_CollidableService.Update(false);
-            m_Environment.m_AimService.Update();
-            m_Environment.m_EventsService.Update();
-            m_Environment.m_MatchService.Update();
-
-            m_Egocentric.m_SelfService.Update();
-            m_Egocentric.m_AffordanceService.Update();
-            m_Egocentric.m_RaycastService.Update();
-
-            m_Export.m_TickService.Assemble(generation);
+            m_Export.m_PipelineService.Run(snapshot, generation, false, {});
             return m_Export.m_TickStore.Acquire();
         }
 
@@ -209,16 +77,6 @@ namespace
                 return message.Level == LogLevel::Info && message.Tag == tag && message.Message == "Cleanup completed.";
             }));
         }
-
-        CollectingSink m_Sink{};
-        Log m_Log{ m_Sink };
-        Map::Layer m_Map{ m_Log };
-        Resolved::Layer m_Resolved{ m_Log, m_Map };
-        Tables::Layer m_Tables{ m_Log, m_Resolved };
-        Relations::Layer m_Relations{ m_Log, m_Resolved, m_Tables };
-        Environment::Layer m_Environment{ m_Log, m_Resolved, m_Tables, m_Relations };
-        Egocentric::Layer m_Egocentric{ m_Log, m_Resolved, m_Tables, m_Relations, m_Environment };
-        Export::Layer m_Export{ m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };
     };
 }
 
@@ -289,4 +147,13 @@ TEST_F(PipelineTests, CleanupForgetsTheTick)
     }
     const auto total{ std::ranges::count_if(m_Sink.m_Messages, [](const auto& message) { return message.Message == "Cleanup completed."; }) };
     EXPECT_EQ(static_cast<std::size_t>(total), k_CleanupTags.size());
+}
+
+TEST_F(PipelineTests, EndStageOncePerStage)
+{
+    std::size_t calls{ 0 };
+    m_Export.m_PipelineService.Run(Snapshot{}, 1, false, [&calls] { ++calls; });
+
+    EXPECT_EQ(k_PipelineStageNames.size(), 21u);
+    EXPECT_EQ(calls, k_PipelineStageNames.size());
 }

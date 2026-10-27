@@ -52,6 +52,12 @@
     <Filter Include="Team\Type">
       <UniqueIdentifier>{8a55dfc8-48cc-4cca-8113-0a0edb24bd9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hash">
+      <UniqueIdentifier>{5b0d0f4e-2c64-4e0a-9d8b-3a9f6c1e7a21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hash\System">
+      <UniqueIdentifier>{8e1c7a52-4f3b-4d6e-b0a9-71d2c5e9f340}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Text">
       <UniqueIdentifier>{ca4176ed-5147-4e49-82e8-262f5a845a12}</UniqueIdentifier>
     </Filter>
@@ -81,6 +87,12 @@
     </Filter>
     <Filter Include="Semantic\Type">
       <UniqueIdentifier>{8d3a4a6e-91e8-4e00-a53a-7c4b92b726a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Stream">
+      <UniqueIdentifier>{fe9d0289-c2bf-5b8d-9ee6-4c6a9ea2b9c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Stream\System">
+      <UniqueIdentifier>{ff818289-85dc-5e32-98e7-0a1fe99d18a8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +141,12 @@
     <ClCompile Include="Team\Type\Common.Team.Type.ixx">
       <Filter>Team\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Hash\System\Common.Hash.System.cpp">
+      <Filter>Hash\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash\System\Common.Hash.System.ixx">
+      <Filter>Hash\System</Filter>
+    </ClCompile>
     <ClCompile Include="Text\System\Common.Text.System.cpp">
       <Filter>Text\System</Filter>
     </ClCompile>
@@ -161,6 +179,12 @@
     </ClCompile>
     <ClCompile Include="Tag\Type\Common.Tag.Type.ixx">
       <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="Stream\System\Common.Stream.System.cpp">
+      <Filter>Stream\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Stream\System\Common.Stream.System.ixx">
+      <Filter>Stream\System</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

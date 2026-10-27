@@ -10,6 +10,8 @@ in the file, so an old dump stays readable after Bridge.xml changes. Output is s
         Exact comparison by bits, field by field, tick by tick (D170, D171). Exit 0 equal, 1 differs, 2 error.
     python Tools/tickdump.py approve RUN GOLDEN_DIR --reason "..."
         Saves RUN as GOLDEN_DIR/golden.tdump (the previous one becomes golden_prev.tdump) and adds a line to manifest.txt (D172).
+        The .sdump of the same session (RUN with the extension .sdump) is saved as golden.sdump and named in the line. A run
+        without .sdump deletes an old golden.sdump, so the two files never belong to different recordings (M5c).
 
 FILE defaults to the newest file of %LOCALAPPDATA%\\Artemis\\TickDumps (run it on Windows: python Tools/game.py py Tools/tickdump.py
 show). A folder stands for <folder>/golden.tdump; a path that does not exist is looked up in that TickDumps folder (the file name
@@ -669,10 +671,20 @@ def Approve(run_path, golden_dir, reason, now=None, commit=None):
         raise TickDumpError(f"{name} is already the golden.")
     now = now or datetime.datetime.now()
     commit = commit or GitCommit()
-    line = f"{now:%Y-%m-%d %H:%M} | layout 0x{dump.layout_hash:016X} | commit {commit} | ticks {ticks[0]}-{ticks[-1]} | {name} | {reason}"
+    # The .sdump of the same session (M5c, D202) has the name of the run with another extension: it is the input of the replay test.
+    run_sdump = os.path.splitext(run_path)[0] + ".sdump"
+    has_sdump = os.path.isfile(run_sdump)
+    golden_sdump = os.path.join(golden_dir, "golden.sdump")
+    shown = f"{name} + {os.path.basename(run_sdump)}" if has_sdump else name
+    line = f"{now:%Y-%m-%d %H:%M} | layout 0x{dump.layout_hash:016X} | commit {commit} | ticks {ticks[0]}-{ticks[-1]} | {shown} | {reason}"
     if os.path.exists(golden):
         os.replace(golden, os.path.join(golden_dir, "golden_prev.tdump"))
     shutil.copyfile(run_path, golden)
+    if has_sdump:
+        shutil.copyfile(run_sdump, golden_sdump)
+    elif os.path.exists(golden_sdump):
+        # An old golden.sdump would not match the new golden.tdump.
+        os.remove(golden_sdump)
     manifest = os.path.join(golden_dir, "manifest.txt")
     previous = b""
     if os.path.exists(manifest):

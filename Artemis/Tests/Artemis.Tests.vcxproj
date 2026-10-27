@@ -83,16 +83,22 @@
     <ClCompile Include="Blam\MapTests.cpp" />
     <ClCompile Include="Blam\ObjectKindTests.cpp" />
     <ClCompile Include="Blam\RuntimeTests.cpp" />
+    <ClCompile Include="Blam\SnapshotRecordTests.cpp" />
     <ClCompile Include="Blam\TagResolverTests.cpp" />
+    <ClCompile Include="Common\HashTests.cpp" />
     <ClCompile Include="Common\LogParseTests.cpp" />
     <ClCompile Include="Common\LogTests.cpp" />
     <ClCompile Include="Common\MathTypeTests.cpp" />
     <ClCompile Include="Common\SnapshotTests.cpp" />
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
+    <ClCompile Include="Perception\ReplayTests.cpp" />
+    <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />
+    <ClCompile Include="Support\Tests.Support.Pipeline.ixx" />
+    <ClCompile Include="Support\Tests.Support.Replay.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
