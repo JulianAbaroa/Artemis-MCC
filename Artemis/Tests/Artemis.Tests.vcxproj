@@ -82,6 +82,21 @@
     <ProjectReference Include="..\Bridge.Transport\Artemis.Bridge.Transport.vcxproj">
       <Project>{E9F6DECA-F3D8-5050-BEA2-1A145165CA3C}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Engine.Core\Artemis.Engine.Core.vcxproj">
+      <Project>{05800B63-82FC-5238-A677-B15CEEDB5242}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.Capture\Artemis.Engine.Capture.vcxproj">
+      <Project>{D5DEED6A-0319-5C03-8121-B71F9BE29C8F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.Control\Artemis.Engine.Control.vcxproj">
+      <Project>{31DCAE1D-3AE2-5D14-B669-1F22FAFE48A8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.Match\Artemis.Engine.Match.vcxproj">
+      <Project>{EFF36A5F-4D8A-516F-99F3-0D15E4BBBA79}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.Render\Artemis.Engine.Render.vcxproj">
+      <Project>{F517C458-8281-563D-B238-8BBEFD42FDF3}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Blam\LayoutTests.cpp" />
@@ -100,6 +115,8 @@
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Control\ActionTests.cpp" />
     <ClCompile Include="Control\LockstepTests.cpp" />
+    <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
+    <ClCompile Include="Engine\MatchConfigTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />

@@ -40,6 +40,14 @@ COMPONENTS = {
     "Artemis/Bridge.Transport": ("Artemis.Bridge.Transport.vcxproj", {"Common", "Service", "Contract", "Control", "Layout", "Export", "Platform"},
                                  {"Common", "Services", "Contract", "Control", "Blam.Layout", "Bridge.Codec", "Blam.Map", "Blam.MapModel",
                                   "Blam.Runtime", "Perception", "Views"}),
+    # The engine in five projects (M6c.2, D216). Platform.* modules each may import: ENGINE_PLATFORM.
+    "Artemis/Engine.Core": ("Artemis.Engine.Core.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services"}),
+    "Artemis/Engine.Capture": ("Artemis.Engine.Capture.vcxproj", {"Common", "Service", "Layout", "Datum", "Platform"},
+                               {"Common", "Services", "Engine.Core", "Blam.Layout"}),
+    "Artemis/Engine.Control": ("Artemis.Engine.Control.vcxproj", {"Common", "Service", "Control", "Layout", "Platform"},
+                               {"Common", "Services", "Engine.Core", "Control", "Blam.Layout"}),
+    "Artemis/Engine.Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services", "Engine.Core"}),
+    "Artemis/Engine.Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services", "Engine.Core"}),
 }
 
 # The pure projects of M5b (D198): what was the Domain after Blam.Runtime. None of them touches the process, the wiring or a layer above.
@@ -60,9 +68,9 @@ TICK_DETOURS = ("ExecuteGameFrameDetour", "SimulationTicksDetour")
 # The interpretation of the live objects (02 sec. 3.2): a project since M5a (D189), it reads only the Snapshot (D184).
 RUNTIME = "Artemis/Blam.Runtime"
 
-# The three locators of the engine tables (Engine.Capture in 02, Platform/Capture until M6).
+# The three locators of the engine tables (Engine.Capture).
 LOCATORS = ("ObjectTableLocator", "PlayerTableLocator", "InteractionTableLocator")
-CAPTURE_HOOK = "Artemis/Core/Infrastructure/Platform/Capture/Hook/"
+CAPTURE_HOOK = "Artemis/Engine.Capture/Hook/"
 
 # Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Map.*) are imported only by the wiring of the DLL (future Mod),
 # the development tools (future DevTools) and the tests (02 sec. 3.5, contract of Blam.Map).
@@ -133,7 +141,8 @@ def test_component_project_lists_every_source(folder):
 def test_dll_project_references_the_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
     assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views",
-            "Bridge.Codec", "Control", "Bridge.Transport"} <= found
+            "Bridge.Codec", "Control", "Bridge.Transport", "Engine.Core", "Engine.Capture", "Engine.Control", "Engine.Match",
+            "Engine.Render"} <= found
 
 
 def test_tests_project_references_the_blam_components():
@@ -171,7 +180,7 @@ def test_unused_group_queries_are_removed():
 def test_the_engine_hook_of_the_map_lives_in_platform():
     hooks = [p for p in Sources("Artemis") if os.path.basename(p).startswith("OpenMapDetour.")]
     assert sorted(os.path.basename(p) for p in hooks) == ["OpenMapDetour.cpp", "OpenMapDetour.ixx"]
-    assert all(p.startswith("Artemis/Core/Infrastructure/Platform/Lifecycle/Hook/") for p in hooks), hooks
+    assert all(p.startswith("Artemis/Engine.Core/Lifecycle/Hook/") for p in hooks), hooks
     for path in Sources("Artemis/Blam.Map") + Sources("Artemis/Blam.MapModel"):
         text = Read(path)
         assert "windows.h" not in text and "GetModuleFileName" not in text, path
@@ -430,11 +439,11 @@ def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
 
 # ---- M6a: Control as a project (D210-D215)
 
-INPUT_TYPE = "Artemis/Core/Infrastructure/Platform/Input/Type/Platform.Input.Type.ixx"
-SIMULATION_TYPE = "Artemis/Core/Infrastructure/Platform/Simulation/Type/Platform.Simulation.Type.ixx"
-DETOUR_CPP = "Artemis/Core/Infrastructure/Platform/Input/Hook/PlayerActionDetour.cpp"
+INPUT_TYPE = "Artemis/Engine.Control/Input/Type/Platform.Input.Type.ixx"
+SIMULATION_TYPE = "Artemis/Engine.Control/Simulation/Type/Platform.Simulation.Type.ixx"
+DETOUR_CPP = "Artemis/Engine.Control/Input/Hook/PlayerActionDetour.cpp"
 BRIDGE_SERVICE_CPP = "Artemis/Bridge.Transport/System/BridgeService.cpp"
-BOT_SERVICE_IXX = "Artemis/Core/Infrastructure/Platform/Simulation/System/BotService.ixx"
+BOT_SERVICE_IXX = "Artemis/Engine.Control/Simulation/System/BotService.ixx"
 CONTROL_NOT_PURE_WORDS = ("std::mutex", "std::thread", "std::chrono")
 
 
@@ -539,7 +548,7 @@ def test_the_bridge_service_and_the_detour_know_only_the_ports():
     for name in ("LifecycleStore", "MatchCycleStore", "PlayerActionStore"):
         assert not re.search(rf"\b{name}\b", service), name
     assert "BridgeEngine& engine" in service
-    assert not re.search(r"\bBridgeService\b", Read(f"{PLATFORM}/Input/Hook/PlayerActionDetour.ixx"))
+    assert not re.search(r"\bBridgeService\b", Read("Artemis/Engine.Control/Input/Hook/PlayerActionDetour.ixx"))
     assert "m_ActionSource.Prepare(" in Read(DETOUR_CPP)
 
 
@@ -550,7 +559,7 @@ def test_the_ports_declare_exactly_their_methods():
     assert set(VIRTUAL_METHOD.findall(engine)) == {"GetPhase", "GetEngineStarts", "GetPausedFrames", "GetRequestedTimeScale",
                                                    "SetRequestedTimeScale", "IsPauseRequested", "SetPauseRequested", "SetEndRoundRequested",
                                                    "SetOverride", "RequestClient"}
-    source = Read(f"{PLATFORM}/Input/System/ActionSource.ixx")
+    source = Read("Artemis/Engine.Control/Input/System/ActionSource.ixx")
     assert re.search(r"^export module Platform\.Input\.System:ActionSource;", source, re.MULTILINE)
     assert re.search(r"\bclass\s+ActionSource\b", source)
     assert set(VIRTUAL_METHOD.findall(source)) == {"Prepare"}
@@ -561,8 +570,13 @@ def test_the_ports_declare_exactly_their_methods():
 REMOVED_INPUT_NAMES = ("GetButtonState", "InputStore", "MouseDeltaStore", "InputAction", "SetAIControlActive", "InjectMouseDelta",
                        "SetActionRequested", "AdvanceInputTick", "InputThread", "IsAIControlActive", "ConsumePendingDelta",
                        "AddPendingDelta", "KnownDeviceHandle")
-REMOVED_INPUT_FILES = ("Input/Hook/GetButtonStateDetour.ixx", "Input/Hook/GetButtonStateDetour.cpp", "Input/State/InputStore.ixx",
-                       "Input/State/InputStore.cpp", "Input/State/MouseDeltaStore.ixx", "Input/State/MouseDeltaStore.cpp")
+CONTROL_INPUT = "Artemis/Engine.Control/Input"
+REMOVED_INPUT_FILES = (f"{CONTROL_INPUT}/Hook/GetButtonStateDetour.ixx", f"{CONTROL_INPUT}/Hook/GetButtonStateDetour.cpp",
+                       f"{CONTROL_INPUT}/State/InputStore.ixx", f"{CONTROL_INPUT}/State/InputStore.cpp",
+                       f"{CONTROL_INPUT}/State/MouseDeltaStore.ixx", f"{CONTROL_INPUT}/State/MouseDeltaStore.cpp")
+CORE_LIFECYCLE = "Artemis/Engine.Core/Lifecycle"
+MATCH = "Artemis/Engine.Match"
+WINDOW = "Artemis/Engine.Render/Window"
 MATCH_CLASSES = {"EngineInterfaceDetour", "LifecycleUpdateDetour", "MatchConfigStore", "MatchCycleStore", "MatchConfigService"}
 WINDOW_CLASSES = {"WndProcDetour", "GetRawInputDataDetour", "InputService"}
 CLASS_DECLARATION = re.compile(r"^\s*class\s+(\w+)", re.MULTILINE)
@@ -577,42 +591,97 @@ def test_the_old_input_is_gone():
                              "Artemis"], capture_output=True, text=True)
     assert result.stdout == ""
     for relative in REMOVED_INPUT_FILES:
-        assert not Tracked(f"{PLATFORM}/{relative}"), relative
-        assert not os.path.exists(os.path.join(REPO, PLATFORM, relative)), relative
+        assert not Tracked(relative), relative
+        assert not os.path.exists(os.path.join(REPO, relative)), relative
     assert not Tracked("Artemis/Core/Runtime/Input")
     assert not os.path.exists(os.path.join(REPO, "Artemis/Core/Runtime/Input"))
 
 
 def test_the_match_and_window_modules_declare_their_classes():
-    assert DeclaredClasses(f"{PLATFORM}/Match") == MATCH_CLASSES
-    assert DeclaredClasses(f"{PLATFORM}/Window") == WINDOW_CLASSES
-    assert not DeclaredClasses(f"{PLATFORM}/Lifecycle") & MATCH_CLASSES
-    assert not DeclaredClasses(f"{PLATFORM}/Input") & WINDOW_CLASSES
-    for folder, name in (("Match", "Hook"), ("Match", "State"), ("Match", "System"), ("Match", "Type"),
-                         ("Window", "Hook"), ("Window", "System"), ("Window", "Type")):
+    assert DeclaredClasses(MATCH) == MATCH_CLASSES
+    assert DeclaredClasses(WINDOW) == WINDOW_CLASSES
+    assert not DeclaredClasses(CORE_LIFECYCLE) & MATCH_CLASSES
+    assert not DeclaredClasses(CONTROL_INPUT) & WINDOW_CLASSES
+    for root, folder, name in ((MATCH, "Match", "Hook"), (MATCH, "Match", "State"), (MATCH, "Match", "System"),
+                               (MATCH, "Match", "Type"), (WINDOW, "Window", "Hook"), (WINDOW, "Window", "System"),
+                               (WINDOW, "Window", "Type")):
         module = f"Platform.{folder}.{name}"
-        path = f"{PLATFORM}/{folder}/{name}/{module}.ixx" if name == "Type" else f"{PLATFORM}/{folder}/{module}.ixx"
+        path = f"{root}/{name}/{module}.ixx" if name == "Type" else f"{root}/{module}.ixx"
         assert re.search(rf"^export module {re.escape(module)};", Read(path), re.MULTILINE), path
 
 
 def test_the_types_of_match_and_window_left_lifecycle_and_input():
-    lifecycle = Read(f"{PLATFORM}/Lifecycle/Type/Platform.Lifecycle.Type.ixx")
-    match = Read(f"{PLATFORM}/Match/Type/Platform.Match.Type.ixx")
+    lifecycle = Read(f"{CORE_LIFECYCLE}/Type/Platform.Lifecycle.Type.ixx")
+    match = Read(f"{MATCH}/Type/Platform.Match.Type.ixx")
     for name in ("MatchConfig", "k_TransplantBlocks", "k_EngineConfigurationSize", "LifecycleUpdateFunction", "k_MaxMatchConfigNameLength"):
         assert not re.search(rf"\b{name}\b", lifecycle), name
         assert re.search(rf"\b{name}\b", match), name
     assert re.search(r"\bStatus\b", lifecycle)
-    input_types = Read(f"{PLATFORM}/Input/Type/Platform.Input.Type.ixx")
-    window = Read(f"{PLATFORM}/Window/Type/Platform.Window.Type.ixx")
+    input_types = Read(f"{CONTROL_INPUT}/Type/Platform.Input.Type.ixx")
+    window = Read(f"{WINDOW}/Type/Platform.Window.Type.ixx")
     for name in ("WindowMessage", "RawMouse", "WindowMessageHandler", "RawMouseHandler", "GetRawInputDataFunction"):
         assert not re.search(rf"\b{name}\b", input_types), name
         assert re.search(rf"\b{name}\b", window), name
 
 
 def test_the_match_window_and_input_modules_import_in_one_direction():
-    for path in Sources(f"{PLATFORM}/Lifecycle"):
+    for path in Sources(CORE_LIFECYCLE):
         assert not [n for n in Imports(path) if n.startswith("Platform.Match.")], path
-    for path in Sources(f"{PLATFORM}/Input"):
+    for path in Sources(CONTROL_INPUT):
         assert not [n for n in Imports(path) if n.startswith("Platform.Window.")], path
-    for path in Sources(f"{PLATFORM}/Window"):
+    for path in Sources(WINDOW):
         assert not [n for n in Imports(path) if n.startswith("Platform.Input.")], path
+
+
+# ---- M6c.2: the engine in five projects (D216, D217, D221)
+
+ENGINE_PLATFORM = {
+    "Artemis/Engine.Core": {"Hook", "Memory", "Host", "Lifecycle"},
+    "Artemis/Engine.Capture": {"Hook", "Memory", "Host", "Lifecycle", "Capture"},
+    "Artemis/Engine.Control": {"Hook", "Memory", "Host", "Lifecycle", "Input", "Simulation"},
+    "Artemis/Engine.Match": {"Hook", "Memory", "Host", "Lifecycle", "Match"},
+    "Artemis/Engine.Render": {"Hook", "Memory", "Host", "Lifecycle", "Render", "Window"},
+}
+ENGINE_FORBIDDEN_PREFIXES = ("Platform.Bridge.", "Platform.Port.", "Platform.Layer", "Runtime.", "UI.", "Viewer.", "Gui.", "Export.",
+                             "Perception.", "Views.", "Tables.", "Map.", "Resolved.", "Relations.", "Environment.", "Egocentric.")
+MODULE_LINE = re.compile(r"^\s*(?:export\s+)?module\s+([A-Za-z_][\w.]*)", re.MULTILINE)
+
+
+@pytest.mark.parametrize("folder", sorted(ENGINE_PLATFORM))
+def test_an_engine_project_imports_only_its_platform_folders(folder):
+    for path in Sources(folder):
+        found = {name.split(".")[1] for name in Imports(path) if name.startswith("Platform.")}
+        assert found <= ENGINE_PLATFORM[folder], f"{path}: {sorted(found - ENGINE_PLATFORM[folder])}"
+
+
+@pytest.mark.parametrize("folder", sorted(ENGINE_PLATFORM))
+def test_an_engine_project_is_a_platform_library_that_knows_no_upper_layer(folder):
+    for path in Sources(folder):
+        module = MODULE_LINE.search(Read(path))
+        assert module and module.group(1).startswith("Platform."), path
+        wrong = [name for name in Imports(path) if name.startswith(ENGINE_FORBIDDEN_PREFIXES)]
+        assert not wrong, f"{path}: imports {wrong}"
+
+
+def test_the_dll_keeps_only_the_layer_and_the_port_of_platform():
+    assert sorted(Tracked(PLATFORM)) == sorted(
+        [f"{PLATFORM}/Platform.Layer.ixx"] + [p for p in Tracked(f"{PLATFORM}/Port")])
+    assert all(p.startswith(f"{PLATFORM}/Port/") or p == f"{PLATFORM}/Platform.Layer.ixx" for p in Tracked(PLATFORM))
+    on_disk = sorted(os.listdir(os.path.join(REPO, PLATFORM)))
+    assert on_disk == ["Platform.Layer.ixx", "Port"], on_disk
+
+
+def test_the_dll_and_the_tests_reference_the_five_engine_projects():
+    engine = {"Engine.Core", "Engine.Capture", "Engine.Control", "Engine.Match", "Engine.Render"}
+    for project in ("Artemis/Artemis.vcxproj", "Artemis/Tests/Artemis.Tests.vcxproj"):
+        found = {ProjectName(include) for include in REFERENCE.findall(Read(project))}
+        assert engine <= found, project
+    solution = Read("Artemis-MCC.sln")
+    for name in engine:
+        assert f'"Artemis.{name}"' in solution, name
+
+
+def test_the_dll_does_not_list_the_sources_of_the_engine_projects():
+    listed = {include.replace("\\", "/") for include in COMPILE.findall(Read("Artemis/Artemis.vcxproj"))}
+    assert not [p for p in listed if p.startswith("Core/Infrastructure/Platform/") and not p.startswith(
+        ("Core/Infrastructure/Platform/Port/", "Core/Infrastructure/Platform/Platform.Layer.ixx"))]

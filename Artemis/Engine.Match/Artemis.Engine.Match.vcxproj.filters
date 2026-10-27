@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Hook">
+      <UniqueIdentifier>{ffae61b5-eaa6-5e8f-befb-f013cbd81eda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="State">
+      <UniqueIdentifier>{fcc71019-82e6-5df5-ba9e-adf7c1634640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{8f7fcf2a-6103-558c-8833-eade68ce5d3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Type">
+      <UniqueIdentifier>{e041360d-a891-5f3e-96f0-a1c8e2b77122}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Hook\EngineInterfaceDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\EngineInterfaceDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\LifecycleUpdateDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\LifecycleUpdateDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform.Match.Hook.ixx" />
+    <ClCompile Include="Platform.Match.State.ixx" />
+    <ClCompile Include="Platform.Match.System.ixx" />
+    <ClCompile Include="State\MatchConfigStore.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\MatchConfigStore.ixx">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\MatchCycleStore.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\MatchCycleStore.ixx">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="System\MatchConfigService.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\MatchConfigService.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="Type\Platform.Match.Type.ixx">
+      <Filter>Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

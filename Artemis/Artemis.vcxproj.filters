@@ -1,21 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Core\Infrastructure\Platform\Capture">
-      <UniqueIdentifier>{6c62a270-9add-5c00-9791-3f20a3c6ddd3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Capture\Type">
-      <UniqueIdentifier>{8731cf6e-62ee-5996-8e82-f2b5e920c94b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Capture\Hook">
-      <UniqueIdentifier>{54387136-736b-5286-9ee5-6bf86b55551e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Capture\State">
-      <UniqueIdentifier>{c34cdba4-5f56-57c3-8a51-f7113ded2060}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Capture\System">
-      <UniqueIdentifier>{91134b9a-6ed1-5308-a0be-5d7a1b5770b3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\UI\TickDump">
       <UniqueIdentifier>{02b748e8-92d3-4d5b-90c4-486b043cbb25}</UniqueIdentifier>
     </Filter>
@@ -94,38 +79,8 @@
     <Filter Include="Core\Infrastructure\Platform">
       <UniqueIdentifier>{d3a7bcbf-9247-4ee8-92cf-c91e3bbe2522}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Host">
-      <UniqueIdentifier>{307d15b9-3017-4119-ae84-abc40b4d9c0c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Host\Type">
-      <UniqueIdentifier>{f5f5212b-be1b-4c88-961a-97b41c8ece1f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Host\System">
-      <UniqueIdentifier>{fe57e77c-3915-4619-a88d-e9915b402523}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Host\State">
-      <UniqueIdentifier>{20de43d5-9f05-4a3c-a6aa-7f0a2390b3d8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Host\Hook">
-      <UniqueIdentifier>{bc4ae9e1-18e9-4160-85f5-4366adec55ae}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Runtime\Bridge">
       <UniqueIdentifier>{a9716d0e-cb24-4b98-846e-5345822dc127}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Simulation">
-      <UniqueIdentifier>{beb54f71-89d1-48de-874e-576db9829d18}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Simulation\Type">
-      <UniqueIdentifier>{70f1dc75-6826-4131-9c49-6aea59199f57}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Simulation\State">
-      <UniqueIdentifier>{e21a4b46-c66a-4183-b0b0-e57630aeeb23}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Simulation\System">
-      <UniqueIdentifier>{9ee5aed1-1718-4d82-b81f-245fe284a9b9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Simulation\Hook">
-      <UniqueIdentifier>{9c5077ba-6b66-4756-9d5c-a0d5636497e1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\UI\TickTrace">
       <UniqueIdentifier>{511bbd30-310e-4d9c-a272-b1419b431aaf}</UniqueIdentifier>
@@ -151,98 +106,11 @@
     <Filter Include="Core\UI\Simulation\System">
       <UniqueIdentifier>{f7edd5c2-4a4f-478a-a999-c7a7b82f27ff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Input">
-      <UniqueIdentifier>{80ebe4ff-c500-4ece-b37c-82334d45d983}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Input\Type">
-      <UniqueIdentifier>{ad9f36ed-0c58-48a3-aa93-893b70b2091c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Input\State">
-      <UniqueIdentifier>{ff6e382f-6673-4729-a93e-c95fcbc0756d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Infrastructure\Platform\Port">
       <UniqueIdentifier>{8f7e8813-f90f-57f2-9c8b-706de64ddadc}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Port\System">
       <UniqueIdentifier>{f18794a9-a4fc-59c8-a6bb-d6ff2adb7484}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Input\System">
-      <UniqueIdentifier>{0693826d-8a27-4e76-97c1-b131d2bd6e30}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Input\Hook">
-      <UniqueIdentifier>{0c546b9e-268d-43f1-a707-e98105ce0bbc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Lifecycle">
-      <UniqueIdentifier>{68da32ca-fa4d-4660-b285-5946abaf0114}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Lifecycle\State">
-      <UniqueIdentifier>{3d4db28a-cc58-470c-ac5e-91d10c451128}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Lifecycle\System">
-      <UniqueIdentifier>{a917e39d-52b6-4bbf-8f12-0b33a0a55267}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Lifecycle\Hook">
-      <UniqueIdentifier>{0257d8b6-cf22-4276-8591-b5aee5557dab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Lifecycle\Type">
-      <UniqueIdentifier>{fa612ca5-7820-4f17-bb94-e99667800daa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Match">
-      <UniqueIdentifier>{d2e4013c-719a-518e-b177-3412ff49750f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Match\Type">
-      <UniqueIdentifier>{87cbf15b-463b-5567-ac44-19c3c742198d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Match\State">
-      <UniqueIdentifier>{9d0c7a18-f03a-55a5-abe2-dccd8b78d00b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Match\System">
-      <UniqueIdentifier>{48972dcb-dcd0-550a-b100-fb8bef2d864d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Match\Hook">
-      <UniqueIdentifier>{edeca477-165f-5a59-a19d-3c2b8a816f8f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Window">
-      <UniqueIdentifier>{5825270f-432f-562a-a077-3b351d2a8ce0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Window\Type">
-      <UniqueIdentifier>{fd1f0d3b-30fe-5d8b-b551-24ebb70be698}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Window\System">
-      <UniqueIdentifier>{947d4049-9a7a-5a60-9857-3a8bb9934f20}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Window\Hook">
-      <UniqueIdentifier>{73afc90f-2e36-5648-a828-01ea9991d0cc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory">
-      <UniqueIdentifier>{371b4643-f75c-46a9-86a8-0768aa313428}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory\Type">
-      <UniqueIdentifier>{5881ed28-56e7-4fe0-aa94-8eb7fe29a61b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory\System">
-      <UniqueIdentifier>{31d732ce-1054-4a29-9825-84dbd8d0db2b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory\System\AOB">
-      <UniqueIdentifier>{9a67a9b4-2f97-4bc5-bb79-564d26c037ea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Memory\System\Reader">
-      <UniqueIdentifier>{8b3d0834-488b-42f8-97c8-3163be4c44d9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Render">
-      <UniqueIdentifier>{95e7d874-00cb-4eaa-aaaf-6b9b88b844ca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Render\State">
-      <UniqueIdentifier>{0f0cc746-e7ff-4194-a8bc-7a341eee0b3c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Render\System">
-      <UniqueIdentifier>{4c0c9853-837c-4b47-a75d-5ed0190bd3d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Render\Hook">
-      <UniqueIdentifier>{6e8a9bf1-5b98-4e00-94dc-3208ddbd3e1b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Render\Type">
-      <UniqueIdentifier>{96694708-945e-402c-8207-32a77b6d2358}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Viewer">
       <UniqueIdentifier>{75d4e7ce-0aa5-444c-a1cc-64e600b598fe}</UniqueIdentifier>
@@ -514,15 +382,6 @@
     <Filter Include="Core\Gui\Style\Type">
       <UniqueIdentifier>{5ebb5890-d1f1-419c-a2d4-55d416d5e5cb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Hook\Type">
-      <UniqueIdentifier>{64471c90-a3b4-41a0-a737-5477d00ad0b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Hook">
-      <UniqueIdentifier>{069b409e-a3dd-4385-b657-4927292aa2a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Hook\System">
-      <UniqueIdentifier>{9a47eef2-d3b9-4d1f-8b3e-731553de7710}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Gui\Widget\System\Panel">
       <UniqueIdentifier>{ece42211-15c5-4856-a09d-390793f12e68}</UniqueIdentifier>
     </Filter>
@@ -566,54 +425,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Platform.Capture.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.cpp">
-      <Filter>Core\Infrastructure\Platform\Capture\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Type\Platform.Capture.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Capture\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx">
       <Filter>Core\UI\TickDump\Type</Filter>
     </ClCompile>
@@ -655,12 +466,6 @@
     </ClCompile>
     <ClCompile Include="Core\UI\Bench\Type\UI.Bench.Type.ixx">
       <Filter>Core\UI\Bench\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchCycleStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchCycleStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
     </ClCompile>
     <ClCompile Include="External\imgui\imgui.cpp">
       <Filter>External\imgui</Filter>
@@ -1163,201 +968,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx">
       <Filter>Core\Infrastructure\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\GetRawInputDataDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\GetRawInputDataDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\WndProcDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\WndProcDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Window\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\System\ActionSource.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\System\InputService.cpp">
-      <Filter>Core\Infrastructure\Platform\Window\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\System\InputService.ixx">
-      <Filter>Core\Infrastructure\Platform\Window\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.State.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\EngineInterfaceDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\EngineInterfaceDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\LifecycleUpdateDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\LifecycleUpdateDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Match\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchConfigStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchConfigStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Match\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\System\MatchConfigService.cpp">
-      <Filter>Core\Infrastructure\Platform\Match\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\System\MatchConfigService.ixx">
-      <Filter>Core\Infrastructure\Platform\Match\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Lifecycle\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Match</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.State.ixx">
-      <Filter>Core\Infrastructure\Platform\Match</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Match</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Type\Platform.Match.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Match\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Platform.Window.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Platform.Window.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Type\Platform.Window.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Window\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.cpp">
-      <Filter>Core\Infrastructure\Platform\Memory\System\AOB</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory\System\AOB</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.cpp">
-      <Filter>Core\Infrastructure\Platform\Memory\System\Reader</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx">
-      <Filter>Core\Infrastructure\Platform\Memory\System\Reader</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx">
-      <Filter>Core\Infrastructure\Platform\Render\System</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Viewer\Map\System\FixturePass.cpp">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
@@ -1370,17 +980,8 @@
     <ClCompile Include="Core\Viewer\Map\System\RaycastPass.ixx">
       <Filter>Core\Viewer\Map\System</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Hook\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx">
       <Filter>Core\Gui\Style\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx">
-      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp">
-      <Filter>Core\Infrastructure\Platform\Hook\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Widget\System\Panel\PanelGuiService.ixx">
       <Filter>Core\Gui\Widget\System\Panel</Filter>
@@ -1394,110 +995,11 @@
     <ClCompile Include="Core\Gui\Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp">
       <Filter>Core\Gui\Widget\System\ResponsiveCard</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx">
-      <Filter>Core\Infrastructure\Platform\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Type\Platform.Host.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\System\HostService.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\System\HostService.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\State\LocalUserStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\State\LocalUserStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Platform.Host.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Host</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetPlayerDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetPlayerDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetProfileDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetProfileDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetGamepadMappingDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetGamepadMappingDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.ixx">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp">
-      <Filter>Core\Infrastructure\Platform\Host\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Simulation\Type</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx">
       <Filter>Core\Runtime\Bridge</Filter>
     </ClCompile>
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.cpp">
       <Filter>Core\Runtime\Bridge</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Simulation\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Simulation\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.ixx">
-      <Filter>Core\Infrastructure\Platform\Simulation\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.cpp">
-      <Filter>Core\Infrastructure\Platform\Simulation\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Platform.Simulation.Hook.ixx">
-      <Filter>Core\Infrastructure\Platform\Simulation</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Simulation\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Simulation\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\PlayerActionStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\PlayerActionStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\PlayerActionDetour.ixx">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\PlayerActionDetour.cpp">
-      <Filter>Core\Infrastructure\Platform\Input\Hook</Filter>
     </ClCompile>
     <ClCompile Include="Core\UI\TickTrace\Type\UI.TickTrace.Type.ixx">
       <Filter>Core\UI\TickTrace\Type</Filter>

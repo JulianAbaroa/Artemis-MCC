@@ -137,22 +137,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ExecuteGameFrameDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\InteractionTableLocator.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\ObjectTableLocator.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\PlayerTableLocator.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Hook\SimulationTicksDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Platform.Capture.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\State\CaptureStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\System\CaptureService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Capture\Type\Platform.Capture.Type.ixx" />
     <ClCompile Include="Core\UI\TickDump\Type\UI.TickDump.Type.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.ixx" />
     <ClCompile Include="Core\UI\TickDump\State\TickDumpUIStore.cpp" />
@@ -167,52 +151,9 @@
     <ClCompile Include="Core\UI\Bench\State\BenchUIStore.cpp" />
     <ClCompile Include="Core\UI\Bench\State\BenchUIStore.ixx" />
     <ClCompile Include="Core\UI\Bench\Type\UI.Bench.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchCycleStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchCycleStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\Type\Platform.Hook.Type.ixx" />
     <ClCompile Include="Core\Gui\Style\Type\Gui.Style.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Hook\System\Platform.Hook.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\GetRawInputDataDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\GetRawInputDataDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\WndProcDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Hook\WndProcDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.State.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Type\Platform.Host.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\System\HostService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\System\HostService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\State\LocalUserStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\State\LocalUserStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Platform.Host.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetPlayerDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetPlayerDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetProfileDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetProfileDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetGamepadMappingDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\LocalUserGetGamepadMappingDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp" />
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx" />
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\State\BotStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\System\BotService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Platform.Simulation.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Simulation\Hook\SetMachinesDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\VirtualInputStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\InputUpdateDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\PlayerActionStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\State\PlayerActionStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\PlayerActionDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Hook\PlayerActionDetour.cpp" />
     <ClCompile Include="Core\UI\Simulation\Type\UI.Simulation.Type.ixx" />
     <ClCompile Include="Core\UI\Simulation\State\SimulationUIStore.ixx" />
     <ClCompile Include="Core\UI\Simulation\State\SimulationUIStore.cpp" />
@@ -223,72 +164,12 @@
     <ClCompile Include="Core\UI\TickTrace\State\TickTraceUIStore.cpp" />
     <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.ixx" />
     <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\System\ActionSource.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\System\InputService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\System\InputService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\DestroySubsystemsDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\EngineInitializeDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\EngineInterfaceDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\EngineInterfaceDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\LifecycleUpdateDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Hook\LifecycleUpdateDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Hook\OpenMapDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.State.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Platform.Lifecycle.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\State\LifecycleStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchConfigStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\State\MatchConfigStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\System\LifecycleService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\System\MatchConfigService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\System\MatchConfigService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Lifecycle\Type\Platform.Lifecycle.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.State.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Platform.Match.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Match\Type\Platform.Match.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Platform.Window.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Platform.Window.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Window\Type\Platform.Window.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Platform.Memory.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\AOB\AOBService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Port\Platform.Port.System.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeActionSource.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeActionSource.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeEngineAdapter.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeEngineAdapter.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\ResizeBuffersDetour.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.Hook.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Platform.Render.System.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\State\RenderStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuBuffer.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuPipeline.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\GpuStateGuard.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\RenderService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\System\SwapChainLocator.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Render\Type\Platform.Render.Type.ixx" />
     <ClCompile Include="Core\Runtime\AI\AIThread.cpp" />
     <ClCompile Include="Core\Runtime\Main\MainThread.ixx">
       <FileType>Document</FileType>
@@ -585,6 +466,21 @@
     </ProjectReference>
     <ProjectReference Include="Bridge.Transport\Artemis.Bridge.Transport.vcxproj">
       <Project>{E9F6DECA-F3D8-5050-BEA2-1A145165CA3C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Engine.Core\Artemis.Engine.Core.vcxproj">
+      <Project>{05800B63-82FC-5238-A677-B15CEEDB5242}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Engine.Capture\Artemis.Engine.Capture.vcxproj">
+      <Project>{D5DEED6A-0319-5C03-8121-B71F9BE29C8F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Engine.Control\Artemis.Engine.Control.vcxproj">
+      <Project>{31DCAE1D-3AE2-5D14-B669-1F22FAFE48A8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Engine.Match\Artemis.Engine.Match.vcxproj">
+      <Project>{EFF36A5F-4D8A-516F-99F3-0D15E4BBBA79}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Engine.Render\Artemis.Engine.Render.vcxproj">
+      <Project>{F517C458-8281-563D-B238-8BBEFD42FDF3}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

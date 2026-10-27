@@ -13,6 +13,9 @@
     <Filter Include="Control">
       <UniqueIdentifier>{712559e7-5888-591b-b57e-e271a1b8119e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{3f994546-8697-5a21-88f7-4c39c6c32a0e}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Perception">
       <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
     </Filter>
@@ -29,6 +32,12 @@
     </ClCompile>
     <ClCompile Include="Control\LockstepTests.cpp">
       <Filter>Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\LifecycleStoreTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\MatchConfigTests.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Perception\PipelineTests.cpp">
       <Filter>Perception</Filter>

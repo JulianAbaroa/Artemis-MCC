@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{D5DEED6A-0319-5C03-8121-B71F9BE29C8F}</ProjectGuid>
+    <RootNamespace>Artemis_Engine_Capture</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.Engine.Capture</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Artemis.Common.props" />
+    <Import Project="..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Artemis.Common.props" />
+    <Import Project="..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\Artemis.Services.vcxproj">
+      <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.Core\Artemis.Engine.Core.vcxproj">
+      <Project>{05800B63-82FC-5238-A677-B15CEEDB5242}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Blam.Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Hook\ExecuteGameFrameDetour.cpp" />
+    <ClCompile Include="Hook\ExecuteGameFrameDetour.ixx" />
+    <ClCompile Include="Hook\InteractionTableLocator.cpp" />
+    <ClCompile Include="Hook\InteractionTableLocator.ixx" />
+    <ClCompile Include="Hook\ObjectTableLocator.cpp" />
+    <ClCompile Include="Hook\ObjectTableLocator.ixx" />
+    <ClCompile Include="Hook\PlayerTableLocator.cpp" />
+    <ClCompile Include="Hook\PlayerTableLocator.ixx" />
+    <ClCompile Include="Hook\SimulationTicksDetour.cpp" />
+    <ClCompile Include="Hook\SimulationTicksDetour.ixx" />
+    <ClCompile Include="Platform.Capture.Hook.ixx" />
+    <ClCompile Include="State\CaptureStore.cpp" />
+    <ClCompile Include="State\CaptureStore.ixx" />
+    <ClCompile Include="System\CaptureService.cpp" />
+    <ClCompile Include="System\CaptureService.ixx" />
+    <ClCompile Include="Type\Platform.Capture.Type.ixx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

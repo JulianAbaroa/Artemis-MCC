@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Hook">
+      <UniqueIdentifier>{3c3b677a-82c7-5a5a-a59e-ca57105eecb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="State">
+      <UniqueIdentifier>{3497706a-a810-5776-a159-8fbe1b9b39a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{3b801eb2-8aa6-5703-9274-b08d71425d89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Type">
+      <UniqueIdentifier>{6fe563c2-4a26-5bad-9d8e-0e36c810ffa2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Hook\ExecuteGameFrameDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\ExecuteGameFrameDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\InteractionTableLocator.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\InteractionTableLocator.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\ObjectTableLocator.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\ObjectTableLocator.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\PlayerTableLocator.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\PlayerTableLocator.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\SimulationTicksDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\SimulationTicksDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform.Capture.Hook.ixx" />
+    <ClCompile Include="State\CaptureStore.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\CaptureStore.ixx">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="System\CaptureService.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\CaptureService.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="Type\Platform.Capture.Type.ixx">
+      <Filter>Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

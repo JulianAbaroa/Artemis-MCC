@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Render">
+      <UniqueIdentifier>{384946ae-0e03-5815-a4fd-00ae3197b052}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Hook">
+      <UniqueIdentifier>{327d2705-d924-5921-9cda-33b04601b88a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\State">
+      <UniqueIdentifier>{92d3de1a-cde2-5a31-b5cf-bf4e07e534ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\System">
+      <UniqueIdentifier>{f15e1f68-2fbb-5624-a64b-ee67d98852ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Type">
+      <UniqueIdentifier>{1ea37a17-27ce-554a-abf5-0ca085a271d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window">
+      <UniqueIdentifier>{7c035068-a68f-5224-9ddc-98eef6a97fed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window\Hook">
+      <UniqueIdentifier>{991410b3-4431-5b08-866e-55819411d019}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window\System">
+      <UniqueIdentifier>{63d0b2f4-f760-55e9-a094-4c788f09810a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Window\Type">
+      <UniqueIdentifier>{0d9c7fde-ccfb-54e7-b0c2-843859531c11}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Render\Hook\PresentDetour.cpp">
+      <Filter>Render\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Hook\PresentDetour.ixx">
+      <Filter>Render\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Hook\ResizeBuffersDetour.cpp">
+      <Filter>Render\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Hook\ResizeBuffersDetour.ixx">
+      <Filter>Render\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform.Render.Hook.ixx">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Platform.Render.System.ixx">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\State\RenderStore.cpp">
+      <Filter>Render\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\State\RenderStore.ixx">
+      <Filter>Render\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\GpuBuffer.cpp">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\GpuBuffer.ixx">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\GpuPipeline.cpp">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\GpuPipeline.ixx">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\GpuStateGuard.cpp">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\GpuStateGuard.ixx">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\RenderService.cpp">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\RenderService.ixx">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\SwapChainLocator.cpp">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\System\SwapChainLocator.ixx">
+      <Filter>Render\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Type\Platform.Render.Type.ixx">
+      <Filter>Render\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Hook\GetRawInputDataDetour.cpp">
+      <Filter>Window\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Hook\GetRawInputDataDetour.ixx">
+      <Filter>Window\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Hook\WndProcDetour.cpp">
+      <Filter>Window\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Hook\WndProcDetour.ixx">
+      <Filter>Window\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Platform.Window.Hook.ixx">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Platform.Window.System.ixx">
+      <Filter>Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\System\InputService.cpp">
+      <Filter>Window\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\System\InputService.ixx">
+      <Filter>Window\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Type\Platform.Window.Type.ixx">
+      <Filter>Window\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

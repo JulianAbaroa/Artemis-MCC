@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Input">
+      <UniqueIdentifier>{a4506a05-2b38-50a1-bb14-22eca16d30ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\Hook">
+      <UniqueIdentifier>{17cc9abb-f498-527a-8a39-d21c6333e90a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\State">
+      <UniqueIdentifier>{f3048bdf-a5a4-5bfe-8161-e45998eb2b38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\System">
+      <UniqueIdentifier>{3ce30c63-5162-54f3-8834-7469ca403489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\Type">
+      <UniqueIdentifier>{a75f03b1-4d4f-53ed-a0f2-66692041dcd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation">
+      <UniqueIdentifier>{9d4dfe08-5945-5d1b-9e1d-2ba32508e733}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\Hook">
+      <UniqueIdentifier>{f1d5485a-9db5-5144-97e0-ac3a3abd8fd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\State">
+      <UniqueIdentifier>{832800da-e157-57cf-bbd9-d47a55e5b834}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\System">
+      <UniqueIdentifier>{af547fe1-7a64-5b96-81d1-22425d85ed29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\Type">
+      <UniqueIdentifier>{3f1162e2-fd92-5bff-916d-1503a6251d33}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Input\Hook\InputUpdateDetour.cpp">
+      <Filter>Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Hook\InputUpdateDetour.ixx">
+      <Filter>Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Hook\PlayerActionDetour.cpp">
+      <Filter>Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Hook\PlayerActionDetour.ixx">
+      <Filter>Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Platform.Input.Hook.ixx">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Platform.Input.State.ixx">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Platform.Input.System.ixx">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\PlayerActionStore.cpp">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\PlayerActionStore.ixx">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\VirtualInputStore.cpp">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\VirtualInputStore.ixx">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\ActionSource.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Type\Platform.Input.Type.ixx">
+      <Filter>Input\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Hook\SetMachinesDetour.cpp">
+      <Filter>Simulation\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Hook\SetMachinesDetour.ixx">
+      <Filter>Simulation\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Platform.Simulation.Hook.ixx">
+      <Filter>Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\State\BotStore.cpp">
+      <Filter>Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\State\BotStore.ixx">
+      <Filter>Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\System\BotService.cpp">
+      <Filter>Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\System\BotService.ixx">
+      <Filter>Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Type\Platform.Simulation.Type.ixx">
+      <Filter>Simulation\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
