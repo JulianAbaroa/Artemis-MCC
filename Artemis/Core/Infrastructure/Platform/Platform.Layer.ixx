@@ -19,6 +19,7 @@ import Platform.Capture.System;
 import Platform.Capture.Hook;
 import Platform.Bridge.State;
 import Platform.Bridge.System;
+import Platform.Port.System;
 import Platform.Render.Type;
 import Platform.Render.State;
 import Platform.Render.System;
@@ -29,6 +30,7 @@ export namespace Platform
 {
     // Root of the Platform layer. Owns the stores, services and hooks that talk to the game process:
     // lifecycle, host (MCC), input, simulation (bots), bridge (Python), memory and render. The hooks are installed by the Runtime layer.
+    // The port adapters connect the bridge with the engine (D215).
     // note: Members are built in declaration order, so stores come first, then services, then hooks.
     class Layer
     {
@@ -72,6 +74,9 @@ export namespace Platform
         using BridgeStore = Platform::Bridge::State::BridgeStore;
         using BridgeService = Platform::Bridge::System::BridgeService;
 
+        using BridgeEngineAdapter = Platform::Port::System::BridgeEngineAdapter;
+        using BridgeActionSource = Platform::Port::System::BridgeActionSource;
+
         using AOBService = Platform::Memory::System::AOBService;
         using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
 
@@ -98,8 +103,9 @@ export namespace Platform
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),
             m_BotService(service.m_Log, m_AOBService, m_BotStore),
-            m_BridgeService(service.m_Log, service.m_SettingsStore, m_LifecycleStore, m_MatchCycleStore, m_PlayerActionStore,
-                m_BridgeStore),
+            m_BridgeEngineAdapter(m_LifecycleStore, m_MatchCycleStore, m_PlayerActionStore),
+            m_BridgeService(service.m_Log, service.m_SettingsStore, m_BridgeEngineAdapter, m_BridgeStore),
+            m_BridgeActionSource(m_BridgeService),
             m_CaptureService(service.m_Log, m_MemoryReaderService, m_CaptureStore),
             m_RenderService(service.m_Log, m_RenderStore),
             m_SwapChainLocator(service.m_Log),
@@ -117,7 +123,7 @@ export namespace Platform
             m_GetRawInputDataDetour(service.m_Log, service.m_SettingsStore, m_InputService, m_MouseDeltaStore),
             m_WndProcDetour(service.m_Log, m_InputService, m_LifecycleStore, m_LifecycleService),
             m_InputUpdateDetour(service.m_Log, m_HostService, m_VirtualInputStore),
-            m_PlayerActionDetour(service.m_Log, m_AOBService, m_PlayerActionStore, m_BotService, m_BridgeService),
+            m_PlayerActionDetour(service.m_Log, m_AOBService, m_PlayerActionStore, m_BotService, m_BridgeActionSource),
             m_SetMachinesDetour(service.m_Log, m_AOBService, m_BotStore),
             m_PresentDetour(service.m_Log, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
             m_ResizeBuffersDetour(service.m_Log, m_RenderStore, m_RenderService, m_SwapChainLocator),
@@ -207,7 +213,9 @@ export namespace Platform
         AOBService m_AOBService;
         HostService m_HostService;
         BotService m_BotService;
+        BridgeEngineAdapter m_BridgeEngineAdapter;
         BridgeService m_BridgeService;
+        BridgeActionSource m_BridgeActionSource;
         MemoryReaderService m_MemoryReaderService{};
         CaptureService m_CaptureService;
         RenderService m_RenderService;

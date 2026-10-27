@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="State">
+      <UniqueIdentifier>{01e1a0c2-b550-5c15-a92d-f803c7293527}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="System">
+      <UniqueIdentifier>{97ca3824-f1ff-5ce3-999c-1d7d0746bb12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Type">
+      <UniqueIdentifier>{8c82c5ec-dcb0-577a-a349-aaf6e5ce2f06}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="State\BridgeStore.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\BridgeStore.ixx">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="System\BridgeEngine.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\BridgeService.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\BridgeService.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\Platform.Bridge.System.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="Type\Platform.Bridge.Type.ixx">
+      <Filter>Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

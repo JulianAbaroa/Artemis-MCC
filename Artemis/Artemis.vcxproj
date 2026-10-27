@@ -201,11 +201,6 @@
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\CanAcceptAnyJoinRequestDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Host\Hook\SessionJoinCheckPatch.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\Platform.Bridge.Type.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.cpp" />
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.ixx" />
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.cpp" />
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx" />
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx" />
@@ -234,6 +229,8 @@
     <ClCompile Include="Core\UI\TickTrace\State\TickTraceUIStore.cpp" />
     <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.ixx" />
     <ClCompile Include="Core\UI\TickTrace\System\TickTraceUIService.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.System.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Input\System\ActionSource.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Input\Type\Platform.Input.Type.ixx" />
@@ -266,6 +263,11 @@
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\System\Reader\MemoryReaderService.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Memory\Type\MemorySignature.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Port\Platform.Port.System.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeActionSource.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeActionSource.ixx" />
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeEngineAdapter.cpp" />
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeEngineAdapter.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.cpp" />
     <ClCompile Include="Core\Infrastructure\Platform\Render\Hook\PresentDetour.ixx" />
@@ -583,6 +585,9 @@
     </ProjectReference>
     <ProjectReference Include="Bridge.Codec\Artemis.Bridge.Codec.vcxproj">
       <Project>{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Bridge.Transport\Artemis.Bridge.Transport.vcxproj">
+      <Project>{E9F6DECA-F3D8-5050-BEA2-1A145165CA3C}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

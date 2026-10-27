@@ -112,18 +112,6 @@
     <Filter Include="Core\Infrastructure\Platform\Host\Hook">
       <UniqueIdentifier>{bc4ae9e1-18e9-4160-85f5-4366adec55ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Bridge">
-      <UniqueIdentifier>{f861fcea-78d1-47c2-b9bc-d5bbf592a2a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Bridge\Type">
-      <UniqueIdentifier>{f7caed5b-4bb1-4281-b081-05fc57e2a912}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Bridge\State">
-      <UniqueIdentifier>{be179231-23a6-4ced-b7a7-059046f4d4aa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Infrastructure\Platform\Bridge\System">
-      <UniqueIdentifier>{987218d9-2764-4405-806f-c55b8e2f885b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Runtime\Bridge">
       <UniqueIdentifier>{a9716d0e-cb24-4b98-846e-5345822dc127}</UniqueIdentifier>
     </Filter>
@@ -174,6 +162,12 @@
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Input\State">
       <UniqueIdentifier>{ff6e382f-6673-4729-a93e-c95fcbc0756d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Port">
+      <UniqueIdentifier>{8f7e8813-f90f-57f2-9c8b-706de64ddadc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Infrastructure\Platform\Port\System">
+      <UniqueIdentifier>{f18794a9-a4fc-59c8-a6bb-d6ff2adb7484}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Infrastructure\Platform\Input\System">
       <UniqueIdentifier>{0693826d-8a27-4e76-97c1-b131d2bd6e30}</UniqueIdentifier>
@@ -1133,6 +1127,21 @@
     <ClCompile Include="Core\Gui\Backend\Gui.Backend.System.ixx">
       <Filter>Core\Gui\Backend</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Port\Platform.Port.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Port</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeActionSource.cpp">
+      <Filter>Core\Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeActionSource.ixx">
+      <Filter>Core\Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeEngineAdapter.cpp">
+      <Filter>Core\Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Port\System\BridgeEngineAdapter.ixx">
+      <Filter>Core\Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Platform.Layer.ixx">
       <Filter>Core\Infrastructure\Platform</Filter>
     </ClCompile>
@@ -1162,6 +1171,12 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\State\InputStore.ixx">
       <Filter>Core\Infrastructure\Platform\Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\Platform.Input.System.ixx">
+      <Filter>Core\Infrastructure\Platform\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Infrastructure\Platform\Input\System\ActionSource.ixx">
+      <Filter>Core\Infrastructure\Platform\Input\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Input\System\InputService.cpp">
       <Filter>Core\Infrastructure\Platform\Input\System</Filter>
@@ -1405,21 +1420,6 @@
     </ClCompile>
     <ClCompile Include="Core\Infrastructure\Platform\Simulation\Type\Platform.Simulation.Type.ixx">
       <Filter>Core\Infrastructure\Platform\Simulation\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\Type\Platform.Bridge.Type.ixx">
-      <Filter>Core\Infrastructure\Platform\Bridge\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.ixx">
-      <Filter>Core\Infrastructure\Platform\Bridge\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\State\BridgeStore.cpp">
-      <Filter>Core\Infrastructure\Platform\Bridge\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.ixx">
-      <Filter>Core\Infrastructure\Platform\Bridge\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Infrastructure\Platform\Bridge\System\BridgeService.cpp">
-      <Filter>Core\Infrastructure\Platform\Bridge\System</Filter>
     </ClCompile>
     <ClCompile Include="Core\Runtime\Bridge\BridgeThread.ixx">
       <Filter>Core\Runtime\Bridge</Filter>

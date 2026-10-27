@@ -2,7 +2,7 @@ module;
 
 #include <windows.h>
 
-export module Platform.Input.System;
+export module Platform.Input.System:Input;
 
 import Common.Log.System;
 import Platform.Input.Type;

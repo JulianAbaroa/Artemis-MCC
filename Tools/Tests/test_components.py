@@ -36,6 +36,10 @@ COMPONENTS = {
                               "Contract"},
                              {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Contract"}),
     "Artemis/Control": ("Artemis.Control.vcxproj", {"Common", "Layout", "Contract", "Control"}, {"Common", "Blam.Layout", "Contract"}),
+    # The only Platform modules it may import are Platform.Bridge.* (test_bridge_transport_imports_no_engine_module).
+    "Artemis/Bridge.Transport": ("Artemis.Bridge.Transport.vcxproj", {"Common", "Service", "Contract", "Control", "Layout", "Export", "Platform"},
+                                 {"Common", "Services", "Contract", "Control", "Blam.Layout", "Bridge.Codec", "Blam.Map", "Blam.MapModel",
+                                  "Blam.Runtime", "Perception", "Views"}),
 }
 
 # The pure projects of M5b (D198): what was the Domain after Blam.Runtime. None of them touches the process, the wiring or a layer above.
@@ -129,13 +133,13 @@ def test_component_project_lists_every_source(folder):
 def test_dll_project_references_the_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
     assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views",
-            "Bridge.Codec", "Control"} <= found
+            "Bridge.Codec", "Control", "Bridge.Transport"} <= found
 
 
 def test_tests_project_references_the_blam_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Tests/Artemis.Tests.vcxproj"))}
     assert {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views", "Bridge.Codec",
-            "Control"} <= found
+            "Control", "Bridge.Transport"} <= found
 
 
 def test_old_map_folders_are_gone():
@@ -312,11 +316,11 @@ def test_contract_is_the_generated_bridge_layout():
 
 
 def test_bridge_type_reexports_the_contract_and_the_clock_moved_to_flat():
-    bridge = Read("Artemis/Core/Infrastructure/Platform/Bridge/Type/Platform.Bridge.Type.ixx")
+    bridge = Read("Artemis/Bridge.Transport/Type/Platform.Bridge.Type.ixx")
     assert "export import Contract.Bridge;" in bridge
     assert not re.search(r"\bstruct\s+BridgeClock\b", bridge)
     assert re.search(r"\bstruct\s+BridgeClock\b", Read("Artemis/Bridge.Codec/Flat/Type/Export.Flat.Type.ixx"))
-    assert not Tracked("Artemis/Core/Infrastructure/Platform/Bridge/Type/BridgeLayout.ixx")
+    assert not Tracked("Artemis/Bridge.Transport/Type/BridgeLayout.ixx")
 
 
 def test_tick_detours_live_in_platform_capture_hook():
@@ -429,7 +433,7 @@ def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
 INPUT_TYPE = "Artemis/Core/Infrastructure/Platform/Input/Type/Platform.Input.Type.ixx"
 SIMULATION_TYPE = "Artemis/Core/Infrastructure/Platform/Simulation/Type/Platform.Simulation.Type.ixx"
 DETOUR_CPP = "Artemis/Core/Infrastructure/Platform/Input/Hook/PlayerActionDetour.cpp"
-BRIDGE_SERVICE_CPP = "Artemis/Core/Infrastructure/Platform/Bridge/System/BridgeService.cpp"
+BRIDGE_SERVICE_CPP = "Artemis/Bridge.Transport/System/BridgeService.cpp"
 BOT_SERVICE_IXX = "Artemis/Core/Infrastructure/Platform/Simulation/System/BotService.ixx"
 CONTROL_NOT_PURE_WORDS = ("std::mutex", "std::thread", "std::chrono")
 
@@ -491,3 +495,62 @@ def test_control_does_not_touch_the_process_the_wiring_or_the_clock():
         assert not (ImportRoots(path) & NOT_PURE_ROOTS), f"{path}: imports {sorted(ImportRoots(path) & NOT_PURE_ROOTS)}"
         for word in NOT_PURE_WORDS + CONTROL_NOT_PURE_WORDS:
             assert word not in text, f"{path}: {word}"
+
+
+# ---- M6b: Bridge.Transport as a project and the ports between the engine and the bridge (D215, D217)
+
+TRANSPORT = "Artemis/Bridge.Transport"
+PLATFORM = "Artemis/Core/Infrastructure/Platform"
+ENGINE_ROOTS = ("Platform.Lifecycle.", "Platform.Input.", "Platform.Simulation.", "Platform.Capture.", "Platform.Host.", "Platform.Hook.",
+                "Platform.Memory.", "Platform.Render.", "Runtime.", "UI.", "Viewer.", "Gui.")
+VIRTUAL_METHOD = re.compile(r"\bvirtual\s+auto\s+(\w+)\s*\(")
+
+
+def Imports(path):
+    return [name for name in IMPORT.findall(Read(path)) if name != "std"]
+
+
+def test_the_old_bridge_folder_of_platform_is_gone():
+    old = "Artemis/Core/Infrastructure/Platform/Bridge"
+    assert not Tracked(old)
+    assert not os.path.exists(os.path.join(REPO, old))
+
+
+def test_bridge_transport_imports_no_engine_module():
+    sources = Sources(TRANSPORT)
+    assert sources
+    for path in sources:
+        engine = [name for name in Imports(path) if name.startswith(ENGINE_ROOTS)]
+        assert not engine, f"{path}: imports {engine}"
+        other = [name for name in Imports(path) if name.startswith("Platform.") and not name.startswith("Platform.Bridge.")]
+        assert not other, f"{path}: imports {other}"
+
+
+def test_only_the_layer_and_the_port_import_the_bridge_in_platform():
+    allowed = (f"{PLATFORM}/Platform.Layer.ixx", f"{PLATFORM}/Port/")
+    found = [path for path in Sources(PLATFORM) if any(name.startswith("Platform.Bridge.") for name in Imports(path))]
+    assert found, "nobody imports the bridge"
+    wrong = [path for path in found if not path.startswith(allowed)]
+    assert not wrong, wrong
+
+
+def test_the_bridge_service_and_the_detour_know_only_the_ports():
+    service = Read(f"{TRANSPORT}/System/BridgeService.ixx")
+    for name in ("LifecycleStore", "MatchCycleStore", "PlayerActionStore"):
+        assert not re.search(rf"\b{name}\b", service), name
+    assert "BridgeEngine& engine" in service
+    assert not re.search(r"\bBridgeService\b", Read(f"{PLATFORM}/Input/Hook/PlayerActionDetour.ixx"))
+    assert "m_ActionSource.Prepare(" in Read(DETOUR_CPP)
+
+
+def test_the_ports_declare_exactly_their_methods():
+    engine = Read(f"{TRANSPORT}/System/BridgeEngine.ixx")
+    assert re.search(r"^export module Platform\.Bridge\.System:Engine;", engine, re.MULTILINE)
+    assert re.search(r"\bclass\s+BridgeEngine\b", engine)
+    assert set(VIRTUAL_METHOD.findall(engine)) == {"GetPhase", "GetEngineStarts", "GetPausedFrames", "GetRequestedTimeScale",
+                                                   "SetRequestedTimeScale", "IsPauseRequested", "SetPauseRequested", "SetEndRoundRequested",
+                                                   "SetOverride", "RequestClient"}
+    source = Read(f"{PLATFORM}/Input/System/ActionSource.ixx")
+    assert re.search(r"^export module Platform\.Input\.System:ActionSource;", source, re.MULTILINE)
+    assert re.search(r"\bclass\s+ActionSource\b", source)
+    assert set(VIRTUAL_METHOD.findall(source)) == {"Prepare"}

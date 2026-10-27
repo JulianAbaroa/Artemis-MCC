@@ -3,6 +3,7 @@ module;
 #include <windows.h>
 
 module Platform.Input.System;
+import :Input;
 
 namespace
 {

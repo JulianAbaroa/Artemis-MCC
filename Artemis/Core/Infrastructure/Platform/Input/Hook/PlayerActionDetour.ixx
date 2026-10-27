@@ -5,8 +5,8 @@ import Control.Action.Type;
 import Platform.Memory.System;
 import Platform.Input.Type;
 import Platform.Input.State;
+import Platform.Input.System;
 import Platform.Simulation.System;
-import Platform.Bridge.System;
 import Layout.Action.Type;
 import std;
 
@@ -19,8 +19,8 @@ export namespace Platform::Input::Hook
 {
     // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
     // note: Players without an override keep the action the engine built. Called by ExecuteGameFrame once per tick on the game thread.
-    // Before the actions, the bot service adds the bots asked for and publishes the session snapshot (A9 M5), and the bridge sets the
-    // overrides of the players of the Python client (waiting for them in Lockstep, D105).
+    // Before the actions, the bot service adds the bots asked for and publishes the session snapshot (A9 M5), and the action source
+    // (the bridge, D215) sets the overrides of the players of the Python client (waiting for them in Lockstep, D105).
     // note: The action tick of the bridge is the number this hook publishes (m_Sequence): one per tick it sees.
     class PlayerActionDetour
     {
@@ -41,15 +41,15 @@ export namespace Platform::Input::Hook
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
-        using BotService = Platform::Simulation::System::BotService;
+        using ActionSource = Platform::Input::System::ActionSource;
 
-        using BridgeService = Platform::Bridge::System::BridgeService;
+        using BotService = Platform::Simulation::System::BotService;
 
     public:
         PlayerActionDetour(Log& log, AOBService& aobService, PlayerActionStore& playerActionStore,
-            BotService& botService, BridgeService& bridgeService) :
+            BotService& botService, ActionSource& actionSource) :
             m_Log(log), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService),
-            m_BridgeService(bridgeService) {}
+            m_ActionSource(actionSource) {}
         ~PlayerActionDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -64,7 +64,7 @@ export namespace Platform::Input::Hook
         AOBService& m_AOBService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
-        BridgeService& m_BridgeService;
+        ActionSource& m_ActionSource;
 
         static inline PlayerActionDetour* s_Instance{ nullptr };
         static inline ApplyPlayerActionsFunction s_OriginalFunction{ nullptr };

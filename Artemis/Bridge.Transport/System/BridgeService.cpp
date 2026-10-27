@@ -3,11 +3,11 @@ module;
 #include <windows.h>
 
 module Platform.Bridge.System;
+import :Service;
 
 import Common.Engine.Type;
 import Control.Lockstep.Type;
 import Control.Lockstep.System;
-import Platform.Lifecycle.Type;
 import Layout.Action.Type;
 import std;
 
@@ -30,7 +30,6 @@ namespace
     using Control::Lockstep::System::ResumeIfAnswered;
     using Control::Lockstep::System::ToClientRequests;
 
-    using Platform::Lifecycle::Type::Status;
     using Platform::Bridge::Type::BridgeOwner;
     using Platform::Bridge::Type::BridgeMode;
     using Platform::Bridge::Type::BridgePhase;
@@ -75,16 +74,6 @@ namespace
     auto StoreShared(std::uint64_t& value, std::uint64_t newValue) -> void
     {
         std::atomic_ref<std::uint64_t>(value).store(newValue, std::memory_order_release);
-    }
-
-    auto ToPhase(Status status) -> BridgePhase
-    {
-        switch (status)
-        {
-        case Status::Running: return BridgePhase::Running;
-        case Status::Initialized: return BridgePhase::Loading;
-        default: return BridgePhase::Idle;
-        }
     }
 }
 
@@ -183,7 +172,7 @@ namespace Platform::Bridge::System
         m_BridgeStore.SetSlots({});
         m_BridgeStore.SetStopped(false);
         // A request left from the previous match must not end the first round of this one (D144).
-        m_LifecycleStore.SetEndRoundRequested(false);
+        m_Engine.SetEndRoundRequested(false);
     }
 
     auto BridgeService::Update() -> void
@@ -211,24 +200,24 @@ namespace Platform::Bridge::System
         // The pause follows the same owner (D143).
         if (control.Owner == BridgeOwner::Python && previous.Owner != BridgeOwner::Python)
         {
-            link.SavedTimeScale = m_LifecycleStore.GetRequestedTimeScale();
-            link.IsSavedPauseRequested = m_LifecycleStore.IsPauseRequested();
+            link.SavedTimeScale = m_Engine.GetRequestedTimeScale();
+            link.IsSavedPauseRequested = m_Engine.IsPauseRequested();
         }
         if (control.Owner == BridgeOwner::Python)
         {
             const float scale{ region->Control.Client.RequestScale };
-            if (std::isfinite(scale) && scale >= 0.0f && scale != m_LifecycleStore.GetRequestedTimeScale())
+            if (std::isfinite(scale) && scale >= 0.0f && scale != m_Engine.GetRequestedTimeScale())
             {
-                m_LifecycleStore.SetRequestedTimeScale(scale);
+                m_Engine.SetRequestedTimeScale(scale);
             }
 
             this->ApplyPause(region->Control.Client.RequestPause != 0);
         }
         else if (previous.Owner == BridgeOwner::Python)
         {
-            m_LifecycleStore.SetRequestedTimeScale(link.SavedTimeScale);
+            m_Engine.SetRequestedTimeScale(link.SavedTimeScale);
             this->ApplyPause(link.IsSavedPauseRequested);
-            m_LifecycleStore.SetEndRoundRequested(false);
+            m_Engine.SetEndRoundRequested(false);
         }
 
         // A raise of the counter is a request (D144). Raises seen between two updates, or before the game thread takes them, count as
@@ -236,7 +225,7 @@ namespace Platform::Bridge::System
         const std::uint32_t endRound{ region->Control.Client.RequestEndRound };
         if (endRound != link.LastClientEndRound && control.Owner == BridgeOwner::Python)
         {
-            m_LifecycleStore.SetEndRoundRequested(true);
+            m_Engine.SetEndRoundRequested(true);
             m_Log.Message("[BridgeService] INFO: End of round requested at action tick {}.", m_BridgeStore.GetActionTick());
         }
         link.LastClientEndRound = endRound;
@@ -255,7 +244,7 @@ namespace Platform::Bridge::System
         // A tick where the engine applied no actions (the action tick repeats, seen when a match ends) is not a new action tick, so
         // not a decision either.
         const std::uint64_t last{ m_BridgeStore.GetLastReadTick() };
-        const std::uint64_t match{ m_MatchCycleStore.GetEngineStarts() };
+        const std::uint64_t match{ m_Engine.GetEngineStarts() };
         const ClockReading reading{ ReadClock(out.ActionTick, last, m_BridgeStore.GetLastReadMatch(), match, isConsecutive) };
         if (reading.IsNewMatch)
         {
@@ -320,7 +309,7 @@ namespace Platform::Bridge::System
         LARGE_INTEGER counter{};
         QueryPerformanceCounter(&counter);
 
-        flat.Header.MatchId = static_cast<std::uint32_t>(m_MatchCycleStore.GetEngineStarts());
+        flat.Header.MatchId = static_cast<std::uint32_t>(m_Engine.GetEngineStarts());
         flat.Header.ActionTick = clock.ActionTick;
         flat.Header.PublishQpc = static_cast<std::uint64_t>(counter.QuadPart);
 
@@ -382,7 +371,7 @@ namespace Platform::Bridge::System
 
             for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player)
             {
-                if ((hook.ControlledMask & (1u << player)) != 0) m_PlayerActionStore.SetOverride(player, hook.Overrides[player]);
+                if ((hook.ControlledMask & (1u << player)) != 0) m_Engine.SetOverride(player, hook.Overrides[player]);
             }
         }
 
@@ -462,15 +451,15 @@ namespace Platform::Bridge::System
         BridgeCounters counters{};
         m_BridgeStore.CopyCounters(counters);
 
-        artemis.Phase = ToPhase(m_LifecycleStore.GetStatus());
+        artemis.Phase = m_Engine.GetPhase();
         artemis.Owner = control.Owner;
         artemis.Mode = control.Mode;
         artemis.DecisionPeriod = control.DecisionPeriod;
         artemis.Latency = control.Latency;
         artemis.IsClientConnected = control.IsClientConnected ? 1 : 0;
-        artemis.IsPaused = m_LifecycleStore.IsPauseRequested() ? 1 : 0;
-        artemis.MatchId = static_cast<std::uint32_t>(m_MatchCycleStore.GetEngineStarts());
-        artemis.Scale = m_LifecycleStore.GetRequestedTimeScale();
+        artemis.IsPaused = m_Engine.IsPauseRequested() ? 1 : 0;
+        artemis.MatchId = static_cast<std::uint32_t>(m_Engine.GetEngineStarts());
+        artemis.Scale = m_Engine.GetRequestedTimeScale();
         artemis.EndRoundSequence = m_BridgeStore.GetLinkState().LastClientEndRound;
 
         StoreShared(artemis.ActionTick, m_BridgeStore.GetActionTick());
@@ -484,15 +473,15 @@ namespace Platform::Bridge::System
         StoreShared(artemis.LockstepWaitMaxNs, counters.LockstepWaitMaxNs);
         StoreShared(artemis.FlattenNs, counters.FlattenNs);
         StoreShared(artemis.FlattenMaxNs, counters.FlattenMaxNs);
-        StoreShared(artemis.PausedFrames, m_LifecycleStore.GetPausedFrames());
+        StoreShared(artemis.PausedFrames, m_Engine.GetPausedFrames());
         StoreShared(artemis.Heartbeat, m_BridgeStore.GetLinkState().Heartbeat);
     }
 
     auto BridgeService::ApplyPause(bool isRequested) -> void
     {
-        if (isRequested == m_LifecycleStore.IsPauseRequested()) return;
+        if (isRequested == m_Engine.IsPauseRequested()) return;
 
-        m_LifecycleStore.SetPauseRequested(isRequested);
+        m_Engine.SetPauseRequested(isRequested);
         m_Log.Message("[BridgeService] INFO: {} at action tick {}.", isRequested ? "Paused" : "Resumed",
             m_BridgeStore.GetActionTick());
     }
@@ -516,7 +505,7 @@ namespace Platform::Bridge::System
 
             // A pause of the client holds the wait without a cap (D143). The cap starts again when the pause ends.
             const auto now{ steady_clock::now() };
-            if (m_LifecycleStore.IsPauseRequested())
+            if (m_Engine.IsPauseRequested())
             {
                 isPauseSeen = true;
                 deadline = now + k_LockstepTimeout;
@@ -592,7 +581,7 @@ namespace Platform::Bridge::System
             const auto requests{ static_cast<std::uint8_t>(action.Requests) };
             if (requests != 0)
             {
-                m_PlayerActionStore.RequestClient(player, ToClientRequests(requests));
+                m_Engine.RequestClient(player, ToClientRequests(requests));
             }
         }
 
@@ -614,7 +603,7 @@ namespace Platform::Bridge::System
     {
         // A local player goes back to its own input. A bot has none: the engine would repeat its last action forever, so it is left
         // standing with the facing it had.
-        m_PlayerActionStore.SetOverride(player, GetReleasedOverride(hook.Overrides[player]));
+        m_Engine.SetOverride(player, GetReleasedOverride(hook.Overrides[player]));
 
         hook.Overrides[player].reset();
         hook.ControlledMask &= ~(1u << player);

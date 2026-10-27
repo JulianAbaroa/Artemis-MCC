@@ -79,6 +79,9 @@
     <ProjectReference Include="..\Bridge.Codec\Artemis.Bridge.Codec.vcxproj">
       <Project>{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Bridge.Transport\Artemis.Bridge.Transport.vcxproj">
+      <Project>{E9F6DECA-F3D8-5050-BEA2-1A145165CA3C}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Blam\LayoutTests.cpp" />
@@ -88,6 +91,7 @@
     <ClCompile Include="Blam\RuntimeTests.cpp" />
     <ClCompile Include="Blam\SnapshotRecordTests.cpp" />
     <ClCompile Include="Blam\TagResolverTests.cpp" />
+    <ClCompile Include="Bridge\TransportTests.cpp" />
     <ClCompile Include="Common\HashTests.cpp" />
     <ClCompile Include="Common\LogParseTests.cpp" />
     <ClCompile Include="Common\LogTests.cpp" />

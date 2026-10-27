@@ -91,7 +91,7 @@ namespace Platform::Input::Hook
             const std::uintptr_t threadContext{ s_Instance->GetThreadContext() };
 
             s_Instance->m_BotService.Update(threadContext);
-            s_Instance->m_BridgeService.Apply(s_Instance->m_Sequence + 1);
+            s_Instance->m_ActionSource.Prepare(s_Instance->m_Sequence + 1);
             s_Instance->ApplyOverrides(bytes, threadContext);
             s_Instance->PublishActions(bytes);
         }

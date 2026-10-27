@@ -1,11 +1,11 @@
-export module Platform.Bridge.System;
+export module Platform.Bridge.System:Service;
+
+import :Engine;
 
 import Common.Log.System;
 import Service.Settings.State;
 import Control.Action.Type;
 import Control.Lockstep.Type;
-import Platform.Lifecycle.State;
-import Platform.Input.State;
 import Platform.Bridge.Type;
 import Platform.Bridge.State;
 import Export.Flat.Type;
@@ -25,15 +25,10 @@ export namespace Platform::Bridge::System
 
         using SettingsStore = Service::Settings::State::SettingsStore;
 
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
-
         using ActionOverride = Control::Action::Type::ActionOverride;
 
         using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
         using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
-
-        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
         using BridgeRegion = Platform::Bridge::Type::BridgeRegion;
         using BridgeTick = Platform::Bridge::Type::BridgeTick;
@@ -45,10 +40,8 @@ export namespace Platform::Bridge::System
         using BridgeStore = Platform::Bridge::State::BridgeStore;
 
     public:
-        BridgeService(Log& log, SettingsStore& settingsStore, LifecycleStore& lifecycleStore,
-            MatchCycleStore& matchCycleStore, PlayerActionStore& playerActionStore, BridgeStore& bridgeStore) :
-            m_Log(log), m_SettingsStore(settingsStore), m_LifecycleStore(lifecycleStore),
-            m_MatchCycleStore(matchCycleStore), m_PlayerActionStore(playerActionStore), m_BridgeStore(bridgeStore) {}
+        BridgeService(Log& log, SettingsStore& settingsStore, BridgeEngine& engine, BridgeStore& bridgeStore) :
+            m_Log(log), m_SettingsStore(settingsStore), m_Engine(engine), m_BridgeStore(bridgeStore) {}
         ~BridgeService() = default;
 
         BridgeService(const BridgeService&) = delete;
@@ -104,9 +97,7 @@ export namespace Platform::Bridge::System
     private:
         Log& m_Log;
         SettingsStore& m_SettingsStore;
-        LifecycleStore& m_LifecycleStore;
-        MatchCycleStore& m_MatchCycleStore;
-        PlayerActionStore& m_PlayerActionStore;
+        BridgeEngine& m_Engine;
         BridgeStore& m_BridgeStore;
 
         auto WriteDiscovery(std::uint32_t pid, const std::string& name) -> std::string;
