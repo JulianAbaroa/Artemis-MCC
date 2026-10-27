@@ -29,4 +29,7 @@ export namespace Common::Engine::Type
 
     // Characters of a gamertag, terminator included.
     inline constexpr std::size_t k_GamerTagLength{ 16 };
+
+    // Logic ticks per second of the engine at x1 (fixed step of 1/60 s, D105).
+    inline constexpr float k_TicksPerSecond{ 60.0f };
 }

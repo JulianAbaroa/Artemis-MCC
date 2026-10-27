@@ -2,6 +2,7 @@ module Platform.Simulation.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
+import Control.Action.Type;
 import Platform.Memory.Type;
 import std;
 
@@ -22,7 +23,7 @@ namespace
     using Platform::Simulation::Type::UnitSelectorFunction;
     using Platform::Simulation::Type::NextZoomLevelFunction;
     using Platform::Simulation::Type::CanUnitZoomFunction;
-    using Platform::Simulation::Type::UnitClientState;
+    using Control::Action::Type::UnitClientState;
 
     using Platform::Simulation::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;

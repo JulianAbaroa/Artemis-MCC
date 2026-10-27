@@ -9,9 +9,6 @@ export namespace Platform::Lifecycle::Type
     // Callback that receives the full path of a cache file the engine opened.
     using MapFileCallback = std::function<void(const std::string& filePath)>;
 
-    // Logic ticks per second of the engine at x1 (fixed step of 1/60 s, D105).
-    inline constexpr float k_TicksPerSecond{ 60.0f };
-
     // Signature of the engine initialization function.
     using EngineInitializeFunction = auto(__fastcall*)() -> void;
 

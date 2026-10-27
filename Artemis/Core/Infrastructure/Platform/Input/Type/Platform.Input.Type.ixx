@@ -4,7 +4,16 @@ module;
 
 export module Platform.Input.Type;
 
+import Layout.Action.Type;
 import std;
+
+namespace
+{
+    using Layout::Action::Type::k_HoldLanes;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Layout::Action::Type::Size::k_PlayerActionSize;
+    using Layout::Action::Type::Size::k_ActionInteractionSize;
+}
 
 export namespace Platform::Input::Type
 {
@@ -132,59 +141,6 @@ export namespace Platform::Input::Type
     // return: True if the state is valid for this frame.
     using InputUpdateFunction = auto(__fastcall*)(void* gameManager, std::int32_t player, InputState* state) -> bool;
 
-    // Players a simulation update holds actions for, by player table index (A9_SplitScreen.txt sec. 12).
-    inline constexpr std::size_t k_MaxActionPlayers{ 16 };
-
-    // Bytes of the action of one player.
-    inline constexpr std::size_t k_PlayerActionSize{ 0xA8 };
-
-    // Mask of the players with an action (uint32, one bit per player table index), inside the simulation update.
-    inline constexpr std::uintptr_t k_UpdateActionMaskOffset{ 0x08 };
-
-    // First action inside the simulation update. The action of a player is at this offset + k_PlayerActionSize * its table index.
-    inline constexpr std::uintptr_t k_UpdateActionsOffset{ 0x10 };
-
-    // Unit of the action: +0x00 (uint32) = 1 and +0x04 (uint8) = action slot of the unit (unit +0x288), so the engine moves that
-    // unit with the action (A9 sec. 13.10). The empty action has 0 and 0xFF. The engine writes them for a local player (0x628b0).
-    inline constexpr std::uintptr_t k_ActionHasUnitOffset{ 0x00 };
-    inline constexpr std::uintptr_t k_ActionUnitSlotOffset{ 0x04 };
-
-    // Buttons of the action (uint64). Bits measured in A9 sec. 12.7 (crouch 0, jump 1, melee 11, zoom 18, fire 30, grenade 40...).
-    inline constexpr std::uintptr_t k_ActionButtonsOffset{ 0x08 };
-
-    // Desired yaw, pitch and roll of the action (3 floats, absolute, radians). The roll is always 0.
-    // note: The engine keeps the yaw in [0, 2 pi).
-    inline constexpr std::uintptr_t k_ActionFacingOffset{ 0x10 };
-
-    // Throttle of the action (2 floats, -1 to 1): forward, then left.
-    inline constexpr std::uintptr_t k_ActionThrottleOffset{ 0x1C };
-
-    // Hold lanes of the action (uint32): a "down" bit per button and a "held" bit once it was down for the hold threshold of the
-    // engine (A17 sec. 8, D121). The host takes the presses, holds and releases from them (0x4b534).
-    inline constexpr std::uintptr_t k_ActionLanesOffset{ 0x40 };
-
-    // A button with a hold lane: its down bit and its held bit in the lanes of the action (0x5df80).
-    struct HoldLane
-    {
-        std::uint8_t DownBit{ 0 };
-        std::uint8_t HeldBit{ 0 };
-    };
-
-    // Lanes the local client fills: use, grab and enter (E, event 3: byte +0x42 is 0x10 down and 0x30 held), events 0x10, 2 (switch
-    // weapon held), 5, 0x3E and 0x37.
-    inline constexpr std::array<HoldLane, 6> k_HoldLanes
-    {
-        HoldLane{ .DownBit = 20, .HeldBit = 21 },
-        HoldLane{ .DownBit = 4, .HeldBit = 5 },
-        HoldLane{ .DownBit = 8, .HeldBit = 9 },
-        HoldLane{ .DownBit = 12, .HeldBit = 13 },
-        HoldLane{ .DownBit = 16, .HeldBit = 17 },
-        HoldLane{ .DownBit = 27, .HeldBit = 29 },
-    };
-
-    // Down bit of use, grab and enter (E), the first hold lane.
-    inline constexpr std::uint32_t k_UseLane{ 1u << k_HoldLanes[0].DownBit };
-
     // Player control tag of the engine globals (A17 sec. 8): the tag address is at the table + k_PlayerControlTagOffset, and the
     // hold threshold (float, seconds) at k_HoldThresholdOffset of the tag data.
     inline constexpr std::uintptr_t k_PlayerControlTagOffset{ 0x418 };
@@ -200,26 +156,8 @@ export namespace Platform::Input::Type
     // Signature of the engine function that turns a tag address into a pointer (haloreach.dll rva 0x15918).
     using ResolveTagAddressFunction = auto(__fastcall*)(const std::uint32_t* address) -> std::uintptr_t;
 
-    // Client requests of the action (A17 sec. 3, D120): echo of the inventory version of the unit (uint16), weapon slot (uint8),
-    // grenade type (uint16) and zoom level (uint16). The empty action asks for nothing: 0xFFFF, 0xFF, 0xFFFF and 0xFFFF.
-    // note: A weapon request only counts if the echo matches unit +0x34C.
-    inline constexpr std::uintptr_t k_ActionInventoryVersionOffset{ 0x44 };
-    inline constexpr std::uintptr_t k_ActionWeaponSlotOffset{ 0x46 };
-    inline constexpr std::uintptr_t k_ActionGrenadeTypeOffset{ 0x48 };
-    inline constexpr std::uintptr_t k_ActionZoomLevelOffset{ 0x4A };
-
-    // Button bit that tells the engine the zoom level of the action is absent, so the unit keeps its own (A17 sec. 2: unit_control
-    // copies the zoom level every tick unless this bit is set). The local client never sets it.
-    inline constexpr std::uint64_t k_ActionKeepZoomButton{ 1ull << 25 };
-
-    // Interaction of the action: the objects the engine picked for the player, best first (A9 sec. 12.2, M5d).
-    // note: The engine fills it every frame for local players only, from their unit (0x4f280). The PlayerAction hook fills it every
-    // tick for every player with an override, with the same engine functions (D118).
-    inline constexpr std::uintptr_t k_ActionInteractionOffset{ 0x54 };
-    inline constexpr std::size_t k_ActionInteractionSize{ 0x24 };
-
     // Command of one player for one tick, as the simulation applies it.
-    // note: Opaque except the offsets above. The engine builds it once per frame from the player control of each local player.
+    // note: Opaque except the offsets of Layout.Action.Type. The engine builds it once per frame from the player control of each local player.
     struct PlayerAction
     {
         std::array<std::uint8_t, k_PlayerActionSize> Data{};
@@ -246,68 +184,6 @@ export namespace Platform::Input::Type
 
     // Desired yaw and pitch of a control block (2 floats, radians), as the frame input left them.
     inline constexpr std::uintptr_t k_ControlFacingOffset{ 0x94 };
-
-    // Fields Artemis writes into the action of a player, every tick (A9 M4b, D109).
-    // note: The action of a player with an override starts from the empty action of the engine (D119): the unit slot, the interaction
-    // (D118) and these fields go on top. The rest (weapon, grenade and zoom requests, aim assist) stays empty for locals and bots.
-    struct ActionOverride
-    {
-        std::uint64_t Buttons{ 0 };
-
-        // Desired facing, absolute, in radians.
-        float Yaw{ 0.0f };
-        float Pitch{ 0.0f };
-
-        // Most radians the yaw and the pitch the hook writes move per tick toward Yaw and Pitch (D114). 0 = straight to them.
-        float TurnLimit{ 0.0f };
-
-        float ThrottleForward{ 0.0f };
-        float ThrottleLeft{ 0.0f };
-
-        // Radians added to Yaw after every tick. Test only (the AI will write the yaw of each tick).
-        float YawPerTick{ 0.0f };
-
-        // Down bits of the hold lanes the agent holds this tick (k_HoldLanes). The held bits are added by the hook (D121).
-        std::uint32_t Lanes{ 0 };
-
-        // Holds use, then releases it, in a cycle. Test only (A9 M5d: can a bot pick up the flag).
-        bool IsUseTest{ false };
-
-        // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view follows the
-        // action. Empty for a player that is not local.
-        std::optional<std::size_t> LocalIndex{};
-    };
-
-    // Yaw and pitch the hook last wrote for an agent, and the unit they were written for (D114).
-    struct AppliedFacing
-    {
-        std::uint32_t Unit{ 0 };
-        std::array<float, 2> Facing{};
-    };
-
-    // One-tick presses of an agent that the client turns into requests (D120): the hook consumes them on its next tick.
-    struct ClientRequests
-    {
-        // Switch to the next weapon (a tap of switch weapon).
-        bool IsWeaponSwitch{ false };
-
-        // Switch to the next grenade type with grenades left.
-        bool IsGrenadeSwitch{ false };
-
-        // Go to the next zoom level of the weapon in the hands, or back to no zoom after the last one.
-        bool IsZoom{ false };
-    };
-
-    // Weapon slot an agent asked for, sent until the unit holds it or the ticks run out (the engine drops a request whose inventory
-    // version is stale).
-    // note: The request is dropped when the inventory version of the unit changes (a pickup or a drop by the host): its slot may no
-    // longer hold the same weapon.
-    struct WeaponRequest
-    {
-        std::int8_t Slot{ -1 };
-        std::uint16_t InventoryVersion{ 0 };
-        std::uint32_t TicksLeft{ 0 };
-    };
 
     // Fields the shadow check compares (D122): what Artemis would send as the client of a local player against what the engine built.
     enum class ShadowField : std::uint8_t

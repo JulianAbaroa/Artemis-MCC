@@ -1,6 +1,7 @@
 export module Platform.Bridge.State;
 
 import Common.Engine.Type;
+import Control.Lockstep.Type;
 import Platform.Bridge.Type;
 import std;
 
@@ -19,10 +20,11 @@ export namespace Platform::Bridge::State
     class BridgeStore
     {
     private:
+        using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
+        using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
+
         using BridgeRegion = Platform::Bridge::Type::BridgeRegion;
-        using BridgeControlState = Platform::Bridge::Type::BridgeControlState;
         using BridgeSlot = Platform::Bridge::Type::BridgeSlot;
-        using BridgeHookState = Platform::Bridge::Type::BridgeHookState;
         using BridgeLinkState = Platform::Bridge::Type::BridgeLinkState;
         using BridgeCounters = Platform::Bridge::Type::BridgeCounters;
 

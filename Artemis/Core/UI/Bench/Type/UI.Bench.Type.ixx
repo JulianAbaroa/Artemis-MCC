@@ -2,7 +2,7 @@ export module UI.Bench.Type;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Platform.Input.Type;
+import Control.Action.Type;
 import Export.Tick.Type;
 import UI.Simulation.Type;
 import std;
@@ -10,7 +10,7 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Platform::Input::Type::ClientRequests;
+    using Control::Action::Type::ClientRequests;
     using Export::Tick::Type::Tick;
     using UI::Simulation::Type::LocalPlayerAction;
 

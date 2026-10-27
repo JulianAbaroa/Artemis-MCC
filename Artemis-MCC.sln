@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Artemis.Views", "Artemis\Vi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Artemis.Bridge.Codec", "Artemis\Bridge.Codec\Artemis.Bridge.Codec.vcxproj", "{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Artemis.Control", "Artemis\Control\Artemis.Control.vcxproj", "{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Artemis.GoogleTest", "Artemis\Tests\GoogleTest\Artemis.GoogleTest.vcxproj", "{8C833536-1445-59FA-9679-5677F063B66D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Artemis.Tests", "Artemis\Tests\Artemis.Tests.vcxproj", "{5D038D20-3B6F-594F-9A4A-266B1FF446E7}"
@@ -153,6 +155,16 @@ Global
 		{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}.Release|x64.ActiveCfg=Release|x64
 		{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}.Release|x64.Build.0=Release|x64
 		{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}.Release|x86.ActiveCfg=Release|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Debug|Any CPU.ActiveCfg=Debug|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Debug|Any CPU.Build.0=Debug|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Debug|x64.ActiveCfg=Debug|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Debug|x64.Build.0=Debug|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Debug|x86.ActiveCfg=Debug|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Release|Any CPU.ActiveCfg=Release|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Release|Any CPU.Build.0=Release|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Release|x64.ActiveCfg=Release|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Release|x64.Build.0=Release|x64
+		{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}.Release|x86.ActiveCfg=Release|x64
 		{8C833536-1445-59FA-9679-5677F063B66D}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{8C833536-1445-59FA-9679-5677F063B66D}.Debug|Any CPU.Build.0 = Debug|x64
 		{8C833536-1445-59FA-9679-5677F063B66D}.Debug|x64.ActiveCfg = Debug|x64

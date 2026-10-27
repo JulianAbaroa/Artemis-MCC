@@ -1,6 +1,8 @@
 export module Platform.Simulation.System;
 
 import Common.Log.System;
+import Control.Action.Type;
+import Control.Action.System;
 import Platform.Memory.System;
 import Platform.Simulation.Type;
 import Platform.Simulation.State;
@@ -12,7 +14,7 @@ export namespace Platform::Simulation::System
     // (A9 M5b). Also publishes the machines and players of the engine every tick (A9 M5a).
     // note: The simulation sees a bot as a remote player: no view, no local input. Its action of each tick comes from the overrides of
     // the PlayerAction hook (D109). The bots skip the session and the simulation queue, so the film does not have them (A9 sec. 13.4).
-    class BotService
+    class BotService : public Control::Action::System::UnitRules
     {
     private:
         using Log = Common::Log::System::Log;
@@ -26,7 +28,7 @@ export namespace Platform::Simulation::System
         using UnitSelectorFunction = Platform::Simulation::Type::UnitSelectorFunction;
         using NextZoomLevelFunction = Platform::Simulation::Type::NextZoomLevelFunction;
         using CanUnitZoomFunction = Platform::Simulation::Type::CanUnitZoomFunction;
-        using UnitClientState = Platform::Simulation::Type::UnitClientState;
+        using UnitClientState = Control::Action::Type::UnitClientState;
         using TeamRequest = Platform::Simulation::Type::TeamRequest;
 
         using BotStore = Platform::Simulation::State::BotStore;
@@ -66,16 +68,16 @@ export namespace Platform::Simulation::System
         // asks for it), or nullopt if it has no other weapon, sits in a seat or the functions were not found (D120).
         // note: Game thread only. A local client only switches in a seat whose tag allows it (seat flag bit 5, 0x61a38). That flag is
         // not read yet, so a seated unit never asks (v1 has no vehicles, D115).
-        auto GetNextWeaponSlot(const UnitClientState& state) const -> std::optional<std::int8_t>;
+        auto GetNextWeaponSlot(const UnitClientState& state) const -> std::optional<std::int8_t> override;
 
         // return: The next grenade type with grenades left (0x48b58c), or nullopt if there is no other one (D120).
         // note: Game thread only.
-        auto GetNextGrenadeType(const UnitClientState& state) const -> std::optional<std::int8_t>;
+        auto GetNextGrenadeType(const UnitClientState& state) const -> std::optional<std::int8_t> override;
 
         // return: The next zoom level of the weapon in the hands (0x485838, -1 = not zoomed), or nullopt if the unit cannot zoom
         // now (0x4852a0) (D120).
         // note: Game thread only.
-        auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t>;
+        auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> override;
 
         // Finds the engine functions by signature, in three sets: the ones that add bots, the ones that build the interaction and the
         // client selectors (weapon, grenade, zoom).

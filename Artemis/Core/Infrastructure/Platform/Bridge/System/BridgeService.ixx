@@ -2,8 +2,9 @@ export module Platform.Bridge.System;
 
 import Common.Log.System;
 import Service.Settings.State;
+import Control.Action.Type;
+import Control.Lockstep.Type;
 import Platform.Lifecycle.State;
-import Platform.Input.Type;
 import Platform.Input.State;
 import Platform.Bridge.Type;
 import Platform.Bridge.State;
@@ -27,7 +28,10 @@ export namespace Platform::Bridge::System
         using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
         using MatchCycleStore = Platform::Lifecycle::State::MatchCycleStore;
 
-        using ActionOverride = Platform::Input::Type::ActionOverride;
+        using ActionOverride = Control::Action::Type::ActionOverride;
+
+        using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
+        using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
 
         using PlayerActionStore = Platform::Input::State::PlayerActionStore;
 
@@ -35,8 +39,6 @@ export namespace Platform::Bridge::System
         using BridgeTick = Platform::Bridge::Type::BridgeTick;
         using BridgeAction = Platform::Bridge::Type::BridgeAction;
         using BridgeClock = Export::Flat::Type::BridgeClock;
-        using BridgeControlState = Platform::Bridge::Type::BridgeControlState;
-        using BridgeHookState = Platform::Bridge::Type::BridgeHookState;
         using BridgeLinkState = Platform::Bridge::Type::BridgeLinkState;
         using BridgeStatus = Platform::Bridge::Type::BridgeStatus;
 
@@ -108,14 +110,12 @@ export namespace Platform::Bridge::System
         BridgeStore& m_BridgeStore;
 
         auto WriteDiscovery(std::uint32_t pid, const std::string& name) -> std::string;
-        auto DecideControl(const BridgeRegion& region, const BridgeControlState& previous) -> BridgeControlState;
         auto LogTransition(const BridgeControlState& previous, const BridgeControlState& control, bool isClientLeft) -> void;
         auto WriteArtemisControl(BridgeRegion& region, const BridgeControlState& control) -> void;
         auto ApplyPause(bool isRequested) -> void;
 
         auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t;
         auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, BridgeHookState& hook) -> void;
-        auto BuildOverride(const BridgeAction& action, float turnLimit) -> ActionOverride;
         auto ReleasePlayers(BridgeHookState& hook, std::uint32_t keepMask) -> void;
         auto ReleasePlayer(BridgeHookState& hook, std::size_t player) -> void;
     };

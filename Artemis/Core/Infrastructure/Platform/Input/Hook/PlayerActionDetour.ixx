@@ -1,17 +1,18 @@
 export module Platform.Input.Hook:PlayerAction;
 
 import Common.Log.System;
+import Control.Action.Type;
 import Platform.Memory.System;
 import Platform.Input.Type;
 import Platform.Input.State;
 import Platform.Simulation.System;
 import Platform.Bridge.System;
+import Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::k_MaxActionPlayers;
-    using Platform::Input::Type::k_HoldLanes;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
 }
 
 export namespace Platform::Input::Hook
@@ -28,13 +29,13 @@ export namespace Platform::Input::Hook
 
         using AOBService = Platform::Memory::System::AOBService;
 
+        using ActionOverride = Control::Action::Type::ActionOverride;
+        using ClientRequests = Control::Action::Type::ClientRequests;
+        using PlayerActionHistory = Control::Action::Type::PlayerActionHistory;
+
         using ApplyPlayerActionsFunction = Platform::Input::Type::ApplyPlayerActionsFunction;
         using ClearPlayerActionFunction = Platform::Input::Type::ClearPlayerActionFunction;
-        using ClientRequests = Platform::Input::Type::ClientRequests;
-        using WeaponRequest = Platform::Input::Type::WeaponRequest;
         using ResolveTagAddressFunction = Platform::Input::Type::ResolveTagAddressFunction;
-        using ActionOverride = Platform::Input::Type::ActionOverride;
-        using AppliedFacing = Platform::Input::Type::AppliedFacing;
         using ShadowField = Platform::Input::Type::ShadowField;
         using ShadowPlayer = Platform::Input::Type::ShadowPlayer;
 
@@ -77,15 +78,10 @@ export namespace Platform::Input::Hook
         // Ticks seen since the hook was installed. Game thread only.
         std::uint64_t m_Sequence{ 0 };
 
-        // Weapon slot each agent asked for and does not hold yet (D120). Game thread only.
-        std::array<std::optional<WeaponRequest>, k_MaxActionPlayers> m_WeaponRequests{};
-
-        // Ticks each hold lane of each agent has been down (D121). Game thread only.
-        std::array<std::array<std::uint32_t, k_HoldLanes.size()>, k_MaxActionPlayers> m_LaneTicks{};
-
-        // Facing each agent got on its last tick, where its turn toward the facing of its action goes on from while its unit is the
-        // same (D114). Empty without an override or a unit. Game thread only.
-        std::array<std::optional<AppliedFacing>, k_MaxActionPlayers> m_Facings{};
+        // What the action of each agent remembers between ticks (D213): the weapon it asked for and does not hold yet (D120), the ticks
+        // each hold lane has been down (D121) and the facing it got on its last tick, where its turn goes on from while its unit is the
+        // same (D114). Forgotten without an override. Game thread only.
+        std::array<PlayerActionHistory, k_MaxActionPlayers> m_Histories{};
 
         // What the shadow check remembers of each local player (D122). Reset while the check is off. Game thread only.
         std::array<ShadowPlayer, k_MaxActionPlayers> m_ShadowPlayers{};
@@ -120,24 +116,10 @@ export namespace Platform::Input::Hook
         auto ReportShadow(ShadowField field, std::size_t player, bool isMatch, std::int64_t engineValue, std::int64_t artemisValue)
             -> void;
 
-        // Writes the hold lanes of the agent into its action: the down bits it holds, plus the held bit of every lane down for the
-        // hold threshold of the engine (D121).
-        // param holdTicks: Hold threshold in ticks, or nullopt if unknown (then no held bit is set).
-        // note: Game thread only. Counted in ticks of game time, so the speed of the engine does not change it.
-        auto WriteLanes(std::uint8_t* action, std::size_t player, std::uint32_t lanes, std::optional<std::uint32_t> holdTicks)
-            -> void;
-
         // return: The hold threshold of buttons in ticks, read from the player control tag of the engine globals, or nullopt if it
         // cannot be read.
         // note: Game thread only. Read every tick: the globals belong to the map.
         auto GetHoldThresholdTicks() const -> std::optional<std::uint32_t>;
-
-        // Writes the client requests of the agent (weapon, grenade, zoom) into its action, with the engine selectors (D120).
-        // note: Without a request the action asks for nothing and keeps the zoom of the unit. For a local player with an override the
-        // zoom its own input asks for is ignored. A weapon request is sent again every tick until the unit holds that slot,
-        // k_WeaponRequestTicks pass or the inventory changes. Game thread only.
-        auto WriteClientRequests(std::uint8_t* action, std::uintptr_t threadContext, std::size_t player,
-            const ClientRequests& requests) -> void;
 
         // return: Thread context of the engine, or 0 if it is not found.
         // note: Reads the thread local storage of the current thread. Call it from the game thread.

@@ -2,13 +2,14 @@ module Platform.Input.State;
 import :PlayerAction;
 
 import Common.Math.Type;
+import Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::k_ActionButtonsOffset;
-    using Platform::Input::Type::k_MaxActionPlayers;
-    using Platform::Input::Type::k_PlayerActionSize;
+    using Layout::Action::Type::Offset::k_ActionButtonsOffset;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Layout::Action::Type::Size::k_PlayerActionSize;
     using Platform::Input::Type::k_ShadowFieldCount;
     using Common::Math::Type::k_TwoPi;
 }

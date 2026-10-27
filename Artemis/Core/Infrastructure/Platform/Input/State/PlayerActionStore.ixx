@@ -1,11 +1,13 @@
 export module Platform.Input.State:PlayerAction;
 
+import Control.Action.Type;
 import Platform.Input.Type;
+import Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::k_MaxActionPlayers;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
     using Platform::Input::Type::k_ShadowFieldCount;
 }
 
@@ -17,10 +19,11 @@ export namespace Platform::Input::State
     class PlayerActionStore
     {
     private:
+        using ActionOverride = Control::Action::Type::ActionOverride;
+        using ClientRequests = Control::Action::Type::ClientRequests;
+
         using PlayerActions = Platform::Input::Type::PlayerActions;
-        using ActionOverride = Platform::Input::Type::ActionOverride;
         using ActionWatch = Platform::Input::Type::ActionWatch;
-        using ClientRequests = Platform::Input::Type::ClientRequests;
         using ShadowField = Platform::Input::Type::ShadowField;
         using ShadowCount = Platform::Input::Type::ShadowCount;
 

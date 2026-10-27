@@ -575,6 +575,9 @@
     <ProjectReference Include="Perception\Artemis.Perception.vcxproj">
       <Project>{17391791-CA10-5F6A-8A15-23AE6A6F6218}</Project>
     </ProjectReference>
+    <ProjectReference Include="Control\Artemis.Control.vcxproj">
+      <Project>{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}</Project>
+    </ProjectReference>
     <ProjectReference Include="Views\Artemis.Views.vcxproj">
       <Project>{B9EA51AF-D05F-5CF0-9215-EF210F49C640}</Project>
     </ProjectReference>

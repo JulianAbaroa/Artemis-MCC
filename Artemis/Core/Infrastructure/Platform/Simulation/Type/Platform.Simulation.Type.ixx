@@ -1,11 +1,14 @@
 export module Platform.Simulation.Type;
 
 import Common.Engine.Type;
+import Control.Action.Type;
 import std;
 
 // Layout of the engine simulation players and machines (A9_SplitScreen.txt sec. 13).
 namespace
 {
+    using Control::Action::Type::UnitClientState;
+
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_GamerTagLength;
 }
@@ -74,9 +77,6 @@ export namespace Platform::Simulation::Type
     inline constexpr std::uintptr_t k_UnitGrenadeType{ 0x37D };
     inline constexpr std::uintptr_t k_UnitZoomLevel{ 0x384 };
 
-    // Zoom level of a unit that is not zoomed.
-    inline constexpr std::int8_t k_NoZoomLevel{ -1 };
-
     // Parent object of an object (uint32 handle, 0xFFFFFFFF none) and seat of a unit inside its parent (int16, -1 none). A unit with
     // both sits in a vehicle or a turret.
     inline constexpr std::uintptr_t k_ObjectParent{ 0x14 };
@@ -132,22 +132,6 @@ export namespace Platform::Simulation::Type
     };
 
     static_assert(sizeof(MachineIdentifier) == k_MachineIdentifierSize);
-
-    // Client state of the unit of a player on one tick (A17 sec. 6).
-    struct UnitClientState
-    {
-        std::uint32_t Unit{ 0xFFFFFFFF };
-        std::int8_t WeaponSlot{ -1 };
-        std::uint16_t InventoryVersion{ 0 };
-        std::int8_t GrenadeType{ -1 };
-        std::int8_t ZoomLevel{ k_NoZoomLevel };
-
-        // The unit sits in a vehicle or a turret.
-        bool IsSeated{ false };
-
-        // Yaw in [0, 2 pi) and pitch of the desired aim of the unit, in radians.
-        std::array<float, 2> Facing{};
-    };
 
     // One player of the engine, as the session section shows it.
     struct SessionPlayer

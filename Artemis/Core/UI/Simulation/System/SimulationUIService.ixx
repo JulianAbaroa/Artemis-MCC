@@ -2,6 +2,7 @@ export module UI.Simulation.System;
 
 import Common.Log.System;
 import Service.Telemetry.State;
+import Control.Action.Type;
 import Platform.Lifecycle.State;
 import Platform.Lifecycle.System;
 import Platform.Host.State;
@@ -19,7 +20,7 @@ import std;
 namespace
 {
     using Platform::Input::Type::PlayerAction;
-    using Platform::Input::Type::ActionOverride;
+    using Control::Action::Type::ActionOverride;
     using UI::Simulation::Type::LocalPlayerAction;
 }
 

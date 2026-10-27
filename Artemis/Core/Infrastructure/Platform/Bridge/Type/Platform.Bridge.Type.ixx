@@ -3,15 +3,14 @@ export module Platform.Bridge.Type;
 export import Contract.Bridge;
 
 import Common.Engine.Type;
-import Platform.Input.Type;
+import Control.Lockstep.Type;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::ActionOverride;
-
-    using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
+    using Control::Lockstep::Type::k_DefaultDecisionPeriod;
+    using Control::Lockstep::Type::k_DefaultLatency;
 }
 
 export namespace Platform::Bridge::Type
@@ -27,36 +26,8 @@ export namespace Platform::Bridge::Type
     // Slice of a Lockstep wait: how often the wait checks that the bridge was not stopped (the hook drain is 500 ms).
     inline constexpr std::chrono::milliseconds k_LockstepWaitSlice{ 10 };
 
-    // Lockstep timeouts in a row after which Lockstep is suspended until the client answers again.
-    inline constexpr std::uint32_t k_MaxLockstepTimeouts{ 2 };
-
     // Time between two updates of the control block (heartbeat, owner, mode, counters).
     inline constexpr std::chrono::milliseconds k_ControlInterval{ 50 };
-
-    // Decision period N and latency d until the client asks for others (D114).
-    inline constexpr std::uint8_t k_DefaultDecisionPeriod{ 4 };
-    inline constexpr std::uint8_t k_DefaultLatency{ 2 };
-
-    // Largest N. One decision per second of game.
-    inline constexpr std::uint8_t k_MaxDecisionPeriod{ 60 };
-
-    // Smallest d. With 1 the action of a tick could be waited for before the engine has read the tick it answers.
-    // note: N is at least k_MinLatency and d at most N: each player has one action slot, so the client must not write decision t + N
-    // while the game can still read decision t.
-    inline constexpr std::uint8_t k_MinLatency{ 2 };
-
-    // Owner, mode and agents in effect, decided by the bridge thread from the requests of the client (D106).
-    struct BridgeControlState
-    {
-        bool IsClientConnected{ false };
-        BridgeOwner Owner{ BridgeOwner::UI };
-        BridgeMode Mode{ BridgeMode::Free };
-        std::uint8_t DecisionPeriod{ k_DefaultDecisionPeriod };
-        std::uint8_t Latency{ k_DefaultLatency };
-
-        // Player table indices whose action comes from the client. Empty unless the client owns the instance.
-        std::uint32_t AgentMask{ 0 };
-    };
 
     // Player of each slot in the last published tick: the actions of a slot must carry its handle (D40).
     struct BridgeSlot
@@ -65,23 +36,6 @@ export namespace Platform::Bridge::Type
 
         // Split-screen index, so the view of a local player follows its action. Empty for bots.
         std::optional<std::size_t> LocalIndex{};
-    };
-
-    // Work of the game thread between ticks (only the PlayerAction hook touches it).
-    struct BridgeHookState
-    {
-        // Decision whose actions are in the overrides, 0 = none.
-        std::uint64_t AppliedSequence{ 0 };
-
-        // Players that have a bridge override, so they are cleared when they leave the mask.
-        std::uint32_t ControlledMask{ 0 };
-
-        // Lockstep timeouts in a row, and whether Lockstep is suspended until the client answers a decision again.
-        std::uint32_t TimeoutsInRow{ 0 };
-        bool IsLockstepSuspended{ false };
-
-        // Override of each player of the client, set again every tick so it wins over the UI and the bench (D106).
-        std::array<std::optional<ActionOverride>, k_MaxPlayers> Overrides{};
     };
 
     // Link with the client as the bridge thread follows it (only the bridge thread touches it).

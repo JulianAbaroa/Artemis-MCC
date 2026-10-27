@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Action">
+      <UniqueIdentifier>{91de3779-a77a-5e68-82f9-44f29fe6af81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Action\System">
+      <UniqueIdentifier>{b1af7e61-d00e-53f5-8c3c-44a44ffdeb1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Action\Type">
+      <UniqueIdentifier>{47072fdf-e93d-5ae1-8129-9d200b3f1814}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lockstep">
+      <UniqueIdentifier>{ce5af450-6f6d-5bcd-88e4-e5f59ec90f91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lockstep\System">
+      <UniqueIdentifier>{e863cfcf-969c-5c42-a4f7-cfc49c089fc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lockstep\Type">
+      <UniqueIdentifier>{d3dc3316-d05b-53c1-ae60-5019f96c303f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Action\System\Control.Action.System.cpp">
+      <Filter>Action\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Action\System\Control.Action.System.ixx">
+      <Filter>Action\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Action\Type\Control.Action.Type.ixx">
+      <Filter>Action\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Lockstep\System\Control.Lockstep.System.cpp">
+      <Filter>Lockstep\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Lockstep\System\Control.Lockstep.System.ixx">
+      <Filter>Lockstep\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Lockstep\Type\Control.Lockstep.Type.ixx">
+      <Filter>Lockstep\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

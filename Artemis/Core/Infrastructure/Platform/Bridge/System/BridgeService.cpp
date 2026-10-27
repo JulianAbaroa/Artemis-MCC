@@ -5,19 +5,35 @@ module;
 module Platform.Bridge.System;
 
 import Common.Engine.Type;
-import Common.Math.Type;
+import Control.Lockstep.Type;
+import Control.Lockstep.System;
 import Platform.Lifecycle.Type;
+import Layout.Action.Type;
 import std;
 
 namespace
 {
+    using Control::Lockstep::Type::ApplyTiming;
+    using Control::Lockstep::Type::BridgeControlState;
+    using Control::Lockstep::Type::BridgeHookState;
+    using Control::Lockstep::Type::ClockReading;
+    using Control::Lockstep::Type::WaitResult;
+    using Control::Lockstep::System::ApplyConnection;
+    using Control::Lockstep::System::BuildOverride;
+    using Control::Lockstep::System::DecideControl;
+    using Control::Lockstep::System::GetApplyTiming;
+    using Control::Lockstep::System::GetDueDecision;
+    using Control::Lockstep::System::GetReleasedOverride;
+    using Control::Lockstep::System::IsDecisionTick;
+    using Control::Lockstep::System::ReadClock;
+    using Control::Lockstep::System::RecordWait;
+    using Control::Lockstep::System::ResumeIfAnswered;
+    using Control::Lockstep::System::ToClientRequests;
+
     using Platform::Lifecycle::Type::Status;
-    using Platform::Input::Type::ClientRequests;
-    using Platform::Input::Type::k_MaxActionPlayers;
     using Platform::Bridge::Type::BridgeOwner;
     using Platform::Bridge::Type::BridgeMode;
     using Platform::Bridge::Type::BridgePhase;
-    using Platform::Bridge::Type::BridgeRequest;
     using Platform::Bridge::Type::BridgeCounters;
     using Platform::Bridge::Type::BridgeSlot;
 
@@ -28,8 +44,7 @@ namespace
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
-    using Common::Math::Type::k_TwoPi;
-    using Common::Math::Type::k_HalfPi;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
     using Platform::Bridge::Type::k_BridgeMagic;
     using Platform::Bridge::Type::k_BridgeLayoutVersion;
     using Platform::Bridge::Type::k_BridgeLayoutHash;
@@ -40,9 +55,6 @@ namespace
     using Platform::Bridge::Type::k_ClientTimeout;
     using Platform::Bridge::Type::k_LockstepTimeout;
     using Platform::Bridge::Type::k_LockstepWaitSlice;
-    using Platform::Bridge::Type::k_MaxLockstepTimeouts;
-    using Platform::Bridge::Type::k_MaxDecisionPeriod;
-    using Platform::Bridge::Type::k_MinLatency;
     using Platform::Bridge::Type::k_BridgeNotLocal;
 
     static_assert(k_MaxPlayers <= k_MaxActionPlayers, "Every bridge slot must have an override in the PlayerActionStore.");
@@ -63,21 +75,6 @@ namespace
     auto StoreShared(std::uint64_t& value, std::uint64_t newValue) -> void
     {
         std::atomic_ref<std::uint64_t>(value).store(newValue, std::memory_order_release);
-    }
-
-    // return: The value, or 0 when it is not finite. Sets isRejected when it had to change it.
-    auto Finite(float value, bool& isRejected) -> float
-    {
-        if (std::isfinite(value)) return value;
-        isRejected = true;
-        return 0.0f;
-    }
-
-    auto Clamp(float value, float limit, bool& isRejected) -> float
-    {
-        if (value >= -limit && value <= limit) return value;
-        isRejected = true;
-        return std::clamp(value, -limit, limit);
     }
 
     auto ToPhase(Status status) -> BridgePhase
@@ -207,14 +204,8 @@ namespace Platform::Bridge::System
         // A client that closes writes heartbeat 0: it leaves at once instead of timing out.
         const bool isClientLeft{ clientHeartbeat == 0 };
         const BridgeControlState previous{ m_BridgeStore.GetControl() };
-        BridgeControlState control{ this->DecideControl(*region, previous) };
-        control.IsClientConnected = !isClientLeft && (now - link.LastClientBeatTime) < k_ClientTimeout;
-        if (!control.IsClientConnected)
-        {
-            control.Owner = BridgeOwner::UI;
-            control.Mode = BridgeMode::Free;
-            control.AgentMask = 0;
-        }
+        const bool isConnected{ !isClientLeft && (now - link.LastClientBeatTime) < k_ClientTimeout };
+        const BridgeControlState control{ ApplyConnection(DecideControl(region->Control.Client, previous), isConnected) };
 
         // The client owns the scale while it owns the instance (D106). The UI gets its own back when the client leaves.
         // The pause follows the same owner (D143).
@@ -261,13 +252,12 @@ namespace Platform::Bridge::System
     {
         out.ActionTick = m_BridgeStore.GetActionTick();
 
-        // Every engine starts its clock again (D139): the first read of a new match is not a skip. Neither is a tick where the engine
-        // applied no actions (the action tick repeats, seen when a match ends): it is not a new action tick, so not a decision either.
+        // A tick where the engine applied no actions (the action tick repeats, seen when a match ends) is not a new action tick, so
+        // not a decision either.
         const std::uint64_t last{ m_BridgeStore.GetLastReadTick() };
         const std::uint64_t match{ m_MatchCycleStore.GetEngineStarts() };
-        const bool isNewMatch{ match != m_BridgeStore.GetLastReadMatch() };
-        const bool isRepeated{ !isNewMatch && last != 0 && out.ActionTick == last };
-        if (isNewMatch)
+        const ClockReading reading{ ReadClock(out.ActionTick, last, m_BridgeStore.GetLastReadMatch(), match, isConsecutive) };
+        if (reading.IsNewMatch)
         {
             if (last != 0)
             {
@@ -275,7 +265,7 @@ namespace Platform::Bridge::System
                     out.ActionTick, last);
             }
         }
-        else if (isConsecutive && last != 0 && !isRepeated && out.ActionTick != last + 1)
+        else if (reading.IsSkip)
         {
             m_BridgeStore.AddClockSkip();
             m_Log.Message("[BridgeService] WARNING: Clock skip in match {}: action tick {} after {}.", match, out.ActionTick,
@@ -290,8 +280,7 @@ namespace Platform::Bridge::System
         }
 
         const BridgeControlState control{ m_BridgeStore.GetControl() };
-        out.IsDecision = m_BridgeStore.GetRegion() != nullptr && control.IsClientConnected && out.ActionTick != 0 && !isRepeated &&
-            out.ActionTick % control.DecisionPeriod == 0;
+        out.IsDecision = IsDecisionTick(m_BridgeStore.GetRegion() != nullptr, control, out.ActionTick, reading.IsRepeated);
     }
 
     auto BridgeService::ResetClock() -> void
@@ -379,28 +368,15 @@ namespace Platform::Bridge::System
             std::uint64_t sequence{ LoadShared(region->Control.Client.ActionSequence) };
 
             // In Lockstep the tick of a decision plus the latency waits for the actions of that decision (D105), if it was published.
-            // note: The AI thread hands decision t over before it reads tick t + 1, and the game thread waits for that read, so at tick
-            // t + d (d >= 2) a decision that will be published is always pushed already.
-            if (control.Mode == BridgeMode::Lockstep && !hook.IsLockstepSuspended && actionTick >= control.Latency)
-            {
-                const std::uint64_t due{ (actionTick - control.Latency) / control.DecisionPeriod * control.DecisionPeriod };
-                if (due > 0 && due <= m_BridgeStore.GetPushedDecision() && sequence < due)
-                {
-                    sequence = this->WaitForDecision(*region, due, hook);
-                }
-            }
+            const std::uint64_t due{ GetDueDecision(actionTick, control, hook, m_BridgeStore.GetPushedDecision(), sequence) };
+            if (due != 0) sequence = this->WaitForDecision(*region, due, hook);
 
-            if (hook.IsLockstepSuspended && sequence > hook.AppliedSequence)
-            {
-                hook.IsLockstepSuspended = false;
-                hook.TimeoutsInRow = 0;
-                m_Log.Message("[BridgeService] INFO: The client answers again: Lockstep resumed.");
-            }
+            if (ResumeIfAnswered(hook, sequence)) m_Log.Message("[BridgeService] INFO: The client answers again: Lockstep resumed.");
 
-            // A decision is applied at its tick plus the latency, or as soon as it arrives when it is late.
-            if (sequence > hook.AppliedSequence && sequence + control.Latency <= actionTick)
+            const ApplyTiming timing{ GetApplyTiming(sequence, hook.AppliedSequence, control.Latency, actionTick) };
+            if (timing != ApplyTiming::None)
             {
-                if (sequence + control.Latency < actionTick) m_BridgeStore.AddLateAction();
+                if (timing == ApplyTiming::Late) m_BridgeStore.AddLateAction();
                 this->ApplyDecision(*region, sequence, agentMask, hook);
             }
 
@@ -460,23 +436,6 @@ namespace Platform::Bridge::System
         }
 
         return path.string();
-    }
-
-    auto BridgeService::DecideControl(const BridgeRegion& region, const BridgeControlState& previous) -> BridgeControlState
-    {
-        const auto& client{ region.Control.Client };
-        BridgeControlState control{ previous };
-
-        control.Owner = client.RequestOwner == BridgeOwner::Python ? BridgeOwner::Python : BridgeOwner::UI;
-        control.Mode = control.Owner == BridgeOwner::Python && client.RequestMode == BridgeMode::Lockstep
-            ? BridgeMode::Lockstep : BridgeMode::Free;
-
-        if (client.RequestPeriod != 0) control.DecisionPeriod = std::clamp(client.RequestPeriod, k_MinLatency, k_MaxDecisionPeriod);
-        if (client.RequestLatency != 0) control.Latency = client.RequestLatency;
-        control.Latency = std::clamp(control.Latency, k_MinLatency, control.DecisionPeriod);
-
-        control.AgentMask = control.Owner == BridgeOwner::Python ? client.AgentMask : 0u;
-        return control;
     }
 
     auto BridgeService::LogTransition(const BridgeControlState& previous, const BridgeControlState& control, bool isClientLeft) -> void
@@ -578,18 +537,13 @@ namespace Platform::Bridge::System
             m_BridgeStore.AddLockstepWait(static_cast<std::uint64_t>(waitNs));
         }
 
-        if (sequence >= decision)
-        {
-            hook.TimeoutsInRow = 0;
-            return sequence;
-        }
+        WaitResult result{ WaitResult::TimedOut };
+        if (sequence >= decision) result = WaitResult::Answered;
+        else if (m_BridgeStore.IsStopped() || isClientGone) result = WaitResult::Cut;
 
-        if (m_BridgeStore.IsStopped() || isClientGone) return sequence;
-
-        m_BridgeStore.AddLockstepTimeout();
-        if (++hook.TimeoutsInRow >= k_MaxLockstepTimeouts)
+        if (result == WaitResult::TimedOut) m_BridgeStore.AddLockstepTimeout();
+        if (RecordWait(hook, result))
         {
-            hook.IsLockstepSuspended = true;
             m_Log.Message("[BridgeService] WARNING: No actions for decision {} after {} waits of {} ms: Lockstep suspended until "
                 "the client answers.", decision, hook.TimeoutsInRow, k_LockstepTimeout.count());
         }
@@ -627,7 +581,9 @@ namespace Platform::Bridge::System
                 continue;
             }
 
-            ActionOverride actionOverride{ this->BuildOverride(action, turnLimit) };
+            bool isRejected{ false };
+            ActionOverride actionOverride{ BuildOverride(action, turnLimit, isRejected) };
+            if (isRejected) m_BridgeStore.AddRejectedAction();
             actionOverride.LocalIndex = slots[player].LocalIndex;
             hook.Overrides[player] = actionOverride;
             hook.ControlledMask |= 1u << player;
@@ -636,35 +592,11 @@ namespace Platform::Bridge::System
             const auto requests{ static_cast<std::uint8_t>(action.Requests) };
             if (requests != 0)
             {
-                m_PlayerActionStore.RequestClient(player, ClientRequests{
-                    .IsWeaponSwitch = (requests & static_cast<std::uint8_t>(BridgeRequest::WeaponSwitch)) != 0,
-                    .IsGrenadeSwitch = (requests & static_cast<std::uint8_t>(BridgeRequest::GrenadeSwitch)) != 0,
-                    .IsZoom = (requests & static_cast<std::uint8_t>(BridgeRequest::Zoom)) != 0 });
+                m_PlayerActionStore.RequestClient(player, ToClientRequests(requests));
             }
         }
 
         hook.AppliedSequence = decision;
-    }
-
-    auto BridgeService::BuildOverride(const BridgeAction& action, float turnLimit) -> ActionOverride
-    {
-        bool isRejected{ false };
-
-        // The engine keeps the yaw in [0, 2 pi): any finite yaw is wrapped there.
-        float yaw{ std::fmod(Finite(action.Yaw, isRejected), k_TwoPi) };
-        if (yaw < 0.0f) yaw += k_TwoPi;
-
-        ActionOverride actionOverride{};
-        actionOverride.Buttons = action.Buttons;
-        actionOverride.Yaw = yaw;
-        actionOverride.Pitch = Clamp(Finite(action.Pitch, isRejected), k_HalfPi, isRejected);
-        actionOverride.ThrottleForward = Clamp(Finite(action.ThrottleForward, isRejected), 1.0f, isRejected);
-        actionOverride.ThrottleLeft = Clamp(Finite(action.ThrottleLeft, isRejected), 1.0f, isRejected);
-        actionOverride.Lanes = action.Lanes;
-        actionOverride.TurnLimit = std::isfinite(turnLimit) && turnLimit > 0.0f ? turnLimit : 0.0f;
-
-        if (isRejected) m_BridgeStore.AddRejectedAction();
-        return actionOverride;
     }
 
     auto BridgeService::ReleasePlayers(BridgeHookState& hook, std::uint32_t keepMask) -> void
@@ -682,15 +614,7 @@ namespace Platform::Bridge::System
     {
         // A local player goes back to its own input. A bot has none: the engine would repeat its last action forever, so it is left
         // standing with the facing it had.
-        const auto& last{ hook.Overrides[player] };
-        if (last.has_value() && !last->LocalIndex.has_value())
-        {
-            m_PlayerActionStore.SetOverride(player, ActionOverride{ .Yaw = last->Yaw, .Pitch = last->Pitch });
-        }
-        else
-        {
-            m_PlayerActionStore.SetOverride(player, std::nullopt);
-        }
+        m_PlayerActionStore.SetOverride(player, GetReleasedOverride(hook.Overrides[player]));
 
         hook.Overrides[player].reset();
         hook.ControlledMask &= ~(1u << player);

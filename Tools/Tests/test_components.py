@@ -2,7 +2,7 @@
 test_components.py
 Boundaries of the components that already are projects (redesign D153; Ignore Rediseno/02 sec. 3.5, D156, D165): each one imports
 only the modules of the components it may depend on, references only those projects, and lists every source it owns.
-Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a, M4b (D182-D188), M5a (D189-D197) and M5b (D198-D201); each later step
+Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a, M4b (D182-D188), M5a (D189-D197), M5b (D198-D201) and M6a (D210-D215); each later step
 that creates a component adds it to COMPONENTS.
 They read the files of the repo (git ls-files), they do not build.
 """
@@ -35,10 +35,11 @@ COMPONENTS = {
                              {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment", "Egocentric", "Export",
                               "Contract"},
                              {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Contract"}),
+    "Artemis/Control": ("Artemis.Control.vcxproj", {"Common", "Layout", "Contract", "Control"}, {"Common", "Blam.Layout", "Contract"}),
 }
 
 # The pure projects of M5b (D198): what was the Domain after Blam.Runtime. None of them touches the process, the wiring or a layer above.
-PURE_PROJECTS = ("Artemis/Contract", "Artemis/Perception", "Artemis/Views", "Artemis/Bridge.Codec")
+PURE_PROJECTS = ("Artemis/Contract", "Artemis/Perception", "Artemis/Views", "Artemis/Bridge.Codec", "Artemis/Control")
 NOT_PURE_ROOTS = {"Service", "Platform", "Infrastructure", "Runtime", "UI", "Viewer", "Gui", "Core"}
 NOT_PURE_WORDS = ("windows.h", "MinHook", "reinterpret_cast", "OnCleanup(", "OnEngineInitialized(", "OnUnhook(")
 LAYERS = (("Relations", "Artemis/Perception/Relations/Relations.Layer.ixx", ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables")),
@@ -128,12 +129,13 @@ def test_component_project_lists_every_source(folder):
 def test_dll_project_references_the_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
     assert {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views",
-            "Bridge.Codec"} <= found
+            "Bridge.Codec", "Control"} <= found
 
 
 def test_tests_project_references_the_blam_components():
     found = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Tests/Artemis.Tests.vcxproj"))}
-    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views", "Bridge.Codec"} <= found
+    assert {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception", "Views", "Bridge.Codec",
+            "Control"} <= found
 
 
 def test_old_map_folders_are_gone():
@@ -420,3 +422,72 @@ def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
     assert re.search(r"\bstruct\s+TickRecordHeader\b", Read("Artemis/Bridge.Codec/Dump/Type/Export.Dump.Type.ixx"))
     for path in Sources("Artemis/Core/UI/TickDump"):
         assert "UI::TickDump::Type::TickRecordHeader" not in Read(path), path
+
+
+# ---- M6a: Control as a project (D210-D215)
+
+INPUT_TYPE = "Artemis/Core/Infrastructure/Platform/Input/Type/Platform.Input.Type.ixx"
+SIMULATION_TYPE = "Artemis/Core/Infrastructure/Platform/Simulation/Type/Platform.Simulation.Type.ixx"
+DETOUR_CPP = "Artemis/Core/Infrastructure/Platform/Input/Hook/PlayerActionDetour.cpp"
+BRIDGE_SERVICE_CPP = "Artemis/Core/Infrastructure/Platform/Bridge/System/BridgeService.cpp"
+BOT_SERVICE_IXX = "Artemis/Core/Infrastructure/Platform/Simulation/System/BotService.ixx"
+CONTROL_NOT_PURE_WORDS = ("std::mutex", "std::thread", "std::chrono")
+
+
+def Defines(path_text, kind, name):
+    return re.search(rf"\b{kind}\s+{name}\b\s*(?:\{{|$)", path_text, re.MULTILINE) is not None
+
+
+def test_the_action_format_lives_in_blam_layout():
+    sources = Sources("Artemis/Blam.Layout/Action")
+    assert sorted(sources) == ["Artemis/Blam.Layout/Action/Layout.Action.Type.ixx", "Artemis/Blam.Layout/Action/Type/ActionBits.ixx",
+                               "Artemis/Blam.Layout/Action/Type/ActionOffset.ixx", "Artemis/Blam.Layout/Action/Type/ActionSize.ixx"]
+    for partition, name in (("Offset", "ActionOffset"), ("Size", "ActionSize"), ("Bits", "ActionBits")):
+        assert Read(f"Artemis/Blam.Layout/Action/Type/{name}.ixx").startswith(f"export module Layout.Action.Type:{partition};")
+        assert f"export import :{partition};" in Read("Artemis/Blam.Layout/Action/Layout.Action.Type.ixx")
+    for path in (INPUT_TYPE, SIMULATION_TYPE):
+        text = Read(path)
+        for name in ("k_PlayerActionSize", "k_ActionButtonsOffset", "k_HoldLanes", "k_NoZoomLevel"):
+            assert not re.search(rf"\b{name}\s*\{{", text), f"{path} defines {name}"
+        assert not Defines(text, "struct", "HoldLane"), path
+
+
+@pytest.mark.parametrize("name", ["ActionOverride", "ClientRequests", "WeaponRequest", "AppliedFacing", "UnitClientState",
+                                  "PlayerActionHistory", "BridgeControlState", "BridgeHookState"])
+def test_control_types_are_defined_only_under_control(name):
+    found = [path for path in Sources("Artemis") if Defines(Read(path), "struct", name)]
+    assert found and all(path.startswith("Artemis/Control/") for path in found), found
+
+
+def test_ticks_per_second_is_defined_only_in_common_engine_type():
+    found = [path for path in Sources("Artemis") if re.search(r"\bk_TicksPerSecond\s*\{", Read(path))]
+    assert found == ["Artemis/Common/Engine/Type/Common.Engine.Type.ixx"], found
+
+
+def test_the_detour_builds_the_action_with_control():
+    text = Read(DETOUR_CPP)
+    assert "BuildAction(" in text
+    for word in ("TurnToward", "MoveToward", "WriteLanes", "WriteClientRequests", "IsUseTestDown", "k_WeaponRequestTicks"):
+        assert word not in text, word
+
+
+def test_the_bridge_service_takes_its_decisions_from_control():
+    text = Read(BRIDGE_SERVICE_CPP)
+    for name in ("DecideControl", "BuildOverride", "Finite", "Clamp"):
+        assert not re.search(rf"\bauto\s+(?:\w+::)?{name}\s*\(", text), f"defines {name}"
+    for name in ("GetDueDecision", "RecordWait", "ReadClock"):
+        assert f"{name}(" in text, name
+
+
+def test_the_bot_service_answers_the_unit_rules():
+    assert re.search(r"class\s+BotService\s*:\s*public\s+Control::Action::System::UnitRules\b", Read(BOT_SERVICE_IXX))
+
+
+def test_control_does_not_touch_the_process_the_wiring_or_the_clock():
+    sources = Sources("Artemis/Control")
+    assert sources
+    for path in sources:
+        text = Read(path)
+        assert not (ImportRoots(path) & NOT_PURE_ROOTS), f"{path}: imports {sorted(ImportRoots(path) & NOT_PURE_ROOTS)}"
+        for word in NOT_PURE_WORDS + CONTROL_NOT_PURE_WORDS:
+            assert word not in text, f"{path}: {word}"

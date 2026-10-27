@@ -42,6 +42,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Action\Layout.Action.Type.ixx" />
+    <ClCompile Include="Action\Type\ActionBits.ixx" />
+    <ClCompile Include="Action\Type\ActionOffset.ixx" />
+    <ClCompile Include="Action\Type\ActionSize.ixx" />
     <ClCompile Include="Datum\Datum.Object.Type.ixx" />
     <ClCompile Include="Datum\Type\Anim\DatumAnimOffset.ixx" />
     <ClCompile Include="Datum\Type\Anim\DatumAnimStructure.ixx" />

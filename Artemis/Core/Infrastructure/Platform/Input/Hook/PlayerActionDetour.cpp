@@ -5,60 +5,54 @@ module;
 module Platform.Input.Hook;
 import :PlayerAction;
 
-import Common.Math.System;
-import Platform.Lifecycle.Type;
+import Control.Action.Type;
+import Control.Action.System;
 import Platform.Hook.System;
 import Platform.Memory.Type;
 import Platform.Simulation.Type;
+import Layout.Action.Type;
 import std;
 
 namespace
 {
     namespace Signature = Platform::Memory::Type::Signature;
 
-    using Common::Math::System::TurnToward;
-    using Common::Math::System::MoveToward;
+    using Control::Action::System::BuildAction;
 
     using Platform::Hook::System::k_DrainTimeout;
 
     using Platform::Hook::System::ResolveRelative;
 
+    using Control::Action::Type::ActionOverride;
+    using Control::Action::Type::ClientRequests;
+    using Control::Action::Type::PlayerActionHistory;
+    using Control::Action::Type::UnitClientState;
+
     using Platform::Input::Type::PlayerActions;
-    using Platform::Input::Type::ActionOverride;
-    using Platform::Input::Type::AppliedFacing;
-    using Platform::Input::Type::ClientRequests;
-    using Platform::Input::Type::WeaponRequest;
     using Platform::Input::Type::ShadowField;
-    using Platform::Simulation::Type::UnitClientState;
-    using Platform::Simulation::Type::k_NoZoomLevel;
 
-    using Platform::Lifecycle::Type::k_TicksPerSecond;
+    using Layout::Action::Type::k_HoldLanes;
+    using Layout::Action::Type::k_NoZoomLevel;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Layout::Action::Type::Size::k_PlayerActionSize;
+    using Layout::Action::Type::Size::k_ActionInteractionSize;
+    using Layout::Action::Type::Offset::k_UpdateActionMaskOffset;
+    using Layout::Action::Type::Offset::k_UpdateActionsOffset;
+    using Layout::Action::Type::Offset::k_ActionHasUnitOffset;
+    using Layout::Action::Type::Offset::k_ActionUnitSlotOffset;
+    using Layout::Action::Type::Offset::k_ActionLanesOffset;
+    using Layout::Action::Type::Offset::k_ActionInteractionOffset;
+    using Layout::Action::Type::Offset::k_ActionInventoryVersionOffset;
+    using Layout::Action::Type::Offset::k_ActionWeaponSlotOffset;
+    using Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
+    using Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
 
-    using Platform::Input::Type::k_MaxActionPlayers;
-    using Platform::Input::Type::k_PlayerActionSize;
-    using Platform::Input::Type::k_UpdateActionMaskOffset;
-    using Platform::Input::Type::k_UpdateActionsOffset;
-    using Platform::Input::Type::k_ActionHasUnitOffset;
-    using Platform::Input::Type::k_ActionUnitSlotOffset;
-    using Platform::Input::Type::k_ActionButtonsOffset;
-    using Platform::Input::Type::k_ActionFacingOffset;
-    using Platform::Input::Type::k_ActionThrottleOffset;
-    using Platform::Input::Type::k_ActionLanesOffset;
-    using Platform::Input::Type::k_HoldLanes;
-    using Platform::Input::Type::k_UseLane;
     using Platform::Input::Type::k_PlayerControlTagOffset;
     using Platform::Input::Type::k_HoldThresholdOffset;
     using Platform::Input::Type::k_TagLoadTableRelOffset;
     using Platform::Input::Type::k_TagLoadTableNextOffset;
     using Platform::Input::Type::k_TagLoadCallRelOffset;
     using Platform::Input::Type::k_TagLoadCallNextOffset;
-    using Platform::Input::Type::k_ActionInteractionOffset;
-    using Platform::Input::Type::k_ActionInteractionSize;
-    using Platform::Input::Type::k_ActionInventoryVersionOffset;
-    using Platform::Input::Type::k_ActionWeaponSlotOffset;
-    using Platform::Input::Type::k_ActionGrenadeTypeOffset;
-    using Platform::Input::Type::k_ActionZoomLevelOffset;
-    using Platform::Input::Type::k_ActionKeepZoomButton;
     using Platform::Input::Type::k_ShadowFieldNames;
     using Platform::Input::Type::k_ControlGlobalsSlot;
     using Platform::Input::Type::k_ControlBlockStride;
@@ -71,30 +65,10 @@ namespace
     static_assert(k_ActionInteractionSize == k_InteractionRecordCount * k_InteractionRecordSize,
         "The interaction of the action must hold the records the engine builds.");
 
-    // Ticks a weapon request is sent while the unit does not hold the slot (half a second at 60 ticks per second).
-    constexpr std::uint32_t k_WeaponRequestTicks{ 30 };
-
-    // Use test (A9 M5d), in ticks of a cycle: use is down until the end tick, then released, so the engine sees new presses, long
-    // holds and releases.
-    constexpr std::uint64_t k_UseTestCycle{ 64 };
-    constexpr std::uint64_t k_UseTestDownEndTick{ 60 };
-
-    // Sanity limit of the hold threshold read from the engine. Anything outside (0, limit) is not a threshold.
-    constexpr float k_MaxHoldThresholdSeconds{ 5.0f };
-
     using Platform::Input::Type::k_ShadowLogLimit;
 
     // Weapon slot of the action that asks for nothing.
     constexpr std::uint8_t k_NoWeaponRequest{ 0xFF };
-
-    // Milliseconds per second. The local client keeps the hold time and the threshold in whole milliseconds (0x5df80).
-    constexpr std::uint32_t k_MillisecondsPerSecond{ 1000 };
-
-    // return: True if use is down in the use test at that tick.
-    auto IsUseTestDown(std::uint64_t tick) -> bool
-    {
-        return (tick % k_UseTestCycle) < k_UseTestDownEndTick;
-    }
 
     // Aims the action at the unit in that slot.
     auto WriteUnitSlot(std::uint8_t* action, std::uint8_t unitSlot) -> void
@@ -134,8 +108,11 @@ namespace Platform::Input::Hook
         // note: Without the thread context the unit slot is unknown, and a cleared action would leave the unit without control.
         if (!m_ClearPlayerAction || threadContext == 0)
         {
-            m_WeaponRequests.fill(std::nullopt);
-            for (auto& ticks : m_LaneTicks) ticks.fill(0);
+            for (auto& history : m_Histories)
+            {
+                history.PendingWeapon.reset();
+                history.LaneTicks.fill(0);
+            }
             return;
         }
 
@@ -173,9 +150,7 @@ namespace Platform::Input::Hook
             const auto& actionOverride{ overrides[player] };
             if (!actionOverride)
             {
-                m_WeaponRequests[player].reset();
-                m_LaneTicks[player].fill(0);
-                m_Facings[player].reset();
+                m_Histories[player] = PlayerActionHistory{};
                 continue;
             }
 
@@ -191,37 +166,12 @@ namespace Platform::Input::Hook
                 WriteUnitSlot(action, *unitSlot);
             }
 
-            // note: The turn goes on from the facing written last tick while the unit is the same. A new unit (first tick of an
-            // override, a spawn, another player in the slot, a new match) starts from the aim the unit has, so it never jumps.
             const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, player) };
-            const auto& previous{ m_Facings[player] };
-            std::array<float, 2> facing{ actionOverride->Yaw, actionOverride->Pitch };
-            if (unitState)
-            {
-                const std::array<float, 2> from{ previous && previous->Unit == unitState->Unit ? previous->Facing : unitState->Facing };
-                facing = { TurnToward(from[0], actionOverride->Yaw, actionOverride->TurnLimit),
-                    MoveToward(from[1], actionOverride->Pitch, actionOverride->TurnLimit) };
-                m_Facings[player] = AppliedFacing{ .Unit = unitState->Unit, .Facing = facing };
-            }
-            else
-            {
-                m_Facings[player].reset();
-            }
-            const std::array<float, 2> throttle{ actionOverride->ThrottleForward, actionOverride->ThrottleLeft };
 
-            // note: The zoom level of the action is marked absent unless the agent asks for one, so the unit keeps its zoom (D120).
-            const std::uint64_t buttons{ actionOverride->Buttons | k_ActionKeepZoomButton };
-
-            std::memcpy(action + k_ActionButtonsOffset, &buttons, sizeof(buttons));
-            std::memcpy(action + k_ActionFacingOffset, facing.data(), sizeof(facing));
-            std::memcpy(action + k_ActionThrottleOffset, throttle.data(), sizeof(throttle));
-
-            std::uint32_t lanes{ actionOverride->Lanes };
-            if (actionOverride->IsUseTest && IsUseTestDown(m_Sequence)) lanes |= k_UseLane;
-
-            this->WriteLanes(action, player, lanes, holdTicks);
-
-            this->WriteClientRequests(action, threadContext, player, requests[player]);
+            // note: Writes the buttons, facing, throttle, lanes and client requests of the agent, in that order (D109, D114, D120, D121).
+            // The sequence is the action tick of the use test, before PublishActions counts this tick.
+            const std::array<float, 2> facing{ BuildAction(std::span<std::uint8_t, k_PlayerActionSize>{ action, k_PlayerActionSize },
+                *actionOverride, unitState, holdTicks, requests[player], m_Sequence, m_BotService, m_Histories[player]) };
 
             // note: The engine builds the interaction once per frame and only for local players. Every agent gets it here from the
             // same engine functions, once per tick, so locals and bots are treated alike (A9 M5d, D118).
@@ -367,26 +317,6 @@ namespace Platform::Input::Hook
             k_ShadowFieldNames[static_cast<std::size_t>(field)], player, engineValue, artemisValue);
     }
 
-    auto PlayerActionDetour::WriteLanes(std::uint8_t* action, std::size_t player, std::uint32_t lanes,
-        std::optional<std::uint32_t> holdTicks) -> void
-    {
-        auto& ticks{ m_LaneTicks[player] };
-
-        for (std::size_t lane{ 0 }; lane < k_HoldLanes.size(); ++lane)
-        {
-            if ((lanes & (1u << k_HoldLanes[lane].DownBit)) == 0)
-            {
-                ticks[lane] = 0;
-                continue;
-            }
-
-            if (ticks[lane] < (std::numeric_limits<std::uint32_t>::max)()) ++ticks[lane];
-            if (holdTicks && ticks[lane] >= *holdTicks) lanes |= 1u << k_HoldLanes[lane].HeldBit;
-        }
-
-        std::memcpy(action + k_ActionLanesOffset, &lanes, sizeof(lanes));
-    }
-
     auto PlayerActionDetour::GetHoldThresholdTicks() const -> std::optional<std::uint32_t>
     {
         if (!m_PlayerControlTable || !m_ResolveTagAddress) return std::nullopt;
@@ -402,84 +332,7 @@ namespace Platform::Input::Hook
         if (tag == 0) return std::nullopt;
 
         const float seconds{ *reinterpret_cast<const float*>(tag + k_HoldThresholdOffset) };
-        if (!(seconds > 0.0f && seconds < k_MaxHoldThresholdSeconds)) return std::nullopt;
-
-        // note: The local client compares whole milliseconds held with (int)(seconds * 1000), so a lane is held from the first tick
-        // whose time reaches it.
-        const auto milliseconds{ static_cast<std::uint32_t>(seconds * static_cast<float>(k_MillisecondsPerSecond)) };
-        const auto ticksPerSecond{ static_cast<std::uint32_t>(k_TicksPerSecond) };
-        return ((milliseconds * ticksPerSecond) + (k_MillisecondsPerSecond - 1)) / k_MillisecondsPerSecond;
-    }
-
-    auto PlayerActionDetour::WriteClientRequests(std::uint8_t* action, std::uintptr_t threadContext, std::size_t player,
-        const ClientRequests& requests) -> void
-    {
-        std::optional<WeaponRequest>& weaponRequest{ m_WeaponRequests[player] };
-
-        const std::optional<UnitClientState> state{ m_BotService.GetUnitClientState(threadContext, player) };
-        if (!state)
-        {
-            weaponRequest.reset();
-            return;
-        }
-
-        if (weaponRequest && (state->WeaponSlot == weaponRequest->Slot || weaponRequest->TicksLeft == 0
-            || state->InventoryVersion != weaponRequest->InventoryVersion))
-        {
-            weaponRequest.reset();
-        }
-
-        if (requests.IsWeaponSwitch)
-        {
-            // note: A second press while a request is pending goes on from the requested slot, as a double tap does.
-            UnitClientState from{ *state };
-            if (weaponRequest) from.WeaponSlot = weaponRequest->Slot;
-
-            const std::optional<std::int8_t> slot{ m_BotService.GetNextWeaponSlot(from) };
-            if (slot)
-            {
-                weaponRequest = WeaponRequest{ .Slot = *slot, .InventoryVersion = state->InventoryVersion,
-                    .TicksLeft = k_WeaponRequestTicks };
-            }
-        }
-
-        std::optional<std::int8_t> zoomLevel{};
-
-        if (weaponRequest)
-        {
-            --weaponRequest->TicksLeft;
-            std::memcpy(action + k_ActionInventoryVersionOffset, &weaponRequest->InventoryVersion,
-                sizeof(weaponRequest->InventoryVersion));
-            action[k_ActionWeaponSlotOffset] = static_cast<std::uint8_t>(weaponRequest->Slot);
-
-            // note: A local client leaves the zoom when it switches weapon (0x61a38). A zoom press during the switch is dropped.
-            zoomLevel = k_NoZoomLevel;
-        }
-        else if (requests.IsZoom)
-        {
-            zoomLevel = m_BotService.GetNextZoomLevel(*state);
-        }
-
-        if (requests.IsGrenadeSwitch)
-        {
-            const std::optional<std::int8_t> type{ m_BotService.GetNextGrenadeType(*state) };
-            if (type)
-            {
-                const auto value{ static_cast<std::uint16_t>(*type) };
-                std::memcpy(action + k_ActionGrenadeTypeOffset, &value, sizeof(value));
-            }
-        }
-
-        if (zoomLevel)
-        {
-            const auto value{ static_cast<std::uint16_t>(static_cast<std::int16_t>(*zoomLevel)) };
-            std::memcpy(action + k_ActionZoomLevelOffset, &value, sizeof(value));
-
-            std::uint64_t buttons{ 0 };
-            std::memcpy(&buttons, action + k_ActionButtonsOffset, sizeof(buttons));
-            buttons &= ~k_ActionKeepZoomButton;
-            std::memcpy(action + k_ActionButtonsOffset, &buttons, sizeof(buttons));
-        }
+        return Control::Action::System::GetHoldThresholdTicks(seconds);
     }
 
     auto PlayerActionDetour::GetThreadContext() const -> std::uintptr_t

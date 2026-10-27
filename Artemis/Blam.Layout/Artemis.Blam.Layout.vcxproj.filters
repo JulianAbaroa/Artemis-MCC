@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Action">
+      <UniqueIdentifier>{678f957b-743f-50e4-89a6-9d908a2678ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Action\Type">
+      <UniqueIdentifier>{17bcc48c-9ee9-532b-8738-feaceafefc5d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Datum">
       <UniqueIdentifier>{2cbf5509-8fe2-50b7-902a-dd7387657e1e}</UniqueIdentifier>
     </Filter>
@@ -81,6 +87,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Action\Layout.Action.Type.ixx">
+      <Filter>Action</Filter>
+    </ClCompile>
+    <ClCompile Include="Action\Type\ActionBits.ixx">
+      <Filter>Action\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Action\Type\ActionOffset.ixx">
+      <Filter>Action\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Action\Type\ActionSize.ixx">
+      <Filter>Action\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Datum\Datum.Object.Type.ixx">
       <Filter>Datum</Filter>
     </ClCompile>

@@ -5,9 +5,11 @@ module;
 module UI.Simulation.System;
 
 import Common.Engine.Type;
+import Control.Action.Type;
 import Platform.Lifecycle.Type;
 import Platform.Simulation.Type;
 import Platform.Bridge.Type;
+import Layout.Action.Type;
 import Gui.Style.Type;
 import std;
 
@@ -16,8 +18,8 @@ namespace
     using Platform::Input::Type::LocalInputSource;
     using Platform::Input::Type::PlayerAction;
     using Platform::Input::Type::PlayerActions;
-    using Platform::Input::Type::ActionOverride;
-    using Platform::Input::Type::ClientRequests;
+    using Control::Action::Type::ActionOverride;
+    using Control::Action::Type::ClientRequests;
     using Platform::Input::Type::ShadowCount;
     using Environment::Players::Type::Player;
     using Environment::Players::Type::Players;
@@ -35,22 +37,22 @@ namespace
     using Platform::Simulation::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
     using Platform::Simulation::Type::k_MaxTeams;
-    using Platform::Input::Type::k_MaxActionPlayers;
-    using Platform::Input::Type::k_PlayerActionSize;
-    using Platform::Input::Type::k_ActionButtonsOffset;
-    using Platform::Input::Type::k_ActionFacingOffset;
-    using Platform::Input::Type::k_ActionThrottleOffset;
-    using Platform::Input::Type::k_UseLane;
+    using Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Layout::Action::Type::Size::k_PlayerActionSize;
+    using Layout::Action::Type::Offset::k_ActionButtonsOffset;
+    using Layout::Action::Type::Offset::k_ActionFacingOffset;
+    using Layout::Action::Type::Offset::k_ActionThrottleOffset;
+    using Layout::Action::Type::k_UseLane;
     using Platform::Input::Type::k_ShadowFieldCount;
     using Platform::Input::Type::k_ShadowFieldNames;
     using Platform::Input::Type::k_ShadowLogLimit;
-    using Platform::Lifecycle::Type::k_TicksPerSecond;
     using UI::Simulation::Type::k_LocalPlayerInputCount;
     using UI::Simulation::Type::k_LocalPlayerInputLabels;
     using UI::Simulation::Type::k_LocalPlayerActionCount;
     using UI::Simulation::Type::k_LocalPlayerActionLabels;
     using UI::Simulation::Type::k_RecordNameSize;
     using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_TicksPerSecond;
     using Common::Engine::Type::k_HandleIndexMask;
     using Gui::Style::Type::k_BytesPerRow;
 

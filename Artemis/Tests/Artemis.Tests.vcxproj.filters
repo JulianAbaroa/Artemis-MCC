@@ -7,6 +7,9 @@
     <Filter Include="Common">
       <UniqueIdentifier>{18814560-6577-49c9-b9d5-355f846785b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Control">
+      <UniqueIdentifier>{712559e7-5888-591b-b57e-e271a1b8119e}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Perception">
       <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
     </Filter>
@@ -15,6 +18,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Control\ActionTests.cpp">
+      <Filter>Control</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\LockstepTests.cpp">
+      <Filter>Control</Filter>
+    </ClCompile>
     <ClCompile Include="Perception\PipelineTests.cpp">
       <Filter>Perception</Filter>
     </ClCompile>
