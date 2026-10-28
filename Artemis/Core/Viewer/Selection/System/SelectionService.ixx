@@ -1,7 +1,7 @@
 export module Viewer.Selection.System;
 
 import Environment.Collidable.Type;
-import Environment.Collidable.State;
+import Viewer.Collidable.State;
 import Viewer.Selection.Type;
 import Viewer.Selection.State;
 import Viewer.Camera.Type;
@@ -16,7 +16,7 @@ export namespace Viewer::Selection::System
     {
     private:
         using Collidables = Environment::Collidable::Type::Collidables;
-        using CollidableStore = Environment::Collidable::State::CollidableStore;
+        using CollidableStore = Viewer::Collidable::State::CollidableStore;
 
         using SelectionStore = Viewer::Selection::State::SelectionStore;
         using Ray = Viewer::Camera::Type::Ray;

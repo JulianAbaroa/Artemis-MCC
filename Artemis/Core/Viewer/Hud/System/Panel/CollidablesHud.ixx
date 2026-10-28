@@ -1,7 +1,7 @@
 export module Viewer.Hud.System:Collidables;
 
 import Environment.Collidable.Type;
-import Environment.Collidable.State;
+import Viewer.Collidable.State;
 import std;
 
 export namespace Viewer::Hud::System

@@ -74,7 +74,7 @@ CAPTURE_HOOK = "Artemis/Engine.Capture/Hook/"
 
 # Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Map.*) are imported only by the wiring of the DLL (future Mod),
 # the development tools (future DevTools) and the tests (02 sec. 3.5, contract of Blam.Map).
-MAP_IMPORTERS = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", "Artemis/Core/UI/", "Artemis/Tests/")
+MAP_IMPORTERS = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", "Artemis/Core/UI/", "Artemis/Core/DevTools/", "Artemis/Tests/")
 
 # Group queries of the old TagResolverService that nobody called (removed in M3, D180).
 REMOVED_NAMES = ("HasBipd", "HasBloc", "HasCtrl", "HasEqip", "HasMach", "HasProj", "HasScen", "HasVehi", "HasWeap")
@@ -424,8 +424,8 @@ def test_the_order_of_the_tick_lives_in_the_pipeline_service():
     tests = Read("Artemis/Tests/Perception/PipelineTests.cpp")
     assert not PIPELINE_STEP.search(tests), PIPELINE_STEP.search(tests).group(0)
     assert "m_PipelineService.Run(" in tests
-    # Tables 4, Relations 2, Environment 11 and Egocentric 3. The Tick is assembled through TickService.
-    assert len(PIPELINE_STEP.findall(Read(PIPELINE_SERVICE + ".cpp"))) == 20
+    # Tables 4, Relations 2, Environment 10 and Egocentric 3. The Tick is assembled through TickService.
+    assert len(PIPELINE_STEP.findall(Read(PIPELINE_SERVICE + ".cpp"))) == 19
 
 
 def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
@@ -685,3 +685,89 @@ def test_the_dll_does_not_list_the_sources_of_the_engine_projects():
     listed = {include.replace("\\", "/") for include in COMPILE.findall(Read("Artemis/Artemis.vcxproj"))}
     assert not [p for p in listed if p.startswith("Core/Infrastructure/Platform/") and not p.startswith(
         ("Core/Infrastructure/Platform/Port/", "Core/Infrastructure/Platform/Platform.Layer.ixx"))]
+
+
+# ---- M7.1: tick observers, the scene apart from the pipeline, the Gui without Domain, EngineAccess (D222-D227)
+
+DEVTOOLS_FOLDERS = ("Artemis/Core/Gui", "Artemis/Core/UI", "Artemis/Core/Viewer", "Artemis/Core/DevTools")
+DEVTOOLS_ROOTS = {"UI", "Viewer", "Gui", "DevTools"}
+PURE_ROOTS = {"Map", "Resolved", "Datum", "Layout", "Tables", "Relations", "Environment", "Egocentric", "Export", "Contract", "Control"}
+DEVTOOLS_PURE_SYSTEMS = {"Export.Dump.System", "Export.Flat.System", "Layout.Snapshot.System", "Environment.Collidable.System",
+                         "Resolved.Definitions.Reflect"}
+
+
+def DevToolsSources():
+    return [path for folder in DEVTOOLS_FOLDERS for path in Sources(folder)]
+
+
+def test_the_ai_thread_knows_no_development_tool():
+    for path in Sources("Artemis/Core/Runtime/AI"):
+        assert not ImportRoots(path) & DEVTOOLS_ROOTS, path
+    text = Read("Artemis/Core/Runtime/AI/AIThread.ixx") + Read("Artemis/Core/Runtime/AI/AIThread.cpp")
+    for name in ("CameraStore", "TickTraceUIService", "TickDumpUIService"):
+        assert name not in text, name
+
+
+def test_the_pipeline_builds_no_scene_and_knows_no_viewer_state():
+    names = re.search(r"k_PipelineStageNames\{(.*?)\};", Read(PIPELINE_SERVICE + ".ixx"), re.DOTALL).group(1)
+    assert "Collidable" not in names
+    assert "CollidableService" not in Read(PIPELINE_SERVICE + ".cpp")
+    for folder in ("Artemis/Bridge.Codec", "Artemis/Perception", "Artemis/Views", "Artemis/Tests/Support"):
+        for path in Sources(folder):
+            assert "isViewerActive" not in Read(path), path
+
+
+def test_the_collidable_scene_is_built_on_demand_and_stored_by_the_viewer():
+    service = Read("Artemis/Perception/Environment/Collidable/System/CollidableService.ixx")
+    assert "BuildScene" in service
+    assert not re.search(r"\bUpdate\(", service)
+    assert not re.search(r"\bCollectCollidables\b", service)
+    stores = [p for p in Sources("Artemis") if re.search(r"\bclass CollidableStore\b", Read(p))]
+    assert stores == ["Artemis/Core/Viewer/Collidable/State/CollidableStore.ixx"], stores
+    for path in Sources("Artemis/Perception"):
+        assert "Environment.Collidable.State" not in Read(path), path
+        assert not re.search(r"\bCollidableStore\b", Read(path)), path
+
+
+def test_the_gui_has_no_domain_and_no_platform_layer():
+    for path in Sources("Artemis/Core/Gui"):
+        names = [n for n in Imports(path)]
+        assert {n.split(".")[0] for n in names} <= {"Common", "Service", "Gui", "Platform"}, (path, names)
+        assert not [n for n in names if n.startswith("Platform.") and not n.startswith(("Platform.Render.", "Platform.Window."))], path
+    assert not [p for p in Tracked("Artemis") if "ObjectFormater" in p]
+    assert not [p for p in Tracked("Artemis/Core/Gui") if "AffordanceFormater" in p or "InteractionFormater" in p]
+    for name in ("Affordance", "Interaction"):
+        assert Tracked(f"Artemis/Core/Viewer/Format/System/{name}/{name}Formater.ixx")
+
+
+def test_the_development_tools_do_not_import_the_engine_the_runtime_or_the_pipeline():
+    for path in DevToolsSources():
+        names = Imports(path)
+        wrong = [n for n in names if n == "Platform.Layer" or n.startswith(("Platform.Port", "Runtime.", "Export.Pipeline.System"))
+                 or n == "Core"]
+        assert not wrong, f"{path}: {wrong}"
+        text = Read(path)
+        assert "PipelineService" not in text and "BuildForMap" not in text, path
+
+
+def test_the_development_tools_import_only_the_data_of_the_pure_components():
+    for path in DevToolsSources():
+        for name in Imports(path):
+            if name.split(".")[0] not in PURE_ROOTS or name in DEVTOOLS_PURE_SYSTEMS:
+                continue
+            assert name.rsplit(".", 1)[-1] in {"Type", "State", "Layer"}, f"{path}: {name}"
+
+
+def test_the_tick_observer_is_wired_from_runtime_to_devtools():
+    defined = [p for p in Sources("Artemis") if re.search(r"\bstruct ObservedTick\b", Read(p))]
+    assert defined == ["Artemis/Bridge.Codec/Pipeline/Type/Export.Pipeline.Type.ixx"], defined
+    assert re.search(r"auto OnTick\(const ObservedTick&", Read("Artemis/Core/DevTools/DevTools.Layer.ixx"))
+    assert "AddObserver(" in Read("Artemis/Core/Runtime/Runtime.Layer.ixx")
+
+
+def test_only_the_wiring_and_the_devtools_import_the_development_tools():
+    owned = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", *(f + "/" for f in DEVTOOLS_FOLDERS))
+    for path in Sources("Artemis"):
+        if path.startswith(owned):
+            continue
+        assert not ImportRoots(path) & DEVTOOLS_ROOTS, path

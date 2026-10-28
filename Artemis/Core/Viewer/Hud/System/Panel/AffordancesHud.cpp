@@ -10,9 +10,9 @@ import Common.Semantic.Type;
 import Tables.Object.Type;
 import Egocentric.Affordance.Type;
 import Gui.Color.System;
-import Gui.Format.System;
 import Gui.Style.Type;
 import Gui.Widget.System;
+import Viewer.Format.System;
 import std;
 
 namespace
@@ -30,8 +30,8 @@ namespace
     using Common::Semantic::Type::NameOf;
 
     using Gui::Color::System::GroupToColor;
-    using Gui::Format::System::AffordanceFormater;
-    using Gui::Format::System::InteractionFormater;
+    using Viewer::Format::System::AffordanceFormater;
+    using Viewer::Format::System::InteractionFormater;
 
     using Gui::Widget::System::PanelGuiService;
 

@@ -11,7 +11,6 @@ import Tables.Object.State;
 import Relations.Classifier.Type;
 import Relations.Classifier.State;
 import Environment.Collidable.Type;
-import Environment.Collidable.State;
 import std;
 
 export namespace Environment::Collidable::System
@@ -23,14 +22,13 @@ export namespace Environment::Collidable::System
         using CollMesh = Resolved::Definitions::Type::Coll::CollMesh;
         using Coll = Resolved::Definitions::Type::Coll::Coll;
         using AliveObject = Tables::Object::Type::Alive::AliveObject;
-        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
         using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
         using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
         using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
         using Classified = Relations::Classifier::Type::Classified;
-        using Classifieds = Relations::Classifier::Type::Classifieds;
         using Collidable = Environment::Collidable::Type::Collidable;
         using CollidablePart = Environment::Collidable::Type::CollidablePart;
+        using Collidables = Environment::Collidable::Type::Collidables;
         using Context = Environment::Collidable::Type::Context;
 
         using Log = Common::Log::System::Log;
@@ -40,22 +38,22 @@ export namespace Environment::Collidable::System
         using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
         using WorldStore = Resolved::World::State::WorldStore;
         using ClassifierStore = Relations::Classifier::State::ClassifierStore;
-        using CollidableStore = Environment::Collidable::State::CollidableStore;
 
     public:
         CollidableService(Log& log, DefinitionsStore& definitionsStore,
             ObjectTableStore& objectTableStore, BoneMatricesStore& boneMatricesStore,
             DamageSectionsStore& damageSectionsStore, ClassifierStore& classifierStore,
-            WorldStore& worldStore, CollidableStore& collidableStore) : m_Log(log),
+            WorldStore& worldStore) : m_Log(log),
             m_DefinitionsStore(definitionsStore), m_ObjectTableStore(objectTableStore),
             m_BoneMatricesStore(boneMatricesStore), m_DamageSectionsStore(damageSectionsStore),
             m_ClassifierStore(classifierStore),
-            m_WorldStore(worldStore), m_CollidableStore(collidableStore) {}
+            m_WorldStore(worldStore) {}
         ~CollidableService() = default;
 
-        // Publishes the collision meshes of every live object for the viewer, or an empty list when the free camera is off.
-        // note: Debug only. The collidables are not part of the Tick (07, D23, D84): the viewer reads this store directly.
-        auto Update(bool isDebugViewActive) -> void;
+        // Builds the collision meshes of every live object.
+        // return: The whole scene, or nothing while the classifier or the object table has no data yet.
+        // note: For tools (D224). Same thread as the pipeline, it reads stores that the AI thread writes.
+        auto BuildScene() -> std::optional<Collidables>;
 
         // Builds one object with its parts only.
         // note: Each part is a collision mesh with the transform that places it in the world.
@@ -63,6 +61,7 @@ export namespace Environment::Collidable::System
 
         auto QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>;
 
+        // Logs the cleanup with the rest of the layer. The scene it builds is owned by its caller (D224), so there is no state to clear.
         auto Cleanup() -> void;
 
     private:
@@ -73,10 +72,6 @@ export namespace Environment::Collidable::System
         DamageSectionsStore& m_DamageSectionsStore;
         ClassifierStore& m_ClassifierStore;
         WorldStore& m_WorldStore;
-        CollidableStore& m_CollidableStore;
-
-        auto CollectCollidables(const Classifieds& classifieds,
-            const ObjectTable& objects) -> void;
 
         auto BuildInstance(const AliveObject& object, bool buildWorldMesh) -> Collidable;
 

@@ -16,9 +16,9 @@ export import :Labels;
 import Common.Engine.Type;
 import Service.Telemetry.State;
 import Platform.Render.State;
-import Environment.Collidable.State;
 import Export.Tick.Type;
 import Export.Tick.State;
+import Viewer.Collidable.State;
 import Viewer.Overlay.State;
 import Viewer.Selection.State;
 import std;
@@ -38,7 +38,7 @@ export namespace Viewer::Hud::System
 
         using TelemetryStore = Service::Telemetry::State::TelemetryStore;
         using RenderStore = Platform::Render::State::RenderStore;
-        using CollidableStore = Environment::Collidable::State::CollidableStore;
+        using CollidableStore = Viewer::Collidable::State::CollidableStore;
         using TickStore = Export::Tick::State::TickStore;
         using OverlayStore = Viewer::Overlay::State::OverlayStore;
         using SelectionStore = Viewer::Selection::State::SelectionStore;

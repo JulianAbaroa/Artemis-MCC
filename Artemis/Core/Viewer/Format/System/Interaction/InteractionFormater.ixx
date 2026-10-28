@@ -1,8 +1,8 @@
-export module Gui.Format.System:Interaction;
+export module Viewer.Format.System:Interaction;
 
 import Tables.Interaction.Type;
 
-export namespace Gui::Format::System
+export namespace Viewer::Format::System
 {
     // Converts the interaction enums to display text. Unlisted values give "Unknown".
     class InteractionFormater

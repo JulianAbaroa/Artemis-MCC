@@ -11,10 +11,8 @@ import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
 import Export.Flat.Type;
+import Export.Pipeline.Type;
 import Export.Pipeline.System;
-import Viewer.Camera.State;
-import UI.TickTrace.System;
-import UI.TickDump.System;
 import std;
 
 namespace
@@ -35,26 +33,25 @@ export namespace Runtime::Thread
 
         using Snapshot = Layout::Snapshot::Type::Snapshot;
 
-        using CameraStore = Viewer::Camera::State::CameraStore;
-
-        using TickTraceUIService = UI::TickTrace::System::TickTraceUIService;
-        using TickDumpUIService = UI::TickDump::System::TickDumpUIService;
+        using ObservedTick = Export::Pipeline::Type::ObservedTick;
 
     public:
         AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
             Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
             Environment::Layer& environment, Egocentric::Layer& egocentric,
-            Export::Layer& exportLayer, CameraStore& cameraStore, TickTraceUIService& tickTraceUIService,
-            TickDumpUIService& tickDumpUIService) :
+            Export::Layer& exportLayer) :
             m_Service(service), m_Platform(platform), m_Map(map),
             m_Resolved(resolved), m_Tables(tables), m_Relations(relations),
             m_Environment(environment), m_Egocentric(egocentric),
-            m_Export(exportLayer), m_ViewerCameraStore(cameraStore), m_TickTraceUIService(tickTraceUIService),
-            m_TickDumpUIService(tickDumpUIService) {}
+            m_Export(exportLayer) {}
         ~AIThread() = default;
 
         // Runs the thread loop until the lifecycle stops.
         auto Run() -> void;
+
+        // Adds a function called every tick after the pipeline and the bridge push, on this thread.
+        // note: Only before Run. There is no lock.
+        auto AddObserver(std::function<void(const ObservedTick&)> observer) -> void;
 
     private:
         Service::Layer& m_Service;
@@ -66,15 +63,14 @@ export namespace Runtime::Thread
         Environment::Layer& m_Environment;
         Egocentric::Layer& m_Egocentric;
         Export::Layer& m_Export;
-        CameraStore& m_ViewerCameraStore;
-        // Development tool (D72): records every tick while the Simulation tab has the tick trace on.
-        TickTraceUIService& m_TickTraceUIService;
-        TickDumpUIService& m_TickDumpUIService;
+        std::vector<std::function<void(const ObservedTick&)>> m_Observers{};
 
         // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
-        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 2> k_StageNames{ [] {
-            std::array<std::string_view, k_PipelineStageNames.size() + 2> names{ "Capture" };
+        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 4> k_StageNames{ [] {
+            std::array<std::string_view, k_PipelineStageNames.size() + 4> names{ "Capture" };
             std::ranges::copy(k_PipelineStageNames, names.begin() + 1);
+            names[k_PipelineStageNames.size() + 1] = "Bridge";
+            names[k_PipelineStageNames.size() + 2] = "Observers";
             names.back() = "Other";
             return names;
         }() };
@@ -101,9 +97,8 @@ export namespace Runtime::Thread
         auto LoadResources() -> void;
 
         // Copies the game into a Snapshot, releases the game thread and runs the pipeline over the Snapshot.
-        // param isViewerActive: The viewer camera state of this tick.
         // return: The Snapshot the tick was built from.
-        auto ExecuteTick(std::uint64_t generation, bool isViewerActive) -> std::shared_ptr<const Snapshot>;
+        auto ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>;
 
         // Records the time since the previous stage ended as the next stage of k_StageNames.
         auto EndStage() -> void;

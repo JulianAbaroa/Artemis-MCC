@@ -16,33 +16,21 @@ namespace
 
 namespace Environment::Collidable::System
 {
-    auto CollidableService::Update(bool isDebugViewActive) -> void
+    auto CollidableService::BuildScene() -> std::optional<Collidables>
     {
-        if (!isDebugViewActive)
-        {
-            m_CollidableStore.Publish({});
-            return;
-        }
-
         auto classifiedsPtr = m_ClassifierStore.Acquire();
         auto objectTablePtr = m_ObjectTableStore.Acquire();
-        if (!classifiedsPtr || !objectTablePtr) return;
+        if (!classifiedsPtr || !objectTablePtr) return std::nullopt;
 
-        this->CollectCollidables(*classifiedsPtr, *objectTablePtr);
-    }
-
-    auto CollidableService::CollectCollidables(const Classifieds& classifieds,
-        const ObjectTable& objectTable) -> void
-    {
         Collidables instances{};
-        instances.reserve(objectTable.size());
+        instances.reserve(objectTablePtr->size());
 
-        for (const auto& [handle, object] : objectTable)
+        for (const auto& [handle, object] : *objectTablePtr)
         {
             instances.push_back(this->BuildInstance(object, true));
         }
 
-        m_CollidableStore.Publish(std::move(instances));
+        return instances;
     }
 
     auto CollidableService::BuildInstance(const AliveObject& object, bool buildWorldMesh) -> Collidable
@@ -473,7 +461,6 @@ namespace Environment::Collidable::System
 
     auto CollidableService::Cleanup() -> void
     {
-        m_CollidableStore.Cleanup();
         m_Log.Message("[CollidableService] INFO: Cleanup completed.");
     }
 }

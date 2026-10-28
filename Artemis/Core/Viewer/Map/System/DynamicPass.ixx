@@ -9,7 +9,7 @@ import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
 import Environment.Collidable.Type;
-import Environment.Collidable.State;
+import Viewer.Collidable.State;
 import Viewer.Palette.System;
 import Viewer.Map.Type;
 import std;

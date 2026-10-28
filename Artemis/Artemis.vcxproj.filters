@@ -181,6 +181,27 @@
     <Filter Include="Core\Viewer\Scene\System">
       <UniqueIdentifier>{9a6651ba-2f1f-4e10-9459-c2ccf9b42a91}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Viewer\Collidable">
+      <UniqueIdentifier>{01ff365a-156d-41fb-812b-885fad15c810}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Collidable\State">
+      <UniqueIdentifier>{a554714c-1ddd-4823-b68d-b1ed36acd238}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Collidable\System">
+      <UniqueIdentifier>{1ee4c58c-afa1-4f4f-82d4-4df309992689}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Format">
+      <UniqueIdentifier>{11777154-32e0-4609-8001-230fb6189f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Viewer\Format\System">
+      <UniqueIdentifier>{bf6508d0-a6b8-4e93-b453-cc6d72f8ff27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\DevTools">
+      <UniqueIdentifier>{e58d3317-c3cb-42b2-86e5-f1b4f4126a59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\DevTools\Type">
+      <UniqueIdentifier>{ee89613b-fb9f-4c12-8365-e713310799d5}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Viewer\Selection">
       <UniqueIdentifier>{ed27cfe4-2756-476a-afac-72262ec3cd56}</UniqueIdentifier>
     </Filter>
@@ -334,7 +355,7 @@
     <Filter Include="Core\Gui\Format\System">
       <UniqueIdentifier>{f9bcde0e-8bc0-4651-9762-552b8ebb74be}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Gui\Format\System\Affordance">
+    <Filter Include="Core\Viewer\Format\System\Affordance">
       <UniqueIdentifier>{7293480b-0ea3-48fa-a5e8-3ceb82ecd147}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Gui\Format\System\Fixtures">
@@ -343,11 +364,8 @@
     <Filter Include="Core\Gui\Format\System\Hex">
       <UniqueIdentifier>{79bbac81-907d-4cd8-8cca-6bc8af39c413}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Gui\Format\System\Interaction">
+    <Filter Include="Core\Viewer\Format\System\Interaction">
       <UniqueIdentifier>{e55870a0-9ec8-4095-bafc-ae8e3b4b7ccb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Gui\Format\System\Object">
-      <UniqueIdentifier>{83b5077f-df29-49e2-93a4-79e840dbe482}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Gui\Format\System\Team">
       <UniqueIdentifier>{681dbb05-de2c-441d-9d13-f9683c4e0ea1}</UniqueIdentifier>
@@ -592,6 +610,24 @@
     </ClCompile>
     <ClCompile Include="Core\Viewer\Viewer.Layer.ixx">
       <Filter>Core\Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Collidable\State\CollidableStore.ixx">
+      <Filter>Core\Viewer\Collidable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Collidable\System\CollidableSceneService.cpp">
+      <Filter>Core\Viewer\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Collidable\System\CollidableSceneService.ixx">
+      <Filter>Core\Viewer\Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Viewer\Format\Viewer.Format.System.ixx">
+      <Filter>Core\Viewer\Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\DevTools\Type\DevTools.Type.ixx">
+      <Filter>Core\DevTools\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\DevTools\DevTools.Layer.ixx">
+      <Filter>Core\DevTools</Filter>
     </ClCompile>
     <ClCompile Include="Core\Viewer\Camera\Type\Viewer.Camera.Type.ixx">
       <Filter>Core\Viewer\Camera\Type</Filter>
@@ -842,11 +878,11 @@
     <ClCompile Include="Core\Gui\Format\Gui.Format.System.ixx">
       <Filter>Core\Gui\Format</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.cpp">
-      <Filter>Core\Gui\Format\System\Affordance</Filter>
+    <ClCompile Include="Core\Viewer\Format\System\Affordance\AffordanceFormater.cpp">
+      <Filter>Core\Viewer\Format\System\Affordance</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Affordance\AffordanceFormater.ixx">
-      <Filter>Core\Gui\Format\System\Affordance</Filter>
+    <ClCompile Include="Core\Viewer\Format\System\Affordance\AffordanceFormater.ixx">
+      <Filter>Core\Viewer\Format\System\Affordance</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Format\System\Fixtures\FixturesFormater.cpp">
       <Filter>Core\Gui\Format\System\Fixtures</Filter>
@@ -860,17 +896,11 @@
     <ClCompile Include="Core\Gui\Format\System\Hex\HexFormater.ixx">
       <Filter>Core\Gui\Format\System\Hex</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.cpp">
-      <Filter>Core\Gui\Format\System\Interaction</Filter>
+    <ClCompile Include="Core\Viewer\Format\System\Interaction\InteractionFormater.cpp">
+      <Filter>Core\Viewer\Format\System\Interaction</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Interaction\InteractionFormater.ixx">
-      <Filter>Core\Gui\Format\System\Interaction</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.cpp">
-      <Filter>Core\Gui\Format\System\Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Gui\Format\System\Object\ObjectFormater.ixx">
-      <Filter>Core\Gui\Format\System\Object</Filter>
+    <ClCompile Include="Core\Viewer\Format\System\Interaction\InteractionFormater.ixx">
+      <Filter>Core\Viewer\Format\System\Interaction</Filter>
     </ClCompile>
     <ClCompile Include="Core\Gui\Format\System\Team\TeamFormater.cpp">
       <Filter>Core\Gui\Format\System\Team</Filter>

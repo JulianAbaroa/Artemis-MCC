@@ -29,7 +29,6 @@ namespace
     using Export::Dump::Type::k_TickDumpMagic;
     using Export::Dump::Type::k_TickRecordMarker;
     using Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
-    using Layout::Snapshot::Type::k_SnapshotViewerActive;
 
     // Where a read of the recorded .tdump stopped.
     enum class GoldenStatus : std::uint8_t
@@ -160,7 +159,7 @@ export namespace Tests::Support::Replay
             const auto& record{ next.Record };
             if (!isFirst && (record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
 
-            exportLayer.m_PipelineService.Run(*record.Snapshot, record.Generation, (record.Flags & k_SnapshotViewerActive) != 0, {});
+            exportLayer.m_PipelineService.Run(*record.Snapshot, record.Generation, {});
             const auto tick{ exportLayer.m_TickStore.Acquire() };
 
             // The same header the recorder flattened with: the clock fields belong to the bridge.

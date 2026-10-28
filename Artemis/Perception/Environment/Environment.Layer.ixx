@@ -10,7 +10,6 @@ import Environment.Entities.State;
 import Environment.Entities.System;
 import Environment.Players.State;
 import Environment.Players.System;
-import Environment.Collidable.State;
 import Environment.Collidable.System;
 import Environment.Aim.State;
 import Environment.Aim.System;
@@ -21,7 +20,7 @@ import Environment.Match.System;
 
 export namespace Environment
 {
-    // Builds the entities, players, details, aim, collidables, events and match status of the world from the tables.
+    // Builds the entities, players, details, aim, events and match status of the world from the tables.
     // note: Pure: the owner connects the lifecycle (D178).
     class Layer
     {
@@ -36,7 +35,6 @@ export namespace Environment
         using EntitiesStore = Environment::Entities::State::EntitiesStore;
         using CarriedHandlesStore = Environment::Entities::State::CarriedHandlesStore;
         using PlayersStore = Environment::Players::State::PlayersStore;
-        using CollidableStore = Environment::Collidable::State::CollidableStore;
         using AimStore = Environment::Aim::State::AimStore;
         using EventsStore = Environment::Events::State::EventsStore;
         using MatchStore = Environment::Match::State::MatchStore;
@@ -62,7 +60,7 @@ export namespace Environment
             m_BarrierDetailsService(log, tables.m_ObjectStore, relations.m_ClassifierStore, m_BarrierDetailsStore),
             m_EntitiesService(log, tables.m_ObjectStore, tables.m_PlayerStore, relations.m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
             m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
-            m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore, m_CollidableStore),
+            m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, relations.m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
             m_EventsService(tables.m_GameStore, m_EventsStore),
             m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_MatchStore) {}
@@ -80,7 +78,6 @@ export namespace Environment
         EntitiesStore m_EntitiesStore{};
         CarriedHandlesStore m_CarriedHandlesStore{};
         PlayersStore m_PlayersStore{};
-        CollidableStore m_CollidableStore{};
         AimStore m_AimStore{};
         EventsStore m_EventsStore{};
         MatchStore m_MatchStore{};
@@ -98,7 +95,7 @@ export namespace Environment
         EventsService m_EventsService;
         MatchService m_MatchService;
 
-        // Removes the details, entities, players, collidables, aim, events and match status.
+        // Removes the details, entities, players, aim, events and match status.
         auto Cleanup() -> void
         {
             m_VitalityDetailsService.Cleanup();

@@ -1,8 +1,9 @@
 export module Gui.Layer;
 
 import Service.Layer;
-import Platform.Layer;
 import Platform.Render.Type;
+import Platform.Render.State;
+import Platform.Render.System;
 import Gui.Backend.System;
 import std;
 
@@ -14,32 +15,34 @@ export namespace Gui
     {
     private:
         using FrameContext = Platform::Render::Type::FrameContext;
+        using RenderStore = Platform::Render::State::RenderStore;
+        using RenderService = Platform::Render::System::RenderService;
 
         using BackendGuiService = Gui::Backend::System::BackendGuiService;
         using WndProcGuiService = Gui::Backend::System::WndProcGuiService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform) :
-            m_BackendGuiService(service.m_Log, service.m_SettingsStore, platform.m_RenderStore),
+        Layer(Service::Layer& service, RenderService& renderService, RenderStore& renderStore) :
+            m_BackendGuiService(service.m_Log, service.m_SettingsStore, renderStore),
             m_WndProcGuiService(m_BackendGuiService, service.m_SettingsStore)
         {
-            platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {
+            renderService.OnInitialized([this](const FrameContext& frame) {
                 m_BackendGuiService.Initialize(frame);
             });
 
-            platform.m_RenderService.OnResize([this](const FrameContext& frame) {
+            renderService.OnResize([this](const FrameContext& frame) {
                 m_BackendGuiService.OnResize(frame);
             });
 
-            platform.m_RenderService.OnFrame([this](const FrameContext&) {
+            renderService.OnFrame([this](const FrameContext&) {
                 m_BackendGuiService.NewFrame();
             });
 
-            platform.m_RenderService.OnPostFrame([this](const FrameContext&) {
+            renderService.OnPostFrame([this](const FrameContext&) {
                 m_BackendGuiService.Render();
             });
 
-            platform.m_RenderService.OnShutdown([this] {
+            renderService.OnShutdown([this] {
                 m_BackendGuiService.Shutdown();
             });
         }

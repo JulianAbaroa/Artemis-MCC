@@ -2,13 +2,13 @@ export module UI.Layer;
 
 import Service.Layer;
 import Service.Preferences.System;
-import Platform.Layer;
 import Platform.Window.Type;
 import Platform.Render.Type;
 import Map.Layer;
 import Resolved.Layer;
 import Tables.Layer;
 import Export.Layer;
+import DevTools.Type;
 import Gui.Layer;
 import Gui.Backend.System;
 import Viewer.Layer;
@@ -76,48 +76,48 @@ export namespace UI
         using LogsUIService = UI::Logs::System::LogsUIService;
 
     public:
-        Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map, Resolved::Layer& resolved,
+        Layer(Service::Layer& service, DevTools::Type::EngineAccess& engine, Map::Layer& map, Resolved::Layer& resolved,
             Tables::Layer& tables, Export::Layer& exportLayer, Gui::Layer& gui, Viewer::Layer& viewer,
             PreferencesService& preferences) :
             m_BackendGuiService(gui.m_BackendGuiService),
             m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, m_CaptureUIStore, viewer.m_OverlayStore),
             m_LauncherUIService(service.m_SettingsStore, m_LauncherUIStore),
-            m_ObjectTableUIService(platform.m_CaptureStore, exportLayer.m_TickStore, m_ObjectTableUIStore, m_CaptureUIStore),
-            m_PlayerTableUIService(platform.m_CaptureStore, exportLayer.m_TickStore, m_PlayerTableUIStore),
+            m_ObjectTableUIService(engine.m_CaptureStore, exportLayer.m_TickStore, m_ObjectTableUIStore, m_CaptureUIStore),
+            m_PlayerTableUIService(engine.m_CaptureStore, exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
-            m_CaptureUIService(service.m_Log, service.m_SettingsStore, platform.m_MemoryReaderService, resolved.m_DefinitionsStore, platform.m_CaptureStore, exportLayer.m_TickStore, m_CaptureUIStore),
-            m_SimulationUIService(service.m_Log, service.m_TelemetryStore, platform.m_LifecycleStore, platform.m_MatchConfigStore,
-                platform.m_MatchConfigService, platform.m_LocalUserStore, platform.m_VirtualInputStore, platform.m_PlayerActionStore,
-                platform.m_BotStore, platform.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
+            m_CaptureUIService(service.m_Log, service.m_SettingsStore, engine.m_MemoryReaderService, resolved.m_DefinitionsStore, engine.m_CaptureStore, exportLayer.m_TickStore, m_CaptureUIStore),
+            m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
+                engine.m_MatchConfigService, engine.m_LocalUserStore, engine.m_VirtualInputStore, engine.m_PlayerActionStore,
+                engine.m_BotStore, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
             m_TickTraceUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, tables.m_ObjectStore,
                 m_TickTraceUIStore),
             m_TickDumpUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
                 m_TickDumpUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore),
-            m_BenchUIService(service.m_LogsStore, service.m_Log, service.m_SettingsStore, platform.m_MemoryReaderService,
-                platform.m_LocalUserStore, platform.m_PlayerActionStore, platform.m_VirtualInputStore, platform.m_LifecycleStore,
-                platform.m_MatchConfigStore, platform.m_MatchCycleStore, platform.m_MatchConfigService, platform.m_BotStore,
+            m_BenchUIService(service.m_LogsStore, service.m_Log, service.m_SettingsStore, engine.m_MemoryReaderService,
+                engine.m_LocalUserStore, engine.m_PlayerActionStore, engine.m_VirtualInputStore, engine.m_LifecycleStore,
+                engine.m_MatchConfigStore, engine.m_MatchCycleStore, engine.m_MatchConfigService, engine.m_BotStore,
                 exportLayer.m_TickStore, m_TickTraceUIStore, m_BenchUIStore)
         {
-            platform.m_RenderService.OnInitialized([this](const FrameContext& frame) {
+            engine.m_RenderService.OnInitialized([this](const FrameContext& frame) {
                 this->Initialize(frame);
             });
 
-            platform.m_RenderService.OnFrame([this](const FrameContext& frame) {
+            engine.m_RenderService.OnFrame([this](const FrameContext& frame) {
                 this->DrawFrame(frame);
             });
 
-            platform.m_RenderService.OnShutdown([this] {
+            engine.m_RenderService.OnShutdown([this] {
                 this->Shutdown();
             });
 
             // The hotkeys run before every other handler, so the viewer cannot swallow them.
-            platform.m_InputService.OnWindowMessage([this](WindowMessage& message) {
+            engine.m_InputService.OnWindowMessage([this](WindowMessage& message) {
                 return m_HotkeyUIService.HandleMessage(message);
             }, true);
 
-            platform.m_InputService.OnWindowMessage([&gui](WindowMessage& message) {
+            engine.m_InputService.OnWindowMessage([&gui](WindowMessage& message) {
                 return gui.m_WndProcGuiService.HandleMessage(message);
             });
         }

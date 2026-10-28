@@ -19,9 +19,6 @@
     <Filter Include="Environment\Collidable">
       <UniqueIdentifier>{70470af0-98a9-5564-a987-a854962c0230}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Environment\Collidable\State">
-      <UniqueIdentifier>{198b7bf0-dc04-5ba7-8548-6078e77f4471}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Environment\Collidable\System">
       <UniqueIdentifier>{a8547fef-950b-54e1-942f-1b15e6e76665}</UniqueIdentifier>
     </Filter>
@@ -164,9 +161,6 @@
     </ClCompile>
     <ClCompile Include="Environment\Aim\Type\Environment.Aim.Type.ixx">
       <Filter>Environment\Aim\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Environment\Collidable\State\CollidableStore.ixx">
-      <Filter>Environment\Collidable\State</Filter>
     </ClCompile>
     <ClCompile Include="Environment\Collidable\System\CollidableService.cpp">
       <Filter>Environment\Collidable\System</Filter>

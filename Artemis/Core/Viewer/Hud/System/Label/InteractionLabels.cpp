@@ -9,7 +9,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Egocentric.Affordance.Type;
-import Gui.Format.System;
+import Viewer.Format.System;
 import Viewer.Options.Type;
 import Viewer.Options.State;
 import Viewer.Style.Type;
@@ -21,8 +21,8 @@ namespace
     using Common::Math::Type::Vec3;
     using Viewer::Options::Type::Flag;
     using Viewer::Hud::Type::LabelRow;
-    using Gui::Format::System::InteractionFormater;
-    using Gui::Format::System::AffordanceFormater;
+    using Viewer::Format::System::InteractionFormater;
+    using Viewer::Format::System::AffordanceFormater;
     using Common::Semantic::Type::NameOf;
     using Egocentric::Affordance::Type::Affordance;
 

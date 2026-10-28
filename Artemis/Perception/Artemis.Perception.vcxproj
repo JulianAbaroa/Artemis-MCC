@@ -58,7 +58,6 @@
     <ClCompile Include="Environment\Aim\System\AimService.cpp" />
     <ClCompile Include="Environment\Aim\System\AimService.ixx" />
     <ClCompile Include="Environment\Aim\Type\Environment.Aim.Type.ixx" />
-    <ClCompile Include="Environment\Collidable\State\CollidableStore.ixx" />
     <ClCompile Include="Environment\Collidable\System\CollidableService.cpp" />
     <ClCompile Include="Environment\Collidable\System\CollidableService.ixx" />
     <ClCompile Include="Environment\Collidable\Type\Environment.Collidable.Type.ixx" />

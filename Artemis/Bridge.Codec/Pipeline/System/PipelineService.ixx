@@ -11,10 +11,10 @@ import std;
 export namespace Export::Pipeline::System
 {
     // Stages of Run in the order they run, one name per endStage call.
-    inline constexpr std::array<std::string_view, 21> k_PipelineStageNames{
+    inline constexpr std::array<std::string_view, 20> k_PipelineStageNames{
         "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
         "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "Entities", "Players",
-        "Collidable", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble" };
+        "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble" };
 
     // Runs the pure chain of one tick over a Snapshot: Tables, Relations, Environment, Egocentric and the assembly of the Tick (D205).
     // note: The one place where the order of the tick lives. The AI thread and the tests call it.
@@ -35,9 +35,8 @@ export namespace Export::Pipeline::System
         auto operator=(const PipelineService&) -> PipelineService& = delete;
 
         // Updates every service from the Snapshot and assembles the Tick of the generation.
-        // param isViewerActive: The viewer camera is on, the collidable service skips what it hides.
         // param endStage: Called after each of the stages of k_PipelineStageNames. Empty to skip it.
-        auto Run(const Snapshot& snapshot, std::uint64_t generation, bool isViewerActive,
+        auto Run(const Snapshot& snapshot, std::uint64_t generation,
             const std::function<void()>& endStage) -> void;
 
     private:

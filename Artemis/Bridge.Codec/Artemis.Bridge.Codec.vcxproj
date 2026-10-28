@@ -74,6 +74,7 @@
     <ClCompile Include="Flat\Type\Export.Flat.Type.ixx" />
     <ClCompile Include="Pipeline\System\PipelineService.cpp" />
     <ClCompile Include="Pipeline\System\PipelineService.ixx" />
+    <ClCompile Include="Pipeline\Type\Export.Pipeline.Type.ixx" />
     <ClCompile Include="Tick\State\TickStore.ixx" />
     <ClCompile Include="Tick\System\TickService.cpp" />
     <ClCompile Include="Tick\System\TickService.ixx" />

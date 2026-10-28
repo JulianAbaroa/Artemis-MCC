@@ -9,8 +9,8 @@ import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
-import Viewer.Camera.State;
-import UI.Layer;
+import Export.Pipeline.Type;
+import DevTools.Layer;
 import Runtime.Thread;
 import std;
 
@@ -21,7 +21,7 @@ export namespace Runtime
     class Layer
     {
     private:
-        using CameraStore = Viewer::Camera::State::CameraStore;
+        using ObservedTick = Export::Pipeline::Type::ObservedTick;
 
         using MainThread = Runtime::Thread::MainThread;
         using AIThread = Runtime::Thread::AIThread;
@@ -34,13 +34,18 @@ export namespace Runtime
             Resolved::Layer& resolved, Tables::Layer& tables,
             Relations::Layer& relations, Environment::Layer& environment,
             Egocentric::Layer& egocentric, Export::Layer& exportLayer,
-            CameraStore& viewerCameraStore, UI::Layer& ui) :
+            DevTools::Layer& devTools) :
             m_Main(service, platform),
             m_AI(service, platform, map, resolved, tables, relations,
-                environment, egocentric, exportLayer, viewerCameraStore, ui.m_TickTraceUIService, ui.m_TickDumpUIService),
-            m_Bench(service, platform, ui.m_BenchUIService),
+                environment, egocentric, exportLayer),
+            m_Bench(service, platform, devTools.m_UI.m_BenchUIService),
             m_Bridge(service, platform, exportLayer),
-            m_Dump(service, platform, ui.m_TickDumpUIService) {}
+            m_Dump(service, platform, devTools.m_UI.m_TickDumpUIService)
+        {
+            m_AI.AddObserver([&devTools](const ObservedTick& tick) {
+                devTools.OnTick(tick);
+            });
+        }
         ~Layer() = default;
 
         Layer(const Layer&) = delete;

@@ -14,9 +14,8 @@ import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
-import Gui.Layer;
-import Viewer.Layer;
-import UI.Layer;
+import DevTools.Type;
+import DevTools.Layer;
 import Runtime.Layer;
 import std;
 
@@ -64,6 +63,23 @@ export namespace Core
 
         PreferencesService m_Preferences{ m_Service.m_SettingsStore, m_Service.m_Log };
 
+        DevTools::Type::EngineAccess m_EngineAccess{
+            .m_RenderService = m_Platform.m_RenderService,
+            .m_RenderStore = m_Platform.m_RenderStore,
+            .m_InputService = m_Platform.m_InputService,
+            .m_CaptureStore = m_Platform.m_CaptureStore,
+            .m_MemoryReaderService = m_Platform.m_MemoryReaderService,
+            .m_LifecycleService = m_Platform.m_LifecycleService,
+            .m_LifecycleStore = m_Platform.m_LifecycleStore,
+            .m_MatchConfigStore = m_Platform.m_MatchConfigStore,
+            .m_MatchConfigService = m_Platform.m_MatchConfigService,
+            .m_MatchCycleStore = m_Platform.m_MatchCycleStore,
+            .m_LocalUserStore = m_Platform.m_LocalUserStore,
+            .m_VirtualInputStore = m_Platform.m_VirtualInputStore,
+            .m_PlayerActionStore = m_Platform.m_PlayerActionStore,
+            .m_BotStore = m_Platform.m_BotStore,
+            .m_BridgeService = m_Platform.m_BridgeService };
+
         Map::Layer m_Map{ m_Service.m_Log };
         Resolved::Layer m_Resolved{ m_Service.m_Log, m_Map };
         Tables::Layer m_Tables{ m_Service.m_Log, m_Resolved };
@@ -71,9 +87,7 @@ export namespace Core
         Environment::Layer m_Environment{ m_Service.m_Log, m_Resolved, m_Tables, m_Relations };
         Egocentric::Layer m_Egocentric{ m_Service.m_Log, m_Resolved, m_Tables, m_Relations, m_Environment };
         Export::Layer m_Export{ m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };
-        Gui::Layer m_Gui{ m_Service, m_Platform };
-        Viewer::Layer m_Viewer{ m_Service, m_Platform, m_Environment, m_Export, m_Gui, m_Preferences };
-        UI::Layer m_UI{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
-        Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export, m_Viewer.m_CameraStore, m_UI };
+        DevTools::Layer m_DevTools{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Environment, m_Export, m_Preferences };
+        Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export, m_DevTools };
     };
 }

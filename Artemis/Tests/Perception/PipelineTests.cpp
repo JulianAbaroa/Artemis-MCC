@@ -48,7 +48,7 @@ namespace
         // Runs the pipeline as Runtime::Thread does (D205) and returns the Tick it assembled.
         auto RunTick(const Snapshot& snapshot, std::uint64_t generation) -> std::shared_ptr<const Tick>
         {
-            m_Export.m_PipelineService.Run(snapshot, generation, false, {});
+            m_Export.m_PipelineService.Run(snapshot, generation, {});
             return m_Export.m_TickStore.Acquire();
         }
 
@@ -152,8 +152,8 @@ TEST_F(PipelineTests, CleanupForgetsTheTick)
 TEST_F(PipelineTests, EndStageOncePerStage)
 {
     std::size_t calls{ 0 };
-    m_Export.m_PipelineService.Run(Snapshot{}, 1, false, [&calls] { ++calls; });
+    m_Export.m_PipelineService.Run(Snapshot{}, 1, [&calls] { ++calls; });
 
-    EXPECT_EQ(k_PipelineStageNames.size(), 21u);
+    EXPECT_EQ(k_PipelineStageNames.size(), 20u);
     EXPECT_EQ(calls, k_PipelineStageNames.size());
 }

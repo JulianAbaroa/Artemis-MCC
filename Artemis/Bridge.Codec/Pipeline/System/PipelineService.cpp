@@ -4,7 +4,7 @@ import std;
 
 namespace Export::Pipeline::System
 {
-    auto PipelineService::Run(const Snapshot& snapshot, std::uint64_t generation, bool isViewerActive,
+    auto PipelineService::Run(const Snapshot& snapshot, std::uint64_t generation,
         const std::function<void()>& endStage) -> void
     {
         const auto stage{ [&endStage] {
@@ -38,8 +38,6 @@ namespace Export::Pipeline::System
         m_Environment.m_EntitiesService.Update();
         stage();
         m_Environment.m_PlayersService.Update();
-        stage();
-        m_Environment.m_CollidableService.Update(isViewerActive);
         stage();
         m_Environment.m_AimService.Update();
         stage();

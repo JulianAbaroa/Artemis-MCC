@@ -23,6 +23,11 @@ namespace
 
 namespace Runtime::Thread
 {
+    auto AIThread::AddObserver(std::function<void(const ObservedTick&)> observer) -> void
+    {
+        m_Observers.push_back(std::move(observer));
+    }
+
     auto AIThread::Run() -> void
     {
         auto& logs{ m_Service.m_Log };
@@ -95,10 +100,8 @@ namespace Runtime::Thread
                 m_Stage = 0;
                 m_StageStart = tickStart;
 
-                // Read once: the pipeline and the recording of this tick must see the same value.
-                const bool isViewerActive{ m_ViewerCameraStore.IsActive() };
                 const bool isFirstAfterLoad{ std::exchange(m_IsFirstTickAfterLoad, false) };
-                const auto snapshot{ this->ExecuteTick(current, isViewerActive) };
+                const auto snapshot{ this->ExecuteTick(current) };
 
                 if (m_BridgeClock.IsDecision)
                 {
@@ -107,11 +110,13 @@ namespace Runtime::Thread
                 }
                 this->EndStage();
 
-                m_TickTraceUIService.Record(current);
-                if (m_TickDumpUIService.IsRecording())
+                if (!m_Observers.empty())
                 {
-                    m_TickDumpUIService.Push(m_Export.m_TickStore.Acquire(), snapshot, current, droppedBefore, isFirstAfterLoad, isViewerActive);
+                    const ObservedTick observed{ .Tick = m_Export.m_TickStore.Acquire(), .Snapshot = snapshot, .Generation = current,
+                        .DroppedBefore = droppedBefore, .IsFirstAfterLoad = isFirstAfterLoad };
+                    for (const auto& observer : m_Observers) observer(observed);
                 }
+                this->EndStage();
 
                 auto tickEnd{ steady_clock::now() };
                 lifecycle.EndTick();
@@ -147,18 +152,15 @@ namespace Runtime::Thread
         m_IsFirstTickAfterLoad = true;
     }
 
-    auto AIThread::ExecuteTick(std::uint64_t generation, bool isViewerActive) -> std::shared_ptr<const Snapshot>
+    auto AIThread::ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>
     {
         const auto snapshot{ m_Platform.m_CaptureService.Capture() };
-
-        // The engine clock of the trace comes from the same copy as the tables.
-        m_TickTraceUIService.CaptureClock(*snapshot);
 
         // Last use of game memory: from here on everything works on the Snapshot, so the game thread runs the next tick.
         m_Platform.m_LifecycleStore.EndRead(m_Last);
         this->EndStage();
 
-        m_Export.m_PipelineService.Run(*snapshot, generation, isViewerActive, m_EndStage);
+        m_Export.m_PipelineService.Run(*snapshot, generation, m_EndStage);
 
         return snapshot;
     }

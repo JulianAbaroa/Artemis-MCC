@@ -2,15 +2,17 @@ export module Viewer.Layer;
 
 import Service.Layer;
 import Service.Preferences.System;
-import Platform.Layer;
 import Platform.Render.Type;
 import Platform.Window.Type;
 import Environment.Layer;
 import Export.Layer;
+import DevTools.Type;
 import Gui.Layer;
 import Gui.Backend.System;
 import Viewer.Camera.State;
 import Viewer.Camera.System;
+import Viewer.Collidable.State;
+import Viewer.Collidable.System;
 import Viewer.Selection.State;
 import Viewer.Selection.System;
 import Viewer.Overlay.State;
@@ -35,11 +37,13 @@ export namespace Viewer
         using RawMouse = Platform::Window::Type::RawMouse;
 
         using CameraStore = Viewer::Camera::State::CameraStore;
+        using CollidableStore = Viewer::Collidable::State::CollidableStore;
         using SelectionStore = Viewer::Selection::State::SelectionStore;
         using OverlayStore = Viewer::Overlay::State::OverlayStore;
         using OptionsStore = Viewer::Options::State::OptionsStore;
 
         using CameraService = Viewer::Camera::System::CameraService;
+        using CollidableSceneService = Viewer::Collidable::System::CollidableSceneService;
         using SelectionService = Viewer::Selection::System::SelectionService;
         using ControlService = Viewer::Control::System::ControlService;
         using SceneService = Viewer::Scene::System::SceneService;
@@ -49,24 +53,25 @@ export namespace Viewer
 
     public:
         // param environment: Source of the debug collidables, which are not part of the Tick.
-        Layer(Service::Layer& service, Platform::Layer& platform, Environment::Layer& environment,
+        Layer(Service::Layer& service, DevTools::Type::EngineAccess& engine, Environment::Layer& environment,
             Export::Layer& exportLayer, Gui::Layer& gui,
             PreferencesService& preferences) :
             m_CameraService(m_CameraStore, m_OptionsStore),
-            m_SelectionService(environment.m_CollidableStore, m_SelectionStore),
+            m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
+            m_SelectionService(m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, m_CameraStore, m_CameraService, m_SelectionService),
-            m_MapService(service.m_Log, environment.m_CollidableStore, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
-            m_HudService(service.m_TelemetryStore, platform.m_RenderStore, environment.m_CollidableStore, exportLayer.m_TickStore, m_OverlayStore, m_SelectionStore),
+            m_MapService(service.m_Log, m_CollidableStore, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, exportLayer.m_TickStore, m_OverlayStore, m_SelectionStore),
             m_LabelService(exportLayer.m_TickStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
         {
-            auto& lifecycle = platform.m_LifecycleService;
+            auto& lifecycle = engine.m_LifecycleService;
 
             preferences.RegisterSection(std::string{ OptionsStore::k_PreferencePrefix },
                 [this](std::ostream& stream) { m_OptionsStore.Save(stream); },
                 [this](std::string_view key, std::string_view value) { m_OptionsStore.Load(key, value); });
 
-            platform.m_RenderService.OnFrame([this, &gui](const FrameContext& frame) {
+            engine.m_RenderService.OnFrame([this, &gui](const FrameContext& frame) {
                 m_MapService.Render(frame);
 
                 if (!gui.m_BackendGuiService.IsReady()) return;
@@ -75,16 +80,20 @@ export namespace Viewer
                 m_HudService.Draw();
             });
 
-            platform.m_RenderService.OnShutdown([this] {
+            engine.m_RenderService.OnShutdown([this] {
                 m_MapService.Release();
             });
 
-            platform.m_InputService.OnWindowMessage([this](WindowMessage& message) {
+            engine.m_InputService.OnWindowMessage([this](WindowMessage& message) {
                 return m_ControlService.HandleMessage(message);
             });
 
-            platform.m_InputService.OnRawMouse([this](RawMouse& mouse) {
+            engine.m_InputService.OnRawMouse([this](RawMouse& mouse) {
                 return m_ControlService.HandleMouse(mouse);
+            });
+
+            lifecycle.OnCleanup([this] {
+                m_CollidableSceneService.Cleanup();
             });
 
             lifecycle.OnUnhook([this] {
@@ -103,12 +112,14 @@ export namespace Viewer
 
         // --- State ---
         CameraStore m_CameraStore{};
+        CollidableStore m_CollidableStore{};
         SelectionStore m_SelectionStore{};
         OverlayStore m_OverlayStore{};
         OptionsStore m_OptionsStore{};
 
         // --- System ---
         CameraService m_CameraService;
+        CollidableSceneService m_CollidableSceneService;
         SelectionService m_SelectionService;
         ControlService m_ControlService;
         SceneService m_SceneService;

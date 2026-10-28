@@ -85,7 +85,7 @@ namespace
         for (std::size_t i{ 0 }; i < snapshots.size(); ++i)
         {
             const std::uint64_t generation{ i + 1 };
-            chain.m_Export.m_PipelineService.Run(snapshots[i], generation, false, {});
+            chain.m_Export.m_PipelineService.Run(snapshots[i], generation, {});
             const auto tick{ chain.m_Export.m_TickStore.Acquire() };
 
             TickCodec::ClearHeader(*flat);

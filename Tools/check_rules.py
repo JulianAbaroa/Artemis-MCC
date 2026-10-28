@@ -110,8 +110,15 @@ CHECKS = {
 LAYER_RANK = {
     "Common": 0, "Service": 1, "Control": 1, "Platform": 2,
     "Map": 10, "Resolved": 11, "Datum": 12, "Layout": 12, "Tables": 13, "Relations": 14, "Environment": 15, "Egocentric": 16, "Export": 17,
-    "Gui": 20, "Viewer": 21, "UI": 22, "Runtime": 23, "Core": 30,
+    "Gui": 20, "Viewer": 21, "UI": 22, "DevTools": 23, "Runtime": 24, "Core": 30,
 }
+# Modules whose rank is not the one of their prefix. DevTools.Type (EngineAccess, D226) holds only references to the engine, so it
+# sits right below the tools: Viewer and UI may import it, the pure layers may not.
+MODULE_RANK = {"DevTools.Type": 19}
+
+
+def Rank(module):
+    return MODULE_RANK.get(module, LAYER_RANK.get(module.split(".")[0]))
 # Modules of Blam.Layout (the format of the engine memory as data): any layer may import them, they sit below all of them.
 # Export.Flat.Type holds the BridgeClock that Platform.Bridge.System and the Runtime share with the flattening (D199).
 LIBRARY_MODULES = ("Datum", "Layout", "Export.Flat.Type")
@@ -441,7 +448,7 @@ def CheckFile(source, findings):
         if name == "std" or name.split(".")[0] not in LAYER_RANK:
             continue
         parts = name.split(".")
-        key = (LAYER_RANK[parts[0]], parts[1] if len(parts) > 1 else "", SPECIALIZATION_ORDER.get(parts[2] if len(parts) > 2 else "", 9))
+        key = (Rank(name), parts[1] if len(parts) > 1 else "", SPECIALIZATION_ORDER.get(parts[2] if len(parts) > 2 else "", 9))
         if previous and key[0] < previous[0]:
             Add("M3", index, f"{name} after a higher layer")
         elif previous and key[0] == previous[0] and key[1] == previous[1] and key[2] < previous[2]:
@@ -872,7 +879,7 @@ def CheckProject(sources, findings):
         if not source.Module:
             continue
         own = source.Module.split(".")[0]
-        if own not in LAYER_RANK or LAYER_RANK[own] >= 30:
+        if own not in LAYER_RANK or Rank(source.Module) >= 30:
             continue
         for index, line in enumerate(source.Code):
             match = re.match(r"\s*(?:export\s+)?import\s+([\w.]+)\s*;", line)
@@ -881,7 +888,7 @@ def CheckProject(sources, findings):
             target = match.group(1).split(".")[0]
             if target in LIBRARY_MODULES or match.group(1) in LIBRARY_MODULES:
                 continue
-            if target in LAYER_RANK and LAYER_RANK[target] > LAYER_RANK[own] and LAYER_RANK[target] < 30:
+            if target in LAYER_RANK and Rank(match.group(1)) > Rank(source.Module) and Rank(match.group(1)) < 30:
                 findings.append((source.Path, index + 1, "A1", f"{own} imports {match.group(1)}", line.strip()))
     # D1, D2: constants defined in several files
     definitions = collections.defaultdict(list)

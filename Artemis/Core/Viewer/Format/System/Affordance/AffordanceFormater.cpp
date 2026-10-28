@@ -1,7 +1,7 @@
-module Gui.Format.System;
+module Viewer.Format.System;
 import :Affordance;
 
-namespace Gui::Format::System
+namespace Viewer::Format::System
 {
     auto AffordanceFormater::BehaviorToString(AffordanceBehavior behavior) -> const char*
     {

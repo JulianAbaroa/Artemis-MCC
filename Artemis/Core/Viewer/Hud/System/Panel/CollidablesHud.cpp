@@ -217,7 +217,7 @@ namespace Viewer::Hud::System
             return;
         }
 
-        for (const Collidable& instance : *collidables)
+        for (const auto& instance : *collidables)
         {
             if (instance.Handle == handle)
             {

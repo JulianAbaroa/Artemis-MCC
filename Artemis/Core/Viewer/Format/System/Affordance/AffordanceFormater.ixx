@@ -1,8 +1,8 @@
-export module Gui.Format.System:Affordance;
+export module Viewer.Format.System:Affordance;
 
 import Egocentric.Affordance.Type;
 
-export namespace Gui::Format::System
+export namespace Viewer::Format::System
 {
     // Converts the affordance enums to display text. Unlisted values give "Unknown".
     class AffordanceFormater

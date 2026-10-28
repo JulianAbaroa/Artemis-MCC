@@ -1,7 +1,7 @@
-module Gui.Format.System;
+module Viewer.Format.System;
 import :Interaction;
 
-namespace Gui::Format::System
+namespace Viewer::Format::System
 {
     auto InteractionFormater::InteractionKindToString(InteractionKind kind) -> const char*
     {

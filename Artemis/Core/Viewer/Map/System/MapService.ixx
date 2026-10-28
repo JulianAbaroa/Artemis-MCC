@@ -15,8 +15,8 @@ import :AimPass;
 import Common.Log.System;
 import Platform.Render.Type;
 import Platform.Render.System;
-import Environment.Collidable.State;
 import Export.Tick.State;
+import Viewer.Collidable.State;
 import Viewer.Profiler.System;
 import Viewer.Scene.System;
 import Viewer.Options.State;
@@ -52,7 +52,7 @@ export namespace Viewer::Map::System
         using GpuPipeline = Platform::Render::System::GpuPipeline;
         using GpuStateGuard = Platform::Render::System::GpuStateGuard;
 
-        using CollidableStore = Environment::Collidable::State::CollidableStore;
+        using CollidableStore = Viewer::Collidable::State::CollidableStore;
         using TickStore = Export::Tick::State::TickStore;
 
         using FrameProfiler = Viewer::Profiler::System::FrameProfiler;
