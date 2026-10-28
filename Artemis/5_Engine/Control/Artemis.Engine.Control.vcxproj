@@ -54,6 +54,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Control.Layer.ixx" />
     <ClCompile Include="Input\Hook\InputUpdateDetour.cpp" />
     <ClCompile Include="Input\Hook\InputUpdateDetour.ixx" />
     <ClCompile Include="Input\Hook\PlayerActionDetour.cpp" />

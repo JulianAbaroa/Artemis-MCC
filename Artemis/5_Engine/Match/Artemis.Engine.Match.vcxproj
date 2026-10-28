@@ -48,6 +48,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Match.Layer.ixx" />
     <ClCompile Include="Hook\EngineInterfaceDetour.cpp" />
     <ClCompile Include="Hook\EngineInterfaceDetour.ixx" />
     <ClCompile Include="Hook\LifecycleUpdateDetour.cpp" />

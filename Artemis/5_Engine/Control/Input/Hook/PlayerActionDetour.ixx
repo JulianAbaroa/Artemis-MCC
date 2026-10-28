@@ -47,13 +47,16 @@ export namespace Platform::Input::Hook
 
     public:
         PlayerActionDetour(Log& log, AOBService& aobService, PlayerActionStore& playerActionStore,
-            BotService& botService, ActionSource& actionSource) :
-            m_Log(log), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService),
-            m_ActionSource(actionSource) {}
+            BotService& botService) :
+            m_Log(log), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService) {}
         ~PlayerActionDetour() = default;
 
+        // Connects the action source (the bridge, D215) that sets the overrides of the Python players.
+        // note: The one that composes the layers calls it before Install. Runs once, on the thread that builds the layers (D243).
+        auto SetActionSource(ActionSource& actionSource) -> void;
+
         // Finds the target by signature and installs the hook. Does nothing if already installed.
-        // return: False if the target is not found or the hook fails.
+        // return: False if there is no action source, the target is not found or the hook fails.
         auto Install() -> bool;
 
         // Waits for the calls in flight to drain, then removes the hook. Does nothing if not installed.
@@ -64,7 +67,7 @@ export namespace Platform::Input::Hook
         AOBService& m_AOBService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
-        ActionSource& m_ActionSource;
+        ActionSource* m_ActionSource{ nullptr };
 
         static inline PlayerActionDetour* s_Instance{ nullptr };
         static inline ApplyPlayerActionsFunction s_OriginalFunction{ nullptr };

@@ -50,6 +50,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Base.Layer.ixx" />
     <ClCompile Include="Hook\System\Platform.Hook.System.cpp" />
     <ClCompile Include="Hook\System\Platform.Hook.System.ixx" />
     <ClCompile Include="Hook\Type\Platform.Hook.Type.ixx" />

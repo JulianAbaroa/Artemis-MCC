@@ -30,6 +30,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Render.Layer.ixx" />
     <ClCompile Include="Render\Hook\PresentDetour.cpp">
       <Filter>Render\Hook</Filter>
     </ClCompile>

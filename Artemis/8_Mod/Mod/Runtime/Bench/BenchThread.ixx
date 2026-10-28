@@ -1,7 +1,7 @@
 export module Runtime.Thread:Bench;
 
 import Service.Layer;
-import Platform.Layer;
+import Engine.Base.Layer;
 import UI.Bench.System;
 import std;
 
@@ -15,8 +15,8 @@ export namespace Runtime::Thread
         using BenchUIService = UI::Bench::System::BenchUIService;
 
     public:
-        BenchThread(Service::Layer& service, Platform::Layer& platform, BenchUIService& benchUIService) :
-            m_Service(service), m_Platform(platform), m_BenchUIService(benchUIService) {}
+        BenchThread(Service::Layer& service, Engine::Base::Layer& base, BenchUIService& benchUIService) :
+            m_Service(service), m_Base(base), m_BenchUIService(benchUIService) {}
         ~BenchThread() = default;
 
         // Blocks until the lifecycle stops.
@@ -24,7 +24,7 @@ export namespace Runtime::Thread
 
     private:
         Service::Layer& m_Service;
-        Platform::Layer& m_Platform;
+        Engine::Base::Layer& m_Base;
         BenchUIService& m_BenchUIService;
     };
 }

@@ -49,12 +49,12 @@ COMPONENTS = {
                                   "Blam.Runtime", "Perception", "Views"}),
     # The engine in five projects (M6c.2, D216). Platform.* modules each may import: ENGINE_PLATFORM.
     "Artemis/5_Engine/Base": ("Artemis.Engine.Base.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services"}),
-    "Artemis/5_Engine/Capture": ("Artemis.Engine.Capture.vcxproj", {"Common", "Service", "Layout", "Datum", "Platform"},
+    "Artemis/5_Engine/Capture": ("Artemis.Engine.Capture.vcxproj", {"Common", "Service", "Layout", "Datum", "Platform", "Engine"},
                                {"Common", "Services", "Engine.Base", "Blam.Layout"}),
-    "Artemis/5_Engine/Control": ("Artemis.Engine.Control.vcxproj", {"Common", "Service", "Control", "Layout", "Platform"},
+    "Artemis/5_Engine/Control": ("Artemis.Engine.Control.vcxproj", {"Common", "Service", "Control", "Layout", "Platform", "Engine"},
                                {"Common", "Services", "Engine.Base", "Control", "Blam.Layout"}),
-    "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services", "Engine.Base"}),
-    "Artemis/5_Engine/Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services", "Engine.Base"}),
+    "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Service", "Platform", "Engine"}, {"Common", "Services", "Engine.Base"}),
+    "Artemis/5_Engine/Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Service", "Platform", "Engine"}, {"Common", "Services", "Engine.Base"}),
     # The development tools (M7.2 D228, M8 A2 D238): Gui (ImGui backend and widgets), Viewer and Workbench (ex UI); the root
     # DevTools.Layer is in Mod. They use the engine only through DevTools.EngineAccess (in Viewer).
     "Artemis/6_DevTools/Gui": ("Artemis.DevTools.Gui.vcxproj", {"Common", "Service", "Platform", "Gui"},
@@ -561,7 +561,7 @@ def test_the_bridge_service_and_the_detour_know_only_the_ports():
         assert not re.search(rf"\b{name}\b", service), name
     assert "BridgeEngine& engine" in service
     assert not re.search(r"\bBridgeService\b", Read("Artemis/5_Engine/Control/Input/Hook/PlayerActionDetour.ixx"))
-    assert "m_ActionSource.Prepare(" in Read(DETOUR_CPP)
+    assert "m_ActionSource->Prepare(" in Read(DETOUR_CPP)
 
 
 def test_the_ports_declare_exactly_their_methods():
@@ -610,7 +610,7 @@ def test_the_old_input_is_gone():
 
 
 def test_the_match_and_window_modules_declare_their_classes():
-    assert DeclaredClasses(MATCH) == MATCH_CLASSES
+    assert DeclaredClasses(MATCH) - {"Layer"} == MATCH_CLASSES
     assert DeclaredClasses(WINDOW) == WINDOW_CLASSES
     assert not DeclaredClasses(CORE_LIFECYCLE) & MATCH_CLASSES
     assert not DeclaredClasses(CONTROL_INPUT) & WINDOW_CLASSES
@@ -670,7 +670,7 @@ def test_an_engine_project_imports_only_its_platform_folders(folder):
 def test_an_engine_project_is_a_platform_library_that_knows_no_upper_layer(folder):
     for path in Sources(folder):
         module = MODULE_LINE.search(Read(path))
-        assert module and module.group(1).startswith("Platform."), path
+        assert module and (module.group(1).startswith("Platform.") or module.group(1) == f"Engine.{os.path.basename(folder)}.Layer"), path
         wrong = [name for name in Imports(path) if name.startswith(ENGINE_FORBIDDEN_PREFIXES)]
         assert not wrong, f"{path}: imports {wrong}"
 
@@ -855,3 +855,98 @@ def test_perception_has_one_layer():
     assert [os.path.basename(p) for p in layers] == ["Environment.Layer.ixx"], layers
     offenders = [p for p in Sources("Artemis") if "Relations.Layer" in Read(p) or "Relations::Layer" in Read(p)]
     assert not offenders, offenders
+
+
+ENGINE_LAYERS = (("Artemis/5_Engine/Base", "Engine.Base.Layer", "Engine::Base"),
+                 ("Artemis/5_Engine/Capture", "Engine.Capture.Layer", "Engine::Capture"),
+                 ("Artemis/5_Engine/Control", "Engine.Control.Layer", "Engine::Control"),
+                 ("Artemis/5_Engine/Match", "Engine.Match.Layer", "Engine::Match"),
+                 ("Artemis/5_Engine/Render", "Engine.Render.Layer", "Engine::Render"),
+                 ("Artemis/4_Bridge/Transport", "Bridge.Transport.Layer", "Bridge::Transport"))
+# The one that composes the Layers of the engine and connects their lifecycle: Platform.Layer in C.2, Mod.Layer in C.3.
+COMPOSER = "Artemis/8_Mod/Mod/Infrastructure/Platform/Platform.Layer.ixx"
+
+
+@pytest.mark.parametrize("folder,module,namespace", ENGINE_LAYERS)
+def test_every_engine_project_and_the_transport_have_their_layer(folder, module, namespace):
+    layers = [p for p in Sources(folder) if p.endswith(".Layer.ixx")]
+    assert layers == [f"{folder}/{module}.ixx"], layers
+    text = Read(layers[0])
+    assert re.search(rf"^export module {re.escape(module)};", text, re.MULTILINE)
+    assert re.search(rf"^export namespace {re.escape(namespace)}\b", text, re.MULTILINE)
+    assert re.search(r"\bclass\s+Layer\b", text)
+
+
+@pytest.mark.parametrize("folder,module,namespace", ENGINE_LAYERS)
+def test_the_engine_layers_import_only_base_and_services(folder, module, namespace):
+    path = f"{folder}/{module}.ixx"
+    layers = {name for name in Imports(path) if name.endswith(".Layer")}
+    allowed = {"Service.Layer"} if module in ("Engine.Base.Layer", "Bridge.Transport.Layer") else {"Service.Layer", "Engine.Base.Layer"}
+    assert layers <= allowed, (path, sorted(layers - allowed))
+    text = Read(path)
+    for word in ("Install(", "OnEngineInitialized", "OnUnhook", "OnCleanup", "OnShutdown"):
+        assert word not in text, f"{path}: {word}"
+
+
+def test_the_action_source_is_set_not_built_in():
+    detour = Read("Artemis/5_Engine/Control/Input/Hook/PlayerActionDetour.ixx")
+    constructor = re.search(r"\bPlayerActionDetour\(([^)]*)\)", detour)
+    assert constructor and "ActionSource" not in constructor.group(1), constructor and constructor.group(1)
+    assert re.search(r"auto\s+SetActionSource\(ActionSource&\s*\w+\)\s*->\s*void", detour)
+    composer = Read(COMPOSER)
+    assert "SetActionSource(" in composer
+    assert composer.index("SetActionSource(") < composer.index("OnEngineInitialized(")
+
+
+def test_no_thread_receives_the_platform_layer():
+    # Runtime.Layer.ixx is the one that receives it and hands the Layers of the engine to the threads (it goes in C.3).
+    sources = [p for p in Sources("Artemis/8_Mod/Mod/Runtime") if not p.endswith("Runtime.Layer.ixx")]
+    assert sources
+    for path in sources:
+        assert "Platform.Layer" not in Imports(path) and "Platform::Layer" not in Read(path), path
+
+
+CALL = re.compile(r"\b((?:m_\w+\.)+)(\w+)\(|this->(\w+)\(")
+
+
+def Calls(text):
+    names = []
+    for match in CALL.finditer(text):
+        if match.group(3):
+            names.append(match.group(3))
+            continue
+        owner, method = match.group(1).rstrip(".").split(".")[-1][2:], match.group(2)
+        if method in ("Install", "Uninstall"):
+            names.append(f"{owner}.{method}")
+        elif method in ("BeginMatch", "ResolveFunctions", "Stop", "RequestShutdown", "WaitForShutdown", "Shutdown"):
+            names.append(method)
+        else:
+            names.append(owner)
+    return names
+
+
+def Body(text, opening):
+    start = text.index(opening)
+    end = text.index("\n        }" if opening.startswith("auto") else "\n            });", start)
+    return text[start:end]
+
+
+def test_the_lifecycle_wiring_keeps_its_order():
+    text = Read(COMPOSER)
+    registers = [text.index(f"{name}(") for name in ("OnEngineInitialized", "OnUnhook", "OnCleanup", "OnInitialized", "OnShutdown")]
+    assert registers == sorted(registers), registers
+    assert Calls(Body(text, "OnEngineInitialized(")) == [
+        "BeginMatch", "PlayerActionDetour.Install", "ResolveFunctions", "SetMachinesDetour.Install", "InstallHostHooks",
+        "OpenMapDetour.Install", "ObjectTableLocator", "PlayerTableLocator", "InteractionTableLocator",
+        "ExecuteGameFrameDetour.Install", "SimulationTicksDetour.Install"]
+    assert Calls(Body(text, "OnUnhook(")) == [
+        "Stop", "UninstallHostHooks", "SetMachinesDetour.Uninstall", "PlayerActionDetour.Uninstall", "OpenMapDetour.Uninstall",
+        "SimulationTicksDetour.Uninstall", "ExecuteGameFrameDetour.Uninstall"]
+    assert Calls(Body(text, "OnCleanup(")) == ["LocalUserStore", "PlayerActionStore", "BotStore", "CaptureService"]
+    hosts = ["LocalUserGetPlayerDetour", "LocalUserGetProfileDetour", "LocalUserGetGamepadMappingDetour", "CanAcceptAnyJoinRequestDetour",
+             "SessionJoinCheckPatch", "InputUpdateDetour"]
+    assert Calls(Body(text, "auto InstallHostHooks()")) == [f"{name}.Install" for name in hosts]
+    assert Calls(Body(text, "auto UninstallHostHooks()")) == [f"{name}.Uninstall" for name in reversed(hosts)]
+    assert Calls(Body(text, "auto ShutdownRenderAndInput()")) == [
+        "WndProcDetour.Uninstall", "GetRawInputDataDetour.Uninstall", "RequestShutdown", "WaitForShutdown",
+        "PresentDetour.Uninstall", "ResizeBuffersDetour.Uninstall", "Shutdown"]

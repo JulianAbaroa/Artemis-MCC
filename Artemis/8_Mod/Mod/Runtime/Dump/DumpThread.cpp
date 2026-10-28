@@ -15,7 +15,7 @@ namespace Runtime::Thread
 {
     auto DumpThread::Run() -> void
     {
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
 
         m_Service.m_Log.Message("[DumpThread] INFO: Started.");
 

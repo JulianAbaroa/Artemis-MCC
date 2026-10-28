@@ -72,6 +72,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Bridge.Transport.Layer.ixx" />
     <ClCompile Include="State\BridgeStore.cpp" />
     <ClCompile Include="State\BridgeStore.ixx" />
     <ClCompile Include="System\BridgeEngine.ixx" />

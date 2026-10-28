@@ -33,6 +33,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Control.Layer.ixx" />
     <ClCompile Include="Input\Hook\InputUpdateDetour.cpp">
       <Filter>Input\Hook</Filter>
     </ClCompile>

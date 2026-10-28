@@ -32,7 +32,7 @@ namespace Runtime::Thread
     {
         auto& logs{ m_Service.m_Log };
         auto& telemetry{ m_Service.m_TelemetryStore };
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
 
         logs.Message("[AIThread] INFO: Started.");
 
@@ -78,7 +78,7 @@ namespace Runtime::Thread
                 const std::uint64_t droppedBefore{ m_Dropped };
 
                 // The game thread waits for this read, so the action tick of the bridge is the one of the state about to be copied.
-                m_Platform.m_BridgeService.CaptureClock(m_Dropped == 0, m_BridgeClock);
+                m_Transport.m_BridgeService.CaptureClock(m_Dropped == 0, m_BridgeClock);
 
                 if (m_Dropped > 0)
                 {
@@ -106,7 +106,7 @@ namespace Runtime::Thread
                 if (m_BridgeClock.IsDecision)
                 {
                     m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = m_BridgeClock });
-                    m_Platform.m_BridgeService.MarkPushed(m_BridgeClock.ActionTick);
+                    m_Transport.m_BridgeService.MarkPushed(m_BridgeClock.ActionTick);
                 }
                 this->EndStage();
 
@@ -154,10 +154,10 @@ namespace Runtime::Thread
 
     auto AIThread::ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>
     {
-        const auto snapshot{ m_Platform.m_CaptureService.Capture() };
+        const auto snapshot{ m_Capture.m_CaptureService.Capture() };
 
         // Last use of game memory: from here on everything works on the Snapshot, so the game thread runs the next tick.
-        m_Platform.m_LifecycleStore.EndRead(m_Last);
+        m_Base.m_LifecycleStore.EndRead(m_Last);
         this->EndStage();
 
         m_Export.m_PipelineService.Run(*snapshot, generation, m_EndStage);
@@ -198,7 +198,7 @@ namespace Runtime::Thread
 
     auto AIThread::IsStable() -> bool
     {
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
 
         return lifecycle.IsRunning() &&
             lifecycle.GetStatus() != Status::TearingDown;
@@ -206,9 +206,9 @@ namespace Runtime::Thread
 
     auto AIThread::Reset() -> void
     {
-        m_Platform.m_LifecycleStore.ResetTickGeneration();
+        m_Base.m_LifecycleStore.ResetTickGeneration();
         m_IsLoaded = false;
         m_Last = 0;
-        m_Platform.m_BridgeService.ResetClock();
+        m_Transport.m_BridgeService.ResetClock();
     }
 }

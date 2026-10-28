@@ -33,6 +33,9 @@
     <ClCompile Include="Control\LockstepTests.cpp">
       <Filter>Control</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\EngineLayerTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\LifecycleStoreTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

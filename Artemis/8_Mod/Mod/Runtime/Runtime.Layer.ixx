@@ -34,12 +34,12 @@ export namespace Runtime
             Environment::Layer& environment,
             Egocentric::Layer& egocentric, Export::Layer& exportLayer,
             DevTools::Layer& devTools) :
-            m_Main(service, platform),
-            m_AI(service, platform, map, resolved, tables,
+            m_Main(service, platform.m_Base, platform.m_Match, platform.m_Render),
+            m_AI(service, platform.m_Base, platform.m_Capture, platform.m_Transport, map, resolved, tables,
                 environment, egocentric, exportLayer),
-            m_Bench(service, platform, devTools.m_UI.m_BenchUIService),
-            m_Bridge(service, platform, exportLayer),
-            m_Dump(service, platform, devTools.m_UI.m_TickDumpUIService)
+            m_Bench(service, platform.m_Base, devTools.m_UI.m_BenchUIService),
+            m_Bridge(service, platform.m_Base, platform.m_Transport, exportLayer),
+            m_Dump(service, platform.m_Base, devTools.m_UI.m_TickDumpUIService)
         {
             m_AI.AddObserver([&devTools](const ObservedTick& tick) {
                 devTools.OnTick(tick);

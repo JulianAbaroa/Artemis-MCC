@@ -53,6 +53,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Render.Layer.ixx" />
     <ClCompile Include="Render\Hook\PresentDetour.cpp" />
     <ClCompile Include="Render\Hook\PresentDetour.ixx" />
     <ClCompile Include="Render\Hook\ResizeBuffersDetour.cpp" />

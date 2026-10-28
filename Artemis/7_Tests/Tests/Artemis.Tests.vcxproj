@@ -115,6 +115,7 @@
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Control\ActionTests.cpp" />
     <ClCompile Include="Control\LockstepTests.cpp" />
+    <ClCompile Include="Engine\EngineLayerTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />

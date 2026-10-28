@@ -1,7 +1,9 @@
 export module Runtime.Thread:AI;
 
 import Service.Layer;
-import Platform.Layer;
+import Engine.Base.Layer;
+import Engine.Capture.Layer;
+import Bridge.Transport.Layer;
 import Map.Layer;
 import Resolved.Layer;
 import Layout.Snapshot.Type;
@@ -35,11 +37,12 @@ export namespace Runtime::Thread
         using ObservedTick = Export::Pipeline::Type::ObservedTick;
 
     public:
-        AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
+        AIThread(Service::Layer& service, Engine::Base::Layer& base, Engine::Capture::Layer& capture,
+            Bridge::Transport::Layer& transport, Map::Layer& map,
             Resolved::Layer& resolved, Tables::Layer& tables,
             Environment::Layer& environment, Egocentric::Layer& egocentric,
             Export::Layer& exportLayer) :
-            m_Service(service), m_Platform(platform), m_Map(map),
+            m_Service(service), m_Base(base), m_Capture(capture), m_Transport(transport), m_Map(map),
             m_Resolved(resolved), m_Tables(tables),
             m_Environment(environment), m_Egocentric(egocentric),
             m_Export(exportLayer) {}
@@ -54,7 +57,9 @@ export namespace Runtime::Thread
 
     private:
         Service::Layer& m_Service;
-        Platform::Layer& m_Platform;
+        Engine::Base::Layer& m_Base;
+        Engine::Capture::Layer& m_Capture;
+        Bridge::Transport::Layer& m_Transport;
         Map::Layer& m_Map;
         Resolved::Layer& m_Resolved;
         Tables::Layer& m_Tables;

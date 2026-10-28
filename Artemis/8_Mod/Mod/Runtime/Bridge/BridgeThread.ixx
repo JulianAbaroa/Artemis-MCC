@@ -1,7 +1,8 @@
 export module Runtime.Thread:Bridge;
 
 import Service.Layer;
-import Platform.Layer;
+import Engine.Base.Layer;
+import Bridge.Transport.Layer;
 import Export.Layer;
 import std;
 
@@ -13,8 +14,9 @@ export namespace Runtime::Thread
     class BridgeThread
     {
     public:
-        BridgeThread(Service::Layer& service, Platform::Layer& platform, Export::Layer& exportLayer) :
-            m_Service(service), m_Platform(platform), m_Export(exportLayer) {}
+        BridgeThread(Service::Layer& service, Engine::Base::Layer& base, Bridge::Transport::Layer& transport,
+            Export::Layer& exportLayer) :
+            m_Service(service), m_Base(base), m_Transport(transport), m_Export(exportLayer) {}
         ~BridgeThread() = default;
 
         // Blocks until the lifecycle stops.
@@ -22,7 +24,8 @@ export namespace Runtime::Thread
 
     private:
         Service::Layer& m_Service;
-        Platform::Layer& m_Platform;
+        Engine::Base::Layer& m_Base;
+        Bridge::Transport::Layer& m_Transport;
         Export::Layer& m_Export;
 
         // Flattens and publishes one decision tick.

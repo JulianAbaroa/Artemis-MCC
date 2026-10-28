@@ -1,7 +1,7 @@
 export module Runtime.Thread:Dump;
 
 import Service.Layer;
-import Platform.Layer;
+import Engine.Base.Layer;
 import UI.TickDump.System;
 import std;
 
@@ -16,8 +16,8 @@ export namespace Runtime::Thread
         using TickDumpUIService = UI::TickDump::System::TickDumpUIService;
 
     public:
-        DumpThread(Service::Layer& service, Platform::Layer& platform, TickDumpUIService& tickDumpUIService) :
-            m_Service(service), m_Platform(platform), m_TickDumpUIService(tickDumpUIService) {}
+        DumpThread(Service::Layer& service, Engine::Base::Layer& base, TickDumpUIService& tickDumpUIService) :
+            m_Service(service), m_Base(base), m_TickDumpUIService(tickDumpUIService) {}
         ~DumpThread() = default;
 
         // Blocks until the lifecycle stops.
@@ -25,7 +25,7 @@ export namespace Runtime::Thread
 
     private:
         Service::Layer& m_Service;
-        Platform::Layer& m_Platform;
+        Engine::Base::Layer& m_Base;
         TickDumpUIService& m_TickDumpUIService;
     };
 }

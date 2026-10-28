@@ -15,7 +15,7 @@ namespace Runtime::Thread
 {
     auto BenchThread::Run() -> void
     {
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
 
         m_BenchUIService.Initialize();
         m_Service.m_Log.Message("[BenchThread] INFO: Started.");

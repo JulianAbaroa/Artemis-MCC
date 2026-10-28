@@ -16,7 +16,7 @@ namespace Core
         // The lifecycle wiring of the pure components lives here, not in them (D178).
         // Every layer is cleaned up in the order of its dependencies, the ones that read first: Environment (which includes Relations),
         // Egocentric and Export, then Tables, Map and Resolved. The tables read the resolved data, which is built from the map (D195, D200).
-        auto& lifecycle = m_Platform.m_LifecycleService;
+        auto& lifecycle = m_Platform.m_Base.m_LifecycleService;
 
         lifecycle.OnMapFileOpened([this](const std::string& filePath) {
             m_Map.m_MapLoaderService.OpenFile(filePath);
@@ -56,7 +56,7 @@ namespace Core
 
         m_IsMinHookReady = true;
 
-        m_Platform.m_LifecycleStore.SetRunning(true);
+        m_Platform.m_Base.m_LifecycleStore.SetRunning(true);
 
         logs.Message("[Core] INFO: Artemis initialized.");
         return true;
@@ -69,18 +69,18 @@ namespace Core
 
     auto Artemis::RequestShutdown() -> void
     {
-        m_Platform.m_LifecycleService.SignalShutdown();
+        m_Platform.m_Base.m_LifecycleService.SignalShutdown();
     }
 
     Artemis::~Artemis()
     {
         m_Preferences.Save();
 
-        m_Platform.m_LifecycleService.SignalShutdown();
+        m_Platform.m_Base.m_LifecycleService.SignalShutdown();
 
-        m_Platform.m_LifecycleService.RaiseUnhook();
+        m_Platform.m_Base.m_LifecycleService.RaiseUnhook();
 
-        m_Platform.m_LifecycleService.RaiseShutdown();
+        m_Platform.m_Base.m_LifecycleService.RaiseShutdown();
 
         // Gives the other threads time to react to the shutdown signal and the raises.
         std::this_thread::sleep_for(200ms);

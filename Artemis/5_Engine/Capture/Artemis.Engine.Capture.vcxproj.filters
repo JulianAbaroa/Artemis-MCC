@@ -15,6 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Capture.Layer.ixx" />
     <ClCompile Include="Hook\ExecuteGameFrameDetour.cpp">
       <Filter>Hook</Filter>
     </ClCompile>

@@ -89,7 +89,7 @@ CHECKS = {
 
 # Rank of each module prefix. A module may import modules of its own rank or lower (A1), and imports go in rank order (M3).
 LAYER_RANK = {
-    "Common": 0, "Service": 1, "Control": 1, "Platform": 2,
+    "Common": 0, "Service": 1, "Control": 1, "Platform": 2, "Engine": 2, "Bridge": 2,
     "Map": 10, "Resolved": 11, "Datum": 12, "Layout": 12, "Tables": 13, "Relations": 14, "Environment": 15, "Egocentric": 16, "Export": 17,
     "Gui": 20, "Viewer": 21, "UI": 22, "DevTools": 23, "Runtime": 24, "Core": 30,
 }

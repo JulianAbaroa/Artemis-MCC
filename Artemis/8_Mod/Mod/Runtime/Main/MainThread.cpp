@@ -26,7 +26,7 @@ namespace Runtime::Thread
 {
     auto MainThread::Run() -> void
     {
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
         auto& logs{ m_Service.m_Log };
 
         this->WaitOrExit(5000ms);
@@ -34,10 +34,10 @@ namespace Runtime::Thread
         logs.Message("[MainThread] INFO: Started.");
 
         // MCC creates the engine right after loading the game module, before the lifecycle hooks can go in. This hook lives in MCC.
-        m_Platform.m_EngineInterfaceDetour.Install();
+        m_Match.m_EngineInterfaceDetour.Install();
 
         // The lobby launch (D124) also hooks MCC, which stays loaded for the whole process.
-        m_Platform.m_LifecycleUpdateDetour.Install();
+        m_Match.m_LifecycleUpdateDetour.Install();
 
         if (!this->InstallLifecycleHooks()) this->Shutdown();
 
@@ -59,8 +59,8 @@ namespace Runtime::Thread
 
                 if (!this->IsStillRunning()) break;
 
-                m_Platform.m_EngineInitializeDetour.Uninstall();
-                m_Platform.m_DestroySubsystemsDetour.Uninstall();
+                m_Base.m_EngineInitializeDetour.Uninstall();
+                m_Base.m_DestroySubsystemsDetour.Uninstall();
 
                 if (!this->IsStillRunning()) break;
 
@@ -79,19 +79,19 @@ namespace Runtime::Thread
             this->WaitOrExit(1000ms);
         }
 
-        m_Platform.m_LifecycleService.RaiseShutdown();
+        m_Base.m_LifecycleService.RaiseShutdown();
 
-        m_Platform.m_EngineInitializeDetour.Uninstall();
-        m_Platform.m_DestroySubsystemsDetour.Uninstall();
-        m_Platform.m_LifecycleUpdateDetour.Uninstall();
-        m_Platform.m_EngineInterfaceDetour.Uninstall();
+        m_Base.m_EngineInitializeDetour.Uninstall();
+        m_Base.m_DestroySubsystemsDetour.Uninstall();
+        m_Match.m_LifecycleUpdateDetour.Uninstall();
+        m_Match.m_EngineInterfaceDetour.Uninstall();
 
         logs.Message("[MainThread] INFO: Stopped.");
     }
 
     auto MainThread::WaitOrExit(milliseconds ms) -> bool
     {
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
 
         std::unique_lock<std::mutex> lock{ lifecycle.GetShutdownMutex() };
 
@@ -104,10 +104,10 @@ namespace Runtime::Thread
 
     auto MainThread::InstallLifecycleHooks() -> bool
     {
-        while (m_Platform.m_LifecycleStore.IsRunning())
+        while (m_Base.m_LifecycleStore.IsRunning())
         {
-            if (m_Platform.m_EngineInitializeDetour.Install() &&
-                m_Platform.m_DestroySubsystemsDetour.Install())
+            if (m_Base.m_EngineInitializeDetour.Install() &&
+                m_Base.m_DestroySubsystemsDetour.Install())
             {
                 return true;
             }
@@ -123,12 +123,12 @@ namespace Runtime::Thread
         constexpr int k_MaxAttempts{ 5 };
 
         for (int attempt = 0; attempt < k_MaxAttempts &&
-            m_Platform.m_LifecycleStore.IsRunning(); ++attempt)
+            m_Base.m_LifecycleStore.IsRunning(); ++attempt)
         {
-            if (m_Platform.m_PresentDetour.Install() &&
-                m_Platform.m_ResizeBuffersDetour.Install())
+            if (m_Render.m_PresentDetour.Install() &&
+                m_Render.m_ResizeBuffersDetour.Install())
             {
-                m_Platform.m_GetRawInputDataDetour.Install();
+                m_Render.m_GetRawInputDataDetour.Install();
                 return true;
             }
 
@@ -146,18 +146,18 @@ namespace Runtime::Thread
         m_Service.m_Log.Message("[MainThread] ERROR:"
             " Initiating emergency shutdown.");
 
-        m_Platform.m_LifecycleService.SignalShutdown();
+        m_Base.m_LifecycleService.SignalShutdown();
     }
 
     auto MainThread::CheckHooksHealth() -> void
     {
-        auto& lifecycle{ m_Platform.m_LifecycleStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
 
         if (lifecycle.GetStatus() == Status::Destroyed) return;
         if (DestroySubsystemsDetour::IsInProgress()) return;
 
-        void* engineInitAddr{ m_Platform.m_EngineInitializeDetour.GetFunctionAddress() };
-        void* destroyAddr{ m_Platform.m_DestroySubsystemsDetour.GetFunctionAddress() };
+        void* engineInitAddr{ m_Base.m_EngineInitializeDetour.GetFunctionAddress() };
+        void* destroyAddr{ m_Base.m_DestroySubsystemsDetour.GetFunctionAddress() };
 
         bool areHooksCorrupted{
             !this->IsHookIntact(engineInitAddr) ||
@@ -192,6 +192,6 @@ namespace Runtime::Thread
     {
         this->WaitOrExit(1000ms);
 
-        return m_Platform.m_LifecycleStore.IsRunning();
+        return m_Base.m_LifecycleStore.IsRunning();
     }
 }

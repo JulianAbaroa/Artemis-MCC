@@ -12,6 +12,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Bridge.Transport.Layer.ixx" />
     <ClCompile Include="State\BridgeStore.cpp">
       <Filter>State</Filter>
     </ClCompile>

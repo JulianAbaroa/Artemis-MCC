@@ -63,21 +63,21 @@ export namespace Core
         PreferencesService m_Preferences{ m_Service.m_SettingsStore, m_Service.m_Log };
 
         DevTools::Type::EngineAccess m_EngineAccess{
-            .m_RenderService = m_Platform.m_RenderService,
-            .m_RenderStore = m_Platform.m_RenderStore,
-            .m_InputService = m_Platform.m_InputService,
-            .m_CaptureStore = m_Platform.m_CaptureStore,
-            .m_MemoryReaderService = m_Platform.m_MemoryReaderService,
-            .m_LifecycleService = m_Platform.m_LifecycleService,
-            .m_LifecycleStore = m_Platform.m_LifecycleStore,
-            .m_MatchConfigStore = m_Platform.m_MatchConfigStore,
-            .m_MatchConfigService = m_Platform.m_MatchConfigService,
-            .m_MatchCycleStore = m_Platform.m_MatchCycleStore,
-            .m_LocalUserStore = m_Platform.m_LocalUserStore,
-            .m_VirtualInputStore = m_Platform.m_VirtualInputStore,
-            .m_PlayerActionStore = m_Platform.m_PlayerActionStore,
-            .m_BotStore = m_Platform.m_BotStore,
-            .m_BridgeService = m_Platform.m_BridgeService };
+            .m_RenderService = m_Platform.m_Render.m_RenderService,
+            .m_RenderStore = m_Platform.m_Render.m_RenderStore,
+            .m_InputService = m_Platform.m_Render.m_InputService,
+            .m_CaptureStore = m_Platform.m_Capture.m_CaptureStore,
+            .m_MemoryReaderService = m_Platform.m_Base.m_MemoryReaderService,
+            .m_LifecycleService = m_Platform.m_Base.m_LifecycleService,
+            .m_LifecycleStore = m_Platform.m_Base.m_LifecycleStore,
+            .m_MatchConfigStore = m_Platform.m_Match.m_MatchConfigStore,
+            .m_MatchConfigService = m_Platform.m_Match.m_MatchConfigService,
+            .m_MatchCycleStore = m_Platform.m_Match.m_MatchCycleStore,
+            .m_LocalUserStore = m_Platform.m_Base.m_LocalUserStore,
+            .m_VirtualInputStore = m_Platform.m_Control.m_VirtualInputStore,
+            .m_PlayerActionStore = m_Platform.m_Control.m_PlayerActionStore,
+            .m_BotStore = m_Platform.m_Control.m_BotStore,
+            .m_BridgeService = m_Platform.m_Transport.m_BridgeService };
 
         Map::Layer m_Map{ m_Service.m_Log };
         Resolved::Layer m_Resolved{ m_Service.m_Log, m_Map };

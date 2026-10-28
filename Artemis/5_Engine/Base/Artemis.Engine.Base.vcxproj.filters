@@ -57,6 +57,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine.Base.Layer.ixx" />
     <ClCompile Include="Hook\System\Platform.Hook.System.cpp">
       <Filter>Hook\System</Filter>
     </ClCompile>

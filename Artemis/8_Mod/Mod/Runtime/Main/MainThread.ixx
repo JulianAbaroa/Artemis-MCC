@@ -1,7 +1,9 @@
 export module Runtime.Thread:Main;
 
 import Service.Layer;
-import Platform.Layer;
+import Engine.Base.Layer;
+import Engine.Match.Layer;
+import Engine.Render.Layer;
 import std;
 
 export namespace Runtime::Thread
@@ -14,8 +16,8 @@ export namespace Runtime::Thread
         using milliseconds = std::chrono::milliseconds;
 
     public:
-        MainThread(Service::Layer& service, Platform::Layer& platform) :
-            m_Service(service), m_Platform(platform) {}
+        MainThread(Service::Layer& service, Engine::Base::Layer& base, Engine::Match::Layer& match, Engine::Render::Layer& render) :
+            m_Service(service), m_Base(base), m_Match(match), m_Render(render) {}
         ~MainThread() = default;
 
         // Installs the hooks and supervises them until the lifecycle stops.
@@ -23,7 +25,9 @@ export namespace Runtime::Thread
 
     private:
         Service::Layer& m_Service;
-        Platform::Layer& m_Platform;
+        Engine::Base::Layer& m_Base;
+        Engine::Match::Layer& m_Match;
+        Engine::Render::Layer& m_Render;
 
         // Sleeps for the given time unless the shutdown is signaled.
         // return: true if the time elapsed, false if the shutdown was signaled.

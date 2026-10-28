@@ -91,7 +91,7 @@ namespace Platform::Input::Hook
             const std::uintptr_t threadContext{ s_Instance->GetThreadContext() };
 
             s_Instance->m_BotService.Update(threadContext);
-            s_Instance->m_ActionSource.Prepare(s_Instance->m_Sequence + 1);
+            s_Instance->m_ActionSource->Prepare(s_Instance->m_Sequence + 1);
             s_Instance->ApplyOverrides(bytes, threadContext);
             s_Instance->PublishActions(bytes);
         }
@@ -362,9 +362,21 @@ namespace Platform::Input::Hook
         m_PlayerActionStore.Publish(actions);
     }
 
+    auto PlayerActionDetour::SetActionSource(ActionSource& actionSource) -> void
+    {
+        m_ActionSource = &actionSource;
+    }
+
     auto PlayerActionDetour::Install() -> bool
     {
         if (m_IsHookInstalled.load()) return true;
+
+        if (!m_ActionSource)
+        {
+            m_Log.Message("[PlayerActionDetour] ERROR: no action source, hook not installed.");
+            return false;
+        }
+
         s_Instance = this;
         m_Sequence = 0;
 
