@@ -168,6 +168,6 @@ def GenerateAll(tagsRoot: str) -> list[str]:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print("Usage: python GenerateCatalog.py <Artemis/Blam.Map/Tag path>")
+        print("Usage: python GenerateCatalog.py <Artemis/2_Blam/Map/Tag path>")
         sys.exit(1)
     GenerateAll(sys.argv[1])

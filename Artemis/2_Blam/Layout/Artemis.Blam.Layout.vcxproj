@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{B7E584C9-A17C-500A-84E9-F555909283EE}</ProjectGuid>
+    <RootNamespace>Artemis_Blam_Layout</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.Blam.Layout</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\1_Shared\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Action\Layout.Action.Type.ixx" />
+    <ClCompile Include="Action\Type\ActionBits.ixx" />
+    <ClCompile Include="Action\Type\ActionOffset.ixx" />
+    <ClCompile Include="Action\Type\ActionSize.ixx" />
+    <ClCompile Include="Datum\Datum.Object.Type.ixx" />
+    <ClCompile Include="Datum\Type\Anim\DatumAnimOffset.ixx" />
+    <ClCompile Include="Datum\Type\Anim\DatumAnimStructure.ixx" />
+    <ClCompile Include="Datum\Type\Bipd\DatumBipdOffset.ixx" />
+    <ClCompile Include="Datum\Type\Bipd\DatumBipdStructure.ixx" />
+    <ClCompile Include="Datum\Type\Bloc\DatumBlocOffset.ixx" />
+    <ClCompile Include="Datum\Type\Bloc\DatumBlocStructure.ixx" />
+    <ClCompile Include="Datum\Type\Ctrl\DatumCtrlOffset.ixx" />
+    <ClCompile Include="Datum\Type\Ctrl\DatumCtrlStructure.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Anim.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Bipd.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Bloc.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Ctrl.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Devi.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Eqip.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Item.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Mach.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Mvar.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Obje.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Proj.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Scen.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Unit.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Vehi.ixx" />
+    <ClCompile Include="Datum\Type\Datum.Object.Type.Weap.ixx" />
+    <ClCompile Include="Datum\Type\DatumBlock.ixx" />
+    <ClCompile Include="Datum\Type\DatumConstant.ixx" />
+    <ClCompile Include="Datum\Type\Devi\DatumDeviOffset.ixx" />
+    <ClCompile Include="Datum\Type\Devi\DatumDeviStructure.ixx" />
+    <ClCompile Include="Datum\Type\Eqip\DatumEqipOffset.ixx" />
+    <ClCompile Include="Datum\Type\Eqip\DatumEqipStructure.ixx" />
+    <ClCompile Include="Datum\Type\Item\DatumItemOffset.ixx" />
+    <ClCompile Include="Datum\Type\Item\DatumItemStructure.ixx" />
+    <ClCompile Include="Datum\Type\Mach\DatumMachOffset.ixx" />
+    <ClCompile Include="Datum\Type\Mach\DatumMachStructure.ixx" />
+    <ClCompile Include="Datum\Type\Mvar\DatumMvarOffset.ixx" />
+    <ClCompile Include="Datum\Type\Mvar\DatumMvarStructure.ixx" />
+    <ClCompile Include="Datum\Type\Obje\DatumObjeOffset.ixx" />
+    <ClCompile Include="Datum\Type\Obje\DatumObjeStructure.ixx" />
+    <ClCompile Include="Datum\Type\Proj\DatumProjOffset.ixx" />
+    <ClCompile Include="Datum\Type\Proj\DatumProjStructure.ixx" />
+    <ClCompile Include="Datum\Type\Scen\DatumScenOffset.ixx" />
+    <ClCompile Include="Datum\Type\Scen\DatumScenStructure.ixx" />
+    <ClCompile Include="Datum\Type\Unit\DatumUnitOffset.ixx" />
+    <ClCompile Include="Datum\Type\Unit\DatumUnitStructure.ixx" />
+    <ClCompile Include="Datum\Type\Vehi\DatumVehiOffset.ixx" />
+    <ClCompile Include="Datum\Type\Vehi\DatumVehiStructure.ixx" />
+    <ClCompile Include="Datum\Type\Weap\DatumWeapOffset.ixx" />
+    <ClCompile Include="Datum\Type\Weap\DatumWeapStructure.ixx" />
+    <ClCompile Include="Game\Layout.Game.Type.ixx" />
+    <ClCompile Include="Game\Type\GameOffset.ixx" />
+    <ClCompile Include="Interaction\Layout.Interaction.Type.ixx" />
+    <ClCompile Include="Interaction\Type\InteractionOffset.ixx" />
+    <ClCompile Include="Player\Layout.Player.Type.ixx" />
+    <ClCompile Include="Player\Type\PlayerMapping.ixx" />
+    <ClCompile Include="Player\Type\PlayerOffset.ixx" />
+    <ClCompile Include="Player\Type\PlayerSize.ixx" />
+    <ClCompile Include="Snapshot\Layout.Snapshot.Type.ixx" />
+    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.cpp" />
+    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.ixx" />
+    <ClCompile Include="Snapshot\Type\SnapshotData.ixx" />
+    <ClCompile Include="Snapshot\Type\SnapshotRaw.ixx" />
+    <ClCompile Include="Snapshot\Type\SnapshotRecord.ixx" />
+    <ClCompile Include="Snapshot\Type\SnapshotRegion.ixx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

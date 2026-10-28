@@ -1,0 +1,43 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/1_Shared/">
+    <Project Path="Artemis/1_Shared/Common/Artemis.Common.vcxproj" Id="687dbfe3-1641-5af5-b910-825e790eb11e" />
+    <Project Path="Artemis/1_Shared/Contract/Artemis.Contract.vcxproj" Id="069c43cd-a84e-5139-be63-db6c494af9c9" />
+    <Project Path="Artemis/1_Shared/Services/Artemis.Services.vcxproj" Id="1a376852-aa90-511d-a66f-4a38a4795b91" />
+  </Folder>
+  <Folder Name="/2_Blam/">
+    <Project Path="Artemis/2_Blam/Layout/Artemis.Blam.Layout.vcxproj" Id="b7e584c9-a17c-500a-84e9-f555909283ee" />
+    <Project Path="Artemis/2_Blam/Map/Artemis.Blam.Map.vcxproj" Id="9f65c23e-e36e-51db-88a7-496f7a6cc46e" />
+    <Project Path="Artemis/2_Blam/MapModel/Artemis.Blam.MapModel.vcxproj" Id="dc8ee9ad-0601-534e-87a7-8fccb10da489" />
+    <Project Path="Artemis/2_Blam/Runtime/Artemis.Blam.Runtime.vcxproj" Id="e2a098f8-6b58-5b46-9131-61462c9fd8a6" />
+  </Folder>
+  <Folder Name="/3_Domain/">
+    <Project Path="Artemis/3_Domain/Control/Artemis.Control.vcxproj" Id="07aa1d03-e395-5ac6-8bb5-39a9b9c2490d" />
+    <Project Path="Artemis/3_Domain/Perception/Artemis.Perception.vcxproj" Id="17391791-ca10-5f6a-8a15-23ae6a6f6218" />
+    <Project Path="Artemis/3_Domain/Views/Artemis.Views.vcxproj" Id="b9ea51af-d05f-5cf0-9215-ef210f49c640" />
+  </Folder>
+  <Folder Name="/4_Bridge/">
+    <Project Path="Artemis/4_Bridge/Codec/Artemis.Bridge.Codec.vcxproj" Id="e34aade0-30f9-535d-82cd-259f1a1d2ae3" />
+    <Project Path="Artemis/4_Bridge/Transport/Artemis.Bridge.Transport.vcxproj" Id="e9f6deca-f3d8-5050-bea2-1a145165ca3c" />
+  </Folder>
+  <Folder Name="/5_Engine/">
+    <Project Path="Artemis/5_Engine/Base/Artemis.Engine.Base.vcxproj" Id="05800b63-82fc-5238-a677-b15ceedb5242" />
+    <Project Path="Artemis/5_Engine/Capture/Artemis.Engine.Capture.vcxproj" Id="d5deed6a-0319-5c03-8121-b71f9be29c8f" />
+    <Project Path="Artemis/5_Engine/Control/Artemis.Engine.Control.vcxproj" Id="31dcae1d-3ae2-5d14-b669-1f22fafe48a8" />
+    <Project Path="Artemis/5_Engine/Match/Artemis.Engine.Match.vcxproj" Id="eff36a5f-4d8a-516f-99f3-0d15e4bbba79" />
+    <Project Path="Artemis/5_Engine/Render/Artemis.Engine.Render.vcxproj" Id="f517c458-8281-563d-b238-8bbefd42fdf3" />
+  </Folder>
+  <Folder Name="/6_DevTools/">
+    <Project Path="Artemis/6_DevTools/DevTools/Artemis.DevTools.vcxproj" Id="efd9ba9e-af4c-5446-9755-2bbcbf4b8bb3" />
+  </Folder>
+  <Folder Name="/7_Tests/">
+    <Project Path="Artemis/7_Tests/GoogleTest/Artemis.GoogleTest.vcxproj" Id="8c833536-1445-59fa-9679-5677f063b66d" />
+    <Project Path="Artemis/7_Tests/Tests/Artemis.Tests.vcxproj" Id="5d038d20-3b6f-594f-9a4a-266b1ff446e7" />
+  </Folder>
+  <Folder Name="/8_Mod/">
+    <Project Path="Artemis/8_Mod/Mod/Artemis.Mod.vcxproj" Id="c56ac911-e132-4c88-a103-1b4bdd344475" />
+  </Folder>
+  <Project Path="Artemis-MCC.pyproj" Type="888888a0-9f3d-457c-b088-3a5042f75d52" Id="250d11ee-1077-476a-9323-c11dd62f4432" />
+</Solution>

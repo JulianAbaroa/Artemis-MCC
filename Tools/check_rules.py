@@ -22,31 +22,11 @@ import argparse, collections, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE = os.path.join(ROOT, "Tools", "check_rules_baseline.txt")
-# Folders with C++ code of the DLL and its libraries. Each one has its own Visual Studio project (P1): Core is part of Artemis.vcxproj.
-SOURCE_ROOTS = ("Artemis/Core/", "Artemis/Common/", "Artemis/Services/", "Artemis/Blam.Map/", "Artemis/Blam.MapModel/", "Artemis/Blam.Layout/", "Artemis/Blam.Runtime/",
-                "Artemis/Contract/", "Artemis/Perception/", "Artemis/Views/", "Artemis/Bridge.Codec/", "Artemis/Control/", "Artemis/Bridge.Transport/",
-                "Artemis/Engine.Core/", "Artemis/Engine.Capture/", "Artemis/Engine.Control/", "Artemis/Engine.Match/", "Artemis/Engine.Render/", "Artemis/DevTools/")
-PROJECT_OF = {
-    "Artemis/Core/": "Artemis/Artemis",
-    "Artemis/Common/": "Artemis/Common/Artemis.Common",
-    "Artemis/Services/": "Artemis/Services/Artemis.Services",
-    "Artemis/Blam.Map/": "Artemis/Blam.Map/Artemis.Blam.Map",
-    "Artemis/Blam.MapModel/": "Artemis/Blam.MapModel/Artemis.Blam.MapModel",
-    "Artemis/Blam.Layout/": "Artemis/Blam.Layout/Artemis.Blam.Layout",
-    "Artemis/Blam.Runtime/": "Artemis/Blam.Runtime/Artemis.Blam.Runtime",
-    "Artemis/Contract/": "Artemis/Contract/Artemis.Contract",
-    "Artemis/Perception/": "Artemis/Perception/Artemis.Perception",
-    "Artemis/Views/": "Artemis/Views/Artemis.Views",
-    "Artemis/Bridge.Codec/": "Artemis/Bridge.Codec/Artemis.Bridge.Codec",
-    "Artemis/Control/": "Artemis/Control/Artemis.Control",
-    "Artemis/Bridge.Transport/": "Artemis/Bridge.Transport/Artemis.Bridge.Transport",
-    "Artemis/Engine.Core/": "Artemis/Engine.Core/Artemis.Engine.Core",
-    "Artemis/Engine.Capture/": "Artemis/Engine.Capture/Artemis.Engine.Capture",
-    "Artemis/Engine.Control/": "Artemis/Engine.Control/Artemis.Engine.Control",
-    "Artemis/Engine.Match/": "Artemis/Engine.Match/Artemis.Engine.Match",
-    "Artemis/Engine.Render/": "Artemis/Engine.Render/Artemis.Engine.Render",
-    "Artemis/DevTools/": "Artemis/DevTools/Artemis.DevTools",
-}
+# Folders with C++ code of the DLL and its libraries (Tools/components.py). Each one has its own Visual Studio project (P1).
+from components import PROJECTS, Project as ProjectPath
+CODE_PROJECTS = [name for _, _, name in PROJECTS if name not in ("GoogleTest", "Tests")]
+SOURCE_ROOTS = tuple(ProjectPath(name).rpartition("/")[0] + "/" for name in CODE_PROJECTS)
+PROJECT_OF = {ProjectPath(name).rpartition("/")[0] + "/": ProjectPath(name)[:-len(".vcxproj")] for name in CODE_PROJECTS}
 
 CHECKS = {
     # Files (rules 6)
@@ -138,7 +118,9 @@ def ListSources():
     out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", *SOURCE_ROOTS],
                          cwd=ROOT, capture_output=True, text=True, check=True).stdout
     # A file moved or deleted since the last commit is still in the index: only the ones on disk count.
-    return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")) and os.path.isfile(os.path.join(ROOT, p)))
+    # Resources/ holds embedded third-party data (the icon bytes of DevTools), not code of Artemis.
+    return sorted(p for p in out.splitlines() if p.endswith((".ixx", ".cpp")) and "/Resources/" not in p
+                  and os.path.isfile(os.path.join(ROOT, p)))
 
 
 class Source:

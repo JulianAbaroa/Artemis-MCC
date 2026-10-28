@@ -2,7 +2,7 @@
 test_generators.py
 Tests of the generators of C++ from XML (M3a, Ignore Rediseno/Tareas/M3a.txt; D176): GenerateDatum.py and GenerateTags.py write
 exactly the files that are in the repo, byte for byte, and --check says so (exit 0) or names the files that differ (exit 1).
-Written by Opus before the code (D161); they are not changed to pass. M3 (D177): the tag output moved to Artemis/Blam.Map/Tag.
+Written by Opus before the code (D161); they are not changed to pass. M3 (D177): the tag output moved to Artemis/2_Blam/Map/Tag.
 The tag XMLs belong to Assembly and stay out of the repo: the GenerateTags tests run when ARTEMIS_ASSEMBLY_TAGS (or the default
 Documents/Tools/Assembly/Tags of the user) is a folder, and are skipped otherwise.
 """
@@ -16,8 +16,8 @@ from tdump_writer import Repo
 
 REPO = Repo()
 TRANSPILER = os.path.join(REPO, "Tools", "TagTranspiler")
-DATUM_OUT = os.path.join(REPO, "Artemis", "Blam.Layout", "Datum", "Type")
-TAG_OUT = os.path.join(REPO, "Artemis", "Blam.Map", "Tag")
+DATUM_OUT = os.path.join(REPO, "Artemis", "2_Blam", "Layout", "Datum", "Type")
+TAG_OUT = os.path.join(REPO, "Artemis", "2_Blam", "Map", "Tag")
 ASSEMBLY_TAGS = os.environ.get("ARTEMIS_ASSEMBLY_TAGS") or os.path.expanduser(os.path.join("~", "Documents", "Tools", "Assembly",
                                                                                             "Tags"))
 NEEDS_ASSEMBLY = pytest.mark.skipif(not os.path.isdir(ASSEMBLY_TAGS),

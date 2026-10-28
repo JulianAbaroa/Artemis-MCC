@@ -44,6 +44,7 @@
     <Compile Include="Tools\tickdump.py" />
     <Compile Include="Tools\livechat.py" />
     <Compile Include="Tools\check_rules.py" />
+    <Compile Include="Tools\components.py" />
     <Compile Include="Tools\deps.py" />
     <Compile Include="Tools\field_usage_report.py" />
     <Compile Include="Tools\outline.py" />

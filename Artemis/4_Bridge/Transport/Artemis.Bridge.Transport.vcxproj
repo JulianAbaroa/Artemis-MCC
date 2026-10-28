@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{E9F6DECA-F3D8-5050-BEA2-1A145165CA3C}</ProjectGuid>
+    <RootNamespace>Artemis_Bridge_Transport</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.Bridge.Transport</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\1_Shared\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\1_Shared\Services\Artemis.Services.vcxproj">
+      <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\1_Shared\Contract\Artemis.Contract.vcxproj">
+      <Project>{069C43CD-A84E-5139-BE63-DB6C494AF9C9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\3_Domain\Control\Artemis.Control.vcxproj">
+      <Project>{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Codec\Artemis.Bridge.Codec.vcxproj">
+      <Project>{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Map\Artemis.Blam.Map.vcxproj">
+      <Project>{9F65C23E-E36E-51DB-88A7-496F7A6CC46E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\MapModel\Artemis.Blam.MapModel.vcxproj">
+      <Project>{DC8EE9AD-0601-534E-87A7-8FCCB10DA489}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Runtime\Artemis.Blam.Runtime.vcxproj">
+      <Project>{E2A098F8-6B58-5B46-9131-61462C9FD8A6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\3_Domain\Perception\Artemis.Perception.vcxproj">
+      <Project>{17391791-CA10-5F6A-8A15-23AE6A6F6218}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\3_Domain\Views\Artemis.Views.vcxproj">
+      <Project>{B9EA51AF-D05F-5CF0-9215-EF210F49C640}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="State\BridgeStore.cpp" />
+    <ClCompile Include="State\BridgeStore.ixx" />
+    <ClCompile Include="System\BridgeEngine.ixx" />
+    <ClCompile Include="System\BridgeService.cpp" />
+    <ClCompile Include="System\BridgeService.ixx" />
+    <ClCompile Include="System\Platform.Bridge.System.ixx" />
+    <ClCompile Include="Type\Platform.Bridge.Type.ixx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

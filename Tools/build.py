@@ -9,7 +9,7 @@ in compact form: one line per diagnostic, relative paths, no duplicates, errors 
     python Tools/build.py --detail LEVEL        Also write build/watch/detail.log (normal, detailed, diagnostic) with the MSBuild
                                                 performance summary (time per project).
     python Tools/build.py --project PATH        Build another project or solution (path relative to the repo, e.g.
-                                                Artemis/Tests/Artemis.Tests.vcxproj). Default: Artemis/Artemis.vcxproj.
+                                                Artemis/7_Tests/Tests/Artemis.Tests.vcxproj). Default: Artemis/8_Mod/Mod/Artemis.Mod.vcxproj.
     python Tools/build.py --wait ID             Keep waiting for a build that outlived --timeout (the id is printed).
     python Tools/build.py --last                Print the result of the last build again, without building.
     python Tools/build.py --warnings            Every warning (default: only the ones in files changed according to git, plus counts).
@@ -44,8 +44,6 @@ def Relative(origin):
         path = path[index + len("/artemis-mcc/"):]
     elif path.lower().startswith(root.lower() + "/"):
         path = path[len(root) + 1:]
-    if path.startswith("Artemis/Core/"):
-        return path[len("Artemis/Core/"):]
     return path[len("Artemis/"):] if path.startswith("Artemis/") else path
 
 
@@ -137,7 +135,7 @@ def Main():
     parser.add_argument("--config", default="Release|x64")
     parser.add_argument("--rebuild", action="store_true")
     parser.add_argument("--detail", choices=["normal", "detailed", "diagnostic"], help="also write build/watch/detail.log with that verbosity")
-    parser.add_argument("--project", help="project or solution to build, relative to the repo (default Artemis/Artemis.vcxproj)")
+    parser.add_argument("--project", help="project or solution to build, relative to the repo (default Artemis/8_Mod/Mod/Artemis.Mod.vcxproj)")
     parser.add_argument("--wait")
     parser.add_argument("--last", action="store_true")
     parser.add_argument("--warnings", action="store_true")

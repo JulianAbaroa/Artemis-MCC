@@ -3,7 +3,7 @@ outline.py
 Skeleton of C++ files: namespaces, classes, methods and functions with their line ranges, without the bodies.
 Read the outline first, then only the line range the change needs.
 
-    python Tools/outline.py FILE [FILE...]     Paths relative to the repo, to Artemis/Core/, or a unique file name (OpenMapDetour.cpp).
+    python Tools/outline.py FILE [FILE...]     Paths relative to the repo, to Artemis/, or a unique file name (OpenMapDetour.cpp).
     python Tools/outline.py FILE --members     Also data members, usings and constants.
     python Tools/outline.py FILE --find NAME   Only the entries whose line mentions NAME (and their parents).
 
@@ -20,7 +20,7 @@ ACCESS = re.compile(r"^\s*(public|private|protected)\s*:(?!:)\s*")
 
 def Find(name):
     path = name.replace("\\", "/")
-    for candidate in (path, "Artemis/Core/" + path, "Artemis/" + path):
+    for candidate in (path, "Artemis/" + path):
         if os.path.isfile(os.path.join(ROOT, candidate)):
             return candidate
     out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "--", f"*{os.path.basename(path)}"],
@@ -106,7 +106,7 @@ def Main():
         lines, entries = Outline(path, args.members)
         imports = sum(1 for e in entries if e[3] == "top" and re.match(r"(?:export\s+)?import\b", e[4]))
         module = next((e[4] for e in entries if e[3] == "top" and re.match(r"(?:export\s+)?module\s+\w", e[4])), "")
-        short = path[len("Artemis/Core/"):] if path.startswith("Artemis/Core/") else (path[len("Artemis/"):] if path.startswith("Artemis/") else path)
+        short = path[len("Artemis/"):] if path.startswith("Artemis/") else path
         print(f"{short}  ({len(lines)} lines)  {module}  imports: {imports}")
         rows = []
         for begin, end, depth, kind, text, acc in entries:

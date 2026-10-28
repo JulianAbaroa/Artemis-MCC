@@ -1,7 +1,7 @@
 """
 tdump_writer.py
 Test support of M2 (Ignore Rediseno/Tareas/M2.txt): writes .tdump files (format version 1, Ignore Referencia/Diseno/15 sec. 4) the
-way the dump thread of Artemis does (Artemis/Bridge.Codec/Dump/System/Export.Dump.System.cpp: keyframe first and every
+way the dump thread of Artemis does (Artemis/4_Bridge/Codec/Dump/System/Export.Dump.System.cpp: keyframe first and every
 keyframe_interval records, otherwise the rows that are new or differ byte for byte plus the handles that are gone). The layout is the
 real one of Data/Bridge/Bridge.xml (GenerateBridge.LayoutJson, the same text the C++ embeds), optionally changed to test layout
 changes. It does not import tickdump.py: a test of the reader must not use the reader to write its input.

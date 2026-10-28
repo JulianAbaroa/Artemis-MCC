@@ -46,7 +46,7 @@ Fields named `Unknown XXX` come from the automatic analysis; their tooltip lists
 
        python Tools/TagTranspiler/GenerateDatum.py [Data/Datum/unit.xml]
 
-   Writes under `Artemis/Core/Domain/3_Datum/Object/Type/`:
+   Writes under `Artemis/2_Blam/Layout/Datum/Type/`:
    `<Prefix>/Datum<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Datum<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Datum.Object.Type.<Prefix>.ixx`, module `Datum.Object.Type`. The `Datum` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
 
 ## Notes
@@ -101,4 +101,4 @@ Per tag: `name`, `group` (fourcc), `kind` (ObjectKind), `mp` (multiplayer object
 
     python Tools/TagTranspiler/GenerateSemantic.py
 
-Writes the module `Common.Semantic.Type` (primary in `Artemis/Core/Common/Semantic/`, partitions under `Type/`): the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.
+Writes the module `Common.Semantic.Type` (primary in `Artemis/1_Shared/Common/Semantic/`, partitions under `Type/`): the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.

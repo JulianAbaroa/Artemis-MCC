@@ -3,7 +3,7 @@
 # Start it with Tools\build_watcher.bat and leave the window open while working with Claude.
 # Exchange folder build\watch\ (gitignored): request.json (id, configuration, platform, target) -> status.json -> errors.log,
 # warnings.log, result.json. Files are only overwritten, never deleted (the device shell cannot delete).
-# request.json may also have "project" (path relative to the repo, a .vcxproj or .sln; default Artemis\Artemis.vcxproj) and
+# request.json may also have "project" (path relative to the repo, a .vcxproj, .sln or .slnx; default Artemis\8_Mod\Mod\Artemis.Mod.vcxproj) and
 # "run" {exe, args}: after an ok build the exe runs from the repo root, its output goes to run.log and its exit code to result.json
 # (runExitCode, runSeconds). "detail" (normal, detailed or diagnostic) also writes detail.log with that verbosity and the
 # MSBuild performance summary (time per project and task).
@@ -19,12 +19,12 @@ if (-not $msbuild) { Write-Host '[build_watcher] ERROR: MSBuild not found.'; Rea
 # The .vcxproj with the same Solution* properties Visual Studio passes (the .sln cannot be built from the command line: MSB5004,
 # two projects named Artemis-MCC). Any difference (even '/' instead of '\' at the end of SolutionDir) changes the compiler command
 # lines and makes every build after a Visual Studio build, and the other way round, a full rebuild.
-$defaultProject = Join-Path $root 'Artemis\Artemis.vcxproj'
+$defaultProject = Join-Path $root 'Artemis\8_Mod\Mod\Artemis.Mod.vcxproj'
 $solutionDir = $root.TrimEnd('\') + '\'
 # A trailing '\' before the closing quote that PowerShell adds to paths with spaces would escape it: double it in that case.
 $solutionDirArgument = if ($solutionDir.Contains(' ')) { $solutionDir + '\' } else { $solutionDir }
-$solutionProperties = @("/p:SolutionDir=$solutionDirArgument", "/p:SolutionPath=$($solutionDir)Artemis-MCC.sln",
-    '/p:SolutionName=Artemis-MCC', '/p:SolutionFileName=Artemis-MCC.sln', '/p:SolutionExt=.sln')
+$solutionProperties = @("/p:SolutionDir=$solutionDirArgument", "/p:SolutionPath=$($solutionDir)Artemis-MCC.slnx",
+    '/p:SolutionName=Artemis-MCC', '/p:SolutionFileName=Artemis-MCC.slnx', '/p:SolutionExt=.slnx')
 $request = Join-Path $watch 'request.json'
 $errors = Join-Path $watch 'errors.log'
 $warnings = Join-Path $watch 'warnings.log'
@@ -68,7 +68,7 @@ while ($true)
         if ($req.project)
         {
             $project = Join-Path $root (([string]$req.project) -replace '/', '\')
-            if ($project -like '*.sln') { $buildProperties = @() }
+            if ($project -like '*.sln' -or $project -like '*.slnx') { $buildProperties = @() }
             if (-not (Test-Path $project)) { throw "Project not found: $project" }
         }
         $detailArguments = @()

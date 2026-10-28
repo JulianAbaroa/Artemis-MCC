@@ -3,7 +3,7 @@ test.py
 Builds a test project through the build watcher (Tools/build_watcher.bat, open on the Windows side), runs its exe with GoogleTest
 JSON output and prints a compact summary: how many passed, failed (file:line and message) and were skipped (reason).
 
-    python Tools/test.py                              Release|x64 build + run of Artemis/Tests/Artemis.Tests.
+    python Tools/test.py                              Release|x64 build + run of Artemis/7_Tests/Tests/Artemis.Tests.
     python Tools/test.py --config Debug|x64           Other configuration.
     python Tools/test.py --project PATH --exe PATH    Another test project and its exe (paths relative to the repo).
     python Tools/test.py --filter "Suite.*"           Passed to the exe as --gtest_filter.
@@ -20,7 +20,7 @@ With --python: 0 every test passed, 1 a test failed, 2 anything else (pytest mis
 import argparse, importlib.util, json, os, re, subprocess, sys, time, uuid
 import build, livechat
 
-DEFAULT_PROJECT = "Artemis/Tests/Artemis.Tests.vcxproj"
+DEFAULT_PROJECT = "Artemis/7_Tests/Tests/Artemis.Tests.vcxproj"
 DEFAULT_CONFIG = "Release|x64"
 PYTHON_TESTS = "Tools/Tests"
 DEFAULT_EXE = "build/{platform}/{configuration}/Artemis.Tests.exe"

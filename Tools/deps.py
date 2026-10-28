@@ -111,8 +111,6 @@ def Label(graph, path):
 
 
 def Short(path):
-    if path.startswith("Artemis/Core/"):
-        return path[len("Artemis/Core/"):]
     return path[len("Artemis/"):] if path.startswith("Artemis/") else path
 
 

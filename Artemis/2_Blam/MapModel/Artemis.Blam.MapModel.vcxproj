@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{DC8EE9AD-0601-534E-87A7-8FCCB10DA489}</ProjectGuid>
+    <RootNamespace>Artemis_Blam_MapModel</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.Blam.MapModel</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\1_Shared\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Map\Artemis.Blam.Map.vcxproj">
+      <Project>{9F65C23E-E36E-51DB-88A7-496F7A6CC46E}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Definitions\_Reflect\Damage\Reflect.Jpt.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Level\Reflect.Sbsp.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Level\Reflect.Scnr.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Level\Reflect.Sddt.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Coll.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Hlmt.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Mode.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Model\Reflect.Phmo.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\_Reflect.Object.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Bipd.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Bloc.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Ctrl.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Eqip.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Mach.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Proj.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Scen.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Vehi.ixx" />
+    <ClCompile Include="Definitions\_Reflect\Object\Reflect.Weap.ixx" />
+    <ClCompile Include="Definitions\Resolved.Definitions.Reflect.ixx" />
+    <ClCompile Include="Definitions\Resolved.Definitions.Type.ixx" />
+    <ClCompile Include="Definitions\State\DefinitionsStore.ixx" />
+    <ClCompile Include="Definitions\System\Damage\Jpt\JptBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Damage\Jpt\JptBuilder.ixx" />
+    <ClCompile Include="Definitions\System\DefinitionsBuilder.cpp" />
+    <ClCompile Include="Definitions\System\DefinitionsBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Level\Sbsp\SbspBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Level\Sbsp\SbspBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Level\Scnr\ScnrBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Level\Scnr\ScnrBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Level\Sddt\SddtBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Level\Sddt\SddtBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Model\Coll\CollBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Model\Coll\CollBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Model\Hlmt\HlmtBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Model\Hlmt\HlmtBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Model\Mode\ModeBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Model\Mode\ModeBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Model\Phmo\PhmoBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Model\Phmo\PhmoBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Bipd\BipdBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Bipd\BipdBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Bloc\BlocBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Bloc\BlocBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Ctrl\CtrlBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Ctrl\CtrlBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Eqip\EqipBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Eqip\EqipBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Mach\MachBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Mach\MachBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\ObjectBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Proj\ProjBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Proj\ProjBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Scen\ScenBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Scen\ScenBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Vehi\VehiBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Vehi\VehiBuilder.ixx" />
+    <ClCompile Include="Definitions\System\Object\Weap\WeapBuilder.cpp" />
+    <ClCompile Include="Definitions\System\Object\Weap\WeapBuilder.ixx" />
+    <ClCompile Include="Definitions\Type\Damage\DefinitionsJpt.ixx" />
+    <ClCompile Include="Definitions\Type\Level\DefinitionsSbsp.ixx" />
+    <ClCompile Include="Definitions\Type\Level\DefinitionsScnr.ixx" />
+    <ClCompile Include="Definitions\Type\Level\DefinitionsSddt.ixx" />
+    <ClCompile Include="Definitions\Type\Model\DefinitionsColl.ixx" />
+    <ClCompile Include="Definitions\Type\Model\DefinitionsHlmt.ixx" />
+    <ClCompile Include="Definitions\Type\Model\DefinitionsMode.ixx" />
+    <ClCompile Include="Definitions\Type\Model\DefinitionsPhmo.ixx" />
+    <ClCompile Include="Definitions\Type\Object\_DefinitionsObject.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsBipd.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsBloc.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsCtrl.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsEqip.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsMach.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsProj.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsScen.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsVehi.ixx" />
+    <ClCompile Include="Definitions\Type\Object\DefinitionsWeap.ixx" />
+    <ClCompile Include="Resolved.Layer.ixx" />
+    <ClCompile Include="Tag\System\TagResolverService.cpp" />
+    <ClCompile Include="Tag\System\TagResolverService.ixx" />
+    <ClCompile Include="Tag\Type\Resolved.Tag.Type.ixx" />
+    <ClCompile Include="Vitality\Resolved.Vitality.Type.ixx" />
+    <ClCompile Include="Vitality\State\VitalityStore.cpp" />
+    <ClCompile Include="Vitality\State\VitalityStore.ixx" />
+    <ClCompile Include="Vitality\System\VitalityBuilder.cpp" />
+    <ClCompile Include="Vitality\System\VitalityBuilder.ixx" />
+    <ClCompile Include="Vitality\Type\Vitality.ixx" />
+    <ClCompile Include="Vitality\Type\VitalityConstant.ixx" />
+    <ClCompile Include="World\Resolved.World.Type.ixx" />
+    <ClCompile Include="World\State\WorldStore.cpp" />
+    <ClCompile Include="World\State\WorldStore.ixx" />
+    <ClCompile Include="World\System\ModelLink\ModelLinkBuilder.cpp" />
+    <ClCompile Include="World\System\ModelLink\ModelLinkBuilder.ixx" />
+    <ClCompile Include="World\System\Raycast\Raycaster.cpp" />
+    <ClCompile Include="World\System\Raycast\Raycaster.ixx" />
+    <ClCompile Include="World\System\RegionStates\RegionStatesBuilder.cpp" />
+    <ClCompile Include="World\System\RegionStates\RegionStatesBuilder.ixx" />
+    <ClCompile Include="World\System\WorldBuilder.cpp" />
+    <ClCompile Include="World\System\WorldBuilder.ixx" />
+    <ClCompile Include="World\Type\WorldModelLink.ixx" />
+    <ClCompile Include="World\Type\WorldRaycast.ixx" />
+    <ClCompile Include="World\Type\WorldRegionStates.ixx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

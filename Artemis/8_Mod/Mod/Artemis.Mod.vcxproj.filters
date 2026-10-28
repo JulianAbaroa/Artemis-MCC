@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Infrastructure">
+      <UniqueIdentifier>{7055a99f-e6fd-5fc2-9b7a-8fcc95fefbd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Infrastructure\Platform">
+      <UniqueIdentifier>{bc0891b6-1102-554e-add5-f16f23cae4f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Infrastructure\Platform\Port">
+      <UniqueIdentifier>{3a750509-8fdf-51dc-a38d-4bc6af048975}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Infrastructure\Platform\Port\System">
+      <UniqueIdentifier>{02aecdec-2580-589e-af17-d20bbbe94815}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Proxy">
+      <UniqueIdentifier>{f32f0fcc-5c9a-5eef-ac63-9682bd8d3c92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime">
+      <UniqueIdentifier>{67eb1bfe-e7d9-5e7a-8919-68d9188c8578}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\AI">
+      <UniqueIdentifier>{3f08af72-91ea-5076-9a5d-d24d1c480020}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Bench">
+      <UniqueIdentifier>{79d52a74-d5cf-55d2-8d45-758856dfda45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Bridge">
+      <UniqueIdentifier>{03d0935d-a044-5565-814d-189ccfc4c4b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Dump">
+      <UniqueIdentifier>{8c5e8395-3eae-505f-9e85-ceb9f20a7865}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Main">
+      <UniqueIdentifier>{eb67bcb9-6afc-5e7e-96b6-310e845d5ffe}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core.cpp" />
+    <ClCompile Include="Core.ixx" />
+    <ClCompile Include="DllMain.cpp" />
+    <ClInclude Include="Proxy\ProxyExports.h">
+      <Filter>Proxy</Filter>
+    </ClInclude>
+    <ClCompile Include="Runtime\Runtime.Layer.ixx">
+      <Filter>Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Runtime.Thread.ixx">
+      <Filter>Runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\Platform\Platform.Layer.ixx">
+      <Filter>Infrastructure\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\AI\AIThread.cpp">
+      <Filter>Runtime\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\AI\AIThread.ixx">
+      <Filter>Runtime\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Bench\BenchThread.cpp">
+      <Filter>Runtime\Bench</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Bench\BenchThread.ixx">
+      <Filter>Runtime\Bench</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Bridge\BridgeThread.cpp">
+      <Filter>Runtime\Bridge</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Bridge\BridgeThread.ixx">
+      <Filter>Runtime\Bridge</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Dump\DumpThread.cpp">
+      <Filter>Runtime\Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Dump\DumpThread.ixx">
+      <Filter>Runtime\Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Main\MainThread.cpp">
+      <Filter>Runtime\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Main\MainThread.ixx">
+      <Filter>Runtime\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\Platform\Port\Platform.Port.System.ixx">
+      <Filter>Infrastructure\Platform\Port</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeActionSource.cpp">
+      <Filter>Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeActionSource.ixx">
+      <Filter>Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeEngineAdapter.cpp">
+      <Filter>Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeEngineAdapter.ixx">
+      <Filter>Infrastructure\Platform\Port\System</Filter>
+    </ClCompile>
+    <None Include="Proxy\GenerateProxyExports.py">
+      <Filter>Proxy</Filter>
+    </None>
+    <None Include="Proxy\exports.txt">
+      <Filter>Proxy</Filter>
+    </None>
+  </ItemGroup>
+</Project>

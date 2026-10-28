@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Hook">
+      <UniqueIdentifier>{50814f39-e566-5f5b-bc33-14a5aa6090c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hook\System">
+      <UniqueIdentifier>{3dd36849-67ea-5738-a37f-50b863a59713}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hook\Type">
+      <UniqueIdentifier>{01d06faa-8783-5710-9766-4475350fd512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Host">
+      <UniqueIdentifier>{b9d41866-45f2-5184-9af0-474226956631}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Host\Hook">
+      <UniqueIdentifier>{98e4d6bb-0815-5b71-a680-e8d197545801}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Host\State">
+      <UniqueIdentifier>{f0c1bceb-d320-5a0a-bee9-b270a74076af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Host\System">
+      <UniqueIdentifier>{edaa2a27-6616-53a8-965b-ba6e5578f48f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Host\Type">
+      <UniqueIdentifier>{8ed6483b-4494-5954-8dc2-a0fc2d744944}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lifecycle">
+      <UniqueIdentifier>{cb5d0178-6075-5d00-8221-24b85e03b22c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lifecycle\Hook">
+      <UniqueIdentifier>{a70395db-4ce1-5e7e-947e-d39e016b9522}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lifecycle\State">
+      <UniqueIdentifier>{84bb0b31-2a53-5f1e-9ab6-e9c94205e3d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lifecycle\System">
+      <UniqueIdentifier>{2bb8353b-50bc-5dfc-8bda-faccc4e53dcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lifecycle\Type">
+      <UniqueIdentifier>{e40a807c-bf91-5d04-a057-a2b59edf7305}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{976cb345-f534-51cd-8f06-c47ed5869894}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\System">
+      <UniqueIdentifier>{914a4e49-228e-5793-9080-dcd5e8e693b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\System\AOB">
+      <UniqueIdentifier>{c5dce3ab-4bc7-5962-8a49-d80b69f30ca8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\System\Reader">
+      <UniqueIdentifier>{64dad8c2-0668-5d95-8dd7-8bfdbaac5816}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\Type">
+      <UniqueIdentifier>{733a33aa-289f-5b02-bcdb-4004bfb454b9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Hook\System\Platform.Hook.System.cpp">
+      <Filter>Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\System\Platform.Hook.System.ixx">
+      <Filter>Hook\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\Type\Platform.Hook.Type.ixx">
+      <Filter>Hook\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\CanAcceptAnyJoinRequestDetour.cpp">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\CanAcceptAnyJoinRequestDetour.ixx">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\LocalUserGetGamepadMappingDetour.cpp">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\LocalUserGetGamepadMappingDetour.ixx">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\LocalUserGetPlayerDetour.cpp">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\LocalUserGetPlayerDetour.ixx">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\LocalUserGetProfileDetour.cpp">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\LocalUserGetProfileDetour.ixx">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\SessionJoinCheckPatch.cpp">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Hook\SessionJoinCheckPatch.ixx">
+      <Filter>Host\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Platform.Host.Hook.ixx">
+      <Filter>Host</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\State\LocalUserStore.cpp">
+      <Filter>Host\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\State\LocalUserStore.ixx">
+      <Filter>Host\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\System\HostService.cpp">
+      <Filter>Host\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\System\HostService.ixx">
+      <Filter>Host\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Host\Type\Platform.Host.Type.ixx">
+      <Filter>Host\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Hook\DestroySubsystemsDetour.cpp">
+      <Filter>Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Hook\DestroySubsystemsDetour.ixx">
+      <Filter>Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Hook\EngineInitializeDetour.cpp">
+      <Filter>Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Hook\EngineInitializeDetour.ixx">
+      <Filter>Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Hook\OpenMapDetour.cpp">
+      <Filter>Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Hook\OpenMapDetour.ixx">
+      <Filter>Lifecycle\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Platform.Lifecycle.Hook.ixx">
+      <Filter>Lifecycle</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Platform.Lifecycle.State.ixx">
+      <Filter>Lifecycle</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Platform.Lifecycle.System.ixx">
+      <Filter>Lifecycle</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\State\LifecycleStore.cpp">
+      <Filter>Lifecycle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\State\LifecycleStore.ixx">
+      <Filter>Lifecycle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\System\LifecycleService.cpp">
+      <Filter>Lifecycle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\System\LifecycleService.ixx">
+      <Filter>Lifecycle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Lifecycle\Type\Platform.Lifecycle.Type.ixx">
+      <Filter>Lifecycle\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Platform.Memory.System.ixx">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Platform.Memory.Type.ixx">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\System\AOB\AOBService.cpp">
+      <Filter>Memory\System\AOB</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\System\AOB\AOBService.ixx">
+      <Filter>Memory\System\AOB</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\System\Reader\MemoryReaderService.cpp">
+      <Filter>Memory\System\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\System\Reader\MemoryReaderService.ixx">
+      <Filter>Memory\System\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Type\MemorySignature.ixx">
+      <Filter>Memory\Type</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="External">
+      <UniqueIdentifier>{401269e2-c6e9-55d8-94cb-caf95b21b01a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\minhook">
+      <UniqueIdentifier>{3987bbfb-e842-5c04-8100-dcc948c80464}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\minhook\hde">
+      <UniqueIdentifier>{805c3fb2-8d5e-5cbb-b009-ad01cc1838b4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(ArtemisRoot)External\minhook\src\buffer.c">
+      <Filter>External\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\minhook\src\hde\hde32.c">
+      <Filter>External\minhook\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\minhook\src\hde\hde64.c">
+      <Filter>External\minhook\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\minhook\src\hook.c">
+      <Filter>External\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\minhook\src\trampoline.c">
+      <Filter>External\minhook</Filter>
+    </ClCompile>
+    <ClInclude Include="$(ArtemisRoot)External\minhook\include\MinHook.h">
+      <Filter>External\minhook</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
