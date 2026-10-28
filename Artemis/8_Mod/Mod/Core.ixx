@@ -10,7 +10,6 @@ import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
 import Tables.Layer;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
@@ -83,11 +82,10 @@ export namespace Core
         Map::Layer m_Map{ m_Service.m_Log };
         Resolved::Layer m_Resolved{ m_Service.m_Log, m_Map };
         Tables::Layer m_Tables{ m_Service.m_Log, m_Resolved };
-        Relations::Layer m_Relations{ m_Service.m_Log, m_Resolved, m_Tables };
-        Environment::Layer m_Environment{ m_Service.m_Log, m_Resolved, m_Tables, m_Relations };
-        Egocentric::Layer m_Egocentric{ m_Service.m_Log, m_Resolved, m_Tables, m_Relations, m_Environment };
-        Export::Layer m_Export{ m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };
+        Environment::Layer m_Environment{ m_Service.m_Log, m_Resolved, m_Tables };
+        Egocentric::Layer m_Egocentric{ m_Service.m_Log, m_Resolved, m_Tables, m_Environment };
+        Export::Layer m_Export{ m_Resolved, m_Tables, m_Environment, m_Egocentric };
         DevTools::Layer m_DevTools{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Environment, m_Export, m_Preferences };
-        Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric, m_Export, m_DevTools };
+        Runtime::Layer m_Runtime{ m_Service, m_Platform, m_Map, m_Resolved, m_Tables, m_Environment, m_Egocentric, m_Export, m_DevTools };
     };
 }

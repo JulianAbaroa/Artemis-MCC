@@ -20,9 +20,9 @@ namespace Export::Pipeline::System
         m_Tables.m_GameService.Update(snapshot);
         stage();
 
-        m_Relations.m_ClassifierService.UpdateClassification();
+        m_Environment.m_ClassifierService.UpdateClassification();
         stage();
-        m_Relations.m_ObjectGraphService.UpdateGraph();
+        m_Environment.m_ObjectGraphService.UpdateGraph();
         stage();
 
         m_Environment.m_VitalityDetailsService.Update();

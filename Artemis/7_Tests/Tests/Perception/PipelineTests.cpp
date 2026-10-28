@@ -8,7 +8,7 @@ import Layout.Snapshot.Type;
 import Tests.Support.Pipeline;
 import std;
 
-// The pure chain of M5b (D198, D200): Tables, Relations, Environment, Egocentric and Export built and run without the DLL, from
+// The pure chain of M5b (D198, D200): Tables, Environment (with Relations), Egocentric and Export built and run without the DLL, from
 // Snapshots made by hand and a tag index written by hand. No .map, no MCC, no Platform and no Service.
 
 namespace
@@ -59,10 +59,9 @@ namespace
             return flat;
         }
 
-        // Cleans up the seven layers in the order Core registers them (D200).
+        // Cleans up the six layers in the order Core registers them (D200).
         auto CleanupAll() -> void
         {
-            m_Relations.Cleanup();
             m_Environment.Cleanup();
             m_Egocentric.Cleanup();
             m_Export.Cleanup();
@@ -85,7 +84,7 @@ TEST_F(PipelineTests, PipelineBuildsWithoutTheDll)
     // Nothing ran yet: no layer published anything and nothing was logged.
     EXPECT_EQ(m_Export.m_TickStore.Acquire(), nullptr);
     EXPECT_EQ(m_Tables.m_ObjectStore.Acquire(), nullptr);
-    EXPECT_EQ(m_Relations.m_ClassifierStore.Acquire(), nullptr);
+    EXPECT_EQ(m_Environment.m_ClassifierStore.Acquire(), nullptr);
     EXPECT_EQ(m_Environment.m_PlayersStore.Acquire(), nullptr);
     EXPECT_EQ(m_Egocentric.m_SelfStore.Acquire(), nullptr);
     EXPECT_EQ(m_Sink.CountOf(LogLevel::Warning), 0u);
@@ -147,6 +146,30 @@ TEST_F(PipelineTests, CleanupForgetsTheTick)
     }
     const auto total{ std::ranges::count_if(m_Sink.m_Messages, [](const auto& message) { return message.Message == "Cleanup completed."; }) };
     EXPECT_EQ(static_cast<std::size_t>(total), k_CleanupTags.size());
+}
+
+// Environment owns the classification and the object graph since M8 C.1 (D241): its Cleanup() empties them with the rest.
+class EnvironmentLayerTests : public ::testing::Test, protected Chain
+{
+protected:
+    auto SetUp() -> void override
+    {
+        FillSyntheticTags(m_Map);
+    }
+};
+
+TEST_F(EnvironmentLayerTests, CleanupEmptiesTheClassificationAndTheGraph)
+{
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {});
+    ASSERT_NE(m_Environment.m_ClassifierStore.Acquire(), nullptr);
+    ASSERT_NE(m_Environment.m_ObjectGraphStore.Acquire(), nullptr);
+    ASSERT_NE(m_Environment.m_EntitiesStore.Acquire(), nullptr);
+
+    m_Environment.Cleanup();
+
+    EXPECT_EQ(m_Environment.m_ClassifierStore.Acquire(), nullptr);
+    EXPECT_EQ(m_Environment.m_ObjectGraphStore.Acquire(), nullptr);
+    EXPECT_EQ(m_Environment.m_EntitiesStore.Acquire(), nullptr);
 }
 
 TEST_F(PipelineTests, EndStageOncePerStage)

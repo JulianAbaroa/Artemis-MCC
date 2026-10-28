@@ -6,7 +6,6 @@ import Map.Layer;
 import Resolved.Layer;
 import Layout.Snapshot.Type;
 import Tables.Layer;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
@@ -37,11 +36,11 @@ export namespace Runtime::Thread
 
     public:
         AIThread(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
-            Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
+            Resolved::Layer& resolved, Tables::Layer& tables,
             Environment::Layer& environment, Egocentric::Layer& egocentric,
             Export::Layer& exportLayer) :
             m_Service(service), m_Platform(platform), m_Map(map),
-            m_Resolved(resolved), m_Tables(tables), m_Relations(relations),
+            m_Resolved(resolved), m_Tables(tables),
             m_Environment(environment), m_Egocentric(egocentric),
             m_Export(exportLayer) {}
         ~AIThread() = default;
@@ -59,7 +58,6 @@ export namespace Runtime::Thread
         Map::Layer& m_Map;
         Resolved::Layer& m_Resolved;
         Tables::Layer& m_Tables;
-        Relations::Layer& m_Relations;
         Environment::Layer& m_Environment;
         Egocentric::Layer& m_Egocentric;
         Export::Layer& m_Export;

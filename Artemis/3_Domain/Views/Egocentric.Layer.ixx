@@ -3,7 +3,6 @@ export module Egocentric.Layer;
 import Common.Log.System;
 import Resolved.Layer;
 import Tables.Layer;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Self.State;
 import Egocentric.Self.System;
@@ -30,10 +29,10 @@ export namespace Egocentric
         using RaycastService = Egocentric::Raycast::System::RaycastService;
 
     public:
-        Layer(Log& log, Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
+        Layer(Log& log, Resolved::Layer& resolved, Tables::Layer& tables,
             Environment::Layer& environment) :
             m_SelfService(log, tables.m_PlayerStore, m_SelfStore),
-            m_AffordanceService(log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
+            m_AffordanceService(log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, environment.m_ClassifierStore, environment.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
             m_RaycastService(log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore) {}
         ~Layer() = default;
 

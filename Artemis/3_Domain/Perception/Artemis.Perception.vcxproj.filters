@@ -315,8 +315,5 @@
     <ClCompile Include="Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx">
       <Filter>Relations\ObjectGraph\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Relations\Relations.Layer.ixx">
-      <Filter>Relations</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

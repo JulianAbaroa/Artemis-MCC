@@ -2,7 +2,6 @@ export module Export.Pipeline.System;
 
 import Layout.Snapshot.Type;
 import Tables.Layer;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Tick.System;
@@ -16,7 +15,7 @@ export namespace Export::Pipeline::System
         "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "Entities", "Players",
         "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble" };
 
-    // Runs the pure chain of one tick over a Snapshot: Tables, Relations, Environment, Egocentric and the assembly of the Tick (D205).
+    // Runs the pure chain of one tick over a Snapshot: Tables, Environment (with Relations), Egocentric and the assembly of the Tick (D205).
     // note: The one place where the order of the tick lives. The AI thread and the tests call it.
     class PipelineService
     {
@@ -25,9 +24,9 @@ export namespace Export::Pipeline::System
         using TickService = Export::Tick::System::TickService;
 
     public:
-        PipelineService(Tables::Layer& tables, Relations::Layer& relations, Environment::Layer& environment,
+        PipelineService(Tables::Layer& tables, Environment::Layer& environment,
             Egocentric::Layer& egocentric, TickService& tickService) :
-            m_Tables(tables), m_Relations(relations), m_Environment(environment), m_Egocentric(egocentric),
+            m_Tables(tables), m_Environment(environment), m_Egocentric(egocentric),
             m_TickService(tickService) {}
         ~PipelineService() = default;
 
@@ -41,7 +40,6 @@ export namespace Export::Pipeline::System
 
     private:
         Tables::Layer& m_Tables;
-        Relations::Layer& m_Relations;
         Environment::Layer& m_Environment;
         Egocentric::Layer& m_Egocentric;
         TickService& m_TickService;

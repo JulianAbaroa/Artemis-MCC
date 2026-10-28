@@ -5,7 +5,6 @@ import Platform.Layer;
 import Map.Layer;
 import Resolved.Layer;
 import Tables.Layer;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
@@ -32,11 +31,11 @@ export namespace Runtime
     public:
         Layer(Service::Layer& service, Platform::Layer& platform, Map::Layer& map,
             Resolved::Layer& resolved, Tables::Layer& tables,
-            Relations::Layer& relations, Environment::Layer& environment,
+            Environment::Layer& environment,
             Egocentric::Layer& egocentric, Export::Layer& exportLayer,
             DevTools::Layer& devTools) :
             m_Main(service, platform),
-            m_AI(service, platform, map, resolved, tables, relations,
+            m_AI(service, platform, map, resolved, tables,
                 environment, egocentric, exportLayer),
             m_Bench(service, platform, devTools.m_UI.m_BenchUIService),
             m_Bridge(service, platform, exportLayer),

@@ -14,7 +14,6 @@ import Resolved.Layer;
 import Resolved.Definitions.Type;
 import Tables.Layer;
 import Tables.Player.Type;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Layer;
@@ -155,9 +154,8 @@ export namespace Tests::Support::Pipeline
         Map::Layer m_Map{ m_Log };
         Resolved::Layer m_Resolved{ m_Log, m_Map };
         Tables::Layer m_Tables{ m_Log, m_Resolved };
-        Relations::Layer m_Relations{ m_Log, m_Resolved, m_Tables };
-        Environment::Layer m_Environment{ m_Log, m_Resolved, m_Tables, m_Relations };
-        Egocentric::Layer m_Egocentric{ m_Log, m_Resolved, m_Tables, m_Relations, m_Environment };
-        Export::Layer m_Export{ m_Resolved, m_Tables, m_Relations, m_Environment, m_Egocentric };
+        Environment::Layer m_Environment{ m_Log, m_Resolved, m_Tables };
+        Egocentric::Layer m_Egocentric{ m_Log, m_Resolved, m_Tables, m_Environment };
+        Export::Layer m_Export{ m_Resolved, m_Tables, m_Environment, m_Egocentric };
     };
 }

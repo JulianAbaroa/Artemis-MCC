@@ -109,7 +109,6 @@
     <ClCompile Include="Relations\ObjectGraph\System\ObjectGraphService.cpp" />
     <ClCompile Include="Relations\ObjectGraph\System\ObjectGraphService.ixx" />
     <ClCompile Include="Relations\ObjectGraph\Type\Relations.ObjectGraph.Type.ixx" />
-    <ClCompile Include="Relations\Relations.Layer.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

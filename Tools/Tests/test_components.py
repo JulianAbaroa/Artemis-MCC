@@ -68,14 +68,12 @@ COMPONENTS = {
 PURE_PROJECTS = ("Artemis/1_Shared/Contract", "Artemis/3_Domain/Perception", "Artemis/3_Domain/Views", "Artemis/4_Bridge/Codec", "Artemis/3_Domain/Control")
 NOT_PURE_ROOTS = {"Service", "Platform", "Infrastructure", "Runtime", "UI", "Viewer", "Gui", "Core"}
 NOT_PURE_WORDS = ("windows.h", "MinHook", "reinterpret_cast", "OnCleanup(", "OnEngineInitialized(", "OnUnhook(")
-LAYERS = (("Relations", "Artemis/3_Domain/Perception/Relations/Relations.Layer.ixx", ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables")),
-          ("Environment", "Artemis/3_Domain/Perception/Environment/Environment.Layer.ixx",
-           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables", "Relations::Layer& relations")),
+LAYERS = (("Environment", "Artemis/3_Domain/Perception/Environment/Environment.Layer.ixx",
+           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables")),
           ("Egocentric", "Artemis/3_Domain/Views/Egocentric.Layer.ixx",
-           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables", "Relations::Layer& relations",
-            "Environment::Layer& environment")),
+           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables", "Environment::Layer& environment")),
           ("Export", "Artemis/4_Bridge/Codec/Export.Layer.ixx",
-           ("Resolved::Layer& resolved", "Tables::Layer& tables", "Relations::Layer& relations", "Environment::Layer& environment",
+           ("Resolved::Layer& resolved", "Tables::Layer& tables", "Environment::Layer& environment",
             "Egocentric::Layer& egocentric")))
 TICK_DETOURS = ("ExecuteGameFrameDetour", "SimulationTicksDetour")
 
@@ -374,7 +372,7 @@ def test_layers_are_pure_with_a_cleanup(name, path, parameters):
 
 def test_core_cleans_the_seven_layers_in_order():
     text = Read("Artemis/8_Mod/Mod/Core.cpp")
-    order = ["m_Relations", "m_Environment", "m_Egocentric", "m_Export", "m_Tables", "m_Map", "m_Resolved"]
+    order = ["m_Environment", "m_Egocentric", "m_Export", "m_Tables", "m_Map", "m_Resolved"]
     positions = [text.index(f"{member}.Cleanup()") for member in order]
     assert positions == sorted(positions), positions
 
@@ -848,3 +846,12 @@ def test_the_order_of_the_solution_is_an_order_of_the_dependencies():
         for include in REFERENCE.findall(Read(ProjectPath(name))):
             target = ProjectName(include)
             assert position[target] < position[name], f"{name} references {target}, shown below it"
+
+
+# ---- M8 C: one Layer per project (D234, D239-D246)
+
+def test_perception_has_one_layer():
+    layers = [p for p in Sources("Artemis/3_Domain/Perception") if p.endswith(".Layer.ixx")]
+    assert [os.path.basename(p) for p in layers] == ["Environment.Layer.ixx"], layers
+    offenders = [p for p in Sources("Artemis") if "Relations.Layer" in Read(p) or "Relations::Layer" in Read(p)]
+    assert not offenders, offenders

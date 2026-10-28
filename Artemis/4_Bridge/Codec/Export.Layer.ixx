@@ -2,7 +2,6 @@ export module Export.Layer;
 
 import Resolved.Layer;
 import Tables.Layer;
-import Relations.Layer;
 import Environment.Layer;
 import Egocentric.Layer;
 import Export.Tick.State;
@@ -25,10 +24,10 @@ export namespace Export
         using PipelineService = Export::Pipeline::System::PipelineService;
 
     public:
-        Layer(Resolved::Layer& resolved, Tables::Layer& tables, Relations::Layer& relations,
+        Layer(Resolved::Layer& resolved, Tables::Layer& tables,
             Environment::Layer& environment, Egocentric::Layer& egocentric) :
-            m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, relations.m_ClassifierStore, relations.m_ObjectGraphStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_VitalityDetailsStore, environment.m_ZoneDetailsStore, environment.m_TeleporterDetailsStore, environment.m_LiftDetailsStore, environment.m_BarrierDetailsStore, environment.m_AimStore, environment.m_EventsStore, environment.m_MatchStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, resolved.m_DefinitionsStore, m_TickStore),
-            m_PipelineService(tables, relations, environment, egocentric, m_TickService) {}
+            m_TickService(tables.m_ObjectStore, tables.m_PlayerStore, tables.m_InteractionStore, environment.m_ClassifierStore, environment.m_ObjectGraphStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_VitalityDetailsStore, environment.m_ZoneDetailsStore, environment.m_TeleporterDetailsStore, environment.m_LiftDetailsStore, environment.m_BarrierDetailsStore, environment.m_AimStore, environment.m_EventsStore, environment.m_MatchStore, egocentric.m_SelfStore, egocentric.m_AffordanceStore, egocentric.m_RaycastStore, resolved.m_DefinitionsStore, m_TickStore),
+            m_PipelineService(tables, environment, egocentric, m_TickService) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
