@@ -59,7 +59,7 @@ namespace
             return flat;
         }
 
-        // Cleans up the six layers in the order Core registers them (D200).
+        // Cleans up the six layers in the order Mod registers them (D200).
         auto CleanupAll() -> void
         {
             m_Environment.Cleanup();

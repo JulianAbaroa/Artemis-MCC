@@ -91,7 +91,7 @@ CHECKS = {
 LAYER_RANK = {
     "Common": 0, "Service": 1, "Control": 1, "Platform": 2, "Engine": 2, "Bridge": 2,
     "Map": 10, "Resolved": 11, "Datum": 12, "Layout": 12, "Tables": 13, "Relations": 14, "Environment": 15, "Egocentric": 16, "Export": 17,
-    "Gui": 20, "Viewer": 21, "UI": 22, "DevTools": 23, "Runtime": 24, "Core": 30,
+    "Gui": 20, "Viewer": 21, "UI": 22, "DevTools": 23, "Runtime": 24, "Mod": 30,
 }
 # Modules whose rank is not the one of their prefix. DevTools.Type (EngineAccess, D226) holds only references to the engine, so it
 # sits right below the tools: Viewer and UI may import it, the pure layers may not.

@@ -10,7 +10,7 @@ import std;
 export namespace Gui
 {
     // Root of the Gui layer. Owns the ImGui backend and the window procedure handler.
-    // note: The backend follows the render events of the Platform layer, so it starts, resizes, draws and shuts down with the game render.
+    // note: The backend follows the render events of Engine::Render::Layer, so it starts, resizes, draws and shuts down with the game render.
     class Layer
     {
     private:

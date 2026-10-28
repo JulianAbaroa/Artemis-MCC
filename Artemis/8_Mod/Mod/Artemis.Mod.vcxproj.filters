@@ -36,21 +36,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core.cpp" />
-    <ClCompile Include="Core.ixx" />
     <ClCompile Include="DllMain.cpp" />
-    <ClCompile Include="DevTools.Layer.ixx" />
+    <ClCompile Include="Mod.Layer.cpp" />
+    <ClCompile Include="Mod.Layer.ixx" />
     <ClInclude Include="Proxy\ProxyExports.h">
       <Filter>Proxy</Filter>
     </ClInclude>
-    <ClCompile Include="Runtime\Runtime.Layer.ixx">
-      <Filter>Runtime</Filter>
-    </ClCompile>
     <ClCompile Include="Runtime\Runtime.Thread.ixx">
       <Filter>Runtime</Filter>
-    </ClCompile>
-    <ClCompile Include="Infrastructure\Platform\Platform.Layer.ixx">
-      <Filter>Infrastructure\Platform</Filter>
     </ClCompile>
     <ClCompile Include="Runtime\AI\AIThread.cpp">
       <Filter>Runtime\AI</Filter>

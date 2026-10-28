@@ -1,7 +1,7 @@
 #include "Proxy/ProxyExports.h"
 #include <windows.h>
 
-import Core;
+import Mod.Layer;
 
 namespace
 {
@@ -14,7 +14,7 @@ namespace
 
         try
         {
-            Core::Artemis artemis{ handleModule };
+            Mod::Layer artemis{ handleModule };
 
             if (artemis.Start())
             {

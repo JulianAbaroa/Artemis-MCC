@@ -109,14 +109,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core.cpp" />
-    <ClCompile Include="Core.ixx" />
     <ClCompile Include="DllMain.cpp" />
-    <ClCompile Include="DevTools.Layer.ixx" />
+    <ClCompile Include="Mod.Layer.cpp" />
+    <ClCompile Include="Mod.Layer.ixx" />
     <ClInclude Include="Proxy\ProxyExports.h" />
-    <ClCompile Include="Runtime\Runtime.Layer.ixx" />
     <ClCompile Include="Runtime\Runtime.Thread.ixx" />
-    <ClCompile Include="Infrastructure\Platform\Platform.Layer.ixx" />
     <ClCompile Include="Runtime\AI\AIThread.cpp" />
     <ClCompile Include="Runtime\AI\AIThread.ixx" />
     <ClCompile Include="Runtime\Bench\BenchThread.cpp" />

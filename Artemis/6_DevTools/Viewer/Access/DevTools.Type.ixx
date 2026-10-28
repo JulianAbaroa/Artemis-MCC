@@ -36,8 +36,8 @@ namespace
 
 export namespace DevTools::Type
 {
-    // What the development tools use of the engine: one reference per member of the Platform layer they read or call (D226).
-    // note: The composition root (Core.ixx, future Mod) builds it from Platform::Layer, so DevTools does not import Platform.Layer.
+    // What the development tools use of the engine: one reference per member of the engine Layers they read or call (D226).
+    // note: Mod builds it from the Layers of Engine and of Bridge.Transport, so DevTools imports none of them.
     struct EngineAccess
     {
         RenderService& m_RenderService;

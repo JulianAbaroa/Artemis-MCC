@@ -55,8 +55,8 @@ COMPONENTS = {
                                {"Common", "Services", "Engine.Base", "Control", "Blam.Layout"}),
     "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Service", "Platform", "Engine"}, {"Common", "Services", "Engine.Base"}),
     "Artemis/5_Engine/Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Service", "Platform", "Engine"}, {"Common", "Services", "Engine.Base"}),
-    # The development tools (M7.2 D228, M8 A2 D238): Gui (ImGui backend and widgets), Viewer and Workbench (ex UI); the root
-    # DevTools.Layer is in Mod. They use the engine only through DevTools.EngineAccess (in Viewer).
+    # The development tools (M7.2 D228, M8 A2 D238): Gui (ImGui backend and widgets), Viewer and Workbench (ex UI); the tools
+    # are composed by Mod.Layer. They use the engine only through DevTools.EngineAccess (in Viewer).
     "Artemis/6_DevTools/Gui": ("Artemis.DevTools.Gui.vcxproj", {"Common", "Service", "Platform", "Gui"},
                                {"Common", "Services", "Engine.Base", "Engine.Render"}),
     "Artemis/6_DevTools/Viewer": ("Artemis.DevTools.Viewer.vcxproj", DEVTOOLS_IMPORTS, DEVTOOLS_REFERENCES | {"DevTools.Gui"}),
@@ -86,7 +86,7 @@ CAPTURE_HOOK = "Artemis/5_Engine/Capture/Hook/"
 
 # Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Map.*) are imported only by the wiring of the DLL (future Mod),
 # the development tools (future DevTools) and the tests (02 sec. 3.5, contract of Blam.Map).
-MAP_IMPORTERS = ("Artemis/8_Mod/Mod/Core.ixx", "Artemis/8_Mod/Mod/Core.cpp", "Artemis/8_Mod/Mod/Runtime/", "Artemis/6_DevTools/", "Artemis/8_Mod/Mod/DevTools.Layer.ixx", "Artemis/7_Tests/Tests/")
+MAP_IMPORTERS = ("Artemis/8_Mod/Mod/Mod.Layer.ixx", "Artemis/8_Mod/Mod/Mod.Layer.cpp", "Artemis/8_Mod/Mod/Runtime/", "Artemis/6_DevTools/", "Artemis/7_Tests/Tests/")
 
 # Group queries of the old TagResolverService that nobody called (removed in M3, D180).
 REMOVED_NAMES = ("HasBipd", "HasBloc", "HasCtrl", "HasEqip", "HasMach", "HasProj", "HasScen", "HasVehi", "HasWeap")
@@ -261,7 +261,7 @@ def test_tables_layer_is_pure_and_core_cleans_it():
     layer = Read(f"{RUNTIME}/Tables.Layer.ixx")
     assert re.search(r"\bLayer\(\s*Log&\s+log\s*,\s*Resolved::Layer&\s+resolved\s*\)", layer)
     assert re.search(r"auto\s+Cleanup\(\)\s*->\s*void", layer)
-    assert "m_Tables.Cleanup()" in Read("Artemis/8_Mod/Mod/Core.cpp")
+    assert "m_Tables.Cleanup()" in Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
 
 
 def test_locators_live_in_platform_capture():
@@ -351,7 +351,7 @@ def test_tick_detours_live_in_platform_capture_hook():
     for name, part in (("ExecuteGameFrameDetour", "ExecuteGameFrame"), ("SimulationTicksDetour", "SimulationTicks")):
         assert Read(f"{CAPTURE_HOOK}{name}.ixx").startswith(f"export module Platform.Capture.Hook:{part};")
         assert f"export import :{part};" in Read(CAPTURE_HOOK + "../Platform.Capture.Hook.ixx")
-    layer = Read("Artemis/8_Mod/Mod/Infrastructure/Platform/Platform.Layer.ixx")
+    layer = Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
     for name in TICK_DETOURS:
         assert f"m_{name}.Install();" in layer and f"m_{name}.Uninstall();" in layer
     assert not [p for p in Tracked("Artemis") if os.path.basename(p) == "Export.Tick.Hook.ixx"]
@@ -371,7 +371,7 @@ def test_layers_are_pure_with_a_cleanup(name, path, parameters):
 
 
 def test_core_cleans_the_seven_layers_in_order():
-    text = Read("Artemis/8_Mod/Mod/Core.cpp")
+    text = Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
     order = ["m_Environment", "m_Egocentric", "m_Export", "m_Tables", "m_Map", "m_Resolved"]
     positions = [text.index(f"{member}.Cleanup()") for member in order]
     assert positions == sorted(positions), positions
@@ -548,7 +548,7 @@ def test_bridge_transport_imports_no_engine_module():
 
 
 def test_only_the_layer_and_the_port_import_the_bridge_in_platform():
-    allowed = (f"{PLATFORM}/Platform.Layer.ixx", f"{PLATFORM}/Port/")
+    allowed = (f"{PLATFORM}/Port/",)
     found = [path for path in Sources(PLATFORM) if any(name.startswith("Platform.Bridge.") for name in Imports(path))]
     assert found, "nobody imports the bridge"
     wrong = [path for path in found if not path.startswith(allowed)]
@@ -676,11 +676,10 @@ def test_an_engine_project_is_a_platform_library_that_knows_no_upper_layer(folde
 
 
 def test_the_dll_keeps_only_the_layer_and_the_port_of_platform():
-    assert sorted(Tracked(PLATFORM)) == sorted(
-        [f"{PLATFORM}/Platform.Layer.ixx"] + [p for p in Tracked(f"{PLATFORM}/Port")])
-    assert all(p.startswith(f"{PLATFORM}/Port/") or p == f"{PLATFORM}/Platform.Layer.ixx" for p in Tracked(PLATFORM))
+    assert sorted(Tracked(PLATFORM)) == sorted(p for p in Tracked(f"{PLATFORM}/Port"))
+    assert all(p.startswith(f"{PLATFORM}/Port/") for p in Tracked(PLATFORM))
     on_disk = sorted(os.listdir(os.path.join(REPO, PLATFORM)))
-    assert on_disk == ["Platform.Layer.ixx", "Port"], on_disk
+    assert on_disk == ["Port"], on_disk
 
 
 def test_the_dll_and_the_tests_reference_the_five_engine_projects():
@@ -695,8 +694,7 @@ def test_the_dll_and_the_tests_reference_the_five_engine_projects():
 
 def test_the_dll_does_not_list_the_sources_of_the_engine_projects():
     listed = {include.replace("\\", "/") for include in COMPILE.findall(Read("Artemis/8_Mod/Mod/Artemis.Mod.vcxproj"))}
-    assert not [p for p in listed if p.startswith("Infrastructure/Platform/") and not p.startswith(
-        ("Infrastructure/Platform/Port/", "Infrastructure/Platform/Platform.Layer.ixx"))]
+    assert not [p for p in listed if p.startswith("Infrastructure/Platform/") and not p.startswith("Infrastructure/Platform/Port/")]
 
 
 # ---- M7.1: tick observers, the scene apart from the pipeline, the Gui without Domain, EngineAccess (D222-D227)
@@ -756,7 +754,7 @@ def test_the_development_tools_do_not_import_the_engine_the_runtime_or_the_pipel
     for path in DevToolsSources():
         names = Imports(path)
         wrong = [n for n in names if n == "Platform.Layer" or n.startswith(("Platform.Port", "Runtime.", "Export.Pipeline.System"))
-                 or n == "Core"]
+                 or n == "Mod.Layer"]
         assert not wrong, f"{path}: {wrong}"
         text = Read(path)
         assert "PipelineService" not in text and "BuildForMap" not in text, path
@@ -773,13 +771,12 @@ def test_the_development_tools_import_only_the_data_of_the_pure_components():
 def test_the_tick_observer_is_wired_from_runtime_to_devtools():
     defined = [p for p in Sources("Artemis") if re.search(r"\bstruct ObservedTick\b", Read(p))]
     assert defined == ["Artemis/4_Bridge/Codec/Pipeline/Type/Export.Pipeline.Type.ixx"], defined
-    assert re.search(r"auto OnTick\(const ObservedTick&", Read("Artemis/8_Mod/Mod/DevTools.Layer.ixx"))
-    assert "AddObserver(" in Read("Artemis/8_Mod/Mod/Runtime/Runtime.Layer.ixx")
+    assert re.search(r"auto OnTick\(const ObservedTick&", Read("Artemis/8_Mod/Mod/Mod.Layer.ixx"))
+    assert "AddObserver(" in Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
 
 
 def test_only_the_wiring_and_the_devtools_import_the_development_tools():
-    owned = ("Artemis/8_Mod/Mod/Core.ixx", "Artemis/8_Mod/Mod/Core.cpp", "Artemis/8_Mod/Mod/Runtime/", "Artemis/8_Mod/Mod/DevTools.Layer.ixx",
-             DEVTOOLS + "/")
+    owned = ("Artemis/8_Mod/Mod/Mod.Layer.ixx", "Artemis/8_Mod/Mod/Mod.Layer.cpp", "Artemis/8_Mod/Mod/Runtime/", DEVTOOLS + "/")
     for path in Sources("Artemis"):
         if path.startswith(owned):
             continue
@@ -790,14 +787,14 @@ def test_only_the_wiring_and_the_devtools_import_the_development_tools():
 
 
 def test_the_dll_keeps_only_the_wiring_the_runtime_and_the_platform_port():
-    allowed_files = {"Core.ixx", "Core.cpp", "DllMain.cpp", "DevTools.Layer.ixx", "Artemis.Mod.vcxproj", "Artemis.Mod.vcxproj.filters"}
+    allowed_files = {"Mod.Layer.ixx", "Mod.Layer.cpp", "DllMain.cpp", "Artemis.Mod.vcxproj", "Artemis.Mod.vcxproj.filters"}
     tracked = {path[len("Artemis/8_Mod/Mod/"):].split("/")[0] for path in Tracked("Artemis/8_Mod/Mod")}
     assert tracked == allowed_files | {"Runtime", "Infrastructure", "Proxy"}, tracked
     assert {p for p in Tracked("Artemis/8_Mod/Mod/Infrastructure")} == {p for p in Tracked("Artemis/8_Mod/Mod/Infrastructure/Platform")}
     on_disk = sorted(n for n in os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod")) if not n.endswith(".user"))
     assert on_disk == sorted(allowed_files | {"Runtime", "Infrastructure", "Proxy"}), on_disk
     assert sorted(os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod/Infrastructure"))) == ["Platform"]
-    assert sorted(os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod/Infrastructure/Platform"))) == ["Platform.Layer.ixx", "Port"]
+    assert sorted(os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod/Infrastructure/Platform"))) == ["Port"]
 
 
 def test_the_dll_references_the_devtools_project_and_the_tests_do_not():
@@ -816,7 +813,7 @@ def test_the_dll_references_the_devtools_project_and_the_tests_do_not():
 
 import sys
 sys.path.insert(0, os.path.join(REPO, "Tools"))
-from components import PROJECTS, SOLUTION, Project as ProjectPath  # noqa: E402
+from components import PROJECTS, SOLUTION, Folder as ProjectFolder, Project as ProjectPath  # noqa: E402
 
 SLNX_PROJECT = re.compile(r'<Project\s+Path="([^"]+)"')
 
@@ -863,8 +860,8 @@ ENGINE_LAYERS = (("Artemis/5_Engine/Base", "Engine.Base.Layer", "Engine::Base"),
                  ("Artemis/5_Engine/Match", "Engine.Match.Layer", "Engine::Match"),
                  ("Artemis/5_Engine/Render", "Engine.Render.Layer", "Engine::Render"),
                  ("Artemis/4_Bridge/Transport", "Bridge.Transport.Layer", "Bridge::Transport"))
-# The one that composes the Layers of the engine and connects their lifecycle: Platform.Layer in C.2, Mod.Layer in C.3.
-COMPOSER = "Artemis/8_Mod/Mod/Infrastructure/Platform/Platform.Layer.ixx"
+# The one that composes the Layers of the engine and connects their lifecycle: Platform.Layer in C.2, Mod.Layer since C.3.
+COMPOSER = "Artemis/8_Mod/Mod/Mod.Layer.cpp"
 
 
 @pytest.mark.parametrize("folder,module,namespace", ENGINE_LAYERS)
@@ -899,8 +896,7 @@ def test_the_action_source_is_set_not_built_in():
 
 
 def test_no_thread_receives_the_platform_layer():
-    # Runtime.Layer.ixx is the one that receives it and hands the Layers of the engine to the threads (it goes in C.3).
-    sources = [p for p in Sources("Artemis/8_Mod/Mod/Runtime") if not p.endswith("Runtime.Layer.ixx")]
+    sources = Sources("Artemis/8_Mod/Mod/Runtime")
     assert sources
     for path in sources:
         assert "Platform.Layer" not in Imports(path) and "Platform::Layer" not in Read(path), path
@@ -926,23 +922,31 @@ def Calls(text):
 
 
 def Body(text, opening):
-    start = text.index(opening)
-    end = text.index("\n        }" if opening.startswith("auto") else "\n            });", start)
-    return text[start:end]
+    # The lambdas and the helpers of the wiring have no nested braces: the first closing brace on its own line ends them.
+    pattern = re.escape(opening).replace("auto\\ ", r"auto\s+(?:\w+::)?")
+    start = re.search(pattern, text).start()
+    return text[start:start + re.search(r"\n\s*\}", text[start:]).start()]
+
+
+def Wiring(text):
+    # The registrations: all the text, or the body of WireEngine when the composer has one.
+    marker = re.search(r"auto\s+(?:\w+::)?WireEngine\(\)\s*->\s*bool\s*\{", text)
+    return text[marker.start():text.index("return true;", marker.start())] if marker else text
 
 
 def test_the_lifecycle_wiring_keeps_its_order():
     text = Read(COMPOSER)
-    registers = [text.index(f"{name}(") for name in ("OnEngineInitialized", "OnUnhook", "OnCleanup", "OnInitialized", "OnShutdown")]
+    wiring = Wiring(text)
+    registers = [wiring.index(f"{name}(") for name in ("OnEngineInitialized", "OnUnhook", "OnCleanup", "OnInitialized", "OnShutdown")]
     assert registers == sorted(registers), registers
-    assert Calls(Body(text, "OnEngineInitialized(")) == [
+    assert Calls(Body(wiring, "OnEngineInitialized(")) == [
         "BeginMatch", "PlayerActionDetour.Install", "ResolveFunctions", "SetMachinesDetour.Install", "InstallHostHooks",
         "OpenMapDetour.Install", "ObjectTableLocator", "PlayerTableLocator", "InteractionTableLocator",
         "ExecuteGameFrameDetour.Install", "SimulationTicksDetour.Install"]
-    assert Calls(Body(text, "OnUnhook(")) == [
+    assert Calls(Body(wiring, "OnUnhook(")) == [
         "Stop", "UninstallHostHooks", "SetMachinesDetour.Uninstall", "PlayerActionDetour.Uninstall", "OpenMapDetour.Uninstall",
         "SimulationTicksDetour.Uninstall", "ExecuteGameFrameDetour.Uninstall"]
-    assert Calls(Body(text, "OnCleanup(")) == ["LocalUserStore", "PlayerActionStore", "BotStore", "CaptureService"]
+    assert Calls(Body(wiring, "OnCleanup(")) == ["LocalUserStore", "PlayerActionStore", "BotStore", "CaptureService"]
     hosts = ["LocalUserGetPlayerDetour", "LocalUserGetProfileDetour", "LocalUserGetGamepadMappingDetour", "CanAcceptAnyJoinRequestDetour",
              "SessionJoinCheckPatch", "InputUpdateDetour"]
     assert Calls(Body(text, "auto InstallHostHooks()")) == [f"{name}.Install" for name in hosts]
@@ -950,3 +954,48 @@ def test_the_lifecycle_wiring_keeps_its_order():
     assert Calls(Body(text, "auto ShutdownRenderAndInput()")) == [
         "WndProcDetour.Uninstall", "GetRawInputDataDetour.Uninstall", "RequestShutdown", "WaitForShutdown",
         "PresentDetour.Uninstall", "ResizeBuffersDetour.Uninstall", "Shutdown"]
+
+
+# ---- M8 C.3: one root Layer for the DLL (D244)
+
+MOD = "Artemis/8_Mod/Mod"
+MOD_MEMBER = re.compile(r"^\s+[\w:<>]+\s+(m_\w+)\s*\{", re.MULTILINE)
+
+
+def test_mod_has_one_root():
+    assert Tracked(f"{MOD}/Mod.Layer.ixx") and Tracked(f"{MOD}/Mod.Layer.cpp")
+    for old in ("Core.ixx", "Core.cpp", "DevTools.Layer.ixx", "Runtime/Runtime.Layer.ixx", "Infrastructure/Platform/Platform.Layer.ixx"):
+        assert not Tracked(f"{MOD}/{old}"), old
+        assert not os.path.exists(os.path.join(REPO, MOD, old)), old
+    gone = {"Core", "Runtime.Layer", "DevTools.Layer", "Platform.Layer"}
+    for path in Sources("Artemis"):
+        module = MODULE_LINE.search(Read(path))
+        assert not (module and module.group(1) in gone), path
+        assert not gone & set(Imports(path)), path
+    assert "Mod.Layer" in Imports(f"{MOD}/DllMain.cpp")
+
+
+def test_mod_wires_the_engine_before_the_tools():
+    members = MOD_MEMBER.findall(Read(f"{MOD}/Mod.Layer.ixx"))
+    assert members == [
+        "m_Module", "m_IsMinHookReady", "m_Service", "m_Base", "m_Capture", "m_Control", "m_Match", "m_Render", "m_BridgeEngineAdapter",
+        "m_Transport", "m_BridgeActionSource", "m_IsEngineWired", "m_Preferences", "m_EngineAccess", "m_Map", "m_Resolved", "m_Tables",
+        "m_Environment", "m_Egocentric", "m_Export", "m_Gui", "m_Viewer", "m_UI", "m_Main", "m_AI", "m_Bench", "m_Bridge", "m_Dump",
+        "m_AIThread", "m_BenchThread", "m_BridgeThread", "m_DumpThread"], members
+    assert members.index("m_IsEngineWired") > members.index("m_BridgeActionSource")
+    assert members.index("m_IsEngineWired") < members.index("m_Gui")
+    assert members[-4:] == ["m_AIThread", "m_BenchThread", "m_BridgeThread", "m_DumpThread"]
+
+
+STATEFUL_PROJECTS = ("Services", "Blam.Map", "Blam.MapModel", "Blam.Runtime", "Perception", "Views", "Bridge.Codec", "Bridge.Transport",
+                     "Engine.Base", "Engine.Capture", "Engine.Control", "Engine.Match", "Engine.Render", "DevTools.Gui", "DevTools.Viewer",
+                     "DevTools.Workbench", "Mod")
+
+
+@pytest.mark.parametrize("project", [name for _, _, name in PROJECTS])
+def test_every_stateful_project_has_one_layer(project):
+    layers = [p for p in Sources(ProjectFolder(project)) if p.endswith(".Layer.ixx")]
+    if project in STATEFUL_PROJECTS:
+        assert len(layers) == 1, layers
+    else:
+        assert not layers, layers
