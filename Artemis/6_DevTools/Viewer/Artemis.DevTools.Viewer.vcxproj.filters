@@ -1,0 +1,389 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Access">
+      <UniqueIdentifier>{e05dfa47-353d-5f83-afcb-356dbc54522e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{c4b8be14-6e64-5d59-88ee-573b664f5da8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera\State">
+      <UniqueIdentifier>{d3d463e1-b99f-5413-bb68-c45e24c70051}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera\System">
+      <UniqueIdentifier>{ca787f3d-66ae-5a2c-a33f-6b540b4bfad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera\Type">
+      <UniqueIdentifier>{f15025bb-b4b8-566e-a8d1-a553fe11d854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Collidable">
+      <UniqueIdentifier>{782d3832-0799-5c99-96aa-2d76897ef6b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Collidable\State">
+      <UniqueIdentifier>{dfdcd3c8-63db-5b61-97e0-16bff8cae28e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Collidable\System">
+      <UniqueIdentifier>{32a37c9e-a6f5-50d4-8caf-3c1917270d0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Control">
+      <UniqueIdentifier>{eb720635-dc81-5bf4-8a74-6c8d04aec9a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Control\System">
+      <UniqueIdentifier>{5e0a4fce-0568-5033-9349-621767353b4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format">
+      <UniqueIdentifier>{83699432-227f-557f-93d3-01f8e166c85a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System">
+      <UniqueIdentifier>{a43b8fa8-ab37-5ea3-bc81-96234611ec0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System\Affordance">
+      <UniqueIdentifier>{602600a9-a1b6-5f65-92c8-28d244f4f240}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System\Interaction">
+      <UniqueIdentifier>{d99a49bb-e180-5723-aa42-1d860a6ecd98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry">
+      <UniqueIdentifier>{ccc640ec-27d8-58be-9f35-61d245e9f9b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Geometry\System">
+      <UniqueIdentifier>{ab65ba7b-63d2-5dfd-a435-92d48fd3d46b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hud">
+      <UniqueIdentifier>{59897248-e655-57ae-93b1-f76699e9f50a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hud\System">
+      <UniqueIdentifier>{d4747710-ee29-57ac-90ee-6867d07e0701}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hud\System\Label">
+      <UniqueIdentifier>{d2140e8f-abd4-5783-8b78-6104c7f7ac99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hud\System\Panel">
+      <UniqueIdentifier>{fc1f93c1-ed0e-529c-b2f2-38281739efca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hud\Type">
+      <UniqueIdentifier>{c759c1c8-4136-5133-87c4-a8515b515742}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Map">
+      <UniqueIdentifier>{1be10f82-9669-50dc-8807-e856b249f8d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Map\System">
+      <UniqueIdentifier>{cfa7d909-42fb-5c6d-b726-a5cc406123fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Map\Type">
+      <UniqueIdentifier>{d13cc2bc-8b2d-5a20-a9ff-957b2def72f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Options">
+      <UniqueIdentifier>{b43b2473-e850-5fdb-8ab7-51360ec201e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Options\State">
+      <UniqueIdentifier>{e9f1183d-e828-5268-aa68-dc3647e19945}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Options\Type">
+      <UniqueIdentifier>{7342d52c-799a-558c-bd84-8cc9b8c6aefc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Overlay">
+      <UniqueIdentifier>{82d2122d-d8fb-584e-b436-bce02ab2d01d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Overlay\State">
+      <UniqueIdentifier>{7bcc0ae3-2a9c-56ca-963c-7b0418830cce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Overlay\Type">
+      <UniqueIdentifier>{f3cba828-ffc4-54c8-810f-8f2e0ee0cd02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Palette">
+      <UniqueIdentifier>{b65065b9-cb7e-5e81-bbd5-553c203a9a90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Palette\System">
+      <UniqueIdentifier>{dff9407d-66a2-5051-a7f6-ae14616a0584}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Palette\Type">
+      <UniqueIdentifier>{582ea80e-b08c-5193-8ed4-7ebd04da05a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Profiler">
+      <UniqueIdentifier>{9daf19fb-3461-5a23-81c6-f6059446e74d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Profiler\System">
+      <UniqueIdentifier>{a745fd30-8be1-5bb0-93c3-69516ee7bea3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Profiler\Type">
+      <UniqueIdentifier>{13c67f37-ae43-52f9-9a13-6b7406766b9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{9785590d-ddab-57f3-bb0e-09fa9e519989}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\System">
+      <UniqueIdentifier>{f4373108-8790-59f1-ac37-96bed769ca9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Selection">
+      <UniqueIdentifier>{b6ad4ffa-0ada-5982-92c6-b538d36c0afa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Selection\State">
+      <UniqueIdentifier>{a042163b-f7ab-556c-9ba7-5da823075f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Selection\System">
+      <UniqueIdentifier>{596e829d-2229-5baf-89d0-2265e6790c8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Selection\Type">
+      <UniqueIdentifier>{81ae1159-13c0-51b4-b300-6fecf4990baf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Style">
+      <UniqueIdentifier>{7eef8d43-1c71-5a59-80e4-63c25f05db9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Style\Type">
+      <UniqueIdentifier>{890723a9-78b6-519a-a175-4cbd3759e298}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Viewer.Layer.ixx" />
+    <ClCompile Include="Access\DevTools.Type.ixx">
+      <Filter>Access</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\Viewer.Format.System.ixx">
+      <Filter>Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Viewer.Map.System.ixx">
+      <Filter>Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\State\CameraStore.cpp">
+      <Filter>Camera\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\State\CameraStore.ixx">
+      <Filter>Camera\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\System\CameraService.cpp">
+      <Filter>Camera\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\System\CameraService.ixx">
+      <Filter>Camera\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\Type\Viewer.Camera.Type.ixx">
+      <Filter>Camera\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Collidable\State\CollidableStore.ixx">
+      <Filter>Collidable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Collidable\System\CollidableSceneService.cpp">
+      <Filter>Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Collidable\System\CollidableSceneService.ixx">
+      <Filter>Collidable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\System\ControlService.cpp">
+      <Filter>Control\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Control\System\ControlService.ixx">
+      <Filter>Control\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry\System\ZoneGeometry.cpp">
+      <Filter>Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry\System\ZoneGeometry.ixx">
+      <Filter>Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\HudService.cpp">
+      <Filter>Hud\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\HudService.ixx">
+      <Filter>Hud\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\Type\Viewer.Hud.Type.ixx">
+      <Filter>Hud\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\AimPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\AimPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\DynamicPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\DynamicPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\FixturePass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\FixturePass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\LimitsPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\LimitsPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\MapPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\MapPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\MapService.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\MapService.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\RaycastPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\RaycastPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\ZonePass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\ZonePass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Type\Viewer.Map.Type.ixx">
+      <Filter>Map\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Options\State\OptionsStore.cpp">
+      <Filter>Options\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Options\State\OptionsStore.ixx">
+      <Filter>Options\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Options\Type\Viewer.Options.Type.ixx">
+      <Filter>Options\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Overlay\State\OverlayStore.cpp">
+      <Filter>Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Overlay\State\OverlayStore.ixx">
+      <Filter>Overlay\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Overlay\Type\Viewer.Overlay.Type.ixx">
+      <Filter>Overlay\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Palette\System\PaletteService.cpp">
+      <Filter>Palette\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Palette\System\PaletteService.ixx">
+      <Filter>Palette\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Palette\Type\Viewer.Palette.Type.ixx">
+      <Filter>Palette\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Profiler\System\FrameProfiler.cpp">
+      <Filter>Profiler\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Profiler\System\FrameProfiler.ixx">
+      <Filter>Profiler\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Profiler\Type\Viewer.Profiler.Type.ixx">
+      <Filter>Profiler\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\System\SceneService.cpp">
+      <Filter>Scene\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\System\SceneService.ixx">
+      <Filter>Scene\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Selection\State\SelectionStore.cpp">
+      <Filter>Selection\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Selection\State\SelectionStore.ixx">
+      <Filter>Selection\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Selection\System\SelectionService.cpp">
+      <Filter>Selection\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Selection\System\SelectionService.ixx">
+      <Filter>Selection\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Selection\Type\Viewer.Selection.Type.ixx">
+      <Filter>Selection\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Style\Type\Viewer.Style.Type.ixx">
+      <Filter>Style\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Affordance\AffordanceFormater.cpp">
+      <Filter>Format\System\Affordance</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Affordance\AffordanceFormater.ixx">
+      <Filter>Format\System\Affordance</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Interaction\InteractionFormater.cpp">
+      <Filter>Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Interaction\InteractionFormater.ixx">
+      <Filter>Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\FixtureLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\FixtureLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\HealthLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\HealthLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\InteractionLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\InteractionLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\LabelCanvas.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\LabelCanvas.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\LabelService.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\LabelService.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\ObjectLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\ObjectLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\PlayerLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\PlayerLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\VehicleLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\VehicleLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\AffordancesHud.cpp">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\AffordancesHud.ixx">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\CollidablesHud.cpp">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\CollidablesHud.ixx">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\FixturesHud.cpp">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\FixturesHud.ixx">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\HealthsHud.cpp">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\HealthsHud.ixx">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

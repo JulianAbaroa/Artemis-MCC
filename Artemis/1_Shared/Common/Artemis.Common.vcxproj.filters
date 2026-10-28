@@ -162,29 +162,29 @@
     <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx">
       <Filter>ZoneShape\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Semantic\Common.Semantic.Type.ixx">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="Semantic\Type\SemanticCatalog.ixx">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="Semantic\Type\SemanticEnum.ixx">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="Semantic\Type\SemanticEventKey.ixx">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="Semantic\Type\SemanticSubtype.ixx">
-      <Filter></Filter>
-    </ClCompile>
-    <ClCompile Include="Tag\Type\Common.Tag.Type.ixx">
-      <Filter></Filter>
-    </ClCompile>
     <ClCompile Include="Stream\System\Common.Stream.System.cpp">
       <Filter>Stream\System</Filter>
     </ClCompile>
     <ClCompile Include="Stream\System\Common.Stream.System.ixx">
       <Filter>Stream\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticCatalog.ixx">
+      <Filter>Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticEnum.ixx">
+      <Filter>Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticEventKey.ixx">
+      <Filter>Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Type\SemanticSubtype.ixx">
+      <Filter>Semantic\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Semantic\Common.Semantic.Type.ixx">
+      <Filter>Semantic</Filter>
+    </ClCompile>
+    <ClCompile Include="Tag\Type\Common.Tag.Type.ixx">
+      <Filter>Tag\Type</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

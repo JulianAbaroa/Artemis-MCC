@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{A76820F4-6138-593A-95DE-2ED036C6B5E5}</ProjectGuid>
+    <RootNamespace>Artemis_DevTools_Workbench</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.DevTools.Workbench</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ArtemisRoot);$(ArtemisRoot)External\imgui;$(ArtemisRoot)External\stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\1_Shared\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\1_Shared\Contract\Artemis.Contract.vcxproj">
+      <Project>{069C43CD-A84E-5139-BE63-DB6C494AF9C9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\1_Shared\Services\Artemis.Services.vcxproj">
+      <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Map\Artemis.Blam.Map.vcxproj">
+      <Project>{9F65C23E-E36E-51DB-88A7-496F7A6CC46E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\MapModel\Artemis.Blam.MapModel.vcxproj">
+      <Project>{DC8EE9AD-0601-534E-87A7-8FCCB10DA489}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Runtime\Artemis.Blam.Runtime.vcxproj">
+      <Project>{E2A098F8-6B58-5B46-9131-61462C9FD8A6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\3_Domain\Control\Artemis.Control.vcxproj">
+      <Project>{07AA1D03-E395-5AC6-8BB5-39A9B9C2490D}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\3_Domain\Perception\Artemis.Perception.vcxproj">
+      <Project>{17391791-CA10-5F6A-8A15-23AE6A6F6218}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\3_Domain\Views\Artemis.Views.vcxproj">
+      <Project>{B9EA51AF-D05F-5CF0-9215-EF210F49C640}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\4_Bridge\Codec\Artemis.Bridge.Codec.vcxproj">
+      <Project>{E34AADE0-30F9-535D-82CD-259F1A1D2AE3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\4_Bridge\Transport\Artemis.Bridge.Transport.vcxproj">
+      <Project>{E9F6DECA-F3D8-5050-BEA2-1A145165CA3C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Base\Artemis.Engine.Base.vcxproj">
+      <Project>{05800B63-82FC-5238-A677-B15CEEDB5242}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Capture\Artemis.Engine.Capture.vcxproj">
+      <Project>{D5DEED6A-0319-5C03-8121-B71F9BE29C8F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Control\Artemis.Engine.Control.vcxproj">
+      <Project>{31DCAE1D-3AE2-5D14-B669-1F22FAFE48A8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Match\Artemis.Engine.Match.vcxproj">
+      <Project>{EFF36A5F-4D8A-516F-99F3-0D15E4BBBA79}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Render\Artemis.Engine.Render.vcxproj">
+      <Project>{F517C458-8281-563D-B238-8BBEFD42FDF3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Gui\Artemis.DevTools.Gui.vcxproj">
+      <Project>{60BC2154-AB80-51DB-A404-0A76212EC7F8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Viewer\Artemis.DevTools.Viewer.vcxproj">
+      <Project>{1938909D-459E-54D6-B1A7-E55698AF6735}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="UI.Layer.cpp" />
+    <ClCompile Include="UI.Layer.ixx" />
+    <ClCompile Include="Bench\State\BenchUIStore.cpp" />
+    <ClCompile Include="Bench\State\BenchUIStore.ixx" />
+    <ClCompile Include="Bench\System\BenchUIService.cpp" />
+    <ClCompile Include="Bench\System\BenchUIService.ixx" />
+    <ClCompile Include="Bench\Type\UI.Bench.Type.ixx" />
+    <ClCompile Include="Capture\State\CaptureUIStore.cpp" />
+    <ClCompile Include="Capture\State\CaptureUIStore.ixx" />
+    <ClCompile Include="Capture\System\CaptureUIService.cpp" />
+    <ClCompile Include="Capture\System\CaptureUIService.ixx" />
+    <ClCompile Include="Capture\Type\UI.Capture.Type.ixx" />
+    <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.cpp" />
+    <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.ixx" />
+    <ClCompile Include="DefinitionsInspector\Type\UI.DefinitionsInspector.Type.ixx" />
+    <ClCompile Include="Hotkey\State\HotkeyUIStore.cpp" />
+    <ClCompile Include="Hotkey\State\HotkeyUIStore.ixx" />
+    <ClCompile Include="Hotkey\System\HotkeyUIService.cpp" />
+    <ClCompile Include="Hotkey\System\HotkeyUIService.ixx" />
+    <ClCompile Include="Hotkey\Type\UI.Hotkey.Type.ixx" />
+    <ClCompile Include="Icon\System\IconLoader.cpp" />
+    <ClCompile Include="Icon\System\IconLoader.ixx" />
+    <ClCompile Include="Icon\Type\UI.Icon.Type.ixx" />
+    <ClCompile Include="Launcher\State\LauncherUIStore.cpp" />
+    <ClCompile Include="Launcher\State\LauncherUIStore.ixx" />
+    <ClCompile Include="Launcher\System\LauncherUIService.cpp" />
+    <ClCompile Include="Launcher\System\LauncherUIService.ixx" />
+    <ClCompile Include="Launcher\Type\UI.Launcher.Type.ixx" />
+    <ClCompile Include="Logs\State\LogsUIStore.cpp" />
+    <ClCompile Include="Logs\State\LogsUIStore.ixx" />
+    <ClCompile Include="Logs\System\LogsUIService.cpp" />
+    <ClCompile Include="Logs\System\LogsUIService.ixx" />
+    <ClCompile Include="Logs\Type\UI.Logs.Type.ixx" />
+    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.cpp" />
+    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.ixx" />
+    <ClCompile Include="ObjectTable\System\ObjectTableUIService.cpp" />
+    <ClCompile Include="ObjectTable\System\ObjectTableUIService.ixx" />
+    <ClCompile Include="ObjectTable\Type\UI.ObjectTable.Type.ixx" />
+    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.cpp" />
+    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.ixx" />
+    <ClCompile Include="PlayerTable\System\PlayerTableUIService.cpp" />
+    <ClCompile Include="PlayerTable\System\PlayerTableUIService.ixx" />
+    <ClCompile Include="PlayerTable\Type\UI.PlayerTable.Type.ixx" />
+    <Image Include="Resources\Icons\cube-solid.png" />
+    <Image Include="Resources\Icons\file-lines-solid.png" />
+    <Image Include="Resources\Icons\gear-solid.png" />
+    <None Include="Resources\Icons\GenerateIconData.py" />
+    <ClCompile Include="Resources\Icons\IconData.cpp" />
+    <ClInclude Include="Resources\Icons\IconData.h" />
+    <Image Include="Resources\Icons\map-solid.png" />
+    <Image Include="Resources\Icons\person-rifle-solid.png" />
+    <ClCompile Include="Settings\System\SettingsUIService.cpp" />
+    <ClCompile Include="Settings\System\SettingsUIService.ixx" />
+    <ClCompile Include="Simulation\State\SimulationUIStore.cpp" />
+    <ClCompile Include="Simulation\State\SimulationUIStore.ixx" />
+    <ClCompile Include="Simulation\System\SimulationUIService.cpp" />
+    <ClCompile Include="Simulation\System\SimulationUIService.ixx" />
+    <ClCompile Include="Simulation\Type\UI.Simulation.Type.ixx" />
+    <ClCompile Include="TickDump\State\TickDumpUIStore.cpp" />
+    <ClCompile Include="TickDump\State\TickDumpUIStore.ixx" />
+    <ClCompile Include="TickDump\System\TickDumpUIService.cpp" />
+    <ClCompile Include="TickDump\System\TickDumpUIService.ixx" />
+    <ClCompile Include="TickDump\Type\UI.TickDump.Type.ixx" />
+    <ClCompile Include="TickTrace\State\TickTraceUIStore.cpp" />
+    <ClCompile Include="TickTrace\State\TickTraceUIStore.ixx" />
+    <ClCompile Include="TickTrace\System\TickTraceUIService.cpp" />
+    <ClCompile Include="TickTrace\System\TickTraceUIService.ixx" />
+    <ClCompile Include="TickTrace\Type\UI.TickTrace.Type.ixx" />
+    <ClCompile Include="$(ArtemisRoot)External\stb\stb_implementation.cpp" />
+    <ClInclude Include="$(ArtemisRoot)External\stb\stb_image.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

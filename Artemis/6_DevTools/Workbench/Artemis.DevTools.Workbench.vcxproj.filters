@@ -1,0 +1,369 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Bench">
+      <UniqueIdentifier>{935f48b7-c896-53c2-a46b-c9a4712310b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Bench\State">
+      <UniqueIdentifier>{513e3727-de45-54fd-bff6-a4f28cd8c0a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Bench\System">
+      <UniqueIdentifier>{46c6bdc5-5615-5f52-aefd-060307f73bc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Bench\Type">
+      <UniqueIdentifier>{feee653b-4972-5cb7-ba62-adcaca013cc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Capture">
+      <UniqueIdentifier>{78388eac-ccae-5730-83b3-109c066b2435}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Capture\State">
+      <UniqueIdentifier>{3756723a-8242-5ea4-8185-bff6ad6853e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Capture\System">
+      <UniqueIdentifier>{6257d534-d9df-5e7e-9ca9-46f82df423de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Capture\Type">
+      <UniqueIdentifier>{0fa94fb2-5f9b-54e1-8c36-a2eb66287c53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DefinitionsInspector">
+      <UniqueIdentifier>{f317db77-99c9-53ff-985f-148f334ea383}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DefinitionsInspector\System">
+      <UniqueIdentifier>{31fe0d84-e391-58cc-b4c8-8b1af5f69d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DefinitionsInspector\Type">
+      <UniqueIdentifier>{51a35efb-b888-5823-a279-dc090940a85f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{02701061-41ef-56f4-b334-afdfe9d3d9de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\stb">
+      <UniqueIdentifier>{6409241c-3422-5cc6-bac1-a19e27694794}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hotkey">
+      <UniqueIdentifier>{74fa8dfb-90ab-5751-b177-a29f6c819035}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hotkey\State">
+      <UniqueIdentifier>{79d74d88-a5e9-5b60-987d-7679fd8f30a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hotkey\System">
+      <UniqueIdentifier>{a049d686-65a7-5485-a45b-0305d9aabc61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hotkey\Type">
+      <UniqueIdentifier>{a0a26d67-05f7-5426-a215-bbe0a03a48c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Icon">
+      <UniqueIdentifier>{1bbc0cf0-0cc4-5b63-9d8e-e9f62eba2314}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Icon\System">
+      <UniqueIdentifier>{d131ebd7-de56-51ae-b054-65fc00135b8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Icon\Type">
+      <UniqueIdentifier>{c542eb45-16f4-54ff-90ae-7ebb08badb3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Launcher">
+      <UniqueIdentifier>{c2b3d704-8e9f-5dee-99d5-fb028afcda00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Launcher\State">
+      <UniqueIdentifier>{143e920d-bc8d-507d-bd07-a29611c82b65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Launcher\System">
+      <UniqueIdentifier>{7e8ffce1-43dd-57ef-b884-3287a2ad5c21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Launcher\Type">
+      <UniqueIdentifier>{69caf15c-3432-51af-b5ec-f9dd96061208}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logs">
+      <UniqueIdentifier>{de17bf24-a8b3-5b6a-9210-9e0b49f91018}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logs\State">
+      <UniqueIdentifier>{eae3b946-55e5-57c7-8eeb-62b23214e513}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logs\System">
+      <UniqueIdentifier>{706bf292-a8d7-5153-9a08-873b76c18edf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logs\Type">
+      <UniqueIdentifier>{d4e200c8-a704-541b-b777-1382a8e4b450}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ObjectTable">
+      <UniqueIdentifier>{6f014d19-0894-5103-8a0c-a9291a5b8a71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ObjectTable\State">
+      <UniqueIdentifier>{abe724b4-5a20-5e4f-a270-3c24cc3a0f5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ObjectTable\System">
+      <UniqueIdentifier>{98dc0cc7-d815-5b5c-b7cb-6567f9feca4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ObjectTable\Type">
+      <UniqueIdentifier>{c239bcb0-4fbb-54e2-a560-3d942276fa38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PlayerTable">
+      <UniqueIdentifier>{e3d0f1de-b48b-5422-9e5b-d523c1c290e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PlayerTable\State">
+      <UniqueIdentifier>{531b19d9-886c-5542-bd3d-beea9ad69198}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PlayerTable\System">
+      <UniqueIdentifier>{bdd6e4fa-1ae2-5424-b15c-9438b8f371a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PlayerTable\Type">
+      <UniqueIdentifier>{d2c23f21-3f8c-538a-8e80-0cedc7ffeb1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c488358f-1030-5bf1-82e9-066f0232bfce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Icons">
+      <UniqueIdentifier>{ef2866af-632d-50bf-9de5-5a24be3ad064}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Settings">
+      <UniqueIdentifier>{3cb77fa2-a578-5d05-a98b-403934efdb35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Settings\System">
+      <UniqueIdentifier>{5d2cfb69-8381-5c7c-8da2-e251d45568dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation">
+      <UniqueIdentifier>{91e12198-6623-5e41-bafd-e81d4f9385ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\State">
+      <UniqueIdentifier>{ec8f9879-754a-5e22-a3e2-88f583432236}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\System">
+      <UniqueIdentifier>{527018f6-b1b7-5b9f-bad0-390a08cdff08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation\Type">
+      <UniqueIdentifier>{2b4d9798-d149-5942-afc7-457f6bb0ce58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickDump">
+      <UniqueIdentifier>{d07025bb-3421-537d-ab6e-51c929163914}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickDump\State">
+      <UniqueIdentifier>{bc5d4f6f-5325-5d6f-a344-c01af41df8c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickDump\System">
+      <UniqueIdentifier>{3d04d595-12e1-5f48-b37f-803dc096df42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickDump\Type">
+      <UniqueIdentifier>{94ad5c28-2ebd-5925-9ae3-8ac35da27653}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickTrace">
+      <UniqueIdentifier>{a318354e-ea71-58c9-a40e-dda0b31e9d6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickTrace\State">
+      <UniqueIdentifier>{ef8d924e-efa6-5ecb-94b4-165c341a50aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickTrace\System">
+      <UniqueIdentifier>{750127a2-d422-5f39-a0b5-8cba75cb4df9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TickTrace\Type">
+      <UniqueIdentifier>{2459d469-7387-5283-81f4-cc6c3cf3c313}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="UI.Layer.cpp" />
+    <ClCompile Include="UI.Layer.ixx" />
+    <ClCompile Include="Bench\State\BenchUIStore.cpp">
+      <Filter>Bench\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Bench\State\BenchUIStore.ixx">
+      <Filter>Bench\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Bench\System\BenchUIService.cpp">
+      <Filter>Bench\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Bench\System\BenchUIService.ixx">
+      <Filter>Bench\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Bench\Type\UI.Bench.Type.ixx">
+      <Filter>Bench\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Capture\State\CaptureUIStore.cpp">
+      <Filter>Capture\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Capture\State\CaptureUIStore.ixx">
+      <Filter>Capture\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Capture\System\CaptureUIService.cpp">
+      <Filter>Capture\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Capture\System\CaptureUIService.ixx">
+      <Filter>Capture\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Capture\Type\UI.Capture.Type.ixx">
+      <Filter>Capture\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.cpp">
+      <Filter>DefinitionsInspector\System</Filter>
+    </ClCompile>
+    <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.ixx">
+      <Filter>DefinitionsInspector\System</Filter>
+    </ClCompile>
+    <ClCompile Include="DefinitionsInspector\Type\UI.DefinitionsInspector.Type.ixx">
+      <Filter>DefinitionsInspector\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Hotkey\State\HotkeyUIStore.cpp">
+      <Filter>Hotkey\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Hotkey\State\HotkeyUIStore.ixx">
+      <Filter>Hotkey\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Hotkey\System\HotkeyUIService.cpp">
+      <Filter>Hotkey\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hotkey\System\HotkeyUIService.ixx">
+      <Filter>Hotkey\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hotkey\Type\UI.Hotkey.Type.ixx">
+      <Filter>Hotkey\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Icon\System\IconLoader.cpp">
+      <Filter>Icon\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Icon\System\IconLoader.ixx">
+      <Filter>Icon\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Icon\Type\UI.Icon.Type.ixx">
+      <Filter>Icon\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\State\LauncherUIStore.cpp">
+      <Filter>Launcher\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\State\LauncherUIStore.ixx">
+      <Filter>Launcher\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\System\LauncherUIService.cpp">
+      <Filter>Launcher\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\System\LauncherUIService.ixx">
+      <Filter>Launcher\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Type\UI.Launcher.Type.ixx">
+      <Filter>Launcher\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Logs\State\LogsUIStore.cpp">
+      <Filter>Logs\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Logs\State\LogsUIStore.ixx">
+      <Filter>Logs\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Logs\System\LogsUIService.cpp">
+      <Filter>Logs\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Logs\System\LogsUIService.ixx">
+      <Filter>Logs\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Logs\Type\UI.Logs.Type.ixx">
+      <Filter>Logs\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.cpp">
+      <Filter>ObjectTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.ixx">
+      <Filter>ObjectTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectTable\System\ObjectTableUIService.cpp">
+      <Filter>ObjectTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectTable\System\ObjectTableUIService.ixx">
+      <Filter>ObjectTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectTable\Type\UI.ObjectTable.Type.ixx">
+      <Filter>ObjectTable\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.cpp">
+      <Filter>PlayerTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.ixx">
+      <Filter>PlayerTable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerTable\System\PlayerTableUIService.cpp">
+      <Filter>PlayerTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerTable\System\PlayerTableUIService.ixx">
+      <Filter>PlayerTable\System</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerTable\Type\UI.PlayerTable.Type.ixx">
+      <Filter>PlayerTable\Type</Filter>
+    </ClCompile>
+    <Image Include="Resources\Icons\cube-solid.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Resources\Icons\file-lines-solid.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Resources\Icons\gear-solid.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <None Include="Resources\Icons\GenerateIconData.py">
+      <Filter>Resources\Icons</Filter>
+    </None>
+    <ClCompile Include="Resources\Icons\IconData.cpp">
+      <Filter>Resources\Icons</Filter>
+    </ClCompile>
+    <ClInclude Include="Resources\Icons\IconData.h">
+      <Filter>Resources\Icons</Filter>
+    </ClInclude>
+    <Image Include="Resources\Icons\map-solid.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <Image Include="Resources\Icons\person-rifle-solid.png">
+      <Filter>Resources\Icons</Filter>
+    </Image>
+    <ClCompile Include="Settings\System\SettingsUIService.cpp">
+      <Filter>Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Settings\System\SettingsUIService.ixx">
+      <Filter>Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\State\SimulationUIStore.cpp">
+      <Filter>Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\State\SimulationUIStore.ixx">
+      <Filter>Simulation\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\System\SimulationUIService.cpp">
+      <Filter>Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\System\SimulationUIService.ixx">
+      <Filter>Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\Type\UI.Simulation.Type.ixx">
+      <Filter>Simulation\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="TickDump\State\TickDumpUIStore.cpp">
+      <Filter>TickDump\State</Filter>
+    </ClCompile>
+    <ClCompile Include="TickDump\State\TickDumpUIStore.ixx">
+      <Filter>TickDump\State</Filter>
+    </ClCompile>
+    <ClCompile Include="TickDump\System\TickDumpUIService.cpp">
+      <Filter>TickDump\System</Filter>
+    </ClCompile>
+    <ClCompile Include="TickDump\System\TickDumpUIService.ixx">
+      <Filter>TickDump\System</Filter>
+    </ClCompile>
+    <ClCompile Include="TickDump\Type\UI.TickDump.Type.ixx">
+      <Filter>TickDump\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="TickTrace\State\TickTraceUIStore.cpp">
+      <Filter>TickTrace\State</Filter>
+    </ClCompile>
+    <ClCompile Include="TickTrace\State\TickTraceUIStore.ixx">
+      <Filter>TickTrace\State</Filter>
+    </ClCompile>
+    <ClCompile Include="TickTrace\System\TickTraceUIService.cpp">
+      <Filter>TickTrace\System</Filter>
+    </ClCompile>
+    <ClCompile Include="TickTrace\System\TickTraceUIService.ixx">
+      <Filter>TickTrace\System</Filter>
+    </ClCompile>
+    <ClCompile Include="TickTrace\Type\UI.TickTrace.Type.ixx">
+      <Filter>TickTrace\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\stb\stb_implementation.cpp">
+      <Filter>External\stb</Filter>
+    </ClCompile>
+    <ClInclude Include="$(ArtemisRoot)External\stb\stb_image.h">
+      <Filter>External\stb</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

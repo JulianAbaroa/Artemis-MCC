@@ -98,14 +98,21 @@
     <ProjectReference Include="..\..\5_Engine\Render\Artemis.Engine.Render.vcxproj">
       <Project>{F517C458-8281-563D-B238-8BBEFD42FDF3}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\6_DevTools\DevTools\Artemis.DevTools.vcxproj">
-      <Project>{EFD9BA9E-AF4C-5446-9755-2BBCBF4B8BB3}</Project>
+    <ProjectReference Include="..\..\6_DevTools\Gui\Artemis.DevTools.Gui.vcxproj">
+      <Project>{60BC2154-AB80-51DB-A404-0A76212EC7F8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\6_DevTools\Viewer\Artemis.DevTools.Viewer.vcxproj">
+      <Project>{1938909D-459E-54D6-B1A7-E55698AF6735}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\6_DevTools\Workbench\Artemis.DevTools.Workbench.vcxproj">
+      <Project>{A76820F4-6138-593A-95DE-2ED036C6B5E5}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="DevTools.Layer.ixx" />
     <ClInclude Include="Proxy\ProxyExports.h" />
     <ClCompile Include="Runtime\Runtime.Layer.ixx" />
     <ClCompile Include="Runtime\Runtime.Thread.ixx" />

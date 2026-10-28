@@ -30,7 +30,9 @@
     <Project Path="Artemis/5_Engine/Render/Artemis.Engine.Render.vcxproj" Id="f517c458-8281-563d-b238-8bbefd42fdf3" />
   </Folder>
   <Folder Name="/6_DevTools/">
-    <Project Path="Artemis/6_DevTools/DevTools/Artemis.DevTools.vcxproj" Id="efd9ba9e-af4c-5446-9755-2bbcbf4b8bb3" />
+    <Project Path="Artemis/6_DevTools/Gui/Artemis.DevTools.Gui.vcxproj" Id="60bc2154-ab80-51db-a404-0a76212ec7f8" />
+    <Project Path="Artemis/6_DevTools/Viewer/Artemis.DevTools.Viewer.vcxproj" Id="1938909d-459e-54d6-b1a7-e55698af6735" />
+    <Project Path="Artemis/6_DevTools/Workbench/Artemis.DevTools.Workbench.vcxproj" Id="a76820f4-6138-593a-95de-2ed036c6b5e5" />
   </Folder>
   <Folder Name="/7_Tests/">
     <Project Path="Artemis/7_Tests/GoogleTest/Artemis.GoogleTest.vcxproj" Id="8c833536-1445-59fa-9679-5677f063b66d" />

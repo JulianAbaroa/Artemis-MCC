@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Backend">
+      <UniqueIdentifier>{a3bb565c-540f-5800-943f-89ddab934dbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Backend\System">
+      <UniqueIdentifier>{8aa473bd-9049-5fa7-a1ed-e920322d8c02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color">
+      <UniqueIdentifier>{7b29b81e-477c-5d27-bf50-b4c369dee58d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color\System">
+      <UniqueIdentifier>{1b5ae4d7-c8dd-5825-ba61-ef73c7501daa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color\System\Group">
+      <UniqueIdentifier>{950b3ba9-4554-5b2d-8469-3697cdc866cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Color\System\Team">
+      <UniqueIdentifier>{6837f361-5618-5b3b-a8d9-b334cf37c2e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{38ab6ee9-bd21-540c-884b-2de0e58c1a6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\imgui">
+      <UniqueIdentifier>{67fe0241-2cf0-59b0-b116-12e1bed36002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\imgui\backends">
+      <UniqueIdentifier>{901a9bf7-05db-5ae3-8c46-395a7e8da0cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format">
+      <UniqueIdentifier>{e6b0cf46-f58d-5328-a796-e31f2ce114da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System">
+      <UniqueIdentifier>{78842c0c-182c-5f85-bc29-c22fbdf0f927}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System\Fixtures">
+      <UniqueIdentifier>{09e60e4f-6cc5-5865-b1f9-2472324a0194}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System\Hex">
+      <UniqueIdentifier>{b75dc435-f75c-522c-88f8-7e4815d52b30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format\System\Team">
+      <UniqueIdentifier>{8676d585-675b-5dac-bf94-6a224fdf34bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Style">
+      <UniqueIdentifier>{8e59abbe-ab8f-57e3-bcc1-4d5539aefaa6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Style\Type">
+      <UniqueIdentifier>{75a2d745-b86b-56f2-85e1-4b5e3277e7a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget">
+      <UniqueIdentifier>{9e38bb41-bd4f-50e8-9a3b-f8c188eda257}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System">
+      <UniqueIdentifier>{fae0ad3e-93d4-5770-b4ce-6097d58d9d84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\CopyableField">
+      <UniqueIdentifier>{0b7c85e3-7fc2-57bf-80ef-734f15c075be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\HandleDrawer">
+      <UniqueIdentifier>{95cff1ac-7fe3-5c0f-b45c-c0ee39cb74ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\Inspector">
+      <UniqueIdentifier>{f3dbd7ce-d671-5243-9c8a-1488a12b2e81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\Panel">
+      <UniqueIdentifier>{1d757b54-0160-58e4-9969-e164f411525c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\ResponsiveCard">
+      <UniqueIdentifier>{027d8e3e-7fc1-57a6-9f67-56bc33a730bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\SearchFilter">
+      <UniqueIdentifier>{c58f5b3f-bc25-5320-812d-04d819defd1e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Gui.Layer.ixx" />
+    <ClCompile Include="Backend\Gui.Backend.System.ixx">
+      <Filter>Backend</Filter>
+    </ClCompile>
+    <ClCompile Include="Color\Gui.Color.System.ixx">
+      <Filter>Color</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\Gui.Format.System.ixx">
+      <Filter>Format</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\Gui.Widget.System.ixx">
+      <Filter>Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="Backend\System\BackendGuiService.cpp">
+      <Filter>Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Backend\System\BackendGuiService.ixx">
+      <Filter>Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Backend\System\WndProcGuiService.cpp">
+      <Filter>Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Backend\System\WndProcGuiService.ixx">
+      <Filter>Backend\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Style\Type\Gui.Style.Type.ixx">
+      <Filter>Style\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Color\System\Group\GroupToColor.cpp">
+      <Filter>Color\System\Group</Filter>
+    </ClCompile>
+    <ClCompile Include="Color\System\Group\GroupToColor.ixx">
+      <Filter>Color\System\Group</Filter>
+    </ClCompile>
+    <ClCompile Include="Color\System\Team\TeamToColor.cpp">
+      <Filter>Color\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Color\System\Team\TeamToColor.ixx">
+      <Filter>Color\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Fixtures\FixturesFormater.cpp">
+      <Filter>Format\System\Fixtures</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Fixtures\FixturesFormater.ixx">
+      <Filter>Format\System\Fixtures</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Hex\HexFormater.cpp">
+      <Filter>Format\System\Hex</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Hex\HexFormater.ixx">
+      <Filter>Format\System\Hex</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Team\TeamFormater.cpp">
+      <Filter>Format\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Team\TeamFormater.ixx">
+      <Filter>Format\System\Team</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\CopyableField\CopyableFieldGuiService.cpp">
+      <Filter>Widget\System\CopyableField</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\CopyableField\CopyableFieldGuiService.ixx">
+      <Filter>Widget\System\CopyableField</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\HandleDrawer\HandleDrawerGuiService.cpp">
+      <Filter>Widget\System\HandleDrawer</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\HandleDrawer\HandleDrawerGuiService.ixx">
+      <Filter>Widget\System\HandleDrawer</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Inspector\InspectorGuiService.ixx">
+      <Filter>Widget\System\Inspector</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Panel\PanelGuiService.cpp">
+      <Filter>Widget\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Panel\PanelGuiService.ixx">
+      <Filter>Widget\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp">
+      <Filter>Widget\System\ResponsiveCard</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\ResponsiveCard\ResponsiveCardGuiService.ixx">
+      <Filter>Widget\System\ResponsiveCard</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.cpp">
+      <Filter>Widget\System\SearchFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.ixx">
+      <Filter>Widget\System\SearchFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_demo.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_draw.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_tables.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_widgets.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.cpp">
+      <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClInclude Include="$(ArtemisRoot)External\imgui\imgui.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="$(ArtemisRoot)External\imgui\imgui_internal.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.h">
+      <Filter>External\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.h">
+      <Filter>External\imgui\backends</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

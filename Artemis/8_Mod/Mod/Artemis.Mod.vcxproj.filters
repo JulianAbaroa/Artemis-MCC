@@ -39,6 +39,7 @@
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="DevTools.Layer.ixx" />
     <ClInclude Include="Proxy\ProxyExports.h">
       <Filter>Proxy</Filter>
     </ClInclude>

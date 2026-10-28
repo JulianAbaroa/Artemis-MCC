@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{60BC2154-AB80-51DB-A404-0A76212EC7F8}</ProjectGuid>
+    <RootNamespace>Artemis_DevTools_Gui</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Artemis.DevTools.Gui</ProjectName>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="..\..\Artemis.Toolset.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\Artemis.Common.props" />
+    <Import Project="..\..\Artemis.Component.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ArtemisRoot);$(ArtemisRoot)External\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\1_Shared\Common\Artemis.Common.vcxproj">
+      <Project>{687DBFE3-1641-5AF5-B910-825E790EB11E}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\1_Shared\Services\Artemis.Services.vcxproj">
+      <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Base\Artemis.Engine.Base.vcxproj">
+      <Project>{05800B63-82FC-5238-A677-B15CEEDB5242}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\5_Engine\Render\Artemis.Engine.Render.vcxproj">
+      <Project>{F517C458-8281-563D-B238-8BBEFD42FDF3}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Gui.Layer.ixx" />
+    <ClCompile Include="Backend\Gui.Backend.System.ixx" />
+    <ClCompile Include="Color\Gui.Color.System.ixx" />
+    <ClCompile Include="Format\Gui.Format.System.ixx" />
+    <ClCompile Include="Widget\Gui.Widget.System.ixx" />
+    <ClCompile Include="Backend\System\BackendGuiService.cpp" />
+    <ClCompile Include="Backend\System\BackendGuiService.ixx" />
+    <ClCompile Include="Backend\System\WndProcGuiService.cpp" />
+    <ClCompile Include="Backend\System\WndProcGuiService.ixx" />
+    <ClCompile Include="Style\Type\Gui.Style.Type.ixx" />
+    <ClCompile Include="Color\System\Group\GroupToColor.cpp" />
+    <ClCompile Include="Color\System\Group\GroupToColor.ixx" />
+    <ClCompile Include="Color\System\Team\TeamToColor.cpp" />
+    <ClCompile Include="Color\System\Team\TeamToColor.ixx" />
+    <ClCompile Include="Format\System\Fixtures\FixturesFormater.cpp" />
+    <ClCompile Include="Format\System\Fixtures\FixturesFormater.ixx" />
+    <ClCompile Include="Format\System\Hex\HexFormater.cpp" />
+    <ClCompile Include="Format\System\Hex\HexFormater.ixx" />
+    <ClCompile Include="Format\System\Team\TeamFormater.cpp" />
+    <ClCompile Include="Format\System\Team\TeamFormater.ixx" />
+    <ClCompile Include="Widget\System\CopyableField\CopyableFieldGuiService.cpp" />
+    <ClCompile Include="Widget\System\CopyableField\CopyableFieldGuiService.ixx" />
+    <ClCompile Include="Widget\System\HandleDrawer\HandleDrawerGuiService.cpp" />
+    <ClCompile Include="Widget\System\HandleDrawer\HandleDrawerGuiService.ixx" />
+    <ClCompile Include="Widget\System\Inspector\InspectorGuiService.ixx" />
+    <ClCompile Include="Widget\System\Panel\PanelGuiService.cpp" />
+    <ClCompile Include="Widget\System\Panel\PanelGuiService.ixx" />
+    <ClCompile Include="Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp" />
+    <ClCompile Include="Widget\System\ResponsiveCard\ResponsiveCardGuiService.ixx" />
+    <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.cpp" />
+    <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.ixx" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui.cpp" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_demo.cpp" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_draw.cpp" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_tables.cpp" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.cpp" />
+    <ClInclude Include="$(ArtemisRoot)External\imgui\imgui.h" />
+    <ClInclude Include="$(ArtemisRoot)External\imgui\imgui_internal.h" />
+    <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
