@@ -25,7 +25,7 @@ BASELINE = os.path.join(ROOT, "Tools", "check_rules_baseline.txt")
 # Folders with C++ code of the DLL and its libraries. Each one has its own Visual Studio project (P1): Core is part of Artemis.vcxproj.
 SOURCE_ROOTS = ("Artemis/Core/", "Artemis/Common/", "Artemis/Services/", "Artemis/Blam.Map/", "Artemis/Blam.MapModel/", "Artemis/Blam.Layout/", "Artemis/Blam.Runtime/",
                 "Artemis/Contract/", "Artemis/Perception/", "Artemis/Views/", "Artemis/Bridge.Codec/", "Artemis/Control/", "Artemis/Bridge.Transport/",
-                "Artemis/Engine.Core/", "Artemis/Engine.Capture/", "Artemis/Engine.Control/", "Artemis/Engine.Match/", "Artemis/Engine.Render/")
+                "Artemis/Engine.Core/", "Artemis/Engine.Capture/", "Artemis/Engine.Control/", "Artemis/Engine.Match/", "Artemis/Engine.Render/", "Artemis/DevTools/")
 PROJECT_OF = {
     "Artemis/Core/": "Artemis/Artemis",
     "Artemis/Common/": "Artemis/Common/Artemis.Common",
@@ -45,6 +45,7 @@ PROJECT_OF = {
     "Artemis/Engine.Control/": "Artemis/Engine.Control/Artemis.Engine.Control",
     "Artemis/Engine.Match/": "Artemis/Engine.Match/Artemis.Engine.Match",
     "Artemis/Engine.Render/": "Artemis/Engine.Render/Artemis.Engine.Render",
+    "Artemis/DevTools/": "Artemis/DevTools/Artemis.DevTools",
 }
 
 CHECKS = {

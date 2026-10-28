@@ -48,6 +48,13 @@ COMPONENTS = {
                                {"Common", "Services", "Engine.Core", "Control", "Blam.Layout"}),
     "Artemis/Engine.Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services", "Engine.Core"}),
     "Artemis/Engine.Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services", "Engine.Core"}),
+    # The development tools (M7.2, D228): Gui, Viewer, UI and the DevTools root. They use the engine only through DevTools.EngineAccess.
+    "Artemis/DevTools": ("Artemis.DevTools.vcxproj",
+                         {"Common", "Service", "Map", "Resolved", "Datum", "Layout", "Tables", "Relations", "Environment", "Egocentric",
+                          "Export", "Contract", "Control", "Platform", "Gui", "Viewer", "UI", "DevTools"},
+                         {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Contract", "Perception",
+                          "Views", "Bridge.Codec", "Control", "Bridge.Transport", "Engine.Core", "Engine.Capture", "Engine.Control",
+                          "Engine.Match", "Engine.Render"}),
 }
 
 # The pure projects of M5b (D198): what was the Domain after Blam.Runtime. None of them touches the process, the wiring or a layer above.
@@ -74,7 +81,7 @@ CAPTURE_HOOK = "Artemis/Engine.Capture/Hook/"
 
 # Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Map.*) are imported only by the wiring of the DLL (future Mod),
 # the development tools (future DevTools) and the tests (02 sec. 3.5, contract of Blam.Map).
-MAP_IMPORTERS = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", "Artemis/Core/UI/", "Artemis/Core/DevTools/", "Artemis/Tests/")
+MAP_IMPORTERS = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", "Artemis/DevTools/", "Artemis/Tests/")
 
 # Group queries of the old TagResolverService that nobody called (removed in M3, D180).
 REMOVED_NAMES = ("HasBipd", "HasBloc", "HasCtrl", "HasEqip", "HasMach", "HasProj", "HasScen", "HasVehi", "HasWeap")
@@ -232,8 +239,8 @@ def test_tables_hold_no_process_address():
 
 
 def test_dev_screens_take_the_address_from_the_snapshot():
-    objects = Read("Artemis/Core/UI/ObjectTable/System/ObjectTableUIService.cpp")
-    players = Read("Artemis/Core/UI/PlayerTable/System/PlayerTableUIService.cpp")
+    objects = Read("Artemis/DevTools/UI/ObjectTable/System/ObjectTableUIService.cpp")
+    players = Read("Artemis/DevTools/UI/PlayerTable/System/PlayerTableUIService.cpp")
     assert "RawObjects" in objects and "object.Address" not in objects
     assert "OriginalAddress" in players and "player.Address" not in players
 
@@ -284,7 +291,7 @@ def test_the_domain_does_not_read_the_game():
 
 
 def test_tick_trace_reads_its_clock_from_the_snapshot():
-    for path in Sources("Artemis/Core/UI/TickTrace"):
+    for path in Sources("Artemis/DevTools/UI/TickTrace"):
         text = Read(path)
         assert "ReadValue" not in text and "GetThreadContext" not in text and "reinterpret_cast" not in text, path
 
@@ -429,11 +436,11 @@ def test_the_order_of_the_tick_lives_in_the_pipeline_service():
 
 
 def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
-    ui = Read("Artemis/Core/UI/TickDump/Type/UI.TickDump.Type.ixx")
+    ui = Read("Artemis/DevTools/UI/TickDump/Type/UI.TickDump.Type.ixx")
     assert not re.search(r"\bstruct\s+(?:TickRecordHeader|TickDumpFileHeader|TickDumpFooter)\b", ui)
     assert "TickRecordHeader" not in ui
     assert re.search(r"\bstruct\s+TickRecordHeader\b", Read("Artemis/Bridge.Codec/Dump/Type/Export.Dump.Type.ixx"))
-    for path in Sources("Artemis/Core/UI/TickDump"):
+    for path in Sources("Artemis/DevTools/UI/TickDump"):
         assert "UI::TickDump::Type::TickRecordHeader" not in Read(path), path
 
 
@@ -689,7 +696,7 @@ def test_the_dll_does_not_list_the_sources_of_the_engine_projects():
 
 # ---- M7.1: tick observers, the scene apart from the pipeline, the Gui without Domain, EngineAccess (D222-D227)
 
-DEVTOOLS_FOLDERS = ("Artemis/Core/Gui", "Artemis/Core/UI", "Artemis/Core/Viewer", "Artemis/Core/DevTools")
+DEVTOOLS = "Artemis/DevTools"
 DEVTOOLS_ROOTS = {"UI", "Viewer", "Gui", "DevTools"}
 PURE_ROOTS = {"Map", "Resolved", "Datum", "Layout", "Tables", "Relations", "Environment", "Egocentric", "Export", "Contract", "Control"}
 DEVTOOLS_PURE_SYSTEMS = {"Export.Dump.System", "Export.Flat.System", "Layout.Snapshot.System", "Environment.Collidable.System",
@@ -697,7 +704,7 @@ DEVTOOLS_PURE_SYSTEMS = {"Export.Dump.System", "Export.Flat.System", "Layout.Sna
 
 
 def DevToolsSources():
-    return [path for folder in DEVTOOLS_FOLDERS for path in Sources(folder)]
+    return Sources(DEVTOOLS)
 
 
 def test_the_ai_thread_knows_no_development_tool():
@@ -723,21 +730,21 @@ def test_the_collidable_scene_is_built_on_demand_and_stored_by_the_viewer():
     assert not re.search(r"\bUpdate\(", service)
     assert not re.search(r"\bCollectCollidables\b", service)
     stores = [p for p in Sources("Artemis") if re.search(r"\bclass CollidableStore\b", Read(p))]
-    assert stores == ["Artemis/Core/Viewer/Collidable/State/CollidableStore.ixx"], stores
+    assert stores == ["Artemis/DevTools/Viewer/Collidable/State/CollidableStore.ixx"], stores
     for path in Sources("Artemis/Perception"):
         assert "Environment.Collidable.State" not in Read(path), path
         assert not re.search(r"\bCollidableStore\b", Read(path)), path
 
 
 def test_the_gui_has_no_domain_and_no_platform_layer():
-    for path in Sources("Artemis/Core/Gui"):
+    for path in Sources("Artemis/DevTools/Gui"):
         names = [n for n in Imports(path)]
         assert {n.split(".")[0] for n in names} <= {"Common", "Service", "Gui", "Platform"}, (path, names)
         assert not [n for n in names if n.startswith("Platform.") and not n.startswith(("Platform.Render.", "Platform.Window."))], path
     assert not [p for p in Tracked("Artemis") if "ObjectFormater" in p]
-    assert not [p for p in Tracked("Artemis/Core/Gui") if "AffordanceFormater" in p or "InteractionFormater" in p]
+    assert not [p for p in Tracked("Artemis/DevTools/Gui") if "AffordanceFormater" in p or "InteractionFormater" in p]
     for name in ("Affordance", "Interaction"):
-        assert Tracked(f"Artemis/Core/Viewer/Format/System/{name}/{name}Formater.ixx")
+        assert Tracked(f"Artemis/DevTools/Viewer/Format/System/{name}/{name}Formater.ixx")
 
 
 def test_the_development_tools_do_not_import_the_engine_the_runtime_or_the_pipeline():
@@ -761,13 +768,37 @@ def test_the_development_tools_import_only_the_data_of_the_pure_components():
 def test_the_tick_observer_is_wired_from_runtime_to_devtools():
     defined = [p for p in Sources("Artemis") if re.search(r"\bstruct ObservedTick\b", Read(p))]
     assert defined == ["Artemis/Bridge.Codec/Pipeline/Type/Export.Pipeline.Type.ixx"], defined
-    assert re.search(r"auto OnTick\(const ObservedTick&", Read("Artemis/Core/DevTools/DevTools.Layer.ixx"))
+    assert re.search(r"auto OnTick\(const ObservedTick&", Read("Artemis/DevTools/DevTools.Layer.ixx"))
     assert "AddObserver(" in Read("Artemis/Core/Runtime/Runtime.Layer.ixx")
 
 
 def test_only_the_wiring_and_the_devtools_import_the_development_tools():
-    owned = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", *(f + "/" for f in DEVTOOLS_FOLDERS))
+    owned = ("Artemis/Core/Core.ixx", "Artemis/Core/Core.cpp", "Artemis/Core/Runtime/", DEVTOOLS + "/")
     for path in Sources("Artemis"):
         if path.startswith(owned):
             continue
         assert not ImportRoots(path) & DEVTOOLS_ROOTS, path
+
+
+# ---- M7.2: the development tools in a project (D228)
+
+
+def test_the_dll_keeps_only_the_wiring_the_runtime_and_the_platform_port():
+    allowed_files = {"Core.ixx", "Core.cpp", "DllMain.cpp"}
+    tracked = {path[len("Artemis/Core/"):].split("/")[0] for path in Tracked("Artemis/Core")}
+    assert tracked == allowed_files | {"Runtime", "Infrastructure"}, tracked
+    assert {p for p in Tracked("Artemis/Core/Infrastructure")} == {p for p in Tracked("Artemis/Core/Infrastructure/Platform")}
+    on_disk = sorted(os.listdir(os.path.join(REPO, "Artemis/Core")))
+    assert on_disk == sorted(allowed_files | {"Runtime", "Infrastructure"}), on_disk
+    assert sorted(os.listdir(os.path.join(REPO, "Artemis/Core/Infrastructure"))) == ["Platform"]
+    assert sorted(os.listdir(os.path.join(REPO, "Artemis/Core/Infrastructure/Platform"))) == ["Platform.Layer.ixx", "Port"]
+
+
+def test_the_dll_references_the_devtools_project_and_the_tests_do_not():
+    dll = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Artemis.vcxproj"))}
+    tests = {ProjectName(include) for include in REFERENCE.findall(Read("Artemis/Tests/Artemis.Tests.vcxproj"))}
+    assert "DevTools" in dll
+    assert "DevTools" not in tests
+    assert '"Artemis.DevTools"' in Read("Artemis-MCC.sln")
+    listed = {include.replace("\\", "/") for include in COMPILE.findall(Read("Artemis/Artemis.vcxproj"))}
+    assert not [p for p in listed if p.startswith(("Core/Gui/", "Core/UI/", "Core/Viewer/", "Core/DevTools/"))]
