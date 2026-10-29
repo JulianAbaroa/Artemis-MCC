@@ -42,6 +42,9 @@
     <ClCompile Include="Time\System\Common.Time.System.ixx" />
     <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

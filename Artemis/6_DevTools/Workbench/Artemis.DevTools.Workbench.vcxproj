@@ -147,6 +147,7 @@
     <Image Include="Resources\Icons\cube-solid.png" />
     <Image Include="Resources\Icons\file-lines-solid.png" />
     <Image Include="Resources\Icons\gear-solid.png" />
+    <None Include="CONTRACT.md" />
     <None Include="Resources\Icons\GenerateIconData.py" />
     <ClCompile Include="Resources\Icons\IconData.cpp" />
     <ClInclude Include="Resources\Icons\IconData.h" />

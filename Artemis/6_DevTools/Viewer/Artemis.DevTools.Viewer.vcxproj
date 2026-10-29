@@ -183,6 +183,9 @@
     <ClCompile Include="Hud\System\Panel\HealthsHud.cpp" />
     <ClCompile Include="Hud\System\Panel\HealthsHud.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

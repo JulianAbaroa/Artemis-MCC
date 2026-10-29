@@ -128,5 +128,8 @@
     <ClCompile Include="Support\Tests.Support.Pipeline.ixx" />
     <ClCompile Include="Support\Tests.Support.Replay.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

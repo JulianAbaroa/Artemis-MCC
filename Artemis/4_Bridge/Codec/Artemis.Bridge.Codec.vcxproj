@@ -80,5 +80,8 @@
     <ClCompile Include="Tick\System\TickService.ixx" />
     <ClCompile Include="Tick\Type\Bridge.Codec.Tick.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

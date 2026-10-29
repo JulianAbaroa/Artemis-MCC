@@ -55,5 +55,8 @@
     <ClCompile Include="Lockstep\System\Control.Lockstep.System.ixx" />
     <ClCompile Include="Lockstep\Type\Control.Lockstep.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

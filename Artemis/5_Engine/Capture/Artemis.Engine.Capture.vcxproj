@@ -74,5 +74,8 @@
     <ClCompile Include="System\CaptureService.ixx" />
     <ClCompile Include="Type\Engine.Capture.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

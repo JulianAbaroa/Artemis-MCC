@@ -44,5 +44,8 @@
   <ItemGroup>
     <ClCompile Include="Contract.Bridge.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

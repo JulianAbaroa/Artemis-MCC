@@ -100,5 +100,8 @@
     <ClCompile Include="$(ArtemisRoot)External\minhook\src\trampoline.c" />
     <ClInclude Include="$(ArtemisRoot)External\minhook\include\MinHook.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

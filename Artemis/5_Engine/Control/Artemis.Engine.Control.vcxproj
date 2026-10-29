@@ -77,5 +77,8 @@
     <ClCompile Include="Simulation\System\BotService.ixx" />
     <ClCompile Include="Simulation\Type\Engine.Control.Simulation.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

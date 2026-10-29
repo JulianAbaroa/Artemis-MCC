@@ -802,7 +802,7 @@ def test_only_the_wiring_and_the_devtools_import_the_development_tools():
 
 
 def test_the_dll_keeps_only_the_wiring_the_runtime_and_the_platform_port():
-    allowed_files = {"Mod.Layer.ixx", "Mod.Layer.cpp", "DllMain.cpp", "Artemis.Mod.vcxproj", "Artemis.Mod.vcxproj.filters"}
+    allowed_files = {"Mod.Layer.ixx", "Mod.Layer.cpp", "DllMain.cpp", "Artemis.Mod.vcxproj", "Artemis.Mod.vcxproj.filters", "CONTRACT.md"}
     tracked = {path[len("Artemis/8_Mod/Mod/"):].split("/")[0] for path in Tracked("Artemis/8_Mod/Mod")}
     assert tracked == allowed_files | {"Thread", "Port", "Proxy"}, tracked
     on_disk = sorted(n for n in os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod")) if not n.endswith(".user"))
@@ -1008,3 +1008,63 @@ def test_every_stateful_project_has_one_layer(project):
         assert len(layers) == 1, layers
     else:
         assert not layers, layers
+
+# Public contracts (M8 D, D235, D248): every project has a CONTRACT.md next to its .vcxproj. Its "Public interface" section names, in
+# backticks, the modules other projects may import. A listed module must exist, and no project imports a module of another one that is
+# not listed. The tests (Artemis.Tests) may import internal modules.
+CONTRACT_SECTIONS = ("Responsibility", "Does not", "Input and output", "Public interface", "Depends on", "State between ticks", "Threads",
+                     "Errors", "Requirements", "Tests")
+CONTRACT_MODULE = re.compile(r"`([A-Z]\w*(?:\.\w+)+)`")
+MODULE_DECLARATION = re.compile(r"^\s*export\s+module\s+([\w.]+)\s*;", re.MULTILINE)
+PROJECT_NAMES = [name for _, _, name in PROJECTS]
+
+
+def Contract(project):
+    return Read(f"{ProjectFolder(project)}/CONTRACT.md")
+
+
+def PublicModules(project):
+    """Modules of the project named in the Public interface section of its contract."""
+    section = Contract(project).split("\n## Public interface\n", 1)[1].split("\n## ", 1)[0]
+    return {m for m in CONTRACT_MODULE.findall(section) if Component(m) == project and m != project}
+
+
+def DeclaredModules(project):
+    """Primary modules (no partitions) that the sources of the project export."""
+    return {m for path in Sources(ProjectFolder(project)) for m in MODULE_DECLARATION.findall(Read(path))}
+
+
+@pytest.mark.parametrize("project", PROJECT_NAMES)
+def test_every_project_has_a_contract_with_every_section(project):
+    path = f"{ProjectFolder(project)}/CONTRACT.md"
+    assert Tracked(path), f"{path} is missing"
+    headings = re.findall(r"^## (.+?)\s*$", Contract(project), re.MULTILINE)
+    assert headings == list(CONTRACT_SECTIONS), headings
+    assert Contract(project).startswith(f"# Artemis.{project}\n")
+    for listing in (ProjectPath(project), ProjectPath(project) + ".filters"):  # visible in Visual Studio
+        assert '<None Include="CONTRACT.md" />' in Read(listing), listing
+
+
+@pytest.mark.parametrize("project", PROJECT_NAMES)
+def test_the_public_interface_lists_only_modules_that_exist(project):
+    missing = sorted(PublicModules(project) - DeclaredModules(project))
+    assert not missing, f"listed in {project}/CONTRACT.md but not declared: {missing}"
+
+
+@pytest.mark.parametrize("project", [name for name in PROJECT_NAMES if name != "Tests"])
+def test_a_project_imports_only_the_public_modules_of_the_others(project):
+    public = {name: PublicModules(name) for name in PROJECT_NAMES}
+    wrong = {}
+    for path in Sources(ProjectFolder(project)):
+        for module in IMPORT.findall(Read(path)):
+            owner = Component(module)
+            if module != "std" and owner != project and owner in public and module not in public[owner]:
+                wrong.setdefault(path, []).append(module)
+    assert not wrong, f"imports modules that the contracts do not list as public: {wrong}"
+
+
+def test_the_index_links_every_contract():
+    index = Read("Artemis/README.md")
+    links = set(re.findall(r"\]\(([^)]+/CONTRACT\.md)\)", index))
+    expected = {f"{ProjectFolder(name)[len('Artemis/'):]}/CONTRACT.md" for name in PROJECT_NAMES}
+    assert links == expected, sorted(links ^ expected)

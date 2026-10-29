@@ -386,4 +386,7 @@
       <Filter>Hud\System\Panel</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
 </Project>

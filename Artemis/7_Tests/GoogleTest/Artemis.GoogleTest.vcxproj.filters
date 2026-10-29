@@ -1,16 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="$(ArtemisRoot)External\googletest\googletest\src\gtest-all.cc" />
+    <ClCompile Include="$(ArtemisRoot)External\googletest\googlemock\src\gmock-all.cc" />
+    <ClCompile Include="$(ArtemisRoot)External\googletest\googlemock\src\gmock_main.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(ArtemisRoot)External\googletest\googletest\src\gtest-all.cc">
-      <Filter>$(ArtemisRoot)External\googletest\googletest\src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(ArtemisRoot)External\googletest\googlemock\src\gmock-all.cc">
-      <Filter>$(ArtemisRoot)External\googletest\googlemock\src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(ArtemisRoot)External\googletest\googlemock\src\gmock_main.cc">
-      <Filter>$(ArtemisRoot)External\googletest\googlemock\src</Filter>
-    </ClCompile>
+    <None Include="CONTRACT.md" />
   </ItemGroup>
 </Project>

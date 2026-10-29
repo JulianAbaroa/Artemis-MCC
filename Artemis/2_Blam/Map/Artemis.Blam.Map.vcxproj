@@ -229,5 +229,8 @@
     <ClCompile Include="Tag\Zone\Type\MapZoneOffset.ixx" />
     <ClCompile Include="Tag\Zone\Type\MapZoneStructure.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

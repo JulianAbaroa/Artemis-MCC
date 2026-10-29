@@ -289,4 +289,7 @@
       <Filter>Snapshot\System</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
 </Project>

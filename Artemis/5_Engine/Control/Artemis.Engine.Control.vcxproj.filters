@@ -98,4 +98,7 @@
       <Filter>Simulation\Type</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
 </Project>

@@ -110,5 +110,8 @@
     <ClCompile Include="Snapshot\Type\SnapshotRecord.ixx" />
     <ClCompile Include="Snapshot\Type\SnapshotRegion.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

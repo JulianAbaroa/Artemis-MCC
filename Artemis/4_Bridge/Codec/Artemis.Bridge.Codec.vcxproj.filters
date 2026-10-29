@@ -92,4 +92,7 @@
       <Filter>Dump\System</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
 </Project>

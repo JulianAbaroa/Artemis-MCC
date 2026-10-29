@@ -64,5 +64,8 @@
     <ClCompile Include="System\MatchConfigService.ixx" />
     <ClCompile Include="Type\Engine.Match.Type.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

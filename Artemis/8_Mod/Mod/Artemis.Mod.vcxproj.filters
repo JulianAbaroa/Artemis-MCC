@@ -94,4 +94,7 @@
       <Filter>Proxy</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
 </Project>

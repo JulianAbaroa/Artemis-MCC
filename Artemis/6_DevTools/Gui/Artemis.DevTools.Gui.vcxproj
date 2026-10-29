@@ -99,6 +99,9 @@
     <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -46,5 +46,8 @@
     <ClCompile Include="$(ArtemisRoot)External\googletest\googlemock\src\gmock-all.cc" />
     <ClCompile Include="$(ArtemisRoot)External\googletest\googlemock\src\gmock_main.cc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -129,6 +129,7 @@
     <ClCompile Include="Port\System\BridgeActionSource.ixx" />
     <ClCompile Include="Port\System\BridgeEngineAdapter.cpp" />
     <ClCompile Include="Port\System\BridgeEngineAdapter.ixx" />
+    <None Include="CONTRACT.md" />
     <None Include="Proxy\GenerateProxyExports.py" />
     <None Include="Proxy\exports.txt" />
   </ItemGroup>

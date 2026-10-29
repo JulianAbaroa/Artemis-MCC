@@ -147,5 +147,8 @@
     <ClCompile Include="World\Type\WorldRaycast.ixx" />
     <ClCompile Include="World\Type\WorldRegionStates.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CONTRACT.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
