@@ -73,6 +73,9 @@
     <ClCompile Include="Details\System\Vitality\VitalityDetailsService.ixx" />
     <ClCompile Include="Details\System\Zone\ZoneDetailsService.cpp" />
     <ClCompile Include="Details\System\Zone\ZoneDetailsService.ixx" />
+    <ClCompile Include="Details\Type\Objective\DetailsObjective.ixx" />
+    <ClCompile Include="Details\System\Objective\ObjectiveDetailsService.ixx" />
+    <ClCompile Include="Details\System\Objective\ObjectiveDetailsService.cpp" />
     <ClCompile Include="Details\Type\Barrier\DetailsBarrier.ixx" />
     <ClCompile Include="Details\Type\Perception.Details.Type.ixx" />
     <ClCompile Include="Details\Type\Lift\DetailsLift.ixx" />

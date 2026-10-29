@@ -94,6 +94,9 @@
     <Filter Include="ZoneShape\Type">
       <UniqueIdentifier>{6c9010b5-5602-4dfd-8d33-e7f40e7b476f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ZoneShape\System">
+      <UniqueIdentifier>{72d79a29-ad76-4d9f-a90a-0fead6ee6fa2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Type\Common.Engine.Type.ixx">
@@ -161,6 +164,12 @@
     </ClCompile>
     <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx">
       <Filter>ZoneShape\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="ZoneShape\System\Common.ZoneShape.System.ixx">
+      <Filter>ZoneShape\System</Filter>
+    </ClCompile>
+    <ClCompile Include="ZoneShape\System\Common.ZoneShape.System.cpp">
+      <Filter>ZoneShape\System</Filter>
     </ClCompile>
     <ClCompile Include="Stream\System\Common.Stream.System.cpp">
       <Filter>Stream\System</Filter>

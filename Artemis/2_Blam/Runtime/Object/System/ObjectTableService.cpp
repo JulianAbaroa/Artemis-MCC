@@ -98,6 +98,7 @@ namespace
     namespace UnitOffset = Blam::Layout::Object::Type::Unit::Offset;
     namespace BipdOffset = Blam::Layout::Object::Type::Bipd::Offset;
     namespace WeapOffset = Blam::Layout::Object::Type::Weap::Offset;
+    namespace ItemOffset = Blam::Layout::Object::Type::Item::Offset;
     namespace ProjOffset = Blam::Layout::Object::Type::Proj::Offset;
     namespace EqipOffset = Blam::Layout::Object::Type::Eqip::Offset;
     namespace SeatBlock = Blam::Layout::Object::Type::Block::Seat;
@@ -509,6 +510,7 @@ namespace Blam::Runtime::Object::System
 
         weapon.IsTracking = datum.Read<std::uint8_t>(WeapOffset::k_IsTracking);
         weapon.TrackedBipedHandle = datum.Read<std::uint32_t>(WeapOffset::k_TrackedBipedHandle);
+        weapon.HolderUnit = datum.Read<std::uint32_t>(ItemOffset::k_HolderUnit);
 
         object.Specific = weapon;
     }

@@ -48,6 +48,9 @@
     <ClCompile Include="Perception\PipelineTests.cpp">
       <Filter>Perception</Filter>
     </ClCompile>
+    <ClCompile Include="Perception\ObjectiveDetailsTests.cpp">
+      <Filter>Perception</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Blam.ixx">
       <Filter>Support</Filter>
     </ClCompile>
@@ -82,6 +85,9 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Common\MathTypeTests.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\ZoneShapeTests.cpp">
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="Common\SnapshotTests.cpp">

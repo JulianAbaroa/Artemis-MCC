@@ -231,6 +231,17 @@
 		<value name="InGame" id="1" />
 		<value name="Ended" id="2" doc="After the end of a round (until the next one starts) or of the match." />
 	</enum>
+	<enum name="RoundState" type="uint8" doc="State of the round of the match (A14).">
+		<value name="Unknown" id="0" />
+		<value name="InPlay" id="1" />
+		<value name="Ended" id="2" />
+		<value name="Between" id="3" doc="Between two rounds." />
+	</enum>
+	<enum name="FlagState" type="uint8" doc="State of a flag of a capture game (A14).">
+		<value name="Home" id="0" doc="At its stand." />
+		<value name="Carried" id="1" />
+		<value name="Dropped" id="2" doc="On the ground until it is returned or the timer resets it." />
+	</enum>
 	<flags name="Capability" type="uint16" doc="Capabilities of an entity. They never decide the group.">
 		<bit name="HasVitality" index="0" />
 		<bit name="HasCollision" index="1" />

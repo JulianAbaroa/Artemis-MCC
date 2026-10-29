@@ -5,3 +5,4 @@ export import :Zone;
 export import :Teleporter;
 export import :Lift;
 export import :Barrier;
+export import :Objective;

@@ -110,6 +110,21 @@ class MatchPhase(enum.IntEnum):
     Ended = 2
 
 
+class RoundState(enum.IntEnum):
+    """State of the round of the match (A14)."""
+    Unknown = 0
+    InPlay = 1
+    Ended = 2
+    Between = 3
+
+
+class FlagState(enum.IntEnum):
+    """State of a flag of a capture game (A14)."""
+    Home = 0
+    Carried = 1
+    Dropped = 2
+
+
 class Capability(enum.IntFlag):
     """Capabilities of an entity. They never decide the group."""
     NONE = 0

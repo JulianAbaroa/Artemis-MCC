@@ -39,6 +39,7 @@ export namespace Perception
         using TeleporterDetailsStore = Perception::Details::State::TeleporterDetailsStore;
         using LiftDetailsStore = Perception::Details::State::LiftDetailsStore;
         using BarrierDetailsStore = Perception::Details::State::BarrierDetailsStore;
+        using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
         using EntitiesStore = Perception::Entities::State::EntitiesStore;
         using CarriedHandlesStore = Perception::Entities::State::CarriedHandlesStore;
         using PlayersStore = Perception::Players::State::PlayersStore;
@@ -53,6 +54,7 @@ export namespace Perception
         using TeleporterDetailsService = Perception::Details::System::TeleporterDetailsService;
         using LiftDetailsService = Perception::Details::System::LiftDetailsService;
         using BarrierDetailsService = Perception::Details::System::BarrierDetailsService;
+        using ObjectiveDetailsService = Perception::Details::System::ObjectiveDetailsService;
         using EntitiesService = Perception::Entities::System::EntitiesService;
         using PlayersService = Perception::Players::System::PlayersService;
         using CollidableService = Perception::Collidable::System::CollidableService;
@@ -71,6 +73,7 @@ export namespace Perception
             m_BarrierDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_BarrierDetailsStore),
             m_EntitiesService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
             m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
+            m_ObjectiveDetailsService(log, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_EntitiesStore, m_PlayersStore, m_ZoneDetailsStore, m_ObjectiveDetailsStore),
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
             m_EventsService(tables.m_GameStore, m_EventsStore),
@@ -89,6 +92,7 @@ export namespace Perception
         TeleporterDetailsStore m_TeleporterDetailsStore{};
         LiftDetailsStore m_LiftDetailsStore{};
         BarrierDetailsStore m_BarrierDetailsStore{};
+        ObjectiveDetailsStore m_ObjectiveDetailsStore{};
         EntitiesStore m_EntitiesStore{};
         CarriedHandlesStore m_CarriedHandlesStore{};
         PlayersStore m_PlayersStore{};
@@ -106,12 +110,13 @@ export namespace Perception
         BarrierDetailsService m_BarrierDetailsService;
         EntitiesService m_EntitiesService;
         PlayersService m_PlayersService;
+        ObjectiveDetailsService m_ObjectiveDetailsService;
         CollidableService m_CollidableService;
         AimService m_AimService;
         EventsService m_EventsService;
         MatchService m_MatchService;
 
-        // Removes the classification, the object graph, the details, entities, players, aim, events and match status.
+        // Removes the classification, the object graph, the details (objectives included), entities, players, aim, events and match status.
         auto Cleanup() -> void
         {
             m_ClassifierService.Cleanup();
@@ -123,6 +128,7 @@ export namespace Perception
             m_BarrierDetailsService.Cleanup();
             m_EntitiesService.Cleanup();
             m_PlayersService.Cleanup();
+            m_ObjectiveDetailsService.Cleanup();
             m_CollidableService.Cleanup();
             m_AimService.Cleanup();
             m_EventsService.Cleanup();

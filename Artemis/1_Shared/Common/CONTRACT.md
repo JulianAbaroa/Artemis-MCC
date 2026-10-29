@@ -29,6 +29,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Common.Semantic.Type` | Semantic ids (kind, function, group, capabilities, events...). Generated; never edited by hand. |
 | `Common.Tag.Type` | Tag names of the playable bipeds, armor abilities, pickups and powerups. |
 | `Common.Team.Type`, `Common.ZoneShape.Type` | Team and zone shape enums with the game's values. |
+| `Common.ZoneShape.System` | `Contains`: whether a point is inside a cylinder or box zone, with the convention of the viewer. |
 | `Common.Text.System` | `WideToUtf8`, JSON escaping, text copies. |
 | `Common.Hash.System` | CRC-32 (same as zlib) of bytes and files. |
 | `Common.Stream.System` | Raw reads and writes of values and rows on a stream. |

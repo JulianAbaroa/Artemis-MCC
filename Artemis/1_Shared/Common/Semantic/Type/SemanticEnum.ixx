@@ -146,6 +146,23 @@ export namespace Common::Semantic::Type
         Ended = 2,
     };
 
+    // State of the round of the match (A14).
+    enum class RoundState : std::uint8_t
+    {
+        Unknown = 0,
+        InPlay = 1,
+        Ended = 2,
+        Between = 3,
+    };
+
+    // State of a flag of a capture game (A14).
+    enum class FlagState : std::uint8_t
+    {
+        Home = 0,
+        Carried = 1,
+        Dropped = 2,
+    };
+
     // Capabilities of an entity. They never decide the group.
     enum class Capability : std::uint16_t
     {
@@ -355,6 +372,31 @@ export namespace Common::Semantic::Type
         case MatchPhase::Unknown: return "Unknown";
         case MatchPhase::InGame: return "InGame";
         case MatchPhase::Ended: return "Ended";
+        default: return {};
+        }
+    }
+
+    // return: The name of the value, or an empty view if it is not known.
+    constexpr auto NameOf(RoundState value) -> std::string_view
+    {
+        switch (value)
+        {
+        case RoundState::Unknown: return "Unknown";
+        case RoundState::InPlay: return "InPlay";
+        case RoundState::Ended: return "Ended";
+        case RoundState::Between: return "Between";
+        default: return {};
+        }
+    }
+
+    // return: The name of the value, or an empty view if it is not known.
+    constexpr auto NameOf(FlagState value) -> std::string_view
+    {
+        switch (value)
+        {
+        case FlagState::Home: return "Home";
+        case FlagState::Carried: return "Carried";
+        case FlagState::Dropped: return "Dropped";
         default: return {};
         }
     }

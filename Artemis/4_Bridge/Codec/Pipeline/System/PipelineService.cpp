@@ -39,6 +39,8 @@ namespace Bridge::Codec::Pipeline::System
         stage();
         m_Environment.m_PlayersService.Update();
         stage();
+        m_Environment.m_ObjectiveDetailsService.Update();
+        stage();
         m_Environment.m_AimService.Update();
         stage();
         m_Environment.m_EventsService.Update();

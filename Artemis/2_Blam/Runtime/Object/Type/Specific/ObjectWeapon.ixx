@@ -1,6 +1,12 @@
 export module Blam.Runtime.Object.Type:Weapon;
 
+import Common.Engine.Type;
 import std;
+
+namespace
+{
+    using Common::Engine::Type::k_NoHandle;
+}
 
 export namespace Blam::Runtime::Object::Type::Weapon
 {
@@ -58,6 +64,10 @@ export namespace Blam::Runtime::Object::Type::Weapon
         // note: Not observed yet.
         std::uint8_t IsTracking{};
         std::uint32_t TrackedBipedHandle{};
+
+        // Unit that holds the item, set on the tick it is taken and 0xFFFFFFFF when dropped. Only the flag is read for it today.
+        // note: ParentHandle follows about 9 ticks later, so it cannot tell who took it.
+        std::uint32_t HolderUnit{ k_NoHandle };
 
         // TODO: Fields of the vehicle weapons that are not read yet (the old Banshee offsets were removed).
         // - IsFiring: the float at 0x250 of the weapon ramps 0 -> 0.5 -> 1.0 -> 0.5 -> 0 while the

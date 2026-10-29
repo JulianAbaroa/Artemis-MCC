@@ -142,6 +142,12 @@
     <Filter Include="Players\Type">
       <UniqueIdentifier>{80e70c18-15d7-56f7-bf89-81603e54e373}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Details\System\Objective">
+      <UniqueIdentifier>{35e2d8c7-1c38-4f2c-b755-d459e378cadf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Details\Type\Objective">
+      <UniqueIdentifier>{dc1b26fe-a145-4819-b64a-0d4102a69f7f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Aim\State\AimStore.ixx">
@@ -200,6 +206,15 @@
     </ClCompile>
     <ClCompile Include="Details\System\Zone\ZoneDetailsService.ixx">
       <Filter>Details\System\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\Type\Objective\DetailsObjective.ixx">
+      <Filter>Details\Type\Objective</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\System\Objective\ObjectiveDetailsService.ixx">
+      <Filter>Details\System\Objective</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\System\Objective\ObjectiveDetailsService.cpp">
+      <Filter>Details\System\Objective</Filter>
     </ClCompile>
     <ClCompile Include="Details\Type\Barrier\DetailsBarrier.ixx">
       <Filter>Details\Type\Barrier</Filter>

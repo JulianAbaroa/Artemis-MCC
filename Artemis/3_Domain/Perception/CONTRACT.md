@@ -4,7 +4,7 @@ Group `3_Domain` - pure static library - builds the world as the engine knows it
 
 ## Responsibility
 Turns the live tables of one tick into the omniscient picture of the world (the engine's truth): it classifies the live objects
-and relates them in the object graph, then builds the details (vitality, zones, teleporters, lifts, barriers), the entities, the
+and relates them in the object graph, then builds the details (vitality, zones, teleporters, lifts, barriers, objectives), the entities, the
 players, the aim, the events and the match status.
 
 ## Does not
@@ -28,12 +28,12 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.Layer` | The facade: owns the stores and services; `Cleanup()` forgets the map. |
 | `Perception.Classifier.Type`, `Perception.Classifier.State` | Kind, function and group of each live object. |
 | `Perception.ObjectGraph.Type`, `Perception.ObjectGraph.State` | How the live objects attach to each other, up to their root. |
-| `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift and barrier details. |
+| `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier and objective details (flags and their stands). |
 | `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. |
 | `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
 | `Perception.Events.Type`, `Perception.Events.State` | The engine events of the tick. |
-| `Perception.Match.Type`, `Perception.Match.State` | Status of the match. |
+| `Perception.Match.Type`, `Perception.Match.State` | Status of the match: phase, scores, round and team scores. |
 | `Perception.Collidable.Type`, `Perception.Collidable.System` | Collision geometry of objects, on demand (used by `Views` and the viewer). |
 
 ## Depends on
@@ -57,7 +57,7 @@ A missing or invalid table entry leaves the results that depend on it empty for 
 
 ## Requirements
 - Deterministic: the same Snapshot and map give the same output bit for bit (the replay test depends on it).
-- Fixed order inside the tick: Classifier, ObjectGraph, Vitality, Zone, Teleporter, Lift, Barrier, Entities, Players, Aim, Events,
+- Fixed order inside the tick: Classifier, ObjectGraph, Vitality, Zone, Teleporter, Lift, Barrier, Entities, Players, Objective, Aim, Events,
   Match.
 - Pure: no process, no `windows.h`, no wiring of the lifecycle (checked by `Tools/Tests/test_components.py`).
 

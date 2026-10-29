@@ -41,6 +41,8 @@
     <ClCompile Include="Time\System\Common.Time.System.cpp" />
     <ClCompile Include="Time\System\Common.Time.System.ixx" />
     <ClCompile Include="ZoneShape\Type\Common.ZoneShape.Type.ixx" />
+    <ClCompile Include="ZoneShape\System\Common.ZoneShape.System.ixx" />
+    <ClCompile Include="ZoneShape\System\Common.ZoneShape.System.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />
