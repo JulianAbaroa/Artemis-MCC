@@ -27,6 +27,8 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_MapVariantAdjust;
     using Blam::Layout::Object::Type::Constant::k_MapVariantAlignMask;
     using Blam::Layout::Object::Type::Constant::k_PlacementsOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextMegaloObjectsOffset;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayData;
 }
 
 namespace Engine::Capture::System
@@ -55,6 +57,9 @@ namespace Engine::Capture::System
             this->CopyRegion(*snapshot, RegionId::GameEngineGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameEngineOffset));
             this->CopyRegion(*snapshot, RegionId::EventGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextEventGlobalsOffset));
             this->CopyRegion(*snapshot, RegionId::GameGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameModeOffset));
+
+            const std::uintptr_t megaloObjects{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextMegaloObjectsOffset) };
+            if (megaloObjects != 0) this->CopyRegion(*snapshot, RegionId::MegaloObjects, reader.Read<std::uintptr_t>(megaloObjects, k_DataArrayData));
         }
 
         this->CopyRegion(*snapshot, RegionId::Placements, this->FindPlacements(threadContext));

@@ -67,7 +67,7 @@ namespace
     using DevTools::Workbench::Capture::Type::k_WorldFilterOffset;
     using DevTools::Workbench::Capture::Type::k_FilterLookupOffset;
     using DevTools::Workbench::Capture::Type::k_HavokComponentArrayRva;
-    using DevTools::Workbench::Capture::Type::k_DataArrayElementsOffset;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayData;
     using DevTools::Workbench::Capture::Type::k_HavokComponentSize;
     using DevTools::Workbench::Capture::Type::k_ComponentFlagsOffset;
     using DevTools::Workbench::Capture::Type::k_ComponentOwnerOffset;
@@ -639,7 +639,7 @@ namespace DevTools::Workbench::Capture::System
         const auto array{ m_MemoryReaderService.Read<std::uintptr_t>(module, k_HavokComponentArrayRva) };
         if (array == 0) return std::nullopt;
 
-        const auto elements{ m_MemoryReaderService.Read<std::uintptr_t>(array, k_DataArrayElementsOffset) };
+        const auto elements{ m_MemoryReaderService.Read<std::uintptr_t>(array, k_DataArrayData) };
         if (elements == 0) return std::nullopt;
 
         const std::uintptr_t address{ elements + (handle & k_HandleIndexMask) * k_HavokComponentSize };

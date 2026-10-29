@@ -38,8 +38,9 @@ namespace
     using Blam::Layout::Game::Type::Offset::k_EventRingSlots;
     using Blam::Layout::Game::Type::Offset::k_EventEntrySize;
 
-    constexpr std::array<RegionId, 8> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
-        RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals, RegionId::Placements, RegionId::GameGlobals };
+    constexpr std::array<RegionId, 9> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
+        RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals, RegionId::Placements, RegionId::GameGlobals,
+        RegionId::MegaloObjects };
 
     auto RegionOf(Snapshot& snapshot, RegionId id) -> Region&
     {
@@ -171,6 +172,7 @@ TEST(SnapshotTest, RegionSizesAreTheEngineAllocations)
     EXPECT_EQ(RegionSize(RegionId::EventGlobals), 0x10B68u);
     EXPECT_EQ(RegionSize(RegionId::Placements), 0x28Bu * 0x4Cu);
     EXPECT_EQ(RegionSize(RegionId::GameGlobals), 0x1F0E0u);
+    EXPECT_EQ(RegionSize(RegionId::MegaloObjects), 0x200u * 0x94u);
 }
 
 TEST(SnapshotTest, RegionSizesCoverTheFieldsTheyHold)

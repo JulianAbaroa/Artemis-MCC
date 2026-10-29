@@ -30,12 +30,6 @@ export namespace Engine::Control::Simulation::Type
     inline constexpr std::uintptr_t k_PlayersGlobalsSlot{ 0x118 };
     inline constexpr std::uintptr_t k_GameOptionsSlot{ 0x48 };
 
-    // Data array: maximum count (int32), element size (int32) and first element (pointer).
-    // note: +0x44 is the first slot never used, not the capacity: free slots above it are still valid (datum_new_at_index).
-    inline constexpr std::uintptr_t k_DataArrayCapacity{ 0x2C };
-    inline constexpr std::uintptr_t k_DataArrayElementSize{ 0x20 };
-    inline constexpr std::uintptr_t k_DataArrayData{ 0x50 };
-
     // Player datum: salt (uint16, 0 = free slot), identifier (uint64), machine index (int16), user index (int32), controller (int32)
     // and gamertag (16 wchar_t).
     inline constexpr std::uintptr_t k_PlayerSalt{ 0x00 };

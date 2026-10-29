@@ -124,8 +124,6 @@ export namespace DevTools::Workbench::Capture::Type
     // RVA of the pointer to the Havok component data array (DAT_180c519b8 in Ghidra).
     inline constexpr std::uintptr_t k_HavokComponentArrayRva{ 0xC519B8 };
 
-    // Pointer to the first element inside a data array.
-    inline constexpr std::uintptr_t k_DataArrayElementsOffset{ 0x50 };
 
 
     // Havok component layout (FUN_18012e1e8, FUN_18012e7cc, FUN_18017d680).

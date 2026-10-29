@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
 import Engine.Base.Memory.Type;
+import Blam.Layout.Object.Type;
 import std;
 
 namespace
@@ -32,9 +33,9 @@ namespace
     using Engine::Control::Simulation::Type::k_PlayersSlot;
     using Engine::Control::Simulation::Type::k_PlayersGlobalsSlot;
     using Engine::Control::Simulation::Type::k_GameOptionsSlot;
-    using Engine::Control::Simulation::Type::k_DataArrayCapacity;
-    using Engine::Control::Simulation::Type::k_DataArrayElementSize;
-    using Engine::Control::Simulation::Type::k_DataArrayData;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayCapacity;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayElementSize;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayData;
     using Engine::Control::Simulation::Type::k_PlayerSalt;
     using Engine::Control::Simulation::Type::k_PlayerFlags;
     using Engine::Control::Simulation::Type::k_PlayerIdentifier;

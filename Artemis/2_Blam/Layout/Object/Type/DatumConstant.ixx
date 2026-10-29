@@ -79,4 +79,18 @@ export namespace Blam::Layout::Object::Type::Constant
 
     // Bytes the engine registers for the event globals ("incident globals", FUN_1801092b0), copied whole into the snapshot (D249).
     constexpr std::size_t k_EventGlobalsSize{ 0x10B68 };
+
+    // Data array of the engine (ResourceBuffer_Allocate): maximum count (int32), element size (int32) and first element (pointer).
+    // note: +0x44 is the first slot never used, not the capacity: free slots above it are still valid (datum_new_at_index).
+    constexpr std::uintptr_t k_DataArrayCapacity{ 0x2C };
+    constexpr std::uintptr_t k_DataArrayElementSize{ 0x20 };
+    constexpr std::uintptr_t k_DataArrayData{ 0x50 };
+
+    // Pointer of the thread context to the "megalo_objects" data array (FUN_18007853c): the state the gametype script keeps per
+    // object (timers and variables of Megalo), its element index in the object datum +0x158 (D250).
+    constexpr std::uintptr_t k_ThreadContextMegaloObjectsOffset{ 0x4F0 };
+
+    // Elements of the megalo objects data array and bytes of each, all copied into the snapshot (D250).
+    constexpr std::size_t k_MaxMegaloObjects{ 0x200 };
+    constexpr std::size_t k_MegaloObjectSize{ 0x94 };
 }

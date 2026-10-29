@@ -17,6 +17,8 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_GameGlobalsSize;
     using Blam::Layout::Object::Type::Constant::k_MaxPlacements;
     using Blam::Layout::Object::Type::Constant::k_PlacementSize;
+    using Blam::Layout::Object::Type::Constant::k_MaxMegaloObjects;
+    using Blam::Layout::Object::Type::Constant::k_MegaloObjectSize;
     using Blam::Layout::Player::Type::Size::k_Base;
     using Blam::Layout::Interaction::Type::Offset::k_OutputUserStride;
 }
@@ -34,11 +36,13 @@ export namespace Blam::Layout::Snapshot::Type
         GameEngineGlobals,
         EventGlobals,
         Placements,
-        GameGlobals
+        GameGlobals,
+        // Elements of the megalo objects data array: the Megalo state of each object (D250).
+        MegaloObjects
     };
 
     // Number of regions, the size of Snapshot::Regions.
-    inline constexpr std::size_t k_RegionCount{ 8 };
+    inline constexpr std::size_t k_RegionCount{ 9 };
 
     // One block of game memory as it was when the snapshot was taken.
     struct Region
@@ -63,6 +67,7 @@ export namespace Blam::Layout::Snapshot::Type
         case RegionId::EventGlobals: return k_EventGlobalsSize;
         case RegionId::Placements: return static_cast<std::size_t>(k_MaxPlacements) * k_PlacementSize;
         case RegionId::GameGlobals: return k_GameGlobalsSize;
+        case RegionId::MegaloObjects: return k_MaxMegaloObjects * k_MegaloObjectSize;
         }
 
         return 0;
