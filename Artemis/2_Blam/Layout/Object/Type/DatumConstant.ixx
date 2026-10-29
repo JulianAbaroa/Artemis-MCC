@@ -18,8 +18,12 @@ export namespace Blam::Layout::Object::Type::Constant
     constexpr std::uint16_t k_MinDatumSize{ 0x1A8 };
 
     // Pointer of the thread context to the game mode, and the offset of the mode inside it.
+    // note: The engine calls the block "game globals": mode and game variant (the variant at +0x14E8, FUN_18007a164).
     constexpr std::uintptr_t k_ThreadContextGameModeOffset{ 0x48 };
     constexpr std::uintptr_t k_GameModeTypeOffset{ 0x10 };
+
+    // Bytes the engine registers for the game globals (FUN_180056a88), copied whole into the snapshot (D249).
+    constexpr std::size_t k_GameGlobalsSize{ 0x1F0E0 };
 
     // Game mode with a map variant (multiplayer, Forge included).
     constexpr std::uint8_t k_GameModeMultiplayer{ 3 };
@@ -47,6 +51,9 @@ export namespace Blam::Layout::Object::Type::Constant
     // Pointer of the thread context to the player mapping globals (A9 sec. 11.1).
     constexpr std::uintptr_t k_ThreadContextMappingOffset{ 0x158 };
 
+    // Bytes the engine registers for the player mapping globals (FUN_180043440), copied whole into the snapshot (D249).
+    constexpr std::size_t k_MappingGlobalsSize{ 0xE8 };
+
     // Pointer of the thread context to the player control globals, and the output user (view) entries inside them (A9 sec. 11.2).
     constexpr std::uintptr_t k_ThreadContextControlGlobalsOffset{ 0xD8 };
     constexpr std::uintptr_t k_ControlGlobalsOutputUserTableOffset{ 0x680 };
@@ -54,13 +61,22 @@ export namespace Blam::Layout::Object::Type::Constant
     // Pointer of the thread context to the game engine globals: phase and scores of the match (D103).
     constexpr std::uintptr_t k_ThreadContextGameEngineOffset{ 0x20 };
 
+    // Bytes the engine registers for the game engine globals (FUN_18007853c), copied whole into the snapshot (D249).
+    constexpr std::size_t k_GameEngineGlobalsSize{ 0x8430 };
+
     // Pointer of the thread context to the time globals, and their fields: engine tick, speed of the engine (D105), tick fraction.
     constexpr std::uintptr_t k_ThreadContextTimeGlobalsOffset{ 0xA0 };
     constexpr std::uintptr_t k_TimeGlobalsEngineTickOffset{ 0x0C };
     constexpr std::uintptr_t k_TimeGlobalsScaleOffset{ 0x10 };
     constexpr std::uintptr_t k_TimeGlobalsTickFractionOffset{ 0x14 };
 
+    // Bytes the engine registers for the time globals (FUN_18005c218), copied whole into the snapshot (D249).
+    constexpr std::size_t k_TimeGlobalsSize{ 0x3C };
+
     // Pointer of the thread context to the event globals, and the last sequence of the event ring inside them (D104).
     constexpr std::uintptr_t k_ThreadContextEventGlobalsOffset{ 0x98 };
     constexpr std::uintptr_t k_EventGlobalsSequenceOffset{ 0x10B30 };
+
+    // Bytes the engine registers for the event globals ("incident globals", FUN_1801092b0), copied whole into the snapshot (D249).
+    constexpr std::size_t k_EventGlobalsSize{ 0x10B68 };
 }

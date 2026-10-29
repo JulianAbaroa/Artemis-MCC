@@ -9,7 +9,7 @@ import std;
 export namespace Blam::Layout::Snapshot::Type
 {
     // Version of the .sdump format (D202). Raised when a header, a block or the order of the blocks changes.
-    inline constexpr std::uint32_t k_SnapshotDumpVersion{ 1 };
+    inline constexpr std::uint32_t k_SnapshotDumpVersion{ 2 };
 
     // First bytes of a .sdump file.
     inline constexpr std::array<char, 8> k_SnapshotDumpMagic{ 'A', 'S', 'D', 'U', 'M', 'P', '\0', '\0' };
@@ -51,7 +51,7 @@ export namespace Blam::Layout::Snapshot::Type
         std::array<char, 64> Source{};
     };
 
-    static_assert(sizeof(SnapshotDumpFileHeader) == 152);
+    static_assert(sizeof(SnapshotDumpFileHeader) == 160);
 
     // Start of one record, followed by SnapshotLoadInfo when Flags has k_SnapshotFirstAfterLoad, then ChangedRegionCount region
     // blocks, ChangedObjectCount object blocks in ascending index order and RemovedObjectCount u32 handles.

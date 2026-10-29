@@ -45,6 +45,8 @@ other region sizes is refused; a file without footer is reported as cut.
 ## Requirements
 - Generated files are never edited by hand: change the XML and run `GenerateDatum.py` (`--check` compares byte for byte).
 - No pointer or address is used to read: `Region::OriginalAddress` is only for tools and logs.
+- Each region is the whole block the engine allocates for it (or the whole array), so a field read later is already in older
+  recordings. A new region or a new size raises the `.sdump` version.
 
 ## Tests
 `LayoutTests` (snapshot reads, bounds) and `SnapshotRecordTests` (`.sdump` round trip) in `Artemis.Tests`; the offsets are

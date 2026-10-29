@@ -4,23 +4,21 @@ import Common.Engine.Type;
 import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
 import Blam.Layout.Interaction.Type;
-import Blam.Layout.Game.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxLocalUsers;
-    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
-    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Object::Type::Constant::k_MappingGlobalsSize;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsSize;
+    using Blam::Layout::Object::Type::Constant::k_GameEngineGlobalsSize;
+    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSize;
+    using Blam::Layout::Object::Type::Constant::k_GameGlobalsSize;
     using Blam::Layout::Object::Type::Constant::k_MaxPlacements;
     using Blam::Layout::Object::Type::Constant::k_PlacementSize;
     using Blam::Layout::Player::Type::Size::k_Base;
-    using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
-    using Blam::Layout::Player::Type::Mapping::k_EntryStride;
     using Blam::Layout::Interaction::Type::Offset::k_OutputUserStride;
-    using Blam::Layout::Game::Type::Offset::k_GameEnginePlayerScores;
-    using Blam::Layout::Game::Type::Offset::k_PlayerScoreStride;
 }
 
 export namespace Blam::Layout::Snapshot::Type
@@ -35,11 +33,12 @@ export namespace Blam::Layout::Snapshot::Type
         TimeGlobals,
         GameEngineGlobals,
         EventGlobals,
-        Placements
+        Placements,
+        GameGlobals
     };
 
     // Number of regions, the size of Snapshot::Regions.
-    inline constexpr std::size_t k_RegionCount{ 7 };
+    inline constexpr std::size_t k_RegionCount{ 8 };
 
     // One block of game memory as it was when the snapshot was taken.
     struct Region
@@ -50,18 +49,20 @@ export namespace Blam::Layout::Snapshot::Type
         std::vector<std::uint8_t> Bytes{};
     };
 
-    // return: Bytes that Capture copies for the region, the last field the code reads or the whole known structure.
+    // return: Bytes that Capture copies for the region: the whole block the engine registers, or the whole array (D249).
+    // note: A field read later is then already in the recordings made before it.
     constexpr auto RegionSize(RegionId id) -> std::size_t
     {
         switch (id)
         {
         case RegionId::PlayerArray: return k_MaxPlayers * k_Base;
-        case RegionId::PlayerMapping: return k_OutputUserPlayer + k_MaxLocalUsers * k_EntryStride;
+        case RegionId::PlayerMapping: return k_MappingGlobalsSize;
         case RegionId::Interaction: return k_MaxLocalUsers * k_OutputUserStride;
-        case RegionId::TimeGlobals: return k_TimeGlobalsTickFractionOffset + sizeof(float);
-        case RegionId::GameEngineGlobals: return k_GameEnginePlayerScores + k_MaxPlayers * k_PlayerScoreStride;
-        case RegionId::EventGlobals: return k_EventGlobalsSequenceOffset + sizeof(std::uint32_t);
+        case RegionId::TimeGlobals: return k_TimeGlobalsSize;
+        case RegionId::GameEngineGlobals: return k_GameEngineGlobalsSize;
+        case RegionId::EventGlobals: return k_EventGlobalsSize;
         case RegionId::Placements: return static_cast<std::size_t>(k_MaxPlacements) * k_PlacementSize;
+        case RegionId::GameGlobals: return k_GameGlobalsSize;
         }
 
         return 0;

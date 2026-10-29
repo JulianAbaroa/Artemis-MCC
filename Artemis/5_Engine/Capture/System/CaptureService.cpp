@@ -54,6 +54,7 @@ namespace Engine::Capture::System
             this->CopyRegion(*snapshot, RegionId::TimeGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextTimeGlobalsOffset));
             this->CopyRegion(*snapshot, RegionId::GameEngineGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameEngineOffset));
             this->CopyRegion(*snapshot, RegionId::EventGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextEventGlobalsOffset));
+            this->CopyRegion(*snapshot, RegionId::GameGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameModeOffset));
         }
 
         this->CopyRegion(*snapshot, RegionId::Placements, this->FindPlacements(threadContext));

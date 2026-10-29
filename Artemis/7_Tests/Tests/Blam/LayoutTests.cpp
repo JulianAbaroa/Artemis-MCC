@@ -26,6 +26,7 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_MaxPlacements;
     using Blam::Layout::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
     using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
     using Blam::Layout::Player::Type::Size::k_Base;
     using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
     using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
@@ -37,8 +38,8 @@ namespace
     using Blam::Layout::Game::Type::Offset::k_EventRingSlots;
     using Blam::Layout::Game::Type::Offset::k_EventEntrySize;
 
-    constexpr std::array<RegionId, 7> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
-        RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals, RegionId::Placements };
+    constexpr std::array<RegionId, 8> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
+        RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals, RegionId::Placements, RegionId::GameGlobals };
 
     auto RegionOf(Snapshot& snapshot, RegionId id) -> Region&
     {
@@ -159,16 +160,17 @@ TEST(SnapshotTest, ReadPlacementKeepsTheRulesOfBefore)
     EXPECT_FALSE(snapshot.ReadPlacement<std::uint8_t>(k_MaxPlacements, 0).has_value());
 }
 
-// Characterization (D185): each region copies up to the last field the code read on 2026-10-25, or the whole known structure.
-TEST(SnapshotTest, RegionSizesAreTheRangesReadToday)
+// Characterization (D249): each region copies the whole block the engine registers for it, or the whole array.
+TEST(SnapshotTest, RegionSizesAreTheEngineAllocations)
 {
     EXPECT_EQ(RegionSize(RegionId::PlayerArray), 0x4900u);
-    EXPECT_EQ(RegionSize(RegionId::PlayerMapping), 0xC8u);
+    EXPECT_EQ(RegionSize(RegionId::PlayerMapping), 0xE8u);
     EXPECT_EQ(RegionSize(RegionId::Interaction), 0x2C0u);
-    EXPECT_EQ(RegionSize(RegionId::TimeGlobals), 0x18u);
-    EXPECT_EQ(RegionSize(RegionId::GameEngineGlobals), 0x32F0u);
-    EXPECT_EQ(RegionSize(RegionId::EventGlobals), 0x10B34u);
+    EXPECT_EQ(RegionSize(RegionId::TimeGlobals), 0x3Cu);
+    EXPECT_EQ(RegionSize(RegionId::GameEngineGlobals), 0x8430u);
+    EXPECT_EQ(RegionSize(RegionId::EventGlobals), 0x10B68u);
     EXPECT_EQ(RegionSize(RegionId::Placements), 0x28Bu * 0x4Cu);
+    EXPECT_EQ(RegionSize(RegionId::GameGlobals), 0x1F0E0u);
 }
 
 TEST(SnapshotTest, RegionSizesCoverTheFieldsTheyHold)
@@ -182,6 +184,7 @@ TEST(SnapshotTest, RegionSizesCoverTheFieldsTheyHold)
     EXPECT_GE(RegionSize(RegionId::EventGlobals), k_EventRing + k_EventRingSlots * k_EventEntrySize);
     EXPECT_GE(RegionSize(RegionId::EventGlobals), k_EventGlobalsSequenceOffset + sizeof(std::uint32_t));
     EXPECT_EQ(RegionSize(RegionId::Placements), k_MaxPlacements * k_PlacementSize);
+    EXPECT_GT(RegionSize(RegionId::GameGlobals), k_GameModeTypeOffset);
     EXPECT_EQ(k_MaxLocalUsers, 4u);
 }
 
