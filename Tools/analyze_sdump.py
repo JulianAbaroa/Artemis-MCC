@@ -21,7 +21,8 @@ Ticks are the engine clock (time globals +0xC).
         Fields of one object datum (same filters as changes). HANDLE in hex.
 
 REGION is a name or index: PlayerArray PlayerMapping Interaction TimeGlobals GameEngineGlobals EventGlobals Placements GameGlobals
-(short: gee = GameEngineGlobals, gg = GameGlobals, ev = EventGlobals, time = TimeGlobals, players = PlayerArray).
+(short: gee = GameEngineGlobals, gg = GameGlobals, ev = EventGlobals, time = TimeGlobals, players = PlayerArray,
+megalo = MegaloObjects: 0x200 elements of 0x94, D250).
 """
 import argparse, os, struct, sys
 try:
@@ -29,9 +30,9 @@ try:
 except ImportError:
     sys.exit("numpy is required: pip install numpy")
 
-REGIONS = ["PlayerArray", "PlayerMapping", "Interaction", "TimeGlobals", "GameEngineGlobals", "EventGlobals", "Placements", "GameGlobals"]
-SHORT = {"gee": 4, "gg": 7, "ev": 5, "time": 3, "players": 0, "mapping": 1, "placements": 6, "interaction": 2}
-TRACKED = (0, 3, 4, 5, 7)
+REGIONS = ["PlayerArray", "PlayerMapping", "Interaction", "TimeGlobals", "GameEngineGlobals", "EventGlobals", "Placements", "GameGlobals", "MegaloObjects"]
+SHORT = {"gee": 4, "gg": 7, "ev": 5, "time": 3, "players": 0, "mapping": 1, "placements": 6, "interaction": 2, "megalo": 8}
+TRACKED = (0, 3, 4, 5, 7, 8)
 TYPES = {"u8": "<u1", "i8": "<i1", "u16": "<u2", "i16": "<i2", "u32": "<u4", "i32": "<i4", "f32": "<f4"}
 TIME, EVENTS = 3, 5
 RING_OFFSET, RING_LAST, ENTRY = 0xDB28, 0x10B30, 0x30
