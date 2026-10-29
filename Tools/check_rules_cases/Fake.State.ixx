@@ -1,9 +1,9 @@
-export module Viewer.Fake.State;
+export module DevTools.Viewer.Fake.State;
 
-import Viewer.Fake.System;
+import DevTools.Viewer.Fake.System;
 
 import std;
 
-export namespace Viewer::Fake::State
+export namespace DevTools::Viewer::Fake::State
 {
 }

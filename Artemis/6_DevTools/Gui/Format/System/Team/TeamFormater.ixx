@@ -1,8 +1,8 @@
-export module Gui.Format.System:Team;
+export module DevTools.Gui.Format.System:Team;
 
 import Common.Team.Type;
 
-export namespace Gui::Format::System
+export namespace DevTools::Gui::Format::System
 {
     // Converts the team enum to display text. Unlisted values give "Unknown".
     class TeamFormater

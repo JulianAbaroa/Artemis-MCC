@@ -1,7 +1,7 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :MapLoader;
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto MapLoaderService::OpenFile(const std::string& filePath) -> void
     {

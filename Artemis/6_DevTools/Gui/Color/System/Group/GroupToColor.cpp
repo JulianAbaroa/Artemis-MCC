@@ -2,10 +2,10 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Gui.Color.System;
+module DevTools.Gui.Color.System;
 import :Group;
 
-namespace Gui::Color::System
+namespace DevTools::Gui::Color::System
 {
     auto GroupToColor::FromGroup(Group group) -> ImVec4
     {

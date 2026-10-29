@@ -1,14 +1,14 @@
-export module Resolved.Definitions.Reflect:Mach;
+export module Blam.MapModel.Definitions.Reflect:Mach;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Mach::Mach;
+    using Blam::MapModel::Definitions::Type::Mach::Mach;
 }
 
 export namespace Common::Reflect::Type

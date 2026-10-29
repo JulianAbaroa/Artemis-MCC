@@ -1,23 +1,23 @@
-export module Platform.Lifecycle.Hook:EngineInitialize;
+export module Engine.Base.Lifecycle.Hook:EngineInitialize;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
+import Engine.Base.Memory.System;
+import Engine.Base.Lifecycle.Type;
+import Engine.Base.Lifecycle.State;
+import Engine.Base.Lifecycle.System;
 import std;
 
-export namespace Platform::Lifecycle::Hook
+export namespace Engine::Base::Lifecycle::Hook
 {
     // Hooks the engine initialization. Once the original returns, raises the engine initialized event and sets the status to Initialized.
     class EngineInitializeDetour
     {
     private:
         using Log = Common::Log::System::Log;
-        using AOBService = Platform::Memory::System::AOBService;
-        using EngineInitializeFunction = Platform::Lifecycle::Type::EngineInitializeFunction;
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using LifecycleService = Platform::Lifecycle::System::LifecycleService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
+        using EngineInitializeFunction = Engine::Base::Lifecycle::Type::EngineInitializeFunction;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using LifecycleService = Engine::Base::Lifecycle::System::LifecycleService;
 
     public:
         EngineInitializeDetour(Log& log, AOBService& aobService,

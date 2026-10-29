@@ -1,9 +1,9 @@
-module Platform.Match.State;
+module Engine.Match.State;
 import :MatchCycle;
 
 import std;
 
-namespace Platform::Match::State
+namespace Engine::Match::State
 {
     auto MatchCycleStore::IsLobbyOpen() const -> bool
     {

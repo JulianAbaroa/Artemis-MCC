@@ -1,7 +1,7 @@
-module Resolved.World.System;
+module Blam.MapModel.World.System;
 import :RegionStates;
 
-namespace Resolved::World::System
+namespace Blam::MapModel::World::System
 {
     auto RegionStatesBuilder::Build(const Coll& coll, const Mode* mode) -> RegionStates
     {

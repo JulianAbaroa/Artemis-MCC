@@ -1,17 +1,17 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Hlmt;
 
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
-    using Resolved::Definitions::Type::Hlmt::DamageTransfer;
-    using Resolved::Definitions::Type::Hlmt::ModelTarget;
-    using Resolved::Definitions::Type::Hlmt::RegionTransition;
-    using Resolved::Definitions::Type::Hlmt::Variant;
-    using Resolved::Definitions::Type::Hlmt::VariantPermutation;
-    using Resolved::Definitions::Type::Hlmt::VariantRegion;
-    using Resolved::Definitions::Type::Hlmt::VariantState;
+    using Blam::MapModel::Definitions::Type::Hlmt::DamageTransfer;
+    using Blam::MapModel::Definitions::Type::Hlmt::ModelTarget;
+    using Blam::MapModel::Definitions::Type::Hlmt::RegionTransition;
+    using Blam::MapModel::Definitions::Type::Hlmt::Variant;
+    using Blam::MapModel::Definitions::Type::Hlmt::VariantPermutation;
+    using Blam::MapModel::Definitions::Type::Hlmt::VariantRegion;
+    using Blam::MapModel::Definitions::Type::Hlmt::VariantState;
 
     // Copies the fields of a model target entry.
     template <typename TEntry>
@@ -101,7 +101,7 @@ namespace
     }
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto HlmtBuilder::Build(const HlmtObject& hlmt) -> Hlmt
     {

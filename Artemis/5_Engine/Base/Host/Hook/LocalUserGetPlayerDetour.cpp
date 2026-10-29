@@ -1,22 +1,22 @@
-module Platform.Host.Hook;
+module Engine.Base.Host.Hook;
 import :LocalUserGetPlayer;
 
-import Platform.Hook.System;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    using Platform::Host::Type::k_LocalUserGetPlayerIndex;
+    using Engine::Base::Host::Type::k_LocalUserGetPlayerIndex;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Host::Hook
+namespace Engine::Base::Host::Hook
 {
     auto __fastcall LocalUserGetPlayerDetour::HookedLocalUserGetPlayer(void* gameManager, std::uint64_t* xuid, wchar_t* name,
         std::uint32_t nameSize, std::int32_t player) -> bool
     {
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         auto* self{ s_Instance };
         auto& store{ self->m_LocalUserStore };
@@ -62,7 +62,7 @@ namespace Platform::Host::Hook
         void* functionAddress{ m_HostService.GetFunctionAddress(k_LocalUserGetPlayerIndex) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLocalUserGetPlayer),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[LocalUserGetPlayerDetour]", m_Log))
@@ -78,9 +78,9 @@ namespace Platform::Host::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[LocalUserGetPlayerDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

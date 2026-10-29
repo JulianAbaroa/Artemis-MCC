@@ -1,4 +1,4 @@
-module Platform.Host.State;
+module Engine.Base.Host.State;
 
 import Common.Engine.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Engine::Type::k_MaxLocalUsers;
 }
 
-namespace Platform::Host::State
+namespace Engine::Base::Host::State
 {
     LocalUserStore::LocalUserStore()
     {

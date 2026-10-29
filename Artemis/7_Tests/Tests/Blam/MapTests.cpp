@@ -2,8 +2,8 @@
 
 import Common.Log.Type;
 import Common.Log.System;
-import Map.Reader.Type;
-import Map.Layer;
+import Blam.Map.Reader.Type;
+import Blam.Map.Layer;
 import Tests.Support.Log;
 import Tests.Support.Maps;
 import std;
@@ -20,7 +20,7 @@ namespace
     using Tests::Support::Maps::LocatedFile;
     using Tests::Support::Maps::Locate;
 
-    using Map::Reader::Type::Magic::Tag::k_Scnr;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Scnr;
     using Tests::Support::Maps::k_ForgeHalo;
 
     // Lowest possible tag count of forge_halo: the sum of the tags the DLL loaded per group.
@@ -60,7 +60,7 @@ namespace
     }
 
     // Opens the files of a multiplayer map the way the engine reports them: the two cache files and then the map.
-    auto OpenWithCacheFiles(Map::Layer& map, const std::filesystem::path& mapPath) -> void
+    auto OpenWithCacheFiles(Blam::Map::Layer& map, const std::filesystem::path& mapPath) -> void
     {
         const std::filesystem::path folder{ mapPath.parent_path() };
         map.m_MapLoaderService.OpenFile((folder / "shared.map").string());
@@ -73,7 +73,7 @@ TEST(MapLoaderTests, CacheFilesOnlyRecordTheirPath)
 {
     CollectingSink sink{};
     Log log{ sink };
-    Map::Layer map{ log };
+    Blam::Map::Layer map{ log };
 
     const std::string shared{ "Z:\\NoGame\\haloreach\\maps\\shared.map" };
     const std::string campaign{ "Z:\\NoGame\\haloreach\\maps\\campaign.map" };
@@ -91,7 +91,7 @@ TEST(MapLoaderTests, OnlyTheFileNameDecidesWhatWasOpened)
 {
     CollectingSink sink{};
     Log log{ sink };
-    Map::Layer map{ log };
+    Blam::Map::Layer map{ log };
 
     // Folders named like the cache files do not count (D179): this is a map, and it does not exist.
     const std::string path{ "Z:\\shared\\campaign\\haloreach\\maps\\forge_halo.map" };
@@ -118,7 +118,7 @@ TEST(MapLoaderTests, MapThatEndsTooEarlyIsNotLoaded)
 
         CollectingSink sink{};
         Log log{ sink };
-        Map::Layer map{ log };
+        Blam::Map::Layer map{ log };
         map.m_MapLoaderService.OpenFile(cut.string());
 
         EXPECT_FALSE(map.m_FileStore.IsLoaded());
@@ -137,7 +137,7 @@ TEST(MapLoaderTests, ForgeHaloLoadsItsTagIndex)
 
     CollectingSink sink{};
     Log log{ sink };
-    Map::Layer map{ log };
+    Blam::Map::Layer map{ log };
     OpenWithCacheFiles(map, forge.Path);
 
     ASSERT_TRUE(map.m_FileStore.IsLoaded());
@@ -165,7 +165,7 @@ TEST(MapLoaderTests, ForgeHaloRawTagsMatchTheDll)
 
     CollectingSink sink{};
     Log log{ sink };
-    Map::Layer map{ log };
+    Blam::Map::Layer map{ log };
     OpenWithCacheFiles(map, forge.Path);
     ASSERT_TRUE(map.m_FileStore.IsLoaded());
 
@@ -184,7 +184,7 @@ TEST(MapLoaderTests, CleanupForgetsTheMap)
 
     CollectingSink sink{};
     Log log{ sink };
-    Map::Layer map{ log };
+    Blam::Map::Layer map{ log };
     OpenWithCacheFiles(map, forge.Path);
     ASSERT_TRUE(map.m_FileStore.IsLoaded());
 

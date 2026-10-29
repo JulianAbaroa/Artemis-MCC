@@ -1,4 +1,4 @@
-export module Viewer.Hud.System;
+export module DevTools.Viewer.Hud.System;
 
 export import :Affordances;
 export import :Collidables;
@@ -14,13 +14,13 @@ export import :FixtureLabels;
 export import :Labels;
 
 import Common.Engine.Type;
-import Service.Telemetry.State;
-import Platform.Render.State;
-import Export.Tick.Type;
-import Export.Tick.State;
-import Viewer.Collidable.State;
-import Viewer.Overlay.State;
-import Viewer.Selection.State;
+import Services.Telemetry.State;
+import Engine.Render.State;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Overlay.State;
+import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
@@ -28,20 +28,20 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Draws the overlay window with the telemetry or the panel of the selected object.
     class HudService
     {
     private:
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
 
-        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
-        using RenderStore = Platform::Render::State::RenderStore;
-        using CollidableStore = Viewer::Collidable::State::CollidableStore;
-        using TickStore = Export::Tick::State::TickStore;
-        using OverlayStore = Viewer::Overlay::State::OverlayStore;
-        using SelectionStore = Viewer::Selection::State::SelectionStore;
+        using TelemetryStore = Services::Telemetry::State::TelemetryStore;
+        using RenderStore = Engine::Render::State::RenderStore;
+        using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
+        using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
+        using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
 
     public:
         HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, CollidableStore& collidableStore,

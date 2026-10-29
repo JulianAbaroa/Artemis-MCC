@@ -1,26 +1,26 @@
-export module UI.Simulation.State;
+export module DevTools.Workbench.Simulation.State;
 
 import Common.Engine.Type;
-import Platform.Simulation.Type;
-import UI.Simulation.Type;
+import Engine.Control.Simulation.Type;
+import DevTools.Workbench.Simulation.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_MaxPlayers;
-    using UI::Simulation::Type::k_RecordNameSize;
+    using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
 }
 
-export namespace UI::Simulation::State
+export namespace DevTools::Workbench::Simulation::State
 {
     // Choices of the simulation tab that are not stored elsewhere.
     // note: UI thread only.
     class SimulationUIStore
     {
     private:
-        using LocalPlayerInput = UI::Simulation::Type::LocalPlayerInput;
-        using LocalPlayerAction = UI::Simulation::Type::LocalPlayerAction;
+        using LocalPlayerInput = DevTools::Workbench::Simulation::Type::LocalPlayerInput;
+        using LocalPlayerAction = DevTools::Workbench::Simulation::Type::LocalPlayerAction;
 
     public:
         SimulationUIStore() = default;

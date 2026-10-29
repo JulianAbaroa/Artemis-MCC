@@ -3,16 +3,16 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:RaycastPass;
+export module DevTools.Viewer.Map.System:RaycastPass;
 
 import Common.Log.System;
-import Platform.Render.System;
-import Egocentric.Raycast.Type;
-import Export.Tick.Type;
-import Viewer.Map.Type;
+import Engine.Render.System;
+import Views.Raycast.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws the raycasts of the aim and the perception as lines. Colors depend on what each ray hit.
     class RaycastPass
@@ -23,9 +23,9 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Raycasts = Egocentric::Raycast::Type::Raycasts;
+        using Raycasts = Views::Raycast::Type::Raycasts;
 
     public:
         explicit RaycastPass(Log& log) : m_Log(log) {}
@@ -49,6 +49,6 @@ export namespace Viewer::Map::System
         UINT m_Capacity{ 0 };
         UINT m_VertexCount{ 0 };
 
-        Platform::Render::System::UploadGate m_Gate{};
+        Engine::Render::System::UploadGate m_Gate{};
     };
 }

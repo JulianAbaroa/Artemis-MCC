@@ -3,21 +3,21 @@ module;
 #include <windows.h>
 #include "External/imgui/imgui.h"
 
-module UI.Bench.System;
+module DevTools.Workbench.Bench.System;
 
 import Common.Engine.Type;
 import Common.Log.Type;
 import Common.Semantic.Type;
 import Common.Math.System;
 import Common.Text.System;
-import Service.Logs.Type;
-import Platform.Host.Type;
-import Platform.Input.Type;
-import Environment.Players.Type;
-import Environment.Events.Type;
-import Export.Tick.Type;
-import UI.Simulation.Type;
-import UI.Simulation.System;
+import Services.Logs.Type;
+import Engine.Base.Host.Type;
+import Engine.Control.Input.Type;
+import Perception.Players.Type;
+import Perception.Events.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Workbench.Simulation.Type;
+import DevTools.Workbench.Simulation.System;
 import std;
 
 namespace
@@ -32,35 +32,35 @@ namespace
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
     using Common::Log::Type::LogLevel;
-    using Platform::Input::Type::InputState;
-    using Platform::Input::Type::LocalInputSource;
-    using Platform::Input::Type::PlayerActions;
-    using UI::Simulation::Type::LocalPlayerAction;
-    using UI::Simulation::System::BuildActionOverride;
-    using Service::Logs::Type::LogEntry;
-    using Environment::Players::Type::Player;
-    using Environment::Events::Type::GameEvent;
+    using Engine::Control::Input::Type::InputState;
+    using Engine::Control::Input::Type::LocalInputSource;
+    using Engine::Control::Input::Type::PlayerActions;
+    using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
+    using DevTools::Workbench::Simulation::System::BuildActionOverride;
+    using Services::Logs::Type::LogEntry;
+    using Perception::Players::Type::Player;
+    using Perception::Events::Type::GameEvent;
     using Common::Semantic::Type::EventKey::EventKeyLabel;
     using Common::Semantic::Type::EventKey::FindEventKey;
-    using UI::Bench::Type::BenchAction;
-    using UI::Bench::Type::BenchCheck;
-    using UI::Bench::Type::BenchPlayers;
-    using UI::Bench::Type::BenchPlayerSample;
-    using UI::Bench::Type::BenchProbe;
-    using UI::Bench::Type::BenchProbeState;
-    using UI::Bench::Type::BenchRequest;
-    using UI::Bench::Type::BenchCheckResult;
-    using UI::Bench::Type::BenchMatch;
-    using UI::Bench::Type::BenchMatchReport;
-    using UI::Bench::Type::BenchPhase;
-    using UI::Bench::Type::BenchRun;
-    using UI::Bench::Type::BenchScenario;
+    using DevTools::Workbench::Bench::Type::BenchAction;
+    using DevTools::Workbench::Bench::Type::BenchCheck;
+    using DevTools::Workbench::Bench::Type::BenchPlayers;
+    using DevTools::Workbench::Bench::Type::BenchPlayerSample;
+    using DevTools::Workbench::Bench::Type::BenchProbe;
+    using DevTools::Workbench::Bench::Type::BenchProbeState;
+    using DevTools::Workbench::Bench::Type::BenchRequest;
+    using DevTools::Workbench::Bench::Type::BenchCheckResult;
+    using DevTools::Workbench::Bench::Type::BenchMatch;
+    using DevTools::Workbench::Bench::Type::BenchMatchReport;
+    using DevTools::Workbench::Bench::Type::BenchPhase;
+    using DevTools::Workbench::Bench::Type::BenchRun;
+    using DevTools::Workbench::Bench::Type::BenchScenario;
 
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
-    using Platform::Host::Type::k_GameModuleName;
-    using Platform::Host::Type::k_HostModuleName;
-    using UI::Bench::Type::k_BenchFileName;
+    using Engine::Base::Host::Type::k_GameModuleName;
+    using Engine::Base::Host::Type::k_HostModuleName;
+    using DevTools::Workbench::Bench::Type::k_BenchFileName;
 
     // How long each phase may take before the match is given up. The launch includes the wait for the lobby (180 s in the hook).
     constexpr seconds k_LaunchTimeout{ 200 };
@@ -237,13 +237,13 @@ namespace
     }
 
     // return: Players of the tick, null without one.
-    auto GetPlayers(const std::shared_ptr<const Export::Tick::Type::Tick>& tick) -> const std::vector<Player>*
+    auto GetPlayers(const std::shared_ptr<const Bridge::Codec::Tick::Type::Tick>& tick) -> const std::vector<Player>*
     {
         return tick != nullptr && tick->Players != nullptr ? &tick->Players->Rows : nullptr;
     }
 }
 
-namespace UI::Bench::System
+namespace DevTools::Workbench::Bench::System
 {
     auto BenchUIService::Initialize() -> void
     {

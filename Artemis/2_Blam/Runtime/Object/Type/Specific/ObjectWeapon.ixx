@@ -1,8 +1,8 @@
-export module Tables.Object.Type:Weapon;
+export module Blam.Runtime.Object.Type:Weapon;
 
 import std;
 
-export namespace Tables::Object::Type::Weapon
+export namespace Blam::Runtime::Object::Type::Weapon
 {
     // Reload or melee animation the weapon is playing.
     // note: Decoded from bits 5 and 6 of the action byte. The value 0x40 alone was never seen.

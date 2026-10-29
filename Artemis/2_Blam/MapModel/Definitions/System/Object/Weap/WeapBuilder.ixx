@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Weap;
+export module Blam.MapModel.Definitions.System:Weap;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the weapon definition.
     class WeapBuilder
     {
     private:
-        using WeapObject = Map::Tag::Type::Weap::Object::WeapObject;
-        using Weap = Resolved::Definitions::Type::Weap::Weap;
+        using WeapObject = Blam::Map::Tag::Type::Weap::Object::WeapObject;
+        using Weap = Blam::MapModel::Definitions::Type::Weap::Weap;
 
     public:
         explicit WeapBuilder(ObjectBuilder& objectBuilder) :

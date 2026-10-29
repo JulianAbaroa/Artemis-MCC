@@ -1,8 +1,8 @@
-module Service.Preferences.System;
+module Services.Preferences.System;
 
 import std;
 
-namespace Service::Preferences::System
+namespace Services::Preferences::System
 {
     auto PreferencesService::Save() -> void
     {

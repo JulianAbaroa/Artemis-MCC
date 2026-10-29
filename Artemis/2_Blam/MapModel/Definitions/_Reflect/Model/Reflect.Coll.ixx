@@ -1,16 +1,16 @@
-export module Resolved.Definitions.Reflect:Coll;
+export module Blam.MapModel.Definitions.Reflect:Coll;
 
 import Common.Math.Type;
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Node;
-    using Resolved::Definitions::Type::Coll::CollMesh;
-    using Resolved::Definitions::Type::Coll::Material;
-    using Resolved::Definitions::Type::Coll::Coll;
+    using Blam::MapModel::Definitions::Type::Coll::CollMesh;
+    using Blam::MapModel::Definitions::Type::Coll::Material;
+    using Blam::MapModel::Definitions::Type::Coll::Coll;
 }
 
 export namespace Common::Reflect::Type

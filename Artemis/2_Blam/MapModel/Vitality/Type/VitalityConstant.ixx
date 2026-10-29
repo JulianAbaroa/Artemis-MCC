@@ -1,8 +1,8 @@
-export module Resolved.Vitality.Type:Constant;
+export module Blam.MapModel.Vitality.Type:Constant;
 
 import std;
 
-export namespace Resolved::Vitality::Type::Constant
+export namespace Blam::MapModel::Vitality::Type::Constant
 {
     // Instant response flag "Kills Object".
     constexpr std::uint32_t k_FlagKillsObject{ 1u << 0 };

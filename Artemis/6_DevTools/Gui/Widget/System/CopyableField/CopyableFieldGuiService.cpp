@@ -2,18 +2,18 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Gui.Widget.System;
+module DevTools.Gui.Widget.System;
 import :CopyableField;
 
-import Gui.Style.Type;
+import DevTools.Gui.Style.Type;
 import std;
 
 namespace
 {
-    using Gui::Style::Type::k_AnimationDuration;
+    using DevTools::Gui::Style::Type::k_AnimationDuration;
 }
 
-namespace Gui::Widget::System
+namespace DevTools::Gui::Widget::System
 {
     auto CopyableFieldGuiService::Draw(const char* label, const std::string& value,
         std::uint32_t ownerHandle) -> void

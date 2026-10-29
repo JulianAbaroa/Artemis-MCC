@@ -1,20 +1,20 @@
-module Platform.Input.State;
+module Engine.Control.Input.State;
 import :PlayerAction;
 
 import Common.Math.Type;
-import Layout.Action.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Layout::Action::Type::Offset::k_ActionButtonsOffset;
-    using Layout::Action::Type::Size::k_MaxActionPlayers;
-    using Layout::Action::Type::Size::k_PlayerActionSize;
-    using Platform::Input::Type::k_ShadowFieldCount;
+    using Blam::Layout::Action::Type::Offset::k_ActionButtonsOffset;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
+    using Engine::Control::Input::Type::k_ShadowFieldCount;
     using Common::Math::Type::k_TwoPi;
 }
 
-namespace Platform::Input::State
+namespace Engine::Control::Input::State
 {
     auto PlayerActionStore::Publish(const PlayerActions& actions) -> void
     {

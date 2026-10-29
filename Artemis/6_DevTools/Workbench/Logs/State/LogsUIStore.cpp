@@ -1,6 +1,6 @@
-module UI.Logs.State;
+module DevTools.Workbench.Logs.State;
 
-namespace UI::Logs::State
+namespace DevTools::Workbench::Logs::State
 {
     auto LogsUIStore::GetSearchBuffer() -> char*
     {

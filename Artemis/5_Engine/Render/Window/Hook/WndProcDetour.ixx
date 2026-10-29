@@ -2,15 +2,15 @@ module;
 
 #include <windows.h>
 
-export module Platform.Window.Hook:WndProc;
+export module Engine.Render.Window.Hook:WndProc;
 
 import Common.Log.System;
-import Platform.Window.System;
-import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
+import Engine.Render.Window.System;
+import Engine.Base.Lifecycle.State;
+import Engine.Base.Lifecycle.System;
 import std;
 
-export namespace Platform::Window::Hook
+export namespace Engine::Render::Window::Hook
 {
     // Subclasses the game window procedure to forward window messages to the input handlers.
     // note: Signals shutdown when the window is closed or destroyed.
@@ -19,10 +19,10 @@ export namespace Platform::Window::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using InputService = Platform::Window::System::InputService;
+        using InputService = Engine::Render::Window::System::InputService;
 
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using LifecycleService = Platform::Lifecycle::System::LifecycleService;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using LifecycleService = Engine::Base::Lifecycle::System::LifecycleService;
 
     public:
         WndProcDetour(Log& log, InputService& inputService,

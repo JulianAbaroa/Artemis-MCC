@@ -1,37 +1,37 @@
-export module Platform.Simulation.System;
+export module Engine.Control.Simulation.System;
 
 import Common.Log.System;
 import Control.Action.Type;
 import Control.Action.System;
-import Platform.Memory.System;
-import Platform.Simulation.Type;
-import Platform.Simulation.State;
+import Engine.Base.Memory.System;
+import Engine.Control.Simulation.Type;
+import Engine.Control.Simulation.State;
 import std;
 
-export namespace Platform::Simulation::System
+export namespace Engine::Control::Simulation::System
 {
     // Adds bots to the match: each one is a player of a machine that only Artemis knows, created like a player that joins in progress
     // (A9 M5b). Also publishes the machines and players of the engine every tick (A9 M5a).
     // note: The simulation sees a bot as a remote player: no view, no local input. Its action of each tick comes from the overrides of
     // the PlayerAction hook (D109). The bots skip the session and the simulation queue, so the film does not have them (A9 sec. 13.4).
-    class BotService : public Control::Action::System::UnitRules
+    class BotService : public ::Control::Action::System::UnitRules
     {
     private:
         using Log = Common::Log::System::Log;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
-        using SetMachinesFunction = Platform::Simulation::Type::SetMachinesFunction;
-        using ApplyPlayerAddedFunction = Platform::Simulation::Type::ApplyPlayerAddedFunction;
-        using ApplyPlayerConfigurationFunction = Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
-        using GatherInteractionsFunction = Platform::Simulation::Type::GatherInteractionsFunction;
-        using UnitSelectorFunction = Platform::Simulation::Type::UnitSelectorFunction;
-        using NextZoomLevelFunction = Platform::Simulation::Type::NextZoomLevelFunction;
-        using CanUnitZoomFunction = Platform::Simulation::Type::CanUnitZoomFunction;
-        using UnitClientState = Control::Action::Type::UnitClientState;
-        using TeamRequest = Platform::Simulation::Type::TeamRequest;
+        using SetMachinesFunction = Engine::Control::Simulation::Type::SetMachinesFunction;
+        using ApplyPlayerAddedFunction = Engine::Control::Simulation::Type::ApplyPlayerAddedFunction;
+        using ApplyPlayerConfigurationFunction = Engine::Control::Simulation::Type::ApplyPlayerConfigurationFunction;
+        using GatherInteractionsFunction = Engine::Control::Simulation::Type::GatherInteractionsFunction;
+        using UnitSelectorFunction = Engine::Control::Simulation::Type::UnitSelectorFunction;
+        using NextZoomLevelFunction = Engine::Control::Simulation::Type::NextZoomLevelFunction;
+        using CanUnitZoomFunction = Engine::Control::Simulation::Type::CanUnitZoomFunction;
+        using UnitClientState = ::Control::Action::Type::UnitClientState;
+        using TeamRequest = Engine::Control::Simulation::Type::TeamRequest;
 
-        using BotStore = Platform::Simulation::State::BotStore;
+        using BotStore = Engine::Control::Simulation::State::BotStore;
 
     public:
         BotService(Log& log, AOBService& aobService, BotStore& botStore) :

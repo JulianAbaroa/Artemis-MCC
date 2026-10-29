@@ -1,15 +1,15 @@
-module Egocentric.Self.System;
+module Views.Self.System;
 
-import Egocentric.Self.Type;
+import Views.Self.Type;
 
 namespace
 {
-    using Egocentric::Self::Type::Self;
+    using Views::Self::Type::Self;
 
-    using Egocentric::Self::Type::k_SelfLocalIndex;
+    using Views::Self::Type::k_SelfLocalIndex;
 }
 
-namespace Egocentric::Self::System
+namespace Views::Self::System
 {
     auto SelfService::Update() -> void
     {

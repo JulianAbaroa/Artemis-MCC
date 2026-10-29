@@ -2,9 +2,9 @@ module;
 
 #include <cassert>
 
-module Resolved.World.State;
+module Blam.MapModel.World.State;
 
-namespace Resolved::World::State
+namespace Blam::MapModel::World::State
 {
     auto WorldStore::GetCollForObject(const std::string& objectTagName,
         const DefinitionsStore& definitionsStore) const -> const Coll*

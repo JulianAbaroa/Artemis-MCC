@@ -1,8 +1,8 @@
-export module UI.Logs.State;
+export module DevTools.Workbench.Logs.State;
 
 import std;
 
-export namespace UI::Logs::State
+export namespace DevTools::Workbench::Logs::State
 {
     // Search text, line selection and copy animation of the logs window.
     class LogsUIStore

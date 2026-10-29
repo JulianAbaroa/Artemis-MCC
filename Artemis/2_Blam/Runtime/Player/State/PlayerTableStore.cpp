@@ -1,6 +1,6 @@
-module Tables.Player.State;
+module Blam.Runtime.Player.State;
 
-namespace Tables::Player::State
+namespace Blam::Runtime::Player::State
 {
     auto PlayerTableStore::AddPlayer(std::uint32_t handle, const AlivePlayer& player) -> void
     {

@@ -1,12 +1,12 @@
 export module Control.Action.Type;
 
-import Layout.Action.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Layout::Action::Type::k_HoldLanes;
-    using Layout::Action::Type::k_NoZoomLevel;
+    using Blam::Layout::Action::Type::k_HoldLanes;
+    using Blam::Layout::Action::Type::k_NoZoomLevel;
 }
 
 export namespace Control::Action::Type

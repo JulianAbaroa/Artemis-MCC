@@ -2,10 +2,10 @@ module;
 
 #include <windows.h>
 
-module Platform.Memory.System;
+module Engine.Base.Memory.System;
 import :Reader;
 
-namespace Platform::Memory::System
+namespace Engine::Base::Memory::System
 {
     auto MemoryReaderService::CopyFromGame(std::uintptr_t address, void* destination,
         std::size_t bytes) -> bool

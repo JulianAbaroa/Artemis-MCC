@@ -1,13 +1,13 @@
-export module Platform.Lifecycle.Hook:DestroySubsystems;
+export module Engine.Base.Lifecycle.Hook:DestroySubsystems;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
+import Engine.Base.Memory.System;
+import Engine.Base.Lifecycle.Type;
+import Engine.Base.Lifecycle.State;
+import Engine.Base.Lifecycle.System;
 import std;
 
-export namespace Platform::Lifecycle::Hook
+export namespace Engine::Base::Lifecycle::Hook
 {
     // Hooks the engine destruction. Before the original runs, stops Artemis work and raises the unhook and cleanup events.
     // note: Sets the status to TearingDown first and to Destroyed after the original returns.
@@ -15,10 +15,10 @@ export namespace Platform::Lifecycle::Hook
     {
     private:
         using Log = Common::Log::System::Log;
-        using AOBService = Platform::Memory::System::AOBService;
-        using DestroySubsystemsFunction = Platform::Lifecycle::Type::DestroySubsystemsFunction;
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using LifecycleService = Platform::Lifecycle::System::LifecycleService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
+        using DestroySubsystemsFunction = Engine::Base::Lifecycle::Type::DestroySubsystemsFunction;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using LifecycleService = Engine::Base::Lifecycle::System::LifecycleService;
 
     public:
         DestroySubsystemsDetour(Log& log, AOBService& aobService,

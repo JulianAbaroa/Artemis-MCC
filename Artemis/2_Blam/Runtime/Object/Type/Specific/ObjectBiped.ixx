@@ -1,17 +1,17 @@
-export module Tables.Object.Type:Biped;
+export module Blam.Runtime.Object.Type:Biped;
 
 import Common.Math.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec2;
     using Common::Math::Type::Vec3;
-    using Resolved::Definitions::Type::Object::DamageReportingType;
+    using Blam::MapModel::Definitions::Type::Object::DamageReportingType;
 }
 
-export namespace Tables::Object::Type::Biped
+export namespace Blam::Runtime::Object::Type::Biped
 {
     // Zoom stage of the biped.
     enum class ZoomLevel : std::uint8_t

@@ -3,10 +3,10 @@
 
 import Common.Log.System;
 import Common.Log.Type;
-import Service.Settings.State;
-import Platform.Match.Type;
-import Platform.Match.State;
-import Platform.Match.System;
+import Services.Settings.State;
+import Engine.Match.Type;
+import Engine.Match.State;
+import Engine.Match.System;
 import Tests.Support.Log;
 import std;
 
@@ -18,14 +18,14 @@ namespace
     using Common::Log::System::Log;
     using Common::Log::Type::LogLevel;
     using Common::Log::Type::LogMessage;
-    using Platform::Match::State::MatchConfigStore;
-    using Platform::Match::System::MatchConfigService;
-    using Service::Settings::State::SettingsStore;
+    using Engine::Match::State::MatchConfigStore;
+    using Engine::Match::System::MatchConfigService;
+    using Services::Settings::State::SettingsStore;
     using Tests::Support::Log::CollectingSink;
 
-    using Platform::Match::Type::k_ConfigurationBaseMapOffset;
-    using Platform::Match::Type::k_EngineConfigurationSize;
-    using Platform::Match::Type::k_TransplantBlocks;
+    using Engine::Match::Type::k_ConfigurationBaseMapOffset;
+    using Engine::Match::Type::k_EngineConfigurationSize;
+    using Engine::Match::Type::k_TransplantBlocks;
 
     using std::filesystem::path;
 

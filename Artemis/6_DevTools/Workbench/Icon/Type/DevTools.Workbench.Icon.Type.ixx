@@ -1,0 +1,27 @@
+module;
+
+#include "External/imgui/imgui.h"
+#include <d3d11.h>
+
+export module DevTools.Workbench.Icon.Type;
+
+export namespace DevTools::Workbench::Icon::Type
+{
+    // GPU texture of an icon with its size.
+    struct IconTexture
+    {
+        ID3D11ShaderResourceView* SRV{ nullptr };
+        int Width{ 0 };
+        int Height{ 0 };
+
+        auto IsValid() const -> bool
+        {
+            return SRV != nullptr;
+        }
+
+        auto ID() const -> ImTextureID
+        {
+            return (ImTextureID)SRV;
+        }
+    };
+}

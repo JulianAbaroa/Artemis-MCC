@@ -1,8 +1,8 @@
-module Viewer.Overlay.State;
+module DevTools.Viewer.Overlay.State;
 
 import std;
 
-namespace Viewer::Overlay::State
+namespace DevTools::Viewer::Overlay::State
 {
     auto OverlayStore::GetMode() const -> Mode
     {

@@ -1,10 +1,10 @@
-export module Platform.Memory.System:AOB;
+export module Engine.Base.Memory.System:AOB;
 
 import Common.Log.System;
-import Platform.Memory.Type;
+import Engine.Base.Memory.Type;
 import std;
 
-export namespace Platform::Memory::System
+export namespace Engine::Base::Memory::System
 {
     // Finds byte patterns (AOB) inside a loaded module.
     class AOBService
@@ -12,7 +12,7 @@ export namespace Platform::Memory::System
     private:
         using Log = Common::Log::System::Log;
 
-        using Signature = Platform::Memory::Type::Signature::Signature;
+        using Signature = Engine::Base::Memory::Type::Signature::Signature;
 
     public:
         AOBService(Log& log) : m_Log(log) {}

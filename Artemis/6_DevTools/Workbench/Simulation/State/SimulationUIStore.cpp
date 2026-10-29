@@ -1,11 +1,11 @@
-module UI.Simulation.State;
+module DevTools.Workbench.Simulation.State;
 
 namespace
 {
-    using UI::Simulation::Type::k_RecordNameSize;
+    using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
 }
 
-namespace UI::Simulation::State
+namespace DevTools::Workbench::Simulation::State
 {
     auto SimulationUIStore::GetLocalPlayerInput(std::size_t player) const -> LocalPlayerInput
     {

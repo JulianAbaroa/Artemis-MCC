@@ -1,10 +1,10 @@
-export module Resolved.Definitions.Type:Ctrl;
+export module Blam.MapModel.Definitions.Type:Ctrl;
 
 import :Object;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Ctrl
+export namespace Blam::MapModel::Definitions::Type::Ctrl
 {
     // Holds the control definition.
     // Waiting for some system to need this.

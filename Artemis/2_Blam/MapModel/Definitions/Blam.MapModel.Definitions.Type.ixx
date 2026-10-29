@@ -1,0 +1,20 @@
+export module Blam.MapModel.Definitions.Type;
+
+export import :Object;
+export import :Bipd;
+export import :Bloc;
+export import :Coll;
+export import :Ctrl;
+export import :Eqip;
+export import :Hlmt;
+export import :Jpt;
+export import :Mach;
+export import :Mode;
+export import :Phmo;
+export import :Proj;
+export import :Sbsp;
+export import :Scen;
+export import :Scnr;
+export import :Sddt;
+export import :Vehi;
+export import :Weap;

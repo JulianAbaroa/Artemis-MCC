@@ -1,16 +1,16 @@
-export module Map.Reader.System:Geometry.MeshDecoder;
+export module Blam.Map.Reader.System:Geometry.MeshDecoder;
 
 import :DataStream;
 import :Formula;
 
 import Common.Math.Type;
 import Common.Log.System;
-import Map.Reader.Type;
-import Map.Reader.State;
-import Map.Tag.Type;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
+import Blam.Map.Tag.Type;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Decodes the vertex and index buffers of the mesh sections into triangles.
     class GeometryMeshDecoderService
@@ -18,19 +18,19 @@ export namespace Map::Reader::System
     private:
         using Vec3 = Common::Math::Type::Vec3;
         using Triangle = Common::Math::Type::Triangle;
-        using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
-        using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
-        using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
-        using Lbsp_MeshesObject = Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
-        using Sbsp_CompressionInfoEntry_3 = Map::Tag::Type::Sbsp::Structure::Sbsp_CompressionInfoEntry_3;
-        using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
-        using VertexDecodeContext = Map::Reader::Type::Geometry::VertexDecodeContext;
-        using BufferInfo = Map::Reader::Type::Geometry::BufferInfo;
+        using SbspObject = Blam::Map::Tag::Type::Sbsp::Object::SbspObject;
+        using LbspObject = Blam::Map::Tag::Type::Lbsp::Object::LbspObject;
+        using ZoneObject = Blam::Map::Tag::Type::Zone::Object::ZoneObject;
+        using Lbsp_MeshesObject = Blam::Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
+        using Sbsp_CompressionInfoEntry_3 = Blam::Map::Tag::Type::Sbsp::Structure::Sbsp_CompressionInfoEntry_3;
+        using Zone_TagResourcesObject = Blam::Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+        using VertexDecodeContext = Blam::Map::Reader::Type::Geometry::VertexDecodeContext;
+        using BufferInfo = Blam::Map::Reader::Type::Geometry::BufferInfo;
 
         using Log = Common::Log::System::Log;
-        using FileStore = Map::Reader::State::FileStore;
-        using DataStreamService = Map::Reader::System::DataStreamService;
-        using FormulaService = Map::Reader::System::FormulaService;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using DataStreamService = Blam::Map::Reader::System::DataStreamService;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
 
     public:
         GeometryMeshDecoderService(Log& log, FileStore& fileStore,

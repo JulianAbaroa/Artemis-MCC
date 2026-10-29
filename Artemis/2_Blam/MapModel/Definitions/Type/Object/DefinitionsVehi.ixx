@@ -1,10 +1,10 @@
-export module Resolved.Definitions.Type:Vehi;
+export module Blam.MapModel.Definitions.Type:Vehi;
 
 import :Object;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Vehi
+export namespace Blam::MapModel::Definitions::Type::Vehi
 {
     // Seat type the AI uses, same ids as the tag.
     enum class SeatKind : std::uint8_t

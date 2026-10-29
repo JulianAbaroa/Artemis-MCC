@@ -3,18 +3,18 @@ module;
 #include <windows.h>
 #include "External/minhook/include/MinHook.h"
 
-module Platform.Window.Hook;
+module Engine.Render.Window.Hook;
 import :GetRawInputData;
 
-import Platform.Window.Type;
-import Platform.Hook.System;
+import Engine.Render.Window.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    using Platform::Window::Type::RawMouse;
+    using Engine::Render::Window::Type::RawMouse;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 
     inline auto SwallowMouse(RAWMOUSE& mouse) -> void
     {
@@ -24,7 +24,7 @@ namespace
     }
 }
 
-namespace Platform::Window::Hook
+namespace Engine::Render::Window::Hook
 {
     auto WINAPI GetRawInputDataDetour::HookedGetRawInputData(HRAWINPUT hRawInput,
         UINT command, LPVOID data, PUINT dataSize, UINT headerSize) -> UINT
@@ -36,7 +36,7 @@ namespace Platform::Window::Hook
 
         if (!self) return size;
 
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         if (size == static_cast<UINT>(-1) || !data || command != RID_INPUT) return size;
 
@@ -81,7 +81,7 @@ namespace Platform::Window::Hook
             GetProcAddress(user32, "GetRawInputData"));
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedGetRawInputData),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[GetRawInputDataDetour]", m_Log))
@@ -96,9 +96,9 @@ namespace Platform::Window::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[GetRawInputDataDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

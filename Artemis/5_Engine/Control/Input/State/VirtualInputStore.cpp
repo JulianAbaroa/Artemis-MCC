@@ -1,8 +1,8 @@
-module Platform.Input.State;
+module Engine.Control.Input.State;
 import :VirtualInput;
 import std;
 
-namespace Platform::Input::State
+namespace Engine::Control::Input::State
 {
     auto VirtualInputStore::SetSource(std::size_t player, LocalInputSource source) -> void
     {

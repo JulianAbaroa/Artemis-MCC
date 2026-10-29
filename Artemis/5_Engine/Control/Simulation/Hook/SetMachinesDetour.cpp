@@ -1,27 +1,27 @@
-module Platform.Simulation.Hook;
+module Engine.Control.Simulation.Hook;
 import :SetMachines;
 
-import Platform.Memory.Type;
-import Platform.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 
-    using Platform::Simulation::Type::MachineIdentifier;
-    using Platform::Simulation::Type::FakeMachine;
+    using Engine::Control::Simulation::Type::MachineIdentifier;
+    using Engine::Control::Simulation::Type::FakeMachine;
 
-    using Platform::Simulation::Type::k_MaxMachines;
+    using Engine::Control::Simulation::Type::k_MaxMachines;
 }
 
-namespace Platform::Simulation::Hook
+namespace Engine::Control::Simulation::Hook
 {
     auto __fastcall SetMachinesDetour::HookedSetMachines(std::uint32_t mask, const MachineIdentifier* identifiers) -> void
     {
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         std::vector<FakeMachine> fakeMachines{};
         s_Instance->m_BotStore.CopyFakeMachines(fakeMachines);
@@ -61,7 +61,7 @@ namespace Platform::Simulation::Hook
         void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::k_SetMachines)) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedSetMachines),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[SetMachinesDetour]", m_Log))
@@ -77,9 +77,9 @@ namespace Platform::Simulation::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[SetMachinesDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

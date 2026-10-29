@@ -2,11 +2,11 @@ module;
 
 #include "External/imgui/imgui.h"
 
-export module Gui.Widget.System:ResponsiveCard;
+export module DevTools.Gui.Widget.System:ResponsiveCard;
 
 import std;
 
-export namespace Gui::Widget::System
+export namespace DevTools::Gui::Widget::System
 {
     // Draws content inside a rounded card of fixed size.
     class ResponsiveCardGuiService

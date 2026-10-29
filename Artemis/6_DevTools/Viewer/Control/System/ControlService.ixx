@@ -1,14 +1,14 @@
-export module Viewer.Control.System;
+export module DevTools.Viewer.Control.System;
 
-import Service.Settings.State;
-import Platform.Window.Type;
-import Viewer.Camera.State;
-import Viewer.Selection.State;
-import Viewer.Overlay.State;
-import Viewer.Options.State;
+import Services.Settings.State;
+import Engine.Render.Window.Type;
+import DevTools.Viewer.Camera.State;
+import DevTools.Viewer.Selection.State;
+import DevTools.Viewer.Overlay.State;
+import DevTools.Viewer.Options.State;
 import std;
 
-export namespace Viewer::Control::System
+export namespace DevTools::Viewer::Control::System
 {
     // Turns window messages and raw mouse movement into viewer actions.
     // F4 toggles the viewer, TAB switches between the Free and the Game mode, the key left of the 1 (|) cycles the follow mode (Free mode only) and F6 toggles the labels.
@@ -18,13 +18,13 @@ export namespace Viewer::Control::System
     class ControlService
     {
     private:
-        using SettingsStore = Service::Settings::State::SettingsStore;
-        using WindowMessage = Platform::Window::Type::WindowMessage;
-        using RawMouse = Platform::Window::Type::RawMouse;
-        using CameraStore = Viewer::Camera::State::CameraStore;
-        using SelectionStore = Viewer::Selection::State::SelectionStore;
-        using OverlayStore = Viewer::Overlay::State::OverlayStore;
-        using OptionsStore = Viewer::Options::State::OptionsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
+        using WindowMessage = Engine::Render::Window::Type::WindowMessage;
+        using RawMouse = Engine::Render::Window::Type::RawMouse;
+        using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
+        using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
+        using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         ControlService(SettingsStore& settingsStore, CameraStore& cameraStore,

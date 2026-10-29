@@ -1,7 +1,7 @@
-module Tables.Object.State;
+module Blam.Runtime.Object.State;
 import :BoneMatrices;
 
-namespace Tables::Object::State
+namespace Blam::Runtime::Object::State
 {
     auto BoneMatricesStore::Get(std::uint32_t handle) const -> const BoneMatrixTable*
     {

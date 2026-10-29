@@ -1,12 +1,12 @@
-export module Platform.Host.Hook:LocalUserGetPlayer;
+export module Engine.Base.Host.Hook:LocalUserGetPlayer;
 
 import Common.Log.System;
-import Platform.Host.Type;
-import Platform.Host.State;
-import Platform.Host.System;
+import Engine.Base.Host.Type;
+import Engine.Base.Host.State;
+import Engine.Base.Host.System;
 import std;
 
-export namespace Platform::Host::Hook
+export namespace Engine::Base::Host::Hook
 {
     // Hooks the MCC function that reports each local user to the engine, so the engine sees the Artemis users as split-screen players.
     // note: User 0 and slots above the requested count go to MCC. With a requested count of 1 the game is untouched.
@@ -15,11 +15,11 @@ export namespace Platform::Host::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using LocalUserGetPlayerFunction = Platform::Host::Type::LocalUserGetPlayerFunction;
+        using LocalUserGetPlayerFunction = Engine::Base::Host::Type::LocalUserGetPlayerFunction;
 
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
-        using HostService = Platform::Host::System::HostService;
+        using HostService = Engine::Base::Host::System::HostService;
 
     public:
         LocalUserGetPlayerDetour(Log& log, HostService& hostService, LocalUserStore& localUserStore) :

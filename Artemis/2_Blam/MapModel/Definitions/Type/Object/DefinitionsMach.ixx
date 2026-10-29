@@ -1,10 +1,10 @@
-export module Resolved.Definitions.Type:Mach;
+export module Blam.MapModel.Definitions.Type:Mach;
 
 import :Object;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Mach
+export namespace Blam::MapModel::Definitions::Type::Mach
 {
     // Holds the machine definition.
     // Waiting for some system to need this.

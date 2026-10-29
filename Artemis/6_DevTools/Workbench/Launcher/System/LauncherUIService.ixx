@@ -1,31 +1,31 @@
-export module UI.Launcher.System;
+export module DevTools.Workbench.Launcher.System;
 
-import Service.Settings.State;
-import Platform.Render.Type;
-import UI.Launcher.Type;
-import UI.Launcher.State;
-import UI.Icon.Type;
+import Services.Settings.State;
+import Engine.Render.Type;
+import DevTools.Workbench.Launcher.Type;
+import DevTools.Workbench.Launcher.State;
+import DevTools.Workbench.Icon.Type;
 import std;
 
 namespace
 {
-    using UI::Launcher::Type::k_TabCount;
+    using DevTools::Workbench::Launcher::Type::k_TabCount;
 }
 
-export namespace UI::Launcher::System
+export namespace DevTools::Workbench::Launcher::System
 {
     // Draws the launcher window and hosts the windows of the tabs.
     class LauncherUIService
     {
     private:
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using FrameContext = Platform::Render::Type::FrameContext;
+        using FrameContext = Engine::Render::Type::FrameContext;
 
-        using Tab = UI::Launcher::Type::Tab;
-        using TabContent = UI::Launcher::Type::TabContent;
-        using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
-        using IconTexture = UI::Icon::Type::IconTexture;
+        using Tab = DevTools::Workbench::Launcher::Type::Tab;
+        using TabContent = DevTools::Workbench::Launcher::Type::TabContent;
+        using LauncherUIStore = DevTools::Workbench::Launcher::State::LauncherUIStore;
+        using IconTexture = DevTools::Workbench::Icon::Type::IconTexture;
 
     public:
         LauncherUIService(SettingsStore& settingsStore, LauncherUIStore& launcherStore) :

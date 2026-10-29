@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Ctrl;
+export module Blam.MapModel.Definitions.System:Ctrl;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the control definition.
     class CtrlBuilder
     {
     private:
-        using CtrlObject = Map::Tag::Type::Ctrl::Object::CtrlObject;
-        using Ctrl = Resolved::Definitions::Type::Ctrl::Ctrl;
+        using CtrlObject = Blam::Map::Tag::Type::Ctrl::Object::CtrlObject;
+        using Ctrl = Blam::MapModel::Definitions::Type::Ctrl::Ctrl;
 
     public:
         explicit CtrlBuilder(ObjectBuilder& objectBuilder) :

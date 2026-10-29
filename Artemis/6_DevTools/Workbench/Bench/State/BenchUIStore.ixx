@@ -1,9 +1,9 @@
-export module UI.Bench.State;
+export module DevTools.Workbench.Bench.State;
 
-import UI.Bench.Type;
+import DevTools.Workbench.Bench.Type;
 import std;
 
-export namespace UI::Bench::State
+export namespace DevTools::Workbench::Bench::State
 {
     // State of the in-game test bench (D129): the exchange folder of the game watcher and the progress of the running scenario.
     // note: The folder is set once, before the first update, and other threads read it only after IsEnabled is true. The run is
@@ -13,7 +13,7 @@ export namespace UI::Bench::State
     private:
         using path = std::filesystem::path;
 
-        using BenchRun = UI::Bench::Type::BenchRun;
+        using BenchRun = DevTools::Workbench::Bench::Type::BenchRun;
 
     public:
         BenchUIStore() = default;

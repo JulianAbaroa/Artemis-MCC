@@ -1,7 +1,7 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Bloc;
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto BlocBuilder::Build(const BlocObject& bloc) -> Bloc
     {

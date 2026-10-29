@@ -5,7 +5,7 @@
 // from Reclaimer's C# implementation to C++.
 // See MeshReader.md for the full Assembly <-> Reclaimer name mapping.
 
-export module Map.Reader.System:Geometry.Loader;
+export module Blam.Map.Reader.System:Geometry.Loader;
 
 import :Formula;
 import :Geometry.Info;
@@ -13,29 +13,29 @@ import :Geometry.MeshDecoder;
 import :Geometry.ResourcePage;
 
 import Common.Log.System;
-import Map.Reader.Type;
-import Map.Tag.Type;
-import Map.Tag.State;
+import Blam.Map.Reader.Type;
+import Blam.Map.Tag.Type;
+import Blam.Map.Tag.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Builds the render geometry of the structure BSPs: the world meshes of each cluster plus the instanced geometry.
     class GeometryLoaderService
     {
     private:
-        using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
-        using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
-        using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
-        using LbspObject = Map::Tag::Type::Lbsp::Object::LbspObject;
-        using SbspGeometry = Map::Reader::Type::Geometry::SbspGeometry;
+        using ZoneObject = Blam::Map::Tag::Type::Zone::Object::ZoneObject;
+        using PlayObject = Blam::Map::Tag::Type::Play::Object::PlayObject;
+        using SbspObject = Blam::Map::Tag::Type::Sbsp::Object::SbspObject;
+        using LbspObject = Blam::Map::Tag::Type::Lbsp::Object::LbspObject;
+        using SbspGeometry = Blam::Map::Reader::Type::Geometry::SbspGeometry;
 
         using Log = Common::Log::System::Log;
-        using TagCatalog = Map::Tag::State::TagCatalog;
-        using FormulaService = Map::Reader::System::FormulaService;
-        using GeometryInfoService = Map::Reader::System::GeometryInfoService;
-        using GeometryResourcePageService = Map::Reader::System::GeometryResourcePageService;
-        using GeometryMeshDecoderService = Map::Reader::System::GeometryMeshDecoderService;
+        using TagCatalog = Blam::Map::Tag::State::TagCatalog;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
+        using GeometryInfoService = Blam::Map::Reader::System::GeometryInfoService;
+        using GeometryResourcePageService = Blam::Map::Reader::System::GeometryResourcePageService;
+        using GeometryMeshDecoderService = Blam::Map::Reader::System::GeometryMeshDecoderService;
 
     public:
         GeometryLoaderService(Log& log, TagCatalog& tagCatalog,

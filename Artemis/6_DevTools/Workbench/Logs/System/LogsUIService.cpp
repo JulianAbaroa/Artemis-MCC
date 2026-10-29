@@ -2,7 +2,7 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.Logs.System;
+module DevTools.Workbench.Logs.System;
 
 import Common.Log.Type;
 import std;
@@ -36,7 +36,7 @@ namespace
     }
 }
 
-namespace UI::Logs::System
+namespace DevTools::Workbench::Logs::System
 {
     auto LogsUIService::Draw() -> void
     {

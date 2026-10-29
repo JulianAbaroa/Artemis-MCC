@@ -2,18 +2,18 @@ module;
 
 #include <cmath>
 
-module Resolved.World.System;
+module Blam.MapModel.World.System;
 import :Raycast;
 
 import Common.Geometry.System;
 import Common.Math.Type;
-import Resolved.World.Type;
+import Blam.MapModel.World.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::k_FloatMax;
-    using Resolved::World::Type::Raycast::k_BoxPadding;
+    using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
 
     // Triangles a leaf holds before it is split.
     constexpr int k_LeafSize{ 4 };
@@ -77,7 +77,7 @@ namespace
     // Fills a node and, when it has many triangles, its two children.
     // note: Splits at the best bin of a surface area heuristic over the longest axis of the centers.
     auto FillNode(std::vector<Prim>& prims, std::size_t begin, std::size_t end, std::int32_t nodeIndex,
-        std::vector<Resolved::World::Type::Raycast::BvhNode>& nodes, int depth) -> void
+        std::vector<Blam::MapModel::World::Type::Raycast::BvhNode>& nodes, int depth) -> void
     {
         Bounds bounds{};
         Bounds centers{};
@@ -193,7 +193,7 @@ namespace
     }
 
     // Distance at which a ray enters a box, or false when it misses it before tMax.
-    auto EntersBox(const Resolved::World::Type::Raycast::BvhNode& node, const std::array<float, 3>& origin,
+    auto EntersBox(const Blam::MapModel::World::Type::Raycast::BvhNode& node, const std::array<float, 3>& origin,
         const std::array<float, 3>& inverse, float tMax, float& outEnter) -> bool
     {
         float t0{ 0.0f };
@@ -213,7 +213,7 @@ namespace
     }
 }
 
-namespace Resolved::World::System
+namespace Blam::MapModel::World::System
 {
     auto Raycaster::Build(const DefinitionsStore& definitionsStore) -> void
     {

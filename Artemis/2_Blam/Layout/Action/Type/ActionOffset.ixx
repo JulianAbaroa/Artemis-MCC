@@ -1,8 +1,8 @@
-export module Layout.Action.Type:Offset;
+export module Blam.Layout.Action.Type:Offset;
 
 import std;
 
-export namespace Layout::Action::Type::Offset
+export namespace Blam::Layout::Action::Type::Offset
 {
     // Mask of the players with an action (uint32, one bit per player table index), inside the simulation update.
     inline constexpr std::uintptr_t k_UpdateActionMaskOffset{ 0x08 };

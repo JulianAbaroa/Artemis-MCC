@@ -1,9 +1,9 @@
-export module UI.TickTrace.State;
+export module DevTools.Workbench.TickTrace.State;
 
-import UI.TickTrace.Type;
+import DevTools.Workbench.TickTrace.Type;
 import std;
 
-export namespace UI::TickTrace::State
+export namespace DevTools::Workbench::TickTrace::State
 {
     // State of the tick trace recording: the flag, the bytes waiting to be written, the open file and the counters.
     // note: The AI thread appends records and the UI thread writes them. The pending clock is AI thread only, the file UI thread only.
@@ -13,7 +13,7 @@ export namespace UI::TickTrace::State
         using steady_clock = std::chrono::steady_clock;
         using path = std::filesystem::path;
 
-        using TickClock = UI::TickTrace::Type::TickClock;
+        using TickClock = DevTools::Workbench::TickTrace::Type::TickClock;
 
     public:
         TickTraceUIStore() = default;

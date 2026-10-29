@@ -251,7 +251,7 @@ def Generate(xmlPath: str, outPath: str) -> None:
     lines.append(f"// Root struct size: {total:#x}")
     lines.append(f"")
 
-    lines.append(f"export module Map.Tag.Type:{prefix}.Structure;")
+    lines.append(f"export module Blam.Map.Tag.Type:{prefix}.Structure;")
     lines.append(f"")
 
     # The body is built first: imports and aliases are written only for what the structs use (Common first).
@@ -268,7 +268,7 @@ def Generate(xmlPath: str, outPath: str) -> None:
     if usesMath:
         lines.append(f"import Common.Math.Type;")
     if usesMap:
-        lines.append(f"import Map.Reader.Type;")
+        lines.append(f"import Blam.Map.Reader.Type;")
     lines.append(f"import std;")
     lines.append(f"")
 
@@ -278,14 +278,14 @@ def Generate(xmlPath: str, outPath: str) -> None:
         if usesMath:
             lines.append(f"    namespace MathType = Common::Math::Type;")
         if usesMap:
-            lines.append(f"    namespace MapStructure = Map::Reader::Type::Structure;")
+            lines.append(f"    namespace MapStructure = Blam::Map::Reader::Type::Structure;")
         lines.append("}")
         lines.append(f"")
 
     lines.append(f"#pragma pack(push, 1)")
     lines.append(f"")
 
-    lines.append(f"export namespace Map::Tag::Type::{prefix}::Structure")
+    lines.append(f"export namespace Blam::Map::Tag::Type::{prefix}::Structure")
     lines.append(f"{{")
 
     lines.extend(body)

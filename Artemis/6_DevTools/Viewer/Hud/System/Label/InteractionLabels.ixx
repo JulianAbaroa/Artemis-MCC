@@ -1,17 +1,17 @@
-export module Viewer.Hud.System:InteractionLabels;
+export module DevTools.Viewer.Hud.System:InteractionLabels;
 
 import :Canvas;
 
-import Viewer.Hud.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Collects the labels of the interactions.
     class InteractionLabels
     {
     private:
-        using LabelContext = Viewer::Hud::Type::LabelContext;
+        using LabelContext = DevTools::Viewer::Hud::Type::LabelContext;
 
     public:
         InteractionLabels() = default;

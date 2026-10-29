@@ -2,27 +2,27 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.PlayerTable.System;
+module DevTools.Workbench.PlayerTable.System;
 
-import Layout.Snapshot.Type;
-import Tables.Player.Type;
-import Gui.Color.System;
-import Gui.Format.System;
-import Gui.Style.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Player.Type;
+import DevTools.Gui.Color.System;
+import DevTools.Gui.Format.System;
+import DevTools.Gui.Style.Type;
 import std;
 
 namespace
 {
-    using Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionId;
 
-    using Tables::Player::Type::Alive::ConnectionState;
+    using Blam::Runtime::Player::Type::Alive::ConnectionState;
 
-    using Gui::Color::System::TeamToColor;
-    using Gui::Format::System::HexFormater;
-    using Gui::Format::System::TeamFormater;
-    using Gui::Widget::System::HandleDrawerGuiService;
+    using DevTools::Gui::Color::System::TeamToColor;
+    using DevTools::Gui::Format::System::HexFormater;
+    using DevTools::Gui::Format::System::TeamFormater;
+    using DevTools::Gui::Widget::System::HandleDrawerGuiService;
 
-    using Gui::Style::Type::k_CardSpacing;
+    using DevTools::Gui::Style::Type::k_CardSpacing;
 
     // Size of a player card.
     const ImVec2 k_CardSize{ 320.0f, 480.0f };
@@ -30,7 +30,7 @@ namespace
     const ImVec4 k_SectionColor{ 1.0f, 0.8f, 0.4f, 1.0f };
 }
 
-namespace UI::PlayerTable::System
+namespace DevTools::Workbench::PlayerTable::System
 {
     auto PlayerTableUIService::Draw() -> void
     {

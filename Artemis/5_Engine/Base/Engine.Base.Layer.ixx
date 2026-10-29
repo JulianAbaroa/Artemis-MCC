@@ -1,13 +1,13 @@
 export module Engine.Base.Layer;
 
-import Service.Layer;
-import Platform.Lifecycle.State;
-import Platform.Lifecycle.System;
-import Platform.Lifecycle.Hook;
-import Platform.Host.State;
-import Platform.Host.System;
-import Platform.Host.Hook;
-import Platform.Memory.System;
+import Services.Layer;
+import Engine.Base.Lifecycle.State;
+import Engine.Base.Lifecycle.System;
+import Engine.Base.Lifecycle.Hook;
+import Engine.Base.Host.State;
+import Engine.Base.Host.System;
+import Engine.Base.Host.Hook;
+import Engine.Base.Memory.System;
 
 export namespace Engine::Base
 {
@@ -16,25 +16,25 @@ export namespace Engine::Base
     class Layer
     {
     private:
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using LifecycleService = Platform::Lifecycle::System::LifecycleService;
-        using EngineInitializeDetour = Platform::Lifecycle::Hook::EngineInitializeDetour;
-        using DestroySubsystemsDetour = Platform::Lifecycle::Hook::DestroySubsystemsDetour;
-        using OpenMapDetour = Platform::Lifecycle::Hook::OpenMapDetour;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using LifecycleService = Engine::Base::Lifecycle::System::LifecycleService;
+        using EngineInitializeDetour = Engine::Base::Lifecycle::Hook::EngineInitializeDetour;
+        using DestroySubsystemsDetour = Engine::Base::Lifecycle::Hook::DestroySubsystemsDetour;
+        using OpenMapDetour = Engine::Base::Lifecycle::Hook::OpenMapDetour;
 
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
-        using HostService = Platform::Host::System::HostService;
-        using LocalUserGetPlayerDetour = Platform::Host::Hook::LocalUserGetPlayerDetour;
-        using LocalUserGetProfileDetour = Platform::Host::Hook::LocalUserGetProfileDetour;
-        using LocalUserGetGamepadMappingDetour = Platform::Host::Hook::LocalUserGetGamepadMappingDetour;
-        using CanAcceptAnyJoinRequestDetour = Platform::Host::Hook::CanAcceptAnyJoinRequestDetour;
-        using SessionJoinCheckPatch = Platform::Host::Hook::SessionJoinCheckPatch;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
+        using HostService = Engine::Base::Host::System::HostService;
+        using LocalUserGetPlayerDetour = Engine::Base::Host::Hook::LocalUserGetPlayerDetour;
+        using LocalUserGetProfileDetour = Engine::Base::Host::Hook::LocalUserGetProfileDetour;
+        using LocalUserGetGamepadMappingDetour = Engine::Base::Host::Hook::LocalUserGetGamepadMappingDetour;
+        using CanAcceptAnyJoinRequestDetour = Engine::Base::Host::Hook::CanAcceptAnyJoinRequestDetour;
+        using SessionJoinCheckPatch = Engine::Base::Host::Hook::SessionJoinCheckPatch;
 
-        using AOBService = Platform::Memory::System::AOBService;
-        using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
+        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
     public:
-        explicit Layer(Service::Layer& service) :
+        explicit Layer(Services::Layer& service) :
             m_LifecycleService(service.m_Log, m_LifecycleStore),
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),

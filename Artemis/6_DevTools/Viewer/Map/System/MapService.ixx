@@ -2,7 +2,7 @@ module;
 
 #include <d3d11.h>
 
-export module Viewer.Map.System:MapService;
+export module DevTools.Viewer.Map.System:MapService;
 
 import :MapPass;
 import :DynamicPass;
@@ -13,20 +13,20 @@ import :LimitsPass;
 import :AimPass;
 
 import Common.Log.System;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Export.Tick.State;
-import Viewer.Collidable.State;
-import Viewer.Profiler.System;
-import Viewer.Scene.System;
-import Viewer.Options.State;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Bridge.Codec.Tick.State;
+import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Profiler.System;
+import DevTools.Viewer.Scene.System;
+import DevTools.Viewer.Options.State;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     template <typename T>
     concept RenderPass = requires(T pass, ID3D11DeviceContext* context,
-        Platform::Render::System::GpuPipeline& pipeline)
+        Engine::Render::System::GpuPipeline& pipeline)
     {
         { pass.Draw(context, pipeline) } -> std::same_as<void>;
         { pass.Release() } -> std::same_as<void>;
@@ -48,16 +48,16 @@ export namespace Viewer::Map::System
     private:
         using Log = Common::Log::System::Log;
 
-        using FrameContext = Platform::Render::Type::FrameContext;
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
-        using GpuStateGuard = Platform::Render::System::GpuStateGuard;
+        using FrameContext = Engine::Render::Type::FrameContext;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
+        using GpuStateGuard = Engine::Render::System::GpuStateGuard;
 
-        using CollidableStore = Viewer::Collidable::State::CollidableStore;
-        using TickStore = Export::Tick::State::TickStore;
+        using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using FrameProfiler = Viewer::Profiler::System::FrameProfiler;
-        using SceneService = Viewer::Scene::System::SceneService;
-        using OptionsStore = Viewer::Options::State::OptionsStore;
+        using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
+        using SceneService = DevTools::Viewer::Scene::System::SceneService;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         MapService(Log& log, CollidableStore& collidableStore,

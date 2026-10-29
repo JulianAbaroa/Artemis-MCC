@@ -1,14 +1,14 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :Geometry.Loader;
 
 namespace
 {
-    using Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
-    using Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
-    using Map::Reader::Type::Geometry::BufferInfo;
+    using Blam::Map::Tag::Type::Lbsp::Object::Lbsp_MeshesObject;
+    using Blam::Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+    using Blam::Map::Reader::Type::Geometry::BufferInfo;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto GeometryLoaderService::ReadRenderGeometry(
         std::vector<std::string>& sbspTagNames) const -> std::vector<SbspGeometry>

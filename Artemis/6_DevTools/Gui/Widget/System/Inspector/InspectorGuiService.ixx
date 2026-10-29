@@ -2,7 +2,7 @@ module;
 
 #include "External/imgui/imgui.h"
 
-export module Gui.Widget.System:Inspector;
+export module DevTools.Gui.Widget.System:Inspector;
 
 import Common.Math.Type;
 import Common.Reflect.Type;
@@ -14,7 +14,7 @@ namespace
     using Common::Reflect::Type::ForEachField;
 }
 
-export namespace Gui::Widget::System
+export namespace DevTools::Gui::Widget::System
 {
     // Draws every field of a reflectable object as a tree. Clicking a value copies it.
     // Nested objects and containers become tree nodes, and containers are cut after k_MaxVectorElements.

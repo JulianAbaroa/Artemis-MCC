@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Proj;
+export module Blam.MapModel.Definitions.System:Proj;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the projectile definition.
     class ProjBuilder
     {
     private:
-        using ProjObject = Map::Tag::Type::Proj::Object::ProjObject;
-        using Proj = Resolved::Definitions::Type::Proj::Proj;
+        using ProjObject = Blam::Map::Tag::Type::Proj::Object::ProjObject;
+        using Proj = Blam::MapModel::Definitions::Type::Proj::Proj;
 
     public:
         explicit ProjBuilder(ObjectBuilder& objectBuilder) :

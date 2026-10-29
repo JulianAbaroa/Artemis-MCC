@@ -1,4 +1,4 @@
-export module Tables.Object.Type:Placement;
+export module Blam.Runtime.Object.Type:Placement;
 
 import Common.Semantic.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Semantic::Type::Physics;
 }
 
-export namespace Tables::Object::Type::Placement
+export namespace Blam::Runtime::Object::Type::Placement
 {
     // Games a placement spawns in, by the symmetry of the game variant.
     enum class Symmetry : std::uint8_t

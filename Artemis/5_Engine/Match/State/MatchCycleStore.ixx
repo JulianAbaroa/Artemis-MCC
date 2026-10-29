@@ -1,8 +1,8 @@
-export module Platform.Match.State:MatchCycle;
+export module Engine.Match.State:MatchCycle;
 
 import std;
 
-export namespace Platform::Match::State
+export namespace Engine::Match::State
 {
     // What Artemis sees of the match cycle of MCC: whether the custom games lobby is open, how many engines started and were
     // destroyed, and the Leave a tool asks for (A15 H3, D129).

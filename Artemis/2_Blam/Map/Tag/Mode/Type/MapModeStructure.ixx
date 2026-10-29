@@ -2,21 +2,21 @@
 // Source XML: mode.xml
 // Root struct size: 0x264
 
-export module Map.Tag.Type:Mode.Structure;
+export module Blam.Map.Tag.Type:Mode.Structure;
 
 import Common.Math.Type;
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
 namespace
 {
     namespace MathType = Common::Math::Type;
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MapStructure = Blam::Map::Reader::Type::Structure;
 }
 
 #pragma pack(push, 1)
 
-export namespace Map::Tag::Type::Mode::Structure
+export namespace Blam::Map::Tag::Type::Mode::Structure
 {
     // Entry size: 0x18
     struct Mode_Regions_PermutationsEntry

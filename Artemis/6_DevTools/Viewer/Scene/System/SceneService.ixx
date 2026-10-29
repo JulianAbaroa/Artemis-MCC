@@ -1,30 +1,30 @@
-export module Viewer.Scene.System;
+export module DevTools.Viewer.Scene.System;
 
 import Common.Math.Type;
-import Service.Settings.State;
-import Export.Tick.Type;
-import Viewer.Camera.Type;
-import Viewer.Camera.State;
-import Viewer.Camera.System;
-import Viewer.Palette.System;
-import Viewer.Selection.System;
+import Services.Settings.State;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Camera.State;
+import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Palette.System;
+import DevTools.Viewer.Selection.System;
 import std;
 
-export namespace Viewer::Scene::System
+export namespace DevTools::Viewer::Scene::System
 {
     // Prepares what the map and the HUD draw each frame: camera, color palette and selection.
     // It is the single entry point for the viewer systems that need the scene.
     class SceneService
     {
     private:
-        using Tick = Export::Tick::Type::Tick;
-        using SettingsStore = Service::Settings::State::SettingsStore;
-        using CameraStore = Viewer::Camera::State::CameraStore;
-        using CameraService = Viewer::Camera::System::CameraService;
-        using Viewport = Viewer::Camera::Type::Viewport;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
+        using SettingsStore = Services::Settings::State::SettingsStore;
+        using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
+        using CameraService = DevTools::Viewer::Camera::System::CameraService;
+        using Viewport = DevTools::Viewer::Camera::Type::Viewport;
         using Matrix = Common::Math::Type::Matrix;
-        using SelectionService = Viewer::Selection::System::SelectionService;
-        using PaletteService = Viewer::Palette::System::PaletteService;
+        using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
+        using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
     public:
         SceneService(SettingsStore& settingsStore, CameraStore& cameraStore,

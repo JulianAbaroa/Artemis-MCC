@@ -1,21 +1,21 @@
-export module Platform.Input.Hook:PlayerAction;
+export module Engine.Control.Input.Hook:PlayerAction;
 
 import Common.Log.System;
 import Control.Action.Type;
-import Platform.Memory.System;
-import Platform.Input.Type;
-import Platform.Input.State;
-import Platform.Input.System;
-import Platform.Simulation.System;
-import Layout.Action.Type;
+import Engine.Base.Memory.System;
+import Engine.Control.Input.Type;
+import Engine.Control.Input.State;
+import Engine.Control.Input.System;
+import Engine.Control.Simulation.System;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
 }
 
-export namespace Platform::Input::Hook
+export namespace Engine::Control::Input::Hook
 {
     // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
     // note: Players without an override keep the action the engine built. Called by ExecuteGameFrame once per tick on the game thread.
@@ -27,23 +27,23 @@ export namespace Platform::Input::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
-        using ActionOverride = Control::Action::Type::ActionOverride;
-        using ClientRequests = Control::Action::Type::ClientRequests;
-        using PlayerActionHistory = Control::Action::Type::PlayerActionHistory;
+        using ActionOverride = ::Control::Action::Type::ActionOverride;
+        using ClientRequests = ::Control::Action::Type::ClientRequests;
+        using PlayerActionHistory = ::Control::Action::Type::PlayerActionHistory;
 
-        using ApplyPlayerActionsFunction = Platform::Input::Type::ApplyPlayerActionsFunction;
-        using ClearPlayerActionFunction = Platform::Input::Type::ClearPlayerActionFunction;
-        using ResolveTagAddressFunction = Platform::Input::Type::ResolveTagAddressFunction;
-        using ShadowField = Platform::Input::Type::ShadowField;
-        using ShadowPlayer = Platform::Input::Type::ShadowPlayer;
+        using ApplyPlayerActionsFunction = Engine::Control::Input::Type::ApplyPlayerActionsFunction;
+        using ClearPlayerActionFunction = Engine::Control::Input::Type::ClearPlayerActionFunction;
+        using ResolveTagAddressFunction = Engine::Control::Input::Type::ResolveTagAddressFunction;
+        using ShadowField = Engine::Control::Input::Type::ShadowField;
+        using ShadowPlayer = Engine::Control::Input::Type::ShadowPlayer;
 
-        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
+        using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
-        using ActionSource = Platform::Input::System::ActionSource;
+        using ActionSource = Engine::Control::Input::System::ActionSource;
 
-        using BotService = Platform::Simulation::System::BotService;
+        using BotService = Engine::Control::Simulation::System::BotService;
 
     public:
         PlayerActionDetour(Log& log, AOBService& aobService, PlayerActionStore& playerActionStore,

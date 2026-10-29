@@ -1,8 +1,8 @@
-module Export.Flat.State;
+module Bridge.Codec.Flat.State;
 
 import std;
 
-namespace Export::Flat::State
+namespace Bridge::Codec::Flat::State
 {
     auto FlatStore::Push(FlatRequest request) -> void
     {

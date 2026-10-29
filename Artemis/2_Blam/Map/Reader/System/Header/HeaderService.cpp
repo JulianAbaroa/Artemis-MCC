@@ -1,18 +1,18 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :Header;
 
 namespace
 {
-    namespace Sections = Map::Reader::Type::Offset::Header::Sections;
-    namespace OffsetMasks = Map::Reader::Type::Offset::Header::OffsetMasks;
-    namespace Offset = Map::Reader::Type::Offset;
-    using Map::Reader::Type::Structure::Header::HeaderSection;
+    namespace Sections = Blam::Map::Reader::Type::Offset::Header::Sections;
+    namespace OffsetMasks = Blam::Map::Reader::Type::Offset::Header::OffsetMasks;
+    namespace Offset = Blam::Map::Reader::Type::Offset;
+    using Blam::Map::Reader::Type::Structure::Header::HeaderSection;
 
-    using Map::Reader::Type::Offset::Header::k_VirtualBaseAddress;
-    using Map::Reader::Type::Offset::Header::k_FileTableCount;
+    using Blam::Map::Reader::Type::Offset::Header::k_VirtualBaseAddress;
+    using Blam::Map::Reader::Type::Offset::Header::k_FileTableCount;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto HeaderService::Read(std::ifstream& file) -> std::optional<HeaderInfo>
     {

@@ -1,12 +1,12 @@
-export module Platform.Input.Hook:InputUpdate;
+export module Engine.Control.Input.Hook:InputUpdate;
 
 import Common.Log.System;
-import Platform.Host.System;
-import Platform.Input.Type;
-import Platform.Input.State;
+import Engine.Base.Host.System;
+import Engine.Control.Input.Type;
+import Engine.Control.Input.State;
 import std;
 
-export namespace Platform::Input::Hook
+export namespace Engine::Control::Input::Hook
 {
     // Hooks the MCC function that gives the engine the input of each local player (keyboard, mouse and gamepad), once per frame.
     // note: Players with LocalInputSource::Virtual get the state of the VirtualInputStore. The rest go to MCC.
@@ -16,12 +16,12 @@ export namespace Platform::Input::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using HostService = Platform::Host::System::HostService;
+        using HostService = Engine::Base::Host::System::HostService;
 
-        using InputUpdateFunction = Platform::Input::Type::InputUpdateFunction;
-        using InputState = Platform::Input::Type::InputState;
+        using InputUpdateFunction = Engine::Control::Input::Type::InputUpdateFunction;
+        using InputState = Engine::Control::Input::Type::InputState;
 
-        using VirtualInputStore = Platform::Input::State::VirtualInputStore;
+        using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
 
     public:
         InputUpdateDetour(Log& log, HostService& hostService, VirtualInputStore& virtualInputStore) :

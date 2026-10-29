@@ -6,10 +6,10 @@ module;
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 
-module Gui.Backend.System;
+module DevTools.Gui.Backend.System;
 import :Backend;
 
-import Gui.Style.Type;
+import DevTools.Gui.Style.Type;
 import std;
 
 extern "C++"
@@ -20,9 +20,9 @@ extern "C++"
 
 namespace
 {
-    using Gui::Style::Type::k_MinimumAlpha;
-    using Gui::Style::Type::k_MinimumScale;
-    using Gui::Style::Type::k_MaximumScale;
+    using DevTools::Gui::Style::Type::k_MinimumAlpha;
+    using DevTools::Gui::Style::Type::k_MinimumScale;
+    using DevTools::Gui::Style::Type::k_MaximumScale;
 
     // Resets the style to the Artemis look. The scale is applied separately.
     auto ApplyDefaultStyle() -> void
@@ -71,7 +71,7 @@ namespace
     }
 }
 
-namespace Gui::Backend::System
+namespace DevTools::Gui::Backend::System
 {
     auto BackendGuiService::Initialize(const FrameContext& frame) -> void
     {

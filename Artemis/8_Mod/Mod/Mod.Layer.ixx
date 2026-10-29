@@ -4,27 +4,27 @@ module;
 
 export module Mod.Layer;
 
-import Service.Layer;
-import Service.Preferences.System;
+import Services.Layer;
+import Services.Preferences.System;
 import Engine.Base.Layer;
 import Engine.Capture.Layer;
 import Engine.Control.Layer;
 import Engine.Match.Layer;
 import Engine.Render.Layer;
 import Bridge.Transport.Layer;
-import Platform.Port.System;
-import Map.Layer;
-import Resolved.Layer;
-import Tables.Layer;
-import Environment.Layer;
-import Egocentric.Layer;
-import Export.Layer;
-import Export.Pipeline.Type;
-import DevTools.Type;
-import Gui.Layer;
-import Viewer.Layer;
-import UI.Layer;
-import Runtime.Thread;
+import Blam.Map.Layer;
+import Blam.MapModel.Layer;
+import Blam.Runtime.Layer;
+import Perception.Layer;
+import Views.Layer;
+import Bridge.Codec.Layer;
+import Bridge.Codec.Pipeline.Type;
+import DevTools.Viewer.Access.Type;
+import DevTools.Gui.Layer;
+import DevTools.Viewer.Layer;
+import DevTools.Workbench.Layer;
+import Mod.Port.System;
+import Mod.Thread.System;
 import std;
 
 export namespace Mod
@@ -37,18 +37,18 @@ export namespace Mod
     private:
         using milliseconds = std::chrono::milliseconds;
 
-        using PreferencesService = Service::Preferences::System::PreferencesService;
+        using PreferencesService = Services::Preferences::System::PreferencesService;
 
-        using BridgeEngineAdapter = Platform::Port::System::BridgeEngineAdapter;
-        using BridgeActionSource = Platform::Port::System::BridgeActionSource;
+        using BridgeEngineAdapter = Mod::Port::System::BridgeEngineAdapter;
+        using BridgeActionSource = Mod::Port::System::BridgeActionSource;
 
-        using ObservedTick = Export::Pipeline::Type::ObservedTick;
+        using ObservedTick = Bridge::Codec::Pipeline::Type::ObservedTick;
 
-        using MainThread = Runtime::Thread::MainThread;
-        using AIThread = Runtime::Thread::AIThread;
-        using BenchThread = Runtime::Thread::BenchThread;
-        using BridgeThread = Runtime::Thread::BridgeThread;
-        using DumpThread = Runtime::Thread::DumpThread;
+        using MainThread = Mod::Thread::System::MainThread;
+        using AIThread = Mod::Thread::System::AIThread;
+        using BenchThread = Mod::Thread::System::BenchThread;
+        using BridgeThread = Mod::Thread::System::BridgeThread;
+        using DumpThread = Mod::Thread::System::DumpThread;
 
     public:
         // Builds all layers. Initialization happens in Start.
@@ -80,7 +80,7 @@ export namespace Mod
         // Set once MH_Initialize succeeds. Gates MH_Uninitialize in the destructor.
         bool m_IsMinHookReady{ false };
 
-        Service::Layer m_Service{};
+        Services::Layer m_Service{};
 
         // The Layers of the engine in the order they are built, then the port adapters and the transport.
         Engine::Base::Layer m_Base{ m_Service };
@@ -98,7 +98,7 @@ export namespace Mod
 
         PreferencesService m_Preferences{ m_Service.m_SettingsStore, m_Service.m_Log };
 
-        DevTools::Type::EngineAccess m_EngineAccess{
+        DevTools::Viewer::Access::Type::EngineAccess m_EngineAccess{
             .m_RenderService = m_Render.m_RenderService,
             .m_RenderStore = m_Render.m_RenderStore,
             .m_InputService = m_Render.m_InputService,
@@ -115,17 +115,17 @@ export namespace Mod
             .m_BotStore = m_Control.m_BotStore,
             .m_BridgeService = m_Transport.m_BridgeService };
 
-        Map::Layer m_Map{ m_Service.m_Log };
-        Resolved::Layer m_Resolved{ m_Service.m_Log, m_Map };
-        Tables::Layer m_Tables{ m_Service.m_Log, m_Resolved };
-        Environment::Layer m_Environment{ m_Service.m_Log, m_Resolved, m_Tables };
-        Egocentric::Layer m_Egocentric{ m_Service.m_Log, m_Resolved, m_Tables, m_Environment };
-        Export::Layer m_Export{ m_Resolved, m_Tables, m_Environment, m_Egocentric };
+        Blam::Map::Layer m_Map{ m_Service.m_Log };
+        Blam::MapModel::Layer m_Resolved{ m_Service.m_Log, m_Map };
+        Blam::Runtime::Layer m_Tables{ m_Service.m_Log, m_Resolved };
+        Perception::Layer m_Environment{ m_Service.m_Log, m_Resolved, m_Tables };
+        Views::Layer m_Egocentric{ m_Service.m_Log, m_Resolved, m_Tables, m_Environment };
+        Bridge::Codec::Layer m_Export{ m_Resolved, m_Tables, m_Environment, m_Egocentric };
 
         // The development tools, in the order they are built.
-        Gui::Layer m_Gui{ m_Service, m_EngineAccess.m_RenderService, m_EngineAccess.m_RenderStore };
-        Viewer::Layer m_Viewer{ m_Service, m_EngineAccess, m_Environment, m_Export, m_Gui, m_Preferences };
-        UI::Layer m_UI{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
+        DevTools::Gui::Layer m_Gui{ m_Service, m_EngineAccess.m_RenderService, m_EngineAccess.m_RenderStore };
+        DevTools::Viewer::Layer m_Viewer{ m_Service, m_EngineAccess, m_Environment, m_Export, m_Gui, m_Preferences };
+        DevTools::Workbench::Layer m_UI{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
 
         MainThread m_Main{ m_Service, m_Base, m_Match, m_Render };
         AIThread m_AI{ m_Service, m_Base, m_Capture, m_Transport, m_Map, m_Resolved, m_Tables, m_Environment, m_Egocentric, m_Export };

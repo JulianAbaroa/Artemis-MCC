@@ -2,25 +2,25 @@ module;
 
 #include "External/minhook/include/MinHook.h"
 
-module Platform.Capture.Hook;
+module Engine.Capture.Hook;
 import :ExecuteGameFrame;
 
-import Platform.Memory.Type;
-import Platform.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Capture::Hook
+namespace Engine::Capture::Hook
 {
     auto __fastcall ExecuteGameFrameDetour::HookedExecuteGameFrame() -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
 
@@ -43,7 +43,7 @@ namespace Platform::Capture::Hook
             m_AOBService.FindPattern(Signature::k_ExecuteGameFrame)) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedExecuteGameFrame),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[ExecuteGameFrameDetour]", m_Log))
@@ -59,15 +59,15 @@ namespace Platform::Capture::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
         // note: Uninstalled from RaiseUnhook, which runs on the game thread inside DestroySubsystems, outside the tick loop, so no
         // call of this hook is in flight on that thread. On eject the tick wait wakes with the shutdown signal.
-        if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
+        if (!Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
             m_Log.Message("[ExecuteGameFrameDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[ExecuteGameFrameDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

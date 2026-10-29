@@ -2,38 +2,38 @@
 
 #include <cstddef>
 
-import Layout.Snapshot.Type;
-import Layout.Snapshot.System;
+import Blam.Layout.Snapshot.Type;
+import Blam.Layout.Snapshot.System;
 import std;
 
 // The .sdump codec of Blam.Layout (M5c, D202, D203): a Snapshot written as a delta of bytes and read back identical, in memory.
 
 namespace
 {
-    namespace Codec = Layout::Snapshot::System;
+    namespace Codec = Blam::Layout::Snapshot::System;
 
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::RegionSize;
-    using Layout::Snapshot::Type::Snapshot;
-    using Layout::Snapshot::Type::SnapshotDumpFileHeader;
-    using Layout::Snapshot::Type::SnapshotDumpFooter;
-    using Layout::Snapshot::Type::SnapshotLoadInfo;
-    using Layout::Snapshot::Type::SnapshotObjectBlock;
-    using Layout::Snapshot::Type::SnapshotReaderState;
-    using Layout::Snapshot::Type::SnapshotReadResult;
-    using Layout::Snapshot::Type::SnapshotReadStatus;
-    using Layout::Snapshot::Type::SnapshotRecordHeader;
-    using Layout::Snapshot::Type::SnapshotRegionBlock;
-    using Layout::Snapshot::Type::SnapshotSpanHeader;
-    using Layout::Snapshot::Type::SnapshotWriterState;
+    using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::Layout::Snapshot::Type::SnapshotDumpFileHeader;
+    using Blam::Layout::Snapshot::Type::SnapshotDumpFooter;
+    using Blam::Layout::Snapshot::Type::SnapshotLoadInfo;
+    using Blam::Layout::Snapshot::Type::SnapshotObjectBlock;
+    using Blam::Layout::Snapshot::Type::SnapshotReaderState;
+    using Blam::Layout::Snapshot::Type::SnapshotReadResult;
+    using Blam::Layout::Snapshot::Type::SnapshotReadStatus;
+    using Blam::Layout::Snapshot::Type::SnapshotRecordHeader;
+    using Blam::Layout::Snapshot::Type::SnapshotRegionBlock;
+    using Blam::Layout::Snapshot::Type::SnapshotSpanHeader;
+    using Blam::Layout::Snapshot::Type::SnapshotWriterState;
 
-    using Layout::Snapshot::Type::k_RegionCount;
-    using Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
-    using Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
-    using Layout::Snapshot::Type::k_SnapshotHasObjectTable;
-    using Layout::Snapshot::Type::k_SnapshotHasThreadContext;
-    using Layout::Snapshot::Type::k_SnapshotViewerActive;
+    using Blam::Layout::Snapshot::Type::k_RegionCount;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
+    using Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
+    using Blam::Layout::Snapshot::Type::k_SnapshotHasObjectTable;
+    using Blam::Layout::Snapshot::Type::k_SnapshotHasThreadContext;
+    using Blam::Layout::Snapshot::Type::k_SnapshotViewerActive;
 
     constexpr std::uint64_t k_LayoutHash{ 0x0123456789ABCDEF };
     constexpr std::string_view k_StartTime{ "2026-10-27 12:00:00" };

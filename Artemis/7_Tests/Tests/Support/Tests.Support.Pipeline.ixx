@@ -5,18 +5,18 @@ import Common.Log.Type;
 import Common.Log.System;
 import Common.Math.Type;
 import Common.Team.Type;
-import Datum.Object.Type;
-import Layout.Player.Type;
-import Layout.Snapshot.Type;
-import Map.Layer;
-import Map.Reader.Type;
-import Resolved.Layer;
-import Resolved.Definitions.Type;
-import Tables.Layer;
-import Tables.Player.Type;
-import Environment.Layer;
-import Egocentric.Layer;
-import Export.Layer;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Player.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Map.Layer;
+import Blam.Map.Reader.Type;
+import Blam.MapModel.Layer;
+import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Layer;
+import Blam.Runtime.Player.Type;
+import Perception.Layer;
+import Views.Layer;
+import Bridge.Codec.Layer;
 import Tests.Support.Blam;
 import Tests.Support.Log;
 import std;
@@ -27,12 +27,12 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Common::Team::Type::Team;
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::RegionSize;
-    using Layout::Snapshot::Type::Snapshot;
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Tables::Player::Type::Alive::ConnectionState;
+    using ::Blam::Layout::Snapshot::Type::RawObject;
+    using ::Blam::Layout::Snapshot::Type::RegionId;
+    using ::Blam::Layout::Snapshot::Type::RegionSize;
+    using ::Blam::Layout::Snapshot::Type::Snapshot;
+    using ::Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using ::Blam::Runtime::Player::Type::Alive::ConnectionState;
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
     using Tests::Support::Blam::MakeHandle;
@@ -43,14 +43,14 @@ namespace
     using Common::Engine::Type::k_NoTick;
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_MaxPlayers;
-    using Map::Reader::Type::Magic::Tag::k_Bipd;
+    using ::Blam::Map::Reader::Type::Magic::Tag::k_Bipd;
 
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
-    namespace UnitOffset = Datum::Object::Type::Unit::Offset;
-    namespace PlayerOffset = Layout::Player::Type::Offset;
-    namespace PlayerMapping = Layout::Player::Type::Mapping;
+    namespace ObjeOffset = ::Blam::Layout::Object::Type::Obje::Offset;
+    namespace UnitOffset = ::Blam::Layout::Object::Type::Unit::Offset;
+    namespace PlayerOffset = ::Blam::Layout::Player::Type::Offset;
+    namespace PlayerMapping = ::Blam::Layout::Player::Type::Mapping;
 
-    using Layout::Player::Type::Size::k_Base;
+    using ::Blam::Layout::Player::Type::Size::k_Base;
 
     // Bytes of every hand made datum: more than the last field of a biped.
     constexpr std::size_t k_DatumBytes{ 0x1000 };
@@ -129,7 +129,7 @@ export namespace Tests::Support::Pipeline
     }
 
     // Writes the tag index of the spartan and marks the map as loaded.
-    auto FillSyntheticTags(Map::Layer& map) -> void
+    auto FillSyntheticTags(::Blam::Map::Layer& map) -> void
     {
         Fill(map.m_TagIndexStore, k_Groups, k_Tags);
         map.m_FileStore.SetLoaded(true);
@@ -151,11 +151,11 @@ export namespace Tests::Support::Pipeline
 
         CollectingSink m_Sink{};
         Log m_Log{ m_Sink };
-        Map::Layer m_Map{ m_Log };
-        Resolved::Layer m_Resolved{ m_Log, m_Map };
-        Tables::Layer m_Tables{ m_Log, m_Resolved };
-        Environment::Layer m_Environment{ m_Log, m_Resolved, m_Tables };
-        Egocentric::Layer m_Egocentric{ m_Log, m_Resolved, m_Tables, m_Environment };
-        Export::Layer m_Export{ m_Resolved, m_Tables, m_Environment, m_Egocentric };
+        ::Blam::Map::Layer m_Map{ m_Log };
+        ::Blam::MapModel::Layer m_Resolved{ m_Log, m_Map };
+        ::Blam::Runtime::Layer m_Tables{ m_Log, m_Resolved };
+        Perception::Layer m_Environment{ m_Log, m_Resolved, m_Tables };
+        Views::Layer m_Egocentric{ m_Log, m_Resolved, m_Tables, m_Environment };
+        Bridge::Codec::Layer m_Export{ m_Resolved, m_Tables, m_Environment, m_Egocentric };
     };
 }

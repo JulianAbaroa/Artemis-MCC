@@ -1,32 +1,32 @@
-export module Resolved.World.System;
+export module Blam.MapModel.World.System;
 
 export import :ModelLink;
 export import :Raycast;
 export import :RegionStates;
 
 import Common.Log.System;
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Resolved.World.State;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.MapModel.World.State;
 import std;
 
-export namespace Resolved::World::System
+export namespace Blam::MapModel::World::System
 {
     // Builds the world from the definitions: which model and collision each object has, how its
     // collision permutations change, how its collision and render models relate, and the hierarchy that rays are cast against.
     class WorldBuilder
     {
     private:
-        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
-        using Coll = Resolved::Definitions::Type::Coll::Coll;
-        using Mode = Resolved::Definitions::Type::Mode::Mode;
+        using Hlmt = Blam::MapModel::Definitions::Type::Hlmt::Hlmt;
+        using Coll = Blam::MapModel::Definitions::Type::Coll::Coll;
+        using Mode = Blam::MapModel::Definitions::Type::Mode::Mode;
 
         using Log = Common::Log::System::Log;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-        using WorldStore = Resolved::World::State::WorldStore;
-        using Raycaster = Resolved::World::System::Raycaster;
-        using RegionStatesBuilder = Resolved::World::System::RegionStatesBuilder;
-        using ModelLinkBuilder = Resolved::World::System::ModelLinkBuilder;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
+        using WorldStore = Blam::MapModel::World::State::WorldStore;
+        using Raycaster = Blam::MapModel::World::System::Raycaster;
+        using RegionStatesBuilder = Blam::MapModel::World::System::RegionStatesBuilder;
+        using ModelLinkBuilder = Blam::MapModel::World::System::ModelLinkBuilder;
 
     public:
         WorldBuilder(Log& log, DefinitionsStore& definitionsStore,

@@ -1,10 +1,10 @@
-export module Resolved.Definitions.Type:Bipd;
+export module Blam.MapModel.Definitions.Type:Bipd;
 
 import :Object;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Bipd
+export namespace Blam::MapModel::Definitions::Type::Bipd
 {
     // Holds the biped definition.
     struct Bipd

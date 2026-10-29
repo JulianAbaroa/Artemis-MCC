@@ -1,8 +1,8 @@
-export module Gui.Widget.System:SearchFilter;
+export module DevTools.Gui.Widget.System:SearchFilter;
 
 import std;
 
-export namespace Gui::Widget::System
+export namespace DevTools::Gui::Widget::System
 {
     // Draws a search bar and matches text against what was typed, ignoring the case.
     class SearchFilterGuiService

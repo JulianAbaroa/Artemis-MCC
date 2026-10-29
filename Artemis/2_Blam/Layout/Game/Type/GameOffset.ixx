@@ -1,8 +1,8 @@
-export module Layout.Game.Type:Offset;
+export module Blam.Layout.Game.Type:Offset;
 
 import std;
 
-export namespace Layout::Game::Type::Offset
+export namespace Blam::Layout::Game::Type::Offset
 {
     // Phase of the match in the game engine globals (uint32) (D103).
     // note: The game engine globals are at *(thread context + k_ThreadContextGameEngineOffset).

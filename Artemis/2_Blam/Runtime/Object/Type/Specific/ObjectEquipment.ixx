@@ -1,8 +1,8 @@
-export module Tables.Object.Type:Equipment;
+export module Blam.Runtime.Object.Type:Equipment;
 
 import std;
 
-export namespace Tables::Object::Type::Equipment
+export namespace Blam::Runtime::Object::Type::Equipment
 {
     struct Equipment
     {

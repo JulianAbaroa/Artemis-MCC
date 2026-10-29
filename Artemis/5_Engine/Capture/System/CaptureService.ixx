@@ -1,12 +1,12 @@
-export module Platform.Capture.System;
+export module Engine.Capture.System;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Capture.State;
-import Layout.Snapshot.Type;
+import Engine.Base.Memory.System;
+import Engine.Capture.State;
+import Blam.Layout.Snapshot.Type;
 import std;
 
-export namespace Platform::Capture::System
+export namespace Engine::Capture::System
 {
     // Copies everything the tick pipeline reads from the game into a snapshot: the live objects and the regions of memory.
     class CaptureService
@@ -14,12 +14,12 @@ export namespace Platform::Capture::System
     private:
         using Log = Common::Log::System::Log;
 
-        using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
+        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
-        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using CaptureStore = Engine::Capture::State::CaptureStore;
 
-        using RegionId = Layout::Snapshot::Type::RegionId;
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
+        using RegionId = Blam::Layout::Snapshot::Type::RegionId;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
 
     public:
         CaptureService(Log& log,

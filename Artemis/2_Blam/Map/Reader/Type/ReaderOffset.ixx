@@ -1,8 +1,8 @@
-export module Map.Reader.Type:Offset;
+export module Blam.Map.Reader.Type:Offset;
 
 import std;
 
-export namespace Map::Reader::Type::Offset
+export namespace Blam::Map::Reader::Type::Offset
 {
     // Size: 0xA000.
     namespace Header

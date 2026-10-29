@@ -2,24 +2,24 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :MapPass;
 
-import Platform.Render.Type;
-import Platform.Render.System;
-import Viewer.Style.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::VertexLayout;
+    using Engine::Render::Type::VertexLayout;
 
-    using Platform::Render::Type::Vertex;
+    using Engine::Render::Type::Vertex;
 
-    using Viewer::Style::Type::k_Map;
+    using DevTools::Viewer::Style::Type::k_Map;
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto MapPass::Upload(ID3D11Device* device, const std::unordered_map<std::string, Sbsp>& sbsps) -> void
     {
@@ -98,7 +98,7 @@ namespace Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::Colored);
 
-        Platform::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+        Engine::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 

@@ -1,16 +1,16 @@
-module UI.PlayerTable.State;
+module DevTools.Workbench.PlayerTable.State;
 
 import Common.Engine.Type;
-import Layout.Player.Type;
+import Blam.Layout.Player.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_HandleIndexMask;
-    using Layout::Player::Type::Size::k_Base;
+    using Blam::Layout::Player::Type::Size::k_Base;
 }
 
-namespace UI::PlayerTable::State
+namespace DevTools::Workbench::PlayerTable::State
 {
     auto PlayerTableUIStore::IsSameSnapshot(
         const std::shared_ptr<const PlayerTable>& table) const -> bool

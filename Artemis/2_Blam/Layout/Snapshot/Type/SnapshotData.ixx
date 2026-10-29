@@ -1,17 +1,17 @@
-export module Layout.Snapshot.Type:Data;
+export module Blam.Layout.Snapshot.Type:Data;
 
 import :Raw;
 import :Region;
 
-import Datum.Object.Type;
+import Blam.Layout.Object.Type;
 import std;
 
 namespace
 {
-    using Datum::Object::Type::Constant::k_PlacementSize;
+    using Blam::Layout::Object::Type::Constant::k_PlacementSize;
 }
 
-export namespace Layout::Snapshot::Type
+export namespace Blam::Layout::Snapshot::Type
 {
     // Everything the tick reads from the game, copied at its start: the live objects and the regions of memory.
     // note: Built by the capture on the AI thread and never modified once published. Reads never touch the game.

@@ -1,16 +1,16 @@
-export module UI.DefinitionsInspector.System;
+export module DevTools.Workbench.DefinitionsInspector.System;
 
-import Service.Settings.State;
-import Resolved.Definitions.State;
-import Tables.Object.Type;
-import Export.Tick.Type;
-import Export.Tick.State;
-import Gui.Widget.System;
-import Viewer.Selection.State;
-import UI.DefinitionsInspector.Type;
+import Services.Settings.State;
+import Blam.MapModel.Definitions.State;
+import Blam.Runtime.Object.Type;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Gui.Widget.System;
+import DevTools.Viewer.Selection.State;
+import DevTools.Workbench.DefinitionsInspector.Type;
 import std;
 
-export namespace UI::DefinitionsInspector::System
+export namespace DevTools::Workbench::DefinitionsInspector::System
 {
     // Draws the resolved definitions of the selected object and the tags linked from it.
     // note: Can also dump the definitions of a class to a file for the field usage report, and the object tags of the map
@@ -18,18 +18,18 @@ export namespace UI::DefinitionsInspector::System
     class DefinitionsInspectorUIService
     {
     private:
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
 
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
-        using TickStore = Export::Tick::State::TickStore;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using InspectorGuiService = Gui::Widget::System::InspectorGuiService;
+        using InspectorGuiService = DevTools::Gui::Widget::System::InspectorGuiService;
 
-        using SelectionStore = Viewer::Selection::State::SelectionStore;
+        using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
 
-        using LinkedTag = UI::DefinitionsInspector::Type::LinkedTag;
+        using LinkedTag = DevTools::Workbench::DefinitionsInspector::Type::LinkedTag;
 
     public:
         DefinitionsInspectorUIService(TickStore& tickStore, DefinitionsStore& definitionsStore,

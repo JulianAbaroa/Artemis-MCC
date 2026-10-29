@@ -1,8 +1,8 @@
-export module Platform.Memory.System:Reader;
+export module Engine.Base.Memory.System:Reader;
 
 import std;
 
-export namespace Platform::Memory::System
+export namespace Engine::Base::Memory::System
 {
     // Reads game memory safely. A failed read (access violation) never crashes.
     class MemoryReaderService

@@ -1,4 +1,4 @@
-export module Tables.Object.Type:Scenery;
+export module Blam.Runtime.Object.Type:Scenery;
 
 import Common.Tag.Type;
 import std;
@@ -15,7 +15,7 @@ namespace
     using Common::Tag::Type::Spawn::k_RespawnPoint;
 }
 
-export namespace Tables::Object::Type::Scenery
+export namespace Blam::Runtime::Object::Type::Scenery
 {
     enum class SceneryKind : std::uint8_t
     {

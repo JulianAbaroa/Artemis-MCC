@@ -1,6 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="$(ArtemisRoot)External">
+      <UniqueIdentifier>{bae5f2c7-c823-598d-8b28-9a120492e6a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\imgui">
+      <UniqueIdentifier>{7fecb25e-0274-5dac-8630-c3e11d37b39d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\imgui\backends">
+      <UniqueIdentifier>{a19e79bc-4b10-59b4-946c-f21f2abb1251}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Backend">
       <UniqueIdentifier>{a3bb565c-540f-5800-943f-89ddab934dbb}</UniqueIdentifier>
     </Filter>
@@ -18,15 +27,6 @@
     </Filter>
     <Filter Include="Color\System\Team">
       <UniqueIdentifier>{6837f361-5618-5b3b-a8d9-b334cf37c2e6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External">
-      <UniqueIdentifier>{38ab6ee9-bd21-540c-884b-2de0e58c1a6a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\imgui">
-      <UniqueIdentifier>{67fe0241-2cf0-59b0-b116-12e1bed36002}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\imgui\backends">
-      <UniqueIdentifier>{901a9bf7-05db-5ae3-8c46-395a7e8da0cf}</UniqueIdentifier>
     </Filter>
     <Filter Include="Format">
       <UniqueIdentifier>{e6b0cf46-f58d-5328-a796-e31f2ce114da}</UniqueIdentifier>
@@ -75,17 +75,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Gui.Layer.ixx" />
-    <ClCompile Include="Backend\Gui.Backend.System.ixx">
+    <ClCompile Include="DevTools.Gui.Layer.ixx" />
+    <ClCompile Include="Backend\DevTools.Gui.Backend.System.ixx">
       <Filter>Backend</Filter>
     </ClCompile>
-    <ClCompile Include="Color\Gui.Color.System.ixx">
+    <ClCompile Include="Color\DevTools.Gui.Color.System.ixx">
       <Filter>Color</Filter>
     </ClCompile>
-    <ClCompile Include="Format\Gui.Format.System.ixx">
+    <ClCompile Include="Format\DevTools.Gui.Format.System.ixx">
       <Filter>Format</Filter>
     </ClCompile>
-    <ClCompile Include="Widget\Gui.Widget.System.ixx">
+    <ClCompile Include="Widget\DevTools.Gui.Widget.System.ixx">
       <Filter>Widget</Filter>
     </ClCompile>
     <ClCompile Include="Backend\System\BackendGuiService.cpp">
@@ -100,7 +100,7 @@
     <ClCompile Include="Backend\System\WndProcGuiService.ixx">
       <Filter>Backend\System</Filter>
     </ClCompile>
-    <ClCompile Include="Style\Type\Gui.Style.Type.ixx">
+    <ClCompile Include="Style\Type\DevTools.Gui.Style.Type.ixx">
       <Filter>Style\Type</Filter>
     </ClCompile>
     <ClCompile Include="Color\System\Group\GroupToColor.cpp">
@@ -167,37 +167,37 @@
       <Filter>Widget\System\SearchFilter</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui.cpp">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_demo.cpp">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_draw.cpp">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_tables.cpp">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui_widgets.cpp">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.cpp">
-      <Filter>External\imgui\backends</Filter>
+      <Filter>$(ArtemisRoot)External\imgui\backends</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.cpp">
-      <Filter>External\imgui\backends</Filter>
+      <Filter>$(ArtemisRoot)External\imgui\backends</Filter>
     </ClCompile>
     <ClInclude Include="$(ArtemisRoot)External\imgui\imgui.h">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="$(ArtemisRoot)External\imgui\imgui_internal.h">
-      <Filter>External\imgui</Filter>
+      <Filter>$(ArtemisRoot)External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_dx11.h">
-      <Filter>External\imgui\backends</Filter>
+      <Filter>$(ArtemisRoot)External\imgui\backends</Filter>
     </ClInclude>
     <ClInclude Include="$(ArtemisRoot)External\imgui\backends\imgui_impl_win32.h">
-      <Filter>External\imgui\backends</Filter>
+      <Filter>$(ArtemisRoot)External\imgui\backends</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

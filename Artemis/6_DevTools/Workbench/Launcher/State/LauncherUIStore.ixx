@@ -1,21 +1,21 @@
-export module UI.Launcher.State;
+export module DevTools.Workbench.Launcher.State;
 
-import UI.Launcher.Type;
+import DevTools.Workbench.Launcher.Type;
 import std;
 
 namespace
 {
-    using UI::Launcher::Type::k_TabCount;
+    using DevTools::Workbench::Launcher::Type::k_TabCount;
 }
 
-export namespace UI::Launcher::State
+export namespace DevTools::Workbench::Launcher::State
 {
     // Visibility state of the launcher and its tabs.
     // note: Atomic because the hotkeys change it from the window thread and the UI reads it from the render thread.
     class LauncherUIStore
     {
     private:
-        using Tab = UI::Launcher::Type::Tab;
+        using Tab = DevTools::Workbench::Launcher::Type::Tab;
 
     public:
         LauncherUIStore() = default;

@@ -1,4 +1,4 @@
-export module Layout.Snapshot.Type:Record;
+export module Blam.Layout.Snapshot.Type:Record;
 
 import :Raw;
 import :Region;
@@ -6,7 +6,7 @@ import :Data;
 
 import std;
 
-export namespace Layout::Snapshot::Type
+export namespace Blam::Layout::Snapshot::Type
 {
     // Version of the .sdump format (D202). Raised when a header, a block or the order of the blocks changes.
     inline constexpr std::uint32_t k_SnapshotDumpVersion{ 1 };
@@ -141,7 +141,7 @@ export namespace Layout::Snapshot::Type
     struct SnapshotRecord
     {
         // The reconstructed Snapshot, identical to the recorded one.
-        std::shared_ptr<const Layout::Snapshot::Type::Snapshot> Snapshot{};
+        std::shared_ptr<const Blam::Layout::Snapshot::Type::Snapshot> Snapshot{};
         std::uint64_t Generation{};
         std::uint32_t DroppedBefore{};
         std::uint32_t Flags{};

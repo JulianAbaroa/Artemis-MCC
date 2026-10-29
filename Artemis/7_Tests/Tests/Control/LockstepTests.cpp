@@ -4,7 +4,7 @@ import Common.Math.Type;
 import Control.Action.Type;
 import Control.Lockstep.Type;
 import Control.Lockstep.System;
-import Contract.Bridge;
+import Contract.Bridge.Type;
 import std;
 
 // Control.Lockstep (M6a, D210-D215): the decisions of the bridge that need no engine and no clock: the control in effect, when the game
@@ -30,10 +30,10 @@ namespace
     using Control::Lockstep::System::ResumeIfAnswered;
     using Control::Lockstep::System::ToClientRequests;
 
-    using Platform::Bridge::Type::BridgeAction;
-    using Platform::Bridge::Type::BridgeClientControl;
-    using Platform::Bridge::Type::BridgeMode;
-    using Platform::Bridge::Type::BridgeOwner;
+    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeClientControl;
+    using Contract::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgeOwner;
 
     using Common::Math::Type::k_HalfPi;
     using Common::Math::Type::k_TwoPi;

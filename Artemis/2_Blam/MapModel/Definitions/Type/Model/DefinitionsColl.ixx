@@ -1,4 +1,4 @@
-export module Resolved.Definitions.Type:Coll;
+export module Blam.MapModel.Definitions.Type:Coll;
 
 import Common.Math.Type;
 import std;
@@ -10,7 +10,7 @@ namespace
     using Common::Math::Type::Triangle;
 }
 
-export namespace Resolved::Definitions::Type::Coll
+export namespace Blam::MapModel::Definitions::Type::Coll
 {
     // String id of "default", the name of the default permutation of a region.
     inline constexpr std::uint32_t k_DefaultPermutationName{ 1 };

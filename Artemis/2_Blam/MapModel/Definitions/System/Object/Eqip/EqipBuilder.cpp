@@ -1,7 +1,7 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Eqip;
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto EqipBuilder::Build(const EqipObject& eqip) -> Eqip
     {

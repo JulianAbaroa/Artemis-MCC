@@ -1,8 +1,8 @@
-export module Layout.Interaction.Type:Offset;
+export module Blam.Layout.Interaction.Type:Offset;
 
 import std;
 
-export namespace Layout::Interaction::Type::Offset
+export namespace Blam::Layout::Interaction::Type::Offset
 {
     // Bytes of one output user (view) entry of the player control globals (A9_SplitScreen.txt sec. 11.2).
     // note: The entries start at *(thread context + 0xD8) + 0x680, one per view. The unit handle of the view is at +0x0.

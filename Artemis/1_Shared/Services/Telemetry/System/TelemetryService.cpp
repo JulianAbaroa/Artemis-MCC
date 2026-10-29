@@ -1,6 +1,6 @@
-module Service.Telemetry.System;
+module Services.Telemetry.System;
 
-namespace Service::Telemetry::System
+namespace Services::Telemetry::System
 {
     auto TelemetryService::Update() -> void
     {

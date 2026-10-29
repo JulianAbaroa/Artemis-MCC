@@ -2,11 +2,11 @@
 // Source XML: sbsp.xml
 // Base size: 0x530.
 
-export module Map.Tag.Type:Sbsp.Offset;
+export module Blam.Map.Tag.Type:Sbsp.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Sbsp::Offset
+export namespace Blam::Map::Tag::Type::Sbsp::Offset
 {
     constexpr std::size_t k_Unknown                                     = 0x0;  // undefined.
     constexpr std::size_t k_Unknown_2                                   = 0x4;  // float32.

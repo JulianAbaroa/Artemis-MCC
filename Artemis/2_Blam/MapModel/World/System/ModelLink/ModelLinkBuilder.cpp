@@ -1,9 +1,9 @@
-module Resolved.World.System;
+module Blam.MapModel.World.System;
 import :ModelLink;
 
 namespace
 {
-    using Resolved::World::Type::ModelLink::AnchorSource;
+    using Blam::MapModel::World::Type::ModelLink::AnchorSource;
 
     // Bit 0 of the lock-on flags of a model target: headshot.
     constexpr std::uint32_t k_LockOnHeadshot{ 1u << 0 };
@@ -16,7 +16,7 @@ namespace
     };
 }
 
-namespace Resolved::World::System
+namespace Blam::MapModel::World::System
 {
     auto ModelLinkBuilder::Build(const Hlmt& hlmt, const Coll* coll, const Mode* mode) const -> ModelLink
     {

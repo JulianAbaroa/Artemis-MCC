@@ -1,10 +1,10 @@
 export module Engine.Capture.Layer;
 
-import Service.Layer;
+import Services.Layer;
 import Engine.Base.Layer;
-import Platform.Capture.State;
-import Platform.Capture.System;
-import Platform.Capture.Hook;
+import Engine.Capture.State;
+import Engine.Capture.System;
+import Engine.Capture.Hook;
 
 export namespace Engine::Capture
 {
@@ -13,16 +13,16 @@ export namespace Engine::Capture
     class Layer
     {
     private:
-        using CaptureStore = Platform::Capture::State::CaptureStore;
-        using CaptureService = Platform::Capture::System::CaptureService;
-        using ObjectTableLocator = Platform::Capture::Hook::ObjectTableLocator;
-        using PlayerTableLocator = Platform::Capture::Hook::PlayerTableLocator;
-        using InteractionTableLocator = Platform::Capture::Hook::InteractionTableLocator;
-        using ExecuteGameFrameDetour = Platform::Capture::Hook::ExecuteGameFrameDetour;
-        using SimulationTicksDetour = Platform::Capture::Hook::SimulationTicksDetour;
+        using CaptureStore = Engine::Capture::State::CaptureStore;
+        using CaptureService = Engine::Capture::System::CaptureService;
+        using ObjectTableLocator = Engine::Capture::Hook::ObjectTableLocator;
+        using PlayerTableLocator = Engine::Capture::Hook::PlayerTableLocator;
+        using InteractionTableLocator = Engine::Capture::Hook::InteractionTableLocator;
+        using ExecuteGameFrameDetour = Engine::Capture::Hook::ExecuteGameFrameDetour;
+        using SimulationTicksDetour = Engine::Capture::Hook::SimulationTicksDetour;
 
     public:
-        Layer(Service::Layer& service, Engine::Base::Layer& base) :
+        Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_CaptureService(service.m_Log, base.m_MemoryReaderService, m_CaptureStore),
             m_ObjectTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_PlayerTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),

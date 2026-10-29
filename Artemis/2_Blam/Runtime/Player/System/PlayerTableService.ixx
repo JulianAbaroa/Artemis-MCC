@@ -1,12 +1,12 @@
-export module Tables.Player.System;
+export module Blam.Runtime.Player.System;
 
 import Common.Log.System;
-import Layout.Snapshot.Type;
-import Tables.Player.Type;
-import Tables.Player.State;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Player.Type;
+import Blam.Runtime.Player.State;
 import std;
 
-export namespace Tables::Player::System
+export namespace Blam::Runtime::Player::System
 {
     // Reads the players of the engine player table into the store.
     class PlayerTableService
@@ -14,11 +14,11 @@ export namespace Tables::Player::System
     private:
         using Log = Common::Log::System::Log;
 
-        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
+        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
 
-        using PlayerTableStore = Tables::Player::State::PlayerTableStore;
+        using PlayerTableStore = Blam::Runtime::Player::State::PlayerTableStore;
 
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
 
     public:
         PlayerTableService(Log& log, PlayerTableStore& playerStore) :

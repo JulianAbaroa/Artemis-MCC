@@ -1,20 +1,20 @@
-export module UI.Capture.System;
+export module DevTools.Workbench.Capture.System;
 
 import Common.Log.System;
-import Service.Settings.State;
-import Platform.Memory.System;
-import Platform.Capture.State;
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Datum.Object.Type;
-import Layout.Snapshot.Type;
-import Export.Tick.Type;
-import Export.Tick.State;
-import UI.Capture.Type;
-import UI.Capture.State;
+import Services.Settings.State;
+import Engine.Base.Memory.System;
+import Engine.Capture.State;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Snapshot.Type;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Workbench.Capture.Type;
+import DevTools.Workbench.Capture.State;
 import std;
 
-export namespace UI::Capture::System
+export namespace DevTools::Workbench::Capture::System
 {
     // Copies the datum of the local biped, its linked objects and the pinned objects to a session file, cut by component (D81).
     // Each object also gets its Havok component and rigid bodies, the shapes of its physics model (phmo), and each capture the layer
@@ -27,25 +27,25 @@ export namespace UI::Capture::System
     {
     private:
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
+        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
-        using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
-        using Phmo = Resolved::Definitions::Type::Phmo::Phmo;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
+        using ObjectKind = Blam::MapModel::Definitions::Type::Object::ObjectKind;
+        using Hlmt = Blam::MapModel::Definitions::Type::Hlmt::Hlmt;
+        using Phmo = Blam::MapModel::Definitions::Type::Phmo::Phmo;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
 
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
-        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
+        using CaptureStore = Engine::Capture::State::CaptureStore;
 
-        using Tick = Export::Tick::Type::Tick;
-        using TickStore = Export::Tick::State::TickStore;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using Target = UI::Capture::Type::Target;
-        using HavokFilter = UI::Capture::Type::HavokFilter;
-        using HavokComponent = UI::Capture::Type::HavokComponent;
-        using CaptureUIStore = UI::Capture::State::CaptureUIStore;
+        using Target = DevTools::Workbench::Capture::Type::Target;
+        using HavokFilter = DevTools::Workbench::Capture::Type::HavokFilter;
+        using HavokComponent = DevTools::Workbench::Capture::Type::HavokComponent;
+        using CaptureUIStore = DevTools::Workbench::Capture::State::CaptureUIStore;
 
     public:
         CaptureUIService(Log& log, SettingsStore& settingsStore, MemoryReaderService& memoryReaderService,

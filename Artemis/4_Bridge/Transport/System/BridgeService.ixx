@@ -1,17 +1,17 @@
-export module Platform.Bridge.System:Service;
+export module Bridge.Transport.System:Service;
 
 import :Engine;
 
 import Common.Log.System;
-import Service.Settings.State;
+import Services.Settings.State;
 import Control.Action.Type;
 import Control.Lockstep.Type;
-import Platform.Bridge.Type;
-import Platform.Bridge.State;
-import Export.Flat.Type;
+import Bridge.Transport.Type;
+import Bridge.Transport.State;
+import Bridge.Codec.Flat.Type;
 import std;
 
-export namespace Platform::Bridge::System
+export namespace Bridge::Transport::System
 {
     // Bridge between Artemis and a Python client on the same PC (D135-D138): the shared memory, the control the client asks for, the
     // decision ticks and the actions of the players the client controls.
@@ -23,21 +23,21 @@ export namespace Platform::Bridge::System
     private:
         using Log = Common::Log::System::Log;
 
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
         using ActionOverride = Control::Action::Type::ActionOverride;
 
         using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
         using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
 
-        using BridgeRegion = Platform::Bridge::Type::BridgeRegion;
-        using BridgeTick = Platform::Bridge::Type::BridgeTick;
-        using BridgeAction = Platform::Bridge::Type::BridgeAction;
-        using BridgeClock = Export::Flat::Type::BridgeClock;
-        using BridgeLinkState = Platform::Bridge::Type::BridgeLinkState;
-        using BridgeStatus = Platform::Bridge::Type::BridgeStatus;
+        using BridgeRegion = Contract::Bridge::Type::BridgeRegion;
+        using BridgeTick = Contract::Bridge::Type::BridgeTick;
+        using BridgeAction = Contract::Bridge::Type::BridgeAction;
+        using BridgeClock = Bridge::Codec::Flat::Type::BridgeClock;
+        using BridgeLinkState = Bridge::Transport::Type::BridgeLinkState;
+        using BridgeStatus = Bridge::Transport::Type::BridgeStatus;
 
-        using BridgeStore = Platform::Bridge::State::BridgeStore;
+        using BridgeStore = Bridge::Transport::State::BridgeStore;
 
     public:
         BridgeService(Log& log, SettingsStore& settingsStore, BridgeEngine& engine, BridgeStore& bridgeStore) :

@@ -1,14 +1,14 @@
-export module Resolved.Definitions.Reflect:Bloc;
+export module Blam.MapModel.Definitions.Reflect:Bloc;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Bloc::Bloc;
+    using Blam::MapModel::Definitions::Type::Bloc::Bloc;
 }
 
 export namespace Common::Reflect::Type

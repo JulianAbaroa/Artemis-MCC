@@ -2,32 +2,32 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :RaycastPass;
 
 import Common.Math.Type;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Egocentric.Raycast.Type;
-import Viewer.Style.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Views.Raycast.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::Vertex;
+    using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
-    using Egocentric::Raycast::Type::RaycastHit;
-    using Egocentric::Raycast::Type::HitKind;
-    using Viewer::Style::Type::Color;
+    using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::HitKind;
+    using DevTools::Viewer::Style::Type::Color;
 
-    using Platform::Render::Type::VertexLayout;
+    using Engine::Render::Type::VertexLayout;
 
-    using Viewer::Style::Type::k_RayAimNoHit;
-    using Viewer::Style::Type::k_RayPerceptionNoHit;
-    using Viewer::Style::Type::k_RayAimHitDynamic;
-    using Viewer::Style::Type::k_RayAimHitStatic;
-    using Viewer::Style::Type::k_RayPerceptionHitDynamic;
-    using Viewer::Style::Type::k_RayPerceptionHitStatic;
+    using DevTools::Viewer::Style::Type::k_RayAimNoHit;
+    using DevTools::Viewer::Style::Type::k_RayPerceptionNoHit;
+    using DevTools::Viewer::Style::Type::k_RayAimHitDynamic;
+    using DevTools::Viewer::Style::Type::k_RayAimHitStatic;
+    using DevTools::Viewer::Style::Type::k_RayPerceptionHitDynamic;
+    using DevTools::Viewer::Style::Type::k_RayPerceptionHitStatic;
 
     constexpr UINT k_InitialCapacity{ 64 };
 
@@ -64,7 +64,7 @@ namespace
     }
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto RaycastPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Raycasts>& raycasts, std::uint64_t generation) -> void
@@ -92,13 +92,13 @@ namespace Viewer::Map::System
 
         const UINT needed = static_cast<UINT>(vertices.size());
 
-        if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
+        if (!Engine::Render::System::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, m_VertexBuffer, m_Capacity, "[RaycastPass]", m_Log))
         {
             return;
         }
 
-        if (!Platform::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
+        if (!Engine::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
             vertices, "[RaycastPass]", m_Log))
         {
             return;
@@ -113,7 +113,7 @@ namespace Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::Colored);
 
-        Platform::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+        Engine::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
     }
 

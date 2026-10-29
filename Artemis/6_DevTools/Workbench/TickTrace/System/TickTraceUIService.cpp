@@ -2,14 +2,14 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.TickTrace.System;
+module DevTools.Workbench.TickTrace.System;
 
 import Common.Math.Type;
 import Common.Text.System;
 import Common.Time.System;
-import Datum.Object.Type;
-import Layout.Snapshot.Type;
-import Tables.Object.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Object.Type;
 import std;
 
 namespace
@@ -20,18 +20,18 @@ namespace
     using Common::Text::System::CopyText;
     using Common::Time::System::LocalNow;
 
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::Snapshot;
+    using Blam::Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::Snapshot;
 
-    using UI::TickTrace::Type::TraceFileHeader;
-    using UI::TickTrace::Type::TickRecord;
-    using UI::TickTrace::Type::ObjectRecord;
+    using DevTools::Workbench::TickTrace::Type::TraceFileHeader;
+    using DevTools::Workbench::TickTrace::Type::TickRecord;
+    using DevTools::Workbench::TickTrace::Type::ObjectRecord;
 
     using Common::Text::System::k_BytesPerMegabyte;
-    using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
-    using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
-    using Datum::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
-    using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsScaleOffset;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
+    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
 
     // Subfolder of the storage folder that holds the traces.
     constexpr std::string_view k_TraceFolder{ "TickTraces" };
@@ -54,7 +54,7 @@ namespace
     }
 }
 
-namespace UI::TickTrace::System
+namespace DevTools::Workbench::TickTrace::System
 {
     auto TickTraceUIService::CaptureClock(const Snapshot& snapshot) -> void
     {

@@ -1,23 +1,23 @@
-export module Map.Reader.System:TagReference;
+export module Blam.Map.Reader.System:TagReference;
 
 import :Formula;
 
-import Map.Reader.Type;
-import Map.Reader.State;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Turns the values stored in the map into offsets and names: where a tag and its blocks are, and which tag a reference points to.
     class TagReferenceService
     {
     private:
-        using TagTableEntry = Map::Reader::Type::Structure::TagTable::TagTableEntry;
-        using TagReference = Map::Reader::Type::Structure::Tag::TagReference;
-        using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
+        using TagTableEntry = Blam::Map::Reader::Type::Structure::TagTable::TagTableEntry;
+        using TagReference = Blam::Map::Reader::Type::Structure::Tag::TagReference;
+        using TagBlock = Blam::Map::Reader::Type::Structure::Tag::TagBlock;
 
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
-        using FormulaService = Map::Reader::System::FormulaService;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
 
     public:
         TagReferenceService(TagIndexStore& tagIndexStore, FormulaService& formulaService) :

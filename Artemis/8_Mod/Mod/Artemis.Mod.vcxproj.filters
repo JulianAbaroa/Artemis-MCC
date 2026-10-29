@@ -1,38 +1,35 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Infrastructure">
-      <UniqueIdentifier>{7055a99f-e6fd-5fc2-9b7a-8fcc95fefbd9}</UniqueIdentifier>
+    <Filter Include="Port">
+      <UniqueIdentifier>{5a084340-6562-5c00-8a83-4c827922c8e1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Infrastructure\Platform">
-      <UniqueIdentifier>{bc0891b6-1102-554e-add5-f16f23cae4f3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Infrastructure\Platform\Port">
-      <UniqueIdentifier>{3a750509-8fdf-51dc-a38d-4bc6af048975}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Infrastructure\Platform\Port\System">
-      <UniqueIdentifier>{02aecdec-2580-589e-af17-d20bbbe94815}</UniqueIdentifier>
+    <Filter Include="Port\System">
+      <UniqueIdentifier>{76c28c55-8aa3-51af-a44d-43d159ee2004}</UniqueIdentifier>
     </Filter>
     <Filter Include="Proxy">
       <UniqueIdentifier>{f32f0fcc-5c9a-5eef-ac63-9682bd8d3c92}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Runtime">
-      <UniqueIdentifier>{67eb1bfe-e7d9-5e7a-8919-68d9188c8578}</UniqueIdentifier>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{7839748f-25e6-53f2-ba71-8d3886d6dac1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Runtime\AI">
-      <UniqueIdentifier>{3f08af72-91ea-5076-9a5d-d24d1c480020}</UniqueIdentifier>
+    <Filter Include="Thread\System">
+      <UniqueIdentifier>{b65b73eb-2223-58c3-a170-f4778e5cb845}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Runtime\Bench">
-      <UniqueIdentifier>{79d52a74-d5cf-55d2-8d45-758856dfda45}</UniqueIdentifier>
+    <Filter Include="Thread\System\AI">
+      <UniqueIdentifier>{81154987-cb2b-5686-bbc1-7c2a95d44f01}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Runtime\Bridge">
-      <UniqueIdentifier>{03d0935d-a044-5565-814d-189ccfc4c4b4}</UniqueIdentifier>
+    <Filter Include="Thread\System\Bench">
+      <UniqueIdentifier>{ca8dcaa5-2c43-5d53-bd5d-96ae7a816d1d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Runtime\Dump">
-      <UniqueIdentifier>{8c5e8395-3eae-505f-9e85-ceb9f20a7865}</UniqueIdentifier>
+    <Filter Include="Thread\System\Bridge">
+      <UniqueIdentifier>{c1b07f9a-a369-5752-aca6-e24d07731e77}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Runtime\Main">
-      <UniqueIdentifier>{eb67bcb9-6afc-5e7e-96b6-310e845d5ffe}</UniqueIdentifier>
+    <Filter Include="Thread\System\Dump">
+      <UniqueIdentifier>{5b5024d9-7f94-5526-aef7-a932b68c8c10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thread\System\Main">
+      <UniqueIdentifier>{4049cf8b-d7d6-5704-af2d-2cd8f4a0de21}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -42,53 +39,53 @@
     <ClInclude Include="Proxy\ProxyExports.h">
       <Filter>Proxy</Filter>
     </ClInclude>
-    <ClCompile Include="Runtime\Runtime.Thread.ixx">
-      <Filter>Runtime</Filter>
+    <ClCompile Include="Thread\Mod.Thread.System.ixx">
+      <Filter>Thread</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\AI\AIThread.cpp">
-      <Filter>Runtime\AI</Filter>
+    <ClCompile Include="Thread\System\AI\AIThread.cpp">
+      <Filter>Thread\System\AI</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\AI\AIThread.ixx">
-      <Filter>Runtime\AI</Filter>
+    <ClCompile Include="Thread\System\AI\AIThread.ixx">
+      <Filter>Thread\System\AI</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Bench\BenchThread.cpp">
-      <Filter>Runtime\Bench</Filter>
+    <ClCompile Include="Thread\System\Bench\BenchThread.cpp">
+      <Filter>Thread\System\Bench</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Bench\BenchThread.ixx">
-      <Filter>Runtime\Bench</Filter>
+    <ClCompile Include="Thread\System\Bench\BenchThread.ixx">
+      <Filter>Thread\System\Bench</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Bridge\BridgeThread.cpp">
-      <Filter>Runtime\Bridge</Filter>
+    <ClCompile Include="Thread\System\Bridge\BridgeThread.cpp">
+      <Filter>Thread\System\Bridge</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Bridge\BridgeThread.ixx">
-      <Filter>Runtime\Bridge</Filter>
+    <ClCompile Include="Thread\System\Bridge\BridgeThread.ixx">
+      <Filter>Thread\System\Bridge</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Dump\DumpThread.cpp">
-      <Filter>Runtime\Dump</Filter>
+    <ClCompile Include="Thread\System\Dump\DumpThread.cpp">
+      <Filter>Thread\System\Dump</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Dump\DumpThread.ixx">
-      <Filter>Runtime\Dump</Filter>
+    <ClCompile Include="Thread\System\Dump\DumpThread.ixx">
+      <Filter>Thread\System\Dump</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Main\MainThread.cpp">
-      <Filter>Runtime\Main</Filter>
+    <ClCompile Include="Thread\System\Main\MainThread.cpp">
+      <Filter>Thread\System\Main</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Main\MainThread.ixx">
-      <Filter>Runtime\Main</Filter>
+    <ClCompile Include="Thread\System\Main\MainThread.ixx">
+      <Filter>Thread\System\Main</Filter>
     </ClCompile>
-    <ClCompile Include="Infrastructure\Platform\Port\Platform.Port.System.ixx">
-      <Filter>Infrastructure\Platform\Port</Filter>
+    <ClCompile Include="Port\Mod.Port.System.ixx">
+      <Filter>Port</Filter>
     </ClCompile>
-    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeActionSource.cpp">
-      <Filter>Infrastructure\Platform\Port\System</Filter>
+    <ClCompile Include="Port\System\BridgeActionSource.cpp">
+      <Filter>Port\System</Filter>
     </ClCompile>
-    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeActionSource.ixx">
-      <Filter>Infrastructure\Platform\Port\System</Filter>
+    <ClCompile Include="Port\System\BridgeActionSource.ixx">
+      <Filter>Port\System</Filter>
     </ClCompile>
-    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeEngineAdapter.cpp">
-      <Filter>Infrastructure\Platform\Port\System</Filter>
+    <ClCompile Include="Port\System\BridgeEngineAdapter.cpp">
+      <Filter>Port\System</Filter>
     </ClCompile>
-    <ClCompile Include="Infrastructure\Platform\Port\System\BridgeEngineAdapter.ixx">
-      <Filter>Infrastructure\Platform\Port\System</Filter>
+    <ClCompile Include="Port\System\BridgeEngineAdapter.ixx">
+      <Filter>Port\System</Filter>
     </ClCompile>
     <None Include="Proxy\GenerateProxyExports.py">
       <Filter>Proxy</Filter>

@@ -1,8 +1,8 @@
-export module Resolved.Definitions.Type:Phmo;
+export module Blam.MapModel.Definitions.Type:Phmo;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Phmo
+export namespace Blam::MapModel::Definitions::Type::Phmo
 {
     // Collision group value that means "keep the group of the rigid body".
     inline constexpr std::uint8_t k_NoCollisionGroup{ 0xFF };

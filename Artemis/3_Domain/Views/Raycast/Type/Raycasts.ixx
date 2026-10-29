@@ -1,18 +1,18 @@
-export module Egocentric.Raycast.Type:Raycasts;
+export module Views.Raycast.Type:Raycasts;
 
 import Common.Math.Type;
-import Resolved.Definitions.Type;
-import Environment.Collidable.Type;
+import Blam.MapModel.Definitions.Type;
+import Perception.Collidable.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Environment::Collidable::Type::Collidable;
-    using Resolved::Definitions::Type::Coll::CollMesh;
+    using Perception::Collidable::Type::Collidable;
+    using Blam::MapModel::Definitions::Type::Coll::CollMesh;
 }
 
-export namespace Egocentric::Raycast::Type
+export namespace Views::Raycast::Type
 {
     enum class HitKind : std::uint8_t
     {

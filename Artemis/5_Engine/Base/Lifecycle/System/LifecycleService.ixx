@@ -1,11 +1,11 @@
-export module Platform.Lifecycle.System:Lifecycle;
+export module Engine.Base.Lifecycle.System:Lifecycle;
 
 import Common.Log.System;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.State;
+import Engine.Base.Lifecycle.Type;
+import Engine.Base.Lifecycle.State;
 import std;
 
-export namespace Platform::Lifecycle::System
+export namespace Engine::Base::Lifecycle::System
 {
     // Raises the engine lifecycle events to the callbacks other layers registered. Also signals shutdown.
     class LifecycleService
@@ -13,10 +13,10 @@ export namespace Platform::Lifecycle::System
     private:
         using Log = Common::Log::System::Log;
 
-        using LifecycleCallback = Platform::Lifecycle::Type::LifecycleCallback;
-        using MapFileCallback = Platform::Lifecycle::Type::MapFileCallback;
+        using LifecycleCallback = Engine::Base::Lifecycle::Type::LifecycleCallback;
+        using MapFileCallback = Engine::Base::Lifecycle::Type::MapFileCallback;
 
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
 
     public:
         LifecycleService(Log& log, LifecycleStore& lifecycleStore) :

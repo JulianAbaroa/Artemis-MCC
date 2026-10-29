@@ -3,36 +3,36 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :AimPass;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Resolved.World.Type;
-import Environment.Aim.Type;
-import Viewer.Selection.State;
-import Viewer.Style.Type;
-import Viewer.Map.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Blam.MapModel.World.Type;
+import Perception.Aim.Type;
+import DevTools.Viewer.Selection.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Map.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::SphereInstance;
-    using Resolved::World::Type::ModelLink::AnchorSource;
-    using Environment::Aim::Type::SectionAim;
-    using Viewer::Style::Type::Color;
+    using Engine::Render::Type::SphereInstance;
+    using Blam::MapModel::World::Type::ModelLink::AnchorSource;
+    using Perception::Aim::Type::SectionAim;
+    using DevTools::Viewer::Style::Type::Color;
     using Microsoft::WRL::ComPtr;
 
-    using Platform::Render::Type::SurfaceMode;
-    using Platform::Render::Type::VertexLayout;
+    using Engine::Render::Type::SurfaceMode;
+    using Engine::Render::Type::VertexLayout;
 
-    using Viewer::Style::Type::k_AimModelTarget;
-    using Viewer::Style::Type::k_AimHeadshotTarget;
-    using Viewer::Style::Type::k_AimCollRegion;
-    using Viewer::Style::Type::k_AimObjectCenter;
-    using Viewer::Style::Type::k_TranslucentAlpha;
+    using DevTools::Viewer::Style::Type::k_AimModelTarget;
+    using DevTools::Viewer::Style::Type::k_AimHeadshotTarget;
+    using DevTools::Viewer::Style::Type::k_AimCollRegion;
+    using DevTools::Viewer::Style::Type::k_AimObjectCenter;
+    using DevTools::Viewer::Style::Type::k_TranslucentAlpha;
     using Common::Engine::Type::k_NoHandle;
     using Common::Math::Type::k_TwoPi;
 
@@ -158,7 +158,7 @@ namespace
     }
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto AimPass::CreateUnitMeshes(ID3D11Device* device) -> bool
     {
@@ -239,7 +239,7 @@ namespace Viewer::Map::System
                 Color c = ColorOf(section.AimSource);
                 if (detail && section.AimSource != AnchorSource::ObjectCenter && i < detail->Sections.size())
                 {
-                    c = Viewer::Style::Type::ColorOfVitality(detail->Sections[i]);
+                    c = DevTools::Viewer::Style::Type::ColorOfVitality(detail->Sections[i]);
                 }
 
                 const SphereInstance instance{

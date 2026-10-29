@@ -1,12 +1,12 @@
-export module Platform.Host.Hook:CanAcceptAnyJoinRequest;
+export module Engine.Base.Host.Hook:CanAcceptAnyJoinRequest;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Host.Type;
-import Platform.Host.State;
+import Engine.Base.Memory.System;
+import Engine.Base.Host.Type;
+import Engine.Base.Host.State;
 import std;
 
-export namespace Platform::Host::Hook
+export namespace Engine::Base::Host::Hook
 {
     // Hooks the engine check that decides if the network session accepts join requests, so the Artemis users can join the match.
     // note: Same change as AlphaRing (it patches the function to return 0). Only applies when more than one local user is requested.
@@ -15,11 +15,11 @@ export namespace Platform::Host::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using CanAcceptAnyJoinRequestFunction = Platform::Host::Type::CanAcceptAnyJoinRequestFunction;
+        using CanAcceptAnyJoinRequestFunction = Engine::Base::Host::Type::CanAcceptAnyJoinRequestFunction;
 
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
     public:
         CanAcceptAnyJoinRequestDetour(Log& log, AOBService& aobService, LocalUserStore& localUserStore) :

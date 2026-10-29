@@ -1,6 +1,6 @@
-module UI.TickTrace.State;
+module DevTools.Workbench.TickTrace.State;
 
-namespace UI::TickTrace::State
+namespace DevTools::Workbench::TickTrace::State
 {
     auto TickTraceUIStore::SetRecording(bool value) -> void
     {

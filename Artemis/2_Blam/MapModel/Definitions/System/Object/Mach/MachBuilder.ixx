@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Mach;
+export module Blam.MapModel.Definitions.System:Mach;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the machine definition.
     class MachBuilder
     {
     private:
-        using MachObject = Map::Tag::Type::Mach::Object::MachObject;
-        using Mach = Resolved::Definitions::Type::Mach::Mach;
+        using MachObject = Blam::Map::Tag::Type::Mach::Object::MachObject;
+        using Mach = Blam::MapModel::Definitions::Type::Mach::Mach;
 
     public:
         explicit MachBuilder(ObjectBuilder& objectBuilder) :

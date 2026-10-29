@@ -4,15 +4,6 @@
     <Filter Include="Logs">
       <UniqueIdentifier>{a7890976-d29b-4b53-ad8e-78e8c68014f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Preferences">
-      <UniqueIdentifier>{68fe117e-3b34-4900-b00e-ab0a690dfe66}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Settings">
-      <UniqueIdentifier>{625e2b27-a2a3-4107-b143-408777dc7f7f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Telemetry">
-      <UniqueIdentifier>{992722ef-2788-427a-aaf2-485d440e0b31}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Logs\State">
       <UniqueIdentifier>{0ea365f9-5817-4c58-ac9f-264d45512ca5}</UniqueIdentifier>
     </Filter>
@@ -22,17 +13,26 @@
     <Filter Include="Logs\Type">
       <UniqueIdentifier>{2a0b1570-3edf-4b0a-a2da-f1b1fa8be237}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Preferences\Type">
-      <UniqueIdentifier>{93bb059c-04e8-4943-9232-25fd3b7f8182}</UniqueIdentifier>
+    <Filter Include="Preferences">
+      <UniqueIdentifier>{68fe117e-3b34-4900-b00e-ab0a690dfe66}</UniqueIdentifier>
     </Filter>
     <Filter Include="Preferences\System">
       <UniqueIdentifier>{6c40a32c-4765-44aa-822d-e09fa1841a9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Preferences\Type">
+      <UniqueIdentifier>{93bb059c-04e8-4943-9232-25fd3b7f8182}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Settings">
+      <UniqueIdentifier>{625e2b27-a2a3-4107-b143-408777dc7f7f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Settings\State">
       <UniqueIdentifier>{1953ebfa-ce26-4471-a00f-9144fd926a78}</UniqueIdentifier>
     </Filter>
     <Filter Include="Settings\System">
       <UniqueIdentifier>{ac9ae0d2-bdd4-43ab-8ee5-b089d915d2d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Telemetry">
+      <UniqueIdentifier>{992722ef-2788-427a-aaf2-485d440e0b31}</UniqueIdentifier>
     </Filter>
     <Filter Include="Telemetry\State">
       <UniqueIdentifier>{426df87c-c106-4b97-993b-d3d390f68ddb}</UniqueIdentifier>
@@ -42,7 +42,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Logs\Type\Service.Logs.Type.ixx">
+    <ClCompile Include="Logs\Type\Services.Logs.Type.ixx">
       <Filter>Logs\Type</Filter>
     </ClCompile>
     <ClCompile Include="Logs\System\LogsSink.cpp">
@@ -57,7 +57,7 @@
     <ClCompile Include="Logs\State\LogsStore.ixx">
       <Filter>Logs\State</Filter>
     </ClCompile>
-    <ClCompile Include="Preferences\Type\Service.Preferences.Type.ixx">
+    <ClCompile Include="Preferences\Type\Services.Preferences.Type.ixx">
       <Filter>Preferences\Type</Filter>
     </ClCompile>
     <ClCompile Include="Preferences\System\PreferencesService.cpp">
@@ -90,6 +90,6 @@
     <ClCompile Include="Telemetry\System\TelemetryService.ixx">
       <Filter>Telemetry\System</Filter>
     </ClCompile>
-    <ClCompile Include="Service.Layer.ixx" />
+    <ClCompile Include="Services.Layer.ixx" />
   </ItemGroup>
 </Project>

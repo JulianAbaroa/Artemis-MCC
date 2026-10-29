@@ -1,8 +1,8 @@
-export module Tables.Object.Type:DamageSection;
+export module Blam.Runtime.Object.Type:DamageSection;
 
 import std;
 
-export namespace Tables::Object::Type::DamageSection
+export namespace Blam::Runtime::Object::Type::DamageSection
 {
 #pragma pack(push, 1)
     struct DamageSection

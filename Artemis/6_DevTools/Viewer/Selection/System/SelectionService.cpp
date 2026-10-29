@@ -1,7 +1,7 @@
-module Viewer.Selection.System;
+module DevTools.Viewer.Selection.System;
 
 import Common.Engine.Type;
-import Viewer.Selection.State;
+import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
@@ -9,7 +9,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-namespace Viewer::Selection::System
+namespace DevTools::Viewer::Selection::System
 {
     auto SelectionService::Update(const Ray& ray) -> void
     {

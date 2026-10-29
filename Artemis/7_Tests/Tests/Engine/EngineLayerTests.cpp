@@ -3,36 +3,36 @@
 import Common.Log.System;
 import Common.Log.Type;
 import Control.Action.Type;
-import Service.Layer;
+import Services.Layer;
 import Engine.Base.Layer;
 import Engine.Capture.Layer;
 import Engine.Control.Layer;
 import Engine.Match.Layer;
 import Engine.Render.Layer;
 import Bridge.Transport.Layer;
-import Platform.Bridge.System;
-import Platform.Bridge.Type;
-import Platform.Input.State;
-import Platform.Input.Hook;
-import Platform.Memory.System;
-import Platform.Simulation.State;
-import Platform.Simulation.System;
+import Bridge.Transport.System;
+import Bridge.Transport.Type;
+import Engine.Control.Input.State;
+import Engine.Control.Input.Hook;
+import Engine.Base.Memory.System;
+import Engine.Control.Simulation.State;
+import Engine.Control.Simulation.System;
 import Tests.Support.Log;
 import std;
 
-// The Layers of the engine projects and of Bridge.Transport (M8 C.2, D242, D243): owners with no callbacks, built over a Service::Layer
+// The Layers of the engine projects and of Bridge.Transport (M8 C.2, D242, D243): owners with no callbacks, built over a Services::Layer
 // and the Base, and the action source of PlayerActionDetour set by the one that composes them. No MCC in the process of the tests.
 
 namespace
 {
     using Common::Log::System::Log;
     using Common::Log::Type::LogLevel;
-    using Platform::Bridge::System::BridgeEngine;
-    using Platform::Input::Hook::PlayerActionDetour;
-    using Platform::Input::State::PlayerActionStore;
-    using Platform::Memory::System::AOBService;
-    using Platform::Simulation::State::BotStore;
-    using Platform::Simulation::System::BotService;
+    using Bridge::Transport::System::BridgeEngine;
+    using Engine::Control::Input::Hook::PlayerActionDetour;
+    using Engine::Control::Input::State::PlayerActionStore;
+    using Engine::Base::Memory::System::AOBService;
+    using Engine::Control::Simulation::State::BotStore;
+    using Engine::Control::Simulation::System::BotService;
     using Tests::Support::Log::CollectingSink;
 
     // Engine behind the port: it answers with idle values and keeps nothing.
@@ -42,7 +42,7 @@ namespace
         using ActionOverride = Control::Action::Type::ActionOverride;
         using ClientRequests = Control::Action::Type::ClientRequests;
 
-        using BridgePhase = Platform::Bridge::Type::BridgePhase;
+        using BridgePhase = Contract::Bridge::Type::BridgePhase;
 
     public:
         IdleBridgeEngine() = default;
@@ -73,7 +73,7 @@ namespace
 
 TEST(EngineLayerTests, BuildsAndDestroysWithoutTheGame)
 {
-    Service::Layer service{};
+    Services::Layer service{};
     IdleBridgeEngine engine{};
     {
         Engine::Base::Layer base{ service };

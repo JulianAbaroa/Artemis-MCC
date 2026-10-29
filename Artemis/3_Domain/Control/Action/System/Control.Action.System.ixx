@@ -1,7 +1,7 @@
 export module Control.Action.System;
 
 import Control.Action.Type;
-import Layout.Action.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
@@ -11,7 +11,7 @@ namespace
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
 
-    using Layout::Action::Type::Size::k_PlayerActionSize;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
 }
 
 export namespace Control::Action::System

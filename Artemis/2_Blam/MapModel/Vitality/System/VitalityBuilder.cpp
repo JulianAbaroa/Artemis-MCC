@@ -1,21 +1,21 @@
-module Resolved.Vitality.System;
+module Blam.MapModel.Vitality.System;
 
-import Resolved.World.Type;
+import Blam.MapModel.World.Type;
 
 namespace
 {
-    using Resolved::Definitions::Type::Hlmt::DamageSection;
-    using Resolved::Vitality::Type::Vitality::VitalityKind;
-    using Resolved::Vitality::Type::Vitality::Transfer;
-    using Resolved::World::Type::ModelLink::AnchorSource;
+    using Blam::MapModel::Definitions::Type::Hlmt::DamageSection;
+    using Blam::MapModel::Vitality::Type::Vitality::VitalityKind;
+    using Blam::MapModel::Vitality::Type::Vitality::Transfer;
+    using Blam::MapModel::World::Type::ModelLink::AnchorSource;
 
-    using Resolved::Vitality::Type::Constant::k_FlagKillsObject;
-    using Resolved::Vitality::Type::Constant::k_FlagKillsObjectNoSolo;
-    using Resolved::Vitality::Type::Constant::k_FlagDestroysObject;
-    using Resolved::Vitality::Type::Constant::k_FlagHeadshot;
+    using Blam::MapModel::Vitality::Type::Constant::k_FlagKillsObject;
+    using Blam::MapModel::Vitality::Type::Constant::k_FlagKillsObjectNoSolo;
+    using Blam::MapModel::Vitality::Type::Constant::k_FlagDestroysObject;
+    using Blam::MapModel::Vitality::Type::Constant::k_FlagHeadshot;
 }
 
-namespace Resolved::Vitality::System
+namespace Blam::MapModel::Vitality::System
 {
     auto VitalityBuilder::BuildForMap() -> void
     {

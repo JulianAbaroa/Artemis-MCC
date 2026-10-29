@@ -1,46 +1,46 @@
-module Tables.Interaction.System;
+module Blam.Runtime.Interaction.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Layout.Interaction.Type;
-import Layout.Player.Type;
-import Layout.Snapshot.Type;
-import Tables.Interaction.Type;
+import Blam.Layout.Interaction.Type;
+import Blam.Layout.Player.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Interaction.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
 
-    using Tables::Interaction::Type::Alive::LocalInteractions;
-    using Tables::Interaction::Type::Alive::InteractionKind;
-    using Tables::Interaction::Type::Alive::InteractionDetail;
+    using Blam::Runtime::Interaction::Type::Alive::LocalInteractions;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionDetail;
 
-    using Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionId;
 
-    using Layout::Interaction::Type::Offset::k_Kind;
-    using Layout::Interaction::Type::Offset::k_Detail;
-    using Layout::Interaction::Type::Offset::k_TargetObjectHandle;
-    using Layout::Interaction::Type::Offset::k_IsMeleeAvailable;
-    using Layout::Interaction::Type::Offset::k_MeleeTargetHandle;
-    using Layout::Interaction::Type::Offset::k_IsAimAvailable;
-    using Layout::Interaction::Type::Offset::k_BipedBodyPart;
-    using Layout::Interaction::Type::Offset::k_AimTargetHandle;
-    using Layout::Interaction::Type::Offset::k_AimTargetSlotID;
-    using Layout::Interaction::Type::Offset::k_AimHitLocalPosition;
-    using Layout::Interaction::Type::Offset::k_OutputUserStride;
-    using Layout::Interaction::Type::Offset::k_Interaction;
+    using Blam::Layout::Interaction::Type::Offset::k_Kind;
+    using Blam::Layout::Interaction::Type::Offset::k_Detail;
+    using Blam::Layout::Interaction::Type::Offset::k_TargetObjectHandle;
+    using Blam::Layout::Interaction::Type::Offset::k_IsMeleeAvailable;
+    using Blam::Layout::Interaction::Type::Offset::k_MeleeTargetHandle;
+    using Blam::Layout::Interaction::Type::Offset::k_IsAimAvailable;
+    using Blam::Layout::Interaction::Type::Offset::k_BipedBodyPart;
+    using Blam::Layout::Interaction::Type::Offset::k_AimTargetHandle;
+    using Blam::Layout::Interaction::Type::Offset::k_AimTargetSlotID;
+    using Blam::Layout::Interaction::Type::Offset::k_AimHitLocalPosition;
+    using Blam::Layout::Interaction::Type::Offset::k_OutputUserStride;
+    using Blam::Layout::Interaction::Type::Offset::k_Interaction;
 
-    using Layout::Player::Type::Mapping::k_PlayerInputUser;
-    using Layout::Player::Type::Mapping::k_OutputUserPlayer;
-    using Layout::Player::Type::Mapping::k_EntryStride;
+    using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
+    using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
+    using Blam::Layout::Player::Type::Mapping::k_EntryStride;
 
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
 }
 
-namespace Tables::Interaction::System
+namespace Blam::Runtime::Interaction::System
 {
     auto InteractionService::UpdateInteractionTable(const Snapshot& snapshot) -> void
     {

@@ -1,8 +1,8 @@
-module Export.Pipeline.System;
+module Bridge.Codec.Pipeline.System;
 
 import std;
 
-namespace Export::Pipeline::System
+namespace Bridge::Codec::Pipeline::System
 {
     auto PipelineService::Run(const Snapshot& snapshot, std::uint64_t generation,
         const std::function<void()>& endStage) -> void

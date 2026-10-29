@@ -1,14 +1,14 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Phmo;
 
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
-    using Resolved::Definitions::Type::Phmo::Shape;
-    using Resolved::Definitions::Type::Phmo::Material;
-    using Resolved::Definitions::Type::Phmo::PhantomType;
-    using Resolved::Definitions::Type::Phmo::ShapeType;
+    using Blam::MapModel::Definitions::Type::Phmo::Shape;
+    using Blam::MapModel::Definitions::Type::Phmo::Material;
+    using Blam::MapModel::Definitions::Type::Phmo::PhantomType;
+    using Blam::MapModel::Definitions::Type::Phmo::ShapeType;
 
     // Deepest nesting of lists, mopps and phantoms followed.
     constexpr int k_MaxShapeDepth{ 8 };
@@ -40,7 +40,7 @@ namespace
     }
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto PhmoBuilder::Build(const PhmoObject& phmo) -> Phmo
     {

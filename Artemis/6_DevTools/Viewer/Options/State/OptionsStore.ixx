@@ -1,23 +1,23 @@
-export module Viewer.Options.State;
+export module DevTools.Viewer.Options.State;
 
-import Viewer.Options.Type;
+import DevTools.Viewer.Options.Type;
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::k_FlagCount;
-    using Viewer::Options::Type::k_ScalarCount;
+    using DevTools::Viewer::Options::Type::k_FlagCount;
+    using DevTools::Viewer::Options::Type::k_ScalarCount;
 }
 
-export namespace Viewer::Options::State
+export namespace DevTools::Viewer::Options::State
 {
     // Holds the value of every viewer option, indexed by Flag and Scalar.
     // The values are atomic so they can be read and written from different threads without locks.
     class OptionsStore
     {
     private:
-        using Flag = Viewer::Options::Type::Flag;
-        using Scalar = Viewer::Options::Type::Scalar;
+        using Flag = DevTools::Viewer::Options::Type::Flag;
+        using Scalar = DevTools::Viewer::Options::Type::Scalar;
 
     public:
         // Prefix of the keys of this store in the preferences file.

@@ -2,41 +2,41 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :Affordances;
 
 import Common.Engine.Type;
 import Common.Semantic.Type;
-import Tables.Object.Type;
-import Egocentric.Affordance.Type;
-import Gui.Color.System;
-import Gui.Style.Type;
-import Gui.Widget.System;
-import Viewer.Format.System;
+import Blam.Runtime.Object.Type;
+import Views.Affordance.Type;
+import DevTools.Gui.Color.System;
+import DevTools.Gui.Style.Type;
+import DevTools.Gui.Widget.System;
+import DevTools.Viewer.Format.System;
 import std;
 
 namespace
 {
-    using Export::Tick::Type::Tick;
-    using Tables::Object::Type::Alive::ObjectTable;
-    using Tables::Object::Type::Alive::AliveObject;
-    using Tables::Interaction::Type::Alive::AliveInteraction;
-    using Egocentric::Affordance::Type::Affordance;
-    using Egocentric::Affordance::Type::AffordanceActivation;
-    using Egocentric::Affordance::Type::SeatStatus;
-    using Tables::Object::Type::Profile::Profile;
+    using Bridge::Codec::Tick::Type::Tick;
+    using Blam::Runtime::Object::Type::Alive::ObjectTable;
+    using Blam::Runtime::Object::Type::Alive::AliveObject;
+    using Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
+    using Views::Affordance::Type::Affordance;
+    using Views::Affordance::Type::AffordanceActivation;
+    using Views::Affordance::Type::SeatStatus;
+    using Blam::Runtime::Object::Type::Profile::Profile;
 
     using Common::Semantic::Type::GroupOf;
     using Common::Semantic::Type::NameOf;
 
-    using Gui::Color::System::GroupToColor;
-    using Viewer::Format::System::AffordanceFormater;
-    using Viewer::Format::System::InteractionFormater;
+    using DevTools::Gui::Color::System::GroupToColor;
+    using DevTools::Viewer::Format::System::AffordanceFormater;
+    using DevTools::Viewer::Format::System::InteractionFormater;
 
-    using Gui::Widget::System::PanelGuiService;
+    using DevTools::Gui::Widget::System::PanelGuiService;
 
     using Common::Engine::Type::k_NoHandle;
-    using Gui::Style::Type::k_SectionColor;
+    using DevTools::Gui::Style::Type::k_SectionColor;
 
     constexpr ImVec4 k_PositiveColor{ 0.4f, 1.0f, 0.4f, 1.0f };
 
@@ -251,7 +251,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto AffordancesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
     {

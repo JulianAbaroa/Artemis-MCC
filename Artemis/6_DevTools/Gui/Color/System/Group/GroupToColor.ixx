@@ -2,11 +2,11 @@ module;
 
 #include "External/imgui/imgui.h"
 
-export module Gui.Color.System:Group;
+export module DevTools.Gui.Color.System:Group;
 
 import Common.Semantic.Type;
 
-export namespace Gui::Color::System
+export namespace DevTools::Gui::Color::System
 {
     // Picks the display color of a group (D53: one pastel per group).
     class GroupToColor

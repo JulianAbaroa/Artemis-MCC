@@ -2,15 +2,15 @@ module;
 
 #include <windows.h>
 
-export module Platform.Window.Hook:GetRawInputData;
+export module Engine.Render.Window.Hook:GetRawInputData;
 
 import Common.Log.System;
-import Service.Settings.State;
-import Platform.Window.Type;
-import Platform.Window.System;
+import Services.Settings.State;
+import Engine.Render.Window.Type;
+import Engine.Render.Window.System;
 import std;
 
-export namespace Platform::Window::Hook
+export namespace Engine::Render::Window::Hook
 {
     // Hooks GetRawInputData to filter mouse input.
     // note: Freezes the mouse while the menu is open, and lets handlers swallow movement.
@@ -18,11 +18,11 @@ export namespace Platform::Window::Hook
     {
     private:
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using GetRawInputDataFunction = Platform::Window::Type::GetRawInputDataFunction;
+        using GetRawInputDataFunction = Engine::Render::Window::Type::GetRawInputDataFunction;
 
-        using InputService = Platform::Window::System::InputService;
+        using InputService = Engine::Render::Window::System::InputService;
 
     public:
         GetRawInputDataDetour(Log& log, SettingsStore& settingsStore,

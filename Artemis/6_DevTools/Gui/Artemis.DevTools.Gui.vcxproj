@@ -56,16 +56,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Gui.Layer.ixx" />
-    <ClCompile Include="Backend\Gui.Backend.System.ixx" />
-    <ClCompile Include="Color\Gui.Color.System.ixx" />
-    <ClCompile Include="Format\Gui.Format.System.ixx" />
-    <ClCompile Include="Widget\Gui.Widget.System.ixx" />
+    <ClCompile Include="DevTools.Gui.Layer.ixx" />
+    <ClCompile Include="Backend\DevTools.Gui.Backend.System.ixx" />
+    <ClCompile Include="Color\DevTools.Gui.Color.System.ixx" />
+    <ClCompile Include="Format\DevTools.Gui.Format.System.ixx" />
+    <ClCompile Include="Widget\DevTools.Gui.Widget.System.ixx" />
     <ClCompile Include="Backend\System\BackendGuiService.cpp" />
     <ClCompile Include="Backend\System\BackendGuiService.ixx" />
     <ClCompile Include="Backend\System\WndProcGuiService.cpp" />
     <ClCompile Include="Backend\System\WndProcGuiService.ixx" />
-    <ClCompile Include="Style\Type\Gui.Style.Type.ixx" />
+    <ClCompile Include="Style\Type\DevTools.Gui.Style.Type.ixx" />
     <ClCompile Include="Color\System\Group\GroupToColor.cpp" />
     <ClCompile Include="Color\System\Group\GroupToColor.ixx" />
     <ClCompile Include="Color\System\Team\TeamToColor.cpp" />

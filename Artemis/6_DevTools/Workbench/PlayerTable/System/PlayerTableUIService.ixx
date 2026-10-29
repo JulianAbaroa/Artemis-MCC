@@ -1,32 +1,32 @@
-export module UI.PlayerTable.System;
+export module DevTools.Workbench.PlayerTable.System;
 
-import Platform.Capture.State;
-import Tables.Player.Type;
-import Export.Tick.Type;
-import Export.Tick.State;
-import Gui.Widget.System;
-import UI.PlayerTable.Type;
-import UI.PlayerTable.State;
+import Engine.Capture.State;
+import Blam.Runtime.Player.Type;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Gui.Widget.System;
+import DevTools.Workbench.PlayerTable.Type;
+import DevTools.Workbench.PlayerTable.State;
 import std;
 
-export namespace UI::PlayerTable::System
+export namespace DevTools::Workbench::PlayerTable::System
 {
     // Draws the live players as cards with a search filter.
     class PlayerTableUIService
     {
     private:
-        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
+        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
 
-        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using CaptureStore = Engine::Capture::State::CaptureStore;
 
-        using TickStore = Export::Tick::State::TickStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
-        using CopyableFieldGuiService = Gui::Widget::System::CopyableFieldGuiService;
-        using ResponsiveCardGuiService = Gui::Widget::System::ResponsiveCardGuiService;
+        using SearchFilterGuiService = DevTools::Gui::Widget::System::SearchFilterGuiService;
+        using CopyableFieldGuiService = DevTools::Gui::Widget::System::CopyableFieldGuiService;
+        using ResponsiveCardGuiService = DevTools::Gui::Widget::System::ResponsiveCardGuiService;
 
-        using Players = UI::PlayerTable::Type::Players;
-        using PlayerTableUIStore = UI::PlayerTable::State::PlayerTableUIStore;
+        using Players = DevTools::Workbench::PlayerTable::Type::Players;
+        using PlayerTableUIStore = DevTools::Workbench::PlayerTable::State::PlayerTableUIStore;
 
     public:
         PlayerTableUIService(CaptureStore& captureStore, TickStore& tickStore, PlayerTableUIStore& playerTableUIStore) :

@@ -1,20 +1,20 @@
-export module Viewer.Geometry.System;
+export module DevTools.Viewer.Geometry.System;
 
 import Common.Math.Type;
 import Common.ZoneShape.Type;
-import Platform.Render.Type;
-import Viewer.Style.Type;
+import Engine.Render.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::Vertex;
+    using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
     using Common::ZoneShape::Type::ZoneShape;
-    using Viewer::Style::Type::Color;
+    using DevTools::Viewer::Style::Type::Color;
 }
 
-export namespace Viewer::Geometry::System
+export namespace DevTools::Viewer::Geometry::System
 {
     // Appends the triangles of a zone as a closed solid. The zone is a cylinder or a box.
     // param forward: With up, defines the orientation of the zone.

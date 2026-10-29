@@ -1,8 +1,8 @@
-export module Resolved.World.Type:RegionStates;
+export module Blam.MapModel.World.Type:RegionStates;
 
 import std;
 
-export namespace Resolved::World::Type::RegionStates
+export namespace Blam::MapModel::World::Type::RegionStates
 {
     // Region of the render model, which is how the engine indexes the permutations of an object.
     struct EngineRegion

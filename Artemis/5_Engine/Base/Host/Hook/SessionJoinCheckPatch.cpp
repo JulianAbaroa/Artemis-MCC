@@ -1,23 +1,23 @@
-module Platform.Host.Hook;
+module Engine.Base.Host.Hook;
 import :SessionJoinCheck;
 
-import Platform.Host.Type;
-import Platform.Memory.Type;
-import Platform.Hook.System;
+import Engine.Base.Host.Type;
+import Engine.Base.Memory.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Host::Type::k_JumpIfAboveOpcode;
-    using Platform::Host::Type::k_JumpAlwaysPatch;
+    using Engine::Base::Host::Type::k_JumpIfAboveOpcode;
+    using Engine::Base::Host::Type::k_JumpAlwaysPatch;
 
     // The "ja" of the SessionJoinCheck signature starts at +12.
     constexpr std::size_t k_JumpOffset{ 12 };
 }
 
-namespace Platform::Host::Hook
+namespace Engine::Base::Host::Hook
 {
     auto SessionJoinCheckPatch::Install() -> bool
     {
@@ -35,7 +35,7 @@ namespace Platform::Host::Hook
             return false;
         }
 
-        if (!Platform::Hook::System::WritePatch(jump, k_JumpAlwaysPatch, m_OriginalBytes,
+        if (!Engine::Base::Hook::System::WritePatch(jump, k_JumpAlwaysPatch, m_OriginalBytes,
             "[SessionJoinCheckPatch]", m_Log))
         {
             return false;
@@ -50,7 +50,7 @@ namespace Platform::Host::Hook
     {
         if (!m_IsPatched) return;
 
-        Platform::Hook::System::RestorePatch(m_PatchAddress, m_OriginalBytes,
+        Engine::Base::Hook::System::RestorePatch(m_PatchAddress, m_OriginalBytes,
             "[SessionJoinCheckPatch]", m_Log);
 
         m_PatchAddress = nullptr;

@@ -2,13 +2,13 @@ module;
 
 #include <windows.h>
 
-module Platform.Bridge.System;
+module Bridge.Transport.System;
 import :Service;
 
 import Common.Engine.Type;
 import Control.Lockstep.Type;
 import Control.Lockstep.System;
-import Layout.Action.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
@@ -30,11 +30,11 @@ namespace
     using Control::Lockstep::System::ResumeIfAnswered;
     using Control::Lockstep::System::ToClientRequests;
 
-    using Platform::Bridge::Type::BridgeOwner;
-    using Platform::Bridge::Type::BridgeMode;
-    using Platform::Bridge::Type::BridgePhase;
-    using Platform::Bridge::Type::BridgeCounters;
-    using Platform::Bridge::Type::BridgeSlot;
+    using Contract::Bridge::Type::BridgeOwner;
+    using Contract::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgePhase;
+    using Bridge::Transport::Type::BridgeCounters;
+    using Bridge::Transport::Type::BridgeSlot;
 
     using std::chrono::steady_clock;
     using std::chrono::nanoseconds;
@@ -43,18 +43,18 @@ namespace
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
-    using Layout::Action::Type::Size::k_MaxActionPlayers;
-    using Platform::Bridge::Type::k_BridgeMagic;
-    using Platform::Bridge::Type::k_BridgeLayoutVersion;
-    using Platform::Bridge::Type::k_BridgeLayoutHash;
-    using Platform::Bridge::Type::k_BridgeRegionPrefix;
-    using Platform::Bridge::Type::k_BridgeTickEventSuffix;
-    using Platform::Bridge::Type::k_BridgeActionEventSuffix;
-    using Platform::Bridge::Type::k_BridgeDiscoveryFolder;
-    using Platform::Bridge::Type::k_ClientTimeout;
-    using Platform::Bridge::Type::k_LockstepTimeout;
-    using Platform::Bridge::Type::k_LockstepWaitSlice;
-    using Platform::Bridge::Type::k_BridgeNotLocal;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Contract::Bridge::Type::k_BridgeMagic;
+    using Contract::Bridge::Type::k_BridgeLayoutVersion;
+    using Contract::Bridge::Type::k_BridgeLayoutHash;
+    using Contract::Bridge::Type::k_BridgeRegionPrefix;
+    using Contract::Bridge::Type::k_BridgeTickEventSuffix;
+    using Contract::Bridge::Type::k_BridgeActionEventSuffix;
+    using Contract::Bridge::Type::k_BridgeDiscoveryFolder;
+    using Bridge::Transport::Type::k_ClientTimeout;
+    using Bridge::Transport::Type::k_LockstepTimeout;
+    using Bridge::Transport::Type::k_LockstepWaitSlice;
+    using Contract::Bridge::Type::k_BridgeNotLocal;
 
     static_assert(k_MaxPlayers <= k_MaxActionPlayers, "Every bridge slot must have an override in the PlayerActionStore.");
 
@@ -77,7 +77,7 @@ namespace
     }
 }
 
-namespace Platform::Bridge::System
+namespace Bridge::Transport::System
 {
     auto BridgeService::Open() -> bool
     {

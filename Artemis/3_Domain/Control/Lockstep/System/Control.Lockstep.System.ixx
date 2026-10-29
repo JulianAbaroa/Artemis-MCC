@@ -2,7 +2,7 @@ export module Control.Lockstep.System;
 
 import Control.Action.Type;
 import Control.Lockstep.Type;
-import Contract.Bridge;
+import Contract.Bridge.Type;
 import std;
 
 namespace
@@ -15,8 +15,8 @@ namespace
     using Control::Lockstep::Type::ClockReading;
     using Control::Lockstep::Type::WaitResult;
 
-    using Platform::Bridge::Type::BridgeAction;
-    using Platform::Bridge::Type::BridgeClientControl;
+    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeClientControl;
 }
 
 export namespace Control::Lockstep::System

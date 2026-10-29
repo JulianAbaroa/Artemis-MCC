@@ -1,7 +1,7 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :FileNames;
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto FileNamesService::Read(std::ifstream& file, std::int32_t fileTableCount,
         std::int64_t fileIndexTableOffset, std::int64_t fileTableOffset,

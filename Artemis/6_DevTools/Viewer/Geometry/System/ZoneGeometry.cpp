@@ -1,4 +1,4 @@
-module Viewer.Geometry.System;
+module DevTools.Viewer.Geometry.System;
 
 import Common.Math.Type;
 import Common.Math.System;
@@ -8,9 +8,9 @@ namespace
 {
     namespace VecMath = Common::Math::System;
 
-    using Platform::Render::Type::Vertex;
+    using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
-    using Viewer::Style::Type::Color;
+    using DevTools::Viewer::Style::Type::Color;
     using Common::ZoneShape::Type::ZoneShape;
     using Common::ZoneShape::Type::ZoneShapeKind;
 
@@ -52,7 +52,7 @@ namespace
     }
 }
 
-namespace Viewer::Geometry::System
+namespace DevTools::Viewer::Geometry::System
 {
     auto AppendSolid(std::vector<Vertex>& out, const Vec3& position,
         const Vec3& forward, const Vec3& up, const ZoneShape& zone,

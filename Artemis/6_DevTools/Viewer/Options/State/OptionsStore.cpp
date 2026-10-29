@@ -1,16 +1,16 @@
-module Viewer.Options.State;
+module DevTools.Viewer.Options.State;
 
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::FlagInfo;
-    using Viewer::Options::Type::ScalarInfo;
-    using Viewer::Options::Type::k_Flags;
-    using Viewer::Options::Type::k_Scalars;
+    using DevTools::Viewer::Options::Type::FlagInfo;
+    using DevTools::Viewer::Options::Type::ScalarInfo;
+    using DevTools::Viewer::Options::Type::k_Flags;
+    using DevTools::Viewer::Options::Type::k_Scalars;
 }
 
-namespace Viewer::Options::State
+namespace DevTools::Viewer::Options::State
 {
     OptionsStore::OptionsStore()
     {

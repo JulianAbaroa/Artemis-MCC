@@ -1,13 +1,13 @@
-export module Viewer.Camera.System;
+export module DevTools.Viewer.Camera.System;
 
 import Common.Math.Type;
-import Export.Tick.Type;
-import Viewer.Camera.Type;
-import Viewer.Camera.State;
-import Viewer.Options.State;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Camera.State;
+import DevTools.Viewer.Options.State;
 import std;
 
-export namespace Viewer::Camera::System
+export namespace DevTools::Viewer::Camera::System
 {
     // Free-fly camera of the viewer. Moves with the keys and the mouse, or follows an object.
     // It builds the view and projection matrices on every update and projects between the world and the screen.
@@ -15,15 +15,15 @@ export namespace Viewer::Camera::System
     {
     private:
         using steady_clock = std::chrono::steady_clock;
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
         using Vec2 = Common::Math::Type::Vec2;
         using Vec3 = Common::Math::Type::Vec3;
         using Matrix = Common::Math::Type::Matrix;
-        using Lens = Viewer::Camera::Type::Lens;
-        using Viewport = Viewer::Camera::Type::Viewport;
-        using Ray = Viewer::Camera::Type::Ray;
-        using CameraStore = Viewer::Camera::State::CameraStore;
-        using OptionsStore = Viewer::Options::State::OptionsStore;
+        using Lens = DevTools::Viewer::Camera::Type::Lens;
+        using Viewport = DevTools::Viewer::Camera::Type::Viewport;
+        using Ray = DevTools::Viewer::Camera::Type::Ray;
+        using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         CameraService(CameraStore& cameraStore, OptionsStore& optionsStore) :

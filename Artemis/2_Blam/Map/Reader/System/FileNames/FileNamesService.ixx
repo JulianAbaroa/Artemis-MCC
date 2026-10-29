@@ -1,18 +1,18 @@
-export module Map.Reader.System:FileNames;
+export module Blam.Map.Reader.System:FileNames;
 
 import :Formula;
 
-import Map.Reader.State;
+import Blam.Map.Reader.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads the table of tag names of the map.
     class FileNamesService
     {
     private:
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
-        using FormulaService = Map::Reader::System::FormulaService;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
 
     public:
         FileNamesService(TagIndexStore& tagIndexStore,

@@ -67,12 +67,12 @@
     <ClCompile Include="Hook\PlayerTableLocator.ixx" />
     <ClCompile Include="Hook\SimulationTicksDetour.cpp" />
     <ClCompile Include="Hook\SimulationTicksDetour.ixx" />
-    <ClCompile Include="Platform.Capture.Hook.ixx" />
+    <ClCompile Include="Engine.Capture.Hook.ixx" />
     <ClCompile Include="State\CaptureStore.cpp" />
     <ClCompile Include="State\CaptureStore.ixx" />
     <ClCompile Include="System\CaptureService.cpp" />
     <ClCompile Include="System\CaptureService.ixx" />
-    <ClCompile Include="Type\Platform.Capture.Type.ixx" />
+    <ClCompile Include="Type\Engine.Capture.Type.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

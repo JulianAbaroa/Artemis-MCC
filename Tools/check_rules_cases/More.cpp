@@ -1,6 +1,6 @@
-module Viewer.Fake.Hook;
+module DevTools.Viewer.Fake.Hook;
 
-namespace Viewer::Fake::Hook
+namespace DevTools::Viewer::Fake::Hook
 {
     auto FakeDetour::HookedRun(int value) -> int
     {

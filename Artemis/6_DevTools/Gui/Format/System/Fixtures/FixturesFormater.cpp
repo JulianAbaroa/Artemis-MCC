@@ -1,7 +1,7 @@
-module Gui.Format.System;
+module DevTools.Gui.Format.System;
 import :Fixtures;
 
-namespace Gui::Format::System
+namespace DevTools::Gui::Format::System
 {
     auto FixturesFormater::ZoneKindToString(ZoneShapeKind kind) -> const char*
     {

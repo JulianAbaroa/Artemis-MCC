@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Vehi;
+export module Blam.MapModel.Definitions.System:Vehi;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the vehicle definition.
     class VehiBuilder
     {
     private:
-        using VehiObject = Map::Tag::Type::Vehi::Object::VehiObject;
-        using Vehi = Resolved::Definitions::Type::Vehi::Vehi;
+        using VehiObject = Blam::Map::Tag::Type::Vehi::Object::VehiObject;
+        using Vehi = Blam::MapModel::Definitions::Type::Vehi::Vehi;
 
     public:
         explicit VehiBuilder(ObjectBuilder& objectBuilder) :

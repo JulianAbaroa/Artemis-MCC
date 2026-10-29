@@ -1,22 +1,22 @@
-export module UI.Bench.System;
+export module DevTools.Workbench.Bench.System;
 
 import Common.Log.System;
-import Service.Logs.State;
-import Service.Settings.State;
-import Platform.Memory.System;
-import Platform.Host.State;
-import Platform.Input.State;
-import Platform.Lifecycle.State;
-import Platform.Match.State;
-import Platform.Match.System;
-import Platform.Simulation.State;
-import Export.Tick.State;
-import UI.TickTrace.State;
-import UI.Bench.Type;
-import UI.Bench.State;
+import Services.Logs.State;
+import Services.Settings.State;
+import Engine.Base.Memory.System;
+import Engine.Base.Host.State;
+import Engine.Control.Input.State;
+import Engine.Base.Lifecycle.State;
+import Engine.Match.State;
+import Engine.Match.System;
+import Engine.Control.Simulation.State;
+import Bridge.Codec.Tick.State;
+import DevTools.Workbench.TickTrace.State;
+import DevTools.Workbench.Bench.Type;
+import DevTools.Workbench.Bench.State;
 import std;
 
-export namespace UI::Bench::System
+export namespace DevTools::Workbench::Bench::System
 {
     // Runs the scenarios of the in-game test bench (D129, D130): takes them from the inbox of the exchange folder, plays their matches
     // one after the other through the match cycle of MCC (A15 H3), checks each match and writes state.json and the report that
@@ -30,28 +30,28 @@ export namespace UI::Bench::System
         using path = std::filesystem::path;
 
         using Log = Common::Log::System::Log;
-        using LogsStore = Service::Logs::State::LogsStore;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using LogsStore = Services::Logs::State::LogsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
-        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
-        using VirtualInputStore = Platform::Input::State::VirtualInputStore;
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
-        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
-        using MatchConfigService = Platform::Match::System::MatchConfigService;
-        using BotStore = Platform::Simulation::State::BotStore;
+        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
+        using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
+        using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using MatchConfigStore = Engine::Match::State::MatchConfigStore;
+        using MatchCycleStore = Engine::Match::State::MatchCycleStore;
+        using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using BotStore = Engine::Control::Simulation::State::BotStore;
 
-        using TickStore = Export::Tick::State::TickStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
+        using TickTraceUIStore = DevTools::Workbench::TickTrace::State::TickTraceUIStore;
 
-        using BenchProbe = UI::Bench::Type::BenchProbe;
-        using BenchScenario = UI::Bench::Type::BenchScenario;
-        using BenchMatchReport = UI::Bench::Type::BenchMatchReport;
-        using BenchRun = UI::Bench::Type::BenchRun;
-        using BenchUIStore = UI::Bench::State::BenchUIStore;
+        using BenchProbe = DevTools::Workbench::Bench::Type::BenchProbe;
+        using BenchScenario = DevTools::Workbench::Bench::Type::BenchScenario;
+        using BenchMatchReport = DevTools::Workbench::Bench::Type::BenchMatchReport;
+        using BenchRun = DevTools::Workbench::Bench::Type::BenchRun;
+        using BenchUIStore = DevTools::Workbench::Bench::State::BenchUIStore;
 
     public:
         BenchUIService(LogsStore& logsStore, Log& log, SettingsStore& settingsStore,

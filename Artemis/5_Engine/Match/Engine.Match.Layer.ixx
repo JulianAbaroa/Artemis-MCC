@@ -1,10 +1,10 @@
 export module Engine.Match.Layer;
 
-import Service.Layer;
+import Services.Layer;
 import Engine.Base.Layer;
-import Platform.Match.State;
-import Platform.Match.System;
-import Platform.Match.Hook;
+import Engine.Match.State;
+import Engine.Match.System;
+import Engine.Match.Hook;
 
 export namespace Engine::Match
 {
@@ -13,14 +13,14 @@ export namespace Engine::Match
     class Layer
     {
     private:
-        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
-        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
-        using MatchConfigService = Platform::Match::System::MatchConfigService;
-        using EngineInterfaceDetour = Platform::Match::Hook::EngineInterfaceDetour;
-        using LifecycleUpdateDetour = Platform::Match::Hook::LifecycleUpdateDetour;
+        using MatchConfigStore = Engine::Match::State::MatchConfigStore;
+        using MatchCycleStore = Engine::Match::State::MatchCycleStore;
+        using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using EngineInterfaceDetour = Engine::Match::Hook::EngineInterfaceDetour;
+        using LifecycleUpdateDetour = Engine::Match::Hook::LifecycleUpdateDetour;
 
     public:
-        Layer(Service::Layer& service, Engine::Base::Layer& base) :
+        Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_MatchConfigService(service.m_Log, service.m_SettingsStore, m_MatchConfigStore),
             m_EngineInterfaceDetour(service.m_Log, base.m_AOBService, base.m_MemoryReaderService, m_MatchCycleStore, m_MatchConfigService),
             m_LifecycleUpdateDetour(service.m_Log, base.m_AOBService, m_MatchConfigStore, m_MatchCycleStore) {}

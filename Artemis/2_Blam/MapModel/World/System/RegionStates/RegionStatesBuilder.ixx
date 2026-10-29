@@ -1,20 +1,20 @@
-export module Resolved.World.System:RegionStates;
+export module Blam.MapModel.World.System:RegionStates;
 
-import Resolved.Definitions.Type;
-import Resolved.World.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.World.Type;
 import std;
 
-export namespace Resolved::World::System
+export namespace Blam::MapModel::World::System
 {
     // Matches, for a model, the regions and permutations of the render model with the collision ones.
     // note: The engine keeps the permutation of each region of the render model in memory, so nothing is inferred from the damage.
     class RegionStatesBuilder
     {
     private:
-        using Coll = Resolved::Definitions::Type::Coll::Coll;
-        using Mode = Resolved::Definitions::Type::Mode::Mode;
-        using RegionStates = Resolved::World::Type::RegionStates::RegionStates;
-        using EngineRegion = Resolved::World::Type::RegionStates::EngineRegion;
+        using Coll = Blam::MapModel::Definitions::Type::Coll::Coll;
+        using Mode = Blam::MapModel::Definitions::Type::Mode::Mode;
+        using RegionStates = Blam::MapModel::World::Type::RegionStates::RegionStates;
+        using EngineRegion = Blam::MapModel::World::Type::RegionStates::EngineRegion;
 
     public:
         RegionStatesBuilder() = default;

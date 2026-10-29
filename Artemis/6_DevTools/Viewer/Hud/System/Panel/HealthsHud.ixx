@@ -1,18 +1,18 @@
-export module Viewer.Hud.System:Vitalities;
+export module DevTools.Viewer.Hud.System:Vitalities;
 
-import Tables.Object.Type;
-import Environment.Details.Type;
-import Environment.Entities.Type;
-import Export.Tick.Type;
+import Blam.Runtime.Object.Type;
+import Perception.Details.Type;
+import Perception.Entities.Type;
+import Bridge.Codec.Tick.Type;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Draws the detail panel of the selected health.
     class HealthsHud
     {
     private:
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
 
     public:
         HealthsHud() = default;

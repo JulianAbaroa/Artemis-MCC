@@ -7,57 +7,6 @@
     <Filter Include="Action\Type">
       <UniqueIdentifier>{17bcc48c-9ee9-532b-8738-feaceafefc5d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Datum">
-      <UniqueIdentifier>{2cbf5509-8fe2-50b7-902a-dd7387657e1e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type">
-      <UniqueIdentifier>{5b96b6fc-6ee1-551a-9d06-8df03fccd827}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Anim">
-      <UniqueIdentifier>{89c9aef8-0bfb-5b38-8f5f-100a32f947f6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Bipd">
-      <UniqueIdentifier>{ec023553-cb64-577b-8ddb-2cffbc315a67}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Bloc">
-      <UniqueIdentifier>{2eb49a5e-93f1-592b-ab78-50150b88a09a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Ctrl">
-      <UniqueIdentifier>{0c33e083-30bc-5bae-aba8-cb40898e4ea6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Devi">
-      <UniqueIdentifier>{87c85203-e01c-5dca-b1ac-cc22afa0d4c9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Eqip">
-      <UniqueIdentifier>{988cf571-b849-537e-beb9-817282a18d46}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Item">
-      <UniqueIdentifier>{bc3410a5-b8e1-5ba8-8cf8-532e61a17bd6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Mach">
-      <UniqueIdentifier>{d2dfa959-453d-5d81-9114-8e249c6fee54}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Mvar">
-      <UniqueIdentifier>{2c720c9d-d62a-5d2f-87d6-ad698ea0df04}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Obje">
-      <UniqueIdentifier>{3a8647ad-458e-5970-ab1d-4e418ae21677}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Proj">
-      <UniqueIdentifier>{612ce70c-64f6-54cc-85ce-ad675fd19355}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Scen">
-      <UniqueIdentifier>{a6ac9df3-3ca5-564d-a1aa-bb70a0c7eb4e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Unit">
-      <UniqueIdentifier>{0f14af9f-38f9-52f7-94c4-aabc9de44602}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Vehi">
-      <UniqueIdentifier>{40777557-b779-55dd-b5fa-266bc18ad9be}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Datum\Type\Weap">
-      <UniqueIdentifier>{32fb9de4-2406-5bc3-b91f-e969f7f7a580}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Game">
       <UniqueIdentifier>{8c191cc6-10d6-51e4-97c0-3478f6ca0acf}</UniqueIdentifier>
     </Filter>
@@ -70,6 +19,57 @@
     <Filter Include="Interaction\Type">
       <UniqueIdentifier>{9bb5156d-a9f4-58f7-a0d2-c0149559ba37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{198f1b6b-0ad9-542e-8da7-2b8de3ff3282}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type">
+      <UniqueIdentifier>{4b448e1d-f931-5fa8-a224-c57632f19132}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Anim">
+      <UniqueIdentifier>{a98d9fc5-551a-58a6-9c76-6077502c19d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Bipd">
+      <UniqueIdentifier>{d7b63b7e-9a61-52e1-9209-69d1f01150fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Bloc">
+      <UniqueIdentifier>{d8a3a9cd-4b42-5ed1-9ee8-1a1ab36c5f36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Ctrl">
+      <UniqueIdentifier>{ca5fc3b7-045b-52b3-b56d-de98b9af7aa2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Devi">
+      <UniqueIdentifier>{73fdf4ca-5052-52df-b927-465e090fcd00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Eqip">
+      <UniqueIdentifier>{dd478fbf-47f0-5e82-9fac-b4da51885bbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Item">
+      <UniqueIdentifier>{0bcacd9c-e286-527c-b38e-cf6cc71957d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Mach">
+      <UniqueIdentifier>{2eb04a8b-4a4c-5f32-978a-899d204c91a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Mvar">
+      <UniqueIdentifier>{50f7d131-c746-5900-99a7-3fba0bd4ff0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Obje">
+      <UniqueIdentifier>{d11e1def-f6b2-5cdd-b657-aac2aea1fc22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Proj">
+      <UniqueIdentifier>{b3446c8b-da5f-578a-b804-d9c08619c0da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Scen">
+      <UniqueIdentifier>{770f2de7-f898-5eec-ad21-72f41255a25f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Unit">
+      <UniqueIdentifier>{d00e49f9-22bc-5fda-9e3a-f2c52d844c80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Vehi">
+      <UniqueIdentifier>{3a0858c0-48ab-5075-b277-2f10a31879dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Type\Weap">
+      <UniqueIdentifier>{ed63016a-a277-5a69-88eb-fdc971c4975d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Player">
       <UniqueIdentifier>{b23ce9e3-fe9a-51c6-b812-601bcc23a892}</UniqueIdentifier>
     </Filter>
@@ -79,15 +79,15 @@
     <Filter Include="Snapshot">
       <UniqueIdentifier>{a43b2aeb-fddd-560f-8438-a532fa563b57}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Snapshot\Type">
-      <UniqueIdentifier>{554b74b4-f8fa-5025-bda0-7c9d97856c88}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Snapshot\System">
       <UniqueIdentifier>{d473fec3-01f5-5347-8ed7-4b88f742f6b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Snapshot\Type">
+      <UniqueIdentifier>{554b74b4-f8fa-5025-bda0-7c9d97856c88}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Action\Layout.Action.Type.ixx">
+    <ClCompile Include="Action\Blam.Layout.Action.Type.ixx">
       <Filter>Action</Filter>
     </ClCompile>
     <ClCompile Include="Action\Type\ActionBits.ixx">
@@ -99,163 +99,163 @@
     <ClCompile Include="Action\Type\ActionSize.ixx">
       <Filter>Action\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Datum.Object.Type.ixx">
-      <Filter>Datum</Filter>
+    <ClCompile Include="Object\Blam.Layout.Object.Type.ixx">
+      <Filter>Object</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Anim\DatumAnimOffset.ixx">
-      <Filter>Datum\Type\Anim</Filter>
+    <ClCompile Include="Object\Type\Anim\DatumAnimOffset.ixx">
+      <Filter>Object\Type\Anim</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Anim\DatumAnimStructure.ixx">
-      <Filter>Datum\Type\Anim</Filter>
+    <ClCompile Include="Object\Type\Anim\DatumAnimStructure.ixx">
+      <Filter>Object\Type\Anim</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Bipd\DatumBipdOffset.ixx">
-      <Filter>Datum\Type\Bipd</Filter>
+    <ClCompile Include="Object\Type\Bipd\DatumBipdOffset.ixx">
+      <Filter>Object\Type\Bipd</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Bipd\DatumBipdStructure.ixx">
-      <Filter>Datum\Type\Bipd</Filter>
+    <ClCompile Include="Object\Type\Bipd\DatumBipdStructure.ixx">
+      <Filter>Object\Type\Bipd</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Bloc\DatumBlocOffset.ixx">
-      <Filter>Datum\Type\Bloc</Filter>
+    <ClCompile Include="Object\Type\Bloc\DatumBlocOffset.ixx">
+      <Filter>Object\Type\Bloc</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Bloc\DatumBlocStructure.ixx">
-      <Filter>Datum\Type\Bloc</Filter>
+    <ClCompile Include="Object\Type\Bloc\DatumBlocStructure.ixx">
+      <Filter>Object\Type\Bloc</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Ctrl\DatumCtrlOffset.ixx">
-      <Filter>Datum\Type\Ctrl</Filter>
+    <ClCompile Include="Object\Type\Ctrl\DatumCtrlOffset.ixx">
+      <Filter>Object\Type\Ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Ctrl\DatumCtrlStructure.ixx">
-      <Filter>Datum\Type\Ctrl</Filter>
+    <ClCompile Include="Object\Type\Ctrl\DatumCtrlStructure.ixx">
+      <Filter>Object\Type\Ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Anim.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Anim.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Bipd.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Bipd.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Bloc.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Bloc.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Ctrl.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Ctrl.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Devi.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Devi.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Eqip.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Eqip.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Item.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Item.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Mach.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Mach.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Mvar.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Mvar.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Obje.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Obje.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Proj.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Proj.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Scen.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Scen.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Unit.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Unit.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Vehi.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Vehi.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Datum.Object.Type.Weap.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Weap.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\DatumBlock.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\DatumBlock.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\DatumConstant.ixx">
-      <Filter>Datum\Type</Filter>
+    <ClCompile Include="Object\Type\DatumConstant.ixx">
+      <Filter>Object\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Devi\DatumDeviOffset.ixx">
-      <Filter>Datum\Type\Devi</Filter>
+    <ClCompile Include="Object\Type\Devi\DatumDeviOffset.ixx">
+      <Filter>Object\Type\Devi</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Devi\DatumDeviStructure.ixx">
-      <Filter>Datum\Type\Devi</Filter>
+    <ClCompile Include="Object\Type\Devi\DatumDeviStructure.ixx">
+      <Filter>Object\Type\Devi</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Eqip\DatumEqipOffset.ixx">
-      <Filter>Datum\Type\Eqip</Filter>
+    <ClCompile Include="Object\Type\Eqip\DatumEqipOffset.ixx">
+      <Filter>Object\Type\Eqip</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Eqip\DatumEqipStructure.ixx">
-      <Filter>Datum\Type\Eqip</Filter>
+    <ClCompile Include="Object\Type\Eqip\DatumEqipStructure.ixx">
+      <Filter>Object\Type\Eqip</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Item\DatumItemOffset.ixx">
-      <Filter>Datum\Type\Item</Filter>
+    <ClCompile Include="Object\Type\Item\DatumItemOffset.ixx">
+      <Filter>Object\Type\Item</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Item\DatumItemStructure.ixx">
-      <Filter>Datum\Type\Item</Filter>
+    <ClCompile Include="Object\Type\Item\DatumItemStructure.ixx">
+      <Filter>Object\Type\Item</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Mach\DatumMachOffset.ixx">
-      <Filter>Datum\Type\Mach</Filter>
+    <ClCompile Include="Object\Type\Mach\DatumMachOffset.ixx">
+      <Filter>Object\Type\Mach</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Mach\DatumMachStructure.ixx">
-      <Filter>Datum\Type\Mach</Filter>
+    <ClCompile Include="Object\Type\Mach\DatumMachStructure.ixx">
+      <Filter>Object\Type\Mach</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Mvar\DatumMvarOffset.ixx">
-      <Filter>Datum\Type\Mvar</Filter>
+    <ClCompile Include="Object\Type\Mvar\DatumMvarOffset.ixx">
+      <Filter>Object\Type\Mvar</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Mvar\DatumMvarStructure.ixx">
-      <Filter>Datum\Type\Mvar</Filter>
+    <ClCompile Include="Object\Type\Mvar\DatumMvarStructure.ixx">
+      <Filter>Object\Type\Mvar</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Obje\DatumObjeOffset.ixx">
-      <Filter>Datum\Type\Obje</Filter>
+    <ClCompile Include="Object\Type\Obje\DatumObjeOffset.ixx">
+      <Filter>Object\Type\Obje</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Obje\DatumObjeStructure.ixx">
-      <Filter>Datum\Type\Obje</Filter>
+    <ClCompile Include="Object\Type\Obje\DatumObjeStructure.ixx">
+      <Filter>Object\Type\Obje</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Proj\DatumProjOffset.ixx">
-      <Filter>Datum\Type\Proj</Filter>
+    <ClCompile Include="Object\Type\Proj\DatumProjOffset.ixx">
+      <Filter>Object\Type\Proj</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Proj\DatumProjStructure.ixx">
-      <Filter>Datum\Type\Proj</Filter>
+    <ClCompile Include="Object\Type\Proj\DatumProjStructure.ixx">
+      <Filter>Object\Type\Proj</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Scen\DatumScenOffset.ixx">
-      <Filter>Datum\Type\Scen</Filter>
+    <ClCompile Include="Object\Type\Scen\DatumScenOffset.ixx">
+      <Filter>Object\Type\Scen</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Scen\DatumScenStructure.ixx">
-      <Filter>Datum\Type\Scen</Filter>
+    <ClCompile Include="Object\Type\Scen\DatumScenStructure.ixx">
+      <Filter>Object\Type\Scen</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Unit\DatumUnitOffset.ixx">
-      <Filter>Datum\Type\Unit</Filter>
+    <ClCompile Include="Object\Type\Unit\DatumUnitOffset.ixx">
+      <Filter>Object\Type\Unit</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Unit\DatumUnitStructure.ixx">
-      <Filter>Datum\Type\Unit</Filter>
+    <ClCompile Include="Object\Type\Unit\DatumUnitStructure.ixx">
+      <Filter>Object\Type\Unit</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Vehi\DatumVehiOffset.ixx">
-      <Filter>Datum\Type\Vehi</Filter>
+    <ClCompile Include="Object\Type\Vehi\DatumVehiOffset.ixx">
+      <Filter>Object\Type\Vehi</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Vehi\DatumVehiStructure.ixx">
-      <Filter>Datum\Type\Vehi</Filter>
+    <ClCompile Include="Object\Type\Vehi\DatumVehiStructure.ixx">
+      <Filter>Object\Type\Vehi</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Weap\DatumWeapOffset.ixx">
-      <Filter>Datum\Type\Weap</Filter>
+    <ClCompile Include="Object\Type\Weap\DatumWeapOffset.ixx">
+      <Filter>Object\Type\Weap</Filter>
     </ClCompile>
-    <ClCompile Include="Datum\Type\Weap\DatumWeapStructure.ixx">
-      <Filter>Datum\Type\Weap</Filter>
+    <ClCompile Include="Object\Type\Weap\DatumWeapStructure.ixx">
+      <Filter>Object\Type\Weap</Filter>
     </ClCompile>
-    <ClCompile Include="Game\Layout.Game.Type.ixx">
+    <ClCompile Include="Game\Blam.Layout.Game.Type.ixx">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Game\Type\GameOffset.ixx">
       <Filter>Game\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Interaction\Layout.Interaction.Type.ixx">
+    <ClCompile Include="Interaction\Blam.Layout.Interaction.Type.ixx">
       <Filter>Interaction</Filter>
     </ClCompile>
     <ClCompile Include="Interaction\Type\InteractionOffset.ixx">
       <Filter>Interaction\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Player\Layout.Player.Type.ixx">
+    <ClCompile Include="Player\Blam.Layout.Player.Type.ixx">
       <Filter>Player</Filter>
     </ClCompile>
     <ClCompile Include="Player\Type\PlayerMapping.ixx">
@@ -267,7 +267,7 @@
     <ClCompile Include="Player\Type\PlayerSize.ixx">
       <Filter>Player\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Snapshot\Layout.Snapshot.Type.ixx">
+    <ClCompile Include="Snapshot\Blam.Layout.Snapshot.Type.ixx">
       <Filter>Snapshot</Filter>
     </ClCompile>
     <ClCompile Include="Snapshot\Type\SnapshotData.ixx">
@@ -282,10 +282,10 @@
     <ClCompile Include="Snapshot\Type\SnapshotRecord.ixx">
       <Filter>Snapshot\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.cpp">
+    <ClCompile Include="Snapshot\System\Blam.Layout.Snapshot.System.cpp">
       <Filter>Snapshot\System</Filter>
     </ClCompile>
-    <ClCompile Include="Snapshot\System\Layout.Snapshot.System.ixx">
+    <ClCompile Include="Snapshot\System\Blam.Layout.Snapshot.System.ixx">
       <Filter>Snapshot\System</Filter>
     </ClCompile>
   </ItemGroup>

@@ -2,32 +2,32 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.Settings.System;
+module DevTools.Workbench.Settings.System;
 
-import Gui.Style.Type;
-import Viewer.Options.Type;
-import Viewer.Camera.Type;
-import UI.Hotkey.Type;
+import DevTools.Gui.Style.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Camera.Type;
+import DevTools.Workbench.Hotkey.Type;
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::Flag;
-    using Viewer::Options::Type::GroupInfo;
-    using Viewer::Options::Type::FlagInfo;
-    using Viewer::Options::Type::ScalarInfo;
-    using Viewer::Camera::Type::Mode;
-    using Viewer::Camera::Type::Follow;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::GroupInfo;
+    using DevTools::Viewer::Options::Type::FlagInfo;
+    using DevTools::Viewer::Options::Type::ScalarInfo;
+    using DevTools::Viewer::Camera::Type::Mode;
+    using DevTools::Viewer::Camera::Type::Follow;
 
-    using UI::Hotkey::Type::Binding;
+    using DevTools::Workbench::Hotkey::Type::Binding;
 
-    using Viewer::Options::Type::k_Groups;
-    using Viewer::Options::Type::k_Flags;
-    using Viewer::Options::Type::k_Scalars;
-    using Gui::Style::Type::k_MinimumAlpha;
-    using Gui::Style::Type::k_MinimumScale;
-    using Gui::Style::Type::k_MaximumScale;
-    using Gui::Style::Type::k_AnimationDuration;
+    using DevTools::Viewer::Options::Type::k_Groups;
+    using DevTools::Viewer::Options::Type::k_Flags;
+    using DevTools::Viewer::Options::Type::k_Scalars;
+    using DevTools::Gui::Style::Type::k_MinimumAlpha;
+    using DevTools::Gui::Style::Type::k_MinimumScale;
+    using DevTools::Gui::Style::Type::k_MaximumScale;
+    using DevTools::Gui::Style::Type::k_AnimationDuration;
 
     constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
     constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
@@ -96,7 +96,7 @@ namespace
     }
 }
 
-namespace UI::Settings::System
+namespace DevTools::Workbench::Settings::System
 {
     auto SettingsUIService::Draw() -> void
     {

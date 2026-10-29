@@ -1,4 +1,4 @@
-export module Viewer.Hud.System:Labels;
+export module DevTools.Viewer.Hud.System:Labels;
 
 import :Canvas;
 import :PlayerLabels;
@@ -8,29 +8,29 @@ import :HealthLabels;
 import :InteractionLabels;
 import :FixtureLabels;
 
-import Relations.Classifier.Type;
-import Export.Tick.State;
-import Viewer.Camera.System;
-import Viewer.Scene.System;
-import Viewer.Options.State;
-import Viewer.Selection.State;
-import Viewer.Hud.Type;
+import Perception.Classifier.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Scene.System;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Selection.State;
+import DevTools.Viewer.Hud.Type;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Builds the labels of every collector each frame and draws them on the background of the screen.
     class LabelService
     {
     private:
-        using Classified = Relations::Classifier::Type::Classified;
-        using LabelContext = Viewer::Hud::Type::LabelContext;
+        using Classified = Perception::Classifier::Type::Classified;
+        using LabelContext = DevTools::Viewer::Hud::Type::LabelContext;
 
-        using TickStore = Export::Tick::State::TickStore;
-        using CameraService = Viewer::Camera::System::CameraService;
-        using SceneService = Viewer::Scene::System::SceneService;
-        using OptionsStore = Viewer::Options::State::OptionsStore;
-        using SelectionStore = Viewer::Selection::State::SelectionStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
+        using CameraService = DevTools::Viewer::Camera::System::CameraService;
+        using SceneService = DevTools::Viewer::Scene::System::SceneService;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
+        using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
 
     public:
         LabelService(TickStore& tickStore, CameraService& cameraService,

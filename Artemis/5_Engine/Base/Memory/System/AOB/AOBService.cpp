@@ -3,7 +3,7 @@ module;
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-module Platform.Memory.System;
+module Engine.Base.Memory.System;
 import :AOB;
 
 namespace
@@ -50,7 +50,7 @@ namespace
     }
 }
 
-namespace Platform::Memory::System
+namespace Engine::Base::Memory::System
 {
     auto AOBService::FindPattern(const Signature& signature, const wchar_t* moduleName) -> std::uintptr_t
     {

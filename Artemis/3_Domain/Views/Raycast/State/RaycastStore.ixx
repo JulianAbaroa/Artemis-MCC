@@ -1,11 +1,11 @@
-export module Egocentric.Raycast.State;
+export module Views.Raycast.State;
 
 import Common.State.Type;
-import Egocentric.Raycast.Type;
+import Views.Raycast.Type;
 
-export namespace Egocentric::Raycast::State
+export namespace Views::Raycast::State
 {
-    class RaycastStore : public Common::State::Type::Snapshot<Egocentric::Raycast::Type::Raycasts>
+    class RaycastStore : public Common::State::Type::Snapshot<Views::Raycast::Type::Raycasts>
     {
     };
 }

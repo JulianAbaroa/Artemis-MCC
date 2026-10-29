@@ -4,7 +4,7 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-module UI.Hotkey.System;
+module DevTools.Workbench.Hotkey.System;
 
 import std;
 
@@ -23,7 +23,7 @@ namespace
     }
 }
 
-namespace UI::Hotkey::System
+namespace DevTools::Workbench::Hotkey::System
 {
     auto HotkeyUIService::HandleMessage(WindowMessage& message) -> bool
     {

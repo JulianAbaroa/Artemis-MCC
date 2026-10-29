@@ -5,19 +5,19 @@ module;
 #include "Resources/Icons/IconData.h"
 #include <d3d11.h>
 
-module UI.Launcher.System;
+module DevTools.Workbench.Launcher.System;
 
-import UI.Icon.System;
+import DevTools.Workbench.Icon.System;
 import std;
 
 namespace
 {
-    using UI::Launcher::Type::Tab;
-    using UI::Icon::System::IconLoader;
+    using DevTools::Workbench::Launcher::Type::Tab;
+    using DevTools::Workbench::Icon::System::IconLoader;
 
-    using UI::Launcher::Type::ToIndex;
+    using DevTools::Workbench::Launcher::Type::ToIndex;
 
-    using UI::Launcher::Type::k_TabCount;
+    using DevTools::Workbench::Launcher::Type::k_TabCount;
 
     // Tabs in the order of the launcher buttons.
     constexpr std::array<Tab, k_TabCount> k_Tabs
@@ -62,7 +62,7 @@ namespace
     const ImVec2 k_TabDefaultSize{ 1360.0f, 800.0f };
 }
 
-namespace UI::Launcher::System
+namespace DevTools::Workbench::Launcher::System
 {
     auto LauncherUIService::OnInitialized() -> void
     {

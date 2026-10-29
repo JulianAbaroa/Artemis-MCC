@@ -1,4 +1,4 @@
-export module Map.Reader.System:MapLoader;
+export module Blam.Map.Reader.System:MapLoader;
 
 import :FileLocator;
 import :FileNames;
@@ -6,26 +6,26 @@ import :Header;
 import :TagIndex;
 
 import Common.Log.System;
-import Map.Reader.Type;
-import Map.Reader.State;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Loads the '.map' file: its header, tag index and tag names.
     // note: Based on Assembly (https://github.com/xboxchaos/assembly) and Reclaimer (https://github.com/Gravemind2401/Reclaimer).
     class MapLoaderService
     {
     private:
-        using HeaderInfo = Map::Reader::Type::Info::HeaderInfo;
+        using HeaderInfo = Blam::Map::Reader::Type::Info::HeaderInfo;
 
         using Log = Common::Log::System::Log;
-        using FileStore = Map::Reader::State::FileStore;
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
-        using FileLocatorService = Map::Reader::System::FileLocatorService;
-        using FileNamesService = Map::Reader::System::FileNamesService;
-        using HeaderService = Map::Reader::System::HeaderService;
-        using TagIndexService = Map::Reader::System::TagIndexService;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
+        using FileLocatorService = Blam::Map::Reader::System::FileLocatorService;
+        using FileNamesService = Blam::Map::Reader::System::FileNamesService;
+        using HeaderService = Blam::Map::Reader::System::HeaderService;
+        using TagIndexService = Blam::Map::Reader::System::TagIndexService;
 
     public:
         explicit MapLoaderService(Log& log, FileStore& fileStore,

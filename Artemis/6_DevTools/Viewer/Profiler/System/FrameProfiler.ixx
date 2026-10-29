@@ -3,20 +3,20 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Profiler.System;
+export module DevTools.Viewer.Profiler.System;
 
 import Common.Log.System;
-import Viewer.Profiler.Type;
+import DevTools.Viewer.Profiler.Type;
 import std;
 
 namespace
 {
-    using Viewer::Profiler::Type::k_CpuCount;
-    using Viewer::Profiler::Type::k_GpuCount;
-    using Viewer::Profiler::Type::k_CounterCount;
+    using DevTools::Viewer::Profiler::Type::k_CpuCount;
+    using DevTools::Viewer::Profiler::Type::k_GpuCount;
+    using DevTools::Viewer::Profiler::Type::k_CounterCount;
 }
 
-export namespace Viewer::Profiler::System
+export namespace DevTools::Viewer::Profiler::System
 {
     // Measures the CPU and GPU time of the map frame and logs the averages once per second.
     // The GPU time uses timestamp queries, which are read a few frames later. Reporting is skipped if k_Enabled is false.
@@ -27,10 +27,10 @@ export namespace Viewer::Profiler::System
 
         using Log = Common::Log::System::Log;
 
-        using Cpu = Viewer::Profiler::Type::Cpu;
-        using Gpu = Viewer::Profiler::Type::Gpu;
-        using Counter = Viewer::Profiler::Type::Counter;
-        using Slot = Viewer::Profiler::Type::Slot;
+        using Cpu = DevTools::Viewer::Profiler::Type::Cpu;
+        using Gpu = DevTools::Viewer::Profiler::Type::Gpu;
+        using Counter = DevTools::Viewer::Profiler::Type::Counter;
+        using Slot = DevTools::Viewer::Profiler::Type::Slot;
 
     public:
         // Compile-time switch. When false, every method does nothing.
@@ -99,7 +99,7 @@ export namespace Viewer::Profiler::System
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using Cpu = Viewer::Profiler::Type::Cpu;
+        using Cpu = DevTools::Viewer::Profiler::Type::Cpu;
 
     public:
         CpuTimer(FrameProfiler& profiler, Cpu slot) :

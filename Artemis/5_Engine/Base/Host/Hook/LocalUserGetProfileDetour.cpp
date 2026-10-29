@@ -1,21 +1,21 @@
-module Platform.Host.Hook;
+module Engine.Base.Host.Hook;
 import :LocalUserGetProfile;
 
-import Platform.Hook.System;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    using Platform::Host::Type::k_LocalUserGetProfileIndex;
+    using Engine::Base::Host::Type::k_LocalUserGetProfileIndex;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Host::Hook
+namespace Engine::Base::Host::Hook
 {
     auto __fastcall LocalUserGetProfileDetour::HookedLocalUserGetProfile(void* gameManager, std::uint64_t xuid) -> PlayerProfile*
     {
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         auto& store{ s_Instance->m_LocalUserStore };
 
@@ -41,7 +41,7 @@ namespace Platform::Host::Hook
         void* functionAddress{ m_HostService.GetFunctionAddress(k_LocalUserGetProfileIndex) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLocalUserGetProfile),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[LocalUserGetProfileDetour]", m_Log))
@@ -57,9 +57,9 @@ namespace Platform::Host::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[LocalUserGetProfileDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

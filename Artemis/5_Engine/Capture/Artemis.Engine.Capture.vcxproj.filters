@@ -46,7 +46,7 @@
     <ClCompile Include="Hook\SimulationTicksDetour.ixx">
       <Filter>Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Platform.Capture.Hook.ixx" />
+    <ClCompile Include="Engine.Capture.Hook.ixx" />
     <ClCompile Include="State\CaptureStore.cpp">
       <Filter>State</Filter>
     </ClCompile>
@@ -59,7 +59,7 @@
     <ClCompile Include="System\CaptureService.ixx">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Type\Platform.Capture.Type.ixx">
+    <ClCompile Include="Type\Engine.Capture.Type.ixx">
       <Filter>Type</Filter>
     </ClCompile>
   </ItemGroup>

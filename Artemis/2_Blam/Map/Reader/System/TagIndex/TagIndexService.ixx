@@ -1,18 +1,18 @@
-export module Map.Reader.System:TagIndex;
+export module Blam.Map.Reader.System:TagIndex;
 
 import :Formula;
 
-import Map.Reader.State;
+import Blam.Map.Reader.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads the tag index of the map: its groups and its tags.
     class TagIndexService
     {
     private:
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
-        using FormulaService = Map::Reader::System::FormulaService;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
 
     public:
         TagIndexService(TagIndexStore& tagIndexStore, FormulaService& formulaService) :

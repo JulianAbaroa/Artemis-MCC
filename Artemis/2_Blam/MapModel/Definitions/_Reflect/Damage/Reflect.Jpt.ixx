@@ -1,12 +1,12 @@
-export module Resolved.Definitions.Reflect:Jpt;
+export module Blam.MapModel.Definitions.Reflect:Jpt;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Jpt::Jpt;
+    using Blam::MapModel::Definitions::Type::Jpt::Jpt;
 }
 
 export namespace Common::Reflect::Type

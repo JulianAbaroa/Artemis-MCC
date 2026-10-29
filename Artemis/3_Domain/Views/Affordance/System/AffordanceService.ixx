@@ -1,52 +1,52 @@
-export module Egocentric.Affordance.System;
+export module Views.Affordance.System;
 
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Log.System;
-import Tables.Object.Type;
-import Tables.Object.State;
-import Tables.Interaction.Type;
-import Tables.Interaction.State;
-import Relations.Classifier.Type;
-import Relations.Classifier.State;
-import Relations.ObjectGraph.Type;
-import Relations.ObjectGraph.State;
-import Environment.Collidable.System;
-import Egocentric.Self.State;
-import Egocentric.Affordance.Type;
-import Egocentric.Affordance.State;
+import Blam.Runtime.Object.Type;
+import Blam.Runtime.Object.State;
+import Blam.Runtime.Interaction.Type;
+import Blam.Runtime.Interaction.State;
+import Perception.Classifier.Type;
+import Perception.Classifier.State;
+import Perception.ObjectGraph.Type;
+import Perception.ObjectGraph.State;
+import Perception.Collidable.System;
+import Views.Self.State;
+import Views.Affordance.Type;
+import Views.Affordance.State;
 import std;
 
-export namespace Egocentric::Affordance::System
+export namespace Views::Affordance::System
 {
     class AffordanceService
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
-        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
-        using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
-        using Vehicle = Tables::Object::Type::Vehicle::Vehicle;
-        using SeatMarker = Tables::Object::Type::Vehicle::Seat::SeatMarker;
-        using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
-        using ObjectTableStore = Tables::Object::State::ObjectTableStore;
-        using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
-        using InteractionStore = Tables::Interaction::State::InteractionStore;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
+        using ObjectTable = Blam::Runtime::Object::Type::Alive::ObjectTable;
+        using AliveInteraction = Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
+        using Vehicle = Blam::Runtime::Object::Type::Vehicle::Vehicle;
+        using SeatMarker = Blam::Runtime::Object::Type::Vehicle::Seat::SeatMarker;
+        using BoneMatrixTable = Blam::Runtime::Object::Type::BoneMatrix::BoneMatrixTable;
+        using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
+        using BoneMatricesStore = Blam::Runtime::Object::State::BoneMatricesStore;
+        using InteractionStore = Blam::Runtime::Interaction::State::InteractionStore;
         using Function = Common::Semantic::Type::Function;
-        using Classified = Relations::Classifier::Type::Classified;
-        using ObjectNode = Relations::ObjectGraph::Type::ObjectNode;
-        using ObjectNodes = Relations::ObjectGraph::Type::ObjectNodes;
-        using ClassifierStore = Relations::Classifier::State::ClassifierStore;
-        using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
-        using CollidableService = Environment::Collidable::System::CollidableService;
-        using Affordance = Egocentric::Affordance::Type::Affordance;
-        using SeatStatus = Egocentric::Affordance::Type::SeatStatus;
-        using AffordanceBehavior = Egocentric::Affordance::Type::AffordanceBehavior;
-        using AffordanceActivation = Egocentric::Affordance::Type::AffordanceActivation;
+        using Classified = Perception::Classifier::Type::Classified;
+        using ObjectNode = Perception::ObjectGraph::Type::ObjectNode;
+        using ObjectNodes = Perception::ObjectGraph::Type::ObjectNodes;
+        using ClassifierStore = Perception::Classifier::State::ClassifierStore;
+        using ObjectGraphStore = Perception::ObjectGraph::State::ObjectGraphStore;
+        using CollidableService = Perception::Collidable::System::CollidableService;
+        using Affordance = Views::Affordance::Type::Affordance;
+        using SeatStatus = Views::Affordance::Type::SeatStatus;
+        using AffordanceBehavior = Views::Affordance::Type::AffordanceBehavior;
+        using AffordanceActivation = Views::Affordance::Type::AffordanceActivation;
 
         using Log = Common::Log::System::Log;
-        using SelfStore = Egocentric::Self::State::SelfStore;
-        using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
+        using SelfStore = Views::Self::State::SelfStore;
+        using AffordanceStore = Views::Affordance::State::AffordanceStore;
 
     public:
         AffordanceService(Log& log, ObjectTableStore& objectStore,

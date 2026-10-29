@@ -1,14 +1,14 @@
-module Resolved.Tag.System;
+module Blam.MapModel.Tag.System;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 
 namespace
 {
-    using Map::Reader::Type::Structure::TagTable::TagTableEntry;
+    using Blam::Map::Reader::Type::Structure::TagTable::TagTableEntry;
 
-    using Map::Reader::Type::Magic::Tag::k_Coll;
-    using Map::Reader::Type::Magic::Tag::k_Hlmt;
-    using Map::Reader::Type::Magic::Tag::k_Mode;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Coll;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Hlmt;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Mode;
 
     // Gets the bit that marks a group in the group mask of a tag name.
     // Only the groups that the object table queries have a bit.
@@ -23,7 +23,7 @@ namespace
     }
 }
 
-namespace Resolved::Tag::System
+namespace Blam::MapModel::Tag::System
 {
     auto TagResolverService::ResolveHandle(std::uint32_t handle) const -> TagInfo
     {

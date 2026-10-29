@@ -1,11 +1,11 @@
-export module Platform.Host.Hook:SessionJoinCheck;
+export module Engine.Base.Host.Hook:SessionJoinCheck;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Host.State;
+import Engine.Base.Memory.System;
+import Engine.Base.Host.State;
 import std;
 
-export namespace Platform::Host::Hook
+export namespace Engine::Base::Host::Hook
 {
     // Patches a network session check so the Artemis users can join the match: the conditional jump after
     // "cmp (session state - 6), 3" becomes unconditional (77 -> EB), skipping that call for session states 6 to 9.
@@ -16,9 +16,9 @@ export namespace Platform::Host::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
     public:
         SessionJoinCheckPatch(Log& log, AOBService& aobService, LocalUserStore& localUserStore) :

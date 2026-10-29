@@ -2,21 +2,21 @@ module;
 
 #include <windows.h>
 
-module Platform.Window.Hook;
+module Engine.Render.Window.Hook;
 import :WndProc;
 
-import Platform.Window.Type;
-import Platform.Hook.System;
+import Engine.Render.Window.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    using Platform::Window::Type::WindowMessage;
+    using Engine::Render::Window::Type::WindowMessage;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Window::Hook
+namespace Engine::Render::Window::Hook
 {
     auto CALLBACK WndProcDetour::HookedWndProc(HWND window, UINT message,
         WPARAM wParam, LPARAM lParam) -> LRESULT
@@ -27,7 +27,7 @@ namespace Platform::Window::Hook
         auto* self = s_Instance;
         if (!self) return CallWindowProcW(original, window, message, wParam, lParam);
 
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         const bool windowDestroyed = (message == WM_CLOSE ||
             message == WM_DESTROY || message == WM_QUIT);
@@ -107,7 +107,7 @@ namespace Platform::Window::Hook
 
         const HWND window = s_Window.load();
 
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
 
         const auto current = GetWindowLongPtrW(window, GWLP_WNDPROC);
         if (current == reinterpret_cast<LONG_PTR>(&HookedWndProc))

@@ -1,17 +1,17 @@
-export module Map.Reader.State:TagIndex;
+export module Blam.Map.Reader.State:TagIndex;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
-export namespace Map::Reader::State
+export namespace Blam::Map::Reader::State
 {
     // Tag index of the loaded map: the tag table, the tag groups and the tag names.
     // note: The data accessors give direct access to the buffers so the readers can fill them. The sizes are thread safe.
     class TagIndexStore
     {
     private:
-        using TagTableEntry = Map::Reader::Type::Structure::TagTable::TagTableEntry;
-        using TagTableGroupEntry = Map::Reader::Type::Structure::TagTable::TagTableGroupEntry;
+        using TagTableEntry = Blam::Map::Reader::Type::Structure::TagTable::TagTableEntry;
+        using TagTableGroupEntry = Blam::Map::Reader::Type::Structure::TagTable::TagTableGroupEntry;
 
     public:
         TagIndexStore() = default;

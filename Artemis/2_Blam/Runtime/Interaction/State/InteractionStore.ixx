@@ -1,16 +1,16 @@
-export module Tables.Interaction.State;
+export module Blam.Runtime.Interaction.State;
 
-import Tables.Interaction.Type;
+import Blam.Runtime.Interaction.Type;
 import std;
 
-export namespace Tables::Interaction::State
+export namespace Blam::Runtime::Interaction::State
 {
     // Holds the last published interactions.
     // note: Lock-free. Published interactions are never modified.
     class InteractionStore
     {
     private:
-        using LocalInteractions = Tables::Interaction::Type::Alive::LocalInteractions;
+        using LocalInteractions = Blam::Runtime::Interaction::Type::Alive::LocalInteractions;
 
     public:
         InteractionStore() = default;

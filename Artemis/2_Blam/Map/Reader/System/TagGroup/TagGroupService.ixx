@@ -1,11 +1,11 @@
-export module Map.Reader.System:TagGroup;
+export module Blam.Map.Reader.System:TagGroup;
 
 import :TagReference;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Describes how to read the tags of one group. Each group specializes it with:
     // DataType (the fixed data of the tag), Magic (the group) and ReadBlocks (the blocks that follow the data).
@@ -16,9 +16,9 @@ export namespace Map::Reader::System
     class TagGroupService
     {
     private:
-        using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
+        using TagBlock = Blam::Map::Reader::Type::Structure::Tag::TagBlock;
 
-        using TagReferenceService = Map::Reader::System::TagReferenceService;
+        using TagReferenceService = Blam::Map::Reader::System::TagReferenceService;
 
     public:
         explicit TagGroupService(TagReferenceService& tagReferenceService) :

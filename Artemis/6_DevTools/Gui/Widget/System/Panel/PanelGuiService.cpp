@@ -2,23 +2,23 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Gui.Widget.System;
+module DevTools.Gui.Widget.System;
 import :Panel;
 
-import Gui.Format.System;
-import Gui.Style.Type;
+import DevTools.Gui.Format.System;
+import DevTools.Gui.Style.Type;
 import std;
 
 namespace
 {
-    using Gui::Format::System::HexFormater;
+    using DevTools::Gui::Format::System::HexFormater;
 
-    using Gui::Style::Type::k_SectionColor;
+    using DevTools::Gui::Style::Type::k_SectionColor;
 
     const ImVec4 k_FalseColor{ 0.4f, 0.4f, 0.4f, 1.0f };
 }
 
-namespace Gui::Widget::System
+namespace DevTools::Gui::Widget::System
 {
     auto PanelGuiService::DrawVec3(const char* label, const Vec3& value) -> void
     {

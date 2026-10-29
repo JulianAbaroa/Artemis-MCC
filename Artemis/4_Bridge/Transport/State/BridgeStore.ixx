@@ -1,8 +1,8 @@
-export module Platform.Bridge.State;
+export module Bridge.Transport.State;
 
 import Common.Engine.Type;
 import Control.Lockstep.Type;
-import Platform.Bridge.Type;
+import Bridge.Transport.Type;
 import std;
 
 namespace
@@ -10,7 +10,7 @@ namespace
     using Common::Engine::Type::k_MaxPlayers;
 }
 
-export namespace Platform::Bridge::State
+export namespace Bridge::Transport::State
 {
     // Shared memory of the bridge (D135, D136) and what the threads of Artemis share about it: the control in effect, the clock of
     // the action ticks, the players of the last tick and the counters.
@@ -23,10 +23,10 @@ export namespace Platform::Bridge::State
         using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
         using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
 
-        using BridgeRegion = Platform::Bridge::Type::BridgeRegion;
-        using BridgeSlot = Platform::Bridge::Type::BridgeSlot;
-        using BridgeLinkState = Platform::Bridge::Type::BridgeLinkState;
-        using BridgeCounters = Platform::Bridge::Type::BridgeCounters;
+        using BridgeRegion = Contract::Bridge::Type::BridgeRegion;
+        using BridgeSlot = Bridge::Transport::Type::BridgeSlot;
+        using BridgeLinkState = Bridge::Transport::Type::BridgeLinkState;
+        using BridgeCounters = Bridge::Transport::Type::BridgeCounters;
 
     public:
         BridgeStore() = default;

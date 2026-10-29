@@ -1,18 +1,18 @@
-export module Tables.Object.State;
+export module Blam.Runtime.Object.State;
 
 export import :BoneMatrices;
 export import :DamageSections;
 
-import Tables.Object.Type;
+import Blam.Runtime.Object.Type;
 import std;
 
-export namespace Tables::Object::State
+export namespace Blam::Runtime::Object::State
 {
     class ObjectTableStore
     {
     private:
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
-        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
+        using ObjectTable = Blam::Runtime::Object::Type::Alive::ObjectTable;
 
     public:
         ObjectTableStore() = default;

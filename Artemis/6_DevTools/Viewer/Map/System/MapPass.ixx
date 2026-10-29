@@ -3,16 +3,16 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:MapPass;
+export module DevTools.Viewer.Map.System:MapPass;
 
 import Common.Log.System;
-import Platform.Render.System;
-import Resolved.Definitions.Type;
-import Export.Tick.Type;
-import Viewer.Map.Type;
+import Engine.Render.System;
+import Blam.MapModel.Definitions.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws the static map geometry. The vertex buffer is built once from the render geometry of the map.
     class MapPass
@@ -23,9 +23,9 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
+        using Sbsp = Blam::MapModel::Definitions::Type::Sbsp::Sbsp;
 
     public:
         explicit MapPass(Log& log) : m_Log(log) {}

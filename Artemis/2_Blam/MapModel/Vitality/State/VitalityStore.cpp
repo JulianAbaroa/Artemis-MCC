@@ -2,9 +2,9 @@ module;
 
 #include <cassert>
 
-module Resolved.Vitality.State;
+module Blam.MapModel.Vitality.State;
 
-namespace Resolved::Vitality::State
+namespace Blam::MapModel::Vitality::State
 {
     auto VitalityStore::Has(const std::string& tagName) const -> bool
     {

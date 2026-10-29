@@ -1,14 +1,14 @@
 module;
 
-export module Viewer.Fake.Widget;
-import Viewer.Other.Type;
+export module DevTools.Viewer.Fake.Widget;
+import DevTools.Viewer.Other.Type;
 
-export namespace Viewer::Wrong::Widget
+export namespace DevTools::Viewer::Wrong::Widget
 {
     // This function is a fake (see Ignore/Referencia/x.txt).
     // Esto es para el caso de prueba.
     using FakePtr = void(*)(int);
-    using Viewer::Other::Type::Thing;
+    using DevTools::Viewer::Other::Type::Thing;
 
     class Widget
     {

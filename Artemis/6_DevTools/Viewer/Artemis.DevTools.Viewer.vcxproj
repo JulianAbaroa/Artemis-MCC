@@ -98,15 +98,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Viewer.Layer.ixx" />
-    <ClCompile Include="Access\DevTools.Type.ixx" />
-    <ClCompile Include="Format\Viewer.Format.System.ixx" />
-    <ClCompile Include="Map\Viewer.Map.System.ixx" />
+    <ClCompile Include="DevTools.Viewer.Layer.ixx" />
+    <ClCompile Include="Access\DevTools.Viewer.Access.Type.ixx" />
+    <ClCompile Include="Format\DevTools.Viewer.Format.System.ixx" />
+    <ClCompile Include="Map\DevTools.Viewer.Map.System.ixx" />
     <ClCompile Include="Camera\State\CameraStore.cpp" />
     <ClCompile Include="Camera\State\CameraStore.ixx" />
     <ClCompile Include="Camera\System\CameraService.cpp" />
     <ClCompile Include="Camera\System\CameraService.ixx" />
-    <ClCompile Include="Camera\Type\Viewer.Camera.Type.ixx" />
+    <ClCompile Include="Camera\Type\DevTools.Viewer.Camera.Type.ixx" />
     <ClCompile Include="Collidable\State\CollidableStore.ixx" />
     <ClCompile Include="Collidable\System\CollidableSceneService.cpp" />
     <ClCompile Include="Collidable\System\CollidableSceneService.ixx" />
@@ -116,7 +116,7 @@
     <ClCompile Include="Geometry\System\ZoneGeometry.ixx" />
     <ClCompile Include="Hud\System\HudService.cpp" />
     <ClCompile Include="Hud\System\HudService.ixx" />
-    <ClCompile Include="Hud\Type\Viewer.Hud.Type.ixx" />
+    <ClCompile Include="Hud\Type\DevTools.Viewer.Hud.Type.ixx" />
     <ClCompile Include="Map\System\AimPass.cpp" />
     <ClCompile Include="Map\System\AimPass.ixx" />
     <ClCompile Include="Map\System\DynamicPass.cpp" />
@@ -133,27 +133,27 @@
     <ClCompile Include="Map\System\RaycastPass.ixx" />
     <ClCompile Include="Map\System\ZonePass.cpp" />
     <ClCompile Include="Map\System\ZonePass.ixx" />
-    <ClCompile Include="Map\Type\Viewer.Map.Type.ixx" />
+    <ClCompile Include="Map\Type\DevTools.Viewer.Map.Type.ixx" />
     <ClCompile Include="Options\State\OptionsStore.cpp" />
     <ClCompile Include="Options\State\OptionsStore.ixx" />
-    <ClCompile Include="Options\Type\Viewer.Options.Type.ixx" />
+    <ClCompile Include="Options\Type\DevTools.Viewer.Options.Type.ixx" />
     <ClCompile Include="Overlay\State\OverlayStore.cpp" />
     <ClCompile Include="Overlay\State\OverlayStore.ixx" />
-    <ClCompile Include="Overlay\Type\Viewer.Overlay.Type.ixx" />
+    <ClCompile Include="Overlay\Type\DevTools.Viewer.Overlay.Type.ixx" />
     <ClCompile Include="Palette\System\PaletteService.cpp" />
     <ClCompile Include="Palette\System\PaletteService.ixx" />
-    <ClCompile Include="Palette\Type\Viewer.Palette.Type.ixx" />
+    <ClCompile Include="Palette\Type\DevTools.Viewer.Palette.Type.ixx" />
     <ClCompile Include="Profiler\System\FrameProfiler.cpp" />
     <ClCompile Include="Profiler\System\FrameProfiler.ixx" />
-    <ClCompile Include="Profiler\Type\Viewer.Profiler.Type.ixx" />
+    <ClCompile Include="Profiler\Type\DevTools.Viewer.Profiler.Type.ixx" />
     <ClCompile Include="Scene\System\SceneService.cpp" />
     <ClCompile Include="Scene\System\SceneService.ixx" />
     <ClCompile Include="Selection\State\SelectionStore.cpp" />
     <ClCompile Include="Selection\State\SelectionStore.ixx" />
     <ClCompile Include="Selection\System\SelectionService.cpp" />
     <ClCompile Include="Selection\System\SelectionService.ixx" />
-    <ClCompile Include="Selection\Type\Viewer.Selection.Type.ixx" />
-    <ClCompile Include="Style\Type\Viewer.Style.Type.ixx" />
+    <ClCompile Include="Selection\Type\DevTools.Viewer.Selection.Type.ixx" />
+    <ClCompile Include="Style\Type\DevTools.Viewer.Style.Type.ixx" />
     <ClCompile Include="Format\System\Affordance\AffordanceFormater.cpp" />
     <ClCompile Include="Format\System\Affordance\AffordanceFormater.ixx" />
     <ClCompile Include="Format\System\Interaction\InteractionFormater.cpp" />

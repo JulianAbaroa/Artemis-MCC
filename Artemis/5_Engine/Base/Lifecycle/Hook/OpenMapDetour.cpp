@@ -2,26 +2,26 @@ module;
 
 #include <windows.h>
 
-module Platform.Lifecycle.Hook;
+module Engine.Base.Lifecycle.Hook;
 import :OpenMap;
 
-import Platform.Memory.Type;
-import Platform.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Lifecycle::Hook
+namespace Engine::Base::Lifecycle::Hook
 {
     auto __fastcall OpenMapDetour::HookedOpenMap(std::uint64_t param1,
         std::uint64_t param2, std::uint64_t mapRelativePath, std::uint32_t* param4) -> void
     {
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         s_OriginalFunction(param1, param2, mapRelativePath, param4);
 
@@ -49,7 +49,7 @@ namespace Platform::Lifecycle::Hook
             m_AOBService.FindPattern(Signature::k_BlamOpenMap));
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedOpenMap),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[OpenMapDetour]", m_Log))
@@ -64,9 +64,9 @@ namespace Platform::Lifecycle::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[OpenMapDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

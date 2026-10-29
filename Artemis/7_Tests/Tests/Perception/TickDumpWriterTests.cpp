@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-import Contract.Bridge;
-import Export.Dump.Type;
-import Export.Dump.System;
+import Contract.Bridge.Type;
+import Bridge.Codec.Dump.Type;
+import Bridge.Codec.Dump.System;
 import std;
 
 // The writer of the .tdump (M5c, D203): the delta of the entities and of the events between two records, and the sizes of the
@@ -10,27 +10,27 @@ import std;
 
 namespace
 {
-    namespace Writer = Export::Dump::System;
+    namespace Writer = Bridge::Codec::Dump::System;
 
-    using Platform::Bridge::Type::BridgeEntity;
-    using Platform::Bridge::Type::BridgeEvent;
-    using Platform::Bridge::Type::BridgeMatch;
-    using Platform::Bridge::Type::BridgePlayer;
-    using Platform::Bridge::Type::BridgeTick;
-    using Platform::Bridge::Type::BridgeTickHeader;
+    using Contract::Bridge::Type::BridgeEntity;
+    using Contract::Bridge::Type::BridgeEvent;
+    using Contract::Bridge::Type::BridgeMatch;
+    using Contract::Bridge::Type::BridgePlayer;
+    using Contract::Bridge::Type::BridgeTick;
+    using Contract::Bridge::Type::BridgeTickHeader;
 
-    using Export::Dump::Type::TickDumpCounters;
-    using Export::Dump::Type::TickDumpFileHeader;
-    using Export::Dump::Type::TickDumpFooter;
-    using Export::Dump::Type::TickDumpWriterState;
-    using Export::Dump::Type::TickRecordHeader;
+    using Bridge::Codec::Dump::Type::TickDumpCounters;
+    using Bridge::Codec::Dump::Type::TickDumpFileHeader;
+    using Bridge::Codec::Dump::Type::TickDumpFooter;
+    using Bridge::Codec::Dump::Type::TickDumpWriterState;
+    using Bridge::Codec::Dump::Type::TickRecordHeader;
 
-    using Platform::Bridge::Type::k_BridgeLayoutJson;
-    using Export::Dump::Type::k_TickDumpEndMarker;
-    using Export::Dump::Type::k_TickRecordEventsLost;
-    using Export::Dump::Type::k_TickRecordHasMatch;
-    using Export::Dump::Type::k_TickRecordKeyframe;
-    using Export::Dump::Type::k_TickRecordMarker;
+    using Contract::Bridge::Type::k_BridgeLayoutJson;
+    using Bridge::Codec::Dump::Type::k_TickDumpEndMarker;
+    using Bridge::Codec::Dump::Type::k_TickRecordEventsLost;
+    using Bridge::Codec::Dump::Type::k_TickRecordHasMatch;
+    using Bridge::Codec::Dump::Type::k_TickRecordKeyframe;
+    using Bridge::Codec::Dump::Type::k_TickRecordMarker;
 
     // One record read back.
     struct ParsedRecord
@@ -88,7 +88,7 @@ namespace
         return event;
     }
 
-    // return: A BridgeTick with the entities (sorted by handle), a player and the events, as Export.Flat leaves it.
+    // return: A BridgeTick with the entities (sorted by handle), a player and the events, as Bridge.Codec.Flat leaves it.
     auto MakeTick(std::span<const BridgeEntity> entities, std::span<const BridgeEvent> events, std::uint32_t gameTick) -> std::unique_ptr<BridgeTick>
     {
         auto flat{ std::make_unique<BridgeTick>() };

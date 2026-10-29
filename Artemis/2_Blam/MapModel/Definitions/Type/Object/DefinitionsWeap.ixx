@@ -1,10 +1,10 @@
-export module Resolved.Definitions.Type:Weap;
+export module Blam.MapModel.Definitions.Type:Weap;
 
 import :Object;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Weap
+export namespace Blam::MapModel::Definitions::Type::Weap
 {
     // Ammunition pool of a weapon. The datum keeps one magazine state per entry (weap 0x2C0, 0x2DA).
     struct Magazine

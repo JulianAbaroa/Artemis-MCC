@@ -1,4 +1,4 @@
-export module Resolved.Definitions.System;
+export module Blam.MapModel.Definitions.System;
 
 // Damage
 export import :Jpt;
@@ -27,13 +27,13 @@ export import :Vehi;
 export import :Weap;
 
 import Common.Log.System;
-import Map.Reader.System;
-import Map.Tag.State;
-import Map.Tag.System;
-import Resolved.Definitions.State;
+import Blam.Map.Reader.System;
+import Blam.Map.Tag.State;
+import Blam.Map.Tag.System;
+import Blam.MapModel.Definitions.State;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the definitions of every tag the map layer loaded.
     // note: Every group goes through the same loop. Each builder says which map object it reads and
@@ -42,10 +42,10 @@ export namespace Resolved::Definitions::System
     {
     private:
         using Log = Common::Log::System::Log;
-        using GeometryLoaderService = Map::Reader::System::GeometryLoaderService;
-        using TagReferenceService = Map::Reader::System::TagReferenceService;
-        using TagCatalog = Map::Tag::State::TagCatalog;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
+        using GeometryLoaderService = Blam::Map::Reader::System::GeometryLoaderService;
+        using TagReferenceService = Blam::Map::Reader::System::TagReferenceService;
+        using TagCatalog = Blam::Map::Tag::State::TagCatalog;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
 
     public:
         DefinitionsBuilder(Log& log, TagCatalog& tagCatalog,

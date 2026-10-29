@@ -2,39 +2,39 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :LimitsPass;
 
 import Common.Math.Type;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Resolved.Definitions.Type;
-import Viewer.Map.Type;
-import Viewer.Style.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Blam.MapModel.Definitions.Type;
+import DevTools.Viewer.Map.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::Vertex;
+    using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
-    using Viewer::Style::Type::Color;
-    using Resolved::Definitions::Type::Scnr::TriggerVolume;
-    using Resolved::Definitions::Type::Scnr::TriggerVolumeKind;
-    using Resolved::Definitions::Type::Scnr::BoundaryTrigger;
-    using Resolved::Definitions::Type::Scnr::Scnr;
-    using Resolved::Definitions::Type::Scnr::SoftCeilingKind;
-    using Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
+    using DevTools::Viewer::Style::Type::Color;
+    using Blam::MapModel::Definitions::Type::Scnr::TriggerVolume;
+    using Blam::MapModel::Definitions::Type::Scnr::TriggerVolumeKind;
+    using Blam::MapModel::Definitions::Type::Scnr::BoundaryTrigger;
+    using Blam::MapModel::Definitions::Type::Scnr::Scnr;
+    using Blam::MapModel::Definitions::Type::Scnr::SoftCeilingKind;
+    using Blam::MapModel::Definitions::Type::Sddt::SoftCeilingMesh;
 
-    using Platform::Render::Type::SurfaceMode;
-    using Platform::Render::Type::VertexLayout;
+    using Engine::Render::Type::SurfaceMode;
+    using Engine::Render::Type::VertexLayout;
 
-    using Viewer::Style::Type::k_LimitKill;
-    using Viewer::Style::Type::k_LimitSoftKill;
-    using Viewer::Style::Type::k_LimitSafe;
-    using Viewer::Style::Type::k_CeilingAcceleration;
-    using Viewer::Style::Type::k_CeilingSoftKill;
-    using Viewer::Style::Type::k_CeilingSlipSurface;
-    using Viewer::Map::Type::k_InitialCapacity;
+    using DevTools::Viewer::Style::Type::k_LimitKill;
+    using DevTools::Viewer::Style::Type::k_LimitSoftKill;
+    using DevTools::Viewer::Style::Type::k_LimitSafe;
+    using DevTools::Viewer::Style::Type::k_CeilingAcceleration;
+    using DevTools::Viewer::Style::Type::k_CeilingSoftKill;
+    using DevTools::Viewer::Style::Type::k_CeilingSlipSurface;
+    using DevTools::Viewer::Map::Type::k_InitialCapacity;
 
     constexpr float k_Minimum{ 1e-4f };
 
@@ -321,7 +321,7 @@ namespace
         }
     }
 
-    auto KeyOf(const Viewer::Map::Type::LimitsPassOptions& options, bool hasScnrs, bool hasSddts) -> std::uint32_t
+    auto KeyOf(const DevTools::Viewer::Map::Type::LimitsPassOptions& options, bool hasScnrs, bool hasSddts) -> std::uint32_t
     {
         return (options.KillVolumes ? 1u : 0u)
             | (options.SafeVolumes ? 2u : 0u)
@@ -331,7 +331,7 @@ namespace
     }
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto LimitsPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const std::unordered_map<std::string, Scnr>>& scnrs, const std::shared_ptr<const std::unordered_map<std::string, Sddt>>& sddts,
@@ -391,13 +391,13 @@ namespace Viewer::Map::System
 
         const UINT needed{ static_cast<UINT>(batch.Scratch.size()) };
 
-        if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
+        if (!Engine::Render::System::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, batch.Buffer, batch.Capacity, tag, m_Log))
         {
             return false;
         }
 
-        if (!Platform::Render::System::UploadDynamicVertices(context, batch.Buffer.Get(),
+        if (!Engine::Render::System::UploadDynamicVertices(context, batch.Buffer.Get(),
             batch.Scratch, tag, m_Log))
         {
             return false;
@@ -416,7 +416,7 @@ namespace Viewer::Map::System
         {
             pipeline.Bind(context, VertexLayout::Colored, SurfaceMode::Translucent, m_Opacity);
 
-            Platform::Render::System::DrawVertexBuffer(context, m_Faces.Buffer.Get(),
+            Engine::Render::System::DrawVertexBuffer(context, m_Faces.Buffer.Get(),
                 m_Faces.VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         }
 
@@ -424,7 +424,7 @@ namespace Viewer::Map::System
         {
             pipeline.Bind(context, VertexLayout::Colored);
 
-            Platform::Render::System::DrawVertexBuffer(context, m_Edges.Buffer.Get(),
+            Engine::Render::System::DrawVertexBuffer(context, m_Edges.Buffer.Get(),
                 m_Edges.VertexCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
         }
     }

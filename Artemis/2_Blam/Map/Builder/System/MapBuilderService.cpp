@@ -1,16 +1,16 @@
-module Map.Builder.System;
+module Blam.Map.Builder.System;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 
 namespace
 {
-    namespace TagTable = Map::Reader::Type::Structure::TagTable;
+    namespace TagTable = Blam::Map::Reader::Type::Structure::TagTable;
 
-    using Map::Reader::Type::Magic::Tag::k_Play;
-    using Map::Reader::Type::Magic::Tag::k_Zone;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Play;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Zone;
 }
 
-namespace Map::Builder::System
+namespace Blam::Map::Builder::System
 {
     auto MapBuilderService::LoadForMap() -> void
     {
@@ -49,7 +49,7 @@ namespace Map::Builder::System
             std::size_t slot{};
             m_TagCatalog.ForEach([&]<typename TStore>(TStore& store) {
                 using TObject = typename std::remove_cvref_t<decltype(std::declval<TStore&>().All())>::mapped_type;
-                using Descriptor = Map::Reader::System::GroupDescriptor<TObject>;
+                using Descriptor = Blam::Map::Reader::System::GroupDescriptor<TObject>;
 
                 if (magic == Descriptor::Magic && !store.Contains(tagName))
                 {

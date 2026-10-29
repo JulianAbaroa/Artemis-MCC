@@ -2,9 +2,9 @@
 
 import Common.Log.Type;
 import Common.Log.System;
-import Map.Reader.Type;
-import Map.Reader.State;
-import Resolved.Tag.System;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
+import Blam.MapModel.Tag.System;
 import Tests.Support.Blam;
 import Tests.Support.Log;
 import std;
@@ -16,17 +16,17 @@ namespace
     using Common::Log::Type::LogLevel;
     using Common::Log::Type::LogMessage;
     using Common::Log::System::Log;
-    using Map::Reader::State::FileStore;
-    using Map::Reader::State::TagIndexStore;
-    using Resolved::Tag::System::TagResolverService;
+    using Blam::Map::Reader::State::FileStore;
+    using Blam::Map::Reader::State::TagIndexStore;
+    using Blam::MapModel::Tag::System::TagResolverService;
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
     using Tests::Support::Blam::MakeHandle;
     using Tests::Support::Log::CollectingSink;
 
-    using Map::Reader::Type::Magic::Tag::k_Coll;
-    using Map::Reader::Type::Magic::Tag::k_Hlmt;
-    using Map::Reader::Type::Magic::Tag::k_Mode;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Coll;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Hlmt;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Mode;
 
     auto CountOf(const CollectingSink& sink, std::string_view message) -> std::size_t
     {

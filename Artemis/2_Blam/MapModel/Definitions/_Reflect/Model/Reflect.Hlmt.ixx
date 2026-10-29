@@ -1,22 +1,22 @@
-export module Resolved.Definitions.Reflect:Hlmt;
+export module Blam.MapModel.Definitions.Reflect:Hlmt;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Hlmt::RegionTransition;
-    using Resolved::Definitions::Type::Hlmt::InstantResponse;
-    using Resolved::Definitions::Type::Hlmt::DamageTransfer;
-    using Resolved::Definitions::Type::Hlmt::DamageSection;
-    using Resolved::Definitions::Type::Hlmt::ModelTarget;
-    using Resolved::Definitions::Type::Hlmt::CollisionRegion;
-    using Resolved::Definitions::Type::Hlmt::VariantState;
-    using Resolved::Definitions::Type::Hlmt::VariantPermutation;
-    using Resolved::Definitions::Type::Hlmt::VariantRegion;
-    using Resolved::Definitions::Type::Hlmt::Variant;
-    using Resolved::Definitions::Type::Hlmt::Hlmt;
+    using Blam::MapModel::Definitions::Type::Hlmt::RegionTransition;
+    using Blam::MapModel::Definitions::Type::Hlmt::InstantResponse;
+    using Blam::MapModel::Definitions::Type::Hlmt::DamageTransfer;
+    using Blam::MapModel::Definitions::Type::Hlmt::DamageSection;
+    using Blam::MapModel::Definitions::Type::Hlmt::ModelTarget;
+    using Blam::MapModel::Definitions::Type::Hlmt::CollisionRegion;
+    using Blam::MapModel::Definitions::Type::Hlmt::VariantState;
+    using Blam::MapModel::Definitions::Type::Hlmt::VariantPermutation;
+    using Blam::MapModel::Definitions::Type::Hlmt::VariantRegion;
+    using Blam::MapModel::Definitions::Type::Hlmt::Variant;
+    using Blam::MapModel::Definitions::Type::Hlmt::Hlmt;
 }
 
 export namespace Common::Reflect::Type

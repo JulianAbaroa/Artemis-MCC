@@ -1,20 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Render">
-      <UniqueIdentifier>{384946ae-0e03-5815-a4fd-00ae3197b052}</UniqueIdentifier>
+    <Filter Include="Hook">
+      <UniqueIdentifier>{c43c69e9-bb8d-5d87-bd17-7ca851b15177}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\Hook">
-      <UniqueIdentifier>{327d2705-d924-5921-9cda-33b04601b88a}</UniqueIdentifier>
+    <Filter Include="State">
+      <UniqueIdentifier>{726fd9f6-0790-557f-aeb5-4b72efb567e2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\State">
-      <UniqueIdentifier>{92d3de1a-cde2-5a31-b5cf-bf4e07e534ed}</UniqueIdentifier>
+    <Filter Include="System">
+      <UniqueIdentifier>{fd4b1ab5-6428-5d1e-bf8e-fbeafe7e9e48}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\System">
-      <UniqueIdentifier>{f15e1f68-2fbb-5624-a64b-ee67d98852ec}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render\Type">
-      <UniqueIdentifier>{1ea37a17-27ce-554a-abf5-0ca085a271d2}</UniqueIdentifier>
+    <Filter Include="Type">
+      <UniqueIdentifier>{7f33e91f-e80f-572e-b2a7-1bb0627279a5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Window">
       <UniqueIdentifier>{7c035068-a68f-5224-9ddc-98eef6a97fed}</UniqueIdentifier>
@@ -31,62 +28,58 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.Render.Layer.ixx" />
-    <ClCompile Include="Render\Hook\PresentDetour.cpp">
-      <Filter>Render\Hook</Filter>
+    <ClCompile Include="Hook\PresentDetour.cpp">
+      <Filter>Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Hook\PresentDetour.ixx">
-      <Filter>Render\Hook</Filter>
+    <ClCompile Include="Hook\PresentDetour.ixx">
+      <Filter>Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Hook\ResizeBuffersDetour.cpp">
-      <Filter>Render\Hook</Filter>
+    <ClCompile Include="Hook\ResizeBuffersDetour.cpp">
+      <Filter>Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Hook\ResizeBuffersDetour.ixx">
-      <Filter>Render\Hook</Filter>
+    <ClCompile Include="Hook\ResizeBuffersDetour.ixx">
+      <Filter>Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Platform.Render.Hook.ixx">
-      <Filter>Render</Filter>
+    <ClCompile Include="Engine.Render.Hook.ixx" />
+    <ClCompile Include="Engine.Render.System.ixx" />
+    <ClCompile Include="State\RenderStore.cpp">
+      <Filter>State</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Platform.Render.System.ixx">
-      <Filter>Render</Filter>
+    <ClCompile Include="State\RenderStore.ixx">
+      <Filter>State</Filter>
     </ClCompile>
-    <ClCompile Include="Render\State\RenderStore.cpp">
-      <Filter>Render\State</Filter>
+    <ClCompile Include="System\GpuBuffer.cpp">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\State\RenderStore.ixx">
-      <Filter>Render\State</Filter>
+    <ClCompile Include="System\GpuBuffer.ixx">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\GpuBuffer.cpp">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\GpuPipeline.cpp">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\GpuBuffer.ixx">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\GpuPipeline.ixx">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\GpuPipeline.cpp">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\GpuStateGuard.cpp">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\GpuPipeline.ixx">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\GpuStateGuard.ixx">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\GpuStateGuard.cpp">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\RenderService.cpp">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\GpuStateGuard.ixx">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\RenderService.ixx">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\RenderService.cpp">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\SwapChainLocator.cpp">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\RenderService.ixx">
-      <Filter>Render\System</Filter>
+    <ClCompile Include="System\SwapChainLocator.ixx">
+      <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Render\System\SwapChainLocator.cpp">
-      <Filter>Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\System\SwapChainLocator.ixx">
-      <Filter>Render\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Type\Platform.Render.Type.ixx">
-      <Filter>Render\Type</Filter>
+    <ClCompile Include="Type\Engine.Render.Type.ixx">
+      <Filter>Type</Filter>
     </ClCompile>
     <ClCompile Include="Window\Hook\GetRawInputDataDetour.cpp">
       <Filter>Window\Hook</Filter>
@@ -100,10 +93,10 @@
     <ClCompile Include="Window\Hook\WndProcDetour.ixx">
       <Filter>Window\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Window\Platform.Window.Hook.ixx">
+    <ClCompile Include="Window\Engine.Render.Window.Hook.ixx">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Window\Platform.Window.System.ixx">
+    <ClCompile Include="Window\Engine.Render.Window.System.ixx">
       <Filter>Window</Filter>
     </ClCompile>
     <ClCompile Include="Window\System\InputService.cpp">
@@ -112,7 +105,7 @@
     <ClCompile Include="Window\System\InputService.ixx">
       <Filter>Window\System</Filter>
     </ClCompile>
-    <ClCompile Include="Window\Type\Platform.Window.Type.ixx">
+    <ClCompile Include="Window\Type\Engine.Render.Window.Type.ixx">
       <Filter>Window\Type</Filter>
     </ClCompile>
   </ItemGroup>

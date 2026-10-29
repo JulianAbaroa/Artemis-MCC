@@ -1,8 +1,8 @@
-export module Tables.Object.Type:Size;
+export module Blam.Runtime.Object.Type:Size;
 
 import std;
 
-export namespace Tables::Object::Type::Size
+export namespace Blam::Runtime::Object::Type::Size
 {
     // TODO: Confirm if this is true.
     constexpr size_t k_Base{ 0x330 };

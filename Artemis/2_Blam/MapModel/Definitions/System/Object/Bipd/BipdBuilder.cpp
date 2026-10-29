@@ -1,7 +1,7 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Bipd;
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto BipdBuilder::Build(const BipdObject& bipd) -> Bipd
     {

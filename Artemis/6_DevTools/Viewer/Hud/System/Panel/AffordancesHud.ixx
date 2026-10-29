@@ -1,18 +1,18 @@
-export module Viewer.Hud.System:Affordances;
+export module DevTools.Viewer.Hud.System:Affordances;
 
-import Tables.Interaction.Type;
-import Tables.Object.Type;
-import Egocentric.Affordance.Type;
-import Export.Tick.Type;
+import Blam.Runtime.Interaction.Type;
+import Blam.Runtime.Object.Type;
+import Views.Affordance.Type;
+import Bridge.Codec.Tick.Type;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Draws the detail panel of the selected affordance.
     class AffordancesHud
     {
     private:
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
 
     public:
         AffordancesHud() = default;

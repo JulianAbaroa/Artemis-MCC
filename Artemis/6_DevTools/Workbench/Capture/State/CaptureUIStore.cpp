@@ -1,11 +1,11 @@
-module UI.Capture.State;
+module DevTools.Workbench.Capture.State;
 
 namespace
 {
-    using UI::Capture::Type::k_LabelSize;
+    using DevTools::Workbench::Capture::Type::k_LabelSize;
 }
 
-namespace UI::Capture::State
+namespace DevTools::Workbench::Capture::State
 {
     auto CaptureUIStore::RequestCapture() -> void
     {

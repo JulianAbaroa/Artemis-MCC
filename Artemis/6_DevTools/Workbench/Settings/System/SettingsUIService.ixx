@@ -1,37 +1,37 @@
-export module UI.Settings.System;
+export module DevTools.Workbench.Settings.System;
 
 import Common.Log.System;
-import Service.Settings.State;
-import Service.Settings.System;
-import Service.Preferences.System;
-import Gui.Style.Type;
-import Viewer.Options.Type;
-import Viewer.Options.State;
-import Viewer.Camera.State;
-import UI.Hotkey.State;
+import Services.Settings.State;
+import Services.Settings.System;
+import Services.Preferences.System;
+import DevTools.Gui.Style.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Camera.State;
+import DevTools.Workbench.Hotkey.State;
 import std;
 
 namespace
 {
-    using Gui::Style::Type::k_AnimationDuration;
+    using DevTools::Gui::Style::Type::k_AnimationDuration;
 }
 
-export namespace UI::Settings::System
+export namespace DevTools::Workbench::Settings::System
 {
     // Draws the settings window with the user preferences, the viewer options and the hotkeys.
     class SettingsUIService
     {
     private:
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
-        using SettingsService = Service::Settings::System::SettingsService;
-        using PreferencesService = Service::Preferences::System::PreferencesService;
+        using SettingsStore = Services::Settings::State::SettingsStore;
+        using SettingsService = Services::Settings::System::SettingsService;
+        using PreferencesService = Services::Preferences::System::PreferencesService;
 
-        using Group = Viewer::Options::Type::Group;
-        using OptionsStore = Viewer::Options::State::OptionsStore;
-        using CameraStore = Viewer::Camera::State::CameraStore;
+        using Group = DevTools::Viewer::Options::Type::Group;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
+        using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
 
-        using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
+        using HotkeyUIStore = DevTools::Workbench::Hotkey::State::HotkeyUIStore;
 
     public:
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,

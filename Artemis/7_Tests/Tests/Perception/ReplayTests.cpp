@@ -4,16 +4,16 @@
 
 import Common.Hash.System;
 import Common.Math.Type;
-import Contract.Bridge;
-import Datum.Object.Type;
-import Export.Dump.Type;
-import Export.Dump.System;
-import Export.Layer;
-import Export.Tick.Type;
-import Layout.Snapshot.Type;
-import Layout.Snapshot.System;
-import Map.Layer;
-import Resolved.Layer;
+import Contract.Bridge.Type;
+import Blam.Layout.Object.Type;
+import Bridge.Codec.Dump.Type;
+import Bridge.Codec.Dump.System;
+import Bridge.Codec.Layer;
+import Bridge.Codec.Tick.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Layout.Snapshot.System;
+import Blam.Map.Layer;
+import Blam.MapModel.Layer;
 import Tests.Support.Blam;
 import Tests.Support.Maps;
 import Tests.Support.Pipeline;
@@ -26,19 +26,19 @@ import std;
 
 namespace
 {
-    namespace SnapshotCodec = Layout::Snapshot::System;
-    namespace TickCodec = Export::Dump::System;
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
+    namespace SnapshotCodec = Blam::Layout::Snapshot::System;
+    namespace TickCodec = Bridge::Codec::Dump::System;
+    namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
 
     using Common::Math::Type::Vec3;
-    using Export::Dump::Type::TickDumpFileHeader;
-    using Layout::Snapshot::Type::Snapshot;
-    using Layout::Snapshot::Type::SnapshotDumpFooter;
-    using Layout::Snapshot::Type::SnapshotLoadInfo;
-    using Layout::Snapshot::Type::SnapshotReaderState;
-    using Layout::Snapshot::Type::SnapshotReadStatus;
-    using Layout::Snapshot::Type::SnapshotWriterState;
-    using Platform::Bridge::Type::BridgeTick;
+    using Bridge::Codec::Dump::Type::TickDumpFileHeader;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::Layout::Snapshot::Type::SnapshotDumpFooter;
+    using Blam::Layout::Snapshot::Type::SnapshotLoadInfo;
+    using Blam::Layout::Snapshot::Type::SnapshotReaderState;
+    using Blam::Layout::Snapshot::Type::SnapshotReadStatus;
+    using Blam::Layout::Snapshot::Type::SnapshotWriterState;
+    using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Blam::Put;
     using Tests::Support::Maps::MapsFolder;
     using Tests::Support::Pipeline::Chain;
@@ -49,9 +49,9 @@ namespace
     using Tests::Support::Replay::ReplayStatus;
 
     using Common::Hash::System::FileCrc32;
-    using Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
-    using Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
-    using Platform::Bridge::Type::k_BridgeLayoutHash;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
+    using Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
+    using Contract::Bridge::Type::k_BridgeLayoutHash;
     using Tests::Support::Pipeline::k_BipedHandle;
 
     constexpr std::string_view k_RecordingsVariable{ "ARTEMIS_RECORDINGS" };
@@ -74,7 +74,7 @@ namespace
         TickCodec::WriteFileHeader(recording.Tdump, "synthetic", "2026-10-27 12:00:00", "test");
         SnapshotCodec::WriteFileHeader(recording.Sdump, k_BridgeLayoutHash, "2026-10-27 12:00:00", "test");
 
-        Export::Dump::Type::TickDumpWriterState tickState{};
+        Bridge::Codec::Dump::Type::TickDumpWriterState tickState{};
         TickCodec::Begin(tickState);
         SnapshotWriterState snapshotState{};
         auto flat{ std::make_unique<BridgeTick>() };
@@ -96,7 +96,7 @@ namespace
                 snapshotState);
         }
 
-        TickCodec::WriteFooter(recording.Tdump, Export::Dump::Type::TickDumpCounters{ .RecordedTicks = snapshots.size() });
+        TickCodec::WriteFooter(recording.Tdump, Bridge::Codec::Dump::Type::TickDumpCounters{ .RecordedTicks = snapshots.size() });
         SnapshotCodec::WriteFooter(recording.Sdump, SnapshotDumpFooter{ .Marker = k_SnapshotDumpEndMarker, .RecordedTicks = snapshots.size() });
         return recording;
     }
@@ -254,7 +254,7 @@ TEST_F(ReplayTests, Recordings)
         // The map the recording was made with.
         SnapshotReaderState reader{};
         const std::string openReason{ SnapshotCodec::OpenReader(sdump, reader) };
-        const auto first{ openReason.empty() ? SnapshotCodec::ReadRecord(sdump, reader) : Layout::Snapshot::Type::SnapshotReadResult{} };
+        const auto first{ openReason.empty() ? SnapshotCodec::ReadRecord(sdump, reader) : Blam::Layout::Snapshot::Type::SnapshotReadResult{} };
         if (!openReason.empty() || first.Status != SnapshotReadStatus::Record || !first.Record.LoadInfo)
         {
             ADD_FAILURE() << directory.string() << ": the .sdump cannot be read or does not start at a map load. " << openReason << first.Reason;

@@ -1,11 +1,11 @@
-export module Resolved.World.State;
+export module Blam.MapModel.World.State;
 
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Resolved.World.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.MapModel.World.Type;
 import std;
 
-export namespace Resolved::World::State
+export namespace Blam::MapModel::World::State
 {
     // Links of the world by tag name: object to model, model to collision, and the region states and model links of each model.
     // note: They are added while the world is built, then the store is frozen and only read.
@@ -13,10 +13,10 @@ export namespace Resolved::World::State
     class WorldStore
     {
     private:
-        using Coll = Resolved::Definitions::Type::Coll::Coll;
-        using RegionStates = Resolved::World::Type::RegionStates::RegionStates;
-        using ModelLink = Resolved::World::Type::ModelLink::ModelLink;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
+        using Coll = Blam::MapModel::Definitions::Type::Coll::Coll;
+        using RegionStates = Blam::MapModel::World::Type::RegionStates::RegionStates;
+        using ModelLink = Blam::MapModel::World::Type::ModelLink::ModelLink;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
 
     public:
         WorldStore() = default;

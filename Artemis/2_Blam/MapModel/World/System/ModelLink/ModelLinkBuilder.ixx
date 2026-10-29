@@ -1,20 +1,20 @@
-export module Resolved.World.System:ModelLink;
+export module Blam.MapModel.World.System:ModelLink;
 
-import Resolved.Definitions.Type;
-import Resolved.World.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.World.Type;
 import std;
 
-export namespace Resolved::World::System
+export namespace Blam::MapModel::World::System
 {
     // Builds the links between the collision model and the render model of a model tag.
     class ModelLinkBuilder
     {
     private:
-        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
-        using Coll = Resolved::Definitions::Type::Coll::Coll;
-        using Mode = Resolved::Definitions::Type::Mode::Mode;
-        using ModelLink = Resolved::World::Type::ModelLink::ModelLink;
-        using ModelLinkAnchor = Resolved::World::Type::ModelLink::ModelLinkAnchor;
+        using Hlmt = Blam::MapModel::Definitions::Type::Hlmt::Hlmt;
+        using Coll = Blam::MapModel::Definitions::Type::Coll::Coll;
+        using Mode = Blam::MapModel::Definitions::Type::Mode::Mode;
+        using ModelLink = Blam::MapModel::World::Type::ModelLink::ModelLink;
+        using ModelLinkAnchor = Blam::MapModel::World::Type::ModelLink::ModelLinkAnchor;
 
     public:
         ModelLinkBuilder() = default;

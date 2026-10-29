@@ -1,8 +1,8 @@
-export module Layout.Player.Type:Offset;
+export module Blam.Layout.Player.Type:Offset;
 
 import std;
 
-export namespace Layout::Player::Type::Offset
+export namespace Blam::Layout::Player::Type::Offset
 {
     // Salt of the player handle (uint32).
     // note: The handle is the salt in the high 16 bits and the table index in the low 16 bits. The networking systems generate the salt.

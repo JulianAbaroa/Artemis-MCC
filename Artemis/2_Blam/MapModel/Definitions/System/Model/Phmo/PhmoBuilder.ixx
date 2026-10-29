@@ -1,19 +1,19 @@
-export module Resolved.Definitions.System:Phmo;
+export module Blam.MapModel.Definitions.System:Phmo;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the physics model definition.
     class PhmoBuilder
     {
     private:
-        using PhmoObject = Map::Tag::Type::Phmo::Object::PhmoObject;
-        using Phmo = Resolved::Definitions::Type::Phmo::Phmo;
-        using RigidBody = Resolved::Definitions::Type::Phmo::RigidBody;
-        using ShapeType = Resolved::Definitions::Type::Phmo::ShapeType;
+        using PhmoObject = Blam::Map::Tag::Type::Phmo::Object::PhmoObject;
+        using Phmo = Blam::MapModel::Definitions::Type::Phmo::Phmo;
+        using RigidBody = Blam::MapModel::Definitions::Type::Phmo::RigidBody;
+        using ShapeType = Blam::MapModel::Definitions::Type::Phmo::ShapeType;
 
     public:
         PhmoBuilder() = default;

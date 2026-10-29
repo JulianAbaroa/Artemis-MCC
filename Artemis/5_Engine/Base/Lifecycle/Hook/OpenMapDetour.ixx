@@ -1,23 +1,23 @@
-export module Platform.Lifecycle.Hook:OpenMap;
+export module Engine.Base.Lifecycle.Hook:OpenMap;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Lifecycle.Type;
-import Platform.Lifecycle.System;
+import Engine.Base.Memory.System;
+import Engine.Base.Lifecycle.Type;
+import Engine.Base.Lifecycle.System;
 import std;
 
-export namespace Platform::Lifecycle::Hook
+export namespace Engine::Base::Lifecycle::Hook
 {
     // Hooks the engine map opening. Once the original returns, reports the full path of the file the engine opened.
     // note: Only reports it. What the file is and what to do with it is decided by the owner of the callback (D179).
     class OpenMapDetour
     {
     private:
-        using OpenMapFunction = Platform::Lifecycle::Type::OpenMapFunction;
+        using OpenMapFunction = Engine::Base::Lifecycle::Type::OpenMapFunction;
 
         using Log = Common::Log::System::Log;
-        using AOBService = Platform::Memory::System::AOBService;
-        using LifecycleService = Platform::Lifecycle::System::LifecycleService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
+        using LifecycleService = Engine::Base::Lifecycle::System::LifecycleService;
 
     public:
         OpenMapDetour(Log& log, AOBService& aobService, LifecycleService& lifecycleService) :

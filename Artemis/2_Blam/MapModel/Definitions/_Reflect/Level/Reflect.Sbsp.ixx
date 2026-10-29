@@ -1,12 +1,12 @@
-export module Resolved.Definitions.Reflect:Sbsp;
+export module Blam.MapModel.Definitions.Reflect:Sbsp;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Sbsp::Sbsp;
+    using Blam::MapModel::Definitions::Type::Sbsp::Sbsp;
 }
 
 export namespace Common::Reflect::Type

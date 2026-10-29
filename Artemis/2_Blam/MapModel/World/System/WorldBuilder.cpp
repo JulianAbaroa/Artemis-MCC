@@ -1,6 +1,6 @@
-module Resolved.World.System;
+module Blam.MapModel.World.System;
 
-namespace Resolved::World::System
+namespace Blam::MapModel::World::System
 {
     auto WorldBuilder::BuildForMap() -> void
     {

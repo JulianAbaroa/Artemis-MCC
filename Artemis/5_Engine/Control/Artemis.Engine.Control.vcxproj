@@ -59,23 +59,23 @@
     <ClCompile Include="Input\Hook\InputUpdateDetour.ixx" />
     <ClCompile Include="Input\Hook\PlayerActionDetour.cpp" />
     <ClCompile Include="Input\Hook\PlayerActionDetour.ixx" />
-    <ClCompile Include="Input\Platform.Input.Hook.ixx" />
-    <ClCompile Include="Input\Platform.Input.State.ixx" />
-    <ClCompile Include="Input\Platform.Input.System.ixx" />
+    <ClCompile Include="Input\Engine.Control.Input.Hook.ixx" />
+    <ClCompile Include="Input\Engine.Control.Input.State.ixx" />
+    <ClCompile Include="Input\Engine.Control.Input.System.ixx" />
     <ClCompile Include="Input\State\PlayerActionStore.cpp" />
     <ClCompile Include="Input\State\PlayerActionStore.ixx" />
     <ClCompile Include="Input\State\VirtualInputStore.cpp" />
     <ClCompile Include="Input\State\VirtualInputStore.ixx" />
     <ClCompile Include="Input\System\ActionSource.ixx" />
-    <ClCompile Include="Input\Type\Platform.Input.Type.ixx" />
+    <ClCompile Include="Input\Type\Engine.Control.Input.Type.ixx" />
     <ClCompile Include="Simulation\Hook\SetMachinesDetour.cpp" />
     <ClCompile Include="Simulation\Hook\SetMachinesDetour.ixx" />
-    <ClCompile Include="Simulation\Platform.Simulation.Hook.ixx" />
+    <ClCompile Include="Simulation\Engine.Control.Simulation.Hook.ixx" />
     <ClCompile Include="Simulation\State\BotStore.cpp" />
     <ClCompile Include="Simulation\State\BotStore.ixx" />
     <ClCompile Include="Simulation\System\BotService.cpp" />
     <ClCompile Include="Simulation\System\BotService.ixx" />
-    <ClCompile Include="Simulation\Type\Platform.Simulation.Type.ixx" />
+    <ClCompile Include="Simulation\Type\Engine.Control.Simulation.Type.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

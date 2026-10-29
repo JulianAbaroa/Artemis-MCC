@@ -1,7 +1,7 @@
-export module Platform.Input.State:VirtualInput;
+export module Engine.Control.Input.State:VirtualInput;
 
 import Common.Engine.Type;
-import Platform.Input.Type;
+import Engine.Control.Input.Type;
 import std;
 
 namespace
@@ -9,15 +9,15 @@ namespace
     using Common::Engine::Type::k_MaxLocalUsers;
 }
 
-export namespace Platform::Input::State
+export namespace Engine::Control::Input::State
 {
     // Input of each local player as the engine receives it from MCC once per frame: who provides it and, for virtual players, the state.
     // note: Thread-safe. Written by the UI (later the AI), read by the InputUpdate hook on the game thread.
     class VirtualInputStore
     {
     private:
-        using InputState = Platform::Input::Type::InputState;
-        using LocalInputSource = Platform::Input::Type::LocalInputSource;
+        using InputState = Engine::Control::Input::Type::InputState;
+        using LocalInputSource = Engine::Control::Input::Type::LocalInputSource;
 
     public:
         VirtualInputStore() = default;

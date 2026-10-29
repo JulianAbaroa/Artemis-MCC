@@ -1,13 +1,13 @@
-export module Resolved.Definitions.Reflect:Sddt;
+export module Blam.MapModel.Definitions.Reflect:Sddt;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
-    using Resolved::Definitions::Type::Sddt::Sddt;
+    using Blam::MapModel::Definitions::Type::Sddt::SoftCeilingMesh;
+    using Blam::MapModel::Definitions::Type::Sddt::Sddt;
 }
 
 export namespace Common::Reflect::Type

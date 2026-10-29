@@ -1,16 +1,16 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :TagStructure;
 
 import Common.Engine.Type;
 
 namespace
 {
-    using Map::Reader::Type::Structure::Tag::TagReference;
+    using Blam::Map::Reader::Type::Structure::Tag::TagReference;
 
     using Common::Engine::Type::k_NoHandle;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto TagStructureService::ReadTagReference(std::ifstream& file,
         std::int64_t tagRefOffset) const -> TagTableEntry

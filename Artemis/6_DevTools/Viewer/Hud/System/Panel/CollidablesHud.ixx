@@ -1,16 +1,16 @@
-export module Viewer.Hud.System:Collidables;
+export module DevTools.Viewer.Hud.System:Collidables;
 
-import Environment.Collidable.Type;
-import Viewer.Collidable.State;
+import Perception.Collidable.Type;
+import DevTools.Viewer.Collidable.State;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Draws the detail panel of the selected collidable.
     class CollidablesHud
     {
     private:
-        using Collidables = Environment::Collidable::Type::Collidables;
+        using Collidables = Perception::Collidable::Type::Collidables;
 
     public:
         CollidablesHud() = default;

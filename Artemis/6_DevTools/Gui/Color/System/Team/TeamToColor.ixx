@@ -2,12 +2,12 @@ module;
 
 #include "External/imgui/imgui.h"
 
-export module Gui.Color.System:Team;
+export module DevTools.Gui.Color.System:Team;
 
 import Common.Team.Type;
 import std;
 
-export namespace Gui::Color::System
+export namespace DevTools::Gui::Color::System
 {
     // Picks the display color of a team.
     class TeamToColor

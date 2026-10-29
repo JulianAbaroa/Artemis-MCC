@@ -63,22 +63,22 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Dump\System\Export.Dump.System.cpp" />
-    <ClCompile Include="Dump\System\Export.Dump.System.ixx" />
-    <ClCompile Include="Dump\Type\Export.Dump.Type.ixx" />
-    <ClCompile Include="Export.Layer.ixx" />
+    <ClCompile Include="Dump\System\Bridge.Codec.Dump.System.cpp" />
+    <ClCompile Include="Dump\System\Bridge.Codec.Dump.System.ixx" />
+    <ClCompile Include="Dump\Type\Bridge.Codec.Dump.Type.ixx" />
+    <ClCompile Include="Bridge.Codec.Layer.ixx" />
     <ClCompile Include="Flat\State\FlatStore.cpp" />
     <ClCompile Include="Flat\State\FlatStore.ixx" />
     <ClCompile Include="Flat\System\FlatService.cpp" />
     <ClCompile Include="Flat\System\FlatService.ixx" />
-    <ClCompile Include="Flat\Type\Export.Flat.Type.ixx" />
+    <ClCompile Include="Flat\Type\Bridge.Codec.Flat.Type.ixx" />
     <ClCompile Include="Pipeline\System\PipelineService.cpp" />
     <ClCompile Include="Pipeline\System\PipelineService.ixx" />
-    <ClCompile Include="Pipeline\Type\Export.Pipeline.Type.ixx" />
+    <ClCompile Include="Pipeline\Type\Bridge.Codec.Pipeline.Type.ixx" />
     <ClCompile Include="Tick\State\TickStore.ixx" />
     <ClCompile Include="Tick\System\TickService.cpp" />
     <ClCompile Include="Tick\System\TickService.ixx" />
-    <ClCompile Include="Tick\Type\Export.Tick.Type.ixx" />
+    <ClCompile Include="Tick\Type\Bridge.Codec.Tick.Type.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

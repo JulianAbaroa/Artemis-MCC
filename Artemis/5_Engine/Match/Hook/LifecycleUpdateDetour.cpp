@@ -1,37 +1,37 @@
-module Platform.Match.Hook;
+module Engine.Match.Hook;
 import :LifecycleUpdate;
 
-import Platform.Memory.Type;
-import Platform.Host.Type;
-import Platform.Match.Type;
-import Platform.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Base.Host.Type;
+import Engine.Match.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Host::Type::k_HostModuleName;
+    using Engine::Base::Host::Type::k_HostModuleName;
 
-    using Platform::Hook::System::k_DrainTimeout;
-    using Platform::Hook::System::ResolveRelative;
-    using Platform::Match::Type::k_LifecycleStateOffset;
-    using Platform::Match::Type::k_PreGameLifecycleState;
-    using Platform::Match::Type::k_LobbyStartIndex;
-    using Platform::Match::Type::k_UiManagerDisplacementOffset;
-    using Platform::Match::Type::k_UiManagerNextInstructionOffset;
-    using Platform::Match::Type::k_LobbyNameDisplacementOffset;
-    using Platform::Match::Type::k_LobbyNameNextInstructionOffset;
-    using Platform::Match::Type::k_FindScreenDisplacementOffset;
-    using Platform::Match::Type::k_FindScreenNextInstructionOffset;
-    using Platform::Match::Type::k_SessionKind;
-    using Platform::Match::Type::k_GetSessionDisplacementOffset;
-    using Platform::Match::Type::k_GetSessionNextInstructionOffset;
-    using Platform::Match::Type::k_IsCountdownActiveDisplacementOffset;
-    using Platform::Match::Type::k_IsCountdownActiveNextInstructionOffset;
-    using Platform::Match::Type::k_EngineUpdateStateIndex;
-    using Platform::Match::Type::k_EngineLeaveState;
-    using Platform::Match::Type::k_EngineStatePayloadMaxSize;
+    using Engine::Base::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::ResolveRelative;
+    using Engine::Match::Type::k_LifecycleStateOffset;
+    using Engine::Match::Type::k_PreGameLifecycleState;
+    using Engine::Match::Type::k_LobbyStartIndex;
+    using Engine::Match::Type::k_UiManagerDisplacementOffset;
+    using Engine::Match::Type::k_UiManagerNextInstructionOffset;
+    using Engine::Match::Type::k_LobbyNameDisplacementOffset;
+    using Engine::Match::Type::k_LobbyNameNextInstructionOffset;
+    using Engine::Match::Type::k_FindScreenDisplacementOffset;
+    using Engine::Match::Type::k_FindScreenNextInstructionOffset;
+    using Engine::Match::Type::k_SessionKind;
+    using Engine::Match::Type::k_GetSessionDisplacementOffset;
+    using Engine::Match::Type::k_GetSessionNextInstructionOffset;
+    using Engine::Match::Type::k_IsCountdownActiveDisplacementOffset;
+    using Engine::Match::Type::k_IsCountdownActiveNextInstructionOffset;
+    using Engine::Match::Type::k_EngineUpdateStateIndex;
+    using Engine::Match::Type::k_EngineLeaveState;
+    using Engine::Match::Type::k_EngineStatePayloadMaxSize;
 
     using std::chrono::steady_clock;
     using std::chrono::seconds;
@@ -48,11 +48,11 @@ namespace
     constexpr milliseconds k_LobbySettleTime{ 3000 };
 }
 
-namespace Platform::Match::Hook
+namespace Engine::Match::Hook
 {
     auto __fastcall LifecycleUpdateDetour::HookedLifecycleUpdate(void* manager) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
 
@@ -82,7 +82,7 @@ namespace Platform::Match::Hook
     auto __fastcall LifecycleUpdateDetour::HookedVariantsCompatible(std::uint64_t first, std::uint64_t second, std::uint64_t third,
         std::uint64_t fourth) -> bool
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
 
@@ -142,7 +142,7 @@ namespace Platform::Match::Hook
 
         m_VariantsAddress.store(reinterpret_cast<void*>(variants));
 
-        if (!Platform::Hook::System::InstallDetour(reinterpret_cast<void*>(variants),
+        if (!Engine::Base::Hook::System::InstallDetour(reinterpret_cast<void*>(variants),
             reinterpret_cast<void*>(&HookedVariantsCompatible),
             reinterpret_cast<void**>(&s_OriginalVariantsCompatible),
             "[LifecycleUpdateDetour]", m_Log))
@@ -153,15 +153,15 @@ namespace Platform::Match::Hook
         void* functionAddress{ reinterpret_cast<void*>(match) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLifecycleUpdate),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[LifecycleUpdateDetour]", m_Log))
         {
             // Without the update nothing presses START, so the variants hook goes too.
-            Platform::Hook::System::DisableDetour(m_VariantsAddress.load());
-            Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-            Platform::Hook::System::RemoveDetour(m_VariantsAddress.load(), "[LifecycleUpdateDetour]", m_Log);
+            Engine::Base::Hook::System::DisableDetour(m_VariantsAddress.load());
+            Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+            Engine::Base::Hook::System::RemoveDetour(m_VariantsAddress.load(), "[LifecycleUpdateDetour]", m_Log);
             return false;
         }
 
@@ -173,12 +173,12 @@ namespace Platform::Match::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::DisableDetour(m_VariantsAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::DisableDetour(m_VariantsAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[LifecycleUpdateDetour]", m_Log);
-        Platform::Hook::System::RemoveDetour(m_VariantsAddress.load(),
+        Engine::Base::Hook::System::RemoveDetour(m_VariantsAddress.load(),
             "[LifecycleUpdateDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

@@ -2,59 +2,59 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.Simulation.System;
+module DevTools.Workbench.Simulation.System;
 
 import Common.Engine.Type;
 import Control.Action.Type;
-import Platform.Lifecycle.Type;
-import Platform.Simulation.Type;
-import Platform.Bridge.Type;
-import Layout.Action.Type;
-import Gui.Style.Type;
+import Engine.Base.Lifecycle.Type;
+import Engine.Control.Simulation.Type;
+import Bridge.Transport.Type;
+import Blam.Layout.Action.Type;
+import DevTools.Gui.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::LocalInputSource;
-    using Platform::Input::Type::PlayerAction;
-    using Platform::Input::Type::PlayerActions;
+    using Engine::Control::Input::Type::LocalInputSource;
+    using Engine::Control::Input::Type::PlayerAction;
+    using Engine::Control::Input::Type::PlayerActions;
     using Control::Action::Type::ActionOverride;
     using Control::Action::Type::ClientRequests;
-    using Platform::Input::Type::ShadowCount;
-    using Environment::Players::Type::Player;
-    using Environment::Players::Type::Players;
-    using Platform::Simulation::Type::SessionSnapshot;
-    using Platform::Simulation::Type::SessionPlayer;
-    using Platform::Simulation::Type::Bot;
-    using Platform::Simulation::Type::FakeMachine;
-    using Platform::Simulation::Type::TeamRequest;
-    using UI::Simulation::Type::LocalPlayerAction;
-    using Platform::Bridge::Type::BridgeStatus;
-    using Platform::Bridge::Type::BridgeOwner;
-    using Platform::Bridge::Type::BridgeMode;
+    using Engine::Control::Input::Type::ShadowCount;
+    using Perception::Players::Type::Player;
+    using Perception::Players::Type::Players;
+    using Engine::Control::Simulation::Type::SessionSnapshot;
+    using Engine::Control::Simulation::Type::SessionPlayer;
+    using Engine::Control::Simulation::Type::Bot;
+    using Engine::Control::Simulation::Type::FakeMachine;
+    using Engine::Control::Simulation::Type::TeamRequest;
+    using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
+    using Bridge::Transport::Type::BridgeStatus;
+    using Contract::Bridge::Type::BridgeOwner;
+    using Contract::Bridge::Type::BridgeMode;
 
     using Common::Engine::Type::k_MaxLocalUsers;
-    using Platform::Simulation::Type::k_MaxMachines;
+    using Engine::Control::Simulation::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
-    using Platform::Simulation::Type::k_MaxTeams;
-    using Layout::Action::Type::Size::k_MaxActionPlayers;
-    using Layout::Action::Type::Size::k_PlayerActionSize;
-    using Layout::Action::Type::Offset::k_ActionButtonsOffset;
-    using Layout::Action::Type::Offset::k_ActionFacingOffset;
-    using Layout::Action::Type::Offset::k_ActionThrottleOffset;
-    using Layout::Action::Type::k_UseLane;
-    using Platform::Input::Type::k_ShadowFieldCount;
-    using Platform::Input::Type::k_ShadowFieldNames;
-    using Platform::Input::Type::k_ShadowLogLimit;
-    using UI::Simulation::Type::k_LocalPlayerInputCount;
-    using UI::Simulation::Type::k_LocalPlayerInputLabels;
-    using UI::Simulation::Type::k_LocalPlayerActionCount;
-    using UI::Simulation::Type::k_LocalPlayerActionLabels;
-    using UI::Simulation::Type::k_RecordNameSize;
+    using Engine::Control::Simulation::Type::k_MaxTeams;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
+    using Blam::Layout::Action::Type::Offset::k_ActionButtonsOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionFacingOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionThrottleOffset;
+    using Blam::Layout::Action::Type::k_UseLane;
+    using Engine::Control::Input::Type::k_ShadowFieldCount;
+    using Engine::Control::Input::Type::k_ShadowFieldNames;
+    using Engine::Control::Input::Type::k_ShadowLogLimit;
+    using DevTools::Workbench::Simulation::Type::k_LocalPlayerInputCount;
+    using DevTools::Workbench::Simulation::Type::k_LocalPlayerInputLabels;
+    using DevTools::Workbench::Simulation::Type::k_LocalPlayerActionCount;
+    using DevTools::Workbench::Simulation::Type::k_LocalPlayerActionLabels;
+    using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_TicksPerSecond;
     using Common::Engine::Type::k_HandleIndexMask;
-    using Gui::Style::Type::k_BytesPerRow;
+    using DevTools::Gui::Style::Type::k_BytesPerRow;
 
     // Width of the name field and of the list of the match config section.
     constexpr float k_MatchConfigFieldWidth{ 260.0f };
@@ -151,7 +151,7 @@ namespace
     }
 }
 
-namespace UI::Simulation::System
+namespace DevTools::Workbench::Simulation::System
 {
     auto SimulationUIService::Draw() -> void
     {

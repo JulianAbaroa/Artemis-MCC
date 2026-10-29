@@ -1,57 +1,57 @@
-export module Egocentric.Raycast.System;
+export module Views.Raycast.System;
 
 import Common.Math.Type;
 import Common.Log.System;
-import Resolved.World.System;
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Tables.Player.Type;
-import Tables.Player.State;
-import Tables.Object.Type;
-import Tables.Object.State;
-import Environment.Collidable.Type;
-import Environment.Collidable.System;
-import Environment.Entities.Type;
-import Environment.Entities.State;
-import Environment.Players.Type;
-import Environment.Players.State;
-import Egocentric.Self.Type;
-import Egocentric.Self.State;
-import Egocentric.Raycast.Type;
-import Egocentric.Raycast.State;
+import Blam.MapModel.World.System;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.Runtime.Player.Type;
+import Blam.Runtime.Player.State;
+import Blam.Runtime.Object.Type;
+import Blam.Runtime.Object.State;
+import Perception.Collidable.Type;
+import Perception.Collidable.System;
+import Perception.Entities.Type;
+import Perception.Entities.State;
+import Perception.Players.Type;
+import Perception.Players.State;
+import Views.Self.Type;
+import Views.Self.State;
+import Views.Raycast.Type;
+import Views.Raycast.State;
 import std;
 
-export namespace Egocentric::Raycast::System
+export namespace Views::Raycast::System
 {
     class RaycastService
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
         using Triangle = Common::Math::Type::Triangle;
-        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
-        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
-        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
-        using Weap = Resolved::Definitions::Type::Weap::Weap;
-        using Collidable = Environment::Collidable::Type::Collidable;
-        using CachedDynamic = Egocentric::Raycast::Type::CachedDynamic;
-        using DynamicCache = Egocentric::Raycast::Type::DynamicCache;
-        using Self = Egocentric::Self::Type::Self;
-        using Raycasts = Egocentric::Raycast::Type::Raycasts;
-        using RaycastHit = Egocentric::Raycast::Type::RaycastHit;
-        using SelfExclusion = Egocentric::Raycast::Type::SelfExclusion;
-        using PerceptionOrigin = Egocentric::Raycast::Type::PerceptionOrigin;
+        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
+        using PlayerTable = Blam::Runtime::Player::Type::Alive::PlayerTable;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
+        using ObjectTable = Blam::Runtime::Object::Type::Alive::ObjectTable;
+        using Weap = Blam::MapModel::Definitions::Type::Weap::Weap;
+        using Collidable = Perception::Collidable::Type::Collidable;
+        using CachedDynamic = Views::Raycast::Type::CachedDynamic;
+        using DynamicCache = Views::Raycast::Type::DynamicCache;
+        using Self = Views::Self::Type::Self;
+        using Raycasts = Views::Raycast::Type::Raycasts;
+        using RaycastHit = Views::Raycast::Type::RaycastHit;
+        using SelfExclusion = Views::Raycast::Type::SelfExclusion;
+        using PerceptionOrigin = Views::Raycast::Type::PerceptionOrigin;
 
         using Log = Common::Log::System::Log;
-        using PlayerTableStore = Tables::Player::State::PlayerTableStore;
-        using ObjectTableStore = Tables::Object::State::ObjectTableStore;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-        using Raycaster = Resolved::World::System::Raycaster;
-        using EntitiesStore = Environment::Entities::State::EntitiesStore;
-        using PlayersStore = Environment::Players::State::PlayersStore;
-        using CollidableService = Environment::Collidable::System::CollidableService;
-        using SelfStore = Egocentric::Self::State::SelfStore;
-        using RaycastStore = Egocentric::Raycast::State::RaycastStore;
+        using PlayerTableStore = Blam::Runtime::Player::State::PlayerTableStore;
+        using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
+        using Raycaster = Blam::MapModel::World::System::Raycaster;
+        using EntitiesStore = Perception::Entities::State::EntitiesStore;
+        using PlayersStore = Perception::Players::State::PlayersStore;
+        using CollidableService = Perception::Collidable::System::CollidableService;
+        using SelfStore = Views::Self::State::SelfStore;
+        using RaycastStore = Views::Raycast::State::RaycastStore;
 
     public:
         RaycastService(Log& log, PlayerTableStore& playerStore,

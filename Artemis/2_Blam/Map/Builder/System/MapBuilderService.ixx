@@ -1,26 +1,26 @@
-export module Map.Builder.System;
+export module Blam.Map.Builder.System;
 
 import Common.Log.System;
-import Map.Reader.State;
-import Map.Reader.System;
-import Map.Tag.State;
-import Map.Tag.System;
+import Blam.Map.Reader.State;
+import Blam.Map.Reader.System;
+import Blam.Map.Tag.State;
+import Blam.Map.Tag.System;
 import std;
 
-export namespace Map::Builder::System
+export namespace Blam::Map::Builder::System
 {
     // Reads every tag of the loaded map that has a descriptor and stores it in the tag catalog.
     class MapBuilderService
     {
     private:
-        using TagCatalog = Map::Tag::State::TagCatalog;
+        using TagCatalog = Blam::Map::Tag::State::TagCatalog;
 
         using Log = Common::Log::System::Log;
-        using FileStore = Map::Reader::State::FileStore;
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
-        using FileLocatorService = Map::Reader::System::FileLocatorService;
-        using TagReferenceService = Map::Reader::System::TagReferenceService;
-        using TagGroupService = Map::Reader::System::TagGroupService;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
+        using FileLocatorService = Blam::Map::Reader::System::FileLocatorService;
+        using TagReferenceService = Blam::Map::Reader::System::TagReferenceService;
+        using TagGroupService = Blam::Map::Reader::System::TagGroupService;
 
     public:
         MapBuilderService(Log& log, TagCatalog& tagCatalog,

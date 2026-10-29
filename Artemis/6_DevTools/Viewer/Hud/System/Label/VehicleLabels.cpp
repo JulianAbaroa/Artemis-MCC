@@ -2,29 +2,29 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :VehicleLabels;
 
 import Common.Math.Type;
-import Viewer.Options.Type;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::Flag;
-    using Viewer::Hud::Type::LabelRow;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Hud::Type::LabelRow;
 
-    using Viewer::Style::Type::k_Affordance;
-    using Viewer::Hud::Type::k_FreeSeatColor;
-    using Viewer::Hud::Type::k_TakenSeatColor;
-    using Viewer::Hud::Type::k_MutedColor;
+    using DevTools::Viewer::Style::Type::k_Affordance;
+    using DevTools::Viewer::Hud::Type::k_FreeSeatColor;
+    using DevTools::Viewer::Hud::Type::k_TakenSeatColor;
+    using DevTools::Viewer::Hud::Type::k_MutedColor;
 
     constexpr ImU32 k_HijackerColor{ IM_COL32(230, 170, 90, 255) };
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto VehicleLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {

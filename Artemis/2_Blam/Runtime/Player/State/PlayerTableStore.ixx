@@ -1,17 +1,17 @@
-export module Tables.Player.State;
+export module Blam.Runtime.Player.State;
 
-import Tables.Player.Type;
+import Blam.Runtime.Player.Type;
 import std;
 
-export namespace Tables::Player::State
+export namespace Blam::Runtime::Player::State
 {
     // Holds the players read from the engine player table.
     // note: Writers lock a mutex. Readers use the published table and never wait.
     class PlayerTableStore
     {
     private:
-        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
-        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
+        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
+        using PlayerTable = Blam::Runtime::Player::Type::Alive::PlayerTable;
 
     public:
         PlayerTableStore() = default;

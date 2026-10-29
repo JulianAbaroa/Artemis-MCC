@@ -2,19 +2,19 @@
 // Source XML: zone.xml
 // Root struct size: 0x228
 
-export module Map.Tag.Type:Zone.Structure;
+export module Blam.Map.Tag.Type:Zone.Structure;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
 namespace
 {
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MapStructure = Blam::Map::Reader::Type::Structure;
 }
 
 #pragma pack(push, 1)
 
-export namespace Map::Tag::Type::Zone::Structure
+export namespace Blam::Map::Tag::Type::Zone::Structure
 {
     // Entry size: 0x1C
     struct Zone_ResourceTypesEntry

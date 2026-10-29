@@ -1,4 +1,4 @@
-module Tables.Object.System;
+module Blam.Runtime.Object.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
@@ -6,59 +6,59 @@ import Common.Semantic.Type;
 import Common.ZoneShape.Type;
 import Common.Tag.Type;
 import Common.Team.Type;
-import Resolved.Definitions.Type;
-import Datum.Object.Type;
-import Layout.Snapshot.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Snapshot.Type;
 
 namespace
 {
     namespace TagName = Common::Tag::Type;
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
-    namespace MvarOffset = Datum::Object::Type::Mvar::Offset;
+    namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
+    namespace MvarOffset = Blam::Layout::Object::Type::Mvar::Offset;
 
     using Common::Math::Type::Vec2;
     using Common::Math::Type::Vec3;
     using Common::ZoneShape::Type::ZoneShapeKind;
     using Common::Team::Type::Team;
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Resolved::Definitions::Type::Object::ToObjectKind;
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::Snapshot;
-    using Tables::Object::Type::BoneMatrix::BonesHeader;
-    using Tables::Object::Type::Biped::Biped;
-    using Tables::Object::Type::Crate::Crate;
-    using Tables::Object::Type::Equipment::Equipment;
-    using Tables::Object::Type::Projectile::Projectile;
-    using Tables::Object::Type::Scenery::Scenery;
-    using Tables::Object::Type::Vehicle::Vehicle;
-    using Tables::Object::Type::Weapon::Weapon;
-    using Tables::Object::Type::Projectile::ProjectileFlags;
-    using Tables::Object::Type::Crate::Teleport::Teleport;
-    using Tables::Object::Type::Crate::Teleport::Allowed;
-    using Tables::Object::Type::Crate::CrateKind;
-    using Tables::Object::Type::Weapon::WeaponAction;
-    using Tables::Object::Type::Weapon::ChargeState;
-    using Tables::Object::Type::Biped::ZoomLevel;
-    using Tables::Object::Type::Biped::VerticalInput;
-    using Tables::Object::Type::Biped::GrenadeType;
-    using Tables::Object::Type::Biped::Damage;
-    using Resolved::Definitions::Type::Object::DamageReportingType;
-    using Tables::Object::Type::Placement::Placement;
-    using Tables::Object::Type::Placement::Symmetry;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
+    using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::Runtime::Object::Type::BoneMatrix::BonesHeader;
+    using Blam::Runtime::Object::Type::Biped::Biped;
+    using Blam::Runtime::Object::Type::Crate::Crate;
+    using Blam::Runtime::Object::Type::Equipment::Equipment;
+    using Blam::Runtime::Object::Type::Projectile::Projectile;
+    using Blam::Runtime::Object::Type::Scenery::Scenery;
+    using Blam::Runtime::Object::Type::Vehicle::Vehicle;
+    using Blam::Runtime::Object::Type::Weapon::Weapon;
+    using Blam::Runtime::Object::Type::Projectile::ProjectileFlags;
+    using Blam::Runtime::Object::Type::Crate::Teleport::Teleport;
+    using Blam::Runtime::Object::Type::Crate::Teleport::Allowed;
+    using Blam::Runtime::Object::Type::Crate::CrateKind;
+    using Blam::Runtime::Object::Type::Weapon::WeaponAction;
+    using Blam::Runtime::Object::Type::Weapon::ChargeState;
+    using Blam::Runtime::Object::Type::Biped::ZoomLevel;
+    using Blam::Runtime::Object::Type::Biped::VerticalInput;
+    using Blam::Runtime::Object::Type::Biped::GrenadeType;
+    using Blam::Runtime::Object::Type::Biped::Damage;
+    using Blam::MapModel::Definitions::Type::Object::DamageReportingType;
+    using Blam::Runtime::Object::Type::Placement::Placement;
+    using Blam::Runtime::Object::Type::Placement::Symmetry;
     using Common::Semantic::Type::Physics;
 
     using Common::Engine::Type::k_NoTick;
-    using Tables::Object::Type::Constant::k_PlacementInUseBit;
-    using Tables::Object::Type::Constant::k_NotPlacedAtStartBit;
-    using Tables::Object::Type::Constant::k_SymmetryShift;
-    using Tables::Object::Type::Constant::k_SymmetryMask;
-    using Tables::Object::Type::Constant::k_GameSpecificBit;
-    using Tables::Object::Type::Constant::k_FixedBit;
-    using Tables::Object::Type::Constant::k_PhasedBit;
-    using Tables::Object::Type::Constant::k_DefaultColor;
-    using Tables::Object::Type::Constant::k_TriggerHeldBit;
-    using Tables::Object::Type::Constant::k_ZoomedBit;
-    using Tables::Object::Type::Constant::k_ActionMask;
+    using Blam::Runtime::Object::Type::Constant::k_PlacementInUseBit;
+    using Blam::Runtime::Object::Type::Constant::k_NotPlacedAtStartBit;
+    using Blam::Runtime::Object::Type::Constant::k_SymmetryShift;
+    using Blam::Runtime::Object::Type::Constant::k_SymmetryMask;
+    using Blam::Runtime::Object::Type::Constant::k_GameSpecificBit;
+    using Blam::Runtime::Object::Type::Constant::k_FixedBit;
+    using Blam::Runtime::Object::Type::Constant::k_PhasedBit;
+    using Blam::Runtime::Object::Type::Constant::k_DefaultColor;
+    using Blam::Runtime::Object::Type::Constant::k_TriggerHeldBit;
+    using Blam::Runtime::Object::Type::Constant::k_ZoomedBit;
+    using Blam::Runtime::Object::Type::Constant::k_ActionMask;
     using Common::Engine::Type::k_NoHandle;
 
     // note: The origin of a parented object is local to its parent, so it is carried
@@ -89,19 +89,19 @@ namespace
             parentOrigin.Z + forward.Z * local.X + left.Z * local.Y + up.Z * local.Z };
     }
 
-    using Tables::Object::Type::Constant::k_DamageSectionStride;
-    using Tables::Object::Type::Constant::k_RegionBlockMaxSize;
+    using Blam::Runtime::Object::Type::Constant::k_DamageSectionStride;
+    using Blam::Runtime::Object::Type::Constant::k_RegionBlockMaxSize;
 
-    using Datum::Object::Type::Constant::k_MinDatumSize;
+    using Blam::Layout::Object::Type::Constant::k_MinDatumSize;
 
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
-    namespace UnitOffset = Datum::Object::Type::Unit::Offset;
-    namespace BipdOffset = Datum::Object::Type::Bipd::Offset;
-    namespace WeapOffset = Datum::Object::Type::Weap::Offset;
-    namespace ProjOffset = Datum::Object::Type::Proj::Offset;
-    namespace EqipOffset = Datum::Object::Type::Eqip::Offset;
-    namespace SeatBlock = Datum::Object::Type::Block::Seat;
-    namespace MultiplayerBlock = Datum::Object::Type::Block::Multiplayer;
+    namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
+    namespace UnitOffset = Blam::Layout::Object::Type::Unit::Offset;
+    namespace BipdOffset = Blam::Layout::Object::Type::Bipd::Offset;
+    namespace WeapOffset = Blam::Layout::Object::Type::Weap::Offset;
+    namespace ProjOffset = Blam::Layout::Object::Type::Proj::Offset;
+    namespace EqipOffset = Blam::Layout::Object::Type::Eqip::Offset;
+    namespace SeatBlock = Blam::Layout::Object::Type::Block::Seat;
+    namespace MultiplayerBlock = Blam::Layout::Object::Type::Block::Multiplayer;
 
     // Fields that are not confirmed in the datum layouts yet. They keep the name they had before the migration.
     constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
@@ -122,7 +122,7 @@ namespace
     constexpr std::uint32_t k_MaxNodes{ 1024 };
 }
 
-namespace Tables::Object::System
+namespace Blam::Runtime::Object::System
 {
     auto ObjectTableService::AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind objectKind) -> void
     {
@@ -465,8 +465,8 @@ namespace Tables::Object::System
     {
         Vehicle vehicle{};
 
-        vehicle.Kind = Tables::Object::Type::Vehicle::ResolveVehicleType(object.TagName);
-        vehicle.SeatLayout = Tables::Object::Type::Vehicle::GetSeatLayout(vehicle.Kind);
+        vehicle.Kind = Blam::Runtime::Object::Type::Vehicle::ResolveVehicleType(object.TagName);
+        vehicle.SeatLayout = Blam::Runtime::Object::Type::Vehicle::GetSeatLayout(vehicle.Kind);
 
         if (const auto seats = datum.FindBlock(SeatBlock::k_Descriptor))
         {
@@ -538,7 +538,7 @@ namespace Tables::Object::System
     {
         Crate crate{};
 
-        crate.Kind = Tables::Object::Type::Crate::ResolveCrateType(object.TagName);
+        crate.Kind = Blam::Runtime::Object::Type::Crate::ResolveCrateType(object.TagName);
 
         if (crate.Kind == CrateKind::TeleportSender ||
             crate.Kind == CrateKind::TeleportReceiver ||
@@ -559,7 +559,7 @@ namespace Tables::Object::System
     auto ObjectTableService::UpdateScenery(const RawObject& datum, AliveObject& object) -> void
     {
         Scenery scenery{};
-        scenery.Kind = Tables::Object::Type::Scenery::ResolveSceneryType(object.TagName);
+        scenery.Kind = Blam::Runtime::Object::Type::Scenery::ResolveSceneryType(object.TagName);
 
         object.Specific = scenery;
     }

@@ -1,18 +1,18 @@
-export module Viewer.Collidable.System;
+export module DevTools.Viewer.Collidable.System;
 
-import Environment.Collidable.System;
-import Viewer.Collidable.State;
+import Perception.Collidable.System;
+import DevTools.Viewer.Collidable.State;
 import std;
 
-export namespace Viewer::Collidable::System
+export namespace DevTools::Viewer::Collidable::System
 {
     // Publishes the scene of collidables for the viewer, built apart from the pipeline (D224).
     class CollidableSceneService
     {
     private:
-        using CollidableService = Environment::Collidable::System::CollidableService;
+        using CollidableService = Perception::Collidable::System::CollidableService;
 
-        using CollidableStore = Viewer::Collidable::State::CollidableStore;
+        using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
 
     public:
         CollidableSceneService(CollidableService& collidableService, CollidableStore& collidableStore) :

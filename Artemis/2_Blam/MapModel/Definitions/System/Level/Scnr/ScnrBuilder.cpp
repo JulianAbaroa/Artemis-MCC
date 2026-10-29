@@ -1,20 +1,20 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Scnr;
 
 import Common.Math.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Resolved::Definitions::Type::Scnr::TriggerVolumeKind;
-    using Resolved::Definitions::Type::Scnr::TriggerVolume;
-    using Resolved::Definitions::Type::Scnr::BoundaryTrigger;
-    using Resolved::Definitions::Type::Scnr::SoftCeilingKind;
-    using Resolved::Definitions::Type::Scnr::SoftCeiling;
+    using Blam::MapModel::Definitions::Type::Scnr::TriggerVolumeKind;
+    using Blam::MapModel::Definitions::Type::Scnr::TriggerVolume;
+    using Blam::MapModel::Definitions::Type::Scnr::BoundaryTrigger;
+    using Blam::MapModel::Definitions::Type::Scnr::SoftCeilingKind;
+    using Blam::MapModel::Definitions::Type::Scnr::SoftCeiling;
 
-    using Resolved::Definitions::Type::Scnr::k_LastTriggerVolumeKind;
-    using Resolved::Definitions::Type::Scnr::k_LastSoftCeilingKind;
+    using Blam::MapModel::Definitions::Type::Scnr::k_LastTriggerVolumeKind;
+    using Blam::MapModel::Definitions::Type::Scnr::k_LastSoftCeilingKind;
 
     template <typename TVec3>
     constexpr auto ToVec3(const TVec3& value) -> Vec3
@@ -28,7 +28,7 @@ namespace
     }
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto ScnrBuilder::Build(const ScnrObject& scnr) -> Scnr
     {

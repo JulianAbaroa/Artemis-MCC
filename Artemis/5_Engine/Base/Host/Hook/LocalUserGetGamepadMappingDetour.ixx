@@ -1,12 +1,12 @@
-export module Platform.Host.Hook:LocalUserGetGamepadMapping;
+export module Engine.Base.Host.Hook:LocalUserGetGamepadMapping;
 
 import Common.Log.System;
-import Platform.Host.Type;
-import Platform.Host.State;
-import Platform.Host.System;
+import Engine.Base.Host.Type;
+import Engine.Base.Host.State;
+import Engine.Base.Host.System;
 import std;
 
-export namespace Platform::Host::Hook
+export namespace Engine::Base::Host::Hook
 {
     // Hooks the MCC function that returns the gamepad mapping of a user, so an Artemis user gets a valid mapping.
     // note: MCC does not know the Artemis XUIDs. Their mapping is a copy of the mapping of user 0.
@@ -15,12 +15,12 @@ export namespace Platform::Host::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using LocalUserGetGamepadMappingFunction = Platform::Host::Type::LocalUserGetGamepadMappingFunction;
-        using GamepadMapping = Platform::Host::Type::GamepadMapping;
+        using LocalUserGetGamepadMappingFunction = Engine::Base::Host::Type::LocalUserGetGamepadMappingFunction;
+        using GamepadMapping = Engine::Base::Host::Type::GamepadMapping;
 
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
-        using HostService = Platform::Host::System::HostService;
+        using HostService = Engine::Base::Host::System::HostService;
 
     public:
         LocalUserGetGamepadMappingDetour(Log& log, HostService& hostService, LocalUserStore& localUserStore) :

@@ -135,14 +135,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Viewer.Layer.ixx" />
-    <ClCompile Include="Access\DevTools.Type.ixx">
+    <ClCompile Include="DevTools.Viewer.Layer.ixx" />
+    <ClCompile Include="Access\DevTools.Viewer.Access.Type.ixx">
       <Filter>Access</Filter>
     </ClCompile>
-    <ClCompile Include="Format\Viewer.Format.System.ixx">
+    <ClCompile Include="Format\DevTools.Viewer.Format.System.ixx">
       <Filter>Format</Filter>
     </ClCompile>
-    <ClCompile Include="Map\Viewer.Map.System.ixx">
+    <ClCompile Include="Map\DevTools.Viewer.Map.System.ixx">
       <Filter>Map</Filter>
     </ClCompile>
     <ClCompile Include="Camera\State\CameraStore.cpp">
@@ -157,7 +157,7 @@
     <ClCompile Include="Camera\System\CameraService.ixx">
       <Filter>Camera\System</Filter>
     </ClCompile>
-    <ClCompile Include="Camera\Type\Viewer.Camera.Type.ixx">
+    <ClCompile Include="Camera\Type\DevTools.Viewer.Camera.Type.ixx">
       <Filter>Camera\Type</Filter>
     </ClCompile>
     <ClCompile Include="Collidable\State\CollidableStore.ixx">
@@ -187,7 +187,7 @@
     <ClCompile Include="Hud\System\HudService.ixx">
       <Filter>Hud\System</Filter>
     </ClCompile>
-    <ClCompile Include="Hud\Type\Viewer.Hud.Type.ixx">
+    <ClCompile Include="Hud\Type\DevTools.Viewer.Hud.Type.ixx">
       <Filter>Hud\Type</Filter>
     </ClCompile>
     <ClCompile Include="Map\System\AimPass.cpp">
@@ -238,7 +238,7 @@
     <ClCompile Include="Map\System\ZonePass.ixx">
       <Filter>Map\System</Filter>
     </ClCompile>
-    <ClCompile Include="Map\Type\Viewer.Map.Type.ixx">
+    <ClCompile Include="Map\Type\DevTools.Viewer.Map.Type.ixx">
       <Filter>Map\Type</Filter>
     </ClCompile>
     <ClCompile Include="Options\State\OptionsStore.cpp">
@@ -247,7 +247,7 @@
     <ClCompile Include="Options\State\OptionsStore.ixx">
       <Filter>Options\State</Filter>
     </ClCompile>
-    <ClCompile Include="Options\Type\Viewer.Options.Type.ixx">
+    <ClCompile Include="Options\Type\DevTools.Viewer.Options.Type.ixx">
       <Filter>Options\Type</Filter>
     </ClCompile>
     <ClCompile Include="Overlay\State\OverlayStore.cpp">
@@ -256,7 +256,7 @@
     <ClCompile Include="Overlay\State\OverlayStore.ixx">
       <Filter>Overlay\State</Filter>
     </ClCompile>
-    <ClCompile Include="Overlay\Type\Viewer.Overlay.Type.ixx">
+    <ClCompile Include="Overlay\Type\DevTools.Viewer.Overlay.Type.ixx">
       <Filter>Overlay\Type</Filter>
     </ClCompile>
     <ClCompile Include="Palette\System\PaletteService.cpp">
@@ -265,7 +265,7 @@
     <ClCompile Include="Palette\System\PaletteService.ixx">
       <Filter>Palette\System</Filter>
     </ClCompile>
-    <ClCompile Include="Palette\Type\Viewer.Palette.Type.ixx">
+    <ClCompile Include="Palette\Type\DevTools.Viewer.Palette.Type.ixx">
       <Filter>Palette\Type</Filter>
     </ClCompile>
     <ClCompile Include="Profiler\System\FrameProfiler.cpp">
@@ -274,7 +274,7 @@
     <ClCompile Include="Profiler\System\FrameProfiler.ixx">
       <Filter>Profiler\System</Filter>
     </ClCompile>
-    <ClCompile Include="Profiler\Type\Viewer.Profiler.Type.ixx">
+    <ClCompile Include="Profiler\Type\DevTools.Viewer.Profiler.Type.ixx">
       <Filter>Profiler\Type</Filter>
     </ClCompile>
     <ClCompile Include="Scene\System\SceneService.cpp">
@@ -295,10 +295,10 @@
     <ClCompile Include="Selection\System\SelectionService.ixx">
       <Filter>Selection\System</Filter>
     </ClCompile>
-    <ClCompile Include="Selection\Type\Viewer.Selection.Type.ixx">
+    <ClCompile Include="Selection\Type\DevTools.Viewer.Selection.Type.ixx">
       <Filter>Selection\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Style\Type\Viewer.Style.Type.ixx">
+    <ClCompile Include="Style\Type\DevTools.Viewer.Style.Type.ixx">
       <Filter>Style\Type</Filter>
     </ClCompile>
     <ClCompile Include="Format\System\Affordance\AffordanceFormater.cpp">

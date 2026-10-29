@@ -1,35 +1,35 @@
-module Platform.Capture.System;
+module Engine.Capture.System;
 
 import Common.Engine.Type;
-import Datum.Object.Type;
+import Blam.Layout.Object.Type;
 import std;
 
 namespace
 {
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::Region;
-    using Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::Region;
+    using Blam::Layout::Snapshot::Type::RegionSize;
 
     using Common::Engine::Type::k_MaxObjects;
-    using Datum::Object::Type::Constant::k_EntrySize;
-    using Datum::Object::Type::Constant::k_EntrySaltOffset;
-    using Datum::Object::Type::Constant::k_EntryKindOffset;
-    using Datum::Object::Type::Constant::k_EntryDatumSizeOffset;
-    using Datum::Object::Type::Constant::k_EntryAddressOffset;
-    using Datum::Object::Type::Constant::k_MinDatumSize;
-    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextGameEngineOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextEventGlobalsOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextGameModeOffset;
-    using Datum::Object::Type::Constant::k_GameModeTypeOffset;
-    using Datum::Object::Type::Constant::k_GameModeMultiplayer;
-    using Datum::Object::Type::Constant::k_ThreadContextMapVariantOffset;
-    using Datum::Object::Type::Constant::k_MapVariantAdjust;
-    using Datum::Object::Type::Constant::k_MapVariantAlignMask;
-    using Datum::Object::Type::Constant::k_PlacementsOffset;
+    using Blam::Layout::Object::Type::Constant::k_EntrySize;
+    using Blam::Layout::Object::Type::Constant::k_EntrySaltOffset;
+    using Blam::Layout::Object::Type::Constant::k_EntryKindOffset;
+    using Blam::Layout::Object::Type::Constant::k_EntryDatumSizeOffset;
+    using Blam::Layout::Object::Type::Constant::k_EntryAddressOffset;
+    using Blam::Layout::Object::Type::Constant::k_MinDatumSize;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameEngineOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextEventGlobalsOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameModeOffset;
+    using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
+    using Blam::Layout::Object::Type::Constant::k_GameModeMultiplayer;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextMapVariantOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantAdjust;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantAlignMask;
+    using Blam::Layout::Object::Type::Constant::k_PlacementsOffset;
 }
 
-namespace Platform::Capture::System
+namespace Engine::Capture::System
 {
     auto CaptureService::Capture() -> std::shared_ptr<const Snapshot>
     {

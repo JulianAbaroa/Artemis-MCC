@@ -2,10 +2,10 @@ module;
 
 #include <zlib.h>
 
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :DataStream;
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto DataStreamService::ReadData(const std::string& filePath,
         std::int64_t fileOffset, std::int32_t size) const

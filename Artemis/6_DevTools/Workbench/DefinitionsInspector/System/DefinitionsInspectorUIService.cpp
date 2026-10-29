@@ -2,12 +2,12 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.DefinitionsInspector.System;
+module DevTools.Workbench.DefinitionsInspector.System;
 
 import Common.Reflect.Type;
 import Common.Reflect.System;
 import Common.Text.System;
-import Resolved.Definitions.Reflect;
+import Blam.MapModel.Definitions.Reflect;
 import std;
 
 namespace
@@ -165,7 +165,7 @@ namespace
     }
 }
 
-namespace UI::DefinitionsInspector::System
+namespace DevTools::Workbench::DefinitionsInspector::System
 {
     template <typename TResolved>
     auto DefinitionsInspectorUIService::DrawLinks(const TResolved& resolved) -> void
@@ -205,7 +205,7 @@ namespace UI::DefinitionsInspector::System
     {
         if (!resolved)
         {
-            ImGui::TextDisabled("Without Resolved::Definitions for %s (%s)", tagName.c_str(), fourCC.c_str());
+            ImGui::TextDisabled("Without Blam::MapModel::Definitions for %s (%s)", tagName.c_str(), fourCC.c_str());
             return;
         }
 
@@ -404,6 +404,6 @@ namespace UI::DefinitionsInspector::System
         else if (fourCC == "sddt") this->DrawResolved(m_DefinitionsStore.m_Sddt.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "vehi") this->DrawResolved(m_DefinitionsStore.m_Vehi.Get(tagName), fourCC, tagName, ownerHandle);
         else if (fourCC == "weap") this->DrawResolved(m_DefinitionsStore.m_Weap.Get(tagName), fourCC, tagName, ownerHandle);
-        else ImGui::TextDisabled("FourCC \"%s\" without Resolved::Definitions yet.", fourCC.c_str());
+        else ImGui::TextDisabled("FourCC \"%s\" without Blam::MapModel::Definitions yet.", fourCC.c_str());
     }
 }

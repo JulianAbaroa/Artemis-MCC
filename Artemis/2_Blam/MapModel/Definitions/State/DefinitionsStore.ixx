@@ -1,15 +1,15 @@
-export module Resolved.Definitions.State;
+export module Blam.MapModel.Definitions.State;
 
-import Map.Reader.State;
-import Resolved.Definitions.Type;
+import Blam.Map.Reader.State;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Map::Reader::State::TagStore;
+    using Blam::Map::Reader::State::TagStore;
 }
 
-export namespace Resolved::Definitions::State
+export namespace Blam::MapModel::Definitions::State
 {
     // Resolved definitions by group, in the same shape as the map layer TagCatalog.
     // note: The builder adds the definitions, then freezes the stores and they are only read.

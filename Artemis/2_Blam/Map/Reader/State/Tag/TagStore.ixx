@@ -2,11 +2,11 @@ module;
 
 #include <cassert>
 
-export module Map.Reader.State:Tag;
+export module Blam.Map.Reader.State:Tag;
 
 import std;
 
-export namespace Map::Reader::State
+export namespace Blam::Map::Reader::State
 {
     // Tags of one group by tag name. They are added while the map is built, then the store is frozen and only read.
     // note: Reads assert that the store is frozen, and Add asserts that it is not.

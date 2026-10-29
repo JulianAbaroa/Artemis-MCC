@@ -1,8 +1,8 @@
-module Viewer.Camera.System;
+module DevTools.Viewer.Camera.System;
 
 import Common.Math.Type;
 import Common.Math.System;
-import Viewer.Options.Type;
+import DevTools.Viewer.Options.Type;
 import std;
 
 namespace
@@ -11,10 +11,10 @@ namespace
 
     namespace VecMath = Common::Math::System;
 
-    using Viewer::Camera::Type::Key;
-    using Viewer::Camera::Type::Mode;
-    using Viewer::Camera::Type::Follow;
-    using Viewer::Options::Type::Scalar;
+    using DevTools::Viewer::Camera::Type::Key;
+    using DevTools::Viewer::Camera::Type::Mode;
+    using DevTools::Viewer::Camera::Type::Follow;
+    using DevTools::Viewer::Options::Type::Scalar;
     using Common::Math::Type::Vec3;
 
     using Common::Math::Type::k_WorldUp;
@@ -32,7 +32,7 @@ namespace
     constexpr float k_FovSmoothing{ 12.0f };
 }
 
-namespace Viewer::Camera::System
+namespace DevTools::Viewer::Camera::System
 {
     auto CameraService::Update(const std::shared_ptr<const Tick>& tick,
         const Viewport& viewport, bool acceptInput,

@@ -2,11 +2,11 @@
 // Source XML: sLdT.xml
 // Base size: 0x40.
 
-export module Map.Tag.Type:Sldt.Offset;
+export module Blam.Map.Tag.Type:Sldt.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Sldt::Offset
+export namespace Blam::Map::Tag::Type::Sldt::Offset
 {
     constexpr std::size_t k_Unknown                                     = 0x0;  // undefined.
     namespace LightmapDataReferences

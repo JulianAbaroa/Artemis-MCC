@@ -2,33 +2,33 @@ module;
 
 #include <cmath>
 
-module Egocentric.Raycast.System;
+module Views.Raycast.System;
 
 import Common.Engine.Type;
 import Common.Math.System;
 import Common.Geometry.System;
-import Resolved.World.Type;
-import Relations.ObjectGraph.Type;
+import Blam.MapModel.World.Type;
+import Perception.ObjectGraph.Type;
 
 namespace
 {
-    using Egocentric::Raycast::Type::RaycastHit;
-    using Egocentric::Raycast::Type::CachedPart;
-    using Environment::Collidable::Type::CollidablePart;
-    using Egocentric::Raycast::Type::HitKind;
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Environment::Entities::Type::Entity;
-    using Environment::Entities::Type::Entities;
-    using Environment::Players::Type::Player;
-    using Environment::Players::Type::Loadout;
+    using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::CachedPart;
+    using Perception::Collidable::Type::CollidablePart;
+    using Views::Raycast::Type::HitKind;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Perception::Entities::Type::Entity;
+    using Perception::Entities::Type::Entities;
+    using Perception::Players::Type::Player;
+    using Perception::Players::Type::Loadout;
 
-    using Egocentric::Raycast::Type::Constant::k_FallbackAimRange;
-    using Egocentric::Raycast::Type::Constant::k_MaxRayRange;
-    using Egocentric::Raycast::Type::Constant::k_DynamicRejectMargin;
-    using Egocentric::Raycast::Type::Constant::k_PerceptionRange;
-    using Egocentric::Raycast::Type::Constant::k_PerceptionRayCount;
-    using Resolved::World::Type::Raycast::k_BoxPadding;
-    using Relations::ObjectGraph::Type::k_MaxParentDepth;
+    using Views::Raycast::Type::Constant::k_FallbackAimRange;
+    using Views::Raycast::Type::Constant::k_MaxRayRange;
+    using Views::Raycast::Type::Constant::k_DynamicRejectMargin;
+    using Views::Raycast::Type::Constant::k_PerceptionRange;
+    using Views::Raycast::Type::Constant::k_PerceptionRayCount;
+    using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
+    using Perception::ObjectGraph::Type::k_MaxParentDepth;
     using Common::Engine::Type::k_NoHandle;
 
     constexpr float k_InvSqrt3 = 0.57735026918962576451f;
@@ -187,7 +187,7 @@ namespace
     }
 }
 
-namespace Egocentric::Raycast::System
+namespace Views::Raycast::System
 {
     auto RaycastService::Update() -> void
     {

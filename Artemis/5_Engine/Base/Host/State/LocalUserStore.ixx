@@ -1,7 +1,7 @@
-export module Platform.Host.State;
+export module Engine.Base.Host.State;
 
 import Common.Engine.Type;
-import Platform.Host.Type;
+import Engine.Base.Host.Type;
 import std;
 
 namespace
@@ -9,7 +9,7 @@ namespace
     using Common::Engine::Type::k_MaxLocalUsers;
 }
 
-export namespace Platform::Host::State
+export namespace Engine::Base::Host::State
 {
     // Local users Artemis adds next to the real one (split-screen): how many, their XUID, name, profile and gamepad mapping.
     // note: User 0 is always the real one of MCC. Users 1 to 3 are Artemis users.
@@ -17,8 +17,8 @@ export namespace Platform::Host::State
     class LocalUserStore
     {
     private:
-        using PlayerProfile = Platform::Host::Type::PlayerProfile;
-        using GamepadMapping = Platform::Host::Type::GamepadMapping;
+        using PlayerProfile = Engine::Base::Host::Type::PlayerProfile;
+        using GamepadMapping = Engine::Base::Host::Type::GamepadMapping;
 
     public:
         // Generates the XUIDs and names of the Artemis users.

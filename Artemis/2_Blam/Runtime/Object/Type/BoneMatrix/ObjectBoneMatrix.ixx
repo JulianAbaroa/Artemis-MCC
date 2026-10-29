@@ -1,4 +1,4 @@
-export module Tables.Object.Type:BoneMatrix;
+export module Blam.Runtime.Object.Type:BoneMatrix;
 
 import Common.Math.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Math::Type::Vec3;
 }
 
-export namespace Tables::Object::Type::BoneMatrix
+export namespace Blam::Runtime::Object::Type::BoneMatrix
 {
 #pragma pack(push, 1)
     struct BoneMatrix

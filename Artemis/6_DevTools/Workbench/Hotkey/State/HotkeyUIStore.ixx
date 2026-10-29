@@ -1,17 +1,17 @@
-export module UI.Hotkey.State;
+export module DevTools.Workbench.Hotkey.State;
 
-import UI.Hotkey.Type;
+import DevTools.Workbench.Hotkey.Type;
 import std;
 
-export namespace UI::Hotkey::State
+export namespace DevTools::Workbench::Hotkey::State
 {
     // Table of the hotkeys the application listens to.
     class HotkeyUIStore
     {
     private:
-        using Action = UI::Hotkey::Type::Action;
-        using Scope = UI::Hotkey::Type::Scope;
-        using Binding = UI::Hotkey::Type::Binding;
+        using Action = DevTools::Workbench::Hotkey::Type::Action;
+        using Scope = DevTools::Workbench::Hotkey::Type::Scope;
+        using Binding = DevTools::Workbench::Hotkey::Type::Binding;
 
     public:
         HotkeyUIStore() = default;

@@ -1,8 +1,8 @@
-module Gui.Format.System;
+module DevTools.Gui.Format.System;
 import :Hex;
 import std;
 
-namespace Gui::Format::System
+namespace DevTools::Gui::Format::System
 {
     auto HexFormater::Hex8(std::uint8_t value) -> std::string
     {

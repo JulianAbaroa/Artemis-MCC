@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="$(ArtemisRoot)External">
+      <UniqueIdentifier>{4df6b085-0749-52eb-a0a7-4e6fd31caad5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\stb">
+      <UniqueIdentifier>{db6c7053-4b41-5dbf-9707-7070734b0385}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Bench">
       <UniqueIdentifier>{935f48b7-c896-53c2-a46b-c9a4712310b0}</UniqueIdentifier>
     </Filter>
@@ -33,12 +39,6 @@
     </Filter>
     <Filter Include="DefinitionsInspector\Type">
       <UniqueIdentifier>{51a35efb-b888-5823-a279-dc090940a85f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External">
-      <UniqueIdentifier>{02701061-41ef-56f4-b334-afdfe9d3d9de}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\stb">
-      <UniqueIdentifier>{6409241c-3422-5cc6-bac1-a19e27694794}</UniqueIdentifier>
     </Filter>
     <Filter Include="Hotkey">
       <UniqueIdentifier>{74fa8dfb-90ab-5751-b177-a29f6c819035}</UniqueIdentifier>
@@ -159,8 +159,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="UI.Layer.cpp" />
-    <ClCompile Include="UI.Layer.ixx" />
+    <ClCompile Include="DevTools.Workbench.Layer.cpp" />
+    <ClCompile Include="DevTools.Workbench.Layer.ixx" />
     <ClCompile Include="Bench\State\BenchUIStore.cpp">
       <Filter>Bench\State</Filter>
     </ClCompile>
@@ -173,7 +173,7 @@
     <ClCompile Include="Bench\System\BenchUIService.ixx">
       <Filter>Bench\System</Filter>
     </ClCompile>
-    <ClCompile Include="Bench\Type\UI.Bench.Type.ixx">
+    <ClCompile Include="Bench\Type\DevTools.Workbench.Bench.Type.ixx">
       <Filter>Bench\Type</Filter>
     </ClCompile>
     <ClCompile Include="Capture\State\CaptureUIStore.cpp">
@@ -188,7 +188,7 @@
     <ClCompile Include="Capture\System\CaptureUIService.ixx">
       <Filter>Capture\System</Filter>
     </ClCompile>
-    <ClCompile Include="Capture\Type\UI.Capture.Type.ixx">
+    <ClCompile Include="Capture\Type\DevTools.Workbench.Capture.Type.ixx">
       <Filter>Capture\Type</Filter>
     </ClCompile>
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.cpp">
@@ -197,7 +197,7 @@
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.ixx">
       <Filter>DefinitionsInspector\System</Filter>
     </ClCompile>
-    <ClCompile Include="DefinitionsInspector\Type\UI.DefinitionsInspector.Type.ixx">
+    <ClCompile Include="DefinitionsInspector\Type\DevTools.Workbench.DefinitionsInspector.Type.ixx">
       <Filter>DefinitionsInspector\Type</Filter>
     </ClCompile>
     <ClCompile Include="Hotkey\State\HotkeyUIStore.cpp">
@@ -212,7 +212,7 @@
     <ClCompile Include="Hotkey\System\HotkeyUIService.ixx">
       <Filter>Hotkey\System</Filter>
     </ClCompile>
-    <ClCompile Include="Hotkey\Type\UI.Hotkey.Type.ixx">
+    <ClCompile Include="Hotkey\Type\DevTools.Workbench.Hotkey.Type.ixx">
       <Filter>Hotkey\Type</Filter>
     </ClCompile>
     <ClCompile Include="Icon\System\IconLoader.cpp">
@@ -221,7 +221,7 @@
     <ClCompile Include="Icon\System\IconLoader.ixx">
       <Filter>Icon\System</Filter>
     </ClCompile>
-    <ClCompile Include="Icon\Type\UI.Icon.Type.ixx">
+    <ClCompile Include="Icon\Type\DevTools.Workbench.Icon.Type.ixx">
       <Filter>Icon\Type</Filter>
     </ClCompile>
     <ClCompile Include="Launcher\State\LauncherUIStore.cpp">
@@ -236,7 +236,7 @@
     <ClCompile Include="Launcher\System\LauncherUIService.ixx">
       <Filter>Launcher\System</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Type\UI.Launcher.Type.ixx">
+    <ClCompile Include="Launcher\Type\DevTools.Workbench.Launcher.Type.ixx">
       <Filter>Launcher\Type</Filter>
     </ClCompile>
     <ClCompile Include="Logs\State\LogsUIStore.cpp">
@@ -251,7 +251,7 @@
     <ClCompile Include="Logs\System\LogsUIService.ixx">
       <Filter>Logs\System</Filter>
     </ClCompile>
-    <ClCompile Include="Logs\Type\UI.Logs.Type.ixx">
+    <ClCompile Include="Logs\Type\DevTools.Workbench.Logs.Type.ixx">
       <Filter>Logs\Type</Filter>
     </ClCompile>
     <ClCompile Include="ObjectTable\State\ObjectTableUIStore.cpp">
@@ -266,7 +266,7 @@
     <ClCompile Include="ObjectTable\System\ObjectTableUIService.ixx">
       <Filter>ObjectTable\System</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectTable\Type\UI.ObjectTable.Type.ixx">
+    <ClCompile Include="ObjectTable\Type\DevTools.Workbench.ObjectTable.Type.ixx">
       <Filter>ObjectTable\Type</Filter>
     </ClCompile>
     <ClCompile Include="PlayerTable\State\PlayerTableUIStore.cpp">
@@ -281,7 +281,7 @@
     <ClCompile Include="PlayerTable\System\PlayerTableUIService.ixx">
       <Filter>PlayerTable\System</Filter>
     </ClCompile>
-    <ClCompile Include="PlayerTable\Type\UI.PlayerTable.Type.ixx">
+    <ClCompile Include="PlayerTable\Type\DevTools.Workbench.PlayerTable.Type.ixx">
       <Filter>PlayerTable\Type</Filter>
     </ClCompile>
     <Image Include="Resources\Icons\cube-solid.png">
@@ -326,7 +326,7 @@
     <ClCompile Include="Simulation\System\SimulationUIService.ixx">
       <Filter>Simulation\System</Filter>
     </ClCompile>
-    <ClCompile Include="Simulation\Type\UI.Simulation.Type.ixx">
+    <ClCompile Include="Simulation\Type\DevTools.Workbench.Simulation.Type.ixx">
       <Filter>Simulation\Type</Filter>
     </ClCompile>
     <ClCompile Include="TickDump\State\TickDumpUIStore.cpp">
@@ -341,7 +341,7 @@
     <ClCompile Include="TickDump\System\TickDumpUIService.ixx">
       <Filter>TickDump\System</Filter>
     </ClCompile>
-    <ClCompile Include="TickDump\Type\UI.TickDump.Type.ixx">
+    <ClCompile Include="TickDump\Type\DevTools.Workbench.TickDump.Type.ixx">
       <Filter>TickDump\Type</Filter>
     </ClCompile>
     <ClCompile Include="TickTrace\State\TickTraceUIStore.cpp">
@@ -356,14 +356,14 @@
     <ClCompile Include="TickTrace\System\TickTraceUIService.ixx">
       <Filter>TickTrace\System</Filter>
     </ClCompile>
-    <ClCompile Include="TickTrace\Type\UI.TickTrace.Type.ixx">
+    <ClCompile Include="TickTrace\Type\DevTools.Workbench.TickTrace.Type.ixx">
       <Filter>TickTrace\Type</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\stb\stb_implementation.cpp">
-      <Filter>External\stb</Filter>
+      <Filter>$(ArtemisRoot)External\stb</Filter>
     </ClCompile>
     <ClInclude Include="$(ArtemisRoot)External\stb\stb_image.h">
-      <Filter>External\stb</Filter>
+      <Filter>$(ArtemisRoot)External\stb</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,13 +1,13 @@
-export module Export.Pipeline.System;
+export module Bridge.Codec.Pipeline.System;
 
-import Layout.Snapshot.Type;
-import Tables.Layer;
-import Environment.Layer;
-import Egocentric.Layer;
-import Export.Tick.System;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Layer;
+import Perception.Layer;
+import Views.Layer;
+import Bridge.Codec.Tick.System;
 import std;
 
-export namespace Export::Pipeline::System
+export namespace Bridge::Codec::Pipeline::System
 {
     // Stages of Run in the order they run, one name per endStage call.
     inline constexpr std::array<std::string_view, 20> k_PipelineStageNames{
@@ -20,12 +20,12 @@ export namespace Export::Pipeline::System
     class PipelineService
     {
     private:
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
-        using TickService = Export::Tick::System::TickService;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
+        using TickService = Bridge::Codec::Tick::System::TickService;
 
     public:
-        PipelineService(Tables::Layer& tables, Environment::Layer& environment,
-            Egocentric::Layer& egocentric, TickService& tickService) :
+        PipelineService(Blam::Runtime::Layer& tables, Perception::Layer& environment,
+            Views::Layer& egocentric, TickService& tickService) :
             m_Tables(tables), m_Environment(environment), m_Egocentric(egocentric),
             m_TickService(tickService) {}
         ~PipelineService() = default;
@@ -39,9 +39,9 @@ export namespace Export::Pipeline::System
             const std::function<void()>& endStage) -> void;
 
     private:
-        Tables::Layer& m_Tables;
-        Environment::Layer& m_Environment;
-        Egocentric::Layer& m_Egocentric;
+        Blam::Runtime::Layer& m_Tables;
+        Perception::Layer& m_Environment;
+        Views::Layer& m_Egocentric;
         TickService& m_TickService;
     };
 }

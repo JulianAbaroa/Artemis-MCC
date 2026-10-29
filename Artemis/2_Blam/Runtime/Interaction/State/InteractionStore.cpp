@@ -1,6 +1,6 @@
-module Tables.Interaction.State;
+module Blam.Runtime.Interaction.State;
 
-namespace Tables::Interaction::State
+namespace Blam::Runtime::Interaction::State
 {
     auto InteractionStore::Publish(LocalInteractions interactions) -> void
     {

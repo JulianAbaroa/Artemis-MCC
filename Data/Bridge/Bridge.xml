@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!-- Single source of the shared memory of the bridge between Artemis and Python (D65, D135-D138). Tools/TagTranspiler/GenerateBridge.py
-     generates the C++ (Platform.Bridge.Type:Layout, with static_asserts of every offset) and Agent/artemis/bridge_layout.py (numpy
+     generates the C++ (Contract.Bridge.Type, with static_asserts of every offset) and Agent/artemis/bridge_layout.py (numpy
      dtypes with the same offsets) plus a LayoutHash both sides compare. Layout: natural alignment, align= raises it.
      Field types: u8 u16 u32 u64 i8 i16 f32 or a struct of this file. count= makes an array (a number or a const). enum= names an enum
      of this file (C++ uses the enum class, a flags field keeps the raw integer). semantic= names an enum of

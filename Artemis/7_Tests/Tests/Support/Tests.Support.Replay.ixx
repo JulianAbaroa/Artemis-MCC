@@ -1,34 +1,34 @@
 export module Tests.Support.Replay;
 
-import Contract.Bridge;
-import Export.Dump.Type;
-import Export.Dump.System;
-import Export.Layer;
-import Export.Tick.Type;
-import Layout.Snapshot.Type;
-import Layout.Snapshot.System;
+import Contract.Bridge.Type;
+import Bridge.Codec.Dump.Type;
+import Bridge.Codec.Dump.System;
+import Bridge.Codec.Layer;
+import Bridge.Codec.Tick.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Layout.Snapshot.System;
 import std;
 
 namespace
 {
-    using Platform::Bridge::Type::BridgeEntity;
-    using Platform::Bridge::Type::BridgeEvent;
-    using Platform::Bridge::Type::BridgeMatch;
-    using Platform::Bridge::Type::BridgePlayer;
-    using Platform::Bridge::Type::BridgeTick;
-    using Platform::Bridge::Type::BridgeTickHeader;
+    using Contract::Bridge::Type::BridgeEntity;
+    using Contract::Bridge::Type::BridgeEvent;
+    using Contract::Bridge::Type::BridgeMatch;
+    using Contract::Bridge::Type::BridgePlayer;
+    using Contract::Bridge::Type::BridgeTick;
+    using Contract::Bridge::Type::BridgeTickHeader;
 
-    using Export::Dump::Type::TickDumpFileHeader;
-    using Export::Dump::Type::TickDumpWriterState;
-    using Export::Dump::Type::TickRecordHeader;
-    using Layout::Snapshot::Type::SnapshotReaderState;
-    using Layout::Snapshot::Type::SnapshotReadStatus;
+    using Bridge::Codec::Dump::Type::TickDumpFileHeader;
+    using Bridge::Codec::Dump::Type::TickDumpWriterState;
+    using Bridge::Codec::Dump::Type::TickRecordHeader;
+    using ::Blam::Layout::Snapshot::Type::SnapshotReaderState;
+    using ::Blam::Layout::Snapshot::Type::SnapshotReadStatus;
 
-    using Platform::Bridge::Type::k_BridgeLayoutHash;
-    using Export::Dump::Type::k_TickDumpEndMarker;
-    using Export::Dump::Type::k_TickDumpMagic;
-    using Export::Dump::Type::k_TickRecordMarker;
-    using Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
+    using Contract::Bridge::Type::k_BridgeLayoutHash;
+    using Bridge::Codec::Dump::Type::k_TickDumpEndMarker;
+    using Bridge::Codec::Dump::Type::k_TickDumpMagic;
+    using Bridge::Codec::Dump::Type::k_TickRecordMarker;
+    using ::Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
 
     // Where a read of the recorded .tdump stopped.
     enum class GoldenStatus : std::uint8_t
@@ -102,7 +102,7 @@ export namespace Tests::Support::Replay
     // param exportLayer: The Export layer of layers that are built and have their map loaded. The other layers are the ones it
     // was built with.
     // note: Stops at the end of the file or at the next record that has k_SnapshotFirstAfterLoad, where the game loaded another map.
-    auto Replay(Export::Layer& exportLayer, std::istream& sdump, std::istream& tdump) -> ReplayResult
+    auto Replay(Bridge::Codec::Layer& exportLayer, std::istream& sdump, std::istream& tdump) -> ReplayResult
     {
         ReplayResult result{};
 
@@ -122,7 +122,7 @@ export namespace Tests::Support::Replay
         }
 
         SnapshotReaderState reader{};
-        if (const std::string reason{ Layout::Snapshot::System::OpenReader(sdump, reader) }; !reason.empty())
+        if (const std::string reason{ ::Blam::Layout::Snapshot::System::OpenReader(sdump, reader) }; !reason.empty())
         {
             result.Reason = "the .sdump cannot be read: " + reason;
             return result;
@@ -136,7 +136,7 @@ export namespace Tests::Support::Replay
             return result;
         }
 
-        auto next{ Layout::Snapshot::System::ReadRecord(sdump, reader) };
+        auto next{ ::Blam::Layout::Snapshot::System::ReadRecord(sdump, reader) };
         if (next.Status != SnapshotReadStatus::Record)
         {
             result.Reason = next.Reason.empty() ? "the .sdump has no records" : "the .sdump has no records: " + next.Reason;
@@ -150,7 +150,7 @@ export namespace Tests::Support::Replay
         }
 
         TickDumpWriterState writer{};
-        Export::Dump::System::Begin(writer);
+        Bridge::Codec::Dump::System::Begin(writer);
         auto flat{ std::make_unique<BridgeTick>() };
         std::vector<char> recorded{};
 
@@ -163,11 +163,11 @@ export namespace Tests::Support::Replay
             const auto tick{ exportLayer.m_TickStore.Acquire() };
 
             // The same header the recorder flattened with: the clock fields belong to the bridge.
-            Export::Dump::System::ClearHeader(*flat);
+            Bridge::Codec::Dump::System::ClearHeader(*flat);
             exportLayer.m_FlatService.Flatten(*tick, *flat);
 
             std::ostringstream buffer{};
-            Export::Dump::System::WriteRecord(buffer, *flat, tick->Match != nullptr, record.DroppedBefore, writer);
+            Bridge::Codec::Dump::System::WriteRecord(buffer, *flat, tick->Match != nullptr, record.DroppedBefore, writer);
             const std::string replayed{ buffer.str() };
             result.Replayed.insert(result.Replayed.end(), replayed.begin(), replayed.end());
 
@@ -184,7 +184,7 @@ export namespace Tests::Support::Replay
                 std::memcpy(&result.GameTick, recorded.data() + k_GameTickOffset, sizeof(result.GameTick));
             }
 
-            next = Layout::Snapshot::System::ReadRecord(sdump, reader);
+            next = ::Blam::Layout::Snapshot::System::ReadRecord(sdump, reader);
         }
 
         if (next.Status == SnapshotReadStatus::Error)

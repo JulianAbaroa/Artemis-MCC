@@ -1,18 +1,18 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :Geometry.Info;
 
 namespace
 {
-    using Map::Reader::Type::Constant::k_FooterSize;
-    using Map::Reader::Type::Constant::k_FooterVBCountOffset;
-    using Map::Reader::Type::Constant::k_FooterIBCountOffset;
-    using Map::Reader::Type::Constant::k_InfoStride;
-    using Map::Reader::Type::Constant::k_AuxSize;
-    using Map::Reader::Type::Constant::k_InfoAuxOffset;
-    using Map::Reader::Type::Constant::k_InfoDataLengthOffset;
+    using Blam::Map::Reader::Type::Constant::k_FooterSize;
+    using Blam::Map::Reader::Type::Constant::k_FooterVBCountOffset;
+    using Blam::Map::Reader::Type::Constant::k_FooterIBCountOffset;
+    using Blam::Map::Reader::Type::Constant::k_InfoStride;
+    using Blam::Map::Reader::Type::Constant::k_AuxSize;
+    using Blam::Map::Reader::Type::Constant::k_InfoAuxOffset;
+    using Blam::Map::Reader::Type::Constant::k_InfoDataLengthOffset;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto GeometryInfoService::ReadFooter(const Zone_TagResourcesObject& entry,
         std::int32_t& outVBCount, std::int32_t& outIBCount,

@@ -1,30 +1,30 @@
-module Export.Flat.System;
+module Bridge.Codec.Flat.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Environment.Entities.Type;
-import Environment.Players.Type;
-import Environment.Events.Type;
-import Environment.Match.Type;
+import Perception.Entities.Type;
+import Perception.Players.Type;
+import Perception.Events.Type;
+import Perception.Match.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Environment::Entities::Type::Entity;
-    using Environment::Players::Type::Player;
-    using Environment::Events::Type::GameEvent;
-    using Environment::Match::Type::MatchScore;
-    using Platform::Bridge::Type::BridgeVec3;
-    using Platform::Bridge::Type::BridgePlayer;
-    using Platform::Bridge::Type::BridgeEntity;
-    using Platform::Bridge::Type::BridgeMatch;
-    using Platform::Bridge::Type::BridgeEvent;
-    using Platform::Bridge::Type::BridgeTickFlag;
+    using Perception::Entities::Type::Entity;
+    using Perception::Players::Type::Player;
+    using Perception::Events::Type::GameEvent;
+    using Perception::Match::Type::MatchScore;
+    using Contract::Bridge::Type::BridgeVec3;
+    using Contract::Bridge::Type::BridgePlayer;
+    using Contract::Bridge::Type::BridgeEntity;
+    using Contract::Bridge::Type::BridgeMatch;
+    using Contract::Bridge::Type::BridgeEvent;
+    using Contract::Bridge::Type::BridgeTickFlag;
 
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
-    using Platform::Bridge::Type::k_BridgeNotLocal;
+    using Contract::Bridge::Type::k_BridgeNotLocal;
 
     // Value of an optional float that is absent (Shield, Vitality).
     constexpr float k_Absent{ std::numeric_limits<float>::quiet_NaN() };
@@ -126,7 +126,7 @@ namespace
     }
 }
 
-namespace Export::Flat::System
+namespace Bridge::Codec::Flat::System
 {
     auto FlatService::Flatten(const Tick& tick, BridgeTick& flat) const -> void
     {

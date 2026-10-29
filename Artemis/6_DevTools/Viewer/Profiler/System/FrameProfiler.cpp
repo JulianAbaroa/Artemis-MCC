@@ -2,7 +2,7 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Profiler.System;
+module DevTools.Viewer.Profiler.System;
 
 import std;
 
@@ -10,8 +10,8 @@ namespace
 {
     using std::chrono::duration;
 
-    using Viewer::Profiler::Type::k_GpuCount;
-    using Viewer::Profiler::Type::k_CpuCount;
+    using DevTools::Viewer::Profiler::Type::k_GpuCount;
+    using DevTools::Viewer::Profiler::Type::k_CpuCount;
 
     constexpr std::array<const char*, k_CpuCount> k_CpuNames{
         "scene", "dynamic", "zone", "raycast", "aim", "draw(submit)", "FRAME" };
@@ -19,7 +19,7 @@ namespace
         "clear", "map", "dynamic", "zone", "raycast", "aim" };
 }
 
-namespace Viewer::Profiler::System
+namespace DevTools::Viewer::Profiler::System
 {
     auto FrameProfiler::CreateQueries(ID3D11Device* device) -> void
     {

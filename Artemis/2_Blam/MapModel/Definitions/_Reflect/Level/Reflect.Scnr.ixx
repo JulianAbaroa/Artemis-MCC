@@ -1,15 +1,15 @@
-export module Resolved.Definitions.Reflect:Scnr;
+export module Blam.MapModel.Definitions.Reflect:Scnr;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Scnr::TriggerVolume;
-    using Resolved::Definitions::Type::Scnr::BoundaryTrigger;
-    using Resolved::Definitions::Type::Scnr::SoftCeiling;
-    using Resolved::Definitions::Type::Scnr::Scnr;
+    using Blam::MapModel::Definitions::Type::Scnr::TriggerVolume;
+    using Blam::MapModel::Definitions::Type::Scnr::BoundaryTrigger;
+    using Blam::MapModel::Definitions::Type::Scnr::SoftCeiling;
+    using Blam::MapModel::Definitions::Type::Scnr::Scnr;
 }
 
 export namespace Common::Reflect::Type

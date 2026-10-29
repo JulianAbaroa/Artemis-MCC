@@ -1,13 +1,13 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :Formula;
 
 namespace
 {
-    using Map::Reader::Type::Constant::k_FixupMask;
-    using Map::Reader::Type::Magic::k_Expand;
+    using Blam::Map::Reader::Type::Constant::k_FixupMask;
+    using Blam::Map::Reader::Type::Magic::k_Expand;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto FormulaService::Initialize(HeaderInfo headerInfo) -> void
     {

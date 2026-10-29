@@ -1,16 +1,16 @@
-export module Map.Reader.System:Formula;
+export module Blam.Map.Reader.System:Formula;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Converts the addresses stored in the map into offsets in the map file.
     // note: Initialize must be called with the header values before any conversion.
     class FormulaService
     {
     private:
-        using HeaderInfo = Map::Reader::Type::Info::HeaderInfo;
+        using HeaderInfo = Blam::Map::Reader::Type::Info::HeaderInfo;
 
     public:
         FormulaService() = default;

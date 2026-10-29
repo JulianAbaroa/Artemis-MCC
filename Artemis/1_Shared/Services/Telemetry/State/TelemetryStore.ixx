@@ -1,8 +1,8 @@
-export module Service.Telemetry.State;
+export module Services.Telemetry.State;
 
 import std;
 
-export namespace Service::Telemetry::State
+export namespace Services::Telemetry::State
 {
     // Lock-free counters fed by hooks and threads, plus the rates derived from them.
     // note: TelemetryService::Update resets the counters and fills the outputs.

@@ -1,4 +1,4 @@
-export module Resolved.Definitions.Type:Scnr;
+export module Blam.MapModel.Definitions.Type:Scnr;
 
 import Common.Math.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Math::Type::Vec3;
 }
 
-export namespace Resolved::Definitions::Type::Scnr
+export namespace Blam::MapModel::Definitions::Type::Scnr
 {
     // Last engine type of a trigger volume and of a soft ceiling that has a kind. Higher types are invalid.
     inline constexpr std::uint16_t k_LastTriggerVolumeKind{ 1 };

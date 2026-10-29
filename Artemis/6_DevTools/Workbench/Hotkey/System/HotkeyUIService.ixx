@@ -1,29 +1,29 @@
-export module UI.Hotkey.System;
+export module DevTools.Workbench.Hotkey.System;
 
-import Service.Settings.State;
-import Platform.Window.Type;
-import Viewer.Overlay.State;
-import UI.Hotkey.Type;
-import UI.Hotkey.State;
-import UI.Launcher.State;
-import UI.Capture.State;
+import Services.Settings.State;
+import Engine.Render.Window.Type;
+import DevTools.Viewer.Overlay.State;
+import DevTools.Workbench.Hotkey.Type;
+import DevTools.Workbench.Hotkey.State;
+import DevTools.Workbench.Launcher.State;
+import DevTools.Workbench.Capture.State;
 
-export namespace UI::Hotkey::System
+export namespace DevTools::Workbench::Hotkey::System
 {
     // Runs the action of the hotkey pressed in the game window.
     class HotkeyUIService
     {
     private:
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using WindowMessage = Platform::Window::Type::WindowMessage;
+        using WindowMessage = Engine::Render::Window::Type::WindowMessage;
 
-        using OverlayStore = Viewer::Overlay::State::OverlayStore;
+        using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
 
-        using Action = UI::Hotkey::Type::Action;
-        using HotkeyUIStore = UI::Hotkey::State::HotkeyUIStore;
-        using LauncherUIStore = UI::Launcher::State::LauncherUIStore;
-        using CaptureUIStore = UI::Capture::State::CaptureUIStore;
+        using Action = DevTools::Workbench::Hotkey::Type::Action;
+        using HotkeyUIStore = DevTools::Workbench::Hotkey::State::HotkeyUIStore;
+        using LauncherUIStore = DevTools::Workbench::Launcher::State::LauncherUIStore;
+        using CaptureUIStore = DevTools::Workbench::Capture::State::CaptureUIStore;
 
     public:
         HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,

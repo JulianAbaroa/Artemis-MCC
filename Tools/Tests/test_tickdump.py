@@ -268,7 +268,7 @@ def test_ticks_in_one_file_only_count_unless_overlap(tmp_path):
 
 
 def test_events_before_the_compared_range_are_left_out(tmp_path):
-    # A recording armed late writes the whole event window of the BridgeTick in its first record (Export::Dump::System::WriteRecord).
+    # A recording armed late writes the whole event window of the BridgeTick in its first record (Bridge::Codec::Dump::System::WriteRecord).
     run = Film(range(4, 10), events=lambda t, rows: [Event(1, 2)] + rows if t == 4 else rows)
     assert DiffOf(tmp_path, Film(), run, overlap=True).is_equal
     late = Film(range(4, 10), events=lambda t, rows: rows)

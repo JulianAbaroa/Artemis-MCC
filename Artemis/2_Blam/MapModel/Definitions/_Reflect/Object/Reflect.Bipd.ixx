@@ -1,14 +1,14 @@
-export module Resolved.Definitions.Reflect:Bipd;
+export module Blam.MapModel.Definitions.Reflect:Bipd;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Bipd::Bipd;
+    using Blam::MapModel::Definitions::Type::Bipd::Bipd;
 }
 
 export namespace Common::Reflect::Type

@@ -1,6 +1,6 @@
-export module Viewer.Layer;
+export module DevTools.Viewer.Layer;
 
-export namespace Viewer
+export namespace DevTools::Viewer
 {
     class Layer
     {

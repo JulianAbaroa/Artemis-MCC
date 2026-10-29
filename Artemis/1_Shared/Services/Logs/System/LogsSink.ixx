@@ -1,9 +1,9 @@
-export module Service.Logs.System;
+export module Services.Logs.System;
 
 import Common.Log.Type;
-import Service.Logs.Type;
-import Service.Logs.State;
-import Service.Settings.State;
+import Services.Logs.Type;
+import Services.Logs.State;
+import Services.Settings.State;
 import std;
 
 namespace
@@ -11,7 +11,7 @@ namespace
     using Common::Log::Type::LogSink;
 }
 
-export namespace Service::Logs::System
+export namespace Services::Logs::System
 {
     // Log sink of the DLL. Stamps each message, keeps it in the LogsStore for the UI and appends it to the log file.
     // note: Thread-safe. Write can be called from any thread.
@@ -20,9 +20,9 @@ export namespace Service::Logs::System
     private:
         using LogMessage = Common::Log::Type::LogMessage;
 
-        using LogEntry = Service::Logs::Type::LogEntry;
-        using LogsStore = Service::Logs::State::LogsStore;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using LogEntry = Services::Logs::Type::LogEntry;
+        using LogsStore = Services::Logs::State::LogsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
     public:
         LogsSink(SettingsStore& settingsStore, LogsStore& logsStore) :

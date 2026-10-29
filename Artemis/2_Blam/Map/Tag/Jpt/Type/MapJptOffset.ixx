@@ -2,11 +2,11 @@
 // Source XML: jpt!.xml
 // Base size: 0xE8.
 
-export module Map.Tag.Type:Jpt.Offset;
+export module Blam.Map.Tag.Type:Jpt.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Jpt::Offset
+export namespace Blam::Map::Tag::Type::Jpt::Offset
 {
     constexpr std::size_t k_Radius                                      = 0x0;  // rangef.
     constexpr std::size_t k_CutoffScale                                 = 0x8;  // float32.

@@ -1,7 +1,7 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Jpt;
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto JptBuilder::Build(const JptObject& jpt) -> Jpt
     {

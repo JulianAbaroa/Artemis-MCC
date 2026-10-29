@@ -46,11 +46,11 @@
     <ClCompile Include="Logs\State\LogsStore.ixx" />
     <ClCompile Include="Logs\System\LogsSink.cpp" />
     <ClCompile Include="Logs\System\LogsSink.ixx" />
-    <ClCompile Include="Logs\Type\Service.Logs.Type.ixx" />
+    <ClCompile Include="Logs\Type\Services.Logs.Type.ixx" />
     <ClCompile Include="Preferences\System\PreferencesService.cpp" />
     <ClCompile Include="Preferences\System\PreferencesService.ixx" />
-    <ClCompile Include="Preferences\Type\Service.Preferences.Type.ixx" />
-    <ClCompile Include="Service.Layer.ixx" />
+    <ClCompile Include="Preferences\Type\Services.Preferences.Type.ixx" />
+    <ClCompile Include="Services.Layer.ixx" />
     <ClCompile Include="Settings\State\SettingsStore.cpp" />
     <ClCompile Include="Settings\State\SettingsStore.ixx" />
     <ClCompile Include="Settings\System\SettingsService.cpp" />

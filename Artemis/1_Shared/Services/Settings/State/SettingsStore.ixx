@@ -1,8 +1,8 @@
-export module Service.Settings.State;
+export module Services.Settings.State;
 
 import std;
 
-export namespace Service::Settings::State
+export namespace Services::Settings::State
 {
     // Shared runtime settings.
     // note: Thread-safe. Flags are atomics and path strings are guarded by a mutex.

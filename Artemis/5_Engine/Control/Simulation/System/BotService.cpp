@@ -1,85 +1,85 @@
-module Platform.Simulation.System;
+module Engine.Control.Simulation.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
-import Platform.Memory.Type;
+import Engine.Base.Memory.Type;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Simulation::Type::SessionSnapshot;
-    using Platform::Simulation::Type::SessionPlayer;
-    using Platform::Simulation::Type::MachineIdentifier;
-    using Platform::Simulation::Type::Bot;
-    using Platform::Simulation::Type::FakeMachine;
-    using Platform::Simulation::Type::SetMachinesFunction;
-    using Platform::Simulation::Type::ApplyPlayerAddedFunction;
-    using Platform::Simulation::Type::ApplyPlayerConfigurationFunction;
-    using Platform::Simulation::Type::TeamRequest;
-    using Platform::Simulation::Type::GatherInteractionsFunction;
-    using Platform::Simulation::Type::UnitSelectorFunction;
-    using Platform::Simulation::Type::NextZoomLevelFunction;
-    using Platform::Simulation::Type::CanUnitZoomFunction;
-    using Control::Action::Type::UnitClientState;
+    using Engine::Control::Simulation::Type::SessionSnapshot;
+    using Engine::Control::Simulation::Type::SessionPlayer;
+    using Engine::Control::Simulation::Type::MachineIdentifier;
+    using Engine::Control::Simulation::Type::Bot;
+    using Engine::Control::Simulation::Type::FakeMachine;
+    using Engine::Control::Simulation::Type::SetMachinesFunction;
+    using Engine::Control::Simulation::Type::ApplyPlayerAddedFunction;
+    using Engine::Control::Simulation::Type::ApplyPlayerConfigurationFunction;
+    using Engine::Control::Simulation::Type::TeamRequest;
+    using Engine::Control::Simulation::Type::GatherInteractionsFunction;
+    using Engine::Control::Simulation::Type::UnitSelectorFunction;
+    using Engine::Control::Simulation::Type::NextZoomLevelFunction;
+    using Engine::Control::Simulation::Type::CanUnitZoomFunction;
+    using ::Control::Action::Type::UnitClientState;
 
-    using Platform::Simulation::Type::k_MaxMachines;
+    using Engine::Control::Simulation::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
-    using Platform::Simulation::Type::k_MaxPlayersPerMachine;
-    using Platform::Simulation::Type::k_ObjectsSlot;
-    using Platform::Simulation::Type::k_PlayersSlot;
-    using Platform::Simulation::Type::k_PlayersGlobalsSlot;
-    using Platform::Simulation::Type::k_GameOptionsSlot;
-    using Platform::Simulation::Type::k_DataArrayCapacity;
-    using Platform::Simulation::Type::k_DataArrayElementSize;
-    using Platform::Simulation::Type::k_DataArrayData;
-    using Platform::Simulation::Type::k_PlayerSalt;
-    using Platform::Simulation::Type::k_PlayerFlags;
-    using Platform::Simulation::Type::k_PlayerIdentifier;
-    using Platform::Simulation::Type::k_PlayerMachineIdentifier;
-    using Platform::Simulation::Type::k_PlayerMachineIndex;
-    using Platform::Simulation::Type::k_PlayerUserIndex;
-    using Platform::Simulation::Type::k_PlayerController;
-    using Platform::Simulation::Type::k_PlayerUnit;
-    using Platform::Simulation::Type::k_ObjectHeaderSize;
-    using Platform::Simulation::Type::k_ObjectHeaderData;
-    using Platform::Simulation::Type::k_UnitFlags;
-    using Platform::Simulation::Type::k_UnitActionSlot;
-    using Platform::Simulation::Type::k_PlayerGamerTag;
-    using Platform::Simulation::Type::k_PlayerTeam;
-    using Platform::Simulation::Type::k_PlayerConfiguration;
-    using Platform::Simulation::Type::k_ConfigurationTeam;
-    using Platform::Simulation::Type::k_MaxTeams;
+    using Engine::Control::Simulation::Type::k_MaxPlayersPerMachine;
+    using Engine::Control::Simulation::Type::k_ObjectsSlot;
+    using Engine::Control::Simulation::Type::k_PlayersSlot;
+    using Engine::Control::Simulation::Type::k_PlayersGlobalsSlot;
+    using Engine::Control::Simulation::Type::k_GameOptionsSlot;
+    using Engine::Control::Simulation::Type::k_DataArrayCapacity;
+    using Engine::Control::Simulation::Type::k_DataArrayElementSize;
+    using Engine::Control::Simulation::Type::k_DataArrayData;
+    using Engine::Control::Simulation::Type::k_PlayerSalt;
+    using Engine::Control::Simulation::Type::k_PlayerFlags;
+    using Engine::Control::Simulation::Type::k_PlayerIdentifier;
+    using Engine::Control::Simulation::Type::k_PlayerMachineIdentifier;
+    using Engine::Control::Simulation::Type::k_PlayerMachineIndex;
+    using Engine::Control::Simulation::Type::k_PlayerUserIndex;
+    using Engine::Control::Simulation::Type::k_PlayerController;
+    using Engine::Control::Simulation::Type::k_PlayerUnit;
+    using Engine::Control::Simulation::Type::k_ObjectHeaderSize;
+    using Engine::Control::Simulation::Type::k_ObjectHeaderData;
+    using Engine::Control::Simulation::Type::k_UnitFlags;
+    using Engine::Control::Simulation::Type::k_UnitActionSlot;
+    using Engine::Control::Simulation::Type::k_PlayerGamerTag;
+    using Engine::Control::Simulation::Type::k_PlayerTeam;
+    using Engine::Control::Simulation::Type::k_PlayerConfiguration;
+    using Engine::Control::Simulation::Type::k_ConfigurationTeam;
+    using Engine::Control::Simulation::Type::k_MaxTeams;
     using Common::Engine::Type::k_GamerTagLength;
-    using Platform::Simulation::Type::k_MachineMask;
-    using Platform::Simulation::Type::k_MachineIdentifiers;
-    using Platform::Simulation::Type::k_LocalMachineIndex;
-    using Platform::Simulation::Type::k_OptionsPlayers;
-    using Platform::Simulation::Type::k_OptionsPlayerSize;
-    using Platform::Simulation::Type::k_OptionsPlayerConfiguration;
-    using Platform::Simulation::Type::k_PlayerConfigurationSize;
-    using Platform::Simulation::Type::k_PlayerUpdateSize;
-    using Platform::Simulation::Type::k_UpdatePlayerIndex;
-    using Platform::Simulation::Type::k_UpdateIdentifier;
-    using Platform::Simulation::Type::k_UpdateType;
-    using Platform::Simulation::Type::k_UpdateMachine;
-    using Platform::Simulation::Type::k_UpdateUserIndex;
-    using Platform::Simulation::Type::k_UpdateController;
-    using Platform::Simulation::Type::k_UpdateJoinedInProgress;
-    using Platform::Simulation::Type::k_UpdateConfiguration;
-    using Platform::Simulation::Type::k_PlayerUpdateAdded;
-    using Platform::Simulation::Type::k_InteractionRecordCount;
-    using Platform::Simulation::Type::k_InteractionRecordSize;
-    using Platform::Simulation::Type::k_InteractionRecordObject;
-    using Platform::Simulation::Type::k_UnitWeaponSlot;
-    using Platform::Simulation::Type::k_UnitInventoryVersion;
-    using Platform::Simulation::Type::k_UnitGrenadeType;
-    using Platform::Simulation::Type::k_UnitZoomLevel;
-    using Platform::Simulation::Type::k_ObjectParent;
-    using Platform::Simulation::Type::k_UnitSeat;
-    using Platform::Simulation::Type::k_UnitDesiredAim;
+    using Engine::Control::Simulation::Type::k_MachineMask;
+    using Engine::Control::Simulation::Type::k_MachineIdentifiers;
+    using Engine::Control::Simulation::Type::k_LocalMachineIndex;
+    using Engine::Control::Simulation::Type::k_OptionsPlayers;
+    using Engine::Control::Simulation::Type::k_OptionsPlayerSize;
+    using Engine::Control::Simulation::Type::k_OptionsPlayerConfiguration;
+    using Engine::Control::Simulation::Type::k_PlayerConfigurationSize;
+    using Engine::Control::Simulation::Type::k_PlayerUpdateSize;
+    using Engine::Control::Simulation::Type::k_UpdatePlayerIndex;
+    using Engine::Control::Simulation::Type::k_UpdateIdentifier;
+    using Engine::Control::Simulation::Type::k_UpdateType;
+    using Engine::Control::Simulation::Type::k_UpdateMachine;
+    using Engine::Control::Simulation::Type::k_UpdateUserIndex;
+    using Engine::Control::Simulation::Type::k_UpdateController;
+    using Engine::Control::Simulation::Type::k_UpdateJoinedInProgress;
+    using Engine::Control::Simulation::Type::k_UpdateConfiguration;
+    using Engine::Control::Simulation::Type::k_PlayerUpdateAdded;
+    using Engine::Control::Simulation::Type::k_InteractionRecordCount;
+    using Engine::Control::Simulation::Type::k_InteractionRecordSize;
+    using Engine::Control::Simulation::Type::k_InteractionRecordObject;
+    using Engine::Control::Simulation::Type::k_UnitWeaponSlot;
+    using Engine::Control::Simulation::Type::k_UnitInventoryVersion;
+    using Engine::Control::Simulation::Type::k_UnitGrenadeType;
+    using Engine::Control::Simulation::Type::k_UnitZoomLevel;
+    using Engine::Control::Simulation::Type::k_ObjectParent;
+    using Engine::Control::Simulation::Type::k_UnitSeat;
+    using Engine::Control::Simulation::Type::k_UnitDesiredAim;
     using Common::Math::Type::k_TwoPi;
 
     // Step of the weapon and grenade selectors: the next one, as a local client asks for it (0x61a38).
@@ -190,7 +190,7 @@ namespace
     }
 }
 
-namespace Platform::Simulation::System
+namespace Engine::Control::Simulation::System
 {
     auto BotService::Update(std::uintptr_t threadContext) -> void
     {

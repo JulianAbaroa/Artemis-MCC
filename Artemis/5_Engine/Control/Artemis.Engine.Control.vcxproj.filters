@@ -46,13 +46,13 @@
     <ClCompile Include="Input\Hook\PlayerActionDetour.ixx">
       <Filter>Input\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Input\Platform.Input.Hook.ixx">
+    <ClCompile Include="Input\Engine.Control.Input.Hook.ixx">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="Input\Platform.Input.State.ixx">
+    <ClCompile Include="Input\Engine.Control.Input.State.ixx">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="Input\Platform.Input.System.ixx">
+    <ClCompile Include="Input\Engine.Control.Input.System.ixx">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="Input\State\PlayerActionStore.cpp">
@@ -70,7 +70,7 @@
     <ClCompile Include="Input\System\ActionSource.ixx">
       <Filter>Input\System</Filter>
     </ClCompile>
-    <ClCompile Include="Input\Type\Platform.Input.Type.ixx">
+    <ClCompile Include="Input\Type\Engine.Control.Input.Type.ixx">
       <Filter>Input\Type</Filter>
     </ClCompile>
     <ClCompile Include="Simulation\Hook\SetMachinesDetour.cpp">
@@ -79,7 +79,7 @@
     <ClCompile Include="Simulation\Hook\SetMachinesDetour.ixx">
       <Filter>Simulation\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Simulation\Platform.Simulation.Hook.ixx">
+    <ClCompile Include="Simulation\Engine.Control.Simulation.Hook.ixx">
       <Filter>Simulation</Filter>
     </ClCompile>
     <ClCompile Include="Simulation\State\BotStore.cpp">
@@ -94,7 +94,7 @@
     <ClCompile Include="Simulation\System\BotService.ixx">
       <Filter>Simulation\System</Filter>
     </ClCompile>
-    <ClCompile Include="Simulation\Type\Platform.Simulation.Type.ixx">
+    <ClCompile Include="Simulation\Type\Engine.Control.Simulation.Type.ixx">
       <Filter>Simulation\Type</Filter>
     </ClCompile>
   </ItemGroup>

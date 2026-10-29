@@ -1,15 +1,15 @@
-export module Tables.Object.State:BoneMatrices;
+export module Blam.Runtime.Object.State:BoneMatrices;
 
-import Tables.Object.Type;
+import Blam.Runtime.Object.Type;
 import std;
 
-export namespace Tables::Object::State
+export namespace Blam::Runtime::Object::State
 {
     class BoneMatricesStore
     {
     private:
-        using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
-        using BoneMatrixTables = Tables::Object::Type::BoneMatrix::BoneMatrixTables;
+        using BoneMatrixTable = Blam::Runtime::Object::Type::BoneMatrix::BoneMatrixTable;
+        using BoneMatrixTables = Blam::Runtime::Object::Type::BoneMatrix::BoneMatrixTables;
 
     public:
         BoneMatricesStore() = default;

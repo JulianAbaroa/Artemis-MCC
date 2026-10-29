@@ -1,15 +1,15 @@
-export module Service.Logs.State;
+export module Services.Logs.State;
 
-import Service.Logs.Type;
+import Services.Logs.Type;
 import std;
 
-export namespace Service::Logs::State
+export namespace Services::Logs::State
 {
     // Thread-safe buffer of the most recent log entries, oldest first.
     class LogsStore
     {
     private:
-        using LogEntry = Service::Logs::Type::LogEntry;
+        using LogEntry = Services::Logs::Type::LogEntry;
 
     public:
         LogsStore() = default;

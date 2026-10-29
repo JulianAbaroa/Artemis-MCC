@@ -2,25 +2,25 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :DynamicPass;
 
 import Common.Engine.Type;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Viewer.Selection.State;
-import Viewer.Style.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import DevTools.Viewer.Selection.State;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::MeshInstance;
-    using Viewer::Style::Type::Color;
+    using Engine::Render::Type::MeshInstance;
+    using DevTools::Viewer::Style::Type::Color;
 
-    using Platform::Render::Type::SurfaceMode;
-    using Platform::Render::Type::VertexLayout;
+    using Engine::Render::Type::SurfaceMode;
+    using Engine::Render::Type::VertexLayout;
 
-    using Viewer::Style::Type::k_Selected;
+    using DevTools::Viewer::Style::Type::k_Selected;
     using Common::Engine::Type::k_NoHandle;
 
     constexpr UINT k_InitialGeometryVertices{ 1u << 16 };
@@ -28,7 +28,7 @@ namespace
     constexpr std::uint32_t k_Invalid{ (std::numeric_limits<std::uint32_t>::max)() };
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto DynamicPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Collidables>& collidables,

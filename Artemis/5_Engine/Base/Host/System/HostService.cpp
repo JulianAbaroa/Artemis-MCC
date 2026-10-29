@@ -1,21 +1,21 @@
-module Platform.Host.System;
+module Engine.Base.Host.System;
 
-import Platform.Memory.Type;
-import Platform.Host.Type;
+import Engine.Base.Memory.Type;
+import Engine.Base.Host.Type;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Host::Type::k_HostModuleName;
+    using Engine::Base::Host::Type::k_HostModuleName;
 
     // Inside the GameManager signature, "mov [rip + disp32], rax" stores the vtable in the object: disp32 at +10, next instruction at +14.
     constexpr std::size_t k_StoreDisplacementOffset{ 10 };
     constexpr std::size_t k_StoreNextInstructionOffset{ 14 };
 }
 
-namespace Platform::Host::System
+namespace Engine::Base::Host::System
 {
     auto HostService::GetFunctionAddress(std::size_t index) -> void*
     {

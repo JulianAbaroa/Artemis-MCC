@@ -1,29 +1,29 @@
-export module Map.Reader.System:Geometry.ResourcePage;
+export module Blam.Map.Reader.System:Geometry.ResourcePage;
 
 import :FileLocator;
 import :DataStream;
 import :Formula;
 
 import Common.Log.System;
-import Map.Reader.State;
-import Map.Tag.Type;
+import Blam.Map.Reader.State;
+import Blam.Map.Tag.Type;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads the raw page that holds the buffers of a geometry resource.
     class GeometryResourcePageService
     {
     private:
-        using ZoneObject = Map::Tag::Type::Zone::Object::ZoneObject;
-        using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
-        using PlayObject = Map::Tag::Type::Play::Object::PlayObject;
+        using ZoneObject = Blam::Map::Tag::Type::Zone::Object::ZoneObject;
+        using Zone_TagResourcesObject = Blam::Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+        using PlayObject = Blam::Map::Tag::Type::Play::Object::PlayObject;
 
         using Log = Common::Log::System::Log;
-        using FileStore = Map::Reader::State::FileStore;
-        using FileLocatorService = Map::Reader::System::FileLocatorService;
-        using DataStreamService = Map::Reader::System::DataStreamService;
-        using FormulaService = Map::Reader::System::FormulaService;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using FileLocatorService = Blam::Map::Reader::System::FileLocatorService;
+        using DataStreamService = Blam::Map::Reader::System::DataStreamService;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
 
     public:
         GeometryResourcePageService(Log& log, FileStore& fileStore,

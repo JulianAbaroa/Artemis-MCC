@@ -1,6 +1,6 @@
-export module Platform.Memory.Type:Signature;
+export module Engine.Base.Memory.Type:Signature;
 
-export namespace Platform::Memory::Type::Signature
+export namespace Engine::Base::Memory::Type::Signature
 {
     // Byte pattern of a game function. "??" matches any byte.
     struct Signature

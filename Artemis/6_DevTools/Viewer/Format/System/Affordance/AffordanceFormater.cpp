@@ -1,7 +1,7 @@
-module Viewer.Format.System;
+module DevTools.Viewer.Format.System;
 import :Affordance;
 
-namespace Viewer::Format::System
+namespace DevTools::Viewer::Format::System
 {
     auto AffordanceFormater::BehaviorToString(AffordanceBehavior behavior) -> const char*
     {

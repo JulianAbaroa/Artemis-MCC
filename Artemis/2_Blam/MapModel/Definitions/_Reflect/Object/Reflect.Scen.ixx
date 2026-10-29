@@ -1,14 +1,14 @@
-export module Resolved.Definitions.Reflect:Scen;
+export module Blam.MapModel.Definitions.Reflect:Scen;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Scen::Scen;
+    using Blam::MapModel::Definitions::Type::Scen::Scen;
 }
 
 export namespace Common::Reflect::Type

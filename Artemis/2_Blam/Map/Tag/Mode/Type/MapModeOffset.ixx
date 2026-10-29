@@ -2,11 +2,11 @@
 // Source XML: mode.xml
 // Base size: 0x264.
 
-export module Map.Tag.Type:Mode.Offset;
+export module Blam.Map.Tag.Type:Mode.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Mode::Offset
+export namespace Blam::Map::Tag::Type::Mode::Offset
 {
     constexpr std::size_t k_Name                                        = 0x0;  // StringID.
     constexpr std::size_t k_Flags                                       = 0x4;  // flags16. [Bit 0=0, Bit 1=1, Has Node Maps=2, Bit 3=3, Bit 4=4, Has Fur Shader=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15]

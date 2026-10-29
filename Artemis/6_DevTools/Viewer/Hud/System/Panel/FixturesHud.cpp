@@ -2,34 +2,34 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :Fixtures;
 
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
-import Environment.Details.Type;
-import Gui.Widget.System;
-import Gui.Format.System;
+import Perception.Details.Type;
+import DevTools.Gui.Widget.System;
+import DevTools.Gui.Format.System;
 import std;
 
 namespace
 {
-    using Export::Tick::Type::Tick;
-    using Environment::Entities::Type::Entity;
-    using Environment::Details::Type::ZoneDetail;
-    using Environment::Details::Type::TeleporterDetail;
-    using Environment::Details::Type::LiftDetail;
-    using Environment::Details::Type::BarrierDetail;
-    using Environment::Details::Type::TeleporterPass;
-    using Environment::Details::Type::HasPass;
+    using Bridge::Codec::Tick::Type::Tick;
+    using Perception::Entities::Type::Entity;
+    using Perception::Details::Type::ZoneDetail;
+    using Perception::Details::Type::TeleporterDetail;
+    using Perception::Details::Type::LiftDetail;
+    using Perception::Details::Type::BarrierDetail;
+    using Perception::Details::Type::TeleporterPass;
+    using Perception::Details::Type::HasPass;
     using Common::ZoneShape::Type::ZoneShape;
     using Common::ZoneShape::Type::ZoneShapeKind;
 
-    using Gui::Format::System::HexFormater;
-    using Gui::Format::System::TeamFormater;
-    using Gui::Format::System::FixturesFormater;
+    using DevTools::Gui::Format::System::HexFormater;
+    using DevTools::Gui::Format::System::TeamFormater;
+    using DevTools::Gui::Format::System::FixturesFormater;
 
-    using Gui::Widget::System::PanelGuiService;
+    using DevTools::Gui::Widget::System::PanelGuiService;
 
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
@@ -197,7 +197,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto FixturesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
     {

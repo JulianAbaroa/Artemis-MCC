@@ -1,20 +1,20 @@
-export module UI.PlayerTable.State;
+export module DevTools.Workbench.PlayerTable.State;
 
-import Tables.Player.Type;
-import Export.Tick.Type;
-import UI.PlayerTable.Type;
+import Blam.Runtime.Player.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Workbench.PlayerTable.Type;
 import std;
 
-export namespace UI::PlayerTable::State
+export namespace DevTools::Workbench::PlayerTable::State
 {
     // Snapshot of the player table with its alive players sorted by handle.
     class PlayerTableUIStore
     {
     private:
-        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
-        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
+        using PlayerTable = Blam::Runtime::Player::Type::Alive::PlayerTable;
+        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
 
-        using Players = UI::PlayerTable::Type::Players;
+        using Players = DevTools::Workbench::PlayerTable::Type::Players;
 
     public:
         PlayerTableUIStore() = default;

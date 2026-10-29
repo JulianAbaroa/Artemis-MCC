@@ -2,21 +2,21 @@
 // Source XML: eqip.xml
 // Root struct size: 0x424
 
-export module Map.Tag.Type:Eqip.Structure;
+export module Blam.Map.Tag.Type:Eqip.Structure;
 
 import Common.Math.Type;
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
 namespace
 {
     namespace MathType = Common::Math::Type;
-    namespace MapStructure = Map::Reader::Type::Structure;
+    namespace MapStructure = Blam::Map::Reader::Type::Structure;
 }
 
 #pragma pack(push, 1)
 
-export namespace Map::Tag::Type::Eqip::Structure
+export namespace Blam::Map::Tag::Type::Eqip::Structure
 {
     // Entry size: 0x2C
     struct Eqip_EarlyMoverOrientedBoundingBoxEntry

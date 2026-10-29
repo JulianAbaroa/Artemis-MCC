@@ -201,10 +201,10 @@
     <ClCompile Include="Definitions\_Reflect\Object\Reflect.Weap.ixx">
       <Filter>Definitions\_Reflect\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Definitions\Resolved.Definitions.Reflect.ixx">
+    <ClCompile Include="Definitions\Blam.MapModel.Definitions.Reflect.ixx">
       <Filter>Definitions</Filter>
     </ClCompile>
-    <ClCompile Include="Definitions\Resolved.Definitions.Type.ixx">
+    <ClCompile Include="Definitions\Blam.MapModel.Definitions.Type.ixx">
       <Filter>Definitions</Filter>
     </ClCompile>
     <ClCompile Include="Definitions\State\DefinitionsStore.ixx">
@@ -375,17 +375,17 @@
     <ClCompile Include="Definitions\Type\Object\DefinitionsWeap.ixx">
       <Filter>Definitions\Type\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Resolved.Layer.ixx" />
+    <ClCompile Include="Blam.MapModel.Layer.ixx" />
     <ClCompile Include="Tag\System\TagResolverService.cpp">
       <Filter>Tag\System</Filter>
     </ClCompile>
     <ClCompile Include="Tag\System\TagResolverService.ixx">
       <Filter>Tag\System</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Type\Resolved.Tag.Type.ixx">
+    <ClCompile Include="Tag\Type\Blam.MapModel.Tag.Type.ixx">
       <Filter>Tag\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Vitality\Resolved.Vitality.Type.ixx">
+    <ClCompile Include="Vitality\Blam.MapModel.Vitality.Type.ixx">
       <Filter>Vitality</Filter>
     </ClCompile>
     <ClCompile Include="Vitality\State\VitalityStore.cpp">
@@ -406,7 +406,7 @@
     <ClCompile Include="Vitality\Type\VitalityConstant.ixx">
       <Filter>Vitality\Type</Filter>
     </ClCompile>
-    <ClCompile Include="World\Resolved.World.Type.ixx">
+    <ClCompile Include="World\Blam.MapModel.World.Type.ixx">
       <Filter>World</Filter>
     </ClCompile>
     <ClCompile Include="World\State\WorldStore.cpp">

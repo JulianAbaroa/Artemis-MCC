@@ -1,8 +1,8 @@
-export module Resolved.Definitions.Type:Hlmt;
+export module Blam.MapModel.Definitions.Type:Hlmt;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Hlmt
+export namespace Blam::MapModel::Definitions::Type::Hlmt
 {
     // Moves a collision region to a new damage state.
     struct RegionTransition

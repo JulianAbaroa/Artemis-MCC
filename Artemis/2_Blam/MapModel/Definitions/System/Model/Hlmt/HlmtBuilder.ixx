@@ -1,21 +1,21 @@
-export module Resolved.Definitions.System:Hlmt;
+export module Blam.MapModel.Definitions.System:Hlmt;
 
-import Map.Reader.System;
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Reader.System;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the model definition.
     class HlmtBuilder
     {
     private:
-        using HlmtObject = Map::Tag::Type::Hlmt::Object::HlmtObject;
-        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
-        using DamageSection = Resolved::Definitions::Type::Hlmt::DamageSection;
-        using InstantResponse = Resolved::Definitions::Type::Hlmt::InstantResponse;
-        using TagReferenceService = Map::Reader::System::TagReferenceService;
+        using HlmtObject = Blam::Map::Tag::Type::Hlmt::Object::HlmtObject;
+        using Hlmt = Blam::MapModel::Definitions::Type::Hlmt::Hlmt;
+        using DamageSection = Blam::MapModel::Definitions::Type::Hlmt::DamageSection;
+        using InstantResponse = Blam::MapModel::Definitions::Type::Hlmt::InstantResponse;
+        using TagReferenceService = Blam::Map::Reader::System::TagReferenceService;
 
     public:
         explicit HlmtBuilder(TagReferenceService& tagReferenceService) :

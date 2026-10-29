@@ -1,17 +1,17 @@
-export module Tables.Object.Type:Vehicle;
+export module Blam.Runtime.Object.Type:Vehicle;
 
 import Common.Math.Type;
 import Common.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Resolved::Definitions::Type::Vehi::SeatKind;
+    using Blam::MapModel::Definitions::Type::Vehi::SeatKind;
 }
 
-export namespace Tables::Object::Type::Vehicle
+export namespace Blam::Runtime::Object::Type::Vehicle
 {
     enum class VehicleKind : std::uint8_t
     {
@@ -36,7 +36,7 @@ export namespace Tables::Object::Type::Vehicle
 
     namespace Seat
     {
-        // The vehicle datum has a variable block (descriptor 0x560, see Datum.Object.Type:Block) with
+        // The vehicle datum has a variable block (descriptor 0x560, see Blam.Layout.Object.Type:Block) with
         // one element of 12 bytes per seat of the vehicle tag: a pair of floats and one static flag '3'.
         // The first float is a smoothed value that ramps towards the second one (the target) every tick.
         // The target is 1.0f when the seat is free and 0.0f when the seat is occupied.

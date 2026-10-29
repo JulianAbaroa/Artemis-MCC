@@ -1,19 +1,19 @@
-export module Map.Reader.System:TagStructure;
+export module Blam.Map.Reader.System:TagStructure;
 
-import Map.Reader.Type;
-import Map.Reader.State;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads the structures that tags embed: references to other tags and blocks.
     class TagStructureService
     {
     private:
-        using TagBlock = Map::Reader::Type::Structure::Tag::TagBlock;
-        using TagTableEntry = Map::Reader::Type::Structure::TagTable::TagTableEntry;
+        using TagBlock = Blam::Map::Reader::Type::Structure::Tag::TagBlock;
+        using TagTableEntry = Blam::Map::Reader::Type::Structure::TagTable::TagTableEntry;
 
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
 
     public:
         explicit TagStructureService(TagIndexStore& tagIndexStore) :

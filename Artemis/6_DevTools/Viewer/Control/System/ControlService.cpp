@@ -4,18 +4,18 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-module Viewer.Control.System;
+module DevTools.Viewer.Control.System;
 
-import Viewer.Camera.Type;
-import Viewer.Options.Type;
+import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Options.Type;
 import std;
 
 namespace
 {
-    using Viewer::Camera::Type::Key;
-    using Viewer::Camera::Type::Mode;
-    using Viewer::Camera::Type::Follow;
-    using Viewer::Options::Type::Scalar;
+    using DevTools::Viewer::Camera::Type::Key;
+    using DevTools::Viewer::Camera::Type::Mode;
+    using DevTools::Viewer::Camera::Type::Follow;
+    using DevTools::Viewer::Options::Type::Scalar;
 
     // Maps a virtual key to a camera key.
     // return: False if the key is not a camera key.
@@ -51,7 +51,7 @@ namespace
     constexpr float k_OrbitStep{ 1.15f };
 }
 
-namespace Viewer::Control::System
+namespace DevTools::Viewer::Control::System
 {
     auto ControlService::HandleMessage(WindowMessage& message) -> bool
     {
@@ -190,7 +190,7 @@ namespace Viewer::Control::System
         {
             if (!IsRepeat(message.LParam))
             {
-                m_OptionsStore.ToggleEnabled(Viewer::Options::Type::Flag::Labels);
+                m_OptionsStore.ToggleEnabled(DevTools::Viewer::Options::Type::Flag::Labels);
             }
             return true;
         }

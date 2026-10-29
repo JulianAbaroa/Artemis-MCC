@@ -1,8 +1,8 @@
-export module Platform.Input.System:ActionSource;
+export module Engine.Control.Input.System:ActionSource;
 
 import std;
 
-export namespace Platform::Input::System
+export namespace Engine::Control::Input::System
 {
     // Actions of the players an outside client controls (D215). Implemented by the owner (Mod).
     class ActionSource

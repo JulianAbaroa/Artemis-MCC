@@ -1,15 +1,15 @@
-export module Resolved.Definitions.Reflect:Vehi;
+export module Blam.MapModel.Definitions.Reflect:Vehi;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Vehi::Seat;
-    using Resolved::Definitions::Type::Vehi::Vehi;
+    using Blam::MapModel::Definitions::Type::Vehi::Seat;
+    using Blam::MapModel::Definitions::Type::Vehi::Vehi;
 }
 
 export namespace Common::Reflect::Type

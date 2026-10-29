@@ -1,6 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="$(ArtemisRoot)External">
+      <UniqueIdentifier>{a20112bf-e02c-5ab6-901f-6931b4d5ffda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\minhook">
+      <UniqueIdentifier>{e1944dc7-43e8-5483-9298-c94725d8e9ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\minhook\include">
+      <UniqueIdentifier>{c1642b51-ff79-5887-94f0-26b703ad6214}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\minhook\src">
+      <UniqueIdentifier>{f795a6af-7841-5d8f-8226-aa2301322439}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\minhook\src\hde">
+      <UniqueIdentifier>{1aa6e80f-cac3-5ccf-874b-6d611bb63e77}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Hook">
       <UniqueIdentifier>{50814f39-e566-5f5b-bc33-14a5aa6090c9}</UniqueIdentifier>
     </Filter>
@@ -58,13 +73,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.Base.Layer.ixx" />
-    <ClCompile Include="Hook\System\Platform.Hook.System.cpp">
+    <ClCompile Include="Hook\System\Engine.Base.Hook.System.cpp">
       <Filter>Hook\System</Filter>
     </ClCompile>
-    <ClCompile Include="Hook\System\Platform.Hook.System.ixx">
+    <ClCompile Include="Hook\System\Engine.Base.Hook.System.ixx">
       <Filter>Hook\System</Filter>
     </ClCompile>
-    <ClCompile Include="Hook\Type\Platform.Hook.Type.ixx">
+    <ClCompile Include="Hook\Type\Engine.Base.Hook.Type.ixx">
       <Filter>Hook\Type</Filter>
     </ClCompile>
     <ClCompile Include="Host\Hook\CanAcceptAnyJoinRequestDetour.cpp">
@@ -97,7 +112,7 @@
     <ClCompile Include="Host\Hook\SessionJoinCheckPatch.ixx">
       <Filter>Host\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Host\Platform.Host.Hook.ixx">
+    <ClCompile Include="Host\Engine.Base.Host.Hook.ixx">
       <Filter>Host</Filter>
     </ClCompile>
     <ClCompile Include="Host\State\LocalUserStore.cpp">
@@ -112,7 +127,7 @@
     <ClCompile Include="Host\System\HostService.ixx">
       <Filter>Host\System</Filter>
     </ClCompile>
-    <ClCompile Include="Host\Type\Platform.Host.Type.ixx">
+    <ClCompile Include="Host\Type\Engine.Base.Host.Type.ixx">
       <Filter>Host\Type</Filter>
     </ClCompile>
     <ClCompile Include="Lifecycle\Hook\DestroySubsystemsDetour.cpp">
@@ -133,13 +148,13 @@
     <ClCompile Include="Lifecycle\Hook\OpenMapDetour.ixx">
       <Filter>Lifecycle\Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Lifecycle\Platform.Lifecycle.Hook.ixx">
+    <ClCompile Include="Lifecycle\Engine.Base.Lifecycle.Hook.ixx">
       <Filter>Lifecycle</Filter>
     </ClCompile>
-    <ClCompile Include="Lifecycle\Platform.Lifecycle.State.ixx">
+    <ClCompile Include="Lifecycle\Engine.Base.Lifecycle.State.ixx">
       <Filter>Lifecycle</Filter>
     </ClCompile>
-    <ClCompile Include="Lifecycle\Platform.Lifecycle.System.ixx">
+    <ClCompile Include="Lifecycle\Engine.Base.Lifecycle.System.ixx">
       <Filter>Lifecycle</Filter>
     </ClCompile>
     <ClCompile Include="Lifecycle\State\LifecycleStore.cpp">
@@ -154,13 +169,13 @@
     <ClCompile Include="Lifecycle\System\LifecycleService.ixx">
       <Filter>Lifecycle\System</Filter>
     </ClCompile>
-    <ClCompile Include="Lifecycle\Type\Platform.Lifecycle.Type.ixx">
+    <ClCompile Include="Lifecycle\Type\Engine.Base.Lifecycle.Type.ixx">
       <Filter>Lifecycle\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Memory\Platform.Memory.System.ixx">
+    <ClCompile Include="Memory\Engine.Base.Memory.System.ixx">
       <Filter>Memory</Filter>
     </ClCompile>
-    <ClCompile Include="Memory\Platform.Memory.Type.ixx">
+    <ClCompile Include="Memory\Engine.Base.Memory.Type.ixx">
       <Filter>Memory</Filter>
     </ClCompile>
     <ClCompile Include="Memory\System\AOB\AOBService.cpp">
@@ -192,22 +207,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(ArtemisRoot)External\minhook\src\buffer.c">
-      <Filter>External\minhook</Filter>
+      <Filter>$(ArtemisRoot)External\minhook\src</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\minhook\src\hde\hde32.c">
-      <Filter>External\minhook\hde</Filter>
+      <Filter>$(ArtemisRoot)External\minhook\src\hde</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\minhook\src\hde\hde64.c">
-      <Filter>External\minhook\hde</Filter>
+      <Filter>$(ArtemisRoot)External\minhook\src\hde</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\minhook\src\hook.c">
-      <Filter>External\minhook</Filter>
+      <Filter>$(ArtemisRoot)External\minhook\src</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\minhook\src\trampoline.c">
-      <Filter>External\minhook</Filter>
+      <Filter>$(ArtemisRoot)External\minhook\src</Filter>
     </ClCompile>
     <ClInclude Include="$(ArtemisRoot)External\minhook\include\MinHook.h">
-      <Filter>External\minhook</Filter>
+      <Filter>$(ArtemisRoot)External\minhook\include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,20 +1,20 @@
-export module Viewer.Palette.System;
+export module DevTools.Viewer.Palette.System;
 
-import Export.Tick.Type;
-import Viewer.Palette.Type;
-import Viewer.Style.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Palette.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
-export namespace Viewer::Palette::System
+export namespace DevTools::Viewer::Palette::System
 {
     // Builds the table that maps an object handle to its display color on the map.
     // The color depends on the overlay content of the tick. Handles without an entry get the collidable color.
     class PaletteService
     {
     private:
-        using Tick = Export::Tick::Type::Tick;
-        using Color = Viewer::Style::Type::Color;
-        using Entry = Viewer::Palette::Type::Entry;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
+        using Color = DevTools::Viewer::Style::Type::Color;
+        using Entry = DevTools::Viewer::Palette::Type::Entry;
 
     public:
         PaletteService() = default;

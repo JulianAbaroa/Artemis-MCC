@@ -1,34 +1,34 @@
-export module UI.ObjectTable.System;
+export module DevTools.Workbench.ObjectTable.System;
 
-import Platform.Capture.State;
-import Tables.Object.Type;
-import Export.Tick.Type;
-import Export.Tick.State;
-import Gui.Widget.System;
-import UI.ObjectTable.Type;
-import UI.ObjectTable.State;
-import UI.Capture.State;
+import Engine.Capture.State;
+import Blam.Runtime.Object.Type;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Gui.Widget.System;
+import DevTools.Workbench.ObjectTable.Type;
+import DevTools.Workbench.ObjectTable.State;
+import DevTools.Workbench.Capture.State;
 import std;
 
-export namespace UI::ObjectTable::System
+export namespace DevTools::Workbench::ObjectTable::System
 {
     // Draws the live objects as cards grouped by class with a search filter.
     class ObjectTableUIService
     {
     private:
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
 
-        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using CaptureStore = Engine::Capture::State::CaptureStore;
 
-        using TickStore = Export::Tick::State::TickStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using SearchFilterGuiService = Gui::Widget::System::SearchFilterGuiService;
-        using CopyableFieldGuiService = Gui::Widget::System::CopyableFieldGuiService;
-        using ResponsiveCardGuiService = Gui::Widget::System::ResponsiveCardGuiService;
+        using SearchFilterGuiService = DevTools::Gui::Widget::System::SearchFilterGuiService;
+        using CopyableFieldGuiService = DevTools::Gui::Widget::System::CopyableFieldGuiService;
+        using ResponsiveCardGuiService = DevTools::Gui::Widget::System::ResponsiveCardGuiService;
 
-        using Groups = UI::ObjectTable::Type::Groups;
-        using ObjectTableUIStore = UI::ObjectTable::State::ObjectTableUIStore;
-        using CaptureUIStore = UI::Capture::State::CaptureUIStore;
+        using Groups = DevTools::Workbench::ObjectTable::Type::Groups;
+        using ObjectTableUIStore = DevTools::Workbench::ObjectTable::State::ObjectTableUIStore;
+        using CaptureUIStore = DevTools::Workbench::Capture::State::CaptureUIStore;
 
     public:
         ObjectTableUIService(CaptureStore& captureStore, TickStore& tickStore, ObjectTableUIStore& objectTableUIStore, CaptureUIStore& captureUIStore) :

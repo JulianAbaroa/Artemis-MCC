@@ -2,11 +2,11 @@
 // Source XML: Lbsp.xml
 // Base size: 0x168.
 
-export module Map.Tag.Type:Lbsp.Offset;
+export module Blam.Map.Tag.Type:Lbsp.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Lbsp::Offset
+export namespace Blam::Map::Tag::Type::Lbsp::Offset
 {
     constexpr std::size_t k_Flags                                       = 0x0;  // flags16. [Compressed=0, Xsynced Geometry=1, Relightmapped=2, Generate Fake Small Lightmaps=3, Generated From Match Data=4, Only A Checker Board=5, Surface To Triangle Mapping Pruned=6, Faked Lightmap Tag For Cache Build=7, Optimized For Less DP All=8, Floating Shadows Enabled=9, Atlas Unrefined Packing=10, Atlas Repacked=11, Using Simplified Irradiance Lighting=12, Disable Shadow Geometry=13, Disable Hybrid Refinement=14]
     constexpr std::size_t k_BspReferenceIndex                           = 0x2;  // int16.

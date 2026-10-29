@@ -1,20 +1,20 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Coll;
 
 import Common.Math.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
     using Common::Math::Type::Triangle;
-    using Resolved::Definitions::Type::Coll::CollMesh;
-    using Resolved::Definitions::Type::Coll::Material;
+    using Blam::MapModel::Definitions::Type::Coll::CollMesh;
+    using Blam::MapModel::Definitions::Type::Coll::Material;
 
     using Common::Math::Type::k_FloatMax;
-    using Resolved::Definitions::Type::Coll::k_DefaultPermutationName;
+    using Blam::MapModel::Definitions::Type::Coll::k_DefaultPermutationName;
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto CollBuilder::Build(const CollObject& coll) -> Coll
     {

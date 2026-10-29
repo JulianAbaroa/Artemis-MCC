@@ -1,7 +1,7 @@
-module Platform.Window.System;
+module Engine.Render.Window.System;
 import :Input;
 
-namespace Platform::Window::System
+namespace Engine::Render::Window::System
 {
     auto InputService::OnWindowMessage(WindowMessageHandler handler, bool runFirst) -> void
     {

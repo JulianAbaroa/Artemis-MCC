@@ -4,16 +4,16 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.Capture.System;
+module DevTools.Workbench.Capture.System;
 
 import Common.Engine.Type;
 import Common.Time.System;
-import Platform.Host.Type;
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Datum.Object.Type;
-import Layout.Snapshot.Type;
-import Gui.Style.Type;
+import Engine.Base.Host.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Snapshot.Type;
+import DevTools.Gui.Style.Type;
 import std;
 
 namespace
@@ -21,71 +21,71 @@ namespace
     using std::filesystem::path;
     using Common::Time::System::LocalNow;
 
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Resolved::Definitions::Type::Phmo::Phmo;
-    using Resolved::Definitions::Type::Phmo::RigidBody;
-    using Resolved::Definitions::Type::Phmo::Shape;
-    using Resolved::Definitions::Type::Phmo::PhantomType;
-    using Resolved::Definitions::State::DefinitionsStore;
-    using Resolved::Definitions::Type::Object::ToObjectKind;
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::Snapshot;
-    using UI::Capture::Type::ComponentRange;
-    using UI::Capture::Type::Source;
-    using UI::Capture::Type::Target;
-    using UI::Capture::Type::ByteChange;
-    using UI::Capture::Type::HavokFilter;
-    using UI::Capture::Type::HavokBody;
-    using UI::Capture::Type::HavokPhantom;
-    using UI::Capture::Type::HavokComponent;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::MapModel::Definitions::Type::Phmo::Phmo;
+    using Blam::MapModel::Definitions::Type::Phmo::RigidBody;
+    using Blam::MapModel::Definitions::Type::Phmo::Shape;
+    using Blam::MapModel::Definitions::Type::Phmo::PhantomType;
+    using Blam::MapModel::Definitions::State::DefinitionsStore;
+    using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
+    using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using DevTools::Workbench::Capture::Type::ComponentRange;
+    using DevTools::Workbench::Capture::Type::Source;
+    using DevTools::Workbench::Capture::Type::Target;
+    using DevTools::Workbench::Capture::Type::ByteChange;
+    using DevTools::Workbench::Capture::Type::HavokFilter;
+    using DevTools::Workbench::Capture::Type::HavokBody;
+    using DevTools::Workbench::Capture::Type::HavokPhantom;
+    using DevTools::Workbench::Capture::Type::HavokComponent;
 
-    using Platform::Host::Type::k_GameModuleName;
-    using UI::Capture::Type::k_LabelSize;
-    using Resolved::Definitions::Type::Phmo::k_NoCollisionGroup;
+    using Engine::Base::Host::Type::k_GameModuleName;
+    using DevTools::Workbench::Capture::Type::k_LabelSize;
+    using Blam::MapModel::Definitions::Type::Phmo::k_NoCollisionGroup;
 
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
-    namespace AnimOffset = Datum::Object::Type::Anim::Offset;
-    namespace UnitOffset = Datum::Object::Type::Unit::Offset;
-    namespace BipdOffset = Datum::Object::Type::Bipd::Offset;
-    namespace VehiOffset = Datum::Object::Type::Vehi::Offset;
-    namespace ItemOffset = Datum::Object::Type::Item::Offset;
-    namespace WeapOffset = Datum::Object::Type::Weap::Offset;
-    namespace EqipOffset = Datum::Object::Type::Eqip::Offset;
-    namespace ProjOffset = Datum::Object::Type::Proj::Offset;
-    namespace ScenOffset = Datum::Object::Type::Scen::Offset;
-    namespace BlocOffset = Datum::Object::Type::Bloc::Offset;
-    namespace DeviOffset = Datum::Object::Type::Devi::Offset;
-    namespace MachOffset = Datum::Object::Type::Mach::Offset;
-    namespace CtrlOffset = Datum::Object::Type::Ctrl::Offset;
+    namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
+    namespace AnimOffset = Blam::Layout::Object::Type::Anim::Offset;
+    namespace UnitOffset = Blam::Layout::Object::Type::Unit::Offset;
+    namespace BipdOffset = Blam::Layout::Object::Type::Bipd::Offset;
+    namespace VehiOffset = Blam::Layout::Object::Type::Vehi::Offset;
+    namespace ItemOffset = Blam::Layout::Object::Type::Item::Offset;
+    namespace WeapOffset = Blam::Layout::Object::Type::Weap::Offset;
+    namespace EqipOffset = Blam::Layout::Object::Type::Eqip::Offset;
+    namespace ProjOffset = Blam::Layout::Object::Type::Proj::Offset;
+    namespace ScenOffset = Blam::Layout::Object::Type::Scen::Offset;
+    namespace BlocOffset = Blam::Layout::Object::Type::Bloc::Offset;
+    namespace DeviOffset = Blam::Layout::Object::Type::Devi::Offset;
+    namespace MachOffset = Blam::Layout::Object::Type::Mach::Offset;
+    namespace CtrlOffset = Blam::Layout::Object::Type::Ctrl::Offset;
 
-    using Datum::Object::Type::Constant::k_ThreadContextGameModeOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextMapVariantOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
-    using Datum::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
-    using UI::Capture::Type::k_HavokWorldRva;
-    using UI::Capture::Type::k_WorldFilterOffset;
-    using UI::Capture::Type::k_FilterLookupOffset;
-    using UI::Capture::Type::k_HavokComponentArrayRva;
-    using UI::Capture::Type::k_DataArrayElementsOffset;
-    using UI::Capture::Type::k_HavokComponentSize;
-    using UI::Capture::Type::k_ComponentFlagsOffset;
-    using UI::Capture::Type::k_ComponentOwnerOffset;
-    using UI::Capture::Type::k_ComponentSizeOffset;
-    using UI::Capture::Type::k_ComponentBodiesOffset;
-    using UI::Capture::Type::k_ComponentBodyCountOffset;
-    using UI::Capture::Type::k_BodyEntrySize;
-    using UI::Capture::Type::k_BodyEntryRigidBodyOffset;
-    using UI::Capture::Type::k_ComponentPhantomOffsets;
-    using UI::Capture::Type::k_RigidBodyFilterInfoOffset;
-    using UI::Capture::Type::k_RigidBodyMotionTypeOffset;
-    using UI::Capture::Type::k_CollisionTestFlagsRva;
-    using UI::Capture::Type::k_FilterFieldMask;
-    using UI::Capture::Type::k_SubsystemShift;
-    using UI::Capture::Type::k_IgnoredSubsystemShift;
-    using UI::Capture::Type::k_SystemGroupShift;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameModeOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextMapVariantOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
+    using Blam::Layout::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
+    using DevTools::Workbench::Capture::Type::k_HavokWorldRva;
+    using DevTools::Workbench::Capture::Type::k_WorldFilterOffset;
+    using DevTools::Workbench::Capture::Type::k_FilterLookupOffset;
+    using DevTools::Workbench::Capture::Type::k_HavokComponentArrayRva;
+    using DevTools::Workbench::Capture::Type::k_DataArrayElementsOffset;
+    using DevTools::Workbench::Capture::Type::k_HavokComponentSize;
+    using DevTools::Workbench::Capture::Type::k_ComponentFlagsOffset;
+    using DevTools::Workbench::Capture::Type::k_ComponentOwnerOffset;
+    using DevTools::Workbench::Capture::Type::k_ComponentSizeOffset;
+    using DevTools::Workbench::Capture::Type::k_ComponentBodiesOffset;
+    using DevTools::Workbench::Capture::Type::k_ComponentBodyCountOffset;
+    using DevTools::Workbench::Capture::Type::k_BodyEntrySize;
+    using DevTools::Workbench::Capture::Type::k_BodyEntryRigidBodyOffset;
+    using DevTools::Workbench::Capture::Type::k_ComponentPhantomOffsets;
+    using DevTools::Workbench::Capture::Type::k_RigidBodyFilterInfoOffset;
+    using DevTools::Workbench::Capture::Type::k_RigidBodyMotionTypeOffset;
+    using DevTools::Workbench::Capture::Type::k_CollisionTestFlagsRva;
+    using DevTools::Workbench::Capture::Type::k_FilterFieldMask;
+    using DevTools::Workbench::Capture::Type::k_SubsystemShift;
+    using DevTools::Workbench::Capture::Type::k_IgnoredSubsystemShift;
+    using DevTools::Workbench::Capture::Type::k_SystemGroupShift;
     using Common::Engine::Type::k_NoHandle;
-    using Gui::Style::Type::k_BytesPerRow;
+    using DevTools::Gui::Style::Type::k_BytesPerRow;
     using Common::Engine::Type::k_HandleIndexMask;
 
     // Folder inside the storage folder that receives one file per capture session.
@@ -482,7 +482,7 @@ namespace
     }
 }
 
-namespace UI::Capture::System
+namespace DevTools::Workbench::Capture::System
 {
     auto CaptureUIService::Update() -> void
     {

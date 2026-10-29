@@ -1,15 +1,15 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Vehi;
 
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
-    using Resolved::Definitions::Type::Vehi::Seat;
-    using Resolved::Definitions::Type::Vehi::SeatKind;
+    using Blam::MapModel::Definitions::Type::Vehi::Seat;
+    using Blam::MapModel::Definitions::Type::Vehi::SeatKind;
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto VehiBuilder::Build(const VehiObject& vehi) -> Vehi
     {

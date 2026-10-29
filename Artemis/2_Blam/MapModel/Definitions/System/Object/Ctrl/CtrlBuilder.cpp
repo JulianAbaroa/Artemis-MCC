@@ -1,7 +1,7 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Ctrl;
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto CtrlBuilder::Build(const CtrlObject& ctrl) -> Ctrl
     {

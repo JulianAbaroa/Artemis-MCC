@@ -5,12 +5,12 @@ module;
 
 module Mod.Layer;
 
-import Platform.Render.Type;
+import Engine.Render.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::FrameContext;
+    using Engine::Render::Type::FrameContext;
 }
 
 using namespace std::chrono_literals;

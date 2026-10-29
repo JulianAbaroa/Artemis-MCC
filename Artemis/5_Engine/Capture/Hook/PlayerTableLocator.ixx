@@ -1,11 +1,11 @@
-export module Platform.Capture.Hook:PlayerTable;
+export module Engine.Capture.Hook:PlayerTable;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Capture.State;
+import Engine.Base.Memory.System;
+import Engine.Capture.State;
 import std;
 
-export namespace Platform::Capture::Hook
+export namespace Engine::Capture::Hook
 {
     // Finds the engine player table and the player mapping globals and stores their base addresses.
     class PlayerTableLocator
@@ -13,9 +13,9 @@ export namespace Platform::Capture::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
-        using CaptureStore = Platform::Capture::State::CaptureStore;
+        using CaptureStore = Engine::Capture::State::CaptureStore;
 
     public:
         PlayerTableLocator(Log& log, AOBService& aobService,

@@ -1,12 +1,12 @@
-export module Platform.Host.Hook:LocalUserGetProfile;
+export module Engine.Base.Host.Hook:LocalUserGetProfile;
 
 import Common.Log.System;
-import Platform.Host.Type;
-import Platform.Host.State;
-import Platform.Host.System;
+import Engine.Base.Host.Type;
+import Engine.Base.Host.State;
+import Engine.Base.Host.System;
 import std;
 
-export namespace Platform::Host::Hook
+export namespace Engine::Base::Host::Hook
 {
     // Hooks the MCC function that returns the profile of a user, so an Artemis user gets a valid profile.
     // note: MCC does not know the Artemis XUIDs. Their profile is a copy of the profile of user 0 for now. The AI will get a fixed
@@ -16,12 +16,12 @@ export namespace Platform::Host::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using LocalUserGetProfileFunction = Platform::Host::Type::LocalUserGetProfileFunction;
-        using PlayerProfile = Platform::Host::Type::PlayerProfile;
+        using LocalUserGetProfileFunction = Engine::Base::Host::Type::LocalUserGetProfileFunction;
+        using PlayerProfile = Engine::Base::Host::Type::PlayerProfile;
 
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
-        using HostService = Platform::Host::System::HostService;
+        using HostService = Engine::Base::Host::System::HostService;
 
     public:
         LocalUserGetProfileDetour(Log& log, HostService& hostService, LocalUserStore& localUserStore) :

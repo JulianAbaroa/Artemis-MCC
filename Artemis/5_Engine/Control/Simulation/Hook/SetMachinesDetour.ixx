@@ -1,12 +1,12 @@
-export module Platform.Simulation.Hook:SetMachines;
+export module Engine.Control.Simulation.Hook:SetMachines;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Simulation.Type;
-import Platform.Simulation.State;
+import Engine.Base.Memory.System;
+import Engine.Control.Simulation.Type;
+import Engine.Control.Simulation.State;
 import std;
 
-export namespace Platform::Simulation::Hook
+export namespace Engine::Control::Simulation::Hook
 {
     // Hooks players_set_machines so the machines of the bots survive every machine update of the engine (A9 M5b).
     // note: Without it, the next machine update from the session would drop the fake machines and the engine would remove their
@@ -16,12 +16,12 @@ export namespace Platform::Simulation::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
-        using MachineIdentifier = Platform::Simulation::Type::MachineIdentifier;
-        using SetMachinesFunction = Platform::Simulation::Type::SetMachinesFunction;
+        using MachineIdentifier = Engine::Control::Simulation::Type::MachineIdentifier;
+        using SetMachinesFunction = Engine::Control::Simulation::Type::SetMachinesFunction;
 
-        using BotStore = Platform::Simulation::State::BotStore;
+        using BotStore = Engine::Control::Simulation::State::BotStore;
 
     public:
         SetMachinesDetour(Log& log, AOBService& aobService, BotStore& botStore) :

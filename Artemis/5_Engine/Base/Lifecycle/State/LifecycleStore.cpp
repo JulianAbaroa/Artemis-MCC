@@ -1,4 +1,4 @@
-module Platform.Lifecycle.State;
+module Engine.Base.Lifecycle.State;
 import :Lifecycle;
 import std;
 
@@ -15,7 +15,7 @@ namespace
     constexpr milliseconds k_ReadTimeout{ 100 };
 }
 
-namespace Platform::Lifecycle::State
+namespace Engine::Base::Lifecycle::State
 {
     auto LifecycleStore::IsRunning() const -> bool
     {

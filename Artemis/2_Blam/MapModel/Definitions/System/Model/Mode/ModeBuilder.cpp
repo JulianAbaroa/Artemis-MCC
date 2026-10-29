@@ -1,4 +1,4 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Mode;
 
 import Common.Math.Type;
@@ -11,7 +11,7 @@ namespace
     constexpr std::uint16_t k_CompressedPositionFlag{ 1u << 0 };
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto ModeBuilder::Build(const ModeObject& mode) -> Mode
     {

@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 // The raw kind id of an entry of the object table to ObjectKind (M4a, D186): the conversion DatumService did before.
 
 namespace
 {
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Resolved::Definitions::Type::Object::ToObjectKind;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
 }
 
 TEST(ObjectKindTest, EngineIdsMapToTheirKind)

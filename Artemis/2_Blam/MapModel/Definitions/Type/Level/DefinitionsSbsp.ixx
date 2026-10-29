@@ -1,4 +1,4 @@
-export module Resolved.Definitions.Type:Sbsp;
+export module Blam.MapModel.Definitions.Type:Sbsp;
 
 import Common.Math.Type;
 import std;
@@ -9,7 +9,7 @@ namespace
     using Common::Math::Type::Triangle;
 }
 
-export namespace Resolved::Definitions::Type::Sbsp
+export namespace Blam::MapModel::Definitions::Type::Sbsp
 {
     // Holds the bounds and the render triangles of a structure bsp.
     struct Sbsp

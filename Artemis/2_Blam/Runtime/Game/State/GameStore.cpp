@@ -1,12 +1,12 @@
-module Tables.Game.State;
+module Blam.Runtime.Game.State;
 
 namespace
 {
     using Common::State::Type::Snapshot;
-    using Tables::Game::Type::Alive::AliveGame;
+    using Blam::Runtime::Game::Type::Alive::AliveGame;
 }
 
-namespace Tables::Game::State
+namespace Blam::Runtime::Game::State
 {
     auto GameStore::GetEventCursor() const -> std::uint32_t
     {

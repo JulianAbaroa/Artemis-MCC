@@ -1,16 +1,16 @@
-export module Platform.Capture.State;
+export module Engine.Capture.State;
 
-import Layout.Snapshot.Type;
+import Blam.Layout.Snapshot.Type;
 import std;
 
-export namespace Platform::Capture::State
+export namespace Engine::Capture::State
 {
     // Holds the addresses the capture copies from and the last published snapshot.
     // note: Lock-free. A published snapshot is never modified.
     class CaptureStore
     {
     private:
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
 
     public:
         CaptureStore() = default;

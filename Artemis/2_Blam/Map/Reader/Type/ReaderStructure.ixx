@@ -1,10 +1,10 @@
-export module Map.Reader.Type:Structure;
+export module Blam.Map.Reader.Type:Structure;
 
 import std;
 
 // Structures read straight from the map file.
 // note: They are packed, so their layout must not change.
-export namespace Map::Reader::Type::Structure
+export namespace Blam::Map::Reader::Type::Structure
 {
 #pragma pack(push, 1)
     // Map file header.

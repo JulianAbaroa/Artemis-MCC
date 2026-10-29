@@ -1,8 +1,8 @@
-export module Layout.Snapshot.Type:Raw;
+export module Blam.Layout.Snapshot.Type:Raw;
 
 import std;
 
-export namespace Layout::Snapshot::Type
+export namespace Blam::Layout::Snapshot::Type
 {
     // Position of a variable block inside the datum.
     struct BlockRange
@@ -17,7 +17,7 @@ export namespace Layout::Snapshot::Type
         std::uint32_t Handle{};
         std::uintptr_t Address{};
         // Kind id of the entry of the object table, as the engine wrote it.
-        // note: The interpretation (which ObjectKind it is, or none) belongs to Resolved::Definitions::Type::Object::ToObjectKind.
+        // note: The interpretation (which ObjectKind it is, or none) belongs to Blam::MapModel::Definitions::Type::Object::ToObjectKind.
         std::uint8_t KindId{};
         std::vector<std::uint8_t> Bytes{};
 

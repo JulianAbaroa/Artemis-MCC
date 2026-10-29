@@ -1,12 +1,12 @@
 export module Engine.Render.Layer;
 
-import Service.Layer;
+import Services.Layer;
 import Engine.Base.Layer;
-import Platform.Render.State;
-import Platform.Render.System;
-import Platform.Render.Hook;
-import Platform.Window.System;
-import Platform.Window.Hook;
+import Engine.Render.State;
+import Engine.Render.System;
+import Engine.Render.Hook;
+import Engine.Render.Window.System;
+import Engine.Render.Window.Hook;
 
 export namespace Engine::Render
 {
@@ -15,18 +15,18 @@ export namespace Engine::Render
     class Layer
     {
     private:
-        using RenderStore = Platform::Render::State::RenderStore;
-        using RenderService = Platform::Render::System::RenderService;
-        using SwapChainLocator = Platform::Render::System::SwapChainLocator;
-        using PresentDetour = Platform::Render::Hook::PresentDetour;
-        using ResizeBuffersDetour = Platform::Render::Hook::ResizeBuffersDetour;
+        using RenderStore = Engine::Render::State::RenderStore;
+        using RenderService = Engine::Render::System::RenderService;
+        using SwapChainLocator = Engine::Render::System::SwapChainLocator;
+        using PresentDetour = Engine::Render::Hook::PresentDetour;
+        using ResizeBuffersDetour = Engine::Render::Hook::ResizeBuffersDetour;
 
-        using InputService = Platform::Window::System::InputService;
-        using GetRawInputDataDetour = Platform::Window::Hook::GetRawInputDataDetour;
-        using WndProcDetour = Platform::Window::Hook::WndProcDetour;
+        using InputService = Engine::Render::Window::System::InputService;
+        using GetRawInputDataDetour = Engine::Render::Window::Hook::GetRawInputDataDetour;
+        using WndProcDetour = Engine::Render::Window::Hook::WndProcDetour;
 
     public:
-        Layer(Service::Layer& service, Engine::Base::Layer& base) :
+        Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_InputService(service.m_Log),
             m_RenderService(service.m_Log, m_RenderStore),
             m_SwapChainLocator(service.m_Log),

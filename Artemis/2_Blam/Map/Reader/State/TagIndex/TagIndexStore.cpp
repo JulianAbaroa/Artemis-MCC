@@ -1,7 +1,7 @@
-module Map.Reader.State;
+module Blam.Map.Reader.State;
 import :TagIndex;
 
-namespace Map::Reader::State
+namespace Blam::Map::Reader::State
 {
     auto TagIndexStore::GetTag(std::int32_t index) const -> const TagTableEntry&
     {

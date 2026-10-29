@@ -3,18 +3,18 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:DynamicPass;
+export module DevTools.Viewer.Map.System:DynamicPass;
 
 import Common.Log.System;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Environment.Collidable.Type;
-import Viewer.Collidable.State;
-import Viewer.Palette.System;
-import Viewer.Map.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Perception.Collidable.Type;
+import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Palette.System;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws the collidable meshes with GPU instancing. Each mesh is stored once and drawn once per instance.
     // The selected object is drawn in the selection color, and the translucent handles go to a second draw.
@@ -26,14 +26,14 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using MeshInstance = Platform::Render::Type::MeshInstance;
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using MeshInstance = Engine::Render::Type::MeshInstance;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Collidables = Environment::Collidable::Type::Collidables;
+        using Collidables = Perception::Collidable::Type::Collidables;
 
-        using PaletteService = Viewer::Palette::System::PaletteService;
-        using Geometry = Viewer::Map::Type::Geometry;
-        using DrawRange = Viewer::Map::Type::DrawRange;
+        using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
+        using Geometry = DevTools::Viewer::Map::Type::Geometry;
+        using DrawRange = DevTools::Viewer::Map::Type::DrawRange;
 
     public:
         explicit DynamicPass(Log& log) : m_Log(log) {}
@@ -77,14 +77,14 @@ export namespace Viewer::Map::System
         std::vector<std::uint32_t> m_Active{};
         std::vector<std::uint32_t> m_ActiveTranslucent{};
 
-        Platform::Render::System::InstanceBuffer m_InstanceBuffer{};
+        Engine::Render::System::InstanceBuffer m_InstanceBuffer{};
         UINT m_InstanceCount{ 0 };
 
         std::vector<MeshInstance> m_InstanceScratch{};
         std::vector<DrawRange> m_Draws{};
         std::vector<DrawRange> m_TranslucentDraws{};
 
-        Platform::Render::System::UploadGate m_Gate{};
+        Engine::Render::System::UploadGate m_Gate{};
 
         // Copies the pending vertices to the geometry buffer and grows it if needed.
         // return: False if the buffer could not be created.

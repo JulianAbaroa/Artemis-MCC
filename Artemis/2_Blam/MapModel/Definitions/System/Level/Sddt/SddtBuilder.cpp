@@ -1,17 +1,17 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Sddt;
 
 import Common.Math.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
     using Common::Math::Type::Triangle;
     using Common::Math::Type::Vec3;
-    using Resolved::Definitions::Type::Scnr::SoftCeilingKind;
-    using Resolved::Definitions::Type::Sddt::SoftCeilingMesh;
+    using Blam::MapModel::Definitions::Type::Scnr::SoftCeilingKind;
+    using Blam::MapModel::Definitions::Type::Sddt::SoftCeilingMesh;
 
-    using Resolved::Definitions::Type::Scnr::k_LastSoftCeilingKind;
+    using Blam::MapModel::Definitions::Type::Scnr::k_LastSoftCeilingKind;
 
     template <typename TVec3>
     constexpr auto ToVec3(const TVec3& value) -> Vec3
@@ -20,7 +20,7 @@ namespace
     }
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto SddtBuilder::Build(const SddtObject& sddt) -> Sddt
     {

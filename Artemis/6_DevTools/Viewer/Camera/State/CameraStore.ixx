@@ -1,18 +1,18 @@
-export module Viewer.Camera.State;
+export module DevTools.Viewer.Camera.State;
 
-import Viewer.Camera.Type;
+import DevTools.Viewer.Camera.Type;
 import std;
 
-export namespace Viewer::Camera::State
+export namespace DevTools::Viewer::Camera::State
 {
     // Holds the camera input: the active and zoom flags, the mode, the follow mode, the orbit distance, the pressed keys and the accumulated mouse movement.
     // The values are atomic because the window messages write them and the render frame reads them.
     class CameraStore
     {
     private:
-        using Key = Viewer::Camera::Type::Key;
-        using Mode = Viewer::Camera::Type::Mode;
-        using Follow = Viewer::Camera::Type::Follow;
+        using Key = DevTools::Viewer::Camera::Type::Key;
+        using Mode = DevTools::Viewer::Camera::Type::Mode;
+        using Follow = DevTools::Viewer::Camera::Type::Follow;
 
     public:
         CameraStore() = default;

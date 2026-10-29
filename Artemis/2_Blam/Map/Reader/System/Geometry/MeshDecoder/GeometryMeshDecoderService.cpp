@@ -1,25 +1,25 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :Geometry.MeshDecoder;
 
 namespace
 {
-    using Map::Reader::Type::Constant::k_FixupMask;
-    using Map::Reader::Type::Constant::k_ResourceDatumMask;
-    using Map::Reader::Type::Constant::k_VertexBufferStride;
-    using Map::Reader::Type::Constant::k_XOffset;
-    using Map::Reader::Type::Constant::k_YOffset;
-    using Map::Reader::Type::Constant::k_ZOffset;
-    using Map::Reader::Type::Constant::k_MeshFlagUnindexed;
-    using Map::Reader::Type::Constant::k_InstanceStride;
-    using Map::Reader::Type::Constant::k_InstanceFixupFromEnd;
-    using Map::Reader::Type::Constant::k_InstanceMatrixFloats;
-    using Map::Reader::Type::Constant::k_InstanceScaledFloats;
-    using Map::Reader::Type::Constant::k_InstanceScaleOffset;
-    using Map::Reader::Type::Constant::k_InstanceMatrixOffset;
-    using Map::Reader::Type::Constant::k_InstanceSectionOffset;
+    using Blam::Map::Reader::Type::Constant::k_FixupMask;
+    using Blam::Map::Reader::Type::Constant::k_ResourceDatumMask;
+    using Blam::Map::Reader::Type::Constant::k_VertexBufferStride;
+    using Blam::Map::Reader::Type::Constant::k_XOffset;
+    using Blam::Map::Reader::Type::Constant::k_YOffset;
+    using Blam::Map::Reader::Type::Constant::k_ZOffset;
+    using Blam::Map::Reader::Type::Constant::k_MeshFlagUnindexed;
+    using Blam::Map::Reader::Type::Constant::k_InstanceStride;
+    using Blam::Map::Reader::Type::Constant::k_InstanceFixupFromEnd;
+    using Blam::Map::Reader::Type::Constant::k_InstanceMatrixFloats;
+    using Blam::Map::Reader::Type::Constant::k_InstanceScaledFloats;
+    using Blam::Map::Reader::Type::Constant::k_InstanceScaleOffset;
+    using Blam::Map::Reader::Type::Constant::k_InstanceMatrixOffset;
+    using Blam::Map::Reader::Type::Constant::k_InstanceSectionOffset;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto GeometryMeshDecoderService::EmitSection(const std::vector<std::uint8_t>& pageData,
         const Zone_TagResourcesObject& entry, std::int32_t vbCount,

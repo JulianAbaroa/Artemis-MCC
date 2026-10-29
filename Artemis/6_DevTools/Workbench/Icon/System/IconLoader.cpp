@@ -3,9 +3,9 @@ module;
 #include "External/stb/stb_image.h"
 #include <d3d11.h>
 
-module UI.Icon.System;
+module DevTools.Workbench.Icon.System;
 
-namespace UI::Icon::System
+namespace DevTools::Workbench::Icon::System
 {
     auto IconLoader::LoadIconFromMemory(ID3D11Device* device,
         const unsigned char* data, unsigned int size, IconTexture& out) -> bool

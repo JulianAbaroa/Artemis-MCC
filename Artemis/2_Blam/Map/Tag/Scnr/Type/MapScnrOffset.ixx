@@ -2,11 +2,11 @@
 // Source XML: scnr.xml
 // Base size: 0x858.
 
-export module Map.Tag.Type:Scnr.Offset;
+export module Blam.Map.Tag.Type:Scnr.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Scnr::Offset
+export namespace Blam::Map::Tag::Type::Scnr::Offset
 {
     constexpr std::size_t k_MapType                                     = 0x0;  // enum8. [Solo=0x0, Multiplayer=0x1, Main Menu=0x2]
     constexpr std::size_t k_Unknown                                     = 0x1;  // int8.

@@ -1,25 +1,25 @@
-export module Egocentric.Self.System;
+export module Views.Self.System;
 
 import Common.Math.Type;
 import Common.Math.System;
 import Common.Log.System;
-import Tables.Player.Type;
-import Tables.Player.State;
-import Egocentric.Self.State;
+import Blam.Runtime.Player.Type;
+import Blam.Runtime.Player.State;
+import Views.Self.State;
 import std;
 
-export namespace Egocentric::Self::System
+export namespace Views::Self::System
 {
     class SelfService
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using AlivePlayer = Tables::Player::Type::Alive::AlivePlayer;
-        using PlayerTable = Tables::Player::Type::Alive::PlayerTable;
+        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
+        using PlayerTable = Blam::Runtime::Player::Type::Alive::PlayerTable;
 
         using Log = Common::Log::System::Log;
-        using PlayerTableStore = Tables::Player::State::PlayerTableStore;
-        using SelfStore = Egocentric::Self::State::SelfStore;
+        using PlayerTableStore = Blam::Runtime::Player::State::PlayerTableStore;
+        using SelfStore = Views::Self::State::SelfStore;
 
     public:
         SelfService(Log& log, PlayerTableStore& playerStore,

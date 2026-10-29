@@ -2,29 +2,29 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :HealthLabels;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Resolved.Vitality.Type;
-import Resolved.World.Type;
-import Viewer.Options.Type;
-import Viewer.Options.State;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import Blam.MapModel.Vitality.Type;
+import Blam.MapModel.World.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::Flag;
-    using Resolved::World::Type::ModelLink::AnchorSource;
-    using Resolved::Vitality::Type::Vitality::Section;
-    using Resolved::Vitality::Type::Vitality::VitalityKind;
+    using DevTools::Viewer::Options::Type::Flag;
+    using Blam::MapModel::World::Type::ModelLink::AnchorSource;
+    using Blam::MapModel::Vitality::Type::Vitality::Section;
+    using Blam::MapModel::Vitality::Type::Vitality::VitalityKind;
 
-    using Viewer::Style::Type::k_VitalityShield;
+    using DevTools::Viewer::Style::Type::k_VitalityShield;
     using Common::Engine::Type::k_NoHandle;
-    using Viewer::Hud::Type::k_SelectedPriority;
+    using DevTools::Viewer::Hud::Type::k_SelectedPriority;
 
     auto TagsOf(const Section& section) -> std::string
     {
@@ -39,7 +39,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto HealthLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
@@ -92,7 +92,7 @@ namespace Viewer::Hud::System
 
                 const ImU32 color = isShield
                     ? ToImColor(k_VitalityShield)
-                    : ToImColor(Viewer::Style::Type::ColorOfVitality(vitality));
+                    : ToImColor(DevTools::Viewer::Style::Type::ColorOfVitality(vitality));
 
                 canvas.AddBar(aim.Position, vitality, color, std::move(text), priority);
             }

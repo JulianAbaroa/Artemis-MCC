@@ -1,8 +1,8 @@
-export module Map.Reader.System:DataStream;
+export module Blam.Map.Reader.System:DataStream;
 
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads bytes from the map files, inflating them when the block is compressed.
     class DataStreamService

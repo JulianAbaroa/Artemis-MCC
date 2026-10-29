@@ -2,17 +2,17 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.TickDump.System;
+module DevTools.Workbench.TickDump.System;
 
 import Common.Hash.System;
 import Common.Text.System;
 import Common.Time.System;
-import Platform.Bridge.Type;
-import Layout.Snapshot.Type;
-import Layout.Snapshot.System;
-import Export.Dump.Type;
-import Export.Dump.System;
-import UI.TickDump.Type;
+import Bridge.Transport.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Layout.Snapshot.System;
+import Bridge.Codec.Dump.Type;
+import Bridge.Codec.Dump.System;
+import DevTools.Workbench.TickDump.Type;
 import std;
 
 namespace
@@ -22,17 +22,17 @@ namespace
     using Common::Text::System::CopyText;
     using Common::Time::System::LocalNow;
 
-    using Platform::Bridge::Type::BridgeTick;
+    using Contract::Bridge::Type::BridgeTick;
 
-    using Export::Dump::Type::TickDumpCounters;
-    using Layout::Snapshot::Type::SnapshotDumpFooter;
-    using Layout::Snapshot::Type::SnapshotLoadInfo;
+    using Bridge::Codec::Dump::Type::TickDumpCounters;
+    using Blam::Layout::Snapshot::Type::SnapshotDumpFooter;
+    using Blam::Layout::Snapshot::Type::SnapshotLoadInfo;
 
     using Common::Text::System::k_BytesPerMegabyte;
-    using Platform::Bridge::Type::k_BridgeLayoutHash;
-    using Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
-    using Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
-    using Layout::Snapshot::Type::k_SnapshotViewerActive;
+    using Contract::Bridge::Type::k_BridgeLayoutHash;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
+    using Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
+    using Blam::Layout::Snapshot::Type::k_SnapshotViewerActive;
 
     // Subfolder of the storage folder that holds the dumps.
     constexpr std::string_view k_DumpFolder{ "TickDumps" };
@@ -71,7 +71,7 @@ namespace
     }
 }
 
-namespace UI::TickDump::System
+namespace DevTools::Workbench::TickDump::System
 {
     auto TickDumpUIService::IsRecording() const -> bool
     {
@@ -200,15 +200,15 @@ namespace UI::TickDump::System
         }
 
         const std::string startTime{ std::format("{:%Y-%m-%d %H:%M:%S}", now) };
-        const std::uint64_t bytes{ Export::Dump::System::WriteFileHeader(file, mapName, startTime, source) };
-        const std::uint64_t snapshotBytes{ Layout::Snapshot::System::WriteFileHeader(snapshotFile, k_BridgeLayoutHash, startTime, source) };
+        const std::uint64_t bytes{ Bridge::Codec::Dump::System::WriteFileHeader(file, mapName, startTime, source) };
+        const std::uint64_t snapshotBytes{ Blam::Layout::Snapshot::System::WriteFileHeader(snapshotFile, k_BridgeLayoutHash, startTime, source) };
 
         m_TickDumpUIStore.ClearQueue();
         m_TickDumpUIStore.ResetCounters();
         m_TickDumpUIStore.AddWrittenBytes(bytes);
         m_TickDumpUIStore.AddSnapshotBytes(snapshotBytes);
-        Export::Dump::System::Begin(m_TickDumpUIStore.GetWriterState());
-        m_TickDumpUIStore.GetSnapshotWriterState() = Layout::Snapshot::Type::SnapshotWriterState{};
+        Bridge::Codec::Dump::System::Begin(m_TickDumpUIStore.GetWriterState());
+        m_TickDumpUIStore.GetSnapshotWriterState() = Blam::Layout::Snapshot::Type::SnapshotWriterState{};
         m_TickDumpUIStore.SetFilePath(filePath);
         m_TickDumpUIStore.SetStatus({});
         m_TickDumpUIStore.SetRecording(true);
@@ -232,13 +232,13 @@ namespace UI::TickDump::System
         const TickDumpCounters counters{ .RecordedTicks = m_TickDumpUIStore.GetRecordedTicks(),
             .DroppedTicks = m_TickDumpUIStore.GetDroppedTicks(), .QueueWaits = m_TickDumpUIStore.GetQueueWaits(),
             .EventLosses = m_TickDumpUIStore.GetEventLosses() };
-        m_TickDumpUIStore.AddWrittenBytes(Export::Dump::System::WriteFooter(file, counters));
+        m_TickDumpUIStore.AddWrittenBytes(Bridge::Codec::Dump::System::WriteFooter(file, counters));
 
         // The map loaded now. The CRC-32 takes about a second for a Reach map.
         SnapshotDumpFooter snapshotFooter{ DescribeMap(m_FileStore.GetMapFilePath(), true) };
         snapshotFooter.Marker = k_SnapshotDumpEndMarker;
         snapshotFooter.RecordedTicks = counters.RecordedTicks;
-        m_TickDumpUIStore.AddSnapshotBytes(Layout::Snapshot::System::WriteFooter(snapshotFile, snapshotFooter));
+        m_TickDumpUIStore.AddSnapshotBytes(Blam::Layout::Snapshot::System::WriteFooter(snapshotFile, snapshotFooter));
 
         file.close();
         snapshotFile.close();
@@ -284,10 +284,10 @@ namespace UI::TickDump::System
         }
 
         BridgeTick& flat{ m_TickDumpUIStore.GetFlat() };
-        Export::Dump::System::ClearHeader(flat);
+        Bridge::Codec::Dump::System::ClearHeader(flat);
         m_FlatService.Flatten(*entry.Tick, flat);
 
-        const auto result{ Export::Dump::System::WriteRecord(file, flat, entry.Tick->Match != nullptr, entry.DroppedBefore,
+        const auto result{ Bridge::Codec::Dump::System::WriteRecord(file, flat, entry.Tick->Match != nullptr, entry.DroppedBefore,
             m_TickDumpUIStore.GetWriterState()) };
         if (result.IsEventsLost) m_TickDumpUIStore.AddEventLoss();
 
@@ -301,7 +301,7 @@ namespace UI::TickDump::System
         }
         if (entry.IsViewerActive) flags |= k_SnapshotViewerActive;
 
-        const std::uint64_t snapshotBytes{ Layout::Snapshot::System::WriteRecord(snapshotFile, entry.Snapshot, entry.Generation,
+        const std::uint64_t snapshotBytes{ Blam::Layout::Snapshot::System::WriteRecord(snapshotFile, entry.Snapshot, entry.Generation,
             entry.DroppedBefore, flags, loadInfo, m_TickDumpUIStore.GetSnapshotWriterState()) };
 
         if (!file.good() || !snapshotFile.good())

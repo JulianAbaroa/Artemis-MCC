@@ -1,38 +1,38 @@
-export module Tables.Object.System;
+export module Blam.Runtime.Object.System;
 
 import Common.Log.System;
-import Resolved.Definitions.Type;
-import Resolved.Tag.System;
-import Resolved.Vitality.State;
-import Resolved.World.State;
-import Layout.Snapshot.Type;
-import Tables.Object.Type;
-import Tables.Object.State;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Tag.System;
+import Blam.MapModel.Vitality.State;
+import Blam.MapModel.World.State;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Object.Type;
+import Blam.Runtime.Object.State;
 import std;
 
-export namespace Tables::Object::System
+export namespace Blam::Runtime::Object::System
 {
     class ObjectTableService
     {
     private:
-        using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-        using RawObject = Layout::Snapshot::Type::RawObject;
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
-        using Profile = Tables::Object::Type::Profile::Profile;
-        using Multiplayer = Tables::Object::Type::Multiplayer::Multiplayer;
-        using Placement = Tables::Object::Type::Placement::Placement;
-        using BoneMatrix = Tables::Object::Type::BoneMatrix::BoneMatrix;
-        using BoneMatrixTable = Tables::Object::Type::BoneMatrix::BoneMatrixTable;
-        using BonesHeader = Tables::Object::Type::BoneMatrix::BonesHeader;
-        using DamageSection = Tables::Object::Type::DamageSection::DamageSection;
-        using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
+        using ObjectKind = Blam::MapModel::Definitions::Type::Object::ObjectKind;
+        using RawObject = Blam::Layout::Snapshot::Type::RawObject;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
+        using Profile = Blam::Runtime::Object::Type::Profile::Profile;
+        using Multiplayer = Blam::Runtime::Object::Type::Multiplayer::Multiplayer;
+        using Placement = Blam::Runtime::Object::Type::Placement::Placement;
+        using BoneMatrix = Blam::Runtime::Object::Type::BoneMatrix::BoneMatrix;
+        using BoneMatrixTable = Blam::Runtime::Object::Type::BoneMatrix::BoneMatrixTable;
+        using BonesHeader = Blam::Runtime::Object::Type::BoneMatrix::BonesHeader;
+        using DamageSection = Blam::Runtime::Object::Type::DamageSection::DamageSection;
+        using DamageSectionTable = Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
 
         using Log = Common::Log::System::Log;
-        using ObjectTableStore = Tables::Object::State::ObjectTableStore;
-        using BoneMatricesStore = Tables::Object::State::BoneMatricesStore;
-        using DamageSectionsStore = Tables::Object::State::DamageSectionsStore;
-        using TagResolverService = Resolved::Tag::System::TagResolverService;
+        using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
+        using BoneMatricesStore = Blam::Runtime::Object::State::BoneMatricesStore;
+        using DamageSectionsStore = Blam::Runtime::Object::State::DamageSectionsStore;
+        using TagResolverService = Blam::MapModel::Tag::System::TagResolverService;
 
     public:
         ObjectTableService(Log& log,

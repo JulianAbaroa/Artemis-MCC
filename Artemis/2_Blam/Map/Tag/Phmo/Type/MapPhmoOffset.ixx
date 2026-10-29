@@ -2,11 +2,11 @@
 // Source XML: phmo.xml
 // Base size: 0x19C.
 
-export module Map.Tag.Type:Phmo.Offset;
+export module Blam.Map.Tag.Type:Phmo.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Phmo::Offset
+export namespace Blam::Map::Tag::Type::Phmo::Offset
 {
     constexpr std::size_t k_Flags                                       = 0x0;  // flags32. [Bit 0=0, Bit 1=1, Bit 2=2, Bit 3=3, Bit 4=4, Bit 5=5, Bit 6=6, Bit 7=7, Bit 8=8, Bit 9=9, Bit 10=10, Bit 11=11, Bit 12=12, Bit 13=13, Bit 14=14, Bit 15=15, Bit 16=16, Bit 17=17, Bit 18=18, Bit 19=19, Bit 20=20, Bit 21=21, Bit 22=22, Bit 23=23, Bit 24=24, Bit 25=25, Bit 26=26, Bit 27=27, Bit 28=28, Bit 29=29, Bit 30=30, Bit 31=31]
     constexpr std::size_t k_MassScale                                   = 0x4;  // float32.

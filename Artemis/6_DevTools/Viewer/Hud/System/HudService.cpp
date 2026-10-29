@@ -2,15 +2,15 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
-import Viewer.Overlay.Type;
+import DevTools.Viewer.Overlay.Type;
 import std;
 
 namespace
 {
-    using Viewer::Overlay::Type::Mode;
+    using DevTools::Viewer::Overlay::Type::Mode;
 
     using Common::Engine::Type::k_NoHandle;
 
@@ -34,7 +34,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto HudService::Draw() -> void
     {

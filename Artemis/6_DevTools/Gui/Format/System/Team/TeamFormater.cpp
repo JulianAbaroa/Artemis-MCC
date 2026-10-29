@@ -1,7 +1,7 @@
-module Gui.Format.System;
+module DevTools.Gui.Format.System;
 import :Team;
 
-namespace Gui::Format::System
+namespace DevTools::Gui::Format::System
 {
     auto TeamFormater::TeamToString(Team team) -> const char*
     {

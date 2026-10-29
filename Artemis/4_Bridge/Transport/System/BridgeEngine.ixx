@@ -1,10 +1,10 @@
-export module Platform.Bridge.System:Engine;
+export module Bridge.Transport.System:Engine;
 
 import Control.Action.Type;
-import Platform.Bridge.Type;
+import Bridge.Transport.Type;
 import std;
 
-export namespace Platform::Bridge::System
+export namespace Bridge::Transport::System
 {
     // What the bridge reads and writes in the engine (D215). Implemented by the owner (Mod), the bridge never imports the engine.
     // note: The bridge calls it from its own thread (Update, EndTick), from the AI thread (CaptureClock) and from the game thread
@@ -15,7 +15,7 @@ export namespace Platform::Bridge::System
         using ActionOverride = Control::Action::Type::ActionOverride;
         using ClientRequests = Control::Action::Type::ClientRequests;
 
-        using BridgePhase = Platform::Bridge::Type::BridgePhase;
+        using BridgePhase = Contract::Bridge::Type::BridgePhase;
 
     public:
         virtual ~BridgeEngine() = default;

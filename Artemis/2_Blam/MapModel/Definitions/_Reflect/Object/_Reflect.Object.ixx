@@ -1,13 +1,13 @@
-export module Resolved.Definitions.Reflect:Object;
+export module Blam.MapModel.Definitions.Reflect:Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Object::MultiplayerObject;
-    using Resolved::Definitions::Type::Object::Object;
+    using Blam::MapModel::Definitions::Type::Object::MultiplayerObject;
+    using Blam::MapModel::Definitions::Type::Object::Object;
 }
 
 export namespace Common::Reflect::Type

@@ -1,6 +1,6 @@
-module Platform.Capture.State;
+module Engine.Capture.State;
 
-namespace Platform::Capture::State
+namespace Engine::Capture::State
 {
     auto CaptureStore::GetThreadContext() const -> std::uintptr_t
     {

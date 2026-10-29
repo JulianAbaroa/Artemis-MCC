@@ -1,15 +1,15 @@
-export module Tables.Object.State:DamageSections;
+export module Blam.Runtime.Object.State:DamageSections;
 
-import Tables.Object.Type;
+import Blam.Runtime.Object.Type;
 import std;
 
-export namespace Tables::Object::State
+export namespace Blam::Runtime::Object::State
 {
     class DamageSectionsStore
     {
     private:
-        using DamageSectionTable = Tables::Object::Type::DamageSection::DamageSectionTable;
-        using DamageSectionTables = Tables::Object::Type::DamageSection::DamageSectionTables;
+        using DamageSectionTable = Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
+        using DamageSectionTables = Blam::Runtime::Object::Type::DamageSection::DamageSectionTables;
 
     public:
         DamageSectionsStore() = default;

@@ -5,20 +5,20 @@ import Common.Log.Type;
 import Common.Log.System;
 import Common.Math.Type;
 import Common.Team.Type;
-import Datum.Object.Type;
-import Layout.Player.Type;
-import Layout.Interaction.Type;
-import Layout.Game.Type;
-import Layout.Snapshot.Type;
-import Map.Layer;
-import Map.Reader.Type;
-import Resolved.Layer;
-import Resolved.Definitions.Type;
-import Tables.Layer;
-import Tables.Object.Type;
-import Tables.Player.Type;
-import Tables.Interaction.Type;
-import Tables.Game.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Player.Type;
+import Blam.Layout.Interaction.Type;
+import Blam.Layout.Game.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Map.Layer;
+import Blam.Map.Reader.Type;
+import Blam.MapModel.Layer;
+import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Layer;
+import Blam.Runtime.Object.Type;
+import Blam.Runtime.Player.Type;
+import Blam.Runtime.Interaction.Type;
+import Blam.Runtime.Game.Type;
 import Tests.Support.Blam;
 import Tests.Support.Log;
 import std;
@@ -33,23 +33,23 @@ namespace
     using Common::Log::System::Log;
     using Common::Math::Type::Vec3;
     using Common::Team::Type::Team;
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::RegionSize;
-    using Layout::Snapshot::Type::Snapshot;
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Tables::Object::Type::Alive::AliveObject;
-    using Tables::Object::Type::Biped::Biped;
-    using Tables::Object::Type::Weapon::Weapon;
-    using Tables::Object::Type::Vehicle::Vehicle;
-    using Tables::Object::Type::Crate::Crate;
-    using Tables::Object::Type::Scenery::Scenery;
-    using Tables::Object::Type::BoneMatrix::BoneMatrix;
-    using Tables::Object::Type::BoneMatrix::BoneMatrixTable;
-    using Tables::Object::Type::DamageSection::DamageSectionTable;
-    using Tables::Player::Type::Alive::AlivePlayer;
-    using Tables::Player::Type::Alive::ConnectionState;
-    using Tables::Interaction::Type::Alive::InteractionKind;
+    using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::Runtime::Object::Type::Alive::AliveObject;
+    using Blam::Runtime::Object::Type::Biped::Biped;
+    using Blam::Runtime::Object::Type::Weapon::Weapon;
+    using Blam::Runtime::Object::Type::Vehicle::Vehicle;
+    using Blam::Runtime::Object::Type::Crate::Crate;
+    using Blam::Runtime::Object::Type::Scenery::Scenery;
+    using Blam::Runtime::Object::Type::BoneMatrix::BoneMatrix;
+    using Blam::Runtime::Object::Type::BoneMatrix::BoneMatrixTable;
+    using Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
+    using Blam::Runtime::Player::Type::Alive::AlivePlayer;
+    using Blam::Runtime::Player::Type::Alive::ConnectionState;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
     using Tests::Support::Blam::MakeHandle;
@@ -62,20 +62,20 @@ namespace
     using Common::Engine::Type::k_NoTick;
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_MaxPlayers;
-    using Map::Reader::Type::Magic::Tag::k_Bipd;
-    using Map::Reader::Type::Magic::Tag::k_Weap;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Bipd;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Weap;
 
-    namespace ObjeOffset = Datum::Object::Type::Obje::Offset;
-    namespace UnitOffset = Datum::Object::Type::Unit::Offset;
-    namespace WeapOffset = Datum::Object::Type::Weap::Offset;
-    namespace PlayerOffset = Layout::Player::Type::Offset;
-    namespace PlayerMapping = Layout::Player::Type::Mapping;
-    namespace InteractionOffset = Layout::Interaction::Type::Offset;
-    namespace GameOffset = Layout::Game::Type::Offset;
+    namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
+    namespace UnitOffset = Blam::Layout::Object::Type::Unit::Offset;
+    namespace WeapOffset = Blam::Layout::Object::Type::Weap::Offset;
+    namespace PlayerOffset = Blam::Layout::Player::Type::Offset;
+    namespace PlayerMapping = Blam::Layout::Player::Type::Mapping;
+    namespace InteractionOffset = Blam::Layout::Interaction::Type::Offset;
+    namespace GameOffset = Blam::Layout::Game::Type::Offset;
 
-    using Layout::Player::Type::Size::k_Base;
-    using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
-    using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Player::Type::Size::k_Base;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
+    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
 
     // Bytes of every hand made datum: more than the last field of a biped.
     constexpr std::size_t k_DatumBytes{ 0x1000 };
@@ -214,7 +214,7 @@ namespace
         return snapshot;
     }
 
-    // Tables::Layer over a real Map::Layer and Resolved::Layer whose tag index is written by hand (D197).
+    // Blam::Runtime::Layer over a real Blam::Map::Layer and Blam::MapModel::Layer whose tag index is written by hand (D197).
     class RuntimeTests : public ::testing::Test
     {
     protected:
@@ -230,19 +230,19 @@ namespace
             return static_cast<std::size_t>(std::ranges::count(m_Sink.m_Messages, expected));
         }
 
-        auto UpdateObjects(const Snapshot& snapshot) -> std::shared_ptr<const Tables::Object::Type::Alive::ObjectTable>
+        auto UpdateObjects(const Snapshot& snapshot) -> std::shared_ptr<const Blam::Runtime::Object::Type::Alive::ObjectTable>
         {
             m_Tables.m_ObjectService.UpdateObjectTable(snapshot);
             return m_Tables.m_ObjectStore.Acquire();
         }
 
-        auto UpdatePlayers(const Snapshot& snapshot) -> std::shared_ptr<const Tables::Player::Type::Alive::PlayerTable>
+        auto UpdatePlayers(const Snapshot& snapshot) -> std::shared_ptr<const Blam::Runtime::Player::Type::Alive::PlayerTable>
         {
             m_Tables.m_PlayerService.UpdatePlayerTable(snapshot);
             return m_Tables.m_PlayerStore.Acquire();
         }
 
-        auto UpdateGame(const Snapshot& snapshot) -> std::shared_ptr<const Tables::Game::Type::Alive::AliveGame>
+        auto UpdateGame(const Snapshot& snapshot) -> std::shared_ptr<const Blam::Runtime::Game::Type::Alive::AliveGame>
         {
             m_Tables.m_GameService.Update(snapshot);
             return m_Tables.m_GameStore.Acquire();
@@ -250,9 +250,9 @@ namespace
 
         CollectingSink m_Sink{};
         Log m_Log{ m_Sink };
-        Map::Layer m_Map{ m_Log };
-        Resolved::Layer m_Resolved{ m_Log, m_Map };
-        Tables::Layer m_Tables{ m_Log, m_Resolved };
+        Blam::Map::Layer m_Map{ m_Log };
+        Blam::MapModel::Layer m_Resolved{ m_Log, m_Map };
+        Blam::Runtime::Layer m_Tables{ m_Log, m_Resolved };
     };
 }
 

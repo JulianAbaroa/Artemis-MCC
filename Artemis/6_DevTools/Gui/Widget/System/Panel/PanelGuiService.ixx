@@ -2,12 +2,12 @@ module;
 
 #include "External/imgui/imgui.h"
 
-export module Gui.Widget.System:Panel;
+export module DevTools.Gui.Widget.System:Panel;
 
 import Common.Math.Type;
 import std;
 
-export namespace Gui::Widget::System
+export namespace DevTools::Gui::Widget::System
 {
     // Draws the small building blocks shared by the HUD panels.
     class PanelGuiService

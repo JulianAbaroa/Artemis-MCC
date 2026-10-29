@@ -1,7 +1,7 @@
-module Viewer.Format.System;
+module DevTools.Viewer.Format.System;
 import :Interaction;
 
-namespace Viewer::Format::System
+namespace DevTools::Viewer::Format::System
 {
     auto InteractionFormater::InteractionKindToString(InteractionKind kind) -> const char*
     {

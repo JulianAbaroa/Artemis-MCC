@@ -2,11 +2,11 @@ module;
 
 #include <cstdlib>
 
-module Service.Settings.System;
+module Services.Settings.System;
 
 import std;
 
-namespace Service::Settings::System
+namespace Services::Settings::System
 {
     auto SettingsService::InitializePaths(const std::string& directory) -> void
     {

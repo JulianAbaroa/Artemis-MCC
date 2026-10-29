@@ -1,4 +1,4 @@
-export module Tables.Object.Type:Alive;
+export module Blam.Runtime.Object.Type:Alive;
 
 import :Profile;
 import :Equipment;
@@ -17,19 +17,19 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Tables::Object::Type::Profile::Profile;
-    using Tables::Object::Type::Equipment::Equipment;
-    using Tables::Object::Type::Vehicle::Vehicle;
-    using Tables::Object::Type::Weapon::Weapon;
-    using Tables::Object::Type::Biped::Biped;
-    using Tables::Object::Type::Crate::Crate;
-    using Tables::Object::Type::Scenery::Scenery;
-    using Tables::Object::Type::Projectile::Projectile;
-    using Tables::Object::Type::Multiplayer::Multiplayer;
-    using Tables::Object::Type::Placement::Placement;
+    using Blam::Runtime::Object::Type::Profile::Profile;
+    using Blam::Runtime::Object::Type::Equipment::Equipment;
+    using Blam::Runtime::Object::Type::Vehicle::Vehicle;
+    using Blam::Runtime::Object::Type::Weapon::Weapon;
+    using Blam::Runtime::Object::Type::Biped::Biped;
+    using Blam::Runtime::Object::Type::Crate::Crate;
+    using Blam::Runtime::Object::Type::Scenery::Scenery;
+    using Blam::Runtime::Object::Type::Projectile::Projectile;
+    using Blam::Runtime::Object::Type::Multiplayer::Multiplayer;
+    using Blam::Runtime::Object::Type::Placement::Placement;
 }
 
-export namespace Tables::Object::Type::Alive
+export namespace Blam::Runtime::Object::Type::Alive
 {
     // Data of the kind of the object. Monostate for the kinds without specific data.
     struct Specific : std::variant<std::monostate, Equipment::Equipment, Vehicle::Vehicle, Weapon::Weapon, Biped::Biped, Crate::Crate,

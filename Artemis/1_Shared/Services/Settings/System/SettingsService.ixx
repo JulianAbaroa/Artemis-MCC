@@ -1,17 +1,17 @@
-export module Service.Settings.System;
+export module Services.Settings.System;
 
 import Common.Log.System;
-import Service.Settings.State;
+import Services.Settings.State;
 import std;
 
-export namespace Service::Settings::System
+export namespace Services::Settings::System
 {
     // Resolves Artemis paths and manages the AppData folder and its config flag.
     class SettingsService
     {
     private:
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
     public:
         SettingsService(SettingsStore& settingsStore, Log& log) :

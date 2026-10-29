@@ -4,11 +4,11 @@
 import Common.Log.System;
 import Common.Log.Type;
 import Control.Action.Type;
-import Service.Settings.State;
-import Export.Flat.Type;
-import Platform.Bridge.Type;
-import Platform.Bridge.State;
-import Platform.Bridge.System;
+import Services.Settings.State;
+import Bridge.Codec.Flat.Type;
+import Bridge.Transport.Type;
+import Bridge.Transport.State;
+import Bridge.Transport.System;
 import Tests.Support.Log;
 import std;
 
@@ -22,26 +22,26 @@ namespace
     using Common::Log::Type::LogMessage;
     using Control::Action::Type::ActionOverride;
     using Control::Action::Type::ClientRequests;
-    using Export::Flat::Type::BridgeClock;
-    using Platform::Bridge::State::BridgeStore;
-    using Platform::Bridge::System::BridgeEngine;
-    using Platform::Bridge::System::BridgeService;
-    using Platform::Bridge::Type::BridgeAction;
-    using Platform::Bridge::Type::BridgeMode;
-    using Platform::Bridge::Type::BridgeOwner;
-    using Platform::Bridge::Type::BridgePhase;
-    using Platform::Bridge::Type::BridgeRegion;
-    using Platform::Bridge::Type::BridgeStatus;
-    using Platform::Bridge::Type::BridgeTick;
-    using Service::Settings::State::SettingsStore;
+    using Bridge::Codec::Flat::Type::BridgeClock;
+    using Bridge::Transport::State::BridgeStore;
+    using Bridge::Transport::System::BridgeEngine;
+    using Bridge::Transport::System::BridgeService;
+    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgeOwner;
+    using Contract::Bridge::Type::BridgePhase;
+    using Contract::Bridge::Type::BridgeRegion;
+    using Bridge::Transport::Type::BridgeStatus;
+    using Contract::Bridge::Type::BridgeTick;
+    using Services::Settings::State::SettingsStore;
     using Tests::Support::Log::CollectingSink;
 
-    using Platform::Bridge::Type::k_BridgeActionEventSuffix;
-    using Platform::Bridge::Type::k_BridgeLayoutHash;
-    using Platform::Bridge::Type::k_BridgeLayoutVersion;
-    using Platform::Bridge::Type::k_BridgeMagic;
-    using Platform::Bridge::Type::k_BridgeNotLocal;
-    using Platform::Bridge::Type::k_BridgeRegionPrefix;
+    using Contract::Bridge::Type::k_BridgeActionEventSuffix;
+    using Contract::Bridge::Type::k_BridgeLayoutHash;
+    using Contract::Bridge::Type::k_BridgeLayoutVersion;
+    using Contract::Bridge::Type::k_BridgeMagic;
+    using Contract::Bridge::Type::k_BridgeNotLocal;
+    using Contract::Bridge::Type::k_BridgeRegionPrefix;
 
     using std::chrono::milliseconds;
     using std::chrono::steady_clock;
@@ -60,7 +60,7 @@ namespace
     class FakeBridgeEngine : public BridgeEngine
     {
     private:
-        using BridgePhase = Platform::Bridge::Type::BridgePhase;
+        using BridgePhase = Contract::Bridge::Type::BridgePhase;
 
         using ActionOverride = Control::Action::Type::ActionOverride;
         using ClientRequests = Control::Action::Type::ClientRequests;

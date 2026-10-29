@@ -3,17 +3,17 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:ZonePass;
+export module DevTools.Viewer.Map.System:ZonePass;
 
 import Common.Log.System;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Export.Tick.Type;
-import Viewer.Palette.System;
-import Viewer.Map.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Palette.System;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws the zones of the teleporters and the objective spawns as translucent solids.
     class ZonePass
@@ -24,12 +24,12 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using Vertex = Platform::Render::Type::Vertex;
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using Vertex = Engine::Render::Type::Vertex;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
 
-        using PaletteService = Viewer::Palette::System::PaletteService;
+        using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
     public:
         explicit ZonePass(Log& log) : m_Log(log) {}
@@ -53,7 +53,7 @@ export namespace Viewer::Map::System
         UINT m_Capacity{ 0 };
         UINT m_VertexCount{ 0 };
 
-        Platform::Render::System::UploadGate m_Gate{};
+        Engine::Render::System::UploadGate m_Gate{};
 
         std::vector<Vertex> m_Scratch{};
     };

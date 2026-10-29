@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-import Export.Pipeline.System;
-import Layout.Snapshot.Type;
+import Bridge.Codec.Pipeline.System;
+import Blam.Layout.Snapshot.Type;
 import Tests.Support.Pipeline;
 import std;
 
@@ -9,12 +9,12 @@ import std;
 
 namespace
 {
-    using Layout::Snapshot::Type::Snapshot;
+    using Blam::Layout::Snapshot::Type::Snapshot;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
     using Tests::Support::Pipeline::WithBipedAndPlayer;
 
-    using Export::Pipeline::System::k_PipelineStageNames;
+    using Bridge::Codec::Pipeline::System::k_PipelineStageNames;
 
     class CollidableSceneTests : public ::testing::Test, protected Chain
     {

@@ -1,23 +1,23 @@
-export module Service.Preferences.System;
+export module Services.Preferences.System;
 
 import Common.Log.System;
-import Service.Preferences.Type;
-import Service.Settings.State;
+import Services.Preferences.Type;
+import Services.Settings.State;
 import std;
 
-export namespace Service::Preferences::System
+export namespace Services::Preferences::System
 {
     // Persists user preferences to user_preferences.cfg in the AppData folder.
     // note: Does nothing unless AppData is enabled. Other modules add their keys through RegisterSection.
     class PreferencesService
     {
     private:
-        using SectionSaver = Service::Preferences::Type::SectionSaver;
-        using SectionLoader = Service::Preferences::Type::SectionLoader;
-        using Section = Service::Preferences::Type::Section;
+        using SectionSaver = Services::Preferences::Type::SectionSaver;
+        using SectionLoader = Services::Preferences::Type::SectionLoader;
+        using Section = Services::Preferences::Type::Section;
 
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
     public:
         PreferencesService(SettingsStore& settingsStore, Log& log) :

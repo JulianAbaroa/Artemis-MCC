@@ -1,14 +1,14 @@
-export module Resolved.Definitions.Reflect:Ctrl;
+export module Blam.MapModel.Definitions.Reflect:Ctrl;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Ctrl::Ctrl;
+    using Blam::MapModel::Definitions::Type::Ctrl::Ctrl;
 }
 
 export namespace Common::Reflect::Type

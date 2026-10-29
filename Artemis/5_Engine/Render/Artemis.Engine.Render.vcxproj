@@ -54,34 +54,34 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.Render.Layer.ixx" />
-    <ClCompile Include="Render\Hook\PresentDetour.cpp" />
-    <ClCompile Include="Render\Hook\PresentDetour.ixx" />
-    <ClCompile Include="Render\Hook\ResizeBuffersDetour.cpp" />
-    <ClCompile Include="Render\Hook\ResizeBuffersDetour.ixx" />
-    <ClCompile Include="Render\Platform.Render.Hook.ixx" />
-    <ClCompile Include="Render\Platform.Render.System.ixx" />
-    <ClCompile Include="Render\State\RenderStore.cpp" />
-    <ClCompile Include="Render\State\RenderStore.ixx" />
-    <ClCompile Include="Render\System\GpuBuffer.cpp" />
-    <ClCompile Include="Render\System\GpuBuffer.ixx" />
-    <ClCompile Include="Render\System\GpuPipeline.cpp" />
-    <ClCompile Include="Render\System\GpuPipeline.ixx" />
-    <ClCompile Include="Render\System\GpuStateGuard.cpp" />
-    <ClCompile Include="Render\System\GpuStateGuard.ixx" />
-    <ClCompile Include="Render\System\RenderService.cpp" />
-    <ClCompile Include="Render\System\RenderService.ixx" />
-    <ClCompile Include="Render\System\SwapChainLocator.cpp" />
-    <ClCompile Include="Render\System\SwapChainLocator.ixx" />
-    <ClCompile Include="Render\Type\Platform.Render.Type.ixx" />
+    <ClCompile Include="Hook\PresentDetour.cpp" />
+    <ClCompile Include="Hook\PresentDetour.ixx" />
+    <ClCompile Include="Hook\ResizeBuffersDetour.cpp" />
+    <ClCompile Include="Hook\ResizeBuffersDetour.ixx" />
+    <ClCompile Include="Engine.Render.Hook.ixx" />
+    <ClCompile Include="Engine.Render.System.ixx" />
+    <ClCompile Include="State\RenderStore.cpp" />
+    <ClCompile Include="State\RenderStore.ixx" />
+    <ClCompile Include="System\GpuBuffer.cpp" />
+    <ClCompile Include="System\GpuBuffer.ixx" />
+    <ClCompile Include="System\GpuPipeline.cpp" />
+    <ClCompile Include="System\GpuPipeline.ixx" />
+    <ClCompile Include="System\GpuStateGuard.cpp" />
+    <ClCompile Include="System\GpuStateGuard.ixx" />
+    <ClCompile Include="System\RenderService.cpp" />
+    <ClCompile Include="System\RenderService.ixx" />
+    <ClCompile Include="System\SwapChainLocator.cpp" />
+    <ClCompile Include="System\SwapChainLocator.ixx" />
+    <ClCompile Include="Type\Engine.Render.Type.ixx" />
     <ClCompile Include="Window\Hook\GetRawInputDataDetour.cpp" />
     <ClCompile Include="Window\Hook\GetRawInputDataDetour.ixx" />
     <ClCompile Include="Window\Hook\WndProcDetour.cpp" />
     <ClCompile Include="Window\Hook\WndProcDetour.ixx" />
-    <ClCompile Include="Window\Platform.Window.Hook.ixx" />
-    <ClCompile Include="Window\Platform.Window.System.ixx" />
+    <ClCompile Include="Window\Engine.Render.Window.Hook.ixx" />
+    <ClCompile Include="Window\Engine.Render.Window.System.ixx" />
     <ClCompile Include="Window\System\InputService.cpp" />
     <ClCompile Include="Window\System\InputService.ixx" />
-    <ClCompile Include="Window\Type\Platform.Window.Type.ixx" />
+    <ClCompile Include="Window\Type\Engine.Render.Window.Type.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

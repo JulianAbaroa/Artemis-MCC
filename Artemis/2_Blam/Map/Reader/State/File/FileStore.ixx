@@ -1,8 +1,8 @@
-export module Map.Reader.State:File;
+export module Blam.Map.Reader.State:File;
 
 import std;
 
-export namespace Map::Reader::State
+export namespace Blam::Map::Reader::State
 {
     // Paths of the map being read and of the external cache maps it can point to, plus whether it is loaded.
     // note: Thread safe.

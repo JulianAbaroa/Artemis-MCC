@@ -53,16 +53,16 @@
     <ClCompile Include="Hook\EngineInterfaceDetour.ixx" />
     <ClCompile Include="Hook\LifecycleUpdateDetour.cpp" />
     <ClCompile Include="Hook\LifecycleUpdateDetour.ixx" />
-    <ClCompile Include="Platform.Match.Hook.ixx" />
-    <ClCompile Include="Platform.Match.State.ixx" />
-    <ClCompile Include="Platform.Match.System.ixx" />
+    <ClCompile Include="Engine.Match.Hook.ixx" />
+    <ClCompile Include="Engine.Match.State.ixx" />
+    <ClCompile Include="Engine.Match.System.ixx" />
     <ClCompile Include="State\MatchConfigStore.cpp" />
     <ClCompile Include="State\MatchConfigStore.ixx" />
     <ClCompile Include="State\MatchCycleStore.cpp" />
     <ClCompile Include="State\MatchCycleStore.ixx" />
     <ClCompile Include="System\MatchConfigService.cpp" />
     <ClCompile Include="System\MatchConfigService.ixx" />
-    <ClCompile Include="Type\Platform.Match.Type.ixx" />
+    <ClCompile Include="Type\Engine.Match.Type.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

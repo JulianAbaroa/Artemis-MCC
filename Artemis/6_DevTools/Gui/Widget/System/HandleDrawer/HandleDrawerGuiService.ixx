@@ -1,16 +1,16 @@
-export module Gui.Widget.System:HandleDrawer;
+export module DevTools.Gui.Widget.System:HandleDrawer;
 
 import :CopyableField;
 
 import std;
 
-export namespace Gui::Widget::System
+export namespace DevTools::Gui::Widget::System
 {
     // Draws a 32-bit object handle.
     class HandleDrawerGuiService
     {
     private:
-        using CopyableFieldGuiService = Gui::Widget::System::CopyableFieldGuiService;
+        using CopyableFieldGuiService = DevTools::Gui::Widget::System::CopyableFieldGuiService;
 
     public:
         HandleDrawerGuiService() = default;

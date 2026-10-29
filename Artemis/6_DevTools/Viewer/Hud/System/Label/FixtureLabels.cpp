@@ -2,42 +2,42 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :FixtureLabels;
 
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
-import Environment.Details.Type;
-import Gui.Format.System;
-import Viewer.Options.Type;
-import Viewer.Options.State;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import Perception.Details.Type;
+import DevTools.Gui.Format.System;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Viewer::Options::Type::Flag;
-    using Viewer::Hud::Type::LabelRow;
-    using Gui::Format::System::FixturesFormater;
-    using Gui::Format::System::TeamFormater;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Hud::Type::LabelRow;
+    using DevTools::Gui::Format::System::FixturesFormater;
+    using DevTools::Gui::Format::System::TeamFormater;
     using Common::ZoneShape::Type::ZoneShape;
 
     namespace SemanticType = Common::Semantic::Type;
 
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
-    using Environment::Details::Type::TeleporterPass;
-    using Environment::Details::Type::HasPass;
+    using Perception::Details::Type::TeleporterPass;
+    using Perception::Details::Type::HasPass;
 
-    using Viewer::Style::Type::k_Fixture;
-    using Viewer::Style::Type::k_TeamNeutral;
-    using Viewer::Style::Type::ColorOfTeam;
+    using DevTools::Viewer::Style::Type::k_Fixture;
+    using DevTools::Viewer::Style::Type::k_TeamNeutral;
+    using DevTools::Viewer::Style::Type::ColorOfTeam;
 
-    using Viewer::Hud::Type::k_InfoColor;
-    using Viewer::Hud::Type::k_MutedColor;
+    using DevTools::Viewer::Hud::Type::k_InfoColor;
+    using DevTools::Viewer::Hud::Type::k_MutedColor;
 
     constexpr float k_FixturePriority{ 0.5f };
 
@@ -72,7 +72,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto FixtureLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {

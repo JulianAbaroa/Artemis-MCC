@@ -1,15 +1,15 @@
 export module Tests.Support.Blam;
 
-import Map.Reader.State;
-import Layout.Snapshot.Type;
+import Blam.Map.Reader.State;
+import Blam.Layout.Snapshot.Type;
 import std;
 
 namespace
 {
-    using Map::Reader::State::TagIndexStore;
-    using Layout::Snapshot::Type::Region;
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::Snapshot;
+    using ::Blam::Map::Reader::State::TagIndexStore;
+    using ::Blam::Layout::Snapshot::Type::Region;
+    using ::Blam::Layout::Snapshot::Type::RegionId;
+    using ::Blam::Layout::Snapshot::Type::Snapshot;
 }
 
 export namespace Tests::Support::Blam

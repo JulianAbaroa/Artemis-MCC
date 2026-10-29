@@ -55,13 +55,13 @@
     <ClCompile Include="Game\State\GameStore.ixx" />
     <ClCompile Include="Game\System\GameService.cpp" />
     <ClCompile Include="Game\System\GameService.ixx" />
-    <ClCompile Include="Game\Tables.Game.Type.ixx" />
+    <ClCompile Include="Game\Blam.Runtime.Game.Type.ixx" />
     <ClCompile Include="Game\Type\GameAlive.ixx" />
     <ClCompile Include="Interaction\State\InteractionStore.cpp" />
     <ClCompile Include="Interaction\State\InteractionStore.ixx" />
     <ClCompile Include="Interaction\System\InteractionService.cpp" />
     <ClCompile Include="Interaction\System\InteractionService.ixx" />
-    <ClCompile Include="Interaction\Tables.Interaction.Type.ixx" />
+    <ClCompile Include="Interaction\Blam.Runtime.Interaction.Type.ixx" />
     <ClCompile Include="Interaction\Type\InteractionAlive.ixx" />
     <ClCompile Include="Object\State\BoneMatrix\BoneMatricesStore.cpp" />
     <ClCompile Include="Object\State\BoneMatrix\BoneMatricesStore.ixx" />
@@ -71,7 +71,7 @@
     <ClCompile Include="Object\State\ObjectTableStore.ixx" />
     <ClCompile Include="Object\System\ObjectTableService.cpp" />
     <ClCompile Include="Object\System\ObjectTableService.ixx" />
-    <ClCompile Include="Object\Tables.Object.Type.ixx" />
+    <ClCompile Include="Object\Blam.Runtime.Object.Type.ixx" />
     <ClCompile Include="Object\Type\BoneMatrix\ObjectBoneMatrix.ixx" />
     <ClCompile Include="Object\Type\DamageSection\ObjectDamageSection.ixx" />
     <ClCompile Include="Object\Type\ObjectAlive.ixx" />
@@ -91,9 +91,9 @@
     <ClCompile Include="Player\State\PlayerTableStore.ixx" />
     <ClCompile Include="Player\System\PlayerTableService.cpp" />
     <ClCompile Include="Player\System\PlayerTableService.ixx" />
-    <ClCompile Include="Player\Tables.Player.Type.ixx" />
+    <ClCompile Include="Player\Blam.Runtime.Player.Type.ixx" />
     <ClCompile Include="Player\Type\PlayerAlive.ixx" />
-    <ClCompile Include="Tables.Layer.ixx" />
+    <ClCompile Include="Blam.Runtime.Layer.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

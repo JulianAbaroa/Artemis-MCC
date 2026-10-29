@@ -1,9 +1,9 @@
-export module Viewer.Fake.System;
+export module DevTools.Viewer.Fake.System;
 
-import Viewer.Other.Type;
+import DevTools.Viewer.Other.Type;
 import Common.Math.Type;
 import std;
-import Service.Logs.System;
+import Services.Logs.System;
 
 namespace
 {
@@ -11,7 +11,7 @@ namespace
     using Renamed = Common::Math::Type::Vec3;
 }
 
-export namespace Viewer::Fake::System
+export namespace DevTools::Viewer::Fake::System
 {
     struct Loose
     {
@@ -22,7 +22,7 @@ export namespace Viewer::Fake::System
     class FakeService
     {
     private:
-        using LogsService = Service::Logs::System::LogsService;
+        using LogsService = Services::Logs::System::LogsService;
         int m_Wrong{ 0 };
 
     public:

@@ -1,4 +1,4 @@
-module Viewer.Selection.State;
+module DevTools.Viewer.Selection.State;
 
 import Common.Engine.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-namespace Viewer::Selection::State
+namespace DevTools::Viewer::Selection::State
 {
     auto SelectionStore::GetSelected() const -> std::uint32_t
     {

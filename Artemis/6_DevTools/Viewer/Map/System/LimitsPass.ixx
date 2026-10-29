@@ -3,17 +3,17 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:LimitsPass;
+export module DevTools.Viewer.Map.System:LimitsPass;
 
 import Common.Log.System;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Resolved.Definitions.Type;
-import Export.Tick.Type;
-import Viewer.Map.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Blam.MapModel.Definitions.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws the kill and safe zone volumes of the scenario as translucent solids with an outline,
     // and the soft ceilings of the structure design as translucent surfaces.
@@ -26,14 +26,14 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using Vertex = Platform::Render::Type::Vertex;
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using Vertex = Engine::Render::Type::Vertex;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
-        using Sddt = Resolved::Definitions::Type::Sddt::Sddt;
+        using Scnr = Blam::MapModel::Definitions::Type::Scnr::Scnr;
+        using Sddt = Blam::MapModel::Definitions::Type::Sddt::Sddt;
 
-        using LimitsPassOptions = Viewer::Map::Type::LimitsPassOptions;
-        using VertexBatch = Viewer::Map::Type::VertexBatch;
+        using LimitsPassOptions = DevTools::Viewer::Map::Type::LimitsPassOptions;
+        using VertexBatch = DevTools::Viewer::Map::Type::VertexBatch;
 
     public:
         explicit LimitsPass(Log& log) : m_Log(log) {}
@@ -60,7 +60,7 @@ export namespace Viewer::Map::System
 
         float m_Opacity{ 0.20f };
 
-        Platform::Render::System::UploadGate m_Gate{};
+        Engine::Render::System::UploadGate m_Gate{};
 
         // return: False if the batch could not be uploaded.
         auto UploadBatch(ID3D11Device* device, ID3D11DeviceContext* context, VertexBatch& batch, const char* tag) -> bool;

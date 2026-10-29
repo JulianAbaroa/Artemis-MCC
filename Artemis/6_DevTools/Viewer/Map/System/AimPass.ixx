@@ -3,18 +3,18 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:AimPass;
+export module DevTools.Viewer.Map.System:AimPass;
 
 import Common.Log.System;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Environment.Aim.Type;
-import Environment.Details.Type;
-import Export.Tick.Type;
-import Viewer.Map.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Perception.Aim.Type;
+import Perception.Details.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws a sphere at each aim section of the objects: a translucent fill and a wire outline.
     // The color comes from the anchor source of the section, or from its vitality if tinting by health is on.
@@ -26,13 +26,13 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using SphereInstance = Platform::Render::Type::SphereInstance;
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using SphereInstance = Engine::Render::Type::SphereInstance;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using VitalityDetail = Environment::Details::Type::VitalityDetail;
-        using VitalityDetails = Environment::Details::Type::VitalityDetails;
-        using Aim = Environment::Aim::Type::Aim;
-        using Aims = Environment::Aim::Type::Aims;
+        using VitalityDetail = Perception::Details::Type::VitalityDetail;
+        using VitalityDetails = Perception::Details::Type::VitalityDetails;
+        using Aim = Perception::Aim::Type::Aim;
+        using Aims = Perception::Aim::Type::Aims;
 
     public:
         explicit AimPass(Log& log) : m_Log(log) {}
@@ -63,12 +63,12 @@ export namespace Viewer::Map::System
         UINT m_UnitFillCount{ 0 };
         UINT m_UnitWireCount{ 0 };
 
-        Platform::Render::System::InstanceBuffer m_InstanceBuffer{};
+        Engine::Render::System::InstanceBuffer m_InstanceBuffer{};
         UINT m_InstanceCount{ 0 };
         UINT m_FillInstanceCount{ 0 };
         bool m_IsTintByHealth{ false };
 
-        Platform::Render::System::UploadGate m_Gate{};
+        Engine::Render::System::UploadGate m_Gate{};
 
         std::vector<SphereInstance> m_FillScratch{};
         std::vector<SphereInstance> m_CenterScratch{};

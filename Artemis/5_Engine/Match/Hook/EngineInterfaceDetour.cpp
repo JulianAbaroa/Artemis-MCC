@@ -1,30 +1,30 @@
-module Platform.Match.Hook;
+module Engine.Match.Hook;
 import :EngineInterface;
 
-import Platform.Memory.Type;
-import Platform.Host.Type;
-import Platform.Match.Type;
-import Platform.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Base.Host.Type;
+import Engine.Match.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Platform::Host::Type::k_HostModuleName;
+    using Engine::Base::Host::Type::k_HostModuleName;
 
-    using Platform::Hook::System::k_DrainTimeout;
-    using Platform::Match::Type::k_EngineGlobalDisplacementOffset;
-    using Platform::Match::Type::k_EngineGlobalNextInstructionOffset;
-    using Platform::Match::Type::k_EngineVTableSize;
-    using Platform::Match::Type::k_EngineDestroyIndex;
-    using Platform::Match::Type::k_EngineStartIndex;
-    using Platform::Match::Type::k_EngineUpdateStateIndex;
-    using Platform::Match::Type::k_EngineCommandIndex;
-    using Platform::Match::Type::k_EngineStatePayloads;
-    using Platform::Match::Type::k_EngineStatePayloadMaxSize;
-    using Platform::Match::Type::k_EngineFirstTextState;
-    using Platform::Match::Type::k_EngineLastTextState;
+    using Engine::Base::Hook::System::k_DrainTimeout;
+    using Engine::Match::Type::k_EngineGlobalDisplacementOffset;
+    using Engine::Match::Type::k_EngineGlobalNextInstructionOffset;
+    using Engine::Match::Type::k_EngineVTableSize;
+    using Engine::Match::Type::k_EngineDestroyIndex;
+    using Engine::Match::Type::k_EngineStartIndex;
+    using Engine::Match::Type::k_EngineUpdateStateIndex;
+    using Engine::Match::Type::k_EngineCommandIndex;
+    using Engine::Match::Type::k_EngineStatePayloads;
+    using Engine::Match::Type::k_EngineStatePayloadMaxSize;
+    using Engine::Match::Type::k_EngineFirstTextState;
+    using Engine::Match::Type::k_EngineLastTextState;
 
     // Longest string read from a payload or a text command, and the bytes read at once while looking for its end.
     constexpr std::size_t k_MaxTextLength{ 256 };
@@ -56,11 +56,11 @@ namespace
     }
 }
 
-namespace Platform::Match::Hook
+namespace Engine::Match::Hook
 {
     auto __fastcall EngineInterfaceDetour::HookedLoadGameEngine(void* gameLaunch, std::int32_t game) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         s_OriginalFunction(gameLaunch, game);
 
@@ -72,7 +72,7 @@ namespace Platform::Match::Hook
 
     auto __fastcall EngineInterfaceDetour::HookedEngineDestroy(void* engine) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
 
@@ -97,7 +97,7 @@ namespace Platform::Match::Hook
     auto __fastcall EngineInterfaceDetour::HookedEngineStart(void* engine, void* systemInterface,
         const std::byte* configuration) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
 
@@ -141,7 +141,7 @@ namespace Platform::Match::Hook
 
     auto __fastcall EngineInterfaceDetour::HookedEngineUpdateState(void* engine, std::int32_t state, const void* payload) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         s_Instance->LogState(state, payload);
 
@@ -150,7 +150,7 @@ namespace Platform::Match::Hook
 
     auto __fastcall EngineInterfaceDetour::HookedEngineCommand(void* engine, const char* command) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
 
@@ -187,7 +187,7 @@ namespace Platform::Match::Hook
         void* functionAddress{ reinterpret_cast<void*>(match) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedLoadGameEngine),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[EngineInterfaceDetour]", m_Log))
@@ -206,11 +206,11 @@ namespace Platform::Match::Hook
         if (!m_IsHookInstalled.load()) return;
 
         // No engine gets traced after the first drain, so the second one only waits for the calls that entered through the copy.
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
         this->Untrace();
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[EngineInterfaceDetour]", m_Log);
 
         m_MatchCycleStore.SetEngineGlobal(nullptr);

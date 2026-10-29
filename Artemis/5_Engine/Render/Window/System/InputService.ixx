@@ -1,10 +1,10 @@
-export module Platform.Window.System:Input;
+export module Engine.Render.Window.System:Input;
 
 import Common.Log.System;
-import Platform.Window.Type;
+import Engine.Render.Window.Type;
 import std;
 
-export namespace Platform::Window::System
+export namespace Engine::Render::Window::System
 {
     // Entry point for input. Dispatches window messages and raw mouse movement to handlers.
     class InputService
@@ -12,10 +12,10 @@ export namespace Platform::Window::System
     private:
         using Log = Common::Log::System::Log;
 
-        using WindowMessage = Platform::Window::Type::WindowMessage;
-        using RawMouse = Platform::Window::Type::RawMouse;
-        using WindowMessageHandler = Platform::Window::Type::WindowMessageHandler;
-        using RawMouseHandler = Platform::Window::Type::RawMouseHandler;
+        using WindowMessage = Engine::Render::Window::Type::WindowMessage;
+        using RawMouse = Engine::Render::Window::Type::RawMouse;
+        using WindowMessageHandler = Engine::Render::Window::Type::WindowMessageHandler;
+        using RawMouseHandler = Engine::Render::Window::Type::RawMouseHandler;
 
     public:
         explicit InputService(Log& log) : m_Log(log) {}

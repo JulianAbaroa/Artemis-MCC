@@ -1,8 +1,8 @@
-export module Map.Reader.Type:Constant;
+export module Blam.Map.Reader.Type:Constant;
 
 import std;
 
-export namespace Map::Reader::Type::Constant
+export namespace Blam::Map::Reader::Type::Constant
 {
     // Footer at the end of the fixup information block. It holds the vertex and index buffer counts.
     constexpr std::int64_t k_FooterSize{ 24 };

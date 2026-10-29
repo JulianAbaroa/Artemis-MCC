@@ -1,6 +1,6 @@
-module Service.Logs.State;
+module Services.Logs.State;
 
-namespace Service::Logs::State
+namespace Services::Logs::State
 {
     auto LogsStore::PushBack(LogEntry entry) -> void
     {

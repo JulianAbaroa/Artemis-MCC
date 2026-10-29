@@ -1,13 +1,13 @@
-module UI.Launcher.State;
+module DevTools.Workbench.Launcher.State;
 
 namespace
 {
-    using UI::Launcher::Type::ToIndex;
+    using DevTools::Workbench::Launcher::Type::ToIndex;
 
-    using UI::Launcher::Type::k_TabCount;
+    using DevTools::Workbench::Launcher::Type::k_TabCount;
 }
 
-namespace UI::Launcher::State
+namespace DevTools::Workbench::Launcher::State
 {
     auto LauncherUIStore::IsVisible() const -> bool
     {

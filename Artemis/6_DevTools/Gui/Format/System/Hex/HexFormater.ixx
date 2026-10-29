@@ -1,8 +1,8 @@
-export module Gui.Format.System:Hex;
+export module DevTools.Gui.Format.System:Hex;
 
 import std;
 
-export namespace Gui::Format::System
+export namespace DevTools::Gui::Format::System
 {
     // Formats unsigned integers as upper-case hex, zero-padded to the width of the type, with the 0x prefix.
     class HexFormater

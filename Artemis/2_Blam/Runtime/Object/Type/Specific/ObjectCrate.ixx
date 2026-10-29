@@ -1,4 +1,4 @@
-export module Tables.Object.Type:Crate;
+export module Blam.Runtime.Object.Type:Crate;
 
 import Common.Tag.Type;
 import Common.ZoneShape.Type;
@@ -22,7 +22,7 @@ namespace
     using Common::Tag::Type::Pallets::k_Pallet;
 }
 
-export namespace Tables::Object::Type::Crate
+export namespace Blam::Runtime::Object::Type::Crate
 {
     enum class CrateKind : std::uint8_t
     {

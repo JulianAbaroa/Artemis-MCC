@@ -1,6 +1,6 @@
-module Service.Settings.State;
+module Services.Settings.State;
 
-namespace Service::Settings::State
+namespace Services::Settings::State
 {
     auto SettingsStore::IsAppDataEnabled() const -> bool
     {

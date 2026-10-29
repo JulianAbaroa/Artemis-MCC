@@ -1,15 +1,15 @@
-export module Map.Reader.System:FileLocator;
+export module Blam.Map.Reader.System:FileLocator;
 
-import Map.Reader.State;
+import Blam.Map.Reader.State;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Opens the map file and finds the external cache maps that a map can point to.
     class FileLocatorService
     {
     private:
-        using FileStore = Map::Reader::State::FileStore;
+        using FileStore = Blam::Map::Reader::State::FileStore;
 
     public:
         explicit FileLocatorService(FileStore& fileStore) :

@@ -1,8 +1,8 @@
-export module Map.Reader.Type:Magic;
+export module Blam.Map.Reader.Type:Magic;
 
 import std;
 
-export namespace Map::Reader::Type::Magic
+export namespace Blam::Map::Reader::Type::Magic
 {
     // Added to a shifted tag address to get its virtual address.
     constexpr std::int64_t k_Expand{ 0x50000000LL };

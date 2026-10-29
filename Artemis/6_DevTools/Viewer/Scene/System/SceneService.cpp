@@ -1,7 +1,7 @@
-module Viewer.Scene.System;
+module DevTools.Viewer.Scene.System;
 
 import Common.Engine.Type;
-import Viewer.Selection.State;
+import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
@@ -9,7 +9,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-namespace Viewer::Scene::System
+namespace DevTools::Viewer::Scene::System
 {
     auto SceneService::IsActive() const -> bool
     {

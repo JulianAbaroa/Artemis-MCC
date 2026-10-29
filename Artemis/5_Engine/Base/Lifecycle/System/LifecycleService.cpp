@@ -1,8 +1,8 @@
-module Platform.Lifecycle.System;
+module Engine.Base.Lifecycle.System;
 import :Lifecycle;
 import std;
 
-namespace Platform::Lifecycle::System
+namespace Engine::Base::Lifecycle::System
 {
     auto LifecycleService::SignalShutdown() -> void
     {

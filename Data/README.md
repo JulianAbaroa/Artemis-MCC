@@ -47,7 +47,7 @@ Fields named `Unknown XXX` come from the automatic analysis; their tooltip lists
        python Tools/TagTranspiler/GenerateDatum.py [Data/Datum/unit.xml]
 
    Writes under `Artemis/2_Blam/Layout/Datum/Type/`:
-   `<Prefix>/Datum<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Datum<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Datum.Object.Type.<Prefix>.ixx`, module `Datum.Object.Type`. The `Datum` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
+   `<Prefix>/Datum<Prefix>Offset.ixx` (absolute offsets), `<Prefix>/Datum<Prefix>Structure.ixx` (packed struct relative to `start`, `static_assert` on the size) and the aggregate `Blam.Layout.Object.Type.<Prefix>.ixx`, module `Blam.Layout.Object.Type`. The `Datum` prefix in the file names avoids clashes with the `Map*` files of layer 1 (same `.ixx` name twice in a project).
 
 ## Notes
 

@@ -1,23 +1,23 @@
-export module Map.Reader.System:Geometry.Info;
+export module Blam.Map.Reader.System:Geometry.Info;
 
 import :DataStream;
 
-import Map.Reader.Type;
-import Map.Reader.State;
-import Map.Tag.Type;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
+import Blam.Map.Tag.Type;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads the footer and the buffer info tables of a geometry resource.
     class GeometryInfoService
     {
     private:
-        using Zone_TagResourcesObject = Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
-        using BufferInfo = Map::Reader::Type::Geometry::BufferInfo;
+        using Zone_TagResourcesObject = Blam::Map::Tag::Type::Zone::Object::Zone_TagResourcesObject;
+        using BufferInfo = Blam::Map::Reader::Type::Geometry::BufferInfo;
 
-        using FileStore = Map::Reader::State::FileStore;
-        using DataStreamService = Map::Reader::System::DataStreamService;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using DataStreamService = Blam::Map::Reader::System::DataStreamService;
 
     public:
         GeometryInfoService(FileStore& fileStore, DataStreamService& dataStreamService) :

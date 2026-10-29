@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Bloc;
+export module Blam.MapModel.Definitions.System:Bloc;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the crate definition.
     class BlocBuilder
     {
     private:
-        using BlocObject = Map::Tag::Type::Bloc::Object::BlocObject;
-        using Bloc = Resolved::Definitions::Type::Bloc::Bloc;
+        using BlocObject = Blam::Map::Tag::Type::Bloc::Object::BlocObject;
+        using Bloc = Blam::MapModel::Definitions::Type::Bloc::Bloc;
 
     public:
         explicit BlocBuilder(ObjectBuilder& objectBuilder) :

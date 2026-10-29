@@ -2,27 +2,27 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :FixturePass;
 
 import Common.Math.Type;
-import Platform.Render.Type;
-import Platform.Render.System;
-import Environment.Details.Type;
-import Environment.Entities.Type;
-import Export.Tick.Type;
-import Viewer.Style.Type;
+import Engine.Render.Type;
+import Engine.Render.System;
+import Perception.Details.Type;
+import Perception.Entities.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Platform::Render::Type::Vertex;
+    using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
-    using Viewer::Style::Type::Color;
+    using DevTools::Viewer::Style::Type::Color;
 
-    using Platform::Render::Type::VertexLayout;
+    using Engine::Render::Type::VertexLayout;
 
-    using Viewer::Style::Type::k_Fixture;
+    using DevTools::Viewer::Style::Type::k_Fixture;
 
     constexpr UINT k_InitialCapacity{ 1024 };
     constexpr std::size_t k_MaxDestinations{ 8 };
@@ -119,7 +119,7 @@ namespace
     }
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto FixturePass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Tick>& tick, const FixturePassOptions& options) -> void
@@ -176,13 +176,13 @@ namespace Viewer::Map::System
 
         const UINT needed = static_cast<UINT>(vertices.size());
 
-        if (!Platform::Render::System::GrowDynamicVertexBuffer(device, needed,
+        if (!Engine::Render::System::GrowDynamicVertexBuffer(device, needed,
             k_InitialCapacity, m_VertexBuffer, m_Capacity, "[FixturePass]", m_Log))
         {
             return;
         }
 
-        if (!Platform::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
+        if (!Engine::Render::System::UploadDynamicVertices(context, m_VertexBuffer.Get(),
             vertices, "[FixturePass]", m_Log))
         {
             return;
@@ -197,7 +197,7 @@ namespace Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::Colored);
 
-        Platform::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
+        Engine::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
     }
 

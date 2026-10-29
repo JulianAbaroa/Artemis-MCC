@@ -3,24 +3,24 @@ module;
 #include <windows.h>
 #include "External/minhook/include/MinHook.h"
 
-module Platform.Lifecycle.Hook;
+module Engine.Base.Lifecycle.Hook;
 import :DestroySubsystems;
 
-import Platform.Memory.Type;
-import Platform.Lifecycle.Type;
-import Platform.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Base.Lifecycle.Type;
+import Engine.Base.Hook.System;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
-    using Platform::Lifecycle::Type::Status;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
+    using Engine::Base::Lifecycle::Type::Status;
     using std::chrono::milliseconds;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 }
 
-namespace Platform::Lifecycle::Hook
+namespace Engine::Base::Lifecycle::Hook
 {
     auto DestroySubsystemsDetour::IsInProgress() -> bool
     {
@@ -29,7 +29,7 @@ namespace Platform::Lifecycle::Hook
 
     auto __fastcall DestroySubsystemsDetour::HookedDestroySubsystems() -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         s_InProgress.store(true, std::memory_order_release);
 
@@ -70,7 +70,7 @@ namespace Platform::Lifecycle::Hook
             m_AOBService.FindPattern(Signature::k_DestroySubsystems));
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedDestroySubsystems),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[DestroySubsystemsDetour]", m_Log))
@@ -86,13 +86,13 @@ namespace Platform::Lifecycle::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        if (!Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
             m_Log.Message("[DestroySubsystemsDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[DestroySubsystemsDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

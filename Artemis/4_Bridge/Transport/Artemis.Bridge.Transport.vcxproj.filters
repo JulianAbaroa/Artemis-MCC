@@ -28,10 +28,10 @@
     <ClCompile Include="System\BridgeService.ixx">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="System\Platform.Bridge.System.ixx">
+    <ClCompile Include="System\Bridge.Transport.System.ixx">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Type\Platform.Bridge.Type.ixx">
+    <ClCompile Include="Type\Bridge.Transport.Type.ixx">
       <Filter>Type</Filter>
     </ClCompile>
   </ItemGroup>

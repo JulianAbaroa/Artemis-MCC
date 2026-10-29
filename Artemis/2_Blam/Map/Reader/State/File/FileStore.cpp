@@ -1,7 +1,7 @@
-module Map.Reader.State;
+module Blam.Map.Reader.State;
 import :File;
 
-namespace Map::Reader::State
+namespace Blam::Map::Reader::State
 {
     auto FileStore::IsLoaded() const -> bool
     {

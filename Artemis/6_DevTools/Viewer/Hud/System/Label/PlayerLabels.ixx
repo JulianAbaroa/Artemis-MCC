@@ -1,19 +1,19 @@
-export module Viewer.Hud.System:PlayerLabels;
+export module DevTools.Viewer.Hud.System:PlayerLabels;
 
 import :Canvas;
 
-import Environment.Entities.Type;
-import Environment.Players.Type;
-import Viewer.Hud.Type;
+import Perception.Entities.Type;
+import Perception.Players.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Collects the labels of the players.
     class PlayerLabels
     {
     private:
-        using LabelContext = Viewer::Hud::Type::LabelContext;
+        using LabelContext = DevTools::Viewer::Hud::Type::LabelContext;
 
     public:
         PlayerLabels() = default;

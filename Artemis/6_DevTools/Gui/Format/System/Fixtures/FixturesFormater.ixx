@@ -1,8 +1,8 @@
-export module Gui.Format.System:Fixtures;
+export module DevTools.Gui.Format.System:Fixtures;
 
 import Common.ZoneShape.Type;
 
-export namespace Gui::Format::System
+export namespace DevTools::Gui::Format::System
 {
     // Converts the fixture enums to display text. Unlisted values give "Unknown".
     class FixturesFormater

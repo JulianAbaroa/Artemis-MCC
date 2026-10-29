@@ -2,15 +2,15 @@ export module Control.Lockstep.Type;
 
 import Common.Engine.Type;
 import Control.Action.Type;
-import Contract.Bridge;
+import Contract.Bridge.Type;
 import std;
 
 namespace
 {
     using Control::Action::Type::ActionOverride;
 
-    using Platform::Bridge::Type::BridgeOwner;
-    using Platform::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgeOwner;
+    using Contract::Bridge::Type::BridgeMode;
 
     using Common::Engine::Type::k_MaxPlayers;
 }

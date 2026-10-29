@@ -1,21 +1,21 @@
-module Viewer.Palette.System;
+module DevTools.Viewer.Palette.System;
 
 import Common.Semantic.Type;
-import Viewer.Style.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
 // TODO: Draw respawn/safe/death zones.
 
 namespace
 {
-    using Viewer::Style::Type::k_Health;
-    using Viewer::Style::Type::k_Fixture;
-    using Viewer::Style::Type::k_Affordance;
-    using Viewer::Style::Type::k_Collidable;
+    using DevTools::Viewer::Style::Type::k_Health;
+    using DevTools::Viewer::Style::Type::k_Fixture;
+    using DevTools::Viewer::Style::Type::k_Affordance;
+    using DevTools::Viewer::Style::Type::k_Collidable;
     using Common::Semantic::Type::Function;
 }
 
-namespace Viewer::Palette::System
+namespace DevTools::Viewer::Palette::System
 {
     auto PaletteService::Build(const std::shared_ptr<const Tick>& tick) -> void
     {
@@ -56,7 +56,7 @@ namespace Viewer::Palette::System
                 const bool isObjectiveSpawn{ entity.Function == Function::ObjectiveSpawn };
 
                 if (isFixture) add(entity.Handle, k_Fixture);
-                else if (hasZone || isObjectiveSpawn || isByTeam) add(entity.Handle, Viewer::Style::Type::ColorOfTeam(entity.Team));
+                else if (hasZone || isObjectiveSpawn || isByTeam) add(entity.Handle, DevTools::Viewer::Style::Type::ColorOfTeam(entity.Team));
             }
         }
 

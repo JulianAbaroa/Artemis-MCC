@@ -1,41 +1,41 @@
 #include <gtest/gtest.h>
 
 import Common.Engine.Type;
-import Datum.Object.Type;
-import Layout.Player.Type;
-import Layout.Interaction.Type;
-import Layout.Game.Type;
-import Layout.Snapshot.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Player.Type;
+import Blam.Layout.Interaction.Type;
+import Blam.Layout.Game.Type;
+import Blam.Layout.Snapshot.Type;
 import std;
 
 // The Snapshot of Blam.Layout (M4a, D184-D186): reads relative to a region, the size of every region and the raw object, without MCC.
 
 namespace
 {
-    using Layout::Snapshot::Type::RegionId;
-    using Layout::Snapshot::Type::Region;
-    using Layout::Snapshot::Type::RawObject;
-    using Layout::Snapshot::Type::BlockRange;
-    using Layout::Snapshot::Type::Snapshot;
-    using Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::Region;
+    using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::BlockRange;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::Layout::Snapshot::Type::RegionSize;
 
-    using Layout::Snapshot::Type::k_RegionCount;
+    using Blam::Layout::Snapshot::Type::k_RegionCount;
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxLocalUsers;
-    using Datum::Object::Type::Constant::k_PlacementSize;
-    using Datum::Object::Type::Constant::k_MaxPlacements;
-    using Datum::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
-    using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
-    using Layout::Player::Type::Size::k_Base;
-    using Layout::Player::Type::Mapping::k_PlayerInputUser;
-    using Layout::Player::Type::Mapping::k_OutputUserPlayer;
-    using Layout::Player::Type::Mapping::k_EntryStride;
-    using Layout::Interaction::Type::Offset::k_OutputUserStride;
-    using Layout::Game::Type::Offset::k_GameEnginePlayerScores;
-    using Layout::Game::Type::Offset::k_PlayerScoreStride;
-    using Layout::Game::Type::Offset::k_EventRing;
-    using Layout::Game::Type::Offset::k_EventRingSlots;
-    using Layout::Game::Type::Offset::k_EventEntrySize;
+    using Blam::Layout::Object::Type::Constant::k_PlacementSize;
+    using Blam::Layout::Object::Type::Constant::k_MaxPlacements;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
+    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Player::Type::Size::k_Base;
+    using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
+    using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
+    using Blam::Layout::Player::Type::Mapping::k_EntryStride;
+    using Blam::Layout::Interaction::Type::Offset::k_OutputUserStride;
+    using Blam::Layout::Game::Type::Offset::k_GameEnginePlayerScores;
+    using Blam::Layout::Game::Type::Offset::k_PlayerScoreStride;
+    using Blam::Layout::Game::Type::Offset::k_EventRing;
+    using Blam::Layout::Game::Type::Offset::k_EventRingSlots;
+    using Blam::Layout::Game::Type::Offset::k_EventEntrySize;
 
     constexpr std::array<RegionId, 7> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
         RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals, RegionId::Placements };

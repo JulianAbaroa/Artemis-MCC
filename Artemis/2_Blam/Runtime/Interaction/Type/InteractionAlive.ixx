@@ -1,4 +1,4 @@
-export module Tables.Interaction.Type:Alive;
+export module Blam.Runtime.Interaction.Type:Alive;
 
 import Common.Engine.Type;
 import Common.Math.Type;
@@ -12,7 +12,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-export namespace Tables::Interaction::Type::Alive
+export namespace Blam::Runtime::Interaction::Type::Alive
 {
     // Kind of object interaction the engine offers to the player.
     enum class InteractionKind : std::uint8_t

@@ -1,15 +1,15 @@
-export module UI.TickTrace.System;
+export module DevTools.Workbench.TickTrace.System;
 
 import Common.Log.System;
-import Service.Settings.State;
-import Map.Reader.State;
-import Layout.Snapshot.Type;
-import Tables.Object.State;
-import UI.TickTrace.Type;
-import UI.TickTrace.State;
+import Services.Settings.State;
+import Blam.Map.Reader.State;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Object.State;
+import DevTools.Workbench.TickTrace.Type;
+import DevTools.Workbench.TickTrace.State;
 import std;
 
-export namespace UI::TickTrace::System
+export namespace DevTools::Workbench::TickTrace::System
 {
     // Records every tick to a binary trace file (A8 sec. 10.2): the engine clock and the bipeds, vehicles, projectiles and weapons of
     // the object table. Tools/analyze_ticktrace.py compares two traces tick by tick (V1).
@@ -18,13 +18,13 @@ export namespace UI::TickTrace::System
     {
     private:
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
-        using FileStore = Map::Reader::State::FileStore;
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
-        using ObjectTableStore = Tables::Object::State::ObjectTableStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
+        using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
 
-        using TickClock = UI::TickTrace::Type::TickClock;
-        using TickTraceUIStore = UI::TickTrace::State::TickTraceUIStore;
+        using TickClock = DevTools::Workbench::TickTrace::Type::TickClock;
+        using TickTraceUIStore = DevTools::Workbench::TickTrace::State::TickTraceUIStore;
 
     public:
         TickTraceUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore,

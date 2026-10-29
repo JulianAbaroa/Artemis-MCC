@@ -1,17 +1,17 @@
-module Viewer.Fake.System;
-import Viewer.Fake.System:Part;
+module DevTools.Viewer.Fake.System;
+import DevTools.Viewer.Fake.System:Part;
 
 namespace
 {
-    using Viewer::Fake::Type::Thing;
+    using DevTools::Viewer::Fake::Type::Thing;
 }
 
-namespace Viewer::Fake::System
+namespace DevTools::Viewer::Fake::System
 {
     void FakeService::Run()
     {
         Helper();
-        auto x = Viewer::Fake::Type::k_Limit; // one; two
+        auto x = DevTools::Viewer::Fake::Type::k_Limit; // one; two
 	int tabbed{ 0 };
         if (x) {
             return;

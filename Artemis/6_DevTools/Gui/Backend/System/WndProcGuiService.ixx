@@ -1,22 +1,22 @@
-export module Gui.Backend.System:WndProc;
+export module DevTools.Gui.Backend.System:WndProc;
 
 import :Backend;
 
-import Service.Settings.State;
-import Platform.Window.Type;
+import Services.Settings.State;
+import Engine.Render.Window.Type;
 import std;
 
-export namespace Gui::Backend::System
+export namespace DevTools::Gui::Backend::System
 {
     // Gives the window messages to ImGui and tells if the game must not receive them.
     class WndProcGuiService
     {
     private:
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using WindowMessage = Platform::Window::Type::WindowMessage;
+        using WindowMessage = Engine::Render::Window::Type::WindowMessage;
 
-        using BackendGuiService = Gui::Backend::System::BackendGuiService;
+        using BackendGuiService = DevTools::Gui::Backend::System::BackendGuiService;
 
     public:
         WndProcGuiService(BackendGuiService& backend, SettingsStore& settingsStore) :

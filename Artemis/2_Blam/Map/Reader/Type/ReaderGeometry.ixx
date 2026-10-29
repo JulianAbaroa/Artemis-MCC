@@ -1,4 +1,4 @@
-export module Map.Reader.Type:Geometry;
+export module Blam.Map.Reader.Type:Geometry;
 
 import Common.Math.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Math::Type::Triangle;
 }
 
-export namespace Map::Reader::Type::Geometry
+export namespace Blam::Map::Reader::Type::Geometry
 {
     // Size and auxiliary value of a vertex or index buffer, read from the buffer info tables.
     struct BufferInfo

@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Scen;
+export module Blam.MapModel.Definitions.System:Scen;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the scenery definition.
     class ScenBuilder
     {
     private:
-        using ScenObject = Map::Tag::Type::Scen::Object::ScenObject;
-        using Scen = Resolved::Definitions::Type::Scen::Scen;
+        using ScenObject = Blam::Map::Tag::Type::Scen::Object::ScenObject;
+        using Scen = Blam::MapModel::Definitions::Type::Scen::Scen;
 
     public:
         explicit ScenBuilder(ObjectBuilder& objectBuilder) :

@@ -1,21 +1,21 @@
-export module Resolved.Tag.System;
+export module Blam.MapModel.Tag.System;
 
 import Common.Log.System;
-import Map.Reader.State;
-import Resolved.Tag.Type;
+import Blam.Map.Reader.State;
+import Blam.MapModel.Tag.Type;
 import std;
 
-export namespace Resolved::Tag::System
+export namespace Blam::MapModel::Tag::System
 {
     // Turns the handles and names of the tags of the loaded map into tag information: names, groups and group membership.
     class TagResolverService
     {
     private:
-        using TagInfo = Resolved::Tag::Type::TagInfo;
+        using TagInfo = Blam::MapModel::Tag::Type::TagInfo;
 
         using Log = Common::Log::System::Log;
-        using FileStore = Map::Reader::State::FileStore;
-        using TagIndexStore = Map::Reader::State::TagIndexStore;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using TagIndexStore = Blam::Map::Reader::State::TagIndexStore;
 
     public:
         TagResolverService(Log& log, FileStore& fileStore, TagIndexStore& tagIndexStore) :

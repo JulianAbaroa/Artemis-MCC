@@ -2,10 +2,10 @@ module;
 
 #include "External/imgui/imgui_internal.h"
 
-module Gui.Color.System;
+module DevTools.Gui.Color.System;
 import :Team;
 
-namespace Gui::Color::System
+namespace DevTools::Gui::Color::System
 {
     auto TeamToColor::TeamColorU32(Team team, std::uint8_t alpha) -> ImU32
     {

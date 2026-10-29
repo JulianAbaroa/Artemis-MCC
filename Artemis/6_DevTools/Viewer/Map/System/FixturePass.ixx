@@ -3,15 +3,15 @@ module;
 #include <d3d11.h>
 #include <wrl/client.h>
 
-export module Viewer.Map.System:FixturePass;
+export module DevTools.Viewer.Map.System:FixturePass;
 
 import Common.Log.System;
-import Platform.Render.System;
-import Export.Tick.Type;
-import Viewer.Map.Type;
+import Engine.Render.System;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Map.Type;
 import std;
 
-export namespace Viewer::Map::System
+export namespace DevTools::Viewer::Map::System
 {
     // Draws the arrows of the map logic: teleporter links, lift launch directions and shield block directions.
     class FixturePass
@@ -22,11 +22,11 @@ export namespace Viewer::Map::System
 
         using Log = Common::Log::System::Log;
 
-        using GpuPipeline = Platform::Render::System::GpuPipeline;
+        using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
 
-        using FixturePassOptions = Viewer::Map::Type::FixturePassOptions;
+        using FixturePassOptions = DevTools::Viewer::Map::Type::FixturePassOptions;
 
     public:
         explicit FixturePass(Log& log) : m_Log(log) {}

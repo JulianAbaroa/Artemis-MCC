@@ -1,31 +1,31 @@
-export module UI.Simulation.System;
+export module DevTools.Workbench.Simulation.System;
 
 import Common.Log.System;
-import Service.Telemetry.State;
+import Services.Telemetry.State;
 import Control.Action.Type;
-import Platform.Lifecycle.State;
-import Platform.Match.State;
-import Platform.Match.System;
-import Platform.Host.State;
-import Platform.Input.Type;
-import Platform.Input.State;
-import Platform.Simulation.State;
-import Platform.Bridge.System;
-import Environment.Players.Type;
-import Export.Tick.Type;
-import Export.Tick.State;
-import UI.Simulation.Type;
-import UI.Simulation.State;
+import Engine.Base.Lifecycle.State;
+import Engine.Match.State;
+import Engine.Match.System;
+import Engine.Base.Host.State;
+import Engine.Control.Input.Type;
+import Engine.Control.Input.State;
+import Engine.Control.Simulation.State;
+import Bridge.Transport.System;
+import Perception.Players.Type;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
+import DevTools.Workbench.Simulation.Type;
+import DevTools.Workbench.Simulation.State;
 import std;
 
 namespace
 {
-    using Platform::Input::Type::PlayerAction;
+    using Engine::Control::Input::Type::PlayerAction;
     using Control::Action::Type::ActionOverride;
-    using UI::Simulation::Type::LocalPlayerAction;
+    using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
 }
 
-export namespace UI::Simulation::System
+export namespace DevTools::Workbench::Simulation::System
 {
     // Builds the override that plays a test mode for one player, keeping the facing of its last action (D109, D119). Used by the
     // simulation tab and by the test bench (D129).
@@ -40,30 +40,30 @@ export namespace UI::Simulation::System
     {
     private:
         using Log = Common::Log::System::Log;
-        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
+        using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
-        using MatchConfigService = Platform::Match::System::MatchConfigService;
-        using LocalUserStore = Platform::Host::State::LocalUserStore;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using MatchConfigStore = Engine::Match::State::MatchConfigStore;
+        using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
-        using InputState = Platform::Input::Type::InputState;
-        using PlayerAction = Platform::Input::Type::PlayerAction;
-        using PlayerActions = Platform::Input::Type::PlayerActions;
-        using ActionWatch = Platform::Input::Type::ActionWatch;
-        using VirtualInputStore = Platform::Input::State::VirtualInputStore;
-        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
+        using InputState = Engine::Control::Input::Type::InputState;
+        using PlayerAction = Engine::Control::Input::Type::PlayerAction;
+        using PlayerActions = Engine::Control::Input::Type::PlayerActions;
+        using ActionWatch = Engine::Control::Input::Type::ActionWatch;
+        using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
+        using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
-        using BotStore = Platform::Simulation::State::BotStore;
+        using BotStore = Engine::Control::Simulation::State::BotStore;
 
-        using BridgeService = Platform::Bridge::System::BridgeService;
+        using BridgeService = Bridge::Transport::System::BridgeService;
 
-        using Players = Environment::Players::Type::Players;
-        using TickStore = Export::Tick::State::TickStore;
+        using Players = Perception::Players::Type::Players;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using LocalPlayerInput = UI::Simulation::Type::LocalPlayerInput;
-        using LocalPlayerAction = UI::Simulation::Type::LocalPlayerAction;
-        using SimulationUIStore = UI::Simulation::State::SimulationUIStore;
+        using LocalPlayerInput = DevTools::Workbench::Simulation::Type::LocalPlayerInput;
+        using LocalPlayerAction = DevTools::Workbench::Simulation::Type::LocalPlayerAction;
+        using SimulationUIStore = DevTools::Workbench::Simulation::State::SimulationUIStore;
 
     public:
         SimulationUIService(Log& log, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,

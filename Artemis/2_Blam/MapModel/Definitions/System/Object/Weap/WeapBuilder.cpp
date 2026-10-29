@@ -1,16 +1,16 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Weap;
 
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 
 namespace
 {
-    using Resolved::Definitions::Type::Weap::Magazine;
-    using Resolved::Definitions::Type::Weap::Trigger;
-    using Resolved::Definitions::Type::Weap::Barrel;
+    using Blam::MapModel::Definitions::Type::Weap::Magazine;
+    using Blam::MapModel::Definitions::Type::Weap::Trigger;
+    using Blam::MapModel::Definitions::Type::Weap::Barrel;
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto WeapBuilder::Build(const WeapObject& weap) -> Weap
     {

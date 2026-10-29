@@ -1,11 +1,11 @@
-export module Resolved.Definitions.System:Coll;
+export module Blam.MapModel.Definitions.System:Coll;
 
 import Common.Math.Type;
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the collision model definition.
     class CollBuilder
@@ -13,9 +13,9 @@ export namespace Resolved::Definitions::System
     private:
         using Vec3 = Common::Math::Type::Vec3;
         using Node = Common::Math::Type::Node;
-        using CollObject = Map::Tag::Type::Coll::Object::CollObject;
-        using Coll_Regions_Permutations_BspsObject = Map::Tag::Type::Coll::Object::Coll_Regions_Permutations_BspsObject;
-        using Coll = Resolved::Definitions::Type::Coll::Coll;
+        using CollObject = Blam::Map::Tag::Type::Coll::Object::CollObject;
+        using Coll_Regions_Permutations_BspsObject = Blam::Map::Tag::Type::Coll::Object::Coll_Regions_Permutations_BspsObject;
+        using Coll = Blam::MapModel::Definitions::Type::Coll::Coll;
 
     public:
         CollBuilder() = default;

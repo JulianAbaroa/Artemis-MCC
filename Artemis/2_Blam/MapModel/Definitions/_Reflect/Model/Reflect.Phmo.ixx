@@ -1,16 +1,16 @@
-export module Resolved.Definitions.Reflect:Phmo;
+export module Blam.MapModel.Definitions.Reflect:Phmo;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Phmo::Shape;
-    using Resolved::Definitions::Type::Phmo::Material;
-    using Resolved::Definitions::Type::Phmo::RigidBody;
-    using Resolved::Definitions::Type::Phmo::PhantomType;
-    using Resolved::Definitions::Type::Phmo::Phmo;
+    using Blam::MapModel::Definitions::Type::Phmo::Shape;
+    using Blam::MapModel::Definitions::Type::Phmo::Material;
+    using Blam::MapModel::Definitions::Type::Phmo::RigidBody;
+    using Blam::MapModel::Definitions::Type::Phmo::PhantomType;
+    using Blam::MapModel::Definitions::Type::Phmo::Phmo;
 }
 
 export namespace Common::Reflect::Type

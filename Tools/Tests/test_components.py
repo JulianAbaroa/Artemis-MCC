@@ -9,72 +9,77 @@ They read the files of the repo (git ls-files), they do not build.
 import os
 import re
 import subprocess
+import sys
 
 import pytest
 
 from tdump_writer import Repo
 
 REPO = Repo()
+sys.path.insert(0, os.path.join(REPO, "Tools"))
+from components import PROJECTS, SOLUTION, Folder as ProjectFolder, Project as ProjectPath  # noqa: E402
 
-# What Viewer and Workbench may import and reference (Workbench adds UI and Viewer; Gui is much narrower, below).
-DEVTOOLS_IMPORTS = {"Common", "Service", "Map", "Resolved", "Datum", "Layout", "Tables", "Relations", "Environment", "Egocentric", "Export",
-                    "Contract", "Control", "Platform", "Gui", "Viewer", "DevTools"}
+ENGINE = {"Engine.Base", "Engine.Capture", "Engine.Control", "Engine.Match", "Engine.Render"}
+# What Viewer and Workbench may import and reference (Workbench adds itself and Viewer; Gui is much narrower, below).
+DEVTOOLS_IMPORTS = {"Common", "Services", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Bridge.Codec",
+                    "Contract", "Control", "Bridge.Transport", "DevTools.Gui", "DevTools.Viewer"} | ENGINE
 DEVTOOLS_REFERENCES = {"Common", "Contract", "Services", "Blam.Layout", "Blam.Map", "Blam.MapModel", "Blam.Runtime", "Control", "Perception",
                        "Views", "Bridge.Codec", "Bridge.Transport", "Engine.Base", "Engine.Capture", "Engine.Control", "Engine.Match",
                        "Engine.Render"}
 
-# Folder of the component -> (project, roots of the modules it may import, components it may reference). std is always allowed.
+# Folder of the component -> (project, components whose modules it may import, components it may reference). std is always allowed.
+# Every module name starts with the name of its component (D233), so ImportRoots gives components.
 COMPONENTS = {
     "Artemis/1_Shared/Common": ("Artemis.Common.vcxproj", {"Common"}, set()),
-    "Artemis/1_Shared/Services": ("Artemis.Services.vcxproj", {"Common", "Service"}, {"Common"}),
-    "Artemis/2_Blam/Map": ("Artemis.Blam.Map.vcxproj", {"Common", "Map"}, {"Common"}),
-    "Artemis/2_Blam/MapModel": ("Artemis.Blam.MapModel.vcxproj", {"Common", "Map", "Resolved"}, {"Common", "Blam.Map"}),
-    "Artemis/2_Blam/Layout": ("Artemis.Blam.Layout.vcxproj", {"Common", "Datum", "Layout"}, {"Common"}),
-    "Artemis/2_Blam/Runtime": ("Artemis.Blam.Runtime.vcxproj", {"Common", "Datum", "Layout", "Resolved", "Tables"},
+    "Artemis/1_Shared/Services": ("Artemis.Services.vcxproj", {"Common", "Services"}, {"Common"}),
+    "Artemis/2_Blam/Map": ("Artemis.Blam.Map.vcxproj", {"Common", "Blam.Map"}, {"Common"}),
+    "Artemis/2_Blam/MapModel": ("Artemis.Blam.MapModel.vcxproj", {"Common", "Blam.Map", "Blam.MapModel"}, {"Common", "Blam.Map"}),
+    "Artemis/2_Blam/Layout": ("Artemis.Blam.Layout.vcxproj", {"Common", "Blam.Layout"}, {"Common"}),
+    "Artemis/2_Blam/Runtime": ("Artemis.Blam.Runtime.vcxproj", {"Common", "Blam.Layout", "Blam.MapModel", "Blam.Runtime"},
                              {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout"}),
     "Artemis/1_Shared/Contract": ("Artemis.Contract.vcxproj", {"Common", "Contract"}, {"Common"}),
-    "Artemis/3_Domain/Perception": ("Artemis.Perception.vcxproj", {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment"},
+    "Artemis/3_Domain/Perception": ("Artemis.Perception.vcxproj", {"Common", "Blam.Layout", "Blam.MapModel", "Blam.Runtime", "Perception"},
                            {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime"}),
     "Artemis/3_Domain/Views": ("Artemis.Views.vcxproj",
-                      {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment", "Egocentric"},
+                      {"Common", "Blam.Layout", "Blam.MapModel", "Blam.Runtime", "Perception", "Views"},
                       {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception"}),
     "Artemis/4_Bridge/Codec": ("Artemis.Bridge.Codec.vcxproj",
-                             {"Common", "Datum", "Layout", "Resolved", "Tables", "Relations", "Environment", "Egocentric", "Export",
-                              "Contract"},
+                             {"Common", "Blam.Layout", "Blam.MapModel", "Blam.Runtime", "Perception", "Views", "Bridge.Codec", "Contract"},
                              {"Common", "Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Contract"}),
-    "Artemis/3_Domain/Control": ("Artemis.Control.vcxproj", {"Common", "Layout", "Contract", "Control"}, {"Common", "Blam.Layout", "Contract"}),
-    # The only Platform modules it may import are Platform.Bridge.* (test_bridge_transport_imports_no_engine_module).
-    "Artemis/4_Bridge/Transport": ("Artemis.Bridge.Transport.vcxproj", {"Common", "Service", "Contract", "Control", "Layout", "Export", "Platform"},
+    "Artemis/3_Domain/Control": ("Artemis.Control.vcxproj", {"Common", "Blam.Layout", "Contract", "Control"}, {"Common", "Blam.Layout", "Contract"}),
+    # It imports no engine module (test_bridge_transport_imports_no_engine_module).
+    "Artemis/4_Bridge/Transport": ("Artemis.Bridge.Transport.vcxproj", {"Common", "Services", "Contract", "Control", "Blam.Layout", "Bridge.Codec",
+                                                                      "Bridge.Transport"},
                                  {"Common", "Services", "Contract", "Control", "Blam.Layout", "Bridge.Codec", "Blam.Map", "Blam.MapModel",
                                   "Blam.Runtime", "Perception", "Views"}),
-    # The engine in five projects (M6c.2, D216). Platform.* modules each may import: ENGINE_PLATFORM.
-    "Artemis/5_Engine/Base": ("Artemis.Engine.Base.vcxproj", {"Common", "Service", "Platform"}, {"Common", "Services"}),
-    "Artemis/5_Engine/Capture": ("Artemis.Engine.Capture.vcxproj", {"Common", "Service", "Layout", "Datum", "Platform", "Engine"},
+    # The engine in five projects (M6c.2, D216). Engine folders each may import: ENGINE_PLATFORM.
+    "Artemis/5_Engine/Base": ("Artemis.Engine.Base.vcxproj", {"Common", "Services", "Engine.Base"}, {"Common", "Services"}),
+    "Artemis/5_Engine/Capture": ("Artemis.Engine.Capture.vcxproj", {"Common", "Services", "Blam.Layout", "Engine.Base", "Engine.Capture"},
                                {"Common", "Services", "Engine.Base", "Blam.Layout"}),
-    "Artemis/5_Engine/Control": ("Artemis.Engine.Control.vcxproj", {"Common", "Service", "Control", "Layout", "Platform", "Engine"},
+    "Artemis/5_Engine/Control": ("Artemis.Engine.Control.vcxproj", {"Common", "Services", "Control", "Blam.Layout", "Engine.Base", "Engine.Control"},
                                {"Common", "Services", "Engine.Base", "Control", "Blam.Layout"}),
-    "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Service", "Platform", "Engine"}, {"Common", "Services", "Engine.Base"}),
-    "Artemis/5_Engine/Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Service", "Platform", "Engine"}, {"Common", "Services", "Engine.Base"}),
+    "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Services", "Engine.Base", "Engine.Match"}, {"Common", "Services", "Engine.Base"}),
+    "Artemis/5_Engine/Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Services", "Engine.Base", "Engine.Render"}, {"Common", "Services", "Engine.Base"}),
     # The development tools (M7.2 D228, M8 A2 D238): Gui (ImGui backend and widgets), Viewer and Workbench (ex UI); the tools
     # are composed by Mod.Layer. They use the engine only through DevTools.EngineAccess (in Viewer).
-    "Artemis/6_DevTools/Gui": ("Artemis.DevTools.Gui.vcxproj", {"Common", "Service", "Platform", "Gui"},
+    "Artemis/6_DevTools/Gui": ("Artemis.DevTools.Gui.vcxproj", {"Common", "Services", "Engine.Render", "DevTools.Gui"},
                                {"Common", "Services", "Engine.Base", "Engine.Render"}),
     "Artemis/6_DevTools/Viewer": ("Artemis.DevTools.Viewer.vcxproj", DEVTOOLS_IMPORTS, DEVTOOLS_REFERENCES | {"DevTools.Gui"}),
-    "Artemis/6_DevTools/Workbench": ("Artemis.DevTools.Workbench.vcxproj", DEVTOOLS_IMPORTS | {"UI"},
+    "Artemis/6_DevTools/Workbench": ("Artemis.DevTools.Workbench.vcxproj", DEVTOOLS_IMPORTS | {"DevTools.Workbench"},
                                      DEVTOOLS_REFERENCES | {"DevTools.Gui", "DevTools.Viewer"}),
 }
 
 # The pure projects of M5b (D198): what was the Domain after Blam.Runtime. None of them touches the process, the wiring or a layer above.
 PURE_PROJECTS = ("Artemis/1_Shared/Contract", "Artemis/3_Domain/Perception", "Artemis/3_Domain/Views", "Artemis/4_Bridge/Codec", "Artemis/3_Domain/Control")
-NOT_PURE_ROOTS = {"Service", "Platform", "Infrastructure", "Runtime", "UI", "Viewer", "Gui", "Core"}
+NOT_PURE_ROOTS = {"Services", "Bridge.Transport", "Mod", "DevTools.Gui", "DevTools.Viewer", "DevTools.Workbench"} | ENGINE
 NOT_PURE_WORDS = ("windows.h", "MinHook", "reinterpret_cast", "OnCleanup(", "OnEngineInitialized(", "OnUnhook(")
-LAYERS = (("Environment", "Artemis/3_Domain/Perception/Environment/Environment.Layer.ixx",
-           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables")),
-          ("Egocentric", "Artemis/3_Domain/Views/Egocentric.Layer.ixx",
-           ("Log& log", "Resolved::Layer& resolved", "Tables::Layer& tables", "Environment::Layer& environment")),
-          ("Export", "Artemis/4_Bridge/Codec/Export.Layer.ixx",
-           ("Resolved::Layer& resolved", "Tables::Layer& tables", "Environment::Layer& environment",
-            "Egocentric::Layer& egocentric")))
+LAYERS = (("Perception", "Artemis/3_Domain/Perception/Perception.Layer.ixx",
+           ("Log& log", "Blam::MapModel::Layer& resolved", "Blam::Runtime::Layer& tables")),
+          ("Views", "Artemis/3_Domain/Views/Views.Layer.ixx",
+           ("Log& log", "Blam::MapModel::Layer& resolved", "Blam::Runtime::Layer& tables", "Perception::Layer& environment")),
+          ("Bridge.Codec", "Artemis/4_Bridge/Codec/Bridge.Codec.Layer.ixx",
+           ("Blam::MapModel::Layer& resolved", "Blam::Runtime::Layer& tables", "Perception::Layer& environment",
+            "Views::Layer& egocentric")))
 TICK_DETOURS = ("ExecuteGameFrameDetour", "SimulationTicksDetour")
 
 # The interpretation of the live objects (02 sec. 3.2): a project since M5a (D189), it reads only the Snapshot (D184).
@@ -84,9 +89,9 @@ RUNTIME = "Artemis/2_Blam/Runtime"
 LOCATORS = ("ObjectTableLocator", "PlayerTableLocator", "InteractionTableLocator")
 CAPTURE_HOOK = "Artemis/5_Engine/Capture/Hook/"
 
-# Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Map.*) are imported only by the wiring of the DLL (future Mod),
+# Outside Blam.Map and Blam.MapModel, the modules of Blam.Map (Blam.Map.*) are imported only by the wiring of the DLL (future Mod),
 # the development tools (future DevTools) and the tests (02 sec. 3.5, contract of Blam.Map).
-MAP_IMPORTERS = ("Artemis/8_Mod/Mod/Mod.Layer.ixx", "Artemis/8_Mod/Mod/Mod.Layer.cpp", "Artemis/8_Mod/Mod/Runtime/", "Artemis/6_DevTools/", "Artemis/7_Tests/Tests/")
+MAP_IMPORTERS = ("Artemis/8_Mod/Mod/Mod.Layer.ixx", "Artemis/8_Mod/Mod/Mod.Layer.cpp", "Artemis/8_Mod/Mod/Thread/", "Artemis/6_DevTools/", "Artemis/7_Tests/Tests/")
 
 # Group queries of the old TagResolverService that nobody called (removed in M3, D180).
 REMOVED_NAMES = ("HasBipd", "HasBloc", "HasCtrl", "HasEqip", "HasMach", "HasProj", "HasScen", "HasVehi", "HasWeap")
@@ -115,8 +120,14 @@ def Read(path):
         return f.read()
 
 
+def Component(module):
+    """Project of a module: the longest project name that is a dotted prefix of it ("Blam.Map.Reader.Type" -> "Blam.Map")."""
+    names = [name for _, _, name in PROJECTS if module == name or module.startswith(name + ".")]
+    return max(names, key=len) if names else module.split(".")[0]
+
+
 def ImportRoots(path):
-    return {name.split(".")[0] for name in IMPORT.findall(Read(path)) if name != "std"}
+    return {Component(name) for name in IMPORT.findall(Read(path)) if name != "std"}
 
 
 def ProjectName(include):
@@ -170,8 +181,8 @@ def test_old_map_folders_are_gone():
 def test_only_wiring_tools_and_tests_import_blam_map():
     inside = ("Artemis/2_Blam/Map/", "Artemis/2_Blam/MapModel/")
     wrong = [path for path in Sources("Artemis") if not path.startswith(inside) and not path.startswith(MAP_IMPORTERS)
-             and "Map" in ImportRoots(path)]
-    assert not wrong, f"import Map.* outside the wiring, the tools and the tests: {wrong}"
+             and "Blam.Map" in ImportRoots(path)]
+    assert not wrong, f"import Blam.Map.* outside the wiring, the tools and the tests: {wrong}"
 
 
 def test_tag_resolver_split():
@@ -213,7 +224,7 @@ def test_engine_offsets_left_tables():
 
 
 def test_raw_snapshot_lives_in_blam_layout():
-    wrong = [p for p in Sources("Artemis") if "Datum::Object::Type::Raw" in Read(p) or "DatumStore" in Read(p)]
+    wrong = [p for p in Sources("Artemis") if "Blam::Layout::Object::Type::Raw" in Read(p) or "DatumStore" in Read(p)]
     assert not wrong, wrong
     definitions = [p for p in Sources("Artemis") if re.search(r"\bstruct\s+RawObject\b", Read(p))]
     assert len(definitions) == 1 and definitions[0].startswith("Artemis/2_Blam/Layout/"), definitions
@@ -230,7 +241,7 @@ def test_blam_runtime_does_not_touch_the_process():
         text = Read(path)
         for word in ("MemoryReaderService", "reader.Read", "windows.h", "reinterpret_cast", "OnCleanup"):
             assert word not in text, f"{path}: {word}"
-        assert not re.search(r"\b(Platform|Service)::", text), f"{path}: the DLL wiring"
+        assert not re.search(r"(?<![\w:])(Engine|Services|Mod)::", text), f"{path}: the DLL wiring"
 
 
 def test_tables_hold_no_process_address():
@@ -258,8 +269,8 @@ def test_wide_to_utf8_is_portable_and_lives_in_common():
 
 
 def test_tables_layer_is_pure_and_core_cleans_it():
-    layer = Read(f"{RUNTIME}/Tables.Layer.ixx")
-    assert re.search(r"\bLayer\(\s*Log&\s+log\s*,\s*Resolved::Layer&\s+resolved\s*\)", layer)
+    layer = Read(f"{RUNTIME}/Blam.Runtime.Layer.ixx")
+    assert re.search(r"\bLayer\(\s*Log&\s+log\s*,\s*Blam::MapModel::Layer&\s+resolved\s*\)", layer)
     assert re.search(r"auto\s+Cleanup\(\)\s*->\s*void", layer)
     assert "m_Tables.Cleanup()" in Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
 
@@ -273,7 +284,7 @@ def test_locators_live_in_platform_capture():
 def test_max_local_users_has_one_owner():
     definitions = [p for p in Sources("Artemis") if re.search(r"\bk_MaxLocalUsers\s*\{", Read(p))]
     assert definitions == ["Artemis/1_Shared/Common/Engine/Type/Common.Engine.Type.ixx"], definitions
-    wrong = [p for p in Sources("Artemis") if "Platform::Host::Type::k_MaxLocalUsers" in Read(p)]
+    wrong = [p for p in Sources("Artemis") if "Engine::Base::Host::Type::k_MaxLocalUsers" in Read(p)]
     assert not wrong, wrong
 
 
@@ -302,7 +313,7 @@ def test_tick_trace_reads_its_clock_from_the_snapshot():
 
 
 def test_read_window_ends_right_after_the_copy():
-    text = Read("Artemis/8_Mod/Mod/Runtime/AI/AIThread.cpp")
+    text = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
     capture = text.index("m_CaptureService.Capture()")
     end_read = text.index("EndRead(m_Last)")
     # The first table update is the first stage of the pipeline (M5c, D205).
@@ -329,18 +340,18 @@ def test_pure_projects_do_not_touch_the_process_or_the_wiring():
 
 def test_contract_is_the_generated_bridge_layout():
     sources = Sources("Artemis/1_Shared/Contract")
-    assert sources == ["Artemis/1_Shared/Contract/Contract.Bridge.ixx"], sources
+    assert sources == ["Artemis/1_Shared/Contract/Contract.Bridge.Type.ixx"], sources
     text = Read(sources[0])
     assert text.splitlines()[0].startswith("// Generated by"), text.splitlines()[0]
-    assert re.search(r"^export module Contract\.Bridge;", text, re.MULTILINE)
+    assert re.search(r"^export module Contract\.Bridge\.Type;", text, re.MULTILINE)
     assert ImportRoots(sources[0]) <= {"Common"}
 
 
 def test_bridge_type_reexports_the_contract_and_the_clock_moved_to_flat():
-    bridge = Read("Artemis/4_Bridge/Transport/Type/Platform.Bridge.Type.ixx")
-    assert "export import Contract.Bridge;" in bridge
+    bridge = Read("Artemis/4_Bridge/Transport/Type/Bridge.Transport.Type.ixx")
+    assert "export import Contract.Bridge.Type;" in bridge
     assert not re.search(r"\bstruct\s+BridgeClock\b", bridge)
-    assert re.search(r"\bstruct\s+BridgeClock\b", Read("Artemis/4_Bridge/Codec/Flat/Type/Export.Flat.Type.ixx"))
+    assert re.search(r"\bstruct\s+BridgeClock\b", Read("Artemis/4_Bridge/Codec/Flat/Type/Bridge.Codec.Flat.Type.ixx"))
     assert not Tracked("Artemis/4_Bridge/Transport/Type/BridgeLayout.ixx")
 
 
@@ -349,12 +360,12 @@ def test_tick_detours_live_in_platform_capture_hook():
     assert sorted(os.path.basename(p) for p in found) == sorted(f"{name}.{ext}" for name in TICK_DETOURS for ext in ("cpp", "ixx"))
     assert all(p.startswith(CAPTURE_HOOK) for p in found), found
     for name, part in (("ExecuteGameFrameDetour", "ExecuteGameFrame"), ("SimulationTicksDetour", "SimulationTicks")):
-        assert Read(f"{CAPTURE_HOOK}{name}.ixx").startswith(f"export module Platform.Capture.Hook:{part};")
-        assert f"export import :{part};" in Read(CAPTURE_HOOK + "../Platform.Capture.Hook.ixx")
+        assert Read(f"{CAPTURE_HOOK}{name}.ixx").startswith(f"export module Engine.Capture.Hook:{part};")
+        assert f"export import :{part};" in Read(CAPTURE_HOOK + "../Engine.Capture.Hook.ixx")
     layer = Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
     for name in TICK_DETOURS:
         assert f"m_{name}.Install();" in layer and f"m_{name}.Uninstall();" in layer
-    assert not [p for p in Tracked("Artemis") if os.path.basename(p) == "Export.Tick.Hook.ixx"]
+    assert not [p for p in Tracked("Artemis") if os.path.basename(p) == "Bridge.Codec.Tick.Hook.ixx"]
     for path in Sources("Artemis/4_Bridge/Codec"):
         text = Read(path)
         for word in ("ExecuteGameFrameFunction", "SimulationTicksFunction", "EndRoundFunction"):
@@ -367,7 +378,7 @@ def test_layers_are_pure_with_a_cleanup(name, path, parameters):
     constructor = r"\bLayer\(\s*" + r"\s*,\s*".join(re.escape(p).replace(r"\ ", r"\s+") for p in parameters) + r"\s*\)"
     assert re.search(constructor, text), f"{name}: constructor"
     assert re.search(r"auto\s+Cleanup\(\)\s*->\s*void", text), f"{name}: Cleanup"
-    assert "Service::Layer" not in text and "Platform::Layer" not in text and "OnCleanup" not in text, name
+    assert "Services::Layer" not in text and "Platform::Layer" not in text and "OnCleanup" not in text, name
 
 
 def test_core_cleans_the_seven_layers_in_order():
@@ -379,8 +390,8 @@ def test_core_cleans_the_seven_layers_in_order():
 
 def test_generate_bridge_writes_the_contract():
     text = Read("Tools/TagTranspiler/GenerateBridge.py")
-    assert '"Artemis", "1_Shared", "Contract", "Contract.Bridge.ixx"' in text
-    assert '"export module Contract.Bridge;"' in text
+    assert '"Artemis", "1_Shared", "Contract", "Contract.Bridge.Type.ixx"' in text
+    assert '"export module Contract.Bridge.Type;"' in text
     assert "BridgeLayout.ixx" not in text
 
 
@@ -388,7 +399,7 @@ def test_generate_bridge_writes_the_contract():
 
 # Calls that run one step of the tick: only PipelineService.Run does it (D205).
 PIPELINE_STEP = re.compile(r"\.m_\w+Service\.(?:Update\w*|Assemble)\(")
-SNAPSHOT_CODEC = "Artemis/2_Blam/Layout/Snapshot/System/Layout.Snapshot.System"
+SNAPSHOT_CODEC = "Artemis/2_Blam/Layout/Snapshot/System/Blam.Layout.Snapshot.System"
 DUMP_CODEC = "Artemis/4_Bridge/Codec/Dump/"
 PIPELINE_SERVICE = "Artemis/4_Bridge/Codec/Pipeline/System/PipelineService"
 
@@ -413,24 +424,24 @@ def test_snapshot_codec_imports_only_what_its_project_allows():
     assert sorted(Tracked(*paths)) == sorted(paths)
     assert "Artemis/2_Blam/Layout/Snapshot/Type/SnapshotRecord.ixx" in Tracked("Artemis/2_Blam/Layout")
     for path in paths + ["Artemis/2_Blam/Layout/Snapshot/Type/SnapshotRecord.ixx"]:
-        assert ImportRoots(path) <= {"Common", "Layout"}, (path, ImportRoots(path))
+        assert ImportRoots(path) <= {"Common", "Blam.Layout"}, (path, ImportRoots(path))
 
 
 def test_dump_codec_and_pipeline_import_only_what_their_project_allows():
     dump = [p for p in Sources("Artemis/4_Bridge/Codec") if p.startswith(DUMP_CODEC)]
-    assert sorted(os.path.basename(p) for p in dump) == ["Export.Dump.System.cpp", "Export.Dump.System.ixx", "Export.Dump.Type.ixx"], dump
+    assert sorted(os.path.basename(p) for p in dump) == ["Bridge.Codec.Dump.System.cpp", "Bridge.Codec.Dump.System.ixx", "Bridge.Codec.Dump.Type.ixx"], dump
     for path in dump:
-        assert ImportRoots(path) <= {"Common", "Contract", "Export"}, (path, ImportRoots(path))
+        assert ImportRoots(path) <= {"Common", "Contract", "Bridge.Codec"}, (path, ImportRoots(path))
     pipeline = [PIPELINE_SERVICE + ".ixx", PIPELINE_SERVICE + ".cpp"]
     assert sorted(Tracked(*pipeline)) == sorted(pipeline)
     for path in pipeline:
-        assert ImportRoots(path) <= {"Layout", "Tables", "Relations", "Environment", "Egocentric", "Export"}, (path, ImportRoots(path))
-    assert "export module Export.Pipeline.System;" in Read(pipeline[0])
-    assert re.search(r"\bPipelineService\s+m_PipelineService\b", Read("Artemis/4_Bridge/Codec/Export.Layer.ixx"))
+        assert ImportRoots(path) <= {"Blam.Layout", "Blam.Runtime", "Perception", "Views", "Bridge.Codec"}, (path, ImportRoots(path))
+    assert "export module Bridge.Codec.Pipeline.System;" in Read(pipeline[0])
+    assert re.search(r"\bPipelineService\s+m_PipelineService\b", Read("Artemis/4_Bridge/Codec/Bridge.Codec.Layer.ixx"))
 
 
 def test_the_order_of_the_tick_lives_in_the_pipeline_service():
-    thread = Read("Artemis/8_Mod/Mod/Runtime/AI/AIThread.cpp")
+    thread = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
     assert not PIPELINE_STEP.search(thread), PIPELINE_STEP.search(thread).group(0)
     assert "m_PipelineService.Run(" in thread
     tests = Read("Artemis/7_Tests/Tests/Perception/PipelineTests.cpp")
@@ -441,18 +452,18 @@ def test_the_order_of_the_tick_lives_in_the_pipeline_service():
 
 
 def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():
-    ui = Read("Artemis/6_DevTools/Workbench/TickDump/Type/UI.TickDump.Type.ixx")
+    ui = Read("Artemis/6_DevTools/Workbench/TickDump/Type/DevTools.Workbench.TickDump.Type.ixx")
     assert not re.search(r"\bstruct\s+(?:TickRecordHeader|TickDumpFileHeader|TickDumpFooter)\b", ui)
     assert "TickRecordHeader" not in ui
-    assert re.search(r"\bstruct\s+TickRecordHeader\b", Read("Artemis/4_Bridge/Codec/Dump/Type/Export.Dump.Type.ixx"))
+    assert re.search(r"\bstruct\s+TickRecordHeader\b", Read("Artemis/4_Bridge/Codec/Dump/Type/Bridge.Codec.Dump.Type.ixx"))
     for path in Sources("Artemis/6_DevTools/Workbench/TickDump"):
-        assert "UI::TickDump::Type::TickRecordHeader" not in Read(path), path
+        assert "DevTools::Workbench::TickDump::Type::TickRecordHeader" not in Read(path), path
 
 
 # ---- M6a: Control as a project (D210-D215)
 
-INPUT_TYPE = "Artemis/5_Engine/Control/Input/Type/Platform.Input.Type.ixx"
-SIMULATION_TYPE = "Artemis/5_Engine/Control/Simulation/Type/Platform.Simulation.Type.ixx"
+INPUT_TYPE = "Artemis/5_Engine/Control/Input/Type/Engine.Control.Input.Type.ixx"
+SIMULATION_TYPE = "Artemis/5_Engine/Control/Simulation/Type/Engine.Control.Simulation.Type.ixx"
 DETOUR_CPP = "Artemis/5_Engine/Control/Input/Hook/PlayerActionDetour.cpp"
 BRIDGE_SERVICE_CPP = "Artemis/4_Bridge/Transport/System/BridgeService.cpp"
 BOT_SERVICE_IXX = "Artemis/5_Engine/Control/Simulation/System/BotService.ixx"
@@ -465,11 +476,11 @@ def Defines(path_text, kind, name):
 
 def test_the_action_format_lives_in_blam_layout():
     sources = Sources("Artemis/2_Blam/Layout/Action")
-    assert sorted(sources) == ["Artemis/2_Blam/Layout/Action/Layout.Action.Type.ixx", "Artemis/2_Blam/Layout/Action/Type/ActionBits.ixx",
+    assert sorted(sources) == ["Artemis/2_Blam/Layout/Action/Blam.Layout.Action.Type.ixx", "Artemis/2_Blam/Layout/Action/Type/ActionBits.ixx",
                                "Artemis/2_Blam/Layout/Action/Type/ActionOffset.ixx", "Artemis/2_Blam/Layout/Action/Type/ActionSize.ixx"]
     for partition, name in (("Offset", "ActionOffset"), ("Size", "ActionSize"), ("Bits", "ActionBits")):
-        assert Read(f"Artemis/2_Blam/Layout/Action/Type/{name}.ixx").startswith(f"export module Layout.Action.Type:{partition};")
-        assert f"export import :{partition};" in Read("Artemis/2_Blam/Layout/Action/Layout.Action.Type.ixx")
+        assert Read(f"Artemis/2_Blam/Layout/Action/Type/{name}.ixx").startswith(f"export module Blam.Layout.Action.Type:{partition};")
+        assert f"export import :{partition};" in Read("Artemis/2_Blam/Layout/Action/Blam.Layout.Action.Type.ixx")
     for path in (INPUT_TYPE, SIMULATION_TYPE):
         text = Read(path)
         for name in ("k_PlayerActionSize", "k_ActionButtonsOffset", "k_HoldLanes", "k_NoZoomLevel"):
@@ -505,7 +516,7 @@ def test_the_bridge_service_takes_its_decisions_from_control():
 
 
 def test_the_bot_service_answers_the_unit_rules():
-    assert re.search(r"class\s+BotService\s*:\s*public\s+Control::Action::System::UnitRules\b", Read(BOT_SERVICE_IXX))
+    assert re.search(r"class\s+BotService\s*:\s*public\s+(?:::)?Control::Action::System::UnitRules\b", Read(BOT_SERVICE_IXX))
 
 
 def test_control_does_not_touch_the_process_the_wiring_or_the_clock():
@@ -521,9 +532,8 @@ def test_control_does_not_touch_the_process_the_wiring_or_the_clock():
 # ---- M6b: Bridge.Transport as a project and the ports between the engine and the bridge (D215, D217)
 
 TRANSPORT = "Artemis/4_Bridge/Transport"
-PLATFORM = "Artemis/8_Mod/Mod/Infrastructure/Platform"
-ENGINE_ROOTS = ("Platform.Lifecycle.", "Platform.Match.", "Platform.Input.", "Platform.Window.", "Platform.Simulation.", "Platform.Capture.", "Platform.Host.", "Platform.Hook.",
-                "Platform.Memory.", "Platform.Render.", "Runtime.", "UI.", "Viewer.", "Gui.")
+PLATFORM = "Artemis/8_Mod/Mod/Port"
+ENGINE_ROOTS = ("Engine.", "Mod.", "DevTools.")
 VIRTUAL_METHOD = re.compile(r"\bvirtual\s+auto\s+(\w+)\s*\(")
 
 
@@ -543,13 +553,11 @@ def test_bridge_transport_imports_no_engine_module():
     for path in sources:
         engine = [name for name in Imports(path) if name.startswith(ENGINE_ROOTS)]
         assert not engine, f"{path}: imports {engine}"
-        other = [name for name in Imports(path) if name.startswith("Platform.") and not name.startswith("Platform.Bridge.")]
-        assert not other, f"{path}: imports {other}"
 
 
 def test_only_the_layer_and_the_port_import_the_bridge_in_platform():
-    allowed = (f"{PLATFORM}/Port/",)
-    found = [path for path in Sources(PLATFORM) if any(name.startswith("Platform.Bridge.") for name in Imports(path))]
+    allowed = (f"{PLATFORM}/",)
+    found = [path for path in Sources(PLATFORM) if any(name.startswith("Bridge.Transport.") for name in Imports(path))]
     assert found, "nobody imports the bridge"
     wrong = [path for path in found if not path.startswith(allowed)]
     assert not wrong, wrong
@@ -566,13 +574,13 @@ def test_the_bridge_service_and_the_detour_know_only_the_ports():
 
 def test_the_ports_declare_exactly_their_methods():
     engine = Read(f"{TRANSPORT}/System/BridgeEngine.ixx")
-    assert re.search(r"^export module Platform\.Bridge\.System:Engine;", engine, re.MULTILINE)
+    assert re.search(r"^export module Bridge\.Transport\.System:Engine;", engine, re.MULTILINE)
     assert re.search(r"\bclass\s+BridgeEngine\b", engine)
     assert set(VIRTUAL_METHOD.findall(engine)) == {"GetPhase", "GetEngineStarts", "GetPausedFrames", "GetRequestedTimeScale",
                                                    "SetRequestedTimeScale", "IsPauseRequested", "SetPauseRequested", "SetEndRoundRequested",
                                                    "SetOverride", "RequestClient"}
     source = Read("Artemis/5_Engine/Control/Input/System/ActionSource.ixx")
-    assert re.search(r"^export module Platform\.Input\.System:ActionSource;", source, re.MULTILINE)
+    assert re.search(r"^export module Engine\.Control\.Input\.System:ActionSource;", source, re.MULTILINE)
     assert re.search(r"\bclass\s+ActionSource\b", source)
     assert set(VIRTUAL_METHOD.findall(source)) == {"Prepare"}
 
@@ -614,23 +622,23 @@ def test_the_match_and_window_modules_declare_their_classes():
     assert DeclaredClasses(WINDOW) == WINDOW_CLASSES
     assert not DeclaredClasses(CORE_LIFECYCLE) & MATCH_CLASSES
     assert not DeclaredClasses(CONTROL_INPUT) & WINDOW_CLASSES
-    for root, folder, name in ((MATCH, "Match", "Hook"), (MATCH, "Match", "State"), (MATCH, "Match", "System"),
-                               (MATCH, "Match", "Type"), (WINDOW, "Window", "Hook"), (WINDOW, "Window", "System"),
-                               (WINDOW, "Window", "Type")):
-        module = f"Platform.{folder}.{name}"
+    for root, prefix, name in ((MATCH, "Engine.Match", "Hook"), (MATCH, "Engine.Match", "State"), (MATCH, "Engine.Match", "System"),
+                               (MATCH, "Engine.Match", "Type"), (WINDOW, "Engine.Render.Window", "Hook"),
+                               (WINDOW, "Engine.Render.Window", "System"), (WINDOW, "Engine.Render.Window", "Type")):
+        module = f"{prefix}.{name}"
         path = f"{root}/{name}/{module}.ixx" if name == "Type" else f"{root}/{module}.ixx"
         assert re.search(rf"^export module {re.escape(module)};", Read(path), re.MULTILINE), path
 
 
 def test_the_types_of_match_and_window_left_lifecycle_and_input():
-    lifecycle = Read(f"{CORE_LIFECYCLE}/Type/Platform.Lifecycle.Type.ixx")
-    match = Read(f"{MATCH}/Type/Platform.Match.Type.ixx")
+    lifecycle = Read(f"{CORE_LIFECYCLE}/Type/Engine.Base.Lifecycle.Type.ixx")
+    match = Read(f"{MATCH}/Type/Engine.Match.Type.ixx")
     for name in ("MatchConfig", "k_TransplantBlocks", "k_EngineConfigurationSize", "LifecycleUpdateFunction", "k_MaxMatchConfigNameLength"):
         assert not re.search(rf"\b{name}\b", lifecycle), name
         assert re.search(rf"\b{name}\b", match), name
     assert re.search(r"\bStatus\b", lifecycle)
-    input_types = Read(f"{CONTROL_INPUT}/Type/Platform.Input.Type.ixx")
-    window = Read(f"{WINDOW}/Type/Platform.Window.Type.ixx")
+    input_types = Read(f"{CONTROL_INPUT}/Type/Engine.Control.Input.Type.ixx")
+    window = Read(f"{WINDOW}/Type/Engine.Render.Window.Type.ixx")
     for name in ("WindowMessage", "RawMouse", "WindowMessageHandler", "RawMouseHandler", "GetRawInputDataFunction"):
         assert not re.search(rf"\b{name}\b", input_types), name
         assert re.search(rf"\b{name}\b", window), name
@@ -638,11 +646,11 @@ def test_the_types_of_match_and_window_left_lifecycle_and_input():
 
 def test_the_match_window_and_input_modules_import_in_one_direction():
     for path in Sources(CORE_LIFECYCLE):
-        assert not [n for n in Imports(path) if n.startswith("Platform.Match.")], path
+        assert not [n for n in Imports(path) if n.startswith("Engine.Match.")], path
     for path in Sources(CONTROL_INPUT):
-        assert not [n for n in Imports(path) if n.startswith("Platform.Window.")], path
+        assert not [n for n in Imports(path) if n.startswith("Engine.Render.Window.")], path
     for path in Sources(WINDOW):
-        assert not [n for n in Imports(path) if n.startswith("Platform.Input.")], path
+        assert not [n for n in Imports(path) if n.startswith("Engine.Control.Input.")], path
 
 
 # ---- M6c.2: the engine in five projects (D216, D217, D221)
@@ -654,15 +662,25 @@ ENGINE_PLATFORM = {
     "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Match"},
     "Artemis/5_Engine/Render": {"Hook", "Memory", "Host", "Lifecycle", "Render", "Window"},
 }
-ENGINE_FORBIDDEN_PREFIXES = ("Platform.Bridge.", "Platform.Port.", "Platform.Layer", "Runtime.", "UI.", "Viewer.", "Gui.", "Export.",
-                             "Perception.", "Views.", "Tables.", "Map.", "Resolved.", "Relations.", "Environment.", "Egocentric.")
+ENGINE_FORBIDDEN_PREFIXES = ("Bridge.Transport.", "Mod.", "DevTools.", "Bridge.Codec.", "Perception.", "Views.", "Blam.Runtime.", "Blam.Map.",
+                             "Blam.MapModel.")
+
+
+def EngineFolder(module):
+    """Folder of an engine module inside its project ("Engine.Base.Hook.System" -> "Hook", "Engine.Capture.Type" -> "Capture");
+    None for the Layer of a project."""
+    if module.endswith(".Layer"):
+        return None
+    component = Component(module)
+    rest = module.split(".")[len(component.split(".")):]
+    return rest[0] if len(rest) > 1 else component.split(".")[1]
 MODULE_LINE = re.compile(r"^\s*(?:export\s+)?module\s+([A-Za-z_][\w.]*)", re.MULTILINE)
 
 
 @pytest.mark.parametrize("folder", sorted(ENGINE_PLATFORM))
 def test_an_engine_project_imports_only_its_platform_folders(folder):
     for path in Sources(folder):
-        found = {name.split(".")[1] for name in Imports(path) if name.startswith("Platform.")}
+        found = {EngineFolder(name) for name in Imports(path) if name.startswith("Engine.")} - {None}
         assert found <= ENGINE_PLATFORM[folder], f"{path}: {sorted(found - ENGINE_PLATFORM[folder])}"
 
 
@@ -670,16 +688,15 @@ def test_an_engine_project_imports_only_its_platform_folders(folder):
 def test_an_engine_project_is_a_platform_library_that_knows_no_upper_layer(folder):
     for path in Sources(folder):
         module = MODULE_LINE.search(Read(path))
-        assert module and (module.group(1).startswith("Platform.") or module.group(1) == f"Engine.{os.path.basename(folder)}.Layer"), path
+        assert module and module.group(1).startswith(f"Engine.{os.path.basename(folder)}."), path
         wrong = [name for name in Imports(path) if name.startswith(ENGINE_FORBIDDEN_PREFIXES)]
         assert not wrong, f"{path}: imports {wrong}"
 
 
 def test_the_dll_keeps_only_the_layer_and_the_port_of_platform():
-    assert sorted(Tracked(PLATFORM)) == sorted(p for p in Tracked(f"{PLATFORM}/Port"))
-    assert all(p.startswith(f"{PLATFORM}/Port/") for p in Tracked(PLATFORM))
-    on_disk = sorted(os.listdir(os.path.join(REPO, PLATFORM)))
-    assert on_disk == ["Port"], on_disk
+    assert Tracked(PLATFORM)
+    assert not Tracked("Artemis/8_Mod/Mod/Infrastructure")
+    assert not os.path.exists(os.path.join(REPO, "Artemis/8_Mod/Mod/Infrastructure"))
 
 
 def test_the_dll_and_the_tests_reference_the_five_engine_projects():
@@ -694,16 +711,16 @@ def test_the_dll_and_the_tests_reference_the_five_engine_projects():
 
 def test_the_dll_does_not_list_the_sources_of_the_engine_projects():
     listed = {include.replace("\\", "/") for include in COMPILE.findall(Read("Artemis/8_Mod/Mod/Artemis.Mod.vcxproj"))}
-    assert not [p for p in listed if p.startswith("Infrastructure/Platform/") and not p.startswith("Infrastructure/Platform/Port/")]
+    assert not [p for p in listed if "/" in p and p.split("/")[0] not in ("Port", "Thread", "Proxy")]
 
 
 # ---- M7.1: tick observers, the scene apart from the pipeline, the Gui without Domain, EngineAccess (D222-D227)
 
 DEVTOOLS = "Artemis/6_DevTools"
-DEVTOOLS_ROOTS = {"UI", "Viewer", "Gui", "DevTools"}
-PURE_ROOTS = {"Map", "Resolved", "Datum", "Layout", "Tables", "Relations", "Environment", "Egocentric", "Export", "Contract", "Control"}
-DEVTOOLS_PURE_SYSTEMS = {"Export.Dump.System", "Export.Flat.System", "Layout.Snapshot.System", "Environment.Collidable.System",
-                         "Resolved.Definitions.Reflect"}
+DEVTOOLS_ROOTS = {"DevTools.Gui", "DevTools.Viewer", "DevTools.Workbench"}
+PURE_ROOTS = {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Bridge.Codec", "Contract", "Control"}
+DEVTOOLS_PURE_SYSTEMS = {"Bridge.Codec.Dump.System", "Bridge.Codec.Flat.System", "Blam.Layout.Snapshot.System", "Perception.Collidable.System",
+                         "Blam.MapModel.Definitions.Reflect"}
 
 
 def DevToolsSources():
@@ -711,9 +728,9 @@ def DevToolsSources():
 
 
 def test_the_ai_thread_knows_no_development_tool():
-    for path in Sources("Artemis/8_Mod/Mod/Runtime/AI"):
+    for path in Sources("Artemis/8_Mod/Mod/Thread/System/AI"):
         assert not ImportRoots(path) & DEVTOOLS_ROOTS, path
-    text = Read("Artemis/8_Mod/Mod/Runtime/AI/AIThread.ixx") + Read("Artemis/8_Mod/Mod/Runtime/AI/AIThread.cpp")
+    text = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.ixx") + Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
     for name in ("CameraStore", "TickTraceUIService", "TickDumpUIService"):
         assert name not in text, name
 
@@ -728,22 +745,21 @@ def test_the_pipeline_builds_no_scene_and_knows_no_viewer_state():
 
 
 def test_the_collidable_scene_is_built_on_demand_and_stored_by_the_viewer():
-    service = Read("Artemis/3_Domain/Perception/Environment/Collidable/System/CollidableService.ixx")
+    service = Read("Artemis/3_Domain/Perception/Collidable/System/CollidableService.ixx")
     assert "BuildScene" in service
     assert not re.search(r"\bUpdate\(", service)
     assert not re.search(r"\bCollectCollidables\b", service)
     stores = [p for p in Sources("Artemis") if re.search(r"\bclass CollidableStore\b", Read(p))]
     assert stores == ["Artemis/6_DevTools/Viewer/Collidable/State/CollidableStore.ixx"], stores
     for path in Sources("Artemis/3_Domain/Perception"):
-        assert "Environment.Collidable.State" not in Read(path), path
+        assert "Perception.Collidable.State" not in Read(path), path
         assert not re.search(r"\bCollidableStore\b", Read(path)), path
 
 
 def test_the_gui_has_no_domain_and_no_platform_layer():
     for path in Sources("Artemis/6_DevTools/Gui"):
         names = [n for n in Imports(path)]
-        assert {n.split(".")[0] for n in names} <= {"Common", "Service", "Gui", "Platform"}, (path, names)
-        assert not [n for n in names if n.startswith("Platform.") and not n.startswith(("Platform.Render.", "Platform.Window."))], path
+        assert {Component(n) for n in names} <= {"Common", "Services", "DevTools.Gui", "Engine.Render"}, (path, names)
     assert not [p for p in Tracked("Artemis") if "ObjectFormater" in p]
     assert not [p for p in Tracked("Artemis/6_DevTools/Gui") if "AffordanceFormater" in p or "InteractionFormater" in p]
     for name in ("Affordance", "Interaction"):
@@ -753,8 +769,7 @@ def test_the_gui_has_no_domain_and_no_platform_layer():
 def test_the_development_tools_do_not_import_the_engine_the_runtime_or_the_pipeline():
     for path in DevToolsSources():
         names = Imports(path)
-        wrong = [n for n in names if n == "Platform.Layer" or n.startswith(("Platform.Port", "Runtime.", "Export.Pipeline.System"))
-                 or n == "Mod.Layer"]
+        wrong = [n for n in names if n.startswith(("Mod.", "Bridge.Codec.Pipeline.System"))]
         assert not wrong, f"{path}: {wrong}"
         text = Read(path)
         assert "PipelineService" not in text and "BuildForMap" not in text, path
@@ -763,20 +778,20 @@ def test_the_development_tools_do_not_import_the_engine_the_runtime_or_the_pipel
 def test_the_development_tools_import_only_the_data_of_the_pure_components():
     for path in DevToolsSources():
         for name in Imports(path):
-            if name.split(".")[0] not in PURE_ROOTS or name in DEVTOOLS_PURE_SYSTEMS:
+            if Component(name) not in PURE_ROOTS or name in DEVTOOLS_PURE_SYSTEMS:
                 continue
             assert name.rsplit(".", 1)[-1] in {"Type", "State", "Layer"}, f"{path}: {name}"
 
 
 def test_the_tick_observer_is_wired_from_runtime_to_devtools():
     defined = [p for p in Sources("Artemis") if re.search(r"\bstruct ObservedTick\b", Read(p))]
-    assert defined == ["Artemis/4_Bridge/Codec/Pipeline/Type/Export.Pipeline.Type.ixx"], defined
+    assert defined == ["Artemis/4_Bridge/Codec/Pipeline/Type/Bridge.Codec.Pipeline.Type.ixx"], defined
     assert re.search(r"auto OnTick\(const ObservedTick&", Read("Artemis/8_Mod/Mod/Mod.Layer.ixx"))
     assert "AddObserver(" in Read("Artemis/8_Mod/Mod/Mod.Layer.cpp")
 
 
 def test_only_the_wiring_and_the_devtools_import_the_development_tools():
-    owned = ("Artemis/8_Mod/Mod/Mod.Layer.ixx", "Artemis/8_Mod/Mod/Mod.Layer.cpp", "Artemis/8_Mod/Mod/Runtime/", DEVTOOLS + "/")
+    owned = ("Artemis/8_Mod/Mod/Mod.Layer.ixx", "Artemis/8_Mod/Mod/Mod.Layer.cpp", "Artemis/8_Mod/Mod/Thread/", DEVTOOLS + "/")
     for path in Sources("Artemis"):
         if path.startswith(owned):
             continue
@@ -789,12 +804,9 @@ def test_only_the_wiring_and_the_devtools_import_the_development_tools():
 def test_the_dll_keeps_only_the_wiring_the_runtime_and_the_platform_port():
     allowed_files = {"Mod.Layer.ixx", "Mod.Layer.cpp", "DllMain.cpp", "Artemis.Mod.vcxproj", "Artemis.Mod.vcxproj.filters"}
     tracked = {path[len("Artemis/8_Mod/Mod/"):].split("/")[0] for path in Tracked("Artemis/8_Mod/Mod")}
-    assert tracked == allowed_files | {"Runtime", "Infrastructure", "Proxy"}, tracked
-    assert {p for p in Tracked("Artemis/8_Mod/Mod/Infrastructure")} == {p for p in Tracked("Artemis/8_Mod/Mod/Infrastructure/Platform")}
+    assert tracked == allowed_files | {"Thread", "Port", "Proxy"}, tracked
     on_disk = sorted(n for n in os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod")) if not n.endswith(".user"))
-    assert on_disk == sorted(allowed_files | {"Runtime", "Infrastructure", "Proxy"}), on_disk
-    assert sorted(os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod/Infrastructure"))) == ["Platform"]
-    assert sorted(os.listdir(os.path.join(REPO, "Artemis/8_Mod/Mod/Infrastructure/Platform"))) == ["Port"]
+    assert on_disk == sorted(allowed_files | {"Thread", "Port", "Proxy"}), on_disk
 
 
 def test_the_dll_references_the_devtools_project_and_the_tests_do_not():
@@ -811,9 +823,6 @@ def test_the_dll_references_the_devtools_project_and_the_tests_do_not():
 
 # ---- M8 A: the solution folders mirrored on disk, in the order of the dependencies (D229-D231)
 
-import sys
-sys.path.insert(0, os.path.join(REPO, "Tools"))
-from components import PROJECTS, SOLUTION, Folder as ProjectFolder, Project as ProjectPath  # noqa: E402
 
 SLNX_PROJECT = re.compile(r'<Project\s+Path="([^"]+)"')
 
@@ -849,7 +858,7 @@ def test_the_order_of_the_solution_is_an_order_of_the_dependencies():
 
 def test_perception_has_one_layer():
     layers = [p for p in Sources("Artemis/3_Domain/Perception") if p.endswith(".Layer.ixx")]
-    assert [os.path.basename(p) for p in layers] == ["Environment.Layer.ixx"], layers
+    assert [os.path.basename(p) for p in layers] == ["Perception.Layer.ixx"], layers
     offenders = [p for p in Sources("Artemis") if "Relations.Layer" in Read(p) or "Relations::Layer" in Read(p)]
     assert not offenders, offenders
 
@@ -878,7 +887,7 @@ def test_every_engine_project_and_the_transport_have_their_layer(folder, module,
 def test_the_engine_layers_import_only_base_and_services(folder, module, namespace):
     path = f"{folder}/{module}.ixx"
     layers = {name for name in Imports(path) if name.endswith(".Layer")}
-    allowed = {"Service.Layer"} if module in ("Engine.Base.Layer", "Bridge.Transport.Layer") else {"Service.Layer", "Engine.Base.Layer"}
+    allowed = {"Services.Layer"} if module in ("Engine.Base.Layer", "Bridge.Transport.Layer") else {"Services.Layer", "Engine.Base.Layer"}
     assert layers <= allowed, (path, sorted(layers - allowed))
     text = Read(path)
     for word in ("Install(", "OnEngineInitialized", "OnUnhook", "OnCleanup", "OnShutdown"):
@@ -896,7 +905,7 @@ def test_the_action_source_is_set_not_built_in():
 
 
 def test_no_thread_receives_the_platform_layer():
-    sources = Sources("Artemis/8_Mod/Mod/Runtime")
+    sources = Sources("Artemis/8_Mod/Mod/Thread")
     assert sources
     for path in sources:
         assert "Platform.Layer" not in Imports(path) and "Platform::Layer" not in Read(path), path

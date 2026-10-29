@@ -2,11 +2,11 @@
 // Source XML: hlmt.xml
 // Base size: 0x220.
 
-export module Map.Tag.Type:Hlmt.Offset;
+export module Blam.Map.Tag.Type:Hlmt.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Hlmt::Offset
+export namespace Blam::Map::Tag::Type::Hlmt::Offset
 {
     constexpr std::size_t k_RenderModel                                 = 0x0;  // TagReference.
     constexpr std::size_t k_CollisionModel                              = 0x10;  // TagReference.

@@ -1,12 +1,12 @@
 export module Engine.Control.Layer;
 
-import Service.Layer;
+import Services.Layer;
 import Engine.Base.Layer;
-import Platform.Input.State;
-import Platform.Input.Hook;
-import Platform.Simulation.State;
-import Platform.Simulation.System;
-import Platform.Simulation.Hook;
+import Engine.Control.Input.State;
+import Engine.Control.Input.Hook;
+import Engine.Control.Simulation.State;
+import Engine.Control.Simulation.System;
+import Engine.Control.Simulation.Hook;
 
 export namespace Engine::Control
 {
@@ -16,17 +16,17 @@ export namespace Engine::Control
     class Layer
     {
     private:
-        using VirtualInputStore = Platform::Input::State::VirtualInputStore;
-        using PlayerActionStore = Platform::Input::State::PlayerActionStore;
-        using InputUpdateDetour = Platform::Input::Hook::InputUpdateDetour;
-        using PlayerActionDetour = Platform::Input::Hook::PlayerActionDetour;
+        using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
+        using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
+        using InputUpdateDetour = Engine::Control::Input::Hook::InputUpdateDetour;
+        using PlayerActionDetour = Engine::Control::Input::Hook::PlayerActionDetour;
 
-        using BotStore = Platform::Simulation::State::BotStore;
-        using BotService = Platform::Simulation::System::BotService;
-        using SetMachinesDetour = Platform::Simulation::Hook::SetMachinesDetour;
+        using BotStore = Engine::Control::Simulation::State::BotStore;
+        using BotService = Engine::Control::Simulation::System::BotService;
+        using SetMachinesDetour = Engine::Control::Simulation::Hook::SetMachinesDetour;
 
     public:
-        Layer(Service::Layer& service, Engine::Base::Layer& base) :
+        Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_BotService(service.m_Log, base.m_AOBService, m_BotStore),
             m_InputUpdateDetour(service.m_Log, base.m_HostService, m_VirtualInputStore),
             m_PlayerActionDetour(service.m_Log, base.m_AOBService, m_PlayerActionStore, m_BotService),

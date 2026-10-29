@@ -1,8 +1,8 @@
-export module Resolved.Definitions.Type:Jpt;
+export module Blam.MapModel.Definitions.Type:Jpt;
 
 import std;
 
-export namespace Resolved::Definitions::Type::Jpt
+export namespace Blam::MapModel::Definitions::Type::Jpt
 {
     // Holds the damage effect definition.
     struct Jpt

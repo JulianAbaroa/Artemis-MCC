@@ -1,6 +1,6 @@
-module Service.Telemetry.State;
+module Services.Telemetry.State;
 
-namespace Service::Telemetry::State
+namespace Services::Telemetry::State
 {
     auto TelemetryStore::RecordDroppedTicks(std::uint64_t dropped) -> void
     {

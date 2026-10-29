@@ -1,15 +1,15 @@
-export module Viewer.Format.System:Interaction;
+export module DevTools.Viewer.Format.System:Interaction;
 
-import Tables.Interaction.Type;
+import Blam.Runtime.Interaction.Type;
 
-export namespace Viewer::Format::System
+export namespace DevTools::Viewer::Format::System
 {
     // Converts the interaction enums to display text. Unlisted values give "Unknown".
     class InteractionFormater
     {
     private:
-        using InteractionKind = Tables::Interaction::Type::Alive::InteractionKind;
-        using InteractionDetail = Tables::Interaction::Type::Alive::InteractionDetail;
+        using InteractionKind = Blam::Runtime::Interaction::Type::Alive::InteractionKind;
+        using InteractionDetail = Blam::Runtime::Interaction::Type::Alive::InteractionDetail;
 
     public:
         InteractionFormater() = default;

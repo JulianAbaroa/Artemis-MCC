@@ -1,19 +1,19 @@
-export module Resolved.Definitions.System:Sbsp;
+export module Blam.MapModel.Definitions.System:Sbsp;
 
 import Common.Math.Type;
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the structure bsp definition.
     class SbspBuilder
     {
     private:
         using Triangle = Common::Math::Type::Triangle;
-        using SbspObject = Map::Tag::Type::Sbsp::Object::SbspObject;
-        using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
+        using SbspObject = Blam::Map::Tag::Type::Sbsp::Object::SbspObject;
+        using Sbsp = Blam::MapModel::Definitions::Type::Sbsp::Sbsp;
 
     public:
         SbspBuilder() = default;

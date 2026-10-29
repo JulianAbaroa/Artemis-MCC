@@ -2,19 +2,19 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :Labels;
 
-import Viewer.Options.Type;
-import Viewer.Hud.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Flag;
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto LabelService::Draw() -> void
     {

@@ -1,29 +1,29 @@
-export module Layout.Snapshot.Type:Region;
+export module Blam.Layout.Snapshot.Type:Region;
 
 import Common.Engine.Type;
-import Datum.Object.Type;
-import Layout.Player.Type;
-import Layout.Interaction.Type;
-import Layout.Game.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Player.Type;
+import Blam.Layout.Interaction.Type;
+import Blam.Layout.Game.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxLocalUsers;
-    using Datum::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
-    using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
-    using Datum::Object::Type::Constant::k_MaxPlacements;
-    using Datum::Object::Type::Constant::k_PlacementSize;
-    using Layout::Player::Type::Size::k_Base;
-    using Layout::Player::Type::Mapping::k_OutputUserPlayer;
-    using Layout::Player::Type::Mapping::k_EntryStride;
-    using Layout::Interaction::Type::Offset::k_OutputUserStride;
-    using Layout::Game::Type::Offset::k_GameEnginePlayerScores;
-    using Layout::Game::Type::Offset::k_PlayerScoreStride;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsTickFractionOffset;
+    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Object::Type::Constant::k_MaxPlacements;
+    using Blam::Layout::Object::Type::Constant::k_PlacementSize;
+    using Blam::Layout::Player::Type::Size::k_Base;
+    using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
+    using Blam::Layout::Player::Type::Mapping::k_EntryStride;
+    using Blam::Layout::Interaction::Type::Offset::k_OutputUserStride;
+    using Blam::Layout::Game::Type::Offset::k_GameEnginePlayerScores;
+    using Blam::Layout::Game::Type::Offset::k_PlayerScoreStride;
 }
 
-export namespace Layout::Snapshot::Type
+export namespace Blam::Layout::Snapshot::Type
 {
     // Block of game memory that is copied whole into the snapshot, one per structure the tick reads field by field.
     // note: The order is the index in Snapshot::Regions.

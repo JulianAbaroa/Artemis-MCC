@@ -1,17 +1,17 @@
-export module Resolved.Definitions.Reflect:Weap;
+export module Blam.MapModel.Definitions.Reflect:Weap;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Weap::Magazine;
-    using Resolved::Definitions::Type::Weap::Trigger;
-    using Resolved::Definitions::Type::Weap::Barrel;
-    using Resolved::Definitions::Type::Weap::Weap;
+    using Blam::MapModel::Definitions::Type::Weap::Magazine;
+    using Blam::MapModel::Definitions::Type::Weap::Trigger;
+    using Blam::MapModel::Definitions::Type::Weap::Barrel;
+    using Blam::MapModel::Definitions::Type::Weap::Weap;
 }
 
 export namespace Common::Reflect::Type

@@ -1,16 +1,16 @@
-export module Resolved.Definitions.System:Scnr;
+export module Blam.MapModel.Definitions.System:Scnr;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the scenario definition.
     class ScnrBuilder
     {
     private:
-        using ScnrObject = Map::Tag::Type::Scnr::Object::ScnrObject;
-        using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
+        using ScnrObject = Blam::Map::Tag::Type::Scnr::Object::ScnrObject;
+        using Scnr = Blam::MapModel::Definitions::Type::Scnr::Scnr;
 
     public:
         ScnrBuilder() = default;

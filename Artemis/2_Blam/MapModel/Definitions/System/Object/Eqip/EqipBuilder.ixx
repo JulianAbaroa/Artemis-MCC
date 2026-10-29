@@ -1,18 +1,18 @@
-export module Resolved.Definitions.System:Eqip;
+export module Blam.MapModel.Definitions.System:Eqip;
 
 import :Object;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the equipment definition.
     class EqipBuilder
     {
     private:
-        using EqipObject = Map::Tag::Type::Eqip::Object::EqipObject;
-        using Eqip = Resolved::Definitions::Type::Eqip::Eqip;
+        using EqipObject = Blam::Map::Tag::Type::Eqip::Object::EqipObject;
+        using Eqip = Blam::MapModel::Definitions::Type::Eqip::Eqip;
 
     public:
         explicit EqipBuilder(ObjectBuilder& objectBuilder) :

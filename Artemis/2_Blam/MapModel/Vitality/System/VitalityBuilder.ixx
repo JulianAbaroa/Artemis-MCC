@@ -1,30 +1,30 @@
-export module Resolved.Vitality.System;
+export module Blam.MapModel.Vitality.System;
 
 import Common.Log.System;
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Resolved.World.Type;
-import Resolved.World.State;
-import Resolved.Vitality.Type;
-import Resolved.Vitality.State;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.MapModel.World.Type;
+import Blam.MapModel.World.State;
+import Blam.MapModel.Vitality.Type;
+import Blam.MapModel.Vitality.State;
 import std;
 
-export namespace Resolved::Vitality::System
+export namespace Blam::MapModel::Vitality::System
 {
     // Builds the vitality layout of every model that has damage sections.
     class VitalityBuilder
     {
     private:
-        using Hlmt = Resolved::Definitions::Type::Hlmt::Hlmt;
-        using ModelLink = Resolved::World::Type::ModelLink::ModelLink;
-        using ModelLinkAnchor = Resolved::World::Type::ModelLink::ModelLinkAnchor;
-        using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
-        using Section = Resolved::Vitality::Type::Vitality::Section;
+        using Hlmt = Blam::MapModel::Definitions::Type::Hlmt::Hlmt;
+        using ModelLink = Blam::MapModel::World::Type::ModelLink::ModelLink;
+        using ModelLinkAnchor = Blam::MapModel::World::Type::ModelLink::ModelLinkAnchor;
+        using Vitality = Blam::MapModel::Vitality::Type::Vitality::Vitality;
+        using Section = Blam::MapModel::Vitality::Type::Vitality::Section;
 
         using Log = Common::Log::System::Log;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-        using WorldStore = Resolved::World::State::WorldStore;
-        using VitalityStore = Resolved::Vitality::State::VitalityStore;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
+        using WorldStore = Blam::MapModel::World::State::WorldStore;
+        using VitalityStore = Blam::MapModel::Vitality::State::VitalityStore;
 
     public:
         VitalityBuilder(Log& log, DefinitionsStore& definitionsStore,

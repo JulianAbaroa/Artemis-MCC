@@ -2,35 +2,35 @@ module;
 
 #include <d3d11.h>
 
-module Viewer.Map.System;
+module DevTools.Viewer.Map.System;
 import :MapService;
 
 import Common.Semantic.Type;
-import Viewer.Camera.Type;
-import Viewer.Options.Type;
-import Viewer.Profiler.Type;
-import Viewer.Profiler.System;
-import Viewer.Map.Type;
-import Viewer.Style.Type;
+import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Profiler.Type;
+import DevTools.Viewer.Profiler.System;
+import DevTools.Viewer.Map.Type;
+import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
 {
-    using Viewer::Camera::Type::Viewport;
-    using Viewer::Options::Type::Flag;
-    using Viewer::Options::Type::Scalar;
-    using Viewer::Profiler::Type::Cpu;
-    using Viewer::Profiler::Type::Gpu;
-    using Viewer::Profiler::Type::Counter;
-    using Viewer::Profiler::System::CpuTimer;
-    using Viewer::Map::Type::FixturePassOptions;
-    using Viewer::Map::Type::LimitsPassOptions;
+    using DevTools::Viewer::Camera::Type::Viewport;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Scalar;
+    using DevTools::Viewer::Profiler::Type::Cpu;
+    using DevTools::Viewer::Profiler::Type::Gpu;
+    using DevTools::Viewer::Profiler::Type::Counter;
+    using DevTools::Viewer::Profiler::System::CpuTimer;
+    using DevTools::Viewer::Map::Type::FixturePassOptions;
+    using DevTools::Viewer::Map::Type::LimitsPassOptions;
     using Common::Semantic::Type::Function;
 
-    using Viewer::Style::Type::k_Background;
+    using DevTools::Viewer::Style::Type::k_Background;
 }
 
-namespace Viewer::Map::System
+namespace DevTools::Viewer::Map::System
 {
     auto MapService::Render(const FrameContext& frame) -> void
     {

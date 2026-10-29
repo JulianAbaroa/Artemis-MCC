@@ -2,7 +2,7 @@ module;
 
 #include <chrono>
 
-module Service.Logs.System;
+module Services.Logs.System;
 
 import Common.Log.System;
 import std;
@@ -12,7 +12,7 @@ namespace
     using Common::Log::System::LevelPrefix;
 }
 
-namespace Service::Logs::System
+namespace Services::Logs::System
 {
     auto LogsSink::Write(const LogMessage& message) -> void
     {

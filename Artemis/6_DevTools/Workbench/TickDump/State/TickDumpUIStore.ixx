@@ -1,12 +1,12 @@
-export module UI.TickDump.State;
+export module DevTools.Workbench.TickDump.State;
 
-import Platform.Bridge.Type;
-import Layout.Snapshot.Type;
-import Export.Dump.Type;
-import UI.TickDump.Type;
+import Bridge.Transport.Type;
+import Blam.Layout.Snapshot.Type;
+import Bridge.Codec.Dump.Type;
+import DevTools.Workbench.TickDump.Type;
 import std;
 
-export namespace UI::TickDump::State
+export namespace DevTools::Workbench::TickDump::State
 {
     // State of the TickDump recording (D151): the queue from the AI thread to the dump thread, the requests of the UI, the two files
     // (.tdump and .sdump) and the counters.
@@ -18,11 +18,11 @@ export namespace UI::TickDump::State
         using milliseconds = std::chrono::milliseconds;
         using path = std::filesystem::path;
 
-        using BridgeTick = Platform::Bridge::Type::BridgeTick;
+        using BridgeTick = Contract::Bridge::Type::BridgeTick;
 
-        using SnapshotWriterState = Layout::Snapshot::Type::SnapshotWriterState;
-        using TickDumpWriterState = Export::Dump::Type::TickDumpWriterState;
-        using TickDumpEntry = UI::TickDump::Type::TickDumpEntry;
+        using SnapshotWriterState = Blam::Layout::Snapshot::Type::SnapshotWriterState;
+        using TickDumpWriterState = Bridge::Codec::Dump::Type::TickDumpWriterState;
+        using TickDumpEntry = DevTools::Workbench::TickDump::Type::TickDumpEntry;
 
     public:
         TickDumpUIStore() = default;

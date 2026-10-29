@@ -1,4 +1,4 @@
-export module Resolved.World.Type:Raycast;
+export module Blam.MapModel.World.Type:Raycast;
 
 import Common.Math.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Math::Type::Vec3;
 }
 
-export namespace Resolved::World::Type::Raycast
+export namespace Blam::MapModel::World::Type::Raycast
 {
     // Padding of every box of a ray tree, so rays that graze a triangle edge are not lost to rounding.
     inline constexpr float k_BoxPadding{ 1.0e-3f };

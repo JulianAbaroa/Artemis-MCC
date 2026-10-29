@@ -2,23 +2,23 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :Canvas;
 
 import Common.Engine.Type;
-import Viewer.Camera.Type;
-import Viewer.Camera.System;
-import Viewer.Options.Type;
-import Viewer.Options.State;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
-    using Viewer::Options::Type::Scalar;
-    using Viewer::Style::Type::k_TeamNeutral;
-    using Viewer::Style::Type::ColorOfTeam;
+    using DevTools::Viewer::Options::Type::Scalar;
+    using DevTools::Viewer::Style::Type::k_TeamNeutral;
+    using DevTools::Viewer::Style::Type::ColorOfTeam;
 
     using Common::Engine::Type::k_NoHandle;
 
@@ -57,9 +57,9 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
-    auto ToImColor(const Viewer::Style::Type::Color& color, float alpha) -> ImU32
+    auto ToImColor(const DevTools::Viewer::Style::Type::Color& color, float alpha) -> ImU32
     {
         return ImGui::ColorConvertFloat4ToU32(ImVec4(color.R, color.G, color.B, alpha));
     }
@@ -79,15 +79,15 @@ namespace Viewer::Hud::System
         return cut == std::string::npos ? tagName : tagName.substr(cut + 1);
     }
 
-    auto DistanceRow(const Viewer::Hud::Type::LabelContext& context,
-        const Common::Math::Type::Vec3& point, ImU32 color) -> Viewer::Hud::Type::LabelRow
+    auto DistanceRow(const DevTools::Viewer::Hud::Type::LabelContext& context,
+        const Common::Math::Type::Vec3& point, ImU32 color) -> DevTools::Viewer::Hud::Type::LabelRow
     {
         const auto distance = context.Frame.Self ? context.Frame.Self->DistanceTo(point) : std::nullopt;
 
-        return Viewer::Hud::Type::LabelRow{ distance ? std::format("d: {:.1f} wu", *distance) : std::string{ "d: n/a" }, color };
+        return DevTools::Viewer::Hud::Type::LabelRow{ distance ? std::format("d: {:.1f} wu", *distance) : std::string{ "d: n/a" }, color };
     }
 
-    auto TeamColorOf(const Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32
+    auto TeamColorOf(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32
     {
         const auto& table = context.Frame.ObjectTable;
         if (!table) return ToImColor(k_TeamNeutral);

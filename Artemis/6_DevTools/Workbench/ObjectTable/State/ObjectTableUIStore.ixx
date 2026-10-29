@@ -1,23 +1,23 @@
-export module UI.ObjectTable.State;
+export module DevTools.Workbench.ObjectTable.State;
 
-import Layout.Snapshot.Type;
-import Tables.Object.Type;
-import Export.Tick.Type;
-import UI.ObjectTable.Type;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Object.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Workbench.ObjectTable.Type;
 import std;
 
-export namespace UI::ObjectTable::State
+export namespace DevTools::Workbench::ObjectTable::State
 {
     // Snapshot of the object table with its alive objects grouped by class.
     class ObjectTableUIStore
     {
     private:
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
 
-        using ObjectTable = Tables::Object::Type::Alive::ObjectTable;
-        using AliveObject = Tables::Object::Type::Alive::AliveObject;
+        using ObjectTable = Blam::Runtime::Object::Type::Alive::ObjectTable;
+        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
 
-        using Groups = UI::ObjectTable::Type::Groups;
+        using Groups = DevTools::Workbench::ObjectTable::Type::Groups;
 
     public:
         ObjectTableUIStore() = default;

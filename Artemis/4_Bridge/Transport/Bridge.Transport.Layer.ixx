@@ -1,8 +1,8 @@
 export module Bridge.Transport.Layer;
 
-import Service.Layer;
-import Platform.Bridge.State;
-import Platform.Bridge.System;
+import Services.Layer;
+import Bridge.Transport.State;
+import Bridge.Transport.System;
 
 export namespace Bridge::Transport
 {
@@ -11,12 +11,12 @@ export namespace Bridge::Transport
     class Layer
     {
     private:
-        using BridgeEngine = Platform::Bridge::System::BridgeEngine;
-        using BridgeStore = Platform::Bridge::State::BridgeStore;
-        using BridgeService = Platform::Bridge::System::BridgeService;
+        using BridgeEngine = Bridge::Transport::System::BridgeEngine;
+        using BridgeStore = Bridge::Transport::State::BridgeStore;
+        using BridgeService = Bridge::Transport::System::BridgeService;
 
     public:
-        Layer(Service::Layer& service, BridgeEngine& engine) :
+        Layer(Services::Layer& service, BridgeEngine& engine) :
             m_BridgeService(service.m_Log, service.m_SettingsStore, engine, m_BridgeStore) {}
         ~Layer() = default;
 

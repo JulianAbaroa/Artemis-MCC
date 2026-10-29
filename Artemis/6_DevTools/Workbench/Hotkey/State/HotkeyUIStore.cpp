@@ -1,6 +1,6 @@
-module UI.Hotkey.State;
+module DevTools.Workbench.Hotkey.State;
 
-namespace UI::Hotkey::State
+namespace DevTools::Workbench::Hotkey::State
 {
     auto HotkeyUIStore::GetBindings() const -> std::span<const Binding>
     {

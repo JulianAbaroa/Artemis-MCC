@@ -1,18 +1,18 @@
-export module UI.TickDump.System;
+export module DevTools.Workbench.TickDump.System;
 
 import Common.Log.System;
-import Service.Settings.State;
-import Map.Reader.State;
-import Layout.Snapshot.Type;
-import Export.Tick.Type;
-import Export.Flat.System;
-import UI.TickDump.Type;
-import UI.TickDump.State;
+import Services.Settings.State;
+import Blam.Map.Reader.State;
+import Blam.Layout.Snapshot.Type;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Flat.System;
+import DevTools.Workbench.TickDump.Type;
+import DevTools.Workbench.TickDump.State;
 import std;
 
-export namespace UI::TickDump::System
+export namespace DevTools::Workbench::TickDump::System
 {
-    // Records every tick to a .tdump file (D151) and a .sdump file with the same name (D202): the BridgeTick that Export.Flat builds,
+    // Records every tick to a .tdump file (D151) and a .sdump file with the same name (D202): the BridgeTick that Bridge.Codec.Flat builds,
     // written by the dump thread with the layout of Bridge.xml embedded and the entities as a delta, and the Snapshot the tick was
     // built from, as a delta of bytes. Tools/tickdump.py reads the .tdump and the tests replay the .sdump.
     // note: Development tool (D72) outside the Domain pipeline. The AI thread only pushes a pointer to the immutable Tick, the dump
@@ -23,13 +23,13 @@ export namespace UI::TickDump::System
         using milliseconds = std::chrono::milliseconds;
 
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
-        using FileStore = Map::Reader::State::FileStore;
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
-        using Tick = Export::Tick::Type::Tick;
-        using FlatService = Export::Flat::System::FlatService;
-        using TickDumpEntry = UI::TickDump::Type::TickDumpEntry;
-        using TickDumpUIStore = UI::TickDump::State::TickDumpUIStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
+        using FileStore = Blam::Map::Reader::State::FileStore;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
+        using FlatService = Bridge::Codec::Flat::System::FlatService;
+        using TickDumpEntry = DevTools::Workbench::TickDump::Type::TickDumpEntry;
+        using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
 
     public:
         TickDumpUIService(Log& log, SettingsStore& settingsStore, FileStore& fileStore, FlatService& flatService,

@@ -2,11 +2,11 @@
 // Source XML: sddt.xml
 // Base size: 0x160.
 
-export module Map.Tag.Type:Sddt.Offset;
+export module Blam.Map.Tag.Type:Sddt.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Sddt::Offset
+export namespace Blam::Map::Tag::Type::Sddt::Offset
 {
     constexpr std::size_t k_ManifestId0                                 = 0x0;  // uint32.
     constexpr std::size_t k_ManifestId1                                 = 0x4;  // uint32.

@@ -1,19 +1,19 @@
-export module Platform.Simulation.State;
+export module Engine.Control.Simulation.State;
 
-import Platform.Simulation.Type;
+import Engine.Control.Simulation.Type;
 import std;
 
-export namespace Platform::Simulation::State
+export namespace Engine::Control::Simulation::State
 {
     // Bots Artemis adds to the match (players on machines of their own), the machines they use, and the latest session snapshot.
     // note: Thread-safe. The UI asks for bots, the game thread adds them and publishes the snapshot once per tick (BotService).
     class BotStore
     {
     private:
-        using SessionSnapshot = Platform::Simulation::Type::SessionSnapshot;
-        using Bot = Platform::Simulation::Type::Bot;
-        using FakeMachine = Platform::Simulation::Type::FakeMachine;
-        using TeamRequest = Platform::Simulation::Type::TeamRequest;
+        using SessionSnapshot = Engine::Control::Simulation::Type::SessionSnapshot;
+        using Bot = Engine::Control::Simulation::Type::Bot;
+        using FakeMachine = Engine::Control::Simulation::Type::FakeMachine;
+        using TeamRequest = Engine::Control::Simulation::Type::TeamRequest;
 
     public:
         BotStore() = default;

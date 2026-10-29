@@ -48,11 +48,11 @@
     <ClCompile Include="Affordance\System\AffordanceService.ixx">
       <Filter>Affordance\System</Filter>
     </ClCompile>
-    <ClCompile Include="Affordance\Type\Egocentric.Affordance.Type.ixx">
+    <ClCompile Include="Affordance\Type\Views.Affordance.Type.ixx">
       <Filter>Affordance\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Egocentric.Layer.ixx" />
-    <ClCompile Include="Raycast\Egocentric.Raycast.Type.ixx">
+    <ClCompile Include="Views.Layer.ixx" />
+    <ClCompile Include="Raycast\Views.Raycast.Type.ixx">
       <Filter>Raycast</Filter>
     </ClCompile>
     <ClCompile Include="Raycast\State\RaycastStore.ixx">
@@ -79,7 +79,7 @@
     <ClCompile Include="Self\System\SelfService.ixx">
       <Filter>Self\System</Filter>
     </ClCompile>
-    <ClCompile Include="Self\Type\Egocentric.Self.Type.ixx">
+    <ClCompile Include="Self\Type\Views.Self.Type.ixx">
       <Filter>Self\Type</Filter>
     </ClCompile>
   </ItemGroup>

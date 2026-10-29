@@ -2,23 +2,23 @@ module;
 
 #include "External/minhook/include/MinHook.h"
 
-module Platform.Capture.Hook;
+module Engine.Capture.Hook;
 import :SimulationTicks;
 
-import Platform.Memory.Type;
-import Platform.Lifecycle.Type;
-import Platform.Hook.System;
-import Datum.Object.Type;
+import Engine.Base.Memory.Type;
+import Engine.Base.Lifecycle.Type;
+import Engine.Base.Hook.System;
+import Blam.Layout.Object.Type;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
-    using Platform::Lifecycle::Type::Status;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
+    using Engine::Base::Lifecycle::Type::Status;
 
-    using Platform::Hook::System::k_DrainTimeout;
-    using Datum::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
-    using Datum::Object::Type::Constant::k_TimeGlobalsScaleOffset;
+    using Engine::Base::Hook::System::k_DrainTimeout;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsScaleOffset;
     constexpr float k_DefaultTimeScale{ 1.0f };
 
     // Arguments of the end_round action of Megalo: no fixed winner, reason 0 (D144).
@@ -26,11 +26,11 @@ namespace
     constexpr std::int32_t k_EndRoundScriptReason{ 0 };
 }
 
-namespace Platform::Capture::Hook
+namespace Engine::Capture::Hook
 {
     auto __fastcall SimulationTicksDetour::HookedSimulationTicks(int ticksToAdvance, float* remainingTime) -> void
     {
-        Platform::Hook::System::InFlightScope scope{ s_InFlight };
+        Engine::Base::Hook::System::InFlightScope scope{ s_InFlight };
 
         auto* self{ s_Instance };
         auto& frameDetour{ self->m_ExecuteGameFrameDetour };
@@ -121,7 +121,7 @@ namespace Platform::Capture::Hook
             m_AOBService.FindPattern(Signature::k_SimulationTicks)) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedSimulationTicks),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[SimulationTicksDetour]", m_Log))
@@ -136,15 +136,15 @@ namespace Platform::Capture::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
         // note: Uninstalled from RaiseUnhook, which runs on the game thread inside DestroySubsystems, outside the tick loop, so no
         // call of this hook is in flight on that thread. On eject the tick wait wakes with the shutdown signal.
-        if (!Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
+        if (!Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout))
         {
             m_Log.Message("[SimulationTicksDetour] WARNING:"
                 " A call was still running when the hook was removed.");
         }
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[SimulationTicksDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

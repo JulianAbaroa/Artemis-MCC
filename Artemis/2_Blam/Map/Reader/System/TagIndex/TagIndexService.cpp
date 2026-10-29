@@ -1,24 +1,24 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :TagIndex;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 
 namespace
 {
-    namespace Offset = Map::Reader::Type::Offset;
+    namespace Offset = Blam::Map::Reader::Type::Offset;
 
-    using Map::Reader::Type::Structure::TagTable::TagTableEntry;
-    using Map::Reader::Type::Structure::TagTable::TagTableGroupEntry;
+    using Blam::Map::Reader::Type::Structure::TagTable::TagTableEntry;
+    using Blam::Map::Reader::Type::Structure::TagTable::TagTableGroupEntry;
 
-    using Map::Reader::Type::Magic::k_IndexHeader;
-    using Map::Reader::Type::Offset::IndexTableHeader::k_TagGroupTableAddress;
-    using Map::Reader::Type::Offset::IndexTableHeader::k_NumberOfTagGroups;
-    using Map::Reader::Type::Offset::IndexTableHeader::k_TagTableAddress;
-    using Map::Reader::Type::Offset::IndexTableHeader::k_NumberOfTags;
-    using Map::Reader::Type::Offset::IndexTableHeader::k_Magic;
+    using Blam::Map::Reader::Type::Magic::k_IndexHeader;
+    using Blam::Map::Reader::Type::Offset::IndexTableHeader::k_TagGroupTableAddress;
+    using Blam::Map::Reader::Type::Offset::IndexTableHeader::k_NumberOfTagGroups;
+    using Blam::Map::Reader::Type::Offset::IndexTableHeader::k_TagTableAddress;
+    using Blam::Map::Reader::Type::Offset::IndexTableHeader::k_NumberOfTags;
+    using Blam::Map::Reader::Type::Offset::IndexTableHeader::k_Magic;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto TagIndexService::Read(std::ifstream& file,
         std::int64_t indexHeaderFileOffset) -> bool

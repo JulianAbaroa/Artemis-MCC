@@ -3,7 +3,7 @@ module Control.Lockstep.System;
 import Common.Math.Type;
 import Control.Action.Type;
 import Control.Lockstep.Type;
-import Contract.Bridge;
+import Contract.Bridge.Type;
 import std;
 
 namespace
@@ -16,11 +16,11 @@ namespace
     using Control::Lockstep::Type::ClockReading;
     using Control::Lockstep::Type::WaitResult;
 
-    using Platform::Bridge::Type::BridgeAction;
-    using Platform::Bridge::Type::BridgeClientControl;
-    using Platform::Bridge::Type::BridgeMode;
-    using Platform::Bridge::Type::BridgeOwner;
-    using Platform::Bridge::Type::BridgeRequest;
+    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeClientControl;
+    using Contract::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgeOwner;
+    using Contract::Bridge::Type::BridgeRequest;
 
     using Common::Math::Type::k_TwoPi;
     using Common::Math::Type::k_HalfPi;

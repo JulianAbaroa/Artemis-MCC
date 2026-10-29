@@ -2,14 +2,14 @@ module;
 
 #include "External/imgui/imgui.h"
 
-export module Viewer.Hud.System:Canvas;
+export module DevTools.Viewer.Hud.System:Canvas;
 
 import Common.Engine.Type;
 import Common.Math.Type;
-import Viewer.Camera.System;
-import Viewer.Options.State;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
@@ -17,10 +17,10 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // return: The color packed for the ImGui draw lists.
-    auto ToImColor(const Viewer::Style::Type::Color& color, float alpha = 1.0f) -> ImU32;
+    auto ToImColor(const DevTools::Viewer::Style::Type::Color& color, float alpha = 1.0f) -> ImU32;
 
     auto DistanceBetween(const Common::Math::Type::Vec3& a, const Common::Math::Type::Vec3& b) -> float;
 
@@ -28,11 +28,11 @@ export namespace Viewer::Hud::System
     auto ShortTagName(const std::string& tagName) -> std::string;
 
     // return: A row with the distance from the local player to the point, or "n/a" if the player is dead.
-    auto DistanceRow(const Viewer::Hud::Type::LabelContext& context,
-        const Common::Math::Type::Vec3& point, ImU32 color) -> Viewer::Hud::Type::LabelRow;
+    auto DistanceRow(const DevTools::Viewer::Hud::Type::LabelContext& context,
+        const Common::Math::Type::Vec3& point, ImU32 color) -> DevTools::Viewer::Hud::Type::LabelRow;
 
     // return: The color of the team of the object, or the neutral color if it has no team or is not in the table.
-    auto TeamColorOf(const Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32;
+    auto TeamColorOf(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32;
 
     // Collects labels, bars and arrows in world space during a frame and draws them together.
     // The collectors add to it and the HUD flushes it once.
@@ -41,12 +41,12 @@ export namespace Viewer::Hud::System
     private:
         using Vec3 = Common::Math::Type::Vec3;
 
-        using CameraService = Viewer::Camera::System::CameraService;
-        using OptionsStore = Viewer::Options::State::OptionsStore;
-        using LabelRow = Viewer::Hud::Type::LabelRow;
-        using Entry = Viewer::Hud::Type::Entry;
-        using Bar = Viewer::Hud::Type::Bar;
-        using Arrow = Viewer::Hud::Type::Arrow;
+        using CameraService = DevTools::Viewer::Camera::System::CameraService;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
+        using LabelRow = DevTools::Viewer::Hud::Type::LabelRow;
+        using Entry = DevTools::Viewer::Hud::Type::Entry;
+        using Bar = DevTools::Viewer::Hud::Type::Bar;
+        using Arrow = DevTools::Viewer::Hud::Type::Arrow;
 
     public:
         LabelCanvas(const CameraService& camera, const OptionsStore& options) :

@@ -1,7 +1,7 @@
-module Gui.Backend.System;
+module DevTools.Gui.Backend.System;
 import :WndProc;
 
-namespace Gui::Backend::System
+namespace DevTools::Gui::Backend::System
 {
     auto WndProcGuiService::HandleMessage(WindowMessage& message) -> bool
     {

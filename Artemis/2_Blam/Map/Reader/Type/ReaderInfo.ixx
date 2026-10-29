@@ -1,8 +1,8 @@
-export module Map.Reader.Type:Info;
+export module Blam.Map.Reader.Type:Info;
 
 import std;
 
-export namespace Map::Reader::Type::Info
+export namespace Blam::Map::Reader::Type::Info
 {
     // Values read from the map header that the address conversions depend on.
     struct HeaderInfo

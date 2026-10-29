@@ -1,41 +1,41 @@
-module Tables.Player.System;
+module Blam.Runtime.Player.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Team.Type;
 import Common.Text.System;
-import Layout.Player.Type;
-import Layout.Snapshot.Type;
+import Blam.Layout.Player.Type;
+import Blam.Layout.Snapshot.Type;
 
 namespace
 {
     using Common::Math::Type::Vec3;
     using Common::Team::Type::Team;
 
-    using Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionId;
 
-    using Tables::Player::Type::Alive::ConnectionState;
+    using Blam::Runtime::Player::Type::Alive::ConnectionState;
 
-    using Layout::Player::Type::Size::k_Base;
-    using Layout::Player::Type::Size::k_TagLength;
+    using Blam::Layout::Player::Type::Size::k_Base;
+    using Blam::Layout::Player::Type::Size::k_TagLength;
 
-    using Layout::Player::Type::Offset::k_Handle;
-    using Layout::Player::Type::Offset::k_ConnectionState;
-    using Layout::Player::Type::Offset::k_AliveBipedHandle;
-    using Layout::Player::Type::Offset::k_DeadBipedHandle;
-    using Layout::Player::Type::Offset::k_CurrentBipedHandle;
-    using Layout::Player::Type::Offset::k_CameraPosition;
-    using Layout::Player::Type::Offset::k_CameraForward;
-    using Layout::Player::Type::Offset::k_AimOffset;
-    using Layout::Player::Type::Offset::k_PrimaryWeaponHandle;
-    using Layout::Player::Type::Offset::k_SecondaryWeaponHandle;
-    using Layout::Player::Type::Offset::k_ObjectiveHandle;
-    using Layout::Player::Type::Offset::k_Team;
-    using Layout::Player::Type::Offset::k_GamerTag;
-    using Layout::Player::Type::Offset::k_Tag;
+    using Blam::Layout::Player::Type::Offset::k_Handle;
+    using Blam::Layout::Player::Type::Offset::k_ConnectionState;
+    using Blam::Layout::Player::Type::Offset::k_AliveBipedHandle;
+    using Blam::Layout::Player::Type::Offset::k_DeadBipedHandle;
+    using Blam::Layout::Player::Type::Offset::k_CurrentBipedHandle;
+    using Blam::Layout::Player::Type::Offset::k_CameraPosition;
+    using Blam::Layout::Player::Type::Offset::k_CameraForward;
+    using Blam::Layout::Player::Type::Offset::k_AimOffset;
+    using Blam::Layout::Player::Type::Offset::k_PrimaryWeaponHandle;
+    using Blam::Layout::Player::Type::Offset::k_SecondaryWeaponHandle;
+    using Blam::Layout::Player::Type::Offset::k_ObjectiveHandle;
+    using Blam::Layout::Player::Type::Offset::k_Team;
+    using Blam::Layout::Player::Type::Offset::k_GamerTag;
+    using Blam::Layout::Player::Type::Offset::k_Tag;
 
-    using Layout::Player::Type::Mapping::k_PlayerInputUser;
-    using Layout::Player::Type::Mapping::k_EntryStride;
+    using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
+    using Blam::Layout::Player::Type::Mapping::k_EntryStride;
 
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_HandleIndexMask;
@@ -52,7 +52,7 @@ namespace
     }
 }
 
-namespace Tables::Player::System
+namespace Blam::Runtime::Player::System
 {
     auto PlayerTableService::BuildLivePlayer(const Snapshot& snapshot, std::uint32_t handle, std::size_t entry) -> AlivePlayer
     {

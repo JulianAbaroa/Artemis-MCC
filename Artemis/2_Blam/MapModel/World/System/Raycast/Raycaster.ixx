@@ -1,22 +1,22 @@
-export module Resolved.World.System:Raycast;
+export module Blam.MapModel.World.System:Raycast;
 
 import Common.Math.Type;
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Resolved.World.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.MapModel.World.Type;
 import std;
 
-export namespace Resolved::World::System
+export namespace Blam::MapModel::World::System
 {
     // Casts rays against the static geometry of the map, using a bounding volume hierarchy.
     class Raycaster
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-        using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
-        using Hit = Resolved::World::Type::Raycast::Hit;
-        using BvhNode = Resolved::World::Type::Raycast::BvhNode;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
+        using Sbsp = Blam::MapModel::Definitions::Type::Sbsp::Sbsp;
+        using Hit = Blam::MapModel::World::Type::Raycast::Hit;
+        using BvhNode = Blam::MapModel::World::Type::Raycast::BvhNode;
         using Triangle = Common::Math::Type::Triangle;
 
     public:

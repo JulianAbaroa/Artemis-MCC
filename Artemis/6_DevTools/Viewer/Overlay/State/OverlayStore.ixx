@@ -1,16 +1,16 @@
-export module Viewer.Overlay.State;
+export module DevTools.Viewer.Overlay.State;
 
-import Viewer.Overlay.Type;
+import DevTools.Viewer.Overlay.Type;
 import std;
 
-export namespace Viewer::Overlay::State
+export namespace DevTools::Viewer::Overlay::State
 {
     // Holds the active overlay mode, the page of its panel and the visibility of the overlay.
     // The values are atomic so they can be read and written from different threads without locks.
     class OverlayStore
     {
     private:
-        using Mode = Viewer::Overlay::Type::Mode;
+        using Mode = DevTools::Viewer::Overlay::Type::Mode;
 
     public:
         OverlayStore() = default;

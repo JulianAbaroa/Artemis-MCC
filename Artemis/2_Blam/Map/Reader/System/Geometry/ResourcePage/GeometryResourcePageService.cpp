@@ -1,13 +1,13 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :Geometry.ResourcePage;
 
 namespace
 {
-    using Map::Tag::Type::Play::Structure::Play_SegmentsEntry;
-    using Map::Tag::Type::Play::Structure::Play_RawPagesEntry;
+    using Blam::Map::Tag::Type::Play::Structure::Play_SegmentsEntry;
+    using Blam::Map::Tag::Type::Play::Structure::Play_RawPagesEntry;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto GeometryResourcePageService::Read(std::uint32_t datum,
         const Zone_TagResourcesObject** outEntry, const ZoneObject* zone,

@@ -1,19 +1,19 @@
-export module Platform.Match.Hook:EngineInterface;
+export module Engine.Match.Hook:EngineInterface;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Match.Type;
-import Platform.Match.State;
-import Platform.Match.System;
+import Engine.Base.Memory.System;
+import Engine.Match.Type;
+import Engine.Match.State;
+import Engine.Match.System;
 import std;
 
 namespace
 {
-    using Platform::Match::Type::k_EngineVTableSize;
-    using Platform::Match::Type::k_EngineStatePayloadMaxSize;
+    using Engine::Match::Type::k_EngineVTableSize;
+    using Engine::Match::Type::k_EngineStatePayloadMaxSize;
 }
 
-export namespace Platform::Match::Hook
+export namespace Engine::Match::Hook
 {
     // Logs every call of MCC to the engine interface (creation, start, state commands, text commands and destruction, A15) and is the
     // point where Artemis changes which match starts (D123): at the start it records the configuration of MCC if a record is armed,
@@ -26,16 +26,16 @@ export namespace Platform::Match::Hook
     private:
         using Log = Common::Log::System::Log;
 
-        using AOBService = Platform::Memory::System::AOBService;
-        using MemoryReaderService = Platform::Memory::System::MemoryReaderService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
+        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
-        using LoadGameEngineFunction = Platform::Match::Type::LoadGameEngineFunction;
-        using EngineDestroyFunction = Platform::Match::Type::EngineDestroyFunction;
-        using EngineStartFunction = Platform::Match::Type::EngineStartFunction;
-        using EngineUpdateStateFunction = Platform::Match::Type::EngineUpdateStateFunction;
-        using EngineCommandFunction = Platform::Match::Type::EngineCommandFunction;
-        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
-        using MatchConfigService = Platform::Match::System::MatchConfigService;
+        using LoadGameEngineFunction = Engine::Match::Type::LoadGameEngineFunction;
+        using EngineDestroyFunction = Engine::Match::Type::EngineDestroyFunction;
+        using EngineStartFunction = Engine::Match::Type::EngineStartFunction;
+        using EngineUpdateStateFunction = Engine::Match::Type::EngineUpdateStateFunction;
+        using EngineCommandFunction = Engine::Match::Type::EngineCommandFunction;
+        using MatchCycleStore = Engine::Match::State::MatchCycleStore;
+        using MatchConfigService = Engine::Match::System::MatchConfigService;
 
     public:
         EngineInterfaceDetour(Log& log, AOBService& aobService, MemoryReaderService& memoryReaderService,

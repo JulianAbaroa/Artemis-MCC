@@ -1,8 +1,8 @@
-module Viewer.Collidable.System;
+module DevTools.Viewer.Collidable.System;
 
 import std;
 
-namespace Viewer::Collidable::System
+namespace DevTools::Viewer::Collidable::System
 {
     auto CollidableSceneService::Update(bool isViewerActive) -> void
     {

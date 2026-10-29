@@ -1,6 +1,6 @@
-module UI.ObjectTable.State;
+module DevTools.Workbench.ObjectTable.State;
 
-namespace UI::ObjectTable::State
+namespace DevTools::Workbench::ObjectTable::State
 {
     auto ObjectTableUIStore::GetSnapshot() const -> const ObjectTable*
     {

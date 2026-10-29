@@ -1,4 +1,4 @@
-export module Resolved.Definitions.Type:Object;
+export module Blam.MapModel.Definitions.Type:Object;
 
 import Common.Math.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Math::Type::Vec3;
 }
 
-export namespace Resolved::Definitions::Type::Object
+export namespace Blam::MapModel::Definitions::Type::Object
 {
     // Object family, same ids as the engine object type.
     enum class ObjectKind : std::uint16_t

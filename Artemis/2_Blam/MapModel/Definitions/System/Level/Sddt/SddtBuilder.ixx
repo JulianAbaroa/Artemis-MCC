@@ -1,16 +1,16 @@
-export module Resolved.Definitions.System:Sddt;
+export module Blam.MapModel.Definitions.System:Sddt;
 
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the structure design definition.
     class SddtBuilder
     {
     private:
-        using SddtObject = Map::Tag::Type::Sddt::Object::SddtObject;
-        using Sddt = Resolved::Definitions::Type::Sddt::Sddt;
+        using SddtObject = Blam::Map::Tag::Type::Sddt::Object::SddtObject;
+        using Sddt = Blam::MapModel::Definitions::Type::Sddt::Sddt;
 
     public:
         SddtBuilder() = default;

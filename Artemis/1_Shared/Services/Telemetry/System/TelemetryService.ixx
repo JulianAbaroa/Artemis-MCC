@@ -1,9 +1,9 @@
-export module Service.Telemetry.System;
+export module Services.Telemetry.System;
 
-import Service.Telemetry.State;
+import Services.Telemetry.State;
 import std;
 
-export namespace Service::Telemetry::System
+export namespace Services::Telemetry::System
 {
     // Turns the raw counters of TelemetryStore into per-second rates and averages.
     class TelemetryService
@@ -11,7 +11,7 @@ export namespace Service::Telemetry::System
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
+        using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
     public:
         TelemetryService(TelemetryStore& telemetryStore) :

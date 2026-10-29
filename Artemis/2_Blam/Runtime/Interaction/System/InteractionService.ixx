@@ -1,12 +1,12 @@
-export module Tables.Interaction.System;
+export module Blam.Runtime.Interaction.System;
 
 import Common.Log.System;
-import Layout.Snapshot.Type;
-import Tables.Interaction.Type;
-import Tables.Interaction.State;
+import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Interaction.Type;
+import Blam.Runtime.Interaction.State;
 import std;
 
-export namespace Tables::Interaction::System
+export namespace Blam::Runtime::Interaction::System
 {
     // Reads the engine interaction tables and publishes the interaction of every local player to the store.
     class InteractionService
@@ -14,10 +14,10 @@ export namespace Tables::Interaction::System
     private:
         using Log = Common::Log::System::Log;
 
-        using AliveInteraction = Tables::Interaction::Type::Alive::AliveInteraction;
-        using InteractionStore = Tables::Interaction::State::InteractionStore;
+        using AliveInteraction = Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
+        using InteractionStore = Blam::Runtime::Interaction::State::InteractionStore;
 
-        using Snapshot = Layout::Snapshot::Type::Snapshot;
+        using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
 
     public:
         InteractionService(Log& log, InteractionStore& interactionStore) :

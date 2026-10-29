@@ -16,7 +16,7 @@ from tdump_writer import Repo
 
 REPO = Repo()
 TRANSPILER = os.path.join(REPO, "Tools", "TagTranspiler")
-DATUM_OUT = os.path.join(REPO, "Artemis", "2_Blam", "Layout", "Datum", "Type")
+DATUM_OUT = os.path.join(REPO, "Artemis", "2_Blam", "Layout", "Object", "Type")
 TAG_OUT = os.path.join(REPO, "Artemis", "2_Blam", "Map", "Tag")
 ASSEMBLY_TAGS = os.environ.get("ARTEMIS_ASSEMBLY_TAGS") or os.path.expanduser(os.path.join("~", "Documents", "Tools", "Assembly",
                                                                                             "Tags"))
@@ -119,9 +119,9 @@ def test_tag_structures_import_what_they_use():
             continue
         text = data.decode("utf-8")
         assert ("import Common.Math.Type;" in text) == ("MathType::" in text), path
-        assert ("import Map.Reader.Type;" in text) == ("MapStructure::" in text), path
-        if "import Common.Math.Type;" in text and "import Map.Reader.Type;" in text:
-            assert text.index("import Common.Math.Type;") < text.index("import Map.Reader.Type;"), path
+        assert ("import Blam.Map.Reader.Type;" in text) == ("MapStructure::" in text), path
+        if "import Common.Math.Type;" in text and "import Blam.Map.Reader.Type;" in text:
+            assert text.index("import Common.Math.Type;") < text.index("import Blam.Map.Reader.Type;"), path
 
 
 # --- safety -------------------------------------------------------------------------------------------------------------------

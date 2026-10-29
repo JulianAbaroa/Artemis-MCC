@@ -1,6 +1,6 @@
-module UI.Bench.State;
+module DevTools.Workbench.Bench.State;
 
-namespace UI::Bench::State
+namespace DevTools::Workbench::Bench::State
 {
     auto BenchUIStore::SetFolder(path folder) -> void
     {

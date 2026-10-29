@@ -28,9 +28,9 @@
     <ClCompile Include="Hook\LifecycleUpdateDetour.ixx">
       <Filter>Hook</Filter>
     </ClCompile>
-    <ClCompile Include="Platform.Match.Hook.ixx" />
-    <ClCompile Include="Platform.Match.State.ixx" />
-    <ClCompile Include="Platform.Match.System.ixx" />
+    <ClCompile Include="Engine.Match.Hook.ixx" />
+    <ClCompile Include="Engine.Match.State.ixx" />
+    <ClCompile Include="Engine.Match.System.ixx" />
     <ClCompile Include="State\MatchConfigStore.cpp">
       <Filter>State</Filter>
     </ClCompile>
@@ -49,7 +49,7 @@
     <ClCompile Include="System\MatchConfigService.ixx">
       <Filter>System</Filter>
     </ClCompile>
-    <ClCompile Include="Type\Platform.Match.Type.ixx">
+    <ClCompile Include="Type\Engine.Match.Type.ixx">
       <Filter>Type</Filter>
     </ClCompile>
   </ItemGroup>

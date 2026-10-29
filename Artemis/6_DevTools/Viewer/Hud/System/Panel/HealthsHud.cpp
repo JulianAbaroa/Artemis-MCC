@@ -2,30 +2,30 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :Vitalities;
 
 import Common.Semantic.Type;
-import Resolved.Vitality.Type;
-import Resolved.World.Type;
-import Gui.Format.System;
-import Gui.Widget.System;
+import Blam.MapModel.Vitality.Type;
+import Blam.MapModel.World.Type;
+import DevTools.Gui.Format.System;
+import DevTools.Gui.Widget.System;
 import std;
 
 namespace
 {
-    using Export::Tick::Type::Tick;
-    using Environment::Entities::Type::Entity;
-    using Environment::Details::Type::VitalityDetail;
-    using Tables::Object::Type::Alive::ObjectTable;
-    using Resolved::Vitality::Type::Vitality::Section;
-    using Resolved::Vitality::Type::Vitality::VitalityKind;
-    using Resolved::World::Type::ModelLink::ModelLinkAnchor;
-    using Resolved::World::Type::ModelLink::AnchorSource;
-    using Resolved::Vitality::Type::Vitality::Vitality;
-    using Gui::Format::System::HexFormater;
+    using Bridge::Codec::Tick::Type::Tick;
+    using Perception::Entities::Type::Entity;
+    using Perception::Details::Type::VitalityDetail;
+    using Blam::Runtime::Object::Type::Alive::ObjectTable;
+    using Blam::MapModel::Vitality::Type::Vitality::Section;
+    using Blam::MapModel::Vitality::Type::Vitality::VitalityKind;
+    using Blam::MapModel::World::Type::ModelLink::ModelLinkAnchor;
+    using Blam::MapModel::World::Type::ModelLink::AnchorSource;
+    using Blam::MapModel::Vitality::Type::Vitality::Vitality;
+    using DevTools::Gui::Format::System::HexFormater;
 
-    using Gui::Widget::System::PanelGuiService;
+    using DevTools::Gui::Widget::System::PanelGuiService;
 
     using Common::Semantic::Type::Capability;
     using Common::Semantic::Type::Lifecycle;
@@ -260,7 +260,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto HealthsHud::Draw(const Tick& tick, std::uint32_t handle) -> void
     {

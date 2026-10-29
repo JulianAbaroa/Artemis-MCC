@@ -2,23 +2,23 @@ module;
 
 #include <windows.h>
 
-module Platform.Capture.Hook;
+module Engine.Capture.Hook;
 import :PlayerTable;
 
-import Platform.Hook.System;
-import Platform.Memory.Type;
-import Datum.Object.Type;
+import Engine.Base.Hook.System;
+import Engine.Base.Memory.Type;
+import Blam.Layout.Object.Type;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Datum::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
-    using Datum::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
-    using Datum::Object::Type::Constant::k_ThreadContextMappingOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
+    using Blam::Layout::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextMappingOffset;
 }
 
-namespace Platform::Capture::Hook
+namespace Engine::Capture::Hook
 {
     auto PlayerTableLocator::FindAndStoreTableBase() -> void
     {
@@ -67,11 +67,11 @@ namespace Platform::Capture::Hook
     {
         __try
         {
-            const std::uint32_t* tlsIndex{ Platform::Hook::System::ResolveTlsIndex(
+            const std::uint32_t* tlsIndex{ Engine::Base::Hook::System::ResolveTlsIndex(
                 m_AOBService.FindPattern(Signature::k_TelemetryIdModifier)) };
             if (!tlsIndex) return 0;
 
-            return Platform::Hook::System::ReadThreadContext(*tlsIndex);
+            return Engine::Base::Hook::System::ReadThreadContext(*tlsIndex);
         }
         __except (EXCEPTION_EXECUTE_HANDLER)
         {

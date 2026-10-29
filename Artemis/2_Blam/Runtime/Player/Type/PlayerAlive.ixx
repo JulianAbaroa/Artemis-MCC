@@ -1,4 +1,4 @@
-export module Tables.Player.Type:Alive;
+export module Blam.Runtime.Player.Type:Alive;
 
 import Common.Team.Type;
 import Common.Math.Type;
@@ -10,7 +10,7 @@ namespace
     using Common::Math::Type::Vec3;
 }
 
-export namespace Tables::Player::Type::Alive
+export namespace Blam::Runtime::Player::Type::Alive
 {
     enum class ConnectionState : std::uint8_t
     {

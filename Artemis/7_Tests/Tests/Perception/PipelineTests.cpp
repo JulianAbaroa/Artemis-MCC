@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 import Common.Log.Type;
-import Contract.Bridge;
-import Export.Pipeline.System;
-import Export.Tick.Type;
-import Layout.Snapshot.Type;
+import Contract.Bridge.Type;
+import Bridge.Codec.Pipeline.System;
+import Bridge.Codec.Tick.Type;
+import Blam.Layout.Snapshot.Type;
 import Tests.Support.Pipeline;
 import std;
 
@@ -14,14 +14,14 @@ import std;
 namespace
 {
     using Common::Log::Type::LogLevel;
-    using Export::Tick::Type::Tick;
-    using Layout::Snapshot::Type::Snapshot;
-    using Platform::Bridge::Type::BridgeTick;
+    using Bridge::Codec::Tick::Type::Tick;
+    using Blam::Layout::Snapshot::Type::Snapshot;
+    using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
     using Tests::Support::Pipeline::WithBipedAndPlayer;
 
-    using Export::Pipeline::System::k_PipelineStageNames;
+    using Bridge::Codec::Pipeline::System::k_PipelineStageNames;
     using Tests::Support::Pipeline::k_BipedHandle;
     using Tests::Support::Pipeline::k_PlayerHandle;
 
@@ -45,7 +45,7 @@ namespace
             FillSyntheticTags(m_Map);
         }
 
-        // Runs the pipeline as Runtime::Thread does (D205) and returns the Tick it assembled.
+        // Runs the pipeline as Mod::Thread::System does (D205) and returns the Tick it assembled.
         auto RunTick(const Snapshot& snapshot, std::uint64_t generation) -> std::shared_ptr<const Tick>
         {
             m_Export.m_PipelineService.Run(snapshot, generation, {});
@@ -118,7 +118,7 @@ TEST_F(PipelineTests, BipedAndPlayerReachTheBridgeTick)
     EXPECT_EQ(flat->Players[0].BipedHandle, k_BipedHandle);
 
     ASSERT_GE(flat->Header.EntityCount, 1u);
-    const auto entities{ std::span<const Platform::Bridge::Type::BridgeEntity>{ flat->Entities }.first(flat->Header.EntityCount) };
+    const auto entities{ std::span<const Contract::Bridge::Type::BridgeEntity>{ flat->Entities }.first(flat->Header.EntityCount) };
     EXPECT_TRUE(std::ranges::any_of(entities, [](const auto& entity) { return entity.Handle == k_BipedHandle; }));
 }
 

@@ -2,37 +2,37 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :PlayerLabels;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
-import Resolved.World.Type;
-import Export.Tick.Type;
-import Viewer.Options.Type;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import Blam.MapModel.World.Type;
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Viewer::Options::Type::Flag;
-    using Resolved::World::Type::ModelLink::AnchorSource;
+    using DevTools::Viewer::Options::Type::Flag;
+    using Blam::MapModel::World::Type::ModelLink::AnchorSource;
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
-    using Environment::Entities::Type::Entity;
-    using Environment::Players::Type::Player;
-    using Environment::Players::Type::Body;
-    using Viewer::Hud::Type::LabelRow;
+    using Perception::Entities::Type::Entity;
+    using Perception::Players::Type::Player;
+    using Perception::Players::Type::Body;
+    using DevTools::Viewer::Hud::Type::LabelRow;
 
-    using Viewer::Style::Type::k_Health;
-    using Viewer::Style::Type::ColorOfTeam;
+    using DevTools::Viewer::Style::Type::k_Health;
+    using DevTools::Viewer::Style::Type::ColorOfTeam;
 
     using Common::Engine::Type::k_NoHandle;
-    using Viewer::Hud::Type::k_MutedColor;
-    using Viewer::Hud::Type::k_SelectedPriority;
+    using DevTools::Viewer::Hud::Type::k_MutedColor;
+    using DevTools::Viewer::Hud::Type::k_SelectedPriority;
 
     constexpr float k_HeadClearance{ 0.12f };
     constexpr float k_FallbackEyeClearance{ 0.25f };
@@ -40,7 +40,7 @@ namespace
     constexpr ImU32 k_WeaponColor{ IM_COL32(190, 200, 215, 255) };
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto PlayerLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {

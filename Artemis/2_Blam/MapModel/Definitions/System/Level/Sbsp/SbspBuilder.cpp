@@ -1,13 +1,13 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 import :Sbsp;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Map::Tag::Type::Sbsp::Structure::SbspData;
+    using Blam::Map::Tag::Type::Sbsp::Structure::SbspData;
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto SbspBuilder::Build(const SbspObject& sbsp, std::vector<Triangle> renderGeometry) -> Sbsp
     {

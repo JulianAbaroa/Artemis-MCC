@@ -1,8 +1,8 @@
-export module Tables.Object.Type:Projectile;
+export module Blam.Runtime.Object.Type:Projectile;
 
 import std;
 
-export namespace Tables::Object::Type::Projectile
+export namespace Blam::Runtime::Object::Type::Projectile
 {
     enum class ProjectileFlags : std::uint32_t
     {

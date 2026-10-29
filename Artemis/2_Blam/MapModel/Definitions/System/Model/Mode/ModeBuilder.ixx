@@ -1,11 +1,11 @@
-export module Resolved.Definitions.System:Mode;
+export module Blam.MapModel.Definitions.System:Mode;
 
 import Common.Math.Type;
-import Map.Tag.Type;
-import Resolved.Definitions.Type;
+import Blam.Map.Tag.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the render model definition.
     class ModeBuilder
@@ -13,12 +13,12 @@ export namespace Resolved::Definitions::System
     private:
         using Vec3 = Common::Math::Type::Vec3;
         using Node = Common::Math::Type::Node;
-        using ModeObject = Map::Tag::Type::Mode::Object::ModeObject;
-        using Mode = Resolved::Definitions::Type::Mode::Mode;
-        using Marker = Resolved::Definitions::Type::Mode::Marker;
-        using MarkerGroup = Resolved::Definitions::Type::Mode::MarkerGroup;
-        using Region = Resolved::Definitions::Type::Mode::Region;
-        using Bounds = Resolved::Definitions::Type::Mode::Bounds;
+        using ModeObject = Blam::Map::Tag::Type::Mode::Object::ModeObject;
+        using Mode = Blam::MapModel::Definitions::Type::Mode::Mode;
+        using Marker = Blam::MapModel::Definitions::Type::Mode::Marker;
+        using MarkerGroup = Blam::MapModel::Definitions::Type::Mode::MarkerGroup;
+        using Region = Blam::MapModel::Definitions::Type::Mode::Region;
+        using Bounds = Blam::MapModel::Definitions::Type::Mode::Bounds;
 
     public:
         ModeBuilder() = default;

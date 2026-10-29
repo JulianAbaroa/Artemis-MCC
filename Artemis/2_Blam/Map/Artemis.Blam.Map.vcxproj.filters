@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="$(ArtemisRoot)External">
+      <UniqueIdentifier>{e5406148-00a6-5abf-8088-ebfc41f910d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="$(ArtemisRoot)External\zlib">
+      <UniqueIdentifier>{f5290fa8-46a9-5462-ab05-8c47f099bd78}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Builder">
       <UniqueIdentifier>{97477174-856f-49b8-988e-c7700175ff93}</UniqueIdentifier>
     </Filter>
@@ -265,28 +271,25 @@
     <Filter Include="Tag\Zone\Type">
       <UniqueIdentifier>{65d3af3f-a1c9-4a33-8e0d-fac3c607c8ed}</UniqueIdentifier>
     </Filter>
-    <Filter Include="zlib">
-      <UniqueIdentifier>{5b1c7d2e-93a4-4f6e-8c0d-2a7e4f1b9d35}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(ArtemisRoot)External\zlib\adler32.c">
-      <Filter>zlib</Filter>
+      <Filter>$(ArtemisRoot)External\zlib</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\zlib\crc32.c">
-      <Filter>zlib</Filter>
+      <Filter>$(ArtemisRoot)External\zlib</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\zlib\inffast.c">
-      <Filter>zlib</Filter>
+      <Filter>$(ArtemisRoot)External\zlib</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\zlib\inflate.c">
-      <Filter>zlib</Filter>
+      <Filter>$(ArtemisRoot)External\zlib</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\zlib\inftrees.c">
-      <Filter>zlib</Filter>
+      <Filter>$(ArtemisRoot)External\zlib</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\zlib\zutil.c">
-      <Filter>zlib</Filter>
+      <Filter>$(ArtemisRoot)External\zlib</Filter>
     </ClCompile>
     <ClCompile Include="Builder\System\MapBuilderService.cpp">
       <Filter>Builder\System</Filter>
@@ -294,14 +297,14 @@
     <ClCompile Include="Builder\System\MapBuilderService.ixx">
       <Filter>Builder\System</Filter>
     </ClCompile>
-    <ClCompile Include="Map.Layer.ixx" />
-    <ClCompile Include="Reader\Map.Reader.State.ixx">
+    <ClCompile Include="Blam.Map.Layer.ixx" />
+    <ClCompile Include="Reader\Blam.Map.Reader.State.ixx">
       <Filter>Reader</Filter>
     </ClCompile>
-    <ClCompile Include="Reader\Map.Reader.System.ixx">
+    <ClCompile Include="Reader\Blam.Map.Reader.System.ixx">
       <Filter>Reader</Filter>
     </ClCompile>
-    <ClCompile Include="Reader\Map.Reader.Type.ixx">
+    <ClCompile Include="Reader\Blam.Map.Reader.Type.ixx">
       <Filter>Reader</Filter>
     </ClCompile>
     <ClCompile Include="Reader\State\File\FileStore.cpp">
@@ -379,7 +382,7 @@
     <ClCompile Include="Reader\System\Loader\MapLoaderService.ixx">
       <Filter>Reader\System\Loader</Filter>
     </ClCompile>
-    <ClCompile Include="Reader\System\Map.Reader.System.Geometry.ixx">
+    <ClCompile Include="Reader\System\Blam.Map.Reader.System.Geometry.ixx">
       <Filter>Reader\System</Filter>
     </ClCompile>
     <ClCompile Include="Reader\System\TagGroup\TagGroupService.ixx">
@@ -421,10 +424,10 @@
     <ClCompile Include="Reader\Type\ReaderStructure.ixx">
       <Filter>Reader\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Bipd\Map.Tag.System.Bipd.ixx">
+    <ClCompile Include="Tag\Bipd\Blam.Map.Tag.System.Bipd.ixx">
       <Filter>Tag\Bipd</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Bipd\Map.Tag.Type.Bipd.ixx">
+    <ClCompile Include="Tag\Bipd\Blam.Map.Tag.Type.Bipd.ixx">
       <Filter>Tag\Bipd</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Bipd\System\MapBipdDescriptor.ixx">
@@ -439,10 +442,10 @@
     <ClCompile Include="Tag\Bipd\Type\MapBipdStructure.ixx">
       <Filter>Tag\Bipd\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Bloc\Map.Tag.System.Bloc.ixx">
+    <ClCompile Include="Tag\Bloc\Blam.Map.Tag.System.Bloc.ixx">
       <Filter>Tag\Bloc</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Bloc\Map.Tag.Type.Bloc.ixx">
+    <ClCompile Include="Tag\Bloc\Blam.Map.Tag.Type.Bloc.ixx">
       <Filter>Tag\Bloc</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Bloc\System\MapBlocDescriptor.ixx">
@@ -457,10 +460,10 @@
     <ClCompile Include="Tag\Bloc\Type\MapBlocStructure.ixx">
       <Filter>Tag\Bloc\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Coll\Map.Tag.System.Coll.ixx">
+    <ClCompile Include="Tag\Coll\Blam.Map.Tag.System.Coll.ixx">
       <Filter>Tag\Coll</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Coll\Map.Tag.Type.Coll.ixx">
+    <ClCompile Include="Tag\Coll\Blam.Map.Tag.Type.Coll.ixx">
       <Filter>Tag\Coll</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Coll\System\MapCollDescriptor.ixx">
@@ -475,10 +478,10 @@
     <ClCompile Include="Tag\Coll\Type\MapCollStructure.ixx">
       <Filter>Tag\Coll\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Ctrl\Map.Tag.System.Ctrl.ixx">
+    <ClCompile Include="Tag\Ctrl\Blam.Map.Tag.System.Ctrl.ixx">
       <Filter>Tag\Ctrl</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Ctrl\Map.Tag.Type.Ctrl.ixx">
+    <ClCompile Include="Tag\Ctrl\Blam.Map.Tag.Type.Ctrl.ixx">
       <Filter>Tag\Ctrl</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Ctrl\System\MapCtrlDescriptor.ixx">
@@ -493,10 +496,10 @@
     <ClCompile Include="Tag\Ctrl\Type\MapCtrlStructure.ixx">
       <Filter>Tag\Ctrl\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Eqip\Map.Tag.System.Eqip.ixx">
+    <ClCompile Include="Tag\Eqip\Blam.Map.Tag.System.Eqip.ixx">
       <Filter>Tag\Eqip</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Eqip\Map.Tag.Type.Eqip.ixx">
+    <ClCompile Include="Tag\Eqip\Blam.Map.Tag.Type.Eqip.ixx">
       <Filter>Tag\Eqip</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Eqip\System\MapEqipDescriptor.ixx">
@@ -511,10 +514,10 @@
     <ClCompile Include="Tag\Eqip\Type\MapEqipStructure.ixx">
       <Filter>Tag\Eqip\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Hlmt\Map.Tag.System.Hlmt.ixx">
+    <ClCompile Include="Tag\Hlmt\Blam.Map.Tag.System.Hlmt.ixx">
       <Filter>Tag\Hlmt</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Hlmt\Map.Tag.Type.Hlmt.ixx">
+    <ClCompile Include="Tag\Hlmt\Blam.Map.Tag.Type.Hlmt.ixx">
       <Filter>Tag\Hlmt</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Hlmt\System\MapHlmtDescriptor.ixx">
@@ -529,10 +532,10 @@
     <ClCompile Include="Tag\Hlmt\Type\MapHlmtStructure.ixx">
       <Filter>Tag\Hlmt\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Jpt\Map.Tag.System.Jpt.ixx">
+    <ClCompile Include="Tag\Jpt\Blam.Map.Tag.System.Jpt.ixx">
       <Filter>Tag\Jpt</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Jpt\Map.Tag.Type.Jpt.ixx">
+    <ClCompile Include="Tag\Jpt\Blam.Map.Tag.Type.Jpt.ixx">
       <Filter>Tag\Jpt</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Jpt\System\MapJptDescriptor.ixx">
@@ -547,10 +550,10 @@
     <ClCompile Include="Tag\Jpt\Type\MapJptStructure.ixx">
       <Filter>Tag\Jpt\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Lbsp\Map.Tag.System.Lbsp.ixx">
+    <ClCompile Include="Tag\Lbsp\Blam.Map.Tag.System.Lbsp.ixx">
       <Filter>Tag\Lbsp</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Lbsp\Map.Tag.Type.Lbsp.ixx">
+    <ClCompile Include="Tag\Lbsp\Blam.Map.Tag.Type.Lbsp.ixx">
       <Filter>Tag\Lbsp</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Lbsp\System\MapLbspDescriptor.ixx">
@@ -565,10 +568,10 @@
     <ClCompile Include="Tag\Lbsp\Type\MapLbspStructure.ixx">
       <Filter>Tag\Lbsp\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Mach\Map.Tag.System.Mach.ixx">
+    <ClCompile Include="Tag\Mach\Blam.Map.Tag.System.Mach.ixx">
       <Filter>Tag\Mach</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Mach\Map.Tag.Type.Mach.ixx">
+    <ClCompile Include="Tag\Mach\Blam.Map.Tag.Type.Mach.ixx">
       <Filter>Tag\Mach</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Mach\System\MapMachDescriptor.ixx">
@@ -583,22 +586,22 @@
     <ClCompile Include="Tag\Mach\Type\MapMachStructure.ixx">
       <Filter>Tag\Mach\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Map.Tag.State.ixx">
+    <ClCompile Include="Tag\Blam.Map.Tag.State.ixx">
       <Filter>Tag</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Map.Tag.System.ixx">
+    <ClCompile Include="Tag\Blam.Map.Tag.System.ixx">
       <Filter>Tag</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Map.Tag.Type.ixx">
+    <ClCompile Include="Tag\Blam.Map.Tag.Type.ixx">
       <Filter>Tag</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Map.TagCatalog.ixx">
       <Filter>Tag</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Mode\Map.Tag.System.Mode.ixx">
+    <ClCompile Include="Tag\Mode\Blam.Map.Tag.System.Mode.ixx">
       <Filter>Tag\Mode</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Mode\Map.Tag.Type.Mode.ixx">
+    <ClCompile Include="Tag\Mode\Blam.Map.Tag.Type.Mode.ixx">
       <Filter>Tag\Mode</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Mode\System\MapModeDescriptor.ixx">
@@ -613,10 +616,10 @@
     <ClCompile Include="Tag\Mode\Type\MapModeStructure.ixx">
       <Filter>Tag\Mode\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Phmo\Map.Tag.System.Phmo.ixx">
+    <ClCompile Include="Tag\Phmo\Blam.Map.Tag.System.Phmo.ixx">
       <Filter>Tag\Phmo</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Phmo\Map.Tag.Type.Phmo.ixx">
+    <ClCompile Include="Tag\Phmo\Blam.Map.Tag.Type.Phmo.ixx">
       <Filter>Tag\Phmo</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Phmo\System\MapPhmoDescriptor.ixx">
@@ -631,10 +634,10 @@
     <ClCompile Include="Tag\Phmo\Type\MapPhmoStructure.ixx">
       <Filter>Tag\Phmo\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Play\Map.Tag.System.Play.ixx">
+    <ClCompile Include="Tag\Play\Blam.Map.Tag.System.Play.ixx">
       <Filter>Tag\Play</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Play\Map.Tag.Type.Play.ixx">
+    <ClCompile Include="Tag\Play\Blam.Map.Tag.Type.Play.ixx">
       <Filter>Tag\Play</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Play\System\MapPlayDescriptor.ixx">
@@ -649,10 +652,10 @@
     <ClCompile Include="Tag\Play\Type\MapPlayStructure.ixx">
       <Filter>Tag\Play\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Proj\Map.Tag.System.Proj.ixx">
+    <ClCompile Include="Tag\Proj\Blam.Map.Tag.System.Proj.ixx">
       <Filter>Tag\Proj</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Proj\Map.Tag.Type.Proj.ixx">
+    <ClCompile Include="Tag\Proj\Blam.Map.Tag.Type.Proj.ixx">
       <Filter>Tag\Proj</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Proj\System\MapProjDescriptor.ixx">
@@ -667,10 +670,10 @@
     <ClCompile Include="Tag\Proj\Type\MapProjStructure.ixx">
       <Filter>Tag\Proj\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Sbsp\Map.Tag.System.Sbsp.ixx">
+    <ClCompile Include="Tag\Sbsp\Blam.Map.Tag.System.Sbsp.ixx">
       <Filter>Tag\Sbsp</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Sbsp\Map.Tag.Type.Sbsp.ixx">
+    <ClCompile Include="Tag\Sbsp\Blam.Map.Tag.Type.Sbsp.ixx">
       <Filter>Tag\Sbsp</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Sbsp\System\MapSbspDescriptor.ixx">
@@ -685,10 +688,10 @@
     <ClCompile Include="Tag\Sbsp\Type\MapSbspStructure.ixx">
       <Filter>Tag\Sbsp\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Scen\Map.Tag.System.Scen.ixx">
+    <ClCompile Include="Tag\Scen\Blam.Map.Tag.System.Scen.ixx">
       <Filter>Tag\Scen</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Scen\Map.Tag.Type.Scen.ixx">
+    <ClCompile Include="Tag\Scen\Blam.Map.Tag.Type.Scen.ixx">
       <Filter>Tag\Scen</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Scen\System\MapScenDescriptor.ixx">
@@ -703,10 +706,10 @@
     <ClCompile Include="Tag\Scen\Type\MapScenStructure.ixx">
       <Filter>Tag\Scen\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Scnr\Map.Tag.System.Scnr.ixx">
+    <ClCompile Include="Tag\Scnr\Blam.Map.Tag.System.Scnr.ixx">
       <Filter>Tag\Scnr</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Scnr\Map.Tag.Type.Scnr.ixx">
+    <ClCompile Include="Tag\Scnr\Blam.Map.Tag.Type.Scnr.ixx">
       <Filter>Tag\Scnr</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Scnr\System\MapScnrDescriptor.ixx">
@@ -721,10 +724,10 @@
     <ClCompile Include="Tag\Scnr\Type\MapScnrStructure.ixx">
       <Filter>Tag\Scnr\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Sddt\Map.Tag.System.Sddt.ixx">
+    <ClCompile Include="Tag\Sddt\Blam.Map.Tag.System.Sddt.ixx">
       <Filter>Tag\Sddt</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Sddt\Map.Tag.Type.Sddt.ixx">
+    <ClCompile Include="Tag\Sddt\Blam.Map.Tag.Type.Sddt.ixx">
       <Filter>Tag\Sddt</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Sddt\System\MapSddtDescriptor.ixx">
@@ -739,10 +742,10 @@
     <ClCompile Include="Tag\Sddt\Type\MapSddtStructure.ixx">
       <Filter>Tag\Sddt\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Sldt\Map.Tag.System.Sldt.ixx">
+    <ClCompile Include="Tag\Sldt\Blam.Map.Tag.System.Sldt.ixx">
       <Filter>Tag\Sldt</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Sldt\Map.Tag.Type.Sldt.ixx">
+    <ClCompile Include="Tag\Sldt\Blam.Map.Tag.Type.Sldt.ixx">
       <Filter>Tag\Sldt</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Sldt\System\MapSldtDescriptor.ixx">
@@ -757,10 +760,10 @@
     <ClCompile Include="Tag\Sldt\Type\MapSldtStructure.ixx">
       <Filter>Tag\Sldt\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Vehi\Map.Tag.System.Vehi.ixx">
+    <ClCompile Include="Tag\Vehi\Blam.Map.Tag.System.Vehi.ixx">
       <Filter>Tag\Vehi</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Vehi\Map.Tag.Type.Vehi.ixx">
+    <ClCompile Include="Tag\Vehi\Blam.Map.Tag.Type.Vehi.ixx">
       <Filter>Tag\Vehi</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Vehi\System\MapVehiDescriptor.ixx">
@@ -775,10 +778,10 @@
     <ClCompile Include="Tag\Vehi\Type\MapVehiStructure.ixx">
       <Filter>Tag\Vehi\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Weap\Map.Tag.System.Weap.ixx">
+    <ClCompile Include="Tag\Weap\Blam.Map.Tag.System.Weap.ixx">
       <Filter>Tag\Weap</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Weap\Map.Tag.Type.Weap.ixx">
+    <ClCompile Include="Tag\Weap\Blam.Map.Tag.Type.Weap.ixx">
       <Filter>Tag\Weap</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Weap\System\MapWeapDescriptor.ixx">
@@ -793,10 +796,10 @@
     <ClCompile Include="Tag\Weap\Type\MapWeapStructure.ixx">
       <Filter>Tag\Weap\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Zone\Map.Tag.System.Zone.ixx">
+    <ClCompile Include="Tag\Zone\Blam.Map.Tag.System.Zone.ixx">
       <Filter>Tag\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Tag\Zone\Map.Tag.Type.Zone.ixx">
+    <ClCompile Include="Tag\Zone\Blam.Map.Tag.Type.Zone.ixx">
       <Filter>Tag\Zone</Filter>
     </ClCompile>
     <ClCompile Include="Tag\Zone\System\MapZoneDescriptor.ixx">

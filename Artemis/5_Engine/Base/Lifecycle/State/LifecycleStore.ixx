@@ -1,16 +1,16 @@
-export module Platform.Lifecycle.State:Lifecycle;
+export module Engine.Base.Lifecycle.State:Lifecycle;
 
-import Platform.Lifecycle.Type;
+import Engine.Base.Lifecycle.Type;
 import std;
 
-export namespace Platform::Lifecycle::State
+export namespace Engine::Base::Lifecycle::State
 {
     // Lifecycle of the game engine and the synchronization primitives built on it.
     // note: Thread-safe. Written by hooks and the main thread, read by the AI, input and main threads.
     class LifecycleStore
     {
     private:
-        using Status = Platform::Lifecycle::Type::Status;
+        using Status = Engine::Base::Lifecycle::Type::Status;
 
         using milliseconds = std::chrono::milliseconds;
 

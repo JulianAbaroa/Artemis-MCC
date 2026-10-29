@@ -1,4 +1,4 @@
-export module Viewer.Selection.State;
+export module DevTools.Viewer.Selection.State;
 
 import Common.Engine.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-export namespace Viewer::Selection::State
+export namespace DevTools::Viewer::Selection::State
 {
     // Holds the selected object handle and the pending pick request.
     // The values are atomic because the input writes them and the render frame reads them.

@@ -1,4 +1,4 @@
-module Platform.Bridge.State;
+module Bridge.Transport.State;
 
 import Common.Engine.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Engine::Type::k_MaxPlayers;
 }
 
-namespace Platform::Bridge::State
+namespace Bridge::Transport::State
 {
     auto BridgeStore::SetRegion(BridgeRegion* region, void* mapping, void* tickEvent, void* actionEvent, std::uint32_t pid,
         std::string discoveryPath) -> void

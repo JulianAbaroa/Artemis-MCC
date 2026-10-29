@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-import Platform.Lifecycle.State;
-import Platform.Lifecycle.Type;
+import Engine.Base.Lifecycle.State;
+import Engine.Base.Lifecycle.Type;
 import std;
 
 // LifecycleStore (M6c.2, D221): the handshake between the game thread and the AI thread, and the flags the bridge and the UI write.
@@ -9,8 +9,8 @@ import std;
 
 namespace
 {
-    using Platform::Lifecycle::State::LifecycleStore;
-    using Platform::Lifecycle::Type::Status;
+    using Engine::Base::Lifecycle::State::LifecycleStore;
+    using Engine::Base::Lifecycle::Type::Status;
 
     using std::chrono::milliseconds;
     using std::chrono::steady_clock;

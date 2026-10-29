@@ -1,7 +1,7 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :FileLocator;
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto FileLocatorService::OpenMapFile(const std::string& filePath) -> std::ifstream
     {

@@ -2,11 +2,11 @@
 // Source XML: ctrl.xml
 // Base size: 0x23C.
 
-export module Map.Tag.Type:Ctrl.Offset;
+export module Blam.Map.Tag.Type:Ctrl.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Ctrl::Offset
+export namespace Blam::Map::Tag::Type::Ctrl::Offset
 {
     constexpr std::size_t k_ObjectType                                  = 0x0;  // enum16. [Biped=0x0, Vehicle=0x1, Weapon=0x2, Equipment=0x3, Terminal=0x4, Projectile=0x5, Scenery=0x6, Machine=0x7, Control=0x8, Sound Scenery=0x9, Crate=0xA, Creature=0xB, Giant=0xC, Effect Scenery=0xD]
     constexpr std::size_t k_SecondaryFlags                              = 0x2;  // flags16. [Does Not Affect Projectile Aiming=0]

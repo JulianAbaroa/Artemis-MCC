@@ -1,6 +1,6 @@
-module Tables.Object.State;
+module Blam.Runtime.Object.State;
 
-namespace Tables::Object::State
+namespace Blam::Runtime::Object::State
 {
     auto ObjectTableStore::AddObject(std::uint32_t handle, const AliveObject& object) -> void
     {

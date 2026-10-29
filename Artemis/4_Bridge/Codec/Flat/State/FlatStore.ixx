@@ -1,9 +1,9 @@
-export module Export.Flat.State;
+export module Bridge.Codec.Flat.State;
 
-import Export.Flat.Type;
+import Bridge.Codec.Flat.Type;
 import std;
 
-export namespace Export::Flat::State
+export namespace Bridge::Codec::Flat::State
 {
     // The Tick of the last decision tick, handed from the AI thread to the bridge thread.
     // note: One slot. A request the bridge thread has not taken yet is replaced by the next one (the client only needs the newest
@@ -11,7 +11,7 @@ export namespace Export::Flat::State
     class FlatStore
     {
     private:
-        using FlatRequest = Export::Flat::Type::FlatRequest;
+        using FlatRequest = Bridge::Codec::Flat::Type::FlatRequest;
         using milliseconds = std::chrono::milliseconds;
 
     public:

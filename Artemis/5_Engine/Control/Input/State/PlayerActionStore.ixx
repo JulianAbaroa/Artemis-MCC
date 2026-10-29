@@ -1,17 +1,17 @@
-export module Platform.Input.State:PlayerAction;
+export module Engine.Control.Input.State:PlayerAction;
 
 import Control.Action.Type;
-import Platform.Input.Type;
-import Layout.Action.Type;
+import Engine.Control.Input.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
 {
-    using Layout::Action::Type::Size::k_MaxActionPlayers;
-    using Platform::Input::Type::k_ShadowFieldCount;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Engine::Control::Input::Type::k_ShadowFieldCount;
 }
 
-export namespace Platform::Input::State
+export namespace Engine::Control::Input::State
 {
     // Player actions of the latest tick, what each action did since the watch was cleared, and the overrides Artemis writes (A9 M4).
     // note: Thread-safe. The PlayerAction hook reads the overrides and publishes the actions on the game thread once per tick.
@@ -19,13 +19,13 @@ export namespace Platform::Input::State
     class PlayerActionStore
     {
     private:
-        using ActionOverride = Control::Action::Type::ActionOverride;
-        using ClientRequests = Control::Action::Type::ClientRequests;
+        using ActionOverride = ::Control::Action::Type::ActionOverride;
+        using ClientRequests = ::Control::Action::Type::ClientRequests;
 
-        using PlayerActions = Platform::Input::Type::PlayerActions;
-        using ActionWatch = Platform::Input::Type::ActionWatch;
-        using ShadowField = Platform::Input::Type::ShadowField;
-        using ShadowCount = Platform::Input::Type::ShadowCount;
+        using PlayerActions = Engine::Control::Input::Type::PlayerActions;
+        using ActionWatch = Engine::Control::Input::Type::ActionWatch;
+        using ShadowField = Engine::Control::Input::Type::ShadowField;
+        using ShadowCount = Engine::Control::Input::Type::ShadowCount;
 
     public:
         PlayerActionStore() = default;

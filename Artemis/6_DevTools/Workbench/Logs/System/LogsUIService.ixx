@@ -1,24 +1,24 @@
-export module UI.Logs.System;
+export module DevTools.Workbench.Logs.System;
 
-import Service.Settings.State;
-import Service.Logs.Type;
-import Service.Logs.State;
-import UI.Logs.Type;
-import UI.Logs.State;
+import Services.Settings.State;
+import Services.Logs.Type;
+import Services.Logs.State;
+import DevTools.Workbench.Logs.Type;
+import DevTools.Workbench.Logs.State;
 import std;
 
-export namespace UI::Logs::System
+export namespace DevTools::Workbench::Logs::System
 {
     // Draws the logs window with the search, the selection and the copy actions.
     class LogsUIService
     {
     private:
-        using LogEntry = Service::Logs::Type::LogEntry;
-        using FilterState = UI::Logs::Type::FilterState;
+        using LogEntry = Services::Logs::Type::LogEntry;
+        using FilterState = DevTools::Workbench::Logs::Type::FilterState;
 
-        using SettingsStore = Service::Settings::State::SettingsStore;
-        using LogsStore = Service::Logs::State::LogsStore;
-        using LogsUIStore = UI::Logs::State::LogsUIStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
+        using LogsStore = Services::Logs::State::LogsStore;
+        using LogsUIStore = DevTools::Workbench::Logs::State::LogsUIStore;
 
     public:
         LogsUIService(SettingsStore& settingsStore, LogsStore& logsStore,

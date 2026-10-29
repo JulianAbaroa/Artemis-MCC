@@ -1,12 +1,12 @@
-export module Platform.Match.Hook:LifecycleUpdate;
+export module Engine.Match.Hook:LifecycleUpdate;
 
 import Common.Log.System;
-import Platform.Memory.System;
-import Platform.Match.Type;
-import Platform.Match.State;
+import Engine.Base.Memory.System;
+import Engine.Match.Type;
+import Engine.Match.State;
 import std;
 
-export namespace Platform::Match::Hook
+export namespace Engine::Match::Hook
 {
     // Launches the match of the custom games lobby when Artemis requests it (D124): before the lifecycle update of MCC runs, calls
     // the START of the lobby screen, as pressing it does. MCC then counts down and launches the match by its normal path (A15 sec.
@@ -22,17 +22,17 @@ export namespace Platform::Match::Hook
 
         using Log = Common::Log::System::Log;
 
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
-        using LifecycleUpdateFunction = Platform::Match::Type::LifecycleUpdateFunction;
-        using FindScreenFunction = Platform::Match::Type::FindScreenFunction;
-        using LobbyStartFunction = Platform::Match::Type::LobbyStartFunction;
-        using GetSessionFunction = Platform::Match::Type::GetSessionFunction;
-        using IsCountdownActiveFunction = Platform::Match::Type::IsCountdownActiveFunction;
-        using EngineUpdateStateFunction = Platform::Match::Type::EngineUpdateStateFunction;
-        using VariantsCompatibleFunction = Platform::Match::Type::VariantsCompatibleFunction;
-        using MatchConfigStore = Platform::Match::State::MatchConfigStore;
-        using MatchCycleStore = Platform::Match::State::MatchCycleStore;
+        using LifecycleUpdateFunction = Engine::Match::Type::LifecycleUpdateFunction;
+        using FindScreenFunction = Engine::Match::Type::FindScreenFunction;
+        using LobbyStartFunction = Engine::Match::Type::LobbyStartFunction;
+        using GetSessionFunction = Engine::Match::Type::GetSessionFunction;
+        using IsCountdownActiveFunction = Engine::Match::Type::IsCountdownActiveFunction;
+        using EngineUpdateStateFunction = Engine::Match::Type::EngineUpdateStateFunction;
+        using VariantsCompatibleFunction = Engine::Match::Type::VariantsCompatibleFunction;
+        using MatchConfigStore = Engine::Match::State::MatchConfigStore;
+        using MatchCycleStore = Engine::Match::State::MatchCycleStore;
 
     public:
         LifecycleUpdateDetour(Log& log, AOBService& aobService, MatchConfigStore& matchConfigStore,

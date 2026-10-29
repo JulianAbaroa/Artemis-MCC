@@ -1,14 +1,14 @@
-export module Resolved.Vitality.Type:Vitality;
+export module Blam.MapModel.Vitality.Type:Vitality;
 
-import Resolved.World.Type;
+import Blam.MapModel.World.Type;
 import std;
 
 namespace
 {
-    using Resolved::World::Type::ModelLink::ModelLinkAnchor;
+    using Blam::MapModel::World::Type::ModelLink::ModelLinkAnchor;
 }
 
-export namespace Resolved::Vitality::Type::Vitality
+export namespace Blam::MapModel::Vitality::Type::Vitality
 {
     enum class VitalityKind : std::uint8_t
     {

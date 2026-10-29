@@ -1,54 +1,54 @@
-export module Export.Tick.System;
+export module Bridge.Codec.Tick.System;
 
-import Resolved.Definitions.Type;
-import Resolved.Definitions.State;
-import Tables.Interaction.Type;
-import Tables.Object.State;
-import Tables.Player.State;
-import Tables.Interaction.State;
-import Relations.Classifier.State;
-import Relations.ObjectGraph.State;
-import Environment.Details.State;
-import Environment.Entities.State;
-import Environment.Players.State;
-import Environment.Aim.State;
-import Environment.Events.State;
-import Environment.Match.State;
-import Egocentric.Self.State;
-import Egocentric.Affordance.State;
-import Egocentric.Raycast.State;
-import Export.Tick.Type;
-import Export.Tick.State;
+import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.Definitions.State;
+import Blam.Runtime.Interaction.Type;
+import Blam.Runtime.Object.State;
+import Blam.Runtime.Player.State;
+import Blam.Runtime.Interaction.State;
+import Perception.Classifier.State;
+import Perception.ObjectGraph.State;
+import Perception.Details.State;
+import Perception.Entities.State;
+import Perception.Players.State;
+import Perception.Aim.State;
+import Perception.Events.State;
+import Perception.Match.State;
+import Views.Self.State;
+import Views.Affordance.State;
+import Views.Raycast.State;
+import Bridge.Codec.Tick.Type;
+import Bridge.Codec.Tick.State;
 import std;
 
-export namespace Export::Tick::System
+export namespace Bridge::Codec::Tick::System
 {
     class TickService
     {
     private:
-        using ObjectTableStore = Tables::Object::State::ObjectTableStore;
-        using PlayerTableStore = Tables::Player::State::PlayerTableStore;
-        using InteractionStore = Tables::Interaction::State::InteractionStore;
-        using ClassifierStore = Relations::Classifier::State::ClassifierStore;
-        using ObjectGraphStore = Relations::ObjectGraph::State::ObjectGraphStore;
-        using EntitiesStore = Environment::Entities::State::EntitiesStore;
-        using PlayersStore = Environment::Players::State::PlayersStore;
-        using VitalityDetailsStore = Environment::Details::State::VitalityDetailsStore;
-        using ZoneDetailsStore = Environment::Details::State::ZoneDetailsStore;
-        using TeleporterDetailsStore = Environment::Details::State::TeleporterDetailsStore;
-        using LiftDetailsStore = Environment::Details::State::LiftDetailsStore;
-        using BarrierDetailsStore = Environment::Details::State::BarrierDetailsStore;
-        using AimStore = Environment::Aim::State::AimStore;
-        using EventsStore = Environment::Events::State::EventsStore;
-        using MatchStore = Environment::Match::State::MatchStore;
-        using SelfStore = Egocentric::Self::State::SelfStore;
-        using AffordanceStore = Egocentric::Affordance::State::AffordanceStore;
-        using RaycastStore = Egocentric::Raycast::State::RaycastStore;
-        using DefinitionsStore = Resolved::Definitions::State::DefinitionsStore;
-        using TickStore = Export::Tick::State::TickStore;
-        using Sbsp = Resolved::Definitions::Type::Sbsp::Sbsp;
-        using Scnr = Resolved::Definitions::Type::Scnr::Scnr;
-        using Sddt = Resolved::Definitions::Type::Sddt::Sddt;
+        using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
+        using PlayerTableStore = Blam::Runtime::Player::State::PlayerTableStore;
+        using InteractionStore = Blam::Runtime::Interaction::State::InteractionStore;
+        using ClassifierStore = Perception::Classifier::State::ClassifierStore;
+        using ObjectGraphStore = Perception::ObjectGraph::State::ObjectGraphStore;
+        using EntitiesStore = Perception::Entities::State::EntitiesStore;
+        using PlayersStore = Perception::Players::State::PlayersStore;
+        using VitalityDetailsStore = Perception::Details::State::VitalityDetailsStore;
+        using ZoneDetailsStore = Perception::Details::State::ZoneDetailsStore;
+        using TeleporterDetailsStore = Perception::Details::State::TeleporterDetailsStore;
+        using LiftDetailsStore = Perception::Details::State::LiftDetailsStore;
+        using BarrierDetailsStore = Perception::Details::State::BarrierDetailsStore;
+        using AimStore = Perception::Aim::State::AimStore;
+        using EventsStore = Perception::Events::State::EventsStore;
+        using MatchStore = Perception::Match::State::MatchStore;
+        using SelfStore = Views::Self::State::SelfStore;
+        using AffordanceStore = Views::Affordance::State::AffordanceStore;
+        using RaycastStore = Views::Raycast::State::RaycastStore;
+        using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
+        using TickStore = Bridge::Codec::Tick::State::TickStore;
+        using Sbsp = Blam::MapModel::Definitions::Type::Sbsp::Sbsp;
+        using Scnr = Blam::MapModel::Definitions::Type::Scnr::Scnr;
+        using Sddt = Blam::MapModel::Definitions::Type::Sddt::Sddt;
 
     public:
         TickService(ObjectTableStore& objectStore, PlayerTableStore& playerStore,

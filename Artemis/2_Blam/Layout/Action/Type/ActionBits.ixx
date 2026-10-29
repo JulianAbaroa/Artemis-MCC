@@ -1,8 +1,8 @@
-export module Layout.Action.Type:Bits;
+export module Blam.Layout.Action.Type:Bits;
 
 import std;
 
-export namespace Layout::Action::Type
+export namespace Blam::Layout::Action::Type
 {
     // A button with a hold lane: its down bit and its held bit in the lanes of the action (0x5df80).
     struct HoldLane

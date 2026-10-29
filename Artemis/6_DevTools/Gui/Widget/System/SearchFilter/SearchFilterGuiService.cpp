@@ -2,7 +2,7 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Gui.Widget.System;
+module DevTools.Gui.Widget.System;
 import :SearchFilter;
 import std;
 
@@ -14,7 +14,7 @@ namespace
     }
 }
 
-namespace Gui::Widget::System
+namespace DevTools::Gui::Widget::System
 {
     auto SearchFilterGuiService::DrawSearchBar(const char* hint) -> void
     {

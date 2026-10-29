@@ -1,18 +1,18 @@
-export module Export.Flat.System;
+export module Bridge.Codec.Flat.System;
 
-import Contract.Bridge;
-import Export.Tick.Type;
+import Contract.Bridge.Type;
+import Bridge.Codec.Tick.Type;
 import std;
 
-export namespace Export::Flat::System
+export namespace Bridge::Codec::Flat::System
 {
     // Flattens a Tick into a BridgeTick: Players, Entities, Match and the newest events as POD rows (D135, D141). Copies only, computes nothing (D37).
     class FlatService
     {
     private:
-        using BridgeTick = Platform::Bridge::Type::BridgeTick;
+        using BridgeTick = Contract::Bridge::Type::BridgeTick;
 
-        using Tick = Export::Tick::Type::Tick;
+        using Tick = Bridge::Codec::Tick::Type::Tick;
 
     public:
         FlatService() = default;

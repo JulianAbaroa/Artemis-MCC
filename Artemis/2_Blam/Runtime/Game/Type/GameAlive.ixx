@@ -1,16 +1,16 @@
-export module Tables.Game.Type:Alive;
+export module Blam.Runtime.Game.Type:Alive;
 
 import Common.Engine.Type;
-import Layout.Game.Type;
+import Blam.Layout.Game.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
-    using Layout::Game::Type::Offset::k_EventDataSize;
+    using Blam::Layout::Game::Type::Offset::k_EventDataSize;
 }
 
-export namespace Tables::Game::Type::Alive
+export namespace Blam::Runtime::Game::Type::Alive
 {
     // One entry of the event ring of the engine, as read (D104).
     struct AliveEvent

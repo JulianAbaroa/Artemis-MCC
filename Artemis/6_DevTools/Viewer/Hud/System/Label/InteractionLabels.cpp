@@ -2,38 +2,38 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :InteractionLabels;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
-import Egocentric.Affordance.Type;
-import Viewer.Format.System;
-import Viewer.Options.Type;
-import Viewer.Options.State;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import Views.Affordance.Type;
+import DevTools.Viewer.Format.System;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Viewer::Options::Type::Flag;
-    using Viewer::Hud::Type::LabelRow;
-    using Viewer::Format::System::InteractionFormater;
-    using Viewer::Format::System::AffordanceFormater;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Hud::Type::LabelRow;
+    using DevTools::Viewer::Format::System::InteractionFormater;
+    using DevTools::Viewer::Format::System::AffordanceFormater;
     using Common::Semantic::Type::NameOf;
-    using Egocentric::Affordance::Type::Affordance;
+    using Views::Affordance::Type::Affordance;
 
-    using Viewer::Style::Type::k_InteractionObject;
-    using Viewer::Style::Type::k_InteractionMelee;
-    using Viewer::Style::Type::k_InteractionAim;
-    using Viewer::Style::Type::k_Affordance;
-    using Viewer::Style::Type::k_TeamNeutral;
+    using DevTools::Viewer::Style::Type::k_InteractionObject;
+    using DevTools::Viewer::Style::Type::k_InteractionMelee;
+    using DevTools::Viewer::Style::Type::k_InteractionAim;
+    using DevTools::Viewer::Style::Type::k_Affordance;
+    using DevTools::Viewer::Style::Type::k_TeamNeutral;
     using Common::Engine::Type::k_NoHandle;
-    using Viewer::Hud::Type::k_InfoColor;
-    using Viewer::Hud::Type::k_MutedColor;
+    using DevTools::Viewer::Hud::Type::k_InfoColor;
+    using DevTools::Viewer::Hud::Type::k_MutedColor;
 
     constexpr float k_TargetPriority{ 3.0f };
     constexpr float k_LinkLift{ 0.5f };
@@ -52,7 +52,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto InteractionLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
@@ -87,7 +87,7 @@ namespace Viewer::Hud::System
         };
 
         auto mark = [&](std::uint32_t handle, std::vector<LabelRow> rows,
-            const Viewer::Style::Type::Color& color) -> void
+            const DevTools::Viewer::Style::Type::Color& color) -> void
         {
             const auto objectIt = tick.ObjectTable->find(handle);
             if (objectIt == tick.ObjectTable->end()) return;

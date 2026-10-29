@@ -1,13 +1,13 @@
-export module Platform.Capture.Hook:ExecuteGameFrame;
+export module Engine.Capture.Hook:ExecuteGameFrame;
 
 import Common.Log.System;
-import Service.Telemetry.State;
-import Platform.Memory.System;
-import Platform.Lifecycle.State;
-import Platform.Capture.Type;
+import Services.Telemetry.State;
+import Engine.Base.Memory.System;
+import Engine.Base.Lifecycle.State;
+import Engine.Capture.Type;
 import std;
 
-export namespace Platform::Capture::Hook
+export namespace Engine::Capture::Hook
 {
     // Hooks the engine function that runs one logic tick, so the AI thread is signaled for every tick and not only for the last one
     // of a frame.
@@ -23,10 +23,10 @@ export namespace Platform::Capture::Hook
         using nanoseconds = std::chrono::nanoseconds;
 
         using Log = Common::Log::System::Log;
-        using TelemetryStore = Service::Telemetry::State::TelemetryStore;
-        using AOBService = Platform::Memory::System::AOBService;
-        using LifecycleStore = Platform::Lifecycle::State::LifecycleStore;
-        using ExecuteGameFrameFunction = Platform::Capture::Type::ExecuteGameFrameFunction;
+        using TelemetryStore = Services::Telemetry::State::TelemetryStore;
+        using AOBService = Engine::Base::Memory::System::AOBService;
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using ExecuteGameFrameFunction = Engine::Capture::Type::ExecuteGameFrameFunction;
 
     public:
         ExecuteGameFrameDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,

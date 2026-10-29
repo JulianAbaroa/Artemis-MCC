@@ -1,8 +1,8 @@
-export module Layout.Action.Type:Size;
+export module Blam.Layout.Action.Type:Size;
 
 import std;
 
-export namespace Layout::Action::Type::Size
+export namespace Blam::Layout::Action::Type::Size
 {
     // Players a simulation update holds actions for, by player table index (A9_SplitScreen.txt sec. 12).
     inline constexpr std::size_t k_MaxActionPlayers{ 16 };

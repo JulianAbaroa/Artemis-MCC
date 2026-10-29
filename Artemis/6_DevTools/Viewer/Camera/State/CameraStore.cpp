@@ -1,6 +1,6 @@
-module Viewer.Camera.State;
+module DevTools.Viewer.Camera.State;
 
-namespace Viewer::Camera::State
+namespace DevTools::Viewer::Camera::State
 {
     auto CameraStore::IsActive() const -> bool
     {

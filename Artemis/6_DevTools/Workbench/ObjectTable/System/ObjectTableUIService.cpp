@@ -2,19 +2,19 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module UI.ObjectTable.System;
+module DevTools.Workbench.ObjectTable.System;
 
 import Common.Semantic.Type;
-import Gui.Format.System;
-import Gui.Style.Type;
+import DevTools.Gui.Format.System;
+import DevTools.Gui.Style.Type;
 import std;
 
 namespace
 {
     using Common::Semantic::Type::Physics;
-    using Gui::Format::System::HexFormater;
+    using DevTools::Gui::Format::System::HexFormater;
 
-    using Gui::Style::Type::k_CardSpacing;
+    using DevTools::Gui::Style::Type::k_CardSpacing;
 
     // Minimum width of an object card.
     constexpr float k_CardMinWidth{ 250.0f };
@@ -44,7 +44,7 @@ namespace
     }
 }
 
-namespace UI::ObjectTable::System
+namespace DevTools::Workbench::ObjectTable::System
 {
     auto ObjectTableUIService::Draw() -> void
     {

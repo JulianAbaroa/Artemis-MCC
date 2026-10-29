@@ -1,8 +1,8 @@
-module UI.TickDump.State;
+module DevTools.Workbench.TickDump.State;
 
 import std;
 
-namespace UI::TickDump::State
+namespace DevTools::Workbench::TickDump::State
 {
     auto TickDumpUIStore::RequestStart(std::string source) -> void
     {

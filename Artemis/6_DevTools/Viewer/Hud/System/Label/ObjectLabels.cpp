@@ -2,43 +2,43 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :ObjectLabels;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
-import Relations.Classifier.Type;
-import Egocentric.Affordance.Type;
-import Gui.Format.System;
-import Viewer.Options.Type;
-import Viewer.Options.State;
-import Viewer.Style.Type;
-import Viewer.Hud.Type;
+import Perception.Classifier.Type;
+import Views.Affordance.Type;
+import DevTools.Gui.Format.System;
+import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Options.State;
+import DevTools.Viewer.Style.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Viewer::Options::Type::Flag;
-    using Viewer::Options::Type::Scalar;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Scalar;
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Binding;
-    using Relations::Classifier::Type::Classified;
-    using Viewer::Hud::Type::LabelRow;
-    using Gui::Format::System::HexFormater;
+    using Perception::Classifier::Type::Classified;
+    using DevTools::Viewer::Hud::Type::LabelRow;
+    using DevTools::Gui::Format::System::HexFormater;
 
     namespace SemanticType = Common::Semantic::Type;
 
-    using Viewer::Style::Type::k_Health;
-    using Viewer::Style::Type::k_Affordance;
-    using Viewer::Style::Type::k_Collidable;
-    using Viewer::Style::Type::k_Selected;
+    using DevTools::Viewer::Style::Type::k_Health;
+    using DevTools::Viewer::Style::Type::k_Affordance;
+    using DevTools::Viewer::Style::Type::k_Collidable;
+    using DevTools::Viewer::Style::Type::k_Selected;
     using Common::Engine::Type::k_NoHandle;
-    using Viewer::Hud::Type::k_InfoColor;
-    using Viewer::Hud::Type::k_MutedColor;
-    using Viewer::Hud::Type::k_FreeSeatColor;
-    using Viewer::Hud::Type::k_TakenSeatColor;
+    using DevTools::Viewer::Hud::Type::k_InfoColor;
+    using DevTools::Viewer::Hud::Type::k_MutedColor;
+    using DevTools::Viewer::Hud::Type::k_FreeSeatColor;
+    using DevTools::Viewer::Hud::Type::k_TakenSeatColor;
 
     // Above the other selected labels: the object label is the main one.
     constexpr float k_SelectedObjectPriority{ 2.0f };
@@ -106,7 +106,7 @@ namespace
         return text;
     }
 
-    auto IsCategoryEnabled(Category category, const Viewer::Options::State::OptionsStore& options) -> bool
+    auto IsCategoryEnabled(Category category, const DevTools::Viewer::Options::State::OptionsStore& options) -> bool
     {
         switch (category)
         {
@@ -120,7 +120,7 @@ namespace
         }
     }
 
-    auto GroupOf(Category category) -> Viewer::Style::Type::Color
+    auto GroupOf(Category category) -> DevTools::Viewer::Style::Type::Color
     {
         switch (category)
         {
@@ -138,7 +138,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto ObjectLabels::Collect(LabelCanvas& canvas, const LabelContext& context) -> void
     {
@@ -161,7 +161,7 @@ namespace Viewer::Hud::System
         const bool showHijackers = options.IsEnabled(Flag::VehicleHijackerSlots);
         const float arrowLength = options.GetScalar(Scalar::ObjectArrowLength);
 
-        std::unordered_map<std::uint32_t, const Egocentric::Affordance::Type::Affordance*> affordances{};
+        std::unordered_map<std::uint32_t, const Views::Affordance::Type::Affordance*> affordances{};
         if (showSeats && tick.Affordances)
         {
             for (const auto& affordance : *tick.Affordances)

@@ -1,11 +1,11 @@
-export module Export.Tick.State;
+export module Bridge.Codec.Tick.State;
 
 import Common.State.Type;
-import Export.Tick.Type;
+import Bridge.Codec.Tick.Type;
 
-export namespace Export::Tick::State
+export namespace Bridge::Codec::Tick::State
 {
-    class TickStore : public Common::State::Type::Snapshot<Export::Tick::Type::Tick>
+    class TickStore : public Common::State::Type::Snapshot<Bridge::Codec::Tick::Type::Tick>
     {
     };
 }

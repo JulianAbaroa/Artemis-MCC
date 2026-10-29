@@ -1,17 +1,17 @@
-module Export.Tick.System;
+module Bridge.Codec.Tick.System;
 
-import Egocentric.Self.Type;
-import Export.Tick.Type;
+import Views.Self.Type;
+import Bridge.Codec.Tick.Type;
 
 namespace
 {
-    using Export::Tick::Type::Tick;
-    using Tables::Interaction::Type::Alive::AliveInteraction;
+    using Bridge::Codec::Tick::Type::Tick;
+    using Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
 
-    using Egocentric::Self::Type::k_SelfLocalIndex;
+    using Views::Self::Type::k_SelfLocalIndex;
 }
 
-namespace Export::Tick::System
+namespace Bridge::Codec::Tick::System
 {
     auto TickService::Assemble(std::uint64_t generation) -> void
     {
@@ -22,19 +22,19 @@ namespace Export::Tick::System
         {
             if (!m_Map)
             {
-                m_Map = std::shared_ptr<const std::unordered_map<std::string, Resolved::Definitions::Type::Sbsp::Sbsp>>(
+                m_Map = std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Sbsp::Sbsp>>(
                     std::shared_ptr<void>{}, &m_DefinitionsStore.m_Sbsp.All());
             }
 
             if (!m_Limits && m_DefinitionsStore.m_Scnr.IsFrozen())
             {
-                m_Limits = std::shared_ptr<const std::unordered_map<std::string, Resolved::Definitions::Type::Scnr::Scnr>>(
+                m_Limits = std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Scnr::Scnr>>(
                     std::shared_ptr<void>{}, &m_DefinitionsStore.m_Scnr.All());
             }
 
             if (!m_Designs && m_DefinitionsStore.m_Sddt.IsFrozen())
             {
-                m_Designs = std::shared_ptr<const std::unordered_map<std::string, Resolved::Definitions::Type::Sddt::Sddt>>(
+                m_Designs = std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Sddt::Sddt>>(
                     std::shared_ptr<void>{}, &m_DefinitionsStore.m_Sddt.All());
             }
         }

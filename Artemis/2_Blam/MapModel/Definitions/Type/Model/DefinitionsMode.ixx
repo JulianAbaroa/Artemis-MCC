@@ -1,4 +1,4 @@
-export module Resolved.Definitions.Type:Mode;
+export module Blam.MapModel.Definitions.Type:Mode;
 
 import Common.Math.Type;
 import std;
@@ -10,7 +10,7 @@ namespace
     using Common::Math::Type::Node;
 }
 
-export namespace Resolved::Definitions::Type::Mode
+export namespace Blam::MapModel::Definitions::Type::Mode
 {
     struct Marker
     {

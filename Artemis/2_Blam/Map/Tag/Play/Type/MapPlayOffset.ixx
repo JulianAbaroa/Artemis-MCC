@@ -2,11 +2,11 @@
 // Source XML: play.xml
 // Base size: 0x50.
 
-export module Map.Tag.Type:Play.Offset;
+export module Blam.Map.Tag.Type:Play.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Play::Offset
+export namespace Blam::Map::Tag::Type::Play::Offset
 {
     namespace CompressionCodecs
     {

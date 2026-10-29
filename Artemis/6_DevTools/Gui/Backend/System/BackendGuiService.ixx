@@ -1,13 +1,13 @@
-export module Gui.Backend.System:Backend;
+export module DevTools.Gui.Backend.System:Backend;
 
 import Common.Log.System;
-import Service.Settings.State;
-import Platform.Window.Type;
-import Platform.Render.Type;
-import Platform.Render.State;
+import Services.Settings.State;
+import Engine.Render.Window.Type;
+import Engine.Render.Type;
+import Engine.Render.State;
 import std;
 
-export namespace Gui::Backend::System
+export namespace DevTools::Gui::Backend::System
 {
     // Owns the ImGui context and its Win32 and DX11 backends.
     // Starts and draws the ImGui frame, and applies the scale, alpha and menu visibility settings.
@@ -16,11 +16,11 @@ export namespace Gui::Backend::System
     {
     private:
         using Log = Common::Log::System::Log;
-        using SettingsStore = Service::Settings::State::SettingsStore;
+        using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using WindowMessage = Platform::Window::Type::WindowMessage;
-        using FrameContext = Platform::Render::Type::FrameContext;
-        using RenderStore = Platform::Render::State::RenderStore;
+        using WindowMessage = Engine::Render::Window::Type::WindowMessage;
+        using FrameContext = Engine::Render::Type::FrameContext;
+        using RenderStore = Engine::Render::State::RenderStore;
 
     public:
         BackendGuiService(Log& log, SettingsStore& settingsStore,

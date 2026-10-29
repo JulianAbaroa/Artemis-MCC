@@ -1,15 +1,15 @@
-export module Tables.Game.State;
+export module Blam.Runtime.Game.State;
 
 import Common.State.Type;
-import Tables.Game.Type;
+import Blam.Runtime.Game.Type;
 import std;
 
 namespace
 {
-    using Tables::Game::Type::Alive::AliveGame;
+    using Blam::Runtime::Game::Type::Alive::AliveGame;
 }
 
-export namespace Tables::Game::State
+export namespace Blam::Runtime::Game::State
 {
     // Holds the game globals of the last tick and the cursor of the event ring.
     // note: The cursor and the dropped count are written by the AI thread only.

@@ -1,19 +1,19 @@
-export module Map.Reader.System:Header;
+export module Blam.Map.Reader.System:Header;
 
 import :Formula;
 
-import Map.Reader.Type;
+import Blam.Map.Reader.Type;
 import std;
 
-export namespace Map::Reader::System
+export namespace Blam::Map::Reader::System
 {
     // Reads the map header.
     // note: Offset mask 3 is not used yet. It possibly corresponds to the locales, which would need their own conversion in FormulaService.
     class HeaderService
     {
     private:
-        using HeaderInfo = Map::Reader::Type::Info::HeaderInfo;
-        using FormulaService = Map::Reader::System::FormulaService;
+        using HeaderInfo = Blam::Map::Reader::Type::Info::HeaderInfo;
+        using FormulaService = Blam::Map::Reader::System::FormulaService;
 
     public:
         explicit HeaderService(FormulaService& formulaService) :

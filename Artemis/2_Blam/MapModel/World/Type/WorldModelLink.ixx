@@ -1,4 +1,4 @@
-export module Resolved.World.Type:ModelLink;
+export module Blam.MapModel.World.Type:ModelLink;
 
 import Common.Math.Type;
 import std;
@@ -8,7 +8,7 @@ namespace
     using Common::Math::Type::Vec3;
 }
 
-export namespace Resolved::World::Type::ModelLink
+export namespace Blam::MapModel::World::Type::ModelLink
 {
     // How an anchor was found.
     enum class AnchorSource : std::uint8_t

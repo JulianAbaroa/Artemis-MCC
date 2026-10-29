@@ -1,17 +1,17 @@
-module Resolved.Definitions.System;
+module Blam.MapModel.Definitions.System;
 
 import Common.Math.Type;
-import Map.Reader.Type;
-import Map.Reader.State;
-import Map.Tag.Type;
+import Blam.Map.Reader.Type;
+import Blam.Map.Reader.State;
+import Blam.Map.Tag.Type;
 
 namespace
 {
     using Common::Math::Type::Triangle;
-    using Map::Reader::State::TagStore;
-    using Map::Reader::System::GroupDescriptor;
-    using Map::Reader::Type::Geometry::SbspGeometry;
-    using Map::Tag::Type::Sbsp::Object::SbspObject;
+    using Blam::Map::Reader::State::TagStore;
+    using Blam::Map::Reader::System::GroupDescriptor;
+    using Blam::Map::Reader::Type::Geometry::SbspGeometry;
+    using Blam::Map::Tag::Type::Sbsp::Object::SbspObject;
 
     // Reads the map object and the definition out of the signature of a builder Build method.
     template <typename TMethod>
@@ -82,7 +82,7 @@ namespace
     }
 }
 
-namespace Resolved::Definitions::System
+namespace Blam::MapModel::Definitions::System
 {
     auto DefinitionsBuilder::BuildForMap() -> void
     {

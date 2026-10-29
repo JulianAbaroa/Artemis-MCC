@@ -1,15 +1,15 @@
-export module Resolved.Definitions.Reflect:Mode;
+export module Blam.MapModel.Definitions.Reflect:Mode;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Mode::Marker;
-    using Resolved::Definitions::Type::Mode::MarkerGroup;
-    using Resolved::Definitions::Type::Mode::Bounds;
-    using Resolved::Definitions::Type::Mode::Mode;
+    using Blam::MapModel::Definitions::Type::Mode::Marker;
+    using Blam::MapModel::Definitions::Type::Mode::MarkerGroup;
+    using Blam::MapModel::Definitions::Type::Mode::Bounds;
+    using Blam::MapModel::Definitions::Type::Mode::Mode;
 }
 
 export namespace Common::Reflect::Type

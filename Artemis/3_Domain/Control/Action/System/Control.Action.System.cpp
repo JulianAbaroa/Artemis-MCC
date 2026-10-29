@@ -3,7 +3,7 @@ module Control.Action.System;
 import Common.Engine.Type;
 import Common.Math.System;
 import Control.Action.Type;
-import Layout.Action.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
@@ -20,19 +20,19 @@ namespace
     using Common::Math::System::TurnToward;
     using Common::Math::System::MoveToward;
 
-    using Layout::Action::Type::k_HoldLanes;
-    using Layout::Action::Type::Size::k_PlayerActionSize;
-    using Layout::Action::Type::k_UseLane;
-    using Layout::Action::Type::k_ActionKeepZoomButton;
-    using Layout::Action::Type::k_NoZoomLevel;
-    using Layout::Action::Type::Offset::k_ActionButtonsOffset;
-    using Layout::Action::Type::Offset::k_ActionFacingOffset;
-    using Layout::Action::Type::Offset::k_ActionThrottleOffset;
-    using Layout::Action::Type::Offset::k_ActionLanesOffset;
-    using Layout::Action::Type::Offset::k_ActionInventoryVersionOffset;
-    using Layout::Action::Type::Offset::k_ActionWeaponSlotOffset;
-    using Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
-    using Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
+    using Blam::Layout::Action::Type::k_HoldLanes;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
+    using Blam::Layout::Action::Type::k_UseLane;
+    using Blam::Layout::Action::Type::k_ActionKeepZoomButton;
+    using Blam::Layout::Action::Type::k_NoZoomLevel;
+    using Blam::Layout::Action::Type::Offset::k_ActionButtonsOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionFacingOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionThrottleOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionLanesOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionInventoryVersionOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionWeaponSlotOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
 
     // Ticks a weapon request is sent while the unit does not hold the slot (half a second at 60 ticks per second).
     constexpr std::uint32_t k_WeaponRequestTicks{ 30 };

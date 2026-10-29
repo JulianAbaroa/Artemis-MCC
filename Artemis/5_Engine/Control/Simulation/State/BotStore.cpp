@@ -1,6 +1,6 @@
-module Platform.Simulation.State;
+module Engine.Control.Simulation.State;
 
-namespace Platform::Simulation::State
+namespace Engine::Control::Simulation::State
 {
     auto BotStore::RequestBot(std::optional<std::int8_t> team) -> void
     {

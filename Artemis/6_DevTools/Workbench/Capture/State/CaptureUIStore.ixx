@@ -1,21 +1,21 @@
-export module UI.Capture.State;
+export module DevTools.Workbench.Capture.State;
 
-import UI.Capture.Type;
+import DevTools.Workbench.Capture.Type;
 import std;
 
 namespace
 {
-    using UI::Capture::Type::k_LabelSize;
+    using DevTools::Workbench::Capture::Type::k_LabelSize;
 }
 
-export namespace UI::Capture::State
+export namespace DevTools::Workbench::Capture::State
 {
     // Inputs, session and last diff of the datum captures.
     // note: Only the capture request is atomic, because the hotkey sets it from the window thread. The rest is used from the render thread.
     class CaptureUIStore
     {
     private:
-        using ByteChange = UI::Capture::Type::ByteChange;
+        using ByteChange = DevTools::Workbench::Capture::Type::ByteChange;
 
     public:
         CaptureUIStore() = default;

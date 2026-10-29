@@ -1,14 +1,14 @@
-export module Resolved.Definitions.Reflect:Eqip;
+export module Blam.MapModel.Definitions.Reflect:Eqip;
 
 import :Object;
 
 import Common.Reflect.Type;
-import Resolved.Definitions.Type;
+import Blam.MapModel.Definitions.Type;
 import std;
 
 namespace
 {
-    using Resolved::Definitions::Type::Eqip::Eqip;
+    using Blam::MapModel::Definitions::Type::Eqip::Eqip;
 }
 
 export namespace Common::Reflect::Type

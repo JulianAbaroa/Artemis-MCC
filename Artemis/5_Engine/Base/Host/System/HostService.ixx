@@ -1,10 +1,10 @@
-export module Platform.Host.System;
+export module Engine.Base.Host.System;
 
 import Common.Log.System;
-import Platform.Memory.System;
+import Engine.Base.Memory.System;
 import std;
 
-export namespace Platform::Host::System
+export namespace Engine::Base::Host::System
 {
     // Finds the game manager of MCC and the functions of its vtable.
     // note: The game manager is the interface MCC gives the game DLL (input, local users, profiles, network). haloreach.dll calls it
@@ -13,7 +13,7 @@ export namespace Platform::Host::System
     {
     private:
         using Log = Common::Log::System::Log;
-        using AOBService = Platform::Memory::System::AOBService;
+        using AOBService = Engine::Base::Memory::System::AOBService;
 
     public:
         HostService(Log& log, AOBService& aobService) :
@@ -24,7 +24,7 @@ export namespace Platform::Host::System
         auto operator=(const HostService&) -> HostService& = delete;
 
         // Returns the address of a function of the game manager vtable.
-        // param index: Entry of the vtable (k_*Index of Platform.Host.Type).
+        // param index: Entry of the vtable (k_*Index of Engine.Base.Host.Type).
         // return: nullptr if the game manager is not found. The cause is logged.
         // note: Resolves the game manager on the first call and keeps it for the whole process.
         auto GetFunctionAddress(std::size_t index) -> void*;

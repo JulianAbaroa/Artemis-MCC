@@ -78,8 +78,8 @@
     <ClCompile Include="System\BridgeEngine.ixx" />
     <ClCompile Include="System\BridgeService.cpp" />
     <ClCompile Include="System\BridgeService.ixx" />
-    <ClCompile Include="System\Platform.Bridge.System.ixx" />
-    <ClCompile Include="Type\Platform.Bridge.Type.ixx" />
+    <ClCompile Include="System\Bridge.Transport.System.ixx" />
+    <ClCompile Include="Type\Bridge.Transport.Type.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

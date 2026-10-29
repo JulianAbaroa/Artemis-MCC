@@ -3,34 +3,34 @@ module;
 #include <algorithm>
 #include <cmath>
 
-module Egocentric.Affordance.System;
+module Views.Affordance.System;
 
 import Common.Semantic.Type;
-import Resolved.Definitions.Type;
-import Tables.Object.Type;
-import Relations.Classifier.Type;
-import Egocentric.Affordance.Type;
-import Egocentric.Self.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Object.Type;
+import Perception.Classifier.Type;
+import Views.Affordance.Type;
+import Views.Self.Type;
 
 namespace
 {
-    using Resolved::Definitions::Type::Object::ObjectKind;
-    using Tables::Object::Type::BoneMatrix::BoneMatrix;
-    using Tables::Object::Type::Vehicle::Seat::Seat;
-    using Relations::Classifier::Type::Classified;
-    using Relations::Classifier::Type::Classifieds;
-    using Egocentric::Self::Type::Self;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::Runtime::Object::Type::BoneMatrix::BoneMatrix;
+    using Blam::Runtime::Object::Type::Vehicle::Seat::Seat;
+    using Perception::Classifier::Type::Classified;
+    using Perception::Classifier::Type::Classifieds;
+    using Views::Self::Type::Self;
 
-    using Egocentric::Self::Type::k_SelfLocalIndex;
+    using Views::Self::Type::k_SelfLocalIndex;
 
     using Common::Semantic::Type::Binding;
     using Common::Semantic::Type::Capability;
     using Common::Semantic::Type::HasCapability;
 
-    using Egocentric::Affordance::Type::Affordances;
+    using Views::Affordance::Type::Affordances;
 }
 
-namespace Egocentric::Affordance::System
+namespace Views::Affordance::System
 {
     auto AffordanceService::Update() -> void
     {
@@ -340,7 +340,7 @@ namespace Egocentric::Affordance::System
 
         const BoneMatrix& bone = bones.Matrices[seatMarker.NodeIndex];
 
-        if (!Tables::Object::Type::BoneMatrix::IsBoneMatrixValid(bone)) return std::nullopt;
+        if (!Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid(bone)) return std::nullopt;
 
         const auto& r = bone.Rotation;
         const Vec3& v = seatMarker.LocalTranslation;

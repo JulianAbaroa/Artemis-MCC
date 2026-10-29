@@ -1,17 +1,17 @@
-export module Viewer.Hud.System:ObjectLabels;
+export module DevTools.Viewer.Hud.System:ObjectLabels;
 
 import :Canvas;
 
-import Viewer.Hud.Type;
+import DevTools.Viewer.Hud.Type;
 import std;
 
-export namespace Viewer::Hud::System
+export namespace DevTools::Viewer::Hud::System
 {
     // Collects the labels of the objects.
     class ObjectLabels
     {
     private:
-        using LabelContext = Viewer::Hud::Type::LabelContext;
+        using LabelContext = DevTools::Viewer::Hud::Type::LabelContext;
 
     public:
         ObjectLabels() = default;

@@ -1,8 +1,8 @@
-export module Layout.Player.Type:Size;
+export module Blam.Layout.Player.Type:Size;
 
 import std;
 
-export namespace Layout::Player::Type::Size
+export namespace Blam::Layout::Player::Type::Size
 {
     // Bytes every player entry occupies inside the player table.
     constexpr std::size_t k_Base{ 0x490 };

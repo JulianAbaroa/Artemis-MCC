@@ -2,11 +2,11 @@
 // Source XML: zone.xml
 // Base size: 0x228.
 
-export module Map.Tag.Type:Zone.Offset;
+export module Blam.Map.Tag.Type:Zone.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Zone::Offset
+export namespace Blam::Map::Tag::Type::Zone::Offset
 {
     constexpr std::size_t k_ScenarioType                                = 0x0;  // enum16. [Solo=0x0, Multiplayer=0x1, Main Menu=0x2]
     constexpr std::size_t k_Flags                                       = 0x2;  // int16.

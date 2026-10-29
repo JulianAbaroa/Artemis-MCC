@@ -1,16 +1,16 @@
-export module Resolved.Vitality.State;
+export module Blam.MapModel.Vitality.State;
 
-import Resolved.Vitality.Type;
+import Blam.MapModel.Vitality.Type;
 import std;
 
-export namespace Resolved::Vitality::State
+export namespace Blam::MapModel::Vitality::State
 {
     // Vitality layouts by model tag name. They are added while the map is built, then the store is frozen and only read.
     // note: Reads assert that the store is frozen, and Add asserts that it is not.
     class VitalityStore
     {
     private:
-        using Vitality = Resolved::Vitality::Type::Vitality::Vitality;
+        using Vitality = Blam::MapModel::Vitality::Type::Vitality::Vitality;
 
     public:
         VitalityStore() = default;

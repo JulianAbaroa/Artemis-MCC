@@ -1,20 +1,20 @@
-export module Resolved.Definitions.System:Object;
+export module Blam.MapModel.Definitions.System:Object;
 
-import Map.Reader.System;
-import Resolved.Definitions.Type;
+import Blam.Map.Reader.System;
+import Blam.MapModel.Definitions.Type;
 import std;
 
-export namespace Resolved::Definitions::System
+export namespace Blam::MapModel::Definitions::System
 {
     // Builds the data every object family shares.
     class ObjectBuilder
     {
     private:
-        using Object = Resolved::Definitions::Type::Object::Object;
-        using MultiplayerObject = Resolved::Definitions::Type::Object::MultiplayerObject;
-        using ObjectKind = Resolved::Definitions::Type::Object::ObjectKind;
-        using MultiplayerObjectKind = Resolved::Definitions::Type::Object::MultiplayerObjectKind;
-        using TagReferenceService = Map::Reader::System::TagReferenceService;
+        using Object = Blam::MapModel::Definitions::Type::Object::Object;
+        using MultiplayerObject = Blam::MapModel::Definitions::Type::Object::MultiplayerObject;
+        using ObjectKind = Blam::MapModel::Definitions::Type::Object::ObjectKind;
+        using MultiplayerObjectKind = Blam::MapModel::Definitions::Type::Object::MultiplayerObjectKind;
+        using TagReferenceService = Blam::Map::Reader::System::TagReferenceService;
 
     public:
         explicit ObjectBuilder(TagReferenceService& tagReferenceService) :

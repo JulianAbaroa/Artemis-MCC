@@ -2,22 +2,22 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module Viewer.Hud.System;
+module DevTools.Viewer.Hud.System;
 import :Collidables;
 
-import Environment.Collidable.Type;
-import Gui.Style.Type;
-import Gui.Widget.System;
+import Perception.Collidable.Type;
+import DevTools.Gui.Style.Type;
+import DevTools.Gui.Widget.System;
 import std;
 
 namespace
 {
-    using Environment::Collidable::Type::Collidable;
-    using Environment::Collidable::Type::RegionDiagnostic;
+    using Perception::Collidable::Type::Collidable;
+    using Perception::Collidable::Type::RegionDiagnostic;
 
-    using Gui::Widget::System::PanelGuiService;
+    using DevTools::Gui::Widget::System::PanelGuiService;
 
-    using Gui::Style::Type::k_BytesPerRow;
+    using DevTools::Gui::Style::Type::k_BytesPerRow;
 
     constexpr ImVec4 k_AlertColor{ 1.0f, 0.4f, 0.4f, 1.0f };
 
@@ -207,7 +207,7 @@ namespace
     }
 }
 
-namespace Viewer::Hud::System
+namespace DevTools::Viewer::Hud::System
 {
     auto CollidablesHud::Draw(const std::shared_ptr<const Collidables>& collidables, std::uint32_t handle) -> void
     {

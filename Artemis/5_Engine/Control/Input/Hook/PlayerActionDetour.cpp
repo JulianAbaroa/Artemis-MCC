@@ -2,70 +2,70 @@ module;
 
 #include <windows.h>
 
-module Platform.Input.Hook;
+module Engine.Control.Input.Hook;
 import :PlayerAction;
 
 import Control.Action.Type;
 import Control.Action.System;
-import Platform.Hook.System;
-import Platform.Memory.Type;
-import Platform.Simulation.Type;
-import Layout.Action.Type;
+import Engine.Base.Hook.System;
+import Engine.Base.Memory.Type;
+import Engine.Control.Simulation.Type;
+import Blam.Layout.Action.Type;
 import std;
 
 namespace
 {
-    namespace Signature = Platform::Memory::Type::Signature;
+    namespace Signature = Engine::Base::Memory::Type::Signature;
 
-    using Control::Action::System::BuildAction;
+    using ::Control::Action::System::BuildAction;
 
-    using Platform::Hook::System::k_DrainTimeout;
+    using Engine::Base::Hook::System::k_DrainTimeout;
 
-    using Platform::Hook::System::ResolveRelative;
+    using Engine::Base::Hook::System::ResolveRelative;
 
-    using Control::Action::Type::ActionOverride;
-    using Control::Action::Type::ClientRequests;
-    using Control::Action::Type::PlayerActionHistory;
-    using Control::Action::Type::UnitClientState;
+    using ::Control::Action::Type::ActionOverride;
+    using ::Control::Action::Type::ClientRequests;
+    using ::Control::Action::Type::PlayerActionHistory;
+    using ::Control::Action::Type::UnitClientState;
 
-    using Platform::Input::Type::PlayerActions;
-    using Platform::Input::Type::ShadowField;
+    using Engine::Control::Input::Type::PlayerActions;
+    using Engine::Control::Input::Type::ShadowField;
 
-    using Layout::Action::Type::k_HoldLanes;
-    using Layout::Action::Type::k_NoZoomLevel;
-    using Layout::Action::Type::Size::k_MaxActionPlayers;
-    using Layout::Action::Type::Size::k_PlayerActionSize;
-    using Layout::Action::Type::Size::k_ActionInteractionSize;
-    using Layout::Action::Type::Offset::k_UpdateActionMaskOffset;
-    using Layout::Action::Type::Offset::k_UpdateActionsOffset;
-    using Layout::Action::Type::Offset::k_ActionHasUnitOffset;
-    using Layout::Action::Type::Offset::k_ActionUnitSlotOffset;
-    using Layout::Action::Type::Offset::k_ActionLanesOffset;
-    using Layout::Action::Type::Offset::k_ActionInteractionOffset;
-    using Layout::Action::Type::Offset::k_ActionInventoryVersionOffset;
-    using Layout::Action::Type::Offset::k_ActionWeaponSlotOffset;
-    using Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
-    using Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
+    using Blam::Layout::Action::Type::k_HoldLanes;
+    using Blam::Layout::Action::Type::k_NoZoomLevel;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
+    using Blam::Layout::Action::Type::Size::k_ActionInteractionSize;
+    using Blam::Layout::Action::Type::Offset::k_UpdateActionMaskOffset;
+    using Blam::Layout::Action::Type::Offset::k_UpdateActionsOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionHasUnitOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionUnitSlotOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionLanesOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionInteractionOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionInventoryVersionOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionWeaponSlotOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
 
-    using Platform::Input::Type::k_PlayerControlTagOffset;
-    using Platform::Input::Type::k_HoldThresholdOffset;
-    using Platform::Input::Type::k_TagLoadTableRelOffset;
-    using Platform::Input::Type::k_TagLoadTableNextOffset;
-    using Platform::Input::Type::k_TagLoadCallRelOffset;
-    using Platform::Input::Type::k_TagLoadCallNextOffset;
-    using Platform::Input::Type::k_ShadowFieldNames;
-    using Platform::Input::Type::k_ControlGlobalsSlot;
-    using Platform::Input::Type::k_ControlBlockStride;
-    using Platform::Input::Type::k_ControlFacingOffset;
+    using Engine::Control::Input::Type::k_PlayerControlTagOffset;
+    using Engine::Control::Input::Type::k_HoldThresholdOffset;
+    using Engine::Control::Input::Type::k_TagLoadTableRelOffset;
+    using Engine::Control::Input::Type::k_TagLoadTableNextOffset;
+    using Engine::Control::Input::Type::k_TagLoadCallRelOffset;
+    using Engine::Control::Input::Type::k_TagLoadCallNextOffset;
+    using Engine::Control::Input::Type::k_ShadowFieldNames;
+    using Engine::Control::Input::Type::k_ControlGlobalsSlot;
+    using Engine::Control::Input::Type::k_ControlBlockStride;
+    using Engine::Control::Input::Type::k_ControlFacingOffset;
 
-    using Platform::Simulation::Type::k_InteractionRecordCount;
-    using Platform::Simulation::Type::k_InteractionRecordSize;
-    using Platform::Simulation::Type::k_InteractionRecordObject;
+    using Engine::Control::Simulation::Type::k_InteractionRecordCount;
+    using Engine::Control::Simulation::Type::k_InteractionRecordSize;
+    using Engine::Control::Simulation::Type::k_InteractionRecordObject;
 
     static_assert(k_ActionInteractionSize == k_InteractionRecordCount * k_InteractionRecordSize,
         "The interaction of the action must hold the records the engine builds.");
 
-    using Platform::Input::Type::k_ShadowLogLimit;
+    using Engine::Control::Input::Type::k_ShadowLogLimit;
 
     // Weapon slot of the action that asks for nothing.
     constexpr std::uint8_t k_NoWeaponRequest{ 0xFF };
@@ -79,11 +79,11 @@ namespace
     }
 }
 
-namespace Platform::Input::Hook
+namespace Engine::Control::Input::Hook
 {
     auto __fastcall PlayerActionDetour::HookedApplyPlayerActions(void* update) -> void
     {
-        Platform::Hook::System::InFlightScope scope(s_InFlight);
+        Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
         if (update != nullptr)
         {
@@ -332,19 +332,19 @@ namespace Platform::Input::Hook
         if (tag == 0) return std::nullopt;
 
         const float seconds{ *reinterpret_cast<const float*>(tag + k_HoldThresholdOffset) };
-        return Control::Action::System::GetHoldThresholdTicks(seconds);
+        return ::Control::Action::System::GetHoldThresholdTicks(seconds);
     }
 
     auto PlayerActionDetour::GetThreadContext() const -> std::uintptr_t
     {
         if (!m_EngineTlsIndex) return 0;
 
-        return Platform::Hook::System::ReadThreadContext(*m_EngineTlsIndex);
+        return Engine::Base::Hook::System::ReadThreadContext(*m_EngineTlsIndex);
     }
 
     auto PlayerActionDetour::FindEngineTlsIndex() -> const std::uint32_t*
     {
-        return Platform::Hook::System::ResolveTlsIndex(m_AOBService.FindPattern(Signature::k_TelemetryIdModifier));
+        return Engine::Base::Hook::System::ResolveTlsIndex(m_AOBService.FindPattern(Signature::k_TelemetryIdModifier));
     }
 
     auto PlayerActionDetour::PublishActions(const std::uint8_t* update) -> void
@@ -411,7 +411,7 @@ namespace Platform::Input::Hook
         void* functionAddress{ reinterpret_cast<void*>(m_AOBService.FindPattern(Signature::k_ApplyPlayerActions)) };
         m_FunctionAddress.store(functionAddress);
 
-        if (!Platform::Hook::System::InstallDetour(functionAddress,
+        if (!Engine::Base::Hook::System::InstallDetour(functionAddress,
             reinterpret_cast<void*>(&HookedApplyPlayerActions),
             reinterpret_cast<void**>(&s_OriginalFunction),
             "[PlayerActionDetour]", m_Log))
@@ -427,9 +427,9 @@ namespace Platform::Input::Hook
     {
         if (!m_IsHookInstalled.load()) return;
 
-        Platform::Hook::System::DisableDetour(m_FunctionAddress.load());
-        Platform::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
-        Platform::Hook::System::RemoveDetour(m_FunctionAddress.load(),
+        Engine::Base::Hook::System::DisableDetour(m_FunctionAddress.load());
+        Engine::Base::Hook::System::WaitForDrain(s_InFlight, k_DrainTimeout);
+        Engine::Base::Hook::System::RemoveDetour(m_FunctionAddress.load(),
             "[PlayerActionDetour]", m_Log);
 
         m_IsHookInstalled.store(false);

@@ -1,4 +1,4 @@
-module Map.Reader.System;
+module Blam.Map.Reader.System;
 import :TagReference;
 
 import Common.Engine.Type;
@@ -8,7 +8,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 }
 
-namespace Map::Reader::System
+namespace Blam::Map::Reader::System
 {
     auto TagReferenceService::GetTagOffset(std::int32_t tagIndex) const -> std::int64_t
     {

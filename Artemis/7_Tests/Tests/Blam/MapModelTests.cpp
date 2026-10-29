@@ -2,9 +2,9 @@
 
 import Common.Log.Type;
 import Common.Log.System;
-import Map.Reader.Type;
-import Map.Layer;
-import Resolved.Layer;
+import Blam.Map.Reader.Type;
+import Blam.Map.Layer;
+import Blam.MapModel.Layer;
 import Tests.Support.Log;
 import Tests.Support.Maps;
 import std;
@@ -21,9 +21,9 @@ namespace
     using Tests::Support::Maps::LocatedFile;
     using Tests::Support::Maps::Locate;
 
-    using Map::Reader::Type::Magic::Tag::k_Coll;
-    using Map::Reader::Type::Magic::Tag::k_Hlmt;
-    using Map::Reader::Type::Magic::Tag::k_Mode;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Coll;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Hlmt;
+    using Blam::Map::Reader::Type::Magic::Tag::k_Mode;
     using Tests::Support::Maps::k_ForgeHalo;
     using Tests::Support::Maps::k_Shared;
 
@@ -85,8 +85,8 @@ namespace
 
         CollectingSink m_Sink{};
         Log m_Log{ m_Sink };
-        Map::Layer m_Map{ m_Log };
-        Resolved::Layer m_Resolved{ m_Log, m_Map };
+        Blam::Map::Layer m_Map{ m_Log };
+        Blam::MapModel::Layer m_Resolved{ m_Log, m_Map };
         double m_LoadSeconds{};
         std::size_t m_LoadMessages{};
     };

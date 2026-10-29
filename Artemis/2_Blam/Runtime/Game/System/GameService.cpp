@@ -1,37 +1,37 @@
-module Tables.Game.System;
+module Blam.Runtime.Game.System;
 
 import Common.Engine.Type;
-import Datum.Object.Type;
-import Layout.Game.Type;
-import Layout.Snapshot.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Game.Type;
+import Blam.Layout.Snapshot.Type;
 
 namespace
 {
-    using Tables::Game::Type::Alive::AliveEvent;
+    using Blam::Runtime::Game::Type::Alive::AliveEvent;
 
-    using Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionId;
 
     using Common::Engine::Type::k_MaxPlayers;
-    using Datum::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
-    using Datum::Object::Type::Constant::k_EventGlobalsSequenceOffset;
-    using Layout::Game::Type::Offset::k_GameEnginePhase;
-    using Layout::Game::Type::Offset::k_GameEnginePlayerScores;
-    using Layout::Game::Type::Offset::k_PlayerScoreStride;
-    using Layout::Game::Type::Offset::k_EventRing;
-    using Layout::Game::Type::Offset::k_EventRingSlots;
-    using Layout::Game::Type::Offset::k_EventEntrySize;
-    using Layout::Game::Type::Offset::k_EntryKey;
-    using Layout::Game::Type::Offset::k_EntryData;
-    using Layout::Game::Type::Offset::k_EntrySequence;
-    using Layout::Game::Type::Offset::k_EntryGameTick;
-    using Layout::Game::Type::Offset::k_EventDataSize;
-    using Layout::Game::Type::Offset::k_DataCausePlayer;
-    using Layout::Game::Type::Offset::k_DataCauseObject;
-    using Layout::Game::Type::Offset::k_DataEffectPlayer;
-    using Layout::Game::Type::Offset::k_DataEffectObject;
-    using Layout::Game::Type::Offset::k_DataDamageReportingType;
-    using Layout::Game::Type::Offset::k_DataModifier;
-    using Layout::Game::Type::Offset::k_DataExtra;
+    using Blam::Layout::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
+    using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Game::Type::Offset::k_GameEnginePhase;
+    using Blam::Layout::Game::Type::Offset::k_GameEnginePlayerScores;
+    using Blam::Layout::Game::Type::Offset::k_PlayerScoreStride;
+    using Blam::Layout::Game::Type::Offset::k_EventRing;
+    using Blam::Layout::Game::Type::Offset::k_EventRingSlots;
+    using Blam::Layout::Game::Type::Offset::k_EventEntrySize;
+    using Blam::Layout::Game::Type::Offset::k_EntryKey;
+    using Blam::Layout::Game::Type::Offset::k_EntryData;
+    using Blam::Layout::Game::Type::Offset::k_EntrySequence;
+    using Blam::Layout::Game::Type::Offset::k_EntryGameTick;
+    using Blam::Layout::Game::Type::Offset::k_EventDataSize;
+    using Blam::Layout::Game::Type::Offset::k_DataCausePlayer;
+    using Blam::Layout::Game::Type::Offset::k_DataCauseObject;
+    using Blam::Layout::Game::Type::Offset::k_DataEffectPlayer;
+    using Blam::Layout::Game::Type::Offset::k_DataEffectObject;
+    using Blam::Layout::Game::Type::Offset::k_DataDamageReportingType;
+    using Blam::Layout::Game::Type::Offset::k_DataModifier;
+    using Blam::Layout::Game::Type::Offset::k_DataExtra;
 
     // return: The field of type T at the offset of the event data.
     template <typename T>
@@ -43,7 +43,7 @@ namespace
     }
 }
 
-namespace Tables::Game::System
+namespace Blam::Runtime::Game::System
 {
     auto GameService::Update(const Snapshot& snapshot) -> void
     {

@@ -2,18 +2,18 @@ module;
 
 #include <d3d11.h>
 
-export module UI.Icon.System;
+export module DevTools.Workbench.Icon.System;
 
-import UI.Icon.Type;
+import DevTools.Workbench.Icon.Type;
 import std;
 
-export namespace UI::Icon::System
+export namespace DevTools::Workbench::Icon::System
 {
     // Creates and releases the GPU textures of the UI icons.
     class IconLoader
     {
     private:
-        using IconTexture = UI::Icon::Type::IconTexture;
+        using IconTexture = DevTools::Workbench::Icon::Type::IconTexture;
 
     public:
         IconLoader() = default;

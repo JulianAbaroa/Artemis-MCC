@@ -2,11 +2,11 @@
 // Source XML: coll.xml
 // Base size: 0x50.
 
-export module Map.Tag.Type:Coll.Offset;
+export module Blam.Map.Tag.Type:Coll.Offset;
 
 import std;
 
-export namespace Map::Tag::Type::Coll::Offset
+export namespace Blam::Map::Tag::Type::Coll::Offset
 {
     constexpr std::size_t k_ImportInfoChecksum                          = 0x0;  // int32.
     constexpr std::size_t k_ErrorsBlock                                 = 0x4;  // uint32.

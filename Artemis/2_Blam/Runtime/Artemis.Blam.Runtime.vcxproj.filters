@@ -78,7 +78,7 @@
     <ClCompile Include="Game\System\GameService.ixx">
       <Filter>Game\System</Filter>
     </ClCompile>
-    <ClCompile Include="Game\Tables.Game.Type.ixx">
+    <ClCompile Include="Game\Blam.Runtime.Game.Type.ixx">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Game\Type\GameAlive.ixx">
@@ -96,7 +96,7 @@
     <ClCompile Include="Interaction\System\InteractionService.ixx">
       <Filter>Interaction\System</Filter>
     </ClCompile>
-    <ClCompile Include="Interaction\Tables.Interaction.Type.ixx">
+    <ClCompile Include="Interaction\Blam.Runtime.Interaction.Type.ixx">
       <Filter>Interaction</Filter>
     </ClCompile>
     <ClCompile Include="Interaction\Type\InteractionAlive.ixx">
@@ -126,7 +126,7 @@
     <ClCompile Include="Object\System\ObjectTableService.ixx">
       <Filter>Object\System</Filter>
     </ClCompile>
-    <ClCompile Include="Object\Tables.Object.Type.ixx">
+    <ClCompile Include="Object\Blam.Runtime.Object.Type.ixx">
       <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Object\Type\BoneMatrix\ObjectBoneMatrix.ixx">
@@ -186,12 +186,12 @@
     <ClCompile Include="Player\System\PlayerTableService.ixx">
       <Filter>Player\System</Filter>
     </ClCompile>
-    <ClCompile Include="Player\Tables.Player.Type.ixx">
+    <ClCompile Include="Player\Blam.Runtime.Player.Type.ixx">
       <Filter>Player</Filter>
     </ClCompile>
     <ClCompile Include="Player\Type\PlayerAlive.ixx">
       <Filter>Player\Type</Filter>
     </ClCompile>
-    <ClCompile Include="Tables.Layer.ixx" />
+    <ClCompile Include="Blam.Runtime.Layer.ixx" />
   </ItemGroup>
 </Project>
