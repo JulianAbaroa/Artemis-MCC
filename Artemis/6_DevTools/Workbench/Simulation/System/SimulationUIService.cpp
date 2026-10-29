@@ -36,7 +36,7 @@ namespace
     using Common::Engine::Type::k_MaxLocalUsers;
     using Engine::Control::Simulation::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
-    using Engine::Control::Simulation::Type::k_MaxTeams;
+    using Common::Engine::Type::k_MaxTeams;
     using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
     using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
     using Blam::Layout::Action::Type::Offset::k_ActionButtonsOffset;

@@ -20,6 +20,24 @@ export namespace Blam::Layout::Game::Type::Offset
     constexpr std::uintptr_t k_GameEnginePlayerScores{ 0x3270 };
     constexpr std::uintptr_t k_PlayerScoreStride{ 0x8 };
 
+    // Round of the match in the game engine globals: index (int16, 0..) and state (uint8: 1 in play, 2 ended, 3 between rounds) (A14).
+    constexpr std::uintptr_t k_GameEngineRoundIndex{ 0xDA };
+    constexpr std::uintptr_t k_GameEngineRoundState{ 0xD8 };
+
+    // Team mapping in the game engine globals: one byte per side, the team that plays that side (0xFF unused), k_MaxTeams bytes (A14).
+    constexpr std::uintptr_t k_GameEngineTeamMapping{ 0x1C };
+
+    // Score of each team (int16) in the game engine globals, by team, one every k_TeamScoreStride bytes (A14).
+    constexpr std::uintptr_t k_GameEngineTeamScoreRound{ 0x32F0 };
+    constexpr std::uintptr_t k_GameEngineTeamScoreTotal{ 0x32F4 };
+    constexpr std::uintptr_t k_TeamScoreStride{ 0x8 };
+
+    // Fields of an element of the megalo objects region (D250). The state and the timer are raw engine values.
+    // note: The timer has 5 + the allies in the zone in its high byte while it runs (0 paused) and the time in 1/1200 s in the low 24 bits (A14).
+    constexpr std::uintptr_t k_MegaloObjectHandle{ 0x38 };
+    constexpr std::uintptr_t k_MegaloObjectState{ 0x50 };
+    constexpr std::uintptr_t k_MegaloObjectResetTimer{ 0x70 };
+
     // Event ring in the event globals (*(thread context + k_ThreadContextEventGlobalsOffset)) (D104).
     // note: The entry of a sequence is at k_EventRing + (sequence % k_EventRingSlots) * k_EventEntrySize.
     constexpr std::uintptr_t k_EventRing{ 0xDB28 };

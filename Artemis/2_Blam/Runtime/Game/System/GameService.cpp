@@ -11,12 +11,27 @@ namespace
 
     using Blam::Layout::Snapshot::Type::RegionId;
 
+    using Blam::Runtime::Game::Type::Alive::AliveMegaloObject;
+
     using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_MaxTeams;
+    using Common::Engine::Type::k_NoHandle;
     using Blam::Layout::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
     using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
+    using Blam::Layout::Object::Type::Constant::k_MaxMegaloObjects;
+    using Blam::Layout::Object::Type::Constant::k_MegaloObjectSize;
     using Blam::Layout::Game::Type::Offset::k_GameEnginePhase;
     using Blam::Layout::Game::Type::Offset::k_GameEnginePlayerScores;
     using Blam::Layout::Game::Type::Offset::k_PlayerScoreStride;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundIndex;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundState;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineTeamMapping;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineTeamScoreRound;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineTeamScoreTotal;
+    using Blam::Layout::Game::Type::Offset::k_TeamScoreStride;
+    using Blam::Layout::Game::Type::Offset::k_MegaloObjectHandle;
+    using Blam::Layout::Game::Type::Offset::k_MegaloObjectState;
+    using Blam::Layout::Game::Type::Offset::k_MegaloObjectResetTimer;
     using Blam::Layout::Game::Type::Offset::k_EventRing;
     using Blam::Layout::Game::Type::Offset::k_EventRingSlots;
     using Blam::Layout::Game::Type::Offset::k_EventEntrySize;
@@ -60,6 +75,31 @@ namespace Blam::Runtime::Game::System
             for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
             {
                 game.PlayerScores[index] = snapshot.Read<std::int16_t>(RegionId::GameEngineGlobals, k_GameEnginePlayerScores + index * k_PlayerScoreStride);
+            }
+
+            game.RoundIndex = snapshot.Read<std::int16_t>(RegionId::GameEngineGlobals, k_GameEngineRoundIndex);
+            game.RoundState = snapshot.Read<std::uint8_t>(RegionId::GameEngineGlobals, k_GameEngineRoundState);
+            game.TeamMapping = snapshot.ReadArray<std::uint8_t, k_MaxTeams>(RegionId::GameEngineGlobals, k_GameEngineTeamMapping);
+
+            for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+            {
+                game.TeamScores[team].Round = snapshot.Read<std::int16_t>(RegionId::GameEngineGlobals, k_GameEngineTeamScoreRound + team * k_TeamScoreStride);
+                game.TeamScores[team].Total = snapshot.Read<std::int16_t>(RegionId::GameEngineGlobals, k_GameEngineTeamScoreTotal + team * k_TeamScoreStride);
+            }
+        }
+
+        if (snapshot.IsCaptured(RegionId::MegaloObjects))
+        {
+            for (std::size_t element{ 0 }; element < k_MaxMegaloObjects; ++element)
+            {
+                const std::size_t start{ element * k_MegaloObjectSize };
+                const auto handle{ snapshot.Read<std::uint32_t>(RegionId::MegaloObjects, start + k_MegaloObjectHandle) };
+                if (handle == k_NoHandle) continue;
+
+                game.MegaloObjects.push_back(AliveMegaloObject{
+                    .ObjectHandle = handle,
+                    .State = snapshot.Read<std::uint32_t>(RegionId::MegaloObjects, start + k_MegaloObjectState),
+                    .ResetTimer = snapshot.Read<std::uint32_t>(RegionId::MegaloObjects, start + k_MegaloObjectResetTimer) });
             }
         }
 

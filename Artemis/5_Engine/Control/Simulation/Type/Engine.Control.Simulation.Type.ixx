@@ -95,9 +95,6 @@ export namespace Engine::Control::Simulation::Type
     // Team inside a player configuration (int8). Team games clamp it to 0..7, other games use the player index.
     inline constexpr std::uintptr_t k_ConfigurationTeam{ 0x78 };
 
-    // Teams of a team game (0 red, 1 blue, 2 green, 3 orange, 4 purple, 5 gold, 6 brown, 7 pink).
-    inline constexpr std::size_t k_MaxTeams{ 8 };
-
     // Player update of the simulation (simulation_player_update).
     inline constexpr std::size_t k_PlayerUpdateSize{ 0xB8 };
     inline constexpr std::uintptr_t k_UpdatePlayerIndex{ 0x00 };

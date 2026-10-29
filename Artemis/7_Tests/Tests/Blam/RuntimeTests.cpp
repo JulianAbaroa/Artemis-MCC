@@ -729,6 +729,81 @@ TEST_F(RuntimeTests, EntryWithAnotherSequenceIsSkipped)
     EXPECT_TRUE(this->UpdateGame(snapshot)->Events.empty());
 }
 
+TEST_F(RuntimeTests, RoundMappingAndTeamScoresComeFromTheGameEngineGlobals)
+{
+    Snapshot snapshot{ WithEvents(0, 0) };
+    std::vector<std::uint8_t>& engine{ snapshot.Regions[static_cast<std::size_t>(RegionId::GameEngineGlobals)].Bytes };
+    Put(engine, GameOffset::k_GameEngineRoundIndex, std::int16_t{ 2 });
+    Put(engine, GameOffset::k_GameEngineRoundState, std::uint8_t{ 3 });
+    Put(engine, GameOffset::k_GameEngineTeamMapping, std::uint8_t{ 1 });
+    Put(engine, GameOffset::k_GameEngineTeamMapping + 1, std::uint8_t{ 0 });
+    Put(engine, GameOffset::k_GameEngineTeamMapping + 2, std::uint8_t{ 0xFF });
+    Put(engine, GameOffset::k_GameEngineTeamScoreRound, std::int16_t{ 1 });
+    Put(engine, GameOffset::k_GameEngineTeamScoreTotal, std::int16_t{ 3 });
+    Put(engine, GameOffset::k_GameEngineTeamScoreRound + (7 * GameOffset::k_TeamScoreStride), std::int16_t{ -2 });
+    Put(engine, GameOffset::k_GameEngineTeamScoreTotal + (7 * GameOffset::k_TeamScoreStride), std::int16_t{ 9 });
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundIndex, 2);
+    EXPECT_EQ(game->RoundState, 3);
+    EXPECT_EQ(game->TeamMapping[0], 1);
+    EXPECT_EQ(game->TeamMapping[1], 0);
+    EXPECT_EQ(game->TeamMapping[2], 0xFF);
+    EXPECT_EQ(game->TeamScores[0].Round, 1);
+    EXPECT_EQ(game->TeamScores[0].Total, 3);
+    EXPECT_EQ(game->TeamScores[1].Round, 0);
+    EXPECT_EQ(game->TeamScores[7].Round, -2);
+    EXPECT_EQ(game->TeamScores[7].Total, 9);
+}
+
+TEST_F(RuntimeTests, MissingGameEngineGlobalsLeaveTheRoundAtZero)
+{
+    Snapshot snapshot{ WithEvents(0, 0) };
+    snapshot.Regions[static_cast<std::size_t>(RegionId::GameEngineGlobals)].Bytes.clear();
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundIndex, 0);
+    EXPECT_EQ(game->RoundState, 0);
+    EXPECT_EQ(game->TeamMapping, (std::array<std::uint8_t, Common::Engine::Type::k_MaxTeams>{}));
+    EXPECT_EQ(game->TeamScores[0].Total, 0);
+}
+
+TEST_F(RuntimeTests, MegaloObjectsKeepOnlyTheElementsWithAHandle)
+{
+    Snapshot snapshot{ WithEvents(0, 0) };
+    std::vector<std::uint8_t>& megalo{ CaptureRegion(snapshot, RegionId::MegaloObjects, RegionSize(RegionId::MegaloObjects)) };
+    const std::size_t size{ Blam::Layout::Object::Type::Constant::k_MegaloObjectSize };
+    for (std::size_t element{ 0 }; element < Blam::Layout::Object::Type::Constant::k_MaxMegaloObjects; ++element)
+    {
+        Put(megalo, (element * size) + GameOffset::k_MegaloObjectHandle, k_NoHandle);
+    }
+
+    Put(megalo, (3 * size) + GameOffset::k_MegaloObjectHandle, MakeHandle(0xEC10, 5));
+    Put(megalo, (3 * size) + GameOffset::k_MegaloObjectState, std::uint32_t{ 2 });
+    Put(megalo, (3 * size) + GameOffset::k_MegaloObjectResetTimer, std::uint32_t{ 0x06011940 });
+    Put(megalo, (0x1FF * size) + GameOffset::k_MegaloObjectHandle, MakeHandle(0xEC11, 6));
+    Put(megalo, (0x1FF * size) + GameOffset::k_MegaloObjectState, std::uint32_t{ 1 });
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    ASSERT_EQ(game->MegaloObjects.size(), 2u);
+    EXPECT_EQ(game->MegaloObjects[0].ObjectHandle, MakeHandle(0xEC10, 5));
+    EXPECT_EQ(game->MegaloObjects[0].State, 2u);
+    EXPECT_EQ(game->MegaloObjects[0].ResetTimer, 0x06011940u);
+    EXPECT_EQ(game->MegaloObjects[1].ObjectHandle, MakeHandle(0xEC11, 6));
+    EXPECT_EQ(game->MegaloObjects[1].State, 1u);
+    EXPECT_EQ(game->MegaloObjects[1].ResetTimer, 0u);
+}
+
+TEST_F(RuntimeTests, MissingMegaloObjectsLeaveTheListEmpty)
+{
+    const auto game{ this->UpdateGame(WithEvents(0, 0)) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_TRUE(game->MegaloObjects.empty());
+}
+
 // --- Layer (D178: pure, the owner calls Cleanup) ---
 
 TEST_F(RuntimeTests, CleanupForgetsEveryTable)

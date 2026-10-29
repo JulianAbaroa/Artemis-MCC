@@ -19,7 +19,7 @@ export namespace Blam::Layout::Object::Type::Item::Structure
         std::uint32_t Unknown1ac;  // 0x4  uint32. | R0 W2 init=0xffffffff upd=0xffffffff W:item_init,item_update
         std::uint8_t  _gap_0x8[0x2];
         std::uint16_t Unknown1b2;  // 0xA  uint16. | R2 W0 SHARED R:FUN_1804ac810,FUN_1804ac8c4
-        std::uint32_t Unknown1b4;  // 0xC  uint32. | R15 W1 init=0xffffffff W:item_init
+        std::uint32_t HolderUnit;  // 0xC  uint32. | Handle of the unit that carries the item, set on the tick it is taken and 0xFFFFFFFF when dropped (A14 sec. 5.6). ParentHandle only follows ~9 ticks later. R15 W1 init=0xffffffff W:item_init
         std::uint32_t Unknown1b8;  // 0x10  uint32. | R0 W1 init=0xffffffff W:item_init
         std::uint32_t ItemSelfHandle;  // 0x14  uint32. | Written from param_1 in item_init (R15-ish reads elsewhere): probably the item's own handle.
         std::uint16_t Unknown1c0;  // 0x18  uint16. | R0 W4 init=0x0 upd=0x0 src=INT_ADD W:FUN_180781484,item_init,item_s148

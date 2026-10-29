@@ -20,6 +20,9 @@ export namespace Common::Engine::Type
     // note: Assumed from the maximum players of a match. Not read from the engine.
     inline constexpr std::size_t k_MaxPlayers{ 16 };
 
+    // Teams of a team game (0 red, 1 blue, 2 green, 3 orange, 4 purple, 5 gold, 6 brown, 7 pink).
+    inline constexpr std::size_t k_MaxTeams{ 8 };
+
     // Local players (split-screen) the engine supports.
     inline constexpr std::size_t k_MaxLocalUsers{ 4 };
 

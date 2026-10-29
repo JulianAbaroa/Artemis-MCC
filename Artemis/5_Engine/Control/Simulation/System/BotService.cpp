@@ -52,7 +52,7 @@ namespace
     using Engine::Control::Simulation::Type::k_PlayerTeam;
     using Engine::Control::Simulation::Type::k_PlayerConfiguration;
     using Engine::Control::Simulation::Type::k_ConfigurationTeam;
-    using Engine::Control::Simulation::Type::k_MaxTeams;
+    using Common::Engine::Type::k_MaxTeams;
     using Common::Engine::Type::k_GamerTagLength;
     using Engine::Control::Simulation::Type::k_MachineMask;
     using Engine::Control::Simulation::Type::k_MachineIdentifiers;

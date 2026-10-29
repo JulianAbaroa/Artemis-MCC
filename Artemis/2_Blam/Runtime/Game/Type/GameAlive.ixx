@@ -7,6 +7,7 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_MaxTeams;
     using Blam::Layout::Game::Type::Offset::k_EventDataSize;
 }
 
@@ -39,6 +40,29 @@ export namespace Blam::Runtime::Game::Type::Alive
         using vector::vector;
     };
 
+    // Score of one team: in the current round and added up over the match.
+    struct AliveTeamScore
+    {
+        std::int16_t Round{};
+        std::int16_t Total{};
+    };
+
+    // One element of the megalo objects array that holds an object: the state the gametype script keeps for it (D250).
+    struct AliveMegaloObject
+    {
+        std::uint32_t ObjectHandle{};
+        // Raw engine value. For a flag 0 home, 1 carried, 2 dropped (A14).
+        std::uint32_t State{};
+        // Raw engine value: high byte 5 + allies in the zone while it runs (0 paused), low 24 bits time in 1/1200 s (A14).
+        std::uint32_t ResetTimer{};
+    };
+
+    // Megalo elements of one tick that hold an object, in element order.
+    struct AliveMegaloObjects : std::vector<AliveMegaloObject>
+    {
+        using vector::vector;
+    };
+
     // Game globals of one tick: clock, phase, scores and the new entries of the event ring.
     struct AliveGame
     {
@@ -47,6 +71,17 @@ export namespace Blam::Runtime::Game::Type::Alive
         // Raw phase of the game engine (k_PhaseMask, k_PhaseInGame, k_PhaseEnded).
         std::uint32_t Phase{};
         std::array<std::int16_t, k_MaxPlayers> PlayerScores{};
+
+        // Round of the match, from 0. Zero when the game engine globals were not captured.
+        std::int16_t RoundIndex{};
+        // Raw state of the round (1 in play, 2 ended, 3 between rounds).
+        std::uint8_t RoundState{};
+        // Team that plays each side, 0xFF for a side not in use. Indexed by the Team of a placement.
+        std::array<std::uint8_t, k_MaxTeams> TeamMapping{};
+        // Score of each team, indexed by team.
+        std::array<AliveTeamScore, k_MaxTeams> TeamScores{};
+        // Megalo state per object. Empty when the region was not captured.
+        AliveMegaloObjects MegaloObjects{};
 
         // Entries whose sequence is above the last one read the tick before.
         AliveEvents Events{};

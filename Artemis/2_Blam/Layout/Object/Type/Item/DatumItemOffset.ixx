@@ -16,7 +16,7 @@ export namespace Blam::Layout::Object::Type::Item::Offset
     constexpr std::size_t k_Unknown1aa                                  = 0x1AA;  // uint16.
     constexpr std::size_t k_Unknown1ac                                  = 0x1AC;  // uint32.
     constexpr std::size_t k_Unknown1b2                                  = 0x1B2;  // uint16.
-    constexpr std::size_t k_Unknown1b4                                  = 0x1B4;  // uint32.
+    constexpr std::size_t k_HolderUnit                                  = 0x1B4;  // uint32.
     constexpr std::size_t k_Unknown1b8                                  = 0x1B8;  // uint32.
     constexpr std::size_t k_ItemSelfHandle                              = 0x1BC;  // uint32.
     constexpr std::size_t k_Unknown1c0                                  = 0x1C0;  // uint16.
