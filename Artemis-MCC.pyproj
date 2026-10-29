@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="Tools\analyze_captures.py" />
     <Compile Include="Tools\analyze_gamestate.py" />
+    <Compile Include="Tools\analyze_sdump.py" />
     <Compile Include="Tools\analyze_phantoms.py" />
     <Compile Include="Tools\analyze_seats.py" />
     <Compile Include="Tools\analyze_ticktrace.py" />
