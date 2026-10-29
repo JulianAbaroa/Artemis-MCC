@@ -1,6 +1,6 @@
 """
 test_tickdump.py
-Tests of Tools/tickdump.py diff and approve (M2, Ignore Rediseno/Tareas/M2.txt; Ignore Referencia/Diseno/15 sec. 6 and 7). Written
+Tests of Tools/tickdump.py diff and approve (M2, D170-D174; Ignore Referencia/Diseno/15 sec. 6 and 7). Written
 by Opus before the code (D161): they fix the interface and the behaviour. They are not changed to pass; if one looks wrong, stop and
 report. The input files are written by tdump_writer.py, never by tickdump.py. Updated for D174 (repeated GameTicks).
 """

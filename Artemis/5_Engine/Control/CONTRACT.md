@@ -14,7 +14,7 @@ Group `5_Engine` - static library inside the game process - applies the actions 
 - Know the bridge: it sees it only through `ActionSource`, which `Mod` implements.
 
 ## Input and output
-- Input: overrides from `ActionSource::Provide`, bot and team requests, virtual input states.
+- Input: overrides set by `ActionSource::Prepare`, bot and team requests, virtual input states.
 - Output: writes into the engine's player actions and input; the published actions and session snapshot.
 
 ## Public interface
@@ -34,7 +34,7 @@ Other projects may import only these modules; everything else in the project is 
 The overrides and action history of every controlled player, the virtual input of each local player, the bots and their machines.
 
 ## Threads
-Game thread for the hooks and the engine functions. `ActionSource::Provide` may block there in Lockstep: at most
+Game thread for the hooks and the engine functions. `ActionSource::Prepare` may block there in Lockstep: at most
 `k_LockstepTimeout` per wait, no limit during a pause of a live client, at once when the client leaves. The stores are thread-safe
 for the UI and the bench.
 

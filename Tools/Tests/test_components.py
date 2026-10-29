@@ -1,6 +1,6 @@
 """
 test_components.py
-Boundaries of the components that already are projects (redesign D153; Ignore Rediseno/02 sec. 3.5, D156, D165): each one imports
+Boundaries of the components that already are projects (redesign D153, D165; contracts D248): each one imports
 only the modules of the components it may depend on, references only those projects, and lists every source it owns.
 Written by Opus before the code (D161) in M3 (D177-D181) and extended in M4a, M4b (D182-D188), M5a (D189-D197), M5b (D198-D201) and M6a (D210-D215); each later step
 that creates a component adds it to COMPONENTS.
