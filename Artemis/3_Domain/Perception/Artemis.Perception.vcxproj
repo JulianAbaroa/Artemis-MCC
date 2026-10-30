@@ -90,6 +90,8 @@
     <ClCompile Include="Entities\Type\Perception.Entities.Type.ixx" />
     <ClCompile Include="Perception.Layer.ixx" />
     <ClCompile Include="Events\State\EventsStore.ixx" />
+    <ClCompile Include="Events\State\EventsMemoryStore.cpp" />
+    <ClCompile Include="Events\State\EventsMemoryStore.ixx" />
     <ClCompile Include="Events\System\EventsService.cpp" />
     <ClCompile Include="Events\System\EventsService.ixx" />
     <ClCompile Include="Events\Type\Perception.Events.Type.ixx" />

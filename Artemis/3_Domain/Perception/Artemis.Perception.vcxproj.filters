@@ -256,6 +256,12 @@
     <ClCompile Include="Events\State\EventsStore.ixx">
       <Filter>Events\State</Filter>
     </ClCompile>
+    <ClCompile Include="Events\State\EventsMemoryStore.cpp">
+      <Filter>Events\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Events\State\EventsMemoryStore.ixx">
+      <Filter>Events\State</Filter>
+    </ClCompile>
     <ClCompile Include="Events\System\EventsService.cpp">
       <Filter>Events\System</Filter>
     </ClCompile>

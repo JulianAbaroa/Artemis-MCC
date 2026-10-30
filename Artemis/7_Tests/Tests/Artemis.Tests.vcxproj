@@ -121,6 +121,7 @@
     <ClCompile Include="Engine\MatchConfigTests.cpp" />
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
+    <ClCompile Include="Perception\FlagEventsTests.cpp" />
     <ClCompile Include="Perception\ObjectiveDetailsTests.cpp" />
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />

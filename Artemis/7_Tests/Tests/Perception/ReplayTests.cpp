@@ -17,6 +17,7 @@ import Blam.Layout.Snapshot.System;
 import Blam.Map.Layer;
 import Blam.MapModel.Layer;
 import Perception.Details.Type;
+import Perception.Events.Type;
 import Perception.Match.Type;
 import Tests.Support.Blam;
 import Tests.Support.Maps;
@@ -167,11 +168,23 @@ namespace
         Perception::Details::Type::ObjectiveDetails Objectives{};
     };
 
+    // What the Perception gave over the whole ctf_c recording that is not tied to one tick.
+    struct CtfRun
+    {
+        // Events Artemis generated (EngineSequence 0), in order.
+        std::vector<Perception::Events::Type::GameEvent> Generated{};
+        // Events of the engine ring with the kind of a flag that reached the log: none should.
+        std::size_t EngineFlagEvents{};
+        // Whether the Sequence of the log grew by one with each event, from 1.
+        bool IsSequenceContinuous{ true };
+    };
+
     // Replays the recording of ctf_c record by record and keeps what the Perception gave at the engine ticks asked for.
     // param ticks: Engine ticks (Match.GameTick) to keep.
     // param last: Receives the moment of the last record.
+    // param run: Receives the events of the whole recording.
     // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunCtfRecording(const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last) -> std::string
+    auto RunCtfRecording(const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last, CtfRun& run) -> std::string
     {
         const std::filesystem::path directory{ RecordingsFolder() / "ctf_c" };
         std::error_code error{};
@@ -193,6 +206,7 @@ namespace
         auto chain{ std::make_unique<Chain>() };
         LoadMap(*chain, mapPath);
 
+        std::uint32_t lastSequence{ 0 };
         for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record; isFirst = false)
         {
             if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
@@ -205,6 +219,22 @@ namespace
                 CtfMoment moment{ .RoundIndex = match->RoundIndex, .TeamScores = match->TeamScores, .Objectives = *objectives };
                 if (std::ranges::contains(ticks, match->GameTick)) moments[match->GameTick] = moment;
                 last = std::move(moment);
+            }
+
+            const auto log{ chain->m_Environment.m_EventsStore.Acquire() };
+            if (log)
+            {
+                for (const auto& event : log->Rows)
+                {
+                    if (event.Sequence <= lastSequence) continue;
+
+                    if (event.Sequence != lastSequence + 1) run.IsSequenceContinuous = false;
+                    lastSequence = event.Sequence;
+
+                    const bool isFlag{ event.Kind >= Common::Semantic::Type::Event::FlagTaken && event.Kind <= Common::Semantic::Type::Event::FlagCaptured };
+                    if (event.EngineSequence == 0) run.Generated.push_back(event);
+                    else if (isFlag) ++run.EngineFlagEvents;
+                }
             }
 
             next = SnapshotCodec::ReadRecord(sdump, reader);
@@ -314,7 +344,8 @@ TEST_F(ReplayTests, CtfObjectivesFollowTheRecordedMatch)
     const std::vector<std::uint32_t> ticks{ 1950, 1960, 4283, 5000, 7870, 15000, 17700, 21300, 28600, 30000 };
     std::map<std::uint32_t, CtfMoment> moments{};
     CtfMoment last{};
-    const std::string reason{ RunCtfRecording(ticks, moments, last) };
+    CtfRun run{};
+    const std::string reason{ RunCtfRecording(ticks, moments, last, run) };
     if (!reason.empty()) GTEST_SKIP() << reason;
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
@@ -352,6 +383,81 @@ TEST_F(ReplayTests, CtfObjectivesFollowTheRecordedMatch)
     std::int32_t total{ 0 };
     for (const auto& score : last.TeamScores) total += score.Total;
     EXPECT_EQ(total, 3);
+}
+
+// --- B4h H.3: the flag events Artemis generates in the ctf_c recording ---
+
+namespace
+{
+    using Common::Semantic::Type::Event;
+
+    // A flag event of the expected list: the tick and the kind.
+    struct ExpectedEvent
+    {
+        std::uint32_t Tick{};
+        Event Kind{};
+    };
+
+    // return: The events of Ignore/Tareas/B4h_esperado_ctf_c.txt (lines "tick Kind"), empty if the file is not there.
+    auto ReadExpectedEvents() -> std::vector<ExpectedEvent>
+    {
+        std::ifstream file{ RecordingsFolder().parent_path() / "Tareas" / "B4h_esperado_ctf_c.txt" };
+        const std::map<std::string, Event> kinds{ { "Taken", Event::FlagTaken }, { "Dropped", Event::FlagDropped }, { "Returned", Event::FlagReturned },
+            { "Reset", Event::FlagReset }, { "Captured", Event::FlagCaptured } };
+
+        std::vector<ExpectedEvent> expected{};
+        std::string line{};
+        while (std::getline(file, line))
+        {
+            std::istringstream words{ line };
+            std::uint32_t tick{};
+            std::string kind{};
+            if ((words >> tick >> kind) && kinds.contains(kind)) expected.push_back(ExpectedEvent{ tick, kinds.at(kind) });
+        }
+
+        return expected;
+    }
+}
+
+TEST_F(ReplayTests, CtfFlagEventsMatchTheExpectedList)
+{
+    const std::vector<ExpectedEvent> expected{ ReadExpectedEvents() };
+    if (expected.empty()) GTEST_SKIP() << "No Ignore/Tareas/B4h_esperado_ctf_c.txt";
+
+    std::map<std::uint32_t, CtfMoment> moments{};
+    CtfMoment last{};
+    CtfRun run{};
+    const std::string reason{ RunCtfRecording({}, moments, last, run) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    EXPECT_EQ(run.EngineFlagEvents, 0u);
+    EXPECT_TRUE(run.IsSequenceContinuous);
+
+    // Taken and Dropped must be in the exact tick. Reset, Returned and Captured within 3 ticks. Compared kind by kind, in order.
+    std::vector<std::string> differences{};
+    for (const Event kind : { Event::FlagTaken, Event::FlagDropped, Event::FlagReturned, Event::FlagReset, Event::FlagCaptured })
+    {
+        std::vector<std::uint32_t> want{};
+        for (const ExpectedEvent& event : expected) if (event.Kind == kind) want.push_back(event.Tick);
+
+        std::vector<std::uint32_t> got{};
+        for (const auto& event : run.Generated) if (event.Kind == kind) got.push_back(event.GameTick);
+
+        const std::uint32_t tolerance{ kind == Event::FlagTaken || kind == Event::FlagDropped ? 0u : 3u };
+        const std::string name{ std::to_string(static_cast<int>(kind)) };
+        if (want.size() != got.size()) differences.push_back(std::format("kind {}: expected {} events, generated {}", name, want.size(), got.size()));
+
+        for (std::size_t i{ 0 }; i < std::min(want.size(), got.size()); ++i)
+        {
+            const std::uint32_t distance{ want[i] > got[i] ? want[i] - got[i] : got[i] - want[i] };
+            if (distance > tolerance) differences.push_back(std::format("kind {} number {}: expected tick {}, generated tick {}", name, i, want[i], got[i]));
+        }
+    }
+
+    std::string text{};
+    for (std::size_t i{ 0 }; i < std::min<std::size_t>(differences.size(), 20); ++i) text += differences[i] + "\n";
+    EXPECT_TRUE(differences.empty()) << differences.size() << " differences, the first 20:\n" << text;
+    EXPECT_EQ(run.Generated.size(), expected.size());
 }
 
 TEST_F(ReplayTests, Recordings)

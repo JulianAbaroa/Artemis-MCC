@@ -45,6 +45,7 @@ export namespace Perception
         using PlayersStore = Perception::Players::State::PlayersStore;
         using AimStore = Perception::Aim::State::AimStore;
         using EventsStore = Perception::Events::State::EventsStore;
+        using EventsMemoryStore = Perception::Events::State::EventsMemoryStore;
         using MatchStore = Perception::Match::State::MatchStore;
 
         using ClassifierService = Perception::Classifier::System::ClassifierService;
@@ -76,7 +77,7 @@ export namespace Perception
             m_ObjectiveDetailsService(log, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_EntitiesStore, m_PlayersStore, m_ZoneDetailsStore, m_ObjectiveDetailsStore),
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
-            m_EventsService(tables.m_GameStore, m_EventsStore),
+            m_EventsService(tables.m_GameStore, m_ObjectiveDetailsStore, m_EventsMemoryStore, m_EventsStore),
             m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_MatchStore) {}
         ~Layer() = default;
 
@@ -98,6 +99,7 @@ export namespace Perception
         PlayersStore m_PlayersStore{};
         AimStore m_AimStore{};
         EventsStore m_EventsStore{};
+        EventsMemoryStore m_EventsMemoryStore{};
         MatchStore m_MatchStore{};
 
         // --- System ---
