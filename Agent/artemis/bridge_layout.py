@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x6E8962B0A93E4E1F
+LAYOUT_HASH = 0x6AFD34075F10C88F
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -98,10 +98,10 @@ BridgeTickHeader = np.dtype({
 
 # State of the match (Environment Match, D103).
 BridgeMatch = np.dtype({
-    'names': ['GameTick', 'Phase', 'RoundState', 'PlayerScores', 'RoundIndex', 'TeamRoundScores', 'TeamTotalScores'],
-    'formats': ['<u4', 'u1', 'u1', ('<i2', (16,)), '<i2', ('<i2', (8,)), ('<i2', (8,))],
-    'offsets': [0, 4, 5, 6, 38, 40, 56],
-    'itemsize': 72,
+    'names': ['GameTick', 'Phase', 'RoundState', 'PlayerScores', 'RoundIndex', 'TeamRoundScores', 'TeamTotalScores', 'RoundClockTicks', 'RoundTicksRemaining', 'RoundTimeLimitTicks', 'RoundLimit'],
+    'formats': ['<u4', 'u1', 'u1', ('<i2', (16,)), '<i2', ('<i2', (8,)), ('<i2', (8,)), '<u4', '<i4', '<u4', 'u1'],
+    'offsets': [0, 4, 5, 6, 38, 40, 56, 72, 76, 80, 84],
+    'itemsize': 88,
 })
 
 # One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).
@@ -148,7 +148,7 @@ BridgeStand = np.dtype({
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), '<u8'],
-    'offsets': [0, 8, 56, 1720, 108216, 108288, 108512, 108576, 110880],
+    'offsets': [0, 8, 56, 1720, 108216, 108304, 108528, 108592, 110896],
     'itemsize': 110912,
 })
 

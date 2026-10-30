@@ -42,5 +42,14 @@ export namespace Perception::Match::Type
         ::RoundState RoundState{ ::RoundState::Unknown };
         // Score of each team, indexed by team.
         std::array<MatchTeamScore, k_MaxTeams> TeamScores{};
+
+        // Ticks the round has been played (with a time limit: limit minus ticks left), 0 when not known.
+        std::uint32_t RoundClockTicks{};
+        // Ticks left in the round, -1 when the round has no time limit.
+        std::int32_t RoundTicksRemaining{ -1 };
+        // Time limit of a round in ticks, 0 for none.
+        std::uint32_t RoundTimeLimitTicks{};
+        // Limit of rounds of the game variant, as stored.
+        std::uint8_t RoundLimit{};
     };
 }

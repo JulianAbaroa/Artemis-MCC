@@ -9,6 +9,9 @@ namespace
 {
     using Blam::Runtime::Game::Type::Alive::AliveEvent;
 
+    // Ticks in a minute of a round time limit (60 s of 60 ticks).
+    constexpr std::uint32_t k_TicksPerMinute{ 3600 };
+
     using Blam::Layout::Snapshot::Type::RegionId;
 
     using Blam::Runtime::Game::Type::Alive::AliveMegaloObject;
@@ -29,6 +32,14 @@ namespace
     using Blam::Layout::Game::Type::Offset::k_GameEngineTeamScoreRound;
     using Blam::Layout::Game::Type::Offset::k_GameEngineTeamScoreTotal;
     using Blam::Layout::Game::Type::Offset::k_TeamScoreStride;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundTimer;
+    using Blam::Layout::Game::Type::Offset::k_GameGlobalsGameVariant;
+    using Blam::Layout::Game::Type::Offset::k_VariantModeFirst;
+    using Blam::Layout::Game::Type::Offset::k_VariantModeLast;
+    using Blam::Layout::Game::Type::Offset::k_VariantRoundLimit;
+    using Blam::Layout::Game::Type::Offset::k_VariantRoundTimeLimit;
+    using Blam::Layout::Game::Type::Offset::TimerTicks;
+    using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
     using Blam::Layout::Game::Type::Offset::k_MegaloObjectHandle;
     using Blam::Layout::Game::Type::Offset::k_MegaloObjectState;
     using Blam::Layout::Game::Type::Offset::k_MegaloObjectResetTimer;
@@ -103,6 +114,8 @@ namespace Blam::Runtime::Game::System
             }
         }
 
+        this->ReadRoundTime(snapshot, game);
+
         if (snapshot.IsCaptured(RegionId::EventGlobals)) this->ReadEvents(snapshot, game);
 
         // The phase values are measured on few game modes (A5): every change is logged to confirm them on the others.
@@ -114,6 +127,34 @@ namespace Blam::Runtime::Game::System
 
         game.DroppedEvents = m_GameStore.GetDroppedEvents();
         m_GameStore.Publish(std::move(game));
+    }
+
+    auto GameService::ReadRoundTime(const Snapshot& snapshot, AliveGame& game) -> void
+    {
+        // The game variant is only valid in the modes that have one.
+        if (snapshot.IsCaptured(RegionId::GameGlobals))
+        {
+            const auto mode{ snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameModeTypeOffset) };
+            if (mode >= k_VariantModeFirst && mode <= k_VariantModeLast)
+            {
+                game.RoundTimeLimitTicks = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantRoundTimeLimit) * k_TicksPerMinute;
+                game.RoundLimit = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantRoundLimit);
+            }
+        }
+
+        const bool hasLimit{ game.RoundTimeLimitTicks > 0 };
+        game.RoundTicksRemaining = hasLimit ? 0 : -1;
+        if (!snapshot.IsCaptured(RegionId::GameEngineGlobals)) return;
+
+        const std::uint32_t ticks{ TimerTicks(snapshot.Read<std::uint32_t>(RegionId::GameEngineGlobals, k_GameEngineRoundTimer)) };
+        if (!hasLimit)
+        {
+            game.RoundClockTicks = ticks;
+            return;
+        }
+
+        game.RoundTicksRemaining = static_cast<std::int32_t>(ticks);
+        game.RoundClockTicks = ticks < game.RoundTimeLimitTicks ? game.RoundTimeLimitTicks - ticks : 0;
     }
 
     auto GameService::Cleanup() -> void

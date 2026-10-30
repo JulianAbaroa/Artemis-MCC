@@ -126,6 +126,10 @@
 		<field name="RoundIndex" type="i16" doc="Round of the match, from 0." />
 		<field name="TeamRoundScores" type="i16" count="MaxTeams" doc="Score of each team in the current round, by team." />
 		<field name="TeamTotalScores" type="i16" count="MaxTeams" doc="Score of each team added up over the match, by team." />
+		<field name="RoundClockTicks" type="u32" doc="Ticks the round has been played: with a time limit the limit minus the ticks left, without one the stopwatch. Frozen when the round ends, 0 when not known." />
+		<field name="RoundTicksRemaining" type="i32" doc="Ticks left in the round, 0 once it ran out, -1 when the round has no time limit." />
+		<field name="RoundTimeLimitTicks" type="u32" doc="Time limit of a round in ticks, 0 for none." />
+		<field name="RoundLimit" type="u8" doc="Limit of rounds of the game variant, as stored." />
 	</struct>
 
 	<struct name="BridgeEvent" doc="One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).">

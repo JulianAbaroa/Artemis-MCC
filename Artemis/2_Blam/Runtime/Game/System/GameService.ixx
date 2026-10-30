@@ -38,5 +38,8 @@ export namespace Blam::Runtime::Game::System
         // Reads the entries of the ring above the cursor into the globals and moves the cursor.
         // note: At most one ring of entries. The older ones were overwritten: they are counted and logged.
         auto ReadEvents(const Snapshot& snapshot, AliveGame& game) -> void;
+
+        // Fills the round clock, the time left and the round settings of the game variant.
+        auto ReadRoundTime(const Snapshot& snapshot, AliveGame& game) -> void;
     };
 }

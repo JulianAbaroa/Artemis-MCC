@@ -80,6 +80,15 @@ export namespace Blam::Runtime::Game::Type::Alive
         std::array<std::uint8_t, k_MaxTeams> TeamMapping{};
         // Score of each team, indexed by team.
         std::array<AliveTeamScore, k_MaxTeams> TeamScores{};
+        // Ticks the round has been played. With a time limit it is the limit minus the ticks left (0 when the round ran out), without
+        // one the ticks of the stopwatch. 0 when the game engine globals were not captured.
+        std::uint32_t RoundClockTicks{};
+        // Ticks left in the round: the limit counts down to 0. -1 when the round has no time limit.
+        std::int32_t RoundTicksRemaining{ -1 };
+        // Time limit of a round in ticks, 0 for none or when the game variant is not available.
+        std::uint32_t RoundTimeLimitTicks{};
+        // Limit of rounds of the game variant as stored, 0 when the game variant is not available.
+        std::uint8_t RoundLimit{};
         // Megalo state per object. Empty when the region was not captured.
         AliveMegaloObjects MegaloObjects{};
 

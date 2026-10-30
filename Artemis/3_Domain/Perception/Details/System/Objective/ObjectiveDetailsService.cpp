@@ -5,6 +5,7 @@ import Common.Engine.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Common.ZoneShape.System;
+import Blam.Layout.Game.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Game.Type;
 import Perception.Classifier.Type;
@@ -35,15 +36,12 @@ namespace
 
     using Common::Engine::Type::k_MaxTeams;
     using Common::Engine::Type::k_NoHandle;
+    using Blam::Layout::Game::Type::Offset::IsTimerRunning;
+    using Blam::Layout::Game::Type::Offset::TimerTicksCeil;
 
     // State of the Megalo element of a flag: 0 home, 1 carried, 2 dropped.
     constexpr std::uint32_t k_MegaloHome{ 0 };
     constexpr std::uint32_t k_MegaloDropped{ 2 };
-
-    // Reset timer of the Megalo element: the high byte is 0 while paused, the low 24 bits count 1/1200 s and go down 20 per tick.
-    constexpr std::uint32_t k_TimerValueMask{ 0x00FFFFFF };
-    constexpr std::uint32_t k_TimerRunningShift{ 24 };
-    constexpr std::uint32_t k_TimerUnitsPerTick{ 20 };
 
     // Distance, horizontal and vertical, within which a flag without a usable Megalo state counts as standing on its stand (world units).
     constexpr float k_HomeRadius{ 1.0f };
@@ -195,8 +193,8 @@ namespace Perception::Details::System
 
             if (flag.State == FlagState::Dropped && element != nullptr && element->State == k_MegaloDropped)
             {
-                flag.ResetTicks = ((element->ResetTimer & k_TimerValueMask) + k_TimerUnitsPerTick - 1) / k_TimerUnitsPerTick;
-                flag.IsResetRunning = (element->ResetTimer >> k_TimerRunningShift) != 0;
+                flag.ResetTicks = TimerTicksCeil(element->ResetTimer);
+                flag.IsResetRunning = IsTimerRunning(element->ResetTimer);
             }
 
             const auto zoneIt{ zoneOfFlag.find(classified.Handle) };

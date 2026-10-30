@@ -166,6 +166,10 @@ namespace
         std::int16_t RoundIndex{};
         std::array<Perception::Match::Type::MatchTeamScore, 8> TeamScores{};
         Perception::Details::Type::ObjectiveDetails Objectives{};
+        std::uint32_t RoundClockTicks{};
+        std::int32_t RoundTicksRemaining{};
+        std::uint32_t RoundTimeLimitTicks{};
+        std::uint8_t RoundLimit{};
     };
 
     // What the Perception gave over the whole ctf_c recording that is not tied to one tick.
@@ -217,7 +221,9 @@ namespace
             const auto objectives{ chain->m_Environment.m_ObjectiveDetailsStore.Acquire() };
             if (match && objectives)
             {
-                CtfMoment moment{ .RoundIndex = match->RoundIndex, .TeamScores = match->TeamScores, .Objectives = *objectives };
+                CtfMoment moment{ .RoundIndex = match->RoundIndex, .TeamScores = match->TeamScores, .Objectives = *objectives,
+                    .RoundClockTicks = match->RoundClockTicks, .RoundTicksRemaining = match->RoundTicksRemaining,
+                    .RoundTimeLimitTicks = match->RoundTimeLimitTicks, .RoundLimit = match->RoundLimit };
                 if (std::ranges::contains(ticks, match->GameTick)) moments[match->GameTick] = moment;
                 last = std::move(moment);
             }
@@ -491,6 +497,78 @@ TEST_F(ReplayTests, CgbFlagsAreTakenAndDroppedSixTimesEachAndNothingElse)
     // They end lying on the ground: no reset, no return and no capture came.
     ASSERT_EQ(last.Objectives.Flags.size(), 2u);
     for (const auto& [handle, flag] : last.Objectives.Flags) EXPECT_EQ(flag.State, FlagState::Dropped) << handle;
+}
+
+// --- R5 Q89: the round time and the round limit of the game variant ---
+
+TEST_F(ReplayTests, CtfCRoundClockIsAStopwatchWithoutLimit)
+{
+    const std::vector<std::uint32_t> ticks{ 3001, 11502, 11563, 15001 };
+    std::map<std::uint32_t, CtfMoment> moments{};
+    CtfMoment last{};
+    CtfRun run{};
+    const std::string reason{ RunCtfRecording("ctf_c", ticks, moments, last, run) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
+
+    EXPECT_EQ(moments.at(3001).RoundClockTicks, 2280u);
+    // Frozen when the round ends and back to 0 when the map is recreated.
+    EXPECT_EQ(moments.at(11502).RoundClockTicks, 10071u);
+    EXPECT_EQ(moments.at(11563).RoundClockTicks, 0u);
+    EXPECT_EQ(moments.at(15001).RoundClockTicks, 2695u);
+
+    for (const std::uint32_t tick : ticks)
+    {
+        EXPECT_EQ(moments.at(tick).RoundLimit, 3) << tick;
+        EXPECT_EQ(moments.at(tick).RoundTimeLimitTicks, 0u) << tick;
+        EXPECT_EQ(moments.at(tick).RoundTicksRemaining, -1) << tick;
+    }
+}
+
+TEST_F(ReplayTests, CgbRoundHasOneRoundAndItsClockWaitsForTheEndOfThePreRound)
+{
+    const std::vector<std::uint32_t> ticks{ 100, 604 };
+    std::map<std::uint32_t, CtfMoment> moments{};
+    CtfMoment last{};
+    CtfRun run{};
+    const std::string reason{ RunCtfRecording("cgb_displace_1min", ticks, moments, last, run) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    for (const std::uint32_t tick : ticks)
+    {
+        ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
+        EXPECT_EQ(moments.at(tick).RoundLimit, 1) << tick;
+        EXPECT_EQ(moments.at(tick).RoundClockTicks, 0u) << tick;
+    }
+}
+
+TEST_F(ReplayTests, CtfDRoundCountsDownFromTheTimeLimit)
+{
+    const std::vector<std::uint32_t> ticks{ 1501, 7801, 8161, 9001, 12656 };
+    std::map<std::uint32_t, CtfMoment> moments{};
+    CtfMoment last{};
+    CtfRun run{};
+    const std::string reason{ RunCtfRecording("ctf_d", ticks, moments, last, run) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    for (const std::uint32_t tick : ticks)
+    {
+        ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
+        EXPECT_EQ(moments.at(tick).RoundTimeLimitTicks, 7200u) << tick;
+        EXPECT_EQ(moments.at(tick).RoundLimit, 3) << tick;
+    }
+
+    EXPECT_EQ(moments.at(1501).RoundTicksRemaining, 6300);
+    EXPECT_EQ(moments.at(1501).RoundClockTicks, 900u);
+    // Round 1 ran out of time.
+    EXPECT_EQ(moments.at(7801).RoundTicksRemaining, 0);
+    EXPECT_EQ(moments.at(7801).RoundClockTicks, 7200u);
+    // The map was recreated: the clock is loaded with the whole limit.
+    EXPECT_EQ(moments.at(8161).RoundTicksRemaining, 7200);
+    EXPECT_EQ(moments.at(9001).RoundTicksRemaining, 6961);
+    // Round 2 ended by a capture: frozen.
+    EXPECT_EQ(moments.at(12656).RoundTicksRemaining, 3606);
 }
 
 TEST_F(ReplayTests, Recordings)

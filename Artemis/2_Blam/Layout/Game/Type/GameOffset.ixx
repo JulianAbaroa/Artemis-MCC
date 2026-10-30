@@ -32,6 +32,44 @@ export namespace Blam::Layout::Game::Type::Offset
     constexpr std::uintptr_t k_GameEngineTeamScoreTotal{ 0x32F4 };
     constexpr std::uintptr_t k_TeamScoreStride{ 0x8 };
 
+    // Round clock in the game engine globals: an engine timer (uint32, see TimerTicks). It counts down from the time limit when the
+    // round has one and up from zero when it has none, and it freezes when the round ends (A14).
+    constexpr std::uintptr_t k_GameEngineRoundTimer{ 0xE4 };
+
+    // Format of an engine timer (uint32): the high byte is the rate (0 stopped, 5 backwards, 0x12 forwards, Megalo may use others) and
+    // the low 24 bits the time in 1/1200 s. At the normal rate the value moves k_TimerUnitsPerTick per tick (A14).
+    constexpr std::uint32_t k_TimerValueMask{ 0x00FFFFFF };
+    constexpr std::uint32_t k_TimerRateShift{ 24 };
+    constexpr std::uint32_t k_TimerUnitsPerTick{ 20 };
+
+    // return: The whole ticks a timer holds.
+    constexpr auto TimerTicks(std::uint32_t timer) -> std::uint32_t
+    {
+        return (timer & k_TimerValueMask) / k_TimerUnitsPerTick;
+    }
+
+    // return: The ticks a timer holds, rounded up (the ticks left before a countdown reaches zero).
+    constexpr auto TimerTicksCeil(std::uint32_t timer) -> std::uint32_t
+    {
+        return ((timer & k_TimerValueMask) + k_TimerUnitsPerTick - 1) / k_TimerUnitsPerTick;
+    }
+
+    // return: Whether the timer runs (its rate is not zero).
+    constexpr auto IsTimerRunning(std::uint32_t timer) -> bool
+    {
+        return (timer >> k_TimerRateShift) != 0;
+    }
+
+    // Game variant in the game globals (the block at k_GameModeTypeOffset): present only when the game mode is in
+    // [k_VariantModeFirst, k_VariantModeLast] (A14 5.7).
+    constexpr std::uintptr_t k_GameGlobalsGameVariant{ 0x14E8 };
+    constexpr std::uint8_t k_VariantModeFirst{ 1 };
+    constexpr std::uint8_t k_VariantModeLast{ 3 };
+
+    // Fields of the game variant: time limit of a round in minutes (0 none) and limit of rounds, both uint8 (A14 5.7).
+    constexpr std::uintptr_t k_VariantRoundTimeLimit{ 0x2BE };
+    constexpr std::uintptr_t k_VariantRoundLimit{ 0x2BF };
+
     // Fields of an element of the megalo objects region (D250). The state and the timer are raw engine values.
     // note: The timer has 5 + the allies in the zone in its high byte while it runs (0 paused) and the time in 1/1200 s in the low 24 bits (A14).
     constexpr std::uintptr_t k_MegaloObjectHandle{ 0x38 };

@@ -6,7 +6,7 @@ Group `4_Bridge` - pure static library - the order of the tick, the Tick, and it
 - `PipelineService::Run`: the one place where the order of a tick lives (Blam.Runtime, then Perception, then Views, then the
   assembly of the Tick), over a Snapshot. The AI thread and the tests call it.
 - The Tick: everything the layers built, packed into one immutable value per tick.
-- Flattening: the Tick into the `BridgeTick` of `Contract` (players, entities, flags, stands, match with round and team scores,
+- Flattening: the Tick into the `BridgeTick` of `Contract` (players, entities, flags, stands, match with round, team scores, round time and round limit,
   newest events as POD rows). Copies, never computes. The one thing it does is order the flags and the stands, which Perception
   keeps by handle, by `BaseTeam` and handle, so a flag keeps its row while the engine recreates it.
 - The `.tdump` format (the recorded stream of flattened ticks) and its writer. Version 2 writes the flags and the stands (counts in

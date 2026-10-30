@@ -4,7 +4,7 @@ Group `1_Shared` - pure static library, generated - the layout C++ and Python sh
 
 ## Responsibility
 The binary contract of the bridge with the Python client: the POD structs of the `BridgeTick` (players, entities, the match with
-its round and team scores, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the events with both
+its round, team scores, round time and round limit, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the events with both
 sequences) and the `BridgeAction`, their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own.
 
 ## Does not

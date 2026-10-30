@@ -26,7 +26,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Blam.Runtime.Object.Type`, `Blam.Runtime.Object.State` | `AliveObject`, the object table, bone matrices, damage sections. |
 | `Blam.Runtime.Player.Type`, `Blam.Runtime.Player.State` | `AlivePlayer` and the player table. |
 | `Blam.Runtime.Interaction.Type`, `Blam.Runtime.Interaction.State` | Interaction of each local player. |
-| `Blam.Runtime.Game.Type`, `Blam.Runtime.Game.State` | Game globals of the tick (clock, phase, round, team mapping and scores, megalo objects), event cursor and dropped events. |
+| `Blam.Runtime.Game.Type`, `Blam.Runtime.Game.State` | Game globals of the tick (clock, phase, round, round clock and time left, game variant round settings, team mapping and scores, megalo objects), event cursor and dropped events. |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Blam.Map`, `Blam.MapModel`.

@@ -212,6 +212,10 @@ namespace Bridge::Codec::Flat::System
             flat.Match.Phase = static_cast<std::uint8_t>(tick.Match->Phase);
             flat.Match.RoundState = static_cast<std::uint8_t>(tick.Match->RoundState);
             flat.Match.RoundIndex = tick.Match->RoundIndex;
+            flat.Match.RoundClockTicks = tick.Match->RoundClockTicks;
+            flat.Match.RoundTicksRemaining = tick.Match->RoundTicksRemaining;
+            flat.Match.RoundTimeLimitTicks = tick.Match->RoundTimeLimitTicks;
+            flat.Match.RoundLimit = tick.Match->RoundLimit;
 
             for (std::size_t team{ 0 }; team < tick.Match->TeamScores.size() && team < flat.Match.TeamRoundScores.size(); ++team)
             {

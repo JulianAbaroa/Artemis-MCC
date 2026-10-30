@@ -50,7 +50,9 @@ namespace Perception::Match::System
         const auto game{ m_GameStore.Acquire() };
         if (!game) return;
 
-        MatchStatus match{ .GameTick = game->EngineTick, .Phase = ToPhase(game->Phase), .RoundIndex = game->RoundIndex, .RoundState = ToRoundState(game->RoundState) };
+        MatchStatus match{ .GameTick = game->EngineTick, .Phase = ToPhase(game->Phase), .RoundIndex = game->RoundIndex, .RoundState = ToRoundState(game->RoundState),
+            .RoundClockTicks = game->RoundClockTicks, .RoundTicksRemaining = game->RoundTicksRemaining,
+            .RoundTimeLimitTicks = game->RoundTimeLimitTicks, .RoundLimit = game->RoundLimit };
 
         for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
         {

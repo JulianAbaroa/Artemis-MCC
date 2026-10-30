@@ -804,6 +804,107 @@ TEST_F(RuntimeTests, MissingMegaloObjectsLeaveTheListEmpty)
     EXPECT_TRUE(game->MegaloObjects.empty());
 }
 
+// --- Round time and game variant ---
+
+namespace
+{
+    // A snapshot with the game engine globals and the game globals captured: the mode, the time limit in minutes and the round limit of the variant.
+    auto WithVariant(std::uint8_t mode, std::uint8_t minutes, std::uint8_t roundLimit) -> Snapshot
+    {
+        Snapshot snapshot{ WithEvents(0, 0) };
+        std::vector<std::uint8_t>& globals{ CaptureRegion(snapshot, RegionId::GameGlobals, RegionSize(RegionId::GameGlobals)) };
+        Put(globals, Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset, mode);
+        Put(globals, GameOffset::k_GameGlobalsGameVariant + GameOffset::k_VariantRoundTimeLimit, minutes);
+        Put(globals, GameOffset::k_GameGlobalsGameVariant + GameOffset::k_VariantRoundLimit, roundLimit);
+        return snapshot;
+    }
+
+    auto PutRoundTimer(Snapshot& snapshot, std::uint32_t timer) -> void
+    {
+        Put(snapshot.Regions[static_cast<std::size_t>(RegionId::GameEngineGlobals)].Bytes, GameOffset::k_GameEngineRoundTimer, timer);
+    }
+}
+
+TEST_F(RuntimeTests, RoundWithoutLimitIsAStopwatch)
+{
+    Snapshot snapshot{ WithVariant(3, 0, 3) };
+    PutRoundTimer(snapshot, (0x12u << 24) | 201438u);
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundClockTicks, 10071u);
+    EXPECT_EQ(game->RoundTicksRemaining, -1);
+    EXPECT_EQ(game->RoundTimeLimitTicks, 0u);
+    EXPECT_EQ(game->RoundLimit, 3);
+}
+
+TEST_F(RuntimeTests, RoundWithLimitCountsDown)
+{
+    Snapshot snapshot{ WithVariant(3, 10, 1) };
+    PutRoundTimer(snapshot, (0x05u << 24) | (600u * 1200u));
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundTimeLimitTicks, 36000u);
+    EXPECT_EQ(game->RoundTicksRemaining, 36000);
+    EXPECT_EQ(game->RoundClockTicks, 0u);
+
+    PutRoundTimer(snapshot, (0x05u << 24) | (200u * 1200u));
+    const auto later{ this->UpdateGame(snapshot) };
+    ASSERT_NE(later, nullptr);
+    EXPECT_EQ(later->RoundTicksRemaining, 12000);
+    EXPECT_EQ(later->RoundClockTicks, 24000u);
+}
+
+TEST_F(RuntimeTests, RoundWithLimitThatRanOutHoldsZeroRemaining)
+{
+    Snapshot snapshot{ WithVariant(3, 2, 3) };
+    PutRoundTimer(snapshot, 0);
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundTicksRemaining, 0);
+    EXPECT_EQ(game->RoundClockTicks, 7200u);
+}
+
+TEST_F(RuntimeTests, StoppedRoundTimerWithoutLimitReadsZero)
+{
+    Snapshot snapshot{ WithVariant(3, 0, 1) };
+    PutRoundTimer(snapshot, 0);
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundClockTicks, 0u);
+    EXPECT_EQ(game->RoundTicksRemaining, -1);
+}
+
+TEST_F(RuntimeTests, GameModeOutsideTheVariantModesLeavesTheSettingsAtZero)
+{
+    for (const std::uint8_t mode : { std::uint8_t{ 0 }, std::uint8_t{ 4 } })
+    {
+        Snapshot snapshot{ WithVariant(mode, 10, 3) };
+        PutRoundTimer(snapshot, (0x05u << 24) | (600u * 1200u));
+
+        const auto game{ this->UpdateGame(snapshot) };
+        ASSERT_NE(game, nullptr);
+        EXPECT_EQ(game->RoundTimeLimitTicks, 0u);
+        EXPECT_EQ(game->RoundLimit, 0);
+        EXPECT_EQ(game->RoundTicksRemaining, -1);
+    }
+}
+
+TEST_F(RuntimeTests, MissingGameEngineGlobalsLeaveTheRoundClockAtZero)
+{
+    Snapshot snapshot{ WithVariant(3, 2, 3) };
+    snapshot.Regions[static_cast<std::size_t>(RegionId::GameEngineGlobals)].Bytes.clear();
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RoundClockTicks, 0u);
+    EXPECT_EQ(game->RoundTimeLimitTicks, 7200u);
+    EXPECT_EQ(game->RoundLimit, 3);
+}
+
 // --- Layer (D178: pure, the owner calls Cleanup) ---
 
 TEST_F(RuntimeTests, CleanupForgetsEveryTable)
