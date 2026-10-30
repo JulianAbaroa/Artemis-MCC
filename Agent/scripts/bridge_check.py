@@ -50,6 +50,10 @@ def Open(args) -> Bridge:
     return Bridge(int(regions[0]["pid"]))
 
 
+# ticks: seconds without a published tick, with the match still running, before the check stops waiting.
+TICK_SILENCE_SECONDS = 10
+
+
 def WaitRunning(bridge, seconds) -> bool:
     end = time.time() + seconds
     while time.time() < end:
@@ -102,10 +106,19 @@ def Ticks(args):
         received, gaps, bad, ticks, entities = 0, 0, [], [], []
         events, kinds, game_ticks = 0, {}, []
         start = time.time()
+        last, silent_since, stopped = None, time.time(), ""
         while received < args.count and time.time() - start < args.count + 30:
             published = bridge.wait_tick(2.0)
             if published is None:
+                # The match ended (or the game stopped publishing): report what arrived instead of waiting for the whole count.
+                if int(bridge.artemis["Phase"]) != BridgePhase.Running:
+                    stopped = "match no longer running"
+                elif time.time() - silent_since > TICK_SILENCE_SECONDS:
+                    stopped = f"no tick for {TICK_SILENCE_SECONDS} s"
+                if stopped:
+                    break
                 continue
+            last, silent_since = published, time.time()
             received += 1
             gaps += published.skipped
             ticks.append(published.action_tick)
@@ -137,13 +150,15 @@ def Ticks(args):
         after = bridge.counters()
         steps = np.diff(ticks) if len(ticks) > 1 else np.array([])
         irregular = int(np.sum(steps != period)) if len(steps) else 0
+        if stopped:
+            print(f"stopped early: {stopped}")
         print(f"received {received} in {elapsed:.1f} s, skipped {gaps}, steps != N: {irregular} (with skips), copies retried {bridge.tears}")
         print(f"entities avg {np.mean(entities) if entities else 0:.0f} max {max(entities) if entities else 0}, "
-              f"players {len(published.players) if received else 0}, flags {len(published.objectives) if received else 0}, "
-              f"stands {len(published.stands) if received else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
-        phase = MatchPhase(int(published.match["Phase"])).name if received else "-"
+              f"players {len(last.players) if received else 0}, flags {len(last.objectives) if received else 0}, "
+              f"stands {len(last.stands) if received else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
+        phase = MatchPhase(int(last.match["Phase"])).name if received else "-"
         print(f"events {events} (lost {bridge.event_gaps}) {kinds}, match ticks {game_ticks[0] if game_ticks else 0}-"
-              f"{game_ticks[-1] if game_ticks else 0}, phase {phase}, scores {[int(s) for s in published.match['PlayerScores'][:4]] if received else []}")
+              f"{game_ticks[-1] if game_ticks else 0}, phase {phase}, scores {[int(s) for s in last.match['PlayerScores'][:4]] if received else []}")
         for line in bad[:10]:
             print("  bad:", line)
         bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
