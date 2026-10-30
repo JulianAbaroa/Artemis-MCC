@@ -17,7 +17,13 @@ That file's existence is exactly the signal that GenerateTags.py finished
 generating that tag's Type/State/System, so it's a safe discovery marker ---
 no XML re-parsing needed here.
 """
-import os
+import os, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from Common import CheckBytes, ReportCheck
+
+# --check: (different, missing, root, count) while comparing instead of writing; None when writing.
+CHECK = None
 
 
 def DiscoverTags(tagsRoot: str) -> list[str]:
@@ -40,6 +46,10 @@ def DiscoverTags(tagsRoot: str) -> list[str]:
 
 
 def _WriteIfChanged(outPath: str, content: str) -> bool:
+    if CHECK is not None:
+        CheckBytes(outPath, content.replace("\n", "\r\n").encode("utf-8"), CHECK[0], CHECK[1], CHECK[2])
+        CHECK[3].append(outPath)
+        return False
     if os.path.isfile(outPath):
         with open(outPath, "r", encoding="utf-8") as f:
             if f.read() == content:
@@ -165,9 +175,22 @@ def GenerateAll(tagsRoot: str) -> list[str]:
     return prefixes
 
 
+def main() -> None:
+    global CHECK
+    import argparse
+    parser = argparse.ArgumentParser(description="Regenerates the root of Blam.Map/Tag/ from the tag folders on disk.")
+    parser.add_argument("root", help="the Tag/ folder (Artemis/2_Blam/Map/Tag)")
+    parser.add_argument("--check", action="store_true", help="compare with the root and write nothing (exit 0 equal, 1 not)")
+    args = parser.parse_args()
+    root = os.path.abspath(args.root)
+    if not os.path.isdir(root):
+        sys.exit(f"Error: '{args.root}' is not a folder.")
+    if args.check:
+        CHECK = ([], [], root, [])
+    GenerateAll(root)
+    if CHECK is not None:
+        sys.exit(ReportCheck(sorted(CHECK[0]), sorted(CHECK[1]), root, len(CHECK[3])))
+
+
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python GenerateCatalog.py <Artemis/2_Blam/Map/Tag path>")
-        sys.exit(1)
-    GenerateAll(sys.argv[1])
+    main()

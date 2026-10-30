@@ -5,6 +5,7 @@ Data/Semantic/Semantic.xml (the single source of the ids) and the hand labels of
 Data/Tags/ObjectTags.xml (the tag catalog).
 
     python Tools/TagTranspiler/GenerateSemantic.py
+    python Tools/TagTranspiler/GenerateSemantic.py --check    # compare with the repo, write nothing (exit 0 equal, 1 not)
 
 Writes the primary module in Artemis/1_Shared/Common/Semantic/ and the partitions under Type/:
     Common.Semantic.Type.ixx   primary module (Common/Semantic/), exports the partitions
@@ -19,8 +20,11 @@ Also writes Agent/artemis/semantic.py: the same ids for Python (IntEnum per enum
 EVENT_KEYS and event_kind for the event keys),
 so the fields of the bridge that hold ids (Agent/artemis/bridge_layout.py SEMANTIC_FIELDS) can be named (D135).
 """
-import os, sys
+import argparse, os, sys
 import xml.etree.ElementTree as ET
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from Common import CheckBytes, ReportCheck
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
@@ -41,11 +45,21 @@ def Finish(lines: list) -> str:
     # rules.txt: CRLF line endings, no final newline.
     return "\r\n".join(lines).rstrip("\r\n")
 
-def Write(name: str, lines: list, folder: str = OUT) -> None:
-    path = os.path.join(folder, name)
+# --check: (different, missing, count) while comparing instead of writing; None when writing.
+CHECK = None
+
+def WriteText(path: str, text: str) -> None:
+    if CHECK is not None:
+        CheckBytes(path, text.encode("utf-8"), CHECK[0], CHECK[1], REPO)
+        CHECK[2].append(path)
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
-        f.write(Finish(lines))
+        f.write(text)
     print(f"  Generated: {os.path.relpath(path, REPO)}")
+
+def Write(name: str, lines: list, folder: str = OUT) -> None:
+    WriteText(os.path.join(folder, name), Finish(lines))
 
 def CheckIds(owner: str, items: list) -> None:
     ids, names = set(), set()
@@ -263,10 +277,14 @@ def GeneratePython(enums, functions, flags, statCategory, keys) -> list:
     return L
 
 def main() -> None:
+    global CHECK
+    parser = argparse.ArgumentParser(description="Generates Common.Semantic.Type and Agent/artemis/semantic.py.")
+    parser.add_argument("--check", action="store_true", help="compare with the repo and write nothing")
+    if parser.parse_args().check:
+        CHECK = ([], [], [])
     enums, functions, flags = ReadSemantic()
     statCategory, keys = ReadEventKeys(enums)
     labels = ReadCatalog(functions)
-    os.makedirs(OUT, exist_ok=True)
     print(f"[Semantic] {len(functions)} functions, {sum(len(f['subtypes']) for f in functions)} subtypes, {len(labels)} catalog labels")
     Write("Common.Semantic.Type.ixx", [HEADER, "export module Common.Semantic.Type;", "",
                                        "export import :Enum;", "export import :Subtype;", "export import :Catalog;",
@@ -275,10 +293,9 @@ def main() -> None:
     Write("SemanticSubtype.ixx", GenerateSubtype(functions))
     Write("SemanticCatalog.ixx", GenerateCatalog(labels))
     Write("SemanticEventKey.ixx", GenerateEventKey(statCategory, keys))
-    os.makedirs(os.path.dirname(PY_OUT), exist_ok=True)
-    with open(PY_OUT, "w", encoding="utf-8", newline="") as f:
-        f.write(Finish(GeneratePython(enums, functions, flags, statCategory, keys)) + "\r\n")
-    print(f"  Generated: {os.path.relpath(PY_OUT, REPO)}")
+    WriteText(PY_OUT, Finish(GeneratePython(enums, functions, flags, statCategory, keys)) + "\r\n")
+    if CHECK is not None:
+        sys.exit(ReportCheck(sorted(CHECK[0]), sorted(CHECK[1]), REPO, len(CHECK[2])))
 
 if __name__ == "__main__":
     main()

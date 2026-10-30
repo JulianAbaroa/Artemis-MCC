@@ -124,6 +124,35 @@ def test_tag_structures_import_what_they_use():
             assert text.index("import Common.Math.Type;") < text.index("import Blam.Map.Reader.Type;"), path
 
 
+# --- GenerateBridge, GenerateSemantic, GenerateCatalog (in-memory --check) ---------------------------------------------------
+
+@pytest.mark.parametrize("script, args", [("GenerateBridge.py", []), ("GenerateSemantic.py", []), ("GenerateCatalog.py", [TAG_OUT])])
+def test_in_memory_generator_check_matches_the_repo(script, args):
+    result = Run(script, *args, "--check")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "OK:" in result.stdout
+
+
+def test_catalog_check_names_the_file_that_differs(tmp_path):
+    # A copy of the Tag/ root (markers and root modules only) with one root module changed: --check exits 1 and names it.
+    root = tmp_path / "Tag"
+    root.mkdir()
+    for name in os.listdir(TAG_OUT):
+        source = os.path.join(TAG_OUT, name)
+        if os.path.isdir(source):
+            marker = f"Blam.Map.Tag.Type.{name}.ixx"
+            if os.path.isfile(os.path.join(source, marker)):
+                (root / name).mkdir()
+                (root / name / marker).write_bytes(b"")
+        elif name.endswith(".ixx"):
+            (root / name).write_bytes(open(source, "rb").read())
+    (root / "Map.TagCatalog.ixx").write_bytes((root / "Map.TagCatalog.ixx").read_bytes() + b"x")
+    result = Run("GenerateCatalog.py", str(root), "--check")
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "DIFFERENT: Map.TagCatalog.ixx" in result.stdout
+    assert (root / "Map.TagCatalog.ixx").read_bytes().endswith(b"x")
+
+
 # --- safety -------------------------------------------------------------------------------------------------------------------
 
 def RepoStatus():
@@ -137,6 +166,9 @@ def test_check_and_out_leave_the_repo_untouched(tmp_path):
     before = RepoStatus()
     Run("GenerateDatum.py", "--check")
     Run("GenerateDatum.py", "--out", str(tmp_path / "datum"))
+    Run("GenerateBridge.py", "--check")
+    Run("GenerateSemantic.py", "--check")
+    Run("GenerateCatalog.py", TAG_OUT, "--check")
     if os.path.isdir(ASSEMBLY_TAGS):
         Run("GenerateTags.py", ASSEMBLY_TAGS, "--check")
         Run("GenerateTags.py", ASSEMBLY_TAGS, "--out", str(tmp_path / "tags"))

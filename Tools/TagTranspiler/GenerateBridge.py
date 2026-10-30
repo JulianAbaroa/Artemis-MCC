@@ -4,6 +4,7 @@ Generates both sides of the shared memory of the bridge between Artemis and Pyth
 the single source of its layout.
 
     python Tools/TagTranspiler/GenerateBridge.py
+    python Tools/TagTranspiler/GenerateBridge.py --check    # compare with the repo, write nothing (exit 0 equal, 1 not)
 
 Writes:
     Artemis/1_Shared/Contract/Contract.Bridge.Type.ixx                           Module Contract.Bridge.Type (namespace Contract::Bridge::Type). POD structs,
@@ -16,9 +17,12 @@ align=), the same rule MSVC follows on x64, so the static_asserts prove that the
 computed layout) changes with any change of a field, a type, an offset or a constant: Python refuses a region with another hash.
 Fails (nothing written) on an unknown type, enum or constant, or a repeated name.
 """
-import json
+import argparse, json
 import os, sys
 import xml.etree.ElementTree as ET
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from Common import CheckBytes, ReportCheck
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
@@ -278,21 +282,36 @@ def Python(model, structs, hash):
     return L
 
 
+# --check: (different, missing) while comparing instead of writing; None when writing.
+CHECK = None
+
+
 def Write(path, lines, crlf_final):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
     text = "\r\n".join(lines).rstrip("\r\n") + ("\r\n" if crlf_final else "")
+    if CHECK is not None:
+        CheckBytes(path, text.encode("utf-8"), CHECK[0], CHECK[1], REPO)
+        return
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(text)
     print(f"  Generated: {os.path.relpath(path, REPO)}")
 
 
 def main():
+    global CHECK
+    parser = argparse.ArgumentParser(description="Generates both sides of the bridge layout from Data/Bridge/Bridge.xml.")
+    parser.add_argument("--check", action="store_true", help="compare with the repo and write nothing")
+    args = parser.parse_args()
+    if args.check:
+        CHECK = ([], [])
     model = Read()
     structs = Layout(model)
     hash = Hash(model, structs)
     print(f"[Bridge] {len(structs)} structs, region {structs['BridgeRegion']['size']} bytes, hash 0x{hash:016X}")
     Write(CPP_OUT, Cpp(model, structs, hash, LayoutJson(model, structs, hash)), False)
     Write(PY_OUT, Python(model, structs, hash), True)
+    if CHECK is not None:
+        sys.exit(ReportCheck(sorted(CHECK[0]), sorted(CHECK[1]), REPO, 2))
 
 
 if __name__ == "__main__":

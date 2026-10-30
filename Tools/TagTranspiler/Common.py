@@ -167,6 +167,17 @@ def CompareTrees(generatedRoot: str, targetRoot: str, only=None) -> tuple[list, 
                     different.append(rel)
     return sorted(different), sorted(missing)
 
+def CheckBytes(path: str, data: bytes, different: list, missing: list, root: str) -> None:
+    """--check of a generator that builds its files in memory: compares data (the exact bytes it would write) with the file at
+    path and records its path relative to root in different or missing. Writes nothing."""
+    rel = os.path.relpath(path, root).replace(os.sep, "/")
+    if not os.path.isfile(path):
+        missing.append(rel)
+        return
+    with open(path, "rb") as f:
+        if f.read() != data:
+            different.append(rel)
+
 def ReportCheck(different: list, missing: list, targetRoot: str, total: int) -> int:
     """Prints the result of --check and returns the exit code: 0 when everything is identical, 1 otherwise."""
     if not different and not missing:
