@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin game="Halo: Reach (MCC)" runtime="true" component="weap" start="0x1C4" baseSize="0x338">
-	<flags16 name="Weapon Flags" offset="0x1C8" confidence="medium" tooltip="Bit 1 = overheated (A6, 2026-10-16, Ignore/20261016_120906.txt): set on the plasma rifle at overheat and still set with Total Heat 0.796, below the tag OverheatedThreshold (1.0), so the engine keeps the hysteresis itself. Bits 4 and 5 = ready, each with a countdown (0x1DC, 0x1DD); 0x30 on every idle weapon.">
+	<flags16 name="Weapon Flags" offset="0x1C8" confidence="medium" exposed="true" tooltip="Bit 1 = overheated (A6, 2026-10-16, Ignore/20261016_120906.txt): set on the plasma rifle at overheat and still set with Total Heat 0.796, below the tag OverheatedThreshold (1.0), so the engine keeps the hysteresis itself. Bits 4 and 5 = ready, each with a countdown (0x1DC, 0x1DD); 0x30 on every idle weapon.">
 		<bit name="Overheated" index="1" />
 		<bit name="Ready A" index="4" />
 		<bit name="Ready B" index="5" />
@@ -23,7 +23,7 @@
 	<uint8 name="Unknown 1D2" offset="0x1D2" confidence="unknown" tooltip="R1 W3 init=0x0 src=SUBPIECE, INT_ADD W:weap_update,weap_init" />
 	<uint8 name="Unknown 1D3" offset="0x1D3" confidence="unknown" tooltip="R1 W1 src=INT_ADD W:weap_update" />
 	<uint16 name="Unknown 1D4" offset="0x1D4" confidence="unknown" tooltip="R2 W1 init=0x0 W:weap_init" />
-	<uint16 name="Reload Timer" offset="0x1D6" confidence="medium" tooltip="Non-zero only during the reload animation (A6, 2026-10-16, Ignore/20261016_120906.txt): DMR 70 mid reload, 0 once it can fire again, while Magazine 0 Reload State 0x2C0 stays 1. CanFire after a reload = this is 0. R3 W1 src=INT_ADD W:weap_update" />
+	<uint16 name="Reload Timer" offset="0x1D6" confidence="medium" exposed="true" tooltip="Non-zero only during the reload animation (A6, 2026-10-16, Ignore/20261016_120906.txt): DMR 70 mid reload, 0 once it can fire again, while Magazine 0 Reload State 0x2C0 stays 1. CanFire after a reload = this is 0. R3 W1 src=INT_ADD W:weap_update" />
 	<uint16 name="Unknown 1D8" offset="0x1D8" confidence="unknown" tooltip="R3 W2 src=INT_ADD, MULTIEQUAL known=Biped.VerticalInput|Projectile.OwnerWeaponHandle W:weap_update,FUN_1804bf7f0" />
 	<uint16 name="Own Index" offset="0x1DA" confidence="low" tooltip="Index written by weap_init." />
 	<uint8 name="Ready Countdown A" offset="0x1DC" confidence="medium" tooltip="Countdown for flag bit 4 of Weapon Flags." />
@@ -36,7 +36,7 @@
 	<uint32 name="Unknown 1F0" offset="0x1F0" confidence="unknown" tooltip="R2 W0 R:FUN_1804b9038,FUN_1804b9554" />
 	<float32 name="Smoothed Toggle" offset="0x1F4" confidence="low" tooltip="Smoothed towards the target at 0x238 (0 or 1.0) with the tag's rise/fall rates and sounds. Probably a flashlight fade." />
 	<uint8 name="Is Tracking" offset="0x1F8" confidence="high" exposed="true" tooltip="1 while the weapon tracks an object (0x200), with or without lock (A6, 2026-10-16, Ignore/20261016_120906.txt). Lock = Tracking State 0x204 = 2." />
-	<uint32 name="Tracked Biped Handle" offset="0x200" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Object the weapon tracks, any object kind (a Falcon for the rocket launcher (A6, 2026-10-16, Ignore/20261016_120906.txt)). 2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit at 0x2E4). The name says biped for history." />
+	<uint32 name="Tracked Object Handle" offset="0x200" confidence="high" default="0xFFFFFFFF" exposed="true" tooltip="Object the weapon tracks, any object kind (a Falcon for the rocket launcher (A6, 2026-10-16, Ignore/20261016_120906.txt)). 2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit at 0x2E4)." />
 	<uint32 name="Tracking State" offset="0x204" confidence="medium" default="0xFFFFFFFF" exposed="true" tooltip="Lock-on progress of the tracked object (A6, 2026-10-16, Ignore/20261016_120906.txt): 1 tracking (aimed, not locked), 2 locked. 0 on weapons without a target. 3rd dword of the tracking structure." />
 	<float32 name="Unknown 214" offset="0x214" confidence="unknown" tooltip="R2 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4" />
 	<float32 name="Unknown 218" offset="0x218" confidence="unknown" tooltip="R1 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4" />
@@ -62,7 +62,7 @@
 	<uint8 name="Barrel 1 State" offset="0x274" confidence="low" default="0x7F" tooltip="Byte 0 of the barrel element (0x7F at init)." />
 	<uint32 name="Barrel 1 Link" offset="0x2A0" confidence="low" default="0xFFFFFFFF" tooltip="dword at +0x2C (-1 at init)." />
 	<uint8 name="Trigger 0 Charge State" offset="0x2A8" confidence="high" exposed="true" tooltip="Charge stage. 2 = fully charged on the plasma pistol (A6, 2026-10-16, Ignore/20261016_120906.txt), 0 idle. Old name Weapon.ChargeState (only trigger 0 was read)." />
-	<uint8 name="Trigger 0 State Ticks" offset="0x2A9" confidence="low" tooltip="Counter of the current trigger state (A6, 2026-10-16, Ignore/20261016_120906.txt): 17 on a charged plasma pistol, 32 on a plasma rifle firing, 0 after the overheat. Old name Charge Inverse (plasma launcher)." />
+	<uint8 name="Trigger 0 State Ticks" offset="0x2A9" confidence="low" exposed="true" tooltip="Counter of the current trigger state (A6, 2026-10-16, Ignore/20261016_120906.txt): 17 on a charged plasma pistol, 32 on a plasma rifle firing, 0 after the overheat. Old name Charge Inverse (plasma launcher)." />
 	<uint8 name="Trigger 0 Byte 2" offset="0x2AA" confidence="low" tooltip="Unidentified." />
 	<uint8 name="Trigger 0 Projectile Count" offset="0x2AB" confidence="medium" tooltip="Not always set." />
 	<float32 name="Trigger 0 Charge Progress" offset="0x2AC" confidence="low" tooltip="Float; user found it useless." />
@@ -78,8 +78,8 @@
 	<uint16 name="Magazine 0 Current Ammo" offset="0x2CA" confidence="high" exposed="true" tooltip="Ammo loaded. Old name Weapon.CurrentAmmo." />
 	<uint16 name="Magazine 0 Link" offset="0x2D8" confidence="low" default="0xFFFF" tooltip="0xFFFF at init." />
 	<uint16 name="Magazine 1 Reload State" offset="0x2DA" confidence="high" tooltip="Old name Weapon.IsReloading (read as u8)." />
-	<uint16 name="Magazine 1 Total Ammo" offset="0x2E0" confidence="high" tooltip="Reserve ammo. Old name Weapon.TotalAmmo." />
-	<uint16 name="Magazine 1 Current Ammo" offset="0x2E4" confidence="high" tooltip="Ammo loaded. Old name Weapon.CurrentAmmo." />
+	<uint16 name="Magazine 1 Total Ammo" offset="0x2E0" confidence="high" exposed="true" tooltip="Reserve ammo. Old name Weapon.TotalAmmo." />
+	<uint16 name="Magazine 1 Current Ammo" offset="0x2E4" confidence="high" exposed="true" tooltip="Ammo loaded. Old name Weapon.CurrentAmmo." />
 	<uint16 name="Magazine 1 Link" offset="0x2F2" confidence="low" default="0xFFFF" tooltip="0xFFFF at init." />
 	<uint32 name="Unknown 2F4" offset="0x2F4" confidence="unknown" tooltip="R1 W1 src=MULTIEQUAL W:FUN_1804b9038" />
 	<uint32 name="Unknown 2F8" offset="0x2F8" confidence="unknown" tooltip="R1 W1 src=[tmp23e00+0xc] SHARED W:FUN_1804c0554" />

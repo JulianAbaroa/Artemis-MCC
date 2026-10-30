@@ -6,6 +6,9 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
+
+    // Magazines the datum of a weapon holds.
+    constexpr std::size_t k_MagazineCount{ 2 };
 }
 
 export namespace Blam::Runtime::Object::Type::Weapon
@@ -29,20 +32,33 @@ export namespace Blam::Runtime::Object::Type::Weapon
         Released = 3,
     };
 
+    // Ammo of one magazine of the weapon.
+    // note: Both read 0 on a magazine the weapon does not have, and on energy weapons.
+    struct WeaponMagazine
+    {
+        // Rounds in the weapon, ready to fire.
+        std::uint16_t Loaded{};
+
+        // Rounds carried outside the weapon.
+        std::uint16_t Reserve{};
+    };
+
     struct Weapon
     {
         // Heat from 0 (cold) to 1.
-        // note: The plasma pistol overheats between 0.8 and 0.93 and is usable again near 0.2. Other weapons were not measured.
+        // note: Not the overheat state, see IsOverheated. The plasma rifle stays overheated with the heat below the tag threshold.
         float TotalHeat{};
+
+        // The engine keeps the overheat state itself (bit 1 of the weapon flags), with hysteresis.
+        std::uint8_t IsOverheated{};
 
         // Energy left from 0 (empty) to 1 (full).
         // note: The engine stores the used fraction clamped to 0 and 1, so it is inverted when read.
         float TotalEnergy{};
 
-        // Ammo carried and ammo loaded in the magazine.
-        // note: Both read 0 on energy weapons.
-        std::uint16_t TotalAmmo{};
-        std::uint16_t CurrentAmmo{};
+        // Magazine 0 and magazine 1 (the second fire mode of the weapons that have one).
+        // note: An array because the engine lays the two out the same way and the tag says how many the weapon has.
+        std::array<WeaponMagazine, k_MagazineCount> Magazines{};
 
         // Fire key held. It is an input, so the weapon can fire without it ever being set.
         // note: A short tap fires but reads 0, like the other input flags.
@@ -54,16 +70,25 @@ export namespace Blam::Runtime::Object::Type::Weapon
         // note: It returns to None when the animation ends, even if the key is still held.
         WeaponAction Action{};
 
-        // Reload in progress on magazine weapons.
-        // note: It stays 1 after the weapon can fire again, until the reload fully ends.
-        std::uint8_t IsReloading{};
+        // Reload countdown, non-zero while the reload animation plays and 0 once the weapon can fire again.
+        // note: Not the magazine reload state of the datum, which stays 1 after the reload.
+        std::uint16_t ReloadTimer{};
 
+        // Charge stage of trigger 0.
         ChargeState ChargeState{};
 
-        // Lock-on state of tracking weapons.
-        // note: Not observed yet.
+        // Counter of the current state of trigger 0.
+        // note: Measured on the plasma pistol (17 charged) and plasma rifle (32 firing). Whether it counts ticks in Charging is open.
+        std::uint8_t Trigger0StateTicks{};
+
+        // The weapon tracks an object, with or without lock.
         std::uint8_t IsTracking{};
-        std::uint32_t TrackedBipedHandle{};
+
+        // Object the weapon tracks, of any kind (a Falcon for the rocket launcher). k_NoHandle without target.
+        std::uint32_t TrackedObject{ k_NoHandle };
+
+        // Lock-on progress: 0 no target, 1 aimed, 2 locked.
+        std::uint32_t TrackingState{};
 
         // Unit that holds the item, set on the tick it is taken and 0xFFFFFFFF when dropped. Only the flag is read for it today.
         // note: ParentHandle follows about 9 ticks later, so it cannot tell who took it.

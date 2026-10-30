@@ -41,6 +41,8 @@ namespace
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Biped::Biped;
     using Blam::Runtime::Object::Type::Weapon::Weapon;
+    using Blam::Runtime::Object::Type::Weapon::ChargeState;
+    using Blam::Runtime::Object::Type::Projectile::Projectile;
     using Blam::Runtime::Object::Type::Vehicle::Vehicle;
     using Blam::Runtime::Object::Type::Crate::Crate;
     using Blam::Runtime::Object::Type::Scenery::Scenery;
@@ -68,6 +70,7 @@ namespace
     namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
     namespace UnitOffset = Blam::Layout::Object::Type::Unit::Offset;
     namespace WeapOffset = Blam::Layout::Object::Type::Weap::Offset;
+    namespace ProjOffset = Blam::Layout::Object::Type::Proj::Offset;
     namespace PlayerOffset = Blam::Layout::Player::Type::Offset;
     namespace PlayerMapping = Blam::Layout::Player::Type::Mapping;
     namespace InteractionOffset = Blam::Layout::Interaction::Type::Offset;
@@ -408,8 +411,14 @@ TEST_F(RuntimeTests, WeaponFieldsComeFromTheDatum)
     Put(raw.Bytes, WeapOffset::k_TotalEnergy, 0.25f);
     Put(raw.Bytes, WeapOffset::k_Magazine0TotalAmmo, std::uint16_t{ 96 });
     Put(raw.Bytes, WeapOffset::k_Magazine0CurrentAmmo, std::uint16_t{ 32 });
+    Put(raw.Bytes, WeapOffset::k_Magazine1TotalAmmo, std::uint16_t{ 7 });
+    Put(raw.Bytes, WeapOffset::k_Magazine1CurrentAmmo, std::uint16_t{ 3 });
+    Put(raw.Bytes, WeapOffset::k_ReloadTimer, std::uint16_t{ 70 });
+    Put(raw.Bytes, WeapOffset::k_Trigger0ChargeState, std::uint8_t{ 1 });
+    Put(raw.Bytes, WeapOffset::k_Trigger0StateTicks, std::uint8_t{ 17 });
     Put(raw.Bytes, WeapOffset::k_IsTracking, std::uint8_t{ 1 });
-    Put(raw.Bytes, WeapOffset::k_TrackedBipedHandle, k_BipedHandle);
+    Put(raw.Bytes, WeapOffset::k_TrackedObjectHandle, k_BipedHandle);
+    Put(raw.Bytes, WeapOffset::k_TrackingState, std::uint32_t{ 2 });
 
     const auto table{ this->UpdateObjects(WithObjects({ raw })) };
     ASSERT_NE(table, nullptr);
@@ -419,10 +428,98 @@ TEST_F(RuntimeTests, WeaponFieldsComeFromTheDatum)
     EXPECT_FLOAT_EQ(weapon->TotalHeat, 0.5f);
     // The engine stores the energy used: the table holds what is left.
     EXPECT_FLOAT_EQ(weapon->TotalEnergy, 0.75f);
-    EXPECT_EQ(weapon->TotalAmmo, 96);
-    EXPECT_EQ(weapon->CurrentAmmo, 32);
+    EXPECT_EQ(weapon->Magazines[0].Reserve, 96);
+    EXPECT_EQ(weapon->Magazines[0].Loaded, 32);
+    EXPECT_EQ(weapon->Magazines[1].Reserve, 7);
+    EXPECT_EQ(weapon->Magazines[1].Loaded, 3);
+    EXPECT_EQ(weapon->ReloadTimer, 70);
+    EXPECT_EQ(weapon->ChargeState, ChargeState::Charging);
+    EXPECT_EQ(weapon->Trigger0StateTicks, 17);
     EXPECT_EQ(weapon->IsTracking, 1);
-    EXPECT_EQ(weapon->TrackedBipedHandle, k_BipedHandle);
+    EXPECT_EQ(weapon->TrackedObject, k_BipedHandle);
+    EXPECT_EQ(weapon->TrackingState, 2u);
+}
+
+TEST_F(RuntimeTests, WeaponWithoutTargetHasNoTrackedObjectAndStateZero)
+{
+    RawObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    Put(raw.Bytes, WeapOffset::k_TrackedObjectHandle, k_NoHandle);
+
+    const auto table{ this->UpdateObjects(WithObjects({ raw })) };
+    ASSERT_NE(table, nullptr);
+    const Weapon* weapon{ std::get_if<Weapon>(&table->at(k_WeaponHandle).Specific) };
+    ASSERT_NE(weapon, nullptr);
+
+    EXPECT_EQ(weapon->IsTracking, 0);
+    EXPECT_EQ(weapon->TrackedObject, k_NoHandle);
+    EXPECT_EQ(weapon->TrackingState, 0u);
+}
+
+TEST_F(RuntimeTests, OverheatedIsBitOneOfTheWeaponFlagsWhateverTheOtherBits)
+{
+    struct Case
+    {
+        std::uint16_t Flags;
+        std::uint8_t Expected;
+    };
+    // Bit 1 alone, with the ready bits (4 and 5, 0x30 on every idle weapon), the ready bits alone, bit 0 and bit 2 (neighbours) and none.
+    const std::array<Case, 6> cases{ {
+        { 0x0002, 1 }, { 0x0032, 1 }, { 0x0030, 0 }, { 0x0001, 0 }, { 0x0004, 0 }, { 0x0000, 0 },
+    } };
+
+    for (const Case& c : cases)
+    {
+        RawObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+        Put(raw.Bytes, WeapOffset::k_WeaponFlags, c.Flags);
+        // The engine keeps the state with the heat below the threshold: the heat does not decide it.
+        Put(raw.Bytes, WeapOffset::k_TotalHeat, 0.1f);
+
+        const auto table{ this->UpdateObjects(WithObjects({ raw })) };
+        ASSERT_NE(table, nullptr);
+        const Weapon* weapon{ std::get_if<Weapon>(&table->at(k_WeaponHandle).Specific) };
+        ASSERT_NE(weapon, nullptr);
+        EXPECT_EQ(weapon->IsOverheated, c.Expected) << "flags " << c.Flags;
+    }
+}
+
+TEST_F(RuntimeTests, ProjectileOwnersShooterRootAndParentNodeComeFromTheDatum)
+{
+    const std::uint32_t projectileHandle{ MakeHandle(0xEC03, 5) };
+    const std::uint32_t playerHandle{ MakeHandle(0xEC04, 0) };
+    const std::uint32_t vehicleHandle{ MakeHandle(0xEC05, 6) };
+
+    // Fired from a vehicle seat and stuck to node 7 of its victim: the shooter root is the vehicle, not the biped.
+    RawObject raw{ MakeObject(projectileHandle, ObjectKind::Projectile, k_RifleTag) };
+    Put(raw.Bytes, ObjeOffset::k_OwnerPlayerHandle, playerHandle);
+    Put(raw.Bytes, ObjeOffset::k_OwnerBipedHandle, k_BipedHandle);
+    Put(raw.Bytes, ProjOffset::k_ShooterRootHandle, vehicleHandle);
+    Put(raw.Bytes, ObjeOffset::k_ParentHandle, k_WeaponHandle);
+    Put(raw.Bytes, ObjeOffset::k_ParentNodeIndex, std::int8_t{ 7 });
+
+    // In flight: no parent, node -1.
+    RawObject flying{ MakeObject(MakeHandle(0xEC03, 6), ObjectKind::Projectile, k_RifleTag) };
+    Put(flying.Bytes, ObjeOffset::k_OwnerPlayerHandle, k_NoHandle);
+    Put(flying.Bytes, ObjeOffset::k_OwnerBipedHandle, k_NoHandle);
+    Put(flying.Bytes, ProjOffset::k_ShooterRootHandle, k_NoHandle);
+    Put(flying.Bytes, ObjeOffset::k_ParentNodeIndex, std::int8_t{ -1 });
+
+    const auto table{ this->UpdateObjects(WithObjects({ raw, flying })) };
+    ASSERT_NE(table, nullptr);
+
+    const Projectile* stuck{ std::get_if<Projectile>(&table->at(projectileHandle).Specific) };
+    ASSERT_NE(stuck, nullptr);
+    EXPECT_EQ(stuck->OwnerPlayer, playerHandle);
+    EXPECT_EQ(stuck->OwnerBiped, k_BipedHandle);
+    EXPECT_EQ(stuck->ShooterRoot, vehicleHandle);
+    EXPECT_NE(stuck->ShooterRoot, stuck->OwnerBiped);
+    EXPECT_EQ(stuck->ParentNode, 7);
+
+    const Projectile* inFlight{ std::get_if<Projectile>(&table->at(MakeHandle(0xEC03, 6)).Specific) };
+    ASSERT_NE(inFlight, nullptr);
+    EXPECT_EQ(inFlight->OwnerPlayer, k_NoHandle);
+    EXPECT_EQ(inFlight->OwnerBiped, k_NoHandle);
+    EXPECT_EQ(inFlight->ShooterRoot, k_NoHandle);
+    EXPECT_EQ(inFlight->ParentNode, -1);
 }
 
 TEST_F(RuntimeTests, BoneMatricesAreCopiedForThisTickOnly)

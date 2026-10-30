@@ -26,4 +26,7 @@ export namespace Blam::Runtime::Object::Type::Constant
     constexpr std::uint8_t k_TriggerHeldBit{ 0x02 };
     constexpr std::uint8_t k_ZoomedBit{ 0x80 };
     constexpr std::uint8_t k_ActionMask{ 0x60 };
+
+    // Overheated bit of the weapon flags (a 16 bit field, unlike the action byte).
+    constexpr std::uint16_t k_OverheatedBit{ 0x0002 };
 }

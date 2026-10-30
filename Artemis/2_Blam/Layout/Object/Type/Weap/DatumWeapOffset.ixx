@@ -34,7 +34,7 @@ export namespace Blam::Layout::Object::Type::Weap::Offset
     constexpr std::size_t k_Unknown1f0                                  = 0x1F0;  // uint32.
     constexpr std::size_t k_SmoothedToggle                              = 0x1F4;  // float32.
     constexpr std::size_t k_IsTracking                                  = 0x1F8;  // uint8.
-    constexpr std::size_t k_TrackedBipedHandle                          = 0x200;  // uint32.
+    constexpr std::size_t k_TrackedObjectHandle                         = 0x200;  // uint32.
     constexpr std::size_t k_TrackingState                               = 0x204;  // uint32.
     constexpr std::size_t k_Unknown214                                  = 0x214;  // float32.
     constexpr std::size_t k_Unknown218                                  = 0x218;  // float32.

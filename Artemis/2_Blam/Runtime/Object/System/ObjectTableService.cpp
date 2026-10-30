@@ -59,6 +59,7 @@ namespace
     using Blam::Runtime::Object::Type::Constant::k_TriggerHeldBit;
     using Blam::Runtime::Object::Type::Constant::k_ZoomedBit;
     using Blam::Runtime::Object::Type::Constant::k_ActionMask;
+    using Blam::Runtime::Object::Type::Constant::k_OverheatedBit;
     using Common::Engine::Type::k_NoHandle;
 
     // note: The origin of a parented object is local to its parent, so it is carried
@@ -106,8 +107,6 @@ namespace
 
     // Fields that are not confirmed in the datum layouts yet. They keep the name they had before the migration.
     constexpr std::size_t k_ProjectileFlags{ ProjOffset::k_Unknown1a8 };
-    constexpr std::size_t k_ProjectileOwnerBipedHandle{ ProjOffset::k_ShooterRootHandle };
-    constexpr std::size_t k_ProjectileOwnerWeaponHandle{ ProjOffset::k_Unknown1d8 };
     constexpr std::size_t k_VehicleBoostThrottle{ UnitOffset::k_Unknown53c };
     constexpr std::size_t k_VehicleBoostCooldown{ UnitOffset::k_Unknown544 };
 
@@ -497,19 +496,24 @@ namespace Blam::Runtime::Object::System
 
         weapon.TotalHeat = datum.Read<float>(WeapOffset::k_TotalHeat);
         weapon.TotalEnergy = 1.0f - datum.Read<float>(WeapOffset::k_TotalEnergy);
-        weapon.TotalAmmo = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0TotalAmmo);
-        weapon.CurrentAmmo = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0CurrentAmmo);
+        weapon.IsOverheated = (datum.Read<std::uint16_t>(WeapOffset::k_WeaponFlags) & k_OverheatedBit) != 0;
+        weapon.Magazines[0].Reserve = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0TotalAmmo);
+        weapon.Magazines[0].Loaded = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0CurrentAmmo);
+        weapon.Magazines[1].Reserve = datum.Read<std::uint16_t>(WeapOffset::k_Magazine1TotalAmmo);
+        weapon.Magazines[1].Loaded = datum.Read<std::uint16_t>(WeapOffset::k_Magazine1CurrentAmmo);
 
         const std::uint8_t actionByte = static_cast<std::uint8_t>(datum.Read<std::uint16_t>(WeapOffset::k_InputMask));
         weapon.IsTriggerHeld = (actionByte & k_TriggerHeldBit) != 0;
         weapon.IsZoomed = (actionByte & k_ZoomedBit) != 0;
         weapon.Action = static_cast<WeaponAction>(actionByte & k_ActionMask);
 
-        weapon.IsReloading = static_cast<std::uint8_t>(datum.Read<std::uint16_t>(WeapOffset::k_Magazine0ReloadState));
+        weapon.ReloadTimer = datum.Read<std::uint16_t>(WeapOffset::k_ReloadTimer);
         weapon.ChargeState = datum.Read<ChargeState>(WeapOffset::k_Trigger0ChargeState);
+        weapon.Trigger0StateTicks = datum.Read<std::uint8_t>(WeapOffset::k_Trigger0StateTicks);
 
         weapon.IsTracking = datum.Read<std::uint8_t>(WeapOffset::k_IsTracking);
-        weapon.TrackedBipedHandle = datum.Read<std::uint32_t>(WeapOffset::k_TrackedBipedHandle);
+        weapon.TrackedObject = datum.Read<std::uint32_t>(WeapOffset::k_TrackedObjectHandle);
+        weapon.TrackingState = datum.Read<std::uint32_t>(WeapOffset::k_TrackingState);
         weapon.HolderUnit = datum.Read<std::uint32_t>(ItemOffset::k_HolderUnit);
 
         object.Specific = weapon;
@@ -530,8 +534,10 @@ namespace Blam::Runtime::Object::System
         Projectile projectile{};
 
         projectile.Flags = datum.Read<ProjectileFlags>(k_ProjectileFlags);
-        projectile.OwnerBipedHandle = datum.Read<std::uint32_t>(k_ProjectileOwnerBipedHandle);
-        projectile.OwnerWeaponHandle = datum.Read<std::uint32_t>(k_ProjectileOwnerWeaponHandle);
+        projectile.OwnerPlayer = datum.Read<std::uint32_t>(ObjeOffset::k_OwnerPlayerHandle);
+        projectile.OwnerBiped = datum.Read<std::uint32_t>(ObjeOffset::k_OwnerBipedHandle);
+        projectile.ShooterRoot = datum.Read<std::uint32_t>(ProjOffset::k_ShooterRootHandle);
+        projectile.ParentNode = datum.Read<std::int8_t>(ObjeOffset::k_ParentNodeIndex);
 
         object.Specific = projectile;
     }

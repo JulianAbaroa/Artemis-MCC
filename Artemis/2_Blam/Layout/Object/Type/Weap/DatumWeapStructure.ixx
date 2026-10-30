@@ -40,7 +40,7 @@ export namespace Blam::Layout::Object::Type::Weap::Structure
         float        SmoothedToggle;  // 0x30  float32. | Smoothed towards the target at 0x238 (0 or 1.0) with the tag's rise/fall rates and sounds. Probably a flashlight fade.
         std::uint8_t IsTracking;  // 0x34  uint8. | 1 while the weapon tracks an object (0x200), with or without lock (A6, 2026-10-16, Ignore/20261016_120906.txt). Lock = Tracking State 0x204 = 2.
         std::uint8_t  _gap_0x35[0x7];
-        std::uint32_t TrackedBipedHandle;  // 0x3C  uint32. | Object the weapon tracks, any object kind (a Falcon for the rocket launcher (A6, 2026-10-16, Ignore/20261016_120906.txt)). 2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit at 0x2E4). The name says biped for history.
+        std::uint32_t TrackedObjectHandle;  // 0x3C  uint32. | Object the weapon tracks, any object kind (a Falcon for the rocket launcher (A6, 2026-10-16, Ignore/20261016_120906.txt)). 2nd dword of the 0x1C-byte tracking structure at 0x1FC (same layout as the unit at 0x2E4).
         std::uint32_t TrackingState;  // 0x40  uint32. | Lock-on progress of the tracked object (A6, 2026-10-16, Ignore/20261016_120906.txt): 1 tracking (aimed, not locked), 2 locked. 0 on weapons without a target. 3rd dword of the tracking structure.
         std::uint8_t  _gap_0x44[0xC];
         float        Unknown214;  // 0x50  float32. | R2 W3 init=0xffffffffx2 src=FLOAT_ADD SHARED W:FUN_18020ec44,FUN_18020eca4,FUN_1800a8dc4
