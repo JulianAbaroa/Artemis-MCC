@@ -4,6 +4,11 @@ Environment of stage 0 of the curriculum (D115, D146, Diseno/14): every agent al
 its own flag stand. Parallel multi-agent API in the style of PettingZoo without the package: dicts keyed by agent (the full player
 handle, D40). One step = one decision of the bridge (N ticks, Lockstep). The observation is computed here from the omniscient tick
 (Full mode); it moves to the View of each agent with B5.
+
+The flags and the stands come from the tick as Artemis computes them (B4h): each flag row has its BaseTeam, the OwnerTeam that plays
+its side in this round, its State (Home, Carried, Dropped) and its carrier; each stand row has its BaseTeam and OwnerTeam. The side
+of an agent is the BaseTeam of the stand its team owns in this round, so the swap of sides between rounds needs no deduction here.
+The rewards read the FlagTaken and FlagCaptured events Artemis generates, whose cause is the carrier.
 """
 import math
 from dataclasses import dataclass
@@ -12,13 +17,10 @@ import numpy as np
 
 from ..bridge import Action, Bridge, BridgeMode, BridgeOwner
 from ..bridge_layout import NO_HANDLE, NOT_LOCAL
-from ..semantic import Event, Function
+from ..semantic import Event, FlagState
 
 TWO_PI = 2 * math.pi
 METERS = 50.0
-FLAG_SUBTYPE = 1
-STAND_SUBTYPE = 1
-AT_STAND = 1.5
 PITCH_LIMIT = 1.4
 CROUCH_BIT = 1 << 0
 JUMP_BIT = 1 << 1
@@ -70,7 +72,7 @@ class AgentState:
         self.last_action = np.zeros(len(ACTION_NVEC), dtype=np.int64)
         self.phi = None
         self.is_taken_rewarded = False
-        # Team value of the base the agent plays from this round (see CtfEnv._side).
+        # BaseTeam of the base the agent plays from, as of the last observation (see CtfEnv._side_of).
         self.side = None
 
 
@@ -116,12 +118,9 @@ class CtfEnv:
                 raise RuntimeError("Artemis closed the bridge")
         self.published = published
         self.events = list(self.bridge.new_events(published))
-        # The few rows the observation needs, found once per decision tick with numpy (a Python loop over 1024 rows costs ms).
-        entities = published.entities
-        is_flag = (entities["Function"] == Function.ObjectiveItem) & (entities["Subtype"] == FLAG_SUBTYPE)
-        is_stand = (entities["Function"] == Function.ObjectiveSpawn) & (entities["Subtype"] == STAND_SUBTYPE)
-        self.flags = entities[is_flag]
-        self.stands = entities[is_stand]
+        # Flags and stands of the round, as Artemis computes them (rows of the tick, no search over the entities).
+        self.flags = published.objectives
+        self.stands = published.stands
         return published
 
     def _entity(self, handle):
@@ -161,7 +160,7 @@ class CtfEnv:
         self.agents = [int(p["Handle"]) for p in players]
         self.states = {handle: AgentState(handle) for handle in self.agents}
         for player in players:
-            self.states[int(player["Handle"])].side = self._side(player)
+            self.states[int(player["Handle"])].side = self._side_of(int(player["Team"]))
         mask = 0
         for handle in self.agents:
             mask |= 1 << (handle & 0xFFFF)
@@ -241,18 +240,14 @@ class CtfEnv:
         truncated = {handle: is_timeout for handle in self.agents}
         return observations, rewards, terminated, truncated, infos
 
-    def _side(self, player):
-        """Team value of the flag stand nearest to the agent when the round starts: the base it plays from.
-        note: The Team of flags and stands is the one of their base (placed by the map variant), not of a player team, and the
-        rounds of Reach CTF switch sides: the blue bot plays from the stand of Team 1 in one round and of Team 0 in the next
-        (measured 2026-10-22 on Desert Bus Short). A flag belongs to the agent when its Team is its side."""
-        body = self._entity(int(player["BipedHandle"]))
-        stands = list(self.stands)
-        if body is None or not stands:
-            return int(player["Team"])
-        position = Vec(body["WorldOrigin"])
-        nearest = min(stands, key=lambda e: float(np.linalg.norm(Vec(e["WorldOrigin"]) - position)))
-        return int(nearest["Team"])
+    def _side_of(self, team):
+        """BaseTeam of the stand that the team owns in this round: the base its agents play from, or None if the team owns no stand.
+        note: The flags and the stands keep the BaseTeam of their placement in the map variant, and the rounds of Reach CTF switch the
+        sides: the blue bot plays from the stand of BaseTeam 1 in one round and of BaseTeam 0 in the next. Artemis gives the OwnerTeam
+        of every stand for the round (the team mapping of the match), so the side is read, not deduced. A flag belongs to the agent
+        when its BaseTeam is the side."""
+        owned = self.stands[self.stands["OwnerTeam"] == team]
+        return int(owned["BaseTeam"][0]) if len(owned) else None
 
     # --- Observation ------------------------------------------------------------------------------------------------------------
 
@@ -273,7 +268,8 @@ class CtfEnv:
         body = self._entity(int(player["BipedHandle"]))
         if body is None:
             return obs, None
-        team = state.side
+        side = self._side_of(int(player["Team"]))
+        state.side = side
         position = Vec(body["WorldOrigin"])
         yaw, pitch = AimAngles(player)
         cos, sin = math.cos(-yaw), math.sin(-yaw)
@@ -281,17 +277,20 @@ class CtfEnv:
         def Local(v):
             return np.array([cos * v[0] - sin * v[1], sin * v[0] + cos * v[1], v[2]], dtype=np.float32)
 
-        enemy_flag = own_flag = own_stand = enemy_stand = None
-        for e in self.flags:
-            if int(e["Team"]) == team:
-                own_flag = e
-            else:
-                enemy_flag = e
-        for e in self.stands:
-            if int(e["Team"]) == team:
-                own_stand = e
-            else:
-                enemy_stand = e
+        def PositionOf(handle):
+            entity = self._entity(int(handle))
+            return Vec(entity["WorldOrigin"]) if entity is not None else None
+
+        enemy_flag = own_flag = own_stand = None
+        if side is not None:
+            for flag in self.flags:
+                if int(flag["BaseTeam"]) == side:
+                    own_flag = flag
+                else:
+                    enemy_flag = flag
+            for stand in self.stands:
+                if int(stand["BaseTeam"]) == side:
+                    own_stand = stand
 
         is_carrying = int(player["Objective"]) != NO_HANDLE
         obs[0:3] = Local(Vec(body["LinearVelocity"])) / 10.0
@@ -300,15 +299,15 @@ class CtfEnv:
         obs[5] = float(player["Shield"])
         obs[6] = float(is_carrying)
         phi = None
-        stand_position = Vec(own_stand["WorldOrigin"]) if own_stand is not None else None
-        if enemy_flag is not None:
-            flag_position = Vec(enemy_flag["WorldOrigin"])
+        stand_position = PositionOf(own_stand["Handle"]) if own_stand is not None else None
+        flag_position = PositionOf(enemy_flag["Handle"]) if enemy_flag is not None else None
+        if flag_position is not None:
             to_flag = flag_position - position
             obs[7:10] = Local(to_flag) / METERS
             obs[10] = np.linalg.norm(to_flag) / METERS
-            at_stand = enemy_stand is not None and np.linalg.norm(flag_position - Vec(enemy_stand["WorldOrigin"])) < AT_STAND
-            obs[11] = float(at_stand)
-            obs[12] = float(not at_stand and not is_carrying and int(enemy_flag["ParentHandle"]) == NO_HANDLE)
+            flag_state = int(enemy_flag["State"])
+            obs[11] = float(flag_state == FlagState.Home)
+            obs[12] = float(flag_state == FlagState.Dropped)
             obs[13] = float(is_carrying)
             if stand_position is not None:
                 if is_carrying:
@@ -319,6 +318,6 @@ class CtfEnv:
             to_stand = stand_position - position
             obs[14:17] = Local(to_stand) / METERS
             obs[17] = np.linalg.norm(to_stand) / METERS
-        if own_flag is not None and own_stand is not None:
-            obs[18] = float(np.linalg.norm(Vec(own_flag["WorldOrigin"]) - stand_position) < AT_STAND)
+        if own_flag is not None:
+            obs[18] = float(int(own_flag["State"]) == FlagState.Home)
         return obs, (float(phi) if phi is not None else None)
