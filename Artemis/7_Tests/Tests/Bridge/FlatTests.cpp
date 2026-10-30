@@ -133,6 +133,7 @@ TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)
     match.RoundTicksRemaining = -1;
     match.RoundTimeLimitTicks = 36000;
     match.RoundLimit = 3;
+    match.ScoreToWin = 5;
 
     Tick tick{};
     tick.Match = std::make_shared<const MatchStatus>(std::move(match));
@@ -152,6 +153,7 @@ TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)
     EXPECT_EQ(flat->Match.RoundTicksRemaining, -1);
     EXPECT_EQ(flat->Match.RoundTimeLimitTicks, 36000u);
     EXPECT_EQ(flat->Match.RoundLimit, 3);
+    EXPECT_EQ(flat->Match.ScoreToWin, 5);
 }
 
 TEST(FlatTests, EventsCarryTheSequenceOfArtemisAndTheOneOfTheEngine)

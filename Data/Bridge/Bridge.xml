@@ -130,6 +130,7 @@
 		<field name="RoundTicksRemaining" type="i32" doc="Ticks left in the round, 0 once it ran out, -1 when the round has no time limit." />
 		<field name="RoundTimeLimitTicks" type="u32" doc="Time limit of a round in ticks, 0 for none." />
 		<field name="RoundLimit" type="u8" doc="Limit of rounds of the game variant, as stored." />
+		<field name="ScoreToWin" type="i32" doc="Score a team (a player in free for all) needs to win, as stored; 0 for none or not known." />
 	</struct>
 
 	<struct name="BridgeEvent" doc="One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).">

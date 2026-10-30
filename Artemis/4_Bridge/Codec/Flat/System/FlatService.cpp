@@ -216,6 +216,7 @@ namespace Bridge::Codec::Flat::System
             flat.Match.RoundTicksRemaining = tick.Match->RoundTicksRemaining;
             flat.Match.RoundTimeLimitTicks = tick.Match->RoundTimeLimitTicks;
             flat.Match.RoundLimit = tick.Match->RoundLimit;
+            flat.Match.ScoreToWin = tick.Match->ScoreToWin;
 
             for (std::size_t team{ 0 }; team < tick.Match->TeamScores.size() && team < flat.Match.TeamRoundScores.size(); ++team)
             {

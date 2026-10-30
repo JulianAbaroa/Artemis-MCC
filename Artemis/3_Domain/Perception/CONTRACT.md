@@ -33,7 +33,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
 | `Perception.Events.Type`, `Perception.Events.State` | The events of the tick: the engine ring plus the flag events Artemis generates. |
-| `Perception.Match.Type`, `Perception.Match.State` | Status of the match: phase, scores, round, team scores, time played and left in the round, round time limit and round limit. |
+| `Perception.Match.Type`, `Perception.Match.State` | Status of the match: phase, scores, round, team scores, time played and left in the round, round time limit, round limit and score to win. |
 | `Perception.Collidable.Type`, `Perception.Collidable.System` | Collision geometry of objects, on demand (used by `Views` and the viewer). |
 
 ## Depends on

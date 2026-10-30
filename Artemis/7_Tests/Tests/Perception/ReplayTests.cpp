@@ -170,6 +170,7 @@ namespace
         std::int32_t RoundTicksRemaining{};
         std::uint32_t RoundTimeLimitTicks{};
         std::uint8_t RoundLimit{};
+        std::int32_t ScoreToWin{};
     };
 
     // What the Perception gave over the whole ctf_c recording that is not tied to one tick.
@@ -223,7 +224,7 @@ namespace
             {
                 CtfMoment moment{ .RoundIndex = match->RoundIndex, .TeamScores = match->TeamScores, .Objectives = *objectives,
                     .RoundClockTicks = match->RoundClockTicks, .RoundTicksRemaining = match->RoundTicksRemaining,
-                    .RoundTimeLimitTicks = match->RoundTimeLimitTicks, .RoundLimit = match->RoundLimit };
+                    .RoundTimeLimitTicks = match->RoundTimeLimitTicks, .RoundLimit = match->RoundLimit, .ScoreToWin = match->ScoreToWin };
                 if (std::ranges::contains(ticks, match->GameTick)) moments[match->GameTick] = moment;
                 last = std::move(moment);
             }
@@ -523,6 +524,7 @@ TEST_F(ReplayTests, CtfCRoundClockIsAStopwatchWithoutLimit)
         EXPECT_EQ(moments.at(tick).RoundLimit, 3) << tick;
         EXPECT_EQ(moments.at(tick).RoundTimeLimitTicks, 0u) << tick;
         EXPECT_EQ(moments.at(tick).RoundTicksRemaining, -1) << tick;
+        EXPECT_EQ(moments.at(tick).ScoreToWin, 1) << tick;
     }
 }
 
@@ -539,6 +541,7 @@ TEST_F(ReplayTests, CgbRoundHasOneRoundAndItsClockWaitsForTheEndOfThePreRound)
     {
         ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
         EXPECT_EQ(moments.at(tick).RoundLimit, 1) << tick;
+        EXPECT_EQ(moments.at(tick).ScoreToWin, 5) << tick;
         EXPECT_EQ(moments.at(tick).RoundClockTicks, 0u) << tick;
     }
 }
@@ -557,6 +560,7 @@ TEST_F(ReplayTests, CtfDRoundCountsDownFromTheTimeLimit)
         ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
         EXPECT_EQ(moments.at(tick).RoundTimeLimitTicks, 7200u) << tick;
         EXPECT_EQ(moments.at(tick).RoundLimit, 3) << tick;
+        EXPECT_EQ(moments.at(tick).ScoreToWin, 1) << tick;
     }
 
     EXPECT_EQ(moments.at(1501).RoundTicksRemaining, 6300);

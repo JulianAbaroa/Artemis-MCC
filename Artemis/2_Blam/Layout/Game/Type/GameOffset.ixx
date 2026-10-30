@@ -70,6 +70,13 @@ export namespace Blam::Layout::Game::Type::Offset
     constexpr std::uintptr_t k_VariantRoundTimeLimit{ 0x2BE };
     constexpr std::uintptr_t k_VariantRoundLimit{ 0x2BF };
 
+    // Engine type of the game variant (uint32 at its start) and the one measured: Megalo. Other types have no score getter (A14 5.8).
+    constexpr std::uintptr_t k_VariantEngineType{ 0x0 };
+    constexpr std::uint32_t k_VariantEngineTypeMegalo{ 2 };
+
+    // Score to win of a Megalo variant, uint16 (0 none): the getter of its virtual +0x48 reads 'movzx [this+0xF83C]' with this = variant + 0x4 (A14 5.8).
+    constexpr std::uintptr_t k_VariantScoreToWin{ 0xF840 };
+
     // Fields of an element of the megalo objects region (D250). The state and the timer are raw engine values.
     // note: The timer has 5 + the allies in the zone in its high byte while it runs (0 paused) and the time in 1/1200 s in the low 24 bits (A14).
     constexpr std::uintptr_t k_MegaloObjectHandle{ 0x38 };

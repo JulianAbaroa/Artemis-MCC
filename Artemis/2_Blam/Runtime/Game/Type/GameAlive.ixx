@@ -89,6 +89,8 @@ export namespace Blam::Runtime::Game::Type::Alive
         std::uint32_t RoundTimeLimitTicks{};
         // Limit of rounds of the game variant as stored, 0 when the game variant is not available.
         std::uint8_t RoundLimit{};
+        // Score to win of the game variant as stored, 0 for none or when the variant is not available or not Megalo.
+        std::uint16_t ScoreToWin{};
         // Megalo state per object. Empty when the region was not captured.
         AliveMegaloObjects MegaloObjects{};
 

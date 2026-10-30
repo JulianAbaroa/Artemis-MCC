@@ -51,5 +51,7 @@ export namespace Perception::Match::Type
         std::uint32_t RoundTimeLimitTicks{};
         // Limit of rounds of the game variant, as stored.
         std::uint8_t RoundLimit{};
+        // Score a team (a player in free for all) needs to win, as stored. 0 for none or not known.
+        std::int32_t ScoreToWin{};
     };
 }

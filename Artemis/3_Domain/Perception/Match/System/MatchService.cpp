@@ -52,7 +52,7 @@ namespace Perception::Match::System
 
         MatchStatus match{ .GameTick = game->EngineTick, .Phase = ToPhase(game->Phase), .RoundIndex = game->RoundIndex, .RoundState = ToRoundState(game->RoundState),
             .RoundClockTicks = game->RoundClockTicks, .RoundTicksRemaining = game->RoundTicksRemaining,
-            .RoundTimeLimitTicks = game->RoundTimeLimitTicks, .RoundLimit = game->RoundLimit };
+            .RoundTimeLimitTicks = game->RoundTimeLimitTicks, .RoundLimit = game->RoundLimit, .ScoreToWin = game->ScoreToWin };
 
         for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
         {

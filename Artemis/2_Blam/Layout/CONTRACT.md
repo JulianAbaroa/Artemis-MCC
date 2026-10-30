@@ -24,7 +24,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Blam.Layout.Object.Type` | Datum layouts per object type (`Obje`, `Unit`, `Bipd`, `Weap`, `Vehi`...), generated. |
 | `Blam.Layout.Player.Type` | Offsets and sizes of the player table and its mapping. |
 | `Blam.Layout.Interaction.Type` | Offsets of the interaction table. |
-| `Blam.Layout.Game.Type` | Offsets of the game globals (phase, round, round clock, team mapping and scores, game variant), the format of an engine timer (`TimerTicks`, `TimerTicksCeil`, `IsTimerRunning`), the megalo object elements and the event ring. |
+| `Blam.Layout.Game.Type` | Offsets of the game globals (phase, round, round clock, team mapping and scores, game variant with its type and score to win), the format of an engine timer (`TimerTicks`, `TimerTicksCeil`, `IsTimerRunning`), the megalo object elements and the event ring. |
 | `Blam.Layout.Action.Type` | Layout of the 0xA8-byte player action of a tick and its button bits. |
 | `Blam.Layout.Snapshot.Type` | `Snapshot`, `RawObject`, `RegionId`, `Region` and the `.sdump` records. |
 | `Blam.Layout.Snapshot.System` | Write and read `.sdump` files (delta against the previous record, byte by byte). |

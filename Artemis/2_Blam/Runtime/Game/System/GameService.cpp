@@ -38,6 +38,9 @@ namespace
     using Blam::Layout::Game::Type::Offset::k_VariantModeLast;
     using Blam::Layout::Game::Type::Offset::k_VariantRoundLimit;
     using Blam::Layout::Game::Type::Offset::k_VariantRoundTimeLimit;
+    using Blam::Layout::Game::Type::Offset::k_VariantEngineType;
+    using Blam::Layout::Game::Type::Offset::k_VariantEngineTypeMegalo;
+    using Blam::Layout::Game::Type::Offset::k_VariantScoreToWin;
     using Blam::Layout::Game::Type::Offset::TimerTicks;
     using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
     using Blam::Layout::Game::Type::Offset::k_MegaloObjectHandle;
@@ -139,6 +142,12 @@ namespace Blam::Runtime::Game::System
             {
                 game.RoundTimeLimitTicks = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantRoundTimeLimit) * k_TicksPerMinute;
                 game.RoundLimit = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantRoundLimit);
+
+                // Only the Megalo variant is measured to have the score to win at that offset.
+                if (snapshot.Read<std::uint32_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantEngineType) == k_VariantEngineTypeMegalo)
+                {
+                    game.ScoreToWin = snapshot.Read<std::uint16_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantScoreToWin);
+                }
             }
         }
 

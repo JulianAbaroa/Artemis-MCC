@@ -809,13 +809,15 @@ TEST_F(RuntimeTests, MissingMegaloObjectsLeaveTheListEmpty)
 namespace
 {
     // A snapshot with the game engine globals and the game globals captured: the mode, the time limit in minutes and the round limit of the variant.
-    auto WithVariant(std::uint8_t mode, std::uint8_t minutes, std::uint8_t roundLimit) -> Snapshot
+    auto WithVariant(std::uint8_t mode, std::uint8_t minutes, std::uint8_t roundLimit, std::uint32_t engineType = 2, std::uint16_t scoreToWin = 0) -> Snapshot
     {
         Snapshot snapshot{ WithEvents(0, 0) };
         std::vector<std::uint8_t>& globals{ CaptureRegion(snapshot, RegionId::GameGlobals, RegionSize(RegionId::GameGlobals)) };
         Put(globals, Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset, mode);
         Put(globals, GameOffset::k_GameGlobalsGameVariant + GameOffset::k_VariantRoundTimeLimit, minutes);
         Put(globals, GameOffset::k_GameGlobalsGameVariant + GameOffset::k_VariantRoundLimit, roundLimit);
+        Put(globals, GameOffset::k_GameGlobalsGameVariant + GameOffset::k_VariantEngineType, engineType);
+        Put(globals, GameOffset::k_GameGlobalsGameVariant + GameOffset::k_VariantScoreToWin, scoreToWin);
         return snapshot;
     }
 
@@ -903,6 +905,41 @@ TEST_F(RuntimeTests, MissingGameEngineGlobalsLeaveTheRoundClockAtZero)
     EXPECT_EQ(game->RoundClockTicks, 0u);
     EXPECT_EQ(game->RoundTimeLimitTicks, 7200u);
     EXPECT_EQ(game->RoundLimit, 3);
+}
+
+TEST_F(RuntimeTests, MegaloVariantScoreToWinIsRead)
+{
+    const auto game{ this->UpdateGame(WithVariant(3, 0, 3, 2, 5)) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->ScoreToWin, 5);
+
+    const auto none{ this->UpdateGame(WithVariant(3, 0, 3, 2, 0)) };
+    ASSERT_NE(none, nullptr);
+    EXPECT_EQ(none->ScoreToWin, 0);
+}
+
+TEST_F(RuntimeTests, ScoreToWinIsZeroForAVariantThatIsNotMegalo)
+{
+    const auto game{ this->UpdateGame(WithVariant(3, 0, 3, 1, 5)) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->ScoreToWin, 0);
+}
+
+TEST_F(RuntimeTests, ScoreToWinIsZeroOutsideTheVariantModes)
+{
+    for (const std::uint8_t mode : { std::uint8_t{ 0 }, std::uint8_t{ 4 } })
+    {
+        const auto game{ this->UpdateGame(WithVariant(mode, 0, 3, 2, 5)) };
+        ASSERT_NE(game, nullptr);
+        EXPECT_EQ(game->ScoreToWin, 0) << static_cast<int>(mode);
+    }
+}
+
+TEST_F(RuntimeTests, MissingGameGlobalsLeaveTheScoreToWinAtZero)
+{
+    const auto game{ this->UpdateGame(WithEvents(0, 0)) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->ScoreToWin, 0);
 }
 
 // --- Layer (D178: pure, the owner calls Cleanup) ---
