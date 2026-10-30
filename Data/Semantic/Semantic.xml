@@ -243,6 +243,12 @@
 		<value name="Carried" id="1" />
 		<value name="Dropped" id="2" doc="On the ground until it is returned or the timer resets it." />
 	</enum>
+	<enum name="ChargeState" type="uint8" doc="Stage of the charged fire mode of a weapon (trigger 0).">
+		<value name="None" id="0" doc="Idle." />
+		<value name="Charging" id="1" doc="Takes ChargingTime of the tag to reach Charged." />
+		<value name="Charged" id="2" />
+		<value name="Released" id="3" doc="Only seen on the plasma launcher." />
+	</enum>
 	<flags name="Capability" type="uint16" doc="Capabilities of an entity. They never decide the group.">
 		<bit name="HasVitality" index="0" />
 		<bit name="HasCollision" index="1" />

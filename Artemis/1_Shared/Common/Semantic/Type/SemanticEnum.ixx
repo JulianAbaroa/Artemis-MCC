@@ -163,6 +163,15 @@ export namespace Common::Semantic::Type
         Dropped = 2,
     };
 
+    // Stage of the charged fire mode of a weapon (trigger 0).
+    enum class ChargeState : std::uint8_t
+    {
+        None = 0,
+        Charging = 1,
+        Charged = 2,
+        Released = 3,
+    };
+
     // Capabilities of an entity. They never decide the group.
     enum class Capability : std::uint16_t
     {
@@ -397,6 +406,19 @@ export namespace Common::Semantic::Type
         case FlagState::Home: return "Home";
         case FlagState::Carried: return "Carried";
         case FlagState::Dropped: return "Dropped";
+        default: return {};
+        }
+    }
+
+    // return: The name of the value, or an empty view if it is not known.
+    constexpr auto NameOf(ChargeState value) -> std::string_view
+    {
+        switch (value)
+        {
+        case ChargeState::None: return "None";
+        case ChargeState::Charging: return "Charging";
+        case ChargeState::Charged: return "Charged";
+        case ChargeState::Released: return "Released";
         default: return {};
         }
     }

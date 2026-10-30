@@ -1,5 +1,7 @@
 export module Perception.Details.State;
 
+export import :ChargeMemory;
+
 import Common.State.Type;
 import Perception.Details.Type;
 import std;
@@ -22,6 +24,9 @@ export namespace Perception::Details::State
     {
     };
     class ProjectileDetailsStore : public Common::State::Type::Snapshot<Perception::Details::Type::ProjectileDetails>
+    {
+    };
+    class WeaponDetailsStore : public Common::State::Type::Snapshot<Perception::Details::Type::WeaponDetails>
     {
     };
     class ObjectiveDetailsStore : public Common::State::Type::Snapshot<Perception::Details::Type::ObjectiveDetails>

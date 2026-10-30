@@ -126,6 +126,7 @@
     <ClCompile Include="Perception\ClassifierFlagZoneTests.cpp" />
     <ClCompile Include="Perception\ObjectiveDetailsTests.cpp" />
     <ClCompile Include="Perception\ProjectileDetailsTests.cpp" />
+    <ClCompile Include="Perception\WeaponDetailsTests.cpp" />
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />

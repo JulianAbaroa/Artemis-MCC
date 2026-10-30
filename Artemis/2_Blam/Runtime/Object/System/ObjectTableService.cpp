@@ -37,7 +37,7 @@ namespace
     using Blam::Runtime::Object::Type::Crate::Teleport::Allowed;
     using Blam::Runtime::Object::Type::Crate::CrateKind;
     using Blam::Runtime::Object::Type::Weapon::WeaponAction;
-    using Blam::Runtime::Object::Type::Weapon::ChargeState;
+    using Common::Semantic::Type::ChargeState;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Blam::Runtime::Object::Type::Biped::VerticalInput;
     using Blam::Runtime::Object::Type::Biped::GrenadeType;
@@ -59,7 +59,7 @@ namespace
     using Blam::Runtime::Object::Type::Constant::k_TriggerHeldBit;
     using Blam::Runtime::Object::Type::Constant::k_ZoomedBit;
     using Blam::Runtime::Object::Type::Constant::k_ActionMask;
-    using Blam::Runtime::Object::Type::Constant::k_OverheatedBit;
+    using Blam::Runtime::Object::Type::Constant::k_OverheatedMask;
     using Common::Engine::Type::k_NoHandle;
 
     // note: The origin of a parented object is local to its parent, so it is carried
@@ -496,7 +496,7 @@ namespace Blam::Runtime::Object::System
 
         weapon.TotalHeat = datum.Read<float>(WeapOffset::k_TotalHeat);
         weapon.TotalEnergy = 1.0f - datum.Read<float>(WeapOffset::k_TotalEnergy);
-        weapon.IsOverheated = (datum.Read<std::uint16_t>(WeapOffset::k_WeaponFlags) & k_OverheatedBit) != 0;
+        weapon.IsOverheated = (datum.Read<std::uint16_t>(WeapOffset::k_WeaponFlags) & k_OverheatedMask) != 0;
         weapon.Magazines[0].Reserve = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0TotalAmmo);
         weapon.Magazines[0].Loaded = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0CurrentAmmo);
         weapon.Magazines[1].Reserve = datum.Read<std::uint16_t>(WeapOffset::k_Magazine1TotalAmmo);
@@ -507,9 +507,9 @@ namespace Blam::Runtime::Object::System
         weapon.IsZoomed = (actionByte & k_ZoomedBit) != 0;
         weapon.Action = static_cast<WeaponAction>(actionByte & k_ActionMask);
 
-        weapon.ReloadTimer = datum.Read<std::uint16_t>(WeapOffset::k_ReloadTimer);
+        weapon.BusyTimer = datum.Read<std::uint16_t>(WeapOffset::k_BusyTimer);
+        weapon.Magazine0ReloadState = datum.Read<std::uint16_t>(WeapOffset::k_Magazine0ReloadState);
         weapon.ChargeState = datum.Read<ChargeState>(WeapOffset::k_Trigger0ChargeState);
-        weapon.Trigger0StateTicks = datum.Read<std::uint8_t>(WeapOffset::k_Trigger0StateTicks);
 
         weapon.IsTracking = datum.Read<std::uint8_t>(WeapOffset::k_IsTracking);
         weapon.TrackedObject = datum.Read<std::uint32_t>(WeapOffset::k_TrackedObjectHandle);

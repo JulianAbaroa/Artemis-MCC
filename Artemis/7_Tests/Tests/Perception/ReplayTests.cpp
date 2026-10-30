@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+import Common.Engine.Type;
 import Common.Hash.System;
 import Common.Math.Type;
 import Common.Semantic.Type;
@@ -697,4 +698,167 @@ TEST_F(ReplayTests, Recordings)
     }
 
     if (replayed == 0 && !::testing::Test::HasFailure()) GTEST_SKIP() << skipped;
+}
+
+// --- W.3: the weapons and projectiles of the armas_a recording ---
+
+namespace
+{
+    // What the Perception gave about the weapons and the projectiles at one engine tick of armas_a.
+    struct ArmasMoment
+    {
+        Perception::Details::Type::WeaponDetails Weapons{};
+        Perception::Details::Type::ProjectileDetails Projectiles{};
+    };
+
+    // Replays the armas_a recording record by record and keeps the weapon and projectile details at the engine ticks asked for.
+    // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
+    auto RunArmasRecording(const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments) -> std::string
+    {
+        const std::filesystem::path directory{ RecordingsFolder() / "armas_a" };
+        std::error_code error{};
+        if (!std::filesystem::is_regular_file(directory / "golden.sdump", error)) return "No recording in " + directory.string();
+
+        std::ifstream sdump{ directory / "golden.sdump", std::ios::binary };
+        SnapshotReaderState reader{};
+        if (const std::string reason{ SnapshotCodec::OpenReader(sdump, reader) }; !reason.empty()) return reason;
+        auto next{ SnapshotCodec::ReadRecord(sdump, reader) };
+        if (next.Status != SnapshotReadStatus::Record || !next.Record.LoadInfo) return "the .sdump does not start at a map load";
+
+        const std::string mapName{ TextOf(next.Record.LoadInfo->MapFileName) };
+        const std::filesystem::path mapPath{ MapsFolder() / mapName };
+        if (!std::filesystem::is_regular_file(mapPath, error) || std::filesystem::file_size(mapPath, error) != next.Record.LoadInfo->MapFileSize)
+        {
+            return mapPath.string() + " not found or not the map of the recording";
+        }
+
+        auto chain{ std::make_unique<Chain>() };
+        LoadMap(*chain, mapPath);
+
+        for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record; isFirst = false)
+        {
+            if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
+
+            chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
+            const auto match{ chain->m_Environment.m_MatchStore.Acquire() };
+            const auto weapons{ chain->m_Environment.m_WeaponDetailsStore.Acquire() };
+            const auto projectiles{ chain->m_Environment.m_ProjectileDetailsStore.Acquire() };
+            if (match && weapons && projectiles && std::ranges::contains(ticks, match->GameTick))
+            {
+                moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles };
+            }
+
+            next = SnapshotCodec::ReadRecord(sdump, reader);
+        }
+
+        return {};
+    }
+
+    constexpr std::uint32_t k_Player0{ 0xEC700000 };
+    constexpr std::uint32_t k_Biped0{ 0xE43301C4 };
+    constexpr std::uint32_t k_Dmr{ 0xE43701C8 };
+    constexpr std::uint32_t k_PlasmaRifle{ 0xE42201B3 };
+    constexpr std::uint32_t k_PlasmaPistol{ 0xE42301B4 };
+    constexpr std::uint32_t k_Rocket{ 0xE42401B5 };
+    constexpr std::uint32_t k_RocketTarget{ 0xE42801B9 };
+    constexpr std::uint32_t k_PlasmaGrenade{ 0xE4E301CF };
+    constexpr std::uint32_t k_GrenadeVictim{ 0xE4D501BA };
+    constexpr std::uint32_t k_Needle{ 0xE4FD01B6 };
+    constexpr std::uint32_t k_NeedleVictim{ 0xE4F001CF };
+    constexpr std::uint32_t k_RocketProjectile{ 0xE4C501C7 };
+}
+
+TEST_F(ReplayTests, ArmasAWeaponsAndProjectilesFollowTheRecordedFilm)
+{
+    using Common::Semantic::Type::ChargeState;
+    using Common::Engine::Type::k_NoHandle;
+
+    const std::vector<std::uint32_t> ticks{ 2250, 2300, 2580, 2640, 3300, 4420, 4500, 4540, 5000, 5880, 5950, 6231, 6300, 6410,
+        7300, 7400, 7480, 8000, 8500, 8550, 8560, 10765, 10780, 10800, 13790, 13810 };
+    std::map<std::uint32_t, ArmasMoment> moments{};
+    const std::string reason{ RunArmasRecording(ticks, moments) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
+
+    const auto weapon{ [&](std::uint32_t tick, std::uint32_t handle) -> const Perception::Details::Type::WeaponDetail&
+    {
+        const auto& weapons{ moments.at(tick).Weapons };
+        EXPECT_TRUE(weapons.contains(handle)) << std::format("no weapon {:08X} at {}", handle, tick);
+        static const Perception::Details::Type::WeaponDetail missing{};
+        return weapons.contains(handle) ? weapons.at(handle) : missing;
+    } };
+    const auto projectile{ [&](std::uint32_t tick, std::uint32_t handle) -> const Perception::Details::Type::ProjectileDetail&
+    {
+        const auto& projectiles{ moments.at(tick).Projectiles };
+        EXPECT_TRUE(projectiles.contains(handle)) << std::format("no projectile {:08X} at {}", handle, tick);
+        static const Perception::Details::Type::ProjectileDetail missing{};
+        return projectiles.contains(handle) ? projectiles.at(handle) : missing;
+    } };
+
+    // DMR: drawn, ready, reloading (the reload state outlasts the reload), ready again, empty and reloading.
+    EXPECT_EQ(weapon(2250, k_Dmr).MagazineCount, 1);
+    EXPECT_FALSE(weapon(2250, k_Dmr).IsEnergyWeapon);
+    EXPECT_FALSE(weapon(2250, k_Dmr).CanFireNow);
+    EXPECT_FALSE(weapon(2250, k_Dmr).IsReloading);
+    EXPECT_EQ(weapon(2300, k_Dmr).Magazines[0].Loaded, 15);
+    EXPECT_TRUE(weapon(2300, k_Dmr).CanFireNow);
+    EXPECT_TRUE(weapon(2580, k_Dmr).IsReloading);
+    EXPECT_FALSE(weapon(2580, k_Dmr).CanFireNow);
+    EXPECT_EQ(weapon(2580, k_Dmr).Magazines[0].Loaded, 10);
+    EXPECT_FALSE(weapon(2640, k_Dmr).IsReloading);
+    EXPECT_TRUE(weapon(2640, k_Dmr).CanFireNow);
+    EXPECT_EQ(weapon(2640, k_Dmr).Magazines[0].Loaded, 15);
+    EXPECT_TRUE(weapon(3300, k_Dmr).IsReloading);
+    EXPECT_EQ(weapon(3300, k_Dmr).Magazines[0].Loaded, 0);
+
+    // Plasma rifle: overheated in its two phases, ready when the second ends.
+    EXPECT_EQ(weapon(4420, k_PlasmaRifle).MagazineCount, 0);
+    EXPECT_TRUE(weapon(4420, k_PlasmaRifle).IsEnergyWeapon);
+    EXPECT_FLOAT_EQ(weapon(4420, k_PlasmaRifle).Energy, 1.0f);
+    EXPECT_TRUE(weapon(4420, k_PlasmaRifle).IsOverheated);
+    EXPECT_FALSE(weapon(4420, k_PlasmaRifle).CanFireNow);
+    EXPECT_TRUE(weapon(4500, k_PlasmaRifle).IsOverheated);
+    EXPECT_LT(weapon(4500, k_PlasmaRifle).Heat, 0.4f);
+    EXPECT_FALSE(weapon(4540, k_PlasmaRifle).IsOverheated);
+    EXPECT_TRUE(weapon(4540, k_PlasmaRifle).CanFireNow);
+    EXPECT_TRUE(weapon(5000, k_PlasmaRifle).IsOverheated);
+
+    // Plasma pistol: charge, released early, charge to the end, overheated after the charged shot.
+    EXPECT_EQ(weapon(5880, k_PlasmaPistol).ChargeState, ChargeState::Charging);
+    EXPECT_NEAR(weapon(5880, k_PlasmaPistol).ChargeFraction, 6.0f / 48.0f, 1e-5f);
+    EXPECT_EQ(weapon(5950, k_PlasmaPistol).ChargeState, ChargeState::None);
+    EXPECT_FLOAT_EQ(weapon(5950, k_PlasmaPistol).ChargeFraction, 0.0f);
+    EXPECT_EQ(weapon(6231, k_PlasmaPistol).ChargeState, ChargeState::Charging);
+    EXPECT_NEAR(weapon(6231, k_PlasmaPistol).ChargeFraction, 24.0f / 48.0f, 1e-5f);
+    EXPECT_EQ(weapon(6300, k_PlasmaPistol).ChargeState, ChargeState::Charged);
+    EXPECT_FLOAT_EQ(weapon(6300, k_PlasmaPistol).ChargeFraction, 1.0f);
+    EXPECT_TRUE(weapon(6410, k_PlasmaPistol).IsOverheated);
+    EXPECT_FALSE(weapon(6410, k_PlasmaPistol).CanFireNow);
+
+    // Rocket launcher: aims at a Falcon, locks, loses the lock (state 3) keeping the target, then no target, locks again.
+    EXPECT_EQ(weapon(7300, k_Rocket).TrackedObject, k_RocketTarget);
+    EXPECT_FALSE(weapon(7300, k_Rocket).IsLocked);
+    EXPECT_TRUE(weapon(7400, k_Rocket).IsLocked);
+    EXPECT_FALSE(weapon(7480, k_Rocket).IsLocked);
+    EXPECT_EQ(weapon(7480, k_Rocket).TrackedObject, k_RocketTarget);
+    EXPECT_EQ(weapon(8000, k_Rocket).TrackedObject, k_NoHandle);
+    EXPECT_TRUE(weapon(8500, k_Rocket).IsLocked);
+    EXPECT_EQ(weapon(8560, k_Rocket).Magazines[0].Loaded, 1);
+
+    // Projectiles: a plasma grenade in the hand of its thrower, thrown, stuck to a victim.
+    EXPECT_TRUE(projectile(10765, k_PlasmaGrenade).InHand);
+    EXPECT_EQ(projectile(10765, k_PlasmaGrenade).StuckTo, k_NoHandle);
+    EXPECT_EQ(projectile(10765, k_PlasmaGrenade).OwnerBiped, k_Biped0);
+    EXPECT_EQ(projectile(10765, k_PlasmaGrenade).OwnerPlayer, k_Player0);
+    EXPECT_FALSE(projectile(10780, k_PlasmaGrenade).InHand);
+    EXPECT_EQ(projectile(10780, k_PlasmaGrenade).StuckTo, k_NoHandle);
+    EXPECT_EQ(projectile(10800, k_PlasmaGrenade).StuckTo, k_GrenadeVictim);
+    EXPECT_GE(projectile(10800, k_PlasmaGrenade).StuckNode, 0);
+    EXPECT_EQ(projectile(13790, k_Needle).StuckTo, k_NoHandle);
+    EXPECT_EQ(projectile(13810, k_Needle).StuckTo, k_NeedleVictim);
+    EXPECT_EQ(projectile(13810, k_Needle).OwnerPlayer, k_Player0);
+    EXPECT_EQ(projectile(8550, k_RocketProjectile).OwnerBiped, k_Biped0);
+    EXPECT_EQ(projectile(8550, k_RocketProjectile).ShooterRoot, k_Biped0);
+    // Entity.Team of the rocket at 8550 is the team of player 0: it waits for W.4.
 }

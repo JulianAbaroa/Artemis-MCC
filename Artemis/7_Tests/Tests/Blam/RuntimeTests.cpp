@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Log.Type;
 import Common.Log.System;
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Common.Team.Type;
 import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
@@ -41,7 +42,7 @@ namespace
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Biped::Biped;
     using Blam::Runtime::Object::Type::Weapon::Weapon;
-    using Blam::Runtime::Object::Type::Weapon::ChargeState;
+    using Common::Semantic::Type::ChargeState;
     using Blam::Runtime::Object::Type::Projectile::Projectile;
     using Blam::Runtime::Object::Type::Vehicle::Vehicle;
     using Blam::Runtime::Object::Type::Crate::Crate;
@@ -413,9 +414,9 @@ TEST_F(RuntimeTests, WeaponFieldsComeFromTheDatum)
     Put(raw.Bytes, WeapOffset::k_Magazine0CurrentAmmo, std::uint16_t{ 32 });
     Put(raw.Bytes, WeapOffset::k_Magazine1TotalAmmo, std::uint16_t{ 7 });
     Put(raw.Bytes, WeapOffset::k_Magazine1CurrentAmmo, std::uint16_t{ 3 });
-    Put(raw.Bytes, WeapOffset::k_ReloadTimer, std::uint16_t{ 70 });
+    Put(raw.Bytes, WeapOffset::k_BusyTimer, std::uint16_t{ 70 });
+    Put(raw.Bytes, WeapOffset::k_Magazine0ReloadState, std::uint16_t{ 1 });
     Put(raw.Bytes, WeapOffset::k_Trigger0ChargeState, std::uint8_t{ 1 });
-    Put(raw.Bytes, WeapOffset::k_Trigger0StateTicks, std::uint8_t{ 17 });
     Put(raw.Bytes, WeapOffset::k_IsTracking, std::uint8_t{ 1 });
     Put(raw.Bytes, WeapOffset::k_TrackedObjectHandle, k_BipedHandle);
     Put(raw.Bytes, WeapOffset::k_TrackingState, std::uint32_t{ 2 });
@@ -432,9 +433,9 @@ TEST_F(RuntimeTests, WeaponFieldsComeFromTheDatum)
     EXPECT_EQ(weapon->Magazines[0].Loaded, 32);
     EXPECT_EQ(weapon->Magazines[1].Reserve, 7);
     EXPECT_EQ(weapon->Magazines[1].Loaded, 3);
-    EXPECT_EQ(weapon->ReloadTimer, 70);
+    EXPECT_EQ(weapon->BusyTimer, 70);
+    EXPECT_EQ(weapon->Magazine0ReloadState, 1);
     EXPECT_EQ(weapon->ChargeState, ChargeState::Charging);
-    EXPECT_EQ(weapon->Trigger0StateTicks, 17);
     EXPECT_EQ(weapon->IsTracking, 1);
     EXPECT_EQ(weapon->TrackedObject, k_BipedHandle);
     EXPECT_EQ(weapon->TrackingState, 2u);
@@ -462,9 +463,11 @@ TEST_F(RuntimeTests, OverheatedIsBitOneOfTheWeaponFlagsWhateverTheOtherBits)
         std::uint16_t Flags;
         std::uint8_t Expected;
     };
-    // Bit 1 alone, with the ready bits (4 and 5, 0x30 on every idle weapon), the ready bits alone, bit 0 and bit 2 (neighbours) and none.
-    const std::array<Case, 6> cases{ {
-        { 0x0002, 1 }, { 0x0032, 1 }, { 0x0030, 0 }, { 0x0001, 0 }, { 0x0004, 0 }, { 0x0000, 0 },
+    // Venting (bit 1), cooling (bit 2) and both, each alone and with the ready bits (4 and 5, 0x30 on every idle weapon), then the ready
+    // bits alone, the neighbours of the two bits (0 and 3) and none.
+    const std::array<Case, 10> cases{ {
+        { 0x0002, 1 }, { 0x0004, 1 }, { 0x0006, 1 }, { 0x0032, 1 }, { 0x0034, 1 },
+        { 0x0030, 0 }, { 0x0001, 0 }, { 0x0008, 0 }, { 0x0000, 0 }, { 0x0031, 0 },
     } };
 
     for (const Case& c : cases)

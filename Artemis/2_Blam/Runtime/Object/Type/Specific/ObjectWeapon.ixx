@@ -1,6 +1,7 @@
 export module Blam.Runtime.Object.Type:Weapon;
 
 import Common.Engine.Type;
+import Common.Semantic.Type;
 import std;
 
 namespace
@@ -22,16 +23,6 @@ export namespace Blam::Runtime::Object::Type::Weapon
         Meleeing = 0x60,
     };
 
-    // Stage of the charged fire mode.
-    // note: Seen on the plasma pistol and the plasma launcher. Released was only seen on the plasma launcher. The stages still need to be measured with logs.
-    enum class ChargeState : std::uint8_t
-    {
-        None = 0,
-        Charging = 1,
-        Charged = 2,
-        Released = 3,
-    };
-
     // Ammo of one magazine of the weapon.
     // note: Both read 0 on a magazine the weapon does not have, and on energy weapons.
     struct WeaponMagazine
@@ -49,7 +40,8 @@ export namespace Blam::Runtime::Object::Type::Weapon
         // note: Not the overheat state, see IsOverheated. The plasma rifle stays overheated with the heat below the tag threshold.
         float TotalHeat{};
 
-        // The engine keeps the overheat state itself (bit 1 of the weapon flags), with hysteresis.
+        // The engine keeps the overheat state itself, in two phases: venting (bit 1 of the weapon flags) and cooling (bit 2).
+        // note: Set while the heat is already below the tag threshold. The weapon can fire again when it clears.
         std::uint8_t IsOverheated{};
 
         // Energy left from 0 (empty) to 1 (full).
@@ -70,16 +62,16 @@ export namespace Blam::Runtime::Object::Type::Weapon
         // note: It returns to None when the animation ends, even if the key is still held.
         WeaponAction Action{};
 
-        // Reload countdown, non-zero while the reload animation plays and 0 once the weapon can fire again.
-        // note: Not the magazine reload state of the datum, which stays 1 after the reload.
-        std::uint16_t ReloadTimer{};
+        // Timer of the weapon being busy, non-zero while it cannot fire and 0 when it can.
+        // note: Runs on a reload, when the weapon is drawn (about 38 ticks) and when it is stowed (about 7). Measured on armas_a.
+        std::uint16_t BusyTimer{};
+
+        // Reload state of magazine 0, raw.
+        // note: 1 only during the reload and about 14 ticks longer, so a reload is this and BusyTimer both non-zero.
+        std::uint16_t Magazine0ReloadState{};
 
         // Charge stage of trigger 0.
-        ChargeState ChargeState{};
-
-        // Counter of the current state of trigger 0.
-        // note: Measured on the plasma pistol (17 charged) and plasma rifle (32 firing). Whether it counts ticks in Charging is open.
-        std::uint8_t Trigger0StateTicks{};
+        Common::Semantic::Type::ChargeState ChargeState{};
 
         // The weapon tracks an object, with or without lock.
         std::uint8_t IsTracking{};

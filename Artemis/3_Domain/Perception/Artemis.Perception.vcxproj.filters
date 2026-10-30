@@ -52,6 +52,12 @@
     <Filter Include="Details\Type\Projectile">
       <UniqueIdentifier>{7e3a9c52-0b14-5d6f-8a27-91c5d3e6f8b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Details\System\Weapon">
+      <UniqueIdentifier>{c3d8f1a6-4e29-5b70-8d14-a6b2e7c9f035}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Details\Type\Weapon">
+      <UniqueIdentifier>{9a4e6b13-7c85-5f02-b3d9-1e8a5c2d7f46}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Details\System\Barrier">
       <UniqueIdentifier>{f52663d2-5128-5a78-bb91-f77ebc27b447}</UniqueIdentifier>
     </Filter>
@@ -180,6 +186,12 @@
     <ClCompile Include="Details\State\DetailsStore.ixx">
       <Filter>Details\State</Filter>
     </ClCompile>
+    <ClCompile Include="Details\State\WeaponChargeMemoryStore.cpp">
+      <Filter>Details\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\State\WeaponChargeMemoryStore.ixx">
+      <Filter>Details\State</Filter>
+    </ClCompile>
     <ClCompile Include="Details\System\Barrier\BarrierDetailsService.cpp">
       <Filter>Details\System\Barrier</Filter>
     </ClCompile>
@@ -191,6 +203,12 @@
     </ClCompile>
     <ClCompile Include="Details\System\Projectile\ProjectileDetailsService.ixx">
       <Filter>Details\System\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\System\Weapon\WeaponDetailsService.cpp">
+      <Filter>Details\System\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\System\Weapon\WeaponDetailsService.ixx">
+      <Filter>Details\System\Weapon</Filter>
     </ClCompile>
     <ClCompile Include="Details\System\Perception.Details.System.ixx">
       <Filter>Details\System</Filter>
@@ -233,6 +251,9 @@
     </ClCompile>
     <ClCompile Include="Details\Type\Projectile\DetailsProjectile.ixx">
       <Filter>Details\Type\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\Type\Weapon\DetailsWeapon.ixx">
+      <Filter>Details\Type\Weapon</Filter>
     </ClCompile>
     <ClCompile Include="Details\Type\Perception.Details.Type.ixx">
       <Filter>Details\Type</Filter>

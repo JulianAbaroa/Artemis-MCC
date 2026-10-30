@@ -6,6 +6,9 @@ import std;
 
 export namespace Blam::MapModel::Definitions::Type::Weap
 {
+    // PrimaryAction and SecondaryAction of a trigger that charge the weapon (the others are Fire = 0 and FireOther = 2).
+    constexpr std::uint16_t k_TriggerActionCharge{ 1 };
+
     // Ammunition pool of a weapon. The datum keeps one magazine state per entry (weap 0x2C0, 0x2DA).
     struct Magazine
     {

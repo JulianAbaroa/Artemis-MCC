@@ -125,6 +125,14 @@ class FlagState(enum.IntEnum):
     Dropped = 2
 
 
+class ChargeState(enum.IntEnum):
+    """Stage of the charged fire mode of a weapon (trigger 0)."""
+    NONE = 0
+    Charging = 1
+    Charged = 2
+    Released = 3
+
+
 class Capability(enum.IntFlag):
     """Capabilities of an entity. They never decide the group."""
     NONE = 0

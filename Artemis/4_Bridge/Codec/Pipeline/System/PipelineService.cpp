@@ -37,6 +37,8 @@ namespace Bridge::Codec::Pipeline::System
         stage();
         m_Environment.m_ProjectileDetailsService.Update();
         stage();
+        m_Environment.m_WeaponDetailsService.Update();
+        stage();
         m_Environment.m_EntitiesService.Update();
         stage();
         m_Environment.m_PlayersService.Update();
