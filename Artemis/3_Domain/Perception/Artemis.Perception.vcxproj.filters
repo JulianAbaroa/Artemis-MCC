@@ -46,6 +46,12 @@
     <Filter Include="Details\System">
       <UniqueIdentifier>{8bdf3887-317a-5b90-92d1-2969768c2c1a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Details\System\Projectile">
+      <UniqueIdentifier>{b1c7e0a4-3d52-5f1e-9a68-2c4d7e81f0a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Details\Type\Projectile">
+      <UniqueIdentifier>{7e3a9c52-0b14-5d6f-8a27-91c5d3e6f8b0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Details\System\Barrier">
       <UniqueIdentifier>{f52663d2-5128-5a78-bb91-f77ebc27b447}</UniqueIdentifier>
     </Filter>
@@ -180,6 +186,12 @@
     <ClCompile Include="Details\System\Barrier\BarrierDetailsService.ixx">
       <Filter>Details\System\Barrier</Filter>
     </ClCompile>
+    <ClCompile Include="Details\System\Projectile\ProjectileDetailsService.cpp">
+      <Filter>Details\System\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\System\Projectile\ProjectileDetailsService.ixx">
+      <Filter>Details\System\Projectile</Filter>
+    </ClCompile>
     <ClCompile Include="Details\System\Perception.Details.System.ixx">
       <Filter>Details\System</Filter>
     </ClCompile>
@@ -218,6 +230,9 @@
     </ClCompile>
     <ClCompile Include="Details\Type\Barrier\DetailsBarrier.ixx">
       <Filter>Details\Type\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\Type\Projectile\DetailsProjectile.ixx">
+      <Filter>Details\Type\Projectile</Filter>
     </ClCompile>
     <ClCompile Include="Details\Type\Perception.Details.Type.ixx">
       <Filter>Details\Type</Filter>

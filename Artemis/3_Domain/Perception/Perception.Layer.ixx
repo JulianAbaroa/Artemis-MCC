@@ -39,6 +39,7 @@ export namespace Perception
         using TeleporterDetailsStore = Perception::Details::State::TeleporterDetailsStore;
         using LiftDetailsStore = Perception::Details::State::LiftDetailsStore;
         using BarrierDetailsStore = Perception::Details::State::BarrierDetailsStore;
+        using ProjectileDetailsStore = Perception::Details::State::ProjectileDetailsStore;
         using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
         using EntitiesStore = Perception::Entities::State::EntitiesStore;
         using CarriedHandlesStore = Perception::Entities::State::CarriedHandlesStore;
@@ -55,6 +56,7 @@ export namespace Perception
         using TeleporterDetailsService = Perception::Details::System::TeleporterDetailsService;
         using LiftDetailsService = Perception::Details::System::LiftDetailsService;
         using BarrierDetailsService = Perception::Details::System::BarrierDetailsService;
+        using ProjectileDetailsService = Perception::Details::System::ProjectileDetailsService;
         using ObjectiveDetailsService = Perception::Details::System::ObjectiveDetailsService;
         using EntitiesService = Perception::Entities::System::EntitiesService;
         using PlayersService = Perception::Players::System::PlayersService;
@@ -72,6 +74,7 @@ export namespace Perception
             m_TeleporterDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_TeleporterDetailsStore),
             m_LiftDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_LiftDetailsStore),
             m_BarrierDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_BarrierDetailsStore),
+            m_ProjectileDetailsService(log, tables.m_ObjectStore, m_ProjectileDetailsStore),
             m_EntitiesService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
             m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
             m_ObjectiveDetailsService(log, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_EntitiesStore, m_PlayersStore, m_ZoneDetailsStore, m_ObjectiveDetailsStore),
@@ -93,6 +96,7 @@ export namespace Perception
         TeleporterDetailsStore m_TeleporterDetailsStore{};
         LiftDetailsStore m_LiftDetailsStore{};
         BarrierDetailsStore m_BarrierDetailsStore{};
+        ProjectileDetailsStore m_ProjectileDetailsStore{};
         ObjectiveDetailsStore m_ObjectiveDetailsStore{};
         EntitiesStore m_EntitiesStore{};
         CarriedHandlesStore m_CarriedHandlesStore{};
@@ -110,6 +114,7 @@ export namespace Perception
         TeleporterDetailsService m_TeleporterDetailsService;
         LiftDetailsService m_LiftDetailsService;
         BarrierDetailsService m_BarrierDetailsService;
+        ProjectileDetailsService m_ProjectileDetailsService;
         EntitiesService m_EntitiesService;
         PlayersService m_PlayersService;
         ObjectiveDetailsService m_ObjectiveDetailsService;
@@ -128,6 +133,7 @@ export namespace Perception
             m_TeleporterDetailsService.Cleanup();
             m_LiftDetailsService.Cleanup();
             m_BarrierDetailsService.Cleanup();
+            m_ProjectileDetailsService.Cleanup();
             m_EntitiesService.Cleanup();
             m_PlayersService.Cleanup();
             m_ObjectiveDetailsService.Cleanup();

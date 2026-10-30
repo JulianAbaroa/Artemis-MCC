@@ -64,6 +64,8 @@
     <ClCompile Include="Details\State\DetailsStore.ixx" />
     <ClCompile Include="Details\System\Barrier\BarrierDetailsService.cpp" />
     <ClCompile Include="Details\System\Barrier\BarrierDetailsService.ixx" />
+    <ClCompile Include="Details\System\Projectile\ProjectileDetailsService.cpp" />
+    <ClCompile Include="Details\System\Projectile\ProjectileDetailsService.ixx" />
     <ClCompile Include="Details\System\Perception.Details.System.ixx" />
     <ClCompile Include="Details\System\Lift\LiftDetailsService.cpp" />
     <ClCompile Include="Details\System\Lift\LiftDetailsService.ixx" />
@@ -77,6 +79,7 @@
     <ClCompile Include="Details\System\Objective\ObjectiveDetailsService.ixx" />
     <ClCompile Include="Details\System\Objective\ObjectiveDetailsService.cpp" />
     <ClCompile Include="Details\Type\Barrier\DetailsBarrier.ixx" />
+    <ClCompile Include="Details\Type\Projectile\DetailsProjectile.ixx" />
     <ClCompile Include="Details\Type\Perception.Details.Type.ixx" />
     <ClCompile Include="Details\Type\Lift\DetailsLift.ixx" />
     <ClCompile Include="Details\Type\Teleporter\DetailsTeleporter.ixx" />

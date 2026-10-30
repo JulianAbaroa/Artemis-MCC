@@ -4,7 +4,7 @@ Group `3_Domain` - pure static library - builds the world as the engine knows it
 
 ## Responsibility
 Turns the live tables of one tick into the omniscient picture of the world (the engine's truth): it classifies the live objects
-and relates them in the object graph, then builds the details (vitality, zones, teleporters, lifts, barriers, objectives), the entities, the
+and relates them in the object graph, then builds the details (vitality, zones, teleporters, lifts, barriers, projectiles, objectives), the entities, the
 players, the aim, the events and the match status.
 
 ## Does not
@@ -17,7 +17,7 @@ players, the aim, the events and the match status.
 ## Input and output
 - Input: the stores of `Blam::Runtime::Layer` (objects, players, damage sections, bone matrices, game) and of
   `Blam::MapModel::Layer` (definitions, vitality layouts, world).
-- Output: one store per result, members of `Perception::Layer` (`ClassifierStore`, `ObjectGraphStore`, the five details stores,
+- Output: one store per result, members of `Perception::Layer` (`ClassifierStore`, `ObjectGraphStore`, the six details stores,
   `EntitiesStore`, `PlayersStore`, `AimStore`, `EventsStore`, `MatchStore`). Each store publishes an immutable value per tick.
 
 ## Public interface
@@ -28,7 +28,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.Layer` | The facade: owns the stores and services; `Cleanup()` forgets the map. |
 | `Perception.Classifier.Type`, `Perception.Classifier.State` | Kind, function and group of each live object. |
 | `Perception.ObjectGraph.Type`, `Perception.ObjectGraph.State` | How the live objects attach to each other, up to their root. |
-| `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier and objective details (flags and their stands). |
+| `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier, projectile (owner, shooter root, what it is stuck to) and objective details (flags and their stands). |
 | `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. |
 | `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
@@ -62,7 +62,7 @@ A missing or invalid table entry leaves the results that depend on it empty for 
 
 ## Requirements
 - Deterministic: the same Snapshot and map give the same output bit for bit (the replay test depends on it).
-- Fixed order inside the tick: Classifier, ObjectGraph, Vitality, Zone, Teleporter, Lift, Barrier, Entities, Players, Objective, Aim, Events,
+- Fixed order inside the tick: Classifier, ObjectGraph, Vitality, Zone, Teleporter, Lift, Barrier, Projectile, Entities, Players, Objective, Aim, Events,
   Match.
 - Pure: no process, no `windows.h`, no wiring of the lifecycle (checked by `Tools/Tests/test_components.py`).
 
