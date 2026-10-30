@@ -99,7 +99,8 @@ def test_writer_round_trip_with_the_existing_reader(tmp_path):
 
 def test_tables_and_ignored_fields_exist_in_bridge_xml():
     assert tickdump.TABLES == {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer",
-                               "Entities": "BridgeEntity", "Events": "BridgeEvent"}
+                               "Entities": "BridgeEntity", "Events": "BridgeEvent", "Objectives": "BridgeObjective",
+                               "Stands": "BridgeStand"}
     assert {t: set(f) for t, f in tickdump.IGNORED.items()} == {
         "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc"},
         "Players": {"LocalIndex", "Connection", "CameraPosition", "CameraForward"}}
@@ -115,8 +116,8 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(bad))
     data = bytearray(Film(range(2)).Bytes())
-    data[8] = 2
-    other = tmp_path / "v2.tdump"
+    data[8] = 3
+    other = tmp_path / "v3.tdump"
     other.write_bytes(bytes(data))
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(other))
@@ -496,3 +497,68 @@ def test_approve_without_sdump_deletes_the_old_golden_sdump(tmp_path):
     assert not (folder / "golden.sdump").exists()
     assert (folder / "golden.tdump").exists()
     assert line.endswith("| ticks 0-9 | run2.tdump | M5c: without sdump")
+
+
+# --- flags and stands (B4h H.4, format version 2) -----------------------------------------------------------------------------
+
+def FlagFilm(state_at=None, ticks=range(6)):
+    """A film with two flags and a stand. state_at: first tick from which the blue flag (BaseTeam 1) is Carried (None = Home)."""
+    w = Writer()
+    for t in ticks:
+        carried = state_at is not None and t >= state_at
+        flags = [{"Handle": 0xA1, "BaseTeam": 0, "OwnerTeam": 1, "State": 0, "CarrierPlayer": 0xFFFFFFFF},
+                 {"Handle": 0xA2, "BaseTeam": 1, "OwnerTeam": 0, "State": 1 if carried else 0, "CarrierPlayer": P1 if carried else 0xFFFFFFFF,
+                  "AlliesInZone": 2}]
+        stands = [{"Handle": 0xB1, "BaseTeam": 1, "OwnerTeam": 0}]
+        w.Tick(t, players=[Player(P1)], entities=[Entity(H1)], objectives=flags, stands=stands)
+    return w
+
+
+def test_flags_and_stands_round_trip_through_the_reader(tmp_path):
+    d = tickdump.Dump(Save(tmp_path, "a.tdump", FlagFilm(state_at=3)))
+    assert d.version == 2 and not d.is_cut
+    assert [len(r.objectives) for r in d.records] == [2] * 6
+    assert [len(r.stands) for r in d.records] == [1] * 6
+    assert [int(r.objectives["State"][1]) for r in d.records] == [0, 0, 0, 1, 1, 1]
+    assert int(d.records[4].objectives["CarrierPlayer"][1]) == P1
+    assert int(d.records[0].stands["OwnerTeam"][0]) == 0
+    assert int(d.records[0].header["ObjectiveCount"]) == 2 and int(d.records[0].header["StandCount"]) == 1
+    assert [len(table) for _, table in d.states()] == [1] * 6
+
+
+def test_a_flag_that_changes_state_is_a_difference_of_its_table(tmp_path):
+    r = DiffOf(tmp_path, FlagFilm(), FlagFilm(state_at=3))
+    assert not r.is_equal
+    assert set(r.fields) == {"Objectives.State", "Objectives.CarrierPlayer"}
+    assert (r.fields["Objectives.State"].first_tick, r.fields["Objectives.State"].first_key) == (3, 0xA2)
+    assert (r.fields["Objectives.State"].golden, r.fields["Objectives.State"].run) == ("0", "1")
+    assert r.existence == {} and r.schema == []
+
+
+def test_a_flag_recreated_with_another_handle_is_an_existence_difference(tmp_path):
+    golden, run = FlagFilm(), Writer()
+    for t in range(6):
+        run.Tick(t, players=[Player(P1)], entities=[Entity(H1)],
+                 objectives=[{"Handle": 0xA1, "BaseTeam": 0, "OwnerTeam": 1, "CarrierPlayer": 0xFFFFFFFF},
+                             {"Handle": 0xA2 if t < 4 else 0xA9, "BaseTeam": 1, "OwnerTeam": 0, "AlliesInZone": 2,
+                              "CarrierPlayer": 0xFFFFFFFF}],
+                 stands=[{"Handle": 0xB1, "BaseTeam": 1, "OwnerTeam": 0}])
+    r = DiffOf(tmp_path, golden, run)
+    assert set(r.existence) == {"Objectives"}
+    e = r.existence["Objectives"]
+    assert (e.only_golden, e.only_run, e.first_tick, e.first_key) == (1, 1, 4, 0xA2)
+
+
+def test_a_golden_from_before_the_flags_is_read_and_reports_the_new_tables_as_schema(tmp_path):
+    real, _ = RealLayout()
+    old_layout = ChangedLayout(real, drop={"BridgeTickHeader": ["ObjectiveCount", "StandCount"]})
+    old_layout["structs"] = [s for s in old_layout["structs"] if s["name"] not in ("BridgeObjective", "BridgeStand")]
+    golden = Film(range(4), writer=Writer(layout=old_layout, layout_hash=0x1))
+    gpath = Save(tmp_path, "old.tdump", golden)
+    assert tickdump.Dump(gpath).version == 1
+    r = tickdump.Diff(tickdump.Dump(gpath), tickdump.Dump(Save(tmp_path, "new.tdump", FlagFilm(ticks=range(4)))))
+    assert not r.is_equal
+    assert "+ Objectives (table of 10 fields)" in r.schema and "+ Stands (table of 3 fields)" in r.schema
+    assert "+ Header.ObjectiveCount" in r.schema and "+ Header.StandCount" in r.schema
+    assert not any(k.startswith(("Objectives", "Stands")) for k in r.fields) and "Objectives" not in r.existence
+

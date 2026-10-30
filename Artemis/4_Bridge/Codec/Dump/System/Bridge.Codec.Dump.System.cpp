@@ -14,6 +14,8 @@ namespace
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeEntity;
+    using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeStand;
 
     using Bridge::Codec::Dump::Type::TickDumpFileHeader;
     using Bridge::Codec::Dump::Type::TickDumpFooter;
@@ -132,6 +134,8 @@ namespace Bridge::Codec::Dump::System
         bytes += WriteRows(stream, std::span<const BridgeEntity>{ changed });
         bytes += WriteRows(stream, std::span<const std::uint32_t>{ removed });
         bytes += WriteRows(stream, fresh);
+        bytes += WriteRows(stream, std::span<const BridgeObjective>{ flat.Objectives.data(), flat.Header.ObjectiveCount });
+        bytes += WriteRows(stream, std::span<const BridgeStand>{ flat.Stands.data(), flat.Header.StandCount });
         result.Bytes = bytes;
 
         if (stream.good())

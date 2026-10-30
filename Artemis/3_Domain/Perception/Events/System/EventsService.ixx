@@ -35,6 +35,8 @@ export namespace Perception::Events::System
         // keyed by its base team. None is generated when the round changes or on the first tick after a load.
         // A carried flag that goes back home is a FlagCaptured only if the score of a team goes up in that tick or the next (the event
         // keeps the tick of the transition). Otherwise it is a FlagReset: the flag went home without scoring.
+        // A new handle for a base team is a capture, a return or a reset only when the new flag is at home. Otherwise the states of the
+        // two flags are compared as if it were the same object.
         // A first engine sequence at or below the last one read starts a new log (another match).
         auto Update() -> void;
 

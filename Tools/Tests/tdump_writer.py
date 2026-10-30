@@ -1,6 +1,6 @@
 """
 tdump_writer.py
-Test support of M2 (D170-D174): writes .tdump files (format version 1, Ignore Referencia/Diseno/15 sec. 4) the
+Test support of M2 (D170-D174): writes .tdump files (format version 2, 1 for a layout without flags and stands; Ignore Referencia/Diseno/15 sec. 4) the
 way the dump thread of Artemis does (Artemis/4_Bridge/Codec/Dump/System/Bridge.Codec.Dump.System.cpp: keyframe first and every
 keyframe_interval records, otherwise the rows that are new or differ byte for byte plus the handles that are gone). The layout is the
 real one of Data/Bridge/Bridge.xml (GenerateBridge.LayoutJson, the same text the C++ embeds), optionally changed to test layout
@@ -33,7 +33,8 @@ FILE_HEADER = struct.Struct("<8sIIQIIII64s32s64s")
 RECORD_HEADER = struct.Struct("<4sIIHHHHI")
 FOOTER = struct.Struct("<4sIQQQQ")
 HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
-DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity", "BridgeEvent")
+DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
+                "BridgeStand")
 SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "f32": 4, "u64": 8}
 
 
@@ -102,6 +103,11 @@ class Writer:
         self.previous = {}
         self.chunks, self.recorded, self.dropped, self.event_losses, self.last_sequence = [], 0, 0, 0, 0
 
+    def HasObjectives(self):
+        """Whether the layout has the flag and stand blocks (format version 2)."""
+        header = self.types["BridgeTickHeader"].names
+        return "BridgeObjective" in self.types and "BridgeStand" in self.types and "ObjectiveCount" in header and "StandCount" in header
+
     def Rows(self, name, rows):
         out = np.zeros(len(rows), self.types[name])
         for i, row in enumerate(rows):
@@ -110,14 +116,16 @@ class Writer:
         return out
 
     def Tick(self, game_tick, players=(), entities=(), events=(), header=None, match=None, dropped_before=0, has_match=True,
-             events_lost=False):
-        players, events = list(players), list(events)
+             events_lost=False, objectives=(), stands=()):
+        players, events, objectives, stands = list(players), list(events), list(objectives), list(stands)
         entity_rows = self.Rows("BridgeEntity", list(entities))
         entity_rows = entity_rows[np.argsort(entity_rows["Handle"], kind="stable")]
         self.last_sequence = max([self.last_sequence] + [int(e["Sequence"]) for e in events if "Sequence" in e])
         head = {"EventCount": len(events), "LastEventSequence": self.last_sequence}
         head.update(header or {})
         head.update({"PlayerCount": len(players), "EntityCount": len(entity_rows)})
+        if self.HasObjectives():
+            head.update({"ObjectiveCount": len(objectives), "StandCount": len(stands)})
         match_row = dict(match or {})
         if has_match:
             match_row.setdefault("GameTick", game_tick)
@@ -142,6 +150,9 @@ class Writer:
         self.chunks.append(changed.tobytes())
         self.chunks.append(np.array(removed, "<u4").tobytes())
         self.chunks.append(self.Rows("BridgeEvent", events).tobytes())
+        if self.HasObjectives():
+            self.chunks.append(self.Rows("BridgeObjective", objectives).tobytes())
+            self.chunks.append(self.Rows("BridgeStand", stands).tobytes())
         self.recorded += 1
         self.dropped += dropped_before
         self.event_losses += 1 if events_lost else 0
@@ -150,7 +161,7 @@ class Writer:
     def Bytes(self, footer=True, dropped_ticks=None, event_losses=None, queue_waits=0, cut=0):
         """The whole file. footer=False: a recording that was cut (crash). cut=N drops the last N bytes."""
         text = json.dumps(self.layout, separators=(",", ":")).encode("ascii")
-        head = FILE_HEADER.pack(b"ATDUMP\0\0", 1, FILE_HEADER.size, self.layout_hash, self.layout.get("version", 1), len(text),
+        head = FILE_HEADER.pack(b"ATDUMP\0\0", 2 if self.HasObjectives() else 1, FILE_HEADER.size, self.layout_hash, self.layout.get("version", 1), len(text),
                                 RECORD_HEADER.size, 0, self.map_name.encode(), self.start_time.encode(), self.source.encode())
         data = head + text + b"".join(self.chunks)
         if footer:

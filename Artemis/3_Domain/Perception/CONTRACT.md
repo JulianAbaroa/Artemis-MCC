@@ -42,7 +42,8 @@ Other projects may import only these modules; everything else in the project is 
 ## State between ticks
 - `CarriedHandlesStore`: every object a biped carried since the map loaded (a dropped Fixed or Phased item can never be picked up
   again, so `IsPickable` needs this history).
-- `TagClassificationsStore`: the classification of each tag of the loaded map, computed once.
+- `TagClassificationsStore`: the classification of each tag of the loaded map, computed once. The per-object result can differ from
+  it in one case: a zone of any tag attached to a flag is classified `ObjectiveZone/FlagZone` (the zone where allies return it; the tag of a gametype may call it a hill).
 - `EventsStore`: a log of the last events, so readers that sample less often than every tick (the bridge, the bench) miss
   none. `GameEvent.Sequence` is the sequence of Artemis (from 1 per match, no gaps, engine events of the tick first, then flag events)
   and `EngineSequence` the one of the engine ring (0 in the flag events Artemis generates). The engine's own flag events are left out.
@@ -67,5 +68,5 @@ A missing or invalid table entry leaves the results that depend on it empty for 
 
 ## Tests
 - `ReplayTests.Recordings`: a recorded Snapshot stream run through the whole pipeline must give the golden `.tdump` byte for byte.
-- `PipelineTests` (the pure chain without the DLL) and `CollidableSceneTests`, in `Artemis.Tests`.
+- `PipelineTests` (the pure chain without the DLL), `CollidableSceneTests` and `ClassifierFlagZoneTests`, in `Artemis.Tests`.
 - `Tools/Tests/test_components.py`: imports, references and purity of the project.

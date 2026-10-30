@@ -45,6 +45,21 @@ namespace
     constexpr std::uint32_t k_TimerRunningShift{ 24 };
     constexpr std::uint32_t k_TimerUnitsPerTick{ 20 };
 
+    // Distance, horizontal and vertical, within which a flag without a usable Megalo state counts as standing on its stand (world units).
+    constexpr float k_HomeRadius{ 1.0f };
+
+    // return: Whether the flag is at its stand: within k_HomeRadius of the stand horizontally and vertically. False without a stand.
+    // note: The engine recreates a dropped flag as a new object that has no Megalo element for about ten ticks. A flag at its stand
+    // is home, anywhere else it lies on the ground.
+    auto IsAtStand(const Entity& flag, const Entity* stand) -> bool
+    {
+        if (stand == nullptr) return false;
+
+        const float horizontal{ std::hypot(flag.WorldOrigin.X - stand->WorldOrigin.X, flag.WorldOrigin.Y - stand->WorldOrigin.Y) };
+        const float vertical{ std::abs(flag.WorldOrigin.Z - stand->WorldOrigin.Z) };
+        return horizontal <= k_HomeRadius && vertical <= k_HomeRadius;
+    }
+
     // return: The team that plays the side of a base team in this round, Neutral when the side is not in use.
     auto OwnerOf(Team baseTeam, const AliveGame* game) -> Team
     {
@@ -95,7 +110,6 @@ namespace Perception::Details::System
         const auto gamePtr{ m_GameStore.Acquire() };
         const auto playersPtr{ m_PlayersStore.Acquire() };
         const auto zonesPtr{ m_ZoneDetailsStore.Acquire() };
-        const auto previousPtr{ m_ObjectiveDetailsStore.Acquire() };
         const AliveGame* game{ gamePtr.get() };
 
         std::unordered_map<std::uint32_t, const AliveMegaloObject*> megalo{};
@@ -174,18 +188,12 @@ namespace Perception::Details::System
             }
             else
             {
-                // Without the Megalo state the flag is Home until it is carried for the first time since it was created.
-                bool wasTaken{ false };
-                if (previousPtr)
-                {
-                    const auto previousIt{ previousPtr->Flags.find(classified.Handle) };
-                    wasTaken = previousIt != previousPtr->Flags.end() && previousIt->second.State != FlagState::Home;
-                }
-
-                flag.State = wasTaken ? FlagState::Dropped : FlagState::Home;
+                // note: No Megalo element yet, or one that still says carried while nobody holds the flag (it lags the drop by up to
+                // ten ticks): the position tells. Nothing is remembered from the tick before.
+                flag.State = IsAtStand(*entity, entitiesPtr->Find(flag.HomeStand)) ? FlagState::Home : FlagState::Dropped;
             }
 
-            if (flag.State == FlagState::Dropped && element != nullptr)
+            if (flag.State == FlagState::Dropped && element != nullptr && element->State == k_MegaloDropped)
             {
                 flag.ResetTicks = ((element->ResetTimer & k_TimerValueMask) + k_TimerUnitsPerTick - 1) / k_TimerUnitsPerTick;
                 flag.IsResetRunning = (element->ResetTimer >> k_TimerRunningShift) != 0;

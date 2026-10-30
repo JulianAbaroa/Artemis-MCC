@@ -11,6 +11,8 @@
 	<const name="MaxPlayers" value="16" owner="Common.Engine.Type:k_MaxPlayers" doc="Players of a match (Common.Engine k_MaxPlayers) and action slots, by player table index." />
 	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a tick (Common.Engine k_MaxObjects)." />
 	<const name="TickBuffers" value="2" doc="Tick buffers: Artemis writes the one Python is not reading." />
+	<const name="MaxObjectives" value="8" doc="Flags, and stands, a tick carries (a capture game has one of each per team: Common.Engine k_MaxTeams)." />
+	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
 	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
@@ -39,6 +41,7 @@
 	</flags>
 	<flags name="BridgeTickFlag" type="u32" doc="Flags of a tick.">
 		<bit name="EntitiesTruncated" index="0" doc="The tick had more live objects than MaxEntities." />
+		<bit name="ObjectivesTruncated" index="1" doc="The tick had more flags or more stands than MaxObjectives." />
 	</flags>
 
 	<struct name="BridgeVec3" doc="Vector of three floats, world units or a direction.">
@@ -111,16 +114,23 @@
 		<field name="Flags" type="u32" enum="BridgeTickFlag" />
 		<field name="EventCount" type="u16" doc="Rows of Events in use, oldest first." />
 		<field name="LastEventSequence" type="u32" doc="Sequence of the newest event of the match up to this tick (0 = none yet)." />
+		<field name="ObjectiveCount" type="u16" doc="Rows of Objectives in use." />
+		<field name="StandCount" type="u16" doc="Rows of Stands in use." />
 	</struct>
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
 		<field name="GameTick" type="u32" doc="Ticks since the start of the match (60 per second). Does not restart between rounds." />
 		<field name="Phase" type="u8" semantic="MatchPhase" />
+		<field name="RoundState" type="u8" semantic="RoundState" />
 		<field name="PlayerScores" type="i16" count="MaxPlayers" doc="Score of each player, by player table index." />
+		<field name="RoundIndex" type="i16" doc="Round of the match, from 0." />
+		<field name="TeamRoundScores" type="i16" count="MaxTeams" doc="Score of each team in the current round, by team." />
+		<field name="TeamTotalScores" type="i16" count="MaxTeams" doc="Score of each team added up over the match, by team." />
 	</struct>
 
 	<struct name="BridgeEvent" doc="One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).">
-		<field name="Sequence" type="u32" doc="From 1 in each match, without gaps." />
+		<field name="Sequence" type="u32" doc="From 1 in each match, without gaps. Artemis numbers the events of the log, the ones it generates included." />
+		<field name="EngineSequence" type="u32" doc="Sequence the engine gave the event in its own ring, 0 in the events Artemis generates (flags)." />
 		<field name="GameTick" type="u32" />
 		<field name="Key" type="u32" />
 		<field name="CausePlayer" type="u32" />
@@ -185,12 +195,33 @@
 		<field name="AngularVelocity" type="BridgeVec3" />
 	</struct>
 
+	<struct name="BridgeObjective" doc="One flag of a capture game (Perception ObjectiveDetail). One struct per kind, and not one block with a Kind: a stand has three fields and a flag ten, so a shared block would carry seven zero fields per stand.">
+		<field name="Handle" type="u32" doc="Object handle of the flag. The engine recreates the flag on reset, return and capture, so it changes: BaseTeam identifies the flag." />
+		<field name="CarrierPlayer" type="u32" doc="Player handle of the carrier, NoHandle when none or when the carrier has no player." />
+		<field name="CarrierBiped" type="u32" doc="Biped handle of the carrier, NoHandle when none." />
+		<field name="HomeStand" type="u32" doc="Handle of the stand with the same BaseTeam, NoHandle when none." />
+		<field name="ResetTicks" type="u32" doc="Ticks left to reset a dropped flag, rounded up. 0 when it is not dropped or the engine has no timer for it." />
+		<field name="BaseTeam" type="u8" semantic="Team" doc="Team of the placement in the map variant. It never changes." />
+		<field name="OwnerTeam" type="u8" semantic="Team" doc="Team that plays the side of the flag in this round. Neutral when the side is not in use." />
+		<field name="State" type="u8" semantic="FlagState" />
+		<field name="IsResetRunning" type="u8" doc="1 when the reset timer of a dropped flag is counting down." />
+		<field name="AlliesInZone" type="u8" doc="Live bipeds of players of the OwnerTeam inside the zone of the flag." />
+	</struct>
+
+	<struct name="BridgeStand" doc="One flag stand of a capture game (Perception StandDetail).">
+		<field name="Handle" type="u32" />
+		<field name="BaseTeam" type="u8" semantic="Team" />
+		<field name="OwnerTeam" type="u8" semantic="Team" doc="Team that plays the side of the stand in this round." />
+	</struct>
+
 	<struct name="BridgeTick" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.">
 		<field name="Sequence" type="u64" />
 		<field name="Header" type="BridgeTickHeader" />
 		<field name="Players" type="BridgePlayer" count="MaxPlayers" />
 		<field name="Entities" type="BridgeEntity" count="MaxEntities" />
 		<field name="Match" type="BridgeMatch" />
+		<field name="Objectives" type="BridgeObjective" count="MaxObjectives" doc="Flags, sorted by BaseTeam then Handle." />
+		<field name="Stands" type="BridgeStand" count="MaxObjectives" doc="Stands, sorted by BaseTeam then Handle." />
 		<field name="Events" type="BridgeEvent" count="MaxTickEvents" />
 		<field name="SequenceEnd" type="u64" />
 	</struct>

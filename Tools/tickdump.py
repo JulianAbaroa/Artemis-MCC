@@ -47,9 +47,13 @@ RECORD_HEADER = np.dtype([("Marker", "S4"), ("GameTick", "<u4"), ("DroppedBefore
 FOOTER = np.dtype([("Marker", "S4"), ("Reserved", "<u4"), ("RecordedTicks", "<u8"), ("DroppedTicks", "<u8"), ("QueueWaits", "<u8"),
                    ("EventLosses", "<u8")])
 HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
+# Rows of a table the layout of a file does not have (a dump from before the flags): empty, with the key every table has.
+EMPTY_ROWS = np.dtype([("Handle", "<u4")])
 # Table name in the output -> struct of the layout (Bridge.xml).
 TABLES = {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer", "Entities": "BridgeEntity",
-          "Events": "BridgeEvent"}
+          "Events": "BridgeEvent", "Objectives": "BridgeObjective", "Stands": "BridgeStand"}
+# Tables of the Diff that are compared tick by tick (the events are compared apart, by Sequence).
+TICK_TABLES = ("Header", "Match", "Players", "Entities", "Objectives", "Stands")
 # Fields that are not compared: the local view of the theater and the clock of the bridge (D170). Listed in every diff.
 IGNORED = {"Header": ("MatchId", "ActionTick", "Generation", "PublishQpc"),
            "Players": ("LocalIndex", "Connection", "CameraPosition", "CameraForward")}
@@ -82,7 +86,7 @@ def Dtypes(layout):
 class Record:
     # entities: the delta of the file (new or changed rows), removed: handles gone since the previous record. Dump.states() rebuilds
     # the full table of every tick.
-    __slots__ = ("game_tick", "dropped", "flags", "header", "match", "players", "entities", "removed", "events")
+    __slots__ = ("game_tick", "dropped", "flags", "header", "match", "players", "entities", "removed", "events", "objectives", "stands")
 
 
 class Dump:
@@ -101,14 +105,17 @@ class Dump:
          source) = FILE_HEADER.unpack_from(data, 0)
         if magic != b"ATDUMP\0\0":
             raise TickDumpError(f"{path} is not a .tdump file.")
-        if self.version != 1:
-            raise TickDumpError(f"{path} has format version {self.version}, this reader knows 1.")
+        if self.version not in (1, 2):
+            raise TickDumpError(f"{path} has format version {self.version}, this reader knows 1 and 2.")
         self.map_name, self.start_time, self.source = Text(map_name), Text(start), Text(source)
         try:
             self.layout = json.loads(data[header_size:header_size + json_size])
             self.types = Dtypes(self.layout)
             th, tm, tp, te, tv = (self.types[n] for n in ("BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity",
                                                           "BridgeEvent"))
+            # Version 2 puts the flags and the stands (counts in the header) after the events; a layout without them has no such blocks.
+            to, ts = self.types.get("BridgeObjective"), self.types.get("BridgeStand")
+            has_objectives = to is not None and ts is not None and {"ObjectiveCount", "StandCount"} <= set(th.names)
         except (ValueError, KeyError, TypeError, IndexError) as error:
             raise TickDumpError(f"{path} has an unreadable layout ({type(error).__name__}: {error}).")
         self.records, self.footer, self.is_cut = [], None, False
@@ -134,6 +141,8 @@ class Dump:
             offset += tm.itemsize
             counts = ((tp, int(r.header["PlayerCount"])), (te, int(rh["ChangedEntityCount"])),
                       (np.dtype("<u4"), int(rh["RemovedEntityCount"])), (tv, int(rh["NewEventCount"])))
+            if has_objectives:
+                counts += ((to, int(r.header["ObjectiveCount"])), (ts, int(r.header["StandCount"])))
             if offset + sum(t.itemsize * n for t, n in counts) > len(data):
                 self.is_cut = True
                 break
@@ -141,7 +150,8 @@ class Dump:
             for t, n in counts:
                 rows.append(np.frombuffer(data, t, n, offset))
                 offset += t.itemsize * n
-            r.players, r.entities, r.removed, r.events = rows
+            r.players, r.entities, r.removed, r.events = rows[:4]
+            r.objectives, r.stands = rows[4:] if has_objectives else (np.zeros(0, EMPTY_ROWS), np.zeros(0, EMPTY_ROWS))
             self.records.append(r)
         else:
             self.is_cut = self.footer is None
@@ -235,7 +245,8 @@ def Row(row, fields=None):
             v = "(" + ",".join(f"{float(v[c]):.3f}" for c in v.dtype.names) + ")"
         elif v.dtype.kind == "f":
             v = f"{float(v):.4f}"
-        elif n in ("Handle", "BoundTo", "ParentHandle", "BipedHandle", "Objective") or n.endswith("Handle"):
+        elif n in ("Handle", "BoundTo", "ParentHandle", "BipedHandle", "Objective", "CarrierPlayer", "CarrierBiped", "HomeStand") \
+                or n.endswith("Handle"):
             v = f"{int(v):08X}" if v.ndim == 0 else v
         parts.append(f"{n}={v}")
     return " ".join(parts)
@@ -250,6 +261,10 @@ def ShowTick(d, tick):
     print(f"match: {Row(r.match)}")
     for p in r.players:
         print(f"player: {Row(p)}")
+    for o in r.objectives:
+        print(f"objective: {Row(o)}")
+    for s in r.stands:
+        print(f"stand: {Row(s)}")
     print(f"entities {len(table)} ({len(r.entities)} written in this record), new events {len(r.events)}")
     for e in r.events:
         print(f"event: {Row(e)}")
@@ -258,7 +273,7 @@ def ShowTick(d, tick):
 def ShowHandle(d, handle, field):
     seen, last = 0, None
     for r, entities in d.states():
-        for table, label in ((r.players, "player"), (entities, "entity")):
+        for table, label in ((r.players, "player"), (entities, "entity"), (r.objectives, "objective"), (r.stands, "stand")):
             rows = table[table["Handle"] == handle] if len(table) else table
             if not len(rows):
                 continue
@@ -364,6 +379,12 @@ def Schema(golden, run):
     schema, common = [], {}
     for table, struct_name in TABLES.items():
         g, r = LayoutFields(golden, struct_name), LayoutFields(run, struct_name)
+        if not g or not r:
+            # A table one layout does not have (the flags in a dump from before them): one line, and nothing to compare.
+            if g or r:
+                schema.append(f"{'-' if g else '+'} {table} (table of {len(g or r)} fields)")
+            common[table] = []
+            continue
         gd, rd = dict(g), dict(r)
         names = []
         for name, t in g:
@@ -539,7 +560,7 @@ def Diff(golden, run, overlap=False):
     golden_keys, run_keys = Occurrences(MatchTicks(golden)), Occurrences(MatchTicks(run))
     both = set(golden_keys) & set(run_keys)
     tick_range = (min(k[0] for k in both), max(k[0] for k in both)) if both else None
-    tables = {name: TableDiff(name, golden, run, common[name]) for name in ("Header", "Match", "Players", "Entities")}
+    tables = {name: TableDiff(name, golden, run, common[name]) for name in TICK_TABLES}
     if both:
         last = max(both)
         gs, rs = MatchStates(golden, golden_keys), MatchStates(run, run_keys)
@@ -555,6 +576,9 @@ def Diff(golden, run, overlap=False):
                 tables["Match"].Compare(key, OneRow(rg.match), OneRow(rr.match), False)
                 tables["Players"].Compare(key, rg.players, rr.players, True)
                 tables["Entities"].Compare(key, tg, tr, True)
+                for name, a, b in (("Objectives", rg.objectives, rr.objectives), ("Stands", rg.stands, rr.stands)):
+                    if tables[name].fields:
+                        tables[name].Compare(key, a, b, True)
                 g, r = next(gs, None), next(rs, None)
     event_fields, event_existence = {}, None
     if both:

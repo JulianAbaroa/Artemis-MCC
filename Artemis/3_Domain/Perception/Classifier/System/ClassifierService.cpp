@@ -171,6 +171,14 @@ namespace
         return classification.MultiplayerFunction != classification.Function;
     }
 
+    // A zone attached to a flag is the zone where allies return that flag (D251), whatever the zone says about itself (A14, section 3):
+    // the tag of the zone reads as a hill because the engine only knows the zone kind, and the flag gives it its meaning. It is not
+    // a capture zone: the capture happens at the stand.
+    auto IsFlagTag(const TagClassification& classification) -> bool
+    {
+        return classification.Function == Function::ObjectiveItem && classification.Subtype == SubtypeValue(Subtype::ObjectiveItem::Flag);
+    }
+
     // Link of a child object to its parent (05, section 5).
     // param parentKind: Invalid when the parent is not in the object table.
     // note: Carried = item held by a biped. Seated = biped inside a vehicle. Attached = any other child.
@@ -213,6 +221,12 @@ namespace Perception::Classifier::System
 
                 classified.Binding = BindingOf(object.Profile.ObjectKind, parentKind);
                 classified.BoundTo = object.ParentHandle;
+
+                if (tag.Function == Function::ObjectiveZone && parentIt != objectTable.end()
+                    && IsFlagTag(this->FindTagClassification(parentIt->second)))
+                {
+                    classified.Subtype = SubtypeValue(Subtype::ObjectiveZone::FlagZone);
+                }
             }
             classified.Capabilities = tag.Capabilities;
 

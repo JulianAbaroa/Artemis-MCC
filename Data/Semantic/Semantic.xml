@@ -150,6 +150,7 @@
 			<subtype name="Hill" id="1" />
 			<subtype name="Territory" id="2" />
 			<subtype name="FlagCapture" id="3" />
+			<subtype name="FlagZone" id="4" doc="Zone bound to a flag (BoundTo = the flag): allies inside return it (D251)." />
 		</value>
 		<value name="Teleporter" id="19" group="MapLogic" doc="Teleporter.">
 			<subtype name="Sender" id="1" />

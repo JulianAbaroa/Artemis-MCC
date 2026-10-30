@@ -25,6 +25,7 @@ import numpy as np
 
 from . import bridge_layout as L
 from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgeRequest
+from .semantic import RoundState
 
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 _kernel32.OpenEventW.restype = wintypes.HANDLE
@@ -107,12 +108,36 @@ class PublishedTick:
         self.players = data["Players"][: int(self.header["PlayerCount"])]
         self.entities = data["Entities"][: int(self.header["EntityCount"])]
         self.match = data["Match"]
+        # Flags and stands of a capture game, sorted by BaseTeam then Handle. The engine recreates a flag on reset, return and
+        # capture, so its Handle changes and BaseTeam is what identifies it.
+        self.objectives = data["Objectives"][: int(self.header["ObjectiveCount"])]
+        self.stands = data["Stands"][: int(self.header["StandCount"])]
         # The newest events of the match up to this tick, oldest first. Bridge.new_events keeps only the unseen ones (D141).
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])
         self.action_tick = int(self.header["ActionTick"])
         self.match_id = int(self.header["MatchId"])
         self.received_qpc = received_qpc
+
+
+    @property
+    def round_index(self) -> int:
+        """Round of the match, from 0."""
+        return int(self.match["RoundIndex"])
+
+    @property
+    def round_state(self) -> RoundState:
+        return RoundState(int(self.match["RoundState"]))
+
+    @property
+    def team_round_scores(self) -> np.ndarray:
+        """Score of each team in the current round, indexed by team."""
+        return self.match["TeamRoundScores"]
+
+    @property
+    def team_total_scores(self) -> np.ndarray:
+        """Score of each team over the match, indexed by team."""
+        return self.match["TeamTotalScores"]
 
 
 class Bridge:

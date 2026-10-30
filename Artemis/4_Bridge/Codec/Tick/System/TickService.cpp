@@ -70,6 +70,7 @@ namespace Bridge::Codec::Tick::System
         tick.TeleporterDetails = m_TeleporterDetailsStore.Acquire();
         tick.LiftDetails = m_LiftDetailsStore.Acquire();
         tick.BarrierDetails = m_BarrierDetailsStore.Acquire();
+        tick.ObjectiveDetails = m_ObjectiveDetailsStore.Acquire();
         tick.Aims = m_AimStore.Acquire();
         tick.Events = m_EventsStore.Acquire();
         tick.Match = m_MatchStore.Acquire();

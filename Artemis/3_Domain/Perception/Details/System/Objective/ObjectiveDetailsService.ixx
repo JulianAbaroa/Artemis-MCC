@@ -39,7 +39,8 @@ export namespace Perception::Details::System
 
         // Publishes the flags and stands of the tick.
         // note: Runs after the Players of the same tick, because the carrier and the allies are bipeds of players. The Megalo state of a
-        // flag is looked up by its handle, never by element. Without the Megalo state a flag is Home until the first time it is carried.
+        // flag is looked up by its handle, never by element. Without a usable Megalo state a flag is Home when it stands within 1.0 of its
+        // stand and Dropped anywhere else.
         auto Update() -> void;
 
         // Drops the published details.

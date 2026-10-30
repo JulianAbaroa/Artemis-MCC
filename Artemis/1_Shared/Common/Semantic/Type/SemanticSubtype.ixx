@@ -199,6 +199,7 @@ export namespace Common::Semantic::Type::Subtype
         Hill = 1,
         Territory = 2,
         FlagCapture = 3,
+        FlagZone = 4,
     };
 
     // Subtypes of Function::Teleporter.
@@ -431,6 +432,7 @@ export namespace Common::Semantic::Type::Subtype
             case 1: return "Hill";
             case 2: return "Territory";
             case 3: return "FlagCapture";
+            case 4: return "FlagZone";
             default: return {};
             }
         case Function::Teleporter:

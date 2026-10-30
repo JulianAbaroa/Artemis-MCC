@@ -158,7 +158,7 @@ SUBTYPES = {
     Function.SpawnZone: {1: 'Normal', 2: 'Weak', 3: 'Anti', 4: 'Fireteam1', 5: 'Fireteam2', 6: 'Fireteam3', 7: 'Fireteam4'},
     Function.Boundary: {1: 'Safe', 2: 'SoftSafe', 3: 'Kill', 4: 'SoftKill'},
     Function.ObjectiveSpawn: {1: 'FlagStand', 2: 'CapturePlate', 3: 'BallSpawn'},
-    Function.ObjectiveZone: {1: 'Hill', 2: 'Territory', 3: 'FlagCapture'},
+    Function.ObjectiveZone: {1: 'Hill', 2: 'Territory', 3: 'FlagCapture', 4: 'FlagZone'},
     Function.Teleporter: {1: 'Sender', 2: 'Receiver', 3: 'TwoWay'},
     Function.Lift: {1: 'Vertical', 2: 'Curved', 3: 'Redirected'},
     Function.Barrier: {1: 'OneWay', 2: 'TwoWay', 3: 'Blocker', 4: 'DropShield', 5: 'Portable'},

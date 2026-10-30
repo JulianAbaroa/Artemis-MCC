@@ -100,7 +100,7 @@ namespace
             m_Chain.m_Environment.m_ClassifierStore.Publish(std::move(classifieds));
 
             Entities entities{};
-            this->AddEntity(entities, k_Flag, Team::Blue, Vec3{});
+            this->AddEntity(entities, k_Flag, Team::Blue, m_FlagPosition);
             this->AddEntity(entities, k_Stand, Team::Blue, Vec3{});
             this->AddEntity(entities, k_Zone, Team::Neutral, Vec3{});
             this->AddEntity(entities, k_AllyBiped, Team::Red, m_AllyPosition);
@@ -138,6 +138,8 @@ namespace
         AliveGame m_Game{};
         std::uint32_t m_Holder{ k_NoHandle };
         Vec3 m_AllyPosition{ 1.0f, 0.0f, 0.5f };
+        // The stand is at the origin.
+        Vec3 m_FlagPosition{};
         std::shared_ptr<const Perception::Details::Type::ObjectiveDetails> m_Published{};
     };
 }
@@ -218,9 +220,15 @@ TEST_F(ObjectiveDetailsTests, PausedTimerIsNotRunning)
     EXPECT_EQ(flag->ResetTicks, 3600u);
 }
 
-TEST_F(ObjectiveDetailsTests, WithoutMegaloTheFlagIsHomeUntilItIsCarried)
+TEST_F(ObjectiveDetailsTests, WithoutMegaloTheFlagIsHomeOnlyWhenItIsAtItsStand)
 {
+    // On the stand (the same place, and within 1.0 both ways).
     const ObjectiveDetail* flag{ this->Update() };
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Home);
+
+    m_FlagPosition = Vec3{ 0.7f, 0.0f, 0.9f };
+    flag = this->Update();
     ASSERT_NE(flag, nullptr);
     EXPECT_EQ(flag->State, FlagState::Home);
 
@@ -229,11 +237,63 @@ TEST_F(ObjectiveDetailsTests, WithoutMegaloTheFlagIsHomeUntilItIsCarried)
     ASSERT_NE(flag, nullptr);
     EXPECT_EQ(flag->State, FlagState::Carried);
 
+    // Nobody holds it and it is off the stand: dropped, and it stays so (nothing is remembered from the tick before).
     m_Holder = k_NoHandle;
+    m_FlagPosition = Vec3{ 3.0f, 0.0f, 0.0f };
     flag = this->Update();
     ASSERT_NE(flag, nullptr);
     EXPECT_EQ(flag->State, FlagState::Dropped);
     EXPECT_EQ(flag->ResetTicks, 0u);
+
+    flag = this->Update();
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Dropped);
+}
+
+TEST_F(ObjectiveDetailsTests, TheDistanceToTheStandIsCheckedHorizontallyAndVertically)
+{
+    m_FlagPosition = Vec3{ 0.0f, 0.0f, 1.5f };
+    const ObjectiveDetail* flag{ this->Update() };
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Dropped);
+
+    m_FlagPosition = Vec3{ 0.8f, 0.8f, 0.0f };
+    flag = this->Update();
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Dropped);
+}
+
+TEST_F(ObjectiveDetailsTests, MegaloThatStillSaysCarriedWithoutAHolderFallsBackToThePosition)
+{
+    // A recreated flag lying on the ground: its element says carried for a few ticks while nobody holds it.
+    m_Game.MegaloObjects.push_back(AliveMegaloObject{ .ObjectHandle = k_Flag, .State = 1 });
+    m_FlagPosition = Vec3{ 5.0f, 0.0f, 0.0f };
+
+    const ObjectiveDetail* flag{ this->Update() };
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Dropped);
+}
+
+TEST_F(ObjectiveDetailsTests, ResetTimerIsOnlyReadFromAnElementThatSaysDropped)
+{
+    m_Game.MegaloObjects.push_back(AliveMegaloObject{ .ObjectHandle = k_Flag, .State = 1, .ResetTimer = 72000 });
+    m_FlagPosition = Vec3{ 5.0f, 0.0f, 0.0f };
+
+    const ObjectiveDetail* flag{ this->Update() };
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Dropped);
+    EXPECT_EQ(flag->ResetTicks, 0u);
+    EXPECT_FALSE(flag->IsResetRunning);
+}
+
+TEST_F(ObjectiveDetailsTests, MegaloHomeWinsOverThePosition)
+{
+    m_Game.MegaloObjects.push_back(AliveMegaloObject{ .ObjectHandle = k_Flag, .State = 0 });
+    m_FlagPosition = Vec3{ 5.0f, 0.0f, 0.0f };
+
+    const ObjectiveDetail* flag{ this->Update() };
+    ASSERT_NE(flag, nullptr);
+    EXPECT_EQ(flag->State, FlagState::Home);
 }
 
 TEST_F(ObjectiveDetailsTests, OnlyLiveBipedsOfTheOwnerTeamInsideTheZoneAreAllies)

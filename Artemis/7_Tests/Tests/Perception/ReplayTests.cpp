@@ -179,16 +179,17 @@ namespace
         bool IsSequenceContinuous{ true };
     };
 
-    // Replays the recording of ctf_c record by record and keeps what the Perception gave at the engine ticks asked for.
+    // Replays the recording of a capture film record by record and keeps what the Perception gave at the engine ticks asked for.
+    // param film: Folder of Ignore/Regresion (ctf_c, cgb_displace_1min).
     // param ticks: Engine ticks (Match.GameTick) to keep.
     // param last: Receives the moment of the last record.
     // param run: Receives the events of the whole recording.
     // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunCtfRecording(const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last, CtfRun& run) -> std::string
+    auto RunCtfRecording(std::string_view film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last, CtfRun& run) -> std::string
     {
-        const std::filesystem::path directory{ RecordingsFolder() / "ctf_c" };
+        const std::filesystem::path directory{ RecordingsFolder() / film };
         std::error_code error{};
-        if (!std::filesystem::is_regular_file(directory / "golden.sdump", error)) return "No ctf_c recording in " + directory.string();
+        if (!std::filesystem::is_regular_file(directory / "golden.sdump", error)) return "No recording in " + directory.string();
 
         std::ifstream sdump{ directory / "golden.sdump", std::ios::binary };
         SnapshotReaderState reader{};
@@ -345,7 +346,7 @@ TEST_F(ReplayTests, CtfObjectivesFollowTheRecordedMatch)
     std::map<std::uint32_t, CtfMoment> moments{};
     CtfMoment last{};
     CtfRun run{};
-    const std::string reason{ RunCtfRecording(ticks, moments, last, run) };
+    const std::string reason{ RunCtfRecording("ctf_c", ticks, moments, last, run) };
     if (!reason.empty()) GTEST_SKIP() << reason;
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
@@ -427,7 +428,7 @@ TEST_F(ReplayTests, CtfFlagEventsMatchTheExpectedList)
     std::map<std::uint32_t, CtfMoment> moments{};
     CtfMoment last{};
     CtfRun run{};
-    const std::string reason{ RunCtfRecording({}, moments, last, run) };
+    const std::string reason{ RunCtfRecording("ctf_c", {}, moments, last, run) };
     if (!reason.empty()) GTEST_SKIP() << reason;
 
     EXPECT_EQ(run.EngineFlagEvents, 0u);
@@ -458,6 +459,38 @@ TEST_F(ReplayTests, CtfFlagEventsMatchTheExpectedList)
     for (std::size_t i{ 0 }; i < std::min<std::size_t>(differences.size(), 20); ++i) text += differences[i] + "\n";
     EXPECT_TRUE(differences.empty()) << differences.size() << " differences, the first 20:\n" << text;
     EXPECT_EQ(run.Generated.size(), expected.size());
+}
+
+// --- B4h H.4: the flags of the cgb_displace_1min film. Two players run with the enemy flags: the red flag is taken, dropped and taken
+// again six times (the user watched this one), the blue flag too. The engine recreates the flag every time it is dropped, with no
+// Megalo element for about ten ticks, and neither that nor the lying on the ground is a reset or a return. After the last drop both flags
+// lie on the ground until the end of the film. ---
+
+TEST_F(ReplayTests, CgbFlagsAreTakenAndDroppedSixTimesEachAndNothingElse)
+{
+    std::map<std::uint32_t, CtfMoment> moments{};
+    CtfMoment last{};
+    CtfRun run{};
+    const std::string reason{ RunCtfRecording("cgb_displace_1min", {}, moments, last, run) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    EXPECT_EQ(run.EngineFlagEvents, 0u);
+    EXPECT_TRUE(run.IsSequenceContinuous);
+
+    // Ticks of each kind by the team that plays the side of the flag (the mapping of the film is red 0, blue 1).
+    std::map<std::pair<std::uint8_t, Event>, std::vector<std::uint32_t>> ticks{};
+    for (const auto& event : run.Generated) ticks[{ event.Modifier, event.Kind }].push_back(event.GameTick);
+
+    using Ticks = std::vector<std::uint32_t>;
+    EXPECT_EQ((ticks[{ 0, Event::FlagTaken }]), (Ticks{ 1970, 2082, 2195, 2311, 2434, 2611 }));
+    EXPECT_EQ((ticks[{ 0, Event::FlagDropped }]), (Ticks{ 1996, 2136, 2218, 2339, 2460, 2630 }));
+    EXPECT_EQ((ticks[{ 1, Event::FlagTaken }]), (Ticks{ 1911, 2023, 2148, 2274, 2329, 2440 }));
+    EXPECT_EQ((ticks[{ 1, Event::FlagDropped }]), (Ticks{ 1959, 2082, 2196, 2298, 2395, 2492 }));
+    EXPECT_EQ(run.Generated.size(), 24u);
+
+    // They end lying on the ground: no reset, no return and no capture came.
+    ASSERT_EQ(last.Objectives.Flags.size(), 2u);
+    for (const auto& [handle, flag] : last.Objectives.Flags) EXPECT_EQ(flag.State, FlagState::Dropped) << handle;
 }
 
 TEST_F(ReplayTests, Recordings)
@@ -545,26 +578,39 @@ TEST_F(ReplayTests, Recordings)
         }
 
         ++replayed;
-        if (result.Status == ReplayStatus::Differs)
+        const std::filesystem::path replayPath{ directory / "replay.tdump" };
+        if (result.Status == ReplayStatus::Differs || result.Status == ReplayStatus::LayoutChanged)
         {
-            // The header of the recording and the records the pipeline gave, to compare them with tools/tickdump.py diff.
+            // The records the pipeline gave, in a complete .tdump to compare with tools/tickdump.py diff and to approve with
+            // tools/tickdump.py approve: the name, the start and the source of the recording, the layout of this build and a footer with
+            // the counters of the run (a replay drops no tick and loses no event).
             std::ifstream golden{ directory / "golden.tdump", std::ios::binary };
             TickDumpFileHeader header{};
             golden.read(reinterpret_cast<char*>(&header), sizeof(header));
-            std::vector<char> prefix(header.HeaderSize + header.LayoutJsonSize);
-            golden.seekg(0);
-            golden.read(prefix.data(), static_cast<std::streamsize>(prefix.size()));
 
-            std::ofstream replay{ directory / "replay.tdump", std::ios::binary | std::ios::trunc };
-            replay.write(prefix.data(), static_cast<std::streamsize>(prefix.size()));
+            std::ofstream replay{ replayPath, std::ios::binary | std::ios::trunc };
+            TickCodec::WriteFileHeader(replay, TextOf(header.MapName), TextOf(header.StartTime), TextOf(header.Source));
             replay.write(result.Replayed.data(), static_cast<std::streamsize>(result.Replayed.size()));
+            TickCodec::WriteFooter(replay, Bridge::Codec::Dump::Type::TickDumpCounters{ .RecordedTicks = result.Records });
 
-            ADD_FAILURE() << std::format("record {} (GameTick {}): python Tools/tickdump.py diff golden.tdump replay.tdump",
-                result.FirstDifference, result.GameTick);
+            if (result.Status == ReplayStatus::LayoutChanged)
+            {
+                ADD_FAILURE() << result.Reason << ": python Tools/tickdump.py diff golden.tdump replay.tdump";
+            }
+            else
+            {
+                ADD_FAILURE() << std::format("record {} (GameTick {}): python Tools/tickdump.py diff golden.tdump replay.tdump",
+                    result.FirstDifference, result.GameTick);
+            }
         }
         else if (result.Status != ReplayStatus::Equal)
         {
             ADD_FAILURE() << result.Reason;
+        }
+        else
+        {
+            // A replay.tdump left by an earlier difference would be taken for the result of this run.
+            std::filesystem::remove(replayPath, error);
         }
     }
 

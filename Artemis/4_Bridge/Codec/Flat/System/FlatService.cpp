@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
+import Perception.Details.Type;
 import Perception.Events.Type;
 import Perception.Match.Type;
 import std;
@@ -15,11 +16,15 @@ namespace
     using Perception::Players::Type::Player;
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchScore;
+    using Perception::Details::Type::ObjectiveDetail;
+    using Perception::Details::Type::StandDetail;
     using Contract::Bridge::Type::BridgeVec3;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeEntity;
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeEvent;
+    using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeStand;
     using Contract::Bridge::Type::BridgeTickFlag;
 
     using Common::Engine::Type::k_NoHandle;
@@ -108,10 +113,54 @@ namespace
         return row;
     }
 
+    auto ToBridge(const ObjectiveDetail& flag) -> BridgeObjective
+    {
+        BridgeObjective row{ Zeroed<BridgeObjective>() };
+        row.Handle = flag.Handle;
+        row.CarrierPlayer = flag.CarrierPlayer;
+        row.CarrierBiped = flag.CarrierBiped;
+        row.HomeStand = flag.HomeStand;
+        row.ResetTicks = flag.ResetTicks;
+        row.BaseTeam = static_cast<std::uint8_t>(flag.BaseTeam);
+        row.OwnerTeam = static_cast<std::uint8_t>(flag.OwnerTeam);
+        row.State = static_cast<std::uint8_t>(flag.State);
+        row.IsResetRunning = flag.IsResetRunning ? 1 : 0;
+        row.AlliesInZone = flag.AlliesInZone;
+        return row;
+    }
+
+    auto ToBridge(const StandDetail& stand) -> BridgeStand
+    {
+        BridgeStand row{ Zeroed<BridgeStand>() };
+        row.Handle = stand.Handle;
+        row.BaseTeam = static_cast<std::uint8_t>(stand.BaseTeam);
+        row.OwnerTeam = static_cast<std::uint8_t>(stand.OwnerTeam);
+        return row;
+    }
+
+    // return: Rows written. They are the ones of a by-handle map in the order of the bridge: by BaseTeam, then by handle, so the same
+    // flag keeps its slot while the engine recreates it. Stops at the capacity of the array.
+    template<typename Detail, typename Row, std::size_t N>
+    auto FlattenObjectives(const std::unordered_map<std::uint32_t, Detail>& details, std::array<Row, N>& rows) -> std::size_t
+    {
+        std::vector<const Detail*> sorted{};
+        sorted.reserve(details.size());
+        for (const auto& [handle, detail] : details) sorted.push_back(&detail);
+        std::ranges::sort(sorted, [](const Detail* a, const Detail* b)
+        {
+            return a->BaseTeam != b->BaseTeam ? a->BaseTeam < b->BaseTeam : a->Handle < b->Handle;
+        });
+
+        const std::size_t count{ (std::min)(sorted.size(), N) };
+        for (std::size_t i{ 0 }; i < count; ++i) rows[i] = ToBridge(*sorted[i]);
+        return count;
+    }
+
     auto ToBridge(const GameEvent& event) -> BridgeEvent
     {
         BridgeEvent row{ Zeroed<BridgeEvent>() };
         row.Sequence = event.Sequence;
+        row.EngineSequence = event.EngineSequence;
         row.GameTick = event.GameTick;
         row.Key = event.Key;
         row.CausePlayer = event.CausePlayer;
@@ -161,11 +210,33 @@ namespace Bridge::Codec::Flat::System
         {
             flat.Match.GameTick = tick.Match->GameTick;
             flat.Match.Phase = static_cast<std::uint8_t>(tick.Match->Phase);
+            flat.Match.RoundState = static_cast<std::uint8_t>(tick.Match->RoundState);
+            flat.Match.RoundIndex = tick.Match->RoundIndex;
+
+            for (std::size_t team{ 0 }; team < tick.Match->TeamScores.size() && team < flat.Match.TeamRoundScores.size(); ++team)
+            {
+                flat.Match.TeamRoundScores[team] = tick.Match->TeamScores[team].Round;
+                flat.Match.TeamTotalScores[team] = tick.Match->TeamScores[team].Total;
+            }
 
             for (const MatchScore& score : tick.Match->Scores)
             {
                 const std::size_t index{ score.PlayerHandle & k_HandleIndexMask };
                 if (index < flat.Match.PlayerScores.size()) flat.Match.PlayerScores[index] = score.Score;
+            }
+        }
+
+        // Flags and stands. Like the entities, only the rows below the count are meaningful.
+        std::size_t objectiveCount{ 0 };
+        std::size_t standCount{ 0 };
+        if (tick.ObjectiveDetails)
+        {
+            const auto& details{ *tick.ObjectiveDetails };
+            objectiveCount = FlattenObjectives(details.Flags, flat.Objectives);
+            standCount = FlattenObjectives(details.Stands, flat.Stands);
+            if (objectiveCount < details.Flags.size() || standCount < details.Stands.size())
+            {
+                flags |= static_cast<std::uint32_t>(BridgeTickFlag::ObjectivesTruncated);
             }
         }
 
@@ -187,6 +258,8 @@ namespace Bridge::Codec::Flat::System
         flat.Header.LastEventSequence = lastEventSequence;
         flat.Header.PlayerCount = static_cast<std::uint16_t>(playerCount);
         flat.Header.EntityCount = static_cast<std::uint16_t>(entityCount);
+        flat.Header.ObjectiveCount = static_cast<std::uint16_t>(objectiveCount);
+        flat.Header.StandCount = static_cast<std::uint16_t>(standCount);
         flat.Header.Generation = tick.Generation;
         flat.Header.Flags = flags;
     }

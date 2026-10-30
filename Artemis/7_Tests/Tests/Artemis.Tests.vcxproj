@@ -107,6 +107,7 @@
     <ClCompile Include="Blam\SnapshotRecordTests.cpp" />
     <ClCompile Include="Blam\TagResolverTests.cpp" />
     <ClCompile Include="Bridge\TransportTests.cpp" />
+    <ClCompile Include="Bridge\FlatTests.cpp" />
     <ClCompile Include="Common\HashTests.cpp" />
     <ClCompile Include="Common\LogParseTests.cpp" />
     <ClCompile Include="Common\LogTests.cpp" />
@@ -122,6 +123,7 @@
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
     <ClCompile Include="Perception\FlagEventsTests.cpp" />
+    <ClCompile Include="Perception\ClassifierFlagZoneTests.cpp" />
     <ClCompile Include="Perception\ObjectiveDetailsTests.cpp" />
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />

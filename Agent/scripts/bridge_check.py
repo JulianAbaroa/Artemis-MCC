@@ -115,6 +115,8 @@ def Ticks(args):
                 bad.append(f"tick {published.action_tick} not a multiple of N {period}")
             if int(h["PlayerCount"]) > L.MAX_PLAYERS or int(h["EntityCount"]) > L.MAX_ENTITIES:
                 bad.append(f"counts {int(h['PlayerCount'])}/{int(h['EntityCount'])}")
+            if int(h["ObjectiveCount"]) > L.MAX_OBJECTIVES or int(h["StandCount"]) > L.MAX_OBJECTIVES:
+                bad.append(f"objective counts {int(h['ObjectiveCount'])}/{int(h['StandCount'])}")
             handles = published.entities["Handle"]
             if len(handles) and (np.any(handles == L.NO_HANDLE) or np.any(np.diff(handles.astype(np.int64)) <= 0)):
                 bad.append(f"entity handles not sorted or NONE at tick {published.action_tick}")
@@ -137,7 +139,8 @@ def Ticks(args):
         irregular = int(np.sum(steps != period)) if len(steps) else 0
         print(f"received {received} in {elapsed:.1f} s, skipped {gaps}, steps != N: {irregular} (with skips), copies retried {bridge.tears}")
         print(f"entities avg {np.mean(entities) if entities else 0:.0f} max {max(entities) if entities else 0}, "
-              f"players {len(published.players) if received else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
+              f"players {len(published.players) if received else 0}, flags {len(published.objectives) if received else 0}, "
+              f"stands {len(published.stands) if received else 0}, clock skips +{after['ClockSkips'] - before['ClockSkips']}")
         phase = MatchPhase(int(published.match["Phase"])).name if received else "-"
         print(f"events {events} (lost {bridge.event_gaps}) {kinds}, match ticks {game_ticks[0] if game_ticks else 0}-"
               f"{game_ticks[-1] if game_ticks else 0}, phase {phase}, scores {[int(s) for s in published.match['PlayerScores'][:4]] if received else []}")

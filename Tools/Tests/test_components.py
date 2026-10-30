@@ -395,6 +395,24 @@ def test_generate_bridge_writes_the_contract():
     assert "BridgeLayout.ixx" not in text
 
 
+def test_the_bridge_layout_has_the_flags_the_stands_and_the_round_of_b4h():
+    from tdump_writer import RealLayout
+    layout, _ = RealLayout()
+    structs = {s["name"]: {f[0]: f for f in s["fields"]} for s in layout["structs"]}
+    assert {"Handle", "CarrierPlayer", "CarrierBiped", "HomeStand", "ResetTicks", "BaseTeam", "OwnerTeam", "State", "IsResetRunning",
+            "AlliesInZone"} == set(structs["BridgeObjective"])
+    assert {"Handle", "BaseTeam", "OwnerTeam"} == set(structs["BridgeStand"])
+    assert {"ObjectiveCount", "StandCount"} <= set(structs["BridgeTickHeader"])
+    assert structs["BridgeTick"]["Objectives"][1:4:2] == ["BridgeObjective", 8]
+    assert structs["BridgeTick"]["Stands"][1:4:2] == ["BridgeStand", 8]
+    assert [structs["BridgeMatch"][n][3] for n in ("TeamRoundScores", "TeamTotalScores")] == [8, 8]
+    assert {"RoundIndex", "RoundState"} <= set(structs["BridgeMatch"])
+    assert "EngineSequence" in structs["BridgeEvent"]
+    # The counts of the arrays are the ones of the C++ constants (Common.Engine k_MaxTeams) and the contract.
+    contract = Read("Artemis/1_Shared/Contract/Contract.Bridge.Type.ixx")
+    assert "k_BridgeMaxObjectives{ 8 }" in contract and "k_MaxTeams == 8" in contract
+
+
 # --- M5c (D202-D207) ------------------------------------------------------------------------------------------------------------
 
 # Calls that run one step of the tick: only PipelineService.Run does it (D205).

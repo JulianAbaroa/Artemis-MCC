@@ -206,3 +206,37 @@ TEST_F(FlagEventsTests, EngineFlagEventsAreLeftOutAndTheSequencesAreSeparate)
     EXPECT_EQ(rows[1].Sequence, 2u);
     EXPECT_EQ(rows[1].EngineSequence, 0u);
 }
+
+TEST_F(FlagEventsTests, FlagRecreatedOnTheGroundIsComparedAsTheSameObject)
+{
+    constexpr std::uint32_t k_FlagC{ 0x1003 };
+    constexpr std::uint32_t k_FlagD{ 0x1004 };
+
+    // Taken, dropped (the engine recreates the flag with a new handle), lying on the ground (recreated again), taken again.
+    this->Tick(k_FlagA, FlagState::Home);
+    this->Tick(k_FlagA, FlagState::Carried);
+    this->Tick(k_FlagB, FlagState::Dropped);
+    this->Tick(k_FlagB, FlagState::Dropped);
+    this->Tick(k_FlagC, FlagState::Dropped);
+    this->Tick(k_FlagD, FlagState::Carried);
+
+    const auto rows{ this->Log() };
+    ASSERT_EQ(rows.size(), 3u);
+    EXPECT_EQ(rows[0].Kind, Event::FlagTaken);
+    EXPECT_EQ(rows[0].EffectObject, k_FlagA);
+    EXPECT_EQ(rows[1].Kind, Event::FlagDropped);
+    EXPECT_EQ(rows[1].GameTick, 102u);
+    EXPECT_EQ(rows[1].CausePlayer, k_Player);
+    EXPECT_EQ(rows[1].EffectObject, k_FlagB);
+    EXPECT_EQ(rows[2].Kind, Event::FlagTaken);
+    EXPECT_EQ(rows[2].GameTick, 105u);
+    EXPECT_EQ(rows[2].EffectObject, k_FlagD);
+}
+
+TEST_F(FlagEventsTests, DroppedFlagRecreatedStillDroppedMakesNoReturnOrReset)
+{
+    this->Tick(k_FlagA, FlagState::Dropped, 2);
+    this->Tick(k_FlagB, FlagState::Dropped, 2);
+
+    EXPECT_TRUE(this->Log().empty());
+}

@@ -201,8 +201,10 @@ namespace Perception::Events::System
                 continue;
             }
 
+            // note: A new handle is a capture, a return or a reset only when the new flag is at home. The engine also recreates a flag
+            // while it lies on the ground or when it drops it, and then the states are compared as for the same object.
             const bool isRecreated{ now->Handle != previous.Handle };
-            if (isRecreated)
+            if (isRecreated && now->State == FlagState::Home)
             {
                 if (previous.State == FlagState::Carried)
                 {
@@ -212,11 +214,6 @@ namespace Perception::Events::System
                 {
                     const Event kind{ previous.AlliesInZone > 0 ? Event::FlagReturned : Event::FlagReset };
                     events.push_back(MakeFlagEvent(kind, gameTick, previous, k_NoHandle, k_NoHandle, previous.Handle));
-                }
-
-                if (now->State == FlagState::Carried)
-                {
-                    events.push_back(MakeFlagEvent(Event::FlagTaken, gameTick, *now, now->CarrierPlayer, now->CarrierBiped, now->Handle));
                 }
             }
             else if (previous.State != FlagState::Carried && now->State == FlagState::Carried)

@@ -15,6 +15,8 @@ namespace
     using Contract::Bridge::Type::BridgeEntity;
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgeMatch;
+    using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeStand;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickHeader;
@@ -42,6 +44,8 @@ namespace
         std::vector<BridgeEntity> Entities{};
         std::vector<std::uint32_t> Removed{};
         std::vector<BridgeEvent> Events{};
+        std::vector<BridgeObjective> Objectives{};
+        std::vector<BridgeStand> Stands{};
     };
 
     template <typename T>
@@ -69,6 +73,8 @@ namespace
         record.Entities = ReadRows<BridgeEntity>(stream, record.Header.ChangedEntityCount);
         record.Removed = ReadRows<std::uint32_t>(stream, record.Header.RemovedEntityCount);
         record.Events = ReadRows<BridgeEvent>(stream, record.Header.NewEventCount);
+        record.Objectives = ReadRows<BridgeObjective>(stream, record.Tick.ObjectiveCount);
+        record.Stands = ReadRows<BridgeStand>(stream, record.Tick.StandCount);
         return record;
     }
 
@@ -216,4 +222,49 @@ TEST(TickDumpWriterTests, ARecordWithoutMatchHasNoGameTick)
     const ParsedRecord record{ ReadRecord(in) };
     EXPECT_FALSE((record.Header.Flags & k_TickRecordHasMatch) != 0);
     EXPECT_EQ(record.Header.GameTick, 0u);
+}
+
+TEST(TickDumpWriterTests, FlagsAndStandsFollowTheEventsOfEveryRecord)
+{
+    TickDumpWriterState state{};
+    Writer::Begin(state);
+    std::stringstream stream{};
+
+    // Two flags and one stand in the first record; the second record has one flag and no stand. Unlike the entities they are not a
+    // delta: each record carries the rows of its tick.
+    auto tickOne{ MakeTick({}, {}, 1) };
+    tickOne->Objectives[0].Handle = 0xA1;
+    tickOne->Objectives[0].State = 1;
+    tickOne->Objectives[1].Handle = 0xA2;
+    tickOne->Objectives[1].AlliesInZone = 2;
+    tickOne->Stands[0].Handle = 0xB1;
+    tickOne->Stands[0].OwnerTeam = 1;
+    tickOne->Header.ObjectiveCount = 2;
+    tickOne->Header.StandCount = 1;
+    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, state) };
+
+    auto tickTwo{ MakeTick({}, {}, 2) };
+    tickTwo->Objectives[0].Handle = 0xA3;
+    tickTwo->Header.ObjectiveCount = 1;
+    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, state) };
+
+    EXPECT_EQ(one.Bytes + two.Bytes, static_cast<std::uint64_t>(stream.tellp()));
+
+    std::istringstream in{ stream.str() };
+    const ParsedRecord first{ ReadRecord(in) };
+    ASSERT_EQ(first.Objectives.size(), 2u);
+    EXPECT_EQ(first.Objectives[0].Handle, 0xA1u);
+    EXPECT_EQ(first.Objectives[0].State, 1u);
+    EXPECT_EQ(first.Objectives[1].AlliesInZone, 2u);
+    ASSERT_EQ(first.Stands.size(), 1u);
+    EXPECT_EQ(first.Stands[0].Handle, 0xB1u);
+    EXPECT_EQ(first.Stands[0].OwnerTeam, 1u);
+
+    const ParsedRecord second{ ReadRecord(in) };
+    ASSERT_EQ(second.Objectives.size(), 1u);
+    EXPECT_EQ(second.Objectives[0].Handle, 0xA3u);
+    EXPECT_TRUE(second.Stands.empty());
+
+    in.peek();
+    EXPECT_TRUE(in.eof());
 }

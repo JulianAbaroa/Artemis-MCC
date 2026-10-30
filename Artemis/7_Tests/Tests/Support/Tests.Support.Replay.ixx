@@ -14,6 +14,8 @@ namespace
     using Contract::Bridge::Type::BridgeEntity;
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgeMatch;
+    using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeStand;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickHeader;
@@ -57,7 +59,8 @@ namespace
 
         const std::size_t rest{ sizeof(BridgeMatch) + (tick.PlayerCount * sizeof(BridgePlayer)) +
             (header.ChangedEntityCount * sizeof(BridgeEntity)) + (header.RemovedEntityCount * sizeof(std::uint32_t)) +
-            (header.NewEventCount * sizeof(BridgeEvent)) };
+            (header.NewEventCount * sizeof(BridgeEvent)) + (tick.ObjectiveCount * sizeof(BridgeObjective)) +
+            (tick.StandCount * sizeof(BridgeStand)) };
 
         bytes.resize(sizeof(header) + sizeof(tick) + rest);
         std::memcpy(bytes.data(), &header, sizeof(header));
@@ -77,8 +80,11 @@ export namespace Tests::Support::Replay
         Equal,
         // A record differs: FirstDifference.
         Differs,
-        // The recording cannot be replayed in this build (another layout, or it does not start at a map load).
+        // The recording cannot be replayed in this build (it does not start at a map load).
         Skipped,
+        // The .tdump has another layout than this build (Bridge.xml changed): the .sdump was replayed, Replayed has the records in the
+        // layout of this build and nothing was compared. The golden has to be approved again.
+        LayoutChanged,
         // A file is corrupt or the two do not match.
         Error
     };
@@ -94,7 +100,7 @@ export namespace Tests::Support::Replay
         std::uint32_t GameTick{};
         // Why the status is Skipped or Error, or a note when the .sdump is cut.
         std::string Reason{};
-        // The records the pipeline gave, as they were written (without the header of the file).
+        // The records the pipeline gave, as they were written (without the header of the file). Status Equal, Differs or LayoutChanged.
         std::vector<char> Replayed{};
     };
 
@@ -128,13 +134,11 @@ export namespace Tests::Support::Replay
             return result;
         }
 
-        if (golden.LayoutHash != k_BridgeLayoutHash || reader.Header.BridgeLayoutHash != golden.LayoutHash)
-        {
-            result.Status = ReplayStatus::Skipped;
-            result.Reason = std::format("layout hash {:016X} in the .tdump, {:016X} in the .sdump, {:016X} in this build",
-                golden.LayoutHash, reader.Header.BridgeLayoutHash, k_BridgeLayoutHash);
-            return result;
-        }
+        // note: The .sdump holds engine snapshots, which do not depend on the layout of the bridge, so another layout of the .tdump is
+        // not a reason to skip: the records are replayed and the golden is reported as changed. The layout hash the .sdump carries
+        // (the one of the .tdump written beside it) is not compared: a golden approved again after a layout change has a new hash and
+        // keeps the .sdump of the session.
+        const bool isOtherLayout{ golden.LayoutHash != k_BridgeLayoutHash };
 
         auto next{ ::Blam::Layout::Snapshot::System::ReadRecord(sdump, reader) };
         if (next.Status != SnapshotReadStatus::Record)
@@ -171,14 +175,14 @@ export namespace Tests::Support::Replay
             const std::string replayed{ buffer.str() };
             result.Replayed.insert(result.Replayed.end(), replayed.begin(), replayed.end());
 
-            if (ReadGoldenRecord(tdump, recorded) != GoldenStatus::Record)
+            if (!isOtherLayout && ReadGoldenRecord(tdump, recorded) != GoldenStatus::Record)
             {
                 result.Reason = std::format("the .tdump has {} records and the .sdump has more", result.Records);
                 return result;
             }
 
             ++result.Records;
-            if (result.FirstDifference == 0 && !std::ranges::equal(recorded, replayed))
+            if (!isOtherLayout && result.FirstDifference == 0 && !std::ranges::equal(recorded, replayed))
             {
                 result.FirstDifference = result.Records;
                 std::memcpy(&result.GameTick, recorded.data() + k_GameTickOffset, sizeof(result.GameTick));
@@ -193,6 +197,13 @@ export namespace Tests::Support::Replay
             return result;
         }
         if (next.Status == SnapshotReadStatus::Cut) result.Reason = "the .sdump is cut: " + next.Reason;
+
+        if (isOtherLayout)
+        {
+            result.Status = ReplayStatus::LayoutChanged;
+            result.Reason = std::format("layout hash {:016X} in the .tdump, {:016X} in this build", golden.LayoutHash, k_BridgeLayoutHash);
+            return result;
+        }
 
         result.Status = result.FirstDifference == 0 ? ReplayStatus::Equal : ReplayStatus::Differs;
         return result;

@@ -38,6 +38,7 @@ export namespace Bridge::Codec::Tick::System
         using TeleporterDetailsStore = Perception::Details::State::TeleporterDetailsStore;
         using LiftDetailsStore = Perception::Details::State::LiftDetailsStore;
         using BarrierDetailsStore = Perception::Details::State::BarrierDetailsStore;
+        using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
         using AimStore = Perception::Aim::State::AimStore;
         using EventsStore = Perception::Events::State::EventsStore;
         using MatchStore = Perception::Match::State::MatchStore;
@@ -56,6 +57,7 @@ export namespace Bridge::Codec::Tick::System
             ObjectGraphStore& objectGraphStore,
             EntitiesStore& entitiesStore, PlayersStore& playersStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
             TeleporterDetailsStore& teleporterDetailsStore, LiftDetailsStore& liftDetailsStore, BarrierDetailsStore& barrierDetailsStore,
+            ObjectiveDetailsStore& objectiveDetailsStore,
             AimStore& aimStore, EventsStore& eventsStore, MatchStore& matchStore, SelfStore& selfStore,
             AffordanceStore& affordanceStore, RaycastStore& raycastStore,
             DefinitionsStore& definitionsStore, TickStore& tickStore) :
@@ -64,6 +66,7 @@ export namespace Bridge::Codec::Tick::System
             m_ObjectGraphStore(objectGraphStore),
             m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
             m_TeleporterDetailsStore(teleporterDetailsStore), m_LiftDetailsStore(liftDetailsStore), m_BarrierDetailsStore(barrierDetailsStore),
+            m_ObjectiveDetailsStore(objectiveDetailsStore),
             m_AimStore(aimStore), m_EventsStore(eventsStore), m_MatchStore(matchStore), m_SelfStore(selfStore),
             m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
             m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
@@ -84,6 +87,7 @@ export namespace Bridge::Codec::Tick::System
         TeleporterDetailsStore& m_TeleporterDetailsStore;
         LiftDetailsStore& m_LiftDetailsStore;
         BarrierDetailsStore& m_BarrierDetailsStore;
+        ObjectiveDetailsStore& m_ObjectiveDetailsStore;
         AimStore& m_AimStore;
         EventsStore& m_EventsStore;
         MatchStore& m_MatchStore;
