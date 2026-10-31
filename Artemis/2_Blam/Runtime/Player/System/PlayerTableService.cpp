@@ -33,6 +33,7 @@ namespace
     using Blam::Layout::Player::Type::Offset::k_Team;
     using Blam::Layout::Player::Type::Offset::k_GamerTag;
     using Blam::Layout::Player::Type::Offset::k_Tag;
+    using Blam::Layout::Player::Type::Offset::k_RespawnTicks;
 
     using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
     using Blam::Layout::Player::Type::Mapping::k_EntryStride;
@@ -65,6 +66,7 @@ namespace Blam::Runtime::Player::System
         player.AliveBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_AliveBipedHandle);
         player.DeadBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_DeadBipedHandle);
         player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
+        player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
 
         auto rawGamerTag = snapshot.ReadArray<char16_t, k_GamerTagLength>(RegionId::PlayerArray, entry + k_GamerTag);
         player.Gamertag = Common::Text::System::WideToUtf8(rawGamerTag);
@@ -135,6 +137,7 @@ namespace Blam::Runtime::Player::System
             player.AliveBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_AliveBipedHandle);
             player.DeadBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_DeadBipedHandle);
             player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
+            player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
 
             player.PrimaryWeaponHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_PrimaryWeaponHandle);
             player.SecondaryWeaponHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_SecondaryWeaponHandle);

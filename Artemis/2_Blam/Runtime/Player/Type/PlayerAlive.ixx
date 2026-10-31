@@ -45,6 +45,9 @@ export namespace Blam::Runtime::Player::Type::Alive
         std::uint32_t DeadBipedHandle{};
         std::uint32_t CurrentBipedHandle{};
 
+        // Ticks left until the player respawns, 0 while alive or without wait (player +0x1BC, D258).
+        std::uint32_t RespawnTicks{};
+
         // Local player (split-screen input user, 0 to 3) the player is, or empty when it is not local.
         std::optional<std::uint8_t> LocalIndex{};
     };

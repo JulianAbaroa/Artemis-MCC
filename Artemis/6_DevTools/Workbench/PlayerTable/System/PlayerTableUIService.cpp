@@ -226,6 +226,8 @@ namespace DevTools::Workbench::PlayerTable::System
         HandleDrawerGuiService::DrawU32("Dead Biped:", player.DeadBipedHandle,
             player.Handle, m_CopyableField);
 
+        ImGui::Text("Respawn Ticks: %u", player.RespawnTicks);
+
         ImGui::Unindent(5.0f);
     }
 }

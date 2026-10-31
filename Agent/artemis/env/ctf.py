@@ -325,7 +325,8 @@ class CtfEnv:
         is_carrying = int(player["Objective"]) != NO_HANDLE
         obs[0:3] = Local(Vec(body["LinearVelocity"])) / 10.0
         obs[3] = pitch
-        obs[4] = 1.0
+        vitality = float(body["Vitality"])
+        obs[4] = 0.0 if math.isnan(vitality) else vitality
         obs[5] = float(player["Shield"])
         obs[6] = float(is_carrying)
         phi = None

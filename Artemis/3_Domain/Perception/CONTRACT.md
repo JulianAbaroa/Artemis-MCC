@@ -30,7 +30,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.ObjectGraph.Type`, `Perception.ObjectGraph.State` | How the live objects attach to each other, up to their root. |
 | `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier, projectile (owner, shooter root, what it is stuck to), weapon (ammo, energy, heat, overheat, reload, charge, lock, `CanFireNow`) and objective details (flags and their stands). |
 | `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. The team of a biped is the one of its player and the team of a projectile the one of its `OwnerPlayer` in the player table. |
-| `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. |
+| `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. `RespawnTicks` belongs to the player and not to its `Body` (it is valid without a biped). The life of a biped is `Entity.Vitality`, there is no `Body.Health`. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
 | `Perception.Events.Type`, `Perception.Events.State` | The events of the tick: the engine ring plus the flag events Artemis generates. |
 | `Perception.Match.Type`, `Perception.Match.State` | Status of the match: phase, scores, round, team scores, time played and left in the round, round time limit, round limit and score to win. |

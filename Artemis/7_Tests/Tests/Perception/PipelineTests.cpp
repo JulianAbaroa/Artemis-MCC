@@ -1,10 +1,13 @@
 #include <gtest/gtest.h>
 
+import Common.Engine.Type;
 import Common.Log.Type;
 import Contract.Bridge.Type;
 import Bridge.Codec.Pipeline.System;
 import Bridge.Codec.Tick.Type;
+import Blam.Layout.Player.Type;
 import Blam.Layout.Snapshot.Type;
+import Tests.Support.Blam;
 import Tests.Support.Pipeline;
 import std;
 
@@ -13,9 +16,13 @@ import std;
 
 namespace
 {
+    using Common::Engine::Type::k_NoHandle;
     using Common::Log::Type::LogLevel;
     using Bridge::Codec::Tick::Type::Tick;
+    using Blam::Layout::Snapshot::Type::RegionId;
     using Blam::Layout::Snapshot::Type::Snapshot;
+    using Tests::Support::Blam::Put;
+    namespace PlayerOffset = ::Blam::Layout::Player::Type::Offset;
     using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
@@ -24,6 +31,7 @@ namespace
     using Bridge::Codec::Pipeline::System::k_PipelineStageNames;
     using Tests::Support::Pipeline::k_BipedHandle;
     using Tests::Support::Pipeline::k_PlayerHandle;
+    using Tests::Support::Pipeline::k_RespawnTicks;
 
     // Services that write "Cleanup completed." when their layer is cleaned up, with the layer that owns them.
     const std::array<std::string_view, 25> k_CleanupTags{
@@ -120,6 +128,32 @@ TEST_F(PipelineTests, BipedAndPlayerReachTheBridgeTick)
     ASSERT_GE(flat->Header.EntityCount, 1u);
     const auto entities{ std::span<const Contract::Bridge::Type::BridgeEntity>{ flat->Entities }.first(flat->Header.EntityCount) };
     EXPECT_TRUE(std::ranges::any_of(entities, [](const auto& entity) { return entity.Handle == k_BipedHandle; }));
+}
+
+TEST_F(PipelineTests, RespawnTicksReachTheBridgePlayerWithBody)
+{
+    const auto tick{ this->RunTick(WithBipedAndPlayer(), 1) };
+    ASSERT_NE(tick, nullptr);
+
+    const auto flat{ this->Flatten(*tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 1u);
+    EXPECT_EQ(flat->Players[0].HasBody, 1);
+    EXPECT_EQ(flat->Players[0].RespawnTicks, static_cast<std::uint32_t>(k_RespawnTicks));
+}
+
+TEST_F(PipelineTests, RespawnTicksReachTheBridgePlayerWithoutBody)
+{
+    Snapshot snapshot{ WithBipedAndPlayer() };
+    auto& players{ snapshot.Regions[static_cast<std::size_t>(RegionId::PlayerArray)].Bytes };
+    Put(players, (2 * ::Blam::Layout::Player::Type::Size::k_Base) + PlayerOffset::k_AliveBipedHandle, k_NoHandle);
+
+    const auto tick{ this->RunTick(snapshot, 1) };
+    ASSERT_NE(tick, nullptr);
+
+    const auto flat{ this->Flatten(*tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 1u);
+    EXPECT_EQ(flat->Players[0].HasBody, 0);
+    EXPECT_EQ(flat->Players[0].RespawnTicks, static_cast<std::uint32_t>(k_RespawnTicks));
 }
 
 TEST_F(PipelineTests, CleanupForgetsTheTick)

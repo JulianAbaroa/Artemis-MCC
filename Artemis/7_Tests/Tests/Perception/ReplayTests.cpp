@@ -176,6 +176,14 @@ namespace
         std::int32_t ScoreToWin{};
     };
 
+    // One wait to respawn of a player: first GameTick seen with RespawnTicks above 0, its value, and the GameTick it reached 0.
+    struct RespawnWait
+    {
+        std::uint32_t StartTick{};
+        std::uint32_t StartValue{};
+        std::uint32_t EndTick{};
+    };
+
     // What the Perception gave over the whole ctf_c recording that is not tied to one tick.
     struct CtfRun
     {
@@ -187,7 +195,42 @@ namespace
         bool IsSequenceContinuous{ true };
         // MapId of every Tick the pipeline assembled.
         std::set<std::int32_t> MapIds{};
+        // Waits of each player (handle index) seen in the Players of the Ticks, in order.
+        std::map<std::uint32_t, std::vector<RespawnWait>> Waits{};
+        // Ticks in which a player waiting to respawn had a Body, or its wait did not go down by one per GameTick.
+        std::size_t RespawnViolations{};
+        // Death events of the engine ring.
+        std::vector<Perception::Events::Type::GameEvent> Deaths{};
     };
+
+    // The RespawnTicks of a player at the last GameTick it was seen.
+    struct RespawnSample
+    {
+        std::uint32_t GameTick{};
+        std::uint32_t Ticks{};
+    };
+
+    // Adds the RespawnTicks of the players of one Tick to the waits of the run and checks the invariants of the field.
+    auto NoteRespawns(const Perception::Players::Type::Players& players, std::uint32_t gameTick, std::map<std::uint32_t, RespawnSample>& previous,
+        CtfRun& run) -> void
+    {
+        for (const auto& player : players.Rows)
+        {
+            const std::uint32_t index{ player.Handle & 0xFFFF };
+            if (player.RespawnTicks > 0 && player.Body) ++run.RespawnViolations;
+
+            auto& waits{ run.Waits[index] };
+            const auto it{ previous.find(index) };
+            const std::uint32_t before{ it == previous.end() ? 0u : it->second.Ticks };
+            const std::uint32_t beforeTick{ it == previous.end() ? 0u : it->second.GameTick };
+            if (it != previous.end() && gameTick == beforeTick) continue;
+
+            if (before > 0 && player.RespawnTicks > 0 && player.RespawnTicks != before - (gameTick - beforeTick)) ++run.RespawnViolations;
+            if (player.RespawnTicks > 0 && before == 0) waits.push_back(RespawnWait{ .StartTick = gameTick, .StartValue = player.RespawnTicks });
+            if (player.RespawnTicks == 0 && before > 0 && !waits.empty()) waits.back().EndTick = gameTick;
+            previous[index] = RespawnSample{ .GameTick = gameTick, .Ticks = player.RespawnTicks };
+        }
+    }
 
     // Replays the recording of a capture film record by record and keeps what the Perception gave at the engine ticks asked for.
     // param film: Folder of Ignore/Regresion (ctf_c, cgb_displace_1min).
@@ -221,14 +264,19 @@ namespace
 
         std::uint32_t lastSequence{ 0 };
         std::size_t records{ 0 };
+        std::map<std::uint32_t, RespawnSample> previous{};
         for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record && records < maxRecords; isFirst = false)
         {
             if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
 
             ++records;
             chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
-            if (const auto tick{ chain->m_Export.m_TickStore.Acquire() }; tick) run.MapIds.insert(tick->MapId);
             const auto match{ chain->m_Environment.m_MatchStore.Acquire() };
+            if (const auto tick{ chain->m_Export.m_TickStore.Acquire() }; tick)
+            {
+                run.MapIds.insert(tick->MapId);
+                if (match && tick->Players) NoteRespawns(*tick->Players, match->GameTick, previous, run);
+            }
             const auto objectives{ chain->m_Environment.m_ObjectiveDetailsStore.Acquire() };
             if (match && objectives)
             {
@@ -250,6 +298,7 @@ namespace
                     lastSequence = event.Sequence;
 
                     const bool isFlag{ event.Kind >= Common::Semantic::Type::Event::FlagTaken && event.Kind <= Common::Semantic::Type::Event::FlagCaptured };
+                    if (event.Kind == Common::Semantic::Type::Event::Death) run.Deaths.push_back(event);
                     if (event.EngineSequence == 0) run.Generated.push_back(event);
                     else if (isFlag) ++run.EngineFlagEvents;
                 }
@@ -557,6 +606,57 @@ TEST_F(ReplayTests, MapIdIsTheSameNonZeroValueInEachFilm)
 
         // The five films are on the same base map.
         EXPECT_EQ(run.MapIds, std::set<std::int32_t>{ k_MapId });
+    }
+}
+
+// --- F2.P: the RespawnTicks of each player ---
+
+TEST_F(ReplayTests, RespawnTicksCountDownOnePerGameTickOnlyWithoutBody)
+{
+    for (const std::string_view film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" })
+    {
+        SCOPED_TRACE(film);
+        std::map<std::uint32_t, CtfMoment> moments{};
+        CtfMoment last{};
+        CtfRun run{};
+        const std::string reason{ RunCtfRecording(film, {}, moments, last, run) };
+        if (!reason.empty()) { std::cout << "[  SKIPPED ] " << film << ": " << reason << "\n"; continue; }
+
+        // A player that waits has no Body, and the wait goes down exactly one per GameTick.
+        EXPECT_EQ(run.RespawnViolations, 0u);
+
+        if (film != "ctf_c") continue;
+
+        // Measured on ctf_c: the waits (start, value, end) of the players of the handle index 0, 14 and 15.
+        const auto waitsOf = [&](std::uint32_t index) { return run.Waits[index]; };
+        const auto expectWait = [](const RespawnWait& wait, std::uint32_t start, std::uint32_t value, std::uint32_t end)
+        {
+            EXPECT_EQ(wait.StartTick, start);
+            EXPECT_EQ(wait.StartValue, value);
+            EXPECT_EQ(wait.EndTick, end);
+        };
+
+        const auto waits0{ waitsOf(0) };
+        ASSERT_EQ(waits0.size(), 4u);
+        expectWait(waits0[0], 2, 599, 601);
+        expectWait(waits0[1], 4281, 420, 4701);
+        expectWait(waits0[2], 11564, 599, 12163);
+        expectWait(waits0[3], 23520, 599, 24119);
+
+        const auto waits14{ waitsOf(14) };
+        ASSERT_EQ(waits14.size(), 1u);
+        expectWait(waits14[0], 23520, 599, 24119);
+
+        const auto waits15{ waitsOf(15) };
+        ASSERT_EQ(waits15.size(), 2u);
+        expectWait(waits15[0], 11564, 599, 12163);
+        expectWait(waits15[1], 23520, 599, 24119);
+
+        // The wait of 420 ticks follows the death of the player 0.
+        EXPECT_TRUE(std::ranges::any_of(run.Deaths, [](const auto& death)
+        {
+            return death.GameTick == 4280 && (death.EffectPlayer & 0xFFFF) == 0;
+        }));
     }
 }
 

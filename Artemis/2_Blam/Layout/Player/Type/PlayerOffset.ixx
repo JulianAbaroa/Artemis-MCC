@@ -59,4 +59,7 @@ export namespace Blam::Layout::Player::Type::Offset
 
     // Service tag as 4 wide characters (8 bytes).
     constexpr std::uintptr_t k_Tag{ 0x0F4 };
+
+    // Ticks left until the player respawns (uint16, widened to uint32 by the readers). 0 while alive or without wait (D103).
+    constexpr std::uintptr_t k_RespawnTicks{ 0x1BC };
 }

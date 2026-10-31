@@ -158,6 +158,7 @@
 	<struct name="BridgePlayer" doc="One player of the Tick (Environment Players), without its name.">
 		<field name="Handle" type="u32" />
 		<field name="BipedHandle" type="u32" />
+		<field name="RespawnTicks" type="u32" doc="Ticks left until the player respawns, 0 while alive (player +0x1BC)." />
 		<field name="Team" type="u8" semantic="Team" />
 		<field name="LocalIndex" type="u8" doc="Split-screen index, 0xFF when not local." />
 		<field name="Connection" type="u8" semantic="ConnectionState" />

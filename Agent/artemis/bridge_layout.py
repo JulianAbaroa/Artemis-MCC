@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x7A8C5C5A74093341
+LAYOUT_HASH = 0xF7D51FDF547575FE
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -118,10 +118,10 @@ BridgeEvent = np.dtype({
 
 # One player of the Tick (Environment Players), without its name.
 BridgePlayer = np.dtype({
-    'names': ['Handle', 'BipedHandle', 'Team', 'LocalIndex', 'Connection', 'IsAlive', 'HasBody', 'Zoom', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'IsAbilityActive', 'CameraPosition', 'CameraForward', 'Aim', 'TicksAlive', 'Shield', 'PrimaryWeapon', 'SecondaryWeapon', 'EquippedWeapon', 'Ability', 'AbilityEnergy', 'Objective', 'LastDamagerPlayer', 'TicksSinceDamage', 'AppliedDecision'],
-    'formats': ['<u4', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', BridgeVec3, BridgeVec3, BridgeVec3, '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<f4', '<u4', '<u4', '<u4', '<u8'],
-    'offsets': [0, 4, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 32, 44, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96],
-    'itemsize': 104,
+    'names': ['Handle', 'BipedHandle', 'RespawnTicks', 'Team', 'LocalIndex', 'Connection', 'IsAlive', 'HasBody', 'Zoom', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'IsAbilityActive', 'CameraPosition', 'CameraForward', 'Aim', 'TicksAlive', 'Shield', 'PrimaryWeapon', 'SecondaryWeapon', 'EquippedWeapon', 'Ability', 'AbilityEnergy', 'Objective', 'LastDamagerPlayer', 'TicksSinceDamage', 'AppliedDecision'],
+    'formats': ['<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', BridgeVec3, BridgeVec3, BridgeVec3, '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<f4', '<u4', '<u4', '<u4', '<u8'],
+    'offsets': [0, 4, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 36, 48, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 104],
+    'itemsize': 112,
 })
 
 # One live object of the Tick (Environment Entities).
@@ -176,8 +176,8 @@ BridgeProjectile = np.dtype({
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), '<u8'],
-    'offsets': [0, 8, 64, 1728, 108224, 108316, 108540, 108604, 110908, 120124, 126272],
-    'itemsize': 126336,
+    'offsets': [0, 8, 64, 1856, 108352, 108444, 108668, 108732, 111036, 120252, 126400],
+    'itemsize': 126464,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -192,8 +192,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 252928],
-    'itemsize': 253696,
+    'offsets': [0, 256, 253184],
+    'itemsize': 253952,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -270,7 +270,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 224,
     'Control.Client.ActionSequence': 232,
     'Ticks': 256,
-    'Actions': 252928,
+    'Actions': 253184,
 }
 
-REGION_SIZE = 253696
+REGION_SIZE = 253952

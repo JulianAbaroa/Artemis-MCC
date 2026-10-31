@@ -60,6 +60,7 @@ namespace
         BridgePlayer row{ Zeroed<BridgePlayer>() };
         row.Handle = player.Handle;
         row.BipedHandle = player.BipedHandle;
+        row.RespawnTicks = player.RespawnTicks;
         row.Team = static_cast<std::uint8_t>(player.Team);
         row.LocalIndex = player.LocalIndex.value_or(k_BridgeNotLocal);
         row.Connection = static_cast<std::uint8_t>(player.Connection);

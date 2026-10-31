@@ -9,6 +9,7 @@ import Bridge.Codec.Tick.Type;
 import Perception.Details.Type;
 import Perception.Events.Type;
 import Perception.Match.Type;
+import Perception.Players.Type;
 import std;
 
 // The flags, the stands, the round and the team scores in the BridgeTick (B4h H.4), and the two sequences of an event.
@@ -34,6 +35,9 @@ namespace
     using Perception::Events::Type::EventLog;
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchStatus;
+    using Perception::Players::Type::Body;
+    using Perception::Players::Type::Player;
+    using Perception::Players::Type::Players;
 
     using Contract::Bridge::Type::k_BridgeMaxObjectives;
     using Contract::Bridge::Type::k_BridgeMaxProjectiles;
@@ -291,6 +295,22 @@ TEST(FlatTests, HeaderCarriesTheMapId)
     tick.MapId = 1234;
     EXPECT_EQ(Flat(tick)->Header.MapId, 1234);
     EXPECT_EQ(Flat(Tick{})->Header.MapId, 0);
+}
+
+TEST(FlatTests, RespawnTicksReachThePlayerRowWithAndWithoutBody)
+{
+    auto players{ std::make_shared<Players>() };
+    players->Rows.push_back(Player{ .Handle = 0xE5A10001, .RespawnTicks = 420 });
+    players->Rows.push_back(Player{ .Handle = 0xE5A10002, .RespawnTicks = 0, .Body = Body{} });
+    Tick tick{};
+    tick.Players = players;
+
+    const auto flat{ Flat(tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 2u);
+    EXPECT_EQ(flat->Players[0].HasBody, 0);
+    EXPECT_EQ(flat->Players[0].RespawnTicks, 420u);
+    EXPECT_EQ(flat->Players[1].HasBody, 1);
+    EXPECT_EQ(flat->Players[1].RespawnTicks, 0u);
 }
 
 TEST(FlatTests, EventsCarryTheSequenceOfArtemisAndTheOneOfTheEngine)

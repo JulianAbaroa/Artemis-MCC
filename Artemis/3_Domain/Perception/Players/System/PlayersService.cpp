@@ -77,6 +77,7 @@ namespace Perception::Players::System
         player.Connection = alive.ConnectionState;
         player.LocalIndex = alive.LocalIndex;
         player.Team = alive.Team;
+        player.RespawnTicks = alive.RespawnTicks;
         player.CameraPosition = alive.CameraPosition;
         player.CameraForward = alive.CameraForward;
         player.Body = this->MakeBody(alive, objectTable, entities, vitalities);

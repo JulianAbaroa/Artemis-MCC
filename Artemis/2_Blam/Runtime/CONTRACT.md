@@ -24,7 +24,7 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `Blam.Runtime.Layer` | The facade: stores and services; `Cleanup()` forgets the map. |
 | `Blam.Runtime.Object.Type`, `Blam.Runtime.Object.State` | `AliveObject`, the object table, bone matrices, damage sections. Weapon: ammo per magazine (`Magazines`), `IsOverheated`, `BusyTimer` (the weapon cannot fire), `Magazine0ReloadState`, charge (`Common.Semantic` `ChargeState`), tracking (`TrackedObject` of any kind, `TrackingState`). Projectile: `OwnerPlayer`, `OwnerBiped`, `ShooterRoot`, `ParentNode`. |
-| `Blam.Runtime.Player.Type`, `Blam.Runtime.Player.State` | `AlivePlayer` and the player table. |
+| `Blam.Runtime.Player.Type`, `Blam.Runtime.Player.State` | `AlivePlayer` and the player table. `RespawnTicks` is read from the player row (+0x1BC, u16 widened). |
 | `Blam.Runtime.Interaction.Type`, `Blam.Runtime.Interaction.State` | Interaction of each local player. |
 | `Blam.Runtime.Game.Type`, `Blam.Runtime.Game.State` | Game globals of the tick (clock, phase, round, round clock and time left, game variant round settings and score to win, team mapping and scores, megalo objects), event cursor and dropped events. |
 

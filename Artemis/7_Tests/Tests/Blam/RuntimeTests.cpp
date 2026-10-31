@@ -585,6 +585,7 @@ TEST_F(RuntimeTests, ConnectedPlayerIsAdded)
     Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_BipedHandle);
     Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_BipedHandle);
     Put(players, entry + PlayerOffset::k_DeadBipedHandle, k_NoHandle);
+    Put(players, entry + PlayerOffset::k_RespawnTicks, std::uint16_t{ 420 });
     Put(players, entry + PlayerOffset::k_PrimaryWeaponHandle, k_WeaponHandle);
     Put(players, entry + PlayerOffset::k_CameraPosition, Vec3{ 1.0f, 2.0f, 3.0f });
     Put(mapping, PlayerMapping::k_PlayerInputUser + (2 * PlayerMapping::k_EntryStride), std::int32_t{ 1 });
@@ -605,6 +606,7 @@ TEST_F(RuntimeTests, ConnectedPlayerIsAdded)
     EXPECT_EQ(player.AliveBipedHandle, k_BipedHandle);
     EXPECT_EQ(player.CurrentBipedHandle, k_BipedHandle);
     EXPECT_EQ(player.DeadBipedHandle, k_NoHandle);
+    EXPECT_EQ(player.RespawnTicks, 420u);
     EXPECT_EQ(player.PrimaryWeaponHandle, k_WeaponHandle);
     EXPECT_FLOAT_EQ(player.CameraPosition.Z, 3.0f);
     ASSERT_TRUE(player.LocalIndex.has_value());

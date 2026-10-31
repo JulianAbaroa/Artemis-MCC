@@ -94,14 +94,14 @@ def ctf(monkeypatch):
 
 
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1, match=None):
+          action_tick=1, match_id=1, match=None, vitality=1.0):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
     home. match: fields of the Match (by default a round without time limit). The agent is the player P0 of team RED, aiming at +x."""
     L = ctf.layout
     stand_at = {RED: (0.0, 0.0, 0.0), BLUE: (100.0, 0.0, 0.0)}
     flag_pos = [stand_at[RED], flag_at or stand_at[BLUE]]
-    entities = [{"Handle": B0, "WorldOrigin": agent_at, "Team": RED},
+    entities = [{"Handle": B0, "WorldOrigin": agent_at, "Team": RED, "Vitality": vitality},
                 {"Handle": STAND_RED, "WorldOrigin": stand_at[RED]}, {"Handle": STAND_BLUE, "WorldOrigin": stand_at[BLUE]},
                 {"Handle": FLAG_RED, "WorldOrigin": flag_pos[0]}, {"Handle": FLAG_BLUE, "WorldOrigin": flag_pos[1]}]
     players = [{"Handle": P0, "BipedHandle": B0, "Team": RED, "LocalIndex": 0xFF, "IsAlive": 1, "HasBody": 1, "Aim": (1.0, 0.0, 0.0),
@@ -128,6 +128,13 @@ def test_enemy_flag_at_its_stand_is_home(ctf):
     assert obs[10] == pytest.approx(95.0 / ctf.METERS)
     # Facing +x: the enemy flag is straight ahead and the own stand behind.
     assert obs[7] > 0 and obs[14] < 0
+
+
+def test_obs_4_follows_the_vitality_of_the_biped_and_nan_is_zero(ctf):
+    _, obs = Reset(ctf, Frame(ctf, vitality=0.25))
+    assert obs[4] == pytest.approx(0.25)
+    _, obs = Reset(ctf, Frame(ctf, vitality=float("nan")))
+    assert obs[4] == 0.0
 
 
 def test_carried_flag_makes_the_agent_a_carrier_that_heads_for_its_stand(ctf):

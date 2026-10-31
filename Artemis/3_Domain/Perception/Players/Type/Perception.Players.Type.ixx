@@ -77,7 +77,7 @@ export namespace Perception::Players::Type
     };
 
     // One player of the player table with its body and loadout (D19, D30, D93).
-    // note: IsAgent waits for the multi-view (B5 Views), RespawnTicks and Score for Q25 and the seat for A11.
+    // note: IsAgent waits for the multi-view (B5 Views) and the seat for A11. The life of the biped is Entity.Vitality, there is no Body.Health (D257).
     struct Player
     {
         std::uint32_t Handle{};
@@ -95,6 +95,9 @@ export namespace Perception::Players::Type
 
         // Current biped, alive or a corpse, or 0xFFFFFFFF without one.
         std::uint32_t BipedHandle{ k_NoHandle };
+
+        // Ticks left until the player respawns, 0 while alive or without wait. Valid without a Body (D258).
+        std::uint32_t RespawnTicks{};
 
         Vec3 CameraPosition{};
         Vec3 CameraForward{};

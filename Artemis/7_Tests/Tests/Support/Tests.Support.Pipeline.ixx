@@ -72,6 +72,9 @@ export namespace Tests::Support::Pipeline
     inline const std::uint32_t k_BipedHandle{ MakeHandle(0xEC01, 3) };
     inline const std::uint32_t k_PlayerHandle{ MakeHandle(0xE5A1, 2) };
 
+    // Respawn ticks that WithBipedAndPlayer writes in the player.
+    inline constexpr std::uint16_t k_RespawnTicks{ 420 };
+
     // return: A biped of the spartan tag whose four damage slots are empty, at (10, 20, 30) looking along +Y with +Z up.
     auto MakeBiped() -> RawObject
     {
@@ -113,6 +116,7 @@ export namespace Tests::Support::Pipeline
         Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_BipedHandle);
         Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_BipedHandle);
         Put(players, entry + PlayerOffset::k_DeadBipedHandle, k_NoHandle);
+        Put(players, entry + PlayerOffset::k_RespawnTicks, k_RespawnTicks);
 
         // The player mapping with no player bound to any input user nor output view.
         std::vector<std::uint8_t>& mapping{ CaptureRegion(snapshot, RegionId::PlayerMapping, RegionSize(RegionId::PlayerMapping)) };
