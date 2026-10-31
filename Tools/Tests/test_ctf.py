@@ -2,7 +2,8 @@
 test_ctf.py
 The environment of stage 0 (Agent/artemis/env/ctf.py) over synthetic frames, with no game: the bridge is a fake that hands out the
 ticks of a list. The real Bridge needs Windows shared memory, so a stand-in module takes its place for the import. B4h H.5: the side
-of an agent comes from the OwnerTeam of the stands, and the flag state from the rows of the tick.
+of an agent comes from the OwnerTeam of the stands, and the flag state from the rows of the tick. P.6 (D255): the clock and the score
+of the round come from the Match.
 """
 import importlib
 import math
@@ -35,7 +36,7 @@ class FakeAction:
 
 
 class FakeTick:
-    def __init__(self, layout, players, entities, objectives, stands, events=(), game_tick=100, match_id=1, action_tick=1):
+    def __init__(self, layout, players, entities, objectives, stands, events=(), game_tick=100, match_id=1, action_tick=1, match=None):
         def Rows(name, rows):
             out = np.zeros(len(rows), getattr(layout, name))
             for i, row in enumerate(rows):
@@ -47,7 +48,7 @@ class FakeTick:
         self.objectives = Rows("BridgeObjective", objectives)
         self.stands = Rows("BridgeStand", stands)
         self.events = Rows("BridgeEvent", list(events))
-        self.match = Rows("BridgeMatch", [{"GameTick": game_tick}])[0]
+        self.match = Rows("BridgeMatch", [{"GameTick": game_tick, "RoundTicksRemaining": -1, **(match or {})}])[0]
         self.match_id, self.action_tick = match_id, action_tick
 
 
@@ -93,10 +94,10 @@ def ctf(monkeypatch):
 
 
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1):
+          action_tick=1, match_id=1, match=None):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
-    home. The agent is the player P0 of team RED, aiming at +x."""
+    home. match: fields of the Match (by default a round without time limit). The agent is the player P0 of team RED, aiming at +x."""
     L = ctf.layout
     stand_at = {RED: (0.0, 0.0, 0.0), BLUE: (100.0, 0.0, 0.0)}
     flag_pos = [stand_at[RED], flag_at or stand_at[BLUE]]
@@ -109,7 +110,7 @@ def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=Fa
                   {"Handle": FLAG_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1], "State": flags[1],
                    "CarrierPlayer": P0 if flags[1] == CARRIED else NONE, "CarrierBiped": B0 if flags[1] == CARRIED else NONE}]
     stands = [{"Handle": STAND_RED, "BaseTeam": RED, "OwnerTeam": owners[0]}, {"Handle": STAND_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1]}]
-    return FakeTick(L, players, entities, objectives, stands, events, game_tick, match_id=match_id, action_tick=action_tick)
+    return FakeTick(L, players, entities, objectives, stands, events, game_tick, match_id=match_id, action_tick=action_tick, match=match)
 
 
 def Reset(ctf, *frames):
@@ -205,3 +206,67 @@ def test_the_environment_no_longer_deduces_the_side_or_searches_the_entities(ctf
     source = open(ctf.__file__, encoding="utf-8").read()
     assert "def _side(" not in source and "np.linalg.norm(Vec(e[\"WorldOrigin\"])" not in source
     assert "FLAG_SUBTYPE" not in source and "STAND_SUBTYPE" not in source and "AT_STAND" not in source
+
+
+# --- Clock and score of the round (P.6, D255) ------------------------------------------------------------------------------------
+
+def Clock(clock, remaining=-1, limit=0):
+    return {"RoundClockTicks": clock, "RoundTicksRemaining": remaining, "RoundTimeLimitTicks": limit}
+
+
+def Observe(ctf, match, max_seconds=120.0):
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf, match=match)]), ctf.CtfConfig(max_seconds=max_seconds))
+    observations, _ = env.reset()
+    return observations[P0]
+
+
+def test_time_left_is_the_one_of_the_round_when_it_has_a_limit(ctf):
+    # 2 min limit, 1 min played: half left (the cap of the environment is the same 120 s).
+    assert Observe(ctf, Clock(3600, remaining=3600, limit=7200))[19] == pytest.approx(0.5)
+
+
+def test_time_left_without_a_limit_is_the_cap_of_the_environment_over_the_round_clock(ctf):
+    assert Observe(ctf, Clock(1800))[19] == pytest.approx(0.75)
+
+
+def test_a_cap_shorter_than_the_limit_of_the_round_is_the_horizon(ctf):
+    # Cap 60 s, limit 120 s, 20 s played: 40 of 60 s left.
+    assert Observe(ctf, Clock(1200, remaining=6000, limit=7200), max_seconds=60.0)[19] == pytest.approx(2.0 / 3.0)
+
+
+def test_a_round_that_ran_out_has_no_time_left(ctf):
+    assert Observe(ctf, Clock(7200, remaining=0, limit=7200))[19] == 0.0
+
+
+def test_score_left_of_both_teams_comes_from_the_match(ctf):
+    scores = [0] * 8
+    scores[RED], scores[BLUE] = 1, 2
+    obs = Observe(ctf, {"ScoreToWin": 3, "TeamRoundScores": scores})
+    assert obs[20] == pytest.approx(2.0 / 3.0) and obs[21] == pytest.approx(1.0 / 3.0)
+
+
+def test_no_score_to_win_gives_no_score_left(ctf):
+    obs = Observe(ctf, {"ScoreToWin": 0})
+    assert obs[20] == 0.0 and obs[21] == 0.0
+
+
+def test_the_cap_of_the_environment_truncates_and_the_end_of_the_round_terminates(ctf):
+    nothing = np.zeros(len(ctf.ACTION_NVEC), dtype=np.int64)
+    # Cap of 60 s reached by the round clock: cut with end_round, truncated.
+    frames = [Frame(ctf, match=Clock(0)), Frame(ctf, action_tick=2, match=Clock(3600))]
+    env = ctf.CtfEnv(FakeBridge(frames), ctf.CtfConfig(max_seconds=60.0))
+    env.reset()
+    _, _, terminated, truncated, _ = env.step({P0: nothing})
+    assert truncated[P0] and not terminated[P0]
+    # The time limit of the round runs out first: the engine ends the round, terminated.
+    end = {"Sequence": 1, "Kind": ctf.Event.RoundEnd, "CausePlayer": NONE, "EffectPlayer": NONE}
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf, match=Clock(0, remaining=1800, limit=1800)),
+                                 Frame(ctf, action_tick=2, events=[end], match=Clock(1800, remaining=0, limit=1800))]))
+    env.reset()
+    _, _, terminated, truncated, _ = env.step({P0: nothing})
+    assert terminated[P0] and not truncated[P0]
+
+
+def test_the_environment_measures_no_time_of_its_own(ctf):
+    source = open(ctf.__file__, encoding="utf-8").read()
+    assert "GameTick" not in source and "start_tick" not in source

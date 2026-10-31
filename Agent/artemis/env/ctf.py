@@ -8,7 +8,8 @@ handle, D40). One step = one decision of the bridge (N ticks, Lockstep). The obs
 The flags and the stands come from the tick as Artemis computes them (B4h): each flag row has its BaseTeam, the OwnerTeam that plays
 its side in this round, its State (Home, Carried, Dropped) and its carrier; each stand row has its BaseTeam and OwnerTeam. The side
 of an agent is the BaseTeam of the stand its team owns in this round, so the swap of sides between rounds needs no deduction here.
-The rewards read the FlagTaken and FlagCaptured events Artemis generates, whose cause is the carrier.
+The rewards read the FlagTaken and FlagCaptured events Artemis generates, whose cause is the carrier. The clock and the score of
+the round come from the Match of the tick (P.6, D255): the environment measures no time of its own.
 """
 import math
 from dataclasses import dataclass
@@ -30,7 +31,9 @@ ACTION_NVEC = (3, 3, 9, 5, 2, 2)
 THROTTLE = (-1.0, 0.0, 1.0)
 YAW_STEPS = (-1.0, -0.5, -0.25, -0.1, 0.0, 0.1, 0.25, 0.5, 1.0)
 PITCH_STEPS = (-0.5, -0.2, 0.0, 0.2, 0.5)
-OBS_SIZE = 20 + sum(ACTION_NVEC)
+# Entries of the state before the one-hot of the last action: 19 = time left, 20 and 21 = score left of the own and the enemy team.
+STATE_SIZE = 22
+OBS_SIZE = STATE_SIZE + sum(ACTION_NVEC)
 
 
 @dataclass
@@ -79,7 +82,8 @@ class AgentState:
 class CtfEnv:
     """Stage 0 environment over one Artemis instance. reset() waits for the agents to spawn in a round; step() answers the current
     tick with the actions and returns what the next one says. Episode = one round: it ends with RoundEnd or GameOver
-    (terminated) or is cut after max_seconds of game time with Bridge.end_round (truncated)."""
+    (terminated, also when the time limit of the round runs out: the time left is in the observation) or is cut with
+    Bridge.end_round when the round clock of the Match reaches max_seconds (truncated), the cap of the environment."""
 
     def __init__(self, bridge: Bridge, config: CtfConfig = None):
         self.bridge = bridge
@@ -88,7 +92,6 @@ class CtfEnv:
         self.states = {}
         self.published = None
         self.match_id = None
-        self.start_tick = 0
         self.is_waiting_round = False
         self.is_cut = False
         self.events = []
@@ -165,7 +168,6 @@ class CtfEnv:
         for handle in self.agents:
             mask |= 1 << (handle & 0xFFFF)
         self.bridge.set_control(agents=mask)
-        self.start_tick = int(published.match["GameTick"])
         self.is_cut = False
         observations = {}
         for handle in self.agents:
@@ -219,8 +221,7 @@ class CtfEnv:
         if is_round_over:
             self.is_waiting_round = True
 
-        elapsed = (int(self.published.match["GameTick"]) - self.start_tick) / 60.0
-        is_timeout = not is_round_over and not self.is_cut and elapsed >= c.max_seconds
+        is_timeout = not is_round_over and not self.is_cut and int(self.published.match["RoundClockTicks"]) >= c.max_seconds * 60
         if is_timeout:
             # The RoundEnd of the cut comes a few ticks later: reset() waits for the next round past it.
             self.bridge.end_round(wait=False)
@@ -249,20 +250,49 @@ class CtfEnv:
         owned = self.stands[self.stands["OwnerTeam"] == team]
         return int(owned["BaseTeam"][0]) if len(owned) else None
 
+    def _time_left(self):
+        """Fraction of the episode left, from the Match: the ticks left of the round (RoundTicksRemaining, -1 without a time limit)
+        or of the cap of the environment (max_seconds over RoundClockTicks), whichever ends first, over the horizon of the same one."""
+        match = self.published.match
+        cap = self.config.max_seconds * 60
+        left, horizon = cap - int(match["RoundClockTicks"]), cap
+        remaining, limit = int(match["RoundTicksRemaining"]), int(match["RoundTimeLimitTicks"])
+        if remaining >= 0:
+            left = min(left, remaining)
+            if limit > 0:
+                horizon = min(horizon, limit)
+        return min(1.0, max(0.0, left / horizon)) if horizon > 0 else 0.0
+
+    def _score_left(self, team):
+        """Fraction of ScoreToWin that the team and its enemy still need to win the round (TeamRoundScores of the Match); 0 when the
+        variant has no score to win. The enemy is the team that owns the other stand in this round."""
+        match = self.published.match
+        to_win = int(match["ScoreToWin"])
+        if to_win <= 0:
+            return 0.0, 0.0
+        scores = match["TeamRoundScores"]
+        enemies = [int(t) for t in self.stands["OwnerTeam"] if int(t) != team]
+
+        def Left(t):
+            if t is None or not 0 <= t < len(scores):
+                return 0.0
+            return max(0, to_win - int(scores[t])) / to_win
+        return Left(team), Left(enemies[0] if enemies else None)
+
     # --- Observation ------------------------------------------------------------------------------------------------------------
 
     def _observe(self, handle):
         """Observation vector of one agent and the shaping potential of its state (None while it has no body)."""
-        c = self.config
         obs = np.zeros(OBS_SIZE, dtype=np.float32)
         player = self._players().get(handle)
         state = self.states[handle]
-        offset = 20
+        offset = STATE_SIZE
         for branch, n in zip(state.last_action, ACTION_NVEC):
             obs[offset + int(branch)] = 1.0
             offset += n
-        elapsed = (int(self.published.match["GameTick"]) - self.start_tick) / 60.0
-        obs[19] = max(0.0, 1.0 - elapsed / c.max_seconds)
+        obs[19] = self._time_left()
+        if player is not None:
+            obs[20:22] = self._score_left(int(player["Team"]))
         if not self._is_playing(player):
             return obs, None
         body = self._entity(int(player["BipedHandle"]))

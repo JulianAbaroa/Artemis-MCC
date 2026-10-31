@@ -1,7 +1,8 @@
 """
 env_check.py
 Checks the stage 0 environment against a running CTF match (Diseno/14 sec. 9.2): plays --episodes rounds with a policy and prints,
-per episode, steps, return, how it ended and the events of the agents. Policies: random, or seek (steer toward the enemy flag, or
+per episode, steps, return, how it ended, the events of the agents and the time and score left of the observation (from the Match, P.6)
+at its start and its end. Policies: random, or seek (steer toward the enemy flag, or
 the own stand while carrying it, with the vectors of the observation; walk forward).
 python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random] [--episodes 3] [--max-seconds 90] [--scale 5]
 Exit code 0 when every episode ended (terminated or truncated) and the observations were finite.
@@ -63,6 +64,7 @@ def Main():
                 events = {h: [] for h in env.agents}
                 steps, ending = 0, None
                 first = {h: float(o[10]) * 50 for h, o in observations.items()}
+                clock = {h: o[19:22].copy() for h, o in observations.items()}
                 closest = dict(first)
                 while ending is None:
                     actions = {h: policy(o, config, rng) for h, o in observations.items()}
@@ -82,6 +84,9 @@ def Main():
                 for h in env.agents:
                     print(f"episode {episode} agent {h:#010x}: {steps} steps, return {returns[h]:+.3f}, {ending}, "
                           f"events {events[h]}, flag at {first[h]:.0f} m, closest {closest[h]:.0f} m, {time.time() - started:.1f} s")
+                    start, end = clock[h], observations[h][19:22]
+                    print(f"  time left {start[0]:.3f} -> {end[0]:.3f}, score left own/enemy {start[1]:.2f}/{start[2]:.2f} -> "
+                          f"{end[1]:.2f}/{end[2]:.2f}")
         finally:
             env.release()
     print(f"lost events {bridge.event_gaps}")
