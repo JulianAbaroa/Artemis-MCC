@@ -83,6 +83,8 @@ export namespace Blam::MapModel::Definitions::Type::Scnr
     struct Scnr
     {
         std::string TagName{};
+        // Engine id of the map (scnr +0x10). Raw value.
+        std::int32_t MapId{};
 
         std::vector<TriggerVolume> TriggerVolumes{};
         std::vector<BoundaryTrigger> KillTriggers{};

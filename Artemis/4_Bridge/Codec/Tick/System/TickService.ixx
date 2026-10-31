@@ -102,6 +102,7 @@ export namespace Bridge::Codec::Tick::System
         TickStore& m_TickStore;
         std::shared_ptr<const std::unordered_map<std::string, Sbsp>> m_Map{};
         std::shared_ptr<const std::unordered_map<std::string, Scnr>> m_Limits{};
+        std::int32_t m_MapId{};
         std::shared_ptr<const std::unordered_map<std::string, Sddt>> m_Designs{};
     };
 }

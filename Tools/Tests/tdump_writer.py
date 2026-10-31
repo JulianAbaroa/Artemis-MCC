@@ -35,7 +35,7 @@ FOOTER = struct.Struct("<4sIQQQQ")
 HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
 DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
                 "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine")
-SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "f32": 4, "u64": 8}
+SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "i32": 4, "f32": 4, "u64": 8}
 
 
 def RealLayout():

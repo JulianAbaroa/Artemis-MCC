@@ -42,6 +42,7 @@ A client built for another layout sees a different hash and refuses to connect.
   `k_BridgeMaxObjectives` (8) rows, the team arrays of the match `k_MaxTeams` (8), and the header carries the counts in use.
 - Weapons and projectiles hold `k_BridgeMaxWeapons` and `k_BridgeMaxProjectiles` (256) rows each, after the events; the header carries
   `WeaponCount` and `ProjectileCount` and the flags `WeaponsTruncated` and `ProjectilesTruncated` tell when rows were cut.
+- The header also carries the `MapId` of the scnr of the loaded map (engine id, 0 while no map).
 
 ## Tests
 The `static_assert` of every offset (at compile time). `Tools/Tests/test_generators.py` and `test_components.py` check that the

@@ -122,6 +122,7 @@
 		<field name="StandCount" type="u16" doc="Rows of Stands in use." />
 		<field name="WeaponCount" type="u16" doc="Rows of Weapons in use." />
 		<field name="ProjectileCount" type="u16" doc="Rows of Projectiles in use." />
+		<field name="MapId" type="i32" doc="MapId of the scnr tag of the loaded map, engine id. 0 while no map." />
 	</struct>
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">

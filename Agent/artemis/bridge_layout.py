@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x3E5E0CECEDB1709E
+LAYOUT_HASH = 0x7A8C5C5A74093341
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -94,9 +94,9 @@ BridgeControl = np.dtype({
 
 # What the tick is: which match and which action tick.
 BridgeTickHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2'],
-    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50],
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4'],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52],
     'itemsize': 56,
 })
 

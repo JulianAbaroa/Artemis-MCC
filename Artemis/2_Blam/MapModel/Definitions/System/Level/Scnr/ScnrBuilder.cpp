@@ -35,6 +35,7 @@ namespace Blam::MapModel::Definitions::System
         Scnr out{};
 
         out.TagName = scnr.TagName;
+        out.MapId = scnr.Data.MapId;
 
         this->BuildTriggerVolumes(scnr, out);
         this->BuildBoundaryTriggers(scnr, out);

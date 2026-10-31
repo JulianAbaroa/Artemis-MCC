@@ -5,7 +5,7 @@ Group `4_Bridge` - pure static library - the order of the tick, the Tick, and it
 ## Responsibility
 - `PipelineService::Run`: the one place where the order of a tick lives (Blam.Runtime, then Perception, then Views, then the
   assembly of the Tick), over a Snapshot. The AI thread and the tests call it.
-- The Tick: everything the layers built, packed into one immutable value per tick.
+- The Tick: everything the layers built, packed into one immutable value per tick. It carries the `MapId` of the scnr of the loaded map (0 while none).
 - Flattening: the Tick into the `BridgeTick` of `Contract` (players, entities, flags, stands, weapons, projectiles, match with round, team scores, round time, round limit and score to win,
   newest events as POD rows). Copies, never computes. The one thing it does is order the flags, the stands, the weapons and the projectiles, which Perception
   keeps by handle (the flags by `BaseTeam` and handle), so a flag keeps its row while the engine recreates it.
@@ -54,4 +54,4 @@ More rows than the `BridgeTick` holds are cut and counted in its header (`Entiti
 
 ## Tests
 `PipelineTests` (the pure chain without the DLL), `ReplayTests.Recordings` (`.sdump` in, golden `.tdump` out, byte for byte),
-`FlatTests` (flags, stands, round, team scores and both event sequences), `TickDumpWriterTests` and `CollidableSceneTests` (the pipeline builds no scene), in `Artemis.Tests`.
+`FlatTests` (flags, stands, round, team scores, the `MapId` of the header and both event sequences), `TickDumpWriterTests` and `CollidableSceneTests` (the pipeline builds no scene), in `Artemis.Tests`.

@@ -285,6 +285,14 @@ TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)
     EXPECT_EQ(flat->Match.ScoreToWin, 5);
 }
 
+TEST(FlatTests, HeaderCarriesTheMapId)
+{
+    Tick tick{};
+    tick.MapId = 1234;
+    EXPECT_EQ(Flat(tick)->Header.MapId, 1234);
+    EXPECT_EQ(Flat(Tick{})->Header.MapId, 0);
+}
+
 TEST(FlatTests, EventsCarryTheSequenceOfArtemisAndTheOneOfTheEngine)
 {
     EventLog log{};

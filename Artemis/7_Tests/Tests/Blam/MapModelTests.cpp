@@ -4,7 +4,9 @@ import Common.Log.Type;
 import Common.Log.System;
 import Blam.Map.Reader.Type;
 import Blam.Map.Layer;
+import Blam.Map.Tag.Type;
 import Blam.MapModel.Layer;
+import Blam.MapModel.Definitions.System;
 import Tests.Support.Log;
 import Tests.Support.Maps;
 import std;
@@ -165,6 +167,15 @@ TEST_F(MapModelTests, KnownTagsHaveDefinitions)
     EXPECT_TRUE(definitions.m_Vehi.Has(std::string{ k_Warthog }));
     EXPECT_TRUE(definitions.m_Scnr.Has(std::string{ k_ForgeHaloScenario }));
     EXPECT_FALSE(definitions.m_Weap.Has(std::string{ k_Warthog }));
+}
+
+TEST(ScnrBuilderTests, MapIdIsCopiedFromTheScnrTag)
+{
+    Blam::Map::Tag::Type::Scnr::Object::ScnrObject scnr{};
+    scnr.Data.MapId = 1234;
+
+    const auto built{ Blam::MapModel::Definitions::System::ScnrBuilder{}.Build(scnr) };
+    EXPECT_EQ(built.MapId, 1234);
 }
 
 TEST_F(MapModelTests, EveryTagResolvesFromItsHandle)

@@ -59,6 +59,7 @@ export namespace Common::Reflect::Type
     {
         static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Scnr::TagName),
+            MakeField("MapId", &Scnr::MapId),
             MakeField("TriggerVolumes", &Scnr::TriggerVolumes),
             MakeField("KillTriggers", &Scnr::KillTriggers),
             MakeField("SafeZoneTriggers", &Scnr::SafeZoneTriggers),

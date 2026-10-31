@@ -185,6 +185,8 @@ namespace
         std::size_t EngineFlagEvents{};
         // Whether the Sequence of the log grew by one with each event, from 1.
         bool IsSequenceContinuous{ true };
+        // MapId of every Tick the pipeline assembled.
+        std::set<std::int32_t> MapIds{};
     };
 
     // Replays the recording of a capture film record by record and keeps what the Perception gave at the engine ticks asked for.
@@ -192,8 +194,10 @@ namespace
     // param ticks: Engine ticks (Match.GameTick) to keep.
     // param last: Receives the moment of the last record.
     // param run: Receives the events of the whole recording.
+    // param maxRecords: Records to replay at most.
     // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunCtfRecording(std::string_view film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last, CtfRun& run) -> std::string
+    auto RunCtfRecording(std::string_view film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last, CtfRun& run,
+        std::size_t maxRecords = std::numeric_limits<std::size_t>::max()) -> std::string
     {
         const std::filesystem::path directory{ RecordingsFolder() / film };
         std::error_code error{};
@@ -216,11 +220,14 @@ namespace
         LoadMap(*chain, mapPath);
 
         std::uint32_t lastSequence{ 0 };
-        for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record; isFirst = false)
+        std::size_t records{ 0 };
+        for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record && records < maxRecords; isFirst = false)
         {
             if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
 
+            ++records;
             chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
+            if (const auto tick{ chain->m_Export.m_TickStore.Acquire() }; tick) run.MapIds.insert(tick->MapId);
             const auto match{ chain->m_Environment.m_MatchStore.Acquire() };
             const auto objectives{ chain->m_Environment.m_ObjectiveDetailsStore.Acquire() };
             if (match && objectives)
@@ -409,10 +416,10 @@ namespace
         Event Kind{};
     };
 
-    // return: The events of Ignore/Tareas/B4h_esperado_ctf_c.txt (lines "tick Kind"), empty if the file is not there.
+    // return: The events of Ignore/Regresion/ctf_c/esperado.txt (lines "tick Kind"), empty if the file is not there.
     auto ReadExpectedEvents() -> std::vector<ExpectedEvent>
     {
-        std::ifstream file{ RecordingsFolder().parent_path() / "Tareas" / "B4h_esperado_ctf_c.txt" };
+        std::ifstream file{ RecordingsFolder() / "ctf_c" / "esperado.txt" };
         const std::map<std::string, Event> kinds{ { "Taken", Event::FlagTaken }, { "Dropped", Event::FlagDropped }, { "Returned", Event::FlagReturned },
             { "Reset", Event::FlagReset }, { "Captured", Event::FlagCaptured } };
 
@@ -433,7 +440,7 @@ namespace
 TEST_F(ReplayTests, CtfFlagEventsMatchTheExpectedList)
 {
     const std::vector<ExpectedEvent> expected{ ReadExpectedEvents() };
-    if (expected.empty()) GTEST_SKIP() << "No Ignore/Tareas/B4h_esperado_ctf_c.txt";
+    if (expected.empty()) GTEST_SKIP() << "No Ignore/Regresion/ctf_c/esperado.txt";
 
     std::map<std::uint32_t, CtfMoment> moments{};
     CtfMoment last{};
@@ -528,6 +535,28 @@ TEST_F(ReplayTests, CtfCRoundClockIsAStopwatchWithoutLimit)
         EXPECT_EQ(moments.at(tick).RoundTimeLimitTicks, 0u) << tick;
         EXPECT_EQ(moments.at(tick).RoundTicksRemaining, -1) << tick;
         EXPECT_EQ(moments.at(tick).ScoreToWin, 1) << tick;
+    }
+}
+
+// --- H.1: the MapId of the scnr in the Tick ---
+
+TEST_F(ReplayTests, MapIdIsTheSameNonZeroValueInEachFilm)
+{
+    // The golden.tdump of each film holds the MapId of every tick. Here the first records are enough.
+    constexpr std::size_t k_MapIdRecords{ 600 };
+    constexpr std::int32_t k_MapId{ 3006 };
+
+    for (const std::string_view film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" })
+    {
+        SCOPED_TRACE(film);
+        std::map<std::uint32_t, CtfMoment> moments{};
+        CtfMoment last{};
+        CtfRun run{};
+        const std::string reason{ RunCtfRecording(film, {}, moments, last, run, k_MapIdRecords) };
+        if (!reason.empty()) { std::cout << "[  SKIPPED ] " << film << ": " << reason << "\n"; continue; }
+
+        // The five films are on the same base map.
+        EXPECT_EQ(run.MapIds, std::set<std::int32_t>{ k_MapId });
     }
 }
 

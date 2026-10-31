@@ -64,6 +64,8 @@ export namespace Bridge::Codec::Tick::Type
     struct Tick
     {
         std::uint64_t Generation = 0;
+        // MapId of the scnr of the loaded map, engine id. 0 while no map or the scnr is not frozen.
+        std::int32_t MapId = 0;
 
         std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Sbsp::Sbsp>> Map{};
         std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Scnr::Scnr>> Limits{};

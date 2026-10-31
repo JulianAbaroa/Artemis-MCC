@@ -45,5 +45,5 @@ invalid `TagInfo` when no map is loaded or the salt does not match.
 The only door to raw tags for the rest of the system.
 
 ## Tests
-`MapModelTests` (forge_halo and shared: load lines, known definitions, every handle of the index), `TagResolverTests` (hand-made
+`MapModelTests` (forge_halo and shared: load lines, known definitions, every handle of the index, `ScnrBuilder` copies the `MapId` of the scnr), `TagResolverTests` (hand-made
 index, no `.map`) and `ObjectKindTests`, in `Artemis.Tests`.

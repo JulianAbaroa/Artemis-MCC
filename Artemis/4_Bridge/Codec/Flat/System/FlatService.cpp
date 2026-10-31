@@ -337,6 +337,7 @@ namespace Bridge::Codec::Flat::System
         flat.Header.WeaponCount = static_cast<std::uint16_t>(weaponCount);
         flat.Header.ProjectileCount = static_cast<std::uint16_t>(projectileCount);
         flat.Header.Generation = tick.Generation;
+        flat.Header.MapId = tick.MapId;
         flat.Header.Flags = flags;
     }
 }

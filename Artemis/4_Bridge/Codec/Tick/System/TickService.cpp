@@ -30,6 +30,8 @@ namespace Bridge::Codec::Tick::System
             {
                 m_Limits = std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Scnr::Scnr>>(
                     std::shared_ptr<void>{}, &m_DefinitionsStore.m_Scnr.All());
+                // note: A map has one scnr. With more, the first one gives the id (D56).
+                m_MapId = m_Limits->empty() ? 0 : m_Limits->begin()->second.MapId;
             }
 
             if (!m_Designs && m_DefinitionsStore.m_Sddt.IsFrozen())
@@ -42,11 +44,13 @@ namespace Bridge::Codec::Tick::System
         {
             m_Map.reset();
             m_Limits.reset();
+            m_MapId = 0;
             m_Designs.reset();
         }
 
         tick.Map = m_Map;
         tick.Limits = m_Limits;
+        tick.MapId = m_MapId;
         tick.Designs = m_Designs;
 
         // --- Layer 3: Tables ---
