@@ -17,14 +17,18 @@ namespace
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchScore;
     using Perception::Details::Type::ObjectiveDetail;
+    using Perception::Details::Type::ProjectileDetail;
     using Perception::Details::Type::StandDetail;
+    using Perception::Details::Type::WeaponDetail;
     using Contract::Bridge::Type::BridgeVec3;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeEntity;
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeStand;
+    using Contract::Bridge::Type::BridgeWeapon;
     using Contract::Bridge::Type::BridgeTickFlag;
 
     using Common::Engine::Type::k_NoHandle;
@@ -138,6 +142,56 @@ namespace
         return row;
     }
 
+    auto ToBridge(const WeaponDetail& weapon) -> BridgeWeapon
+    {
+        BridgeWeapon row{ Zeroed<BridgeWeapon>() };
+        row.Handle = weapon.Handle;
+        row.TrackedObject = weapon.TrackedObject;
+        row.Energy = weapon.Energy;
+        row.Heat = weapon.Heat;
+        row.ChargeFraction = weapon.ChargeFraction;
+        for (std::size_t magazine{ 0 }; magazine < weapon.Magazines.size(); ++magazine)
+        {
+            row.Magazines[magazine].Loaded = weapon.Magazines[magazine].Loaded;
+            row.Magazines[magazine].Reserve = weapon.Magazines[magazine].Reserve;
+        }
+        row.MagazineCount = weapon.MagazineCount;
+        row.IsEnergyWeapon = weapon.IsEnergyWeapon ? 1 : 0;
+        row.IsOverheated = weapon.IsOverheated ? 1 : 0;
+        row.IsReloading = weapon.IsReloading ? 1 : 0;
+        row.ChargeState = static_cast<std::uint8_t>(weapon.ChargeState);
+        row.IsLocked = weapon.IsLocked ? 1 : 0;
+        row.CanFireNow = weapon.CanFireNow ? 1 : 0;
+        return row;
+    }
+
+    auto ToBridge(const ProjectileDetail& projectile) -> BridgeProjectile
+    {
+        BridgeProjectile row{ Zeroed<BridgeProjectile>() };
+        row.Handle = projectile.Handle;
+        row.OwnerPlayer = projectile.OwnerPlayer;
+        row.OwnerBiped = projectile.OwnerBiped;
+        row.ShooterRoot = projectile.ShooterRoot;
+        row.StuckTo = projectile.StuckTo;
+        row.StuckNode = projectile.StuckNode;
+        row.InHand = projectile.InHand ? 1 : 0;
+        return row;
+    }
+
+    // return: Rows written, sorted by handle. Stops at the capacity of the array.
+    template<typename Detail, typename Row, std::size_t N>
+    auto FlattenByHandle(const std::unordered_map<std::uint32_t, Detail>& details, std::array<Row, N>& rows) -> std::size_t
+    {
+        std::vector<const Detail*> sorted{};
+        sorted.reserve(details.size());
+        for (const auto& [handle, detail] : details) sorted.push_back(&detail);
+        std::ranges::sort(sorted, [](const Detail* a, const Detail* b) { return a->Handle < b->Handle; });
+
+        const std::size_t count{ (std::min)(sorted.size(), N) };
+        for (std::size_t i{ 0 }; i < count; ++i) rows[i] = ToBridge(*sorted[i]);
+        return count;
+    }
+
     // return: Rows written. They are the ones of a by-handle map in the order of the bridge: by BaseTeam, then by handle, so the same
     // flag keeps its slot while the engine recreates it. Stops at the capacity of the array.
     template<typename Detail, typename Row, std::size_t N>
@@ -245,6 +299,21 @@ namespace Bridge::Codec::Flat::System
             }
         }
 
+        // Weapons and projectiles, by handle. Like the entities, only the rows below the count are meaningful.
+        std::size_t weaponCount{ 0 };
+        if (tick.WeaponDetails)
+        {
+            weaponCount = FlattenByHandle(*tick.WeaponDetails, flat.Weapons);
+            if (weaponCount < tick.WeaponDetails->size()) flags |= static_cast<std::uint32_t>(BridgeTickFlag::WeaponsTruncated);
+        }
+
+        std::size_t projectileCount{ 0 };
+        if (tick.ProjectileDetails)
+        {
+            projectileCount = FlattenByHandle(*tick.ProjectileDetails, flat.Projectiles);
+            if (projectileCount < tick.ProjectileDetails->size()) flags |= static_cast<std::uint32_t>(BridgeTickFlag::ProjectilesTruncated);
+        }
+
         // The newest events of the log: Python keeps its cursor by sequence and skips the ones it already has.
         std::size_t eventCount{ 0 };
         std::uint32_t lastEventSequence{ 0 };
@@ -265,6 +334,8 @@ namespace Bridge::Codec::Flat::System
         flat.Header.EntityCount = static_cast<std::uint16_t>(entityCount);
         flat.Header.ObjectiveCount = static_cast<std::uint16_t>(objectiveCount);
         flat.Header.StandCount = static_cast<std::uint16_t>(standCount);
+        flat.Header.WeaponCount = static_cast<std::uint16_t>(weaponCount);
+        flat.Header.ProjectileCount = static_cast<std::uint16_t>(projectileCount);
         flat.Header.Generation = tick.Generation;
         flat.Header.Flags = flags;
     }

@@ -15,7 +15,9 @@ namespace
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeStand;
+    using Contract::Bridge::Type::BridgeWeapon;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickHeader;
@@ -60,7 +62,8 @@ namespace
         const std::size_t rest{ sizeof(BridgeMatch) + (tick.PlayerCount * sizeof(BridgePlayer)) +
             (header.ChangedEntityCount * sizeof(BridgeEntity)) + (header.RemovedEntityCount * sizeof(std::uint32_t)) +
             (header.NewEventCount * sizeof(BridgeEvent)) + (tick.ObjectiveCount * sizeof(BridgeObjective)) +
-            (tick.StandCount * sizeof(BridgeStand)) };
+            (tick.StandCount * sizeof(BridgeStand)) + (tick.WeaponCount * sizeof(BridgeWeapon)) +
+            (tick.ProjectileCount * sizeof(BridgeProjectile)) };
 
         bytes.resize(sizeof(header) + sizeof(tick) + rest);
         std::memcpy(bytes.data(), &header, sizeof(header));

@@ -4,7 +4,7 @@ Group `1_Shared` - pure static library, generated - the layout C++ and Python sh
 
 ## Responsibility
 The binary contract of the bridge with the Python client: the POD structs of the `BridgeTick` (players, entities, the match with
-its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the events with both
+its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon` and the projectiles `BridgeProjectile`, the events with both
 sequences) and the `BridgeAction`, their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own.
 
 ## Does not
@@ -40,6 +40,8 @@ A client built for another layout sees a different hash and refuses to connect.
 - The layout changes only on purpose: every `.tdump` embeds the JSON of the layout it was written with.
 - Flags and stands are two structs and not one block with a kind: a stand has three fields and a flag ten. Both arrays hold
   `k_BridgeMaxObjectives` (8) rows, the team arrays of the match `k_MaxTeams` (8), and the header carries the counts in use.
+- Weapons and projectiles hold `k_BridgeMaxWeapons` and `k_BridgeMaxProjectiles` (256) rows each, after the events; the header carries
+  `WeaponCount` and `ProjectileCount` and the flags `WeaponsTruncated` and `ProjectilesTruncated` tell when rows were cut.
 
 ## Tests
 The `static_assert` of every offset (at compile time). `Tools/Tests/test_generators.py` and `test_components.py` check that the

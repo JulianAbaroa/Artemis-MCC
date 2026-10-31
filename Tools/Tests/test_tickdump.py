@@ -100,7 +100,7 @@ def test_writer_round_trip_with_the_existing_reader(tmp_path):
 def test_tables_and_ignored_fields_exist_in_bridge_xml():
     assert tickdump.TABLES == {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer",
                                "Entities": "BridgeEntity", "Events": "BridgeEvent", "Objectives": "BridgeObjective",
-                               "Stands": "BridgeStand"}
+                               "Stands": "BridgeStand", "Weapons": "BridgeWeapon", "Projectiles": "BridgeProjectile"}
     assert {t: set(f) for t, f in tickdump.IGNORED.items()} == {
         "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc"},
         "Players": {"LocalIndex", "Connection", "CameraPosition", "CameraForward"}}
@@ -116,8 +116,8 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(bad))
     data = bytearray(Film(range(2)).Bytes())
-    data[8] = 3
-    other = tmp_path / "v3.tdump"
+    data[8] = 4
+    other = tmp_path / "v4.tdump"
     other.write_bytes(bytes(data))
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(other))
@@ -514,9 +514,53 @@ def FlagFilm(state_at=None, ticks=range(6)):
     return w
 
 
+def test_a_golden_of_version_2_is_read_and_reports_the_weapon_tables_as_schema(tmp_path):
+    real, _ = RealLayout()
+    old_layout = ChangedLayout(real, drop={"BridgeTickHeader": ["WeaponCount", "ProjectileCount"]})
+    old_layout["structs"] = [s for s in old_layout["structs"] if s["name"] not in ("BridgeWeapon", "BridgeProjectile", "BridgeMagazine")]
+    golden = Writer(layout=old_layout, layout_hash=0x2)
+    for t in range(4):
+        golden.Tick(t, players=[Player(P1)], entities=[Entity(H1)], objectives=[{"Handle": 0xA1}], stands=[{"Handle": 0xB1}])
+    gpath = Save(tmp_path, "v2.tdump", golden)
+    assert tickdump.Dump(gpath).version == 2
+    r = tickdump.Diff(tickdump.Dump(gpath), tickdump.Dump(Save(tmp_path, "new.tdump", WeaponFilm(ticks=range(4)))))
+    assert not r.is_equal
+    assert any(line.startswith("+ Weapons (table of") for line in r.schema)
+    assert any(line.startswith("+ Projectiles (table of") for line in r.schema)
+    assert "+ Header.WeaponCount" in r.schema and "+ Header.ProjectileCount" in r.schema
+
+
+def WeaponFilm(charged_at=None, ticks=range(6)):
+    """A film with a weapon and a projectile. charged_at: first tick from which the weapon has Energy 0.5 (else 1.0)."""
+    w = Writer()
+    for t in ticks:
+        energy = 0.5 if charged_at is not None and t >= charged_at else 1.0
+        w.Tick(t, players=[Player(P1)], entities=[Entity(H1)],
+               weapons=[{"Handle": 0xC1, "TrackedObject": 0xC1, "Energy": energy, "MagazineCount": 1, "CanFireNow": 1}],
+               projectiles=[{"Handle": 0xD1, "OwnerPlayer": P1, "InHand": 1}])
+    return w
+
+
+def test_weapons_and_projectiles_round_trip_through_the_reader(tmp_path):
+    d = tickdump.Dump(Save(tmp_path, "w.tdump", WeaponFilm(charged_at=3)))
+    assert d.version == 3 and not d.is_cut
+    assert [len(r.weapons) for r in d.records] == [1] * 6
+    assert [len(r.projectiles) for r in d.records] == [1] * 6
+    assert [float(r.weapons["Energy"][0]) for r in d.records] == [1.0, 1.0, 1.0, 0.5, 0.5, 0.5]
+    assert int(d.records[0].projectiles["OwnerPlayer"][0]) == P1 and int(d.records[0].projectiles["InHand"][0]) == 1
+    assert int(d.records[0].header["WeaponCount"]) == 1 and int(d.records[0].header["ProjectileCount"]) == 1
+
+
+def test_a_weapon_that_changes_energy_is_a_difference_of_its_table(tmp_path):
+    r = DiffOf(tmp_path, WeaponFilm(), WeaponFilm(charged_at=3))
+    assert set(r.fields) == {"Weapons.Energy"}
+    assert (r.fields["Weapons.Energy"].first_tick, r.fields["Weapons.Energy"].first_key) == (3, 0xC1)
+    assert r.existence == {} and r.schema == []
+
+
 def test_flags_and_stands_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "a.tdump", FlagFilm(state_at=3)))
-    assert d.version == 2 and not d.is_cut
+    assert d.version == 3 and not d.is_cut
     assert [len(r.objectives) for r in d.records] == [2] * 6
     assert [len(r.stands) for r in d.records] == [1] * 6
     assert [int(r.objectives["State"][1]) for r in d.records] == [0, 0, 0, 1, 1, 1]
@@ -551,8 +595,9 @@ def test_a_flag_recreated_with_another_handle_is_an_existence_difference(tmp_pat
 
 def test_a_golden_from_before_the_flags_is_read_and_reports_the_new_tables_as_schema(tmp_path):
     real, _ = RealLayout()
-    old_layout = ChangedLayout(real, drop={"BridgeTickHeader": ["ObjectiveCount", "StandCount"]})
-    old_layout["structs"] = [s for s in old_layout["structs"] if s["name"] not in ("BridgeObjective", "BridgeStand")]
+    old_layout = ChangedLayout(real, drop={"BridgeTickHeader": ["ObjectiveCount", "StandCount", "WeaponCount", "ProjectileCount"]})
+    old_layout["structs"] = [s for s in old_layout["structs"]
+                             if s["name"] not in ("BridgeObjective", "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine")]
     golden = Film(range(4), writer=Writer(layout=old_layout, layout_hash=0x1))
     gpath = Save(tmp_path, "old.tdump", golden)
     assert tickdump.Dump(gpath).version == 1

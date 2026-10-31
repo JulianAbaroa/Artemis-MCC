@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
 import Perception.ObjectGraph.Type;
 
@@ -20,6 +21,7 @@ namespace
     using Common::Team::Type::Team;
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
     using Blam::Runtime::Object::Type::Placement::Placement;
+    using Blam::Runtime::Object::Type::Projectile::Projectile;
     using Blam::Runtime::Player::Type::Alive::PlayerTable;
     using Perception::Details::Type::VitalityDetails;
 
@@ -92,6 +94,17 @@ namespace
         return teams;
     }
 
+    // Maps every player to its team.
+    auto CollectPlayerTeams(const PlayerTable& playerTable) -> std::unordered_map<std::uint32_t, Team>
+    {
+        std::unordered_map<std::uint32_t, Team> teams{};
+        teams.reserve(playerTable.size());
+
+        for (const auto& [handle, player] : playerTable) teams[handle] = player.Team;
+
+        return teams;
+    }
+
     // Checks whether a weapon belongs to a vehicle: mounted guns and horns are never picked up (D74).
     auto IsVehicleWeapon(Function function, std::uint8_t subtype) -> bool
     {
@@ -121,6 +134,8 @@ namespace Perception::Entities::System
         const auto playerTablePtr{ m_PlayerStore.Acquire() };
         const auto bipedTeams{ playerTablePtr ? CollectBipedTeams(*playerTablePtr) : std::unordered_map<std::uint32_t, Team>{} };
 
+        const auto playerTeams{ playerTablePtr ? CollectPlayerTeams(*playerTablePtr) : std::unordered_map<std::uint32_t, Team>{} };
+
         Entities entities{};
         entities.Rows.reserve(classifiedsPtr->size());
 
@@ -131,7 +146,7 @@ namespace Perception::Entities::System
 
             if (classified.Binding == Binding::Carried) m_CarriedHandlesStore.Add(classified.Handle);
 
-            entities.Rows.push_back(this->MakeEntity(classified, objectIt->second, objectTable, vitalities, bipedTeams));
+            entities.Rows.push_back(this->MakeEntity(classified, objectIt->second, objectTable, vitalities, bipedTeams, playerTeams));
         }
 
         std::ranges::sort(entities.Rows, {}, &Entity::Handle);
@@ -146,7 +161,8 @@ namespace Perception::Entities::System
     }
 
     auto EntitiesService::MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable,
-        const VitalityDetails& vitalities, const std::unordered_map<std::uint32_t, Team>& bipedTeams) -> Entity
+        const VitalityDetails& vitalities, const std::unordered_map<std::uint32_t, Team>& bipedTeams,
+        const std::unordered_map<std::uint32_t, Team>& playerTeams) -> Entity
     {
         Entity entity{};
         entity.Handle = classified.Handle;
@@ -165,6 +181,14 @@ namespace Perception::Entities::System
             const auto teamIt{ bipedTeams.find(entity.Handle) };
             entity.Team = teamIt == bipedTeams.end() ? Team::Neutral : teamIt->second;
         }
+
+        // note: A projectile takes the team of the player that fired it, also from a vehicle seat. Without a player it keeps what it had.
+        if (const Projectile* projectile{ std::get_if<Projectile>(&object.Specific) })
+        {
+            const auto playerIt{ playerTeams.find(projectile->OwnerPlayer) };
+            if (playerIt != playerTeams.end()) entity.Team = playerIt->second;
+        }
+
         entity.Physics = object.Placement ? object.Placement->Physics : Physics::None;
         entity.BoundingCenter = object.BoundingCenter;
         entity.BoundingRadius = object.BoundingRadius;

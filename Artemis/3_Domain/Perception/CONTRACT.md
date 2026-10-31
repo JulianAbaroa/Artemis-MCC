@@ -29,7 +29,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.Classifier.Type`, `Perception.Classifier.State` | Kind, function and group of each live object. |
 | `Perception.ObjectGraph.Type`, `Perception.ObjectGraph.State` | How the live objects attach to each other, up to their root. |
 | `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier, projectile (owner, shooter root, what it is stuck to), weapon (ammo, energy, heat, overheat, reload, charge, lock, `CanFireNow`) and objective details (flags and their stands). |
-| `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. |
+| `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. The team of a biped is the one of its player and the team of a projectile the one of its `OwnerPlayer` in the player table. |
 | `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
 | `Perception.Events.Type`, `Perception.Events.State` | The events of the tick: the engine ring plus the flag events Artemis generates. |

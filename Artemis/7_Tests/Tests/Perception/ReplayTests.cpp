@@ -18,8 +18,10 @@ import Blam.Layout.Snapshot.System;
 import Blam.Map.Layer;
 import Blam.MapModel.Layer;
 import Perception.Details.Type;
+import Perception.Entities.Type;
 import Perception.Events.Type;
 import Perception.Match.Type;
+import Perception.Players.Type;
 import Tests.Support.Blam;
 import Tests.Support.Maps;
 import Tests.Support.Pipeline;
@@ -700,22 +702,25 @@ TEST_F(ReplayTests, Recordings)
     if (replayed == 0 && !::testing::Test::HasFailure()) GTEST_SKIP() << skipped;
 }
 
-// --- W.3: the weapons and projectiles of the armas_a recording ---
+// --- W.3, W.4: the weapons and projectiles of the armas_a and armas_b recordings ---
 
 namespace
 {
-    // What the Perception gave about the weapons and the projectiles at one engine tick of armas_a.
+    // What the Perception gave about the weapons, the projectiles and the entities at one engine tick of an armas recording.
     struct ArmasMoment
     {
         Perception::Details::Type::WeaponDetails Weapons{};
         Perception::Details::Type::ProjectileDetails Projectiles{};
+        std::shared_ptr<const Perception::Entities::Type::Entities> Entities{};
+        std::shared_ptr<const Perception::Players::Type::Players> Players{};
     };
 
-    // Replays the armas_a recording record by record and keeps the weapon and projectile details at the engine ticks asked for.
+    // Replays the recording of that name (armas_a, armas_b) record by record and keeps the weapon and projectile details at the engine ticks asked for.
     // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunArmasRecording(const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments) -> std::string
+    auto RunArmasRecording(const std::string& film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments)
+        -> std::string
     {
-        const std::filesystem::path directory{ RecordingsFolder() / "armas_a" };
+        const std::filesystem::path directory{ RecordingsFolder() / film };
         std::error_code error{};
         if (!std::filesystem::is_regular_file(directory / "golden.sdump", error)) return "No recording in " + directory.string();
 
@@ -743,9 +748,11 @@ namespace
             const auto match{ chain->m_Environment.m_MatchStore.Acquire() };
             const auto weapons{ chain->m_Environment.m_WeaponDetailsStore.Acquire() };
             const auto projectiles{ chain->m_Environment.m_ProjectileDetailsStore.Acquire() };
+            const auto entities{ chain->m_Environment.m_EntitiesStore.Acquire() };
+            const auto players{ chain->m_Environment.m_PlayersStore.Acquire() };
             if (match && weapons && projectiles && std::ranges::contains(ticks, match->GameTick))
             {
-                moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles };
+                moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles, .Entities = entities, .Players = players };
             }
 
             next = SnapshotCodec::ReadRecord(sdump, reader);
@@ -776,7 +783,7 @@ TEST_F(ReplayTests, ArmasAWeaponsAndProjectilesFollowTheRecordedFilm)
     const std::vector<std::uint32_t> ticks{ 2250, 2300, 2580, 2640, 3300, 4420, 4500, 4540, 5000, 5880, 5950, 6231, 6300, 6410,
         7300, 7400, 7480, 8000, 8500, 8550, 8560, 10765, 10780, 10800, 13790, 13810 };
     std::map<std::uint32_t, ArmasMoment> moments{};
-    const std::string reason{ RunArmasRecording(ticks, moments) };
+    const std::string reason{ RunArmasRecording("armas_a", ticks, moments) };
     if (!reason.empty()) GTEST_SKIP() << reason;
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
@@ -860,5 +867,57 @@ TEST_F(ReplayTests, ArmasAWeaponsAndProjectilesFollowTheRecordedFilm)
     EXPECT_EQ(projectile(13810, k_Needle).OwnerPlayer, k_Player0);
     EXPECT_EQ(projectile(8550, k_RocketProjectile).OwnerBiped, k_Biped0);
     EXPECT_EQ(projectile(8550, k_RocketProjectile).ShooterRoot, k_Biped0);
-    // Entity.Team of the rocket at 8550 is the team of player 0: it waits for W.4.
+
+    // Entity.Team of a projectile is the team of its OwnerPlayer in the player table (W.4).
+    const auto& at8550{ moments.at(8550) };
+    ASSERT_NE(at8550.Entities, nullptr);
+    ASSERT_NE(at8550.Players, nullptr);
+    const auto* rocket{ at8550.Entities->Find(k_RocketProjectile) };
+    const auto* owner{ at8550.Players->Find(k_Player0) };
+    ASSERT_NE(rocket, nullptr);
+    ASSERT_NE(owner, nullptr);
+    EXPECT_EQ(rocket->Team, owner->Team);
+}
+
+// --- W.4: armas_b, finite ammunition: the reserve and the battery run out ---
+
+TEST_F(ReplayTests, ArmasBMagazinesReservesAndBatteryFollowTheRecordedFilm)
+{
+    const std::vector<std::uint32_t> ticks{ 1300, 1320, 1420, 1900, 2250, 2310, 2400, 3155, 7700 };
+    std::map<std::uint32_t, ArmasMoment> moments{};
+    const std::string reason{ RunArmasRecording("armas_b", ticks, moments) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
+
+    const auto weapon{ [&](std::uint32_t tick, std::uint32_t handle) -> const Perception::Details::Type::WeaponDetail&
+    {
+        const auto& weapons{ moments.at(tick).Weapons };
+        EXPECT_TRUE(weapons.contains(handle)) << std::format("no weapon {:08X} at {}", handle, tick);
+        static const Perception::Details::Type::WeaponDetail missing{};
+        return weapons.contains(handle) ? weapons.at(handle) : missing;
+    } };
+
+    constexpr std::uint32_t k_DmrB{ 0xE43501C6 };
+
+    // DMR: last round, empty with a reserve, reloaded, reserve spent, empty and dry, ammunition picked up.
+    EXPECT_EQ(weapon(1300, k_DmrB).Magazines[0].Loaded, 1);
+    EXPECT_EQ(weapon(1300, k_DmrB).Magazines[0].Reserve, 30);
+    EXPECT_EQ(weapon(1320, k_DmrB).Magazines[0].Loaded, 0);
+    EXPECT_FALSE(weapon(1320, k_DmrB).CanFireNow);
+    EXPECT_EQ(weapon(1420, k_DmrB).Magazines[0].Loaded, 15);
+    EXPECT_EQ(weapon(1420, k_DmrB).Magazines[0].Reserve, 15);
+    EXPECT_EQ(weapon(1900, k_DmrB).Magazines[0].Loaded, 15);
+    EXPECT_EQ(weapon(1900, k_DmrB).Magazines[0].Reserve, 0);
+    EXPECT_EQ(weapon(2250, k_DmrB).Magazines[0].Loaded, 0);
+    EXPECT_EQ(weapon(2250, k_DmrB).Magazines[0].Reserve, 0);
+    EXPECT_FALSE(weapon(2250, k_DmrB).CanFireNow);
+    EXPECT_EQ(weapon(2310, k_DmrB).Magazines[0].Reserve, 45);
+
+    // Plasma rifle: the battery drains shot by shot until the weapon cannot fire.
+    EXPECT_TRUE(weapon(2400, k_PlasmaRifle).IsEnergyWeapon);
+    EXPECT_FLOAT_EQ(weapon(2400, k_PlasmaRifle).Energy, 1.0f);
+    EXPECT_NEAR(weapon(3155, k_PlasmaRifle).Energy, 0.97f, 1e-4f);
+    EXPECT_FLOAT_EQ(weapon(7700, k_PlasmaRifle).Energy, 0.0f);
+    EXPECT_FALSE(weapon(7700, k_PlasmaRifle).CanFireNow);
 }

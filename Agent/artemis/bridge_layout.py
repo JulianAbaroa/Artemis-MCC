@@ -8,12 +8,14 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x5CD36409CE179C81
+LAYOUT_HASH = 0x3E5E0CECEDB1709E
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
 TICK_BUFFERS = 2
 MAX_OBJECTIVES = 8
+MAX_WEAPONS = 0x100
+MAX_PROJECTILES = 0x100
 MAX_TEAMS = 8
 MAX_TICK_EVENTS = 64
 NO_HANDLE = 0xffffffff
@@ -54,6 +56,8 @@ class BridgeTickFlag(enum.IntFlag):
     """Flags of a tick."""
     EntitiesTruncated = 0x1
     ObjectivesTruncated = 0x2
+    WeaponsTruncated = 0x4
+    ProjectilesTruncated = 0x8
 
 
 # Vector of three floats, world units or a direction.
@@ -90,10 +94,10 @@ BridgeControl = np.dtype({
 
 # What the tick is: which match and which action tick.
 BridgeTickHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2'],
-    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46],
-    'itemsize': 48,
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2'],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50],
+    'itemsize': 56,
 })
 
 # State of the match (Environment Match, D103).
@@ -144,12 +148,36 @@ BridgeStand = np.dtype({
     'itemsize': 8,
 })
 
+# Ammo of one magazine of a weapon.
+BridgeMagazine = np.dtype({
+    'names': ['Loaded', 'Reserve'],
+    'formats': ['<u2', '<u2'],
+    'offsets': [0, 2],
+    'itemsize': 4,
+})
+
+# One live weapon (Perception WeaponDetail): in a hand, on the floor or mounted. The pose, the holder and the team are in its entity.
+BridgeWeapon = np.dtype({
+    'names': ['Handle', 'TrackedObject', 'Energy', 'Heat', 'ChargeFraction', 'Magazines', 'MagazineCount', 'IsEnergyWeapon', 'IsOverheated', 'IsReloading', 'ChargeState', 'IsLocked', 'CanFireNow'],
+    'formats': ['<u4', '<u4', '<f4', '<f4', '<f4', (BridgeMagazine, (2,)), 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1'],
+    'offsets': [0, 4, 8, 12, 16, 20, 28, 29, 30, 31, 32, 33, 34],
+    'itemsize': 36,
+})
+
+# One live projectile (Perception ProjectileDetail). The pose and the team are in its entity.
+BridgeProjectile = np.dtype({
+    'names': ['Handle', 'OwnerPlayer', 'OwnerBiped', 'ShooterRoot', 'StuckTo', 'StuckNode', 'InHand'],
+    'formats': ['<u4', '<u4', '<u4', '<u4', '<u4', 'i1', 'u1'],
+    'offsets': [0, 4, 8, 12, 16, 20, 21],
+    'itemsize': 24,
+})
+
 # One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
 BridgeTick = np.dtype({
-    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'SequenceEnd'],
-    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), '<u8'],
-    'offsets': [0, 8, 56, 1720, 108216, 108308, 108532, 108596, 110904],
-    'itemsize': 110912,
+    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'SequenceEnd'],
+    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), '<u8'],
+    'offsets': [0, 8, 64, 1728, 108224, 108316, 108540, 108604, 110908, 120124, 126272],
+    'itemsize': 126336,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -164,8 +192,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 222080],
-    'itemsize': 222848,
+    'offsets': [0, 256, 252928],
+    'itemsize': 253696,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -190,6 +218,7 @@ SEMANTIC_FIELDS = {
     ('BridgeObjective', 'State'): 'FlagState',
     ('BridgeStand', 'BaseTeam'): 'Team',
     ('BridgeStand', 'OwnerTeam'): 'Team',
+    ('BridgeWeapon', 'ChargeState'): 'ChargeState',
 }
 
 # Byte offset of each field of the region.
@@ -241,7 +270,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 224,
     'Control.Client.ActionSequence': 232,
     'Ticks': 256,
-    'Actions': 222080,
+    'Actions': 252928,
 }
 
-REGION_SIZE = 222848
+REGION_SIZE = 253696

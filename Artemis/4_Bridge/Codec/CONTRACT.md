@@ -6,11 +6,12 @@ Group `4_Bridge` - pure static library - the order of the tick, the Tick, and it
 - `PipelineService::Run`: the one place where the order of a tick lives (Blam.Runtime, then Perception, then Views, then the
   assembly of the Tick), over a Snapshot. The AI thread and the tests call it.
 - The Tick: everything the layers built, packed into one immutable value per tick.
-- Flattening: the Tick into the `BridgeTick` of `Contract` (players, entities, flags, stands, match with round, team scores, round time, round limit and score to win,
-  newest events as POD rows). Copies, never computes. The one thing it does is order the flags and the stands, which Perception
-  keeps by handle, by `BaseTeam` and handle, so a flag keeps its row while the engine recreates it.
+- Flattening: the Tick into the `BridgeTick` of `Contract` (players, entities, flags, stands, weapons, projectiles, match with round, team scores, round time, round limit and score to win,
+  newest events as POD rows). Copies, never computes. The one thing it does is order the flags, the stands, the weapons and the projectiles, which Perception
+  keeps by handle (the flags by `BaseTeam` and handle), so a flag keeps its row while the engine recreates it.
 - The `.tdump` format (the recorded stream of flattened ticks) and its writer. Version 2 writes the flags and the stands (counts in
-  the `BridgeTickHeader`) after the events of every record; a reader of version 1 files finds none.
+  the `BridgeTickHeader`) after the events of every record; a reader of version 1 files finds none. Version 3 adds the weapons and then the projectiles (counts in the header) after the stands; a
+  reader of older files finds none.
 
 ## Does not
 - Open shared memory or talk to the client: that is `Bridge.Transport`.
@@ -45,7 +46,7 @@ waits, so it never happens there).
 is the one-slot `FlatStore`.
 
 ## Errors
-More rows than the `BridgeTick` holds are cut and counted in its header (`EntitiesTruncated`, `ObjectivesTruncated`).
+More rows than the `BridgeTick` holds are cut and counted in its header (`EntitiesTruncated`, `ObjectivesTruncated`, `WeaponsTruncated`, `ProjectilesTruncated`).
 
 ## Requirements
 - The flattened layout changes only through `Contract` (same `k_BridgeLayoutHash`).

@@ -405,6 +405,13 @@ def test_the_bridge_layout_has_the_flags_the_stands_and_the_round_of_b4h():
     assert {"ObjectiveCount", "StandCount"} <= set(structs["BridgeTickHeader"])
     assert structs["BridgeTick"]["Objectives"][1:4:2] == ["BridgeObjective", 8]
     assert structs["BridgeTick"]["Stands"][1:4:2] == ["BridgeStand", 8]
+    # W.4: the weapons and the projectiles (counts in the header, tables after the events).
+    assert {"Handle", "OwnerPlayer", "OwnerBiped", "ShooterRoot", "StuckTo", "StuckNode", "InHand"} == set(structs["BridgeProjectile"])
+    assert {"Handle", "TrackedObject", "Energy", "Heat", "ChargeFraction", "Magazines", "MagazineCount", "IsEnergyWeapon", "IsOverheated",
+            "IsReloading", "ChargeState", "IsLocked", "CanFireNow"} == set(structs["BridgeWeapon"])
+    assert {"WeaponCount", "ProjectileCount"} <= set(structs["BridgeTickHeader"])
+    assert structs["BridgeTick"]["Weapons"][1:4:2] == ["BridgeWeapon", 256]
+    assert structs["BridgeTick"]["Projectiles"][1:4:2] == ["BridgeProjectile", 256]
     assert [structs["BridgeMatch"][n][3] for n in ("TeamRoundScores", "TeamTotalScores")] == [8, 8]
     assert {"RoundIndex", "RoundState"} <= set(structs["BridgeMatch"])
     assert "EngineSequence" in structs["BridgeEvent"]

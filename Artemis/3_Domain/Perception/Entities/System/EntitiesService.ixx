@@ -18,7 +18,8 @@ export namespace Perception::Entities::System
     // Builds the Entities table: one uniform row per live object (D19).
     // note: Adds to the classification the state and the capabilities that change with the object: Lifecycle, IsDynamic, IsPickable
     // and IsDestructible. The lifecycle comes from the VitalityDetails of the same tick (D87).
-    // note: The team of a biped comes from its player in the player table, not from its multiplayer block (D94).
+    // note: The team of a biped comes from its player in the player table, not from its multiplayer block (D94). So does the team of a
+    // projectile, from the player that fired it (D254). A projectile without a player keeps the team of its multiplayer block.
     class EntitiesService
     {
     private:
@@ -68,8 +69,10 @@ export namespace Perception::Entities::System
 
         // Builds the entity of a classified object with its lifecycle and its dynamic capabilities.
         // param bipedTeams: Team of the player of each biped, alive or a corpse.
+        // param playerTeams: Team of each player by player handle, for the projectiles (the team of the player that fired them).
         auto MakeEntity(const Classified& classified, const AliveObject& object, const ObjectTable& objectTable,
-            const VitalityDetails& vitalities, const std::unordered_map<std::uint32_t, Team>& bipedTeams) -> Entity;
+            const VitalityDetails& vitalities, const std::unordered_map<std::uint32_t, Team>& bipedTeams,
+            const std::unordered_map<std::uint32_t, Team>& playerTeams) -> Entity;
 
         // Returns the last object of the parent chain, or the object itself when it is Free.
         auto RootOf(const AliveObject& object, const ObjectTable& objectTable) const -> const AliveObject&;

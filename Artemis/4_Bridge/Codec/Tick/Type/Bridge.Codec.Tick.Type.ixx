@@ -46,6 +46,8 @@ namespace
     using Perception::Details::Type::BarrierDetail;
     using Perception::Details::Type::BarrierDetails;
     using Perception::Details::Type::ObjectiveDetails;
+    using Perception::Details::Type::ProjectileDetails;
+    using Perception::Details::Type::WeaponDetails;
     using Perception::Aim::Type::Aim;
     using Perception::Aim::Type::Aims;
     using Perception::Events::Type::EventLog;
@@ -86,6 +88,8 @@ export namespace Bridge::Codec::Tick::Type
         std::shared_ptr<const LiftDetails> LiftDetails{};
         std::shared_ptr<const BarrierDetails> BarrierDetails{};
         std::shared_ptr<const ObjectiveDetails> ObjectiveDetails{};
+        std::shared_ptr<const ProjectileDetails> ProjectileDetails{};
+        std::shared_ptr<const WeaponDetails> WeaponDetails{};
         std::shared_ptr<const Aims> Aims{};
         // Last events of the match. Readers keep their own cursor by sequence (D104).
         std::shared_ptr<const EventLog> Events{};

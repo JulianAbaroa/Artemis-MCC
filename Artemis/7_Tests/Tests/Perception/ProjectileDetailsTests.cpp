@@ -1,6 +1,12 @@
 #include <gtest/gtest.h>
 
 import Common.Engine.Type;
+import Common.Semantic.Type;
+import Common.Team.Type;
+import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Player.Type;
+import Perception.Classifier.Type;
+import Perception.Entities.Type;
 import Blam.Runtime.Object.Type;
 import Perception.Details.Type;
 import Tests.Support.Pipeline;
@@ -11,6 +17,12 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
+    using Common::Semantic::Type::Function;
+    using Common::Team::Type::Team;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::Runtime::Player::Type::Alive::AlivePlayer;
+    using Perception::Classifier::Type::Classified;
+    using Perception::Classifier::Type::Classifieds;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Biped::Biped;
     using Blam::Runtime::Object::Type::Projectile::Projectile;
@@ -134,4 +146,33 @@ TEST_F(ProjectileDetailsTests, OnlyProjectilesGetADetailAndCleanupDropsThem)
 
     m_Chain.m_Environment.m_ProjectileDetailsService.Cleanup();
     EXPECT_EQ(m_Chain.m_Environment.m_ProjectileDetailsStore.Acquire(), nullptr);
+}
+
+TEST_F(ProjectileDetailsTests, TheEntityOfAProjectileHasTheTeamOfThePlayerThatFiredIt)
+{
+    // Fired from a vehicle seat (the shooter root is the vehicle): the team still comes from the player.
+    this->AddProjectile(k_FromVehicle, Projectile{ .OwnerPlayer = k_Player, .OwnerBiped = k_Biped, .ShooterRoot = k_Vehicle, .ParentNode = -1 }, k_NoHandle);
+    this->AddProjectile(k_InFlight, Projectile{ .OwnerPlayer = k_NoHandle, .OwnerBiped = k_NoHandle, .ShooterRoot = k_NoHandle, .ParentNode = -1 }, k_NoHandle);
+    m_Chain.m_Tables.m_ObjectStore.Publish();
+
+    m_Chain.m_Tables.m_PlayerStore.AddPlayer(k_Player, AlivePlayer{ .Handle = k_Player, .Team = Team::Blue });
+    m_Chain.m_Tables.m_PlayerStore.Publish();
+
+    Classifieds classifieds{};
+    classifieds.push_back(Classified{ .Handle = k_FromVehicle, .Kind = ObjectKind::Projectile, .Function = Function::Projectile });
+    classifieds.push_back(Classified{ .Handle = k_InFlight, .Kind = ObjectKind::Projectile, .Function = Function::Projectile });
+    m_Chain.m_Environment.m_ClassifierStore.Publish(std::move(classifieds));
+
+    m_Chain.m_Environment.m_EntitiesService.Update();
+    const auto entities{ m_Chain.m_Environment.m_EntitiesStore.Acquire() };
+    ASSERT_NE(entities, nullptr);
+
+    const auto fired{ entities->Index.find(k_FromVehicle) };
+    ASSERT_NE(fired, entities->Index.end());
+    EXPECT_EQ(entities->Rows[fired->second].Team, Team::Blue);
+
+    // Without a player the team is what it was before: Neutral for a projectile of a map without team.
+    const auto noPlayer{ entities->Index.find(k_InFlight) };
+    ASSERT_NE(noPlayer, entities->Index.end());
+    EXPECT_EQ(entities->Rows[noPlayer->second].Team, Team::Neutral);
 }

@@ -16,7 +16,9 @@ namespace
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeObjective;
+    using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeStand;
+    using Contract::Bridge::Type::BridgeWeapon;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickHeader;
@@ -46,6 +48,8 @@ namespace
         std::vector<BridgeEvent> Events{};
         std::vector<BridgeObjective> Objectives{};
         std::vector<BridgeStand> Stands{};
+        std::vector<BridgeWeapon> Weapons{};
+        std::vector<BridgeProjectile> Projectiles{};
     };
 
     template <typename T>
@@ -75,6 +79,8 @@ namespace
         record.Events = ReadRows<BridgeEvent>(stream, record.Header.NewEventCount);
         record.Objectives = ReadRows<BridgeObjective>(stream, record.Tick.ObjectiveCount);
         record.Stands = ReadRows<BridgeStand>(stream, record.Tick.StandCount);
+        record.Weapons = ReadRows<BridgeWeapon>(stream, record.Tick.WeaponCount);
+        record.Projectiles = ReadRows<BridgeProjectile>(stream, record.Tick.ProjectileCount);
         return record;
     }
 
@@ -264,6 +270,55 @@ TEST(TickDumpWriterTests, FlagsAndStandsFollowTheEventsOfEveryRecord)
     ASSERT_EQ(second.Objectives.size(), 1u);
     EXPECT_EQ(second.Objectives[0].Handle, 0xA3u);
     EXPECT_TRUE(second.Stands.empty());
+
+    in.peek();
+    EXPECT_TRUE(in.eof());
+}
+
+TEST(TickDumpWriterTests, WeaponsAndProjectilesFollowTheStandsOfEveryRecord)
+{
+    TickDumpWriterState state{};
+    Writer::Begin(state);
+    std::stringstream stream{};
+
+    // Two weapons and one projectile in the first record; the second has one projectile and no weapon. Each record carries the rows of
+    // its tick, they are not a delta.
+    auto tickOne{ MakeTick({}, {}, 1) };
+    tickOne->Weapons[0].Handle = 0xC1;
+    tickOne->Weapons[0].CanFireNow = 1;
+    tickOne->Weapons[1].Handle = 0xC2;
+    tickOne->Weapons[1].Magazines[0].Loaded = 15;
+    tickOne->Projectiles[0].Handle = 0xD1;
+    tickOne->Projectiles[0].InHand = 1;
+    tickOne->Projectiles[0].StuckNode = -1;
+    tickOne->Header.WeaponCount = 2;
+    tickOne->Header.ProjectileCount = 1;
+    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, state) };
+
+    auto tickTwo{ MakeTick({}, {}, 2) };
+    tickTwo->Projectiles[0].Handle = 0xD2;
+    tickTwo->Projectiles[0].StuckNode = 5;
+    tickTwo->Header.ProjectileCount = 1;
+    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, state) };
+
+    EXPECT_EQ(one.Bytes + two.Bytes, static_cast<std::uint64_t>(stream.tellp()));
+
+    std::istringstream in{ stream.str() };
+    const ParsedRecord first{ ReadRecord(in) };
+    ASSERT_EQ(first.Weapons.size(), 2u);
+    EXPECT_EQ(first.Weapons[0].Handle, 0xC1u);
+    EXPECT_EQ(first.Weapons[0].CanFireNow, 1u);
+    EXPECT_EQ(first.Weapons[1].Magazines[0].Loaded, 15u);
+    ASSERT_EQ(first.Projectiles.size(), 1u);
+    EXPECT_EQ(first.Projectiles[0].Handle, 0xD1u);
+    EXPECT_EQ(first.Projectiles[0].InHand, 1u);
+    EXPECT_EQ(first.Projectiles[0].StuckNode, -1);
+
+    const ParsedRecord second{ ReadRecord(in) };
+    EXPECT_TRUE(second.Weapons.empty());
+    ASSERT_EQ(second.Projectiles.size(), 1u);
+    EXPECT_EQ(second.Projectiles[0].Handle, 0xD2u);
+    EXPECT_EQ(second.Projectiles[0].StuckNode, 5);
 
     in.peek();
     EXPECT_TRUE(in.eof());

@@ -130,6 +130,8 @@ def Ticks(args):
                 bad.append(f"counts {int(h['PlayerCount'])}/{int(h['EntityCount'])}")
             if int(h["ObjectiveCount"]) > L.MAX_OBJECTIVES or int(h["StandCount"]) > L.MAX_OBJECTIVES:
                 bad.append(f"objective counts {int(h['ObjectiveCount'])}/{int(h['StandCount'])}")
+            if int(h["WeaponCount"]) > L.MAX_WEAPONS or int(h["ProjectileCount"]) > L.MAX_PROJECTILES:
+                bad.append(f"weapon/projectile counts {int(h['WeaponCount'])}/{int(h['ProjectileCount'])}")
             handles = published.entities["Handle"]
             if len(handles) and (np.any(handles == L.NO_HANDLE) or np.any(np.diff(handles.astype(np.int64)) <= 0)):
                 bad.append(f"entity handles not sorted or NONE at tick {published.action_tick}")

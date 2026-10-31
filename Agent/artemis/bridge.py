@@ -112,6 +112,10 @@ class PublishedTick:
         # capture, so its Handle changes and BaseTeam is what identifies it.
         self.objectives = data["Objectives"][: int(self.header["ObjectiveCount"])]
         self.stands = data["Stands"][: int(self.header["StandCount"])]
+        # Live weapons (in a hand, on the floor or mounted) and live projectiles, sorted by Handle. The pose and the team are in the
+        # entity of the same Handle. ChargeFraction and Energy are NaN when the weapon has no charge or no energy.
+        self.weapons = data["Weapons"][: int(self.header["WeaponCount"])]
+        self.projectiles = data["Projectiles"][: int(self.header["ProjectileCount"])]
         # The newest events of the match up to this tick, oldest first. Bridge.new_events keeps only the unseen ones (D141).
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Contract.Bridge.Type;
@@ -16,6 +17,7 @@ namespace
 {
     using Bridge::Codec::Flat::System::FlatService;
     using Bridge::Codec::Tick::Type::Tick;
+    using Common::Semantic::Type::ChargeState;
     using Common::Semantic::Type::Event;
     using Common::Semantic::Type::FlagState;
     using Common::Semantic::Type::RoundState;
@@ -24,12 +26,19 @@ namespace
     using Contract::Bridge::Type::BridgeTickFlag;
     using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ObjectiveDetails;
+    using Perception::Details::Type::ProjectileDetail;
+    using Perception::Details::Type::ProjectileDetails;
     using Perception::Details::Type::StandDetail;
+    using Perception::Details::Type::WeaponDetail;
+    using Perception::Details::Type::WeaponDetails;
     using Perception::Events::Type::EventLog;
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchStatus;
 
     using Contract::Bridge::Type::k_BridgeMaxObjectives;
+    using Contract::Bridge::Type::k_BridgeMaxProjectiles;
+    using Contract::Bridge::Type::k_BridgeMaxWeapons;
+    using Common::Engine::Type::k_NoHandle;
 
     auto Flat(const Tick& tick) -> std::unique_ptr<BridgeTick>
     {
@@ -118,6 +127,126 @@ TEST(FlatTests, WithoutObjectiveDetailsTheCountsAreZero)
     EXPECT_EQ(flat->Header.ObjectiveCount, 0u);
     EXPECT_EQ(flat->Header.StandCount, 0u);
     EXPECT_EQ(flat->Header.Flags, 0u);
+}
+
+TEST(FlatTests, WeaponFieldsAreCopiedToTheWeaponRow)
+{
+    WeaponDetails weapons{};
+    WeaponDetail detail{ .Handle = 0xE4370001, .MagazineCount = 1, .IsEnergyWeapon = false, .Energy = std::numeric_limits<float>::quiet_NaN(),
+        .Heat = 0.25f, .IsOverheated = true, .IsReloading = true, .ChargeState = ChargeState::Charging, .ChargeFraction = 0.5f,
+        .TrackedObject = 0xE4280002, .IsLocked = true, .CanFireNow = false };
+    detail.Magazines[0] = { .Loaded = 12, .Reserve = 48 };
+    detail.Magazines[1] = { .Loaded = 3, .Reserve = 9 };
+    weapons[detail.Handle] = detail;
+
+    Tick tick{};
+    tick.WeaponDetails = std::make_shared<const WeaponDetails>(std::move(weapons));
+    const auto flat{ Flat(tick) };
+
+    ASSERT_EQ(flat->Header.WeaponCount, 1u);
+    EXPECT_EQ(flat->Header.ProjectileCount, 0u);
+    const auto& row{ flat->Weapons[0] };
+    EXPECT_EQ(row.Handle, 0xE4370001u);
+    EXPECT_EQ(row.MagazineCount, 1u);
+    EXPECT_EQ(row.Magazines[0].Loaded, 12u);
+    EXPECT_EQ(row.Magazines[0].Reserve, 48u);
+    EXPECT_EQ(row.Magazines[1].Loaded, 3u);
+    EXPECT_EQ(row.Magazines[1].Reserve, 9u);
+    EXPECT_EQ(row.IsEnergyWeapon, 0u);
+    EXPECT_TRUE(std::isnan(row.Energy));
+    EXPECT_FLOAT_EQ(row.Heat, 0.25f);
+    EXPECT_EQ(row.IsOverheated, 1u);
+    EXPECT_EQ(row.IsReloading, 1u);
+    EXPECT_EQ(row.ChargeState, static_cast<std::uint8_t>(ChargeState::Charging));
+    EXPECT_FLOAT_EQ(row.ChargeFraction, 0.5f);
+    EXPECT_EQ(row.TrackedObject, 0xE4280002u);
+    EXPECT_EQ(row.IsLocked, 1u);
+    EXPECT_EQ(row.CanFireNow, 0u);
+    EXPECT_EQ(flat->Header.Flags, 0u);
+}
+
+TEST(FlatTests, ProjectileFieldsAreCopiedToTheProjectileRow)
+{
+    ProjectileDetails projectiles{};
+    projectiles[0xE4E30001] = ProjectileDetail{ .Handle = 0xE4E30001, .OwnerPlayer = 0xEC700000, .OwnerBiped = 0xE43301C4,
+        .ShooterRoot = 0xE4440005, .StuckTo = 0xE4D50006, .StuckNode = 7, .InHand = false };
+    projectiles[0xE4E30002] = ProjectileDetail{ .Handle = 0xE4E30002, .OwnerPlayer = 0xEC700000, .OwnerBiped = 0xE43301C4,
+        .ShooterRoot = 0xE43301C4, .StuckTo = k_NoHandle, .StuckNode = -1, .InHand = true };
+
+    Tick tick{};
+    tick.ProjectileDetails = std::make_shared<const ProjectileDetails>(std::move(projectiles));
+    const auto flat{ Flat(tick) };
+
+    ASSERT_EQ(flat->Header.ProjectileCount, 2u);
+    EXPECT_EQ(flat->Header.WeaponCount, 0u);
+    const auto& stuck{ flat->Projectiles[0] };
+    EXPECT_EQ(stuck.Handle, 0xE4E30001u);
+    EXPECT_EQ(stuck.OwnerPlayer, 0xEC700000u);
+    EXPECT_EQ(stuck.OwnerBiped, 0xE43301C4u);
+    EXPECT_EQ(stuck.ShooterRoot, 0xE4440005u);
+    EXPECT_EQ(stuck.StuckTo, 0xE4D50006u);
+    EXPECT_EQ(stuck.StuckNode, 7);
+    EXPECT_EQ(stuck.InHand, 0u);
+    const auto& inHand{ flat->Projectiles[1] };
+    EXPECT_EQ(inHand.StuckTo, k_NoHandle);
+    EXPECT_EQ(inHand.StuckNode, -1);
+    EXPECT_EQ(inHand.InHand, 1u);
+}
+
+TEST(FlatTests, WeaponsAndProjectilesAreOrderedByHandle)
+{
+    // An unordered map gives no order: the rows must not depend on it.
+    WeaponDetails weapons{};
+    for (const std::uint32_t handle : { 0x30u, 0x10u, 0x20u }) weapons[handle] = WeaponDetail{ .Handle = handle };
+    ProjectileDetails projectiles{};
+    for (const std::uint32_t handle : { 0x90u, 0x70u, 0x80u }) projectiles[handle] = ProjectileDetail{ .Handle = handle };
+
+    Tick tick{};
+    tick.WeaponDetails = std::make_shared<const WeaponDetails>(std::move(weapons));
+    tick.ProjectileDetails = std::make_shared<const ProjectileDetails>(std::move(projectiles));
+    const auto flat{ Flat(tick) };
+
+    ASSERT_EQ(flat->Header.WeaponCount, 3u);
+    EXPECT_EQ(flat->Weapons[0].Handle, 0x10u);
+    EXPECT_EQ(flat->Weapons[1].Handle, 0x20u);
+    EXPECT_EQ(flat->Weapons[2].Handle, 0x30u);
+    ASSERT_EQ(flat->Header.ProjectileCount, 3u);
+    EXPECT_EQ(flat->Projectiles[0].Handle, 0x70u);
+    EXPECT_EQ(flat->Projectiles[1].Handle, 0x80u);
+    EXPECT_EQ(flat->Projectiles[2].Handle, 0x90u);
+}
+
+TEST(FlatTests, MoreWeaponsOrProjectilesThanTheCapacityAreCutAndFlagged)
+{
+    WeaponDetails weapons{};
+    for (std::uint32_t i{ 0 }; i < k_BridgeMaxWeapons + 1; ++i) weapons[0x100 + i] = WeaponDetail{ .Handle = 0x100 + i };
+
+    Tick onlyWeapons{};
+    onlyWeapons.WeaponDetails = std::make_shared<const WeaponDetails>(std::move(weapons));
+    const auto flatWeapons{ Flat(onlyWeapons) };
+    EXPECT_EQ(flatWeapons->Header.WeaponCount, k_BridgeMaxWeapons);
+    EXPECT_NE(flatWeapons->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::WeaponsTruncated), 0u);
+    EXPECT_EQ(flatWeapons->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::ProjectilesTruncated), 0u);
+    // The cut keeps the lowest handles.
+    EXPECT_EQ(flatWeapons->Weapons[k_BridgeMaxWeapons - 1].Handle, 0x100u + k_BridgeMaxWeapons - 1);
+
+    ProjectileDetails projectiles{};
+    for (std::uint32_t i{ 0 }; i < k_BridgeMaxProjectiles + 1; ++i) projectiles[0x100 + i] = ProjectileDetail{ .Handle = 0x100 + i };
+
+    Tick onlyProjectiles{};
+    onlyProjectiles.ProjectileDetails = std::make_shared<const ProjectileDetails>(std::move(projectiles));
+    const auto flatProjectiles{ Flat(onlyProjectiles) };
+    EXPECT_EQ(flatProjectiles->Header.ProjectileCount, k_BridgeMaxProjectiles);
+    EXPECT_NE(flatProjectiles->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::ProjectilesTruncated), 0u);
+    EXPECT_EQ(flatProjectiles->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::WeaponsTruncated), 0u);
+}
+
+TEST(FlatTests, WithoutWeaponOrProjectileDetailsTheCountsAreZero)
+{
+    const auto flat{ Flat(Tick{}) };
+
+    EXPECT_EQ(flat->Header.WeaponCount, 0u);
+    EXPECT_EQ(flat->Header.ProjectileCount, 0u);
 }
 
 TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)

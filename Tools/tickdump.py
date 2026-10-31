@@ -47,13 +47,18 @@ RECORD_HEADER = np.dtype([("Marker", "S4"), ("GameTick", "<u4"), ("DroppedBefore
 FOOTER = np.dtype([("Marker", "S4"), ("Reserved", "<u4"), ("RecordedTicks", "<u8"), ("DroppedTicks", "<u8"), ("QueueWaits", "<u8"),
                    ("EventLosses", "<u8")])
 HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
+# Tables the layout of a file may not have, in the order of the blocks at the end of a record: Record slot, struct, count in the header.
+# Version 2 added the first two, version 3 the last two. A file whose layout lacks a block has none of it.
+EXTRA_BLOCKS = (("objectives", "BridgeObjective", "ObjectiveCount"), ("stands", "BridgeStand", "StandCount"),
+                ("weapons", "BridgeWeapon", "WeaponCount"), ("projectiles", "BridgeProjectile", "ProjectileCount"))
 # Rows of a table the layout of a file does not have (a dump from before the flags): empty, with the key every table has.
 EMPTY_ROWS = np.dtype([("Handle", "<u4")])
 # Table name in the output -> struct of the layout (Bridge.xml).
 TABLES = {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer", "Entities": "BridgeEntity",
-          "Events": "BridgeEvent", "Objectives": "BridgeObjective", "Stands": "BridgeStand"}
+          "Events": "BridgeEvent", "Objectives": "BridgeObjective", "Stands": "BridgeStand", "Weapons": "BridgeWeapon",
+          "Projectiles": "BridgeProjectile"}
 # Tables of the Diff that are compared tick by tick (the events are compared apart, by Sequence).
-TICK_TABLES = ("Header", "Match", "Players", "Entities", "Objectives", "Stands")
+TICK_TABLES = ("Header", "Match", "Players", "Entities", "Objectives", "Stands", "Weapons", "Projectiles")
 # Fields that are not compared: the local view of the theater and the clock of the bridge (D170). Listed in every diff.
 IGNORED = {"Header": ("MatchId", "ActionTick", "Generation", "PublishQpc"),
            "Players": ("LocalIndex", "Connection", "CameraPosition", "CameraForward")}
@@ -86,7 +91,8 @@ def Dtypes(layout):
 class Record:
     # entities: the delta of the file (new or changed rows), removed: handles gone since the previous record. Dump.states() rebuilds
     # the full table of every tick.
-    __slots__ = ("game_tick", "dropped", "flags", "header", "match", "players", "entities", "removed", "events", "objectives", "stands")
+    __slots__ = ("game_tick", "dropped", "flags", "header", "match", "players", "entities", "removed", "events", "objectives", "stands", "weapons",
+                 "projectiles")
 
 
 class Dump:
@@ -105,17 +111,18 @@ class Dump:
          source) = FILE_HEADER.unpack_from(data, 0)
         if magic != b"ATDUMP\0\0":
             raise TickDumpError(f"{path} is not a .tdump file.")
-        if self.version not in (1, 2):
-            raise TickDumpError(f"{path} has format version {self.version}, this reader knows 1 and 2.")
+        if self.version not in (1, 2, 3):
+            raise TickDumpError(f"{path} has format version {self.version}, this reader knows 1, 2 and 3.")
         self.map_name, self.start_time, self.source = Text(map_name), Text(start), Text(source)
         try:
             self.layout = json.loads(data[header_size:header_size + json_size])
             self.types = Dtypes(self.layout)
             th, tm, tp, te, tv = (self.types[n] for n in ("BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity",
                                                           "BridgeEvent"))
-            # Version 2 puts the flags and the stands (counts in the header) after the events; a layout without them has no such blocks.
-            to, ts = self.types.get("BridgeObjective"), self.types.get("BridgeStand")
-            has_objectives = to is not None and ts is not None and {"ObjectiveCount", "StandCount"} <= set(th.names)
+            # Version 2 puts the flags and the stands, version 3 the weapons and the projectiles (counts in the header), after the
+            # events. A layout without a block has no such block.
+            blocks = [(slot, self.types[struct], count) for slot, struct, count in EXTRA_BLOCKS
+                      if struct in self.types and count in th.names]
         except (ValueError, KeyError, TypeError, IndexError) as error:
             raise TickDumpError(f"{path} has an unreadable layout ({type(error).__name__}: {error}).")
         self.records, self.footer, self.is_cut = [], None, False
@@ -141,8 +148,7 @@ class Dump:
             offset += tm.itemsize
             counts = ((tp, int(r.header["PlayerCount"])), (te, int(rh["ChangedEntityCount"])),
                       (np.dtype("<u4"), int(rh["RemovedEntityCount"])), (tv, int(rh["NewEventCount"])))
-            if has_objectives:
-                counts += ((to, int(r.header["ObjectiveCount"])), (ts, int(r.header["StandCount"])))
+            counts += tuple((t, int(r.header[count])) for _, t, count in blocks)
             if offset + sum(t.itemsize * n for t, n in counts) > len(data):
                 self.is_cut = True
                 break
@@ -151,7 +157,9 @@ class Dump:
                 rows.append(np.frombuffer(data, t, n, offset))
                 offset += t.itemsize * n
             r.players, r.entities, r.removed, r.events = rows[:4]
-            r.objectives, r.stands = rows[4:] if has_objectives else (np.zeros(0, EMPTY_ROWS), np.zeros(0, EMPTY_ROWS))
+            present = dict(zip((slot for slot, _, _ in blocks), rows[4:]))
+            for slot, _, _ in EXTRA_BLOCKS:
+                setattr(r, slot, present.get(slot, np.zeros(0, EMPTY_ROWS)))
             self.records.append(r)
         else:
             self.is_cut = self.footer is None
@@ -241,11 +249,14 @@ def Row(row, fields=None):
     parts = []
     for n in names:
         v = row[n]
-        if v.dtype.names:
+        if v.dtype.names and v.ndim:
+            v = "[" + ";".join("(" + ",".join(f"{int(x[c])}" for c in v.dtype.names) + ")" for x in v) + "]"
+        elif v.dtype.names:
             v = "(" + ",".join(f"{float(v[c]):.3f}" for c in v.dtype.names) + ")"
         elif v.dtype.kind == "f":
             v = f"{float(v):.4f}"
-        elif n in ("Handle", "BoundTo", "ParentHandle", "BipedHandle", "Objective", "CarrierPlayer", "CarrierBiped", "HomeStand") \
+        elif n in ("Handle", "BoundTo", "ParentHandle", "BipedHandle", "Objective", "CarrierPlayer", "CarrierBiped", "HomeStand",
+                 "TrackedObject", "OwnerPlayer", "OwnerBiped", "ShooterRoot", "StuckTo") \
                 or n.endswith("Handle"):
             v = f"{int(v):08X}" if v.ndim == 0 else v
         parts.append(f"{n}={v}")
@@ -265,6 +276,10 @@ def ShowTick(d, tick):
         print(f"objective: {Row(o)}")
     for s in r.stands:
         print(f"stand: {Row(s)}")
+    for w in r.weapons:
+        print(f"weapon: {Row(w)}")
+    for p in r.projectiles:
+        print(f"projectile: {Row(p)}")
     print(f"entities {len(table)} ({len(r.entities)} written in this record), new events {len(r.events)}")
     for e in r.events:
         print(f"event: {Row(e)}")
@@ -273,7 +288,8 @@ def ShowTick(d, tick):
 def ShowHandle(d, handle, field):
     seen, last = 0, None
     for r, entities in d.states():
-        for table, label in ((r.players, "player"), (entities, "entity"), (r.objectives, "objective"), (r.stands, "stand")):
+        for table, label in ((r.players, "player"), (entities, "entity"), (r.objectives, "objective"), (r.stands, "stand"),
+                             (r.weapons, "weapon"), (r.projectiles, "projectile")):
             rows = table[table["Handle"] == handle] if len(table) else table
             if not len(rows):
                 continue
@@ -576,7 +592,8 @@ def Diff(golden, run, overlap=False):
                 tables["Match"].Compare(key, OneRow(rg.match), OneRow(rr.match), False)
                 tables["Players"].Compare(key, rg.players, rr.players, True)
                 tables["Entities"].Compare(key, tg, tr, True)
-                for name, a, b in (("Objectives", rg.objectives, rr.objectives), ("Stands", rg.stands, rr.stands)):
+                for name, a, b in (("Objectives", rg.objectives, rr.objectives), ("Stands", rg.stands, rr.stands),
+                                   ("Weapons", rg.weapons, rr.weapons), ("Projectiles", rg.projectiles, rr.projectiles)):
                     if tables[name].fields:
                         tables[name].Compare(key, a, b, True)
                 g, r = next(gs, None), next(rs, None)

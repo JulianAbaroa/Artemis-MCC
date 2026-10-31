@@ -12,6 +12,8 @@
 	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a tick (Common.Engine k_MaxObjects)." />
 	<const name="TickBuffers" value="2" doc="Tick buffers: Artemis writes the one Python is not reading." />
 	<const name="MaxObjectives" value="8" doc="Flags, and stands, a tick carries (a capture game has one of each per team: Common.Engine k_MaxTeams)." />
+	<const name="MaxWeapons" value="256" doc="Live weapons a tick carries: in hand, on the floor or mounted (D254)." />
+	<const name="MaxProjectiles" value="256" doc="Live projectiles a tick carries (D254)." />
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
@@ -42,6 +44,8 @@
 	<flags name="BridgeTickFlag" type="u32" doc="Flags of a tick.">
 		<bit name="EntitiesTruncated" index="0" doc="The tick had more live objects than MaxEntities." />
 		<bit name="ObjectivesTruncated" index="1" doc="The tick had more flags or more stands than MaxObjectives." />
+		<bit name="WeaponsTruncated" index="2" doc="The tick had more live weapons than MaxWeapons." />
+		<bit name="ProjectilesTruncated" index="3" doc="The tick had more live projectiles than MaxProjectiles." />
 	</flags>
 
 	<struct name="BridgeVec3" doc="Vector of three floats, world units or a direction.">
@@ -116,6 +120,8 @@
 		<field name="LastEventSequence" type="u32" doc="Sequence of the newest event of the match up to this tick (0 = none yet)." />
 		<field name="ObjectiveCount" type="u16" doc="Rows of Objectives in use." />
 		<field name="StandCount" type="u16" doc="Rows of Stands in use." />
+		<field name="WeaponCount" type="u16" doc="Rows of Weapons in use." />
+		<field name="ProjectileCount" type="u16" doc="Rows of Projectiles in use." />
 	</struct>
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
@@ -219,6 +225,37 @@
 		<field name="OwnerTeam" type="u8" semantic="Team" doc="Team that plays the side of the stand in this round." />
 	</struct>
 
+	<struct name="BridgeMagazine" doc="Ammo of one magazine of a weapon.">
+		<field name="Loaded" type="u16" doc="Rounds in the weapon, ready to fire." />
+		<field name="Reserve" type="u16" doc="Rounds carried outside the weapon." />
+	</struct>
+
+	<struct name="BridgeWeapon" doc="One live weapon (Perception WeaponDetail): in a hand, on the floor or mounted. The pose, the holder and the team are in its entity.">
+		<field name="Handle" type="u32" />
+		<field name="TrackedObject" type="u32" doc="Object the weapon tracks, NoHandle when it tracks nothing." />
+		<field name="Energy" type="f32" doc="Energy left, 0 to 1, on an energy weapon. NaN on the others." />
+		<field name="Heat" type="f32" doc="0 to 1." />
+		<field name="ChargeFraction" type="f32" doc="Progress of the charge, 0 to 1. NaN when no trigger of the tag charges." />
+		<field name="Magazines" type="BridgeMagazine" count="2" doc="Only the first MagazineCount are meaningful." />
+		<field name="MagazineCount" type="u8" doc="Magazines of the tag that hold rounds, 0 to 2." />
+		<field name="IsEnergyWeapon" type="u8" doc="1 when the tag has no magazine with rounds." />
+		<field name="IsOverheated" type="u8" doc="1 from the overheat until the weapon can fire again, whatever the heat says." />
+		<field name="IsReloading" type="u8" />
+		<field name="ChargeState" type="u8" semantic="ChargeState" doc="Stage of the charged fire mode of trigger 0." />
+		<field name="IsLocked" type="u8" doc="1 when the tracked object is locked." />
+		<field name="CanFireNow" type="u8" doc="1 when the weapon is not busy, not overheated and has energy or a loaded round. Does not cover the trigger, the holder or a melee." />
+	</struct>
+
+	<struct name="BridgeProjectile" doc="One live projectile (Perception ProjectileDetail). The pose and the team are in its entity.">
+		<field name="Handle" type="u32" />
+		<field name="OwnerPlayer" type="u32" doc="Player that fired it, NoHandle when none." />
+		<field name="OwnerBiped" type="u32" doc="Biped that fired it, NoHandle when none." />
+		<field name="ShooterRoot" type="u32" doc="Root of the shooter's parent chain: the biped on foot, the vehicle when seated." />
+		<field name="StuckTo" type="u32" doc="Object the projectile is stuck to, NoHandle in flight and while InHand." />
+		<field name="StuckNode" type="i8" doc="Node of StuckTo, -1 when it is not stuck." />
+		<field name="InHand" type="u8" doc="1 while a grenade is still in the hand of its thrower." />
+	</struct>
+
 	<struct name="BridgeTick" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.">
 		<field name="Sequence" type="u64" />
 		<field name="Header" type="BridgeTickHeader" />
@@ -228,6 +265,8 @@
 		<field name="Objectives" type="BridgeObjective" count="MaxObjectives" doc="Flags, sorted by BaseTeam then Handle." />
 		<field name="Stands" type="BridgeStand" count="MaxObjectives" doc="Stands, sorted by BaseTeam then Handle." />
 		<field name="Events" type="BridgeEvent" count="MaxTickEvents" />
+		<field name="Weapons" type="BridgeWeapon" count="MaxWeapons" doc="Live weapons, sorted by Handle." />
+		<field name="Projectiles" type="BridgeProjectile" count="MaxProjectiles" doc="Live projectiles, sorted by Handle." />
 		<field name="SequenceEnd" type="u64" />
 	</struct>
 
