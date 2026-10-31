@@ -16,6 +16,8 @@ export namespace Common::Reflect::Type
     {
         static constexpr auto k_Value = std::tuple{
             MakeField("TagName", &Jpt::TagName),
+            MakeField("RadiusMin", &Jpt::RadiusMin),
+            MakeField("RadiusMax", &Jpt::RadiusMax),
             MakeField("Category", &Jpt::Category),
             MakeField("DamageFlags", &Jpt::DamageFlags),
             MakeField("DamageLowerBound", &Jpt::DamageLowerBound),

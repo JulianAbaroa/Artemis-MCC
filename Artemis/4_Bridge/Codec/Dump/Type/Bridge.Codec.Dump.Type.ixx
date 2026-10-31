@@ -8,7 +8,7 @@ export namespace Bridge::Codec::Dump::Type
     // Version of the .tdump format (D151). Raised when the file header, the record header or the order of the blocks changes.
     // note: 2 adds the Objectives and Stands blocks at the end of each record. 3 adds the Weapons and Projectiles blocks after them.
     // A reader of 1 or 2 reads those files without the blocks they do not have.
-    inline constexpr std::uint32_t k_TickDumpVersion{ 3 };
+    inline constexpr std::uint32_t k_TickDumpVersion{ 4 };
 
     // First bytes of a .tdump file.
     inline constexpr std::array<char, 8> k_TickDumpMagic{ 'A', 'T', 'D', 'U', 'M', 'P', '\0', '\0' };
@@ -49,7 +49,7 @@ export namespace Bridge::Codec::Dump::Type
     static_assert(sizeof(TickDumpFileHeader) == 200);
 
     // Start of one tick record, followed by BridgeTickHeader, BridgeMatch, Players[PlayerCount], Entities[ChangedEntityCount],
-    // u32 RemovedHandles[RemovedEntityCount], Events[NewEventCount], Objectives[ObjectiveCount], Stands[StandCount], Weapons[WeaponCount] and Projectiles[ProjectileCount], with the sizes
+    // u32 RemovedHandles[RemovedEntityCount], Events[NewEventCount], Objectives[ObjectiveCount], Stands[StandCount], Weapons[WeaponCount], Projectiles[ProjectileCount] and Explosives[ExplosiveCount], with the sizes
     // of the layout of the file. The counts are in BridgeTickHeader. A file whose layout has no such fields has no such blocks.
     // note: Entities are a delta, because almost every row repeats from one tick to the next (98.9% measured in Forge World): the
     // rows that are new or differ from the previous record, and the handles of the previous record that are gone. A keyframe

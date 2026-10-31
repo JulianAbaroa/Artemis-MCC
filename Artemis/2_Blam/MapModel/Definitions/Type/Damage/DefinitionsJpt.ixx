@@ -9,6 +9,10 @@ export namespace Blam::MapModel::Definitions::Type::Jpt
     {
         std::string TagName{};
 
+        // Area of effect in world units: full damage up to RadiusMin, none past RadiusMax. Both 0 for a direct hit only.
+        float RadiusMin{};
+        float RadiusMax{};
+
         // None, Falling, Bullet, Grenade, HighExplosive, Sniper, Melee, Flame, MountedWeapon, Vehicle, Plasma, Needle, Shotgun, Assassinated.
         std::uint16_t Category{};
 

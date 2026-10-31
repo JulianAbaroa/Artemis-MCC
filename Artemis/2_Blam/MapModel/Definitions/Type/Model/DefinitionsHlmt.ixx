@@ -19,6 +19,9 @@ export namespace Blam::MapModel::Definitions::Type::Hlmt
         float DamageThreshold{};
 
         std::vector<RegionTransition> RegionTransitions{};
+
+        // Damage effect applied around the object when the response fires (the explosion of a fusion coil). Empty without one.
+        std::string TransitionDamageEffectTagName{};
     };
 
     struct DamageTransfer

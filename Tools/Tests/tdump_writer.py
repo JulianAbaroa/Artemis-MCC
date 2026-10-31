@@ -1,6 +1,6 @@
 """
 tdump_writer.py
-Test support of M2 (D170-D174): writes .tdump files (format version 3, 2 without weapons and projectiles, 1 without flags and stands; Ignore Referencia/Diseno/15 sec. 4) the
+Test support of M2 (D170-D174): writes .tdump files (format version 4, 3 without explosives, 2 without weapons and projectiles, 1 without flags and stands; Ignore Referencia/Diseno/15 sec. 4) the
 way the dump thread of Artemis does (Artemis/4_Bridge/Codec/Dump/System/Bridge.Codec.Dump.System.cpp: keyframe first and every
 keyframe_interval records, otherwise the rows that are new or differ byte for byte plus the handles that are gone). The layout is the
 real one of Data/Bridge/Bridge.xml (GenerateBridge.LayoutJson, the same text the C++ embeds), optionally changed to test layout
@@ -34,7 +34,7 @@ RECORD_HEADER = struct.Struct("<4sIIHHHHI")
 FOOTER = struct.Struct("<4sIQQQQ")
 HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
 DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
-                "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine")
+                "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine", "BridgeExplosive")
 SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "i32": 4, "f32": 4, "u64": 8}
 
 
@@ -114,8 +114,12 @@ class Writer:
         return self.HasObjectives() and "BridgeWeapon" in self.types and "BridgeProjectile" in self.types \
             and "WeaponCount" in header and "ProjectileCount" in header
 
+    def HasExplosives(self):
+        """Whether the layout has the explosive block (format version 4)."""
+        return self.HasWeapons() and "BridgeExplosive" in self.types and "ExplosiveCount" in self.types["BridgeTickHeader"].names
+
     def Version(self):
-        return 3 if self.HasWeapons() else 2 if self.HasObjectives() else 1
+        return 4 if self.HasExplosives() else 3 if self.HasWeapons() else 2 if self.HasObjectives() else 1
 
     def Rows(self, name, rows):
         out = np.zeros(len(rows), self.types[name])
@@ -125,9 +129,9 @@ class Writer:
         return out
 
     def Tick(self, game_tick, players=(), entities=(), events=(), header=None, match=None, dropped_before=0, has_match=True,
-             events_lost=False, objectives=(), stands=(), weapons=(), projectiles=()):
+             events_lost=False, objectives=(), stands=(), weapons=(), projectiles=(), explosives=()):
         players, events, objectives, stands = list(players), list(events), list(objectives), list(stands)
-        weapons, projectiles = list(weapons), list(projectiles)
+        weapons, projectiles, explosives = list(weapons), list(projectiles), list(explosives)
         entity_rows = self.Rows("BridgeEntity", list(entities))
         entity_rows = entity_rows[np.argsort(entity_rows["Handle"], kind="stable")]
         self.last_sequence = max([self.last_sequence] + [int(e["Sequence"]) for e in events if "Sequence" in e])
@@ -138,6 +142,8 @@ class Writer:
             head.update({"ObjectiveCount": len(objectives), "StandCount": len(stands)})
         if self.HasWeapons():
             head.update({"WeaponCount": len(weapons), "ProjectileCount": len(projectiles)})
+        if self.HasExplosives():
+            head["ExplosiveCount"] = len(explosives)
         match_row = dict(match or {})
         if has_match:
             match_row.setdefault("GameTick", game_tick)
@@ -168,6 +174,8 @@ class Writer:
         if self.HasWeapons():
             self.chunks.append(self.Rows("BridgeWeapon", weapons).tobytes())
             self.chunks.append(self.Rows("BridgeProjectile", projectiles).tobytes())
+        if self.HasExplosives():
+            self.chunks.append(self.Rows("BridgeExplosive", explosives).tobytes())
         self.recorded += 1
         self.dropped += dropped_before
         self.event_losses += 1 if events_lost else 0

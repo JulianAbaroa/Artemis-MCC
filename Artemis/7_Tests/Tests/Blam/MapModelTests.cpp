@@ -169,6 +169,30 @@ TEST_F(MapModelTests, KnownTagsHaveDefinitions)
     EXPECT_FALSE(definitions.m_Weap.Has(std::string{ k_Warthog }));
 }
 
+TEST_F(MapModelTests, ExplosivesOfForgeHaloReachTheirDamageEffect)
+{
+    // Measured with B4x: model of the object -> instant response of its damage section -> jpt with the radius and the damage.
+    const auto& definitions = s_Loaded->m_Resolved.m_DefinitionsStore;
+    const auto* coil{ definitions.m_Hlmt.Get("objects\\gear\\human\\military\\fusion_coil\\fusion_coil") };
+    ASSERT_NE(coil, nullptr);
+    ASSERT_FALSE(coil->DamageSections.empty());
+    ASSERT_FALSE(coil->DamageSections[0].InstantResponses.empty());
+    const std::string& blast{ coil->DamageSections[0].InstantResponses.back().TransitionDamageEffectTagName };
+    EXPECT_EQ(blast, "objects\\gear\\human\\military\\damage_effects\\fusion_coil_explosion");
+
+    const auto* jpt{ definitions.m_Jpt.Get(blast) };
+    ASSERT_NE(jpt, nullptr);
+    EXPECT_FLOAT_EQ(jpt->RadiusMin, 0.8f);
+    EXPECT_FLOAT_EQ(jpt->RadiusMax, 2.0f);
+    EXPECT_FLOAT_EQ(jpt->DamageUpperBoundMax, 200.0f);
+
+    const auto* mine{ definitions.m_Jpt.Get("objects\\multi\\land_mine\\damage_effects\\land_mine_explosion") };
+    ASSERT_NE(mine, nullptr);
+    EXPECT_FLOAT_EQ(mine->RadiusMin, 0.6f);
+    EXPECT_FLOAT_EQ(mine->RadiusMax, 2.0f);
+    EXPECT_FLOAT_EQ(mine->DamageUpperBoundMax, 600.0f);
+}
+
 TEST(ScnrBuilderTests, MapIdIsCopiedFromTheScnrTag)
 {
     Blam::Map::Tag::Type::Scnr::Object::ScnrObject scnr{};

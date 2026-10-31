@@ -25,6 +25,8 @@ namespace
     using Common::Team::Type::Team;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickFlag;
+    using Perception::Details::Type::ExplosiveDetail;
+    using Perception::Details::Type::ExplosiveDetails;
     using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ObjectiveDetails;
     using Perception::Details::Type::ProjectileDetail;
@@ -39,6 +41,7 @@ namespace
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Players;
 
+    using Contract::Bridge::Type::k_BridgeMaxExplosives;
     using Contract::Bridge::Type::k_BridgeMaxObjectives;
     using Contract::Bridge::Type::k_BridgeMaxProjectiles;
     using Contract::Bridge::Type::k_BridgeMaxWeapons;
@@ -245,12 +248,41 @@ TEST(FlatTests, MoreWeaponsOrProjectilesThanTheCapacityAreCutAndFlagged)
     EXPECT_EQ(flatProjectiles->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::WeaponsTruncated), 0u);
 }
 
+TEST(FlatTests, ExplosivesAreOrderedByHandleCarryTheirBlastAndAreCutAtTheCapacity)
+{
+    ExplosiveDetails explosives{};
+    explosives[0x20] = ExplosiveDetail{ .Handle = 0x20, .RadiusMin = 0.8f, .RadiusMax = 2.0f, .Damage = 200.0f };
+    explosives[0x10] = ExplosiveDetail{ .Handle = 0x10, .RadiusMin = 0.6f, .RadiusMax = 2.0f, .Damage = 600.0f };
+
+    Tick tick{};
+    tick.ExplosiveDetails = std::make_shared<const ExplosiveDetails>(std::move(explosives));
+    const auto flat{ Flat(tick) };
+
+    ASSERT_EQ(flat->Header.ExplosiveCount, 2u);
+    EXPECT_EQ(flat->Explosives[0].Handle, 0x10u);
+    EXPECT_FLOAT_EQ(flat->Explosives[0].Damage, 600.0f);
+    EXPECT_EQ(flat->Explosives[1].Handle, 0x20u);
+    EXPECT_FLOAT_EQ(flat->Explosives[1].RadiusMin, 0.8f);
+    EXPECT_FLOAT_EQ(flat->Explosives[1].RadiusMax, 2.0f);
+    EXPECT_FLOAT_EQ(flat->Explosives[1].Damage, 200.0f);
+    EXPECT_EQ(flat->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::ExplosivesTruncated), 0u);
+
+    ExplosiveDetails many{};
+    for (std::uint32_t i{ 0 }; i < k_BridgeMaxExplosives + 1; ++i) many[0x100 + i] = ExplosiveDetail{ .Handle = 0x100 + i };
+    Tick full{};
+    full.ExplosiveDetails = std::make_shared<const ExplosiveDetails>(std::move(many));
+    const auto flatFull{ Flat(full) };
+    EXPECT_EQ(flatFull->Header.ExplosiveCount, k_BridgeMaxExplosives);
+    EXPECT_NE(flatFull->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::ExplosivesTruncated), 0u);
+}
+
 TEST(FlatTests, WithoutWeaponOrProjectileDetailsTheCountsAreZero)
 {
     const auto flat{ Flat(Tick{}) };
 
     EXPECT_EQ(flat->Header.WeaponCount, 0u);
     EXPECT_EQ(flat->Header.ProjectileCount, 0u);
+    EXPECT_EQ(flat->Header.ExplosiveCount, 0u);
 }
 
 TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)

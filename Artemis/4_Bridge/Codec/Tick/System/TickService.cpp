@@ -74,6 +74,7 @@ namespace Bridge::Codec::Tick::System
         tick.TeleporterDetails = m_TeleporterDetailsStore.Acquire();
         tick.LiftDetails = m_LiftDetailsStore.Acquire();
         tick.BarrierDetails = m_BarrierDetailsStore.Acquire();
+        tick.ExplosiveDetails = m_ExplosiveDetailsStore.Acquire();
         tick.ObjectiveDetails = m_ObjectiveDetailsStore.Acquire();
         tick.ProjectileDetails = m_ProjectileDetailsStore.Acquire();
         tick.WeaponDetails = m_WeaponDetailsStore.Acquire();

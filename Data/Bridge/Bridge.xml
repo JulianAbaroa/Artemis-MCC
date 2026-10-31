@@ -14,6 +14,7 @@
 	<const name="MaxObjectives" value="8" doc="Flags, and stands, a tick carries (a capture game has one of each per team: Common.Engine k_MaxTeams)." />
 	<const name="MaxWeapons" value="256" doc="Live weapons a tick carries: in hand, on the floor or mounted (D254)." />
 	<const name="MaxProjectiles" value="256" doc="Live projectiles a tick carries (D254)." />
+	<const name="MaxExplosives" value="64" doc="Live explosives a tick carries: fusion coils, land mines, plasma batteries, propane tanks (D259)." />
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
@@ -46,6 +47,7 @@
 		<bit name="ObjectivesTruncated" index="1" doc="The tick had more flags or more stands than MaxObjectives." />
 		<bit name="WeaponsTruncated" index="2" doc="The tick had more live weapons than MaxWeapons." />
 		<bit name="ProjectilesTruncated" index="3" doc="The tick had more live projectiles than MaxProjectiles." />
+		<bit name="ExplosivesTruncated" index="4" doc="The tick had more live explosives than MaxExplosives." />
 	</flags>
 
 	<struct name="BridgeVec3" doc="Vector of three floats, world units or a direction.">
@@ -123,6 +125,7 @@
 		<field name="WeaponCount" type="u16" doc="Rows of Weapons in use." />
 		<field name="ProjectileCount" type="u16" doc="Rows of Projectiles in use." />
 		<field name="MapId" type="i32" doc="MapId of the scnr tag of the loaded map, engine id. 0 while no map." />
+		<field name="ExplosiveCount" type="u16" doc="Rows of Explosives in use." />
 	</struct>
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
@@ -258,6 +261,13 @@
 		<field name="InHand" type="u8" doc="1 while a grenade is still in the hand of its thrower." />
 	</struct>
 
+	<struct name="BridgeExplosive" doc="One live explosive (Perception ExplosiveDetail): the explosion of its tags. The life, the pose and the team are in its entity.">
+		<field name="Handle" type="u32" />
+		<field name="RadiusMin" type="f32" doc="Full damage up to this distance, world units. 0 when the tags have no explosion." />
+		<field name="RadiusMax" type="f32" doc="No damage past this distance, world units." />
+		<field name="Damage" type="f32" doc="Damage points at the center, before the material of the victim." />
+	</struct>
+
 	<struct name="BridgeTick" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.">
 		<field name="Sequence" type="u64" />
 		<field name="Header" type="BridgeTickHeader" />
@@ -269,6 +279,7 @@
 		<field name="Events" type="BridgeEvent" count="MaxTickEvents" />
 		<field name="Weapons" type="BridgeWeapon" count="MaxWeapons" doc="Live weapons, sorted by Handle." />
 		<field name="Projectiles" type="BridgeProjectile" count="MaxProjectiles" doc="Live projectiles, sorted by Handle." />
+		<field name="Explosives" type="BridgeExplosive" count="MaxExplosives" doc="Live explosives, sorted by Handle." />
 		<field name="SequenceEnd" type="u64" />
 	</struct>
 

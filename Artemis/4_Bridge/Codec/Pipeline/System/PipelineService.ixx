@@ -10,9 +10,9 @@ import std;
 export namespace Bridge::Codec::Pipeline::System
 {
     // Stages of Run in the order they run, one name per endStage call.
-    inline constexpr std::array<std::string_view, 23> k_PipelineStageNames{
+    inline constexpr std::array<std::string_view, 24> k_PipelineStageNames{
         "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
-        "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "ProjectileDetails", "WeaponDetails", "Entities", "Players",
+        "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "ExplosiveDetails", "ProjectileDetails", "WeaponDetails", "Entities", "Players",
         "ObjectiveDetails", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble" };
 
     // Runs the pure chain of one tick over a Snapshot: Tables, Environment (with Relations), Egocentric and the assembly of the Tick (D205).

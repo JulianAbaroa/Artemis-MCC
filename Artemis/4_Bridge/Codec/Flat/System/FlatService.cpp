@@ -16,6 +16,7 @@ namespace
     using Perception::Players::Type::Player;
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchScore;
+    using Perception::Details::Type::ExplosiveDetail;
     using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ProjectileDetail;
     using Perception::Details::Type::StandDetail;
@@ -25,6 +26,7 @@ namespace
     using Contract::Bridge::Type::BridgeEntity;
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeEvent;
+    using Contract::Bridge::Type::BridgeExplosive;
     using Contract::Bridge::Type::BridgeObjective;
     using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeStand;
@@ -179,6 +181,16 @@ namespace
         return row;
     }
 
+    auto ToBridge(const ExplosiveDetail& explosive) -> BridgeExplosive
+    {
+        BridgeExplosive row{ Zeroed<BridgeExplosive>() };
+        row.Handle = explosive.Handle;
+        row.RadiusMin = explosive.RadiusMin;
+        row.RadiusMax = explosive.RadiusMax;
+        row.Damage = explosive.Damage;
+        return row;
+    }
+
     // return: Rows written, sorted by handle. Stops at the capacity of the array.
     template<typename Detail, typename Row, std::size_t N>
     auto FlattenByHandle(const std::unordered_map<std::uint32_t, Detail>& details, std::array<Row, N>& rows) -> std::size_t
@@ -300,7 +312,7 @@ namespace Bridge::Codec::Flat::System
             }
         }
 
-        // Weapons and projectiles, by handle. Like the entities, only the rows below the count are meaningful.
+        // Weapons, projectiles and explosives, by handle. Like the entities, only the rows below the count are meaningful.
         std::size_t weaponCount{ 0 };
         if (tick.WeaponDetails)
         {
@@ -313,6 +325,13 @@ namespace Bridge::Codec::Flat::System
         {
             projectileCount = FlattenByHandle(*tick.ProjectileDetails, flat.Projectiles);
             if (projectileCount < tick.ProjectileDetails->size()) flags |= static_cast<std::uint32_t>(BridgeTickFlag::ProjectilesTruncated);
+        }
+
+        std::size_t explosiveCount{ 0 };
+        if (tick.ExplosiveDetails)
+        {
+            explosiveCount = FlattenByHandle(*tick.ExplosiveDetails, flat.Explosives);
+            if (explosiveCount < tick.ExplosiveDetails->size()) flags |= static_cast<std::uint32_t>(BridgeTickFlag::ExplosivesTruncated);
         }
 
         // The newest events of the log: Python keeps its cursor by sequence and skips the ones it already has.
@@ -337,6 +356,7 @@ namespace Bridge::Codec::Flat::System
         flat.Header.StandCount = static_cast<std::uint16_t>(standCount);
         flat.Header.WeaponCount = static_cast<std::uint16_t>(weaponCount);
         flat.Header.ProjectileCount = static_cast<std::uint16_t>(projectileCount);
+        flat.Header.ExplosiveCount = static_cast<std::uint16_t>(explosiveCount);
         flat.Header.Generation = tick.Generation;
         flat.Header.MapId = tick.MapId;
         flat.Header.Flags = flags;

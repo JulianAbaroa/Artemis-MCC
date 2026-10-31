@@ -141,7 +141,8 @@ namespace Blam::MapModel::Definitions::System
                 section.InstantResponses.push_back(InstantResponse{
                     .Flags = ir.Flags,
                     .DamageThreshold = ir.DamageThreshold,
-                    .RegionTransitions = MakeRegionTransitions(ir.RegionTransitions) });
+                    .RegionTransitions = MakeRegionTransitions(ir.RegionTransitions),
+                    .TransitionDamageEffectTagName = m_TagReferenceService.ResolveTagReferenceName(ir.TransitionDamageEffect) });
             }
 
             section.SectionDamageTransfers = MakeDamageTransfers(ds.SectionDamageTransfers);

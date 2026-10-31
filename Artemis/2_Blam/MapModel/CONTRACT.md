@@ -22,7 +22,7 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Blam.MapModel.Layer` | The facade: stores, builders and the tag resolver; `Cleanup()` forgets the map. |
-| `Blam.MapModel.Definitions.Type`, `Blam.MapModel.Definitions.State` | Resolved definitions by tag group (object, model, damage, level...). |
+| `Blam.MapModel.Definitions.Type`, `Blam.MapModel.Definitions.State` | Resolved definitions by tag group (object, model, damage, level...). The instant responses of a model name their damage effect and the damage effect carries its radius (D259). |
 | `Blam.MapModel.Definitions.Reflect` | Reflection of the definitions, for the inspector. |
 | `Blam.MapModel.World.Type`, `Blam.MapModel.World.State`, `Blam.MapModel.World.System` | Links of the world and the raycaster. |
 | `Blam.MapModel.Vitality.Type`, `Blam.MapModel.Vitality.State` | Vitality layouts by model. |

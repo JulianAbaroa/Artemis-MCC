@@ -4,7 +4,7 @@ Group `1_Shared` - pure static library, generated - the layout C++ and Python sh
 
 ## Responsibility
 The binary contract of the bridge with the Python client: the POD structs of the `BridgeTick` (players, entities, the match with
-its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon` and the projectiles `BridgeProjectile`, the events with both
+its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon`, the projectiles `BridgeProjectile` and the explosives `BridgeExplosive`, the events with both
 sequences) and the `BridgeAction`, their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own.
 
 ## Does not
@@ -42,6 +42,8 @@ A client built for another layout sees a different hash and refuses to connect.
   `k_BridgeMaxObjectives` (8) rows, the team arrays of the match `k_MaxTeams` (8), and the header carries the counts in use.
 - Weapons and projectiles hold `k_BridgeMaxWeapons` and `k_BridgeMaxProjectiles` (256) rows each, after the events; the header carries
   `WeaponCount` and `ProjectileCount` and the flags `WeaponsTruncated` and `ProjectilesTruncated` tell when rows were cut.
+- Explosives hold `k_BridgeMaxExplosives` (64) rows after the projectiles (D259): radius and damage of the explosion of the tags; the
+  header carries `ExplosiveCount` after `MapId` and the flag `ExplosivesTruncated` tells when rows were cut.
 - The header also carries the `MapId` of the scnr of the loaded map (engine id, 0 while no map).
 - Each player row carries `RespawnTicks` (ticks left until it respawns, 0 while alive), right after `BipedHandle`: it takes the 2 bytes of padding
   the u8 block already had, so the layout adds 4 bytes per player and no new padding.

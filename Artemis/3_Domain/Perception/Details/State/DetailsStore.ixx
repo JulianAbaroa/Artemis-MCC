@@ -23,6 +23,9 @@ export namespace Perception::Details::State
     class BarrierDetailsStore : public Common::State::Type::Snapshot<Perception::Details::Type::BarrierDetails>
     {
     };
+    class ExplosiveDetailsStore : public Common::State::Type::Snapshot<Perception::Details::Type::ExplosiveDetails>
+    {
+    };
     class ProjectileDetailsStore : public Common::State::Type::Snapshot<Perception::Details::Type::ProjectileDetails>
     {
     };

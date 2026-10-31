@@ -116,6 +116,8 @@ class PublishedTick:
         # entity of the same Handle. ChargeFraction and Energy are NaN when the weapon has no charge or no energy.
         self.weapons = data["Weapons"][: int(self.header["WeaponCount"])]
         self.projectiles = data["Projectiles"][: int(self.header["ProjectileCount"])]
+        # Live explosives (fusion coils, land mines...) with the radius and damage of their explosion, sorted by Handle (D259).
+        self.explosives = data["Explosives"][: int(self.header["ExplosiveCount"])]
         # The newest events of the match up to this tick, oldest first. Bridge.new_events keeps only the unseen ones (D141).
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])

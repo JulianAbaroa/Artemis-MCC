@@ -61,6 +61,9 @@
     <Filter Include="Details\System\Barrier">
       <UniqueIdentifier>{f52663d2-5128-5a78-bb91-f77ebc27b447}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Details\System\Explosive">
+      <UniqueIdentifier>{6a1e2c4b-8d3f-4b7a-9e15-b4c0f2a7d901}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Details\System\Lift">
       <UniqueIdentifier>{27b12513-f594-5856-930b-266c85b5d8d2}</UniqueIdentifier>
     </Filter>
@@ -78,6 +81,9 @@
     </Filter>
     <Filter Include="Details\Type\Barrier">
       <UniqueIdentifier>{25b5df50-f185-5d4d-81ef-e9c8854c4cef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Details\Type\Explosive">
+      <UniqueIdentifier>{7b2f3d5c-9e4a-4c8b-8f26-c5d1a3b8e012}</UniqueIdentifier>
     </Filter>
     <Filter Include="Details\Type\Lift">
       <UniqueIdentifier>{4d9830fb-e370-552b-9956-7bd0f28e8295}</UniqueIdentifier>
@@ -213,6 +219,12 @@
     <ClCompile Include="Details\System\Perception.Details.System.ixx">
       <Filter>Details\System</Filter>
     </ClCompile>
+    <ClCompile Include="Details\System\Explosive\ExplosiveDetailsService.cpp">
+      <Filter>Details\System\Explosive</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\System\Explosive\ExplosiveDetailsService.ixx">
+      <Filter>Details\System\Explosive</Filter>
+    </ClCompile>
     <ClCompile Include="Details\System\Lift\LiftDetailsService.cpp">
       <Filter>Details\System\Lift</Filter>
     </ClCompile>
@@ -257,6 +269,9 @@
     </ClCompile>
     <ClCompile Include="Details\Type\Perception.Details.Type.ixx">
       <Filter>Details\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\Type\Explosive\DetailsExplosive.ixx">
+      <Filter>Details\Type\Explosive</Filter>
     </ClCompile>
     <ClCompile Include="Details\Type\Lift\DetailsLift.ixx">
       <Filter>Details\Type\Lift</Filter>

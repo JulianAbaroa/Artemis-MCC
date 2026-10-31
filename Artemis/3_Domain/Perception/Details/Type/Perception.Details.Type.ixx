@@ -5,6 +5,7 @@ export import :Zone;
 export import :Teleporter;
 export import :Lift;
 export import :Barrier;
+export import :Explosive;
 export import :Projectile;
 export import :Weapon;
 export import :Objective;

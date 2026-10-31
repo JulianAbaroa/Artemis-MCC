@@ -34,10 +34,10 @@ namespace
     using Tests::Support::Pipeline::k_RespawnTicks;
 
     // Services that write "Cleanup completed." when their layer is cleaned up, with the layer that owns them.
-    const std::array<std::string_view, 25> k_CleanupTags{
+    const std::array<std::string_view, 26> k_CleanupTags{
         "[ClassifierService]", "[ObjectGraphService]",
         "[VitalityDetailsService]", "[ZoneDetailsService]", "[TeleporterDetailsService]", "[LiftDetailsService]",
-        "[BarrierDetailsService]", "[ProjectileDetailsService]", "[WeaponDetailsService]", "[EntitiesService]", "[PlayersService]", "[ObjectiveDetailsService]", "[CollidableService]", "[AimService]",
+        "[BarrierDetailsService]", "[ExplosiveDetailsService]", "[ProjectileDetailsService]", "[WeaponDetailsService]", "[EntitiesService]", "[PlayersService]", "[ObjectiveDetailsService]", "[CollidableService]", "[AimService]",
         "[SelfService]", "[AffordanceService]", "[RaycastService]",
         "[ObjectTableService]", "[PlayerTableService]", "[InteractionService]",
         "[MapLoaderService]", "[MapBuilderService]",
@@ -211,6 +211,6 @@ TEST_F(PipelineTests, EndStageOncePerStage)
     std::size_t calls{ 0 };
     m_Export.m_PipelineService.Run(Snapshot{}, 1, [&calls] { ++calls; });
 
-    EXPECT_EQ(k_PipelineStageNames.size(), 23u);
+    EXPECT_EQ(k_PipelineStageNames.size(), 24u);
     EXPECT_EQ(calls, k_PipelineStageNames.size());
 }

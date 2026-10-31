@@ -844,10 +844,9 @@ namespace
         std::shared_ptr<const Perception::Players::Type::Players> Players{};
     };
 
-    // Replays the recording of that name (armas_a, armas_b) record by record and keeps the weapon and projectile details at the engine ticks asked for.
+    // Replays the recording of that name record by record, up to the next map load, and calls onRecord with the chain after each one.
     // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunArmasRecording(const std::string& film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments)
-        -> std::string
+    auto ReplayRecording(const std::string& film, const std::function<void(const Chain&)>& onRecord) -> std::string
     {
         const std::filesystem::path directory{ RecordingsFolder() / film };
         std::error_code error{};
@@ -874,20 +873,30 @@ namespace
             if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
 
             chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
-            const auto match{ chain->m_Environment.m_MatchStore.Acquire() };
-            const auto weapons{ chain->m_Environment.m_WeaponDetailsStore.Acquire() };
-            const auto projectiles{ chain->m_Environment.m_ProjectileDetailsStore.Acquire() };
-            const auto entities{ chain->m_Environment.m_EntitiesStore.Acquire() };
-            const auto players{ chain->m_Environment.m_PlayersStore.Acquire() };
-            if (match && weapons && projectiles && std::ranges::contains(ticks, match->GameTick))
-            {
-                moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles, .Entities = entities, .Players = players };
-            }
+            onRecord(*chain);
 
             next = SnapshotCodec::ReadRecord(sdump, reader);
         }
 
         return {};
+    }
+
+    // Replays the recording of that name (armas_a, armas_b) and keeps the weapon and projectile details at the engine ticks asked for.
+    // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
+    auto RunArmasRecording(const std::string& film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments)
+        -> std::string
+    {
+        return ReplayRecording(film, [&](const Chain& chain) {
+            const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+            const auto weapons{ chain.m_Environment.m_WeaponDetailsStore.Acquire() };
+            const auto projectiles{ chain.m_Environment.m_ProjectileDetailsStore.Acquire() };
+            const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+            if (match && weapons && projectiles && std::ranges::contains(ticks, match->GameTick))
+            {
+                moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles, .Entities = entities, .Players = players };
+            }
+        });
     }
 
     constexpr std::uint32_t k_Player0{ 0xEC700000 };
@@ -1049,4 +1058,57 @@ TEST_F(ReplayTests, ArmasBMagazinesReservesAndBatteryFollowTheRecordedFilm)
     EXPECT_NEAR(weapon(3155, k_PlasmaRifle).Energy, 0.97f, 1e-4f);
     EXPECT_FLOAT_EQ(weapon(7700, k_PlasmaRifle).Energy, 0.0f);
     EXPECT_FALSE(weapon(7700, k_PlasmaRifle).CanFireNow);
+}
+
+// --- B4x (D259): the explosives of the explosivos recording ---
+
+TEST_F(ReplayTests, ExplosivesCarryTheBlastOfTheirTags)
+{
+    using Common::Semantic::Type::Function;
+    using Common::Semantic::Type::Subtype::Explosive;
+
+    // Per subtype: (RadiusMin, RadiusMax, Damage) of every tick, and the live explosives without a detail or details without an entity.
+    std::map<std::uint8_t, std::set<std::tuple<float, float, float>>> blasts{};
+    std::set<std::uint32_t> handles{};
+    std::size_t missing{ 0 };
+    std::size_t orphans{ 0 };
+    const std::string reason{ ReplayRecording("explosivos", [&](const Chain& chain) {
+        const auto details{ chain.m_Environment.m_ExplosiveDetailsStore.Acquire() };
+        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+        if (!details || !entities) return;
+
+        std::size_t live{ 0 };
+        for (const auto& entity : entities->Rows)
+        {
+            if (entity.Function != Function::Explosive) continue;
+
+            ++live;
+            handles.insert(entity.Handle);
+            const auto it{ details->find(entity.Handle) };
+            if (it == details->end()) { ++missing; continue; }
+
+            blasts[entity.Subtype].insert({ it->second.RadiusMin, it->second.RadiusMax, it->second.Damage });
+        }
+        if (details->size() > live) orphans += details->size() - live;
+    }) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    EXPECT_EQ(missing, 0u);
+    EXPECT_EQ(orphans, 0u);
+    // The film has the four kinds, and each one has the same blast all the time.
+    EXPECT_GE(handles.size(), 4u);
+    for (const Explosive kind : { Explosive::FusionCoil, Explosive::Landmine, Explosive::PlasmaBattery, Explosive::PropaneTank })
+    {
+        const auto& seen{ blasts[static_cast<std::uint8_t>(kind)] };
+        ASSERT_EQ(seen.size(), 1u) << "subtype " << static_cast<int>(kind);
+        const auto [radiusMin, radiusMax, damage]{ *seen.begin() };
+        std::cout << std::format("[ Explosive ] subtype {}: radius {}..{}, damage {}\n", static_cast<int>(kind), radiusMin, radiusMax, damage);
+        EXPECT_GT(radiusMax, radiusMin);
+        EXPECT_GT(damage, 0.0f);
+    }
+
+    EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::FusionCoil)].begin(), std::make_tuple(0.8f, 2.0f, 200.0f));
+    EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::Landmine)].begin(), std::make_tuple(0.6f, 2.0f, 600.0f));
+    EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::PlasmaBattery)].begin(), std::make_tuple(0.8f, 2.0f, 200.0f));
+    EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::PropaneTank)].begin(), std::make_tuple(0.666f, 3.0f, 300.0f));
 }

@@ -37,6 +37,7 @@ export namespace Common::Reflect::Type
             MakeField("Flags", &InstantResponse::Flags),
             MakeField("DamageThreshold", &InstantResponse::DamageThreshold),
             MakeField("RegionTransitions", &InstantResponse::RegionTransitions),
+            MakeField("TransitionDamageEffectTagName", &InstantResponse::TransitionDamageEffectTagName),
         };
     };
 

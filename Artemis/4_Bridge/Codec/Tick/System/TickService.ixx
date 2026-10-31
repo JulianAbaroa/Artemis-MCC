@@ -38,6 +38,7 @@ export namespace Bridge::Codec::Tick::System
         using TeleporterDetailsStore = Perception::Details::State::TeleporterDetailsStore;
         using LiftDetailsStore = Perception::Details::State::LiftDetailsStore;
         using BarrierDetailsStore = Perception::Details::State::BarrierDetailsStore;
+        using ExplosiveDetailsStore = Perception::Details::State::ExplosiveDetailsStore;
         using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
         using ProjectileDetailsStore = Perception::Details::State::ProjectileDetailsStore;
         using WeaponDetailsStore = Perception::Details::State::WeaponDetailsStore;
@@ -59,6 +60,7 @@ export namespace Bridge::Codec::Tick::System
             ObjectGraphStore& objectGraphStore,
             EntitiesStore& entitiesStore, PlayersStore& playersStore, VitalityDetailsStore& vitalityDetailsStore, ZoneDetailsStore& zoneDetailsStore,
             TeleporterDetailsStore& teleporterDetailsStore, LiftDetailsStore& liftDetailsStore, BarrierDetailsStore& barrierDetailsStore,
+            ExplosiveDetailsStore& explosiveDetailsStore,
             ObjectiveDetailsStore& objectiveDetailsStore, ProjectileDetailsStore& projectileDetailsStore, WeaponDetailsStore& weaponDetailsStore,
             AimStore& aimStore, EventsStore& eventsStore, MatchStore& matchStore, SelfStore& selfStore,
             AffordanceStore& affordanceStore, RaycastStore& raycastStore,
@@ -68,6 +70,7 @@ export namespace Bridge::Codec::Tick::System
             m_ObjectGraphStore(objectGraphStore),
             m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore), m_VitalityDetailsStore(vitalityDetailsStore), m_ZoneDetailsStore(zoneDetailsStore),
             m_TeleporterDetailsStore(teleporterDetailsStore), m_LiftDetailsStore(liftDetailsStore), m_BarrierDetailsStore(barrierDetailsStore),
+            m_ExplosiveDetailsStore(explosiveDetailsStore),
             m_ObjectiveDetailsStore(objectiveDetailsStore), m_ProjectileDetailsStore(projectileDetailsStore), m_WeaponDetailsStore(weaponDetailsStore),
             m_AimStore(aimStore), m_EventsStore(eventsStore), m_MatchStore(matchStore), m_SelfStore(selfStore),
             m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore),
@@ -89,6 +92,7 @@ export namespace Bridge::Codec::Tick::System
         TeleporterDetailsStore& m_TeleporterDetailsStore;
         LiftDetailsStore& m_LiftDetailsStore;
         BarrierDetailsStore& m_BarrierDetailsStore;
+        ExplosiveDetailsStore& m_ExplosiveDetailsStore;
         ObjectiveDetailsStore& m_ObjectiveDetailsStore;
         ProjectileDetailsStore& m_ProjectileDetailsStore;
         WeaponDetailsStore& m_WeaponDetailsStore;

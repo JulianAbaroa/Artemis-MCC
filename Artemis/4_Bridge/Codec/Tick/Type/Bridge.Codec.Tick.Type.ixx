@@ -43,6 +43,8 @@ namespace
     using Perception::Details::Type::TeleporterDetails;
     using Perception::Details::Type::LiftDetail;
     using Perception::Details::Type::LiftDetails;
+    using Perception::Details::Type::ExplosiveDetail;
+    using Perception::Details::Type::ExplosiveDetails;
     using Perception::Details::Type::BarrierDetail;
     using Perception::Details::Type::BarrierDetails;
     using Perception::Details::Type::ObjectiveDetails;
@@ -89,6 +91,7 @@ export namespace Bridge::Codec::Tick::Type
         std::shared_ptr<const TeleporterDetails> TeleporterDetails{};
         std::shared_ptr<const LiftDetails> LiftDetails{};
         std::shared_ptr<const BarrierDetails> BarrierDetails{};
+        std::shared_ptr<const ExplosiveDetails> ExplosiveDetails{};
         std::shared_ptr<const ObjectiveDetails> ObjectiveDetails{};
         std::shared_ptr<const ProjectileDetails> ProjectileDetails{};
         std::shared_ptr<const WeaponDetails> WeaponDetails{};

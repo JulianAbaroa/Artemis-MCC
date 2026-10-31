@@ -100,7 +100,8 @@ def test_writer_round_trip_with_the_existing_reader(tmp_path):
 def test_tables_and_ignored_fields_exist_in_bridge_xml():
     assert tickdump.TABLES == {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer",
                                "Entities": "BridgeEntity", "Events": "BridgeEvent", "Objectives": "BridgeObjective",
-                               "Stands": "BridgeStand", "Weapons": "BridgeWeapon", "Projectiles": "BridgeProjectile"}
+                               "Stands": "BridgeStand", "Weapons": "BridgeWeapon", "Projectiles": "BridgeProjectile",
+                               "Explosives": "BridgeExplosive"}
     assert {t: set(f) for t, f in tickdump.IGNORED.items()} == {
         "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc"},
         "Players": {"LocalIndex", "Connection", "CameraPosition", "CameraForward"}}
@@ -116,8 +117,8 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(bad))
     data = bytearray(Film(range(2)).Bytes())
-    data[8] = 4
-    other = tmp_path / "v4.tdump"
+    data[8] = 5
+    other = tmp_path / "v5.tdump"
     other.write_bytes(bytes(data))
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(other))
@@ -537,13 +538,16 @@ def WeaponFilm(charged_at=None, ticks=range(6)):
         energy = 0.5 if charged_at is not None and t >= charged_at else 1.0
         w.Tick(t, players=[Player(P1)], entities=[Entity(H1)],
                weapons=[{"Handle": 0xC1, "TrackedObject": 0xC1, "Energy": energy, "MagazineCount": 1, "CanFireNow": 1}],
-               projectiles=[{"Handle": 0xD1, "OwnerPlayer": P1, "InHand": 1}])
+               projectiles=[{"Handle": 0xD1, "OwnerPlayer": P1, "InHand": 1}],
+               explosives=[{"Handle": 0xE1, "RadiusMin": 0.8, "RadiusMax": 2.0, "Damage": 200.0}])
     return w
 
 
 def test_weapons_and_projectiles_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "w.tdump", WeaponFilm(charged_at=3)))
-    assert d.version == 3 and not d.is_cut
+    assert d.version == 4 and not d.is_cut
+    assert [len(r.explosives) for r in d.records] == [1] * 6
+    assert float(d.records[0].explosives["Damage"][0]) == 200.0 and int(d.records[0].header["ExplosiveCount"]) == 1
     assert [len(r.weapons) for r in d.records] == [1] * 6
     assert [len(r.projectiles) for r in d.records] == [1] * 6
     assert [float(r.weapons["Energy"][0]) for r in d.records] == [1.0, 1.0, 1.0, 0.5, 0.5, 0.5]
@@ -560,7 +564,7 @@ def test_a_weapon_that_changes_energy_is_a_difference_of_its_table(tmp_path):
 
 def test_flags_and_stands_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "a.tdump", FlagFilm(state_at=3)))
-    assert d.version == 3 and not d.is_cut
+    assert d.version == 4 and not d.is_cut
     assert [len(r.objectives) for r in d.records] == [2] * 6
     assert [len(r.stands) for r in d.records] == [1] * 6
     assert [int(r.objectives["State"][1]) for r in d.records] == [0, 0, 0, 1, 1, 1]

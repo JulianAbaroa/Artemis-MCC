@@ -8,6 +8,8 @@ namespace Blam::MapModel::Definitions::System
         Jpt out{};
 
         out.TagName = jpt.TagName;
+        out.RadiusMin = jpt.Data.Radius.Min;
+        out.RadiusMax = jpt.Data.Radius.Max;
         out.Category = jpt.Data.Category;
         out.DamageFlags = jpt.Data.Flags_2;
         out.DamageLowerBound = jpt.Data.DamageLowerBound;
