@@ -46,6 +46,7 @@ export namespace Perception
         using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
         using EntitiesStore = Perception::Entities::State::EntitiesStore;
         using CarriedHandlesStore = Perception::Entities::State::CarriedHandlesStore;
+        using GroundMemoryStore = Perception::Players::State::GroundMemoryStore;
         using PlayersStore = Perception::Players::State::PlayersStore;
         using AimStore = Perception::Aim::State::AimStore;
         using EventsStore = Perception::Events::State::EventsStore;
@@ -83,7 +84,7 @@ export namespace Perception
             m_ProjectileDetailsService(log, tables.m_ObjectStore, m_ProjectileDetailsStore),
             m_WeaponDetailsService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_GameStore, m_WeaponChargeMemoryStore, m_WeaponDetailsStore),
             m_EntitiesService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
-            m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_PlayersStore),
+            m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_GroundMemoryStore, m_PlayersStore),
             m_ObjectiveDetailsService(log, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_EntitiesStore, m_PlayersStore, m_ZoneDetailsStore, m_ObjectiveDetailsStore),
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
@@ -110,6 +111,7 @@ export namespace Perception
         ObjectiveDetailsStore m_ObjectiveDetailsStore{};
         EntitiesStore m_EntitiesStore{};
         CarriedHandlesStore m_CarriedHandlesStore{};
+        GroundMemoryStore m_GroundMemoryStore{};
         PlayersStore m_PlayersStore{};
         AimStore m_AimStore{};
         EventsStore m_EventsStore{};

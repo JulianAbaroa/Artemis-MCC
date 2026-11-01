@@ -48,7 +48,7 @@ export namespace Blam::Layout::Object::Type::Unit::Offset
     constexpr std::size_t k_Unknown298                                  = 0x298;  // uint64.
     constexpr std::size_t k_Unknown2a0                                  = 0x2A0;  // uint32.
     constexpr std::size_t k_Unknown2a9                                  = 0x2A9;  // uint8.
-    constexpr std::size_t k_Unknown2ac                                  = 0x2AC;  // uint32.
+    constexpr std::size_t k_CrouchFraction                              = 0x2AC;  // float32.
     constexpr std::size_t k_FireStrengthA                               = 0x2B0;  // float32.
     constexpr std::size_t k_FireStrengthB                               = 0x2B4;  // float32.
     constexpr std::size_t k_AimTargetHeader                             = 0x2BC;  // uint32.

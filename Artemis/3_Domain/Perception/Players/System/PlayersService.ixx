@@ -36,18 +36,23 @@ export namespace Perception::Players::System
 
         using Body = Perception::Players::Type::Body;
         using Player = Perception::Players::Type::Player;
+        using GroundMemory = Perception::Players::Type::GroundMemory;
         using Players = Perception::Players::Type::Players;
+        using GroundMemoryStore = Perception::Players::State::GroundMemoryStore;
         using PlayersStore = Perception::Players::State::PlayersStore;
 
     public:
         PlayersService(Log& log, ObjectTableStore& objectStore, PlayerTableStore& playerStore,
-            VitalityDetailsStore& vitalityDetailsStore, EntitiesStore& entitiesStore, PlayersStore& playersStore) :
+            VitalityDetailsStore& vitalityDetailsStore, EntitiesStore& entitiesStore, GroundMemoryStore& groundMemoryStore,
+            PlayersStore& playersStore) :
             m_Log(log), m_ObjectStore(objectStore), m_PlayerStore(playerStore),
-            m_VitalityDetailsStore(vitalityDetailsStore), m_EntitiesStore(entitiesStore), m_PlayersStore(playersStore) {}
+            m_VitalityDetailsStore(vitalityDetailsStore), m_EntitiesStore(entitiesStore), m_GroundMemoryStore(groundMemoryStore),
+            m_PlayersStore(playersStore) {}
         ~PlayersService() = default;
 
         // Publishes one player per entry of the player table, sorted by handle.
         // note: Runs after Entities of the same tick, which decides whether the biped is alive.
+        // note: Resolves the ground of each biped with the memory of the previous tick (D260).
         auto Update() -> void;
 
         // Drops the published players.
@@ -59,15 +64,17 @@ export namespace Perception::Players::System
         PlayerTableStore& m_PlayerStore;
         VitalityDetailsStore& m_VitalityDetailsStore;
         EntitiesStore& m_EntitiesStore;
+        GroundMemoryStore& m_GroundMemoryStore;
         PlayersStore& m_PlayersStore;
 
         // Builds the player of an entry of the player table.
+        // param previous: Ground memory of the previous tick. nextMemory: Receives the entry of the biped of this tick.
         auto MakePlayer(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
-            const VitalityDetails& vitalities) const -> Player;
+            const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> Player;
 
         // Builds the body of the live biped of a player.
         // return: Empty when the player has no live biped.
         auto MakeBody(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
-            const VitalityDetails& vitalities) const -> std::optional<Body>;
+            const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> std::optional<Body>;
     };
 }

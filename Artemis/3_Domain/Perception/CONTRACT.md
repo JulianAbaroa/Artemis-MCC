@@ -30,7 +30,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.ObjectGraph.Type`, `Perception.ObjectGraph.State` | How the live objects attach to each other, up to their root. |
 | `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier, explosive (radius and damage of the explosion of its tags, D259), projectile (owner, shooter root, what it is stuck to), weapon (ammo, energy, heat, overheat, reload, charge, lock, `CanFireNow`) and objective details (flags and their stands). |
 | `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. The team of a biped is the one of its player and the team of a projectile the one of its `OwnerPlayer` in the player table. |
-| `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. `RespawnTicks` belongs to the player and not to its `Body` (it is valid without a biped). The life of a biped is `Entity.Vitality`, there is no `Body.Health`. |
+| `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. `RespawnTicks` belongs to the player and not to its `Body` (it is valid without a biped). The life of a biped is `Entity.Vitality`, there is no `Body.Health`. `Body` carries the ground and the crouch of the biped (D260): `Ground` (`GroundKind`: Air, Static, Object, Attached), `IsGrounded`, `AirborneTicks`, `GroundObject`, `OwnVelocity` (relative to the object under the feet), `CrouchFraction` and `IsCrouching`. A contact that cuts for 1 or 2 ticks keeps the last ground and a jump releases it at once. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
 | `Perception.Events.Type`, `Perception.Events.State` | The events of the tick: the engine ring plus the flag events Artemis generates. |
 | `Perception.Match.Type`, `Perception.Match.State` | Status of the match: phase, scores, round, team scores, time played and left in the round, round time limit, round limit and score to win. |
@@ -51,6 +51,9 @@ Other projects may import only these modules; everything else in the project is 
 - `WeaponChargeMemoryStore`: the first engine tick each weapon was seen in the Charging state, by handle, for `ChargeFraction` (the engine
   gives the stage but not how long it has lasted). Only the weapons that are charging are in it. It is emptied on `Cleanup()` (a load) and a
   weapon seen already charging starts from that tick.
+- `GroundMemoryStore`: by biped handle, the ticks without contact, the ground and object of the last contact and whether the biped jumped off it, to
+  resolve `Body.Ground` (D260). Only the bipeds with a `Body` in the last tick are in it. It is emptied on `Cleanup()` and a new biped starts without
+  history (its `AirborneTicks` count from 0).
 - `EventsMemoryStore`: the last flag seen of each base team, the round and the last engine sequence, to generate the flag events on
   the transitions (none when the round changes or on the first tick after a load).
 - Every other store holds only the value of the last tick. `Cleanup()` forgets the map.

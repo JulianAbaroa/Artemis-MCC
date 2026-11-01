@@ -23,6 +23,7 @@ namespace
     using Common::Semantic::Type::FlagState;
     using Common::Semantic::Type::RoundState;
     using Common::Team::Type::Team;
+    using Contract::Bridge::Type::BridgeGround;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickFlag;
     using Perception::Details::Type::ExplosiveDetail;
@@ -38,6 +39,7 @@ namespace
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchStatus;
     using Perception::Players::Type::Body;
+    using Perception::Players::Type::GroundKind;
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Players;
 
@@ -343,6 +345,46 @@ TEST(FlatTests, RespawnTicksReachThePlayerRowWithAndWithoutBody)
     EXPECT_EQ(flat->Players[0].RespawnTicks, 420u);
     EXPECT_EQ(flat->Players[1].HasBody, 1);
     EXPECT_EQ(flat->Players[1].RespawnTicks, 0u);
+}
+
+TEST(FlatTests, GroundAndCrouchReachThePlayerRowAndAreZeroWithoutBody)
+{
+    Body body{};
+    body.Ground = GroundKind::Object;
+    body.IsGrounded = true;
+    body.IsCrouching = true;
+    body.AirborneTicks = 2;
+    body.GroundObject = 0xE4030194;
+    body.OwnVelocity = { 0.5f, -1.5f, 2.5f };
+    body.CrouchFraction = 0.75f;
+
+    auto players{ std::make_shared<Players>() };
+    players->Rows.push_back(Player{ .Handle = 0xE5A10001, .Body = body });
+    players->Rows.push_back(Player{ .Handle = 0xE5A10002 });
+    Tick tick{};
+    tick.Players = players;
+
+    const auto flat{ Flat(tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 2u);
+    const auto& with{ flat->Players[0] };
+    EXPECT_EQ(with.Ground, BridgeGround::Object);
+    EXPECT_EQ(with.IsGrounded, 1);
+    EXPECT_EQ(with.IsCrouching, 1);
+    EXPECT_EQ(with.AirborneTicks, 2u);
+    EXPECT_EQ(with.GroundObject, 0xE4030194u);
+    EXPECT_FLOAT_EQ(with.OwnVelocity.X, 0.5f);
+    EXPECT_FLOAT_EQ(with.OwnVelocity.Y, -1.5f);
+    EXPECT_FLOAT_EQ(with.OwnVelocity.Z, 2.5f);
+    EXPECT_FLOAT_EQ(with.CrouchFraction, 0.75f);
+
+    const auto& without{ flat->Players[1] };
+    EXPECT_EQ(without.Ground, BridgeGround::Air);
+    EXPECT_EQ(without.IsGrounded, 0);
+    EXPECT_EQ(without.IsCrouching, 0);
+    EXPECT_EQ(without.AirborneTicks, 0u);
+    EXPECT_EQ(without.GroundObject, 0u);
+    EXPECT_FLOAT_EQ(without.OwnVelocity.Z, 0.0f);
+    EXPECT_FLOAT_EQ(without.CrouchFraction, 0.0f);
 }
 
 TEST(FlatTests, EventsCarryTheSequenceOfArtemisAndTheOneOfTheEngine)

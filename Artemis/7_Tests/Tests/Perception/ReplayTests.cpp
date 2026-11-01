@@ -17,6 +17,7 @@ import Blam.Layout.Snapshot.Type;
 import Blam.Layout.Snapshot.System;
 import Blam.Map.Layer;
 import Blam.MapModel.Layer;
+import Blam.Runtime.Object.Type;
 import Perception.Details.Type;
 import Perception.Entities.Type;
 import Perception.Events.Type;
@@ -1111,4 +1112,189 @@ TEST_F(ReplayTests, ExplosivesCarryTheBlastOfTheirTags)
     EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::Landmine)].begin(), std::make_tuple(0.6f, 2.0f, 600.0f));
     EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::PlasmaBattery)].begin(), std::make_tuple(0.8f, 2.0f, 200.0f));
     EXPECT_EQ(*blasts[static_cast<std::uint8_t>(Explosive::PropaneTank)].begin(), std::make_tuple(0.666f, 3.0f, 300.0f));
+}
+
+// --- A3c (D260): the ground and the crouch of the suelo recording ---
+
+namespace
+{
+    // The ground and the crouch of the body of player 0 at one engine tick of the suelo recording, with the contact the engine gave.
+    struct SueloMoment
+    {
+        Perception::Players::Type::GroundKind Ground{};
+        bool IsGrounded{};
+        std::uint32_t AirborneTicks{};
+        std::uint32_t GroundObject{};
+        float OwnZ{};
+        float Crouch{};
+        bool IsCrouching{};
+        std::uint32_t EngineGroundObject{};
+    };
+
+    using Common::Engine::Type::k_NoHandle;
+
+    constexpr std::uint32_t k_SueloBiped{ 0xE5B30344 };
+    constexpr std::uint32_t k_SueloBlock{ 0xE4030194 };
+    constexpr std::uint32_t k_SueloSecondBlock{ 0xE33B00CC };
+    constexpr std::uint32_t k_SueloWarthog{ 0xE34000D1 };
+    constexpr std::uint32_t k_SueloFlickerBlock{ 0xE4770208 };
+}
+
+TEST_F(ReplayTests, SueloGroundAndCrouchFollowTheRecordedFilm)
+{
+    using Perception::Players::Type::GroundKind;
+
+    std::map<std::uint32_t, SueloMoment> moments{};
+    const std::string reason{ ReplayRecording("suelo", [&](const Chain& chain) {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (!match || !players || !objects || players->Rows.empty() || !players->Rows[0].Body) return;
+
+        const auto& row{ players->Rows[0] };
+        const auto& body{ *row.Body };
+        const auto objectIt{ objects->find(row.BipedHandle) };
+        const auto* biped{ objectIt == objects->end() ? nullptr : std::get_if<Blam::Runtime::Object::Type::Biped::Biped>(&objectIt->second.Specific) };
+        moments[match->GameTick] = SueloMoment{ .Ground = body.Ground, .IsGrounded = body.IsGrounded, .AirborneTicks = body.AirborneTicks,
+            .GroundObject = body.GroundObject, .OwnZ = body.OwnVelocity.Z, .Crouch = body.CrouchFraction, .IsCrouching = body.IsCrouching,
+            .EngineGroundObject = biped ? biped->GroundObjectHandle : 0 };
+        EXPECT_EQ(row.BipedHandle, k_SueloBiped) << "GameTick " << match->GameTick;
+    }) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    const auto at{ [&](std::uint32_t tick) -> const SueloMoment&
+    {
+        EXPECT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
+        static const SueloMoment missing{};
+        return moments.contains(tick) ? moments.at(tick) : missing;
+    } };
+
+    // The jump off the block (1166): not grounded from the first tick, with the vertical speed of the jump. It lands on the BSP (1254).
+    EXPECT_EQ(at(1165).AirborneTicks, 0u);
+    EXPECT_EQ(at(1165).Ground, GroundKind::Object);
+    EXPECT_FALSE(at(1166).IsGrounded);
+    EXPECT_EQ(at(1166).Ground, GroundKind::Air);
+    EXPECT_EQ(at(1166).AirborneTicks, 1u);
+    EXPECT_NEAR(at(1166).OwnZ, 2.3f, 1e-3f);
+    EXPECT_EQ(at(1253).Ground, GroundKind::Air);
+    EXPECT_EQ(at(1254).Ground, GroundKind::Static);
+    EXPECT_TRUE(at(1254).IsGrounded);
+    EXPECT_EQ(at(1254).AirborneTicks, 0u);
+    EXPECT_EQ(at(1254).GroundObject, k_NoHandle);
+
+    // Three ticks without contact between blocks (890-892, speed -0.33): the first two keep the block, the third is the air.
+    EXPECT_EQ(at(889).AirborneTicks, 0u);
+    for (const std::uint32_t tick : { 890u, 891u })
+    {
+        EXPECT_TRUE(at(tick).IsGrounded) << tick;
+        EXPECT_EQ(at(tick).Ground, GroundKind::Object) << tick;
+        EXPECT_EQ(at(tick).GroundObject, k_SueloFlickerBlock) << tick;
+        EXPECT_EQ(at(tick).AirborneTicks, tick - 889u) << tick;
+    }
+    EXPECT_FALSE(at(892).IsGrounded);
+    EXPECT_EQ(at(892).Ground, GroundKind::Air);
+    EXPECT_EQ(at(892).AirborneTicks, 3u);
+    EXPECT_EQ(at(893).AirborneTicks, 0u);
+    EXPECT_TRUE(at(893).IsGrounded);
+
+    // Standing still on an object: the engine gives no handle at some ticks and the last one is kept.
+    const auto standing{ [&](std::uint32_t from, std::uint32_t to, std::uint32_t object)
+    {
+        std::size_t withoutEngineHandle{ 0 };
+        for (std::uint32_t tick{ from }; tick <= to; ++tick)
+        {
+            EXPECT_EQ(at(tick).Ground, GroundKind::Object) << tick;
+            EXPECT_TRUE(at(tick).IsGrounded) << tick;
+            EXPECT_EQ(at(tick).GroundObject, object) << tick;
+            if (at(tick).EngineGroundObject == k_NoHandle) ++withoutEngineHandle;
+        }
+        EXPECT_GT(withoutEngineHandle, 0u) << "the engine never gave 0xFFFFFFFF in " << from << "-" << to;
+    } };
+    standing(7201, 7494, k_SueloBlock);
+    standing(8401, 8591, k_SueloSecondBlock);
+
+    // On the Warthog, and then seated in it.
+    for (std::uint32_t tick{ 7772 }; tick <= 8031; ++tick)
+    {
+        ASSERT_EQ(at(tick).Ground, GroundKind::Object) << tick;
+        ASSERT_EQ(at(tick).GroundObject, k_SueloWarthog) << tick;
+    }
+    for (std::uint32_t tick{ 8032 }; tick <= 8247; ++tick)
+    {
+        ASSERT_EQ(at(tick).Ground, GroundKind::Attached) << tick;
+        ASSERT_FALSE(at(tick).IsGrounded) << tick;
+        ASSERT_EQ(at(tick).AirborneTicks, 0u) << tick;
+        ASSERT_EQ(at(tick).GroundObject, k_NoHandle) << tick;
+    }
+
+    // The long fall (9030-9416): 387 ticks in the air, and the landing resets the count.
+    for (std::uint32_t tick{ 9030 }; tick <= 9416; ++tick)
+    {
+        ASSERT_EQ(at(tick).Ground, GroundKind::Air) << tick;
+        ASSERT_FALSE(at(tick).IsGrounded) << tick;
+        ASSERT_EQ(at(tick).AirborneTicks, tick - 9029u) << tick;
+    }
+    EXPECT_EQ(at(9417).AirborneTicks, 0u);
+    EXPECT_TRUE(at(9417).IsGrounded);
+
+    // The crouch moves at most 1/18 per tick, IsCrouching is the half of it, and the three taps cross it.
+    for (const auto& [tick, moment] : moments)
+    {
+        EXPECT_EQ(moment.IsCrouching, moment.Crouch >= 0.5f) << tick;
+        if (const auto previous{ moments.find(tick - 1) }; previous != moments.end())
+        {
+            EXPECT_LE(std::abs(moment.Crouch - previous->second.Crouch), (1.0f / 18.0f) + 1e-4f) << tick;
+        }
+    }
+    for (const std::uint32_t tap : { 1586u, 1633u, 1682u })
+    {
+        bool isCrouching{ false };
+        for (std::uint32_t tick{ tap }; tick < tap + 12; ++tick) isCrouching = isCrouching || at(tick).IsCrouching;
+        EXPECT_TRUE(isCrouching) << "tap " << tap;
+    }
+}
+
+TEST_F(ReplayTests, GroundIsConsistentWithTheContactInEveryFilm)
+{
+    using Perception::Players::Type::GroundKind;
+
+    std::size_t replayed{ 0 };
+    std::string skipped{};
+    for (const std::string film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" })
+    {
+        std::size_t bodies{ 0 };
+        const std::string reason{ ReplayRecording(film, [&](const Chain& chain) {
+            const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+            const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!match || !players || !objects) return;
+
+            for (const auto& row : players->Rows)
+            {
+                if (!row.Body) continue;
+
+                const auto objectIt{ objects->find(row.BipedHandle) };
+                if (objectIt == objects->end()) continue;
+                const auto* biped{ std::get_if<Blam::Runtime::Object::Type::Biped::Biped>(&objectIt->second.Specific) };
+                if (!biped) continue;
+
+                ++bodies;
+                const auto& body{ *row.Body };
+                const bool hasContact{ objectIt->second.ParentHandle == k_NoHandle && biped->ContactMaterial != Blam::Runtime::Object::Type::Biped::k_NoContact };
+                if (body.AirborneTicks > 0 && hasContact) ADD_FAILURE() << film << " " << match->GameTick << ": airborne with contact";
+                if (body.AirborneTicks >= 3 && body.IsGrounded) ADD_FAILURE() << film << " " << match->GameTick << ": grounded after 3 ticks";
+                if (hasContact && !body.IsGrounded) ADD_FAILURE() << film << " " << match->GameTick << ": contact but not grounded";
+                if (body.IsCrouching != (body.CrouchFraction >= 0.5f)) ADD_FAILURE() << film << " " << match->GameTick << ": crouch";
+            }
+        }) };
+        if (!reason.empty())
+        {
+            skipped += reason + ". ";
+            continue;
+        }
+        ++replayed;
+        EXPECT_GT(bodies, 0u) << film;
+    }
+
+    if (replayed == 0) GTEST_SKIP() << skipped;
 }

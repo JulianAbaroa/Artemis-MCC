@@ -47,6 +47,9 @@ A client built for another layout sees a different hash and refuses to connect.
 - The header also carries the `MapId` of the scnr of the loaded map (engine id, 0 while no map).
 - Each player row carries `RespawnTicks` (ticks left until it respawns, 0 while alive), right after `BipedHandle`: it takes the 2 bytes of padding
   the u8 block already had, so the layout adds 4 bytes per player and no new padding.
+- Each player row carries the ground and the crouch of its body (D260): `Ground` (`BridgeGround`), `IsGrounded` and `IsCrouching` after `IsAbilityActive`
+  (13 u8 and 3 bytes of padding), and `AirborneTicks`, `GroundObject`, `CrouchFraction` and `OwnVelocity` after `TicksSinceDamage`. They fill the
+  4 bytes of padding that sat before `AppliedDecision`, so the row grows 24 bytes. All of them are 0 without a body.
 
 ## Tests
 The `static_assert` of every offset (at compile time). `Tools/Tests/test_generators.py` and `test_components.py` check that the

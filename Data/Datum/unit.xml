@@ -59,7 +59,7 @@
 	<uint64 name="Unknown 298" offset="0x298" confidence="unknown" tooltip="R0 W1 src=INDIRECT known=Crate.Teleport.Top|Scenery.Boundary.Bottom W:unit_init" />
 	<uint32 name="Unknown 2A0" offset="0x2A0" confidence="unknown" tooltip="R0 W1 src=INDIRECT known=Crate.Teleport.ShapeKind W:unit_init" />
 	<uint8 name="Unknown 2A9" offset="0x2A9" confidence="unknown" tooltip="R1 W0 SHARED R:FUN_1804bf094" />
-	<uint32 name="Unknown 2AC" offset="0x2AC" confidence="unknown" tooltip="R3 W0 R:FUN_1804a9e5c,unit_sa8" />
+	<float32 name="Crouch Fraction" offset="0x2AC" confidence="high" exposed="true" tooltip="Real crouch posture, 0 standing .. 1 crouched. Moves 1/18 per tick (0.3 s) toward the crouch button, never against it; a short tap (10-12 ticks of latch) peaks at 0.5-0.6; rises in the air too. FUN_1804a9e5c scales the node offsets by (1 - this). (A3c, 2026-11-01, recording 20261101_110334 = golden suelo) R:FUN_1804a9e5c,unit_sa8" />
 	<float32 name="Fire Strength A" offset="0x2B0" confidence="medium" tooltip="Float handed to the weapon A input (1.0 while the latch pulses bit 30)." />
 	<float32 name="Fire Strength B" offset="0x2B4" confidence="medium" tooltip="Float handed to the weapon B input." />
 	<uint32 name="Aim Target Header" offset="0x2BC" confidence="low" tooltip="Start of a record copied to the tracking structure at 0x2E4 by FUN_180480280. Value 0." />

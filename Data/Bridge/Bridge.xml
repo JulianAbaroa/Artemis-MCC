@@ -37,6 +37,12 @@
 		<value name="Loading" id="1" />
 		<value name="Running" id="2" doc="Ticks are running and decision ticks are published." />
 	</enum>
+	<enum name="BridgeGround" type="u8" doc="What the feet of a biped touch (Perception GroundKind, D260).">
+		<value name="Air" id="0" />
+		<value name="Static" id="1" doc="The BSP." />
+		<value name="Object" id="2" doc="A living object, such as a forge block or a vehicle." />
+		<value name="Attached" id="3" doc="Parented to another object, such as a seat." />
+	</enum>
 	<flags name="BridgeRequest" type="u8" doc="One-shot client requests of a decision (D120).">
 		<bit name="WeaponSwitch" index="0" />
 		<bit name="GrenadeSwitch" index="1" />
@@ -172,6 +178,9 @@
 		<field name="FragGrenades" type="u8" />
 		<field name="PlasmaGrenades" type="u8" />
 		<field name="IsAbilityActive" type="u8" />
+		<field name="Ground" type="u8" enum="BridgeGround" doc="Zero in the air and without Body. A contact that cuts for 1 or 2 ticks keeps the last ground." />
+		<field name="IsGrounded" type="u8" doc="1 with contact or in the 2 ticks of a cut that was not a jump, 0 attached and in the air." />
+		<field name="IsCrouching" type="u8" doc="CrouchFraction >= 0.5." />
 		<field name="CameraPosition" type="BridgeVec3" />
 		<field name="CameraForward" type="BridgeVec3" />
 		<field name="Aim" type="BridgeVec3" />
@@ -185,6 +194,10 @@
 		<field name="Objective" type="u32" />
 		<field name="LastDamagerPlayer" type="u32" />
 		<field name="TicksSinceDamage" type="u32" doc="NoHandle (0xFFFFFFFF) when unknown." />
+		<field name="AirborneTicks" type="u32" doc="Ticks without contact in a row, 0 with contact or attached." />
+		<field name="GroundObject" type="u32" doc="Object under the feet when Ground is Object, NoHandle otherwise (the last valid one when the engine drops it)." />
+		<field name="CrouchFraction" type="f32" doc="0 standing to 1 crouched." />
+		<field name="OwnVelocity" type="BridgeVec3" doc="Velocity relative to the object under the feet, or the biped's own." />
 		<field name="AppliedDecision" type="u64" doc="DecisionTick of the bridge action the engine applied to this player up to this tick (0 = none)." />
 	</struct>
 

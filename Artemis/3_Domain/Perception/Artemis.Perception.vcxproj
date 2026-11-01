@@ -110,6 +110,8 @@
     <ClCompile Include="Match\System\MatchService.cpp" />
     <ClCompile Include="Match\System\MatchService.ixx" />
     <ClCompile Include="Match\Type\Perception.Match.Type.ixx" />
+    <ClCompile Include="Players\State\GroundMemoryStore.cpp" />
+    <ClCompile Include="Players\State\GroundMemoryStore.ixx" />
     <ClCompile Include="Players\State\PlayersStore.ixx" />
     <ClCompile Include="Players\System\PlayersService.cpp" />
     <ClCompile Include="Players\System\PlayersService.ixx" />

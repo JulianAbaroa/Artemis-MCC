@@ -32,9 +32,10 @@ export namespace Blam::Layout::Object::Type::Bipd::Offset
     constexpr std::size_t k_UnknownA2c                                  = 0xA2C;  // uint16.
     constexpr std::size_t k_UnknownA2e                                  = 0xA2E;  // uint16.
     constexpr std::size_t k_UnknownA38                                  = 0xA38;  // uint32.
+    constexpr std::size_t k_CrouchHeld                                  = 0xA44;  // uint8.
     constexpr std::size_t k_UnknownA4c                                  = 0xA4C;  // uint32.
     constexpr std::size_t k_UnknownA6c                                  = 0xA6C;  // uint16.
-    constexpr std::size_t k_UnknownA6e                                  = 0xA6E;  // uint8.
+    constexpr std::size_t k_PhysicsMode                                 = 0xA6E;  // uint8.
     constexpr std::size_t k_UnknownA70                                  = 0xA70;  // uint32.
     constexpr std::size_t k_UnknownA74                                  = 0xA74;  // uint64.
     constexpr std::size_t k_UnknownA7c                                  = 0xA7C;  // uint32.
@@ -50,8 +51,9 @@ export namespace Blam::Layout::Object::Type::Bipd::Offset
     constexpr std::size_t k_UnknownAb0                                  = 0xAB0;  // uint64.
     constexpr std::size_t k_UnknownAb8                                  = 0xAB8;  // uint32.
     constexpr std::size_t k_GroundObjectHandle                          = 0xAD0;  // uint32.
+    constexpr std::size_t k_ContactMaterial                             = 0xAD4;  // uint16.
     constexpr std::size_t k_UnknownAd6                                  = 0xAD6;  // uint8.
-    constexpr std::size_t k_UnknownAd7                                  = 0xAD7;  // uint8.
+    constexpr std::size_t k_OnStructure                                 = 0xAD7;  // uint8.
     constexpr std::size_t k_SurfaceNormal                               = 0xAD8;  // vector3.
     constexpr std::size_t k_UnknownAec                                  = 0xAEC;  // uint32.
     constexpr std::size_t k_UnknownAf8                                  = 0xAF8;  // float32.

@@ -1,5 +1,7 @@
 export module Perception.Players.State;
 
+export import :GroundMemory;
+
 import Common.State.Type;
 import Perception.Players.Type;
 import std;

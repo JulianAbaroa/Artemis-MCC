@@ -20,6 +20,18 @@ namespace
 
 export namespace Perception::Players::Type
 {
+    // What a biped touches with its feet (D260).
+    enum class GroundKind : std::uint8_t
+    {
+        Air = 0,
+        // The BSP.
+        Static,
+        // A living object, such as a forge block or a vehicle.
+        Object,
+        // The biped is parented to another object, such as a seat.
+        Attached,
+    };
+
     // Weapons, armor ability, grenades and objective of a live player (D93).
     // note: Read from the unit of the biped (A2), except the objective, which only the player table has.
     struct Loadout
@@ -74,6 +86,49 @@ export namespace Perception::Players::Type
 
         // Ticks since the last damage, or empty if the biped was never damaged.
         std::optional<std::uint32_t> TicksSinceDamage{};
+
+        // What the feet touch. A contact that cuts for 1 or 2 ticks between blocks keeps the last Ground (hysteresis, D260).
+        GroundKind Ground{ GroundKind::Air };
+
+        // Whether the biped can jump or walk now: true with contact, false when attached, and false in the air after 3 ticks or after a jump.
+        bool IsGrounded{};
+
+        // Ticks without contact in a row, 0 with contact or attached.
+        std::uint32_t AirborneTicks{};
+
+        // Object under the feet when Ground is Object, or 0xFFFFFFFF.
+        // note: The engine drops it to 0xFFFFFFFF when the biped stands still on the object. The last valid one of this biped is kept.
+        std::uint32_t GroundObject{ k_NoHandle };
+
+        // Velocity of the biped relative to the object under its feet, or its own velocity when there is none.
+        Vec3 OwnVelocity{};
+
+        // Crouch pose, from 0 (standing) to 1 (crouched).
+        float CrouchFraction{};
+
+        // CrouchFraction >= 0.5.
+        bool IsCrouching{};
+    };
+
+    // What the players service remembers of one biped between ticks to resolve its ground (D260).
+    struct GroundMemoryEntry
+    {
+        std::uint32_t AirborneTicks{};
+
+        // Ground of the last contact, or Attached while attached.
+        GroundKind LastGround{ GroundKind::Air };
+
+        // Last valid object of this biped while its Object contact did not cut.
+        std::uint32_t LastObject{ k_NoHandle };
+
+        // Whether the biped jumped off the ground: it stays until the next contact.
+        bool IsTakeoff{};
+    };
+
+    // Ground memory by biped handle. Only the bipeds with a Body in the last tick are in it.
+    struct GroundMemory : std::unordered_map<std::uint32_t, GroundMemoryEntry>
+    {
+        using unordered_map::unordered_map;
     };
 
     // One player of the player table with its body and loadout (D19, D30, D93).

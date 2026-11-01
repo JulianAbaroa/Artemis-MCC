@@ -70,6 +70,7 @@ namespace
 
     namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
     namespace UnitOffset = Blam::Layout::Object::Type::Unit::Offset;
+    namespace BipdOffset = Blam::Layout::Object::Type::Bipd::Offset;
     namespace WeapOffset = Blam::Layout::Object::Type::Weap::Offset;
     namespace ProjOffset = Blam::Layout::Object::Type::Proj::Offset;
     namespace PlayerOffset = Blam::Layout::Player::Type::Offset;
@@ -366,6 +367,22 @@ TEST_F(RuntimeTests, BipedFieldsComeFromTheDatum)
     EXPECT_EQ(biped->LastDamageTick, 900u);
     ASSERT_TRUE(biped->TicksSinceDamage.has_value());
     EXPECT_EQ(*biped->TicksSinceDamage, 60u);
+}
+
+TEST_F(RuntimeTests, BipedGroundAndCrouchComeFromTheDatum)
+{
+    RawObject raw{ MakeBiped() };
+    Put(raw.Bytes, UnitOffset::k_CrouchFraction, 0.5f);
+    Put(raw.Bytes, BipdOffset::k_ContactMaterial, std::uint16_t{ 121 });
+    Put(raw.Bytes, BipdOffset::k_OnStructure, std::uint8_t{ 1 });
+
+    const auto table{ this->UpdateObjects(WithObjects({ raw })) };
+    ASSERT_NE(table, nullptr);
+    const Biped* biped{ std::get_if<Biped>(&table->at(k_BipedHandle).Specific) };
+    ASSERT_NE(biped, nullptr);
+    EXPECT_FLOAT_EQ(biped->CrouchFraction, 0.5f);
+    EXPECT_EQ(biped->ContactMaterial, 121u);
+    EXPECT_TRUE(biped->OnStructure);
 }
 
 TEST_F(RuntimeTests, WeaponInAVehicleSlotIsNotEquipped)

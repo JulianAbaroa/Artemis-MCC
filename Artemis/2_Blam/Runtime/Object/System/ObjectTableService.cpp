@@ -411,11 +411,14 @@ namespace Blam::Runtime::Object::System
         // note: The two bytes the repo read before are the low bytes of the control flags.
         const std::uint64_t controlFlags = datum.Read<std::uint64_t>(UnitOffset::k_ControlFlags);
         biped.VerticalInput = static_cast<VerticalInput>(controlFlags & 0xFF);
+        biped.CrouchFraction = datum.Read<float>(UnitOffset::k_CrouchFraction);
         biped.IsAbilityActive = static_cast<std::uint8_t>((controlFlags >> 8) & 0xFF);
         biped.ZoomLevel = datum.Read<ZoomLevel>(UnitOffset::k_ZoomLevel);
 
         biped.SurfaceNormal = datum.Read<Vec3>(BipdOffset::k_SurfaceNormal);
         biped.GroundObjectHandle = datum.Read<std::uint32_t>(BipdOffset::k_GroundObjectHandle);
+        biped.ContactMaterial = datum.Read<std::uint16_t>(BipdOffset::k_ContactMaterial);
+        biped.OnStructure = datum.Read<std::uint8_t>(BipdOffset::k_OnStructure) != 0;
 
         biped.PrimaryWeaponHandle = datum.Read<std::uint32_t>(UnitOffset::k_PrimaryWeaponHandle);
         biped.SecondaryWeaponHandle = datum.Read<std::uint32_t>(UnitOffset::k_SecondaryWeaponHandle);

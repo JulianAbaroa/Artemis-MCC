@@ -45,11 +45,13 @@ export namespace Blam::Layout::Object::Type::Bipd::Structure
         std::uint16_t UnknownA2e;  // 0x56  uint16. | R0 W1 init=0x0 W:bipd_s138
         std::uint8_t  _gap_0x58[0x8];
         std::uint32_t UnknownA38;  // 0x60  uint32. | R0 W1 src=call 1804a0d14 W:bipd_s138
-        std::uint8_t  _gap_0x64[0x10];
+        std::uint8_t  _gap_0x64[0x8];
+        std::uint8_t CrouchHeld;  // 0x6C  uint8. | 1 while the crouch button reaches the biped (follows unit control bit 0, can lag it a few ticks in the air). Intention, not posture: the posture is unit Crouch Fraction 0x2AC. (A3c, 2026-11-01, recording 20261101_110334 = golden suelo)
+        std::uint8_t  _gap_0x6D[0x7];
         std::uint32_t UnknownA4c;  // 0x74  uint32. | R4 W3 init=0xffffffff upd=0xffffffff src=call 180013464 W:bipd_init,FUN_180157a80,FUN_1801579cc
         std::uint8_t  _gap_0x78[0x1C];
         std::uint16_t UnknownA6c;  // 0x94  uint16. | R0 W1 init=0x0 W:bipd_s138
-        std::uint8_t UnknownA6e;  // 0x96  uint8. | R6 W2 init=0x0 src=param_2 W:bipd_s138,FUN_180192e7c
+        std::uint8_t PhysicsMode;  // 0x96  uint8. | Character physics mode (FUN_180192e7c sets it and resets the data of the mode at 0xA74+). Measured: 1 = ground (standing AND airborne, also while seated: the ground fields freeze), 3 = dead; 2 seen only on still bodies (cgb), 6 rare (melee?). (A3c, 2026-11-01, recording 20261101_110334 = golden suelo) R6 W2 init=0x0 src=param_2 W:bipd_s138,FUN_180192e7c
         std::uint8_t  _gap_0x97[0x1];
         std::uint32_t UnknownA70;  // 0x98  uint32. | R3 W1 src=param_1 W:bipd_s138
         std::uint64_t UnknownA74;  // 0x9C  uint64. | R0 W3 upd=0x0 src=INDIRECT W:FUN_180192e7c
@@ -66,10 +68,10 @@ export namespace Blam::Layout::Object::Type::Bipd::Structure
         std::uint64_t UnknownAb0;  // 0xD8  uint64. | R0 W1 src=INDIRECT W:FUN_180192e7c
         std::uint32_t UnknownAb8;  // 0xE0  uint32. | R0 W1 src=INDIRECT W:FUN_180192e7c
         std::uint8_t  _gap_0xE4[0x14];
-        std::uint32_t GroundObjectHandle;  // 0xF8  uint32. | Living object the biped stands on. Old name Biped.GroundObjectHandle (not seen by the static analysis).
-        std::uint8_t  _gap_0xFC[0x2];
+        std::uint32_t GroundObjectHandle;  // 0xF8  uint32. | Object the biped stands on (forge block, vehicle), -1 on the BSP and in the air. Lags 1 tick on landing and drops to -1 after ~5 s standing still on an object (physics at rest) while Contact Material stays: keep the last one while the contact lasts. (A3c, 2026-11-01, recording 20261101_110334 = golden suelo)
+        std::uint16_t ContactMaterial;  // 0xFC  uint16. | Global material index of the ground contact, 0xFFFF in the air. Set on the landing tick and cleared on the take-off tick (jump: same tick vz = +2.3). forge_halo: terrain 65/66/69, forge blocks 121, Warthog 106. Flickers 1-3 ticks between blocks. (A3c, 2026-11-01, recording 20261101_110334 = golden suelo)
         std::uint8_t UnknownAd6;  // 0xFE  uint8. | R0 W1 upd=0x0 W:FUN_180192e7c
-        std::uint8_t UnknownAd7;  // 0xFF  uint8. | R1 W1 upd=0x0 W:FUN_180192e7c
+        std::uint8_t OnStructure;  // 0xFF  uint8. | 1 while the contact is the structure BSP (Ground Object Handle -1), 0 on objects and in the air. (A3c, 2026-11-01, recording 20261101_110334 = golden suelo) R1 W1 upd=0x0 W:FUN_180192e7c
         MathType::Vec3 SurfaceNormal;  // 0x100  vector3. | Normal of the last ground contact. Old name Biped.SurfaceNormal.
         std::uint8_t  _gap_0x10C[0x8];
         std::uint32_t UnknownAec;  // 0x114  uint32. | R0 W1 upd=0xffffffff W:FUN_180192e7c

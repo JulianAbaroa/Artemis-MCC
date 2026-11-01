@@ -334,6 +334,12 @@
     <ClCompile Include="Match\Type\Perception.Match.Type.ixx">
       <Filter>Match\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Players\State\GroundMemoryStore.cpp">
+      <Filter>Players\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Players\State\GroundMemoryStore.ixx">
+      <Filter>Players\State</Filter>
+    </ClCompile>
     <ClCompile Include="Players\State\PlayersStore.ixx">
       <Filter>Players\State</Filter>
     </ClCompile>

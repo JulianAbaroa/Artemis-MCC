@@ -21,6 +21,7 @@ namespace
     using Perception::Details::Type::ProjectileDetail;
     using Perception::Details::Type::StandDetail;
     using Perception::Details::Type::WeaponDetail;
+    using Contract::Bridge::Type::BridgeGround;
     using Contract::Bridge::Type::BridgeVec3;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeEntity;
@@ -91,6 +92,13 @@ namespace
         row.Objective = body.Loadout.Objective;
         row.LastDamagerPlayer = body.LastDamagerPlayer;
         row.TicksSinceDamage = body.TicksSinceDamage.value_or(k_NoHandle);
+        row.Ground = static_cast<BridgeGround>(body.Ground);
+        row.IsGrounded = body.IsGrounded ? 1 : 0;
+        row.IsCrouching = body.IsCrouching ? 1 : 0;
+        row.AirborneTicks = body.AirborneTicks;
+        row.GroundObject = body.GroundObject;
+        row.CrouchFraction = body.CrouchFraction;
+        row.OwnVelocity = ToBridge(body.OwnVelocity);
         return row;
     }
 

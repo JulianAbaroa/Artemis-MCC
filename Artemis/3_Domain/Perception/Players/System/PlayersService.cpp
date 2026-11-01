@@ -1,17 +1,34 @@
 module Perception.Players.System;
 
 import Common.Engine.Type;
+import Common.Math.Type;
 import Common.Semantic.Type;
 
 namespace
 {
     using Common::Semantic::Type::Lifecycle;
+    using Blam::Runtime::Object::Type::Alive::AliveObject;
+    using Blam::Runtime::Object::Type::Alive::ObjectTable;
     using Blam::Runtime::Object::Type::Biped::Biped;
     using Blam::Runtime::Object::Type::Biped::Damage;
+    using Common::Math::Type::Vec3;
+    using Perception::Players::Type::Body;
+    using Perception::Players::Type::GroundKind;
+    using Perception::Players::Type::GroundMemoryEntry;
     using Blam::Runtime::Object::Type::Equipment::Equipment;
     using Perception::Details::Type::VitalityDetails;
 
+    using Blam::Runtime::Object::Type::Biped::k_NoContact;
     using Common::Engine::Type::k_NoHandle;
+
+    // Ticks without contact after which the biped is no longer grounded.
+    constexpr std::uint32_t k_HoldTicks{ 3 };
+
+    // Own vertical speed above which the first tick without contact is a jump, in world units per second.
+    constexpr float k_TakeoffSpeed{ 1.0f };
+
+    // CrouchFraction from which the biped counts as crouching.
+    constexpr float k_CrouchThreshold{ 0.5f };
 
     // Returns the vitality of the first shield section of an object, from 0 to 1.
     // return: Empty when the object has no vitality detail or its layout has no shield section.
@@ -24,6 +41,89 @@ namespace
         if (section < 0 || static_cast<std::size_t>(section) >= it->second.Sections.size()) return std::nullopt;
 
         return it->second.Sections[static_cast<std::size_t>(section)];
+    }
+
+    // Returns the velocity of the biped relative to the object under its feet.
+    // return: The velocity of the biped itself when the ground is not an object or the object is not in the table.
+    auto FindOwnVelocity(const AliveObject& object, GroundKind ground, std::uint32_t groundObject, const ObjectTable& objectTable) -> Vec3
+    {
+        Vec3 velocity{ object.LinearVelocity };
+        if (ground != GroundKind::Object) return velocity;
+
+        const auto it{ objectTable.find(groundObject) };
+        if (it == objectTable.end()) return velocity;
+
+        velocity.X -= it->second.LinearVelocity.X;
+        velocity.Y -= it->second.LinearVelocity.Y;
+        velocity.Z -= it->second.LinearVelocity.Z;
+        return velocity;
+    }
+
+    // Resolves the ground of a biped from its contact and the memory of the previous tick (D260).
+    // param next: Receives the memory for the next tick.
+    // note: The contact cuts for 1 or 2 ticks between blocks, so the last ground is held for them, unless the biped jumped off it.
+    auto ResolveGround(Body& body, const AliveObject& object, const Biped& biped, const ObjectTable& objectTable,
+        const GroundMemoryEntry& previous, GroundMemoryEntry& next) -> void
+    {
+        const bool isAttached{ object.ParentHandle != k_NoHandle };
+        const bool isContact{ !isAttached && biped.ContactMaterial != k_NoContact };
+
+        next = previous;
+        body.GroundObject = k_NoHandle;
+
+        if (isAttached || isContact)
+        {
+            next.AirborneTicks = 0;
+            next.IsTakeoff = false;
+
+            if (isAttached)
+            {
+                body.Ground = GroundKind::Attached;
+                next.LastObject = k_NoHandle;
+            }
+            else if (biped.OnStructure)
+            {
+                body.Ground = GroundKind::Static;
+                next.LastObject = k_NoHandle;
+            }
+            else
+            {
+                body.Ground = GroundKind::Object;
+                if (biped.GroundObjectHandle != k_NoHandle) next.LastObject = biped.GroundObjectHandle;
+                body.GroundObject = next.LastObject;
+            }
+
+            next.LastGround = body.Ground;
+            body.IsGrounded = !isAttached;
+        }
+        else
+        {
+            next.AirborneTicks = previous.AirborneTicks + 1;
+
+            const bool wasOnGround{ previous.LastGround == GroundKind::Static || previous.LastGround == GroundKind::Object };
+            if (next.AirborneTicks == 1 && wasOnGround)
+            {
+                const Vec3 own{ FindOwnVelocity(object, previous.LastGround, previous.LastObject, objectTable) };
+                next.IsTakeoff = own.Z > k_TakeoffSpeed;
+            }
+
+            const bool isHeld{ wasOnGround && !next.IsTakeoff && next.AirborneTicks < k_HoldTicks };
+            if (isHeld)
+            {
+                body.Ground = previous.LastGround;
+                if (body.Ground == GroundKind::Object) body.GroundObject = previous.LastObject;
+            }
+            else
+            {
+                body.Ground = GroundKind::Air;
+                next.LastGround = GroundKind::Air;
+                next.LastObject = k_NoHandle;
+            }
+            body.IsGrounded = isHeld;
+        }
+
+        body.AirborneTicks = next.AirborneTicks;
+        body.OwnVelocity = FindOwnVelocity(object, body.Ground, body.GroundObject, objectTable);
     }
 
     // Returns the player of the latest hit, or k_NoHandle without attackers.
@@ -52,10 +152,15 @@ namespace Perception::Players::System
         Players players{};
         players.Rows.reserve(playerTablePtr->size());
 
+        // note: The memory keeps only the bipeds that have a Body in this tick.
+        GroundMemory& memory{ m_GroundMemoryStore.Get() };
+        GroundMemory nextMemory{};
+
         for (const auto& [handle, alive] : *playerTablePtr)
         {
-            players.Rows.push_back(this->MakePlayer(alive, *objectTablePtr, *entitiesPtr, vitalities));
+            players.Rows.push_back(this->MakePlayer(alive, *objectTablePtr, *entitiesPtr, vitalities, memory, nextMemory));
         }
+        memory = std::move(nextMemory);
 
         std::ranges::sort(players.Rows, {}, &Player::Handle);
 
@@ -69,7 +174,7 @@ namespace Perception::Players::System
     }
 
     auto PlayersService::MakePlayer(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
-        const VitalityDetails& vitalities) const -> Player
+        const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> Player
     {
         Player player{};
         player.Handle = alive.Handle;
@@ -80,14 +185,14 @@ namespace Perception::Players::System
         player.RespawnTicks = alive.RespawnTicks;
         player.CameraPosition = alive.CameraPosition;
         player.CameraForward = alive.CameraForward;
-        player.Body = this->MakeBody(alive, objectTable, entities, vitalities);
+        player.Body = this->MakeBody(alive, objectTable, entities, vitalities, previous, nextMemory);
         player.BipedHandle = player.Body ? alive.AliveBipedHandle : alive.CurrentBipedHandle;
 
         return player;
     }
 
     auto PlayersService::MakeBody(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
-        const VitalityDetails& vitalities) const -> std::optional<Body>
+        const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> std::optional<Body>
     {
         const std::uint32_t handle{ alive.AliveBipedHandle };
         if (handle == k_NoHandle) return std::nullopt;
@@ -109,6 +214,12 @@ namespace Perception::Players::System
         body.Shield = FindShield(vitalities, handle);
         body.LastDamagerPlayer = FindLastDamager(biped->Damages);
         body.TicksSinceDamage = biped->TicksSinceDamage;
+        body.CrouchFraction = biped->CrouchFraction;
+        body.IsCrouching = biped->CrouchFraction >= k_CrouchThreshold;
+
+        const auto previousIt{ previous.find(handle) };
+        const GroundMemoryEntry before{ previousIt == previous.end() ? GroundMemoryEntry{} : previousIt->second };
+        ResolveGround(body, objectIt->second, *biped, objectTable, before, nextMemory[handle]);
 
         auto& loadout{ body.Loadout };
         loadout.PrimaryWeapon = biped->PrimaryWeaponHandle;
@@ -135,6 +246,7 @@ namespace Perception::Players::System
 
     auto PlayersService::Cleanup() -> void
     {
+        m_GroundMemoryStore.Cleanup();
         m_PlayersStore.Cleanup();
 
         m_Log.Message("[PlayersService] INFO: Cleanup completed.");

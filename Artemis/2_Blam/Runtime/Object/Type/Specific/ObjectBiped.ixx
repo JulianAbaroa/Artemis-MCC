@@ -13,6 +13,9 @@ namespace
 
 export namespace Blam::Runtime::Object::Type::Biped
 {
+    // ContactMaterial of a biped without contact.
+    inline constexpr std::uint16_t k_NoContact{ std::numeric_limits<std::uint16_t>::max() };
+
     // Zoom stage of the biped.
     enum class ZoomLevel : std::uint8_t
     {
@@ -73,6 +76,10 @@ export namespace Blam::Runtime::Object::Type::Biped
 
         VerticalInput VerticalInput{};
 
+        // Crouch pose of the unit, from 0 (standing) to 1 (fully crouched). It moves 1/18 per tick towards the pose of the key.
+        // note: Unlike VerticalInput it is the real pose, so a quick tap shows up in it (A3c).
+        float CrouchFraction{};
+
         // Armor ability key state. Its meaning depends on the ability. The Equipment of ArmorAbilityHandle has the real state.
         // note: Sprint and camo stay 1 for as long as the ability runs, even with the key released.
         // note: Jetpack stays 1 only while the key is held. Armor lock is assumed to behave the same, but it is untested.
@@ -89,8 +96,16 @@ export namespace Blam::Runtime::Object::Type::Biped
         Vec3 SurfaceNormal{};
 
         // Handle of the living object the biped stands on.
-        // note: 0xFFFFFFFF on static geometry and in the air. It lags the real contact by a fraction of a second.
+        // note: 0xFFFFFFFF on static geometry and in the air. It takes 1 tick to show after landing and drops to 0xFFFFFFFF when the
+        // biped stands still on the object, with the contact intact (A3c). Perception keeps the last valid one.
         std::uint32_t GroundObjectHandle{};
+
+        // Material of the surface in contact, or 0xFFFF without contact.
+        // note: The contact can cut for 1 or 2 ticks between blocks without the biped jumping.
+        std::uint16_t ContactMaterial{};
+
+        // Whether the contact is with the BSP (static geometry) and not with an object.
+        bool OnStructure{};
 
         // Weapons held, by slot. They do not swap when the biped switches weapons.
         std::uint32_t PrimaryWeaponHandle{};

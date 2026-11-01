@@ -61,7 +61,7 @@ export namespace Blam::Layout::Object::Type::Unit::Structure
         std::uint8_t  _gap_0xEC[0x5];
         std::uint8_t Unknown2a9;  // 0xF1  uint8. | R1 W0 SHARED R:FUN_1804bf094
         std::uint8_t  _gap_0xF2[0x2];
-        std::uint32_t Unknown2ac;  // 0xF4  uint32. | R3 W0 R:FUN_1804a9e5c,unit_sa8
+        float        CrouchFraction;  // 0xF4  float32. | Real crouch posture, 0 standing .. 1 crouched. Moves 1/18 per tick (0.3 s) toward the crouch button, never against it; a short tap (10-12 ticks of latch) peaks at 0.5-0.6; rises in the air too. FUN_1804a9e5c scales the node offsets by (1 - this). (A3c, 2026-11-01, recording 20261101_110334 = golden suelo) R:FUN_1804a9e5c,unit_sa8
         float        FireStrengthA;  // 0xF8  float32. | Float handed to the weapon A input (1.0 while the latch pulses bit 30).
         float        FireStrengthB;  // 0xFC  float32. | Float handed to the weapon B input.
         std::uint8_t  _gap_0x100[0x4];
