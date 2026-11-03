@@ -83,6 +83,7 @@
     <Compile Include="Tools\Tests\test_ctf.py" />
     <Compile Include="Tools\Tests\test_generators.py" />
     <Compile Include="Tools\Tests\test_tickdump.py" />
+    <Compile Include="Tools\Tests\test_tools.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\README.md" />

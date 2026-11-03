@@ -969,6 +969,8 @@ def Main():
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--dead", action="store_true")
     arguments = parser.parse_args()
+    if arguments.update_baseline and (arguments.files is not None or arguments.only or arguments.self_test or arguments.dead):
+        parser.error("--update-baseline needs the full run (no --files, no --only, no --self-test, no --dead)")
     if arguments.self_test:
         return SelfTest()
 

@@ -8,10 +8,10 @@ Answers "who depends on X" and "what does a change in X touch" without reading t
     python Tools/deps.py uses NAME [-t]      What NAME imports (direct or transitive). External imports (std, <...>) are left out.
     python Tools/deps.py impact FILE...      Files affected by a change in these files (transitive users), grouped by module.
     python Tools/deps.py where NAME          Which file declares a module or partition. A trailing '*' matches by prefix.
-    python Tools/deps.py top [-n 20]         Modules with the most direct users (fan-in): the risky ones to change.
+    python Tools/deps.py top [-n N]          Modules with the most direct users (fan-in): the risky ones to change.
     python Tools/deps.py cycles              Import cycles between files (should be none).
 
-    --files   list every file instead of grouping by module     -n N   cap on lines printed (default 40; 0 = no cap)
+    --files   list every file instead of grouping by module     -n N   cap on lines printed (default 40, 20 for top; 0 = no cap)
 
 A unit is "Module" (primary interface) or "Module:Partition". 'import :P' inside module M means M:P. An implementation unit
 ('module M;' in a .cpp) depends on M. Generated files count like any other. Artemis/External/ is not scanned.
@@ -138,8 +138,10 @@ def Main():
     parser.add_argument("names", nargs="*")
     parser.add_argument("-t", "--transitive", action="store_true")
     parser.add_argument("--files", action="store_true")
-    parser.add_argument("-n", type=int, default=40)
+    parser.add_argument("-n", type=int, default=None)
     args = parser.parse_args()
+    if args.n is None:
+        args.n = 20 if args.command == "top" else 40
     graph = Graph()
 
     if args.command in ("users", "uses", "where", "impact") and not args.names:
@@ -175,7 +177,7 @@ def Main():
         for path, users in graph.Users.items():
             byModule[graph.Owner.get(path, "?")] |= {u for u in users if graph.Owner.get(u) != graph.Owner.get(path)}
         rows = sorted(((len(u), m) for m, u in byModule.items()), reverse=True)
-        Print([f"  {count:3}  {module}" for count, module in rows], args.n or 20)
+        Print([f"  {count:3}  {module}" for count, module in rows], args.n)
         return 0
 
     if args.command == "cycles":

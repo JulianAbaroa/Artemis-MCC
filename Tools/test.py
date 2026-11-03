@@ -14,7 +14,7 @@ JSON output and prints a compact summary: how many passed, failed (file:line and
     -n N   cap on lines printed (default 40; 0 = no cap)
 
 Exit code: 0 every test passed (skipped ones do not count), 1 a test failed, 2 the project did not compile (or the exe did not
-run), 3 the watcher is not running, 4 a LiveChat message arrived (the build keeps going, resume with --wait), 5 still building.
+run, or ran no test, or its exit code disagrees with the JSON), 3 the watcher is not running, 4 a LiveChat message arrived (the build keeps going, resume with --wait), 5 still building.
 With --python: 0 every test passed, 1 a test failed, 2 anything else (pytest missing, collection error, usage error).
 """
 import argparse, importlib.util, json, os, re, subprocess, sys, time, uuid
@@ -45,7 +45,40 @@ def SkipReasons(log):
     return reasons
 
 
-def Summarize(args, started):
+def Evaluate(data, runExitCode, reasons=None, filter=None):
+    """Pure verdict of a GoogleTest JSON (already parsed) and the exe exit code -> (exit code, lines to print).
+    0 every test passed or was skipped, 1 a test failed, 2 the run cannot be trusted (no testsuites, no case, exit code without failure)."""
+    reasons = reasons or {}
+    suites = data.get("testsuites") if isinstance(data, dict) else None
+    if not isinstance(suites, list):
+        return 2, ["malformed " + RESULTS + ": no testsuites."]
+    passed, failed, skipped = 0, [], []
+    for suite in suites:
+        for case in suite.get("testsuite", []):
+            name = f"{suite.get('name')}.{case.get('name')}"
+            if case.get("failures"):
+                failed.append((name, case["failures"]))
+            elif case.get("result") == "SKIPPED" or case.get("status") == "NOTRUN":
+                skipped.append((name, reasons.get(name, "")))
+            else:
+                passed += 1
+    if passed + len(failed) + len(skipped) == 0:
+        return 2, ["no test ran" + (": the filter matched no test." if filter else ".")]
+    lines = [f"Tests: {passed} passed, {len(failed)} failed, {len(skipped)} skipped ({data.get('time', '?')})."]
+    for name, failures in failed:
+        for failure in failures:
+            text = failure.get("failure", "").replace("\r", "")
+            first, _, rest = text.partition("\n")
+            lines.append(f"  FAILED {name}: {build.Relative(first)}: {' '.join(rest.split())[:200]}")
+    for name, reason in skipped:
+        lines.append(f"  SKIPPED {name}: {reason or '(no reason in the run log)'}")
+    if runExitCode != 0 and not failed:
+        lines.insert(1, f"the exe exited with {runExitCode} but the JSON lists no failure.")
+        return 2, lines
+    return (1 if failed else 0), lines
+
+
+def Summarize(args, started, runExitCode=0):
     try:
         mtime = os.path.getmtime(os.path.join(build.ROOT, RESULTS))
         with open(os.path.join(build.ROOT, RESULTS), encoding="utf-8-sig") as handle:
@@ -58,30 +91,12 @@ def Summarize(args, started):
     if mtime < started - 2:
         print(f"{RESULTS} is older than this run: the exe did not write it.")
         return 2
-    reasons = SkipReasons(ReadText(RUN_LOG))
-    passed, failed, skipped = 0, [], []
-    for suite in data.get("testsuites", []):
-        for case in suite.get("testsuite", []):
-            name = f"{suite.get('name')}.{case.get('name')}"
-            if case.get("failures"):
-                failed.append((name, case["failures"]))
-            elif case.get("result") == "SKIPPED" or case.get("status") == "NOTRUN":
-                skipped.append((name, reasons.get(name, "")))
-            else:
-                passed += 1
-    lines = [f"Tests: {passed} passed, {len(failed)} failed, {len(skipped)} skipped ({data.get('time', '?')})."]
-    for name, failures in failed:
-        for failure in failures:
-            text = failure.get("failure", "").replace("\r", "")
-            first, _, rest = text.partition("\n")
-            lines.append(f"  FAILED {name}: {build.Relative(first)}: {' '.join(rest.split())[:200]}")
-    for name, reason in skipped:
-        lines.append(f"  SKIPPED {name}: {reason or '(no reason in the run log)'}")
+    code, lines = Evaluate(data, runExitCode, SkipReasons(ReadText(RUN_LOG)), args.filter)
     for line in lines[:args.n] if args.n else lines:
         print(line)
     if args.n and len(lines) > args.n:
         print(f"... {len(lines) - args.n} more lines (-n 0 for all)")
-    return 1 if failed else 0
+    return code
 
 
 def RunPython(args):
@@ -124,7 +139,7 @@ def Finish(result, args, started):
     if "runExitCode" not in result:
         print("The build is ok but the watcher did not run the exe (is it an old watcher? close and reopen build_watcher.bat).")
         return 2
-    code = Summarize(args, started)
+    code = Summarize(args, started, result["runExitCode"])
     print(f"(build {result.get('seconds')} s, run {result.get('runSeconds')} s, exe exit code {result.get('runExitCode')})")
     return code
 
