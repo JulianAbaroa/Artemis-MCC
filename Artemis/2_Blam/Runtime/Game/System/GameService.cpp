@@ -18,6 +18,7 @@ namespace
 
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxTeams;
+    using Common::Engine::Type::k_TicksPerSecond;
     using Common::Engine::Type::k_NoHandle;
     using Blam::Layout::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
     using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
@@ -38,6 +39,14 @@ namespace
     using Blam::Layout::Game::Type::Offset::k_VariantModeLast;
     using Blam::Layout::Game::Type::Offset::k_VariantRoundLimit;
     using Blam::Layout::Game::Type::Offset::k_VariantRoundTimeLimit;
+    using Blam::Layout::Game::Type::Offset::k_VariantRoundsToWin;
+    using Blam::Layout::Game::Type::Offset::k_VariantSuddenDeath;
+    using Blam::Layout::Game::Type::Offset::k_VariantGracePeriod;
+    using Blam::Layout::Game::Type::Offset::k_VariantLivesPerRound;
+    using Blam::Layout::Game::Type::Offset::k_VariantTeamLivesPerRound;
+    using Blam::Layout::Game::Type::Offset::k_VariantRespawnTime;
+    using Blam::Layout::Game::Type::Offset::k_VariantPowerupDuration;
+    using Blam::Layout::Game::Type::Offset::k_PowerupCount;
     using Blam::Layout::Game::Type::Offset::k_VariantEngineType;
     using Blam::Layout::Game::Type::Offset::k_VariantEngineTypeMegalo;
     using Blam::Layout::Game::Type::Offset::k_VariantScoreToWin;
@@ -69,6 +78,12 @@ namespace
         T value{};
         std::memcpy(&value, data.data() + offset, sizeof(T));
         return value;
+    }
+
+    // return: The ticks of a duration the game variant stores in seconds.
+    auto SecondsToTicks(std::uint32_t seconds) -> std::uint32_t
+    {
+        return static_cast<std::uint32_t>(static_cast<float>(seconds) * k_TicksPerSecond);
     }
 }
 
@@ -142,6 +157,22 @@ namespace Blam::Runtime::Game::System
             {
                 game.RoundTimeLimitTicks = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantRoundTimeLimit) * k_TicksPerMinute;
                 game.RoundLimit = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantRoundLimit);
+
+                const auto variant{ k_GameGlobalsGameVariant };
+                game.RoundsToWin = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, variant + k_VariantRoundsToWin);
+                game.LivesPerRound = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, variant + k_VariantLivesPerRound);
+                game.TeamLivesPerRound = snapshot.Read<std::uint8_t>(RegionId::GameGlobals, variant + k_VariantTeamLivesPerRound);
+                game.RespawnTimeTicks = SecondsToTicks(snapshot.Read<std::uint8_t>(RegionId::GameGlobals, variant + k_VariantRespawnTime));
+                game.GracePeriodTicks = SecondsToTicks(snapshot.Read<std::uint16_t>(RegionId::GameGlobals, variant + k_VariantGracePeriod));
+
+                // Indefinite sudden death (-1 seconds) stays -1.
+                const auto suddenDeath{ snapshot.Read<std::int16_t>(RegionId::GameGlobals, variant + k_VariantSuddenDeath) };
+                game.SuddenDeathTicks = suddenDeath < 0 ? -1 : static_cast<std::int32_t>(SecondsToTicks(static_cast<std::uint32_t>(suddenDeath)));
+
+                for (std::size_t powerup{ 0 }; powerup < k_PowerupCount; ++powerup)
+                {
+                    game.PowerupDurationTicks[powerup] = SecondsToTicks(snapshot.Read<std::uint8_t>(RegionId::GameGlobals, variant + k_VariantPowerupDuration + powerup));
+                }
 
                 // Only the Megalo variant is measured to have the score to win at that offset.
                 if (snapshot.Read<std::uint32_t>(RegionId::GameGlobals, k_GameGlobalsGameVariant + k_VariantEngineType) == k_VariantEngineTypeMegalo)

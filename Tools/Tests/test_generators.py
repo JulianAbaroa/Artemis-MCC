@@ -173,3 +173,23 @@ def test_check_and_out_leave_the_repo_untouched(tmp_path):
         Run("GenerateTags.py", ASSEMBLY_TAGS, "--check")
         Run("GenerateTags.py", ASSEMBLY_TAGS, "--out", str(tmp_path / "tags"))
     assert RepoStatus() == before
+
+
+# --- GenerateBridge: the traits of the players and the variant settings of the match (A19, D262) ---
+
+def test_bridge_layout_carries_the_player_traits_and_the_variant_settings():
+    sys.path.insert(0, os.path.join(REPO, "Agent"))
+    try:
+        from artemis import bridge_layout as L
+    finally:
+        sys.path.pop(0)
+
+    traits = L.BridgePlayer.fields["Traits"][0]
+    assert traits is L.BridgePlayerTraits
+    assert L.BridgePlayerTraits.itemsize == 72
+    for name in ("MovementSpeed", "Gravity", "JumpHeight", "DamageMultiplier", "MeleeMultiplier", "RadarRange", "InfiniteAmmo", "VehicleUse",
+                 "VisibleWaypoint", "RadarMode", "FragGrenades", "PrimaryWeapon"):
+        assert name in L.BridgePlayerTraits.names
+    assert L.BridgeMatch.fields["PowerupDurationTicks"][0].shape == (3,)
+    for name in ("RespawnTimeTicks", "LivesPerRound", "TeamLivesPerRound", "RoundsToWin", "SuddenDeathTicks", "GracePeriodTicks"):
+        assert name in L.BridgeMatch.names

@@ -62,4 +62,8 @@ export namespace Blam::Layout::Player::Type::Offset
 
     // Ticks left until the player respawns (uint16, widened to uint32 by the readers). 0 while alive or without wait (D103).
     constexpr std::uintptr_t k_RespawnTicks{ 0x1BC };
+
+    // Traits the engine applies to the player right now (k_Size bytes, decoded by the Traits module) (D262).
+    // note: It exists for dead players too.
+    constexpr std::uintptr_t k_Traits{ 0x328 };
 }

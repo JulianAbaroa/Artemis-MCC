@@ -102,6 +102,7 @@
     <ClCompile Include="Player\Type\PlayerMapping.ixx" />
     <ClCompile Include="Player\Type\PlayerOffset.ixx" />
     <ClCompile Include="Player\Type\PlayerSize.ixx" />
+    <ClCompile Include="Player\Type\PlayerTraits.ixx" />
     <ClCompile Include="Snapshot\Blam.Layout.Snapshot.Type.ixx" />
     <ClCompile Include="Snapshot\System\Blam.Layout.Snapshot.System.cpp" />
     <ClCompile Include="Snapshot\System\Blam.Layout.Snapshot.System.ixx" />

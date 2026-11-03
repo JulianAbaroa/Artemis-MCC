@@ -2,6 +2,7 @@ export module Perception.Match.Type;
 
 import Common.Engine.Type;
 import Common.Semantic.Type;
+import Blam.Layout.Game.Type;
 import std;
 
 namespace
@@ -10,6 +11,8 @@ namespace
     using Common::Semantic::Type::RoundState;
 
     using Common::Engine::Type::k_MaxTeams;
+
+    using Blam::Layout::Game::Type::Offset::k_PowerupCount;
 }
 
 export namespace Perception::Match::Type
@@ -53,5 +56,17 @@ export namespace Perception::Match::Type
         std::uint8_t RoundLimit{};
         // Score a team (a player in free for all) needs to win, as stored. 0 for none or not known.
         std::int32_t ScoreToWin{};
+
+        // Respawn, round and powerup settings of the game variant, in ticks (D262). 0 when the game variant is not available.
+        std::uint32_t RespawnTimeTicks{};
+        // Lives per round and per team, 0 for unlimited.
+        std::uint8_t LivesPerRound{};
+        std::uint8_t TeamLivesPerRound{};
+        std::uint8_t RoundsToWin{};
+        // Sudden death duration, -1 for indefinite.
+        std::int32_t SuddenDeathTicks{};
+        std::uint32_t GracePeriodTicks{};
+        // Duration of the red, blue and yellow powerups.
+        std::array<std::uint32_t, k_PowerupCount> PowerupDurationTicks{};
     };
 }

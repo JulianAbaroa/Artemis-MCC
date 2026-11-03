@@ -33,7 +33,7 @@ FILE_HEADER = struct.Struct("<8sIIQIIII64s32s64s")
 RECORD_HEADER = struct.Struct("<4sIIHHHHI")
 FOOTER = struct.Struct("<4sIQQQQ")
 HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
-DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
+DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
                 "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine", "BridgeExplosive", "BridgeLiftStage", "BridgeLift")
 SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "i32": 4, "f32": 4, "u64": 8}
 

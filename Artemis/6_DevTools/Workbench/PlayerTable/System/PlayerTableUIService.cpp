@@ -227,6 +227,8 @@ namespace DevTools::Workbench::PlayerTable::System
             player.Handle, m_CopyableField);
 
         ImGui::Text("Respawn Ticks: %u", player.RespawnTicks);
+        ImGui::Text("Traits: speed %.2f grav %.2f jump %.2f dmg %.2f", player.Traits.MovementSpeed, player.Traits.Gravity, player.Traits.JumpHeight,
+            player.Traits.DamageMultiplier);
 
         ImGui::Unindent(5.0f);
     }

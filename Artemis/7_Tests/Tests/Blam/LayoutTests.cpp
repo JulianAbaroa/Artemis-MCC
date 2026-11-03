@@ -230,3 +230,198 @@ TEST(RawObjectTest, FindBlockFollowsTheDescriptor)
     EXPECT_EQ(object.ReadBlock<std::uint32_t>(0x00, 5), 0u);
     EXPECT_EQ(object.ReadBlock<std::uint32_t>(0x04, 0), 0u);
 }
+
+// --- Player traits (A19, D262) ---
+
+namespace
+{
+    using Blam::Layout::Player::Type::Traits::PlayerTraits;
+    using Blam::Layout::Player::Type::Traits::Decode;
+    using Blam::Layout::Player::Type::Traits::InfiniteAmmoMode;
+    using Blam::Layout::Player::Type::Traits::AbilityUsageMode;
+    using Blam::Layout::Player::Type::Traits::VehicleUseMode;
+    using Blam::Layout::Player::Type::Traits::IdentityVisibility;
+    using Blam::Layout::Player::Type::Traits::RadarDisplayMode;
+    using Blam::Layout::Player::Type::Traits::k_Size;
+    using Blam::Layout::Player::Type::Traits::k_DamageResistance;
+    using Blam::Layout::Player::Type::Traits::k_HealthMultiplier;
+    using Blam::Layout::Player::Type::Traits::k_HealthRegenRate;
+    using Blam::Layout::Player::Type::Traits::k_ShieldMultiplier;
+    using Blam::Layout::Player::Type::Traits::k_ShieldRegenRate;
+    using Blam::Layout::Player::Type::Traits::k_OvershieldRegenRate;
+    using Blam::Layout::Player::Type::Traits::k_ShieldVampirism;
+    using Blam::Layout::Player::Type::Traits::k_DamageMultiplier;
+    using Blam::Layout::Player::Type::Traits::k_MeleeMultiplier;
+    using Blam::Layout::Player::Type::Traits::k_MovementSpeed;
+    using Blam::Layout::Player::Type::Traits::k_Gravity;
+    using Blam::Layout::Player::Type::Traits::k_JumpHeight;
+    using Blam::Layout::Player::Type::Traits::k_RadarRange;
+    using Blam::Layout::Player::Type::Traits::k_HeadshotImmune;
+    using Blam::Layout::Player::Type::Traits::k_AssassinationImmune;
+    using Blam::Layout::Player::Type::Traits::k_CannotDieFromDamage;
+    using Blam::Layout::Player::Type::Traits::k_GrenadeRegen;
+    using Blam::Layout::Player::Type::Traits::k_WeaponPickup;
+    using Blam::Layout::Player::Type::Traits::k_AbilitiesDropOnDeath;
+    using Blam::Layout::Player::Type::Traits::k_InfiniteAbilities;
+    using Blam::Layout::Player::Type::Traits::k_InfiniteAmmo;
+    using Blam::Layout::Player::Type::Traits::k_AbilityUsage;
+    using Blam::Layout::Player::Type::Traits::k_VehicleUse;
+    using Blam::Layout::Player::Type::Traits::k_VisibleWaypoint;
+    using Blam::Layout::Player::Type::Traits::k_VisibleName;
+    using Blam::Layout::Player::Type::Traits::k_RadarMode;
+    using Blam::Layout::Player::Type::Traits::k_GrenadeCount;
+    using Blam::Layout::Player::Type::Traits::k_ActiveCamo;
+    using Blam::Layout::Player::Type::Traits::k_PrimaryWeapon;
+    using Blam::Layout::Player::Type::Traits::k_SecondaryWeapon;
+    using Blam::Layout::Player::Type::Traits::k_Ability;
+
+    using TraitsBlock = std::array<std::uint8_t, k_Size>;
+
+    // return: The traits of a block of zeros with one byte set.
+    auto DecodeByte(std::size_t offset, std::uint8_t raw) -> PlayerTraits
+    {
+        TraitsBlock block{};
+        block[offset] = raw;
+        return Decode(block);
+    }
+
+    // Checks the value of a numeric trait at the first and last raw index, and NaN at 0 and past the last one.
+    auto ExpectFloatEdges(std::size_t offset, float PlayerTraits::* field, float first, float last, std::uint8_t lastIndex) -> void
+    {
+        EXPECT_FLOAT_EQ(DecodeByte(offset, 1).*field, first) << offset;
+        if (std::isinf(last)) EXPECT_TRUE(std::isinf(DecodeByte(offset, lastIndex).*field)) << offset;
+        else EXPECT_FLOAT_EQ(DecodeByte(offset, lastIndex).*field, last) << offset;
+        EXPECT_TRUE(std::isnan(DecodeByte(offset, 0).*field)) << offset;
+        EXPECT_TRUE(std::isnan(DecodeByte(offset, static_cast<std::uint8_t>(lastIndex + 1)).*field)) << offset;
+        EXPECT_TRUE(std::isnan(DecodeByte(offset, 255).*field)) << offset;
+    }
+}
+
+TEST(PlayerTraitsTest, OffsetIsInsideThePlayerEntry)
+{
+    EXPECT_EQ(Blam::Layout::Player::Type::Offset::k_Traits + k_Size, 0x328u + 0x2Cu);
+    EXPECT_LE(Blam::Layout::Player::Type::Offset::k_Traits + k_Size, k_Base);
+}
+
+TEST(PlayerTraitsTest, NumericTablesDecodeTheirEdgesAndNaNOutside)
+{
+    ExpectFloatEdges(k_DamageResistance, &PlayerTraits::DamageResistance, 0.1f, std::numeric_limits<float>::infinity(), 12);
+    ExpectFloatEdges(k_HealthMultiplier, &PlayerTraits::HealthMultiplier, 0.0f, 4.0f, 6);
+    ExpectFloatEdges(k_HealthRegenRate, &PlayerTraits::HealthRegenRate, -0.25f, 2.0f, 9);
+    ExpectFloatEdges(k_ShieldMultiplier, &PlayerTraits::ShieldMultiplier, 0.0f, 4.0f, 6);
+    ExpectFloatEdges(k_ShieldRegenRate, &PlayerTraits::ShieldRegenRate, -0.25f, 2.0f, 14);
+    ExpectFloatEdges(k_OvershieldRegenRate, &PlayerTraits::OvershieldRegenRate, -0.25f, 2.0f, 14);
+    ExpectFloatEdges(k_ShieldVampirism, &PlayerTraits::ShieldVampirism, 0.0f, 1.0f, 5);
+    ExpectFloatEdges(k_DamageMultiplier, &PlayerTraits::DamageMultiplier, 0.0f, std::numeric_limits<float>::infinity(), 12);
+    ExpectFloatEdges(k_MeleeMultiplier, &PlayerTraits::MeleeMultiplier, 0.0f, std::numeric_limits<float>::infinity(), 12);
+    ExpectFloatEdges(k_MovementSpeed, &PlayerTraits::MovementSpeed, 0.0f, 3.0f, 17);
+    ExpectFloatEdges(k_Gravity, &PlayerTraits::Gravity, 0.5f, 2.0f, 5);
+    ExpectFloatEdges(k_RadarRange, &PlayerTraits::RadarRange, 10.0f, 150.0f, 7);
+
+    EXPECT_FLOAT_EQ(DecodeByte(k_DamageResistance, 11).DamageResistance, 20.0f);
+    EXPECT_FLOAT_EQ(DecodeByte(k_DamageMultiplier, 11).DamageMultiplier, 3.0f);
+    EXPECT_FLOAT_EQ(DecodeByte(k_MovementSpeed, 6).MovementSpeed, 1.0f);
+    EXPECT_FLOAT_EQ(DecodeByte(k_MovementSpeed, 7).MovementSpeed, 1.1f);
+    EXPECT_FLOAT_EQ(DecodeByte(k_Gravity, 2).Gravity, 0.75f);
+}
+
+TEST(PlayerTraitsTest, JumpHeightIsAPercentage)
+{
+    TraitsBlock block{};
+    block[k_JumpHeight] = 100;
+    EXPECT_FLOAT_EQ(Decode(block).JumpHeight, 1.0f);
+    block[k_JumpHeight] = 150;
+    EXPECT_FLOAT_EQ(Decode(block).JumpHeight, 1.5f);
+    block[k_JumpHeight] = 0x2C;
+    block[k_JumpHeight + 1] = 0x01;
+    EXPECT_FLOAT_EQ(Decode(block).JumpHeight, 3.0f);
+    block.fill(0);
+    for (std::size_t byte{ 0 }; byte < 4; ++byte) block[k_JumpHeight + byte] = 0xFF;
+    EXPECT_FLOAT_EQ(Decode(block).JumpHeight, -0.01f);
+}
+
+TEST(PlayerTraitsTest, BoolsAreTwoForYesAndFalseOtherwise)
+{
+    for (const std::size_t offset : { k_HeadshotImmune, k_AssassinationImmune, k_CannotDieFromDamage, k_GrenadeRegen, k_WeaponPickup,
+        k_AbilitiesDropOnDeath, k_InfiniteAbilities })
+    {
+        const auto isSet = [offset](std::uint8_t raw)
+        {
+            const PlayerTraits traits{ DecodeByte(offset, raw) };
+            return std::array<bool, 7>{ traits.IsHeadshotImmune, traits.IsAssassinationImmune, traits.CannotDieFromDamage, traits.IsGrenadeRegenOn,
+                traits.IsWeaponPickupOn, traits.DoAbilitiesDropOnDeath, traits.AreAbilitiesInfinite };
+        };
+
+        EXPECT_EQ(std::ranges::count(isSet(2), true), 1) << offset;
+        EXPECT_EQ(std::ranges::count(isSet(1), true), 0) << offset;
+        EXPECT_EQ(std::ranges::count(isSet(0), true), 0) << offset;
+        EXPECT_EQ(std::ranges::count(isSet(3), true), 0) << offset;
+    }
+
+    EXPECT_TRUE(DecodeByte(k_HeadshotImmune, 2).IsHeadshotImmune);
+    EXPECT_TRUE(DecodeByte(k_InfiniteAbilities, 2).AreAbilitiesInfinite);
+}
+
+TEST(PlayerTraitsTest, EnumsAreUnknownOutsideTheirValues)
+{
+    EXPECT_EQ(DecodeByte(k_InfiniteAmmo, 1).InfiniteAmmo, InfiniteAmmoMode::Off);
+    EXPECT_EQ(DecodeByte(k_InfiniteAmmo, 3).InfiniteAmmo, InfiniteAmmoMode::Bottomless);
+    EXPECT_EQ(DecodeByte(k_InfiniteAmmo, 0).InfiniteAmmo, InfiniteAmmoMode::Unknown);
+    EXPECT_EQ(DecodeByte(k_InfiniteAmmo, 4).InfiniteAmmo, InfiniteAmmoMode::Unknown);
+
+    EXPECT_EQ(DecodeByte(k_AbilityUsage, 1).AbilityUsage, AbilityUsageMode::Disabled);
+    EXPECT_EQ(DecodeByte(k_AbilityUsage, 3).AbilityUsage, AbilityUsageMode::Enabled);
+    EXPECT_EQ(DecodeByte(k_AbilityUsage, 4).AbilityUsage, AbilityUsageMode::Unknown);
+
+    EXPECT_EQ(DecodeByte(k_VehicleUse, 1).VehicleUse, VehicleUseMode::Blocked);
+    EXPECT_EQ(DecodeByte(k_VehicleUse, 6).VehicleUse, VehicleUseMode::NoDriver);
+    EXPECT_EQ(DecodeByte(k_VehicleUse, 8).VehicleUse, VehicleUseMode::Full);
+    EXPECT_EQ(DecodeByte(k_VehicleUse, 9).VehicleUse, VehicleUseMode::Unknown);
+    EXPECT_EQ(DecodeByte(k_VehicleUse, 0).VehicleUse, VehicleUseMode::Unknown);
+
+    EXPECT_EQ(DecodeByte(k_VisibleWaypoint, 2).VisibleWaypoint, IdentityVisibility::Allies);
+    EXPECT_EQ(DecodeByte(k_VisibleWaypoint, 3).VisibleWaypoint, IdentityVisibility::Everyone);
+    EXPECT_EQ(DecodeByte(k_VisibleWaypoint, 4).VisibleWaypoint, IdentityVisibility::Unknown);
+    EXPECT_EQ(DecodeByte(k_VisibleName, 1).VisibleName, IdentityVisibility::Hidden);
+    EXPECT_EQ(DecodeByte(k_VisibleName, 0).VisibleName, IdentityVisibility::Unknown);
+
+    EXPECT_EQ(DecodeByte(k_RadarMode, 1).RadarMode, RadarDisplayMode::Off);
+    EXPECT_EQ(DecodeByte(k_RadarMode, 4).RadarMode, RadarDisplayMode::Enhanced);
+    EXPECT_EQ(DecodeByte(k_RadarMode, 5).RadarMode, RadarDisplayMode::Unknown);
+    EXPECT_EQ(DecodeByte(k_RadarMode, 255).RadarMode, RadarDisplayMode::Unknown);
+}
+
+TEST(PlayerTraitsTest, GrenadeSettingGivesTheCountsOfEachKind)
+{
+    const std::array<std::array<std::uint8_t, 3>, 15> expected{ {
+        { 0, 0, 0 }, { 1, 255, 255 }, { 2, 0, 0 }, { 3, 1, 0 }, { 4, 2, 0 }, { 5, 3, 0 }, { 6, 4, 0 }, { 7, 0, 1 }, { 8, 0, 2 }, { 9, 0, 3 },
+        { 10, 0, 4 }, { 11, 1, 1 }, { 12, 2, 2 }, { 13, 3, 3 }, { 14, 4, 4 } } };
+    for (const auto& row : expected)
+    {
+        const PlayerTraits traits{ DecodeByte(k_GrenadeCount, row[0]) };
+        EXPECT_EQ(traits.FragGrenades, row[1]) << static_cast<int>(row[0]);
+        EXPECT_EQ(traits.PlasmaGrenades, row[2]) << static_cast<int>(row[0]);
+    }
+
+    EXPECT_EQ(DecodeByte(k_GrenadeCount, 15).FragGrenades, 0);
+    EXPECT_EQ(DecodeByte(k_GrenadeCount, 255).PlasmaGrenades, 0);
+}
+
+TEST(PlayerTraitsTest, RawFieldsKeepTheirValue)
+{
+    EXPECT_EQ(DecodeByte(k_ActiveCamo, 5).ActiveCamo, 5);
+    EXPECT_EQ(DecodeByte(k_PrimaryWeapon, 0).PrimaryWeapon, 0);
+    EXPECT_EQ(DecodeByte(k_PrimaryWeapon, 0xFF).PrimaryWeapon, -1);
+    EXPECT_EQ(DecodeByte(k_SecondaryWeapon, 1).SecondaryWeapon, 1);
+    EXPECT_EQ(DecodeByte(k_Ability, 0xFF).Ability, -1);
+}
+
+TEST(PlayerTraitsTest, OfAnAllZeroBlockAreUnknown)
+{
+    const PlayerTraits traits{ Decode(TraitsBlock{}) };
+    EXPECT_TRUE(std::isnan(traits.MovementSpeed));
+    EXPECT_TRUE(std::isnan(traits.RadarRange));
+    EXPECT_FALSE(traits.IsHeadshotImmune);
+    EXPECT_EQ(traits.InfiniteAmmo, InfiniteAmmoMode::Unknown);
+    EXPECT_EQ(traits.VehicleUse, VehicleUseMode::Unknown);
+}

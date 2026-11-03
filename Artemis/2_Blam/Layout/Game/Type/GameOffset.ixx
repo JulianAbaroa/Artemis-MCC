@@ -70,6 +70,20 @@ export namespace Blam::Layout::Game::Type::Offset
     constexpr std::uintptr_t k_VariantRoundTimeLimit{ 0x2BE };
     constexpr std::uintptr_t k_VariantRoundLimit{ 0x2BF };
 
+    // Round and respawn settings of the game variant (D262). Seconds are stored, except the lives and the rounds to win.
+    // note: Rounds to win uint8, sudden death int16 (-1 indefinite), grace period uint16, lives per round and team lives per round
+    // uint8 (0 unlimited), respawn time uint8.
+    constexpr std::uintptr_t k_VariantRoundsToWin{ 0x2BD };
+    constexpr std::uintptr_t k_VariantSuddenDeath{ 0x2C0 };
+    constexpr std::uintptr_t k_VariantGracePeriod{ 0x2C2 };
+    constexpr std::uintptr_t k_VariantLivesPerRound{ 0x2C5 };
+    constexpr std::uintptr_t k_VariantTeamLivesPerRound{ 0x2C6 };
+    constexpr std::uintptr_t k_VariantRespawnTime{ 0x2C7 };
+
+    // Duration in seconds (uint8) of the red, blue and yellow powerups of the game variant, one byte each (D262).
+    constexpr std::uintptr_t k_VariantPowerupDuration{ 0x3B8 };
+    constexpr std::size_t k_PowerupCount{ 3 };
+
     // Engine type of the game variant (uint32 at its start) and the one measured: Megalo. Other types have no score getter (A14 5.8).
     constexpr std::uintptr_t k_VariantEngineType{ 0x0 };
     constexpr std::uint32_t k_VariantEngineTypeMegalo{ 2 };

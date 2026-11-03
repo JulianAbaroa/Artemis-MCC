@@ -2,6 +2,7 @@ module Bridge.Codec.Flat.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
+import Blam.Layout.Player.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
 import Perception.Details.Type;
@@ -23,7 +24,14 @@ namespace
     using Perception::Details::Type::ProjectileDetail;
     using Perception::Details::Type::StandDetail;
     using Perception::Details::Type::WeaponDetail;
+    using Blam::Layout::Player::Type::Traits::PlayerTraits;
     using Contract::Bridge::Type::BridgeGround;
+    using Contract::Bridge::Type::BridgePlayerTraits;
+    using Contract::Bridge::Type::BridgeInfiniteAmmo;
+    using Contract::Bridge::Type::BridgeAbilityUsage;
+    using Contract::Bridge::Type::BridgeVehicleUse;
+    using Contract::Bridge::Type::BridgeIdentityVisibility;
+    using Contract::Bridge::Type::BridgeRadarMode;
     using Contract::Bridge::Type::BridgeVec3;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeEntity;
@@ -63,12 +71,51 @@ namespace
         return BridgeVec3{ .X = v.X, .Y = v.Y, .Z = v.Z };
     }
 
+    auto ToBridge(const PlayerTraits& traits) -> BridgePlayerTraits
+    {
+        BridgePlayerTraits row{ Zeroed<BridgePlayerTraits>() };
+        row.DamageResistance = traits.DamageResistance;
+        row.HealthMultiplier = traits.HealthMultiplier;
+        row.HealthRegenRate = traits.HealthRegenRate;
+        row.ShieldMultiplier = traits.ShieldMultiplier;
+        row.ShieldRegenRate = traits.ShieldRegenRate;
+        row.OvershieldRegenRate = traits.OvershieldRegenRate;
+        row.ShieldVampirism = traits.ShieldVampirism;
+        row.DamageMultiplier = traits.DamageMultiplier;
+        row.MeleeMultiplier = traits.MeleeMultiplier;
+        row.MovementSpeed = traits.MovementSpeed;
+        row.Gravity = traits.Gravity;
+        row.JumpHeight = traits.JumpHeight;
+        row.RadarRange = traits.RadarRange;
+        row.HeadshotImmune = traits.IsHeadshotImmune ? 1 : 0;
+        row.AssassinationImmune = traits.IsAssassinationImmune ? 1 : 0;
+        row.CannotDieFromDamage = traits.CannotDieFromDamage ? 1 : 0;
+        row.GrenadeRegen = traits.IsGrenadeRegenOn ? 1 : 0;
+        row.WeaponPickup = traits.IsWeaponPickupOn ? 1 : 0;
+        row.AbilitiesDropOnDeath = traits.DoAbilitiesDropOnDeath ? 1 : 0;
+        row.InfiniteAbilities = traits.AreAbilitiesInfinite ? 1 : 0;
+        row.InfiniteAmmo = static_cast<BridgeInfiniteAmmo>(traits.InfiniteAmmo);
+        row.AbilityUsage = static_cast<BridgeAbilityUsage>(traits.AbilityUsage);
+        row.VehicleUse = static_cast<BridgeVehicleUse>(traits.VehicleUse);
+        row.VisibleWaypoint = static_cast<BridgeIdentityVisibility>(traits.VisibleWaypoint);
+        row.VisibleName = static_cast<BridgeIdentityVisibility>(traits.VisibleName);
+        row.RadarMode = static_cast<BridgeRadarMode>(traits.RadarMode);
+        row.FragGrenades = traits.FragGrenades;
+        row.PlasmaGrenades = traits.PlasmaGrenades;
+        row.ActiveCamo = traits.ActiveCamo;
+        row.PrimaryWeapon = traits.PrimaryWeapon;
+        row.SecondaryWeapon = traits.SecondaryWeapon;
+        row.Ability = traits.Ability;
+        return row;
+    }
+
     auto ToBridge(const Player& player) -> BridgePlayer
     {
         BridgePlayer row{ Zeroed<BridgePlayer>() };
         row.Handle = player.Handle;
         row.BipedHandle = player.BipedHandle;
         row.RespawnTicks = player.RespawnTicks;
+        row.Traits = ToBridge(player.Traits);
         row.Team = static_cast<std::uint8_t>(player.Team);
         row.LocalIndex = player.LocalIndex.value_or(k_BridgeNotLocal);
         row.Connection = static_cast<std::uint8_t>(player.Connection);
@@ -324,6 +371,17 @@ namespace Bridge::Codec::Flat::System
             flat.Match.RoundTimeLimitTicks = tick.Match->RoundTimeLimitTicks;
             flat.Match.RoundLimit = tick.Match->RoundLimit;
             flat.Match.ScoreToWin = tick.Match->ScoreToWin;
+            flat.Match.RespawnTimeTicks = tick.Match->RespawnTimeTicks;
+            flat.Match.SuddenDeathTicks = tick.Match->SuddenDeathTicks;
+            flat.Match.GracePeriodTicks = tick.Match->GracePeriodTicks;
+            flat.Match.LivesPerRound = tick.Match->LivesPerRound;
+            flat.Match.TeamLivesPerRound = tick.Match->TeamLivesPerRound;
+            flat.Match.RoundsToWin = tick.Match->RoundsToWin;
+
+            for (std::size_t powerup{ 0 }; powerup < tick.Match->PowerupDurationTicks.size() && powerup < flat.Match.PowerupDurationTicks.size(); ++powerup)
+            {
+                flat.Match.PowerupDurationTicks[powerup] = tick.Match->PowerupDurationTicks[powerup];
+            }
 
             for (std::size_t team{ 0 }; team < tick.Match->TeamScores.size() && team < flat.Match.TeamRoundScores.size(); ++team)
             {

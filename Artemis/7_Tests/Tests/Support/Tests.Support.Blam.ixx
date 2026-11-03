@@ -61,6 +61,30 @@ export namespace Tests::Support::Blam
         return (static_cast<std::uint32_t>(salt) << 16) | (index & 0xFFFF);
     }
 
+    // Block of player traits of ctf_c without objective (the base traits, A19): speed 110%, gravity 75%, jump 100%, DMR, AR, sprint.
+    inline constexpr std::array<std::uint8_t, 0x2C> k_CtfCBaseTraits{
+        0x04, 0x02, 0x07, 0x02, 0x0A, 0x0A, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x06, 0x06, 0x01, 0x02,
+        0x0C, 0x02, 0x02, 0x01, 0x02, 0x00, 0x01, 0x00, 0x07, 0x02, 0x08, 0x01, 0x64, 0x00, 0x00, 0x00,
+        0x01, 0x02, 0x03, 0x01, 0x01, 0x00, 0x00, 0x00, 0x03, 0x03, 0x02, 0x00 };
+
+    // return: The same block with the trait set of the flag carrier of ctf_c on top (A19): shield vampirism 100%, melee 125%, ability
+    // usage disabled, infinite abilities off, speed 90%, no driver, jump 150%, waypoint everyone, forced color, radar 75 m.
+    constexpr auto CarrierTraits() -> std::array<std::uint8_t, 0x2C>
+    {
+        std::array<std::uint8_t, 0x2C> block{ k_CtfCBaseTraits };
+        block[0x07] = 5;
+        block[0x0D] = 8;
+        block[0x12] = 1;
+        block[0x14] = 1;
+        block[0x18] = 5;
+        block[0x1A] = 6;
+        block[0x1C] = 150;
+        block[0x21] = 3;
+        block[0x24] = 10;
+        block[0x29] = 5;
+        return block;
+    }
+
     // Writes the bytes of value at offset. The caller sizes the buffer.
     template <typename T>
         requires std::is_trivially_copyable_v<T>

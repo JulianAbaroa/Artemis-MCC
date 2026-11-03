@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x1AC672670E2D6507
+LAYOUT_HASH = 0xC8D58E708FDEAFE9
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -20,6 +20,7 @@ MAX_EXPLOSIVES = 64
 MAX_LIFTS = 64
 MAX_LIFT_STAGES = 3
 MAX_TEAMS = 8
+POWERUP_COUNT = 3
 MAX_TICK_EVENTS = 64
 NO_HANDLE = 0xffffffff
 NOT_LOCAL = 255
@@ -54,6 +55,52 @@ class BridgeGround(enum.IntEnum):
     Static = 1
     Object = 2
     Attached = 3
+
+
+class BridgeInfiniteAmmo(enum.IntEnum):
+    """Infinite ammo trait (Blam.Layout InfiniteAmmoMode, D262). 0 is a value outside the table."""
+    Unknown = 0
+    Off = 1
+    On = 2
+    Bottomless = 3
+
+
+class BridgeAbilityUsage(enum.IntEnum):
+    """Armor ability usage trait (Blam.Layout AbilityUsageMode, D262)."""
+    Unknown = 0
+    Disabled = 1
+    NotWithObjectives = 2
+    Enabled = 3
+
+
+class BridgeVehicleUse(enum.IntEnum):
+    """Vehicle use trait (Blam.Layout VehicleUseMode, D262)."""
+    Unknown = 0
+    Blocked = 1
+    PassengerOnly = 2
+    DriverOnly = 3
+    GunnerOnly = 4
+    NoPassenger = 5
+    NoDriver = 6
+    NoGunner = 7
+    Full = 8
+
+
+class BridgeIdentityVisibility(enum.IntEnum):
+    """Who sees the waypoint or the name of a player (Blam.Layout IdentityVisibility, D262)."""
+    Unknown = 0
+    Hidden = 1
+    Allies = 2
+    Everyone = 3
+
+
+class BridgeRadarMode(enum.IntEnum):
+    """Motion tracker mode trait (Blam.Layout RadarDisplayMode, D262)."""
+    Unknown = 0
+    Off = 1
+    Allies = 2
+    Normal = 3
+    Enhanced = 4
 
 
 class BridgeRequest(enum.IntFlag):
@@ -115,10 +162,10 @@ BridgeTickHeader = np.dtype({
 
 # State of the match (Environment Match, D103).
 BridgeMatch = np.dtype({
-    'names': ['GameTick', 'Phase', 'RoundState', 'PlayerScores', 'RoundIndex', 'TeamRoundScores', 'TeamTotalScores', 'RoundClockTicks', 'RoundTicksRemaining', 'RoundTimeLimitTicks', 'RoundLimit', 'ScoreToWin'],
-    'formats': ['<u4', 'u1', 'u1', ('<i2', (16,)), '<i2', ('<i2', (8,)), ('<i2', (8,)), '<u4', '<i4', '<u4', 'u1', '<i4'],
-    'offsets': [0, 4, 5, 6, 38, 40, 56, 72, 76, 80, 84, 88],
-    'itemsize': 92,
+    'names': ['GameTick', 'Phase', 'RoundState', 'PlayerScores', 'RoundIndex', 'TeamRoundScores', 'TeamTotalScores', 'RoundClockTicks', 'RoundTicksRemaining', 'RoundTimeLimitTicks', 'RoundLimit', 'ScoreToWin', 'RespawnTimeTicks', 'SuddenDeathTicks', 'GracePeriodTicks', 'PowerupDurationTicks', 'LivesPerRound', 'TeamLivesPerRound', 'RoundsToWin'],
+    'formats': ['<u4', 'u1', 'u1', ('<i2', (16,)), '<i2', ('<i2', (8,)), ('<i2', (8,)), '<u4', '<i4', '<u4', 'u1', '<i4', '<u4', '<i4', '<u4', ('<u4', (3,)), 'u1', 'u1', 'u1'],
+    'offsets': [0, 4, 5, 6, 38, 40, 56, 72, 76, 80, 84, 88, 92, 96, 100, 104, 116, 117, 118],
+    'itemsize': 120,
 })
 
 # One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).
@@ -129,12 +176,20 @@ BridgeEvent = np.dtype({
     'itemsize': 36,
 })
 
+# Traits the engine applies to a player in this tick (Blam.Layout PlayerTraits, D262): already composed with the carried objective, the powerups and the respawn traits. Multipliers are 1.0 for 100%. A raw index outside its table reads NaN (floats), 0 (bools) or Unknown (enums).
+BridgePlayerTraits = np.dtype({
+    'names': ['DamageResistance', 'HealthMultiplier', 'HealthRegenRate', 'ShieldMultiplier', 'ShieldRegenRate', 'OvershieldRegenRate', 'ShieldVampirism', 'DamageMultiplier', 'MeleeMultiplier', 'MovementSpeed', 'Gravity', 'JumpHeight', 'RadarRange', 'HeadshotImmune', 'AssassinationImmune', 'CannotDieFromDamage', 'GrenadeRegen', 'WeaponPickup', 'AbilitiesDropOnDeath', 'InfiniteAbilities', 'InfiniteAmmo', 'AbilityUsage', 'VehicleUse', 'VisibleWaypoint', 'VisibleName', 'RadarMode', 'FragGrenades', 'PlasmaGrenades', 'ActiveCamo', 'PrimaryWeapon', 'SecondaryWeapon', 'Ability'],
+    'formats': ['<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', '<f4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'i1', 'i1', 'i1'],
+    'offsets': [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70],
+    'itemsize': 72,
+})
+
 # One player of the Tick (Environment Players), without its name.
 BridgePlayer = np.dtype({
-    'names': ['Handle', 'BipedHandle', 'RespawnTicks', 'Team', 'LocalIndex', 'Connection', 'IsAlive', 'HasBody', 'Zoom', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'IsAbilityActive', 'Ground', 'IsGrounded', 'IsCrouching', 'CameraPosition', 'CameraForward', 'Aim', 'TicksAlive', 'Shield', 'PrimaryWeapon', 'SecondaryWeapon', 'EquippedWeapon', 'Ability', 'AbilityEnergy', 'Objective', 'LastDamagerPlayer', 'TicksSinceDamage', 'AirborneTicks', 'GroundObject', 'CrouchFraction', 'OwnVelocity', 'AppliedDecision'],
-    'formats': ['<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', BridgeVec3, BridgeVec3, BridgeVec3, '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<u4', '<f4', BridgeVec3, '<u8'],
-    'offsets': [0, 4, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 28, 40, 52, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 128],
-    'itemsize': 136,
+    'names': ['Handle', 'BipedHandle', 'RespawnTicks', 'Team', 'LocalIndex', 'Connection', 'IsAlive', 'HasBody', 'Zoom', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'IsAbilityActive', 'Ground', 'IsGrounded', 'IsCrouching', 'CameraPosition', 'CameraForward', 'Aim', 'TicksAlive', 'Shield', 'PrimaryWeapon', 'SecondaryWeapon', 'EquippedWeapon', 'Ability', 'AbilityEnergy', 'Objective', 'LastDamagerPlayer', 'TicksSinceDamage', 'AirborneTicks', 'GroundObject', 'CrouchFraction', 'OwnVelocity', 'Traits', 'AppliedDecision'],
+    'formats': ['<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', BridgeVec3, BridgeVec3, BridgeVec3, '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<u4', '<f4', BridgeVec3, BridgePlayerTraits, '<u8'],
+    'offsets': [0, 4, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 28, 40, 52, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 128, 200],
+    'itemsize': 208,
 })
 
 # One live object of the Tick (Environment Entities).
@@ -213,8 +268,8 @@ BridgeLift = np.dtype({
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
-    'offsets': [0, 8, 72, 2248, 108744, 108836, 109060, 109124, 111428, 120644, 126788, 127812, 138056],
-    'itemsize': 138112,
+    'offsets': [0, 8, 72, 3400, 109896, 110016, 110240, 110304, 112608, 121824, 127968, 128992, 139232],
+    'itemsize': 139264,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -229,8 +284,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 276480],
-    'itemsize': 277248,
+    'offsets': [0, 256, 278784],
+    'itemsize': 279552,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -307,7 +362,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 224,
     'Control.Client.ActionSequence': 232,
     'Ticks': 256,
-    'Actions': 276480,
+    'Actions': 278784,
 }
 
-REGION_SIZE = 277248
+REGION_SIZE = 279552

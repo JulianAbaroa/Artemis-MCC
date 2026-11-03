@@ -2,12 +2,14 @@ export module Blam.Runtime.Player.Type:Alive;
 
 import Common.Team.Type;
 import Common.Math.Type;
+import Blam.Layout.Player.Type;
 import std;
 
 namespace
 {
     using Common::Team::Type::Team;
     using Common::Math::Type::Vec3;
+    using Blam::Layout::Player::Type::Traits::PlayerTraits;
 }
 
 export namespace Blam::Runtime::Player::Type::Alive
@@ -47,6 +49,9 @@ export namespace Blam::Runtime::Player::Type::Alive
 
         // Ticks left until the player respawns, 0 while alive or without wait (player +0x1BC, D258).
         std::uint32_t RespawnTicks{};
+
+        // Traits the engine applies to the player now, decoded from player +0x328 (D262). Valid dead or alive.
+        PlayerTraits Traits{};
 
         // Local player (split-screen input user, 0 to 3) the player is, or empty when it is not local.
         std::optional<std::uint8_t> LocalIndex{};

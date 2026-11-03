@@ -38,6 +38,7 @@ namespace
     using Tests::Support::Blam::MakeHandle;
     using Tests::Support::Blam::Put;
     using Tests::Support::Blam::CaptureRegion;
+    using Tests::Support::Blam::k_CtfCBaseTraits;
 
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_NoTick;
@@ -117,6 +118,7 @@ export namespace Tests::Support::Pipeline
         Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_BipedHandle);
         Put(players, entry + PlayerOffset::k_DeadBipedHandle, k_NoHandle);
         Put(players, entry + PlayerOffset::k_RespawnTicks, k_RespawnTicks);
+        std::ranges::copy(k_CtfCBaseTraits, players.begin() + static_cast<std::ptrdiff_t>(entry + PlayerOffset::k_Traits));
 
         // The player mapping with no player bound to any input user nor output view.
         std::vector<std::uint8_t>& mapping{ CaptureRegion(snapshot, RegionId::PlayerMapping, RegionSize(RegionId::PlayerMapping)) };

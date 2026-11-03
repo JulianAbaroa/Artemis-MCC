@@ -51,6 +51,11 @@ A client built for another layout sees a different hash and refuses to connect.
 - The header also carries the `MapId` of the scnr of the loaded map (engine id, 0 while no map).
 - Each player row carries `RespawnTicks` (ticks left until it respawns, 0 while alive), right after `BipedHandle`: it takes the 2 bytes of padding
   the u8 block already had, so the layout adds 4 bytes per player and no new padding.
+- Each player row carries `Traits` (`BridgePlayerTraits`, 72 bytes, D262): the traits the engine applies to the player in that tick, decoded (multipliers as
+  floats, `RadarRange` in meters, bools as 0/1, the enums of Bridge.xml, raw grenade counts, camo and weapon/ability indices). It sits right before
+  `AppliedDecision` and fills no padding: the row grows from 136 to 208 bytes. It is valid also when `HasBody` is 0. `BridgeMatch` adds the respawn, round
+  and powerup settings of the game variant (`RespawnTimeTicks`, `SuddenDeathTicks`, `GracePeriodTicks`, `PowerupDurationTicks[3]`, `LivesPerRound`,
+  `TeamLivesPerRound`, `RoundsToWin`), all 0 without a usable variant.
 - Each player row carries the ground and the crouch of its body (D260): `Ground` (`BridgeGround`), `IsGrounded` and `IsCrouching` after `IsAbilityActive`
   (13 u8 and 3 bytes of padding), and `AirborneTicks`, `GroundObject`, `CrouchFraction` and `OwnVelocity` after `TicksSinceDamage`. They fill the
   4 bytes of padding that sat before `AppliedDecision`, so the row grows 24 bytes. All of them are 0 without a body.

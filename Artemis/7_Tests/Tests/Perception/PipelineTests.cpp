@@ -156,6 +156,48 @@ TEST_F(PipelineTests, RespawnTicksReachTheBridgePlayerWithoutBody)
     EXPECT_EQ(flat->Players[0].RespawnTicks, static_cast<std::uint32_t>(k_RespawnTicks));
 }
 
+TEST_F(PipelineTests, PlayerTraitsReachThePlayerAndTheBridgePlayerWithAndWithoutBody)
+{
+    const auto expectBaseTraits = [](const auto& traits)
+    {
+        EXPECT_FLOAT_EQ(traits.MovementSpeed, 1.1f);
+        EXPECT_FLOAT_EQ(traits.Gravity, 0.75f);
+        EXPECT_FLOAT_EQ(traits.JumpHeight, 1.0f);
+        EXPECT_FLOAT_EQ(traits.RadarRange, 25.0f);
+        EXPECT_EQ(static_cast<int>(traits.InfiniteAmmo), 2);
+        EXPECT_EQ(static_cast<int>(traits.RadarMode), 3);
+        EXPECT_EQ(traits.FragGrenades, 2);
+        EXPECT_EQ(traits.PlasmaGrenades, 2);
+        EXPECT_EQ(traits.PrimaryWeapon, 0);
+        EXPECT_EQ(traits.SecondaryWeapon, 1);
+    };
+
+    const auto withBody{ this->RunTick(WithBipedAndPlayer(), 1) };
+    ASSERT_NE(withBody, nullptr);
+    ASSERT_NE(withBody->Players, nullptr);
+    ASSERT_EQ(withBody->Players->Rows.size(), 1u);
+    EXPECT_TRUE(withBody->Players->Rows[0].IsAlive());
+    expectBaseTraits(withBody->Players->Rows[0].Traits);
+    const auto flatWith{ this->Flatten(*withBody) };
+    ASSERT_EQ(flatWith->Header.PlayerCount, 1u);
+    EXPECT_EQ(flatWith->Players[0].HasBody, 1);
+    expectBaseTraits(flatWith->Players[0].Traits);
+
+    Snapshot snapshot{ WithBipedAndPlayer() };
+    auto& players{ snapshot.Regions[static_cast<std::size_t>(RegionId::PlayerArray)].Bytes };
+    Put(players, (2 * ::Blam::Layout::Player::Type::Size::k_Base) + PlayerOffset::k_AliveBipedHandle, k_NoHandle);
+    const auto withoutBody{ this->RunTick(snapshot, 1) };
+    ASSERT_NE(withoutBody, nullptr);
+    ASSERT_NE(withoutBody->Players, nullptr);
+    ASSERT_EQ(withoutBody->Players->Rows.size(), 1u);
+    EXPECT_FALSE(withoutBody->Players->Rows[0].IsAlive());
+    expectBaseTraits(withoutBody->Players->Rows[0].Traits);
+    const auto flatWithout{ this->Flatten(*withoutBody) };
+    ASSERT_EQ(flatWithout->Header.PlayerCount, 1u);
+    EXPECT_EQ(flatWithout->Players[0].HasBody, 0);
+    expectBaseTraits(flatWithout->Players[0].Traits);
+}
+
 TEST_F(PipelineTests, CleanupForgetsTheTick)
 {
     const auto tick{ this->RunTick(WithBipedAndPlayer(), 1) };

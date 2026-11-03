@@ -22,14 +22,15 @@ export namespace Contract::Bridge::Type
     inline constexpr std::uint32_t k_BridgeLayoutVersion{ 1 };
 
     // FNV-1a 64 of the computed layout. Python compares it with the hash of its generated module.
-    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0x1AC672670E2D6507 };
+    inline constexpr std::uint64_t k_BridgeLayoutHash{ 0xC8D58E708FDEAFE9 };
 
     // Layout of every struct as JSON (GenerateBridge.py LayoutJson). Each TickDump embeds it (D151).
     inline constexpr std::string_view k_BridgeLayoutJson{
-        R"json({"version":1,"hash":"0x1AC672670E2D6507","primitives":{"u8":"u1","u16":"<u2","u32":"<u4","u64":"<u8","i8":"i1","i16":"<i2","i32":"<i4","f32":"<f4"},"structs":[{"name":"BridgeVec3","size":12,"align":4,"fields":[["X","f32",0,1,""],["Y","f32",4,1,""],["Z","f32",8,1,""]]},{"name":"BridgeArtemisControl","size":192,"align":64,"fields":[["Magic","u32",0,1,""],["LayoutVersion","u32",4,1,""],["LayoutHash","u64",8,1,""],["RegionSize","u32",16,1,""],["Pid","u32",20,1,""],["Heartbeat","u64",24,1,""],["QpcFrequency","u64",32,1,""],["Phase","u8",40,1,"BridgePhase"],["Owner","u8",41,1,"BridgeOwner"],["Mode","u8",42,1,"BridgeMode"],["DecisionPeriod","u8",43,1,""],["Latency","u8",44,1,""],["IsClientConnected","u8",45,1,""],["IsPaused","u8",46,1,""],["MatchId","u32",48,1,""],["ActionTick","u64",56,1,""],["Scale","f32",64,1,""],["ActiveBuffer","u32",68,1,""],["PublishedTicks","u64",72,1,""],["LateActions","u64",80,1,""],["LockstepWaits","u64",88,1,""],["LockstepWaitNs","u64",96,1,""],["LockstepTimeouts","u64",104,1,""],["HandleMismatches","u64",112,1,""],["RejectedActions","u64",120,1,""],["ClockSkips","u64",128,1,""],["LockstepWaitMaxNs","u64",136,1,""],["FlattenNs","u64",144,1,""],["FlattenMaxNs","u64",152,1,""],["PausedFrames","u64",160,1,""],["EndRoundSequence","u32",168,1,""]]},{"name":"BridgeClientControl","size":64,"align":64,"fields":[["ClientPid","u32",0,1,""],["RequestOwner","u8",4,1,"BridgeOwner"],["RequestMode","u8",5,1,"BridgeMode"],["RequestPeriod","u8",6,1,""],["RequestLatency","u8",7,1,""],["RequestScale","f32",8,1,""],["RequestPause","u8",12,1,""],["AgentMask","u32",16,1,""],["RequestEndRound","u32",20,1,""],["RequestTurnLimit","f32",24,1,""],["ClientHeartbeat","u64",32,1,""],["ActionSequence","u64",40,1,""]]},{"name":"BridgeControl","size":256,"align":64,"fields":[["Artemis","BridgeArtemisControl",0,1,""],["Client","BridgeClientControl",192,1,""]]},{"name":"BridgeTickHeader","size":64,"align":8,"fields":[["MatchId","u32",0,1,""],["PlayerCount","u16",4,1,""],["EntityC)json"
-        R"json(ount","u16",6,1,""],["ActionTick","u64",8,1,""],["Generation","u64",16,1,""],["PublishQpc","u64",24,1,""],["Flags","u32",32,1,"BridgeTickFlag"],["EventCount","u16",36,1,""],["LastEventSequence","u32",40,1,""],["ObjectiveCount","u16",44,1,""],["StandCount","u16",46,1,""],["WeaponCount","u16",48,1,""],["ProjectileCount","u16",50,1,""],["MapId","i32",52,1,""],["ExplosiveCount","u16",56,1,""],["LiftCount","u16",58,1,""]]},{"name":"BridgeMatch","size":92,"align":4,"fields":[["GameTick","u32",0,1,""],["Phase","u8",4,1,""],["RoundState","u8",5,1,""],["PlayerScores","i16",6,16,""],["RoundIndex","i16",38,1,""],["TeamRoundScores","i16",40,8,""],["TeamTotalScores","i16",56,8,""],["RoundClockTicks","u32",72,1,""],["RoundTicksRemaining","i32",76,1,""],["RoundTimeLimitTicks","u32",80,1,""],["RoundLimit","u8",84,1,""],["ScoreToWin","i32",88,1,""]]},{"name":"BridgeEvent","size":36,"align":4,"fields":[["Sequence","u32",0,1,""],["EngineSequence","u32",4,1,""],["GameTick","u32",8,1,""],["Key","u32",12,1,""],["CausePlayer","u32",16,1,""],["CauseObject","u32",20,1,""],["EffectPlayer","u32",24,1,""],["EffectObject","u32",28,1,""],["Kind","u8",32,1,""],["DamageReportingType","u8",33,1,""],["IsHeadshot","u8",34,1,""],["IsStuck","u8",35,1,""]]},{"name":"BridgePlayer","size":136,"align":8,"fields":[["Handle","u32",0,1,""],["BipedHandle","u32",4,1,""],["RespawnTicks","u32",8,1,""],["Team","u8",12,1,""],["LocalIndex","u8",13,1,""],["Connection","u8",14,1,""],["IsAlive","u8",15,1,""],["HasBody","u8",16,1,""],["Zoom","u8",17,1,""],["SelectedGrenade","u8",18,1,""],["FragGrenades","u8",19,1,""],["PlasmaGrenades","u8",20,1,""],["IsAbilityActive","u8",21,1,""],["Ground","u8",22,1,"BridgeGround"],["IsGrounded","u8",23,1,""],["IsCrouching","u8",24,1,""],["CameraPosition","BridgeVec3",28,1,""],["CameraForward","BridgeVec3",40,1,""],["Aim","BridgeVec3",52,1,""],["TicksAlive","u32",64,1,""],["Shield","f32",68,1,""],["PrimaryWeapon","u32",72,1,""],["SecondaryWeapon","u32",76,1,""],["EquippedWeapon","u32",)json"
-        R"json(80,1,""],["Ability","u32",84,1,""],["AbilityEnergy","f32",88,1,""],["Objective","u32",92,1,""],["LastDamagerPlayer","u32",96,1,""],["TicksSinceDamage","u32",100,1,""],["AirborneTicks","u32",104,1,""],["GroundObject","u32",108,1,""],["CrouchFraction","f32",112,1,""],["OwnVelocity","BridgeVec3",116,1,""],["AppliedDecision","u64",128,1,""]]},{"name":"BridgeEntity","size":104,"align":4,"fields":[["Handle","u32",0,1,""],["Kind","u16",4,1,""],["Function","u8",6,1,""],["Subtype","u8",7,1,""],["Group","u8",8,1,""],["Lifecycle","u8",9,1,""],["Binding","u8",10,1,""],["Team","u8",11,1,""],["Physics","u8",12,1,""],["Capabilities","u16",14,1,""],["BoundTo","u32",16,1,""],["ParentHandle","u32",20,1,""],["BoundingRadius","f32",24,1,""],["Vitality","f32",28,1,""],["BoundingCenter","BridgeVec3",32,1,""],["WorldOrigin","BridgeVec3",44,1,""],["Forward","BridgeVec3",56,1,""],["Up","BridgeVec3",68,1,""],["LinearVelocity","BridgeVec3",80,1,""],["AngularVelocity","BridgeVec3",92,1,""]]},{"name":"BridgeObjective","size":28,"align":4,"fields":[["Handle","u32",0,1,""],["CarrierPlayer","u32",4,1,""],["CarrierBiped","u32",8,1,""],["HomeStand","u32",12,1,""],["ResetTicks","u32",16,1,""],["BaseTeam","u8",20,1,""],["OwnerTeam","u8",21,1,""],["State","u8",22,1,""],["IsResetRunning","u8",23,1,""],["AlliesInZone","u8",24,1,""]]},{"name":"BridgeStand","size":8,"align":4,"fields":[["Handle","u32",0,1,""],["BaseTeam","u8",4,1,""],["OwnerTeam","u8",5,1,""]]},{"name":"BridgeMagazine","size":4,"align":2,"fields":[["Loaded","u16",0,1,""],["Reserve","u16",2,1,""]]},{"name":"BridgeWeapon","size":36,"align":4,"fields":[["Handle","u32",0,1,""],["TrackedObject","u32",4,1,""],["Energy","f32",8,1,""],["Heat","f32",12,1,""],["ChargeFraction","f32",16,1,""],["Magazines","BridgeMagazine",20,2,""],["MagazineCount","u8",28,1,""],["IsEnergyWeapon","u8",29,1,""],["IsOverheated","u8",30,1,""],["IsReloading","u8",31,1,""],["ChargeState","u8",32,1,""],["IsLocked","u8",33,1,""],["CanFireNow","u8",34,1,""]]},{"name":"BridgeP)json"
-        R"json(rojectile","size":24,"align":4,"fields":[["Handle","u32",0,1,""],["OwnerPlayer","u32",4,1,""],["OwnerBiped","u32",8,1,""],["ShooterRoot","u32",12,1,""],["StuckTo","u32",16,1,""],["StuckNode","i8",20,1,""],["InHand","u8",21,1,""]]},{"name":"BridgeExplosive","size":16,"align":4,"fields":[["Handle","u32",0,1,""],["RadiusMin","f32",4,1,""],["RadiusMax","f32",8,1,""],["Damage","f32",12,1,""]]},{"name":"BridgeLiftStage","size":44,"align":4,"fields":[["Position","BridgeVec3",0,1,""],["Direction","BridgeVec3",12,1,""],["Acceleration","f32",24,1,""],["MaximumVelocity","f32",28,1,""],["AxisAcceleration","f32",32,1,""],["AxisMaximumVelocity","f32",36,1,""],["Affects","u8",40,1,""]]},{"name":"BridgeLift","size":160,"align":4,"fields":[["Handle","u32",0,1,""],["StageCount","u8",4,1,""],["HasExit","u8",5,1,""],["ExitTick","u32",8,1,""],["ExitBiped","u32",12,1,""],["ExitVelocity","BridgeVec3",16,1,""],["Stages","BridgeLiftStage",28,3,""]]},{"name":"BridgeTick","size":138112,"align":64,"fields":[["Sequence","u64",0,1,""],["Header","BridgeTickHeader",8,1,""],["Players","BridgePlayer",72,16,""],["Entities","BridgeEntity",2248,1024,""],["Match","BridgeMatch",108744,1,""],["Objectives","BridgeObjective",108836,8,""],["Stands","BridgeStand",109060,8,""],["Events","BridgeEvent",109124,64,""],["Weapons","BridgeWeapon",111428,256,""],["Projectiles","BridgeProjectile",120644,256,""],["Explosives","BridgeExplosive",126788,64,""],["Lifts","BridgeLift",127812,64,""],["SequenceEnd","u64",138056,1,""]]},{"name":"BridgeAction","size":48,"align":8,"fields":[["PlayerHandle","u32",0,1,""],["Lanes","u32",4,1,""],["DecisionTick","u64",8,1,""],["Buttons","u64",16,1,""],["Yaw","f32",24,1,""],["Pitch","f32",28,1,""],["ThrottleForward","f32",32,1,""],["ThrottleLeft","f32",36,1,""],["Requests","u8",40,1,"BridgeRequest"]]},{"name":"BridgeRegion","size":277248,"align":64,"fields":[["Control","BridgeControl",0,1,""],["Ticks","BridgeTick",256,2,""],["Actions","BridgeAction",276480,16,""]]}]})json"
+        R"json({"version":1,"hash":"0xC8D58E708FDEAFE9","primitives":{"u8":"u1","u16":"<u2","u32":"<u4","u64":"<u8","i8":"i1","i16":"<i2","i32":"<i4","f32":"<f4"},"structs":[{"name":"BridgeVec3","size":12,"align":4,"fields":[["X","f32",0,1,""],["Y","f32",4,1,""],["Z","f32",8,1,""]]},{"name":"BridgeArtemisControl","size":192,"align":64,"fields":[["Magic","u32",0,1,""],["LayoutVersion","u32",4,1,""],["LayoutHash","u64",8,1,""],["RegionSize","u32",16,1,""],["Pid","u32",20,1,""],["Heartbeat","u64",24,1,""],["QpcFrequency","u64",32,1,""],["Phase","u8",40,1,"BridgePhase"],["Owner","u8",41,1,"BridgeOwner"],["Mode","u8",42,1,"BridgeMode"],["DecisionPeriod","u8",43,1,""],["Latency","u8",44,1,""],["IsClientConnected","u8",45,1,""],["IsPaused","u8",46,1,""],["MatchId","u32",48,1,""],["ActionTick","u64",56,1,""],["Scale","f32",64,1,""],["ActiveBuffer","u32",68,1,""],["PublishedTicks","u64",72,1,""],["LateActions","u64",80,1,""],["LockstepWaits","u64",88,1,""],["LockstepWaitNs","u64",96,1,""],["LockstepTimeouts","u64",104,1,""],["HandleMismatches","u64",112,1,""],["RejectedActions","u64",120,1,""],["ClockSkips","u64",128,1,""],["LockstepWaitMaxNs","u64",136,1,""],["FlattenNs","u64",144,1,""],["FlattenMaxNs","u64",152,1,""],["PausedFrames","u64",160,1,""],["EndRoundSequence","u32",168,1,""]]},{"name":"BridgeClientControl","size":64,"align":64,"fields":[["ClientPid","u32",0,1,""],["RequestOwner","u8",4,1,"BridgeOwner"],["RequestMode","u8",5,1,"BridgeMode"],["RequestPeriod","u8",6,1,""],["RequestLatency","u8",7,1,""],["RequestScale","f32",8,1,""],["RequestPause","u8",12,1,""],["AgentMask","u32",16,1,""],["RequestEndRound","u32",20,1,""],["RequestTurnLimit","f32",24,1,""],["ClientHeartbeat","u64",32,1,""],["ActionSequence","u64",40,1,""]]},{"name":"BridgeControl","size":256,"align":64,"fields":[["Artemis","BridgeArtemisControl",0,1,""],["Client","BridgeClientControl",192,1,""]]},{"name":"BridgeTickHeader","size":64,"align":8,"fields":[["MatchId","u32",0,1,""],["PlayerCount","u16",4,1,""],["EntityC)json"
+        R"json(ount","u16",6,1,""],["ActionTick","u64",8,1,""],["Generation","u64",16,1,""],["PublishQpc","u64",24,1,""],["Flags","u32",32,1,"BridgeTickFlag"],["EventCount","u16",36,1,""],["LastEventSequence","u32",40,1,""],["ObjectiveCount","u16",44,1,""],["StandCount","u16",46,1,""],["WeaponCount","u16",48,1,""],["ProjectileCount","u16",50,1,""],["MapId","i32",52,1,""],["ExplosiveCount","u16",56,1,""],["LiftCount","u16",58,1,""]]},{"name":"BridgeMatch","size":120,"align":4,"fields":[["GameTick","u32",0,1,""],["Phase","u8",4,1,""],["RoundState","u8",5,1,""],["PlayerScores","i16",6,16,""],["RoundIndex","i16",38,1,""],["TeamRoundScores","i16",40,8,""],["TeamTotalScores","i16",56,8,""],["RoundClockTicks","u32",72,1,""],["RoundTicksRemaining","i32",76,1,""],["RoundTimeLimitTicks","u32",80,1,""],["RoundLimit","u8",84,1,""],["ScoreToWin","i32",88,1,""],["RespawnTimeTicks","u32",92,1,""],["SuddenDeathTicks","i32",96,1,""],["GracePeriodTicks","u32",100,1,""],["PowerupDurationTicks","u32",104,3,""],["LivesPerRound","u8",116,1,""],["TeamLivesPerRound","u8",117,1,""],["RoundsToWin","u8",118,1,""]]},{"name":"BridgeEvent","size":36,"align":4,"fields":[["Sequence","u32",0,1,""],["EngineSequence","u32",4,1,""],["GameTick","u32",8,1,""],["Key","u32",12,1,""],["CausePlayer","u32",16,1,""],["CauseObject","u32",20,1,""],["EffectPlayer","u32",24,1,""],["EffectObject","u32",28,1,""],["Kind","u8",32,1,""],["DamageReportingType","u8",33,1,""],["IsHeadshot","u8",34,1,""],["IsStuck","u8",35,1,""]]},{"name":"BridgePlayerTraits","size":72,"align":4,"fields":[["DamageResistance","f32",0,1,""],["HealthMultiplier","f32",4,1,""],["HealthRegenRate","f32",8,1,""],["ShieldMultiplier","f32",12,1,""],["ShieldRegenRate","f32",16,1,""],["OvershieldRegenRate","f32",20,1,""],["ShieldVampirism","f32",24,1,""],["DamageMultiplier","f32",28,1,""],["MeleeMultiplier","f32",32,1,""],["MovementSpeed","f32",36,1,""],["Gravity","f32",40,1,""],["JumpHeight","f32",44,1,""],["RadarRange","f32",48,1,""],["HeadshotImmune","u8",52,1,")json"
+        R"json("],["AssassinationImmune","u8",53,1,""],["CannotDieFromDamage","u8",54,1,""],["GrenadeRegen","u8",55,1,""],["WeaponPickup","u8",56,1,""],["AbilitiesDropOnDeath","u8",57,1,""],["InfiniteAbilities","u8",58,1,""],["InfiniteAmmo","u8",59,1,"BridgeInfiniteAmmo"],["AbilityUsage","u8",60,1,"BridgeAbilityUsage"],["VehicleUse","u8",61,1,"BridgeVehicleUse"],["VisibleWaypoint","u8",62,1,"BridgeIdentityVisibility"],["VisibleName","u8",63,1,"BridgeIdentityVisibility"],["RadarMode","u8",64,1,"BridgeRadarMode"],["FragGrenades","u8",65,1,""],["PlasmaGrenades","u8",66,1,""],["ActiveCamo","u8",67,1,""],["PrimaryWeapon","i8",68,1,""],["SecondaryWeapon","i8",69,1,""],["Ability","i8",70,1,""]]},{"name":"BridgePlayer","size":208,"align":8,"fields":[["Handle","u32",0,1,""],["BipedHandle","u32",4,1,""],["RespawnTicks","u32",8,1,""],["Team","u8",12,1,""],["LocalIndex","u8",13,1,""],["Connection","u8",14,1,""],["IsAlive","u8",15,1,""],["HasBody","u8",16,1,""],["Zoom","u8",17,1,""],["SelectedGrenade","u8",18,1,""],["FragGrenades","u8",19,1,""],["PlasmaGrenades","u8",20,1,""],["IsAbilityActive","u8",21,1,""],["Ground","u8",22,1,"BridgeGround"],["IsGrounded","u8",23,1,""],["IsCrouching","u8",24,1,""],["CameraPosition","BridgeVec3",28,1,""],["CameraForward","BridgeVec3",40,1,""],["Aim","BridgeVec3",52,1,""],["TicksAlive","u32",64,1,""],["Shield","f32",68,1,""],["PrimaryWeapon","u32",72,1,""],["SecondaryWeapon","u32",76,1,""],["EquippedWeapon","u32",80,1,""],["Ability","u32",84,1,""],["AbilityEnergy","f32",88,1,""],["Objective","u32",92,1,""],["LastDamagerPlayer","u32",96,1,""],["TicksSinceDamage","u32",100,1,""],["AirborneTicks","u32",104,1,""],["GroundObject","u32",108,1,""],["CrouchFraction","f32",112,1,""],["OwnVelocity","BridgeVec3",116,1,""],["Traits","BridgePlayerTraits",128,1,""],["AppliedDecision","u64",200,1,""]]},{"name":"BridgeEntity","size":104,"align":4,"fields":[["Handle","u32",0,1,""],["Kind","u16",4,1,""],["Function","u8",6,1,""],["Subtype","u8",7,1,""],["Group","u8",8,1,""],["Li)json"
+        R"json(fecycle","u8",9,1,""],["Binding","u8",10,1,""],["Team","u8",11,1,""],["Physics","u8",12,1,""],["Capabilities","u16",14,1,""],["BoundTo","u32",16,1,""],["ParentHandle","u32",20,1,""],["BoundingRadius","f32",24,1,""],["Vitality","f32",28,1,""],["BoundingCenter","BridgeVec3",32,1,""],["WorldOrigin","BridgeVec3",44,1,""],["Forward","BridgeVec3",56,1,""],["Up","BridgeVec3",68,1,""],["LinearVelocity","BridgeVec3",80,1,""],["AngularVelocity","BridgeVec3",92,1,""]]},{"name":"BridgeObjective","size":28,"align":4,"fields":[["Handle","u32",0,1,""],["CarrierPlayer","u32",4,1,""],["CarrierBiped","u32",8,1,""],["HomeStand","u32",12,1,""],["ResetTicks","u32",16,1,""],["BaseTeam","u8",20,1,""],["OwnerTeam","u8",21,1,""],["State","u8",22,1,""],["IsResetRunning","u8",23,1,""],["AlliesInZone","u8",24,1,""]]},{"name":"BridgeStand","size":8,"align":4,"fields":[["Handle","u32",0,1,""],["BaseTeam","u8",4,1,""],["OwnerTeam","u8",5,1,""]]},{"name":"BridgeMagazine","size":4,"align":2,"fields":[["Loaded","u16",0,1,""],["Reserve","u16",2,1,""]]},{"name":"BridgeWeapon","size":36,"align":4,"fields":[["Handle","u32",0,1,""],["TrackedObject","u32",4,1,""],["Energy","f32",8,1,""],["Heat","f32",12,1,""],["ChargeFraction","f32",16,1,""],["Magazines","BridgeMagazine",20,2,""],["MagazineCount","u8",28,1,""],["IsEnergyWeapon","u8",29,1,""],["IsOverheated","u8",30,1,""],["IsReloading","u8",31,1,""],["ChargeState","u8",32,1,""],["IsLocked","u8",33,1,""],["CanFireNow","u8",34,1,""]]},{"name":"BridgeProjectile","size":24,"align":4,"fields":[["Handle","u32",0,1,""],["OwnerPlayer","u32",4,1,""],["OwnerBiped","u32",8,1,""],["ShooterRoot","u32",12,1,""],["StuckTo","u32",16,1,""],["StuckNode","i8",20,1,""],["InHand","u8",21,1,""]]},{"name":"BridgeExplosive","size":16,"align":4,"fields":[["Handle","u32",0,1,""],["RadiusMin","f32",4,1,""],["RadiusMax","f32",8,1,""],["Damage","f32",12,1,""]]},{"name":"BridgeLiftStage","size":44,"align":4,"fields":[["Position","BridgeVec3",0,1,""],["Direction","BridgeVec3",12,1,""],)json"
+        R"json(["Acceleration","f32",24,1,""],["MaximumVelocity","f32",28,1,""],["AxisAcceleration","f32",32,1,""],["AxisMaximumVelocity","f32",36,1,""],["Affects","u8",40,1,""]]},{"name":"BridgeLift","size":160,"align":4,"fields":[["Handle","u32",0,1,""],["StageCount","u8",4,1,""],["HasExit","u8",5,1,""],["ExitTick","u32",8,1,""],["ExitBiped","u32",12,1,""],["ExitVelocity","BridgeVec3",16,1,""],["Stages","BridgeLiftStage",28,3,""]]},{"name":"BridgeTick","size":139264,"align":64,"fields":[["Sequence","u64",0,1,""],["Header","BridgeTickHeader",8,1,""],["Players","BridgePlayer",72,16,""],["Entities","BridgeEntity",3400,1024,""],["Match","BridgeMatch",109896,1,""],["Objectives","BridgeObjective",110016,8,""],["Stands","BridgeStand",110240,8,""],["Events","BridgeEvent",110304,64,""],["Weapons","BridgeWeapon",112608,256,""],["Projectiles","BridgeProjectile",121824,256,""],["Explosives","BridgeExplosive",127968,64,""],["Lifts","BridgeLift",128992,64,""],["SequenceEnd","u64",139232,1,""]]},{"name":"BridgeAction","size":48,"align":8,"fields":[["PlayerHandle","u32",0,1,""],["Lanes","u32",4,1,""],["DecisionTick","u64",8,1,""],["Buttons","u64",16,1,""],["Yaw","f32",24,1,""],["Pitch","f32",28,1,""],["ThrottleForward","f32",32,1,""],["ThrottleLeft","f32",36,1,""],["Requests","u8",40,1,"BridgeRequest"]]},{"name":"BridgeRegion","size":279552,"align":64,"fields":[["Control","BridgeControl",0,1,""],["Ticks","BridgeTick",256,2,""],["Actions","BridgeAction",278784,16,""]]}]})json"
     };
 
     // 'ABTB' read as little endian u32: the region is an Artemis bridge.
@@ -61,6 +62,9 @@ export namespace Contract::Bridge::Type
     inline constexpr std::uint32_t k_BridgeMaxLiftStages{ 3 };
 
     static_assert(k_MaxTeams == 8, "Bridge.xml MaxTeams must match k_MaxTeams.");
+
+    // Powerups of a game variant (red, blue, yellow): the length of the powerup duration array.
+    inline constexpr std::uint32_t k_BridgePowerupCount{ 3 };
 
     // Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence.
     inline constexpr std::uint32_t k_BridgeMaxTickEvents{ 64 };
@@ -118,6 +122,58 @@ export namespace Contract::Bridge::Type
         Object = 2,
         // Parented to another object, such as a seat.
         Attached = 3,
+    };
+
+    // Infinite ammo trait (Blam.Layout InfiniteAmmoMode, D262). 0 is a value outside the table.
+    enum class BridgeInfiniteAmmo : std::uint8_t
+    {
+        Unknown = 0,
+        Off = 1,
+        On = 2,
+        // Infinite ammo without reloading.
+        Bottomless = 3,
+    };
+
+    // Armor ability usage trait (Blam.Layout AbilityUsageMode, D262).
+    enum class BridgeAbilityUsage : std::uint8_t
+    {
+        Unknown = 0,
+        Disabled = 1,
+        NotWithObjectives = 2,
+        Enabled = 3,
+    };
+
+    // Vehicle use trait (Blam.Layout VehicleUseMode, D262).
+    enum class BridgeVehicleUse : std::uint8_t
+    {
+        Unknown = 0,
+        Blocked = 1,
+        PassengerOnly = 2,
+        DriverOnly = 3,
+        GunnerOnly = 4,
+        NoPassenger = 5,
+        NoDriver = 6,
+        NoGunner = 7,
+        Full = 8,
+    };
+
+    // Who sees the waypoint or the name of a player (Blam.Layout IdentityVisibility, D262).
+    enum class BridgeIdentityVisibility : std::uint8_t
+    {
+        Unknown = 0,
+        Hidden = 1,
+        Allies = 2,
+        Everyone = 3,
+    };
+
+    // Motion tracker mode trait (Blam.Layout RadarDisplayMode, D262).
+    enum class BridgeRadarMode : std::uint8_t
+    {
+        Unknown = 0,
+        Off = 1,
+        Allies = 2,
+        Normal = 3,
+        Enhanced = 4,
     };
 
     // One-shot client requests of a decision (D120).
@@ -304,6 +360,20 @@ export namespace Contract::Bridge::Type
         std::uint8_t RoundLimit{};
         // Score a team (a player in free for all) needs to win, as stored; 0 for none or not known.
         std::int32_t ScoreToWin{};
+        // Respawn time of the game variant in ticks, 0 when not known.
+        std::uint32_t RespawnTimeTicks{};
+        // Sudden death duration in ticks, -1 for indefinite, 0 when not known.
+        std::int32_t SuddenDeathTicks{};
+        // Grace period of the game variant in ticks.
+        std::uint32_t GracePeriodTicks{};
+        // Duration of the red, blue and yellow powerups of the game variant in ticks.
+        std::array<std::uint32_t, k_BridgePowerupCount> PowerupDurationTicks{};
+        // Lives of each player per round, 0 for unlimited.
+        std::uint8_t LivesPerRound{};
+        // Lives of each team per round, 0 for unlimited.
+        std::uint8_t TeamLivesPerRound{};
+        // Rounds a team needs to win the match, as stored.
+        std::uint8_t RoundsToWin{};
     };
 
     // One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).
@@ -323,6 +393,61 @@ export namespace Contract::Bridge::Type
         std::uint8_t DamageReportingType{};
         std::uint8_t IsHeadshot{};
         std::uint8_t IsStuck{};
+    };
+
+    // Traits the engine applies to a player in this tick (Blam.Layout PlayerTraits, D262): already composed with the carried objective, the powerups and the respawn traits. Multipliers are 1.0 for 100%. A raw index outside its table reads NaN (floats), 0 (bools) or Unknown (enums).
+    struct BridgePlayerTraits
+    {
+        // Infinity when invulnerable.
+        float DamageResistance{};
+        float HealthMultiplier{};
+        float HealthRegenRate{};
+        float ShieldMultiplier{};
+        float ShieldRegenRate{};
+        float OvershieldRegenRate{};
+        float ShieldVampirism{};
+        // Weapon damage. Infinity for instant kill.
+        float DamageMultiplier{};
+        // Infinity for instant kill.
+        float MeleeMultiplier{};
+        float MovementSpeed{};
+        float Gravity{};
+        // Multiplier of the stored percentage (150% reads 1.5).
+        float JumpHeight{};
+        // Motion tracker range in meters, not a multiplier.
+        float RadarRange{};
+        // 0 no, 1 yes.
+        std::uint8_t HeadshotImmune{};
+        // 0 no, 1 yes.
+        std::uint8_t AssassinationImmune{};
+        // 0 no, 1 yes.
+        std::uint8_t CannotDieFromDamage{};
+        // 0 no, 1 yes.
+        std::uint8_t GrenadeRegen{};
+        // 0 no, 1 yes.
+        std::uint8_t WeaponPickup{};
+        // 0 no, 1 yes.
+        std::uint8_t AbilitiesDropOnDeath{};
+        // 0 no, 1 yes.
+        std::uint8_t InfiniteAbilities{};
+        BridgeInfiniteAmmo InfiniteAmmo{};
+        BridgeAbilityUsage AbilityUsage{};
+        BridgeVehicleUse VehicleUse{};
+        BridgeIdentityVisibility VisibleWaypoint{};
+        BridgeIdentityVisibility VisibleName{};
+        BridgeRadarMode RadarMode{};
+        // Grenades the player starts with, 255 for the map default.
+        std::uint8_t FragGrenades{};
+        // Grenades the player starts with, 255 for the map default.
+        std::uint8_t PlasmaGrenades{};
+        // Raw setting, 1 off to 5 best.
+        std::uint8_t ActiveCamo{};
+        // Raw index of the weapon table of the game variant editor, -1 none, 0 the first one.
+        std::int8_t PrimaryWeapon{};
+        // Raw index of the weapon table of the game variant editor, -1 none.
+        std::int8_t SecondaryWeapon{};
+        // Raw index of the armor ability table of the game variant editor, -1 none, 0 sprint.
+        std::int8_t Ability{};
     };
 
     // One player of the Tick (Environment Players), without its name.
@@ -373,6 +498,8 @@ export namespace Contract::Bridge::Type
         float CrouchFraction{};
         // Velocity relative to the object under the feet, or the biped's own.
         BridgeVec3 OwnVelocity{};
+        // Active traits of the player, also while dead (player +0x328).
+        BridgePlayerTraits Traits{};
         // DecisionTick of the bridge action the engine applied to this player up to this tick (0 = none).
         std::uint64_t AppliedDecision{};
     };
@@ -669,7 +796,7 @@ export namespace Contract::Bridge::Type
     static_assert(offsetof(BridgeTickHeader, MapId) == 52);
     static_assert(offsetof(BridgeTickHeader, ExplosiveCount) == 56);
     static_assert(offsetof(BridgeTickHeader, LiftCount) == 58);
-    static_assert(sizeof(BridgeMatch) == 92 && alignof(BridgeMatch) == 4);
+    static_assert(sizeof(BridgeMatch) == 120 && alignof(BridgeMatch) == 4);
     static_assert(std::is_trivially_copyable_v<BridgeMatch> && std::is_standard_layout_v<BridgeMatch>);
     static_assert(offsetof(BridgeMatch, GameTick) == 0);
     static_assert(offsetof(BridgeMatch, Phase) == 4);
@@ -683,6 +810,13 @@ export namespace Contract::Bridge::Type
     static_assert(offsetof(BridgeMatch, RoundTimeLimitTicks) == 80);
     static_assert(offsetof(BridgeMatch, RoundLimit) == 84);
     static_assert(offsetof(BridgeMatch, ScoreToWin) == 88);
+    static_assert(offsetof(BridgeMatch, RespawnTimeTicks) == 92);
+    static_assert(offsetof(BridgeMatch, SuddenDeathTicks) == 96);
+    static_assert(offsetof(BridgeMatch, GracePeriodTicks) == 100);
+    static_assert(offsetof(BridgeMatch, PowerupDurationTicks) == 104);
+    static_assert(offsetof(BridgeMatch, LivesPerRound) == 116);
+    static_assert(offsetof(BridgeMatch, TeamLivesPerRound) == 117);
+    static_assert(offsetof(BridgeMatch, RoundsToWin) == 118);
     static_assert(sizeof(BridgeEvent) == 36 && alignof(BridgeEvent) == 4);
     static_assert(std::is_trivially_copyable_v<BridgeEvent> && std::is_standard_layout_v<BridgeEvent>);
     static_assert(offsetof(BridgeEvent, Sequence) == 0);
@@ -697,7 +831,41 @@ export namespace Contract::Bridge::Type
     static_assert(offsetof(BridgeEvent, DamageReportingType) == 33);
     static_assert(offsetof(BridgeEvent, IsHeadshot) == 34);
     static_assert(offsetof(BridgeEvent, IsStuck) == 35);
-    static_assert(sizeof(BridgePlayer) == 136 && alignof(BridgePlayer) == 8);
+    static_assert(sizeof(BridgePlayerTraits) == 72 && alignof(BridgePlayerTraits) == 4);
+    static_assert(std::is_trivially_copyable_v<BridgePlayerTraits> && std::is_standard_layout_v<BridgePlayerTraits>);
+    static_assert(offsetof(BridgePlayerTraits, DamageResistance) == 0);
+    static_assert(offsetof(BridgePlayerTraits, HealthMultiplier) == 4);
+    static_assert(offsetof(BridgePlayerTraits, HealthRegenRate) == 8);
+    static_assert(offsetof(BridgePlayerTraits, ShieldMultiplier) == 12);
+    static_assert(offsetof(BridgePlayerTraits, ShieldRegenRate) == 16);
+    static_assert(offsetof(BridgePlayerTraits, OvershieldRegenRate) == 20);
+    static_assert(offsetof(BridgePlayerTraits, ShieldVampirism) == 24);
+    static_assert(offsetof(BridgePlayerTraits, DamageMultiplier) == 28);
+    static_assert(offsetof(BridgePlayerTraits, MeleeMultiplier) == 32);
+    static_assert(offsetof(BridgePlayerTraits, MovementSpeed) == 36);
+    static_assert(offsetof(BridgePlayerTraits, Gravity) == 40);
+    static_assert(offsetof(BridgePlayerTraits, JumpHeight) == 44);
+    static_assert(offsetof(BridgePlayerTraits, RadarRange) == 48);
+    static_assert(offsetof(BridgePlayerTraits, HeadshotImmune) == 52);
+    static_assert(offsetof(BridgePlayerTraits, AssassinationImmune) == 53);
+    static_assert(offsetof(BridgePlayerTraits, CannotDieFromDamage) == 54);
+    static_assert(offsetof(BridgePlayerTraits, GrenadeRegen) == 55);
+    static_assert(offsetof(BridgePlayerTraits, WeaponPickup) == 56);
+    static_assert(offsetof(BridgePlayerTraits, AbilitiesDropOnDeath) == 57);
+    static_assert(offsetof(BridgePlayerTraits, InfiniteAbilities) == 58);
+    static_assert(offsetof(BridgePlayerTraits, InfiniteAmmo) == 59);
+    static_assert(offsetof(BridgePlayerTraits, AbilityUsage) == 60);
+    static_assert(offsetof(BridgePlayerTraits, VehicleUse) == 61);
+    static_assert(offsetof(BridgePlayerTraits, VisibleWaypoint) == 62);
+    static_assert(offsetof(BridgePlayerTraits, VisibleName) == 63);
+    static_assert(offsetof(BridgePlayerTraits, RadarMode) == 64);
+    static_assert(offsetof(BridgePlayerTraits, FragGrenades) == 65);
+    static_assert(offsetof(BridgePlayerTraits, PlasmaGrenades) == 66);
+    static_assert(offsetof(BridgePlayerTraits, ActiveCamo) == 67);
+    static_assert(offsetof(BridgePlayerTraits, PrimaryWeapon) == 68);
+    static_assert(offsetof(BridgePlayerTraits, SecondaryWeapon) == 69);
+    static_assert(offsetof(BridgePlayerTraits, Ability) == 70);
+    static_assert(sizeof(BridgePlayer) == 208 && alignof(BridgePlayer) == 8);
     static_assert(std::is_trivially_copyable_v<BridgePlayer> && std::is_standard_layout_v<BridgePlayer>);
     static_assert(offsetof(BridgePlayer, Handle) == 0);
     static_assert(offsetof(BridgePlayer, BipedHandle) == 4);
@@ -732,7 +900,8 @@ export namespace Contract::Bridge::Type
     static_assert(offsetof(BridgePlayer, GroundObject) == 108);
     static_assert(offsetof(BridgePlayer, CrouchFraction) == 112);
     static_assert(offsetof(BridgePlayer, OwnVelocity) == 116);
-    static_assert(offsetof(BridgePlayer, AppliedDecision) == 128);
+    static_assert(offsetof(BridgePlayer, Traits) == 128);
+    static_assert(offsetof(BridgePlayer, AppliedDecision) == 200);
     static_assert(sizeof(BridgeEntity) == 104 && alignof(BridgeEntity) == 4);
     static_assert(std::is_trivially_copyable_v<BridgeEntity> && std::is_standard_layout_v<BridgeEntity>);
     static_assert(offsetof(BridgeEntity, Handle) == 0);
@@ -824,21 +993,21 @@ export namespace Contract::Bridge::Type
     static_assert(offsetof(BridgeLift, ExitBiped) == 12);
     static_assert(offsetof(BridgeLift, ExitVelocity) == 16);
     static_assert(offsetof(BridgeLift, Stages) == 28);
-    static_assert(sizeof(BridgeTick) == 138112 && alignof(BridgeTick) == 64);
+    static_assert(sizeof(BridgeTick) == 139264 && alignof(BridgeTick) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeTick> && std::is_standard_layout_v<BridgeTick>);
     static_assert(offsetof(BridgeTick, Sequence) == 0);
     static_assert(offsetof(BridgeTick, Header) == 8);
     static_assert(offsetof(BridgeTick, Players) == 72);
-    static_assert(offsetof(BridgeTick, Entities) == 2248);
-    static_assert(offsetof(BridgeTick, Match) == 108744);
-    static_assert(offsetof(BridgeTick, Objectives) == 108836);
-    static_assert(offsetof(BridgeTick, Stands) == 109060);
-    static_assert(offsetof(BridgeTick, Events) == 109124);
-    static_assert(offsetof(BridgeTick, Weapons) == 111428);
-    static_assert(offsetof(BridgeTick, Projectiles) == 120644);
-    static_assert(offsetof(BridgeTick, Explosives) == 126788);
-    static_assert(offsetof(BridgeTick, Lifts) == 127812);
-    static_assert(offsetof(BridgeTick, SequenceEnd) == 138056);
+    static_assert(offsetof(BridgeTick, Entities) == 3400);
+    static_assert(offsetof(BridgeTick, Match) == 109896);
+    static_assert(offsetof(BridgeTick, Objectives) == 110016);
+    static_assert(offsetof(BridgeTick, Stands) == 110240);
+    static_assert(offsetof(BridgeTick, Events) == 110304);
+    static_assert(offsetof(BridgeTick, Weapons) == 112608);
+    static_assert(offsetof(BridgeTick, Projectiles) == 121824);
+    static_assert(offsetof(BridgeTick, Explosives) == 127968);
+    static_assert(offsetof(BridgeTick, Lifts) == 128992);
+    static_assert(offsetof(BridgeTick, SequenceEnd) == 139232);
     static_assert(sizeof(BridgeAction) == 48 && alignof(BridgeAction) == 8);
     static_assert(std::is_trivially_copyable_v<BridgeAction> && std::is_standard_layout_v<BridgeAction>);
     static_assert(offsetof(BridgeAction, PlayerHandle) == 0);
@@ -850,9 +1019,9 @@ export namespace Contract::Bridge::Type
     static_assert(offsetof(BridgeAction, ThrottleForward) == 32);
     static_assert(offsetof(BridgeAction, ThrottleLeft) == 36);
     static_assert(offsetof(BridgeAction, Requests) == 40);
-    static_assert(sizeof(BridgeRegion) == 277248 && alignof(BridgeRegion) == 64);
+    static_assert(sizeof(BridgeRegion) == 279552 && alignof(BridgeRegion) == 64);
     static_assert(std::is_trivially_copyable_v<BridgeRegion> && std::is_standard_layout_v<BridgeRegion>);
     static_assert(offsetof(BridgeRegion, Control) == 0);
     static_assert(offsetof(BridgeRegion, Ticks) == 256);
-    static_assert(offsetof(BridgeRegion, Actions) == 276480);
+    static_assert(offsetof(BridgeRegion, Actions) == 278784);
 }

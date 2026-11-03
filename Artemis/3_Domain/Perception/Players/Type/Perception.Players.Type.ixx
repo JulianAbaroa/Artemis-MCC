@@ -3,6 +3,7 @@ export module Perception.Players.Type;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Team.Type;
+import Blam.Layout.Player.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
 import std;
@@ -11,6 +12,7 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Common::Team::Type::Team;
+    using Blam::Layout::Player::Type::Traits::PlayerTraits;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Blam::Runtime::Object::Type::Biped::GrenadeType;
     using Blam::Runtime::Player::Type::Alive::ConnectionState;
@@ -153,6 +155,10 @@ export namespace Perception::Players::Type
 
         // Ticks left until the player respawns, 0 while alive or without wait. Valid without a Body (D258).
         std::uint32_t RespawnTicks{};
+
+        // Traits the engine applies to the player in this tick, already composed with the carried objective, the powerups and the respawn
+        // traits (D262). Valid without a Body: the block exists for a dead player too.
+        PlayerTraits Traits{};
 
         Vec3 CameraPosition{};
         Vec3 CameraForward{};

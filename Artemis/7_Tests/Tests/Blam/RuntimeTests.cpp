@@ -52,6 +52,13 @@ namespace
     using Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
     using Blam::Runtime::Player::Type::Alive::AlivePlayer;
     using Blam::Runtime::Player::Type::Alive::ConnectionState;
+    using Blam::Layout::Player::Type::Traits::InfiniteAmmoMode;
+    using Blam::Layout::Player::Type::Traits::RadarDisplayMode;
+    using Blam::Layout::Player::Type::Traits::VehicleUseMode;
+    using Blam::Layout::Player::Type::Traits::IdentityVisibility;
+    using Blam::Layout::Player::Type::Traits::AbilityUsageMode;
+    using Tests::Support::Blam::k_CtfCBaseTraits;
+    using Tests::Support::Blam::CarrierTraits;
     using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
@@ -643,6 +650,56 @@ TEST_F(RuntimeTests, ConnectedPlayerIsAdded)
     EXPECT_EQ(*player.LocalIndex, 1);
 }
 
+TEST_F(RuntimeTests, PlayerTraitsAreDecodedFromTheBlockOfTheEntryAlsoWhenDead)
+{
+    Snapshot snapshot{};
+    std::vector<std::uint8_t>& players{ CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)) };
+    CaptureEmptyMapping(snapshot);
+
+    const std::size_t entry{ PutPlayer(players, 2, 0xE5A1, ConnectionState::Connected) };
+    Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_NoHandle);
+    Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_NoHandle);
+    std::ranges::copy(k_CtfCBaseTraits, players.begin() + static_cast<std::ptrdiff_t>(entry + PlayerOffset::k_Traits));
+
+    const std::uint32_t handle{ MakeHandle(0xE5A1, 2) };
+    const auto table{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(table, nullptr);
+    ASSERT_TRUE(table->contains(handle));
+    const auto& base{ table->at(handle).Traits };
+
+    EXPECT_FLOAT_EQ(base.MovementSpeed, 1.1f);
+    EXPECT_FLOAT_EQ(base.Gravity, 0.75f);
+    EXPECT_FLOAT_EQ(base.JumpHeight, 1.0f);
+    EXPECT_FLOAT_EQ(base.MeleeMultiplier, 1.0f);
+    EXPECT_FLOAT_EQ(base.DamageResistance, 1.0f);
+    EXPECT_EQ(base.PrimaryWeapon, 0);
+    EXPECT_EQ(base.SecondaryWeapon, 1);
+    EXPECT_EQ(base.Ability, 0);
+    EXPECT_EQ(base.FragGrenades, 2);
+    EXPECT_EQ(base.PlasmaGrenades, 2);
+    EXPECT_EQ(base.InfiniteAmmo, InfiniteAmmoMode::On);
+    EXPECT_EQ(base.RadarMode, RadarDisplayMode::Normal);
+    EXPECT_FLOAT_EQ(base.RadarRange, 25.0f);
+
+    // The block of the carrier replaces the old one on the next tick (the player is updated, not rebuilt).
+    const std::array<std::uint8_t, 0x2C> carrier{ CarrierTraits() };
+    std::ranges::copy(carrier, players.begin() + static_cast<std::ptrdiff_t>(entry + PlayerOffset::k_Traits));
+    const auto next{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(next, nullptr);
+    const auto& traits{ next->at(handle).Traits };
+
+    EXPECT_FLOAT_EQ(traits.MeleeMultiplier, 1.25f);
+    EXPECT_FLOAT_EQ(traits.MovementSpeed, 0.9f);
+    EXPECT_FLOAT_EQ(traits.JumpHeight, 1.5f);
+    EXPECT_FLOAT_EQ(traits.ShieldVampirism, 1.0f);
+    EXPECT_EQ(traits.VehicleUse, VehicleUseMode::NoDriver);
+    EXPECT_EQ(traits.VisibleWaypoint, IdentityVisibility::Everyone);
+    EXPECT_EQ(traits.AbilityUsage, AbilityUsageMode::Disabled);
+    EXPECT_FALSE(traits.AreAbilitiesInfinite);
+    EXPECT_FLOAT_EQ(traits.RadarRange, 75.0f);
+    EXPECT_FLOAT_EQ(traits.Gravity, 0.75f);
+}
+
 TEST_F(RuntimeTests, PlayerWithAnUnknownConnectionStateIsLeftOut)
 {
     Snapshot snapshot{};
@@ -1048,6 +1105,73 @@ TEST_F(RuntimeTests, MegaloVariantScoreToWinIsRead)
     const auto none{ this->UpdateGame(WithVariant(3, 0, 3, 2, 0)) };
     ASSERT_NE(none, nullptr);
     EXPECT_EQ(none->ScoreToWin, 0);
+}
+
+namespace
+{
+    // Writes the respawn, round and powerup settings of the variant: respawn 5 s, 2 lives, 4 team lives, 3 rounds to win, sudden death
+    // 30 s, grace 5 s, powerups 10, 15 and 90 s.
+    auto PutVariantSettings(Snapshot& snapshot, std::int16_t suddenDeath = 30) -> void
+    {
+        auto& globals{ snapshot.Regions[static_cast<std::size_t>(RegionId::GameGlobals)].Bytes };
+        const std::size_t variant{ GameOffset::k_GameGlobalsGameVariant };
+        Put(globals, variant + GameOffset::k_VariantRespawnTime, std::uint8_t{ 5 });
+        Put(globals, variant + GameOffset::k_VariantLivesPerRound, std::uint8_t{ 2 });
+        Put(globals, variant + GameOffset::k_VariantTeamLivesPerRound, std::uint8_t{ 4 });
+        Put(globals, variant + GameOffset::k_VariantRoundsToWin, std::uint8_t{ 3 });
+        Put(globals, variant + GameOffset::k_VariantSuddenDeath, suddenDeath);
+        Put(globals, variant + GameOffset::k_VariantGracePeriod, std::uint16_t{ 5 });
+        Put(globals, variant + GameOffset::k_VariantPowerupDuration, std::uint8_t{ 10 });
+        Put(globals, variant + GameOffset::k_VariantPowerupDuration + 1, std::uint8_t{ 15 });
+        Put(globals, variant + GameOffset::k_VariantPowerupDuration + 2, std::uint8_t{ 90 });
+    }
+}
+
+TEST_F(RuntimeTests, VariantRespawnRoundAndPowerupSettingsAreReadInTicks)
+{
+    Snapshot snapshot{ WithVariant(3, 0, 3) };
+    PutVariantSettings(snapshot);
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->RespawnTimeTicks, 300u);
+    EXPECT_EQ(game->LivesPerRound, 2);
+    EXPECT_EQ(game->TeamLivesPerRound, 4);
+    EXPECT_EQ(game->RoundsToWin, 3);
+    EXPECT_EQ(game->SuddenDeathTicks, 1800);
+    EXPECT_EQ(game->GracePeriodTicks, 300u);
+    EXPECT_EQ(game->PowerupDurationTicks[0], 600u);
+    EXPECT_EQ(game->PowerupDurationTicks[1], 900u);
+    EXPECT_EQ(game->PowerupDurationTicks[2], 5400u);
+}
+
+TEST_F(RuntimeTests, IndefiniteSuddenDeathStaysMinusOne)
+{
+    Snapshot snapshot{ WithVariant(3, 0, 3) };
+    PutVariantSettings(snapshot, -1);
+
+    const auto game{ this->UpdateGame(snapshot) };
+    ASSERT_NE(game, nullptr);
+    EXPECT_EQ(game->SuddenDeathTicks, -1);
+}
+
+TEST_F(RuntimeTests, VariantSettingsAreZeroOutsideTheVariantModes)
+{
+    for (const std::uint8_t mode : { std::uint8_t{ 0 }, std::uint8_t{ 4 } })
+    {
+        Snapshot snapshot{ WithVariant(mode, 0, 3) };
+        PutVariantSettings(snapshot);
+
+        const auto game{ this->UpdateGame(snapshot) };
+        ASSERT_NE(game, nullptr);
+        EXPECT_EQ(game->RespawnTimeTicks, 0u);
+        EXPECT_EQ(game->LivesPerRound, 0);
+        EXPECT_EQ(game->TeamLivesPerRound, 0);
+        EXPECT_EQ(game->RoundsToWin, 0);
+        EXPECT_EQ(game->SuddenDeathTicks, 0);
+        EXPECT_EQ(game->GracePeriodTicks, 0u);
+        EXPECT_EQ(game->PowerupDurationTicks, (std::array<std::uint32_t, 3>{ 0, 0, 0 }));
+    }
 }
 
 TEST_F(RuntimeTests, ScoreToWinIsZeroForAVariantThatIsNotMegalo)

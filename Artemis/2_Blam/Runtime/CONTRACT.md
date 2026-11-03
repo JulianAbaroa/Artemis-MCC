@@ -24,9 +24,9 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `Blam.Runtime.Layer` | The facade: stores and services; `Cleanup()` forgets the map. |
 | `Blam.Runtime.Object.Type`, `Blam.Runtime.Object.State` | `AliveObject`, the object table, bone matrices, damage sections. Weapon: ammo per magazine (`Magazines`), `IsOverheated`, `BusyTimer` (the weapon cannot fire), `Magazine0ReloadState`, charge (`Common.Semantic` `ChargeState`), tracking (`TrackedObject` of any kind, `TrackingState`). Projectile: `OwnerPlayer`, `OwnerBiped`, `ShooterRoot`, `ParentNode`. Biped: `CrouchFraction` (unit +0x2AC, the real pose), `ContactMaterial` (0xFFFF without contact, `k_NoContact`) and `OnStructure` (bipd +0xAD4 and +0xAD7), `GroundObjectHandle` (lags one tick when landing and drops to none when standing still on an object, D260). Every object: `IsInPhantom` (obje +0xDC bit 16: inside a phantom volume that pushes it, set the tick it enters and cleared the tick it leaves, D261). |
-| `Blam.Runtime.Player.Type`, `Blam.Runtime.Player.State` | `AlivePlayer` and the player table. `RespawnTicks` is read from the player row (+0x1BC, u16 widened). |
+| `Blam.Runtime.Player.Type`, `Blam.Runtime.Player.State` | `AlivePlayer` and the player table. `RespawnTicks` is read from the player row (+0x1BC, u16 widened) and `Traits` (the decoded block at +0x328, D262) for every player of the table, alive or dead. |
 | `Blam.Runtime.Interaction.Type`, `Blam.Runtime.Interaction.State` | Interaction of each local player. |
-| `Blam.Runtime.Game.Type`, `Blam.Runtime.Game.State` | Game globals of the tick (clock, phase, round, round clock and time left, game variant round settings and score to win, team mapping and scores, megalo objects), event cursor and dropped events. |
+| `Blam.Runtime.Game.Type`, `Blam.Runtime.Game.State` | Game globals of the tick (clock, phase, round, round clock and time left, game variant round, respawn and powerup settings and score to win, team mapping and scores, megalo objects), event cursor and dropped events. |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Blam.Map`, `Blam.MapModel`.

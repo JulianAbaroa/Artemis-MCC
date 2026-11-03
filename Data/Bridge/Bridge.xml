@@ -18,6 +18,7 @@
 	<const name="MaxLifts" value="64" doc="Live lifts a tick carries: man cannons and gravity lifts (D261)." />
 	<const name="MaxLiftStages" value="3" doc="Stages (phantom types that push players or bipeds) a lift carries. The tags have 3 at most (D261)." />
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
+	<const name="PowerupCount" value="3" doc="Powerups of a game variant (red, blue, yellow): the length of the powerup duration array." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
 	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
@@ -44,6 +45,42 @@
 		<value name="Static" id="1" doc="The BSP." />
 		<value name="Object" id="2" doc="A living object, such as a forge block or a vehicle." />
 		<value name="Attached" id="3" doc="Parented to another object, such as a seat." />
+	</enum>
+	<enum name="BridgeInfiniteAmmo" type="u8" doc="Infinite ammo trait (Blam.Layout InfiniteAmmoMode, D262). 0 is a value outside the table.">
+		<value name="Unknown" id="0" />
+		<value name="Off" id="1" />
+		<value name="On" id="2" />
+		<value name="Bottomless" id="3" doc="Infinite ammo without reloading." />
+	</enum>
+	<enum name="BridgeAbilityUsage" type="u8" doc="Armor ability usage trait (Blam.Layout AbilityUsageMode, D262).">
+		<value name="Unknown" id="0" />
+		<value name="Disabled" id="1" />
+		<value name="NotWithObjectives" id="2" />
+		<value name="Enabled" id="3" />
+	</enum>
+	<enum name="BridgeVehicleUse" type="u8" doc="Vehicle use trait (Blam.Layout VehicleUseMode, D262).">
+		<value name="Unknown" id="0" />
+		<value name="Blocked" id="1" />
+		<value name="PassengerOnly" id="2" />
+		<value name="DriverOnly" id="3" />
+		<value name="GunnerOnly" id="4" />
+		<value name="NoPassenger" id="5" />
+		<value name="NoDriver" id="6" />
+		<value name="NoGunner" id="7" />
+		<value name="Full" id="8" />
+	</enum>
+	<enum name="BridgeIdentityVisibility" type="u8" doc="Who sees the waypoint or the name of a player (Blam.Layout IdentityVisibility, D262).">
+		<value name="Unknown" id="0" />
+		<value name="Hidden" id="1" />
+		<value name="Allies" id="2" />
+		<value name="Everyone" id="3" />
+	</enum>
+	<enum name="BridgeRadarMode" type="u8" doc="Motion tracker mode trait (Blam.Layout RadarDisplayMode, D262).">
+		<value name="Unknown" id="0" />
+		<value name="Off" id="1" />
+		<value name="Allies" id="2" />
+		<value name="Normal" id="3" />
+		<value name="Enhanced" id="4" />
 	</enum>
 	<flags name="BridgeRequest" type="u8" doc="One-shot client requests of a decision (D120).">
 		<bit name="WeaponSwitch" index="0" />
@@ -151,6 +188,13 @@
 		<field name="RoundTimeLimitTicks" type="u32" doc="Time limit of a round in ticks, 0 for none." />
 		<field name="RoundLimit" type="u8" doc="Limit of rounds of the game variant, as stored." />
 		<field name="ScoreToWin" type="i32" doc="Score a team (a player in free for all) needs to win, as stored; 0 for none or not known." />
+		<field name="RespawnTimeTicks" type="u32" doc="Respawn time of the game variant in ticks, 0 when not known." />
+		<field name="SuddenDeathTicks" type="i32" doc="Sudden death duration in ticks, -1 for indefinite, 0 when not known." />
+		<field name="GracePeriodTicks" type="u32" doc="Grace period of the game variant in ticks." />
+		<field name="PowerupDurationTicks" type="u32" count="PowerupCount" doc="Duration of the red, blue and yellow powerups of the game variant in ticks." />
+		<field name="LivesPerRound" type="u8" doc="Lives of each player per round, 0 for unlimited." />
+		<field name="TeamLivesPerRound" type="u8" doc="Lives of each team per round, 0 for unlimited." />
+		<field name="RoundsToWin" type="u8" doc="Rounds a team needs to win the match, as stored." />
 	</struct>
 
 	<struct name="BridgeEvent" doc="One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).">
@@ -166,6 +210,41 @@
 		<field name="DamageReportingType" type="u8" />
 		<field name="IsHeadshot" type="u8" />
 		<field name="IsStuck" type="u8" />
+	</struct>
+
+	<struct name="BridgePlayerTraits" doc="Traits the engine applies to a player in this tick (Blam.Layout PlayerTraits, D262): already composed with the carried objective, the powerups and the respawn traits. Multipliers are 1.0 for 100%. A raw index outside its table reads NaN (floats), 0 (bools) or Unknown (enums).">
+		<field name="DamageResistance" type="f32" doc="Infinity when invulnerable." />
+		<field name="HealthMultiplier" type="f32" />
+		<field name="HealthRegenRate" type="f32" />
+		<field name="ShieldMultiplier" type="f32" />
+		<field name="ShieldRegenRate" type="f32" />
+		<field name="OvershieldRegenRate" type="f32" />
+		<field name="ShieldVampirism" type="f32" />
+		<field name="DamageMultiplier" type="f32" doc="Weapon damage. Infinity for instant kill." />
+		<field name="MeleeMultiplier" type="f32" doc="Infinity for instant kill." />
+		<field name="MovementSpeed" type="f32" />
+		<field name="Gravity" type="f32" />
+		<field name="JumpHeight" type="f32" doc="Multiplier of the stored percentage (150% reads 1.5)." />
+		<field name="RadarRange" type="f32" doc="Motion tracker range in meters, not a multiplier." />
+		<field name="HeadshotImmune" type="u8" doc="0 no, 1 yes." />
+		<field name="AssassinationImmune" type="u8" doc="0 no, 1 yes." />
+		<field name="CannotDieFromDamage" type="u8" doc="0 no, 1 yes." />
+		<field name="GrenadeRegen" type="u8" doc="0 no, 1 yes." />
+		<field name="WeaponPickup" type="u8" doc="0 no, 1 yes." />
+		<field name="AbilitiesDropOnDeath" type="u8" doc="0 no, 1 yes." />
+		<field name="InfiniteAbilities" type="u8" doc="0 no, 1 yes." />
+		<field name="InfiniteAmmo" type="u8" enum="BridgeInfiniteAmmo" />
+		<field name="AbilityUsage" type="u8" enum="BridgeAbilityUsage" />
+		<field name="VehicleUse" type="u8" enum="BridgeVehicleUse" />
+		<field name="VisibleWaypoint" type="u8" enum="BridgeIdentityVisibility" />
+		<field name="VisibleName" type="u8" enum="BridgeIdentityVisibility" />
+		<field name="RadarMode" type="u8" enum="BridgeRadarMode" />
+		<field name="FragGrenades" type="u8" doc="Grenades the player starts with, 255 for the map default." />
+		<field name="PlasmaGrenades" type="u8" doc="Grenades the player starts with, 255 for the map default." />
+		<field name="ActiveCamo" type="u8" doc="Raw setting, 1 off to 5 best." />
+		<field name="PrimaryWeapon" type="i8" doc="Raw index of the weapon table of the game variant editor, -1 none, 0 the first one." />
+		<field name="SecondaryWeapon" type="i8" doc="Raw index of the weapon table of the game variant editor, -1 none." />
+		<field name="Ability" type="i8" doc="Raw index of the armor ability table of the game variant editor, -1 none, 0 sprint." />
 	</struct>
 
 	<struct name="BridgePlayer" doc="One player of the Tick (Environment Players), without its name.">
@@ -202,6 +281,7 @@
 		<field name="GroundObject" type="u32" doc="Object under the feet when Ground is Object, NoHandle otherwise (the last valid one when the engine drops it)." />
 		<field name="CrouchFraction" type="f32" doc="0 standing to 1 crouched." />
 		<field name="OwnVelocity" type="BridgeVec3" doc="Velocity relative to the object under the feet, or the biped's own." />
+		<field name="Traits" type="BridgePlayerTraits" doc="Active traits of the player, also while dead (player +0x328)." />
 		<field name="AppliedDecision" type="u64" doc="DecisionTick of the bridge action the engine applied to this player up to this tick (0 = none)." />
 	</struct>
 

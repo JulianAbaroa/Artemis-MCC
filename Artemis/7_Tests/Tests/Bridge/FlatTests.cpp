@@ -5,6 +5,7 @@ import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Contract.Bridge.Type;
+import Blam.Layout.Player.Type;
 import Bridge.Codec.Flat.System;
 import Bridge.Codec.Tick.Type;
 import Perception.Details.Type;
@@ -25,7 +26,12 @@ namespace
     using Common::Semantic::Type::FlagState;
     using Common::Semantic::Type::RoundState;
     using Common::Team::Type::Team;
+    using Blam::Layout::Player::Type::Traits::PlayerTraits;
     using Contract::Bridge::Type::BridgeGround;
+    using Contract::Bridge::Type::BridgeInfiniteAmmo;
+    using Contract::Bridge::Type::BridgeVehicleUse;
+    using Contract::Bridge::Type::BridgeIdentityVisibility;
+    using Contract::Bridge::Type::BridgeRadarMode;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickFlag;
     using Perception::Details::Type::ExplosiveDetail;
@@ -362,6 +368,13 @@ TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)
     match.RoundTimeLimitTicks = 36000;
     match.RoundLimit = 3;
     match.ScoreToWin = 5;
+    match.RespawnTimeTicks = 300;
+    match.LivesPerRound = 2;
+    match.TeamLivesPerRound = 4;
+    match.RoundsToWin = 3;
+    match.SuddenDeathTicks = -1;
+    match.GracePeriodTicks = 300;
+    match.PowerupDurationTicks = { 360, 900, 5400 };
 
     Tick tick{};
     tick.Match = std::make_shared<const MatchStatus>(std::move(match));
@@ -382,6 +395,15 @@ TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)
     EXPECT_EQ(flat->Match.RoundTimeLimitTicks, 36000u);
     EXPECT_EQ(flat->Match.RoundLimit, 3);
     EXPECT_EQ(flat->Match.ScoreToWin, 5);
+    EXPECT_EQ(flat->Match.RespawnTimeTicks, 300u);
+    EXPECT_EQ(flat->Match.LivesPerRound, 2);
+    EXPECT_EQ(flat->Match.TeamLivesPerRound, 4);
+    EXPECT_EQ(flat->Match.RoundsToWin, 3);
+    EXPECT_EQ(flat->Match.SuddenDeathTicks, -1);
+    EXPECT_EQ(flat->Match.GracePeriodTicks, 300u);
+    EXPECT_EQ(flat->Match.PowerupDurationTicks[0], 360u);
+    EXPECT_EQ(flat->Match.PowerupDurationTicks[1], 900u);
+    EXPECT_EQ(flat->Match.PowerupDurationTicks[2], 5400u);
 }
 
 TEST(FlatTests, HeaderCarriesTheMapId)
@@ -406,6 +428,61 @@ TEST(FlatTests, RespawnTicksReachThePlayerRowWithAndWithoutBody)
     EXPECT_EQ(flat->Players[0].RespawnTicks, 420u);
     EXPECT_EQ(flat->Players[1].HasBody, 1);
     EXPECT_EQ(flat->Players[1].RespawnTicks, 0u);
+}
+
+TEST(FlatTests, PlayerTraitsReachThePlayerRowWithAndWithoutBody)
+{
+    PlayerTraits traits{};
+    traits.DamageResistance = std::numeric_limits<float>::infinity();
+    traits.MeleeMultiplier = 1.25f;
+    traits.MovementSpeed = 0.9f;
+    traits.Gravity = 0.75f;
+    traits.JumpHeight = 1.5f;
+    traits.RadarRange = 75.0f;
+    traits.IsHeadshotImmune = true;
+    traits.AreAbilitiesInfinite = true;
+    traits.InfiniteAmmo = Blam::Layout::Player::Type::Traits::InfiniteAmmoMode::Bottomless;
+    traits.VehicleUse = Blam::Layout::Player::Type::Traits::VehicleUseMode::NoDriver;
+    traits.VisibleWaypoint = Blam::Layout::Player::Type::Traits::IdentityVisibility::Everyone;
+    traits.RadarMode = Blam::Layout::Player::Type::Traits::RadarDisplayMode::Enhanced;
+    traits.FragGrenades = 2;
+    traits.PlasmaGrenades = 255;
+    traits.ActiveCamo = 3;
+    traits.PrimaryWeapon = -1;
+    traits.Ability = 4;
+
+    auto players{ std::make_shared<Players>() };
+    players->Rows.push_back(Player{ .Handle = 0xE5A10001, .Traits = traits });
+    players->Rows.push_back(Player{ .Handle = 0xE5A10002, .Traits = traits, .Body = Body{} });
+    Tick tick{};
+    tick.Players = players;
+
+    const auto flat{ Flat(tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 2u);
+    EXPECT_EQ(flat->Players[0].HasBody, 0);
+    EXPECT_EQ(flat->Players[1].HasBody, 1);
+    for (const auto& row : std::span{ flat->Players }.first(2))
+    {
+        EXPECT_TRUE(std::isinf(row.Traits.DamageResistance));
+        EXPECT_FLOAT_EQ(row.Traits.MeleeMultiplier, 1.25f);
+        EXPECT_FLOAT_EQ(row.Traits.MovementSpeed, 0.9f);
+        EXPECT_FLOAT_EQ(row.Traits.Gravity, 0.75f);
+        EXPECT_FLOAT_EQ(row.Traits.JumpHeight, 1.5f);
+        EXPECT_FLOAT_EQ(row.Traits.RadarRange, 75.0f);
+        EXPECT_EQ(row.Traits.HeadshotImmune, 1);
+        EXPECT_EQ(row.Traits.AssassinationImmune, 0);
+        EXPECT_EQ(row.Traits.InfiniteAbilities, 1);
+        EXPECT_EQ(row.Traits.InfiniteAmmo, BridgeInfiniteAmmo::Bottomless);
+        EXPECT_EQ(row.Traits.VehicleUse, BridgeVehicleUse::NoDriver);
+        EXPECT_EQ(row.Traits.VisibleWaypoint, BridgeIdentityVisibility::Everyone);
+        EXPECT_EQ(row.Traits.VisibleName, BridgeIdentityVisibility::Unknown);
+        EXPECT_EQ(row.Traits.RadarMode, BridgeRadarMode::Enhanced);
+        EXPECT_EQ(row.Traits.FragGrenades, 2);
+        EXPECT_EQ(row.Traits.PlasmaGrenades, 255);
+        EXPECT_EQ(row.Traits.ActiveCamo, 3);
+        EXPECT_EQ(row.Traits.PrimaryWeapon, -1);
+        EXPECT_EQ(row.Traits.Ability, 4);
+    }
 }
 
 TEST(FlatTests, GroundAndCrouchReachThePlayerRowAndAreZeroWithoutBody)

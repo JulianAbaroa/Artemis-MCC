@@ -267,6 +267,9 @@
     <ClCompile Include="Player\Type\PlayerSize.ixx">
       <Filter>Player\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Player\Type\PlayerTraits.ixx">
+      <Filter>Player\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Snapshot\Blam.Layout.Snapshot.Type.ixx">
       <Filter>Snapshot</Filter>
     </ClCompile>

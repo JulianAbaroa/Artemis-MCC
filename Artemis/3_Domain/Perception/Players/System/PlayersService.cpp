@@ -183,6 +183,7 @@ namespace Perception::Players::System
         player.LocalIndex = alive.LocalIndex;
         player.Team = alive.Team;
         player.RespawnTicks = alive.RespawnTicks;
+        player.Traits = alive.Traits;
         player.CameraPosition = alive.CameraPosition;
         player.CameraForward = alive.CameraForward;
         player.Body = this->MakeBody(alive, objectTable, entities, vitalities, previous, nextMemory);

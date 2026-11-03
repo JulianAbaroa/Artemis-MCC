@@ -9,6 +9,7 @@ namespace
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxTeams;
     using Blam::Layout::Game::Type::Offset::k_EventDataSize;
+    using Blam::Layout::Game::Type::Offset::k_PowerupCount;
 }
 
 export namespace Blam::Runtime::Game::Type::Alive
@@ -91,6 +92,16 @@ export namespace Blam::Runtime::Game::Type::Alive
         std::uint8_t RoundLimit{};
         // Score to win of the game variant as stored, 0 for none or when the variant is not available or not Megalo.
         std::uint16_t ScoreToWin{};
+        // Respawn, round and powerup settings of the game variant (D262). All 0 when the game variant is not available.
+        // Seconds of the variant in ticks. -1 stays -1 (sudden death indefinite).
+        std::uint32_t RespawnTimeTicks{};
+        std::uint8_t LivesPerRound{};
+        std::uint8_t TeamLivesPerRound{};
+        std::uint8_t RoundsToWin{};
+        std::int32_t SuddenDeathTicks{};
+        std::uint32_t GracePeriodTicks{};
+        // Duration of the red, blue and yellow powerups in ticks.
+        std::array<std::uint32_t, k_PowerupCount> PowerupDurationTicks{};
         // Megalo state per object. Empty when the region was not captured.
         AliveMegaloObjects MegaloObjects{};
 

@@ -1468,3 +1468,138 @@ TEST_F(ReplayTests, EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift)
 
     if (replayed == 0) GTEST_SKIP() << skipped;
 }
+
+// --- A19: the traits of the players and the settings of the game variant ---
+
+TEST_F(ReplayTests, CtfCGravityIsConstantAndJumpHeightFollowsTheFlagOfThePlayer0)
+{
+    using Common::Semantic::Type::Event;
+
+    std::map<std::uint32_t, float> jumpAt{};
+    std::vector<std::pair<std::uint32_t, Event>> carries{};
+    std::size_t gravityViolations{ 0 };
+    std::size_t samples{ 0 };
+    std::set<float> jumps{};
+    std::uint32_t lastTick{ 0 };
+    std::uint32_t lastSequence{ 0 };
+    const std::string reason{ ReplayRecording("ctf_c", [&](const Chain& chain) {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        const auto log{ chain.m_Environment.m_EventsStore.Acquire() };
+        if (log)
+        {
+            for (const auto& event : log->Rows)
+            {
+                if (event.Sequence <= lastSequence) continue;
+                lastSequence = event.Sequence;
+                if (event.EngineSequence == 0 && (event.Kind == Event::FlagTaken || event.Kind == Event::FlagDropped) && (event.CausePlayer & 0xFFFF) == 0)
+                {
+                    carries.emplace_back(event.GameTick, event.Kind);
+                }
+            }
+        }
+
+        if (!match || !players || match->GameTick == lastTick) return;
+        lastTick = match->GameTick;
+        for (const auto& player : players->Rows)
+        {
+            ++samples;
+            if (player.Traits.Gravity != 0.75f) ++gravityViolations;
+            if ((player.Handle & 0xFFFF) == 0)
+            {
+                jumpAt[match->GameTick] = player.Traits.JumpHeight;
+                jumps.insert(player.Traits.JumpHeight);
+            }
+        }
+    }) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    EXPECT_GT(samples, 0u);
+    EXPECT_EQ(gravityViolations, 0u);
+    EXPECT_EQ(jumps, (std::set<float>{ 1.0f, 1.5f }));
+    ASSERT_GT(carries.size(), 10u);
+
+    // The jump height of the player 0 changes one tick after each Taken (to 1.5) and Dropped (to 1.0) of a flag it carries. Measured exceptions:
+    // the drop by suicide at 4281 changes two ticks later (the player dies at 4280), and the deaths that start the waits at 11564 and 23520
+    // reset the jump to 1.0 without a Dropped event of the player 0.
+    constexpr std::uint32_t k_SuicideDrop{ 4281 };
+    constexpr std::uint32_t k_SuicideChange{ 4283 };
+
+    std::map<std::uint32_t, float> changes{};
+    float previousJump{ 0.0f };
+    for (const auto& [tick, jump] : jumpAt)
+    {
+        if (jump != previousJump) changes.emplace(tick, jump);
+        previousJump = jump;
+    }
+
+    EXPECT_EQ(carries.size(), 138u);
+    std::set<std::uint32_t> explained{};
+    for (const auto& [tick, kind] : carries)
+    {
+        const std::uint32_t change{ tick == k_SuicideDrop ? k_SuicideChange : tick + 1 };
+        explained.insert(change);
+        ASSERT_TRUE(changes.contains(change)) << tick;
+        EXPECT_FLOAT_EQ(changes.at(change), kind == Event::FlagTaken ? 1.5f : 1.0f) << tick;
+    }
+
+    std::map<std::uint32_t, float> unexplained{};
+    for (const auto& [tick, jump] : changes)
+    {
+        if (tick != 1 && !explained.contains(tick)) unexplained.emplace(tick, jump);
+    }
+    EXPECT_EQ(unexplained, (std::map<std::uint32_t, float>{ { 11564, 1.0f }, { 23520, 1.0f } }));
+}
+
+TEST_F(ReplayTests, LiftsFilmPlayersHaveTheBaseGravityAndSpeed)
+{
+    std::size_t samples{ 0 };
+    std::size_t violations{ 0 };
+    const std::string reason{ ReplayRecording("lifts", [&](const Chain& chain) {
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        if (!players) return;
+
+        for (const auto& player : players->Rows)
+        {
+            ++samples;
+            if (player.Traits.Gravity != 0.75f || player.Traits.MovementSpeed != 1.1f) ++violations;
+        }
+    }) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    EXPECT_GT(samples, 0u);
+    EXPECT_EQ(violations, 0u);
+}
+
+TEST_F(ReplayTests, VariantSettingsOfCtfCAndCgbMatchTheirGametypes)
+{
+    struct Expected
+    {
+        std::string_view Film{};
+        std::uint32_t Respawn{};
+        std::uint8_t Lives{};
+        std::uint8_t RoundsToWin{};
+        std::int32_t SuddenDeath{};
+        std::uint32_t Grace{};
+        std::array<std::uint32_t, 3> Powerups{};
+    };
+
+    for (const Expected& want : { Expected{ "ctf_c", 300, 0, 0, 0, 0, { 600, 600, 600 } }, Expected{ "cgb_displace_1min", 300, 0, 0, 0, 300, { 360, 900, 5400 } } })
+    {
+        SCOPED_TRACE(want.Film);
+        std::shared_ptr<const Perception::Match::Type::MatchStatus> last{};
+        const std::string reason{ ReplayRecording(std::string{ want.Film }, [&](const Chain& chain) {
+            if (const auto match{ chain.m_Environment.m_MatchStore.Acquire() }; match) last = match;
+        }) };
+        if (!reason.empty()) { std::cout << "[  SKIPPED ] " << want.Film << ": " << reason << "\n"; continue; }
+
+        ASSERT_NE(last, nullptr);
+        EXPECT_EQ(last->RespawnTimeTicks, want.Respawn);
+        EXPECT_EQ(last->LivesPerRound, want.Lives);
+        EXPECT_EQ(last->TeamLivesPerRound, 0);
+        EXPECT_EQ(last->RoundsToWin, want.RoundsToWin);
+        EXPECT_EQ(last->SuddenDeathTicks, want.SuddenDeath);
+        EXPECT_EQ(last->GracePeriodTicks, want.Grace);
+        EXPECT_EQ(last->PowerupDurationTicks, want.Powerups);
+    }
+}
