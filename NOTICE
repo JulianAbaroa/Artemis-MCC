@@ -171,6 +171,10 @@ Acknowledgments (no code redistributed)
     Conceptual inspiration for the DLL proxy injection approach using
     wtsapi32.dll. The proxy export forwarders in Artemis are regenerated
     directly from the system wtsapi32.dll export table via GenerateProxyExports.py.
+- ReachVariantTool (https://github.com/DavidJCobb/ReachVariantEditor)
+    Reference for the Halo: Reach game variant format (player traits and
+    custom game options) used to name the fields Artemis reads from memory.
+    No code was taken from this project.
 - Mjolnir-Forge-Editor (https://github.com/Waffle1434/Mjolnir-Forge-Editor)
     The author's entry point into Halo modding at the game-engine level.
     No code was taken from this project.
