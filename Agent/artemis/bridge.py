@@ -118,6 +118,8 @@ class PublishedTick:
         self.projectiles = data["Projectiles"][: int(self.header["ProjectileCount"])]
         # Live explosives (fusion coils, land mines...) with the radius and damage of their explosion, sorted by Handle (D259).
         self.explosives = data["Explosives"][: int(self.header["ExplosiveCount"])]
+        # Live lifts with the stages of their tag and the measured exit of the last biped they pushed, sorted by Handle (D261).
+        self.lifts = data["Lifts"][: int(self.header["LiftCount"])]
         # The newest events of the match up to this tick, oldest first. Bridge.new_events keeps only the unseen ones (D141).
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])

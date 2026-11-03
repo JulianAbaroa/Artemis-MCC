@@ -149,7 +149,7 @@ namespace DevTools::Viewer::Hud::System
             }
         }
 
-        // note: Lifts and barriers are entities with their detail (D91). The kind is the subtype. The force of a lift waits for A12.
+        // note: Lifts and barriers are entities with their detail (D91). The kind is the subtype. The stages of a lift are in its detail (D261).
         auto tagNameOf = [&tick](std::uint32_t handle) -> std::string
         {
             if (!tick.ObjectTable) return {};

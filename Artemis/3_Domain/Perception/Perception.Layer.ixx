@@ -38,6 +38,7 @@ export namespace Perception
         using ZoneDetailsStore = Perception::Details::State::ZoneDetailsStore;
         using TeleporterDetailsStore = Perception::Details::State::TeleporterDetailsStore;
         using LiftDetailsStore = Perception::Details::State::LiftDetailsStore;
+        using LiftMemoryStore = Perception::Details::State::LiftMemoryStore;
         using BarrierDetailsStore = Perception::Details::State::BarrierDetailsStore;
         using ExplosiveDetailsStore = Perception::Details::State::ExplosiveDetailsStore;
         using ProjectileDetailsStore = Perception::Details::State::ProjectileDetailsStore;
@@ -78,7 +79,7 @@ export namespace Perception
             m_VitalityDetailsService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_DamageSectionsStore, m_ClassifierStore, m_VitalityDetailsStore),
             m_ZoneDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_ZoneDetailsStore),
             m_TeleporterDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_TeleporterDetailsStore),
-            m_LiftDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_LiftDetailsStore),
+            m_LiftDetailsService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_LiftMemoryStore, m_LiftDetailsStore),
             m_BarrierDetailsService(log, tables.m_ObjectStore, m_ClassifierStore, m_BarrierDetailsStore),
             m_ExplosiveDetailsService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, m_ClassifierStore, m_ExplosiveDetailsStore),
             m_ProjectileDetailsService(log, tables.m_ObjectStore, m_ProjectileDetailsStore),
@@ -103,6 +104,7 @@ export namespace Perception
         ZoneDetailsStore m_ZoneDetailsStore{};
         TeleporterDetailsStore m_TeleporterDetailsStore{};
         LiftDetailsStore m_LiftDetailsStore{};
+        LiftMemoryStore m_LiftMemoryStore{};
         BarrierDetailsStore m_BarrierDetailsStore{};
         ExplosiveDetailsStore m_ExplosiveDetailsStore{};
         ProjectileDetailsStore m_ProjectileDetailsStore{};

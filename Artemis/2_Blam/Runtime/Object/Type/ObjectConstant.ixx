@@ -19,6 +19,9 @@ export namespace Blam::Runtime::Object::Type::Constant
     constexpr std::uint8_t k_FixedBit{ 0x40 };
     constexpr std::uint8_t k_PhasedBit{ 0x80 };
 
+    // Bit of the second object flags word (obje 0xDC) set while the object is inside a phantom volume that pushes it (D261).
+    constexpr std::uint32_t k_InPhantomBit{ 0x00010000 };
+
     // Color of a placement left on the Forge default.
     constexpr std::uint8_t k_DefaultColor{ 0xFF };
 

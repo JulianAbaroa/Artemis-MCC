@@ -156,7 +156,9 @@ namespace DevTools::Viewer::Map::System
                 const auto* entity{ tick->Entities->Find(handle) };
                 if (!entity) continue;
 
-                AppendDirectional(vertices, entity->BoundingCenter, lift.LaunchDirection, options.ArrowLength, k_Fixture);
+                if (lift.Stages.empty()) continue;
+
+                AppendDirectional(vertices, entity->BoundingCenter, lift.Stages.back().Direction, options.ArrowLength, k_Fixture);
             }
         }
 

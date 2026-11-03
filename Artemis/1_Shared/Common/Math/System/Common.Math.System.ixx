@@ -5,6 +5,7 @@ import Common.Math.Type;
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec4;
 }
 
 export namespace Common::Math::System
@@ -26,6 +27,9 @@ export namespace Common::Math::System
 
     // Returns the length of the vector.
     auto Length(const Vec3& v) -> float;
+
+    // Returns the vector rotated by a unit quaternion (x, y, z, w).
+    auto Rotate(const Vec4& quaternion, const Vec3& v) -> Vec3;
 
     // Returns the distance between two points.
     auto Distance(const Vec3& a, const Vec3& b) -> float;

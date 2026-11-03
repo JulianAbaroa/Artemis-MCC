@@ -1,6 +1,7 @@
 export module Perception.Details.State;
 
 export import :ChargeMemory;
+export import :LiftMemory;
 
 import Common.State.Type;
 import Perception.Details.Type;

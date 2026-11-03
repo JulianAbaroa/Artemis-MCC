@@ -4,7 +4,7 @@ Group `1_Shared` - pure static library, generated - the layout C++ and Python sh
 
 ## Responsibility
 The binary contract of the bridge with the Python client: the POD structs of the `BridgeTick` (players, entities, the match with
-its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon`, the projectiles `BridgeProjectile` and the explosives `BridgeExplosive`, the events with both
+its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon`, the projectiles `BridgeProjectile` the explosives `BridgeExplosive` and the lifts `BridgeLift`, the events with both
 sequences) and the `BridgeAction`, their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own.
 
 ## Does not
@@ -44,6 +44,10 @@ A client built for another layout sees a different hash and refuses to connect.
   `WeaponCount` and `ProjectileCount` and the flags `WeaponsTruncated` and `ProjectilesTruncated` tell when rows were cut.
 - Explosives hold `k_BridgeMaxExplosives` (64) rows after the projectiles (D259): radius and damage of the explosion of the tags; the
   header carries `ExplosiveCount` after `MapId` and the flag `ExplosivesTruncated` tells when rows were cut.
+- Lifts hold `k_BridgeMaxLifts` (64) rows after the explosives (D261): up to `k_BridgeMaxLiftStages` (3) stages of the tag (`BridgeLiftStage`: marker
+  position and direction in the world, the push along it and toward its axis, who it affects) and the measured exit of the last biped
+  (`HasExit`, `ExitTick`, `ExitBiped`, `ExitVelocity`). The header carries `LiftCount` after `ExplosiveCount`, in the padding it already had, and the
+  flag `LiftsTruncated` tells when rows were cut.
 - The header also carries the `MapId` of the scnr of the loaded map (engine id, 0 while no map).
 - Each player row carries `RespawnTicks` (ticks left until it respawns, 0 while alive), right after `BipedHandle`: it takes the 2 bytes of padding
   the u8 block already had, so the layout adds 4 bytes per player and no new padding.

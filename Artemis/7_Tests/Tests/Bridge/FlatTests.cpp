@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 import Common.Engine.Type;
+import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Contract.Bridge.Type;
@@ -18,6 +19,7 @@ namespace
 {
     using Bridge::Codec::Flat::System::FlatService;
     using Bridge::Codec::Tick::Type::Tick;
+    using Common::Math::Type::Vec3;
     using Common::Semantic::Type::ChargeState;
     using Common::Semantic::Type::Event;
     using Common::Semantic::Type::FlagState;
@@ -28,6 +30,9 @@ namespace
     using Contract::Bridge::Type::BridgeTickFlag;
     using Perception::Details::Type::ExplosiveDetail;
     using Perception::Details::Type::ExplosiveDetails;
+    using Perception::Details::Type::LiftDetail;
+    using Perception::Details::Type::LiftDetails;
+    using Perception::Details::Type::LiftStage;
     using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ObjectiveDetails;
     using Perception::Details::Type::ProjectileDetail;
@@ -44,6 +49,8 @@ namespace
     using Perception::Players::Type::Players;
 
     using Contract::Bridge::Type::k_BridgeMaxExplosives;
+    using Contract::Bridge::Type::k_BridgeMaxLifts;
+    using Contract::Bridge::Type::k_BridgeMaxLiftStages;
     using Contract::Bridge::Type::k_BridgeMaxObjectives;
     using Contract::Bridge::Type::k_BridgeMaxProjectiles;
     using Contract::Bridge::Type::k_BridgeMaxWeapons;
@@ -278,6 +285,59 @@ TEST(FlatTests, ExplosivesAreOrderedByHandleCarryTheirBlastAndAreCutAtTheCapacit
     EXPECT_NE(flatFull->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::ExplosivesTruncated), 0u);
 }
 
+TEST(FlatTests, LiftsAreOrderedByHandleCarryTheirStagesAndExitAndAreCutAtTheCapacity)
+{
+    LiftStage first{ .Position = Vec3{ 1.0f, 2.0f, 3.0f }, .Direction = Vec3{ 0.0f, -0.82f, 0.57f }, .Acceleration = 11.0f, .MaximumVelocity = 7.5f,
+        .AxisAcceleration = 25.0f, .AxisMaximumVelocity = 20.0f, .Affects = 15 };
+    LiftStage second{ .Direction = Vec3{ 0.0f, 0.0f, 1.0f }, .Acceleration = 16.0f, .MaximumVelocity = 8.0f, .Affects = 3 };
+
+    LiftDetails lifts{};
+    lifts[0x20] = LiftDetail{ .Handle = 0x20, .Stages = { first, second }, .HasExit = true, .ExitTick = 1227,
+        .ExitVelocity = Vec3{ 0.252f, -6.162f, 4.114f }, .ExitBiped = 0xB1 };
+    lifts[0x10] = LiftDetail{ .Handle = 0x10 };
+
+    Tick tick{};
+    tick.LiftDetails = std::make_shared<const LiftDetails>(std::move(lifts));
+    const auto flat{ Flat(tick) };
+
+    ASSERT_EQ(flat->Header.LiftCount, 2u);
+    EXPECT_EQ(flat->Lifts[0].Handle, 0x10u);
+    EXPECT_EQ(flat->Lifts[0].StageCount, 0u);
+    EXPECT_EQ(flat->Lifts[0].HasExit, 0u);
+    EXPECT_EQ(flat->Lifts[0].ExitBiped, k_NoHandle);
+
+    const auto& lift{ flat->Lifts[1] };
+    EXPECT_EQ(lift.Handle, 0x20u);
+    ASSERT_EQ(lift.StageCount, 2u);
+    EXPECT_EQ(lift.HasExit, 1u);
+    EXPECT_EQ(lift.ExitTick, 1227u);
+    EXPECT_EQ(lift.ExitBiped, 0xB1u);
+    EXPECT_FLOAT_EQ(lift.ExitVelocity.X, 0.252f);
+    EXPECT_FLOAT_EQ(lift.ExitVelocity.Y, -6.162f);
+    EXPECT_FLOAT_EQ(lift.ExitVelocity.Z, 4.114f);
+    EXPECT_FLOAT_EQ(lift.Stages[0].Position.Z, 3.0f);
+    EXPECT_FLOAT_EQ(lift.Stages[0].Direction.Y, -0.82f);
+    EXPECT_FLOAT_EQ(lift.Stages[0].Acceleration, 11.0f);
+    EXPECT_FLOAT_EQ(lift.Stages[0].MaximumVelocity, 7.5f);
+    EXPECT_FLOAT_EQ(lift.Stages[0].AxisAcceleration, 25.0f);
+    EXPECT_FLOAT_EQ(lift.Stages[0].AxisMaximumVelocity, 20.0f);
+    EXPECT_EQ(lift.Stages[0].Affects, 15u);
+    EXPECT_FLOAT_EQ(lift.Stages[1].Direction.Z, 1.0f);
+    EXPECT_EQ(lift.Stages[1].Affects, 3u);
+    EXPECT_EQ(flat->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::LiftsTruncated), 0u);
+
+    LiftDetails many{};
+    for (std::uint32_t i{ 0 }; i < k_BridgeMaxLifts + 1; ++i) many[0x100 + i] = LiftDetail{ .Handle = 0x100 + i };
+    many[0x100].Stages.assign(k_BridgeMaxLiftStages + 1, second);
+    Tick full{};
+    full.LiftDetails = std::make_shared<const LiftDetails>(std::move(many));
+    const auto flatFull{ Flat(full) };
+    EXPECT_EQ(flatFull->Header.LiftCount, k_BridgeMaxLifts);
+    EXPECT_NE(flatFull->Header.Flags & static_cast<std::uint32_t>(BridgeTickFlag::LiftsTruncated), 0u);
+    // A tag with more stages than the row holds keeps the first ones.
+    EXPECT_EQ(flatFull->Lifts[0].StageCount, k_BridgeMaxLiftStages);
+}
+
 TEST(FlatTests, WithoutWeaponOrProjectileDetailsTheCountsAreZero)
 {
     const auto flat{ Flat(Tick{}) };
@@ -285,6 +345,7 @@ TEST(FlatTests, WithoutWeaponOrProjectileDetailsTheCountsAreZero)
     EXPECT_EQ(flat->Header.WeaponCount, 0u);
     EXPECT_EQ(flat->Header.ProjectileCount, 0u);
     EXPECT_EQ(flat->Header.ExplosiveCount, 0u);
+    EXPECT_EQ(flat->Header.LiftCount, 0u);
 }
 
 TEST(FlatTests, MatchCarriesTheRoundAndTheScoresOfEachTeam)

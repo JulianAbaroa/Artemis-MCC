@@ -17,6 +17,7 @@ namespace
     using Contract::Bridge::Type::BridgeObjective;
     using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeExplosive;
+    using Contract::Bridge::Type::BridgeLift;
     using Contract::Bridge::Type::BridgeStand;
     using Contract::Bridge::Type::BridgeWeapon;
     using Contract::Bridge::Type::BridgePlayer;
@@ -64,7 +65,8 @@ namespace
             (header.ChangedEntityCount * sizeof(BridgeEntity)) + (header.RemovedEntityCount * sizeof(std::uint32_t)) +
             (header.NewEventCount * sizeof(BridgeEvent)) + (tick.ObjectiveCount * sizeof(BridgeObjective)) +
             (tick.StandCount * sizeof(BridgeStand)) + (tick.WeaponCount * sizeof(BridgeWeapon)) +
-            (tick.ProjectileCount * sizeof(BridgeProjectile)) + (tick.ExplosiveCount * sizeof(BridgeExplosive)) };
+            (tick.ProjectileCount * sizeof(BridgeProjectile)) + (tick.ExplosiveCount * sizeof(BridgeExplosive)) +
+            (tick.LiftCount * sizeof(BridgeLift)) };
 
         bytes.resize(sizeof(header) + sizeof(tick) + rest);
         std::memcpy(bytes.data(), &header, sizeof(header));

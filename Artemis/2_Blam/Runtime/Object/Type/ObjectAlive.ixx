@@ -67,6 +67,10 @@ export namespace Blam::Runtime::Object::Type::Alive
         float BoundingRadius{};
         float DamageReceived{};
 
+        // note: The object is inside a phantom volume that pushes it: a lift or a man cannon (obje 0xDC bit 16, D261).
+        // Set the tick it enters and cleared the tick it leaves. Never set by walking on the solid of the lift.
+        bool IsInPhantom{ false };
+
         ::Profile Profile{};
 
         // note: Only objects that have the multiplayer block.

@@ -28,7 +28,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.Layer` | The facade: owns the stores and services; `Cleanup()` forgets the map. |
 | `Perception.Classifier.Type`, `Perception.Classifier.State` | Kind, function and group of each live object. |
 | `Perception.ObjectGraph.Type`, `Perception.ObjectGraph.State` | How the live objects attach to each other, up to their root. |
-| `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift, barrier, explosive (radius and damage of the explosion of its tags, D259), projectile (owner, shooter root, what it is stuck to), weapon (ammo, energy, heat, overheat, reload, charge, lock, `CanFireNow`) and objective details (flags and their stands). |
+| `Perception.Details.Type`, `Perception.Details.State` | Vitality, zone, teleporter, lift (the stages of the phantom types of its tag and the measured exit of the last biped it pushed, D98, D261), barrier, explosive (radius and damage of the explosion of its tags, D259), projectile (owner, shooter root, what it is stuck to), weapon (ammo, energy, heat, overheat, reload, charge, lock, `CanFireNow`) and objective details (flags and their stands). |
 | `Perception.Entities.Type`, `Perception.Entities.State` | The entities of the tick. The team of a biped is the one of its player and the team of a projectile the one of its `OwnerPlayer` in the player table. |
 | `Perception.Players.Type`, `Perception.Players.State` | The players of the tick. `RespawnTicks` belongs to the player and not to its `Body` (it is valid without a biped). The life of a biped is `Entity.Vitality`, there is no `Body.Health`. `Body` carries the ground and the crouch of the biped (D260): `Ground` (`GroundKind`: Air, Static, Object, Attached), `IsGrounded`, `AirborneTicks`, `GroundObject`, `OwnVelocity` (relative to the object under the feet), `CrouchFraction` and `IsCrouching`. A contact that cuts for 1 or 2 ticks keeps the last ground and a jump releases it at once. |
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
@@ -54,6 +54,9 @@ Other projects may import only these modules; everything else in the project is 
 - `GroundMemoryStore`: by biped handle, the ticks without contact, the ground and object of the last contact and whether the biped jumped off it, to
   resolve `Body.Ground` (D260). Only the bipeds with a `Body` in the last tick are in it. It is emptied on `Cleanup()` and a new biped starts without
   history (its `AirborneTicks` count from 0).
+- `LiftMemoryStore`: the bipeds that were inside a phantom volume in the last tick with the lift each one was assigned when it entered (the nearest
+  one within 3 world units, none for doors and other phantoms) and the last exit of each lift (tick, velocity and biped), for `LiftDetail.HasExit`
+  (D261). A biped that disappears inside is forgotten without an exit and a lift that disappears loses its exit. It is emptied on `Cleanup()`.
 - `EventsMemoryStore`: the last flag seen of each base team, the round and the last engine sequence, to generate the flag events on
   the transitions (none when the round changes or on the first tick after a load).
 - Every other store holds only the value of the last tick. `Cleanup()` forgets the map.
@@ -74,5 +77,5 @@ A missing or invalid table entry leaves the results that depend on it empty for 
 
 ## Tests
 - `ReplayTests.Recordings`: a recorded Snapshot stream run through the whole pipeline must give the golden `.tdump` byte for byte.
-- `PipelineTests` (the pure chain without the DLL), `CollidableSceneTests` and `ClassifierFlagZoneTests`, in `Artemis.Tests`.
+- `PipelineTests` (the pure chain without the DLL), `CollidableSceneTests`, `ClassifierFlagZoneTests` and `LiftDetailsTests` (stages, who each one affects, the measured exit), in `Artemis.Tests`.
 - `Tools/Tests/test_components.py`: imports, references and purity of the project.

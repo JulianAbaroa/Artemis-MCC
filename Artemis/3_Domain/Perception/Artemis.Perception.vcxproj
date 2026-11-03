@@ -62,6 +62,8 @@
     <ClCompile Include="Collidable\System\CollidableService.ixx" />
     <ClCompile Include="Collidable\Type\Perception.Collidable.Type.ixx" />
     <ClCompile Include="Details\State\DetailsStore.ixx" />
+    <ClCompile Include="Details\State\LiftMemoryStore.cpp" />
+    <ClCompile Include="Details\State\LiftMemoryStore.ixx" />
     <ClCompile Include="Details\State\WeaponChargeMemoryStore.cpp" />
     <ClCompile Include="Details\State\WeaponChargeMemoryStore.ixx" />
     <ClCompile Include="Details\System\Barrier\BarrierDetailsService.cpp" />

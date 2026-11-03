@@ -6,6 +6,7 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Common::Math::Type::Vec4;
 
     using Common::Math::Type::k_WorldUp;
     using Common::Math::Type::k_TwoPi;
@@ -29,6 +30,13 @@ namespace Common::Math::System
     auto Scale(const Vec3& v, float scalar) -> Vec3
     {
         return { v.X * scalar, v.Y * scalar, v.Z * scalar };
+    }
+
+    auto Rotate(const Vec4& quaternion, const Vec3& v) -> Vec3
+    {
+        const Vec3 q{ quaternion.X, quaternion.Y, quaternion.Z };
+        const Vec3 t{ Scale(Cross(q, v), 2.0f) };
+        return Add(Add(v, Scale(t, quaternion.W)), Cross(q, t));
     }
 
     auto Dot(const Vec3& a, const Vec3& b) -> float

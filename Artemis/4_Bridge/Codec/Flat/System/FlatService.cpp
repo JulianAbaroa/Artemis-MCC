@@ -17,6 +17,8 @@ namespace
     using Perception::Events::Type::GameEvent;
     using Perception::Match::Type::MatchScore;
     using Perception::Details::Type::ExplosiveDetail;
+    using Perception::Details::Type::LiftDetail;
+    using Perception::Details::Type::LiftStage;
     using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ProjectileDetail;
     using Perception::Details::Type::StandDetail;
@@ -28,6 +30,8 @@ namespace
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeEvent;
     using Contract::Bridge::Type::BridgeExplosive;
+    using Contract::Bridge::Type::BridgeLift;
+    using Contract::Bridge::Type::BridgeLiftStage;
     using Contract::Bridge::Type::BridgeObjective;
     using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeStand;
@@ -37,6 +41,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
     using Contract::Bridge::Type::k_BridgeNotLocal;
+    using Contract::Bridge::Type::k_BridgeMaxLiftStages;
 
     // Value of an optional float that is absent (Shield, Vitality).
     constexpr float k_Absent{ std::numeric_limits<float>::quiet_NaN() };
@@ -199,6 +204,33 @@ namespace
         return row;
     }
 
+    auto ToBridge(const LiftStage& stage) -> BridgeLiftStage
+    {
+        BridgeLiftStage row{ Zeroed<BridgeLiftStage>() };
+        row.Position = ToBridge(stage.Position);
+        row.Direction = ToBridge(stage.Direction);
+        row.Acceleration = stage.Acceleration;
+        row.MaximumVelocity = stage.MaximumVelocity;
+        row.AxisAcceleration = stage.AxisAcceleration;
+        row.AxisMaximumVelocity = stage.AxisMaximumVelocity;
+        row.Affects = stage.Affects;
+        return row;
+    }
+
+    // note: A tag with more stages than the row holds loses the last ones (the tags have 3 at most).
+    auto ToBridge(const LiftDetail& lift) -> BridgeLift
+    {
+        BridgeLift row{ Zeroed<BridgeLift>() };
+        row.Handle = lift.Handle;
+        row.StageCount = static_cast<std::uint8_t>((std::min)(lift.Stages.size(), static_cast<std::size_t>(k_BridgeMaxLiftStages)));
+        row.HasExit = lift.HasExit ? 1 : 0;
+        row.ExitTick = lift.ExitTick;
+        row.ExitBiped = lift.ExitBiped;
+        row.ExitVelocity = ToBridge(lift.ExitVelocity);
+        for (std::size_t i{ 0 }; i < row.StageCount; ++i) row.Stages[i] = ToBridge(lift.Stages[i]);
+        return row;
+    }
+
     // return: Rows written, sorted by handle. Stops at the capacity of the array.
     template<typename Detail, typename Row, std::size_t N>
     auto FlattenByHandle(const std::unordered_map<std::uint32_t, Detail>& details, std::array<Row, N>& rows) -> std::size_t
@@ -320,7 +352,7 @@ namespace Bridge::Codec::Flat::System
             }
         }
 
-        // Weapons, projectiles and explosives, by handle. Like the entities, only the rows below the count are meaningful.
+        // Weapons, projectiles, explosives and lifts, by handle. Like the entities, only the rows below the count are meaningful.
         std::size_t weaponCount{ 0 };
         if (tick.WeaponDetails)
         {
@@ -340,6 +372,13 @@ namespace Bridge::Codec::Flat::System
         {
             explosiveCount = FlattenByHandle(*tick.ExplosiveDetails, flat.Explosives);
             if (explosiveCount < tick.ExplosiveDetails->size()) flags |= static_cast<std::uint32_t>(BridgeTickFlag::ExplosivesTruncated);
+        }
+
+        std::size_t liftCount{ 0 };
+        if (tick.LiftDetails)
+        {
+            liftCount = FlattenByHandle(*tick.LiftDetails, flat.Lifts);
+            if (liftCount < tick.LiftDetails->size()) flags |= static_cast<std::uint32_t>(BridgeTickFlag::LiftsTruncated);
         }
 
         // The newest events of the log: Python keeps its cursor by sequence and skips the ones it already has.
@@ -365,6 +404,7 @@ namespace Bridge::Codec::Flat::System
         flat.Header.WeaponCount = static_cast<std::uint16_t>(weaponCount);
         flat.Header.ProjectileCount = static_cast<std::uint16_t>(projectileCount);
         flat.Header.ExplosiveCount = static_cast<std::uint16_t>(explosiveCount);
+        flat.Header.LiftCount = static_cast<std::uint16_t>(liftCount);
         flat.Header.Generation = tick.Generation;
         flat.Header.MapId = tick.MapId;
         flat.Header.Flags = flags;

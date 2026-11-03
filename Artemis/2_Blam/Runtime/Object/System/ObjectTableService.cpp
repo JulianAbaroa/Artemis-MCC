@@ -54,6 +54,7 @@ namespace
     using Blam::Runtime::Object::Type::Constant::k_SymmetryMask;
     using Blam::Runtime::Object::Type::Constant::k_GameSpecificBit;
     using Blam::Runtime::Object::Type::Constant::k_FixedBit;
+    using Blam::Runtime::Object::Type::Constant::k_InPhantomBit;
     using Blam::Runtime::Object::Type::Constant::k_PhasedBit;
     using Blam::Runtime::Object::Type::Constant::k_DefaultColor;
     using Blam::Runtime::Object::Type::Constant::k_TriggerHeldBit;
@@ -212,6 +213,7 @@ namespace Blam::Runtime::Object::System
 
         object.BoundingRadius = datum.Read<float>(ObjeOffset::k_BoundingRadius);
         object.DamageReceived = datum.Read<float>(ObjeOffset::k_DamageReceived);
+        object.IsInPhantom = (datum.Read<std::uint32_t>(ObjeOffset::k_ObjectFlags2) & k_InPhantomBit) != 0;
 
         object.HlmtVariant = datum.Read<std::uint16_t>(ObjeOffset::k_ModelVariant);
 

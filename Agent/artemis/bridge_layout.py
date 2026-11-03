@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x726B7E147F5E5386
+LAYOUT_HASH = 0x1AC672670E2D6507
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -17,6 +17,8 @@ MAX_OBJECTIVES = 8
 MAX_WEAPONS = 0x100
 MAX_PROJECTILES = 0x100
 MAX_EXPLOSIVES = 64
+MAX_LIFTS = 64
+MAX_LIFT_STAGES = 3
 MAX_TEAMS = 8
 MAX_TICK_EVENTS = 64
 NO_HANDLE = 0xffffffff
@@ -68,6 +70,7 @@ class BridgeTickFlag(enum.IntFlag):
     WeaponsTruncated = 0x4
     ProjectilesTruncated = 0x8
     ExplosivesTruncated = 0x10
+    LiftsTruncated = 0x20
 
 
 # Vector of three floats, world units or a direction.
@@ -104,9 +107,9 @@ BridgeControl = np.dtype({
 
 # What the tick is: which match and which action tick.
 BridgeTickHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2'],
-    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56],
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2'],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56, 58],
     'itemsize': 64,
 })
 
@@ -190,12 +193,28 @@ BridgeExplosive = np.dtype({
     'itemsize': 16,
 })
 
+# One stage of a lift: a phantom type of its physics model that pushes players or bipeds (Perception LiftStage).
+BridgeLiftStage = np.dtype({
+    'names': ['Position', 'Direction', 'Acceleration', 'MaximumVelocity', 'AxisAcceleration', 'AxisMaximumVelocity', 'Affects'],
+    'formats': [BridgeVec3, BridgeVec3, '<f4', '<f4', '<f4', '<f4', 'u1'],
+    'offsets': [0, 12, 24, 28, 32, 36, 40],
+    'itemsize': 44,
+})
+
+# One live lift (Perception LiftDetail): the stages of its tag and the measured exit of the last biped it pushed. The pose and the team are in its entity.
+BridgeLift = np.dtype({
+    'names': ['Handle', 'StageCount', 'HasExit', 'ExitTick', 'ExitBiped', 'ExitVelocity', 'Stages'],
+    'formats': ['<u4', 'u1', 'u1', '<u4', '<u4', BridgeVec3, (BridgeLiftStage, (3,))],
+    'offsets': [0, 4, 5, 8, 12, 16, 28],
+    'itemsize': 160,
+})
+
 # One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
 BridgeTick = np.dtype({
-    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'SequenceEnd'],
-    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), '<u8'],
-    'offsets': [0, 8, 72, 2248, 108744, 108836, 109060, 109124, 111428, 120644, 126788, 127816],
-    'itemsize': 127872,
+    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'SequenceEnd'],
+    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
+    'offsets': [0, 8, 72, 2248, 108744, 108836, 109060, 109124, 111428, 120644, 126788, 127812, 138056],
+    'itemsize': 138112,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -210,8 +229,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 256000],
-    'itemsize': 256768,
+    'offsets': [0, 256, 276480],
+    'itemsize': 277248,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -288,7 +307,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 224,
     'Control.Client.ActionSequence': 232,
     'Ticks': 256,
-    'Actions': 256000,
+    'Actions': 276480,
 }
 
-REGION_SIZE = 256768
+REGION_SIZE = 277248

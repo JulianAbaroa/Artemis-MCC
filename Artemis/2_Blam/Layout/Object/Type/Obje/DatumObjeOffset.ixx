@@ -42,7 +42,7 @@ export namespace Blam::Layout::Object::Type::Obje::Offset
     constexpr std::size_t k_HavokComponentHandle                        = 0xCC;  // uint32.
     constexpr std::size_t k_UnknownD4                                   = 0xD4;  // uint32.
     constexpr std::size_t k_LastUpdateTick                              = 0xD8;  // uint32.
-    constexpr std::size_t k_ObjectFlags2                                = 0xDC;  // flags32.
+    constexpr std::size_t k_ObjectFlags2                                = 0xDC;  // flags32. [In Phantom=16]
     constexpr std::size_t k_UnknownE0                                   = 0xE0;  // uint8.
     constexpr std::size_t k_UnknownE2                                   = 0xE2;  // uint16.
     constexpr std::size_t k_UpdateFlags                                 = 0xE4;  // uint16.

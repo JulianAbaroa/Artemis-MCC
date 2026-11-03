@@ -101,7 +101,7 @@ def test_tables_and_ignored_fields_exist_in_bridge_xml():
     assert tickdump.TABLES == {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer",
                                "Entities": "BridgeEntity", "Events": "BridgeEvent", "Objectives": "BridgeObjective",
                                "Stands": "BridgeStand", "Weapons": "BridgeWeapon", "Projectiles": "BridgeProjectile",
-                               "Explosives": "BridgeExplosive"}
+                               "Explosives": "BridgeExplosive", "Lifts": "BridgeLift"}
     assert {t: set(f) for t, f in tickdump.IGNORED.items()} == {
         "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc"},
         "Players": {"LocalIndex", "Connection", "CameraPosition", "CameraForward"}}
@@ -117,8 +117,8 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(bad))
     data = bytearray(Film(range(2)).Bytes())
-    data[8] = 5
-    other = tmp_path / "v5.tdump"
+    data[8] = 6
+    other = tmp_path / "v6.tdump"
     other.write_bytes(bytes(data))
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(other))
@@ -545,7 +545,7 @@ def WeaponFilm(charged_at=None, ticks=range(6)):
 
 def test_weapons_and_projectiles_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "w.tdump", WeaponFilm(charged_at=3)))
-    assert d.version == 4 and not d.is_cut
+    assert d.version == 5 and not d.is_cut
     assert [len(r.explosives) for r in d.records] == [1] * 6
     assert float(d.records[0].explosives["Damage"][0]) == 200.0 and int(d.records[0].header["ExplosiveCount"]) == 1
     assert [len(r.weapons) for r in d.records] == [1] * 6
@@ -553,6 +553,59 @@ def test_weapons_and_projectiles_round_trip_through_the_reader(tmp_path):
     assert [float(r.weapons["Energy"][0]) for r in d.records] == [1.0, 1.0, 1.0, 0.5, 0.5, 0.5]
     assert int(d.records[0].projectiles["OwnerPlayer"][0]) == P1 and int(d.records[0].projectiles["InHand"][0]) == 1
     assert int(d.records[0].header["WeaponCount"]) == 1 and int(d.records[0].header["ProjectileCount"]) == 1
+
+
+def LiftFilm(exit_speed=None, ticks=range(6)):
+    """A film with a lift of two stages. exit_speed: from tick 3 the lift has the exit of a biped with that velocity in Z."""
+    w = Writer()
+    stages = [{"Position": {"X": 1.0, "Y": 2.0, "Z": 3.0}, "Direction": {"X": 0.0, "Y": 0.0, "Z": 1.0}, "Acceleration": 10.0,
+               "MaximumVelocity": 7.0, "AxisAcceleration": 25.0, "AxisMaximumVelocity": 20.0, "Affects": 15},
+              {"Position": {"X": 1.0, "Y": 2.0, "Z": 4.0}, "Direction": {"X": -0.82, "Y": 0.0, "Z": 0.57}, "Acceleration": 11.0,
+               "MaximumVelocity": 7.5, "Affects": 3}]
+    for t in ticks:
+        lift = {"Handle": 0xF1, "StageCount": 2, "ExitBiped": 0xFFFFFFFF, "Stages": stages}
+        if exit_speed is not None and t >= 3:
+            lift.update({"HasExit": 1, "ExitTick": 3, "ExitBiped": 0xB1, "ExitVelocity": {"X": 0.0, "Y": 0.0, "Z": exit_speed}})
+        w.Tick(t, players=[Player(P1)], entities=[Entity(H1)], lifts=[lift])
+    return w
+
+
+def test_lifts_round_trip_through_the_reader_and_show_prints_them(tmp_path, capsys):
+    d = tickdump.Dump(Save(tmp_path, "l.tdump", LiftFilm(exit_speed=6.5)))
+    assert d.version == 5 and not d.is_cut
+    assert [len(r.lifts) for r in d.records] == [1] * 6
+    assert int(d.records[0].header["LiftCount"]) == 1
+    assert [int(r.lifts["HasExit"][0]) for r in d.records] == [0, 0, 0, 1, 1, 1]
+    assert float(d.records[4].lifts["ExitVelocity"]["Z"][0]) == 6.5
+    assert float(d.records[0].lifts["Stages"][0][1]["Direction"]["X"]) == pytest.approx(-0.82)
+    tickdump.ShowTick(d, 4)
+    out = capsys.readouterr().out
+    assert "lift: Handle=000000F1 StageCount=2 HasExit=1 ExitTick=3 ExitBiped=000000B1" in out
+    assert "Stages=[((1.000,2.000,3.000),(0.000,0.000,1.000),10.000,7.000,25.000,20.000,15);" in out
+
+
+def test_a_lift_exit_is_a_difference_of_its_table(tmp_path):
+    r = DiffOf(tmp_path, LiftFilm(), LiftFilm(exit_speed=6.5))
+    assert not r.is_equal
+    assert {"Lifts.HasExit", "Lifts.ExitTick", "Lifts.ExitBiped", "Lifts.ExitVelocity"} <= set(r.fields)
+    assert (r.fields["Lifts.HasExit"].first_tick, r.fields["Lifts.HasExit"].first_key) == (3, 0xF1)
+    assert r.existence == {} and r.schema == []
+
+
+def test_a_golden_from_before_the_lifts_reports_the_new_table_as_schema(tmp_path):
+    real, _ = RealLayout()
+    old_layout = ChangedLayout(real, drop={"BridgeTickHeader": ["LiftCount"]})
+    old_layout["structs"] = [s for s in old_layout["structs"] if s["name"] not in ("BridgeLift", "BridgeLiftStage")]
+    older = Writer(layout=old_layout, layout_hash=0x4)
+    assert older.Version() == 4
+    for t in range(4):
+        older.Tick(t, players=[Player(P1)], entities=[Entity(H1)])
+    gpath = Save(tmp_path, "v4.tdump", older)
+    assert tickdump.Dump(gpath).version == 4
+    r = tickdump.Diff(tickdump.Dump(gpath), tickdump.Dump(Save(tmp_path, "new.tdump", LiftFilm(ticks=range(4)))))
+    assert not r.is_equal
+    assert any(line.startswith("+ Lifts (table of") for line in r.schema)
+    assert "+ Header.LiftCount" in r.schema
 
 
 def test_a_weapon_that_changes_energy_is_a_difference_of_its_table(tmp_path):
@@ -564,7 +617,7 @@ def test_a_weapon_that_changes_energy_is_a_difference_of_its_table(tmp_path):
 
 def test_flags_and_stands_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "a.tdump", FlagFilm(state_at=3)))
-    assert d.version == 4 and not d.is_cut
+    assert d.version == 5 and not d.is_cut
     assert [len(r.objectives) for r in d.records] == [2] * 6
     assert [len(r.stands) for r in d.records] == [1] * 6
     assert [int(r.objectives["State"][1]) for r in d.records] == [0, 0, 0, 1, 1, 1]

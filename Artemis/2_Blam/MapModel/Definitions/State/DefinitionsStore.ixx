@@ -41,6 +41,15 @@ export namespace Blam::MapModel::Definitions::State
         TagStore<Type::Vehi::Vehi> m_Vehi{};
         TagStore<Type::Weap::Weap> m_Weap{};
 
+        // return: The model tag (hlmt) of a crate or a scenery tag, empty for any other tag.
+        // note: Explosives and lifts are crates, except the propane tank of some maps, a scenery.
+        auto ModelOf(const std::string& tagName) const -> std::string
+        {
+            if (const auto* bloc{ m_Bloc.Get(tagName) }) return bloc->Base.ModelTagName;
+            if (const auto* scen{ m_Scen.Get(tagName) }) return scen->Base.ModelTagName;
+            return {};
+        }
+
         // Calls the function with the store of every group.
         template <typename F>
         auto ForEach(F&& f) -> void

@@ -17,6 +17,7 @@ import Blam.Layout.Snapshot.Type;
 import Blam.Layout.Snapshot.System;
 import Blam.Map.Layer;
 import Blam.MapModel.Layer;
+import Blam.MapModel.Definitions.Type;
 import Blam.Runtime.Object.Type;
 import Perception.Details.Type;
 import Perception.Entities.Type;
@@ -1294,6 +1295,175 @@ TEST_F(ReplayTests, GroundIsConsistentWithTheContactInEveryFilm)
         }
         ++replayed;
         EXPECT_GT(bodies, 0u) << film;
+    }
+
+    if (replayed == 0) GTEST_SKIP() << skipped;
+}
+
+// --- A12 (D98, D261): the lifts of the lifts recording ---
+
+namespace
+{
+    // What a lift of the lifts recording must give: the exit of its pass and the last stage of its tag. The values are the ones measured in
+    // game (A12 sec. 7) with the engine tick of the Match.
+    struct LiftExpectation
+    {
+        std::uint32_t Handle{};
+        std::uint32_t ExitTick{};
+        float ExitSpeed{};
+        std::size_t StageCount{};
+        float Acceleration{};
+        float MaximumVelocity{};
+
+        // Dot of the direction of the last stage with the normalized exit velocity that the pass must beat. 0 where the lift does not
+        // saturate (the exit is not along the stage).
+        float MinimumDot{};
+    };
+
+    // What the first exit of a lift looked like when the lift published it.
+    struct LiftSeen
+    {
+        std::uint32_t ExitTick{};
+        Common::Math::Type::Vec3 ExitVelocity{};
+        std::uint32_t ExitBiped{};
+        std::size_t StageCount{};
+        Common::Math::Type::Vec3 LastDirection{};
+        float Acceleration{};
+        float MaximumVelocity{};
+    };
+
+    auto Dot(const Common::Math::Type::Vec3& a, const Common::Math::Type::Vec3& b) -> float
+    {
+        return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+    }
+
+    auto Speed(const Common::Math::Type::Vec3& v) -> float
+    {
+        return std::sqrt(Dot(v, v));
+    }
+}
+
+TEST_F(ReplayTests, LiftsCarryTheStagesOfTheirTagsAndTheMeasuredExitOfTheLiftsFilm)
+{
+    // Handle, tick of the exit, |ExitVelocity|, stages, Acceleration and MaximumVelocity of the last one, minimum dot of the direction.
+    const std::vector<LiftExpectation> expected{
+        { 0xE42201B3, 1227, 7.414f, 2, 11.0f, 7.5f, 0.99f },
+        { 0xE42301B4, 1806, 10.916f, 2, 16.0f, 11.0f, 0.99f },
+        { 0xE42401B5, 2271, 6.853f, 2, 10.0f, 8.0f, 0.0f },
+        { 0xE42501B6, 2912, 10.292f, 1, 30.0f, 25.0f, 0.0f },
+        { 0xE42101B2, 4380, 6.109f, 2, 10.0f, 7.0f, 0.0f },
+        { 0xE42601B7, 7180, 7.722f, 3, 16.0f, 7.8f, 0.99f },
+        { 0xE42701B8, 7590, 8.921f, 3, 16.0f, 8.0f, 0.99f },
+        { 0xE42801B9, 8134, 6.426f, 3, 16.0f, 6.5f, 0.99f },
+        { 0xE42901BA, 8510, 3.225f, 2, 10.0f, 3.0f, 0.85f },
+        { 0xE42A01BB, 8822, 3.408f, 2, 20.0f, 3.5f, 0.99f },
+        { 0xE42B01BC, 9362, 7.915f, 2, 15.0f, 8.0f, 0.99f } };
+
+    std::map<std::uint32_t, LiftSeen> seen{};
+    std::set<std::uint32_t> exitBeforeFirst{};
+    std::size_t emptyStages{ 0 };
+    const std::string reason{ ReplayRecording("lifts", [&](const Chain& chain) {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
+        if (!match || !lifts) return;
+
+        for (const auto& [handle, lift] : *lifts)
+        {
+            if (lift.Stages.empty()) ++emptyStages;
+            if (!lift.HasExit || seen.contains(handle)) continue;
+
+            // The exit is published from the tick it happens, so the first tick with it is the tick of the exit.
+            if (lift.ExitTick != match->GameTick) exitBeforeFirst.insert(handle);
+            seen[handle] = LiftSeen{ .ExitTick = lift.ExitTick, .ExitVelocity = lift.ExitVelocity, .ExitBiped = lift.ExitBiped,
+                .StageCount = lift.Stages.size(),
+                .LastDirection = lift.Stages.empty() ? Common::Math::Type::Vec3{} : lift.Stages.back().Direction,
+                .Acceleration = lift.Stages.empty() ? 0.0f : lift.Stages.back().Acceleration,
+                .MaximumVelocity = lift.Stages.empty() ? 0.0f : lift.Stages.back().MaximumVelocity };
+        }
+    }) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    EXPECT_EQ(emptyStages, 0u);
+    EXPECT_TRUE(exitBeforeFirst.empty());
+
+    for (const LiftExpectation& lift : expected)
+    {
+        SCOPED_TRACE(std::format("{:08X}", lift.Handle));
+        const auto it{ seen.find(lift.Handle) };
+        ASSERT_NE(it, seen.end());
+        const LiftSeen& found{ it->second };
+
+        std::cout << std::format("[ Lift ] {:08X}: exit {} |v| {:.3f} stages {} last {}/{} dot {:.3f}\n", lift.Handle, found.ExitTick, Speed(found.ExitVelocity),
+            found.StageCount, found.Acceleration, found.MaximumVelocity,
+            Dot(found.LastDirection, found.ExitVelocity) / Speed(found.ExitVelocity));
+
+        EXPECT_EQ(found.ExitTick, lift.ExitTick);
+        EXPECT_NEAR(Speed(found.ExitVelocity), lift.ExitSpeed, 1e-3f);
+        EXPECT_EQ(found.StageCount, lift.StageCount);
+        EXPECT_FLOAT_EQ(found.Acceleration, lift.Acceleration);
+        EXPECT_FLOAT_EQ(found.MaximumVelocity, lift.MaximumVelocity);
+
+        // E42901BA (tunnels) leaves halfway through the turn toward its second stage: 0.903 measured.
+        if (lift.MinimumDot > 0.0f) EXPECT_GT(Dot(found.LastDirection, found.ExitVelocity) / Speed(found.ExitVelocity), lift.MinimumDot);
+    }
+
+    // The exact velocity of two exits.
+    EXPECT_NEAR(seen.at(0xE42201B3).ExitVelocity.X, 0.252f, 1e-3f);
+    EXPECT_NEAR(seen.at(0xE42201B3).ExitVelocity.Y, -6.162f, 1e-3f);
+    EXPECT_NEAR(seen.at(0xE42201B3).ExitVelocity.Z, 4.114f, 1e-3f);
+    EXPECT_NEAR(seen.at(0xE42101B2).ExitVelocity.X, 0.041f, 1e-3f);
+    EXPECT_NEAR(seen.at(0xE42101B2).ExitVelocity.Y, 0.155f, 1e-3f);
+    EXPECT_NEAR(seen.at(0xE42101B2).ExitVelocity.Z, 6.107f, 1e-3f);
+}
+
+TEST_F(ReplayTests, EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift)
+{
+    constexpr float k_OwnerRadius{ 3.0f };
+
+    std::size_t replayed{ 0 };
+    std::string skipped{};
+    for (const std::string film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts" })
+    {
+        std::size_t emptyStages{ 0 };
+        std::size_t inPhantom{ 0 };
+        std::size_t withoutLift{ 0 };
+        const std::string reason{ ReplayRecording(film, [&](const Chain& chain) {
+            const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
+            const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!lifts || !objects) return;
+
+            for (const auto& entry : *lifts)
+            {
+                if (entry.second.Stages.empty()) ++emptyStages;
+            }
+
+            for (const auto& [handle, object] : *objects)
+            {
+                if (object.Profile.ObjectKind != Blam::MapModel::Definitions::Type::Object::ObjectKind::Biped || !object.IsInPhantom) continue;
+
+                ++inPhantom;
+                bool isNear{ false };
+                for (const auto& entry : *lifts)
+                {
+                    const auto liftIt{ objects->find(entry.first) };
+                    if (liftIt == objects->end()) continue;
+
+                    const Common::Math::Type::Vec3 d{ liftIt->second.WorldOrigin.X - object.WorldOrigin.X, liftIt->second.WorldOrigin.Y - object.WorldOrigin.Y,
+                        liftIt->second.WorldOrigin.Z - object.WorldOrigin.Z };
+                    if (Speed(d) <= k_OwnerRadius) isNear = true;
+                }
+                if (!isNear) ++withoutLift;
+            }
+        }) };
+        if (!reason.empty())
+        {
+            skipped += reason + ". ";
+            continue;
+        }
+
+        ++replayed;
+        std::cout << std::format("[ Lift ] {}: {} biped ticks in a phantom, {} without a lift within {} wu\n", film, inPhantom, withoutLift, k_OwnerRadius);
+        EXPECT_EQ(emptyStages, 0u) << film;
     }
 
     if (replayed == 0) GTEST_SKIP() << skipped;

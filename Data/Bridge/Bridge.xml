@@ -15,6 +15,8 @@
 	<const name="MaxWeapons" value="256" doc="Live weapons a tick carries: in hand, on the floor or mounted (D254)." />
 	<const name="MaxProjectiles" value="256" doc="Live projectiles a tick carries (D254)." />
 	<const name="MaxExplosives" value="64" doc="Live explosives a tick carries: fusion coils, land mines, plasma batteries, propane tanks (D259)." />
+	<const name="MaxLifts" value="64" doc="Live lifts a tick carries: man cannons and gravity lifts (D261)." />
+	<const name="MaxLiftStages" value="3" doc="Stages (phantom types that push players or bipeds) a lift carries. The tags have 3 at most (D261)." />
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
@@ -54,6 +56,7 @@
 		<bit name="WeaponsTruncated" index="2" doc="The tick had more live weapons than MaxWeapons." />
 		<bit name="ProjectilesTruncated" index="3" doc="The tick had more live projectiles than MaxProjectiles." />
 		<bit name="ExplosivesTruncated" index="4" doc="The tick had more live explosives than MaxExplosives." />
+		<bit name="LiftsTruncated" index="5" doc="The tick had more live lifts than MaxLifts." />
 	</flags>
 
 	<struct name="BridgeVec3" doc="Vector of three floats, world units or a direction.">
@@ -132,6 +135,7 @@
 		<field name="ProjectileCount" type="u16" doc="Rows of Projectiles in use." />
 		<field name="MapId" type="i32" doc="MapId of the scnr tag of the loaded map, engine id. 0 while no map." />
 		<field name="ExplosiveCount" type="u16" doc="Rows of Explosives in use." />
+		<field name="LiftCount" type="u16" doc="Rows of Lifts in use." />
 	</struct>
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
@@ -281,6 +285,26 @@
 		<field name="Damage" type="f32" doc="Damage points at the center, before the material of the victim." />
 	</struct>
 
+	<struct name="BridgeLiftStage" doc="One stage of a lift: a phantom type of its physics model that pushes players or bipeds (Perception LiftStage).">
+		<field name="Position" type="BridgeVec3" doc="Marker of the stage, world space. The origin of the lift when the type has no marker." />
+		<field name="Direction" type="BridgeVec3" doc="+X of the marker, world space. The up of the lift when the type has no marker." />
+		<field name="Acceleration" type="f32" doc="Along Direction, wu/s^2." />
+		<field name="MaximumVelocity" type="f32" doc="Along Direction, wu/s. A cap: some lifts release the biped before it reaches it." />
+		<field name="AxisAcceleration" type="f32" doc="Toward the axis of the marker, wu/s^2. Centers the biped." />
+		<field name="AxisMaximumVelocity" type="f32" doc="Toward the axis of the marker, wu/s." />
+		<field name="Affects" type="u8" doc="Bits: 1 players, 2 bipeds that are not players, 4 vehicles, 8 items (weapons, equipment, crates)." />
+	</struct>
+
+	<struct name="BridgeLift" doc="One live lift (Perception LiftDetail): the stages of its tag and the measured exit of the last biped it pushed. The pose and the team are in its entity.">
+		<field name="Handle" type="u32" />
+		<field name="StageCount" type="u8" doc="Stages in use, 0 to MaxLiftStages. 0 without definitions or physics model." />
+		<field name="HasExit" type="u8" doc="1 once a biped has left the push of this lift. ExitTick, ExitBiped and ExitVelocity mean nothing before." />
+		<field name="ExitTick" type="u32" doc="GameTick of the first tick with the biped out of the volume." />
+		<field name="ExitBiped" type="u32" doc="Biped that left, NoHandle without an exit." />
+		<field name="ExitVelocity" type="BridgeVec3" doc="Linear velocity of the biped at ExitTick, world space, wu/s. The last exit replaces the previous one." />
+		<field name="Stages" type="BridgeLiftStage" count="MaxLiftStages" doc="Only the first StageCount are meaningful, in the order of the tag." />
+	</struct>
+
 	<struct name="BridgeTick" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.">
 		<field name="Sequence" type="u64" />
 		<field name="Header" type="BridgeTickHeader" />
@@ -293,6 +317,7 @@
 		<field name="Weapons" type="BridgeWeapon" count="MaxWeapons" doc="Live weapons, sorted by Handle." />
 		<field name="Projectiles" type="BridgeProjectile" count="MaxProjectiles" doc="Live projectiles, sorted by Handle." />
 		<field name="Explosives" type="BridgeExplosive" count="MaxExplosives" doc="Live explosives, sorted by Handle." />
+		<field name="Lifts" type="BridgeLift" count="MaxLifts" doc="Live lifts, sorted by Handle." />
 		<field name="SequenceEnd" type="u64" />
 	</struct>
 

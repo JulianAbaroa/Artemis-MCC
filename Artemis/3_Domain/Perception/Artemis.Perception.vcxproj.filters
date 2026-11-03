@@ -192,6 +192,12 @@
     <ClCompile Include="Details\State\DetailsStore.ixx">
       <Filter>Details\State</Filter>
     </ClCompile>
+    <ClCompile Include="Details\State\LiftMemoryStore.cpp">
+      <Filter>Details\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Details\State\LiftMemoryStore.ixx">
+      <Filter>Details\State</Filter>
+    </ClCompile>
     <ClCompile Include="Details\State\WeaponChargeMemoryStore.cpp">
       <Filter>Details\State</Filter>
     </ClCompile>

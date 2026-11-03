@@ -16,21 +16,12 @@ namespace
     using Perception::Details::Type::ExplosiveDetail;
     using Perception::Details::Type::ExplosiveDetails;
 
-    // return: The model tag of a crate or a scenery, empty for any other tag.
-    // note: Explosives are crates, except the propane tank of some maps, a scenery.
-    auto ModelOf(const DefinitionsStore& definitions, const std::string& tagName) -> std::string
-    {
-        if (const auto* bloc{ definitions.m_Bloc.Get(tagName) }) return bloc->Base.ModelTagName;
-        if (const auto* scen{ definitions.m_Scen.Get(tagName) }) return scen->Base.ModelTagName;
-        return {};
-    }
-
     // return: The damage effect of the instant response with the lowest threshold that has one, null when none has.
     // note: Measured on forge_halo (B4x): the fusion coil has two responses with the same effect (0.99 and 0), the propane tank
     // one at 0.5 without effect and one at 0 with it, the land mine and the plasma battery one at 0.
     auto ExplosionOf(const DefinitionsStore& definitions, const std::string& tagName) -> const Jpt*
     {
-        const Hlmt* hlmt{ definitions.m_Hlmt.Get(ModelOf(definitions, tagName)) };
+        const Hlmt* hlmt{ definitions.m_Hlmt.Get(definitions.ModelOf(tagName)) };
         if (hlmt == nullptr) return nullptr;
 
         const std::string* effect{ nullptr };

@@ -304,8 +304,8 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::FixtureLiftLabels, Group::Fixtures, "FixtureLiftLabels", "Lift labels",
             "Labels each lift with its kind (vertical, curved, redirected) and tag.", true },
 
-        { Flag::FixtureLiftArrows, Group::Fixtures, "FixtureLiftArrows", "Lift launch arrows",
-            "Draws an arrow along the launch direction of each lift.", true },
+        { Flag::FixtureLiftArrows, Group::Fixtures, "FixtureLiftArrows", "Lift direction arrows",
+            "Draws an arrow along the direction of the last stage of each lift.", true },
 
         { Flag::FixtureShieldLabels, Group::Fixtures, "FixtureShieldLabels", "Shield labels",
             "Labels each barrier with its kind (one-way, two-way, blocker, drop shield, portable) and tag.", true },

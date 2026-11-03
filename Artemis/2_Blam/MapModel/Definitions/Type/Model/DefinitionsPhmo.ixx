@@ -7,6 +7,15 @@ export namespace Blam::MapModel::Definitions::Type::Phmo
     // Collision group value that means "keep the group of the rigid body".
     inline constexpr std::uint8_t k_NoCollisionGroup{ 0xFF };
 
+    // Bits of PhantomType::Flags that say who a phantom volume ignores, same ids as the tag.
+    inline constexpr std::uint32_t k_PhantomIgnoresPlayers{ 1u << 3 };
+    inline constexpr std::uint32_t k_PhantomIgnoresNonPlayers{ 1u << 4 };
+    inline constexpr std::uint32_t k_PhantomIgnoresBipeds{ 1u << 5 };
+    inline constexpr std::uint32_t k_PhantomIgnoresVehicles{ 1u << 6 };
+    inline constexpr std::uint32_t k_PhantomIgnoresWeapons{ 1u << 7 };
+    inline constexpr std::uint32_t k_PhantomIgnoresEquipment{ 1u << 8 };
+    inline constexpr std::uint32_t k_PhantomIgnoresCrates{ 1u << 15 };
+
     // Kind of a physics model shape, same ids as the tag.
     enum class ShapeType : std::uint16_t
     {

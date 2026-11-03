@@ -385,6 +385,19 @@ TEST_F(RuntimeTests, BipedGroundAndCrouchComeFromTheDatum)
     EXPECT_TRUE(biped->OnStructure);
 }
 
+TEST_F(RuntimeTests, ObjectIsInPhantomWhenBit16OfTheSecondFlagsIsSet)
+{
+    RawObject inside{ MakeBiped() };
+    Put(inside.Bytes, ObjeOffset::k_ObjectFlags2, std::uint32_t{ 0x18100 });
+    RawObject outside{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    Put(outside.Bytes, ObjeOffset::k_ObjectFlags2, std::uint32_t{ 0x8100 });
+
+    const auto table{ this->UpdateObjects(WithObjects({ inside, outside })) };
+    ASSERT_NE(table, nullptr);
+    EXPECT_TRUE(table->at(k_BipedHandle).IsInPhantom);
+    EXPECT_FALSE(table->at(k_WeaponHandle).IsInPhantom);
+}
+
 TEST_F(RuntimeTests, WeaponInAVehicleSlotIsNotEquipped)
 {
     RawObject raw{ MakeBiped() };

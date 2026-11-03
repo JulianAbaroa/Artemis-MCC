@@ -119,15 +119,21 @@ namespace
         return title;
     }
 
-    // Draws an entity with a lift detail (D91).
-    // note: The force waits for A12 and the launch direction is provisional.
+    // Draws an entity with a lift detail (D91, D261): the direction of its last stage and the measured exit.
     auto DrawLift(const Entity& entity, const LiftDetail& lift, const std::string& tagName) -> void
     {
         PanelGuiService::DrawHeader(ImVec4(0.6f, 1.0f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
         PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
         PanelGuiService::DrawVec3("Forward:", entity.Forward);
         PanelGuiService::DrawVec3("Up:", entity.Up);
-        PanelGuiService::DrawVec3("Launch Direction:", lift.LaunchDirection);
+        ImGui::Text("Stages: %d", static_cast<int>(lift.Stages.size()));
+        if (!lift.Stages.empty()) PanelGuiService::DrawVec3("Last Stage Direction:", lift.Stages.back().Direction);
+
+        if (!lift.HasExit) return;
+
+        const auto& v{ lift.ExitVelocity };
+        ImGui::Text("Exit: tick %u, biped %08X, speed %.2f", lift.ExitTick, lift.ExitBiped, std::sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z));
+        PanelGuiService::DrawVec3("Exit Velocity:", lift.ExitVelocity);
     }
 
     // Draws an entity with a barrier detail (D91).
