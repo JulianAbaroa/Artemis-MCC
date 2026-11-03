@@ -123,6 +123,7 @@
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
     <ClCompile Include="Perception\PlayerGroundTests.cpp" />
+    <ClCompile Include="Perception\PlayerPowerupTests.cpp" />
     <ClCompile Include="Perception\FlagEventsTests.cpp" />
     <ClCompile Include="Perception\ClassifierFlagZoneTests.cpp" />
     <ClCompile Include="Perception\ObjectiveDetailsTests.cpp" />

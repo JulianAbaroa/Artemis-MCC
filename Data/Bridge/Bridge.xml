@@ -82,6 +82,12 @@
 		<value name="Normal" id="3" />
 		<value name="Enhanced" id="4" />
 	</enum>
+	<enum name="BridgePowerup" type="u8" doc="Custom powerup the engine applies to a player (Common Semantic Subtype Powerup, D263).">
+		<value name="NoPowerup" id="0" />
+		<value name="Red" id="1" />
+		<value name="Blue" id="2" />
+		<value name="Yellow" id="3" />
+	</enum>
 	<flags name="BridgeRequest" type="u8" doc="One-shot client requests of a decision (D120).">
 		<bit name="WeaponSwitch" index="0" />
 		<bit name="GrenadeSwitch" index="1" />
@@ -251,10 +257,12 @@
 		<field name="Handle" type="u32" />
 		<field name="BipedHandle" type="u32" />
 		<field name="RespawnTicks" type="u32" doc="Ticks left until the player respawns, 0 while alive (player +0x1BC)." />
+		<field name="PowerupTicks" type="u32" doc="Ticks left of the active custom powerup counting this one, 0 when Powerup is None (D263)." />
 		<field name="Team" type="u8" semantic="Team" />
 		<field name="LocalIndex" type="u8" doc="Split-screen index, 0xFF when not local." />
 		<field name="Connection" type="u8" semantic="ConnectionState" />
 		<field name="IsAlive" type="u8" />
+		<field name="Powerup" type="u8" enum="BridgePowerup" doc="Custom powerup the engine applies: 0 none, 1 red, 2 blue, 3 yellow. Also without Body (the engine clears it on death)." />
 		<field name="HasBody" type="u8" doc="0: the fields from Aim on are zero." />
 		<field name="Zoom" type="u8" semantic="ZoomLevel" />
 		<field name="SelectedGrenade" type="u8" semantic="GrenadeType" />

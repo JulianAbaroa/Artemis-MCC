@@ -54,4 +54,4 @@ More rows than the `BridgeTick` holds are cut and counted in its header (`Entiti
 
 ## Tests
 `PipelineTests` (the pure chain without the DLL), `ReplayTests.Recordings` (`.sdump` in, golden `.tdump` out, byte for byte),
-`FlatTests` (flags, stands, round, team scores, the `MapId` of the header, the `RespawnTicks`, the traits, the variant settings of the match, ground and crouch of the players, the lifts with their stages and exit and both event sequences), `TickDumpWriterTests` and `CollidableSceneTests` (the pipeline builds no scene), in `Artemis.Tests`.
+`FlatTests` (flags, stands, round, team scores, the `MapId` of the header, the `RespawnTicks`, the traits, the custom powerup of each player, the variant settings of the match, ground and crouch of the players, the lifts with their stages and exit and both event sequences), `TickDumpWriterTests` and `CollidableSceneTests` (the pipeline builds no scene), in `Artemis.Tests`.

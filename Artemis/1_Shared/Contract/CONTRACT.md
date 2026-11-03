@@ -56,6 +56,9 @@ A client built for another layout sees a different hash and refuses to connect.
   `AppliedDecision` and fills no padding: the row grows from 136 to 208 bytes. It is valid also when `HasBody` is 0. `BridgeMatch` adds the respawn, round
   and powerup settings of the game variant (`RespawnTimeTicks`, `SuddenDeathTicks`, `GracePeriodTicks`, `PowerupDurationTicks[3]`, `LivesPerRound`,
   `TeamLivesPerRound`, `RoundsToWin`), all 0 without a usable variant.
+- Each player row carries the active custom powerup (D263): `Powerup` (`BridgePowerup`: 0 `NoPowerup`, 1 red, 2 blue, 3 yellow, named so because `None` is reserved in Python) after `IsAlive` and `PowerupTicks`
+  (ticks left counting the current one, 0 without powerup) after `RespawnTicks`. Both are valid when `HasBody` is 0. `BridgePlayer` grows from 208 to 216 bytes
+  (2 bytes of padding before `CameraPosition` and 4 before `AppliedDecision`, the 5 new bytes cannot fill the old 3).
 - Each player row carries the ground and the crouch of its body (D260): `Ground` (`BridgeGround`), `IsGrounded` and `IsCrouching` after `IsAbilityActive`
   (13 u8 and 3 bytes of padding), and `AirborneTicks`, `GroundObject`, `CrouchFraction` and `OwnVelocity` after `TicksSinceDamage`. They fill the
   4 bytes of padding that sat before `AppliedDecision`, so the row grows 24 bytes. All of them are 0 without a body.

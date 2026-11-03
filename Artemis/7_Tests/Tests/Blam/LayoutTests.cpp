@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 import Common.Engine.Type;
+import Common.Semantic.Type;
 import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
 import Blam.Layout.Interaction.Type;
@@ -235,6 +236,8 @@ TEST(RawObjectTest, FindBlockFollowsTheDescriptor)
 
 namespace
 {
+    using Common::Semantic::Type::Subtype::Powerup;
+    using Blam::Layout::Player::Type::Powerup::ActivePowerup;
     using Blam::Layout::Player::Type::Traits::PlayerTraits;
     using Blam::Layout::Player::Type::Traits::Decode;
     using Blam::Layout::Player::Type::Traits::InfiniteAmmoMode;
@@ -424,4 +427,56 @@ TEST(PlayerTraitsTest, OfAnAllZeroBlockAreUnknown)
     EXPECT_FALSE(traits.IsHeadshotImmune);
     EXPECT_EQ(traits.InfiniteAmmo, InfiniteAmmoMode::Unknown);
     EXPECT_EQ(traits.VehicleUse, VehicleUseMode::Unknown);
+}
+
+TEST(PlayerPowerupTest, WithoutPickupsThereIsNoPowerup)
+{
+    const auto none{ ActivePowerup({ 0, 0, 0 }, 1000, { 600, 900, 1200 }) };
+    EXPECT_EQ(none.Subtype, Powerup::None);
+    EXPECT_EQ(none.Ticks, 0u);
+}
+
+TEST(PlayerPowerupTest, TheRedPowerupCountsDownFromItsDurationPlusOneToOne)
+{
+    const std::array<std::uint32_t, 3> durations{ 600, 900, 1200 };
+    const std::array<std::int32_t, 3> pickups{ 1321, 0, 0 };
+    const auto first{ ActivePowerup(pickups, 1322, durations) };
+    EXPECT_EQ(first.Subtype, Powerup::Red);
+    EXPECT_EQ(first.Ticks, 600u);
+    const auto last{ ActivePowerup(pickups, 1921, durations) };
+    EXPECT_EQ(last.Subtype, Powerup::Red);
+    EXPECT_EQ(last.Ticks, 1u);
+    const auto gone{ ActivePowerup(pickups, 1922, durations) };
+    EXPECT_EQ(gone.Subtype, Powerup::None);
+    EXPECT_EQ(gone.Ticks, 0u);
+}
+
+TEST(PlayerPowerupTest, OnlyTheMostRecentPickupCountsAndTheOlderOneDoesNotComeBack)
+{
+    const std::array<std::uint32_t, 3> durations{ 900, 900, 1200 };
+    const std::array<std::int32_t, 3> pickups{ 0, 4015, 4253 };
+    const auto yellow{ ActivePowerup(pickups, 4254, durations) };
+    EXPECT_EQ(yellow.Subtype, Powerup::Yellow);
+    EXPECT_EQ(yellow.Ticks, 1200u);
+    EXPECT_EQ(ActivePowerup(pickups, 5453, durations).Ticks, 1u);
+    const auto after{ ActivePowerup(pickups, 5454, durations) };
+    EXPECT_EQ(after.Subtype, Powerup::None);
+    EXPECT_EQ(after.Ticks, 0u);
+}
+
+TEST(PlayerPowerupTest, ATieTakesTheLowestIndex)
+{
+    const auto tie{ ActivePowerup({ 0, 50, 50 }, 51, { 600, 900, 1200 }) };
+    EXPECT_EQ(tie.Subtype, Powerup::Blue);
+    EXPECT_EQ(tie.Ticks, 900u);
+    EXPECT_EQ(ActivePowerup({ 70, 70, 70 }, 71, { 600, 900, 1200 }).Subtype, Powerup::Red);
+}
+
+TEST(PlayerPowerupTest, ADurationOfZeroIsNeverActiveAndTheTickOfThePickupIsDefined)
+{
+    EXPECT_EQ(ActivePowerup({ 100, 0, 0 }, 100, { 0, 0, 0 }).Subtype, Powerup::None);
+    EXPECT_EQ(ActivePowerup({ 100, 0, 0 }, 101, { 0, 900, 1200 }).Subtype, Powerup::None);
+    const auto same{ ActivePowerup({ 100, 0, 0 }, 100, { 600, 900, 1200 }) };
+    EXPECT_EQ(same.Subtype, Powerup::Red);
+    EXPECT_EQ(same.Ticks, 601u);
 }

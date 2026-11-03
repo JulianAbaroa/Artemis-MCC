@@ -5,6 +5,7 @@ import Common.Math.Type;
 import Common.Team.Type;
 import Common.Text.System;
 import Blam.Layout.Player.Type;
+import Blam.Layout.Game.Type;
 import Blam.Layout.Snapshot.Type;
 
 namespace
@@ -35,6 +36,8 @@ namespace
     using Blam::Layout::Player::Type::Offset::k_Tag;
     using Blam::Layout::Player::Type::Offset::k_RespawnTicks;
     using Blam::Layout::Player::Type::Offset::k_Traits;
+    using Blam::Layout::Player::Type::Offset::k_PowerupPickupTicks;
+    using Blam::Layout::Game::Type::Offset::k_PowerupCount;
 
     using Blam::Layout::Player::Type::Traits::k_Size;
     using Blam::Layout::Player::Type::Traits::Decode;
@@ -72,6 +75,7 @@ namespace Blam::Runtime::Player::System
         player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
         player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
         player.Traits = Decode(snapshot.ReadArray<std::uint8_t, k_Size>(RegionId::PlayerArray, entry + k_Traits));
+        player.PowerupPickupTicks = snapshot.ReadArray<std::int32_t, k_PowerupCount>(RegionId::PlayerArray, entry + k_PowerupPickupTicks);
 
         auto rawGamerTag = snapshot.ReadArray<char16_t, k_GamerTagLength>(RegionId::PlayerArray, entry + k_GamerTag);
         player.Gamertag = Common::Text::System::WideToUtf8(rawGamerTag);
@@ -144,6 +148,7 @@ namespace Blam::Runtime::Player::System
             player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
             player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
             player.Traits = Decode(snapshot.ReadArray<std::uint8_t, k_Size>(RegionId::PlayerArray, entry + k_Traits));
+            player.PowerupPickupTicks = snapshot.ReadArray<std::int32_t, k_PowerupCount>(RegionId::PlayerArray, entry + k_PowerupPickupTicks);
 
             player.PrimaryWeaponHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_PrimaryWeaponHandle);
             player.SecondaryWeaponHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_SecondaryWeaponHandle);

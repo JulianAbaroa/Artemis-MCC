@@ -32,6 +32,7 @@ namespace
     using Contract::Bridge::Type::BridgeVehicleUse;
     using Contract::Bridge::Type::BridgeIdentityVisibility;
     using Contract::Bridge::Type::BridgeRadarMode;
+    using Contract::Bridge::Type::BridgePowerup;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickFlag;
     using Perception::Details::Type::ExplosiveDetail;
@@ -428,6 +429,27 @@ TEST(FlatTests, RespawnTicksReachThePlayerRowWithAndWithoutBody)
     EXPECT_EQ(flat->Players[0].RespawnTicks, 420u);
     EXPECT_EQ(flat->Players[1].HasBody, 1);
     EXPECT_EQ(flat->Players[1].RespawnTicks, 0u);
+}
+
+TEST(FlatTests, PowerupReachesThePlayerRowWithAndWithoutBody)
+{
+    auto players{ std::make_shared<Players>() };
+    players->Rows.push_back(Player{ .Handle = 0xE5A10001, .Powerup = Common::Semantic::Type::Subtype::Powerup::Red, .PowerupTicks = 532 });
+    players->Rows.push_back(Player{ .Handle = 0xE5A10002, .Powerup = Common::Semantic::Type::Subtype::Powerup::Yellow, .PowerupTicks = 1, .Body = Body{} });
+    players->Rows.push_back(Player{ .Handle = 0xE5A10003 });
+    Tick tick{};
+    tick.Players = players;
+
+    const auto flat{ Flat(tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 3u);
+    EXPECT_EQ(flat->Players[0].HasBody, 0);
+    EXPECT_EQ(flat->Players[0].Powerup, BridgePowerup::Red);
+    EXPECT_EQ(flat->Players[0].PowerupTicks, 532u);
+    EXPECT_EQ(flat->Players[1].HasBody, 1);
+    EXPECT_EQ(flat->Players[1].Powerup, BridgePowerup::Yellow);
+    EXPECT_EQ(flat->Players[1].PowerupTicks, 1u);
+    EXPECT_EQ(flat->Players[2].Powerup, BridgePowerup::NoPowerup);
+    EXPECT_EQ(flat->Players[2].PowerupTicks, 0u);
 }
 
 TEST(FlatTests, PlayerTraitsReachThePlayerRowWithAndWithoutBody)

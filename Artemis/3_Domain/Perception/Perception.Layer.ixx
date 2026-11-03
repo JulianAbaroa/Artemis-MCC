@@ -85,7 +85,7 @@ export namespace Perception
             m_ProjectileDetailsService(log, tables.m_ObjectStore, m_ProjectileDetailsStore),
             m_WeaponDetailsService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_GameStore, m_WeaponChargeMemoryStore, m_WeaponDetailsStore),
             m_EntitiesService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_ClassifierStore, m_VitalityDetailsStore, m_EntitiesStore, m_CarriedHandlesStore),
-            m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, m_VitalityDetailsStore, m_EntitiesStore, m_GroundMemoryStore, m_PlayersStore),
+            m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, tables.m_GameStore, m_VitalityDetailsStore, m_EntitiesStore, m_GroundMemoryStore, m_PlayersStore),
             m_ObjectiveDetailsService(log, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_EntitiesStore, m_PlayersStore, m_ZoneDetailsStore, m_ObjectiveDetailsStore),
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),

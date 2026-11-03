@@ -3,10 +3,12 @@ module Perception.Players.System;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
+import Blam.Layout.Player.Type;
 
 namespace
 {
     using Common::Semantic::Type::Lifecycle;
+    using Blam::Layout::Player::Type::Powerup::ActivePowerup;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Alive::ObjectTable;
     using Blam::Runtime::Object::Type::Biped::Biped;
@@ -149,6 +151,8 @@ namespace Perception::Players::System
         const VitalityDetails empty{};
         const VitalityDetails& vitalities{ vitalitiesPtr ? *vitalitiesPtr : empty };
 
+        const auto gamePtr{ m_GameStore.Acquire() };
+
         Players players{};
         players.Rows.reserve(playerTablePtr->size());
 
@@ -158,7 +162,7 @@ namespace Perception::Players::System
 
         for (const auto& [handle, alive] : *playerTablePtr)
         {
-            players.Rows.push_back(this->MakePlayer(alive, *objectTablePtr, *entitiesPtr, vitalities, memory, nextMemory));
+            players.Rows.push_back(this->MakePlayer(alive, gamePtr.get(), *objectTablePtr, *entitiesPtr, vitalities, memory, nextMemory));
         }
         memory = std::move(nextMemory);
 
@@ -173,7 +177,7 @@ namespace Perception::Players::System
         m_PlayersStore.Publish(std::move(players));
     }
 
-    auto PlayersService::MakePlayer(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
+    auto PlayersService::MakePlayer(const AlivePlayer& alive, const AliveGame* game, const ObjectTable& objectTable, const Entities& entities,
         const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> Player
     {
         Player player{};
@@ -184,6 +188,12 @@ namespace Perception::Players::System
         player.Team = alive.Team;
         player.RespawnTicks = alive.RespawnTicks;
         player.Traits = alive.Traits;
+        if (game)
+        {
+            const auto powerup{ ActivePowerup(alive.PowerupPickupTicks, game->EngineTick, game->PowerupDurationTicks) };
+            player.Powerup = powerup.Subtype;
+            player.PowerupTicks = powerup.Ticks;
+        }
         player.CameraPosition = alive.CameraPosition;
         player.CameraForward = alive.CameraForward;
         player.Body = this->MakeBody(alive, objectTable, entities, vitalities, previous, nextMemory);

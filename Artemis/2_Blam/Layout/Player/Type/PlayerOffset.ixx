@@ -66,4 +66,8 @@ export namespace Blam::Layout::Player::Type::Offset
     // Traits the engine applies to the player right now (k_Size bytes, decoded by the Traits module) (D262).
     // note: It exists for dead players too.
     constexpr std::uintptr_t k_Traits{ 0x328 };
+
+    // Game time (int32) at which the player picked up the red, blue and yellow powerup, one value each in that order. 0 for never or
+    // deleted (the engine clears the three when the unit is released, that is, on death) (D263).
+    constexpr std::uintptr_t k_PowerupPickupTicks{ 0x0300 };
 }

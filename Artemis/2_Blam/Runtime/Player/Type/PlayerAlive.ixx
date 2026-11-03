@@ -3,6 +3,7 @@ export module Blam.Runtime.Player.Type:Alive;
 import Common.Team.Type;
 import Common.Math.Type;
 import Blam.Layout.Player.Type;
+import Blam.Layout.Game.Type;
 import std;
 
 namespace
@@ -10,6 +11,7 @@ namespace
     using Common::Team::Type::Team;
     using Common::Math::Type::Vec3;
     using Blam::Layout::Player::Type::Traits::PlayerTraits;
+    using Blam::Layout::Game::Type::Offset::k_PowerupCount;
 }
 
 export namespace Blam::Runtime::Player::Type::Alive
@@ -52,6 +54,10 @@ export namespace Blam::Runtime::Player::Type::Alive
 
         // Traits the engine applies to the player now, decoded from player +0x328 (D262). Valid dead or alive.
         PlayerTraits Traits{};
+
+        // Game time of the last pickup of the red, blue and yellow powerup as stored in player +0x300, 0 for never or deleted (D263).
+        // note: Raw: the active powerup needs the game time and the durations of the variant, which this table does not have.
+        std::array<std::int32_t, k_PowerupCount> PowerupPickupTicks{};
 
         // Local player (split-screen input user, 0 to 3) the player is, or empty when it is not local.
         std::optional<std::uint8_t> LocalIndex{};

@@ -2,6 +2,7 @@ export module Perception.Players.Type;
 
 import Common.Engine.Type;
 import Common.Math.Type;
+import Common.Semantic.Type;
 import Common.Team.Type;
 import Blam.Layout.Player.Type;
 import Blam.Runtime.Object.Type;
@@ -159,6 +160,11 @@ export namespace Perception::Players::Type
         // Traits the engine applies to the player in this tick, already composed with the carried objective, the powerups and the respawn
         // traits (D262). Valid without a Body: the block exists for a dead player too.
         PlayerTraits Traits{};
+
+        // Custom powerup the engine applies to the player in this tick and the ticks it has left counting this one (D263). None and 0
+        // without a powerup. Valid without a Body: the engine clears the pickups when the unit is released.
+        Common::Semantic::Type::Subtype::Powerup Powerup{};
+        std::uint32_t PowerupTicks{};
 
         Vec3 CameraPosition{};
         Vec3 CameraForward{};

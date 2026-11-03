@@ -700,6 +700,37 @@ TEST_F(RuntimeTests, PlayerTraitsAreDecodedFromTheBlockOfTheEntryAlsoWhenDead)
     EXPECT_FLOAT_EQ(traits.Gravity, 0.75f);
 }
 
+TEST_F(RuntimeTests, PowerupPickupTicksAreReadRawFromTheEntryAlsoWhenDead)
+{
+    Snapshot snapshot{};
+    std::vector<std::uint8_t>& players{ CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)) };
+    CaptureEmptyMapping(snapshot);
+
+    const std::size_t entry{ PutPlayer(players, 2, 0xE5A1, ConnectionState::Connected) };
+    Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_NoHandle);
+    Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_NoHandle);
+    const std::array<std::int32_t, 3> pickups{ 1321, 0, 4253 };
+    for (std::size_t index{ 0 }; index < pickups.size(); ++index)
+    {
+        Put(players, entry + PlayerOffset::k_PowerupPickupTicks + (index * sizeof(std::int32_t)), pickups[index]);
+    }
+
+    const std::uint32_t handle{ MakeHandle(0xE5A1, 2) };
+    const auto table{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(table, nullptr);
+    ASSERT_TRUE(table->contains(handle));
+    EXPECT_EQ(table->at(handle).PowerupPickupTicks, pickups);
+
+    // The engine clears the three on death: the next tick reads zeros.
+    for (std::size_t index{ 0 }; index < pickups.size(); ++index)
+    {
+        Put(players, entry + PlayerOffset::k_PowerupPickupTicks + (index * sizeof(std::int32_t)), std::int32_t{ 0 });
+    }
+    const auto next{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(next, nullptr);
+    EXPECT_EQ(next->at(handle).PowerupPickupTicks, (std::array<std::int32_t, 3>{ 0, 0, 0 }));
+}
+
 TEST_F(RuntimeTests, PlayerWithAnUnknownConnectionStateIsLeftOut)
 {
     Snapshot snapshot{};

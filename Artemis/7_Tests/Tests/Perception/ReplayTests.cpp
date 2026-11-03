@@ -1427,7 +1427,17 @@ TEST_F(ReplayTests, EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift)
         std::size_t emptyStages{ 0 };
         std::size_t inPhantom{ 0 };
         std::size_t withoutLift{ 0 };
+        std::size_t withPowerup{ 0 };
         const std::string reason{ ReplayRecording(film, [&](const Chain& chain) {
+            // A18 (D263): only the powerups film has custom powerups. Checked here to replay each film once.
+            if (const auto players{ chain.m_Environment.m_PlayersStore.Acquire() })
+            {
+                for (const auto& player : players->Rows)
+                {
+                    if (player.Powerup != Common::Semantic::Type::Subtype::Powerup::None || player.PowerupTicks != 0) ++withPowerup;
+                }
+            }
+
             const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
             const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
             if (!lifts || !objects) return;
@@ -1464,6 +1474,7 @@ TEST_F(ReplayTests, EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift)
         ++replayed;
         std::cout << std::format("[ Lift ] {}: {} biped ticks in a phantom, {} without a lift within {} wu\n", film, inPhantom, withoutLift, k_OwnerRadius);
         EXPECT_EQ(emptyStages, 0u) << film;
+        EXPECT_EQ(withPowerup, 0u) << film;
     }
 
     if (replayed == 0) GTEST_SKIP() << skipped;
@@ -1602,4 +1613,116 @@ TEST_F(ReplayTests, VariantSettingsOfCtfCAndCgbMatchTheirGametypes)
         EXPECT_EQ(last->GracePeriodTicks, want.Grace);
         EXPECT_EQ(last->PowerupDurationTicks, want.Powerups);
     }
+}
+
+// --- A18 (D263): the custom powerup of the player in the powerups recording ---
+
+namespace
+{
+    // What the player 0 had at one engine tick of the powerups recording.
+    struct PowerupSample
+    {
+        Common::Semantic::Type::Subtype::Powerup Powerup{};
+        std::uint32_t Ticks{};
+        float DamageResistance{};
+        std::uint8_t ActiveCamo{};
+        std::array<std::uint32_t, 3> Durations{};
+    };
+
+    // Replays the powerups recording and keeps the player 0 at every engine tick.
+    // return: Empty if it ran, else the reason it cannot run here.
+    auto RunPowerupsRecording(std::map<std::uint32_t, PowerupSample>& samples) -> std::string
+    {
+        return ReplayRecording("powerups", [&](const Chain& chain) {
+            const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+            if (!match || !players || players->Rows.empty()) return;
+
+            const auto& player{ players->Rows.front() };
+            samples[match->GameTick] = PowerupSample{ .Powerup = player.Powerup, .Ticks = player.PowerupTicks,
+                .DamageResistance = player.Traits.DamageResistance, .ActiveCamo = player.Traits.ActiveCamo, .Durations = match->PowerupDurationTicks };
+        });
+    }
+}
+
+TEST_F(ReplayTests, PowerupsFilmGivesTheMeasuredPowerupAtEachMoment)
+{
+    using Common::Semantic::Type::Subtype::Powerup;
+
+    // GameTick, powerup and ticks left, measured on the .sdump (red 10 s, blue 15 s, yellow 20 s).
+    struct Expected
+    {
+        std::uint32_t Tick{};
+        Powerup Kind{};
+        std::uint32_t Ticks{};
+    };
+    const std::vector<Expected> expected{
+        { 1321, Powerup::None, 0 }, { 1322, Powerup::Red, 600 }, { 1921, Powerup::Red, 1 }, { 1922, Powerup::None, 0 },
+        { 4016, Powerup::Blue, 900 }, { 4253, Powerup::Blue, 663 }, { 4254, Powerup::Yellow, 1200 }, { 5453, Powerup::Yellow, 1 },
+        { 5454, Powerup::None, 0 }, { 6410, Powerup::Blue, 900 }, { 6678, Powerup::Blue, 632 }, { 6679, Powerup::None, 0 },
+        { 7451, Powerup::Red, 600 }, { 8050, Powerup::Red, 1 }, { 8051, Powerup::None, 0 } };
+
+    std::map<std::uint32_t, PowerupSample> samples{};
+    const std::string reason{ RunPowerupsRecording(samples) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+
+    for (const Expected& moment : expected)
+    {
+        const auto it{ samples.find(moment.Tick) };
+        ASSERT_NE(it, samples.end()) << "tick " << moment.Tick;
+        EXPECT_EQ(it->second.Powerup, moment.Kind) << "tick " << moment.Tick;
+        EXPECT_EQ(it->second.Ticks, moment.Ticks) << "tick " << moment.Tick;
+    }
+}
+
+TEST_F(ReplayTests, PowerupsFilmCountsDownOnePerTickAndTheTraitsFollowOneTickLater)
+{
+    using Common::Semantic::Type::Subtype::Powerup;
+
+    std::map<std::uint32_t, PowerupSample> samples{};
+    const std::string reason{ RunPowerupsRecording(samples) };
+    if (!reason.empty()) GTEST_SKIP() << reason;
+    ASSERT_FALSE(samples.empty());
+
+    std::size_t active{ 0 };
+    std::size_t counted{ 0 };
+    std::size_t withTraits{ 0 };
+    const PowerupSample* previous{ nullptr };
+    std::uint32_t previousTick{ 0 };
+    for (const auto& [tick, sample] : samples)
+    {
+        if (sample.Powerup == Powerup::None)
+        {
+            EXPECT_EQ(sample.Ticks, 0u) << "tick " << tick;
+        }
+        else
+        {
+            ++active;
+            const std::uint32_t total{ sample.Durations[static_cast<std::size_t>(sample.Powerup) - 1] };
+            EXPECT_GT(sample.Ticks, 0u) << "tick " << tick;
+            EXPECT_LE(sample.Ticks, total) << "tick " << tick;
+
+            // The traits are composed at the start of the tick and the pickup happens after: they follow the powerup one tick later.
+            if (sample.Ticks < total)
+            {
+                ++withTraits;
+                if (sample.Powerup == Powerup::Blue) EXPECT_EQ(sample.ActiveCamo, 5) << "tick " << tick;
+                else EXPECT_TRUE(std::isinf(sample.DamageResistance)) << "tick " << tick;
+            }
+
+            // Down by one per tick, except in a pickup (it goes up to the total).
+            if (previous && previousTick + 1 == tick && previous->Powerup == sample.Powerup && sample.Ticks != total)
+            {
+                ++counted;
+                EXPECT_EQ(sample.Ticks, previous->Ticks - 1) << "tick " << tick;
+            }
+        }
+
+        previous = &sample;
+        previousTick = tick;
+    }
+
+    EXPECT_GT(active, 0u);
+    EXPECT_GT(counted, 0u);
+    EXPECT_GT(withTraits, 0u);
 }

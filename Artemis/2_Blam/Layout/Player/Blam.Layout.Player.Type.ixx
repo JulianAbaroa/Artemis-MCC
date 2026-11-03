@@ -4,3 +4,4 @@ export import :Offset;
 export import :Mapping;
 export import :Size;
 export import :Traits;
+export import :Powerup;

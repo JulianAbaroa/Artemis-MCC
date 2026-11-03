@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0xC8D58E708FDEAFE9
+LAYOUT_HASH = 0x6A9CE91EC0814D8D
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -103,6 +103,14 @@ class BridgeRadarMode(enum.IntEnum):
     Enhanced = 4
 
 
+class BridgePowerup(enum.IntEnum):
+    """Custom powerup the engine applies to a player (Common Semantic Subtype Powerup, D263)."""
+    NoPowerup = 0
+    Red = 1
+    Blue = 2
+    Yellow = 3
+
+
 class BridgeRequest(enum.IntFlag):
     """One-shot client requests of a decision (D120)."""
     WeaponSwitch = 0x1
@@ -186,10 +194,10 @@ BridgePlayerTraits = np.dtype({
 
 # One player of the Tick (Environment Players), without its name.
 BridgePlayer = np.dtype({
-    'names': ['Handle', 'BipedHandle', 'RespawnTicks', 'Team', 'LocalIndex', 'Connection', 'IsAlive', 'HasBody', 'Zoom', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'IsAbilityActive', 'Ground', 'IsGrounded', 'IsCrouching', 'CameraPosition', 'CameraForward', 'Aim', 'TicksAlive', 'Shield', 'PrimaryWeapon', 'SecondaryWeapon', 'EquippedWeapon', 'Ability', 'AbilityEnergy', 'Objective', 'LastDamagerPlayer', 'TicksSinceDamage', 'AirborneTicks', 'GroundObject', 'CrouchFraction', 'OwnVelocity', 'Traits', 'AppliedDecision'],
-    'formats': ['<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', BridgeVec3, BridgeVec3, BridgeVec3, '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<u4', '<f4', BridgeVec3, BridgePlayerTraits, '<u8'],
-    'offsets': [0, 4, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 28, 40, 52, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 128, 200],
-    'itemsize': 208,
+    'names': ['Handle', 'BipedHandle', 'RespawnTicks', 'PowerupTicks', 'Team', 'LocalIndex', 'Connection', 'IsAlive', 'Powerup', 'HasBody', 'Zoom', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'IsAbilityActive', 'Ground', 'IsGrounded', 'IsCrouching', 'CameraPosition', 'CameraForward', 'Aim', 'TicksAlive', 'Shield', 'PrimaryWeapon', 'SecondaryWeapon', 'EquippedWeapon', 'Ability', 'AbilityEnergy', 'Objective', 'LastDamagerPlayer', 'TicksSinceDamage', 'AirborneTicks', 'GroundObject', 'CrouchFraction', 'OwnVelocity', 'Traits', 'AppliedDecision'],
+    'formats': ['<u4', '<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', BridgeVec3, BridgeVec3, BridgeVec3, '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<f4', '<u4', '<u4', '<u4', '<u4', '<u4', '<f4', BridgeVec3, BridgePlayerTraits, '<u8'],
+    'offsets': [0, 4, 8, 12, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 32, 44, 56, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 132, 208],
+    'itemsize': 216,
 })
 
 # One live object of the Tick (Environment Entities).
@@ -268,8 +276,8 @@ BridgeLift = np.dtype({
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
-    'offsets': [0, 8, 72, 3400, 109896, 110016, 110240, 110304, 112608, 121824, 127968, 128992, 139232],
-    'itemsize': 139264,
+    'offsets': [0, 8, 72, 3528, 110024, 110144, 110368, 110432, 112736, 121952, 128096, 129120, 139360],
+    'itemsize': 139392,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -284,8 +292,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 278784],
-    'itemsize': 279552,
+    'offsets': [0, 256, 279040],
+    'itemsize': 279808,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -362,7 +370,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 224,
     'Control.Client.ActionSequence': 232,
     'Ticks': 256,
-    'Actions': 278784,
+    'Actions': 279040,
 }
 
-REGION_SIZE = 279552
+REGION_SIZE = 279808

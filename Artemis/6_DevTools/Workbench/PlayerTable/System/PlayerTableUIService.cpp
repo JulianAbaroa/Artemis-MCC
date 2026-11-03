@@ -229,6 +229,8 @@ namespace DevTools::Workbench::PlayerTable::System
         ImGui::Text("Respawn Ticks: %u", player.RespawnTicks);
         ImGui::Text("Traits: speed %.2f grav %.2f jump %.2f dmg %.2f", player.Traits.MovementSpeed, player.Traits.Gravity, player.Traits.JumpHeight,
             player.Traits.DamageMultiplier);
+        // note: The active powerup needs the game time and the variant, so the card shows the raw pickup times of the player table.
+        ImGui::Text("Powerup pickups: red %d blue %d yellow %d", player.PowerupPickupTicks[0], player.PowerupPickupTicks[1], player.PowerupPickupTicks[2]);
 
         ImGui::Unindent(5.0f);
     }

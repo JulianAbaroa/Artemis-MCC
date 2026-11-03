@@ -32,6 +32,7 @@ namespace
     using Contract::Bridge::Type::BridgeVehicleUse;
     using Contract::Bridge::Type::BridgeIdentityVisibility;
     using Contract::Bridge::Type::BridgeRadarMode;
+    using Contract::Bridge::Type::BridgePowerup;
     using Contract::Bridge::Type::BridgeVec3;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeEntity;
@@ -116,6 +117,8 @@ namespace
         row.BipedHandle = player.BipedHandle;
         row.RespawnTicks = player.RespawnTicks;
         row.Traits = ToBridge(player.Traits);
+        row.Powerup = static_cast<BridgePowerup>(player.Powerup);
+        row.PowerupTicks = player.PowerupTicks;
         row.Team = static_cast<std::uint8_t>(player.Team);
         row.LocalIndex = player.LocalIndex.value_or(k_BridgeNotLocal);
         row.Connection = static_cast<std::uint8_t>(player.Connection);

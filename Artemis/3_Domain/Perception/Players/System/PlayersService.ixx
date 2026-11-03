@@ -5,6 +5,8 @@ import Blam.Runtime.Object.Type;
 import Blam.Runtime.Object.State;
 import Blam.Runtime.Player.Type;
 import Blam.Runtime.Player.State;
+import Blam.Runtime.Game.Type;
+import Blam.Runtime.Game.State;
 import Perception.Details.Type;
 import Perception.Details.State;
 import Perception.Entities.Type;
@@ -28,6 +30,9 @@ export namespace Perception::Players::System
         using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
         using PlayerTableStore = Blam::Runtime::Player::State::PlayerTableStore;
 
+        using AliveGame = Blam::Runtime::Game::Type::Alive::AliveGame;
+        using GameStore = Blam::Runtime::Game::State::GameStore;
+
         using VitalityDetails = Perception::Details::Type::VitalityDetails;
         using VitalityDetailsStore = Perception::Details::State::VitalityDetailsStore;
 
@@ -43,15 +48,17 @@ export namespace Perception::Players::System
 
     public:
         PlayersService(Log& log, ObjectTableStore& objectStore, PlayerTableStore& playerStore,
-            VitalityDetailsStore& vitalityDetailsStore, EntitiesStore& entitiesStore, GroundMemoryStore& groundMemoryStore,
+            GameStore& gameStore, VitalityDetailsStore& vitalityDetailsStore, EntitiesStore& entitiesStore, GroundMemoryStore& groundMemoryStore,
             PlayersStore& playersStore) :
-            m_Log(log), m_ObjectStore(objectStore), m_PlayerStore(playerStore),
+            m_Log(log), m_ObjectStore(objectStore), m_PlayerStore(playerStore), m_GameStore(gameStore),
             m_VitalityDetailsStore(vitalityDetailsStore), m_EntitiesStore(entitiesStore), m_GroundMemoryStore(groundMemoryStore),
             m_PlayersStore(playersStore) {}
         ~PlayersService() = default;
 
         // Publishes one player per entry of the player table, sorted by handle.
         // note: Runs after Entities of the same tick, which decides whether the biped is alive.
+        // note: The custom powerup comes from the pickups of each player and the game time and powerup durations of the game store, read in
+        // this same call, so it does not depend on the order of the pipeline. Without game it is None (D263).
         // note: Resolves the ground of each biped with the memory of the previous tick (D260).
         auto Update() -> void;
 
@@ -62,6 +69,7 @@ export namespace Perception::Players::System
         Log& m_Log;
         ObjectTableStore& m_ObjectStore;
         PlayerTableStore& m_PlayerStore;
+        GameStore& m_GameStore;
         VitalityDetailsStore& m_VitalityDetailsStore;
         EntitiesStore& m_EntitiesStore;
         GroundMemoryStore& m_GroundMemoryStore;
@@ -69,7 +77,8 @@ export namespace Perception::Players::System
 
         // Builds the player of an entry of the player table.
         // param previous: Ground memory of the previous tick. nextMemory: Receives the entry of the biped of this tick.
-        auto MakePlayer(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
+        // param game: Game time and powerup durations for the custom powerup, null when the game was not captured.
+        auto MakePlayer(const AlivePlayer& alive, const AliveGame* game, const ObjectTable& objectTable, const Entities& entities,
             const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> Player;
 
         // Builds the body of the live biped of a player.

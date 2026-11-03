@@ -193,3 +193,17 @@ def test_bridge_layout_carries_the_player_traits_and_the_variant_settings():
     assert L.BridgeMatch.fields["PowerupDurationTicks"][0].shape == (3,)
     for name in ("RespawnTimeTicks", "LivesPerRound", "TeamLivesPerRound", "RoundsToWin", "SuddenDeathTicks", "GracePeriodTicks"):
         assert name in L.BridgeMatch.names
+
+
+
+def test_bridge_layout_carries_the_active_powerup_of_each_player():
+    sys.path.insert(0, os.path.join(REPO, "Agent"))
+    try:
+        from artemis import bridge_layout as L
+    finally:
+        sys.path.pop(0)
+
+    assert "Powerup" in L.BridgePlayer.names and "PowerupTicks" in L.BridgePlayer.names
+    assert L.BridgePlayer.itemsize == 216
+    assert [int(member) for member in L.BridgePowerup] == [0, 1, 2, 3]
+    assert L.BridgePowerup.NoPowerup == 0 and L.BridgePowerup.Yellow == 3

@@ -267,6 +267,9 @@
     <ClCompile Include="Player\Type\PlayerSize.ixx">
       <Filter>Player\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Player\Type\PlayerPowerup.ixx">
+      <Filter>Player\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Player\Type\PlayerTraits.ixx">
       <Filter>Player\Type</Filter>
     </ClCompile>
