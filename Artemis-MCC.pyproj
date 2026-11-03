@@ -71,6 +71,7 @@
     <Compile Include="Agent\scripts\probe_ctf.py" />
     <Compile Include="Agent\scripts\setup_env.py" />
     <Compile Include="Agent\scripts\train_stage0.py" />
+    <Compile Include="Agent\scripts\variant_poke.py" />
     <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
     <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
     <Compile Include="Tools\TagTranspiler\GenerateDatum.py" />
