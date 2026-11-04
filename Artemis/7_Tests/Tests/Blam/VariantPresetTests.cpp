@@ -160,7 +160,7 @@ TEST(VariantPresetTest, ALineThatIsWrongInvalidatesTheWholePreset)
     {
         const auto result{ ParsePreset(good + "\n" + std::string{ bad } + "\n") };
         ASSERT_FALSE(result.has_value()) << bad;
-        EXPECT_NE(result.error().find("Line "), std::string::npos) << bad;
+        EXPECT_NE(result.error().find("line "), std::string::npos) << bad;
     }
 
     EXPECT_FALSE(ParsePreset("source 0\nwrite 2c7 spawn 03 ff").has_value());
@@ -316,7 +316,7 @@ TEST(VariantPresetTest, ATraitSetOfThePresetThatTheScriptDoesNotHaveIsRejected)
     EXPECT_TRUE(Plan(Catalog(), base, &three, variant, PresetPhase::Load).has_value());
     const auto writes{ Plan(Catalog(), base, &outside, variant, PresetPhase::Load) };
     ASSERT_FALSE(writes.has_value());
-    EXPECT_NE(writes.error().Reason.find("Trait set 3"), std::string::npos);
+    EXPECT_NE(writes.error().Reason.find("trait set 3"), std::string::npos);
     EXPECT_EQ(variant, before);
 }
 

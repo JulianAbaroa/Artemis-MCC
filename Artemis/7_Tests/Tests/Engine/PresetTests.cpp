@@ -199,7 +199,7 @@ TEST_F(PresetTests, SetActiveFailsWithAnErrorAndKeepsTheActivePreset)
 
     WritePreset("broken", "preset broken\nwrite zz load 00 ff\n");
     EXPECT_FALSE(m_Service.SetActive("broken"));
-    EXPECT_NE(m_Store.GetResult().Message.find("Line 2"), std::string::npos);
+    EXPECT_NE(m_Store.GetResult().Message.find("line 2"), std::string::npos);
 
     WritePreset("other", "preset another\nsource 0\n");
     EXPECT_FALSE(m_Service.SetActive("other"));
@@ -278,8 +278,8 @@ TEST_F(PresetTests, ATraitSetTheScriptDoesNotHaveRejectsThePresetAndLeavesTheCop
 
     EXPECT_EQ(m_Service.ApplyToStart(start), PresetOutcome::Rejected);
     EXPECT_EQ(start, before);
-    EXPECT_NE(m_Store.GetResult().Message.find("Trait set 5"), std::string::npos);
-    EXPECT_TRUE(Logged(LogLevel::Warning, "Trait set 5"));
+    EXPECT_NE(m_Store.GetResult().Message.find("trait set 5"), std::string::npos);
+    EXPECT_TRUE(Logged(LogLevel::Warning, "trait set 5"));
     EXPECT_EQ(m_Store.GetBase(), nullptr);
 }
 
@@ -419,7 +419,7 @@ TEST_F(PresetTests, ATraitSetTheScriptLacksRejectsTheRequestBetweenRounds)
 
     EXPECT_EQ(variant, original);
     EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Rejected);
-    EXPECT_NE(m_Store.GetResult().Message.find("Trait set 5"), std::string::npos);
+    EXPECT_NE(m_Store.GetResult().Message.find("trait set 5"), std::string::npos);
     EXPECT_EQ(m_Store.GetActive(), nullptr);
 }
 

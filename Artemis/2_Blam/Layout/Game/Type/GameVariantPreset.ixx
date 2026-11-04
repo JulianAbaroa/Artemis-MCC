@@ -165,7 +165,7 @@ namespace
 
     auto LineError(std::size_t number, std::string_view expected) -> std::string
     {
-        return std::format("Line {}: expected {}.", number, expected);
+        return std::format("line {}: expected {}", number, expected);
     }
 
     auto ReadU32(std::span<const std::uint8_t> bytes, std::size_t offset) -> std::uint32_t
@@ -264,7 +264,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
             else return std::unexpected(LineError(line.Number, "'preset <name>' once, 'source <hash>', 'write ...' or 'check ...'"));
         }
 
-        if (!isNamed) return std::unexpected(std::string{ "Line 1: expected 'preset <name>'." });
+        if (!isNamed) return std::unexpected(std::string{ "line 1: expected 'preset <name>'" });
         return preset;
     }
 
@@ -285,7 +285,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
         {
             if (field.Offset > variant.size() || field.Size > variant.size() - field.Offset)
             {
-                return std::unexpected(std::format("The field at offset 0x{:X} is outside the variant.", field.Offset));
+                return std::unexpected(std::format("the field at offset 0x{:X} is outside the variant", field.Offset));
             }
             base.Bytes.insert(base.Bytes.end(), variant.begin() + field.Offset, variant.begin() + field.Offset + field.Size);
         }
@@ -308,7 +308,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
             for (const PresetWrite& write : preset->Writes)
             {
                 const std::pair key{ write.Offset, write.Mask };
-                if (!known.contains(key)) return std::unexpected(std::format("The write at offset 0x{:X} is not a field of the catalog.", write.Offset));
+                if (!known.contains(key)) return std::unexpected(std::format("the write at offset 0x{:X} is not a field of the catalog", write.Offset));
                 chosen[key] = &write;
             }
         }
@@ -318,7 +318,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
 
         for (const PresetField& field : catalog.Fields)
         {
-            if (cursor + field.Size > base.Bytes.size()) return std::unexpected(std::string{ "The saved base does not match the catalog." });
+            if (cursor + field.Size > base.Bytes.size()) return std::unexpected(std::string{ "the saved base does not match the catalog" });
 
             PresetWrite write{ .Offset = field.Offset, .When = field.When, .Bytes = {}, .Mask = field.Mask };
             const auto found{ chosen.find({ field.Offset, field.Mask }) };
@@ -326,7 +326,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
 
             if (isWritten && found->second->Bytes.size() != field.Size)
             {
-                return std::unexpected(std::format("The write at offset 0x{:X} has another size than its field.", field.Offset));
+                return std::unexpected(std::format("the write at offset 0x{:X} has another size than its field", field.Offset));
             }
 
             for (std::size_t i{}; i < field.Size; ++i)
@@ -350,7 +350,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
     auto Plan(const PresetCatalog& catalog, const PresetBase& base, const CompiledPreset* preset, std::span<const std::uint8_t> variant,
         PresetPhase phase) -> std::expected<PresetWrites, PresetRejection>
     {
-        if (!IsMegaloVariant(variant)) return std::unexpected(PresetRejection{ "The game variant is not a Megalo variant." });
+        if (!IsMegaloVariant(variant)) return std::unexpected(PresetRejection{ "the game variant is not a Megalo variant" });
 
         if (preset != nullptr)
         {
@@ -359,7 +359,7 @@ export namespace Blam::Layout::Game::Type::VariantPreset
             {
                 if (index >= setCount)
                 {
-                    return std::unexpected(PresetRejection{ std::format("Trait set {} does not exist (the script has {}).", index, setCount) });
+                    return std::unexpected(PresetRejection{ std::format("trait set {} does not exist (the script has {})", index, setCount) });
                 }
             }
         }
@@ -370,12 +370,12 @@ export namespace Blam::Layout::Game::Type::VariantPreset
         PresetWrites changes{};
         for (PresetWrite& write : *composed)
         {
-            if (!IsInside(write, variant.size())) return std::unexpected(PresetRejection{ std::format("The field at offset 0x{:X} is outside the variant.", write.Offset) });
+            if (!IsInside(write, variant.size())) return std::unexpected(PresetRejection{ std::format("the field at offset 0x{:X} is outside the variant", write.Offset) });
             if (IsApplied(write, variant)) continue;
 
             if (phase == PresetPhase::BetweenRounds && write.When == PresetWhen::Load)
             {
-                return std::unexpected(PresetRejection{ std::format("The field at offset 0x{:X} can only change at load.", write.Offset) });
+                return std::unexpected(PresetRejection{ std::format("the field at offset 0x{:X} can only change at load", write.Offset) });
             }
             changes.push_back(std::move(write));
         }

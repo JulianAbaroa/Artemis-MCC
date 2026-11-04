@@ -15,7 +15,8 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
     endround [--round-seconds 10] [--seconds 300] [--scale S] [--stale]
                                            D144: asks for the end of each round after --round-seconds of play (from the start, or
                                            the first Spawn after a RoundEnd) and checks that RoundEnd follows, or GameOver in the
-                                           last round. Python owns the instance without agents (Free mode). --stale first asks
+                                           last round. Python owns the instance without agents (Free mode); the events from before it
+                                           attached are skipped. --stale first asks
                                            for one outside a match (start it in the lobby): it must not end the first round.
     preset --names a,b [--rounds N] [--reject] [--seconds 120] [--scale S]
                                            Q97: for each of N rounds (default one per name) requests the next preset of the list in
@@ -326,13 +327,18 @@ def EndRound(args):
             print("FAIL Artemis did not hand the instance to Python")
             return 1
         rounds, bad, kinds = [], [], {}
-        requested, round_start, is_over = None, None, False
+        requested, round_start, is_over, attached = None, None, False, False
         start = time.time()
         while time.time() - start < args.seconds and not is_over:
             published = bridge.wait_tick(2.0)
             if published is None:
                 continue
             tick = int(published.match["GameTick"])
+            if not attached:
+                # note: The first read returns the events still in the window, from before this client attached (an earlier
+                # RoundEnd would count as one without a request).
+                bridge.new_events(published)
+                attached = True
             if round_start is None and not rounds:
                 round_start = tick
             for event in bridge.new_events(published):
@@ -518,7 +524,7 @@ def Main():
     parser.add_argument("--count", type=int, default=60)
     parser.add_argument("--scale", type=float, default=0.0)
     parser.add_argument("--mode", choices=["lockstep", "free"], default="lockstep")
-    parser.add_argument("--seconds", type=float, default=60)
+    parser.add_argument("--seconds", type=float, default=None, help="how long to run (endround 300, preset 120, the rest 60)")
     parser.add_argument("--agents", choices=["bots", "all"], default="bots")
     parser.add_argument("--period", type=int, default=4)
     parser.add_argument("--latency", type=int, default=2)
@@ -535,6 +541,8 @@ def Main():
     parser.add_argument("--turn-step", type=float, default=2.5, help="turn: radians the target yaw moves each time")
     parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
     args = parser.parse_args()
+    if args.seconds is None:
+        args.seconds = {"endround": 300.0, "preset": 120.0}.get(args.command, 60.0)
     try:
         return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "turn": Turn}[args.command](args)
     except BridgeError as error:
