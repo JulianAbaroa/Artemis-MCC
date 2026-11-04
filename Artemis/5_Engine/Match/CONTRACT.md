@@ -5,7 +5,7 @@ Group `5_Engine` - static library inside the game process - the cycle of matches
 ## Responsibility
 Sees and drives the match cycle of MCC: copies the vtable of the engine interface (`EngineInterfaceDetour`) to know when an engine
 starts and is destroyed, keeps a library of recorded match configurations (`<storage>/MatchConfigs/<name>.bin`) and transplants
-the pending one into the next start, and presses START on the custom games lobby from the MCC lifecycle update
+the pending one into the next start, writes the active gametype preset into that copy (`Engine.Base.Preset`, D264), and presses START on the custom games lobby from the MCC lifecycle update
 (`LifecycleUpdateDetour`).
 
 ## Does not
@@ -27,7 +27,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations. |
 
 ## Depends on
-`Common`, `Services`, `Engine.Base`.
+`Common`, `Services`, `Engine.Base` (and `Blam.Layout` through its presets).
 
 ## State between ticks
 The recorded configurations on disk (they hold the user's XUID: never in the repo) and the pending one; the counts of the cycle.

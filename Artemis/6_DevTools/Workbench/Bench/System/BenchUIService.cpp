@@ -12,6 +12,7 @@ import Common.Math.System;
 import Common.Text.System;
 import Services.Logs.Type;
 import Engine.Base.Host.Type;
+import Engine.Base.Preset.Type;
 import Engine.Control.Input.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
@@ -32,6 +33,8 @@ namespace
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
     using Common::Log::Type::LogLevel;
+    using Engine::Base::Preset::Type::PresetOutcome;
+    using Engine::Base::Preset::Type::PresetResult;
     using Engine::Control::Input::Type::InputState;
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerActions;
@@ -55,6 +58,23 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchPhase;
     using DevTools::Workbench::Bench::Type::BenchRun;
     using DevTools::Workbench::Bench::Type::BenchScenario;
+
+    // return: The state of the gametype preset in a line for the panel and the check: the active one and what the last load did with it.
+    auto PresetLine(const std::string& active, const PresetResult& result) -> std::string
+    {
+        std::string state{};
+
+        switch (result.Outcome)
+        {
+        case PresetOutcome::None: state = "no load since it was set"; break;
+        case PresetOutcome::NoPreset: state = "not written: " + result.Message; break;
+        case PresetOutcome::AppliedAtLoad: state = "applied at load"; break;
+        case PresetOutcome::Rejected: state = "rejected: " + result.Message; break;
+        case PresetOutcome::Failed: state = "failed: " + result.Message; break;
+        }
+
+        return std::format("Preset: {} ({})", active.empty() ? std::string{ "none" } : active, state);
+    }
 
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
@@ -330,6 +350,9 @@ namespace DevTools::Workbench::Bench::System
         const std::string status{ m_BenchUIStore.GetStatus() };
         ImGui::TextWrapped("%s", status.c_str());
 
+        const std::string preset{ PresetLine(m_PresetStore.GetActiveName(), m_PresetStore.GetResult()) };
+        ImGui::TextWrapped("%s", preset.c_str());
+
         const path folder{ m_BenchUIStore.GetFolder() / "scenarios" };
         std::vector<path>& files{ m_BenchUIStore.GetScenarioFiles() };
         const std::size_t selected{ m_BenchUIStore.GetSelectedScenario() };
@@ -496,6 +519,11 @@ namespace DevTools::Workbench::Bench::System
                 if (!team.has_value() || *team < 0 || *team > 7) return fail("bot takes auto or a team 0-7");
                 match.Bots.push_back(static_cast<std::int8_t>(*team));
             }
+            else if (key == "preset")
+            {
+                if (value.empty() || value.find(' ') != std::string_view::npos) return fail("preset takes a name or none");
+                match.Preset = value == "none" ? std::string{} : std::string{ value };
+            }
             else if (key == "scale")
             {
                 const auto scale{ ParseNumber<float>(value) };
@@ -594,6 +622,22 @@ namespace DevTools::Workbench::Bench::System
 
         m_Log.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
             match.Config);
+
+        // The preset is made active before the configuration is pending, so a preset that cannot be loaded leaves nothing pending.
+        if (!match.Preset.has_value())
+        {
+            m_PresetStore.SetResult(PresetResult{});
+        }
+        else if (match.Preset->empty())
+        {
+            m_PresetService.ClearActive();
+        }
+        else if (!m_PresetService.SetActive(*match.Preset))
+        {
+            report.End = "no-preset";
+            this->EndMatch(run);
+            return;
+        }
 
         if (!m_MatchConfigService.LoadPending(match.Config))
         {
@@ -1064,6 +1108,12 @@ namespace DevTools::Workbench::Bench::System
                 result.IsOk = compared > 0 && passed == compared;
                 result.Detail = check.Name == "moved" ? std::format("{}/{} players moved >= {} (least {:.2f})", passed, compared, minimum,
                     compared > 0 ? least : 0.0f) : std::format("{}/{} players changed weapon", passed, compared);
+            }
+            else if (check.Name == "preset_applied")
+            {
+                const PresetResult applied{ m_PresetStore.GetResult() };
+                result.IsOk = applied.Outcome == PresetOutcome::AppliedAtLoad && (arguments.empty() || applied.Name == arguments.front());
+                result.Detail = PresetLine(m_PresetStore.GetActiveName(), applied);
             }
             else if (check.Name == "objective_taken")
             {

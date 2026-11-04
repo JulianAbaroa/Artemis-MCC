@@ -111,6 +111,7 @@
     <Content Include="Data\Bridge\Bridge.xml" />
     <Content Include="Data\Presets\Catalog.xml" />
     <Content Include="Data\Presets\artemis_ctf_base.xml" />
+    <Content Include="Data\Presets\artemis_ctf_colors.xml" />
     <Content Include="Data\Presets\artemis_ctf_fast.xml" />
     <Content Include="Tools\Tests\presets\fixture.xml" />
     <Content Include="Tools\Tests\presets\fixture_parent.xml" />

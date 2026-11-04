@@ -7,6 +7,8 @@ import Engine.Base.Memory.System;
 import Engine.Base.Host.State;
 import Engine.Control.Input.State;
 import Engine.Base.Lifecycle.State;
+import Engine.Base.Preset.State;
+import Engine.Base.Preset.System;
 import Engine.Match.State;
 import Engine.Match.System;
 import Engine.Control.Simulation.State;
@@ -41,6 +43,8 @@ export namespace DevTools::Workbench::Bench::System
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using PresetStore = Engine::Base::Preset::State::PresetStore;
+        using PresetService = Engine::Base::Preset::System::PresetService;
         using BotStore = Engine::Control::Simulation::State::BotStore;
 
         using TickStore = Bridge::Codec::Tick::State::TickStore;
@@ -58,13 +62,13 @@ export namespace DevTools::Workbench::Bench::System
             MemoryReaderService& memoryReaderService, LocalUserStore& localUserStore, PlayerActionStore& playerActionStore,
             VirtualInputStore& virtualInputStore,
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
-            MatchConfigService& matchConfigService, BotStore& botStore, TickStore& tickStore, TickTraceUIStore& tickTraceUIStore,
+            MatchConfigService& matchConfigService, PresetStore& presetStore, PresetService& presetService, BotStore& botStore, TickStore& tickStore, TickTraceUIStore& tickTraceUIStore,
             BenchUIStore& benchUIStore) :
             m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
             m_VirtualInputStore(virtualInputStore),
             m_LifecycleStore(lifecycleStore), m_MatchConfigStore(matchConfigStore), m_MatchCycleStore(matchCycleStore),
-            m_MatchConfigService(matchConfigService), m_BotStore(botStore), m_TickStore(tickStore), m_TickTraceUIStore(tickTraceUIStore),
+            m_MatchConfigService(matchConfigService), m_PresetStore(presetStore), m_PresetService(presetService), m_BotStore(botStore), m_TickStore(tickStore), m_TickTraceUIStore(tickTraceUIStore),
             m_BenchUIStore(benchUIStore) {}
         ~BenchUIService() = default;
 
@@ -94,6 +98,8 @@ export namespace DevTools::Workbench::Bench::System
         MatchConfigStore& m_MatchConfigStore;
         MatchCycleStore& m_MatchCycleStore;
         MatchConfigService& m_MatchConfigService;
+        PresetStore& m_PresetStore;
+        PresetService& m_PresetService;
         BotStore& m_BotStore;
         TickStore& m_TickStore;
         TickTraceUIStore& m_TickTraceUIStore;

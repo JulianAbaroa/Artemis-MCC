@@ -55,6 +55,18 @@
     <Filter Include="Lifecycle\Type">
       <UniqueIdentifier>{e40a807c-bf91-5d04-a057-a2b59edf7305}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Preset">
+      <UniqueIdentifier>{5988f712-392f-4125-aea7-8a6e87b9c396}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Preset\State">
+      <UniqueIdentifier>{07a59a45-98fc-4b9c-bc80-89f79b9e7adb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Preset\System">
+      <UniqueIdentifier>{d0614d37-e420-41d5-9165-37bf3de71ef8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Preset\Type">
+      <UniqueIdentifier>{4339a9de-5754-49df-8e2c-4aa31de73ef4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Memory">
       <UniqueIdentifier>{976cb345-f534-51cd-8f06-c47ed5869894}</UniqueIdentifier>
     </Filter>
@@ -129,6 +141,27 @@
     </ClCompile>
     <ClCompile Include="Host\Type\Engine.Base.Host.Type.ixx">
       <Filter>Host\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\Engine.Base.Preset.State.ixx">
+      <Filter>Preset</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\Engine.Base.Preset.System.ixx">
+      <Filter>Preset</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\State\PresetStore.cpp">
+      <Filter>Preset\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\State\PresetStore.ixx">
+      <Filter>Preset\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\System\PresetService.cpp">
+      <Filter>Preset\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\System\PresetService.ixx">
+      <Filter>Preset\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Preset\Type\Engine.Base.Preset.Type.ixx">
+      <Filter>Preset\Type</Filter>
     </ClCompile>
     <ClCompile Include="Lifecycle\Hook\DestroySubsystemsDetour.cpp">
       <Filter>Lifecycle\Hook</Filter>

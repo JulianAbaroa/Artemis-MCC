@@ -2,6 +2,8 @@ export module DevTools.Viewer.Access.Type;
 
 import Engine.Base.Lifecycle.State;
 import Engine.Base.Lifecycle.System;
+import Engine.Base.Preset.State;
+import Engine.Base.Preset.System;
 import Engine.Match.State;
 import Engine.Match.System;
 import Engine.Base.Host.State;
@@ -19,6 +21,8 @@ namespace
 {
     using Engine::Base::Lifecycle::State::LifecycleStore;
     using Engine::Base::Lifecycle::System::LifecycleService;
+    using Engine::Base::Preset::State::PresetStore;
+    using Engine::Base::Preset::System::PresetService;
     using Engine::Match::State::MatchConfigStore;
     using Engine::Match::State::MatchCycleStore;
     using Engine::Match::System::MatchConfigService;
@@ -50,6 +54,8 @@ export namespace DevTools::Viewer::Access::Type
         MatchConfigStore& m_MatchConfigStore;
         MatchConfigService& m_MatchConfigService;
         MatchCycleStore& m_MatchCycleStore;
+        PresetStore& m_PresetStore;
+        PresetService& m_PresetService;
         LocalUserStore& m_LocalUserStore;
         VirtualInputStore& m_VirtualInputStore;
         PlayerActionStore& m_PlayerActionStore;

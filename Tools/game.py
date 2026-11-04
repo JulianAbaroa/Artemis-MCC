@@ -172,7 +172,7 @@ def PrintReport(report):
     return 0 if report.get("result") == "ok" else 1
 
 
-MATCH_KEYS = {"name", "config", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
+MATCH_KEYS = {"name", "config", "preset", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
               "probes", "ticktrace", "events"}
 
 
@@ -195,6 +195,11 @@ def Compile(scenario, configs):
             name = match.get("name") or match["config"]
             lines.append(f"match {name}" + (f" #{repeat + 1}" if int(match.get("repeat", 1)) > 1 else ""))
             lines.append(f"config {match['config']}")
+            if "preset" in match:
+                preset = "none" if match["preset"] is None else match["preset"]
+                if not isinstance(preset, str) or not re.fullmatch(r"[a-z0-9_]{1,31}", preset):
+                    raise ValueError(f"match {index + 1}: preset '{preset}' is not a preset name ([a-z0-9_], up to 31 characters) or none")
+                lines.append(f"preset {preset}")
             if "locals" in match:
                 lines.append(f"locals {int(match['locals'])}")
             for team in match.get("bots", []):

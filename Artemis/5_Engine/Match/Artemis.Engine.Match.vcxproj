@@ -43,6 +43,9 @@
     <ProjectReference Include="..\..\1_Shared\Services\Artemis.Services.vcxproj">
       <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Base\Artemis.Engine.Base.vcxproj">
       <Project>{05800B63-82FC-5238-A677-B15CEEDB5242}</Project>
     </ProjectReference>

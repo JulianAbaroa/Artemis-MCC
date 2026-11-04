@@ -17,6 +17,7 @@ import pytest
 
 from tdump_writer import Repo
 
+import game
 import presets
 
 REPO = Repo()
@@ -265,3 +266,32 @@ def test_the_compiler_gives_exactly_the_shared_fixture(tmp_path):
         with open(os.path.join(FIXTURE, name), "rb") as handle:
             assert handle.read().replace(b"\r\n", b"\n").rstrip(b"\n") == text.encode("ascii").rstrip(b"\n"), name
     assert Cli("--check", "--presets", SOURCES, "--catalog", CATALOG, "--out", FIXTURE).returncode == 0
+
+
+# --- bench key and example presets ----------------------------------------------------------------------------------------------
+
+def test_the_colors_preset_writes_only_load_fields_on_top_of_its_base():
+    compiled, errors, info = presets.Compile()
+    assert errors == [] and info["artemis_ctf_colors"][0] == "artemis_ctf_base"
+    base, colors = Writes(compiled["artemis_ctf_base.txt"]), Writes(compiled["artemis_ctf_colors.txt"])
+    extra = {key: value for key, value in colors.items() if key not in base}
+    assert extra == {(0x3C0 + 0x48, "ffffffff"): ("load", "00ff0000"), (0x3C0 + 0x58 + 0x48, "ffffffff"): ("load", "0080ff00")}
+    assert all(colors[key] == value for key, value in base.items())
+
+
+def test_game_compile_writes_the_preset_key_after_the_config_of_its_match():
+    scenario = {"name": "q", "matches": [
+        {"config": "c", "preset": "artemis_ctf_fast", "checks": [["preset_applied", "artemis_ctf_fast"]]},
+        {"config": "c", "preset": "none"}, {"config": "c", "preset": None}, {"config": "c"}]}
+    text, count = game.Compile(scenario, None)
+    assert count == 4
+    assert "config c\npreset artemis_ctf_fast\n" in text and "check preset_applied artemis_ctf_fast\n" in text
+    assert text.count("preset none\n") == 2 and text.count("\npreset ") == 3
+    assert game.presets is presets
+
+
+@pytest.mark.parametrize("preset", ["Bad", "with space", "x" * 32, "", 3])
+def test_game_compile_refuses_a_preset_that_is_not_a_name(preset):
+    with pytest.raises(ValueError, match="preset"):
+        game.Compile({"matches": [{"config": "c", "preset": preset}]}, None)
+

@@ -2,6 +2,7 @@ export module Engine.Match.Hook:EngineInterface;
 
 import Common.Log.System;
 import Engine.Base.Memory.System;
+import Engine.Base.Preset.System;
 import Engine.Match.Type;
 import Engine.Match.State;
 import Engine.Match.System;
@@ -17,7 +18,8 @@ export namespace Engine::Match::Hook
 {
     // Logs every call of MCC to the engine interface (creation, start, state commands, text commands and destruction, A15) and is the
     // point where Artemis changes which match starts (D123): at the start it records the configuration of MCC if a record is armed,
-    // and transplants the pending recorded configuration into a copy of it.
+    // and transplants the pending recorded configuration into a copy of it. With an active gametype preset it also writes the preset into
+    // the copy (D264).
     // note: Hooks the MCC function that creates the engine, which stays loaded for the whole process. Each new engine gets a copy of its
     // vtable with the logged entries replaced, so nothing is patched inside the game module. Without a record armed or a configuration
     // pending, the start is only logged and gets the configuration of MCC unchanged.
@@ -28,6 +30,7 @@ export namespace Engine::Match::Hook
 
         using AOBService = Engine::Base::Memory::System::AOBService;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
+        using PresetService = Engine::Base::Preset::System::PresetService;
 
         using LoadGameEngineFunction = Engine::Match::Type::LoadGameEngineFunction;
         using EngineDestroyFunction = Engine::Match::Type::EngineDestroyFunction;
@@ -39,9 +42,9 @@ export namespace Engine::Match::Hook
 
     public:
         EngineInterfaceDetour(Log& log, AOBService& aobService, MemoryReaderService& memoryReaderService,
-            MatchCycleStore& matchCycleStore, MatchConfigService& matchConfigService) :
+            MatchCycleStore& matchCycleStore, MatchConfigService& matchConfigService, PresetService& presetService) :
             m_Log(log), m_AOBService(aobService), m_MemoryReaderService(memoryReaderService),
-            m_MatchCycleStore(matchCycleStore), m_MatchConfigService(matchConfigService) {}
+            m_MatchCycleStore(matchCycleStore), m_MatchConfigService(matchConfigService), m_PresetService(presetService) {}
         ~EngineInterfaceDetour() = default;
 
         // Finds the MCC function by signature and installs the hook. Does nothing if already installed.
@@ -58,6 +61,7 @@ export namespace Engine::Match::Hook
         MemoryReaderService& m_MemoryReaderService;
         MatchCycleStore& m_MatchCycleStore;
         MatchConfigService& m_MatchConfigService;
+        PresetService& m_PresetService;
 
         static inline EngineInterfaceDetour* s_Instance{ nullptr };
         static inline LoadGameEngineFunction s_OriginalFunction{ nullptr };

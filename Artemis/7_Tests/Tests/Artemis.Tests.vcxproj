@@ -121,6 +121,7 @@
     <ClCompile Include="Engine\EngineLayerTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />
+    <ClCompile Include="Engine\PresetTests.cpp" />
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
     <ClCompile Include="Perception\PlayerGroundTests.cpp" />

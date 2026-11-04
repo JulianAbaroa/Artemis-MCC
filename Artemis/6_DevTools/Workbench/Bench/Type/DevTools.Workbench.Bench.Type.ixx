@@ -74,6 +74,8 @@ export namespace DevTools::Workbench::Bench::Type
         std::string Name{};
         // Recorded match config transplanted at the start (D123).
         std::string Config{};
+        // Gametype preset made active before the launch (D264). Empty text removes it, no value leaves the active one.
+        std::optional<std::string> Preset{};
         // Local users of the split-screen, the primary one included. Empty leaves the count as it is.
         std::optional<std::size_t> Locals{};
         // Team of each bot added after the start. Empty team = the one the engine picks.
@@ -132,7 +134,7 @@ export namespace DevTools::Workbench::Bench::Type
         std::string Config{};
         // pending, running, ok, fail.
         std::string Result{ "pending" };
-        // How the match ended: gametype, limit, run-timeout, launch-timeout, load-timeout, leave-timeout, destroyed-while-loading, no-config.
+        // How the match ended: gametype, limit, run-timeout, launch-timeout, load-timeout, leave-timeout, destroyed-while-loading, no-config, no-preset.
         std::string End{};
         std::uint64_t Ticks{ 0 };
         double LaunchSeconds{ 0.0 };

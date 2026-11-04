@@ -8,10 +8,13 @@ import Engine.Base.Host.State;
 import Engine.Base.Host.System;
 import Engine.Base.Host.Hook;
 import Engine.Base.Memory.System;
+import Engine.Base.Preset.State;
+import Engine.Base.Preset.System;
 
 export namespace Engine::Base
 {
-    // The base of the engine: lifecycle of the game, host (MCC) local users and session checks, signature search and memory reads.
+    // The base of the engine: lifecycle of the game, host (MCC) local users and session checks, signature search and memory reads, and the
+    // gametype presets (D264).
     // note: Owner only: it has no callbacks and installs nothing. The one that composes it connects the lifecycle and installs the hooks.
     class Layer
     {
@@ -33,11 +36,15 @@ export namespace Engine::Base
         using AOBService = Engine::Base::Memory::System::AOBService;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
+        using PresetStore = Engine::Base::Preset::State::PresetStore;
+        using PresetService = Engine::Base::Preset::System::PresetService;
+
     public:
         explicit Layer(Services::Layer& service) :
             m_LifecycleService(service.m_Log, m_LifecycleStore),
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),
+            m_PresetService(service.m_Log, service.m_SettingsStore, m_PresetStore),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_OpenMapDetour(service.m_Log, m_AOBService, m_LifecycleService),
@@ -55,12 +62,14 @@ export namespace Engine::Base
         // --- State ---
         LifecycleStore m_LifecycleStore{};
         LocalUserStore m_LocalUserStore{};
+        PresetStore m_PresetStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
         AOBService m_AOBService;
         HostService m_HostService;
         MemoryReaderService m_MemoryReaderService{};
+        PresetService m_PresetService;
 
         // --- Hook ---
         EngineInitializeDetour m_EngineInitializeDetour;

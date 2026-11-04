@@ -25,7 +25,7 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `DevTools.Workbench.Layer` | The facade: stores and services of the launcher and its tabs. |
 | `DevTools.Workbench.TickDump.System` | The TickDump service the dump thread runs. |
-| `DevTools.Workbench.Bench.System` | The bench service the bench thread runs. |
+| `DevTools.Workbench.Bench.System` | The bench service the bench thread runs. A match may name a gametype preset (`preset <name>` or `preset none`, made active before the launch, a name that cannot be loaded ends the match with `no-preset`) and check `preset_applied [<name>]`. Its panel shows one line with the preset and what the last load did with it. |
 
 ## Depends on
 Every pure project, `Services`, `Bridge.Transport`, the five `Engine.*` projects, `DevTools.Gui` and `DevTools.Viewer`.

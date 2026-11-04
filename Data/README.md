@@ -119,7 +119,7 @@ Writes the module `Common.Semantic.Type` (primary in `Artemis/1_Shared/Common/Se
       </preset>
 
   One element per group or block, one attribute per field. Only the fields written are set, the rest keeps the value of the gametype (D265 b). `base` is another preset: the child overrides the parent field by field, and chains are allowed (no cycles). A value is the name of the enum or a number (`0x` for hex) inside the range of the type; a `bit` takes `0`, `1`, `true` or `false`. An error is reported as `file:line` with what was expected and invalidates the whole preset.
-- `artemis_ctf_base.xml` is the Artemis CTF as measured in Forge and `artemis_ctf_fast.xml` a child for short training rounds.
+- `artemis_ctf_base.xml` is the Artemis CTF as measured in Forge `artemis_ctf_fast.xml` a child for short training rounds and `artemis_ctf_colors.xml` a child that sets the colors of teams 0 and 1 (a field that is only read at load: a request between rounds is rejected). The bench makes a preset active with the match key `preset <name>` (or `preset none`) and checks it with `preset_applied [<name>]`.
 
       python Tools/presets.py compile [--out DIR]   writes <name>.txt and _catalog.txt (default build/game/presets)
       python Tools/presets.py --check [--out DIR]   exit 1 when the compiled files differ from the XML

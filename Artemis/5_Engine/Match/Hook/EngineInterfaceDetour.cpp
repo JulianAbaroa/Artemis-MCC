@@ -16,6 +16,7 @@ namespace
     using Engine::Base::Hook::System::k_DrainTimeout;
     using Engine::Match::Type::k_EngineGlobalDisplacementOffset;
     using Engine::Match::Type::k_EngineGlobalNextInstructionOffset;
+    using Engine::Match::Type::k_EngineConfigurationSize;
     using Engine::Match::Type::k_EngineVTableSize;
     using Engine::Match::Type::k_EngineDestroyIndex;
     using Engine::Match::Type::k_EngineStartIndex;
@@ -129,8 +130,26 @@ namespace Engine::Match::Hook
             catch (const std::exception& exception)
             {
                 startConfiguration = configuration;
+                transplanted.clear();
                 self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to record or transplant the configuration ({}).",
                     exception.what());
+            }
+
+            // The active gametype preset goes into the copy the engine starts with (D264). Without a transplant the copy is made here, so
+            // the configuration of MCC is never written. A preset that fails leaves the copy as it was.
+            try
+            {
+                if (self->m_PresetService.HasActive())
+                {
+                    if (transplanted.empty()) transplanted.assign(configuration, configuration + k_EngineConfigurationSize);
+
+                    self->m_PresetService.ApplyToStart(transplanted);
+                    startConfiguration = transplanted.data();
+                }
+            }
+            catch (const std::exception& exception)
+            {
+                self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to write the preset into the start ({}).", exception.what());
             }
         }
 

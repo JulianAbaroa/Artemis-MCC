@@ -48,6 +48,9 @@
     <ProjectReference Include="..\..\1_Shared\Services\Artemis.Services.vcxproj">
       <Project>{1A376852-AA90-511D-A66F-4A38A4795B91}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\2_Blam\Layout\Artemis.Blam.Layout.vcxproj">
+      <Project>{B7E584C9-A17C-500A-84E9-F555909283EE}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.Base.Layer.ixx" />
@@ -84,6 +87,13 @@
     <ClCompile Include="Lifecycle\System\LifecycleService.cpp" />
     <ClCompile Include="Lifecycle\System\LifecycleService.ixx" />
     <ClCompile Include="Lifecycle\Type\Engine.Base.Lifecycle.Type.ixx" />
+    <ClCompile Include="Preset\Engine.Base.Preset.State.ixx" />
+    <ClCompile Include="Preset\Engine.Base.Preset.System.ixx" />
+    <ClCompile Include="Preset\State\PresetStore.cpp" />
+    <ClCompile Include="Preset\State\PresetStore.ixx" />
+    <ClCompile Include="Preset\System\PresetService.cpp" />
+    <ClCompile Include="Preset\System\PresetService.ixx" />
+    <ClCompile Include="Preset\Type\Engine.Base.Preset.Type.ixx" />
     <ClCompile Include="Memory\Engine.Base.Memory.System.ixx" />
     <ClCompile Include="Memory\Engine.Base.Memory.Type.ixx" />
     <ClCompile Include="Memory\System\AOB\AOBService.cpp" />
