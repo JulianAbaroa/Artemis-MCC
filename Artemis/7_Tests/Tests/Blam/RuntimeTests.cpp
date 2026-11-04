@@ -220,7 +220,8 @@ namespace
         Put(events, k_EventGlobalsSequenceOffset, last);
         for (std::uint32_t sequence{ first }; sequence <= last && sequence != 0; ++sequence)
         {
-            PutEvent(events, RingEvent{ .Sequence = sequence, .Key = 0x100 + sequence, .GameTick = 1000 + sequence }, sequence);
+            PutEvent(events, RingEvent{ .Sequence = sequence, .Key = 0x100 + sequence, .GameTick = 1000 + sequence },
+                sequence % GameOffset::k_EventRingSlots);
         }
 
         return snapshot;
@@ -919,6 +920,21 @@ TEST_F(RuntimeTests, OverwrittenEventsAreCountedAndWarnedOnce)
     EXPECT_EQ(this->UpdateGame(WithEvents(1, last))->DroppedEvents, 4u);
 }
 
+TEST_F(RuntimeTests, SequencesPastTheFirstTurnOfTheRingAreRead)
+{
+    // The engine keeps only the low byte of the sequence in the entry (D268): 251..270 cross 255 without a loss.
+    this->UpdateGame(WithEvents(1, 250));
+
+    const auto game{ this->UpdateGame(WithEvents(1, 270)) };
+    ASSERT_NE(game, nullptr);
+    ASSERT_EQ(game->Events.size(), 20u);
+    EXPECT_EQ(game->Events.front().Sequence, 251u);
+    EXPECT_EQ(game->Events.back().Sequence, 270u);
+    EXPECT_EQ(game->Events.back().Key, 0x100u + 270u);
+    EXPECT_EQ(game->DroppedEvents, 0u);
+    EXPECT_EQ(m_Sink.CountOf(LogLevel::Warning), 0u);
+}
+
 TEST_F(RuntimeTests, ANewEngineStartsTheSequenceAgain)
 {
     this->UpdateGame(WithEvents(1, 10));
@@ -933,9 +949,8 @@ TEST_F(RuntimeTests, ANewEngineStartsTheSequenceAgain)
 TEST_F(RuntimeTests, EntryWithAnotherSequenceIsSkipped)
 {
     Snapshot snapshot{ WithEvents(1, 3) };
-    // The slot of 2 holds an entry of the previous turn of the ring.
-    PutEvent(snapshot.Regions[static_cast<std::size_t>(RegionId::EventGlobals)].Bytes, RingEvent{ .Sequence = 2 },
-        2 + GameOffset::k_EventRingSlots);
+    // The slot of 2 holds a sequence the engine never writes there.
+    PutEvent(snapshot.Regions[static_cast<std::size_t>(RegionId::EventGlobals)].Bytes, RingEvent{ .Sequence = 2 }, 7);
 
     const auto game{ this->UpdateGame(snapshot) };
     ASSERT_NE(game, nullptr);
@@ -944,6 +959,7 @@ TEST_F(RuntimeTests, EntryWithAnotherSequenceIsSkipped)
     EXPECT_EQ(game->Events[1].Sequence, 3u);
     EXPECT_EQ(this->CountOf(LogLevel::Warning, "[GameService]",
         "1 entries of the event ring held another sequence (layout changed?)."), 1u);
+    EXPECT_EQ(game->DroppedEvents, 1u);
 
     // The cursor still moved to the last sequence.
     EXPECT_TRUE(this->UpdateGame(snapshot)->Events.empty());

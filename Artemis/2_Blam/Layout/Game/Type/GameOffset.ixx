@@ -114,6 +114,7 @@ export namespace Blam::Layout::Game::Type::Offset
     // Fields of an entry of the event ring.
     constexpr std::uintptr_t k_EntryKey{ 0x00 };
     constexpr std::uintptr_t k_EntryData{ 0x08 };
+    // note: The engine stores only the low byte of the sequence here (sequence % k_EventRingSlots, D268).
     constexpr std::uintptr_t k_EntrySequence{ 0x24 };
     constexpr std::uintptr_t k_EntryGameTick{ 0x28 };
 

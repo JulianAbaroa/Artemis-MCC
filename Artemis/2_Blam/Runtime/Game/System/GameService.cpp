@@ -233,7 +233,7 @@ namespace Blam::Runtime::Game::System
         for (std::uint32_t sequence{ first }; sequence <= last; ++sequence)
         {
             const std::size_t entry{ k_EventRing + (sequence % k_EventRingSlots) * k_EventEntrySize };
-            if (snapshot.Read<std::uint32_t>(RegionId::EventGlobals, entry + k_EntrySequence) != sequence)
+            if (snapshot.Read<std::uint32_t>(RegionId::EventGlobals, entry + k_EntrySequence) != sequence % k_EventRingSlots)
             {
                 ++mismatches;
                 continue;
@@ -258,6 +258,7 @@ namespace Blam::Runtime::Game::System
 
         if (mismatches > 0)
         {
+            m_GameStore.AddDroppedEvents(mismatches);
             m_Log.Message("[GameService] WARNING: {} entries of the event ring held another sequence (layout changed?).", mismatches);
         }
 
