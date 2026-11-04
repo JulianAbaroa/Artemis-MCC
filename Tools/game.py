@@ -15,6 +15,7 @@ keep waiting.
     python Tools/game.py log [-n N] [--all] [--grep RE]   Last WARNING/ERROR lines of the Artemis log (--all: every line).
     python Tools/game.py crashes                 Crashes saved by the watcher.
     python Tools/game.py export                  Compile Tools/scenarios/*.json for the bench panel of the Simulation tab.
+    (deploy and run also compile Data/Presets with Tools/presets.py and have the watcher copy them to the storage folder.)
     python Tools/game.py py SCRIPT [ARGS...] [--no-wait]   Run a script of Agent/ with the Windows venv (D137) and print its output.
     python Tools/game.py py --id ID [--wait]     Print (or keep waiting for) the output of an earlier run.
 
@@ -23,7 +24,7 @@ Exit code: 0 ok, 1 failed (request or scenario), 2 still waiting (run the same w
 """
 import argparse, glob, json, os, re, sys, time, uuid
 from datetime import datetime, timezone
-import livechat
+import livechat, presets
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAME = os.path.join(ROOT, "build", "game")
@@ -350,10 +351,14 @@ def Main():
     if args.command == "status":
         return Status()
     if args.command in ("deploy", "launch", "kill", "info"):
+        if args.command == "deploy" and presets.Export():
+            return 1
         return Request(args.command, launch=args.launch)
     if args.command == "wait":
         return Wait(args.arg or "loaded", args.timeout)
     if args.command == "run":
+        if presets.Export() or Request("presets"):
+            return 1
         return Run(args.arg, not args.no_wait, args.timeout)
     if args.command == "report":
         id = args.arg

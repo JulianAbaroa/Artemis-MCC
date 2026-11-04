@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Source of the shared fixture of the compiler (test_presets.py) and of the C++ tests of the presets (VariantPresetTests). -->
+<preset doc="Parent of the fixture.">
+  <general round_limit="3" rounds_to_win="2" teams_enabled="1" />
+  <respawn time_seconds="7" respawn_on_kills="true" />
+  <social friendly_fire="1" />
+  <base_traits gravity="100%" movement_speed="90%" jump_height="150" />
+</preset>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preset base="artemis_ctf_base" doc="Short rounds for curriculum: 2 minute rounds, respawn 3 s, light gravity, slower flag carrier.">
+  <general time_limit_minutes="2" />
+  <respawn time_seconds="3" />
+  <base_traits gravity="50%" movement_speed="120%" />
+  <trait_set index="0" movement_speed="90%" />
+</preset>

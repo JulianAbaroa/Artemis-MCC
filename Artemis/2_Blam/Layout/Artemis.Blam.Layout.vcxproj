@@ -96,6 +96,7 @@
     <ClCompile Include="Object\Type\Weap\DatumWeapStructure.ixx" />
     <ClCompile Include="Game\Blam.Layout.Game.Type.ixx" />
     <ClCompile Include="Game\Type\GameOffset.ixx" />
+    <ClCompile Include="Game\Type\GameVariantPreset.ixx" />
     <ClCompile Include="Interaction\Blam.Layout.Interaction.Type.ixx" />
     <ClCompile Include="Interaction\Type\InteractionOffset.ixx" />
     <ClCompile Include="Player\Blam.Layout.Player.Type.ixx" />

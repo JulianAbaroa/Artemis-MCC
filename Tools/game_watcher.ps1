@@ -2,7 +2,7 @@
 # Deploys the Artemis DLL, launches and closes MCC and watches it for crashes, when Tools/game.py asks for it (Diseno/11, D129).
 # Start it with Tools\game_watcher.bat and leave the window open while working with Claude. It does nothing to MCC on its own.
 # Exchange folder build\game\ (gitignored):
-#   request.json  {id, kind: deploy|launch|kill|status|info|python, launch: bool, script, args}   written by game.py
+#   request.json  {id, kind: deploy|launch|kill|status|info|presets|python, launch: bool, script, args}   written by game.py
 #   python\<id>.json/.out/.err  run of a script of Agent\ with the venv Agent\.venv (kind python, D137): state, stdout, stderr
 #   result.json   {id, ok, message}                                     answer to the last request
 #   watcher.json  {heartbeat, mccRunning, pid, launchedAt, artemisLoaded, crashes, mccDir}   refreshed every second
@@ -49,6 +49,19 @@ function Find-MccDir($config)
         if (Test-Path $dir) { return $dir }
     }
     return $null
+}
+
+# Copies the compiled presets (build\game\presets, written by Tools\presets.py) to the storage folder of Artemis, where the DLL reads them (Q97).
+function Sync-Presets
+{
+    $source = Join-Path $game 'presets'
+    if (-not (Test-Path $source)) { return 'no compiled presets' }
+    $target = Join-Path $env:LOCALAPPDATA 'Artemis\Presets'
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    Get-ChildItem $target -Filter '*.txt' -File | Where-Object { -not (Test-Path (Join-Path $source $_.Name)) } | Remove-Item -Force
+    $files = @(Get-ChildItem $source -Filter '*.txt' -File)
+    foreach ($file in $files) { Copy-Item $file.FullName $target -Force }
+    return "$($files.Count) preset files copied"
 }
 
 # Python of Agent\.venv (D137). Created on first use with the newest Python of the py launcher that installs Agent\requirements.txt.
@@ -229,12 +242,13 @@ while ($true)
                 Copy-Item (Join-Path $out 'wtsapi32.dll') $mccDir -Force
                 if (Test-Path (Join-Path $out 'wtsapi32.pdb')) { Copy-Item (Join-Path $out 'wtsapi32.pdb') $mccDir -Force }
                 Set-Content -Path (Join-Path $mccDir 'artemis_bench.txt') -Value $game -NoNewline
-                $message += '; dll copied'
+                $message += '; dll copied; ' + (Sync-Presets)
                 if ($req.launch) { $message += '; ' + (Start-Mcc $config) }
             }
             'launch' { $message = Start-Mcc $config }
             'kill' { $message = 'MCC ' + (Stop-Mcc) }
             'status' { $message = 'ok' }
+            'presets' { $message = Sync-Presets }
             'python' { $message = Start-Python $req }
             'info'
             {

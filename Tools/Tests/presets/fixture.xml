@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preset base="fixture_parent" doc="Fixture: every kind of field and one override of the parent.">
+  <general time_limit_minutes="0x2" />
+  <respawn time_seconds="3" />
+  <base_traits gravity="75%" movement_speed="110%" />
+  <map powerups="0" weapon_set="rocket_launchers" />
+  <team index="1" primary_color="0x00FF00" />
+  <loadout palette="2" index="3" primary="rocket_launcher" grenades="4" />
+  <trait_set index="0" movement_speed="90%" />
+</preset>

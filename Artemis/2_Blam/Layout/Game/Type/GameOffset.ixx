@@ -91,6 +91,12 @@ export namespace Blam::Layout::Game::Type::Offset
     // Score to win of a Megalo variant, uint16 (0 none): the getter of its virtual +0x48 reads 'movzx [this+0xF83C]' with this = variant + 0x4 (A14 5.8).
     constexpr std::uintptr_t k_VariantScoreToWin{ 0xF840 };
 
+    // Trait sets of a Megalo variant (D264): the number of sets of the script (uint32, at the Megalo object + 0x5DC4 with the object at
+    // variant + 0x4) and the first set. Each set is a block of player traits (0x2C bytes) every k_VariantMegaloTraitSetStride bytes.
+    constexpr std::uintptr_t k_VariantMegaloTraitSetCount{ 0x5DC8 };
+    constexpr std::uintptr_t k_VariantMegaloTraitSets{ 0x5DD0 };
+    constexpr std::uintptr_t k_VariantMegaloTraitSetStride{ 0x30 };
+
     // Fields of an element of the megalo objects region (D250). The state and the timer are raw engine values.
     // note: The timer has 5 + the allies in the zone in its high byte while it runs (0 paused) and the time in 1/1200 s in the low 24 bits (A14).
     constexpr std::uintptr_t k_MegaloObjectHandle{ 0x38 };

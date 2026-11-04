@@ -1,0 +1,11 @@
+preset fixture_parent
+source be140b6347ef10cc69a94314cf6a9c3e9090f1f2
+write 2bc load 08 08
+write 2bd round_end 02 ff
+write 2bf round_end 03 ff
+write 2c4 load 08 08
+write 2c7 spawn 07 ff
+write 2fc tick 01 01
+write 31c tick 05 ff
+write 31d tick 03 ff
+write 320 tick 96000000 ffffffff

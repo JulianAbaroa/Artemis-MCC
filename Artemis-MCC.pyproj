@@ -26,6 +26,8 @@
     <Folder Include="Data\Datum\" />
     <Folder Include="Data\Semantic\" />
     <Folder Include="Data\Bridge\" />
+    <Folder Include="Data\Presets\" />
+    <Folder Include="Tools\Tests\presets\" />
     <Folder Include="Agent\" />
     <Folder Include="Agent\artemis\" />
     <Folder Include="Agent\artemis\env\" />
@@ -42,6 +44,7 @@
     <Compile Include="Tools\analyze_ticktrace.py" />
     <Compile Include="Tools\build.py" />
     <Compile Include="Tools\game.py" />
+    <Compile Include="Tools\presets.py" />
     <Compile Include="Tools\tickdump.py" />
     <Compile Include="Tools\livechat.py" />
     <Compile Include="Tools\check_rules.py" />
@@ -83,6 +86,7 @@
     <Compile Include="Tools\Tests\test_components.py" />
     <Compile Include="Tools\Tests\test_ctf.py" />
     <Compile Include="Tools\Tests\test_generators.py" />
+    <Compile Include="Tools\Tests\test_presets.py" />
     <Compile Include="Tools\Tests\test_tickdump.py" />
     <Compile Include="Tools\Tests\test_tools.py" />
   </ItemGroup>
@@ -105,6 +109,11 @@
     <Content Include="Data\Datum\weap.xml" />
     <Content Include="Data\Semantic\Semantic.xml" />
     <Content Include="Data\Bridge\Bridge.xml" />
+    <Content Include="Data\Presets\Catalog.xml" />
+    <Content Include="Data\Presets\artemis_ctf_base.xml" />
+    <Content Include="Data\Presets\artemis_ctf_fast.xml" />
+    <Content Include="Tools\Tests\presets\fixture.xml" />
+    <Content Include="Tools\Tests\presets\fixture_parent.xml" />
     <Content Include="Agent\requirements.txt" />
     <Content Include="Data\Tags\ObjectTags.xml" />
   </ItemGroup>

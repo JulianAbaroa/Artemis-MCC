@@ -249,6 +249,9 @@
     <ClCompile Include="Game\Type\GameOffset.ixx">
       <Filter>Game\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Game\Type\GameVariantPreset.ixx">
+      <Filter>Game\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Interaction\Blam.Layout.Interaction.Type.ixx">
       <Filter>Interaction</Filter>
     </ClCompile>

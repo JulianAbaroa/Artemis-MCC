@@ -13,6 +13,7 @@ Sources of truth of Artemis: hand-edited XML, committed, with nothing executable
 - `Tags/ObjectTags.xml`: catalog of object tags with their semantic Function and Subtype (see "Tag catalog").
 - `../Tools/seed_tags.py`: builds and merges the tag catalog.
 - `Semantic/Semantic.xml`: single source of the semantic ids (functions, subtypes, groups, states, capabilities, events). See "Semantic ids".
+- `Presets/Catalog.xml` and `Presets/<name>.xml`: the writable fields of the game variant and the gametype presets. See "Presets".
 
 ## Format
 
@@ -102,3 +103,26 @@ Per tag: `name`, `group` (fourcc), `kind` (ObjectKind), `mp` (multiplayer object
     python Tools/TagTranspiler/GenerateSemantic.py
 
 Writes the module `Common.Semantic.Type` (primary in `Artemis/1_Shared/Common/Semantic/`, partitions under `Type/`): the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.
+
+## Presets
+
+`Presets/` holds the gametype presets (Q97, D264, D265): sets of values that Artemis writes into the game variant `V` (the one the engine reads: respawn time, traits, rounds, loadouts...) at load and between rounds. The XML is the source of truth, hand-edited and committed. The DLL does not read XML: `Tools/presets.py` compiles it into text files and editing a preset needs no rebuild.
+
+- `Catalog.xml`: every writable field once. `<enum>` (names and values of ReachVariantTool, such as `75%` or `rocket_launcher`), one `<traits>` block (the 0x2C bytes of player traits with their subfields, used by every group with `traits="true"`) and `<group>` elements. A group has an `offset` (from the start of `V`, the offsets of its fields are relative to it), a default `when` and optional `<index name count stride>` for repeated blocks (`team` 8 x 0x58, `loadout` palette 6 x 30 and index 5 x 6, `trait_set` 16 x 0x30). A `<field>` has `name`, `offset`, `type` (`u8 s8 u16 s16 u32 s32 bit`), `enum`, `unit`, `doc`, `when` and, for `bit`, `bit` and `width`. `when` says when the engine reads the field: `tick`, `spawn`, `pickup`, `round_start`, `round_end` or `load` (only at load, a request between rounds that would change it is rejected). Fields not measured yet are `load` (A19 section 5.1).
+- `<name>.xml`: one preset per file. The name is the file name (`[a-z0-9_]`, up to 31 characters).
+
+      <preset base="artemis_ctf_base" doc="...">
+        <general round_limit="3" time_limit_minutes="2" />
+        <base_traits gravity="75%" movement_speed="110%" jump_height="100" />
+        <trait_set index="0" movement_speed="90%" />
+        <team index="1" primary_color="0x00FF00" />
+      </preset>
+
+  One element per group or block, one attribute per field. Only the fields written are set, the rest keeps the value of the gametype (D265 b). `base` is another preset: the child overrides the parent field by field, and chains are allowed (no cycles). A value is the name of the enum or a number (`0x` for hex) inside the range of the type; a `bit` takes `0`, `1`, `true` or `false`. An error is reported as `file:line` with what was expected and invalidates the whole preset.
+- `artemis_ctf_base.xml` is the Artemis CTF as measured in Forge and `artemis_ctf_fast.xml` a child for short training rounds.
+
+      python Tools/presets.py compile [--out DIR]   writes <name>.txt and _catalog.txt (default build/game/presets)
+      python Tools/presets.py --check [--out DIR]   exit 1 when the compiled files differ from the XML
+      python Tools/presets.py list
+
+`game.py deploy` and `game.py run` compile first, and the game watcher copies the files to `%LOCALAPPDATA%\Artemis\Presets`. A compiled preset is one line per write (`write <offset hex> <when> <bytes hex> <mask hex>`, inheritance resolved, only the bits of the mask are written) plus `preset`, `source` (hash of the XML and its bases) and `check megalo_trait_set <i>` lines. `_catalog.txt` lists every field (`field <offset hex> <size> <mask hex> <when>`): the fields Artemis saves at load and restores when the preset changes. The parse and the application of these files is `Blam.Layout.Game.Type:VariantPreset`; `Artemis/7_Tests/Tests/Blam/Fixtures/presets` is the fixture both sides test against (regenerate it as `test_presets.py` says).

@@ -102,6 +102,9 @@
     <ClCompile Include="Blam\RuntimeTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
+    <ClCompile Include="Blam\VariantPresetTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
     <ClCompile Include="Blam\TagResolverTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>

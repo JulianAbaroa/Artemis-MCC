@@ -100,6 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Blam\LayoutTests.cpp" />
+    <ClCompile Include="Blam\VariantPresetTests.cpp" />
     <ClCompile Include="Blam\MapModelTests.cpp" />
     <ClCompile Include="Blam\MapTests.cpp" />
     <ClCompile Include="Blam\ObjectKindTests.cpp" />

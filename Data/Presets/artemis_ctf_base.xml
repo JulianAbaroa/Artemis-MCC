@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Artemis CTF gametype as measured in Forge: the values the training presets start from. -->
+<preset doc="Artemis CTF as it is: 3 rounds, no time limit, respawn 5 s, speed 110%, gravity 75%.">
+  <general round_limit="3" time_limit_minutes="0" />
+  <respawn time_seconds="5" loadout_camera_seconds="10" />
+  <base_traits movement_speed="110%" gravity="75%" jump_height="100" />
+</preset>

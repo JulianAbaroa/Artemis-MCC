@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fields of the game variant (V) that a preset can write (q97, d264, d265). Offsets are from the start of V (GameGlobals + 0x14E8).
+     A field is the unit that Artemis saves as the base value at load and restores. Compiled by Tools/presets.py. -->
+<catalog>
+  <!-- Enums with the values of ReachVariantTool (player_traits.h, custom_game_options.h). Value 0 or -3 'unchanged' leaves the base. -->
+  <enum name="bool_trait">
+    <value name="unchanged" value="0" />
+    <value name="disabled" value="1" />
+    <value name="enabled" value="2" />
+  </enum>
+  <enum name="damage_resist">
+    <value name="unchanged" value="0" />
+    <value name="10%" value="1" />
+    <value name="50%" value="2" />
+    <value name="90%" value="3" />
+    <value name="100%" value="4" />
+    <value name="110%" value="5" />
+    <value name="150%" value="6" />
+    <value name="200%" value="7" />
+    <value name="300%" value="8" />
+    <value name="500%" value="9" />
+    <value name="1000%" value="10" />
+    <value name="2000%" value="11" />
+    <value name="invulnerable" value="12" />
+  </enum>
+  <enum name="health_multiplier">
+    <value name="unchanged" value="0" />
+    <value name="0%" value="1" />
+    <value name="100%" value="2" />
+    <value name="150%" value="3" />
+    <value name="200%" value="4" />
+    <value name="300%" value="5" />
+    <value name="400%" value="6" />
+  </enum>
+  <enum name="health_rate">
+    <value name="unchanged" value="0" />
+    <value name="-25%" value="1" />
+    <value name="-10%" value="2" />
+    <value name="-5%" value="3" />
+    <value name="0%" value="4" />
+    <value name="50%" value="5" />
+    <value name="90%" value="6" />
+    <value name="100%" value="7" />
+    <value name="110%" value="8" />
+    <value name="200%" value="9" />
+  </enum>
+  <enum name="shield_rate">
+    <value name="unchanged" value="0" />
+    <value name="-25%" value="1" />
+    <value name="-10%" value="2" />
+    <value name="-5%" value="3" />
+    <value name="0%" value="4" />
+    <value name="10%" value="5" />
+    <value name="25%" value="6" />
+    <value name="50%" value="7" />
+    <value name="75%" value="8" />
+    <value name="90%" value="9" />
+    <value name="100%" value="10" />
+    <value name="110%" value="11" />
+    <value name="125%" value="12" />
+    <value name="150%" value="13" />
+    <value name="200%" value="14" />
+  </enum>
+  <enum name="vampirism_rate">
+    <value name="unchanged" value="0" />
+    <value name="0%" value="1" />
+    <value name="10%" value="2" />
+    <value name="25%" value="3" />
+    <value name="50%" value="4" />
+    <value name="100%" value="5" />
+  </enum>
+  <enum name="damage_multiplier">
+    <value name="unchanged" value="0" />
+    <value name="0%" value="1" />
+    <value name="25%" value="2" />
+    <value name="50%" value="3" />
+    <value name="75%" value="4" />
+    <value name="90%" value="5" />
+    <value name="100%" value="6" />
+    <value name="110%" value="7" />
+    <value name="125%" value="8" />
+    <value name="150%" value="9" />
+    <value name="200%" value="10" />
+    <value name="300%" value="11" />
+    <value name="instant_kill" value="12" />
+  </enum>
+  <enum name="grenade_count">
+    <value name="unchanged" value="0" />
+    <value name="map_default" value="1" />
+    <value name="none" value="2" />
+    <value name="frag_1" value="3" />
+    <value name="frag_2" value="4" />
+    <value name="frag_3" value="5" />
+    <value name="frag_4" value="6" />
+    <value name="plasma_1" value="7" />
+    <value name="plasma_2" value="8" />
+    <value name="plasma_3" value="9" />
+    <value name="plasma_4" value="10" />
+    <value name="each_1" value="11" />
+    <value name="each_2" value="12" />
+    <value name="each_3" value="13" />
+    <value name="each_4" value="14" />
+  </enum>
+  <enum name="infinite_ammo">
+    <value name="unchanged" value="0" />
+    <value name="disabled" value="1" />
+    <value name="enabled" value="2" />
+    <value name="bottomless" value="3" />
+  </enum>
+  <enum name="ability_usage">
+    <value name="unchanged" value="0" />
+    <value name="disabled" value="1" />
+    <value name="not_with_objectives" value="2" />
+    <value name="enabled" value="3" />
+  </enum>
+  <enum name="weapon">
+    <value name="random" value="-4" />
+    <value name="unchanged" value="-3" />
+    <value name="map_default" value="-2" />
+    <value name="none" value="-1" />
+    <value name="dmr" value="0" />
+    <value name="assault_rifle" value="1" />
+    <value name="plasma_pistol" value="2" />
+    <value name="spiker" value="3" />
+    <value name="energy_sword" value="4" />
+    <value name="magnum" value="5" />
+    <value name="needler" value="6" />
+    <value name="plasma_rifle" value="7" />
+    <value name="rocket_launcher" value="8" />
+    <value name="shotgun" value="9" />
+    <value name="sniper_rifle" value="10" />
+    <value name="spartan_laser" value="11" />
+    <value name="gravity_hammer" value="12" />
+    <value name="plasma_repeater" value="13" />
+    <value name="needle_rifle" value="14" />
+    <value name="focus_rifle" value="15" />
+    <value name="plasma_launcher" value="16" />
+    <value name="concussion_rifle" value="17" />
+    <value name="grenade_launcher" value="18" />
+    <value name="golf_club" value="19" />
+    <value name="fuel_rod_gun" value="20" />
+    <value name="machine_gun_turret" value="21" />
+    <value name="plasma_cannon" value="22" />
+    <value name="target_locator" value="23" />
+  </enum>
+  <enum name="ability">
+    <value name="random" value="-4" />
+    <value name="unchanged" value="-3" />
+    <value name="map_default" value="-2" />
+    <value name="none" value="-1" />
+    <value name="sprint" value="0" />
+    <value name="jetpack" value="1" />
+    <value name="armor_lock" value="2" />
+    <value name="unused_power_fist" value="3" />
+    <value name="active_camo" value="4" />
+    <value name="unused_ammo_pack" value="5" />
+    <value name="unused_sensor_pack" value="6" />
+    <value name="hologram" value="7" />
+    <value name="evade" value="8" />
+    <value name="drop_shield" value="9" />
+  </enum>
+  <enum name="movement_speed">
+    <value name="unchanged" value="0" />
+    <value name="0%" value="1" />
+    <value name="25%" value="2" />
+    <value name="50%" value="3" />
+    <value name="75%" value="4" />
+    <value name="90%" value="5" />
+    <value name="100%" value="6" />
+    <value name="110%" value="7" />
+    <value name="120%" value="8" />
+    <value name="130%" value="9" />
+    <value name="140%" value="10" />
+    <value name="150%" value="11" />
+    <value name="160%" value="12" />
+    <value name="170%" value="13" />
+    <value name="180%" value="14" />
+    <value name="190%" value="15" />
+    <value name="200%" value="16" />
+    <value name="300%" value="17" />
+  </enum>
+  <enum name="player_gravity">
+    <value name="unchanged" value="0" />
+    <value name="50%" value="1" />
+    <value name="75%" value="2" />
+    <value name="100%" value="3" />
+    <value name="150%" value="4" />
+    <value name="200%" value="5" />
+  </enum>
+  <enum name="vehicle_usage">
+    <value name="unchanged" value="0" />
+    <value name="none" value="1" />
+    <value name="passenger_only" value="2" />
+    <value name="driver_only" value="3" />
+    <value name="gunner_only" value="4" />
+    <value name="no_passenger" value="5" />
+    <value name="no_driver" value="6" />
+    <value name="no_gunner" value="7" />
+    <value name="full_use" value="8" />
+  </enum>
+  <enum name="double_jump">
+    <value name="unchanged" value="0" />
+    <value name="disabled" value="1" />
+    <value name="enabled" value="2" />
+    <value name="enabled_plus_lunge" value="3" />
+  </enum>
+  <enum name="active_camo">
+    <value name="unchanged" value="0" />
+    <value name="off" value="1" />
+    <value name="worst" value="2" />
+    <value name="poor" value="3" />
+    <value name="good" value="4" />
+    <value name="best" value="5" />
+  </enum>
+  <enum name="visible_identity">
+    <value name="unchanged" value="0" />
+    <value name="none" value="1" />
+    <value name="allies" value="2" />
+    <value name="everyone" value="3" />
+  </enum>
+  <enum name="aura">
+    <value name="unchanged" value="0" />
+    <value name="none" value="1" />
+    <value name="team_primary" value="2" />
+    <value name="darken_armor" value="3" />
+    <value name="pastel_armor" value="4" />
+    <value name="unknown_5" value="5" />
+    <value name="unknown_6" value="6" />
+  </enum>
+  <enum name="forced_color">
+    <value name="unchanged" value="0" />
+    <value name="none" value="1" />
+    <value name="red" value="2" />
+    <value name="blue" value="3" />
+    <value name="green" value="4" />
+    <value name="orange" value="5" />
+    <value name="purple" value="6" />
+    <value name="gold" value="7" />
+    <value name="brown" value="8" />
+    <value name="pink" value="9" />
+    <value name="white" value="10" />
+    <value name="black" value="11" />
+    <value name="zombie" value="12" />
+    <value name="pink_alt" value="13" />
+  </enum>
+  <enum name="radar_state">
+    <value name="unchanged" value="0" />
+    <value name="off" value="1" />
+    <value name="allies" value="2" />
+    <value name="normal" value="3" />
+    <value name="enhanced" value="4" />
+  </enum>
+  <enum name="radar_range">
+    <value name="unchanged" value="0" />
+    <value name="10m" value="1" />
+    <value name="15m" value="2" />
+    <value name="25m" value="3" />
+    <value name="50m" value="4" />
+    <value name="75m" value="5" />
+    <value name="100m" value="6" />
+    <value name="150m" value="7" />
+  </enum>
+  <enum name="weapon_set">
+    <value name="random" value="-3" />
+    <value name="map_default" value="-2" />
+    <value name="none" value="-1" />
+    <value name="human" value="0" />
+    <value name="covenant" value="1" />
+    <value name="no_snipers" value="2" />
+    <value name="rocket_launchers" value="3" />
+    <value name="no_power_weapons" value="4" />
+    <value name="juggernaut" value="5" />
+    <value name="slayer_pro" value="6" />
+    <value name="rifles_only" value="7" />
+    <value name="mid_range_only" value="8" />
+    <value name="long_range_only" value="9" />
+    <value name="sniper_rifles" value="10" />
+    <value name="melee" value="11" />
+    <value name="energy_swords" value="12" />
+    <value name="gravity_hammers" value="13" />
+    <value name="mass_destruction" value="14" />
+  </enum>
+  <enum name="vehicle_set">
+    <value name="map_default" value="-2" />
+    <value name="mongooses" value="0" />
+    <value name="warthogs" value="1" />
+    <value name="no_aircraft" value="2" />
+    <value name="only_aircraft" value="3" />
+    <value name="no_tanks" value="4" />
+    <value name="only_tanks" value="5" />
+    <value name="no_light_ground" value="6" />
+    <value name="only_light_ground" value="7" />
+    <value name="no_covenant" value="8" />
+    <value name="all_covenant" value="9" />
+    <value name="no_human" value="10" />
+    <value name="all_human" value="11" />
+    <value name="none" value="12" />
+    <value name="all" value="13" />
+  </enum>
+  <enum name="team_changes">
+    <value name="disabled" value="0" />
+    <value name="enabled" value="1" />
+    <value name="balancing_only" value="2" />
+  </enum>
+  <enum name="team_species">
+    <value name="player_preference" value="0" />
+    <value name="all_spartans" value="1" />
+    <value name="all_elites" value="2" />
+    <value name="use_team_species" value="3" />
+    <value name="spartans_vs_elites" value="4" />
+  </enum>
+  <enum name="team_scoring">
+    <value name="sum" value="0" />
+    <value name="minimum" value="1" />
+    <value name="maximum" value="2" />
+  </enum>
+
+  <!-- Block of player traits (0x2C bytes), defined once and used by every group with traits="true". Offsets are inside the block. -->
+  <traits>
+    <field name="damage_resistance" offset="0x00" type="u8" enum="damage_resist" />
+    <field name="health_multiplier" offset="0x01" type="u8" enum="health_multiplier" />
+    <field name="health_regen_rate" offset="0x02" type="u8" enum="health_rate" />
+    <field name="shield_multiplier" offset="0x03" type="u8" enum="health_multiplier" />
+    <field name="shield_regen_rate" offset="0x04" type="u8" enum="shield_rate" />
+    <field name="overshield_regen_rate" offset="0x05" type="u8" enum="shield_rate" />
+    <field name="headshot_immunity" offset="0x06" type="u8" enum="bool_trait" />
+    <field name="shield_vampirism" offset="0x07" type="u8" enum="vampirism_rate" />
+    <field name="assassination_immunity" offset="0x08" type="u8" enum="bool_trait" />
+    <field name="cannot_die_from_damage" offset="0x09" type="u8" enum="bool_trait" />
+    <field name="weapon_damage_multiplier" offset="0x0C" type="u8" enum="damage_multiplier" />
+    <field name="melee_damage_multiplier" offset="0x0D" type="u8" enum="damage_multiplier" />
+    <field name="grenade_regeneration" offset="0x0E" type="u8" enum="bool_trait" />
+    <field name="weapon_pickup" offset="0x0F" type="u8" enum="bool_trait" />
+    <field name="grenade_count" offset="0x10" type="u8" enum="grenade_count" />
+    <field name="infinite_ammo" offset="0x11" type="u8" enum="infinite_ammo" />
+    <field name="ability_usage" offset="0x12" type="u8" enum="ability_usage" />
+    <field name="abilities_drop_on_death" offset="0x13" type="u8" enum="bool_trait" />
+    <field name="infinite_abilities" offset="0x14" type="u8" enum="bool_trait" />
+    <field name="primary_weapon" offset="0x15" type="s8" enum="weapon" />
+    <field name="secondary_weapon" offset="0x16" type="s8" enum="weapon" />
+    <field name="armor_ability" offset="0x17" type="s8" enum="ability" />
+    <field name="movement_speed" offset="0x18" type="u8" enum="movement_speed" />
+    <field name="gravity" offset="0x19" type="u8" enum="player_gravity" />
+    <field name="vehicle_use" offset="0x1A" type="u8" enum="vehicle_usage" />
+    <field name="double_jump" offset="0x1B" type="u8" enum="double_jump" />
+    <field name="jump_height" offset="0x1C" type="s32" unit="%" doc="Literal percentage. -1 leaves the base." />
+    <field name="active_camo" offset="0x20" type="u8" enum="active_camo" />
+    <field name="visible_waypoint" offset="0x21" type="u8" enum="visible_identity" />
+    <field name="visible_name" offset="0x22" type="u8" enum="visible_identity" />
+    <field name="aura" offset="0x23" type="u8" enum="aura" />
+    <field name="forced_color" offset="0x24" type="u8" enum="forced_color" />
+    <field name="motion_tracker_mode" offset="0x28" type="u8" enum="radar_state" />
+    <field name="motion_tracker_range" offset="0x29" type="u8" enum="radar_range" />
+    <field name="directional_damage_indicator" offset="0x2A" type="u8" doc="0 to 2." />
+  </traits>
+
+  <group name="general" doc="Rounds, time and teams of the match.">
+    <field name="teams_enabled" offset="0x2BC" type="bit" bit="3" when="load" doc="Bit position taken from ReachVariantTool, not measured." />
+    <field name="rounds_to_win" offset="0x2BD" type="u8" when="round_end" />
+    <field name="time_limit_minutes" offset="0x2BE" type="u8" when="round_start" unit="min" doc="0 is no limit." />
+    <field name="round_limit" offset="0x2BF" type="u8" when="round_end" />
+    <field name="sudden_death_seconds" offset="0x2C0" type="s16" when="round_end" unit="s" doc="-1 is indefinite." />
+    <field name="grace_period_seconds" offset="0x2C2" type="u16" when="load" unit="s" doc="Not measured, so load only." />
+  </group>
+  <group name="respawn" doc="Respawn and lives.">
+    <field name="sync_with_team" offset="0x2C4" type="bit" bit="0" when="load" doc="Not measured, so load only." />
+    <field name="respawn_on_kills" offset="0x2C4" type="bit" bit="3" when="load" doc="Not measured, so load only." />
+    <field name="lives_per_round" offset="0x2C5" type="u8" when="spawn" doc="0 is unlimited." />
+    <field name="team_lives_per_round" offset="0x2C6" type="u8" when="spawn" doc="0 is unlimited." />
+    <field name="time_seconds" offset="0x2C7" type="u8" when="spawn" unit="s" />
+    <field name="suicide_penalty" offset="0x2C8" type="u8" when="spawn" unit="s" />
+    <field name="betrayal_penalty" offset="0x2C9" type="u8" when="spawn" unit="s" />
+    <field name="growth" offset="0x2CA" type="u8" when="spawn" doc="Respawn time growth." />
+    <field name="loadout_camera_seconds" offset="0x2CB" type="u8" when="round_start" unit="s" />
+    <field name="traits_duration" offset="0x2CC" type="u8" when="spawn" unit="s" doc="Seconds the respawn traits last." />
+  </group>
+  <group name="respawn_traits" offset="0x2D0" when="spawn" traits="true" doc="Traits of a player after respawning (the duration is respawn traits_duration)." />
+  <group name="social" doc="Friendly fire and team changes.">
+    <field name="friendly_fire" offset="0x2FC" type="bit" bit="0" when="tick" />
+    <field name="betrayal_booting" offset="0x2FC" type="bit" bit="1" when="load" doc="Bit position taken from ReachVariantTool, not measured." />
+    <field name="team_changes" offset="0x2FE" type="u16" enum="team_changes" when="load" doc="Not measured, so load only." />
+  </group>
+  <group name="map" doc="Map options, weapon and vehicle sets and the duration of the powerups.">
+    <field name="grenades" offset="0x300" type="bit" bit="0" when="round_start" />
+    <field name="shortcuts" offset="0x300" type="bit" bit="1" when="round_start" />
+    <field name="abilities" offset="0x300" type="bit" bit="2" when="round_start" />
+    <field name="powerups" offset="0x300" type="bit" bit="3" when="round_start" />
+    <field name="turrets" offset="0x300" type="bit" bit="4" when="round_start" />
+    <field name="indestructible_vehicles" offset="0x300" type="bit" bit="5" when="round_start" />
+    <field name="weapon_set" offset="0x330" type="s16" enum="weapon_set" when="round_start" />
+    <field name="vehicle_set" offset="0x332" type="s16" enum="vehicle_set" when="round_start" />
+    <field name="red_duration" offset="0x3B8" type="u8" when="pickup" unit="s" />
+    <field name="blue_duration" offset="0x3B9" type="u8" when="pickup" unit="s" />
+    <field name="yellow_duration" offset="0x3BA" type="u8" when="pickup" unit="s" />
+  </group>
+  <group name="base_traits" offset="0x304" when="tick" traits="true" doc="Traits of every player." />
+  <group name="red_traits" offset="0x334" when="pickup" traits="true" doc="Traits of the red powerup." />
+  <group name="blue_traits" offset="0x360" when="pickup" traits="true" doc="Traits of the blue powerup." />
+  <group name="yellow_traits" offset="0x38C" when="pickup" traits="true" doc="Traits of the yellow powerup." />
+  <group name="teams" doc="Species and scoring of the teams.">
+    <field name="species" offset="0x3BC" type="bit" bit="0" width="3" enum="team_species" when="tick" />
+    <field name="team_scoring" offset="0x738" type="u16" enum="team_scoring" when="load" doc="Not measured, so load only." />
+  </group>
+  <group name="team" offset="0x3C0" when="load" doc="Colors of a team (u32, -1 is the default). Not changeable in game.">
+    <index name="index" count="8" stride="0x58" />
+    <field name="primary_color" offset="0x48" type="u32" />
+    <field name="secondary_color" offset="0x4C" type="u32" />
+    <field name="text_color" offset="0x50" type="u32" />
+  </group>
+  <group name="loadout" offset="0x681" when="spawn" doc="A loadout of a palette (6 palettes of 5 loadouts, 6 bytes each).">
+    <index name="palette" count="6" stride="0x1E" />
+    <index name="index" count="5" stride="0x6" />
+    <field name="visible" offset="0x0" type="u8" />
+    <field name="name" offset="0x1" type="u8" doc="Raw index of the name." />
+    <field name="primary" offset="0x2" type="s8" enum="weapon" />
+    <field name="secondary" offset="0x3" type="s8" enum="weapon" />
+    <field name="ability" offset="0x4" type="s8" enum="ability" />
+    <field name="grenades" offset="0x5" type="u8" doc="Raw count (0 to 15)." />
+  </group>
+  <group name="trait_set" offset="0x5DD0" when="tick" traits="true" check="megalo_trait_set" doc="A trait set of the Megalo script. The index has to be below the number of sets of the script.">
+    <index name="index" count="16" stride="0x30" />
+  </group>
+  <group name="megalo" doc="Options of the Megalo script.">
+    <field name="score_to_win" offset="0xF840" type="u16" when="tick" doc="0 is none." />
+  </group>
+</catalog>

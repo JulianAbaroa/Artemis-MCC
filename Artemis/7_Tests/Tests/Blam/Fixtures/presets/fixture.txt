@@ -1,0 +1,19 @@
+preset fixture
+source 943dbc9027993dcd9e8f5aafd9678518af11d1c0
+write 2bc load 08 08
+write 2bd round_end 02 ff
+write 2be round_start 02 ff
+write 2bf round_end 03 ff
+write 2c4 load 08 08
+write 2c7 spawn 03 ff
+write 2fc tick 01 01
+write 300 round_start 00 08
+write 31c tick 07 ff
+write 31d tick 02 ff
+write 320 tick 96000000 ffffffff
+write 330 round_start 0300 ffff
+write 460 load 00ff0000 ffffffff
+write 6d1 spawn 08 ff
+write 6d4 spawn 04 ff
+write 5de8 tick 05 ff
+check megalo_trait_set 0
