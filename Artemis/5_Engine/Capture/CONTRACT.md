@@ -4,7 +4,8 @@ Group `5_Engine` - static library inside the game process - copies one tick of t
 
 ## Responsibility
 The tick hooks (`ExecuteGameFrameDetour`, `SimulationTicksDetour`) that open the read window of every logic tick and wake the AI
-thread; the locators of the object, player and interaction tables; and `CaptureService`, which copies the live objects and every
+thread (`SimulationTicksDetour` also ends the round on request and hands a pending gametype preset to `Engine.Base` `PresetService` with
+the live game variant at a round break); the locators of the object, player and interaction tables; and `CaptureService`, which copies the live objects and every
 memory region of `RegionId` into a new Snapshot and publishes it.
 
 ## Does not

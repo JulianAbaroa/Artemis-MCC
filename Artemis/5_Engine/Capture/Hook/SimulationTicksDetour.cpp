@@ -9,6 +9,7 @@ import Engine.Base.Memory.Type;
 import Engine.Base.Lifecycle.Type;
 import Engine.Base.Hook.System;
 import Blam.Layout.Object.Type;
+import Blam.Layout.Game.Type;
 import std;
 
 namespace
@@ -17,6 +18,12 @@ namespace
     using Engine::Base::Lifecycle::Type::Status;
 
     using Engine::Base::Hook::System::k_DrainTimeout;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundState;
+    using Blam::Layout::Game::Type::Offset::k_GameGlobalsGameVariant;
+    using Blam::Layout::Object::Type::Constant::k_GameGlobalsSize;
+    using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameEngineOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameModeOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Blam::Layout::Object::Type::Constant::k_TimeGlobalsScaleOffset;
     constexpr float k_DefaultTimeScale{ 1.0f };
@@ -39,6 +46,7 @@ namespace Engine::Capture::Hook
         self->m_LifecycleStore.SetStatus(Status::Running);
         self->ApplyTimeScale();
         self->ApplyEndRound();
+        self->ApplyPreset();
 
         // A pause runs the frame without ticks (D143): the engine returns at once when asked for none, and the time left is dropped
         // as its own pause check does, so nothing piles up for the frames after it.
@@ -108,6 +116,34 @@ namespace Engine::Capture::Hook
 
         m_EndRound(k_EndRoundNoWinner, false, k_EndRoundScriptReason);
         m_Log.Message("[SimulationTicksDetour] INFO: Round ended on request.");
+    }
+
+    auto SimulationTicksDetour::ApplyPreset() -> void
+    {
+        if (!m_PresetService.HasPending()) return;
+
+        const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
+        if (threadContext == 0) return;
+
+        const std::uintptr_t gameGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameModeOffset) };
+        const std::uintptr_t gameEngine{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameEngineOffset) };
+        if (gameGlobals == 0 || gameEngine == 0) return;
+
+        const auto roundState{ *reinterpret_cast<const std::uint8_t*>(gameEngine + k_GameEngineRoundState) };
+        const auto gameMode{ *reinterpret_cast<const std::uint8_t*>(gameGlobals + k_GameModeTypeOffset) };
+
+        const std::span<std::uint8_t> variant{ reinterpret_cast<std::uint8_t*>(gameGlobals + k_GameGlobalsGameVariant),
+            k_GameGlobalsSize - k_GameGlobalsGameVariant };
+
+        // The service does not throw, but nothing may leave the hook.
+        try
+        {
+            m_PresetService.ApplyBetweenRounds(variant, roundState, gameMode);
+        }
+        catch (...)
+        {
+            m_Log.Message("[SimulationTicksDetour] ERROR: The preset request failed with an exception.");
+        }
     }
 
     auto SimulationTicksDetour::Install() -> void

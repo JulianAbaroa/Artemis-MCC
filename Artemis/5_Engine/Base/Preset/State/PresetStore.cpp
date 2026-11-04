@@ -1,5 +1,6 @@
 module Engine.Base.Preset.State;
 import :Preset;
+import Engine.Base.Preset.Type;
 import std;
 
 namespace Engine::Base::Preset::State
@@ -40,10 +41,51 @@ namespace Engine::Base::Preset::State
         return m_Base;
     }
 
-    auto PresetStore::SetBase(std::shared_ptr<const PresetBase> base) -> void
+    auto PresetStore::GetBaseCatalog() const -> std::shared_ptr<const PresetCatalog>
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_BaseCatalog;
+    }
+
+    auto PresetStore::SetBase(std::shared_ptr<const PresetBase> base, std::shared_ptr<const PresetCatalog> catalog) -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_Base = std::move(base);
+        m_BaseCatalog = m_Base != nullptr ? std::move(catalog) : nullptr;
+    }
+
+    auto PresetStore::BeginRequest() -> std::uint64_t
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return ++m_LatestRequestId;
+    }
+
+    auto PresetStore::HasPending() const -> bool
+    {
+        return m_HasPending.load(std::memory_order_acquire);
+    }
+
+    auto PresetStore::SetPending(PendingRequest request) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_Pending = std::move(request);
+        m_HasPending.store(true, std::memory_order_release);
+    }
+
+    auto PresetStore::TakePending() -> std::optional<PendingRequest>
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        std::optional<PendingRequest> request{ std::move(m_Pending) };
+        m_Pending.reset();
+        m_HasPending.store(false, std::memory_order_release);
+        return request;
+    }
+
+    auto PresetStore::ClearPending() -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_Pending.reset();
+        m_HasPending.store(false, std::memory_order_release);
     }
 
     auto PresetStore::GetResult() const -> PresetResult
@@ -56,5 +98,14 @@ namespace Engine::Base::Preset::State
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_Result = std::move(result);
+    }
+
+    auto PresetStore::SetResultOf(std::uint64_t requestId, PresetResult result) -> bool
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        if (requestId != m_LatestRequestId) return false;
+
+        m_Result = std::move(result);
+        return true;
     }
 }

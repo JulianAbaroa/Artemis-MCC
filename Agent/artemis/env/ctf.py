@@ -11,13 +11,14 @@ of an agent is the BaseTeam of the stand its team owns in this round, so the swa
 The rewards read the FlagTaken and FlagCaptured events Artemis generates, whose cause is the carrier. The clock and the score of
 the round come from the Match of the tick (P.6, D255): the environment measures no time of its own.
 """
+import logging
 import math
 from dataclasses import dataclass
 
 import numpy as np
 
 from ..bridge import Action, Bridge, BridgeMode, BridgeOwner
-from ..bridge_layout import NO_HANDLE, NOT_LOCAL
+from ..bridge_layout import NO_HANDLE, NOT_LOCAL, BridgePresetResult
 from ..semantic import Event, FlagState
 
 TWO_PI = 2 * math.pi
@@ -139,9 +140,21 @@ class CtfEnv:
 
     # --- Episode ----------------------------------------------------------------------------------------------------------------
 
-    def reset(self):
-        """Waits until every bot of the match is alive in a running round and returns {agent: observation}."""
+    def reset(self, preset=None):
+        """Waits until every bot of the match is alive in a running round and returns {agent: observation}.
+        preset: name of a gametype preset to play from the next round (Data/Presets), "" for the base values of the game variant, None
+        to leave it as it is. The preset is requested and the round is ended, since a preset is written between rounds. A preset that
+        cannot be applied (Rejected) raises RuntimeError: training with other settings than the ones asked would go unnoticed."""
         waited = 0.0
+        if preset is not None:
+            result = self.bridge.request_preset(preset)
+            if result is None:
+                raise RuntimeError(f"Artemis did not take the preset request {preset!r}")
+            if result == BridgePresetResult.Rejected:
+                raise RuntimeError(f"preset {preset!r} rejected: its files are wrong or it cannot be applied")
+            if result == BridgePresetResult.Pending:
+                self.bridge.end_round(wait=False)
+                self.is_waiting_round = True
         while True:
             published = self._next_tick()
             waited += self.config.period / 60.0
@@ -160,6 +173,14 @@ class CtfEnv:
                 break
             if waited > self.config.reset_timeout * 60:
                 raise TimeoutError("no round with every agent alive")
+        preset_info = None
+        if preset is not None:
+            final = self.bridge.wait_preset()
+            if final == BridgePresetResult.Rejected:
+                raise RuntimeError(f"preset {preset!r} rejected between rounds: it changes what only a load can change or a trait set the script lacks")
+            if final == BridgePresetResult.Pending:
+                logging.getLogger(__name__).warning("preset %r is still pending after the wait: the round started without it", preset)
+            preset_info = {"name": preset, "result": getattr(final, "name", final)}
         self.agents = [int(p["Handle"]) for p in players]
         self.states = {handle: AgentState(handle) for handle in self.agents}
         for player in players:
@@ -173,7 +194,7 @@ class CtfEnv:
         for handle in self.agents:
             observations[handle], phi = self._observe(handle)
             self.states[handle].phi = phi
-        return observations, {handle: {} for handle in self.agents}
+        return observations, {handle: ({} if preset_info is None else {"preset": dict(preset_info)}) for handle in self.agents}
 
     def step(self, actions):
         """actions: {agent: array of the MultiDiscrete branches}. Returns observations, rewards, terminated, truncated, infos."""

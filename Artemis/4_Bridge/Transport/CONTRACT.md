@@ -6,7 +6,10 @@ Group `4_Bridge` - static library with side effects (shared memory, events, disc
 The transport to a Python client on the same PC: the region `Local\Artemis.Bridge.<pid>` with its two events and the discovery
 file in `%LOCALAPPDATA%`; the control block (phase, owner, mode, N, d, heartbeats, counters); two `BridgeTick` buffers with a
 seqlock; one action slot per player; and the lockstep of the actions on the game thread. It declares the `BridgeEngine` port for
-what it needs from the engine.
+what it needs from the engine. The gametype preset request (Q97) follows the end of round one: `RequestPreset` counter and
+`RequestPresetName` of the client, taken only while Python owns the instance and echoed in `PresetSequence` with `PresetResult` and
+`ActivePreset`. A request that still waits for a round break is dropped when Python loses the instance, as the end of round one is.
+Artemis publishes the name and the result first and `PresetSequence` last, with a release store.
 
 ## Does not
 - Import any engine project: it reaches the engine only through `BridgeEngine`, implemented by `Mod`.

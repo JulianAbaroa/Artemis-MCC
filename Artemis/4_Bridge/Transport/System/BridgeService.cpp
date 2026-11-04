@@ -55,6 +55,7 @@ namespace
     using Bridge::Transport::Type::k_LockstepTimeout;
     using Bridge::Transport::Type::k_LockstepWaitSlice;
     using Contract::Bridge::Type::k_BridgeNotLocal;
+    using Contract::Bridge::Type::k_BridgePresetNameSize;
 
     static_assert(k_MaxPlayers <= k_MaxActionPlayers, "Every bridge slot must have an override in the PlayerActionStore.");
 
@@ -71,9 +72,19 @@ namespace
         return std::atomic_ref<std::uint64_t>(const_cast<std::uint64_t&>(value)).load(std::memory_order_acquire);
     }
 
+    auto LoadShared(const std::uint32_t& value) -> std::uint32_t
+    {
+        return std::atomic_ref<std::uint32_t>(const_cast<std::uint32_t&>(value)).load(std::memory_order_acquire);
+    }
+
     auto StoreShared(std::uint64_t& value, std::uint64_t newValue) -> void
     {
         std::atomic_ref<std::uint64_t>(value).store(newValue, std::memory_order_release);
+    }
+
+    auto StoreShared(std::uint32_t& value, std::uint32_t newValue) -> void
+    {
+        std::atomic_ref<std::uint32_t>(value).store(newValue, std::memory_order_release);
     }
 }
 
@@ -218,6 +229,8 @@ namespace Bridge::Transport::System
             m_Engine.SetRequestedTimeScale(link.SavedTimeScale);
             this->ApplyPause(link.IsSavedPauseRequested);
             m_Engine.SetEndRoundRequested(false);
+            // A preset that still waits for a round break goes with the client that asked for it.
+            m_Engine.CancelPresetRequest();
         }
 
         // A raise of the counter is a request (D144). Raises seen between two updates, or before the game thread takes them, count as
@@ -229,6 +242,19 @@ namespace Bridge::Transport::System
             m_Log.Message("[BridgeService] INFO: End of round requested at action tick {}.", m_BridgeStore.GetActionTick());
         }
         link.LastClientEndRound = endRound;
+
+        // The same for a preset: Python writes the name before it raises the counter. The counter is loaded with acquire, so the plain
+        // reads of the name below see the name of that raise. The result is Pending in the engine before the echo below says it was seen.
+        const std::uint32_t presetCounter{ LoadShared(region->Control.Client.RequestPreset) };
+        if (presetCounter != link.LastClientPreset && control.Owner == BridgeOwner::Python)
+        {
+            const auto& nameBytes{ region->Control.Client.RequestPresetName };
+            const auto nameEnd{ std::ranges::find(nameBytes, std::uint8_t{ 0 }) };
+            const std::string name{ nameBytes.begin(), nameEnd };
+            m_Engine.RequestPreset(name);
+            m_Log.Message("[BridgeService] INFO: Preset \"{}\" requested.", name);
+        }
+        link.LastClientPreset = presetCounter;
 
         this->LogTransition(previous, control, isClientLeft);
         m_BridgeStore.SetControl(control);
@@ -461,6 +487,14 @@ namespace Bridge::Transport::System
         artemis.MatchId = static_cast<std::uint32_t>(m_Engine.GetEngineStarts());
         artemis.Scale = m_Engine.GetRequestedTimeScale();
         artemis.EndRoundSequence = m_BridgeStore.GetLinkState().LastClientEndRound;
+
+        // The name and the result first, the sequence that says they answer it last: Python reads the sequence with the result after it.
+        const std::string activePreset{ m_Engine.GetActivePreset() };
+        std::array<std::uint8_t, k_BridgePresetNameSize> activeName{};
+        std::copy_n(activePreset.begin(), (std::min)(activePreset.size(), activeName.size() - 1), activeName.begin());
+        artemis.ActivePreset = activeName;
+        artemis.PresetResult = m_Engine.GetPresetResult();
+        StoreShared(artemis.PresetSequence, m_BridgeStore.GetLinkState().LastClientPreset);
 
         StoreShared(artemis.ActionTick, m_BridgeStore.GetActionTick());
         StoreShared(artemis.LateActions, counters.LateActions);

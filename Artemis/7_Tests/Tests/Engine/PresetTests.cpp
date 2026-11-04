@@ -30,6 +30,8 @@ namespace
     using Tests::Support::Log::CollectingSink;
     using Blam::Layout::Game::Type::VariantPreset::CompiledPreset;
     using Blam::Layout::Game::Type::VariantPreset::PresetBase;
+    using Blam::Layout::Game::Type::Offset::k_RoundStateBetween;
+    using Blam::Layout::Game::Type::Offset::k_RoundStateEnded;
     using Blam::Layout::Game::Type::Offset::k_VariantEngineType;
     using Blam::Layout::Game::Type::Offset::k_VariantEngineTypeMegalo;
     using Blam::Layout::Game::Type::Offset::k_VariantMegaloTraitSetCount;
@@ -38,6 +40,14 @@ namespace
     using Engine::Match::Type::k_EngineConfigurationSize;
 
     using std::filesystem::path;
+
+    // Round state of the engine while a round is running (1), and the mode of a match (3). Writes at a round break need neither.
+    constexpr std::uint8_t k_RoundStateInPlay{ 1 };
+    constexpr std::uint8_t k_ModeMultiplayer{ 3 };
+    constexpr std::uint8_t k_ModeNone{ 0 };
+
+    // A preset that changes only what a round break can change: respawn time and round limit.
+    constexpr std::string_view k_BetweenPreset{ "preset between\nsource 0\nwrite 2c7 spawn 03 ff\nwrite 2bf round_end 03 ff\n" };
 
     constexpr std::string_view k_RejectedPreset{ "preset rejected\nsource 0\nwrite 2c7 spawn 03 ff\ncheck megalo_trait_set 5\n" };
 
@@ -92,6 +102,30 @@ namespace
             std::memcpy(configuration.data() + k_ConfigurationVariantOffset + k_VariantEngineType, &megalo, sizeof(megalo));
             std::memcpy(configuration.data() + k_ConfigurationVariantOffset + k_VariantMegaloTraitSetCount, &sets, sizeof(sets));
             return configuration;
+        }
+
+        // return: The live variant of a match: the variant of MakeConfiguration alone.
+        static auto MakeVariant() -> std::vector<std::uint8_t>
+        {
+            const std::vector<std::byte> configuration{ MakeConfiguration() };
+            std::vector<std::uint8_t> variant(configuration.size() - k_ConfigurationVariantOffset);
+            std::memcpy(variant.data(), configuration.data() + k_ConfigurationVariantOffset, variant.size());
+            return variant;
+        }
+
+        // What the start hook does for every start: the per-start state first, then the preset only if one is active.
+        auto Start(std::span<std::byte> configuration) -> PresetOutcome
+        {
+            m_Service.BeginStart();
+            return m_Service.HasActive() ? m_Service.ApplyToStart(configuration) : PresetOutcome::NoPreset;
+        }
+
+        // return: The live variant of a start configuration.
+        static auto VariantOf(const std::vector<std::byte>& configuration) -> std::vector<std::uint8_t>
+        {
+            std::vector<std::uint8_t> variant(configuration.size() - k_ConfigurationVariantOffset);
+            std::memcpy(variant.data(), configuration.data() + k_ConfigurationVariantOffset, variant.size());
+            return variant;
         }
 
         static auto VariantByte(const std::vector<std::byte>& configuration, std::size_t offset) -> int
@@ -258,4 +292,385 @@ TEST_F(PresetTests, ACopyTooSmallToHoldAVariantFailsWithAnError)
     EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Failed);
     EXPECT_TRUE(Logged(LogLevel::Error, "too small"));
     EXPECT_EQ(start, std::vector<std::byte>(k_ConfigurationVariantOffset, std::byte{ 0x11 }));
+}
+
+TEST_F(PresetTests, ARequestInAMatchWaitsForAnEndedOrBetweenRoundsAndNeverWritesInPlay)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    EXPECT_TRUE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Pending);
+    EXPECT_EQ(m_Store.GetResult().Name, "between");
+
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateInPlay, k_ModeMultiplayer);
+    m_Service.ApplyBetweenRounds(variant, 0, k_ModeMultiplayer);
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeNone);
+    EXPECT_EQ(variant, original);
+    EXPECT_TRUE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetBase(), nullptr);
+
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateEnded, k_ModeMultiplayer);
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_NE(variant, original);
+    EXPECT_EQ(variant[k_VariantRespawnTime], 3);
+    EXPECT_EQ(variant[k_VariantRoundLimit], 3);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied);
+    EXPECT_EQ(m_Store.GetActiveName(), "between");
+}
+
+TEST_F(PresetTests, TheBaseIsSavedAtTheFirstRequestOfAMatchLoadedWithoutAPresetAndKeptUntilTheNextLoad)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+    EXPECT_EQ(m_Store.GetBase(), nullptr);
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    // The base is not taken at the request but at the break, from the variant as it is then.
+    EXPECT_EQ(m_Store.GetBase(), nullptr);
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    const auto base{ m_Store.GetBase() };
+    ASSERT_NE(base, nullptr);
+    EXPECT_NE(std::ranges::find(base->Bytes, original[k_VariantRespawnTime]), base->Bytes.end());
+
+    // A second request keeps the same base and the preset after it is applied again over the first one.
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(m_Store.GetBase(), base);
+
+    // The next start drops it, with or without a preset.
+    std::vector<std::byte> start{ MakeConfiguration() };
+    EXPECT_EQ(this->Start(start), PresetOutcome::AppliedAtLoad);
+    EXPECT_NE(m_Store.GetBase(), base);
+
+    m_Service.ClearActive();
+    EXPECT_EQ(this->Start(start), PresetOutcome::NoPreset);
+    EXPECT_EQ(m_Store.GetBase(), nullptr);
+}
+
+TEST_F(PresetTests, NoPresetBetweenRoundsRestoresTheBaseAndClearsTheActivePreset)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    ASSERT_NE(variant, original);
+
+    ASSERT_TRUE(m_Service.Request("", true));
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Pending);
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateInPlay, k_ModeMultiplayer);
+    EXPECT_NE(variant, original);
+
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(variant, original);
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied);
+    EXPECT_TRUE(m_Store.GetResult().Name.empty());
+}
+
+TEST_F(PresetTests, NoPresetWithNothingWrittenLeavesTheVariantAlone)
+{
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    EXPECT_EQ(variant, original);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied);
+    EXPECT_FALSE(m_Service.HasPending());
+}
+
+TEST_F(PresetTests, AFieldOnlyALoadCanChangeRejectsTheRequestAndKeepsTheVariantAndTheActivePreset)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    const std::vector<std::uint8_t> applied{ variant };
+
+    // The fixture changes load fields the match was not loaded with.
+    ASSERT_TRUE(m_Service.Request("fixture", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    EXPECT_EQ(variant, applied);
+    EXPECT_EQ(m_Store.GetActiveName(), "between");
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Rejected);
+    EXPECT_EQ(m_Store.GetResult().Name, "fixture");
+    EXPECT_NE(m_Store.GetResult().Message.find("only change at load"), std::string::npos);
+    EXPECT_FALSE(m_Service.HasPending());
+}
+
+TEST_F(PresetTests, ATraitSetTheScriptLacksRejectsTheRequestBetweenRounds)
+{
+    WritePreset("rejected", k_RejectedPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("rejected", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateEnded, k_ModeMultiplayer);
+
+    EXPECT_EQ(variant, original);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Rejected);
+    EXPECT_NE(m_Store.GetResult().Message.find("Trait set 5"), std::string::npos);
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+}
+
+TEST_F(PresetTests, AVariantThatIsNotMegaloRejectsTheRequestBetweenRounds)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    variant[k_VariantEngineType] = 1;
+    const std::vector<std::uint8_t> before{ variant };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    EXPECT_EQ(variant, before);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Rejected);
+}
+
+TEST_F(PresetTests, ARequestInTheLobbyBecomesTheActivePresetForTheNextStart)
+{
+    ASSERT_TRUE(m_Service.Request("fixture", false));
+
+    EXPECT_EQ(m_Store.GetActiveName(), "fixture");
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::AppliedAtLoad);
+
+    std::vector<std::byte> start{ MakeConfiguration() };
+    EXPECT_EQ(m_Service.ApplyToStart(start), PresetOutcome::AppliedAtLoad);
+
+    // None in the lobby just clears it.
+    ASSERT_TRUE(m_Service.Request("", false));
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::AppliedAtLoad);
+}
+
+TEST_F(PresetTests, ARequestWhoseFilesAreMissingFailsAtOnceAndKeepsTheActivePreset)
+{
+    ASSERT_TRUE(m_Service.SetActive("fixture"));
+
+    EXPECT_FALSE(m_Service.Request("missing", true));
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Failed);
+    EXPECT_EQ(m_Store.GetActiveName(), "fixture");
+
+    EXPECT_FALSE(m_Service.Request("missing", false));
+    EXPECT_EQ(m_Store.GetActiveName(), "fixture");
+}
+
+TEST_F(PresetTests, ARequestNoRoundBreakServedIsWrittenByTheNextStart)
+{
+    ASSERT_TRUE(m_Service.Request("fixture", true));
+    std::vector<std::byte> start{ MakeConfiguration() };
+
+    EXPECT_EQ(this->Start(start), PresetOutcome::AppliedAtLoad);
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetActiveName(), "fixture");
+}
+
+TEST_F(PresetTests, ARequestForNoneNoRoundBreakServedClearsTheActivePresetAtTheNextStart)
+{
+    ASSERT_TRUE(m_Service.SetActive("fixture"));
+    ASSERT_TRUE(m_Service.Request("", true));
+    std::vector<std::byte> start{ MakeConfiguration() };
+    const std::vector<std::byte> original{ start };
+
+    EXPECT_EQ(this->Start(start), PresetOutcome::NoPreset);
+    EXPECT_EQ(start, original);
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::AppliedAtLoad);
+}
+
+TEST_F(PresetTests, EachMatchComposesOverItsOwnBaseThroughThePathOfTheStartHook)
+{
+    WritePreset("a", "preset a\nsource 0\nwrite 2c7 spawn 03 ff\nwrite 2bf round_end 03 ff\n");
+    WritePreset("b", "preset b\nsource 0\nwrite 2bf round_end 04 ff\n");
+
+    // Match 1 has no preset, gets A, then none.
+    std::vector<std::byte> first{ MakeConfiguration() };
+    ASSERT_EQ(this->Start(first), PresetOutcome::NoPreset);
+    std::vector<std::uint8_t> live1{ VariantOf(first) };
+    const std::vector<std::uint8_t> original1{ live1 };
+
+    ASSERT_TRUE(m_Service.Request("a", true));
+    m_Service.ApplyBetweenRounds(live1, k_RoundStateBetween, k_ModeMultiplayer);
+    ASSERT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied);
+    EXPECT_EQ(live1[k_VariantRespawnTime], 3);
+    const auto base1{ m_Store.GetBase() };
+    ASSERT_NE(base1, nullptr);
+
+    ASSERT_TRUE(m_Service.Request("", true));
+    m_Service.ApplyBetweenRounds(live1, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(live1, original1);
+
+    // Match 2 starts with another respawn time and gets B at load: B does not write it, so it stays the one of match 2.
+    ASSERT_TRUE(m_Service.Request("b", false));
+    std::vector<std::byte> second{ MakeConfiguration() };
+    second[k_ConfigurationVariantOffset + k_VariantRespawnTime] = std::byte{ 0x55 };
+    ASSERT_EQ(this->Start(second), PresetOutcome::AppliedAtLoad);
+    EXPECT_EQ(VariantByte(second, k_VariantRespawnTime), 0x55);
+    EXPECT_EQ(VariantByte(second, k_VariantRoundLimit), 4);
+
+    const auto base2{ m_Store.GetBase() };
+    ASSERT_NE(base2, nullptr);
+    EXPECT_NE(base2, base1);
+    EXPECT_NE(std::ranges::find(base2->Bytes, std::uint8_t{ 0x55 }), base2->Bytes.end());
+
+    // Back to none in match 2 gives its own values, not the ones of match 1.
+    std::vector<std::uint8_t> live2{ VariantOf(second) };
+    ASSERT_TRUE(m_Service.Request("", true));
+    m_Service.ApplyBetweenRounds(live2, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(live2[k_VariantRespawnTime], 0x55);
+    EXPECT_EQ(live2[k_VariantRoundLimit], VariantByte(MakeConfiguration(), k_VariantRoundLimit));
+}
+
+TEST_F(PresetTests, TheChoiceOfTheBenchDropsARequestOfTheBridgeThatStillWaits)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    ASSERT_TRUE(m_Service.SetActive("fixture"));
+    EXPECT_FALSE(m_Service.HasPending());
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(variant, original);
+    EXPECT_EQ(m_Store.GetActiveName(), "fixture");
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ClearActive();
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+}
+
+TEST_F(PresetTests, ARequestWhoseFilesFailLeavesTheEarlierWaitingRequestAlone)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    EXPECT_FALSE(m_Service.Request("missing", true));
+    EXPECT_TRUE(m_Service.HasPending());
+
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(m_Store.GetActiveName(), "between");
+    EXPECT_EQ(variant[k_VariantRespawnTime], 3);
+}
+
+TEST_F(PresetTests, CancelPendingDropsTheRequestAndItsResult)
+{
+    WritePreset("between", k_BetweenPreset);
+    ASSERT_TRUE(m_Service.Request("between", true));
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Pending);
+
+    m_Service.CancelPending();
+    EXPECT_FALSE(m_Service.HasPending());
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::None);
+}
+
+TEST_F(PresetTests, GoingFromAToBGivesBackTheBaseOfAFieldBLeavesOut)
+{
+    WritePreset("a", "preset a\nsource 0\nwrite 2c7 spawn 03 ff\nwrite 2bf round_end 03 ff\n");
+    WritePreset("b", "preset b\nsource 0\nwrite 2bf round_end 04 ff\n");
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("a", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    ASSERT_EQ(variant[k_VariantRespawnTime], 3);
+
+    ASSERT_TRUE(m_Service.Request("b", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied);
+    EXPECT_EQ(variant[k_VariantRespawnTime], original[k_VariantRespawnTime]);
+    EXPECT_EQ(variant[k_VariantRoundLimit], 4);
+}
+
+TEST_F(PresetTests, AFieldOnlyALoadCanChangeIsAcceptedBetweenRoundsWhenItAlreadyHasTheValue)
+{
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::uint8_t current{ static_cast<std::uint8_t>(variant[0x2C4] & 0x08) };
+    WritePreset("loadeq", std::format("preset loadeq\nsource 0\nwrite 2c4 load {:02x} 08\nwrite 2bf round_end 03 ff\n", current));
+
+    ASSERT_TRUE(m_Service.Request("loadeq", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied) << m_Store.GetResult().Message;
+    EXPECT_EQ(variant[k_VariantRoundLimit], 3);
+}
+
+TEST_F(PresetTests, AWriteThatDoesNotReadBackEqualRestoresTheVariantAndKeepsTheActivePreset)
+{
+    // Two fields on the same byte with overlapping masks: the second write changes the bits the first one verifies.
+    {
+        std::ofstream catalog{ m_Folder / "Presets" / "_catalog.txt", std::ios::binary | std::ios::trunc };
+        catalog << "field 10 1 ff tick\nfield 10 1 0f tick\n";
+    }
+    WritePreset("overlap", "preset overlap\nsource 0\nwrite 10 tick 12 ff\nwrite 10 tick 05 0f\n");
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+    const std::vector<std::uint8_t> original{ variant };
+
+    ASSERT_TRUE(m_Service.Request("overlap", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    EXPECT_EQ(variant, original);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Failed);
+    EXPECT_NE(m_Store.GetResult().Message.find("read back"), std::string::npos);
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+}
+
+TEST_F(PresetTests, ARequestWithAnotherCatalogThanTheBaseIsRejectedWithAReason)
+{
+    WritePreset("between", k_BetweenPreset);
+    std::vector<std::uint8_t> variant{ MakeVariant() };
+
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+    ASSERT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Applied);
+    const std::vector<std::uint8_t> applied{ variant };
+
+    {
+        std::ofstream catalog{ m_Folder / "Presets" / "_catalog.txt", std::ios::binary | std::ios::app };
+        catalog << "\nfield 20 1 ff tick\n";
+    }
+    ASSERT_TRUE(m_Service.Request("between", true));
+    m_Service.ApplyBetweenRounds(variant, k_RoundStateBetween, k_ModeMultiplayer);
+
+    EXPECT_EQ(variant, applied);
+    EXPECT_EQ(m_Store.GetResult().Outcome, PresetOutcome::Rejected);
+    EXPECT_NE(m_Store.GetResult().Message.find("catalog"), std::string::npos);
+    EXPECT_EQ(m_Store.GetActiveName(), "between");
+}
+
+TEST(PresetStoreTest, TakePendingReadsAndClearsInOneStepAndAnOldRequestNeverHidesANewerResult)
+{
+    PresetStore store{};
+    EXPECT_FALSE(store.HasPending());
+
+    const std::uint64_t first{ store.BeginRequest() };
+    store.SetPending(PresetStore::PendingRequest{ .Id = first, .Name = "a" });
+    EXPECT_TRUE(store.HasPending());
+
+    const auto taken{ store.TakePending() };
+    ASSERT_TRUE(taken.has_value());
+    EXPECT_EQ(taken->Name, "a");
+    EXPECT_FALSE(store.HasPending());
+    EXPECT_FALSE(store.TakePending().has_value());
+
+    const std::uint64_t second{ store.BeginRequest() };
+    EXPECT_GT(second, first);
+    EXPECT_TRUE(store.SetResultOf(second, PresetResult{ .Outcome = PresetOutcome::Pending, .Name = "b" }));
+    EXPECT_FALSE(store.SetResultOf(first, PresetResult{ .Outcome = PresetOutcome::Applied, .Name = "a" }));
+    EXPECT_EQ(store.GetResult().Name, "b");
+    EXPECT_EQ(store.GetResult().Outcome, PresetOutcome::Pending);
 }

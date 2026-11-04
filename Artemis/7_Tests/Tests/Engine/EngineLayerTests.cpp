@@ -43,6 +43,7 @@ namespace
         using ClientRequests = Control::Action::Type::ClientRequests;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
+        using BridgePresetResult = Contract::Bridge::Type::BridgePresetResult;
 
     public:
         IdleBridgeEngine() = default;
@@ -56,6 +57,10 @@ namespace
         auto IsPauseRequested() const -> bool override { return false; }
         auto SetPauseRequested(bool value) -> void override { static_cast<void>(value); }
         auto SetEndRoundRequested(bool value) -> void override { static_cast<void>(value); }
+        auto RequestPreset(std::string_view name) -> void override { static_cast<void>(name); }
+        auto CancelPresetRequest() -> void override {}
+        auto GetPresetResult() const -> BridgePresetResult override { return BridgePresetResult::NoResult; }
+        auto GetActivePreset() const -> std::string override { return std::string{}; }
 
         auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override
         {

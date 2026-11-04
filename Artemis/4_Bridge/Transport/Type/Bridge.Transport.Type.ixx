@@ -57,6 +57,9 @@ export namespace Bridge::Transport::Type
         // Last RequestEndRound of the client seen. A change while Python owns the instance is a request (D144).
         std::uint32_t LastClientEndRound{ 0 };
 
+        // Last RequestPreset of the client seen. A change while Python owns the instance is a request for the preset in RequestPresetName.
+        std::uint32_t LastClientPreset{ 0 };
+
         // When the tick being written started, to time the flatten.
         std::chrono::steady_clock::time_point PublishStart{};
     };

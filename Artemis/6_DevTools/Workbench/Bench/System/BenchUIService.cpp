@@ -71,6 +71,8 @@ namespace
         case PresetOutcome::AppliedAtLoad: state = "applied at load"; break;
         case PresetOutcome::Rejected: state = "rejected: " + result.Message; break;
         case PresetOutcome::Failed: state = "failed: " + result.Message; break;
+        case PresetOutcome::Pending: state = "waiting for a round break"; break;
+        case PresetOutcome::Applied: state = "applied between rounds"; break;
         }
 
         return std::format("Preset: {} ({})", active.empty() ? std::string{ "none" } : active, state);

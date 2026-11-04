@@ -19,6 +19,7 @@
 	<const name="MaxLiftStages" value="3" doc="Stages (phantom types that push players or bipeds) a lift carries. The tags have 3 at most (D261)." />
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
 	<const name="PowerupCount" value="3" doc="Powerups of a game variant (red, blue, yellow): the length of the powerup duration array." />
+	<const name="PresetNameSize" value="32" doc="Bytes of a gametype preset name, with its end zero (Engine.Base.Preset k_MaxPresetNameLength is 31)." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
 	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
@@ -39,6 +40,14 @@
 		<value name="Idle" id="0" doc="No match: menus, lobby or teardown." />
 		<value name="Loading" id="1" />
 		<value name="Running" id="2" doc="Ticks are running and decision ticks are published." />
+	</enum>
+	<enum name="BridgePresetResult" type="u8" doc="What became of the last RequestPreset (Q97).">
+		<value name="NoResult" id="0" doc="No request since Artemis loaded." />
+		<value name="Pending" id="1" doc="Taken and waiting for a round break of the match." />
+		<value name="Applied" id="2" doc="Written into the live variant between rounds and read back equal." />
+		<value name="AtLoad" id="3" doc="Taken in the lobby: the next start writes it." />
+		<value name="Rejected" id="4" doc="Not applied: the preset changes what only a load can change, a trait set the script lacks, or its files are wrong. The variant and the active preset did not change." />
+		<value name="Unknown" id="5" doc="A result this layout does not name." />
 	</enum>
 	<enum name="BridgeGround" type="u8" doc="What the feet of a biped touch (Perception GroundKind, D260).">
 		<value name="Air" id="0" />
@@ -140,6 +149,9 @@
 		<field name="FlattenMaxNs" type="u64" doc="Longest flatten and publish of one tick." />
 		<field name="PausedFrames" type="u64" doc="Game frames that ran without ticks because of a pause." />
 		<field name="EndRoundSequence" type="u32" doc="Last RequestEndRound seen (D144). Seen is not done: dropped without Python owning the instance or a match running. The proof is the RoundEnd or GameOver event." />
+		<field name="PresetSequence" type="u32" doc="Last RequestPreset seen (Q97). PresetResult answers it: Pending until the round break, then Applied or Rejected." />
+		<field name="PresetResult" type="u8" enum="BridgePresetResult" />
+		<field name="ActivePreset" type="u8" count="PresetNameSize" doc="Name of the active gametype preset, zero filled. Empty when none." />
 	</struct>
 
 	<struct name="BridgeClientControl" align="64" doc="Part of the control block written by Python only.">
@@ -152,6 +164,8 @@
 		<field name="RequestPause" type="u8" doc="1 holds the logic ticks while Python owns the instance (D143). Set it before a long step." />
 		<field name="AgentMask" type="u32" doc="Player table indices Python controls, one bit each." />
 		<field name="RequestEndRound" type="u32" doc="Counter: a raise ends the round, as the end_round action of Megalo (D144). Raises before Artemis takes one count as one. Starts from EndRoundSequence." />
+		<field name="RequestPreset" type="u32" doc="Counter: a raise asks for the preset RequestPresetName, or none when it is empty (Q97). Taken only while Python owns the instance. Starts from PresetSequence." />
+		<field name="RequestPresetName" type="u8" count="PresetNameSize" doc="Name of the preset wanted, zero filled. Written before the counter is raised." />
 		<field name="RequestTurnLimit" type="f32" doc="Most radians the yaw and the pitch of each agent turn per tick toward those of its action (D114). 0 = straight to them." />
 		<field name="ClientHeartbeat" type="u64" doc="Counter Python raises at least every 500 ms." />
 		<field name="ActionSequence" type="u64" doc="Action tick of the last decision whose actions are complete. Written last." />

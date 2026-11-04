@@ -24,7 +24,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from . import bridge_layout as L
-from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgeRequest
+from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgePresetResult, BridgeRequest
 from .semantic import RoundState
 
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -185,6 +185,8 @@ class Bridge:
         self.client["RequestPause"] = 0
         self.client["RequestTurnLimit"] = 0.0
         self.client["RequestEndRound"] = int(self.artemis["EndRoundSequence"])
+        self.client["RequestPreset"] = int(self.artemis["PresetSequence"])
+        self.client["RequestPresetName"][:] = 0
         self.client["RequestMode"] = BridgeMode.Free
         self.client["RequestOwner"] = BridgeOwner.UI
         self.client["ClientPid"] = os.getpid()
@@ -254,6 +256,44 @@ class Bridge:
         sequence = (int(self.client["RequestEndRound"]) + 1) & 0xFFFFFFFF
         self.client["RequestEndRound"] = sequence
         return self.wait_control(timeout, EndRoundSequence=sequence) if wait else True
+
+    def request_preset(self, name, wait=True, timeout=2.0):
+        """Asks for the gametype preset `name` (Data/Presets, compiled to the storage folder by Tools/presets.py) while Python owns the
+        instance, or for none with an empty name. In the lobby Artemis writes it at the next start (AtLoad). In a match it waits for
+        the next round break: Pending now, then Applied when the round has ended or Rejected when the preset changes what only a load
+        can change or a trait set the script lacks (the variant and the active preset do not change). The break comes with
+        end_round(), or with the end of the round of the game.
+        With wait, returns the BridgePresetResult once Artemis echoed the request, or None if it did not within the timeout. It is stale
+        when the request was dropped without ownership. Without wait, returns None at once."""
+        raw = str(name).encode("ascii")
+        if len(raw) >= L.PRESET_NAME_SIZE:
+            raise ValueError(f"preset name longer than {L.PRESET_NAME_SIZE - 1} characters: {name!r}")
+        # The name first and the counter after it: Artemis reads the name when it sees the counter change.
+        self.client["RequestPresetName"][:] = np.frombuffer(raw.ljust(L.PRESET_NAME_SIZE, b"\0"), dtype=np.uint8)
+        sequence = (int(self.client["RequestPreset"]) + 1) & 0xFFFFFFFF
+        self.client["RequestPreset"] = sequence
+        if not wait or not self.wait_control(timeout, PresetSequence=sequence):
+            return None
+        return self.preset_result
+
+    @property
+    def preset_result(self):
+        """What became of the last request_preset, as a BridgePresetResult."""
+        value = int(self.artemis["PresetResult"])
+        return BridgePresetResult(value) if value in BridgePresetResult._value2member_map_ else BridgePresetResult.Unknown
+
+    @property
+    def active_preset(self) -> str:
+        """Name of the active gametype preset, empty when there is none."""
+        raw = bytes(np.asarray(self.artemis["ActivePreset"], dtype=np.uint8))
+        return raw.split(b"\0", 1)[0].decode("ascii", "replace")
+
+    def wait_preset(self, timeout=10.0):
+        """Waits until the last request is no longer Pending and returns its result (still Pending after the timeout)."""
+        end = time.time() + timeout
+        while self.preset_result == BridgePresetResult.Pending and time.time() < end:
+            time.sleep(0.02)
+        return self.preset_result
 
     @contextlib.contextmanager
     def paused(self):

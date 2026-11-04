@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x6A9CE91EC0814D8D
+LAYOUT_HASH = 0x1D60CCD529B319FC
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x400
@@ -21,6 +21,7 @@ MAX_LIFTS = 64
 MAX_LIFT_STAGES = 3
 MAX_TEAMS = 8
 POWERUP_COUNT = 3
+PRESET_NAME_SIZE = 32
 MAX_TICK_EVENTS = 64
 NO_HANDLE = 0xffffffff
 NOT_LOCAL = 255
@@ -47,6 +48,16 @@ class BridgePhase(enum.IntEnum):
     Idle = 0
     Loading = 1
     Running = 2
+
+
+class BridgePresetResult(enum.IntEnum):
+    """What became of the last RequestPreset (Q97)."""
+    NoResult = 0
+    Pending = 1
+    Applied = 2
+    AtLoad = 3
+    Rejected = 4
+    Unknown = 5
 
 
 class BridgeGround(enum.IntEnum):
@@ -138,26 +149,26 @@ BridgeVec3 = np.dtype({
 
 # Part of the control block written by Artemis only.
 BridgeArtemisControl = np.dtype({
-    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence'],
-    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4'],
-    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168],
-    'itemsize': 192,
+    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence', 'PresetSequence', 'PresetResult', 'ActivePreset'],
+    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4', '<u4', 'u1', ('u1', (32,))],
+    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 172, 176, 177],
+    'itemsize': 256,
 })
 
 # Part of the control block written by Python only.
 BridgeClientControl = np.dtype({
-    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'AgentMask', 'RequestEndRound', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
-    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', '<u4', '<u4', '<f4', '<u8', '<u8'],
-    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 40],
-    'itemsize': 64,
+    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'AgentMask', 'RequestEndRound', 'RequestPreset', 'RequestPresetName', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
+    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', '<u4', '<u4', '<u4', ('u1', (32,)), '<f4', '<u8', '<u8'],
+    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 60, 64, 72],
+    'itemsize': 128,
 })
 
 # Control block at the start of the region.
 BridgeControl = np.dtype({
     'names': ['Artemis', 'Client'],
     'formats': [BridgeArtemisControl, BridgeClientControl],
-    'offsets': [0, 192],
-    'itemsize': 256,
+    'offsets': [0, 256],
+    'itemsize': 384,
 })
 
 # What the tick is: which match and which action tick.
@@ -292,8 +303,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 256, 279040],
-    'itemsize': 279808,
+    'offsets': [0, 384, 279168],
+    'itemsize': 279936,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -356,21 +367,26 @@ OFFSETS = {
     'Control.Artemis.FlattenMaxNs': 152,
     'Control.Artemis.PausedFrames': 160,
     'Control.Artemis.EndRoundSequence': 168,
-    'Control.Client': 192,
-    'Control.Client.ClientPid': 192,
-    'Control.Client.RequestOwner': 196,
-    'Control.Client.RequestMode': 197,
-    'Control.Client.RequestPeriod': 198,
-    'Control.Client.RequestLatency': 199,
-    'Control.Client.RequestScale': 200,
-    'Control.Client.RequestPause': 204,
-    'Control.Client.AgentMask': 208,
-    'Control.Client.RequestEndRound': 212,
-    'Control.Client.RequestTurnLimit': 216,
-    'Control.Client.ClientHeartbeat': 224,
-    'Control.Client.ActionSequence': 232,
-    'Ticks': 256,
-    'Actions': 279040,
+    'Control.Artemis.PresetSequence': 172,
+    'Control.Artemis.PresetResult': 176,
+    'Control.Artemis.ActivePreset': 177,
+    'Control.Client': 256,
+    'Control.Client.ClientPid': 256,
+    'Control.Client.RequestOwner': 260,
+    'Control.Client.RequestMode': 261,
+    'Control.Client.RequestPeriod': 262,
+    'Control.Client.RequestLatency': 263,
+    'Control.Client.RequestScale': 264,
+    'Control.Client.RequestPause': 268,
+    'Control.Client.AgentMask': 272,
+    'Control.Client.RequestEndRound': 276,
+    'Control.Client.RequestPreset': 280,
+    'Control.Client.RequestPresetName': 284,
+    'Control.Client.RequestTurnLimit': 316,
+    'Control.Client.ClientHeartbeat': 320,
+    'Control.Client.ActionSequence': 328,
+    'Ticks': 384,
+    'Actions': 279168,
 }
 
-REGION_SIZE = 279808
+REGION_SIZE = 279936

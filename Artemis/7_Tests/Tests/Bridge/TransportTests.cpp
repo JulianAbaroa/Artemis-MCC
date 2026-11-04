@@ -30,6 +30,7 @@ namespace
     using Contract::Bridge::Type::BridgeMode;
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgePhase;
+    using Contract::Bridge::Type::BridgePresetResult;
     using Contract::Bridge::Type::BridgeRegion;
     using Bridge::Transport::Type::BridgeStatus;
     using Contract::Bridge::Type::BridgeTick;
@@ -61,6 +62,7 @@ namespace
     {
     private:
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
+        using BridgePresetResult = Contract::Bridge::Type::BridgePresetResult;
 
         using ActionOverride = Control::Action::Type::ActionOverride;
         using ClientRequests = Control::Action::Type::ClientRequests;
@@ -78,6 +80,10 @@ namespace
         std::vector<float> m_ScaleWrites{};
         std::vector<bool> m_PauseWrites{};
         std::vector<bool> m_EndRoundWrites{};
+        std::vector<std::string> m_PresetRequests{};
+        std::size_t m_PresetCancels{ 0 };
+        BridgePresetResult m_PresetResult{ BridgePresetResult::NoResult };
+        std::string m_ActivePreset{};
         std::vector<OverrideCall> m_OverrideCalls{};
         std::size_t m_RequestCount{ 0 };
 
@@ -105,6 +111,16 @@ namespace
             m_IsEndRoundRequested = value;
             m_EndRoundWrites.push_back(value);
         }
+
+        auto RequestPreset(std::string_view name) -> void override
+        {
+            m_PresetRequests.emplace_back(name);
+            m_PresetResult = BridgePresetResult::Pending;
+        }
+
+        auto CancelPresetRequest() -> void override { ++m_PresetCancels; }
+        auto GetPresetResult() const -> BridgePresetResult override { return m_PresetResult; }
+        auto GetActivePreset() const -> std::string override { return m_ActivePreset; }
 
         auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override
         {
@@ -296,6 +312,65 @@ TEST_F(TransportTests, EndRoundIsARaise)
     m_Region->Control.Client.RequestEndRound = 2;
     this->Connect(BridgeOwner::UI, BridgeMode::Free, 0);
     EXPECT_EQ(std::ranges::count(m_Engine.m_EndRoundWrites, true), 1);
+}
+
+TEST_F(TransportTests, APresetIsARaiseWithAZeroFilledNameAndIsEchoedWithItsResult)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_TRUE(m_Engine.m_PresetRequests.empty());
+
+    auto& client{ m_Region->Control.Client };
+    const std::string_view name{ "artemis_ctf_fast" };
+    std::ranges::copy(name, client.RequestPresetName.begin());
+    client.RequestPreset = 1;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+
+    ASSERT_EQ(m_Engine.m_PresetRequests.size(), 1u);
+    EXPECT_EQ(m_Engine.m_PresetRequests.back(), name);
+    EXPECT_EQ(m_Region->Control.Artemis.PresetSequence, 1u);
+    EXPECT_EQ(m_Region->Control.Artemis.PresetResult, BridgePresetResult::Pending);
+
+    // The same counter is not a new request. The result and the active preset follow the engine.
+    m_Engine.m_PresetResult = BridgePresetResult::Applied;
+    m_Engine.m_ActivePreset = std::string{ name };
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_EQ(m_Engine.m_PresetRequests.size(), 1u);
+    EXPECT_EQ(m_Region->Control.Artemis.PresetResult, BridgePresetResult::Applied);
+    const auto& active{ m_Region->Control.Artemis.ActivePreset };
+    EXPECT_EQ(std::string(active.begin(), std::ranges::find(active, std::uint8_t{ 0 })), name);
+
+    // An empty name asks for none.
+    client.RequestPresetName.fill(0);
+    client.RequestPreset = 2;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    ASSERT_EQ(m_Engine.m_PresetRequests.size(), 2u);
+    EXPECT_TRUE(m_Engine.m_PresetRequests.back().empty());
+    EXPECT_EQ(m_Region->Control.Artemis.PresetSequence, 2u);
+}
+
+TEST_F(TransportTests, APresetRaiseWhileTheUIOwnsTheInstanceIsDropped)
+{
+    auto& client{ m_Region->Control.Client };
+    client.RequestPresetName[0] = 'a';
+    client.RequestPreset = 1;
+    this->Connect(BridgeOwner::UI, BridgeMode::Free, 0);
+
+    EXPECT_TRUE(m_Engine.m_PresetRequests.empty());
+    EXPECT_EQ(m_Region->Control.Artemis.PresetSequence, 1u);
+}
+
+TEST_F(TransportTests, ThePresetRequestIsDroppedWhenPythonLosesTheInstance)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_EQ(m_Engine.m_PresetCancels, 0u);
+
+    m_Region->Control.Client.RequestPresetName[0] = 'a';
+    m_Region->Control.Client.RequestPreset = 1;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_EQ(m_Engine.m_PresetCancels, 0u);
+
+    this->Connect(BridgeOwner::UI, BridgeMode::Free, 0);
+    EXPECT_GE(m_Engine.m_PresetCancels, 1u);
 }
 
 TEST_F(TransportTests, FreeAppliesAtTheLatency)

@@ -55,6 +55,8 @@ class FakeTick:
 class FakeBridge:
     def __init__(self, ticks):
         self.ticks, self.is_alive, self.written = list(ticks), True, []
+        # Preset requests: what Artemis answers at once (Pending, 1) and at the round break (Applied, 2), and the calls seen.
+        self.preset_requests, self.round_ends, self.preset_answer, self.preset_final = [], 0, 1, 2
 
     def set_control(self, **kwargs):
         pass
@@ -72,7 +74,14 @@ class FakeBridge:
         self.written.append((tick, actions))
 
     def end_round(self, wait=True):
-        pass
+        self.round_ends += 1
+
+    def request_preset(self, name, timeout=2.0):
+        self.preset_requests.append(name)
+        return self.preset_answer
+
+    def wait_preset(self, timeout=10.0):
+        return self.preset_final
 
 
 @pytest.fixture
@@ -277,3 +286,69 @@ def test_the_cap_of_the_environment_truncates_and_the_end_of_the_round_terminate
 def test_the_environment_measures_no_time_of_its_own(ctf):
     source = open(ctf.__file__, encoding="utf-8").read()
     assert "GameTick" not in source and "start_tick" not in source
+
+
+def test_reset_with_a_preset_requests_it_and_ends_the_round(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    env = ctf.CtfEnv(bridge)
+    env.reset(preset="artemis_ctf_fast")
+    assert bridge.preset_requests == ["artemis_ctf_fast"]
+    assert bridge.round_ends == 1
+
+
+def test_reset_reports_the_preset_and_its_result_in_the_info(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_final = ctf.layout.BridgePresetResult.Applied
+    _, infos = ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
+    assert infos[P0]["preset"] == {"name": "artemis_ctf_fast", "result": "Applied"}
+    _, infos = ctf.CtfEnv(FakeBridge([Frame(ctf)])).reset()
+    assert "preset" not in infos[P0]
+
+
+def test_a_preset_still_pending_after_the_wait_is_logged_and_reported(ctf, caplog):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_final = ctf.layout.BridgePresetResult.Pending
+    with caplog.at_level("WARNING"):
+        _, infos = ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
+    assert infos[P0]["preset"]["result"] == "Pending"
+    assert "still pending" in caplog.text
+
+
+def test_reset_without_a_preset_asks_for_nothing(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset()
+    assert bridge.preset_requests == [] and bridge.round_ends == 0
+
+
+def test_an_empty_preset_asks_for_the_base_values(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset(preset="")
+    assert bridge.preset_requests == [""]
+
+
+def test_a_preset_taken_in_the_lobby_does_not_end_a_round(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_answer = ctf.layout.BridgePresetResult.AtLoad
+    ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
+    assert bridge.round_ends == 0
+
+
+def test_a_rejected_preset_raises_at_once_or_at_the_break(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_answer = ctf.layout.BridgePresetResult.Rejected
+    with pytest.raises(RuntimeError):
+        ctf.CtfEnv(bridge).reset(preset="artemis_ctf_colors")
+
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_final = ctf.layout.BridgePresetResult.Rejected
+    with pytest.raises(RuntimeError):
+        ctf.CtfEnv(bridge).reset(preset="artemis_ctf_colors")
+    assert bridge.round_ends == 1
+
+
+def test_a_preset_nobody_answered_raises(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_answer = None
+    with pytest.raises(RuntimeError):
+        ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
+

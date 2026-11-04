@@ -34,12 +34,16 @@ export namespace Blam::Layout::Game::Type::VariantPreset
         std::size_t Size{};
         std::vector<std::uint8_t> Mask{};
         PresetWhen When{};
+
+        auto operator==(const PresetField&) const -> bool = default;
     };
 
     // Every writable field, in the order of the file (the order of the saved base).
     struct PresetCatalog
     {
         std::vector<PresetField> Fields{};
+
+        auto operator==(const PresetCatalog&) const -> bool = default;
     };
 
     // Bytes to write at an offset of the variant. Only the bits of the mask are written. Bytes and Mask have the same length.

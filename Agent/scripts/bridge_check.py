@@ -17,6 +17,13 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            the first Spawn after a RoundEnd) and checks that RoundEnd follows, or GameOver in the
                                            last round. Python owns the instance without agents (Free mode). --stale first asks
                                            for one outside a match (start it in the lobby): it must not end the first round.
+    preset --names a,b [--rounds N] [--reject] [--seconds 120] [--scale S]
+                                           Q97: for each of N rounds (default one per name) requests the next preset of the list in
+                                           the middle of the round (Pending), ends the round and checks the result at the break:
+                                           Applied and the active preset is the one asked. Then waits for the next Spawn. With
+                                           --reject the names must be presets the match cannot take (artemis_ctf_colors changes
+                                           load fields): the result is Rejected and the active preset does not change.
+                                           The match has to start with artemis_ctf_base (Bench: preset artemis_ctf_base).
     turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
                                            D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
                                            pitch +-0.4). The aim seen between two ticks never turns faster than --turn-limit rad
@@ -443,9 +450,69 @@ def Turn(args):
         return 0 if not failed else 1
 
 
+def WaitSpawn(bridge, seconds) -> bool:
+    """Reads ticks until a Spawn event of a round arrives (the round that follows a break is running), or the time is out."""
+    end = time.time() + seconds
+    while time.time() < end:
+        published = bridge.wait_tick(2.0)
+        if published is None:
+            continue
+        if any(int(event["Kind"]) == Event.Spawn for event in bridge.new_events(published)):
+            return True
+    return False
+
+
+def Preset(args):
+    names = [name for name in args.names.split(",") if name]
+    if not names:
+        print("FAIL --names needs at least one preset")
+        return 1
+    rounds = args.rounds or len(names)
+    with Open(args) as bridge:
+        if not WaitRunning(bridge, args.wait):
+            print(f"FAIL no match running after {args.wait} s")
+            return 1
+        bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Free, scale=args.scale, agents=0)
+        if not bridge.wait_control(Owner=BridgeOwner.Python):
+            print("FAIL Artemis did not hand the instance to Python")
+            return 1
+        expected = L.BridgePresetResult.Rejected if args.reject else L.BridgePresetResult.Applied
+        bad = []
+        for step in range(rounds):
+            name = names[step % len(names)]
+            before = bridge.active_preset
+            asked = bridge.request_preset(name)
+            if asked != L.BridgePresetResult.Pending:
+                bad.append(f"round {step + 1}: {name} answered {asked} in the middle of a round, not Pending")
+                break
+            if not bridge.end_round():
+                bad.append(f"round {step + 1}: the end of the round was not taken")
+                break
+            result = bridge.wait_preset(args.seconds)
+            active = bridge.active_preset
+            print(f"  round {step + 1}: {name} -> {result.name}, active {active!r} (was {before!r})")
+            # A match that ended with the request answers AtLoad: the next start writes it.
+            if result != expected and not (result == L.BridgePresetResult.AtLoad and not args.reject):
+                bad.append(f"round {step + 1}: {name} ended as {result.name}, expected {expected.name}")
+            if args.reject and active != before:
+                bad.append(f"round {step + 1}: a rejected preset changed the active one to {active!r}")
+            if not args.reject and result == expected and active != name:
+                bad.append(f"round {step + 1}: active preset {active!r}, expected {name!r}")
+            if not WaitSpawn(bridge, args.seconds):
+                bad.append(f"round {step + 1}: no round started after the break")
+                break
+        bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
+        for line in bad[:10]:
+            print("  bad:", line)
+        checks = [("every request answered as expected", not bad)]
+        failed = [name for name, ok in checks if not ok]
+        print("PASS" if not failed else "FAIL " + ", ".join(failed))
+        return 0 if not failed else 1
+
+
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "turn"])
+    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "turn"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
@@ -458,6 +525,9 @@ def Main():
     parser.add_argument("--crash-after", type=int, default=0)
     parser.add_argument("--pause-every", type=int, default=0, help="run: decisions between two pauses (0 = none)")
     parser.add_argument("--pause-seconds", type=float, default=30.0, help="run: length of each pause")
+    parser.add_argument("--names", default="", help="preset: comma separated presets to request, one per round")
+    parser.add_argument("--rounds", type=int, default=0, help="preset: rounds to request one in (0 = one per name)")
+    parser.add_argument("--reject", action="store_true", help="preset: the names must be rejected")
     parser.add_argument("--stale", action="store_true", help="endround: ask for one in the lobby first")
     parser.add_argument("--round-seconds", type=float, default=10.0, help="endround: play before each request")
     parser.add_argument("--yaw-step", type=float, default=YAW_STEP, help="run: radians the yaw turns per decision")
@@ -466,7 +536,7 @@ def Main():
     parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
     args = parser.parse_args()
     try:
-        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "turn": Turn}[args.command](args)
+        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "turn": Turn}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2

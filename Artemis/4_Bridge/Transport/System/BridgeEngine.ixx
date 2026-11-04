@@ -16,6 +16,7 @@ export namespace Bridge::Transport::System
         using ClientRequests = Control::Action::Type::ClientRequests;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
+        using BridgePresetResult = Contract::Bridge::Type::BridgePresetResult;
 
     public:
         virtual ~BridgeEngine() = default;
@@ -36,6 +37,19 @@ export namespace Bridge::Transport::System
         virtual auto SetPauseRequested(bool value) -> void = 0;
 
         virtual auto SetEndRoundRequested(bool value) -> void = 0;
+
+        // Asks for a gametype preset by name, or for none with an empty name. In the lobby it is written at the next start, in a match at
+        // the next round break.
+        virtual auto RequestPreset(std::string_view name) -> void = 0;
+
+        // Drops the request that still waits for a round break, when the client that made it is gone.
+        virtual auto CancelPresetRequest() -> void = 0;
+
+        // return: What became of the last request.
+        virtual auto GetPresetResult() const -> BridgePresetResult = 0;
+
+        // return: The name of the active preset, empty when none.
+        virtual auto GetActivePreset() const -> std::string = 0;
 
         // Sets the override of a player for the next action, or none to give the player back to the engine.
         virtual auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void = 0;

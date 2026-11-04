@@ -23,6 +23,8 @@ export namespace Blam::Layout::Game::Type::Offset
     // Round of the match in the game engine globals: index (int16, 0..) and state (uint8: 1 in play, 2 ended, 3 between rounds) (A14).
     constexpr std::uintptr_t k_GameEngineRoundIndex{ 0xDA };
     constexpr std::uintptr_t k_GameEngineRoundState{ 0xD8 };
+    constexpr std::uint8_t k_RoundStateEnded{ 2 };
+    constexpr std::uint8_t k_RoundStateBetween{ 3 };
 
     // Team mapping in the game engine globals: one byte per side, the team that plays that side (0xFF unused), k_MaxTeams bytes (A14).
     constexpr std::uintptr_t k_GameEngineTeamMapping{ 0x1C };

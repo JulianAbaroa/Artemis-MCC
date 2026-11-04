@@ -139,6 +139,9 @@ namespace Engine::Match::Hook
             // the configuration of MCC is never written. A preset that fails leaves the copy as it was.
             try
             {
+                // The per-start state is reset for every start, with or without a preset.
+                self->m_PresetService.BeginStart();
+
                 if (self->m_PresetService.HasActive())
                 {
                     if (transplanted.empty()) transplanted.assign(configuration, configuration + k_EngineConfigurationSize);
