@@ -4,6 +4,7 @@ Tests of the verification tools themselves: Tools/test.py Evaluate (no false gre
 and the -n handling of deps.py.
 """
 import hashlib
+import json
 import importlib.util
 import os
 import re
@@ -147,3 +148,101 @@ def test_game_compiles_the_tickdump_key_and_rejects_other_values():
             assert "tickdump" in str(error)
         else:
             raise AssertionError(bad)
+
+
+def LoadGame():
+    sys.path.insert(0, TOOLS)
+    try:
+        return LoadTool("game")
+    finally:
+        sys.path.remove(TOOLS)
+
+
+WINDOWS_PATH = "C:\\Users\\x\\AppData\\Local\\Artemis\\TickDumps\\20261105_101500_ctf_c.tdump"
+
+
+def test_game_asserts_the_tdump_by_its_short_name_through_the_python_request():
+    game = LoadGame()
+    script, args = game.AssertArguments(WINDOWS_PATH)
+    assert script == "Tools\\tickdump.py"
+    assert args == ["assert", "20261105_101500_ctf_c.tdump", "--json"]
+    assert game.AssertArguments(WINDOWS_PATH.replace("\\", "/"))[1] == args
+
+
+def test_game_interprets_the_exit_of_the_assert():
+    game = LoadGame()
+    failing = json.dumps({"result": "FAIL", "records": 9, "rules": [{"name": "header_flags", "count": 2, "cases": [
+        {"tick": 7, "handle": "0x00000000", "detail": "0x1"}]}]})
+    assert game.InterpretAssert(0, '{"result": "PASS"}') == ("pass", [])
+    status, lines = game.InterpretAssert(1, failing + "\n")
+    assert status == "fail" and lines == ["header_flags: 2 case(s)", "  tick 7 handle 0x00000000 0x1"]
+    assert game.InterpretAssert(1, "garbage\nmore")[0] == "fail"
+    assert game.InterpretAssert(2, "ERROR: cannot read x\n") == ("error", ["ERROR: cannot read x"])
+    assert game.InterpretAssert(7, "")[0] == "error"
+
+
+def test_game_assert_tickdump_uses_the_runner_and_reports_pending_and_errors():
+    game = LoadGame()
+    calls = []
+
+    def Runner(code, out):
+        def Run(script, args, timeout):
+            calls.append((script, args, timeout))
+            return code, out
+        return Run
+    assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(0, ""))[0] == "pass"
+    assert calls == [("Tools\\tickdump.py", ["assert", "20261105_101500_ctf_c.tdump", "--json"], 30)]
+    assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(1, '{"rules": []}'))[0] == "fail"
+    assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(2, "ERROR: x"))[0] == "error"
+    status, lines = game.AssertTickDump(WINDOWS_PATH, 30, Runner(None, "20261105-101500-ab12"))
+    assert status == "pending" and "py --id 20261105-101500-ab12 --wait" in lines[0]
+    assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(None, "the watcher refused the run (x)"))[0] == "error"
+
+
+def test_game_report_fails_the_scenario_when_a_tickdump_assert_fails(capsys):
+    game = LoadGame()
+
+    def Report(result="ok"):
+        return {"id": "r1", "scenario": "s", "result": result, "seconds": 1, "message": "done", "matches": [
+            {"index": 1, "name": "a", "config": "c", "result": "ok", "files": {"tickdump": WINDOWS_PATH}},
+            {"index": 2, "name": "b", "config": "c", "result": "ok", "files": {}}]}
+
+    def Asserter(status):
+        return lambda path: (status, ["rule: 1 case(s)"] if status == "fail" else [])
+    assert game.PrintReport(Report(), Asserter("pass")) == 0
+    assert "tickdump assert: PASS" in capsys.readouterr().out
+    assert game.PrintReport(Report(), Asserter("fail")) == 1
+    out = capsys.readouterr().out
+    assert "r1 (s): FAIL" in out and "tickdump-assert" in out and "tickdump assert: FAIL" in out and "rule: 1 case(s)" in out
+    assert game.PrintReport(Report(), Asserter("error")) == 1
+    assert "tickdump-assert" in capsys.readouterr().out
+    assert game.PrintReport(Report(), Asserter("pending")) == 2
+    assert game.PrintReport(Report("fail"), Asserter("pass")) == 1
+    # A match without tickdump never runs an assert.
+    report = Report()
+    report["matches"][0]["files"] = {}
+    assert game.PrintReport(report, lambda path: 1 / 0) == 0
+
+
+def test_game_run_python_reads_the_exit_and_the_output_of_the_run(tmp_path, monkeypatch):
+    game = LoadGame()
+    (tmp_path / "python").mkdir()
+    sent = []
+    monkeypatch.setattr(game, "GAME", str(tmp_path))
+    monkeypatch.setattr(game, "Send", lambda kind, id=None, **extra: (sent.append((kind, id, extra)) or (True, "queued")))
+    monkeypatch.setattr(game.time, "sleep", lambda seconds: None)
+
+    def Answer(name):
+        if name.endswith(".json"):
+            id = sent[0][1]
+            (tmp_path / "python" / (id + ".out")).write_text('{"result": "PASS"}\n', encoding="utf-8")
+            return {"done": True, "exit": 0}
+        return None
+    monkeypatch.setattr(game, "ReadJson", Answer)
+    assert game.RunPython("Tools\\tickdump.py", ["assert", "x.tdump", "--json"], 10) == (0, '{"result": "PASS"}\n')
+    assert sent[0][0] == "python" and sent[0][2] == {"script": "Tools\\tickdump.py", "args": ["assert", "x.tdump", "--json"]}
+    monkeypatch.setattr(game, "ReadJson", lambda name: None)
+    code, out = game.RunPython("Tools\\tickdump.py", [], 0)
+    assert code is None and out == sent[1][1]
+    monkeypatch.setattr(game, "Send", lambda kind, id=None, **extra: (False, "no"))
+    assert game.RunPython("Tools\\tickdump.py", [], 5) == (None, "the watcher refused the run (no)")

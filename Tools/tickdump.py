@@ -9,6 +9,11 @@ in the file, so an old dump stays readable after Bridge.xml changes. Output is s
     python Tools/tickdump.py show [FILE] --handle H [--field F]   One entity or player over the dump (first, last and changes).
     python Tools/tickdump.py diff GOLDEN RUN [--overlap] [--max N]
         Exact comparison by bits, field by field, tick by tick (D170, D171). Exit 0 equal, 1 differs, 2 error.
+    python Tools/tickdump.py assert FILE [--json]
+        Runs on FILE the general rules of Tools/tickchecks.py (the invariants of Tools/Tests/test_golden_tick.py that need no film) and the rules of
+        the file (no dropped ticks, not cut). Prints PASS, or the failing rules with their first 10 cases (GameTick, handle). --json prints one
+        line of JSON instead: {"result", "records", "rules": [{"name", "count", "cases": [{"tick", "handle", "detail"}]}]}.
+        Exit 0 passes, 1 fails, 2 cannot read the file. FILE is resolved like in show (the file name alone is enough).
     python Tools/tickdump.py approve RUN GOLDEN_DIR --reason "..."
         Saves RUN as GOLDEN_DIR/golden.tdump (the previous one becomes golden_prev.tdump) and adds a line to manifest.txt (D172).
         The .sdump of the same session (RUN with the extension .sdump) is saved as golden.sdump and named in the line. A run
@@ -761,6 +766,25 @@ def Approve(run_path, golden_dir, reason, now=None, commit=None):
     return line
 
 
+def Assert(dump, as_json=False):
+    """Prints the result of the general rules on a dump. return: 0 pass, 1 fail."""
+    import tickchecks
+    _, failures = tickchecks.Evaluate(dump, os.path.basename(dump.path))
+    if as_json:
+        rules = [{"name": name, "count": count, "cases": [{"tick": t, "handle": f"0x{h:08X}", "detail": d} for t, h, d in cases]}
+                 for name, count, cases in failures]
+        print(json.dumps({"result": "FAIL" if failures else "PASS", "records": len(dump.records), "rules": rules}))
+    elif not failures:
+        print(f"PASS {os.path.basename(dump.path)}: {len(dump.records)} records, {len(tickchecks.ALL_RULES)} rules")
+    else:
+        print(f"FAIL {os.path.basename(dump.path)}: {len(failures)} rule(s) failed")
+        for name, count, cases in failures:
+            print(f"  {name}: {count} case(s), the first ones (GameTick, handle, detail):")
+            for t, h, d in cases:
+                print(f"    tick {t} handle 0x{h:08X} {d}")
+    return 1 if failures else 0
+
+
 # --- command line ----------------------------------------------------------------------------------------------------------------
 
 def Run(args):
@@ -772,6 +796,8 @@ def Run(args):
     if args.command == "approve":
         print(Approve(args.run, args.golden_dir, args.reason))
         return 0
+    if args.command == "assert":
+        return Assert(Dump(ResolvePath(args.file)), args.json)
     d = Dump(ResolvePath(args.file) if args.file else Newest())
     if args.tick is not None:
         ShowTick(d, args.tick)
@@ -795,6 +821,9 @@ def Main(argv=None):
     diff.add_argument("run")
     diff.add_argument("--overlap", action="store_true", help="ticks in one file only do not count")
     diff.add_argument("--max", type=int, default=20, help="field lines to print")
+    check = commands.add_parser("assert", help="run the general invariants on a dump: exit 0 pass, 1 fail, 2 error")
+    check.add_argument("file")
+    check.add_argument("--json", action="store_true", help="one line of JSON instead of text")
     approve = commands.add_parser("approve", help="save a run as the golden of a film")
     approve.add_argument("run")
     approve.add_argument("golden_dir")

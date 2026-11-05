@@ -42,6 +42,7 @@
     <Compile Include="Tools\build.py" />
     <Compile Include="Tools\game.py" />
     <Compile Include="Tools\presets.py" />
+    <Compile Include="Tools\tickchecks.py" />
     <Compile Include="Tools\tickdump.py" />
     <Compile Include="Tools\livechat.py" />
     <Compile Include="Tools\check_rules.py" />
@@ -84,6 +85,7 @@
     <Compile Include="Tools\Tests\test_generators.py" />
     <Compile Include="Tools\Tests\test_golden_tick.py" />
     <Compile Include="Tools\Tests\test_presets.py" />
+    <Compile Include="Tools\Tests\test_tickchecks.py" />
     <Compile Include="Tools\Tests\test_tickdump.py" />
     <Compile Include="Tools\Tests\test_tools.py" />
   </ItemGroup>

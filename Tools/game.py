@@ -23,10 +23,15 @@ A match of a scenario may record the TickDump (Diseno/15): "tickdump": true writ
 and the .sdump (any other value is an error of the scenario). The report lists them as "tickdump" and "snapshot" and prints, per match,
 the records, the dropped ticks and the size of the .tdump.
 
+When a match records the TickDump, the report runs the general invariants on its .tdump (python Tools/tickdump.py assert NAME --json, through the
+python request of the watcher, because the file is in the TickDumps folder of the Windows side) and prints PASS or the failing rules under the match.
+A match that fails them, or whose assert cannot run, makes the scenario FAIL with the reason tickdump-assert. An assert that is still running
+(exit 2) is resumed with game.py py --id ID --wait.
+
 Exit code: 0 ok, 1 failed (request or scenario), 2 still waiting (run the same wait again), 3 the watcher is not running,
 4 a LiveChat message arrived (Tools/livechat.py; it is printed with the command that resumes the wait).
 """
-import argparse, glob, json, os, re, sys, time, uuid
+import argparse, glob, json, ntpath, os, re, sys, time, uuid
 from datetime import datetime, timezone
 import livechat, presets
 
@@ -86,7 +91,8 @@ def Bench():
     return state
 
 
-def Request(kind, id=None, **extra):
+def Send(kind, id=None, **extra):
+    """Writes a request for the watcher and waits up to 60 s for its answer. return: (ok, message), message None when it did not answer."""
     NeedWatcher()
     id = id or time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:6]
     WriteJson("request.json", dict(id=id, kind=kind, **extra))
@@ -94,11 +100,18 @@ def Request(kind, id=None, **extra):
     while time.time() - start < 60:
         result = ReadJson("result.json")
         if result and result.get("id") == id:
-            print(f"{kind}: {'ok' if result.get('ok') else 'FAILED'}: {result.get('message')}")
-            return 0 if result.get("ok") else 1
+            return bool(result.get("ok")), result.get("message")
         time.sleep(1)
-    print(f"{kind}: no answer from the watcher in 60 s.")
-    return 1
+    return False, None
+
+
+def Request(kind, id=None, **extra):
+    ok, message = Send(kind, id, **extra)
+    if message is None and not ok:
+        print(f"{kind}: no answer from the watcher in 60 s.")
+        return 1
+    print(f"{kind}: {'ok' if ok else 'FAILED'}: {message}")
+    return 0 if ok else 1
 
 
 def Status():
@@ -147,6 +160,61 @@ def Wait(what, timeout):
     return 2
 
 
+def AssertArguments(path):
+    """(script, args) that run the general invariants on the .tdump of a match through the python request of the watcher. The file is in the TickDumps
+    folder of the Windows side, which this shell cannot read: tickdump.py resolves the file name alone in that folder, like show."""
+    return "Tools\\tickdump.py", ["assert", ntpath.basename(path.replace("/", "\\")), "--json"]
+
+
+def RunPython(script, args, timeout):
+    """Runs a script with the Windows python of the watcher. return: (exit code, stdout), exit None when the request failed or the run is still going
+    after the timeout (then stdout is the id to resume with game.py py --id ID --wait)."""
+    id = time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:4]
+    ok, message = Send("python", id=id, script=script, args=args)
+    if not ok:
+        return None, f"the watcher refused the run ({message})"
+    start = time.time()
+    while time.time() - start < timeout:
+        state = ReadJson(os.path.join("python", id + ".json"))
+        if state and state.get("done"):
+            try:
+                with open(os.path.join(GAME, "python", id + ".out"), encoding="utf-8", errors="replace") as handle:
+                    return state.get("exit"), handle.read()
+            except OSError:
+                return state.get("exit"), ""
+        time.sleep(2)
+    return None, id
+
+
+def InterpretAssert(code, out):
+    """(status, lines) of the exit code and stdout of tickdump.py assert --json. status: pass (0), fail (1, the failing rules as lines), error (2 or
+    anything else) or pending (the run did not finish: out is its id)."""
+    if code == 0:
+        return "pass", []
+    if code == 1:
+        lines = []
+        try:
+            report = json.loads(next(line for line in out.splitlines() if line.startswith("{")))
+            for rule in report.get("rules", []):
+                lines.append(f"{rule['name']}: {rule['count']} case(s)")
+                lines += [f"  tick {c['tick']} handle {c['handle']} {c['detail']}".rstrip() for c in rule.get("cases", [])[:3]]
+        except (StopIteration, ValueError, KeyError, TypeError):
+            lines = out.strip().splitlines()[:12]
+        return "fail", lines
+    return "error", out.strip().splitlines()[:6]
+
+
+def AssertTickDump(path, timeout=60, runner=RunPython):
+    """Runs tickdump.py assert on the .tdump of a match. return: (status, lines) of InterpretAssert, or pending when it did not finish."""
+    script, args = AssertArguments(path)
+    code, out = runner(script, args, timeout)
+    if code is None and not out.startswith("the watcher"):
+        return "pending", [f"still running: python Tools/game.py py --id {out} --wait"]
+    if code is None:
+        return "error", [out]
+    return InterpretAssert(code, out)
+
+
 def TickDumpSummary(path):
     """One line about the .tdump of a match: records, dropped (sum of the records / footer) and size. The file is in the TickDumps
     folder of the storage folder: when this shell cannot read it, the line says how to (game.py py Tools/tickdump.py show NAME)."""
@@ -161,9 +229,20 @@ def TickDumpSummary(path):
     return f"ticks={len(dump.records)} dropped={dropped} (footer {footer}) size={dump.size / 1e6:.1f} MB"
 
 
-def PrintReport(report):
-    print(f"report {report.get('id')} ({report.get('scenario')}): {str(report.get('result', '?')).upper()}"
-          f" | {report.get('seconds')} s | {report.get('message', '')}")
+def PrintReport(report, asserter=AssertTickDump):
+    """Prints a report. A match with a tickdump gets the general invariants run on its .tdump (asserter): a match that fails them, or whose assert
+    cannot run, makes the scenario FAIL with the reason tickdump-assert. return: 0 ok, 1 failed, 2 an assert is still running."""
+    asserts = {}
+    for match in report.get("matches", []):
+        path = match.get("files", {}).get("tickdump")
+        if path:
+            asserts[match.get("index")] = asserter(path)
+    statuses = [status for status, _ in asserts.values()]
+    is_failed = report.get("result") != "ok" or "fail" in statuses or "error" in statuses
+    result = "fail" if is_failed and report.get("result") == "ok" else report.get("result", "?")
+    message = report.get("message", "") + (" tickdump-assert" if "fail" in statuses or "error" in statuses else "")
+    print(f"report {report.get('id')} ({report.get('scenario')}): {str(result).upper()}"
+          f" | {report.get('seconds')} s | {message}")
     for match in report.get("matches", []):
         timing = match.get("timing", {})
         print(f"  match {match.get('index')} {match.get('name')} [{match.get('config')}]: {str(match.get('result')).upper()}"
@@ -189,7 +268,14 @@ def PrintReport(report):
             print(f"    {name}: {('build/game/' + local[index + len('/build/game/'):]) if index >= 0 else path}")
             if name == "tickdump":
                 print(f"      {TickDumpSummary(path)}")
-    return 0 if report.get("result") == "ok" else 1
+        if match.get("index") in asserts:
+            status, lines = asserts[match.get("index")]
+            print(f"    tickdump assert: {status.upper()}")
+            for line in lines:
+                print(f"      {line}")
+    if is_failed:
+        return 1
+    return 2 if "pending" in statuses else 0
 
 
 MATCH_KEYS = {"name", "config", "preset", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
