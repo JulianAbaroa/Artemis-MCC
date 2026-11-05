@@ -11,6 +11,7 @@ export namespace Blam::Layout::Object::Type::Bloc::Offset
     // First datum byte of the component and the byte after its last one.
     constexpr std::size_t k_ComponentStart = 0x1A8;
     constexpr std::size_t k_ComponentEnd = 0x1B0;
+    static_assert(k_ComponentEnd == 0x1B0, "Bloc fixed size mismatch");
 
     constexpr std::size_t k_Unknown1a8                                  = 0x1A8;  // uint32.
     constexpr std::size_t k_Unknown1ac                                  = 0x1AC;  // uint32.

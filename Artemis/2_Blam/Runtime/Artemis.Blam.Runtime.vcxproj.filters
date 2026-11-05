@@ -147,6 +147,9 @@
     <ClCompile Include="Object\Type\ObjectPlacement.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Object\Type\ObjectHandleAudit.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Object\Type\ObjectProfile.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>

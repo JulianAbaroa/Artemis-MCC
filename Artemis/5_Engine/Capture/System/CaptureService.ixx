@@ -1,6 +1,7 @@
 export module Engine.Capture.System;
 
 import Common.Log.System;
+import Engine.Base.Lifecycle.State;
 import Engine.Base.Memory.System;
 import Engine.Capture.State;
 import Blam.Layout.Snapshot.Type;
@@ -14,6 +15,7 @@ export namespace Engine::Capture::System
     private:
         using Log = Common::Log::System::Log;
 
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
         using CaptureStore = Engine::Capture::State::CaptureStore;
@@ -23,9 +25,10 @@ export namespace Engine::Capture::System
 
     public:
         CaptureService(Log& log,
+            LifecycleStore& lifecycleStore,
             MemoryReaderService& memoryReaderService,
             CaptureStore& captureStore) :
-            m_Log(log), m_MemoryReaderService(memoryReaderService),
+            m_Log(log), m_LifecycleStore(lifecycleStore), m_MemoryReaderService(memoryReaderService),
             m_CaptureStore(captureStore) {}
         ~CaptureService() = default;
 
@@ -40,8 +43,19 @@ export namespace Engine::Capture::System
 
     private:
         Log& m_Log;
+        LifecycleStore& m_LifecycleStore;
         MemoryReaderService& m_MemoryReaderService;
         CaptureStore& m_CaptureStore;
+
+        // Teardown epoch the capacities were checked for, or the maximum before the first check. A new load runs under a new epoch, so
+        // nothing resets it: not the game thread (Cleanup) and not a tick that was still running after the teardown began, which marks
+        // the epoch it started under (read before the teardown), never the next one.
+        std::atomic<std::uint64_t> m_CheckedEpoch{ std::numeric_limits<std::uint64_t>::max() };
+
+        // Compares the capacity of the object and player tables of the engine (data array header) with k_MaxObjects and k_MaxPlayers,
+        // once per map load. A difference is a WARNING with both values, nothing else changes.
+        // note: Runs on the AI thread inside the read window.
+        auto CheckCapacities(std::uintptr_t threadContext, std::uint64_t epoch) -> void;
 
         // Copies the datum of every live object of the object table.
         auto CopyObjects(Snapshot& snapshot, std::uintptr_t tableBase) -> void;

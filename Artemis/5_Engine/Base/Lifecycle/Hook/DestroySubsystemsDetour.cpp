@@ -45,6 +45,8 @@ namespace Engine::Base::Lifecycle::Hook
         }
         if (!lifecycle.WaitForTickEnd(milliseconds(10)))
         {
+            // The Cleanup runs anyway. The tick that is still running publishes nothing: it sees the state before it publishes (C.7).
+            lifecycle.AddTeardownTimeout();
             logs.Message("[DestroySubsystemsDetour] WARNING:"
                 " Artemis tick did not finish within timeout.");
         }
@@ -56,7 +58,9 @@ namespace Engine::Base::Lifecycle::Hook
 
         lifecycle.SetStatus(Status::Destroyed);
 
-        logs.Message("[DestroySubsystemsDetour] INFO: Game engine destroyed.");
+        logs.Message("[DestroySubsystemsDetour] INFO: Game engine destroyed."
+            " Teardowns with tick timeout: {}. Ticks discarded so far: {}.",
+            lifecycle.GetTeardownTimeouts(), lifecycle.GetDiscardedTicks());
 
         s_InProgress.store(false, std::memory_order_release);
     }

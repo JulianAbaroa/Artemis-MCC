@@ -43,7 +43,7 @@ The last Tick and one pending `FlatRequest` (a newer one replaces a request the 
 waits, so it never happens there).
 
 ## Threads
-`Run` and the assembly run on the AI thread. `Flatten` runs on the bridge thread (and the dump thread for recordings). The handoff
+`Run` and the assembly run on the AI thread. `Run` asks its `canPublish` right before assembling the Tick and leaves the last Tick as it was when it says no (the engine started tearing down). `Flatten` runs on the bridge thread (and the dump thread for recordings). The handoff
 is the one-slot `FlatStore`.
 
 ## Errors

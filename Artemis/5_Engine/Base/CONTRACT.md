@@ -40,7 +40,8 @@ The engine status and the read window, the addresses found by signature, the loc
 ## Threads
 - Engine functions and anything that needs the engine's thread context run only on the game thread.
 - Memory reads may run on the AI thread inside the read window, while the game waits (at most 100 ms per tick).
-- `LifecycleStore` is thread-safe: hooks and the main thread write it; the AI, input and main threads wait on it.
+- `LifecycleStore` is thread-safe: hooks and the main thread write it; the AI, input and main threads wait on it. At teardown the game thread waits 10 ms for the Artemis tick and runs the Cleanup anyway (it is never held by the AI thread): a tick still running reads `CanPublish` before it publishes and between pipeline stages, and is discarded. `GetTeardownEpoch` goes up with every `TearingDown`, so a thread that slept through the teardown, or a tick that only saw `Destroyed`, still finds its per-map state stale and resets it. The teardowns with timeout and the discarded ticks are counted (game thread and AI thread, atomics) and shown in the teardown INFO.
+- Remaining risk (F1 C.7): the cut happens between stages, so a stage that is already running when the teardown starts can still overlap the Cleanup and write a store while it is emptied (the stores are mutex-protected, but a stage may repopulate one after its Cleanup). The full fix is that the AI thread owns the cleanup of its stores, triggered by the epoch; it is in the backlog.
 - `PresetStore` is thread-safe and hands out immutable snapshots. `PresetService::ApplyToStart` runs on the MCC thread of the start and never throws. `ApplyBetweenRounds` runs on the game thread inside the tick hook and never throws; `Request` runs on the bridge or bench thread and reads the files there, so the game thread never touches the disk.
 
 ## Errors

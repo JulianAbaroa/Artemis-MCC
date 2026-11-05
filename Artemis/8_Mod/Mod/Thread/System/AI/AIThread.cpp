@@ -38,6 +38,14 @@ namespace Mod::Thread::System
 
         while (lifecycle.IsRunning())
         {
+            // A teardown happened since the last reset: the state of the previous map goes, even if this thread never saw TearingDown
+            // (a tick that outlasted the whole teardown sees Destroyed, and one that overslept can wake in the next Initialized).
+            if (const std::uint64_t epoch{ lifecycle.GetTeardownEpoch() }; epoch != m_ResetEpoch)
+            {
+                this->Reset();
+                m_ResetEpoch = epoch;
+            }
+
             const Status status{ lifecycle.GetStatus() };
 
             // The game thread waits for each tick read only while this thread is consuming ticks.
@@ -103,6 +111,15 @@ namespace Mod::Thread::System
                 const bool isFirstAfterLoad{ std::exchange(m_IsFirstTickAfterLoad, false) };
                 const auto snapshot{ this->ExecuteTick(current) };
 
+                // The engine can start tearing down while the tick runs: the Cleanup empties the stores it writes and does not wait
+                // for it past its timeout. The state is read again here, before anything is published, not only when the tick began.
+                if (snapshot == nullptr || !lifecycle.CanPublish())
+                {
+                    this->DiscardTick(current);
+                    lifecycle.EndTick();
+                    break;
+                }
+
                 if (m_BridgeClock.IsDecision)
                 {
                     m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = m_BridgeClock });
@@ -160,9 +177,21 @@ namespace Mod::Thread::System
         m_Base.m_LifecycleStore.EndRead(m_Last);
         this->EndStage();
 
-        m_Export.m_PipelineService.Run(*snapshot, generation, m_EndStage);
+        // A teardown that began during the read: the pipeline would only write stores the Cleanup is emptying.
+        if (!m_Base.m_LifecycleStore.CanPublish()) return nullptr;
+
+        m_Export.m_PipelineService.Run(*snapshot, generation, m_EndStage, m_CanPublish);
+
+        // The pipeline stops between stages when the teardown starts: what it left is not a tick to publish.
+        if (!m_Base.m_LifecycleStore.CanPublish()) return nullptr;
 
         return snapshot;
+    }
+
+    auto AIThread::DiscardTick(std::uint64_t generation) -> void
+    {
+        m_Base.m_LifecycleStore.AddDiscardedTick();
+        m_Service.m_Log.Message("[AIThread] INFO: Tick {} discarded: the engine is tearing down.", generation);
     }
 
     auto AIThread::EndStage() -> void

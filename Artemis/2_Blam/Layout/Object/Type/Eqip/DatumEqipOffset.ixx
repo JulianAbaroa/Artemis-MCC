@@ -11,6 +11,7 @@ export namespace Blam::Layout::Object::Type::Eqip::Offset
     // First datum byte of the component and the byte after its last one.
     constexpr std::size_t k_ComponentStart = 0x1C4;
     constexpr std::size_t k_ComponentEnd = 0x210;
+    static_assert(k_ComponentEnd == 0x210, "Eqip fixed size mismatch");
 
     constexpr std::size_t k_Unknown1c4                                  = 0x1C4;  // uint16.
     constexpr std::size_t k_UseCounter                                  = 0x1C6;  // uint16.

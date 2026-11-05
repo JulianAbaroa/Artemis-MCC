@@ -5,61 +5,64 @@ import std;
 namespace Bridge::Codec::Pipeline::System
 {
     auto PipelineService::Run(const Snapshot& snapshot, std::uint64_t generation,
-        const std::function<void()>& endStage) -> void
+        const std::function<void()>& endStage, const std::function<bool()>& canPublish) -> void
     {
-        const auto stage{ [&endStage] {
+        // return: Whether the tick may go on. False once canPublish says no: the engine began tearing down, so the next stage would only
+        // write stores the Cleanup is emptying.
+        const auto stage{ [&endStage, &canPublish] {
             if (endStage) endStage();
+            return !canPublish || canPublish();
         } };
 
         m_Tables.m_ObjectService.UpdateObjectTable(snapshot);
-        stage();
+        if (!stage()) return;
         m_Tables.m_PlayerService.UpdatePlayerTable(snapshot);
-        stage();
+        if (!stage()) return;
         m_Tables.m_InteractionService.UpdateInteractionTable(snapshot);
-        stage();
+        if (!stage()) return;
         m_Tables.m_GameService.Update(snapshot);
-        stage();
+        if (!stage()) return;
 
         m_Environment.m_ClassifierService.UpdateClassification();
-        stage();
+        if (!stage()) return;
         m_Environment.m_ObjectGraphService.UpdateGraph();
-        stage();
+        if (!stage()) return;
 
         m_Environment.m_VitalityDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_ZoneDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_TeleporterDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_LiftDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_BarrierDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_ExplosiveDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_ProjectileDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_WeaponDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_EntitiesService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_PlayersService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_ObjectiveDetailsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_AimService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_EventsService.Update();
-        stage();
+        if (!stage()) return;
         m_Environment.m_MatchService.Update();
-        stage();
+        if (!stage()) return;
 
         m_Egocentric.m_SelfService.Update();
-        stage();
+        if (!stage()) return;
         m_Egocentric.m_AffordanceService.Update();
-        stage();
+        if (!stage()) return;
         m_Egocentric.m_RaycastService.Update();
-        stage();
+        if (!stage()) return;
 
         m_TickService.Assemble(generation);
         stage();

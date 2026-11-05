@@ -40,6 +40,21 @@ REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", ".."))
 DATUM_XML = os.path.join(REPO, "Data", "Datum")
 OUT = os.path.join(REPO, "Artemis", "2_Blam", "Layout", "Object", "Type")
 
+# Bytes of the fixed part of the datum per concrete type: where the component ends (absolute), as the engine allocates it
+# (Historia/Diseno_2026-10/Capas/3_Datum_Pendientes.txt item 3, F1 C.5 a). The generated Offset partition static_asserts it, so a
+# change in the XML that moves the end of a type does not compile until the number is changed here on purpose.
+EXPECTED_END = {
+    "Bipd": 0xE00,
+    "Vehi": 0xDE8,
+    "Weap": 0x338,
+    "Eqip": 0x210,
+    "Proj": 0x258,
+    "Scen": 0x1E4,
+    "Bloc": 0x1B0,
+    "Mach": 0x2D4,
+    "Ctrl": 0x2CC,
+}
+
 def Finish(text: str, xmlName: str) -> str:
     text = text.replace("export module Blam.Map.Tag.Type:", "export module Blam.Layout.Object.Type:")
     text = text.replace("Blam::Map::Tag::Type::", "Blam::Layout::Object::Type::")
@@ -90,6 +105,10 @@ def ProcessXml(xmlPath: str, out: str) -> None:
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+    if prefix in EXPECTED_END and end != EXPECTED_END[prefix]:
+        raise SystemExit(f"{xmlName}: the component ends at 0x{end:X} but the engine allocates 0x{EXPECTED_END[prefix]:X} for {prefix} "
+                         "(EXPECTED_END in GenerateDatum.py)")
+
     off = off.replace(f"// Base size: 0x{end:X}.", f"// Component range: 0x{start:X}..0x{end:X} (absolute datum offsets).")
     # Range of the component, so tools can cut a datum by component without repeating the XML.
     marker = "::Offset\n{\n"
@@ -98,7 +117,9 @@ def ProcessXml(xmlPath: str, out: str) -> None:
     off = off.replace("\r\n", "\n").replace(marker, marker +
         "    // First datum byte of the component and the byte after its last one.\n"
         f"    constexpr std::size_t k_ComponentStart = 0x{start:X};\n"
-        f"    constexpr std::size_t k_ComponentEnd = 0x{end:X};\n\n", 1)
+        f"    constexpr std::size_t k_ComponentEnd = 0x{end:X};\n" +
+        (f"    static_assert(k_ComponentEnd == 0x{EXPECTED_END[prefix]:X}, \"{prefix} fixed size mismatch\");\n"
+         if prefix in EXPECTED_END else "") + "\n", 1)
     st = st.replace("// Root struct size:", f"// Component starts at datum offset 0x{start:X}; field offsets in comments are relative to it.\n// Root struct size:")
     compDir = os.path.join(out, prefix)
     os.makedirs(compDir, exist_ok=True)

@@ -27,6 +27,7 @@ export namespace Blam::Runtime::Object::System
         using BonesHeader = Blam::Runtime::Object::Type::BoneMatrix::BonesHeader;
         using DamageSection = Blam::Runtime::Object::Type::DamageSection::DamageSection;
         using DamageSectionTable = Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
+        using HandleAudit = Blam::Runtime::Object::Type::HandleAudit::HandleAudit;
 
         using Log = Common::Log::System::Log;
         using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
@@ -51,6 +52,10 @@ export namespace Blam::Runtime::Object::System
         // note: Does not read the game memory. Does nothing while the snapshot has no object table.
         auto UpdateObjectTable(const Snapshot& snapshot) -> void;
 
+        // return: What the object links of the last tick resolved to (stale salt, free slot, salt 0). Zero before the first tick.
+        // note: AI thread only, the same one that calls UpdateObjectTable.
+        auto GetHandleAudit() const -> const HandleAudit&;
+
         auto Cleanup() -> void;
 
     private:
@@ -59,6 +64,18 @@ export namespace Blam::Runtime::Object::System
         BoneMatricesStore& m_BoneMatricesStore;
         DamageSectionsStore& m_DamageSectionsStore;
         TagResolverService& m_TagResolverService;
+
+        HandleAudit m_HandleAudit{};
+        // Teardown epoch (Snapshot::TeardownEpoch) the salt 0 WARNING was logged for, or the maximum before the first one: it comes once per
+        // map load, not once per tick. AI thread only. A new load runs under a new epoch, so no Cleanup (game thread) has to reset it, and
+        // a tick that straggles past the teardown cannot set it for the next load.
+        std::uint64_t m_ReportedEpoch{ std::numeric_limits<std::uint64_t>::max() };
+
+        // Counts what the object handles the runtime follows resolve to, into m_HandleAudit: the parent, child and next sibling of every
+        // object, the weapon slots of the bipeds and vehicles, the owner and shooter of the projectiles, and the bipeds, weapons and
+        // objective of the player table.
+        // note: A handle whose slot holds another salt is not an error: the object it named was deleted. Only salt 0 is logged.
+        auto AuditHandles(const Snapshot& snapshot) -> void;
 
         // Adds the objects of the snapshot that are not stored yet.
         auto DiscoverObjects(const Snapshot& snapshot) -> void;

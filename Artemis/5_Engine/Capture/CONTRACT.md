@@ -35,11 +35,11 @@ The tick hooks run on the game thread and wait for the read of the tick (the win
 thread inside that window; the game goes on as soon as the AI thread ends the read.
 
 ## Errors
-A region that cannot be read is left empty in the Snapshot and its flag stays off; before the thread context or the object table
+Once per map load (per teardown epoch of `LifecycleStore`), `Capture` compares the capacity of the engine object and player tables (header of the data array) with `k_MaxObjects` and `k_MaxPlayers`: a difference is a WARNING with both values, nothing else changes. A region that cannot be read is left empty in the Snapshot and its flag stays off; before the thread context or the object table
 is found, the Snapshot says so and nothing is copied.
 
 ## Requirements
 The read window stays short: the game waits for it on every tick (telemetry: read wait).
 
 ## Tests
-`ReplayTests.Recordings` uses Snapshots this project recorded; the capture itself is checked in game (golden film and the bench).
+`ReplayTests.Recordings` uses Snapshots this project recorded; `CaptureServiceTests` (the capacity check over fake memory); the capture itself is checked in game (golden film and the bench).

@@ -5,8 +5,11 @@ import Common.Log.Type;
 import Contract.Bridge.Type;
 import Bridge.Codec.Pipeline.System;
 import Bridge.Codec.Tick.Type;
+import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
+import Blam.Runtime.Object.Type;
 import Blam.Layout.Snapshot.Type;
+import Blam.MapModel.Definitions.Type;
 import Tests.Support.Blam;
 import Tests.Support.Pipeline;
 import std;
@@ -20,8 +23,12 @@ namespace
     using Common::Log::Type::LogLevel;
     using Bridge::Codec::Tick::Type::Tick;
     using Blam::Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RawObject;
     using Blam::Layout::Snapshot::Type::Snapshot;
+    using Tests::Support::Blam::MakeHandle;
     using Tests::Support::Blam::Put;
+    namespace ObjeOffset = ::Blam::Layout::Object::Type::Obje::Offset;
+    namespace UnitOffset = ::Blam::Layout::Object::Type::Unit::Offset;
     namespace PlayerOffset = ::Blam::Layout::Player::Type::Offset;
     using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Pipeline::Chain;
@@ -255,4 +262,182 @@ TEST_F(PipelineTests, EndStageOncePerStage)
 
     EXPECT_EQ(k_PipelineStageNames.size(), 24u);
     EXPECT_EQ(calls, k_PipelineStageNames.size());
+}
+
+TEST_F(PipelineTests, RunStopsAfterTheFirstStageWhenThePublishCheckSaysNo)
+{
+    std::size_t asked{ 0 };
+    std::size_t stages{ 0 };
+
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, [&stages] { ++stages; }, [&asked] { ++asked; return false; });
+
+    // The check comes after each stage: the stage that was running finishes, the others do not run and no Tick is assembled (F1 C.7).
+    EXPECT_EQ(asked, 1u);
+    EXPECT_EQ(stages, 1u);
+    EXPECT_EQ(m_Export.m_TickStore.Acquire(), nullptr);
+}
+
+TEST_F(PipelineTests, RunStopsBetweenStagesWhenTheTeardownStartsInTheMiddle)
+{
+    std::size_t stages{ 0 };
+    const auto first{ RunTick(WithBipedAndPlayer(), 1) };
+    ASSERT_NE(first, nullptr);
+
+    // The check says yes for ten stages and then no.
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 2, [&stages] { ++stages; }, [&stages] { return stages < 10; });
+
+    EXPECT_EQ(stages, 10u);
+    EXPECT_EQ(m_Export.m_TickStore.Acquire(), first);
+}
+
+TEST_F(PipelineTests, EveryStageAsksTheCheck)
+{
+    std::size_t asked{ 0 };
+
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {}, [&asked] { ++asked; return true; });
+
+    // The one after the assembly asks too, with nothing left to stop.
+    EXPECT_EQ(asked, k_PipelineStageNames.size());
+    EXPECT_NE(m_Export.m_TickStore.Acquire(), nullptr);
+}
+
+TEST_F(PipelineTests, TickKeepsTheLastOneWhenThePublishCheckSaysNo)
+{
+    const auto first{ RunTick(WithBipedAndPlayer(), 1) };
+    ASSERT_NE(first, nullptr);
+
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 2, {}, [] { return false; });
+
+    EXPECT_EQ(m_Export.m_TickStore.Acquire(), first);
+}
+
+TEST_F(PipelineTests, TickIsAssembledWhenThePublishCheckSaysYes)
+{
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {}, [] { return true; });
+
+    EXPECT_NE(m_Export.m_TickStore.Acquire(), nullptr);
+}
+
+// The links of the objects (F1 C.5 d): a handle with the salt of the live object of its slot matches, another salt is old, an empty slot is free.
+class HandleAuditTests : public PipelineTests
+{
+protected:
+    // return: A copy of the biped of WithBipedAndPlayer under another handle, with the three links written.
+    static auto MakeLinked(std::uint32_t handle, std::uint32_t parent, std::uint32_t child, std::uint32_t sibling) -> RawObject
+    {
+        RawObject object{ WithBipedAndPlayer().RawObjects.at(k_BipedHandle) };
+        object.Handle = handle;
+        Put(object.Bytes, ObjeOffset::k_ParentHandle, parent);
+        Put(object.Bytes, ObjeOffset::k_ChildHandle, child);
+        Put(object.Bytes, ObjeOffset::k_NextSiblingHandle, sibling);
+        return object;
+    }
+
+    // return: The snapshot with the biped (slot 3) and two linked objects (slots 4 and 5).
+    static auto WithLinks() -> Snapshot
+    {
+        Snapshot snapshot{ WithBipedAndPlayer() };
+        Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, ObjeOffset::k_ChildHandle, k_NoHandle);
+        Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, ObjeOffset::k_NextSiblingHandle, k_NoHandle);
+
+        // Parent matches the biped, child has the salt of a deleted object of slot 3, sibling points to the empty slot 9.
+        const std::uint32_t second{ MakeHandle(0xEC02, 4) };
+        snapshot.RawObjects.emplace(second, MakeLinked(second, k_BipedHandle, MakeHandle(0xAAAA, 3), MakeHandle(0xEC03, 9)));
+
+        // Parent with salt 0 over the live slot 4.
+        const std::uint32_t third{ MakeHandle(0xEC03, 5) };
+        snapshot.RawObjects.emplace(third, MakeLinked(third, MakeHandle(0, 4), k_NoHandle, k_NoHandle));
+        return snapshot;
+    }
+
+    auto ZeroSaltWarnings() const -> std::size_t
+    {
+        return static_cast<std::size_t>(std::ranges::count_if(m_Sink.m_Messages, [](const auto& message) {
+            return message.Level == LogLevel::Warning && message.Message.contains("salt 0");
+        }));
+    }
+};
+
+TEST_F(HandleAuditTests, CountsMatchingStaleFreeAndZeroSaltLinks)
+{
+    m_Export.m_PipelineService.Run(WithLinks(), 1, {});
+
+    const auto& audit{ m_Tables.m_ObjectService.GetHandleAudit() };
+    // The player of the fixture holds the biped as its alive and current biped: two more links that match.
+    EXPECT_EQ(audit.Checked, 6u);
+    EXPECT_EQ(audit.Matching, 3u);
+    EXPECT_EQ(audit.Stale, 2u);
+    EXPECT_EQ(audit.Free, 1u);
+    EXPECT_EQ(audit.ZeroSalt, 1u);
+}
+
+TEST_F(HandleAuditTests, OnlyTheLinksThatExistAreCounted)
+{
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {});
+
+    // The biped has no parent, child, sibling or weapon (NONE or 0), and the player holds it twice.
+    const auto& audit{ m_Tables.m_ObjectService.GetHandleAudit() };
+    EXPECT_EQ(audit.Checked, 2u);
+    EXPECT_EQ(audit.Matching, 2u);
+    EXPECT_EQ(ZeroSaltWarnings(), 0u);
+}
+
+TEST_F(HandleAuditTests, DeadBipedOfThePlayerAndWeaponOfTheBipedWithOldSaltAreStale)
+{
+    Snapshot snapshot{ WithBipedAndPlayer() };
+    auto& players{ snapshot.Regions[static_cast<std::size_t>(Blam::Layout::Snapshot::Type::RegionId::PlayerArray)].Bytes };
+    Put(players, (2 * Blam::Layout::Player::Type::Size::k_Base) + PlayerOffset::k_DeadBipedHandle, MakeHandle(0x1111, 3));
+    Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, UnitOffset::k_PrimaryWeaponHandle, MakeHandle(0x2222, 6));
+
+    m_Export.m_PipelineService.Run(snapshot, 1, {});
+
+    const auto& audit{ m_Tables.m_ObjectService.GetHandleAudit() };
+    EXPECT_EQ(audit.Checked, 4u);
+    EXPECT_EQ(audit.Matching, 2u);
+    EXPECT_EQ(audit.Stale, 1u);
+    EXPECT_EQ(audit.Free, 1u);
+    EXPECT_EQ(audit.ZeroSalt, 0u);
+    EXPECT_EQ(ZeroSaltWarnings(), 0u);
+}
+
+TEST_F(HandleAuditTests, StaleHandlesAreNotLogged)
+{
+    Snapshot snapshot{ WithLinks() };
+    Put(snapshot.RawObjects.at(MakeHandle(0xEC03, 5)).Bytes, ObjeOffset::k_ParentHandle, MakeHandle(0xBBBB, 4));
+
+    m_Export.m_PipelineService.Run(snapshot, 1, {});
+
+    EXPECT_EQ(m_Tables.m_ObjectService.GetHandleAudit().ZeroSalt, 0u);
+    EXPECT_GT(m_Tables.m_ObjectService.GetHandleAudit().Stale, 0u);
+    EXPECT_EQ(ZeroSaltWarnings(), 0u);
+}
+
+TEST_F(HandleAuditTests, ZeroSaltWarningComesOncePerMapLoad)
+{
+    m_Export.m_PipelineService.Run(WithLinks(), 1, {});
+    m_Export.m_PipelineService.Run(WithLinks(), 2, {});
+    EXPECT_EQ(ZeroSaltWarnings(), 1u);
+
+    // A new map load runs under another teardown epoch: the next salt 0 is reported again, with no Cleanup needed.
+    Snapshot nextLoad{ WithLinks() };
+    nextLoad.TeardownEpoch = 1;
+    m_Export.m_PipelineService.Run(nextLoad, 3, {});
+    m_Export.m_PipelineService.Run(nextLoad, 4, {});
+    EXPECT_EQ(ZeroSaltWarnings(), 2u);
+}
+
+TEST_F(HandleAuditTests, WeaponSlotsOfAVehicleAreAudited)
+{
+    Snapshot snapshot{ WithBipedAndPlayer() };
+    const std::uint32_t vehicle{ MakeHandle(0xEC09, 8) };
+    RawObject object{ MakeLinked(vehicle, k_NoHandle, k_NoHandle, k_NoHandle) };
+    object.KindId = static_cast<std::uint8_t>(::Blam::MapModel::Definitions::Type::Object::ObjectKind::Vehicle);
+    Put(object.Bytes, UnitOffset::k_PrimaryWeaponHandle, vehicle);
+    snapshot.RawObjects.emplace(vehicle, std::move(object));
+
+    m_Export.m_PipelineService.Run(snapshot, 1, {});
+
+    const auto& audit{ m_Tables.m_ObjectService.GetHandleAudit() };
+    EXPECT_EQ(audit.Checked, 3u);
+    EXPECT_EQ(audit.Matching, 3u);
 }

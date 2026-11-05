@@ -11,6 +11,7 @@ export namespace Blam::Layout::Object::Type::Mach::Offset
     // First datum byte of the component and the byte after its last one.
     constexpr std::size_t k_ComponentStart = 0x2C4;
     constexpr std::size_t k_ComponentEnd = 0x2D4;
+    static_assert(k_ComponentEnd == 0x2D4, "Mach fixed size mismatch");
 
     constexpr std::size_t k_Unknown2c4                                  = 0x2C4;  // uint32.
     constexpr std::size_t k_Unknown2c8                                  = 0x2C8;  // uint32.

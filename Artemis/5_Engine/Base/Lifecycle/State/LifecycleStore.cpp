@@ -41,6 +41,9 @@ namespace Engine::Base::Lifecycle::State
 
     auto LifecycleStore::SetStatus(Status value) -> void
     {
+        // The epoch goes up before the status, so whoever sees TearingDown or Destroyed also sees the new epoch.
+        if (value == Status::TearingDown) m_TeardownEpoch.fetch_add(1, std::memory_order_acq_rel);
+
         m_Status.store(value, std::memory_order_release);
 
         if (value == Status::TearingDown) this->WakeTickWaiters();
@@ -160,6 +163,38 @@ namespace Engine::Base::Lifecycle::State
         }
 
         return true;
+    }
+
+    auto LifecycleStore::CanPublish() const -> bool
+    {
+        const Status status{ m_Status.load(std::memory_order_acquire) };
+
+        return status != Status::TearingDown && status != Status::Destroyed;
+    }
+
+    auto LifecycleStore::GetTeardownEpoch() const -> std::uint64_t
+    {
+        return m_TeardownEpoch.load(std::memory_order_acquire);
+    }
+
+    auto LifecycleStore::AddTeardownTimeout() -> void
+    {
+        m_TeardownTimeouts.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::GetTeardownTimeouts() const -> std::uint64_t
+    {
+        return m_TeardownTimeouts.load(std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::AddDiscardedTick() -> void
+    {
+        m_DiscardedTicks.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto LifecycleStore::GetDiscardedTicks() const -> std::uint64_t
+    {
+        return m_DiscardedTicks.load(std::memory_order_relaxed);
     }
 
     auto LifecycleStore::WaitForBlam() -> void

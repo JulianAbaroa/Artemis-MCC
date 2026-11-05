@@ -82,6 +82,9 @@ export namespace Mod::Thread::System
         // The next tick that runs the pipeline is the first one after the map loaded (D207).
         bool m_IsFirstTickAfterLoad{ true };
 
+        // Teardown epoch (LifecycleStore) the state was last reset for.
+        std::uint64_t m_ResetEpoch{ 0 };
+
         std::uint64_t m_Last{ 0 };
         std::uint64_t m_Dropped{ 0 };
 
@@ -95,13 +98,19 @@ export namespace Mod::Thread::System
         steady_clock::time_point m_StageStart{};
         // Calls EndStage. Built once so the pipeline takes it without allocating every tick.
         std::function<void()> m_EndStage{ [this] { this->EndStage(); } };
+        // Asks the lifecycle whether the tick may still publish, for the pipeline right before it assembles the Tick.
+        std::function<bool()> m_CanPublish{ [this] { return m_Base.m_LifecycleStore.CanPublish(); } };
 
         // Builds the map, definitions, world and vitality data once the map file is loaded.
         auto LoadResources() -> void;
 
         // Copies the game into a Snapshot, releases the game thread and runs the pipeline over the Snapshot.
-        // return: The Snapshot the tick was built from.
+        // return: The Snapshot the tick was built from, or null if the engine started tearing down once the read ended (the pipeline
+        // did not run).
         auto ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>;
+
+        // Counts a tick that was cut by a teardown (shown in the log of the teardown) and logs it.
+        auto DiscardTick(std::uint64_t generation) -> void;
 
         // Records the time since the previous stage ended as the next stage of k_StageNames.
         auto EndStage() -> void;
@@ -114,6 +123,7 @@ export namespace Mod::Thread::System
         auto IsStable() -> bool;
 
         // Clears the tick generation and the load state for the next map.
+        // note: Idempotent: Run calls it when the teardown epoch changed and again in TearingDown.
         auto Reset() -> void;
     };
 }

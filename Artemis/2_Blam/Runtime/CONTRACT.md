@@ -41,6 +41,7 @@ never wait.
 
 ## Errors
 A region or table that was not captured leaves its output empty (or as it was) for that tick; a datum of unknown kind is skipped.
+`ObjectTableService` counts per tick (`HandleAudit`) what the object handles the runtime follows resolve to: matching, old salt (the object was deleted and its slot reused, normal in play: only counted), free slot, and salt 0 (WARNING once per map load).
 
 ## Requirements
 Pure: no process, no address (checked by `Tools/Tests/test_components.py`). Deterministic, like the rest of the pipeline.

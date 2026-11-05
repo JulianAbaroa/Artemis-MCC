@@ -22,6 +22,10 @@ export namespace Blam::Layout::Snapshot::Type
         // The object table was already found. Objects can still be empty (no live object).
         bool HasObjectTable{};
 
+        // Teardown epoch of the engine (LifecycleStore) when the capture began, so the services that report once per map load can tell
+        // a new load without touching the engine. 0 in recordings.
+        std::uint64_t TeardownEpoch{};
+
         // Every live object by handle.
         std::unordered_map<std::uint32_t, RawObject> RawObjects{};
 

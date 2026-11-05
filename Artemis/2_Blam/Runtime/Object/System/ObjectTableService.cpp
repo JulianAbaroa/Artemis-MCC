@@ -8,6 +8,7 @@ import Common.Tag.Type;
 import Common.Team.Type;
 import Blam.MapModel.Definitions.Type;
 import Blam.Layout.Object.Type;
+import Blam.Layout.Player.Type;
 import Blam.Layout.Snapshot.Type;
 
 namespace
@@ -61,6 +62,13 @@ namespace
     using Blam::Runtime::Object::Type::Constant::k_ActionMask;
     using Blam::Runtime::Object::Type::Constant::k_OverheatedMask;
     using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_HandleIndexMask;
+    using Common::Engine::Type::k_SaltShift;
+    using Common::Engine::Type::k_MaxObjects;
+    using Common::Engine::Type::k_MaxPlayers;
+    using Blam::Layout::Snapshot::Type::RegionId;
+    namespace PlayerOffset = Blam::Layout::Player::Type::Offset;
+    using Blam::Layout::Player::Type::Size::k_Base;
 
     // note: The origin of a parented object is local to its parent, so it is carried
     // through the parent chain. Halo frames are forward, left (up x forward) and up.
@@ -172,6 +180,7 @@ namespace Blam::Runtime::Object::System
         m_DamageSectionsStore.Clear();
 
         this->DiscoverObjects(snapshot);
+        this->AuditHandles(snapshot);
 
         std::vector<std::uint32_t> deadHandles{};
 
@@ -571,9 +580,96 @@ namespace Blam::Runtime::Object::System
         object.Specific = scenery;
     }
 
+    auto ObjectTableService::GetHandleAudit() const -> const HandleAudit&
+    {
+        return m_HandleAudit;
+    }
+
+    auto ObjectTableService::AuditHandles(const Snapshot& snapshot) -> void
+    {
+        // Salt of the live object in each slot, 0 for a free one (the capture skips the entries with salt 0).
+        std::array<std::uint16_t, k_MaxObjects> salts{};
+        for (const auto& [handle, datum] : snapshot.RawObjects)
+        {
+            const std::uint32_t index{ handle & k_HandleIndexMask };
+            if (index < salts.size()) salts[index] = static_cast<std::uint16_t>(handle >> k_SaltShift);
+        }
+
+        HandleAudit audit{};
+        const auto count{ [&](std::uint32_t handle) {
+            // Both values mean "no object": the engine writes -1, and the player table and the unit weapon slots keep 0 before there is one.
+            if (handle == k_NoHandle || handle == 0) return;
+
+            ++audit.Checked;
+
+            const std::uint32_t index{ handle & k_HandleIndexMask };
+            const std::uint16_t salt{ static_cast<std::uint16_t>(handle >> k_SaltShift) };
+            if (salt == 0) ++audit.ZeroSalt;
+
+            if (index >= salts.size() || salts[index] == 0) ++audit.Free;
+            else if (salts[index] == salt) ++audit.Matching;
+            else ++audit.Stale;
+        } };
+
+        for (const auto& [handle, datum] : snapshot.RawObjects)
+        {
+            count(datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle));
+            count(datum.Read<std::uint32_t>(ObjeOffset::k_ChildHandle));
+            count(datum.Read<std::uint32_t>(ObjeOffset::k_NextSiblingHandle));
+
+            switch (ToObjectKind(datum.KindId))
+            {
+            case ObjectKind::Biped:
+            case ObjectKind::Vehicle:
+                // note: Bipeds and vehicles are units (their component starts at 0x9D8 after the unit one), so the weapon slots are at the
+                // same offsets. The bipd ground object field is left out: it holds 1, 2 and 3 (not handles, salt 0) in some ticks of
+                // cgb_displace_1min.
+                for (std::uint8_t slot{ 0 }; slot < k_WeaponSlots; ++slot)
+                {
+                    count(datum.Read<std::uint32_t>(UnitOffset::k_PrimaryWeaponHandle + (slot * k_WeaponSlotStride)));
+                }
+                break;
+
+            case ObjectKind::Projectile:
+                count(datum.Read<std::uint32_t>(ObjeOffset::k_OwnerBipedHandle));
+                count(datum.Read<std::uint32_t>(ProjOffset::k_ShooterRootHandle));
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        // The object handles of the player table: the bipeds the player controls and controlled, the weapons and the objective.
+        if (snapshot.IsCaptured(RegionId::PlayerArray))
+        {
+            for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
+            {
+                const std::size_t entry{ index * k_Base };
+                if (snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + PlayerOffset::k_Handle) == 0) continue;
+
+                for (const std::uintptr_t field : { PlayerOffset::k_AliveBipedHandle, PlayerOffset::k_DeadBipedHandle,
+                    PlayerOffset::k_CurrentBipedHandle, PlayerOffset::k_PrimaryWeaponHandle, PlayerOffset::k_SecondaryWeaponHandle,
+                    PlayerOffset::k_ObjectiveHandle })
+                {
+                    count(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + field));
+                }
+            }
+        }
+
+        m_HandleAudit = audit;
+
+        if (audit.ZeroSalt > 0 && m_ReportedEpoch != snapshot.TeardownEpoch)
+        {
+            m_ReportedEpoch = snapshot.TeardownEpoch;
+            m_Log.Message("[ObjectTableService] WARNING: {} object links have salt 0, which no live object has.", audit.ZeroSalt);
+        }
+    }
+
     auto ObjectTableService::Cleanup() -> void
     {
         m_ObjectStore.Cleanup();
+        // m_HandleAudit and m_ReportedEpoch are written by the AI thread only: the next map's first tick replaces them.
 
         m_Log.Message("[ObjectTableService] INFO: Cleanup completed.");
     }

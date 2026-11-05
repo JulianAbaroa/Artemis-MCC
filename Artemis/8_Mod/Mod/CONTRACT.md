@@ -35,7 +35,13 @@ Observers must not block.
 
 ## Errors
 A pipeline that cannot start (signature not found, hook not installed) is logged with the reason and the UI and the bridge show the
-phase. A sweep slow enough to stall the game logs the time of every stage.
+phase. A sweep slow enough to stall the game logs the time of every stage. A tick still running when the engine starts tearing down
+(the game thread waits for it only 10 ms and then runs the Cleanup) reads the state again between pipeline stages and before it
+publishes: with the engine TearingDown or Destroyed it stops, publishes no Tick, no bridge frame and runs no observer, and is counted
+(`LifecycleStore` discarded ticks, logged in the teardown INFO). The AI thread also resets its per-map state when the teardown epoch
+changed, even if it never saw TearingDown. This narrows the overlap with the Cleanup, it does not remove it: a stage already running
+can still write a store while the Cleanup empties it (backlog: the AI thread owns the cleanup of its stores). The check and the push are
+two steps, so observers must stay well under 10 ms (as well as not block).
 
 ## Requirements
 - Order of the engine callbacks: engine first, then the tools (Gui, Viewer, Workbench), then the pipeline.

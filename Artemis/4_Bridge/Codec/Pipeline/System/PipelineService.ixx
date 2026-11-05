@@ -35,8 +35,11 @@ export namespace Bridge::Codec::Pipeline::System
 
         // Updates every service from the Snapshot and assembles the Tick of the generation.
         // param endStage: Called after each of the stages of k_PipelineStageNames. Empty to skip it.
+        // param canPublish: Asked after every stage. When it says false the run stops there: the later stages do not run, the Tick is not
+        // assembled and the last one stays as it was (the engine started tearing down while the tick ran, F1 C.7). A stage already
+        // running when the teardown starts still finishes. Empty to always go on.
         auto Run(const Snapshot& snapshot, std::uint64_t generation,
-            const std::function<void()>& endStage) -> void;
+            const std::function<void()>& endStage, const std::function<bool()>& canPublish = {}) -> void;
 
     private:
         Blam::Runtime::Layer& m_Tables;

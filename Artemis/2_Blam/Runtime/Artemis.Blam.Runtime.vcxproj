@@ -76,6 +76,7 @@
     <ClCompile Include="Object\Type\DamageSection\ObjectDamageSection.ixx" />
     <ClCompile Include="Object\Type\ObjectAlive.ixx" />
     <ClCompile Include="Object\Type\ObjectConstant.ixx" />
+    <ClCompile Include="Object\Type\ObjectHandleAudit.ixx" />
     <ClCompile Include="Object\Type\ObjectMultiplayer.ixx" />
     <ClCompile Include="Object\Type\ObjectPlacement.ixx" />
     <ClCompile Include="Object\Type\ObjectProfile.ixx" />

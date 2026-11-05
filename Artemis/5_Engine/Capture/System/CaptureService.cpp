@@ -11,6 +11,10 @@ namespace
     using Blam::Layout::Snapshot::Type::RegionSize;
 
     using Common::Engine::Type::k_MaxObjects;
+    using Common::Engine::Type::k_MaxPlayers;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextObjectDataOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayCapacity;
     using Blam::Layout::Object::Type::Constant::k_EntrySize;
     using Blam::Layout::Object::Type::Constant::k_EntrySaltOffset;
     using Blam::Layout::Object::Type::Constant::k_EntryKindOffset;
@@ -42,8 +46,14 @@ namespace Engine::Capture::System
         const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
         const std::uintptr_t objectTableBase{ m_CaptureStore.GetObjectTableBase() };
 
+        snapshot->TeardownEpoch = m_LifecycleStore.GetTeardownEpoch();
         snapshot->HasThreadContext = threadContext != 0;
         snapshot->HasObjectTable = objectTableBase != 0;
+
+        if (threadContext != 0 && m_CheckedEpoch.load(std::memory_order_relaxed) != snapshot->TeardownEpoch)
+        {
+            this->CheckCapacities(threadContext, snapshot->TeardownEpoch);
+        }
 
         if (objectTableBase != 0) this->CopyObjects(*snapshot, objectTableBase);
 
@@ -67,6 +77,37 @@ namespace Engine::Capture::System
         m_CaptureStore.Publish(snapshot);
 
         return snapshot;
+    }
+
+    auto CaptureService::CheckCapacities(std::uintptr_t threadContext, std::uint64_t epoch) -> void
+    {
+        auto& reader = m_MemoryReaderService;
+
+        const std::uintptr_t objectArray{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextObjectDataOffset) };
+        const std::uintptr_t playerArray{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextTelemetryDataOffset) };
+        if (objectArray == 0 || playerArray == 0) return;
+
+        const std::int32_t objectCapacity{ reader.Read<std::int32_t>(objectArray, k_DataArrayCapacity) };
+        const std::int32_t playerCapacity{ reader.Read<std::int32_t>(playerArray, k_DataArrayCapacity) };
+
+        // A failed read or an array not allocated yet gives 0: nothing is checked, the next tick tries again.
+        if (objectCapacity <= 0 || playerCapacity <= 0) return;
+
+        m_CheckedEpoch.store(epoch, std::memory_order_relaxed);
+
+        if (objectCapacity != static_cast<std::int64_t>(k_MaxObjects))
+        {
+            m_Log.Message("[CaptureService] WARNING: The object table of the engine has {} slots and Artemis assumes {}.",
+                objectCapacity, k_MaxObjects);
+        }
+
+        if (playerCapacity != static_cast<std::int64_t>(k_MaxPlayers))
+        {
+            m_Log.Message("[CaptureService] WARNING: The player table of the engine has {} slots and Artemis assumes {}.",
+                playerCapacity, k_MaxPlayers);
+        }
+
+        m_Log.Message("[CaptureService] INFO: Table capacities checked: objects {}, players {}.", objectCapacity, playerCapacity);
     }
 
     auto CaptureService::CopyObjects(Snapshot& snapshot, std::uintptr_t tableBase) -> void

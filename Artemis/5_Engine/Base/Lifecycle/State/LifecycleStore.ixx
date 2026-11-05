@@ -27,7 +27,7 @@ export namespace Engine::Base::Lifecycle::State
         auto GetStatus() const -> Status;
 
         // Changes the engine status.
-        // note: TearingDown wakes the tick waiters and Initialized wakes the Blam waiters.
+        // note: TearingDown raises the teardown epoch and wakes the tick waiters. Initialized wakes the Blam waiters.
         auto SetStatus(Status value) -> void;
 
         // Mutex and condition variable to wait on until shutdown is signaled.
@@ -65,6 +65,25 @@ export namespace Engine::Base::Lifecycle::State
         // Waits for the Artemis tick in progress to finish.
         // return: False if the timeout expired first.
         auto WaitForTickEnd(milliseconds timeout) -> bool;
+
+        // Whether the Artemis tick in progress may still publish its result (the Tick, the bridge frame and the observers).
+        // return: False once the engine is tearing down or destroyed, because the Cleanup empties the stores the tick keeps writing.
+        // note: Read by the AI thread before it publishes, not only when the tick starts (D271, F1 C.7).
+        auto CanPublish() const -> bool;
+
+        // Teardowns that began since Artemis loaded: SetStatus(TearingDown) raises it. A thread that keeps per-load state compares it with the
+        // value it last reset for, so it also notices a teardown it slept through or a tick that outlasted it (it saw Destroyed, never
+        // TearingDown).
+        auto GetTeardownEpoch() const -> std::uint64_t;
+
+        // Teardowns where the Artemis tick did not end within the wait of the game thread, since Artemis loaded. The Cleanup runs
+        // anyway, the game thread is never held by the AI thread. Raised by the game thread.
+        auto AddTeardownTimeout() -> void;
+        auto GetTeardownTimeouts() const -> std::uint64_t;
+
+        // Ticks that were cut because the engine started tearing down while they ran, since Artemis loaded. Raised by the AI thread.
+        auto AddDiscardedTick() -> void;
+        auto GetDiscardedTicks() const -> std::uint64_t;
 
         // Blocks until the game engine is initialized or Artemis stops.
         auto WaitForBlam() -> void;
@@ -126,6 +145,9 @@ export namespace Engine::Base::Lifecycle::State
         std::atomic<float> m_RequestedTimeScale{ 0.0f };
         std::atomic<bool> m_IsPauseRequested{ false };
         std::atomic<std::uint64_t> m_PausedFrames{ 0 };
+        std::atomic<std::uint64_t> m_TeardownEpoch{ 0 };
+        std::atomic<std::uint64_t> m_TeardownTimeouts{ 0 };
+        std::atomic<std::uint64_t> m_DiscardedTicks{ 0 };
         std::atomic<bool> m_IsEndRoundRequested{ false };
 
         // Wakes every thread blocked on the tick condition variable so they re-check their predicate.

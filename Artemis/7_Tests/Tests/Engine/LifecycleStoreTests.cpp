@@ -206,3 +206,98 @@ TEST_F(LifecycleStoreTests, ResetTickGeneration)
     EXPECT_EQ(m_Store.WaitForTick(0, dropped), 1u);
     EXPECT_EQ(dropped, 0u);
 }
+
+TEST_F(LifecycleStoreTests, CanPublishOnlyBeforeTheTeardown)
+{
+    for (const Status status : { Status::Waiting, Status::Initialized, Status::Running })
+    {
+        m_Store.SetStatus(status);
+        EXPECT_TRUE(m_Store.CanPublish());
+    }
+
+    for (const Status status : { Status::TearingDown, Status::Destroyed })
+    {
+        m_Store.SetStatus(status);
+        EXPECT_FALSE(m_Store.CanPublish());
+    }
+}
+
+TEST_F(LifecycleStoreTests, TeardownCountersStartAtZeroAndCount)
+{
+    EXPECT_EQ(m_Store.GetTeardownTimeouts(), 0u);
+    EXPECT_EQ(m_Store.GetDiscardedTicks(), 0u);
+
+    m_Store.AddTeardownTimeout();
+    m_Store.AddDiscardedTick();
+    m_Store.AddDiscardedTick();
+
+    EXPECT_EQ(m_Store.GetTeardownTimeouts(), 1u);
+    EXPECT_EQ(m_Store.GetDiscardedTicks(), 2u);
+}
+
+// F1 C.7: the game thread does not wait for a long tick past its timeout, and the tick finds the state changed when it ends, so it
+// publishes nothing and is counted. This is the order AIThread::Run follows (BeginTick, work, CanPublish, publish or discard, EndTick).
+TEST_F(LifecycleStoreTests, TickRunningAtTeardownDoesNotPublish)
+{
+    m_Store.SetStatus(Status::Running);
+    m_Store.BeginTick();
+
+    std::atomic<bool> release{ false };
+    std::atomic<bool> published{ false };
+    std::jthread tick{ [&] {
+        while (!release.load()) std::this_thread::sleep_for(milliseconds{ 1 });
+
+        if (m_Store.CanPublish()) published.store(true);
+        else m_Store.AddDiscardedTick();
+        m_Store.EndTick();
+    } };
+
+    // The detour: TearingDown, a wait that expires, the Cleanup goes on.
+    m_Store.SetStatus(Status::TearingDown);
+    if (!m_Store.WaitForTickEnd(milliseconds{ 10 })) m_Store.AddTeardownTimeout();
+
+    release.store(true);
+    tick.join();
+
+    EXPECT_FALSE(published.load());
+    EXPECT_EQ(m_Store.GetTeardownTimeouts(), 1u);
+    EXPECT_EQ(m_Store.GetDiscardedTicks(), 1u);
+    EXPECT_TRUE(m_Store.WaitForTickEnd(milliseconds{ 20 }));
+}
+
+TEST_F(LifecycleStoreTests, TickThatEndsBeforeTheTeardownPublishes)
+{
+    m_Store.SetStatus(Status::Running);
+    m_Store.BeginTick();
+
+    const bool canPublish{ m_Store.CanPublish() };
+    m_Store.EndTick();
+    m_Store.SetStatus(Status::TearingDown);
+
+    EXPECT_TRUE(canPublish);
+    EXPECT_TRUE(m_Store.WaitForTickEnd(milliseconds{ 10 }));
+    EXPECT_EQ(m_Store.GetTeardownTimeouts(), 0u);
+}
+
+TEST_F(LifecycleStoreTests, TeardownEpochGoesUpOnlyWithTearingDown)
+{
+    EXPECT_EQ(m_Store.GetTeardownEpoch(), 0u);
+
+    for (const Status status : { Status::Initialized, Status::Running, Status::Destroyed, Status::Waiting })
+    {
+        m_Store.SetStatus(status);
+        EXPECT_EQ(m_Store.GetTeardownEpoch(), 0u);
+    }
+
+    m_Store.SetStatus(Status::TearingDown);
+    EXPECT_EQ(m_Store.GetTeardownEpoch(), 1u);
+
+    // A thread that only saw Destroyed (it outlasted the teardown) still finds the epoch changed, and so does one that slept until
+    // the next Initialized.
+    m_Store.SetStatus(Status::Destroyed);
+    m_Store.SetStatus(Status::Initialized);
+    EXPECT_EQ(m_Store.GetTeardownEpoch(), 1u);
+
+    m_Store.SetStatus(Status::TearingDown);
+    EXPECT_EQ(m_Store.GetTeardownEpoch(), 2u);
+}

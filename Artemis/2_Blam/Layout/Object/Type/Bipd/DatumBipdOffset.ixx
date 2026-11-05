@@ -11,6 +11,7 @@ export namespace Blam::Layout::Object::Type::Bipd::Offset
     // First datum byte of the component and the byte after its last one.
     constexpr std::size_t k_ComponentStart = 0x9D8;
     constexpr std::size_t k_ComponentEnd = 0xE00;
+    static_assert(k_ComponentEnd == 0xE00, "Bipd fixed size mismatch");
 
     constexpr std::size_t k_BipedFlags                                  = 0x9D8;  // flags32. [Ability Held Copy=17]
     constexpr std::size_t k_Unknown9dc                                  = 0x9DC;  // uint16.

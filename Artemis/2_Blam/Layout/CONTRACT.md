@@ -44,6 +44,7 @@ other region sizes is refused; a file without footer is reported as cut.
 
 ## Requirements
 - Generated files are never edited by hand: change the XML and run `GenerateDatum.py` (`--check` compares byte for byte).
+- The fixed size of the nine concrete types the engine allocates (Bipd 0xE00, Vehi 0xDE8, Weap 0x338, Eqip 0x210, Proj 0x258, Scen 0x1E4, Bloc 0x1B0, Mach 0x2D4, Ctrl 0x2CC) is a table in `GenerateDatum.py` (`EXPECTED_END`), and the generated Offset partition `static_assert`s `k_ComponentEnd` against it.
 - No pointer or address is used to read: `Region::OriginalAddress` is only for tools and logs.
 - Each region is the whole block the engine allocates for it (or the whole array), so a field read later is already in older
   recordings. A new region or a new size raises the `.sdump` version.
