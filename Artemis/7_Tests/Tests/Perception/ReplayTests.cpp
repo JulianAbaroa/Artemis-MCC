@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 import Common.Engine.Type;
-import Common.Hash.System;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
@@ -25,7 +24,7 @@ import Perception.Events.Type;
 import Perception.Match.Type;
 import Perception.Players.Type;
 import Tests.Support.Blam;
-import Tests.Support.Maps;
+import Tests.Support.FilmPass;
 import Tests.Support.Pipeline;
 import Tests.Support.Replay;
 import std;
@@ -41,16 +40,16 @@ namespace
     namespace ObjeOffset = Blam::Layout::Object::Type::Obje::Offset;
 
     using Common::Math::Type::Vec3;
-    using Bridge::Codec::Dump::Type::TickDumpFileHeader;
     using Blam::Layout::Snapshot::Type::Snapshot;
     using Blam::Layout::Snapshot::Type::SnapshotDumpFooter;
     using Blam::Layout::Snapshot::Type::SnapshotLoadInfo;
-    using Blam::Layout::Snapshot::Type::SnapshotReaderState;
-    using Blam::Layout::Snapshot::Type::SnapshotReadStatus;
     using Blam::Layout::Snapshot::Type::SnapshotWriterState;
     using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Blam::Put;
-    using Tests::Support::Maps::MapsFolder;
+    using Tests::Support::FilmPass::FilmOutcome;
+    using Tests::Support::FilmPass::PeakWorkingSetMegabytes;
+    using Tests::Support::FilmPass::RecordingsFolder;
+    using Tests::Support::FilmPass::RunFilmPass;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
     using Tests::Support::Pipeline::WithBipedAndPlayer;
@@ -58,13 +57,13 @@ namespace
     using Tests::Support::Replay::ReplayResult;
     using Tests::Support::Replay::ReplayStatus;
 
-    using Common::Hash::System::FileCrc32;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
     using Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
+    using Common::Engine::Type::k_NoHandle;
     using Contract::Bridge::Type::k_BridgeLayoutHash;
     using Tests::Support::Pipeline::k_BipedHandle;
 
-    constexpr std::string_view k_RecordingsVariable{ "ARTEMIS_RECORDINGS" };
+    constexpr std::string_view k_JobsVariable{ "ARTEMIS_REPLAY_JOBS" };
     constexpr std::string_view k_SyntheticMap{ "synthetic.map" };
 
     // A recording in memory: the two files of one session.
@@ -119,52 +118,6 @@ namespace
         return snapshot;
     }
 
-    // return: ARTEMIS_RECORDINGS if it is set, else Ignore/Regresion of the repository.
-    auto RecordingsFolder() -> std::filesystem::path
-    {
-        char* value{ nullptr };
-        std::size_t length{};
-        std::filesystem::path folder{};
-
-        if (_dupenv_s(&value, &length, k_RecordingsVariable.data()) == 0 && value != nullptr)
-        {
-            folder = value;
-            std::free(value);
-        }
-
-        if (folder.empty())
-        {
-            // This file is Artemis/7_Tests/Tests/Perception/ReplayTests.cpp.
-            const std::filesystem::path source{ std::source_location::current().file_name() };
-            folder = source.parent_path().parent_path().parent_path().parent_path().parent_path() / "Ignore" / "Regresion";
-        }
-
-        return folder;
-    }
-
-    // return: The text of a fixed size array up to its first 0.
-    template <std::size_t N>
-    auto TextOf(const std::array<char, N>& text) -> std::string
-    {
-        return std::string{ text.begin(), std::ranges::find(text, '\0') };
-    }
-
-    // Loads the map of the recording as AIThread::LoadResources does.
-    auto LoadMap(Chain& chain, const std::filesystem::path& mapPath) -> void
-    {
-        const std::filesystem::path folder{ mapPath.parent_path() };
-        std::error_code error{};
-
-        if (std::filesystem::is_regular_file(folder / "shared.map", error)) chain.m_Map.m_MapLoaderService.OpenFile((folder / "shared.map").string());
-        if (std::filesystem::is_regular_file(folder / "campaign.map", error)) chain.m_Map.m_MapLoaderService.OpenFile((folder / "campaign.map").string());
-        chain.m_Map.m_MapLoaderService.OpenFile(mapPath.string());
-
-        chain.m_Map.m_MapBuilderService.LoadForMap();
-        chain.m_Resolved.m_DefinitionsBuilder.BuildForMap();
-        chain.m_Resolved.m_WorldBuilder.BuildForMap();
-        chain.m_Resolved.m_VitalityBuilder.BuildForMap();
-    }
-
     // What the Perception of the ctf_c recording gave at one engine tick.
     struct CtfMoment
     {
@@ -195,7 +148,7 @@ namespace
         std::size_t EngineFlagEvents{};
         // Whether the Sequence of the log grew by one with each event, from 1.
         bool IsSequenceContinuous{ true };
-        // MapId of every Tick the pipeline assembled.
+        // MapId of the Ticks the pipeline assembled in the first records.
         std::set<std::int32_t> MapIds{};
         // Waits of each player (handle index) seen in the Players of the Ticks, in order.
         std::map<std::uint32_t, std::vector<RespawnWait>> Waits{};
@@ -234,87 +187,749 @@ namespace
         }
     }
 
-    // Replays the recording of a capture film record by record and keeps what the Perception gave at the engine ticks asked for.
-    // param film: Folder of Ignore/Regresion (ctf_c, cgb_displace_1min).
-    // param ticks: Engine ticks (Match.GameTick) to keep.
-    // param last: Receives the moment of the last record.
-    // param run: Receives the events of the whole recording.
-    // param maxRecords: Records to replay at most.
-    // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunCtfRecording(std::string_view film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, CtfMoment>& moments, CtfMoment& last, CtfRun& run,
-        std::size_t maxRecords = std::numeric_limits<std::size_t>::max()) -> std::string
+    // What the Perception gave over a ctf film that the tests ask for: the moments of the engine ticks asked for, the last one and the
+    // run. The state of the observer is at the end.
+    struct CtfData
     {
-        const std::filesystem::path directory{ RecordingsFolder() / film };
-        std::error_code error{};
-        if (!std::filesystem::is_regular_file(directory / "golden.sdump", error)) return "No recording in " + directory.string();
+        std::map<std::uint32_t, CtfMoment> Moments{};
+        CtfMoment Last{};
+        CtfRun Run{};
 
-        std::ifstream sdump{ directory / "golden.sdump", std::ios::binary };
-        SnapshotReaderState reader{};
-        if (const std::string reason{ SnapshotCodec::OpenReader(sdump, reader) }; !reason.empty()) return reason;
-        auto next{ SnapshotCodec::ReadRecord(sdump, reader) };
-        if (next.Status != SnapshotReadStatus::Record || !next.Record.LoadInfo) return "the .sdump does not start at a map load";
+        std::map<std::uint32_t, RespawnSample> Previous{};
+        std::uint32_t LastSequence{};
+        std::shared_ptr<const Perception::Match::Type::MatchStatus> LastMatch{};
+        std::shared_ptr<const Perception::Details::Type::ObjectiveDetails> LastObjectives{};
+    };
 
-        const std::string mapName{ TextOf(next.Record.LoadInfo->MapFileName) };
-        const std::filesystem::path mapPath{ MapsFolder() / mapName };
-        if (!std::filesystem::is_regular_file(mapPath, error) || std::filesystem::file_size(mapPath, error) != next.Record.LoadInfo->MapFileSize)
+    // What the Perception gave about the weapons, the projectiles and the entities at one engine tick of an armas recording.
+    struct ArmasMoment
+    {
+        Perception::Details::Type::WeaponDetails Weapons{};
+        Perception::Details::Type::ProjectileDetails Projectiles{};
+        std::shared_ptr<const Perception::Entities::Type::Entities> Entities{};
+        std::shared_ptr<const Perception::Players::Type::Players> Players{};
+    };
+
+    // The blasts of the explosives of the explosivos recording.
+    struct ExplosiveData
+    {
+        // Per subtype: (RadiusMin, RadiusMax, Damage) of every tick.
+        std::map<std::uint8_t, std::set<std::tuple<float, float, float>>> Blasts{};
+        std::set<std::uint32_t> Handles{};
+        // Live explosives without a detail, and details without an entity.
+        std::size_t Missing{};
+        std::size_t Orphans{};
+    };
+
+    // The ground and the crouch of the body of player 0 at one engine tick of the suelo recording, with the contact the engine gave.
+    struct SueloMoment
+    {
+        Perception::Players::Type::GroundKind Ground{};
+        bool IsGrounded{};
+        std::uint32_t AirborneTicks{};
+        std::uint32_t GroundObject{};
+        float OwnZ{};
+        float Crouch{};
+        bool IsCrouching{};
+        std::uint32_t EngineGroundObject{};
+    };
+
+    // A tick of the suelo recording in which the player 0 had another biped than the expected one.
+    struct WrongBiped
+    {
+        std::uint32_t BipedHandle{};
+        std::uint32_t GameTick{};
+    };
+
+    struct SueloData
+    {
+        std::map<std::uint32_t, SueloMoment> Moments{};
+        std::vector<WrongBiped> WrongBipeds{};
+    };
+
+    // The checks of the ground of every body of a film.
+    struct GroundData
+    {
+        std::size_t Bodies{};
+        // The texts of the checks that failed.
+        std::vector<std::string> Failures{};
+    };
+
+    // What the first exit of a lift looked like when the lift published it.
+    struct LiftSeen
+    {
+        std::uint32_t ExitTick{};
+        Common::Math::Type::Vec3 ExitVelocity{};
+        std::uint32_t ExitBiped{};
+        std::size_t StageCount{};
+        Common::Math::Type::Vec3 LastDirection{};
+        float Acceleration{};
+        float MaximumVelocity{};
+    };
+
+    struct LiftExitData
+    {
+        std::map<std::uint32_t, LiftSeen> Seen{};
+        std::set<std::uint32_t> ExitBeforeFirst{};
+        std::size_t EmptyStages{};
+    };
+
+    // The checks of the lifts, the bipeds in a phantom and the powerups of every body of a film.
+    struct LiftScanData
+    {
+        std::size_t EmptyStages{};
+        std::size_t InPhantom{};
+        std::size_t WithoutLift{};
+        std::size_t WithPowerup{};
+    };
+
+    // The traits of the players of ctf_c: the gravity of all and the jump height of the player 0.
+    struct GravityData
+    {
+        std::map<std::uint32_t, float> JumpAt{};
+        std::vector<std::pair<std::uint32_t, Common::Semantic::Type::Event>> Carries{};
+        std::size_t GravityViolations{};
+        std::size_t Samples{};
+        std::set<float> Jumps{};
+
+        std::uint32_t LastTick{};
+        std::uint32_t LastSequence{};
+    };
+
+    // The base traits of the players of the lifts film.
+    struct BaseTraitsData
+    {
+        std::size_t Samples{};
+        std::size_t Violations{};
+    };
+
+    // What the player 0 had at one engine tick of the powerups recording.
+    struct PowerupSample
+    {
+        Common::Semantic::Type::Subtype::Powerup Powerup{};
+        std::uint32_t Ticks{};
+        float DamageResistance{};
+        std::uint8_t ActiveCamo{};
+        std::array<std::uint32_t, 3> Durations{};
+    };
+
+    auto Dot(const Common::Math::Type::Vec3& a, const Common::Math::Type::Vec3& b) -> float
+    {
+        return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+    }
+
+    auto Speed(const Common::Math::Type::Vec3& v) -> float
+    {
+        return std::sqrt(Dot(v, v));
+    }
+
+    // Everything the tests gather from one film. A film is replayed once (D269): its observers fill this on the thread of the pass and
+    // the tests assert on it afterwards.
+    struct FilmResult
+    {
+        FilmOutcome Pass{};
+        CtfData Ctf{};
+        std::map<std::uint32_t, ArmasMoment> Armas{};
+        ExplosiveData Explosives{};
+        SueloData Suelo{};
+        GroundData Ground{};
+        LiftExitData LiftExit{};
+        LiftScanData LiftScan{};
+        GravityData Gravity{};
+        BaseTraitsData BaseTraits{};
+        // The last Match of the film.
+        std::shared_ptr<const Perception::Match::Type::MatchStatus> LastMatch{};
+        std::map<std::uint32_t, PowerupSample> Powerups{};
+    };
+
+    // Engine ticks that the tests ask for in each film.
+    const std::vector<std::uint32_t> k_CtfCObjectiveTicks{ 1950, 1960, 4283, 5000, 7870, 15000, 17700, 21300, 28600, 30000 };
+    const std::vector<std::uint32_t> k_CtfCClockTicks{ 3001, 11502, 11563, 15001 };
+    const std::vector<std::uint32_t> k_CgbRoundTicks{ 100, 604 };
+    const std::vector<std::uint32_t> k_CtfDTicks{ 1501, 7801, 8161, 9001, 12656 };
+    const std::vector<std::uint32_t> k_ArmasATicks{ 2250, 2300, 2580, 2640, 3300, 4420, 4500, 4540, 5000, 5880, 5950, 6231, 6300, 6410,
+        7300, 7400, 7480, 8000, 8500, 8550, 8560, 10765, 10780, 10800, 13790, 13810 };
+    const std::vector<std::uint32_t> k_ArmasBTicks{ 1300, 1320, 1420, 1900, 2250, 2310, 2400, 3155, 7700 };
+
+    constexpr std::size_t k_MapIdRecords{ 600 };
+    constexpr std::uint32_t k_SueloBiped{ 0xE5B30344 };
+
+    // What each observer of the pass has to keep in a film: the observers that read the same stores share one pass.
+    struct FilmPlan
+    {
+        bool IsCtf{};
+        bool IsArmas{};
+        bool IsExplosives{};
+        bool IsSuelo{};
+        bool IsGround{};
+        bool IsLiftExit{};
+        bool IsLiftScan{};
+        bool IsGravity{};
+        bool IsBaseTraits{};
+        bool IsLastMatch{};
+        bool IsPowerups{};
+        std::vector<std::uint32_t> CtfTicks{};
+        std::vector<std::uint32_t> ArmasTicks{};
+    };
+
+    // return: The observers and the ticks of a film, the union of what the tests that use it ask for.
+    auto PlanOf(std::string_view film) -> FilmPlan
+    {
+        const auto isOneOf{ [&](std::initializer_list<std::string_view> films) { return std::ranges::contains(films, film); } };
+
+        FilmPlan plan{};
+        plan.IsCtf = isOneOf({ "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" });
+        plan.IsArmas = isOneOf({ "armas_a", "armas_b" });
+        plan.IsExplosives = film == "explosivos";
+        plan.IsSuelo = film == "suelo";
+        plan.IsGround = isOneOf({ "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" });
+        plan.IsLiftExit = film == "lifts";
+        plan.IsLiftScan = isOneOf({ "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts" });
+        plan.IsGravity = film == "ctf_c";
+        plan.IsBaseTraits = film == "lifts";
+        plan.IsLastMatch = isOneOf({ "ctf_c", "cgb_displace_1min" });
+        plan.IsPowerups = film == "powerups";
+
+        if (film == "ctf_c")
         {
-            return mapPath.string() + " not found or not the map of the recording";
+            plan.CtfTicks = k_CtfCObjectiveTicks;
+            plan.CtfTicks.insert(plan.CtfTicks.end(), k_CtfCClockTicks.begin(), k_CtfCClockTicks.end());
+        }
+        if (film == "cgb_displace_1min") plan.CtfTicks = k_CgbRoundTicks;
+        if (film == "ctf_d") plan.CtfTicks = k_CtfDTicks;
+        if (film == "armas_a") plan.ArmasTicks = k_ArmasATicks;
+        if (film == "armas_b") plan.ArmasTicks = k_ArmasBTicks;
+        return plan;
+    }
+
+    // return: What the Perception gave at one record, as a moment of a ctf film.
+    auto MomentOf(const Perception::Match::Type::MatchStatus& match, const Perception::Details::Type::ObjectiveDetails& objectives) -> CtfMoment
+    {
+        return CtfMoment{ .RoundIndex = match.RoundIndex, .TeamScores = match.TeamScores, .Objectives = objectives,
+            .RoundClockTicks = match.RoundClockTicks, .RoundTicksRemaining = match.RoundTicksRemaining,
+            .RoundTimeLimitTicks = match.RoundTimeLimitTicks, .RoundLimit = match.RoundLimit, .ScoreToWin = match.ScoreToWin };
+    }
+
+    // Keeps what the Perception gave at the engine ticks asked for, the events of the run and the respawn waits.
+    // param record: Number of the record, counted from 1.
+    auto ObserveCtf(const Chain& chain, std::size_t record, const std::vector<std::uint32_t>& ticks, CtfData& data) -> void
+    {
+        CtfRun& run{ data.Run };
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        if (const auto tick{ chain.m_Export.m_TickStore.Acquire() }; tick)
+        {
+            if (record <= k_MapIdRecords) run.MapIds.insert(tick->MapId);
+            if (match && tick->Players) NoteRespawns(*tick->Players, match->GameTick, data.Previous, run);
+        }
+        const auto objectives{ chain.m_Environment.m_ObjectiveDetailsStore.Acquire() };
+        if (match && objectives)
+        {
+            if (std::ranges::contains(ticks, match->GameTick)) data.Moments[match->GameTick] = MomentOf(*match, *objectives);
+            data.LastMatch = match;
+            data.LastObjectives = objectives;
         }
 
-        auto chain{ std::make_unique<Chain>() };
-        LoadMap(*chain, mapPath);
+        const auto log{ chain.m_Environment.m_EventsStore.Acquire() };
+        if (!log) return;
 
-        std::uint32_t lastSequence{ 0 };
-        std::size_t records{ 0 };
-        std::map<std::uint32_t, RespawnSample> previous{};
-        for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record && records < maxRecords; isFirst = false)
+        for (const auto& event : log->Rows)
         {
-            if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
+            if (event.Sequence <= data.LastSequence) continue;
 
-            ++records;
-            chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
-            const auto match{ chain->m_Environment.m_MatchStore.Acquire() };
-            if (const auto tick{ chain->m_Export.m_TickStore.Acquire() }; tick)
-            {
-                run.MapIds.insert(tick->MapId);
-                if (match && tick->Players) NoteRespawns(*tick->Players, match->GameTick, previous, run);
-            }
-            const auto objectives{ chain->m_Environment.m_ObjectiveDetailsStore.Acquire() };
-            if (match && objectives)
-            {
-                CtfMoment moment{ .RoundIndex = match->RoundIndex, .TeamScores = match->TeamScores, .Objectives = *objectives,
-                    .RoundClockTicks = match->RoundClockTicks, .RoundTicksRemaining = match->RoundTicksRemaining,
-                    .RoundTimeLimitTicks = match->RoundTimeLimitTicks, .RoundLimit = match->RoundLimit, .ScoreToWin = match->ScoreToWin };
-                if (std::ranges::contains(ticks, match->GameTick)) moments[match->GameTick] = moment;
-                last = std::move(moment);
-            }
+            if (event.Sequence != data.LastSequence + 1) run.IsSequenceContinuous = false;
+            data.LastSequence = event.Sequence;
 
-            const auto log{ chain->m_Environment.m_EventsStore.Acquire() };
-            if (log)
+            const bool isFlag{ event.Kind >= Common::Semantic::Type::Event::FlagTaken && event.Kind <= Common::Semantic::Type::Event::FlagCaptured };
+            if (event.Kind == Common::Semantic::Type::Event::Death) run.Deaths.push_back(event);
+            if (event.EngineSequence == 0) run.Generated.push_back(event);
+            else if (isFlag) ++run.EngineFlagEvents;
+        }
+    }
+
+    // Keeps the weapon and projectile details at the engine ticks asked for.
+    auto ObserveArmas(const Chain& chain, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments) -> void
+    {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto weapons{ chain.m_Environment.m_WeaponDetailsStore.Acquire() };
+        const auto projectiles{ chain.m_Environment.m_ProjectileDetailsStore.Acquire() };
+        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        if (match && weapons && projectiles && std::ranges::contains(ticks, match->GameTick))
+        {
+            moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles, .Entities = entities, .Players = players };
+        }
+    }
+
+    auto ObserveExplosives(const Chain& chain, ExplosiveData& data) -> void
+    {
+        using Common::Semantic::Type::Function;
+
+        const auto details{ chain.m_Environment.m_ExplosiveDetailsStore.Acquire() };
+        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+        if (!details || !entities) return;
+
+        std::size_t live{ 0 };
+        for (const auto& entity : entities->Rows)
+        {
+            if (entity.Function != Function::Explosive) continue;
+
+            ++live;
+            data.Handles.insert(entity.Handle);
+            const auto it{ details->find(entity.Handle) };
+            if (it == details->end()) { ++data.Missing; continue; }
+
+            data.Blasts[entity.Subtype].insert({ it->second.RadiusMin, it->second.RadiusMax, it->second.Damage });
+        }
+        if (details->size() > live) data.Orphans += details->size() - live;
+    }
+
+    // Keeps the ground and the crouch of the player 0 at every engine tick.
+    auto ObserveSuelo(const Chain& chain, SueloData& data) -> void
+    {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (!match || !players || !objects || players->Rows.empty() || !players->Rows[0].Body) return;
+
+        const auto& row{ players->Rows[0] };
+        const auto& body{ *row.Body };
+        const auto objectIt{ objects->find(row.BipedHandle) };
+        const auto* biped{ objectIt == objects->end() ? nullptr : std::get_if<Blam::Runtime::Object::Type::Biped::Biped>(&objectIt->second.Specific) };
+        data.Moments[match->GameTick] = SueloMoment{ .Ground = body.Ground, .IsGrounded = body.IsGrounded, .AirborneTicks = body.AirborneTicks,
+            .GroundObject = body.GroundObject, .OwnZ = body.OwnVelocity.Z, .Crouch = body.CrouchFraction, .IsCrouching = body.IsCrouching,
+            .EngineGroundObject = biped ? biped->GroundObjectHandle : 0 };
+        if (row.BipedHandle != k_SueloBiped) data.WrongBipeds.push_back(WrongBiped{ .BipedHandle = row.BipedHandle, .GameTick = match->GameTick });
+    }
+
+    // Checks that the ground of every body is consistent with the contact of its biped.
+    auto ObserveGround(const Chain& chain, std::string_view film, GroundData& data) -> void
+    {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (!match || !players || !objects) return;
+
+        for (const auto& row : players->Rows)
+        {
+            if (!row.Body) continue;
+
+            const auto objectIt{ objects->find(row.BipedHandle) };
+            if (objectIt == objects->end()) continue;
+            const auto* biped{ std::get_if<Blam::Runtime::Object::Type::Biped::Biped>(&objectIt->second.Specific) };
+            if (!biped) continue;
+
+            ++data.Bodies;
+            const auto& body{ *row.Body };
+            const bool hasContact{ objectIt->second.ParentHandle == k_NoHandle && biped->ContactMaterial != Blam::Runtime::Object::Type::Biped::k_NoContact };
+            const auto fail{ [&](std::string_view text) { data.Failures.push_back(std::format("{} {}: {}", film, match->GameTick, text)); } };
+            if (body.AirborneTicks > 0 && hasContact) fail("airborne with contact");
+            if (body.AirborneTicks >= 3 && body.IsGrounded) fail("grounded after 3 ticks");
+            if (hasContact && !body.IsGrounded) fail("contact but not grounded");
+            if (body.IsCrouching != (body.CrouchFraction >= 0.5f)) fail("crouch");
+        }
+    }
+
+    // Keeps the first exit of every lift.
+    auto ObserveLiftExit(const Chain& chain, LiftExitData& data) -> void
+    {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
+        if (!match || !lifts) return;
+
+        for (const auto& [handle, lift] : *lifts)
+        {
+            if (lift.Stages.empty()) ++data.EmptyStages;
+            if (!lift.HasExit || data.Seen.contains(handle)) continue;
+
+            // The exit is published from the tick it happens, so the first tick with it is the tick of the exit.
+            if (lift.ExitTick != match->GameTick) data.ExitBeforeFirst.insert(handle);
+            data.Seen[handle] = LiftSeen{ .ExitTick = lift.ExitTick, .ExitVelocity = lift.ExitVelocity, .ExitBiped = lift.ExitBiped,
+                .StageCount = lift.Stages.size(),
+                .LastDirection = lift.Stages.empty() ? Common::Math::Type::Vec3{} : lift.Stages.back().Direction,
+                .Acceleration = lift.Stages.empty() ? 0.0f : lift.Stages.back().Acceleration,
+                .MaximumVelocity = lift.Stages.empty() ? 0.0f : lift.Stages.back().MaximumVelocity };
+        }
+    }
+
+    // Counts the lifts without stages, the bipeds in a phantom with no lift near and the players with a powerup.
+    auto ObserveLiftScan(const Chain& chain, LiftScanData& data) -> void
+    {
+        constexpr float k_OwnerRadius{ 3.0f };
+
+        // A18 (D263): only the powerups film has custom powerups. Checked here to replay each film once.
+        if (const auto players{ chain.m_Environment.m_PlayersStore.Acquire() })
+        {
+            for (const auto& player : players->Rows)
             {
-                for (const auto& event : log->Rows)
+                if (player.Powerup != Common::Semantic::Type::Subtype::Powerup::None || player.PowerupTicks != 0) ++data.WithPowerup;
+            }
+        }
+
+        const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (!lifts || !objects) return;
+
+        for (const auto& entry : *lifts)
+        {
+            if (entry.second.Stages.empty()) ++data.EmptyStages;
+        }
+
+        for (const auto& [handle, object] : *objects)
+        {
+            if (object.Profile.ObjectKind != Blam::MapModel::Definitions::Type::Object::ObjectKind::Biped || !object.IsInPhantom) continue;
+
+            ++data.InPhantom;
+            bool isNear{ false };
+            for (const auto& entry : *lifts)
+            {
+                const auto liftIt{ objects->find(entry.first) };
+                if (liftIt == objects->end()) continue;
+
+                const Common::Math::Type::Vec3 d{ liftIt->second.WorldOrigin.X - object.WorldOrigin.X, liftIt->second.WorldOrigin.Y - object.WorldOrigin.Y,
+                    liftIt->second.WorldOrigin.Z - object.WorldOrigin.Z };
+                if (Speed(d) <= k_OwnerRadius) isNear = true;
+            }
+            if (!isNear) ++data.WithoutLift;
+        }
+    }
+
+    // Keeps the flag events of the player 0 and the gravity and jump height of the players.
+    auto ObserveGravity(const Chain& chain, GravityData& data) -> void
+    {
+        using Common::Semantic::Type::Event;
+
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        const auto log{ chain.m_Environment.m_EventsStore.Acquire() };
+        if (log)
+        {
+            for (const auto& event : log->Rows)
+            {
+                if (event.Sequence <= data.LastSequence) continue;
+                data.LastSequence = event.Sequence;
+                if (event.EngineSequence == 0 && (event.Kind == Event::FlagTaken || event.Kind == Event::FlagDropped) && (event.CausePlayer & 0xFFFF) == 0)
                 {
-                    if (event.Sequence <= lastSequence) continue;
+                    data.Carries.emplace_back(event.GameTick, event.Kind);
+                }
+            }
+        }
 
-                    if (event.Sequence != lastSequence + 1) run.IsSequenceContinuous = false;
-                    lastSequence = event.Sequence;
+        if (!match || !players || match->GameTick == data.LastTick) return;
+        data.LastTick = match->GameTick;
+        for (const auto& player : players->Rows)
+        {
+            ++data.Samples;
+            if (player.Traits.Gravity != 0.75f) ++data.GravityViolations;
+            if ((player.Handle & 0xFFFF) == 0)
+            {
+                data.JumpAt[match->GameTick] = player.Traits.JumpHeight;
+                data.Jumps.insert(player.Traits.JumpHeight);
+            }
+        }
+    }
 
-                    const bool isFlag{ event.Kind >= Common::Semantic::Type::Event::FlagTaken && event.Kind <= Common::Semantic::Type::Event::FlagCaptured };
-                    if (event.Kind == Common::Semantic::Type::Event::Death) run.Deaths.push_back(event);
-                    if (event.EngineSequence == 0) run.Generated.push_back(event);
-                    else if (isFlag) ++run.EngineFlagEvents;
+    auto ObserveBaseTraits(const Chain& chain, BaseTraitsData& data) -> void
+    {
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        if (!players) return;
+
+        for (const auto& player : players->Rows)
+        {
+            ++data.Samples;
+            if (player.Traits.Gravity != 0.75f || player.Traits.MovementSpeed != 1.1f) ++data.Violations;
+        }
+    }
+
+    // Keeps the player 0 at every engine tick.
+    auto ObservePowerups(const Chain& chain, std::map<std::uint32_t, PowerupSample>& samples) -> void
+    {
+        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        if (!match || !players || players->Rows.empty()) return;
+
+        const auto& player{ players->Rows.front() };
+        samples[match->GameTick] = PowerupSample{ .Powerup = player.Powerup, .Ticks = player.PowerupTicks,
+            .DamageResistance = player.Traits.DamageResistance, .ActiveCamo = player.Traits.ActiveCamo, .Durations = match->PowerupDurationTicks };
+    }
+
+    // Replays a film once and gathers what the tests that use it ask for.
+    auto GatherFilm(const std::string& film, bool isCompared) -> std::shared_ptr<const FilmResult>
+    {
+        const FilmPlan plan{ PlanOf(film) };
+        auto result{ std::make_shared<FilmResult>() };
+
+        result->Pass = RunFilmPass(film, isCompared, [&](const Chain& chain, std::size_t record)
+        {
+            if (plan.IsCtf) ObserveCtf(chain, record, plan.CtfTicks, result->Ctf);
+            if (plan.IsArmas) ObserveArmas(chain, plan.ArmasTicks, result->Armas);
+            if (plan.IsExplosives) ObserveExplosives(chain, result->Explosives);
+            if (plan.IsSuelo) ObserveSuelo(chain, result->Suelo);
+            if (plan.IsGround) ObserveGround(chain, film, result->Ground);
+            if (plan.IsLiftExit) ObserveLiftExit(chain, result->LiftExit);
+            if (plan.IsLiftScan) ObserveLiftScan(chain, result->LiftScan);
+            if (plan.IsGravity) ObserveGravity(chain, result->Gravity);
+            if (plan.IsBaseTraits) ObserveBaseTraits(chain, result->BaseTraits);
+            if (plan.IsPowerups) ObservePowerups(chain, result->Powerups);
+            if (plan.IsLastMatch)
+            {
+                if (const auto match{ chain.m_Environment.m_MatchStore.Acquire() }; match) result->LastMatch = match;
+            }
+        });
+
+        CtfData& ctf{ result->Ctf };
+        if (ctf.LastMatch && ctf.LastObjectives) ctf.Last = MomentOf(*ctf.LastMatch, *ctf.LastObjectives);
+        ctf.LastMatch.reset();
+        ctf.LastObjectives.reset();
+        return result;
+    }
+
+    // The films of each test of ReplayTests. A test that is not here may use any film.
+    struct TestFilms
+    {
+        std::string_view Test{};
+        std::vector<std::string_view> Films{};
+    };
+
+    const std::vector<TestFilms> k_TestFilms{
+        { "CtfObjectivesFollowTheRecordedMatch", { "ctf_c" } },
+        { "CtfFlagEventsMatchTheExpectedList", { "ctf_c" } },
+        { "CgbFlagsAreTakenAndDroppedSixTimesEachAndNothingElse", { "cgb_displace_1min" } },
+        { "CtfCRoundClockIsAStopwatchWithoutLimit", { "ctf_c" } },
+        { "MapIdIsTheSameNonZeroValueInEachFilm", { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" } },
+        { "RespawnTicksCountDownOnePerGameTickOnlyWithoutBody", { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" } },
+        { "CgbRoundHasOneRoundAndItsClockWaitsForTheEndOfThePreRound", { "cgb_displace_1min" } },
+        { "CtfDRoundCountsDownFromTheTimeLimit", { "ctf_d" } },
+        { "ArmasAWeaponsAndProjectilesFollowTheRecordedFilm", { "armas_a" } },
+        { "ArmasBMagazinesReservesAndBatteryFollowTheRecordedFilm", { "armas_b" } },
+        { "ExplosivesCarryTheBlastOfTheirTags", { "explosivos" } },
+        { "SueloGroundAndCrouchFollowTheRecordedFilm", { "suelo" } },
+        { "GroundIsConsistentWithTheContactInEveryFilm",
+            { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" } },
+        { "LiftsCarryTheStagesOfTheirTagsAndTheMeasuredExitOfTheLiftsFilm", { "lifts" } },
+        { "EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift",
+            { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts" } },
+        { "CtfCGravityIsConstantAndJumpHeightFollowsTheFlagOfThePlayer0", { "ctf_c" } },
+        { "LiftsFilmPlayersHaveTheBaseGravityAndSpeed", { "lifts" } },
+        { "VariantSettingsOfCtfCAndCgbMatchTheirGametypes", { "ctf_c", "cgb_displace_1min" } },
+        { "PowerupsFilmGivesTheMeasuredPowerupAtEachMoment", { "powerups" } },
+        { "PowerupsFilmCountsDownOnePerTickAndTheTraitsFollowOneTickLater", { "powerups" } },
+        { "SyntheticRecordingReplaysEqual", {} },
+        { "CorruptedObjectDiffers", {} },
+        { "NotFromLoadIsSkipped", {} },
+        { "SecondLoadStopsTheReplay", {} } };
+
+    // return: The films of Ignore/Regresion that have golden.sdump and, if asked, golden.tdump, sorted by name.
+    auto FilmsWithGolden(bool isTdumpNeeded) -> std::vector<std::string>
+    {
+        std::vector<std::string> films{};
+        std::error_code error{};
+        for (const auto& entry : std::filesystem::directory_iterator(RecordingsFolder(), error))
+        {
+            if (entry.is_directory() && std::filesystem::is_regular_file(entry.path() / "golden.sdump", error) &&
+                (!isTdumpNeeded || std::filesystem::is_regular_file(entry.path() / "golden.tdump", error)))
+            {
+                films.push_back(entry.path().filename().string());
+            }
+        }
+
+        std::ranges::sort(films);
+        return films;
+    }
+
+    // return: How many passes may run at once: ARTEMIS_REPLAY_JOBS if it is set, else the hardware threads.
+    auto ReplayJobs() -> std::size_t
+    {
+        char* value{ nullptr };
+        std::size_t length{};
+        std::size_t jobs{ 0 };
+
+        if (_dupenv_s(&value, &length, k_JobsVariable.data()) == 0 && value != nullptr)
+        {
+            jobs = static_cast<std::size_t>(std::strtoul(value, nullptr, 10));
+            std::free(value);
+        }
+
+        if (jobs == 0) jobs = std::thread::hardware_concurrency();
+        return (std::max)(jobs, std::size_t{ 1 });
+    }
+
+    // The passes of the process: each film is replayed once, on a small pool of threads that takes the biggest .sdump first, and the
+    // tests wait for the film they need (D269).
+    class FilmPasses
+    {
+    public:
+        // Starts the passes of the films that were not started yet.
+        // param films: Film and whether its records are compared with golden.tdump.
+        auto Launch(const std::map<std::string, bool>& films) -> void
+        {
+            auto batch{ std::make_shared<Batch>() };
+            {
+                const std::scoped_lock lock{ m_Mutex };
+                for (const auto& [film, isCompared] : films)
+                {
+                    if (m_Results.contains(film)) continue;
+
+                    Job& job{ batch->Jobs.emplace_back() };
+                    job.Film = film;
+                    job.IsCompared = isCompared;
+                    m_Results.emplace(film, job.Promise.get_future().share());
+                }
+            }
+            if (batch->Jobs.empty()) return;
+
+            // The biggest first: the suite takes as long as the longest film if it starts at once.
+            std::error_code error{};
+            const auto sizeOf{ [&](const Job& job) { return std::filesystem::file_size(RecordingsFolder() / job.Film / "golden.sdump", error); } };
+            std::ranges::stable_sort(batch->Jobs, [&](const Job& a, const Job& b) { return sizeOf(a) > sizeOf(b); });
+
+            m_Jobs = (std::min)(ReplayJobs(), batch->Jobs.size());
+            batch->Active = m_Jobs;
+            for (std::size_t i{ 0 }; i < m_Jobs; ++i) m_Workers.emplace_back([this, batch] { this->Work(*batch); });
+        }
+
+        // return: The result of the film, waiting for its pass to end. The pass runs on this thread if nobody started it.
+        auto Get(const std::string& film) -> const FilmResult&
+        {
+            std::shared_future<std::shared_ptr<const FilmResult>> future{};
+            std::promise<std::shared_ptr<const FilmResult>> promise{};
+            bool isOwner{ false };
+            {
+                const std::scoped_lock lock{ m_Mutex };
+                if (const auto it{ m_Results.find(film) }; it != m_Results.end())
+                {
+                    future = it->second;
+                }
+                else
+                {
+                    future = promise.get_future().share();
+                    m_Results.emplace(film, future);
+                    isOwner = true;
                 }
             }
 
-            next = SnapshotCodec::ReadRecord(sdump, reader);
+            if (isOwner) promise.set_value(this->Run(film, false));
+            return *future.get();
         }
 
-        return {};
-    }
+        // Waits for the passes that are still running.
+        auto Join() -> void
+        {
+            m_Workers.clear();
+        }
+
+    private:
+        struct Job
+        {
+            std::string Film{};
+            bool IsCompared{};
+            std::promise<std::shared_ptr<const FilmResult>> Promise{};
+        };
+
+        struct Batch
+        {
+            std::vector<Job> Jobs{};
+            std::atomic<std::size_t> Next{ 0 };
+            std::atomic<std::size_t> Active{ 0 };
+        };
+
+        auto Work(Batch& batch) -> void
+        {
+            for (;;)
+            {
+                const std::size_t index{ batch.Next.fetch_add(1) };
+                if (index >= batch.Jobs.size()) break;
+
+                Job& job{ batch.Jobs[index] };
+                job.Promise.set_value(this->Run(job.Film, job.IsCompared));
+            }
+
+            if (batch.Active.fetch_sub(1) != 1) return;
+
+            const std::scoped_lock lock{ m_Output };
+            std::cout << std::format("[ REPLAY MEM ] peak working set {} MB, {} jobs, hardware_concurrency {}\n", PeakWorkingSetMegabytes(), m_Jobs,
+                std::thread::hardware_concurrency()) << std::flush;
+        }
+
+        // return: The result of the pass. An exception that escapes the pass is the error of the film.
+        auto Run(const std::string& film, bool isCompared) -> std::shared_ptr<const FilmResult>
+        {
+            std::shared_ptr<const FilmResult> result{};
+            try
+            {
+                result = GatherFilm(film, isCompared);
+            }
+            catch (const std::exception& exception)
+            {
+                auto failed{ std::make_shared<FilmResult>() };
+                failed->Pass.Error = std::format("exception in the pass of {}: {}", film, exception.what());
+                result = failed;
+            }
+
+            if (result->Pass.Skip.empty())
+            {
+                const std::scoped_lock lock{ m_Output };
+                std::cout << std::format("[  REPLAY  ] {}: {} records in {:.1f} s\n", film, result->Pass.Records, result->Pass.Seconds) << std::flush;
+            }
+            return result;
+        }
+
+        std::mutex m_Mutex{};
+        std::mutex m_Output{};
+        std::map<std::string, std::shared_future<std::shared_ptr<const FilmResult>>> m_Results{};
+        std::vector<std::jthread> m_Workers{};
+        std::size_t m_Jobs{ 1 };
+    };
 
     class ReplayTests : public ::testing::Test
     {
     protected:
+        // Starts the passes of the films that the tests selected by the filter need, so they run at once while the first tests wait.
+        static auto SetUpTestSuite() -> void
+        {
+            std::map<std::string, bool> films{};
+            const auto want{ [&](const std::string& film, bool isCompared) { films[film] = films[film] || isCompared; } };
+
+            const ::testing::UnitTest& unit{ *::testing::UnitTest::GetInstance() };
+            for (int suiteIndex{ 0 }; suiteIndex < unit.total_test_suite_count(); ++suiteIndex)
+            {
+                const ::testing::TestSuite& suite{ *unit.GetTestSuite(suiteIndex) };
+                if (std::string_view{ suite.name() } != "ReplayTests") continue;
+
+                for (int testIndex{ 0 }; testIndex < suite.total_test_count(); ++testIndex)
+                {
+                    const ::testing::TestInfo& info{ *suite.GetTestInfo(testIndex) };
+                    if (!info.should_run()) continue;
+
+                    const std::string_view name{ info.name() };
+                    if (name == "Recordings")
+                    {
+                        for (const std::string& film : FilmsWithGolden(true)) want(film, true);
+                    }
+                    else if (const auto it{ std::ranges::find(k_TestFilms, name, &TestFilms::Test) }; it != k_TestFilms.end())
+                    {
+                        for (const std::string_view film : it->Films) want(std::string{ film }, false);
+                    }
+                    else
+                    {
+                        for (const std::string& film : FilmsWithGolden(false)) want(film, false);
+                    }
+                }
+            }
+
+            s_Passes.Launch(films);
+        }
+
+        static auto TearDownTestSuite() -> void
+        {
+            s_Passes.Join();
+        }
+
+        // return: What the pass over the film gathered, waiting for the pass to end.
+        static auto Film(const std::string& film) -> const FilmResult&
+        {
+            return s_Passes.Get(film);
+        }
+
         auto SetUp() -> void override
         {
             FillSyntheticTags(m_Recorder.m_Map);
@@ -329,6 +944,9 @@ namespace
 
         Chain m_Recorder{};
         Chain m_Replayer{};
+
+    private:
+        static inline FilmPasses s_Passes{};
     };
 }
 
@@ -410,12 +1028,12 @@ namespace
 
 TEST_F(ReplayTests, CtfObjectivesFollowTheRecordedMatch)
 {
-    const std::vector<std::uint32_t> ticks{ 1950, 1960, 4283, 5000, 7870, 15000, 17700, 21300, 28600, 30000 };
-    std::map<std::uint32_t, CtfMoment> moments{};
-    CtfMoment last{};
-    CtfRun run{};
-    const std::string reason{ RunCtfRecording("ctf_c", ticks, moments, last, run) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const std::vector<std::uint32_t>& ticks{ k_CtfCObjectiveTicks };
+    const FilmResult& film{ Film("ctf_c") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Ctf.Moments };
+    const auto& last{ film.Ctf.Last };
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
 
@@ -493,11 +1111,10 @@ TEST_F(ReplayTests, CtfFlagEventsMatchTheExpectedList)
     const std::vector<ExpectedEvent> expected{ ReadExpectedEvents() };
     if (expected.empty()) GTEST_SKIP() << "No Ignore/Regresion/ctf_c/esperado.txt";
 
-    std::map<std::uint32_t, CtfMoment> moments{};
-    CtfMoment last{};
-    CtfRun run{};
-    const std::string reason{ RunCtfRecording("ctf_c", {}, moments, last, run) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("ctf_c") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& run{ film.Ctf.Run };
 
     EXPECT_EQ(run.EngineFlagEvents, 0u);
     EXPECT_TRUE(run.IsSequenceContinuous);
@@ -536,11 +1153,11 @@ TEST_F(ReplayTests, CtfFlagEventsMatchTheExpectedList)
 
 TEST_F(ReplayTests, CgbFlagsAreTakenAndDroppedSixTimesEachAndNothingElse)
 {
-    std::map<std::uint32_t, CtfMoment> moments{};
-    CtfMoment last{};
-    CtfRun run{};
-    const std::string reason{ RunCtfRecording("cgb_displace_1min", {}, moments, last, run) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("cgb_displace_1min") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& last{ film.Ctf.Last };
+    const auto& run{ film.Ctf.Run };
 
     EXPECT_EQ(run.EngineFlagEvents, 0u);
     EXPECT_TRUE(run.IsSequenceContinuous);
@@ -565,12 +1182,11 @@ TEST_F(ReplayTests, CgbFlagsAreTakenAndDroppedSixTimesEachAndNothingElse)
 
 TEST_F(ReplayTests, CtfCRoundClockIsAStopwatchWithoutLimit)
 {
-    const std::vector<std::uint32_t> ticks{ 3001, 11502, 11563, 15001 };
-    std::map<std::uint32_t, CtfMoment> moments{};
-    CtfMoment last{};
-    CtfRun run{};
-    const std::string reason{ RunCtfRecording("ctf_c", ticks, moments, last, run) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const std::vector<std::uint32_t>& ticks{ k_CtfCClockTicks };
+    const FilmResult& film{ Film("ctf_c") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Ctf.Moments };
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
 
@@ -594,17 +1210,15 @@ TEST_F(ReplayTests, CtfCRoundClockIsAStopwatchWithoutLimit)
 TEST_F(ReplayTests, MapIdIsTheSameNonZeroValueInEachFilm)
 {
     // The golden.tdump of each film holds the MapId of every tick. Here the first records are enough.
-    constexpr std::size_t k_MapIdRecords{ 600 };
     constexpr std::int32_t k_MapId{ 3006 };
 
     for (const std::string_view film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" })
     {
         SCOPED_TRACE(film);
-        std::map<std::uint32_t, CtfMoment> moments{};
-        CtfMoment last{};
-        CtfRun run{};
-        const std::string reason{ RunCtfRecording(film, {}, moments, last, run, k_MapIdRecords) };
-        if (!reason.empty()) { std::cout << "[  SKIPPED ] " << film << ": " << reason << "\n"; continue; }
+        const FilmResult& result{ Film(std::string{ film }) };
+        if (!result.Pass.Error.empty()) { ADD_FAILURE() << result.Pass.Error; continue; }
+        if (!result.Pass.Skip.empty()) { std::cout << "[  SKIPPED ] " << film << ": " << result.Pass.Skip << "\n"; continue; }
+        const auto& run{ result.Ctf.Run };
 
         // The five films are on the same base map.
         EXPECT_EQ(run.MapIds, std::set<std::int32_t>{ k_MapId });
@@ -618,11 +1232,10 @@ TEST_F(ReplayTests, RespawnTicksCountDownOnePerGameTickOnlyWithoutBody)
     for (const std::string_view film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b" })
     {
         SCOPED_TRACE(film);
-        std::map<std::uint32_t, CtfMoment> moments{};
-        CtfMoment last{};
-        CtfRun run{};
-        const std::string reason{ RunCtfRecording(film, {}, moments, last, run) };
-        if (!reason.empty()) { std::cout << "[  SKIPPED ] " << film << ": " << reason << "\n"; continue; }
+        const FilmResult& result{ Film(std::string{ film }) };
+        if (!result.Pass.Error.empty()) { ADD_FAILURE() << result.Pass.Error; continue; }
+        if (!result.Pass.Skip.empty()) { std::cout << "[  SKIPPED ] " << film << ": " << result.Pass.Skip << "\n"; continue; }
+        const auto& run{ result.Ctf.Run };
 
         // A player that waits has no Body, and the wait goes down exactly one per GameTick.
         EXPECT_EQ(run.RespawnViolations, 0u);
@@ -630,7 +1243,11 @@ TEST_F(ReplayTests, RespawnTicksCountDownOnePerGameTickOnlyWithoutBody)
         if (film != "ctf_c") continue;
 
         // Measured on ctf_c: the waits (start, value, end) of the players of the handle index 0, 14 and 15.
-        const auto waitsOf = [&](std::uint32_t index) { return run.Waits[index]; };
+        const auto waitsOf = [&](std::uint32_t index)
+        {
+            const auto it{ run.Waits.find(index) };
+            return it == run.Waits.end() ? std::vector<RespawnWait>{} : it->second;
+        };
         const auto expectWait = [](const RespawnWait& wait, std::uint32_t start, std::uint32_t value, std::uint32_t end)
         {
             EXPECT_EQ(wait.StartTick, start);
@@ -664,12 +1281,11 @@ TEST_F(ReplayTests, RespawnTicksCountDownOnePerGameTickOnlyWithoutBody)
 
 TEST_F(ReplayTests, CgbRoundHasOneRoundAndItsClockWaitsForTheEndOfThePreRound)
 {
-    const std::vector<std::uint32_t> ticks{ 100, 604 };
-    std::map<std::uint32_t, CtfMoment> moments{};
-    CtfMoment last{};
-    CtfRun run{};
-    const std::string reason{ RunCtfRecording("cgb_displace_1min", ticks, moments, last, run) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const std::vector<std::uint32_t>& ticks{ k_CgbRoundTicks };
+    const FilmResult& film{ Film("cgb_displace_1min") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Ctf.Moments };
 
     for (const std::uint32_t tick : ticks)
     {
@@ -682,12 +1298,11 @@ TEST_F(ReplayTests, CgbRoundHasOneRoundAndItsClockWaitsForTheEndOfThePreRound)
 
 TEST_F(ReplayTests, CtfDRoundCountsDownFromTheTimeLimit)
 {
-    const std::vector<std::uint32_t> ticks{ 1501, 7801, 8161, 9001, 12656 };
-    std::map<std::uint32_t, CtfMoment> moments{};
-    CtfMoment last{};
-    CtfRun run{};
-    const std::string reason{ RunCtfRecording("ctf_d", ticks, moments, last, run) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const std::vector<std::uint32_t>& ticks{ k_CtfDTicks };
+    const FilmResult& film{ Film("ctf_d") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Ctf.Moments };
 
     for (const std::uint32_t tick : ticks)
     {
@@ -712,81 +1327,28 @@ TEST_F(ReplayTests, CtfDRoundCountsDownFromTheTimeLimit)
 TEST_F(ReplayTests, Recordings)
 {
     const std::filesystem::path folder{ RecordingsFolder() };
-
-    std::vector<std::filesystem::path> recordings{};
-    std::error_code error{};
-    for (const auto& entry : std::filesystem::directory_iterator(folder, error))
-    {
-        if (entry.is_directory() && std::filesystem::is_regular_file(entry.path() / "golden.sdump", error) &&
-            std::filesystem::is_regular_file(entry.path() / "golden.tdump", error))
-        {
-            recordings.push_back(entry.path());
-        }
-    }
-
+    const std::vector<std::string> recordings{ FilmsWithGolden(true) };
     if (recordings.empty()) GTEST_SKIP() << "No recording (golden.sdump and golden.tdump) in " << folder.string();
 
     std::size_t replayed{ 0 };
     std::string skipped{};
 
-    for (const std::filesystem::path& directory : recordings)
+    for (const std::string& name : recordings)
     {
+        const std::filesystem::path directory{ folder / name };
         SCOPED_TRACE(directory.string());
 
-        std::ifstream sdump{ directory / "golden.sdump", std::ios::binary };
-        std::ifstream tdump{ directory / "golden.tdump", std::ios::binary };
-
-        // The map the recording was made with.
-        SnapshotReaderState reader{};
-        const std::string openReason{ SnapshotCodec::OpenReader(sdump, reader) };
-        const auto first{ openReason.empty() ? SnapshotCodec::ReadRecord(sdump, reader) : Blam::Layout::Snapshot::Type::SnapshotReadResult{} };
-        if (!openReason.empty() || first.Status != SnapshotReadStatus::Record || !first.Record.LoadInfo)
+        const FilmOutcome& pass{ Film(name).Pass };
+        if (!pass.Error.empty()) { ADD_FAILURE() << pass.Error; continue; }
+        if (!pass.RecordingsFailure.empty()) { ADD_FAILURE() << pass.RecordingsFailure; continue; }
+        if (!pass.Warning.empty()) std::cout << "[  WARNING ] " << pass.Warning << "\n";
+        if (!pass.Skip.empty() || !pass.IsCompared)
         {
-            ADD_FAILURE() << directory.string() << ": the .sdump cannot be read or does not start at a map load. " << openReason << first.Reason;
+            skipped += pass.RecordingsSkip;
             continue;
         }
 
-        const std::string mapName{ TextOf(first.Record.LoadInfo->MapFileName) };
-        const std::filesystem::path mapPath{ MapsFolder() / mapName };
-        const std::uintmax_t mapSize{ std::filesystem::is_regular_file(mapPath, error) ? std::filesystem::file_size(mapPath, error) : 0 };
-        if (mapSize == 0)
-        {
-            skipped += mapPath.string() + " not found. ";
-            continue;
-        }
-        if (mapSize != first.Record.LoadInfo->MapFileSize)
-        {
-            skipped += std::format("{} has {} bytes, the recording was made with {}. ", mapPath.string(), mapSize, first.Record.LoadInfo->MapFileSize);
-            continue;
-        }
-
-        // The footer holds the CRC-32 of the map of the session. A file without footer or without CRC is checked by size only.
-        SnapshotDumpFooter footer{};
-        sdump.clear();
-        sdump.seekg(-static_cast<std::streamoff>(sizeof(footer)), std::ios::end);
-        sdump.read(reinterpret_cast<char*>(&footer), sizeof(footer));
-        if (sdump.gcount() == static_cast<std::streamsize>(sizeof(footer)) && footer.Marker == k_SnapshotDumpEndMarker &&
-            footer.HasCrc != 0 && TextOf(footer.MapFileName) == mapName)
-        {
-            const std::optional<std::uint32_t> crc{ FileCrc32(mapPath) };
-            if (!crc || *crc != footer.MapCrc32)
-            {
-                skipped += std::format("{} has another CRC-32 than the recording ({:08X}). ", mapPath.string(), footer.MapCrc32);
-                continue;
-            }
-        }
-        else
-        {
-            std::cout << "[  WARNING ] " << directory.string() << ": no CRC-32 of the map in the footer, checked by size only.\n";
-        }
-
-        auto chain{ std::make_unique<Chain>() };
-        LoadMap(*chain, mapPath);
-
-        sdump.clear();
-        sdump.seekg(0);
-        const ReplayResult result{ Replay(chain->m_Export, sdump, tdump) };
-
+        const ReplayResult& result{ pass.Comparison };
         if (result.Status == ReplayStatus::Skipped)
         {
             skipped += directory.string() + ": " + result.Reason + ". ";
@@ -794,39 +1356,18 @@ TEST_F(ReplayTests, Recordings)
         }
 
         ++replayed;
-        const std::filesystem::path replayPath{ directory / "replay.tdump" };
-        if (result.Status == ReplayStatus::Differs || result.Status == ReplayStatus::LayoutChanged)
+        if (result.Status == ReplayStatus::LayoutChanged)
         {
-            // The records the pipeline gave, in a complete .tdump to compare with tools/tickdump.py diff and to approve with
-            // tools/tickdump.py approve: the name, the start and the source of the recording, the layout of this build and a footer with
-            // the counters of the run (a replay drops no tick and loses no event).
-            std::ifstream golden{ directory / "golden.tdump", std::ios::binary };
-            TickDumpFileHeader header{};
-            golden.read(reinterpret_cast<char*>(&header), sizeof(header));
-
-            std::ofstream replay{ replayPath, std::ios::binary | std::ios::trunc };
-            TickCodec::WriteFileHeader(replay, TextOf(header.MapName), TextOf(header.StartTime), TextOf(header.Source));
-            replay.write(result.Replayed.data(), static_cast<std::streamsize>(result.Replayed.size()));
-            TickCodec::WriteFooter(replay, Bridge::Codec::Dump::Type::TickDumpCounters{ .RecordedTicks = result.Records });
-
-            if (result.Status == ReplayStatus::LayoutChanged)
-            {
-                ADD_FAILURE() << result.Reason << ": python Tools/tickdump.py diff golden.tdump replay.tdump";
-            }
-            else
-            {
-                ADD_FAILURE() << std::format("record {} (GameTick {}): python Tools/tickdump.py diff golden.tdump replay.tdump",
-                    result.FirstDifference, result.GameTick);
-            }
+            ADD_FAILURE() << result.Reason << ": python Tools/tickdump.py diff golden.tdump replay.tdump";
+        }
+        else if (result.Status == ReplayStatus::Differs)
+        {
+            ADD_FAILURE() << std::format("record {} (GameTick {}): python Tools/tickdump.py diff golden.tdump replay.tdump",
+                result.FirstDifference, result.GameTick);
         }
         else if (result.Status != ReplayStatus::Equal)
         {
             ADD_FAILURE() << result.Reason;
-        }
-        else
-        {
-            // A replay.tdump left by an earlier difference would be taken for the result of this run.
-            std::filesystem::remove(replayPath, error);
         }
     }
 
@@ -837,70 +1378,6 @@ TEST_F(ReplayTests, Recordings)
 
 namespace
 {
-    // What the Perception gave about the weapons, the projectiles and the entities at one engine tick of an armas recording.
-    struct ArmasMoment
-    {
-        Perception::Details::Type::WeaponDetails Weapons{};
-        Perception::Details::Type::ProjectileDetails Projectiles{};
-        std::shared_ptr<const Perception::Entities::Type::Entities> Entities{};
-        std::shared_ptr<const Perception::Players::Type::Players> Players{};
-    };
-
-    // Replays the recording of that name record by record, up to the next map load, and calls onRecord with the chain after each one.
-    // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto ReplayRecording(const std::string& film, const std::function<void(const Chain&)>& onRecord) -> std::string
-    {
-        const std::filesystem::path directory{ RecordingsFolder() / film };
-        std::error_code error{};
-        if (!std::filesystem::is_regular_file(directory / "golden.sdump", error)) return "No recording in " + directory.string();
-
-        std::ifstream sdump{ directory / "golden.sdump", std::ios::binary };
-        SnapshotReaderState reader{};
-        if (const std::string reason{ SnapshotCodec::OpenReader(sdump, reader) }; !reason.empty()) return reason;
-        auto next{ SnapshotCodec::ReadRecord(sdump, reader) };
-        if (next.Status != SnapshotReadStatus::Record || !next.Record.LoadInfo) return "the .sdump does not start at a map load";
-
-        const std::string mapName{ TextOf(next.Record.LoadInfo->MapFileName) };
-        const std::filesystem::path mapPath{ MapsFolder() / mapName };
-        if (!std::filesystem::is_regular_file(mapPath, error) || std::filesystem::file_size(mapPath, error) != next.Record.LoadInfo->MapFileSize)
-        {
-            return mapPath.string() + " not found or not the map of the recording";
-        }
-
-        auto chain{ std::make_unique<Chain>() };
-        LoadMap(*chain, mapPath);
-
-        for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record; isFirst = false)
-        {
-            if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
-
-            chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
-            onRecord(*chain);
-
-            next = SnapshotCodec::ReadRecord(sdump, reader);
-        }
-
-        return {};
-    }
-
-    // Replays the recording of that name (armas_a, armas_b) and keeps the weapon and projectile details at the engine ticks asked for.
-    // return: Empty if it ran, else the reason it cannot run here (no recording, map not found).
-    auto RunArmasRecording(const std::string& film, const std::vector<std::uint32_t>& ticks, std::map<std::uint32_t, ArmasMoment>& moments)
-        -> std::string
-    {
-        return ReplayRecording(film, [&](const Chain& chain) {
-            const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
-            const auto weapons{ chain.m_Environment.m_WeaponDetailsStore.Acquire() };
-            const auto projectiles{ chain.m_Environment.m_ProjectileDetailsStore.Acquire() };
-            const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
-            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-            if (match && weapons && projectiles && std::ranges::contains(ticks, match->GameTick))
-            {
-                moments[match->GameTick] = ArmasMoment{ .Weapons = *weapons, .Projectiles = *projectiles, .Entities = entities, .Players = players };
-            }
-        });
-    }
-
     constexpr std::uint32_t k_Player0{ 0xEC700000 };
     constexpr std::uint32_t k_Biped0{ 0xE43301C4 };
     constexpr std::uint32_t k_Dmr{ 0xE43701C8 };
@@ -920,11 +1397,11 @@ TEST_F(ReplayTests, ArmasAWeaponsAndProjectilesFollowTheRecordedFilm)
     using Common::Semantic::Type::ChargeState;
     using Common::Engine::Type::k_NoHandle;
 
-    const std::vector<std::uint32_t> ticks{ 2250, 2300, 2580, 2640, 3300, 4420, 4500, 4540, 5000, 5880, 5950, 6231, 6300, 6410,
-        7300, 7400, 7480, 8000, 8500, 8550, 8560, 10765, 10780, 10800, 13790, 13810 };
-    std::map<std::uint32_t, ArmasMoment> moments{};
-    const std::string reason{ RunArmasRecording("armas_a", ticks, moments) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const std::vector<std::uint32_t>& ticks{ k_ArmasATicks };
+    const FilmResult& film{ Film("armas_a") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Armas };
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
 
@@ -1023,10 +1500,11 @@ TEST_F(ReplayTests, ArmasAWeaponsAndProjectilesFollowTheRecordedFilm)
 
 TEST_F(ReplayTests, ArmasBMagazinesReservesAndBatteryFollowTheRecordedFilm)
 {
-    const std::vector<std::uint32_t> ticks{ 1300, 1320, 1420, 1900, 2250, 2310, 2400, 3155, 7700 };
-    std::map<std::uint32_t, ArmasMoment> moments{};
-    const std::string reason{ RunArmasRecording("armas_b", ticks, moments) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const std::vector<std::uint32_t>& ticks{ k_ArmasBTicks };
+    const FilmResult& film{ Film("armas_b") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Armas };
 
     for (const std::uint32_t tick : ticks) ASSERT_TRUE(moments.contains(tick)) << "no record at engine tick " << tick;
 
@@ -1069,31 +1547,13 @@ TEST_F(ReplayTests, ExplosivesCarryTheBlastOfTheirTags)
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Subtype::Explosive;
 
-    // Per subtype: (RadiusMin, RadiusMax, Damage) of every tick, and the live explosives without a detail or details without an entity.
-    std::map<std::uint8_t, std::set<std::tuple<float, float, float>>> blasts{};
-    std::set<std::uint32_t> handles{};
-    std::size_t missing{ 0 };
-    std::size_t orphans{ 0 };
-    const std::string reason{ ReplayRecording("explosivos", [&](const Chain& chain) {
-        const auto details{ chain.m_Environment.m_ExplosiveDetailsStore.Acquire() };
-        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
-        if (!details || !entities) return;
-
-        std::size_t live{ 0 };
-        for (const auto& entity : entities->Rows)
-        {
-            if (entity.Function != Function::Explosive) continue;
-
-            ++live;
-            handles.insert(entity.Handle);
-            const auto it{ details->find(entity.Handle) };
-            if (it == details->end()) { ++missing; continue; }
-
-            blasts[entity.Subtype].insert({ it->second.RadiusMin, it->second.RadiusMax, it->second.Damage });
-        }
-        if (details->size() > live) orphans += details->size() - live;
-    }) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("explosivos") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    auto blasts{ film.Explosives.Blasts };
+    const auto& handles{ film.Explosives.Handles };
+    const std::size_t missing{ film.Explosives.Missing };
+    const std::size_t orphans{ film.Explosives.Orphans };
 
     EXPECT_EQ(missing, 0u);
     EXPECT_EQ(orphans, 0u);
@@ -1119,22 +1579,6 @@ TEST_F(ReplayTests, ExplosivesCarryTheBlastOfTheirTags)
 
 namespace
 {
-    // The ground and the crouch of the body of player 0 at one engine tick of the suelo recording, with the contact the engine gave.
-    struct SueloMoment
-    {
-        Perception::Players::Type::GroundKind Ground{};
-        bool IsGrounded{};
-        std::uint32_t AirborneTicks{};
-        std::uint32_t GroundObject{};
-        float OwnZ{};
-        float Crouch{};
-        bool IsCrouching{};
-        std::uint32_t EngineGroundObject{};
-    };
-
-    using Common::Engine::Type::k_NoHandle;
-
-    constexpr std::uint32_t k_SueloBiped{ 0xE5B30344 };
     constexpr std::uint32_t k_SueloBlock{ 0xE4030194 };
     constexpr std::uint32_t k_SueloSecondBlock{ 0xE33B00CC };
     constexpr std::uint32_t k_SueloWarthog{ 0xE34000D1 };
@@ -1145,23 +1589,11 @@ TEST_F(ReplayTests, SueloGroundAndCrouchFollowTheRecordedFilm)
 {
     using Perception::Players::Type::GroundKind;
 
-    std::map<std::uint32_t, SueloMoment> moments{};
-    const std::string reason{ ReplayRecording("suelo", [&](const Chain& chain) {
-        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
-        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
-        if (!match || !players || !objects || players->Rows.empty() || !players->Rows[0].Body) return;
-
-        const auto& row{ players->Rows[0] };
-        const auto& body{ *row.Body };
-        const auto objectIt{ objects->find(row.BipedHandle) };
-        const auto* biped{ objectIt == objects->end() ? nullptr : std::get_if<Blam::Runtime::Object::Type::Biped::Biped>(&objectIt->second.Specific) };
-        moments[match->GameTick] = SueloMoment{ .Ground = body.Ground, .IsGrounded = body.IsGrounded, .AirborneTicks = body.AirborneTicks,
-            .GroundObject = body.GroundObject, .OwnZ = body.OwnVelocity.Z, .Crouch = body.CrouchFraction, .IsCrouching = body.IsCrouching,
-            .EngineGroundObject = biped ? biped->GroundObjectHandle : 0 };
-        EXPECT_EQ(row.BipedHandle, k_SueloBiped) << "GameTick " << match->GameTick;
-    }) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("suelo") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& moments{ film.Suelo.Moments };
+    for (const WrongBiped& row : film.Suelo.WrongBipeds) EXPECT_EQ(row.BipedHandle, k_SueloBiped) << "GameTick " << row.GameTick;
 
     const auto at{ [&](std::uint32_t tick) -> const SueloMoment&
     {
@@ -1263,38 +1695,17 @@ TEST_F(ReplayTests, GroundIsConsistentWithTheContactInEveryFilm)
     std::string skipped{};
     for (const std::string film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" })
     {
-        std::size_t bodies{ 0 };
-        const std::string reason{ ReplayRecording(film, [&](const Chain& chain) {
-            const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
-            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-            const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
-            if (!match || !players || !objects) return;
-
-            for (const auto& row : players->Rows)
-            {
-                if (!row.Body) continue;
-
-                const auto objectIt{ objects->find(row.BipedHandle) };
-                if (objectIt == objects->end()) continue;
-                const auto* biped{ std::get_if<Blam::Runtime::Object::Type::Biped::Biped>(&objectIt->second.Specific) };
-                if (!biped) continue;
-
-                ++bodies;
-                const auto& body{ *row.Body };
-                const bool hasContact{ objectIt->second.ParentHandle == k_NoHandle && biped->ContactMaterial != Blam::Runtime::Object::Type::Biped::k_NoContact };
-                if (body.AirborneTicks > 0 && hasContact) ADD_FAILURE() << film << " " << match->GameTick << ": airborne with contact";
-                if (body.AirborneTicks >= 3 && body.IsGrounded) ADD_FAILURE() << film << " " << match->GameTick << ": grounded after 3 ticks";
-                if (hasContact && !body.IsGrounded) ADD_FAILURE() << film << " " << match->GameTick << ": contact but not grounded";
-                if (body.IsCrouching != (body.CrouchFraction >= 0.5f)) ADD_FAILURE() << film << " " << match->GameTick << ": crouch";
-            }
-        }) };
-        if (!reason.empty())
+        const FilmResult& result{ Film(film) };
+        if (!result.Pass.Error.empty()) { ADD_FAILURE() << result.Pass.Error; continue; }
+        if (!result.Pass.Skip.empty())
         {
-            skipped += reason + ". ";
+            skipped += result.Pass.Skip + ". ";
             continue;
         }
+
         ++replayed;
-        EXPECT_GT(bodies, 0u) << film;
+        for (const std::string& failure : result.Ground.Failures) ADD_FAILURE() << failure;
+        EXPECT_GT(result.Ground.Bodies, 0u) << film;
     }
 
     if (replayed == 0) GTEST_SKIP() << skipped;
@@ -1319,28 +1730,6 @@ namespace
         // saturate (the exit is not along the stage).
         float MinimumDot{};
     };
-
-    // What the first exit of a lift looked like when the lift published it.
-    struct LiftSeen
-    {
-        std::uint32_t ExitTick{};
-        Common::Math::Type::Vec3 ExitVelocity{};
-        std::uint32_t ExitBiped{};
-        std::size_t StageCount{};
-        Common::Math::Type::Vec3 LastDirection{};
-        float Acceleration{};
-        float MaximumVelocity{};
-    };
-
-    auto Dot(const Common::Math::Type::Vec3& a, const Common::Math::Type::Vec3& b) -> float
-    {
-        return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-    }
-
-    auto Speed(const Common::Math::Type::Vec3& v) -> float
-    {
-        return std::sqrt(Dot(v, v));
-    }
 }
 
 TEST_F(ReplayTests, LiftsCarryTheStagesOfTheirTagsAndTheMeasuredExitOfTheLiftsFilm)
@@ -1359,29 +1748,12 @@ TEST_F(ReplayTests, LiftsCarryTheStagesOfTheirTagsAndTheMeasuredExitOfTheLiftsFi
         { 0xE42A01BB, 8822, 3.408f, 2, 20.0f, 3.5f, 0.99f },
         { 0xE42B01BC, 9362, 7.915f, 2, 15.0f, 8.0f, 0.99f } };
 
-    std::map<std::uint32_t, LiftSeen> seen{};
-    std::set<std::uint32_t> exitBeforeFirst{};
-    std::size_t emptyStages{ 0 };
-    const std::string reason{ ReplayRecording("lifts", [&](const Chain& chain) {
-        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
-        const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
-        if (!match || !lifts) return;
-
-        for (const auto& [handle, lift] : *lifts)
-        {
-            if (lift.Stages.empty()) ++emptyStages;
-            if (!lift.HasExit || seen.contains(handle)) continue;
-
-            // The exit is published from the tick it happens, so the first tick with it is the tick of the exit.
-            if (lift.ExitTick != match->GameTick) exitBeforeFirst.insert(handle);
-            seen[handle] = LiftSeen{ .ExitTick = lift.ExitTick, .ExitVelocity = lift.ExitVelocity, .ExitBiped = lift.ExitBiped,
-                .StageCount = lift.Stages.size(),
-                .LastDirection = lift.Stages.empty() ? Common::Math::Type::Vec3{} : lift.Stages.back().Direction,
-                .Acceleration = lift.Stages.empty() ? 0.0f : lift.Stages.back().Acceleration,
-                .MaximumVelocity = lift.Stages.empty() ? 0.0f : lift.Stages.back().MaximumVelocity };
-        }
-    }) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("lifts") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& seen{ film.LiftExit.Seen };
+    const auto& exitBeforeFirst{ film.LiftExit.ExitBeforeFirst };
+    const std::size_t emptyStages{ film.LiftExit.EmptyStages };
 
     EXPECT_EQ(emptyStages, 0u);
     EXPECT_TRUE(exitBeforeFirst.empty());
@@ -1424,57 +1796,19 @@ TEST_F(ReplayTests, EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift)
     std::string skipped{};
     for (const std::string film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts" })
     {
-        std::size_t emptyStages{ 0 };
-        std::size_t inPhantom{ 0 };
-        std::size_t withoutLift{ 0 };
-        std::size_t withPowerup{ 0 };
-        const std::string reason{ ReplayRecording(film, [&](const Chain& chain) {
-            // A18 (D263): only the powerups film has custom powerups. Checked here to replay each film once.
-            if (const auto players{ chain.m_Environment.m_PlayersStore.Acquire() })
-            {
-                for (const auto& player : players->Rows)
-                {
-                    if (player.Powerup != Common::Semantic::Type::Subtype::Powerup::None || player.PowerupTicks != 0) ++withPowerup;
-                }
-            }
-
-            const auto lifts{ chain.m_Environment.m_LiftDetailsStore.Acquire() };
-            const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
-            if (!lifts || !objects) return;
-
-            for (const auto& entry : *lifts)
-            {
-                if (entry.second.Stages.empty()) ++emptyStages;
-            }
-
-            for (const auto& [handle, object] : *objects)
-            {
-                if (object.Profile.ObjectKind != Blam::MapModel::Definitions::Type::Object::ObjectKind::Biped || !object.IsInPhantom) continue;
-
-                ++inPhantom;
-                bool isNear{ false };
-                for (const auto& entry : *lifts)
-                {
-                    const auto liftIt{ objects->find(entry.first) };
-                    if (liftIt == objects->end()) continue;
-
-                    const Common::Math::Type::Vec3 d{ liftIt->second.WorldOrigin.X - object.WorldOrigin.X, liftIt->second.WorldOrigin.Y - object.WorldOrigin.Y,
-                        liftIt->second.WorldOrigin.Z - object.WorldOrigin.Z };
-                    if (Speed(d) <= k_OwnerRadius) isNear = true;
-                }
-                if (!isNear) ++withoutLift;
-            }
-        }) };
-        if (!reason.empty())
+        const FilmResult& result{ Film(film) };
+        if (!result.Pass.Error.empty()) { ADD_FAILURE() << result.Pass.Error; continue; }
+        if (!result.Pass.Skip.empty())
         {
-            skipped += reason + ". ";
+            skipped += result.Pass.Skip + ". ";
             continue;
         }
 
         ++replayed;
-        std::cout << std::format("[ Lift ] {}: {} biped ticks in a phantom, {} without a lift within {} wu\n", film, inPhantom, withoutLift, k_OwnerRadius);
-        EXPECT_EQ(emptyStages, 0u) << film;
-        EXPECT_EQ(withPowerup, 0u) << film;
+        const LiftScanData& scan{ result.LiftScan };
+        std::cout << std::format("[ Lift ] {}: {} biped ticks in a phantom, {} without a lift within {} wu\n", film, scan.InPhantom, scan.WithoutLift, k_OwnerRadius);
+        EXPECT_EQ(scan.EmptyStages, 0u) << film;
+        EXPECT_EQ(scan.WithPowerup, 0u) << film;
     }
 
     if (replayed == 0) GTEST_SKIP() << skipped;
@@ -1486,44 +1820,14 @@ TEST_F(ReplayTests, CtfCGravityIsConstantAndJumpHeightFollowsTheFlagOfThePlayer0
 {
     using Common::Semantic::Type::Event;
 
-    std::map<std::uint32_t, float> jumpAt{};
-    std::vector<std::pair<std::uint32_t, Event>> carries{};
-    std::size_t gravityViolations{ 0 };
-    std::size_t samples{ 0 };
-    std::set<float> jumps{};
-    std::uint32_t lastTick{ 0 };
-    std::uint32_t lastSequence{ 0 };
-    const std::string reason{ ReplayRecording("ctf_c", [&](const Chain& chain) {
-        const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
-        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-        const auto log{ chain.m_Environment.m_EventsStore.Acquire() };
-        if (log)
-        {
-            for (const auto& event : log->Rows)
-            {
-                if (event.Sequence <= lastSequence) continue;
-                lastSequence = event.Sequence;
-                if (event.EngineSequence == 0 && (event.Kind == Event::FlagTaken || event.Kind == Event::FlagDropped) && (event.CausePlayer & 0xFFFF) == 0)
-                {
-                    carries.emplace_back(event.GameTick, event.Kind);
-                }
-            }
-        }
-
-        if (!match || !players || match->GameTick == lastTick) return;
-        lastTick = match->GameTick;
-        for (const auto& player : players->Rows)
-        {
-            ++samples;
-            if (player.Traits.Gravity != 0.75f) ++gravityViolations;
-            if ((player.Handle & 0xFFFF) == 0)
-            {
-                jumpAt[match->GameTick] = player.Traits.JumpHeight;
-                jumps.insert(player.Traits.JumpHeight);
-            }
-        }
-    }) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("ctf_c") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& jumpAt{ film.Gravity.JumpAt };
+    const auto& carries{ film.Gravity.Carries };
+    const std::size_t gravityViolations{ film.Gravity.GravityViolations };
+    const std::size_t samples{ film.Gravity.Samples };
+    const auto& jumps{ film.Gravity.Jumps };
 
     EXPECT_GT(samples, 0u);
     EXPECT_EQ(gravityViolations, 0u);
@@ -1564,19 +1868,11 @@ TEST_F(ReplayTests, CtfCGravityIsConstantAndJumpHeightFollowsTheFlagOfThePlayer0
 
 TEST_F(ReplayTests, LiftsFilmPlayersHaveTheBaseGravityAndSpeed)
 {
-    std::size_t samples{ 0 };
-    std::size_t violations{ 0 };
-    const std::string reason{ ReplayRecording("lifts", [&](const Chain& chain) {
-        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-        if (!players) return;
-
-        for (const auto& player : players->Rows)
-        {
-            ++samples;
-            if (player.Traits.Gravity != 0.75f || player.Traits.MovementSpeed != 1.1f) ++violations;
-        }
-    }) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("lifts") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const std::size_t samples{ film.BaseTraits.Samples };
+    const std::size_t violations{ film.BaseTraits.Violations };
 
     EXPECT_GT(samples, 0u);
     EXPECT_EQ(violations, 0u);
@@ -1598,11 +1894,10 @@ TEST_F(ReplayTests, VariantSettingsOfCtfCAndCgbMatchTheirGametypes)
     for (const Expected& want : { Expected{ "ctf_c", 300, 0, 0, 0, 0, { 600, 600, 600 } }, Expected{ "cgb_displace_1min", 300, 0, 0, 0, 300, { 360, 900, 5400 } } })
     {
         SCOPED_TRACE(want.Film);
-        std::shared_ptr<const Perception::Match::Type::MatchStatus> last{};
-        const std::string reason{ ReplayRecording(std::string{ want.Film }, [&](const Chain& chain) {
-            if (const auto match{ chain.m_Environment.m_MatchStore.Acquire() }; match) last = match;
-        }) };
-        if (!reason.empty()) { std::cout << "[  SKIPPED ] " << want.Film << ": " << reason << "\n"; continue; }
+        const FilmResult& result{ Film(std::string{ want.Film }) };
+        if (!result.Pass.Error.empty()) { ADD_FAILURE() << result.Pass.Error; continue; }
+        if (!result.Pass.Skip.empty()) { std::cout << "[  SKIPPED ] " << want.Film << ": " << result.Pass.Skip << "\n"; continue; }
+        const auto& last{ result.LastMatch };
 
         ASSERT_NE(last, nullptr);
         EXPECT_EQ(last->RespawnTimeTicks, want.Respawn);
@@ -1616,34 +1911,6 @@ TEST_F(ReplayTests, VariantSettingsOfCtfCAndCgbMatchTheirGametypes)
 }
 
 // --- A18 (D263): the custom powerup of the player in the powerups recording ---
-
-namespace
-{
-    // What the player 0 had at one engine tick of the powerups recording.
-    struct PowerupSample
-    {
-        Common::Semantic::Type::Subtype::Powerup Powerup{};
-        std::uint32_t Ticks{};
-        float DamageResistance{};
-        std::uint8_t ActiveCamo{};
-        std::array<std::uint32_t, 3> Durations{};
-    };
-
-    // Replays the powerups recording and keeps the player 0 at every engine tick.
-    // return: Empty if it ran, else the reason it cannot run here.
-    auto RunPowerupsRecording(std::map<std::uint32_t, PowerupSample>& samples) -> std::string
-    {
-        return ReplayRecording("powerups", [&](const Chain& chain) {
-            const auto match{ chain.m_Environment.m_MatchStore.Acquire() };
-            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-            if (!match || !players || players->Rows.empty()) return;
-
-            const auto& player{ players->Rows.front() };
-            samples[match->GameTick] = PowerupSample{ .Powerup = player.Powerup, .Ticks = player.PowerupTicks,
-                .DamageResistance = player.Traits.DamageResistance, .ActiveCamo = player.Traits.ActiveCamo, .Durations = match->PowerupDurationTicks };
-        });
-    }
-}
 
 TEST_F(ReplayTests, PowerupsFilmGivesTheMeasuredPowerupAtEachMoment)
 {
@@ -1662,9 +1929,10 @@ TEST_F(ReplayTests, PowerupsFilmGivesTheMeasuredPowerupAtEachMoment)
         { 5454, Powerup::None, 0 }, { 6410, Powerup::Blue, 900 }, { 6678, Powerup::Blue, 632 }, { 6679, Powerup::None, 0 },
         { 7451, Powerup::Red, 600 }, { 8050, Powerup::Red, 1 }, { 8051, Powerup::None, 0 } };
 
-    std::map<std::uint32_t, PowerupSample> samples{};
-    const std::string reason{ RunPowerupsRecording(samples) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("powerups") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& samples{ film.Powerups };
 
     for (const Expected& moment : expected)
     {
@@ -1679,9 +1947,10 @@ TEST_F(ReplayTests, PowerupsFilmCountsDownOnePerTickAndTheTraitsFollowOneTickLat
 {
     using Common::Semantic::Type::Subtype::Powerup;
 
-    std::map<std::uint32_t, PowerupSample> samples{};
-    const std::string reason{ RunPowerupsRecording(samples) };
-    if (!reason.empty()) GTEST_SKIP() << reason;
+    const FilmResult& film{ Film("powerups") };
+    if (!film.Pass.Error.empty()) FAIL() << film.Pass.Error;
+    if (!film.Pass.Skip.empty()) GTEST_SKIP() << film.Pass.Skip;
+    const auto& samples{ film.Powerups };
     ASSERT_FALSE(samples.empty());
 
     std::size_t active{ 0 };

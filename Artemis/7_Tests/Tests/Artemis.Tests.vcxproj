@@ -136,6 +136,7 @@
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
+    <ClCompile Include="Support\Tests.Support.FilmPass.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />
     <ClCompile Include="Support\Tests.Support.Pipeline.ixx" />

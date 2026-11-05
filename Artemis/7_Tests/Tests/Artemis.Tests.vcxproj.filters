@@ -132,6 +132,9 @@
     <ClCompile Include="Support\Tests.Support.Pipeline.ixx">
       <Filter>Support</Filter>
     </ClCompile>
+    <ClCompile Include="Support\Tests.Support.FilmPass.ixx">
+      <Filter>Support</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Replay.ixx">
       <Filter>Support</Filter>
     </ClCompile>
