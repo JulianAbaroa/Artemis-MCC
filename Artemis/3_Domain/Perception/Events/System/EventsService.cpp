@@ -61,17 +61,21 @@ namespace Perception::Events::System
 
         EventsMemory& memory{ m_MemoryStore.Get() };
 
+        // note: Read before the flag events are appended, because the engine events of a match start again at 1 only with a new engine.
+        const bool isSameMatch{ game->Events.empty() || game->Events.front().Sequence > memory.LastEngineSequence };
+        if (!game->Events.empty()) memory.LastEngineSequence = game->Events.back().Sequence;
+
+        // The clock of a new engine starts again, so a GameOver of the last match is forgotten.
+        if (!isSameMatch || (memory.GameOverTick && game->EngineTick < *memory.GameOverTick)) memory.GameOverTick.reset();
+
         std::vector<GameEvent> fresh{};
         fresh.reserve(game->Events.size());
         for (const AliveEvent& entry : game->Events)
         {
             const GameEvent event{ this->MakeEvent(entry) };
+            if (event.Kind == Event::GameOver && !memory.GameOverTick) memory.GameOverTick = game->EngineTick;
             if (!IsFlagKind(event.Kind)) fresh.push_back(event);
         }
-
-        // note: Read before the flag events are appended, because the engine events of a match start again at 1 only with a new engine.
-        const bool isSameMatch{ game->Events.empty() || game->Events.front().Sequence > memory.LastEngineSequence };
-        if (!game->Events.empty()) memory.LastEngineSequence = game->Events.back().Sequence;
 
         this->AppendFlagEvents(*game, fresh);
         if (fresh.empty()) return;

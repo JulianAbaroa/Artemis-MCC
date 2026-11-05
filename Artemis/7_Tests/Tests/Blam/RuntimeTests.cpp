@@ -683,6 +683,34 @@ TEST_F(RuntimeTests, ACurrentBipedOfZeroBeforeTheFirstSpawnIsNoHandle)
     EXPECT_EQ(reset->at(handle).CurrentBipedHandle, k_NoHandle);
 }
 
+TEST_F(RuntimeTests, AWeaponOrObjectiveHandleOfZeroIsNoHandle)
+{
+    Snapshot snapshot{};
+    std::vector<std::uint8_t>& players{ CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)) };
+    CaptureEmptyMapping(snapshot);
+
+    // note: Measured in cgb tick 3579, the first tick of a body: the engine had not written the objective yet.
+    const std::size_t entry{ PutPlayer(players, 1, 0xE5A2, ConnectionState::Connected) };
+    Put(players, entry + PlayerOffset::k_PrimaryWeaponHandle, std::uint32_t{ 0 });
+    Put(players, entry + PlayerOffset::k_SecondaryWeaponHandle, std::uint32_t{ 0 });
+    Put(players, entry + PlayerOffset::k_ObjectiveHandle, std::uint32_t{ 0 });
+
+    const std::uint32_t handle{ MakeHandle(0xE5A2, 1) };
+    const auto built{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(built, nullptr);
+    EXPECT_EQ(built->at(handle).PrimaryWeaponHandle, k_NoHandle);
+    EXPECT_EQ(built->at(handle).SecondaryWeaponHandle, k_NoHandle);
+    EXPECT_EQ(built->at(handle).ObjectiveHandle, k_NoHandle);
+
+    Put(players, entry + PlayerOffset::k_PrimaryWeaponHandle, k_WeaponHandle);
+    Put(players, entry + PlayerOffset::k_ObjectiveHandle, k_BipedHandle);
+    const auto updated{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(updated, nullptr);
+    EXPECT_EQ(updated->at(handle).PrimaryWeaponHandle, k_WeaponHandle);
+    EXPECT_EQ(updated->at(handle).SecondaryWeaponHandle, k_NoHandle);
+    EXPECT_EQ(updated->at(handle).ObjectiveHandle, k_BipedHandle);
+}
+
 TEST_F(RuntimeTests, PlayerTraitsAreDecodedFromTheBlockOfTheEntryAlsoWhenDead)
 {
     Snapshot snapshot{};
@@ -869,29 +897,21 @@ TEST_F(RuntimeTests, GameNeedsTheThreadContext)
     EXPECT_EQ(this->UpdateGame(snapshot), nullptr);
 }
 
-TEST_F(RuntimeTests, ClockPhaseAndScoresAndEveryPhaseChangeIsLogged)
+TEST_F(RuntimeTests, ClockAndScoresAreReadAndTheEngineGlobalsAreMarkedCaptured)
 {
     Snapshot snapshot{ WithEvents(0, 0) };
     Put(snapshot.Regions[static_cast<std::size_t>(RegionId::TimeGlobals)].Bytes, k_TimeGlobalsEngineTickOffset, std::uint32_t{ 4321 });
     std::vector<std::uint8_t>& engine{ snapshot.Regions[static_cast<std::size_t>(RegionId::GameEngineGlobals)].Bytes };
-    Put(engine, GameOffset::k_GameEnginePhase, std::uint32_t{ 2 });
     Put(engine, GameOffset::k_GameEnginePlayerScores, std::int16_t{ 5 });
     Put(engine, GameOffset::k_GameEnginePlayerScores + ((k_MaxPlayers - 1) * GameOffset::k_PlayerScoreStride), std::int16_t{ -1 });
 
     const auto game{ this->UpdateGame(snapshot) };
     ASSERT_NE(game, nullptr);
     EXPECT_EQ(game->EngineTick, 4321u);
-    EXPECT_EQ(game->Phase, 2u);
+    EXPECT_TRUE(game->HasEngineGlobals);
     EXPECT_EQ(game->PlayerScores[0], 5);
     EXPECT_EQ(game->PlayerScores[k_MaxPlayers - 1], -1);
     EXPECT_TRUE(game->Events.empty());
-
-    this->UpdateGame(snapshot);
-    EXPECT_EQ(this->CountOf(LogLevel::Info, "[GameService]", "Game engine phase 2 at engine tick 4321."), 1u);
-
-    Put(engine, GameOffset::k_GameEnginePhase, std::uint32_t{ 4 });
-    this->UpdateGame(snapshot);
-    EXPECT_EQ(this->CountOf(LogLevel::Info, "[GameService]", "Game engine phase 4 at engine tick 4321."), 1u);
 }
 
 TEST_F(RuntimeTests, FirstReadTakesTheWholeRingWithoutCountingALoss)

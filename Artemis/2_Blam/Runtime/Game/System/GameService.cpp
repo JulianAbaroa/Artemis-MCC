@@ -24,7 +24,6 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_EventGlobalsSequenceOffset;
     using Blam::Layout::Object::Type::Constant::k_MaxMegaloObjects;
     using Blam::Layout::Object::Type::Constant::k_MegaloObjectSize;
-    using Blam::Layout::Game::Type::Offset::k_GameEnginePhase;
     using Blam::Layout::Game::Type::Offset::k_GameEnginePlayerScores;
     using Blam::Layout::Game::Type::Offset::k_PlayerScoreStride;
     using Blam::Layout::Game::Type::Offset::k_GameEngineRoundIndex;
@@ -99,7 +98,7 @@ namespace Blam::Runtime::Game::System
 
         if (snapshot.IsCaptured(RegionId::GameEngineGlobals))
         {
-            game.Phase = snapshot.Read<std::uint32_t>(RegionId::GameEngineGlobals, k_GameEnginePhase);
+            game.HasEngineGlobals = true;
 
             for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
             {
@@ -135,13 +134,6 @@ namespace Blam::Runtime::Game::System
         this->ReadRoundTime(snapshot, game);
 
         if (snapshot.IsCaptured(RegionId::EventGlobals)) this->ReadEvents(snapshot, game);
-
-        // The phase values are measured on few game modes (A5): every change is logged to confirm them on the others.
-        const auto previous{ m_GameStore.Acquire() };
-        if (!previous || previous->Phase != game.Phase)
-        {
-            m_Log.Message("[GameService] INFO: Game engine phase {} at engine tick {}.", game.Phase, game.EngineTick);
-        }
 
         game.DroppedEvents = m_GameStore.GetDroppedEvents();
         m_GameStore.Publish(std::move(game));

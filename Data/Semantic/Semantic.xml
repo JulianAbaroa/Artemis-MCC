@@ -227,10 +227,10 @@
 		<value name="RoundEnd" id="19" doc="A round ended and another one follows. The last round ends with GameOver instead." />
 		<value name="RoundStart" id="20" doc="One per player, about 11 s after RoundEnd." />
 	</enum>
-	<enum name="MatchPhase" type="uint8" doc="Phase of the match (D103).">
+	<enum name="MatchPhase" type="uint8" doc="Phase of the match (D103): InGame from the start of the match until the GameOver event of the engine, Ended from the tick it is read. A round that ends does not end the match.">
 		<value name="Unknown" id="0" />
 		<value name="InGame" id="1" />
-		<value name="Ended" id="2" doc="After the end of a round (until the next one starts) or of the match." />
+		<value name="Ended" id="2" doc="From the tick of the GameOver event of the engine until the engine starts another match." />
 	</enum>
 	<enum name="RoundState" type="uint8" doc="State of the round of the match (A14).">
 		<value name="Unknown" id="0" />

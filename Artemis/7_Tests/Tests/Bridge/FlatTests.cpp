@@ -517,6 +517,7 @@ TEST(FlatTests, APlayerWithoutBodyHasNoHandleInTheHandlesOfTheBody)
     body.Loadout.Objective = 0xE4010004;
     body.LastDamagerPlayer = 0xE5A10009;
     body.GroundObject = 0xE4030194;
+    body.Zoom = decltype(body.Zoom)::Zoom1;
 
     auto players{ std::make_shared<Players>() };
     players->Rows.push_back(Player{ .Handle = 0xE5A10001, .BipedHandle = 0xE4330001, .Body = body });
@@ -532,6 +533,7 @@ TEST(FlatTests, APlayerWithoutBodyHasNoHandleInTheHandlesOfTheBody)
     EXPECT_EQ(with.EquippedWeapon, 0xE4010001u);
     EXPECT_EQ(with.Ability, 0xE4010003u);
     EXPECT_EQ(with.Objective, 0xE4010004u);
+    EXPECT_EQ(with.Zoom, 0);
     EXPECT_EQ(with.LastDamagerPlayer, 0xE5A10009u);
     EXPECT_EQ(with.GroundObject, 0xE4030194u);
 
@@ -546,6 +548,8 @@ TEST(FlatTests, APlayerWithoutBodyHasNoHandleInTheHandlesOfTheBody)
     EXPECT_EQ(without.LastDamagerPlayer, k_NoHandle);
     EXPECT_EQ(without.GroundObject, k_NoHandle);
     EXPECT_EQ(without.TicksSinceDamage, k_NoHandle);
+    // No zoom (0xFF), not the 0 of Zoom1.
+    EXPECT_EQ(without.Zoom, 0xFF);
 }
 
 TEST(FlatTests, GroundAndCrouchReachThePlayerRowAndAreZeroWithoutBody)

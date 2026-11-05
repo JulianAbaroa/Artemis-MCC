@@ -90,7 +90,7 @@ export namespace Perception
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
             m_EventsService(tables.m_GameStore, m_ObjectiveDetailsStore, m_EventsMemoryStore, m_EventsStore),
-            m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_MatchStore) {}
+            m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_EventsMemoryStore, m_MatchStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;

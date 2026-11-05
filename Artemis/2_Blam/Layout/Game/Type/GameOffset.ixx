@@ -4,16 +4,9 @@ import std;
 
 export namespace Blam::Layout::Game::Type::Offset
 {
-    // Phase of the match in the game engine globals (uint32) (D103).
-    // note: The game engine globals are at *(thread context + k_ThreadContextGameEngineOffset).
-    constexpr std::uintptr_t k_GameEnginePhase{ 0x0000 };
-
-    // Bits of the raw value that hold the phase. Bit 3 is something else: set in CTF (12 and 13), clear in Slayer (4 and 5) (A14).
-    constexpr std::uint32_t k_PhaseMask{ 0x7 };
-
-    // Values of the phase: playing, and after the end of a round or of the match. Pregame is not measured yet.
-    constexpr std::uint32_t k_PhaseInGame{ 4 };
-    constexpr std::uint32_t k_PhaseEnded{ 5 };
+    // note: The game engine globals are at *(thread context + k_ThreadContextGameEngineOffset). Their first uint32 (+0x0) is not the phase of the
+    // match: it is 12 in play and 13 from each round end to the recreation of the round and for one tick at the death of the local player (CTF, A14).
+    // The phase of the match comes from the GameOver event.
 
     // Score of each player (int16) in the game engine globals, by player table index, one every k_PlayerScoreStride bytes.
     // note: Measured in Slayer (A5). In CTF it stays 0 after a capture (A14): the layout may depend on the game mode.

@@ -69,8 +69,8 @@ export namespace Blam::Runtime::Game::Type::Alive
     {
         // Ticks since the start of the match (time globals +0xC).
         std::uint32_t EngineTick{};
-        // Raw phase of the game engine (k_PhaseMask, k_PhaseInGame, k_PhaseEnded).
-        std::uint32_t Phase{};
+        // Whether the game engine globals were captured in this tick.
+        bool HasEngineGlobals{ false };
         std::array<std::int16_t, k_MaxPlayers> PlayerScores{};
 
         // Round of the match, from 0. Zero when the game engine globals were not captured.

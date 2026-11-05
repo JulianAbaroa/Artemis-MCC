@@ -104,7 +104,7 @@ class Event(enum.IntEnum):
 
 
 class MatchPhase(enum.IntEnum):
-    """Phase of the match (D103)."""
+    """Phase of the match (D103): InGame from the start of the match until the GameOver event of the engine, Ended from the tick it is read. A round that ends does not end the match."""
     Unknown = 0
     InGame = 1
     Ended = 2

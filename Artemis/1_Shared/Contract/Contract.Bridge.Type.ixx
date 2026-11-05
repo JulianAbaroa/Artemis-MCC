@@ -378,6 +378,7 @@ export namespace Contract::Bridge::Type
     {
         // Ticks since the start of the match (60 per second). Does not restart between rounds.
         std::uint32_t GameTick{};
+        // InGame from the start of the match until the GameOver event of the engine, Ended from that tick on (not from each round end: see RoundState). Unknown only without the game engine globals.
         std::uint8_t Phase{};
         std::uint8_t RoundState{};
         // Score of each player, by player table index.

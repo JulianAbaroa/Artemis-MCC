@@ -138,7 +138,7 @@ export namespace Common::Semantic::Type
         RoundStart = 20,
     };
 
-    // Phase of the match (D103).
+    // Phase of the match (D103): InGame from the start of the match until the GameOver event of the engine, Ended from the tick it is read. A round that ends does not end the match.
     enum class MatchPhase : std::uint8_t
     {
         Unknown = 0,

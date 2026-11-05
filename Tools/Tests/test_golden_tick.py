@@ -302,7 +302,6 @@ def CheckFlags(s, r, tab, tick):
     p = r.players
     biped_of = dict(zip(p["Handle"].tolist(), p["BipedHandle"].tolist()))
     objective_of = dict(zip(p["Handle"].tolist(), p["Objective"].tolist()))
-    # An Objective of 0 is a handle that is not valid (HALLAZGO 2): counted apart in AnalyzePlayers.
     stands = {int(h): (int(b), int(o)) for h, b, o in zip(r.stands["Handle"], r.stands["BaseTeam"], r.stands["OwnerTeam"])}
     carried_by = {}
     for o in r.objectives:
@@ -326,7 +325,7 @@ def CheckFlags(s, r, tab, tick):
             if home[1] != int(o["OwnerTeam"]):
                 s.Add("flag_owner_team_vs_stand", tick, flag, f"stand {home[1]} flag {int(o['OwnerTeam'])}")
     for player, objective in objective_of.items():
-        if objective not in (NO_HANDLE, 0) and carried_by.get(player) != objective:
+        if objective != NO_HANDLE and carried_by.get(player) != objective:
             s.Add("player_objective_not_carried", tick, player, f"Objective 0x{objective:08X}")
 
 
@@ -342,6 +341,9 @@ ZERO_RADIUS_KINDS = (ObjectKind.Weapon, ObjectKind.Projectile)
 BOUNDS_MARGIN = 3.5
 # Lowest Vitality of a dead entity: -22.22 in suelo (death by a long fall, 9441), a fraction can go below 0 when the damage is larger.
 VITALITY_FLOOR = -23.0
+# Vitality goes below 0 once the entity is dead (damage beyond 0): only Dead bipeds, vehicles (and turrets) and crates (explosives) show it. Rows measured.
+NEGATIVE_VITALITY_KINDS = (ObjectKind.Biped, ObjectKind.Vehicle, ObjectKind.Crate)
+NEGATIVE_VITALITY_ROWS = {"armas_a": 1164, "armas_b": 230, "cgb_displace_1min": 1485, "ctf_c": 0, "ctf_d": 0, "explosivos": 814, "lifts": 910, "powerups": 0, "suelo": 152}
 # Aim and CameraForward are unit vectors with float32 rounding (measured 1.0000000908 at most).
 UNIT_TOLERANCE = 1e-5
 # Aim equals CameraForward in every row with Body (measured at most 1.2e-6 degrees).
@@ -480,6 +482,9 @@ def AnalyzeEntities(s):
     s.Flag("entity_active_vitality_not_a_fraction", known & active & ~((vitality > 0) & (vitality <= 1)), ticks, h, vitality)
     s.Flag("entity_dead_vitality_above_zero", known & ~active & (vitality > 0), ticks, h, vitality)
     s.Flag("entity_vitality_below_the_floor", known & (vitality < VITALITY_FLOOR), ticks, h, vitality)
+    negative = known & (vitality < 0)
+    s.values["negative_vitality_rows"] = int(negative.sum())
+    s.Flag("entity_negative_vitality_unexpected", negative & (active | ~np.isin(E["Kind"], NEGATIVE_VITALITY_KINDS)), ticks, h, vitality)
     # Velocities.
     linear, angular = Vec(E["LinearVelocity"]), Vec(E["AngularVelocity"])
     s.Flag("entity_linear_velocity_not_finite", ~np.isfinite(linear).all(axis=1), ticks, h)
@@ -517,7 +522,7 @@ def AnalyzePlayers(s):
     # Without Body every handle of the body is NoHandle and the numbers are zero (TicksSinceDamage is NoHandle).
     for name in BODY_HANDLES + ("TicksSinceDamage",):
         s.Flag("player_no_body_" + name, ~body & (P[name] != NO_HANDLE), ticks, h, P[name])
-    for name in ("Zoom", "SelectedGrenade", "FragGrenades", "PlasmaGrenades", "IsAbilityActive", "TicksAlive", "AbilityEnergy", "Shield"):
+    for name in ("SelectedGrenade", "FragGrenades", "PlasmaGrenades", "IsAbilityActive", "TicksAlive", "AbilityEnergy", "Shield"):
         s.Flag("player_no_body_" + name + "_not_zero", ~body & (P[name] != 0), ticks, h, P[name])
     s.Flag("player_no_body_aim_not_zero", ~body & (np.abs(Vec(P["Aim"])).sum(axis=1) != 0), ticks, h)
     # TicksAlive.
@@ -564,7 +569,7 @@ def AnalyzePlayers(s):
     s.Flag("player_camera_far_from_the_biped", near & ~(distance <= CAMERA_DISTANCE_MAX), ticks, h, distance)
     # Loadout.
     seated = biped_found & (biped["Binding"] == sem.Binding.Seated)
-    holds_objective = (P["Objective"] != NO_HANDLE) & (P["Objective"] != 0)
+    holds_objective = P["Objective"] != NO_HANDLE
     for name in ("BipedHandle",) + BODY_HANDLES:
         s.Flag("player_handle_zero_" + name, P[name] == 0, ticks, h)
     captured = [int(t) for t, k in zip(s.EV["GameTick"], s.EV["Kind"]) if k == sem.Event.FlagCaptured]
@@ -804,16 +809,15 @@ ABILITY_ACTIVE_ROWS = {"armas_a": 3260, "armas_b": 150, "cgb_displace_1min": 767
                        "powerups": 1044, "suelo": 1890}
 # Player rows with Body and Zoom1 (the other rows with Body have no zoom). Zoom2 never appears. Not even the DMR of armas_a was zoomed.
 ZOOM1_ROWS = {"cgb_displace_1min": 1556, "ctf_c": 136}
-# Steps of TicksAlive that are not +1 in a tick: (tick, step). suelo 8248 is the tick the biped leaves the Warthog seat (8032-8248).
+# Steps of TicksAlive that are not +1 in a tick: (tick, step). suelo 8248 is the tick the biped leaves the Warthog seat (8032-8248). It is a counter of
+# the engine, not a bug: +2 at leaving a seat (cgb 2146, 2821 too).
 TICKS_ALIVE_STEPS = {"suelo": [(8248, 2)], "cgb_displace_1min": [(2146, 2), (2821, 2)]}
 # First TicksAlive of a body that is not 1: the player that appears in the last records of cgb (GameTick 3579 three times, D174).
 FIRST_TICKS_ALIVE_ODD = {"cgb_displace_1min": [(3579, 0)]}
-# Rows with Objective 0 (a handle that is not valid: HALLAZGO 2), cgb tick 3579: the first tick of that body, camera and Objective not written yet.
-ZERO_OBJECTIVE_ROWS = {"cgb_displace_1min": 2}
 # Hits (TicksSinceDamage 0) after which neither the shield nor the health dropped in the next HIT_WINDOW_TICKS ticks.
 HITS_WITHOUT_A_DROP = {"cgb_displace_1min": 6}
 # Rows of PrimaryWeapon and SecondaryWeapon that point to a weapon that is not with the biped: the player carries the flag (the flag is the
-# equipped weapon and the weapons are on the floor), is seated in a vehicle, or it is the tick of a capture. HALLAZGO 3.
+# equipped weapon and the weapons are on the floor), is seated in a vehicle, or it is the tick of a capture. Not a bug: the engine keeps the weapons.
 LOADOUT_NOT_WITH_THE_BIPED = {"armas_a": (1646, 1646), "cgb_displace_1min": (2519, 2398), "ctf_c": (4818, 4169), "ctf_d": (2379, 0), "suelo": (216, 216)}
 # Events that name a flag that the engine already recreated (FlagReset, FlagReturned): the entity is not in the tick nor in the previous one.
 FLAG_EVENT_OBJECTS_GONE = {"ctf_c": 3}
@@ -849,44 +853,43 @@ FILMS_WITH_ENGINE_EVENTS = tuple(f for f in FILMS if f != "cgb_displace_1min")
 
 INGAME, ENDED, UNKNOWN_PHASE = sem.MatchPhase.InGame, sem.MatchPhase.Ended, sem.MatchPhase.Unknown
 PLAY, OVER, BETWEEN, UNKNOWN_STATE = sem.RoundState.InPlay, sem.RoundState.Ended, sem.RoundState.Between, sem.RoundState.Unknown
-# (GameTick of the record, Phase, RoundState, RoundIndex) at each change of any of the three. Phase Ended with RoundState InPlay for one tick is the
-# tick of each death of the local player and the tick the round is recreated, when the Phase goes back to InGame one tick after the RoundState (HALLAZGO 4).
-# ctf_c 11203 is the tick after the capture of 11202, 11564 the one after the recreation of 11563.
-PHASE_FLICKER_FILMS = ("armas_a", "ctf_c", "ctf_d", "explosivos", "lifts", "powerups", "suelo")
+# (GameTick of the record, Phase, RoundState, RoundIndex) at each change of any of the three. The Phase is InGame from the start until the GameOver event of the
+# engine and Ended from the record that reads it (armas_a 17224, ctf_c 32671, ctf_d 15981: the event is stamped one tick earlier, GAME_OVER_READ_LAG_TICKS).
+# The end of a round (RoundState Ended, Between) and the death of the local player (ctf_c 4281) do not change it: the raw phase of the engine does, so it
+# is not read (HALLAZGO 4, fixed). ctf_c 11203 is the tick after the capture of 11202, 11564 the one after the recreation of 11563.
 MATCH_TRANSITIONS = {
     "armas_a": [
-        (1, INGAME, PLAY, 0), (8903, ENDED, PLAY, 0), (8904, INGAME, PLAY, 0), (10845, ENDED, PLAY, 0), (10846, INGAME, PLAY, 0),
-        (12401, ENDED, PLAY, 0), (12402, INGAME, PLAY, 0), (13839, ENDED, PLAY, 0), (13840, INGAME, PLAY, 0), (16569, ENDED, PLAY, 0),
-        (16570, INGAME, PLAY, 0), (17224, ENDED, OVER, 0),
+        (1, INGAME, PLAY, 0), (17224, ENDED, OVER, 0),
     ],
     "armas_b": [
         (1, INGAME, PLAY, 0),
     ],
     "cgb_displace_1min": [
-        (0, UNKNOWN_PHASE, PLAY, 0), (0, INGAME, PLAY, 0),
+        (0, INGAME, PLAY, 0),
     ],
     "ctf_c": [
-        (1, INGAME, PLAY, 0), (4281, ENDED, PLAY, 0), (4282, INGAME, PLAY, 0), (11203, ENDED, OVER, 0), (11503, ENDED, BETWEEN, 1),
-        (11563, ENDED, PLAY, 1), (11564, INGAME, PLAY, 1), (23159, ENDED, OVER, 1), (23459, ENDED, BETWEEN, 2), (23519, ENDED, PLAY, 2),
-        (23520, INGAME, PLAY, 2), (32671, ENDED, OVER, 2),
+        (1, INGAME, PLAY, 0), (11203, INGAME, OVER, 0), (11503, INGAME, BETWEEN, 1), (11563, INGAME, PLAY, 1), (23159, INGAME, OVER, 1),
+        (23459, INGAME, BETWEEN, 2), (23519, INGAME, PLAY, 2), (32671, ENDED, OVER, 2),
     ],
     "ctf_d": [
-        (1, INGAME, PLAY, 0), (7801, ENDED, OVER, 0), (8101, ENDED, BETWEEN, 1), (8161, ENDED, PLAY, 1), (8162, INGAME, PLAY, 1),
-        (12356, ENDED, OVER, 1), (12656, ENDED, BETWEEN, 2), (12716, ENDED, PLAY, 2), (12717, INGAME, PLAY, 2), (15981, ENDED, OVER, 2),
+        (1, INGAME, PLAY, 0), (7801, INGAME, OVER, 0), (8101, INGAME, BETWEEN, 1), (8161, INGAME, PLAY, 1), (12356, INGAME, OVER, 1),
+        (12656, INGAME, BETWEEN, 2), (12716, INGAME, PLAY, 2), (15981, ENDED, OVER, 2),
     ],
     "explosivos": [
-        (1, INGAME, PLAY, 0), (5398, ENDED, PLAY, 0), (5399, INGAME, PLAY, 0),
+        (1, INGAME, PLAY, 0),
     ],
     "lifts": [
-        (1, INGAME, PLAY, 0), (3319, ENDED, PLAY, 0), (3320, INGAME, PLAY, 0), (9761, ENDED, PLAY, 0), (9762, INGAME, PLAY, 0),
+        (1, INGAME, PLAY, 0),
     ],
     "powerups": [
-        (1, INGAME, PLAY, 0), (6679, ENDED, PLAY, 0), (6680, INGAME, PLAY, 0),
+        (1, INGAME, PLAY, 0),
     ],
     "suelo": [
-        (1, INGAME, PLAY, 0), (9441, ENDED, PLAY, 0), (9442, INGAME, PLAY, 0),
+        (1, INGAME, PLAY, 0),
     ],
 }
+# The record that reads the GameOver event is this many ticks after the GameTick of the event (measured 1 in the 3 films that end).
+GAME_OVER_READ_LAG_TICKS = 1
 SCORE_CHANGES = {
     "armas_a": [
         (1, (0, 0), (0, 0), {}),
@@ -1042,11 +1045,13 @@ def test_entity_bounds_are_sane(film):
 def test_entity_vitality_is_a_fraction(film):
     """Covers: Entity.Vitality.
     NaN without vitality. An active entity has a vitality in (0, 1] (never above 1, not even with the red powerup: that is the shield). A dead one has
-    0 or less: the fraction goes negative with the damage that killed it (suelo and lifts -22.2, a fall). The biped of a player with Body has more than 0."""
+    0 or less: the fraction goes negative with the damage beyond 0 that killed it (suelo and lifts -22.2, a fall), only for Dead bipeds, vehicles and turrets and
+    explosive crates (NEGATIVE_VITALITY_ROWS), never an Active entity. The biped of a player with Body has more than 0."""
     s = Film(film)
     for name in ("entity_vitality_not_finite", "entity_active_vitality_not_a_fraction", "entity_dead_vitality_above_zero", "entity_vitality_below_the_floor",
-                 "player_alive_biped_vitality"):
+                 "player_alive_biped_vitality", "entity_negative_vitality_unexpected"):
         s.Clean(name)
+    assert s.values["negative_vitality_rows"] == NEGATIVE_VITALITY_ROWS[film]
     low, high = s.values["vitality_range"]
     assert high <= 1.0 and low >= VITALITY_FLOOR
 
@@ -1093,7 +1098,7 @@ def test_entity_team_of_a_player_biped(film):
 def test_player_body_and_biped_agree(film):
     """Covers: Player.Handle, Player.BipedHandle, Player.IsAlive, Player.HasBody.
     HasBody is IsAlive (no player is alive without Body). With Body the biped is an active Biped entity of the tick. Without Body the 7 handles of the
-    body, GroundObject and TicksSinceDamage are NoHandle and the numbers of the body are zero, BipedHandle is NoHandle (before the first spawn: the engine
+    body, GroundObject and TicksSinceDamage are NoHandle, Zoom is 0xFF (none, test_player_zoom_without_body_is_none) and the numbers of the body are zero, BipedHandle is NoHandle (before the first spawn: the engine
     stores 0 and Artemis reads it as NoHandle, F2.A), the dead biped that the table still has, or the handle of a biped that is gone."""
     s = Film(film)
     s.Clean("player_alive_vs_body")
@@ -1101,7 +1106,7 @@ def test_player_body_and_biped_agree(film):
     s.Clean("player_no_body_biped_found_but_alive")
     for name in BODY_HANDLES + ("TicksSinceDamage",):
         s.Clean("player_no_body_" + name)
-    for name in ("Zoom", "SelectedGrenade", "FragGrenades", "PlasmaGrenades", "IsAbilityActive", "TicksAlive", "AbilityEnergy", "Shield"):
+    for name in ("SelectedGrenade", "FragGrenades", "PlasmaGrenades", "IsAbilityActive", "TicksAlive", "AbilityEnergy", "Shield"):
         s.Clean("player_no_body_" + name + "_not_zero")
     s.Clean("player_no_body_aim_not_zero")
     s.Clean("player_handle_zero_BipedHandle")
@@ -1110,19 +1115,20 @@ def test_player_body_and_biped_agree(film):
     assert s.values["body_rows"] > 0
 
 
-@pytest.mark.parametrize("film", Films(xfail=("cgb_displace_1min",), reason="HALLAZGO 2: Objective is 0 (a handle that is not valid) in the first tick of the body of the last records of cgb"))
+@ALL
 def test_player_handles_are_never_zero(film):
     """Covers: Player.Objective.
-    No handle of a player row is 0: a handle of salt 0 is never a datum (NoHandle is 0xFFFFFFFF)."""
+    No handle of a player row is 0: a handle of salt 0 is never a datum (NoHandle is 0xFFFFFFFF). The engine writes 0 in the objective (cgb 3579, the first tick of
+    a body) and the loadout handles when there is none: the core reads it as NoHandle (D270)."""
     s = Film(film)
     for name in ("BipedHandle",) + BODY_HANDLES:
         s.Clean("player_handle_zero_" + name)
 
 
-@pytest.mark.parametrize("film", Films(xfail=FILMS, reason="HALLAZGO 1: Zoom of a player without Body is 0 (Zoom1), with Body and no zoom it is 0xFF"))
+@ALL
 def test_player_zoom_without_body_is_none(film):
     """Covers: Player.Zoom.
-    Zoom says no zoom (0xFF) for a player without Body, as with Body and no zoom (ZoomLevel None). Today it reads 0, which is Zoom1."""
+    Zoom says no zoom (0xFF) for a player without Body, as with Body and no zoom (ZoomLevel None), not the 0 of Zoom1."""
     s = Film(film)
     P = s.P
     nobody = P["HasBody"] == 0
@@ -1139,14 +1145,6 @@ def test_player_ticks_alive_count_up(film):
     assert s.values["first_ticks_alive_odd"] == FIRST_TICKS_ALIVE_ODD.get(film, [])
     s.Clean("player_ticks_alive_stands_still")
     assert s.values["first_ticks_alive"].get(FIRST_TICKS_ALIVE, 0) > 0
-
-
-@pytest.mark.parametrize("film", Films(xfail=("suelo", "cgb_displace_1min"), reason="HALLAZGO 5: TicksAlive jumps 2 in one tick (leaving a seat, cgb 2146 and 2821)"))
-def test_player_ticks_alive_never_skips(film):
-    """Covers: Player.TicksAlive.
-    TicksAlive goes up exactly 1 per GameTick while the biped lives."""
-    s = Film(film)
-    s.Clean("player_ticks_alive_step")
 
 
 @ALL
@@ -1179,7 +1177,8 @@ def test_player_camera_and_aim(film):
 def test_player_loadout_handles(film):
     """Covers: Player.PrimaryWeapon, Player.SecondaryWeapon, Player.EquippedWeapon, Player.Ability.
     PrimaryWeapon and SecondaryWeapon are NoHandle or a weapon of the tick. The weapon is with the biped (BoundTo or ParentHandle) except while the player
-    carries the flag, is seated in a vehicle or in the tick of a capture (LOADOUT_NOT_WITH_THE_BIPED, HALLAZGO 3). EquippedWeapon is NoHandle, the Primary,
+    carries the flag, is seated in a vehicle or in the tick of a capture (LOADOUT_NOT_WITH_THE_BIPED: the engine keeps the weapons then, not a bug; any other
+    row fails). EquippedWeapon is NoHandle, the Primary,
     the Secondary or the Objective. Ability is NoHandle or an armor ability of the tick. The rows with the ability in use are in ABILITY_ACTIVE_ROWS."""
     s = Film(film)
     for name in ("PrimaryWeapon", "SecondaryWeapon"):
@@ -1194,15 +1193,6 @@ def test_player_loadout_handles(film):
     assert sum(s.values["equipped_is"].values()) == s.values["body_rows"]
 
 
-@pytest.mark.parametrize("film", Films(xfail=tuple(LOADOUT_NOT_WITH_THE_BIPED), reason="HALLAZGO 3: PrimaryWeapon and SecondaryWeapon keep the handle of a weapon the player no longer carries"))
-def test_player_loadout_weapons_are_always_with_the_biped(film):
-    """Covers: Player.PrimaryWeapon, Player.SecondaryWeapon.
-    PrimaryWeapon and SecondaryWeapon are NoHandle or a weapon of the biped, always."""
-    s = Film(film)
-    s.Clean("player_PrimaryWeapon_not_with_the_biped")
-    s.Clean("player_SecondaryWeapon_not_with_the_biped")
-
-
 @pytest.mark.parametrize("film", ["ctf_c", "ctf_d", "cgb_displace_1min"])
 def test_player_objective_is_the_flag_it_carries(film):
     """Covers: Player.Objective.
@@ -1213,7 +1203,6 @@ def test_player_objective_is_the_flag_it_carries(film):
     s.Clean("player_objective_not_carried")
     s.Clean("player_objective_not_a_flag")
     assert s.values["flag_states"].get(int(sem.FlagState.Carried), 0) > 0
-    s.Exactly("player_handle_zero_Objective", ZERO_OBJECTIVE_ROWS.get(film, 0))
 
 
 @ALL
@@ -1349,13 +1338,23 @@ def test_match_phase_and_round_state(film):
     assert s.values["match_transitions"] == [(t, int(p), int(r), i) for t, p, r, i in MATCH_TRANSITIONS[film]]
 
 
-@pytest.mark.parametrize("film", Films(xfail=PHASE_FLICKER_FILMS, reason="HALLAZGO 4: Phase is Ended with the round in play for one tick at each death of the local player and at each recreation of a round"))
-def test_match_phase_is_ingame_while_the_round_is_in_play(film):
+@ALL
+def test_match_phase_ends_with_the_game_over_event(film):
     """Covers: Match.Phase.
-    While RoundState is InPlay the Phase is InGame (or Unknown while loading), never Ended."""
+    The Phase is InGame from the first record until the GameOver event of the engine (one in armas_a, ctf_c and ctf_d, none in the others) and Ended from
+    the record that reads it on: not from the end of a round, not at the death of the local player (ctf_c 4281), and never Unknown (the engine globals are captured)."""
     s = Film(film)
     M = s.matches
-    assert not ((M["Phase"] == ENDED) & (M["RoundState"] == PLAY)).any()
+    over = [int(e["GameTick"]) for e in s.EV if e["Kind"] == sem.Event.GameOver]
+    assert len(over) == (1 if film in ("armas_a", "ctf_c", "ctf_d") else 0)
+    ended = M["Phase"] == ENDED
+    assert (M["Phase"] != UNKNOWN_PHASE).all()
+    if not over:
+        assert not ended.any()
+        return
+    start = over[0] + GAME_OVER_READ_LAG_TICKS
+    assert (ended == (M["GameTick"] >= start)).all()
+    assert int(M["GameTick"][ended].min()) == start
 
 
 @ALL

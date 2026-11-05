@@ -127,6 +127,7 @@
     <ClCompile Include="Perception\PlayerGroundTests.cpp" />
     <ClCompile Include="Perception\PlayerPowerupTests.cpp" />
     <ClCompile Include="Perception\FlagEventsTests.cpp" />
+    <ClCompile Include="Perception\MatchTests.cpp" />
     <ClCompile Include="Perception\ClassifierFlagZoneTests.cpp" />
     <ClCompile Include="Perception\ObjectiveDetailsTests.cpp" />
     <ClCompile Include="Perception\ExplosiveDetailsTests.cpp" />

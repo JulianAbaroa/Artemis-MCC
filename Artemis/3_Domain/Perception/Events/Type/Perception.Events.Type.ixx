@@ -73,6 +73,9 @@ export namespace Perception::Events::Type
         // Last engine sequence read, 0 before the first one.
         std::uint32_t LastEngineSequence{};
 
+        // Engine tick in which the GameOver event of the engine was read, none while the match goes on. The Match service derives the phase from it.
+        std::optional<std::uint32_t> GameOverTick{};
+
         // Sum of the round and match scores of every team in the last tick.
         std::uint32_t LastScore{};
 

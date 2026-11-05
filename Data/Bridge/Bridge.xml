@@ -197,7 +197,7 @@
 
 	<struct name="BridgeMatch" doc="State of the match (Environment Match, D103).">
 		<field name="GameTick" type="u32" doc="Ticks since the start of the match (60 per second). Does not restart between rounds." />
-		<field name="Phase" type="u8" semantic="MatchPhase" />
+		<field name="Phase" type="u8" semantic="MatchPhase" doc="InGame from the start of the match until the GameOver event of the engine, Ended from that tick on (not from each round end: see RoundState). Unknown only without the game engine globals." />
 		<field name="RoundState" type="u8" semantic="RoundState" />
 		<field name="PlayerScores" type="i16" count="MaxPlayers" doc="Score of each player, by player table index." />
 		<field name="RoundIndex" type="i16" doc="Round of the match, from 0." />

@@ -63,6 +63,9 @@
     <ClCompile Include="Perception\FlagEventsTests.cpp">
       <Filter>Perception</Filter>
     </ClCompile>
+    <ClCompile Include="Perception\MatchTests.cpp">
+      <Filter>Perception</Filter>
+    </ClCompile>
     <ClCompile Include="Perception\ClassifierFlagZoneTests.cpp">
       <Filter>Perception</Filter>
     </ClCompile>

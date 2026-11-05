@@ -2,9 +2,9 @@ module Perception.Match.System;
 
 import Common.Engine.Type;
 import Common.Semantic.Type;
-import Blam.Layout.Game.Type;
 import Blam.Runtime.Player.Type;
 import Blam.Runtime.Game.Type;
+import Perception.Events.Type;
 import Perception.Match.Type;
 
 namespace
@@ -18,16 +18,15 @@ namespace
     using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxTeams;
-    using Blam::Layout::Game::Type::Offset::k_PhaseMask;
-    using Blam::Layout::Game::Type::Offset::k_PhaseInGame;
-    using Blam::Layout::Game::Type::Offset::k_PhaseEnded;
 
-    // return: The phase of the raw value of the engine.
-    auto ToPhase(std::uint32_t phase) -> MatchPhase
+    // return: The phase of the match: InGame from the start until the GameOver event of the engine, Ended from the tick it was read, Unknown without
+    // the game engine globals.
+    // note: The raw phase of the engine is not used: it is also Ended between the end of a round and the next one and for a tick when the local
+    // player dies (A14).
+    auto ToPhase(bool hasEngineGlobals, std::optional<std::uint32_t> gameOverTick, std::uint32_t gameTick) -> MatchPhase
     {
-        if ((phase & k_PhaseMask) == k_PhaseInGame) return MatchPhase::InGame;
-        if ((phase & k_PhaseMask) == k_PhaseEnded) return MatchPhase::Ended;
-        return MatchPhase::Unknown;
+        if (!hasEngineGlobals) return MatchPhase::Unknown;
+        return gameOverTick && gameTick >= *gameOverTick ? MatchPhase::Ended : MatchPhase::InGame;
     }
 
     // return: The state of the round of the raw value of the engine.
@@ -50,7 +49,7 @@ namespace Perception::Match::System
         const auto game{ m_GameStore.Acquire() };
         if (!game) return;
 
-        MatchStatus match{ .GameTick = game->EngineTick, .Phase = ToPhase(game->Phase), .RoundIndex = game->RoundIndex, .RoundState = ToRoundState(game->RoundState),
+        MatchStatus match{ .GameTick = game->EngineTick, .Phase = ToPhase(game->HasEngineGlobals, m_EventsMemoryStore.Get().GameOverTick, game->EngineTick), .RoundIndex = game->RoundIndex, .RoundState = ToRoundState(game->RoundState),
             .RoundClockTicks = game->RoundClockTicks, .RoundTicksRemaining = game->RoundTicksRemaining,
             .RoundTimeLimitTicks = game->RoundTimeLimitTicks, .RoundLimit = game->RoundLimit, .ScoreToWin = game->ScoreToWin,
             .RespawnTimeTicks = game->RespawnTimeTicks, .LivesPerRound = game->LivesPerRound, .TeamLivesPerRound = game->TeamLivesPerRound,

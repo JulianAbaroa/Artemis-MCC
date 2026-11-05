@@ -3,6 +3,7 @@ module Bridge.Codec.Flat.System;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Blam.Layout.Player.Type;
+import Blam.Runtime.Object.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
 import Perception.Details.Type;
@@ -25,6 +26,7 @@ namespace
     using Perception::Details::Type::StandDetail;
     using Perception::Details::Type::WeaponDetail;
     using Blam::Layout::Player::Type::Traits::PlayerTraits;
+    using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Contract::Bridge::Type::BridgeGround;
     using Contract::Bridge::Type::BridgePlayerTraits;
     using Contract::Bridge::Type::BridgeInfiniteAmmo;
@@ -127,7 +129,7 @@ namespace
         row.CameraForward = ToBridge(player.CameraForward);
         row.TicksSinceDamage = k_NoHandle;
 
-        // Without a body the handles of the body do not exist (NoHandle, not the zero of Zeroed).
+        // Without a body the handles of the body do not exist (NoHandle, not the zero of Zeroed) and there is no zoom (0xFF, not the 0 of Zoom1).
         row.PrimaryWeapon = k_NoHandle;
         row.SecondaryWeapon = k_NoHandle;
         row.EquippedWeapon = k_NoHandle;
@@ -135,6 +137,7 @@ namespace
         row.Objective = k_NoHandle;
         row.LastDamagerPlayer = k_NoHandle;
         row.GroundObject = k_NoHandle;
+        row.Zoom = static_cast<std::uint8_t>(ZoomLevel::None);
 
         if (!player.Body) return row;
 
