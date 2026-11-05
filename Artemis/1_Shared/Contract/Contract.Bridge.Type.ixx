@@ -492,6 +492,7 @@ export namespace Contract::Bridge::Type
     struct BridgePlayer
     {
         std::uint32_t Handle{};
+        // Biped of the player, NoHandle before the first spawn (the engine stores 0 there) and while there is none.
         std::uint32_t BipedHandle{};
         // Ticks left until the player respawns, 0 while alive (player +0x1BC).
         std::uint32_t RespawnTicks{};
@@ -504,7 +505,7 @@ export namespace Contract::Bridge::Type
         std::uint8_t IsAlive{};
         // Custom powerup the engine applies: 0 none, 1 red, 2 blue, 3 yellow. Also without Body (the engine clears it on death).
         BridgePowerup Powerup{};
-        // 0: the fields from Aim on are zero.
+        // 0: the fields from Aim on are zero, except the handles of the body, which are NoHandle.
         std::uint8_t HasBody{};
         std::uint8_t Zoom{};
         std::uint8_t SelectedGrenade{};
@@ -517,24 +518,32 @@ export namespace Contract::Bridge::Type
         std::uint8_t IsGrounded{};
         // CrouchFraction >= 0.5.
         std::uint8_t IsCrouching{};
+        // View of the player, valid for a local player (LocalIndex). In a theater film nobody is local.
         BridgeVec3 CameraPosition{};
+        // Unit vector, equal to Aim for a local player with Body. Valid for a local player only.
         BridgeVec3 CameraForward{};
         BridgeVec3 Aim{};
         std::uint32_t TicksAlive{};
         // NaN without shield.
         float Shield{};
+        // NoHandle without Body or when there is none.
         std::uint32_t PrimaryWeapon{};
+        // NoHandle without Body or when there is none.
         std::uint32_t SecondaryWeapon{};
+        // NoHandle without Body or when there is none.
         std::uint32_t EquippedWeapon{};
+        // NoHandle without Body or when there is none.
         std::uint32_t Ability{};
         float AbilityEnergy{};
+        // NoHandle without Body or when there is none.
         std::uint32_t Objective{};
+        // NoHandle without Body or when nobody damaged the player.
         std::uint32_t LastDamagerPlayer{};
         // NoHandle (0xFFFFFFFF) when unknown.
         std::uint32_t TicksSinceDamage{};
         // Ticks without contact in a row, 0 with contact or attached.
         std::uint32_t AirborneTicks{};
-        // Object under the feet when Ground is Object, NoHandle otherwise (the last valid one when the engine drops it).
+        // Object under the feet when Ground is Object, NoHandle otherwise and without Body (the last valid one when the engine drops it).
         std::uint32_t GroundObject{};
         // 0 standing to 1 crouched.
         float CrouchFraction{};
@@ -561,13 +570,15 @@ export namespace Contract::Bridge::Type
         std::uint16_t Capabilities{};
         std::uint32_t BoundTo{};
         std::uint32_t ParentHandle{};
+        // 0 in weapons and projectiles: their tags have no bounding sphere.
         float BoundingRadius{};
-        // NaN without vitality.
+        // Fraction of the health, 1 full. NaN without vitality. 0 or below once Lifecycle is Dead: the damage that killed it leaves a negative fraction (-22.2 in a fall).
         float Vitality{};
         BridgeVec3 BoundingCenter{};
         BridgeVec3 WorldOrigin{};
         BridgeVec3 Forward{};
         BridgeVec3 Up{};
+        // World space, wu/s. The displacement of the origin in a tick is this over 60. The physics runs at 30 Hz, so it repeats between ticks.
         BridgeVec3 LinearVelocity{};
         BridgeVec3 AngularVelocity{};
     };

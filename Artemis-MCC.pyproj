@@ -87,6 +87,7 @@
     <Compile Include="Tools\Tests\test_bridge_preset.py" />
     <Compile Include="Tools\Tests\test_ctf.py" />
     <Compile Include="Tools\Tests\test_generators.py" />
+    <Compile Include="Tools\Tests\test_golden_tick.py" />
     <Compile Include="Tools\Tests\test_presets.py" />
     <Compile Include="Tools\Tests\test_tickdump.py" />
     <Compile Include="Tools\Tests\test_tools.py" />
