@@ -6,13 +6,10 @@ module Engine.Capture.Hook;
 import :PlayerTable;
 
 import Engine.Base.Hook.System;
-import Engine.Base.Memory.Type;
 import Blam.Layout.Object.Type;
 
 namespace
 {
-    namespace Signature = Engine::Base::Memory::Type::Signature;
-
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
     using Blam::Layout::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextMappingOffset;
@@ -26,7 +23,7 @@ namespace Engine::Capture::Hook
         const bool hasMapping{ m_CaptureStore.GetMappingBase() != 0 };
         if (hasTable && hasMapping) return;
 
-        const std::uintptr_t threadContext{ this->GetThreadContext() };
+        const std::uintptr_t threadContext{ Engine::Base::Hook::System::FindThreadContext(m_AOBService) };
 
         if (!hasTable)
         {
@@ -60,22 +57,6 @@ namespace Engine::Capture::Hook
 
                 m_CaptureStore.SetMappingBase(mappingBase);
             }
-        }
-    }
-
-    auto PlayerTableLocator::GetThreadContext() -> std::uintptr_t
-    {
-        __try
-        {
-            const std::uint32_t* tlsIndex{ Engine::Base::Hook::System::ResolveTlsIndex(
-                m_AOBService.FindPattern(Signature::k_TelemetryIdModifier)) };
-            if (!tlsIndex) return 0;
-
-            return Engine::Base::Hook::System::ReadThreadContext(*tlsIndex);
-        }
-        __except (EXCEPTION_EXECUTE_HANDLER)
-        {
-            return 0;
         }
     }
 

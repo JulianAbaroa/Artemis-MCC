@@ -6,9 +6,12 @@ module;
 module Engine.Base.Hook.System;
 
 import Engine.Base.Hook.Type;
+import Engine.Base.Memory.Type;
 
 namespace
 {
+    namespace Signature = Engine::Base::Memory::Type::Signature;
+
     using Common::Log::System::Log;
 
     using Engine::Base::Hook::Type::k_TlsArrayOffset;
@@ -134,6 +137,22 @@ namespace Engine::Base::Hook::System
 
         const auto tlsArray{ static_cast<std::uintptr_t>(__readgsqword(static_cast<unsigned long>(k_TlsArrayOffset))) };
         return *reinterpret_cast<const std::uintptr_t*>(tlsArray + (tlsIndex * sizeof(std::uintptr_t)));
+    }
+
+    auto FindThreadContext(Engine::Base::Memory::System::AOBService& aobService) -> std::uintptr_t
+    {
+        __try
+        {
+            const std::uint32_t* tlsIndex{ ResolveTlsIndex(
+                aobService.FindPattern(Signature::k_TelemetryIdModifier)) };
+            if (!tlsIndex) return 0;
+
+            return ReadThreadContext(*tlsIndex);
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER)
+        {
+            return 0;
+        }
     }
 
     auto WaitForDrain(std::atomic<int>& counter,

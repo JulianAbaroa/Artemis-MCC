@@ -123,6 +123,28 @@ namespace
         return (static_cast<std::uint32_t>(salt) << 16) | static_cast<std::uint32_t>(index);
     }
 
+    // Datum of a player slot that is in use, with the salt that makes its handle.
+    struct PlayerSlot
+    {
+        std::uintptr_t Datum{};
+        std::uint16_t Salt{};
+    };
+
+    // return: The slot of the player, or nothing when there is no thread context, no player table or the slot is free (salt 0).
+    auto FindPlayerSlot(std::uintptr_t threadContext, std::size_t playerIndex) -> std::optional<PlayerSlot>
+    {
+        if (threadContext == 0) return std::nullopt;
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        if (players == 0) return std::nullopt;
+
+        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
+        const auto salt{ datum != 0 ? Read<std::uint16_t>(datum + k_PlayerSalt) : std::uint16_t{ 0 } };
+        if (salt == 0) return std::nullopt;
+
+        return PlayerSlot{ .Datum = datum, .Salt = salt };
+    }
+
     // return: The address of the data of the object, or 0 if the handle is not a live object.
     auto GetObjectData(std::uintptr_t threadContext, std::uint32_t handle) -> std::uintptr_t
     {
@@ -450,15 +472,10 @@ namespace Engine::Control::Simulation::System
 
     auto BotService::GetUnitActionSlot(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint8_t>
     {
-        if (threadContext == 0) return std::nullopt;
+        const auto slot{ FindPlayerSlot(threadContext, playerIndex) };
+        if (!slot) return std::nullopt;
 
-        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
-        if (players == 0) return std::nullopt;
-
-        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
-        if (datum == 0 || Read<std::uint16_t>(datum + k_PlayerSalt) == 0) return std::nullopt;
-
-        const std::uintptr_t unit{ GetObjectData(threadContext, Read<std::uint32_t>(datum + k_PlayerUnit)) };
+        const std::uintptr_t unit{ GetObjectData(threadContext, Read<std::uint32_t>(slot->Datum + k_PlayerUnit)) };
         if (unit == 0) return std::nullopt;
 
         return Read<std::uint8_t>(unit + k_UnitActionSlot);
@@ -470,12 +487,8 @@ namespace Engine::Control::Simulation::System
         if (!m_IsInteractionResolved || threadContext == 0) return false;
         if (interaction.size() != k_InteractionRecordCount * k_InteractionRecordSize) return false;
 
-        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
-        if (players == 0) return false;
-
-        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
-        const auto salt{ datum != 0 ? Read<std::uint16_t>(datum + k_PlayerSalt) : std::uint16_t{ 0 } };
-        if (salt == 0) return false;
+        const auto slot{ FindPlayerSlot(threadContext, playerIndex) };
+        if (!slot) return false;
 
         // note: Same steps as 0x4f280: clear the records, then fill them only if the player has a unit (the steps read it unchecked).
         std::ranges::fill(interaction, std::uint8_t{ 0 });
@@ -485,9 +498,9 @@ namespace Engine::Control::Simulation::System
                 sizeof(std::uint32_t));
         }
 
-        if (Read<std::uint32_t>(datum + k_PlayerUnit) == 0xFFFFFFFF) return true;
+        if (Read<std::uint32_t>(slot->Datum + k_PlayerUnit) == 0xFFFFFFFF) return true;
 
-        const std::uint32_t handle{ MakePlayerHandle(salt, playerIndex) };
+        const std::uint32_t handle{ MakePlayerHandle(slot->Salt, playerIndex) };
         m_GatherNearbyInteractions(handle, interaction.data());
         m_GatherAimedInteractions(handle, interaction.data());
         return true;
@@ -495,15 +508,10 @@ namespace Engine::Control::Simulation::System
 
     auto BotService::GetUnitClientState(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<UnitClientState>
     {
-        if (threadContext == 0) return std::nullopt;
+        const auto slot{ FindPlayerSlot(threadContext, playerIndex) };
+        if (!slot) return std::nullopt;
 
-        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
-        if (players == 0) return std::nullopt;
-
-        const std::uintptr_t datum{ GetPlayerDatum(players, playerIndex) };
-        if (datum == 0 || Read<std::uint16_t>(datum + k_PlayerSalt) == 0) return std::nullopt;
-
-        const auto unitHandle{ Read<std::uint32_t>(datum + k_PlayerUnit) };
+        const auto unitHandle{ Read<std::uint32_t>(slot->Datum + k_PlayerUnit) };
         const std::uintptr_t unit{ GetObjectData(threadContext, unitHandle) };
         if (unit == 0) return std::nullopt;
 

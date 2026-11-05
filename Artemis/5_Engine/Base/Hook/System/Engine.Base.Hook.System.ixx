@@ -1,6 +1,7 @@
 export module Engine.Base.Hook.System;
 
 import Common.Log.System;
+import Engine.Base.Memory.System;
 import std;
 
 namespace
@@ -75,6 +76,11 @@ export namespace Engine::Base::Hook::System
     // note: The context lives in the thread local storage of the threads that run the engine (the game thread). Reads raw memory:
     // the caller guards it with __try where the slot can be wrong.
     auto ReadThreadContext(std::uint32_t tlsIndex) -> std::uintptr_t;
+
+    // return: The engine thread context of the calling thread, found through the signature of the TLS slot, or 0 if there is no match, the
+    // slot is out of range or reading it faults.
+    // note: Runs on the game thread only (see ReadThreadContext).
+    auto FindThreadContext(Engine::Base::Memory::System::AOBService& aobService) -> std::uintptr_t;
 
     // Longest wait for the calls in flight when a hook is removed.
     inline constexpr std::chrono::milliseconds k_DrainTimeout{ 500 };

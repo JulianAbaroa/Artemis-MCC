@@ -6,13 +6,10 @@ module Engine.Capture.Hook;
 import :ObjectTable;
 
 import Engine.Base.Hook.System;
-import Engine.Base.Memory.Type;
 import Blam.Layout.Object.Type;
 
 namespace
 {
-    namespace Signature = Engine::Base::Memory::Type::Signature;
-
     using Blam::Layout::Object::Type::Constant::k_ThreadContextObjectDataOffset;
     using Blam::Layout::Object::Type::Constant::k_ObjectDataTableOffset;
 }
@@ -23,7 +20,7 @@ namespace Engine::Capture::Hook
     {
         if (m_CaptureStore.GetObjectTableBase() != 0) return;
 
-        const std::uintptr_t threadContext{ this->GetThreadContext() };
+        const std::uintptr_t threadContext{ Engine::Base::Hook::System::FindThreadContext(m_AOBService) };
         const std::uintptr_t tableBase{ this->GetObjectTable(threadContext) };
         if (!tableBase)
         {
@@ -37,22 +34,6 @@ namespace Engine::Capture::Hook
 
         m_CaptureStore.SetThreadContext(threadContext);
         m_CaptureStore.SetObjectTableBase(tableBase);
-    }
-
-    auto ObjectTableLocator::GetThreadContext() -> std::uintptr_t
-    {
-        __try
-        {
-            const std::uint32_t* tlsIndex{ Engine::Base::Hook::System::ResolveTlsIndex(
-                m_AOBService.FindPattern(Signature::k_TelemetryIdModifier)) };
-            if (!tlsIndex) return 0;
-
-            return Engine::Base::Hook::System::ReadThreadContext(*tlsIndex);
-        }
-        __except (EXCEPTION_EXECUTE_HANDLER)
-        {
-            return 0;
-        }
     }
 
     // Returns the pointer to the Global Object Table (Indirection Table).

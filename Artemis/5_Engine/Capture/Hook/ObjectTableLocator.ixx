@@ -32,10 +32,6 @@ export namespace Engine::Capture::Hook
         AOBService& m_AOBService;
         CaptureStore& m_CaptureStore;
 
-        // return: Engine thread context of the calling thread, or 0 if it is not ready.
-        // note: Read from the TLS slot of the engine, so it must run on the game thread.
-        auto GetThreadContext() -> std::uintptr_t;
-
         // return: Address of the object table, or 0 if the thread context is not ready.
         auto GetObjectTable(std::uintptr_t threadContext) -> std::uintptr_t;
     };

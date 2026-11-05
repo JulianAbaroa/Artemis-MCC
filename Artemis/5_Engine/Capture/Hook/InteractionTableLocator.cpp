@@ -6,13 +6,10 @@ module Engine.Capture.Hook;
 import :InteractionTable;
 
 import Engine.Base.Hook.System;
-import Engine.Base.Memory.Type;
 import Blam.Layout.Object.Type;
 
 namespace
 {
-    namespace Signature = Engine::Base::Memory::Type::Signature;
-
     using Blam::Layout::Object::Type::Constant::k_ThreadContextControlGlobalsOffset;
     using Blam::Layout::Object::Type::Constant::k_ControlGlobalsOutputUserTableOffset;
 }
@@ -43,15 +40,11 @@ namespace Engine::Capture::Hook
 
     auto InteractionTableLocator::GetInteractionTable() -> std::uintptr_t
     {
+        const std::uintptr_t threadContext{ Engine::Base::Hook::System::FindThreadContext(m_AOBService) };
+        if (!threadContext) return 0;
+
         __try
         {
-            const std::uint32_t* tlsIndex{ Engine::Base::Hook::System::ResolveTlsIndex(
-                m_AOBService.FindPattern(Signature::k_TelemetryIdModifier)) };
-            if (!tlsIndex) return 0;
-
-            const std::uintptr_t threadContext{ Engine::Base::Hook::System::ReadThreadContext(*tlsIndex) };
-            if (!threadContext) return 0;
-
             const std::uintptr_t controlGlobals{
                 *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextControlGlobalsOffset) };
             if (!controlGlobals) return 0;

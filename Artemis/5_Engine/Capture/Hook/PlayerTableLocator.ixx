@@ -32,10 +32,6 @@ export namespace Engine::Capture::Hook
         AOBService& m_AOBService;
         CaptureStore& m_CaptureStore;
 
-        // return: Thread context of the engine, or 0 if it is not ready.
-        // note: Reads the thread local storage of the current thread. Call it from the game thread.
-        auto GetThreadContext() -> std::uintptr_t;
-
         // Finds the table that holds the session data of every player: names, state, camera and the handles of their biped, weapons and objective.
         // return: Address of the player table, or 0 if the thread context is not ready.
         auto GetPlayerTable(std::uintptr_t threadContext) -> std::uintptr_t;
