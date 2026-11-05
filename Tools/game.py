@@ -167,30 +167,35 @@ def AssertArguments(path):
 
 
 def RunPython(script, args, timeout):
-    """Runs a script with the Windows python of the watcher. return: (exit code, stdout), exit None when the request failed or the run is still going
-    after the timeout (then stdout is the id to resume with game.py py --id ID --wait)."""
+    """Runs a script with the Windows python of the watcher. return: (exit code, stdout, stderr), exit None when the request failed or the run is still
+    going after the timeout (then stdout is the id to resume with game.py py --id ID --wait). The watcher keeps ID.out and ID.err in GAME/python."""
     id = time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:4]
     ok, message = Send("python", id=id, script=script, args=args)
     if not ok:
-        return None, f"the watcher refused the run ({message})"
+        return None, f"the watcher refused the run ({message})", ""
     start = time.time()
     while time.time() - start < timeout:
         state = ReadJson(os.path.join("python", id + ".json"))
         if state and state.get("done"):
-            try:
-                with open(os.path.join(GAME, "python", id + ".out"), encoding="utf-8", errors="replace") as handle:
-                    return state.get("exit"), handle.read()
-            except OSError:
-                return state.get("exit"), ""
+            texts = []
+            for suffix in ("out", "err"):
+                try:
+                    with open(os.path.join(GAME, "python", f"{id}.{suffix}"), encoding="utf-8", errors="replace") as handle:
+                        texts.append(handle.read())
+                except OSError:
+                    texts.append("")
+            return state.get("exit"), texts[0], texts[1]
         time.sleep(2)
-    return None, id
+    return None, id, ""
 
 
-def InterpretAssert(code, out):
-    """(status, lines) of the exit code and stdout of tickdump.py assert --json. status: pass (0), fail (1, the failing rules as lines), error (2 or
-    anything else) or pending (the run did not finish: out is its id)."""
+def InterpretAssert(code, out, err=""):
+    """(status, lines) of the exit code, stdout and stderr of tickdump.py assert --json. status: pass (0), fail (1, the failing rules as lines),
+    error (2 or anything else) or pending (the run did not finish: out is its id). An error, or a fail whose rules cannot be read, shows the last lines
+    of stderr (the traceback of the script), then the ones of stdout."""
     if code == 0:
         return "pass", []
+    tail = (err.strip().splitlines()[-8:] + out.strip().splitlines()[-4:]) if err.strip() else out.strip().splitlines()[-8:]
     if code == 1:
         lines = []
         try:
@@ -199,20 +204,20 @@ def InterpretAssert(code, out):
                 lines.append(f"{rule['name']}: {rule['count']} case(s)")
                 lines += [f"  tick {c['tick']} handle {c['handle']} {c['detail']}".rstrip() for c in rule.get("cases", [])[:3]]
         except (StopIteration, ValueError, KeyError, TypeError):
-            lines = out.strip().splitlines()[:12]
-        return "fail", lines
-    return "error", out.strip().splitlines()[:6]
+            lines = []
+        return "fail", lines or ["no rule could be read from the output:"] + tail
+    return "error", tail or [f"exit {code} without output"]
 
 
 def AssertTickDump(path, timeout=60, runner=RunPython):
     """Runs tickdump.py assert on the .tdump of a match. return: (status, lines) of InterpretAssert, or pending when it did not finish."""
     script, args = AssertArguments(path)
-    code, out = runner(script, args, timeout)
+    code, out, err = runner(script, args, timeout)
     if code is None and not out.startswith("the watcher"):
         return "pending", [f"still running: python Tools/game.py py --id {out} --wait"]
     if code is None:
         return "error", [out]
-    return InterpretAssert(code, out)
+    return InterpretAssert(code, out, err)
 
 
 def TickDumpSummary(path):

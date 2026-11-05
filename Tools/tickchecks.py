@@ -148,6 +148,12 @@ def Lookup(tab, handles):
     return tab["Handle"][index] == handles, tab[index]
 
 
+def ParentKinds(found, rows):
+    """int16 Kind of each looked-up parent, -1 where the handle was not found. The Kind column is unsigned: the sentinel is mixed in only after a cast
+    to a signed type (numpy 2 refuses -1 next to uint16)."""
+    return np.where(found, rows["Kind"].astype(np.int16), np.int16(-1))
+
+
 def Concat(chunks, dtype):
     return np.concatenate(chunks) if chunks else np.zeros(0, dtype)
 
@@ -189,7 +195,7 @@ def Collect(film, dump):
             linked = e["BoundTo"] != NO_HANDLE
             if linked.any():
                 found, rows = Lookup(tab, e["BoundTo"][linked])
-                parent[linked] = np.where(found, rows["Kind"], -1)
+                parent[linked] = ParentKinds(found, rows)
             entity_parent.append(parent)
             if len(np.unique(e["Handle"])) != len(e):
                 s.Add("entity_handle_repeated_in_a_record", tick, e["Handle"][0])
@@ -569,7 +575,7 @@ def AnalyzeMatch(s):
         new_round = (M["RoundState"][1:] == sem.RoundState.InPlay) & (M["RoundState"][:-1] == sem.RoundState.Between)
         s.Flag("match_round_score_not_reset", new_round & (rounds[1:] != 0).any(axis=1), ticks[1:], zeros[1:])
         s.Flag("match_player_score_not_reset", new_round & (players[1:] != 0).any(axis=1), ticks[1:], zeros[1:])
-        s.Flag("match_round_index_not_by_one", (M["RoundIndex"][1:] - M["RoundIndex"][:-1] > 1) | (M["RoundIndex"][1:] < M["RoundIndex"][:-1]), ticks[1:], zeros[1:])
+        s.Flag("match_round_index_not_by_one", (M["RoundIndex"][1:].astype(np.int64) - M["RoundIndex"][:-1].astype(np.int64) > 1) | (M["RoundIndex"][1:] < M["RoundIndex"][:-1]), ticks[1:], zeros[1:])
     s.Flag("match_unused_team_score", (totals[:, 2:] != 0).any(axis=1) | (rounds[:, 2:] != 0).any(axis=1), ticks, zeros)
     score_key = np.concatenate([totals[:, :2], rounds[:, :2], players], axis=1)
     moved = np.concatenate([[True], (score_key[1:] != score_key[:-1]).any(axis=1)]) if len(M) else np.zeros(0, bool)

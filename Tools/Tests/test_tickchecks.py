@@ -6,12 +6,14 @@ exit codes are 0 pass, 1 fail, 2 error. The rules themselves are asserted film b
 import copy
 import json
 import os
+import re
 
+import numpy as np
 import pytest
 
 import tickchecks
 import tickdump
-from tdump_writer import Repo
+from tdump_writer import Repo, Writer
 
 GOLDEN = os.path.join(os.environ.get("ARTEMIS_RECORDINGS") or os.path.join(Repo(), "Ignore", "Regresion"), "cgb_displace_1min", "golden.tdump")
 needs_golden = pytest.mark.skipif(not os.path.isfile(GOLDEN), reason="the cgb_displace_1min golden is not in this checkout")
@@ -83,3 +85,47 @@ def test_an_empty_dump_fails_and_a_missing_file_is_an_error(golden, tmp_path, ca
 def test_the_rule_names_are_unique():
     assert len(set(tickchecks.ALL_RULES)) == len(tickchecks.ALL_RULES)
     assert set(tickchecks.FILE_RULES).isdisjoint(tickchecks.GENERAL_RULES)
+
+
+def test_parent_kinds_mixes_the_sentinel_only_after_a_signed_cast():
+    # The Kind column of a BridgeEntity is unsigned: numpy 2 (NEP 50) refuses -1 next to uint16.
+    rows = np.zeros(3, np.dtype([("Kind", "<u2")]))
+    rows["Kind"] = [5, 10, 65535]
+    kinds = tickchecks.ParentKinds(np.array([True, False, True]), rows)
+    assert kinds.dtype == np.int16
+    assert kinds.tolist() == [5, -1, -1]
+    strict = np.where(np.array([True, False]), np.array([7, 7], np.uint16).astype(np.int16), np.int16(-1))
+    assert strict.tolist() == [7, -1]
+
+
+def test_no_np_where_or_fill_mixes_a_negative_literal_with_a_column():
+    with open(tickchecks.__file__, encoding="utf-8") as handle:
+        source = handle.read()
+    assert not re.search(r"np\.where\([^\n]*,\s*-1\s*\)", source)
+    assert not re.search(r"np\.(?:full|where)\([^\n]*rows\[\"Kind\"\](?!\.astype)", source)
+
+
+def test_a_link_to_a_handle_that_is_not_in_the_tick_is_found_without_an_exception(tmp_path):
+    # The case of the live crash: an entity bound to a handle that no entity of the tick has.
+    writer = Writer()
+    for tick in range(3):
+        writer.Tick(tick, entities=[{"Handle": 0xE2340012, "Kind": 2, "Vitality": 1.0, "BoundTo": 0xE2999999, "ParentHandle": 0xE2999999}])
+    dump = tickdump.Dump(writer.Save(tmp_path / "linked.tdump"))
+    _, failures = tickchecks.Evaluate(dump)
+    assert "entity_bound_to_not_in_the_tick" in [name for name, _, _ in failures]
+
+
+def test_an_exception_inside_assert_is_exit_2_with_the_message_on_stderr(tmp_path, monkeypatch, capsys):
+    path = Writer().Save(tmp_path / "x.tdump")
+
+    def Boom(*args, **kwargs):
+        raise OverflowError("Python integer -1 out of bounds for uint16")
+    monkeypatch.setattr(tickchecks, "Evaluate", Boom)
+    assert tickdump.Main(["assert", path, "--json"]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "ERROR: assert failed inside the tool: OverflowError: Python integer -1 out of bounds for uint16" in captured.err
+    assert "Traceback" in captured.err
+    # Failing rules still exit 1, and only the assert command turns exceptions into 2.
+    monkeypatch.undo()
+    assert tickdump.Main(["assert", path]) in (0, 1)

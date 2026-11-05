@@ -176,24 +176,31 @@ def test_game_interprets_the_exit_of_the_assert():
     assert game.InterpretAssert(0, '{"result": "PASS"}') == ("pass", [])
     status, lines = game.InterpretAssert(1, failing + "\n")
     assert status == "fail" and lines == ["header_flags: 2 case(s)", "  tick 7 handle 0x00000000 0x1"]
-    assert game.InterpretAssert(1, "garbage\nmore")[0] == "fail"
+    status, lines = game.InterpretAssert(1, "garbage\nmore")
+    assert status == "fail" and lines[0].startswith("no rule could be read") and lines[-2:] == ["garbage", "more"]
     assert game.InterpretAssert(2, "ERROR: cannot read x\n") == ("error", ["ERROR: cannot read x"])
-    assert game.InterpretAssert(7, "")[0] == "error"
+    assert game.InterpretAssert(7, "") == ("error", ["exit 7 without output"])
+    # An error, or a fail that cannot be read, shows the end of stderr (the traceback), not just the status.
+    traceback = "\n".join(["Traceback (most recent call last):", "  File x, line 1", "OverflowError: Python integer -1 out of bounds for uint16"])
+    status, lines = game.InterpretAssert(1, "", traceback)
+    assert status == "fail" and lines[-1] == "OverflowError: Python integer -1 out of bounds for uint16"
+    status, lines = game.InterpretAssert(2, "", "a\n" * 20 + traceback)
+    assert status == "error" and lines[-1].startswith("OverflowError") and len(lines) == 8
 
 
 def test_game_assert_tickdump_uses_the_runner_and_reports_pending_and_errors():
     game = LoadGame()
     calls = []
 
-    def Runner(code, out):
+    def Runner(code, out, err=""):
         def Run(script, args, timeout):
             calls.append((script, args, timeout))
-            return code, out
+            return code, out, err
         return Run
     assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(0, ""))[0] == "pass"
     assert calls == [("Tools\\tickdump.py", ["assert", "20261105_101500_ctf_c.tdump", "--json"], 30)]
     assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(1, '{"rules": []}'))[0] == "fail"
-    assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(2, "ERROR: x"))[0] == "error"
+    assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(2, "", "ERROR: boom")) == ("error", ["ERROR: boom"])
     status, lines = game.AssertTickDump(WINDOWS_PATH, 30, Runner(None, "20261105-101500-ab12"))
     assert status == "pending" and "py --id 20261105-101500-ab12 --wait" in lines[0]
     assert game.AssertTickDump(WINDOWS_PATH, 30, Runner(None, "the watcher refused the run (x)"))[0] == "error"
@@ -236,13 +243,14 @@ def test_game_run_python_reads_the_exit_and_the_output_of_the_run(tmp_path, monk
         if name.endswith(".json"):
             id = sent[0][1]
             (tmp_path / "python" / (id + ".out")).write_text('{"result": "PASS"}\n', encoding="utf-8")
+            (tmp_path / "python" / (id + ".err")).write_text("warning\n", encoding="utf-8")
             return {"done": True, "exit": 0}
         return None
     monkeypatch.setattr(game, "ReadJson", Answer)
-    assert game.RunPython("Tools\\tickdump.py", ["assert", "x.tdump", "--json"], 10) == (0, '{"result": "PASS"}\n')
+    assert game.RunPython("Tools\\tickdump.py", ["assert", "x.tdump", "--json"], 10) == (0, '{"result": "PASS"}\n', "warning\n")
     assert sent[0][0] == "python" and sent[0][2] == {"script": "Tools\\tickdump.py", "args": ["assert", "x.tdump", "--json"]}
     monkeypatch.setattr(game, "ReadJson", lambda name: None)
-    code, out = game.RunPython("Tools\\tickdump.py", [], 0)
-    assert code is None and out == sent[1][1]
+    code, out, err = game.RunPython("Tools\\tickdump.py", [], 0)
+    assert code is None and out == sent[1][1] and err == ""
     monkeypatch.setattr(game, "Send", lambda kind, id=None, **extra: (False, "no"))
-    assert game.RunPython("Tools\\tickdump.py", [], 5) == (None, "the watcher refused the run (no)")
+    assert game.RunPython("Tools\\tickdump.py", [], 5) == (None, "the watcher refused the run (no)", "")

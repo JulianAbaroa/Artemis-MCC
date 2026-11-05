@@ -13,7 +13,7 @@ in the file, so an old dump stays readable after Bridge.xml changes. Output is s
         Runs on FILE the general rules of Tools/tickchecks.py (the invariants of Tools/Tests/test_golden_tick.py that need no film) and the rules of
         the file (no dropped ticks, not cut). Prints PASS, or the failing rules with their first 10 cases (GameTick, handle). --json prints one
         line of JSON instead: {"result", "records", "rules": [{"name", "count", "cases": [{"tick", "handle", "detail"}]}]}.
-        Exit 0 passes, 1 fails, 2 cannot read the file. FILE is resolved like in show (the file name alone is enough).
+        Exit 0 passes, 1 fails (only when rules fail), 2 cannot read the file or any error inside the tool (the message and the traceback go to stderr). FILE is resolved like in show (the file name alone is enough).
     python Tools/tickdump.py approve RUN GOLDEN_DIR --reason "..."
         Saves RUN as GOLDEN_DIR/golden.tdump (the previous one becomes golden_prev.tdump) and adds a line to manifest.txt (D172).
         The .sdump of the same session (RUN with the extension .sdump) is saved as golden.sdump and named in the line. A run
@@ -44,6 +44,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import traceback
 from collections import Counter
 from dataclasses import dataclass
 from typing import Optional
@@ -828,10 +829,18 @@ def Main(argv=None):
     approve.add_argument("run")
     approve.add_argument("golden_dir")
     approve.add_argument("--reason", required=True)
+    args = parser.parse_args(argv)
     try:
-        return Run(parser.parse_args(argv))
+        return Run(args)
     except TickDumpError as error:
         print(f"ERROR: {error}", file=sys.stderr)
+        return 2
+    except Exception as error:
+        # Exit 1 is only for the rules that fail (assert) or a dump that differs (diff): a bug of the tool is an error.
+        if args.command != "assert":
+            raise
+        print(f"ERROR: assert failed inside the tool: {type(error).__name__}: {error}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         return 2
 
 
