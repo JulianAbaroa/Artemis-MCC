@@ -258,9 +258,10 @@ namespace DevTools::Workbench::TickDump::System
             m_TickDumpUIStore.AddSnapshotBytes(Blam::Layout::Snapshot::System::WriteFooter(snapshotFile, snapshotFooter));
         }
 
+        // Closing a stream that was never opened sets its failbit: the .sdump is only checked when it was recorded.
         file.close();
-        snapshotFile.close();
-        if (file.fail() || snapshotFile.fail())
+        if (isSnapshotWritten) snapshotFile.close();
+        if (file.fail() || (isSnapshotWritten && snapshotFile.fail()))
         {
             m_TickDumpUIStore.SetStatus("The footer could not be written: a file is cut.");
             m_Log.Message("[TickDumpUIService] ERROR: Failed to write the footer of the dump.");
