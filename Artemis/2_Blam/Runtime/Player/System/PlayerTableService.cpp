@@ -76,6 +76,19 @@ namespace Blam::Runtime::Player::System
 
         player.Handle = handle;
 
+        this->ReadSlot(snapshot, entry, handle & k_HandleIndexMask, player);
+
+        auto rawGamerTag = snapshot.ReadArray<char16_t, k_GamerTagLength>(RegionId::PlayerArray, entry + k_GamerTag);
+        player.Gamertag = Common::Text::System::WideToUtf8(rawGamerTag);
+
+        auto rawTag = snapshot.ReadArray<char16_t, k_TagLength>(RegionId::PlayerArray, entry + k_Tag);
+        player.Tag = Common::Text::System::WideToUtf8(rawTag);
+
+        return player;
+    }
+
+    auto PlayerTableService::ReadSlot(const Snapshot& snapshot, std::size_t entry, std::uint32_t index, AlivePlayer& player) -> void
+    {
         player.ConnectionState = snapshot.Read<ConnectionState>(RegionId::PlayerArray, entry + k_ConnectionState);
 
         player.AliveBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_AliveBipedHandle);
@@ -85,21 +98,13 @@ namespace Blam::Runtime::Player::System
         player.Traits = Decode(snapshot.ReadArray<std::uint8_t, k_Size>(RegionId::PlayerArray, entry + k_Traits));
         player.PowerupPickupTicks = snapshot.ReadArray<std::int32_t, k_PowerupCount>(RegionId::PlayerArray, entry + k_PowerupPickupTicks);
 
-        auto rawGamerTag = snapshot.ReadArray<char16_t, k_GamerTagLength>(RegionId::PlayerArray, entry + k_GamerTag);
-        player.Gamertag = Common::Text::System::WideToUtf8(rawGamerTag);
-
-        auto rawTag = snapshot.ReadArray<char16_t, k_TagLength>(RegionId::PlayerArray, entry + k_Tag);
-        player.Tag = Common::Text::System::WideToUtf8(rawTag);
-
         player.PrimaryWeaponHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_PrimaryWeaponHandle));
         player.SecondaryWeaponHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_SecondaryWeaponHandle));
         player.ObjectiveHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_ObjectiveHandle));
         player.CameraPosition = snapshot.Read<Vec3>(RegionId::PlayerArray, entry + k_CameraPosition);
         player.CameraForward = snapshot.Read<Vec3>(RegionId::PlayerArray, entry + k_CameraForward);
         player.AimOffset = snapshot.Read<Vec3>(RegionId::PlayerArray, entry + k_AimOffset);
-        player.LocalIndex = this->ReadLocalIndex(snapshot, handle & k_HandleIndexMask);
-
-        return player;
+        player.LocalIndex = this->ReadLocalIndex(snapshot, index);
     }
 
     auto PlayerTableService::UpdatePlayerTable(const Snapshot& snapshot) -> void
@@ -147,24 +152,9 @@ namespace Blam::Runtime::Player::System
                 return;
             }
 
-            player.ConnectionState = snapshot.Read<ConnectionState>(RegionId::PlayerArray, entry + k_ConnectionState);
-
             player.Team = snapshot.Read<Team>(RegionId::PlayerArray, entry + k_Team);
 
-            player.AliveBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_AliveBipedHandle);
-            player.DeadBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_DeadBipedHandle);
-            player.CurrentBipedHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle));
-            player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
-            player.Traits = Decode(snapshot.ReadArray<std::uint8_t, k_Size>(RegionId::PlayerArray, entry + k_Traits));
-            player.PowerupPickupTicks = snapshot.ReadArray<std::int32_t, k_PowerupCount>(RegionId::PlayerArray, entry + k_PowerupPickupTicks);
-
-            player.PrimaryWeaponHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_PrimaryWeaponHandle));
-            player.SecondaryWeaponHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_SecondaryWeaponHandle));
-            player.ObjectiveHandle = ReadHandle(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_ObjectiveHandle));
-            player.CameraPosition = snapshot.Read<Vec3>(RegionId::PlayerArray, entry + k_CameraPosition);
-            player.CameraForward = snapshot.Read<Vec3>(RegionId::PlayerArray, entry + k_CameraForward);
-            player.AimOffset = snapshot.Read<Vec3>(RegionId::PlayerArray, entry + k_AimOffset);
-            player.LocalIndex = this->ReadLocalIndex(snapshot, index);
+            this->ReadSlot(snapshot, entry, index, player);
         });
 
         for (std::uint32_t handle : handlesToRemove)

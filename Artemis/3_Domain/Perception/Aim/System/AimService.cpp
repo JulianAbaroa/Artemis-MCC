@@ -52,16 +52,12 @@ namespace Perception::Aim::System
 
         if (anchor.ModelNodeIndex >= 0)
         {
-            if (!bones ||
-                static_cast<std::size_t>(anchor.ModelNodeIndex) >= bones->Matrices.size())
-            {
-                return aim;
-            }
+            if (!bones) return aim;
 
-            const auto& bone = bones->Matrices[anchor.ModelNodeIndex];
-            if (!Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid(bone)) return aim;
+            const auto* bone = Blam::Runtime::Object::Type::BoneMatrix::FindValidBone(bones->Matrices, anchor.ModelNodeIndex);
+            if (bone == nullptr) return aim;
 
-            aim.Position = Blam::Runtime::Object::Type::BoneMatrix::Transform(bone, offset.X, offset.Y, offset.Z);
+            aim.Position = Blam::Runtime::Object::Type::BoneMatrix::Transform(*bone, offset.X, offset.Y, offset.Z);
             aim.Valid = true;
             return aim;
         }

@@ -35,7 +35,6 @@ namespace
     using Blam::Runtime::Object::Type::Projectile::ProjectileFlags;
     using Blam::Runtime::Object::Type::Crate::Teleport::Teleport;
     using Blam::Runtime::Object::Type::Crate::Teleport::Allowed;
-    using Blam::Runtime::Object::Type::Crate::CrateKind;
     using Blam::Runtime::Object::Type::Weapon::WeaponAction;
     using Common::Semantic::Type::ChargeState;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
@@ -551,11 +550,7 @@ namespace Blam::Runtime::Object::System
     {
         Crate crate{};
 
-        crate.Kind = Blam::Runtime::Object::Type::Crate::ResolveCrateType(object.TagName);
-
-        if (crate.Kind == CrateKind::TeleportSender ||
-            crate.Kind == CrateKind::TeleportReceiver ||
-            crate.Kind == CrateKind::TeleportTwoWay)
+        if (Common::Tag::Type::Teleport::IsTeleport(object.TagName))
         {
             Teleport teleport{};
 
@@ -572,7 +567,6 @@ namespace Blam::Runtime::Object::System
     auto ObjectTableService::UpdateScenery(const RawObject& datum, AliveObject& object) -> void
     {
         Scenery scenery{};
-        scenery.Kind = Blam::Runtime::Object::Type::Scenery::ResolveSceneryType(object.TagName);
 
         object.Specific = scenery;
     }

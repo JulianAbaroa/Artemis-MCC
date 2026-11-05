@@ -1,17 +1,60 @@
 module Perception.Collidable.System;
 
+import Common.Math.System;
+import Blam.MapModel.Definitions.Type;
 import Blam.Runtime.Object.Type;
 import Perception.Collidable.Type;
 
 namespace
 {
     using Common::Math::Type::Triangle;
+    using Common::Math::Type::Vec3;
+    using Blam::MapModel::Definitions::Type::Coll::Coll;
+    using Perception::Collidable::Type::Collidable;
     using Perception::Collidable::Type::RegionDiagnostic;
 
     using Perception::Collidable::Type::k_RegionStateStride;
     using Perception::Collidable::Type::k_RegionStateValue;
     using Perception::Collidable::Type::k_NoPermutation;
     using Perception::Collidable::Type::Collidables;
+
+    // Axes of a rigid object (no bones) and the center of its collision bounds, in the object space.
+    struct RigidFrame
+    {
+        Vec3 Position{};
+        Vec3 Forward{};
+        Vec3 Up{};
+        Vec3 Right{};
+        Vec3 Center{};
+    };
+
+    auto MakeRigidFrame(const Collidable& instance, const Coll& coll) -> RigidFrame
+    {
+        return RigidFrame{
+            .Position = instance.Position,
+            .Forward = instance.Forward,
+            .Up = instance.Up,
+            .Right = Common::Math::System::Cross(instance.Up, instance.Forward),
+            .Center = Vec3{ (coll.BoundsMin.X + coll.BoundsMax.X) * 0.5f,
+                            (coll.BoundsMin.Y + coll.BoundsMax.Y) * 0.5f,
+                            (coll.BoundsMin.Z + coll.BoundsMax.Z) * 0.5f }
+        };
+    }
+
+    // Appends the triangles with their points placed by pose, keeping surface flags and material.
+    auto AppendPosed(std::vector<Triangle>& out, const auto& triangles, const auto& pose) -> void
+    {
+        for (const auto& triangle : triangles)
+        {
+            Triangle worldTriangle;
+            worldTriangle.A = pose(triangle.A);
+            worldTriangle.B = pose(triangle.B);
+            worldTriangle.C = pose(triangle.C);
+            worldTriangle.SurfaceFlags = triangle.SurfaceFlags;
+            worldTriangle.Material = triangle.Material;
+            out.push_back(worldTriangle);
+        }
+    }
 }
 
 namespace Perception::Collidable::System
@@ -147,37 +190,16 @@ namespace Perception::Collidable::System
                 continue;
             }
 
-            if (mesh.NodeIndex < 0 || static_cast<size_t>(mesh.NodeIndex) >= matrices.size())
+            const BoneMatrix* bone = Blam::Runtime::Object::Type::BoneMatrix::FindValidBone(matrices, mesh.NodeIndex);
+            if (bone == nullptr)
             {
                 continue;
             }
 
-            const BoneMatrix& bone = matrices[mesh.NodeIndex];
-
-            if (!Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid(bone))
+            AppendPosed(out.Triangles, mesh.Triangles, [&](const Vec3& v)
             {
-                continue;
-            }
-
-            auto poseLocal = [&](const Vec3& v) {
-                const auto& r = bone.Rotation;
-                return Vec3{
-                    r[0] * v.X + r[3] * v.Y + r[6] * v.Z + bone.Translation[0],
-                    r[1] * v.X + r[4] * v.Y + r[7] * v.Z + bone.Translation[1],
-                    r[2] * v.X + r[5] * v.Y + r[8] * v.Z + bone.Translation[2]
-                };
-            };
-
-            for (const auto& triangle : mesh.Triangles)
-            {
-                Triangle worldTriangle;
-                worldTriangle.A = poseLocal(triangle.A);
-                worldTriangle.B = poseLocal(triangle.B);
-                worldTriangle.C = poseLocal(triangle.C);
-                worldTriangle.SurfaceFlags = triangle.SurfaceFlags;
-                worldTriangle.Material = triangle.Material;
-                out.Triangles.push_back(worldTriangle);
-            }
+                return Blam::Runtime::Object::Type::BoneMatrix::Transform(*bone, v.X, v.Y, v.Z);
+            });
         }
 
         return out;
@@ -189,19 +211,13 @@ namespace Perception::Collidable::System
         CollMesh out;
         if (!ctx.Coll) return out;
 
-        const auto& pos = instance.Position;
-        const auto& fwd = instance.Forward;
-        const auto& up = instance.Up;
-        const auto  rgt = this->Cross(up, fwd);
+        const RigidFrame frame{ MakeRigidFrame(instance, *ctx.Coll) };
 
-        const float cx = (ctx.Coll->BoundsMin.X + ctx.Coll->BoundsMax.X) * 0.5f;
-        const float cy = (ctx.Coll->BoundsMin.Y + ctx.Coll->BoundsMax.Y) * 0.5f;
-        const float cz = (ctx.Coll->BoundsMin.Z + ctx.Coll->BoundsMax.Z) * 0.5f;
-
-        auto poseLocal = [&](const Vec3& v) {
-            return this->TransformPoint(pos, rgt, fwd, up,
-                v.X - cx, v.Y - cy, v.Z - cz);
-            };
+        auto poseLocal = [&](const Vec3& v)
+        {
+            return this->TransformPoint(frame.Position, frame.Right, frame.Forward, frame.Up,
+                v.X - frame.Center.X, v.Y - frame.Center.Y, v.Z - frame.Center.Z);
+        };
 
         size_t triTotal = 0;
         for (const auto& mesh : ctx.Coll->Meshes)
@@ -214,16 +230,7 @@ namespace Perception::Collidable::System
         {
             if (!this->IsActivePermutation(ctx, mesh, damage)) continue;
 
-            for (const auto& triangle : mesh.Triangles)
-            {
-                Triangle worldTriangle;
-                worldTriangle.A = poseLocal(triangle.A);
-                worldTriangle.B = poseLocal(triangle.B);
-                worldTriangle.C = poseLocal(triangle.C);
-                worldTriangle.SurfaceFlags = triangle.SurfaceFlags;
-                worldTriangle.Material = triangle.Material;
-                out.Triangles.push_back(worldTriangle);
-            }
+            AppendPosed(out.Triangles, mesh.Triangles, poseLocal);
         }
 
         return out;
@@ -248,20 +255,14 @@ namespace Perception::Collidable::System
             {
                 if (!this->IsActivePermutation(ctx, mesh, damage)) continue;
 
-                if (mesh.NodeIndex < 0 || static_cast<size_t>(mesh.NodeIndex) >= matrices.size())
+                const BoneMatrix* bone = Blam::Runtime::Object::Type::BoneMatrix::FindValidBone(matrices, mesh.NodeIndex);
+                if (bone == nullptr)
                 {
                     continue;
                 }
 
-                const BoneMatrix& bone = matrices[mesh.NodeIndex];
-
-                if (!Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid(bone))
-                {
-                    continue;
-                }
-
-                const auto& r = bone.Rotation;
-                const auto& t = bone.Translation;
+                const auto& r = bone->Rotation;
+                const auto& t = bone->Translation;
 
                 CollidablePart part;
                 part.Source = &mesh;
@@ -276,18 +277,17 @@ namespace Perception::Collidable::System
             return out;
         }
 
-        const auto& pos = instance.Position;
-        const auto& fwd = instance.Forward;
-        const auto& up = instance.Up;
-        const auto  rgt = this->Cross(up, fwd);
+        const RigidFrame frame{ MakeRigidFrame(instance, *ctx.Coll) };
+        const auto& fwd = frame.Forward;
+        const auto& up = frame.Up;
+        const auto& rgt = frame.Right;
+        const float cx = frame.Center.X;
+        const float cy = frame.Center.Y;
+        const float cz = frame.Center.Z;
 
-        const float cx = (ctx.Coll->BoundsMin.X + ctx.Coll->BoundsMax.X) * 0.5f;
-        const float cy = (ctx.Coll->BoundsMin.Y + ctx.Coll->BoundsMax.Y) * 0.5f;
-        const float cz = (ctx.Coll->BoundsMin.Z + ctx.Coll->BoundsMax.Z) * 0.5f;
-
-        const float tx = pos.X - (fwd.X * cx + rgt.X * cy + up.X * cz);
-        const float ty = pos.Y - (fwd.Y * cx + rgt.Y * cy + up.Y * cz);
-        const float tz = pos.Z - (fwd.Z * cx + rgt.Z * cy + up.Z * cz);
+        const float tx = frame.Position.X - (fwd.X * cx + rgt.X * cy + up.X * cz);
+        const float ty = frame.Position.Y - (fwd.Y * cx + rgt.Y * cy + up.Y * cz);
+        const float tz = frame.Position.Z - (fwd.Z * cx + rgt.Z * cy + up.Z * cz);
 
         for (const auto& mesh : meshes)
         {
@@ -430,15 +430,6 @@ namespace Perception::Collidable::System
 
     // --- Helpers ---
 
-    auto CollidableService::Cross(const Vec3& a, const Vec3& b) -> Vec3
-    {
-        return {
-            a.Y * b.Z - a.Z * b.Y,
-            a.Z * b.X - a.X * b.Z,
-            a.X * b.Y - a.Y * b.X
-        };
-    }
-
     auto CollidableService::TransformPoint(const Vec3& pos, const Vec3& right,
         const Vec3& forward, const Vec3& up, float lx, float ly, float lz) -> Vec3
     {
@@ -447,16 +438,6 @@ namespace Perception::Collidable::System
             pos.Y + forward.Y * lx + right.Y * ly + up.Y * lz,
             pos.Z + forward.Z * lx + right.Z * ly + up.Z * lz
         };
-    }
-
-    auto CollidableService::TransformByBone(const BoneMatrix& m,
-        float lx, float ly, float lz) -> Vec3
-    {
-        const auto& r = m.Rotation;
-        const float wx = r[0] * lx + r[1] * ly + r[2] * lz + m.Translation[0];
-        const float wy = r[3] * lx + r[4] * ly + r[5] * lz + m.Translation[1];
-        const float wz = r[6] * lx + r[7] * ly + r[8] * lz + m.Translation[2];
-        return { wx, wy, wz };
     }
 
     auto CollidableService::Cleanup() -> void

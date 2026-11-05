@@ -44,6 +44,10 @@ export namespace Blam::Runtime::Player::System
 
         auto UpdatePlayerData(const Snapshot& snapshot) -> void;
 
+        // Reads the fields that change while the player lives from the table slot into the player.
+        // note: Not the team, the gamertag or the tag. Those are read where they are needed.
+        auto ReadSlot(const Snapshot& snapshot, std::size_t entry, std::uint32_t index, AlivePlayer& player) -> void;
+
         // return: Local player of the table index, or empty when it is not local or the mapping is not captured.
         auto ReadLocalIndex(const Snapshot& snapshot, std::uint32_t index) -> std::optional<std::uint8_t>;
     };

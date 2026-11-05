@@ -335,21 +335,12 @@ namespace Views::Affordance::System
                          vehicleObject.BoundingCenter.Z };
         }
 
-        if (static_cast<std::size_t>(seatMarker.NodeIndex) >= bones.Matrices.size())
-            return std::nullopt;
+        const BoneMatrix* bone = Blam::Runtime::Object::Type::BoneMatrix::FindValidBone(bones.Matrices, seatMarker.NodeIndex);
+        if (bone == nullptr) return std::nullopt;
 
-        const BoneMatrix& bone = bones.Matrices[seatMarker.NodeIndex];
-
-        if (!Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid(bone)) return std::nullopt;
-
-        const auto& r = bone.Rotation;
         const Vec3& v = seatMarker.LocalTranslation;
 
-        return Vec3{
-            r[0] * v.X + r[3] * v.Y + r[6] * v.Z + bone.Translation[0],
-            r[1] * v.X + r[4] * v.Y + r[7] * v.Z + bone.Translation[1],
-            r[2] * v.X + r[5] * v.Y + r[8] * v.Z + bone.Translation[2]
-        };
+        return Blam::Runtime::Object::Type::BoneMatrix::Transform(*bone, v.X, v.Y, v.Z);
     }
 
     // --- Shared helpers ---

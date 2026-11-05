@@ -101,12 +101,8 @@ export namespace Perception::Collidable::System
 
         // --- Helpers ---
 
-        auto Cross(const Vec3& a, const Vec3& b) -> Vec3;
-
         auto TransformPoint(const Vec3& pos,
             const Vec3& right, const Vec3& forward,
             const Vec3& up, float lx, float ly, float lz) -> Vec3;
-
-        auto TransformByBone(const BoneMatrix& m, float lx, float ly, float lz) -> Vec3;
     };
 }

@@ -7,7 +7,6 @@ import std;
 
 namespace
 {
-    using Common::Math::Type::Node;
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::Definitions::Type::Coll::Material;
     using Blam::MapModel::Definitions::Type::Coll::Coll;
@@ -15,17 +14,6 @@ namespace
 
 export namespace Common::Reflect::Type
 {
-    template <>
-    struct Fields<Node>
-    {
-        static constexpr auto k_Value = std::tuple{
-            MakeField("Name", &Node::Name),
-            MakeField("ParentIndex", &Node::ParentIndex),
-            MakeField("NextSiblingIndex", &Node::NextSiblingIndex),
-            MakeField("FirstChildIndex", &Node::FirstChildIndex),
-        };
-    };
-
     template <>
     struct Fields<CollMesh>
     {

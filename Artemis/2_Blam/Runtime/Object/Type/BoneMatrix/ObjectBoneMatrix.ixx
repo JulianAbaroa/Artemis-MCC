@@ -78,6 +78,19 @@ export namespace Blam::Runtime::Object::Type::BoneMatrix
         return true;
     }
 
+    // Finds the bone of a node when the index is in range and its matrix is valid.
+    // return: The bone, or nullptr for a negative or out of range index and for an invalid matrix.
+    inline auto FindValidBone(const std::vector<BoneMatrix>& matrices, std::int32_t nodeIndex) -> const BoneMatrix*
+    {
+        if (nodeIndex < 0 || static_cast<std::size_t>(nodeIndex) >= matrices.size())
+        {
+            return nullptr;
+        }
+
+        const BoneMatrix& bone = matrices[nodeIndex];
+        return IsBoneMatrixValid(bone) ? &bone : nullptr;
+    }
+
     // Bone matrix tables, by object handle.
     struct BoneMatrixTables : std::unordered_map<std::uint32_t, BoneMatrixTable>
     {
