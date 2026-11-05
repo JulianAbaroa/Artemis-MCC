@@ -2,6 +2,7 @@ module DevTools.Viewer.Camera.System;
 
 import Common.Math.Type;
 import Common.Math.System;
+import Blam.Runtime.Player.Type;
 import DevTools.Viewer.Options.Type;
 import std;
 
@@ -16,6 +17,8 @@ namespace
     using DevTools::Viewer::Camera::Type::Follow;
     using DevTools::Viewer::Options::Type::Scalar;
     using Common::Math::Type::Vec3;
+    using Blam::Runtime::Player::Type::Alive::AlivePlayer;
+    using Blam::Runtime::Player::Type::Alive::PlayerTable;
 
     using Common::Math::Type::k_WorldUp;
 
@@ -30,6 +33,17 @@ namespace
 
     // Speed of the field of view transition. Higher is faster.
     constexpr float k_FovSmoothing{ 12.0f };
+
+    // return: The player whose alive biped is the handle, or nullptr if there is none.
+    auto FindPlayerOfBiped(const PlayerTable& table, std::uint32_t bipedHandle) -> const AlivePlayer*
+    {
+        for (const auto& entry : table)
+        {
+            if (entry.second.AliveBipedHandle == bipedHandle) return &entry.second;
+        }
+
+        return nullptr;
+    }
 }
 
 namespace DevTools::Viewer::Camera::System
@@ -146,13 +160,10 @@ namespace DevTools::Viewer::Camera::System
 
         if (tick->PlayerTable)
         {
-            for (const auto& entry : *tick->PlayerTable)
+            if (const AlivePlayer* player{ FindPlayerOfBiped(*tick->PlayerTable, selected) })
             {
-                const auto& player = entry.second;
-                if (player.AliveBipedHandle != selected) continue;
-
-                outPosition = player.CameraPosition;
-                outForward = player.CameraForward;
+                outPosition = player->CameraPosition;
+                outForward = player->CameraForward;
                 return true;
             }
         }
@@ -198,12 +209,9 @@ namespace DevTools::Viewer::Camera::System
 
         if (tick->PlayerTable)
         {
-            for (const auto& entry : *tick->PlayerTable)
+            if (const AlivePlayer* player{ FindPlayerOfBiped(*tick->PlayerTable, selected) })
             {
-                const auto& player = entry.second;
-                if (player.AliveBipedHandle != selected) continue;
-
-                outPivot = player.CameraPosition;
+                outPivot = player->CameraPosition;
                 return true;
             }
         }

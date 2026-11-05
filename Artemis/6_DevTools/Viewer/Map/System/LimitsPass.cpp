@@ -6,6 +6,7 @@ module DevTools.Viewer.Map.System;
 import :LimitsPass;
 
 import Common.Math.Type;
+import Common.Math.System;
 import Engine.Render.Type;
 import Engine.Render.System;
 import Blam.MapModel.Definitions.Type;
@@ -17,6 +18,9 @@ namespace
 {
     using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
+    using Common::Math::System::Add;
+    using Common::Math::System::Cross;
+    using Common::Math::System::Scale;
     using DevTools::Viewer::Style::Type::Color;
     using Blam::MapModel::Definitions::Type::Scnr::TriggerVolume;
     using Blam::MapModel::Definitions::Type::Scnr::TriggerVolumeKind;
@@ -47,19 +51,6 @@ namespace
         std::vector<Vertex>& Faces;
         std::vector<Vertex>& Edges;
     };
-
-    auto Add(const Vec3& a, const Vec3& b) -> Vec3
-    {
-        return { a.X + b.X, a.Y + b.Y, a.Z + b.Z };
-    }
-    auto Scale(const Vec3& a, float s) -> Vec3
-    {
-        return { a.X * s, a.Y * s, a.Z * s };
-    }
-    auto Cross(const Vec3& a, const Vec3& b) -> Vec3
-    {
-        return { a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X };
-    }
 
     auto MakeVertex(const Vec3& p, const Color& c) -> Vertex
     {

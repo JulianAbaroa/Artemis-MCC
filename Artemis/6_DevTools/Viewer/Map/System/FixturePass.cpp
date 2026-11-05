@@ -6,6 +6,7 @@ module DevTools.Viewer.Map.System;
 import :FixturePass;
 
 import Common.Math.Type;
+import Common.Math.System;
 import Engine.Render.Type;
 import Engine.Render.System;
 import Perception.Details.Type;
@@ -18,6 +19,11 @@ namespace
 {
     using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
+    using Common::Math::System::Add;
+    using Common::Math::System::Cross;
+    using Common::Math::System::Length;
+    using Common::Math::System::Scale;
+    using Common::Math::System::Subtract;
     using DevTools::Viewer::Style::Type::Color;
 
     using Engine::Render::Type::VertexLayout;
@@ -32,28 +38,6 @@ namespace
     constexpr float k_HeadWidth{ 0.2f };
     constexpr float k_AnchorLift{ 0.4f };
     constexpr float k_Minimum{ 1e-5f };
-
-    auto Sub(const Vec3& a, const Vec3& b) -> Vec3
-    {
-        return { a.X - b.X, a.Y - b.Y, a.Z - b.Z };
-    }
-    auto Add(const Vec3& a, const Vec3& b) -> Vec3
-    {
-        return { a.X + b.X, a.Y + b.Y, a.Z + b.Z };
-    }
-    auto Scale(const Vec3& a, float s) -> Vec3
-    {
-        return { a.X * s, a.Y * s, a.Z * s };
-    }
-    auto Length(const Vec3& a) -> float
-    {
-        return std::sqrt(a.X * a.X + a.Y * a.Y + a.Z * a.Z);
-    }
-
-    auto Cross(const Vec3& a, const Vec3& b) -> Vec3
-    {
-        return { a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X };
-    }
 
     // return: The point lifted so the arrows do not sink into the floor.
     auto Raised(const Vec3& p) -> Vec3
@@ -74,19 +58,19 @@ namespace
 
         side = Scale(side, 1.0f / Length(side));
         const Vec3 other = Cross(dir, side);
-        const Vec3 baseCenter = Sub(tip, Scale(dir, k_HeadLength));
+        const Vec3 baseCenter = Subtract(tip, Scale(dir, k_HeadLength));
 
         AppendLine(vertices, tip, Add(baseCenter, Scale(side, k_HeadWidth)), c);
-        AppendLine(vertices, tip, Sub(baseCenter, Scale(side, k_HeadWidth)), c);
+        AppendLine(vertices, tip, Subtract(baseCenter, Scale(side, k_HeadWidth)), c);
         AppendLine(vertices, tip, Add(baseCenter, Scale(other, k_HeadWidth)), c);
-        AppendLine(vertices, tip, Sub(baseCenter, Scale(other, k_HeadWidth)), c);
+        AppendLine(vertices, tip, Subtract(baseCenter, Scale(other, k_HeadWidth)), c);
     }
 
     // Appends an arrow with a head at the tip. A dashed arrow is drawn as separate segments.
     auto AppendArrow(std::vector<Vertex>& vertices, const Vec3& from, const Vec3& to,
         const Color& c, bool dashed) -> void
     {
-        const Vec3 delta = Sub(to, from);
+        const Vec3 delta = Subtract(to, from);
         const float length = Length(delta);
         if (length < k_Minimum) return;
 

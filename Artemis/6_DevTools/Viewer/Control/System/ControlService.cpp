@@ -6,6 +6,7 @@ module;
 
 module DevTools.Viewer.Control.System;
 
+import Engine.Render.Window.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Options.Type;
 import std;
@@ -16,6 +17,7 @@ namespace
     using DevTools::Viewer::Camera::Type::Mode;
     using DevTools::Viewer::Camera::Type::Follow;
     using DevTools::Viewer::Options::Type::Scalar;
+    using Engine::Render::Window::Type::IsKeyRepeat;
 
     // Maps a virtual key to a camera key.
     // return: False if the key is not a camera key.
@@ -33,11 +35,6 @@ namespace
         case VK_CONTROL: outKey = Key::Custom; return true;
         default:         return false;
         }
-    }
-
-    auto IsRepeat(std::intptr_t lParam) -> bool
-    {
-        return (HIWORD(lParam) & KF_REPEAT) != 0;
     }
 
     // One notch of the mouse wheel is 120 units.
@@ -157,7 +154,7 @@ namespace DevTools::Viewer::Control::System
         {
         case VK_F4:
         {
-            if (!IsRepeat(message.LParam))
+            if (!IsKeyRepeat(message))
             {
                 const bool isActive = !m_CameraStore.IsActive();
                 m_CameraStore.SetActive(isActive);
@@ -172,7 +169,7 @@ namespace DevTools::Viewer::Control::System
             // Not a viewer key while the viewer is off or the menu uses it to move between widgets.
             if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible()) return false;
 
-            if (!IsRepeat(message.LParam)) m_CameraStore.ToggleMode();
+            if (!IsKeyRepeat(message)) m_CameraStore.ToggleMode();
             return true;
         }
 
@@ -182,13 +179,13 @@ namespace DevTools::Viewer::Control::System
             if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible() ||
                 m_CameraStore.GetMode() != Mode::Free) return false;
 
-            if (!IsRepeat(message.LParam)) m_CameraStore.CycleFollow();
+            if (!IsKeyRepeat(message)) m_CameraStore.CycleFollow();
             return true;
         }
 
         case VK_F6:
         {
-            if (!IsRepeat(message.LParam))
+            if (!IsKeyRepeat(message))
             {
                 m_OptionsStore.ToggleEnabled(DevTools::Viewer::Options::Type::Flag::Labels);
             }

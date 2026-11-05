@@ -84,6 +84,9 @@ export namespace DevTools::Viewer::Map::System
         std::vector<DrawRange> m_Draws{};
         std::vector<DrawRange> m_TranslucentDraws{};
 
+        // Binds the geometry and instance buffers and draws the ranges.
+        auto DrawRanges(ID3D11DeviceContext* context, const std::vector<DrawRange>& ranges) const -> void;
+
         Engine::Render::System::UploadGate m_Gate{};
 
         // Copies the pending vertices to the geometry buffer and grows it if needed.

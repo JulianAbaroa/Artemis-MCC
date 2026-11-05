@@ -6,6 +6,7 @@ module DevTools.Viewer.Hud.System;
 import :Canvas;
 
 import Common.Engine.Type;
+import Common.Math.System;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Camera.System;
 import DevTools.Viewer.Options.Type;
@@ -64,15 +65,6 @@ namespace DevTools::Viewer::Hud::System
         return ImGui::ColorConvertFloat4ToU32(ImVec4(color.R, color.G, color.B, alpha));
     }
 
-    auto DistanceBetween(const Common::Math::Type::Vec3& a, const Common::Math::Type::Vec3& b) -> float
-    {
-        const float dx = a.X - b.X;
-        const float dy = a.Y - b.Y;
-        const float dz = a.Z - b.Z;
-
-        return std::sqrt(dx * dx + dy * dy + dz * dz);
-    }
-
     auto ShortTagName(const std::string& tagName) -> std::string
     {
         const std::size_t cut = tagName.find_last_of("\\/");
@@ -121,6 +113,28 @@ namespace DevTools::Viewer::Hud::System
         return true;
     }
 
+    auto LabelCanvas::ProjectInView(const Vec3& world, ImVec2& outScreen, float& outDistance) const -> bool
+    {
+        const float distance = Common::Math::System::Distance(world, m_Eye);
+        if (distance > m_Options.GetScalar(Scalar::LabelMaxDistance)) return false;
+
+        ImVec2 screen{};
+        if (!this->Project(world, screen)) return false;
+
+        const auto& viewport = m_Camera.GetViewport();
+        if (screen.x < viewport.Position.X - k_ScreenMargin ||
+            screen.y < viewport.Position.Y - k_ScreenMargin ||
+            screen.x > viewport.Position.X + viewport.Size.X + k_ScreenMargin ||
+            screen.y > viewport.Position.Y + viewport.Size.Y + k_ScreenMargin)
+        {
+            return false;
+        }
+
+        outScreen = screen;
+        outDistance = distance;
+        return true;
+    }
+
     auto LabelCanvas::Add(const Vec3& world, std::vector<LabelRow> rows, ImU32 group, ImU32 team,
         float priority, std::uint32_t key) -> bool
     {
@@ -141,20 +155,9 @@ namespace DevTools::Viewer::Hud::System
             }
         }
 
-        const float distance = DistanceBetween(world, m_Eye);
-        if (distance > m_Options.GetScalar(Scalar::LabelMaxDistance)) return false;
-
         ImVec2 screen{};
-        if (!this->Project(world, screen)) return false;
-
-        const auto& viewport = m_Camera.GetViewport();
-        if (screen.x < viewport.Position.X - k_ScreenMargin ||
-            screen.y < viewport.Position.Y - k_ScreenMargin ||
-            screen.x > viewport.Position.X + viewport.Size.X + k_ScreenMargin ||
-            screen.y > viewport.Position.Y + viewport.Size.Y + k_ScreenMargin)
-        {
-            return false;
-        }
+        float distance{};
+        if (!this->ProjectInView(world, screen, distance)) return false;
 
         Entry entry{};
         entry.Screen = screen;
@@ -172,7 +175,7 @@ namespace DevTools::Viewer::Hud::System
 
     auto LabelCanvas::AddArrow(const Vec3& from, const Vec3& to, ImU32 color, float thickness, bool dashed) -> bool
     {
-        if (DistanceBetween(from, m_Eye) > m_Options.GetScalar(Scalar::LabelMaxDistance)) return false;
+        if (Common::Math::System::Distance(from, m_Eye) > m_Options.GetScalar(Scalar::LabelMaxDistance)) return false;
 
         Arrow arrow{};
         if (!this->Project(from, arrow.From) || !this->Project(to, arrow.To)) return false;
@@ -192,20 +195,9 @@ namespace DevTools::Viewer::Hud::System
     auto LabelCanvas::AddBar(const Vec3& world, float fraction, ImU32 color,
         std::string text, float priority) -> bool
     {
-        const float distance = DistanceBetween(world, m_Eye);
-        if (distance > m_Options.GetScalar(Scalar::LabelMaxDistance)) return false;
-
         ImVec2 screen{};
-        if (!this->Project(world, screen)) return false;
-
-        const auto& viewport = m_Camera.GetViewport();
-        if (screen.x < viewport.Position.X - k_ScreenMargin ||
-            screen.y < viewport.Position.Y - k_ScreenMargin ||
-            screen.x > viewport.Position.X + viewport.Size.X + k_ScreenMargin ||
-            screen.y > viewport.Position.Y + viewport.Size.Y + k_ScreenMargin)
-        {
-            return false;
-        }
+        float distance{};
+        if (!this->ProjectInView(world, screen, distance)) return false;
 
         Bar bar{};
         bar.Screen = screen;

@@ -10,11 +10,7 @@ import std;
 
 namespace
 {
-    // Checks the auto repeat bit of a key message.
-    auto IsRepeat(std::intptr_t lParam) -> bool
-    {
-        return (HIWORD(lParam) & KF_REPEAT) != 0;
-    }
+    using Engine::Render::Window::Type::IsKeyRepeat;
 
     // Checks whether the Shift key is pressed.
     auto IsShiftDown() -> bool
@@ -36,7 +32,7 @@ namespace DevTools::Workbench::Hotkey::System
         const auto* binding{ m_HotkeyStore.Find(virtualKey, IsShiftDown()) };
         if (binding == nullptr) return false;
 
-        if (!IsRepeat(message.LParam)) this->Execute(binding->Action);
+        if (!IsKeyRepeat(message)) this->Execute(binding->Action);
 
         message.Result = 0;
         return true;

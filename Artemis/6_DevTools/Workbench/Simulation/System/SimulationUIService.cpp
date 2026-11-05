@@ -56,6 +56,23 @@ namespace
     using Common::Engine::Type::k_HandleIndexMask;
     using DevTools::Gui::Style::Type::k_BytesPerRow;
 
+    // Draws one radio button per local player action on a line.
+    // return: The action the user clicked, or nothing when the selection did not change.
+    auto DrawActionRadios(LocalPlayerAction current) -> std::optional<LocalPlayerAction>
+    {
+        std::optional<LocalPlayerAction> chosen{};
+
+        for (std::size_t i{ 0 }; i < k_LocalPlayerActionCount; ++i)
+        {
+            if (i != 0) ImGui::SameLine();
+
+            const auto mode{ static_cast<LocalPlayerAction>(i) };
+            if (ImGui::RadioButton(k_LocalPlayerActionLabels[i], mode == current) && mode != current) chosen = mode;
+        }
+
+        return chosen;
+    }
+
     // Width of the name field and of the list of the match config section.
     constexpr float k_MatchConfigFieldWidth{ 260.0f };
 
@@ -313,7 +330,7 @@ namespace DevTools::Workbench::Simulation::System
         // The client owns the speed and the pause while it owns the instance (D106, D143).
         BridgeStatus bridge{};
         m_BridgeService.CopyStatus(bridge);
-        const bool isPythonOwned{ bridge.Owner == BridgeOwner::Python };
+        const bool isPythonOwned{ bridge.Control.Owner == BridgeOwner::Python };
         if (isPythonOwned) ImGui::TextUnformatted("Python owns the speed and the pause.");
         ImGui::BeginDisabled(isPythonOwned);
 
@@ -358,9 +375,9 @@ namespace DevTools::Workbench::Simulation::System
         }
 
         ImGui::Text("Shared memory Artemis.Bridge.%u | client %s | owner %s | mode %s | N %u, d %u | agents 0x%04X", status.Pid,
-            status.IsClientConnected ? "connected" : "none", status.Owner == BridgeOwner::Python ? "Python" : "UI",
-            status.Mode == BridgeMode::Lockstep ? "Lockstep" : "Free", static_cast<unsigned>(status.DecisionPeriod),
-            static_cast<unsigned>(status.Latency), status.AgentMask);
+            status.Control.IsClientConnected ? "connected" : "none", status.Control.Owner == BridgeOwner::Python ? "Python" : "UI",
+            status.Control.Mode == BridgeMode::Lockstep ? "Lockstep" : "Free", static_cast<unsigned>(status.Control.DecisionPeriod),
+            static_cast<unsigned>(status.Control.Latency), status.Control.AgentMask);
 
         const auto& counters{ status.Counters };
         const double waitMs{ counters.LockstepWaits > 0
@@ -550,16 +567,10 @@ namespace DevTools::Workbench::Simulation::System
 
         // note: The labels repeat other widgets of the tab (the Engine column), so the radios get their own ID scope.
         ImGui::PushID("ActionMode");
-        for (std::size_t i{ 0 }; i < k_LocalPlayerActionCount; ++i)
+        if (const auto mode{ DrawActionRadios(current) })
         {
-            if (i != 0) ImGui::SameLine();
-
-            const auto mode{ static_cast<LocalPlayerAction>(i) };
-            if (ImGui::RadioButton(k_LocalPlayerActionLabels[i], mode == current) && mode != current)
-            {
-                m_SimulationUIStore.SetLocalPlayerAction(local, mode);
-                this->ApplyLocalPlayerAction(local, index, mode, action);
-            }
+            m_SimulationUIStore.SetLocalPlayerAction(local, *mode);
+            this->ApplyLocalPlayerAction(local, index, *mode, action);
         }
         ImGui::PopID();
 
@@ -914,16 +925,10 @@ namespace DevTools::Workbench::Simulation::System
 
             const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex) };
 
-            for (std::size_t i{ 0 }; i < k_LocalPlayerActionCount; ++i)
+            if (const auto mode{ DrawActionRadios(current) })
             {
-                if (i != 0) ImGui::SameLine();
-
-                const auto mode{ static_cast<LocalPlayerAction>(i) };
-                if (ImGui::RadioButton(k_LocalPlayerActionLabels[i], mode == current) && mode != current)
-                {
-                    m_SimulationUIStore.SetBotAction(bot.PlayerIndex, mode);
-                    this->ApplyBotAction(bot.PlayerIndex, mode);
-                }
+                m_SimulationUIStore.SetBotAction(bot.PlayerIndex, *mode);
+                this->ApplyBotAction(bot.PlayerIndex, *mode);
             }
 
             // note: One-tick presses of the client (D120). They only reach the bot while its action is not Engine.

@@ -33,6 +33,12 @@ export namespace Engine::Render::Window::Type
         std::uint16_t ButtonData{ 0 };
     };
 
+    // return: True when the key message is the auto repeat of a key that is already down.
+    inline auto IsKeyRepeat(const WindowMessage& message) -> bool
+    {
+        return (HIWORD(message.LParam) & KF_REPEAT) != 0;
+    }
+
     // Handler for window messages. Returns true to consume the message.
     using WindowMessageHandler = std::function<bool(WindowMessage&)>;
 

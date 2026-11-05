@@ -241,6 +241,11 @@ namespace DevTools::Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::MeshInstanced);
 
+        this->DrawRanges(context, m_Draws);
+    }
+
+    auto DynamicPass::DrawRanges(ID3D11DeviceContext* context, const std::vector<DrawRange>& ranges) const -> void
+    {
         ID3D11Buffer* buffers[2] = { m_GeometryBuffer.Get(), m_InstanceBuffer.Get() };
         const UINT strides[2] = { GpuPipeline::k_UnitVertexStride, GpuPipeline::k_MeshInstanceStride };
         const UINT offsets[2] = { 0, 0 };
@@ -248,7 +253,7 @@ namespace DevTools::Viewer::Map::System
         context->IASetVertexBuffers(0, 2, buffers, strides, offsets);
         context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-        for (const DrawRange& range : m_Draws)
+        for (const DrawRange& range : ranges)
         {
             context->DrawInstanced(range.VertexCount, range.InstanceCount,
                 range.FirstVertex, range.FirstInstance);
@@ -261,18 +266,7 @@ namespace DevTools::Viewer::Map::System
 
         pipeline.Bind(context, VertexLayout::MeshInstanced, SurfaceMode::Translucent, alpha);
 
-        ID3D11Buffer* buffers[2] = { m_GeometryBuffer.Get(), m_InstanceBuffer.Get() };
-        const UINT strides[2] = { GpuPipeline::k_UnitVertexStride, GpuPipeline::k_MeshInstanceStride };
-        const UINT offsets[2] = { 0, 0 };
-
-        context->IASetVertexBuffers(0, 2, buffers, strides, offsets);
-        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        for (const DrawRange& range : m_TranslucentDraws)
-        {
-            context->DrawInstanced(range.VertexCount, range.InstanceCount,
-                range.FirstVertex, range.FirstInstance);
-        }
+        this->DrawRanges(context, m_TranslucentDraws);
     }
 
     auto DynamicPass::Release() -> void

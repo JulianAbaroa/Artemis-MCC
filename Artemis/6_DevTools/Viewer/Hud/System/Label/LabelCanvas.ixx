@@ -22,8 +22,6 @@ export namespace DevTools::Viewer::Hud::System
     // return: The color packed for the ImGui draw lists.
     auto ToImColor(const DevTools::Viewer::Style::Type::Color& color, float alpha = 1.0f) -> ImU32;
 
-    auto DistanceBetween(const Common::Math::Type::Vec3& a, const Common::Math::Type::Vec3& b) -> float;
-
     // return: The tag name without its folders.
     auto ShortTagName(const std::string& tagName) -> std::string;
 
@@ -100,5 +98,9 @@ export namespace DevTools::Viewer::Hud::System
 
         // return: False if the point is behind the camera.
         auto Project(const Vec3& world, ImVec2& outScreen) const -> bool;
+
+        // Measures the distance to the eye and projects the point, then checks the point is inside the viewport plus its margin.
+        // return: False if the point is too far, behind the camera or outside the viewport.
+        auto ProjectInView(const Vec3& world, ImVec2& outScreen, float& outDistance) const -> bool;
     };
 }

@@ -408,12 +408,7 @@ namespace Bridge::Transport::System
     {
         const BridgeControlState control{ m_BridgeStore.GetControl() };
         out.IsOpen = m_BridgeStore.GetRegion() != nullptr;
-        out.IsClientConnected = control.IsClientConnected;
-        out.Owner = control.Owner;
-        out.Mode = control.Mode;
-        out.DecisionPeriod = control.DecisionPeriod;
-        out.Latency = control.Latency;
-        out.AgentMask = control.AgentMask;
+        out.Control = control;
         out.Pid = m_BridgeStore.GetPid();
         m_BridgeStore.CopyCounters(out.Counters);
     }

@@ -61,6 +61,29 @@ namespace
         }
     }
 
+    // Draws the world origin, forward and up of an entity.
+    auto DrawWorldPose(const Entity& entity) -> void
+    {
+        PanelGuiService::DrawVec3("World Origin:", entity.WorldOrigin);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+    }
+
+    // Draws the bounding center, forward and up of an entity.
+    auto DrawBoundingPose(const Entity& entity) -> void
+    {
+        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
+        PanelGuiService::DrawVec3("Forward:", entity.Forward);
+        PanelGuiService::DrawVec3("Up:", entity.Up);
+    }
+
+    // Draws the linear and angular velocity of an entity.
+    auto DrawVelocities(const Entity& entity) -> void
+    {
+        PanelGuiService::DrawVec3("Linear Velocity:", entity.LinearVelocity);
+        PanelGuiService::DrawVec3("Angular Velocity:", entity.AngularVelocity);
+    }
+
     auto DrawAllowedObjects(TeleporterPass passes) -> void
     {
         struct Entry { bool IsActive; const char* Label; };
@@ -89,9 +112,7 @@ namespace
         const std::string_view subtype{ SemanticType::Subtype::NameOf(entity.Function, entity.Subtype) };
 
         PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 0.4f, 1.0f), "Teleporter", tagName, entity.Handle);
-        PanelGuiService::DrawVec3("World Origin:", entity.WorldOrigin);
-        PanelGuiService::DrawVec3("Forward:", entity.Forward);
-        PanelGuiService::DrawVec3("Up:", entity.Up);
+        DrawWorldPose(entity);
         ImGui::Text("Channel: %d", static_cast<int>(teleporter.Channel));
         ImGui::Text("Type: %.*s", static_cast<int>(subtype.size()), subtype.data());
         ImGui::Text("Destinations: %d", static_cast<int>(teleporter.Destinations.size()));
@@ -123,9 +144,7 @@ namespace
     auto DrawLift(const Entity& entity, const LiftDetail& lift, const std::string& tagName) -> void
     {
         PanelGuiService::DrawHeader(ImVec4(0.6f, 1.0f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
-        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
-        PanelGuiService::DrawVec3("Forward:", entity.Forward);
-        PanelGuiService::DrawVec3("Up:", entity.Up);
+        DrawBoundingPose(entity);
         ImGui::Text("Stages: %d", static_cast<int>(lift.Stages.size()));
         if (!lift.Stages.empty()) PanelGuiService::DrawVec3("Last Stage Direction:", lift.Stages.back().Direction);
 
@@ -140,9 +159,7 @@ namespace
     auto DrawBarrier(const Entity& entity, const BarrierDetail& barrier, const std::string& tagName) -> void
     {
         PanelGuiService::DrawHeader(ImVec4(0.85f, 0.4f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
-        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
-        PanelGuiService::DrawVec3("Forward:", entity.Forward);
-        PanelGuiService::DrawVec3("Up:", entity.Up);
+        DrawBoundingPose(entity);
         PanelGuiService::DrawVec3("Pass Direction:", barrier.PassDirection);
     }
 
@@ -151,9 +168,7 @@ namespace
     auto DrawZoneEntity(const Entity& entity, const ZoneShape& shape, const std::string& tagName) -> void
     {
         PanelGuiService::DrawHeader(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
-        PanelGuiService::DrawVec3("World Origin:", entity.WorldOrigin);
-        PanelGuiService::DrawVec3("Forward:", entity.Forward);
-        PanelGuiService::DrawVec3("Up:", entity.Up);
+        DrawWorldPose(entity);
         ImGui::Text("Team: %s", TeamFormater::TeamToString(entity.Team));
 
         ImGui::Spacing();
@@ -164,11 +179,8 @@ namespace
     auto DrawProp(const Entity& entity, const std::string& tagName) -> void
     {
         PanelGuiService::DrawHeader(ImVec4(1.0f, 0.55f, 0.0f, 1.0f), TitleOf(entity).c_str(), tagName, entity.Handle);
-        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
-        PanelGuiService::DrawVec3("Forward:", entity.Forward);
-        PanelGuiService::DrawVec3("Up:", entity.Up);
-        PanelGuiService::DrawVec3("Linear Velocity:", entity.LinearVelocity);
-        PanelGuiService::DrawVec3("Angular Velocity:", entity.AngularVelocity);
+        DrawBoundingPose(entity);
+        DrawVelocities(entity);
         ImGui::Text("Radius: %.2f", entity.BoundingRadius);
     }
 
@@ -189,11 +201,8 @@ namespace
         const std::string title{ TitleOf(entity) + (isCarried ? " (Carried)" : "") };
 
         PanelGuiService::DrawHeader(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), title.c_str(), tagName, entity.Handle);
-        PanelGuiService::DrawVec3("Bounding Center:", entity.BoundingCenter);
-        PanelGuiService::DrawVec3("Forward:", entity.Forward);
-        PanelGuiService::DrawVec3("Up:", entity.Up);
-        PanelGuiService::DrawVec3("Linear Velocity:", entity.LinearVelocity);
-        PanelGuiService::DrawVec3("Angular Velocity:", entity.AngularVelocity);
+        DrawBoundingPose(entity);
+        DrawVelocities(entity);
         ImGui::Text("Team: %s", TeamFormater::TeamToString(entity.Team));
 
         if (isCarried)

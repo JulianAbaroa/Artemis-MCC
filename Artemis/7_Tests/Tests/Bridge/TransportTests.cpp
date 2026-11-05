@@ -264,10 +264,10 @@ TEST_F(TransportTests, NoClientKeepsTheUi)
 
     const BridgeStatus status{ this->GetStatus() };
     EXPECT_TRUE(status.IsOpen);
-    EXPECT_FALSE(status.IsClientConnected);
-    EXPECT_EQ(status.Owner, BridgeOwner::UI);
-    EXPECT_EQ(status.Mode, BridgeMode::Free);
-    EXPECT_EQ(status.AgentMask, 0u);
+    EXPECT_FALSE(status.Control.IsClientConnected);
+    EXPECT_EQ(status.Control.Owner, BridgeOwner::UI);
+    EXPECT_EQ(status.Control.Mode, BridgeMode::Free);
+    EXPECT_EQ(status.Control.AgentMask, 0u);
     EXPECT_EQ(m_Region->Control.Artemis.Phase, BridgePhase::Running);
     EXPECT_EQ(m_Region->Control.Artemis.Heartbeat, 1u);
 }
@@ -278,7 +278,7 @@ TEST_F(TransportTests, PythonOwnsScaleAndPause)
     m_Region->Control.Client.RequestPause = 1;
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
 
-    EXPECT_TRUE(this->GetStatus().IsClientConnected);
+    EXPECT_TRUE(this->GetStatus().Control.IsClientConnected);
     ASSERT_EQ(m_Engine.m_ScaleWrites.size(), 1u);
     EXPECT_FLOAT_EQ(m_Engine.m_ScaleWrites.back(), 3.0f);
     ASSERT_EQ(m_Engine.m_PauseWrites.size(), 1u);
@@ -292,7 +292,7 @@ TEST_F(TransportTests, PythonOwnsScaleAndPause)
     EXPECT_FALSE(m_Engine.m_IsPauseRequested);
     ASSERT_FALSE(m_Engine.m_EndRoundWrites.empty());
     EXPECT_FALSE(m_Engine.m_EndRoundWrites.back());
-    EXPECT_FALSE(this->GetStatus().IsClientConnected);
+    EXPECT_FALSE(this->GetStatus().Control.IsClientConnected);
 }
 
 TEST_F(TransportTests, EndRoundIsARaise)

@@ -9,10 +9,7 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
-    using Contract::Bridge::Type::BridgeMode;
-    using Contract::Bridge::Type::BridgeOwner;
-    using Control::Lockstep::Type::k_DefaultDecisionPeriod;
-    using Control::Lockstep::Type::k_DefaultLatency;
+    using Control::Lockstep::Type::BridgeControlState;
 }
 
 export namespace Bridge::Transport::Type
@@ -84,12 +81,9 @@ export namespace Bridge::Transport::Type
     struct BridgeStatus
     {
         bool IsOpen{ false };
-        bool IsClientConnected{ false };
-        BridgeOwner Owner{ BridgeOwner::UI };
-        BridgeMode Mode{ BridgeMode::Free };
-        std::uint8_t DecisionPeriod{ k_DefaultDecisionPeriod };
-        std::uint8_t Latency{ k_DefaultLatency };
-        std::uint32_t AgentMask{ 0 };
+
+        // Client link, owner, mode and agents in effect.
+        BridgeControlState Control{};
         std::uint32_t Pid{ 0 };
         BridgeCounters Counters{};
     };
