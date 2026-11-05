@@ -507,6 +507,47 @@ TEST(FlatTests, PlayerTraitsReachThePlayerRowWithAndWithoutBody)
     }
 }
 
+TEST(FlatTests, APlayerWithoutBodyHasNoHandleInTheHandlesOfTheBody)
+{
+    Body body{};
+    body.Loadout.PrimaryWeapon = 0xE4010001;
+    body.Loadout.SecondaryWeapon = 0xE4010002;
+    body.Loadout.EquippedWeapon = 0xE4010001;
+    body.Loadout.Ability = 0xE4010003;
+    body.Loadout.Objective = 0xE4010004;
+    body.LastDamagerPlayer = 0xE5A10009;
+    body.GroundObject = 0xE4030194;
+
+    auto players{ std::make_shared<Players>() };
+    players->Rows.push_back(Player{ .Handle = 0xE5A10001, .BipedHandle = 0xE4330001, .Body = body });
+    players->Rows.push_back(Player{ .Handle = 0xE5A10002 });
+    Tick tick{};
+    tick.Players = players;
+
+    const auto flat{ Flat(tick) };
+    ASSERT_EQ(flat->Header.PlayerCount, 2u);
+    const auto& with{ flat->Players[0] };
+    EXPECT_EQ(with.PrimaryWeapon, 0xE4010001u);
+    EXPECT_EQ(with.SecondaryWeapon, 0xE4010002u);
+    EXPECT_EQ(with.EquippedWeapon, 0xE4010001u);
+    EXPECT_EQ(with.Ability, 0xE4010003u);
+    EXPECT_EQ(with.Objective, 0xE4010004u);
+    EXPECT_EQ(with.LastDamagerPlayer, 0xE5A10009u);
+    EXPECT_EQ(with.GroundObject, 0xE4030194u);
+
+    const auto& without{ flat->Players[1] };
+    EXPECT_EQ(without.HasBody, 0);
+    EXPECT_EQ(without.BipedHandle, k_NoHandle);
+    EXPECT_EQ(without.PrimaryWeapon, k_NoHandle);
+    EXPECT_EQ(without.SecondaryWeapon, k_NoHandle);
+    EXPECT_EQ(without.EquippedWeapon, k_NoHandle);
+    EXPECT_EQ(without.Ability, k_NoHandle);
+    EXPECT_EQ(without.Objective, k_NoHandle);
+    EXPECT_EQ(without.LastDamagerPlayer, k_NoHandle);
+    EXPECT_EQ(without.GroundObject, k_NoHandle);
+    EXPECT_EQ(without.TicksSinceDamage, k_NoHandle);
+}
+
 TEST(FlatTests, GroundAndCrouchReachThePlayerRowAndAreZeroWithoutBody)
 {
     Body body{};
@@ -542,7 +583,7 @@ TEST(FlatTests, GroundAndCrouchReachThePlayerRowAndAreZeroWithoutBody)
     EXPECT_EQ(without.IsGrounded, 0);
     EXPECT_EQ(without.IsCrouching, 0);
     EXPECT_EQ(without.AirborneTicks, 0u);
-    EXPECT_EQ(without.GroundObject, 0u);
+    EXPECT_EQ(without.GroundObject, k_NoHandle);
     EXPECT_FLOAT_EQ(without.OwnVelocity.Z, 0.0f);
     EXPECT_FLOAT_EQ(without.CrouchFraction, 0.0f);
 }

@@ -45,11 +45,18 @@ namespace
     using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
     using Blam::Layout::Player::Type::Mapping::k_EntryStride;
 
+    using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_SaltShift;
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_GamerTagLength;
+
+    // Current biped handle as the engine stores it. The raw value is 0 before the first spawn and a handle with salt 0 is never valid.
+    auto ReadCurrentBiped(std::uint32_t raw) -> std::uint32_t
+    {
+        return raw == 0 ? k_NoHandle : raw;
+    }
 
     // Whether the value is a connection state the engine uses.
     auto IsKnownConnectionState(ConnectionState state) -> bool
@@ -72,7 +79,7 @@ namespace Blam::Runtime::Player::System
 
         player.AliveBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_AliveBipedHandle);
         player.DeadBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_DeadBipedHandle);
-        player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
+        player.CurrentBipedHandle = ReadCurrentBiped(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle));
         player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
         player.Traits = Decode(snapshot.ReadArray<std::uint8_t, k_Size>(RegionId::PlayerArray, entry + k_Traits));
         player.PowerupPickupTicks = snapshot.ReadArray<std::int32_t, k_PowerupCount>(RegionId::PlayerArray, entry + k_PowerupPickupTicks);
@@ -145,7 +152,7 @@ namespace Blam::Runtime::Player::System
 
             player.AliveBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_AliveBipedHandle);
             player.DeadBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_DeadBipedHandle);
-            player.CurrentBipedHandle = snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle);
+            player.CurrentBipedHandle = ReadCurrentBiped(snapshot.Read<std::uint32_t>(RegionId::PlayerArray, entry + k_CurrentBipedHandle));
             player.RespawnTicks = snapshot.Read<std::uint16_t>(RegionId::PlayerArray, entry + k_RespawnTicks);
             player.Traits = Decode(snapshot.ReadArray<std::uint8_t, k_Size>(RegionId::PlayerArray, entry + k_Traits));
             player.PowerupPickupTicks = snapshot.ReadArray<std::int32_t, k_PowerupCount>(RegionId::PlayerArray, entry + k_PowerupPickupTicks);

@@ -127,6 +127,15 @@ namespace
         row.CameraForward = ToBridge(player.CameraForward);
         row.TicksSinceDamage = k_NoHandle;
 
+        // Without a body the handles of the body do not exist (NoHandle, not the zero of Zeroed).
+        row.PrimaryWeapon = k_NoHandle;
+        row.SecondaryWeapon = k_NoHandle;
+        row.EquippedWeapon = k_NoHandle;
+        row.Ability = k_NoHandle;
+        row.Objective = k_NoHandle;
+        row.LastDamagerPlayer = k_NoHandle;
+        row.GroundObject = k_NoHandle;
+
         if (!player.Body) return row;
 
         const auto& body{ *player.Body };

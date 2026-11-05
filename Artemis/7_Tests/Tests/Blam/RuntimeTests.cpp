@@ -651,6 +651,38 @@ TEST_F(RuntimeTests, ConnectedPlayerIsAdded)
     EXPECT_EQ(*player.LocalIndex, 1);
 }
 
+TEST_F(RuntimeTests, ACurrentBipedOfZeroBeforeTheFirstSpawnIsNoHandle)
+{
+    Snapshot snapshot{};
+    std::vector<std::uint8_t>& players{ CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)) };
+    CaptureEmptyMapping(snapshot);
+
+    // note: Measured in suelo before the first spawn: alive biped 0xFFFFFFFF and current biped 0.
+    const std::size_t entry{ PutPlayer(players, 2, 0xE5A1, ConnectionState::Connected) };
+    Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_NoHandle);
+    Put(players, entry + PlayerOffset::k_CurrentBipedHandle, std::uint32_t{ 0 });
+
+    const std::uint32_t handle{ MakeHandle(0xE5A1, 2) };
+    const auto table{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(table, nullptr);
+    ASSERT_TRUE(table->contains(handle));
+    EXPECT_EQ(table->at(handle).AliveBipedHandle, k_NoHandle);
+    EXPECT_EQ(table->at(handle).CurrentBipedHandle, k_NoHandle);
+
+    // The spawn writes the biped in the same entry, and the player is updated, not rebuilt.
+    Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_BipedHandle);
+    Put(players, entry + PlayerOffset::k_CurrentBipedHandle, k_BipedHandle);
+    const auto spawned{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(spawned, nullptr);
+    EXPECT_EQ(spawned->at(handle).CurrentBipedHandle, k_BipedHandle);
+
+    Put(players, entry + PlayerOffset::k_AliveBipedHandle, k_NoHandle);
+    Put(players, entry + PlayerOffset::k_CurrentBipedHandle, std::uint32_t{ 0 });
+    const auto reset{ this->UpdatePlayers(snapshot) };
+    ASSERT_NE(reset, nullptr);
+    EXPECT_EQ(reset->at(handle).CurrentBipedHandle, k_NoHandle);
+}
+
 TEST_F(RuntimeTests, PlayerTraitsAreDecodedFromTheBlockOfTheEntryAlsoWhenDead)
 {
     Snapshot snapshot{};
