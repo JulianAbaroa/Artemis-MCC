@@ -32,7 +32,7 @@ import GenerateBridge  # noqa: E402
 FILE_HEADER = struct.Struct("<8sIIQIIII64s32s64s")
 RECORD_HEADER = struct.Struct("<4sIIHHHHI")
 FOOTER = struct.Struct("<4sIQQQQ")
-HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
+HAS_MATCH, EVENTS_LOST, KEYFRAME, TIME_MEASURED = 1, 2, 4, 8
 DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
                 "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine", "BridgeExplosive", "BridgeLiftStage", "BridgeLift")
 SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "i32": 4, "f32": 4, "u64": 8}
@@ -144,7 +144,7 @@ class Writer:
         return out
 
     def Tick(self, game_tick, players=(), entities=(), events=(), header=None, match=None, dropped_before=0, has_match=True,
-             events_lost=False, objectives=(), stands=(), weapons=(), projectiles=(), explosives=(), lifts=()):
+             events_lost=False, objectives=(), stands=(), weapons=(), projectiles=(), explosives=(), lifts=(), elapsed_us=None):
         players, events, objectives, stands = list(players), list(events), list(objectives), list(stands)
         weapons, projectiles, explosives, lifts = list(weapons), list(projectiles), list(explosives), list(lifts)
         entity_rows = self.Rows("BridgeEntity", list(entities))
@@ -165,7 +165,7 @@ class Writer:
         if has_match:
             match_row.setdefault("GameTick", game_tick)
 
-        flags = (HAS_MATCH if has_match else 0) | (EVENTS_LOST if events_lost else 0)
+        flags = (HAS_MATCH if has_match else 0) | (EVENTS_LOST if events_lost else 0) | (TIME_MEASURED if elapsed_us is not None else 0)
         if self.since_keyframe >= self.keyframe_interval:
             flags |= KEYFRAME
             self.since_keyframe = 0
@@ -179,7 +179,7 @@ class Writer:
         self.previous = {int(r["Handle"]): r.tobytes() for r in entity_rows}
 
         self.chunks.append(RECORD_HEADER.pack(b"TICK", game_tick if has_match else 0, dropped_before, len(events), flags,
-                                              len(changed), len(removed), 0))
+                                              len(changed), len(removed), elapsed_us or 0))
         for name, rows in (("BridgeTickHeader", [head]), ("BridgeMatch", [match_row]), ("BridgePlayer", players)):
             self.chunks.append(self.Rows(name, rows).tobytes())
         self.chunks.append(changed.tobytes())

@@ -7,7 +7,6 @@ import Bridge.Codec.Tick.State;
 import DevTools.Gui.Widget.System;
 import DevTools.Workbench.ObjectTable.Type;
 import DevTools.Workbench.ObjectTable.State;
-import DevTools.Workbench.Capture.State;
 import std;
 
 export namespace DevTools::Workbench::ObjectTable::System
@@ -28,11 +27,10 @@ export namespace DevTools::Workbench::ObjectTable::System
 
         using Groups = DevTools::Workbench::ObjectTable::Type::Groups;
         using ObjectTableUIStore = DevTools::Workbench::ObjectTable::State::ObjectTableUIStore;
-        using CaptureUIStore = DevTools::Workbench::Capture::State::CaptureUIStore;
 
     public:
-        ObjectTableUIService(CaptureStore& captureStore, TickStore& tickStore, ObjectTableUIStore& objectTableUIStore, CaptureUIStore& captureUIStore) :
-            m_CaptureStore(captureStore), m_TickStore(tickStore), m_ObjectTableUIStore(objectTableUIStore), m_CaptureUIStore(captureUIStore) {}
+        ObjectTableUIService(CaptureStore& captureStore, TickStore& tickStore, ObjectTableUIStore& objectTableUIStore) :
+            m_CaptureStore(captureStore), m_TickStore(tickStore), m_ObjectTableUIStore(objectTableUIStore) {}
         ~ObjectTableUIService() = default;
 
         ObjectTableUIService(const ObjectTableUIService&) = delete;
@@ -45,7 +43,6 @@ export namespace DevTools::Workbench::ObjectTable::System
         CaptureStore& m_CaptureStore;
         TickStore& m_TickStore;
         ObjectTableUIStore& m_ObjectTableUIStore;
-        CaptureUIStore& m_CaptureUIStore;
 
         SearchFilterGuiService m_SearchFilter{};
         CopyableFieldGuiService m_CopyableField{};

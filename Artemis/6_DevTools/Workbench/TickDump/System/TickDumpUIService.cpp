@@ -85,12 +85,12 @@ namespace DevTools::Workbench::TickDump::System
 
         m_TickDumpUIStore.Push(TickDumpEntry{ .Tick = std::move(tick), .Snapshot = std::move(snapshot), .Generation = generation,
             .DroppedBefore = static_cast<std::uint32_t>((std::min)(droppedBefore, std::uint64_t{ (std::numeric_limits<std::uint32_t>::max)() })),
-            .IsFirstAfterLoad = isFirstAfterLoad, .IsViewerActive = isViewerActive });
+            .IsFirstAfterLoad = isFirstAfterLoad, .IsViewerActive = isViewerActive, .PushedAt = std::chrono::steady_clock::now() });
     }
 
     auto TickDumpUIService::Update(milliseconds timeout) -> void
     {
-        if (auto source{ m_TickDumpUIStore.TakeStartRequest() }) this->Start(*source);
+        if (auto request{ m_TickDumpUIStore.TakeStartRequest() }) this->Start(request->Source, request->IsSnapshotWritten);
         if (m_TickDumpUIStore.TakeStopRequest())
         {
             this->Finish();
@@ -116,7 +116,8 @@ namespace DevTools::Workbench::TickDump::System
         ImGui::SeparatorText("Tick dump");
 
         ImGui::TextWrapped("Records the Tick of every tick (the BridgeTick of Bridge.xml) to a .tdump and the Snapshot it came from to a"
-            " .sdump, in TickDumps in the storage folder (D151, D202). Tools/tickdump.py reads the .tdump.");
+            " .sdump, in TickDumps in the storage folder (D151, D202). Tools/tickdump.py reads the .tdump. Each record also carries the real"
+            " time since the previous one.");
 
         if (m_TickDumpUIStore.IsRecording())
         {
@@ -132,13 +133,13 @@ namespace DevTools::Workbench::TickDump::System
             if (ImGui::Button("Start##TickDump"))
             {
                 m_TickDumpUIStore.SetWaitingForLoad(false);
-                m_TickDumpUIStore.RequestStart("manual");
+                m_TickDumpUIStore.RequestStart("manual", true);
             }
             ImGui::SameLine();
             if (ImGui::Button("Start at next load##TickDump"))
             {
                 m_TickDumpUIStore.SetWaitingForLoad(true);
-                m_TickDumpUIStore.RequestStart("manual, from the next load");
+                m_TickDumpUIStore.RequestStart("manual, from the next load", true);
             }
         }
 
@@ -158,7 +159,7 @@ namespace DevTools::Workbench::TickDump::System
         if (!status.empty()) ImGui::TextUnformatted(status.c_str());
     }
 
-    auto TickDumpUIService::Start(std::string_view source) -> void
+    auto TickDumpUIService::Start(std::string_view source, bool isSnapshotWritten) -> void
     {
         if (m_TickDumpUIStore.IsRecording()) return;
 
@@ -190,18 +191,22 @@ namespace DevTools::Workbench::TickDump::System
         }
 
         std::ofstream& snapshotFile{ m_TickDumpUIStore.GetSnapshotFile() };
-        snapshotFile.open(snapshotPath, std::ios::binary | std::ios::trunc);
-        if (!snapshotFile)
+        if (isSnapshotWritten)
         {
-            file.close();
-            m_TickDumpUIStore.SetStatus("The snapshot dump file cannot be opened.");
-            m_Log.Message("[TickDumpUIService] ERROR: Failed to open the snapshot dump file.");
-            return;
+            snapshotFile.open(snapshotPath, std::ios::binary | std::ios::trunc);
+            if (!snapshotFile)
+            {
+                file.close();
+                m_TickDumpUIStore.SetStatus("The snapshot dump file cannot be opened.");
+                m_Log.Message("[TickDumpUIService] ERROR: Failed to open the snapshot dump file.");
+                return;
+            }
         }
 
         const std::string startTime{ std::format("{:%Y-%m-%d %H:%M:%S}", now) };
         const std::uint64_t bytes{ Bridge::Codec::Dump::System::WriteFileHeader(file, mapName, startTime, source) };
-        const std::uint64_t snapshotBytes{ Blam::Layout::Snapshot::System::WriteFileHeader(snapshotFile, k_BridgeLayoutHash, startTime, source) };
+        const std::uint64_t snapshotBytes{ isSnapshotWritten
+            ? Blam::Layout::Snapshot::System::WriteFileHeader(snapshotFile, k_BridgeLayoutHash, startTime, source) : 0 };
 
         m_TickDumpUIStore.ClearQueue();
         m_TickDumpUIStore.ResetCounters();
@@ -209,11 +214,20 @@ namespace DevTools::Workbench::TickDump::System
         m_TickDumpUIStore.AddSnapshotBytes(snapshotBytes);
         Bridge::Codec::Dump::System::Begin(m_TickDumpUIStore.GetWriterState());
         m_TickDumpUIStore.GetSnapshotWriterState() = Blam::Layout::Snapshot::Type::SnapshotWriterState{};
+        m_TickDumpUIStore.SetSnapshotWritten(isSnapshotWritten);
+        m_TickDumpUIStore.SetLastRecordAt(std::chrono::steady_clock::now());
         m_TickDumpUIStore.SetFilePath(filePath);
         m_TickDumpUIStore.SetStatus({});
         m_TickDumpUIStore.SetRecording(true);
 
-        m_Log.Message("[TickDumpUIService] INFO: Recording ticks to '{}' and '{}' ({}).", filePath.string(), snapshotPath.string(), source);
+        if (isSnapshotWritten)
+        {
+            m_Log.Message("[TickDumpUIService] INFO: Recording ticks to '{}' and '{}' ({}).", filePath.string(), snapshotPath.string(), source);
+        }
+        else
+        {
+            m_Log.Message("[TickDumpUIService] INFO: Recording ticks to '{}' ({}).", filePath.string(), source);
+        }
     }
 
     auto TickDumpUIService::Finish() -> void
@@ -227,18 +241,22 @@ namespace DevTools::Workbench::TickDump::System
         // A failed write in the drain already closed the files and reported it.
         std::ofstream& file{ m_TickDumpUIStore.GetFile() };
         std::ofstream& snapshotFile{ m_TickDumpUIStore.GetSnapshotFile() };
-        if (!file.is_open() || !snapshotFile.is_open()) return;
+        const bool isSnapshotWritten{ m_TickDumpUIStore.IsSnapshotWritten() };
+        if (!file.is_open() || (isSnapshotWritten && !snapshotFile.is_open())) return;
 
         const TickDumpCounters counters{ .RecordedTicks = m_TickDumpUIStore.GetRecordedTicks(),
             .DroppedTicks = m_TickDumpUIStore.GetDroppedTicks(), .QueueWaits = m_TickDumpUIStore.GetQueueWaits(),
             .EventLosses = m_TickDumpUIStore.GetEventLosses() };
         m_TickDumpUIStore.AddWrittenBytes(Bridge::Codec::Dump::System::WriteFooter(file, counters));
 
-        // The map loaded now. The CRC-32 takes about a second for a Reach map.
-        SnapshotDumpFooter snapshotFooter{ DescribeMap(m_FileStore.GetMapFilePath(), true) };
-        snapshotFooter.Marker = k_SnapshotDumpEndMarker;
-        snapshotFooter.RecordedTicks = counters.RecordedTicks;
-        m_TickDumpUIStore.AddSnapshotBytes(Blam::Layout::Snapshot::System::WriteFooter(snapshotFile, snapshotFooter));
+        if (isSnapshotWritten)
+        {
+            // The map loaded now. The CRC-32 takes about a second for a Reach map.
+            SnapshotDumpFooter snapshotFooter{ DescribeMap(m_FileStore.GetMapFilePath(), true) };
+            snapshotFooter.Marker = k_SnapshotDumpEndMarker;
+            snapshotFooter.RecordedTicks = counters.RecordedTicks;
+            m_TickDumpUIStore.AddSnapshotBytes(Blam::Layout::Snapshot::System::WriteFooter(snapshotFile, snapshotFooter));
+        }
 
         file.close();
         snapshotFile.close();
@@ -252,7 +270,7 @@ namespace DevTools::Workbench::TickDump::System
         const std::string status{ std::format("Saved {} ticks ({} dropped, {} queue waits, {} event losses).", counters.RecordedTicks,
             counters.DroppedTicks, counters.QueueWaits, counters.EventLosses) };
         m_TickDumpUIStore.SetStatus(status);
-        m_Log.Message("[TickDumpUIService] INFO: Dump saved, {} ticks, {} bytes (.tdump), {} bytes (.sdump), {} dropped, {} queue waits, {} event losses.",
+        m_Log.Message("[TickDumpUIService] INFO: Dump saved, {} ticks, {} bytes (.tdump), {} bytes (.sdump, 0 when not recorded), {} dropped, {} queue waits, {} event losses.",
             counters.RecordedTicks, m_TickDumpUIStore.GetWrittenBytes(), m_TickDumpUIStore.GetSnapshotBytes(), counters.DroppedTicks,
             counters.QueueWaits, counters.EventLosses);
     }
@@ -274,7 +292,8 @@ namespace DevTools::Workbench::TickDump::System
     {
         std::ofstream& file{ m_TickDumpUIStore.GetFile() };
         std::ofstream& snapshotFile{ m_TickDumpUIStore.GetSnapshotFile() };
-        if (!file.is_open() || !snapshotFile.is_open() || entry.Tick == nullptr || entry.Snapshot == nullptr) return;
+        const bool isSnapshotWritten{ m_TickDumpUIStore.IsSnapshotWritten() };
+        if (!file.is_open() || (isSnapshotWritten && !snapshotFile.is_open()) || entry.Tick == nullptr || entry.Snapshot == nullptr) return;
 
         // The offline test replays from an empty History, so a recording armed for the next load starts exactly there (D208).
         if (m_TickDumpUIStore.IsWaitingForLoad())
@@ -287,24 +306,33 @@ namespace DevTools::Workbench::TickDump::System
         Bridge::Codec::Dump::System::ClearHeader(flat);
         m_FlatService.Flatten(*entry.Tick, flat);
 
+        // Real time since the previous record (since the start of the recording for the first one), saturated to 32 bits.
+        const auto elapsed{ std::chrono::duration_cast<std::chrono::microseconds>(entry.PushedAt - m_TickDumpUIStore.GetLastRecordAt()).count() };
+        m_TickDumpUIStore.SetLastRecordAt(entry.PushedAt);
+        const auto elapsedMicroseconds{ static_cast<std::uint32_t>(std::clamp<std::int64_t>(elapsed, 0, (std::numeric_limits<std::uint32_t>::max)())) };
+
         const auto result{ Bridge::Codec::Dump::System::WriteRecord(file, flat, entry.Tick->Match != nullptr, entry.DroppedBefore,
-            m_TickDumpUIStore.GetWriterState()) };
+            elapsedMicroseconds, m_TickDumpUIStore.GetWriterState()) };
         if (result.IsEventsLost) m_TickDumpUIStore.AddEventLoss();
 
-        std::uint32_t flags{ 0 };
-        std::optional<SnapshotLoadInfo> loadInfo{};
-        if (entry.IsFirstAfterLoad)
+        std::uint64_t snapshotBytes{ 0 };
+        if (isSnapshotWritten)
         {
-            flags |= k_SnapshotFirstAfterLoad;
-            const SnapshotDumpFooter map{ DescribeMap(m_FileStore.GetMapFilePath(), false) };
-            loadInfo = SnapshotLoadInfo{ .MapFileName = map.MapFileName, .MapFileSize = map.MapFileSize };
+            std::uint32_t flags{ 0 };
+            std::optional<SnapshotLoadInfo> loadInfo{};
+            if (entry.IsFirstAfterLoad)
+            {
+                flags |= k_SnapshotFirstAfterLoad;
+                const SnapshotDumpFooter map{ DescribeMap(m_FileStore.GetMapFilePath(), false) };
+                loadInfo = SnapshotLoadInfo{ .MapFileName = map.MapFileName, .MapFileSize = map.MapFileSize };
+            }
+            if (entry.IsViewerActive) flags |= k_SnapshotViewerActive;
+
+            snapshotBytes = Blam::Layout::Snapshot::System::WriteRecord(snapshotFile, entry.Snapshot, entry.Generation,
+                entry.DroppedBefore, flags, loadInfo, m_TickDumpUIStore.GetSnapshotWriterState());
         }
-        if (entry.IsViewerActive) flags |= k_SnapshotViewerActive;
 
-        const std::uint64_t snapshotBytes{ Blam::Layout::Snapshot::System::WriteRecord(snapshotFile, entry.Snapshot, entry.Generation,
-            entry.DroppedBefore, flags, loadInfo, m_TickDumpUIStore.GetSnapshotWriterState()) };
-
-        if (!file.good() || !snapshotFile.good())
+        if (!file.good() || (isSnapshotWritten && !snapshotFile.good()))
         {
             this->Fail();
             return;

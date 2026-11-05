@@ -28,6 +28,9 @@ export namespace Bridge::Codec::Dump::Type
     // TickRecordHeader::Flags: the record carries every live entity, not the changes since the previous record.
     inline constexpr std::uint16_t k_TickRecordKeyframe{ 4 };
 
+    // TickRecordHeader::Flags: ElapsedMicroseconds was measured. An older file, or a replay that does not measure, has it off and 0 there.
+    inline constexpr std::uint16_t k_TickRecordTimeMeasured{ 8 };
+
     // Start of a .tdump file, followed by LayoutJsonSize bytes of k_BridgeLayoutJson.
     struct TickDumpFileHeader
     {
@@ -66,7 +69,9 @@ export namespace Bridge::Codec::Dump::Type
         std::uint16_t Flags{};
         std::uint16_t ChangedEntityCount{};
         std::uint16_t RemovedEntityCount{};
-        std::uint32_t Reserved{};
+        // Real time since the previous record (the first: since the start of the recording), saturated to 32 bits.
+        // note: Only valid with k_TickRecordTimeMeasured. It was the reserved field, always 0, so older files read as not measured.
+        std::uint32_t ElapsedMicroseconds{};
     };
 
     static_assert(sizeof(TickRecordHeader) == 24);

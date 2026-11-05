@@ -108,7 +108,7 @@ namespace
     {
         PanelGuiService::DrawSectionSeparator();
 
-        ImGui::TextDisabled("Region states (engine). F7 prints them to the logs:");
+        ImGui::TextDisabled("Region states (engine):");
 
         if (instance.RegionBlock.empty())
         {

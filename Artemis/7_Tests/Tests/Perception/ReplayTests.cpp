@@ -99,7 +99,7 @@ namespace
 
             TickCodec::ClearHeader(*flat);
             chain.m_Export.m_FlatService.Flatten(*tick, *flat);
-            TickCodec::WriteRecord(recording.Tdump, *flat, tick->Match != nullptr, 0, tickState);
+            TickCodec::WriteRecord(recording.Tdump, *flat, tick->Match != nullptr, 0, std::nullopt, tickState);
 
             SnapshotCodec::WriteRecord(recording.Sdump, std::make_shared<const Snapshot>(stored[i]), generation, 0, flags[i], info,
                 snapshotState);

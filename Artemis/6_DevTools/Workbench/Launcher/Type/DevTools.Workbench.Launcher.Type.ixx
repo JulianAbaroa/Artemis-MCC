@@ -11,7 +11,6 @@ export namespace DevTools::Workbench::Launcher::Type
         PlayerTable,
         DefinitionsInspector,
         Settings,
-        Capture,
         Simulation,
         Logs,
 

@@ -306,12 +306,6 @@ def test_the_domain_does_not_read_the_game():
     assert not wrong, wrong
 
 
-def test_tick_trace_reads_its_clock_from_the_snapshot():
-    for path in Sources("Artemis/6_DevTools/Workbench/TickTrace"):
-        text = Read(path)
-        assert "ReadValue" not in text and "GetThreadContext" not in text and "reinterpret_cast" not in text, path
-
-
 def test_read_window_ends_right_after_the_copy():
     text = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
     capture = text.index("m_CaptureService.Capture()")
@@ -756,7 +750,7 @@ def test_the_ai_thread_knows_no_development_tool():
     for path in Sources("Artemis/8_Mod/Mod/Thread/System/AI"):
         assert not ImportRoots(path) & DEVTOOLS_ROOTS, path
     text = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.ixx") + Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
-    for name in ("CameraStore", "TickTraceUIService", "TickDumpUIService"):
+    for name in ("CameraStore", "TickDumpUIService"):
         assert name not in text, name
 
 

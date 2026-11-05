@@ -4,13 +4,13 @@ import std;
 
 namespace DevTools::Workbench::TickDump::State
 {
-    auto TickDumpUIStore::RequestStart(std::string source) -> void
+    auto TickDumpUIStore::RequestStart(std::string source, bool isSnapshotWritten) -> void
     {
         std::lock_guard lock{ m_TextMutex };
-        m_StartRequest = std::move(source);
+        m_StartRequest = TickDumpStartRequest{ .Source = std::move(source), .IsSnapshotWritten = isSnapshotWritten };
     }
 
-    auto TickDumpUIStore::TakeStartRequest() -> std::optional<std::string>
+    auto TickDumpUIStore::TakeStartRequest() -> std::optional<TickDumpStartRequest>
     {
         std::lock_guard lock{ m_TextMutex };
         return std::exchange(m_StartRequest, std::nullopt);
@@ -33,6 +33,26 @@ namespace DevTools::Workbench::TickDump::State
             m_IsRecording.store(value, std::memory_order_release);
         }
         m_NotFull.notify_all();
+    }
+
+    auto TickDumpUIStore::SetSnapshotWritten(bool value) -> void
+    {
+        m_IsSnapshotWritten = value;
+    }
+
+    auto TickDumpUIStore::IsSnapshotWritten() const -> bool
+    {
+        return m_IsSnapshotWritten;
+    }
+
+    auto TickDumpUIStore::SetLastRecordAt(time_point value) -> void
+    {
+        m_LastRecordAt = value;
+    }
+
+    auto TickDumpUIStore::GetLastRecordAt() const -> time_point
+    {
+        return m_LastRecordAt;
     }
 
     auto TickDumpUIStore::SetWaitingForLoad(bool value) -> void

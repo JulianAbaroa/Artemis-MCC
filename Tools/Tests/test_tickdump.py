@@ -126,6 +126,25 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
 
 # --- equal --------------------------------------------------------------------------------------------------------------------
 
+def test_real_time_of_the_records_is_read_shown_and_ignored_by_diff(tmp_path, capsys):
+    timed = Writer()
+    plain = Writer()
+    for t in range(4):
+        timed.Tick(t, players=[Player(P1)], entities=[Entity(H1)], elapsed_us=16_000 + t * 1000)
+        plain.Tick(t, players=[Player(P1)], entities=[Entity(H1)])
+    a = Save(tmp_path, "timed.tdump", timed)
+    b = Save(tmp_path, "plain.tdump", plain)
+    d = tickdump.Dump(a)
+    assert [r.elapsed_us for r in d.records] == [16_000, 17_000, 18_000, 19_000]
+    assert [r.elapsed_us for r in tickdump.Dump(b).records] == [None] * 4
+    assert tickdump.Main(["show", a]) == 0
+    out = capsys.readouterr().out
+    assert "real time: 0.070 s over 4 records, 17.50 ms per tick (max 19.00 ms)" in out
+    assert tickdump.Main(["show", b]) == 0
+    assert "real time: not measured" in capsys.readouterr().out
+    assert tickdump.Diff(tickdump.Dump(a), tickdump.Dump(b)).is_equal
+
+
 def test_a_file_against_itself_is_equal(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "a.tdump", Film()))
     r = tickdump.Diff(d, d)

@@ -33,6 +33,7 @@ namespace
     using Bridge::Codec::Dump::Type::k_TickDumpEndMarker;
     using Bridge::Codec::Dump::Type::k_TickDumpMagic;
     using Bridge::Codec::Dump::Type::k_TickDumpVersion;
+    using Bridge::Codec::Dump::Type::k_TickRecordTimeMeasured;
     using Bridge::Codec::Dump::Type::k_TickRecordEventsLost;
     using Bridge::Codec::Dump::Type::k_TickRecordHasMatch;
     using Bridge::Codec::Dump::Type::k_TickRecordKeyframe;
@@ -68,7 +69,7 @@ namespace Bridge::Codec::Dump::System
     }
 
     auto WriteRecord(std::ostream& stream, const BridgeTick& flat, bool hasMatch, std::uint32_t droppedBefore,
-        TickDumpWriterState& state) -> Type::TickDumpWriteResult
+        std::optional<std::uint32_t> elapsedMicroseconds, TickDumpWriterState& state) -> Type::TickDumpWriteResult
     {
         Type::TickDumpWriteResult result{};
 
@@ -77,6 +78,11 @@ namespace Bridge::Codec::Dump::System
         {
             record.GameTick = flat.Match.GameTick;
             record.Flags |= k_TickRecordHasMatch;
+        }
+        if (elapsedMicroseconds)
+        {
+            record.ElapsedMicroseconds = *elapsedMicroseconds;
+            record.Flags |= k_TickRecordTimeMeasured;
         }
 
         // The BridgeTick carries the newest events of the match (oldest first, Sequence from 1 in each match), so each record

@@ -6,7 +6,6 @@ import DevTools.Viewer.Overlay.State;
 import DevTools.Workbench.Hotkey.Type;
 import DevTools.Workbench.Hotkey.State;
 import DevTools.Workbench.Launcher.State;
-import DevTools.Workbench.Capture.State;
 
 export namespace DevTools::Workbench::Hotkey::System
 {
@@ -23,13 +22,12 @@ export namespace DevTools::Workbench::Hotkey::System
         using Action = DevTools::Workbench::Hotkey::Type::Action;
         using HotkeyUIStore = DevTools::Workbench::Hotkey::State::HotkeyUIStore;
         using LauncherUIStore = DevTools::Workbench::Launcher::State::LauncherUIStore;
-        using CaptureUIStore = DevTools::Workbench::Capture::State::CaptureUIStore;
 
     public:
         HotkeyUIService(SettingsStore& settingsStore, HotkeyUIStore& hotkeyStore,
-            LauncherUIStore& launcherStore, CaptureUIStore& captureStore, OverlayStore& overlayStore) :
+            LauncherUIStore& launcherStore, OverlayStore& overlayStore) :
             m_SettingsStore(settingsStore), m_HotkeyStore(hotkeyStore),
-            m_LauncherStore(launcherStore), m_CaptureStore(captureStore), m_OverlayStore(overlayStore) {}
+            m_LauncherStore(launcherStore), m_OverlayStore(overlayStore) {}
         ~HotkeyUIService() = default;
 
         HotkeyUIService(const HotkeyUIService&) = delete;
@@ -43,7 +41,6 @@ export namespace DevTools::Workbench::Hotkey::System
         SettingsStore& m_SettingsStore;
         HotkeyUIStore& m_HotkeyStore;
         LauncherUIStore& m_LauncherStore;
-        CaptureUIStore& m_CaptureStore;
         OverlayStore& m_OverlayStore;
 
         // Runs the action of a hotkey.

@@ -89,8 +89,9 @@ export namespace DevTools::Workbench::Bench::Type
         std::vector<BenchAction> Actions{};
         std::vector<BenchRequest> Requests{};
         std::vector<BenchProbe> Probes{};
-        // Records a TickTrace of the match (the storage folder of the TickTrace tool).
-        bool IsTickTrace{ false };
+        // Records the .tdump of the match with the TickDump, and the .sdump too when IsTickDumpFull (the storage folder of the TickDump tool).
+        bool IsTickDump{ false };
+        bool IsTickDumpFull{ false };
         // Writes every event of the match to a CSV in the events folder of the bench (D104, A14).
         bool IsEvents{ false };
     };
@@ -143,7 +144,7 @@ export namespace DevTools::Workbench::Bench::Type
         std::vector<BenchCheckResult> Checks{};
         // WARNING and ERROR lines of the log during the match.
         std::vector<std::string> Log{};
-        // Files written during the match (probes, TickTrace), as name and path.
+        // Files written during the match (probes, TickDump), as name and path.
         std::vector<std::pair<std::string, std::string>> Files{};
     };
 
@@ -198,7 +199,7 @@ export namespace DevTools::Workbench::Bench::Type
         // CSV of the events of the match, and the sequence of the last event written to it.
         std::filesystem::path EventsFile{};
         std::uint32_t EventCursor{ 0 };
-        bool IsTickTraceNoted{ false };
+        bool IsTickDumpNoted{ false };
         std::chrono::steady_clock::time_point LastStateWrite{};
         std::string Message{};
     };

@@ -581,9 +581,11 @@ namespace DevTools::Workbench::Bench::System
                 probe.Size = *size;
                 match.Probes.push_back(std::move(probe));
             }
-            else if (key == "ticktrace")
+            else if (key == "tickdump")
             {
-                match.IsTickTrace = true;
+                if (!value.empty() && value != "full") return fail("tickdump takes nothing or full");
+                match.IsTickDump = true;
+                match.IsTickDumpFull = value == "full";
             }
             else if (key == "events")
             {
@@ -826,7 +828,12 @@ namespace DevTools::Workbench::Bench::System
             report.Files.emplace_back("events", run.EventsFile.string());
         }
 
-        if (match.IsTickTrace) m_TickTraceUIStore.RequestStart();
+        if (match.IsTickDump)
+        {
+            const std::string& scenarioName{ run.Scenario->Name.empty() ? run.Scenario->Id : run.Scenario->Name };
+            m_TickDumpUIStore.SetWaitingForLoad(false);
+            m_TickDumpUIStore.RequestStart(std::format("{}/{}", scenarioName, match.Name), match.IsTickDumpFull);
+        }
     }
 
     auto BenchUIService::Sample(BenchRun& run, std::uint64_t ticks) -> void
@@ -835,10 +842,12 @@ namespace DevTools::Workbench::Bench::System
         BenchMatchReport& report{ run.Reports[run.MatchIndex] };
         const auto* players{ GetPlayers(run.LastTick) };
 
-        if (match.IsTickTrace && !run.IsTickTraceNoted && m_TickTraceUIStore.IsRecording())
+        if (match.IsTickDump && !run.IsTickDumpNoted && m_TickDumpUIStore.IsRecording())
         {
-            run.IsTickTraceNoted = true;
-            report.Files.emplace_back("ticktrace", m_TickTraceUIStore.GetFilePath().string());
+            run.IsTickDumpNoted = true;
+            const std::filesystem::path tickDumpPath{ m_TickDumpUIStore.GetFilePath() };
+            report.Files.emplace_back("tickdump", tickDumpPath.string());
+            if (match.IsTickDumpFull) report.Files.emplace_back("snapshot", std::filesystem::path{ tickDumpPath }.replace_extension(".sdump").string());
         }
 
         if (players != nullptr)
@@ -951,9 +960,9 @@ namespace DevTools::Workbench::Bench::System
         run.AppliedModes.clear();
         run.FirstSamples.clear();
         run.IsObjectiveSeen = false;
-        run.IsTickTraceNoted = false;
+        run.IsTickDumpNoted = false;
 
-        if (run.Scenario->Matches[run.MatchIndex].IsTickTrace) m_TickTraceUIStore.RequestStop();
+        if (run.Scenario->Matches[run.MatchIndex].IsTickDump) m_TickDumpUIStore.RequestStop();
     }
 
     auto BenchUIService::ResolveProbe(const BenchProbe& probe) -> std::optional<std::uintptr_t>

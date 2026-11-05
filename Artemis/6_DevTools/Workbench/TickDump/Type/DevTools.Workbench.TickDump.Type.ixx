@@ -17,5 +17,16 @@ export namespace DevTools::Workbench::TickDump::Type
         bool IsFirstAfterLoad{};
         // The viewer camera was active in the tick.
         bool IsViewerActive{};
+        // When the AI thread queued the tick, to measure the real time between records.
+        std::chrono::steady_clock::time_point PushedAt{};
+    };
+
+    // A request to start a recording.
+    struct TickDumpStartRequest
+    {
+        // What is recorded, written to the file header.
+        std::string Source{};
+        // Also write the .sdump with the Snapshots.
+        bool IsSnapshotWritten{ true };
     };
 }

@@ -3,12 +3,13 @@
 Group `6_DevTools` - static library inside the game process - the launcher, inspectors, recorders and the in-game test bench.
 
 ## Responsibility
-- The launcher and its tab windows: simulation (bots, speed, pause), capture, object and player tables, definitions inspector,
+- The launcher and its tab windows: simulation (bots, speed, pause), object and player tables, definitions inspector,
   logs, settings and hotkeys (icons from `Resources/`, stb compiled here).
-- Recorders: TickDump (`.tdump` + `.sdump` of every tick, written by the dump thread) and TickTrace (engine clock and objects per
-  tick).
+- Recorder: TickDump (`.tdump` + `.sdump` of every tick, written by the dump thread; each `.tdump` record also carries the real
+  time since the previous one).
 - The in-game test bench: takes scenarios from the exchange folder of `Tools/game.py`, plays their matches through the match cycle,
-  checks them and writes `state.json` and the report.
+  checks them and writes `state.json` and the report. A match may ask for the TickDump (`tickdump` for the `.tdump`, `tickdump full`
+  for the `.tdump` and the `.sdump`), which the bench starts at the first tick of the match and stops at its end.
 
 ## Does not
 - Take part in the tick: the AI thread only hands it the immutable `ObservedTick`.
@@ -16,7 +17,7 @@ Group `6_DevTools` - static library inside the game process - the launcher, insp
 
 ## Input and output
 - Input: `ObservedTick` per tick, `EngineAccess`, user actions, bench scenarios.
-- Output: windows on the game frame, `.tdump`/`.sdump`/trace files, bench reports, preferences.
+- Output: windows on the game frame, `.tdump`/`.sdump` files, bench reports, preferences.
 
 ## Public interface
 Other projects may import only these modules; everything else in the project is internal.

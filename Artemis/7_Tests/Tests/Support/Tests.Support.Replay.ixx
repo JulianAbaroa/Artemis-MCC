@@ -177,7 +177,7 @@ export namespace Tests::Support::Replay
             exportLayer.m_FlatService.Flatten(*tick, *m_Flat);
 
             std::ostringstream buffer{};
-            Bridge::Codec::Dump::System::WriteRecord(buffer, *m_Flat, tick->Match != nullptr, droppedBefore, m_Writer);
+            Bridge::Codec::Dump::System::WriteRecord(buffer, *m_Flat, tick->Match != nullptr, droppedBefore, std::nullopt, m_Writer);
             const std::string replayed{ buffer.str() };
             m_Result.Replayed.insert(m_Result.Replayed.end(), replayed.begin(), replayed.end());
 

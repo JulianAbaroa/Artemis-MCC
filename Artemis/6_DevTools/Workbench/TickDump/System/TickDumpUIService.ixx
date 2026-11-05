@@ -69,7 +69,8 @@ export namespace DevTools::Workbench::TickDump::System
         FlatService& m_FlatService;
         TickDumpUIStore& m_TickDumpUIStore;
 
-        auto Start(std::string_view source) -> void;
+        // param isSnapshotWritten: Also open and write the .sdump.
+        auto Start(std::string_view source, bool isSnapshotWritten) -> void;
         // Writes what is still queued and the footers, and closes the files.
         auto Finish() -> void;
         // Ends a recording a file can no longer take (full disk, removed folder), without footers.

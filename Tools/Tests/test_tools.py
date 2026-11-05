@@ -125,3 +125,25 @@ def test_top_n_zero_is_uncapped():
     assert "more" not in uncapped.stdout
     assert len(Rows(uncapped.stdout)) >= len(Rows(default.stdout))
     assert len(Rows(default.stdout)) <= 20
+
+def test_game_compiles_the_tickdump_key_and_rejects_other_values():
+    sys.path.insert(0, TOOLS)
+    try:
+        game = LoadTool("game")
+    finally:
+        sys.path.remove(TOOLS)
+
+    def Lines(value):
+        scenario = {"name": "s", "matches": [{"name": "m", "config": "c", "tickdump": value}]}
+        return game.Compile(scenario, None)[0].splitlines()
+
+    assert "tickdump" in Lines(True)
+    assert "tickdump full" in Lines("full")
+    assert not any(line.startswith("tickdump") for line in Lines(False))
+    for bad in ("yes", "tdump", 2):
+        try:
+            Lines(bad)
+        except ValueError as error:
+            assert "tickdump" in str(error)
+        else:
+            raise AssertionError(bad)

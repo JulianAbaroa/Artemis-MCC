@@ -23,6 +23,8 @@ export namespace DevTools::Workbench::TickDump::State
         using SnapshotWriterState = Blam::Layout::Snapshot::Type::SnapshotWriterState;
         using TickDumpWriterState = Bridge::Codec::Dump::Type::TickDumpWriterState;
         using TickDumpEntry = DevTools::Workbench::TickDump::Type::TickDumpEntry;
+        using TickDumpStartRequest = DevTools::Workbench::TickDump::Type::TickDumpStartRequest;
+        using time_point = std::chrono::steady_clock::time_point;
 
     public:
         TickDumpUIStore() = default;
@@ -33,15 +35,25 @@ export namespace DevTools::Workbench::TickDump::State
 
         // Asks the dump thread to start a recording.
         // param source: what is recorded, written to the file header.
-        auto RequestStart(std::string source) -> void;
-        // return: The source of a pending start request, which is cleared.
-        auto TakeStartRequest() -> std::optional<std::string>;
+        // param isSnapshotWritten: Also write the .sdump. A bench match records only the .tdump unless it asks for both.
+        auto RequestStart(std::string source, bool isSnapshotWritten) -> void;
+        // return: A pending start request, which is cleared.
+        auto TakeStartRequest() -> std::optional<TickDumpStartRequest>;
         auto RequestStop() -> void;
         auto TakeStopRequest() -> bool;
 
         // note: Cleared before the dump thread writes the footer, so the AI thread stops pushing and wakes from a full queue.
         auto SetRecording(bool value) -> void;
         auto IsRecording() const -> bool;
+
+        // Whether the running recording also writes the .sdump. Dump thread only.
+        auto SetSnapshotWritten(bool value) -> void;
+        auto IsSnapshotWritten() const -> bool;
+
+        // When the previous record was queued (the start of the recording before the first one), to measure the time between records.
+        // Dump thread only.
+        auto SetLastRecordAt(time_point value) -> void;
+        auto GetLastRecordAt() const -> time_point;
 
         // A recording waiting for the next map load drops every Tick until the first one after the load (D208).
         // note: Set by the render thread before the start request, cleared by the dump thread when that Tick arrives.
@@ -92,7 +104,9 @@ export namespace DevTools::Workbench::TickDump::State
         std::atomic<bool> m_IsRecording{};
         std::atomic<bool> m_IsWaitingForLoad{};
         std::atomic<bool> m_IsStopRequested{};
-        std::optional<std::string> m_StartRequest{};
+        std::optional<TickDumpStartRequest> m_StartRequest{};
+        bool m_IsSnapshotWritten{ true };
+        time_point m_LastRecordAt{};
 
         std::deque<TickDumpEntry> m_Queue{};
         mutable std::mutex m_QueueMutex{};

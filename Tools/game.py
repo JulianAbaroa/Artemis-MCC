@@ -19,6 +19,10 @@ keep waiting.
     python Tools/game.py py SCRIPT [ARGS...] [--no-wait]   Run a script of Agent/ with the Windows venv (D137) and print its output.
     python Tools/game.py py --id ID [--wait]     Print (or keep waiting for) the output of an earlier run.
 
+A match of a scenario may record the TickDump (Diseno/15): "tickdump": true writes the .tdump of the match, "tickdump": "full" the .tdump
+and the .sdump (any other value is an error of the scenario). The report lists them as "tickdump" and "snapshot" and prints, per match,
+the records, the dropped ticks and the size of the .tdump.
+
 Exit code: 0 ok, 1 failed (request or scenario), 2 still waiting (run the same wait again), 3 the watcher is not running,
 4 a LiveChat message arrived (Tools/livechat.py; it is printed with the command that resumes the wait).
 """
@@ -143,6 +147,20 @@ def Wait(what, timeout):
     return 2
 
 
+def TickDumpSummary(path):
+    """One line about the .tdump of a match: records, dropped (sum of the records / footer) and size. The file is in the TickDumps
+    folder of the storage folder: when this shell cannot read it, the line says how to (game.py py Tools/tickdump.py show NAME)."""
+    local = path.replace("\\", "/")
+    try:
+        import tickdump
+        dump = tickdump.Dump(local)
+    except Exception as error:
+        return f"(not read here: {type(error).__name__}; run: game.py py Tools/tickdump.py show {os.path.basename(local)})"
+    dropped = sum(record.dropped for record in dump.records)
+    footer = int(dump.footer["DroppedTicks"]) if dump.footer is not None else "no footer"
+    return f"ticks={len(dump.records)} dropped={dropped} (footer {footer}) size={dump.size / 1e6:.1f} MB"
+
+
 def PrintReport(report):
     print(f"report {report.get('id')} ({report.get('scenario')}): {str(report.get('result', '?')).upper()}"
           f" | {report.get('seconds')} s | {report.get('message', '')}")
@@ -169,11 +187,13 @@ def PrintReport(report):
             local = path.replace("\\", "/")
             index = local.lower().find("/build/game/")
             print(f"    {name}: {('build/game/' + local[index + len('/build/game/'):]) if index >= 0 else path}")
+            if name == "tickdump":
+                print(f"      {TickDumpSummary(path)}")
     return 0 if report.get("result") == "ok" else 1
 
 
 MATCH_KEYS = {"name", "config", "preset", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
-              "probes", "ticktrace", "events"}
+              "probes", "tickdump", "events"}
 
 
 def Compile(scenario, configs):
@@ -186,6 +206,8 @@ def Compile(scenario, configs):
         unknown = set(match) - MATCH_KEYS
         if unknown:
             raise ValueError(f"match {index + 1}: unknown keys {sorted(unknown)}")
+        if match.get("tickdump") not in (None, False, True, "full"):
+            raise ValueError(f"match {index + 1}: tickdump must be true (the .tdump) or \"full\" (.tdump and .sdump), not {match['tickdump']!r}")
         if not match.get("config"):
             raise ValueError(f"match {index + 1}: no config")
         if configs is not None and match["config"] not in configs:
@@ -214,8 +236,8 @@ def Compile(scenario, configs):
                 for item in match.get(key, []):
                     words = [item] if isinstance(item, str) else list(item)
                     lines.append(f"{key[:-1]} " + " ".join(str(w) for w in words))
-            if match.get("ticktrace"):
-                lines.append("ticktrace")
+            if match.get("tickdump"):
+                lines.append("tickdump" + (" full" if match["tickdump"] == "full" else ""))
             if match.get("events"):
                 lines.append("events")
     if not count:

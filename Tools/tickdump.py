@@ -3,7 +3,8 @@ tickdump.py
 Reads the .tdump files of the TickDump (D151, Ignore Diseno/15): the BridgeTick of every tick, with the layout of Bridge.xml embedded
 in the file, so an old dump stays readable after Bridge.xml changes. Output is short on purpose (it is read by Claude).
 
-    python Tools/tickdump.py show [FILE]                  Summary: source, ticks, GameTick range and gaps, drops, events by kind.
+    python Tools/tickdump.py show [FILE]                  Summary: source, ticks, GameTick range and gaps, drops, events by kind, real
+                                                          time (ms per tick and total, when the recording measured it).
     python Tools/tickdump.py show [FILE] --tick T         One record: header, match, players and the entity count.
     python Tools/tickdump.py show [FILE] --handle H [--field F]   One entity or player over the dump (first, last and changes).
     python Tools/tickdump.py diff GOLDEN RUN [--overlap] [--max N]
@@ -16,6 +17,9 @@ in the file, so an old dump stays readable after Bridge.xml changes. Output is s
 FILE defaults to the newest file of %LOCALAPPDATA%\\Artemis\\TickDumps (run it on Windows: python Tools/game.py py Tools/tickdump.py
 show). A folder stands for <folder>/golden.tdump; a path that does not exist is looked up in that TickDumps folder (the file name
 alone is enough). Errors print "ERROR: ..." and exit 2.
+
+The real time of a record (microseconds since the previous one, flag 8) is measured by the in-game recorder only: an offline replay
+leaves 0 with the flag off, and diff never compares it. A file from before it reads as not measured (the format version is the same).
 
 Diff rules: rows are aligned by GameTick (records with Match only), Players and Entities by Handle, events by Sequence. Fields are
 matched by name across the two embedded layouts: an added, removed or retyped field is a layout change (+, -, ~) and counts as a
@@ -43,10 +47,10 @@ import numpy as np
 
 FILE_HEADER = struct.Struct("<8sIIQIIII64s32s64s")
 RECORD_HEADER = np.dtype([("Marker", "S4"), ("GameTick", "<u4"), ("DroppedBefore", "<u4"), ("NewEventCount", "<u2"), ("Flags", "<u2"),
-                          ("ChangedEntityCount", "<u2"), ("RemovedEntityCount", "<u2"), ("Reserved", "<u4")])
+                          ("ChangedEntityCount", "<u2"), ("RemovedEntityCount", "<u2"), ("ElapsedMicroseconds", "<u4")])
 FOOTER = np.dtype([("Marker", "S4"), ("Reserved", "<u4"), ("RecordedTicks", "<u8"), ("DroppedTicks", "<u8"), ("QueueWaits", "<u8"),
                    ("EventLosses", "<u8")])
-HAS_MATCH, EVENTS_LOST, KEYFRAME = 1, 2, 4
+HAS_MATCH, EVENTS_LOST, KEYFRAME, TIME_MEASURED = 1, 2, 4, 8
 # Tables the layout of a file may not have, in the order of the blocks at the end of a record: Record slot, struct, count in the header.
 # Version 2 added the first two, version 3 the weapons and the projectiles, version 4 the explosives, version 5 the lifts. A file whose layout lacks a block has none of it.
 EXTRA_BLOCKS = (("objectives", "BridgeObjective", "ObjectiveCount"), ("stands", "BridgeStand", "StandCount"),
@@ -92,7 +96,7 @@ def Dtypes(layout):
 class Record:
     # entities: the delta of the file (new or changed rows), removed: handles gone since the previous record. Dump.states() rebuilds
     # the full table of every tick.
-    __slots__ = ("game_tick", "dropped", "flags", "header", "match", "players", "entities", "removed", "events", "objectives", "stands", "weapons",
+    __slots__ = ("game_tick", "dropped", "flags", "elapsed_us", "header", "match", "players", "entities", "removed", "events", "objectives", "stands", "weapons",
                  "projectiles", "explosives", "lifts")
 
 
@@ -143,6 +147,8 @@ class Dump:
             rh = np.frombuffer(data, RECORD_HEADER, 1, offset)[0]
             offset += record_size
             r.game_tick, r.dropped, r.flags = int(rh["GameTick"]), int(rh["DroppedBefore"]), int(rh["Flags"])
+            # Real microseconds since the previous record; None in a file that did not measure them (older, or an offline replay).
+            r.elapsed_us = int(rh["ElapsedMicroseconds"]) if r.flags & TIME_MEASURED else None
             r.header = np.frombuffer(data, th, 1, offset)[0]
             offset += th.itemsize
             r.match = np.frombuffer(data, tm, 1, offset)[0]
@@ -234,6 +240,12 @@ def Summary(d):
           f"entities avg {np.mean(entities) if entities else 0:.0f} max {max(entities, default=0)}, "
           f"players max {max((len(x.players) for x in r), default=0)}")
     print(f"events {sum(kinds.values())}: {dict(kinds.most_common(12))}")
+    timed = [x.elapsed_us for x in r if x.elapsed_us is not None]
+    if timed:
+        print(f"real time: {sum(timed) / 1e6:.3f} s over {len(timed)} records, {sum(timed) / len(timed) / 1e3:.2f} ms per tick "
+              f"(max {max(timed) / 1e3:.2f} ms)")
+    else:
+        print("real time: not measured")
     bad = [x.game_tick for x, table in d.states() if len(table) != int(x.header["EntityCount"])]
     if bad:
         print(f"ERROR: rebuilt entity count differs from EntityCount in {len(bad)} records, first GameTick {bad[0]}")

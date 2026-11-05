@@ -13,7 +13,7 @@ import Engine.Match.State;
 import Engine.Match.System;
 import Engine.Control.Simulation.State;
 import Bridge.Codec.Tick.State;
-import DevTools.Workbench.TickTrace.State;
+import DevTools.Workbench.TickDump.State;
 import DevTools.Workbench.Bench.Type;
 import DevTools.Workbench.Bench.State;
 import std;
@@ -49,7 +49,7 @@ export namespace DevTools::Workbench::Bench::System
 
         using TickStore = Bridge::Codec::Tick::State::TickStore;
 
-        using TickTraceUIStore = DevTools::Workbench::TickTrace::State::TickTraceUIStore;
+        using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
 
         using BenchProbe = DevTools::Workbench::Bench::Type::BenchProbe;
         using BenchScenario = DevTools::Workbench::Bench::Type::BenchScenario;
@@ -62,13 +62,13 @@ export namespace DevTools::Workbench::Bench::System
             MemoryReaderService& memoryReaderService, LocalUserStore& localUserStore, PlayerActionStore& playerActionStore,
             VirtualInputStore& virtualInputStore,
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
-            MatchConfigService& matchConfigService, PresetStore& presetStore, PresetService& presetService, BotStore& botStore, TickStore& tickStore, TickTraceUIStore& tickTraceUIStore,
+            MatchConfigService& matchConfigService, PresetStore& presetStore, PresetService& presetService, BotStore& botStore, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
             BenchUIStore& benchUIStore) :
             m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
             m_VirtualInputStore(virtualInputStore),
             m_LifecycleStore(lifecycleStore), m_MatchConfigStore(matchConfigStore), m_MatchCycleStore(matchCycleStore),
-            m_MatchConfigService(matchConfigService), m_PresetStore(presetStore), m_PresetService(presetService), m_BotStore(botStore), m_TickStore(tickStore), m_TickTraceUIStore(tickTraceUIStore),
+            m_MatchConfigService(matchConfigService), m_PresetStore(presetStore), m_PresetService(presetService), m_BotStore(botStore), m_TickStore(tickStore), m_TickDumpUIStore(tickDumpUIStore),
             m_BenchUIStore(benchUIStore) {}
         ~BenchUIService() = default;
 
@@ -102,7 +102,7 @@ export namespace DevTools::Workbench::Bench::System
         PresetService& m_PresetService;
         BotStore& m_BotStore;
         TickStore& m_TickStore;
-        TickTraceUIStore& m_TickTraceUIStore;
+        TickDumpUIStore& m_TickDumpUIStore;
         BenchUIStore& m_BenchUIStore;
 
         // Copies a scenario file to the inbox, named like the ones of Tools/game.py so the scenarios run in arrival order.
@@ -124,7 +124,7 @@ export namespace DevTools::Workbench::Bench::System
         // Moves the current match one phase forward when its condition is met, or ends it when a timeout passes.
         auto Step(BenchRun& run) -> void;
 
-        // Opens the probe files and starts the TickTrace of a match that asks for them, when its first tick arrives.
+        // Opens the probe files and starts the TickDump of a match that asks for them, when its first tick arrives.
         auto StartTools(BenchRun& run) -> void;
 
         // On every new tick of a running match: remembers the players for the checks, plays the actions, sends the requests and
@@ -132,7 +132,7 @@ export namespace DevTools::Workbench::Bench::System
         // param ticks: Ticks of the match so far.
         auto Sample(BenchRun& run, std::uint64_t ticks) -> void;
 
-        // Gives every player the bench changed back its engine action and stops the TickTrace.
+        // Gives every player the bench changed back its engine action and stops the TickDump.
         auto StopTools(BenchRun& run) -> void;
 
         // return: The address the probe points to now, empty if a pointer of its chain cannot be read or is null.

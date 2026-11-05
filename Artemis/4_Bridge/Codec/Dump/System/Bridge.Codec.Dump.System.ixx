@@ -22,10 +22,12 @@ export namespace Bridge::Codec::Dump::System
     // param flat: The BridgeTick flattened with an empty header (the clock fields belong to the bridge).
     // param hasMatch: The Tick had a Match, so its GameTick is valid.
     // param droppedBefore: Ticks the AI thread dropped right before this one.
+    // param elapsedMicroseconds: Real time since the previous record, or none when the caller does not measure it (an offline replay),
+    // which writes 0 with the flag off so the file does not depend on the speed of the machine.
     // return: The bytes written and whether events were lost.
     // note: The state moves to the next record only if the stream is still good afterwards.
     auto WriteRecord(std::ostream& stream, const Contract::Bridge::Type::BridgeTick& flat, bool hasMatch, std::uint32_t droppedBefore,
-        Type::TickDumpWriterState& state) -> Type::TickDumpWriteResult;
+        std::optional<std::uint32_t> elapsedMicroseconds, Type::TickDumpWriterState& state) -> Type::TickDumpWriteResult;
 
     // Writes the footer of a complete .tdump file.
     // return: Bytes written.

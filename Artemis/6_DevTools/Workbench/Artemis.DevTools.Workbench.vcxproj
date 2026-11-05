@@ -108,11 +108,6 @@
     <ClCompile Include="Bench\System\BenchUIService.cpp" />
     <ClCompile Include="Bench\System\BenchUIService.ixx" />
     <ClCompile Include="Bench\Type\DevTools.Workbench.Bench.Type.ixx" />
-    <ClCompile Include="Capture\State\CaptureUIStore.cpp" />
-    <ClCompile Include="Capture\State\CaptureUIStore.ixx" />
-    <ClCompile Include="Capture\System\CaptureUIService.cpp" />
-    <ClCompile Include="Capture\System\CaptureUIService.ixx" />
-    <ClCompile Include="Capture\Type\DevTools.Workbench.Capture.Type.ixx" />
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.cpp" />
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.ixx" />
     <ClCompile Include="DefinitionsInspector\Type\DevTools.Workbench.DefinitionsInspector.Type.ixx" />
@@ -165,11 +160,6 @@
     <ClCompile Include="TickDump\System\TickDumpUIService.cpp" />
     <ClCompile Include="TickDump\System\TickDumpUIService.ixx" />
     <ClCompile Include="TickDump\Type\DevTools.Workbench.TickDump.Type.ixx" />
-    <ClCompile Include="TickTrace\State\TickTraceUIStore.cpp" />
-    <ClCompile Include="TickTrace\State\TickTraceUIStore.ixx" />
-    <ClCompile Include="TickTrace\System\TickTraceUIService.cpp" />
-    <ClCompile Include="TickTrace\System\TickTraceUIService.ixx" />
-    <ClCompile Include="TickTrace\Type\DevTools.Workbench.TickTrace.Type.ixx" />
     <ClCompile Include="$(ArtemisRoot)External\stb\stb_implementation.cpp" />
     <ClInclude Include="$(ArtemisRoot)External\stb\stb_image.h" />
   </ItemGroup>

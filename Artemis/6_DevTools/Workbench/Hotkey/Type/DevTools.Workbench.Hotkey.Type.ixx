@@ -14,7 +14,6 @@ export namespace DevTools::Workbench::Hotkey::Type
         ToggleMenu,
         ResetMenu,
         LockMenu,
-        CaptureDatum,
     };
 
     // Layer that handles the hotkey.

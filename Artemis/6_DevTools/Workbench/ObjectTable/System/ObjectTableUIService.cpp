@@ -167,11 +167,6 @@ namespace DevTools::Workbench::ObjectTable::System
 
     auto ObjectTableUIService::DrawCardHeader(const AliveObject& object) -> void
     {
-        bool isPinned{ m_CaptureUIStore.IsPinned(object.Handle) };
-        if (ImGui::Checkbox("##pin", &isPinned)) m_CaptureUIStore.SetPinned(object.Handle, isPinned);
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Pin for the datum captures (F7).");
-        ImGui::SameLine();
-
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
 
         ImGui::TextUnformatted("Tag:");

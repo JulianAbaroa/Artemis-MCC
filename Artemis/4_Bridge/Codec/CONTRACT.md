@@ -12,6 +12,7 @@ Group `4_Bridge` - pure static library - the order of the tick, the Tick, and it
 - The `.tdump` format (the recorded stream of flattened ticks) and its writer. Version 2 writes the flags and the stands (counts in
   the `BridgeTickHeader`) after the events of every record; a reader of version 1 files finds none. Version 3 adds the weapons and then the projectiles (counts in the header) after the stands; a
   reader of older files finds none. Version 4 adds the explosives (count in the header) after the projectiles. Version 5 adds the lifts after the explosives.
+  The record header carries the real microseconds since the previous record (flag 8 when measured, 0 and off otherwise, so older files read as not measured and the version is the same). The writer takes it from the caller; a replay passes none.
 
 ## Does not
 - Open shared memory or talk to the client: that is `Bridge.Transport`.
@@ -50,7 +51,7 @@ More rows than the `BridgeTick` holds are cut and counted in its header (`Entiti
 
 ## Requirements
 - The flattened layout changes only through `Contract` (same `k_BridgeLayoutHash`).
-- Deterministic: a recorded Snapshot stream gives the same `.tdump` byte for byte; padding of every row is zeroed.
+- Deterministic: a recorded Snapshot stream gives the same `.tdump` byte for byte (the replay does not measure real time); padding of every row is zeroed.
 
 ## Tests
 `PipelineTests` (the pure chain without the DLL), `ReplayTests.Recordings` (`.sdump` in, golden `.tdump` out, byte for byte),

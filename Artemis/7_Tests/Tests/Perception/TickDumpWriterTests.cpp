@@ -35,6 +35,7 @@ namespace
     using Bridge::Codec::Dump::Type::k_TickRecordHasMatch;
     using Bridge::Codec::Dump::Type::k_TickRecordKeyframe;
     using Bridge::Codec::Dump::Type::k_TickRecordMarker;
+    using Bridge::Codec::Dump::Type::k_TickRecordTimeMeasured;
 
     // One record read back.
     struct ParsedRecord
@@ -146,14 +147,14 @@ TEST(TickDumpWriterTests, FirstRecordIsAKeyframeAndTheNextOneIsADelta)
     const std::array<BridgeEntity, 3> first{ MakeEntity(10, 1.0f), MakeEntity(20, 2.0f), MakeEntity(30, 3.0f) };
     const std::array<BridgeEvent, 2> firstEvents{ MakeEvent(1), MakeEvent(2) };
     const auto tickOne{ MakeTick(first, firstEvents, 100) };
-    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, state) };
+    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, std::nullopt, state) };
     EXPECT_FALSE(one.IsEventsLost);
 
     // The entity 20 changes, 30 is gone and 40 is new. The window of events gains the sequence 3.
     const std::array<BridgeEntity, 3> second{ MakeEntity(10, 1.0f), MakeEntity(20, 2.5f), MakeEntity(40, 4.0f) };
     const std::array<BridgeEvent, 3> secondEvents{ MakeEvent(1), MakeEvent(2), MakeEvent(3) };
     const auto tickTwo{ MakeTick(second, secondEvents, 101) };
-    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 3, state) };
+    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 3, std::nullopt, state) };
     EXPECT_FALSE(two.IsEventsLost);
 
     EXPECT_EQ(one.Bytes + two.Bytes, static_cast<std::uint64_t>(stream.tellp()));
@@ -201,11 +202,11 @@ TEST(TickDumpWriterTests, ASequenceJumpIsReportedAsLostEvents)
     std::stringstream stream{};
 
     const std::array<BridgeEvent, 2> firstEvents{ MakeEvent(1), MakeEvent(2) };
-    Writer::WriteRecord(stream, *MakeTick({}, firstEvents, 1), true, 0, state);
+    Writer::WriteRecord(stream, *MakeTick({}, firstEvents, 1), true, 0, std::nullopt, state);
 
     // Events 3 to 5 left the window before they were written.
     const std::array<BridgeEvent, 1> lateEvents{ MakeEvent(6) };
-    const auto lost{ Writer::WriteRecord(stream, *MakeTick({}, lateEvents, 2), true, 0, state) };
+    const auto lost{ Writer::WriteRecord(stream, *MakeTick({}, lateEvents, 2), true, 0, std::nullopt, state) };
     EXPECT_TRUE(lost.IsEventsLost);
 
     std::istringstream in{ stream.str() };
@@ -222,7 +223,7 @@ TEST(TickDumpWriterTests, ARecordWithoutMatchHasNoGameTick)
     Writer::Begin(state);
     std::stringstream stream{};
 
-    Writer::WriteRecord(stream, *MakeTick({}, {}, 0), false, 0, state);
+    Writer::WriteRecord(stream, *MakeTick({}, {}, 0), false, 0, std::nullopt, state);
 
     std::istringstream in{ stream.str() };
     const ParsedRecord record{ ReadRecord(in) };
@@ -247,12 +248,12 @@ TEST(TickDumpWriterTests, FlagsAndStandsFollowTheEventsOfEveryRecord)
     tickOne->Stands[0].OwnerTeam = 1;
     tickOne->Header.ObjectiveCount = 2;
     tickOne->Header.StandCount = 1;
-    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, state) };
+    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, std::nullopt, state) };
 
     auto tickTwo{ MakeTick({}, {}, 2) };
     tickTwo->Objectives[0].Handle = 0xA3;
     tickTwo->Header.ObjectiveCount = 1;
-    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, state) };
+    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, std::nullopt, state) };
 
     EXPECT_EQ(one.Bytes + two.Bytes, static_cast<std::uint64_t>(stream.tellp()));
 
@@ -293,13 +294,13 @@ TEST(TickDumpWriterTests, WeaponsAndProjectilesFollowTheStandsOfEveryRecord)
     tickOne->Projectiles[0].StuckNode = -1;
     tickOne->Header.WeaponCount = 2;
     tickOne->Header.ProjectileCount = 1;
-    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, state) };
+    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, std::nullopt, state) };
 
     auto tickTwo{ MakeTick({}, {}, 2) };
     tickTwo->Projectiles[0].Handle = 0xD2;
     tickTwo->Projectiles[0].StuckNode = 5;
     tickTwo->Header.ProjectileCount = 1;
-    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, state) };
+    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, std::nullopt, state) };
 
     EXPECT_EQ(one.Bytes + two.Bytes, static_cast<std::uint64_t>(stream.tellp()));
 
@@ -322,4 +323,26 @@ TEST(TickDumpWriterTests, WeaponsAndProjectilesFollowTheStandsOfEveryRecord)
 
     in.peek();
     EXPECT_TRUE(in.eof());
+}
+
+TEST(TickDumpWriterTests, TwoRecordsWithMeasuredTimeReadBackTheirMicroseconds)
+{
+    TickDumpWriterState state{};
+    Writer::Begin(state);
+    std::stringstream stream{};
+
+    Writer::WriteRecord(stream, *MakeTick({}, {}, 1), true, 0, 16'667u, state);
+    Writer::WriteRecord(stream, *MakeTick({}, {}, 2), true, 0, 0u, state);
+    Writer::WriteRecord(stream, *MakeTick({}, {}, 3), true, 0, std::nullopt, state);
+
+    std::istringstream in{ stream.str() };
+    const ParsedRecord first{ ReadRecord(in) };
+    const ParsedRecord second{ ReadRecord(in) };
+    const ParsedRecord third{ ReadRecord(in) };
+    EXPECT_TRUE((first.Header.Flags & k_TickRecordTimeMeasured) != 0);
+    EXPECT_EQ(first.Header.ElapsedMicroseconds, 16'667u);
+    EXPECT_TRUE((second.Header.Flags & k_TickRecordTimeMeasured) != 0);
+    EXPECT_EQ(second.Header.ElapsedMicroseconds, 0u);
+    EXPECT_FALSE((third.Header.Flags & k_TickRecordTimeMeasured) != 0);
+    EXPECT_EQ(third.Header.ElapsedMicroseconds, 0u);
 }
