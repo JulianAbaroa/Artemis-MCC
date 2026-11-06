@@ -4,6 +4,8 @@ import std;
 
 export namespace Blam::Runtime::Object::Type::Constant
 {
+    // Entries a bone or damage store tolerates above twice the tables written in its last generation before Clear drops the unwritten ones.
+    constexpr std::size_t k_StorePruneSlack{ 64 };
     constexpr std::uint8_t k_DamageSectionStride{ 0x18 };
     constexpr std::uint16_t k_RegionBlockMaxSize{ 0x400 };
 

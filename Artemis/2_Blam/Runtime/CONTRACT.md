@@ -33,6 +33,7 @@ Other projects may import only these modules; everything else in the project is 
 
 ## State between ticks
 - The objects and players are kept by handle and refreshed every tick; a handle whose salt changed is replaced.
+- `ObjectTableStore` publishes into a small pool of tables (S2.O, D276): the table of a tick is written over one nobody holds, so a reader that holds a table sees it unchanged, and a steady tick allocates none. `BoneMatricesStore` and `DamageSectionsStore` keep their buffers between ticks: `Write(handle)` gives the table to fill in place, `Get` gives it until the next `Clear`.
 - `GameStore` keeps the cursor of the event ring (last sequence read) and the count of entries overwritten before they were read.
 
 ## Threads

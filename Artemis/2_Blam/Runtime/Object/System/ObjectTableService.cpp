@@ -352,25 +352,23 @@ namespace Blam::Runtime::Object::System
 
         if (nodeCount == 0) return;
 
-        BoneMatrixTable table;
+        // The matrices are read straight into the buffer the store kept from the last tick.
+        BoneMatrixTable& table = m_BoneMatricesStore.Write(object.Handle);
         table.Matrices.resize(nodeCount);
 
         const std::size_t bytes = nodeCount * sizeof(BoneMatrix);
-        if (!datum.ReadRaw(offset, table.Matrices.data(), bytes)) return;
-
-        m_BoneMatricesStore.Set(object.Handle, std::move(table));
+        if (!datum.ReadRaw(offset, table.Matrices.data(), bytes)) m_BoneMatricesStore.Discard(object.Handle);
     }
 
     auto ObjectTableService::ReadDamageSectionTable(const RawObject& datum, AliveObject& object) -> void
     {
-        DamageSectionTable table{};
+        // The table is filled in the buffers the store kept from the last tick.
+        DamageSectionTable& table = m_DamageSectionsStore.Write(object.Handle);
 
         this->ReadDamageSections(datum, table);
         this->ReadRegionBlock(datum, table);
 
-        if (table.Sections.empty() && table.Regions.Bytes.empty()) return;
-
-        m_DamageSectionsStore.Set(object.Handle, std::move(table));
+        if (table.Sections.empty() && table.Regions.Bytes.empty()) m_DamageSectionsStore.Discard(object.Handle);
     }
 
     auto ObjectTableService::ReadDamageSections(const RawObject& datum, DamageSectionTable& table) -> void
@@ -382,7 +380,8 @@ namespace Blam::Runtime::Object::System
         const std::uint16_t count = regionsSize / k_DamageSectionStride;
         if (count == 0 || count >= 256) return;
 
-        std::vector<DamageSection> raw(count);
+        // count < 256, so the raw sections fit in this array and need no vector.
+        std::array<DamageSection, 256> raw{};
         if (!datum.ReadRaw(regionsOffsetRaw, raw.data(), count * sizeof(DamageSection))) return;
 
         table.Sections.resize(count);
@@ -402,12 +401,15 @@ namespace Blam::Runtime::Object::System
 
         if (offset == 0xFFFF || size == 0 || size > k_RegionBlockMaxSize) return;
 
-        std::vector<std::uint8_t> bytes(size);
-        if (!datum.ReadRaw(offset, bytes.data(), size)) return;
+        table.Regions.Bytes.resize(size);
+        if (!datum.ReadRaw(offset, table.Regions.Bytes.data(), size))
+        {
+            table.Regions.Bytes.clear();
+            return;
+        }
 
         table.Regions.Size = size;
         table.Regions.Offset = offset;
-        table.Regions.Bytes = std::move(bytes);
     }
 
     auto ObjectTableService::UpdateBiped(const RawObject& datum, AliveObject& object) -> void

@@ -129,6 +129,9 @@
     <ClCompile Include="Blam\ObjectKindTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
+    <ClCompile Include="Blam\ObjectStoreTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
     <ClCompile Include="Blam\RuntimeTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>

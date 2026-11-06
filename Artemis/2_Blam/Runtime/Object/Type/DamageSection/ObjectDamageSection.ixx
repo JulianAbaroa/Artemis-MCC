@@ -38,8 +38,15 @@ export namespace Blam::Runtime::Object::Type::DamageSection
         RegionBlock Regions{};
     };
 
-    // Damage section tables, by object handle.
-    struct DamageSectionTables : std::unordered_map<std::uint32_t, DamageSectionTable>
+    // The table of an object and the Clear generation of the store it was written in (0 = never, or discarded).
+    struct DamageSectionEntry
+    {
+        DamageSectionTable Table{};
+        std::uint64_t Generation{};
+    };
+
+    // Damage section tables, by object handle. The entries of older generations are kept for their buffers and are not visible.
+    struct DamageSectionTables : std::unordered_map<std::uint32_t, DamageSectionEntry>
     {
         using unordered_map::unordered_map;
     };

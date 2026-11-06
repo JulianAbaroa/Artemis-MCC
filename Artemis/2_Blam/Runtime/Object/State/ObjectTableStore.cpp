@@ -41,12 +41,30 @@ namespace Blam::Runtime::Object::State
 
     auto ObjectTableStore::Publish() -> void
     {
-        std::shared_ptr<const ObjectTable> snap;
+        std::shared_ptr<ObjectTable> target;
         {
             std::lock_guard<std::mutex> lock(m_Mutex);
-            snap = std::make_shared<const ObjectTable>(m_ObjectTable);
+
+            // The published table has a second reference (the published pointer), so it is never chosen.
+            for (const auto& pooled : m_Pool)
+            {
+                if (pooled.use_count() != 1) continue;
+
+                target = pooled;
+                break;
+            }
+
+            if (target)
+            {
+                *target = m_ObjectTable;
+            }
+            else
+            {
+                target = std::make_shared<ObjectTable>(m_ObjectTable);
+                if (m_Pool.size() < k_PoolCapacity) m_Pool.push_back(target);
+            }
         }
-        m_PublishedTable.store(snap, std::memory_order_release);
+        m_PublishedTable.store(target, std::memory_order_release);
     }
 
     auto ObjectTableStore::Acquire() const -> std::shared_ptr<const ObjectTable>
@@ -60,5 +78,6 @@ namespace Blam::Runtime::Object::State
 
         m_ObjectTable.clear();
         m_PublishedTable.store(nullptr, std::memory_order_release);
+        m_Pool.clear();
     }
 }

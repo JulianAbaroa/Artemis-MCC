@@ -198,7 +198,7 @@ namespace
         return audit;
     }
 
-    // Copy of ReadBoneMatrixTable of ObjectTableService.cpp, into the store.
+    // Copy of ReadBoneMatrixTable of ObjectTableService.cpp, written in place in the store.
     // return: Whether it set a table.
     auto FillBones(const RawObject& datum, std::uint32_t handle, BoneMatricesStore& store) -> bool
     {
@@ -211,26 +211,29 @@ namespace
         const std::uint32_t nodeCount = static_cast<std::uint32_t>(size / sizeof(BoneMatrix));
         if (nodeCount >= k_MaxNodes || nodeCount == 0) return false;
 
-        BoneMatrixTable table;
+        BoneMatrixTable& table = store.Write(handle);
         table.Matrices.resize(nodeCount);
-        if (!datum.ReadRaw(offset, table.Matrices.data(), nodeCount * sizeof(BoneMatrix))) return false;
+        if (!datum.ReadRaw(offset, table.Matrices.data(), nodeCount * sizeof(BoneMatrix)))
+        {
+            store.Discard(handle);
+            return false;
+        }
 
-        store.Set(handle, std::move(table));
         return true;
     }
 
-    // Copy of ReadDamageSectionTable of ObjectTableService.cpp, into the store.
+    // Copy of ReadDamageSectionTable of ObjectTableService.cpp, written in place in the store.
     // return: Whether it set a table.
     auto FillDamage(const RawObject& datum, std::uint32_t handle, DamageSectionsStore& store) -> bool
     {
-        DamageSectionTable table{};
+        DamageSectionTable& table = store.Write(handle);
 
         const std::uint16_t regionsSize = datum.Read<std::uint16_t>(ObjeOffset::k_DamageSectionsSize);
         const std::uint16_t regionsOffsetRaw = datum.Read<std::uint16_t>(ObjeOffset::k_DamageSectionsOffset);
         const std::uint16_t count = regionsSize / k_DamageSectionStride;
         if (regionsOffsetRaw != 0xFFFF && count != 0 && count < 256)
         {
-            std::vector<DamageSection> raw(count);
+            std::array<DamageSection, 256> raw{};
             if (datum.ReadRaw(regionsOffsetRaw, raw.data(), count * sizeof(DamageSection)))
             {
                 table.Sections.resize(count);
@@ -246,18 +249,24 @@ namespace
         const std::uint16_t offset = datum.Read<std::uint16_t>(ObjeOffset::k_RegionStateOffset);
         if (offset != 0xFFFF && size != 0 && size <= k_RegionBlockMaxSize)
         {
-            std::vector<std::uint8_t> bytes(size);
-            if (datum.ReadRaw(offset, bytes.data(), size))
+            table.Regions.Bytes.resize(size);
+            if (datum.ReadRaw(offset, table.Regions.Bytes.data(), size))
             {
                 table.Regions.Size = size;
                 table.Regions.Offset = offset;
-                table.Regions.Bytes = std::move(bytes);
+            }
+            else
+            {
+                table.Regions.Bytes.clear();
             }
         }
 
-        if (table.Sections.empty() && table.Regions.Bytes.empty()) return false;
+        if (table.Sections.empty() && table.Regions.Bytes.empty())
+        {
+            store.Discard(handle);
+            return false;
+        }
 
-        store.Set(handle, std::move(table));
         return true;
     }
 
@@ -357,8 +366,8 @@ namespace
             add(TimeRow("O1 loop UpdateObjects (find + ResolveWorldOrigin)", m_O1Loop));
             add(TimeRow("O1 RemoveObject of the dead", m_O1Remove));
             add(TimeRow("O1 Publish (copy of the table)", m_O1Publish));
-            add(TimeRow("O1 bones store: Set of a new vector per object", m_O1Bones));
-            add(TimeRow("O1 damage store: Set of a new table per object", m_O1Damage));
+            add(TimeRow("O1 bones store: write in place per object", m_O1Bones));
+            add(TimeRow("O1 damage store: write in place per object", m_O1Damage));
             add(TimeRow("O1 sum of the parts above", m_O1Sum));
             add(TimeRow("O1 rest of O0 (UpdateObjectData etc.), O0 - sum", m_O1Rest));
             add(CounterRow("O1 alive objects in the table", m_OTable));
@@ -438,6 +447,7 @@ namespace
         Series m_CObjects{}, m_CObjectBytes{}, m_CRegionBytes{};
 
         // ObjectTable.
+        ObjectTableStore m_ReplicaStore{};
         BoneMatricesStore m_ReplicaBones{};
         DamageSectionsStore m_ReplicaDamage{};
         ObjectTable m_O2Target{};
@@ -675,8 +685,12 @@ namespace
             m_ReplicaPrevious = chain.m_Tables.m_ObjectStore.Acquire();
             if (!m_ReplicaPrevious || m_ReplicaPrevious->empty() || !snapshot.HasObjectTable) return;
 
-            // The store as it is when UpdateObjectTable begins.
-            ObjectTableStore store{};
+            // The store as it is when UpdateObjectTable begins. It lives between measures like the one of production, so its pool of
+            // published tables is warm.
+            ObjectTableStore& store{ m_ReplicaStore };
+            std::vector<std::uint32_t> stale{};
+            store.UpdateObjects([&](std::uint32_t handle, AliveObject&) { stale.push_back(handle); });
+            for (const std::uint32_t handle : stale) store.RemoveObject(handle);
             for (const auto& [handle, object] : *m_ReplicaPrevious) store.AddObject(handle, object);
 
             auto start{ steady_clock::now() };
@@ -852,7 +866,7 @@ namespace
         report.push_back(std::format("Pass: {:.1f} s. Alive objects per Snapshot: mean {:.1f}, max {:.0f}. Times in microseconds per tick.",
             outcome.Seconds, alive.Mean, alive.Max));
         report.push_back("The fake memory is built outside the measured time and is warm in the cache: C0 is a lower bound of the capture of the game.");
-        report.push_back("O1 Clear includes destroying what the previous measure left (the old tables), as production does when it replaces them.");
+        report.push_back("The O1 replicas run on stores that live between measures, like those of production (pool of published tables, kept buffers).");
         report.push_back("");
         for (std::string& line : bench.Lines()) report.push_back(std::move(line));
         report.push_back("");
