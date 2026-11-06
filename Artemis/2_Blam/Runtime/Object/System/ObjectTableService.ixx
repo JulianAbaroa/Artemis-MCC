@@ -84,7 +84,7 @@ export namespace Blam::Runtime::Object::System
         // note: Does nothing if the tag of the datum index cannot be resolved.
         auto AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind kind) -> void;
 
-        auto UpdateObjectData(const RawObject& datum, AliveObject& object) -> void;
+        auto UpdateObjectData(const RawObject& datum, AliveObject& object, bool isLight) -> void;
 
         // Reads the position and size of the bone block from the descriptor in the datum (0x178).
         // return: The header, or nothing if the object has no bone block or the descriptor is not plausible.

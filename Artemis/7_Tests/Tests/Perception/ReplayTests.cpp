@@ -17,10 +17,13 @@ import Blam.Layout.Snapshot.System;
 import Blam.Map.Layer;
 import Blam.MapModel.Layer;
 import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Game.System;
+import Blam.Runtime.Object.System;
 import Blam.Runtime.Object.Type;
 import Perception.Details.Type;
 import Perception.Entities.Type;
 import Perception.Events.Type;
+import Perception.Flags.System;
 import Perception.Match.Type;
 import Perception.Players.Type;
 import Tests.Support.Blam;
@@ -46,6 +49,7 @@ namespace
     using Blam::Layout::Snapshot::Type::SnapshotWriterState;
     using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Blam::Put;
+    using Tests::Support::FilmPass::FilmBeforeRecord;
     using Tests::Support::FilmPass::FilmOutcome;
     using Tests::Support::FilmPass::PeakWorkingSetMegabytes;
     using Tests::Support::FilmPass::RecordingsFolder;
@@ -323,6 +327,20 @@ namespace
         return std::sqrt(Dot(v, v));
     }
 
+    // What the flag pass of the light snapshot gave against the full tick, record by record in a ctf film (Q101.B).
+    struct LightFlagsData
+    {
+        // Records and flags compared.
+        std::size_t Records{};
+        std::size_t Flags{};
+        // Flags of the full tick that the light pass did not give (the tag of the flag was not classified yet).
+        std::size_t Missing{};
+        // Flags whose detail differs, AlliesInZone left out.
+        std::size_t Different{};
+        // The first differences, as text.
+        std::vector<std::string> First{};
+    };
+
     // Everything the tests gather from one film. A film is replayed once (D269): its observers fill this on the thread of the pass and
     // the tests assert on it afterwards.
     struct FilmResult
@@ -340,6 +358,7 @@ namespace
         // The last Match of the film.
         std::shared_ptr<const Perception::Match::Type::MatchStatus> LastMatch{};
         std::map<std::uint32_t, PowerupSample> Powerups{};
+        LightFlagsData LightFlags{};
     };
 
     // Engine ticks that the tests ask for in each film.
@@ -368,6 +387,7 @@ namespace
         bool IsBaseTraits{};
         bool IsLastMatch{};
         bool IsPowerups{};
+        bool IsLightFlags{};
         std::vector<std::uint32_t> CtfTicks{};
         std::vector<std::uint32_t> ArmasTicks{};
     };
@@ -389,6 +409,7 @@ namespace
         plan.IsBaseTraits = film == "lifts";
         plan.IsLastMatch = isOneOf({ "ctf_c", "cgb_displace_1min" });
         plan.IsPowerups = film == "powerups";
+        plan.IsLightFlags = isOneOf({ "ctf_c", "ctf_d" });
 
         if (film == "ctf_c")
         {
@@ -652,14 +673,76 @@ namespace
             .DamageResistance = player.Traits.DamageResistance, .ActiveCamo = player.Traits.ActiveCamo, .Durations = match->PowerupDurationTicks };
     }
 
+    // Decodes the light snapshot of a record the way the sparse mode does and builds its flags, before the full pipeline runs the record.
+    // return: The flags, or nothing while the full pipeline never published objectives (the first record).
+    // note: Touches only the light stores of the chain, which the full pipeline does not read.
+    auto BuildLightFlags(Chain& chain, const Snapshot& snapshot) -> std::optional<Perception::Details::Type::ObjectiveDetails>
+    {
+        const Snapshot light{ SnapshotCodec::MakeLight(snapshot) };
+        chain.m_Tables.m_LightObjectService.UpdateObjectTable(light);
+        chain.m_Tables.m_LightGameService.Update(light);
+
+        if (!chain.m_Environment.m_ObjectiveDetailsStore.Acquire()) return std::nullopt;
+
+        return chain.m_Environment.m_FlagPassService.BuildFlags();
+    }
+
+    // Compares the flags of the light pass with the ObjectiveDetails the full pipeline published for the same record.
+    auto CompareLightFlags(const Chain& chain, const std::optional<Perception::Details::Type::ObjectiveDetails>& light, std::size_t record,
+        LightFlagsData& data) -> void
+    {
+        const auto full{ chain.m_Environment.m_ObjectiveDetailsStore.Acquire() };
+        if (!light || !full) return;
+
+        ++data.Records;
+        for (const auto& [handle, expected] : full->Flags)
+        {
+            ++data.Flags;
+
+            const auto it{ light->Flags.find(handle) };
+            if (it == light->Flags.end())
+            {
+                ++data.Missing;
+                continue;
+            }
+
+            const auto& actual{ it->second };
+            const bool isSame{ actual.BaseTeam == expected.BaseTeam && actual.OwnerTeam == expected.OwnerTeam && actual.HomeStand == expected.HomeStand
+                && actual.State == expected.State && actual.CarrierBiped == expected.CarrierBiped && actual.CarrierPlayer == expected.CarrierPlayer
+                && actual.ResetTicks == expected.ResetTicks && actual.IsResetRunning == expected.IsResetRunning };
+            if (isSame) continue;
+
+            ++data.Different;
+            if (data.First.size() < 5)
+            {
+                data.First.push_back(std::format("record {} flag {:#x}: state {}/{} carrier {:#x}/{:#x} player {:#x}/{:#x} reset {}/{} owner {}/{}", record, handle,
+                    static_cast<int>(actual.State), static_cast<int>(expected.State), actual.CarrierBiped, expected.CarrierBiped,
+                    actual.CarrierPlayer, expected.CarrierPlayer, actual.ResetTicks, expected.ResetTicks,
+                    static_cast<int>(actual.OwnerTeam), static_cast<int>(expected.OwnerTeam)));
+            }
+        }
+    }
+
     // Replays a film once and gathers what the tests that use it ask for.
     auto GatherFilm(const std::string& film, bool isCompared) -> std::shared_ptr<const FilmResult>
     {
         const FilmPlan plan{ PlanOf(film) };
         auto result{ std::make_shared<FilmResult>() };
 
+        std::optional<Perception::Details::Type::ObjectiveDetails> lightFlags{};
+        FilmBeforeRecord before{};
+        if (plan.IsLightFlags)
+        {
+            before = [&](const Chain& chain, const Snapshot& snapshot, std::size_t) -> std::function<void()>
+            {
+                lightFlags = BuildLightFlags(const_cast<Chain&>(chain), snapshot);
+                return {};
+            };
+        }
+
         result->Pass = RunFilmPass(film, isCompared, [&](const Chain& chain, std::size_t record)
         {
+            if (plan.IsLightFlags) CompareLightFlags(chain, lightFlags, record, result->LightFlags);
             if (plan.IsCtf) ObserveCtf(chain, record, plan.CtfTicks, result->Ctf);
             if (plan.IsArmas) ObserveArmas(chain, plan.ArmasTicks, result->Armas);
             if (plan.IsExplosives) ObserveExplosives(chain, result->Explosives);
@@ -674,7 +757,7 @@ namespace
             {
                 if (const auto match{ chain.m_Environment.m_MatchStore.Acquire() }; match) result->LastMatch = match;
             }
-        });
+        }, before);
 
         CtfData& ctf{ result->Ctf };
         if (ctf.LastMatch && ctf.LastObjectives) ctf.Last = MomentOf(*ctf.LastMatch, *ctf.LastObjectives);
@@ -703,6 +786,7 @@ namespace
         { "ArmasBMagazinesReservesAndBatteryFollowTheRecordedFilm", { "armas_b" } },
         { "ExplosivesCarryTheBlastOfTheirTags", { "explosivos" } },
         { "ASparseSampledPassRunsWithoutFailure", { "explosivos" } },
+        { "LightFlagPassGivesTheObjectiveDetailsOfTheFullTick", { "ctf_c", "ctf_d" } },
         { "SueloGroundAndCrouchFollowTheRecordedFilm", { "suelo" } },
         { "GroundIsConsistentWithTheContactInEveryFilm",
             { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" } },
@@ -2024,4 +2108,32 @@ TEST_F(ReplayTests, ASparseSampledPassRunsWithoutFailure)
     }
 
     if (replayed == 0) GTEST_SKIP() << "No recording (golden.sdump) in " << RecordingsFolder().string();
+}
+
+// Q101.B: the flags the light pass builds from the light snapshot of a record (what the sparse mode has in the ticks without pipeline) are
+// the ObjectiveDetails of the full tick of the same record: the same function builds both. AlliesInZone is left out (it comes from the last
+// full tick, D278).
+TEST_F(ReplayTests, LightFlagPassGivesTheObjectiveDetailsOfTheFullTick)
+{
+    std::size_t replayed{ 0 };
+    for (const std::string name : { std::string{ "ctf_c" }, std::string{ "ctf_d" } })
+    {
+        SCOPED_TRACE(name);
+
+        const FilmResult& film{ Film(name) };
+        if (!film.Pass.Skip.empty()) continue;
+
+        ++replayed;
+        const LightFlagsData& data{ film.LightFlags };
+        std::cout << std::format("[  LIGHT   ] {}: {} records, {} flags compared, {} missing, {} different\n", name, data.Records, data.Flags,
+            data.Missing, data.Different);
+
+        EXPECT_GT(data.Records, 0u);
+        EXPECT_GT(data.Flags, 0u);
+        EXPECT_EQ(data.Different, 0u);
+        for (const std::string& line : data.First) ADD_FAILURE() << line;
+        EXPECT_EQ(data.Missing, 0u);
+    }
+
+    if (replayed == 0) GTEST_SKIP() << "No recording (golden.sdump) of ctf_c or ctf_d in " << RecordingsFolder().string();
 }

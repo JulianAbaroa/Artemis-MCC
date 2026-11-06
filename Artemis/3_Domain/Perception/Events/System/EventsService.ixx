@@ -19,6 +19,7 @@ export namespace Perception::Events::System
         using AliveGame = Blam::Runtime::Game::Type::Alive::AliveGame;
         using GameEvent = Perception::Events::Type::GameEvent;
         using ObjectiveDetail = Perception::Details::Type::ObjectiveDetail;
+        using ObjectiveDetails = Perception::Details::Type::ObjectiveDetails;
 
         using GameStore = Blam::Runtime::Game::State::GameStore;
         using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
@@ -40,6 +41,12 @@ export namespace Perception::Events::System
         // A first engine sequence at or below the last one read starts a new log (another match).
         auto Update() -> void;
 
+        // Generates the flag events of a tick that did not run the pipeline (sparse mode, Q101) from the flags of that tick, with the same
+        // rules as Update, and keeps them in the memory. They are not in the log yet: the next Update adds them with its own events,
+        // ordered by GameTick (the events of the engine first within a tick), so the sequence of Artemis has no gaps and no event is out of order.
+        // param game: Only EngineTick, RoundIndex and TeamScores are read.
+        auto UpdateFlags(const AliveGame& game, const ObjectiveDetails& objectives) -> void;
+
         auto Cleanup() -> void;
 
     private:
@@ -51,7 +58,8 @@ export namespace Perception::Events::System
         static auto MakeEvent(const AliveEvent& entry) -> GameEvent;
 
         // Compares each flag with the one of the tick before and appends the flag events of the transitions.
+        // param objectives: The flags of this tick, null when there are none.
         // note: Updates the memory, also when it generates nothing.
-        auto AppendFlagEvents(const AliveGame& game, std::vector<GameEvent>& events) -> void;
+        auto AppendFlagEvents(const AliveGame& game, const ObjectiveDetails* objectives, std::vector<GameEvent>& events) -> void;
     };
 }

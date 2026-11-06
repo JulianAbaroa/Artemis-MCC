@@ -41,6 +41,11 @@ export namespace Bridge::Codec::Pipeline::System
         auto Run(const Snapshot& snapshot, std::uint64_t generation,
             const std::function<void()>& endStage, const std::function<bool()>& canPublish = {}) -> void;
 
+        // Decodes the light snapshot of a tick that does not run the pipeline (sparse mode, Q101) and generates the flag events of that tick.
+        // note: Touches only the light stores of Blam.Runtime and the memory of the events service. Nothing is published to the Tick, and the
+        // stores of the full tick stay as the last full tick left them.
+        auto RunLight(const Snapshot& snapshot) -> void;
+
     private:
         Blam::Runtime::Layer& m_Tables;
         Perception::Layer& m_Environment;

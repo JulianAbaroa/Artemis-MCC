@@ -1,12 +1,14 @@
 export module Perception.Details.Type:Objective;
 
 import Common.Engine.Type;
+import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import std;
 
 namespace
 {
+    using Common::Math::Type::Vec3;
     using Common::Semantic::Type::FlagState;
     using Common::Team::Type::Team;
 
@@ -53,6 +55,9 @@ export namespace Perception::Details::Type
         std::uint32_t Handle{};
         ::Team BaseTeam{ ::Team::Neutral };
         ::Team OwnerTeam{ ::Team::Neutral };
+
+        // Where the stand is, world space.
+        Vec3 WorldOrigin{};
     };
 
     // Flags and stands of the tick, by handle.

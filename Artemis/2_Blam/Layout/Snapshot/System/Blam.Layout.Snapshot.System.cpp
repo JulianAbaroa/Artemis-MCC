@@ -30,6 +30,8 @@ namespace
     using Blam::Layout::Snapshot::Type::SnapshotWriterState;
 
     using Common::Engine::Type::k_HandleIndexMask;
+    using Blam::Layout::Snapshot::Type::IsLightRegion;
+    using Blam::Layout::Snapshot::Type::k_LightKindId;
     using Blam::Layout::Snapshot::Type::k_RegionCount;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpMagic;
@@ -178,6 +180,30 @@ namespace
 
 namespace Blam::Layout::Snapshot::System
 {
+    auto MakeLight(const Type::Snapshot& full) -> Type::Snapshot
+    {
+        Type::Snapshot light{};
+        light.HasThreadContext = full.HasThreadContext;
+        light.HasObjectTable = full.HasObjectTable;
+        light.TeardownEpoch = full.TeardownEpoch;
+        light.IsLight = true;
+
+        for (const RawObject& object : full.RawObjects)
+        {
+            if (object.KindId != k_LightKindId) continue;
+
+            const std::optional<std::span<std::uint8_t>> bytes{ light.RawObjects.Emplace(object.Handle, object.Address, object.KindId, object.Bytes.size()) };
+            if (bytes) std::memcpy(bytes->data(), object.Bytes.data(), object.Bytes.size());
+        }
+
+        for (std::size_t index{ 0 }; index < k_RegionCount; ++index)
+        {
+            if (IsLightRegion(static_cast<RegionId>(index))) light.Regions[index] = full.Regions[index];
+        }
+
+        return light;
+    }
+
     auto WriteFileHeader(std::ostream& stream, std::uint64_t bridgeLayoutHash, std::string_view startTime,
         std::string_view source) -> std::uint64_t
     {

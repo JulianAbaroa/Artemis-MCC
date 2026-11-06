@@ -18,6 +18,7 @@ import Perception.Aim.State;
 import Perception.Aim.System;
 import Perception.Events.State;
 import Perception.Events.System;
+import Perception.Flags.System;
 import Perception.Match.State;
 import Perception.Match.System;
 
@@ -70,6 +71,7 @@ export namespace Perception
         using CollidableService = Perception::Collidable::System::CollidableService;
         using AimService = Perception::Aim::System::AimService;
         using EventsService = Perception::Events::System::EventsService;
+        using FlagPassService = Perception::Flags::System::FlagPassService;
         using MatchService = Perception::Match::System::MatchService;
 
     public:
@@ -90,6 +92,7 @@ export namespace Perception
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
             m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
             m_EventsService(tables.m_GameStore, m_ObjectiveDetailsStore, m_EventsMemoryStore, m_EventsStore),
+            m_FlagPassService(tables.m_LightObjectStore, tables.m_LightGameStore, m_TagClassificationsStore, m_ObjectiveDetailsStore, m_PlayersStore, m_EventsService),
             m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_EventsMemoryStore, m_MatchStore) {}
         ~Layer() = default;
 
@@ -137,6 +140,7 @@ export namespace Perception
         CollidableService m_CollidableService;
         AimService m_AimService;
         EventsService m_EventsService;
+        FlagPassService m_FlagPassService;
         MatchService m_MatchService;
 
         // Removes the classification, the object graph, the details (objectives included), entities, players, aim, events and match status.

@@ -108,6 +108,8 @@
     <ClCompile Include="Events\System\EventsService.cpp" />
     <ClCompile Include="Events\System\EventsService.ixx" />
     <ClCompile Include="Events\Type\Perception.Events.Type.ixx" />
+    <ClCompile Include="Flags\System\FlagPassService.cpp" />
+    <ClCompile Include="Flags\System\Perception.Flags.System.ixx" />
     <ClCompile Include="Match\State\MatchStore.ixx" />
     <ClCompile Include="Match\System\MatchService.cpp" />
     <ClCompile Include="Match\System\MatchService.ixx" />

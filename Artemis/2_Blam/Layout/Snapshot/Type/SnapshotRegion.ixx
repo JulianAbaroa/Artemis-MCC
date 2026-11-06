@@ -53,6 +53,13 @@ export namespace Blam::Layout::Snapshot::Type
         std::vector<std::uint8_t> Bytes{};
     };
 
+    // return: Whether a light snapshot (Snapshot::IsLight) copies the region: the ones the flag pass reads, which are the game clock
+    // (EngineTick), the game engine globals (round, team mapping and scores) and the megalo objects (the state of each flag).
+    constexpr auto IsLightRegion(RegionId id) -> bool
+    {
+        return id == RegionId::TimeGlobals || id == RegionId::GameEngineGlobals || id == RegionId::MegaloObjects;
+    }
+
     // return: Bytes that Capture copies for the region: the whole block the engine registers, or the whole array (D249).
     // note: A field read later is then already in the recordings made before it.
     constexpr auto RegionSize(RegionId id) -> std::size_t

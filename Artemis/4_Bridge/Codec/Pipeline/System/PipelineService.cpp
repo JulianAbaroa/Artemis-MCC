@@ -67,4 +67,11 @@ namespace Bridge::Codec::Pipeline::System
         m_TickService.Assemble(generation);
         stage();
     }
+
+    auto PipelineService::RunLight(const Snapshot& snapshot) -> void
+    {
+        m_Tables.m_LightObjectService.UpdateObjectTable(snapshot);
+        m_Tables.m_LightGameService.Update(snapshot);
+        m_Environment.m_FlagPassService.Update();
+    }
 }

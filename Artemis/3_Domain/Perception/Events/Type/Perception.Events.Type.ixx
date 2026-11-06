@@ -84,6 +84,10 @@ export namespace Perception::Events::Type
 
         // Carried flags that went back home and wait for a score to be called a capture.
         std::array<std::optional<PendingCapture>, k_MaxTeams> Pending{};
+
+        // Flag events generated in ticks without a pipeline (sparse mode, Q101), in order of generation. They join the log, ordered by tick,
+        // in the next full tick.
+        std::vector<GameEvent> LightEvents{};
     };
 
     // Last events of the match, oldest first.

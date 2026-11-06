@@ -6,8 +6,11 @@ import std;
 
 namespace
 {
+    using Blam::Layout::Snapshot::Type::IsLightRegion;
     using Blam::Layout::Snapshot::Type::Region;
     using Blam::Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::k_LightKindId;
+    using Blam::Layout::Snapshot::Type::k_RegionCount;
 
     using Common::Engine::Type::k_MaxObjects;
     using Common::Engine::Type::k_MaxPlayers;
@@ -60,6 +63,7 @@ namespace Engine::Capture::System
         const std::uintptr_t objectTableBase{ m_CaptureStore.GetObjectTableBase() };
 
         snapshot->TeardownEpoch = epoch;
+        snapshot->IsLight = false;
         snapshot->HasThreadContext = threadContext != 0;
         snapshot->HasObjectTable = objectTableBase != 0;
 
@@ -68,7 +72,7 @@ namespace Engine::Capture::System
             this->CheckCapacities(threadContext, snapshot->TeardownEpoch);
         }
 
-        if (objectTableBase != 0) this->CopyObjects(*snapshot, threadContext, objectTableBase);
+        if (objectTableBase != 0) this->CopyObjects(*snapshot, threadContext, objectTableBase, false);
 
         this->CopyRegion(*snapshot, RegionId::PlayerArray, m_CaptureStore.GetPlayerTableBase());
         this->CopyRegion(*snapshot, RegionId::PlayerMapping, m_CaptureStore.GetMappingBase());
@@ -92,6 +96,43 @@ namespace Engine::Capture::System
         this->CopyRegion(*snapshot, RegionId::Placements, this->FindPlacements(threadContext));
 
         m_CaptureStore.Publish(snapshot);
+
+        return snapshot;
+    }
+
+    auto CaptureService::CaptureLight() -> std::shared_ptr<const Snapshot>
+    {
+        const std::uint64_t epoch{ m_LifecycleStore.GetTeardownEpoch() };
+        const std::shared_ptr<Snapshot> snapshot{ this->AcquireSnapshot(epoch) };
+
+        auto& reader = m_MemoryReaderService;
+
+        const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
+        const std::uintptr_t objectTableBase{ m_CaptureStore.GetObjectTableBase() };
+
+        snapshot->TeardownEpoch = epoch;
+        snapshot->IsLight = true;
+        snapshot->HasThreadContext = threadContext != 0;
+        snapshot->HasObjectTable = objectTableBase != 0;
+
+        if (objectTableBase != 0) this->CopyObjects(*snapshot, threadContext, objectTableBase, true);
+
+        const auto contextPointer = [&](std::size_t offset) -> std::uintptr_t
+        {
+            return threadContext != 0 ? reader.Read<std::uintptr_t>(threadContext, offset) : 0;
+        };
+
+        // A reused Snapshot may hold the regions of a full capture: the regions that are not light are emptied.
+        for (std::size_t index{ 0 }; index < k_RegionCount; ++index)
+        {
+            if (!IsLightRegion(static_cast<RegionId>(index))) this->CopyRegion(*snapshot, static_cast<RegionId>(index), 0);
+        }
+
+        this->CopyRegion(*snapshot, RegionId::TimeGlobals, contextPointer(k_ThreadContextTimeGlobalsOffset));
+        this->CopyRegion(*snapshot, RegionId::GameEngineGlobals, contextPointer(k_ThreadContextGameEngineOffset));
+
+        const std::uintptr_t megaloObjects{ contextPointer(k_ThreadContextMegaloObjectsOffset) };
+        this->CopyRegion(*snapshot, RegionId::MegaloObjects, megaloObjects != 0 ? reader.Read<std::uintptr_t>(megaloObjects, k_DataArrayData) : 0);
 
         return snapshot;
     }
@@ -152,7 +193,7 @@ namespace Engine::Capture::System
         m_Log.Message("[CaptureService] INFO: Table capacities checked: objects {}, players {}.", objectCapacity, playerCapacity);
     }
 
-    auto CaptureService::CopyObjects(Snapshot& snapshot, std::uintptr_t threadContext, std::uintptr_t tableBase) -> void
+    auto CaptureService::CopyObjects(Snapshot& snapshot, std::uintptr_t threadContext, std::uintptr_t tableBase, bool isLight) -> void
     {
         auto& reader = m_MemoryReaderService;
 
@@ -164,8 +205,11 @@ namespace Engine::Capture::System
             capacity = reader.Read<std::int32_t>(objectArray, k_DataArrayCapacity);
             firstUnused = reader.Read<std::int32_t>(objectArray, k_DataArrayFirstUnusedIndex);
             const std::int32_t liveCount{ reader.Read<std::int32_t>(objectArray, k_DataArrayLiveCount) };
-            m_TelemetryStore.RecordObjectTable(firstUnused > 0 ? static_cast<std::uint64_t>(firstUnused) : 0,
-                liveCount > 0 ? static_cast<std::uint64_t>(liveCount) : 0);
+            if (!isLight)
+            {
+                m_TelemetryStore.RecordObjectTable(firstUnused > 0 ? static_cast<std::uint64_t>(firstUnused) : 0,
+                    liveCount > 0 ? static_cast<std::uint64_t>(liveCount) : 0);
+            }
         }
 
         const std::uint32_t slotLimit{ ObjectSlotLimit(capacity, firstUnused) };
@@ -177,13 +221,14 @@ namespace Engine::Capture::System
             std::uint16_t salt{ reader.Read<std::uint16_t>(entryAddress, k_EntrySaltOffset) };
             if (salt == 0) continue;
 
+            std::uint8_t kindId{ reader.Read<std::uint8_t>(entryAddress, k_EntryKindOffset) };
+            if (isLight && kindId != k_LightKindId) continue;
+
             std::uintptr_t address{ reader.Read<std::uintptr_t>(entryAddress, k_EntryAddressOffset) };
             if (address == 0) continue;
 
             std::uint16_t datumSize{ reader.Read<std::uint16_t>(entryAddress, k_EntryDatumSizeOffset) };
             if (datumSize < k_MinDatumSize) continue;
-
-            std::uint8_t kindId{ reader.Read<std::uint8_t>(entryAddress, k_EntryKindOffset) };
 
             // The datum is read straight into the arena of the snapshot.
             const std::uint32_t handle{ (static_cast<std::uint32_t>(salt) << 16) | index };

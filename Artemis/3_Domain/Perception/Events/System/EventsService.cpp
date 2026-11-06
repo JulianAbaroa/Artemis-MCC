@@ -67,6 +67,7 @@ namespace Perception::Events::System
 
         // The clock of a new engine starts again, so a GameOver of the last match is forgotten.
         if (!isSameMatch || (memory.GameOverTick && game->EngineTick < *memory.GameOverTick)) memory.GameOverTick.reset();
+        if (!isSameMatch) memory.LightEvents.clear();
 
         std::vector<GameEvent> fresh{};
         fresh.reserve(game->Events.size());
@@ -77,7 +78,17 @@ namespace Perception::Events::System
             if (!IsFlagKind(event.Kind)) fresh.push_back(event);
         }
 
-        this->AppendFlagEvents(*game, fresh);
+        const auto objectives{ m_ObjectiveDetailsStore.Acquire() };
+        this->AppendFlagEvents(*game, objectives.get(), fresh);
+
+        // note: Only after a sparse stretch. A full stretch never has light events, so its order stays the one of the generation.
+        if (!memory.LightEvents.empty())
+        {
+            fresh.insert(fresh.end(), memory.LightEvents.begin(), memory.LightEvents.end());
+            memory.LightEvents.clear();
+            std::ranges::stable_sort(fresh, {}, [](const GameEvent& event) { return std::pair{ event.GameTick, event.EngineSequence == 0 }; });
+        }
+
         if (fresh.empty()) return;
 
         const auto previous{ m_EventsStore.Acquire() };
@@ -97,13 +108,22 @@ namespace Perception::Events::System
         m_EventsStore.Publish(std::move(log));
     }
 
+    auto EventsService::UpdateFlags(const AliveGame& game, const ObjectiveDetails& objectives) -> void
+    {
+        std::vector<GameEvent> events{};
+        this->AppendFlagEvents(game, &objectives, events);
+
+        EventsMemory& memory{ m_MemoryStore.Get() };
+        memory.LightEvents.insert(memory.LightEvents.end(), events.begin(), events.end());
+    }
+
     auto EventsService::Cleanup() -> void
     {
         m_MemoryStore.Cleanup();
         m_EventsStore.Cleanup();
     }
 
-    auto EventsService::AppendFlagEvents(const AliveGame& game, std::vector<GameEvent>& events) -> void
+    auto EventsService::AppendFlagEvents(const AliveGame& game, const ObjectiveDetails* objectives, std::vector<GameEvent>& events) -> void
     {
         const std::uint32_t gameTick{ game.EngineTick };
         const std::int16_t roundIndex{ game.RoundIndex };
@@ -118,7 +138,6 @@ namespace Perception::Events::System
         const bool isScoreUp{ score > memory.LastScore };
         const std::uint32_t scoreBefore{ memory.LastScore };
         memory.LastScore = score;
-        const auto objectives{ m_ObjectiveDetailsStore.Acquire() };
 
         // The flag of each base team in this tick.
         std::array<const ObjectiveDetail*, k_MaxTeams> current{};

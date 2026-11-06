@@ -5,6 +5,10 @@ import std;
 
 export namespace Blam::Layout::Snapshot::System
 {
+    // return: The light snapshot (Snapshot::IsLight) of a full one: the same flags, the objects of kind k_LightKindId in their order and the regions
+    // IsLightRegion says, with the same content CaptureService::CaptureLight copies from the game. The other regions are empty.
+    auto MakeLight(const Type::Snapshot& full) -> Type::Snapshot;
+
     // Writes the header of a .sdump file (D202).
     // param bridgeLayoutHash: The hash of the layout of the .tdump written beside this file.
     // return: Bytes written.

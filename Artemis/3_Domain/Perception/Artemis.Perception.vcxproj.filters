@@ -124,6 +124,12 @@
     <Filter Include="Events\Type">
       <UniqueIdentifier>{11535116-2c61-5880-a65d-0ded7dfcf5d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Flags">
+      <UniqueIdentifier>{c118e9ca-458e-43c4-9bc9-838328796283}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Flags\System">
+      <UniqueIdentifier>{59985a51-3080-4b97-bfd1-eecd9a97b4fb}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Match">
       <UniqueIdentifier>{76582ab8-d5ae-5bb0-ac61-87b32f2076f8}</UniqueIdentifier>
     </Filter>
@@ -327,6 +333,12 @@
     </ClCompile>
     <ClCompile Include="Events\Type\Perception.Events.Type.ixx">
       <Filter>Events\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Flags\System\FlagPassService.cpp">
+      <Filter>Flags\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Flags\System\Perception.Flags.System.ixx">
+      <Filter>Flags\System</Filter>
     </ClCompile>
     <ClCompile Include="Match\State\MatchStore.ixx">
       <Filter>Match\State</Filter>

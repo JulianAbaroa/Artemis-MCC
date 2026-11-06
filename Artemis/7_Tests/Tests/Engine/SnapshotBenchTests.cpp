@@ -12,9 +12,12 @@ import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
 import Blam.Layout.Snapshot.Type;
 import Blam.MapModel.Definitions.Type;
+import Blam.Runtime.Game.System;
+import Blam.Runtime.Object.System;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Object.State;
 import Bridge.Codec.Pipeline.System;
+import Perception.Flags.System;
 import Tests.Support.Bench;
 import Tests.Support.EngineMemory;
 import Tests.Support.FilmPass;
@@ -319,6 +322,7 @@ namespace
             if ((record - 1) % k_EveryRecords == 0)
             {
                 this->MeasureCapture(snapshot);
+                this->MeasureLight(chain);
                 this->MeasureObjectTable(chain, snapshot);
             }
 
@@ -373,6 +377,14 @@ namespace
             add(TimeRow("C2 objects", m_C2Objects));
             add(TimeRow("C2 regions", m_C2Regions));
             add(TimeRow("C2 total", m_C2));
+            add("");
+            add("Light tick of the sparse mode (Q101.B), over the same fake memory: CaptureLight, the decode of the light snapshot and the flag pass (BuildFlags, without the events):");
+            add(TimeRow("L0 CaptureLight (production)", m_L0));
+            add(TimeRow("L1 decode: light objects and light game", m_L1));
+            add(TimeRow("L2 flag pass: BuildFlags", m_L2));
+            add(TimeRow("L3 sum L0 + L1 + L2 (target: under 50 us)", m_L3));
+            add(CounterRow("L0 objects in the light snapshot", m_LObjects));
+            add(CounterRow("L2 flags built", m_LFlags));
             add("");
             add("ObjectTable stage:");
             add(TimeRow("O0 stage ObjectTable (production, every record)", m_Stages[0]));
@@ -463,6 +475,9 @@ namespace
         Series m_C2Objects{}, m_C2Regions{}, m_C2{};
         Series m_CObjects{}, m_CObjectBytes{}, m_CRegionBytes{};
 
+        // Light tick.
+        Series m_L0{}, m_L1{}, m_L2{}, m_L3{}, m_LObjects{}, m_LFlags{};
+
         // ObjectTable.
         ObjectTableStore m_ReplicaStore{};
         BoneMatricesStore m_ReplicaBones{};
@@ -547,6 +562,35 @@ namespace
         }
 
         // C0, C1 and C2 for the Snapshot of this record.
+        // Times the light capture over the memory MeasureCapture just loaded, then the decode of its snapshot and the flag pass on the chain.
+        // note: The chain is only touched in its light stores. The flag pass is timed without the events service, which keeps memory.
+        auto MeasureLight(const Chain& chain) -> void
+        {
+            auto start{ steady_clock::now() };
+            const std::shared_ptr<const Snapshot> light{ m_Service.CaptureLight() };
+            auto end{ steady_clock::now() };
+            const double captureUs{ Micros(start, end) };
+
+            Chain& target{ const_cast<Chain&>(chain) };
+            start = steady_clock::now();
+            target.m_Tables.m_LightObjectService.UpdateObjectTable(*light);
+            target.m_Tables.m_LightGameService.Update(*light);
+            end = steady_clock::now();
+            const double decodeUs{ Micros(start, end) };
+
+            start = steady_clock::now();
+            const auto flags{ target.m_Environment.m_FlagPassService.BuildFlags() };
+            end = steady_clock::now();
+            const double flagsUs{ Micros(start, end) };
+
+            m_L0.Add(captureUs);
+            m_L1.Add(decodeUs);
+            m_L2.Add(flagsUs);
+            m_L3.Add(captureUs + decodeUs + flagsUs);
+            m_LObjects.Add(static_cast<double>(light->RawObjects.Size()));
+            m_LFlags.Add(static_cast<double>(flags.Flags.size()));
+        }
+
         auto MeasureCapture(const Snapshot& snapshot) -> void
         {
             m_Memory.Load(snapshot, m_Store);

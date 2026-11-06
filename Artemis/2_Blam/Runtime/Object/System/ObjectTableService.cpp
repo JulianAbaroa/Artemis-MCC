@@ -181,7 +181,8 @@ namespace Blam::Runtime::Object::System
         m_DamageSectionsStore.Clear();
 
         this->DiscoverObjects(snapshot);
-        this->AuditHandles(snapshot);
+        // note: The audit follows links to objects a light snapshot does not have.
+        if (!snapshot.IsLight) this->AuditHandles(snapshot);
 
         std::vector<std::uint32_t> deadHandles{};
 
@@ -194,7 +195,7 @@ namespace Blam::Runtime::Object::System
                     return;
                 }
 
-                this->UpdateObjectData(*datum, object);
+                this->UpdateObjectData(*datum, object, snapshot.IsLight);
                 object.Placement = this->ReadPlacement(snapshot, *datum);
                 object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, *datum);
             });
@@ -207,7 +208,7 @@ namespace Blam::Runtime::Object::System
         m_ObjectStore.Publish();
     }
 
-    auto ObjectTableService::UpdateObjectData(const RawObject& datum, AliveObject& object) -> void
+    auto ObjectTableService::UpdateObjectData(const RawObject& datum, AliveObject& object, bool isLight) -> void
     {
         object.NextSiblingHandle = datum.Read<std::uint32_t>(ObjeOffset::k_NextSiblingHandle);
         object.ChildHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ChildHandle);
@@ -228,8 +229,12 @@ namespace Blam::Runtime::Object::System
 
         object.Multiplayer = this->ReadMultiplayer(datum);
 
-        this->ReadBoneMatrixTable(datum, object);
-        this->ReadDamageSectionTable(datum, object);
+        // note: The flag pass of a light snapshot reads neither the skeleton nor the damage of a weapon.
+        if (!isLight)
+        {
+            this->ReadBoneMatrixTable(datum, object);
+            this->ReadDamageSectionTable(datum, object);
+        }
 
         switch (object.Profile.ObjectKind)
         {

@@ -37,7 +37,9 @@ export namespace Blam::Runtime
             m_ObjectService(log, m_ObjectStore, m_BoneMatricesStore, m_DamageSectionsStore, resolved.m_TagResolverService),
             m_PlayerService(log, m_PlayerStore),
             m_InteractionService(log, m_InteractionStore),
-            m_GameService(log, m_GameStore) {}
+            m_GameService(log, m_GameStore),
+            m_LightObjectService(log, m_LightObjectStore, m_LightBoneMatricesStore, m_LightDamageSectionsStore, resolved.m_TagResolverService),
+            m_LightGameService(log, m_LightGameStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
@@ -51,11 +53,20 @@ export namespace Blam::Runtime
         InteractionStore m_InteractionStore{};
         GameStore m_GameStore{};
 
+        // What the light snapshot of a tick without pipeline decodes into (Q101): the weapons and the game globals, apart from the stores of the
+        // full tick, which a light tick never touches.
+        ObjectTableStore m_LightObjectStore{};
+        BoneMatricesStore m_LightBoneMatricesStore{};
+        DamageSectionsStore m_LightDamageSectionsStore{};
+        GameStore m_LightGameStore{};
+
         // --- System ---
         ObjectTableService m_ObjectService;
         PlayerTableService m_PlayerService;
         InteractionService m_InteractionService;
         GameService m_GameService;
+        ObjectTableService m_LightObjectService;
+        GameService m_LightGameService;
 
         // Removes the objects, players, interaction and game state.
         auto Cleanup() -> void
@@ -64,6 +75,8 @@ export namespace Blam::Runtime
             m_PlayerService.Cleanup();
             m_InteractionService.Cleanup();
             m_GameService.Cleanup();
+            m_LightObjectStore.Cleanup();
+            m_LightGameStore.Cleanup();
         }
     };
 }

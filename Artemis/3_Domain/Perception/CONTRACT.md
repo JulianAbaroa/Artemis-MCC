@@ -34,6 +34,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Perception.Aim.Type`, `Perception.Aim.State` | What each player aims at. |
 | `Perception.Events.Type`, `Perception.Events.State` | The events of the tick: the engine ring plus the flag events Artemis generates. |
 | `Perception.Match.Type`, `Perception.Match.State` | Status of the match: phase (InGame until the GameOver event of the engine, then Ended), scores, round, team scores, time played and left in the round, round time limit, round limit, score to win and the respawn time, lives, rounds to win, sudden death, grace period and powerup durations of the game variant (in ticks, D262). |
+| `Perception.Flags.System` | `FlagPassService` (Q101): in a tick without pipeline (sparse mode) builds the `ObjectiveDetail` of each flag from the weapons of the light snapshot (decoded by `Blam.Runtime` into its light stores) and what the last full tick published (stands and their position, players, tag classification, allies in the zone), and hands them to `EventsService::UpdateFlags`. The flag detail is built by `ObjectiveDetailsService::MakeFlag`, the same function the full tick uses (a test checks it over ctf_c and ctf_d, AlliesInZone left out). `AlliesInZone` is the one of the last full tick for the flag of the same base team (D278), the carrier player the owner of the carrier biped in that tick. A weapon whose tag no full tick classified is not a flag. Without a full tick before it does nothing. |
 | `Perception.Collidable.Type`, `Perception.Collidable.System` | Collision geometry of objects, on demand (used by `Views` and the viewer). |
 
 ## Depends on
@@ -62,7 +63,7 @@ Other projects may import only these modules; everything else in the project is 
   one within 3 world units, none for doors and other phantoms) and the last exit of each lift (tick, velocity and biped), for `LiftDetail.HasExit`
   (D261). The entry is the first sample inside the volume and the exit the first sample outside, with the tick and velocity of that sample
   (a pass through the volume shorter than the sampling interval is not seen). A biped that disappears inside is forgotten without an exit and a lift that disappears loses its exit. It is emptied on `Cleanup()`.
-- `EventsMemoryStore`: the last flag seen of each base team, the round, the last engine sequence and the engine tick in which the GameOver event was
+- `EventsMemoryStore`: the flag events of the light ticks that are not in the log yet (`LightEvents`, sparse mode): the next full `Update` adds them to its own events and orders the lot by `GameTick`, the engine events first within a tick, and then numbers them, so the Artemis sequence has no gaps. They are dropped with a new engine. Without light events the order is the generation order, as always. It also keeps the last flag seen of each base team, the round, the last engine sequence and the engine tick in which the GameOver event was
   read, to generate the flag events on the transitions (none when the round changes or on the first tick after a load). The Match service reads
   the GameOver tick to derive `MatchStatus.Phase`, never the raw phase of the engine (it is also Ended between rounds). A new engine (the clock or
   the ring sequence go back) forgets it.

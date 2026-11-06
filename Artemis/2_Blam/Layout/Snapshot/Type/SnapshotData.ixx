@@ -14,7 +14,11 @@ namespace
 
 export namespace Blam::Layout::Snapshot::Type
 {
-    // Everything the tick reads from the game, copied at its start: the live objects and the regions of memory.
+    // Kind id of the entry of the object table of the weapons. The flags are weapons, and a light snapshot keeps only the objects of this kind.
+    // note: It is the value of Blam::MapModel::Definitions::Type::Object::ObjectKind::Weapon, which this project cannot import (a test checks it).
+    inline constexpr std::uint8_t k_LightKindId{ 0x02 };
+
+    // Everything the tick reads from the game, copied at its start: the live objects and the regions of memory (or, when IsLight, the little the flags need).
     // note: Built by the capture on the AI thread and never modified once published. Reads never touch the game.
     struct Snapshot
     {
@@ -22,6 +26,10 @@ export namespace Blam::Layout::Snapshot::Type
         bool HasThreadContext{};
         // The object table was already found. Objects can still be empty (no live object).
         bool HasObjectTable{};
+
+        // A light snapshot (Q101): only the objects of kind k_LightKindId and the regions IsLightRegion says, to date the events of the flags on the
+        // ticks the pipeline does not run. The full pipeline never runs on one.
+        bool IsLight{};
 
         // Teardown epoch of the engine (LifecycleStore) when the capture began, so the services that report once per map load can tell
         // a new load without touching the engine. 0 in recordings.

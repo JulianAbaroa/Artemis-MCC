@@ -11,7 +11,9 @@ import Engine.Capture.System;
 import Services.Telemetry.State;
 import Services.Telemetry.Type;
 import Blam.Layout.Object.Type;
+import Blam.Layout.Snapshot.System;
 import Blam.Layout.Snapshot.Type;
+import Blam.MapModel.Definitions.Type;
 import Tests.Support.EngineMemory;
 import Tests.Support.Log;
 import std;
@@ -32,9 +34,15 @@ namespace
     using Engine::Capture::System::CaptureService;
     using Services::Telemetry::State::TelemetryStore;
     using Services::Telemetry::Type::PerfSnapshot;
+    using Blam::Layout::Snapshot::Type::IsLightRegion;
     using Blam::Layout::Snapshot::Type::RegionId;
     using Blam::Layout::Snapshot::Type::RegionSize;
     using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::Layout::Snapshot::Type::k_LightKindId;
+    using Blam::Layout::Snapshot::Type::k_RegionCount;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
+    using Blam::Layout::Snapshot::System::MakeLight;
     using Tests::Support::EngineMemory::FakeEngineMemory;
     using Tests::Support::Log::CollectingSink;
 
@@ -453,4 +461,140 @@ TEST_F(CaptureServiceTests, ReusedSnapshotGetsTheNewEpochAndCleanupDoesNotBreakT
     this->Connect();
 
     for (int tick{ 0 }; tick < 4; ++tick) EXPECT_EQ(m_Service.Capture()->TeardownEpoch, 1u);
+}
+
+
+// Q101.B: the light capture of the ticks without pipeline.
+namespace
+{
+    // A snapshot with objects of several kinds (the weapons are the ones of kind k_LightKindId) and every region filled with a pattern.
+    auto MakeSourceWithWeapons() -> Snapshot
+    {
+        Snapshot source{};
+        source.HasThreadContext = true;
+        source.HasObjectTable = true;
+
+        const std::array<std::pair<std::uint32_t, std::uint8_t>, 6> objects{ { { 3, 0 }, { 7, k_LightKindId }, { 20, 3 }, { 21, k_LightKindId },
+            { 40, 9 }, { 1500, k_LightKindId } } };
+        for (const auto& [index, kind] : objects)
+        {
+            const auto bytes{ source.RawObjects.Emplace((1u << 16) | index, 0, kind, 0x200) };
+            for (std::size_t i{ 0 }; i < bytes->size(); ++i) (*bytes)[i] = static_cast<std::uint8_t>(index + i);
+        }
+
+        for (std::size_t id{ 0 }; id < k_RegionCount; ++id)
+        {
+            source.Regions[id].OriginalAddress = 0x1000;
+            source.Regions[id].Bytes.assign(RegionSize(static_cast<RegionId>(id)), static_cast<std::uint8_t>(0x10 + id));
+        }
+
+        return source;
+    }
+
+    auto ExpectSameSnapshot(const Snapshot& actual, const Snapshot& expected) -> void
+    {
+        EXPECT_EQ(actual.IsLight, expected.IsLight);
+        EXPECT_EQ(actual.HasThreadContext, expected.HasThreadContext);
+        EXPECT_EQ(actual.HasObjectTable, expected.HasObjectTable);
+        EXPECT_EQ(actual.TeardownEpoch, expected.TeardownEpoch);
+
+        ASSERT_EQ(actual.RawObjects.Size(), expected.RawObjects.Size());
+        for (auto a{ actual.RawObjects.begin() }, e{ expected.RawObjects.begin() }; a != actual.RawObjects.end(); ++a, ++e)
+        {
+            EXPECT_EQ(a->Handle, e->Handle);
+            EXPECT_EQ(a->KindId, e->KindId);
+            EXPECT_EQ(a->Address, e->Address);
+            EXPECT_TRUE(std::ranges::equal(a->Bytes, e->Bytes));
+        }
+
+        for (std::size_t id{ 0 }; id < k_RegionCount; ++id)
+        {
+            EXPECT_EQ(actual.Regions[id].OriginalAddress, expected.Regions[id].OriginalAddress) << "region " << id;
+            EXPECT_EQ(actual.Regions[id].Bytes, expected.Regions[id].Bytes) << "region " << id;
+        }
+    }
+}
+
+TEST_F(CaptureServiceTests, TheLightKindIsTheWeaponKindOfTheMapModel)
+{
+    EXPECT_EQ(ToObjectKind(k_LightKindId), ObjectKind::Weapon);
+}
+
+TEST_F(CaptureServiceTests, CaptureLightIsTheOfflineLightSnapshotOfTheFullCapture)
+{
+    m_Memory.Load(MakeSourceWithWeapons(), m_Store);
+
+    const auto full{ m_Service.Capture() };
+    const auto light{ m_Service.CaptureLight() };
+
+    EXPECT_TRUE(light->IsLight);
+    EXPECT_FALSE(full->IsLight);
+    ExpectSameSnapshot(*light, MakeLight(*full));
+
+    // Only the weapons and the light regions.
+    EXPECT_EQ(light->RawObjects.Size(), 3u);
+    EXPECT_TRUE(Has(light, 7));
+    EXPECT_TRUE(Has(light, 21));
+    EXPECT_TRUE(Has(light, 1500));
+    EXPECT_FALSE(Has(light, 3));
+    for (std::size_t id{ 0 }; id < k_RegionCount; ++id)
+    {
+        EXPECT_EQ(light->IsCaptured(static_cast<RegionId>(id)), IsLightRegion(static_cast<RegionId>(id))) << "region " << id;
+    }
+    EXPECT_TRUE(IsLightRegion(RegionId::TimeGlobals));
+    EXPECT_TRUE(IsLightRegion(RegionId::GameEngineGlobals));
+    EXPECT_TRUE(IsLightRegion(RegionId::MegaloObjects));
+}
+
+TEST_F(CaptureServiceTests, CaptureLightDoesNotPublishNorTouchTheTelemetryOfTheObjectTable)
+{
+    m_Memory.Load(MakeSourceWithWeapons(), m_Store);
+    this->SetMark(300, 120);
+    const auto full{ m_Service.Capture() };
+
+    this->SetMark(1700, 640);
+    const auto light{ m_Service.CaptureLight() };
+
+    EXPECT_EQ(m_Store.Acquire(), full);
+
+    PerfSnapshot photo{};
+    m_Telemetry.CopyPerf(photo);
+    EXPECT_EQ(photo.ObjectSlotsMax, 300u);
+    EXPECT_EQ(photo.ObjectsMax, 120u);
+}
+
+TEST_F(CaptureServiceTests, LightAndFullCapturesShareTheSnapshotPoolWithoutLeavingAnythingBehind)
+{
+    const Snapshot source{ MakeSourceWithWeapons() };
+    m_Memory.Load(source, m_Store);
+
+    for (int round{ 0 }; round < 6; ++round)
+    {
+        {
+            const auto light{ m_Service.CaptureLight() };
+            EXPECT_EQ(light->RawObjects.Size(), 3u);
+            EXPECT_FALSE(light->IsCaptured(RegionId::PlayerArray));
+            EXPECT_FALSE(light->IsCaptured(RegionId::Placements));
+        }
+        {
+            const auto full{ m_Service.Capture() };
+            EXPECT_FALSE(full->IsLight);
+            EXPECT_EQ(full->RawObjects.Size(), 6u);
+            EXPECT_TRUE(full->IsCaptured(RegionId::PlayerArray));
+            EXPECT_TRUE(full->IsCaptured(RegionId::EventGlobals));
+        }
+    }
+}
+
+TEST_F(CaptureServiceTests, CaptureLightWithoutThreadContextHoldsNothing)
+{
+    m_Memory.Load(MakeSourceWithWeapons(), m_Store);
+    m_Store.Cleanup();
+
+    const auto light{ m_Service.CaptureLight() };
+
+    EXPECT_TRUE(light->IsLight);
+    EXPECT_FALSE(light->HasThreadContext);
+    EXPECT_TRUE(light->RawObjects.IsEmpty());
+    EXPECT_FALSE(light->IsCaptured(RegionId::TimeGlobals));
 }

@@ -2,6 +2,7 @@ module Perception.Details.System;
 import :ObjectiveDetails;
 
 import Common.Engine.Type;
+import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
 import Common.ZoneShape.System;
@@ -17,6 +18,7 @@ namespace
     namespace Subtype = Common::Semantic::Type::Subtype;
     namespace Zone = Common::ZoneShape::System;
 
+    using Common::Math::Type::Vec3;
     using Common::Semantic::Type::FlagState;
     using Common::Semantic::Type::Function;
     using Common::Team::Type::Team;
@@ -49,12 +51,12 @@ namespace
     // return: Whether the flag is at its stand: within k_HomeRadius of the stand horizontally and vertically. False without a stand.
     // note: The engine recreates a dropped flag as a new object that has no Megalo element for about ten ticks. A flag at its stand
     // is home, anywhere else it lies on the ground.
-    auto IsAtStand(const Entity& flag, const Entity* stand) -> bool
+    auto IsAtStand(const Vec3& flag, const StandDetail* stand) -> bool
     {
         if (stand == nullptr) return false;
 
-        const float horizontal{ std::hypot(flag.WorldOrigin.X - stand->WorldOrigin.X, flag.WorldOrigin.Y - stand->WorldOrigin.Y) };
-        const float vertical{ std::abs(flag.WorldOrigin.Z - stand->WorldOrigin.Z) };
+        const float horizontal{ std::hypot(flag.X - stand->WorldOrigin.X, flag.Y - stand->WorldOrigin.Y) };
+        const float vertical{ std::abs(flag.Z - stand->WorldOrigin.Z) };
         return horizontal <= k_HomeRadius && vertical <= k_HomeRadius;
     }
 
@@ -117,14 +119,7 @@ namespace Perception::Details::System
             for (const AliveMegaloObject& element : game->MegaloObjects) megalo.emplace(element.ObjectHandle, &element);
         }
 
-        std::unordered_map<std::uint32_t, const Player*> playerOfBiped{};
-        if (playersPtr)
-        {
-            for (const Player& player : playersPtr->Rows)
-            {
-                if (player.BipedHandle != k_NoHandle) playerOfBiped.emplace(player.BipedHandle, &player);
-            }
-        }
+        const auto playerOfBiped{ this->MapPlayersOfBipeds(playersPtr.get()) };
 
         // Zone of each flag: the ObjectiveZone bound to it.
         std::unordered_map<std::uint32_t, std::uint32_t> zoneOfFlag{};
@@ -142,7 +137,8 @@ namespace Perception::Details::System
                 const Entity* entity{ entitiesPtr->Find(classified.Handle) };
                 if (entity == nullptr) continue;
 
-                details.Stands.emplace(classified.Handle, StandDetail{ .Handle = classified.Handle, .BaseTeam = entity->Team, .OwnerTeam = OwnerOf(entity->Team, game) });
+                details.Stands.emplace(classified.Handle, StandDetail{ .Handle = classified.Handle, .BaseTeam = entity->Team, .OwnerTeam = OwnerOf(entity->Team, game),
+                    .WorldOrigin = entity->WorldOrigin });
             }
         }
 
@@ -157,45 +153,10 @@ namespace Perception::Details::System
             const Weapon* weapon{ std::get_if<Weapon>(&objectIt->second.Specific) };
             if (weapon == nullptr) continue;
 
-            ObjectiveDetail flag{ .Handle = classified.Handle, .BaseTeam = entity->Team, .OwnerTeam = OwnerOf(entity->Team, game) };
-
-            // The stand with the same base team. The lowest handle wins so the result does not depend on the container.
-            for (const auto& [standHandle, stand] : details.Stands)
-            {
-                if (stand.BaseTeam == flag.BaseTeam && (flag.HomeStand == k_NoHandle || standHandle < flag.HomeStand)) flag.HomeStand = standHandle;
-            }
-
             const auto megaloIt{ megalo.find(classified.Handle) };
             const AliveMegaloObject* element{ megaloIt == megalo.end() ? nullptr : megaloIt->second };
 
-            if (weapon->HolderUnit != k_NoHandle)
-            {
-                flag.State = FlagState::Carried;
-                flag.CarrierBiped = weapon->HolderUnit;
-
-                const auto playerIt{ playerOfBiped.find(weapon->HolderUnit) };
-                if (playerIt != playerOfBiped.end()) flag.CarrierPlayer = playerIt->second->Handle;
-            }
-            else if (element != nullptr && element->State == k_MegaloHome)
-            {
-                flag.State = FlagState::Home;
-            }
-            else if (element != nullptr && element->State == k_MegaloDropped)
-            {
-                flag.State = FlagState::Dropped;
-            }
-            else
-            {
-                // note: No Megalo element yet, or one that still says carried while nobody holds the flag (it lags the drop by up to
-                // ten ticks): the position tells. Nothing is remembered from the tick before.
-                flag.State = IsAtStand(*entity, entitiesPtr->Find(flag.HomeStand)) ? FlagState::Home : FlagState::Dropped;
-            }
-
-            if (flag.State == FlagState::Dropped && element != nullptr && element->State == k_MegaloDropped)
-            {
-                flag.ResetTicks = TimerTicksCeil(element->ResetTimer);
-                flag.IsResetRunning = IsTimerRunning(element->ResetTimer);
-            }
+            ObjectiveDetail flag{ this->MakeFlag(classified.Handle, entity->Team, entity->WorldOrigin, *weapon, element, game, details, playerOfBiped) };
 
             const auto zoneIt{ zoneOfFlag.find(classified.Handle) };
             if (zoneIt != zoneOfFlag.end()) flag.AlliesInZone = CountAllies(flag.OwnerTeam, zoneIt->second, *entitiesPtr, zonesPtr.get(), playersPtr.get());
@@ -203,6 +164,64 @@ namespace Perception::Details::System
         }
 
         m_ObjectiveDetailsStore.Publish(std::move(details));
+    }
+
+    auto ObjectiveDetailsService::MapPlayersOfBipeds(const Players* players) -> std::unordered_map<std::uint32_t, std::uint32_t>
+    {
+        std::unordered_map<std::uint32_t, std::uint32_t> playerOfBiped{};
+        if (players == nullptr) return playerOfBiped;
+
+        for (const Player& player : players->Rows)
+        {
+            if (player.BipedHandle != k_NoHandle) playerOfBiped.emplace(player.BipedHandle, player.Handle);
+        }
+
+        return playerOfBiped;
+    }
+
+    auto ObjectiveDetailsService::MakeFlag(std::uint32_t handle, Team baseTeam, const Vec3& position, const Weapon& weapon,
+        const AliveMegaloObject* element, const AliveGame* game, const ObjectiveDetails& stands,
+        const std::unordered_map<std::uint32_t, std::uint32_t>& playerOfBiped) -> ObjectiveDetail
+    {
+        ObjectiveDetail flag{ .Handle = handle, .BaseTeam = baseTeam, .OwnerTeam = OwnerOf(baseTeam, game) };
+
+        // The stand with the same base team. The lowest handle wins so the result does not depend on the container.
+        for (const auto& [standHandle, stand] : stands.Stands)
+        {
+            if (stand.BaseTeam == flag.BaseTeam && (flag.HomeStand == k_NoHandle || standHandle < flag.HomeStand)) flag.HomeStand = standHandle;
+        }
+
+        if (weapon.HolderUnit != k_NoHandle)
+        {
+            flag.State = FlagState::Carried;
+            flag.CarrierBiped = weapon.HolderUnit;
+
+            const auto playerIt{ playerOfBiped.find(weapon.HolderUnit) };
+            if (playerIt != playerOfBiped.end()) flag.CarrierPlayer = playerIt->second;
+        }
+        else if (element != nullptr && element->State == k_MegaloHome)
+        {
+            flag.State = FlagState::Home;
+        }
+        else if (element != nullptr && element->State == k_MegaloDropped)
+        {
+            flag.State = FlagState::Dropped;
+        }
+        else
+        {
+            // note: No Megalo element yet, or one that still says carried while nobody holds the flag (it lags the drop by up to
+            // ten ticks): the position tells. Nothing is remembered from the tick before.
+            const auto standIt{ stands.Stands.find(flag.HomeStand) };
+            flag.State = IsAtStand(position, standIt == stands.Stands.end() ? nullptr : &standIt->second) ? FlagState::Home : FlagState::Dropped;
+        }
+
+        if (flag.State == FlagState::Dropped && element != nullptr && element->State == k_MegaloDropped)
+        {
+            flag.ResetTicks = TimerTicksCeil(element->ResetTimer);
+            flag.IsResetRunning = IsTimerRunning(element->ResetTimer);
+        }
+
+        return flag;
     }
 
     auto ObjectiveDetailsService::Cleanup() -> void

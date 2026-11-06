@@ -49,6 +49,12 @@ export namespace Perception::Classifier::Type
 
         // Capabilities that follow from the tag and the function only.
         Capability Capabilities{ Capability::None };
+
+        // return: Whether the tag is the one of a flag (an objective item of subtype Flag).
+        auto IsFlag() const -> bool
+        {
+            return Function == ::Function::ObjectiveItem && Subtype == static_cast<std::uint8_t>(Common::Semantic::Type::Subtype::ObjectiveItem::Flag);
+        }
     };
 
     // Classification of one live object.

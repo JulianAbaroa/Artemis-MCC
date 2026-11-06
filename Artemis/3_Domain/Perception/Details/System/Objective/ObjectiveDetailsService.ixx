@@ -1,10 +1,15 @@
 export module Perception.Details.System:ObjectiveDetails;
 
 import Common.Log.System;
+import Common.Math.Type;
+import Common.Team.Type;
+import Blam.Runtime.Object.Type;
 import Blam.Runtime.Object.State;
+import Blam.Runtime.Game.Type;
 import Blam.Runtime.Game.State;
 import Perception.Classifier.State;
 import Perception.Entities.State;
+import Perception.Players.Type;
 import Perception.Players.State;
 import Perception.Details.Type;
 import Perception.Details.State;
@@ -17,6 +22,15 @@ export namespace Perception::Details::System
     {
     private:
         using Log = Common::Log::System::Log;
+
+        using Vec3 = Common::Math::Type::Vec3;
+        using Team = Common::Team::Type::Team;
+        using AliveGame = Blam::Runtime::Game::Type::Alive::AliveGame;
+        using AliveMegaloObject = Blam::Runtime::Game::Type::Alive::AliveMegaloObject;
+        using Weapon = Blam::Runtime::Object::Type::Weapon::Weapon;
+        using ObjectiveDetail = Perception::Details::Type::ObjectiveDetail;
+        using ObjectiveDetails = Perception::Details::Type::ObjectiveDetails;
+        using Players = Perception::Players::Type::Players;
 
         using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
         using GameStore = Blam::Runtime::Game::State::GameStore;
@@ -45,6 +59,18 @@ export namespace Perception::Details::System
 
         // Drops the published details.
         auto Cleanup() -> void;
+
+        // return: The player of each live biped of the players, by biped handle. Empty without players.
+        static auto MapPlayersOfBipeds(const Players* players) -> std::unordered_map<std::uint32_t, std::uint32_t>;
+
+        // Builds the detail of one flag from what the engine says about it, the same way for the full tick and for the flag pass of the
+        // ticks without a pipeline (Q101).
+        // param baseTeam: Team of the multiplayer block of the flag. position: World origin of the flag.
+        // param element: Megalo element of the flag, null when it has none. game: Null before the game globals were read.
+        // param stands: The stands of the round, with their position. playerOfBiped: See MapPlayersOfBipeds.
+        // return: The detail without AlliesInZone: it needs the zone of the flag, which the caller knows.
+        static auto MakeFlag(std::uint32_t handle, Team baseTeam, const Vec3& position, const Weapon& weapon, const AliveMegaloObject* element,
+            const AliveGame* game, const ObjectiveDetails& stands, const std::unordered_map<std::uint32_t, std::uint32_t>& playerOfBiped) -> ObjectiveDetail;
 
     private:
         Log& m_Log;

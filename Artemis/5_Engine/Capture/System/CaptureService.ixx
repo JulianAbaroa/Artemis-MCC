@@ -42,6 +42,12 @@ export namespace Engine::Capture::System
         // note: Runs on the AI thread inside the read window, the game thread waits for it.
         auto Capture() -> std::shared_ptr<const Snapshot>;
 
+        // Copies only what the flag pass needs into a light Snapshot (IsLight): the objects of kind k_LightKindId (the flags are weapons,
+        // and this project cannot filter by tag) and the regions IsLightRegion says (game clock, game engine globals and megalo objects).
+        // return: The snapshot, not published: the store keeps the last full one. Without the thread context it holds nothing.
+        // note: Runs on the AI thread inside the read window, like Capture. It takes no telemetry and never checks the capacities.
+        auto CaptureLight() -> std::shared_ptr<const Snapshot>;
+
         // Clears the stored addresses and snapshot.
         auto Cleanup() -> void;
 
@@ -77,7 +83,8 @@ export namespace Engine::Capture::System
         // (every live object is below it), at most the capacity of the array and k_MaxObjects.
         // note: The mark is read on every call. Without a readable mark or capacity it walks what it can: the capacity, then k_MaxObjects.
         // It also tells the telemetry the mark and the live count (the maxima of a run).
-        auto CopyObjects(Snapshot& snapshot, std::uintptr_t threadContext, std::uintptr_t tableBase) -> void;
+        // param isLight: Copies only the objects of kind k_LightKindId and leaves the telemetry alone.
+        auto CopyObjects(Snapshot& snapshot, std::uintptr_t threadContext, std::uintptr_t tableBase, bool isLight) -> void;
 
         // Copies RegionSize(id) bytes from the address into the region.
         // note: An address of 0 or a failed read leave the region as not captured.

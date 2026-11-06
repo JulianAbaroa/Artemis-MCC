@@ -34,6 +34,7 @@ Other projects may import only these modules; everything else in the project is 
 ## State between ticks
 - The objects and players are kept by handle and refreshed every tick; a handle whose salt changed is replaced.
 - `ObjectTableStore` publishes into a small pool of tables (S2.O, D276): the table of a tick is written over one nobody holds, so a reader that holds a table sees it unchanged, and a steady tick allocates none. `BoneMatricesStore` and `DamageSectionsStore` keep their buffers between ticks: `Write(handle)` gives the table to fill in place, `Get` gives it until the next `Clear`.
+- The light snapshot of a tick without pipeline (Q101) is decoded by a second `ObjectTableService` and a second `GameService` into their own light stores (`m_LightObjectStore`, `m_LightBoneMatricesStore`, `m_LightDamageSectionsStore`, `m_LightGameStore`), never into the stores of the full tick. The light object table has only the weapons, and the light game only the clock, the round, the team mapping and scores and the megalo objects (no event ring, no game variant). `ObjectTableService` skips the handle audit on a light snapshot, which has not the objects the links point to.
 - `GameStore` keeps the cursor of the event ring (last sequence read) and the count of entries overwritten before they were read.
 
 ## Threads
