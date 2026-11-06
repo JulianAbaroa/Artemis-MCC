@@ -1,5 +1,6 @@
 export module DevTools.Workbench.TickDump.State;
 
+import Common.State.Type;
 import Bridge.Transport.Type;
 import Blam.Layout.Snapshot.Type;
 import Bridge.Codec.Dump.Type;
@@ -60,7 +61,8 @@ export namespace DevTools::Workbench::TickDump::State
         auto SetWaitingForLoad(bool value) -> void;
         auto IsWaitingForLoad() const -> bool;
 
-        // Queues a Tick. Waits while the queue is full and the recording goes on, so no Tick is lost (D151).
+        // Queues a Tick. Waits while its bytes do not fit under the cap and the recording goes on, so no Tick is lost (D151).
+        // An entry alone above the cap still goes in.
         auto Push(TickDumpEntry entry) -> void;
         // return: The oldest queued Tick, or none after the timeout.
         auto WaitPop(milliseconds timeout) -> std::optional<TickDumpEntry>;
@@ -98,8 +100,12 @@ export namespace DevTools::Workbench::TickDump::State
         auto ResetCounters() -> void;
 
     private:
-        // Ticks the queue holds before the AI thread waits: 2 s of game at x1. Each one keeps a whole Tick alive.
-        static constexpr std::size_t k_QueueCapacity{ 120 };
+        // Bytes the queue keeps alive before the AI thread waits (about 2 s of game at x1 for a CTF map). Counted by EstimateBytes, not by
+        // Ticks: an entry keeps its Snapshot arena alive, so the count said little about the memory.
+        static constexpr std::size_t k_QueueCapacityBytes{ 256ull * 1024 * 1024 };
+
+        // return: What the entry keeps alive: the Tick, the arena and the regions of its Snapshot. Cheap, no walk of the objects.
+        auto EstimateBytes(const TickDumpEntry& entry) const -> std::size_t;
 
         std::atomic<bool> m_IsRecording{};
         std::atomic<bool> m_IsWaitingForLoad{};
@@ -108,10 +114,7 @@ export namespace DevTools::Workbench::TickDump::State
         bool m_IsSnapshotWritten{ true };
         time_point m_LastRecordAt{};
 
-        std::deque<TickDumpEntry> m_Queue{};
-        mutable std::mutex m_QueueMutex{};
-        std::condition_variable m_NotEmpty{};
-        std::condition_variable m_NotFull{};
+        Common::State::Type::ByteBoundedQueue<TickDumpEntry> m_Queue{ k_QueueCapacityBytes };
 
         std::unique_ptr<BridgeTick> m_Flat{ std::make_unique<BridgeTick>() };
         TickDumpWriterState m_WriterState{};

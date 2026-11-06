@@ -156,6 +156,9 @@
     <ClCompile Include="Common\ZoneShapeTests.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Common\ByteBoundedQueueTests.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="Common\SnapshotTests.cpp">
       <Filter>Common</Filter>
     </ClCompile>

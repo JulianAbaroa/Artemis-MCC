@@ -116,6 +116,7 @@
     <ClCompile Include="Common\LogTests.cpp" />
     <ClCompile Include="Common\MathTypeTests.cpp" />
     <ClCompile Include="Common\ZoneShapeTests.cpp" />
+    <ClCompile Include="Common\ByteBoundedQueueTests.cpp" />
     <ClCompile Include="Common\SnapshotTests.cpp" />
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Control\ActionTests.cpp" />

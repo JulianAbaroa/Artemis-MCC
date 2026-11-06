@@ -28,11 +28,8 @@ namespace DevTools::Workbench::TickDump::State
 
     auto TickDumpUIStore::SetRecording(bool value) -> void
     {
-        {
-            std::lock_guard lock{ m_QueueMutex };
-            m_IsRecording.store(value, std::memory_order_release);
-        }
-        m_NotFull.notify_all();
+        m_IsRecording.store(value, std::memory_order_release);
+        m_Queue.SetOpen(value);
     }
 
     auto TickDumpUIStore::SetSnapshotWritten(bool value) -> void
@@ -70,49 +67,37 @@ namespace DevTools::Workbench::TickDump::State
         return m_IsRecording.load(std::memory_order_acquire);
     }
 
+    auto TickDumpUIStore::EstimateBytes(const TickDumpEntry& entry) const -> std::size_t
+    {
+        std::size_t bytes{ sizeof(TickDumpEntry) };
+        if (entry.Tick != nullptr) bytes += sizeof(*entry.Tick);
+        if (entry.Snapshot != nullptr)
+        {
+            bytes += sizeof(*entry.Snapshot) + entry.Snapshot->RawObjects.CapacityBytes();
+            for (const auto& region : entry.Snapshot->Regions) bytes += region.Bytes.capacity();
+        }
+        return bytes;
+    }
+
     auto TickDumpUIStore::Push(TickDumpEntry entry) -> void
     {
-        {
-            std::unique_lock lock{ m_QueueMutex };
-            if (m_Queue.size() >= k_QueueCapacity)
-            {
-                m_QueueWaits.fetch_add(1, std::memory_order_relaxed);
-                m_NotFull.wait(lock, [this] {
-                    return m_Queue.size() < k_QueueCapacity || !m_IsRecording.load(std::memory_order_acquire);
-                });
-            }
-            if (!m_IsRecording.load(std::memory_order_acquire)) return;
-            m_Queue.push_back(std::move(entry));
-        }
-        m_NotEmpty.notify_one();
+        const std::size_t bytes{ this->EstimateBytes(entry) };
+        if (m_Queue.Push(std::move(entry), bytes).IsWaited) m_QueueWaits.fetch_add(1, std::memory_order_relaxed);
     }
 
     auto TickDumpUIStore::WaitPop(milliseconds timeout) -> std::optional<TickDumpEntry>
     {
-        std::optional<TickDumpEntry> entry{};
-        {
-            std::unique_lock lock{ m_QueueMutex };
-            if (!m_NotEmpty.wait_for(lock, timeout, [this] { return !m_Queue.empty(); })) return std::nullopt;
-            entry = std::move(m_Queue.front());
-            m_Queue.pop_front();
-        }
-        m_NotFull.notify_one();
-        return entry;
+        return m_Queue.WaitPop(timeout);
     }
 
     auto TickDumpUIStore::GetQueuedTicks() const -> std::size_t
     {
-        std::lock_guard lock{ m_QueueMutex };
-        return m_Queue.size();
+        return m_Queue.Size();
     }
 
     auto TickDumpUIStore::ClearQueue() -> void
     {
-        {
-            std::lock_guard lock{ m_QueueMutex };
-            m_Queue.clear();
-        }
-        m_NotFull.notify_all();
+        m_Queue.Clear();
     }
 
     auto TickDumpUIStore::GetFlat() -> BridgeTick&

@@ -56,6 +56,8 @@ export namespace Blam::Layout::Snapshot::Type
         auto begin() const -> const_iterator { return m_Objects.begin(); }
         auto end() const -> const_iterator { return m_Objects.end(); }
         auto Size() const -> std::size_t { return m_Objects.size(); }
+        // return: Bytes the arena keeps allocated (what the table keeps alive, used or not).
+        auto CapacityBytes() const -> std::size_t { return m_Capacity; }
         auto IsEmpty() const -> bool { return m_Objects.empty(); }
 
         // return: The object of the handle, or null. The whole handle must match: an object whose slot was reused under another salt

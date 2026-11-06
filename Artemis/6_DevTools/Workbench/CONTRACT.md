@@ -45,7 +45,7 @@ bench thread advances the bench five times per second.
 A tool that fails does not affect the tick; a bench match that fails or passes its limit is left and the next one starts.
 
 ## Requirements
-The AI thread never waits for a tool except the bounded queue of the dump.
+The AI thread never waits for a tool except the queue of the dump, which is capped in bytes (256 MB of what the entries keep alive; an entry alone above the cap still goes in; no Tick is lost).
 
 ## Tests
 The formats it writes are tested where they live (`TickDumpWriterTests` for `Bridge.Codec`, `SnapshotRecordTests` for
