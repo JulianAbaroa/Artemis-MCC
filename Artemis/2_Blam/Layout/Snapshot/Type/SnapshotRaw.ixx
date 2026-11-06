@@ -11,7 +11,8 @@ export namespace Blam::Layout::Snapshot::Type
         std::size_t Size{};
     };
 
-    // Copy of the whole datum of a live object (fixed part and variable blocks), as it was in memory.
+    // View of the copy of the whole datum of a live object (fixed part and variable blocks), as it was in memory.
+    // note: The bytes belong to the RawObjectTable that holds the object: the view is valid as long as that table is not changed.
     struct RawObject
     {
         std::uint32_t Handle{};
@@ -19,7 +20,7 @@ export namespace Blam::Layout::Snapshot::Type
         // Kind id of the entry of the object table, as the engine wrote it.
         // note: The interpretation (which ObjectKind it is, or none) belongs to Blam::MapModel::Definitions::Type::Object::ToObjectKind.
         std::uint8_t KindId{};
-        std::vector<std::uint8_t> Bytes{};
+        std::span<const std::uint8_t> Bytes{};
 
         // return: The value at offset, or a zero-initialized value if it does not fit in the datum.
         template<typename T>

@@ -23,16 +23,18 @@ namespace
     using Common::Log::Type::LogLevel;
     using Bridge::Codec::Tick::Type::Tick;
     using Blam::Layout::Snapshot::Type::RegionId;
-    using Blam::Layout::Snapshot::Type::RawObject;
     using Blam::Layout::Snapshot::Type::Snapshot;
     using Tests::Support::Blam::MakeHandle;
+    using Tests::Support::Blam::OwnedObject;
     using Tests::Support::Blam::Put;
+    using Tests::Support::Blam::PutObject;
     namespace ObjeOffset = ::Blam::Layout::Object::Type::Obje::Offset;
     namespace UnitOffset = ::Blam::Layout::Object::Type::Unit::Offset;
     namespace PlayerOffset = ::Blam::Layout::Player::Type::Offset;
     using Contract::Bridge::Type::BridgeTick;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
+    using Tests::Support::Pipeline::MakeBiped;
     using Tests::Support::Pipeline::WithBipedAndPlayer;
 
     using Bridge::Codec::Pipeline::System::k_PipelineStageNames;
@@ -323,9 +325,9 @@ class HandleAuditTests : public PipelineTests
 {
 protected:
     // return: A copy of the biped of WithBipedAndPlayer under another handle, with the three links written.
-    static auto MakeLinked(std::uint32_t handle, std::uint32_t parent, std::uint32_t child, std::uint32_t sibling) -> RawObject
+    static auto MakeLinked(std::uint32_t handle, std::uint32_t parent, std::uint32_t child, std::uint32_t sibling) -> OwnedObject
     {
-        RawObject object{ WithBipedAndPlayer().RawObjects.at(k_BipedHandle) };
+        OwnedObject object{ MakeBiped() };
         object.Handle = handle;
         Put(object.Bytes, ObjeOffset::k_ParentHandle, parent);
         Put(object.Bytes, ObjeOffset::k_ChildHandle, child);
@@ -337,16 +339,16 @@ protected:
     static auto WithLinks() -> Snapshot
     {
         Snapshot snapshot{ WithBipedAndPlayer() };
-        Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, ObjeOffset::k_ChildHandle, k_NoHandle);
-        Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, ObjeOffset::k_NextSiblingHandle, k_NoHandle);
+        Put(snapshot.RawObjects.Edit(k_BipedHandle), ObjeOffset::k_ChildHandle, k_NoHandle);
+        Put(snapshot.RawObjects.Edit(k_BipedHandle), ObjeOffset::k_NextSiblingHandle, k_NoHandle);
 
         // Parent matches the biped, child has the salt of a deleted object of slot 3, sibling points to the empty slot 9.
         const std::uint32_t second{ MakeHandle(0xEC02, 4) };
-        snapshot.RawObjects.emplace(second, MakeLinked(second, k_BipedHandle, MakeHandle(0xAAAA, 3), MakeHandle(0xEC03, 9)));
+        PutObject(snapshot, MakeLinked(second, k_BipedHandle, MakeHandle(0xAAAA, 3), MakeHandle(0xEC03, 9)));
 
         // Parent with salt 0 over the live slot 4.
         const std::uint32_t third{ MakeHandle(0xEC03, 5) };
-        snapshot.RawObjects.emplace(third, MakeLinked(third, MakeHandle(0, 4), k_NoHandle, k_NoHandle));
+        PutObject(snapshot, MakeLinked(third, MakeHandle(0, 4), k_NoHandle, k_NoHandle));
         return snapshot;
     }
 
@@ -387,7 +389,7 @@ TEST_F(HandleAuditTests, DeadBipedOfThePlayerAndWeaponOfTheBipedWithOldSaltAreSt
     Snapshot snapshot{ WithBipedAndPlayer() };
     auto& players{ snapshot.Regions[static_cast<std::size_t>(Blam::Layout::Snapshot::Type::RegionId::PlayerArray)].Bytes };
     Put(players, (2 * Blam::Layout::Player::Type::Size::k_Base) + PlayerOffset::k_DeadBipedHandle, MakeHandle(0x1111, 3));
-    Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, UnitOffset::k_PrimaryWeaponHandle, MakeHandle(0x2222, 6));
+    Put(snapshot.RawObjects.Edit(k_BipedHandle), UnitOffset::k_PrimaryWeaponHandle, MakeHandle(0x2222, 6));
 
     m_Export.m_PipelineService.Run(snapshot, 1, {});
 
@@ -403,7 +405,7 @@ TEST_F(HandleAuditTests, DeadBipedOfThePlayerAndWeaponOfTheBipedWithOldSaltAreSt
 TEST_F(HandleAuditTests, StaleHandlesAreNotLogged)
 {
     Snapshot snapshot{ WithLinks() };
-    Put(snapshot.RawObjects.at(MakeHandle(0xEC03, 5)).Bytes, ObjeOffset::k_ParentHandle, MakeHandle(0xBBBB, 4));
+    Put(snapshot.RawObjects.Edit(MakeHandle(0xEC03, 5)), ObjeOffset::k_ParentHandle, MakeHandle(0xBBBB, 4));
 
     m_Export.m_PipelineService.Run(snapshot, 1, {});
 
@@ -430,10 +432,10 @@ TEST_F(HandleAuditTests, WeaponSlotsOfAVehicleAreAudited)
 {
     Snapshot snapshot{ WithBipedAndPlayer() };
     const std::uint32_t vehicle{ MakeHandle(0xEC09, 8) };
-    RawObject object{ MakeLinked(vehicle, k_NoHandle, k_NoHandle, k_NoHandle) };
+    OwnedObject object{ MakeLinked(vehicle, k_NoHandle, k_NoHandle, k_NoHandle) };
     object.KindId = static_cast<std::uint8_t>(::Blam::MapModel::Definitions::Type::Object::ObjectKind::Vehicle);
     Put(object.Bytes, UnitOffset::k_PrimaryWeaponHandle, vehicle);
-    snapshot.RawObjects.emplace(vehicle, std::move(object));
+    PutObject(snapshot, object);
 
     m_Export.m_PipelineService.Run(snapshot, 1, {});
 

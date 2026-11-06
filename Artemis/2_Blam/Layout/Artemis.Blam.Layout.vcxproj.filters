@@ -285,6 +285,9 @@
     <ClCompile Include="Snapshot\Type\SnapshotRaw.ixx">
       <Filter>Snapshot\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Snapshot\Type\SnapshotObjects.ixx">
+      <Filter>Snapshot\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Snapshot\Type\SnapshotRegion.ixx">
       <Filter>Snapshot\Type</Filter>
     </ClCompile>

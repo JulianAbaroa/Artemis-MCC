@@ -52,6 +52,17 @@ export namespace Engine::Capture::System
         CaptureStore& m_CaptureStore;
         TelemetryStore& m_TelemetryStore;
 
+        // Snapshots Capture reuses (D276). Owned and changed only by Capture, on the AI thread: Cleanup, which runs on the game thread,
+        // only drops the published Snapshot of the store and never touches the pool. A new teardown epoch starts a new pool.
+        static constexpr std::size_t k_SnapshotPoolCapacity{ 4 };
+        std::vector<std::shared_ptr<Snapshot>> m_Pool{};
+        std::uint64_t m_PoolEpoch{ std::numeric_limits<std::uint64_t>::max() };
+
+        // return: A snapshot to fill: one from the pool that nobody else holds (emptied of objects), else a new one that joins the pool
+        // while it has room (above k_SnapshotPoolCapacity it is not kept: the dump queue or a viewer may hold many).
+        // note: Runs on the AI thread inside the read window.
+        auto AcquireSnapshot(std::uint64_t epoch) -> std::shared_ptr<Snapshot>;
+
         // Teardown epoch the capacities were checked for, or the maximum before the first check. A new load runs under a new epoch, so
         // nothing resets it: not the game thread (Cleanup) and not a tick that was still running after the teardown began, which marks
         // the epoch it started under (read before the teardown), never the next one.

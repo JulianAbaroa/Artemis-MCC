@@ -28,11 +28,12 @@ Other projects may import only these modules; everything else in the project is 
 `Common`, `Services`, `Engine.Base`, `Blam.Layout`.
 
 ## State between ticks
-The table bases and the engine thread context found by the locators; the last published Snapshot.
+The table bases and the engine thread context found by the locators; the last published Snapshot. `CaptureService` also keeps a pool of up to 4 Snapshots it reuses (D276): `Capture` fills one that only the pool holds (never the published one, nor one a reader, the dump queue or a viewer still holds), emptying its objects and reusing the capacity of its arena and regions. A Snapshot nobody can release because it is held is simply not reused, and above the pool capacity a new one is made and not kept. A new teardown epoch starts a new pool.
 
 ## Threads
 The tick hooks run on the game thread and wait for the read of the tick (the window of `Engine.Base`). `Capture` runs on the AI
 thread inside that window; the game goes on as soon as the AI thread ends the read.
+The pool belongs to `Capture` and the AI thread alone: `Cleanup` (game thread) only drops the published Snapshot of `CaptureStore` and never touches the pool, which a new epoch replaces on the AI thread.
 
 ## Errors
 Once per map load (per teardown epoch of `LifecycleStore`), `Capture` compares the capacity of the engine object and player tables (header of the data array) with `k_MaxObjects` and `k_MaxPlayers`: a difference is a WARNING with both values (a larger engine table is walked only up to `k_MaxObjects`). A region that cannot be read is left empty in the Snapshot and its flag stays off; before the thread context or the object table

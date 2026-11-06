@@ -34,7 +34,6 @@ namespace
     using Common::Log::System::Log;
     using Common::Math::Type::Vec3;
     using Common::Team::Type::Team;
-    using Blam::Layout::Snapshot::Type::RawObject;
     using Blam::Layout::Snapshot::Type::RegionId;
     using Blam::Layout::Snapshot::Type::RegionSize;
     using Blam::Layout::Snapshot::Type::Snapshot;
@@ -63,7 +62,9 @@ namespace
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
     using Tests::Support::Blam::MakeHandle;
+    using Tests::Support::Blam::OwnedObject;
     using Tests::Support::Blam::Put;
+    using Tests::Support::Blam::PutObject;
     using Tests::Support::Blam::PutText;
     using Tests::Support::Blam::CaptureRegion;
     using Tests::Support::Log::CollectingSink;
@@ -116,9 +117,9 @@ namespace
     concept HasBase = requires(const T& value) { value.Base; };
 
     // return: A live object of the kind with the tag, zero filled, without parent nor placement.
-    auto MakeObject(std::uint32_t handle, ObjectKind kind, std::uint32_t tagHandle) -> RawObject
+    auto MakeObject(std::uint32_t handle, ObjectKind kind, std::uint32_t tagHandle) -> OwnedObject
     {
-        RawObject object{};
+        OwnedObject object{};
         object.Handle = handle;
         object.Address = 0x7FF100000000 + (static_cast<std::uintptr_t>(handle & 0xFFFF) * k_DatumBytes);
         object.KindId = static_cast<std::uint8_t>(kind);
@@ -132,9 +133,9 @@ namespace
     }
 
     // return: A biped whose four damage slots are empty, at (10, 20, 30) looking along +Y with +Z up.
-    auto MakeBiped() -> RawObject
+    auto MakeBiped() -> OwnedObject
     {
-        RawObject biped{ MakeObject(k_BipedHandle, ObjectKind::Biped, k_SpartanTag) };
+        OwnedObject biped{ MakeObject(k_BipedHandle, ObjectKind::Biped, k_SpartanTag) };
 
         Put(biped.Bytes, ObjeOffset::k_Origin, Vec3{ 10.0f, 20.0f, 30.0f });
         Put(biped.Bytes, ObjeOffset::k_Forward, Vec3{ 0.0f, 1.0f, 0.0f });
@@ -150,14 +151,14 @@ namespace
     }
 
     // return: A snapshot with the object table found and these objects.
-    auto WithObjects(std::initializer_list<RawObject> objects) -> Snapshot
+    auto WithObjects(std::initializer_list<OwnedObject> objects) -> Snapshot
     {
         Snapshot snapshot{};
         snapshot.HasThreadContext = true;
         snapshot.HasObjectTable = true;
-        for (const RawObject& object : objects)
+        for (const OwnedObject& object : objects)
         {
-            snapshot.RawObjects.emplace(object.Handle, object);
+            PutObject(snapshot, object);
         }
         return snapshot;
     }
@@ -327,7 +328,7 @@ TEST_F(RuntimeTests, ObjectWithAnUnknownTagIsLeftOut)
 
 TEST_F(RuntimeTests, BipedFieldsComeFromTheDatum)
 {
-    RawObject raw{ MakeBiped() };
+    OwnedObject raw{ MakeBiped() };
     Put(raw.Bytes, ObjeOffset::k_LinearVelocity, Vec3{ 1.0f, 2.0f, 3.0f });
     Put(raw.Bytes, UnitOffset::k_TicksAlive, std::uint32_t{ 1234 });
     Put(raw.Bytes, UnitOffset::k_CurrentAim, Vec3{ 0.6f, 0.8f, 0.0f });
@@ -379,7 +380,7 @@ TEST_F(RuntimeTests, BipedFieldsComeFromTheDatum)
 
 TEST_F(RuntimeTests, BipedGroundAndCrouchComeFromTheDatum)
 {
-    RawObject raw{ MakeBiped() };
+    OwnedObject raw{ MakeBiped() };
     Put(raw.Bytes, UnitOffset::k_CrouchFraction, 0.5f);
     Put(raw.Bytes, BipdOffset::k_ContactMaterial, std::uint16_t{ 121 });
     Put(raw.Bytes, BipdOffset::k_OnStructure, std::uint8_t{ 1 });
@@ -395,9 +396,9 @@ TEST_F(RuntimeTests, BipedGroundAndCrouchComeFromTheDatum)
 
 TEST_F(RuntimeTests, ObjectIsInPhantomWhenBit16OfTheSecondFlagsIsSet)
 {
-    RawObject inside{ MakeBiped() };
+    OwnedObject inside{ MakeBiped() };
     Put(inside.Bytes, ObjeOffset::k_ObjectFlags2, std::uint32_t{ 0x18100 });
-    RawObject outside{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    OwnedObject outside{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
     Put(outside.Bytes, ObjeOffset::k_ObjectFlags2, std::uint32_t{ 0x8100 });
 
     const auto table{ this->UpdateObjects(WithObjects({ inside, outside })) };
@@ -408,7 +409,7 @@ TEST_F(RuntimeTests, ObjectIsInPhantomWhenBit16OfTheSecondFlagsIsSet)
 
 TEST_F(RuntimeTests, WeaponInAVehicleSlotIsNotEquipped)
 {
-    RawObject raw{ MakeBiped() };
+    OwnedObject raw{ MakeBiped() };
     Put(raw.Bytes, UnitOffset::k_PrimaryWeaponHandle, k_WeaponHandle);
     // note: The engine writes 0xFF in a vehicle, where it hides the weapons.
     Put(raw.Bytes, UnitOffset::k_ActiveWeaponSlot, std::uint8_t{ 0xFF });
@@ -422,7 +423,7 @@ TEST_F(RuntimeTests, WeaponInAVehicleSlotIsNotEquipped)
 
 TEST_F(RuntimeTests, ParentedObjectIsPlacedThroughItsParent)
 {
-    RawObject weapon{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    OwnedObject weapon{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
     Put(weapon.Bytes, ObjeOffset::k_ParentHandle, k_BipedHandle);
     Put(weapon.Bytes, ObjeOffset::k_Origin, Vec3{ 1.0f, 2.0f, 3.0f });
 
@@ -445,7 +446,7 @@ TEST_F(RuntimeTests, ParentedObjectIsPlacedThroughItsParent)
 
 TEST_F(RuntimeTests, WeaponFieldsComeFromTheDatum)
 {
-    RawObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    OwnedObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
     Put(raw.Bytes, WeapOffset::k_TotalHeat, 0.5f);
     Put(raw.Bytes, WeapOffset::k_TotalEnergy, 0.25f);
     Put(raw.Bytes, WeapOffset::k_Magazine0TotalAmmo, std::uint16_t{ 96 });
@@ -481,7 +482,7 @@ TEST_F(RuntimeTests, WeaponFieldsComeFromTheDatum)
 
 TEST_F(RuntimeTests, WeaponWithoutTargetHasNoTrackedObjectAndStateZero)
 {
-    RawObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    OwnedObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
     Put(raw.Bytes, WeapOffset::k_TrackedObjectHandle, k_NoHandle);
 
     const auto table{ this->UpdateObjects(WithObjects({ raw })) };
@@ -510,7 +511,7 @@ TEST_F(RuntimeTests, OverheatedIsBitOneOfTheWeaponFlagsWhateverTheOtherBits)
 
     for (const Case& c : cases)
     {
-        RawObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+        OwnedObject raw{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
         Put(raw.Bytes, WeapOffset::k_WeaponFlags, c.Flags);
         // The engine keeps the state with the heat below the threshold: the heat does not decide it.
         Put(raw.Bytes, WeapOffset::k_TotalHeat, 0.1f);
@@ -530,7 +531,7 @@ TEST_F(RuntimeTests, ProjectileOwnersShooterRootAndParentNodeComeFromTheDatum)
     const std::uint32_t vehicleHandle{ MakeHandle(0xEC05, 6) };
 
     // Fired from a vehicle seat and stuck to node 7 of its victim: the shooter root is the vehicle, not the biped.
-    RawObject raw{ MakeObject(projectileHandle, ObjectKind::Projectile, k_RifleTag) };
+    OwnedObject raw{ MakeObject(projectileHandle, ObjectKind::Projectile, k_RifleTag) };
     Put(raw.Bytes, ObjeOffset::k_OwnerPlayerHandle, playerHandle);
     Put(raw.Bytes, ObjeOffset::k_OwnerBipedHandle, k_BipedHandle);
     Put(raw.Bytes, ProjOffset::k_ShooterRootHandle, vehicleHandle);
@@ -538,7 +539,7 @@ TEST_F(RuntimeTests, ProjectileOwnersShooterRootAndParentNodeComeFromTheDatum)
     Put(raw.Bytes, ObjeOffset::k_ParentNodeIndex, std::int8_t{ 7 });
 
     // In flight: no parent, node -1.
-    RawObject flying{ MakeObject(MakeHandle(0xEC03, 6), ObjectKind::Projectile, k_RifleTag) };
+    OwnedObject flying{ MakeObject(MakeHandle(0xEC03, 6), ObjectKind::Projectile, k_RifleTag) };
     Put(flying.Bytes, ObjeOffset::k_OwnerPlayerHandle, k_NoHandle);
     Put(flying.Bytes, ObjeOffset::k_OwnerBipedHandle, k_NoHandle);
     Put(flying.Bytes, ProjOffset::k_ShooterRootHandle, k_NoHandle);
@@ -567,7 +568,7 @@ TEST_F(RuntimeTests, BoneMatricesAreCopiedForThisTickOnly)
 {
     constexpr std::uint16_t k_BonesOffset{ 0xE80 };
 
-    RawObject raw{ MakeBiped() };
+    OwnedObject raw{ MakeBiped() };
     Put(raw.Bytes, ObjeOffset::k_NodeMatricesSize, static_cast<std::uint16_t>(2 * sizeof(BoneMatrix)));
     Put(raw.Bytes, ObjeOffset::k_NodeMatricesOffset, k_BonesOffset);
 
@@ -1303,7 +1304,7 @@ TEST_F(RuntimeTests, CleanupForgetsEveryTable)
 {
     Snapshot snapshot{ WithEvents(1, 3) };
     snapshot.HasObjectTable = true;
-    snapshot.RawObjects.emplace(k_BipedHandle, MakeBiped());
+    PutObject(snapshot, MakeBiped());
     PutPlayer(CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)), 0, 0xE5A1, ConnectionState::Connected);
     CaptureEmptyMapping(snapshot);
     CaptureRegion(snapshot, RegionId::Interaction, RegionSize(RegionId::Interaction));

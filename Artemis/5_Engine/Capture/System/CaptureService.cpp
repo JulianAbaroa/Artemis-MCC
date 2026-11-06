@@ -6,7 +6,6 @@ import std;
 
 namespace
 {
-    using Blam::Layout::Snapshot::Type::RawObject;
     using Blam::Layout::Snapshot::Type::Region;
     using Blam::Layout::Snapshot::Type::RegionSize;
 
@@ -51,14 +50,16 @@ namespace Engine::Capture::System
 {
     auto CaptureService::Capture() -> std::shared_ptr<const Snapshot>
     {
-        auto snapshot{ std::make_shared<Snapshot>() };
+        // The epoch is read once, before anything is copied (see m_CheckedEpoch).
+        const std::uint64_t epoch{ m_LifecycleStore.GetTeardownEpoch() };
+        const std::shared_ptr<Snapshot> snapshot{ this->AcquireSnapshot(epoch) };
 
         auto& reader = m_MemoryReaderService;
 
         const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
         const std::uintptr_t objectTableBase{ m_CaptureStore.GetObjectTableBase() };
 
-        snapshot->TeardownEpoch = m_LifecycleStore.GetTeardownEpoch();
+        snapshot->TeardownEpoch = epoch;
         snapshot->HasThreadContext = threadContext != 0;
         snapshot->HasObjectTable = objectTableBase != 0;
 
@@ -73,21 +74,50 @@ namespace Engine::Capture::System
         this->CopyRegion(*snapshot, RegionId::PlayerMapping, m_CaptureStore.GetMappingBase());
         this->CopyRegion(*snapshot, RegionId::Interaction, m_CaptureStore.GetInteractionTableBase());
 
-        if (threadContext != 0)
+        // Every region goes through CopyRegion on every capture, with address 0 when its pointer is missing: a reused Snapshot must not keep
+        // the region of the previous capture.
+        const auto contextPointer = [&](std::size_t offset) -> std::uintptr_t
         {
-            this->CopyRegion(*snapshot, RegionId::TimeGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextTimeGlobalsOffset));
-            this->CopyRegion(*snapshot, RegionId::GameEngineGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameEngineOffset));
-            this->CopyRegion(*snapshot, RegionId::EventGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextEventGlobalsOffset));
-            this->CopyRegion(*snapshot, RegionId::GameGlobals, reader.Read<std::uintptr_t>(threadContext, k_ThreadContextGameModeOffset));
+            return threadContext != 0 ? reader.Read<std::uintptr_t>(threadContext, offset) : 0;
+        };
 
-            const std::uintptr_t megaloObjects{ reader.Read<std::uintptr_t>(threadContext, k_ThreadContextMegaloObjectsOffset) };
-            if (megaloObjects != 0) this->CopyRegion(*snapshot, RegionId::MegaloObjects, reader.Read<std::uintptr_t>(megaloObjects, k_DataArrayData));
-        }
+        this->CopyRegion(*snapshot, RegionId::TimeGlobals, contextPointer(k_ThreadContextTimeGlobalsOffset));
+        this->CopyRegion(*snapshot, RegionId::GameEngineGlobals, contextPointer(k_ThreadContextGameEngineOffset));
+        this->CopyRegion(*snapshot, RegionId::EventGlobals, contextPointer(k_ThreadContextEventGlobalsOffset));
+        this->CopyRegion(*snapshot, RegionId::GameGlobals, contextPointer(k_ThreadContextGameModeOffset));
+
+        const std::uintptr_t megaloObjects{ contextPointer(k_ThreadContextMegaloObjectsOffset) };
+        this->CopyRegion(*snapshot, RegionId::MegaloObjects, megaloObjects != 0 ? reader.Read<std::uintptr_t>(megaloObjects, k_DataArrayData) : 0);
 
         this->CopyRegion(*snapshot, RegionId::Placements, this->FindPlacements(threadContext));
 
         m_CaptureStore.Publish(snapshot);
 
+        return snapshot;
+    }
+
+    auto CaptureService::AcquireSnapshot(std::uint64_t epoch) -> std::shared_ptr<Snapshot>
+    {
+        // A new map load starts a new pool: what the old one holds goes with the old map.
+        if (m_PoolEpoch != epoch)
+        {
+            m_Pool.clear();
+            m_PoolEpoch = epoch;
+        }
+
+        // A pooled Snapshot has one reference (the pool) when nobody else holds it. The published one has another (the store), so it is
+        // never chosen. A reader that let go cannot take it again: it only gets the published Snapshot from the store.
+        for (const std::shared_ptr<Snapshot>& pooled : m_Pool)
+        {
+            if (pooled.use_count() != 1) continue;
+
+            // The flags, the epoch and every region address are written by Capture, and every region goes through CopyRegion, which empties it when its address is 0.
+            pooled->RawObjects.Clear();
+            return pooled;
+        }
+
+        auto snapshot{ std::make_shared<Snapshot>() };
+        if (m_Pool.size() < k_SnapshotPoolCapacity) m_Pool.push_back(snapshot);
         return snapshot;
     }
 
@@ -155,24 +185,28 @@ namespace Engine::Capture::System
 
             std::uint8_t kindId{ reader.Read<std::uint8_t>(entryAddress, k_EntryKindOffset) };
 
-            RawObject object{};
-            object.Handle = (static_cast<std::uint32_t>(salt) << 16) | index;
-            object.Address = address;
-            object.KindId = kindId;
+            // The datum is read straight into the arena of the snapshot.
+            const std::uint32_t handle{ (static_cast<std::uint32_t>(salt) << 16) | index };
+            const std::optional<std::span<std::uint8_t>> bytes{ snapshot.RawObjects.Emplace(handle, address, kindId, datumSize) };
+            if (!bytes) continue;
 
-            object.Bytes.resize(datumSize);
-            if (!reader.ReadRaw(address, object.Bytes.data(), datumSize)) continue;
-
-            snapshot.RawObjects.emplace(object.Handle, std::move(object));
+            if (!reader.ReadRaw(address, bytes->data(), datumSize)) snapshot.RawObjects.PopLast();
         }
     }
 
     auto CaptureService::CopyRegion(Snapshot& snapshot, RegionId id, std::uintptr_t address) -> void
     {
-        if (address == 0) return;
-
         Region& region{ snapshot.Regions[static_cast<std::size_t>(id)] };
+        if (address == 0)
+        {
+            // A reused snapshot may hold the region of an older tick.
+            region.OriginalAddress = 0;
+            region.Bytes.clear();
+            return;
+        }
+
         region.OriginalAddress = address;
+        // The same size keeps the bytes of the older tick, which ReadRaw overwrites whole.
         region.Bytes.resize(RegionSize(id));
 
         if (!m_MemoryReaderService.ReadRaw(address, region.Bytes.data(), region.Bytes.size()))

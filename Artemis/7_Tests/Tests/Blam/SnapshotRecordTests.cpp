@@ -56,31 +56,22 @@ namespace
 
     auto AddObject(Snapshot& snapshot, std::uint32_t handle, std::size_t size, std::uint8_t seed, std::uint8_t kind) -> void
     {
-        RawObject object{};
-        object.Handle = handle;
-        object.Address = 0x7FF100000000 + (static_cast<std::uintptr_t>(handle & 0xFFFF) * 0x1000);
-        object.KindId = kind;
-        object.Bytes = Pattern(size, seed);
-        snapshot.RawObjects.emplace(handle, std::move(object));
+        const std::uintptr_t address{ 0x7FF100000000 + (static_cast<std::uintptr_t>(handle & 0xFFFF) * 0x1000) };
+        snapshot.RawObjects.Add(handle, address, kind, Pattern(size, seed));
     }
 
-    auto ObjectOf(Snapshot& snapshot, std::uint32_t handle) -> RawObject&
-    {
-        return snapshot.RawObjects.at(handle);
-    }
-
-    // return: The snapshot with RawObjects inserted in ascending index order into a new map, as the capture does.
+    // return: The snapshot with the objects added in ascending index order into a new table, as the capture does.
     auto AsCaptured(const Snapshot& snapshot) -> Snapshot
     {
         std::vector<const RawObject*> objects{};
-        for (const auto& [handle, object] : snapshot.RawObjects) objects.push_back(&object);
+        for (const RawObject& object : snapshot.RawObjects) objects.push_back(&object);
         std::ranges::sort(objects, [](const RawObject* a, const RawObject* b) { return (a->Handle & 0xFFFF) < (b->Handle & 0xFFFF); });
 
         Snapshot captured{};
         captured.HasThreadContext = snapshot.HasThreadContext;
         captured.HasObjectTable = snapshot.HasObjectTable;
         captured.Regions = snapshot.Regions;
-        for (const RawObject* object : objects) captured.RawObjects.emplace(object->Handle, *object);
+        for (const RawObject* object : objects) captured.RawObjects.Add(object->Handle, object->Address, object->KindId, object->Bytes);
         return captured;
     }
 
@@ -102,20 +93,19 @@ namespace
             if (expected.Regions[i].Bytes != actual.Regions[i].Bytes) return ::testing::AssertionFailure() << "region " << i << " has other bytes";
         }
 
-        if (expected.RawObjects.size() != actual.RawObjects.size())
+        if (expected.RawObjects.Size() != actual.RawObjects.Size())
         {
-            return ::testing::AssertionFailure() << "object count " << actual.RawObjects.size() << " instead of " << expected.RawObjects.size();
+            return ::testing::AssertionFailure() << "object count " << actual.RawObjects.Size() << " instead of " << expected.RawObjects.Size();
         }
 
         auto left{ expected.RawObjects.begin() };
         auto right{ actual.RawObjects.begin() };
         for (; left != expected.RawObjects.end(); ++left, ++right)
         {
-            if (left->first != right->first) return ::testing::AssertionFailure() << "iteration order differs at handle " << left->first;
-            if (left->second.Handle != right->second.Handle || left->second.Address != right->second.Address ||
-                left->second.KindId != right->second.KindId || left->second.Bytes != right->second.Bytes)
+            if (left->Handle != right->Handle) return ::testing::AssertionFailure() << "iteration order differs at handle " << left->Handle;
+            if (left->Address != right->Address || left->KindId != right->KindId || !std::ranges::equal(left->Bytes, right->Bytes))
             {
-                return ::testing::AssertionFailure() << "object " << left->first << " differs";
+                return ::testing::AssertionFailure() << "object " << left->Handle << " differs";
             }
         }
 
@@ -190,7 +180,8 @@ TEST_F(SnapshotRecordTests, RoundTripFull)
     expected.Regions = snapshot.Regions;
     for (const std::uint32_t handle : { 0xE001'0002u, 0xE002'0005u, 0xE003'0009u })
     {
-        expected.RawObjects.emplace(handle, snapshot.RawObjects.at(handle));
+        const RawObject* object{ snapshot.RawObjects.Find(handle) };
+        expected.RawObjects.Add(handle, object->Address, object->KindId, object->Bytes);
     }
 
     SnapshotLoadInfo info{ .MapFileSize = 332328960 };
@@ -236,10 +227,10 @@ TEST_F(SnapshotRecordTests, DeltaSequence)
 
     // 2: one object changes 4 bytes in two places.
     Snapshot changed{ sequence.back() };
-    changed.RawObjects.at(0xE001'0002).Bytes[4] ^= 0x5A;
-    changed.RawObjects.at(0xE001'0002).Bytes[5] ^= 0x5A;
-    changed.RawObjects.at(0xE001'0002).Bytes[50] ^= 0x33;
-    changed.RawObjects.at(0xE001'0002).Bytes[51] ^= 0x33;
+    changed.RawObjects.Edit(0xE001'0002)[4] ^= 0x5A;
+    changed.RawObjects.Edit(0xE001'0002)[5] ^= 0x5A;
+    changed.RawObjects.Edit(0xE001'0002)[50] ^= 0x33;
+    changed.RawObjects.Edit(0xE001'0002)[51] ^= 0x33;
     sequence.push_back(changed);
 
     // 3: an object is deleted and another one enters, with an index below the ones that stay.
@@ -248,8 +239,11 @@ TEST_F(SnapshotRecordTests, DeltaSequence)
     swapped.HasObjectTable = true;
     swapped.Regions = changed.Regions;
     AddObject(swapped, 0xE004'0001, 48, 40, 4);
-    swapped.RawObjects.emplace(0xE001'0002, changed.RawObjects.at(0xE001'0002));
-    swapped.RawObjects.emplace(0xE003'0009, changed.RawObjects.at(0xE003'0009));
+    for (const std::uint32_t handle : { 0xE001'0002u, 0xE003'0009u })
+    {
+        const RawObject* object{ changed.RawObjects.Find(handle) };
+        swapped.RawObjects.Add(handle, object->Address, object->KindId, object->Bytes);
+    }
     sequence.push_back(swapped);
 
     // 4: a region is not captured anymore and another one moves in memory.
@@ -332,7 +326,7 @@ TEST_F(SnapshotRecordTests, CutFileIsReported)
     AddObject(first, 0xE001'0002, 100, 10, 1);
 
     Snapshot second{ first };
-    second.RawObjects.at(0xE001'0002).Bytes[3] ^= 0x7F;
+    second.RawObjects.Edit(0xE001'0002)[3] ^= 0x7F;
 
     Snapshot third{ second };
     AddObject(third, 0xE002'0005, 300, 20, 2);

@@ -1,6 +1,7 @@
 export module Blam.Layout.Snapshot.Type:Data;
 
 import :Raw;
+import :Objects;
 import :Region;
 
 import Blam.Layout.Object.Type;
@@ -26,8 +27,8 @@ export namespace Blam::Layout::Snapshot::Type
         // a new load without touching the engine. 0 in recordings.
         std::uint64_t TeardownEpoch{};
 
-        // Every live object by handle.
-        std::unordered_map<std::uint32_t, RawObject> RawObjects{};
+        // Every live object.
+        RawObjectTable RawObjects{};
 
         // Indexed by RegionId.
         std::array<Region, k_RegionCount> Regions{};

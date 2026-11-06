@@ -78,7 +78,7 @@ TEST(SnapshotTest, AnEmptySnapshotHasNothing)
     const Snapshot snapshot{};
     EXPECT_FALSE(snapshot.HasThreadContext);
     EXPECT_FALSE(snapshot.HasObjectTable);
-    EXPECT_TRUE(snapshot.RawObjects.empty());
+    EXPECT_TRUE(snapshot.RawObjects.IsEmpty());
     for (RegionId id : k_AllRegions)
     {
         EXPECT_FALSE(snapshot.IsCaptured(id));
@@ -193,8 +193,9 @@ TEST(SnapshotTest, RegionSizesCoverTheFieldsTheyHold)
 
 TEST(RawObjectTest, ReadsInsideTheDatumOnly)
 {
-    RawObject object{ .Handle = 0xE0010005, .Address = 0x1000, .KindId = 0x0E, .Bytes = std::vector<std::uint8_t>(0x20, 0) };
-    Put<std::uint32_t>(object.Bytes, 0x1C, 42);
+    std::vector<std::uint8_t> bytes(0x20, 0);
+    Put<std::uint32_t>(bytes, 0x1C, 42);
+    const RawObject object{ .Handle = 0xE0010005, .Address = 0x1000, .KindId = 0x0E, .Bytes = bytes };
 
     EXPECT_EQ(object.KindId, 0x0Eu);
     EXPECT_EQ(object.Read<std::uint32_t>(0x1C), 42u);
@@ -207,18 +208,19 @@ TEST(RawObjectTest, ReadsInsideTheDatumOnly)
 
 TEST(RawObjectTest, FindBlockFollowsTheDescriptor)
 {
-    RawObject object{ .Bytes = std::vector<std::uint8_t>(0x80, 0) };
+    std::vector<std::uint8_t> bytes(0x80, 0);
     // Descriptors { u16 size, u16 offset }.
-    Put<std::uint16_t>(object.Bytes, 0x00, 0x08);
-    Put<std::uint16_t>(object.Bytes, 0x02, 0x40);
-    Put<std::uint16_t>(object.Bytes, 0x04, 0x00);
-    Put<std::uint16_t>(object.Bytes, 0x06, 0x40);
-    Put<std::uint16_t>(object.Bytes, 0x08, 0x08);
-    Put<std::uint16_t>(object.Bytes, 0x0A, 0xFFFF);
-    Put<std::uint16_t>(object.Bytes, 0x0C, 0x10);
-    Put<std::uint16_t>(object.Bytes, 0x0E, 0x78);
-    Put<std::uint32_t>(object.Bytes, 0x44, 7);
+    Put<std::uint16_t>(bytes, 0x00, 0x08);
+    Put<std::uint16_t>(bytes, 0x02, 0x40);
+    Put<std::uint16_t>(bytes, 0x04, 0x00);
+    Put<std::uint16_t>(bytes, 0x06, 0x40);
+    Put<std::uint16_t>(bytes, 0x08, 0x08);
+    Put<std::uint16_t>(bytes, 0x0A, 0xFFFF);
+    Put<std::uint16_t>(bytes, 0x0C, 0x10);
+    Put<std::uint16_t>(bytes, 0x0E, 0x78);
+    Put<std::uint32_t>(bytes, 0x44, 7);
 
+    const RawObject object{ .Bytes = bytes };
     const std::optional<BlockRange> block{ object.FindBlock(0x00) };
     ASSERT_TRUE(block.has_value());
     EXPECT_EQ(block->Offset, 0x40u);

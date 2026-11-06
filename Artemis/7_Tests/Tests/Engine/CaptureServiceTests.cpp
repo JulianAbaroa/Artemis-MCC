@@ -11,6 +11,7 @@ import Engine.Capture.System;
 import Services.Telemetry.State;
 import Services.Telemetry.Type;
 import Blam.Layout.Object.Type;
+import Blam.Layout.Snapshot.Type;
 import Tests.Support.EngineMemory;
 import Tests.Support.Log;
 import std;
@@ -31,6 +32,9 @@ namespace
     using Engine::Capture::System::CaptureService;
     using Services::Telemetry::State::TelemetryStore;
     using Services::Telemetry::Type::PerfSnapshot;
+    using Blam::Layout::Snapshot::Type::RegionId;
+    using Blam::Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::Snapshot;
     using Tests::Support::EngineMemory::FakeEngineMemory;
     using Tests::Support::Log::CollectingSink;
 
@@ -82,7 +86,7 @@ namespace
         // return: Whether the snapshot has the object of that slot.
         static auto Has(const auto& snapshot, std::uint32_t index) -> bool
         {
-            return snapshot->RawObjects.contains((1u << 16) | index);
+            return snapshot->RawObjects.Contains((1u << 16) | index);
         }
 
         // return: Messages of the level whose text has all the parts.
@@ -207,7 +211,7 @@ TEST_F(CaptureServiceTests, ObjectsBelowTheMarkAreCopiedAndNoneAbove)
     EXPECT_TRUE(Has(snapshot, 9));
     EXPECT_FALSE(Has(snapshot, 10));
     EXPECT_FALSE(Has(snapshot, 1500));
-    EXPECT_EQ(snapshot->RawObjects.size(), 2u);
+    EXPECT_EQ(snapshot->RawObjects.Size(), 2u);
 }
 
 TEST_F(CaptureServiceTests, ObjectAtAnIndexOf1024OrMoreIsCopied)
@@ -301,4 +305,152 @@ TEST_F(CaptureServiceTests, TelemetryKeepsTheHighestMarkAndLiveCountUntilThePhot
     m_Telemetry.CopyPerf(photo);
     EXPECT_EQ(photo.ObjectSlotsMax, 50u);
     EXPECT_EQ(photo.ObjectsMax, 10u);
+}
+
+TEST_F(CaptureServiceTests, SnapshotHeldByAReaderIsNotReusedAndKeepsItsValues)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(10, 1);
+    this->AddLive(3);
+    const auto held{ m_Service.Capture() };
+    ASSERT_TRUE(Has(held, 3));
+    const std::vector<std::uint8_t> before{ held->RawObjects.Find((1u << 16) | 3u)->Bytes.begin(), held->RawObjects.Find((1u << 16) | 3u)->Bytes.end() };
+
+    // Other data in the memory and 3 more captures: more than the pool would need if the held one could be taken.
+    std::ranges::fill(m_Memory.m_Datum, std::uint8_t{ 0x5A });
+    this->AddLive(7);
+    this->SetMark(10, 2);
+    for (int tick{ 0 }; tick < 3; ++tick) EXPECT_NE(m_Service.Capture().get(), held.get());
+
+    EXPECT_TRUE(Has(held, 3));
+    EXPECT_FALSE(Has(held, 7));
+    EXPECT_TRUE(std::ranges::equal(held->RawObjects.Find((1u << 16) | 3u)->Bytes, before));
+}
+
+TEST_F(CaptureServiceTests, ReleasedSnapshotsAreReusedAndOnlyTheNewObjectsRemain)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(10, 3);
+    this->AddLive(3);
+    this->AddLive(5);
+    this->AddLive(8);
+
+    std::set<const void*> addresses{};
+    for (int tick{ 0 }; tick < 10; ++tick)
+    {
+        const auto snapshot{ m_Service.Capture() };
+        addresses.insert(snapshot.get());
+        EXPECT_EQ(snapshot->RawObjects.Size(), 3u);
+    }
+
+    // The published one is never taken: two snapshots take turns.
+    EXPECT_EQ(addresses.size(), 2u);
+
+    // Fewer objects than before: nothing of the old tick is left in the reused one.
+    this->SetMark(4, 1);
+    for (int tick{ 0 }; tick < 4; ++tick)
+    {
+        const auto snapshot{ m_Service.Capture() };
+        EXPECT_EQ(snapshot->RawObjects.Size(), 1u);
+        EXPECT_TRUE(Has(snapshot, 3));
+        EXPECT_FALSE(Has(snapshot, 5));
+        EXPECT_FALSE(Has(snapshot, 8));
+    }
+}
+
+TEST_F(CaptureServiceTests, ReusedSnapshotDropsTheRegionThatIsNotCapturedAnymore)
+{
+    Snapshot withTime{};
+    withTime.HasThreadContext = true;
+    withTime.HasObjectTable = true;
+    withTime.Regions[static_cast<std::size_t>(RegionId::TimeGlobals)].OriginalAddress = 0x1000;
+    withTime.Regions[static_cast<std::size_t>(RegionId::TimeGlobals)].Bytes.assign(RegionSize(RegionId::TimeGlobals), 0xAB);
+    Snapshot without{};
+    without.HasThreadContext = true;
+    without.HasObjectTable = true;
+
+    for (int round{ 0 }; round < 4; ++round)
+    {
+        m_Memory.Load(withTime, m_Store);
+        {
+            const auto snapshot{ m_Service.Capture() };
+            ASSERT_TRUE(snapshot->IsCaptured(RegionId::TimeGlobals));
+            EXPECT_EQ(snapshot->Read<std::uint8_t>(RegionId::TimeGlobals, 0), 0xABu);
+        }
+
+        m_Memory.Load(without, m_Store);
+        {
+            const auto snapshot{ m_Service.Capture() };
+            EXPECT_FALSE(snapshot->IsCaptured(RegionId::TimeGlobals));
+            EXPECT_EQ(snapshot->Regions[static_cast<std::size_t>(RegionId::TimeGlobals)].OriginalAddress, 0u);
+        }
+    }
+}
+
+TEST_F(CaptureServiceTests, ReusedSnapshotDropsTheContextRegionsWhenTheContextOrTheMegaloPointerIsMissing)
+{
+    const std::array<RegionId, 5> contextRegions{ RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals,
+        RegionId::GameGlobals, RegionId::MegaloObjects };
+
+    Snapshot full{};
+    full.HasThreadContext = true;
+    full.HasObjectTable = true;
+    for (const RegionId id : contextRegions)
+    {
+        auto& region{ full.Regions[static_cast<std::size_t>(id)] };
+        region.OriginalAddress = 0x1000;
+        region.Bytes.assign(RegionSize(id), 0xAB);
+    }
+
+    Snapshot noContext{};
+    noContext.HasObjectTable = true;
+
+    Snapshot noMegalo{ full };
+    noMegalo.Regions[static_cast<std::size_t>(RegionId::MegaloObjects)] = {};
+
+    for (int round{ 0 }; round < 4; ++round)
+    {
+        m_Memory.Load(full, m_Store);
+        {
+            const auto snapshot{ m_Service.Capture() };
+            for (const RegionId id : contextRegions) ASSERT_TRUE(snapshot->IsCaptured(id));
+        }
+
+        m_Memory.Load(noContext, m_Store);
+        {
+            const auto snapshot{ m_Service.Capture() };
+            for (const RegionId id : contextRegions)
+            {
+                EXPECT_FALSE(snapshot->IsCaptured(id));
+                EXPECT_EQ(snapshot->Regions[static_cast<std::size_t>(id)].OriginalAddress, 0u);
+            }
+        }
+
+        m_Memory.Load(full, m_Store);
+        {
+            const auto snapshot{ m_Service.Capture() };
+            ASSERT_TRUE(snapshot->IsCaptured(RegionId::MegaloObjects));
+        }
+
+        m_Memory.Load(noMegalo, m_Store);
+        {
+            const auto snapshot{ m_Service.Capture() };
+            EXPECT_FALSE(snapshot->IsCaptured(RegionId::MegaloObjects));
+            EXPECT_EQ(snapshot->Regions[static_cast<std::size_t>(RegionId::MegaloObjects)].OriginalAddress, 0u);
+            EXPECT_TRUE(snapshot->IsCaptured(RegionId::TimeGlobals));
+        }
+    }
+}
+
+TEST_F(CaptureServiceTests, ReusedSnapshotGetsTheNewEpochAndCleanupDoesNotBreakTheNextCapture)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    for (int tick{ 0 }; tick < 4; ++tick) EXPECT_EQ(m_Service.Capture()->TeardownEpoch, 0u);
+
+    m_Lifecycle.SetStatus(Status::TearingDown);
+    m_Service.Cleanup();
+    EXPECT_EQ(m_Store.Acquire(), nullptr);
+    this->Connect();
+
+    for (int tick{ 0 }; tick < 4; ++tick) EXPECT_EQ(m_Service.Capture()->TeardownEpoch, 1u);
 }

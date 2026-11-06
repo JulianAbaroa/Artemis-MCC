@@ -7,6 +7,7 @@ import std;
 namespace
 {
     using ::Blam::Map::Reader::State::TagIndexStore;
+    using ::Blam::Layout::Snapshot::Type::RawObject;
     using ::Blam::Layout::Snapshot::Type::Region;
     using ::Blam::Layout::Snapshot::Type::RegionId;
     using ::Blam::Layout::Snapshot::Type::Snapshot;
@@ -85,10 +86,31 @@ export namespace Tests::Support::Blam
         return block;
     }
 
+    // An object with the bytes it owns, to build the objects of a Snapshot. PutObject copies it into the table of the Snapshot.
+    struct OwnedObject
+    {
+        std::uint32_t Handle{};
+        std::uintptr_t Address{};
+        std::uint8_t KindId{};
+        std::vector<std::uint8_t> Bytes{};
+
+        // return: The view of the bytes of this object, valid as long as it is not changed.
+        auto View() const -> RawObject
+        {
+            return RawObject{ .Handle = Handle, .Address = Address, .KindId = KindId, .Bytes = Bytes };
+        }
+    };
+
+    // Adds the object to the snapshot, with a copy of its bytes.
+    auto PutObject(Snapshot& snapshot, const OwnedObject& object) -> void
+    {
+        snapshot.RawObjects.Add(object.Handle, object.Address, object.KindId, object.Bytes);
+    }
+
     // Writes the bytes of value at offset. The caller sizes the buffer.
     template <typename T>
         requires std::is_trivially_copyable_v<T>
-    auto Put(std::vector<std::uint8_t>& bytes, std::size_t offset, const T& value) -> void
+    auto Put(std::span<std::uint8_t> bytes, std::size_t offset, const T& value) -> void
     {
         std::memcpy(bytes.data() + offset, &value, sizeof(T));
     }

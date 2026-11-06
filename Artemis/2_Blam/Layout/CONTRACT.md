@@ -13,7 +13,7 @@ type: every live object (`RawObject`) and every memory region (`RegionId`) copie
 - Interpret what was copied: that is `Blam.Runtime`.
 
 ## Input and output
-Types, offsets and the `.sdump` writer and reader. A Snapshot is immutable once published; every read from it is bounds-checked
+Types, offsets and the `.sdump` writer and reader. A Snapshot is immutable once published (its `RawObject` views point into the arena of its table: a table that is copied, cleared or added to rebases or drops them, so they are not kept across changes); every read from it is bounds-checked
 and returns zeros (or nothing) when the region or the value is missing.
 
 ## Public interface
@@ -26,7 +26,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Blam.Layout.Interaction.Type` | Offsets of the interaction table. |
 | `Blam.Layout.Game.Type` | Offsets of the game globals (phase, round, round clock, team mapping and scores, game variant with its type, score to win, respawn, round and powerup settings, Megalo trait sets), the format of an engine timer (`TimerTicks`, `TimerTicksCeil`, `IsTimerRunning`), the megalo object elements and the event ring. Also the pure logic of the gametype presets (`:VariantPreset`, namespace `VariantPreset`, Q97, D264, D265): `ParseCatalog` and `ParsePreset` read the compiled files of `Tools/presets.py` (a wrong line invalidates the whole preset), `SaveBase` keeps the value of every field of the catalog, `Compose` gives the final value of each field (preset or saved base), `Plan` decides a request (rejected, with a reason and nothing to write, when the variant is not Megalo, a trait set does not exist, or between rounds a `Load` field would change) and returns the writes that change the variant, `Apply` writes them with their masks and `Verify` reads them back. It works on bytes it is given: the engine writes nothing here. |
 | `Blam.Layout.Action.Type` | Layout of the 0xA8-byte player action of a tick and its button bits. |
-| `Blam.Layout.Snapshot.Type` | `Snapshot`, `RawObject`, `RegionId`, `Region` and the `.sdump` records. |
+| `Blam.Layout.Snapshot.Type` | `Snapshot`, `RawObjectTable` (the live objects of a Snapshot, D276: the datums one after the other in one arena, an index by engine slot, iteration in the order they were added, `Find` checks the whole handle salt included), `RawObject` (a view of one datum inside that arena: `Read`, `ReadRaw`, `FindBlock` and `ReadBlock` are bounds-checked and give zero when the value does not fit), `RegionId`, `Region` and the `.sdump` records. The format of the `.sdump` did not change. |
 | `Blam.Layout.Snapshot.System` | Write and read `.sdump` files (delta against the previous record, byte by byte). |
 
 ## Depends on

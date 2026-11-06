@@ -53,6 +53,7 @@ namespace
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
     using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
     using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::RawObjectTable;
     using Blam::Layout::Snapshot::Type::Region;
     using Blam::Layout::Snapshot::Type::RegionId;
     using Blam::Layout::Snapshot::Type::RegionSize;
@@ -102,18 +103,17 @@ namespace
     constexpr std::size_t k_StageCount{ k_PipelineStageNames.size() };
 
     // Copy of ResolveWorldOrigin of ObjectTableService.cpp (it is private to that file).
-    template <typename Raws>
-    auto ResolveWorldOrigin(const Raws& raws, const RawObject& datum, int depth = 0) -> Vec3
+    auto ResolveWorldOrigin(const RawObjectTable& raws, const RawObject& datum, int depth = 0) -> Vec3
     {
         const Vec3 local = datum.Read<Vec3>(ObjeOffset::k_Origin);
         const std::uint32_t parentHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle);
 
         if (parentHandle == k_NoHandle || depth >= 8) return local;
 
-        auto parentIt = raws.find(parentHandle);
-        if (parentIt == raws.end()) return local;
+        const RawObject* parentFound = raws.Find(parentHandle);
+        if (parentFound == nullptr) return local;
 
-        const RawObject& parent = parentIt->second;
+        const RawObject& parent = *parentFound;
         const Vec3 parentOrigin = ResolveWorldOrigin(raws, parent, depth + 1);
         const Vec3 forward = parent.Read<Vec3>(ObjeOffset::k_Forward);
         const Vec3 up = parent.Read<Vec3>(ObjeOffset::k_Up);
@@ -132,8 +132,9 @@ namespace
     auto AuditHandles(const Snapshot& snapshot) -> HandleAudit
     {
         std::array<std::uint16_t, k_MaxObjects> salts{};
-        for (const auto& [handle, datum] : snapshot.RawObjects)
+        for (const RawObject& datum : snapshot.RawObjects)
         {
+            const std::uint32_t handle{ datum.Handle };
             const std::uint32_t index{ handle & k_HandleIndexMask };
             if (index < salts.size()) salts[index] = static_cast<std::uint16_t>(handle >> k_SaltShift);
         }
@@ -153,7 +154,7 @@ namespace
             else ++audit.Stale;
         } };
 
-        for (const auto& [handle, datum] : snapshot.RawObjects)
+        for (const RawObject& datum : snapshot.RawObjects)
         {
             count(datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle));
             count(datum.Read<std::uint32_t>(ObjeOffset::k_ChildHandle));
@@ -282,6 +283,22 @@ namespace
         return std::format("{:<46} n={:<6} mean={:>9.2f} p99={:>9.1f} max={:>10.1f}", label, s.N, s.Mean, s.P99, s.Max);
     }
 
+    // The Snapshot of before S2.C: a map with a vector of bytes per object. Capture does not build it anymore: the C1 replica keeps
+    // building it, so C1 stays as the reference of the old path and C0 is the production one.
+    struct OldSnapshot
+    {
+        struct OldObject
+        {
+            std::uint32_t Handle{};
+            std::uintptr_t Address{};
+            std::uint8_t KindId{};
+            std::vector<std::uint8_t> Bytes{};
+        };
+
+        std::unordered_map<std::uint32_t, OldObject> RawObjects{};
+        std::array<Region, k_RegionCount> Regions{};
+    };
+
     class SnapshotBench
     {
     public:
@@ -296,7 +313,7 @@ namespace
         auto Before(const Chain& chain, const Snapshot& snapshot, std::size_t record) -> std::function<void()>
         {
             m_Snapshot = &snapshot;
-            m_Alive.Add(static_cast<double>(snapshot.RawObjects.size()));
+            m_Alive.Add(static_cast<double>(snapshot.RawObjects.Size()));
             m_IsReplicaPending = false;
 
             if ((record - 1) % k_EveryRecords == 0)
@@ -338,7 +355,7 @@ namespace
             add(std::format("C0 check: {} Snapshots compared with the record (handles, KindId and bytes of every object, every region, the flags), {} differences.",
                 m_CaptureCompared, m_CaptureDiffs));
             add("");
-            add("C1 breakdown (a copy of the steps of Capture with a clock around each):");
+            add("C1 breakdown of the OLD path of Capture (before S2.C: map, a vector per object, a new Snapshot each tick), with a clock around each step:");
             add(TimeRow("C1 make_shared<Snapshot>", m_C1Make));
             add(TimeRow("C1 objects (walk + vector + ReadRaw + emplace)", m_C1Objects));
             add(TimeRow("C1   of which the walk of the table alone", m_C1Walk));
@@ -436,7 +453,7 @@ namespace
 
         // Capture.
         std::shared_ptr<const Snapshot> m_PreviousCaptured{};
-        std::shared_ptr<Snapshot> m_PreviousReplica{};
+        std::shared_ptr<OldSnapshot> m_PreviousReplica{};
         std::vector<std::uint8_t> m_ObjectBuffer{};
         std::vector<std::uint8_t> m_RegionBuffer{};
         std::size_t m_CaptureCompared{};
@@ -515,11 +532,11 @@ namespace
 
             if (captured.HasThreadContext != record.HasThreadContext) ++m_CaptureDiffs;
             if (captured.HasObjectTable != record.HasObjectTable) ++m_CaptureDiffs;
-            if (captured.RawObjects.size() != record.RawObjects.size()) ++m_CaptureDiffs;
-            for (const auto& [handle, raw] : record.RawObjects)
+            if (captured.RawObjects.Size() != record.RawObjects.Size()) ++m_CaptureDiffs;
+            for (const RawObject& raw : record.RawObjects)
             {
-                const auto it{ captured.RawObjects.find(handle) };
-                if (it == captured.RawObjects.end() || it->second.Handle != handle || it->second.KindId != raw.KindId || it->second.Bytes != raw.Bytes) ++m_CaptureDiffs;
+                const RawObject* found{ captured.RawObjects.Find(raw.Handle) };
+                if (found == nullptr || found->Handle != raw.Handle || found->KindId != raw.KindId || !std::ranges::equal(found->Bytes, raw.Bytes)) ++m_CaptureDiffs;
             }
             for (std::size_t id{ 0 }; id < k_RegionCount; ++id)
             {
@@ -560,7 +577,7 @@ namespace
 
             // C1: the steps of Capture.
             start = steady_clock::now();
-            auto replica{ std::make_shared<Snapshot>() };
+            auto replica{ std::make_shared<OldSnapshot>() };
             end = steady_clock::now();
             const double makeUs{ Micros(start, end) };
             m_C1Make.Add(makeUs);
@@ -643,11 +660,11 @@ namespace
             m_C2.Add(Micros(start, endRegions));
         }
 
-        // C1 objects: a copy of CopyObjects of CaptureService.cpp.
-        auto CopyObjectsReplica(Snapshot& snapshot) -> void
+        // C1 objects: a copy of CopyObjects of CaptureService.cpp as it was before S2.C (a vector per object, a map).
+        auto CopyObjectsReplica(OldSnapshot& snapshot) -> void
         {
             this->WalkTable([&](std::uint32_t handle, std::uintptr_t address, std::uint16_t datumSize, std::uint8_t kindId) {
-                RawObject object{};
+                OldSnapshot::OldObject object{};
                 object.Handle = handle;
                 object.Address = address;
                 object.KindId = kindId;
@@ -660,7 +677,7 @@ namespace
         }
 
         // C1 regions: a copy of CopyRegion of CaptureService.cpp for each region the fake memory holds.
-        auto CopyRegionsReplica(Snapshot& snapshot) -> void
+        auto CopyRegionsReplica(OldSnapshot& snapshot) -> void
         {
             for (std::size_t id{ 0 }; id < k_RegionCount; ++id)
             {
@@ -702,9 +719,9 @@ namespace
 
             std::size_t added{};
             start = steady_clock::now();
-            for (const auto& [handle, datum] : snapshot.RawObjects)
+            for (const RawObject& datum : snapshot.RawObjects)
             {
-                if (!store.HasObject(handle)) ++added;
+                if (!store.HasObject(datum.Handle)) ++added;
             }
             end = steady_clock::now();
             const double discoverUs{ Micros(start, end) };
@@ -719,14 +736,14 @@ namespace
             std::vector<std::uint32_t> dead{};
             start = steady_clock::now();
             store.UpdateObjects([&](std::uint32_t handle, AliveObject& object) {
-                const auto it{ snapshot.RawObjects.find(handle) };
-                if (it == snapshot.RawObjects.end())
+                const RawObject* datum{ snapshot.RawObjects.Find(handle) };
+                if (datum == nullptr)
                 {
                     dead.push_back(handle);
                     return;
                 }
 
-                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, it->second);
+                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, *datum);
             });
             end = steady_clock::now();
             const double loopUs{ Micros(start, end) };
@@ -750,10 +767,10 @@ namespace
             m_ReplicaList.clear();
             for (const auto& [handle, object] : *m_ReplicaPublished)
             {
-                const auto it{ snapshot.RawObjects.find(handle) };
-                if (it == snapshot.RawObjects.end()) continue;
+                const RawObject* datum{ snapshot.RawObjects.Find(handle) };
+                if (datum == nullptr) continue;
 
-                raws.push_back(&it->second);
+                raws.push_back(datum);
                 m_ReplicaList.push_back(handle);
             }
 
@@ -828,11 +845,11 @@ namespace
             // Who is alive: what the Snapshot has stays, what it lost goes, and the rest of the published table is new.
             for (const auto& [handle, object] : *m_ReplicaPrevious)
             {
-                if (published->contains(handle) != m_Snapshot->RawObjects.contains(handle)) ++m_ObjectDiffs;
+                if (published->contains(handle) != m_Snapshot->RawObjects.Contains(handle)) ++m_ObjectDiffs;
             }
             for (const auto& [handle, object] : *published)
             {
-                if (!m_ReplicaPrevious->contains(handle) && !m_Snapshot->RawObjects.contains(handle)) ++m_ObjectDiffs;
+                if (!m_ReplicaPrevious->contains(handle) && !m_Snapshot->RawObjects.Contains(handle)) ++m_ObjectDiffs;
             }
 
             std::size_t bones{};

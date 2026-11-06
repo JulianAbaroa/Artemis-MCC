@@ -105,6 +105,7 @@
     <ClCompile Include="Blam\MapTests.cpp" />
     <ClCompile Include="Blam\ObjectKindTests.cpp" />
     <ClCompile Include="Blam\ObjectStoreTests.cpp" />
+    <ClCompile Include="Blam\RawObjectTableTests.cpp" />
     <ClCompile Include="Blam\RuntimeTests.cpp" />
     <ClCompile Include="Blam\SnapshotRecordTests.cpp" />
     <ClCompile Include="Blam\TagResolverTests.cpp" />

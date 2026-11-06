@@ -141,8 +141,8 @@ namespace DevTools::Workbench::ObjectTable::System
         const auto* published{ m_ObjectTableUIStore.GetPublished() };
         if (!published) return 0;
 
-        const auto it{ published->RawObjects.find(object.Handle) };
-        return it != published->RawObjects.end() ? it->second.Address : 0;
+        const auto* found{ published->RawObjects.Find(object.Handle) };
+        return found != nullptr ? found->Address : 0;
     }
 
     auto ObjectTableUIService::PassesFilter(const AliveObject& object) const -> bool

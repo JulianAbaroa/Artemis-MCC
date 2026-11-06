@@ -15,6 +15,7 @@ namespace
     using Common::Engine::Type::k_MaxObjects;
     using Common::Engine::Type::k_MaxPlayers;
     using Engine::Capture::State::CaptureStore;
+    using ::Blam::Layout::Snapshot::Type::RawObject;
     using ::Blam::Layout::Snapshot::Type::RegionId;
     using ::Blam::Layout::Snapshot::Type::Snapshot;
     using ::Blam::Layout::Snapshot::Type::k_RegionCount;
@@ -132,13 +133,14 @@ export namespace Tests::Support::EngineMemory
             m_Sources = {};
 
             std::size_t total{};
-            for (const auto& [handle, raw] : snapshot.RawObjects) total += raw.Bytes.size();
+            for (const RawObject& raw : snapshot.RawObjects) total += raw.Bytes.size();
             m_Arena.resize(total);
 
             std::size_t used{};
             std::uint32_t firstUnused{};
-            for (const auto& [handle, raw] : snapshot.RawObjects)
+            for (const RawObject& raw : snapshot.RawObjects)
             {
+                const std::uint32_t handle{ raw.Handle };
                 const std::uint32_t index{ handle & 0xFFFFu };
                 if (index >= k_TableEntries) continue;
 

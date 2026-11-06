@@ -24,6 +24,7 @@ namespace
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
     using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
     using Blam::Layout::Snapshot::Type::RawObject;
+    using Blam::Layout::Snapshot::Type::RawObjectTable;
     using Blam::Layout::Snapshot::Type::Snapshot;
     using Blam::Runtime::Object::Type::BoneMatrix::BonesHeader;
     using Blam::Runtime::Object::Type::Biped::Biped;
@@ -72,18 +73,17 @@ namespace
 
     // note: The origin of a parented object is local to its parent, so it is carried
     // through the parent chain. Halo frames are forward, left (up x forward) and up.
-    template <typename Raws>
-    auto ResolveWorldOrigin(const Raws& raws, const RawObject& datum, int depth = 0) -> Vec3
+    auto ResolveWorldOrigin(const RawObjectTable& raws, const RawObject& datum, int depth = 0) -> Vec3
     {
         const Vec3 local = datum.Read<Vec3>(ObjeOffset::k_Origin);
         const std::uint32_t parentHandle = datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle);
 
         if (parentHandle == k_NoHandle || depth >= 8) return local;
 
-        auto parentIt = raws.find(parentHandle);
-        if (parentIt == raws.end()) return local;
+        const RawObject* parentFound = raws.Find(parentHandle);
+        if (parentFound == nullptr) return local;
 
-        const RawObject& parent = parentIt->second;
+        const RawObject& parent = *parentFound;
         const Vec3 parentOrigin = ResolveWorldOrigin(raws, parent, depth + 1);
         const Vec3 forward = parent.Read<Vec3>(ObjeOffset::k_Forward);
         const Vec3 up = parent.Read<Vec3>(ObjeOffset::k_Up);
@@ -162,8 +162,9 @@ namespace Blam::Runtime::Object::System
 
     auto ObjectTableService::DiscoverObjects(const Snapshot& snapshot) -> void
     {
-        for (const auto& [handle, datum] : snapshot.RawObjects)
+        for (const RawObject& datum : snapshot.RawObjects)
         {
+            const std::uint32_t handle{ datum.Handle };
             if (m_ObjectStore.HasObject(handle)) continue;
 
             std::uint32_t datumIndex{ datum.Read<std::uint32_t>(ObjeOffset::k_TagHandle) };
@@ -186,16 +187,16 @@ namespace Blam::Runtime::Object::System
 
         m_ObjectStore.UpdateObjects(
             [&](std::uint32_t handle, AliveObject& object) {
-                auto it = snapshot.RawObjects.find(handle);
-                if (it == snapshot.RawObjects.end())
+                const RawObject* datum = snapshot.RawObjects.Find(handle);
+                if (datum == nullptr)
                 {
                     deadHandles.push_back(handle);
                     return;
                 }
 
-                this->UpdateObjectData(it->second, object);
-                object.Placement = this->ReadPlacement(snapshot, it->second);
-                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, it->second);
+                this->UpdateObjectData(*datum, object);
+                object.Placement = this->ReadPlacement(snapshot, *datum);
+                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, *datum);
             });
 
         for (std::uint32_t handle : deadHandles)
@@ -591,8 +592,9 @@ namespace Blam::Runtime::Object::System
     {
         // Salt of the live object in each slot, 0 for a free one (the capture skips the entries with salt 0).
         std::array<std::uint16_t, k_MaxObjects> salts{};
-        for (const auto& [handle, datum] : snapshot.RawObjects)
+        for (const RawObject& datum : snapshot.RawObjects)
         {
+            const std::uint32_t handle{ datum.Handle };
             const std::uint32_t index{ handle & k_HandleIndexMask };
             if (index < salts.size()) salts[index] = static_cast<std::uint16_t>(handle >> k_SaltShift);
         }
@@ -613,7 +615,7 @@ namespace Blam::Runtime::Object::System
             else ++audit.Stale;
         } };
 
-        for (const auto& [handle, datum] : snapshot.RawObjects)
+        for (const RawObject& datum : snapshot.RawObjects)
         {
             count(datum.Read<std::uint32_t>(ObjeOffset::k_ParentHandle));
             count(datum.Read<std::uint32_t>(ObjeOffset::k_ChildHandle));

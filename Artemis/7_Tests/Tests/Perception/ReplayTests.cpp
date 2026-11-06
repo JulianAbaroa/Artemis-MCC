@@ -114,7 +114,7 @@ namespace
     auto WithBipedMoved() -> Snapshot
     {
         Snapshot snapshot{ WithBipedAndPlayer() };
-        Put(snapshot.RawObjects.at(k_BipedHandle).Bytes, ObjeOffset::k_Origin, Vec3{ 11.0f, 20.0f, 30.0f });
+        Put(snapshot.RawObjects.Edit(k_BipedHandle), ObjeOffset::k_Origin, Vec3{ 11.0f, 20.0f, 30.0f });
         return snapshot;
     }
 
@@ -967,7 +967,7 @@ TEST_F(ReplayTests, CorruptedObjectDiffers)
 
     // The .sdump keeps the second snapshot with the sign of the x of the Origin of the biped flipped (one byte).
     std::vector<Snapshot> stored{ snapshots };
-    stored[1].RawObjects.at(k_BipedHandle).Bytes[ObjeOffset::k_Origin + 3] ^= 0x80;
+    stored[1].RawObjects.Edit(k_BipedHandle)[ObjeOffset::k_Origin + 3] ^= 0x80;
 
     Recording recording{ Record(m_Recorder, snapshots, stored, { k_SnapshotFirstAfterLoad, 0, 0 }) };
 

@@ -128,6 +128,15 @@ namespace
         std::vector<Span> Spans{};
     };
 
+    // An object block read from the file, with the bytes it owns until they go into the table of the Snapshot.
+    struct ChangedObject
+    {
+        std::uint32_t Handle{};
+        std::uintptr_t Address{};
+        std::uint8_t KindId{};
+        std::vector<std::uint8_t> Bytes{};
+    };
+
     struct ObjectPlan
     {
         const RawObject* Object{};
@@ -203,33 +212,28 @@ namespace Blam::Layout::Snapshot::System
         }
 
         std::vector<const RawObject*> sorted{};
-        sorted.reserve(snapshot->RawObjects.size());
-        for (const auto& [handle, object] : snapshot->RawObjects) sorted.push_back(&object);
+        sorted.reserve(snapshot->RawObjects.Size());
+        for (const RawObject& object : snapshot->RawObjects) sorted.push_back(&object);
         std::ranges::sort(sorted, [](const RawObject* a, const RawObject* b) { return IsBeforeByIndex(a->Handle, b->Handle); });
 
         std::vector<ObjectPlan> objects{};
         for (const RawObject* object : sorted)
         {
-            const RawObject* before{ nullptr };
-            if (previous != nullptr)
-            {
-                if (auto it{ previous->RawObjects.find(object->Handle) }; it != previous->RawObjects.end()) before = &it->second;
-            }
+            const RawObject* before{ previous != nullptr ? previous->RawObjects.Find(object->Handle) : nullptr };
 
             if (before != nullptr && before->Address == object->Address && before->KindId == object->KindId &&
-                before->Bytes == object->Bytes) continue;
+                std::ranges::equal(before->Bytes, object->Bytes)) continue;
 
-            const std::span<const std::uint8_t> beforeBytes{ before != nullptr ? std::span<const std::uint8_t>{ before->Bytes } :
-                std::span<const std::uint8_t>{} };
+            const std::span<const std::uint8_t> beforeBytes{ before != nullptr ? before->Bytes : std::span<const std::uint8_t>{} };
             objects.push_back(ObjectPlan{ .Object = object, .Spans = MakeSpans(beforeBytes, object->Bytes) });
         }
 
         std::vector<std::uint32_t> removed{};
         if (previous != nullptr)
         {
-            for (const auto& [handle, object] : previous->RawObjects)
+            for (const RawObject& object : previous->RawObjects)
             {
-                if (!snapshot->RawObjects.contains(handle)) removed.push_back(handle);
+                if (!snapshot->RawObjects.Contains(object.Handle)) removed.push_back(object.Handle);
             }
             std::ranges::sort(removed, IsBeforeByIndex);
         }
@@ -384,19 +388,19 @@ namespace Blam::Layout::Snapshot::System
             }
         }
 
-        std::vector<RawObject> changed{};
+        std::vector<ChangedObject> changed{};
         for (std::uint16_t i{ 0 }; i < header.ChangedObjectCount; ++i)
         {
             SnapshotObjectBlock block{};
             if (!ReadValue(stream, block)) return Fail(SnapshotReadStatus::Cut, "the file is cut inside an object block");
             if (block.Size > k_MaxBlockBytes) return Fail(SnapshotReadStatus::Error, std::format("an object of {} bytes is too large", block.Size));
 
-            RawObject object{ .Handle = block.Handle, .Address = static_cast<std::uintptr_t>(block.Address), .KindId = block.KindId };
+            ChangedObject object{ .Handle = block.Handle, .Address = static_cast<std::uintptr_t>(block.Address), .KindId = block.KindId };
             if (previous != nullptr)
             {
-                if (auto it{ previous->RawObjects.find(block.Handle) }; it != previous->RawObjects.end() && it->second.Bytes.size() == block.Size)
+                if (const RawObject* before{ previous->RawObjects.Find(block.Handle) }; before != nullptr && before->Bytes.size() == block.Size)
                 {
-                    object.Bytes = it->second.Bytes;
+                    object.Bytes.assign(before->Bytes.begin(), before->Bytes.end());
                 }
             }
             if (object.Bytes.size() != block.Size) object.Bytes.assign(block.Size, 0);
@@ -415,23 +419,29 @@ namespace Blam::Layout::Snapshot::System
             if (!ReadValue(stream, handle)) return Fail(SnapshotReadStatus::Cut, "the file is cut inside the removed handles");
             gone.insert(handle);
         }
-        for (const RawObject& object : changed) gone.insert(object.Handle);
+        for (const ChangedObject& object : changed) gone.insert(object.Handle);
 
+        // The objects of the record by slot: the ones of the previous record that stay, and the ones that changed.
         std::vector<RawObject> objects{};
         if (previous != nullptr)
         {
-            for (const auto& [handle, object] : previous->RawObjects)
+            for (const RawObject& object : previous->RawObjects)
             {
-                if (!gone.contains(handle)) objects.push_back(object);
+                if (!gone.contains(object.Handle)) objects.push_back(object);
             }
         }
-        for (RawObject& object : changed) objects.push_back(std::move(object));
+        for (const ChangedObject& object : changed)
+        {
+            objects.push_back(RawObject{ .Handle = object.Handle, .Address = object.Address, .KindId = object.KindId, .Bytes = object.Bytes });
+        }
         std::ranges::sort(objects, [](const RawObject& a, const RawObject& b) { return IsBeforeByIndex(a.Handle, b.Handle); });
 
-        for (RawObject& object : objects)
+        for (const RawObject& object : objects)
         {
-            const std::uint32_t handle{ object.Handle };
-            snapshot->RawObjects.emplace(handle, std::move(object));
+            if (!snapshot->RawObjects.Add(object.Handle, object.Address, object.KindId, object.Bytes))
+            {
+                return Fail(SnapshotReadStatus::Error, std::format("object {:08X} has a slot the engine table does not have or twice", object.Handle));
+            }
         }
 
         state.Previous = snapshot;

@@ -27,7 +27,6 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Common::Team::Type::Team;
-    using ::Blam::Layout::Snapshot::Type::RawObject;
     using ::Blam::Layout::Snapshot::Type::RegionId;
     using ::Blam::Layout::Snapshot::Type::RegionSize;
     using ::Blam::Layout::Snapshot::Type::Snapshot;
@@ -36,7 +35,9 @@ namespace
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
     using Tests::Support::Blam::MakeHandle;
+    using Tests::Support::Blam::OwnedObject;
     using Tests::Support::Blam::Put;
+    using Tests::Support::Blam::PutObject;
     using Tests::Support::Blam::CaptureRegion;
     using Tests::Support::Blam::k_CtfCBaseTraits;
 
@@ -77,9 +78,9 @@ export namespace Tests::Support::Pipeline
     inline constexpr std::uint16_t k_RespawnTicks{ 420 };
 
     // return: A biped of the spartan tag whose four damage slots are empty, at (10, 20, 30) looking along +Y with +Z up.
-    auto MakeBiped() -> RawObject
+    auto MakeBiped() -> OwnedObject
     {
-        RawObject biped{};
+        OwnedObject biped{};
         biped.Handle = k_BipedHandle;
         biped.Address = 0x7FF100000000 + (static_cast<std::uintptr_t>(k_BipedHandle & 0xFFFF) * k_DatumBytes);
         biped.KindId = static_cast<std::uint8_t>(ObjectKind::Biped);
@@ -107,7 +108,7 @@ export namespace Tests::Support::Pipeline
         Snapshot snapshot{};
         snapshot.HasThreadContext = true;
         snapshot.HasObjectTable = true;
-        snapshot.RawObjects.emplace(k_BipedHandle, MakeBiped());
+        PutObject(snapshot, MakeBiped());
 
         std::vector<std::uint8_t>& players{ CaptureRegion(snapshot, RegionId::PlayerArray, RegionSize(RegionId::PlayerArray)) };
         const std::size_t entry{ 2 * k_Base };
