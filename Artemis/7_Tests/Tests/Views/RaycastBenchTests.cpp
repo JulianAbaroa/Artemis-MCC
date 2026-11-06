@@ -8,6 +8,7 @@ import Blam.Runtime.Player.Type;
 import Perception.Collidable.Type;
 import Views.Raycast.Type;
 import Views.Raycast.System;
+import Tests.Support.Bench;
 import Tests.Support.FilmPass;
 import Tests.Support.Pipeline;
 import std;
@@ -22,6 +23,9 @@ namespace
     using Common::Math::Type::Triangle;
     using Common::Math::Type::Vec3;
     using Perception::Collidable::Type::CollidablePart;
+    using Tests::Support::Bench::Micros;
+    using Tests::Support::Bench::Series;
+    using Tests::Support::Bench::Stats;
     using Tests::Support::FilmPass::FilmOutcome;
     using Tests::Support::FilmPass::RecordingsFolder;
     using Tests::Support::FilmPass::RunFilmPass;
@@ -45,10 +49,10 @@ namespace
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::SelfExclusion;
-    using std::chrono::duration;
     using std::chrono::steady_clock;
 
     using Common::Engine::Type::k_NoHandle;
+    using Tests::Support::Bench::k_NanosPerMicro;
     using Views::Raycast::Type::Constant::k_PerceptionRange;
     using Views::Raycast::Type::Constant::k_PerceptionRayCount;
 
@@ -63,53 +67,6 @@ namespace
 
     // The 16 agent metrics (M2, M3, M4) run every K records, M0 and M1 run at every record. K = 30 on ctf_d, to stay under 150 s.
     constexpr std::size_t k_EveryRecords{ 30 };
-
-    constexpr double k_NanosPerMicro{ 1000.0 };
-
-    auto Micros(steady_clock::time_point from, steady_clock::time_point to) -> double
-    {
-        return duration<double, std::micro>(to - from).count();
-    }
-
-    struct Stats
-    {
-        std::size_t N{};
-        double Mean{};
-        double P50{};
-        double P99{};
-        double Max{};
-    };
-
-    // Values of one metric, one per measure. Microseconds for times.
-    class Series
-    {
-    public:
-        auto Add(double value) -> void { m_Values.push_back(value); }
-
-        auto Summary() const -> Stats
-        {
-            Stats stats{};
-            stats.N = m_Values.size();
-            if (m_Values.empty()) return stats;
-
-            std::vector<double> sorted{ m_Values };
-            std::ranges::sort(sorted);
-            const auto at{ [&](double fraction) -> double
-            {
-                const std::size_t index{ static_cast<std::size_t>(std::ceil(fraction * static_cast<double>(sorted.size()))) };
-                return sorted[(std::min)((std::max)(index, std::size_t{ 1 }), sorted.size()) - 1];
-            } };
-
-            stats.Mean = std::accumulate(sorted.begin(), sorted.end(), 0.0) / static_cast<double>(sorted.size());
-            stats.P50 = at(0.50);
-            stats.P99 = at(0.99);
-            stats.Max = sorted.back();
-            return stats;
-        }
-
-    private:
-        std::vector<double> m_Values{};
-    };
 
     // Where and where to one agent looks from.
     struct Origin
@@ -597,28 +554,15 @@ namespace
 
         const std::vector<std::string> lines{ bench.Lines() };
         const auto now{ std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()) };
-#ifdef NDEBUG
-        constexpr std::string_view configuration{ "Release|x64" };
-#else
-        constexpr std::string_view configuration{ "Debug|x64 (numbers are not comparable)" };
-#endif
         std::vector<std::string> report{};
         report.push_back(std::format("Raycast bench: film {}, {} records, K = {} (M2, M3 and M4 every K records), {:%Y-%m-%d %H:%M:%S} UTC, {}.",
-            film, outcome.Records, k_EveryRecords, now, configuration));
+            film, outcome.Records, k_EveryRecords, now, Tests::Support::Bench::Configuration()));
         report.push_back(std::format("Pass: {:.1f} s. Times in microseconds per tick unless it says otherwise. mean/N4 = ms per tick averaged over a decision every 4 ticks.", outcome.Seconds));
         report.push_back("");
         report.insert(report.end(), lines.begin(), lines.end());
 
-        // This file is Artemis/7_Tests/Tests/Views/RaycastBenchTests.cpp.
-        const std::filesystem::path source{ std::source_location::current().file_name() };
-        const std::filesystem::path folder{ source.parent_path().parent_path().parent_path().parent_path().parent_path() / "build" / "bench" };
-        std::error_code error{};
-        std::filesystem::create_directories(folder, error);
-        const std::filesystem::path file{ folder / std::format("raycast_{}.txt", film) };
-        std::ofstream out{ file, std::ios::trunc };
-        ASSERT_TRUE(out.is_open()) << "Cannot write " << file.string();
-        for (const std::string& line : report) out << line << "\n";
-        out.close();
+        const std::filesystem::path file{ Tests::Support::Bench::WriteReport(std::format("raycast_{}.txt", film), report) };
+        ASSERT_FALSE(file.empty()) << "Cannot write the report of " << film;
 
         ::testing::Test::RecordProperty("ReportFile", file.string());
         for (std::size_t index{ 0 }; index < report.size(); ++index)

@@ -123,6 +123,7 @@
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />
     <ClCompile Include="Engine\PresetTests.cpp" />
+    <ClCompile Include="Engine\SnapshotBenchTests.cpp" />
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
     <ClCompile Include="Perception\PlayerGroundTests.cpp" />
@@ -139,7 +140,9 @@
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
+    <ClCompile Include="Support\Tests.Support.Bench.ixx" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
+    <ClCompile Include="Support\Tests.Support.EngineMemory.ixx" />
     <ClCompile Include="Support\Tests.Support.FilmPass.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />

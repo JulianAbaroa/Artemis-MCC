@@ -57,6 +57,9 @@
     <ClCompile Include="Engine\PresetTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\SnapshotBenchTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Perception\CollidableSceneTests.cpp">
       <Filter>Perception</Filter>
     </ClCompile>
@@ -99,7 +102,13 @@
     <ClCompile Include="Views\RaycastBenchTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="Support\Tests.Support.Bench.ixx">
+      <Filter>Support</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Blam.ixx">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="Support\Tests.Support.EngineMemory.ixx">
       <Filter>Support</Filter>
     </ClCompile>
     <ClCompile Include="Support\Tests.Support.Log.ixx">

@@ -100,6 +100,11 @@ export namespace Tests::Support::FilmPass
     // Called after the pipeline ran each record, on the thread of the pass. It only gathers data: no EXPECT, ASSERT or output.
     // param record: Number of the record, counted from 1.
     using FilmObserver = std::function<void(const Chain& chain, std::size_t record)>;
+
+    // Called before the pipeline runs each record, on the thread of the pass, with the Snapshot the pipeline is about to get. The chain
+    // holds what the previous record left. It may measure on its own copies, never change the chain.
+    // return: The endStage of PipelineService::Run for this record (called after each stage), or empty for none.
+    using FilmBeforeRecord = std::function<std::function<void()>(const Chain& chain, const ::Blam::Layout::Snapshot::Type::Snapshot& snapshot, std::size_t record)>;
 }
 
 namespace
@@ -192,8 +197,9 @@ export namespace Tests::Support::FilmPass
     // param film: Folder of Ignore/Regresion.
     // param isCompared: Compare each record with golden.tdump in the same pass (D204). replay.tdump is written when they differ and
     // deleted when they are equal.
+    // param before: Called before each record is run. Empty to skip it.
     // note: Safe to call from several threads at once, each pass has its own Chain. An exception ends up in the outcome.
-    auto RunFilmPass(std::string_view film, bool isCompared, const FilmObserver& observer) -> FilmOutcome
+    auto RunFilmPass(std::string_view film, bool isCompared, const FilmObserver& observer, const FilmBeforeRecord& before = {}) -> FilmOutcome
     {
         using clock = std::chrono::steady_clock;
         const clock::time_point start{ clock::now() };
@@ -240,7 +246,9 @@ export namespace Tests::Support::FilmPass
                 if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
 
                 ++outcome.Records;
-                chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
+                std::function<void()> endStage{};
+                if (before) endStage = before(*chain, *next.Record.Snapshot, outcome.Records);
+                chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, endStage);
                 if (comparer) comparer->OnRecord(chain->m_Export, next.Record.DroppedBefore);
                 if (observer) observer(*chain, outcome.Records);
                 if (!observer && comparer && comparer->IsFinal()) break;

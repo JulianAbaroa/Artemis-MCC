@@ -11,6 +11,7 @@ import Engine.Capture.System;
 import Services.Telemetry.State;
 import Services.Telemetry.Type;
 import Blam.Layout.Object.Type;
+import Tests.Support.EngineMemory;
 import Tests.Support.Log;
 import std;
 
@@ -30,16 +31,9 @@ namespace
     using Engine::Capture::System::CaptureService;
     using Services::Telemetry::State::TelemetryStore;
     using Services::Telemetry::Type::PerfSnapshot;
+    using Tests::Support::EngineMemory::FakeEngineMemory;
     using Tests::Support::Log::CollectingSink;
 
-    using Blam::Layout::Object::Type::Constant::k_DataArrayCapacity;
-    using Blam::Layout::Object::Type::Constant::k_DataArrayFirstUnusedIndex;
-    using Blam::Layout::Object::Type::Constant::k_DataArrayLiveCount;
-    using Blam::Layout::Object::Type::Constant::k_EntryAddressOffset;
-    using Blam::Layout::Object::Type::Constant::k_EntryDatumSizeOffset;
-    using Blam::Layout::Object::Type::Constant::k_EntrySaltOffset;
-    using Blam::Layout::Object::Type::Constant::k_MinDatumSize;
-    using Blam::Layout::Object::Type::Constant::k_EntrySize;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextObjectDataOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
 
@@ -54,15 +48,8 @@ namespace
         TelemetryStore m_Telemetry{};
         CaptureService m_Service{ m_Log, m_Lifecycle, m_Reader, m_Store, m_Telemetry };
 
-        // The thread context, the headers of the two data arrays and the object table the capture walks.
-        std::vector<std::uintptr_t> m_Context{ std::vector<std::uintptr_t>(0x100) };
-        std::vector<std::uint8_t> m_ObjectHeader{ std::vector<std::uint8_t>(0x100) };
-        std::vector<std::uint8_t> m_PlayerHeader{ std::vector<std::uint8_t>(0x100) };
-        // Entries past k_MaxObjects exist so that a walk that goes too far finds something to copy.
-        static constexpr std::size_t k_TableEntries{ k_MaxObjects + 16 };
-        std::vector<std::uint8_t> m_ObjectTable{ std::vector<std::uint8_t>(k_TableEntries * k_EntrySize) };
-        // Datum bytes every live entry points at.
-        std::vector<std::uint8_t> m_Datum{ std::vector<std::uint8_t>(k_MinDatumSize) };
+        // The fake game memory: the thread context, the headers of the two data arrays and the object table the capture walks.
+        FakeEngineMemory m_Memory{};
 
         auto SetUp() -> void override
         {
@@ -72,35 +59,24 @@ namespace
         // Points the context at the headers and the store at the context and the table, as the locators do at a map load.
         auto Connect() -> void
         {
-            m_Context[k_ThreadContextObjectDataOffset / sizeof(std::uintptr_t)] = reinterpret_cast<std::uintptr_t>(m_ObjectHeader.data());
-            m_Context[k_ThreadContextTelemetryDataOffset / sizeof(std::uintptr_t)] = reinterpret_cast<std::uintptr_t>(m_PlayerHeader.data());
-            m_Store.SetThreadContext(reinterpret_cast<std::uintptr_t>(m_Context.data()));
-            m_Store.SetObjectTableBase(reinterpret_cast<std::uintptr_t>(m_ObjectTable.data()));
+            m_Memory.Connect(m_Store);
         }
 
         auto SetCapacities(std::int32_t objects, std::int32_t players) -> void
         {
-            std::memcpy(m_ObjectHeader.data() + k_DataArrayCapacity, &objects, sizeof(objects));
-            std::memcpy(m_PlayerHeader.data() + k_DataArrayCapacity, &players, sizeof(players));
+            m_Memory.SetCapacities(objects, players);
         }
 
         // Sets the first-unused slot (+0x44) and the live count (+0x48) of the object data array.
         auto SetMark(std::int32_t firstUnused, std::int32_t liveCount) -> void
         {
-            std::memcpy(m_ObjectHeader.data() + k_DataArrayFirstUnusedIndex, &firstUnused, sizeof(firstUnused));
-            std::memcpy(m_ObjectHeader.data() + k_DataArrayLiveCount, &liveCount, sizeof(liveCount));
+            m_Memory.SetMark(firstUnused, liveCount);
         }
 
         // Makes the slot of the table a live object with salt 1: its handle is 0x10000 | index.
         auto AddLive(std::uint32_t index) -> void
         {
-            std::uint8_t* entry{ m_ObjectTable.data() + (index * k_EntrySize) };
-            const std::uint16_t salt{ 1 };
-            const std::uint16_t size{ k_MinDatumSize };
-            const std::uintptr_t address{ reinterpret_cast<std::uintptr_t>(m_Datum.data()) };
-            std::memcpy(entry + k_EntrySaltOffset, &salt, sizeof(salt));
-            std::memcpy(entry + k_EntryDatumSizeOffset, &size, sizeof(size));
-            std::memcpy(entry + k_EntryAddressOffset, &address, sizeof(address));
+            m_Memory.AddLive(index);
         }
 
         // return: Whether the snapshot has the object of that slot.
@@ -192,13 +168,13 @@ TEST_F(CaptureServiceTests, NoThreadContextChecksNothing)
 TEST_F(CaptureServiceTests, NullHeaderPointerChecksNothingAndIsRetriedOnTheNextTick)
 {
     this->SetCapacities(512, 8);
-    m_Context[k_ThreadContextObjectDataOffset / sizeof(std::uintptr_t)] = 0;
+    m_Memory.m_Context[k_ThreadContextObjectDataOffset / sizeof(std::uintptr_t)] = 0;
     m_Service.Capture();
     m_Service.Capture();
     EXPECT_EQ(m_Sink.CountOf(LogLevel::Warning), 0u);
 
     this->Connect();
-    m_Context[k_ThreadContextTelemetryDataOffset / sizeof(std::uintptr_t)] = 0;
+    m_Memory.m_Context[k_ThreadContextTelemetryDataOffset / sizeof(std::uintptr_t)] = 0;
     m_Service.Capture();
     EXPECT_EQ(m_Sink.CountOf(LogLevel::Warning), 0u);
 
@@ -266,7 +242,7 @@ TEST_F(CaptureServiceTests, MarkOfZeroWalksTheCapacity)
 
 TEST_F(CaptureServiceTests, UnreadableArrayWalksEverySlotUpToTheLimit)
 {
-    m_Context[k_ThreadContextObjectDataOffset / sizeof(std::uintptr_t)] = 0;
+    m_Memory.m_Context[k_ThreadContextObjectDataOffset / sizeof(std::uintptr_t)] = 0;
     this->AddLive(5);
     this->AddLive(k_MaxObjects - 1);
     this->AddLive(k_MaxObjects);
