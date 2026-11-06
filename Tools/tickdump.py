@@ -39,6 +39,7 @@ import argparse
 import datetime
 import glob
 import json
+import math
 import os
 import shutil
 import struct
@@ -231,6 +232,12 @@ def EventNames():
         return str
 
 
+def Percentile(values, fraction):
+    """Nearest-rank percentile of a non-empty list: the smallest value that at least that fraction of the list does not exceed."""
+    ordered = sorted(values)
+    return ordered[max(math.ceil(fraction * len(ordered)), 1) - 1]
+
+
 def Summary(d):
     r = d.records
     ticks = [x.game_tick for x in r if x.flags & HAS_MATCH]
@@ -249,7 +256,7 @@ def Summary(d):
     timed = [x.elapsed_us for x in r if x.elapsed_us is not None]
     if timed:
         print(f"real time: {sum(timed) / 1e6:.3f} s over {len(timed)} records, {sum(timed) / len(timed) / 1e3:.2f} ms per tick "
-              f"(max {max(timed) / 1e3:.2f} ms)")
+              f"(p50 {Percentile(timed, 0.5) / 1e3:.2f} p99 {Percentile(timed, 0.99) / 1e3:.2f} max {max(timed) / 1e3:.2f} ms)")
     else:
         print("real time: not measured")
     bad = [x.game_tick for x, table in d.states() if len(table) != int(x.header["EntityCount"])]

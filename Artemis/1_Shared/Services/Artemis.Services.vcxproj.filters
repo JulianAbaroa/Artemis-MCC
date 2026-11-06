@@ -37,6 +37,9 @@
     <Filter Include="Telemetry\State">
       <UniqueIdentifier>{426df87c-c106-4b97-993b-d3d390f68ddb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Telemetry\Type">
+      <UniqueIdentifier>{f963a1ad-2024-4976-ba3d-76e56810c99a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Telemetry\System">
       <UniqueIdentifier>{5ce165a3-ef9d-4bec-8bb6-e4a76eed30a6}</UniqueIdentifier>
     </Filter>
@@ -83,6 +86,15 @@
     </ClCompile>
     <ClCompile Include="Telemetry\State\TelemetryStore.ixx">
       <Filter>Telemetry\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Telemetry\System\TelemetryPerf.cpp">
+      <Filter>Telemetry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Telemetry\System\TelemetryPerf.ixx">
+      <Filter>Telemetry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Telemetry\Type\Services.Telemetry.Type.ixx">
+      <Filter>Telemetry\Type</Filter>
     </ClCompile>
     <ClCompile Include="Telemetry\System\TelemetryService.cpp">
       <Filter>Telemetry\System</Filter>

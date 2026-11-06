@@ -10,6 +10,9 @@ Group `6_DevTools` - static library inside the game process - the launcher, insp
 - The in-game test bench: takes scenarios from the exchange folder of `Tools/game.py`, plays their matches through the match cycle,
   checks them and writes `state.json` and the report. A match may ask for the TickDump (`tickdump` for the `.tdump`, `tickdump full`
   for the `.tdump` and the `.sdump`), which the bench starts at the first tick of the match and stops at its end.
+  Each match report also gets a `perf` block (omitted when the run had no sweeps): the cumulative telemetry counters and the Lockstep
+  counters are photographed when the run begins and when it ends, and the difference gives ticks, wall, engine (without the Lockstep
+  wait), read wait and sweep times (avg, p50, p99, max) per tick or sweep, the average of each sweep stage, and the Lockstep waits.
 
 ## Does not
 - Take part in the tick: the AI thread only hands it the immutable `ObservedTick`.

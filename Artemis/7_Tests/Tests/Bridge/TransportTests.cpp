@@ -458,6 +458,8 @@ TEST_F(TransportTests, LockstepAnsweredByTheClient)
     const BridgeStatus status{ this->GetStatus() };
     EXPECT_EQ(status.Counters.LockstepWaits, 1u);
     EXPECT_EQ(status.Counters.LockstepTimeouts, 0u);
+    EXPECT_GT(m_Service.TakeLockstepWaitMax(), 0u);
+    EXPECT_EQ(m_Service.TakeLockstepWaitMax(), 0u);
 }
 
 TEST_F(TransportTests, StopEndsTheWait)

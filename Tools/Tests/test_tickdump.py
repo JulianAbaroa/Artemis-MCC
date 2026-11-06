@@ -139,10 +139,21 @@ def test_real_time_of_the_records_is_read_shown_and_ignored_by_diff(tmp_path, ca
     assert [r.elapsed_us for r in tickdump.Dump(b).records] == [None] * 4
     assert tickdump.Main(["show", a]) == 0
     out = capsys.readouterr().out
-    assert "real time: 0.070 s over 4 records, 17.50 ms per tick (max 19.00 ms)" in out
+    assert "real time: 0.070 s over 4 records, 17.50 ms per tick (p50 17.00 p99 19.00 max 19.00 ms)" in out
     assert tickdump.Main(["show", b]) == 0
     assert "real time: not measured" in capsys.readouterr().out
     assert tickdump.Diff(tickdump.Dump(a), tickdump.Dump(b)).is_equal
+
+
+def test_show_gives_p50_p99_and_max_of_the_real_time_per_tick(tmp_path, capsys):
+    timed = Writer()
+    for t in range(100):
+        timed.Tick(t, players=[Player(P1)], entities=[Entity(H1)], elapsed_us=(t + 1) * 1000)
+    path = Save(tmp_path, "spread.tdump", timed)
+    assert tickdump.Main(["show", path]) == 0
+    assert "50.50 ms per tick (p50 50.00 p99 99.00 max 100.00 ms)" in capsys.readouterr().out
+    assert tickdump.Percentile([5, 1, 3], 0.5) == 3
+    assert tickdump.Percentile([7], 0.99) == 7
 
 
 def test_a_file_against_itself_is_equal(tmp_path):

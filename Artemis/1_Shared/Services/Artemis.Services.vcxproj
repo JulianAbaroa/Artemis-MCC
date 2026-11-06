@@ -57,8 +57,11 @@
     <ClCompile Include="Settings\System\SettingsService.ixx" />
     <ClCompile Include="Telemetry\State\TelemetryStore.cpp" />
     <ClCompile Include="Telemetry\State\TelemetryStore.ixx" />
+    <ClCompile Include="Telemetry\System\TelemetryPerf.cpp" />
+    <ClCompile Include="Telemetry\System\TelemetryPerf.ixx" />
     <ClCompile Include="Telemetry\System\TelemetryService.cpp" />
     <ClCompile Include="Telemetry\System\TelemetryService.ixx" />
+    <ClCompile Include="Telemetry\Type\Services.Telemetry.Type.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

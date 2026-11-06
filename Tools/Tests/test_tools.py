@@ -231,6 +231,33 @@ def test_game_report_fails_the_scenario_when_a_tickdump_assert_fails(capsys):
     assert game.PrintReport(report, lambda path: 1 / 0) == 0
 
 
+def test_game_report_prints_the_perf_lines_of_a_match_that_has_them(capsys):
+    game = LoadGame()
+    perf = {"ticks": 600, "wall_ms_per_tick": 9.5, "engine_ms": 3.25, "read_wait_ms": 1.5, "read_timeouts": 0,
+            "sweep_ms": {"avg": 2.0, "p50": 1.75, "p99": 6.5, "max": 12.0},
+            "stages": {"Capture": 0.5, "Raycast": 4.0, "Bridge": 0.25, "Tick": 1.0, "A": 0.1, "B": 0.2, "C": 0.3, "Other": 0.05},
+            "lockstep": {"waits": 7, "avg_ms": 1.25, "max_ms": 3.5, "timeouts": 0}}
+    report = {"id": "r1", "scenario": "s", "result": "ok", "seconds": 1, "message": "", "matches": [
+        {"index": 1, "name": "a", "config": "c", "result": "ok", "files": {}, "perf": perf},
+        {"index": 2, "name": "b", "config": "c", "result": "ok", "files": {}}]}
+    assert game.PrintReport(report, lambda path: 1 / 0) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert ("    perf: wall 9.50 ms/tick | engine 3.25 | read wait 1.50 | sweep avg/p50/p99/max 2.00/1.75/6.50/12.00 ms"
+            " | lockstep 7 avg 1.25 max 3.50 ms") in lines
+    assert "    stages: Raycast 4.00 ms, Tick 1.00 ms, Capture 0.50 ms, A 0.10 ms, B 0.20 ms, C 0.30 ms" not in lines
+    assert "    stages: Raycast 4.00 ms, Tick 1.00 ms, Capture 0.50 ms, C 0.30 ms, Bridge 0.25 ms, B 0.20 ms" in lines
+    assert sum(1 for line in lines if "perf:" in line or "stages:" in line) == 2
+
+
+def test_game_report_without_perf_prints_nothing_new(capsys):
+    game = LoadGame()
+    report = {"id": "r1", "scenario": "s", "result": "ok", "seconds": 1, "message": "", "matches": [
+        {"index": 1, "name": "a", "config": "c", "result": "ok", "files": {}}]}
+    assert game.PrintReport(report, lambda path: 1 / 0) == 0
+    out = capsys.readouterr().out
+    assert "perf:" not in out and "stages:" not in out
+
+
 def test_game_run_python_reads_the_exit_and_the_output_of_the_run(tmp_path, monkeypatch):
     game = LoadGame()
     (tmp_path / "python").mkdir()

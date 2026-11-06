@@ -3,6 +3,8 @@ export module DevTools.Workbench.Bench.Type;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
+import Services.Telemetry.Type;
+import Bridge.Transport.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Workbench.Simulation.Type;
 import std;
@@ -11,6 +13,8 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Control::Action::Type::ClientRequests;
+    using Services::Telemetry::Type::PerfSnapshot;
+    using Bridge::Transport::Type::BridgeCounters;
     using Bridge::Codec::Tick::Type::Tick;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
 
@@ -146,6 +150,8 @@ export namespace DevTools::Workbench::Bench::Type
         std::vector<std::string> Log{};
         // Files written during the match (probes, TickDump), as name and path.
         std::vector<std::pair<std::string, std::string>> Files{};
+        // The "perf" JSON object of the report: where the wall clock of the run went. Empty when the match ran no sweeps.
+        std::string Perf{};
     };
 
     // What the bench remembers of a player from the first sampled tick where it was alive, for the checks.
@@ -189,6 +195,9 @@ export namespace DevTools::Workbench::Bench::Type
         std::shared_ptr<const Tick> LastTick{};
         // Log sequence when the match began.
         std::uint64_t LogSequence{ 0 };
+        // Telemetry and Lockstep counters when the run began, empty once the perf of the match was closed.
+        std::optional<PerfSnapshot> PerfStart{};
+        BridgeCounters LockstepStart{};
         // Players seen alive, by handle, and whether any of them held the objective on a sampled tick.
         std::unordered_map<std::uint32_t, BenchPlayerSample> FirstSamples{};
         bool IsObjectiveSeen{ false };

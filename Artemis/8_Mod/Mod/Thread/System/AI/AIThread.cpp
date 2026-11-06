@@ -1,6 +1,8 @@
 module Mod.Thread.System;
 import :AI;
 
+import Services.Telemetry.Type;
+import Services.Telemetry.System;
 import Engine.Base.Lifecycle.Type;
 import Bridge.Codec.Flat.Type;
 import std;
@@ -11,6 +13,8 @@ namespace
 {
     using Engine::Base::Lifecycle::Type::Status;
     using Bridge::Codec::Flat::Type::FlatRequest;
+    using Services::Telemetry::System::OtherStageNs;
+    using Services::Telemetry::Type::k_MaxStages;
 
     using std::chrono::steady_clock;
     using std::chrono::nanoseconds;
@@ -34,7 +38,10 @@ namespace Mod::Thread::System
         auto& telemetry{ m_Service.m_TelemetryStore };
         auto& lifecycle{ m_Base.m_LifecycleStore };
 
+        static_assert(k_StageNames.size() <= k_MaxStages, "The telemetry store keeps the time of up to k_MaxStages stages.");
+
         logs.Message("[AIThread] INFO: Started.");
+        telemetry.SetStageNames(k_StageNames);
 
         while (lifecycle.IsRunning())
         {
@@ -141,7 +148,9 @@ namespace Mod::Thread::System
                 const auto sweepNs{ static_cast<std::uint64_t>(
                     std::chrono::duration_cast<nanoseconds>(tickEnd - tickStart).count()) };
 
-                telemetry.RecordSweepTime(sweepNs);
+                // Time not covered by a stage (the read handoff, telemetry) goes to the last one.
+                m_StageNs.back() = OtherStageNs(sweepNs, std::span<const std::uint64_t>{ m_StageNs }.first(m_StageNs.size() - 1));
+                telemetry.RecordSweep(sweepNs, m_StageNs);
                 if (sweepNs >= static_cast<std::uint64_t>(k_SlowSweep.count())) this->ReportSlowSweep(sweepNs);
 
                 break;
@@ -209,12 +218,6 @@ namespace Mod::Thread::System
 
     auto AIThread::ReportSlowSweep(std::uint64_t sweepNs) -> void
     {
-        std::uint64_t stagesNs{ 0 };
-        for (std::uint64_t ns : m_StageNs) stagesNs += ns;
-
-        // Time not covered by a stage (the read handoff, telemetry).
-        m_StageNs.back() = sweepNs > stagesNs ? sweepNs - stagesNs : 0;
-
         std::string stages{};
         for (std::size_t i{ 0 }; i < m_StageNs.size(); i++)
         {

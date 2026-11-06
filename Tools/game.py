@@ -234,6 +234,21 @@ def TickDumpSummary(path):
     return f"ticks={len(dump.records)} dropped={dropped} (footer {footer}) size={dump.size / 1e6:.1f} MB"
 
 
+def PerfLines(perf):
+    """The two lines of the perf block of a match (Bench report): where the wall clock of the run went. return: [] without a block."""
+    if not perf:
+        return []
+    sweep, lockstep = perf.get("sweep_ms", {}), perf.get("lockstep", {})
+    lines = [f"    perf: wall {perf.get('wall_ms_per_tick', 0):.2f} ms/tick | engine {perf.get('engine_ms', 0):.2f} | "
+             f"read wait {perf.get('read_wait_ms', 0):.2f} | sweep avg/p50/p99/max {sweep.get('avg', 0):.2f}/{sweep.get('p50', 0):.2f}/"
+             f"{sweep.get('p99', 0):.2f}/{sweep.get('max', 0):.2f} ms | lockstep {lockstep.get('waits', 0)} "
+             f"avg {lockstep.get('avg_ms', 0):.2f} max {lockstep.get('max_ms', 0):.2f} ms"]
+    heaviest = sorted(perf.get("stages", {}).items(), key=lambda item: -item[1])[:6]
+    if heaviest:
+        lines.append("    stages: " + ", ".join(f"{name} {ms:.2f} ms" for name, ms in heaviest))
+    return lines
+
+
 def PrintReport(report, asserter=AssertTickDump):
     """Prints a report. A match with a tickdump gets the general invariants run on its .tdump (asserter): a match that fails them, or whose assert
     cannot run, makes the scenario FAIL with the reason tickdump-assert. return: 0 ok, 1 failed, 2 an assert is still running."""
@@ -254,6 +269,8 @@ def PrintReport(report, asserter=AssertTickDump):
               f" end={match.get('end')} ticks={match.get('ticks')} "
               + " ".join(f"{k}={v}" for k, v in timing.items())
               + (f" ms/tick={1000 * timing['run'] / match['ticks']:.2f}" if match.get("ticks") and timing.get("run") else ""))
+        for line in PerfLines(match.get("perf")):
+            print(line)
         if match.get("end") == "launch-timeout":
             print("    hint: START was not taken. Is MCC on the Reach custom games screen, without a dialog open?"
                   " (any map and gametype, even none: Artemis skips the variants check, A15 2.19)")

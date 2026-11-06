@@ -413,6 +413,11 @@ namespace Bridge::Transport::System
         m_BridgeStore.CopyCounters(out.Counters);
     }
 
+    auto BridgeService::TakeLockstepWaitMax() -> std::uint64_t
+    {
+        return m_BridgeStore.TakeLockstepWaitWindowMax();
+    }
+
     auto BridgeService::WriteDiscovery(std::uint32_t pid, const std::string& name) -> std::string
     {
         const std::string appData{ m_SettingsStore.GetAppDataDirectory() };

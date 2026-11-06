@@ -11,6 +11,9 @@ import Common.Semantic.Type;
 import Common.Math.System;
 import Common.Text.System;
 import Services.Logs.Type;
+import Services.Telemetry.Type;
+import Services.Telemetry.System;
+import Bridge.Transport.Type;
 import Engine.Base.Host.Type;
 import Engine.Base.Preset.Type;
 import Engine.Control.Input.Type;
@@ -41,6 +44,11 @@ namespace
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using DevTools::Workbench::Simulation::System::BuildActionOverride;
     using Services::Logs::Type::LogEntry;
+    using Services::Telemetry::Type::PerfSnapshot;
+    using Services::Telemetry::System::HistogramPercentileNs;
+    using Services::Telemetry::System::Subtract;
+    using Bridge::Transport::Type::BridgeCounters;
+    using Bridge::Transport::Type::BridgeStatus;
     using Perception::Players::Type::Player;
     using Perception::Events::Type::GameEvent;
     using Common::Semantic::Type::EventKey::EventKeyLabel;
@@ -256,6 +264,50 @@ namespace
     auto IsCleanEnd(std::string_view end) -> bool
     {
         return end == "gametype" || end == "limit";
+    }
+
+    // Stages that average less than this per sweep are left out of the perf block, in milliseconds.
+    constexpr double k_MinPerfStageMs{ 0.005 };
+
+    // return: The perf block of a match as a JSON object: where the wall clock went per tick and per sweep, and the Lockstep wait.
+    // Empty without sweeps.
+    // param delta: What the telemetry counted during the run.
+    // param lockstep: What the Lockstep counters of the bridge counted during the run, with the maximum of the run.
+    // param runSeconds: Wall time of the run. ticks: Ticks of the run as the bench counted them.
+    // note: The engine time of the telemetry includes the Lockstep wait, because the wait happens inside the simulation call (the
+    // PlayerAction hook applies the actions there). engine_ms takes it out, and lockstep reports it by itself.
+    auto BuildPerfJson(const PerfSnapshot& delta, std::span<const std::string_view> stageNames, const BridgeCounters& lockstep,
+        double runSeconds, std::uint64_t ticks) -> std::string
+    {
+        if (delta.Sweeps == 0) return {};
+
+        const double perTick{ delta.Ticks > 0 ? 1.0 / static_cast<double>(delta.Ticks) : 0.0 };
+        const double perSweep{ 1.0 / static_cast<double>(delta.Sweeps) };
+        const double engineNs{ static_cast<double>(delta.EngineNs > lockstep.LockstepWaitNs ? delta.EngineNs - lockstep.LockstepWaitNs : 0) };
+        const double wallMs{ ticks > 0 ? runSeconds * 1000.0 / static_cast<double>(ticks) : 0.0 };
+        const auto percentileMs{ [&](double fraction) {
+            return static_cast<double>(HistogramPercentileNs(delta.SweepHistogram, fraction, delta.SweepMaxNs)) / 1e6;
+        } };
+
+        std::string stages{};
+        for (std::size_t i{ 0 }; i < stageNames.size(); ++i)
+        {
+            const double ms{ static_cast<double>(delta.StageNs[i]) * perSweep / 1e6 };
+            if (ms < k_MinPerfStageMs) continue;
+            if (!stages.empty()) stages += ',';
+            stages += std::format("\"{}\":{:.3f}", JsonEscape(std::string{ stageNames[i] }), ms);
+        }
+
+        const double waitMs{ lockstep.LockstepWaits > 0
+            ? static_cast<double>(lockstep.LockstepWaitNs) / static_cast<double>(lockstep.LockstepWaits) / 1e6 : 0.0 };
+
+        return std::format("{{\"ticks\":{},\"wall_ms_per_tick\":{:.3f},\"engine_ms\":{:.3f},\"read_wait_ms\":{:.3f},"
+            "\"read_timeouts\":{},\"sweep_ms\":{{\"avg\":{:.3f},\"p50\":{:.3f},\"p99\":{:.3f},\"max\":{:.3f}}},"
+            "\"stages\":{{{}}},\"lockstep\":{{\"waits\":{},\"avg_ms\":{:.3f},\"max_ms\":{:.3f},\"timeouts\":{}}}}}",
+            delta.Ticks, wallMs, engineNs * perTick / 1e6, static_cast<double>(delta.ReadWaitNs) * perTick / 1e6, delta.ReadTimeouts,
+            static_cast<double>(delta.SweepNs) * perSweep / 1e6, percentileMs(0.5), percentileMs(0.99),
+            static_cast<double>(delta.SweepMaxNs) / 1e6, stages, lockstep.LockstepWaits, waitMs,
+            static_cast<double>(lockstep.LockstepWaitMaxNs) / 1e6, lockstep.LockstepTimeouts);
     }
 
     // return: Players of the tick, null without one.
@@ -743,6 +795,7 @@ namespace DevTools::Workbench::Bench::System
                 for (const auto& team : match.Bots) m_BotStore.RequestBot(team);
                 if (match.TimeScale.has_value()) m_LifecycleStore.SetRequestedTimeScale(*match.TimeScale);
 
+                this->BeginPerf(run);
                 this->StartTools(run);
                 this->Sample(run, 1);
             }
@@ -774,11 +827,13 @@ namespace DevTools::Workbench::Bench::System
             else if ((match.MaxTicks > 0 && report.Ticks >= match.MaxTicks) || (match.MaxSeconds > 0.0 && elapsed >= match.MaxSeconds))
             {
                 report.RunSeconds = elapsed;
+                this->EndPerf(run, report);
                 this->Leave(run, "limit");
             }
             else if (elapsed >= static_cast<double>(k_RunTimeout.count()))
             {
                 report.RunSeconds = elapsed;
+                this->EndPerf(run, report);
                 this->Leave(run, "run-timeout");
             }
             break;
@@ -950,6 +1005,40 @@ namespace DevTools::Workbench::Bench::System
         }
     }
 
+    auto BenchUIService::BeginPerf(BenchRun& run) -> void
+    {
+        PerfSnapshot start{};
+        BridgeStatus status{};
+
+        m_TelemetryStore.CopyPerf(start);
+        m_BridgeService.CopyStatus(status);
+        m_BridgeService.TakeLockstepWaitMax();
+
+        run.PerfStart = start;
+        run.LockstepStart = status.Counters;
+    }
+
+    auto BenchUIService::EndPerf(BenchRun& run, BenchMatchReport& report) -> void
+    {
+        if (!run.PerfStart.has_value()) return;
+
+        PerfSnapshot end{};
+        BridgeStatus status{};
+
+        m_TelemetryStore.CopyPerf(end);
+        m_BridgeService.CopyStatus(status);
+
+        BridgeCounters lockstep{};
+        lockstep.LockstepWaits = status.Counters.LockstepWaits - run.LockstepStart.LockstepWaits;
+        lockstep.LockstepWaitNs = status.Counters.LockstepWaitNs - run.LockstepStart.LockstepWaitNs;
+        lockstep.LockstepTimeouts = status.Counters.LockstepTimeouts - run.LockstepStart.LockstepTimeouts;
+        lockstep.LockstepWaitMaxNs = m_BridgeService.TakeLockstepWaitMax();
+
+        report.Perf = BuildPerfJson(Subtract(end, *run.PerfStart), m_TelemetryStore.GetStageNames(), lockstep, report.RunSeconds,
+            report.Ticks);
+        run.PerfStart.reset();
+    }
+
     auto BenchUIService::StopTools(BenchRun& run) -> void
     {
         for (const auto& [index, mode] : run.AppliedModes)
@@ -1013,6 +1102,7 @@ namespace DevTools::Workbench::Bench::System
             if (report.Log.size() < k_MaxLogLines) report.Log.push_back(entry.FullText);
         }
 
+        this->EndPerf(run, report);
         this->Check(run, report);
         this->StopTools(run);
 
@@ -1189,9 +1279,10 @@ namespace DevTools::Workbench::Bench::System
             if (report.Result != "ok") isOk = false;
             if (!matches.empty()) matches += ',';
             matches += std::format("{{\"index\":{},\"name\":\"{}\",\"config\":\"{}\",\"result\":\"{}\",\"end\":\"{}\",\"ticks\":{},"
-                "\"timing\":{{\"launch\":{:.1f},\"load\":{:.1f},\"run\":{:.1f}}},\"checks\":[{}],\"log\":{},\"files\":{{{}}}}}",
+                "\"timing\":{{\"launch\":{:.1f},\"load\":{:.1f},\"run\":{:.1f}}},\"checks\":[{}],\"log\":{},\"files\":{{{}}}{}}}",
                 report.Index, JsonEscape(report.Name), JsonEscape(report.Config), report.Result, JsonEscape(report.End), report.Ticks,
-                report.LaunchSeconds, report.LoadSeconds, report.RunSeconds, checks, ToJson(report.Log), files);
+                report.LaunchSeconds, report.LoadSeconds, report.RunSeconds, checks, ToJson(report.Log), files,
+                report.Perf.empty() ? std::string{} : ",\"perf\":" + report.Perf);
         }
 
         const std::string result{ isDone ? (isOk ? "ok" : "fail") : "running" };

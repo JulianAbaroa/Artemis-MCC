@@ -1,5 +1,7 @@
 export module Services.Telemetry.System;
 
+export import :Perf;
+
 import Services.Telemetry.State;
 import std;
 

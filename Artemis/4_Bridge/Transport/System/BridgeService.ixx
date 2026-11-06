@@ -94,6 +94,9 @@ export namespace Bridge::Transport::System
 
         auto CopyStatus(BridgeStatus& out) const -> void;
 
+        // Longest Lockstep wait since the previous call, in nanoseconds, then restarts it (the bench takes one per match).
+        auto TakeLockstepWaitMax() -> std::uint64_t;
+
     private:
         Log& m_Log;
         SettingsStore& m_SettingsStore;

@@ -116,6 +116,7 @@ export namespace Mod::Thread::System
         auto EndStage() -> void;
 
         // Logs the time of every stage when a sweep is slow enough to stall the game.
+        // note: Runs after Run recorded the sweep, so the last stage (Other) is already filled.
         // note: The game waits for the read of each tick for up to 100 ms (LifecycleStore), so a sweep near that drops ticks.
         auto ReportSlowSweep(std::uint64_t sweepNs) -> void;
 

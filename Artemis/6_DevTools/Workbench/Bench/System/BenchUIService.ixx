@@ -3,6 +3,7 @@ export module DevTools.Workbench.Bench.System;
 import Common.Log.System;
 import Services.Logs.State;
 import Services.Settings.State;
+import Services.Telemetry.State;
 import Engine.Base.Memory.System;
 import Engine.Base.Host.State;
 import Engine.Control.Input.State;
@@ -12,6 +13,7 @@ import Engine.Base.Preset.System;
 import Engine.Match.State;
 import Engine.Match.System;
 import Engine.Control.Simulation.State;
+import Bridge.Transport.System;
 import Bridge.Codec.Tick.State;
 import DevTools.Workbench.TickDump.State;
 import DevTools.Workbench.Bench.Type;
@@ -34,6 +36,7 @@ export namespace DevTools::Workbench::Bench::System
         using Log = Common::Log::System::Log;
         using LogsStore = Services::Logs::State::LogsStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
+        using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
         using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
@@ -46,6 +49,8 @@ export namespace DevTools::Workbench::Bench::System
         using PresetStore = Engine::Base::Preset::State::PresetStore;
         using PresetService = Engine::Base::Preset::System::PresetService;
         using BotStore = Engine::Control::Simulation::State::BotStore;
+
+        using BridgeService = Bridge::Transport::System::BridgeService;
 
         using TickStore = Bridge::Codec::Tick::State::TickStore;
 
@@ -63,8 +68,9 @@ export namespace DevTools::Workbench::Bench::System
             VirtualInputStore& virtualInputStore,
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
             MatchConfigService& matchConfigService, PresetStore& presetStore, PresetService& presetService, BotStore& botStore, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
-            BenchUIStore& benchUIStore) :
-            m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore),
+            TelemetryStore& telemetryStore, BridgeService& bridgeService, BenchUIStore& benchUIStore) :
+            m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore), m_TelemetryStore(telemetryStore),
+            m_BridgeService(bridgeService),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
             m_VirtualInputStore(virtualInputStore),
             m_LifecycleStore(lifecycleStore), m_MatchConfigStore(matchConfigStore), m_MatchCycleStore(matchCycleStore),
@@ -90,6 +96,8 @@ export namespace DevTools::Workbench::Bench::System
         LogsStore& m_LogsStore;
         Log& m_Log;
         SettingsStore& m_SettingsStore;
+        TelemetryStore& m_TelemetryStore;
+        BridgeService& m_BridgeService;
         MemoryReaderService& m_MemoryReaderService;
         LocalUserStore& m_LocalUserStore;
         PlayerActionStore& m_PlayerActionStore;
@@ -131,6 +139,14 @@ export namespace DevTools::Workbench::Bench::System
         // reads the probes.
         // param ticks: Ticks of the match so far.
         auto Sample(BenchRun& run, std::uint64_t ticks) -> void;
+
+        // Takes the photo of the telemetry and Lockstep counters the perf of the match is measured from, when its run begins.
+        auto BeginPerf(BenchRun& run) -> void;
+
+        // Takes the closing photo and writes the perf block of the match from the difference. Does nothing if BeginPerf did not run
+        // or the block was already written.
+        // note: Called when the run ends (limit or timeout) and again by EndMatch, so the time spent leaving is not measured.
+        auto EndPerf(BenchRun& run, BenchMatchReport& report) -> void;
 
         // Gives every player the bench changed back its engine action and stops the TickDump.
         auto StopTools(BenchRun& run) -> void;

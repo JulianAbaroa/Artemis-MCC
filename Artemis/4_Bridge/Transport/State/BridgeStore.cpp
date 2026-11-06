@@ -179,6 +179,12 @@ namespace Bridge::Transport::State
         m_LockstepWaits.fetch_add(1, std::memory_order_relaxed);
         m_LockstepWaitNs.fetch_add(waitNs, std::memory_order_relaxed);
         if (waitNs > m_LockstepWaitMaxNs.load(std::memory_order_relaxed)) m_LockstepWaitMaxNs.store(waitNs, std::memory_order_relaxed);
+        if (waitNs > m_LockstepWaitWindowMaxNs.load(std::memory_order_relaxed)) m_LockstepWaitWindowMaxNs.store(waitNs, std::memory_order_relaxed);
+    }
+
+    auto BridgeStore::TakeLockstepWaitWindowMax() -> std::uint64_t
+    {
+        return m_LockstepWaitWindowMaxNs.exchange(0, std::memory_order_relaxed);
     }
 
     auto BridgeStore::AddLockstepTimeout() -> void

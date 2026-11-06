@@ -19,6 +19,9 @@
     <Filter Include="Perception">
       <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Services">
+      <UniqueIdentifier>{f9c99720-d49a-43a9-8107-35153e2a8535}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Views">
       <UniqueIdentifier>{5b1c7e3a-9d42-4f68-8a0e-2c6d41f7b9e3}</UniqueIdentifier>
     </Filter>
@@ -89,6 +92,9 @@
     </ClCompile>
     <ClCompile Include="Perception\WeaponDetailsTests.cpp">
       <Filter>Perception</Filter>
+    </ClCompile>
+    <ClCompile Include="Services\TelemetryTests.cpp">
+      <Filter>Services</Filter>
     </ClCompile>
     <ClCompile Include="Views\RaycastBenchTests.cpp">
       <Filter>Views</Filter>

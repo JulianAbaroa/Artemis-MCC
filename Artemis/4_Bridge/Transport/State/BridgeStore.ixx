@@ -85,6 +85,9 @@ export namespace Bridge::Transport::State
         auto AddLateAction() -> void;
         // note: Game thread only (the maximum is a plain load and store).
         auto AddLockstepWait(std::uint64_t waitNs) -> void;
+        // Longest Lockstep wait since the previous call, then restarts it. The total maximum of CopyCounters does not restart.
+        // note: Called by a tool thread. The game thread that records the waits races with it harmlessly (a wait may count in either window).
+        auto TakeLockstepWaitWindowMax() -> std::uint64_t;
         auto AddLockstepTimeout() -> void;
         auto AddHandleMismatch() -> void;
         auto AddRejectedAction() -> void;
@@ -117,6 +120,7 @@ export namespace Bridge::Transport::State
         std::atomic<std::uint64_t> m_LockstepWaits{ 0 };
         std::atomic<std::uint64_t> m_LockstepWaitNs{ 0 };
         std::atomic<std::uint64_t> m_LockstepWaitMaxNs{ 0 };
+        std::atomic<std::uint64_t> m_LockstepWaitWindowMaxNs{ 0 };
         std::atomic<std::uint64_t> m_LockstepTimeouts{ 0 };
         std::atomic<std::uint64_t> m_HandleMismatches{ 0 };
         std::atomic<std::uint64_t> m_RejectedActions{ 0 };
