@@ -243,6 +243,8 @@ def PerfLines(perf):
              f"read wait {perf.get('read_wait_ms', 0):.2f} | sweep avg/p50/p99/max {sweep.get('avg', 0):.2f}/{sweep.get('p50', 0):.2f}/"
              f"{sweep.get('p99', 0):.2f}/{sweep.get('max', 0):.2f} ms | lockstep {lockstep.get('waits', 0)} "
              f"avg {lockstep.get('avg_ms', 0):.2f} max {lockstep.get('max_ms', 0):.2f} ms"]
+    if "object_slots_max" in perf:
+        lines[0] += f" | object slots max {perf['object_slots_max']} objects max {perf.get('objects_max', 0)}"
     heaviest = sorted(perf.get("stages", {}).items(), key=lambda item: -item[1])[:6]
     if heaviest:
         lines.append("    stages: " + ", ".join(f"{name} {ms:.2f} ms" for name, ms in heaviest))

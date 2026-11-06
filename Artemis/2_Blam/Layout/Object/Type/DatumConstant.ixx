@@ -81,8 +81,11 @@ export namespace Blam::Layout::Object::Type::Constant
     constexpr std::size_t k_EventGlobalsSize{ 0x10B68 };
 
     // Data array of the engine (ResourceBuffer_Allocate): maximum count (int32), element size (int32) and first element (pointer).
-    // note: +0x44 is the first slot never used, not the capacity: free slots above it are still valid (datum_new_at_index).
+    // note: +0x44 is the first slot never used, not the capacity: free slots above it are still valid (datum_new_at_index), but every
+    // live datum is below it (BlamDataArrayAllocateAtIndex raises it to index + 1). +0x48 is the count of live datums.
     constexpr std::uintptr_t k_DataArrayCapacity{ 0x2C };
+    constexpr std::uintptr_t k_DataArrayFirstUnusedIndex{ 0x44 };
+    constexpr std::uintptr_t k_DataArrayLiveCount{ 0x48 };
     constexpr std::uintptr_t k_DataArrayElementSize{ 0x20 };
     constexpr std::uintptr_t k_DataArrayData{ 0x50 };
 

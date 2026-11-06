@@ -1,6 +1,7 @@
 export module Engine.Capture.System;
 
 import Common.Log.System;
+import Services.Telemetry.State;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.Memory.System;
 import Engine.Capture.State;
@@ -15,6 +16,8 @@ export namespace Engine::Capture::System
     private:
         using Log = Common::Log::System::Log;
 
+        using TelemetryStore = Services::Telemetry::State::TelemetryStore;
+
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
@@ -27,9 +30,10 @@ export namespace Engine::Capture::System
         CaptureService(Log& log,
             LifecycleStore& lifecycleStore,
             MemoryReaderService& memoryReaderService,
-            CaptureStore& captureStore) :
+            CaptureStore& captureStore,
+            TelemetryStore& telemetryStore) :
             m_Log(log), m_LifecycleStore(lifecycleStore), m_MemoryReaderService(memoryReaderService),
-            m_CaptureStore(captureStore) {}
+            m_CaptureStore(captureStore), m_TelemetryStore(telemetryStore) {}
         ~CaptureService() = default;
 
         // Copies everything the tick pipeline reads from the game (objects, placements and the regions of RegionId) into a new
@@ -46,6 +50,7 @@ export namespace Engine::Capture::System
         LifecycleStore& m_LifecycleStore;
         MemoryReaderService& m_MemoryReaderService;
         CaptureStore& m_CaptureStore;
+        TelemetryStore& m_TelemetryStore;
 
         // Teardown epoch the capacities were checked for, or the maximum before the first check. A new load runs under a new epoch, so
         // nothing resets it: not the game thread (Cleanup) and not a tick that was still running after the teardown began, which marks
@@ -57,8 +62,11 @@ export namespace Engine::Capture::System
         // note: Runs on the AI thread inside the read window.
         auto CheckCapacities(std::uintptr_t threadContext, std::uint64_t epoch) -> void;
 
-        // Copies the datum of every live object of the object table.
-        auto CopyObjects(Snapshot& snapshot, std::uintptr_t tableBase) -> void;
+        // Copies the datum of every live object of the object table: the slots below the first-unused mark of the engine data array
+        // (every live object is below it), at most the capacity of the array and k_MaxObjects.
+        // note: The mark is read on every call. Without a readable mark or capacity it walks what it can: the capacity, then k_MaxObjects.
+        // It also tells the telemetry the mark and the live count (the maxima of a run).
+        auto CopyObjects(Snapshot& snapshot, std::uintptr_t threadContext, std::uintptr_t tableBase) -> void;
 
         // Copies RegionSize(id) bytes from the address into the region.
         // note: An address of 0 or a failed read leave the region as not captured.

@@ -271,7 +271,8 @@ namespace
 
     // return: The perf block of a match as a JSON object: where the wall clock went per tick and per sweep, and the Lockstep wait.
     // Empty without sweeps.
-    // param delta: What the telemetry counted during the run.
+    // param delta: What the telemetry counted during the run. object_slots_max and objects_max are the highest first-unused slot and
+    // live count of the engine object table seen during it.
     // param lockstep: What the Lockstep counters of the bridge counted during the run, with the maximum of the run.
     // param runSeconds: Wall time of the run. ticks: Ticks of the run as the bench counted them.
     // note: The engine time of the telemetry includes the Lockstep wait, because the wait happens inside the simulation call (the
@@ -303,11 +304,12 @@ namespace
 
         return std::format("{{\"ticks\":{},\"wall_ms_per_tick\":{:.3f},\"engine_ms\":{:.3f},\"read_wait_ms\":{:.3f},"
             "\"read_timeouts\":{},\"sweep_ms\":{{\"avg\":{:.3f},\"p50\":{:.3f},\"p99\":{:.3f},\"max\":{:.3f}}},"
-            "\"stages\":{{{}}},\"lockstep\":{{\"waits\":{},\"avg_ms\":{:.3f},\"max_ms\":{:.3f},\"timeouts\":{}}}}}",
+            "\"stages\":{{{}}},\"lockstep\":{{\"waits\":{},\"avg_ms\":{:.3f},\"max_ms\":{:.3f},\"timeouts\":{}}},"
+            "\"object_slots_max\":{},\"objects_max\":{}}}",
             delta.Ticks, wallMs, engineNs * perTick / 1e6, static_cast<double>(delta.ReadWaitNs) * perTick / 1e6, delta.ReadTimeouts,
             static_cast<double>(delta.SweepNs) * perSweep / 1e6, percentileMs(0.5), percentileMs(0.99),
             static_cast<double>(delta.SweepMaxNs) / 1e6, stages, lockstep.LockstepWaits, waitMs,
-            static_cast<double>(lockstep.LockstepWaitMaxNs) / 1e6, lockstep.LockstepTimeouts);
+            static_cast<double>(lockstep.LockstepWaitMaxNs) / 1e6, lockstep.LockstepTimeouts, delta.ObjectSlotsMax, delta.ObjectsMax);
     }
 
     // return: Players of the tick, null without one.

@@ -5,7 +5,7 @@ Group `5_Engine` - static library inside the game process - copies one tick of t
 ## Responsibility
 The tick hooks (`ExecuteGameFrameDetour`, `SimulationTicksDetour`) that open the read window of every logic tick and wake the AI
 thread (`SimulationTicksDetour` also ends the round on request and hands a pending gametype preset to `Engine.Base` `PresetService` with
-the live game variant at a round break); the locators of the object, player and interaction tables; and `CaptureService`, which copies the live objects and every
+the live game variant at a round break); the locators of the object, player and interaction tables; and `CaptureService`, which copies the live objects (the slots below the first-unused mark of the engine object table, at most its capacity and `k_MaxObjects`, and tells `Services` Telemetry the mark and live count) and every
 memory region of `RegionId` into a new Snapshot and publishes it.
 
 ## Does not
@@ -35,7 +35,7 @@ The tick hooks run on the game thread and wait for the read of the tick (the win
 thread inside that window; the game goes on as soon as the AI thread ends the read.
 
 ## Errors
-Once per map load (per teardown epoch of `LifecycleStore`), `Capture` compares the capacity of the engine object and player tables (header of the data array) with `k_MaxObjects` and `k_MaxPlayers`: a difference is a WARNING with both values, nothing else changes. A region that cannot be read is left empty in the Snapshot and its flag stays off; before the thread context or the object table
+Once per map load (per teardown epoch of `LifecycleStore`), `Capture` compares the capacity of the engine object and player tables (header of the data array) with `k_MaxObjects` and `k_MaxPlayers`: a difference is a WARNING with both values (a larger engine table is walked only up to `k_MaxObjects`). A region that cannot be read is left empty in the Snapshot and its flag stays off; before the thread context or the object table
 is found, the Snapshot says so and nothing is copied.
 
 ## Requirements

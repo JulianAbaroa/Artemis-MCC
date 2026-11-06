@@ -28,5 +28,9 @@ export namespace Services::Telemetry::Type
         std::array<std::uint64_t, k_SweepHistogramSize> SweepHistogram{};
         // Time of each stage summed over the sweeps, in the order of the registered names.
         std::array<std::uint64_t, k_MaxStages> StageNs{};
+        // Highest first-unused slot (+0x44) and highest live count (+0x48) of the engine object table since the previous photo.
+        // They are not differences: the store restarts them when a photo is taken.
+        std::uint64_t ObjectSlotsMax{ 0 };
+        std::uint64_t ObjectsMax{ 0 };
     };
 }

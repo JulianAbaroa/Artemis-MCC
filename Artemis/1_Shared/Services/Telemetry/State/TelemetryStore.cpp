@@ -59,6 +59,12 @@ namespace Services::Telemetry::State
         }
     }
 
+    auto TelemetryStore::RecordObjectTable(std::uint64_t slots, std::uint64_t live) -> void
+    {
+        if (slots > m_ObjectSlotsMax.load(std::memory_order_relaxed)) m_ObjectSlotsMax.store(slots, std::memory_order_relaxed);
+        if (live > m_ObjectsMax.load(std::memory_order_relaxed)) m_ObjectsMax.store(live, std::memory_order_relaxed);
+    }
+
     auto TelemetryStore::SetStageNames(std::span<const std::string_view> names) -> void
     {
         m_StageCount = (std::min)(names.size(), k_MaxStages);
@@ -79,6 +85,8 @@ namespace Services::Telemetry::State
         out.Sweeps = m_TotalSweeps.load(std::memory_order_relaxed);
         out.SweepNs = m_TotalSweepNs.load(std::memory_order_relaxed);
         out.SweepMaxNs = m_SweepMaxNs.exchange(0, std::memory_order_relaxed);
+        out.ObjectSlotsMax = m_ObjectSlotsMax.exchange(0, std::memory_order_relaxed);
+        out.ObjectsMax = m_ObjectsMax.exchange(0, std::memory_order_relaxed);
 
         for (std::size_t i{ 0 }; i < out.SweepHistogram.size(); ++i) out.SweepHistogram[i] = m_SweepHistogram[i].load(std::memory_order_relaxed);
         for (std::size_t i{ 0 }; i < out.StageNs.size(); ++i) out.StageNs[i] = m_TotalStageNs[i].load(std::memory_order_relaxed);

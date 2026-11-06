@@ -42,7 +42,7 @@ namespace Engine::Capture::Hook
     // Resolution logic: The lower 16 bits of a Handle (0xFFFF) serve as the index
     // into this table, while the upper 16 bits function as a 'Salt' for versioning.
     // Each entry contains a 64-bit pointer to the actual entity data (Bipeds, Weapons, etc.).
-    // Capacity: Probably 1024 slots, supporting the 650 Forge-item limit
+    // Capacity: 2048 slots (data array +0x2C), supporting the 650 Forge-item limit
     // plus dynamic entities like projectiles and player assets.
     auto ObjectTableLocator::GetObjectTable(std::uintptr_t threadContext) -> std::uintptr_t
     {

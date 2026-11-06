@@ -23,7 +23,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Services.Logs.Type`, `Services.Logs.State` | The log entries and the bounded, thread-safe buffer the log window reads. |
 | `Services.Settings.State`, `Services.Settings.System` | Shared runtime flags and paths; the AppData folder and its `config.ini` flag. |
 | `Services.Preferences.System` | `PreferencesService`: other projects register a section of keys; saved to and loaded from AppData. |
-| `Services.Telemetry.State` | Lock-free counters (dropped ticks, read wait, sweep time, presents) and the rates derived from them, plus cumulative counters that `Update` never resets: ticks, engine time, read wait, sweeps, a 25 us histogram of the sweep duration and the time of each sweep stage (names registered once by `Mod`). `CopyPerf` takes a photo and restarts the sweep maximum. |
+| `Services.Telemetry.State` | Lock-free counters (dropped ticks, read wait, sweep time, presents) and the rates derived from them, plus cumulative counters that `Update` never resets: ticks, engine time, read wait, sweeps, a 25 us histogram of the sweep duration and the time of each sweep stage (names registered once by `Mod`). `CopyPerf` takes a photo and restarts the maxima (the sweep, and the highest first-unused slot and live count of the engine object table, which `Capture` records with `RecordObjectTable`). |
 | `Services.Telemetry.Type` | `PerfSnapshot` (a photo of the cumulative counters) and the histogram constants. |
 | `Services.Telemetry.System` | `TelemetryService`, and the pure functions over photos: `SweepBucket`, `HistogramPercentileNs`, `OtherStageNs`, `Subtract`. |
 

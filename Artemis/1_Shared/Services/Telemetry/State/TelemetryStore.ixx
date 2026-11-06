@@ -57,6 +57,9 @@ export namespace Services::Telemetry::State
         std::array<std::atomic<std::uint64_t>, k_SweepHistogramSize> m_SweepHistogram{};
         // Time of each stage of the sweep summed over all sweeps, in nanoseconds.
         std::array<std::atomic<std::uint64_t>, k_MaxStages> m_TotalStageNs{};
+        // Highest first-unused slot and highest live count of the engine object table since the last CopyPerf.
+        std::atomic<std::uint64_t> m_ObjectSlotsMax{ 0 };
+        std::atomic<std::uint64_t> m_ObjectsMax{ 0 };
 
         // Output. Ticks per second.
         std::atomic<float> m_TickHz{ 0.0f };
@@ -94,11 +97,15 @@ export namespace Services::Telemetry::State
         // note: The names must outlive the store (string literals). Not thread-safe: the writer is the thread that records the sweeps.
         auto SetStageNames(std::span<const std::string_view> names) -> void;
 
+        // Keeps the highest first-unused slot and live count of the object table seen since the last CopyPerf.
+        // note: The AI thread is the only writer (Capture).
+        auto RecordObjectTable(std::uint64_t slots, std::uint64_t live) -> void;
+
         // Names registered with SetStageNames.
         auto GetStageNames() const -> std::span<const std::string_view>;
 
         // Photo of the cumulative counters.
-        // note: Restarts SweepMaxNs, so the maximum of a photo is the one since the previous photo. One consumer at a time.
+        // note: Restarts SweepMaxNs, ObjectSlotsMax and ObjectsMax, so the maximum of a photo is the one since the previous photo. One consumer at a time.
         auto CopyPerf(PerfSnapshot& out) -> void;
 
         // Counts one presented frame.

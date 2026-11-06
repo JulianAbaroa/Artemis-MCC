@@ -8,10 +8,10 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x1D60CCD529B319FC
+LAYOUT_HASH = 0xACB5D266FBD2BE94
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
-MAX_ENTITIES = 0x400
+MAX_ENTITIES = 0x800
 TICK_BUFFERS = 2
 MAX_OBJECTIVES = 8
 MAX_WEAPONS = 0x100
@@ -286,9 +286,9 @@ BridgeLift = np.dtype({
 # One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'SequenceEnd'],
-    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (1024,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
-    'offsets': [0, 8, 72, 3528, 110024, 110144, 110368, 110432, 112736, 121952, 128096, 129120, 139360],
-    'itemsize': 139392,
+    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (2048,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
+    'offsets': [0, 8, 72, 3528, 216520, 216640, 216864, 216928, 219232, 228448, 234592, 235616, 245856],
+    'itemsize': 245888,
 })
 
 # Action of one player for one decision, written by Python (D109, D119).
@@ -303,8 +303,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 384, 279168],
-    'itemsize': 279936,
+    'offsets': [0, 384, 492160],
+    'itemsize': 492928,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -386,7 +386,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 320,
     'Control.Client.ActionSequence': 328,
     'Ticks': 384,
-    'Actions': 279168,
+    'Actions': 492160,
 }
 
-REGION_SIZE = 279936
+REGION_SIZE = 492928

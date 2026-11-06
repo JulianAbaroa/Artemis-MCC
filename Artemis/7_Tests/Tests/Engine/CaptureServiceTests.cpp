@@ -8,6 +8,8 @@ import Engine.Base.Lifecycle.Type;
 import Engine.Base.Memory.System;
 import Engine.Capture.State;
 import Engine.Capture.System;
+import Services.Telemetry.State;
+import Services.Telemetry.Type;
 import Blam.Layout.Object.Type;
 import Tests.Support.Log;
 import std;
@@ -26,9 +28,17 @@ namespace
     using Engine::Base::Memory::System::MemoryReaderService;
     using Engine::Capture::State::CaptureStore;
     using Engine::Capture::System::CaptureService;
+    using Services::Telemetry::State::TelemetryStore;
+    using Services::Telemetry::Type::PerfSnapshot;
     using Tests::Support::Log::CollectingSink;
 
     using Blam::Layout::Object::Type::Constant::k_DataArrayCapacity;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayFirstUnusedIndex;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayLiveCount;
+    using Blam::Layout::Object::Type::Constant::k_EntryAddressOffset;
+    using Blam::Layout::Object::Type::Constant::k_EntryDatumSizeOffset;
+    using Blam::Layout::Object::Type::Constant::k_EntrySaltOffset;
+    using Blam::Layout::Object::Type::Constant::k_MinDatumSize;
     using Blam::Layout::Object::Type::Constant::k_EntrySize;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextObjectDataOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
@@ -41,13 +51,18 @@ namespace
         LifecycleStore m_Lifecycle{};
         MemoryReaderService m_Reader{};
         CaptureStore m_Store{};
-        CaptureService m_Service{ m_Log, m_Lifecycle, m_Reader, m_Store };
+        TelemetryStore m_Telemetry{};
+        CaptureService m_Service{ m_Log, m_Lifecycle, m_Reader, m_Store, m_Telemetry };
 
         // The thread context, the headers of the two data arrays and the object table the capture walks.
         std::vector<std::uintptr_t> m_Context{ std::vector<std::uintptr_t>(0x100) };
         std::vector<std::uint8_t> m_ObjectHeader{ std::vector<std::uint8_t>(0x100) };
         std::vector<std::uint8_t> m_PlayerHeader{ std::vector<std::uint8_t>(0x100) };
-        std::vector<std::uint8_t> m_ObjectTable{ std::vector<std::uint8_t>(k_MaxObjects * k_EntrySize) };
+        // Entries past k_MaxObjects exist so that a walk that goes too far finds something to copy.
+        static constexpr std::size_t k_TableEntries{ k_MaxObjects + 16 };
+        std::vector<std::uint8_t> m_ObjectTable{ std::vector<std::uint8_t>(k_TableEntries * k_EntrySize) };
+        // Datum bytes every live entry points at.
+        std::vector<std::uint8_t> m_Datum{ std::vector<std::uint8_t>(k_MinDatumSize) };
 
         auto SetUp() -> void override
         {
@@ -69,6 +84,31 @@ namespace
             std::memcpy(m_PlayerHeader.data() + k_DataArrayCapacity, &players, sizeof(players));
         }
 
+        // Sets the first-unused slot (+0x44) and the live count (+0x48) of the object data array.
+        auto SetMark(std::int32_t firstUnused, std::int32_t liveCount) -> void
+        {
+            std::memcpy(m_ObjectHeader.data() + k_DataArrayFirstUnusedIndex, &firstUnused, sizeof(firstUnused));
+            std::memcpy(m_ObjectHeader.data() + k_DataArrayLiveCount, &liveCount, sizeof(liveCount));
+        }
+
+        // Makes the slot of the table a live object with salt 1: its handle is 0x10000 | index.
+        auto AddLive(std::uint32_t index) -> void
+        {
+            std::uint8_t* entry{ m_ObjectTable.data() + (index * k_EntrySize) };
+            const std::uint16_t salt{ 1 };
+            const std::uint16_t size{ k_MinDatumSize };
+            const std::uintptr_t address{ reinterpret_cast<std::uintptr_t>(m_Datum.data()) };
+            std::memcpy(entry + k_EntrySaltOffset, &salt, sizeof(salt));
+            std::memcpy(entry + k_EntryDatumSizeOffset, &size, sizeof(size));
+            std::memcpy(entry + k_EntryAddressOffset, &address, sizeof(address));
+        }
+
+        // return: Whether the snapshot has the object of that slot.
+        static auto Has(const auto& snapshot, std::uint32_t index) -> bool
+        {
+            return snapshot->RawObjects.contains((1u << 16) | index);
+        }
+
         // return: Messages of the level whose text has all the parts.
         auto CountOf(LogLevel level, std::initializer_list<std::string_view> parts) const -> std::size_t
         {
@@ -87,17 +127,17 @@ TEST_F(CaptureServiceTests, CapacitiesThatMatchLogNoWarning)
     m_Service.Capture();
 
     EXPECT_EQ(m_Sink.CountOf(LogLevel::Warning), 0u);
-    EXPECT_EQ(this->CountOf(LogLevel::Info, { "capacities checked", "objects 1024", "players 16" }), 1u);
+    EXPECT_EQ(this->CountOf(LogLevel::Info, { "capacities checked", "objects 2048", "players 16" }), 1u);
 }
 
 TEST_F(CaptureServiceTests, ObjectCapacityThatDiffersWarnsWithBothValues)
 {
-    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetCapacities(4096, static_cast<std::int32_t>(k_MaxPlayers));
 
     m_Service.Capture();
 
     EXPECT_EQ(m_Sink.CountOf(LogLevel::Warning), 1u);
-    EXPECT_EQ(this->CountOf(LogLevel::Warning, { "object table", "2048", "1024" }), 1u);
+    EXPECT_EQ(this->CountOf(LogLevel::Warning, { "object table", "4096", "2048" }), 1u);
 }
 
 TEST_F(CaptureServiceTests, PlayerCapacityThatDiffersWarnsWithBothValues)
@@ -174,4 +214,115 @@ TEST_F(CaptureServiceTests, SnapshotCarriesTheTeardownEpoch)
 
     m_Lifecycle.SetStatus(Status::TearingDown);
     EXPECT_EQ(m_Service.Capture()->TeardownEpoch, 1u);
+}
+
+TEST_F(CaptureServiceTests, ObjectsBelowTheMarkAreCopiedAndNoneAbove)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(10, 2);
+    this->AddLive(3);
+    this->AddLive(9);
+    this->AddLive(10);
+    this->AddLive(1500);
+
+    const auto snapshot{ m_Service.Capture() };
+
+    EXPECT_TRUE(Has(snapshot, 3));
+    EXPECT_TRUE(Has(snapshot, 9));
+    EXPECT_FALSE(Has(snapshot, 10));
+    EXPECT_FALSE(Has(snapshot, 1500));
+    EXPECT_EQ(snapshot->RawObjects.size(), 2u);
+}
+
+TEST_F(CaptureServiceTests, ObjectAtAnIndexOf1024OrMoreIsCopied)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(1501, 2);
+    this->AddLive(5);
+    this->AddLive(1024);
+    this->AddLive(1500);
+
+    const auto snapshot{ m_Service.Capture() };
+
+    EXPECT_TRUE(Has(snapshot, 5));
+    EXPECT_TRUE(Has(snapshot, 1024));
+    EXPECT_TRUE(Has(snapshot, 1500));
+}
+
+TEST_F(CaptureServiceTests, MarkOfZeroWalksTheCapacity)
+{
+    this->SetCapacities(100, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(0, 0);
+    this->AddLive(5);
+    this->AddLive(99);
+    this->AddLive(100);
+
+    const auto snapshot{ m_Service.Capture() };
+
+    EXPECT_TRUE(Has(snapshot, 5));
+    EXPECT_TRUE(Has(snapshot, 99));
+    EXPECT_FALSE(Has(snapshot, 100));
+}
+
+TEST_F(CaptureServiceTests, UnreadableArrayWalksEverySlotUpToTheLimit)
+{
+    m_Context[k_ThreadContextObjectDataOffset / sizeof(std::uintptr_t)] = 0;
+    this->AddLive(5);
+    this->AddLive(k_MaxObjects - 1);
+    this->AddLive(k_MaxObjects);
+
+    const auto snapshot{ m_Service.Capture() };
+
+    EXPECT_TRUE(Has(snapshot, 5));
+    EXPECT_TRUE(Has(snapshot, k_MaxObjects - 1));
+    EXPECT_FALSE(Has(snapshot, k_MaxObjects));
+}
+
+TEST_F(CaptureServiceTests, CapacityLargerThanTheLimitWalksTheLimitAndWarns)
+{
+    this->SetCapacities(4096, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(4096, 3);
+    this->AddLive(7);
+    this->AddLive(k_MaxObjects - 1);
+    this->AddLive(k_MaxObjects);
+
+    const auto snapshot{ m_Service.Capture() };
+
+    EXPECT_TRUE(Has(snapshot, 7));
+    EXPECT_TRUE(Has(snapshot, k_MaxObjects - 1));
+    EXPECT_FALSE(Has(snapshot, k_MaxObjects));
+    EXPECT_EQ(this->CountOf(LogLevel::Warning, { "object table", "4096", "2048" }), 1u);
+}
+
+TEST_F(CaptureServiceTests, TheMarkIsReadOnEveryCapture)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->AddLive(20);
+    this->SetMark(10, 1);
+    EXPECT_FALSE(Has(m_Service.Capture(), 20));
+
+    this->SetMark(21, 1);
+    EXPECT_TRUE(Has(m_Service.Capture(), 20));
+}
+
+TEST_F(CaptureServiceTests, TelemetryKeepsTheHighestMarkAndLiveCountUntilThePhoto)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->SetMark(300, 120);
+    m_Service.Capture();
+    this->SetMark(1700, 640);
+    m_Service.Capture();
+    this->SetMark(50, 10);
+    m_Service.Capture();
+
+    PerfSnapshot photo{};
+    m_Telemetry.CopyPerf(photo);
+    EXPECT_EQ(photo.ObjectSlotsMax, 1700u);
+    EXPECT_EQ(photo.ObjectsMax, 640u);
+
+    // The photo restarts the maxima: the next one only sees what came after.
+    m_Service.Capture();
+    m_Telemetry.CopyPerf(photo);
+    EXPECT_EQ(photo.ObjectSlotsMax, 50u);
+    EXPECT_EQ(photo.ObjectsMax, 10u);
 }

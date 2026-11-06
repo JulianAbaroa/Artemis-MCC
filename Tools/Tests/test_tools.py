@@ -249,6 +249,20 @@ def test_game_report_prints_the_perf_lines_of_a_match_that_has_them(capsys):
     assert sum(1 for line in lines if "perf:" in line or "stages:" in line) == 2
 
 
+def test_game_report_perf_line_ends_with_the_object_table_maxima_when_the_block_has_them(capsys):
+    game = LoadGame()
+    perf = {"ticks": 600, "wall_ms_per_tick": 9.5, "engine_ms": 3.25, "read_wait_ms": 1.5, "read_timeouts": 0,
+            "sweep_ms": {"avg": 2.0, "p50": 1.75, "p99": 6.5, "max": 12.0}, "stages": {},
+            "lockstep": {"waits": 7, "avg_ms": 1.25, "max_ms": 3.5, "timeouts": 0},
+            "object_slots_max": 1701, "objects_max": 655}
+    report = {"id": "r1", "scenario": "s", "result": "ok", "seconds": 1, "message": "", "matches": [
+        {"index": 1, "name": "a", "config": "c", "result": "ok", "files": {}, "perf": perf}]}
+    assert game.PrintReport(report, lambda path: 1 / 0) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert ("    perf: wall 9.50 ms/tick | engine 3.25 | read wait 1.50 | sweep avg/p50/p99/max 2.00/1.75/6.50/12.00 ms"
+            " | lockstep 7 avg 1.25 max 3.50 ms | object slots max 1701 objects max 655") in lines
+
+
 def test_game_report_without_perf_prints_nothing_new(capsys):
     game = LoadGame()
     report = {"id": "r1", "scenario": "s", "result": "ok", "seconds": 1, "message": "", "matches": [

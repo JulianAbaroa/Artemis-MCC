@@ -9,7 +9,7 @@
 <bridge version="1">
 	<const name="Magic" value="0x42544241" doc="'ABTB' read as little endian u32: the region is an Artemis bridge." />
 	<const name="MaxPlayers" value="16" owner="Common.Engine.Type:k_MaxPlayers" doc="Players of a match (Common.Engine k_MaxPlayers) and action slots, by player table index." />
-	<const name="MaxEntities" value="1024" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a tick (Common.Engine k_MaxObjects)." />
+	<const name="MaxEntities" value="2048" owner="Common.Engine.Type:k_MaxObjects" doc="Live objects of a tick (Common.Engine k_MaxObjects)." />
 	<const name="TickBuffers" value="2" doc="Tick buffers: Artemis writes the one Python is not reading." />
 	<const name="MaxObjectives" value="8" doc="Flags, and stands, a tick carries (a capture game has one of each per team: Common.Engine k_MaxTeams)." />
 	<const name="MaxWeapons" value="256" doc="Live weapons a tick carries: in hand, on the floor or mounted (D254)." />

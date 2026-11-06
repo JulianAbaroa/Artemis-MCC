@@ -15,6 +15,8 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_ThreadContextObjectDataOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
     using Blam::Layout::Object::Type::Constant::k_DataArrayCapacity;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayFirstUnusedIndex;
+    using Blam::Layout::Object::Type::Constant::k_DataArrayLiveCount;
     using Blam::Layout::Object::Type::Constant::k_EntrySize;
     using Blam::Layout::Object::Type::Constant::k_EntrySaltOffset;
     using Blam::Layout::Object::Type::Constant::k_EntryKindOffset;
@@ -33,6 +35,16 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_PlacementsOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextMegaloObjectsOffset;
     using Blam::Layout::Object::Type::Constant::k_DataArrayData;
+
+    // return: Slots of the object table to walk. The first-unused mark when it is readable, else the capacity, never more than the
+    // capacity (when it is known) or k_MaxObjects.
+    auto ObjectSlotLimit(std::int32_t capacity, std::int32_t firstUnused) -> std::uint32_t
+    {
+        std::uint32_t limit{ k_MaxObjects };
+        if (capacity > 0) limit = (std::min)(limit, static_cast<std::uint32_t>(capacity));
+        if (firstUnused > 0) limit = (std::min)(limit, static_cast<std::uint32_t>(firstUnused));
+        return limit;
+    }
 }
 
 namespace Engine::Capture::System
@@ -55,7 +67,7 @@ namespace Engine::Capture::System
             this->CheckCapacities(threadContext, snapshot->TeardownEpoch);
         }
 
-        if (objectTableBase != 0) this->CopyObjects(*snapshot, objectTableBase);
+        if (objectTableBase != 0) this->CopyObjects(*snapshot, threadContext, objectTableBase);
 
         this->CopyRegion(*snapshot, RegionId::PlayerArray, m_CaptureStore.GetPlayerTableBase());
         this->CopyRegion(*snapshot, RegionId::PlayerMapping, m_CaptureStore.GetMappingBase());
@@ -110,11 +122,25 @@ namespace Engine::Capture::System
         m_Log.Message("[CaptureService] INFO: Table capacities checked: objects {}, players {}.", objectCapacity, playerCapacity);
     }
 
-    auto CaptureService::CopyObjects(Snapshot& snapshot, std::uintptr_t tableBase) -> void
+    auto CaptureService::CopyObjects(Snapshot& snapshot, std::uintptr_t threadContext, std::uintptr_t tableBase) -> void
     {
         auto& reader = m_MemoryReaderService;
 
-        for (std::uint32_t index{ 0 }; index < k_MaxObjects; ++index)
+        std::int32_t capacity{ 0 };
+        std::int32_t firstUnused{ 0 };
+        const std::uintptr_t objectArray{ threadContext != 0 ? reader.Read<std::uintptr_t>(threadContext, k_ThreadContextObjectDataOffset) : 0 };
+        if (objectArray != 0)
+        {
+            capacity = reader.Read<std::int32_t>(objectArray, k_DataArrayCapacity);
+            firstUnused = reader.Read<std::int32_t>(objectArray, k_DataArrayFirstUnusedIndex);
+            const std::int32_t liveCount{ reader.Read<std::int32_t>(objectArray, k_DataArrayLiveCount) };
+            m_TelemetryStore.RecordObjectTable(firstUnused > 0 ? static_cast<std::uint64_t>(firstUnused) : 0,
+                liveCount > 0 ? static_cast<std::uint64_t>(liveCount) : 0);
+        }
+
+        const std::uint32_t slotLimit{ ObjectSlotLimit(capacity, firstUnused) };
+
+        for (std::uint32_t index{ 0 }; index < slotLimit; ++index)
         {
             std::uintptr_t entryAddress{ tableBase + (index * k_EntrySize) };
 

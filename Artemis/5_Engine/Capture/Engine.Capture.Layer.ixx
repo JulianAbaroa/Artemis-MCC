@@ -23,7 +23,7 @@ export namespace Engine::Capture
 
     public:
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
-            m_CaptureService(service.m_Log, base.m_LifecycleStore, base.m_MemoryReaderService, m_CaptureStore),
+            m_CaptureService(service.m_Log, base.m_LifecycleStore, base.m_MemoryReaderService, m_CaptureStore, service.m_TelemetryStore),
             m_ObjectTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_PlayerTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_InteractionTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),

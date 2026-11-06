@@ -26,9 +26,9 @@ export namespace Common::Engine::Type
     // Local players (split-screen) the engine supports.
     inline constexpr std::size_t k_MaxLocalUsers{ 4 };
 
-    // Slots of the object table: Artemis scans this many objects per tick and the bridge exports this many entities.
-    // note: Assumed from the object limit of the engine. Not read from it.
-    inline constexpr std::uint32_t k_MaxObjects{ 1024 };
+    // Slots of the object table: Artemis scans at most this many objects per tick and the bridge exports this many entities.
+    // note: The capacity of the engine table (data array +0x2C), assumed and checked once per map load. Not read from it.
+    inline constexpr std::uint32_t k_MaxObjects{ 2048 };
 
     // Characters of a gamertag, terminator included.
     inline constexpr std::size_t k_GamerTagLength{ 16 };
