@@ -1,5 +1,7 @@
 export module Views.Raycast.System;
 
+export import :Cast;
+
 import Common.Math.Type;
 import Common.Log.System;
 import Blam.MapModel.World.System;
@@ -27,18 +29,9 @@ export namespace Views::Raycast::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using Triangle = Common::Math::Type::Triangle;
-        using AlivePlayer = Blam::Runtime::Player::Type::Alive::AlivePlayer;
-        using PlayerTable = Blam::Runtime::Player::Type::Alive::PlayerTable;
-        using AliveObject = Blam::Runtime::Object::Type::Alive::AliveObject;
-        using ObjectTable = Blam::Runtime::Object::Type::Alive::ObjectTable;
-        using Weap = Blam::MapModel::Definitions::Type::Weap::Weap;
-        using Collidable = Perception::Collidable::Type::Collidable;
-        using CachedDynamic = Views::Raycast::Type::CachedDynamic;
         using DynamicCache = Views::Raycast::Type::DynamicCache;
         using Self = Views::Self::Type::Self;
         using Raycasts = Views::Raycast::Type::Raycasts;
-        using RaycastHit = Views::Raycast::Type::RaycastHit;
         using SelfExclusion = Views::Raycast::Type::SelfExclusion;
         using PerceptionOrigin = Views::Raycast::Type::PerceptionOrigin;
 
@@ -83,21 +76,5 @@ export namespace Views::Raycast::System
         EntitiesStore& m_EntitiesStore;
         PlayersStore& m_PlayersStore;
         RaycastStore& m_RaycastStore;
-
-        auto ResolveAimRange(std::uint32_t selfPlayerHandle) const -> float;
-        auto ResolveAimRangeUncapped(std::uint32_t selfPlayerHandle) const -> float;
-
-        // Collects the handles the rays of the agent ignore: its biped, its loadout and the vehicle it rides with its parts.
-        auto BuildSelfExclusion(std::uint32_t selfPlayerHandle,
-            std::uint32_t selfBipedHandle) const -> SelfExclusion;
-
-        // Returns the center and the forward of the biped, or of its vehicle when it rides one.
-        auto ResolvePerceptionOrigin(std::uint32_t selfBipedHandle) const -> PerceptionOrigin;
-
-        auto BuildDynamicCache(const Vec3& origin, float radius,
-            const SelfExclusion& selfExclusion) -> DynamicCache;
-
-        auto CastRay(const Vec3& origin, const Vec3& direction, float maxDistance,
-            const DynamicCache& dynamicCache) const -> RaycastHit;
     };
 }

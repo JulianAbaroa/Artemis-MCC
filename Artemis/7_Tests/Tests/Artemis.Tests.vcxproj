@@ -137,6 +137,7 @@
     <ClCompile Include="Perception\WeaponDetailsTests.cpp" />
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
+    <ClCompile Include="Views\RaycastBenchTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
     <ClCompile Include="Support\Tests.Support.FilmPass.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />

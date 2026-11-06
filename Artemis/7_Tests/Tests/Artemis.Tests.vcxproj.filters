@@ -19,6 +19,9 @@
     <Filter Include="Perception">
       <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Views">
+      <UniqueIdentifier>{5b1c7e3a-9d42-4f68-8a0e-2c6d41f7b9e3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Support">
       <UniqueIdentifier>{10f96d0a-30c8-4e39-a948-e5ec6e1d76f8}</UniqueIdentifier>
     </Filter>
@@ -86,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="Perception\WeaponDetailsTests.cpp">
       <Filter>Perception</Filter>
+    </ClCompile>
+    <ClCompile Include="Views\RaycastBenchTests.cpp">
+      <Filter>Views</Filter>
     </ClCompile>
     <ClCompile Include="Support\Tests.Support.Blam.ixx">
       <Filter>Support</Filter>

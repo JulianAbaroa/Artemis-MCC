@@ -58,6 +58,9 @@
     <ClCompile Include="Raycast\State\RaycastStore.ixx">
       <Filter>Raycast\State</Filter>
     </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastCast.ixx">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
     <ClCompile Include="Raycast\System\RaycastService.cpp">
       <Filter>Raycast\System</Filter>
     </ClCompile>

@@ -64,6 +64,7 @@
     <ClCompile Include="Views.Layer.ixx" />
     <ClCompile Include="Raycast\Views.Raycast.Type.ixx" />
     <ClCompile Include="Raycast\State\RaycastStore.ixx" />
+    <ClCompile Include="Raycast\System\RaycastCast.ixx" />
     <ClCompile Include="Raycast\System\RaycastService.cpp" />
     <ClCompile Include="Raycast\System\RaycastService.ixx" />
     <ClCompile Include="Raycast\Type\RaycastConstant.ixx" />

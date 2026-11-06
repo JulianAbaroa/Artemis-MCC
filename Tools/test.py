@@ -7,6 +7,7 @@ JSON output and prints a compact summary: how many passed, failed (file:line and
     python Tools/test.py --config Debug|x64           Other configuration.
     python Tools/test.py --project PATH --exe PATH    Another test project and its exe (paths relative to the repo).
     python Tools/test.py --filter "Suite.*"           Passed to the exe as --gtest_filter.
+    python Tools/test.py --disabled --filter "DISABLED_Suite.*"   Also runs the DISABLED_ tests (--gtest_also_run_disabled_tests).
     python Tools/test.py --wait ID                    Keep waiting for a build that outlived --timeout (the id is printed).
     python Tools/test.py --python                     pytest of Tools/Tests (D173) in the shell where this runs, no watcher. Not
                                                       combined with --project/--exe/--config. Needs pytest: pip install --user pytest.
@@ -151,6 +152,7 @@ def Main():
     parser.add_argument("--project", default=DEFAULT_PROJECT)
     parser.add_argument("--exe")
     parser.add_argument("--filter")
+    parser.add_argument("--disabled", action="store_true", help="also run the DISABLED_ tests (--gtest_also_run_disabled_tests)")
     parser.add_argument("--wait")
     parser.add_argument("--timeout", type=int, default=170)
     parser.add_argument("-n", type=int, default=40)
@@ -171,6 +173,8 @@ def Main():
     runArguments = ["--gtest_output=json:" + RESULTS]
     if args.filter:
         runArguments.append("--gtest_filter=" + args.filter)
+    if args.disabled:
+        runArguments.append("--gtest_also_run_disabled_tests")
     id = time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6]
     request = {"id": id, "configuration": configuration, "platform": platform, "target": "Build",
                "project": args.project.replace("\\", "/"), "run": {"exe": exe.replace("\\", "/"), "args": runArguments}}
