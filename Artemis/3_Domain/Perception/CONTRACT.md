@@ -50,17 +50,23 @@ Other projects may import only these modules; everything else in the project is 
   The cursor of the engine's event ring lives in `Blam.Runtime`.
 - `WeaponChargeMemoryStore`: the first engine tick each weapon was seen in the Charging state, by handle, for `ChargeFraction` (the engine
   gives the stage but not how long it has lasted). Only the weapons that are charging are in it. It is emptied on `Cleanup()` (a load) and a
-  weapon seen already charging starts from that tick.
+  weapon seen already charging starts from that tick. With a tick delta greater than 1 (sparse updates) the first tick seen charging is the
+  sample, so `ChargeFraction` under-estimates by up to delta - 1 ticks. It always counts from `EngineTick`, never from a number of updates.
 - `GroundMemoryStore`: by biped handle, the ticks without contact, the ground and object of the last contact and whether the biped jumped off it, to
   resolve `Body.Ground` (D260). Only the bipeds with a `Body` in the last tick are in it. It is emptied on `Cleanup()` and a new biped starts without
-  history (its `AirborneTicks` count from 0).
+  history (its `AirborneTicks` count from 0). Each entry keeps the `EngineTick` of the update that wrote it and ages by the ticks since then
+  (1 for a repeated tick or without game). With a delta greater than 1 the contact may have ended at any tick of the interval, so the latest is taken:
+  the first sample without contact is `AirborneTicks` 1 (and `IsTakeoff` is evaluated there), the next ones add the delta. A clock that goes
+  back leaves the biped without history. With delta 1 the result is the one of every tick.
 - `LiftMemoryStore`: the bipeds that were inside a phantom volume in the last tick with the lift each one was assigned when it entered (the nearest
   one within 3 world units, none for doors and other phantoms) and the last exit of each lift (tick, velocity and biped), for `LiftDetail.HasExit`
-  (D261). A biped that disappears inside is forgotten without an exit and a lift that disappears loses its exit. It is emptied on `Cleanup()`.
+  (D261). The entry is the first sample inside the volume and the exit the first sample outside, with the tick and velocity of that sample
+  (a pass through the volume shorter than the sampling interval is not seen). A biped that disappears inside is forgotten without an exit and a lift that disappears loses its exit. It is emptied on `Cleanup()`.
 - `EventsMemoryStore`: the last flag seen of each base team, the round, the last engine sequence and the engine tick in which the GameOver event was
   read, to generate the flag events on the transitions (none when the round changes or on the first tick after a load). The Match service reads
   the GameOver tick to derive `MatchStatus.Phase`, never the raw phase of the engine (it is also Ended between rounds). A new engine (the clock or
   the ring sequence go back) forgets it.
+- `CarriedHandlesStore` only adds what is seen carried in the sample: it has no tick count and needs no delta.
 - Every other store holds only the value of the last tick. `Cleanup()` forgets the map.
 
 ## Threads

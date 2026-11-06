@@ -364,3 +364,30 @@ TEST_F(LiftDetailsTests, ExitOfALiftThatDisappearsIsForgottenAndCleanupEmptiesEv
     EXPECT_EQ(m_Chain.m_Environment.m_LiftDetailsStore.Acquire(), nullptr);
     EXPECT_FALSE(this->Run(8)->at(k_LiftA).HasExit);
 }
+
+// Q101.A: updates that skip engine ticks (the sparse mode). The exit is the first sample outside the volume.
+TEST_F(LiftDetailsTests, ABipedThatEntersAndLeavesBetweenTwoSamplesIsDatedInTheSampleOfTheExit)
+{
+    this->AddLift(k_LiftA, k_LiftTag, Vec3{ 0.0f, 0.0f, 0.0f });
+    this->AddBiped(k_Biped, Vec3{ 0.8f, 0.0f, 0.0f });
+    ASSERT_NE(this->Run(100), nullptr);
+
+    // Inside at the sample 104 and 108, out at 112: the exit is at 112 with the velocity of that sample.
+    this->Set(k_Biped, true, Vec3{ 0.0f, 0.0f, 2.0f });
+    EXPECT_FALSE(this->Run(104)->at(k_LiftA).HasExit);
+    this->Set(k_Biped, true, Vec3{ 0.0f, 0.0f, 3.0f });
+    EXPECT_FALSE(this->Run(108)->at(k_LiftA).HasExit);
+    this->Set(k_Biped, false, Vec3{ 0.0f, 0.0f, 4.5f });
+    const auto details{ this->Run(112) };
+    EXPECT_TRUE(details->at(k_LiftA).HasExit);
+    EXPECT_EQ(details->at(k_LiftA).ExitTick, 112u);
+    EXPECT_FLOAT_EQ(details->at(k_LiftA).ExitVelocity.Z, 4.5f);
+
+    // A biped that is inside and out between two samples is never seen inside: no exit (declared tolerance).
+    this->AddBiped(k_OtherBiped, Vec3{ 0.5f, 0.0f, 0.0f });
+    this->Run(116);
+    this->Set(k_OtherBiped, false, Vec3{ 0.0f, 0.0f, 9.0f });
+    const auto after{ this->Run(120) };
+    EXPECT_EQ(after->at(k_LiftA).ExitBiped, k_Biped);
+    EXPECT_EQ(after->at(k_LiftA).ExitTick, 112u);
+}

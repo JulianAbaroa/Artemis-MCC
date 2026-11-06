@@ -78,12 +78,13 @@ export namespace Perception::Players::System
         // Builds the player of an entry of the player table.
         // param previous: Ground memory of the previous tick. nextMemory: Receives the entry of the biped of this tick.
         // param game: Game time and powerup durations for the custom powerup, null when the game was not captured.
+        // note: The ground memory ages by the engine ticks since the previous update, so it also works when updates skip ticks.
         auto MakePlayer(const AlivePlayer& alive, const AliveGame* game, const ObjectTable& objectTable, const Entities& entities,
             const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> Player;
 
         // Builds the body of the live biped of a player.
         // return: Empty when the player has no live biped.
-        auto MakeBody(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
+        auto MakeBody(const AlivePlayer& alive, const AliveGame* game, const ObjectTable& objectTable, const Entities& entities,
             const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> std::optional<Body>;
     };
 }

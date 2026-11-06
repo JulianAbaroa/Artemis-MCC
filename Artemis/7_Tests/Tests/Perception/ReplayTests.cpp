@@ -702,6 +702,7 @@ namespace
         { "ArmasAWeaponsAndProjectilesFollowTheRecordedFilm", { "armas_a" } },
         { "ArmasBMagazinesReservesAndBatteryFollowTheRecordedFilm", { "armas_b" } },
         { "ExplosivesCarryTheBlastOfTheirTags", { "explosivos" } },
+        { "ASparseSampledPassRunsWithoutFailure", { "explosivos" } },
         { "SueloGroundAndCrouchFollowTheRecordedFilm", { "suelo" } },
         { "GroundIsConsistentWithTheContactInEveryFilm",
             { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" } },
@@ -1994,4 +1995,33 @@ TEST_F(ReplayTests, PowerupsFilmCountsDownOnePerTickAndTheTraitsFollowOneTickLat
     EXPECT_GT(active, 0u);
     EXPECT_GT(counted, 0u);
     EXPECT_GT(withTraits, 0u);
+}
+
+// Q101.A: a film sampled every 4 records (the pipeline only runs on records 1, 5, 9...) must run without failure. One short film keeps the
+// suite fast; the comparison with the full pass over every film is the test of Q101.C.
+TEST_F(ReplayTests, ASparseSampledPassRunsWithoutFailure)
+{
+    constexpr std::size_t k_SampleEvery{ 4 };
+
+    std::size_t replayed{ 0 };
+    for (const std::string name : { std::string{ "explosivos" } })
+    {
+        SCOPED_TRACE(name);
+
+        std::size_t observed{ 0 };
+        const FilmOutcome pass{ RunFilmPass(name, false, [&](const Chain&, std::size_t record)
+        {
+            EXPECT_EQ((record - 1) % k_SampleEvery, 0u);
+            ++observed;
+        }, {}, k_SampleEvery) };
+
+        if (!pass.Error.empty()) { ADD_FAILURE() << pass.Error; continue; }
+        if (!pass.Skip.empty()) continue;
+
+        ++replayed;
+        EXPECT_GT(pass.Records, 0u);
+        EXPECT_EQ(observed, (pass.Records + k_SampleEvery - 1) / k_SampleEvery);
+    }
+
+    if (replayed == 0) GTEST_SKIP() << "No recording (golden.sdump) in " << RecordingsFolder().string();
 }

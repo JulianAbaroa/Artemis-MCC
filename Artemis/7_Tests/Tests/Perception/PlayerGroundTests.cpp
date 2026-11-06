@@ -2,6 +2,7 @@
 
 import Common.Engine.Type;
 import Common.Math.Type;
+import Blam.Runtime.Game.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
 import Perception.Entities.Type;
@@ -15,6 +16,7 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Blam::Runtime::Game::Type::Alive::AliveGame;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Biped::Biped;
     using Blam::Runtime::Player::Type::Alive::AlivePlayer;
@@ -63,7 +65,8 @@ namespace
     {
     protected:
         // Publishes the tables of a tick with the biped as the frame says, runs the players service and returns the body.
-        auto Step(const Frame& frame) -> Body
+        // param engineTick: Engine tick of the update, 0 for none (the game store stays empty and every update counts as one tick).
+        auto Step(const Frame& frame, std::uint32_t engineTick = 0) -> Body
         {
             auto& objects{ m_Chain.m_Tables.m_ObjectStore };
             Biped biped{};
@@ -103,6 +106,8 @@ namespace
             entities.Rows.push_back(Entity{ .Handle = k_BipedHandle });
             entities.Index.emplace(k_BipedHandle, 0);
             m_Chain.m_Environment.m_EntitiesStore.Publish(std::move(entities));
+
+            if (engineTick != 0) m_Chain.m_Tables.m_GameStore.Publish(AliveGame{ .EngineTick = engineTick });
 
             m_Chain.m_Environment.m_PlayersService.Update();
             const auto players{ m_Chain.m_Environment.m_PlayersStore.Acquire() };
@@ -271,4 +276,54 @@ TEST_F(PlayerGroundTests, CleanupEmptiesTheMemory)
     const Body flicker{ this->Step(InAir(-0.3f)) };
     EXPECT_FALSE(flicker.IsGrounded);
     EXPECT_EQ(flicker.AirborneTicks, 1u);
+}
+
+// Q101.A: updates that skip engine ticks (the sparse mode). The memory ages by the ticks that passed.
+TEST_F(PlayerGroundTests, ASampleEveryFourTicksDatesTheTakeoffInTheFirstSampleWithoutContact)
+{
+    EXPECT_EQ(this->Step(OnBlock(), 100).AirborneTicks, 0u);
+
+    // The contact ended somewhere in 101..104: the latest tick is taken, so it is the first one in the air and the jump is evaluated.
+    const Body first{ this->Step(InAir(2.3f), 104) };
+    EXPECT_EQ(first.AirborneTicks, 1u);
+    EXPECT_EQ(first.Ground, GroundKind::Air);
+    EXPECT_FALSE(first.IsGrounded);
+
+    EXPECT_EQ(this->Step(InAir(1.0f), 108).AirborneTicks, 5u);
+    EXPECT_EQ(this->Step(InAir(0.0f), 112).AirborneTicks, 9u);
+
+    const Body landed{ this->Step(OnBlock(), 116) };
+    EXPECT_EQ(landed.AirborneTicks, 0u);
+    EXPECT_TRUE(landed.IsGrounded);
+}
+
+TEST_F(PlayerGroundTests, ASampleWithoutContactAfterASparseGapHoldsTheGroundLikeTheFirstTickWithoutContact)
+{
+    this->Step(OnBlock(), 100);
+
+    // Not a jump (no vertical speed): the flicker rule of the first tick without contact applies to the first sample.
+    const Body flicker{ this->Step(InAir(0.0f), 104) };
+    EXPECT_EQ(flicker.AirborneTicks, 1u);
+    EXPECT_TRUE(flicker.IsGrounded);
+    EXPECT_EQ(flicker.Ground, GroundKind::Object);
+
+    // Four ticks later it is past the hold.
+    const Body held{ this->Step(InAir(0.0f), 108) };
+    EXPECT_EQ(held.AirborneTicks, 5u);
+    EXPECT_FALSE(held.IsGrounded);
+}
+
+TEST_F(PlayerGroundTests, ARepeatedTickCountsAsOneAndAClockThatGoesBackLeavesTheBipedWithoutHistory)
+{
+    this->Step(OnBlock(), 100);
+    this->Step(InAir(0.0f), 101);
+    EXPECT_EQ(this->Step(InAir(0.0f), 102).AirborneTicks, 2u);
+
+    // The same tick again counts as one update, as every update did before the sparse mode.
+    EXPECT_EQ(this->Step(InAir(0.0f), 102).AirborneTicks, 3u);
+
+    // A clock that goes back: no history, as after a load.
+    const Body back{ this->Step(InAir(0.0f), 50) };
+    EXPECT_EQ(back.AirborneTicks, 1u);
+    EXPECT_FALSE(back.IsGrounded);
 }

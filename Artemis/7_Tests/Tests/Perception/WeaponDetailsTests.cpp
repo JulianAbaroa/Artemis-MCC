@@ -262,3 +262,15 @@ TEST_F(WeaponDetailsTests, OnlyWeaponsGetADetailAndCleanupDropsThem)
     m_Chain.m_Environment.m_WeaponDetailsService.Cleanup();
     EXPECT_EQ(m_Chain.m_Environment.m_WeaponDetailsStore.Acquire(), nullptr);
 }
+
+// Q101.A: updates that skip engine ticks (the sparse mode). The charge starts in the first sample seen charging.
+TEST_F(WeaponDetailsTests, ChargeFractionOfASparseSampleStartsInTheSampleWhereTheChargeWasFirstSeen)
+{
+    EXPECT_FLOAT_EQ(this->Update(k_ChargeTag, Charging(ChargeState::None), 100).ChargeFraction, 0.0f);
+
+    // The charge began in 101..104: the first sample is the start (the fraction under-estimates by up to 3 ticks).
+    EXPECT_FLOAT_EQ(this->Update(k_ChargeTag, Charging(ChargeState::Charging), 104).ChargeFraction, 0.0f);
+    EXPECT_NEAR(this->Update(k_ChargeTag, Charging(ChargeState::Charging), 108).ChargeFraction, 4.0f / 48.0f, 1e-5f);
+    EXPECT_NEAR(this->Update(k_ChargeTag, Charging(ChargeState::Charging), 128).ChargeFraction, 24.0f / 48.0f, 1e-5f);
+    EXPECT_FLOAT_EQ(this->Update(k_ChargeTag, Charging(ChargeState::Charged), 152).ChargeFraction, 1.0f);
+}

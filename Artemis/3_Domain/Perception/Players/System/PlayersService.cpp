@@ -61,11 +61,14 @@ namespace
         return velocity;
     }
 
-    // Resolves the ground of a biped from its contact and the memory of the previous tick (D260).
-    // param next: Receives the memory for the next tick.
+    // Resolves the ground of a biped from its contact and the memory of the previous update (D260).
+    // param ticks: Engine ticks since the previous update, 1 when every tick is processed.
+    // param next: Receives the memory for the next update.
+    // note: When updates skip ticks the contact may have ended at any tick of the interval: the latest one is taken, so the first sample
+    // without contact is AirborneTicks 1 and the takeoff is evaluated there.
     // note: The contact cuts for 1 or 2 ticks between blocks, so the last ground is held for them, unless the biped jumped off it.
     auto ResolveGround(Body& body, const AliveObject& object, const Biped& biped, const ObjectTable& objectTable,
-        const GroundMemoryEntry& previous, GroundMemoryEntry& next) -> void
+        const GroundMemoryEntry& previous, std::uint32_t ticks, GroundMemoryEntry& next) -> void
     {
         const bool isAttached{ object.ParentHandle != k_NoHandle };
         const bool isContact{ !isAttached && biped.ContactMaterial != k_NoContact };
@@ -100,7 +103,7 @@ namespace
         }
         else
         {
-            next.AirborneTicks = previous.AirborneTicks + 1;
+            next.AirborneTicks = previous.AirborneTicks == 0 ? 1 : previous.AirborneTicks + ticks;
 
             const bool wasOnGround{ previous.LastGround == GroundKind::Static || previous.LastGround == GroundKind::Object };
             if (next.AirborneTicks == 1 && wasOnGround)
@@ -196,13 +199,13 @@ namespace Perception::Players::System
         }
         player.CameraPosition = alive.CameraPosition;
         player.CameraForward = alive.CameraForward;
-        player.Body = this->MakeBody(alive, objectTable, entities, vitalities, previous, nextMemory);
+        player.Body = this->MakeBody(alive, game, objectTable, entities, vitalities, previous, nextMemory);
         player.BipedHandle = player.Body ? alive.AliveBipedHandle : alive.CurrentBipedHandle;
 
         return player;
     }
 
-    auto PlayersService::MakeBody(const AlivePlayer& alive, const ObjectTable& objectTable, const Entities& entities,
+    auto PlayersService::MakeBody(const AlivePlayer& alive, const AliveGame* game, const ObjectTable& objectTable, const Entities& entities,
         const VitalityDetails& vitalities, const GroundMemory& previous, GroundMemory& nextMemory) const -> std::optional<Body>
     {
         const std::uint32_t handle{ alive.AliveBipedHandle };
@@ -229,8 +232,20 @@ namespace Perception::Players::System
         body.IsCrouching = biped->CrouchFraction >= k_CrouchThreshold;
 
         const auto previousIt{ previous.find(handle) };
-        const GroundMemoryEntry before{ previousIt == previous.end() ? GroundMemoryEntry{} : previousIt->second };
-        ResolveGround(body, objectIt->second, *biped, objectTable, before, nextMemory[handle]);
+        GroundMemoryEntry before{ previousIt == previous.end() ? GroundMemoryEntry{} : previousIt->second };
+
+        // note: Without game every update counts as one tick, and so does a repeated tick (the film of a paused match gives some), as always.
+        // A clock that goes back leaves the biped without history, as after a load.
+        std::uint32_t ticks{ 1 };
+        if (game)
+        {
+            if (game->EngineTick >= before.EngineTick) ticks = (std::max)(1u, game->EngineTick - before.EngineTick);
+            else before = GroundMemoryEntry{};
+        }
+
+        auto& next{ nextMemory[handle] };
+        ResolveGround(body, objectIt->second, *biped, objectTable, before, ticks, next);
+        next.EngineTick = game ? game->EngineTick : 0;
 
         auto& loadout{ body.Loadout };
         loadout.PrimaryWeapon = biped->PrimaryWeaponHandle;

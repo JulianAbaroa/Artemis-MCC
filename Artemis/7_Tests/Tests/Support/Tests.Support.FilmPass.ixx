@@ -198,8 +198,10 @@ export namespace Tests::Support::FilmPass
     // param isCompared: Compare each record with golden.tdump in the same pass (D204). replay.tdump is written when they differ and
     // deleted when they are equal.
     // param before: Called before each record is run. Empty to skip it.
+    // param sampleEvery: Only the records 1, 1 + sampleEvery, 1 + 2 * sampleEvery... go through the pipeline, the observer and the comparison.
+    // The others are read and dropped, as the DLL does with the ticks it does not process in sparse mode (Q101). 1 runs them all.
     // note: Safe to call from several threads at once, each pass has its own Chain. An exception ends up in the outcome.
-    auto RunFilmPass(std::string_view film, bool isCompared, const FilmObserver& observer, const FilmBeforeRecord& before = {}) -> FilmOutcome
+    auto RunFilmPass(std::string_view film, bool isCompared, const FilmObserver& observer, const FilmBeforeRecord& before = {}, std::size_t sampleEvery = 1) -> FilmOutcome
     {
         using clock = std::chrono::steady_clock;
         const clock::time_point start{ clock::now() };
@@ -246,12 +248,15 @@ export namespace Tests::Support::FilmPass
                 if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
 
                 ++outcome.Records;
-                std::function<void()> endStage{};
-                if (before) endStage = before(*chain, *next.Record.Snapshot, outcome.Records);
-                chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, endStage);
-                if (comparer) comparer->OnRecord(chain->m_Export, next.Record.DroppedBefore);
-                if (observer) observer(*chain, outcome.Records);
-                if (!observer && comparer && comparer->IsFinal()) break;
+                if ((outcome.Records - 1) % sampleEvery == 0)
+                {
+                    std::function<void()> endStage{};
+                    if (before) endStage = before(*chain, *next.Record.Snapshot, outcome.Records);
+                    chain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, endStage);
+                    if (comparer) comparer->OnRecord(chain->m_Export, next.Record.DroppedBefore);
+                    if (observer) observer(*chain, outcome.Records);
+                    if (!observer && comparer && comparer->IsFinal()) break;
+                }
 
                 next = SnapshotCodec::ReadRecord(sdump, reader);
             }

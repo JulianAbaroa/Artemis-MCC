@@ -126,6 +126,9 @@ export namespace Perception::Players::Type
 
         // Whether the biped jumped off the ground: it stays until the next contact.
         bool IsTakeoff{};
+
+        // Engine tick of the update that wrote this entry, to know how many ticks passed until the next one (0 without game).
+        std::uint32_t EngineTick{};
     };
 
     // Ground memory by biped handle. Only the bipeds with a Body in the last tick are in it.
