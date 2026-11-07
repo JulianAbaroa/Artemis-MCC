@@ -98,6 +98,9 @@ export namespace DevTools::Workbench::Bench::Type
         bool IsTickDumpFull{ false };
         // Writes every event of the match to a CSV in the events folder of the bench (D104, A14).
         bool IsEvents{ false };
+        // Raises the every-tick demand for the whole match (Q101). Off lets a client run the sparse mode during it: the bench then
+        // sees only the ticks of the decisions, which its 5 Hz checks and probes do not notice. Off cannot go with tickdump or events.
+        bool IsEveryTick{ true };
     };
 
     // List of matches the bench plays in order (H3). The same list is a rotation or a list of tests (D130).

@@ -649,6 +649,11 @@ namespace DevTools::Workbench::Bench::System
             {
                 match.IsEvents = true;
             }
+            else if (key == "every_tick")
+            {
+                if (value != "off") return fail("every_tick takes off");
+                match.IsEveryTick = false;
+            }
             else if (key == "check")
             {
                 std::vector<std::string> words{ SplitWords(value) };
@@ -666,6 +671,10 @@ namespace DevTools::Workbench::Bench::System
         for (const BenchMatch& match : scenario.Matches)
         {
             if (match.Config.empty()) return std::format("match {} has no config.", match.Name);
+            if (!match.IsEveryTick && (match.IsTickDump || match.IsEvents))
+            {
+                return std::format("match {} has every_tick off with tickdump or events, which need every tick.", match.Name);
+            }
         }
 
         return {};
@@ -682,8 +691,9 @@ namespace DevTools::Workbench::Bench::System
         run.PhaseStart = steady_clock::now();
         report.Result = "running";
 
-        // The checks and the probes sample every tick the bench sees, so a match needs the pipeline on every tick (Q101).
-        if (!m_EveryTickDemand.IsHeld()) m_EveryTickDemand = m_SettingsStore.RaiseEveryTickDemand();
+        // A match needs the pipeline on every tick unless the scenario turned it off (Q101): the TickDump raises its own demand.
+        if (!match.IsEveryTick) m_EveryTickDemand.Reset();
+        else if (!m_EveryTickDemand.IsHeld()) m_EveryTickDemand = m_SettingsStore.RaiseEveryTickDemand();
 
         m_Log.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
             match.Config);

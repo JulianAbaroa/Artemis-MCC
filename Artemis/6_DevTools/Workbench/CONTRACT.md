@@ -12,7 +12,8 @@ Group `6_DevTools` - static library inside the game process - the launcher, insp
   for the `.tdump` and the `.sdump`), which the bench starts at the first tick of the match and stops at its end.
   Every-tick demand (Q101): TickDump raises it while it records (from its start to its stop or its failure) and each bench match raises it
   for its whole duration, so the pipeline runs on every tick and the checks, the probes and the dump see every tick even if a client asked
-  for sparse. The `perf` block also has a `light` entry (ticks, mean and max in microseconds).
+  for sparse. A match with `every_tick off` does not raise it, so a client may run the sparse mode there (the bench then sees only the
+  ticks of the decisions); it cannot go with `tickdump` or `events`. The `perf` block also has a `light` entry (ticks, mean and max in microseconds).
   Each match report also gets a `perf` block (omitted when the run had no sweeps): the cumulative telemetry counters and the Lockstep
   counters are photographed when the run begins and when it ends, and the difference gives ticks, wall, engine (without the Lockstep
   wait), read wait and sweep times (avg, p50, p99, max) per tick or sweep, the average of each sweep stage, and the Lockstep waits, plus the highest first-unused slot (`object_slots_max`) and live count (`objects_max`) of the engine object table.

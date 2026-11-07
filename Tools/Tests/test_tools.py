@@ -150,6 +150,29 @@ def test_game_compiles_the_tickdump_key_and_rejects_other_values():
             raise AssertionError(bad)
 
 
+def test_game_compiles_every_tick_false_and_rejects_it_with_the_recorders():
+    sys.path.insert(0, TOOLS)
+    try:
+        game = LoadTool("game")
+    finally:
+        sys.path.remove(TOOLS)
+
+    def Lines(**keys):
+        scenario = {"name": "s", "matches": [dict({"name": "m", "config": "c"}, **keys)]}
+        return game.Compile(scenario, None)[0].splitlines()
+
+    assert "every_tick off" in Lines(every_tick=False)
+    assert not any(line.startswith("every_tick") for line in Lines(every_tick=True))
+    assert not any(line.startswith("every_tick") for line in Lines())
+    for keys in ({"every_tick": False, "tickdump": True}, {"every_tick": False, "events": True}, {"every_tick": "no"}):
+        try:
+            Lines(**keys)
+        except ValueError as error:
+            assert "every_tick" in str(error)
+        else:
+            raise AssertionError(keys)
+
+
 def LoadGame():
     sys.path.insert(0, TOOLS)
     try:

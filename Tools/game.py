@@ -245,6 +245,9 @@ def PerfLines(perf):
              f"avg {lockstep.get('avg_ms', 0):.2f} max {lockstep.get('max_ms', 0):.2f} ms"]
     if "object_slots_max" in perf:
         lines[0] += f" | object slots max {perf['object_slots_max']} objects max {perf.get('objects_max', 0)}"
+    light = perf.get("light", {})
+    if light.get("ticks"):
+        lines[0] += f" | light {light['ticks']} ticks avg {light.get('avg_us', 0):.0f} max {light.get('max_us', 0):.0f} us"
     heaviest = sorted(perf.get("stages", {}).items(), key=lambda item: -item[1])[:6]
     if heaviest:
         lines.append("    stages: " + ", ".join(f"{name} {ms:.2f} ms" for name, ms in heaviest))
@@ -303,7 +306,7 @@ def PrintReport(report, asserter=AssertTickDump):
 
 
 MATCH_KEYS = {"name", "config", "preset", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
-              "probes", "tickdump", "events"}
+              "probes", "tickdump", "events", "every_tick"}
 
 
 def Compile(scenario, configs):
@@ -318,6 +321,10 @@ def Compile(scenario, configs):
             raise ValueError(f"match {index + 1}: unknown keys {sorted(unknown)}")
         if match.get("tickdump") not in (None, False, True, "full"):
             raise ValueError(f"match {index + 1}: tickdump must be true (the .tdump) or \"full\" (.tdump and .sdump), not {match['tickdump']!r}")
+        if match.get("every_tick", True) not in (True, False):
+            raise ValueError(f"match {index + 1}: every_tick must be true or false, not {match['every_tick']!r}")
+        if match.get("every_tick") is False and (match.get("tickdump") or match.get("events")):
+            raise ValueError(f"match {index + 1}: every_tick false (sparse allowed, Q101) cannot go with tickdump or events")
         if not match.get("config"):
             raise ValueError(f"match {index + 1}: no config")
         if configs is not None and match["config"] not in configs:
@@ -350,6 +357,8 @@ def Compile(scenario, configs):
                 lines.append("tickdump" + (" full" if match["tickdump"] == "full" else ""))
             if match.get("events"):
                 lines.append("events")
+            if match.get("every_tick") is False:
+                lines.append("every_tick off")
     if not count:
         raise ValueError("the scenario has no matches")
     return "\n".join(lines) + "\n", count
