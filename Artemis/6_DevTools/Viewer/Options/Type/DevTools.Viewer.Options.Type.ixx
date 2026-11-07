@@ -16,6 +16,7 @@ export namespace DevTools::Viewer::Options::Type
         Interaction,
         Fixtures,
         Limits,
+        Map,
 
         Count
     };
@@ -85,6 +86,8 @@ export namespace DevTools::Viewer::Options::Type
         LimitKillVolumes,
         LimitSafeVolumes,
         LimitSoftCeilings,
+
+        MapCollision,
 
         Count
     };
@@ -162,6 +165,7 @@ export namespace DevTools::Viewer::Options::Type
         { Group::Interaction, "Interaction", false },
         { Group::Fixtures, "Fixtures", false },
         { Group::Limits, "Map limits", false },
+        { Group::Map, "Map", false },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags
@@ -330,6 +334,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::LimitSoftCeilings, Group::Limits, "LimitSoftCeilings", "Soft ceilings",
             "Draws the soft ceiling surfaces of the structure design: blue pushes back, yellow kills softly and purple makes slip. Translucent, without outline.", true },
+
+        { Flag::MapCollision, Group::Map, "MapCollision", "Collision",
+            "Draws the collision surfaces the rays hit (structure and instanced geometry) instead of the render geometry. Orange is invisible, purple is two sided.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

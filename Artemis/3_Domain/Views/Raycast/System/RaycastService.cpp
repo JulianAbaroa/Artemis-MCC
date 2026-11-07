@@ -387,6 +387,8 @@ namespace Views::Raycast::System
             best.Kind = HitKind::Static;
             best.Distance = staticHit.Distance;
             best.Point = staticHit.Point;
+            best.SurfaceFlags = staticHit.SurfaceFlags;
+            best.Material = staticHit.Material;
         }
 
         return best;
@@ -441,6 +443,8 @@ namespace Views::Raycast::System
                         best.Distance = distance;
                         best.ObjectHandle = handle;
                         best.RegionIndex = part.Source->RegionIndex;
+                        best.SurfaceFlags = 0;
+                        best.Material = -1;
                         best.Point = {
                             origin.X + direction.X * distance,
                             origin.Y + direction.Y * distance,

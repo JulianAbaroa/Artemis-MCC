@@ -17,6 +17,9 @@ export namespace DevTools::Viewer::Style::Type
 
     // Semantic groups are pastel so they never compete with the saturated team colors.
     inline constexpr Color k_Map{ 0.557f, 0.788f, 0.910f };
+    inline constexpr Color k_MapCollision{ 0.557f, 0.788f, 0.910f };
+    inline constexpr Color k_MapCollisionTwoSided{ 0.690f, 0.600f, 0.930f };
+    inline constexpr Color k_MapCollisionInvisible{ 0.980f, 0.690f, 0.400f };
     inline constexpr Color k_Collidable{ 0.620f, 0.847f, 0.651f };
     inline constexpr Color k_Affordance{ 0.949f, 0.663f, 0.784f };
     inline constexpr Color k_Health{ 0.945f, 0.863f, 0.541f };

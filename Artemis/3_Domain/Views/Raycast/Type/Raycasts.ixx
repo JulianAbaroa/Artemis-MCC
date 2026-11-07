@@ -34,6 +34,12 @@ export namespace Views::Raycast::Type
         // Region of the collision model that was hit, or -1 when no dynamic part was.
         std::int16_t RegionIndex{ -1 };
 
+        // Flags of the collision surface that a static hit crossed (two sided, invisible, climbable, breakable...). 0 for a dynamic hit or a miss.
+        std::uint8_t SurfaceFlags{ 0 };
+
+        // Global material index of that surface. -1 for a dynamic hit, a miss or a surface without material.
+        std::int16_t Material{ -1 };
+
         Vec3 Origin{};
         Vec3 Direction{};
         float MaxDistance{ 0.0f };

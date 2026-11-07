@@ -23,11 +23,15 @@ export namespace Blam::MapModel::World::Type::Raycast
         std::int32_t Count{};
     };
 
-    // Closest triangle a ray hits.
+    // Closest collision surface a ray hits.
+    // note: SurfaceFlags are the flags of the collision surface (two sided, invisible, climbable, breakable...) and Material is
+    // its global material index, -1 if it has none. Both are the defaults when nothing was hit.
     struct Hit
     {
         bool IsHit{};
         float Distance{};
         Vec3 Point{};
+        std::uint8_t SurfaceFlags{ 0 };
+        std::int16_t Material{ -1 };
     };
 }

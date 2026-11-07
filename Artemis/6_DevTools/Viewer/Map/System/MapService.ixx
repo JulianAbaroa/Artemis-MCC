@@ -32,7 +32,8 @@ export namespace DevTools::Viewer::Map::System
         { pass.Release() } -> std::same_as<void>;
     };
 
-    static_assert(RenderPass<MapPass>);
+    // MapPass draws with an extra flag (collision or render), so it only has to release.
+    static_assert(requires(MapPass pass) { { pass.Release() } -> std::same_as<void>; });
     static_assert(RenderPass<DynamicPass>);
     static_assert(RenderPass<ZonePass>);
     static_assert(RenderPass<RaycastPass>);

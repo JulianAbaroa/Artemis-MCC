@@ -23,7 +23,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Views.Layer` | The facade: stores and services; `Cleanup()` forgets the map. |
 | `Views.Self.Type`, `Views.Self.State` | The agent's player (`k_SelfLocalIndex`) and its position. |
 | `Views.Affordance.Type`, `Views.Affordance.State` | What the agent can interact with, and how. |
-| `Views.Raycast.Type`, `Views.Raycast.State` | The rays of the agent and what they hit. |
+| `Views.Raycast.Type`, `Views.Raycast.State` | The rays of the agent and what they hit. A static hit is a collision surface and carries its flags (`SurfaceFlags`) and global material (`Material`, -1 if none), a dynamic hit or a miss gives 0 and -1 (D272). |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Blam.Map`, `Blam.MapModel`, `Blam.Runtime`, `Perception`.

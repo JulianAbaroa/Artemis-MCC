@@ -180,6 +180,8 @@ namespace
                         best.Distance = distance;
                         best.ObjectHandle = handle;
                         best.RegionIndex = part.Source->RegionIndex;
+                        best.SurfaceFlags = 0;
+                        best.Material = -1;
                         best.Point = {
                             origin.X + direction.X * distance,
                             origin.Y + direction.Y * distance,
@@ -217,7 +219,7 @@ namespace
                 for (const auto& [tagName, sbsp] : chain.m_Resolved.m_DefinitionsStore.m_Sbsp.All())
                 {
                     ++m_Sbsps;
-                    m_StaticTriangles += sbsp.RenderGeometry.size();
+                    m_StaticTriangles += sbsp.CollisionGeometry.size();
                 }
             }
 

@@ -184,7 +184,7 @@ namespace DevTools::Viewer::Map::System
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 
-        m_MapPass.Draw(context, m_GpuPipeline);
+        m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::MapCollision));
         m_Profiler.MarkGpu(context, Gpu::Map);
 
         m_DynamicPass.Draw(context, m_GpuPipeline);

@@ -240,7 +240,7 @@ namespace Blam::MapModel::World::System
         std::vector<Prim> prims{};
         for (const Sbsp* sbsp : sbsps)
         {
-            for (const auto& tri : sbsp->RenderGeometry)
+            for (const auto& tri : sbsp->CollisionGeometry)
             {
                 Prim prim{};
                 prim.Tri = tri;
@@ -306,8 +306,12 @@ namespace Blam::MapModel::World::System
 
                     if (!best.IsHit || distance < best.Distance)
                     {
+                        const Triangle& triangle = m_Triangles[static_cast<std::size_t>(i)];
+
                         best.IsHit = true;
                         best.Distance = distance;
+                        best.SurfaceFlags = triangle.SurfaceFlags;
+                        best.Material = triangle.Material;
                         closest = distance;
                     }
                 }

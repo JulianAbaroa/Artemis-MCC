@@ -6,6 +6,7 @@ module;
 export module DevTools.Viewer.Map.System:MapPass;
 
 import Common.Log.System;
+import Engine.Render.Type;
 import Engine.Render.System;
 import Blam.MapModel.Definitions.Type;
 import Bridge.Codec.Tick.Type;
@@ -14,7 +15,7 @@ import std;
 
 export namespace DevTools::Viewer::Map::System
 {
-    // Draws the static map geometry. The vertex buffer is built once from the render geometry of the map.
+    // Draws the static map geometry, either the render geometry or the collision the rays hit. Both vertex buffers are built once.
     class MapPass
     {
     private:
@@ -43,7 +44,8 @@ export namespace DevTools::Viewer::Map::System
         // return: True if there is geometry to draw.
         auto HasBuffer() const -> bool;
 
-        auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
+        // param isCollision: Draws the collision surfaces instead of the render geometry. Falls back to the other one if it is empty.
+        auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isCollision) -> void;
 
         auto Release() -> void;
 
@@ -52,6 +54,13 @@ export namespace DevTools::Viewer::Map::System
 
         ComPtr<ID3D11Buffer> m_VertexBuffer{};
         UINT m_VertexCount{ 0 };
+        ComPtr<ID3D11Buffer> m_CollisionBuffer{};
+        UINT m_CollisionCount{ 0 };
+
+        // Uploads the vertices as an immutable buffer.
+        // return: False if they do not fit in one buffer or the device refuses.
+        auto CreateBuffer(ID3D11Device* device, const std::vector<Engine::Render::Type::Vertex>& vertices,
+            ComPtr<ID3D11Buffer>& outBuffer, UINT& outCount) -> bool;
         bool m_IsUploaded{ false };
     };
 }

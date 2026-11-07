@@ -9,6 +9,7 @@ import Blam.Map.Reader.Type;
 import Blam.Map.Layer;
 import Blam.MapModel.Layer;
 import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.World.System;
 import Tests.Support.Log;
 import Tests.Support.Maps;
 import std;
@@ -403,6 +404,74 @@ TEST_F(SbspCollisionTests, MaterialsAreGlobalIndicesOrNone)
         }
         std::cout << std::format("[ Collision ] {}: {} triangles without material, largest global material index {}.\n", name, none, largest);
     }
+}
+
+TEST_F(SbspCollisionTests, RaycasterHitCarriesFlagsAndMaterialOfTheSurface)
+{
+    Blam::MapModel::World::System::Raycaster raycaster{};
+    raycaster.Build(s_Loaded->m_Resolved.m_DefinitionsStore);
+
+    // Every ray is cast from above a triangle of the collision, straight down at its centroid.
+    std::size_t checked{};
+    for (const auto& [name, sbsp] : s_Loaded->m_Resolved.m_DefinitionsStore.m_Sbsp.All())
+    {
+        const std::size_t step{ (std::max)(sbsp.CollisionGeometry.size() / 200, std::size_t{ 1 }) };
+        for (std::size_t i{}; i < sbsp.CollisionGeometry.size(); i += step)
+        {
+            const Triangle& tri{ sbsp.CollisionGeometry[i] };
+            const Vec3 normal{ Cross(Subtract(tri.B, tri.A), Subtract(tri.C, tri.A)) };
+            const float length{ Length(normal) };
+            if (length < 1e-4f) continue;
+
+            const Vec3 unit{ normal.X / length, normal.Y / length, normal.Z / length };
+            const Vec3 centroid{ (tri.A.X + tri.B.X + tri.C.X) / 3.0f, (tri.A.Y + tri.B.Y + tri.C.Y) / 3.0f, (tri.A.Z + tri.B.Z + tri.C.Z) / 3.0f };
+            const Vec3 origin{ centroid.X + unit.X * 0.5f, centroid.Y + unit.Y * 0.5f, centroid.Z + unit.Z * 0.5f };
+
+            const auto hit{ raycaster.Cast(origin, Vec3{ -unit.X, -unit.Y, -unit.Z }, 2.0f) };
+            ASSERT_TRUE(hit.IsHit) << name << " triangle " << i;
+            EXPECT_LE(hit.Distance, 0.5f + 1e-2f) << name << " triangle " << i;
+            EXPECT_GE(hit.Material, -1) << name << " triangle " << i;
+            ++checked;
+        }
+    }
+
+    EXPECT_GT(checked, 100u);
+}
+
+TEST_F(SbspCollisionTests, RayDownFromASpawnHitsStaticCollisionWithAValidMaterial)
+{
+    Blam::MapModel::World::System::Raycaster raycaster{};
+    raycaster.Build(s_Loaded->m_Resolved.m_DefinitionsStore);
+
+    const auto scnr{ s_Loaded->m_Map.m_TagCatalog.Scnr.Get("levels\\multi\\forge_halo\\forge_halo") };
+    ASSERT_NE(scnr, nullptr);
+
+    std::size_t withMaterial{};
+    std::size_t hits{};
+    for (const auto& spawn : scnr->PlayerStartingLocations)
+    {
+        // Spawns sit on the floor: casting from a little above must hit within a few world units.
+        const Vec3 origin{ spawn.Position.X, spawn.Position.Y, spawn.Position.Z + 1.0f };
+        const auto hit{ raycaster.Cast(origin, Vec3{ 0.0f, 0.0f, -1.0f }, 50.0f) };
+        if (!hit.IsHit) continue;
+
+        ++hits;
+        EXPECT_GT(hit.Distance, 0.0f);
+        EXPECT_LT(hit.Distance, 20.0f);
+        EXPECT_FLOAT_EQ(hit.Point.X, origin.X);
+        if (hit.Material >= 0) ++withMaterial;
+    }
+
+    std::cout << std::format("[ Collision ] {} spawns, {} hits, {} with material.\n", scnr->PlayerStartingLocations.size(), hits, withMaterial);
+    ASSERT_FALSE(scnr->PlayerStartingLocations.empty());
+    EXPECT_GT(hits, 0u);
+    EXPECT_GT(withMaterial, 0u);
+
+    // A ray that starts far above the map misses nothing but stays within the limit: a short one in the sky misses.
+    const auto sky{ raycaster.Cast(Vec3{ 0.0f, 0.0f, 100000.0f }, Vec3{ 0.0f, 0.0f, 1.0f }, 10.0f) };
+    EXPECT_FALSE(sky.IsHit);
+    EXPECT_EQ(sky.Material, -1);
+    EXPECT_EQ(sky.SurfaceFlags, 0);
 }
 
 TEST(DISABLED_CollisionSweep, AllMaps)
