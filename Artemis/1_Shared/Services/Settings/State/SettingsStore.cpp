@@ -139,4 +139,14 @@ namespace Services::Settings::State
         std::lock_guard<std::mutex> lock(m_Mutex);
         return m_AppDataDirectory.empty();
     }
+
+    auto SettingsStore::RaiseEveryTickDemand() -> EveryTickDemandToken
+    {
+        return EveryTickDemandToken{ m_EveryTickDemand };
+    }
+
+    auto SettingsStore::GetEveryTickDemand() const -> std::uint32_t
+    {
+        return m_EveryTickDemand.load();
+    }
 }

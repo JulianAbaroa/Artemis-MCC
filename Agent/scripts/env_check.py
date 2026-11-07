@@ -42,12 +42,13 @@ def Main():
     parser.add_argument("--max-seconds", type=float, default=90.0)
     parser.add_argument("--scale", type=float, default=0.0)
     parser.add_argument("--turn-limit", type=float, default=0.1)
+    parser.add_argument("--sparse", action="store_true", help="ask Artemis for its pipeline only on decisions (default: every tick)")
     args = parser.parse_args()
     regions = discover()
     if not regions:
         print("FAIL no open region (is MCC running with Artemis?)")
         return 2
-    config = CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit)
+    config = CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit, sparse=args.sparse)
     policy = Seek if args.policy == "seek" else Random
     rng = np.random.default_rng(0)
     failures = []

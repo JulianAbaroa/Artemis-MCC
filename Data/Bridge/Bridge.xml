@@ -131,6 +131,7 @@
 		<field name="DecisionPeriod" type="u8" doc="Effective N: a published tick every N action ticks (D114)." />
 		<field name="Latency" type="u8" doc="Effective d: a decision is applied d action ticks after its decision tick." />
 		<field name="IsClientConnected" type="u8" />
+		<field name="IsSparse" type="u8" doc="Effective sparse mode (Q101): the pipeline runs only on decision ticks. 0 when no client is connected or a tool needs every tick." />
 		<field name="IsPaused" type="u8" doc="Whether the logic ticks are held (D143): frames run without ticks, the Lockstep wait has no cap." />
 		<field name="MatchId" type="u32" doc="Engine starts since Artemis loaded. Changes with every match." />
 		<field name="ActionTick" type="u64" doc="Last action tick applied by the engine (the clock of the bridge)." />
@@ -162,6 +163,7 @@
 		<field name="RequestLatency" type="u8" doc="d wanted, 1 to N (0 = keep)." />
 		<field name="RequestScale" type="f32" doc="Time scale wanted while Python owns the instance (0 = the engine default)." />
 		<field name="RequestPause" type="u8" doc="1 holds the logic ticks while Python owns the instance (D143). Set it before a long step." />
+		<field name="RequestSparse" type="u8" doc="1 asks for the pipeline only on decision ticks (Q101). 0 = every tick. IsSparse is the effective one." />
 		<field name="AgentMask" type="u32" doc="Player table indices Python controls, one bit each." />
 		<field name="RequestEndRound" type="u32" doc="Counter: a raise ends the round, as the end_round action of Megalo (D144). Raises before Artemis takes one count as one. Starts from EndRoundSequence." />
 		<field name="RequestPreset" type="u32" doc="Counter: a raise asks for the preset RequestPresetName, or none when it is empty (Q97). Taken only while Python owns the instance. Starts from PresetSequence." />

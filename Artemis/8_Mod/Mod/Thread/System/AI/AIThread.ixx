@@ -81,6 +81,8 @@ export namespace Mod::Thread::System
         bool m_IsLoaded{ false };
         // The next tick that runs the pipeline is the first one after the map loaded (D207).
         bool m_IsFirstTickAfterLoad{ true };
+        // Whether the previous tick was read in sparse mode (Q101). The first tick after it turns on runs the whole pipeline.
+        bool m_IsSparse{ false };
 
         // Teardown epoch (LifecycleStore) the state was last reset for.
         std::uint64_t m_ResetEpoch{ 0 };
@@ -108,6 +110,11 @@ export namespace Mod::Thread::System
         // return: The Snapshot the tick was built from, or null if the engine started tearing down once the read ended (the pipeline
         // did not run).
         auto ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>;
+
+        // Sparse mode, a tick that is not a decision: copies only what the light pass needs, releases the game thread and runs the light pass
+        // (the flag pass). Nothing is published and no observer runs.
+        // return: False if the engine started tearing down once the read ended (the pass did not complete).
+        auto ExecuteLightTick() -> bool;
 
         // Counts a tick that was cut by a teardown (shown in the log of the teardown) and logs it.
         auto DiscardTick(std::uint64_t generation) -> void;

@@ -23,6 +23,9 @@ export namespace Bridge::Codec::Flat::Type
 
         // Whether this state is a decision tick of a connected client (a tick goes out).
         bool IsDecision{ false };
+
+        // Whether the pipeline runs only on decision ticks (Q101): a tick that is not a decision does the light pass only.
+        bool IsSparse{ false };
     };
 
     // A Tick of a decision tick waiting to be flattened into a BridgeTick, with the clock read with it (D135).

@@ -27,7 +27,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Control.Action.Type` | `ActionOverride`, `AppliedFacing`, `ClientRequests`, `UnitClientState`, `PlayerActionHistory`. |
 | `Control.Action.System` | `BuildAction`, `GetHoldThresholdTicks` and the `UnitRules` port. |
 | `Control.Lockstep.Type` | Limits and defaults of the lockstep (decision period N, latency d, timeouts) and `BridgeControlState`. |
-| `Control.Lockstep.System` | `DecideControl`, `ApplyConnection`, `BuildOverride`, `GetDueDecision`, `RecordWait`, `ResumeIfAnswered`, `GetApplyTiming`, `GetReleasedOverride`, `ReadClock`, `IsDecisionTick`. |
+| `Control.Lockstep.System` | `DecideControl`, `ApplyConnection`, `BuildOverride`, `GetDueDecision`, `RecordWait`, `ResumeIfAnswered`, `GetApplyTiming`, `GetReleasedOverride`, `ReadClock`, `IsDecisionTick`, `IsSparse` (Q101: the client asked for sparse, is connected and nobody needs every tick, pure). |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Contract`.

@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0xACB5D266FBD2BE94
+LAYOUT_HASH = 0x45B15B12AFA0B3FA
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -149,17 +149,17 @@ BridgeVec3 = np.dtype({
 
 # Part of the control block written by Artemis only.
 BridgeArtemisControl = np.dtype({
-    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence', 'PresetSequence', 'PresetResult', 'ActivePreset'],
-    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4', '<u4', 'u1', ('u1', (32,))],
-    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 172, 176, 177],
+    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsSparse', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence', 'PresetSequence', 'PresetResult', 'ActivePreset'],
+    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4', '<u4', 'u1', ('u1', (32,))],
+    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 47, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 172, 176, 177],
     'itemsize': 256,
 })
 
 # Part of the control block written by Python only.
 BridgeClientControl = np.dtype({
-    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'AgentMask', 'RequestEndRound', 'RequestPreset', 'RequestPresetName', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
-    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', '<u4', '<u4', '<u4', ('u1', (32,)), '<f4', '<u8', '<u8'],
-    'offsets': [0, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 60, 64, 72],
+    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'RequestSparse', 'AgentMask', 'RequestEndRound', 'RequestPreset', 'RequestPresetName', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
+    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', 'u1', '<u4', '<u4', '<u4', ('u1', (32,)), '<f4', '<u8', '<u8'],
+    'offsets': [0, 4, 5, 6, 7, 8, 12, 13, 16, 20, 24, 28, 60, 64, 72],
     'itemsize': 128,
 })
 
@@ -349,7 +349,8 @@ OFFSETS = {
     'Control.Artemis.DecisionPeriod': 43,
     'Control.Artemis.Latency': 44,
     'Control.Artemis.IsClientConnected': 45,
-    'Control.Artemis.IsPaused': 46,
+    'Control.Artemis.IsSparse': 46,
+    'Control.Artemis.IsPaused': 47,
     'Control.Artemis.MatchId': 48,
     'Control.Artemis.ActionTick': 56,
     'Control.Artemis.Scale': 64,
@@ -378,6 +379,7 @@ OFFSETS = {
     'Control.Client.RequestLatency': 263,
     'Control.Client.RequestScale': 264,
     'Control.Client.RequestPause': 268,
+    'Control.Client.RequestSparse': 269,
     'Control.Client.AgentMask': 272,
     'Control.Client.RequestEndRound': 276,
     'Control.Client.RequestPreset': 280,

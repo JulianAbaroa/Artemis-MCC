@@ -28,6 +28,12 @@ export namespace Services::Telemetry::Type
         std::array<std::uint64_t, k_SweepHistogramSize> SweepHistogram{};
         // Time of each stage summed over the sweeps, in the order of the registered names.
         std::array<std::uint64_t, k_MaxStages> StageNs{};
+        // Light ticks (sparse mode, Q101): the ticks that are not decisions, which only capture the weapons and the flag pass. They are not
+        // sweeps: they are not in SweepNs, the histogram or the stages.
+        std::uint64_t LightTicks{ 0 };
+        std::uint64_t LightNs{ 0 };
+        // Longest light tick since the previous photo. It is not a difference: the store restarts it when a photo is taken.
+        std::uint64_t LightMaxNs{ 0 };
         // Highest first-unused slot (+0x44) and highest live count (+0x48) of the engine object table since the previous photo.
         // They are not differences: the store restarts them when a photo is taken.
         std::uint64_t ObjectSlotsMax{ 0 };

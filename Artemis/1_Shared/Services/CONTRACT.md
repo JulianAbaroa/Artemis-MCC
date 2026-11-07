@@ -21,10 +21,10 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `Services.Layer` | The facade: owns `SettingsStore`, `LogsStore`, the `LogsSink`, `TelemetryStore` and their services. |
 | `Services.Logs.Type`, `Services.Logs.State` | The log entries and the bounded, thread-safe buffer the log window reads. |
-| `Services.Settings.State`, `Services.Settings.System` | Shared runtime flags and paths; the AppData folder and its `config.ini` flag. |
+| `Services.Settings.State`, `Services.Settings.System` | Shared runtime flags and paths; the AppData folder and its `config.ini` flag; the every-tick demand (Q101): a counter of tokens that the recorders and tools which need the pipeline on every tick hold while they work (`RaiseEveryTickDemand` returns an `EveryTickDemandToken`: move-only, it lowers the demand once when reset or destroyed, so a demand cannot be lowered twice), read by the bridge and the AI thread to decide the sparse mode. |
 | `Services.Preferences.System` | `PreferencesService`: other projects register a section of keys; saved to and loaded from AppData. |
-| `Services.Telemetry.State` | Lock-free counters (dropped ticks, read wait, sweep time, presents) and the rates derived from them, plus cumulative counters that `Update` never resets: ticks, engine time, read wait, sweeps, a 25 us histogram of the sweep duration and the time of each sweep stage (names registered once by `Mod`). `CopyPerf` takes a photo and restarts the maxima (the sweep, and the highest first-unused slot and live count of the engine object table, which `Capture` records with `RecordObjectTable`). |
-| `Services.Telemetry.Type` | `PerfSnapshot` (a photo of the cumulative counters) and the histogram constants. |
+| `Services.Telemetry.State` | Lock-free counters (dropped ticks, read wait, sweep time, presents) and the rates derived from them, plus cumulative counters that `Update` never resets: ticks, engine time, read wait, sweeps, a 25 us histogram of the sweep duration and the time of each sweep stage (names registered once by `Mod`). The light ticks of the sparse mode (Q101) are counted apart (`RecordLightTick`: count, time, maximum, and the per second rate and mean for the UI), never in the sweeps or the histogram. `CopyPerf` takes a photo and restarts the maxima (the sweep, the light tick, and the highest first-unused slot and live count of the engine object table, which `Capture` records with `RecordObjectTable`). |
+| `Services.Telemetry.Type` | `PerfSnapshot` (a photo of the cumulative counters, with the light ticks) and the histogram constants. |
 | `Services.Telemetry.System` | `TelemetryService`, and the pure functions over photos: `SweepBucket`, `HistogramPercentileNs`, `OtherStageNs`, `Subtract`. |
 
 ## Depends on
@@ -35,7 +35,7 @@ The settings and preferences files, the log file and the log buffer. Keys on dis
 
 ## Threads
 `LogsSink::Write` and the settings flags are thread-safe. Telemetry counters are fed from any thread without locks;
-`TelemetryService::Update` is called periodically from one thread.
+`TelemetryService::Update` is called periodically from one thread. The every-tick demand is atomic: the tools raise it from their threads, the bridge and AI threads read it.
 
 ## Errors
 A file that cannot be written is skipped; nothing blocks the game. Preferences do nothing while AppData is disabled, and a missing

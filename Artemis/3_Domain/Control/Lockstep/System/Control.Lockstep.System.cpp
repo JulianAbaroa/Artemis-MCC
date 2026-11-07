@@ -59,6 +59,7 @@ namespace Control::Lockstep::System
         control.Latency = std::clamp(control.Latency, k_MinLatency, control.DecisionPeriod);
 
         control.AgentMask = control.Owner == BridgeOwner::Python ? client.AgentMask : 0u;
+        control.IsSparseRequested = client.RequestSparse != 0;
         return control;
     }
 
@@ -70,9 +71,15 @@ namespace Control::Lockstep::System
             control.Owner = BridgeOwner::UI;
             control.Mode = BridgeMode::Free;
             control.AgentMask = 0;
+            control.IsSparseRequested = false;
         }
 
         return control;
+    }
+
+    auto IsSparse(const BridgeControlState& control, std::uint32_t everyTickDemand) -> bool
+    {
+        return control.IsClientConnected && control.IsSparseRequested && everyTickDemand == 0;
     }
 
     auto BuildOverride(const BridgeAction& action, float turnLimit, bool& isRejected) -> ActionOverride

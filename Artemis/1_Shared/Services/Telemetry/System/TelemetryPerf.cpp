@@ -63,6 +63,9 @@ namespace Services::Telemetry::System
         result.Sweeps = Difference(later.Sweeps, earlier.Sweeps);
         result.SweepNs = Difference(later.SweepNs, earlier.SweepNs);
         result.SweepMaxNs = later.SweepMaxNs;
+        result.LightTicks = Difference(later.LightTicks, earlier.LightTicks);
+        result.LightNs = Difference(later.LightNs, earlier.LightNs);
+        result.LightMaxNs = later.LightMaxNs;
         result.ObjectSlotsMax = later.ObjectSlotsMax;
         result.ObjectsMax = later.ObjectsMax;
 

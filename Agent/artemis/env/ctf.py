@@ -43,6 +43,8 @@ class CtfConfig:
     latency: int = 2
     scale: float = 0.0
     turn_limit: float = 0.1
+    # Asks Artemis for its pipeline only on decision ticks (Q101). Off by default: the checks of env_check read every tick.
+    sparse: bool = False
     max_seconds: float = 120.0
     shaping: float = 0.1
     take_reward: float = 0.2
@@ -103,11 +105,12 @@ class CtfEnv:
     def take_control(self, agents_mask=0) -> bool:
         c = self.config
         self.bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, period=c.period, latency=c.latency,
-                                scale=c.scale, agents=agents_mask, turn_limit=c.turn_limit)
+                                scale=c.scale, agents=agents_mask, turn_limit=c.turn_limit,
+                                sparse=c.sparse)
         return self.bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1)
 
     def release(self):
-        self.bridge.set_control(owner=BridgeOwner.UI, scale=0.0, agents=0, turn_limit=0.0)
+        self.bridge.set_control(owner=BridgeOwner.UI, scale=0.0, agents=0, turn_limit=0.0, sparse=False)
 
     # --- Ticks -----------------------------------------------------------------------------------------------------------------
 

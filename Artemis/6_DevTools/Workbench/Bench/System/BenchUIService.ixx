@@ -61,6 +61,7 @@ export namespace DevTools::Workbench::Bench::System
         using BenchMatchReport = DevTools::Workbench::Bench::Type::BenchMatchReport;
         using BenchRun = DevTools::Workbench::Bench::Type::BenchRun;
         using BenchUIStore = DevTools::Workbench::Bench::State::BenchUIStore;
+        using EveryTickDemandToken = Services::Settings::State::EveryTickDemandToken;
 
     public:
         BenchUIService(LogsStore& logsStore, Log& log, SettingsStore& settingsStore,
@@ -112,6 +113,8 @@ export namespace DevTools::Workbench::Bench::System
         TickStore& m_TickStore;
         TickDumpUIStore& m_TickDumpUIStore;
         BenchUIStore& m_BenchUIStore;
+        // Held from the start of a match to the end of its tools, so the pipeline runs every tick during the match (Q101).
+        EveryTickDemandToken m_EveryTickDemand{};
 
         // Copies a scenario file to the inbox, named like the ones of Tools/game.py so the scenarios run in arrival order.
         auto QueueScenario(const path& file) -> void;

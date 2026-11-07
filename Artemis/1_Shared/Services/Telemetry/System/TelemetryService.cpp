@@ -18,6 +18,8 @@ namespace Services::Telemetry::System
         std::uint64_t readTimeouts = m_TelemetryStore.m_ReadTimeouts.exchange(0, std::memory_order_relaxed);
         std::uint64_t sweeps = m_TelemetryStore.m_Sweeps.exchange(0, std::memory_order_relaxed);
         std::uint64_t sweepNs = m_TelemetryStore.m_SweepNs.exchange(0, std::memory_order_relaxed);
+        std::uint64_t lightTicks = m_TelemetryStore.m_LightTicks.exchange(0, std::memory_order_relaxed);
+        std::uint64_t lightNs = m_TelemetryStore.m_LightNs.exchange(0, std::memory_order_relaxed);
         std::uint64_t presents = m_TelemetryStore.m_Presents.exchange(0, std::memory_order_relaxed);
 
         m_TelemetryStore.m_TickHz.store((float)(tickTotal / seconds), std::memory_order_relaxed);
@@ -27,6 +29,9 @@ namespace Services::Telemetry::System
         m_TelemetryStore.m_ReadWaitMs.store(tickTotal ? (float)((readWaitNs / (double)tickTotal) / 1e6) : 0.0f, std::memory_order_relaxed);
         m_TelemetryStore.m_ReadTimeoutsOut.store((std::uint32_t)readTimeouts, std::memory_order_relaxed);
         m_TelemetryStore.m_SweepMs.store(sweeps ? (float)((sweepNs / (double)sweeps) / 1e6) : 0.0f, std::memory_order_relaxed);
+
+        m_TelemetryStore.m_LightHz.store((float)(lightTicks / seconds), std::memory_order_relaxed);
+        m_TelemetryStore.m_LightUs.store(lightTicks ? (float)((lightNs / (double)lightTicks) / 1e3) : 0.0f, std::memory_order_relaxed);
 
         std::uint64_t dropped = m_TelemetryStore.m_Dropped.exchange(0, std::memory_order_relaxed);
         m_TelemetryStore.m_DroppedOut.store((std::uint32_t)dropped, std::memory_order_relaxed);

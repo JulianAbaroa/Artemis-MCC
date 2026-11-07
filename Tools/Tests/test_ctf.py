@@ -59,7 +59,7 @@ class FakeBridge:
         self.preset_requests, self.round_ends, self.preset_answer, self.preset_final = [], 0, 1, 2
 
     def set_control(self, **kwargs):
-        pass
+        self.controls = getattr(self, "controls", []) + [kwargs]
 
     def wait_control(self, *args, **kwargs):
         return True
@@ -352,3 +352,25 @@ def test_a_preset_nobody_answered_raises(ctf):
     with pytest.raises(RuntimeError):
         ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
 
+
+def test_sparse_is_asked_for_only_when_the_config_says_so(ctf):
+    off, on = FakeBridge([Frame(ctf)]), FakeBridge([Frame(ctf)])
+    assert ctf.CtfConfig().sparse is False
+    ctf.CtfEnv(off).take_control()
+    ctf.CtfEnv(on, ctf.CtfConfig(sparse=True)).take_control()
+    assert off.controls[-1]["sparse"] is False
+    assert on.controls[-1]["sparse"] is True
+
+
+def test_release_goes_back_to_every_tick(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge, ctf.CtfConfig(sparse=True)).release()
+    assert bridge.controls[-1]["sparse"] is False
+
+
+def test_the_layout_has_the_sparse_fields(ctf):
+    layout = ctf.layout
+    assert "RequestSparse" in layout.BridgeClientControl.names
+    assert "IsSparse" in layout.BridgeArtemisControl.names
+    assert layout.OFFSETS["Control.Artemis.IsSparse"] == 46
+    assert layout.OFFSETS["Control.Client.RequestSparse"] == 269

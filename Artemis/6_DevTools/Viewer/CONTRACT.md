@@ -3,6 +3,7 @@
 Group `6_DevTools` - static library inside the game process - the 3D debug viewer: free camera, map, HUD and selection.
 
 ## Responsibility
+In sparse mode (Q101) it sees only the decision ticks and does not raise the every-tick demand. The HUD shows the light ticks per second and their mean time next to the sweep time.
 Draws the map and a HUD over the game frame from the published Tick: a free or game camera, the collidables, zones, fixtures and
 labels, an overlay with telemetry or the panel of the selected object, and picking by ray. It also defines `EngineAccess`: the
 exact members of the engine and bridge Layers the development tools may use, so they import none of those Layers.

@@ -33,6 +33,12 @@ Owns every component: built in member order, destroyed in reverse; the threads a
 Creates and stops every thread. The AI thread imports no development tool: the tools are tick observers registered from outside.
 Observers must not block.
 
+Sparse mode (Q101): when the bridge clock says IsSparse (the client asked for it, is connected and nobody needs every tick: the
+every-tick demand of `SettingsStore` is 0), the AI thread runs a tick that is not a decision as a light tick: `CaptureLight`, `EndRead`
+(the game thread is released as in a full tick), `PipelineService::RunLight`. No full pipeline, no Tick, no push to the bridge, no
+observer. The first tick after a map load and the first after the mode turned on run the whole pipeline, and so does every decision
+tick. A light tick that the teardown cuts is discarded like a full one. Telemetry counts light ticks apart from the sweeps.
+
 ## Errors
 A pipeline that cannot start (signature not found, hook not installed) is logged with the reason and the UI and the bridge show the
 phase. A sweep slow enough to stall the game logs the time of every stage. A tick still running when the engine starts tearing down

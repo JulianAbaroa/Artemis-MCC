@@ -183,6 +183,7 @@ class Bridge:
         # A new client starts clean: requests left by a client that died must not be taken as this one's.
         self.client["AgentMask"] = 0
         self.client["RequestPause"] = 0
+        self.client["RequestSparse"] = 0
         self.client["RequestTurnLimit"] = 0.0
         self.client["RequestEndRound"] = int(self.artemis["EndRoundSequence"])
         self.client["RequestPreset"] = int(self.artemis["PresetSequence"])
@@ -216,11 +217,16 @@ class Bridge:
         """Artemis still has the region open with this layout."""
         return int(self.artemis["Magic"]) == L.MAGIC
 
-    def set_control(self, owner=None, mode=None, period=None, latency=None, scale=None, agents=None, turn_limit=None):
+    def set_control(self, owner=None, mode=None, period=None, latency=None, scale=None, agents=None, turn_limit=None,
+                    sparse=None):
         """Asks for the owner, the mode, N, d, the time scale and the players (mask of player table indices) Python controls.
         Artemis applies them in its next control update (50 ms) and reports what is in effect in the Artemis part of the control.
         turn_limit: most radians per tick the facing of each agent turns toward the yaw and pitch of its action (D114), 0 = straight
-        to them. Artemis reads it when it applies each decision, so a decision applied after the change already turns with it."""
+        to them. Artemis reads it when it applies each decision, so a decision applied after the change already turns with it.
+        sparse: True asks Artemis to run its pipeline only on decision ticks (Q101), False on every tick. It is only a request: the
+        effective one is is_sparse. Artemis keeps every tick while a recorder or a tool needs them, and while no client is connected."""
+        if sparse is not None:
+            self.client["RequestSparse"] = 1 if sparse else 0
         if turn_limit is not None:
             self.client["RequestTurnLimit"] = turn_limit
         if period is not None:
@@ -235,6 +241,11 @@ class Bridge:
             self.client["RequestMode"] = mode
         if owner is not None:
             self.client["RequestOwner"] = owner
+
+    @property
+    def is_sparse(self) -> bool:
+        """Whether Artemis runs its pipeline only on decision ticks right now (Q101), the effective value of set_control(sparse=...)."""
+        return int(self.artemis["IsSparse"]) != 0
 
     def pause(self, wait=True, timeout=2.0) -> bool:
         """Holds the logic ticks of the instance while Python owns it (D143): frames run without ticks and, in Lockstep, the wait
@@ -390,6 +401,7 @@ class Bridge:
         if self._thread is not None:
             self.client["AgentMask"] = 0
             self.client["RequestPause"] = 0
+            self.client["RequestSparse"] = 0
             self.client["RequestMode"] = BridgeMode.Free
             self.client["RequestOwner"] = BridgeOwner.UI
             self._stop.set()

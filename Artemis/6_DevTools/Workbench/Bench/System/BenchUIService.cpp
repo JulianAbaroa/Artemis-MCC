@@ -299,17 +299,21 @@ namespace
             stages += std::format("\"{}\":{:.3f}", JsonEscape(std::string{ stageNames[i] }), ms);
         }
 
+        // The light ticks of the sparse mode are apart from the sweeps: the average is over them only.
+        const double lightAvgUs{ delta.LightTicks > 0 ? static_cast<double>(delta.LightNs) / static_cast<double>(delta.LightTicks) / 1e3 : 0.0 };
         const double waitMs{ lockstep.LockstepWaits > 0
             ? static_cast<double>(lockstep.LockstepWaitNs) / static_cast<double>(lockstep.LockstepWaits) / 1e6 : 0.0 };
 
         return std::format("{{\"ticks\":{},\"wall_ms_per_tick\":{:.3f},\"engine_ms\":{:.3f},\"read_wait_ms\":{:.3f},"
             "\"read_timeouts\":{},\"sweep_ms\":{{\"avg\":{:.3f},\"p50\":{:.3f},\"p99\":{:.3f},\"max\":{:.3f}}},"
             "\"stages\":{{{}}},\"lockstep\":{{\"waits\":{},\"avg_ms\":{:.3f},\"max_ms\":{:.3f},\"timeouts\":{}}},"
+            "\"light\":{{\"ticks\":{},\"avg_us\":{:.1f},\"max_us\":{:.1f}}},"
             "\"object_slots_max\":{},\"objects_max\":{}}}",
             delta.Ticks, wallMs, engineNs * perTick / 1e6, static_cast<double>(delta.ReadWaitNs) * perTick / 1e6, delta.ReadTimeouts,
             static_cast<double>(delta.SweepNs) * perSweep / 1e6, percentileMs(0.5), percentileMs(0.99),
             static_cast<double>(delta.SweepMaxNs) / 1e6, stages, lockstep.LockstepWaits, waitMs,
-            static_cast<double>(lockstep.LockstepWaitMaxNs) / 1e6, lockstep.LockstepTimeouts, delta.ObjectSlotsMax, delta.ObjectsMax);
+            static_cast<double>(lockstep.LockstepWaitMaxNs) / 1e6, lockstep.LockstepTimeouts, delta.LightTicks, lightAvgUs,
+            static_cast<double>(delta.LightMaxNs) / 1e3, delta.ObjectSlotsMax, delta.ObjectsMax);
     }
 
     // return: Players of the tick, null without one.
@@ -677,6 +681,9 @@ namespace DevTools::Workbench::Bench::System
         run.LastTick = nullptr;
         run.PhaseStart = steady_clock::now();
         report.Result = "running";
+
+        // The checks and the probes sample every tick the bench sees, so a match needs the pipeline on every tick (Q101).
+        if (!m_EveryTickDemand.IsHeld()) m_EveryTickDemand = m_SettingsStore.RaiseEveryTickDemand();
 
         m_Log.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
             match.Config);
@@ -1052,6 +1059,8 @@ namespace DevTools::Workbench::Bench::System
         run.FirstSamples.clear();
         run.IsObjectiveSeen = false;
         run.IsTickDumpNoted = false;
+
+        m_EveryTickDemand.Reset();
 
         if (run.Scenario->Matches[run.MatchIndex].IsTickDump) m_TickDumpUIStore.RequestStop();
     }

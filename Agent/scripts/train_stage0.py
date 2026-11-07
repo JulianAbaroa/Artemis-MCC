@@ -25,6 +25,7 @@ def Main():
     parser.add_argument("--scale", type=float, default=10.0)
     parser.add_argument("--max-seconds", type=float, default=60.0, help="game seconds before an episode is cut")
     parser.add_argument("--turn-limit", type=float, default=0.1)
+    parser.add_argument("--no-sparse", action="store_true", help="ask Artemis for its pipeline on every tick (default: only on decisions)")
     parser.add_argument("--name", default=time.strftime("stage0_%Y%m%d_%H%M%S"))
     args = parser.parse_args()
     regions = discover()
@@ -43,7 +44,8 @@ def Main():
 
     Log(f"run {args.name}: {vars(args)}")
     with Bridge(int(regions[0]["pid"])) as bridge:
-        env = CtfEnv(bridge, CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit))
+        env = CtfEnv(bridge, CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit,
+                                          sparse=not args.no_sparse))
         if not env.take_control():
             Log("FAIL Artemis did not hand the instance over")
             return 1

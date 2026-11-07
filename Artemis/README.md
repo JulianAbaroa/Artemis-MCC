@@ -47,6 +47,8 @@ minhook by `Engine.Base`, imgui by `DevTools.Gui`, stb by `DevTools.Workbench`.
    world), `Views` (the agent), then the assembly of the Tick.
 4. On a decision tick with a client connected, the Tick goes to the bridge thread, which flattens it (`Bridge.Codec`) and publishes
    it (`Bridge.Transport`). Every tick, the `ObservedTick` goes to the observers (viewer, recorders), which must not block.
+   In sparse mode (the client asked for it, Q101) a tick that is not a decision only does steps 1 and 2 with a light capture and the flag
+   pass of `Perception`: no Tick, no observers. A recorder that needs every tick keeps the mode off while it works.
 5. Game thread, next ticks: the PlayerAction hook of `Engine.Control` asks its `ActionSource` (the bridge, connected by `Mod`) for
    the overrides of the client's players, builds each action with `Control` and writes it. In Lockstep it waits for the decision.
 

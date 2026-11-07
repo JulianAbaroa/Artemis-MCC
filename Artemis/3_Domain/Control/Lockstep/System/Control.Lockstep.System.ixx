@@ -29,6 +29,11 @@ export namespace Control::Lockstep::System
     // return: The control with the connection of the client. Without it the UI owns the instance, Free, with no agents.
     auto ApplyConnection(BridgeControlState control, bool isConnected) -> BridgeControlState;
 
+    // return: Whether the pipeline runs only on decision ticks (Q101): the client asked for it, it is connected and nobody needs every tick.
+    // param everyTickDemand: Recorders and tools that need every tick of the engine (Services::EveryTick), 0 = none.
+    // note: Without a client, or when it leaves, every tick runs the pipeline.
+    auto IsSparse(const BridgeControlState& control, std::uint32_t everyTickDemand) -> bool;
+
     // return: The override of a player for the action of the client, with the values the engine accepts.
     // param turnLimit: Turn limit of the client. A value that is not a positive number is 0 (straight to the target).
     // param isRejected: Set to true when a value had to be changed. Never set to false.

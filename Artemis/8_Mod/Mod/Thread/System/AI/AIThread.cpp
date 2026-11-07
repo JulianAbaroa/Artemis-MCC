@@ -116,6 +116,26 @@ namespace Mod::Thread::System
                 m_StageStart = tickStart;
 
                 const bool isFirstAfterLoad{ std::exchange(m_IsFirstTickAfterLoad, false) };
+
+                // Sparse mode (Q101): a tick that is not a decision only does the light pass. The first tick after a load and the first
+                // one after the mode changed to sparse run the whole pipeline, so the tick of a decision always has the state it needs.
+                const bool wasSparse{ std::exchange(m_IsSparse, m_BridgeClock.IsSparse) };
+                if (m_BridgeClock.IsSparse && !m_BridgeClock.IsDecision && wasSparse && !isFirstAfterLoad)
+                {
+                    if (!this->ExecuteLightTick())
+                    {
+                        this->DiscardTick(current);
+                        lifecycle.EndTick();
+                        break;
+                    }
+
+                    const auto lightEnd{ steady_clock::now() };
+                    lifecycle.EndTick();
+                    telemetry.RecordLightTick(static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<nanoseconds>(lightEnd - tickStart).count()));
+                    break;
+                }
+
                 const auto snapshot{ this->ExecuteTick(current) };
 
                 // The engine can start tearing down while the tick runs: the Cleanup empties the stores it writes and does not wait
@@ -197,6 +217,20 @@ namespace Mod::Thread::System
         return snapshot;
     }
 
+    auto AIThread::ExecuteLightTick() -> bool
+    {
+        const auto snapshot{ m_Capture.m_CaptureService.CaptureLight() };
+
+        // Last use of game memory, as in ExecuteTick.
+        m_Base.m_LifecycleStore.EndRead(m_Last);
+
+        if (snapshot == nullptr || !m_Base.m_LifecycleStore.CanPublish()) return false;
+
+        m_Export.m_PipelineService.RunLight(*snapshot);
+
+        return m_Base.m_LifecycleStore.CanPublish();
+    }
+
     auto AIThread::DiscardTick(std::uint64_t generation) -> void
     {
         m_Base.m_LifecycleStore.AddDiscardedTick();
@@ -240,6 +274,7 @@ namespace Mod::Thread::System
     {
         m_Base.m_LifecycleStore.ResetTickGeneration();
         m_IsLoaded = false;
+        m_IsSparse = false;
         m_Last = 0;
         m_Transport.m_BridgeService.ResetClock();
     }

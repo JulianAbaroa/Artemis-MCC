@@ -11,6 +11,7 @@ module;
 export module Tests.Support.FilmPass;
 
 import Common.Hash.System;
+import Blam.Layout.Object.Type;
 import Blam.Layout.Snapshot.Type;
 import Blam.Layout.Snapshot.System;
 import Bridge.Codec.Dump.Type;
@@ -31,6 +32,8 @@ namespace
 
     using Bridge::Codec::Dump::Type::TickDumpCounters;
     using Bridge::Codec::Dump::Type::TickDumpFileHeader;
+    using ::Blam::Layout::Snapshot::Type::RegionId;
+    using ::Blam::Layout::Snapshot::Type::Snapshot;
     using ::Blam::Layout::Snapshot::Type::SnapshotDumpFooter;
     using ::Blam::Layout::Snapshot::Type::SnapshotLoadInfo;
     using ::Blam::Layout::Snapshot::Type::SnapshotReaderState;
@@ -45,8 +48,20 @@ namespace
 
     using ::Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
     using ::Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
+    using ::Blam::Layout::Object::Type::Constant::k_TimeGlobalsEngineTickOffset;
 
     constexpr std::string_view k_RecordingsVariable{ "ARTEMIS_RECORDINGS" };
+
+    // return: The engine tick of a record, read from its time globals. 0 when the record has none.
+    auto EngineTickOf(const Snapshot& snapshot) -> std::uint32_t
+    {
+        const std::vector<std::uint8_t>& bytes{ snapshot.Regions[static_cast<std::size_t>(RegionId::TimeGlobals)].Bytes };
+        if (bytes.size() < k_TimeGlobalsEngineTickOffset + sizeof(std::uint32_t)) return 0;
+
+        std::uint32_t tick{};
+        std::memcpy(&tick, bytes.data() + k_TimeGlobalsEngineTickOffset, sizeof(tick));
+        return tick;
+    }
 
     // return: The text of a fixed size array up to its first 0.
     template <std::size_t N>
@@ -105,6 +120,16 @@ export namespace Tests::Support::FilmPass
     // holds what the previous record left. It may measure on its own copies, never change the chain.
     // return: The endStage of PipelineService::Run for this record (called after each stage), or empty for none.
     using FilmBeforeRecord = std::function<std::function<void()>(const Chain& chain, const ::Blam::Layout::Snapshot::Type::Snapshot& snapshot, std::size_t record)>;
+
+    // A second pass beside the full one that works as the DLL does in sparse mode (Q101): a second chain whose pipeline only runs on the
+    // decision records and the first record after the load, the other records go through MakeLight and PipelineService::RunLight.
+    struct FilmSparse
+    {
+        // A record is a decision when its engine tick is a multiple of this and differs from the previous record's. 0 = no sparse pass.
+        std::size_t Period{ 0 };
+        // Called on each decision record after both chains ran it, on the thread of the pass. It only gathers data.
+        std::function<void(Chain& full, Chain& sparse, std::size_t record)> OnDecision{};
+    };
 }
 
 namespace
@@ -200,8 +225,11 @@ export namespace Tests::Support::FilmPass
     // param before: Called before each record is run. Empty to skip it.
     // param sampleEvery: Only the records 1, 1 + sampleEvery, 1 + 2 * sampleEvery... go through the pipeline, the observer and the comparison.
     // The others are read and dropped, as the DLL does with the ticks it does not process in sparse mode (Q101). 1 runs them all.
+    // param sparse: With a Period, every record also goes through the sparse chain (see FilmSparse) and OnDecision sees both chains. Use it with
+    // sampleEvery 1.
     // note: Safe to call from several threads at once, each pass has its own Chain. An exception ends up in the outcome.
-    auto RunFilmPass(std::string_view film, bool isCompared, const FilmObserver& observer, const FilmBeforeRecord& before = {}, std::size_t sampleEvery = 1) -> FilmOutcome
+    auto RunFilmPass(std::string_view film, bool isCompared, const FilmObserver& observer, const FilmBeforeRecord& before = {}, std::size_t sampleEvery = 1,
+        const FilmSparse& sparse = {}) -> FilmOutcome
     {
         using clock = std::chrono::steady_clock;
         const clock::time_point start{ clock::now() };
@@ -243,6 +271,14 @@ export namespace Tests::Support::FilmPass
             auto chain{ std::make_unique<Chain>() };
             LoadMap(*chain, MapsFolder() / TextOf(next.Record.LoadInfo->MapFileName));
 
+            std::unique_ptr<Chain> sparseChain{};
+            std::uint32_t previousTick{ 0 };
+            if (sparse.Period > 0)
+            {
+                sparseChain = std::make_unique<Chain>();
+                LoadMap(*sparseChain, MapsFolder() / TextOf(next.Record.LoadInfo->MapFileName));
+            }
+
             for (bool isFirst{ true }; next.Status == SnapshotReadStatus::Record; isFirst = false)
             {
                 if (!isFirst && (next.Record.Flags & k_SnapshotFirstAfterLoad) != 0) break;
@@ -256,6 +292,24 @@ export namespace Tests::Support::FilmPass
                     if (comparer) comparer->OnRecord(chain->m_Export, next.Record.DroppedBefore);
                     if (observer) observer(*chain, outcome.Records);
                     if (!observer && comparer && comparer->IsFinal()) break;
+                }
+
+                if (sparseChain)
+                {
+                    const std::uint32_t tick{ EngineTickOf(*next.Record.Snapshot) };
+                    const bool isDecision{ tick != 0 && tick != previousTick && tick % sparse.Period == 0 };
+                    previousTick = tick;
+
+                    if (isFirst || isDecision)
+                    {
+                        sparseChain->m_Export.m_PipelineService.Run(*next.Record.Snapshot, next.Record.Generation, {});
+                    }
+                    else
+                    {
+                        sparseChain->m_Export.m_PipelineService.RunLight(SnapshotCodec::MakeLight(*next.Record.Snapshot));
+                    }
+
+                    if (isDecision && sparse.OnDecision) sparse.OnDecision(*chain, *sparseChain, outcome.Records);
                 }
 
                 next = SnapshotCodec::ReadRecord(sdump, reader);

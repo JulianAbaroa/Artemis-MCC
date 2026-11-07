@@ -140,7 +140,9 @@
     <ClCompile Include="Perception\ProjectileDetailsTests.cpp" />
     <ClCompile Include="Perception\WeaponDetailsTests.cpp" />
     <ClCompile Include="Perception\ReplayTests.cpp" />
+    <ClCompile Include="Perception\ReplaySparseTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
+    <ClCompile Include="Services\SettingsStoreTests.cpp" />
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Bench.ixx" />

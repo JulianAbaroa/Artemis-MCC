@@ -32,7 +32,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Bridge.Codec.Pipeline.System` | `PipelineService::Run` and the names of its stages, and `RunLight` (Q101): decodes a light Snapshot into the light stores of Blam.Runtime and runs the flag pass of Perception. It touches no store of the full tick and assembles no Tick. |
 | `Bridge.Codec.Pipeline.Type` | `ObservedTick`: what the AI thread hands to the tick observers. |
 | `Bridge.Codec.Tick.Type`, `Bridge.Codec.Tick.State` | The Tick and its store. |
-| `Bridge.Codec.Flat.Type`, `Bridge.Codec.Flat.System` | `BridgeClock`, `FlatRequest`, `FlatService::Flatten`. |
+| `Bridge.Codec.Flat.Type`, `Bridge.Codec.Flat.System` | `BridgeClock` (with `IsDecision` and `IsSparse`), `FlatRequest`, `FlatService::Flatten`. |
 | `Bridge.Codec.Dump.Type`, `Bridge.Codec.Dump.System` | The `.tdump` format and writer. |
 
 ## Depends on

@@ -177,6 +177,17 @@ def Ticks(args):
         return 0 if ok else 1
 
 
+def CheckSparse(bridge, args):
+    """Q101: with --sparse Artemis must report the effective sparse mode once Python owns the instance; without it, never.
+    A recorder or a tool that needs every tick (TickDump, the bench) keeps it off on purpose, so that is a failure to look at."""
+    if not bridge.wait_control(IsSparse=1 if args.sparse else 0, timeout=3.0):
+        print(f"FAIL sparse {'requested' if args.sparse else 'not requested'} but Artemis reports IsSparse={int(bridge.is_sparse)} "
+              f"(a TickDump recording or the bench keeps every tick)")
+        return False
+    print(f"sparse: requested {args.sparse}, effective {bridge.is_sparse}")
+    return True
+
+
 def Run(args):
     lockstep = args.mode == "lockstep"
     with Open(args) as bridge:
@@ -184,9 +195,11 @@ def Run(args):
             print(f"FAIL no match running after {args.wait} s")
             return 1
         bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep if lockstep else BridgeMode.Free,
-                           period=args.period, latency=args.latency, scale=args.scale, agents=0)
+                           period=args.period, latency=args.latency, scale=args.scale, agents=0, sparse=args.sparse)
         if not bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1):
             print("FAIL Artemis did not hand the instance over")
+            return 1
+        if not CheckSparse(bridge, args):
             return 1
         period, latency = args.period, args.latency
         before = bridge.counters()
@@ -394,9 +407,11 @@ def Turn(args):
             print(f"FAIL no match running after {args.wait} s")
             return 1
         bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, period=period, latency=args.latency,
-                           scale=args.scale, agents=0, turn_limit=limit)
+                           scale=args.scale, agents=0, turn_limit=limit, sparse=args.sparse)
         if not bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1):
             print("FAIL Artemis did not hand the instance over")
+            return 1
+        if not CheckSparse(bridge, args):
             return 1
         targets, last_aim, over = {}, {}, []
         mask = decisions = settled_ok = settled_total = 0
@@ -527,6 +542,7 @@ def Main():
     parser.add_argument("--seconds", type=float, default=None, help="how long to run (endround 300, preset 120, the rest 60)")
     parser.add_argument("--agents", choices=["bots", "all"], default="bots")
     parser.add_argument("--period", type=int, default=4)
+    parser.add_argument("--sparse", action="store_true", help="run, turn: ask Artemis for its pipeline only on decision ticks (Q101)")
     parser.add_argument("--latency", type=int, default=2)
     parser.add_argument("--crash-after", type=int, default=0)
     parser.add_argument("--pause-every", type=int, default=0, help="run: decisions between two pauses (0 = none)")

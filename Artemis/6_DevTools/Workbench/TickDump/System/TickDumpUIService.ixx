@@ -23,6 +23,7 @@ export namespace DevTools::Workbench::TickDump::System
         using milliseconds = std::chrono::milliseconds;
 
         using Log = Common::Log::System::Log;
+        using EveryTickDemandToken = Services::Settings::State::EveryTickDemandToken;
         using SettingsStore = Services::Settings::State::SettingsStore;
         using FileStore = Blam::Map::Reader::State::FileStore;
         using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
@@ -68,6 +69,8 @@ export namespace DevTools::Workbench::TickDump::System
         FileStore& m_FileStore;
         FlatService& m_FlatService;
         TickDumpUIStore& m_TickDumpUIStore;
+        // Held from Start to Finish or Fail, so the pipeline runs every tick while a recording runs.
+        EveryTickDemandToken m_EveryTickDemand{};
 
         // param isSnapshotWritten: Also open and write the .sdump.
         auto Start(std::string_view source, bool isSnapshotWritten) -> void;

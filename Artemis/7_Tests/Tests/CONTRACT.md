@@ -5,7 +5,8 @@ Group `7_Tests` - executable - the C++ tests of the components, without MCC.
 ## Responsibility
 `Artemis.Tests.exe`: unit and characterization tests of the projects that run without the game, and of the engine projects as far
 as they can be built and destroyed without it. The replay test is the safety net of the whole pipeline: a recorded `.sdump` of a
-real match run through `Bridge.Codec.Pipeline.System` must give the approved golden `.tdump` byte for byte.
+real match run through `Bridge.Codec.Pipeline.System` must give the approved golden `.tdump` byte for byte. `ReplaySparseTests` replays the films twice, the full pipeline on every record against the sparse mode (pipeline on the
+decision records, `MakeLight` and `RunLight` on the others) and compares the Tick field by field with a tolerance list and caps (Q101).
 
 ## Does not
 - Need the game: anything that needs MCC is the in-game bench (`Tools/game.py`).

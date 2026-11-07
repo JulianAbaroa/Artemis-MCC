@@ -59,6 +59,15 @@ namespace Services::Telemetry::State
         }
     }
 
+    auto TelemetryStore::RecordLightTick(std::uint64_t durationNs) -> void
+    {
+        m_LightTicks.fetch_add(1, std::memory_order_relaxed);
+        m_LightNs.fetch_add(durationNs, std::memory_order_relaxed);
+        m_TotalLightTicks.fetch_add(1, std::memory_order_relaxed);
+        m_TotalLightNs.fetch_add(durationNs, std::memory_order_relaxed);
+        if (durationNs > m_LightMaxNs.load(std::memory_order_relaxed)) m_LightMaxNs.store(durationNs, std::memory_order_relaxed);
+    }
+
     auto TelemetryStore::RecordObjectTable(std::uint64_t slots, std::uint64_t live) -> void
     {
         if (slots > m_ObjectSlotsMax.load(std::memory_order_relaxed)) m_ObjectSlotsMax.store(slots, std::memory_order_relaxed);
@@ -85,6 +94,9 @@ namespace Services::Telemetry::State
         out.Sweeps = m_TotalSweeps.load(std::memory_order_relaxed);
         out.SweepNs = m_TotalSweepNs.load(std::memory_order_relaxed);
         out.SweepMaxNs = m_SweepMaxNs.exchange(0, std::memory_order_relaxed);
+        out.LightTicks = m_TotalLightTicks.load(std::memory_order_relaxed);
+        out.LightNs = m_TotalLightNs.load(std::memory_order_relaxed);
+        out.LightMaxNs = m_LightMaxNs.exchange(0, std::memory_order_relaxed);
         out.ObjectSlotsMax = m_ObjectSlotsMax.exchange(0, std::memory_order_relaxed);
         out.ObjectsMax = m_ObjectsMax.exchange(0, std::memory_order_relaxed);
 

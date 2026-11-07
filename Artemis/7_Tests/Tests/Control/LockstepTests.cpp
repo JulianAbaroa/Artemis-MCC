@@ -25,6 +25,7 @@ namespace
     using Control::Lockstep::System::GetDueDecision;
     using Control::Lockstep::System::GetReleasedOverride;
     using Control::Lockstep::System::IsDecisionTick;
+    using Control::Lockstep::System::IsSparse;
     using Control::Lockstep::System::ReadClock;
     using Control::Lockstep::System::RecordWait;
     using Control::Lockstep::System::ResumeIfAnswered;
@@ -399,4 +400,43 @@ TEST(LockstepTests, IsDecisionTick)
     BridgeControlState gone{ control };
     gone.IsClientConnected = false;
     EXPECT_FALSE(IsDecisionTick(true, gone, 8, false));
+}
+
+TEST(LockstepTests, SparseNeedsRequestClientAndNoDemand)
+{
+    BridgeClientControl client{ MakeClient(BridgeOwner::Python, BridgeMode::Lockstep, 4, 2, 0x3) };
+    BridgeControlState control{ ApplyConnection(DecideControl(client, BridgeControlState{}), true) };
+
+    // Not asked for: every tick.
+    EXPECT_FALSE(control.IsSparseRequested);
+    EXPECT_FALSE(IsSparse(control, 0));
+
+    client.RequestSparse = 1;
+    control = ApplyConnection(DecideControl(client, control), true);
+    EXPECT_TRUE(control.IsSparseRequested);
+    EXPECT_TRUE(IsSparse(control, 0));
+
+    // A recorder or a tool that needs every tick wins, and sparse comes back when it is done.
+    EXPECT_FALSE(IsSparse(control, 1));
+    EXPECT_FALSE(IsSparse(control, 3));
+    EXPECT_TRUE(IsSparse(control, 0));
+
+    // Asking for 0 again goes back to every tick.
+    client.RequestSparse = 0;
+    EXPECT_FALSE(IsSparse(DecideControl(client, control), 0));
+}
+
+TEST(LockstepTests, SparseEndsWithTheClient)
+{
+    BridgeClientControl client{ MakeClient(BridgeOwner::Python, BridgeMode::Lockstep, 4, 2, 0x3) };
+    client.RequestSparse = 1;
+    const BridgeControlState control{ DecideControl(client, BridgeControlState{}) };
+
+    // The request is read before the connection: a client that is not connected never gets sparse.
+    EXPECT_FALSE(IsSparse(ApplyConnection(control, false), 0));
+    EXPECT_FALSE(ApplyConnection(control, false).IsSparseRequested);
+    EXPECT_TRUE(IsSparse(ApplyConnection(control, true), 0));
+
+    // On disconnect the request is gone: a client that comes back asks again.
+    EXPECT_FALSE(IsSparse(ApplyConnection(ApplyConnection(control, false), true), 0));
 }

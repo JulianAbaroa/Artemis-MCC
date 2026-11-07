@@ -217,6 +217,17 @@ namespace DevTools::Viewer::Hud::System
         ImGui::SameLine();
         ImGui::Text("(max %.0f ticks/s)", maxTickHz);
 
+        // Sparse mode (Q101): the ticks that are not decisions only do the light pass, and are not in the sweep above.
+        const float lightHz = telemetry.m_LightHz.load(std::memory_order_relaxed);
+        if (lightHz > 0.0f)
+        {
+            ImGui::Text("Light ticks:");
+            ImGui::SameLine();
+            ImGui::TextColored(k_Info, "%.0f /s", lightHz);
+            ImGui::SameLine();
+            ImGui::Text("(%.1f us each)", telemetry.m_LightUs.load(std::memory_order_relaxed));
+        }
+
         const ImVec4 dropColor = dropped == 0 ? k_Green : ImVec4(1.0f, 0.4f, 0.0f, 1.0f);
 
         ImGui::Text("Dropped:");

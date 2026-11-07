@@ -172,3 +172,29 @@ TEST(TelemetryTests, SubtractClampsACounterThatWentBackwards)
     EXPECT_EQ(delta.Ticks, 0u);
     EXPECT_EQ(delta.EngineNs, 7u);
 }
+
+TEST(TelemetryTests, LightTicksAreCountedApartFromTheSweeps)
+{
+    TelemetryStore store{};
+    store.RecordSweep(100'000, k_NoStages);
+    const PerfSnapshot before{ Photo(store) };
+
+    store.RecordLightTick(60'000);
+    store.RecordLightTick(90'000);
+    store.RecordLightTick(30'000);
+    store.RecordSweep(200'000, k_NoStages);
+
+    const PerfSnapshot delta{ Subtract(Photo(store), before) };
+    EXPECT_EQ(delta.LightTicks, 3u);
+    EXPECT_EQ(delta.LightNs, 180'000u);
+    EXPECT_EQ(delta.LightMaxNs, 90'000u);
+
+    // Not in the sweeps: count, time, maximum and histogram are the ones of the full sweeps only.
+    EXPECT_EQ(delta.Sweeps, 1u);
+    EXPECT_EQ(delta.SweepNs, 200'000u);
+    EXPECT_EQ(delta.SweepMaxNs, 200'000u);
+    EXPECT_EQ(std::accumulate(delta.SweepHistogram.begin(), delta.SweepHistogram.end(), std::uint64_t{ 0 }), 1u);
+
+    // The maximum restarts with each photo, as the one of the sweeps.
+    EXPECT_EQ(Photo(store).LightMaxNs, 0u);
+}

@@ -40,6 +40,9 @@ export namespace Services::Telemetry::State
         std::atomic<std::uint64_t> m_Sweeps{ 0 };
         // Total time spent in those sweeps, in nanoseconds.
         std::atomic<std::uint64_t> m_SweepNs{ 0 };
+        // Light ticks (sparse mode, Q101) since the last update, and the time spent in them in nanoseconds.
+        std::atomic<std::uint64_t> m_LightTicks{ 0 };
+        std::atomic<std::uint64_t> m_LightNs{ 0 };
         // Frames presented since the last update.
         std::atomic<std::uint64_t> m_Presents{ 0 };
 
@@ -57,6 +60,10 @@ export namespace Services::Telemetry::State
         std::array<std::atomic<std::uint64_t>, k_SweepHistogramSize> m_SweepHistogram{};
         // Time of each stage of the sweep summed over all sweeps, in nanoseconds.
         std::array<std::atomic<std::uint64_t>, k_MaxStages> m_TotalStageNs{};
+        // Light ticks of the sparse mode (Q101): count, total time and longest since the last CopyPerf. Apart from the sweeps above.
+        std::atomic<std::uint64_t> m_TotalLightTicks{ 0 };
+        std::atomic<std::uint64_t> m_TotalLightNs{ 0 };
+        std::atomic<std::uint64_t> m_LightMaxNs{ 0 };
         // Highest first-unused slot and highest live count of the engine object table since the last CopyPerf.
         std::atomic<std::uint64_t> m_ObjectSlotsMax{ 0 };
         std::atomic<std::uint64_t> m_ObjectsMax{ 0 };
@@ -76,6 +83,9 @@ export namespace Services::Telemetry::State
         std::atomic<std::uint32_t> m_ReadTimeoutsOut{ 0 };
         // Output. Average sweep time, in milliseconds.
         std::atomic<float> m_SweepMs{ 0.0f };
+        // Output. Light ticks per second and their average time, in microseconds (Q101).
+        std::atomic<float> m_LightHz{ 0.0f };
+        std::atomic<float> m_LightUs{ 0.0f };
 
         // Adds ticks that were skipped without being processed.
         auto RecordDroppedTicks(std::uint64_t dropped) -> void;
@@ -93,6 +103,10 @@ export namespace Services::Telemetry::State
         // param stageNs: Time of each stage in the order of the registered names. Entries past k_MaxStages are ignored.
         auto RecordSweep(std::uint64_t durationNs, std::span<const std::uint64_t> stageNs) -> void;
 
+        // Records one light tick of the sparse mode: its duration. Not a sweep: it does not touch the sweep counters or the histogram.
+        // note: The AI thread is the only writer.
+        auto RecordLightTick(std::uint64_t durationNs) -> void;
+
         // Registers the names of the stages RecordSweep receives, once, before the first sweep.
         // note: The names must outlive the store (string literals). Not thread-safe: the writer is the thread that records the sweeps.
         auto SetStageNames(std::span<const std::string_view> names) -> void;
@@ -105,7 +119,7 @@ export namespace Services::Telemetry::State
         auto GetStageNames() const -> std::span<const std::string_view>;
 
         // Photo of the cumulative counters.
-        // note: Restarts SweepMaxNs, ObjectSlotsMax and ObjectsMax, so the maximum of a photo is the one since the previous photo. One consumer at a time.
+        // note: Restarts SweepMaxNs, LightMaxNs, ObjectSlotsMax and ObjectsMax, so the maximum of a photo is the one since the previous photo. One consumer at a time.
         auto CopyPerf(PerfSnapshot& out) -> void;
 
         // Counts one presented frame.

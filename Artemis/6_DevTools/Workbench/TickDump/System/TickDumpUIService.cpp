@@ -218,6 +218,9 @@ namespace DevTools::Workbench::TickDump::System
         m_TickDumpUIStore.SetLastRecordAt(std::chrono::steady_clock::now());
         m_TickDumpUIStore.SetFilePath(filePath);
         m_TickDumpUIStore.SetStatus({});
+
+        // A recording needs every tick: the pipeline does not go sparse until it ends (Q101).
+        m_EveryTickDemand = m_SettingsStore.RaiseEveryTickDemand();
         m_TickDumpUIStore.SetRecording(true);
 
         if (isSnapshotWritten)
@@ -236,6 +239,7 @@ namespace DevTools::Workbench::TickDump::System
 
         // From here the AI thread pushes nothing more, so the queue only holds what it pushed before.
         m_TickDumpUIStore.SetRecording(false);
+        m_EveryTickDemand.Reset();
         while (auto entry{ m_TickDumpUIStore.WaitPop(milliseconds{ 0 }) }) this->Write(*entry);
 
         // A failed write in the drain already closed the files and reported it.
@@ -278,6 +282,7 @@ namespace DevTools::Workbench::TickDump::System
 
     auto TickDumpUIService::Fail() -> void
     {
+        m_EveryTickDemand.Reset();
         m_TickDumpUIStore.SetRecording(false);
         m_TickDumpUIStore.ClearQueue();
         m_TickDumpUIStore.GetFile().close();

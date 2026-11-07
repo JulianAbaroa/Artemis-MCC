@@ -41,6 +41,9 @@ export namespace Control::Lockstep::Type
         std::uint8_t DecisionPeriod{ k_DefaultDecisionPeriod };
         std::uint8_t Latency{ k_DefaultLatency };
 
+        // Whether the client asks for the pipeline only on decision ticks (Q101). Not the effective one: see IsSparse.
+        bool IsSparseRequested{ false };
+
         // Player table indices whose action comes from the client. Empty unless the client owns the instance.
         std::uint32_t AgentMask{ 0 };
     };

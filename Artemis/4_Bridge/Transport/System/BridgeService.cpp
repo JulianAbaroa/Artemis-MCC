@@ -25,6 +25,7 @@ namespace
     using Control::Lockstep::System::GetDueDecision;
     using Control::Lockstep::System::GetReleasedOverride;
     using Control::Lockstep::System::IsDecisionTick;
+    using Control::Lockstep::System::IsSparse;
     using Control::Lockstep::System::ReadClock;
     using Control::Lockstep::System::RecordWait;
     using Control::Lockstep::System::ResumeIfAnswered;
@@ -296,6 +297,7 @@ namespace Bridge::Transport::System
 
         const BridgeControlState control{ m_BridgeStore.GetControl() };
         out.IsDecision = IsDecisionTick(m_BridgeStore.GetRegion() != nullptr, control, out.ActionTick, reading.IsRepeated);
+        out.IsSparse = IsSparse(control, m_SettingsStore.GetEveryTickDemand());
     }
 
     auto BridgeService::ResetClock() -> void
@@ -483,6 +485,7 @@ namespace Bridge::Transport::System
         artemis.DecisionPeriod = control.DecisionPeriod;
         artemis.Latency = control.Latency;
         artemis.IsClientConnected = control.IsClientConnected ? 1 : 0;
+        artemis.IsSparse = IsSparse(control, m_SettingsStore.GetEveryTickDemand()) ? 1 : 0;
         artemis.IsPaused = m_Engine.IsPauseRequested() ? 1 : 0;
         artemis.MatchId = static_cast<std::uint32_t>(m_Engine.GetEngineStarts());
         artemis.Scale = m_Engine.GetRequestedTimeScale();
