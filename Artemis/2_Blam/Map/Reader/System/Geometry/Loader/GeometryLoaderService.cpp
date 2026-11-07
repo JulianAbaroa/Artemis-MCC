@@ -19,8 +19,7 @@ namespace Blam::Map::Reader::System
         const PlayObject* play = m_TagCatalog.Play.Get("__play__");
         if (!zone || !play) return result;
 
-        const std::int64_t fixupDataBase = m_FormulaService.ToFileOffset(
-            m_FormulaService.Expand(zone->Data.FixupInformation.Pointer));
+        const std::int64_t fixupDataBase = m_GeometryResourcePageService.FixupDataBase(zone);
 
         std::int32_t processed{};
 

@@ -35,7 +35,7 @@ export namespace Blam::MapModel
     public:
         Layer(Log& log, Blam::Map::Layer& map) :
             m_TagResolverService(log, map.m_FileStore, map.m_TagIndexStore),
-            m_DefinitionsBuilder(log, map.m_TagCatalog, map.m_GeometryLoaderService, m_DefinitionsStore, map.m_TagReferenceService),
+            m_DefinitionsBuilder(log, map.m_TagCatalog, map.m_GeometryLoaderService, map.m_GeometryCollisionService, m_DefinitionsStore, map.m_TagReferenceService),
             m_WorldBuilder(log, m_DefinitionsStore, m_WorldStore, m_Raycaster, m_RegionStatesBuilder, m_ModelLinkBuilder),
             m_VitalityBuilder(log, m_DefinitionsStore, m_WorldStore, m_VitalityStore) {}
         ~Layer() = default;

@@ -35,4 +35,37 @@ export namespace Blam::Map::Reader::Type::Constant
     constexpr int k_InstanceScaleOffset{ 0 };
     constexpr int k_InstanceMatrixOffset{ 4 };
     constexpr int k_InstanceSectionOffset{ 58 };
+
+    // The same entries also hold the index of the instanced geometry definition they place and its flags.
+    constexpr int k_InstanceDefinitionOffset{ 52 };
+    constexpr int k_InstanceFlagsOffset{ 54 };
+
+    // Location bits of a resource fixup (AddressLocationHighBits): the target is in the definition or in the raw page.
+    constexpr std::uint8_t k_FixupLocationMask{ 0x60 };
+    constexpr std::uint8_t k_FixupLocationDefinition{ 0x20 };
+    constexpr std::uint8_t k_FixupLocationPage{ 0x40 };
+
+    // Tag block inside a resource definition: count, address (patched by a fixup), definition.
+    constexpr std::int32_t k_TagBlockSize{ 12 };
+    constexpr std::int32_t k_TagBlockAddressOffset{ 4 };
+
+    // Root of the collision resource of a structure bsp: three tag blocks, the bsps with the normal layout, the bsps with the
+    // large layout and the instanced geometry definitions.
+    constexpr std::int32_t k_CollisionRootSize{ 36 };
+    constexpr std::int32_t k_CollisionRootNormalBlock{ 0 };
+    constexpr std::int32_t k_CollisionRootLargeBlock{ 12 };
+    constexpr std::int32_t k_CollisionRootInstancedBlock{ 24 };
+
+    // A collision geometry is nine tag blocks in a row: nodes, supernodes, planes, leaves, bsp2d references, bsp2d nodes,
+    // surfaces, edges and vertices. Offsets of the ones that are read.
+    constexpr std::int32_t k_CollisionNodesBlock{ 0 };
+    constexpr std::int32_t k_CollisionSurfacesBlock{ 72 };
+    constexpr std::int32_t k_CollisionEdgesBlock{ 84 };
+    constexpr std::int32_t k_CollisionVerticesBlock{ 96 };
+
+    // Entry of the instanced geometry definitions: the collision geometry (normal layout) and, after it, a second one that
+    // would use the large layout.
+    constexpr std::int32_t k_InstanceDefinitionStride{ 324 };
+    constexpr std::int32_t k_InstanceDefinitionCollisionOffset{ 8 };
+    constexpr std::int32_t k_InstanceDefinitionLargeOffset{ 116 };
 }

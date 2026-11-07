@@ -43,16 +43,18 @@ export namespace Blam::MapModel::Definitions::System
     private:
         using Log = Common::Log::System::Log;
         using GeometryLoaderService = Blam::Map::Reader::System::GeometryLoaderService;
+        using GeometryCollisionService = Blam::Map::Reader::System::GeometryCollisionService;
         using TagReferenceService = Blam::Map::Reader::System::TagReferenceService;
         using TagCatalog = Blam::Map::Tag::State::TagCatalog;
         using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
 
     public:
         DefinitionsBuilder(Log& log, TagCatalog& tagCatalog,
-            GeometryLoaderService& geometryLoaderService, DefinitionsStore& definitionsStore,
-            TagReferenceService& tagReferenceService) :
+            GeometryLoaderService& geometryLoaderService, GeometryCollisionService& geometryCollisionService,
+            DefinitionsStore& definitionsStore, TagReferenceService& tagReferenceService) :
             m_Log(log), m_TagCatalog(tagCatalog),
-            m_GeometryLoaderService(geometryLoaderService), m_DefinitionsStore(definitionsStore),
+            m_GeometryLoaderService(geometryLoaderService), m_GeometryCollisionService(geometryCollisionService),
+            m_DefinitionsStore(definitionsStore),
             m_ObjectBuilder(tagReferenceService),
             m_Builders{ BipdBuilder{ m_ObjectBuilder }, BlocBuilder{ m_ObjectBuilder }, CollBuilder{},
                 CtrlBuilder{ m_ObjectBuilder }, EqipBuilder{ m_ObjectBuilder }, HlmtBuilder{ tagReferenceService },
@@ -72,6 +74,7 @@ export namespace Blam::MapModel::Definitions::System
         Log& m_Log;
         TagCatalog& m_TagCatalog;
         GeometryLoaderService& m_GeometryLoaderService;
+        GeometryCollisionService& m_GeometryCollisionService;
         DefinitionsStore& m_DefinitionsStore;
 
         ObjectBuilder m_ObjectBuilder;

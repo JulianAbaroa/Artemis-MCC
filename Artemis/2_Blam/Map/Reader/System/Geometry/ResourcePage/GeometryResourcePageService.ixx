@@ -46,6 +46,9 @@ export namespace Blam::Map::Reader::System
             const ZoneObject* zone, const PlayObject* play) const
             -> std::vector<std::uint8_t>;
 
+        // return: File offset where the fixup data of the zone starts.
+        auto FixupDataBase(const ZoneObject* zone) const -> std::int64_t;
+
     private:
         Log& m_Log;
         FileStore& m_FileStore;

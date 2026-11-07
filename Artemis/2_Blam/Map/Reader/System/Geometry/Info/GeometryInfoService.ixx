@@ -44,6 +44,11 @@ export namespace Blam::Map::Reader::System
             std::vector<BufferInfo>& outIBTable,
             std::int64_t fixupDataBase) const -> bool;
 
+        // Reads the definition of a resource: its tag blocks and the footer.
+        // param fixupDataBase: File offset where the fixup data of the zone starts.
+        // return: The bytes of the definition, fewer than its length if the file ends first. Empty if it cannot be read.
+        auto ReadDefinition(const Zone_TagResourcesObject& entry, std::int64_t fixupDataBase) const -> std::vector<std::uint8_t>;
+
     private:
         FileStore& m_FileStore;
         DataStreamService& m_DataStreamService;

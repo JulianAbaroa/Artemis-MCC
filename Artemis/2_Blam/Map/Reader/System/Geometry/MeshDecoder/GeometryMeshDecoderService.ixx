@@ -71,6 +71,12 @@ export namespace Blam::Map::Reader::System
             const ZoneObject* zone, std::int64_t fixupDataBase,
             const char* tagName, std::vector<Triangle>& out) const -> std::uint32_t;
 
+        // Reads the table of instance placements of a BSP: k_InstanceStride bytes per instance.
+        // param fixupDataBase: File offset where the fixup data of the zone starts.
+        // return: Empty if the BSP has no instances or the table cannot be located. Shorter than the instance count if the file ends first.
+        auto ReadInstanceTable(const SbspObject* sbsp, const ZoneObject* zone,
+            std::int64_t fixupDataBase, const char* tagName) const -> std::vector<std::uint8_t>;
+
         // return: Null if the section has no compression info.
         auto GetCompressionInfo(int sectionIdx,
             const SbspObject* sbsp) const -> const Sbsp_CompressionInfoEntry_3*;

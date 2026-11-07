@@ -11,6 +11,7 @@ namespace
     using Blam::Map::Reader::State::TagStore;
     using Blam::Map::Reader::System::GroupDescriptor;
     using Blam::Map::Reader::Type::Geometry::SbspGeometry;
+    using Blam::Map::Reader::Type::Geometry::SbspCollision;
     using Blam::Map::Tag::Type::Sbsp::Object::SbspObject;
 
     // Reads the map object and the definition out of the signature of a builder Build method.
@@ -125,6 +126,16 @@ namespace Blam::MapModel::Definitions::System
 
         std::vector<SbspGeometry> rendered = m_GeometryLoaderService.ReadRenderGeometry(tagNames);
 
+        std::vector<SbspCollision> collided = m_GeometryCollisionService.ReadCollision(tagNames);
+
+        std::unordered_map<std::string, SbspCollision> collisionByName{};
+        collisionByName.reserve(collided.size());
+
+        for (SbspCollision& collision : collided)
+        {
+            collisionByName.emplace(collision.TagName, std::move(collision));
+        }
+
         std::unordered_map<std::string, std::vector<Triangle>> renderByName{};
         renderByName.reserve(rendered.size());
 
@@ -158,7 +169,15 @@ namespace Blam::MapModel::Definitions::System
                 renderGeometry = std::move(it->second);
             }
 
-            m_DefinitionsStore.m_Sbsp.Add(tagName, m_SbspBuilder.Build(sbsp, std::move(renderGeometry)));
+            SbspCollision collision{};
+
+            const auto collisionIt = collisionByName.find(tagName);
+            if (collisionIt != collisionByName.end())
+            {
+                collision = std::move(collisionIt->second);
+            }
+
+            m_DefinitionsStore.m_Sbsp.Add(tagName, m_SbspBuilder.Build(sbsp, std::move(renderGeometry), std::move(collision)));
             ++built;
         }
 

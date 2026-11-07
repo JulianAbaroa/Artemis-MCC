@@ -1,8 +1,12 @@
 module Blam.Map.Reader.System;
 import :Geometry.MeshDecoder;
 
+import Common.Math.System;
+
 namespace
 {
+    using Common::Math::System::TransformPoint3x4;
+
     using Blam::Map::Reader::Type::Constant::k_FixupMask;
     using Blam::Map::Reader::Type::Constant::k_ResourceDatumMask;
     using Blam::Map::Reader::Type::Constant::k_VertexBufferStride;
@@ -178,37 +182,10 @@ namespace Blam::Map::Reader::System
         std::int64_t fixupDataBase, const char* tagName,
         std::vector<Triangle>& out) const -> std::uint32_t
     {
-        if (sbsp->InstancedGeometryInstances.empty()) return 0;
-
-        int instResIdx = (int)(sbsp->Data.ZoneAssetDatum5 & k_ResourceDatumMask);
-        if (instResIdx < 0 || instResIdx >= (int)zone->TagResources.size()) return 0;
-
-        const Zone_TagResourcesObject& instEntry = zone->TagResources[instResIdx];
-
-        int fixupIdx = (int)instEntry.ResourceFixups.size() - k_InstanceFixupFromEnd;
-        if (fixupIdx < 0 || fixupIdx >= (int)instEntry.ResourceFixups.size())
-        {
-            m_Log.Message("[GeometryMeshDecoderService] WARNING: '{}':"
-                " InstancesEntry.ResourceFixups is too short (Count={}, need >={}).",
-                tagName, (int)instEntry.ResourceFixups.size(), k_InstanceFixupFromEnd);
-            return 0;
-        }
-
-        const auto& fixup = instEntry.ResourceFixups[fixupIdx];
-
-        // This address intentionally does not use FormulaService::ResolveFixupOffset.
-        // It is a different formula than EmitSection: it adds
-        // instEntry.FixupInformationOffset and ignores AddressLocationHighBits.
-        // Do not merge it with the one in EmitSection.
-        std::uint32_t rawOffset = ((std::uint32_t)fixup.AddressUpperBits << 16) | fixup.Address;
-        std::uint32_t address = ((std::uint32_t)instEntry.FixupInformationOffset + rawOffset) & k_FixupMask;
-        std::int64_t transformsBase = fixupDataBase + address;
+        const std::vector<std::uint8_t> blob = this->ReadInstanceTable(sbsp, zone, fixupDataBase, tagName);
+        if (blob.empty()) return 0;
 
         int instCount = (int)sbsp->InstancedGeometryInstances.size();
-
-        auto blob = m_DataStreamService.ReadData(
-            m_FileStore.GetMapFilePath(), transformsBase,
-            k_InstanceStride * instCount);
 
         std::uint32_t emitted{};
 
@@ -247,6 +224,40 @@ namespace Blam::Map::Reader::System
         }
 
         return emitted;
+    }
+
+    auto GeometryMeshDecoderService::ReadInstanceTable(const SbspObject* sbsp, const ZoneObject* zone,
+        std::int64_t fixupDataBase, const char* tagName) const -> std::vector<std::uint8_t>
+    {
+        if (sbsp->InstancedGeometryInstances.empty()) return {};
+
+        int instResIdx = (int)(sbsp->Data.ZoneAssetDatum5 & k_ResourceDatumMask);
+        if (instResIdx < 0 || instResIdx >= (int)zone->TagResources.size()) return {};
+
+        const Zone_TagResourcesObject& instEntry = zone->TagResources[instResIdx];
+
+        int fixupIdx = (int)instEntry.ResourceFixups.size() - k_InstanceFixupFromEnd;
+        if (fixupIdx < 0 || fixupIdx >= (int)instEntry.ResourceFixups.size())
+        {
+            m_Log.Message("[GeometryMeshDecoderService] WARNING: '{}':"
+                " InstancesEntry.ResourceFixups is too short (Count={}, need >={}).",
+                tagName, (int)instEntry.ResourceFixups.size(), k_InstanceFixupFromEnd);
+            return {};
+        }
+
+        const auto& fixup = instEntry.ResourceFixups[fixupIdx];
+
+        // This address intentionally does not use FormulaService::ResolveFixupOffset.
+        // It is a different formula than EmitSection: it adds
+        // instEntry.FixupInformationOffset and ignores AddressLocationHighBits.
+        // Do not merge it with the one in EmitSection.
+        std::uint32_t rawOffset = ((std::uint32_t)fixup.AddressUpperBits << 16) | fixup.Address;
+        std::uint32_t address = ((std::uint32_t)instEntry.FixupInformationOffset + rawOffset) & k_FixupMask;
+        std::int64_t transformsBase = fixupDataBase + address;
+
+        return m_DataStreamService.ReadData(
+            m_FileStore.GetMapFilePath(), transformsBase,
+            k_InstanceStride * (int)sbsp->InstancedGeometryInstances.size());
     }
 
     auto GeometryMeshDecoderService::GetCompressionInfo(int sectionIdx,
@@ -350,12 +361,7 @@ namespace Blam::Map::Reader::System
 
         if (context.TransformMatrix)
         {
-            const float* m = context.TransformMatrix;
-            float worldX = x * m[0] + y * m[3] + z * m[6] + m[9];
-            float worldY = x * m[1] + y * m[4] + z * m[7] + m[10];
-            float worldZ = x * m[2] + y * m[5] + z * m[8] + m[11];
-
-            return { worldX, worldY, worldZ };
+            return TransformPoint3x4({ x, y, z }, context.TransformMatrix);
         }
 
         return { x, y, z };

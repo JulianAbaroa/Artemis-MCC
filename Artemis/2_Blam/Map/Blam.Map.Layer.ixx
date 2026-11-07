@@ -33,6 +33,7 @@ export namespace Blam::Map
         using GeometryMeshDecoderService = Blam::Map::Reader::System::GeometryMeshDecoderService;
         using GeometryResourcePageService = Blam::Map::Reader::System::GeometryResourcePageService;
         using GeometryLoaderService = Blam::Map::Reader::System::GeometryLoaderService;
+        using GeometryCollisionService = Blam::Map::Reader::System::GeometryCollisionService;
         using MapLoaderService = Blam::Map::Reader::System::MapLoaderService;
 
         using MapBuilderService = Blam::Map::Builder::System::MapBuilderService;
@@ -48,7 +49,8 @@ export namespace Blam::Map
             m_GeometryInfoService(m_FileStore, m_DataStreamService),
             m_GeometryMeshDecoderService(log, m_FileStore, m_DataStreamService, m_FormulaService),
             m_GeometryResourcePageService(log, m_FileStore, m_FileLocatorService, m_DataStreamService, m_FormulaService),
-            m_GeometryLoaderService(log, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService, m_FormulaService),
+            m_GeometryLoaderService(log, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService),
+            m_GeometryCollisionService(log, m_TagCatalog, m_GeometryResourcePageService, m_GeometryInfoService, m_GeometryMeshDecoderService, m_FormulaService),
             m_MapLoaderService(log, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_FileNamesService, m_HeaderService, m_TagIndexService),
             m_MapBuilderService(log, m_TagCatalog, m_FileStore, m_TagIndexStore, m_FileLocatorService, m_TagReferenceService) {}
         ~Layer() = default;
@@ -75,6 +77,7 @@ export namespace Blam::Map
         GeometryMeshDecoderService m_GeometryMeshDecoderService;
         GeometryResourcePageService m_GeometryResourcePageService;
         GeometryLoaderService m_GeometryLoaderService;
+        GeometryCollisionService m_GeometryCollisionService;
         MapLoaderService m_MapLoaderService;
         MapBuilderService m_MapBuilderService;
 

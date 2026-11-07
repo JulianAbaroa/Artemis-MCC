@@ -46,6 +46,9 @@
     <Filter Include="Reader\System\Geometry">
       <UniqueIdentifier>{9ff33cda-0a6f-45f4-b17a-b24690fda231}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Reader\System\Geometry\Collision">
+      <UniqueIdentifier>{605655ee-623f-40b5-8ff0-2d2482a83b79}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Reader\System\Geometry\Info">
       <UniqueIdentifier>{a088d1cf-7e91-40d6-93f3-bf48bd8ffe9b}</UniqueIdentifier>
     </Filter>
@@ -345,6 +348,12 @@
     </ClCompile>
     <ClCompile Include="Reader\System\Formula\FormulaService.ixx">
       <Filter>Reader\System\Formula</Filter>
+    </ClCompile>
+    <ClCompile Include="Reader\System\Geometry\Collision\GeometryCollisionService.cpp">
+      <Filter>Reader\System\Geometry\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="Reader\System\Geometry\Collision\GeometryCollisionService.ixx">
+      <Filter>Reader\System\Geometry\Collision</Filter>
     </ClCompile>
     <ClCompile Include="Reader\System\Geometry\Info\GeometryInfoService.cpp">
       <Filter>Reader\System\Geometry\Info</Filter>

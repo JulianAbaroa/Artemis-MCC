@@ -14,7 +14,6 @@ export namespace Blam::MapModel::Definitions::System
         using Vec3 = Common::Math::Type::Vec3;
         using Node = Common::Math::Type::Node;
         using CollObject = Blam::Map::Tag::Type::Coll::Object::CollObject;
-        using Coll_Regions_Permutations_BspsObject = Blam::Map::Tag::Type::Coll::Object::Coll_Regions_Permutations_BspsObject;
         using Coll = Blam::MapModel::Definitions::Type::Coll::Coll;
 
     public:
@@ -29,8 +28,5 @@ export namespace Blam::MapModel::Definitions::System
         auto BuildNodes(const CollObject& coll, Coll& out) -> void;
         auto BuildMaterials(const CollObject& coll, Coll& out) -> void;
         auto BuildBounds(Coll& out) -> void;
-
-        auto CollectSurfaceVertexIndices(const Coll_Regions_Permutations_BspsObject& bsp,
-            std::int32_t surfaceIndex) -> std::vector<std::int32_t>;
     };
 }

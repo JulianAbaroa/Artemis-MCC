@@ -34,6 +34,10 @@ export namespace Common::Math::System
     // Returns the distance between two points.
     auto Distance(const Vec3& a, const Vec3& b) -> float;
 
+    // Moves a point with a 3x4 matrix of 12 floats: three rows of rotation and scale, then the translation.
+    // note: Row vector convention, as the instance transforms of the map file.
+    auto TransformPoint3x4(const Vec3& point, const float* matrix) -> Vec3;
+
     // Returns the vector with length 1.
     // param fallback: Returned if the length is too small to normalize.
     auto Normalize(const Vec3& v, const Vec3& fallback = Vec3{ 0.0f, 0.0f, 1.0f }) -> Vec3;

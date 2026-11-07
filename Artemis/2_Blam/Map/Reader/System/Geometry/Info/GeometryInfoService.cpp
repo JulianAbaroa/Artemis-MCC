@@ -33,6 +33,15 @@ namespace Blam::Map::Reader::System
         return true;
     }
 
+    auto GeometryInfoService::ReadDefinition(const Zone_TagResourcesObject& entry,
+        std::int64_t fixupDataBase) const -> std::vector<std::uint8_t>
+    {
+        if (entry.FixupInformationLength <= 0) return {};
+
+        return m_DataStreamService.ReadData(m_FileStore.GetMapFilePath(),
+            fixupDataBase + entry.FixupInformationOffset, entry.FixupInformationLength);
+    }
+
     auto GeometryInfoService::ReadBufferInfoTables(const Zone_TagResourcesObject& entry,
         std::int32_t vbCount, std::int32_t ibCount,
         std::vector<BufferInfo>& outVBTable, std::vector<BufferInfo>& outIBTable,

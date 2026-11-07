@@ -26,6 +26,39 @@ export namespace Blam::Map::Reader::Type::Geometry
         std::vector<Triangle> RenderGeometry{};
     };
 
+    // One placement of an instanced geometry definition.
+    struct CollisionInstance
+    {
+        std::int16_t DefinitionIndex{ -1 };
+        std::uint16_t Flags{};
+
+        // Three rows of the rotation already multiplied by the scale, then the position. Row vectors, as the render geometry.
+        std::array<float, 12> Matrix{};
+    };
+
+    // Collision of one structure BSP.
+    struct SbspCollision
+    {
+        std::string TagName{};
+
+        // Surfaces of the structure as triangles, in world space.
+        std::vector<Triangle> Structure{};
+
+        // Surfaces of each instanced geometry definition as triangles, in the local space of the definition.
+        std::vector<std::vector<Triangle>> Definitions{};
+        std::vector<CollisionInstance> Instances{};
+
+        // True if the structure used the large element layout.
+        bool IsLarge{ false };
+
+        // Surfaces whose polygon could not be walked, triangles dropped for having no area, definitions that could not be
+        // read and placements that name a definition that does not exist.
+        std::uint32_t OpenSurfaces{};
+        std::uint32_t DegenerateTriangles{};
+        std::uint32_t UnreadDefinitions{};
+        std::uint32_t InvalidPlacements{};
+    };
+
     // Everything needed to decode the vertices of one mesh section.
     struct VertexDecodeContext
     {

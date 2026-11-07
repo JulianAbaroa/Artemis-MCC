@@ -126,6 +126,9 @@
     <ClCompile Include="Blam\MapModelTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
+    <ClCompile Include="Blam\SbspCollisionTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
     <ClCompile Include="Blam\MapTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>

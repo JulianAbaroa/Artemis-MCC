@@ -22,7 +22,7 @@ the development tools and the tests may import them.
 | Module | What it gives |
 |---|---|
 | `Blam.Map.Layer` | The facade: stores and services of the loaded map; `Cleanup()` forgets it. |
-| `Blam.Map.Reader.Type`, `Blam.Map.Reader.State`, `Blam.Map.Reader.System` | File header, tag index, data streams and tag references. |
+| `Blam.Map.Reader.Type`, `Blam.Map.Reader.State`, `Blam.Map.Reader.System` | File header, tag index, data streams and tag references, and the geometry of the structure bsps: render triangles (`GeometryLoaderService`) and collision (`GeometryCollisionService`: static surfaces and the instanced geometry definitions with their placements, read from the collision resource). |
 | `Blam.Map.Tag.Type`, `Blam.Map.Tag.State`, `Blam.Map.Tag.System` | Generated tag structs, the catalog and the tag readers. |
 
 ## Depends on

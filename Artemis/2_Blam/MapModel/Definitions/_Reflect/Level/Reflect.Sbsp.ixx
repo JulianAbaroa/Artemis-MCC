@@ -21,6 +21,7 @@ export namespace Common::Reflect::Type
             MakeField("MoppBoundsMin", &Sbsp::MoppBoundsMin),
             MakeField("MoppBoundsMax", &Sbsp::MoppBoundsMax),
             MakeField("RenderGeometry", &Sbsp::RenderGeometry),
+            MakeField("CollisionGeometry", &Sbsp::CollisionGeometry),
         };
     };
 }

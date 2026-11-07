@@ -7,7 +7,6 @@
 
 export module Blam.Map.Reader.System:Geometry.Loader;
 
-import :Formula;
 import :Geometry.Info;
 import :Geometry.MeshDecoder;
 import :Geometry.ResourcePage;
@@ -32,7 +31,6 @@ export namespace Blam::Map::Reader::System
 
         using Log = Common::Log::System::Log;
         using TagCatalog = Blam::Map::Tag::State::TagCatalog;
-        using FormulaService = Blam::Map::Reader::System::FormulaService;
         using GeometryInfoService = Blam::Map::Reader::System::GeometryInfoService;
         using GeometryResourcePageService = Blam::Map::Reader::System::GeometryResourcePageService;
         using GeometryMeshDecoderService = Blam::Map::Reader::System::GeometryMeshDecoderService;
@@ -41,13 +39,11 @@ export namespace Blam::Map::Reader::System
         GeometryLoaderService(Log& log, TagCatalog& tagCatalog,
             GeometryResourcePageService& geometryResourcePageService,
             GeometryInfoService& geometryInfoService,
-            GeometryMeshDecoderService& geometryMeshDecoderService,
-            FormulaService& formulaService) :
+            GeometryMeshDecoderService& geometryMeshDecoderService) :
             m_Log(log), m_TagCatalog(tagCatalog),
             m_GeometryResourcePageService(geometryResourcePageService),
             m_GeometryInfoService(geometryInfoService),
-            m_GeometryMeshDecoderService(geometryMeshDecoderService),
-            m_FormulaService(formulaService) {}
+            m_GeometryMeshDecoderService(geometryMeshDecoderService) {}
         ~GeometryLoaderService() = default;
 
         // Decodes the geometry of each structure BSP that has a lightmap BSP with meshes.
@@ -62,6 +58,5 @@ export namespace Blam::Map::Reader::System
         GeometryResourcePageService& m_GeometryResourcePageService;
         GeometryInfoService& m_GeometryInfoService;
         GeometryMeshDecoderService& m_GeometryMeshDecoderService;
-        FormulaService& m_FormulaService;
     };
 }

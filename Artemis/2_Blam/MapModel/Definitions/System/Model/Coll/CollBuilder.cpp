@@ -2,6 +2,7 @@ module Blam.MapModel.Definitions.System;
 import :Coll;
 
 import Common.Math.Type;
+import Common.Geometry.System;
 import Blam.MapModel.Definitions.Type;
 
 namespace
@@ -9,6 +10,7 @@ namespace
     using Common::Math::Type::Triangle;
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::Definitions::Type::Coll::Material;
+    using Common::Geometry::System::AppendCollisionSurface;
 
     using Common::Math::Type::k_FloatMax;
     using Blam::MapModel::Definitions::Type::Coll::k_DefaultPermutationName;
@@ -75,27 +77,7 @@ namespace Blam::MapModel::Definitions::System
                         k < static_cast<std::int32_t>(bsp.Surfaces.size());
                         ++k)
                     {
-                        const std::vector<std::int32_t> indices =
-                            this->CollectSurfaceVertexIndices(bsp, k);
-
-                        if (indices.size() < 3) continue;
-
-                        const auto& surface = bsp.Surfaces[k];
-
-                        for (std::size_t fan = 1; fan + 1 < indices.size(); ++fan)
-                        {
-                            Triangle triangle{};
-
-                            triangle.A = bsp.Vertices[indices[0]].Point;
-
-                            triangle.B = bsp.Vertices[indices[fan]].Point;
-
-                            triangle.C = bsp.Vertices[indices[fan + 1]].Point;
-
-                            triangle.SurfaceFlags = surface.Flags;
-                            triangle.Material = surface.Material;
-                            mesh.Triangles.push_back(triangle);
-                        }
+                        AppendCollisionSurface(bsp.Surfaces, bsp.Edges, bsp.Vertices, k, mesh.Triangles);
                     }
 
                     if (mesh.Triangles.empty()) continue;
@@ -183,77 +165,5 @@ namespace Blam::MapModel::Definitions::System
             out.BoundsMax.Y = (std::max)(out.BoundsMax.Y, mesh.LocalMax.Y);
             out.BoundsMax.Z = (std::max)(out.BoundsMax.Z, mesh.LocalMax.Z);
         }
-    }
-
-    auto CollBuilder::CollectSurfaceVertexIndices(
-        const Coll_Regions_Permutations_BspsObject& bsp,
-        std::int32_t surfaceIndex) -> std::vector<std::int32_t>
-    {
-        std::vector<std::int32_t> ring{};
-
-        const auto& surfaces = bsp.Surfaces;
-        const auto& edges = bsp.Edges;
-
-        if (surfaceIndex < 0 ||
-            static_cast<std::size_t>(surfaceIndex) >= surfaces.size())
-        {
-            return ring;
-        }
-
-        const std::int32_t firstEdge = surfaces[surfaceIndex].FirstEdge;
-
-        if (firstEdge < 0 ||
-            static_cast<std::size_t>(firstEdge) >= edges.size())
-        {
-            return ring;
-        }
-
-        std::int32_t i{ firstEdge };
-
-        const std::size_t maxSteps = edges.size() + 1;
-        std::size_t steps{};
-
-        do
-        {
-            if (i < 0 || static_cast<std::size_t>(i) >= edges.size())
-            {
-                ring.clear();
-                return ring;
-            }
-
-            const auto& edge = edges[i];
-
-            std::int32_t vertex{};
-            std::int32_t next{};
-
-            if (edge.LeftSurface == surfaceIndex)
-            {
-                vertex = edge.StartVertex;
-                next = edge.ForwardEdge;
-            }
-            else
-            {
-                vertex = edge.EndVertex;
-                next = edge.ReverseEdge;
-            }
-
-            if (vertex < 0 ||
-                static_cast<std::size_t>(vertex) >= bsp.Vertices.size())
-            {
-                ring.clear();
-                return ring;
-            }
-
-            ring.push_back(vertex);
-            i = next;
-
-            if (++steps > maxSteps)
-            {
-                ring.clear();
-                return ring;
-            }
-        } while (i != firstEdge);
-
-        return ring;
     }
 }

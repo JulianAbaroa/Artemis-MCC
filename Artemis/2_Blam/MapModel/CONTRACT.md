@@ -22,7 +22,7 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Blam.MapModel.Layer` | The facade: stores, builders and the tag resolver; `Cleanup()` forgets the map. |
-| `Blam.MapModel.Definitions.Type`, `Blam.MapModel.Definitions.State` | Resolved definitions by tag group (object, model, damage, level...). The instant responses of a model name their damage effect and the damage effect carries its radius (D259). `DefinitionsStore::ModelOf` gives the model tag of a crate or a scenery. The phantom types of a physics model carry the `k_PhantomIgnores*` bits of their flags (D98). |
+| `Blam.MapModel.Definitions.Type`, `Blam.MapModel.Definitions.State` | Resolved definitions by tag group (object, model, damage, level...). The instant responses of a model name their damage effect and the damage effect carries its radius (D259). `DefinitionsStore::ModelOf` gives the model tag of a crate or a scenery. A structure bsp carries its render triangles and its collision triangles in world space (`Sbsp::CollisionGeometry`: structure and placed instanced geometry, with the surface flags and the global material index of each triangle, D272). The phantom types of a physics model carry the `k_PhantomIgnores*` bits of their flags (D98). |
 | `Blam.MapModel.Definitions.Reflect` | Reflection of the definitions, for the inspector. |
 | `Blam.MapModel.World.Type`, `Blam.MapModel.World.State`, `Blam.MapModel.World.System` | Links of the world and the raycaster. |
 | `Blam.MapModel.Vitality.Type`, `Blam.MapModel.Vitality.State` | Vitality layouts by model. |

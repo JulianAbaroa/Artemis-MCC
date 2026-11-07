@@ -72,6 +72,8 @@
     <ClCompile Include="Reader\System\FileNames\FileNamesService.ixx" />
     <ClCompile Include="Reader\System\Formula\FormulaService.cpp" />
     <ClCompile Include="Reader\System\Formula\FormulaService.ixx" />
+    <ClCompile Include="Reader\System\Geometry\Collision\GeometryCollisionService.cpp" />
+    <ClCompile Include="Reader\System\Geometry\Collision\GeometryCollisionService.ixx" />
     <ClCompile Include="Reader\System\Geometry\Info\GeometryInfoService.cpp" />
     <ClCompile Include="Reader\System\Geometry\Info\GeometryInfoService.ixx" />
     <ClCompile Include="Reader\System\Geometry\Loader\GeometryLoaderService.cpp" />

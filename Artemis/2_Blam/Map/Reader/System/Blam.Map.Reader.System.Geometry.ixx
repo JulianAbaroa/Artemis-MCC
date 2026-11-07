@@ -1,5 +1,6 @@
 export module Blam.Map.Reader.System:Geometry;
 
+export import :Geometry.Collision;
 export import :Geometry.Info;
 export import :Geometry.Loader;
 export import :Geometry.MeshDecoder;

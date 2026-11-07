@@ -63,6 +63,14 @@ namespace Common::Math::System
         return Length(Subtract(a, b));
     }
 
+    auto TransformPoint3x4(const Vec3& point, const float* matrix) -> Vec3
+    {
+        return {
+            point.X * matrix[0] + point.Y * matrix[3] + point.Z * matrix[6] + matrix[9],
+            point.X * matrix[1] + point.Y * matrix[4] + point.Z * matrix[7] + matrix[10],
+            point.X * matrix[2] + point.Y * matrix[5] + point.Z * matrix[8] + matrix[11] };
+    }
+
     auto Normalize(const Vec3& v, const Vec3& fallback) -> Vec3
     {
         const float length = Length(v);

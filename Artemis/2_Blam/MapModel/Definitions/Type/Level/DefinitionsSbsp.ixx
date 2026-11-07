@@ -11,7 +11,7 @@ namespace
 
 export namespace Blam::MapModel::Definitions::Type::Sbsp
 {
-    // Holds the bounds and the render triangles of a structure bsp.
+    // Holds the bounds, the render triangles and the collision triangles of a structure bsp.
     struct Sbsp
     {
         std::string TagName{};
@@ -22,5 +22,10 @@ export namespace Blam::MapModel::Definitions::Type::Sbsp
         Vec3 MoppBoundsMax{};
 
         std::vector<Triangle> RenderGeometry{};
+
+        // Collision surfaces of the structure and of the placed instanced geometry, all in world space, as triangles.
+        // SurfaceFlags are the flags of the collision surface (two sided, invisible, climbable, breakable...) and Material is the
+        // global material index of the collision material of the surface (-1 if it has none).
+        std::vector<Triangle> CollisionGeometry{};
     };
 }

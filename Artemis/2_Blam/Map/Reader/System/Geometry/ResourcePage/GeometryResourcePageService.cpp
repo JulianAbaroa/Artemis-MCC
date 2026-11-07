@@ -9,6 +9,11 @@ namespace
 
 namespace Blam::Map::Reader::System
 {
+    auto GeometryResourcePageService::FixupDataBase(const ZoneObject* zone) const -> std::int64_t
+    {
+        return m_FormulaService.ToFileOffset(m_FormulaService.Expand(zone->Data.FixupInformation.Pointer));
+    }
+
     auto GeometryResourcePageService::Read(std::uint32_t datum,
         const Zone_TagResourcesObject** outEntry, const ZoneObject* zone,
         const PlayObject* play) const -> std::vector<std::uint8_t>
