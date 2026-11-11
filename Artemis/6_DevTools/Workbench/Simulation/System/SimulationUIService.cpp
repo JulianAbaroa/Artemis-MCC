@@ -861,7 +861,7 @@ namespace DevTools::Workbench::Simulation::System
         PlayerActions actions{};
         m_PlayerActionStore.CopyLatest(actions);
 
-        if (!ImGui::BeginTable("Bots", 10, flags)) return;
+        if (!ImGui::BeginTable("Bots", 11, flags)) return;
 
         ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Player");
@@ -873,6 +873,7 @@ namespace DevTools::Workbench::Simulation::System
         ImGui::TableSetupColumn("Action this tick");
         ImGui::TableSetupColumn("Action");
         ImGui::TableSetupColumn("Requests");
+        ImGui::TableSetupColumn("Remove");
         ImGui::TableHeadersRow();
 
         for (const Bot& bot : bots)
@@ -951,6 +952,16 @@ namespace DevTools::Workbench::Simulation::System
                     player.Client->InventoryVersion, player.Client->GrenadeType, player.Client->ZoomLevel,
                     player.Client->IsSeated ? ", seated" : "");
             }
+
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Remove"))
+            {
+                // note: The action mode and the override belong to the player index, which a new bot can take.
+                m_SimulationUIStore.SetBotAction(bot.PlayerIndex, LocalPlayerAction::Engine);
+                m_PlayerActionStore.SetOverride(bot.PlayerIndex, std::nullopt);
+                m_BotStore.RequestRemove(bot.Number);
+            }
+            ImGui::SetItemTooltip("The bot leaves the match on the next tick and its slot is free at once. The result is in the log.");
 
             ImGui::PopID();
         }

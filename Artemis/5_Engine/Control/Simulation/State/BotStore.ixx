@@ -35,8 +35,16 @@ export namespace Engine::Control::Simulation::State
         // return: The team changes asked for and not applied yet, and clears them.
         auto TakeTeamRequests() -> std::vector<TeamRequest>;
 
+        // Asks to remove a bot by its number. The game thread removes it on its next tick.
+        auto RequestRemove(std::size_t number) -> void;
+
+        // return: The numbers of the bots asked to be removed and not removed yet, and clears them.
+        auto TakeRemoveRequests() -> std::vector<std::size_t>;
+
         auto AddBot(const Bot& bot) -> void;
-        auto GetBotCount() const -> std::size_t;
+
+        // Forgets the bot with that number. Its machine stays.
+        auto RemoveBot(std::size_t number) -> void;
         auto CopyBots(std::vector<Bot>& out) const -> void;
 
         auto AddFakeMachine(const FakeMachine& machine) -> void;
@@ -52,6 +60,7 @@ export namespace Engine::Control::Simulation::State
         mutable std::mutex m_Mutex{};
         std::vector<std::optional<std::int8_t>> m_Requests{};
         std::vector<TeamRequest> m_TeamRequests{};
+        std::vector<std::size_t> m_RemoveRequests{};
         std::vector<Bot> m_Bots{};
         std::vector<FakeMachine> m_FakeMachines{};
         SessionSnapshot m_Snapshot{};

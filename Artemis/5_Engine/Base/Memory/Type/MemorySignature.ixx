@@ -164,6 +164,15 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 8B C4 48 89 58 10 48 89 70 18 48 89 78 20 55 41 54 41 55 41 56 41 57 48 8D 68 A1 48 81 EC 00 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 27 4C 63 39 33 DB 65 48 8B 04 25 58 00 00 00"
     };
 
+    // simulation_players_apply_update(update) (0x418ff8): applies a player update by its type (+0xC: 0 left, 1 swap, 2 remove, 3 added,
+    // 4 configuration). It has no stack cookie: the wildcards are the jump targets of the type switch and the TLS index (A9 sec. 13.15).
+    // 1 hit in haloreach.dll build 1.3528.
+    inline constexpr Signature k_ApplyPlayerUpdate
+    {
+        "ApplyPlayerUpdate",
+        "48 83 EC 28 8B 51 0C 45 33 C0 4C 8B C9 85 D2 0F 84 ?? ?? ?? ?? 83 EA 01 0F 84 ?? ?? ?? ?? 83 EA 01 0F 84 ?? ?? ?? ?? 83 EA 01 0F 84 ?? ?? ?? ?? 83 FA 01 0F 85 ?? ?? ?? ?? 8B 15 ?? ?? ?? ?? 4C 63 11 65 48 8B 04 25 58 00 00 00"
+    };
+
     // player_set_configuration(player, configuration): applies a "configuration" player update (name, appearance, team. A team change
     // kills the unit and starts the respawn timer) (A9 sec. 13.11).
     inline constexpr Signature k_ApplyPlayerConfiguration

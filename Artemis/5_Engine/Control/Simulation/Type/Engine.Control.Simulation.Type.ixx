@@ -10,6 +10,7 @@ namespace
     using ::Control::Action::Type::UnitClientState;
 
     using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_MaxTeams;
     using Common::Engine::Type::k_GamerTagLength;
 }
 
@@ -20,6 +21,10 @@ export namespace Engine::Control::Simulation::Type
 
     // Players one machine can have: the user index and the controller (0 to 3) cannot repeat inside a machine.
     inline constexpr std::size_t k_MaxPlayersPerMachine{ 4 };
+
+    // Bots one instance can hold: 4 per fake machine, on every machine slot except the first one (the local machine). The player table
+    // (k_MaxPlayers) is the limit that binds first.
+    inline constexpr std::size_t k_MaxBots{ (k_MaxMachines - 1) * k_MaxPlayersPerMachine };
 
     // Bytes of a machine identifier.
     inline constexpr std::size_t k_MachineIdentifierSize{ 6 };
@@ -34,9 +39,10 @@ export namespace Engine::Control::Simulation::Type
     // and gamertag (16 wchar_t).
     inline constexpr std::uintptr_t k_PlayerSalt{ 0x00 };
 
-    // Player flags (uint32): bit 0 active in game (set by the activation events of the simulation queue), bit 3 set on creation in
-    // network games, bit 15 joined in progress.
+    // Player flags (uint32): bit 0 active in game (set by the activation events of the simulation queue), bit 1 left (the "left" update
+    // sets it, the "remove" update needs it), bit 3 set on creation in network games, bit 15 joined in progress.
     inline constexpr std::uintptr_t k_PlayerFlags{ 0x04 };
+    inline constexpr std::uint32_t k_PlayerFlagLeft{ 0x2 };
     inline constexpr std::uintptr_t k_PlayerIdentifier{ 0x08 };
 
     // Machine identifier of the player datum (6 bytes). The engine keeps it next to the machine index, and players_update_activation
@@ -106,7 +112,9 @@ export namespace Engine::Control::Simulation::Type
     inline constexpr std::uintptr_t k_UpdateJoinedInProgress{ 0x21 };
     inline constexpr std::uintptr_t k_UpdateConfiguration{ 0x28 };
 
-    // Type of a player update that adds a player.
+    // Types of a player update. Left needs the flag k_PlayerFlagLeft off and sets it, remove needs it on and frees the slot.
+    inline constexpr std::int32_t k_PlayerUpdateLeft{ 0 };
+    inline constexpr std::int32_t k_PlayerUpdateRemove{ 2 };
     inline constexpr std::int32_t k_PlayerUpdateAdded{ 3 };
 
     // Interaction of a player as the engine builds it (A9 M5d): records of the objects the player can use, best first. A record has
@@ -157,7 +165,7 @@ export namespace Engine::Control::Simulation::Type
     // A player Artemis added on a machine of its own (A9 M5b).
     struct Bot
     {
-        // Number of the bot, from 1, in the order they were added.
+        // Number of the bot, from 1: the lowest one free when it was added. It decides its machine and user.
         std::size_t Number{ 0 };
         std::size_t PlayerIndex{ 0 };
         std::size_t MachineIndex{ 0 };
@@ -173,6 +181,50 @@ export namespace Engine::Control::Simulation::Type
         std::int8_t Team{ 0 };
     };
 
+    // A bot as the roster planner sees it: its number, its slot in the player table and the team the engine has it on.
+    struct RosterBot
+    {
+        std::size_t Number{ 0 };
+        std::size_t PlayerIndex{ 0 };
+        std::int8_t Team{ 0 };
+    };
+
+    // The bots a match should have (D284): how many on each team, and how many more on the team of the local player 0, which is
+    // resolved when the roster is applied. The local players are not part of it.
+    struct Roster
+    {
+        std::array<std::size_t, k_MaxTeams> Teams{};
+        std::size_t Auto{ 0 };
+
+        auto operator==(const Roster&) const -> bool = default;
+    };
+
+    // A bot that changes team.
+    struct RosterMove
+    {
+        std::size_t Number{ 0 };
+        std::int8_t Team{ 0 };
+
+        auto operator==(const RosterMove&) const -> bool = default;
+    };
+
+    // What it takes to go from the bots of the match to a roster. It is applied in this order: moves, removes, adds.
+    struct RosterPlan
+    {
+        std::vector<RosterMove> Moves{};
+        // Numbers of the bots to remove.
+        std::vector<std::size_t> Removes{};
+        // Team of every bot to add.
+        std::vector<std::int8_t> Adds{};
+
+        auto IsEmpty() const -> bool
+        {
+            return Moves.empty() && Removes.empty() && Adds.empty();
+        }
+
+        auto operator==(const RosterPlan&) const -> bool = default;
+    };
+
     // A machine that only exists for the bots.
     struct FakeMachine
     {
@@ -185,6 +237,11 @@ export namespace Engine::Control::Simulation::Type
 
     // Signature of simulation_player_update_apply_added: creates the player of an "added" update.
     using ApplyPlayerAddedFunction = auto(__fastcall*)(const void* update) -> bool;
+
+    // Signature of simulation_players_apply_update (0x418ff8): applies a player update of the types left, swap, remove, added and
+    // configuration. For left, remove and configuration it checks that the player of the index has the identifier of the update.
+    // return: True if it applied the update.
+    using ApplyPlayerUpdateFunction = auto(__fastcall*)(const void* update) -> bool;
 
     // Signature of player_set_configuration: applies a configuration to the player (handle with salt).
     using ApplyPlayerConfigurationFunction = auto(__fastcall*)(std::uint32_t player, const void* configuration) -> void;
@@ -202,4 +259,101 @@ export namespace Engine::Control::Simulation::Type
 
     // Signature of the two steps that fill the interaction of a player (handle with salt) once it was cleared (0x4ef34, 0x4eb54).
     using GatherInteractionsFunction = auto(__fastcall*)(std::uint32_t player, void* interaction) -> void;
+
+    // return: A player update of the given type with the player index and the identifier, and every other field zero.
+    // note: Enough for the types left and remove. The type added needs the machine, the user and the configuration on top.
+    auto MakePlayerUpdate(std::int32_t playerIndex, std::uint64_t identifier, std::int32_t type) -> std::array<std::uint8_t, k_PlayerUpdateSize>
+    {
+        std::array<std::uint8_t, k_PlayerUpdateSize> update{};
+
+        std::memcpy(update.data() + k_UpdatePlayerIndex, &playerIndex, sizeof(playerIndex));
+        std::memcpy(update.data() + k_UpdateIdentifier, &identifier, sizeof(identifier));
+        std::memcpy(update.data() + k_UpdateType, &type, sizeof(type));
+
+        return update;
+    }
+
+    // return: The lowest bot number from 1 to k_MaxBots that is not in use, or nothing if all are. A bot that is removed and added again
+    // gets the same number, so it gets the same machine, user and controller.
+    auto FindFreeBotNumber(std::span<const std::size_t> used) -> std::optional<std::size_t>
+    {
+        for (std::size_t number{ 1 }; number <= k_MaxBots; ++number)
+        {
+            if (std::ranges::find(used, number) == used.end()) return number;
+        }
+
+        return std::nullopt;
+    }
+
+    // Plans the fewest operations that turn the bots of the match into the roster (D284). Per team it keeps the bots it has up to the
+    // count it wants. The extra bots of a team move to the teams that miss some, in team order, and the ones left are removed. The
+    // teams that still miss bots get new ones. Inside a team the bot with the highest number goes first, so the last added one leaves.
+    // param bots: The bots of the match. A bot on a team that is not 0 to k_MaxTeams - 1 counts as an extra one.
+    // param localTeam: Team of the local player 0, where the auto bots go.
+    // param otherPlayers: Players in the table that are not bots (the local players and real ones).
+    // return: The plan, or the reason the roster does not fit: more bots than k_MaxBots, or than the free slots of the player table.
+    auto PlanRoster(std::span<const RosterBot> bots, const Roster& roster, std::int8_t localTeam, std::size_t otherPlayers)
+        -> std::expected<RosterPlan, std::string>
+    {
+        std::array<std::size_t, k_MaxTeams> wanted{ roster.Teams };
+
+        if (roster.Auto > 0)
+        {
+            if (localTeam < 0 || static_cast<std::size_t>(localTeam) >= k_MaxTeams)
+            {
+                return std::unexpected(std::format("the local player is on team {}, not on a team from 0 to {}", localTeam,
+                    k_MaxTeams - 1));
+            }
+
+            wanted[static_cast<std::size_t>(localTeam)] += roster.Auto;
+        }
+
+        const std::size_t total{ std::accumulate(wanted.begin(), wanted.end(), std::size_t{ 0 }) };
+        if (total > k_MaxBots) return std::unexpected(std::format("{} bots, at most {}", total, k_MaxBots));
+
+        if (otherPlayers + total > k_MaxPlayers)
+        {
+            return std::unexpected(std::format("{} bots and {} other players do not fit in {} player slots", total, otherPlayers,
+                k_MaxPlayers));
+        }
+
+        // Teams in order, the ones outside the range last, and the highest number first inside a team.
+        std::vector<RosterBot> sorted{ bots.begin(), bots.end() };
+        const auto teamOrder = [](const RosterBot& bot) {
+            return (bot.Team >= 0 && static_cast<std::size_t>(bot.Team) < k_MaxTeams) ? static_cast<std::size_t>(bot.Team) : k_MaxTeams;
+        };
+        std::ranges::sort(sorted, [&teamOrder](const RosterBot& left, const RosterBot& right) {
+            if (teamOrder(left) != teamOrder(right)) return teamOrder(left) < teamOrder(right);
+            return left.Number > right.Number;
+        });
+
+        std::array<std::size_t, k_MaxTeams + 1> have{};
+        for (const RosterBot& bot : sorted) ++have[teamOrder(bot)];
+
+        // The first bots of each team in this order are its extra ones.
+        std::vector<std::size_t> extra{};
+        std::array<std::size_t, k_MaxTeams + 1> seen{};
+        for (const RosterBot& bot : sorted)
+        {
+            const std::size_t team{ teamOrder(bot) };
+            const std::size_t keep{ team < k_MaxTeams ? (std::min)(have[team], wanted[team]) : 0 };
+
+            if (seen[team]++ < have[team] - keep) extra.push_back(bot.Number);
+        }
+
+        RosterPlan plan{};
+        std::size_t next{ 0 };
+
+        for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+        {
+            for (std::size_t missing{ have[team] < wanted[team] ? wanted[team] - have[team] : 0 }; missing > 0; --missing)
+            {
+                if (next < extra.size()) plan.Moves.push_back(RosterMove{ .Number = extra[next++], .Team = static_cast<std::int8_t>(team) });
+                else                     plan.Adds.push_back(static_cast<std::int8_t>(team));
+            }
+        }
+
+        plan.Removes.assign(extra.begin() + static_cast<std::ptrdiff_t>(next), extra.end());
+        return plan;
+    }
 }

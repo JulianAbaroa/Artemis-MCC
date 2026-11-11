@@ -23,6 +23,7 @@ export namespace Engine::Control::Simulation::System
 
         using SetMachinesFunction = Engine::Control::Simulation::Type::SetMachinesFunction;
         using ApplyPlayerAddedFunction = Engine::Control::Simulation::Type::ApplyPlayerAddedFunction;
+        using ApplyPlayerUpdateFunction = Engine::Control::Simulation::Type::ApplyPlayerUpdateFunction;
         using ApplyPlayerConfigurationFunction = Engine::Control::Simulation::Type::ApplyPlayerConfigurationFunction;
         using GatherInteractionsFunction = Engine::Control::Simulation::Type::GatherInteractionsFunction;
         using UnitSelectorFunction = Engine::Control::Simulation::Type::UnitSelectorFunction;
@@ -41,7 +42,8 @@ export namespace Engine::Control::Simulation::System
         BotService(const BotService&) = delete;
         auto operator=(const BotService&) -> BotService& = delete;
 
-        // Publishes the session snapshot, adds the bots asked for since the last tick and applies their team changes.
+        // Publishes the session snapshot, removes the bots asked to be removed since the last tick, adds the ones asked for and applies
+        // their team changes.
         // param threadContext: Thread context of the engine, or 0 if unknown (then it does nothing).
         // note: Game thread only, before the player actions of the tick are applied.
         auto Update(std::uintptr_t threadContext) -> void;
@@ -79,11 +81,11 @@ export namespace Engine::Control::Simulation::System
         // note: Game thread only.
         auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> override;
 
-        // Finds the engine functions by signature, in three sets: the ones that add bots, the ones that build the interaction and the
-        // client selectors (weapon, grenade, zoom).
-        // return: False if one is not found. The cause is logged. Without the first set no bot can be added, without the second the
-        // agents keep the interaction the engine built (none for a bot), without the third the agents cannot switch weapon,
-        // grenade or zoom.
+        // Finds the engine functions by signature, in three sets: the ones that add and remove bots, the ones that build the
+        // interaction and the client selectors (weapon, grenade, zoom).
+        // return: False if one is not found. The cause is logged. Without the first set no bot can be added (without only the player
+        // update function, bots are added but not removed), without the second the agents keep the interaction the engine built (none
+        // for a bot), without the third the agents cannot switch weapon, grenade or zoom.
         // note: Call it before the SetMachines hook is installed: the hook overwrites the bytes the signature matches.
         auto ResolveFunctions() -> bool;
 
@@ -98,6 +100,7 @@ export namespace Engine::Control::Simulation::System
         // Engine functions. The SetMachines call goes through its hook, which keeps the fake machines.
         SetMachinesFunction m_SetMachines{ nullptr };
         ApplyPlayerAddedFunction m_ApplyPlayerAdded{ nullptr };
+        ApplyPlayerUpdateFunction m_ApplyPlayerUpdate{ nullptr };
         ApplyPlayerConfigurationFunction m_ApplyPlayerConfiguration{ nullptr };
         bool m_IsResolved{ false };
 
@@ -118,6 +121,14 @@ export namespace Engine::Control::Simulation::System
         // param team: Team in team games, or nullopt for the team of the local player.
         // return: False if the engine refused it. The cause is logged.
         auto AddBot(std::uintptr_t threadContext, std::optional<std::int8_t> team) -> bool;
+
+        // Removes a bot from the match: the "left" update, then the "remove" update, both through the engine function that applies the
+        // player updates, so the slot is free at once and the bot leaves the scoreboard.
+        // param number: Number of the bot. Only the bots Artemis added are touched, never a local or real player.
+        // return: True if the bot is no longer in the match. False if the engine refused a step or the function was not found: the
+        // cause is logged and the bot stays in the store while its slot is taken (a retry resumes where it stopped).
+        // note: Game thread only.
+        auto RemoveBot(std::uintptr_t threadContext, std::size_t number) -> bool;
 
         // Moves a player to another team through its configuration, as a team change in the game does (the unit dies and respawns).
         auto ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> void;

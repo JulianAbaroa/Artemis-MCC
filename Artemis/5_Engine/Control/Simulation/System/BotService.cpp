@@ -18,6 +18,7 @@ namespace
     using Engine::Control::Simulation::Type::FakeMachine;
     using Engine::Control::Simulation::Type::SetMachinesFunction;
     using Engine::Control::Simulation::Type::ApplyPlayerAddedFunction;
+    using Engine::Control::Simulation::Type::ApplyPlayerUpdateFunction;
     using Engine::Control::Simulation::Type::ApplyPlayerConfigurationFunction;
     using Engine::Control::Simulation::Type::TeamRequest;
     using Engine::Control::Simulation::Type::GatherInteractionsFunction;
@@ -38,6 +39,7 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_DataArrayData;
     using Engine::Control::Simulation::Type::k_PlayerSalt;
     using Engine::Control::Simulation::Type::k_PlayerFlags;
+    using Engine::Control::Simulation::Type::k_PlayerFlagLeft;
     using Engine::Control::Simulation::Type::k_PlayerIdentifier;
     using Engine::Control::Simulation::Type::k_PlayerMachineIdentifier;
     using Engine::Control::Simulation::Type::k_PlayerMachineIndex;
@@ -62,15 +64,16 @@ namespace
     using Engine::Control::Simulation::Type::k_OptionsPlayerConfiguration;
     using Engine::Control::Simulation::Type::k_PlayerConfigurationSize;
     using Engine::Control::Simulation::Type::k_PlayerUpdateSize;
-    using Engine::Control::Simulation::Type::k_UpdatePlayerIndex;
-    using Engine::Control::Simulation::Type::k_UpdateIdentifier;
-    using Engine::Control::Simulation::Type::k_UpdateType;
     using Engine::Control::Simulation::Type::k_UpdateMachine;
     using Engine::Control::Simulation::Type::k_UpdateUserIndex;
     using Engine::Control::Simulation::Type::k_UpdateController;
     using Engine::Control::Simulation::Type::k_UpdateJoinedInProgress;
     using Engine::Control::Simulation::Type::k_UpdateConfiguration;
     using Engine::Control::Simulation::Type::k_PlayerUpdateAdded;
+    using Engine::Control::Simulation::Type::k_PlayerUpdateLeft;
+    using Engine::Control::Simulation::Type::k_PlayerUpdateRemove;
+    using Engine::Control::Simulation::Type::MakePlayerUpdate;
+    using Engine::Control::Simulation::Type::FindFreeBotNumber;
     using Engine::Control::Simulation::Type::k_InteractionRecordCount;
     using Engine::Control::Simulation::Type::k_InteractionRecordSize;
     using Engine::Control::Simulation::Type::k_InteractionRecordObject;
@@ -85,9 +88,6 @@ namespace
 
     // Step of the weapon and grenade selectors: the next one, as a local client asks for it (0x61a38).
     constexpr std::int16_t k_SelectorStep{ 1 };
-
-    // Bots one instance can hold: 4 per fake machine, on every machine slot except the first one (the local machine).
-    constexpr std::size_t k_MaxBots{ (k_MaxMachines - 1) * k_MaxPlayersPerMachine };
 
     // High bytes of the identifier of a bot ("ARTE"). The low bytes are its number.
     constexpr std::uint64_t k_BotIdentifierBase{ 0x4152544500000000 };
@@ -221,6 +221,11 @@ namespace Engine::Control::Simulation::System
 
         this->PublishSnapshot(threadContext);
 
+        for (const std::size_t number : m_BotStore.TakeRemoveRequests())
+        {
+            this->RemoveBot(threadContext, number);
+        }
+
         for (const std::optional<std::int8_t> team : m_BotStore.TakeRequests())
         {
             if (!this->AddBot(threadContext, team)) break;
@@ -291,8 +296,15 @@ namespace Engine::Control::Simulation::System
             return false;
         }
 
-        const std::size_t count{ m_BotStore.GetBotCount() };
-        if (count >= k_MaxBots)
+        // note: The lowest free number, so a bot removed and added again gets the same machine, user and controller.
+        std::vector<Bot> bots{};
+        m_BotStore.CopyBots(bots);
+
+        std::vector<std::size_t> usedNumbers{};
+        for (const Bot& bot : bots) usedNumbers.push_back(bot.Number);
+
+        const std::optional<std::size_t> freeNumber{ FindFreeBotNumber(usedNumbers) };
+        if (!freeNumber)
         {
             m_Log.Message("[BotService] WARNING: No machine slot left for another bot.");
             return false;
@@ -336,24 +348,22 @@ namespace Engine::Control::Simulation::System
             return false;
         }
 
-        const std::size_t number{ count + 1 };
-        const std::size_t machineIndex{ (k_MaxMachines - 1) - (count / k_MaxPlayersPerMachine) };
-        const std::size_t slot{ count % k_MaxPlayersPerMachine };
+        const std::size_t number{ *freeNumber };
+        const std::size_t position{ number - 1 };
+        const std::size_t machineIndex{ (k_MaxMachines - 1) - (position / k_MaxPlayersPerMachine) };
+        const std::size_t slot{ position % k_MaxPlayersPerMachine };
 
         if (!this->EnsureFakeMachine(globals, machineIndex)) return false;
 
-        std::array<std::uint8_t, k_PlayerUpdateSize> update{};
         const auto playerIndex{ static_cast<std::int32_t>(*freeIndex) };
         const std::uint64_t identifier{ k_BotIdentifierBase | number };
+        std::array<std::uint8_t, k_PlayerUpdateSize> update{ MakePlayerUpdate(playerIndex, identifier, k_PlayerUpdateAdded) };
         const auto userIndex{ static_cast<std::int32_t>(slot) };
 
         MachineIdentifier machine{};
         std::memcpy(machine.Bytes.data(), reinterpret_cast<const void*>(globals + k_MachineIdentifiers
             + (machineIndex * sizeof(MachineIdentifier))), sizeof(machine));
 
-        std::memcpy(update.data() + k_UpdatePlayerIndex, &playerIndex, sizeof(playerIndex));
-        std::memcpy(update.data() + k_UpdateIdentifier, &identifier, sizeof(identifier));
-        std::memcpy(update.data() + k_UpdateType, &k_PlayerUpdateAdded, sizeof(k_PlayerUpdateAdded));
         std::memcpy(update.data() + k_UpdateMachine, machine.Bytes.data(), sizeof(machine));
         std::memcpy(update.data() + k_UpdateUserIndex, &userIndex, sizeof(userIndex));
         std::memcpy(update.data() + k_UpdateController, &userIndex, sizeof(userIndex));
@@ -396,6 +406,80 @@ namespace Engine::Control::Simulation::System
 
         m_Log.Message("[BotService] INFO: Bot {} added as player {} on machine {} (user {}). Configuration: {} names and {}"
             " identifiers replaced.", number, *freeIndex, machineIndex, slot, names, identifiers);
+        return true;
+    }
+
+    auto BotService::RemoveBot(std::uintptr_t threadContext, std::size_t number) -> bool
+    {
+        std::vector<Bot> bots{};
+        m_BotStore.CopyBots(bots);
+
+        const auto found{ std::ranges::find(bots, number, &Bot::Number) };
+        if (found == bots.end())
+        {
+            m_Log.Message("[BotService] WARNING: Bot {} does not exist, nothing was removed.", number);
+            return false;
+        }
+
+        const Bot bot{ *found };
+        if (!m_ApplyPlayerUpdate)
+        {
+            m_Log.Message("[BotService] ERROR: Failed to remove bot {}: the engine function was not found.", number);
+            return false;
+        }
+
+        // The slot must still hold this bot. If it is free or taken by another player, the bot is gone and nobody else is touched.
+        auto slot{ FindPlayerSlot(threadContext, bot.PlayerIndex) };
+        if (!slot || Read<std::uint64_t>(slot->Datum + k_PlayerIdentifier) != bot.Identifier)
+        {
+            m_Log.Message("[BotService] WARNING: Bot {} is already gone from player {}.", number, bot.PlayerIndex);
+            m_BotStore.RemoveBot(number);
+            return true;
+        }
+
+        const auto playerIndex{ static_cast<std::int32_t>(bot.PlayerIndex) };
+
+        // note: The "left" update is refused if the flag is already set (a retry after a failed "remove").
+        if ((Read<std::uint32_t>(slot->Datum + k_PlayerFlags) & k_PlayerFlagLeft) == 0)
+        {
+            const auto left{ MakePlayerUpdate(playerIndex, bot.Identifier, k_PlayerUpdateLeft) };
+            if (!m_ApplyPlayerUpdate(left.data()))
+            {
+                m_Log.Message("[BotService] ERROR: Failed to remove bot {} (player {}): the engine refused the left update.", number,
+                    bot.PlayerIndex);
+                return false;
+            }
+
+            slot = FindPlayerSlot(threadContext, bot.PlayerIndex);
+            if (slot && (Read<std::uint32_t>(slot->Datum + k_PlayerFlags) & k_PlayerFlagLeft) == 0)
+            {
+                m_Log.Message("[BotService] ERROR: Failed to remove bot {} (player {}): the left flag was not set.", number,
+                    bot.PlayerIndex);
+                return false;
+            }
+        }
+
+        if (slot)
+        {
+            const auto remove{ MakePlayerUpdate(playerIndex, bot.Identifier, k_PlayerUpdateRemove) };
+            if (!m_ApplyPlayerUpdate(remove.data()))
+            {
+                m_Log.Message("[BotService] ERROR: Failed to remove bot {} (player {}): the engine refused the remove update.", number,
+                    bot.PlayerIndex);
+                return false;
+            }
+
+            if (FindPlayerSlot(threadContext, bot.PlayerIndex))
+            {
+                m_Log.Message("[BotService] ERROR: Failed to remove bot {} (player {}): the slot is still taken.", number,
+                    bot.PlayerIndex);
+                return false;
+            }
+        }
+
+        m_BotStore.RemoveBot(number);
+
+        m_Log.Message("[BotService] INFO: Bot {} removed from player {}.", number, bot.PlayerIndex);
         return true;
     }
 
@@ -567,12 +651,16 @@ namespace Engine::Control::Simulation::System
             m_ApplyPlayerConfiguration = reinterpret_cast<ApplyPlayerConfigurationFunction>(
                 m_AOBService.FindPattern(Signature::k_ApplyPlayerConfiguration));
 
+            m_ApplyPlayerUpdate = reinterpret_cast<ApplyPlayerUpdateFunction>(m_AOBService.FindPattern(Signature::k_ApplyPlayerUpdate));
+
             m_IsResolved = m_SetMachines && m_ApplyPlayerAdded && m_ApplyPlayerConfiguration;
             if (!m_IsResolved)
             {
                 m_Log.Message("[BotService] ERROR: Failed to find {}. No bot can be added.", !m_SetMachines ? "SetMachines"
                     : (!m_ApplyPlayerAdded ? "ApplyPlayerAdded" : "ApplyPlayerConfiguration"));
             }
+
+            if (!m_ApplyPlayerUpdate) m_Log.Message("[BotService] ERROR: Failed to find ApplyPlayerUpdate. No bot can be removed.");
         }
 
         if (!m_IsInteractionResolved)
@@ -606,6 +694,6 @@ namespace Engine::Control::Simulation::System
             }
         }
 
-        return m_IsResolved && m_IsInteractionResolved && m_IsClientResolved;
+        return m_IsResolved && m_ApplyPlayerUpdate && m_IsInteractionResolved && m_IsClientResolved;
     }
 }

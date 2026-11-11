@@ -26,16 +26,28 @@ namespace Engine::Control::Simulation::State
         return std::exchange(m_TeamRequests, {});
     }
 
+    auto BotStore::RequestRemove(std::size_t number) -> void
+    {
+        std::scoped_lock lock(m_Mutex);
+        m_RemoveRequests.push_back(number);
+    }
+
+    auto BotStore::TakeRemoveRequests() -> std::vector<std::size_t>
+    {
+        std::scoped_lock lock(m_Mutex);
+        return std::exchange(m_RemoveRequests, {});
+    }
+
     auto BotStore::AddBot(const Bot& bot) -> void
     {
         std::scoped_lock lock(m_Mutex);
         m_Bots.push_back(bot);
     }
 
-    auto BotStore::GetBotCount() const -> std::size_t
+    auto BotStore::RemoveBot(std::size_t number) -> void
     {
         std::scoped_lock lock(m_Mutex);
-        return m_Bots.size();
+        std::erase_if(m_Bots, [number](const Bot& bot) { return bot.Number == number; });
     }
 
     auto BotStore::CopyBots(std::vector<Bot>& out) const -> void
@@ -73,6 +85,7 @@ namespace Engine::Control::Simulation::State
         std::scoped_lock lock(m_Mutex);
         m_Requests.clear();
         m_TeamRequests.clear();
+        m_RemoveRequests.clear();
         m_Bots.clear();
         m_FakeMachines.clear();
         m_Snapshot = SessionSnapshot{};

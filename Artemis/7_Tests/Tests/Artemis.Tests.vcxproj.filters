@@ -48,6 +48,9 @@
     <ClCompile Include="Engine\EngineLayerTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\BotRosterTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\LifecycleStoreTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

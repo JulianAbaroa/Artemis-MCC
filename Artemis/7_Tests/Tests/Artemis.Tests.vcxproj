@@ -124,6 +124,7 @@
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Control\ActionTests.cpp" />
     <ClCompile Include="Control\LockstepTests.cpp" />
+    <ClCompile Include="Engine\BotRosterTests.cpp" />
     <ClCompile Include="Engine\CaptureServiceTests.cpp" />
     <ClCompile Include="Engine\EngineLayerTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
