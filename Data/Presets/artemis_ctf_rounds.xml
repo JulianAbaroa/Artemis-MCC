@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preset base="artemis_ctf_fast" doc="Tests across rounds (LS.1 roster): 4 rounds of 1 minute.">
+  <general round_limit="4" time_limit_minutes="1" />
+</preset>
