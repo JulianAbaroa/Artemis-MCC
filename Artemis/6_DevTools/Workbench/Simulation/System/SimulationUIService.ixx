@@ -138,8 +138,11 @@ export namespace DevTools::Workbench::Simulation::System
         // Writes the game options entry of every valid player to the log, so the configuration layout can be shared.
         auto LogOptions() -> void;
 
-        // Draws the add button and one row per bot with its action mode (A9 M5b).
+        // Draws the add button, the roster line and editor, and one row per bot with its action mode (A9 M5b, LS.1).
         auto DrawBots() -> void;
+
+        // Draws the roster of the bots: what is active and its state, and the counts per team to request another one (D284).
+        auto DrawRoster() -> void;
 
         // Draws the shadow check (D122): its switch and the comparisons of every field.
         auto DrawShadow() -> void;

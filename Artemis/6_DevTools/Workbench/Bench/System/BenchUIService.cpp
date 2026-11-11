@@ -18,6 +18,7 @@ import Engine.Base.Host.Type;
 import Engine.Base.MapVariant.Type;
 import Engine.Base.Preset.Type;
 import Engine.Control.Input.Type;
+import Engine.Control.Simulation.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
 import Bridge.Codec.Tick.Type;
@@ -63,6 +64,11 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchProbe;
     using DevTools::Workbench::Bench::Type::BenchProbeState;
     using DevTools::Workbench::Bench::Type::BenchRequest;
+    using DevTools::Workbench::Bench::Type::BenchRosterRow;
+    using Engine::Control::Simulation::Type::Roster;
+    using Engine::Control::Simulation::Type::ToText;
+    using Common::Engine::Type::k_MaxTeams;
+    using Common::Semantic::Type::RoundState;
     using DevTools::Workbench::Bench::Type::BenchCheckResult;
     using DevTools::Workbench::Bench::Type::BenchMatch;
     using DevTools::Workbench::Bench::Type::BenchMatchReport;
@@ -254,6 +260,26 @@ namespace
             position = end;
         }
         return words;
+    }
+
+    // return: The roster of the words: k_MaxTeams counts, the word auto and its count. Nothing if they do not fit.
+    auto ParseRoster(const std::vector<std::string>& words) -> std::optional<Roster>
+    {
+        if (words.size() != k_MaxTeams + 2 || words[k_MaxTeams] != "auto") return std::nullopt;
+
+        Roster roster{};
+        for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+        {
+            const auto count{ ParseNumber<std::size_t>(words[team]) };
+            if (!count.has_value()) return std::nullopt;
+            roster.Teams[team] = *count;
+        }
+
+        const auto autoCount{ ParseNumber<std::size_t>(words[k_MaxTeams + 1]) };
+        if (!autoCount.has_value()) return std::nullopt;
+        roster.Auto = *autoCount;
+
+        return roster;
     }
 
     auto ToText(BenchPhase phase) -> std::string_view
@@ -592,16 +618,13 @@ namespace DevTools::Workbench::Bench::System
                 if (!count.has_value()) return fail("locals takes a number");
                 match.Locals = count;
             }
-            else if (key == "bot")
+            else if (key == "roster" || key == "round_roster")
             {
-                if (value == "auto")
-                {
-                    match.Bots.push_back(std::nullopt);
-                    continue;
-                }
-                const auto team{ ParseNumber<int>(value) };
-                if (!team.has_value() || *team < 0 || *team > 7) return fail("bot takes auto or a team 0-7");
-                match.Bots.push_back(static_cast<std::int8_t>(*team));
+                const auto roster{ ParseRoster(SplitWords(value)) };
+                if (!roster.has_value()) return fail(std::format("{} takes {} counts per team, then auto and a count", key, k_MaxTeams));
+
+                if (key == "roster") match.RosterAtLoad = *roster;
+                else                 match.RoundRosters.push_back(*roster);
             }
             else if (key == "preset")
             {
@@ -700,6 +723,10 @@ namespace DevTools::Workbench::Bench::System
         for (const BenchMatch& match : scenario.Matches)
         {
             if (match.Config.empty()) return std::format("match {} has no config.", match.Name);
+            if (!match.RosterAtLoad.has_value() && !match.RoundRosters.empty())
+            {
+                return std::format("match {} has round_roster lines but no roster line: round 0 is checked against it.", match.Name);
+            }
             if (!match.IsEveryTick && (match.IsTickDump || match.IsEvents))
             {
                 return std::format("match {} has every_tick off with tickdump or events, which need every tick.", match.Name);
@@ -758,6 +785,10 @@ namespace DevTools::Workbench::Bench::System
             this->EndMatch(run);
             return;
         }
+
+        // The roster of the previous match does not carry over: a match without one has no bots, as before the rosters (D284).
+        m_BotStore.ClearRoster();
+        if (match.RosterAtLoad.has_value()) m_BotStore.RequestRoster(*match.RosterAtLoad);
 
         if (!m_MatchConfigService.LoadPending(match.Config))
         {
@@ -855,8 +886,8 @@ namespace DevTools::Workbench::Bench::System
                 run.Phase = BenchPhase::Running;
                 run.PhaseStart = steady_clock::now();
 
-                // Bots and teams only exist after the start (D110). The speed is set when the match runs, so loading is not scaled.
-                for (const auto& team : match.Bots) m_BotStore.RequestBot(team);
+                // The bots come from the roster the service applies at the first tick (D284). The speed is set when the match runs, so
+                // loading is not scaled.
                 if (match.TimeScale.has_value()) m_LifecycleStore.SetRequestedTimeScale(*match.TimeScale);
 
                 this->BeginPerf(run);
@@ -926,6 +957,9 @@ namespace DevTools::Workbench::Bench::System
         BenchMatchReport& report{ run.Reports[run.MatchIndex] };
 
         run.SentRequests.assign(match.Requests.size(), false);
+        run.LastRound = -1;
+        run.RostersRequested = 0;
+        run.RosterRows.clear();
         run.Probes.clear();
 
         for (const BenchProbe& probe : match.Probes)
@@ -999,7 +1033,7 @@ namespace DevTools::Workbench::Bench::System
                     if (isInside && IsSelected(player, action.Players)) desired = action.Mode;
                 }
 
-                const auto applied{ run.AppliedModes.find(index) };
+                const auto applied{ run.AppliedModes.find(player.Handle) };
                 const LocalPlayerAction current{ applied != run.AppliedModes.end() ? applied->second : LocalPlayerAction::Engine };
 
                 if (desired != current)
@@ -1013,7 +1047,7 @@ namespace DevTools::Workbench::Bench::System
                     const std::optional<std::size_t> localPlayer{ player.LocalIndex.has_value()
                         ? std::optional<std::size_t>{ *player.LocalIndex } : std::nullopt };
                     m_PlayerActionStore.SetOverride(index, BuildActionOverride(desired, latest.Actions[index], localPlayer));
-                    run.AppliedModes[index] = desired;
+                    run.AppliedModes[player.Handle] = desired;
                 }
 
                 for (std::size_t i{ 0 }; i < match.Requests.size(); ++i)
@@ -1031,6 +1065,8 @@ namespace DevTools::Workbench::Bench::System
                 if (ticks >= match.Requests[i].AtTick) run.SentRequests[i] = true;
             }
         }
+
+        this->UpdateRosters(run);
 
         for (std::size_t i{ 0 }; i < match.Probes.size(); ++i)
         {
@@ -1066,6 +1102,50 @@ namespace DevTools::Workbench::Bench::System
                     event.DamageReportingType, event.Modifier, event.Extra, ToHexValue(std::as_bytes(std::span{ event.Data })));
             }
             run.EventCursor = events->LastSequence;
+        }
+    }
+
+    auto BenchUIService::UpdateRosters(BenchRun& run) -> void
+    {
+        const BenchMatch& match{ run.Scenario->Matches[run.MatchIndex] };
+        const auto* players{ GetPlayers(run.LastTick) };
+        const auto& status{ run.LastTick ? run.LastTick->Match : nullptr };
+
+        if (players == nullptr || !status || status->RoundState != RoundState::InPlay || status->RoundIndex == run.LastRound) return;
+        if (!match.RosterAtLoad.has_value()) return;
+
+        run.LastRound = status->RoundIndex;
+
+        // The roster of round R was asked for while round R - 1 ran, and the last one asked for holds on.
+        const auto round{ static_cast<std::size_t>((std::max)(status->RoundIndex, std::int16_t{ 0 })) };
+        const Roster& expected{ round == 0 ? *match.RosterAtLoad
+            : match.RoundRosters.empty() ? *match.RosterAtLoad
+            : match.RoundRosters[(std::min)(round, match.RoundRosters.size()) - 1] };
+
+        // note: The bots are the players without a local index. The auto ones are on the team of the local player 0.
+        BenchRosterRow row{ .Round = status->RoundIndex };
+        std::optional<std::size_t> localTeam{};
+        for (const Player& player : *players)
+        {
+            const auto team{ static_cast<std::size_t>(player.Team) };
+
+            if (player.LocalIndex == 0) localTeam = team;
+            if (player.LocalIndex.has_value()) continue;
+
+            if (team < k_MaxTeams) ++row.Seen[team];
+            else                   ++row.SeenElsewhere;
+        }
+
+        row.Expected = expected.Teams;
+        if (expected.Auto > 0 && localTeam && *localTeam < k_MaxTeams) row.Expected[*localTeam] += expected.Auto;
+        run.RosterRows.push_back(row);
+
+        while (run.RostersRequested <= static_cast<std::size_t>(status->RoundIndex) && run.RostersRequested < match.RoundRosters.size())
+        {
+            m_BotStore.RequestRoster(match.RoundRosters[run.RostersRequested]);
+            m_Log.Message("[BenchUIService] INFO: Roster {} asked for at round {}.", ToText(match.RoundRosters[run.RostersRequested]),
+                status->RoundIndex);
+            ++run.RostersRequested;
         }
     }
 
@@ -1105,9 +1185,9 @@ namespace DevTools::Workbench::Bench::System
 
     auto BenchUIService::StopTools(BenchRun& run) -> void
     {
-        for (const auto& [index, mode] : run.AppliedModes)
+        for (const auto& [handle, mode] : run.AppliedModes)
         {
-            if (mode != LocalPlayerAction::Engine) m_PlayerActionStore.SetOverride(index, std::nullopt);
+            if (mode != LocalPlayerAction::Engine) m_PlayerActionStore.SetOverride(handle & k_HandleIndexMask, std::nullopt);
         }
 
         run.AppliedModes.clear();
@@ -1290,6 +1370,26 @@ namespace DevTools::Workbench::Bench::System
                 for (const auto& argument : arguments) expected += (expected.empty() ? "" : " ") + argument;
                 result.IsOk = applied.Outcome == MapVariantOutcome::AppliedAtLoad && (arguments.empty() || applied.Name == expected);
                 result.Detail = MapVariantLine(m_MapVariantStore.GetActiveName(), applied);
+            }
+            else if (check.Name == "roster_ok")
+            {
+                std::string detail{};
+                bool isOk{ !run.RosterRows.empty() };
+
+                for (const BenchRosterRow& row : run.RosterRows)
+                {
+                    const auto text{ [](const std::array<std::size_t, k_MaxTeams>& counts) {
+                        Roster roster{ .Teams = counts };
+                        return ToText(roster);
+                    } };
+
+                    isOk = isOk && row.IsOk();
+                    detail += std::format("{}round {} expected {} seen {}{}", detail.empty() ? "" : "; ", row.Round, text(row.Expected),
+                        text(row.Seen), row.SeenElsewhere > 0 ? std::format(" (+{} off teams)", row.SeenElsewhere) : "");
+                }
+
+                result.IsOk = isOk;
+                result.Detail = detail.empty() ? "no round start seen with a roster" : detail;
             }
             else if (check.Name == "objective_taken")
             {

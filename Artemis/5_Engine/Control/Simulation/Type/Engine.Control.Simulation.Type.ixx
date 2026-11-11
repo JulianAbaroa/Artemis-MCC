@@ -2,12 +2,16 @@ export module Engine.Control.Simulation.Type;
 
 import Common.Engine.Type;
 import Control.Action.Type;
+import Blam.Layout.Game.Type;
 import std;
 
 // Layout of the engine simulation players and machines (A9_SplitScreen.txt sec. 13).
 namespace
 {
     using ::Control::Action::Type::UnitClientState;
+
+    using Blam::Layout::Game::Type::Offset::k_RoundStateBetween;
+    using Blam::Layout::Game::Type::Offset::k_RoundStateEnded;
 
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxTeams;
@@ -208,6 +212,51 @@ export namespace Engine::Control::Simulation::Type
         auto operator==(const RosterMove&) const -> bool = default;
     };
 
+    // What became of the last roster request (D284).
+    enum class RosterOutcome : std::uint8_t
+    {
+        // No request yet.
+        None,
+        // Taken in a match, waiting for the end of the round.
+        Pending,
+        // Applied in the first tick of the match.
+        AtLoad,
+        // Applied between two rounds.
+        Applied,
+        // Not applied: it does not fit, or an operation failed (see Reason).
+        Rejected,
+    };
+
+    // Result of the last roster request and the round of the match it was applied in.
+    struct RosterResult
+    {
+        RosterOutcome Outcome{ RosterOutcome::None };
+        // Round index of the match when it was applied, or -1.
+        std::int16_t Round{ -1 };
+        std::string Reason{};
+
+        auto operator==(const RosterResult&) const -> bool = default;
+    };
+
+    // A roster asked for, with the number of the request. The result of an older request never replaces the one of a newer request.
+    struct RosterRequest
+    {
+        Roster Value{};
+        std::uint64_t Sequence{ 0 };
+
+        auto operator==(const RosterRequest&) const -> bool = default;
+    };
+
+    // What the roster service does on a tick.
+    enum class RosterStep : std::uint8_t
+    {
+        Nothing,
+        // First tick of the match: take the request of the lobby, then apply the active roster.
+        Load,
+        // A request made in the match waits for the end of the round, and this is a tick of the break.
+        Break,
+    };
+
     // What it takes to go from the bots of the match to a roster. It is applied in this order: moves, removes, adds.
     struct RosterPlan
     {
@@ -273,6 +322,32 @@ export namespace Engine::Control::Simulation::Type
         return update;
     }
 
+    // return: What the roster service does on this tick. A request made in the match is applied once, in a tick where the round is
+    // ended or between rounds, never in the middle of a round.
+    // param roundState: Round state of the game engine globals, empty if it could not be read.
+    auto GetRosterStep(bool isMatchStarted, bool hasPending, std::optional<std::uint8_t> roundState) -> RosterStep
+    {
+        if (!isMatchStarted) return RosterStep::Load;
+        if (!hasPending || !roundState) return RosterStep::Nothing;
+
+        return (*roundState == k_RoundStateEnded || *roundState == k_RoundStateBetween) ? RosterStep::Break : RosterStep::Nothing;
+    }
+
+    // return: The roster as text for logs and the screens: the teams with bots as "team:count" and the auto ones, or "empty".
+    auto ToText(const Roster& roster) -> std::string
+    {
+        std::string text{};
+
+        for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+        {
+            if (roster.Teams[team] > 0) text += std::format("{}{}:{}", text.empty() ? "" : " ", team, roster.Teams[team]);
+        }
+
+        if (roster.Auto > 0) text += std::format("{}auto:{}", text.empty() ? "" : " ", roster.Auto);
+
+        return text.empty() ? "empty" : text;
+    }
+
     // return: The lowest bot number from 1 to k_MaxBots that is not in use, or nothing if all are. A bot that is removed and added again
     // gets the same number, so it gets the same machine, user and controller.
     auto FindFreeBotNumber(std::span<const std::size_t> used) -> std::optional<std::size_t>
@@ -288,7 +363,8 @@ export namespace Engine::Control::Simulation::Type
     // Plans the fewest operations that turn the bots of the match into the roster (D284). Per team it keeps the bots it has up to the
     // count it wants. The extra bots of a team move to the teams that miss some, in team order, and the ones left are removed. The
     // teams that still miss bots get new ones. Inside a team the bot with the highest number goes first, so the last added one leaves.
-    // param bots: The bots of the match. A bot on a team that is not 0 to k_MaxTeams - 1 counts as an extra one.
+    // param bots: The bots of the match. A bot on a team that is not 0 to k_MaxTeams - 1 (one that is gone from the engine) is never moved:
+    // it is removed, after the other removes.
     // param localTeam: Team of the local player 0, where the auto bots go.
     // param otherPlayers: Players in the table that are not bots (the local players and real ones).
     // return: The plan, or the reason the roster does not fit: more bots than k_MaxBots, or than the free slots of the player table.
@@ -332,13 +408,18 @@ export namespace Engine::Control::Simulation::Type
 
         // The first bots of each team in this order are its extra ones.
         std::vector<std::size_t> extra{};
-        std::array<std::size_t, k_MaxTeams + 1> seen{};
+        std::vector<std::size_t> offTeam{};
+        std::array<std::size_t, k_MaxTeams> seen{};
         for (const RosterBot& bot : sorted)
         {
             const std::size_t team{ teamOrder(bot) };
-            const std::size_t keep{ team < k_MaxTeams ? (std::min)(have[team], wanted[team]) : 0 };
+            if (team >= k_MaxTeams)
+            {
+                offTeam.push_back(bot.Number);
+                continue;
+            }
 
-            if (seen[team]++ < have[team] - keep) extra.push_back(bot.Number);
+            if (seen[team]++ < have[team] - (std::min)(have[team], wanted[team])) extra.push_back(bot.Number);
         }
 
         RosterPlan plan{};
@@ -354,6 +435,7 @@ export namespace Engine::Control::Simulation::Type
         }
 
         plan.Removes.assign(extra.begin() + static_cast<std::ptrdiff_t>(next), extra.end());
+        plan.Removes.insert(plan.Removes.end(), offTeam.begin(), offTeam.end());
         return plan;
     }
 }

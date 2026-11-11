@@ -25,7 +25,7 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Engine.Base.Layer` | The facade: lifecycle, host and memory stores and services, and their detours. Owner only. |
-| `Engine.Base.Hook.Type`, `Engine.Base.Hook.System` | `InstallDetour`, `RemoveDetour`, `WritePatch`, `InFlightScope`, TLS resolution. |
+| `Engine.Base.Hook.Type`, `Engine.Base.Hook.System` | `InstallDetour`, `RemoveDetour`, `WritePatch`, `InFlightScope`, TLS resolution, `ReadRoundState` and `ReadRoundIndex` (round of the game engine globals, game thread). |
 | `Engine.Base.Memory.Type`, `Engine.Base.Memory.System` | `MemoryReaderService` (reads that never fault) and `AOBService` (`FindPattern` for a signature, `FindFunctionAtRva` for a function known only by its RVA and the start of its prologue, R3). |
 | `Engine.Base.Lifecycle.Type`, `Engine.Base.Lifecycle.State`, `Engine.Base.Lifecycle.System`, `Engine.Base.Lifecycle.Hook` | Engine status, callbacks, the read window of the tick and the lifecycle detours (initialize, open map, destroy subsystems). |
 | `Engine.Base.Host.Type`, `Engine.Base.Host.State`, `Engine.Base.Host.System` | Game manager of MCC (vtable entries), `LocalUserStore` (XUIDs, names, profiles, gamepad mappings), `HostService`. |
@@ -33,7 +33,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Engine.Base.Preset.Type`, `Engine.Base.Preset.State`, `Engine.Base.Preset.System` | `PresetOutcome` and `PresetResult`, `PresetStore` (active preset, catalog, base values saved at the load, result of the last load) and `PresetService` (`SetActive` reads `<name>.txt` and `_catalog.txt`, `Request` takes a request of the bridge (the lobby makes it the active preset, a match leaves it pending; when MCC is back in the lobby but its state still says Running the request stays pending and the next start takes it, the same effect), `ApplyBetweenRounds` serves it into a live variant buffer it is given (only with the round ended or between rounds and a game mode with a variant, base saved from the variant at the first request of the match, a refused plan leaves the variant and the active preset as they were), `ApplyToStart` writes the preset into a start configuration with the logic of `Blam.Layout`, reads it back and leaves the copy as it was on any failure). |
 
 ## Depends on
-`Common`, `Services`, `Blam.Layout` (only the pure logic of the presets).
+`Common`, `Services`, `Blam.Layout` (the pure logic of the presets and the offsets of the game engine globals).
 
 ## State between ticks
 The engine status and the read window, the addresses found by signature, the local users and their profiles, the active preset with the base values and the result of the last load.

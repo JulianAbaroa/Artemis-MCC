@@ -7,6 +7,8 @@ module Engine.Base.Hook.System;
 
 import Engine.Base.Hook.Type;
 import Engine.Base.Memory.Type;
+import Blam.Layout.Game.Type;
+import Blam.Layout.Object.Type;
 
 namespace
 {
@@ -18,6 +20,18 @@ namespace
     using Engine::Base::Hook::Type::k_MaxTlsIndex;
     using Engine::Base::Hook::Type::k_TlsIndexRelOffset;
     using Engine::Base::Hook::Type::k_TlsIndexNextOffset;
+
+    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundIndex;
+    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundState;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameEngineOffset;
+
+    // return: The game engine globals of the thread context, or 0.
+    auto ReadGameEngine(std::uintptr_t threadContext) -> std::uintptr_t
+    {
+        if (threadContext == 0) return 0;
+
+        return *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameEngineOffset);
+    }
 
     // Copies bytes over code, restoring the page protection after.
     // return: False if the page cannot be made writable.
@@ -137,6 +151,22 @@ namespace Engine::Base::Hook::System
 
         const auto tlsArray{ static_cast<std::uintptr_t>(__readgsqword(static_cast<unsigned long>(k_TlsArrayOffset))) };
         return *reinterpret_cast<const std::uintptr_t*>(tlsArray + (tlsIndex * sizeof(std::uintptr_t)));
+    }
+
+    auto ReadRoundState(std::uintptr_t threadContext) -> std::optional<std::uint8_t>
+    {
+        const std::uintptr_t gameEngine{ ReadGameEngine(threadContext) };
+        if (gameEngine == 0) return std::nullopt;
+
+        return *reinterpret_cast<const std::uint8_t*>(gameEngine + k_GameEngineRoundState);
+    }
+
+    auto ReadRoundIndex(std::uintptr_t threadContext) -> std::optional<std::int16_t>
+    {
+        const std::uintptr_t gameEngine{ ReadGameEngine(threadContext) };
+        if (gameEngine == 0) return std::nullopt;
+
+        return *reinterpret_cast<const std::int16_t*>(gameEngine + k_GameEngineRoundIndex);
     }
 
     auto FindThreadContext(Engine::Base::Memory::System::AOBService& aobService) -> std::uintptr_t

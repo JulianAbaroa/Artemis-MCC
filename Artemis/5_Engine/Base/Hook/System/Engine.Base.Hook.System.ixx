@@ -82,6 +82,15 @@ export namespace Engine::Base::Hook::System
     // note: Runs on the game thread only (see ReadThreadContext).
     auto FindThreadContext(Engine::Base::Memory::System::AOBService& aobService) -> std::uintptr_t;
 
+    // return: The round state of the game engine globals (1 in play, 2 ended, 3 between rounds), or nothing without a thread context or
+    // without the globals.
+    // note: Game thread only. Reads raw memory.
+    auto ReadRoundState(std::uintptr_t threadContext) -> std::optional<std::uint8_t>;
+
+    // return: The index of the round (from 0) of the game engine globals, or nothing without a thread context or without the globals.
+    // note: Game thread only. Reads raw memory.
+    auto ReadRoundIndex(std::uintptr_t threadContext) -> std::optional<std::int16_t>;
+
     // Longest wait for the calls in flight when a hook is removed.
     inline constexpr std::chrono::milliseconds k_DrainTimeout{ 500 };
 

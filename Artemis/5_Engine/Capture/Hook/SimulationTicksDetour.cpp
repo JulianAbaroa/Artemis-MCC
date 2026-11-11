@@ -18,7 +18,7 @@ namespace
     using Engine::Base::Lifecycle::Type::Status;
 
     using Engine::Base::Hook::System::k_DrainTimeout;
-    using Blam::Layout::Game::Type::Offset::k_GameEngineRoundState;
+    using Engine::Base::Hook::System::ReadRoundState;
     using Blam::Layout::Game::Type::Offset::k_GameGlobalsGameVariant;
     using Blam::Layout::Object::Type::Constant::k_GameGlobalsMapVariant;
     using Blam::Layout::Object::Type::Constant::k_GameGlobalsSize;
@@ -26,7 +26,6 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_MapVariantAlignMask;
     using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
     using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
-    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameEngineOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextGameModeOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextMapVariantOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
@@ -132,10 +131,9 @@ namespace Engine::Capture::Hook
         if (threadContext == 0) return;
 
         const std::uintptr_t gameGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameModeOffset) };
-        const std::uintptr_t gameEngine{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameEngineOffset) };
-        if (gameGlobals == 0 || gameEngine == 0) return;
+        const std::optional<std::uint8_t> roundState{ ReadRoundState(threadContext) };
+        if (gameGlobals == 0 || !roundState) return;
 
-        const auto roundState{ *reinterpret_cast<const std::uint8_t*>(gameEngine + k_GameEngineRoundState) };
         const auto gameMode{ *reinterpret_cast<const std::uint8_t*>(gameGlobals + k_GameModeTypeOffset) };
 
         const std::span<std::uint8_t> variant{ reinterpret_cast<std::uint8_t*>(gameGlobals + k_GameGlobalsGameVariant),
@@ -144,7 +142,7 @@ namespace Engine::Capture::Hook
         // The service does not throw, but nothing may leave the hook.
         try
         {
-            m_PresetService.ApplyBetweenRounds(variant, roundState, gameMode);
+            m_PresetService.ApplyBetweenRounds(variant, *roundState, gameMode);
         }
         catch (...)
         {
@@ -160,11 +158,10 @@ namespace Engine::Capture::Hook
         if (threadContext == 0) return;
 
         const std::uintptr_t gameGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameModeOffset) };
-        const std::uintptr_t gameEngine{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameEngineOffset) };
+        const std::optional<std::uint8_t> roundState{ ReadRoundState(threadContext) };
         const std::uintptr_t pointer{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextMapVariantOffset) };
-        if (gameGlobals == 0 || gameEngine == 0 || pointer == 0) return;
+        if (gameGlobals == 0 || !roundState || pointer == 0) return;
 
-        const auto roundState{ *reinterpret_cast<const std::uint8_t*>(gameEngine + k_GameEngineRoundState) };
         const auto gameMode{ *reinterpret_cast<const std::uint8_t*>(gameGlobals + k_GameModeTypeOffset) };
 
         // The runtime map variant is where the engine computes it (FUN_18006bcec), the options hold their copy in the game globals.
@@ -175,7 +172,7 @@ namespace Engine::Capture::Hook
         // The service does not throw, but nothing may leave the hook.
         try
         {
-            m_MapVariantService.ApplyBetweenRounds(runtime, options, roundState, gameMode);
+            m_MapVariantService.ApplyBetweenRounds(runtime, options, *roundState, gameMode);
         }
         catch (...)
         {

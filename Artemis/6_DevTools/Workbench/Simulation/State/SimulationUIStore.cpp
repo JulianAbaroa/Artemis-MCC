@@ -47,14 +47,25 @@ namespace DevTools::Workbench::Simulation::State
         m_LocalPlayerActions[player] = action;
     }
 
-    auto SimulationUIStore::GetBotAction(std::size_t playerIndex) const -> LocalPlayerAction
+    auto SimulationUIStore::GetBotAction(std::size_t playerIndex, std::uint32_t handle) const -> LocalPlayerAction
     {
-        return m_BotActions[playerIndex];
+        return m_BotActionHandles[playerIndex] == handle ? m_BotActions[playerIndex] : LocalPlayerAction::Engine;
     }
 
-    auto SimulationUIStore::SetBotAction(std::size_t playerIndex, LocalPlayerAction action) -> void
+    auto SimulationUIStore::SetBotAction(std::size_t playerIndex, std::uint32_t handle, LocalPlayerAction action) -> void
     {
+        m_BotActionHandles[playerIndex] = handle;
         m_BotActions[playerIndex] = action;
+    }
+
+    auto SimulationUIStore::GetRosterEditor() const -> Roster
+    {
+        return m_RosterEditor;
+    }
+
+    auto SimulationUIStore::SetRosterEditor(const Roster& roster) -> void
+    {
+        m_RosterEditor = roster;
     }
 
     auto SimulationUIStore::GetOptionsPlayer() const -> std::size_t

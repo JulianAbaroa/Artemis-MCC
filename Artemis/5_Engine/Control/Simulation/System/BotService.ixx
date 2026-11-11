@@ -4,6 +4,7 @@ import Common.Log.System;
 import Control.Action.Type;
 import Control.Action.System;
 import Engine.Base.Memory.System;
+import Engine.Control.Input.State;
 import Engine.Control.Simulation.Type;
 import Engine.Control.Simulation.State;
 import std;
@@ -30,20 +31,26 @@ export namespace Engine::Control::Simulation::System
         using NextZoomLevelFunction = Engine::Control::Simulation::Type::NextZoomLevelFunction;
         using CanUnitZoomFunction = Engine::Control::Simulation::Type::CanUnitZoomFunction;
         using UnitClientState = ::Control::Action::Type::UnitClientState;
+        using Bot = Engine::Control::Simulation::Type::Bot;
         using TeamRequest = Engine::Control::Simulation::Type::TeamRequest;
+        using Roster = Engine::Control::Simulation::Type::Roster;
+        using RosterRequest = Engine::Control::Simulation::Type::RosterRequest;
+        using RosterResult = Engine::Control::Simulation::Type::RosterResult;
+        using RosterOutcome = Engine::Control::Simulation::Type::RosterOutcome;
+        using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
         using BotStore = Engine::Control::Simulation::State::BotStore;
 
     public:
-        BotService(Log& log, AOBService& aobService, BotStore& botStore) :
-            m_Log(log), m_AOBService(aobService), m_BotStore(botStore) {}
+        BotService(Log& log, AOBService& aobService, BotStore& botStore, PlayerActionStore& playerActionStore) :
+            m_Log(log), m_AOBService(aobService), m_BotStore(botStore), m_PlayerActionStore(playerActionStore) {}
         ~BotService() = default;
 
         BotService(const BotService&) = delete;
         auto operator=(const BotService&) -> BotService& = delete;
 
-        // Publishes the session snapshot, removes the bots asked to be removed since the last tick, adds the ones asked for and applies
-        // their team changes.
+        // Publishes the session snapshot, applies the roster (the first tick of the match: the active one, then a pending one at the end
+        // of a round), removes the bots asked to be removed since the last tick, adds the ones asked for and applies their team changes.
         // param threadContext: Thread context of the engine, or 0 if unknown (then it does nothing).
         // note: Game thread only, before the player actions of the tick are applied.
         auto Update(std::uintptr_t threadContext) -> void;
@@ -93,6 +100,7 @@ export namespace Engine::Control::Simulation::System
         Log& m_Log;
         AOBService& m_AOBService;
         BotStore& m_BotStore;
+        PlayerActionStore& m_PlayerActionStore;
 
         // Ticks seen. Game thread only.
         std::uint64_t m_Sequence{ 0 };
@@ -122,16 +130,32 @@ export namespace Engine::Control::Simulation::System
         // return: False if the engine refused it. The cause is logged.
         auto AddBot(std::uintptr_t threadContext, std::optional<std::int8_t> team) -> bool;
 
+        // Applies the roster at the first tick of the match, and a pending one in the first tick of the break between two rounds.
+        // note: The break is read from the round state of the game engine globals (ended or between rounds). If this hook does not run
+        // during the break, the roster waits for a tick where the state is read again, and it is logged when it is applied.
+        auto UpdateRoster(std::uintptr_t threadContext) -> void;
+
+        // Plans the roster against the bots in the engine and does moves, removes and adds in that order.
+        // param outcome: What the result says when every operation worked (AtLoad or Applied).
+        // return: The result. Rejected with the reason if the roster does not fit (nothing was done) or if some operation failed or was
+        // skipped (the others stay done: Rejected can mean partly applied).
+        auto ApplyRoster(std::uintptr_t threadContext, const Roster& roster, RosterOutcome outcome) -> RosterResult;
+
         // Removes a bot from the match: the "left" update, then the "remove" update, both through the engine function that applies the
         // player updates, so the slot is free at once and the bot leaves the scoreboard.
         // param number: Number of the bot. Only the bots Artemis added are touched, never a local or real player.
         // return: True if the bot is no longer in the match. False if the engine refused a step or the function was not found: the
         // cause is logged and the bot stays in the store while its slot is taken (a retry resumes where it stopped).
-        // note: Game thread only.
+        // note: Game thread only. It is the one way a bot leaves: it also clears the action override of its player index, so a new bot
+        // at that index starts clean.
         auto RemoveBot(std::uintptr_t threadContext, std::size_t number) -> bool;
 
+        // Forgets a bot that is out of the engine and clears the action override of its player index.
+        auto ForgetBot(const Bot& bot) -> void;
+
         // Moves a player to another team through its configuration, as a team change in the game does (the unit dies and respawns).
-        auto ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> void;
+        // return: True if the player is on the team afterwards. The cause is logged.
+        auto ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> bool;
 
         // Makes sure the fake machine exists in the engine.
         // return: False if the slot belongs to a real machine or the engine did not take it.

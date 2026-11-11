@@ -151,6 +151,10 @@ export namespace DevTools::Workbench::Bench::System
         // param ticks: Ticks of the match so far.
         auto Sample(BenchRun& run, std::uint64_t ticks) -> void;
 
+        // At the first tick of each round in play: records the bots per team against the roster of the round (roster_ok) and asks for the
+        // roster of the next round, so it is applied at the end of this one.
+        auto UpdateRosters(BenchRun& run) -> void;
+
         // Takes the photo of the telemetry and Lockstep counters the perf of the match is measured from, when its run begins.
         auto BeginPerf(BenchRun& run) -> void;
 

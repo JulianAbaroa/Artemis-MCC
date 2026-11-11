@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
 import Engine.Base.Memory.Type;
+import Engine.Base.Hook.System;
 import Blam.Layout.Object.Type;
 import std;
 
@@ -21,6 +22,15 @@ namespace
     using Engine::Control::Simulation::Type::ApplyPlayerUpdateFunction;
     using Engine::Control::Simulation::Type::ApplyPlayerConfigurationFunction;
     using Engine::Control::Simulation::Type::TeamRequest;
+    using Engine::Control::Simulation::Type::RosterBot;
+    using Engine::Control::Simulation::Type::RosterPlan;
+    using Engine::Control::Simulation::Type::RosterResult;
+    using Engine::Control::Simulation::Type::PlanRoster;
+    using Engine::Control::Simulation::Type::GetRosterStep;
+    using Engine::Control::Simulation::Type::RosterStep;
+    using Engine::Control::Simulation::Type::ToText;
+    using Engine::Base::Hook::System::ReadRoundIndex;
+    using Engine::Base::Hook::System::ReadRoundState;
     using Engine::Control::Simulation::Type::GatherInteractionsFunction;
     using Engine::Control::Simulation::Type::UnitSelectorFunction;
     using Engine::Control::Simulation::Type::NextZoomLevelFunction;
@@ -220,6 +230,7 @@ namespace Engine::Control::Simulation::System
         if (threadContext == 0) return;
 
         this->PublishSnapshot(threadContext);
+        this->UpdateRoster(threadContext);
 
         for (const std::size_t number : m_BotStore.TakeRemoveRequests())
         {
@@ -433,7 +444,7 @@ namespace Engine::Control::Simulation::System
         if (!slot || Read<std::uint64_t>(slot->Datum + k_PlayerIdentifier) != bot.Identifier)
         {
             m_Log.Message("[BotService] WARNING: Bot {} is already gone from player {}.", number, bot.PlayerIndex);
-            m_BotStore.RemoveBot(number);
+            this->ForgetBot(bot);
             return true;
         }
 
@@ -477,10 +488,128 @@ namespace Engine::Control::Simulation::System
             }
         }
 
-        m_BotStore.RemoveBot(number);
+        this->ForgetBot(bot);
 
         m_Log.Message("[BotService] INFO: Bot {} removed from player {}.", number, bot.PlayerIndex);
         return true;
+    }
+
+    auto BotService::ForgetBot(const Bot& bot) -> void
+    {
+        m_PlayerActionStore.SetOverride(bot.PlayerIndex, std::nullopt);
+        m_BotStore.RemoveBot(bot.Number);
+    }
+
+    auto BotService::UpdateRoster(std::uintptr_t threadContext) -> void
+    {
+        const bool isStarted{ m_BotStore.IsMatchStarted() };
+        const bool hasPending{ m_BotStore.HasPendingRoster() };
+        const RosterStep step{ GetRosterStep(isStarted, hasPending, hasPending ? ReadRoundState(threadContext) : std::nullopt) };
+
+        if (step == RosterStep::Nothing) return;
+
+        // note: At the first tick a request made before it (the lobby) is the roster of the load. It only becomes the active roster if
+        // it is applied. Between rounds it is the request made in the match.
+        const bool isLoad{ step == RosterStep::Load };
+        if (isLoad) m_BotStore.SetMatchStarted();
+
+        const std::optional<RosterRequest> request{ isLoad ? m_BotStore.TakeLoadRoster() : m_BotStore.TakePendingRoster() };
+        if (!request) return;
+
+        const RosterResult result{ this->ApplyRoster(threadContext, request->Value, isLoad ? RosterOutcome::AtLoad : RosterOutcome::Applied) };
+        const bool isApplied{ result.Outcome != RosterOutcome::Rejected };
+
+        m_BotStore.FinishRoster(*request, result, isApplied);
+
+        if (!isApplied) return;
+
+        if (isLoad) m_Log.Message("[BotService] INFO: Roster applied at load.");
+        else        m_Log.Message("[BotService] INFO: Roster applied between rounds {}.", result.Round);
+    }
+
+    auto BotService::ApplyRoster(std::uintptr_t threadContext, const Roster& roster, RosterOutcome outcome) -> RosterResult
+    {
+        const std::int16_t round{ ReadRoundIndex(threadContext).value_or(-1) };
+        const auto reject = [&](const std::string& reason) {
+            m_Log.Message("[BotService] WARNING: Roster {} was not applied: {}.", ToText(roster), reason);
+            return RosterResult{ .Outcome = RosterOutcome::Rejected, .Round = round, .Reason = reason };
+        };
+
+        const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
+        const auto globals{ Read<std::uintptr_t>(threadContext + k_PlayersGlobalsSlot) };
+        if (!m_IsResolved || players == 0 || globals == 0) return reject("the players or the engine functions are not available");
+
+        std::vector<Bot> bots{};
+        m_BotStore.CopyBots(bots);
+
+        // A bot already gone from the engine goes in with no team: the plan only removes it, and the removal forgets it.
+        std::vector<RosterBot> current{};
+        std::size_t botsInEngine{ 0 };
+        for (const Bot& bot : bots)
+        {
+            const auto slot{ FindPlayerSlot(threadContext, bot.PlayerIndex) };
+            const bool isInEngine{ slot && Read<std::uint64_t>(slot->Datum + k_PlayerIdentifier) == bot.Identifier };
+
+            if (isInEngine) ++botsInEngine;
+            current.push_back(RosterBot{ .Number = bot.Number, .PlayerIndex = bot.PlayerIndex,
+                .Team = isInEngine ? Read<std::int8_t>(slot->Datum + k_PlayerTeam) : std::int8_t{ -1 } });
+        }
+
+        // The local player 0 gives the team of the auto bots. Every other player in the table takes a slot.
+        const auto localMachine{ Read<std::int32_t>(globals + k_LocalMachineIndex) };
+        std::int8_t localTeam{ -1 };
+        std::size_t occupied{ 0 };
+        for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
+        {
+            const auto slot{ FindPlayerSlot(threadContext, index) };
+            if (!slot) continue;
+
+            ++occupied;
+            if (Read<std::int16_t>(slot->Datum + k_PlayerMachineIndex) == localMachine && Read<std::int32_t>(slot->Datum + k_PlayerUserIndex) == 0)
+            {
+                localTeam = Read<std::int8_t>(slot->Datum + k_PlayerTeam);
+            }
+        }
+
+        const auto plan{ PlanRoster(current, roster, localTeam, occupied - botsInEngine) };
+        if (!plan) return reject(plan.error());
+
+        const std::size_t total{ plan->Moves.size() + plan->Removes.size() + plan->Adds.size() };
+        std::size_t done{ 0 };
+        std::size_t failures{ 0 };
+
+        for (const auto& move : plan->Moves)
+        {
+            const auto found{ std::ranges::find(bots, move.Number, &Bot::Number) };
+
+            if (this->ApplyTeam(threadContext, TeamRequest{ .PlayerIndex = found->PlayerIndex, .Team = move.Team })) ++done;
+            else                                                                                                    ++failures;
+        }
+
+        for (const std::size_t number : plan->Removes)
+        {
+            if (this->RemoveBot(threadContext, number)) ++done;
+            else                                        ++failures;
+        }
+
+        for (const std::int8_t team : plan->Adds)
+        {
+            if (!this->AddBot(threadContext, team))
+            {
+                ++failures;
+                break;
+            }
+
+            ++done;
+        }
+
+        m_Log.Message("[BotService] INFO: Roster {}: {} moves, {} removes, {} adds, {} of {} operations done, {} failed.", ToText(roster),
+            plan->Moves.size(), plan->Removes.size(), plan->Adds.size(), done, total, failures);
+
+        // note: Operations left after a failed add are skipped, so they count as not done. Nothing is undone or retried.
+        if (done < total) return reject(std::format("{} of {} operations done, see the log", done, total));
+
+        return RosterResult{ .Outcome = outcome, .Round = round };
     }
 
     auto BotService::EnsureFakeMachine(std::uintptr_t playersGlobals, std::size_t machineIndex) -> bool
@@ -528,19 +657,19 @@ namespace Engine::Control::Simulation::System
         return true;
     }
 
-    auto BotService::ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> void
+    auto BotService::ApplyTeam(std::uintptr_t threadContext, const TeamRequest& request) -> bool
     {
-        if (!m_IsResolved || request.Team < 0 || static_cast<std::size_t>(request.Team) >= k_MaxTeams) return;
+        if (!m_IsResolved || request.Team < 0 || static_cast<std::size_t>(request.Team) >= k_MaxTeams) return false;
 
         const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
-        if (players == 0) return;
+        if (players == 0) return false;
 
         const std::uintptr_t datum{ GetPlayerDatum(players, request.PlayerIndex) };
         const auto salt{ datum != 0 ? Read<std::uint16_t>(datum + k_PlayerSalt) : std::uint16_t{ 0 } };
         if (salt == 0)
         {
             m_Log.Message("[BotService] WARNING: Player {} is gone, its team was not changed.", request.PlayerIndex);
-            return;
+            return false;
         }
 
         std::array<std::uint8_t, k_PlayerConfigurationSize> configuration{};
@@ -550,8 +679,15 @@ namespace Engine::Control::Simulation::System
         const std::uint32_t handle{ MakePlayerHandle(salt, request.PlayerIndex) };
         m_ApplyPlayerConfiguration(handle, configuration.data());
 
-        m_Log.Message("[BotService] INFO: Player {} moved to team {} (now {}).", request.PlayerIndex, request.Team,
-            Read<std::int8_t>(datum + k_PlayerTeam));
+        const auto team{ Read<std::int8_t>(datum + k_PlayerTeam) };
+        if (team != request.Team)
+        {
+            m_Log.Message("[BotService] ERROR: Player {} did not move to team {} (still on {}).", request.PlayerIndex, request.Team, team);
+            return false;
+        }
+
+        m_Log.Message("[BotService] INFO: Player {} moved to team {} (now {}).", request.PlayerIndex, request.Team, team);
+        return true;
     }
 
     auto BotService::GetUnitActionSlot(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint8_t>

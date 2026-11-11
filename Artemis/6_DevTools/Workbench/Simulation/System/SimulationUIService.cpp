@@ -28,6 +28,10 @@ namespace
     using Engine::Control::Simulation::Type::Bot;
     using Engine::Control::Simulation::Type::FakeMachine;
     using Engine::Control::Simulation::Type::TeamRequest;
+    using Engine::Control::Simulation::Type::Roster;
+    using Engine::Control::Simulation::Type::RosterOutcome;
+    using Engine::Control::Simulation::Type::RosterResult;
+    using Engine::Control::Simulation::Type::ToText;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using Bridge::Transport::Type::BridgeStatus;
     using Contract::Bridge::Type::BridgeOwner;
@@ -848,6 +852,8 @@ namespace DevTools::Workbench::Simulation::System
         if (ImGui::Button("Add bot")) m_BotStore.RequestBot(newTeam);
         ImGui::SetItemTooltip("Applied on the next tick of a match. The result is in the log.");
 
+        this->DrawRoster();
+
         std::vector<Bot> bots{};
         m_BotStore.CopyBots(bots);
 
@@ -924,11 +930,11 @@ namespace DevTools::Workbench::Simulation::System
 
             ImGui::TableNextColumn();
 
-            const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex) };
+            const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex, player.Handle) };
 
             if (const auto mode{ DrawActionRadios(current) })
             {
-                m_SimulationUIStore.SetBotAction(bot.PlayerIndex, *mode);
+                m_SimulationUIStore.SetBotAction(bot.PlayerIndex, player.Handle, *mode);
                 this->ApplyBotAction(bot.PlayerIndex, *mode);
             }
 
@@ -954,13 +960,7 @@ namespace DevTools::Workbench::Simulation::System
             }
 
             ImGui::TableNextColumn();
-            if (ImGui::SmallButton("Remove"))
-            {
-                // note: The action mode and the override belong to the player index, which a new bot can take.
-                m_SimulationUIStore.SetBotAction(bot.PlayerIndex, LocalPlayerAction::Engine);
-                m_PlayerActionStore.SetOverride(bot.PlayerIndex, std::nullopt);
-                m_BotStore.RequestRemove(bot.Number);
-            }
+            if (ImGui::SmallButton("Remove")) m_BotStore.RequestRemove(bot.Number);
             ImGui::SetItemTooltip("The bot leaves the match on the next tick and its slot is free at once. The result is in the log.");
 
             ImGui::PopID();
@@ -1011,6 +1011,54 @@ namespace DevTools::Workbench::Simulation::System
         m_Log.Message("[SimulationUIService] INFO: Action of bot {} (player {}) at tick {}: in the mask {}, bytes {}.", number,
             playerIndex, actions.Sequence, (actions.Mask & (1u << playerIndex)) != 0 ? "yes" : "no",
             ToHex(actions.Actions[playerIndex].Data));
+    }
+
+    auto SimulationUIService::DrawRoster() -> void
+    {
+        const std::optional<Roster> active{ m_BotStore.GetActiveRoster() };
+        const RosterResult result{ m_BotStore.GetRosterResult() };
+
+        std::string state{};
+        switch (result.Outcome)
+        {
+        case RosterOutcome::None: state = active ? "applies at the next load" : ""; break;
+        case RosterOutcome::Pending: state = "pending until the end of the round"; break;
+        case RosterOutcome::AtLoad: state = "at load"; break;
+        case RosterOutcome::Applied: state = std::format("between rounds {}", result.Round); break;
+        case RosterOutcome::Rejected: state = std::format("rejected: {}", result.Reason); break;
+        }
+
+        ImGui::Text("Roster: %s%s%s%s", active ? ToText(*active).c_str() : "none", state.empty() ? "" : " (", state.c_str(),
+            state.empty() ? "" : ")");
+        ImGui::SetItemTooltip("Bots per team (the local players are not part of it). Applied at the first tick of every match, and a"
+            " new one between two rounds. Auto goes to the team of the local player 0.");
+
+        Roster editor{ m_SimulationUIStore.GetRosterEditor() };
+        bool isEdited{ false };
+
+        for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+        {
+            int count{ static_cast<int>(editor.Teams[team]) };
+            ImGui::SetNextItemWidth(80.0f);
+            if (ImGui::InputInt(k_TeamLabels[team], &count, 1, 4))
+            {
+                editor.Teams[team] = static_cast<std::size_t>((std::clamp)(count, 0, static_cast<int>(k_MaxPlayers)));
+                isEdited = true;
+            }
+        }
+
+        int autoCount{ static_cast<int>(editor.Auto) };
+        ImGui::SetNextItemWidth(80.0f);
+        if (ImGui::InputInt("Auto", &autoCount, 1, 4))
+        {
+            editor.Auto = static_cast<std::size_t>((std::clamp)(autoCount, 0, static_cast<int>(k_MaxPlayers)));
+            isEdited = true;
+        }
+
+        if (isEdited) m_SimulationUIStore.SetRosterEditor(editor);
+
+        if (ImGui::Button("Request roster")) m_BotStore.RequestRoster(editor);
+        ImGui::SetItemTooltip("In the lobby it is the roster of the next match. In a match it is applied at the end of the round.");
     }
 
     auto SimulationUIService::ApplyBotAction(std::size_t playerIndex, LocalPlayerAction mode) -> void

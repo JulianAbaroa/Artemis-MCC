@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
 import Services.Telemetry.Type;
+import Engine.Control.Simulation.Type;
 import Bridge.Transport.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Workbench.Simulation.Type;
@@ -17,7 +18,9 @@ namespace
     using Bridge::Transport::Type::BridgeCounters;
     using Bridge::Codec::Tick::Type::Tick;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
+    using Engine::Control::Simulation::Type::Roster;
 
+    using Common::Engine::Type::k_MaxTeams;
     using Common::Engine::Type::k_NoHandle;
 }
 
@@ -85,8 +88,10 @@ export namespace DevTools::Workbench::Bench::Type
         std::optional<std::string> MapVariant{};
         // Local users of the split-screen, the primary one included. Empty leaves the count as it is.
         std::optional<std::size_t> Locals{};
-        // Team of each bot added after the start. Empty team = the one the engine picks.
-        std::vector<std::optional<std::int8_t>> Bots{};
+        // Bots of the match (D284): applied at the first tick, and a roster per next round, each one requested while the round before
+        // it runs and applied at the end of that round. No roster at all means no bots: the one of the previous match is cleared.
+        std::optional<Roster> RosterAtLoad{};
+        std::vector<Roster> RoundRosters{};
         // Engine speed during the match. Empty leaves it as it is, 0 = the engine speed.
         std::optional<float> TimeScale{};
         // Limits after which the bench sends Leave (D131). 0 = none: the gametype ends the match.
@@ -160,6 +165,21 @@ export namespace DevTools::Workbench::Bench::Type
         std::string Perf{};
     };
 
+    // One round start the bench saw (the roster_ok check): the bots per team the roster of the round asks for and the ones the Tick had.
+    struct BenchRosterRow
+    {
+        std::int16_t Round{ 0 };
+        std::array<std::size_t, k_MaxTeams> Expected{};
+        std::array<std::size_t, k_MaxTeams> Seen{};
+        // Bots seen on a team that is not 0 to k_MaxTeams - 1.
+        std::size_t SeenElsewhere{ 0 };
+
+        auto IsOk() const -> bool
+        {
+            return Expected == Seen && SeenElsewhere == 0;
+        }
+    };
+
     // What the bench remembers of a player from the first sampled tick where it was alive, for the checks.
     struct BenchPlayerSample
     {
@@ -207,9 +227,14 @@ export namespace DevTools::Workbench::Bench::Type
         // Players seen alive, by handle, and whether any of them held the objective on a sampled tick.
         std::unordered_map<std::uint32_t, BenchPlayerSample> FirstSamples{};
         bool IsObjectiveSeen{ false };
-        // Test mode each player index plays because of the bench, and the requests already sent.
-        std::unordered_map<std::size_t, LocalPlayerAction> AppliedModes{};
+        // Test mode each player plays because of the bench, by player handle (a new player at an index has another handle), and the
+        // requests already sent.
+        std::unordered_map<std::uint32_t, LocalPlayerAction> AppliedModes{};
         std::vector<bool> SentRequests{};
+        // Rounds of the roster check: the last round seen in play, the round rosters requested so far and the rows.
+        std::int16_t LastRound{ -1 };
+        std::size_t RostersRequested{ 0 };
+        std::vector<BenchRosterRow> RosterRows{};
         std::vector<BenchProbeState> Probes{};
         // CSV of the events of the match, and the sequence of the last event written to it.
         std::filesystem::path EventsFile{};

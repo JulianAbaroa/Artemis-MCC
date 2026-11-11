@@ -305,8 +305,40 @@ def PrintReport(report, asserter=AssertTickDump):
     return 2 if "pending" in statuses else 0
 
 
-MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
+MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "roster", "rosters", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
               "probes", "tickdump", "events", "every_tick"}
+
+
+MAX_TEAMS = 8
+
+
+def RosterLine(match_number, roster, what):
+    """Words of a roster for BenchUIService (D284): the bots per team 0..7, then auto. roster = {"0": 7, "1": 8, "auto": 0}."""
+    if not isinstance(roster, dict):
+        raise ValueError(f"match {match_number}: {what} must be an object like " + '{"0": 7, "1": 8, "auto": 0}' + f", not {roster!r}")
+    counts = [0] * MAX_TEAMS
+    auto = 0
+    for key, value in roster.items():
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"match {match_number}: {what} count of {key!r} must be an integer >= 0, not {value!r}")
+        if str(key) == "auto":
+            auto = value
+        elif str(key).isdigit() and int(key) < MAX_TEAMS:
+            counts[int(key)] = value
+        else:
+            raise ValueError(f"match {match_number}: {what} key {key!r} is not a team 0-{MAX_TEAMS - 1} or auto")
+    return " ".join(str(count) for count in counts) + f" auto {auto}"
+
+
+def RosterFromBots(match_number, bots):
+    """The roster of the bots shortcut: how many bots on each team, and how many on the team of the local player (null or auto)."""
+    roster = {}
+    for team in bots:
+        key = "auto" if team in (None, "auto") else str(team)
+        if key != "auto" and (not key.isdigit() or int(key) >= MAX_TEAMS):
+            raise ValueError(f"match {match_number}: bots takes auto or a team 0-{MAX_TEAMS - 1}, not {team!r}")
+        roster[key] = roster.get(key, 0) + 1
+    return roster
 
 
 def Compile(scenario, configs):
@@ -316,6 +348,15 @@ def Compile(scenario, configs):
     count = 0
     for index, raw in enumerate(scenario.get("matches", [])):
         match = dict(defaults, **raw)
+        # One way to say the bots at load per match: the one of the match itself replaces the one of the defaults (D284).
+        if "roster" in raw and "bots" in raw:
+            raise ValueError(f"match {index + 1}: roster and bots cannot go together (bots is a shortcut of roster)")
+        if "roster" in raw:
+            match.pop("bots", None)
+        if "bots" in raw:
+            match.pop("roster", None)
+        if match.get("roster") is not None and "bots" in match:
+            raise ValueError(f"match {index + 1}: roster and bots cannot go together (bots is a shortcut of roster)")
         unknown = set(match) - MATCH_KEYS
         if unknown:
             raise ValueError(f"match {index + 1}: unknown keys {sorted(unknown)}")
@@ -349,8 +390,16 @@ def Compile(scenario, configs):
                 lines.append(f"map {variant}")
             if "locals" in match:
                 lines.append(f"locals {int(match['locals'])}")
-            for team in match.get("bots", []):
-                lines.append(f"bot {'auto' if team in (None, 'auto') else int(team)}")
+            at_load = match.get("roster")
+            if at_load is None and "bots" in match:
+                at_load = RosterFromBots(index + 1, match["bots"])
+            if at_load is not None:
+                lines.append("roster " + RosterLine(index + 1, at_load, "roster"))
+            if match.get("rosters"):
+                if at_load is None:
+                    raise ValueError(f"match {index + 1}: rosters need a roster (or bots) at load: round 0 is checked against it")
+                for round_roster in match["rosters"]:
+                    lines.append("round_roster " + RosterLine(index + 1, round_roster, "rosters"))
             if "scale" in match:
                 lines.append(f"scale {float(match['scale'])}")
             if match.get("max_ticks"):

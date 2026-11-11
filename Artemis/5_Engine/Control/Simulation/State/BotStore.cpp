@@ -1,5 +1,10 @@
 module Engine.Control.Simulation.State;
 
+namespace
+{
+    using Engine::Control::Simulation::Type::RosterOutcome;
+}
+
 namespace Engine::Control::Simulation::State
 {
     auto BotStore::RequestBot(std::optional<std::int8_t> team) -> void
@@ -36,6 +41,75 @@ namespace Engine::Control::Simulation::State
     {
         std::scoped_lock lock(m_Mutex);
         return std::exchange(m_RemoveRequests, {});
+    }
+
+    auto BotStore::RequestRoster(const Roster& roster) -> void
+    {
+        std::scoped_lock lock(m_Mutex);
+        m_PendingRoster = RosterRequest{ .Value = roster, .Sequence = ++m_RosterSequence };
+        m_RosterResult = RosterResult{ .Outcome = RosterOutcome::Pending };
+    }
+
+    auto BotStore::HasPendingRoster() const -> bool
+    {
+        std::scoped_lock lock(m_Mutex);
+        return m_PendingRoster.has_value();
+    }
+
+    auto BotStore::TakePendingRoster() -> std::optional<RosterRequest>
+    {
+        std::scoped_lock lock(m_Mutex);
+        return std::exchange(m_PendingRoster, std::nullopt);
+    }
+
+    auto BotStore::TakeLoadRoster() -> std::optional<RosterRequest>
+    {
+        std::scoped_lock lock(m_Mutex);
+
+        if (m_PendingRoster) return std::exchange(m_PendingRoster, std::nullopt);
+        if (m_ActiveRoster) return RosterRequest{ .Value = *m_ActiveRoster, .Sequence = m_RosterSequence };
+
+        return std::nullopt;
+    }
+
+    auto BotStore::FinishRoster(const RosterRequest& request, const RosterResult& result, bool isApplied) -> void
+    {
+        std::scoped_lock lock(m_Mutex);
+
+        if (isApplied) m_ActiveRoster = request.Value;
+        if (request.Sequence == m_RosterSequence) m_RosterResult = result;
+    }
+
+    auto BotStore::GetActiveRoster() const -> std::optional<Roster>
+    {
+        std::scoped_lock lock(m_Mutex);
+        return m_ActiveRoster;
+    }
+
+    auto BotStore::ClearRoster() -> void
+    {
+        std::scoped_lock lock(m_Mutex);
+        m_ActiveRoster.reset();
+        m_PendingRoster.reset();
+        m_RosterResult = RosterResult{};
+    }
+
+    auto BotStore::GetRosterResult() const -> RosterResult
+    {
+        std::scoped_lock lock(m_Mutex);
+        return m_RosterResult;
+    }
+
+    auto BotStore::IsMatchStarted() const -> bool
+    {
+        std::scoped_lock lock(m_Mutex);
+        return m_IsMatchStarted;
+    }
+
+    auto BotStore::SetMatchStarted() -> void
+    {
+        std::scoped_lock lock(m_Mutex);
+        m_IsMatchStarted = true;
     }
 
     auto BotStore::AddBot(const Bot& bot) -> void
@@ -86,6 +160,8 @@ namespace Engine::Control::Simulation::State
         m_Requests.clear();
         m_TeamRequests.clear();
         m_RemoveRequests.clear();
+        m_IsMatchStarted = false;
+        m_RosterResult = m_PendingRoster ? RosterResult{ .Outcome = RosterOutcome::Pending } : RosterResult{};
         m_Bots.clear();
         m_FakeMachines.clear();
         m_Snapshot = SessionSnapshot{};
