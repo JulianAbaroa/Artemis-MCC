@@ -56,6 +56,7 @@ namespace
     using Bridge::Transport::Type::k_LockstepTimeout;
     using Bridge::Transport::Type::k_LockstepWaitSlice;
     using Contract::Bridge::Type::k_BridgeNotLocal;
+    using Contract::Bridge::Type::k_BridgeMapNameSize;
     using Contract::Bridge::Type::k_BridgePresetNameSize;
 
     static_assert(k_MaxPlayers <= k_MaxActionPlayers, "Every bridge slot must have an override in the PlayerActionStore.");
@@ -232,6 +233,7 @@ namespace Bridge::Transport::System
             m_Engine.SetEndRoundRequested(false);
             // A preset that still waits for a round break goes with the client that asked for it.
             m_Engine.CancelPresetRequest();
+            m_Engine.CancelMapRequest();
         }
 
         // A raise of the counter is a request (D144). Raises seen between two updates, or before the game thread takes them, count as
@@ -256,6 +258,18 @@ namespace Bridge::Transport::System
             m_Log.Message("[BridgeService] INFO: Preset \"{}\" requested.", name);
         }
         link.LastClientPreset = presetCounter;
+
+        // The same for a map variant (Q98). The name has no end zero when it fills the field.
+        const std::uint32_t mapCounter{ LoadShared(region->Control.Client.RequestMap) };
+        if (mapCounter != link.LastClientMap && control.Owner == BridgeOwner::Python)
+        {
+            const auto& nameBytes{ region->Control.Client.RequestMapName };
+            const auto nameEnd{ std::ranges::find(nameBytes, std::uint8_t{ 0 }) };
+            const std::string name{ nameBytes.begin(), nameEnd };
+            m_Engine.RequestMap(name);
+            m_Log.Message("[BridgeService] INFO: Map variant \"{}\" requested.", name);
+        }
+        link.LastClientMap = mapCounter;
 
         this->LogTransition(previous, control, isClientLeft);
         m_BridgeStore.SetControl(control);
@@ -498,6 +512,13 @@ namespace Bridge::Transport::System
         artemis.ActivePreset = activeName;
         artemis.PresetResult = m_Engine.GetPresetResult();
         StoreShared(artemis.PresetSequence, m_BridgeStore.GetLinkState().LastClientPreset);
+
+        const std::string activeMap{ m_Engine.GetActiveMap() };
+        std::array<std::uint8_t, k_BridgeMapNameSize> activeMapName{};
+        std::copy_n(activeMap.begin(), (std::min)(activeMap.size(), activeMapName.size()), activeMapName.begin());
+        artemis.ActiveMap = activeMapName;
+        artemis.MapResult = m_Engine.GetMapResult();
+        StoreShared(artemis.MapSequence, m_BridgeStore.GetLinkState().LastClientMap);
 
         StoreShared(artemis.ActionTick, m_BridgeStore.GetActionTick());
         StoreShared(artemis.LateActions, counters.LateActions);

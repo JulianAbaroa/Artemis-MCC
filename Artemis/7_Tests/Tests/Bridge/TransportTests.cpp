@@ -40,6 +40,7 @@ namespace
     using Contract::Bridge::Type::k_BridgeActionEventSuffix;
     using Contract::Bridge::Type::k_BridgeLayoutHash;
     using Contract::Bridge::Type::k_BridgeLayoutVersion;
+    using Contract::Bridge::Type::k_BridgeMapNameSize;
     using Contract::Bridge::Type::k_BridgeMagic;
     using Contract::Bridge::Type::k_BridgeNotLocal;
     using Contract::Bridge::Type::k_BridgeRegionPrefix;
@@ -84,6 +85,10 @@ namespace
         std::size_t m_PresetCancels{ 0 };
         BridgePresetResult m_PresetResult{ BridgePresetResult::NoResult };
         std::string m_ActivePreset{};
+        std::vector<std::string> m_MapRequests{};
+        std::size_t m_MapCancels{ 0 };
+        BridgePresetResult m_MapResult{ BridgePresetResult::NoResult };
+        std::string m_ActiveMap{};
         std::vector<OverrideCall> m_OverrideCalls{};
         std::size_t m_RequestCount{ 0 };
 
@@ -121,6 +126,16 @@ namespace
         auto CancelPresetRequest() -> void override { ++m_PresetCancels; }
         auto GetPresetResult() const -> BridgePresetResult override { return m_PresetResult; }
         auto GetActivePreset() const -> std::string override { return m_ActivePreset; }
+
+        auto RequestMap(std::string_view name) -> void override
+        {
+            m_MapRequests.emplace_back(name);
+            m_MapResult = BridgePresetResult::Pending;
+        }
+
+        auto CancelMapRequest() -> void override { ++m_MapCancels; }
+        auto GetMapResult() const -> BridgePresetResult override { return m_MapResult; }
+        auto GetActiveMap() const -> std::string override { return m_ActiveMap; }
 
         auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override
         {
@@ -371,6 +386,84 @@ TEST_F(TransportTests, ThePresetRequestIsDroppedWhenPythonLosesTheInstance)
 
     this->Connect(BridgeOwner::UI, BridgeMode::Free, 0);
     EXPECT_GE(m_Engine.m_PresetCancels, 1u);
+}
+
+TEST_F(TransportTests, AMapVariantIsARaiseWithAZeroFilledNameAndIsEchoedWithItsResult)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_TRUE(m_Engine.m_MapRequests.empty());
+
+    auto& client{ m_Region->Control.Client };
+    const std::string_view name{ "Reach Bus Mountain Pass Reach Bus CTF" };
+    std::ranges::copy(name, client.RequestMapName.begin());
+    client.RequestMap = 1;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+
+    ASSERT_EQ(m_Engine.m_MapRequests.size(), 1u);
+    EXPECT_EQ(m_Engine.m_MapRequests.back(), name);
+    EXPECT_EQ(m_Region->Control.Artemis.MapSequence, 1u);
+    EXPECT_EQ(m_Region->Control.Artemis.MapResult, BridgePresetResult::Pending);
+
+    // The same counter is not a new request. The result and the active map variant follow the engine, apart from the preset.
+    m_Engine.m_MapResult = BridgePresetResult::Applied;
+    m_Engine.m_ActiveMap = std::string{ name };
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_EQ(m_Engine.m_MapRequests.size(), 1u);
+    EXPECT_EQ(m_Region->Control.Artemis.MapResult, BridgePresetResult::Applied);
+    EXPECT_EQ(m_Region->Control.Artemis.PresetResult, BridgePresetResult::NoResult);
+    const auto& active{ m_Region->Control.Artemis.ActiveMap };
+    EXPECT_EQ(std::string(active.begin(), std::ranges::find(active, std::uint8_t{ 0 })), name);
+
+    // An empty name asks for none.
+    client.RequestMapName.fill(0);
+    client.RequestMap = 2;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    ASSERT_EQ(m_Engine.m_MapRequests.size(), 2u);
+    EXPECT_TRUE(m_Engine.m_MapRequests.back().empty());
+    EXPECT_EQ(m_Region->Control.Artemis.MapSequence, 2u);
+    EXPECT_TRUE(m_Engine.m_PresetRequests.empty());
+}
+
+TEST_F(TransportTests, AMapVariantNameOfSixtyFourCharactersHasNoEndZero)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+
+    auto& client{ m_Region->Control.Client };
+    const std::string name(k_BridgeMapNameSize, 'm');
+    std::ranges::copy(name, client.RequestMapName.begin());
+    client.RequestMap = 1;
+    m_Engine.m_ActiveMap = name;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+
+    ASSERT_EQ(m_Engine.m_MapRequests.size(), 1u);
+    EXPECT_EQ(m_Engine.m_MapRequests.back(), name);
+    const auto& active{ m_Region->Control.Artemis.ActiveMap };
+    EXPECT_EQ(std::string(active.begin(), active.end()), name);
+}
+
+TEST_F(TransportTests, AMapVariantRaiseWhileTheUIOwnsTheInstanceIsDropped)
+{
+    auto& client{ m_Region->Control.Client };
+    client.RequestMapName[0] = 'a';
+    client.RequestMap = 1;
+    this->Connect(BridgeOwner::UI, BridgeMode::Free, 0);
+
+    EXPECT_TRUE(m_Engine.m_MapRequests.empty());
+    EXPECT_EQ(m_Region->Control.Artemis.MapSequence, 1u);
+}
+
+TEST_F(TransportTests, TheMapVariantRequestIsDroppedWhenPythonLosesTheInstance)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_EQ(m_Engine.m_MapCancels, 0u);
+
+    m_Region->Control.Client.RequestMapName[0] = 'a';
+    m_Region->Control.Client.RequestMap = 1;
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+    EXPECT_EQ(m_Engine.m_MapCancels, 0u);
+
+    this->Connect(BridgeOwner::UI, BridgeMode::Free, 0);
+    EXPECT_GE(m_Engine.m_MapCancels, 1u);
 }
 
 TEST_F(TransportTests, FreeAppliesAtTheLatency)

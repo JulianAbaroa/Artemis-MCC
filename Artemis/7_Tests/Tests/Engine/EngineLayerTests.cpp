@@ -61,6 +61,10 @@ namespace
         auto CancelPresetRequest() -> void override {}
         auto GetPresetResult() const -> BridgePresetResult override { return BridgePresetResult::NoResult; }
         auto GetActivePreset() const -> std::string override { return std::string{}; }
+        auto RequestMap(std::string_view name) -> void override { static_cast<void>(name); }
+        auto CancelMapRequest() -> void override {}
+        auto GetMapResult() const -> BridgePresetResult override { return BridgePresetResult::NoResult; }
+        auto GetActiveMap() const -> std::string override { return std::string{}; }
 
         auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override
         {

@@ -57,6 +57,9 @@ export namespace Bridge::Transport::Type
         // Last RequestPreset of the client seen. A change while Python owns the instance is a request for the preset in RequestPresetName.
         std::uint32_t LastClientPreset{ 0 };
 
+        // Last RequestMap of the client seen. A change while Python owns the instance is a request for the map variant in RequestMapName (Q98).
+        std::uint32_t LastClientMap{ 0 };
+
         // When the tick being written started, to time the flatten.
         std::chrono::steady_clock::time_point PublishStart{};
     };

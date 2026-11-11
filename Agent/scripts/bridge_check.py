@@ -25,6 +25,15 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            --reject the names must be presets the match cannot take (artemis_ctf_colors changes
                                            load fields): the result is Rejected and the active preset does not change.
                                            The match has to start with artemis_ctf_base (Bench: preset artemis_ctf_base).
+    map --names a,b [--rounds N] [--reject NAME] [--seconds 120] [--scale S]
+                                           Q98: for each of N rounds (default one per name) requests the next map variant of the list (the
+                                           name of a recorded match config of the loaded map) in the middle of the round (Pending), ends
+                                           the round and checks the result at the break: Applied and the active map is the one asked. Then
+                                           waits for the next Spawn and checks that the positions of the flag stands of the new round
+                                           changed (a different layout) when the map variant is a different one than before. With --reject
+                                           NAME it requests that map variant as well in the first round and expects Rejected (for
+                                           example a config of another .map) with the active map unchanged. The match has to start with
+                                           one of the names, or with the map variant of its config (Bench: map <name>).
     turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
                                            D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
                                            pitch +-0.4). The aim seen between two ticks never turns faster than --turn-limit rad
@@ -512,7 +521,7 @@ def Preset(args):
             result = bridge.wait_preset(args.seconds)
             active = bridge.active_preset
             print(f"  round {step + 1}: {name} -> {result.name}, active {active!r} (was {before!r})")
-            # A match that ended with the request answers AtLoad: the next start writes it.
+            # A match that ended with the request may answer Applied (Ended also happens at game over): the active block carries it to the next start.
             if result != expected and not (result == L.BridgePresetResult.AtLoad and not args.reject):
                 bad.append(f"round {step + 1}: {name} ended as {result.name}, expected {expected.name}")
             if args.reject and active != before:
@@ -531,15 +540,118 @@ def Preset(args):
         return 0 if not failed else 1
 
 
+def StandPositions(published):
+    """The positions of the flag stands of a tick, sorted, rounded to 0.1: what tells one layout of the map from another."""
+    positions = []
+    for stand in published.stands:
+        rows = published.entities[published.entities["Handle"] == stand["Handle"]]
+        if len(rows):
+            positions.append(tuple(round(float(value), 1) for value in rows[0]["WorldOrigin"]))
+    return sorted(positions)
+
+
+def WaitStands(bridge, seconds):
+    """The stand positions of the first tick that has any, or None when none came in time."""
+    end = time.time() + seconds
+    while time.time() < end:
+        published = bridge.wait_tick(2.0)
+        if published is not None and len(published.stands):
+            positions = StandPositions(published)
+            if positions:
+                return positions
+    return None
+
+
+def Break(bridge, args, name, label):
+    """Requests the map variant in the middle of a round, ends the round and waits for the break. Returns (result, active) or None
+    with the reason in the second place when the request or the end of the round was not taken."""
+    asked = bridge.request_map(name)
+    if asked != L.BridgePresetResult.Pending:
+        return None, f"{label}: {name} answered {asked} in the middle of a round, not Pending"
+    if not bridge.end_round():
+        return None, f"{label}: the end of the round was not taken"
+    return bridge.wait_map(args.seconds), bridge.active_map
+
+
+def MapVariant(args):
+    names = [name for name in args.names.split(",") if name]
+    if not names:
+        print("FAIL --names needs at least one map variant")
+        return 1
+    if args.reject is True:
+        print("FAIL --reject needs the name of a map variant")
+        return 1
+    rounds = args.rounds or len(names)
+    with Open(args) as bridge:
+        if not WaitRunning(bridge, args.wait):
+            print(f"FAIL no match running after {args.wait} s")
+            return 1
+        bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Free, scale=args.scale, agents=0)
+        if not bridge.wait_control(Owner=BridgeOwner.Python):
+            print("FAIL Artemis did not hand the instance to Python")
+            return 1
+        bad = []
+        # The layout the match runs now, to compare the first switch with.
+        previous = WaitStands(bridge, args.seconds)
+        if previous is None:
+            bad.append("no flag stands in the running round")
+        if args.reject and not bad:
+            # A map variant the loaded map cannot take is Rejected at the break and nothing changes.
+            before = bridge.active_map
+            result, active = Break(bridge, args, args.reject, "--reject")
+            if result is None:
+                bad.append(active)
+            else:
+                print(f"  reject: {args.reject} -> {result.name}, active {active!r} (was {before!r})")
+                if result != L.BridgePresetResult.Rejected:
+                    bad.append(f"--reject {args.reject} ended as {result.name}, expected Rejected")
+                if active != before:
+                    bad.append(f"a rejected map variant changed the active one to {active!r}")
+                if not WaitSpawn(bridge, args.seconds):
+                    bad.append("no round started after the rejected request")
+                else:
+                    previous = WaitStands(bridge, args.seconds) or previous
+        for step in range(rounds if not bad else 0):
+            name = names[step % len(names)]
+            before = bridge.active_map
+            result, active = Break(bridge, args, name, f"round {step + 1}")
+            if result is None:
+                bad.append(active)
+                break
+            print(f"  round {step + 1}: {name} -> {result.name}, active {active!r} (was {before!r})")
+            # A match that ended with the request may answer Applied (Ended also happens at game over): the active block carries it to the next start.
+            if result not in (L.BridgePresetResult.Applied, L.BridgePresetResult.AtLoad):
+                bad.append(f"round {step + 1}: {name} ended as {result.name}, expected Applied")
+            elif result == L.BridgePresetResult.Applied and active != name:
+                bad.append(f"round {step + 1}: active map {active!r}, expected {name!r}")
+            if not WaitSpawn(bridge, args.seconds):
+                bad.append(f"round {step + 1}: no round started after the break")
+                break
+            now = WaitStands(bridge, args.seconds)
+            if now is None:
+                bad.append(f"round {step + 1}: no flag stands after the break (a map variant without the CTF objects)")
+                break
+            if name != before and previous is not None and now == previous:
+                bad.append(f"round {step + 1}: the stands did not move after {name!r}")
+            previous = now
+        bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
+        for line in bad[:10]:
+            print("  bad:", line)
+        checks = [("every request answered as expected", not bad)]
+        failed = [name for name, ok in checks if not ok]
+        print("PASS" if not failed else "FAIL " + ", ".join(failed))
+        return 0 if not failed else 1
+
+
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "turn"])
+    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "map", "turn"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
     parser.add_argument("--scale", type=float, default=0.0)
     parser.add_argument("--mode", choices=["lockstep", "free"], default="lockstep")
-    parser.add_argument("--seconds", type=float, default=None, help="how long to run (endround 300, preset 120, the rest 60)")
+    parser.add_argument("--seconds", type=float, default=None, help="how long to run (endround 300, preset and map 120, the rest 60)")
     parser.add_argument("--agents", choices=["bots", "all"], default="bots")
     parser.add_argument("--period", type=int, default=4)
     parser.add_argument("--sparse", action="store_true", help="run, turn: ask Artemis for its pipeline only on decision ticks (Q101)")
@@ -549,7 +661,8 @@ def Main():
     parser.add_argument("--pause-seconds", type=float, default=30.0, help="run: length of each pause")
     parser.add_argument("--names", default="", help="preset: comma separated presets to request, one per round")
     parser.add_argument("--rounds", type=int, default=0, help="preset: rounds to request one in (0 = one per name)")
-    parser.add_argument("--reject", action="store_true", help="preset: the names must be rejected")
+    parser.add_argument("--reject", nargs="?", const=True, default="",
+                        help="preset: the names must be rejected (a flag). map: a map variant (NAME) that must be Rejected, tried first")
     parser.add_argument("--stale", action="store_true", help="endround: ask for one in the lobby first")
     parser.add_argument("--round-seconds", type=float, default=10.0, help="endround: play before each request")
     parser.add_argument("--yaw-step", type=float, default=YAW_STEP, help="run: radians the yaw turns per decision")
@@ -558,9 +671,9 @@ def Main():
     parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
     args = parser.parse_args()
     if args.seconds is None:
-        args.seconds = {"endround": 300.0, "preset": 120.0}.get(args.command, 60.0)
+        args.seconds = {"endround": 300.0, "preset": 120.0, "map": 120.0}.get(args.command, 60.0)
     try:
-        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "turn": Turn}[args.command](args)
+        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "map": MapVariant, "turn": Turn}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2

@@ -676,7 +676,7 @@ def test_the_match_window_and_input_modules_import_in_one_direction():
 
 ENGINE_PLATFORM = {
     "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant"},
-    "Artemis/5_Engine/Capture": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Capture"},
+    "Artemis/5_Engine/Capture": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Capture"},
     "Artemis/5_Engine/Control": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Input", "Simulation"},
     "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Match"},
     "Artemis/5_Engine/Render": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Render", "Window"},

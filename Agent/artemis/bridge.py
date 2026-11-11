@@ -188,6 +188,8 @@ class Bridge:
         self.client["RequestEndRound"] = int(self.artemis["EndRoundSequence"])
         self.client["RequestPreset"] = int(self.artemis["PresetSequence"])
         self.client["RequestPresetName"][:] = 0
+        self.client["RequestMap"] = int(self.artemis["MapSequence"])
+        self.client["RequestMapName"][:] = 0
         self.client["RequestMode"] = BridgeMode.Free
         self.client["RequestOwner"] = BridgeOwner.UI
         self.client["ClientPid"] = os.getpid()
@@ -305,6 +307,45 @@ class Bridge:
         while self.preset_result == BridgePresetResult.Pending and time.time() < end:
             time.sleep(0.02)
         return self.preset_result
+
+    def request_map(self, name, wait=True, timeout=2.0):
+        """Asks for the map variant `name` (the name of a match config recorded from the lobby: its map variant is used, Q98) while Python
+        owns the instance, or for none with an empty name (the map variant the match loaded with). It has to be a map variant of the
+        loaded .map. In the lobby Artemis writes it at the next start (AtLoad). In a match it waits for the next round break: Pending
+        now, then Applied when the round has ended or Rejected when it does not fit the map (map id, version or quotas) or the config
+        cannot be read (the map variant and the active one do not change). The break comes with end_round(), or with the end of the round
+        of the game. The next round is built from it.
+        With wait, returns the BridgePresetResult once Artemis echoed the request, or None if it did not within the timeout. It is stale
+        when the request was dropped without ownership. Without wait, returns None at once."""
+        raw = str(name).encode("ascii")
+        if len(raw) > L.MAP_NAME_SIZE:
+            raise ValueError(f"map name longer than {L.MAP_NAME_SIZE} characters: {name!r}")
+        # The name first and the counter after it: Artemis reads the name when it sees the counter change.
+        self.client["RequestMapName"][:] = np.frombuffer(raw.ljust(L.MAP_NAME_SIZE, b"\0"), dtype=np.uint8)
+        sequence = (int(self.client["RequestMap"]) + 1) & 0xFFFFFFFF
+        self.client["RequestMap"] = sequence
+        if not wait or not self.wait_control(timeout, MapSequence=sequence):
+            return None
+        return self.map_result
+
+    @property
+    def map_result(self):
+        """What became of the last request_map, as a BridgePresetResult."""
+        value = int(self.artemis["MapResult"])
+        return BridgePresetResult(value) if value in BridgePresetResult._value2member_map_ else BridgePresetResult.Unknown
+
+    @property
+    def active_map(self) -> str:
+        """Name of the active map variant, empty when there is none (the one the match loaded with)."""
+        raw = bytes(np.asarray(self.artemis["ActiveMap"], dtype=np.uint8))
+        return raw.split(b"\0", 1)[0].decode("ascii", "replace")
+
+    def wait_map(self, timeout=10.0):
+        """Waits until the last map variant request is no longer Pending and returns its result (still Pending after the timeout)."""
+        end = time.time() + timeout
+        while self.map_result == BridgePresetResult.Pending and time.time() < end:
+            time.sleep(0.02)
+        return self.map_result
 
     @contextlib.contextmanager
     def paused(self):

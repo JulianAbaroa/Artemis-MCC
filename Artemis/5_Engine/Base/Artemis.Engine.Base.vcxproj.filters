@@ -61,6 +61,9 @@
     <Filter Include="MapVariant\State">
       <UniqueIdentifier>{58876ede-632d-4609-acab-089a300bf0e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MapVariant\System">
+      <UniqueIdentifier>{72509137-29e0-4182-844b-7b6ae16fbf10}</UniqueIdentifier>
+    </Filter>
     <Filter Include="MapVariant\Type">
       <UniqueIdentifier>{b6156309-1a25-4354-ae48-bb992328e74b}</UniqueIdentifier>
     </Filter>
@@ -153,6 +156,15 @@
     </ClCompile>
     <ClCompile Include="MapVariant\Engine.Base.MapVariant.State.ixx">
       <Filter>MapVariant</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\Engine.Base.MapVariant.System.ixx">
+      <Filter>MapVariant</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\System\MapVariantService.cpp">
+      <Filter>MapVariant\System</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\System\MapVariantService.ixx">
+      <Filter>MapVariant\System</Filter>
     </ClCompile>
     <ClCompile Include="MapVariant\State\MapVariantStore.cpp">
       <Filter>MapVariant\State</Filter>

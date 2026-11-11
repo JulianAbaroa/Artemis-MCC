@@ -2,6 +2,7 @@ export module Engine.Match.Hook:EngineInterface;
 
 import Common.Log.System;
 import Engine.Base.Memory.System;
+import Engine.Base.MapVariant.System;
 import Engine.Base.Preset.System;
 import Engine.Match.Type;
 import Engine.Match.State;
@@ -39,7 +40,7 @@ export namespace Engine::Match::Hook
         using EngineCommandFunction = Engine::Match::Type::EngineCommandFunction;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
-        using MapVariantService = Engine::Match::System::MapVariantService;
+        using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
 
     public:
         EngineInterfaceDetour(Log& log, AOBService& aobService, MemoryReaderService& memoryReaderService,

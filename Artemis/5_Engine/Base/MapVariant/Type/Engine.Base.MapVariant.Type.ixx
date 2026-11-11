@@ -18,9 +18,15 @@ export namespace Engine::Base::MapVariant::Type
         Rejected,
         // The map variant could not be loaded or written: the start went on without it.
         Failed,
+        // A request made during a match waits for the round to end.
+        Pending,
+        // The request was written into the live map variant between rounds and read back equal.
+        Applied,
     };
 
     // Result of the last load or of the last request to set the active map variant.
+    // note: A request made in the lobby ends as AppliedAtLoad (written at the next start). One made in a match is Pending until the next
+    // round break, then Applied, Rejected or Failed.
     struct MapVariantResult
     {
         MapVariantOutcome Outcome{ MapVariantOutcome::None };

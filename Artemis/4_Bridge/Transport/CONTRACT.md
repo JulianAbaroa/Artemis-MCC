@@ -9,7 +9,7 @@ seqlock; one action slot per player; and the lockstep of the actions on the game
 what it needs from the engine. The gametype preset request (Q97) follows the end of round one: `RequestPreset` counter and
 `RequestPresetName` of the client, taken only while Python owns the instance and echoed in `PresetSequence` with `PresetResult` and
 `ActivePreset`. A request that still waits for a round break is dropped when Python loses the instance, as the end of round one is.
-Artemis publishes the name and the result first and `PresetSequence` last, with a release store.
+Artemis publishes the name and the result first and `PresetSequence` last, with a release store. The map variant request (Q98, D266) works the same way with its own fields: `RequestMap` counter and `RequestMapName` (64 bytes, no end zero when the name fills it) of the client, echoed in `MapSequence` with `MapResult` (the same `BridgePresetResult` values) and `ActiveMap`; `BridgeEngine` gains `RequestMap`, `CancelMapRequest`, `GetMapResult` and `GetActiveMap`. The engine reads the block of the named configuration when the request arrives (the bridge thread), never on the game thread.
 
 ## Does not
 - Import any engine project: it reaches the engine only through `BridgeEngine`, implemented by `Mod`.

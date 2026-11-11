@@ -3,6 +3,7 @@ export module DevTools.Viewer.Access.Type;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.Lifecycle.System;
 import Engine.Base.MapVariant.State;
+import Engine.Base.MapVariant.System;
 import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
 import Engine.Match.State;
@@ -29,7 +30,7 @@ namespace
     using Engine::Match::State::MatchConfigStore;
     using Engine::Match::State::MatchCycleStore;
     using Engine::Match::System::MatchConfigService;
-    using Engine::Match::System::MapVariantService;
+    using Engine::Base::MapVariant::System::MapVariantService;
     using Engine::Base::Host::State::LocalUserStore;
     using Engine::Control::Input::State::VirtualInputStore;
     using Engine::Control::Input::State::PlayerActionStore;

@@ -34,7 +34,7 @@ export namespace Engine::Capture
             m_InteractionTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_ExecuteGameFrameDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, base.m_LifecycleStore, m_OracleService),
             m_SimulationTicksDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, base.m_LifecycleStore, m_CaptureStore,
-                base.m_PresetService, m_ExecuteGameFrameDetour) {}
+                base.m_PresetService, base.m_MapVariantService, m_ExecuteGameFrameDetour) {}
         ~Layer() = default;
 
         // Not copyable. Members hold references to each other.

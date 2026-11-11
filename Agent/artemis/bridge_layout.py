@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x45B15B12AFA0B3FA
+LAYOUT_HASH = 0x5622D7152230766B
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -22,6 +22,7 @@ MAX_LIFT_STAGES = 3
 MAX_TEAMS = 8
 POWERUP_COUNT = 3
 PRESET_NAME_SIZE = 32
+MAP_NAME_SIZE = 64
 MAX_TICK_EVENTS = 64
 NO_HANDLE = 0xffffffff
 NOT_LOCAL = 255
@@ -51,7 +52,7 @@ class BridgePhase(enum.IntEnum):
 
 
 class BridgePresetResult(enum.IntEnum):
-    """What became of the last RequestPreset (Q97)."""
+    """What became of the last RequestPreset (Q97) or RequestMap (Q98), each with its own result."""
     NoResult = 0
     Pending = 1
     Applied = 2
@@ -149,26 +150,26 @@ BridgeVec3 = np.dtype({
 
 # Part of the control block written by Artemis only.
 BridgeArtemisControl = np.dtype({
-    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsSparse', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence', 'PresetSequence', 'PresetResult', 'ActivePreset'],
-    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4', '<u4', 'u1', ('u1', (32,))],
-    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 47, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 172, 176, 177],
-    'itemsize': 256,
+    'names': ['Magic', 'LayoutVersion', 'LayoutHash', 'RegionSize', 'Pid', 'Heartbeat', 'QpcFrequency', 'Phase', 'Owner', 'Mode', 'DecisionPeriod', 'Latency', 'IsClientConnected', 'IsSparse', 'IsPaused', 'MatchId', 'ActionTick', 'Scale', 'ActiveBuffer', 'PublishedTicks', 'LateActions', 'LockstepWaits', 'LockstepWaitNs', 'LockstepTimeouts', 'HandleMismatches', 'RejectedActions', 'ClockSkips', 'LockstepWaitMaxNs', 'FlattenNs', 'FlattenMaxNs', 'PausedFrames', 'EndRoundSequence', 'PresetSequence', 'PresetResult', 'ActivePreset', 'MapSequence', 'MapResult', 'ActiveMap'],
+    'formats': ['<u4', '<u4', '<u8', '<u4', '<u4', '<u8', '<u8', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4', '<u8', '<f4', '<u4', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4', '<u4', 'u1', ('u1', (32,)), '<u4', 'u1', ('u1', (64,))],
+    'offsets': [0, 4, 8, 16, 20, 24, 32, 40, 41, 42, 43, 44, 45, 46, 47, 48, 56, 64, 68, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 172, 176, 177, 212, 216, 217],
+    'itemsize': 320,
 })
 
 # Part of the control block written by Python only.
 BridgeClientControl = np.dtype({
-    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'RequestSparse', 'AgentMask', 'RequestEndRound', 'RequestPreset', 'RequestPresetName', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
-    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', 'u1', '<u4', '<u4', '<u4', ('u1', (32,)), '<f4', '<u8', '<u8'],
-    'offsets': [0, 4, 5, 6, 7, 8, 12, 13, 16, 20, 24, 28, 60, 64, 72],
-    'itemsize': 128,
+    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'RequestSparse', 'AgentMask', 'RequestEndRound', 'RequestPreset', 'RequestPresetName', 'RequestMap', 'RequestMapName', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
+    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', 'u1', '<u4', '<u4', '<u4', ('u1', (32,)), '<u4', ('u1', (64,)), '<f4', '<u8', '<u8'],
+    'offsets': [0, 4, 5, 6, 7, 8, 12, 13, 16, 20, 24, 28, 60, 64, 128, 136, 144],
+    'itemsize': 192,
 })
 
 # Control block at the start of the region.
 BridgeControl = np.dtype({
     'names': ['Artemis', 'Client'],
     'formats': [BridgeArtemisControl, BridgeClientControl],
-    'offsets': [0, 256],
-    'itemsize': 384,
+    'offsets': [0, 320],
+    'itemsize': 512,
 })
 
 # What the tick is: which match and which action tick.
@@ -303,8 +304,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 384, 492160],
-    'itemsize': 492928,
+    'offsets': [0, 512, 492288],
+    'itemsize': 493056,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -371,24 +372,29 @@ OFFSETS = {
     'Control.Artemis.PresetSequence': 172,
     'Control.Artemis.PresetResult': 176,
     'Control.Artemis.ActivePreset': 177,
-    'Control.Client': 256,
-    'Control.Client.ClientPid': 256,
-    'Control.Client.RequestOwner': 260,
-    'Control.Client.RequestMode': 261,
-    'Control.Client.RequestPeriod': 262,
-    'Control.Client.RequestLatency': 263,
-    'Control.Client.RequestScale': 264,
-    'Control.Client.RequestPause': 268,
-    'Control.Client.RequestSparse': 269,
-    'Control.Client.AgentMask': 272,
-    'Control.Client.RequestEndRound': 276,
-    'Control.Client.RequestPreset': 280,
-    'Control.Client.RequestPresetName': 284,
-    'Control.Client.RequestTurnLimit': 316,
-    'Control.Client.ClientHeartbeat': 320,
-    'Control.Client.ActionSequence': 328,
-    'Ticks': 384,
-    'Actions': 492160,
+    'Control.Artemis.MapSequence': 212,
+    'Control.Artemis.MapResult': 216,
+    'Control.Artemis.ActiveMap': 217,
+    'Control.Client': 320,
+    'Control.Client.ClientPid': 320,
+    'Control.Client.RequestOwner': 324,
+    'Control.Client.RequestMode': 325,
+    'Control.Client.RequestPeriod': 326,
+    'Control.Client.RequestLatency': 327,
+    'Control.Client.RequestScale': 328,
+    'Control.Client.RequestPause': 332,
+    'Control.Client.RequestSparse': 333,
+    'Control.Client.AgentMask': 336,
+    'Control.Client.RequestEndRound': 340,
+    'Control.Client.RequestPreset': 344,
+    'Control.Client.RequestPresetName': 348,
+    'Control.Client.RequestMap': 380,
+    'Control.Client.RequestMapName': 384,
+    'Control.Client.RequestTurnLimit': 448,
+    'Control.Client.ClientHeartbeat': 456,
+    'Control.Client.ActionSequence': 464,
+    'Ticks': 512,
+    'Actions': 492288,
 }
 
-REGION_SIZE = 492928
+REGION_SIZE = 493056

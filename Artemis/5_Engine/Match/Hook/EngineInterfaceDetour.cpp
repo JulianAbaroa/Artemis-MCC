@@ -139,6 +139,9 @@ namespace Engine::Match::Hook
             // A map variant that does not fit leaves the copy as it was: the start keeps the map variant of its configuration.
             try
             {
+                // Every start keeps the map variant of its configuration, and takes the request no round break served.
+                self->m_MapVariantService.BeginStart(std::span<const std::byte>{ startConfiguration, k_EngineConfigurationSize });
+
                 if (self->m_MapVariantService.HasActive())
                 {
                     if (transplanted.empty()) transplanted.assign(configuration, configuration + k_EngineConfigurationSize);

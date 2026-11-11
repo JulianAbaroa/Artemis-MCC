@@ -9,6 +9,7 @@ import Engine.Base.Host.System;
 import Engine.Base.Host.Hook;
 import Engine.Base.Memory.System;
 import Engine.Base.MapVariant.State;
+import Engine.Base.MapVariant.System;
 import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
 
@@ -39,6 +40,7 @@ export namespace Engine::Base
 
         using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using PresetStore = Engine::Base::Preset::State::PresetStore;
+        using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
         using PresetService = Engine::Base::Preset::System::PresetService;
 
     public:
@@ -47,6 +49,7 @@ export namespace Engine::Base
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),
             m_PresetService(service.m_Log, service.m_SettingsStore, m_PresetStore),
+            m_MapVariantService(service.m_Log, m_MapVariantStore),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_OpenMapDetour(service.m_Log, m_AOBService, m_LifecycleService),
@@ -73,6 +76,7 @@ export namespace Engine::Base
         HostService m_HostService;
         MemoryReaderService m_MemoryReaderService{};
         PresetService m_PresetService;
+        MapVariantService m_MapVariantService;
 
         // --- Hook ---
         EngineInitializeDetour m_EngineInitializeDetour;

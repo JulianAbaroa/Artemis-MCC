@@ -57,6 +57,8 @@ class FakeBridge:
         self.ticks, self.is_alive, self.written = list(ticks), True, []
         # Preset requests: what Artemis answers at once (Pending, 1) and at the round break (Applied, 2), and the calls seen.
         self.preset_requests, self.round_ends, self.preset_answer, self.preset_final = [], 0, 1, 2
+        # The same for map variant requests, and the calls in order.
+        self.map_requests, self.map_answer, self.map_final, self.calls = [], 1, 2, []
 
     def set_control(self, **kwargs):
         self.controls = getattr(self, "controls", []) + [kwargs]
@@ -75,10 +77,20 @@ class FakeBridge:
 
     def end_round(self, wait=True):
         self.round_ends += 1
+        self.calls.append("end_round")
 
     def request_preset(self, name, timeout=2.0):
         self.preset_requests.append(name)
+        self.calls.append("request_preset")
         return self.preset_answer
+
+    def request_map(self, name, timeout=2.0):
+        self.map_requests.append(name)
+        self.calls.append("request_map")
+        return self.map_answer
+
+    def wait_map(self, timeout=10.0):
+        return self.map_final
 
     def wait_preset(self, timeout=10.0):
         return self.preset_final
@@ -103,7 +115,7 @@ def ctf(monkeypatch):
 
 
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1, match=None, vitality=1.0):
+          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
     home. match: fields of the Match (by default a round without time limit). The agent is the player P0 of team RED, aiming at +x."""
@@ -118,7 +130,7 @@ def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=Fa
     objectives = [{"Handle": FLAG_RED, "BaseTeam": RED, "OwnerTeam": owners[0], "State": flags[0], "CarrierPlayer": NONE, "CarrierBiped": NONE},
                   {"Handle": FLAG_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1], "State": flags[1],
                    "CarrierPlayer": P0 if flags[1] == CARRIED else NONE, "CarrierBiped": B0 if flags[1] == CARRIED else NONE}]
-    stands = [{"Handle": STAND_RED, "BaseTeam": RED, "OwnerTeam": owners[0]}, {"Handle": STAND_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1]}]
+    stands = [{"Handle": STAND_RED, "BaseTeam": RED, "OwnerTeam": owners[0]}, {"Handle": STAND_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1]}][:stand_count]
     return FakeTick(L, players, entities, objectives, stands, events, game_tick, match_id=match_id, action_tick=action_tick, match=match)
 
 
@@ -373,4 +385,86 @@ def test_the_layout_has_the_sparse_fields(ctf):
     assert "RequestSparse" in layout.BridgeClientControl.names
     assert "IsSparse" in layout.BridgeArtemisControl.names
     assert layout.OFFSETS["Control.Artemis.IsSparse"] == 46
-    assert layout.OFFSETS["Control.Client.RequestSparse"] == 269
+    assert layout.OFFSETS["Control.Client.RequestSparse"] == 333
+
+
+# --- map variants (Q98, D266) -----------------------------------------------------------------------------------------------------
+
+
+def test_reset_with_a_map_requests_it_and_ends_the_round(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset(map="Reach Bus Mountain Pass Reach Bus CTF")
+    assert bridge.map_requests == ["Reach Bus Mountain Pass Reach Bus CTF"]
+    assert bridge.round_ends == 1
+
+
+def test_reset_with_a_preset_and_a_map_requests_both_before_the_one_end_of_round(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast", map="reach_bus")
+    assert bridge.calls == ["request_preset", "request_map", "end_round"]
+
+
+def test_reset_reports_the_map_and_its_result_in_the_info(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.map_final = ctf.layout.BridgePresetResult.Applied
+    _, infos = ctf.CtfEnv(bridge).reset(map="reach_bus")
+    assert infos[P0]["map"] == {"name": "reach_bus", "result": "Applied"}
+    assert "preset" not in infos[P0]
+    _, infos = ctf.CtfEnv(FakeBridge([Frame(ctf)])).reset()
+    assert "map" not in infos[P0]
+
+
+def test_reset_without_a_map_asks_for_none_and_an_empty_map_asks_for_the_loaded_one(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset()
+    assert bridge.map_requests == [] and bridge.round_ends == 0
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset(map="")
+    assert bridge.map_requests == [""]
+
+
+def test_a_map_left_for_the_next_load_while_a_match_is_up_raises(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.map_answer = ctf.layout.BridgePresetResult.AtLoad
+    with pytest.raises(RuntimeError, match="next match load"):
+        ctf.CtfEnv(bridge).reset(map="reach_bus")
+
+
+def test_a_rejected_map_still_ends_the_round_of_the_preset_requested_before(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.preset_answer = ctf.layout.BridgePresetResult.Pending
+    bridge.map_answer = ctf.layout.BridgePresetResult.Rejected
+    with pytest.raises(RuntimeError, match="map variant"):
+        ctf.CtfEnv(bridge).reset(preset="fast", map="other_map")
+    assert bridge.round_ends == 1
+
+
+def test_a_rejected_map_raises_at_once_or_at_the_break(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.map_answer = ctf.layout.BridgePresetResult.Rejected
+    with pytest.raises(RuntimeError, match="map variant"):
+        ctf.CtfEnv(bridge).reset(map="other_map")
+
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.map_final = ctf.layout.BridgePresetResult.Rejected
+    with pytest.raises(RuntimeError, match="map variant"):
+        ctf.CtfEnv(bridge).reset(map="other_map")
+    assert bridge.round_ends == 1
+
+
+def test_a_map_nobody_answered_raises(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.map_answer = None
+    with pytest.raises(RuntimeError, match="did not take"):
+        ctf.CtfEnv(bridge).reset(map="reach_bus")
+
+
+def test_a_map_whose_round_has_no_flag_stands_raises(ctf):
+    with pytest.raises(RuntimeError, match="no CTF"):
+        ctf.CtfEnv(FakeBridge([Frame(ctf, stand_count=1)])).reset(map="no_flags")
+    with pytest.raises(RuntimeError, match="no CTF"):
+        ctf.CtfEnv(FakeBridge([Frame(ctf, stand_count=0)])).reset(map="no_flags")
+
+
+def test_the_stands_are_only_checked_when_a_map_is_asked(ctf):
+    ctf.CtfEnv(FakeBridge([Frame(ctf, stand_count=0)])).reset()

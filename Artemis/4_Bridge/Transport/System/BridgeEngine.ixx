@@ -51,6 +51,19 @@ export namespace Bridge::Transport::System
         // return: The name of the active preset, empty when none.
         virtual auto GetActivePreset() const -> std::string = 0;
 
+        // Asks for a map variant by name (the name of a recorded match configuration), or for none with an empty name. In the lobby it is
+        // written at the next start, in a match at the next round break (Q98).
+        virtual auto RequestMap(std::string_view name) -> void = 0;
+
+        // Drops the map variant request that still waits for a round break, when the client that made it is gone.
+        virtual auto CancelMapRequest() -> void = 0;
+
+        // return: What became of the last map variant request.
+        virtual auto GetMapResult() const -> BridgePresetResult = 0;
+
+        // return: The name of the active map variant, empty when none.
+        virtual auto GetActiveMap() const -> std::string = 0;
+
         // Sets the override of a player for the next action, or none to give the player back to the engine.
         virtual auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void = 0;
 

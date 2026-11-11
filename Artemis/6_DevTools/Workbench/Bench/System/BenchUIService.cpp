@@ -736,7 +736,7 @@ namespace DevTools::Workbench::Bench::System
         {
             m_MapVariantService.ClearActive();
         }
-        else if (!m_MapVariantService.SetActive(*match.MapVariant))
+        else if (!m_MapVariantService.SetActive(*match.MapVariant, m_MatchConfigService.ReadMapVariant(*match.MapVariant)))
         {
             report.End = "no-map";
             this->EndMatch(run);

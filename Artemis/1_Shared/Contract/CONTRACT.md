@@ -5,7 +5,7 @@ Group `1_Shared` - pure static library, generated - the layout C++ and Python sh
 ## Responsibility
 The binary contract of the bridge with the Python client: the POD structs of the `BridgeTick` (players, entities, the match with
 its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon`, the projectiles `BridgeProjectile` the explosives `BridgeExplosive` and the lifts `BridgeLift`, the events with both
-sequences) and the `BridgeAction`, their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own.
+sequences) and the `BridgeAction`, their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own. The control block carries the requests of the client that Artemis answers with a sequence and a result: end of round, gametype preset (`RequestPreset`, Q97) and map variant (`RequestMap`, `RequestMapName`, echoed in `MapSequence`, `MapResult`, `ActiveMap`, Q98, D266).
 
 ## Does not
 - Flatten a tick or decode an action: that is `Bridge.Codec`.

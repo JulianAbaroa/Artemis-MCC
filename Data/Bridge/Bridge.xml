@@ -20,6 +20,7 @@
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
 	<const name="PowerupCount" value="3" doc="Powerups of a game variant (red, blue, yellow): the length of the powerup duration array." />
 	<const name="PresetNameSize" value="32" doc="Bytes of a gametype preset name, with its end zero (Engine.Base.Preset k_MaxPresetNameLength is 31)." />
+	<const name="MapNameSize" value="64" doc="Bytes of a map variant name: the name of a recorded match configuration (Engine.Match k_MaxMatchConfigNameLength is 64 characters). A name of 64 characters has no end zero." />
 	<const name="MaxTickEvents" value="64" doc="Newest events of the match a tick carries (D141). Python keeps its cursor by Sequence." />
 	<const name="NoHandle" value="0xFFFFFFFF" owner="Common.Engine.Type:k_NoHandle" doc="No datum." />
 	<const name="NotLocal" value="0xFF" type="u8" doc="LocalIndex of a player that is not local." />
@@ -41,7 +42,7 @@
 		<value name="Loading" id="1" />
 		<value name="Running" id="2" doc="Ticks are running and decision ticks are published." />
 	</enum>
-	<enum name="BridgePresetResult" type="u8" doc="What became of the last RequestPreset (Q97).">
+	<enum name="BridgePresetResult" type="u8" doc="What became of the last RequestPreset (Q97) or RequestMap (Q98), each with its own result.">
 		<value name="NoResult" id="0" doc="No request since Artemis loaded." />
 		<value name="Pending" id="1" doc="Taken and waiting for a round break of the match." />
 		<value name="Applied" id="2" doc="Written into the live variant between rounds and read back equal." />
@@ -153,6 +154,9 @@
 		<field name="PresetSequence" type="u32" doc="Last RequestPreset seen (Q97). PresetResult answers it: Pending until the round break, then Applied or Rejected." />
 		<field name="PresetResult" type="u8" enum="BridgePresetResult" />
 		<field name="ActivePreset" type="u8" count="PresetNameSize" doc="Name of the active gametype preset, zero filled. Empty when none." />
+		<field name="MapSequence" type="u32" doc="Last RequestMap seen (Q98). MapResult answers it: Pending until the round break, then Applied or Rejected." />
+		<field name="MapResult" type="u8" enum="BridgePresetResult" />
+		<field name="ActiveMap" type="u8" count="MapNameSize" doc="Name of the active map variant (a recorded match configuration), zero filled. Empty when none." />
 	</struct>
 
 	<struct name="BridgeClientControl" align="64" doc="Part of the control block written by Python only.">
@@ -168,6 +172,8 @@
 		<field name="RequestEndRound" type="u32" doc="Counter: a raise ends the round, as the end_round action of Megalo (D144). Raises before Artemis takes one count as one. Starts from EndRoundSequence." />
 		<field name="RequestPreset" type="u32" doc="Counter: a raise asks for the preset RequestPresetName, or none when it is empty (Q97). Taken only while Python owns the instance. Starts from PresetSequence." />
 		<field name="RequestPresetName" type="u8" count="PresetNameSize" doc="Name of the preset wanted, zero filled. Written before the counter is raised." />
+		<field name="RequestMap" type="u32" doc="Counter: a raise asks for the map variant RequestMapName, or none when it is empty (Q98, D266). Taken only while Python owns the instance. Starts from MapSequence." />
+		<field name="RequestMapName" type="u8" count="MapNameSize" doc="Name of the map variant wanted (a recorded match configuration), zero filled. Written before the counter is raised." />
 		<field name="RequestTurnLimit" type="f32" doc="Most radians the yaw and the pitch of each agent turn per tick toward those of its action (D114). 0 = straight to them." />
 		<field name="ClientHeartbeat" type="u64" doc="Counter Python raises at least every 500 ms." />
 		<field name="ActionSequence" type="u64" doc="Action tick of the last decision whose actions are complete. Written last." />

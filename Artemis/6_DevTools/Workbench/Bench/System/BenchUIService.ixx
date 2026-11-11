@@ -9,6 +9,7 @@ import Engine.Base.Host.State;
 import Engine.Control.Input.State;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.MapVariant.State;
+import Engine.Base.MapVariant.System;
 import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
 import Engine.Match.State;
@@ -47,7 +48,7 @@ export namespace DevTools::Workbench::Bench::System
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
-        using MapVariantService = Engine::Match::System::MapVariantService;
+        using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
         using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using PresetStore = Engine::Base::Preset::State::PresetStore;
         using PresetService = Engine::Base::Preset::System::PresetService;

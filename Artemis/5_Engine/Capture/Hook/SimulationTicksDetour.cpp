@@ -20,10 +20,15 @@ namespace
     using Engine::Base::Hook::System::k_DrainTimeout;
     using Blam::Layout::Game::Type::Offset::k_GameEngineRoundState;
     using Blam::Layout::Game::Type::Offset::k_GameGlobalsGameVariant;
+    using Blam::Layout::Object::Type::Constant::k_GameGlobalsMapVariant;
     using Blam::Layout::Object::Type::Constant::k_GameGlobalsSize;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantAdjust;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantAlignMask;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
     using Blam::Layout::Object::Type::Constant::k_GameModeTypeOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextGameEngineOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextGameModeOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextMapVariantOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTimeGlobalsOffset;
     using Blam::Layout::Object::Type::Constant::k_TimeGlobalsScaleOffset;
     constexpr float k_DefaultTimeScale{ 1.0f };
@@ -47,6 +52,7 @@ namespace Engine::Capture::Hook
         self->ApplyTimeScale();
         self->ApplyEndRound();
         self->ApplyPreset();
+        self->ApplyMapVariant();
 
         // A pause runs the frame without ticks (D143): the engine returns at once when asked for none, and the time left is dropped
         // as its own pause check does, so nothing piles up for the frames after it.
@@ -143,6 +149,37 @@ namespace Engine::Capture::Hook
         catch (...)
         {
             m_Log.Message("[SimulationTicksDetour] ERROR: The preset request failed with an exception.");
+        }
+    }
+
+    auto SimulationTicksDetour::ApplyMapVariant() -> void
+    {
+        if (!m_MapVariantService.HasPending()) return;
+
+        const std::uintptr_t threadContext{ m_CaptureStore.GetThreadContext() };
+        if (threadContext == 0) return;
+
+        const std::uintptr_t gameGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameModeOffset) };
+        const std::uintptr_t gameEngine{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameEngineOffset) };
+        const std::uintptr_t pointer{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextMapVariantOffset) };
+        if (gameGlobals == 0 || gameEngine == 0 || pointer == 0) return;
+
+        const auto roundState{ *reinterpret_cast<const std::uint8_t*>(gameEngine + k_GameEngineRoundState) };
+        const auto gameMode{ *reinterpret_cast<const std::uint8_t*>(gameGlobals + k_GameModeTypeOffset) };
+
+        // The runtime map variant is where the engine computes it (FUN_18006bcec), the options hold their copy in the game globals.
+        const std::uintptr_t runtimeAddress{ (pointer + k_MapVariantAdjust) & ~k_MapVariantAlignMask };
+        const std::span<std::byte> runtime{ reinterpret_cast<std::byte*>(runtimeAddress), k_MapVariantSize };
+        const std::span<std::byte> options{ reinterpret_cast<std::byte*>(gameGlobals + k_GameGlobalsMapVariant), k_MapVariantSize };
+
+        // The service does not throw, but nothing may leave the hook.
+        try
+        {
+            m_MapVariantService.ApplyBetweenRounds(runtime, options, roundState, gameMode);
+        }
+        catch (...)
+        {
+            m_Log.Message("[SimulationTicksDetour] ERROR: The map variant request failed with an exception.");
         }
     }
 

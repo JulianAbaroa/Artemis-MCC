@@ -4,7 +4,7 @@ Group `8_Mod` - the DLL (`wtsapi32.dll` proxy) - composes every project and runs
 
 ## Responsibility
 The composition root. `Mod::Layer` owns every Layer in dependency order, connects the engine lifecycle callbacks and the ports
-(`BridgeEngineAdapter` implements `Bridge.Transport`'s `BridgeEngine`; `BridgeActionSource` implements `Engine.Control`'s
+(`BridgeEngineAdapter` implements `Bridge.Transport`'s `BridgeEngine`, reading the map variant of a named configuration with `MatchConfigService` before it asks `Engine.Base` for it; `BridgeActionSource` implements `Engine.Control`'s
 `ActionSource` over `BridgeService`), builds `EngineAccess` for the development tools, registers the tick observers, installs the
 hooks and runs the threads:
 - Main: installs and supervises the hooks, reinstalls them when the engine is recreated, drives the shutdown.
