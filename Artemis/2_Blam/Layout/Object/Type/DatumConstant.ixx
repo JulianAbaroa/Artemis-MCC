@@ -34,6 +34,24 @@ export namespace Blam::Layout::Object::Type::Constant
     constexpr std::uintptr_t k_MapVariantAdjust{ 0x30B };
     constexpr std::uintptr_t k_MapVariantAlignMask{ 0x3 };
 
+    // Bytes of the map variant (unpacked), and the places it is copied from or to (Q98, D266, A15 sec. 5, MapVariant sec. 7.1).
+    // note: The match configuration of MCC holds it at k_ConfigurationMapVariantOffset (it ends at the end of the configuration data),
+    // the game globals hold the copy the engine loads from at k_GameGlobalsMapVariant (game options + 0x110E0, unaligned).
+    constexpr std::size_t k_MapVariantSize{ 0xD9BC };
+    constexpr std::size_t k_ConfigurationMapVariantOffset{ 0x1D308 };
+    constexpr std::size_t k_GameGlobalsMapVariant{ 0x110F0 };
+
+    // Version the engine accepts in the map variant header (Validate).
+    constexpr std::uint16_t k_MapVariantVersion{ 0x20 };
+
+    // Header of the map variant, from its first byte: version, number of quotas (palette entries), id of the map it was made for, and the
+    // world bounds the engine recomputes at load (FUN_18006c290) and Q98 keeps from the runtime variant.
+    constexpr std::size_t k_MapVariantVersionOffset{ 0x2B0 };
+    constexpr std::size_t k_MapVariantQuotasOffset{ 0x2B2 };
+    constexpr std::size_t k_MapVariantMapIdOffset{ 0x2B4 };
+    constexpr std::size_t k_MapVariantBoundsOffset{ 0x2C8 };
+    constexpr std::size_t k_MapVariantBoundsSize{ 0x18 };
+
     // Placement array of the map variant: one entry per object placed in Forge.
     // note: The layout of an entry is Mvar (Data/Datum/mvar.xml). The limit is the Forge object limit.
     constexpr std::uintptr_t k_PlacementsOffset{ 0x14FC };

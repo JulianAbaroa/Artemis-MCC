@@ -21,7 +21,7 @@ Other projects may import only these modules; everything else in the project is 
 
 | Module | What it gives |
 |---|---|
-| `Blam.Layout.Object.Type` | Datum layouts per object type (`Obje`, `Unit`, `Bipd`, `Weap`, `Vehi`...), generated. |
+| `Blam.Layout.Object.Type` | Datum layouts per object type (`Obje`, `Unit`, `Bipd`, `Weap`, `Vehi`...), generated. Also the constants of the map variant (`k_MapVariantSize`, its place in the match configuration and in the game globals, header offsets) and the pure logic of map variants (`:MapVariant`, namespace `MapVariant`, Q98, D266): `Read` the header of a block (version, quotas, map id, placements in use), `CheckCompatible` (nothing if the new variant can replace the current one, else the reason: version, map id or quotas) and `ComposeRuntime` (the new block with the world bounds of the current one). It works on bytes it is given. |
 | `Blam.Layout.Player.Type` | Offsets and sizes of the player table and its mapping, and the block of player traits (`PlayerTraits`, its enums and the raw-index tables, `Decode` of the 0x2C bytes at player +0x328, D262), and the custom powerup (`ActivePowerup`: the rule of the engine from the three pickup game times at player +0x300, the game time and the durations of the variant, D263). |
 | `Blam.Layout.Interaction.Type` | Offsets of the interaction table. |
 | `Blam.Layout.Collision.Type` | What the raycast oracle needs of the engine function `collision_test_vector` (R3, D272): the flag bits of its `u64` (`k_Static`, `k_StaticAndObjects`, with every surface and both faces), the size and offsets of its 0x70-byte result, and `CollisionResult` with `Decode` of those bytes. |

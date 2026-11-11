@@ -24,10 +24,10 @@ Other projects may import only these modules; everything else in the project is 
 | `Engine.Match.Layer` | The facade: config and cycle stores, `MatchConfigService` and the two detours. Owner only. |
 | `Engine.Match.Type` | Engine interface vtable entries and the `LoadGameEngine` signature. |
 | `Engine.Match.State` | `MatchConfigStore` and `MatchCycleStore`. |
-| `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations. |
+| `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations, and `ReadMapVariant` (the map variant block of a recorded configuration, without making it pending; Q98, D266). |
 
 ## Depends on
-`Common`, `Services`, `Engine.Base` (and `Blam.Layout` through its presets).
+`Common`, `Services`, `Engine.Base` (and `Blam.Layout` through its presets and the map variant constants).
 
 ## State between ticks
 The recorded configurations on disk (they hold the user's XUID: never in the repo) and the pending one; the counts of the cycle.

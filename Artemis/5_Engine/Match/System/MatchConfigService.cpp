@@ -2,12 +2,16 @@ module Engine.Match.System;
 import :MatchConfig;
 
 import Engine.Match.Type;
+import Blam.Layout.Object.Type;
 import std;
 
 namespace
 {
     using std::filesystem::path;
     using Engine::Match::Type::MatchConfig;
+
+    using Blam::Layout::Object::Type::Constant::k_ConfigurationMapVariantOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
 
     using Engine::Match::Type::k_EngineConfigurationSize;
     using Engine::Match::Type::k_ConfigurationBaseMapOffset;
@@ -92,10 +96,23 @@ namespace Engine::Match::System
 
     auto MatchConfigService::LoadPending(std::string_view name) -> bool
     {
+        auto config{ this->ReadConfig(name) };
+        if (!config) return false;
+
+        const std::uint32_t baseMap{ ReadBaseMap(config->Bytes.data()) };
+        m_MatchConfigStore.SetPending(std::move(config));
+
+        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" (base map 0x{:X}) is pending for the next start.",
+            name, baseMap);
+        return true;
+    }
+
+    auto MatchConfigService::ReadConfig(std::string_view name) const -> std::shared_ptr<MatchConfig>
+    {
         if (!IsValidName(name))
         {
             m_Log.Message("[MatchConfigService] WARNING: \"{}\" is not a valid configuration name.", name);
-            return false;
+            return nullptr;
         }
 
         const path folder{ this->GetLibraryFolder() };
@@ -103,7 +120,7 @@ namespace Engine::Match::System
         if (folder.empty())
         {
             m_Log.Message("[MatchConfigService] WARNING: Storage Folder is not set, no configuration can be read.");
-            return false;
+            return nullptr;
         }
 
         const path file{ folder / std::format("{}{}", name, k_ConfigExtension) };
@@ -112,7 +129,7 @@ namespace Engine::Match::System
         if (!stream)
         {
             m_Log.Message("[MatchConfigService] ERROR: Failed to open {}.", ToText(file));
-            return false;
+            return nullptr;
         }
 
         const std::streamoff size{ stream.tellg() };
@@ -121,7 +138,7 @@ namespace Engine::Match::System
         {
             m_Log.Message("[MatchConfigService] ERROR: {} has {} bytes, a configuration has {}.", ToText(file),
                 static_cast<long long>(size), k_EngineConfigurationSize);
-            return false;
+            return nullptr;
         }
 
         auto config{ std::make_shared<MatchConfig>() };
@@ -133,15 +150,19 @@ namespace Engine::Match::System
         if (!stream.read(reinterpret_cast<char*>(config->Bytes.data()), static_cast<std::streamsize>(k_EngineConfigurationSize)))
         {
             m_Log.Message("[MatchConfigService] ERROR: Failed to read {}.", ToText(file));
-            return false;
+            return nullptr;
         }
 
-        const std::uint32_t baseMap{ ReadBaseMap(config->Bytes.data()) };
-        m_MatchConfigStore.SetPending(std::move(config));
+        return config;
+    }
 
-        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" (base map 0x{:X}) is pending for the next start.",
-            name, baseMap);
-        return true;
+    auto MatchConfigService::ReadMapVariant(std::string_view name) const -> std::vector<std::byte>
+    {
+        const auto config{ this->ReadConfig(name) };
+        if (!config) return {};
+
+        const auto first{ config->Bytes.begin() + k_ConfigurationMapVariantOffset };
+        return std::vector<std::byte>(first, first + k_MapVariantSize);
     }
 
     auto MatchConfigService::ClearPending() -> void

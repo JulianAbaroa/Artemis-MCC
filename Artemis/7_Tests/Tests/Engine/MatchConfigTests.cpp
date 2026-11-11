@@ -7,6 +7,7 @@ import Services.Settings.State;
 import Engine.Match.Type;
 import Engine.Match.State;
 import Engine.Match.System;
+import Blam.Layout.Object.Type;
 import Tests.Support.Log;
 import std;
 
@@ -22,6 +23,9 @@ namespace
     using Engine::Match::System::MatchConfigService;
     using Services::Settings::State::SettingsStore;
     using Tests::Support::Log::CollectingSink;
+
+    using Blam::Layout::Object::Type::Constant::k_ConfigurationMapVariantOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
 
     using Engine::Match::Type::k_ConfigurationBaseMapOffset;
     using Engine::Match::Type::k_EngineConfigurationSize;
@@ -251,4 +255,46 @@ TEST_F(MatchConfigTests, ClearAndCancel)
     EXPECT_EQ(m_Store.GetRecordName(), "armed");
     m_Service.CancelRecord();
     EXPECT_TRUE(m_Store.GetRecordName().empty());
+}
+
+TEST_F(MatchConfigTests, ReadMapVariantGivesTheBlockOfTheConfig)
+{
+    auto buffer{ MakeBuffer(0x11) };
+    std::memset(buffer.data() + k_ConfigurationMapVariantOffset, 0x5C, k_MapVariantSize);
+    this->WriteConfig("reach bus.bin", buffer);
+
+    const std::vector<std::byte> block{ m_Service.ReadMapVariant("reach bus") };
+
+    ASSERT_EQ(block.size(), k_MapVariantSize);
+    EXPECT_TRUE(std::ranges::all_of(block, [](std::byte value) { return value == std::byte{ 0x5C }; }));
+
+    // Reading a map variant leaves the pending configuration as it was.
+    EXPECT_EQ(m_Store.GetPending(), nullptr);
+}
+
+TEST_F(MatchConfigTests, ReadMapVariantReturnsTheBytesAtTheOffsetOnly)
+{
+    auto buffer{ MakeBuffer(0x00) };
+    buffer[k_ConfigurationMapVariantOffset - 1] = std::byte{ 0xEE };
+    buffer[k_ConfigurationMapVariantOffset] = std::byte{ 0x01 };
+    buffer[k_ConfigurationMapVariantOffset + k_MapVariantSize - 1] = std::byte{ 0x02 };
+    buffer[k_ConfigurationMapVariantOffset + k_MapVariantSize] = std::byte{ 0xEE };
+    this->WriteConfig("edges.bin", buffer);
+
+    const std::vector<std::byte> block{ m_Service.ReadMapVariant("edges") };
+
+    ASSERT_EQ(block.size(), k_MapVariantSize);
+    EXPECT_EQ(block.front(), std::byte{ 0x01 });
+    EXPECT_EQ(block.back(), std::byte{ 0x02 });
+}
+
+TEST_F(MatchConfigTests, ReadMapVariantFailsWithoutReadingAWrongFile)
+{
+    this->WriteConfig("short.bin", std::vector<std::byte>(k_EngineConfigurationSize - 1, std::byte{ 0 }));
+
+    EXPECT_TRUE(m_Service.ReadMapVariant("short").empty());
+    EXPECT_TRUE(Logged(LogLevel::Error, "a configuration has"));
+    EXPECT_TRUE(m_Service.ReadMapVariant("missing").empty());
+    EXPECT_TRUE(m_Service.ReadMapVariant("bad/name").empty());
+    EXPECT_TRUE(Logged(LogLevel::Warning, "is not a valid configuration name"));
 }

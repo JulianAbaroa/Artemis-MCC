@@ -19,6 +19,7 @@ export namespace Engine::Match::System
         using Log = Common::Log::System::Log;
         using SettingsStore = Services::Settings::State::SettingsStore;
 
+        using MatchConfig = Engine::Match::Type::MatchConfig;
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
 
     public:
@@ -36,6 +37,11 @@ export namespace Engine::Match::System
         // Reads a recorded configuration and makes it the pending one.
         // return: False if the name is not valid, or the file cannot be read or has the wrong size.
         auto LoadPending(std::string_view name) -> bool;
+
+        // Reads the map variant of a recorded configuration (Q98, D266), without making the configuration pending.
+        // return: The k_MapVariantSize bytes of the map variant, empty if the name is not valid or the file cannot be read.
+        // note: Reads the file: never from the game thread.
+        auto ReadMapVariant(std::string_view name) const -> std::vector<std::byte>;
 
         // Clears the pending configuration, so the next start is the match of MCC unchanged.
         auto ClearPending() -> void;
@@ -71,6 +77,10 @@ export namespace Engine::Match::System
         Log& m_Log;
         SettingsStore& m_SettingsStore;
         MatchConfigStore& m_MatchConfigStore;
+
+        // return: The recorded configuration of that name, null (with the reason logged) if the name is not valid or the file cannot be
+        // read or has the wrong size.
+        auto ReadConfig(std::string_view name) const -> std::shared_ptr<MatchConfig>;
 
         // return: The folder of the library, empty if the storage folder is not set.
         auto GetLibraryFolder() const -> path;

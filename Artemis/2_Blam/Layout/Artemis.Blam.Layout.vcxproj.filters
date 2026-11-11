@@ -183,6 +183,9 @@
     <ClCompile Include="Object\Type\DatumConstant.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Object\Type\MapVariant.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Object\Type\Devi\DatumDeviOffset.ixx">
       <Filter>Object\Type\Devi</Filter>
     </ClCompile>

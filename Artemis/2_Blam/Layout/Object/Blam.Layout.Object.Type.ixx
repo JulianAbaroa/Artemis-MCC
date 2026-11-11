@@ -11,6 +11,7 @@ export import :Eqip;
 export import :Item;
 export import :Mach;
 export import :Mvar;
+export import :MapVariant;
 export import :Obje;
 export import :Proj;
 export import :Scen;

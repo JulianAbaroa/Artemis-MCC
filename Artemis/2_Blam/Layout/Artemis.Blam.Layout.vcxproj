@@ -72,6 +72,7 @@
     <ClCompile Include="Object\Type\Blam.Layout.Object.Type.Weap.ixx" />
     <ClCompile Include="Object\Type\DatumBlock.ixx" />
     <ClCompile Include="Object\Type\DatumConstant.ixx" />
+    <ClCompile Include="Object\Type\MapVariant.ixx" />
     <ClCompile Include="Object\Type\Devi\DatumDeviOffset.ixx" />
     <ClCompile Include="Object\Type\Devi\DatumDeviStructure.ixx" />
     <ClCompile Include="Object\Type\Eqip\DatumEqipOffset.ixx" />
