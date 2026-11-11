@@ -163,6 +163,8 @@ namespace Mod
 
         m_Viewer.m_CollidableSceneService.Update(isViewerActive);
 
+        m_UI.m_OracleUIService.OnTick(tick);
+
         if (m_UI.m_TickDumpUIService.IsRecording())
         {
             m_UI.m_TickDumpUIService.Push(tick.Tick, tick.Snapshot, tick.Generation, tick.DroppedBefore,

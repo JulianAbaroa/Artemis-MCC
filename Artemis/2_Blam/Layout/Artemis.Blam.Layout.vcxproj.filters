@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Collision">
+      <UniqueIdentifier>{7f5d34f3-e923-4952-816c-157a0053e28a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Collision\Type">
+      <UniqueIdentifier>{f8bf23d7-d4e9-40a7-8212-898e0150cd77}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Action">
       <UniqueIdentifier>{678f957b-743f-50e4-89a6-9d908a2678ed}</UniqueIdentifier>
     </Filter>
@@ -299,6 +305,21 @@
     </ClCompile>
     <ClCompile Include="Snapshot\System\Blam.Layout.Snapshot.System.ixx">
       <Filter>Snapshot\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision\Blam.Layout.Collision.Type.ixx">
+      <Filter>Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision\Type\CollisionConstant.ixx">
+      <Filter>Collision\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision\Type\CollisionFlag.ixx">
+      <Filter>Collision\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision\Type\CollisionOffset.ixx">
+      <Filter>Collision\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision\Type\CollisionResult.ixx">
+      <Filter>Collision\Type</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

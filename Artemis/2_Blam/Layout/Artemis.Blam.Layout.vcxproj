@@ -113,6 +113,11 @@
     <ClCompile Include="Snapshot\Type\SnapshotRaw.ixx" />
     <ClCompile Include="Snapshot\Type\SnapshotRecord.ixx" />
     <ClCompile Include="Snapshot\Type\SnapshotRegion.ixx" />
+    <ClCompile Include="Collision\Blam.Layout.Collision.Type.ixx" />
+    <ClCompile Include="Collision\Type\CollisionConstant.ixx" />
+    <ClCompile Include="Collision\Type\CollisionFlag.ixx" />
+    <ClCompile Include="Collision\Type\CollisionOffset.ixx" />
+    <ClCompile Include="Collision\Type\CollisionResult.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

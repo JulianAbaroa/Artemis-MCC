@@ -105,5 +105,8 @@ namespace Engine::Capture::Hook
         const auto waitNs{ static_cast<std::uint64_t>(std::chrono::duration_cast<nanoseconds>(end - start).count()) };
         m_SimulationWaitNs += waitNs;
         m_TelemetryStore.RecordReadWait(waitNs, !isRead);
+
+        // The window is closed and the game thread is between two ticks: the oracle does not delay the AI read (D272).
+        m_OracleService.Run();
     }
 }

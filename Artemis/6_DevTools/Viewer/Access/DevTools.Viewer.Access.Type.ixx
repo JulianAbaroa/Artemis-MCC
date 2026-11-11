@@ -12,6 +12,7 @@ import Engine.Render.Window.System;
 import Engine.Control.Simulation.State;
 import Engine.Base.Memory.System;
 import Engine.Capture.State;
+import Engine.Capture.Oracle.State;
 import Bridge.Transport.System;
 import Engine.Render.State;
 import Engine.Render.System;
@@ -33,6 +34,7 @@ namespace
     using Engine::Control::Simulation::State::BotStore;
     using Engine::Base::Memory::System::MemoryReaderService;
     using Engine::Capture::State::CaptureStore;
+    using Engine::Capture::Oracle::State::OracleStore;
     using Bridge::Transport::System::BridgeService;
     using Engine::Render::State::RenderStore;
     using Engine::Render::System::RenderService;
@@ -48,6 +50,7 @@ export namespace DevTools::Viewer::Access::Type
         RenderStore& m_RenderStore;
         InputService& m_InputService;
         CaptureStore& m_CaptureStore;
+        OracleStore& m_OracleStore;
         MemoryReaderService& m_MemoryReaderService;
         LifecycleService& m_LifecycleService;
         LifecycleStore& m_LifecycleStore;

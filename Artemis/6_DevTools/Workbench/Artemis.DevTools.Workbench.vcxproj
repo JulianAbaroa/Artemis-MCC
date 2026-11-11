@@ -161,6 +161,11 @@
     <ClCompile Include="TickDump\System\TickDumpUIService.ixx" />
     <ClCompile Include="TickDump\Type\DevTools.Workbench.TickDump.Type.ixx" />
     <ClCompile Include="$(ArtemisRoot)External\stb\stb_implementation.cpp" />
+    <ClCompile Include="Oracle\State\OracleUIStore.cpp" />
+    <ClCompile Include="Oracle\State\OracleUIStore.ixx" />
+    <ClCompile Include="Oracle\System\OracleUIService.cpp" />
+    <ClCompile Include="Oracle\System\OracleUIService.ixx" />
+    <ClCompile Include="Oracle\Type\DevTools.Workbench.Oracle.Type.ixx" />
     <ClInclude Include="$(ArtemisRoot)External\stb\stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

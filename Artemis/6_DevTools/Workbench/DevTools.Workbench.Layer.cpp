@@ -47,6 +47,7 @@ namespace DevTools::Workbench
             m_SimulationUIService.Draw();
             m_TickDumpUIService.Draw();
             m_BenchUIService.Draw();
+            m_OracleUIService.Draw();
         });
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();

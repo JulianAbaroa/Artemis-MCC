@@ -1,6 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Oracle">
+      <UniqueIdentifier>{f4a1cc78-f173-464d-b02d-cade56c490f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\State">
+      <UniqueIdentifier>{676fce2f-3d7a-4db2-9e80-d09435e85e57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\System">
+      <UniqueIdentifier>{103405fa-2ab8-4528-b423-0fc48a3b62bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\Type">
+      <UniqueIdentifier>{536a75c0-9ebd-4e8d-ad86-5d41d8f4ce3d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="$(ArtemisRoot)External">
       <UniqueIdentifier>{4df6b085-0749-52eb-a0a7-4e6fd31caad5}</UniqueIdentifier>
     </Filter>
@@ -307,6 +319,21 @@
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\stb\stb_implementation.cpp">
       <Filter>$(ArtemisRoot)External\stb</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\State\OracleUIStore.cpp">
+      <Filter>Oracle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\State\OracleUIStore.ixx">
+      <Filter>Oracle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleUIService.cpp">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleUIService.ixx">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Type\DevTools.Workbench.Oracle.Type.ixx">
+      <Filter>Oracle\Type</Filter>
     </ClCompile>
     <ClInclude Include="$(ArtemisRoot)External\stb\stb_image.h">
       <Filter>$(ArtemisRoot)External\stb</Filter>

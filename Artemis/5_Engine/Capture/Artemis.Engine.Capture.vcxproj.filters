@@ -1,6 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Oracle">
+      <UniqueIdentifier>{3ed0a894-d7e2-4865-9369-6e9edcfd8830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\State">
+      <UniqueIdentifier>{d167042d-5eb3-433f-9a20-b868d5742c2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\System">
+      <UniqueIdentifier>{41a5e353-b482-48de-a176-65d7022035fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\Type">
+      <UniqueIdentifier>{e0128bcc-41a7-4bc5-b1ed-e0cefff02a12}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Hook">
       <UniqueIdentifier>{3c3b677a-82c7-5a5a-a59e-ca57105eecb6}</UniqueIdentifier>
     </Filter>
@@ -61,6 +73,21 @@
     </ClCompile>
     <ClCompile Include="Type\Engine.Capture.Type.ixx">
       <Filter>Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\State\OracleStore.cpp">
+      <Filter>Oracle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\State\OracleStore.ixx">
+      <Filter>Oracle\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleService.cpp">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleService.ixx">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Type\Engine.Capture.Oracle.Type.ixx">
+      <Filter>Oracle\Type</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

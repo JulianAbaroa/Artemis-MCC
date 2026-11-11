@@ -104,6 +104,7 @@ export namespace Mod
             .m_RenderStore = m_Render.m_RenderStore,
             .m_InputService = m_Render.m_InputService,
             .m_CaptureStore = m_Capture.m_CaptureStore,
+            .m_OracleStore = m_Capture.m_OracleStore,
             .m_MemoryReaderService = m_Base.m_MemoryReaderService,
             .m_LifecycleService = m_Base.m_LifecycleService,
             .m_LifecycleStore = m_Base.m_LifecycleStore,

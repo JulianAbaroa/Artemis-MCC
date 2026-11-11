@@ -5,6 +5,7 @@ Group `6_DevTools` - static library inside the game process - the launcher, insp
 ## Responsibility
 - The launcher and its tab windows: simulation (bots, speed, pause), object and player tables, definitions inspector,
   logs, settings and hotkeys (icons from `Resources/`, stb compiled here).
+- The raycast oracle (R3, D272, `Oracle`): checks in game that the rays of Artemis give what the engine gives and measures what a ray costs the engine. Off by default and never saved as on (only its rays per batch, default 16, and its period in ticks, default 1, are preferences: `RaycastOracle_Rays`, `RaycastOracle_EveryTicks`). Every period it hands `Engine.Capture` a batch with the rays of the last tick (aim and perception) and random ones from the eye of the local player (fixed seed, 100 m), reads what the game thread traced, compares it with `Raycaster::Cast` (static, same ray) and with the `RaycastService` result of the tick (one or two ticks apart), and every 10 s writes `[RaycastOracle] INFO:` to the log and `RaycastOracle/<date>.txt` in the storage folder: counters, the 20 worst differences and the engine cost per ray (mean, p50, p99) for the static test and the test with objects. The comparison is `Views.Oracle`. Exception to "observers must not block", only while the oracle is on: its observer writes the report file (a few KB of text, truncated and rewritten every 10 s) on the AI thread, and the rays it casts with `Raycaster` cost up to 64 casts per tick. Nothing in the repo posts work to the Dump thread (it only runs the TickDump queue), so the write stays there.
 - Recorder: TickDump (`.tdump` + `.sdump` of every tick, written by the dump thread; each `.tdump` record also carries the real
   time since the previous one).
 - The in-game test bench: takes scenarios from the exchange folder of `Tools/game.py`, plays their matches through the match cycle,
@@ -33,6 +34,7 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `DevTools.Workbench.Layer` | The facade: stores and services of the launcher and its tabs. |
 | `DevTools.Workbench.TickDump.System` | The TickDump service the dump thread runs. |
+| `DevTools.Workbench.Oracle.System` | The oracle service `Mod` runs as a tick observer (`OnTick`, AI thread: it never waits for the game thread) and draws in the Simulation tab. |
 | `DevTools.Workbench.Bench.System` | The bench service the bench thread runs. A match may name a gametype preset (`preset <name>` or `preset none`, made active before the launch, a name that cannot be loaded ends the match with `no-preset`) and check `preset_applied [<name>]`. Its panel shows one line with the preset and what the last load did with it. |
 
 ## Depends on

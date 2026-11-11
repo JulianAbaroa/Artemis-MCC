@@ -73,6 +73,11 @@
     <ClCompile Include="System\CaptureService.cpp" />
     <ClCompile Include="System\CaptureService.ixx" />
     <ClCompile Include="Type\Engine.Capture.Type.ixx" />
+    <ClCompile Include="Oracle\State\OracleStore.cpp" />
+    <ClCompile Include="Oracle\State\OracleStore.ixx" />
+    <ClCompile Include="Oracle\System\OracleService.cpp" />
+    <ClCompile Include="Oracle\System\OracleService.ixx" />
+    <ClCompile Include="Oracle\Type\Engine.Capture.Oracle.Type.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

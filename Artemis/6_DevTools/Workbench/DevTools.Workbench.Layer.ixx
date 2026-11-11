@@ -31,6 +31,8 @@ import DevTools.Workbench.Bench.State;
 import DevTools.Workbench.Bench.System;
 import DevTools.Workbench.Logs.State;
 import DevTools.Workbench.Logs.System;
+import DevTools.Workbench.Oracle.State;
+import DevTools.Workbench.Oracle.System;
 import std;
 
 export namespace DevTools::Workbench
@@ -55,6 +57,7 @@ export namespace DevTools::Workbench
         using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
         using BenchUIStore = DevTools::Workbench::Bench::State::BenchUIStore;
         using LogsUIStore = DevTools::Workbench::Logs::State::LogsUIStore;
+        using OracleUIStore = DevTools::Workbench::Oracle::State::OracleUIStore;
 
         using HotkeyUIService = DevTools::Workbench::Hotkey::System::HotkeyUIService;
         using LauncherUIService = DevTools::Workbench::Launcher::System::LauncherUIService;
@@ -66,6 +69,7 @@ export namespace DevTools::Workbench
         using TickDumpUIService = DevTools::Workbench::TickDump::System::TickDumpUIService;
         using BenchUIService = DevTools::Workbench::Bench::System::BenchUIService;
         using LogsUIService = DevTools::Workbench::Logs::System::LogsUIService;
+        using OracleUIService = DevTools::Workbench::Oracle::System::OracleUIService;
 
     public:
         Layer(Services::Layer& service, DevTools::Viewer::Access::Type::EngineAccess& engine, Blam::Map::Layer& map, Blam::MapModel::Layer& resolved,
@@ -87,8 +91,14 @@ export namespace DevTools::Workbench
             m_BenchUIService(service.m_LogsStore, service.m_Log, service.m_SettingsStore, engine.m_MemoryReaderService,
                 engine.m_LocalUserStore, engine.m_PlayerActionStore, engine.m_VirtualInputStore, engine.m_LifecycleStore,
                 engine.m_MatchConfigStore, engine.m_MatchCycleStore, engine.m_MatchConfigService, engine.m_PresetStore, engine.m_PresetService,
-                engine.m_BotStore, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore)
+                engine.m_BotStore, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore),
+            m_OracleUIService(service.m_Log, service.m_SettingsStore, engine.m_OracleStore, resolved.m_Raycaster, m_OracleUIStore)
         {
+            // The raycast oracle saves its rays and period (D272), never whether it runs.
+            preferences.RegisterSection(std::string{ OracleUIStore::k_OraclePreferencePrefix },
+                [this](std::ostream& stream) { m_OracleUIStore.Save(stream); },
+                [this](std::string_view key, std::string_view value) { m_OracleUIStore.Load(key, value); });
+
             engine.m_RenderService.OnInitialized([this](const FrameContext& frame) {
                 this->Initialize(frame);
             });
@@ -127,6 +137,7 @@ export namespace DevTools::Workbench
         TickDumpUIStore m_TickDumpUIStore{};
         LogsUIStore m_LogsUIStore{};
         BenchUIStore m_BenchUIStore{};
+        OracleUIStore m_OracleUIStore{};
 
         // --- System ---
         HotkeyUIService m_HotkeyUIService;
@@ -139,6 +150,7 @@ export namespace DevTools::Workbench
         TickDumpUIService m_TickDumpUIService;
         LogsUIService m_LogsUIService;
         BenchUIService m_BenchUIService;
+        OracleUIService m_OracleUIService;
 
     private:
         // Releases the old icons and opens the launcher if the setting asks for it.

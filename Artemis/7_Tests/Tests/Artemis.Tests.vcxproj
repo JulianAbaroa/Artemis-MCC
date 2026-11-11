@@ -103,6 +103,7 @@
     <ClCompile Include="Blam\VariantPresetTests.cpp" />
     <ClCompile Include="Blam\MapModelTests.cpp" />
     <ClCompile Include="Blam\SbspCollisionTests.cpp" />
+    <ClCompile Include="Blam\CollisionResultTests.cpp" />
     <ClCompile Include="Blam\MapTests.cpp" />
     <ClCompile Include="Blam\ObjectKindTests.cpp" />
     <ClCompile Include="Blam\ObjectStoreTests.cpp" />
@@ -127,6 +128,7 @@
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />
     <ClCompile Include="Engine\PresetTests.cpp" />
+    <ClCompile Include="Engine\OracleStoreTests.cpp" />
     <ClCompile Include="Engine\SnapshotBenchTests.cpp" />
     <ClCompile Include="Perception\CollidableSceneTests.cpp" />
     <ClCompile Include="Perception\PipelineTests.cpp" />
@@ -146,6 +148,7 @@
     <ClCompile Include="Services\SettingsStoreTests.cpp" />
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
+    <ClCompile Include="Views\RaycastOracleTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Bench.ixx" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
     <ClCompile Include="Support\Tests.Support.EngineMemory.ixx" />

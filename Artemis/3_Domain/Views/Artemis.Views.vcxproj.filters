@@ -1,6 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Oracle">
+      <UniqueIdentifier>{350a4285-abe2-40e2-b3ac-7df2a6541e88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\System">
+      <UniqueIdentifier>{c61a4f0e-c89c-477c-953c-f4694c99f8d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oracle\Type">
+      <UniqueIdentifier>{e94d3daf-2309-4ae3-9075-a46827b8f5e0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Affordance">
       <UniqueIdentifier>{bdf885c5-a604-5f4b-83aa-85135a1a747a}</UniqueIdentifier>
     </Filter>
@@ -84,6 +93,36 @@
     </ClCompile>
     <ClCompile Include="Self\Type\Views.Self.Type.ixx">
       <Filter>Self\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Views.Oracle.System.ixx">
+      <Filter>Oracle</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Views.Oracle.Type.ixx">
+      <Filter>Oracle</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleCompare.ixx">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleReport.cpp">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleReport.ixx">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleRecord.ixx">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\System\OracleSystem.cpp">
+      <Filter>Oracle\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Type\OracleConstant.ixx">
+      <Filter>Oracle\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Type\OracleSample.ixx">
+      <Filter>Oracle\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Oracle\Type\OracleStats.ixx">
+      <Filter>Oracle\Type</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

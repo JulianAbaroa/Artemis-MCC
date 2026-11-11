@@ -1,5 +1,7 @@
 export module Engine.Base.Memory.Type:Signature;
 
+import std;
+
 export namespace Engine::Base::Memory::Type::Signature
 {
     // Byte pattern of a game function. "??" matches any byte.
@@ -214,4 +216,17 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 B8 C0 22 00 00 E8 ?? ?? ?? ?? 48 2B E0 0F 29 B4 24 B0 22 00 00 0F 29 BC 24 A0 22 00 00 44 0F 29 84 24 90 22 00 00 44 0F 29 8C 24 80 22 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 70 22 00 00 44 8B 05 ?? ?? ?? ?? 45 33 E4 65 48 8B 04 25 58 00 00 00 4C 8B FA"
     };
 
+    // collision_test_vector (0x12969c, A20): the ray test the bullets use. It is found by its RVA and checked twice: the unwind table must
+    // say a function begins exactly there, and the bytes there must be its whole prologue (the pushes, then "mov eax, 0x16910 / call
+    // alloca_probe / sub rsp, rax"). 0x16910 + the pushes = the 0x16948 of A20 sec. 2. Read from haloreach.dll MD5 012f4079...
+    inline constexpr Signature k_CollisionTestVectorPrologue
+    {
+        "CollisionTestVectorPrologue",
+        "48 89 5C 24 10 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 F0 97 FE FF B8 10 69 01 00 E8 ?? ?? ?? ?? 48 2B E0"
+    };
+
+    inline constexpr std::uint32_t k_CollisionTestVectorRva{ 0x12969C };
+
+    // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
+    inline constexpr std::uint32_t k_CollisionTestVectorWindow{ 0 };
 }

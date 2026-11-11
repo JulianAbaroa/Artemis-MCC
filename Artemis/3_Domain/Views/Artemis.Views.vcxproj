@@ -73,6 +73,16 @@
     <ClCompile Include="Self\System\SelfService.cpp" />
     <ClCompile Include="Self\System\SelfService.ixx" />
     <ClCompile Include="Self\Type\Views.Self.Type.ixx" />
+    <ClCompile Include="Oracle\Views.Oracle.System.ixx" />
+    <ClCompile Include="Oracle\Views.Oracle.Type.ixx" />
+    <ClCompile Include="Oracle\System\OracleCompare.ixx" />
+    <ClCompile Include="Oracle\System\OracleReport.cpp" />
+    <ClCompile Include="Oracle\System\OracleReport.ixx" />
+    <ClCompile Include="Oracle\System\OracleRecord.ixx" />
+    <ClCompile Include="Oracle\System\OracleSystem.cpp" />
+    <ClCompile Include="Oracle\Type\OracleConstant.ixx" />
+    <ClCompile Include="Oracle\Type\OracleSample.ixx" />
+    <ClCompile Include="Oracle\Type\OracleStats.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

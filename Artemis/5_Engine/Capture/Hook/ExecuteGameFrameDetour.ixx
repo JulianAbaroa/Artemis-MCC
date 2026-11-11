@@ -5,6 +5,7 @@ import Services.Telemetry.State;
 import Engine.Base.Memory.System;
 import Engine.Base.Lifecycle.State;
 import Engine.Capture.Type;
+import Engine.Capture.Oracle.System;
 import std;
 
 export namespace Engine::Capture::Hook
@@ -27,12 +28,13 @@ export namespace Engine::Capture::Hook
         using AOBService = Engine::Base::Memory::System::AOBService;
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using ExecuteGameFrameFunction = Engine::Capture::Type::ExecuteGameFrameFunction;
+        using OracleService = Engine::Capture::Oracle::System::OracleService;
 
     public:
         ExecuteGameFrameDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,
-            LifecycleStore& lifecycleStore) :
+            LifecycleStore& lifecycleStore, OracleService& oracleService) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
-            m_LifecycleStore(lifecycleStore) {}
+            m_LifecycleStore(lifecycleStore), m_OracleService(oracleService) {}
         ~ExecuteGameFrameDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -55,7 +57,7 @@ export namespace Engine::Capture::Hook
         // Time the game thread waited for the AI read inside the current or last SimulationTicks call, in nanoseconds.
         auto GetSimulationWaitNs() const -> std::uint64_t;
 
-        // Signals a complete tick and records how long the game thread waited for the AI read.
+        // Signals a complete tick and records how long the game thread waited for the AI read, then lets the raycast oracle trace its rays.
         // note: Called here between ticks and by SimulationTicksDetour for the last tick of a call.
         auto CloseTick() -> void;
 
@@ -64,6 +66,7 @@ export namespace Engine::Capture::Hook
         TelemetryStore& m_TelemetryStore;
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;
+        OracleService& m_OracleService;
 
         static inline ExecuteGameFrameDetour* s_Instance{ nullptr };
         static inline std::atomic<int> s_InFlight{ 0 };

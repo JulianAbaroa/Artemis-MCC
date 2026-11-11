@@ -7,6 +7,7 @@ Builds the view of the agent's local player: its self (the player it controls an
 can pick up, enter or use) and the raycasts it sees with.
 
 ## Does not
+- Take part in the Tick with `Oracle`: `Views.Oracle.*` is the pure comparison, counters and report text of the raycast oracle (R3, D272), a development tool. It lives here only because it needs `RaycastHit` and `Artemis.Tests` cannot reference `DevTools.*`. `Views::Layer`, the services and the rest of the pipeline never import it, only `DevTools.Workbench` does.
 - Decide actions: that is the Python agent.
 - Build the action: that is `Control`.
 - Flatten anything for Python: that is `Bridge.Codec`.
@@ -24,6 +25,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Views.Self.Type`, `Views.Self.State` | The agent's player (`k_SelfLocalIndex`) and its position. |
 | `Views.Affordance.Type`, `Views.Affordance.State` | What the agent can interact with, and how. |
 | `Views.Raycast.Type`, `Views.Raycast.State` | The rays of the agent and what they hit. A static hit is a collision surface and carries its flags (`SurfaceFlags`) and global material (`Material`, -1 if none), a dynamic hit or a miss gives 0 and -1 (D272). |
+| `Views.Oracle.Type`, `Views.Oracle.System` | Dev tool only (R3, D272), outside the pipeline: `OracleSample` (a ray with the engine answers and ours), `RayDifference`, `OracleStats` and its counters; `Compare` (the engine without objects against `Raycaster`, and with objects against the tick: hit or not, distance beyond `k_DistanceTolerance`, kind, object handle, material and surface flags), `Record` (counters, worst 20, cost histogram), `Summarize`, `Percentile`, `FormatSummary`, `FormatReport`, `ResolveRootObject` and `RandomDirection`. Pure functions, no engine call. |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Blam.Map`, `Blam.MapModel`, `Blam.Runtime`, `Perception`.
@@ -42,4 +44,4 @@ An agent without a unit (dead, not spawned) gets an empty view for that tick.
 - Deterministic and pure, like the rest of the pipeline.
 
 ## Tests
-`PipelineTests` and `ReplayTests.Recordings` in `Artemis.Tests` (the views reach the flattened tick).
+`PipelineTests` and `ReplayTests.Recordings` in `Artemis.Tests` (the views reach the flattened tick). `RaycastOracleCompare/Record/Cost/Report` tests the oracle logic with made-up results.
