@@ -1,7 +1,7 @@
 {
     "name": "ctf_endround",
     "defaults": {
-        "config": "Desert Bus Sky Roads Desert Bus 2.1 Short",
+        "config": "Artemis Training",
         "max_seconds": 300
     },
     "matches": [
