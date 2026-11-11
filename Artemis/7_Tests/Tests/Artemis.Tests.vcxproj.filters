@@ -51,6 +51,9 @@
     <ClCompile Include="Engine\LifecycleStoreTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\MapVariantServiceTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\MatchConfigTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

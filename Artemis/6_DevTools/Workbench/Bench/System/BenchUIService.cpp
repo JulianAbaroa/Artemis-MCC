@@ -15,6 +15,7 @@ import Services.Telemetry.Type;
 import Services.Telemetry.System;
 import Bridge.Transport.Type;
 import Engine.Base.Host.Type;
+import Engine.Base.MapVariant.Type;
 import Engine.Base.Preset.Type;
 import Engine.Control.Input.Type;
 import Perception.Players.Type;
@@ -36,6 +37,8 @@ namespace
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
     using Common::Log::Type::LogLevel;
+    using Engine::Base::MapVariant::Type::MapVariantOutcome;
+    using Engine::Base::MapVariant::Type::MapVariantResult;
     using Engine::Base::Preset::Type::PresetOutcome;
     using Engine::Base::Preset::Type::PresetResult;
     using Engine::Control::Input::Type::InputState;
@@ -84,6 +87,24 @@ namespace
         }
 
         return std::format("Preset: {} ({})", active.empty() ? std::string{ "none" } : active, state);
+    }
+
+    // return: The state of the map variant in a line for the panel and the check: the active one and what the last load did with it.
+    // note: Map variants are only written at load for now (Q98, D266). The between rounds states come with the bridge.
+    auto MapVariantLine(const std::string& active, const MapVariantResult& result) -> std::string
+    {
+        std::string state{};
+
+        switch (result.Outcome)
+        {
+        case MapVariantOutcome::None: state = "no load since it was set"; break;
+        case MapVariantOutcome::NoMap: state = "not written"; break;
+        case MapVariantOutcome::AppliedAtLoad: state = "at load"; break;
+        case MapVariantOutcome::Rejected: state = "rejected: " + result.Message; break;
+        case MapVariantOutcome::Failed: state = "failed: " + result.Message; break;
+        }
+
+        return std::format("Map variant: {} ({})", active.empty() ? std::string{ "none" } : active, state);
     }
 
     using Common::Engine::Type::k_NoHandle;
@@ -413,6 +434,9 @@ namespace DevTools::Workbench::Bench::System
         const std::string preset{ PresetLine(m_PresetStore.GetActiveName(), m_PresetStore.GetResult()) };
         ImGui::TextWrapped("%s", preset.c_str());
 
+        const std::string mapVariant{ MapVariantLine(m_MapVariantStore.GetActiveName(), m_MapVariantStore.GetResult()) };
+        ImGui::TextWrapped("%s", mapVariant.c_str());
+
         const path folder{ m_BenchUIStore.GetFolder() / "scenarios" };
         std::vector<path>& files{ m_BenchUIStore.GetScenarioFiles() };
         const std::size_t selected{ m_BenchUIStore.GetSelectedScenario() };
@@ -584,6 +608,11 @@ namespace DevTools::Workbench::Bench::System
                 if (value.empty() || value.find(' ') != std::string_view::npos) return fail("preset takes a name or none");
                 match.Preset = value == "none" ? std::string{} : std::string{ value };
             }
+            else if (key == "map")
+            {
+                if (value.empty()) return fail("map takes the name of a recorded config or none");
+                match.MapVariant = value == "none" ? std::string{} : std::string{ value };
+            }
             else if (key == "scale")
             {
                 const auto scale{ ParseNumber<float>(value) };
@@ -697,6 +726,22 @@ namespace DevTools::Workbench::Bench::System
 
         m_Log.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
             match.Config);
+
+        // The map variant is made active before the configuration is pending, for the same reason (Q98, D266).
+        if (!match.MapVariant.has_value())
+        {
+            m_MapVariantStore.SetResult(MapVariantResult{});
+        }
+        else if (match.MapVariant->empty())
+        {
+            m_MapVariantService.ClearActive();
+        }
+        else if (!m_MapVariantService.SetActive(*match.MapVariant))
+        {
+            report.End = "no-map";
+            this->EndMatch(run);
+            return;
+        }
 
         // The preset is made active before the configuration is pending, so a preset that cannot be loaded leaves nothing pending.
         if (!match.Preset.has_value())
@@ -1236,6 +1281,15 @@ namespace DevTools::Workbench::Bench::System
                 const PresetResult applied{ m_PresetStore.GetResult() };
                 result.IsOk = applied.Outcome == PresetOutcome::AppliedAtLoad && (arguments.empty() || applied.Name == arguments.front());
                 result.Detail = PresetLine(m_PresetStore.GetActiveName(), applied);
+            }
+            else if (check.Name == "map_applied")
+            {
+                const MapVariantResult applied{ m_MapVariantStore.GetResult() };
+                // The name of a config can hold spaces, which split the arguments of the check: they are joined back.
+                std::string expected{};
+                for (const auto& argument : arguments) expected += (expected.empty() ? "" : " ") + argument;
+                result.IsOk = applied.Outcome == MapVariantOutcome::AppliedAtLoad && (arguments.empty() || applied.Name == expected);
+                result.Detail = MapVariantLine(m_MapVariantStore.GetActiveName(), applied);
             }
             else if (check.Name == "objective_taken")
             {

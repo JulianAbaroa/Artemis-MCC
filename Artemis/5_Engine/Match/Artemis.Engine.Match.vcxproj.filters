@@ -43,6 +43,12 @@
     <ClCompile Include="State\MatchCycleStore.ixx">
       <Filter>State</Filter>
     </ClCompile>
+    <ClCompile Include="System\MapVariantService.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\MapVariantService.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
     <ClCompile Include="System\MatchConfigService.cpp">
       <Filter>System</Filter>
     </ClCompile>

@@ -16,14 +16,16 @@ export namespace Engine::Match
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using MapVariantService = Engine::Match::System::MapVariantService;
         using EngineInterfaceDetour = Engine::Match::Hook::EngineInterfaceDetour;
         using LifecycleUpdateDetour = Engine::Match::Hook::LifecycleUpdateDetour;
 
     public:
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_MatchConfigService(service.m_Log, service.m_SettingsStore, m_MatchConfigStore),
+            m_MapVariantService(service.m_Log, m_MatchConfigService, base.m_MapVariantStore),
             m_EngineInterfaceDetour(service.m_Log, base.m_AOBService, base.m_MemoryReaderService, m_MatchCycleStore, m_MatchConfigService,
-                base.m_PresetService),
+                m_MapVariantService, base.m_PresetService),
             m_LifecycleUpdateDetour(service.m_Log, base.m_AOBService, m_MatchConfigStore, m_MatchCycleStore) {}
         ~Layer() = default;
 
@@ -37,6 +39,7 @@ export namespace Engine::Match
 
         // --- System ---
         MatchConfigService m_MatchConfigService;
+        MapVariantService m_MapVariantService;
 
         // --- Hook ---
         EngineInterfaceDetour m_EngineInterfaceDetour;

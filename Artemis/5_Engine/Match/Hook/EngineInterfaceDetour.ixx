@@ -19,7 +19,7 @@ export namespace Engine::Match::Hook
     // Logs every call of MCC to the engine interface (creation, start, state commands, text commands and destruction, A15) and is the
     // point where Artemis changes which match starts (D123): at the start it records the configuration of MCC if a record is armed,
     // and transplants the pending recorded configuration into a copy of it. With an active gametype preset it also writes the preset into
-    // the copy (D264).
+    // the copy (D264). The active map variant goes in before it (Q98, D266).
     // note: Hooks the MCC function that creates the engine, which stays loaded for the whole process. Each new engine gets a copy of its
     // vtable with the logged entries replaced, so nothing is patched inside the game module. Without a record armed or a configuration
     // pending, the start is only logged and gets the configuration of MCC unchanged.
@@ -39,12 +39,14 @@ export namespace Engine::Match::Hook
         using EngineCommandFunction = Engine::Match::Type::EngineCommandFunction;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using MapVariantService = Engine::Match::System::MapVariantService;
 
     public:
         EngineInterfaceDetour(Log& log, AOBService& aobService, MemoryReaderService& memoryReaderService,
-            MatchCycleStore& matchCycleStore, MatchConfigService& matchConfigService, PresetService& presetService) :
+            MatchCycleStore& matchCycleStore, MatchConfigService& matchConfigService, MapVariantService& mapVariantService, PresetService& presetService) :
             m_Log(log), m_AOBService(aobService), m_MemoryReaderService(memoryReaderService),
-            m_MatchCycleStore(matchCycleStore), m_MatchConfigService(matchConfigService), m_PresetService(presetService) {}
+            m_MatchCycleStore(matchCycleStore), m_MatchConfigService(matchConfigService), m_MapVariantService(mapVariantService),
+            m_PresetService(presetService) {}
         ~EngineInterfaceDetour() = default;
 
         // Finds the MCC function by signature and installs the hook. Does nothing if already installed.
@@ -61,6 +63,7 @@ export namespace Engine::Match::Hook
         MemoryReaderService& m_MemoryReaderService;
         MatchCycleStore& m_MatchCycleStore;
         MatchConfigService& m_MatchConfigService;
+        MapVariantService& m_MapVariantService;
         PresetService& m_PresetService;
 
         static inline EngineInterfaceDetour* s_Instance{ nullptr };

@@ -91,6 +91,7 @@ export namespace DevTools::Workbench
             m_BenchUIService(service.m_LogsStore, service.m_Log, service.m_SettingsStore, engine.m_MemoryReaderService,
                 engine.m_LocalUserStore, engine.m_PlayerActionStore, engine.m_VirtualInputStore, engine.m_LifecycleStore,
                 engine.m_MatchConfigStore, engine.m_MatchCycleStore, engine.m_MatchConfigService, engine.m_PresetStore, engine.m_PresetService,
+                engine.m_MapVariantStore, engine.m_MapVariantService,
                 engine.m_BotStore, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore),
             m_OracleUIService(service.m_Log, service.m_SettingsStore, engine.m_OracleStore, resolved.m_Raycaster, m_OracleUIStore)
         {

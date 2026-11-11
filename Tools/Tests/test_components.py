@@ -58,7 +58,7 @@ COMPONENTS = {
                                {"Common", "Services", "Engine.Base", "Blam.Layout"}),
     "Artemis/5_Engine/Control": ("Artemis.Engine.Control.vcxproj", {"Common", "Services", "Control", "Blam.Layout", "Engine.Base", "Engine.Control"},
                                {"Common", "Services", "Engine.Base", "Control", "Blam.Layout"}),
-    "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Services", "Engine.Base", "Engine.Match"}, {"Common", "Services", "Blam.Layout", "Engine.Base"}),
+    "Artemis/5_Engine/Match": ("Artemis.Engine.Match.vcxproj", {"Common", "Services", "Blam.Layout", "Engine.Base", "Engine.Match"}, {"Common", "Services", "Blam.Layout", "Engine.Base"}),
     "Artemis/5_Engine/Render": ("Artemis.Engine.Render.vcxproj", {"Common", "Services", "Engine.Base", "Engine.Render"}, {"Common", "Services", "Engine.Base"}),
     # The development tools (M7.2 D228, M8 A2 D238): Gui (ImGui backend and widgets), Viewer and Workbench (ex UI); the tools
     # are composed by Mod.Layer. They use the engine only through DevTools.EngineAccess (in Viewer).
@@ -675,10 +675,10 @@ def test_the_match_window_and_input_modules_import_in_one_direction():
 # ---- M6c.2: the engine in five projects (D216, D217, D221)
 
 ENGINE_PLATFORM = {
-    "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset"},
+    "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant"},
     "Artemis/5_Engine/Capture": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Capture"},
     "Artemis/5_Engine/Control": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Input", "Simulation"},
-    "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Match"},
+    "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Match"},
     "Artemis/5_Engine/Render": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Render", "Window"},
 }
 ENGINE_FORBIDDEN_PREFIXES = ("Bridge.Transport.", "Mod.", "DevTools.", "Bridge.Codec.", "Perception.", "Views.", "Blam.Runtime.", "Blam.Map.",

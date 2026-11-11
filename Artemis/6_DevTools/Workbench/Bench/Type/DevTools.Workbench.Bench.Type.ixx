@@ -80,6 +80,9 @@ export namespace DevTools::Workbench::Bench::Type
         std::string Config{};
         // Gametype preset made active before the launch (D264). Empty text removes it, no value leaves the active one.
         std::optional<std::string> Preset{};
+        // Map variant (name of a recorded config whose map variant is used) made active before the launch (Q98, D266). Empty text removes
+        // it, no value leaves the active one.
+        std::optional<std::string> MapVariant{};
         // Local users of the split-screen, the primary one included. Empty leaves the count as it is.
         std::optional<std::size_t> Locals{};
         // Team of each bot added after the start. Empty team = the one the engine picks.

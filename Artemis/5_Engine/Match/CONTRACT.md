@@ -24,7 +24,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Engine.Match.Layer` | The facade: config and cycle stores, `MatchConfigService` and the two detours. Owner only. |
 | `Engine.Match.Type` | Engine interface vtable entries and the `LoadGameEngine` signature. |
 | `Engine.Match.State` | `MatchConfigStore` and `MatchCycleStore`. |
-| `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations, and `ReadMapVariant` (the map variant block of a recorded configuration, without making it pending; Q98, D266). |
+| `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations, and `ReadMapVariant` (the map variant block of a recorded configuration, without making it pending; Q98, D266). `MapVariantService` makes the map variant of a recorded configuration the active one (`SetActive` reads the file, never from the game thread) and `ApplyToStart` writes it into the start configuration at +0x1D308 after the transplant and before the preset, only if it fits the one the copy carries (map id, version, quotas; otherwise a WARNING and the start keeps the map variant of its configuration), reads it back and leaves the copy as it was on any failure. |
 
 ## Depends on
 `Common`, `Services`, `Engine.Base` (and `Blam.Layout` through its presets and the map variant constants).

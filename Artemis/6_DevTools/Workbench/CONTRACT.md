@@ -35,7 +35,7 @@ Other projects may import only these modules; everything else in the project is 
 | `DevTools.Workbench.Layer` | The facade: stores and services of the launcher and its tabs. |
 | `DevTools.Workbench.TickDump.System` | The TickDump service the dump thread runs. |
 | `DevTools.Workbench.Oracle.System` | The oracle service `Mod` runs as a tick observer (`OnTick`, AI thread: it never waits for the game thread) and draws in the Simulation tab. |
-| `DevTools.Workbench.Bench.System` | The bench service the bench thread runs. A match may name a gametype preset (`preset <name>` or `preset none`, made active before the launch, a name that cannot be loaded ends the match with `no-preset`) and check `preset_applied [<name>]`. Its panel shows one line with the preset and what the last load did with it. |
+| `DevTools.Workbench.Bench.System` | The bench service the bench thread runs. A match may name a gametype preset (`preset <name>` or `preset none`, made active before the launch, a name that cannot be loaded ends the match with `no-preset`) and check `preset_applied [<name>]`. It may also name a map variant (`map <config name>` or `map none`, Q98, D266: the map variant of a recorded config, made active before the launch, a name that cannot be read ends the match with `no-map`) and check `map_applied [<name>]`. Its panel shows one line with the preset and one with the map variant and what the last load did with each. |
 
 ## Depends on
 Every pure project, `Services`, `Bridge.Transport`, the five `Engine.*` projects, `DevTools.Gui` and `DevTools.Viewer`.

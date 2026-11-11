@@ -8,6 +8,7 @@ import Engine.Base.Host.State;
 import Engine.Base.Host.System;
 import Engine.Base.Host.Hook;
 import Engine.Base.Memory.System;
+import Engine.Base.MapVariant.State;
 import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
 
@@ -36,6 +37,7 @@ export namespace Engine::Base
         using AOBService = Engine::Base::Memory::System::AOBService;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
+        using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using PresetStore = Engine::Base::Preset::State::PresetStore;
         using PresetService = Engine::Base::Preset::System::PresetService;
 
@@ -63,6 +65,7 @@ export namespace Engine::Base
         LifecycleStore m_LifecycleStore{};
         LocalUserStore m_LocalUserStore{};
         PresetStore m_PresetStore{};
+        MapVariantStore m_MapVariantStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;

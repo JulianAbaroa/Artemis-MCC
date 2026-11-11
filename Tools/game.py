@@ -305,7 +305,7 @@ def PrintReport(report, asserter=AssertTickDump):
     return 2 if "pending" in statuses else 0
 
 
-MATCH_KEYS = {"name", "config", "preset", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
+MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
               "probes", "tickdump", "events", "every_tick"}
 
 
@@ -339,6 +339,14 @@ def Compile(scenario, configs):
                 if not isinstance(preset, str) or not re.fullmatch(r"[a-z0-9_]{1,31}", preset):
                     raise ValueError(f"match {index + 1}: preset '{preset}' is not a preset name ([a-z0-9_], up to 31 characters) or none")
                 lines.append(f"preset {preset}")
+            if "map" in match:
+                # A map variant is named like the recorded config whose map variant it is (Q98, D266).
+                variant = "none" if match["map"] is None else match["map"]
+                if not isinstance(variant, str) or not re.fullmatch(r"[A-Za-z0-9 _.-]{1,64}", variant) or variant != variant.strip():
+                    raise ValueError(f"match {index + 1}: map '{variant}' is not the name of a recorded config (letters, digits, spaces, _ - ., up to 64) or none")
+                if configs is not None and variant != "none" and variant not in configs:
+                    raise ValueError(f"match {index + 1}: map '{variant}' is not a recorded config (have: {', '.join(configs) or 'none'})")
+                lines.append(f"map {variant}")
             if "locals" in match:
                 lines.append(f"locals {int(match['locals'])}")
             for team in match.get("bots", []):

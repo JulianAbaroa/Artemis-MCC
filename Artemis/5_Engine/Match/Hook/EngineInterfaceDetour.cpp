@@ -135,6 +135,23 @@ namespace Engine::Match::Hook
                     exception.what());
             }
 
+            // The active map variant goes into the copy the engine starts with, after the transplant and before the preset (Q98, D266).
+            // A map variant that does not fit leaves the copy as it was: the start keeps the map variant of its configuration.
+            try
+            {
+                if (self->m_MapVariantService.HasActive())
+                {
+                    if (transplanted.empty()) transplanted.assign(configuration, configuration + k_EngineConfigurationSize);
+
+                    self->m_MapVariantService.ApplyToStart(transplanted);
+                    startConfiguration = transplanted.data();
+                }
+            }
+            catch (const std::exception& exception)
+            {
+                self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to write the map variant into the start ({}).", exception.what());
+            }
+
             // The active gametype preset goes into the copy the engine starts with (D264). Without a transplant the copy is made here, so
             // the configuration of MCC is never written. A preset that fails leaves the copy as it was.
             try

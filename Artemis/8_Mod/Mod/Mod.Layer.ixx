@@ -113,6 +113,8 @@ export namespace Mod
             .m_MatchCycleStore = m_Match.m_MatchCycleStore,
             .m_PresetStore = m_Base.m_PresetStore,
             .m_PresetService = m_Base.m_PresetService,
+            .m_MapVariantStore = m_Base.m_MapVariantStore,
+            .m_MapVariantService = m_Match.m_MapVariantService,
             .m_LocalUserStore = m_Base.m_LocalUserStore,
             .m_VirtualInputStore = m_Control.m_VirtualInputStore,
             .m_PlayerActionStore = m_Control.m_PlayerActionStore,

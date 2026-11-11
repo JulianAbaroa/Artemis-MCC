@@ -63,6 +63,8 @@
     <ClCompile Include="State\MatchConfigStore.ixx" />
     <ClCompile Include="State\MatchCycleStore.cpp" />
     <ClCompile Include="State\MatchCycleStore.ixx" />
+    <ClCompile Include="System\MapVariantService.cpp" />
+    <ClCompile Include="System\MapVariantService.ixx" />
     <ClCompile Include="System\MatchConfigService.cpp" />
     <ClCompile Include="System\MatchConfigService.ixx" />
     <ClCompile Include="Type\Engine.Match.Type.ixx" />

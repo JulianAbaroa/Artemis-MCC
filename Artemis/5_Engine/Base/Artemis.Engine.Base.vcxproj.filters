@@ -55,6 +55,15 @@
     <Filter Include="Lifecycle\Type">
       <UniqueIdentifier>{e40a807c-bf91-5d04-a057-a2b59edf7305}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MapVariant">
+      <UniqueIdentifier>{df7f4c52-00e4-4a16-b5d1-6081b956f1b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MapVariant\State">
+      <UniqueIdentifier>{58876ede-632d-4609-acab-089a300bf0e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MapVariant\Type">
+      <UniqueIdentifier>{b6156309-1a25-4354-ae48-bb992328e74b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Preset">
       <UniqueIdentifier>{5988f712-392f-4125-aea7-8a6e87b9c396}</UniqueIdentifier>
     </Filter>
@@ -141,6 +150,18 @@
     </ClCompile>
     <ClCompile Include="Host\Type\Engine.Base.Host.Type.ixx">
       <Filter>Host\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\Engine.Base.MapVariant.State.ixx">
+      <Filter>MapVariant</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\State\MapVariantStore.cpp">
+      <Filter>MapVariant\State</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\State\MapVariantStore.ixx">
+      <Filter>MapVariant\State</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\Type\Engine.Base.MapVariant.Type.ixx">
+      <Filter>MapVariant\Type</Filter>
     </ClCompile>
     <ClCompile Include="Preset\Engine.Base.Preset.State.ixx">
       <Filter>Preset</Filter>
