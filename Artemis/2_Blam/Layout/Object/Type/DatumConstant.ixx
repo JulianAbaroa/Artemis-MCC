@@ -52,6 +52,18 @@ export namespace Blam::Layout::Object::Type::Constant
     constexpr std::size_t k_MapVariantBoundsOffset{ 0x2C8 };
     constexpr std::size_t k_MapVariantBoundsSize{ 0x18 };
 
+    // Label table of the map variant (FUN_18014daf0 registers its labels in the first round after the load): the strings, zero terminated,
+    // in an area of k_MapVariantLabelStringsSize bytes, the offset of string i inside that area as a u16 in an array of k_MaxLabels entries,
+    // and the number of labels as an i32. A placement points to its label with k_GametypeLabel (Mvar), k_NoLabel when it has none.
+    // note: The per-label object lists of Megalo (megalo state + 0x13A0 + label * 4) are indexed by the label index of the load: a map
+    // variant written between rounds has to keep the index of every label the match already knows (RemapLabels).
+    constexpr std::size_t k_MapVariantLabelStringsOffset{ 0x2F4 };
+    constexpr std::size_t k_MapVariantLabelStringsSize{ 0x1000 };
+    constexpr std::size_t k_MapVariantLabelOffsetsOffset{ 0x12F8 };
+    constexpr std::size_t k_MaxLabels{ 256 };
+    constexpr std::size_t k_MapVariantLabelCountOffset{ 0x14F8 };
+    constexpr std::uint16_t k_NoLabel{ (std::numeric_limits<std::uint16_t>::max)() };
+
     // Placement array of the map variant: one entry per object placed in Forge.
     // note: The layout of an entry is Mvar (Data/Datum/mvar.xml). The limit is the Forge object limit.
     constexpr std::uintptr_t k_PlacementsOffset{ 0x14FC };

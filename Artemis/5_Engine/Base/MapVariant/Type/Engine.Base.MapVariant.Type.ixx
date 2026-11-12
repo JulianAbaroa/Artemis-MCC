@@ -16,10 +16,14 @@ export namespace Engine::Base::MapVariant::Type
     {
         // The map variant asked for. Null asks for the one the match loaded with.
         std::shared_ptr<const ActiveMapVariant> Pick{};
-        // What goes into the options: the block of the pick, or the one the start carried.
+        // What goes into the options: the block of the pick, or the one the start carried, with its labels in the order of the live map variant.
         std::vector<std::byte> Block{};
         // What goes into the runtime map variant: the block over the world bounds the runtime already has.
         std::vector<std::byte> Composed{};
         std::uint32_t PlacementsInUse{ 0 };
+        // What RemapLabels did so the match keeps the index of its labels: labels moved, appended and kept from the live map variant.
+        std::uint32_t LabelsMoved{ 0 };
+        std::uint32_t LabelsAppended{ 0 };
+        std::uint32_t LabelsKept{ 0 };
     };
 }

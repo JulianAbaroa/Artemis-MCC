@@ -144,8 +144,15 @@ namespace Engine::Base::MapVariant::System
 
             if (const auto reason{ LayoutMapVariant::CheckCompatible(*incomingHeader, *currentHeader) }) return std::unexpected(*reason);
 
-            return MapVariantLivePlan{ .Pick = std::move(mapVariant), .Block = std::vector<std::byte>(block.begin(), block.begin() + k_MapVariantSize),
-                .Composed = LayoutMapVariant::ComposeRuntime(block, runtime), .PlacementsInUse = incomingHeader->PlacementsInUse };
+            // The labels keep the index the match built its Megalo object lists with: a map variant with the same labels in another order
+            // crashes the next round reset. The runtime and the options get the same remapped block, so a copy of one over the other mid-match
+            // cannot bring the old order back.
+            const auto remap{ LayoutMapVariant::RemapLabels(runtime, block) };
+            if (!remap) return std::unexpected("labels: " + remap.error());
+
+            return MapVariantLivePlan{ .Pick = std::move(mapVariant), .Block = remap->Block,
+                .Composed = LayoutMapVariant::ComposeRuntime(remap->Block, runtime), .PlacementsInUse = incomingHeader->PlacementsInUse,
+                .LabelsMoved = remap->Moved, .LabelsAppended = remap->Appended, .LabelsKept = remap->Kept };
         }
         catch (const std::exception& exception)
         {
@@ -179,6 +186,11 @@ namespace Engine::Base::MapVariant::System
 
             m_Log.Message("[MapVariantService] INFO: Map variant \"{}\" written into the live map variant (placements in use: {}).",
                 plan.Pick != nullptr ? plan.Pick->Name : std::string{ "of the load" }, plan.PlacementsInUse);
+            if (plan.LabelsMoved > 0 || plan.LabelsAppended > 0)
+            {
+                m_Log.Message("[MapVariantService] INFO: labels remapped: {} moved, {} appended ({} of the match kept).", plan.LabelsMoved, plan.LabelsAppended,
+                    plan.LabelsKept);
+            }
             return {};
         }
         catch (const std::exception& exception)

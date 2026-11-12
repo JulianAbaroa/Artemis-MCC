@@ -34,6 +34,9 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_ConfigurationMapVariantOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantBoundsOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantBoundsSize;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantLabelCountOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantLabelOffsetsOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantLabelStringsOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantMapIdOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantQuotasOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
@@ -86,6 +89,10 @@ namespace
             std::memcpy(config.data() + k_ConfigurationMapVariantOffset + k_MapVariantVersionOffset, &version, sizeof(version));
             std::memcpy(config.data() + k_ConfigurationMapVariantOffset + k_MapVariantQuotasOffset, &quotas, sizeof(quotas));
             std::memcpy(config.data() + k_ConfigurationMapVariantOffset + k_MapVariantMapIdOffset, &mapId, sizeof(mapId));
+
+            // No labels: the table is read when a map variant is written between rounds, and a filler would be a count out of range.
+            const std::int32_t labels{ 0 };
+            std::memcpy(config.data() + k_ConfigurationMapVariantOffset + k_MapVariantLabelCountOffset, &labels, sizeof(labels));
             return config;
         }
 
@@ -382,4 +389,83 @@ TEST_F(MapVariantServiceTests, ACommitThatCannotWriteLeavesRuntimeAndOptionsAsTh
     EXPECT_FALSE(m_Service.CommitLive(*plan, small, options).has_value());
     EXPECT_EQ(runtime, runtimeBefore);
     EXPECT_EQ(options, optionsBefore);
+}
+
+
+namespace
+{
+    // return: The map variant of MakeLive with a label table: the strings in order and the placements' labels untouched (none in use).
+    auto MakeLabeledLive(std::uint8_t fill, const std::vector<std::string>& labels) -> Buffer
+    {
+        Buffer block{ MakeLive(fill, 145, 3006, 0x01) };
+        std::size_t offset{ 0 };
+        for (std::size_t index{ 0 }; index < labels.size(); ++index)
+        {
+            std::memcpy(block.data() + k_MapVariantLabelStringsOffset + offset, labels[index].c_str(), labels[index].size() + 1);
+            const std::uint16_t at{ static_cast<std::uint16_t>(offset) };
+            std::memcpy(block.data() + k_MapVariantLabelOffsetsOffset + index * 2, &at, sizeof(at));
+            offset += labels[index].size() + 1;
+        }
+
+        const std::int32_t count{ static_cast<std::int32_t>(labels.size()) };
+        std::memcpy(block.data() + k_MapVariantLabelCountOffset, &count, sizeof(count));
+        return block;
+    }
+
+    auto CountOf(const Buffer& block) -> std::int32_t
+    {
+        std::int32_t count{};
+        std::memcpy(&count, block.data() + k_MapVariantLabelCountOffset, sizeof(count));
+        return count;
+    }
+}
+
+TEST_F(MapVariantServiceTests, TheLabelsOfTheMatchKeepTheirIndexInTheRuntimeAndInTheOptions)
+{
+    // The map variant of the config has [flag_stand, teleporter]; the live one [teleport, flag_stand].
+    Buffer config{ MakeConfig(0x11, 145, 3006, 0x5C) };
+    const Buffer incomingBlock{ MakeLabeledLive(0x5C, { "flag_stand", "teleporter" }) };
+    std::ranges::copy(incomingBlock, config.begin() + k_ConfigurationMapVariantOffset);
+    this->WriteConfig("open flag", config);
+    const auto pick{ this->Pick("open flag") };
+
+    Buffer runtime{ MakeLabeledLive(0xA1, { "teleport", "flag_stand" }) };
+    Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
+
+    const auto plan{ m_Service.PrepareLive(pick, runtime) };
+
+    ASSERT_TRUE(plan.has_value());
+    EXPECT_EQ(plan->LabelsMoved, 2u);
+    EXPECT_EQ(plan->LabelsAppended, 1u);
+    EXPECT_EQ(plan->LabelsKept, 1u);
+    EXPECT_NE(plan->Block, incomingBlock);
+    EXPECT_EQ(CountOf(plan->Block), 3);
+    EXPECT_EQ(CountOf(plan->Composed), 3);
+
+    ASSERT_TRUE(m_Service.CommitLive(*plan, runtime, options).has_value());
+    // Both copies hold the same label table (strings, offsets and count), so a copy of one over the other brings no other order back.
+    EXPECT_EQ(options, plan->Block);
+    EXPECT_EQ(CountOf(runtime), 3);
+    EXPECT_EQ(CountOf(options), 3);
+    const auto tableBegin{ static_cast<std::ptrdiff_t>(k_MapVariantLabelStringsOffset) };
+    const auto tableEnd{ static_cast<std::ptrdiff_t>(k_MapVariantLabelCountOffset + 4) };
+    EXPECT_TRUE(std::equal(runtime.begin() + tableBegin, runtime.begin() + tableEnd, options.begin() + tableBegin));
+    EXPECT_TRUE(Logged(LogLevel::Info, "labels remapped: 2 moved, 1 appended"));
+}
+
+TEST_F(MapVariantServiceTests, AMapVariantWhoseLabelsDoNotFitIsRefusedWholeWithTheReason)
+{
+    Buffer config{ MakeConfig(0x11, 145, 3006, 0x5C) };
+    std::ranges::copy(MakeLabeledLive(0x5C, { "extra" }), config.begin() + k_ConfigurationMapVariantOffset);
+    this->WriteConfig("many", config);
+    const auto pick{ this->Pick("many") };
+
+    std::vector<std::string> many{};
+    for (std::size_t index{ 0 }; index < 0x100; ++index) many.push_back(std::format("l{}", index));
+    const Buffer runtime{ MakeLabeledLive(0xA1, many) };
+
+    const auto plan{ m_Service.PrepareLive(pick, runtime) };
+
+    ASSERT_FALSE(plan.has_value());
+    EXPECT_NE(plan.error().find("labels: 257 labels do not fit in 256"), std::string::npos);
 }

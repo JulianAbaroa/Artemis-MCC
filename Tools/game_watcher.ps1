@@ -162,7 +162,7 @@ function Save-Crash
     $state = Join-Path $game 'state.json'
     if (Test-Path $state) { Copy-Item $state (Join-Path $dir 'state.json') -Force }
     $since = if ($script:launchedAt) { $script:launchedAt } else { (Get-Date).AddHours(-1) }
-    $places = @((Join-Path $env:LOCALAPPDATA 'MCC\Saved\Crashes'), (Join-Path $env:LOCALAPPDATA 'CrashDumps'),
+    $places = @((Join-Path $env:LOCALAPPDATA 'MCC\Saved\Crashes'), (Join-Path $env:LOCALAPPDATA 'CrashDumps'), 'C:\CrashDumps',
         (Join-Path $env:LOCALAPPDATA 'MCC\Saved\Logs'), (Join-Path ($env:USERPROFILE) 'AppData\LocalLow\MCC\Temporary'))
     $copied = @()
     foreach ($place in $places)

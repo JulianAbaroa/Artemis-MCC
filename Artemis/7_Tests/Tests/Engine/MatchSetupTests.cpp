@@ -76,6 +76,7 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_ThreadContextMapVariantOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantMapIdOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantQuotasOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantLabelCountOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
     using Blam::Layout::Object::Type::Constant::k_MapVariantVersion;
     using Blam::Layout::Object::Type::Constant::k_MapVariantVersionOffset;
@@ -242,6 +243,10 @@ namespace
             std::memcpy(configuration.data() + k_ConfigurationMapVariantOffset + k_MapVariantVersionOffset, &version, sizeof(version));
             std::memcpy(configuration.data() + k_ConfigurationMapVariantOffset + k_MapVariantQuotasOffset, &quotas, sizeof(quotas));
             std::memcpy(configuration.data() + k_ConfigurationMapVariantOffset + k_MapVariantMapIdOffset, &mapId, sizeof(mapId));
+
+            // No labels: the filler would be a label count out of range for the remap of a map variant written between rounds.
+            const std::int32_t labels{ 0 };
+            std::memcpy(configuration.data() + k_ConfigurationMapVariantOffset + k_MapVariantLabelCountOffset, &labels, sizeof(labels));
             return configuration;
         }
 
