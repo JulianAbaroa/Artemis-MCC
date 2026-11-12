@@ -29,27 +29,41 @@ namespace
         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
     };
 
-    // return: Whether the name can be the file name of a configuration: letters, digits, spaces, '_', '-' and '.'.
+    // Folder of the library where Delete moves the files, outside the listing (the listing does not enter subfolders, D283).
+    constexpr std::string_view k_DeletedFolder{ "_deleted" };
+
+    // Copies of a name that Delete keeps before it stops numbering them.
+    constexpr std::size_t k_MaxDeletedCopies{ 1000 };
+
+    // return: Why the name cannot be the file name of a configuration, empty if it can: letters, digits, spaces, '_', '-' and '.'.
     // note: Windows drops a final space or dot from a file name, so the name cannot end with one. Before the first dot the name cannot
     // be a device name.
-    auto IsValidName(std::string_view name) -> bool
+    auto FindNameProblem(std::string_view name) -> std::string
     {
-        if (name.empty() || name.size() > k_MaxMatchConfigNameLength) return false;
-        if (name.back() == ' ' || name.back() == '.') return false;
+        if (name.empty()) return "The name is empty.";
+        if (name.size() > k_MaxMatchConfigNameLength) return std::format("The name is longer than {} characters.", k_MaxMatchConfigNameLength);
+        if (name.back() == ' ' || name.back() == '.') return "The name cannot end with a space or a dot.";
 
         const bool isAllowed{ std::ranges::all_of(name, [](char c) {
             return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == ' ' || c == '_' || c == '-' || c == '.';
             }) };
 
-        if (!isAllowed) return false;
+        if (!isAllowed) return "Only letters, digits, spaces, '_', '-' and '.' are allowed.";
 
         const std::string_view stem{ name.substr(0, name.find('.')) };
 
-        return std::ranges::none_of(k_DeviceNames, [stem](std::string_view device) {
+        const bool isDevice{ std::ranges::any_of(k_DeviceNames, [stem](std::string_view device) {
             return std::ranges::equal(stem, device, [](char a, char b) {
                 return std::toupper(static_cast<unsigned char>(a)) == std::toupper(static_cast<unsigned char>(b));
                 });
-            });
+            }) };
+
+        return isDevice ? "The name is a reserved device name of Windows." : std::string{};
+    }
+
+    auto IsValidName(std::string_view name) -> bool
+    {
+        return FindNameProblem(name).empty();
     }
 
     // return: The path as UTF-8. Unlike path::string, it does not throw on characters outside the code page.
@@ -163,6 +177,87 @@ namespace Engine::Match::System
 
         const auto first{ config->Bytes.begin() + k_ConfigurationMapVariantOffset };
         return std::vector<std::byte>(first, first + k_MapVariantSize);
+    }
+
+    auto MatchConfigService::GetNameProblem(std::string_view name) -> std::string
+    {
+        return FindNameProblem(name);
+    }
+
+    auto MatchConfigService::RenameConfig(std::string_view from, std::string_view to) -> std::string
+    {
+        std::string problem{ FindNameProblem(from) };
+        if (problem.empty()) problem = FindNameProblem(to);
+        if (!problem.empty()) return problem;
+
+        const path folder{ this->GetLibraryFolder() };
+        if (folder.empty()) return "Storage Folder is not set.";
+
+        // The pending configuration keeps the name it was loaded with, so it is the user who clears it first.
+        const auto pending{ m_MatchConfigStore.GetPending() };
+        if (pending && pending->Name == from) return "It is the pending configuration for the next start. Clear it first.";
+
+        const path source{ folder / std::format("{}{}", from, k_ConfigExtension) };
+        const path target{ folder / std::format("{}{}", to, k_ConfigExtension) };
+
+        std::error_code error{};
+        if (!std::filesystem::is_regular_file(source, error)) return "The configuration does not exist.";
+
+        // Windows names are case-insensitive: a case-only rename is the same file, anything else that exists is not overwritten.
+        const bool isSameName{ std::ranges::equal(from, to, [](char a, char b) {
+            return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+            }) };
+        if (!isSameName && std::filesystem::exists(target, error)) return "A configuration with that name already exists.";
+
+        std::filesystem::rename(source, target, error);
+
+        if (error)
+        {
+            m_Log.Message("[MatchConfigService] ERROR: Failed to rename {} to {} ({}).", ToText(source), ToText(target), error.message());
+            return "The file could not be renamed. See the log.";
+        }
+
+        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" renamed to \"{}\".", from, to);
+        return {};
+    }
+
+    auto MatchConfigService::DeleteConfig(std::string_view name) -> std::string
+    {
+        const std::string problem{ FindNameProblem(name) };
+        if (!problem.empty()) return problem;
+
+        const path folder{ this->GetLibraryFolder() };
+        if (folder.empty()) return "Storage Folder is not set.";
+
+        const auto pending{ m_MatchConfigStore.GetPending() };
+        if (pending && pending->Name == name) return "It is the pending configuration for the next start. Clear it first.";
+
+        const path source{ folder / std::format("{}{}", name, k_ConfigExtension) };
+
+        std::error_code error{};
+        if (!std::filesystem::is_regular_file(source, error)) return "The configuration does not exist.";
+
+        const path deletedFolder{ folder / k_DeletedFolder };
+        std::filesystem::create_directories(deletedFolder, error);
+
+        // A file already deleted under the same name stays: the new one takes the first free number.
+        path target{ deletedFolder / std::format("{}{}", name, k_ConfigExtension) };
+
+        for (std::size_t number{ 2 }; std::filesystem::exists(target, error) && number < k_MaxDeletedCopies; ++number)
+        {
+            target = deletedFolder / std::format("{} ({}){}", name, number, k_ConfigExtension);
+        }
+
+        std::filesystem::rename(source, target, error);
+
+        if (error)
+        {
+            m_Log.Message("[MatchConfigService] ERROR: Failed to move {} to {} ({}).", ToText(source), ToText(target), error.message());
+            return "The file could not be moved. See the log.";
+        }
+
+        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" moved to {}.", name, ToText(target));
+        return {};
     }
 
     auto MatchConfigService::ClearPending() -> void

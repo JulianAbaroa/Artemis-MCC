@@ -83,7 +83,22 @@ export namespace DevTools::Workbench::Simulation::State
         // Name typed for the next record of the match config section (D123).
         auto GetRecordNameField() -> std::array<char, k_RecordNameSize>&;
 
-        // Recorded match configurations the last refresh listed, and the one picked in the list.
+        // New name typed in the rename popup of the match config section.
+        auto GetRenameField() -> std::array<char, k_RecordNameSize>&;
+
+        // Reason the last rename or delete was refused, empty when it went through.
+        auto GetConfigEditError() const -> const std::string&;
+        auto SetConfigEditError(std::string error) -> void;
+
+        // Whether the list of the combo was open on the last frame, so the folder is read once each time it opens.
+        auto IsConfigComboOpen() const -> bool;
+        auto SetConfigComboOpen(bool isOpen) -> void;
+
+        // Whether the folder was listed at least once.
+        auto IsConfigListLoaded() const -> bool;
+        auto SetConfigListLoaded(bool isLoaded) -> void;
+
+        // Recorded match configurations the last listing read, and the one picked in the list.
         auto GetMatchConfigNames() const -> const std::vector<std::string>&;
         auto SetMatchConfigNames(std::vector<std::string> names) -> void;
         auto GetSelectedMatchConfig() const -> std::size_t;
@@ -102,6 +117,10 @@ export namespace DevTools::Workbench::Simulation::State
         std::optional<std::int8_t> m_NewBotTeam{};
         Roster m_RosterEditor{};
         std::array<char, k_RecordNameSize> m_RecordNameField{};
+        std::array<char, k_RecordNameSize> m_RenameField{};
+        std::string m_ConfigEditError{};
+        bool m_IsConfigComboOpen{ false };
+        bool m_IsConfigListLoaded{ false };
         std::vector<std::string> m_MatchConfigNames{};
         std::size_t m_SelectedMatchConfig{ 0 };
     };

@@ -132,6 +132,41 @@ namespace DevTools::Workbench::Simulation::State
         return m_RecordNameField;
     }
 
+    auto SimulationUIStore::GetRenameField() -> std::array<char, k_RecordNameSize>&
+    {
+        return m_RenameField;
+    }
+
+    auto SimulationUIStore::GetConfigEditError() const -> const std::string&
+    {
+        return m_ConfigEditError;
+    }
+
+    auto SimulationUIStore::SetConfigEditError(std::string error) -> void
+    {
+        m_ConfigEditError = std::move(error);
+    }
+
+    auto SimulationUIStore::IsConfigComboOpen() const -> bool
+    {
+        return m_IsConfigComboOpen;
+    }
+
+    auto SimulationUIStore::SetConfigComboOpen(bool isOpen) -> void
+    {
+        m_IsConfigComboOpen = isOpen;
+    }
+
+    auto SimulationUIStore::IsConfigListLoaded() const -> bool
+    {
+        return m_IsConfigListLoaded;
+    }
+
+    auto SimulationUIStore::SetConfigListLoaded(bool isLoaded) -> void
+    {
+        m_IsConfigListLoaded = isLoaded;
+    }
+
     auto SimulationUIStore::GetMatchConfigNames() const -> const std::vector<std::string>&
     {
         return m_MatchConfigNames;

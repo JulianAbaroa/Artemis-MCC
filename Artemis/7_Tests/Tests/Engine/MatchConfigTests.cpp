@@ -298,3 +298,79 @@ TEST_F(MatchConfigTests, ReadMapVariantFailsWithoutReadingAWrongFile)
     EXPECT_TRUE(m_Service.ReadMapVariant("bad/name").empty());
     EXPECT_TRUE(Logged(LogLevel::Warning, "is not a valid configuration name"));
 }
+
+TEST_F(MatchConfigTests, GetNameProblemSaysWhyAndIsEmptyForAValidName)
+{
+    EXPECT_TRUE(MatchConfigService::GetNameProblem("ctf_1").empty());
+    EXPECT_FALSE(MatchConfigService::GetNameProblem("").empty());
+    EXPECT_FALSE(MatchConfigService::GetNameProblem("a/b").empty());
+    EXPECT_FALSE(MatchConfigService::GetNameProblem("NUL").empty());
+    EXPECT_FALSE(MatchConfigService::GetNameProblem("name.").empty());
+    EXPECT_FALSE(MatchConfigService::GetNameProblem(std::string(100, 'a')).empty());
+}
+
+TEST_F(MatchConfigTests, RenameMovesTheFileAndTheListingFollows)
+{
+    this->WriteConfig("old.bin", MakeBuffer(0x11));
+
+    EXPECT_TRUE(m_Service.RenameConfig("old", "new").empty());
+
+    EXPECT_EQ(m_Service.ListConfigs(), std::vector<std::string>{ "new" });
+    EXPECT_EQ(ReadFile(this->Library() / "new.bin"), MakeBuffer(0x11));
+    EXPECT_FALSE(std::filesystem::exists(this->Library() / "old.bin"));
+}
+
+TEST_F(MatchConfigTests, RenameRejectsAnInvalidOrExistingNameAndAMissingSource)
+{
+    this->WriteConfig("a.bin", MakeBuffer(0x11));
+    this->WriteConfig("b.bin", MakeBuffer(0x22));
+
+    EXPECT_FALSE(m_Service.RenameConfig("a", "bad/name").empty());
+    EXPECT_FALSE(m_Service.RenameConfig("a", "CON").empty());
+    EXPECT_FALSE(m_Service.RenameConfig("a", "b").empty());
+    EXPECT_FALSE(m_Service.RenameConfig("missing", "c").empty());
+
+    EXPECT_EQ(ReadFile(this->Library() / "a.bin"), MakeBuffer(0x11));
+    EXPECT_EQ(ReadFile(this->Library() / "b.bin"), MakeBuffer(0x22));
+    EXPECT_EQ(m_Service.ListConfigs(), (std::vector<std::string>{ "a", "b" }));
+}
+
+TEST_F(MatchConfigTests, RenameAndDeleteRefuseThePendingConfiguration)
+{
+    this->WriteConfig("p.bin", MakeBuffer(0x33));
+    ASSERT_TRUE(m_Service.LoadPending("p"));
+
+    EXPECT_FALSE(m_Service.RenameConfig("p", "q").empty());
+    EXPECT_FALSE(m_Service.DeleteConfig("p").empty());
+    EXPECT_TRUE(std::filesystem::exists(this->Library() / "p.bin"));
+    ASSERT_NE(m_Store.GetPending(), nullptr);
+    EXPECT_EQ(m_Store.GetPending()->Name, "p");
+
+    m_Service.ClearPending();
+    EXPECT_TRUE(m_Service.DeleteConfig("p").empty());
+}
+
+TEST_F(MatchConfigTests, DeleteMovesTheFileToDeletedAndItIsNoLongerListed)
+{
+    this->WriteConfig("gone.bin", MakeBuffer(0x44));
+    this->WriteConfig("stay.bin", MakeBuffer(0x55));
+
+    EXPECT_TRUE(m_Service.DeleteConfig("gone").empty());
+
+    EXPECT_EQ(m_Service.ListConfigs(), std::vector<std::string>{ "stay" });
+    EXPECT_FALSE(m_Service.LoadPending("gone"));
+    EXPECT_EQ(ReadFile(this->Library() / "_deleted" / "gone.bin"), MakeBuffer(0x44));
+    EXPECT_FALSE(m_Service.DeleteConfig("gone").empty());
+}
+
+TEST_F(MatchConfigTests, DeleteKeepsAnEarlierDeletedFileWithTheSameName)
+{
+    this->WriteConfig("x.bin", MakeBuffer(0x01));
+    ASSERT_TRUE(m_Service.DeleteConfig("x").empty());
+    this->WriteConfig("x.bin", MakeBuffer(0x02));
+    ASSERT_TRUE(m_Service.DeleteConfig("x").empty());
+
+    EXPECT_EQ(ReadFile(this->Library() / "_deleted" / "x.bin"), MakeBuffer(0x01));
+    EXPECT_EQ(ReadFile(this->Library() / "_deleted" / "x (2).bin"), MakeBuffer(0x02));
+    EXPECT_TRUE(m_Service.ListConfigs().empty());
+}

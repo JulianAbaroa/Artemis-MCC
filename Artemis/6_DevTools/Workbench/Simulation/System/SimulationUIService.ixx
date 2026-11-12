@@ -49,6 +49,7 @@ export namespace DevTools::Workbench::Simulation::System
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
+        using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
         using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
@@ -77,12 +78,12 @@ export namespace DevTools::Workbench::Simulation::System
         SimulationUIService(Log& log, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
             MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
             VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore,
-            MatchSetupService& matchSetupService, BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore,
+            MatchSetupService& matchSetupService, MatchCycleStore& matchCycleStore, BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore,
             TickDumpUIStore& tickDumpUIStore, BenchUIStore& benchUIStore) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
             m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
             m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
-            m_BotStore(botStore), m_MatchSetupService(matchSetupService), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore),
+            m_BotStore(botStore), m_MatchSetupService(matchSetupService), m_MatchCycleStore(matchCycleStore), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore),
             m_TickDumpUIStore(tickDumpUIStore), m_BenchUIStore(benchUIStore) {}
         ~SimulationUIService() = default;
 
@@ -108,14 +109,26 @@ export namespace DevTools::Workbench::Simulation::System
         PlayerActionStore& m_PlayerActionStore;
         BotStore& m_BotStore;
         MatchSetupService& m_MatchSetupService;
+        MatchCycleStore& m_MatchCycleStore;
         BridgeService& m_BridgeService;
         TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
         TickDumpUIStore& m_TickDumpUIStore;
         BenchUIStore& m_BenchUIStore;
 
-        // Draws the record of the next start, the library of recorded configurations and the one the next start transplants (D123).
+        // Draws the state of the match, the library of recorded configurations with its actions, the pending one and the record (D123).
         auto DrawMatchConfig() -> void;
+
+        // Draws the chip with the state of the match: lobby, loading, or in match with its configuration and round.
+        auto DrawMatchState() -> void;
+
+        // Draws the rename and delete buttons of the picked configuration and their popups.
+        // param name: The picked configuration, empty if none.
+        auto DrawConfigEdit(const std::string& name) -> void;
+
+        // Lists the folder again and keeps the pick when its name is still there.
+        // param prefer: Name to pick when it is there, instead of the one picked before.
+        auto RefreshConfigs(std::string_view prefer = {}) -> void;
 
         // Draws the header of a section and remembers whether the user folded it.
         // return: Whether the body must be drawn.

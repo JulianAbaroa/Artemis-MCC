@@ -84,7 +84,7 @@ export namespace DevTools::Workbench
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
                 engine.m_MatchConfigService, engine.m_LocalUserStore, engine.m_VirtualInputStore, engine.m_PlayerActionStore,
-                engine.m_BotStore, engine.m_MatchSetupService, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore,
+                engine.m_BotStore, engine.m_MatchSetupService, engine.m_MatchCycleStore, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore,
                 m_TickDumpUIStore, m_BenchUIStore),
             m_TickDumpUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
                 m_TickDumpUIStore),

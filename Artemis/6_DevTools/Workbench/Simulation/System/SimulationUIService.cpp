@@ -11,6 +11,7 @@ import Engine.Base.MatchSetup.Type;
 import Engine.Control.Simulation.Type;
 import Bridge.Transport.Type;
 import Blam.Layout.Action.Type;
+import Perception.Match.Type;
 import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
 import std;
@@ -89,6 +90,10 @@ namespace
 
     // Width of the name field and of the list of the match config section.
     constexpr float k_MatchConfigFieldWidth{ 170.0f };
+
+    // Names of the popups of the match config section.
+    constexpr const char* k_RenameConfigPopup{ "Rename configuration" };
+    constexpr const char* k_DeleteConfigPopup{ "Delete configuration" };
 
     // Width of the custom speed field, of the count buttons of the local players and of the input combo of their table.
     constexpr float k_CustomSpeedWidth{ 70.0f };
@@ -402,96 +407,281 @@ namespace DevTools::Workbench::Simulation::System
         // Record: type a name, arm it and start a custom game from the MCC lobby, and its configuration is saved to the MatchConfigs
         // folder of the storage folder. Use: pick a recorded one, then start any custom game from the lobby or press Launch now. That
         // start plays the base map, map variant and game variant of the picked one, for one start only (D123).
-        std::array<char, k_RecordNameSize>& recordName{ m_SimulationUIStore.GetRecordNameField() };
-        ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
-        ImGui::InputText("Name", recordName.data(), recordName.size());
-        StatusGuiService::ShowTooltip("Name to record the next start under.");
+        this->DrawMatchState();
 
-        ImGui::SameLine();
-        if (ImGui::Button("Record next start")) m_MatchConfigService.ArmRecord(recordName.data());
-        StatusGuiService::ShowTooltip("Saves the configuration of the next start of MCC under this name, before any transplant."
-            " A recorded configuration with the same name is replaced.");
+        if (!m_SimulationUIStore.IsConfigListLoaded()) this->RefreshConfigs();
 
-        const std::string armedName{ m_MatchConfigStore.GetRecordName() };
-
-        if (!armedName.empty())
-        {
-            ImGui::Text("Recording the next start as \"%s\".", armedName.c_str());
-            ImGui::SameLine();
-            if (ImGui::Button("Cancel##Record")) m_MatchConfigService.CancelRecord();
-        }
-
-        ControlFlow flow{};
-
-        if (flow.Button("Refresh")) m_SimulationUIStore.SetMatchConfigNames(m_MatchConfigService.ListConfigs());
-        StatusGuiService::ShowTooltip("Lists the recorded configurations of the storage folder.");
-
-        const std::vector<std::string>& names{ m_SimulationUIStore.GetMatchConfigNames() };
         std::size_t selected{ m_SimulationUIStore.GetSelectedMatchConfig() };
 
-        if (selected >= names.size())
+        if (selected >= m_SimulationUIStore.GetMatchConfigNames().size())
         {
             selected = 0;
             m_SimulationUIStore.SetSelectedMatchConfig(selected);
         }
 
+        ControlFlow flow{};
         flow.Place(k_MatchConfigFieldWidth);
         ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
 
-        const char* preview{ names.empty() ? "None, press Refresh" : names[selected].c_str() };
+        const std::vector<std::string>& listed{ m_SimulationUIStore.GetMatchConfigNames() };
+        const std::string preview{ listed.empty() ? std::string{ "No recorded configuration" } : listed[selected] };
+        const bool isComboOpen{ ImGui::BeginCombo("##Recorded", preview.c_str()) };
 
-        if (ImGui::BeginCombo("##Recorded", preview))
+        // The folder is read each time the list opens, so a configuration recorded meanwhile shows up without a button.
+        if (isComboOpen && !m_SimulationUIStore.IsConfigComboOpen()) this->RefreshConfigs();
+        m_SimulationUIStore.SetConfigComboOpen(isComboOpen);
+
+        if (isComboOpen)
         {
+            const std::vector<std::string>& names{ m_SimulationUIStore.GetMatchConfigNames() };
+
             for (std::size_t index{ 0 }; index < names.size(); ++index)
             {
-                if (ImGui::Selectable(names[index].c_str(), index == selected)) m_SimulationUIStore.SetSelectedMatchConfig(index);
+                if (ImGui::Selectable(names[index].c_str(), index == m_SimulationUIStore.GetSelectedMatchConfig()))
+                {
+                    m_SimulationUIStore.SetSelectedMatchConfig(index);
+                }
             }
 
             ImGui::EndCombo();
         }
-        StatusGuiService::ShowTooltip("Recorded match configuration to use.");
+        StatusGuiService::ShowTooltip("Recorded match configuration. The list is read from the storage folder each time it opens.");
+
+        const std::vector<std::string>& names{ m_SimulationUIStore.GetMatchConfigNames() };
+        selected = (std::min)(m_SimulationUIStore.GetSelectedMatchConfig(), names.empty() ? 0 : names.size() - 1);
+        const std::string name{ names.empty() ? std::string{} : names[selected] };
 
         {
-            const DisabledScope none{ names.empty(), "No recorded configuration. Press Refresh." };
+            const DisabledScope none{ names.empty(), "No recorded configuration." };
 
-            if (flow.Button("Use for next start")) m_MatchConfigService.LoadPending(names[selected]);
-            none.Tooltip("The next start of MCC plays the base map, map variant and game variant of the picked configuration.");
+            if (flow.Button("Use for next start")) m_MatchConfigService.LoadPending(name);
+            none.Tooltip("The next start of MCC plays the base map, map variant and game variant of the picked configuration, once.");
         }
 
         if (m_MatchConfigStore.IsLaunchRequested())
         {
-            ImGui::TextUnformatted("Launch requested, waiting for the next frame of MCC.");
-            ImGui::SameLine();
-            if (ImGui::Button("Cancel##Launch")) m_MatchConfigService.CancelLaunch();
+            if (flow.Button("Cancel launch")) m_MatchConfigService.CancelLaunch();
+            StatusGuiService::ShowTooltip("Withdraws the launch: MCC has not taken the request yet.");
         }
         else
         {
-            if (ImGui::Button("Launch now")) m_MatchConfigService.RequestLaunch();
-            StatusGuiService::ShowTooltip("Presses the START of the custom games lobby of MCC: MCC counts down and launches. MCC must be"
-                " in the lobby. The pending configuration, if any, is transplanted into that start.");
+            // note: The lobby flag is set by the lifecycle hook, which looks for the lobby screen every 15 frames while no launch is
+            // pending, so this button follows the real lobby with a delay of about 250 ms at 60 fps.
+            const DisabledScope outsideLobby{ !m_MatchCycleStore.IsLobbyOpen(), "Only in the MCC lobby" };
+
+            if (flow.Button("Launch now")) m_MatchConfigService.RequestLaunch();
+            outsideLobby.Tooltip("Presses the START of the custom games lobby of MCC: MCC counts down and launches."
+                " The pending configuration, if any, is transplanted into that start.");
         }
 
+        this->DrawConfigEdit(name);
+
         const auto pending{ m_MatchConfigStore.GetPending() };
+        const std::string history{ std::format("Last applied: {}\nLast recorded: {}\nLast launch: {}",
+            m_MatchConfigStore.GetLastApplied().empty() ? std::string{ "-" } : m_MatchConfigStore.GetLastApplied(),
+            m_MatchConfigStore.GetLastRecorded().empty() ? std::string{ "-" } : m_MatchConfigStore.GetLastRecorded(),
+            m_MatchConfigStore.GetLastLaunch().empty() ? std::string{ "-" } : m_MatchConfigStore.GetLastLaunch()) };
 
         if (pending)
         {
-            ImGui::Text("Next start: \"%s\"", pending->Name.c_str());
+            const std::string chip{ std::format("Next start: {}", pending->Name) };
+            StatusGuiService::DrawChip(chip.c_str(), StatusKind::Pending, history.c_str());
+
             ImGui::SameLine();
-            if (ImGui::Button("Clear##Pending")) m_MatchConfigService.ClearPending();
+            if (ImGui::SmallButton("x##ClearPending")) m_MatchConfigService.ClearPending();
+            StatusGuiService::ShowTooltip("Clears it: the next start is the match of MCC unchanged.");
         }
         else
         {
-            ImGui::TextUnformatted("Next start: unchanged");
+            StatusGuiService::DrawChip("Next start: unchanged", StatusKind::Off, history.c_str());
         }
 
-        const std::string lastApplied{ m_MatchConfigStore.GetLastApplied() };
-        const std::string lastRecorded{ m_MatchConfigStore.GetLastRecorded() };
+        std::array<char, k_RecordNameSize>& recordName{ m_SimulationUIStore.GetRecordNameField() };
+        const std::string nameProblem{ MatchConfigService::GetNameProblem(recordName.data()) };
+        const bool isTyped{ recordName[0] != '\0' };
 
-        ImGui::Text("Last applied: %s", lastApplied.empty() ? "-" : lastApplied.c_str());
-        ImGui::Text("Last recorded: %s", lastRecorded.empty() ? "-" : lastRecorded.c_str());
+        // An invalid name is marked in red with its reason, so it does not only show in the log.
+        const bool isMarked{ isTyped && !nameProblem.empty() };
+        if (isMarked) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4{ 0.45f, 0.12f, 0.12f, 1.0f });
+        ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
+        ImGui::InputTextWithHint("##RecordName", "Name to record", recordName.data(), recordName.size());
+        if (isMarked) ImGui::PopStyleColor();
+        StatusGuiService::ShowTooltip("Name to record the next start under.");
 
-        const std::string lastLaunch{ m_MatchConfigStore.GetLastLaunch() };
-        ImGui::Text("Last launch: %s", lastLaunch.empty() ? "-" : lastLaunch.c_str());
+        ImGui::SameLine();
+        {
+            const DisabledScope invalid{ !nameProblem.empty(), nameProblem.c_str() };
+
+            if (ImGui::Button("Record next start")) m_MatchConfigService.ArmRecord(recordName.data());
+            invalid.Tooltip("Saves the configuration of the next start of MCC under this name, before any transplant."
+                " A recorded configuration with the same name is replaced.");
+        }
+
+        if (isMarked) ImGui::TextColored(k_StatusColors[static_cast<std::size_t>(StatusKind::Error)], "%s", nameProblem.c_str());
+
+        const std::string armedName{ m_MatchConfigStore.GetRecordName() };
+
+        if (!armedName.empty())
+        {
+            const std::string chip{ std::format("Armed: {}", armedName) };
+            StatusGuiService::DrawChip(chip.c_str(), StatusKind::Pending, "The next start of MCC is saved under this name.");
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Cancel##Record")) m_MatchConfigService.CancelRecord();
+            StatusGuiService::ShowTooltip("Disarms the record.");
+        }
+    }
+
+    auto SimulationUIService::DrawMatchState() -> void
+    {
+        using Engine::Base::Lifecycle::Type::Status;
+
+        const Status status{ m_LifecycleStore.GetStatus() };
+
+        if (status == Status::Running)
+        {
+            std::string text{ "In match" };
+
+            const std::string applied{ m_MatchConfigStore.GetLastApplied() };
+            if (!applied.empty()) text += ": " + applied;
+
+            const auto tick{ m_TickStore.Acquire() };
+
+            if (tick && tick->Match)
+            {
+                const auto round{ tick->Match->RoundIndex + 1 };
+                text += tick->Match->RoundLimit > 0 ? std::format(", round {}/{}", round, tick->Match->RoundLimit)
+                                                    : std::format(", round {}", round);
+            }
+
+            StatusGuiService::DrawChip(text.c_str(), StatusKind::Active, "A match is running. The configuration is the last one applied.");
+        }
+        else if (status == Status::Initialized)
+        {
+            StatusGuiService::DrawChip("Loading", StatusKind::Pending, "The engine is starting a match.");
+        }
+        else if (m_MatchCycleStore.IsLobbyOpen())
+        {
+            StatusGuiService::DrawChip("Lobby", StatusKind::Ok, "MCC shows the custom games lobby.");
+        }
+        else
+        {
+            StatusGuiService::DrawChip("No match", StatusKind::Off, "MCC is not in a match or in the custom games lobby.");
+        }
+    }
+
+    auto SimulationUIService::DrawConfigEdit(const std::string& name) -> void
+    {
+        {
+            const auto pending{ m_MatchConfigStore.GetPending() };
+            const bool isPending{ pending && pending->Name == name };
+
+            const DisabledScope scope{ name.empty() || isPending,
+                name.empty() ? "No recorded configuration." : "It is the pending configuration. Clear it first." };
+            ControlFlow flow{};
+
+            if (flow.Button("Rename..."))
+            {
+                std::array<char, k_RecordNameSize>& field{ m_SimulationUIStore.GetRenameField() };
+                std::snprintf(field.data(), field.size(), "%s", name.c_str());
+
+                m_SimulationUIStore.SetConfigEditError({});
+                ImGui::OpenPopup(k_RenameConfigPopup);
+            }
+            scope.Tooltip("Renames the picked configuration.");
+
+            if (flow.Button("Delete..."))
+            {
+                m_SimulationUIStore.SetConfigEditError({});
+                ImGui::OpenPopup(k_DeleteConfigPopup);
+            }
+            scope.Tooltip("Moves the picked configuration to the _deleted folder of MatchConfigs.");
+        }
+
+        const ImVec4 errorColor{ k_StatusColors[static_cast<std::size_t>(StatusKind::Error)] };
+
+        if (ImGui::BeginPopupModal(k_RenameConfigPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Rename \"%s\" to:", name.c_str());
+
+            std::array<char, k_RecordNameSize>& field{ m_SimulationUIStore.GetRenameField() };
+            if (ImGui::IsWindowAppearing()) ImGui::SetKeyboardFocusHere();
+            ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
+            ImGui::InputText("##NewName", field.data(), field.size());
+
+            const std::string problem{ MatchConfigService::GetNameProblem(field.data()) };
+            if (field[0] != '\0' && !problem.empty()) ImGui::TextColored(errorColor, "%s", problem.c_str());
+
+            {
+                const DisabledScope invalid{ !problem.empty(), problem.c_str() };
+
+                if (ImGui::Button("Rename"))
+                {
+                    const std::string error{ m_MatchConfigService.RenameConfig(name, field.data()) };
+                    m_SimulationUIStore.SetConfigEditError(error);
+
+                    if (error.empty())
+                    {
+                        this->RefreshConfigs(field.data());
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel##Rename")) ImGui::CloseCurrentPopup();
+
+            const std::string& error{ m_SimulationUIStore.GetConfigEditError() };
+            if (!error.empty()) ImGui::TextColored(errorColor, "%s", error.c_str());
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopupModal(k_DeleteConfigPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Delete \"%s\"?", name.c_str());
+            ImGui::TextUnformatted("The file moves to MatchConfigs/_deleted. The lists in Data/Training and the\n"
+                "entries of Maps.json that name it will stop loading.");
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.65f, 0.15f, 0.15f, 1.0f });
+            const bool isConfirmed{ ImGui::Button("Delete") };
+            ImGui::PopStyleColor();
+
+            if (isConfirmed)
+            {
+                const std::string error{ m_MatchConfigService.DeleteConfig(name) };
+                m_SimulationUIStore.SetConfigEditError(error);
+
+                if (error.empty())
+                {
+                    this->RefreshConfigs();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel##Delete")) ImGui::CloseCurrentPopup();
+
+            const std::string& error{ m_SimulationUIStore.GetConfigEditError() };
+            if (!error.empty()) ImGui::TextColored(errorColor, "%s", error.c_str());
+
+            ImGui::EndPopup();
+        }
+    }
+
+    auto SimulationUIService::RefreshConfigs(std::string_view prefer) -> void
+    {
+        const std::vector<std::string>& before{ m_SimulationUIStore.GetMatchConfigNames() };
+        const std::size_t picked{ m_SimulationUIStore.GetSelectedMatchConfig() };
+        const std::string keep{ !prefer.empty() ? std::string{ prefer } : picked < before.size() ? before[picked] : std::string{} };
+
+        std::vector<std::string> names{ m_MatchConfigService.ListConfigs() };
+        const auto found{ std::ranges::find(names, keep) };
+        const std::size_t index{ found == names.end() ? 0 : static_cast<std::size_t>(found - names.begin()) };
+
+        m_SimulationUIStore.SetMatchConfigNames(std::move(names));
+        m_SimulationUIStore.SetSelectedMatchConfig(index);
+        m_SimulationUIStore.SetConfigListLoaded(true);
     }
 
     auto SimulationUIService::DrawBridge() -> void

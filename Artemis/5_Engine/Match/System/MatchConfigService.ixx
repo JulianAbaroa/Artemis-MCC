@@ -34,6 +34,22 @@ export namespace Engine::Match::System
         // note: Reads the folder. Called on a user action, not every frame.
         auto ListConfigs() const -> std::vector<std::string>;
 
+        // return: Why the name cannot be used for a configuration (empty, too long, a device name of Windows, a character outside
+        // letters, digits, spaces, '_', '-' and '.'), empty if it can. The same rule as ArmRecord and Rename.
+        static auto GetNameProblem(std::string_view name) -> std::string;
+
+        // Renames a recorded configuration. It does not overwrite another one, and it refuses the pending one so the pending name never
+        // goes stale without the user knowing.
+        // return: Empty on success, otherwise the reason it was not renamed.
+        // note: Touches the folder: a user action, never the game thread.
+        auto RenameConfig(std::string_view from, std::string_view to) -> std::string;
+
+        // Moves a recorded configuration to the _deleted folder of the library instead of erasing it (the listing does not enter
+        // subfolders, D283). A file already there under the same name is kept: the new one gets " (2)", " (3)"...
+        // return: Empty on success, otherwise the reason it was not deleted. The pending configuration is refused as in RenameConfig.
+        // note: Touches the folder: a user action, never the game thread.
+        auto DeleteConfig(std::string_view name) -> std::string;
+
         // Reads a recorded configuration and makes it the pending one.
         // return: False if the name is not valid, or the file cannot be read or has the wrong size.
         auto LoadPending(std::string_view name) -> bool;
