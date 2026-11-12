@@ -78,11 +78,10 @@ export namespace Engine::Base::MatchSetup::System
 
         // Asks for a setup. It waits for the next start or the next round break, whichever comes first, and replaces the request that was
         // waiting. A setup that can never fit is refused at once (Rejected, and the request that waited stays).
-        // param isMerge: Adds the fields of the setup to the request that waits if the same origin made it, instead of replacing it.
         // return: The number of the request. Its result is GetResult().Sequence.
         // note: While a match runs (or loads) the map variant and the preset catalog are compared with the ones of that match.
         // note: Any thread except the game thread.
-        auto Request(MatchSetup setup, MatchSetupOrigin origin, bool isMerge = false) -> std::uint64_t;
+        auto Request(MatchSetup setup, MatchSetupOrigin origin) -> std::uint64_t;
 
         // Records a request whose names could not be resolved (a file is missing, a block cannot be read). The result is Rejected and
         // nothing changes in the engine, and a request that waited stays.

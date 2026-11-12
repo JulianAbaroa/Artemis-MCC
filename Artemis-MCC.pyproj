@@ -59,6 +59,7 @@
     <Compile Include="Agent\artemis\__init__.py" />
     <Compile Include="Agent\artemis\bridge.py" />
     <Compile Include="Agent\artemis\bridge_layout.py" />
+    <Compile Include="Agent\artemis\match_setup.py" />
     <Compile Include="Agent\artemis\semantic.py" />
     <Compile Include="Agent\artemis\env\__init__.py" />
     <Compile Include="Agent\artemis\env\ctf.py" />
@@ -82,6 +83,7 @@
     <Compile Include="Tools\Tests\test_components.py" />
     <Compile Include="Tools\Tests\test_bridge_map.py" />
     <Compile Include="Tools\Tests\test_bridge_preset.py" />
+    <Compile Include="Tools\Tests\test_bridge_setup.py" />
     <Compile Include="Tools\Tests\test_ctf.py" />
     <Compile Include="Tools\Tests\test_generators.py" />
     <Compile Include="Tools\Tests\test_golden_tick.py" />

@@ -9,6 +9,8 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
+    using Contract::Bridge::Type::BridgeRoster;
+    using Contract::Bridge::Type::BridgeSetupResult;
     using Control::Lockstep::Type::BridgeControlState;
 }
 
@@ -37,6 +39,31 @@ export namespace Bridge::Transport::Type
         std::optional<std::size_t> LocalIndex{};
     };
 
+    // One match setup the client asks for (LS.2): the fields it did not set are empty and mean no change. An empty preset asks for the base
+    // values and an empty map for the map variant the match loaded with.
+    struct BridgeSetupRequest
+    {
+        std::optional<std::string> Preset{};
+        std::optional<std::string> Map{};
+        std::optional<BridgeRoster> Roster{};
+    };
+
+    // What became of the last setup request: the result, the round of the match it was applied in (-1 when none) and why, in ASCII.
+    struct BridgeSetupInfo
+    {
+        BridgeSetupResult Result{ BridgeSetupResult::NoResult };
+        std::int16_t Round{ -1 };
+        std::string Reason{};
+    };
+
+    // The setup the engine holds: the names of the preset and of the map variant, empty for none, and the roster if it has one.
+    struct BridgeActiveSetup
+    {
+        std::string Preset{};
+        std::string Map{};
+        std::optional<BridgeRoster> Roster{};
+    };
+
     // Link with the client as the bridge thread follows it (only the bridge thread touches it).
     struct BridgeLinkState
     {
@@ -54,11 +81,9 @@ export namespace Bridge::Transport::Type
         // Last RequestEndRound of the client seen. A change while Python owns the instance is a request (D144).
         std::uint32_t LastClientEndRound{ 0 };
 
-        // Last RequestPreset of the client seen. A change while Python owns the instance is a request for the preset in RequestPresetName.
-        std::uint32_t LastClientPreset{ 0 };
-
-        // Last RequestMap of the client seen. A change while Python owns the instance is a request for the map variant in RequestMapName (Q98).
-        std::uint32_t LastClientMap{ 0 };
+        // Last RequestSetup of the client seen. A change while Python owns the instance is a request for the fields of RequestSetupFields
+        // (LS.2): the preset, the map variant and the roster of one match setup.
+        std::uint32_t LastClientSetup{ 0 };
 
         // When the tick being written started, to time the flatten.
         std::chrono::steady_clock::time_point PublishStart{};

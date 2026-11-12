@@ -386,31 +386,7 @@ TEST(MatchSetupStoreTest, ARejectionDoesNotClearTheValidRequestThatWaitedAndItsO
     EXPECT_EQ(store.GetActiveBots(), MakeRoster(1, 1));
 }
 
-TEST(MatchSetupStoreTest, AMergeAddsTheFieldsToTheRequestOfTheSameOriginAndAnOtherOriginReplacesIt)
-{
-    MatchSetupStore store{};
-    PresetPick pick{};
-    pick.Name = "slayer";
-    store.Request(MatchSetup{ .Preset = pick }, MatchSetupOrigin::Bridge, true);
-    const std::uint64_t second{ store.Request(MatchSetup{ .Map = std::shared_ptr<const ActiveMapVariant>{} }, MatchSetupOrigin::Bridge, true) };
-
-    const auto merged{ store.TakePending() };
-    ASSERT_TRUE(merged.has_value());
-    EXPECT_EQ(merged->Sequence, second);
-    ASSERT_TRUE(merged->Value.Preset.has_value());
-    EXPECT_EQ(merged->Value.Preset->Name, "slayer");
-    EXPECT_TRUE(merged->Value.Map.has_value());
-
-    store.Request(MatchSetup{ .Preset = pick }, MatchSetupOrigin::Bridge, true);
-    store.Request(MatchSetup{ .Bots = MakeRoster(1, 1) }, MatchSetupOrigin::Bench, true);
-
-    const auto replaced{ store.TakePending() };
-    ASSERT_TRUE(replaced.has_value());
-    EXPECT_FALSE(replaced->Value.Preset.has_value());
-    EXPECT_EQ(replaced->Value.Bots, MakeRoster(1, 1));
-}
-
-TEST(MatchSetupStoreTest, ARequestWithoutMergeReplacesEvenTheSameOrigin)
+TEST(MatchSetupStoreTest, ARequestReplacesTheOneWaitingEvenOfTheSameOrigin)
 {
     MatchSetupStore store{};
     PresetPick pick{};
@@ -725,10 +701,9 @@ TEST_F(MatchSetupTests, ARequestThatFailsItsChecksDoesNotClearTheOneThatWaited)
     EXPECT_EQ(m_Service.GetResult().Outcome, MatchSetupOutcome::Rejected);
 }
 
-TEST_F(MatchSetupTests, TheBridgeAsksForThePresetAndThenTheMapAndBothAreApplied)
+TEST_F(MatchSetupTests, OneRequestOfTheBridgeCarriesThePresetAndTheMapAndBothAreApplied)
 {
-    m_Service.Request(MatchSetup{ .Preset = this->Pick("fixture") }, MatchSetupOrigin::Bridge, true);
-    const std::uint64_t sequence{ m_Service.Request(MatchSetup{ .Map = MakeMap("reach bus", 3006, std::byte{ 0x5C }) }, MatchSetupOrigin::Bridge, true) };
+    const std::uint64_t sequence{ m_Service.Request(MatchSetup{ .Preset = this->Pick("fixture"), .Map = MakeMap("reach bus", 3006, std::byte{ 0x5C }) }, MatchSetupOrigin::Bridge) };
 
     Buffer start{ MakeConfiguration(3006) };
     this->Start(start);

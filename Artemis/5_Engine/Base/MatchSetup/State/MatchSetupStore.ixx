@@ -28,10 +28,8 @@ export namespace Engine::Base::MatchSetup::State
         auto operator=(const MatchSetupStore&) -> MatchSetupStore& = delete;
 
         // Leaves a setup to apply at the next start or the next round break, replacing the one waiting, and sets the result to Pending.
-        // param isMerge: Takes the fields the setup has over the one waiting when that one has the same origin (the bridge asks for the
-        // preset and the map in two calls and wants both), so the setup that waits is the old one plus the new fields.
         // return: The number of the request.
-        auto Request(MatchSetup setup, MatchSetupOrigin origin, bool isMerge = false) -> std::uint64_t;
+        auto Request(MatchSetup setup, MatchSetupOrigin origin) -> std::uint64_t;
 
         // Records a request that cannot be applied: the result is Rejected with the reason and the number of the new request. A request
         // that waited before stays and is still applied, with its own result dropped as an older one.

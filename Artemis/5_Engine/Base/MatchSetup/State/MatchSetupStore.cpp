@@ -8,18 +8,9 @@ namespace
 
 namespace Engine::Base::MatchSetup::State
 {
-    auto MatchSetupStore::Request(MatchSetup setup, MatchSetupOrigin origin, bool isMerge) -> std::uint64_t
+    auto MatchSetupStore::Request(MatchSetup setup, MatchSetupOrigin origin) -> std::uint64_t
     {
         std::scoped_lock lock(m_Mutex);
-
-        if (isMerge && m_Pending && m_Pending->Origin == origin)
-        {
-            MatchSetup merged{ std::move(m_Pending->Value) };
-            if (setup.Preset) merged.Preset = std::move(setup.Preset);
-            if (setup.Map) merged.Map = std::move(setup.Map);
-            if (setup.Bots) merged.Bots = std::move(setup.Bots);
-            setup = std::move(merged);
-        }
 
         m_Pending = MatchSetupRequest{ .Value = std::move(setup), .Sequence = ++m_Sequence, .Origin = origin };
         m_Result = MatchSetupResult{ .Outcome = MatchSetupOutcome::Pending, .Sequence = m_Sequence };

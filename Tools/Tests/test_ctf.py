@@ -11,6 +11,7 @@ import os
 import sys
 import types
 from dataclasses import dataclass
+from typing import NamedTuple
 
 import numpy as np
 import pytest
@@ -52,13 +53,28 @@ class FakeTick:
         self.match_id, self.action_tick = match_id, action_tick
 
 
+class SetupAnswer(NamedTuple):
+    """What the bridge answers to a setup request: the result, the round and the reason."""
+    result: object
+    round: int
+    reason: str
+
+
+# BridgeSetupResult by number, filled by the ctf fixture once the layout is imported.
+RESULTS = {}
+
+
+def Status(result, round=-1, reason=""):
+    """An answer with the result 1 Pending, 2 Applied, 3 AtLoad or 4 Rejected."""
+    return SetupAnswer(RESULTS[result], round, reason)
+
+
 class FakeBridge:
     def __init__(self, ticks):
         self.ticks, self.is_alive, self.written = list(ticks), True, []
-        # Preset requests: what Artemis answers at once (Pending, 1) and at the round break (Applied, 2), and the calls seen.
-        self.preset_requests, self.round_ends, self.preset_answer, self.preset_final = [], 0, 1, 2
-        # The same for map variant requests, and the calls in order.
-        self.map_requests, self.map_answer, self.map_final, self.calls = [], 1, 2, []
+        # Setup requests: what Artemis answers at once (Pending) and at the round break (Applied), the requests seen and the calls in order.
+        self.setup_requests, self.round_ends, self.calls = [], 0, []
+        self.setup_answer, self.setup_final = Status(1), Status(2)
 
     def set_control(self, **kwargs):
         self.controls = getattr(self, "controls", []) + [kwargs]
@@ -79,21 +95,13 @@ class FakeBridge:
         self.round_ends += 1
         self.calls.append("end_round")
 
-    def request_preset(self, name, timeout=2.0):
-        self.preset_requests.append(name)
-        self.calls.append("request_preset")
-        return self.preset_answer
+    def request_setup(self, preset=None, map=None, roster=None, wait=True, timeout=2.0):
+        self.setup_requests.append({"preset": preset, "map": map, "roster": roster})
+        self.calls.append("request_setup")
+        return self.setup_answer
 
-    def request_map(self, name, timeout=2.0):
-        self.map_requests.append(name)
-        self.calls.append("request_map")
-        return self.map_answer
-
-    def wait_map(self, timeout=10.0):
-        return self.map_final
-
-    def wait_preset(self, timeout=10.0):
-        return self.preset_final
+    def wait_setup(self, timeout=10.0):
+        return self.setup_final
 
 
 @pytest.fixture
@@ -109,6 +117,7 @@ def ctf(monkeypatch):
     monkeypatch.setitem(sys.modules, "artemis.bridge", fake)
     module = importlib.import_module("artemis.env.ctf")
     module.layout = layout
+    RESULTS.update({value: layout.BridgeSetupResult(value) for value in (1, 2, 3, 4)})
     yield module
     for name in [n for n in sys.modules if n == "artemis" or n.startswith("artemis.")]:
         sys.modules.pop(name, None)
@@ -304,64 +313,64 @@ def test_reset_with_a_preset_requests_it_and_ends_the_round(ctf):
     bridge = FakeBridge([Frame(ctf)])
     env = ctf.CtfEnv(bridge)
     env.reset(preset="artemis_ctf_fast")
-    assert bridge.preset_requests == ["artemis_ctf_fast"]
+    assert bridge.setup_requests == [{"preset": "artemis_ctf_fast", "map": None, "roster": None}]
     assert bridge.round_ends == 1
 
 
 def test_reset_reports_the_preset_and_its_result_in_the_info(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_final = ctf.layout.BridgePresetResult.Applied
     _, infos = ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
     assert infos[P0]["preset"] == {"name": "artemis_ctf_fast", "result": "Applied"}
     _, infos = ctf.CtfEnv(FakeBridge([Frame(ctf)])).reset()
-    assert "preset" not in infos[P0]
+    assert "preset" not in infos[P0] and "setup" not in infos[P0]
 
 
 def test_a_preset_still_pending_after_the_wait_is_logged_and_reported(ctf, caplog):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_final = ctf.layout.BridgePresetResult.Pending
+    bridge.setup_final = Status(1)
     with caplog.at_level("WARNING"):
         _, infos = ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
     assert infos[P0]["preset"]["result"] == "Pending"
     assert "still pending" in caplog.text
 
 
-def test_reset_without_a_preset_asks_for_nothing(ctf):
+def test_reset_without_a_setup_asks_for_nothing(ctf):
     bridge = FakeBridge([Frame(ctf)])
     ctf.CtfEnv(bridge).reset()
-    assert bridge.preset_requests == [] and bridge.round_ends == 0
+    assert bridge.setup_requests == [] and bridge.round_ends == 0
 
 
 def test_an_empty_preset_asks_for_the_base_values(ctf):
     bridge = FakeBridge([Frame(ctf)])
     ctf.CtfEnv(bridge).reset(preset="")
-    assert bridge.preset_requests == [""]
+    assert bridge.setup_requests[0]["preset"] == ""
 
 
 def test_a_preset_taken_in_the_lobby_does_not_end_a_round(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_answer = ctf.layout.BridgePresetResult.AtLoad
+    bridge.setup_answer = Status(3)
     ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
     assert bridge.round_ends == 0
 
 
-def test_a_rejected_preset_raises_at_once_or_at_the_break(ctf):
+def test_a_rejected_setup_raises_with_its_reason_at_once_or_at_the_break(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_answer = ctf.layout.BridgePresetResult.Rejected
-    with pytest.raises(RuntimeError):
+    bridge.setup_answer = Status(4, reason="preset: changes load fields")
+    with pytest.raises(RuntimeError, match="changes load fields"):
         ctf.CtfEnv(bridge).reset(preset="artemis_ctf_colors")
+    assert bridge.round_ends == 0
 
     bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_final = ctf.layout.BridgePresetResult.Rejected
-    with pytest.raises(RuntimeError):
+    bridge.setup_final = Status(4, reason="roster: 70 bots, at most 64")
+    with pytest.raises(RuntimeError, match="at most 64"):
         ctf.CtfEnv(bridge).reset(preset="artemis_ctf_colors")
     assert bridge.round_ends == 1
 
 
-def test_a_preset_nobody_answered_raises(ctf):
+def test_a_setup_nobody_answered_raises(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_answer = None
-    with pytest.raises(RuntimeError):
+    bridge.setup_answer = None
+    with pytest.raises(RuntimeError, match="did not take"):
         ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
 
 
@@ -385,7 +394,7 @@ def test_the_layout_has_the_sparse_fields(ctf):
     assert "RequestSparse" in layout.BridgeClientControl.names
     assert "IsSparse" in layout.BridgeArtemisControl.names
     assert layout.OFFSETS["Control.Artemis.IsSparse"] == 46
-    assert layout.OFFSETS["Control.Client.RequestSparse"] == 333
+    assert layout.OFFSETS["Control.Client.RequestSparse"] == layout.OFFSETS["Control.Client"] + 13
 
 
 # --- map variants (Q98, D266) -----------------------------------------------------------------------------------------------------
@@ -394,69 +403,66 @@ def test_the_layout_has_the_sparse_fields(ctf):
 def test_reset_with_a_map_requests_it_and_ends_the_round(ctf):
     bridge = FakeBridge([Frame(ctf)])
     ctf.CtfEnv(bridge).reset(map="Reach Bus Mountain Pass Reach Bus CTF")
-    assert bridge.map_requests == ["Reach Bus Mountain Pass Reach Bus CTF"]
+    assert bridge.setup_requests == [{"preset": None, "map": "Reach Bus Mountain Pass Reach Bus CTF", "roster": None}]
     assert bridge.round_ends == 1
 
 
-def test_reset_with_a_preset_and_a_map_requests_both_before_the_one_end_of_round(ctf):
+def test_reset_with_a_preset_a_map_and_a_roster_is_one_request_and_one_end_of_round(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast", map="reach_bus")
-    assert bridge.calls == ["request_preset", "request_map", "end_round"]
+    ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast", map="reach_bus", roster={"0": 3, "1": 3})
+    assert bridge.calls == ["request_setup", "end_round"]
+    assert bridge.setup_requests == [{"preset": "artemis_ctf_fast", "map": "reach_bus", "roster": {"0": 3, "1": 3}}]
 
 
-def test_reset_reports_the_map_and_its_result_in_the_info(ctf):
+def test_the_setup_is_a_dict_or_a_match_setup_and_the_keywords_replace_its_fields(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.map_final = ctf.layout.BridgePresetResult.Applied
-    _, infos = ctf.CtfEnv(bridge).reset(map="reach_bus")
+    ctf.CtfEnv(bridge).reset(setup={"preset": "a", "map": "m"}, preset="b")
+    assert bridge.setup_requests == [{"preset": "b", "map": "m", "roster": None}]
+
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset(setup=ctf.MatchSetup(roster=[2, 2]))
+    assert bridge.setup_requests == [{"preset": None, "map": None, "roster": [2, 2]}]
+
+    with pytest.raises(ValueError):
+        ctf.CtfEnv(FakeBridge([Frame(ctf)])).reset(setup={"presets": "a"})
+
+
+def test_reset_reports_the_map_the_roster_and_the_setup_in_the_info(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    bridge.setup_final = Status(2, 4, "partial: 2 of 4 bots")
+    _, infos = ctf.CtfEnv(bridge).reset(map="reach_bus", roster={"0": 4})
     assert infos[P0]["map"] == {"name": "reach_bus", "result": "Applied"}
+    assert infos[P0]["roster"]["result"] == "Applied"
+    assert infos[P0]["setup"] == {"result": "Applied", "round": 4, "reason": "partial: 2 of 4 bots"}
     assert "preset" not in infos[P0]
     _, infos = ctf.CtfEnv(FakeBridge([Frame(ctf)])).reset()
     assert "map" not in infos[P0]
 
 
-def test_reset_without_a_map_asks_for_none_and_an_empty_map_asks_for_the_loaded_one(ctf):
-    bridge = FakeBridge([Frame(ctf)])
-    ctf.CtfEnv(bridge).reset()
-    assert bridge.map_requests == [] and bridge.round_ends == 0
+def test_an_empty_map_asks_for_the_loaded_one(ctf):
     bridge = FakeBridge([Frame(ctf)])
     ctf.CtfEnv(bridge).reset(map="")
-    assert bridge.map_requests == [""]
+    assert bridge.setup_requests[0]["map"] == ""
 
 
 def test_a_map_left_for_the_next_load_while_a_match_is_up_raises(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.map_answer = ctf.layout.BridgePresetResult.AtLoad
+    bridge.setup_answer = Status(3)
     with pytest.raises(RuntimeError, match="next match load"):
         ctf.CtfEnv(bridge).reset(map="reach_bus")
 
 
-def test_a_rejected_map_still_ends_the_round_of_the_preset_requested_before(ctf):
-    bridge = FakeBridge([Frame(ctf)])
-    bridge.preset_answer = ctf.layout.BridgePresetResult.Pending
-    bridge.map_answer = ctf.layout.BridgePresetResult.Rejected
-    with pytest.raises(RuntimeError, match="map variant"):
-        ctf.CtfEnv(bridge).reset(preset="fast", map="other_map")
-    assert bridge.round_ends == 1
-
-
 def test_a_rejected_map_raises_at_once_or_at_the_break(ctf):
     bridge = FakeBridge([Frame(ctf)])
-    bridge.map_answer = ctf.layout.BridgePresetResult.Rejected
-    with pytest.raises(RuntimeError, match="map variant"):
+    bridge.setup_answer = Status(4, reason="map: does not fit the loaded map")
+    with pytest.raises(RuntimeError, match="does not fit the loaded map"):
         ctf.CtfEnv(bridge).reset(map="other_map")
 
     bridge = FakeBridge([Frame(ctf)])
-    bridge.map_final = ctf.layout.BridgePresetResult.Rejected
-    with pytest.raises(RuntimeError, match="map variant"):
+    bridge.setup_final = Status(4, reason="map: does not fit the loaded map")
+    with pytest.raises(RuntimeError, match="rejected between rounds"):
         ctf.CtfEnv(bridge).reset(map="other_map")
     assert bridge.round_ends == 1
-
-
-def test_a_map_nobody_answered_raises(ctf):
-    bridge = FakeBridge([Frame(ctf)])
-    bridge.map_answer = None
-    with pytest.raises(RuntimeError, match="did not take"):
-        ctf.CtfEnv(bridge).reset(map="reach_bus")
 
 
 def test_a_map_whose_round_has_no_flag_stands_raises(ctf):

@@ -31,7 +31,9 @@ export namespace Mod::Port::System
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
-        using BridgePresetResult = Contract::Bridge::Type::BridgePresetResult;
+        using BridgeActiveSetup = Bridge::Transport::Type::BridgeActiveSetup;
+        using BridgeSetupInfo = Bridge::Transport::Type::BridgeSetupInfo;
+        using BridgeSetupRequest = Bridge::Transport::Type::BridgeSetupRequest;
 
     public:
         BridgeEngineAdapter(LifecycleStore& lifecycleStore, MatchCycleStore& matchCycleStore, PlayerActionStore& playerActionStore,
@@ -53,14 +55,10 @@ export namespace Mod::Port::System
         auto IsPauseRequested() const -> bool override;
         auto SetPauseRequested(bool value) -> void override;
         auto SetEndRoundRequested(bool value) -> void override;
-        auto RequestPreset(std::string_view name) -> void override;
-        auto CancelPresetRequest() -> void override;
-        auto GetPresetResult() const -> BridgePresetResult override;
-        auto GetActivePreset() const -> std::string override;
-        auto RequestMap(std::string_view name) -> void override;
-        auto CancelMapRequest() -> void override;
-        auto GetMapResult() const -> BridgePresetResult override;
-        auto GetActiveMap() const -> std::string override;
+        auto RequestSetup(const BridgeSetupRequest& request) -> void override;
+        auto CancelSetupRequest() -> void override;
+        auto GetSetupResult() const -> BridgeSetupInfo override;
+        auto GetActiveSetup() const -> BridgeActiveSetup override;
         auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override;
         auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void override;
 

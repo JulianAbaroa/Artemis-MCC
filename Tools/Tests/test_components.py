@@ -597,7 +597,7 @@ def test_the_ports_declare_exactly_their_methods():
     assert re.search(r"\bclass\s+BridgeEngine\b", engine)
     assert set(VIRTUAL_METHOD.findall(engine)) == {"GetPhase", "GetEngineStarts", "GetPausedFrames", "GetRequestedTimeScale",
                                                    "SetRequestedTimeScale", "IsPauseRequested", "SetPauseRequested", "SetEndRoundRequested",
-                                                   "SetOverride", "RequestClient"}
+                                                   "RequestSetup", "CancelSetupRequest", "GetSetupResult", "GetActiveSetup", "SetOverride", "RequestClient"}
     source = Read("Artemis/5_Engine/Control/Input/System/ActionSource.ixx")
     assert re.search(r"^export module Engine\.Control\.Input\.System:ActionSource;", source, re.MULTILINE)
     assert re.search(r"\bclass\s+ActionSource\b", source)
@@ -675,10 +675,10 @@ def test_the_match_window_and_input_modules_import_in_one_direction():
 # ---- M6c.2: the engine in five projects (D216, D217, D221)
 
 ENGINE_PLATFORM = {
-    "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant"},
+    "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "MatchSetup"},
     "Artemis/5_Engine/Capture": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Capture"},
-    "Artemis/5_Engine/Control": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Input", "Simulation"},
-    "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Match"},
+    "Artemis/5_Engine/Control": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MatchSetup", "Input", "Simulation"},
+    "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "MatchSetup", "Match"},
     "Artemis/5_Engine/Render": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Render", "Window"},
 }
 ENGINE_FORBIDDEN_PREFIXES = ("Bridge.Transport.", "Mod.", "DevTools.", "Bridge.Codec.", "Perception.", "Views.", "Blam.Runtime.", "Blam.Map.",
@@ -974,7 +974,7 @@ def test_the_lifecycle_wiring_keeps_its_order():
     assert Calls(Body(wiring, "OnUnhook(")) == [
         "Stop", "UninstallHostHooks", "SetMachinesDetour.Uninstall", "PlayerActionDetour.Uninstall", "OpenMapDetour.Uninstall",
         "SimulationTicksDetour.Uninstall", "ExecuteGameFrameDetour.Uninstall"]
-    assert Calls(Body(wiring, "OnCleanup(")) == ["LocalUserStore", "PlayerActionStore", "BotStore", "CaptureService"]
+    assert Calls(Body(wiring, "OnCleanup(")) == ["LocalUserStore", "PlayerActionStore", "BotStore", "MatchSetupStore", "CaptureService"]
     hosts = ["LocalUserGetPlayerDetour", "LocalUserGetProfileDetour", "LocalUserGetGamepadMappingDetour", "CanAcceptAnyJoinRequestDetour",
              "SessionJoinCheckPatch", "InputUpdateDetour"]
     assert Calls(Body(text, "auto InstallHostHooks()")) == [f"{name}.Install" for name in hosts]

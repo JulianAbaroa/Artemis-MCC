@@ -24,7 +24,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from . import bridge_layout as L
-from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgePresetResult, BridgeRequest
+from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgeRequest, BridgeSetupResult
+from .match_setup import MatchSetup, SetupStatus, roster_to_array, roster_to_dict  # noqa: F401
 from .semantic import RoundState
 
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -186,10 +187,12 @@ class Bridge:
         self.client["RequestSparse"] = 0
         self.client["RequestTurnLimit"] = 0.0
         self.client["RequestEndRound"] = int(self.artemis["EndRoundSequence"])
-        self.client["RequestPreset"] = int(self.artemis["PresetSequence"])
-        self.client["RequestPresetName"][:] = 0
-        self.client["RequestMap"] = int(self.artemis["MapSequence"])
-        self.client["RequestMapName"][:] = 0
+        self.client["RequestSetup"] = int(self.artemis["SetupSequence"])
+        self.client["RequestSetupFields"] = 0
+        self.client["RequestSetupPreset"][:] = 0
+        self.client["RequestSetupMap"][:] = 0
+        self.client["RequestSetupRoster"]["Teams"][:] = 0
+        self.client["RequestSetupRoster"]["Auto"] = 0
         self.client["RequestMode"] = BridgeMode.Free
         self.client["RequestOwner"] = BridgeOwner.UI
         self.client["ClientPid"] = os.getpid()
@@ -270,30 +273,68 @@ class Bridge:
         self.client["RequestEndRound"] = sequence
         return self.wait_control(timeout, EndRoundSequence=sequence) if wait else True
 
-    def request_preset(self, name, wait=True, timeout=2.0):
-        """Asks for the gametype preset `name` (Data/Presets, compiled to the storage folder by Tools/presets.py) while Python owns the
-        instance, or for none with an empty name. In the lobby Artemis writes it at the next start (AtLoad). In a match it waits for
-        the next round break: Pending now, then Applied when the round has ended or Rejected when the preset changes what only a load
-        can change or a trait set the script lacks (the variant and the active preset do not change). The break comes with
-        end_round(), or with the end of the round of the game.
-        With wait, returns the BridgePresetResult once Artemis echoed the request, or None if it did not within the timeout. It is stale
-        when the request was dropped without ownership. Without wait, returns None at once."""
-        raw = str(name).encode("ascii")
-        if len(raw) >= L.PRESET_NAME_SIZE:
-            raise ValueError(f"preset name longer than {L.PRESET_NAME_SIZE - 1} characters: {name!r}")
-        # The name first and the counter after it: Artemis reads the name when it sees the counter change.
-        self.client["RequestPresetName"][:] = np.frombuffer(raw.ljust(L.PRESET_NAME_SIZE, b"\0"), dtype=np.uint8)
-        sequence = (int(self.client["RequestPreset"]) + 1) & 0xFFFFFFFF
-        self.client["RequestPreset"] = sequence
-        if not wait or not self.wait_control(timeout, PresetSequence=sequence):
+    def request_setup(self, preset=None, map=None, roster=None, wait=True, timeout=2.0):
+        """Asks for one match setup while Python owns the instance: the gametype preset, the map variant and the bots, whole or not at all.
+        A field that is None is not asked for (no change). preset is the name of a preset (Data/Presets, compiled to the storage folder by
+        Tools/presets.py), and "" asks for the base values of the gametype. map is the name of a match config recorded from the lobby (its
+        map variant is used, Q98) and has to be one of the loaded .map, and "" asks for the map variant the match loaded with. roster is
+        the bots (see roster_to_array). In the lobby Artemis writes it at the next start (AtLoad). In a match it waits for the next round
+        break: Pending now, then Applied when the round has ended, or Rejected when nothing could be applied (a preset that changes what
+        only a load can change, a trait set the script lacks, a map that does not fit, a roster that does not fit, an unknown name): the
+        reason says why. The break comes with end_round(), or with the end of the round of the game.
+        With wait, returns the SetupStatus once Artemis echoed the request, or None if it did not within the timeout. It is stale when the
+        request was dropped without ownership. Without wait, returns None at once."""
+        fields = 0
+        preset_raw = map_raw = b""
+        if preset is not None:
+            preset_raw = str(preset).encode("ascii")
+            if len(preset_raw) >= L.PRESET_NAME_SIZE:
+                raise ValueError(f"preset name longer than {L.PRESET_NAME_SIZE - 1} characters: {preset!r}")
+            fields |= L.SETUP_PRESET
+        if map is not None:
+            map_raw = str(map).encode("ascii")
+            if len(map_raw) > L.MAP_NAME_SIZE:
+                raise ValueError(f"map name longer than {L.MAP_NAME_SIZE} characters: {map!r}")
+            fields |= L.SETUP_MAP
+        roster_bytes = None
+        if roster is not None:
+            roster_bytes = roster_to_array(roster)
+            fields |= L.SETUP_ROSTER
+        # The fields and the mask first and the counter after them: Artemis reads them when it sees the counter change.
+        self.client["RequestSetupPreset"][:] = np.frombuffer(preset_raw.ljust(L.PRESET_NAME_SIZE, b"\0"), dtype=np.uint8)
+        self.client["RequestSetupMap"][:] = np.frombuffer(map_raw.ljust(L.MAP_NAME_SIZE, b"\0"), dtype=np.uint8)
+        if roster_bytes is not None:
+            self.client["RequestSetupRoster"]["Teams"][:] = roster_bytes[:L.MAX_TEAMS]
+            self.client["RequestSetupRoster"]["Auto"] = roster_bytes[L.MAX_TEAMS]
+        self.client["RequestSetupFields"] = fields
+        sequence = (int(self.client["RequestSetup"]) + 1) & 0xFFFFFFFF
+        self.client["RequestSetup"] = sequence
+        if not wait or not self.wait_control(timeout, SetupSequence=sequence):
             return None
-        return self.preset_result
+        return self.setup_status
+
+    def request_preset(self, name, wait=True, timeout=2.0):
+        """Shortcut of request_setup(preset=name): returns its result (a BridgeSetupResult) or None."""
+        status = self.request_setup(preset=name, wait=wait, timeout=timeout)
+        return status.result if status else None
+
+    def request_map(self, name, wait=True, timeout=2.0):
+        """Shortcut of request_setup(map=name): returns its result (a BridgeSetupResult) or None."""
+        status = self.request_setup(map=name, wait=wait, timeout=timeout)
+        return status.result if status else None
 
     @property
-    def preset_result(self):
-        """What became of the last request_preset, as a BridgePresetResult."""
-        value = int(self.artemis["PresetResult"])
-        return BridgePresetResult(value) if value in BridgePresetResult._value2member_map_ else BridgePresetResult.Unknown
+    def setup_result(self):
+        """What became of the last request_setup, as a BridgeSetupResult."""
+        value = int(self.artemis["SetupResult"])
+        return BridgeSetupResult(value) if value in BridgeSetupResult._value2member_map_ else BridgeSetupResult.Unknown
+
+    @property
+    def setup_status(self) -> SetupStatus:
+        """The result, the round and the reason of the last request_setup."""
+        raw = bytes(np.asarray(self.artemis["SetupReason"], dtype=np.uint8))
+        reason = raw.split(b"\0", 1)[0].decode("ascii", "replace")
+        return SetupStatus(self.setup_result, int(self.artemis["SetupRound"]), reason)
 
     @property
     def active_preset(self) -> str:
@@ -301,51 +342,26 @@ class Bridge:
         raw = bytes(np.asarray(self.artemis["ActivePreset"], dtype=np.uint8))
         return raw.split(b"\0", 1)[0].decode("ascii", "replace")
 
-    def wait_preset(self, timeout=10.0):
-        """Waits until the last request is no longer Pending and returns its result (still Pending after the timeout)."""
-        end = time.time() + timeout
-        while self.preset_result == BridgePresetResult.Pending and time.time() < end:
-            time.sleep(0.02)
-        return self.preset_result
-
-    def request_map(self, name, wait=True, timeout=2.0):
-        """Asks for the map variant `name` (the name of a match config recorded from the lobby: its map variant is used, Q98) while Python
-        owns the instance, or for none with an empty name (the map variant the match loaded with). It has to be a map variant of the
-        loaded .map. In the lobby Artemis writes it at the next start (AtLoad). In a match it waits for the next round break: Pending
-        now, then Applied when the round has ended or Rejected when it does not fit the map (map id, version or quotas) or the config
-        cannot be read (the map variant and the active one do not change). The break comes with end_round(), or with the end of the round
-        of the game. The next round is built from it.
-        With wait, returns the BridgePresetResult once Artemis echoed the request, or None if it did not within the timeout. It is stale
-        when the request was dropped without ownership. Without wait, returns None at once."""
-        raw = str(name).encode("ascii")
-        if len(raw) > L.MAP_NAME_SIZE:
-            raise ValueError(f"map name longer than {L.MAP_NAME_SIZE} characters: {name!r}")
-        # The name first and the counter after it: Artemis reads the name when it sees the counter change.
-        self.client["RequestMapName"][:] = np.frombuffer(raw.ljust(L.MAP_NAME_SIZE, b"\0"), dtype=np.uint8)
-        sequence = (int(self.client["RequestMap"]) + 1) & 0xFFFFFFFF
-        self.client["RequestMap"] = sequence
-        if not wait or not self.wait_control(timeout, MapSequence=sequence):
-            return None
-        return self.map_result
-
-    @property
-    def map_result(self):
-        """What became of the last request_map, as a BridgePresetResult."""
-        value = int(self.artemis["MapResult"])
-        return BridgePresetResult(value) if value in BridgePresetResult._value2member_map_ else BridgePresetResult.Unknown
-
     @property
     def active_map(self) -> str:
         """Name of the active map variant, empty when there is none (the one the match loaded with)."""
         raw = bytes(np.asarray(self.artemis["ActiveMap"], dtype=np.uint8))
         return raw.split(b"\0", 1)[0].decode("ascii", "replace")
 
-    def wait_map(self, timeout=10.0):
-        """Waits until the last map variant request is no longer Pending and returns its result (still Pending after the timeout)."""
+    @property
+    def active_roster(self):
+        """The bots of the active setup as a dict (see roster_to_dict), or None when it has no roster."""
+        if not int(self.artemis["ActiveHasRoster"]):
+            return None
+        roster = self.artemis["ActiveRoster"]
+        return roster_to_dict(np.asarray(roster["Teams"]), roster["Auto"])
+
+    def wait_setup(self, timeout=10.0):
+        """Waits until the last request is no longer Pending and returns its SetupStatus (still Pending after the timeout)."""
         end = time.time() + timeout
-        while self.map_result == BridgePresetResult.Pending and time.time() < end:
+        while self.setup_result == BridgeSetupResult.Pending and time.time() < end:
             time.sleep(0.02)
-        return self.map_result
+        return self.setup_status
 
     @contextlib.contextmanager
     def paused(self):

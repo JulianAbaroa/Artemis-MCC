@@ -58,6 +58,14 @@ namespace
     using Contract::Bridge::Type::k_BridgeNotLocal;
     using Contract::Bridge::Type::k_BridgeMapNameSize;
     using Contract::Bridge::Type::k_BridgePresetNameSize;
+    using Contract::Bridge::Type::k_BridgeSetupMap;
+    using Contract::Bridge::Type::k_BridgeSetupPreset;
+    using Contract::Bridge::Type::k_BridgeSetupRoster;
+    using Contract::Bridge::Type::k_BridgeSetupReasonSize;
+    using Bridge::Transport::Type::BridgeActiveSetup;
+    using Bridge::Transport::Type::BridgeSetupInfo;
+    using Bridge::Transport::Type::BridgeSetupRequest;
+    using Contract::Bridge::Type::BridgeRoster;
 
     static_assert(k_MaxPlayers <= k_MaxActionPlayers, "Every bridge slot must have an override in the PlayerActionStore.");
 
@@ -231,9 +239,8 @@ namespace Bridge::Transport::System
             m_Engine.SetRequestedTimeScale(link.SavedTimeScale);
             this->ApplyPause(link.IsSavedPauseRequested);
             m_Engine.SetEndRoundRequested(false);
-            // A preset that still waits for a round break goes with the client that asked for it.
-            m_Engine.CancelPresetRequest();
-            m_Engine.CancelMapRequest();
+            // A setup that still waits for a round break goes with the client that asked for it.
+            m_Engine.CancelSetupRequest();
         }
 
         // A raise of the counter is a request (D144). Raises seen between two updates, or before the game thread takes them, count as
@@ -246,30 +253,36 @@ namespace Bridge::Transport::System
         }
         link.LastClientEndRound = endRound;
 
-        // The same for a preset: Python writes the name before it raises the counter. The counter is loaded with acquire, so the plain
-        // reads of the name below see the name of that raise. The result is Pending in the engine before the echo below says it was seen.
-        const std::uint32_t presetCounter{ LoadShared(region->Control.Client.RequestPreset) };
-        if (presetCounter != link.LastClientPreset && control.Owner == BridgeOwner::Python)
+        // The same for a setup (LS.2): Python writes the mask and the fields before it raises the counter. The counter is loaded with
+        // acquire, so the plain reads below see the fields of that raise. The result is Pending in the engine before the echo says it was
+        // seen. The names have no end zero when they fill their field.
+        const std::uint32_t setupCounter{ LoadShared(region->Control.Client.RequestSetup) };
+        if (setupCounter != link.LastClientSetup && control.Owner == BridgeOwner::Python)
         {
-            const auto& nameBytes{ region->Control.Client.RequestPresetName };
-            const auto nameEnd{ std::ranges::find(nameBytes, std::uint8_t{ 0 }) };
-            const std::string name{ nameBytes.begin(), nameEnd };
-            m_Engine.RequestPreset(name);
-            m_Log.Message("[BridgeService] INFO: Preset \"{}\" requested.", name);
-        }
-        link.LastClientPreset = presetCounter;
+            const auto& client{ region->Control.Client };
+            const std::uint8_t fields{ client.RequestSetupFields };
+            BridgeSetupRequest request{};
 
-        // The same for a map variant (Q98). The name has no end zero when it fills the field.
-        const std::uint32_t mapCounter{ LoadShared(region->Control.Client.RequestMap) };
-        if (mapCounter != link.LastClientMap && control.Owner == BridgeOwner::Python)
-        {
-            const auto& nameBytes{ region->Control.Client.RequestMapName };
-            const auto nameEnd{ std::ranges::find(nameBytes, std::uint8_t{ 0 }) };
-            const std::string name{ nameBytes.begin(), nameEnd };
-            m_Engine.RequestMap(name);
-            m_Log.Message("[BridgeService] INFO: Map variant \"{}\" requested.", name);
+            if ((fields & k_BridgeSetupPreset) != 0)
+            {
+                const auto nameEnd{ std::ranges::find(client.RequestSetupPreset, std::uint8_t{ 0 }) };
+                request.Preset = std::string(client.RequestSetupPreset.begin(), nameEnd);
+            }
+
+            if ((fields & k_BridgeSetupMap) != 0)
+            {
+                const auto nameEnd{ std::ranges::find(client.RequestSetupMap, std::uint8_t{ 0 }) };
+                request.Map = std::string(client.RequestSetupMap.begin(), nameEnd);
+            }
+
+            if ((fields & k_BridgeSetupRoster) != 0) request.Roster = client.RequestSetupRoster;
+
+            m_Engine.RequestSetup(request);
+            m_Log.Message("[BridgeService] INFO: Setup requested (preset {}, map {}, roster {}).",
+                request.Preset ? "\"" + *request.Preset + "\"" : std::string{ "-" }, request.Map ? "\"" + *request.Map + "\"" : std::string{ "-" },
+                request.Roster ? "set" : "-");
         }
-        link.LastClientMap = mapCounter;
+        link.LastClientSetup = setupCounter;
 
         this->LogTransition(previous, control, isClientLeft);
         m_BridgeStore.SetControl(control);
@@ -505,20 +518,26 @@ namespace Bridge::Transport::System
         artemis.Scale = m_Engine.GetRequestedTimeScale();
         artemis.EndRoundSequence = m_BridgeStore.GetLinkState().LastClientEndRound;
 
-        // The name and the result first, the sequence that says they answer it last: Python reads the sequence with the result after it.
-        const std::string activePreset{ m_Engine.GetActivePreset() };
+        // The names and the result first, the sequence that says they answer it last: Python reads the sequence with the result after it.
+        const BridgeActiveSetup active{ m_Engine.GetActiveSetup() };
         std::array<std::uint8_t, k_BridgePresetNameSize> activeName{};
-        std::copy_n(activePreset.begin(), (std::min)(activePreset.size(), activeName.size() - 1), activeName.begin());
+        std::copy_n(active.Preset.begin(), (std::min)(active.Preset.size(), activeName.size() - 1), activeName.begin());
         artemis.ActivePreset = activeName;
-        artemis.PresetResult = m_Engine.GetPresetResult();
-        StoreShared(artemis.PresetSequence, m_BridgeStore.GetLinkState().LastClientPreset);
 
-        const std::string activeMap{ m_Engine.GetActiveMap() };
         std::array<std::uint8_t, k_BridgeMapNameSize> activeMapName{};
-        std::copy_n(activeMap.begin(), (std::min)(activeMap.size(), activeMapName.size()), activeMapName.begin());
+        std::copy_n(active.Map.begin(), (std::min)(active.Map.size(), activeMapName.size()), activeMapName.begin());
         artemis.ActiveMap = activeMapName;
-        artemis.MapResult = m_Engine.GetMapResult();
-        StoreShared(artemis.MapSequence, m_BridgeStore.GetLinkState().LastClientMap);
+
+        artemis.ActiveRoster = active.Roster.value_or(BridgeRoster{});
+        artemis.ActiveHasRoster = active.Roster ? 1 : 0;
+
+        const BridgeSetupInfo info{ m_Engine.GetSetupResult() };
+        artemis.SetupResult = info.Result;
+        artemis.SetupRound = info.Round;
+        std::array<std::uint8_t, k_BridgeSetupReasonSize> reason{};
+        std::copy_n(info.Reason.begin(), (std::min)(info.Reason.size(), reason.size()), reason.begin());
+        artemis.SetupReason = reason;
+        StoreShared(artemis.SetupSequence, m_BridgeStore.GetLinkState().LastClientSetup);
 
         StoreShared(artemis.ActionTick, m_BridgeStore.GetActionTick());
         StoreShared(artemis.LateActions, counters.LateActions);

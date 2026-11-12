@@ -18,7 +18,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..bridge import Action, Bridge, BridgeMode, BridgeOwner
-from ..bridge_layout import NO_HANDLE, NOT_LOCAL, BridgePresetResult
+from ..bridge_layout import NO_HANDLE, NOT_LOCAL, BridgeSetupResult
+from ..match_setup import MatchSetup
 from ..semantic import Event, FlagState
 
 TWO_PI = 2 * math.pi
@@ -143,42 +144,35 @@ class CtfEnv:
 
     # --- Episode ----------------------------------------------------------------------------------------------------------------
 
-    def reset(self, preset=None, map=None):
+    def reset(self, setup=None, preset=None, map=None, roster=None):
         """Waits until every bot of the match is alive in a running round and returns {agent: observation}.
-        preset: name of a gametype preset to play from the next round (Data/Presets), "" for the base values of the game variant, None
-        to leave it as it is. The preset is requested and the round is ended, since a preset is written between rounds. A preset that
-        cannot be applied (Rejected) raises RuntimeError: training with other settings than the ones asked would go unnoticed.
-        map: name of the match config whose map variant to play from the next round (Q98), "" for the one the match loaded with, None to
-        leave it as it is. Independent of the preset: both are requested before the one end of round that serves them. A map variant that
-        cannot be applied raises RuntimeError, and so does one whose round has no 2 flag stands (a Megalo CTF finds its flags by label,
-        so a map variant without them leaves a CTF without flags)."""
+        setup: a dict (keys preset, map, roster) or a MatchSetup, asked for in one request. preset, map and roster ask for one field each
+        and take the place of the same field of setup. A field that is None is left as it is.
+        preset: name of a gametype preset to play from the next round (Data/Presets), "" for the base values of the game variant.
+        map: name of the match config whose map variant to play from the next round (Q98), "" for the one the match loaded with.
+        roster: the bots to play with (a dict of the "roster" of a bench scenario, or the bots of each team from team 0).
+        The setup is requested and the round is ended once, since it is written between rounds. A setup that cannot be applied (Rejected)
+        raises RuntimeError with the reason: training with other settings than the ones asked would go unnoticed. So does a map variant
+        left for the next load (a match is up and keeps its map) and one whose round has no 2 flag stands (a Megalo CTF finds its flags
+        by label, so a map variant without them leaves a CTF without flags). A partial result (the roster did not fit after the preset
+        or the map went in) is logged and reported in the info."""
+        asked = MatchSetup.of(setup)
+        asked = MatchSetup(preset if preset is not None else asked.preset, map if map is not None else asked.map,
+                           roster if roster is not None else asked.roster)
         waited = 0.0
-        is_break_needed = False
-        if preset is not None:
-            result = self.bridge.request_preset(preset)
-            if result is None:
-                raise RuntimeError(f"Artemis did not take the preset request {preset!r}")
-            if result == BridgePresetResult.Rejected:
-                raise RuntimeError(f"preset {preset!r} rejected: its files are wrong or it cannot be applied")
-            is_break_needed = result == BridgePresetResult.Pending
-        if map is not None:
-            result = self.bridge.request_map(map)
-            if result is None:
-                raise RuntimeError(f"Artemis did not take the map variant request {map!r}")
-            if result == BridgePresetResult.Rejected:
-                # The preset was requested before: end the round anyway, or it would stay queued with nobody told.
-                if is_break_needed:
-                    self.bridge.end_round(wait=False)
-                raise RuntimeError(f"map variant {map!r} rejected: it does not fit the loaded map or its config cannot be read")
-            if result == BridgePresetResult.AtLoad:
+        is_asked = asked.preset is not None or asked.map is not None or asked.roster is not None
+        if is_asked:
+            status = self.bridge.request_setup(preset=asked.preset, map=asked.map, roster=asked.roster)
+            if status is None:
+                raise RuntimeError(f"Artemis did not take the setup request {asked}")
+            if status.result == BridgeSetupResult.Rejected:
+                raise RuntimeError(f"setup {asked} rejected: {status.reason or 'it cannot be applied'}")
+            if status.result == BridgeSetupResult.AtLoad and asked.map is not None:
                 # A match is up: AtLoad means the request went to the next start and this one trains on the wrong map.
-                if is_break_needed:
-                    self.bridge.end_round(wait=False)
-                raise RuntimeError(f"map variant {map!r} was left for the next match load: the current match keeps its map")
-            is_break_needed = is_break_needed or result == BridgePresetResult.Pending
-        if is_break_needed:
-            self.bridge.end_round(wait=False)
-            self.is_waiting_round = True
+                raise RuntimeError(f"map variant {asked.map!r} was left for the next match load: the current match keeps its map")
+            if status.result == BridgeSetupResult.Pending:
+                self.bridge.end_round(wait=False)
+                self.is_waiting_round = True
         while True:
             published = self._next_tick()
             waited += self.config.period / 60.0
@@ -197,24 +191,25 @@ class CtfEnv:
                 break
             if waited > self.config.reset_timeout * 60:
                 raise TimeoutError("no round with every agent alive")
-        preset_info = None
-        if preset is not None:
-            final = self.bridge.wait_preset()
-            if final == BridgePresetResult.Rejected:
-                raise RuntimeError(f"preset {preset!r} rejected between rounds: it changes what only a load can change or a trait set the script lacks")
-            if final == BridgePresetResult.Pending:
-                logging.getLogger(__name__).warning("preset %r is still pending after the wait: the round started without it", preset)
-            preset_info = {"name": preset, "result": getattr(final, "name", final)}
-        map_info = None
-        if map is not None:
-            final = self.bridge.wait_map()
-            if final == BridgePresetResult.Rejected:
-                raise RuntimeError(f"map variant {map!r} rejected between rounds: it does not fit the loaded map")
-            if final == BridgePresetResult.Pending:
-                logging.getLogger(__name__).warning("map variant %r is still pending after the wait: the round started without it", map)
-            if len(self.stands) < 2:
-                raise RuntimeError(f"map variant {map!r} has no CTF for this gametype: the round has {len(self.stands)} flag stands, 2 needed")
-            map_info = {"name": map, "result": getattr(final, "name", final)}
+        info = {}
+        if is_asked:
+            final = self.bridge.wait_setup()
+            if final.result == BridgeSetupResult.Rejected:
+                raise RuntimeError(f"setup {asked} rejected between rounds: {final.reason or 'it cannot be applied'}")
+            if final.result == BridgeSetupResult.Pending:
+                logging.getLogger(__name__).warning("setup %s is still pending after the wait: the round started without it", asked)
+            if final.reason:
+                logging.getLogger(__name__).warning("setup %s: %s", asked, final.reason)
+            if asked.map is not None and len(self.stands) < 2:
+                raise RuntimeError(f"map variant {asked.map!r} has no CTF for this gametype: the round has {len(self.stands)} flag stands, 2 needed")
+            result = getattr(final.result, "name", final.result)
+            if asked.preset is not None:
+                info["preset"] = {"name": asked.preset, "result": result}
+            if asked.map is not None:
+                info["map"] = {"name": asked.map, "result": result}
+            if asked.roster is not None:
+                info["roster"] = {"value": asked.roster, "result": result}
+            info["setup"] = {"result": result, "round": final.round, "reason": final.reason}
         self.agents = [int(p["Handle"]) for p in players]
         self.states = {handle: AgentState(handle) for handle in self.agents}
         for player in players:
@@ -228,9 +223,6 @@ class CtfEnv:
         for handle in self.agents:
             observations[handle], phi = self._observe(handle)
             self.states[handle].phi = phi
-        info = {} if preset_info is None else {"preset": dict(preset_info)}
-        if map_info is not None:
-            info["map"] = dict(map_info)
         return observations, {handle: {key: dict(value) for key, value in info.items()} for handle in self.agents}
 
     def step(self, actions):

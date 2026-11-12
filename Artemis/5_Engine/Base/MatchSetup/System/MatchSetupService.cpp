@@ -105,7 +105,7 @@ namespace
 
 namespace Engine::Base::MatchSetup::System
 {
-    auto MatchSetupService::Request(MatchSetup setup, MatchSetupOrigin origin, bool isMerge) -> std::uint64_t
+    auto MatchSetupService::Request(MatchSetup setup, MatchSetupOrigin origin) -> std::uint64_t
     {
         try
         {
@@ -126,7 +126,7 @@ namespace Engine::Base::MatchSetup::System
 
             if (reason) return this->Reject(*reason);
 
-            const std::uint64_t sequence{ m_MatchSetupStore.Request(std::move(setup), origin, isMerge) };
+            const std::uint64_t sequence{ m_MatchSetupStore.Request(std::move(setup), origin) };
             m_Log.Message("[MatchSetupService] INFO: Setup {} requested, it waits for the next start or round break.", sequence);
             return sequence;
         }

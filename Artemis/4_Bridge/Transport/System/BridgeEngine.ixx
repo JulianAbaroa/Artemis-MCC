@@ -16,7 +16,9 @@ export namespace Bridge::Transport::System
         using ClientRequests = Control::Action::Type::ClientRequests;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
-        using BridgePresetResult = Contract::Bridge::Type::BridgePresetResult;
+        using BridgeActiveSetup = Bridge::Transport::Type::BridgeActiveSetup;
+        using BridgeSetupInfo = Bridge::Transport::Type::BridgeSetupInfo;
+        using BridgeSetupRequest = Bridge::Transport::Type::BridgeSetupRequest;
 
     public:
         virtual ~BridgeEngine() = default;
@@ -38,31 +40,18 @@ export namespace Bridge::Transport::System
 
         virtual auto SetEndRoundRequested(bool value) -> void = 0;
 
-        // Asks for a gametype preset by name, or for none with an empty name. In the lobby it is written at the next start, in a match at
-        // the next round break.
-        virtual auto RequestPreset(std::string_view name) -> void = 0;
+        // Asks for one match setup: a gametype preset, a map variant and a bot roster, whole or not at all (LS.2). In the lobby it is
+        // written at the next start, in a match at the next round break. The names are resolved here, on the bridge thread.
+        virtual auto RequestSetup(const BridgeSetupRequest& request) -> void = 0;
 
         // Drops the request that still waits for a round break, when the client that made it is gone.
-        virtual auto CancelPresetRequest() -> void = 0;
+        virtual auto CancelSetupRequest() -> void = 0;
 
         // return: What became of the last request.
-        virtual auto GetPresetResult() const -> BridgePresetResult = 0;
+        virtual auto GetSetupResult() const -> BridgeSetupInfo = 0;
 
-        // return: The name of the active preset, empty when none.
-        virtual auto GetActivePreset() const -> std::string = 0;
-
-        // Asks for a map variant by name (the name of a recorded match configuration), or for none with an empty name. In the lobby it is
-        // written at the next start, in a match at the next round break (Q98).
-        virtual auto RequestMap(std::string_view name) -> void = 0;
-
-        // Drops the map variant request that still waits for a round break, when the client that made it is gone.
-        virtual auto CancelMapRequest() -> void = 0;
-
-        // return: What became of the last map variant request.
-        virtual auto GetMapResult() const -> BridgePresetResult = 0;
-
-        // return: The name of the active map variant, empty when none.
-        virtual auto GetActiveMap() const -> std::string = 0;
+        // return: The setup the engine holds.
+        virtual auto GetActiveSetup() const -> BridgeActiveSetup = 0;
 
         // Sets the override of a player for the next action, or none to give the player back to the engine.
         virtual auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void = 0;

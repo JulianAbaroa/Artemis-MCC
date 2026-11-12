@@ -9,23 +9,55 @@ namespace
 {
     using Engine::Base::Lifecycle::Type::Status;
     using Contract::Bridge::Type::BridgePhase;
-    using Contract::Bridge::Type::BridgePresetResult;
+    using Contract::Bridge::Type::BridgeRoster;
+    using Contract::Bridge::Type::BridgeSetupResult;
+    using Contract::Bridge::Type::k_BridgeSetupReasonSize;
     using Engine::Base::MatchSetup::Type::MatchSetup;
     using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
     using Engine::Base::MatchSetup::Type::MatchSetupOutcome;
+    using Engine::Base::MatchSetup::Type::Roster;
 
-    // The bridge has one result for preset and map: the one of the last setup request, whichever field it set (D286).
-    auto ToSetupResult(MatchSetupOutcome outcome) -> BridgePresetResult
+    // The bridge has one result for the preset, the map and the roster of a setup request (D286).
+    auto ToSetupResult(MatchSetupOutcome outcome) -> BridgeSetupResult
     {
         switch (outcome)
         {
-        case MatchSetupOutcome::None: return BridgePresetResult::NoResult;
-        case MatchSetupOutcome::Pending: return BridgePresetResult::Pending;
-        case MatchSetupOutcome::Applied: return BridgePresetResult::Applied;
-        case MatchSetupOutcome::AtLoad: return BridgePresetResult::AtLoad;
-        case MatchSetupOutcome::Rejected: return BridgePresetResult::Rejected;
-        default: return BridgePresetResult::Unknown;
+        case MatchSetupOutcome::None: return BridgeSetupResult::NoResult;
+        case MatchSetupOutcome::Pending: return BridgeSetupResult::Pending;
+        case MatchSetupOutcome::Applied: return BridgeSetupResult::Applied;
+        case MatchSetupOutcome::AtLoad: return BridgeSetupResult::AtLoad;
+        case MatchSetupOutcome::Rejected: return BridgeSetupResult::Rejected;
+        default: return BridgeSetupResult::Unknown;
         }
+    }
+
+    // return: The roster of the bridge (bots as bytes) as the engine one. A count is never above the bot limit, which fits a byte.
+    auto ToRoster(const BridgeRoster& roster) -> Roster
+    {
+        Roster result{};
+        for (std::size_t team{ 0 }; team < roster.Teams.size(); ++team) result.Teams[team] = roster.Teams[team];
+        result.Auto = roster.Auto;
+        return result;
+    }
+
+    // return: The roster of the engine as the one of the bridge, a count capped at a byte.
+    auto ToBridgeRoster(const Roster& roster) -> BridgeRoster
+    {
+        BridgeRoster result{};
+        for (std::size_t team{ 0 }; team < result.Teams.size(); ++team) result.Teams[team] = static_cast<std::uint8_t>((std::min)(roster.Teams[team], std::size_t{ 255 }));
+        result.Auto = static_cast<std::uint8_t>((std::min)(roster.Auto, std::size_t{ 255 }));
+        return result;
+    }
+
+    // return: The text as ASCII that fits the reason field of the bridge: other characters become '?', and what does not fit is cut.
+    auto ToReason(std::string_view text) -> std::string
+    {
+        std::string reason{};
+        for (const char character : text.substr(0, k_BridgeSetupReasonSize))
+        {
+            reason += (character >= ' ' && character <= '~') ? character : '?';
+        }
+        return reason;
     }
 
     auto ToPhase(Status status) -> BridgePhase
@@ -81,64 +113,60 @@ namespace Mod::Port::System
         m_LifecycleStore.SetEndRoundRequested(value);
     }
 
-    auto BridgeEngineAdapter::RequestPreset(std::string_view name) -> void
+    auto BridgeEngineAdapter::RequestSetup(const BridgeSetupRequest& request) -> void
     {
-        // The files are read here, on the bridge thread: the game thread only receives the values.
-        auto pick{ m_PresetService.Resolve(name) };
-        if (!pick)
+        // The files and the blocks are read here, on the bridge thread: the game thread only receives the values. One request carries
+        // every field, so it is one setup for the service: no merge.
+        MatchSetup setup{};
+
+        if (request.Preset)
         {
-            m_MatchSetupService.Reject(pick.error());
-            return;
+            auto pick{ m_PresetService.Resolve(*request.Preset) };
+            if (!pick)
+            {
+                m_MatchSetupService.Reject(pick.error());
+                return;
+            }
+            setup.Preset = std::move(*pick);
         }
 
-        // The bridge asks for the preset and the map in two calls: the second adds to the setup the first left waiting.
-        m_MatchSetupService.Request(MatchSetup{ .Preset = std::move(*pick) }, MatchSetupOrigin::Bridge, true);
+        if (request.Map)
+        {
+            // No name asks for the map variant the match loaded with.
+            std::vector<std::byte> block{};
+            if (!request.Map->empty()) block = m_MatchConfigService.ReadMapVariant(*request.Map);
+
+            auto mapVariant{ m_MapVariantService.Resolve(*request.Map, std::move(block)) };
+            if (!mapVariant)
+            {
+                m_MatchSetupService.Reject(mapVariant.error());
+                return;
+            }
+            setup.Map = std::move(*mapVariant);
+        }
+
+        if (request.Roster) setup.Bots = ToRoster(*request.Roster);
+
+        m_MatchSetupService.Request(std::move(setup), MatchSetupOrigin::Bridge);
     }
 
-    auto BridgeEngineAdapter::CancelPresetRequest() -> void
+    auto BridgeEngineAdapter::CancelSetupRequest() -> void
     {
         m_MatchSetupService.Cancel(MatchSetupOrigin::Bridge);
     }
 
-    auto BridgeEngineAdapter::GetPresetResult() const -> BridgePresetResult
+    auto BridgeEngineAdapter::GetSetupResult() const -> BridgeSetupInfo
     {
-        return ToSetupResult(m_MatchSetupService.GetResult().Outcome);
+        const auto result{ m_MatchSetupService.GetResult() };
+        return BridgeSetupInfo{ .Result = ToSetupResult(result.Outcome), .Round = result.Round, .Reason = ToReason(result.Reason) };
     }
 
-    auto BridgeEngineAdapter::GetActivePreset() const -> std::string
+    auto BridgeEngineAdapter::GetActiveSetup() const -> BridgeActiveSetup
     {
-        return m_MatchSetupService.GetActive().Preset;
-    }
-
-    auto BridgeEngineAdapter::RequestMap(std::string_view name) -> void
-    {
-        // The block is read here, on the bridge thread: the game thread only receives the bytes. No name asks for none.
-        std::vector<std::byte> block{};
-        if (!name.empty()) block = m_MatchConfigService.ReadMapVariant(name);
-
-        auto mapVariant{ m_MapVariantService.Resolve(name, std::move(block)) };
-        if (!mapVariant)
-        {
-            m_MatchSetupService.Reject(mapVariant.error());
-            return;
-        }
-
-        m_MatchSetupService.Request(MatchSetup{ .Map = std::move(*mapVariant) }, MatchSetupOrigin::Bridge, true);
-    }
-
-    auto BridgeEngineAdapter::CancelMapRequest() -> void
-    {
-        m_MatchSetupService.Cancel(MatchSetupOrigin::Bridge);
-    }
-
-    auto BridgeEngineAdapter::GetMapResult() const -> BridgePresetResult
-    {
-        return ToSetupResult(m_MatchSetupService.GetResult().Outcome);
-    }
-
-    auto BridgeEngineAdapter::GetActiveMap() const -> std::string
-    {
-        return m_MatchSetupService.GetActive().Map;
+        auto active{ m_MatchSetupService.GetActive() };
+        BridgeActiveSetup setup{ .Preset = std::move(active.Preset), .Map = std::move(active.Map) };
+        if (active.Bots) setup.Roster = ToBridgeRoster(*active.Bots);
+        return setup;
     }
 
     auto BridgeEngineAdapter::SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void

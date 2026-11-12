@@ -34,6 +34,12 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            NAME it requests that map variant as well in the first round and expects Rejected (for
                                            example a config of another .map) with the active map unchanged. The match has to start with
                                            one of the names, or with the map variant of its config (Bench: map <name>).
+    setup [--preset NAME] [--map NAME] [--roster 0:3,1:4,auto:2] [--reject] [--seconds 120] [--scale S]
+                                           LS.2: requests one match setup (the fields given) in the middle of a round (Pending), ends the
+                                           round and checks the result at the break: Applied, and the active preset, map and roster are
+                                           the ones asked (a name "" asks for the base values or the map the match loaded with). With
+                                           --reject the result must be Rejected with a reason and the active setup must not change.
+                                           "preset" and "map" are the same request with one field.
     turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
                                            D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
                                            pitch +-0.4). The aim seen between two ticks never turns faster than --turn-limit rad
@@ -506,23 +512,23 @@ def Preset(args):
         if not bridge.wait_control(Owner=BridgeOwner.Python):
             print("FAIL Artemis did not hand the instance to Python")
             return 1
-        expected = L.BridgePresetResult.Rejected if args.reject else L.BridgePresetResult.Applied
+        expected = L.BridgeSetupResult.Rejected if args.reject else L.BridgeSetupResult.Applied
         bad = []
         for step in range(rounds):
             name = names[step % len(names)]
             before = bridge.active_preset
             asked = bridge.request_preset(name)
-            if asked != L.BridgePresetResult.Pending:
+            if asked != L.BridgeSetupResult.Pending:
                 bad.append(f"round {step + 1}: {name} answered {asked} in the middle of a round, not Pending")
                 break
             if not bridge.end_round():
                 bad.append(f"round {step + 1}: the end of the round was not taken")
                 break
-            result = bridge.wait_preset(args.seconds)
+            result = bridge.wait_setup(args.seconds).result
             active = bridge.active_preset
             print(f"  round {step + 1}: {name} -> {result.name}, active {active!r} (was {before!r})")
             # A match that ended with the request may answer Applied (Ended also happens at game over): the active block carries it to the next start.
-            if result != expected and not (result == L.BridgePresetResult.AtLoad and not args.reject):
+            if result != expected and not (result == L.BridgeSetupResult.AtLoad and not args.reject):
                 bad.append(f"round {step + 1}: {name} ended as {result.name}, expected {expected.name}")
             if args.reject and active != before:
                 bad.append(f"round {step + 1}: a rejected preset changed the active one to {active!r}")
@@ -535,6 +541,65 @@ def Preset(args):
         for line in bad[:10]:
             print("  bad:", line)
         checks = [("every request answered as expected", not bad)]
+        failed = [name for name, ok in checks if not ok]
+        print("PASS" if not failed else "FAIL " + ", ".join(failed))
+        return 0 if not failed else 1
+
+
+def ParseRoster(text):
+    """The roster of the option --roster: "0:3,1:4,auto:2" is 3 bots of team 0, 4 of team 1 and 2 automatic ones."""
+    roster = {}
+    for item in text.split(","):
+        key, _, count = item.partition(":")
+        roster[key.strip()] = int(count)
+    return roster
+
+
+def Setup(args):
+    if args.preset is None and args.map is None and not args.roster:
+        print("FAIL setup needs at least one of --preset, --map and --roster")
+        return 1
+    roster = ParseRoster(args.roster) if args.roster else None
+    with Open(args) as bridge:
+        if not WaitRunning(bridge, args.wait):
+            print(f"FAIL no match running after {args.wait} s")
+            return 1
+        bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Free, scale=args.scale, agents=0)
+        if not bridge.wait_control(Owner=BridgeOwner.Python):
+            print("FAIL Artemis did not hand the instance to Python")
+            return 1
+        bad = []
+        before = (bridge.active_preset, bridge.active_map, bridge.active_roster)
+        asked = bridge.request_setup(preset=args.preset, map=args.map, roster=roster)
+        if asked is None or asked.result != L.BridgeSetupResult.Pending:
+            bad.append(f"the request answered {asked} in the middle of a round, not Pending")
+        elif not bridge.end_round():
+            bad.append("the end of the round was not taken")
+        else:
+            final = bridge.wait_setup(args.seconds)
+            active = (bridge.active_preset, bridge.active_map, bridge.active_roster)
+            print(f"  setup -> {final.result.name}, round {final.round}, reason {final.reason!r}")
+            print(f"  active: preset {active[0]!r}, map {active[1]!r}, roster {active[2]} (was {before})")
+            if args.reject:
+                if final.result != L.BridgeSetupResult.Rejected or not final.reason:
+                    bad.append(f"ended as {final.result.name} with reason {final.reason!r}, expected Rejected with a reason")
+                if active != before:
+                    bad.append("a rejected setup changed the active one")
+            elif final.result not in (L.BridgeSetupResult.Applied, L.BridgeSetupResult.AtLoad):
+                bad.append(f"ended as {final.result.name}, expected Applied")
+            elif final.result == L.BridgeSetupResult.Applied:
+                if args.preset is not None and active[0] != args.preset:
+                    bad.append(f"active preset {active[0]!r}, expected {args.preset!r}")
+                if args.map is not None and active[1] != args.map:
+                    bad.append(f"active map {active[1]!r}, expected {args.map!r}")
+                if roster is not None and active[2] != {k: v for k, v in roster.items() if v}:
+                    bad.append(f"active roster {active[2]}, expected {roster}")
+            if not WaitSpawn(bridge, args.seconds):
+                bad.append("no round started after the break")
+        bridge.set_control(owner=BridgeOwner.UI, scale=0.0)
+        for line in bad[:10]:
+            print("  bad:", line)
+        checks = [("the request was answered as expected", not bad)]
         failed = [name for name, ok in checks if not ok]
         print("PASS" if not failed else "FAIL " + ", ".join(failed))
         return 0 if not failed else 1
@@ -566,11 +631,11 @@ def Break(bridge, args, name, label):
     """Requests the map variant in the middle of a round, ends the round and waits for the break. Returns (result, active) or None
     with the reason in the second place when the request or the end of the round was not taken."""
     asked = bridge.request_map(name)
-    if asked != L.BridgePresetResult.Pending:
+    if asked != L.BridgeSetupResult.Pending:
         return None, f"{label}: {name} answered {asked} in the middle of a round, not Pending"
     if not bridge.end_round():
         return None, f"{label}: the end of the round was not taken"
-    return bridge.wait_map(args.seconds), bridge.active_map
+    return bridge.wait_setup(args.seconds).result, bridge.active_map
 
 
 def MapVariant(args):
@@ -603,7 +668,7 @@ def MapVariant(args):
                 bad.append(active)
             else:
                 print(f"  reject: {args.reject} -> {result.name}, active {active!r} (was {before!r})")
-                if result != L.BridgePresetResult.Rejected:
+                if result != L.BridgeSetupResult.Rejected:
                     bad.append(f"--reject {args.reject} ended as {result.name}, expected Rejected")
                 if active != before:
                     bad.append(f"a rejected map variant changed the active one to {active!r}")
@@ -620,9 +685,9 @@ def MapVariant(args):
                 break
             print(f"  round {step + 1}: {name} -> {result.name}, active {active!r} (was {before!r})")
             # A match that ended with the request may answer Applied (Ended also happens at game over): the active block carries it to the next start.
-            if result not in (L.BridgePresetResult.Applied, L.BridgePresetResult.AtLoad):
+            if result not in (L.BridgeSetupResult.Applied, L.BridgeSetupResult.AtLoad):
                 bad.append(f"round {step + 1}: {name} ended as {result.name}, expected Applied")
-            elif result == L.BridgePresetResult.Applied and active != name:
+            elif result == L.BridgeSetupResult.Applied and active != name:
                 bad.append(f"round {step + 1}: active map {active!r}, expected {name!r}")
             if not WaitSpawn(bridge, args.seconds):
                 bad.append(f"round {step + 1}: no round started after the break")
@@ -645,7 +710,7 @@ def MapVariant(args):
 
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "map", "turn"])
+    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "map", "setup", "turn"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
@@ -663,6 +728,9 @@ def Main():
     parser.add_argument("--rounds", type=int, default=0, help="preset: rounds to request one in (0 = one per name)")
     parser.add_argument("--reject", nargs="?", const=True, default="",
                         help="preset: the names must be rejected (a flag). map: a map variant (NAME) that must be Rejected, tried first")
+    parser.add_argument("--preset", default=None, help="setup: the preset to request (empty = the base values)")
+    parser.add_argument("--map", default=None, help="setup: the map variant to request (empty = the one the match loaded with)")
+    parser.add_argument("--roster", default="", help="setup: the bots, for example 0:3,1:4,auto:2")
     parser.add_argument("--stale", action="store_true", help="endround: ask for one in the lobby first")
     parser.add_argument("--round-seconds", type=float, default=10.0, help="endround: play before each request")
     parser.add_argument("--yaw-step", type=float, default=YAW_STEP, help="run: radians the yaw turns per decision")
@@ -671,9 +739,9 @@ def Main():
     parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
     args = parser.parse_args()
     if args.seconds is None:
-        args.seconds = {"endround": 300.0, "preset": 120.0, "map": 120.0}.get(args.command, 60.0)
+        args.seconds = {"endround": 300.0, "preset": 120.0, "map": 120.0, "setup": 120.0}.get(args.command, 60.0)
     try:
-        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "map": MapVariant, "turn": Turn}[args.command](args)
+        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "map": MapVariant, "setup": Setup, "turn": Turn}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2
