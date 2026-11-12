@@ -5,6 +5,7 @@ module;
 module DevTools.Workbench.Simulation.System;
 
 import Common.Engine.Type;
+import Common.Team.Type;
 import Control.Action.Type;
 import Engine.Base.Lifecycle.Type;
 import Engine.Base.MatchSetup.Type;
@@ -12,6 +13,7 @@ import Engine.Control.Simulation.Type;
 import Bridge.Transport.Type;
 import Blam.Layout.Action.Type;
 import Perception.Match.Type;
+import DevTools.Gui.Color.System;
 import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
 import std;
@@ -33,10 +35,14 @@ namespace
     using Engine::Control::Simulation::Type::TeamRequest;
     using Engine::Base::MatchSetup::Type::MatchSetup;
     using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
+    using Engine::Base::MatchSetup::Type::MatchSetupOutcome;
+    using Engine::Base::MatchSetup::Type::MatchSetupResult;
     using Engine::Base::MatchSetup::Type::Roster;
     using Engine::Base::MatchSetup::Type::ToText;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using DevTools::Workbench::Simulation::Type::SimulationSection;
+    using Common::Team::Type::Team;
+    using DevTools::Gui::Color::System::TeamToColor;
     using DevTools::Gui::Style::Type::StatusKind;
     using DevTools::Gui::Widget::System::DisabledScope;
     using DevTools::Gui::Widget::System::ResponsiveCardGuiService;
@@ -142,6 +148,71 @@ namespace
         float m_RightEdge{ 0.0f };
         bool m_IsFirst{ true };
     };
+
+    // Widths of the columns of the bot table and characters of the chip of the last request.
+    constexpr float k_BotModeColumnWidth{ 110.0f };
+    constexpr std::size_t k_MaxChipCharacters{ 56 };
+
+    // return: The color of a team index of the engine, grey outside 0..7.
+    auto GetTeamColor(std::int8_t team) -> ImVec4
+    {
+        const bool isTeam{ team >= 0 && static_cast<std::size_t>(team) < k_MaxTeams };
+        return TeamToColor::TeamColorVec4(isTeam ? static_cast<Team>(team) : Team::Neutral, 1.0f);
+    }
+
+    // return: Width of a counter drawn by DrawCounter, to place it in a line.
+    auto CounterWidth(const char* label) -> float
+    {
+        const ImGuiStyle& style{ ImGui::GetStyle() };
+        const float button{ ImGui::CalcTextSize("-").x + (style.FramePadding.x * 2.0f) };
+
+        return ImGui::CalcTextSize(label).x + ImGui::CalcTextSize("00").x + (button * 2.0f) + (style.ItemSpacing.x * 3.0f);
+    }
+
+    // Draws a label with a number between a minus and a plus button.
+    // return: Whether the number changed.
+    auto DrawCounter(const char* label, std::size_t& value, const char* tooltip) -> bool
+    {
+        bool isChanged{ false };
+
+        ImGui::PushID(label);
+        ImGui::BeginGroup();
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(label);
+        ImGui::SameLine();
+
+        if (ImGui::SmallButton("-") && value > 0)
+        {
+            --value;
+            isChanged = true;
+        }
+
+        ImGui::SameLine();
+        ImGui::Text("%2zu", value);
+        ImGui::SameLine();
+
+        if (ImGui::SmallButton("+") && value < k_MaxPlayers)
+        {
+            ++value;
+            isChanged = true;
+        }
+
+        ImGui::EndGroup();
+        ImGui::PopID();
+
+        StatusGuiService::ShowTooltip(tooltip);
+        return isChanged;
+    }
+
+    // return: The text cut to k_MaxChipCharacters with "..." when longer, so a chip fits the width of the panel.
+    auto Shorten(std::string text) -> std::string
+    {
+        if (text.size() <= k_MaxChipCharacters) return text;
+
+        text.resize(k_MaxChipCharacters - 3);
+        return text + "...";
+    }
 
     // return: The counters of the bridge, one per line, for a tooltip.
     auto DescribeBridgeCounters(const BridgeStatus& status) -> std::string
@@ -1125,145 +1196,35 @@ namespace DevTools::Workbench::Simulation::System
     auto SimulationUIService::DrawBots() -> void
     {
         // Bots are players on machines of their own, added in the match like a player that joins in progress (A9 M5b). They have no
-        // view and no input: their action is the mode of the row. In Engine mode the engine repeats the last action it applied (as for a
-        // remote player), so a bot keeps walking after Test action. The film does not have them.
-        const std::optional<std::int8_t> newTeam{ m_SimulationUIStore.GetNewBotTeam() };
-
-        ImGui::SetNextItemWidth(160.0f);
-        if (ImGui::BeginCombo("Team of new bots", newTeam ? GetTeamLabel(*newTeam) : "Same as the local player"))
-        {
-            if (ImGui::Selectable("Same as the local player", !newTeam)) m_SimulationUIStore.SetNewBotTeam(std::nullopt);
-
-            for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
-            {
-                const auto value{ static_cast<std::int8_t>(team) };
-                if (ImGui::Selectable(k_TeamLabels[team], newTeam == value)) m_SimulationUIStore.SetNewBotTeam(value);
-            }
-
-            ImGui::EndCombo();
-        }
-        ImGui::SetItemTooltip("Only team games use it. Other games give each player its own team.");
-
-        ImGui::SameLine();
-        if (ImGui::Button("Add bot")) m_BotStore.RequestBot(newTeam);
-        ImGui::SetItemTooltip("Applied on the next tick of a match. The result is in the log.");
-
+        // view and no input: their action is the mode of the picked bot. In Engine mode the engine repeats the last action it applied
+        // (as for a remote player), so a bot keeps walking after Test action. The film does not have them.
+        // Not done on purpose: the read-only mode when the orchestrator is connected (U14), which edits the roster from one instance only.
+        // The orchestrator does not exist yet, so nothing here checks for it.
         this->DrawRoster();
 
         std::vector<Bot> bots{};
         m_BotStore.CopyBots(bots);
 
-        if (bots.empty()) return;
+        if (bots.empty())
+        {
+            ImGui::TextDisabled("No bots in the match.");
+            return;
+        }
 
         SessionSnapshot snapshot{};
         m_BotStore.CopySnapshot(snapshot);
 
-        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
+        this->DrawBotTable(bots, snapshot);
 
-        PlayerActions actions{};
-        m_PlayerActionStore.CopyLatest(actions);
+        const auto picked{ std::ranges::find(bots, m_SimulationUIStore.GetSelectedBot(), &Bot::Number) };
 
-        // note: Temporary until the bot editor (sub-commit 3) replaces this table: it scrolls instead of widening the window.
-        if (!ImGui::BeginTable("Bots", 11, flags | ImGuiTableFlags_ScrollX)) return;
-
-        ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Player");
-        ImGui::TableSetupColumn("Machine");
-        ImGui::TableSetupColumn("User");
-        ImGui::TableSetupColumn("In engine");
-        ImGui::TableSetupColumn("Team");
-        ImGui::TableSetupColumn("Unit (flags)");
-        ImGui::TableSetupColumn("Action this tick");
-        ImGui::TableSetupColumn("Action");
-        ImGui::TableSetupColumn("Requests");
-        ImGui::TableSetupColumn("Remove");
-        ImGui::TableHeadersRow();
-
-        for (const Bot& bot : bots)
+        if (picked == bots.end())
         {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("%zu", bot.Number);
-            ImGui::TableNextColumn();
-            ImGui::Text("%zu", bot.PlayerIndex);
-            ImGui::TableNextColumn();
-            ImGui::Text("%zu", bot.MachineIndex);
-            ImGui::TableNextColumn();
-            ImGui::Text("%zu", bot.Slot);
-
-            const SessionPlayer& player{ snapshot.Players[bot.PlayerIndex] };
-
-            ImGui::TableNextColumn();
-            if (player.IsValid && player.Identifier == bot.Identifier) ImGui::Text("%08X", player.Handle);
-            else                                                       ImGui::TextDisabled("Gone");
-
-            ImGui::PushID(static_cast<int>(bot.PlayerIndex));
-
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(-1.0f);
-            if (ImGui::BeginCombo("##Team", GetTeamLabel(player.Team)))
-            {
-                for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
-                {
-                    const auto value{ static_cast<std::int8_t>(team) };
-                    if (ImGui::Selectable(k_TeamLabels[team], player.Team == value) && player.Team != value)
-                    {
-                        m_BotStore.RequestTeam(TeamRequest{ .PlayerIndex = bot.PlayerIndex, .Team = value });
-                    }
-                }
-
-                ImGui::EndCombo();
-            }
-
-            ImGui::TableNextColumn();
-            if (player.UnitHandle != k_NoHandle) ImGui::Text("%08X (%08X)", player.UnitHandle, player.UnitFlags);
-            else                                 ImGui::TextDisabled("-");
-
-            ImGui::TableNextColumn();
-            const bool hasAction{ (actions.Mask & (1u << bot.PlayerIndex)) != 0 };
-            ImGui::TextUnformatted(hasAction ? "yes" : "no");
-            ImGui::SameLine();
-            if (ImGui::SmallButton("Log")) this->LogBotAction(bot.Number, bot.PlayerIndex, actions);
-
-            ImGui::TableNextColumn();
-
-            const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex, player.Handle) };
-
-            if (const auto mode{ DrawActionRadios(current) })
-            {
-                m_SimulationUIStore.SetBotAction(bot.PlayerIndex, player.Handle, *mode);
-                this->ApplyBotAction(bot.PlayerIndex, *mode);
-            }
-
-            // note: One-tick presses of the client (D120). They only reach the bot while its action is not Engine.
-            ImGui::TableNextColumn();
-            if (ImGui::SmallButton("Weapon"))
-            {
-                m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsWeaponSwitch = true });
-            }
-            ImGui::SameLine();
-            if (ImGui::SmallButton("Grenade"))
-            {
-                m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsGrenadeSwitch = true });
-            }
-            ImGui::SameLine();
-            if (ImGui::SmallButton("Zoom")) m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsZoom = true });
-
-            if (player.Client)
-            {
-                ImGui::Text("Slot %d, inventory %u, grenade %d, zoom %d%s", player.Client->WeaponSlot,
-                    player.Client->InventoryVersion, player.Client->GrenadeType, player.Client->ZoomLevel,
-                    player.Client->IsSeated ? ", seated" : "");
-            }
-
-            ImGui::TableNextColumn();
-            if (ImGui::SmallButton("Remove")) m_BotStore.RequestRemove(bot.Number);
-            ImGui::SetItemTooltip("The bot leaves the match on the next tick and its slot is free at once. The result is in the log.");
-
-            ImGui::PopID();
+            ImGui::TextDisabled("Pick a bot to see its detail.");
+            return;
         }
 
-        ImGui::EndTable();
+        this->DrawBotDetail(*picked, snapshot.Players[picked->PlayerIndex]);
     }
 
     auto SimulationUIService::DrawShadow() -> void
@@ -1313,34 +1274,216 @@ namespace DevTools::Workbench::Simulation::System
 
     auto SimulationUIService::DrawRoster() -> void
     {
-        const std::string line{ ToText(m_MatchSetupService.GetActive(), m_MatchSetupService.GetResult()) };
-        ImGui::TextWrapped("%s", line.c_str());
-
+        // The counters are the bots each team should have in total, not bots to add. Apply now and Next round both go through the match
+        // setup as a request with only the roster, so an applied roster is the active one and the next match applies it again.
         Roster editor{ m_SimulationUIStore.GetRosterEditor() };
         bool isEdited{ false };
 
-        for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+        ControlFlow flow{};
+
+        for (const std::size_t team : { std::size_t{ 0 }, std::size_t{ 1 } })
         {
-            int count{ static_cast<int>(editor.Teams[team]) };
-            ImGui::SetNextItemWidth(80.0f);
-            if (ImGui::InputInt(k_TeamLabels[team], &count, 1, 4))
-            {
-                editor.Teams[team] = static_cast<std::size_t>((std::clamp)(count, 0, static_cast<int>(k_MaxPlayers)));
-                isEdited = true;
-            }
+            flow.Place(CounterWidth(k_TeamLabels[team]));
+            isEdited |= DrawCounter(k_TeamLabels[team], editor.Teams[team], "Bots on this team, in total.");
         }
 
-        int autoCount{ static_cast<int>(editor.Auto) };
-        ImGui::SetNextItemWidth(80.0f);
-        if (ImGui::InputInt("Auto", &autoCount, 1, 4))
+        flow.Place(CounterWidth("Auto"));
+        isEdited |= DrawCounter("Auto", editor.Auto, "Bots that go to the team of the first local player, in total.");
+
+        if (ImGui::TreeNode("Other teams"))
         {
-            editor.Auto = static_cast<std::size_t>((std::clamp)(autoCount, 0, static_cast<int>(k_MaxPlayers)));
-            isEdited = true;
+            ControlFlow others{};
+
+            for (std::size_t team{ 2 }; team < k_MaxTeams; ++team)
+            {
+                others.Place(CounterWidth(k_TeamLabels[team]));
+                isEdited |= DrawCounter(k_TeamLabels[team], editor.Teams[team], "Bots on this team, in total.");
+            }
+
+            ImGui::TreePop();
         }
 
         if (isEdited) m_SimulationUIStore.SetRosterEditor(editor);
 
-        if (ImGui::Button("Request roster")) m_MatchSetupService.Request(MatchSetup{ .Bots = editor }, MatchSetupOrigin::Ui);
+        ControlFlow buttons{};
+
+        // A request waiting from the bridge or the bench would be replaced by ours without a word: the buttons wait for it instead.
+        const std::optional<MatchSetupOrigin> waiting{ m_MatchSetupService.GetPendingOrigin() };
+        const bool isOtherWaiting{ waiting.has_value() && *waiting != MatchSetupOrigin::Ui };
+        const std::string otherReason{ isOtherWaiting ? std::format("A setup from {} is waiting", ToText(*waiting)) : std::string{} };
+
+        {
+            const bool isInMatch{ m_LifecycleStore.GetStatus() == Engine::Base::Lifecycle::Type::Status::Running };
+            const DisabledScope noMatch{ isOtherWaiting || !isInMatch, isOtherWaiting ? otherReason.c_str() : "Needs a match" };
+
+            if (buttons.Button("Apply now")) m_MatchSetupService.Request(MatchSetup{ .Bots = editor, .IsImmediate = true }, MatchSetupOrigin::Ui);
+            noMatch.Tooltip("Turns the bots of the match into this roster on the next frame, in the middle of the round if need be.");
+        }
+
+        {
+            const DisabledScope otherWaiting{ isOtherWaiting, otherReason.c_str() };
+
+            if (buttons.Button("Next round")) m_MatchSetupService.Request(MatchSetup{ .Bots = editor }, MatchSetupOrigin::Ui);
+            otherWaiting.Tooltip("Applies this roster at the end of the round, or at the next load if no match is running.");
+        }
+
+        // The last request: waiting, applied (the round it went in) or rejected with its reason. The tooltip has the whole setup line.
+        const MatchSetupResult result{ m_MatchSetupService.GetResult() };
+        const std::string line{ ToText(m_MatchSetupService.GetActive(), result) };
+
+        switch (result.Outcome)
+        {
+        case MatchSetupOutcome::None:
+            StatusGuiService::DrawChip("No request yet", StatusKind::Off, line.c_str());
+            break;
+        case MatchSetupOutcome::Pending:
+            StatusGuiService::DrawChip("Pending", StatusKind::Pending, line.c_str());
+            break;
+        case MatchSetupOutcome::AtLoad:
+        case MatchSetupOutcome::Applied:
+        {
+            const std::string text{ result.Reason.empty() ? std::format("Applied (round {})", result.Round)
+                : std::format("Applied (round {}): {}", result.Round, result.Reason) };
+            StatusGuiService::DrawChip(Shorten(text).c_str(), result.Reason.empty() ? StatusKind::Ok : StatusKind::Pending, line.c_str());
+            break;
+        }
+        case MatchSetupOutcome::Rejected:
+            StatusGuiService::DrawChip(Shorten("Rejected: " + result.Reason).c_str(), StatusKind::Error, line.c_str());
+            break;
+        }
+    }
+
+    auto SimulationUIService::DrawBotTable(const std::vector<Bot>& bots, const SessionSnapshot& snapshot) -> void
+    {
+        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit };
+
+        if (!ImGui::BeginTable("Bots", 4, flags)) return;
+
+        ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, k_NumberColumnWidth);
+        ImGui::TableSetupColumn("Team", ImGuiTableColumnFlags_WidthFixed, k_NameColumnWidth);
+        ImGui::TableSetupColumn("State", ImGuiTableColumnFlags_WidthFixed, k_StateColumnWidth);
+        ImGui::TableSetupColumn("Mode", ImGuiTableColumnFlags_WidthFixed, k_BotModeColumnWidth);
+        ImGui::TableHeadersRow();
+
+        const auto tick{ m_TickStore.Acquire() };
+        const Players* players{ tick && tick->Players ? tick->Players.get() : nullptr };
+        const std::size_t picked{ m_SimulationUIStore.GetSelectedBot() };
+
+        for (const Bot& bot : bots)
+        {
+            const SessionPlayer& player{ snapshot.Players[bot.PlayerIndex] };
+            const bool isInEngine{ player.IsValid && player.Identifier == bot.Identifier };
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            if (ImGui::Selectable(std::to_string(bot.Number).c_str(), bot.Number == picked, ImGuiSelectableFlags_SpanAllColumns))
+            {
+                m_SimulationUIStore.SetSelectedBot(bot.Number);
+            }
+
+            ImGui::TableNextColumn();
+            ImGui::TextColored(GetTeamColor(player.Team), "%s", GetTeamLabel(player.Team));
+
+            // The state: gone (no longer in the engine), then alive or dead by the live body of the tick. The tick does not say who
+            // carries an objective without more work, so there is no "flag" state yet.
+            ImGui::TableNextColumn();
+            if (!isInEngine)
+            {
+                ImGui::TextDisabled("gone");
+            }
+            else
+            {
+                const Player* seen{ players ? players->Find(player.Handle) : nullptr };
+                ImGui::TextUnformatted(seen != nullptr && seen->IsAlive() ? "alive" : "dead");
+            }
+
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(k_LocalPlayerActionLabels[static_cast<std::size_t>(
+                m_SimulationUIStore.GetBotAction(bot.PlayerIndex, player.Handle))]);
+        }
+
+        ImGui::EndTable();
+    }
+
+    auto SimulationUIService::DrawBotDetail(const Bot& bot, const SessionPlayer& player) -> void
+    {
+        const bool isInEngine{ player.IsValid && player.Identifier == bot.Identifier };
+
+        PlayerActions actions{};
+        m_PlayerActionStore.CopyLatest(actions);
+
+        ImGui::PushID(static_cast<int>(bot.PlayerIndex));
+        ImGui::SeparatorText(std::format("Bot {}", bot.Number).c_str());
+
+        const std::string handle{ isInEngine ? std::format("{:08X}", player.Handle) : std::string{ "gone" } };
+        ImGui::Text("Player %zu (%s), machine %zu, user %zu", bot.PlayerIndex, handle.c_str(), bot.MachineIndex, bot.Slot);
+
+        if (player.UnitHandle != k_NoHandle) ImGui::Text("Unit %08X (flags %08X)", player.UnitHandle, player.UnitFlags);
+        else                                 ImGui::TextDisabled("No unit");
+
+        const bool hasAction{ (actions.Mask & (1u << bot.PlayerIndex)) != 0 };
+        ImGui::Text("Action this tick: %s", hasAction ? "yes" : "no");
+
+        if (player.Client)
+        {
+            ImGui::Text("Slot %d, inventory %u, grenade %d, zoom %d%s", player.Client->WeaponSlot, player.Client->InventoryVersion,
+                player.Client->GrenadeType, player.Client->ZoomLevel, player.Client->IsSeated ? ", seated" : "");
+        }
+
+        // Changing the team asks the engine on the next tick, the same request the roster uses for a move.
+        ImGui::SetNextItemWidth(k_InputComboWidth);
+        if (ImGui::BeginCombo("Team", GetTeamLabel(player.Team)))
+        {
+            for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
+            {
+                const auto value{ static_cast<std::int8_t>(team) };
+                if (ImGui::Selectable(k_TeamLabels[team], player.Team == value) && player.Team != value)
+                {
+                    m_BotStore.RequestTeam(TeamRequest{ .PlayerIndex = bot.PlayerIndex, .Team = value });
+                }
+            }
+
+            ImGui::EndCombo();
+        }
+        StatusGuiService::ShowTooltip("Moves this bot to another team on the next tick.");
+
+        const LocalPlayerAction current{ m_SimulationUIStore.GetBotAction(bot.PlayerIndex, player.Handle) };
+
+        ImGui::PushID("BotMode");
+        if (const auto mode{ DrawActionRadios(current) })
+        {
+            m_SimulationUIStore.SetBotAction(bot.PlayerIndex, player.Handle, *mode);
+            this->ApplyBotAction(bot.PlayerIndex, *mode);
+        }
+        ImGui::PopID();
+        StatusGuiService::ShowTooltip("What the bot does each tick. Engine repeats the last action the engine applied.");
+
+        // note: One-tick presses of the client. They only reach the bot while its action is not Engine.
+        ControlFlow flow{};
+
+        if (flow.Button("Weapon")) m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsWeaponSwitch = true });
+        StatusGuiService::ShowTooltip("Presses the weapon switch for one tick. Needs a mode other than Engine.");
+
+        if (flow.Button("Grenade")) m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsGrenadeSwitch = true });
+        StatusGuiService::ShowTooltip("Presses the grenade switch for one tick. Needs a mode other than Engine.");
+
+        if (flow.Button("Zoom")) m_PlayerActionStore.RequestClient(bot.PlayerIndex, ClientRequests{ .IsZoom = true });
+        StatusGuiService::ShowTooltip("Presses zoom for one tick. Needs a mode other than Engine.");
+
+        if (flow.Button("Log")) this->LogBotAction(bot.Number, bot.PlayerIndex, actions);
+        StatusGuiService::ShowTooltip("Writes the latest action of this bot to the log.");
+
+        // Remove goes to the right end of the line, in red.
+        const float removeWidth{ ImGui::CalcTextSize("Remove").x + (ImGui::GetStyle().FramePadding.x * 2.0f) };
+        flow.Place(removeWidth);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (std::max)(0.0f, ImGui::GetContentRegionAvail().x - removeWidth));
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.65f, 0.15f, 0.15f, 1.0f });
+        if (ImGui::Button("Remove")) m_BotStore.RequestRemove(bot.Number);
+        ImGui::PopStyleColor();
+        StatusGuiService::ShowTooltip("The bot leaves the match on the next tick and its slot is free at once. The result is in the log.");
+
+        ImGui::PopID();
     }
 
     auto SimulationUIService::ApplyBotAction(std::size_t playerIndex, LocalPlayerAction mode) -> void

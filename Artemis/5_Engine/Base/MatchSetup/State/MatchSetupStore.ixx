@@ -39,6 +39,12 @@ export namespace Engine::Base::MatchSetup::State
         // return: Whether a request waits. Lock free: the game thread asks it every tick.
         auto HasPending() const -> bool;
 
+        // return: Who made the request waiting, or nothing.
+        auto GetPendingOrigin() const -> std::optional<MatchSetupOrigin>;
+
+        // return: Whether the request waiting is an immediate one (MatchSetup::IsImmediate). Lock free, like HasPending.
+        auto HasImmediate() const -> bool;
+
         // Reads the request waiting and clears it in one step. The result stays Pending until Finish.
         // return: The request, or none.
         auto TakePending() -> std::optional<MatchSetupRequest>;
@@ -95,5 +101,6 @@ export namespace Engine::Base::MatchSetup::State
         bool m_IsLoadWindow{ false };
 
         std::atomic<bool> m_HasPending{ false };
+        std::atomic<bool> m_HasImmediate{ false };
     };
 }

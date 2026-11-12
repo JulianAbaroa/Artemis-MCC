@@ -2,18 +2,6 @@ module Engine.Control.Simulation.State;
 
 namespace Engine::Control::Simulation::State
 {
-    auto BotStore::RequestBot(std::optional<std::int8_t> team) -> void
-    {
-        std::scoped_lock lock(m_Mutex);
-        m_Requests.push_back(team);
-    }
-
-    auto BotStore::TakeRequests() -> std::vector<std::optional<std::int8_t>>
-    {
-        std::scoped_lock lock(m_Mutex);
-        return std::exchange(m_Requests, {});
-    }
-
     auto BotStore::RequestTeam(const TeamRequest& request) -> void
     {
         std::scoped_lock lock(m_Mutex);
@@ -83,7 +71,6 @@ namespace Engine::Control::Simulation::State
     auto BotStore::Cleanup() -> void
     {
         std::scoped_lock lock(m_Mutex);
-        m_Requests.clear();
         m_TeamRequests.clear();
         m_RemoveRequests.clear();
         m_Bots.clear();

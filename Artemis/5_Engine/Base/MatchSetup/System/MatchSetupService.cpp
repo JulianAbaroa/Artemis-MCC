@@ -115,7 +115,11 @@ namespace Engine::Base::MatchSetup::System
 
             std::optional<std::string> reason{};
 
-            if (setup.Bots) reason = CheckRosterSize(*setup.Bots).transform([](const std::string& text) { return "roster: " + text; });
+            // An immediate request is applied in the middle of a round, where only the roster can change.
+            if (setup.IsImmediate && (setup.Preset || setup.Map)) reason = "an immediate request carries only the roster";
+            else if (setup.IsImmediate && !setup.Bots) reason = "an immediate request needs a roster";
+
+            if (!reason && setup.Bots) reason = CheckRosterSize(*setup.Bots).transform([](const std::string& text) { return "roster: " + text; });
 
             if (!reason && isInMatch && setup.Preset) reason = m_PresetService.Check(*setup.Preset).transform([](const std::string& text) { return "preset: " + text; });
 
@@ -126,8 +130,11 @@ namespace Engine::Base::MatchSetup::System
 
             if (reason) return this->Reject(*reason);
 
+            const bool isImmediate{ setup.IsImmediate };
             const std::uint64_t sequence{ m_MatchSetupStore.Request(std::move(setup), origin) };
-            m_Log.Message("[MatchSetupService] INFO: Setup {} requested, it waits for the next start or round break.", sequence);
+
+            if (isImmediate) m_Log.Message("[MatchSetupService] INFO: Setup {} requested, it is applied on the next frame of the match.", sequence);
+            else                   m_Log.Message("[MatchSetupService] INFO: Setup {} requested, it waits for the next start or round break.", sequence);
             return sequence;
         }
         catch (const std::exception& exception)
@@ -156,6 +163,11 @@ namespace Engine::Base::MatchSetup::System
     {
         return ActiveMatchSetup{ .Preset = m_PresetService.GetActiveName(), .Map = m_MapVariantService.GetActiveName(),
             .Bots = m_MatchSetupStore.GetActiveBots() };
+    }
+
+    auto MatchSetupService::GetPendingOrigin() const -> std::optional<MatchSetupOrigin>
+    {
+        return m_MatchSetupStore.GetPendingOrigin();
     }
 
     auto MatchSetupService::GetResult() const -> MatchSetupResult
@@ -296,16 +308,21 @@ namespace Engine::Base::MatchSetup::System
     auto MatchSetupService::UpdateBreak(std::uintptr_t threadContext) -> void
     {
         // The break waits for the first tick of the match, which gives the load its bots. A request that waited at that tick is part of
-        // the load and is served in the first frame after it, whatever the round.
+        // the load and is served in the first frame after it, whatever the round. An immediate request (roster only) is served in the
+        // first frame after the first tick, whatever the round state, and never waits for a break.
         if (threadContext == 0 || !m_MatchSetupStore.HasPending() || !m_MatchSetupStore.IsMatchStarted()) return;
 
         const bool isAtLoad{ m_MatchSetupStore.IsLoadWindow() };
 
         try
         {
-            if (!isAtLoad && GetMatchSetupStep(true, true, ReadRoundState(threadContext)) != MatchSetupStep::Break) return;
+            const bool isBreak{ isAtLoad || GetMatchSetupStep(true, true, ReadRoundState(threadContext)) == MatchSetupStep::Break };
 
-            this->ApplyBreak(threadContext, isAtLoad);
+            // HasImmediate is only a cheap look: another thread may replace the request meanwhile, so the decision is made on the request
+            // that is taken, inside the lock of the store (ApplyBreak).
+            if (!isBreak && !m_MatchSetupStore.HasImmediate()) return;
+
+            this->ApplyBreak(threadContext, isAtLoad, isBreak);
         }
         catch (const std::exception& exception)
         {
@@ -357,12 +374,12 @@ namespace Engine::Base::MatchSetup::System
         m_Log.Message("[MatchSetupService] INFO: Setup {} applied at load (roster {}).", load->Sequence, ToText(*load->Bots));
     }
 
-    auto MatchSetupService::ApplyBreak(std::uintptr_t threadContext, bool isAtLoad) -> void
+    auto MatchSetupService::ApplyBreak(std::uintptr_t threadContext, bool isAtLoad, bool isBreak) -> void
     {
         RosterPort* const port{ m_RosterPort.load() };
         const std::optional<LiveMemory> live{ ReadLiveMemory(threadContext) };
         const std::optional<MatchSetupRequest> request{ m_MatchSetupStore.TakePendingIf(
-            [&live, port](const MatchSetup& setup) { return CanServe(setup, live, port != nullptr); }) };
+            [&live, port, isBreak](const MatchSetup& setup) { return (isBreak || setup.IsImmediate) && CanServe(setup, live, port != nullptr); }) };
         if (!request) return;
 
         if (isAtLoad) m_MatchSetupStore.SetLoadWindow(false);
@@ -376,7 +393,8 @@ namespace Engine::Base::MatchSetup::System
         {
             m_Log.Message("[MatchSetupService] ERROR: Setup {} failed with an exception: {}.", request->Sequence, exception.what());
             m_MatchSetupStore.Finish(MatchSetupResult{ .Outcome = MatchSetupOutcome::Rejected, .Sequence = request->Sequence,
-                .Round = ReadRoundIndex(threadContext).value_or(-1), .Reason = std::string{ "exception: " } + exception.what() }, std::nullopt);
+                .Round = ReadRoundIndex(threadContext).value_or(-1), .Reason = std::string{ "exception: " } + exception.what(),
+                .IsImmediate = request->Value.IsImmediate }, std::nullopt);
         }
     }
 
@@ -386,7 +404,7 @@ namespace Engine::Base::MatchSetup::System
         const std::optional<LiveMemory> live{ ReadLiveMemory(threadContext) };
         const std::int16_t round{ ReadRoundIndex(threadContext).value_or(-1) };
         const MatchSetupOutcome success{ isAtLoad ? MatchSetupOutcome::AtLoad : MatchSetupOutcome::Applied };
-        const char* const when{ isAtLoad ? "at load" : "between rounds" };
+        const char* const when{ isAtLoad ? "at load" : setup.IsImmediate ? "now, round" : "between rounds" };
 
         // Rejected means nothing was applied.
         const auto reject = [&](const std::string& reason, bool isFailure) {
@@ -394,7 +412,7 @@ namespace Engine::Base::MatchSetup::System
             else           m_Log.Message("[MatchSetupService] WARNING: Setup {} was not applied {} {}: {}.", request.Sequence, when, round, reason);
 
             m_MatchSetupStore.Finish(MatchSetupResult{ .Outcome = MatchSetupOutcome::Rejected, .Sequence = request.Sequence, .Round = round,
-                .Reason = reason }, std::nullopt);
+                .Reason = reason, .IsImmediate = setup.IsImmediate }, std::nullopt);
         };
 
         if ((setup.Preset || setup.Map) && !live) return reject("the game memory is not available", false);
@@ -506,7 +524,8 @@ namespace Engine::Base::MatchSetup::System
             }
         }
 
-        m_MatchSetupStore.Finish(MatchSetupResult{ .Outcome = success, .Sequence = request.Sequence, .Round = round, .Reason = reason }, adopted);
+        m_MatchSetupStore.Finish(MatchSetupResult{ .Outcome = success, .Sequence = request.Sequence, .Round = round, .Reason = reason,
+            .IsImmediate = setup.IsImmediate }, adopted);
 
         m_Log.Message("[MatchSetupService] INFO: Setup {} applied {} {} (preset {}, map {}, roster {}).", request.Sequence, when, round,
             setup.Preset ? (setup.Preset->Name.empty() ? std::string{ "none" } : setup.Preset->Name) : std::string{ "unchanged" },

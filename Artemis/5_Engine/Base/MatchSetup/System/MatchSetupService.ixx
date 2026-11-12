@@ -94,6 +94,10 @@ export namespace Engine::Base::MatchSetup::System
         // return: The setup the engine holds, which every start applies again.
         auto GetActive() const -> ActiveMatchSetup;
 
+        // return: Who made the request that waits, or nothing. The Workbench uses it so its buttons do not replace the request of
+        // another client without saying so.
+        auto GetPendingOrigin() const -> std::optional<MatchSetupOrigin>;
+
         // return: What became of the last request.
         auto GetResult() const -> MatchSetupResult;
 
@@ -118,7 +122,8 @@ export namespace Engine::Base::MatchSetup::System
         auto UpdateLoad(std::uintptr_t threadContext) -> void;
 
         // Applies the request waiting at the first frame whose round is ended or between rounds, never in the middle of a round (or in the
-        // first frame after the load when it waited at the first tick). The request is taken once and ends as Applied (AtLoad) or Rejected.
+        // first frame after the load when it waited at the first tick). An immediate request (MatchSetup::IsImmediate, roster only) is
+        // applied in the first frame after the first tick whatever the round state, through the same RosterPort the break uses. The request is taken once and ends as Applied (AtLoad) or Rejected.
         // note: Game thread only, from a hook that runs before the ticks of every frame, paused or not (SimulationTicksDetour). Never
         // throws.
         auto UpdateBreak(std::uintptr_t threadContext) -> void;
@@ -141,7 +146,9 @@ export namespace Engine::Base::MatchSetup::System
         auto ApplyLoad(std::uintptr_t threadContext) -> void;
 
         // Serves the request waiting, if the moment is right for what it holds.
-        auto ApplyBreak(std::uintptr_t threadContext, bool isAtLoad) -> void;
+        // param isBreak: Whether this is a tick of a round break or of the load. Out of a break only an immediate request is served, and
+        // that is decided on the request taken, under the lock of the store.
+        auto ApplyBreak(std::uintptr_t threadContext, bool isAtLoad, bool isBreak) -> void;
 
         // Checks everything the request holds against the live match, then writes it, and records the result.
         auto Serve(std::uintptr_t threadContext, RosterPort* port, const MatchSetupRequest& request, bool isAtLoad) -> void;

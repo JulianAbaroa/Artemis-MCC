@@ -54,11 +54,11 @@ export namespace DevTools::Workbench::Simulation::State
         auto GetBotAction(std::size_t playerIndex, std::uint32_t handle) const -> LocalPlayerAction;
         auto SetBotAction(std::size_t playerIndex, std::uint32_t handle, LocalPlayerAction action) -> void;
 
-        // Team of the next bots in team games, or nullopt for the team of the local player.
-        auto GetNewBotTeam() const -> std::optional<std::int8_t>;
-        auto SetNewBotTeam(std::optional<std::int8_t> team) -> void;
+        // Number of the bot whose detail the bots section shows, 0 for none.
+        auto GetSelectedBot() const -> std::size_t;
+        auto SetSelectedBot(std::size_t number) -> void;
 
-        // Counts typed in the roster editor of the bots section, sent with its button.
+        // Counts of the roster editor of the bots section, sent with its buttons.
         auto GetRosterEditor() const -> Roster;
         auto SetRosterEditor(const Roster& roster) -> void;
 
@@ -114,7 +114,7 @@ export namespace DevTools::Workbench::Simulation::State
         std::size_t m_SessionPlayer{ 0 };
         std::array<bool, k_SimulationSectionCount> m_OpenSections{ true, true, true, true, false };
         bool m_IsPlayerActionsOpen{ false };
-        std::optional<std::int8_t> m_NewBotTeam{};
+        std::size_t m_SelectedBot{ 0 };
         Roster m_RosterEditor{};
         std::array<char, k_RecordNameSize> m_RecordNameField{};
         std::array<char, k_RecordNameSize> m_RenameField{};

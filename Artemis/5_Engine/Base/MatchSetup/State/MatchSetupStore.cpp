@@ -12,6 +12,7 @@ namespace Engine::Base::MatchSetup::State
     {
         std::scoped_lock lock(m_Mutex);
 
+        m_HasImmediate.store(setup.IsImmediate, std::memory_order_release);
         m_Pending = MatchSetupRequest{ .Value = std::move(setup), .Sequence = ++m_Sequence, .Origin = origin };
         m_Result = MatchSetupResult{ .Outcome = MatchSetupOutcome::Pending, .Sequence = m_Sequence };
         m_HasPending.store(true, std::memory_order_release);
@@ -30,10 +31,24 @@ namespace Engine::Base::MatchSetup::State
         return m_HasPending.load(std::memory_order_acquire);
     }
 
+    auto MatchSetupStore::GetPendingOrigin() const -> std::optional<MatchSetupOrigin>
+    {
+        std::scoped_lock lock(m_Mutex);
+        if (!m_Pending) return std::nullopt;
+
+        return m_Pending->Origin;
+    }
+
+    auto MatchSetupStore::HasImmediate() const -> bool
+    {
+        return m_HasImmediate.load(std::memory_order_acquire);
+    }
+
     auto MatchSetupStore::TakePending() -> std::optional<MatchSetupRequest>
     {
         std::scoped_lock lock(m_Mutex);
         m_HasPending.store(false, std::memory_order_release);
+        m_HasImmediate.store(false, std::memory_order_release);
         return std::exchange(m_Pending, std::nullopt);
     }
 
@@ -43,6 +58,7 @@ namespace Engine::Base::MatchSetup::State
         if (!m_Pending || !canServe(m_Pending->Value)) return std::nullopt;
 
         m_HasPending.store(false, std::memory_order_release);
+        m_HasImmediate.store(false, std::memory_order_release);
         return std::exchange(m_Pending, std::nullopt);
     }
 
@@ -54,6 +70,7 @@ namespace Engine::Base::MatchSetup::State
         if (m_Result.Sequence == m_Pending->Sequence) m_Result = MatchSetupResult{};
         m_Pending.reset();
         m_HasPending.store(false, std::memory_order_release);
+        m_HasImmediate.store(false, std::memory_order_release);
     }
 
     auto MatchSetupStore::GetSequence() const -> std::uint64_t

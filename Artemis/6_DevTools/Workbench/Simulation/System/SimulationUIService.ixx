@@ -10,6 +10,7 @@ import Engine.Match.System;
 import Engine.Base.Host.State;
 import Engine.Control.Input.Type;
 import Engine.Control.Input.State;
+import Engine.Control.Simulation.Type;
 import Engine.Control.Simulation.State;
 import Bridge.Transport.System;
 import Perception.Players.Type;
@@ -61,6 +62,9 @@ export namespace DevTools::Workbench::Simulation::System
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
         using BotStore = Engine::Control::Simulation::State::BotStore;
+        using Bot = Engine::Control::Simulation::Type::Bot;
+        using SessionPlayer = Engine::Control::Simulation::Type::SessionPlayer;
+        using SessionSnapshot = Engine::Control::Simulation::Type::SessionSnapshot;
 
         using BridgeService = Bridge::Transport::System::BridgeService;
 
@@ -182,12 +186,18 @@ export namespace DevTools::Workbench::Simulation::System
         // Writes the game options entry of every valid player to the log, so the configuration layout can be shared.
         auto LogOptions() -> void;
 
-        // Draws the add button, the roster line and editor, and one row per bot with its action mode (A9 M5b, LS.1).
+        // Draws the roster editor with its buttons and the chip of the last request, the table of the bots and the detail of the picked one.
         auto DrawBots() -> void;
 
-        // Draws the match setup line (what the engine holds and the state of the last request, D286) and the counts per team to request a
-        // setup with only another roster (D284).
+        // Draws the counters of the roster editor (Red, Blue, Auto and, folded, the other six teams), the Apply now and Next round buttons
+        // and the chip with the result of the last request.
         auto DrawRoster() -> void;
+
+        // Draws the table of the bots: number, team, state and mode.
+        auto DrawBotTable(const std::vector<Bot>& bots, const SessionSnapshot& snapshot) -> void;
+
+        // Draws the detail of one bot: its ids, the team, the action mode, the one-tick requests and Remove.
+        auto DrawBotDetail(const Bot& bot, const SessionPlayer& player) -> void;
 
         // Draws the shadow check (D122): its switch and the comparisons of every field.
         auto DrawShadow() -> void;

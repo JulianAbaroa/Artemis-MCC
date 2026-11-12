@@ -230,11 +230,6 @@ namespace Engine::Control::Simulation::System
             this->RemoveBot(threadContext, number);
         }
 
-        for (const std::optional<std::int8_t> team : m_BotStore.TakeRequests())
-        {
-            if (!this->AddBot(threadContext, team)) break;
-        }
-
         for (const TeamRequest& request : m_BotStore.TakeTeamRequests())
         {
             this->ApplyTeam(threadContext, request);

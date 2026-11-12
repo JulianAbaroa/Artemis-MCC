@@ -22,13 +22,6 @@ export namespace Engine::Control::Simulation::State
         BotStore(const BotStore&) = delete;
         auto operator=(const BotStore&) -> BotStore& = delete;
 
-        // Asks for one more bot. The game thread adds it on its next tick.
-        // param team: Team of the bot in team games, or nullopt for the team of the local player.
-        auto RequestBot(std::optional<std::int8_t> team) -> void;
-
-        // return: The teams of the bots asked for and not added yet (one entry per bot), and clears them.
-        auto TakeRequests() -> std::vector<std::optional<std::int8_t>>;
-
         // Asks to move a bot to another team. The game thread applies it on its next tick.
         auto RequestTeam(const TeamRequest& request) -> void;
 
@@ -58,7 +51,6 @@ export namespace Engine::Control::Simulation::State
 
     private:
         mutable std::mutex m_Mutex{};
-        std::vector<std::optional<std::int8_t>> m_Requests{};
         std::vector<TeamRequest> m_TeamRequests{};
         std::vector<std::size_t> m_RemoveRequests{};
         std::vector<Bot> m_Bots{};

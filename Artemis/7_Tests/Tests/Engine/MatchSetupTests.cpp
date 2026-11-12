@@ -1033,3 +1033,166 @@ TEST_F(MatchSetupBreakTests, TheActiveBotsAtAStartWithNoRequestAreAppliedWithout
     EXPECT_EQ(m_Port.m_Applies, 2u);
     EXPECT_EQ(m_Service.GetResult(), MatchSetupResult{});
 }
+
+TEST_F(MatchSetupTests, AnImmediateRequestWithAPresetOrAMapIsRejectedWholeAndNothingWaits)
+{
+    const std::uint64_t withPreset{ m_Service.Request(MatchSetup{ .Preset = this->Pick("fixture"), .Bots = MakeRoster(1, 1), .IsImmediate = true },
+        MatchSetupOrigin::Ui) };
+
+    EXPECT_FALSE(m_Store.HasPending());
+    EXPECT_FALSE(m_Store.HasImmediate());
+    EXPECT_EQ(m_Service.GetResult().Outcome, MatchSetupOutcome::Rejected);
+    EXPECT_EQ(m_Service.GetResult().Sequence, withPreset);
+    EXPECT_NE(m_Service.GetResult().Reason.find("only the roster"), std::string::npos);
+
+    const std::uint64_t withMap{ m_Service.Request(MatchSetup{ .Map = MakeMap("reach bus", 3006, std::byte{ 0x5C }), .Bots = MakeRoster(1, 1),
+        .IsImmediate = true }, MatchSetupOrigin::Ui) };
+
+    EXPECT_FALSE(m_Store.HasPending());
+    EXPECT_EQ(m_Service.GetResult().Outcome, MatchSetupOutcome::Rejected);
+    EXPECT_EQ(m_Service.GetResult().Sequence, withMap);
+    EXPECT_NE(m_Service.GetResult().Reason.find("only the roster"), std::string::npos);
+
+    // Nothing of those requests is active or written at the next start.
+    Buffer start{ MakeConfiguration(3006) };
+    const Buffer original{ start };
+    this->Start(start);
+
+    EXPECT_EQ(start, original);
+    EXPECT_FALSE(m_Service.GetActive().Bots.has_value());
+}
+
+TEST_F(MatchSetupTests, AnImmediateRequestWithoutARosterIsRejected)
+{
+    m_Service.Request(MatchSetup{ .IsImmediate = true }, MatchSetupOrigin::Ui);
+
+    EXPECT_FALSE(m_Store.HasPending());
+    EXPECT_EQ(m_Service.GetResult().Outcome, MatchSetupOutcome::Rejected);
+}
+
+TEST(MatchSetupStoreTest, TheImmediateMarkFollowsTheRequestWaiting)
+{
+    MatchSetupStore store{};
+
+    store.Request(MatchSetup{ .Bots = MakeRoster(1, 1), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    EXPECT_TRUE(store.HasImmediate());
+
+    // A normal request replaces it.
+    store.Request(MatchSetup{ .Bots = MakeRoster(1, 1) }, MatchSetupOrigin::Ui);
+    EXPECT_FALSE(store.HasImmediate());
+
+    store.Request(MatchSetup{ .Bots = MakeRoster(2, 2), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    EXPECT_TRUE(store.TakePending().has_value());
+    EXPECT_FALSE(store.HasImmediate());
+
+    store.Request(MatchSetup{ .Bots = MakeRoster(2, 2), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    store.DropPending(MatchSetupOrigin::Ui);
+    EXPECT_FALSE(store.HasImmediate());
+}
+
+TEST(MatchSetupTypeTest, AnImmediateResultSaysNowAndNotBetweenRounds)
+{
+    const ActiveMatchSetup active{ .Bots = MakeRoster(1, 2) };
+
+    EXPECT_EQ(ToText(active, MatchSetupResult{ .Outcome = MatchSetupOutcome::Applied, .Round = 2, .IsImmediate = true }),
+        "Setup: preset none, map none, roster 0:1 1:2 (now, round 2)");
+}
+
+TEST_F(MatchSetupBreakTests, AnImmediateRosterIsAppliedOnTheNextFrameInTheMiddleOfARoundAndBecomesTheActiveOne)
+{
+    this->FirstTick();
+    m_Game.SetRound(k_RoundStateInPlay, 1);
+
+    const std::uint64_t sequence{ m_Service.Request(MatchSetup{ .Bots = MakeRoster(2, 3), .IsImmediate = true }, MatchSetupOrigin::Ui) };
+    EXPECT_EQ(m_Service.GetResult().Outcome, MatchSetupOutcome::Pending);
+
+    m_Service.UpdateBreak(m_Game.Context());
+
+    EXPECT_FALSE(m_Store.HasPending());
+    EXPECT_EQ(m_Port.m_Applies, 1u);
+    EXPECT_EQ(m_Service.GetResult(), (MatchSetupResult{ .Outcome = MatchSetupOutcome::Applied, .Sequence = sequence, .Round = 1, .IsImmediate = true }));
+    EXPECT_EQ(m_Service.GetActive().Bots, MakeRoster(2, 3));
+
+    // The active roster is applied again at the next load, as for any applied roster.
+    m_Store.Cleanup();
+    Buffer next{ MatchSetupTests::MakeConfiguration(3006) };
+    this->Start(next);
+    m_Service.UpdateLoad(m_Game.Context());
+    EXPECT_EQ(m_Port.m_Applies, 2u);
+}
+
+TEST_F(MatchSetupBreakTests, ANormalRosterRequestStillWaitsForTheBreakWhileAnImmediateOneDoesNot)
+{
+    this->FirstTick();
+    m_Game.SetRound(k_RoundStateInPlay, 1);
+
+    m_Service.Request(MatchSetup{ .Bots = MakeRoster(1, 1) }, MatchSetupOrigin::Ui);
+    m_Service.UpdateBreak(m_Game.Context());
+    EXPECT_TRUE(m_Store.HasPending());
+    EXPECT_EQ(m_Port.m_Applies, 0u);
+
+    m_Service.Request(MatchSetup{ .Bots = MakeRoster(4, 4), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    m_Service.UpdateBreak(m_Game.Context());
+    EXPECT_FALSE(m_Store.HasPending());
+    EXPECT_EQ(m_Port.m_Applies, 1u);
+}
+
+TEST_F(MatchSetupBreakTests, AnImmediateRosterThatDoesNothingIsRejectedWithItsReasonAndKeepsTheActiveRoster)
+{
+    this->FirstTick();
+    m_Game.SetRound(k_RoundStateInPlay, 1);
+    m_Service.Request(MatchSetup{ .Bots = MakeRoster(1, 1), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    m_Service.UpdateBreak(m_Game.Context());
+    ASSERT_EQ(m_Service.GetActive().Bots, MakeRoster(1, 1));
+
+    m_Port.m_Application = RosterApplication{ .Reason = "no free machine slot" };
+    const std::uint64_t sequence{ m_Service.Request(MatchSetup{ .Bots = MakeRoster(5, 5), .IsImmediate = true }, MatchSetupOrigin::Ui) };
+    m_Service.UpdateBreak(m_Game.Context());
+
+    EXPECT_EQ(m_Service.GetResult().Outcome, MatchSetupOutcome::Rejected);
+    EXPECT_EQ(m_Service.GetResult().Sequence, sequence);
+    EXPECT_NE(m_Service.GetResult().Reason.find("no free machine slot"), std::string::npos);
+    EXPECT_EQ(m_Service.GetActive().Bots, MakeRoster(1, 1));
+}
+
+TEST_F(MatchSetupBreakTests, AnImmediateRequestReplacedByANormalOneIsNotServedInTheMiddleOfARound)
+{
+    this->FirstTick();
+    m_Game.SetRound(k_RoundStateInPlay, 1);
+    const Buffer before{ m_Game.Snapshot() };
+
+    m_Service.Request(MatchSetup{ .Bots = MakeRoster(1, 1), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    m_Service.Request(MatchSetup{ .Preset = this->Pick("between"), .Map = MakeMap("reach bus", 3006, std::byte{ 0x5C }), .Bots = MakeRoster(2, 2) },
+        MatchSetupOrigin::Bench);
+
+    m_Service.UpdateBreak(m_Game.Context());
+
+    EXPECT_TRUE(m_Store.HasPending());
+    EXPECT_EQ(m_Port.m_Applies, 0u);
+    EXPECT_EQ(m_Game.Snapshot(), before);
+}
+
+TEST(MatchSetupStoreTest, TheTakeDecidesOnTheRequestItTakesNotOnTheMarkRead)
+{
+    MatchSetupStore store{};
+
+    // The mark was read as immediate, then a normal request replaced the one waiting: the condition sees the normal one and takes nothing.
+    store.Request(MatchSetup{ .Bots = MakeRoster(1, 1), .IsImmediate = true }, MatchSetupOrigin::Ui);
+    ASSERT_TRUE(store.HasImmediate());
+    store.Request(MatchSetup{ .Bots = MakeRoster(2, 2) }, MatchSetupOrigin::Bench);
+
+    EXPECT_FALSE(store.TakePendingIf([](const MatchSetup& setup) { return setup.IsImmediate; }).has_value());
+    EXPECT_TRUE(store.HasPending());
+    EXPECT_EQ(store.GetPendingOrigin(), MatchSetupOrigin::Bench);
+}
+
+TEST_F(MatchSetupTests, TheOriginOfTheWaitingRequestIsReadable)
+{
+    EXPECT_FALSE(m_Service.GetPendingOrigin().has_value());
+
+    m_Service.Request(MatchSetup{ .Bots = MakeRoster(1, 1) }, MatchSetupOrigin::Bridge);
+    EXPECT_EQ(m_Service.GetPendingOrigin(), MatchSetupOrigin::Bridge);
+
+    m_Service.Cancel(MatchSetupOrigin::Bridge);
+    EXPECT_FALSE(m_Service.GetPendingOrigin().has_value());
+}

@@ -117,14 +117,14 @@ namespace DevTools::Workbench::Simulation::State
         }
     }
 
-    auto SimulationUIStore::GetNewBotTeam() const -> std::optional<std::int8_t>
+    auto SimulationUIStore::GetSelectedBot() const -> std::size_t
     {
-        return m_NewBotTeam;
+        return m_SelectedBot;
     }
 
-    auto SimulationUIStore::SetNewBotTeam(std::optional<std::int8_t> team) -> void
+    auto SimulationUIStore::SetSelectedBot(std::size_t number) -> void
     {
-        m_NewBotTeam = team;
+        m_SelectedBot = number;
     }
 
     auto SimulationUIStore::GetRecordNameField() -> std::array<char, k_RecordNameSize>&

@@ -57,6 +57,9 @@ export namespace Engine::Base::MatchSetup::Type
         // A null map variant asks for the one the match loaded with.
         std::optional<std::shared_ptr<const ActiveMapVariant>> Map{};
         std::optional<Roster> Bots{};
+        // Apply the roster on the next frame of a running match instead of at the next round break (U.1, D289). It carries only the roster:
+        // a request with a preset or a map variant is rejected whole, because those are only written at a start or a break.
+        bool IsImmediate{ false };
     };
 
     // What became of the last setup request (D286).
@@ -83,6 +86,8 @@ export namespace Engine::Base::MatchSetup::Type
         // Round index of the match when it was applied, or -1.
         std::int16_t Round{ -1 };
         std::string Reason{};
+        // Whether the request was an immediate one, so the text says "now" and not "between rounds".
+        bool IsImmediate{ false };
 
         auto operator==(const MatchSetupResult&) const -> bool = default;
     };
@@ -145,6 +150,19 @@ export namespace Engine::Base::MatchSetup::Type
         return (*roundState == k_RoundStateEnded || *roundState == k_RoundStateBetween) ? MatchSetupStep::Break : MatchSetupStep::Nothing;
     }
 
+    // return: The name of the client, for the messages that say whose request waits.
+    auto ToText(MatchSetupOrigin origin) -> std::string
+    {
+        switch (origin)
+        {
+        case MatchSetupOrigin::Bridge: return "the bridge";
+        case MatchSetupOrigin::Bench: return "the bench";
+        case MatchSetupOrigin::Ui: return "the UI";
+        }
+
+        return "a client";
+    }
+
     // return: The roster as text for logs and the screens: the teams with bots as "team:count" and the auto ones, or "empty".
     auto ToText(const Roster& roster) -> std::string
     {
@@ -171,7 +189,7 @@ export namespace Engine::Base::MatchSetup::Type
         case MatchSetupOutcome::Pending: state = "pending"; break;
         case MatchSetupOutcome::AtLoad: state = result.Reason.empty() ? std::string{ "at load" } : "at load, " + result.Reason; break;
         case MatchSetupOutcome::Applied:
-            state = std::format("between rounds {}", result.Round) + (result.Reason.empty() ? std::string{} : ", " + result.Reason);
+            state = std::format("{} {}", result.IsImmediate ? "now, round" : "between rounds", result.Round) + (result.Reason.empty() ? std::string{} : ", " + result.Reason);
             break;
         case MatchSetupOutcome::Rejected: state = "rejected: " + result.Reason; break;
         }
