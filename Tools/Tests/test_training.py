@@ -32,7 +32,7 @@ def presets(tmp_path):
 
 
 def Entry(**kwargs):
-    entry = {"map": "Map CTF 1v1 First", "preset": None, "roster": {"0": 1, "1": 1}, "rounds": 1, "weight": 1.0}
+    entry = {"map": "Map CTF 1v1 First", "preset": None, "roster": {"auto": 1, "rival": 1}, "rounds": 1, "weight": 1.0}
     entry.update(kwargs)
     return entry
 
@@ -78,19 +78,26 @@ def test_the_example_list_loads_and_is_the_curriculum():
     assert result.order == "sequence" and len(result.entries) == 3
     assert [entry.map for entry in result.entries] == ["Map CTF 1v1 First", "Map CTF 1v1 First", "Map CTF 2v2 Final"]
     assert all(entry.preset == "artemis_ctf_rounds" for entry in result.entries)
-    assert result.entries[0].roster == {"0": 1}
+    assert [entry.roster for entry in result.entries] == [{"rival": 1}, {"auto": 1, "rival": 1}, {"auto": 2, "rival": 2}]
 
 
 def test_a_valid_list_loads(tmp_path):
-    result = load_list(Write(tmp_path, [Entry(rounds=2), Entry(map="Map Vex 8v8", roster={"0": 7, "1": 7, "auto": 0})]))
+    result = load_list(Write(tmp_path, [Entry(rounds=2), Entry(map="Map Vex 8v8", roster={"auto": 7, "rival": 8})]))
     assert [entry.rounds for entry in result.entries] == [2, 1]
 
 
 @pytest.mark.parametrize("entry, message", [
     ({"map": "Map Nowhere 1v1"}, "not in the catalog"),
-    ({"roster": {"0": 8, "1": 8}}, "does not fit"),
-    ({"roster": {"0": 15, "auto": 1}}, "does not fit"),
-    ({"roster": {"9": 1}}, "roster"),
+    ({"roster": {"auto": 8, "rival": 8}}, "does not fit"),
+    ({"roster": {"auto": 1, "rival": 15}}, "does not fit"),
+    ({"roster": {"auto": 3}}, "rival of at least 1"),
+    ({"roster": {"auto": 3, "rival": 0}}, "rival of at least 1"),
+    ({"roster": {}}, "rival of at least 1"),
+    ({"roster": {"0": 1, "rival": 1}}, "keys"),
+    ({"roster": {"9": 1}}, "keys"),
+    ({"roster": {"auto": -1, "rival": 1}}, "at least 0"),
+    ({"roster": {"auto": 1.5, "rival": 1}}, "integer"),
+    ({"roster": [1, 1]}, "keys"),
     ({"rounds": 0}, "rounds"),
     ({"rounds": 1.5}, "rounds"),
     ({"weight": 0}, "weight"),
@@ -102,7 +109,7 @@ def test_an_entry_that_is_not_valid_is_refused(tmp_path, entry, message):
 
 
 def test_the_local_players_count_in_the_16(tmp_path):
-    path = Write(tmp_path, [Entry(roster={"0": 8, "1": 7})])
+    path = Write(tmp_path, [Entry(roster={"auto": 7, "rival": 8})])
     assert load_list(path, locals=1)
     with pytest.raises(ListError, match="does not fit"):
         load_list(path, locals=2)
@@ -152,11 +159,11 @@ def test_sequence_plays_each_entry_for_its_rounds_and_starts_again():
 
 
 def test_the_setup_carries_the_preset_the_map_and_a_copy_of_the_roster():
-    entry = TrainingEntry("Map A", "p", {"0": 1})
+    entry = TrainingEntry("Map A", "p", {"rival": 1})
     setup = TrainingList("t", "sequence", [entry]).next_setup()
-    assert (setup.preset, setup.map, setup.roster) == ("p", "Map A", {"0": 1})
-    setup.roster["0"] = 9
-    assert entry.roster == {"0": 1}
+    assert (setup.preset, setup.map, setup.roster) == ("p", "Map A", {"rival": 1})
+    setup.roster["rival"] = 9
+    assert entry.roster == {"rival": 1}
 
 
 def test_weighted_with_a_seed_is_reproducible_and_plays_each_draw_for_its_rounds():
@@ -194,7 +201,7 @@ def test_weights_shape_the_draws():
 
 def test_save_and_load_round_trip(tmp_path, presets):
     path = str(tmp_path / "list.json")
-    entries = [Entry(preset="artemis_ctf_rounds", rounds=3), Entry(map="Map Vex 8v8", preset="", roster={"0": 7, "1": 8}, weight=2.5),
+    entries = [Entry(preset="artemis_ctf_rounds", rounds=3), Entry(map="Map Vex 8v8", preset="", roster={"auto": 7, "rival": 8}, weight=2.5),
                Entry(map="Map CTF 2v2 Final", roster=None)]
     saved = save_list(path, "mine", "weighted", entries, presets_folder=presets)
     loaded = load_list(path, seed=5, presets_folder=presets)
@@ -219,3 +226,14 @@ def test_save_refuses_what_load_would_refuse(tmp_path):
 def test_the_package_exports_what_the_scripts_use():
     for name in ("load_list", "save_list", "load_catalog", "TrainingList", "MapInfo", "MAPS_PATH"):
         assert hasattr(training, name)
+
+
+def test_the_relative_roster_becomes_the_engine_roster_of_the_team_of_the_local_player():
+    from artemis.match_setup import is_relative_roster, resolve_roster
+    assert resolve_roster({"auto": 2, "rival": 3}, 0) == {"0": 2, "1": 3}
+    assert resolve_roster({"auto": 2, "rival": 3}, 1) == {"1": 2, "0": 3}
+    assert resolve_roster({"rival": 1}, 0) == {"0": 0, "1": 1}
+    assert resolve_roster({"rival": 1}, 1) == {"1": 0, "0": 1}
+    with pytest.raises(ValueError):
+        resolve_roster({"rival": 1}, 2)
+    assert is_relative_roster({"rival": 1}) and not is_relative_roster({"auto": 1}) and not is_relative_roster({"0": 1})

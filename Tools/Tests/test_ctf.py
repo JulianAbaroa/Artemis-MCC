@@ -124,7 +124,7 @@ def ctf(monkeypatch):
 
 
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2):
+          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
     home. match: fields of the Match (by default a round without time limit). The agent is the player P0 of team RED, aiming at +x."""
@@ -136,6 +136,9 @@ def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=Fa
                 {"Handle": FLAG_RED, "WorldOrigin": flag_pos[0]}, {"Handle": FLAG_BLUE, "WorldOrigin": flag_pos[1]}]
     players = [{"Handle": P0, "BipedHandle": B0, "Team": RED, "LocalIndex": 0xFF, "IsAlive": 1, "HasBody": 1, "Aim": (1.0, 0.0, 0.0),
                 "Shield": 1.0, "Objective": FLAG_BLUE if carrying else NONE}]
+    if local_team is not None:
+        # The local player 0, the passive rival of the lists (D287), on the team the engine gave it.
+        players.append({"Handle": 0xEC700001, "BipedHandle": NONE, "Team": local_team, "LocalIndex": 0, "IsAlive": 1, "HasBody": 1})
     objectives = [{"Handle": FLAG_RED, "BaseTeam": RED, "OwnerTeam": owners[0], "State": flags[0], "CarrierPlayer": NONE, "CarrierBiped": NONE},
                   {"Handle": FLAG_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1], "State": flags[1],
                    "CarrierPlayer": P0 if flags[1] == CARRIED else NONE, "CarrierBiped": B0 if flags[1] == CARRIED else NONE}]
@@ -500,3 +503,69 @@ def test_a_map_whose_round_has_no_flag_stands_raises(ctf):
 
 def test_the_stands_are_only_checked_when_a_map_is_asked(ctf):
     ctf.CtfEnv(FakeBridge([Frame(ctf, stand_count=0)])).reset()
+
+
+# --- roster relative to the local player (D287) and a match that ends -------------------------------------------------------------------
+
+
+def test_a_relative_roster_is_resolved_from_the_team_of_the_local_player_before_the_request(ctf):
+    for local_team, expected in ((RED, {"0": 2, "1": 3}), (BLUE, {"1": 2, "0": 3})):
+        bridge = FakeBridge([Frame(ctf, local_team=local_team), Frame(ctf, local_team=local_team, action_tick=2)])
+        ctf.CtfEnv(bridge).reset(roster={"auto": 2, "rival": 3})
+        assert bridge.setup_requests == [{"preset": None, "map": None, "roster": expected}]
+
+
+def test_a_roster_with_team_keys_is_sent_as_it_is_and_needs_no_tick_before(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    ctf.CtfEnv(bridge).reset(roster={"0": 1, "1": 1})
+    assert bridge.setup_requests[0]["roster"] == {"0": 1, "1": 1}
+
+
+def test_a_relative_roster_without_a_local_player_raises(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    with pytest.raises(RuntimeError, match="no local player"):
+        ctf.CtfEnv(bridge).reset(roster={"rival": 1})
+    assert bridge.setup_requests == []
+
+
+class EndedBridge(FakeBridge):
+    """A bridge whose match ended: no more ticks, and the phase it publishes."""
+    def __init__(self, ticks, phase=None):
+        super().__init__(ticks)
+        self.phase = phase
+        self.waits = 0
+
+    def wait_tick(self, timeout):
+        self.waits += 1
+        return super().wait_tick(timeout)
+
+
+def test_reset_raises_and_does_not_hang_when_the_match_ended_with_a_team_left_empty(ctf):
+    # The round ended with the agent bot and the local player on team 0 and nobody on team 1: Reach ended the match.
+    bridge = EndedBridge([Frame(ctf, local_team=RED)], phase=ctf.layout.BridgePhase.Idle)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.001, reset_timeout=1.0))
+    with pytest.raises(RuntimeError, match="match ended by the gametype: a team was left empty"):
+        env.reset(roster={"0": 1})
+        env.reset()
+    assert bridge.waits <= 3
+
+
+def test_reset_gives_up_after_reset_timeout_when_no_tick_comes_and_the_phase_says_nothing(ctf):
+    bridge = EndedBridge([Frame(ctf)])
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.25, reset_timeout=1.0))
+    env.reset()
+    with pytest.raises(RuntimeError, match="no tick for"):
+        env.step({P0: np.zeros(len(ctf.ACTION_NVEC), dtype=np.int64)})
+    assert bridge.waits <= 6
+
+
+def test_a_reset_whose_round_never_starts_raises_a_timeout(ctf):
+    def dead():
+        frame = Frame(ctf)
+        frame.players[0]["IsAlive"] = 0
+        return frame
+    bridge = FakeBridge([dead() for _ in range(5000)])
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.001, reset_timeout=0.05))
+    # Ticks come but the bot never lives: the wall clock bounds the wait.
+    with pytest.raises(TimeoutError, match="no round with every agent alive"):
+        env.reset()

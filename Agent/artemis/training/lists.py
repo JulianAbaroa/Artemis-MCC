@@ -5,11 +5,11 @@ played in ("sequence" or "weighted") and the compiled text of every preset they 
 CtfEnv.reset(setup=...).
 
     { "name": "...", "order": "sequence" | "weighted", "entries": [
-        { "map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"0": 0, "1": 1, "auto": 0}, "rounds": 3, "weight": 1.0 } ],
+        { "map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"auto": 0, "rival": 1}, "rounds": 3, "weight": 1.0 } ],
       "presets": { "artemis_ctf_rounds": { "source": "<hash>", "lines": [ ... ] } } }
 
-map is a config of Maps.json. preset is null (no change), "" (the base values) or the name of a preset of Data/Presets. roster is a dict with
-the keys "0" to "7" and "auto" as the bench takes it, or null (no change). The compiled presets are the ones of Tools/presets.py when the
+map is a config of Maps.json. preset is null (no change), "" (the base values) or the name of a preset of Data/Presets. roster is relative to the local player 0 (D287), a passive rival that
+does not count in NvM: {"auto": bots on the team of the local player, "rival": bots on the other team}, or null (no change). The compiled presets are the ones of Tools/presets.py when the
 list was saved: a list whose preset changed since says so when it is loaded (StaleListError) and has to be saved again.
 """
 import importlib.util
@@ -18,7 +18,7 @@ import os
 import random
 from dataclasses import dataclass, field
 
-from ..match_setup import MatchSetup, roster_to_array
+from ..match_setup import RELATIVE_ROSTER_KEYS, MatchSetup
 from .catalog import ROOT, load_catalog
 
 ORDERS = ("sequence", "weighted")
@@ -115,11 +115,15 @@ def _check_entry(entry, index, maps, locals_):
     if not isinstance(entry.weight, (int, float)) or isinstance(entry.weight, bool) or not entry.weight > 0:
         raise ListError(f"{where}: weight {entry.weight!r} must be above 0")
     if entry.roster is not None:
-        try:
-            counts = roster_to_array(entry.roster)
-        except (ValueError, TypeError) as error:
-            raise ListError(f"{where}: roster: {error}") from error
-        bots = int(counts.sum(dtype="int64"))
+        roster = entry.roster
+        if not isinstance(roster, dict) or not set(roster) <= set(RELATIVE_ROSTER_KEYS):
+            raise ListError(f"{where}: roster has the keys {list(RELATIVE_ROSTER_KEYS)} only (bots on the team of the local player and on the other team)")
+        for key, count in roster.items():
+            if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+                raise ListError(f"{where}: roster {key!r} must be an integer of at least 0")
+        if roster.get("rival", 0) < 1:
+            raise ListError(f"{where}: roster needs rival of at least 1 (the team of the local player always has the local player)")
+        bots = roster.get("auto", 0) + roster["rival"]
         if bots + locals_ > PLAYERS:
             raise ListError(f"{where}: roster of {bots} bots and {locals_} local players does not fit in {PLAYERS} players")
 

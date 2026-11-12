@@ -92,6 +92,10 @@ def Main():
                     start, end = clock[h], observations[h][19:22]
                     print(f"  time left {start[0]:.3f} -> {end[0]:.3f}, score left own/enemy {start[1]:.2f}/{start[2]:.2f} -> "
                           f"{end[1]:.2f}/{end[2]:.2f}")
+        except (RuntimeError, TimeoutError) as error:
+            # The match ended (a team left empty ends it) or the environment gave up waiting: say so and fail, never wait on.
+            print(f"FAIL {error}")
+            failures.append(str(error))
         finally:
             env.release()
     print(f"lost events {bridge.event_gaps}")

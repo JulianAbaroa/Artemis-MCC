@@ -218,6 +218,12 @@ class Bridge:
             self._heartbeat.value += 1
 
     @property
+    def phase(self):
+        """State of the engine as Artemis publishes it: a BridgePhase (Idle when there is no match)."""
+        value = int(self.artemis["Phase"])
+        return BridgePhase(value) if value in BridgePhase._value2member_map_ else None
+
+    @property
     def is_alive(self) -> bool:
         """Artemis still has the region open with this layout."""
         return int(self.artemis["Magic"]) == L.MAGIC

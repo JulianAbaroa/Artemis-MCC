@@ -13,13 +13,14 @@ the round come from the Match of the tick (P.6, D255): the environment measures 
 """
 import logging
 import math
+import time
 from dataclasses import dataclass
 
 import numpy as np
 
 from ..bridge import Action, Bridge, BridgeMode, BridgeOwner
-from ..bridge_layout import NO_HANDLE, NOT_LOCAL, BridgeSetupResult
-from ..match_setup import MatchSetup
+from ..bridge_layout import NO_HANDLE, NOT_LOCAL, BridgePhase, BridgeSetupResult
+from ..match_setup import MatchSetup, is_relative_roster, resolve_roster
 from ..semantic import Event, FlagState
 
 TWO_PI = 2 * math.pi
@@ -122,16 +123,43 @@ class CtfEnv:
         if self.published is not None:
             self.bridge.write_actions(self.published.action_tick, actions or {})
         published = None
+        waited = 0.0
         while published is None:
             published = self.bridge.wait_tick(self.config.tick_timeout)
-            if published is None and not self.bridge.is_alive:
+            if published is not None:
+                break
+            if not self.bridge.is_alive:
                 raise RuntimeError("Artemis closed the bridge")
+            waited += self.config.tick_timeout
+            if getattr(self.bridge, "phase", None) == BridgePhase.Idle:
+                raise RuntimeError(self._ended("the match ended: Artemis has no running match"))
+            if waited >= self.config.reset_timeout:
+                raise RuntimeError(self._ended(f"no tick for {waited:.0f} s"))
         self.published = published
         self.events = list(self.bridge.new_events(published))
         # Flags and stands of the round, as Artemis computes them (rows of the tick, no search over the entities).
         self.flags = published.objectives
         self.stands = published.stands
         return published
+
+    def _ended(self, what):
+        """The message of a match that stopped giving ticks: what happened and, when the last tick has a CTF team with no players, why the
+        gametype most likely ended it (Reach ends a match whose team is left empty)."""
+        empty = []
+        if self.published is not None:
+            teams = {int(p["Team"]) for p in self.published.players}
+            empty = [team for team in (0, 1) if team not in teams]
+        if empty:
+            return f"{what}: match ended by the gametype: a team was left empty? (no players on team {empty[0]})"
+        return what
+
+    def _local_team(self):
+        """Team of the local player 0 in the next tick (the passive rival, D287), to resolve the roster of a training list with."""
+        published = self._next_tick()
+        for player in published.players:
+            if int(player["LocalIndex"]) == 0:
+                return int(player["Team"])
+        raise RuntimeError("no local player 0 in the tick: a roster relative to it cannot be resolved")
 
     def _entity(self, handle):
         rows = self.published.entities[self.published.entities["Handle"] == handle]
@@ -165,8 +193,12 @@ class CtfEnv:
         asked = MatchSetup(preset if preset is not None else asked.preset, map if map is not None else asked.map,
                            roster if roster is not None else asked.roster)
         waited = 0.0
+        deadline = time.monotonic() + self.config.reset_timeout
         is_asked = asked.preset is not None or asked.map is not None or asked.roster is not None
         if is_asked:
+            if is_relative_roster(asked.roster):
+                # The roster of a list is relative to the local player 0, which sits on a team the engine decides: ask the tick right before.
+                asked = MatchSetup(asked.preset, asked.map, resolve_roster(asked.roster, self._local_team()))
             status = self.bridge.request_setup(preset=asked.preset, map=asked.map, roster=asked.roster)
             if status is None:
                 raise RuntimeError(f"Artemis did not take the setup request {asked}")
@@ -196,6 +228,8 @@ class CtfEnv:
                 break
             if waited > self.config.reset_timeout * 60:
                 raise TimeoutError("no round with every agent alive")
+            if time.monotonic() > deadline:
+                raise TimeoutError(self._ended(f"no round with every agent alive after {self.config.reset_timeout:.0f} s"))
         info = {}
         if is_asked:
             final = self.bridge.wait_setup()

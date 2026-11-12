@@ -68,3 +68,21 @@ def roster_to_dict(teams, auto) -> dict:
     if int(auto) > 0:
         result["auto"] = int(auto)
     return result
+
+
+# Keys of a roster written relative to the local player 0 (D287): "auto" bots go to the team of the local player, "rival" bots to the other
+# CTF team. The local player counts for neither: it is a passive rival that does not count in NvM.
+RELATIVE_ROSTER_KEYS = ("auto", "rival")
+
+
+def is_relative_roster(roster) -> bool:
+    """Whether a roster is the one of a training list (it has "rival"), which needs the team of the local player to become an engine roster."""
+    return isinstance(roster, dict) and "rival" in roster
+
+
+def resolve_roster(roster, local_team: int) -> dict:
+    """The engine roster ({team: bots}) of a relative one, given the team of the local player 0 (0 or 1, the two CTF teams): "auto" bots on its
+    team and "rival" bots on the other one."""
+    if local_team not in (0, 1):
+        raise ValueError(f"the local player is on team {local_team}, not on one of the two CTF teams (0 and 1)")
+    return {str(local_team): int(roster.get("auto", 0)), str(1 - local_team): int(roster["rival"])}

@@ -2,9 +2,9 @@
   "name": "ctf_curriculo_inicial",
   "order": "sequence",
   "entries": [
-    {"map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"0": 1}, "rounds": 3, "weight": 1.0},
-    {"map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"0": 1, "1": 1}, "rounds": 3, "weight": 1.0},
-    {"map": "Map CTF 2v2 Final", "preset": "artemis_ctf_rounds", "roster": {"0": 2, "1": 2}, "rounds": 3, "weight": 1.0}
+    {"map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"rival": 1}, "rounds": 3, "weight": 1.0},
+    {"map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"auto": 1, "rival": 1}, "rounds": 3, "weight": 1.0},
+    {"map": "Map CTF 2v2 Final", "preset": "artemis_ctf_rounds", "roster": {"auto": 2, "rival": 2}, "rounds": 3, "weight": 1.0}
   ],
   "presets": {
     "artemis_ctf_rounds": {
