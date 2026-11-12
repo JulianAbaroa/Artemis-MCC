@@ -22,7 +22,7 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `DevTools.Gui.Layer` | The facade: `BackendGuiService` and `WndProcGuiService`. |
 | `DevTools.Gui.Backend.System` | Whether the UI can draw now; the backend lifecycle. |
-| `DevTools.Gui.Widget.System`, `DevTools.Gui.Color.System`, `DevTools.Gui.Format.System`, `DevTools.Gui.Style.Type` | Widgets, colors, formats and style constants. |
+| `DevTools.Gui.Widget.System`, `DevTools.Gui.Color.System`, `DevTools.Gui.Format.System`, `DevTools.Gui.Style.Type` | Widgets, colors, formats and style constants. Widgets include the state markers (`StatusGuiService`: chip, dot, "(?)" marker and the tooltip of a control, with the `StatusKind` colors of the style module), `DisabledScope` (disables the widgets inside it and keeps the reason for their tooltip, which shows also on a disabled control) and `SectionBox` (rounded box around a group of widgets). |
 
 ## Depends on
 `Common`, `Services`, `Engine.Base`, `Engine.Render`.

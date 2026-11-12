@@ -10,6 +10,7 @@ import Common.Time.System;
 import Blam.MapModel.World.Type;
 import Views.Oracle.System;
 import Bridge.Codec.Tick.Type;
+import DevTools.Gui.Widget.System;
 
 namespace
 {
@@ -28,6 +29,7 @@ namespace
     using Views::Oracle::System::ResolveRootObject;
     using Views::Oracle::Type::Constant::k_RandomRayRange;
     using Views::Oracle::Type::Stats::OracleStats;
+    using DevTools::Gui::Widget::System::StatusGuiService;
     using DevTools::Workbench::Oracle::Type::k_MaxPendingBatches;
     using DevTools::Workbench::Oracle::Type::k_ReportFolder;
     using DevTools::Workbench::Oracle::Type::k_SummaryInterval;
@@ -57,20 +59,20 @@ namespace DevTools::Workbench::Oracle::System
     {
         ImGui::SeparatorText("Raycast oracle");
 
-        ImGui::TextWrapped("Development tool (D272). Traces rays with the engine function the bullets use, on the game thread, and compares them"
-            " with the rays of Artemis: the aim and perception rays of the tick and random rays from the eye of the player. Off by default."
-            " The report is written to RaycastOracle in the storage folder.");
-
         bool isEnabled{ m_OracleUIStore.IsEnabled() };
         if (ImGui::Checkbox("Enabled##RaycastOracle", &isEnabled)) m_OracleUIStore.SetEnabled(isEnabled);
+        StatusGuiService::ShowTooltip("Traces rays with the engine function the bullets use and compares them with the rays of Artemis."
+            " Off by default. The report goes to RaycastOracle in the storage folder.");
 
         int rays{ m_OracleUIStore.GetRaysPerBatch() };
         ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
         if (ImGui::InputInt("Rays per batch##RaycastOracle", &rays)) m_OracleUIStore.SetRaysPerBatch(rays);
+        StatusGuiService::ShowTooltip("Rays in each batch: the rays of the tick first, random ones for the rest.");
 
         int everyTicks{ m_OracleUIStore.GetEveryTicks() };
         ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
         if (ImGui::InputInt("Every ticks##RaycastOracle", &everyTicks)) m_OracleUIStore.SetEveryTicks(everyTicks);
+        StatusGuiService::ShowTooltip("Ticks between two batches.");
 
         const OracleStatus status{ m_OracleStore.GetStatus() };
         if (status == OracleStatus::Unavailable) ImGui::TextColored(k_ErrorColor, "%s", DescribeStatus(status));

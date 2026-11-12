@@ -18,6 +18,16 @@ namespace DevTools::Workbench::Bench::State
         return m_IsEnabled.load(std::memory_order_acquire);
     }
 
+    auto BenchUIStore::IsScenarioRunning() const -> bool
+    {
+        return m_IsScenarioRunning.load(std::memory_order_acquire);
+    }
+
+    auto BenchUIStore::SetScenarioRunning(bool value) -> void
+    {
+        m_IsScenarioRunning.store(value, std::memory_order_release);
+    }
+
     auto BenchUIStore::GetRun() -> BenchRun&
     {
         return m_Run;

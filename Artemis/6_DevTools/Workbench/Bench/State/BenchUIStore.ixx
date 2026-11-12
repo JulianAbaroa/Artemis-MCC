@@ -27,6 +27,10 @@ export namespace DevTools::Workbench::Bench::State
         auto GetFolder() const -> const path&;
         auto IsEnabled() const -> bool;
 
+        // Whether a scenario is running. Written by the bench thread, read by the UI.
+        auto IsScenarioRunning() const -> bool;
+        auto SetScenarioRunning(bool value) -> void;
+
         // note: Bench thread only.
         auto GetRun() -> BenchRun&;
 
@@ -43,6 +47,7 @@ export namespace DevTools::Workbench::Bench::State
     private:
         path m_Folder{};
         std::atomic<bool> m_IsEnabled{ false };
+        std::atomic<bool> m_IsScenarioRunning{ false };
         BenchRun m_Run{};
         mutable std::mutex m_Mutex{};
         std::string m_Status{};

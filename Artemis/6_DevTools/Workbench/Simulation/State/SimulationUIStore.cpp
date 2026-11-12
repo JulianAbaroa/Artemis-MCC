@@ -3,6 +3,7 @@ module DevTools.Workbench.Simulation.State;
 namespace
 {
     using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
+    using DevTools::Workbench::Simulation::Type::k_SimulationSectionKeys;
 }
 
 namespace DevTools::Workbench::Simulation::State
@@ -68,14 +69,52 @@ namespace DevTools::Workbench::Simulation::State
         m_RosterEditor = roster;
     }
 
-    auto SimulationUIStore::GetOptionsPlayer() const -> std::size_t
+    auto SimulationUIStore::GetSessionPlayer() const -> std::size_t
     {
-        return m_OptionsPlayer;
+        return m_SessionPlayer;
     }
 
-    auto SimulationUIStore::SetOptionsPlayer(std::size_t playerIndex) -> void
+    auto SimulationUIStore::SetSessionPlayer(std::size_t playerIndex) -> void
     {
-        m_OptionsPlayer = playerIndex;
+        m_SessionPlayer = playerIndex;
+    }
+
+    auto SimulationUIStore::IsSectionOpen(SimulationSection section) const -> bool
+    {
+        return m_OpenSections[static_cast<std::size_t>(section)];
+    }
+
+    auto SimulationUIStore::SetSectionOpen(SimulationSection section, bool isOpen) -> void
+    {
+        m_OpenSections[static_cast<std::size_t>(section)] = isOpen;
+    }
+
+    auto SimulationUIStore::IsPlayerActionsOpen() const -> bool
+    {
+        return m_IsPlayerActionsOpen;
+    }
+
+    auto SimulationUIStore::SetPlayerActionsOpen(bool isOpen) -> void
+    {
+        m_IsPlayerActionsOpen = isOpen;
+    }
+
+    auto SimulationUIStore::Save(std::ostream& stream) const -> void
+    {
+        for (std::size_t section{ 0 }; section < m_OpenSections.size(); ++section)
+        {
+            stream << k_SimulationPreferencePrefix << k_SimulationSectionKeys[section] << '=' << (m_OpenSections[section] ? 1 : 0) << '\n';
+        }
+    }
+
+    auto SimulationUIStore::Load(std::string_view key, std::string_view value) -> void
+    {
+        if (value != "0" && value != "1") return;
+
+        for (std::size_t section{ 0 }; section < m_OpenSections.size(); ++section)
+        {
+            if (key == k_SimulationSectionKeys[section]) m_OpenSections[section] = value == "1";
+        }
     }
 
     auto SimulationUIStore::GetNewBotTeam() const -> std::optional<std::int8_t>

@@ -5,6 +5,7 @@ module;
 module DevTools.Workbench.Settings.System;
 
 import DevTools.Gui.Style.Type;
+import DevTools.Gui.Widget.System;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Workbench.Hotkey.Type;
@@ -28,53 +29,13 @@ namespace
     using DevTools::Gui::Style::Type::k_MinimumScale;
     using DevTools::Gui::Style::Type::k_MaximumScale;
     using DevTools::Gui::Style::Type::k_AnimationDuration;
+    using DevTools::Gui::Widget::System::SectionBox;
 
     constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
     constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
 
     constexpr const char* k_DisablePopup{ "Confirm Disable AppData" };
     constexpr const char* k_DeletePopup{ "Delete AppData" };
-
-    // Draws a rounded box around the widgets created while it lives.
-    // param useFullWidth: Stretches the box to the available width instead of the content width.
-    class SectionBox
-    {
-    public:
-        explicit SectionBox(bool useFullWidth = false) :
-            m_IsFullWidth(useFullWidth),
-            m_Min(ImGui::GetCursorScreenPos()),
-            m_Width(ImGui::GetContentRegionAvail().x)
-        {
-            ImGui::BeginGroup();
-            ImGui::Spacing();
-            ImGui::Indent(10.0f);
-            ImGui::Spacing();
-        }
-
-        ~SectionBox()
-        {
-            ImGui::Spacing();
-            ImGui::Unindent(10.0f);
-            ImGui::Spacing();
-            ImGui::EndGroup();
-
-            const ImVec2 size{ ImGui::GetItemRectSize() };
-            const float width{ m_IsFullWidth ? m_Width : size.x + 20.0f };
-            const ImVec2 max{ m_Min.x + width, m_Min.y + size.y };
-
-            ImDrawList* drawList{ ImGui::GetWindowDrawList() };
-            drawList->AddRectFilled(m_Min, max, ImColor(255, 255, 255, 15), 5.0f);
-            drawList->AddRect(m_Min, max, ImColor(255, 255, 255, 30), 5.0f);
-        }
-
-        SectionBox(const SectionBox&) = delete;
-        auto operator=(const SectionBox&) -> SectionBox& = delete;
-
-    private:
-        bool m_IsFullWidth{};
-        ImVec2 m_Min{};
-        float m_Width{};
-    };
 
     // Moves the cursor so the next buttons are centered.
     auto CenterNextButtons(float buttonWidth, int count) -> void

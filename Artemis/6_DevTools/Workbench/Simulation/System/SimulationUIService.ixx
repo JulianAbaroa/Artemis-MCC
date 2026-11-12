@@ -17,6 +17,8 @@ import Bridge.Codec.Tick.Type;
 import Bridge.Codec.Tick.State;
 import DevTools.Workbench.Simulation.Type;
 import DevTools.Workbench.Simulation.State;
+import DevTools.Workbench.TickDump.State;
+import DevTools.Workbench.Bench.State;
 import std;
 
 namespace
@@ -35,8 +37,9 @@ export namespace DevTools::Workbench::Simulation::System
     auto BuildActionOverride(LocalPlayerAction mode, const PlayerAction& action, std::optional<std::size_t> localPlayer)
         -> std::optional<ActionOverride>;
 
-    // Draws the simulation tab (D107): the match config of the next start (D123), game speed, local players (split-screen) with their
-    // input, the player actions of each tick, the machines and players of the engine, and the bots (A9 M5).
+    // Draws the simulation tab (D107, D289): a fixed strip with the game speed and the state of the bridge, the dump, the bench and the
+    // bots, then the collapsible sections MATCH, BOTS, TICK DUMP, LOCAL PLAYERS and DEVELOPMENT. A closed section copies and walks
+    // nothing. Every control carries a tooltip, and one that cannot act is disabled with the reason.
     class SimulationUIService
     {
     private:
@@ -66,23 +69,33 @@ export namespace DevTools::Workbench::Simulation::System
         using LocalPlayerInput = DevTools::Workbench::Simulation::Type::LocalPlayerInput;
         using LocalPlayerAction = DevTools::Workbench::Simulation::Type::LocalPlayerAction;
         using SimulationUIStore = DevTools::Workbench::Simulation::State::SimulationUIStore;
+        using SimulationSection = DevTools::Workbench::Simulation::Type::SimulationSection;
+        using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
+        using BenchUIStore = DevTools::Workbench::Bench::State::BenchUIStore;
 
     public:
         SimulationUIService(Log& log, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
             MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
             VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore,
-            MatchSetupService& matchSetupService, BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
+            MatchSetupService& matchSetupService, BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore,
+            TickDumpUIStore& tickDumpUIStore, BenchUIStore& benchUIStore) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
             m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
             m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
-            m_BotStore(botStore), m_MatchSetupService(matchSetupService), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
+            m_BotStore(botStore), m_MatchSetupService(matchSetupService), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore),
+            m_TickDumpUIStore(tickDumpUIStore), m_BenchUIStore(benchUIStore) {}
         ~SimulationUIService() = default;
 
         SimulationUIService(const SimulationUIService&) = delete;
         auto operator=(const SimulationUIService&) -> SimulationUIService& = delete;
 
         // Draws the content of the simulation window.
-        auto Draw() -> void;
+        // param drawTickDump: Draws the body of the TICK DUMP section. It lives in another folder that imports this one, so the layer passes it.
+        // param drawDevelopmentTools: Draws the test bench and the raycast oracle inside DEVELOPMENT, for the same reason.
+        auto Draw(const std::function<void()>& drawTickDump, const std::function<void()>& drawDevelopmentTools) -> void;
+
+        // Draws the windows opened from the tab (player actions and shadow check). Costs nothing while they are closed.
+        auto DrawWindows() -> void;
 
     private:
         Log& m_Log;
@@ -98,20 +111,35 @@ export namespace DevTools::Workbench::Simulation::System
         BridgeService& m_BridgeService;
         TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
+        TickDumpUIStore& m_TickDumpUIStore;
+        BenchUIStore& m_BenchUIStore;
 
         // Draws the record of the next start, the library of recorded configurations and the one the next start transplants (D123).
         auto DrawMatchConfig() -> void;
 
-        // Draws the requested and the real engine speed, the presets and the custom field.
-        auto DrawGameSpeed() -> void;
+        // Draws the header of a section and remembers whether the user folded it.
+        // return: Whether the body must be drawn.
+        auto BeginSection(SimulationSection section) -> bool;
 
-        // Draws the state of the bridge with Python (D135): client, owner, mode and counters. Read only.
+        // Draws the fixed strip: speed controls and the state dots.
+        auto DrawStrip() -> void;
+
+        // Draws pause, speed presets, the custom field and the real speed, wrapping to the next line when a control does not fit.
+        auto DrawSpeedRow() -> void;
+
+        // Draws the dots of the bridge, the dump and the bench, and the bot count.
+        auto DrawStatusRow() -> void;
+
+        // Draws the body of DEVELOPMENT: bridge, bench, oracle, session and the button of the player actions window.
+        auto DrawDevelopment(const std::function<void()>& drawDevelopmentTools) -> void;
+
+        // Draws the state of the bridge with Python: client, mode and owner in a line, the counters in its tooltip.
         auto DrawBridge() -> void;
 
-        // Draws the local player count and one row per player.
+        // Draws the count of the next start and one row per player.
         auto DrawLocalPlayers() -> void;
 
-        // Draws the name, the engine status, the engine player and biped, and the input combo of a player.
+        // Draws the name, the state and the input combo of a player. The engine handle and biped are in the tooltip of the row.
         // param players: Players of the latest tick, or null before the first one.
         auto DrawLocalPlayerRow(std::size_t player, std::size_t requestedCount, const Players* players) -> void;
 
@@ -135,7 +163,7 @@ export namespace DevTools::Workbench::Simulation::System
         // Writes the action and what changed since the last clear to the log, so a measurement can be shared.
         auto LogAction(std::size_t localPlayer, std::uint64_t sequence, const PlayerAction& action, const ActionWatch& watch) -> void;
 
-        // Draws the machines and players of the engine and the game options entry of one player (A9 M5a).
+        // Draws the machines of the engine, its players and the detail of the picked one.
         auto DrawSession() -> void;
 
         // Writes the game options entry of every valid player to the log, so the configuration layout can be shared.

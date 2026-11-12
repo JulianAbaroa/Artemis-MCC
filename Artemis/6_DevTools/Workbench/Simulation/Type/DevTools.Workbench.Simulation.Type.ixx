@@ -13,6 +13,40 @@ export namespace DevTools::Workbench::Simulation::Type
     // Characters of the name field of the match config section, with the final null.
     inline constexpr std::size_t k_RecordNameSize{ k_MaxMatchConfigNameLength + 1 };
 
+    // Collapsible sections of the simulation tab, in the order they are drawn.
+    enum class SimulationSection : std::uint8_t
+    {
+        Match = 0,
+        Bots,
+        TickDump,
+        LocalPlayers,
+        Development,
+
+        Count
+    };
+
+    inline constexpr std::size_t k_SimulationSectionCount{ static_cast<std::size_t>(SimulationSection::Count) };
+
+    // Titles of the section headers, in the order of SimulationSection.
+    inline constexpr std::array<const char*, k_SimulationSectionCount> k_SimulationSectionTitles
+    {
+        "MATCH",
+        "BOTS",
+        "TICK DUMP",
+        "LOCAL PLAYERS",
+        "DEVELOPMENT",
+    };
+
+    // Keys of the sections in the preferences file, in the order of SimulationSection.
+    inline constexpr std::array<std::string_view, k_SimulationSectionCount> k_SimulationSectionKeys
+    {
+        "Match",
+        "Bots",
+        "TickDump",
+        "LocalPlayers",
+        "Development",
+    };
+
     // Input the simulation tab gives a local player (A9 M2 test).
     enum class LocalPlayerInput : std::uint8_t
     {

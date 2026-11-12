@@ -44,11 +44,14 @@ namespace DevTools::Workbench
             m_SettingsUIService.Draw();
         });
         m_LauncherUIService.DrawTab(Tab::Simulation, "Simulation", [this] {
-            m_SimulationUIService.Draw();
-            m_TickDumpUIService.Draw();
-            m_BenchUIService.Draw();
-            m_OracleUIService.Draw();
+            m_SimulationUIService.Draw([this] {
+                m_TickDumpUIService.Draw();
+            }, [this] {
+                m_BenchUIService.Draw();
+                m_OracleUIService.Draw();
+            });
         });
+        m_SimulationUIService.DrawWindows();
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();
         });

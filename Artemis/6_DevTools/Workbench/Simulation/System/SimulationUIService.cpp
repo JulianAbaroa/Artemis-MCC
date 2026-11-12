@@ -12,6 +12,7 @@ import Engine.Control.Simulation.Type;
 import Bridge.Transport.Type;
 import Blam.Layout.Action.Type;
 import DevTools.Gui.Style.Type;
+import DevTools.Gui.Widget.System;
 import std;
 
 namespace
@@ -34,6 +35,12 @@ namespace
     using Engine::Base::MatchSetup::Type::Roster;
     using Engine::Base::MatchSetup::Type::ToText;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
+    using DevTools::Workbench::Simulation::Type::SimulationSection;
+    using DevTools::Gui::Style::Type::StatusKind;
+    using DevTools::Gui::Widget::System::DisabledScope;
+    using DevTools::Gui::Widget::System::ResponsiveCardGuiService;
+    using DevTools::Gui::Widget::System::SectionBox;
+    using DevTools::Gui::Widget::System::StatusGuiService;
     using Bridge::Transport::Type::BridgeStatus;
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgeMode;
@@ -56,6 +63,8 @@ namespace
     using DevTools::Workbench::Simulation::Type::k_LocalPlayerActionCount;
     using DevTools::Workbench::Simulation::Type::k_LocalPlayerActionLabels;
     using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
+    using DevTools::Workbench::Simulation::Type::k_SimulationSectionTitles;
+    using DevTools::Gui::Style::Type::k_StatusColors;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_TicksPerSecond;
     using Common::Engine::Type::k_HandleIndexMask;
@@ -79,7 +88,73 @@ namespace
     }
 
     // Width of the name field and of the list of the match config section.
-    constexpr float k_MatchConfigFieldWidth{ 260.0f };
+    constexpr float k_MatchConfigFieldWidth{ 170.0f };
+
+    // Width of the custom speed field, of the count buttons of the local players and of the input combo of their table.
+    constexpr float k_CustomSpeedWidth{ 70.0f };
+    constexpr float k_CountButtonWidth{ 28.0f };
+    constexpr float k_InputComboWidth{ 150.0f };
+
+    // Widths of the columns of the player tables.
+    constexpr float k_NumberColumnWidth{ 28.0f };
+    constexpr float k_NameColumnWidth{ 130.0f };
+    constexpr float k_StateColumnWidth{ 110.0f };
+    constexpr float k_KindColumnWidth{ 70.0f };
+
+    // Size of the player actions window the first time it opens.
+    constexpr ImVec2 k_PlayerActionsWindowSize{ 480.0f, 560.0f };
+
+    // Lays controls on a line and starts the next line for the ones that do not fit in the width the line began with.
+    class ControlFlow
+    {
+    public:
+        ControlFlow() :
+            m_RightEdge(ImGui::GetCursorScreenPos().x + ImGui::GetContentRegionAvail().x)
+        {
+        }
+
+        // Places the cursor for a control of the given width: on the same line when it fits, on the next one otherwise.
+        auto Place(float width) -> void
+        {
+            if (!m_IsFirst && ResponsiveCardGuiService::FitsOnSameLine(width, ImGui::GetStyle().ItemSpacing.x, m_RightEdge)) ImGui::SameLine();
+            m_IsFirst = false;
+        }
+
+        // Draws a button placed by Place. An active one is tinted like a pressed button.
+        // return: Whether it was clicked.
+        auto Button(const char* label, bool isActive = false) -> bool
+        {
+            this->Place(ImGui::CalcTextSize(label, nullptr, true).x + (ImGui::GetStyle().FramePadding.x * 2.0f));
+
+            if (isActive) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+            const bool isClicked{ ImGui::Button(label) };
+            if (isActive) ImGui::PopStyleColor();
+
+            return isClicked;
+        }
+
+    private:
+        float m_RightEdge{ 0.0f };
+        bool m_IsFirst{ true };
+    };
+
+    // return: The counters of the bridge, one per line, for a tooltip.
+    auto DescribeBridgeCounters(const BridgeStatus& status) -> std::string
+    {
+        const auto& counters{ status.Counters };
+        const double waitMs{ counters.LockstepWaits > 0
+            ? static_cast<double>(counters.LockstepWaitNs) / static_cast<double>(counters.LockstepWaits) / 1.0e6 : 0.0 };
+        const double flattenMs{ counters.PublishedTicks > 0
+            ? static_cast<double>(counters.FlattenNs) / static_cast<double>(counters.PublishedTicks) / 1.0e6 : 0.0 };
+
+        return std::format("Shared memory Artemis.Bridge.{}\nN {}, d {}, agents 0x{:04X}\n"
+            "Published ticks {} (flatten avg {:.3f} ms, max {:.3f})\nLate {}\nLockstep waits {} (avg {:.3f} ms, max {:.3f}), timeouts {}\n"
+            "Handle mismatches {}, rejected {}, clock skips {}",
+            status.Pid, static_cast<unsigned>(status.Control.DecisionPeriod), static_cast<unsigned>(status.Control.Latency),
+            status.Control.AgentMask, counters.PublishedTicks, flattenMs, static_cast<double>(counters.FlattenMaxNs) / 1.0e6,
+            counters.LateActions, counters.LockstepWaits, waitMs, static_cast<double>(counters.LockstepWaitMaxNs) / 1.0e6,
+            counters.LockstepTimeouts, counters.HandleMismatches, counters.RejectedActions, counters.ClockSkips);
+    }
 
     // Speeds tested in A8 (0.1 to 100). Above x5 the engine caps at 10 ticks per frame.
     constexpr float k_MinTimeScale{ 0.1f };
@@ -175,63 +250,167 @@ namespace
 
 namespace DevTools::Workbench::Simulation::System
 {
-    auto SimulationUIService::Draw() -> void
+    auto SimulationUIService::Draw(const std::function<void()>& drawTickDump, const std::function<void()>& drawDevelopmentTools) -> void
     {
-        ImGui::SeparatorText("Match config");
-
-        this->DrawMatchConfig();
+        this->DrawStrip();
 
         ImGui::Spacing();
-        ImGui::SeparatorText("Game speed");
 
-        this->DrawGameSpeed();
+        if (this->BeginSection(SimulationSection::Match)) this->DrawMatchConfig();
+        if (this->BeginSection(SimulationSection::Bots)) this->DrawBots();
+        if (this->BeginSection(SimulationSection::TickDump)) drawTickDump();
+        if (this->BeginSection(SimulationSection::LocalPlayers)) this->DrawLocalPlayers();
+        if (this->BeginSection(SimulationSection::Development)) this->DrawDevelopment(drawDevelopmentTools);
+    }
 
-        ImGui::Spacing();
+    auto SimulationUIService::DrawWindows() -> void
+    {
+        if (!m_SimulationUIStore.IsPlayerActionsOpen()) return;
+
+        bool isOpen{ true };
+        ImGui::SetNextWindowSize(k_PlayerActionsWindowSize, ImGuiCond_FirstUseEver);
+
+        if (ImGui::Begin("Player actions", &isOpen))
+        {
+            this->DrawPlayerActions();
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Shadow check");
+
+            this->DrawShadow();
+        }
+
+        ImGui::End();
+
+        if (!isOpen) m_SimulationUIStore.SetPlayerActionsOpen(false);
+    }
+
+    auto SimulationUIService::BeginSection(SimulationSection section) -> bool
+    {
+        const bool wasOpen{ m_SimulationUIStore.IsSectionOpen(section) };
+
+        // The store owns the state, so it survives the window and is saved with the preferences.
+        ImGui::SetNextItemOpen(wasOpen, ImGuiCond_Always);
+        const bool isOpen{ ImGui::CollapsingHeader(k_SimulationSectionTitles[static_cast<std::size_t>(section)]) };
+
+        if (isOpen != wasOpen) m_SimulationUIStore.SetSectionOpen(section, isOpen);
+        return isOpen;
+    }
+
+    auto SimulationUIService::DrawStrip() -> void
+    {
+        const SectionBox box{ true };
+
+        this->DrawSpeedRow();
+        this->DrawStatusRow();
+    }
+
+    auto SimulationUIService::DrawSpeedRow() -> void
+    {
+        const float requested{ m_LifecycleStore.GetRequestedTimeScale() };
+        const bool isPaused{ m_LifecycleStore.IsPauseRequested() };
+
+        // The client owns the speed and the pause while it owns the instance.
+        BridgeStatus bridge{};
+        m_BridgeService.CopyStatus(bridge);
+        const bool isPythonOwned{ bridge.Control.Owner == BridgeOwner::Python };
+
+        {
+            const DisabledScope python{ isPythonOwned, "Owned by Python" };
+            ControlFlow flow{};
+
+            if (flow.Button(isPaused ? "Resume" : "Pause")) m_LifecycleStore.SetPauseRequested(!isPaused);
+            python.Tooltip("Holds the logic ticks. The game keeps drawing frames without advancing.");
+
+            if (flow.Button("Default", requested <= 0.0f)) m_LifecycleStore.SetRequestedTimeScale(0.0f);
+            python.Tooltip("Stops writing the speed: the engine goes back to x1.");
+
+            for (const float preset : k_TimeScalePresets)
+            {
+                const std::string label{ std::format("x{:g}", preset) };
+                if (flow.Button(label.c_str(), requested == preset)) m_LifecycleStore.SetRequestedTimeScale(preset);
+                python.Tooltip("Engine time scale. Above x5 the engine runs at most 10 ticks per frame.");
+            }
+
+            float custom{ m_SimulationUIStore.GetCustomTimeScale() };
+
+            flow.Place(k_CustomSpeedWidth);
+            ImGui::SetNextItemWidth(k_CustomSpeedWidth);
+            if (ImGui::InputFloat("##CustomTimeScale", &custom, 0.0f, 0.0f, "%.2f"))
+            {
+                m_SimulationUIStore.SetCustomTimeScale(std::clamp(custom, k_MinTimeScale, k_MaxTimeScale));
+            }
+            python.Tooltip("Custom time scale, 0.1 to 100. Press Apply to use it.");
+
+            if (flow.Button("Apply")) m_LifecycleStore.SetRequestedTimeScale(m_SimulationUIStore.GetCustomTimeScale());
+            python.Tooltip("Applies the custom time scale. It is not saved: Artemis always starts without changing the speed.");
+        }
+
+        const float tickHz{ m_TelemetryStore.m_TickHz.load(std::memory_order_relaxed) };
+        ImGui::Text("real x%.1f - %.0f t/s%s", tickHz / k_TicksPerSecond, tickHz, isPaused ? " (paused)" : "");
+        StatusGuiService::ShowTooltip("Ticks per second the engine really runs. Above x5 it is capped at 10 ticks per frame.");
+    }
+
+    auto SimulationUIService::DrawStatusRow() -> void
+    {
+        BridgeStatus bridge{};
+        m_BridgeService.CopyStatus(bridge);
+
+        if (!bridge.IsOpen)                         StatusGuiService::DrawDot("Bridge", StatusKind::Error, "The shared memory is not open. See the log.");
+        else if (bridge.Control.IsClientConnected)  StatusGuiService::DrawDot("Bridge", StatusKind::Active, "A Python client is connected.");
+        else                                        StatusGuiService::DrawDot("Bridge", StatusKind::Off, "No Python client is connected.");
+
+        // Recording is red (it costs disk and every tick), armed for the next load is amber.
+        const bool isRecording{ m_TickDumpUIStore.IsRecording() };
+        const bool isWaiting{ isRecording && m_TickDumpUIStore.IsWaitingForLoad() };
+
+        ImGui::SameLine();
+        if (isWaiting)        StatusGuiService::DrawDot("Dump", StatusKind::Pending, "Armed to record from the next load.");
+        else if (isRecording) StatusGuiService::DrawDot("Dump", StatusKind::Error, "Recording ticks.");
+        else                  StatusGuiService::DrawDot("Dump", StatusKind::Off, "Not recording.");
+
+        ImGui::SameLine();
+        if (!m_BenchUIStore.IsEnabled())             StatusGuiService::DrawDot("Bench", StatusKind::Off, "The test bench is off.");
+        else if (m_BenchUIStore.IsScenarioRunning()) StatusGuiService::DrawDot("Bench", StatusKind::Active, "A bench scenario is running.");
+        else                                         StatusGuiService::DrawDot("Bench", StatusKind::Off, "No bench scenario is running.");
+
+        std::vector<Bot> bots{};
+        m_BotStore.CopyBots(bots);
+
+        ImGui::SameLine();
+        ImGui::Text("Bots %zu/%zu", bots.size(), k_MaxPlayers);
+        StatusGuiService::ShowTooltip("Bots Artemis has added to the match, out of the player slots of the engine.");
+    }
+
+    auto SimulationUIService::DrawDevelopment(const std::function<void()>& drawDevelopmentTools) -> void
+    {
         ImGui::SeparatorText("Python bridge");
-
         this->DrawBridge();
 
-        ImGui::Spacing();
-        ImGui::SeparatorText("Local players");
+        drawDevelopmentTools();
 
-        this->DrawLocalPlayers();
-
-        ImGui::Spacing();
-        ImGui::SeparatorText("Player actions");
-
-        this->DrawPlayerActions();
-
-        ImGui::Spacing();
         ImGui::SeparatorText("Session");
-
         this->DrawSession();
 
         ImGui::Spacing();
-        ImGui::SeparatorText("Bots");
-
-        this->DrawBots();
-
-        ImGui::Spacing();
-        ImGui::SeparatorText("Shadow check");
-
-        this->DrawShadow();
+        if (ImGui::Button("Player actions...")) m_SimulationUIStore.SetPlayerActionsOpen(true);
+        StatusGuiService::ShowTooltip("Opens the window with the action of a local player in each tick and the shadow check.");
     }
 
     auto SimulationUIService::DrawMatchConfig() -> void
     {
-        ImGui::TextWrapped("Recorded match configurations (D123). Record: type a name, arm it and start a custom game from the MCC"
-            " lobby. Its configuration is saved to the MatchConfigs folder of the storage folder. Use: pick a recorded one, then start any"
-            " custom game from the MCC lobby, or press Launch now while MCC is in the lobby. That start plays the base map, map"
-            " variant and game variant of the picked one. A pick applies to one start only.");
-
+        // Record: type a name, arm it and start a custom game from the MCC lobby, and its configuration is saved to the MatchConfigs
+        // folder of the storage folder. Use: pick a recorded one, then start any custom game from the lobby or press Launch now. That
+        // start plays the base map, map variant and game variant of the picked one, for one start only (D123).
         std::array<char, k_RecordNameSize>& recordName{ m_SimulationUIStore.GetRecordNameField() };
         ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
         ImGui::InputText("Name", recordName.data(), recordName.size());
+        StatusGuiService::ShowTooltip("Name to record the next start under.");
 
         ImGui::SameLine();
         if (ImGui::Button("Record next start")) m_MatchConfigService.ArmRecord(recordName.data());
-        ImGui::SetItemTooltip("Saves the configuration of the next start of MCC under this name, before any transplant. A recorded"
-            " configuration with the same name is replaced.");
+        StatusGuiService::ShowTooltip("Saves the configuration of the next start of MCC under this name, before any transplant."
+            " A recorded configuration with the same name is replaced.");
 
         const std::string armedName{ m_MatchConfigStore.GetRecordName() };
 
@@ -242,8 +421,10 @@ namespace DevTools::Workbench::Simulation::System
             if (ImGui::Button("Cancel##Record")) m_MatchConfigService.CancelRecord();
         }
 
-        if (ImGui::Button("Refresh")) m_SimulationUIStore.SetMatchConfigNames(m_MatchConfigService.ListConfigs());
-        ImGui::SetItemTooltip("Lists the recorded configurations of the storage folder.");
+        ControlFlow flow{};
+
+        if (flow.Button("Refresh")) m_SimulationUIStore.SetMatchConfigNames(m_MatchConfigService.ListConfigs());
+        StatusGuiService::ShowTooltip("Lists the recorded configurations of the storage folder.");
 
         const std::vector<std::string>& names{ m_SimulationUIStore.GetMatchConfigNames() };
         std::size_t selected{ m_SimulationUIStore.GetSelectedMatchConfig() };
@@ -254,12 +435,12 @@ namespace DevTools::Workbench::Simulation::System
             m_SimulationUIStore.SetSelectedMatchConfig(selected);
         }
 
-        ImGui::SameLine();
+        flow.Place(k_MatchConfigFieldWidth);
         ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
 
         const char* preview{ names.empty() ? "None, press Refresh" : names[selected].c_str() };
 
-        if (ImGui::BeginCombo("Recorded", preview))
+        if (ImGui::BeginCombo("##Recorded", preview))
         {
             for (std::size_t index{ 0 }; index < names.size(); ++index)
             {
@@ -268,11 +449,14 @@ namespace DevTools::Workbench::Simulation::System
 
             ImGui::EndCombo();
         }
+        StatusGuiService::ShowTooltip("Recorded match configuration to use.");
 
-        ImGui::SameLine();
-        ImGui::BeginDisabled(names.empty());
-        if (ImGui::Button("Use for next start")) m_MatchConfigService.LoadPending(names[selected]);
-        ImGui::EndDisabled();
+        {
+            const DisabledScope none{ names.empty(), "No recorded configuration. Press Refresh." };
+
+            if (flow.Button("Use for next start")) m_MatchConfigService.LoadPending(names[selected]);
+            none.Tooltip("The next start of MCC plays the base map, map variant and game variant of the picked configuration.");
+        }
 
         if (m_MatchConfigStore.IsLaunchRequested())
         {
@@ -283,7 +467,7 @@ namespace DevTools::Workbench::Simulation::System
         else
         {
             if (ImGui::Button("Launch now")) m_MatchConfigService.RequestLaunch();
-            ImGui::SetItemTooltip("Presses the START of the custom games lobby of MCC (D124): MCC counts down and launches. MCC must be"
+            StatusGuiService::ShowTooltip("Presses the START of the custom games lobby of MCC: MCC counts down and launches. MCC must be"
                 " in the lobby. The pending configuration, if any, is transplanted into that start.");
         }
 
@@ -291,13 +475,13 @@ namespace DevTools::Workbench::Simulation::System
 
         if (pending)
         {
-            ImGui::Text("Pending for the next start: \"%s\".", pending->Name.c_str());
+            ImGui::Text("Next start: \"%s\"", pending->Name.c_str());
             ImGui::SameLine();
             if (ImGui::Button("Clear##Pending")) m_MatchConfigService.ClearPending();
         }
         else
         {
-            ImGui::TextUnformatted("Pending for the next start: none. The match of MCC starts unchanged.");
+            ImGui::TextUnformatted("Next start: unchanged");
         }
 
         const std::string lastApplied{ m_MatchConfigStore.GetLastApplied() };
@@ -310,64 +494,6 @@ namespace DevTools::Workbench::Simulation::System
         ImGui::Text("Last launch: %s", lastLaunch.empty() ? "-" : lastLaunch.c_str());
     }
 
-    auto SimulationUIService::DrawGameSpeed() -> void
-    {
-        ImGui::TextWrapped("Engine time scale. Above x5 the engine runs at most 10 ticks per frame, so the real speed is capped at"
-            " fps x 10 / 60. Not saved: Artemis always starts without changing the speed.");
-
-        const float requested{ m_LifecycleStore.GetRequestedTimeScale() };
-
-        if (requested > 0.0f)
-        {
-            ImGui::Text("Requested: x%.2f", requested);
-        }
-        else
-        {
-            ImGui::TextUnformatted("Requested: engine default");
-        }
-
-        const float tickHz{ m_TelemetryStore.m_TickHz.load(std::memory_order_relaxed) };
-        ImGui::Text("Real: %.0f ticks/s (x%.2f)", tickHz, tickHz / k_TicksPerSecond);
-
-        const bool isPaused{ m_LifecycleStore.IsPauseRequested() };
-        if (isPaused) ImGui::Text("Paused: frames run without ticks (%llu so far).", m_LifecycleStore.GetPausedFrames());
-
-        // The client owns the speed and the pause while it owns the instance (D106, D143).
-        BridgeStatus bridge{};
-        m_BridgeService.CopyStatus(bridge);
-        const bool isPythonOwned{ bridge.Control.Owner == BridgeOwner::Python };
-        if (isPythonOwned) ImGui::TextUnformatted("Python owns the speed and the pause.");
-        ImGui::BeginDisabled(isPythonOwned);
-
-        if (ImGui::Button(isPaused ? "Resume" : "Pause")) m_LifecycleStore.SetPauseRequested(!isPaused);
-        ImGui::SetItemTooltip("Holds the logic ticks. The game keeps drawing frames without advancing (D143).");
-        ImGui::SameLine();
-
-        if (ImGui::Button("Engine")) m_LifecycleStore.SetRequestedTimeScale(0.0f);
-        ImGui::SetItemTooltip("Stop writing the speed. The engine goes back to x1.");
-
-        for (const float preset : k_TimeScalePresets)
-        {
-            ImGui::SameLine();
-
-            const std::string label{ std::format("x{:g}", preset) };
-            if (ImGui::Button(label.c_str())) m_LifecycleStore.SetRequestedTimeScale(preset);
-        }
-
-        float custom{ m_SimulationUIStore.GetCustomTimeScale() };
-
-        ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::InputFloat("##CustomTimeScale", &custom, 0.0f, 0.0f, "%.2f"))
-        {
-            m_SimulationUIStore.SetCustomTimeScale(std::clamp(custom, k_MinTimeScale, k_MaxTimeScale));
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Apply")) m_LifecycleStore.SetRequestedTimeScale(m_SimulationUIStore.GetCustomTimeScale());
-
-        ImGui::EndDisabled();
-    }
-
     auto SimulationUIService::DrawBridge() -> void
     {
         BridgeStatus status{};
@@ -375,40 +501,41 @@ namespace DevTools::Workbench::Simulation::System
 
         if (!status.IsOpen)
         {
-            ImGui::TextUnformatted("Off: the shared memory is not open (see the log).");
+            StatusGuiService::DrawDot("Off", StatusKind::Error, "The shared memory is not open. See the log.");
             return;
         }
 
-        ImGui::Text("Shared memory Artemis.Bridge.%u | client %s | owner %s | mode %s | N %u, d %u | agents 0x%04X", status.Pid,
-            status.Control.IsClientConnected ? "connected" : "none", status.Control.Owner == BridgeOwner::Python ? "Python" : "UI",
-            status.Control.Mode == BridgeMode::Lockstep ? "Lockstep" : "Free", static_cast<unsigned>(status.Control.DecisionPeriod),
-            static_cast<unsigned>(status.Control.Latency), status.Control.AgentMask);
+        const std::string line{ std::format("client {}, {}, owner {}", status.Control.IsClientConnected ? "connected" : "none",
+            status.Control.Mode == BridgeMode::Lockstep ? "Lockstep" : "Free", status.Control.Owner == BridgeOwner::Python ? "Python" : "UI") };
+        const std::string counters{ DescribeBridgeCounters(status) };
 
-        const auto& counters{ status.Counters };
-        const double waitMs{ counters.LockstepWaits > 0
-            ? static_cast<double>(counters.LockstepWaitNs) / static_cast<double>(counters.LockstepWaits) / 1.0e6 : 0.0 };
-        const double flattenMs{ counters.PublishedTicks > 0
-            ? static_cast<double>(counters.FlattenNs) / static_cast<double>(counters.PublishedTicks) / 1.0e6 : 0.0 };
-        ImGui::Text("Published ticks %llu (flatten avg %.3f ms, max %.3f) | late %llu | waits %llu (avg %.3f ms, max %.3f) | timeouts %llu",
-            counters.PublishedTicks, flattenMs, static_cast<double>(counters.FlattenMaxNs) / 1.0e6, counters.LateActions,
-            counters.LockstepWaits, waitMs, static_cast<double>(counters.LockstepWaitMaxNs) / 1.0e6, counters.LockstepTimeouts);
-        ImGui::Text("Handle mismatches %llu | rejected %llu | clock skips %llu", counters.HandleMismatches, counters.RejectedActions,
-            counters.ClockSkips);
+        StatusGuiService::DrawDot(line.c_str(), status.Control.IsClientConnected ? StatusKind::Active : StatusKind::Off, counters.c_str());
     }
 
     auto SimulationUIService::DrawLocalPlayers() -> void
     {
-        ImGui::TextWrapped("Split-screen users Artemis adds next to yours. The count applies when the next match starts.");
-
+        // Split-screen users Artemis adds next to yours. The count applies when the next match starts.
         const std::size_t previousCount{ m_LocalUserStore.GetRequestedCount() };
-        int count{ static_cast<int>(previousCount) };
 
-        if (ImGui::SliderInt("Players", &count, 1, static_cast<int>(k_MaxLocalUsers)))
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted("At next start");
+        StatusGuiService::ShowTooltip("Split-screen users Artemis adds next to yours. The count applies when the next match starts.");
+
+        for (std::size_t count{ 1 }; count <= k_MaxLocalUsers; ++count)
         {
-            m_LocalUserStore.SetRequestedCount(static_cast<std::size_t>(count));
+            ImGui::SameLine();
+
+            const bool isCurrent{ count == previousCount };
+            if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+            const bool isClicked{ ImGui::Button(std::to_string(count).c_str(), ImVec2{ k_CountButtonWidth, 0.0f }) };
+            if (isCurrent) ImGui::PopStyleColor();
+
+            if (!isClicked) continue;
+
+            m_LocalUserStore.SetRequestedCount(count);
 
             // Without a real gamepad, Device pauses the game for an Artemis user (gamepad disconnected), so new users start Idle.
-            for (std::size_t player{ previousCount }; player < static_cast<std::size_t>(count); ++player)
+            for (std::size_t player{ previousCount }; player < count; ++player)
             {
                 if (m_SimulationUIStore.GetLocalPlayerInput(player) != LocalPlayerInput::Device) continue;
 
@@ -417,16 +544,14 @@ namespace DevTools::Workbench::Simulation::System
             }
         }
 
-        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
+        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit };
 
-        if (!ImGui::BeginTable("LocalPlayers", 6, flags)) return;
+        if (!ImGui::BeginTable("LocalPlayers", 4, flags)) return;
 
-        ImGui::TableSetupColumn("Player", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Name");
-        ImGui::TableSetupColumn("Engine");
-        ImGui::TableSetupColumn("Handle");
-        ImGui::TableSetupColumn("Biped");
-        ImGui::TableSetupColumn("Input");
+        ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, k_NumberColumnWidth);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, k_NameColumnWidth);
+        ImGui::TableSetupColumn("State", ImGuiTableColumnFlags_WidthFixed, k_StateColumnWidth);
+        ImGui::TableSetupColumn("Input", ImGuiTableColumnFlags_WidthFixed, k_InputComboWidth);
         ImGui::TableHeadersRow();
 
         const std::size_t requestedCount{ m_LocalUserStore.GetRequestedCount() };
@@ -446,8 +571,24 @@ namespace DevTools::Workbench::Simulation::System
     {
         ImGui::TableNextRow();
 
+        // note: The local index comes from the player mapping of the engine (A9 M3), not from Artemis.
+        const Player* engine{ FindLocalPlayer(players, player) };
+
+        // The number cell spans the row, so the tooltip with the engine data covers all of it except the combo.
         ImGui::TableNextColumn();
-        ImGui::Text("%zu", player + 1);
+        ImGui::Selectable(std::to_string(player + 1).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
+
+        if (engine)
+        {
+            const std::string tooltip{ engine->BipedHandle != k_NoHandle
+                ? std::format("Engine player {:08X}, biped {:08X}", engine->Handle, engine->BipedHandle)
+                : std::format("Engine player {:08X}, no biped", engine->Handle) };
+            StatusGuiService::ShowTooltip(tooltip.c_str());
+        }
+        else
+        {
+            StatusGuiService::ShowTooltip("The engine has no player for this user.");
+        }
 
         ImGui::TableNextColumn();
         if (player == 0)
@@ -473,23 +614,12 @@ namespace DevTools::Workbench::Simulation::System
             ImGui::TextUnformatted(m_LocalUserStore.IsReported(player) ? "In match" : "Waiting for a match");
         }
 
-        // note: The local index comes from the player mapping of the engine (A9 M3), not from Artemis.
-        const Player* engine{ FindLocalPlayer(players, player) };
-
-        ImGui::TableNextColumn();
-        if (engine) ImGui::Text("%08X", engine->Handle);
-        else        ImGui::TextDisabled("-");
-
-        ImGui::TableNextColumn();
-        if (engine && engine->BipedHandle != k_NoHandle) ImGui::Text("%08X", engine->BipedHandle);
-        else                                              ImGui::TextDisabled("-");
-
         ImGui::TableNextColumn();
         ImGui::PushID(static_cast<int>(player));
 
         const LocalPlayerInput current{ m_SimulationUIStore.GetLocalPlayerInput(player) };
 
-        ImGui::SetNextItemWidth(-1.0f);
+        ImGui::SetNextItemWidth(k_InputComboWidth);
         if (ImGui::BeginCombo("##Input", k_LocalPlayerInputLabels[static_cast<std::size_t>(current)]))
         {
             for (std::size_t i{ 0 }; i < k_LocalPlayerInputCount; ++i)
@@ -505,6 +635,7 @@ namespace DevTools::Workbench::Simulation::System
 
             ImGui::EndCombo();
         }
+        StatusGuiService::ShowTooltip("Input this user plays with. Device reads the real devices, the others are virtual.");
 
         ImGui::PopID();
     }
@@ -523,16 +654,15 @@ namespace DevTools::Workbench::Simulation::System
 
     auto SimulationUIService::DrawPlayerActions() -> void
     {
-        ImGui::TextWrapped("Command of a local player for the latest tick, as the simulation applies it (A9 M4, D109). Press Clear,"
-            " then a control in the game: yellow bits and red bytes changed at some tick since the clear, so presses of a single"
-            " tick are not missed. The mode writes the action of the player every tick instead of the engine.");
-
+        // Command of a local player for the latest tick, as the simulation applies it. Press Clear, then a control in the game: yellow
+        // bits and red bytes changed at some tick since the clear, so presses of a single tick are not missed (A9 M4, D109).
         int localPlayer{ static_cast<int>(m_SimulationUIStore.GetActionLocalPlayer()) + 1 };
         ImGui::SetNextItemWidth(120.0f);
         if (ImGui::SliderInt("Local player", &localPlayer, 1, static_cast<int>(k_MaxLocalUsers)))
         {
             m_SimulationUIStore.SetActionLocalPlayer(static_cast<std::size_t>(localPlayer - 1));
         }
+        StatusGuiService::ShowTooltip("Local player whose action is shown.");
 
         const std::size_t local{ m_SimulationUIStore.GetActionLocalPlayer() };
 
@@ -578,12 +708,15 @@ namespace DevTools::Workbench::Simulation::System
             this->ApplyLocalPlayerAction(local, index, *mode, action);
         }
         ImGui::PopID();
+        StatusGuiService::ShowTooltip("What the simulation writes for this player every tick instead of the action the engine built.");
 
         ImGui::Text("Buttons: %016llX", static_cast<unsigned long long>(buttons));
         ImGui::SameLine();
         if (ImGui::SmallButton("Clear")) m_PlayerActionStore.ClearWatches();
+        StatusGuiService::ShowTooltip("Clears the marks: yellow bits and red bytes changed at some tick since the clear.");
         ImGui::SameLine();
         if (ImGui::SmallButton("Log")) this->LogAction(local, actions.Sequence, action, watch);
+        StatusGuiService::ShowTooltip("Writes the action and what changed since the last clear to the log.");
 
         this->DrawButtonBits(buttons, watch.SeenButtons);
 
@@ -699,9 +832,7 @@ namespace DevTools::Workbench::Simulation::System
 
     auto SimulationUIService::DrawSession() -> void
     {
-        ImGui::TextWrapped("Machines and players as the engine has them (A9 M5a). Up to 4 players per machine. Bots live on machines"
-            " Artemis adds from slot 16 down.");
-
+        // Machines and players as the engine has them. Up to 4 players per machine. Bots live on machines Artemis adds from slot 16 down.
         SessionSnapshot snapshot{};
         m_BotStore.CopySnapshot(snapshot);
 
@@ -714,52 +845,28 @@ namespace DevTools::Workbench::Simulation::System
         std::vector<FakeMachine> fakeMachines{};
         m_BotStore.CopyFakeMachines(fakeMachines);
 
-        ImGui::Text("Tick %llu, machine mask %05X, local machine %d", static_cast<unsigned long long>(snapshot.Sequence),
-            snapshot.MachineMask, snapshot.LocalMachineIndex);
+        std::string machines{};
 
-        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg };
-
-        if (ImGui::BeginTable("Machines", 3, flags))
+        for (std::size_t machine{ 0 }; machine < k_MaxMachines; ++machine)
         {
-            ImGui::TableSetupColumn("Machine", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableSetupColumn("Identifier");
-            ImGui::TableSetupColumn("Kind");
-            ImGui::TableHeadersRow();
+            if ((snapshot.MachineMask & (1u << machine)) == 0) continue;
 
-            for (std::size_t machine{ 0 }; machine < k_MaxMachines; ++machine)
-            {
-                if ((snapshot.MachineMask & (1u << machine)) == 0) continue;
-
-                const bool isFake{ std::ranges::any_of(fakeMachines, [machine](const FakeMachine& fake) {
-                    return fake.Index == machine;
-                }) };
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("%zu", machine);
-
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(ToHex(snapshot.Machines[machine].Bytes).c_str());
-
-                ImGui::TableNextColumn();
-                if (static_cast<std::int32_t>(machine) == snapshot.LocalMachineIndex) ImGui::TextUnformatted("Local");
-                else if (isFake)                                                       ImGui::TextUnformatted("Artemis (bots)");
-                else                                                                   ImGui::TextUnformatted("Remote");
-            }
-
-            ImGui::EndTable();
+            machines += machines.empty() ? std::format("{}", machine) : std::format(", {}", machine);
         }
 
-        if (ImGui::BeginTable("SessionPlayers", 8, flags))
+        ImGui::Text("%d machines: %s", std::popcount(snapshot.MachineMask), machines.c_str());
+        StatusGuiService::ShowTooltip(std::format("Tick {}, local machine {}. Machines Artemis added for its bots are listed as bot in the players.",
+            snapshot.Sequence, snapshot.LocalMachineIndex).c_str());
+
+        const ImGuiTableFlags flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit };
+        const std::size_t picked{ m_SimulationUIStore.GetSessionPlayer() };
+
+        if (ImGui::BeginTable("SessionPlayers", 4, flags))
         {
-            ImGui::TableSetupColumn("Index", ImGuiTableColumnFlags_WidthFixed);
-            ImGui::TableSetupColumn("Handle");
-            ImGui::TableSetupColumn("Name");
-            ImGui::TableSetupColumn("Flags");
-            ImGui::TableSetupColumn("Identifier");
-            ImGui::TableSetupColumn("Machine");
-            ImGui::TableSetupColumn("User");
-            ImGui::TableSetupColumn("Controller");
+            ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, k_NumberColumnWidth);
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, k_NameColumnWidth);
+            ImGui::TableSetupColumn("Machine", ImGuiTableColumnFlags_WidthFixed, k_KindColumnWidth);
+            ImGui::TableSetupColumn("Kind", ImGuiTableColumnFlags_WidthFixed, k_KindColumnWidth);
             ImGui::TableHeadersRow();
 
             for (std::size_t index{ 0 }; index < k_MaxPlayers; ++index)
@@ -767,48 +874,47 @@ namespace DevTools::Workbench::Simulation::System
                 const SessionPlayer& player{ snapshot.Players[index] };
                 if (!player.IsValid) continue;
 
+                const bool isFake{ std::ranges::any_of(fakeMachines, [&player](const FakeMachine& fake) {
+                    return std::cmp_equal(fake.Index, player.MachineIndex);
+                }) };
+
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("%zu", index);
-                ImGui::TableNextColumn();
-                ImGui::Text("%08X", player.Handle);
-                ImGui::TableNextColumn();
+                if (ImGui::Selectable(std::to_string(index).c_str(), index == picked, ImGuiSelectableFlags_SpanAllColumns))
+                {
+                    m_SimulationUIStore.SetSessionPlayer(index);
+                }
+
                 const auto nameLength{ static_cast<std::size_t>(std::ranges::find(player.GamerTag, L'\0') - player.GamerTag.begin()) };
+
+                ImGui::TableNextColumn();
                 ImGui::TextUnformatted(ToNarrow(std::wstring_view{ player.GamerTag.data(), nameLength }).c_str());
-                ImGui::TableNextColumn();
-                ImGui::Text("%08X", player.Flags);
-                ImGui::TableNextColumn();
-                ImGui::Text("%016llX", static_cast<unsigned long long>(player.Identifier));
                 ImGui::TableNextColumn();
                 ImGui::Text("%d", player.MachineIndex);
                 ImGui::TableNextColumn();
-                ImGui::Text("%d", player.UserIndex);
-                ImGui::TableNextColumn();
-                ImGui::Text("%d", player.Controller);
+                if (player.MachineIndex == snapshot.LocalMachineIndex) ImGui::TextUnformatted("local");
+                else if (isFake)                                         ImGui::TextUnformatted("bot");
+                else                                                     ImGui::TextUnformatted("remote");
             }
 
             ImGui::EndTable();
         }
 
-        int optionsPlayer{ static_cast<int>(m_SimulationUIStore.GetOptionsPlayer()) };
-        ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::SliderInt("Game options of player", &optionsPlayer, 0, static_cast<int>(k_MaxPlayers) - 1))
+        if (picked < k_MaxPlayers && snapshot.Players[picked].IsValid)
         {
-            m_SimulationUIStore.SetOptionsPlayer(static_cast<std::size_t>(optionsPlayer));
+            const SessionPlayer& player{ snapshot.Players[picked] };
+
+            ImGui::Text("Player %zu: handle %08X, identifier %016llX", picked, player.Handle,
+                static_cast<unsigned long long>(player.Identifier));
+            ImGui::Text("Flags %08X, user %d, controller %d", player.Flags, player.UserIndex, player.Controller);
+        }
+        else
+        {
+            ImGui::TextDisabled("Pick a player to see its detail.");
         }
 
-        ImGui::SameLine();
-        if (ImGui::SmallButton("Log options")) this->LogOptions();
-
-        const auto& entry{ snapshot.Options[m_SimulationUIStore.GetOptionsPlayer()] };
-
-        for (std::size_t offset{ 0 }; offset < entry.size(); ++offset)
-        {
-            if (offset % k_BytesPerRow == 0) ImGui::TextDisabled("+%02zX", offset);
-
-            ImGui::SameLine();
-            ImGui::Text("%02X", entry[offset]);
-        }
+        if (ImGui::Button("Log options")) this->LogOptions();
+        StatusGuiService::ShowTooltip("Writes the game options entry of every valid player to the log, so the layout can be shared.");
     }
 
     auto SimulationUIService::LogOptions() -> void
@@ -828,10 +934,9 @@ namespace DevTools::Workbench::Simulation::System
 
     auto SimulationUIService::DrawBots() -> void
     {
-        ImGui::TextWrapped("Players on machines of their own, added in the match like a player that joins in progress (A9 M5b)."
-            " They have no view and no input: their action is the mode below. In Engine mode the engine repeats the last action it"
-            " applied (as for a remote player), so a bot keeps walking after Test action. The film does not have them.");
-
+        // Bots are players on machines of their own, added in the match like a player that joins in progress (A9 M5b). They have no
+        // view and no input: their action is the mode of the row. In Engine mode the engine repeats the last action it applied (as for a
+        // remote player), so a bot keeps walking after Test action. The film does not have them.
         const std::optional<std::int8_t> newTeam{ m_SimulationUIStore.GetNewBotTeam() };
 
         ImGui::SetNextItemWidth(160.0f);
@@ -868,7 +973,8 @@ namespace DevTools::Workbench::Simulation::System
         PlayerActions actions{};
         m_PlayerActionStore.CopyLatest(actions);
 
-        if (!ImGui::BeginTable("Bots", 11, flags)) return;
+        // note: Temporary until the bot editor (sub-commit 3) replaces this table: it scrolls instead of widening the window.
+        if (!ImGui::BeginTable("Bots", 11, flags | ImGuiTableFlags_ScrollX)) return;
 
         ImGui::TableSetupColumn("Bot", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Player");
@@ -972,15 +1078,16 @@ namespace DevTools::Workbench::Simulation::System
 
     auto SimulationUIService::DrawShadow() -> void
     {
-        ImGui::TextWrapped("For every local player without an override, compares what Artemis would send as its client with what the"
-            " engine built (D122). Play normally: switch weapons and grenades, zoom, hold buttons, walk over objects.");
-        ImGui::Text("Mismatches logged per field: %llu.", static_cast<unsigned long long>(k_ShadowLogLimit));
-
+        // For every local player without an override, compares what Artemis would send as its client with what the engine built (D122).
+        // Play normally: switch weapons and grenades, zoom, hold buttons, walk over objects.
         bool isEnabled{ m_PlayerActionStore.IsShadowEnabled() };
         if (ImGui::Checkbox("Enabled", &isEnabled)) m_PlayerActionStore.SetShadowEnabled(isEnabled);
+        StatusGuiService::ShowTooltip(std::format("Compares what Artemis would send as the client of each local player without an override"
+            " with what the engine built. Mismatches logged per field: {}.", k_ShadowLogLimit).c_str());
 
         ImGui::SameLine();
         if (ImGui::Button("Clear")) m_PlayerActionStore.ClearShadow();
+        StatusGuiService::ShowTooltip("Sets every counter to zero.");
 
         std::array<ShadowCount, k_ShadowFieldCount> counts{};
         m_PlayerActionStore.CopyShadow(counts);

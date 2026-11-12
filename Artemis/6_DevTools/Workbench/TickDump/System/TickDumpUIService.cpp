@@ -12,12 +12,20 @@ import Blam.Layout.Snapshot.Type;
 import Blam.Layout.Snapshot.System;
 import Bridge.Codec.Dump.Type;
 import Bridge.Codec.Dump.System;
+import DevTools.Gui.Style.Type;
+import DevTools.Gui.Widget.System;
 import DevTools.Workbench.TickDump.Type;
 import std;
 
 namespace
 {
     using std::filesystem::path;
+
+    using DevTools::Gui::Style::Type::StatusKind;
+    using DevTools::Gui::Widget::System::DisabledScope;
+    using DevTools::Gui::Widget::System::StatusGuiService;
+
+    using DevTools::Gui::Style::Type::k_StatusColors;
     using Common::Hash::System::FileCrc32;
     using Common::Text::System::CopyText;
     using Common::Time::System::LocalNow;
@@ -113,50 +121,65 @@ namespace DevTools::Workbench::TickDump::System
 
     auto TickDumpUIService::Draw() -> void
     {
-        ImGui::SeparatorText("Tick dump");
+        // Records the Tick of every tick to a .tdump and the Snapshot it came from to a .sdump, in TickDumps in the storage folder.
+        const bool isRecording{ m_TickDumpUIStore.IsRecording() };
+        const bool isWaiting{ isRecording && m_TickDumpUIStore.IsWaitingForLoad() };
 
-        ImGui::TextWrapped("Records the Tick of every tick (the BridgeTick of Bridge.xml) to a .tdump and the Snapshot it came from to a"
-            " .sdump, in TickDumps in the storage folder (D151, D202). Tools/tickdump.py reads the .tdump. Each record also carries the real"
-            " time since the previous one.");
+        const double megabytes{ ToMegabytes(m_TickDumpUIStore.GetWrittenBytes() + m_TickDumpUIStore.GetSnapshotBytes()) };
+        const std::string chip{ isWaiting ? std::string{ "Armed for next load" }
+            : isRecording ? std::format("Recording {} ticks - {:.1f} MB", m_TickDumpUIStore.GetRecordedTicks(), megabytes)
+            : std::string{ "Off" } };
 
-        if (m_TickDumpUIStore.IsRecording())
+        const path filePath{ m_TickDumpUIStore.GetFilePath() };
+        const std::string tooltip{ std::format(".tdump {:.1f} MB, .sdump {:.1f} MB, queued {}.{}",
+            ToMegabytes(m_TickDumpUIStore.GetWrittenBytes()), ToMegabytes(m_TickDumpUIStore.GetSnapshotBytes()),
+            m_TickDumpUIStore.GetQueuedTicks(), filePath.empty() ? std::string{} : " " + filePath.string()) };
+
+        StatusGuiService::DrawChip(chip.c_str(), isWaiting ? StatusKind::Pending : isRecording ? StatusKind::Error : StatusKind::Off,
+            tooltip.c_str());
+
         {
-            if (ImGui::Button("Stop##TickDump")) m_TickDumpUIStore.RequestStop();
-            if (m_TickDumpUIStore.IsWaitingForLoad())
-            {
-                ImGui::SameLine();
-                ImGui::TextUnformatted("Waiting for the next map load.");
-            }
-        }
-        else
-        {
+            const DisabledScope recording{ isRecording, "Already recording" };
+
             if (ImGui::Button("Start##TickDump"))
             {
                 m_TickDumpUIStore.SetWaitingForLoad(false);
                 m_TickDumpUIStore.RequestStart("manual", true);
             }
+            recording.Tooltip("Starts recording now.");
+
             ImGui::SameLine();
             if (ImGui::Button("Start at next load##TickDump"))
             {
                 m_TickDumpUIStore.SetWaitingForLoad(true);
                 m_TickDumpUIStore.RequestStart("manual, from the next load", true);
             }
+            recording.Tooltip("Arms the recording to begin at the first tick of the next map load.");
         }
 
         ImGui::SameLine();
-        ImGui::Text("Ticks: %llu  .tdump: %.1f MB  .sdump: %.1f MB  Queued: %zu",
-            static_cast<unsigned long long>(m_TickDumpUIStore.GetRecordedTicks()), ToMegabytes(m_TickDumpUIStore.GetWrittenBytes()),
-            ToMegabytes(m_TickDumpUIStore.GetSnapshotBytes()), m_TickDumpUIStore.GetQueuedTicks());
-        ImGui::Text("Dropped: %llu  Queue waits: %llu  Event losses: %llu",
-            static_cast<unsigned long long>(m_TickDumpUIStore.GetDroppedTicks()),
-            static_cast<unsigned long long>(m_TickDumpUIStore.GetQueueWaits()),
-            static_cast<unsigned long long>(m_TickDumpUIStore.GetEventLosses()));
+        {
+            const DisabledScope idle{ !isRecording, "Not recording" };
+            if (ImGui::Button("Stop##TickDump")) m_TickDumpUIStore.RequestStop();
+            idle.Tooltip("Stops the recording and closes the files.");
+        }
 
-        const path filePath{ m_TickDumpUIStore.GetFilePath() };
-        if (!filePath.empty()) ImGui::TextDisabled("%s", filePath.string().c_str());
+        // Losses only show when there is one.
+        const std::uint64_t dropped{ m_TickDumpUIStore.GetDroppedTicks() };
+        const std::uint64_t waits{ m_TickDumpUIStore.GetQueueWaits() };
+        const std::uint64_t losses{ m_TickDumpUIStore.GetEventLosses() };
+
+        if (dropped > 0 || waits > 0 || losses > 0)
+        {
+            std::string text{};
+            if (dropped > 0) text += std::format("Dropped: {}  ", dropped);
+            if (waits > 0) text += std::format("Queue waits: {}  ", waits);
+            if (losses > 0) text += std::format("Event losses: {}", losses);
+            ImGui::TextColored(k_StatusColors[static_cast<std::size_t>(StatusKind::Error)], "%s", text.c_str());
+        }
 
         const std::string status{ m_TickDumpUIStore.GetStatus() };
-        if (!status.empty()) ImGui::TextUnformatted(status.c_str());
+        if (!status.empty()) ImGui::TextColored(k_StatusColors[static_cast<std::size_t>(StatusKind::Error)], "%s", status.c_str());
     }
 
     auto TickDumpUIService::Start(std::string_view source, bool isSnapshotWritten) -> void

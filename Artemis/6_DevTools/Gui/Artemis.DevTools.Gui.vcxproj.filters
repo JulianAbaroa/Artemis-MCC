@@ -73,6 +73,15 @@
     <Filter Include="Widget\System\SearchFilter">
       <UniqueIdentifier>{c58f5b3f-bc25-5320-812d-04d819defd1e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Widget\System\Status">
+      <UniqueIdentifier>{6f52d1c5-643d-48f0-b632-6976e90e04ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\DisabledScope">
+      <UniqueIdentifier>{c7853754-3a2c-4d43-8931-389654668555}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Widget\System\SectionBox">
+      <UniqueIdentifier>{6f7ed28d-a082-4a40-b278-aea1e86f0692}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DevTools.Gui.Layer.ixx" />
@@ -165,6 +174,24 @@
     </ClCompile>
     <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.ixx">
       <Filter>Widget\System\SearchFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Status\StatusGuiService.cpp">
+      <Filter>Widget\System\Status</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Status\StatusGuiService.ixx">
+      <Filter>Widget\System\Status</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\DisabledScope\DisabledScope.cpp">
+      <Filter>Widget\System\DisabledScope</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\DisabledScope\DisabledScope.ixx">
+      <Filter>Widget\System\DisabledScope</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\SectionBox\SectionBox.cpp">
+      <Filter>Widget\System\SectionBox</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\SectionBox\SectionBox.ixx">
+      <Filter>Widget\System\SectionBox</Filter>
     </ClCompile>
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui.cpp">
       <Filter>$(ArtemisRoot)External\imgui</Filter>

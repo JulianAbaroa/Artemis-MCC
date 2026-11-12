@@ -10,6 +10,7 @@ namespace
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_MaxPlayers;
     using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
+    using DevTools::Workbench::Simulation::Type::k_SimulationSectionCount;
 }
 
 export namespace DevTools::Workbench::Simulation::State
@@ -21,9 +22,13 @@ export namespace DevTools::Workbench::Simulation::State
     private:
         using LocalPlayerInput = DevTools::Workbench::Simulation::Type::LocalPlayerInput;
         using LocalPlayerAction = DevTools::Workbench::Simulation::Type::LocalPlayerAction;
+        using SimulationSection = DevTools::Workbench::Simulation::Type::SimulationSection;
         using Roster = Engine::Base::MatchSetup::Type::Roster;
 
     public:
+        // Prefix of the keys of this store in the preferences file.
+        static constexpr std::string_view k_SimulationPreferencePrefix{ "Simulation_" };
+
         SimulationUIStore() = default;
         ~SimulationUIStore() = default;
 
@@ -57,9 +62,23 @@ export namespace DevTools::Workbench::Simulation::State
         auto GetRosterEditor() const -> Roster;
         auto SetRosterEditor(const Roster& roster) -> void;
 
-        // Player whose game options entry the session section shows.
-        auto GetOptionsPlayer() const -> std::size_t;
-        auto SetOptionsPlayer(std::size_t playerIndex) -> void;
+        // Player table index whose detail the session list shows.
+        auto GetSessionPlayer() const -> std::size_t;
+        auto SetSessionPlayer(std::size_t playerIndex) -> void;
+
+        // Whether a section of the tab is unfolded. All but Development start unfolded.
+        auto IsSectionOpen(SimulationSection section) const -> bool;
+        auto SetSectionOpen(SimulationSection section, bool isOpen) -> void;
+
+        // Whether the player actions window is open. Not saved.
+        auto IsPlayerActionsOpen() const -> bool;
+        auto SetPlayerActionsOpen(bool isOpen) -> void;
+
+        // Writes the open sections as "<prefix><key>=<0|1>" lines.
+        auto Save(std::ostream& stream) const -> void;
+
+        // Applies one saved key. Ignores unknown keys and values that cannot be read.
+        auto Load(std::string_view key, std::string_view value) -> void;
 
         // Name typed for the next record of the match config section (D123).
         auto GetRecordNameField() -> std::array<char, k_RecordNameSize>&;
@@ -77,7 +96,9 @@ export namespace DevTools::Workbench::Simulation::State
         std::array<LocalPlayerAction, k_MaxLocalUsers> m_LocalPlayerActions{};
         std::array<LocalPlayerAction, k_MaxPlayers> m_BotActions{};
         std::array<std::uint32_t, k_MaxPlayers> m_BotActionHandles{};
-        std::size_t m_OptionsPlayer{ 0 };
+        std::size_t m_SessionPlayer{ 0 };
+        std::array<bool, k_SimulationSectionCount> m_OpenSections{ true, true, true, true, false };
+        bool m_IsPlayerActionsOpen{ false };
         std::optional<std::int8_t> m_NewBotTeam{};
         Roster m_RosterEditor{};
         std::array<char, k_RecordNameSize> m_RecordNameField{};

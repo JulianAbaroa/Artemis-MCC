@@ -20,6 +20,7 @@ import Engine.Control.Input.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
 import Bridge.Codec.Tick.Type;
+import DevTools.Gui.Widget.System;
 import DevTools.Workbench.Simulation.Type;
 import DevTools.Workbench.Simulation.System;
 import std;
@@ -39,6 +40,7 @@ namespace
     using Engine::Control::Input::Type::InputState;
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerActions;
+    using DevTools::Gui::Widget::System::StatusGuiService;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using DevTools::Workbench::Simulation::System::BuildActionOverride;
     using Services::Logs::Type::LogEntry;
@@ -437,6 +439,8 @@ namespace DevTools::Workbench::Bench::System
             }
         }
 
+        m_BenchUIStore.SetScenarioRunning(run.Scenario.has_value());
+
         if (steady_clock::now() - run.LastStateWrite >= k_StateInterval) this->WriteState(run);
     }
 
@@ -446,7 +450,8 @@ namespace DevTools::Workbench::Bench::System
 
         if (!m_BenchUIStore.IsEnabled())
         {
-            ImGui::TextDisabled("Off. The game watcher turns it on when it deploys the DLL (D129).");
+            ImGui::TextDisabled("Off");
+            StatusGuiService::ShowTooltip("The game watcher turns the bench on when it deploys the DLL.");
             return;
         }
 
@@ -495,10 +500,11 @@ namespace DevTools::Workbench::Bench::System
             ImGui::EndCombo();
         }
 
+        StatusGuiService::ShowTooltip(folder.string().c_str());
+
         ImGui::SameLine();
         if (ImGui::Button("Run") && selected < files.size()) this->QueueScenario(files[selected]);
-
-        ImGui::TextDisabled("%s", folder.string().c_str());
+        StatusGuiService::ShowTooltip("Queues the picked scenario. The bench plays its matches and writes the report.");
     }
 
     auto BenchUIService::QueueScenario(const path& file) -> void

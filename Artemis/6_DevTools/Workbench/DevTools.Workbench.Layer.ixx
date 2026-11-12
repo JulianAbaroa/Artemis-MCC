@@ -84,7 +84,8 @@ export namespace DevTools::Workbench
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
                 engine.m_MatchConfigService, engine.m_LocalUserStore, engine.m_VirtualInputStore, engine.m_PlayerActionStore,
-                engine.m_BotStore, engine.m_MatchSetupService, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
+                engine.m_BotStore, engine.m_MatchSetupService, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore,
+                m_TickDumpUIStore, m_BenchUIStore),
             m_TickDumpUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
                 m_TickDumpUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore),
@@ -98,6 +99,11 @@ export namespace DevTools::Workbench
             preferences.RegisterSection(std::string{ OracleUIStore::k_OraclePreferencePrefix },
                 [this](std::ostream& stream) { m_OracleUIStore.Save(stream); },
                 [this](std::string_view key, std::string_view value) { m_OracleUIStore.Load(key, value); });
+
+            // The sections of the simulation tab remember whether they are open.
+            preferences.RegisterSection(std::string{ SimulationUIStore::k_SimulationPreferencePrefix },
+                [this](std::ostream& stream) { m_SimulationUIStore.Save(stream); },
+                [this](std::string_view key, std::string_view value) { m_SimulationUIStore.Load(key, value); });
 
             engine.m_RenderService.OnInitialized([this](const FrameContext& frame) {
                 this->Initialize(frame);
