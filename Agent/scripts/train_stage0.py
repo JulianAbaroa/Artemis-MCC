@@ -2,7 +2,7 @@
 train_stage0.py
 Trains the stage 0 agent (D115, D146, D147): PPO on CtfEnv over the running MCC, in Lockstep at a high time scale, with the ticks
 paused during each update. Writes Agent/runs/<run>/log.txt and policy.pt (the last policy).
-python Tools/game.py py Agent/scripts/train_stage0.py [--updates 20] [--steps 1024] [--scale 10] [--max-seconds 60] --no-wait
+python Tools/game.py py Agent/scripts/train_stage0.py [--updates 20] [--steps 1024] [--scale 10] [--max-seconds 60] [--list Data/Training/ctf_curriculo_inicial.json [--seed 0]] --no-wait
 """
 import argparse
 import os
@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from artemis.bridge import Bridge, discover  # noqa: E402
 from artemis.env import ACTION_NVEC, OBS_SIZE, CtfConfig, CtfEnv  # noqa: E402
 from artemis.train.ppo import Ppo, PpoConfig  # noqa: E402
+from artemis.training import load_list  # noqa: E402
 
 RUNS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "runs")
 
@@ -26,6 +27,8 @@ def Main():
     parser.add_argument("--max-seconds", type=float, default=60.0, help="game seconds before an episode is cut")
     parser.add_argument("--turn-limit", type=float, default=0.1)
     parser.add_argument("--no-sparse", action="store_true", help="ask Artemis for its pipeline on every tick (default: only on decisions)")
+    parser.add_argument("--list", help="training list (Data/Training/<name>.json): the setup of every episode comes from it")
+    parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
     parser.add_argument("--name", default=time.strftime("stage0_%Y%m%d_%H%M%S"))
     args = parser.parse_args()
     regions = discover()
@@ -43,9 +46,10 @@ def Main():
         log_file.flush()
 
     Log(f"run {args.name}: {vars(args)}")
+    setups = load_list(args.list, seed=args.seed) if args.list else None
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit,
-                                          sparse=not args.no_sparse))
+                                          sparse=not args.no_sparse), setups)
         if not env.take_control():
             Log("FAIL Artemis did not hand the instance over")
             return 1

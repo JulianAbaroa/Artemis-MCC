@@ -27,11 +27,13 @@
     <Folder Include="Data\Semantic\" />
     <Folder Include="Data\Bridge\" />
     <Folder Include="Data\Presets\" />
+    <Folder Include="Data\Training\" />
     <Folder Include="Tools\Tests\presets\" />
     <Folder Include="Agent\" />
     <Folder Include="Agent\artemis\" />
     <Folder Include="Agent\artemis\env\" />
     <Folder Include="Agent\artemis\train\" />
+    <Folder Include="Agent\artemis\training\" />
     <Folder Include="Agent\scripts\" />
     <Folder Include="Data\Tags\" />
   </ItemGroup>
@@ -61,6 +63,9 @@
     <Compile Include="Agent\artemis\bridge_layout.py" />
     <Compile Include="Agent\artemis\match_setup.py" />
     <Compile Include="Agent\artemis\semantic.py" />
+    <Compile Include="Agent\artemis\training\__init__.py" />
+    <Compile Include="Agent\artemis\training\catalog.py" />
+    <Compile Include="Agent\artemis\training\lists.py" />
     <Compile Include="Agent\artemis\env\__init__.py" />
     <Compile Include="Agent\artemis\env\ctf.py" />
     <Compile Include="Agent\artemis\train\__init__.py" />
@@ -94,6 +99,7 @@
     <Compile Include="Tools\Tests\test_tickchecks.py" />
     <Compile Include="Tools\Tests\test_tickdump.py" />
     <Compile Include="Tools\Tests\test_tools.py" />
+    <Compile Include="Tools\Tests\test_training.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\README.md" />
@@ -118,6 +124,8 @@
     <Content Include="Data\Presets\artemis_ctf_base.xml" />
     <Content Include="Data\Presets\artemis_ctf_colors.xml" />
     <Content Include="Data\Presets\artemis_ctf_fast.xml" />
+    <Content Include="Data\Training\Maps.json" />
+    <Content Include="Data\Training\ctf_curriculo_inicial.json" />
     <Content Include="Tools\Tests\presets\fixture.xml" />
     <Content Include="Tools\Tests\presets\fixture_parent.xml" />
     <Content Include="Agent\requirements.txt" />

@@ -374,6 +374,32 @@ def test_a_setup_nobody_answered_raises(ctf):
         ctf.CtfEnv(bridge).reset(preset="artemis_ctf_fast")
 
 
+class FakeSetups:
+    """Stands for a TrainingList: hands out a setup per call."""
+    def __init__(self, *setups):
+        self.setups = list(setups)
+
+    def next_setup(self):
+        return self.setups.pop(0)
+
+
+def test_an_environment_with_setups_asks_for_the_next_one_at_every_reset(ctf):
+    bridge = FakeBridge([Frame(ctf), Frame(ctf, match_id=2)])
+    env = ctf.CtfEnv(bridge, setups=FakeSetups({"preset": "a", "map": "Map A", "roster": {"0": 1}}, {"map": "Map B"}))
+    env.reset()
+    env.reset()
+    assert [request["map"] for request in bridge.setup_requests] == ["Map A", "Map B"]
+    assert bridge.setup_requests[0]["roster"] == {"0": 1}
+
+
+def test_a_reset_with_its_own_setup_does_not_take_one_from_the_setups(ctf):
+    bridge = FakeBridge([Frame(ctf)])
+    setups = FakeSetups({"map": "Map A"})
+    ctf.CtfEnv(bridge, setups=setups).reset(preset="p")
+    assert [request["preset"] for request in bridge.setup_requests] == ["p"]
+    assert len(setups.setups) == 1
+
+
 def test_sparse_is_asked_for_only_when_the_config_says_so(ctf):
     off, on = FakeBridge([Frame(ctf)]), FakeBridge([Frame(ctf)])
     assert ctf.CtfConfig().sparse is False

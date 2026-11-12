@@ -1,0 +1,27 @@
+{
+  "name": "ctf_curriculo_inicial",
+  "order": "sequence",
+  "entries": [
+    {"map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"0": 1}, "rounds": 3, "weight": 1.0},
+    {"map": "Map CTF 1v1 First", "preset": "artemis_ctf_rounds", "roster": {"0": 1, "1": 1}, "rounds": 3, "weight": 1.0},
+    {"map": "Map CTF 2v2 Final", "preset": "artemis_ctf_rounds", "roster": {"0": 2, "1": 2}, "rounds": 3, "weight": 1.0}
+  ],
+  "presets": {
+    "artemis_ctf_rounds": {
+      "source": "bc94fbc8c84e70cd4a2b4fc679cb66f0c903bbb0",
+      "lines": [
+        "preset artemis_ctf_rounds",
+        "source bc94fbc8c84e70cd4a2b4fc679cb66f0c903bbb0",
+        "write 2be round_start 01 ff",
+        "write 2bf round_end 04 ff",
+        "write 2c7 spawn 03 ff",
+        "write 2cb round_start 0a ff",
+        "write 31c tick 08 ff",
+        "write 31d tick 01 ff",
+        "write 320 tick 64000000 ffffffff",
+        "write 5de8 tick 05 ff",
+        "check megalo_trait_set 0"
+      ]
+    }
+  }
+}

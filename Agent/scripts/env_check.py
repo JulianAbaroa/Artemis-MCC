@@ -4,7 +4,7 @@ Checks the stage 0 environment against a running CTF match (Diseno/14 sec. 9.2):
 per episode, steps, return, how it ended, the events of the agents and the time and score left of the observation (from the Match, P.6)
 at its start and its end. Policies: random, or seek (steer toward the enemy flag, or
 the own stand while carrying it, with the vectors of the observation; walk forward).
-python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random] [--episodes 3] [--max-seconds 90] [--scale 5]
+python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]]
 Exit code 0 when every episode ended (terminated or truncated) and the observations were finite.
 """
 import argparse
@@ -20,6 +20,7 @@ import numpy as np  # noqa: E402
 from artemis.bridge import Bridge, discover  # noqa: E402
 from artemis.env import ACTION_NVEC, CtfConfig, CtfEnv  # noqa: E402
 from artemis.env.ctf import YAW_STEPS  # noqa: E402
+from artemis.training import load_list  # noqa: E402
 
 
 def Seek(obs, config, rng):
@@ -43,7 +44,10 @@ def Main():
     parser.add_argument("--scale", type=float, default=0.0)
     parser.add_argument("--turn-limit", type=float, default=0.1)
     parser.add_argument("--sparse", action="store_true", help="ask Artemis for its pipeline only on decisions (default: every tick)")
+    parser.add_argument("--list", help="training list (Data/Training/<name>.json): every episode starts with its next setup")
+    parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
     args = parser.parse_args()
+    setups = load_list(args.list, seed=args.seed) if args.list else None
     regions = discover()
     if not regions:
         print("FAIL no open region (is MCC running with Artemis?)")
@@ -60,7 +64,7 @@ def Main():
         try:
             for episode in range(args.episodes):
                 started = time.time()
-                observations, _ = env.reset()
+                observations, _ = env.reset(setup=setups.next_setup() if setups else None)
                 returns = {h: 0.0 for h in env.agents}
                 events = {h: [] for h in env.agents}
                 steps, ending = 0, None

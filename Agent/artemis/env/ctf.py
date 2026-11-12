@@ -89,9 +89,11 @@ class CtfEnv:
     (terminated, also when the time limit of the round runs out: the time left is in the observation) or is cut with
     Bridge.end_round when the round clock of the Match reaches max_seconds (truncated), the cap of the environment."""
 
-    def __init__(self, bridge: Bridge, config: CtfConfig = None):
+    def __init__(self, bridge: Bridge, config: CtfConfig = None, setups=None):
+        """setups: an object with next_setup() (a TrainingList). A reset() that is not given a setup of its own asks for the next one."""
         self.bridge = bridge
         self.config = config or CtfConfig()
+        self.setups = setups
         self.agents = []
         self.states = {}
         self.published = None
@@ -155,7 +157,10 @@ class CtfEnv:
         raises RuntimeError with the reason: training with other settings than the ones asked would go unnoticed. So does a map variant
         left for the next load (a match is up and keeps its map) and one whose round has no 2 flag stands (a Megalo CTF finds its flags
         by label, so a map variant without them leaves a CTF without flags). A partial result (the roster did not fit after the preset
-        or the map went in) is logged and reported in the info."""
+        or the map went in) is logged and reported in the info. With no setup, preset, map or roster of its own, a reset takes the next setup
+        of the setups of the environment (one episode is one round, so one setup per round), if it has any."""
+        if setup is None and preset is None and map is None and roster is None and self.setups is not None:
+            setup = self.setups.next_setup()
         asked = MatchSetup.of(setup)
         asked = MatchSetup(preset if preset is not None else asked.preset, map if map is not None else asked.map,
                            roster if roster is not None else asked.roster)
