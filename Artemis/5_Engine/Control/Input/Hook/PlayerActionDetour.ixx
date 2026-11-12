@@ -2,6 +2,7 @@ export module Engine.Control.Input.Hook:PlayerAction;
 
 import Common.Log.System;
 import Control.Action.Type;
+import Engine.Base.MatchSetup.System;
 import Engine.Base.Memory.System;
 import Engine.Control.Input.Type;
 import Engine.Control.Input.State;
@@ -19,7 +20,8 @@ export namespace Engine::Control::Input::Hook
 {
     // Hooks the engine function that applies the player actions of each tick: writes the overrides into them, then publishes them (D109).
     // note: Players without an override keep the action the engine built. Called by ExecuteGameFrame once per tick on the game thread.
-    // Before the actions, the bot service adds the bots asked for and publishes the session snapshot (A9 M5), and the action source
+    // Before the actions, the match setup service applies the setup asked for (D286: preset, map variant and bots, at the first tick and
+    // at the break between rounds), the bot service adds the bots asked for and publishes the session snapshot (A9 M5), and the action source
     // (the bridge, D215) sets the overrides of the players of the Python client (waiting for them in Lockstep, D105).
     // note: The action tick of the bridge is the number this hook publishes (m_Sequence): one per tick it sees.
     class PlayerActionDetour
@@ -27,6 +29,7 @@ export namespace Engine::Control::Input::Hook
     private:
         using Log = Common::Log::System::Log;
 
+        using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using AOBService = Engine::Base::Memory::System::AOBService;
 
         using ActionOverride = ::Control::Action::Type::ActionOverride;
@@ -46,9 +49,10 @@ export namespace Engine::Control::Input::Hook
         using BotService = Engine::Control::Simulation::System::BotService;
 
     public:
-        PlayerActionDetour(Log& log, AOBService& aobService, PlayerActionStore& playerActionStore,
+        PlayerActionDetour(Log& log, AOBService& aobService, MatchSetupService& matchSetupService, PlayerActionStore& playerActionStore,
             BotService& botService) :
-            m_Log(log), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService) {}
+            m_Log(log), m_AOBService(aobService), m_MatchSetupService(matchSetupService), m_PlayerActionStore(playerActionStore),
+            m_BotService(botService) {}
         ~PlayerActionDetour() = default;
 
         // Connects the action source (the bridge, D215) that sets the overrides of the Python players.
@@ -65,6 +69,7 @@ export namespace Engine::Control::Input::Hook
     private:
         Log& m_Log;
         AOBService& m_AOBService;
+        MatchSetupService& m_MatchSetupService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
         ActionSource* m_ActionSource{ nullptr };

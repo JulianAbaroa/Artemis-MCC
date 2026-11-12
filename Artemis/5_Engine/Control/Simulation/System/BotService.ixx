@@ -3,6 +3,8 @@ export module Engine.Control.Simulation.System;
 import Common.Log.System;
 import Control.Action.Type;
 import Control.Action.System;
+import Engine.Base.MatchSetup.Type;
+import Engine.Base.MatchSetup.System;
 import Engine.Base.Memory.System;
 import Engine.Control.Input.State;
 import Engine.Control.Simulation.Type;
@@ -15,7 +17,8 @@ export namespace Engine::Control::Simulation::System
     // (A9 M5b). Also publishes the machines and players of the engine every tick (A9 M5a).
     // note: The simulation sees a bot as a remote player: no view, no local input. Its action of each tick comes from the overrides of
     // the PlayerAction hook (D109). The bots skip the session and the simulation queue, so the film does not have them (A9 sec. 13.4).
-    class BotService : public ::Control::Action::System::UnitRules
+    // It is also the bots port of MatchSetupService (D286): the setup service decides when a roster is applied, this one how.
+    class BotService : public ::Control::Action::System::UnitRules, public Engine::Base::MatchSetup::System::RosterPort
     {
     private:
         using Log = Common::Log::System::Log;
@@ -33,10 +36,9 @@ export namespace Engine::Control::Simulation::System
         using UnitClientState = ::Control::Action::Type::UnitClientState;
         using Bot = Engine::Control::Simulation::Type::Bot;
         using TeamRequest = Engine::Control::Simulation::Type::TeamRequest;
-        using Roster = Engine::Control::Simulation::Type::Roster;
-        using RosterRequest = Engine::Control::Simulation::Type::RosterRequest;
-        using RosterResult = Engine::Control::Simulation::Type::RosterResult;
-        using RosterOutcome = Engine::Control::Simulation::Type::RosterOutcome;
+        using RosterPlan = Engine::Control::Simulation::Type::RosterPlan;
+        using Roster = Engine::Base::MatchSetup::Type::Roster;
+        using RosterApplication = Engine::Base::MatchSetup::Type::RosterApplication;
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
         using BotStore = Engine::Control::Simulation::State::BotStore;
@@ -49,8 +51,8 @@ export namespace Engine::Control::Simulation::System
         BotService(const BotService&) = delete;
         auto operator=(const BotService&) -> BotService& = delete;
 
-        // Publishes the session snapshot, applies the roster (the first tick of the match: the active one, then a pending one at the end
-        // of a round), removes the bots asked to be removed since the last tick, adds the ones asked for and applies their team changes.
+        // Publishes the session snapshot, removes the bots asked to be removed since the last tick, adds the ones asked for and applies
+        // their team changes.
         // param threadContext: Thread context of the engine, or 0 if unknown (then it does nothing).
         // note: Game thread only, before the player actions of the tick are applied.
         auto Update(std::uintptr_t threadContext) -> void;
@@ -87,6 +89,17 @@ export namespace Engine::Control::Simulation::System
         // now (0x4852a0) (D120).
         // note: Game thread only.
         auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> override;
+
+        // return: Why the roster does not fit the match as it is now (more bots than k_MaxBots or than the free slots of the player table,
+        // or the team of the local player when it has auto bots), or nothing. Nothing is changed.
+        // note: Game thread only.
+        auto CheckRoster(std::uintptr_t threadContext, const Roster& roster) -> std::optional<std::string> override;
+
+        // Plans the roster against the bots in the engine and does moves, removes and adds in that order.
+        // return: The operations done of the total, or the reason when the roster does not fit (nothing was done). An operation that fails
+        // is logged and the others stay done: no rollback, and the ones after a failed add are skipped and count as not done.
+        // note: Game thread only.
+        auto ApplyRoster(std::uintptr_t threadContext, const Roster& roster) -> RosterApplication override;
 
         // Finds the engine functions by signature, in three sets: the ones that add and remove bots, the ones that build the
         // interaction and the client selectors (weapon, grenade, zoom).
@@ -130,16 +143,10 @@ export namespace Engine::Control::Simulation::System
         // return: False if the engine refused it. The cause is logged.
         auto AddBot(std::uintptr_t threadContext, std::optional<std::int8_t> team) -> bool;
 
-        // Applies the roster at the first tick of the match, and a pending one in the first tick of the break between two rounds.
-        // note: The break is read from the round state of the game engine globals (ended or between rounds). If this hook does not run
-        // during the break, the roster waits for a tick where the state is read again, and it is logged when it is applied.
-        auto UpdateRoster(std::uintptr_t threadContext) -> void;
-
-        // Plans the roster against the bots in the engine and does moves, removes and adds in that order.
-        // param outcome: What the result says when every operation worked (AtLoad or Applied).
-        // return: The result. Rejected with the reason if the roster does not fit (nothing was done) or if some operation failed or was
-        // skipped (the others stay done: Rejected can mean partly applied).
-        auto ApplyRoster(std::uintptr_t threadContext, const Roster& roster, RosterOutcome outcome) -> RosterResult;
+        // Plans the roster against the bots in the engine.
+        // param bots: Out. The bots of the store.
+        // return: The plan, or why the roster does not fit.
+        auto PlanCurrentRoster(std::uintptr_t threadContext, const Roster& roster, std::vector<Bot>& bots) -> std::expected<RosterPlan, std::string>;
 
         // Removes a bot from the match: the "left" update, then the "remove" update, both through the engine function that applies the
         // player updates, so the slot is free at once and the bot leaves the scoreboard.

@@ -7,6 +7,7 @@ module DevTools.Workbench.Simulation.System;
 import Common.Engine.Type;
 import Control.Action.Type;
 import Engine.Base.Lifecycle.Type;
+import Engine.Base.MatchSetup.Type;
 import Engine.Control.Simulation.Type;
 import Bridge.Transport.Type;
 import Blam.Layout.Action.Type;
@@ -28,17 +29,17 @@ namespace
     using Engine::Control::Simulation::Type::Bot;
     using Engine::Control::Simulation::Type::FakeMachine;
     using Engine::Control::Simulation::Type::TeamRequest;
-    using Engine::Control::Simulation::Type::Roster;
-    using Engine::Control::Simulation::Type::RosterOutcome;
-    using Engine::Control::Simulation::Type::RosterResult;
-    using Engine::Control::Simulation::Type::ToText;
+    using Engine::Base::MatchSetup::Type::MatchSetup;
+    using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
+    using Engine::Base::MatchSetup::Type::Roster;
+    using Engine::Base::MatchSetup::Type::ToText;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using Bridge::Transport::Type::BridgeStatus;
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgeMode;
 
     using Common::Engine::Type::k_MaxLocalUsers;
-    using Engine::Control::Simulation::Type::k_MaxMachines;
+    using Engine::Base::MatchSetup::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxTeams;
     using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
@@ -1015,23 +1016,8 @@ namespace DevTools::Workbench::Simulation::System
 
     auto SimulationUIService::DrawRoster() -> void
     {
-        const std::optional<Roster> active{ m_BotStore.GetActiveRoster() };
-        const RosterResult result{ m_BotStore.GetRosterResult() };
-
-        std::string state{};
-        switch (result.Outcome)
-        {
-        case RosterOutcome::None: state = active ? "applies at the next load" : ""; break;
-        case RosterOutcome::Pending: state = "pending until the end of the round"; break;
-        case RosterOutcome::AtLoad: state = "at load"; break;
-        case RosterOutcome::Applied: state = std::format("between rounds {}", result.Round); break;
-        case RosterOutcome::Rejected: state = std::format("rejected: {}", result.Reason); break;
-        }
-
-        ImGui::Text("Roster: %s%s%s%s", active ? ToText(*active).c_str() : "none", state.empty() ? "" : " (", state.c_str(),
-            state.empty() ? "" : ")");
-        ImGui::SetItemTooltip("Bots per team (the local players are not part of it). Applied at the first tick of every match, and a"
-            " new one between two rounds. Auto goes to the team of the local player 0.");
+        const std::string line{ ToText(m_MatchSetupService.GetActive(), m_MatchSetupService.GetResult()) };
+        ImGui::TextWrapped("%s", line.c_str());
 
         Roster editor{ m_SimulationUIStore.GetRosterEditor() };
         bool isEdited{ false };
@@ -1057,8 +1043,7 @@ namespace DevTools::Workbench::Simulation::System
 
         if (isEdited) m_SimulationUIStore.SetRosterEditor(editor);
 
-        if (ImGui::Button("Request roster")) m_BotStore.RequestRoster(editor);
-        ImGui::SetItemTooltip("In the lobby it is the roster of the next match. In a match it is applied at the end of the round.");
+        if (ImGui::Button("Request roster")) m_MatchSetupService.Request(MatchSetup{ .Bots = editor }, MatchSetupOrigin::Ui);
     }
 
     auto SimulationUIService::ApplyBotAction(std::size_t playerIndex, LocalPlayerAction mode) -> void

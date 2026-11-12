@@ -6,8 +6,7 @@ import Common.Log.System;
 import Services.Telemetry.State;
 import Engine.Base.Memory.System;
 import Engine.Base.Lifecycle.State;
-import Engine.Base.MapVariant.System;
-import Engine.Base.Preset.System;
+import Engine.Base.MatchSetup.System;
 import Engine.Capture.Type;
 import Engine.Capture.State;
 import std;
@@ -15,7 +14,7 @@ import std;
 export namespace Engine::Capture::Hook
 {
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, keeps the engine speed requested by
-    // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), serves the gametype preset and the map variant requested between rounds, records the telemetry of the call
+    // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), applies the match setup requested between rounds (D286), records the telemetry of the call
     // and closes its last tick (ExecuteGameFrameDetour closes the others).
     // note: Without the ExecuteGameFrame hook it signals once per call that advanced ticks, so only the last tick of a frame is seen.
     // note: Game main thread only. See docs/Tick Synchronization.md.
@@ -29,19 +28,18 @@ export namespace Engine::Capture::Hook
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
         using AOBService = Engine::Base::Memory::System::AOBService;
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
-        using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
-        using PresetService = Engine::Base::Preset::System::PresetService;
+        using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using CaptureStore = Engine::Capture::State::CaptureStore;
         using SimulationTicksFunction = Engine::Capture::Type::SimulationTicksFunction;
         using EndRoundFunction = Engine::Capture::Type::EndRoundFunction;
 
     public:
         SimulationTicksDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,
-            LifecycleStore& lifecycleStore, CaptureStore& captureStore, PresetService& presetService,
-            MapVariantService& mapVariantService, ExecuteGameFrameDetour& executeGameFrameDetour) :
+            LifecycleStore& lifecycleStore, CaptureStore& captureStore, MatchSetupService& matchSetupService,
+            ExecuteGameFrameDetour& executeGameFrameDetour) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
-            m_LifecycleStore(lifecycleStore), m_CaptureStore(captureStore), m_PresetService(presetService),
-            m_MapVariantService(mapVariantService), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
+            m_LifecycleStore(lifecycleStore), m_CaptureStore(captureStore),
+            m_MatchSetupService(matchSetupService), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
         ~SimulationTicksDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -56,8 +54,7 @@ export namespace Engine::Capture::Hook
         AOBService& m_AOBService;
         LifecycleStore& m_LifecycleStore;
         CaptureStore& m_CaptureStore;
-        PresetService& m_PresetService;
-        MapVariantService& m_MapVariantService;
+        MatchSetupService& m_MatchSetupService;
         ExecuteGameFrameDetour& m_ExecuteGameFrameDetour;
 
         static inline SimulationTicksDetour* s_Instance{ nullptr };
@@ -84,15 +81,9 @@ export namespace Engine::Capture::Hook
         // note: Runs before the ticks of the frame, also in a pause. The engine ignores it when no round is running.
         auto ApplyEndRound() -> void;
 
-        // Serves a gametype preset requested during the match into the live game variant, at a round break only (never in play).
-        // note: Runs after ApplyEndRound, so a request made with an end of round is served in the same frame the round ends. The service
-        // does the checks and the writing, this only reads the round state, the mode and the variant through the thread context.
-        auto ApplyPreset() -> void;
-
-        // Serves a map variant requested during the match into the runtime map variant and the copy of it in the game options, at a round
-        // break only (Q98, D266). The next round builds its objects from it.
-        // note: Runs after ApplyPreset, in the same cut. The service does the checks and the writing, this only finds the two blocks through
-        // the thread context.
-        auto ApplyMapVariant() -> void;
+        // Applies the match setup (preset, map variant and bots) requested during the match, at a round break only (D286). The service
+        // does the checks and the writing, this only gives it the thread context.
+        // note: Runs after ApplyEndRound, so a request made with an end of round is served in the frame the round ends. Also in a pause.
+        auto ApplyMatchSetup() -> void;
     };
 }

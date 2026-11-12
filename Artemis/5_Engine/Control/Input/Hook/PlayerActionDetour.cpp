@@ -90,6 +90,7 @@ namespace Engine::Control::Input::Hook
             auto* bytes{ static_cast<std::uint8_t*>(update) };
             const std::uintptr_t threadContext{ s_Instance->GetThreadContext() };
 
+            s_Instance->m_MatchSetupService.UpdateLoad(threadContext);
             s_Instance->m_BotService.Update(threadContext);
             s_Instance->m_ActionSource->Prepare(s_Instance->m_Sequence + 1);
             s_Instance->ApplyOverrides(bytes, threadContext);

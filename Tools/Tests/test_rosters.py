@@ -1,7 +1,7 @@
 """
 test_rosters.py
-Tests of the roster keys of the bench scenarios (LS.1, D284): how Tools/game.py compiles "roster", "bots" and "rosters" into the line
-format of BenchUIService.
+Tests of the roster keys of the bench scenarios (LS.1, D284): how Tools/game.py compiles "roster", "bots" and "rosters" (a shortcut of
+"setups", D286) into the line format of BenchUIService.
 """
 import pytest
 
@@ -53,13 +53,14 @@ def test_a_null_roster_removes_the_roster_of_the_defaults():
     assert "roster" not in text
 
 
-def test_rosters_are_one_line_per_round_in_order():
+def test_rosters_are_one_setup_line_per_round_in_order():
     text = compile_one({"config": "c", "roster": {"0": 7, "1": 8},
                         "rosters": [{"0": 1, "auto": 2}, {"0": 5, "1": 6}, {"1": 1}]})
     lines = text.splitlines()
-    assert lines.index("roster 7 8 0 0 0 0 0 0 auto 0") < lines.index("round_roster 1 0 0 0 0 0 0 0 auto 2")
-    assert [line for line in lines if line.startswith("round_roster")] == [
-        "round_roster 1 0 0 0 0 0 0 0 auto 2", "round_roster 5 6 0 0 0 0 0 0 auto 0", "round_roster 0 1 0 0 0 0 0 0 auto 0"]
+    assert lines.index("roster 7 8 0 0 0 0 0 0 auto 0") < lines.index("round_setup roster=1 0 0 0 0 0 0 0 auto 2")
+    assert [line for line in lines if line.startswith("round_")] == [
+        "round_setup roster=1 0 0 0 0 0 0 0 auto 2", "round_setup roster=5 6 0 0 0 0 0 0 auto 0", "round_setup roster=0 1 0 0 0 0 0 0 auto 0"]
+    assert "round_roster" not in text
 
 
 def test_rosters_need_a_roster_at_load():

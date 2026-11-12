@@ -84,15 +84,14 @@ export namespace DevTools::Workbench
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
                 engine.m_MatchConfigService, engine.m_LocalUserStore, engine.m_VirtualInputStore, engine.m_PlayerActionStore,
-                engine.m_BotStore, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
+                engine.m_BotStore, engine.m_MatchSetupService, engine.m_BridgeService, exportLayer.m_TickStore, m_SimulationUIStore),
             m_TickDumpUIService(service.m_Log, service.m_SettingsStore, map.m_FileStore, exportLayer.m_FlatService,
                 m_TickDumpUIStore),
             m_LogsUIService(service.m_SettingsStore, service.m_LogsStore, m_LogsUIStore),
             m_BenchUIService(service.m_LogsStore, service.m_Log, service.m_SettingsStore, engine.m_MemoryReaderService,
                 engine.m_LocalUserStore, engine.m_PlayerActionStore, engine.m_VirtualInputStore, engine.m_LifecycleStore,
-                engine.m_MatchConfigStore, engine.m_MatchCycleStore, engine.m_MatchConfigService, engine.m_PresetStore, engine.m_PresetService,
-                engine.m_MapVariantStore, engine.m_MapVariantService,
-                engine.m_BotStore, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore),
+                engine.m_MatchConfigStore, engine.m_MatchCycleStore, engine.m_MatchConfigService, engine.m_MatchSetupService, engine.m_PresetService,
+                engine.m_MapVariantService, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore),
             m_OracleUIService(service.m_Log, service.m_SettingsStore, engine.m_OracleStore, resolved.m_Raycaster, m_OracleUIStore)
         {
             // The raycast oracle saves its rays and period (D272), never whether it runs.

@@ -60,6 +60,9 @@
     <ClCompile Include="Engine\MatchConfigTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\MatchSetupTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\PresetTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

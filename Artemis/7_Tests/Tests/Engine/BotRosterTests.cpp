@@ -2,6 +2,7 @@
 
 import Common.Engine.Type;
 import Blam.Layout.Game.Type;
+import Engine.Base.MatchSetup.Type;
 import Engine.Control.Simulation.Type;
 import Engine.Control.Simulation.State;
 import std;
@@ -15,19 +16,17 @@ namespace
     using Engine::Control::Simulation::Type::Bot;
     using Engine::Control::Simulation::Type::FindFreeBotNumber;
     using Engine::Control::Simulation::Type::MakePlayerUpdate;
-    using Engine::Control::Simulation::Type::GetRosterStep;
+    using Engine::Base::MatchSetup::Type::GetMatchSetupStep;
     using Engine::Control::Simulation::Type::PlanRoster;
-    using Engine::Control::Simulation::Type::Roster;
-    using Engine::Control::Simulation::Type::RosterOutcome;
-    using Engine::Control::Simulation::Type::RosterResult;
-    using Engine::Control::Simulation::Type::RosterStep;
-    using Engine::Control::Simulation::Type::ToText;
+    using Engine::Base::MatchSetup::Type::MatchSetupStep;
+    using Engine::Base::MatchSetup::Type::Roster;
+    using Engine::Base::MatchSetup::Type::ToText;
     using Engine::Control::Simulation::Type::RosterBot;
     using Engine::Control::Simulation::Type::RosterMove;
     using Engine::Control::Simulation::Type::RosterPlan;
 
     using Common::Engine::Type::k_MaxTeams;
-    using Engine::Control::Simulation::Type::k_MaxBots;
+    using Engine::Base::MatchSetup::Type::k_MaxBots;
     using Engine::Control::Simulation::Type::k_PlayerUpdateAdded;
     using Engine::Control::Simulation::Type::k_PlayerUpdateLeft;
     using Engine::Control::Simulation::Type::k_PlayerUpdateRemove;
@@ -320,24 +319,24 @@ TEST(BotRosterTests, RosterTextListsTheTeamsWithBots)
 
 TEST(BotRosterTests, FirstTickOfTheMatchLoadsWhateverTheRound)
 {
-    EXPECT_EQ(GetRosterStep(false, false, std::nullopt), RosterStep::Load);
-    EXPECT_EQ(GetRosterStep(false, true, 1), RosterStep::Load);
-    EXPECT_EQ(GetRosterStep(false, false, k_RoundStateEnded), RosterStep::Load);
+    EXPECT_EQ(GetMatchSetupStep(false, false, std::nullopt), MatchSetupStep::Load);
+    EXPECT_EQ(GetMatchSetupStep(false, true, 1), MatchSetupStep::Load);
+    EXPECT_EQ(GetMatchSetupStep(false, false, k_RoundStateEnded), MatchSetupStep::Load);
 }
 
 TEST(BotRosterTests, RequestOfTheMatchWaitsForTheEndOfTheRound)
 {
-    EXPECT_EQ(GetRosterStep(true, true, 1), RosterStep::Nothing);
-    EXPECT_EQ(GetRosterStep(true, true, 0), RosterStep::Nothing);
-    EXPECT_EQ(GetRosterStep(true, true, std::nullopt), RosterStep::Nothing);
-    EXPECT_EQ(GetRosterStep(true, true, k_RoundStateEnded), RosterStep::Break);
-    EXPECT_EQ(GetRosterStep(true, true, k_RoundStateBetween), RosterStep::Break);
+    EXPECT_EQ(GetMatchSetupStep(true, true, 1), MatchSetupStep::Nothing);
+    EXPECT_EQ(GetMatchSetupStep(true, true, 0), MatchSetupStep::Nothing);
+    EXPECT_EQ(GetMatchSetupStep(true, true, std::nullopt), MatchSetupStep::Nothing);
+    EXPECT_EQ(GetMatchSetupStep(true, true, k_RoundStateEnded), MatchSetupStep::Break);
+    EXPECT_EQ(GetMatchSetupStep(true, true, k_RoundStateBetween), MatchSetupStep::Break);
 }
 
 TEST(BotRosterTests, WithoutARequestThereIsNothingToDoDuringTheBreak)
 {
-    EXPECT_EQ(GetRosterStep(true, false, k_RoundStateEnded), RosterStep::Nothing);
-    EXPECT_EQ(GetRosterStep(true, false, k_RoundStateBetween), RosterStep::Nothing);
+    EXPECT_EQ(GetMatchSetupStep(true, false, k_RoundStateEnded), MatchSetupStep::Nothing);
+    EXPECT_EQ(GetMatchSetupStep(true, false, k_RoundStateBetween), MatchSetupStep::Nothing);
 }
 
 TEST(BotRosterTests, BotGoneFromTheEngineIsRemovedNeverMovedAndTheTeamThatMissesGetsANewBot)
@@ -365,152 +364,4 @@ TEST(BotRosterTests, GoneBotsAreRemovedAfterTheExtraBotsOfTheTeams)
     EXPECT_TRUE(plan->Moves.empty());
     EXPECT_EQ(plan->Removes, (std::vector<std::size_t>{ 3, 2, 4 }));
     EXPECT_TRUE(plan->Adds.empty());
-}
-
-TEST(BotRosterTests, RequestIsTakenOnceAndTheResultStaysPendingUntilItIsFinished)
-{
-    BotStore store{};
-    EXPECT_FALSE(store.HasPendingRoster());
-    EXPECT_EQ(store.GetRosterResult().Outcome, RosterOutcome::None);
-
-    store.RequestRoster(MakeRoster({ 1, 2 }));
-
-    EXPECT_TRUE(store.HasPendingRoster());
-    EXPECT_EQ(store.GetRosterResult().Outcome, RosterOutcome::Pending);
-
-    const auto request{ store.TakePendingRoster() };
-    ASSERT_TRUE(request.has_value());
-    EXPECT_EQ(request->Value, MakeRoster({ 1, 2 }));
-    EXPECT_FALSE(store.HasPendingRoster());
-    EXPECT_FALSE(store.TakePendingRoster().has_value());
-    EXPECT_EQ(store.GetRosterResult().Outcome, RosterOutcome::Pending);
-    EXPECT_FALSE(store.GetActiveRoster().has_value());
-
-    store.FinishRoster(*request, RosterResult{ .Outcome = RosterOutcome::Applied, .Round = 2 }, true);
-
-    EXPECT_EQ(store.GetRosterResult(), (RosterResult{ .Outcome = RosterOutcome::Applied, .Round = 2 }));
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 1, 2 }));
-}
-
-TEST(BotRosterTests, RejectedRequestLeavesTheActiveRosterAsItWas)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 7, 8 }));
-    store.FinishRoster(*store.TakeLoadRoster(), RosterResult{ .Outcome = RosterOutcome::AtLoad, .Round = 0 }, true);
-
-    store.RequestRoster(MakeRoster({ 9, 9 }));
-    const auto request{ store.TakePendingRoster() };
-    store.FinishRoster(*request, RosterResult{ .Outcome = RosterOutcome::Rejected, .Reason = "does not fit" }, false);
-
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 7, 8 }));
-    EXPECT_EQ(store.GetRosterResult().Outcome, RosterOutcome::Rejected);
-    EXPECT_EQ(store.GetRosterResult().Reason, "does not fit");
-}
-
-TEST(BotRosterTests, LoadTakesThePendingRequestWithoutMakingItActiveBeforeItIsApplied)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 7, 8 }));
-
-    const auto request{ store.TakeLoadRoster() };
-
-    ASSERT_TRUE(request.has_value());
-    EXPECT_EQ(request->Value, MakeRoster({ 7, 8 }));
-    EXPECT_FALSE(store.HasPendingRoster());
-    EXPECT_FALSE(store.GetActiveRoster().has_value());
-    EXPECT_FALSE(store.TakeLoadRoster().has_value());
-}
-
-TEST(BotRosterTests, LoadTakesTheActiveRosterWhenNothingIsPending)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 7, 8 }));
-    store.FinishRoster(*store.TakeLoadRoster(), RosterResult{ .Outcome = RosterOutcome::AtLoad }, true);
-
-    const auto request{ store.TakeLoadRoster() };
-
-    ASSERT_TRUE(request.has_value());
-    EXPECT_EQ(request->Value, MakeRoster({ 7, 8 }));
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 7, 8 }));
-}
-
-TEST(BotRosterTests, ResultOfAnOlderRequestNeverReplacesTheOneOfANewerRequest)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 1 }));
-    const auto older{ store.TakePendingRoster() };
-
-    store.RequestRoster(MakeRoster({ 2 }));
-    store.FinishRoster(*older, RosterResult{ .Outcome = RosterOutcome::Applied, .Round = 1 }, true);
-
-    // The engine holds the older roster now, but the newer request is still pending and shows as such.
-    EXPECT_EQ(store.GetRosterResult().Outcome, RosterOutcome::Pending);
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 1 }));
-    EXPECT_TRUE(store.HasPendingRoster());
-
-    const auto newer{ store.TakePendingRoster() };
-    ASSERT_TRUE(newer.has_value());
-    EXPECT_GT(newer->Sequence, older->Sequence);
-
-    store.FinishRoster(*newer, RosterResult{ .Outcome = RosterOutcome::Applied, .Round = 2 }, true);
-    EXPECT_EQ(store.GetRosterResult().Round, 2);
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 2 }));
-}
-
-TEST(BotRosterTests, NewerRequestReplacesAnOlderOneNotTakenYet)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 1 }));
-    store.RequestRoster(MakeRoster({ 0, 4 }));
-
-    EXPECT_EQ(store.TakePendingRoster()->Value, MakeRoster({ 0, 4 }));
-}
-
-TEST(BotRosterTests, CleanupKeepsTheActiveRosterAndAPendingOneButNotTheBotsNorTheOldResult)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 7, 8 }));
-    store.FinishRoster(*store.TakePendingRoster(), RosterResult{ .Outcome = RosterOutcome::Applied, .Round = 3 }, true);
-    store.RequestRoster(MakeRoster({ 1, 2 }));
-    store.AddBot(Bot{ .Number = 1, .PlayerIndex = 15 });
-    store.RequestRemove(1);
-    store.SetMatchStarted();
-
-    store.Cleanup();
-
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 7, 8 }));
-    EXPECT_TRUE(store.HasPendingRoster());
-    EXPECT_EQ(store.GetRosterResult(), RosterResult{ .Outcome = RosterOutcome::Pending });
-    EXPECT_FALSE(store.IsMatchStarted());
-    EXPECT_TRUE(store.TakeRemoveRequests().empty());
-
-    std::vector<Bot> bots{};
-    store.CopyBots(bots);
-    EXPECT_TRUE(bots.empty());
-}
-
-TEST(BotRosterTests, CleanupWithoutAPendingRequestResetsTheResultButKeepsTheActiveRoster)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 7, 8 }));
-    store.FinishRoster(*store.TakePendingRoster(), RosterResult{ .Outcome = RosterOutcome::Applied, .Round = 3 }, true);
-
-    store.Cleanup();
-
-    EXPECT_EQ(store.GetActiveRoster(), MakeRoster({ 7, 8 }));
-    EXPECT_EQ(store.GetRosterResult(), RosterResult{});
-}
-
-TEST(BotRosterTests, ClearRosterForgetsTheActiveThePendingAndTheResult)
-{
-    BotStore store{};
-    store.RequestRoster(MakeRoster({ 7, 8 }));
-    store.FinishRoster(*store.TakePendingRoster(), RosterResult{ .Outcome = RosterOutcome::AtLoad }, true);
-    store.RequestRoster(MakeRoster({ 1, 2 }));
-
-    store.ClearRoster();
-
-    EXPECT_FALSE(store.GetActiveRoster().has_value());
-    EXPECT_FALSE(store.HasPendingRoster());
-    EXPECT_EQ(store.GetRosterResult(), RosterResult{});
 }

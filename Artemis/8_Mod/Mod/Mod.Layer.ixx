@@ -89,8 +89,7 @@ export namespace Mod
         Engine::Match::Layer m_Match{ m_Service, m_Base };
         Engine::Render::Layer m_Render{ m_Service, m_Base };
         BridgeEngineAdapter m_BridgeEngineAdapter{ m_Base.m_LifecycleStore, m_Match.m_MatchCycleStore, m_Control.m_PlayerActionStore,
-            m_Base.m_PresetStore, m_Base.m_PresetService, m_Base.m_MapVariantStore, m_Base.m_MapVariantService,
-            m_Match.m_MatchConfigService };
+            m_Base.m_MatchSetupService, m_Base.m_PresetService, m_Base.m_MapVariantService, m_Match.m_MatchConfigService };
         Bridge::Transport::Layer m_Transport{ m_Service, m_BridgeEngineAdapter };
         BridgeActionSource m_BridgeActionSource{ m_Transport.m_BridgeService };
 
@@ -112,9 +111,8 @@ export namespace Mod
             .m_MatchConfigStore = m_Match.m_MatchConfigStore,
             .m_MatchConfigService = m_Match.m_MatchConfigService,
             .m_MatchCycleStore = m_Match.m_MatchCycleStore,
-            .m_PresetStore = m_Base.m_PresetStore,
+            .m_MatchSetupService = m_Base.m_MatchSetupService,
             .m_PresetService = m_Base.m_PresetService,
-            .m_MapVariantStore = m_Base.m_MapVariantStore,
             .m_MapVariantService = m_Base.m_MapVariantService,
             .m_LocalUserStore = m_Base.m_LocalUserStore,
             .m_VirtualInputStore = m_Control.m_VirtualInputStore,

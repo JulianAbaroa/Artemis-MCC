@@ -1,6 +1,15 @@
 export module Engine.Base.Preset.Type;
 
+import Blam.Layout.Game.Type;
 import std;
+
+namespace
+{
+    using Blam::Layout::Game::Type::VariantPreset::CompiledPreset;
+    using Blam::Layout::Game::Type::VariantPreset::PresetBase;
+    using Blam::Layout::Game::Type::VariantPreset::PresetCatalog;
+    using Blam::Layout::Game::Type::VariantPreset::PresetWrites;
+}
 
 export namespace Engine::Base::Preset::Type
 {
@@ -17,33 +26,24 @@ export namespace Engine::Base::Preset::Type
     // the game globals (A19 sec. 5.2). It is 0x300, written in decimal because other unrelated offsets share that hex value.
     inline constexpr std::size_t k_ConfigurationVariantOffset{ 768 };
 
-    // What the last load did with the active preset.
-    enum class PresetOutcome : std::uint8_t
+    // A preset read from the compiled files, ready to be part of a match setup (D286). A null preset asks for the base values of the
+    // gametype (the name is then empty).
+    struct PresetPick
     {
-        // No load happened since the result was cleared.
-        None,
-        // The load had no preset to write, or its variant is not one a preset can be written to.
-        NoPreset,
-        // The preset was written into the start and read back equal.
-        AppliedAtLoad,
-        // The request was refused (a trait set the script does not have): the start went on without the preset.
-        Rejected,
-        // The preset could not be loaded or written: the start went on without it.
-        Failed,
-        // A request made during a match waits for the round to end.
-        Pending,
-        // The request was written into the live variant between rounds and read back equal.
-        Applied,
+        std::string Name{};
+        std::shared_ptr<const CompiledPreset> Preset{};
+        std::shared_ptr<const PresetCatalog> Catalog{};
     };
 
-    // Result of the last load or of the last request to set the active preset.
-    // note: A request made in the lobby ends as AppliedAtLoad (written at the next start). One made in a match is Pending until the next
-    // round break, then Applied, Rejected or Failed.
-    struct PresetResult
+    // A preset checked against the live variant of a match and not written yet.
+    struct PresetLivePlan
     {
-        PresetOutcome Outcome{ PresetOutcome::None };
-        std::string Name{};
-        // Why it was not applied. Empty when it was.
-        std::string Message{};
+        PresetPick Pick{};
+        // The base values the writes were composed over, and the catalog they were saved with. Null when the plan has no writes.
+        std::shared_ptr<const PresetBase> Base{};
+        std::shared_ptr<const PresetCatalog> Catalog{};
+        // Whether Base was saved from the variant for this plan (the first preset of a match loaded without one).
+        bool IsBaseNew{ false };
+        PresetWrites Writes{};
     };
 }

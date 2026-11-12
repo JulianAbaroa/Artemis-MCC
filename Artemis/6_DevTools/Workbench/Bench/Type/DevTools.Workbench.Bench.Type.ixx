@@ -4,7 +4,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
 import Services.Telemetry.Type;
-import Engine.Control.Simulation.Type;
+import Engine.Base.MatchSetup.Type;
 import Bridge.Transport.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Workbench.Simulation.Type;
@@ -18,7 +18,8 @@ namespace
     using Bridge::Transport::Type::BridgeCounters;
     using Bridge::Codec::Tick::Type::Tick;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
-    using Engine::Control::Simulation::Type::Roster;
+    using Engine::Base::MatchSetup::Type::MatchSetupOutcome;
+    using Engine::Base::MatchSetup::Type::Roster;
 
     using Common::Engine::Type::k_MaxTeams;
     using Common::Engine::Type::k_NoHandle;
@@ -75,23 +76,29 @@ export namespace DevTools::Workbench::Bench::Type
         std::size_t Size{ 4 };
     };
 
+    // A match setup a scenario asks for (D286), by names: what a field leaves out stays as the engine holds it.
+    struct BenchSetup
+    {
+        // Gametype preset. Empty text asks for the base values of the gametype (D264).
+        std::optional<std::string> Preset{};
+        // Map variant (name of a recorded config whose map variant is used, Q98, D266). Empty text asks for the one of the load.
+        std::optional<std::string> MapVariant{};
+        std::optional<Roster> Bots{};
+    };
+
     // One match of a scenario: what to launch, who plays, how fast, when to stop and what to check at the end.
     struct BenchMatch
     {
         std::string Name{};
         // Recorded match config transplanted at the start (D123).
         std::string Config{};
-        // Gametype preset made active before the launch (D264). Empty text removes it, no value leaves the active one.
-        std::optional<std::string> Preset{};
-        // Map variant (name of a recorded config whose map variant is used) made active before the launch (Q98, D266). Empty text removes
-        // it, no value leaves the active one.
-        std::optional<std::string> MapVariant{};
         // Local users of the split-screen, the primary one included. Empty leaves the count as it is.
         std::optional<std::size_t> Locals{};
-        // Bots of the match (D284): applied at the first tick, and a roster per next round, each one requested while the round before
-        // it runs and applied at the end of that round. No roster at all means no bots: the one of the previous match is cleared.
-        std::optional<Roster> RosterAtLoad{};
-        std::vector<Roster> RoundRosters{};
+        // The setup of the load (D286): preset and map variant written into the start and the bots added at the first tick, one request
+        // made before the launch. A match with no roster has no bots: the one of the previous match is cleared (D284).
+        BenchSetup SetupAtLoad{};
+        // A setup per next round, each one requested while the round before it runs and applied at the end of that round.
+        std::vector<BenchSetup> RoundSetups{};
         // Engine speed during the match. Empty leaves it as it is, 0 = the engine speed.
         std::optional<float> TimeScale{};
         // Limits after which the bench sends Leave (D131). 0 = none: the gametype ends the match.
@@ -165,18 +172,40 @@ export namespace DevTools::Workbench::Bench::Type
         std::string Perf{};
     };
 
-    // One round start the bench saw (the roster_ok check): the bots per team the roster of the round asks for and the ones the Tick had.
-    struct BenchRosterRow
+    // One round start the bench saw (the roster_ok and setup_ok checks): what the setups asked for up to that round and what the engine
+    // held, with the result of the last request.
+    struct BenchSetupRow
     {
         std::int16_t Round{ 0 };
-        std::array<std::size_t, k_MaxTeams> Expected{};
-        std::array<std::size_t, k_MaxTeams> Seen{};
+
+        // What the requests asked for up to this round, each field only if some request set it.
+        std::optional<std::string> ExpectedPreset{};
+        std::optional<std::string> ExpectedMap{};
+        std::optional<std::array<std::size_t, k_MaxTeams>> ExpectedBots{};
+
+        // The names the engine holds, and the bots per team of the Tick (the players without a local index).
+        std::string SeenPreset{};
+        std::string SeenMap{};
+        std::array<std::size_t, k_MaxTeams> SeenBots{};
         // Bots seen on a team that is not 0 to k_MaxTeams - 1.
         std::size_t SeenElsewhere{ 0 };
 
+        // Whether any request was made up to this round, and what became of the last one.
+        bool IsRequested{ false };
+        MatchSetupOutcome Outcome{ MatchSetupOutcome::None };
+        std::string Reason{};
+
+        auto IsBotsOk() const -> bool
+        {
+            return (!ExpectedBots || *ExpectedBots == SeenBots) && SeenElsewhere == 0;
+        }
+
         auto IsOk() const -> bool
         {
-            return Expected == Seen && SeenElsewhere == 0;
+            const bool isApplied{ Outcome == MatchSetupOutcome::AtLoad || Outcome == MatchSetupOutcome::Applied };
+
+            return this->IsBotsOk() && (!ExpectedPreset || *ExpectedPreset == SeenPreset) && (!ExpectedMap || *ExpectedMap == SeenMap) &&
+                (!IsRequested || (isApplied && Reason.empty()));
         }
     };
 
@@ -231,10 +260,10 @@ export namespace DevTools::Workbench::Bench::Type
         // requests already sent.
         std::unordered_map<std::uint32_t, LocalPlayerAction> AppliedModes{};
         std::vector<bool> SentRequests{};
-        // Rounds of the roster check: the last round seen in play, the round rosters requested so far and the rows.
+        // Rounds of the setup checks: the last round seen in play, the round setups requested so far and the rows.
         std::int16_t LastRound{ -1 };
-        std::size_t RostersRequested{ 0 };
-        std::vector<BenchRosterRow> RosterRows{};
+        std::size_t SetupsRequested{ 0 };
+        std::vector<BenchSetupRow> SetupRows{};
         std::vector<BenchProbeState> Probes{};
         // CSV of the events of the match, and the sequence of the last event written to it.
         std::filesystem::path EventsFile{};

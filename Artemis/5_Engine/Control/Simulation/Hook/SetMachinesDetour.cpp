@@ -1,6 +1,7 @@
 module Engine.Control.Simulation.Hook;
 import :SetMachines;
 
+import Engine.Base.MatchSetup.Type;
 import Engine.Base.Memory.Type;
 import Engine.Base.Hook.System;
 import std;
@@ -14,7 +15,7 @@ namespace
     using Engine::Control::Simulation::Type::MachineIdentifier;
     using Engine::Control::Simulation::Type::FakeMachine;
 
-    using Engine::Control::Simulation::Type::k_MaxMachines;
+    using Engine::Base::MatchSetup::Type::k_MaxMachines;
 }
 
 namespace Engine::Control::Simulation::Hook

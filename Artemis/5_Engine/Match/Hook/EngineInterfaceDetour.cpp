@@ -135,44 +135,25 @@ namespace Engine::Match::Hook
                     exception.what());
             }
 
-            // The active map variant goes into the copy the engine starts with, after the transplant and before the preset (Q98, D266).
-            // A map variant that does not fit leaves the copy as it was: the start keeps the map variant of its configuration.
+            // The setup of this start (the request waiting, or the one the engine holds) goes into the copy the engine starts with, after the
+            // transplant (D286). Without a transplant the copy is made here, so the configuration of MCC is never written. A setup that
+            // does not fit leaves the copy as it was: the start keeps the preset and the map variant of its configuration.
             try
             {
-                // Every start keeps the map variant of its configuration, and takes the request no round break served.
-                self->m_MapVariantService.BeginStart(std::span<const std::byte>{ startConfiguration, k_EngineConfigurationSize });
+                // The per-start state is reset for every start, with or without a setup.
+                self->m_MatchSetupService.BeginStart(std::span<const std::byte>{ startConfiguration, k_EngineConfigurationSize });
 
-                if (self->m_MapVariantService.HasActive())
+                if (self->m_MatchSetupService.HasLoadWork())
                 {
                     if (transplanted.empty()) transplanted.assign(configuration, configuration + k_EngineConfigurationSize);
 
-                    self->m_MapVariantService.ApplyToStart(transplanted);
+                    self->m_MatchSetupService.ApplyToStart(transplanted);
                     startConfiguration = transplanted.data();
                 }
             }
             catch (const std::exception& exception)
             {
-                self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to write the map variant into the start ({}).", exception.what());
-            }
-
-            // The active gametype preset goes into the copy the engine starts with (D264). Without a transplant the copy is made here, so
-            // the configuration of MCC is never written. A preset that fails leaves the copy as it was.
-            try
-            {
-                // The per-start state is reset for every start, with or without a preset.
-                self->m_PresetService.BeginStart();
-
-                if (self->m_PresetService.HasActive())
-                {
-                    if (transplanted.empty()) transplanted.assign(configuration, configuration + k_EngineConfigurationSize);
-
-                    self->m_PresetService.ApplyToStart(transplanted);
-                    startConfiguration = transplanted.data();
-                }
-            }
-            catch (const std::exception& exception)
-            {
-                self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to write the preset into the start ({}).", exception.what());
+                self->m_Log.Message("[EngineInterfaceDetour] ERROR: Failed to write the setup into the start ({}).", exception.what());
             }
         }
 

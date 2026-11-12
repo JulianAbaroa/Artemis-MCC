@@ -130,6 +130,7 @@
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MapVariantServiceTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />
+    <ClCompile Include="Engine\MatchSetupTests.cpp" />
     <ClCompile Include="Engine\PresetTests.cpp" />
     <ClCompile Include="Engine\OracleStoreTests.cpp" />
     <ClCompile Include="Engine\SnapshotBenchTests.cpp" />

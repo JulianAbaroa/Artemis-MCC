@@ -29,7 +29,7 @@ export namespace Engine::Control
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_BotService(service.m_Log, base.m_AOBService, m_BotStore, m_PlayerActionStore),
             m_InputUpdateDetour(service.m_Log, base.m_HostService, m_VirtualInputStore),
-            m_PlayerActionDetour(service.m_Log, base.m_AOBService, m_PlayerActionStore, m_BotService),
+            m_PlayerActionDetour(service.m_Log, base.m_AOBService, base.m_MatchSetupService, m_PlayerActionStore, m_BotService),
             m_SetMachinesDetour(service.m_Log, base.m_AOBService, m_BotStore) {}
         ~Layer() = default;
 

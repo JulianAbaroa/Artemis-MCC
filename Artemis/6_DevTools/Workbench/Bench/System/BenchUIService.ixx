@@ -8,13 +8,12 @@ import Engine.Base.Memory.System;
 import Engine.Base.Host.State;
 import Engine.Control.Input.State;
 import Engine.Base.Lifecycle.State;
-import Engine.Base.MapVariant.State;
 import Engine.Base.MapVariant.System;
-import Engine.Base.Preset.State;
+import Engine.Base.MatchSetup.Type;
+import Engine.Base.MatchSetup.System;
 import Engine.Base.Preset.System;
 import Engine.Match.State;
 import Engine.Match.System;
-import Engine.Control.Simulation.State;
 import Bridge.Transport.System;
 import Bridge.Codec.Tick.State;
 import DevTools.Workbench.TickDump.State;
@@ -49,10 +48,10 @@ export namespace DevTools::Workbench::Bench::System
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
         using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
-        using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
-        using PresetStore = Engine::Base::Preset::State::PresetStore;
+        using MatchSetup = Engine::Base::MatchSetup::Type::MatchSetup;
+        using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
+        using Roster = Engine::Base::MatchSetup::Type::Roster;
         using PresetService = Engine::Base::Preset::System::PresetService;
-        using BotStore = Engine::Control::Simulation::State::BotStore;
 
         using BridgeService = Bridge::Transport::System::BridgeService;
 
@@ -64,6 +63,7 @@ export namespace DevTools::Workbench::Bench::System
         using BenchScenario = DevTools::Workbench::Bench::Type::BenchScenario;
         using BenchMatchReport = DevTools::Workbench::Bench::Type::BenchMatchReport;
         using BenchRun = DevTools::Workbench::Bench::Type::BenchRun;
+        using BenchSetup = DevTools::Workbench::Bench::Type::BenchSetup;
         using BenchUIStore = DevTools::Workbench::Bench::State::BenchUIStore;
         using EveryTickDemandToken = Services::Settings::State::EveryTickDemandToken;
 
@@ -72,16 +72,16 @@ export namespace DevTools::Workbench::Bench::System
             MemoryReaderService& memoryReaderService, LocalUserStore& localUserStore, PlayerActionStore& playerActionStore,
             VirtualInputStore& virtualInputStore,
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
-            MatchConfigService& matchConfigService, PresetStore& presetStore, PresetService& presetService, MapVariantStore& mapVariantStore,
-            MapVariantService& mapVariantService, BotStore& botStore, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
+            MatchConfigService& matchConfigService, MatchSetupService& matchSetupService, PresetService& presetService,
+            MapVariantService& mapVariantService, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
             TelemetryStore& telemetryStore, BridgeService& bridgeService, BenchUIStore& benchUIStore) :
             m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore), m_TelemetryStore(telemetryStore),
             m_BridgeService(bridgeService),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
             m_VirtualInputStore(virtualInputStore),
             m_LifecycleStore(lifecycleStore), m_MatchConfigStore(matchConfigStore), m_MatchCycleStore(matchCycleStore),
-            m_MatchConfigService(matchConfigService), m_PresetStore(presetStore), m_PresetService(presetService), m_MapVariantStore(mapVariantStore),
-            m_MapVariantService(mapVariantService), m_BotStore(botStore), m_TickStore(tickStore), m_TickDumpUIStore(tickDumpUIStore),
+            m_MatchConfigService(matchConfigService), m_MatchSetupService(matchSetupService), m_PresetService(presetService),
+            m_MapVariantService(mapVariantService), m_TickStore(tickStore), m_TickDumpUIStore(tickDumpUIStore),
             m_BenchUIStore(benchUIStore) {}
         ~BenchUIService() = default;
 
@@ -113,11 +113,9 @@ export namespace DevTools::Workbench::Bench::System
         MatchConfigStore& m_MatchConfigStore;
         MatchCycleStore& m_MatchCycleStore;
         MatchConfigService& m_MatchConfigService;
-        PresetStore& m_PresetStore;
+        MatchSetupService& m_MatchSetupService;
         PresetService& m_PresetService;
-        MapVariantStore& m_MapVariantStore;
         MapVariantService& m_MapVariantService;
-        BotStore& m_BotStore;
         TickStore& m_TickStore;
         TickDumpUIStore& m_TickDumpUIStore;
         BenchUIStore& m_BenchUIStore;
@@ -143,6 +141,16 @@ export namespace DevTools::Workbench::Bench::System
         // Moves the current match one phase forward when its condition is met, or ends it when a timeout passes.
         auto Step(BenchRun& run) -> void;
 
+        // Resolves the names of a setup into values. A name that cannot be resolved makes a refused request (the one waiting stays).
+        // param defaultBots: The roster of a setup that sets none: nothing, or the empty roster to take the bots away.
+        // param request: Out. The setup, when the names were resolved.
+        // return: Empty when it was resolved, else the end of the match that has no preset or no map ("no-preset", "no-map").
+        auto ResolveSetup(const BenchSetup& setup, const std::optional<Roster>& defaultBots, MatchSetup& request) -> std::string;
+
+        // Resolves a setup and asks for it, as the bench does.
+        // return: What ResolveSetup returns.
+        auto RequestSetup(const BenchSetup& setup, const std::optional<Roster>& defaultBots) -> std::string;
+
         // Opens the probe files and starts the TickDump of a match that asks for them, when its first tick arrives.
         auto StartTools(BenchRun& run) -> void;
 
@@ -151,9 +159,9 @@ export namespace DevTools::Workbench::Bench::System
         // param ticks: Ticks of the match so far.
         auto Sample(BenchRun& run, std::uint64_t ticks) -> void;
 
-        // At the first tick of each round in play: records the bots per team against the roster of the round (roster_ok) and asks for the
-        // roster of the next round, so it is applied at the end of this one.
-        auto UpdateRosters(BenchRun& run) -> void;
+        // At the first tick of each round in play: records what the engine holds against what the setups asked for up to that round
+        // (roster_ok, setup_ok) and asks for the setup of the next round, so it is applied at the end of this one.
+        auto UpdateSetups(BenchRun& run) -> void;
 
         // Takes the photo of the telemetry and Lockstep counters the perf of the match is measured from, when its run begins.
         auto BeginPerf(BenchRun& run) -> void;

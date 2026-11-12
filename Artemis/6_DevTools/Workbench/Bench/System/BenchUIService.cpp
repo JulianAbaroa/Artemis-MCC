@@ -15,10 +15,8 @@ import Services.Telemetry.Type;
 import Services.Telemetry.System;
 import Bridge.Transport.Type;
 import Engine.Base.Host.Type;
-import Engine.Base.MapVariant.Type;
-import Engine.Base.Preset.Type;
+import Engine.Base.MatchSetup.Type;
 import Engine.Control.Input.Type;
-import Engine.Control.Simulation.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
 import Bridge.Codec.Tick.Type;
@@ -38,10 +36,6 @@ namespace
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
     using Common::Log::Type::LogLevel;
-    using Engine::Base::MapVariant::Type::MapVariantOutcome;
-    using Engine::Base::MapVariant::Type::MapVariantResult;
-    using Engine::Base::Preset::Type::PresetOutcome;
-    using Engine::Base::Preset::Type::PresetResult;
     using Engine::Control::Input::Type::InputState;
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerActions;
@@ -64,9 +58,15 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchProbe;
     using DevTools::Workbench::Bench::Type::BenchProbeState;
     using DevTools::Workbench::Bench::Type::BenchRequest;
-    using DevTools::Workbench::Bench::Type::BenchRosterRow;
-    using Engine::Control::Simulation::Type::Roster;
-    using Engine::Control::Simulation::Type::ToText;
+    using DevTools::Workbench::Bench::Type::BenchSetup;
+    using DevTools::Workbench::Bench::Type::BenchSetupRow;
+    using Engine::Base::MatchSetup::Type::ActiveMatchSetup;
+    using Engine::Base::MatchSetup::Type::MatchSetup;
+    using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
+    using Engine::Base::MatchSetup::Type::MatchSetupOutcome;
+    using Engine::Base::MatchSetup::Type::MatchSetupResult;
+    using Engine::Base::MatchSetup::Type::Roster;
+    using Engine::Base::MatchSetup::Type::ToText;
     using Common::Engine::Type::k_MaxTeams;
     using Common::Semantic::Type::RoundState;
     using DevTools::Workbench::Bench::Type::BenchCheckResult;
@@ -75,43 +75,6 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchPhase;
     using DevTools::Workbench::Bench::Type::BenchRun;
     using DevTools::Workbench::Bench::Type::BenchScenario;
-
-    // return: The state of the gametype preset in a line for the panel and the check: the active one and what the last load did with it.
-    auto PresetLine(const std::string& active, const PresetResult& result) -> std::string
-    {
-        std::string state{};
-
-        switch (result.Outcome)
-        {
-        case PresetOutcome::None: state = "no load since it was set"; break;
-        case PresetOutcome::NoPreset: state = "not written: " + result.Message; break;
-        case PresetOutcome::AppliedAtLoad: state = "applied at load"; break;
-        case PresetOutcome::Rejected: state = "rejected: " + result.Message; break;
-        case PresetOutcome::Failed: state = "failed: " + result.Message; break;
-        case PresetOutcome::Pending: state = "waiting for a round break"; break;
-        case PresetOutcome::Applied: state = "applied between rounds"; break;
-        }
-
-        return std::format("Preset: {} ({})", active.empty() ? std::string{ "none" } : active, state);
-    }
-
-    // return: The state of the map variant in a line for the panel and the check: the active one and what the last load did with it.
-    // note: Map variants are only written at load for now (Q98, D266). The between rounds states come with the bridge.
-    auto MapVariantLine(const std::string& active, const MapVariantResult& result) -> std::string
-    {
-        std::string state{};
-
-        switch (result.Outcome)
-        {
-        case MapVariantOutcome::None: state = "no load since it was set"; break;
-        case MapVariantOutcome::NoMap: state = "not written"; break;
-        case MapVariantOutcome::AppliedAtLoad: state = "at load"; break;
-        case MapVariantOutcome::Rejected: state = "rejected: " + result.Message; break;
-        case MapVariantOutcome::Failed: state = "failed: " + result.Message; break;
-        }
-
-        return std::format("Map variant: {} ({})", active.empty() ? std::string{ "none" } : active, state);
-    }
 
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
@@ -280,6 +243,52 @@ namespace
         roster.Auto = *autoCount;
 
         return roster;
+    }
+
+    // Sets the fields of a round setup from its text: "preset=<name or none>, map=<config or none> and roster=<counts>" separated by
+    // semicolons, with the fields it changes in any order. The map is a config name, which can hold spaces.
+    // return: Why the text is wrong, or empty when the setup was read.
+    auto ParseSetupFields(std::string_view text, BenchSetup& setup) -> std::string
+    {
+        bool isAny{ false };
+
+        while (!Trim(text).empty())
+        {
+            const std::size_t end{ (std::min)(text.find(';'), text.size()) };
+            const std::string_view field{ Trim(text.substr(0, end)) };
+            text.remove_prefix((std::min)(end + 1, text.size()));
+
+            if (field.empty()) continue;
+
+            const std::size_t equals{ (std::min)(field.find('='), field.size()) };
+            const std::string_view key{ Trim(field.substr(0, equals)) };
+            const std::string_view value{ Trim(field.substr(equals + (equals < field.size() ? 1 : 0))) };
+
+            if (key == "preset")
+            {
+                if (value.empty() || value.find(' ') != std::string_view::npos) return "preset takes a name or none";
+                setup.Preset = value == "none" ? std::string{} : std::string{ value };
+            }
+            else if (key == "map")
+            {
+                if (value.empty()) return "map takes the name of a recorded config or none";
+                setup.MapVariant = value == "none" ? std::string{} : std::string{ value };
+            }
+            else if (key == "roster")
+            {
+                const auto roster{ ParseRoster(SplitWords(value)) };
+                if (!roster.has_value()) return std::format("roster takes {} counts per team, then auto and a count", k_MaxTeams);
+                setup.Bots = *roster;
+            }
+            else
+            {
+                return std::format("unknown setup field {}", key);
+            }
+
+            isAny = true;
+        }
+
+        return isAny ? std::string{} : std::string{ "round_setup takes at least one field" };
     }
 
     auto ToText(BenchPhase phase) -> std::string_view
@@ -457,11 +466,8 @@ namespace DevTools::Workbench::Bench::System
         const std::string status{ m_BenchUIStore.GetStatus() };
         ImGui::TextWrapped("%s", status.c_str());
 
-        const std::string preset{ PresetLine(m_PresetStore.GetActiveName(), m_PresetStore.GetResult()) };
-        ImGui::TextWrapped("%s", preset.c_str());
-
-        const std::string mapVariant{ MapVariantLine(m_MapVariantStore.GetActiveName(), m_MapVariantStore.GetResult()) };
-        ImGui::TextWrapped("%s", mapVariant.c_str());
+        const std::string setup{ ToText(m_MatchSetupService.GetActive(), m_MatchSetupService.GetResult()) };
+        ImGui::TextWrapped("%s", setup.c_str());
 
         const path folder{ m_BenchUIStore.GetFolder() / "scenarios" };
         std::vector<path>& files{ m_BenchUIStore.GetScenarioFiles() };
@@ -618,23 +624,29 @@ namespace DevTools::Workbench::Bench::System
                 if (!count.has_value()) return fail("locals takes a number");
                 match.Locals = count;
             }
-            else if (key == "roster" || key == "round_roster")
+            else if (key == "roster")
             {
                 const auto roster{ ParseRoster(SplitWords(value)) };
-                if (!roster.has_value()) return fail(std::format("{} takes {} counts per team, then auto and a count", key, k_MaxTeams));
+                if (!roster.has_value()) return fail(std::format("roster takes {} counts per team, then auto and a count", k_MaxTeams));
 
-                if (key == "roster") match.RosterAtLoad = *roster;
-                else                 match.RoundRosters.push_back(*roster);
+                match.SetupAtLoad.Bots = *roster;
+            }
+            else if (key == "round_setup")
+            {
+                BenchSetup setup{};
+                if (const std::string why{ ParseSetupFields(value, setup) }; !why.empty()) return fail(why);
+
+                match.RoundSetups.push_back(std::move(setup));
             }
             else if (key == "preset")
             {
                 if (value.empty() || value.find(' ') != std::string_view::npos) return fail("preset takes a name or none");
-                match.Preset = value == "none" ? std::string{} : std::string{ value };
+                match.SetupAtLoad.Preset = value == "none" ? std::string{} : std::string{ value };
             }
             else if (key == "map")
             {
                 if (value.empty()) return fail("map takes the name of a recorded config or none");
-                match.MapVariant = value == "none" ? std::string{} : std::string{ value };
+                match.SetupAtLoad.MapVariant = value == "none" ? std::string{} : std::string{ value };
             }
             else if (key == "scale")
             {
@@ -723,16 +735,53 @@ namespace DevTools::Workbench::Bench::System
         for (const BenchMatch& match : scenario.Matches)
         {
             if (match.Config.empty()) return std::format("match {} has no config.", match.Name);
-            if (!match.RosterAtLoad.has_value() && !match.RoundRosters.empty())
-            {
-                return std::format("match {} has round_roster lines but no roster line: round 0 is checked against it.", match.Name);
-            }
             if (!match.IsEveryTick && (match.IsTickDump || match.IsEvents))
             {
                 return std::format("match {} has every_tick off with tickdump or events, which need every tick.", match.Name);
             }
         }
 
+        return {};
+    }
+
+    auto BenchUIService::ResolveSetup(const BenchSetup& setup, const std::optional<Roster>& defaultBots, MatchSetup& request) -> std::string
+    {
+        request = MatchSetup{ .Bots = setup.Bots ? setup.Bots : defaultBots };
+
+        if (setup.Preset.has_value())
+        {
+            auto preset{ m_PresetService.Resolve(*setup.Preset) };
+            if (!preset)
+            {
+                m_MatchSetupService.Reject(preset.error());
+                return "no-preset";
+            }
+
+            request.Preset = std::move(*preset);
+        }
+
+        if (setup.MapVariant.has_value())
+        {
+            const std::string& name{ *setup.MapVariant };
+            auto mapVariant{ m_MapVariantService.Resolve(name, name.empty() ? std::vector<std::byte>{} : m_MatchConfigService.ReadMapVariant(name)) };
+            if (!mapVariant)
+            {
+                m_MatchSetupService.Reject(mapVariant.error());
+                return "no-map";
+            }
+
+            request.Map = std::move(*mapVariant);
+        }
+
+        return {};
+    }
+
+    auto BenchUIService::RequestSetup(const BenchSetup& setup, const std::optional<Roster>& defaultBots) -> std::string
+    {
+        MatchSetup request{};
+        if (std::string failure{ this->ResolveSetup(setup, defaultBots, request) }; !failure.empty()) return failure;
+
+        m_MatchSetupService.Request(std::move(request), MatchSetupOrigin::Bench);
         return {};
     }
 
@@ -754,41 +803,17 @@ namespace DevTools::Workbench::Bench::System
         m_Log.Message("[BenchUIService] INFO: Match {} of {} ({}, config {}).", report.Index, run.Reports.size(), match.Name,
             match.Config);
 
-        // The map variant is made active before the configuration is pending, for the same reason (Q98, D266).
-        if (!match.MapVariant.has_value())
+        // One request carries the preset, the map variant and the bots of the match (D286). The names are resolved first, so a name
+        // that cannot be resolved ends the match before anything is pending, and the request is only made once the configuration is
+        // pending, so a failed load leaves no setup behind. A match with no roster has no bots, as before the setups (D284): the empty
+        // roster takes away the one of the previous match.
+        MatchSetup setupAtLoad{};
+        if (const std::string failure{ this->ResolveSetup(match.SetupAtLoad, Roster{}, setupAtLoad) }; !failure.empty())
         {
-            m_MapVariantStore.SetResult(MapVariantResult{});
-        }
-        else if (match.MapVariant->empty())
-        {
-            m_MapVariantService.ClearActive();
-        }
-        else if (!m_MapVariantService.SetActive(*match.MapVariant, m_MatchConfigService.ReadMapVariant(*match.MapVariant)))
-        {
-            report.End = "no-map";
+            report.End = failure;
             this->EndMatch(run);
             return;
         }
-
-        // The preset is made active before the configuration is pending, so a preset that cannot be loaded leaves nothing pending.
-        if (!match.Preset.has_value())
-        {
-            m_PresetStore.SetResult(PresetResult{});
-        }
-        else if (match.Preset->empty())
-        {
-            m_PresetService.ClearActive();
-        }
-        else if (!m_PresetService.SetActive(*match.Preset))
-        {
-            report.End = "no-preset";
-            this->EndMatch(run);
-            return;
-        }
-
-        // The roster of the previous match does not carry over: a match without one has no bots, as before the rosters (D284).
-        m_BotStore.ClearRoster();
-        if (match.RosterAtLoad.has_value()) m_BotStore.RequestRoster(*match.RosterAtLoad);
 
         if (!m_MatchConfigService.LoadPending(match.Config))
         {
@@ -796,6 +821,8 @@ namespace DevTools::Workbench::Bench::System
             this->EndMatch(run);
             return;
         }
+
+        m_MatchSetupService.Request(std::move(setupAtLoad), MatchSetupOrigin::Bench);
 
         if (match.Locals.has_value())
         {
@@ -958,8 +985,8 @@ namespace DevTools::Workbench::Bench::System
 
         run.SentRequests.assign(match.Requests.size(), false);
         run.LastRound = -1;
-        run.RostersRequested = 0;
-        run.RosterRows.clear();
+        run.SetupsRequested = 0;
+        run.SetupRows.clear();
         run.Probes.clear();
 
         for (const BenchProbe& probe : match.Probes)
@@ -1066,7 +1093,7 @@ namespace DevTools::Workbench::Bench::System
             }
         }
 
-        this->UpdateRosters(run);
+        this->UpdateSetups(run);
 
         for (std::size_t i{ 0 }; i < match.Probes.size(); ++i)
         {
@@ -1105,25 +1132,37 @@ namespace DevTools::Workbench::Bench::System
         }
     }
 
-    auto BenchUIService::UpdateRosters(BenchRun& run) -> void
+    auto BenchUIService::UpdateSetups(BenchRun& run) -> void
     {
         const BenchMatch& match{ run.Scenario->Matches[run.MatchIndex] };
         const auto* players{ GetPlayers(run.LastTick) };
         const auto& status{ run.LastTick ? run.LastTick->Match : nullptr };
 
         if (players == nullptr || !status || status->RoundState != RoundState::InPlay || status->RoundIndex == run.LastRound) return;
-        if (!match.RosterAtLoad.has_value()) return;
+
+        const bool isAny{ match.SetupAtLoad.Preset || match.SetupAtLoad.MapVariant || match.SetupAtLoad.Bots || !match.RoundSetups.empty() };
+        if (!isAny) return;
 
         run.LastRound = status->RoundIndex;
 
-        // The roster of round R was asked for while round R - 1 ran, and the last one asked for holds on.
+        // The setup of round R was asked for while round R - 1 ran, and the last one asked for holds on. A field a setup leaves out keeps
+        // what the one before it set.
         const auto round{ static_cast<std::size_t>((std::max)(status->RoundIndex, std::int16_t{ 0 })) };
-        const Roster& expected{ round == 0 ? *match.RosterAtLoad
-            : match.RoundRosters.empty() ? *match.RosterAtLoad
-            : match.RoundRosters[(std::min)(round, match.RoundRosters.size()) - 1] };
+        const std::size_t requests{ (std::min)(round, match.RoundSetups.size()) };
+
+        BenchSetupRow row{ .Round = status->RoundIndex };
+        std::optional<Roster> expected{};
+
+        const auto take = [&](const BenchSetup& setup) {
+            if (setup.Preset.has_value()) row.ExpectedPreset = setup.Preset;
+            if (setup.MapVariant.has_value()) row.ExpectedMap = setup.MapVariant;
+            if (setup.Bots.has_value()) expected = setup.Bots;
+        };
+
+        take(match.SetupAtLoad);
+        for (std::size_t request{ 0 }; request < requests; ++request) take(match.RoundSetups[request]);
 
         // note: The bots are the players without a local index. The auto ones are on the team of the local player 0.
-        BenchRosterRow row{ .Round = status->RoundIndex };
         std::optional<std::size_t> localTeam{};
         for (const Player& player : *players)
         {
@@ -1132,20 +1171,33 @@ namespace DevTools::Workbench::Bench::System
             if (player.LocalIndex == 0) localTeam = team;
             if (player.LocalIndex.has_value()) continue;
 
-            if (team < k_MaxTeams) ++row.Seen[team];
+            if (team < k_MaxTeams) ++row.SeenBots[team];
             else                   ++row.SeenElsewhere;
         }
 
-        row.Expected = expected.Teams;
-        if (expected.Auto > 0 && localTeam && *localTeam < k_MaxTeams) row.Expected[*localTeam] += expected.Auto;
-        run.RosterRows.push_back(row);
-
-        while (run.RostersRequested <= static_cast<std::size_t>(status->RoundIndex) && run.RostersRequested < match.RoundRosters.size())
+        if (expected.has_value())
         {
-            m_BotStore.RequestRoster(match.RoundRosters[run.RostersRequested]);
-            m_Log.Message("[BenchUIService] INFO: Roster {} asked for at round {}.", ToText(match.RoundRosters[run.RostersRequested]),
-                status->RoundIndex);
-            ++run.RostersRequested;
+            row.ExpectedBots = expected->Teams;
+            if (expected->Auto > 0 && localTeam && *localTeam < k_MaxTeams) (*row.ExpectedBots)[*localTeam] += expected->Auto;
+        }
+
+        const ActiveMatchSetup active{ m_MatchSetupService.GetActive() };
+        const MatchSetupResult result{ m_MatchSetupService.GetResult() };
+        row.SeenPreset = active.Preset;
+        row.SeenMap = active.Map;
+        row.IsRequested = true;
+        row.Outcome = result.Outcome;
+        row.Reason = result.Reason;
+        run.SetupRows.push_back(std::move(row));
+
+        while (run.SetupsRequested <= static_cast<std::size_t>(status->RoundIndex) && run.SetupsRequested < match.RoundSetups.size())
+        {
+            if (this->RequestSetup(match.RoundSetups[run.SetupsRequested], std::nullopt).empty())
+            {
+                m_Log.Message("[BenchUIService] INFO: Setup {} asked for at round {}.", run.SetupsRequested + 1, status->RoundIndex);
+            }
+
+            ++run.SetupsRequested;
         }
     }
 
@@ -1358,38 +1410,64 @@ namespace DevTools::Workbench::Bench::System
             }
             else if (check.Name == "preset_applied")
             {
-                const PresetResult applied{ m_PresetStore.GetResult() };
-                result.IsOk = applied.Outcome == PresetOutcome::AppliedAtLoad && (arguments.empty() || applied.Name == arguments.front());
-                result.Detail = PresetLine(m_PresetStore.GetActiveName(), applied);
+                const MatchSetupResult applied{ m_MatchSetupService.GetResult() };
+                const ActiveMatchSetup active{ m_MatchSetupService.GetActive() };
+                result.IsOk = applied.Outcome == MatchSetupOutcome::AtLoad && (arguments.empty() || active.Preset == arguments.front());
+                result.Detail = ToText(active, applied);
             }
             else if (check.Name == "map_applied")
             {
-                const MapVariantResult applied{ m_MapVariantStore.GetResult() };
+                const MatchSetupResult applied{ m_MatchSetupService.GetResult() };
+                const ActiveMatchSetup active{ m_MatchSetupService.GetActive() };
                 // The name of a config can hold spaces, which split the arguments of the check: they are joined back.
                 std::string expected{};
                 for (const auto& argument : arguments) expected += (expected.empty() ? "" : " ") + argument;
-                result.IsOk = applied.Outcome == MapVariantOutcome::AppliedAtLoad && (arguments.empty() || applied.Name == expected);
-                result.Detail = MapVariantLine(m_MapVariantStore.GetActiveName(), applied);
+                result.IsOk = applied.Outcome == MatchSetupOutcome::AtLoad && (arguments.empty() || active.Map == expected);
+                result.Detail = ToText(active, applied);
             }
-            else if (check.Name == "roster_ok")
+            else if (check.Name == "roster_ok" || check.Name == "setup_ok")
             {
+                const bool isSetup{ check.Name == "setup_ok" };
                 std::string detail{};
-                bool isOk{ !run.RosterRows.empty() };
+                bool isOk{ true };
 
-                for (const BenchRosterRow& row : run.RosterRows)
+                const auto bots = [](const std::array<std::size_t, k_MaxTeams>& counts) {
+                    Roster roster{ .Teams = counts };
+                    return ToText(roster);
+                };
+                const auto name = [](const std::optional<std::string>& expected) {
+                    return expected ? (expected->empty() ? std::string{ "none" } : *expected) : std::string{ "any" };
+                };
+
+                // roster_ok looks at the rounds that expect bots, setup_ok at every round of a match with setups.
+                for (const BenchSetupRow& row : run.SetupRows)
                 {
-                    const auto text{ [](const std::array<std::size_t, k_MaxTeams>& counts) {
-                        Roster roster{ .Teams = counts };
-                        return ToText(roster);
-                    } };
+                    if (!isSetup && !row.ExpectedBots.has_value()) continue;
 
-                    isOk = isOk && row.IsOk();
-                    detail += std::format("{}round {} expected {} seen {}{}", detail.empty() ? "" : "; ", row.Round, text(row.Expected),
-                        text(row.Seen), row.SeenElsewhere > 0 ? std::format(" (+{} off teams)", row.SeenElsewhere) : "");
+                    isOk = isOk && (isSetup ? row.IsOk() : row.IsBotsOk());
+                    detail += std::format("{}round {} ", detail.empty() ? "" : "; ", row.Round);
+
+                    if (isSetup)
+                    {
+                        detail += std::format("expected preset {} map {} roster {} seen preset {} map {} roster {}", name(row.ExpectedPreset),
+                            name(row.ExpectedMap), row.ExpectedBots ? bots(*row.ExpectedBots) : std::string{ "any" },
+                            row.SeenPreset.empty() ? std::string{ "none" } : row.SeenPreset,
+                            row.SeenMap.empty() ? std::string{ "none" } : row.SeenMap, bots(row.SeenBots));
+
+                        const bool isApplied{ row.Outcome == MatchSetupOutcome::AtLoad || row.Outcome == MatchSetupOutcome::Applied };
+                        if (row.Outcome == MatchSetupOutcome::Rejected) detail += " (rejected: " + row.Reason + ")";
+                        else if (row.IsRequested && !isApplied) detail += " (not applied)";
+                    }
+                    else
+                    {
+                        detail += std::format("expected {} seen {}", bots(*row.ExpectedBots), bots(row.SeenBots));
+                    }
+
+                    if (row.SeenElsewhere > 0) detail += std::format(" (+{} off teams)", row.SeenElsewhere);
                 }
 
-                result.IsOk = isOk;
-                result.Detail = detail.empty() ? "no round start seen with a roster" : detail;
+                result.IsOk = isOk && !detail.empty();
+                result.Detail = !detail.empty() ? detail : std::string{ isSetup ? "no round start seen with a setup" : "no round start seen with a roster" };
             }
             else if (check.Name == "objective_taken")
             {

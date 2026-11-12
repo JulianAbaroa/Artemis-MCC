@@ -2,9 +2,8 @@ export module Mod.Port.System:BridgeEngine;
 
 import Control.Action.Type;
 import Engine.Base.Lifecycle.State;
-import Engine.Base.MapVariant.State;
 import Engine.Base.MapVariant.System;
-import Engine.Base.Preset.State;
+import Engine.Base.MatchSetup.System;
 import Engine.Base.Preset.System;
 import Engine.Match.State;
 import Engine.Match.System;
@@ -23,9 +22,8 @@ export namespace Mod::Port::System
         using ClientRequests = Control::Action::Type::ClientRequests;
 
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
-        using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
-        using PresetStore = Engine::Base::Preset::State::PresetStore;
+        using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using PresetService = Engine::Base::Preset::System::PresetService;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
@@ -37,11 +35,11 @@ export namespace Mod::Port::System
 
     public:
         BridgeEngineAdapter(LifecycleStore& lifecycleStore, MatchCycleStore& matchCycleStore, PlayerActionStore& playerActionStore,
-            PresetStore& presetStore, PresetService& presetService, MapVariantStore& mapVariantStore,
-            MapVariantService& mapVariantService, MatchConfigService& matchConfigService) :
+            MatchSetupService& matchSetupService, PresetService& presetService, MapVariantService& mapVariantService,
+            MatchConfigService& matchConfigService) :
             m_LifecycleStore(lifecycleStore), m_MatchCycleStore(matchCycleStore), m_PlayerActionStore(playerActionStore),
-            m_PresetStore(presetStore), m_PresetService(presetService), m_MapVariantStore(mapVariantStore),
-            m_MapVariantService(mapVariantService), m_MatchConfigService(matchConfigService) {}
+            m_MatchSetupService(matchSetupService), m_PresetService(presetService), m_MapVariantService(mapVariantService),
+            m_MatchConfigService(matchConfigService) {}
         ~BridgeEngineAdapter() override = default;
 
         BridgeEngineAdapter(const BridgeEngineAdapter&) = delete;
@@ -70,9 +68,8 @@ export namespace Mod::Port::System
         LifecycleStore& m_LifecycleStore;
         MatchCycleStore& m_MatchCycleStore;
         PlayerActionStore& m_PlayerActionStore;
-        PresetStore& m_PresetStore;
+        MatchSetupService& m_MatchSetupService;
         PresetService& m_PresetService;
-        MapVariantStore& m_MapVariantStore;
         MapVariantService& m_MapVariantService;
         MatchConfigService& m_MatchConfigService;
     };

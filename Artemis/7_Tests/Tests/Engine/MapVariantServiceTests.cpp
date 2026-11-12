@@ -10,7 +10,6 @@ import Engine.Base.MapVariant.System;
 import Engine.Match.Type;
 import Engine.Match.State;
 import Engine.Match.System;
-import Blam.Layout.Game.Type;
 import Blam.Layout.Object.Type;
 import Tests.Support.Log;
 import std;
@@ -25,18 +24,14 @@ namespace
     using Common::Log::Type::LogLevel;
     using Common::Log::Type::LogMessage;
     using Engine::Base::MapVariant::State::MapVariantStore;
-    using Engine::Base::MapVariant::Type::MapVariantOutcome;
-    using Engine::Base::MapVariant::Type::MapVariantResult;
+    using Engine::Base::MapVariant::Type::ActiveMapVariant;
     using Engine::Match::State::MatchConfigStore;
     using Engine::Base::MapVariant::System::MapVariantService;
     using Engine::Match::System::MatchConfigService;
     using Services::Settings::State::SettingsStore;
     using Tests::Support::Log::CollectingSink;
 
-    using Blam::Layout::Game::Type::Offset::k_RoundStateBetween;
-    using Blam::Layout::Game::Type::Offset::k_RoundStateEnded;
     using Blam::Layout::Object::Type::Constant::k_ConfigurationMapVariantOffset;
-    using Blam::Layout::Object::Type::Constant::k_GameModeMultiplayer;
     using Blam::Layout::Object::Type::Constant::k_MapVariantBoundsOffset;
     using Blam::Layout::Object::Type::Constant::k_MapVariantBoundsSize;
     using Blam::Layout::Object::Type::Constant::k_MapVariantMapIdOffset;
@@ -108,6 +103,14 @@ namespace
             return m_ConfigService.ReadMapVariant(name);
         }
 
+        // return: The map variant of a recorded configuration, resolved as the bench and the bridge do.
+        auto Pick(const std::string& name) const -> std::shared_ptr<const ActiveMapVariant>
+        {
+            auto pick{ m_Service.Resolve(name, this->Read(name)) };
+            EXPECT_TRUE(pick.has_value()) << name;
+            return pick.value_or(nullptr);
+        }
+
         auto Logged(LogLevel level, std::string_view text) const -> bool
         {
             return std::ranges::any_of(m_Sink.m_Messages, [&](const LogMessage& message) {
@@ -129,123 +132,119 @@ namespace
     };
 }
 
-TEST_F(MapVariantServiceTests, SetActiveReadsTheMapVariantOfTheConfig)
+TEST_F(MapVariantServiceTests, ResolveReadsTheMapVariantOfTheConfigAndChangesNothing)
 {
     this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
 
-    EXPECT_TRUE(m_Service.SetActive("reach bus", this->Read("reach bus")));
+    const auto pick{ m_Service.Resolve("reach bus", this->Read("reach bus")) };
 
-    EXPECT_TRUE(m_Service.HasActive());
-    EXPECT_EQ(m_Store.GetActiveName(), "reach bus");
-    ASSERT_NE(m_Store.GetActive(), nullptr);
-    EXPECT_EQ(m_Store.GetActive()->Block.size(), k_MapVariantSize);
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::None);
-    EXPECT_TRUE(Logged(LogLevel::Info, "map id 3006, 145 quotas"));
+    ASSERT_TRUE(pick.has_value());
+    ASSERT_NE(*pick, nullptr);
+    EXPECT_EQ((*pick)->Name, "reach bus");
+    EXPECT_EQ((*pick)->Block.size(), k_MapVariantSize);
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+    EXPECT_TRUE(m_Service.GetActiveName().empty());
 }
 
-TEST_F(MapVariantServiceTests, SetActiveOfAMissingConfigFailsAndKeepsTheActiveOne)
+TEST_F(MapVariantServiceTests, ResolveOfNoNameIsANullPickThatMeansTheMapOfTheLoad)
 {
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.SetActive("reach bus", this->Read("reach bus")));
+    const auto pick{ m_Service.Resolve("", {}) };
 
-    EXPECT_FALSE(m_Service.SetActive("missing", this->Read("missing")));
+    ASSERT_TRUE(pick.has_value());
+    EXPECT_EQ(*pick, nullptr);
+}
 
-    EXPECT_EQ(m_Store.GetActiveName(), "reach bus");
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Failed);
-    EXPECT_EQ(m_Store.GetResult().Name, "missing");
+TEST_F(MapVariantServiceTests, ResolveOfAMissingConfigFailsWithAReasonAndLogsAnError)
+{
+    const auto pick{ m_Service.Resolve("missing", this->Read("missing")) };
+
+    ASSERT_FALSE(pick.has_value());
+    EXPECT_NE(pick.error().find("missing"), std::string::npos);
     EXPECT_TRUE(Logged(LogLevel::Error, "could not be used"));
 }
 
-TEST_F(MapVariantServiceTests, ClearActiveRemovesItAndTheResult)
+TEST_F(MapVariantServiceTests, AdoptMakesThePickTheActiveOneAndNullClearsIt)
 {
     this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.SetActive("reach bus", this->Read("reach bus")));
 
-    m_Service.ClearActive();
+    m_Service.Adopt(this->Pick("reach bus"));
 
-    EXPECT_FALSE(m_Service.HasActive());
-    EXPECT_TRUE(m_Store.GetActiveName().empty());
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::None);
+    EXPECT_EQ(m_Service.GetActiveName(), "reach bus");
+    ASSERT_NE(m_Service.GetActive(), nullptr);
+
+    m_Service.Adopt(nullptr);
+    EXPECT_EQ(m_Service.GetActive(), nullptr);
+    EXPECT_TRUE(m_Service.GetActiveName().empty());
 }
 
-TEST_F(MapVariantServiceTests, ApplyToStartWritesTheBlockAndNothingOutsideIt)
+TEST_F(MapVariantServiceTests, WriteToStartWritesTheBlockAndNothingOutsideIt)
 {
     this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.SetActive("reach bus", this->Read("reach bus")));
+    const auto pick{ this->Pick("reach bus") };
 
     const Buffer original{ MakeConfig(0x77, 145, 3006, 0xA1) };
     Buffer start{ original };
 
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::AppliedAtLoad);
+    EXPECT_TRUE(m_Service.WriteToStart(start, *pick).has_value());
 
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::AppliedAtLoad);
-    EXPECT_EQ(m_Store.GetResult().Name, "reach bus");
     EXPECT_TRUE(DifferOnlyInMapVariant(start, original));
+    // Adopting is the business of the setup service once everything is in.
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
 
     const Buffer expected{ MakeConfig(0x11, 145, 3006, 0x5C) };
     EXPECT_TRUE(std::equal(start.begin() + k_ConfigurationMapVariantOffset, start.begin() + k_ConfigurationMapVariantOffset + k_MapVariantSize,
         expected.begin() + k_ConfigurationMapVariantOffset));
 }
 
-TEST_F(MapVariantServiceTests, ApplyToStartRejectsAnotherMapAndLeavesTheBufferEqual)
+TEST_F(MapVariantServiceTests, WriteToStartRejectsAnotherMapAndLeavesTheBufferEqual)
 {
     this->WriteConfig("other map", MakeConfig(0x11, 145, 3010, 0x5C));
-    ASSERT_TRUE(m_Service.SetActive("other map", this->Read("other map")));
+    const auto pick{ this->Pick("other map") };
 
     const Buffer original{ MakeConfig(0x77, 145, 3006, 0xA1) };
     Buffer start{ original };
 
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::Rejected);
+    const auto written{ m_Service.WriteToStart(start, *pick) };
 
+    ASSERT_FALSE(written.has_value());
     EXPECT_EQ(start, original);
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Rejected);
-    EXPECT_NE(m_Store.GetResult().Message.find("map id 3010 instead of 3006"), std::string::npos);
-    EXPECT_TRUE(Logged(LogLevel::Warning, "does not fit the map"));
+    EXPECT_NE(written.error().find("map id 3010 instead of 3006"), std::string::npos);
 }
 
-TEST_F(MapVariantServiceTests, ApplyToStartRejectsAnotherNumberOfQuotas)
+TEST_F(MapVariantServiceTests, WriteToStartRejectsAnotherNumberOfQuotas)
 {
     this->WriteConfig("other quotas", MakeConfig(0x11, 120, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.SetActive("other quotas", this->Read("other quotas")));
+    const auto pick{ this->Pick("other quotas") };
 
     const Buffer original{ MakeConfig(0x77, 145, 3006, 0xA1) };
     Buffer start{ original };
 
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::Rejected);
+    const auto written{ m_Service.WriteToStart(start, *pick) };
+
+    ASSERT_FALSE(written.has_value());
     EXPECT_EQ(start, original);
-    EXPECT_NE(m_Store.GetResult().Message.find("120 quotas instead of 145"), std::string::npos);
+    EXPECT_NE(written.error().find("120 quotas instead of 145"), std::string::npos);
 }
 
-TEST_F(MapVariantServiceTests, ApplyToStartWithoutAnActiveMapVariantTouchesNothing)
-{
-    const Buffer original{ MakeConfig(0x77, 145, 3006, 0xA1) };
-    Buffer start{ original };
-
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::NoMap);
-
-    EXPECT_EQ(start, original);
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::None);
-}
-
-TEST_F(MapVariantServiceTests, ApplyToStartRefusesABufferTooSmall)
+TEST_F(MapVariantServiceTests, WriteToStartRefusesABufferTooSmall)
 {
     this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.SetActive("reach bus", this->Read("reach bus")));
+    const auto pick{ this->Pick("reach bus") };
 
     Buffer start(k_ConfigurationMapVariantOffset + k_MapVariantSize - 1, std::byte{ 0x77 });
     const Buffer original{ start };
 
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::Failed);
+    EXPECT_FALSE(m_Service.WriteToStart(start, *pick).has_value());
     EXPECT_EQ(start, original);
 }
 
-TEST_F(MapVariantServiceTests, TheActiveMapVariantGoesOverTheTransplantedOneAndTheRestOfTheTransplantStays)
+TEST_F(MapVariantServiceTests, TheMapVariantGoesOverTheTransplantedOneAndTheRestOfTheTransplantStays)
 {
-    // The order of the start: transplant, then the active map variant (D266).
+    // The order of the start: transplant, then the map variant of the setup (D266).
     this->WriteConfig("recorded", MakeConfig(0x22, 145, 3006, 0x33));
     this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
     ASSERT_TRUE(m_ConfigService.LoadPending("recorded"));
-    ASSERT_TRUE(m_Service.SetActive("reach bus", this->Read("reach bus")));
+    const auto pick{ this->Pick("reach bus") };
 
     const Buffer mcc{ MakeConfig(0x77, 145, 3006, 0xA1) };
     Buffer start{};
@@ -254,7 +253,7 @@ TEST_F(MapVariantServiceTests, TheActiveMapVariantGoesOverTheTransplantedOneAndT
     const Buffer transplanted{ start };
     EXPECT_EQ(static_cast<std::uint8_t>(transplanted[k_ConfigurationMapVariantOffset + 0x10]), 0x33);
 
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::AppliedAtLoad);
+    EXPECT_TRUE(m_Service.WriteToStart(start, *pick).has_value());
 
     EXPECT_TRUE(DifferOnlyInMapVariant(start, transplanted));
     EXPECT_EQ(static_cast<std::uint8_t>(start[k_ConfigurationMapVariantOffset + 0x10]), 0x5C);
@@ -270,13 +269,10 @@ TEST_F(MapVariantServiceTests, TheMapVariantDoesNotOverlapTheGameVariantTheNextS
     EXPECT_GE(k_ConfigurationMapVariantOffset, k_TransplantBlocks.back().Offset);
 }
 
-// --- Request, start and between rounds ---------------------------------------------------------------------------------------------
+// --- The live map variant (round break) --------------------------------------------------------------------------------------------
 
 namespace
 {
-    constexpr std::uint8_t k_RoundStateInPlay{ 1 };
-    constexpr std::uint8_t k_LobbyMode{ 1 };
-
     // return: A live map variant (runtime or options) of k_MapVariantSize bytes with the header of a map variant, the bounds set to bounds
     // and every other byte set to fill.
     auto MakeLive(std::uint8_t fill, std::uint16_t quotas, std::uint32_t mapId, std::uint8_t bounds) -> Buffer
@@ -288,95 +284,27 @@ namespace
     }
 }
 
-TEST_F(MapVariantServiceTests, ARequestInTheLobbyBecomesTheActiveOneAtTheNextLoad)
+TEST_F(MapVariantServiceTests, PrepareLiveChangesNothingAndCommitLiveGivesTheRuntimeTheBlockWithItsOwnBoundsAndTheOptionsTheBlock)
 {
     this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-
-    EXPECT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), false));
-
-    EXPECT_EQ(m_Store.GetActiveName(), "reach bus");
-    EXPECT_FALSE(m_Service.HasPending());
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::AppliedAtLoad);
-}
-
-TEST_F(MapVariantServiceTests, ARequestInTheMatchWaitsAndAnUnreadableOneDropsTheWaitingOne)
-{
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), true));
-
-    EXPECT_TRUE(m_Service.HasPending());
-    EXPECT_FALSE(m_Service.HasActive());
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Pending);
-
-    // The older request must not change the map later without anyone being told.
-    EXPECT_FALSE(m_Service.Request("missing", this->Read("missing"), true));
-
-    EXPECT_FALSE(m_Service.HasPending());
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Failed);
-}
-
-TEST_F(MapVariantServiceTests, TheBenchChoiceSupersedesARequestAndNothingOfItIsWrittenAfterwards)
-{
-    this->WriteConfig("a", MakeConfig(0x11, 145, 3006, 0x5C));
-    this->WriteConfig("b", MakeConfig(0x12, 145, 3006, 0x5D));
-    ASSERT_TRUE(m_Service.Request("a", this->Read("a"), true));
-    // The game thread took the request and is applying it.
-    const auto taken{ m_Store.TakePending() };
-    ASSERT_TRUE(taken.has_value());
-    const std::uint64_t id{ taken->Id };
-
-    ASSERT_TRUE(m_Service.SetActive("b", this->Read("b")));
-
-    // An application of the old request already taken by the game thread finds its id outdated.
-    EXPECT_FALSE(m_Store.IsCurrent(id));
-    EXPECT_FALSE(m_Store.SetResultOf(id, MapVariantResult{ .Outcome = MapVariantOutcome::Applied, .Name = "a" }));
-
-    Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
-    Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
-    const Buffer runtimeBefore{ runtime };
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
-
-    EXPECT_EQ(runtime, runtimeBefore);
-    EXPECT_EQ(m_Store.GetActiveName(), "b");
-    EXPECT_NE(m_Store.GetResult().Outcome, MapVariantOutcome::Applied);
-}
-
-TEST_F(MapVariantServiceTests, TheRequestWaitsWhileTheRoundIsInPlayOrTheModeHasNoMapVariant)
-{
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), true));
+    const auto pick{ this->Pick("reach bus") };
 
     Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
     Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
     const Buffer runtimeBefore{ runtime };
     const Buffer optionsBefore{ options };
-
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateInPlay, k_GameModeMultiplayer);
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_LobbyMode);
-
-    EXPECT_TRUE(m_Service.HasPending());
-    EXPECT_EQ(runtime, runtimeBefore);
-    EXPECT_EQ(options, optionsBefore);
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Pending);
-}
-
-TEST_F(MapVariantServiceTests, AtTheBreakTheRuntimeGetsTheBlockWithItsOwnBoundsAndTheOptionsGetTheBlock)
-{
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), true));
-
-    Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
-    Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
-    const Buffer runtimeBefore{ runtime };
     const Buffer block{ this->Read("reach bus") };
 
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
+    const auto plan{ m_Service.PrepareLive(pick, runtime) };
 
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Applied);
-    EXPECT_EQ(m_Store.GetActiveName(), "reach bus");
-    EXPECT_FALSE(m_Service.HasPending());
+    ASSERT_TRUE(plan.has_value());
+    EXPECT_EQ(runtime, runtimeBefore);
+    EXPECT_EQ(options, optionsBefore);
+    EXPECT_EQ(m_Store.GetActive(), nullptr);
+
+    ASSERT_TRUE(m_Service.CommitLive(*plan, runtime, options).has_value());
+
     EXPECT_EQ(options, block);
-
     for (std::size_t offset{ 0 }; offset < k_MapVariantSize; ++offset)
     {
         const bool isBounds{ offset >= k_MapVariantBoundsOffset && offset < k_MapVariantBoundsOffset + k_MapVariantBoundsSize };
@@ -384,118 +312,74 @@ TEST_F(MapVariantServiceTests, AtTheBreakTheRuntimeGetsTheBlockWithItsOwnBoundsA
     }
 }
 
-TEST_F(MapVariantServiceTests, ARequestIsAppliedOnceAndTheBetweenStateServesIt)
-{
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), true));
-
-    Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
-    Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
-
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateBetween, k_GameModeMultiplayer);
-    ASSERT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Applied);
-
-    // Written again by the engine, a second call has nothing to serve.
-    std::ranges::fill(options, std::byte{ 0x44 });
-    const Buffer after{ options };
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
-
-    EXPECT_EQ(options, after);
-}
-
-TEST_F(MapVariantServiceTests, ARejectedRequestLeavesRuntimeAndOptionsByteForByte)
+TEST_F(MapVariantServiceTests, PrepareLiveOfAnotherMapIsRefusedWithAReason)
 {
     this->WriteConfig("other map", MakeConfig(0x11, 145, 3010, 0x5C));
-    ASSERT_TRUE(m_Service.Request("other map", this->Read("other map"), true));
+    const auto pick{ this->Pick("other map") };
 
     Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
-    Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
-    const Buffer runtimeBefore{ runtime };
-    const Buffer optionsBefore{ options };
 
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
+    const auto plan{ m_Service.PrepareLive(pick, runtime) };
 
-    EXPECT_EQ(runtime, runtimeBefore);
-    EXPECT_EQ(options, optionsBefore);
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Rejected);
-    EXPECT_NE(m_Store.GetResult().Message.find("map id 3010 instead of 3006"), std::string::npos);
-    EXPECT_FALSE(m_Service.HasActive());
-    EXPECT_FALSE(m_Service.HasPending());
-    EXPECT_TRUE(Logged(LogLevel::Warning, "does not fit the map"));
+    ASSERT_FALSE(plan.has_value());
+    EXPECT_NE(plan.error().find("map id 3010 instead of 3006"), std::string::npos);
 }
 
 TEST_F(MapVariantServiceTests, NoneBringsBackTheMapVariantTheStartCarried)
 {
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
     const Buffer carried{ MakeConfig(0x77, 145, 3006, 0xA1) };
     m_Service.BeginStart(carried);
 
     Buffer runtime{ MakeLive(0x5C, 145, 3006, 0x01) };
     Buffer options{ MakeLive(0x5C, 145, 3006, 0x02) };
-    ASSERT_TRUE(m_Service.Request("", {}, true));
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Pending);
 
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
+    const auto plan{ m_Service.PrepareLive(nullptr, runtime) };
 
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Applied);
-    EXPECT_FALSE(m_Service.HasActive());
+    ASSERT_TRUE(plan.has_value());
+    ASSERT_TRUE(m_Service.CommitLive(*plan, runtime, options).has_value());
     EXPECT_TRUE(std::equal(options.begin(), options.end(), carried.begin() + k_ConfigurationMapVariantOffset));
 }
 
-TEST_F(MapVariantServiceTests, NoneWithoutAStartIsRejected)
+TEST_F(MapVariantServiceTests, NoneWithoutAStartIsRefused)
 {
     Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
+
+    const auto plan{ m_Service.PrepareLive(nullptr, runtime) };
+
+    ASSERT_FALSE(plan.has_value());
+    EXPECT_NE(plan.error().find("not known"), std::string::npos);
+}
+
+TEST_F(MapVariantServiceTests, CheckComparesWithTheMapVariantTheStartCarriedOnlyOnceThereIsOne)
+{
+    this->WriteConfig("other map", MakeConfig(0x11, 145, 3010, 0x5C));
+    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
+    const auto other{ this->Pick("other map") };
+    const auto fits{ this->Pick("reach bus") };
+
+    // Before a start nothing is compared.
+    EXPECT_FALSE(m_Service.Check(*other).has_value());
+
+    m_Service.BeginStart(MakeConfig(0x77, 145, 3006, 0xA1));
+
+    EXPECT_TRUE(m_Service.Check(*other).has_value());
+    EXPECT_FALSE(m_Service.Check(*fits).has_value());
+}
+
+TEST_F(MapVariantServiceTests, ACommitThatCannotWriteLeavesRuntimeAndOptionsAsTheyWere)
+{
+    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
+    const auto pick{ this->Pick("reach bus") };
+    Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
+    const auto plan{ m_Service.PrepareLive(pick, runtime) };
+    ASSERT_TRUE(plan.has_value());
+
+    Buffer small(k_MapVariantSize - 1, std::byte{ 0x44 });
     Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
     const Buffer runtimeBefore{ runtime };
-    ASSERT_TRUE(m_Service.Request("", {}, true));
+    const Buffer optionsBefore{ options };
 
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
-
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::Rejected);
+    EXPECT_FALSE(m_Service.CommitLive(*plan, small, options).has_value());
     EXPECT_EQ(runtime, runtimeBefore);
-}
-
-TEST_F(MapVariantServiceTests, ARequestNoRoundBreakServedIsTakenByTheNextStart)
-{
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), true));
-
-    const Buffer next{ MakeConfig(0x77, 145, 3006, 0xA1) };
-    m_Service.BeginStart(next);
-
-    EXPECT_FALSE(m_Service.HasPending());
-    EXPECT_EQ(m_Store.GetActiveName(), "reach bus");
-
-    Buffer start{ next };
-    EXPECT_EQ(m_Service.ApplyToStart(start), MapVariantOutcome::AppliedAtLoad);
-    EXPECT_TRUE(DifferOnlyInMapVariant(start, next));
-}
-
-TEST_F(MapVariantServiceTests, CancelPendingDropsTheRequestAndItsResult)
-{
-    this->WriteConfig("reach bus", MakeConfig(0x11, 145, 3006, 0x5C));
-    ASSERT_TRUE(m_Service.Request("reach bus", this->Read("reach bus"), true));
-
-    m_Service.CancelPending();
-
-    EXPECT_FALSE(m_Service.HasPending());
-    EXPECT_EQ(m_Store.GetResult().Outcome, MapVariantOutcome::None);
-}
-
-TEST_F(MapVariantServiceTests, TheResultOfAnOldRequestNeverHidesANewerOne)
-{
-    this->WriteConfig("a", MakeConfig(0x11, 145, 3006, 0x5C));
-    this->WriteConfig("b", MakeConfig(0x12, 145, 3006, 0x5D));
-    ASSERT_TRUE(m_Service.Request("a", this->Read("a"), true));
-    const auto first{ m_Store.GetResult() };
-    ASSERT_TRUE(m_Service.Request("b", this->Read("b"), true));
-
-    EXPECT_EQ(first.Name, "a");
-    EXPECT_EQ(m_Store.GetResult().Name, "b");
-
-    Buffer runtime{ MakeLive(0xA1, 145, 3006, 0x01) };
-    Buffer options{ MakeLive(0xA2, 145, 3006, 0x02) };
-    m_Service.ApplyBetweenRounds(runtime, options, k_RoundStateEnded, k_GameModeMultiplayer);
-
-    EXPECT_EQ(m_Store.GetActiveName(), "b");
+    EXPECT_EQ(options, optionsBefore);
 }

@@ -10,13 +10,15 @@ import Engine.Base.Host.Hook;
 import Engine.Base.Memory.System;
 import Engine.Base.MapVariant.State;
 import Engine.Base.MapVariant.System;
+import Engine.Base.MatchSetup.State;
+import Engine.Base.MatchSetup.System;
 import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
 
 export namespace Engine::Base
 {
     // The base of the engine: lifecycle of the game, host (MCC) local users and session checks, signature search and memory reads, and the
-    // gametype presets (D264).
+    // gametype presets (D264), map variants and the match setup that applies them with the bots (D286).
     // note: Owner only: it has no callbacks and installs nothing. The one that composes it connects the lifecycle and installs the hooks.
     class Layer
     {
@@ -39,8 +41,10 @@ export namespace Engine::Base
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
         using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
+        using MatchSetupStore = Engine::Base::MatchSetup::State::MatchSetupStore;
         using PresetStore = Engine::Base::Preset::State::PresetStore;
         using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
+        using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using PresetService = Engine::Base::Preset::System::PresetService;
 
     public:
@@ -50,6 +54,7 @@ export namespace Engine::Base
             m_HostService(service.m_Log, m_AOBService),
             m_PresetService(service.m_Log, service.m_SettingsStore, m_PresetStore),
             m_MapVariantService(service.m_Log, m_MapVariantStore),
+            m_MatchSetupService(service.m_Log, m_LifecycleStore, m_MatchSetupStore, m_PresetService, m_MapVariantService),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_OpenMapDetour(service.m_Log, m_AOBService, m_LifecycleService),
@@ -69,6 +74,7 @@ export namespace Engine::Base
         LocalUserStore m_LocalUserStore{};
         PresetStore m_PresetStore{};
         MapVariantStore m_MapVariantStore{};
+        MatchSetupStore m_MatchSetupStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
@@ -77,6 +83,7 @@ export namespace Engine::Base
         MemoryReaderService m_MemoryReaderService{};
         PresetService m_PresetService;
         MapVariantService m_MapVariantService;
+        MatchSetupService m_MatchSetupService;
 
         // --- Hook ---
         EngineInitializeDetour m_EngineInitializeDetour;

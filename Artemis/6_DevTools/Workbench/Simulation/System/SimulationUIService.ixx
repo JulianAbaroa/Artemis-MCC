@@ -4,6 +4,7 @@ import Common.Log.System;
 import Services.Telemetry.State;
 import Control.Action.Type;
 import Engine.Base.Lifecycle.State;
+import Engine.Base.MatchSetup.System;
 import Engine.Match.State;
 import Engine.Match.System;
 import Engine.Base.Host.State;
@@ -43,6 +44,7 @@ export namespace DevTools::Workbench::Simulation::System
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
         using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
@@ -69,11 +71,11 @@ export namespace DevTools::Workbench::Simulation::System
         SimulationUIService(Log& log, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
             MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
             VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore,
-            BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
+            MatchSetupService& matchSetupService, BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
             m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
             m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
-            m_BotStore(botStore), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
+            m_BotStore(botStore), m_MatchSetupService(matchSetupService), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore) {}
         ~SimulationUIService() = default;
 
         SimulationUIService(const SimulationUIService&) = delete;
@@ -92,6 +94,7 @@ export namespace DevTools::Workbench::Simulation::System
         VirtualInputStore& m_VirtualInputStore;
         PlayerActionStore& m_PlayerActionStore;
         BotStore& m_BotStore;
+        MatchSetupService& m_MatchSetupService;
         BridgeService& m_BridgeService;
         TickStore& m_TickStore;
         SimulationUIStore& m_SimulationUIStore;
@@ -141,7 +144,8 @@ export namespace DevTools::Workbench::Simulation::System
         // Draws the add button, the roster line and editor, and one row per bot with its action mode (A9 M5b, LS.1).
         auto DrawBots() -> void;
 
-        // Draws the roster of the bots: what is active and its state, and the counts per team to request another one (D284).
+        // Draws the match setup line (what the engine holds and the state of the last request, D286) and the counts per team to request a
+        // setup with only another roster (D284).
         auto DrawRoster() -> void;
 
         // Draws the shadow check (D122): its switch and the comparisons of every field.

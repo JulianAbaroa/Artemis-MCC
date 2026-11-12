@@ -87,6 +87,13 @@
     <ClCompile Include="Lifecycle\System\LifecycleService.cpp" />
     <ClCompile Include="Lifecycle\System\LifecycleService.ixx" />
     <ClCompile Include="Lifecycle\Type\Engine.Base.Lifecycle.Type.ixx" />
+    <ClCompile Include="MatchSetup\Engine.Base.MatchSetup.State.ixx" />
+    <ClCompile Include="MatchSetup\Engine.Base.MatchSetup.System.ixx" />
+    <ClCompile Include="MatchSetup\State\MatchSetupStore.cpp" />
+    <ClCompile Include="MatchSetup\State\MatchSetupStore.ixx" />
+    <ClCompile Include="MatchSetup\System\MatchSetupService.cpp" />
+    <ClCompile Include="MatchSetup\System\MatchSetupService.ixx" />
+    <ClCompile Include="MatchSetup\Type\Engine.Base.MatchSetup.Type.ixx" />
     <ClCompile Include="MapVariant\Engine.Base.MapVariant.State.ixx" />
     <ClCompile Include="MapVariant\Engine.Base.MapVariant.System.ixx" />
     <ClCompile Include="MapVariant\State\MapVariantStore.cpp" />

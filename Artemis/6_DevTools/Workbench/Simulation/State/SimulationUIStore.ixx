@@ -1,7 +1,7 @@
 export module DevTools.Workbench.Simulation.State;
 
 import Common.Engine.Type;
-import Engine.Control.Simulation.Type;
+import Engine.Base.MatchSetup.Type;
 import DevTools.Workbench.Simulation.Type;
 import std;
 
@@ -21,7 +21,7 @@ export namespace DevTools::Workbench::Simulation::State
     private:
         using LocalPlayerInput = DevTools::Workbench::Simulation::Type::LocalPlayerInput;
         using LocalPlayerAction = DevTools::Workbench::Simulation::Type::LocalPlayerAction;
-        using Roster = Engine::Control::Simulation::Type::Roster;
+        using Roster = Engine::Base::MatchSetup::Type::Roster;
 
     public:
         SimulationUIStore() = default;

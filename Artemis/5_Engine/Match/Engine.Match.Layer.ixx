@@ -23,7 +23,7 @@ export namespace Engine::Match
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_MatchConfigService(service.m_Log, service.m_SettingsStore, m_MatchConfigStore),
             m_EngineInterfaceDetour(service.m_Log, base.m_AOBService, base.m_MemoryReaderService, m_MatchCycleStore, m_MatchConfigService,
-                base.m_MapVariantService, base.m_PresetService),
+                base.m_MatchSetupService),
             m_LifecycleUpdateDetour(service.m_Log, base.m_AOBService, m_MatchConfigStore, m_MatchCycleStore) {}
         ~Layer() = default;
 

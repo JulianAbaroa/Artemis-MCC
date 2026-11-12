@@ -94,6 +94,7 @@ namespace Mod
         m_Base.m_LifecycleService.SignalShutdown();
 
         m_Base.m_LifecycleService.RaiseUnhook();
+        m_Base.m_MatchSetupService.SetRosterPort(nullptr);
 
         m_Base.m_LifecycleService.RaiseShutdown();
 
@@ -107,6 +108,9 @@ namespace Mod
     {
         // The action source is connected before any hook goes in (D243).
         m_Control.m_PlayerActionDetour.SetActionSource(m_BridgeActionSource);
+
+        // The setup service applies the bots through the bots service (D286): Engine.Base cannot see Engine.Control.
+        m_Base.m_MatchSetupService.SetRosterPort(&m_Control.m_BotService);
 
         // The host hooks also go in here, before the network session forms, so the Artemis users can join it.
         // The bot service finds its functions before the SetMachines hook overwrites the bytes of their signature.
@@ -142,6 +146,7 @@ namespace Mod
             m_Base.m_LocalUserStore.Cleanup();
             m_Control.m_PlayerActionStore.Cleanup();
             m_Control.m_BotStore.Cleanup();
+            m_Base.m_MatchSetupStore.Cleanup();
             m_Capture.m_CaptureService.Cleanup();
         });
 

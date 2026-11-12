@@ -2,8 +2,7 @@ module Mod.Port.System;
 import :BridgeEngine;
 
 import Engine.Base.Lifecycle.Type;
-import Engine.Base.MapVariant.Type;
-import Engine.Base.Preset.Type;
+import Engine.Base.MatchSetup.Type;
 import std;
 
 namespace
@@ -11,33 +10,20 @@ namespace
     using Engine::Base::Lifecycle::Type::Status;
     using Contract::Bridge::Type::BridgePhase;
     using Contract::Bridge::Type::BridgePresetResult;
-    using Engine::Base::MapVariant::Type::MapVariantOutcome;
-    using Engine::Base::Preset::Type::PresetOutcome;
+    using Engine::Base::MatchSetup::Type::MatchSetup;
+    using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
+    using Engine::Base::MatchSetup::Type::MatchSetupOutcome;
 
-    auto ToPresetResult(PresetOutcome outcome) -> BridgePresetResult
+    // The bridge has one result for preset and map: the one of the last setup request, whichever field it set (D286).
+    auto ToSetupResult(MatchSetupOutcome outcome) -> BridgePresetResult
     {
         switch (outcome)
         {
-        case PresetOutcome::None: return BridgePresetResult::NoResult;
-        case PresetOutcome::Pending: return BridgePresetResult::Pending;
-        case PresetOutcome::Applied: return BridgePresetResult::Applied;
-        case PresetOutcome::AppliedAtLoad: return BridgePresetResult::AtLoad;
-        case PresetOutcome::Rejected:
-        case PresetOutcome::Failed: return BridgePresetResult::Rejected;
-        default: return BridgePresetResult::Unknown;
-        }
-    }
-
-    auto ToMapResult(MapVariantOutcome outcome) -> BridgePresetResult
-    {
-        switch (outcome)
-        {
-        case MapVariantOutcome::None: return BridgePresetResult::NoResult;
-        case MapVariantOutcome::Pending: return BridgePresetResult::Pending;
-        case MapVariantOutcome::Applied: return BridgePresetResult::Applied;
-        case MapVariantOutcome::AppliedAtLoad: return BridgePresetResult::AtLoad;
-        case MapVariantOutcome::Rejected:
-        case MapVariantOutcome::Failed: return BridgePresetResult::Rejected;
+        case MatchSetupOutcome::None: return BridgePresetResult::NoResult;
+        case MatchSetupOutcome::Pending: return BridgePresetResult::Pending;
+        case MatchSetupOutcome::Applied: return BridgePresetResult::Applied;
+        case MatchSetupOutcome::AtLoad: return BridgePresetResult::AtLoad;
+        case MatchSetupOutcome::Rejected: return BridgePresetResult::Rejected;
         default: return BridgePresetResult::Unknown;
         }
     }
@@ -97,23 +83,31 @@ namespace Mod::Port::System
 
     auto BridgeEngineAdapter::RequestPreset(std::string_view name) -> void
     {
-        // The match is where the ticks run, and it starts to be one while it loads. Anywhere else the preset is written at the next start.
-        m_PresetService.Request(name, this->GetPhase() != BridgePhase::Idle);
+        // The files are read here, on the bridge thread: the game thread only receives the values.
+        auto pick{ m_PresetService.Resolve(name) };
+        if (!pick)
+        {
+            m_MatchSetupService.Reject(pick.error());
+            return;
+        }
+
+        // The bridge asks for the preset and the map in two calls: the second adds to the setup the first left waiting.
+        m_MatchSetupService.Request(MatchSetup{ .Preset = std::move(*pick) }, MatchSetupOrigin::Bridge, true);
     }
 
     auto BridgeEngineAdapter::CancelPresetRequest() -> void
     {
-        m_PresetService.CancelPending();
+        m_MatchSetupService.Cancel(MatchSetupOrigin::Bridge);
     }
 
     auto BridgeEngineAdapter::GetPresetResult() const -> BridgePresetResult
     {
-        return ToPresetResult(m_PresetStore.GetResult().Outcome);
+        return ToSetupResult(m_MatchSetupService.GetResult().Outcome);
     }
 
     auto BridgeEngineAdapter::GetActivePreset() const -> std::string
     {
-        return m_PresetStore.GetActiveName();
+        return m_MatchSetupService.GetActive().Preset;
     }
 
     auto BridgeEngineAdapter::RequestMap(std::string_view name) -> void
@@ -122,24 +116,29 @@ namespace Mod::Port::System
         std::vector<std::byte> block{};
         if (!name.empty()) block = m_MatchConfigService.ReadMapVariant(name);
 
-        // The match is where the ticks run, and it starts to be one while it loads: a request then waits for a break instead of being
-        // written at a start that already happened. Anywhere else the map variant is written at the next start.
-        m_MapVariantService.Request(name, std::move(block), this->GetPhase() != BridgePhase::Idle);
+        auto mapVariant{ m_MapVariantService.Resolve(name, std::move(block)) };
+        if (!mapVariant)
+        {
+            m_MatchSetupService.Reject(mapVariant.error());
+            return;
+        }
+
+        m_MatchSetupService.Request(MatchSetup{ .Map = std::move(*mapVariant) }, MatchSetupOrigin::Bridge, true);
     }
 
     auto BridgeEngineAdapter::CancelMapRequest() -> void
     {
-        m_MapVariantService.CancelPending();
+        m_MatchSetupService.Cancel(MatchSetupOrigin::Bridge);
     }
 
     auto BridgeEngineAdapter::GetMapResult() const -> BridgePresetResult
     {
-        return ToMapResult(m_MapVariantStore.GetResult().Outcome);
+        return ToSetupResult(m_MatchSetupService.GetResult().Outcome);
     }
 
     auto BridgeEngineAdapter::GetActiveMap() const -> std::string
     {
-        return m_MapVariantStore.GetActiveName();
+        return m_MatchSetupService.GetActive().Map;
     }
 
     auto BridgeEngineAdapter::SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void

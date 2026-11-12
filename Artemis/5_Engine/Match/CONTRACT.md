@@ -5,7 +5,7 @@ Group `5_Engine` - static library inside the game process - the cycle of matches
 ## Responsibility
 Sees and drives the match cycle of MCC: copies the vtable of the engine interface (`EngineInterfaceDetour`) to know when an engine
 starts and is destroyed, keeps a library of recorded match configurations (`<storage>/MatchConfigs/<name>.bin`) and transplants
-the pending one into the next start, writes the active gametype preset into that copy (`Engine.Base.Preset`, D264; `BeginStart` runs on every start and the start also consumes a preset request no round break served), and presses START on the custom games lobby from the MCC lifecycle update
+the pending one into the next start, writes the match setup into that copy (`Engine.Base.MatchSetup`, D286: preset and map variant, restored whole if either fails; `BeginStart` runs on every start and the start also consumes a setup request no round break served), and presses START on the custom games lobby from the MCC lifecycle update
 (`LifecycleUpdateDetour`).
 
 ## Does not
@@ -24,7 +24,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Engine.Match.Layer` | The facade: config and cycle stores, `MatchConfigService` and the two detours. Owner only. |
 | `Engine.Match.Type` | Engine interface vtable entries and the `LoadGameEngine` signature. |
 | `Engine.Match.State` | `MatchConfigStore` and `MatchCycleStore`. |
-| `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations, and `ReadMapVariant` (the map variant block of a recorded configuration, without making it pending; Q98, D266). The start hook calls `Engine.Base` `MapVariantService` after the transplant and before the preset: `BeginStart` and, with an active map variant, `ApplyToStart` (at +0x1D308, only if it fits the one the copy carries; otherwise a WARNING and the start keeps the map variant of its configuration). |
+| `Engine.Match.System` | `MatchConfigService`: list, record, load and transplant configurations, and `ReadMapVariant` (the map variant block of a recorded configuration, without making it pending; Q98, D266). The start hook calls `Engine.Base` `MatchSetupService` after the transplant: `BeginStart` and, when there is something to apply, `ApplyToStart`, which writes the preset and the map variant (at +0x1D308, only if it fits the one the copy carries). A setup that does not fit is Rejected with a WARNING, the copy is left as it was and the start gets the setup the engine held before. |
 
 ## Depends on
 `Common`, `Services`, `Engine.Base` (and `Blam.Layout` through its presets and the map variant constants).

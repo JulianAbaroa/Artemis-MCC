@@ -67,6 +67,18 @@
     <Filter Include="MapVariant\Type">
       <UniqueIdentifier>{b6156309-1a25-4354-ae48-bb992328e74b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MatchSetup">
+      <UniqueIdentifier>{50052ee9-478c-4e29-bd60-579f40fb4a63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MatchSetup\State">
+      <UniqueIdentifier>{d416d61f-d075-44c3-914e-5303d2f13520}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MatchSetup\System">
+      <UniqueIdentifier>{7c1fd634-bbcf-41d9-9169-e53dc7e8b9fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MatchSetup\Type">
+      <UniqueIdentifier>{e256b3e7-2f9b-48bc-a73a-442be0420d9a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Preset">
       <UniqueIdentifier>{5988f712-392f-4125-aea7-8a6e87b9c396}</UniqueIdentifier>
     </Filter>
@@ -174,6 +186,27 @@
     </ClCompile>
     <ClCompile Include="MapVariant\Type\Engine.Base.MapVariant.Type.ixx">
       <Filter>MapVariant\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\Engine.Base.MatchSetup.State.ixx">
+      <Filter>MatchSetup</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\Engine.Base.MatchSetup.System.ixx">
+      <Filter>MatchSetup</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\State\MatchSetupStore.cpp">
+      <Filter>MatchSetup\State</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\State\MatchSetupStore.ixx">
+      <Filter>MatchSetup\State</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\System\MatchSetupService.cpp">
+      <Filter>MatchSetup\System</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\System\MatchSetupService.ixx">
+      <Filter>MatchSetup\System</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSetup\Type\Engine.Base.MatchSetup.Type.ixx">
+      <Filter>MatchSetup\Type</Filter>
     </ClCompile>
     <ClCompile Include="Preset\Engine.Base.Preset.State.ixx">
       <Filter>Preset</Filter>

@@ -2,7 +2,7 @@ export module Engine.Control.Simulation.Type;
 
 import Common.Engine.Type;
 import Control.Action.Type;
-import Blam.Layout.Game.Type;
+import Engine.Base.MatchSetup.Type;
 import std;
 
 // Layout of the engine simulation players and machines (A9_SplitScreen.txt sec. 13).
@@ -10,8 +10,10 @@ namespace
 {
     using ::Control::Action::Type::UnitClientState;
 
-    using Blam::Layout::Game::Type::Offset::k_RoundStateBetween;
-    using Blam::Layout::Game::Type::Offset::k_RoundStateEnded;
+    using Engine::Base::MatchSetup::Type::CheckRosterFit;
+    using Engine::Base::MatchSetup::Type::k_MaxBots;
+    using Engine::Base::MatchSetup::Type::k_MaxMachines;
+    using Engine::Base::MatchSetup::Type::Roster;
 
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxTeams;
@@ -20,16 +22,6 @@ namespace
 
 export namespace Engine::Control::Simulation::Type
 {
-    // Machines the engine tracks (16 players and the host).
-    inline constexpr std::size_t k_MaxMachines{ 17 };
-
-    // Players one machine can have: the user index and the controller (0 to 3) cannot repeat inside a machine.
-    inline constexpr std::size_t k_MaxPlayersPerMachine{ 4 };
-
-    // Bots one instance can hold: 4 per fake machine, on every machine slot except the first one (the local machine). The player table
-    // (k_MaxPlayers) is the limit that binds first.
-    inline constexpr std::size_t k_MaxBots{ (k_MaxMachines - 1) * k_MaxPlayersPerMachine };
-
     // Bytes of a machine identifier.
     inline constexpr std::size_t k_MachineIdentifierSize{ 6 };
 
@@ -193,16 +185,6 @@ export namespace Engine::Control::Simulation::Type
         std::int8_t Team{ 0 };
     };
 
-    // The bots a match should have (D284): how many on each team, and how many more on the team of the local player 0, which is
-    // resolved when the roster is applied. The local players are not part of it.
-    struct Roster
-    {
-        std::array<std::size_t, k_MaxTeams> Teams{};
-        std::size_t Auto{ 0 };
-
-        auto operator==(const Roster&) const -> bool = default;
-    };
-
     // A bot that changes team.
     struct RosterMove
     {
@@ -210,51 +192,6 @@ export namespace Engine::Control::Simulation::Type
         std::int8_t Team{ 0 };
 
         auto operator==(const RosterMove&) const -> bool = default;
-    };
-
-    // What became of the last roster request (D284).
-    enum class RosterOutcome : std::uint8_t
-    {
-        // No request yet.
-        None,
-        // Taken in a match, waiting for the end of the round.
-        Pending,
-        // Applied in the first tick of the match.
-        AtLoad,
-        // Applied between two rounds.
-        Applied,
-        // Not applied: it does not fit, or an operation failed (see Reason).
-        Rejected,
-    };
-
-    // Result of the last roster request and the round of the match it was applied in.
-    struct RosterResult
-    {
-        RosterOutcome Outcome{ RosterOutcome::None };
-        // Round index of the match when it was applied, or -1.
-        std::int16_t Round{ -1 };
-        std::string Reason{};
-
-        auto operator==(const RosterResult&) const -> bool = default;
-    };
-
-    // A roster asked for, with the number of the request. The result of an older request never replaces the one of a newer request.
-    struct RosterRequest
-    {
-        Roster Value{};
-        std::uint64_t Sequence{ 0 };
-
-        auto operator==(const RosterRequest&) const -> bool = default;
-    };
-
-    // What the roster service does on a tick.
-    enum class RosterStep : std::uint8_t
-    {
-        Nothing,
-        // First tick of the match: take the request of the lobby, then apply the active roster.
-        Load,
-        // A request made in the match waits for the end of the round, and this is a tick of the break.
-        Break,
     };
 
     // What it takes to go from the bots of the match to a roster. It is applied in this order: moves, removes, adds.
@@ -322,32 +259,6 @@ export namespace Engine::Control::Simulation::Type
         return update;
     }
 
-    // return: What the roster service does on this tick. A request made in the match is applied once, in a tick where the round is
-    // ended or between rounds, never in the middle of a round.
-    // param roundState: Round state of the game engine globals, empty if it could not be read.
-    auto GetRosterStep(bool isMatchStarted, bool hasPending, std::optional<std::uint8_t> roundState) -> RosterStep
-    {
-        if (!isMatchStarted) return RosterStep::Load;
-        if (!hasPending || !roundState) return RosterStep::Nothing;
-
-        return (*roundState == k_RoundStateEnded || *roundState == k_RoundStateBetween) ? RosterStep::Break : RosterStep::Nothing;
-    }
-
-    // return: The roster as text for logs and the screens: the teams with bots as "team:count" and the auto ones, or "empty".
-    auto ToText(const Roster& roster) -> std::string
-    {
-        std::string text{};
-
-        for (std::size_t team{ 0 }; team < k_MaxTeams; ++team)
-        {
-            if (roster.Teams[team] > 0) text += std::format("{}{}:{}", text.empty() ? "" : " ", team, roster.Teams[team]);
-        }
-
-        if (roster.Auto > 0) text += std::format("{}auto:{}", text.empty() ? "" : " ", roster.Auto);
-
-        return text.empty() ? "empty" : text;
-    }
-
     // return: The lowest bot number from 1 to k_MaxBots that is not in use, or nothing if all are. A bot that is removed and added again
     // gets the same number, so it gets the same machine, user and controller.
     auto FindFreeBotNumber(std::span<const std::size_t> used) -> std::optional<std::size_t>
@@ -385,13 +296,7 @@ export namespace Engine::Control::Simulation::Type
         }
 
         const std::size_t total{ std::accumulate(wanted.begin(), wanted.end(), std::size_t{ 0 }) };
-        if (total > k_MaxBots) return std::unexpected(std::format("{} bots, at most {}", total, k_MaxBots));
-
-        if (otherPlayers + total > k_MaxPlayers)
-        {
-            return std::unexpected(std::format("{} bots and {} other players do not fit in {} player slots", total, otherPlayers,
-                k_MaxPlayers));
-        }
+        if (const auto reason{ CheckRosterFit(total, otherPlayers) }) return std::unexpected(*reason);
 
         // Teams in order, the ones outside the range last, and the highest number first inside a team.
         std::vector<RosterBot> sorted{ bots.begin(), bots.end() };

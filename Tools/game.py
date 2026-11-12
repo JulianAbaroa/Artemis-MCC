@@ -305,7 +305,7 @@ def PrintReport(report, asserter=AssertTickDump):
     return 2 if "pending" in statuses else 0
 
 
-MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "roster", "rosters", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
+MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "roster", "rosters", "setups", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
               "probes", "tickdump", "events", "every_tick"}
 
 
@@ -341,6 +341,47 @@ def RosterFromBots(match_number, bots):
     return roster
 
 
+def PresetWord(match_number, value):
+    """The preset of a setup as BenchUIService reads it: a name ([a-z0-9_], up to 31 characters) or none."""
+    preset = "none" if value is None else value
+    if not isinstance(preset, str) or not re.fullmatch(r"[a-z0-9_]{1,31}", preset):
+        raise ValueError(f"match {match_number}: preset '{preset}' is not a preset name ([a-z0-9_], up to 31 characters) or none")
+    return preset
+
+
+def MapWord(match_number, value, configs):
+    """The map of a setup: the name of a recorded config whose map variant it is (Q98, D266), or none."""
+    variant = "none" if value is None else value
+    if not isinstance(variant, str) or not re.fullmatch(r"[A-Za-z0-9 _.-]{1,64}", variant) or variant != variant.strip():
+        raise ValueError(f"match {match_number}: map '{variant}' is not the name of a recorded config (letters, digits, spaces, _ - ., up to 64) or none")
+    if configs is not None and variant != "none" and variant not in configs:
+        raise ValueError(f"match {match_number}: map '{variant}' is not a recorded config (have: {', '.join(configs) or 'none'})")
+    return variant
+
+
+SETUP_KEYS = {"preset", "map", "roster"}
+
+
+def SetupFields(match_number, setup, configs, what):
+    """The fields of one setup (D286) as BenchUIService reads them, "preset=x; map=y; roster=7 8 0 0 0 0 0 0 auto 0". A field left out
+    is not written: the setup does not change it."""
+    if not isinstance(setup, dict):
+        raise ValueError(f"match {match_number}: {what} must be an object with preset, map and roster, not {setup!r}")
+    unknown = set(setup) - SETUP_KEYS
+    if unknown:
+        raise ValueError(f"match {match_number}: {what} has unknown keys {sorted(unknown)} (preset, map, roster)")
+    fields = []
+    if "preset" in setup:
+        fields.append("preset=" + PresetWord(match_number, setup["preset"]))
+    if "map" in setup:
+        fields.append("map=" + MapWord(match_number, setup["map"], configs))
+    if "roster" in setup:
+        fields.append("roster=" + RosterLine(match_number, setup["roster"], what + " roster"))
+    if not fields:
+        raise ValueError(f"match {match_number}: {what} changes nothing (give preset, map or roster)")
+    return "; ".join(fields)
+
+
 def Compile(scenario, configs):
     """Turns the JSON scenario (Diseno/11 sec. 9) into the line format BenchUIService reads. Raises ValueError when it is wrong."""
     defaults = scenario.get("defaults", {})
@@ -357,6 +398,8 @@ def Compile(scenario, configs):
             match.pop("roster", None)
         if match.get("roster") is not None and "bots" in match:
             raise ValueError(f"match {index + 1}: roster and bots cannot go together (bots is a shortcut of roster)")
+        if match.get("setups") and match.get("rosters"):
+            raise ValueError(f"match {index + 1}: setups and rosters cannot go together (rosters is a shortcut of setups)")
         unknown = set(match) - MATCH_KEYS
         if unknown:
             raise ValueError(f"match {index + 1}: unknown keys {sorted(unknown)}")
@@ -376,18 +419,9 @@ def Compile(scenario, configs):
             lines.append(f"match {name}" + (f" #{repeat + 1}" if int(match.get("repeat", 1)) > 1 else ""))
             lines.append(f"config {match['config']}")
             if "preset" in match:
-                preset = "none" if match["preset"] is None else match["preset"]
-                if not isinstance(preset, str) or not re.fullmatch(r"[a-z0-9_]{1,31}", preset):
-                    raise ValueError(f"match {index + 1}: preset '{preset}' is not a preset name ([a-z0-9_], up to 31 characters) or none")
-                lines.append(f"preset {preset}")
+                lines.append("preset " + PresetWord(index + 1, match["preset"]))
             if "map" in match:
-                # A map variant is named like the recorded config whose map variant it is (Q98, D266).
-                variant = "none" if match["map"] is None else match["map"]
-                if not isinstance(variant, str) or not re.fullmatch(r"[A-Za-z0-9 _.-]{1,64}", variant) or variant != variant.strip():
-                    raise ValueError(f"match {index + 1}: map '{variant}' is not the name of a recorded config (letters, digits, spaces, _ - ., up to 64) or none")
-                if configs is not None and variant != "none" and variant not in configs:
-                    raise ValueError(f"match {index + 1}: map '{variant}' is not a recorded config (have: {', '.join(configs) or 'none'})")
-                lines.append(f"map {variant}")
+                lines.append("map " + MapWord(index + 1, match["map"], configs))
             if "locals" in match:
                 lines.append(f"locals {int(match['locals'])}")
             at_load = match.get("roster")
@@ -395,11 +429,19 @@ def Compile(scenario, configs):
                 at_load = RosterFromBots(index + 1, match["bots"])
             if at_load is not None:
                 lines.append("roster " + RosterLine(index + 1, at_load, "roster"))
-            if match.get("rosters"):
+            # One setup per next round (D286): the rosters shortcut is the setups that only change the roster.
+            setups = match.get("setups")
+            if setups is not None and not isinstance(setups, list):
+                raise ValueError(f"match {index + 1}: setups must be a list of objects with preset, map and roster")
+            rosters = match.get("rosters")
+            if rosters is not None and not isinstance(rosters, list):
+                raise ValueError(f"match {index + 1}: rosters must be a list of rosters")
+            if rosters:
                 if at_load is None:
                     raise ValueError(f"match {index + 1}: rosters need a roster (or bots) at load: round 0 is checked against it")
-                for round_roster in match["rosters"]:
-                    lines.append("round_roster " + RosterLine(index + 1, round_roster, "rosters"))
+                setups = [{"roster": roster} for roster in rosters]
+            for setup in setups or []:
+                lines.append("round_setup " + SetupFields(index + 1, setup, configs, "setups" if match.get("setups") else "rosters"))
             if "scale" in match:
                 lines.append(f"scale {float(match['scale'])}")
             if match.get("max_ticks"):

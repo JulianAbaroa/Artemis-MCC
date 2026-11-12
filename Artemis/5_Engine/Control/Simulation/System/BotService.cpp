@@ -4,7 +4,6 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
 import Engine.Base.Memory.Type;
-import Engine.Base.Hook.System;
 import Blam.Layout.Object.Type;
 import std;
 
@@ -24,22 +23,17 @@ namespace
     using Engine::Control::Simulation::Type::TeamRequest;
     using Engine::Control::Simulation::Type::RosterBot;
     using Engine::Control::Simulation::Type::RosterPlan;
-    using Engine::Control::Simulation::Type::RosterResult;
     using Engine::Control::Simulation::Type::PlanRoster;
-    using Engine::Control::Simulation::Type::GetRosterStep;
-    using Engine::Control::Simulation::Type::RosterStep;
-    using Engine::Control::Simulation::Type::ToText;
-    using Engine::Base::Hook::System::ReadRoundIndex;
-    using Engine::Base::Hook::System::ReadRoundState;
+    using Engine::Base::MatchSetup::Type::ToText;
     using Engine::Control::Simulation::Type::GatherInteractionsFunction;
     using Engine::Control::Simulation::Type::UnitSelectorFunction;
     using Engine::Control::Simulation::Type::NextZoomLevelFunction;
     using Engine::Control::Simulation::Type::CanUnitZoomFunction;
     using ::Control::Action::Type::UnitClientState;
 
-    using Engine::Control::Simulation::Type::k_MaxMachines;
+    using Engine::Base::MatchSetup::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
-    using Engine::Control::Simulation::Type::k_MaxPlayersPerMachine;
+    using Engine::Base::MatchSetup::Type::k_MaxPlayersPerMachine;
     using Engine::Control::Simulation::Type::k_ObjectsSlot;
     using Engine::Control::Simulation::Type::k_PlayersSlot;
     using Engine::Control::Simulation::Type::k_PlayersGlobalsSlot;
@@ -230,7 +224,6 @@ namespace Engine::Control::Simulation::System
         if (threadContext == 0) return;
 
         this->PublishSnapshot(threadContext);
-        this->UpdateRoster(threadContext);
 
         for (const std::size_t number : m_BotStore.TakeRemoveRequests())
         {
@@ -500,46 +493,12 @@ namespace Engine::Control::Simulation::System
         m_BotStore.RemoveBot(bot.Number);
     }
 
-    auto BotService::UpdateRoster(std::uintptr_t threadContext) -> void
+    auto BotService::PlanCurrentRoster(std::uintptr_t threadContext, const Roster& roster, std::vector<Bot>& bots) -> std::expected<RosterPlan, std::string>
     {
-        const bool isStarted{ m_BotStore.IsMatchStarted() };
-        const bool hasPending{ m_BotStore.HasPendingRoster() };
-        const RosterStep step{ GetRosterStep(isStarted, hasPending, hasPending ? ReadRoundState(threadContext) : std::nullopt) };
-
-        if (step == RosterStep::Nothing) return;
-
-        // note: At the first tick a request made before it (the lobby) is the roster of the load. It only becomes the active roster if
-        // it is applied. Between rounds it is the request made in the match.
-        const bool isLoad{ step == RosterStep::Load };
-        if (isLoad) m_BotStore.SetMatchStarted();
-
-        const std::optional<RosterRequest> request{ isLoad ? m_BotStore.TakeLoadRoster() : m_BotStore.TakePendingRoster() };
-        if (!request) return;
-
-        const RosterResult result{ this->ApplyRoster(threadContext, request->Value, isLoad ? RosterOutcome::AtLoad : RosterOutcome::Applied) };
-        const bool isApplied{ result.Outcome != RosterOutcome::Rejected };
-
-        m_BotStore.FinishRoster(*request, result, isApplied);
-
-        if (!isApplied) return;
-
-        if (isLoad) m_Log.Message("[BotService] INFO: Roster applied at load.");
-        else        m_Log.Message("[BotService] INFO: Roster applied between rounds {}.", result.Round);
-    }
-
-    auto BotService::ApplyRoster(std::uintptr_t threadContext, const Roster& roster, RosterOutcome outcome) -> RosterResult
-    {
-        const std::int16_t round{ ReadRoundIndex(threadContext).value_or(-1) };
-        const auto reject = [&](const std::string& reason) {
-            m_Log.Message("[BotService] WARNING: Roster {} was not applied: {}.", ToText(roster), reason);
-            return RosterResult{ .Outcome = RosterOutcome::Rejected, .Round = round, .Reason = reason };
-        };
-
         const auto players{ Read<std::uintptr_t>(threadContext + k_PlayersSlot) };
         const auto globals{ Read<std::uintptr_t>(threadContext + k_PlayersGlobalsSlot) };
-        if (!m_IsResolved || players == 0 || globals == 0) return reject("the players or the engine functions are not available");
+        if (!m_IsResolved || players == 0 || globals == 0) return std::unexpected("the players or the engine functions are not available");
 
-        std::vector<Bot> bots{};
         m_BotStore.CopyBots(bots);
 
         // A bot already gone from the engine goes in with no team: the plan only removes it, and the removal forgets it.
@@ -571,8 +530,23 @@ namespace Engine::Control::Simulation::System
             }
         }
 
-        const auto plan{ PlanRoster(current, roster, localTeam, occupied - botsInEngine) };
-        if (!plan) return reject(plan.error());
+        return PlanRoster(current, roster, localTeam, occupied - botsInEngine);
+    }
+
+    auto BotService::CheckRoster(std::uintptr_t threadContext, const Roster& roster) -> std::optional<std::string>
+    {
+        std::vector<Bot> bots{};
+        const auto plan{ this->PlanCurrentRoster(threadContext, roster, bots) };
+
+        if (plan) return std::nullopt;
+        return plan.error();
+    }
+
+    auto BotService::ApplyRoster(std::uintptr_t threadContext, const Roster& roster) -> RosterApplication
+    {
+        std::vector<Bot> bots{};
+        const auto plan{ this->PlanCurrentRoster(threadContext, roster, bots) };
+        if (!plan) return RosterApplication{ .Reason = plan.error() };
 
         const std::size_t total{ plan->Moves.size() + plan->Removes.size() + plan->Adds.size() };
         std::size_t done{ 0 };
@@ -607,9 +581,7 @@ namespace Engine::Control::Simulation::System
             plan->Moves.size(), plan->Removes.size(), plan->Adds.size(), done, total, failures);
 
         // note: Operations left after a failed add are skipped, so they count as not done. Nothing is undone or retried.
-        if (done < total) return reject(std::format("{} of {} operations done, see the log", done, total));
-
-        return RosterResult{ .Outcome = outcome, .Round = round };
+        return RosterApplication{ .Done = done, .Total = total };
     }
 
     auto BotService::EnsureFakeMachine(std::uintptr_t playersGlobals, std::size_t machineIndex) -> bool

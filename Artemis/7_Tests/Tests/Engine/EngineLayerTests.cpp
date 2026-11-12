@@ -104,9 +104,11 @@ TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)
     Log log{ sink };
     AOBService aobService{ log };
     PlayerActionStore playerActionStore{};
+    Services::Layer service{};
+    Engine::Base::Layer base{ service };
     BotStore botStore{};
     BotService botService{ log, aobService, botStore, playerActionStore };
-    PlayerActionDetour detour{ log, aobService, playerActionStore, botService };
+    PlayerActionDetour detour{ log, aobService, base.m_MatchSetupService, playerActionStore, botService };
 
     EXPECT_FALSE(detour.Install());
 
