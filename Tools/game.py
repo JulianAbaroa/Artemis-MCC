@@ -411,7 +411,8 @@ def Compile(scenario, configs):
             raise ValueError(f"match {index + 1}: every_tick false (sparse allowed, Q101) cannot go with tickdump or events")
         if not match.get("config"):
             raise ValueError(f"match {index + 1}: no config")
-        if configs is not None and match["config"] not in configs:
+        created = {d.get("name") for d in match.get("decodes", []) if isinstance(d, dict) and d.get("template")}
+        if configs is not None and match["config"] not in configs and match["config"] not in created:
             raise ValueError(f"match {index + 1}: config '{match['config']}' is not recorded (have: {', '.join(configs) or 'none'})")
         for repeat in range(int(match.get("repeat", 1))):
             count += 1
@@ -452,7 +453,13 @@ def Compile(scenario, configs):
                 path = decode["path"]
                 if not re.match(r"^[A-Za-z]:[\\/]", path):
                     raise ValueError(f"match {index + 1}: decode path must be an absolute Windows path (the DLL reads it), got '{path}'")
-                lines.append(f"decode_mvar {decode['when']} {path}|{compare}")
+                if decode.get("template"):
+                    # create_config (Q106): the decode also makes the config "name" from the config "template"; compare_config then compares the whole file.
+                    if not decode.get("name") or (configs is not None and decode["template"] not in configs):
+                        raise ValueError(f"match {index + 1}: create needs a recorded template and a name")
+                    lines.append(f"create_config {decode['when']} {path}|{decode['template']}|{decode['name']}|{compare}")
+                else:
+                    lines.append(f"decode_mvar {decode['when']} {path}|{compare}")
             if "scale" in match:
                 lines.append(f"scale {float(match['scale'])}")
             if match.get("max_ticks"):

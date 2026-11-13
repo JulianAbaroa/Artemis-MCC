@@ -41,6 +41,9 @@ export namespace Blam::Layout::Object::Type::Constant
     constexpr std::size_t k_ConfigurationMapVariantOffset{ 0x1D308 };
     constexpr std::size_t k_GameGlobalsMapVariant{ 0x110F0 };
 
+    // Map id of Forge World, the only map whose map variants Artemis builds configurations from (Q106, D290).
+    constexpr std::uint32_t k_ForgeWorldMapId{ 3006 };
+
     // Version the engine accepts in the map variant header (Validate).
     constexpr std::uint16_t k_MapVariantVersion{ 0x20 };
 

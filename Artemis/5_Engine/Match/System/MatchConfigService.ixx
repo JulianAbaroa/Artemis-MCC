@@ -34,6 +34,11 @@ export namespace Engine::Match::System
         // note: Reads the folder. Called on a user action, not every frame.
         auto ListConfigs() const -> std::vector<std::string>;
 
+        // return: A name for a new configuration made from free text (the name of a map variant): the characters the rule does not allow
+        // are dropped, repeated spaces become one and a final space or dot goes, cut to the longest name. Empty if nothing is left.
+        // note: The result passes GetNameProblem unless it is a device name.
+        static auto SuggestName(std::string_view text) -> std::string;
+
         // return: Why the name cannot be used for a configuration (empty, too long, a device name of Windows, a character outside
         // letters, digits, spaces, '_', '-' and '.'), empty if it can. The same rule as ArmRecord and Rename.
         static auto GetNameProblem(std::string_view name) -> std::string;
@@ -58,6 +63,20 @@ export namespace Engine::Match::System
         // return: The k_MapVariantSize bytes of the map variant, empty if the name is not valid or the file cannot be read.
         // note: Reads the file: never from the game thread.
         auto ReadMapVariant(std::string_view name) const -> std::vector<std::byte>;
+
+        // return: The whole recorded configuration, empty if the name is not valid or the file cannot be read or has the wrong size.
+        // note: Reads the file: never from the game thread.
+        auto ReadConfigBytes(std::string_view name) const -> std::vector<std::byte>;
+
+        // Creates a recorded configuration from a template and the map variant of a decoded .mvar, without opening the map in the lobby
+        // (Q106, D290). The new configuration is the template with the map variant block replaced, saved as <name>.bin.
+        // param templateName: Recorded configuration to copy. Its map variant must be one of Forge World.
+        // param mapVariant: The k_MapVariantSize bytes of the decoded map variant, also of Forge World.
+        // param name: Name of the new configuration, checked by the same rule as Record and Rename. It never overwrites a configuration.
+        // return: Empty on success, otherwise the reason it was refused (name, map id of the template or of the map variant, version,
+        // an existing name, the file could not be written).
+        // note: Touches the folder: a user action, never the game thread.
+        auto CreateFromMvar(std::string_view templateName, std::span<const std::byte> mapVariant, std::string_view name) -> std::string;
 
         // Clears the pending configuration, so the next start is the match of MCC unchanged.
         auto ClearPending() -> void;

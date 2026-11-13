@@ -91,8 +91,13 @@ export namespace DevTools::Workbench::Bench::Type
     {
         bool IsLobby{ true };
         std::filesystem::path File{};
-        // Config whose map variant the decoded one is compared with. Empty for no comparison.
+        // Config the decoded one is compared with: its map variant block, or its whole file when the decode creates a config. Empty for no
+        // comparison.
         std::string CompareConfig{};
+        // Empty for a plain decode. Otherwise the decode creates the config Name from the config Template and the map variant (Q106), after
+        // moving an older config of that name to _deleted so a scenario can run again.
+        std::string Template{};
+        std::string Name{};
     };
 
     // One match of a scenario: what to launch, who plays, how fast, when to stop and what to check at the end.

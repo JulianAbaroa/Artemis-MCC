@@ -111,6 +111,7 @@ export namespace Mod
             .m_MatchConfigStore = m_Match.m_MatchConfigStore,
             .m_MatchConfigService = m_Match.m_MatchConfigService,
             .m_MapVariantDecodeStore = m_Match.m_MapVariantDecodeStore,
+            .m_MapVariantCatalogService = m_Match.m_MapVariantCatalogService,
             .m_MatchCycleStore = m_Match.m_MatchCycleStore,
             .m_MatchSetupService = m_Base.m_MatchSetupService,
             .m_PresetService = m_Base.m_PresetService,

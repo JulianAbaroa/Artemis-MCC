@@ -374,3 +374,99 @@ TEST_F(MatchConfigTests, DeleteKeepsAnEarlierDeletedFileWithTheSameName)
     EXPECT_EQ(ReadFile(this->Library() / "_deleted" / "x (2).bin"), MakeBuffer(0x02));
     EXPECT_TRUE(m_Service.ListConfigs().empty());
 }
+
+namespace
+{
+    using Blam::Layout::Object::Type::Constant::k_ForgeWorldMapId;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantMapIdOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantVersion;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantVersionOffset;
+
+    // return: A map variant block with the version and the map id, every other byte set to fill.
+    auto MakeMapVariant(std::uint16_t version, std::uint32_t mapId, std::uint8_t fill) -> std::vector<std::byte>
+    {
+        std::vector<std::byte> block(k_MapVariantSize, static_cast<std::byte>(fill));
+        std::memcpy(block.data() + k_MapVariantVersionOffset, &version, sizeof(version));
+        std::memcpy(block.data() + k_MapVariantMapIdOffset, &mapId, sizeof(mapId));
+        return block;
+    }
+}
+
+// CreateFromMvar (Q106, D290): a configuration made from a template and the map variant of a .mvar.
+TEST_F(MatchConfigTests, CreateFromMvarReplacesOnlyTheMapVariantOfTheTemplate)
+{
+    std::vector<std::byte> templateBytes{ MakeBuffer(0x11) };
+    const std::vector<std::byte> original{ MakeMapVariant(k_MapVariantVersion, k_ForgeWorldMapId, 0x22) };
+    std::ranges::copy(original, templateBytes.begin() + k_ConfigurationMapVariantOffset);
+    this->WriteConfig("Template.bin", templateBytes);
+
+    const std::vector<std::byte> incoming{ MakeMapVariant(k_MapVariantVersion, k_ForgeWorldMapId, 0x33) };
+
+    EXPECT_EQ(m_Service.CreateFromMvar("Template", incoming, "Map New"), "");
+
+    const std::vector<std::byte> created{ ReadFile(this->Library() / "Map New.bin") };
+    ASSERT_EQ(created.size(), k_EngineConfigurationSize);
+
+    std::vector<std::byte> expected{ templateBytes };
+    std::ranges::copy(incoming, expected.begin() + k_ConfigurationMapVariantOffset);
+
+    EXPECT_EQ(created, expected);
+    EXPECT_EQ(ReadFile(this->Library() / "Template.bin"), templateBytes);
+    EXPECT_EQ(m_Service.ReadConfigBytes("Map New"), expected);
+    EXPECT_EQ(m_Service.ListConfigs(), (std::vector<std::string>{ "Map New", "Template" }));
+}
+
+TEST_F(MatchConfigTests, CreateFromMvarRefusesAnotherMapIdWithTheReason)
+{
+    std::vector<std::byte> templateBytes{ MakeBuffer(0x11) };
+    std::ranges::copy(MakeMapVariant(k_MapVariantVersion, k_ForgeWorldMapId, 0x22), templateBytes.begin() + k_ConfigurationMapVariantOffset);
+    this->WriteConfig("Template.bin", templateBytes);
+
+    const std::string reason{ m_Service.CreateFromMvar("Template", MakeMapVariant(k_MapVariantVersion, 3010, 0x33), "Map Other") };
+
+    EXPECT_NE(reason.find("map 3010"), std::string::npos);
+    EXPECT_NE(reason.find("Forge World"), std::string::npos);
+    EXPECT_EQ(this->FileCount(), 1u);
+}
+
+TEST_F(MatchConfigTests, CreateFromMvarRefusesATemplateOfAnotherMap)
+{
+    std::vector<std::byte> templateBytes{ MakeBuffer(0x11) };
+    std::ranges::copy(MakeMapVariant(k_MapVariantVersion, 3010, 0x22), templateBytes.begin() + k_ConfigurationMapVariantOffset);
+    this->WriteConfig("Template.bin", templateBytes);
+
+    const std::string reason{ m_Service.CreateFromMvar("Template", MakeMapVariant(k_MapVariantVersion, k_ForgeWorldMapId, 0x33), "Map New") };
+
+    EXPECT_NE(reason.find("not a Forge World configuration"), std::string::npos);
+    EXPECT_EQ(this->FileCount(), 1u);
+}
+
+TEST_F(MatchConfigTests, CreateFromMvarNeverOverwritesAndChecksTheName)
+{
+    std::vector<std::byte> templateBytes{ MakeBuffer(0x11) };
+    std::ranges::copy(MakeMapVariant(k_MapVariantVersion, k_ForgeWorldMapId, 0x22), templateBytes.begin() + k_ConfigurationMapVariantOffset);
+    this->WriteConfig("Template.bin", templateBytes);
+    this->WriteConfig("Taken.bin", MakeBuffer(0x44));
+
+    const std::vector<std::byte> incoming{ MakeMapVariant(k_MapVariantVersion, k_ForgeWorldMapId, 0x33) };
+
+    EXPECT_EQ(m_Service.CreateFromMvar("Template", incoming, "Taken"), "A configuration with that name already exists.");
+    EXPECT_EQ(ReadFile(this->Library() / "Taken.bin"), MakeBuffer(0x44));
+    EXPECT_FALSE(m_Service.CreateFromMvar("Template", incoming, "bad/name").empty());
+    EXPECT_FALSE(m_Service.CreateFromMvar("Template", incoming, "").empty());
+    EXPECT_FALSE(m_Service.CreateFromMvar("Missing", incoming, "Map New").empty());
+    EXPECT_FALSE(m_Service.CreateFromMvar("Template", std::vector<std::byte>(10), "Map New").empty());
+    EXPECT_FALSE(m_Service.CreateFromMvar("Template", MakeMapVariant(0x1, k_ForgeWorldMapId, 0x33), "Map New").empty());
+    EXPECT_EQ(this->FileCount(), 2u);
+}
+
+TEST(MatchConfigNameTests, SuggestNameDropsWhatTheRuleDoesNotAllow)
+{
+    EXPECT_EQ(MatchConfigService::SuggestName("Map CTF (1v1) First"), "Map CTF 1v1 First");
+    EXPECT_EQ(MatchConfigService::SuggestName("Map CTF: 2v2 (final iteration)"), "Map CTF 2v2 final iteration");
+    EXPECT_EQ(MatchConfigService::SuggestName("Map   spaced  out  "), "Map spaced out");
+    EXPECT_EQ(MatchConfigService::SuggestName("Map ends with dot."), "Map ends with dot");
+    EXPECT_EQ(MatchConfigService::SuggestName("(((" ), "");
+    EXPECT_TRUE(MatchConfigService::GetNameProblem(MatchConfigService::SuggestName("Map CTF (1v1) First")).empty());
+    EXPECT_EQ(MatchConfigService::SuggestName(std::string(200, 'a')).size(), Engine::Match::Type::k_MaxMatchConfigNameLength);
+}

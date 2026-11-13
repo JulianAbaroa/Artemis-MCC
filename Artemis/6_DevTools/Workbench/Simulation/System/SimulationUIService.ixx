@@ -52,6 +52,8 @@ export namespace DevTools::Workbench::Simulation::System
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
+        using MapVariantCatalogService = Engine::Match::System::MapVariantCatalogService;
+        using MapVariantDecodeStore = Engine::Match::State::MapVariantDecodeStore;
         using LocalUserStore = Engine::Base::Host::State::LocalUserStore;
 
         using InputState = Engine::Control::Input::Type::InputState;
@@ -80,12 +82,14 @@ export namespace DevTools::Workbench::Simulation::System
 
     public:
         SimulationUIService(Log& log, TelemetryStore& telemetryStore, LifecycleStore& lifecycleStore,
-            MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, LocalUserStore& localUserStore,
+            MatchConfigStore& matchConfigStore, MatchConfigService& matchConfigService, MapVariantCatalogService& mapVariantCatalogService,
+            MapVariantDecodeStore& mapVariantDecodeStore, LocalUserStore& localUserStore,
             VirtualInputStore& virtualInputStore, PlayerActionStore& playerActionStore, BotStore& botStore,
             MatchSetupService& matchSetupService, MatchCycleStore& matchCycleStore, BridgeService& bridgeService, TickStore& tickStore, SimulationUIStore& simulationUIStore,
             TickDumpUIStore& tickDumpUIStore, BenchUIStore& benchUIStore) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_LifecycleStore(lifecycleStore),
-            m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_LocalUserStore(localUserStore),
+            m_MatchConfigStore(matchConfigStore), m_MatchConfigService(matchConfigService), m_MapVariantCatalogService(mapVariantCatalogService),
+            m_MapVariantDecodeStore(mapVariantDecodeStore), m_LocalUserStore(localUserStore),
             m_VirtualInputStore(virtualInputStore), m_PlayerActionStore(playerActionStore),
             m_BotStore(botStore), m_MatchSetupService(matchSetupService), m_MatchCycleStore(matchCycleStore), m_BridgeService(bridgeService), m_TickStore(tickStore), m_SimulationUIStore(simulationUIStore),
             m_TickDumpUIStore(tickDumpUIStore), m_BenchUIStore(benchUIStore) {}
@@ -108,6 +112,8 @@ export namespace DevTools::Workbench::Simulation::System
         LifecycleStore& m_LifecycleStore;
         MatchConfigStore& m_MatchConfigStore;
         MatchConfigService& m_MatchConfigService;
+        MapVariantCatalogService& m_MapVariantCatalogService;
+        MapVariantDecodeStore& m_MapVariantDecodeStore;
         LocalUserStore& m_LocalUserStore;
         VirtualInputStore& m_VirtualInputStore;
         PlayerActionStore& m_PlayerActionStore;
@@ -129,6 +135,17 @@ export namespace DevTools::Workbench::Simulation::System
         // Draws the rename and delete buttons of the picked configuration and their popups.
         // param name: The picked configuration, empty if none.
         auto DrawConfigEdit(const std::string& name) -> void;
+
+        // Draws the New from .mvar row (Q106): the map variant files by their name, the template configuration, the name of the new one
+        // and the button that creates it, with the chip of the last creation (U11).
+        auto DrawNewFromMapVariant() -> void;
+
+        // Takes the decode of the file being created from, when it arrived, and creates the configuration. Gives up when the lifecycle
+        // hook does not answer.
+        auto PollCreate() -> void;
+
+        // Lists the .mvar files again and keeps the pick when its file is still there.
+        auto RefreshMapVariants() -> void;
 
         // Lists the folder again and keeps the pick when its name is still there.
         // param prefer: Name to pick when it is there, instead of the one picked before.

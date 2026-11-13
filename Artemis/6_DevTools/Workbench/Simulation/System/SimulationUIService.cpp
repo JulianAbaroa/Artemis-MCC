@@ -10,6 +10,7 @@ import Control.Action.Type;
 import Engine.Base.Lifecycle.Type;
 import Engine.Base.MatchSetup.Type;
 import Engine.Control.Simulation.Type;
+import Engine.Match.Type;
 import Bridge.Transport.Type;
 import Blam.Layout.Action.Type;
 import Perception.Match.Type;
@@ -70,6 +71,11 @@ namespace
     using DevTools::Workbench::Simulation::Type::k_LocalPlayerActionCount;
     using DevTools::Workbench::Simulation::Type::k_LocalPlayerActionLabels;
     using DevTools::Workbench::Simulation::Type::k_RecordNameSize;
+    using DevTools::Workbench::Simulation::Type::k_DefaultTemplate;
+    using DevTools::Workbench::Simulation::Type::CreateStatus;
+    using DevTools::Workbench::Simulation::Type::MapVariantCreate;
+    using Engine::Match::Type::MapVariantEntry;
+    using Engine::Match::Type::k_MaxMatchConfigNameLength;
     using DevTools::Workbench::Simulation::Type::k_SimulationSectionTitles;
     using DevTools::Gui::Style::Type::k_StatusColors;
     using Common::Engine::Type::k_NoHandle;
@@ -96,6 +102,19 @@ namespace
 
     // Width of the name field and of the list of the match config section.
     constexpr float k_MatchConfigFieldWidth{ 170.0f };
+
+    // How long the lifecycle hook may take to decode a .mvar before the creation is given up.
+    constexpr std::chrono::seconds k_CreateTimeout{ 10 };
+
+    // Width of the lists of the New from .mvar row.
+    constexpr float k_MapVariantFieldWidth{ 250.0f };
+
+    // return: The text of the tooltip of a .mvar of the list.
+    auto DescribeMapVariant(const MapVariantEntry& entry) -> std::string
+    {
+        return std::format("{}\nFile: {}\nAccount: {}\nModified: {:%Y-%m-%d %H:%M}", entry.Description.empty() ? std::string{ "No description." } : entry.Description,
+            entry.Path.filename().string(), entry.Account, std::chrono::floor<std::chrono::minutes>(entry.Modified));
+    }
 
     // Names of the popups of the match config section.
     constexpr const char* k_RenameConfigPopup{ "Rename configuration" };
@@ -480,7 +499,11 @@ namespace DevTools::Workbench::Simulation::System
         // start plays the base map, map variant and game variant of the picked one, for one start only (D123).
         this->DrawMatchState();
 
-        if (!m_SimulationUIStore.IsConfigListLoaded()) this->RefreshConfigs();
+        if (!m_SimulationUIStore.IsConfigListLoaded())
+        {
+            this->RefreshConfigs();
+            this->RefreshMapVariants();
+        }
 
         std::size_t selected{ m_SimulationUIStore.GetSelectedMatchConfig() };
 
@@ -546,6 +569,7 @@ namespace DevTools::Workbench::Simulation::System
         }
 
         this->DrawConfigEdit(name);
+        this->DrawNewFromMapVariant();
 
         const auto pending{ m_MatchConfigStore.GetPending() };
         const std::string history{ std::format("Last applied: {}\nLast recorded: {}\nLast launch: {}",
@@ -738,6 +762,178 @@ namespace DevTools::Workbench::Simulation::System
 
             ImGui::EndPopup();
         }
+    }
+
+    auto SimulationUIService::DrawNewFromMapVariant() -> void
+    {
+        this->PollCreate();
+
+        const std::vector<MapVariantEntry>& entries{ m_SimulationUIStore.GetMapVariantEntries() };
+        const std::vector<std::string>& configs{ m_SimulationUIStore.GetMatchConfigNames() };
+        MapVariantCreate& create{ m_SimulationUIStore.GetMapVariantCreate() };
+
+        std::size_t picked{ (std::min)(m_SimulationUIStore.GetSelectedMapVariant(), entries.empty() ? 0 : entries.size() - 1) };
+        const MapVariantEntry* entry{ entries.empty() ? nullptr : &entries[picked] };
+
+        if (m_SimulationUIStore.GetCreateTemplate().empty() && std::ranges::contains(configs, std::string{ k_DefaultTemplate }))
+        {
+            m_SimulationUIStore.SetCreateTemplate(std::string{ k_DefaultTemplate });
+        }
+
+        // The name follows the file picked, until another one is picked: "Map <name of the map variant>".
+        std::array<char, k_RecordNameSize>& nameField{ m_SimulationUIStore.GetCreateNameField() };
+
+        if (entry != nullptr && m_SimulationUIStore.GetCreatePrefilledFor() != entry->Path)
+        {
+            std::snprintf(nameField.data(), nameField.size(), "%s", MatchConfigService::SuggestName("Map " + entry->Name).c_str());
+            m_SimulationUIStore.SetCreatePrefilledFor(entry->Path);
+        }
+
+        ImGui::TextUnformatted("New from .mvar");
+        StatusGuiService::ShowTooltip("Makes a recorded configuration out of a Forge map variant file of MCC, without opening the map in the lobby."
+            " Only Forge World map variants.");
+
+        ImGui::SetNextItemWidth(k_MapVariantFieldWidth);
+        const std::string preview{ entry == nullptr ? std::string{ "No .mvar files found" } : entry->Name };
+        const bool isComboOpen{ ImGui::BeginCombo("##MapVariantFile", preview.c_str()) };
+
+        // The folders are read each time the list opens, so a file saved meanwhile shows up without a button.
+        if (isComboOpen && !m_SimulationUIStore.IsMapVariantComboOpen()) this->RefreshMapVariants();
+        m_SimulationUIStore.SetMapVariantComboOpen(isComboOpen);
+
+        if (isComboOpen)
+        {
+            const std::vector<MapVariantEntry>& listed{ m_SimulationUIStore.GetMapVariantEntries() };
+
+            for (std::size_t index{ 0 }; index < listed.size(); ++index)
+            {
+                ImGui::PushID(static_cast<int>(index));
+                if (ImGui::Selectable(listed[index].Name.c_str(), index == picked)) m_SimulationUIStore.SetSelectedMapVariant(index);
+                StatusGuiService::ShowTooltip(DescribeMapVariant(listed[index]).c_str());
+                ImGui::PopID();
+            }
+
+            ImGui::EndCombo();
+        }
+
+        // The list may have been read again above: the pick is looked up again.
+        picked = (std::min)(m_SimulationUIStore.GetSelectedMapVariant(), entries.empty() ? 0 : entries.size() - 1);
+        entry = entries.empty() ? nullptr : &entries[picked];
+
+        StatusGuiService::ShowTooltip("Forge map variant files of every account folder of MCC, by the name inside them.");
+
+        ImGui::SetNextItemWidth(k_MapVariantFieldWidth);
+        const std::string& templateName{ m_SimulationUIStore.GetCreateTemplate() };
+
+        if (ImGui::BeginCombo("##CreateTemplate", templateName.empty() ? "Pick a template" : templateName.c_str()))
+        {
+            for (const std::string& config : configs)
+            {
+                if (ImGui::Selectable(config.c_str(), config == templateName)) m_SimulationUIStore.SetCreateTemplate(config);
+            }
+
+            ImGui::EndCombo();
+        }
+        StatusGuiService::ShowTooltip("Recorded configuration copied for everything but the map variant (gametype, settings, base map)."
+            " It must be a Forge World one.");
+
+        const std::string nameProblem{ MatchConfigService::GetNameProblem(nameField.data()) };
+        const bool isExisting{ nameProblem.empty() && std::ranges::contains(configs, std::string{ nameField.data() }) };
+        const std::string reason{ !nameProblem.empty() ? nameProblem : isExisting ? "A configuration with that name already exists." : std::string{} };
+        const bool isMarked{ nameField[0] != '\0' && !reason.empty() };
+
+        if (isMarked) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4{ 0.45f, 0.12f, 0.12f, 1.0f });
+        ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
+        ImGui::InputTextWithHint("##CreateName", "Name of the new configuration", nameField.data(), nameField.size());
+        if (isMarked) ImGui::PopStyleColor();
+        StatusGuiService::ShowTooltip("Name of the new recorded configuration. It does not replace an existing one.");
+
+        ImGui::SameLine();
+        {
+            const bool isPending{ create.Status == CreateStatus::Pending };
+            const std::string blocked{ entry == nullptr ? std::string{ "No .mvar file picked." } : templateName.empty() ? std::string{ "Pick a template." }
+                : isPending ? std::string{ "Decoding the file." } : reason };
+            const DisabledScope scope{ !blocked.empty(), blocked.c_str() };
+
+            if (ImGui::Button("Create"))
+            {
+                create = MapVariantCreate{ .Status = CreateStatus::Pending, .Name = nameField.data(), .Template = templateName, .Start = std::chrono::steady_clock::now() };
+
+                std::ifstream stream{ entry->Path, std::ios::binary };
+                const std::vector<char> text{ std::istreambuf_iterator<char>{ stream }, std::istreambuf_iterator<char>{} };
+
+                if (!stream || text.empty())
+                {
+                    create.Status = CreateStatus::Rejected;
+                    create.Message = "The file cannot be read.";
+                }
+                else
+                {
+                    create.Ticket = m_MapVariantDecodeStore.Request(std::vector<std::byte>{ reinterpret_cast<const std::byte*>(text.data()),
+                        reinterpret_cast<const std::byte*>(text.data() + text.size()) });
+                }
+            }
+            scope.Tooltip("Decodes the file with the engine and saves the new configuration. It does not change the next start.");
+        }
+
+        if (isMarked) ImGui::TextColored(k_StatusColors[static_cast<std::size_t>(StatusKind::Error)], "%s", reason.c_str());
+
+        if (create.Status == CreateStatus::Pending)
+        {
+            StatusGuiService::DrawChip("pending", StatusKind::Pending, "The MCC thread is decoding the file.");
+        }
+        else if (create.Status == CreateStatus::Created)
+        {
+            const std::string chip{ std::format("created: {}", create.Name) };
+            StatusGuiService::DrawChip(chip.c_str(), StatusKind::Ok, create.Message.c_str());
+        }
+        else if (create.Status == CreateStatus::Rejected)
+        {
+            StatusGuiService::DrawChip("rejected", StatusKind::Error, create.Message.c_str());
+            ImGui::SameLine();
+            ImGui::TextColored(k_StatusColors[static_cast<std::size_t>(StatusKind::Error)], "%s", create.Message.c_str());
+        }
+    }
+
+    auto SimulationUIService::PollCreate() -> void
+    {
+        MapVariantCreate& create{ m_SimulationUIStore.GetMapVariantCreate() };
+
+        if (create.Status != CreateStatus::Pending) return;
+
+        const auto outcome{ m_MapVariantDecodeStore.TakeOutcome(create.Ticket) };
+
+        if (!outcome)
+        {
+            if (std::chrono::steady_clock::now() - create.Start > k_CreateTimeout)
+            {
+                create.Status = CreateStatus::Rejected;
+                create.Message = "The MCC thread did not answer. Try again.";
+            }
+            return;
+        }
+
+        const std::string reason{ outcome->Decoded.IsOk() ? m_MatchConfigService.CreateFromMvar(create.Template, outcome->Decoded.Block, create.Name)
+                                                          : outcome->Decoded.Error };
+
+        create.Status = reason.empty() ? CreateStatus::Created : CreateStatus::Rejected;
+        create.Message = reason.empty() ? std::format("{} placements, from {}", outcome->Decoded.PlacementsInUse, outcome->Decoded.Name) : reason;
+
+        // The new configuration shows in the list of configurations without a restart.
+        if (reason.empty()) this->RefreshConfigs();
+    }
+
+    auto SimulationUIService::RefreshMapVariants() -> void
+    {
+        const std::vector<MapVariantEntry>& before{ m_SimulationUIStore.GetMapVariantEntries() };
+        const std::size_t picked{ m_SimulationUIStore.GetSelectedMapVariant() };
+        const std::filesystem::path keep{ picked < before.size() ? before[picked].Path : std::filesystem::path{} };
+
+        std::vector<MapVariantEntry> entries{ m_MapVariantCatalogService.List() };
+        const auto found{ std::ranges::find(entries, keep, &MapVariantEntry::Path) };
+
+        m_SimulationUIStore.SetSelectedMapVariant(found == entries.end() ? 0 : static_cast<std::size_t>(found - entries.begin()));
+        m_SimulationUIStore.SetMapVariantEntries(std::move(entries));
     }
 
     auto SimulationUIService::RefreshConfigs(std::string_view prefer) -> void

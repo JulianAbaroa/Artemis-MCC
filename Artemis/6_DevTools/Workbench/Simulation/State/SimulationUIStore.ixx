@@ -2,6 +2,7 @@ export module DevTools.Workbench.Simulation.State;
 
 import Common.Engine.Type;
 import Engine.Base.MatchSetup.Type;
+import Engine.Match.Type;
 import DevTools.Workbench.Simulation.Type;
 import std;
 
@@ -24,6 +25,8 @@ export namespace DevTools::Workbench::Simulation::State
         using LocalPlayerAction = DevTools::Workbench::Simulation::Type::LocalPlayerAction;
         using SimulationSection = DevTools::Workbench::Simulation::Type::SimulationSection;
         using Roster = Engine::Base::MatchSetup::Type::Roster;
+        using MapVariantEntry = Engine::Match::Type::MapVariantEntry;
+        using MapVariantCreate = DevTools::Workbench::Simulation::Type::MapVariantCreate;
 
     public:
         // Prefix of the keys of this store in the preferences file.
@@ -104,7 +107,35 @@ export namespace DevTools::Workbench::Simulation::State
         auto GetSelectedMatchConfig() const -> std::size_t;
         auto SetSelectedMatchConfig(std::size_t index) -> void;
 
+        // .mvar files the last listing found, and the one picked in the New from .mvar row.
+        auto GetMapVariantEntries() const -> const std::vector<MapVariantEntry>&;
+        auto SetMapVariantEntries(std::vector<MapVariantEntry> entries) -> void;
+        auto GetSelectedMapVariant() const -> std::size_t;
+        auto SetSelectedMapVariant(std::size_t index) -> void;
+        auto IsMapVariantComboOpen() const -> bool;
+        auto SetMapVariantComboOpen(bool isOpen) -> void;
+
+        // Template configuration picked in the New from .mvar row. Empty until the list of configurations is known: the row then picks the
+        // default template.
+        auto GetCreateTemplate() const -> const std::string&;
+        auto SetCreateTemplate(std::string name) -> void;
+
+        // Name typed for the new configuration, and the file it was prefilled for (the field is prefilled again when another file is picked).
+        auto GetCreateNameField() -> std::array<char, k_RecordNameSize>&;
+        auto GetCreatePrefilledFor() const -> const std::filesystem::path&;
+        auto SetCreatePrefilledFor(std::filesystem::path file) -> void;
+
+        // The last creation asked for, which the row shows as a chip.
+        auto GetMapVariantCreate() -> MapVariantCreate&;
+
     private:
+        std::vector<MapVariantEntry> m_MapVariantEntries{};
+        std::size_t m_SelectedMapVariant{ 0 };
+        bool m_IsMapVariantComboOpen{ false };
+        std::string m_CreateTemplate{};
+        std::array<char, k_RecordNameSize> m_CreateNameField{};
+        std::filesystem::path m_CreatePrefilledFor{};
+        MapVariantCreate m_MapVariantCreate{};
         std::array<LocalPlayerInput, k_MaxLocalUsers> m_LocalPlayerInputs{};
         float m_CustomTimeScale{ 1.0f };
         std::size_t m_ActionLocalPlayer{ 0 };

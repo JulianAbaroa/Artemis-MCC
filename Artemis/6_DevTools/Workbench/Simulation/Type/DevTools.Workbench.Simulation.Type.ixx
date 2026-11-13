@@ -13,6 +13,31 @@ export namespace DevTools::Workbench::Simulation::Type
     // Characters of the name field of the match config section, with the final null.
     inline constexpr std::size_t k_RecordNameSize{ k_MaxMatchConfigNameLength + 1 };
 
+    // Default template of "New from .mvar": a Forge World configuration whose map variant is replaced (Q106, D290).
+    inline constexpr std::string_view k_DefaultTemplate{ "Map CTF 1v1 First" };
+
+    // Where the creation of a configuration from a .mvar is.
+    enum class CreateStatus : std::uint8_t
+    {
+        None,
+        // The file is being decoded by the MCC thread.
+        Pending,
+        Created,
+        Rejected,
+    };
+
+    // The last creation of a configuration from a .mvar the tab asked for (U11): what it was and how it ended.
+    struct MapVariantCreate
+    {
+        CreateStatus Status{ CreateStatus::None };
+        // The name of the configuration, and the reason of a rejection or the details of a creation.
+        std::string Name{};
+        std::string Message{};
+        std::string Template{};
+        std::uint64_t Ticket{ 0 };
+        std::chrono::steady_clock::time_point Start{};
+    };
+
     // Collapsible sections of the simulation tab, in the order they are drawn.
     enum class SimulationSection : std::uint8_t
     {

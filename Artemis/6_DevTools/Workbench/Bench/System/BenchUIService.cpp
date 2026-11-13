@@ -18,6 +18,7 @@ import Engine.Base.Host.Type;
 import Engine.Base.MapVariant.Type;
 import Engine.Base.MatchSetup.Type;
 import Engine.Control.Input.Type;
+import Blam.Layout.Object.Type;
 import Blam.Layout.MapVariantFile.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
@@ -68,6 +69,8 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchSetup;
     using DevTools::Workbench::Bench::Type::BenchSetupRow;
     using Engine::Base::MapVariant::Type::DecodedMapVariant;
+    using Blam::Layout::Object::Type::Constant::k_ConfigurationMapVariantOffset;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
     using Engine::Base::MatchSetup::Type::ActiveMatchSetup;
     using Engine::Base::MatchSetup::Type::MatchSetup;
     using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
@@ -662,6 +665,31 @@ namespace DevTools::Workbench::Bench::System
                 if ((when != "lobby" && when != "match") || file.empty()) return fail("decode_mvar takes lobby|match, a file and optionally |config");
                 match.Decodes.push_back(BenchDecode{ .IsLobby = when == "lobby", .File = path{ file }, .CompareConfig = std::string{ compare } });
             }
+            else if (key == "create_config")
+            {
+                // create_config lobby|match <file>|<template>|<name>|<config to compare the whole file with, optional>
+                const std::size_t split{ (std::min)(value.find(' '), value.size()) };
+                const std::string_view when{ value.substr(0, split) };
+                std::vector<std::string_view> fields{};
+                std::string_view rest{ Trim(value.substr(split)) };
+
+                for (std::size_t bar{ rest.find('|') }; bar != std::string_view::npos; bar = rest.find('|'))
+                {
+                    fields.push_back(Trim(rest.substr(0, bar)));
+                    rest = rest.substr(bar + 1);
+                }
+
+                fields.push_back(Trim(rest));
+
+                if ((when != "lobby" && when != "match") || fields.size() < 3 || fields.size() > 4 || fields[0].empty() || fields[1].empty() || fields[2].empty())
+                {
+                    return fail("create_config takes lobby|match, a file, a template, a name and optionally a config to compare with, separated by |");
+                }
+
+                match.Decodes.push_back(BenchDecode{ .IsLobby = when == "lobby", .File = path{ fields[0] },
+                    .CompareConfig = fields.size() == 4 ? std::string{ fields[3] } : std::string{}, .Template = std::string{ fields[1] },
+                    .Name = std::string{ fields[2] } });
+            }
             else if (key == "round_setup")
             {
                 BenchSetup setup{};
@@ -831,7 +859,8 @@ namespace DevTools::Workbench::Bench::System
         const BenchDecode& decode{ match.Decodes[index] };
         const auto finish{ [&](bool isOk, const std::string& detail)
         {
-            report.Checks.push_back(BenchCheckResult{ .Name = std::format("decode_mvar {}", decode.File.filename().string()), .IsOk = isOk,
+            report.Checks.push_back(BenchCheckResult{ .Name = decode.Template.empty() ? std::format("decode_mvar {}", decode.File.filename().string())
+                : std::format("create_config {}", decode.Name), .IsOk = isOk,
                 .Detail = std::format("{}: {}", isLobby ? "lobby" : "match", detail) });
             run.DecodesDone[index] = true;
             run.DecodeTicket = 0;
@@ -893,6 +922,55 @@ namespace DevTools::Workbench::Bench::System
         std::string detail{ std::format("name={} version=0x{:X} quotas={} map_id={} placements={}", decoded.Name, decoded.Version,
             decoded.Quotas, decoded.MapId, decoded.PlacementsInUse) };
         bool isOk{ true };
+
+        if (!decode.Template.empty())
+        {
+            // A scenario runs again: the config of an earlier run goes to _deleted first.
+            if (std::ranges::contains(m_MatchConfigService.ListConfigs(), decode.Name)) m_MatchConfigService.DeleteConfig(decode.Name);
+
+            if (const std::string reason{ m_MatchConfigService.CreateFromMvar(decode.Template, decoded.Block, decode.Name) }; !reason.empty())
+            {
+                finish(false, std::format("{} rejected: {}", detail, reason));
+                return true;
+            }
+
+            detail += std::format(" created={} template={}", decode.Name, decode.Template);
+
+            if (!decode.CompareConfig.empty())
+            {
+                const std::vector<std::byte> created{ m_MatchConfigService.ReadConfigBytes(decode.Name) };
+                const std::vector<std::byte> expected{ m_MatchConfigService.ReadConfigBytes(decode.CompareConfig) };
+
+                if (created.empty() || expected.empty())
+                {
+                    finish(false, std::format("{} compare={} cannot be read", detail, decode.CompareConfig));
+                    return true;
+                }
+
+                // The whole file: bytes inside the map variant block are the decode and are reported apart from the ones outside it.
+                const FileParse::BlockDiff diff{ FileParse::Diff(created, expected) };
+                const std::size_t blockEnd{ k_ConfigurationMapVariantOffset + k_MapVariantSize };
+                std::size_t insideBytes{ 0 };
+                std::string outside{};
+                std::size_t outsideRuns{ 0 };
+
+                for (const FileParse::DiffRange& range : diff.Ranges)
+                {
+                    const std::size_t from{ (std::max)(range.Offset, k_ConfigurationMapVariantOffset) };
+                    const std::size_t to{ (std::min)(range.Offset + range.Size, blockEnd) };
+                    if (from < to) insideBytes += to - from;
+                    if (range.Offset >= k_ConfigurationMapVariantOffset && range.Offset + range.Size <= blockEnd) continue;
+
+                    if (++outsideRuns <= k_MaxDiffRanges) outside += std::format("{}0x{:X}+{}", outside.empty() ? "" : ",", range.Offset, range.Size);
+                }
+
+                detail += std::format(" bin_compare={} bin_diff_bytes={} in_map_variant={} outside_runs={} outside=[{}]", decode.CompareConfig, diff.Bytes,
+                    insideBytes, outsideRuns, outside);
+            }
+
+            finish(true, detail);
+            return true;
+        }
 
         if (!decode.CompareConfig.empty())
         {
@@ -1444,7 +1522,8 @@ namespace DevTools::Workbench::Bench::System
         {
             if (!run.DecodesDone[index])
             {
-                report.Checks.push_back(BenchCheckResult{ .Name = std::format("decode_mvar {}", match.Decodes[index].File.filename().string()),
+                report.Checks.push_back(BenchCheckResult{ .Name = match.Decodes[index].Template.empty() ? std::format("decode_mvar {}", match.Decodes[index].File.filename().string())
+                    : std::format("create_config {}", match.Decodes[index].Name),
                     .IsOk = false, .Detail = "the match ended before the decode ran" });
             }
         }

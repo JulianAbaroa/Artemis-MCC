@@ -10,7 +10,11 @@ namespace
     using std::filesystem::path;
     using Engine::Match::Type::MatchConfig;
 
+    namespace LayoutMapVariant = Blam::Layout::Object::Type::MapVariant;
+
     using Blam::Layout::Object::Type::Constant::k_ConfigurationMapVariantOffset;
+    using Blam::Layout::Object::Type::Constant::k_ForgeWorldMapId;
+    using Blam::Layout::Object::Type::Constant::k_MapVariantVersion;
     using Blam::Layout::Object::Type::Constant::k_MapVariantSize;
 
     using Engine::Match::Type::k_EngineConfigurationSize;
@@ -177,6 +181,87 @@ namespace Engine::Match::System
 
         const auto first{ config->Bytes.begin() + k_ConfigurationMapVariantOffset };
         return std::vector<std::byte>(first, first + k_MapVariantSize);
+    }
+
+    auto MatchConfigService::ReadConfigBytes(std::string_view name) const -> std::vector<std::byte>
+    {
+        const auto config{ this->ReadConfig(name) };
+        return config ? config->Bytes : std::vector<std::byte>{};
+    }
+
+    auto MatchConfigService::CreateFromMvar(std::string_view templateName, std::span<const std::byte> mapVariant, std::string_view name)
+        -> std::string
+    {
+        const auto refuse{ [&](std::string reason)
+        {
+            m_Log.Message("[MatchConfigService] WARNING: Configuration \"{}\" not created ({}).", name, reason);
+            return reason;
+        } };
+
+        if (const std::string problem{ FindNameProblem(name) }; !problem.empty()) return refuse(problem);
+
+        const path folder{ this->GetLibraryFolder() };
+        if (folder.empty()) return refuse("Storage Folder is not set.");
+
+        const auto header{ mapVariant.size() == k_MapVariantSize ? LayoutMapVariant::Read(mapVariant) : std::nullopt };
+        if (!header) return refuse("The map variant is not a valid block.");
+        if (header->Version != k_MapVariantVersion) return refuse(std::format("The map variant has version 0x{:X}.", header->Version));
+        if (header->MapId != k_ForgeWorldMapId)
+        {
+            return refuse(std::format("The map variant is for map {}: only Forge World ({}) is supported.", header->MapId, k_ForgeWorldMapId));
+        }
+
+        const auto config{ this->ReadConfig(templateName) };
+        if (!config) return refuse(std::format("The template \"{}\" cannot be read.", templateName));
+
+        const std::span<const std::byte> templateBlock{ config->Bytes.data() + k_ConfigurationMapVariantOffset, k_MapVariantSize };
+        const auto templateHeader{ LayoutMapVariant::Read(templateBlock) };
+
+        if (!templateHeader || templateHeader->MapId != k_ForgeWorldMapId)
+        {
+            return refuse(std::format("The template \"{}\" is not a Forge World configuration.", templateName));
+        }
+
+        const path file{ folder / std::format("{}{}", name, k_ConfigExtension) };
+        std::error_code error{};
+        if (std::filesystem::exists(file, error)) return refuse("A configuration with that name already exists.");
+
+        std::vector<std::byte> bytes{ config->Bytes };
+        std::ranges::copy(mapVariant, bytes.begin() + k_ConfigurationMapVariantOffset);
+
+        std::filesystem::create_directories(folder, error);
+        std::ofstream stream{ file, std::ios::binary | std::ios::trunc };
+
+        if (!stream || !stream.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())))
+        {
+            stream.close();
+            std::filesystem::remove(file, error);
+            m_Log.Message("[MatchConfigService] ERROR: Failed to write {}.", ToText(file));
+            return "The file could not be written. See the log.";
+        }
+
+        m_Log.Message("[MatchConfigService] INFO: Configuration \"{}\" created from template \"{}\" with a map variant of {} placements.",
+            name, templateName, header->PlacementsInUse);
+        return {};
+    }
+
+    auto MatchConfigService::SuggestName(std::string_view text) -> std::string
+    {
+        std::string name{};
+
+        for (const char c : text)
+        {
+            const std::string candidate{ std::format("a{}a", c) };
+            const bool isAllowed{ c != '\0' && FindNameProblem(candidate).empty() };
+
+            if (!isAllowed || (c == ' ' && (name.empty() || name.back() == ' '))) continue;
+            if (name.size() >= k_MaxMatchConfigNameLength) break;
+
+            name.push_back(c);
+        }
+
+        while (!name.empty() && (name.back() == ' ' || name.back() == '.')) name.pop_back();
+        return name;
     }
 
     auto MatchConfigService::GetNameProblem(std::string_view name) -> std::string

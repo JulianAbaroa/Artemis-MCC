@@ -186,4 +186,64 @@ namespace DevTools::Workbench::Simulation::State
     {
         m_SelectedMatchConfig = index;
     }
+
+    auto SimulationUIStore::GetMapVariantEntries() const -> const std::vector<MapVariantEntry>&
+    {
+        return m_MapVariantEntries;
+    }
+
+    auto SimulationUIStore::SetMapVariantEntries(std::vector<MapVariantEntry> entries) -> void
+    {
+        m_MapVariantEntries = std::move(entries);
+    }
+
+    auto SimulationUIStore::GetSelectedMapVariant() const -> std::size_t
+    {
+        return m_SelectedMapVariant;
+    }
+
+    auto SimulationUIStore::SetSelectedMapVariant(std::size_t index) -> void
+    {
+        m_SelectedMapVariant = index;
+    }
+
+    auto SimulationUIStore::IsMapVariantComboOpen() const -> bool
+    {
+        return m_IsMapVariantComboOpen;
+    }
+
+    auto SimulationUIStore::SetMapVariantComboOpen(bool isOpen) -> void
+    {
+        m_IsMapVariantComboOpen = isOpen;
+    }
+
+    auto SimulationUIStore::GetCreateTemplate() const -> const std::string&
+    {
+        return m_CreateTemplate;
+    }
+
+    auto SimulationUIStore::SetCreateTemplate(std::string name) -> void
+    {
+        m_CreateTemplate = std::move(name);
+    }
+
+    auto SimulationUIStore::GetCreateNameField() -> std::array<char, k_RecordNameSize>&
+    {
+        return m_CreateNameField;
+    }
+
+    auto SimulationUIStore::GetCreatePrefilledFor() const -> const std::filesystem::path&
+    {
+        return m_CreatePrefilledFor;
+    }
+
+    auto SimulationUIStore::SetCreatePrefilledFor(std::filesystem::path file) -> void
+    {
+        m_CreatePrefilledFor = std::move(file);
+    }
+
+    auto SimulationUIStore::GetMapVariantCreate() -> MapVariantCreate&
+    {
+        return m_MapVariantCreate;
+    }
 }

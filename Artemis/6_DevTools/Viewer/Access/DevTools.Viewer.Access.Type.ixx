@@ -28,6 +28,7 @@ namespace
     using Engine::Match::State::MapVariantDecodeStore;
     using Engine::Match::State::MatchConfigStore;
     using Engine::Match::State::MatchCycleStore;
+    using Engine::Match::System::MapVariantCatalogService;
     using Engine::Match::System::MatchConfigService;
     using Engine::Base::MapVariant::System::MapVariantService;
     using Engine::Base::Host::State::LocalUserStore;
@@ -60,6 +61,7 @@ export namespace DevTools::Viewer::Access::Type
         MatchConfigStore& m_MatchConfigStore;
         MatchConfigService& m_MatchConfigService;
         MapVariantDecodeStore& m_MapVariantDecodeStore;
+        MapVariantCatalogService& m_MapVariantCatalogService;
         MatchCycleStore& m_MatchCycleStore;
         MatchSetupService& m_MatchSetupService;
         PresetService& m_PresetService;
