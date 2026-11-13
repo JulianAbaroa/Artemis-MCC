@@ -234,6 +234,23 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 10 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 F0 97 FE FF B8 10 69 01 00 E8 ?? ?? ?? ?? 48 2B E0"
     };
 
+    // Functions: Map variant
+    // Initializes a map variant buffer to the empty one (0x6bff8): void*(buffer). With the id -1 it does not look at any tag.
+    // 1 hit in haloreach.dll build 1.3528 (Q106).
+    inline constexpr Signature k_MapVariantInit
+    {
+        "MapVariantInit",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 33 ED 48 8D B9 FC 14 00 00 33 C0 48 89 A9 B8 02 00 00"
+    };
+
+    // Decodes the map variant chunk of a .mvar file (0x17adac): checks the SHA1 of the chunk and reads its bitstream into a buffer the
+    // initializer prepared. bool(chunk header, buffer). 1 hit in haloreach.dll build 1.3528 (Q106).
+    inline constexpr Signature k_MapVariantDecode
+    {
+        "MapVariantDecode",
+        "48 89 5C 24 18 48 89 74 24 20 55 57 41 56 48 8D AC 24 70 FF FF FF 48 81 EC 90 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 85 80 00 00 00 8B 41 20 4C 8B F2 48 8B F9 33 DB 0F C8"
+    };
+
     inline constexpr std::uint32_t k_CollisionTestVectorRva{ 0x12969C };
 
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).

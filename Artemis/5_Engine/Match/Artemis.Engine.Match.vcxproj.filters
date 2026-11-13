@@ -43,10 +43,22 @@
     <ClCompile Include="State\MatchCycleStore.ixx">
       <Filter>State</Filter>
     </ClCompile>
+    <ClCompile Include="State\MapVariantDecodeStore.cpp">
+      <Filter>State</Filter>
+    </ClCompile>
+    <ClCompile Include="State\MapVariantDecodeStore.ixx">
+      <Filter>State</Filter>
+    </ClCompile>
     <ClCompile Include="System\MatchConfigService.cpp">
       <Filter>System</Filter>
     </ClCompile>
     <ClCompile Include="System\MatchConfigService.ixx">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\MapVariantCatalogService.cpp">
+      <Filter>System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\MapVariantCatalogService.ixx">
       <Filter>System</Filter>
     </ClCompile>
     <ClCompile Include="Type\Engine.Match.Type.ixx">

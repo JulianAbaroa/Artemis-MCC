@@ -178,6 +178,12 @@
     <ClCompile Include="MapVariant\System\MapVariantService.ixx">
       <Filter>MapVariant\System</Filter>
     </ClCompile>
+    <ClCompile Include="MapVariant\System\MapVariantDecodeService.cpp">
+      <Filter>MapVariant\System</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariant\System\MapVariantDecodeService.ixx">
+      <Filter>MapVariant\System</Filter>
+    </ClCompile>
     <ClCompile Include="MapVariant\State\MapVariantStore.cpp">
       <Filter>MapVariant\State</Filter>
     </ClCompile>

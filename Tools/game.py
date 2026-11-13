@@ -306,7 +306,7 @@ def PrintReport(report, asserter=AssertTickDump):
 
 
 MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "roster", "rosters", "setups", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
-              "probes", "tickdump", "events", "every_tick"}
+              "probes", "tickdump", "events", "every_tick", "decodes"}
 
 
 MAX_TEAMS = 8
@@ -442,6 +442,17 @@ def Compile(scenario, configs):
                 setups = [{"roster": roster} for roster in rosters]
             for setup in setups or []:
                 lines.append("round_setup " + SetupFields(index + 1, setup, configs, "setups" if match.get("setups") else "rosters"))
+            # Decodes of .mvar files (Q106): {"when": "lobby"|"match", "path": file, "compare_config": recorded config}. The path is an absolute Windows path (read by the DLL).
+            for decode in match.get("decodes", []):
+                if not isinstance(decode, dict) or decode.get("when") not in ("lobby", "match") or not decode.get("path"):
+                    raise ValueError(f"match {index + 1}: decodes takes objects with when (lobby or match), path and optionally compare_config")
+                compare = decode.get("compare_config", "")
+                if compare and configs is not None and compare not in configs:
+                    raise ValueError(f"match {index + 1}: decode compare_config '{compare}' is not recorded (have: {', '.join(configs) or 'none'})")
+                path = decode["path"]
+                if not re.match(r"^[A-Za-z]:[\\/]", path):
+                    raise ValueError(f"match {index + 1}: decode path must be an absolute Windows path (the DLL reads it), got '{path}'")
+                lines.append(f"decode_mvar {decode['when']} {path}|{compare}")
             if "scale" in match:
                 lines.append(f"scale {float(match['scale'])}")
             if match.get("max_ticks"):

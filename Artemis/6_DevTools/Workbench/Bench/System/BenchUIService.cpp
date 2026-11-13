@@ -15,8 +15,10 @@ import Services.Telemetry.Type;
 import Services.Telemetry.System;
 import Bridge.Transport.Type;
 import Engine.Base.Host.Type;
+import Engine.Base.MapVariant.Type;
 import Engine.Base.MatchSetup.Type;
 import Engine.Control.Input.Type;
+import Blam.Layout.MapVariantFile.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
 import Bridge.Codec.Tick.Type;
@@ -27,6 +29,8 @@ import std;
 
 namespace
 {
+    namespace FileParse = Blam::Layout::MapVariantFile::Type::Parse;
+
     using std::chrono::steady_clock;
     using std::chrono::system_clock;
     using std::chrono::duration;
@@ -55,6 +59,7 @@ namespace
     using Common::Semantic::Type::EventKey::FindEventKey;
     using DevTools::Workbench::Bench::Type::BenchAction;
     using DevTools::Workbench::Bench::Type::BenchCheck;
+    using DevTools::Workbench::Bench::Type::BenchDecode;
     using DevTools::Workbench::Bench::Type::BenchPlayers;
     using DevTools::Workbench::Bench::Type::BenchPlayerSample;
     using DevTools::Workbench::Bench::Type::BenchProbe;
@@ -62,6 +67,7 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchRequest;
     using DevTools::Workbench::Bench::Type::BenchSetup;
     using DevTools::Workbench::Bench::Type::BenchSetupRow;
+    using Engine::Base::MapVariant::Type::DecodedMapVariant;
     using Engine::Base::MatchSetup::Type::ActiveMatchSetup;
     using Engine::Base::MatchSetup::Type::MatchSetup;
     using Engine::Base::MatchSetup::Type::MatchSetupOrigin;
@@ -88,6 +94,13 @@ namespace
     constexpr seconds k_LaunchTimeout{ 200 };
     constexpr seconds k_LoadTimeout{ 180 };
     constexpr seconds k_LeaveTimeout{ 60 };
+
+    // How long a decode of a .mvar waits for the lifecycle hook, and how long a lobby decode waits for the lobby screen.
+    constexpr seconds k_DecodeTimeout{ 10 };
+    constexpr seconds k_DecodeLobbyTimeout{ 120 };
+
+    // Runs of differing bytes the report lists for a decode.
+    constexpr std::size_t k_MaxDiffRanges{ 48 };
 
     // Ceiling of a match without limits (the gametype ends it): a paused or stuck match is left anyway.
     constexpr seconds k_RunTimeout{ 3600 };
@@ -637,6 +650,18 @@ namespace DevTools::Workbench::Bench::System
 
                 match.SetupAtLoad.Bots = *roster;
             }
+            else if (key == "decode_mvar")
+            {
+                // decode_mvar lobby|match <file>|<config to compare with, optional>
+                const std::size_t split{ (std::min)(value.find(' '), value.size()) };
+                const std::string_view when{ value.substr(0, split) };
+                const std::string_view rest{ Trim(value.substr(split)) };
+                const std::size_t bar{ (std::min)(rest.find('|'), rest.size()) };
+                const std::string_view file{ Trim(rest.substr(0, bar)) };
+                const std::string_view compare{ Trim(rest.substr((std::min)(bar + 1, rest.size()))) };
+                if ((when != "lobby" && when != "match") || file.empty()) return fail("decode_mvar takes lobby|match, a file and optionally |config");
+                match.Decodes.push_back(BenchDecode{ .IsLobby = when == "lobby", .File = path{ file }, .CompareConfig = std::string{ compare } });
+            }
             else if (key == "round_setup")
             {
                 BenchSetup setup{};
@@ -791,6 +816,113 @@ namespace DevTools::Workbench::Bench::System
         return {};
     }
 
+    auto BenchUIService::StepDecodes(BenchRun& run, bool isLobby) -> bool
+    {
+        const BenchMatch& match{ run.Scenario->Matches[run.MatchIndex] };
+        BenchMatchReport& report{ run.Reports[run.MatchIndex] };
+
+        if (run.DecodesDone.size() != match.Decodes.size()) run.DecodesDone.assign(match.Decodes.size(), false);
+
+        std::size_t index{ 0 };
+        while (index < match.Decodes.size() && (run.DecodesDone[index] || match.Decodes[index].IsLobby != isLobby)) ++index;
+
+        if (index == match.Decodes.size()) return false;
+
+        const BenchDecode& decode{ match.Decodes[index] };
+        const auto finish{ [&](bool isOk, const std::string& detail)
+        {
+            report.Checks.push_back(BenchCheckResult{ .Name = std::format("decode_mvar {}", decode.File.filename().string()), .IsOk = isOk,
+                .Detail = std::format("{}: {}", isLobby ? "lobby" : "match", detail) });
+            run.DecodesDone[index] = true;
+            run.DecodeTicket = 0;
+            run.IsDecodeStarted = false;
+        } };
+
+        if (!run.IsDecodeStarted)
+        {
+            // The lobby decode waits for the lobby screen: the lifecycle hook runs in the main menu too, but the bench asks for it to be the
+            // lobby so the report says where it ran.
+            if (isLobby && !m_MatchCycleStore.IsLobbyOpen())
+            {
+                if (run.DecodeStart == steady_clock::time_point{}) run.DecodeStart = steady_clock::now();
+                if (SecondsSince(run.DecodeStart) > static_cast<double>(k_DecodeLobbyTimeout.count()))
+                {
+                    run.DecodeStart = {};
+                    finish(false, "the lobby did not open");
+                }
+                return true;
+            }
+
+            std::ifstream stream{ decode.File, std::ios::binary };
+            const std::vector<char> text{ std::istreambuf_iterator<char>{ stream }, std::istreambuf_iterator<char>{} };
+
+            if (!stream || text.empty())
+            {
+                finish(false, std::format("cannot read {}", decode.File.string()));
+                return true;
+            }
+
+            run.DecodeTicket = m_MapVariantDecodeStore.Request(std::vector<std::byte>{ reinterpret_cast<const std::byte*>(text.data()),
+                reinterpret_cast<const std::byte*>(text.data() + text.size()) });
+            run.DecodeStart = steady_clock::now();
+            run.IsDecodeStarted = true;
+            return true;
+        }
+
+        auto outcome{ m_MapVariantDecodeStore.TakeOutcome(run.DecodeTicket) };
+
+        if (!outcome)
+        {
+            if (SecondsSince(run.DecodeStart) > static_cast<double>(k_DecodeTimeout.count()))
+            {
+                run.DecodeStart = {};
+                finish(false, "the lifecycle hook did not answer");
+            }
+            return true;
+        }
+
+        run.DecodeStart = {};
+        const DecodedMapVariant& decoded{ outcome->Decoded };
+
+        if (!decoded.IsOk())
+        {
+            finish(false, std::format("name={} error={}", decoded.Name, decoded.Error));
+            return true;
+        }
+
+        std::string detail{ std::format("name={} version=0x{:X} quotas={} map_id={} placements={}", decoded.Name, decoded.Version,
+            decoded.Quotas, decoded.MapId, decoded.PlacementsInUse) };
+        bool isOk{ true };
+
+        if (!decode.CompareConfig.empty())
+        {
+            const std::vector<std::byte> expected{ m_MatchConfigService.ReadMapVariant(decode.CompareConfig) };
+
+            if (expected.empty())
+            {
+                isOk = false;
+                detail += std::format(" compare={} cannot be read", decode.CompareConfig);
+            }
+            else
+            {
+                const FileParse::BlockDiff diff{ FileParse::Diff(decoded.Block, expected) };
+                std::string ranges{};
+
+                for (std::size_t range{ 0 }; range < (std::min)(diff.Ranges.size(), k_MaxDiffRanges); ++range)
+                {
+                    ranges += std::format("{}0x{:X}+{}", range == 0 ? "" : ",", diff.Ranges[range].Offset, diff.Ranges[range].Size);
+                }
+
+                if (diff.Ranges.size() > k_MaxDiffRanges) ranges += std::format(",...({} runs)", diff.Ranges.size());
+
+                detail += std::format(" compare={} diff_bytes={} ranges=[{}]", decode.CompareConfig, diff.Bytes, ranges);
+            }
+        }
+
+        finish(isOk, detail);
+        return true;
+    }
+
     auto BenchUIService::BeginMatch(BenchRun& run) -> void
     {
         const BenchMatch& match{ run.Scenario->Matches[run.MatchIndex] };
@@ -860,7 +992,7 @@ namespace DevTools::Workbench::Bench::System
     {
         if (run.Phase == BenchPhase::Idle)
         {
-            this->BeginMatch(run);
+            if (!this->StepDecodes(run, true)) this->BeginMatch(run);
             return;
         }
 
@@ -937,6 +1069,8 @@ namespace DevTools::Workbench::Bench::System
         case BenchPhase::Running:
         {
             const auto tick{ m_TickStore.Acquire() };
+
+            this->StepDecodes(run, false);
 
             if (tick != nullptr && tick->Generation != run.LastGeneration)
             {
@@ -1305,6 +1439,20 @@ namespace DevTools::Workbench::Bench::System
             if (entry.Level != LogLevel::Warning && entry.Level != LogLevel::Error) continue;
             if (report.Log.size() < k_MaxLogLines) report.Log.push_back(entry.FullText);
         }
+
+        for (std::size_t index{ 0 }; index < run.DecodesDone.size(); ++index)
+        {
+            if (!run.DecodesDone[index])
+            {
+                report.Checks.push_back(BenchCheckResult{ .Name = std::format("decode_mvar {}", match.Decodes[index].File.filename().string()),
+                    .IsOk = false, .Detail = "the match ended before the decode ran" });
+            }
+        }
+
+        run.DecodesDone.clear();
+        run.DecodeTicket = 0;
+        run.IsDecodeStarted = false;
+        run.DecodeStart = {};
 
         this->EndPerf(run, report);
         this->Check(run, report);

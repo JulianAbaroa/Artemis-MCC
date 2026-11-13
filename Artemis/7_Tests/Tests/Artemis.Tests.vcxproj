@@ -101,6 +101,8 @@
   <ItemGroup>
     <ClCompile Include="Blam\LayoutTests.cpp" />
     <ClCompile Include="Blam\VariantPresetTests.cpp" />
+    <ClCompile Include="Blam\MapVariantFileTests.cpp" />
+    <ClCompile Include="Engine\MapVariantCatalogTests.cpp" />
     <ClCompile Include="Blam\MapVariantTests.cpp" />
     <ClCompile Include="Blam\MapModelTests.cpp" />
     <ClCompile Include="Blam\SbspCollisionTests.cpp" />

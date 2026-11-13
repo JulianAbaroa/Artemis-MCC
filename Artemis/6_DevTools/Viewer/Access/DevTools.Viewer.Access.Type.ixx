@@ -25,6 +25,7 @@ namespace
     using Engine::Base::Lifecycle::System::LifecycleService;
     using Engine::Base::MatchSetup::System::MatchSetupService;
     using Engine::Base::Preset::System::PresetService;
+    using Engine::Match::State::MapVariantDecodeStore;
     using Engine::Match::State::MatchConfigStore;
     using Engine::Match::State::MatchCycleStore;
     using Engine::Match::System::MatchConfigService;
@@ -58,6 +59,7 @@ export namespace DevTools::Viewer::Access::Type
         LifecycleStore& m_LifecycleStore;
         MatchConfigStore& m_MatchConfigStore;
         MatchConfigService& m_MatchConfigService;
+        MapVariantDecodeStore& m_MapVariantDecodeStore;
         MatchCycleStore& m_MatchCycleStore;
         MatchSetupService& m_MatchSetupService;
         PresetService& m_PresetService;

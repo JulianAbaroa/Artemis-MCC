@@ -23,7 +23,7 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `DevTools.Viewer.Layer` | The facade: camera, selection, overlay, options and the services that draw. |
-| `DevTools.Viewer.Access.Type` | `EngineAccess`: what the tools use of the engine and the bridge (it also carries the `OracleStore` of the raycast oracle), built by `Mod`. |
+| `DevTools.Viewer.Access.Type` | `EngineAccess`: what the tools use of the engine and the bridge (it also carries the `OracleStore` of the raycast oracle and the `MapVariantDecodeStore` the bench asks decodes through), built by `Mod`. |
 | `DevTools.Viewer.Camera.Type`, `DevTools.Viewer.Camera.State` | Camera modes, lens, rays and the camera input. |
 | `DevTools.Viewer.Options.Type`, `DevTools.Viewer.Options.State` | Viewer options and their preference keys. |
 | `DevTools.Viewer.Overlay.State`, `DevTools.Viewer.Selection.State` | Overlay mode and page; selected object and pick requests. |

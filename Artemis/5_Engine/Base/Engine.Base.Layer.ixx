@@ -44,6 +44,7 @@ export namespace Engine::Base
         using MatchSetupStore = Engine::Base::MatchSetup::State::MatchSetupStore;
         using PresetStore = Engine::Base::Preset::State::PresetStore;
         using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
+        using MapVariantDecodeService = Engine::Base::MapVariant::System::MapVariantDecodeService;
         using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using PresetService = Engine::Base::Preset::System::PresetService;
 
@@ -54,6 +55,7 @@ export namespace Engine::Base
             m_HostService(service.m_Log, m_AOBService),
             m_PresetService(service.m_Log, service.m_SettingsStore, m_PresetStore),
             m_MapVariantService(service.m_Log, m_MapVariantStore),
+            m_MapVariantDecodeService(service.m_Log, m_AOBService),
             m_MatchSetupService(service.m_Log, m_LifecycleStore, m_MatchSetupStore, m_PresetService, m_MapVariantService),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
@@ -83,6 +85,7 @@ export namespace Engine::Base
         MemoryReaderService m_MemoryReaderService{};
         PresetService m_PresetService;
         MapVariantService m_MapVariantService;
+        MapVariantDecodeService m_MapVariantDecodeService;
         MatchSetupService m_MatchSetupService;
 
         // --- Hook ---

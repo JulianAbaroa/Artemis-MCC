@@ -15,6 +15,7 @@ namespace
 
     using Engine::Base::Hook::System::k_DrainTimeout;
     using Engine::Base::Hook::System::ResolveRelative;
+    using Engine::Match::Type::MapVariantDecodeOutcome;
     using Engine::Match::Type::k_LifecycleStateOffset;
     using Engine::Match::Type::k_PreGameLifecycleState;
     using Engine::Match::Type::k_LobbyStartIndex;
@@ -58,6 +59,8 @@ namespace Engine::Match::Hook
 
         if (self != nullptr && manager != nullptr)
         {
+            if (self->m_MapVariantDecodeStore.HasRequest()) self->ServeMapVariantDecode();
+
             if (self->m_MatchConfigStore.IsLaunchRequested())
             {
                 self->Launch(manager);
@@ -246,6 +249,23 @@ namespace Engine::Match::Hook
         // START may still refuse with a dialog of its own (too many players): the log only says it was pressed.
         m_MatchConfigStore.SetLastLaunch("START pressed: the lobby should count down and launch.");
         m_Log.Message("[LifecycleUpdateDetour] INFO: START of the lobby pressed.");
+    }
+
+    auto LifecycleUpdateDetour::ServeMapVariantDecode() -> void
+    {
+        try
+        {
+            auto request{ m_MapVariantDecodeStore.TakeRequest() };
+
+            if (!request) return;
+
+            m_MapVariantDecodeStore.Publish(MapVariantDecodeOutcome{ .Ticket = request->Ticket,
+                .Decoded = m_MapVariantDecodeService.Decode(request->File) });
+        }
+        catch (const std::exception& exception)
+        {
+            m_Log.Message("[LifecycleUpdateDetour] ERROR: Failed to decode a map variant file ({}).", exception.what());
+        }
     }
 
     auto LifecycleUpdateDetour::Leave() -> void

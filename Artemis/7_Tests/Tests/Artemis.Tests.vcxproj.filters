@@ -165,6 +165,12 @@
     <ClCompile Include="Blam\VariantPresetTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>
+    <ClCompile Include="Blam\MapVariantFileTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\MapVariantCatalogTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Blam\MapVariantTests.cpp">
       <Filter>Blam</Filter>
     </ClCompile>

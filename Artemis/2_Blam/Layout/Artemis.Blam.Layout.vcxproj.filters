@@ -7,6 +7,12 @@
     <Filter Include="Collision\Type">
       <UniqueIdentifier>{f8bf23d7-d4e9-40a7-8212-898e0150cd77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="MapVariantFile">
+      <UniqueIdentifier>{3b0c1a52-6f5e-4c0a-9a57-6c2f4d0e8a11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MapVariantFile\Type">
+      <UniqueIdentifier>{9d4a7e31-2b6c-4f58-8e0d-5a1c3b7f9e22}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Action">
       <UniqueIdentifier>{678f957b-743f-50e4-89a6-9d908a2678ed}</UniqueIdentifier>
     </Filter>
@@ -323,6 +329,12 @@
     </ClCompile>
     <ClCompile Include="Collision\Type\CollisionResult.ixx">
       <Filter>Collision\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariantFile\Blam.Layout.MapVariantFile.Type.ixx">
+      <Filter>MapVariantFile</Filter>
+    </ClCompile>
+    <ClCompile Include="MapVariantFile\Type\MapVariantFileParse.ixx">
+      <Filter>MapVariantFile\Type</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

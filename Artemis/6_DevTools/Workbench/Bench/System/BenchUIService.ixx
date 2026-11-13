@@ -44,6 +44,7 @@ export namespace DevTools::Workbench::Bench::System
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
         using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using MapVariantDecodeStore = Engine::Match::State::MapVariantDecodeStore;
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
@@ -72,15 +73,16 @@ export namespace DevTools::Workbench::Bench::System
             MemoryReaderService& memoryReaderService, LocalUserStore& localUserStore, PlayerActionStore& playerActionStore,
             VirtualInputStore& virtualInputStore,
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
-            MatchConfigService& matchConfigService, MatchSetupService& matchSetupService, PresetService& presetService,
-            MapVariantService& mapVariantService, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
+            MatchConfigService& matchConfigService, MapVariantDecodeStore& mapVariantDecodeStore, MatchSetupService& matchSetupService,
+            PresetService& presetService, MapVariantService& mapVariantService, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
             TelemetryStore& telemetryStore, BridgeService& bridgeService, BenchUIStore& benchUIStore) :
             m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore), m_TelemetryStore(telemetryStore),
             m_BridgeService(bridgeService),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
             m_VirtualInputStore(virtualInputStore),
             m_LifecycleStore(lifecycleStore), m_MatchConfigStore(matchConfigStore), m_MatchCycleStore(matchCycleStore),
-            m_MatchConfigService(matchConfigService), m_MatchSetupService(matchSetupService), m_PresetService(presetService),
+            m_MatchConfigService(matchConfigService), m_MapVariantDecodeStore(mapVariantDecodeStore), m_MatchSetupService(matchSetupService),
+            m_PresetService(presetService),
             m_MapVariantService(mapVariantService), m_TickStore(tickStore), m_TickDumpUIStore(tickDumpUIStore),
             m_BenchUIStore(benchUIStore) {}
         ~BenchUIService() = default;
@@ -113,6 +115,7 @@ export namespace DevTools::Workbench::Bench::System
         MatchConfigStore& m_MatchConfigStore;
         MatchCycleStore& m_MatchCycleStore;
         MatchConfigService& m_MatchConfigService;
+        MapVariantDecodeStore& m_MapVariantDecodeStore;
         MatchSetupService& m_MatchSetupService;
         PresetService& m_PresetService;
         MapVariantService& m_MapVariantService;
@@ -137,6 +140,13 @@ export namespace DevTools::Workbench::Bench::System
 
         // Loads the config of the next match, sets its local users and requests the launch.
         auto BeginMatch(BenchRun& run) -> void;
+
+        // Runs the decodes of .mvar files the match asks for in one phase (Q106), one at a time: reads the file, asks the lifecycle hook to
+        // decode it and, when the result arrives, adds a check "decode_mvar" with what the decode gave and how it differs from the map
+        // variant of the config to compare with. A request the hook does not answer in time fails the check.
+        // param isLobby: The decodes of the lobby (before the launch, the lobby open) or the ones of the match (once it runs).
+        // return: Whether a decode of that phase is still to finish.
+        auto StepDecodes(BenchRun& run, bool isLobby) -> bool;
 
         // Moves the current match one phase forward when its condition is met, or ends it when a timeout passes.
         auto Step(BenchRun& run) -> void;

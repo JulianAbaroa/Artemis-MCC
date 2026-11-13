@@ -2,6 +2,7 @@ export module Engine.Match.Hook:LifecycleUpdate;
 
 import Common.Log.System;
 import Engine.Base.Memory.System;
+import Engine.Base.MapVariant.System;
 import Engine.Match.Type;
 import Engine.Match.State;
 import std;
@@ -23,6 +24,7 @@ export namespace Engine::Match::Hook
         using Log = Common::Log::System::Log;
 
         using AOBService = Engine::Base::Memory::System::AOBService;
+        using MapVariantDecodeService = Engine::Base::MapVariant::System::MapVariantDecodeService;
 
         using LifecycleUpdateFunction = Engine::Match::Type::LifecycleUpdateFunction;
         using FindScreenFunction = Engine::Match::Type::FindScreenFunction;
@@ -31,13 +33,15 @@ export namespace Engine::Match::Hook
         using IsCountdownActiveFunction = Engine::Match::Type::IsCountdownActiveFunction;
         using EngineUpdateStateFunction = Engine::Match::Type::EngineUpdateStateFunction;
         using VariantsCompatibleFunction = Engine::Match::Type::VariantsCompatibleFunction;
+        using MapVariantDecodeStore = Engine::Match::State::MapVariantDecodeStore;
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
 
     public:
-        LifecycleUpdateDetour(Log& log, AOBService& aobService, MatchConfigStore& matchConfigStore,
-            MatchCycleStore& matchCycleStore) :
-            m_Log(log), m_AOBService(aobService), m_MatchConfigStore(matchConfigStore),
+        LifecycleUpdateDetour(Log& log, AOBService& aobService, MapVariantDecodeService& mapVariantDecodeService,
+            MapVariantDecodeStore& mapVariantDecodeStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore) :
+            m_Log(log), m_AOBService(aobService), m_MapVariantDecodeService(mapVariantDecodeService),
+            m_MapVariantDecodeStore(mapVariantDecodeStore), m_MatchConfigStore(matchConfigStore),
             m_MatchCycleStore(matchCycleStore) {}
         ~LifecycleUpdateDetour() = default;
 
@@ -56,6 +60,8 @@ export namespace Engine::Match::Hook
     private:
         Log& m_Log;
         AOBService& m_AOBService;
+        MapVariantDecodeService& m_MapVariantDecodeService;
+        MapVariantDecodeStore& m_MapVariantDecodeStore;
         MatchConfigStore& m_MatchConfigStore;
         MatchCycleStore& m_MatchCycleStore;
 
@@ -107,6 +113,11 @@ export namespace Engine::Match::Hook
         // request waits for the lobby (MCC shows it again after every match) until it times out.
         // note: MCC thread, inside the hook, before the original update.
         auto Launch(const void* manager) -> void;
+
+        // Decodes the .mvar of the waiting request with the engine decode and publishes the result (Q106). The file was read by the one
+        // that asked, so nothing here touches the disk.
+        // note: MCC thread, inside the hook, in the lobby and in a match alike: the decode needs neither a map nor the game thread.
+        auto ServeMapVariantDecode() -> void;
 
         // Sends the Leave state command to the live engine, as the pause menu does.
         // note: MCC thread, inside the hook, the thread that calls the engine interface.

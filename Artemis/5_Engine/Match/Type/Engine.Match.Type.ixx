@@ -1,5 +1,6 @@
 export module Engine.Match.Type;
 
+import Engine.Base.MapVariant.Type;
 import std;
 
 export namespace Engine::Match::Type
@@ -44,6 +45,32 @@ export namespace Engine::Match::Type
         { .Offset = 0x310, .Size = 0x10000 - 0x310 },
         { .Offset = 0x1CF00, .Size = k_EngineConfigurationSize - 0x1CF00 },
     } };
+
+    // A .mvar file of Forge found in the folders of MCC (Q106, D291).
+    struct MapVariantEntry
+    {
+        std::filesystem::path Path{};
+        // The name in the header of the file, or the name of the file when the header has none.
+        std::string Name{};
+        std::string Description{};
+        // Folder of the account (the XUID) the file is in.
+        std::string Account{};
+        std::chrono::system_clock::time_point Modified{};
+    };
+
+    // Request to decode a .mvar, with the bytes of the file read by the one that asks (the MCC thread never reads a disk).
+    struct MapVariantDecodeRequest
+    {
+        std::uint64_t Ticket{ 0 };
+        std::vector<std::byte> File{};
+    };
+
+    // What the decode of the request with that ticket gave.
+    struct MapVariantDecodeOutcome
+    {
+        std::uint64_t Ticket{ 0 };
+        Engine::Base::MapVariant::Type::DecodedMapVariant Decoded{};
+    };
 
     // Longest name of a recorded match configuration, in characters.
     inline constexpr std::size_t k_MaxMatchConfigNameLength{ 64 };

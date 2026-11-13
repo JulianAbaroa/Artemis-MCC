@@ -119,6 +119,8 @@
     <ClCompile Include="Collision\Type\CollisionFlag.ixx" />
     <ClCompile Include="Collision\Type\CollisionOffset.ixx" />
     <ClCompile Include="Collision\Type\CollisionResult.ixx" />
+    <ClCompile Include="MapVariantFile\Blam.Layout.MapVariantFile.Type.ixx" />
+    <ClCompile Include="MapVariantFile\Type\MapVariantFileParse.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

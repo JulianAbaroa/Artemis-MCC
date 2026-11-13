@@ -15,16 +15,20 @@ export namespace Engine::Match
     private:
         using MatchConfigStore = Engine::Match::State::MatchConfigStore;
         using MatchCycleStore = Engine::Match::State::MatchCycleStore;
+        using MapVariantCatalogService = Engine::Match::System::MapVariantCatalogService;
+        using MapVariantDecodeStore = Engine::Match::State::MapVariantDecodeStore;
         using MatchConfigService = Engine::Match::System::MatchConfigService;
         using EngineInterfaceDetour = Engine::Match::Hook::EngineInterfaceDetour;
         using LifecycleUpdateDetour = Engine::Match::Hook::LifecycleUpdateDetour;
 
     public:
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
+            m_MapVariantCatalogService(service.m_Log),
             m_MatchConfigService(service.m_Log, service.m_SettingsStore, m_MatchConfigStore),
             m_EngineInterfaceDetour(service.m_Log, base.m_AOBService, base.m_MemoryReaderService, m_MatchCycleStore, m_MatchConfigService,
                 base.m_MatchSetupService),
-            m_LifecycleUpdateDetour(service.m_Log, base.m_AOBService, m_MatchConfigStore, m_MatchCycleStore) {}
+            m_LifecycleUpdateDetour(service.m_Log, base.m_AOBService, base.m_MapVariantDecodeService, m_MapVariantDecodeStore,
+                m_MatchConfigStore, m_MatchCycleStore) {}
         ~Layer() = default;
 
         // Not copyable. Members hold references to each other.
@@ -32,10 +36,12 @@ export namespace Engine::Match
         auto operator=(const Layer&) -> Layer& = delete;
 
         // --- State ---
+        MapVariantDecodeStore m_MapVariantDecodeStore{};
         MatchConfigStore m_MatchConfigStore{};
         MatchCycleStore m_MatchCycleStore{};
 
         // --- System ---
+        MapVariantCatalogService m_MapVariantCatalogService;
         MatchConfigService m_MatchConfigService;
 
         // --- Hook ---

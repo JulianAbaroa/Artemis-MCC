@@ -86,6 +86,15 @@ export namespace DevTools::Workbench::Bench::Type
         std::optional<Roster> Bots{};
     };
 
+    // A .mvar the scenario has the engine decode, once in the lobby (before the launch) or while the match runs (Q106).
+    struct BenchDecode
+    {
+        bool IsLobby{ true };
+        std::filesystem::path File{};
+        // Config whose map variant the decoded one is compared with. Empty for no comparison.
+        std::string CompareConfig{};
+    };
+
     // One match of a scenario: what to launch, who plays, how fast, when to stop and what to check at the end.
     struct BenchMatch
     {
@@ -99,6 +108,7 @@ export namespace DevTools::Workbench::Bench::Type
         BenchSetup SetupAtLoad{};
         // A setup per next round, each one requested while the round before it runs and applied at the end of that round.
         std::vector<BenchSetup> RoundSetups{};
+        std::vector<BenchDecode> Decodes{};
         // Engine speed during the match. Empty leaves it as it is, 0 = the engine speed.
         std::optional<float> TimeScale{};
         // Limits after which the bench sends Leave (D131). 0 = none: the gametype ends the match.
@@ -265,6 +275,11 @@ export namespace DevTools::Workbench::Bench::Type
         std::size_t SetupsRequested{ 0 };
         std::vector<BenchSetupRow> SetupRows{};
         std::vector<BenchProbeState> Probes{};
+        // Decodes of the match already reported, the ticket and the start of the one waiting for the hook.
+        std::vector<bool> DecodesDone{};
+        std::uint64_t DecodeTicket{ 0 };
+        std::chrono::steady_clock::time_point DecodeStart{};
+        bool IsDecodeStarted{ false };
         // CSV of the events of the match, and the sequence of the last event written to it.
         std::filesystem::path EventsFile{};
         std::uint32_t EventCursor{ 0 };

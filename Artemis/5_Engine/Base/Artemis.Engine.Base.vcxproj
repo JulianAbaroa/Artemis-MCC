@@ -100,6 +100,8 @@
     <ClCompile Include="MapVariant\State\MapVariantStore.ixx" />
     <ClCompile Include="MapVariant\System\MapVariantService.cpp" />
     <ClCompile Include="MapVariant\System\MapVariantService.ixx" />
+    <ClCompile Include="MapVariant\System\MapVariantDecodeService.cpp" />
+    <ClCompile Include="MapVariant\System\MapVariantDecodeService.ixx" />
     <ClCompile Include="MapVariant\Type\Engine.Base.MapVariant.Type.ixx" />
     <ClCompile Include="Preset\Engine.Base.Preset.State.ixx" />
     <ClCompile Include="Preset\Engine.Base.Preset.System.ixx" />
