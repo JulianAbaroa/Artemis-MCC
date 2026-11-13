@@ -45,18 +45,15 @@ namespace DevTools::Workbench::Bench::State
         return m_Status;
     }
 
-    auto BenchUIStore::GetScenarioFiles() -> std::vector<path>&
+    auto BenchUIStore::SetLastResult(BenchLastResult result) -> void
     {
-        return m_ScenarioFiles;
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_LastResult = std::move(result);
     }
 
-    auto BenchUIStore::SetSelectedScenario(std::size_t index) -> void
+    auto BenchUIStore::GetLastResult() const -> std::optional<BenchLastResult>
     {
-        m_SelectedScenario = index;
-    }
-
-    auto BenchUIStore::GetSelectedScenario() const -> std::size_t
-    {
-        return m_SelectedScenario;
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return m_LastResult;
     }
 }

@@ -242,6 +242,15 @@ export namespace DevTools::Workbench::Bench::Type
         std::size_t Rows{ 0 };
     };
 
+    // How the last finished scenario ended, for the status line of the panel.
+    struct BenchLastResult
+    {
+        std::string Scenario{};
+        bool IsOk{ false };
+        // Local time of the end as HH:MM.
+        std::string Time{};
+    };
+
     // Progress of the running scenario.
     // note: Bench thread only.
     struct BenchRun

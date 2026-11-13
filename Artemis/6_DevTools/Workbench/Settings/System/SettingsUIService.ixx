@@ -9,6 +9,8 @@ import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Camera.State;
 import DevTools.Workbench.Hotkey.State;
+import DevTools.Workbench.Settings.Type;
+import DevTools.Workbench.Settings.State;
 import std;
 
 namespace
@@ -18,7 +20,7 @@ namespace
 
 export namespace DevTools::Workbench::Settings::System
 {
-    // Draws the settings window with the user preferences, the viewer options and the hotkeys.
+    // Draws the settings window: the data and preferences files, the viewer options, the interface settings, the hotkeys and the folders.
     class SettingsUIService
     {
     private:
@@ -31,17 +33,20 @@ export namespace DevTools::Workbench::Settings::System
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
 
+        using SettingsSection = DevTools::Workbench::Settings::Type::SettingsSection;
+
         using HotkeyUIStore = DevTools::Workbench::Hotkey::State::HotkeyUIStore;
+        using SettingsUIStore = DevTools::Workbench::Settings::State::SettingsUIStore;
 
     public:
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,
             Log& log, HotkeyUIStore& hotkeyStore,
             OptionsStore& optionsStore, PreferencesService& preferencesService,
-            CameraStore& cameraStore) :
+            CameraStore& cameraStore, SettingsUIStore& settingsUIStore) :
             m_SettingsStore(settingsStore), m_SettingsService(settingsService),
             m_Log(log), m_HotkeyStore(hotkeyStore),
             m_OptionsStore(optionsStore), m_PreferencesService(preferencesService),
-            m_CameraStore(cameraStore) {}
+            m_CameraStore(cameraStore), m_SettingsUIStore(settingsUIStore) {}
         ~SettingsUIService() = default;
 
         SettingsUIService(const SettingsUIService&) = delete;
@@ -58,9 +63,11 @@ export namespace DevTools::Workbench::Settings::System
         OptionsStore& m_OptionsStore;
         PreferencesService& m_PreferencesService;
         CameraStore& m_CameraStore;
+        SettingsUIStore& m_SettingsUIStore;
 
-        // ImGui time until which the save button shows its confirmation.
+        // ImGui time until which the save and the load buttons show their confirmation.
         double m_SaveFeedbackUntil{ 0.0 };
+        double m_LoadFeedbackUntil{ 0.0 };
 
         std::string m_AnimatedPathLabel{};
         float m_AnimationStartTime{ 0.0f };
@@ -68,9 +75,13 @@ export namespace DevTools::Workbench::Settings::System
         float m_UIScalePreview{ 1.0f };
         bool m_IsScalePreviewInitialized{ false };
 
+        // Draws a section header that remembers whether it is open.
+        // return: Whether the content is to be drawn.
+        auto BeginSection(SettingsSection section) -> bool;
+
         // Draws the menu opacity, the UI scale and the input options.
         // note: The UI scale is applied when the slider is released.
-        auto DrawUserPreferences() -> void;
+        auto DrawInterface() -> void;
 
         // Draws the group of every viewer option and the reset button.
         auto DrawViewerOptions() -> void;
@@ -85,18 +96,19 @@ export namespace DevTools::Workbench::Settings::System
         // Draws the table of the hotkeys.
         auto DrawHotkeysTable() -> void;
 
-        // Draws the local storage toggle, the save preferences button and the delete data button.
-        auto DrawDataPersistence() -> void;
+        // Draws the local storage state and toggle, the save and load preferences buttons and the delete data button.
+        // note: Load reads the preferences file on the UI thread. The stores it fills are the ones the sliders write, and the UI scale and
+        // the opacity are read again on the next frame, so nothing is left half applied.
+        auto DrawData() -> void;
 
         // Draws the paths used by Artemis.
-        auto DrawSystemDirectories() -> void;
+        auto DrawFolders() -> void;
 
         // Draws a row of the hotkeys table.
         auto DrawHotkeyRow(const char* label, const char* keys, const char* tooltip) -> void;
 
         // Draws a read only path with a right click copy.
-        auto DrawPathField(const char* label, const std::string& path,
-            float widthOffset = 10.0f) -> void;
+        auto DrawPathField(const char* label, const std::string& path) -> void;
 
         // Draws the confirmation popups of the data persistence.
         auto DrawPersistencePopups() -> void;

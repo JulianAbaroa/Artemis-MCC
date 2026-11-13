@@ -13,6 +13,7 @@ export namespace DevTools::Workbench::Bench::State
     private:
         using path = std::filesystem::path;
 
+        using BenchLastResult = DevTools::Workbench::Bench::Type::BenchLastResult;
         using BenchRun = DevTools::Workbench::Bench::Type::BenchRun;
 
     public:
@@ -38,11 +39,10 @@ export namespace DevTools::Workbench::Bench::State
         auto SetStatus(std::string status) -> void;
         auto GetStatus() const -> std::string;
 
-        // Scenario files the Simulation tab offers (scenarios/ of the exchange folder) and the one selected.
-        // note: Render thread only.
-        auto GetScenarioFiles() -> std::vector<path>&;
-        auto SetSelectedScenario(std::size_t index) -> void;
-        auto GetSelectedScenario() const -> std::size_t;
+        // How the last finished scenario ended. Written by the bench thread when it writes the final report, read by the UI.
+        // return: Nothing until a scenario has finished.
+        auto SetLastResult(BenchLastResult result) -> void;
+        auto GetLastResult() const -> std::optional<BenchLastResult>;
 
     private:
         path m_Folder{};
@@ -51,7 +51,6 @@ export namespace DevTools::Workbench::Bench::State
         BenchRun m_Run{};
         mutable std::mutex m_Mutex{};
         std::string m_Status{};
-        std::vector<path> m_ScenarioFiles{};
-        std::size_t m_SelectedScenario{ 0 };
+        std::optional<BenchLastResult> m_LastResult{};
     };
 }

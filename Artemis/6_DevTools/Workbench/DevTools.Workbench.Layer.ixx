@@ -22,6 +22,7 @@ import DevTools.Workbench.ObjectTable.System;
 import DevTools.Workbench.PlayerTable.State;
 import DevTools.Workbench.PlayerTable.System;
 import DevTools.Workbench.DefinitionsInspector.System;
+import DevTools.Workbench.Settings.State;
 import DevTools.Workbench.Settings.System;
 import DevTools.Workbench.Simulation.State;
 import DevTools.Workbench.Simulation.System;
@@ -53,6 +54,7 @@ export namespace DevTools::Workbench
         using LauncherUIStore = DevTools::Workbench::Launcher::State::LauncherUIStore;
         using ObjectTableUIStore = DevTools::Workbench::ObjectTable::State::ObjectTableUIStore;
         using PlayerTableUIStore = DevTools::Workbench::PlayerTable::State::PlayerTableUIStore;
+        using SettingsUIStore = DevTools::Workbench::Settings::State::SettingsUIStore;
         using SimulationUIStore = DevTools::Workbench::Simulation::State::SimulationUIStore;
         using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
         using BenchUIStore = DevTools::Workbench::Bench::State::BenchUIStore;
@@ -81,7 +83,7 @@ export namespace DevTools::Workbench
             m_ObjectTableUIService(engine.m_CaptureStore, exportLayer.m_TickStore, m_ObjectTableUIStore),
             m_PlayerTableUIService(engine.m_CaptureStore, exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
-            m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore),
+            m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore, m_SettingsUIStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
                 engine.m_MatchConfigService, engine.m_MapVariantCatalogService, engine.m_MapVariantDecodeStore, engine.m_LocalUserStore,
                 engine.m_VirtualInputStore, engine.m_PlayerActionStore,
@@ -100,6 +102,11 @@ export namespace DevTools::Workbench
             preferences.RegisterSection(std::string{ OracleUIStore::k_OraclePreferencePrefix },
                 [this](std::ostream& stream) { m_OracleUIStore.Save(stream); },
                 [this](std::string_view key, std::string_view value) { m_OracleUIStore.Load(key, value); });
+
+            // The sections of the settings tab remember whether they are open.
+            preferences.RegisterSection(std::string{ SettingsUIStore::k_SettingsPreferencePrefix },
+                [this](std::ostream& stream) { m_SettingsUIStore.Save(stream); },
+                [this](std::string_view key, std::string_view value) { m_SettingsUIStore.Load(key, value); });
 
             // The sections of the simulation tab remember whether they are open.
             preferences.RegisterSection(std::string{ SimulationUIStore::k_SimulationPreferencePrefix },
@@ -140,6 +147,7 @@ export namespace DevTools::Workbench
         LauncherUIStore m_LauncherUIStore{};
         ObjectTableUIStore m_ObjectTableUIStore{};
         PlayerTableUIStore m_PlayerTableUIStore{};
+        SettingsUIStore m_SettingsUIStore{};
         SimulationUIStore m_SimulationUIStore{};
         TickDumpUIStore m_TickDumpUIStore{};
         LogsUIStore m_LogsUIStore{};

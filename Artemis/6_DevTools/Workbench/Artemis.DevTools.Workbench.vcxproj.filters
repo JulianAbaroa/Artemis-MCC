@@ -118,8 +118,14 @@
     <Filter Include="Settings">
       <UniqueIdentifier>{3cb77fa2-a578-5d05-a98b-403934efdb35}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Settings\State">
+      <UniqueIdentifier>{177b4c9f-03ed-4687-b947-914a50925932}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Settings\System">
       <UniqueIdentifier>{5d2cfb69-8381-5c7c-8da2-e251d45568dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Settings\Type">
+      <UniqueIdentifier>{12b62102-5563-4a48-a9d9-f243ad23d2b5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Simulation">
       <UniqueIdentifier>{91e12198-6623-5e41-bafd-e81d4f9385ce}</UniqueIdentifier>
@@ -281,11 +287,20 @@
     <Image Include="Resources\Icons\person-rifle-solid.png">
       <Filter>Resources\Icons</Filter>
     </Image>
+    <ClCompile Include="Settings\State\SettingsUIStore.cpp">
+      <Filter>Settings\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Settings\State\SettingsUIStore.ixx">
+      <Filter>Settings\State</Filter>
+    </ClCompile>
     <ClCompile Include="Settings\System\SettingsUIService.cpp">
       <Filter>Settings\System</Filter>
     </ClCompile>
     <ClCompile Include="Settings\System\SettingsUIService.ixx">
       <Filter>Settings\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Settings\Type\DevTools.Workbench.Settings.Type.ixx">
+      <Filter>Settings\Type</Filter>
     </ClCompile>
     <ClCompile Include="Simulation\State\SimulationUIStore.cpp">
       <Filter>Simulation\State</Filter>

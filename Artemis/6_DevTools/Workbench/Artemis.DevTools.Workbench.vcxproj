@@ -148,8 +148,11 @@
     <ClInclude Include="Resources\Icons\IconData.h" />
     <Image Include="Resources\Icons\map-solid.png" />
     <Image Include="Resources\Icons\person-rifle-solid.png" />
+    <ClCompile Include="Settings\State\SettingsUIStore.cpp" />
+    <ClCompile Include="Settings\State\SettingsUIStore.ixx" />
     <ClCompile Include="Settings\System\SettingsUIService.cpp" />
     <ClCompile Include="Settings\System\SettingsUIService.ixx" />
+    <ClCompile Include="Settings\Type\DevTools.Workbench.Settings.Type.ixx" />
     <ClCompile Include="Simulation\State\SimulationUIStore.cpp" />
     <ClCompile Include="Simulation\State\SimulationUIStore.ixx" />
     <ClCompile Include="Simulation\System\SimulationUIService.cpp" />

@@ -23,6 +23,7 @@ import Blam.Layout.MapVariantFile.Type;
 import Perception.Players.Type;
 import Perception.Events.Type;
 import Bridge.Codec.Tick.Type;
+import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
 import DevTools.Workbench.Simulation.Type;
 import DevTools.Workbench.Simulation.System;
@@ -45,6 +46,7 @@ namespace
     using Engine::Control::Input::Type::InputState;
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerActions;
+    using DevTools::Gui::Style::Type::StatusKind;
     using DevTools::Gui::Widget::System::StatusGuiService;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using DevTools::Workbench::Simulation::System::BuildActionOverride;
@@ -61,6 +63,7 @@ namespace
     using DevTools::Workbench::Bench::Type::BenchAction;
     using DevTools::Workbench::Bench::Type::BenchCheck;
     using DevTools::Workbench::Bench::Type::BenchDecode;
+    using DevTools::Workbench::Bench::Type::BenchLastResult;
     using DevTools::Workbench::Bench::Type::BenchPlayers;
     using DevTools::Workbench::Bench::Type::BenchPlayerSample;
     using DevTools::Workbench::Bench::Type::BenchProbe;
@@ -205,6 +208,14 @@ namespace
     auto UtcNow() -> std::string
     {
         return std::format("{:%FT%T}+00:00", std::chrono::floor<milliseconds>(system_clock::now()));
+    }
+
+    // return: The local time as HH:MM.
+    auto LocalClockText() -> std::string
+    {
+        SYSTEMTIME time{};
+        GetLocalTime(&time);
+        return std::format("{:02}:{:02}", time.wHour, time.wMinute);
     }
 
     // return: The text without spaces, tabs and line ends at both sides.
@@ -466,84 +477,49 @@ namespace DevTools::Workbench::Bench::System
 
         if (!m_BenchUIStore.IsEnabled())
         {
-            ImGui::TextDisabled("Off");
-            StatusGuiService::ShowTooltip("The game watcher turns the bench on when it deploys the DLL.");
+            StatusGuiService::DrawChip("Off", StatusKind::Off, "The game watcher turns the bench on when it deploys the DLL.");
             return;
         }
 
-        // Draw runs inside the frame of the game: a file name it cannot convert must not take the game down.
-        try
+        if (m_BenchUIStore.IsScenarioRunning())
         {
-            this->DrawScenarios();
+            const std::string status{ m_BenchUIStore.GetStatus() };
+
+            StatusGuiService::DrawChip("Running", StatusKind::Active, "The bench is playing a scenario.");
+            ImGui::SameLine();
+            ImGui::TextWrapped("%s", status.c_str());
         }
-        catch (const std::exception& exception)
+        else
         {
-            ImGui::TextDisabled("The scenarios cannot be listed (%s).", exception.what());
-        }
-    }
-
-    auto BenchUIService::DrawScenarios() -> void
-    {
-        const std::string status{ m_BenchUIStore.GetStatus() };
-        ImGui::TextWrapped("%s", status.c_str());
-
-        const std::string setup{ ToText(m_MatchSetupService.GetActive(), m_MatchSetupService.GetResult()) };
-        ImGui::TextWrapped("%s", setup.c_str());
-
-        const path folder{ m_BenchUIStore.GetFolder() / "scenarios" };
-        std::vector<path>& files{ m_BenchUIStore.GetScenarioFiles() };
-        const std::size_t selected{ m_BenchUIStore.GetSelectedScenario() };
-        const std::string preview{ selected < files.size() ? files[selected].stem().string() : std::string{ "(none)" } };
-
-        if (ImGui::BeginCombo("Scenario", preview.c_str()))
-        {
-            // Listed when the combo opens: Tools/game.py export can write the files while the game runs.
-            files.clear();
-            std::error_code error{};
-            for (std::filesystem::directory_iterator it{ folder, error }; !error && it != std::filesystem::directory_iterator{};
-                it.increment(error))
-            {
-                if (it->path().extension() == ".txt") files.push_back(it->path());
-            }
-            std::ranges::sort(files);
-
-            for (std::size_t i{ 0 }; i < files.size(); ++i)
-            {
-                const std::string name{ files[i].stem().string() };
-                if (ImGui::Selectable(name.c_str(), i == selected)) m_BenchUIStore.SetSelectedScenario(i);
-            }
-
-            ImGui::EndCombo();
+            StatusGuiService::DrawChip("Waiting", StatusKind::Pending, "No scenario is running.");
         }
 
-        StatusGuiService::ShowTooltip(folder.string().c_str());
-
-        ImGui::SameLine();
-        if (ImGui::Button("Run") && selected < files.size()) this->QueueScenario(files[selected]);
-        StatusGuiService::ShowTooltip("Queues the picked scenario. The bench plays its matches and writes the report.");
-    }
-
-    auto BenchUIService::QueueScenario(const path& file) -> void
-    {
-        const auto now{ std::chrono::floor<milliseconds>(system_clock::now()) };
-        const auto second{ std::chrono::floor<seconds>(now) };
-        const path target{ m_BenchUIStore.GetFolder() / "inbox" / std::format("{:%Y%m%d-%H%M%S}-ui{:03}.txt", second,
-            (now - second).count()) };
-        const path temporary{ path{ target }.concat(".tmp") };
-        std::error_code error{};
-
-        // Copied under another extension first: the bench thread only takes .txt files, never a half written one.
-        std::filesystem::copy_file(file, temporary, std::filesystem::copy_options::overwrite_existing, error);
-        if (!error) std::filesystem::rename(temporary, target, error);
-
-        if (error)
+        if (const std::optional<BenchLastResult> last{ m_BenchUIStore.GetLastResult() }; last.has_value())
         {
-            m_Log.Message("[BenchUIService] WARNING: Failed to queue the scenario {} ({}).", file.stem().string(),
-                error.message());
-            return;
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted("Last:");
+            ImGui::SameLine();
+            StatusGuiService::DrawChip(last->IsOk ? "PASS" : "FAIL", last->IsOk ? StatusKind::Ok : StatusKind::Error);
+            ImGui::SameLine();
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextWrapped("%s %s", last->Scenario.c_str(), last->Time.c_str());
         }
 
-        m_Log.Message("[BenchUIService] INFO: Scenario {} queued from the Simulation tab.", file.stem().string());
+        // The setup the bench asked for is shown only while its scenario runs: a setup of the Simulation tab has its own chip there.
+        const MatchSetupResult result{ m_MatchSetupService.GetResult() };
+
+        if (m_BenchUIStore.IsScenarioRunning() && result.Outcome != MatchSetupOutcome::None)
+        {
+            const std::string setup{ ToText(m_MatchSetupService.GetActive(), result) };
+            const bool isApplied{ result.Outcome == MatchSetupOutcome::AtLoad || result.Outcome == MatchSetupOutcome::Applied };
+
+            if (result.Outcome == MatchSetupOutcome::Rejected) StatusGuiService::DrawChip("Rejected", StatusKind::Error);
+            else if (isApplied && result.Reason.empty()) StatusGuiService::DrawChip("Applied", StatusKind::Ok);
+            else StatusGuiService::DrawChip("Pending", StatusKind::Pending);
+
+            ImGui::SameLine();
+            ImGui::TextWrapped("%s", setup.c_str());
+        }
     }
 
     auto BenchUIService::TakeScenario(BenchRun& run) -> void
@@ -1725,7 +1701,8 @@ namespace DevTools::Workbench::Bench::System
         const BenchMatchReport* report{ hasScenario ? &run.Reports[index] : nullptr };
         const std::string status{ hasScenario ? std::format("{} match {}/{} {}", ToText(run.Phase), index + 1, run.Reports.size(),
             report->Name) : std::string{ "Waiting for a scenario." } };
-        m_BenchUIStore.SetStatus(status);
+        m_BenchUIStore.SetStatus(hasScenario ? std::format("{} - match {}/{} {} ({})", run.Scenario->Name.empty() ? run.Scenario->Id
+            : run.Scenario->Name, index + 1, run.Reports.size(), report->Name, ToText(run.Phase)) : status);
 
         const std::string text{ std::format("{{\"heartbeat\":\"{}\",\"lobbyReady\":{},\"phase\":\"{}\",\"scenario\":\"{}\","
             "\"match\":\"{}\",\"matchIndex\":{},\"matchCount\":{},\"tick\":{},\"engineStarts\":{},\"engineDestroys\":{},"
@@ -1772,6 +1749,12 @@ namespace DevTools::Workbench::Bench::System
         }
 
         const std::string result{ isDone ? (isOk ? "ok" : "fail") : "running" };
+
+        if (isDone)
+        {
+            m_BenchUIStore.SetLastResult(BenchLastResult{ .Scenario = run.Scenario->Name.empty() ? run.Scenario->Id : run.Scenario->Name,
+                .IsOk = isOk, .Time = LocalClockText() });
+        }
         const std::string text{ std::format("{{\"id\":\"{}\",\"scenario\":\"{}\",\"done\":{},\"result\":\"{}\",\"seconds\":{:.1f},"
             "\"message\":\"{}\",\"matches\":[{}]}}", JsonEscape(run.Scenario->Id), JsonEscape(run.Scenario->Name), isDone, result,
             SecondsSince(run.ScenarioStart), JsonEscape(run.Message), matches) };

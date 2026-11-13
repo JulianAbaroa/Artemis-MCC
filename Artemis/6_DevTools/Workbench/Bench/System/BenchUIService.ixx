@@ -97,8 +97,8 @@ export namespace DevTools::Workbench::Bench::System
         // Advances the running scenario, or takes the next one from the inbox, and writes state.json every second.
         auto Update() -> void;
 
-        // Draws the bench panel of the Simulation tab: what the bench is doing, and a scenario of scenarios/ to queue, so a rotation
-        // runs without Tools/game.py (Tools/game.py export writes those files).
+        // Draws the bench panel of the Simulation tab: one status line (off, waiting or running), the last result and, while a scenario
+        // runs, the state of the setup. Claude queues the scenarios with Tools/game.py, so the panel has no controls.
         auto Draw() -> void;
 
     private:
@@ -124,12 +124,6 @@ export namespace DevTools::Workbench::Bench::System
         BenchUIStore& m_BenchUIStore;
         // Held from the start of a match to the end of its tools, so the pipeline runs every tick during the match (Q101).
         EveryTickDemandToken m_EveryTickDemand{};
-
-        // Copies a scenario file to the inbox, named like the ones of Tools/game.py so the scenarios run in arrival order.
-        auto QueueScenario(const path& file) -> void;
-
-        // Draws the status and the scenario picker of the panel.
-        auto DrawScenarios() -> void;
 
         // Takes the oldest scenario of the inbox (moved to taken/) and starts it. A scenario that does not parse gets a failed report.
         auto TakeScenario(BenchRun& run) -> void;

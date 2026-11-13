@@ -9,6 +9,7 @@ import DevTools.Gui.Widget.System;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Workbench.Hotkey.Type;
+import DevTools.Workbench.Settings.Type;
 import std;
 
 namespace
@@ -21,21 +22,51 @@ namespace
     using DevTools::Viewer::Camera::Type::Follow;
 
     using DevTools::Workbench::Hotkey::Type::Binding;
+    using DevTools::Workbench::Settings::Type::SettingsSection;
 
     using DevTools::Viewer::Options::Type::k_Groups;
     using DevTools::Viewer::Options::Type::k_Flags;
     using DevTools::Viewer::Options::Type::k_Scalars;
+    using DevTools::Gui::Style::Type::StatusKind;
+    using DevTools::Workbench::Settings::Type::k_SettingsSectionTitles;
     using DevTools::Gui::Style::Type::k_MinimumAlpha;
     using DevTools::Gui::Style::Type::k_MinimumScale;
     using DevTools::Gui::Style::Type::k_MaximumScale;
     using DevTools::Gui::Style::Type::k_AnimationDuration;
+    using DevTools::Gui::Widget::System::DisabledScope;
+    using DevTools::Gui::Widget::System::ResponsiveCardGuiService;
     using DevTools::Gui::Widget::System::SectionBox;
+    using DevTools::Gui::Widget::System::StatusGuiService;
 
     constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
     constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
 
+    // Share of a row the label takes before its item, and the narrowest an item may get (in font sizes) before it goes under its label.
+    constexpr float k_LabelColumnFraction{ 0.4f };
+    constexpr float k_MinimumItemEms{ 6.0f };
+
+    // Seconds the save and load buttons show their confirmation.
+    constexpr double k_FeedbackSeconds{ 2.0 };
+
     constexpr const char* k_DisablePopup{ "Confirm Disable AppData" };
     constexpr const char* k_DeletePopup{ "Delete AppData" };
+
+    // Draws the label at the left of a row and sizes the next item to fill the rest of it, so the row follows the width of the window.
+    // A row with too little room puts the item on the line below its label.
+    // param tooltip: Shown while the label is hovered. Null for none.
+    auto LabelBeforeItem(const char* label, const char* tooltip) -> void
+    {
+        const float startX{ ImGui::GetCursorPosX() };
+        const float available{ ImGui::GetContentRegionAvail().x };
+        const float column{ (std::max)(available * k_LabelColumnFraction, ImGui::CalcTextSize(label).x + ImGui::GetStyle().ItemSpacing.x) };
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(label);
+        if (tooltip != nullptr) StatusGuiService::ShowTooltip(tooltip);
+
+        if (available - column >= ImGui::GetFontSize() * k_MinimumItemEms) ImGui::SameLine(startX + column);
+        ImGui::SetNextItemWidth(-(std::numeric_limits<float>::min)());
+    }
 
     // Moves the cursor so the next buttons are centered.
     auto CenterNextButtons(float buttonWidth, int count) -> void
@@ -63,15 +94,15 @@ namespace DevTools::Workbench::Settings::System
     {
         if (ImGui::BeginChild("SettingsScroll", ImVec2(0, 0), false))
         {
-            if (ImGui::CollapsingHeader("User Preferences"))
+            if (this->BeginSection(SettingsSection::Data))
             {
                 ImGui::Indent(10.0f);
-                this->DrawUserPreferences();
+                this->DrawData();
                 ImGui::Unindent(10.0f);
                 ImGui::Spacing();
             }
 
-            if (ImGui::CollapsingHeader("Viewer"))
+            if (this->BeginSection(SettingsSection::Viewer))
             {
                 ImGui::Indent(10.0f);
                 this->DrawViewerOptions();
@@ -79,7 +110,15 @@ namespace DevTools::Workbench::Settings::System
                 ImGui::Spacing();
             }
 
-            if (ImGui::CollapsingHeader("Hotkeys", ImGuiTreeNodeFlags_DefaultOpen))
+            if (this->BeginSection(SettingsSection::Interface))
+            {
+                ImGui::Indent(10.0f);
+                this->DrawInterface();
+                ImGui::Unindent(10.0f);
+                ImGui::Spacing();
+            }
+
+            if (this->BeginSection(SettingsSection::Hotkeys))
             {
                 ImGui::Indent(10.0f);
                 this->DrawHotkeysTable();
@@ -87,18 +126,10 @@ namespace DevTools::Workbench::Settings::System
                 ImGui::Spacing();
             }
 
-            if (ImGui::CollapsingHeader("Data Persistence"))
+            if (this->BeginSection(SettingsSection::Folders))
             {
                 ImGui::Indent(10.0f);
-                this->DrawDataPersistence();
-                ImGui::Unindent(10.0f);
-                ImGui::Spacing();
-            }
-
-            if (ImGui::CollapsingHeader("System Directories"))
-            {
-                ImGui::Indent(10.0f);
-                this->DrawSystemDirectories();
+                this->DrawFolders();
                 ImGui::Unindent(10.0f);
             }
         }
@@ -106,7 +137,19 @@ namespace DevTools::Workbench::Settings::System
         ImGui::EndChild();
     }
 
-    auto SettingsUIService::DrawUserPreferences() -> void
+    auto SettingsUIService::BeginSection(SettingsSection section) -> bool
+    {
+        const bool wasOpen{ m_SettingsUIStore.IsSectionOpen(section) };
+
+        // The store owns the state, so it is saved with the preferences.
+        ImGui::SetNextItemOpen(wasOpen, ImGuiCond_Always);
+        const bool isOpen{ ImGui::CollapsingHeader(k_SettingsSectionTitles[static_cast<std::size_t>(section)]) };
+
+        if (isOpen != wasOpen) m_SettingsUIStore.SetSectionOpen(section, isOpen);
+        return isOpen;
+    }
+
+    auto SettingsUIService::DrawInterface() -> void
     {
         if (!m_IsScalePreviewInitialized)
         {
@@ -116,11 +159,7 @@ namespace DevTools::Workbench::Settings::System
 
         SectionBox box{};
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Menu Opacity");
-
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
-        ImGui::PushItemWidth(200.0f);
+        LabelBeforeItem("Menu opacity", "Transparency of the Artemis windows.");
 
         float menuAlpha{ m_SettingsStore.GetMenuAlpha() };
         if (ImGui::SliderFloat("##GlobalOpacity", &menuAlpha, k_MinimumAlpha, 1.0f, "%.2f"))
@@ -128,16 +167,14 @@ namespace DevTools::Workbench::Settings::System
             m_SettingsStore.SetMenuAlpha((std::max)(menuAlpha, k_MinimumAlpha));
         }
 
-        ImGui::PopItemWidth();
+        StatusGuiService::ShowTooltip("Transparency of the Artemis windows.");
 
         ImGui::Spacing();
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("UI Scale");
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
+        LabelBeforeItem("UI scale", "Size of the Artemis windows and their text. Applied when you release the slider.");
 
-        ImGui::PushItemWidth(200.0f);
         ImGui::SliderFloat("##GlobalScale", &m_UIScalePreview, k_MinimumScale, k_MaximumScale, "%.2f");
+        StatusGuiService::ShowTooltip("Size of the Artemis windows and their text. Applied when you release the slider.");
 
         if (ImGui::IsItemDeactivatedAfterEdit())
         {
@@ -148,25 +185,19 @@ namespace DevTools::Workbench::Settings::System
                 m_UIScalePreview);
         }
 
-        ImGui::PopItemWidth();
-
         ImGui::Spacing();
 
         bool shouldFreezeMouse{ m_SettingsStore.IsMouseFreezeEnabled() };
-        if (ImGui::Checkbox("Freeze Mouse Input", &shouldFreezeMouse))
+        if (ImGui::Checkbox("Freeze mouse input", &shouldFreezeMouse))
         {
             m_SettingsStore.SetMouseFreezeEnabled(shouldFreezeMouse);
         }
 
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::SetTooltip("Blocks game camera movement while the menu is open.");
-        }
+        StatusGuiService::ShowTooltip("Blocks game camera movement while the menu is open.");
 
         ImGui::Spacing();
 
-        const bool usesAppData{ m_SettingsStore.IsAppDataEnabled() };
-        if (!usesAppData) ImGui::BeginDisabled();
+        const DisabledScope noStorage{ !m_SettingsStore.IsAppDataEnabled(), "Needs local storage, turn it on in Data." };
 
         bool shouldOpenOnStart{ m_SettingsStore.IsOpenUIOnStartEnabled() };
         if (ImGui::Checkbox("Open UI on MCC start", &shouldOpenOnStart))
@@ -174,14 +205,7 @@ namespace DevTools::Workbench::Settings::System
             m_SettingsStore.SetOpenUIOnStartEnabled(shouldOpenOnStart);
         }
 
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-        {
-            ImGui::SetTooltip("%s", usesAppData ?
-                "Defines if Artemis control panel is opened on MCC start." :
-                "This feature uses Local Storage, go to Data Persistence to enable it.");
-        }
-
-        if (!usesAppData) ImGui::EndDisabled();
+        noStorage.Tooltip("Opens the Artemis control panel when MCC starts.");
     }
 
     auto SettingsUIService::DrawViewerOptions() -> void
@@ -199,10 +223,12 @@ namespace DevTools::Workbench::Settings::System
             ImGui::Spacing();
         }
 
-        if (ImGui::Button("Reset Viewer Options"))
+        if (ImGui::Button("Reset viewer options"))
         {
             m_OptionsStore.ResetToDefaults();
         }
+
+        StatusGuiService::ShowTooltip("Sets every viewer option back to its default.");
     }
 
     auto SettingsUIService::DrawCameraControls() -> void
@@ -219,17 +245,8 @@ namespace DevTools::Workbench::Settings::System
             ImGui::SetTooltip("Shows or hides the Viewer. Same as the F4 hotkey.");
         }
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Mode");
-
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::SetTooltip("Free camera: the Viewer takes the keyboard and the mouse and flies on its own.\n"
-                "Game camera: the game keeps its controls and the Viewer sits on your view.");
-        }
-
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
-        ImGui::PushItemWidth(200.0f);
+        LabelBeforeItem("Mode", "Free camera: the Viewer takes the keyboard and the mouse and flies on its own.\n"
+            "Game camera: the game keeps its controls and the Viewer sits on your view.");
 
         const int current{ static_cast<int>(m_CameraStore.GetMode()) };
         if (ImGui::BeginCombo("##ViewerMode", k_ModeLabels[current]))
@@ -248,24 +265,14 @@ namespace DevTools::Workbench::Settings::System
             ImGui::EndCombo();
         }
 
-        ImGui::PopItemWidth();
 
         const bool isGameMode{ m_CameraStore.GetMode() == Mode::Game };
         if (isGameMode) ImGui::BeginDisabled();
 
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Follow selection");
-
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-        {
-            ImGui::SetTooltip("Off: flies on its own.\n"
-                "First person: sits on the view of the selected object.\n"
-                "Orbit: turns around the selected object (mouse rotates, wheel sets the distance).\n"
-                "Free camera only. Same as the key left of the 1.");
-        }
-
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
-        ImGui::PushItemWidth(200.0f);
+        LabelBeforeItem("Follow selection", isGameMode ? "Needs the free camera." : "Off: flies on its own.\n"
+            "First person: sits on the view of the selected object.\n"
+            "Orbit: turns around the selected object (mouse rotates, wheel sets the distance).\n"
+            "Same as the key left of the 1.");
 
         const int currentFollow{ static_cast<int>(m_CameraStore.GetFollow()) };
         if (ImGui::BeginCombo("##ViewerFollow", k_FollowLabels[currentFollow]))
@@ -284,7 +291,6 @@ namespace DevTools::Workbench::Settings::System
             ImGui::EndCombo();
         }
 
-        ImGui::PopItemWidth();
 
         if (isGameMode) ImGui::EndDisabled();
 
@@ -335,16 +341,7 @@ namespace DevTools::Workbench::Settings::System
         {
             if (info.Group != group) continue;
 
-            ImGui::AlignTextToFramePadding();
-            ImGui::Text("%s", info.Label);
-
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::SetTooltip("%s", info.Tooltip);
-            }
-
-            ImGui::SameLine(ImGui::GetContentRegionAvail().x - 205.0f);
-            ImGui::PushItemWidth(200.0f);
+            LabelBeforeItem(info.Label, info.Tooltip);
             ImGui::PushID(info.Key);
 
             float value{ m_OptionsStore.GetScalar(info.Id) };
@@ -354,19 +351,17 @@ namespace DevTools::Workbench::Settings::System
             }
 
             ImGui::PopID();
-            ImGui::PopItemWidth();
-        }
+            }
     }
 
     auto SettingsUIService::DrawHotkeysTable() -> void
     {
         SectionBox box{};
 
-        const float tableWidth{ ImGui::GetContentRegionAvail().x - 10.0f };
         const ImGuiTableFlags flags{ ImGuiTableFlags_BordersInnerH |
             ImGuiTableFlags_NoBordersInBody };
 
-        if (!ImGui::BeginTable("HotkeysTable", 2, flags, ImVec2(tableWidth, 0))) return;
+        if (!ImGui::BeginTable("HotkeysTable", 2, flags)) return;
 
         const ImVec4 headerColor{ ImGui::GetStyleColorVec4(ImGuiCol_TabActive) };
 
@@ -396,7 +391,7 @@ namespace DevTools::Workbench::Settings::System
         ImGui::EndTable();
     }
 
-    auto SettingsUIService::DrawDataPersistence() -> void
+    auto SettingsUIService::DrawData() -> void
     {
         bool shouldOpenDisablePopup{ false };
         bool shouldOpenDeletePopup{ false };
@@ -404,11 +399,14 @@ namespace DevTools::Workbench::Settings::System
         {
             SectionBox box{};
 
-            ImGui::BeginGroup();
             bool usesAppData{ m_SettingsStore.IsAppDataEnabled() };
-            ImGui::AlignTextToFramePadding();
+            const std::string folder{ m_SettingsStore.GetAppDataDirectory() };
 
-            if (ImGui::Checkbox("Enable Local Storage (AppData)", &usesAppData))
+            StatusGuiService::DrawDot(usesAppData ? "Local storage: on" : "Local storage: off",
+                usesAppData ? StatusKind::Active : StatusKind::Off,
+                usesAppData && !folder.empty() ? folder.c_str() : "Nothing is saved to disk.");
+
+            if (ImGui::Checkbox("Use local storage (AppData)", &usesAppData))
             {
                 if (!usesAppData)
                 {
@@ -421,44 +419,52 @@ namespace DevTools::Workbench::Settings::System
                     m_SettingsService.SaveAppDataEnabled();
                 }
             }
-            ImGui::EndGroup();
 
-            const float rowWidth{ ImGui::GetContentRegionAvail().x };
+            StatusGuiService::ShowTooltip("Saves the preferences, replays and captures in the AppData folder.");
 
-            ImGui::SameLine(rowWidth - 280.0f);
-
-            ImGui::BeginGroup();
+            const ImGuiStyle& style{ ImGui::GetStyle() };
+            const float rightEdge{ ImGui::GetCursorScreenPos().x + ImGui::GetContentRegionAvail().x };
+            const float buttonWidth{ (std::max)(ImGui::CalcTextSize("Save preferences").x, ImGui::CalcTextSize("Load preferences").x)
+                + (style.FramePadding.x * 2.0f) };
             const bool justSaved{ ImGui::GetTime() < m_SaveFeedbackUntil };
+            const bool justLoaded{ ImGui::GetTime() < m_LoadFeedbackUntil };
 
-            if (!usesAppData) ImGui::BeginDisabled();
-
-            if (ImGui::Button(justSaved ? "Saved!##SavePreferences" : "Save Preferences##SavePreferences",
-                ImVec2(130, 0)))
             {
-                m_PreferencesService.Save();
-                m_SaveFeedbackUntil = ImGui::GetTime() + 2.0;
+                const DisabledScope noSave{ !usesAppData, "Needs local storage, turn it on above." };
+
+                if (ImGui::Button(justSaved ? "Saved##SavePreferences" : "Save preferences##SavePreferences", ImVec2(buttonWidth, 0.0f)))
+                {
+                    m_PreferencesService.Save();
+                    m_SaveFeedbackUntil = ImGui::GetTime() + k_FeedbackSeconds;
+                }
+
+                noSave.Tooltip("Writes the preferences to disk now.");
             }
 
-            if (!usesAppData) ImGui::EndDisabled();
+            if (ResponsiveCardGuiService::FitsOnSameLine(buttonWidth, style.ItemSpacing.x, rightEdge)) ImGui::SameLine();
 
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
             {
-                ImGui::SetTooltip(usesAppData
-                    ? "Writes the user preferences to disk now."
-                    : "Enable Local Storage (AppData) to save the preferences.");
+                const DisabledScope noLoad{ !usesAppData, "Needs local storage, turn it on above." };
+
+                if (ImGui::Button(justLoaded ? "Loaded##LoadPreferences" : "Load preferences##LoadPreferences", ImVec2(buttonWidth, 0.0f)))
+                {
+                    m_PreferencesService.Load();
+
+                    // The scale slider shows the value in the store, which the file may have changed.
+                    m_IsScalePreviewInitialized = false;
+                    m_LoadFeedbackUntil = ImGui::GetTime() + k_FeedbackSeconds;
+                }
+
+                noLoad.Tooltip("Reads the preferences file again and applies it now.");
             }
-            ImGui::EndGroup();
 
-            ImGui::SameLine(rowWidth - 140.0f);
-
-            ImGui::BeginGroup();
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.15f, 0.15f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
 
-            if (ImGui::Button("Delete Data", ImVec2(130, 0))) shouldOpenDeletePopup = true;
+            if (ImGui::Button("Delete data")) shouldOpenDeletePopup = true;
 
             ImGui::PopStyleColor(2);
-            ImGui::EndGroup();
+            StatusGuiService::ShowTooltip("Deletes the replays, timelines, event registry and preferences. Asks first.");
         }
 
         if (shouldOpenDisablePopup) ImGui::OpenPopup(k_DisablePopup);
@@ -467,13 +473,13 @@ namespace DevTools::Workbench::Settings::System
         this->DrawPersistencePopups();
     }
 
-    auto SettingsUIService::DrawSystemDirectories() -> void
+    auto SettingsUIService::DrawFolders() -> void
     {
         SectionBox box{ true };
 
-        this->DrawPathField("Base Installation", m_SettingsStore.GetBaseDirectory());
-        this->DrawPathField("Log File Output", m_SettingsStore.GetLoggerPath());
-        this->DrawPathField("Storage Folder", m_SettingsStore.GetAppDataDirectory());
+        this->DrawPathField("Install", m_SettingsStore.GetBaseDirectory());
+        this->DrawPathField("Log file", m_SettingsStore.GetLoggerPath());
+        this->DrawPathField("Storage", m_SettingsStore.GetAppDataDirectory());
     }
 
     auto SettingsUIService::DrawHotkeyRow(const char* label, const char* keys,
@@ -492,14 +498,13 @@ namespace DevTools::Workbench::Settings::System
         ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", keys);
     }
 
-    auto SettingsUIService::DrawPathField(const char* label, const std::string& path,
-        float widthOffset) -> void
+    auto SettingsUIService::DrawPathField(const char* label, const std::string& path) -> void
     {
         ImGui::TextDisabled("%s", label);
         ImGui::BeginGroup();
 
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.12f, 0.12f, 0.12f, 1.0f));
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - widthOffset);
+        ImGui::SetNextItemWidth(-(std::numeric_limits<float>::min)());
 
         std::vector<char> buffer{ path.begin(), path.end() };
         buffer.push_back('\0');
@@ -511,7 +516,7 @@ namespace DevTools::Workbench::Settings::System
 
         if (ImGui::IsItemHovered())
         {
-            ImGui::SetTooltip("Right-click to copy path to clipboard.");
+            ImGui::SetTooltip("Right-click to copy the path.");
 
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
             {
