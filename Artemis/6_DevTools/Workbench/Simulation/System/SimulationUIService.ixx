@@ -136,7 +136,7 @@ export namespace DevTools::Workbench::Simulation::System
         // param name: The picked configuration, empty if none.
         auto DrawConfigEdit(const std::string& name) -> void;
 
-        // Draws the New from .mvar row (Q106): the map variant files by their name, the template configuration, the name of the new one
+        // Draws the New from .mvar block, last of the Match section (Q106): the map variant files by their name, the template configuration, the name of the new one
         // and the button that creates it, with the chip of the last creation (U11).
         auto DrawNewFromMapVariant() -> void;
 

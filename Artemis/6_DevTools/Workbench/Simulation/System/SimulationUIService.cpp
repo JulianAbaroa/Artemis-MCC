@@ -498,6 +498,7 @@ namespace DevTools::Workbench::Simulation::System
         // folder of the storage folder. Use: pick a recorded one, then start any custom game from the lobby or press Launch now. That
         // start plays the base map, map variant and game variant of the picked one, for one start only (D123).
         this->DrawMatchState();
+        ImGui::SeparatorText("Recorded configurations");
 
         if (!m_SimulationUIStore.IsConfigListLoaded())
         {
@@ -541,6 +542,14 @@ namespace DevTools::Workbench::Simulation::System
         }
         StatusGuiService::ShowTooltip("Recorded match configuration. The list is read from the storage folder each time it opens.");
 
+        if (flow.Button("Refresh"))
+        {
+            this->RefreshConfigs();
+            this->RefreshMapVariants();
+        }
+        StatusGuiService::ShowTooltip("Reads the recorded configurations and the .mvar files from disk again, for files added or deleted"
+            " outside Artemis.");
+
         const std::vector<std::string>& names{ m_SimulationUIStore.GetMatchConfigNames() };
         selected = (std::min)(m_SimulationUIStore.GetSelectedMatchConfig(), names.empty() ? 0 : names.size() - 1);
         const std::string name{ names.empty() ? std::string{} : names[selected] };
@@ -569,7 +578,6 @@ namespace DevTools::Workbench::Simulation::System
         }
 
         this->DrawConfigEdit(name);
-        this->DrawNewFromMapVariant();
 
         const auto pending{ m_MatchConfigStore.GetPending() };
         const std::string history{ std::format("Last applied: {}\nLast recorded: {}\nLast launch: {}",
@@ -591,6 +599,7 @@ namespace DevTools::Workbench::Simulation::System
             StatusGuiService::DrawChip("Next start: unchanged", StatusKind::Off, history.c_str());
         }
 
+        ImGui::SeparatorText("Record from the lobby");
         std::array<char, k_RecordNameSize>& recordName{ m_SimulationUIStore.GetRecordNameField() };
         const std::string nameProblem{ MatchConfigService::GetNameProblem(recordName.data()) };
         const bool isTyped{ recordName[0] != '\0' };
@@ -625,6 +634,8 @@ namespace DevTools::Workbench::Simulation::System
             if (ImGui::SmallButton("Cancel##Record")) m_MatchConfigService.CancelRecord();
             StatusGuiService::ShowTooltip("Disarms the record.");
         }
+
+        this->DrawNewFromMapVariant();
     }
 
     auto SimulationUIService::DrawMatchState() -> void
@@ -775,6 +786,12 @@ namespace DevTools::Workbench::Simulation::System
         std::size_t picked{ (std::min)(m_SimulationUIStore.GetSelectedMapVariant(), entries.empty() ? 0 : entries.size() - 1) };
         const MapVariantEntry* entry{ entries.empty() ? nullptr : &entries[picked] };
 
+        // A template deleted outside Artemis is dropped, so the default (or a new pick) takes its place.
+        if (!m_SimulationUIStore.GetCreateTemplate().empty() && !std::ranges::contains(configs, m_SimulationUIStore.GetCreateTemplate()))
+        {
+            m_SimulationUIStore.SetCreateTemplate({});
+        }
+
         if (m_SimulationUIStore.GetCreateTemplate().empty() && std::ranges::contains(configs, std::string{ k_DefaultTemplate }))
         {
             m_SimulationUIStore.SetCreateTemplate(std::string{ k_DefaultTemplate });
@@ -789,13 +806,13 @@ namespace DevTools::Workbench::Simulation::System
             m_SimulationUIStore.SetCreatePrefilledFor(entry->Path);
         }
 
-        ImGui::TextUnformatted("New from .mvar");
+        ImGui::SeparatorText("New from .mvar");
         StatusGuiService::ShowTooltip("Makes a recorded configuration out of a Forge map variant file of MCC, without opening the map in the lobby."
             " Only Forge World map variants.");
 
         ImGui::SetNextItemWidth(k_MapVariantFieldWidth);
         const std::string preview{ entry == nullptr ? std::string{ "No .mvar files found" } : entry->Name };
-        const bool isComboOpen{ ImGui::BeginCombo("##MapVariantFile", preview.c_str()) };
+        const bool isComboOpen{ ImGui::BeginCombo("Map variant##MapVariantFile", preview.c_str()) };
 
         // The folders are read each time the list opens, so a file saved meanwhile shows up without a button.
         if (isComboOpen && !m_SimulationUIStore.IsMapVariantComboOpen()) this->RefreshMapVariants();
@@ -820,13 +837,17 @@ namespace DevTools::Workbench::Simulation::System
         picked = (std::min)(m_SimulationUIStore.GetSelectedMapVariant(), entries.empty() ? 0 : entries.size() - 1);
         entry = entries.empty() ? nullptr : &entries[picked];
 
-        StatusGuiService::ShowTooltip("Forge map variant files of every account folder of MCC, by the name inside them.");
+        StatusGuiService::ShowTooltip("Forge map variant files of every account folder of MCC, by the name saved inside them (the one"
+            " shown in Forge), sorted by name. Hover an item for its description and file.");
 
         ImGui::SetNextItemWidth(k_MapVariantFieldWidth);
         const std::string& templateName{ m_SimulationUIStore.GetCreateTemplate() };
 
-        if (ImGui::BeginCombo("##CreateTemplate", templateName.empty() ? "Pick a template" : templateName.c_str()))
+        if (ImGui::BeginCombo("Settings from##CreateTemplate", templateName.empty() ? "Pick a configuration" : templateName.c_str()))
         {
+            // The folder is read when the list opens, so a configuration added or deleted outside Artemis shows.
+            if (ImGui::IsWindowAppearing()) this->RefreshConfigs();
+
             for (const std::string& config : configs)
             {
                 if (ImGui::Selectable(config.c_str(), config == templateName)) m_SimulationUIStore.SetCreateTemplate(config);
@@ -834,8 +855,8 @@ namespace DevTools::Workbench::Simulation::System
 
             ImGui::EndCombo();
         }
-        StatusGuiService::ShowTooltip("Recorded configuration copied for everything but the map variant (gametype, settings, base map)."
-            " It must be a Forge World one.");
+        StatusGuiService::ShowTooltip("Template: the new configuration copies everything but the map variant from this recorded one"
+            " (gametype, game settings, base map). It must be a Forge World one.");
 
         const std::string nameProblem{ MatchConfigService::GetNameProblem(nameField.data()) };
         const bool isExisting{ nameProblem.empty() && std::ranges::contains(configs, std::string{ nameField.data() }) };
@@ -844,7 +865,7 @@ namespace DevTools::Workbench::Simulation::System
 
         if (isMarked) ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4{ 0.45f, 0.12f, 0.12f, 1.0f });
         ImGui::SetNextItemWidth(k_MatchConfigFieldWidth);
-        ImGui::InputTextWithHint("##CreateName", "Name of the new configuration", nameField.data(), nameField.size());
+        ImGui::InputTextWithHint("Name##CreateName", "Name of the new configuration", nameField.data(), nameField.size());
         if (isMarked) ImGui::PopStyleColor();
         StatusGuiService::ShowTooltip("Name of the new recorded configuration. It does not replace an existing one.");
 
@@ -919,8 +940,13 @@ namespace DevTools::Workbench::Simulation::System
         create.Status = reason.empty() ? CreateStatus::Created : CreateStatus::Rejected;
         create.Message = reason.empty() ? std::format("{} placements, from {}", outcome->Decoded.PlacementsInUse, outcome->Decoded.Name) : reason;
 
-        // The new configuration shows in the list of configurations without a restart.
-        if (reason.empty()) this->RefreshConfigs();
+        // The new configuration shows, picked, in the list of configurations without a restart. The name field is emptied: that name
+        // is taken now, and keeping it would mark it as existing right after the creation.
+        if (reason.empty())
+        {
+            this->RefreshConfigs(create.Name);
+            m_SimulationUIStore.GetCreateNameField()[0] = '\0';
+        }
     }
 
     auto SimulationUIService::RefreshMapVariants() -> void
