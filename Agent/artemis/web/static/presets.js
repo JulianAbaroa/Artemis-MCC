@@ -131,7 +131,7 @@ function fieldRow(group, field, values) {
   const unit = field.unit ? ` ${field.unit}` : "";
   return h("tr", { class: own ? "" : "inherited" },
     h("td", { title: `${field.doc || field.name}\n${field.type}${unit}; applied: ${field.when}` }, field.name),
-    h("td", {}, input, unit),
+    h("td", { class: unit ? "value with-unit" : "value" }, input, unit),
     h("td", { class: "used" }, origin),
     h("td", {}, button));
 }

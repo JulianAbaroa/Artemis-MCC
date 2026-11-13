@@ -41,3 +41,5 @@ input[type="checkbox"] { width: auto; }
 input[type="search"] { width: 220px; }
 pre { margin: 6px 0; padding: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; white-space: pre-wrap; max-height: 320px; overflow: auto; }
 td input[type="number"] { width: 70px; }
+td.with-unit { white-space: nowrap; }
+td.with-unit input:not([type="number"]) { width: calc(100% - 3em); }
