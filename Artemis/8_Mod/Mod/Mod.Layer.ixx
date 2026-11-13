@@ -131,7 +131,7 @@ export namespace Mod
 
         // The development tools, in the order they are built.
         DevTools::Gui::Layer m_Gui{ m_Service, m_EngineAccess.m_RenderService, m_EngineAccess.m_RenderStore };
-        DevTools::Viewer::Layer m_Viewer{ m_Service, m_EngineAccess, m_Environment, m_Export, m_Gui, m_Preferences };
+        DevTools::Viewer::Layer m_Viewer{ m_Service, m_EngineAccess, m_Environment, m_Gui, m_Preferences };
         DevTools::Workbench::Layer m_UI{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
 
         MainThread m_Main{ m_Service, m_Base, m_Match, m_Render };

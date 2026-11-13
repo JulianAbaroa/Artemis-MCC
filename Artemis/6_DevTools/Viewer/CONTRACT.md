@@ -14,7 +14,7 @@ exact members of the engine and bridge Layers the development tools may use, so 
   thread after the tick, and only while the free camera is active.
 
 ## Input and output
-- Input: the Tick, the stores of the pure projects, `EngineAccess`, the window input of `Engine.Render`.
+- Input: the Tick (taken with the collidable scene, published together after the tick, D294), the stores of the pure projects, `EngineAccess`, the window input of `Engine.Render`.
 - Output: drawing on the game frame; the viewer options in the preferences file.
 
 ## Public interface

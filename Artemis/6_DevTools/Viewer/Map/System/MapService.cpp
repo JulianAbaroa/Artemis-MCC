@@ -6,7 +6,9 @@ module DevTools.Viewer.Map.System;
 import :MapService;
 
 import Common.Semantic.Type;
+import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Profiler.Type;
 import DevTools.Viewer.Profiler.System;
@@ -17,6 +19,7 @@ import std;
 namespace
 {
     using DevTools::Viewer::Camera::Type::Viewport;
+    using DevTools::Viewer::Collidable::Type::ShareObjects;
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Scalar;
     using DevTools::Viewer::Profiler::Type::Cpu;
@@ -59,8 +62,10 @@ namespace DevTools::Viewer::Map::System
             return;
         }
 
-        const auto tick = m_TickStore.Acquire();
-        if (!tick) return;
+        // note: One acquire for the whole frame. The camera, the passes and the meshes all come from the same tick (D294).
+        const auto scene = m_CollidableStore.Acquire();
+        if (!scene || !scene->Tick) return;
+        const auto& tick = scene->Tick;
 
         if (!m_GpuPipeline.Initialize(frame.Device)) return;
 
@@ -101,9 +106,9 @@ namespace DevTools::Viewer::Map::System
                     }
                 }
 
-                // note: The debug collidables are not part of the Tick. They come from their own store.
-                m_DynamicPass.Upload(frame.Device, frame.Context, m_CollidableStore.Acquire(),
-                    palette, selected, translucentHandles, tick->Generation);
+                // note: The debug collidables are not part of the Tick. They come with it in the scene.
+                m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
+                    palette, selected, translucentHandles);
             }
 
             {

@@ -33,16 +33,17 @@ namespace DevTools::Viewer::Map::System
     auto DynamicPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Collidables>& collidables,
         const PaletteService& palette, std::uint32_t selectedHandle,
-        const std::unordered_set<std::uint32_t>& translucentHandles,
-        std::uint64_t generation) -> void
+        const std::unordered_set<std::uint32_t>& translucentHandles) -> void
     {
         if (!device || !context) return;
 
         const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au);
 
-        if (m_Gate.IsCurrent(generation, gateKey)) return;
+        if (m_IsUploaded && collidables == m_UploadedScene && gateKey == m_UploadedKey) return;
 
-        m_Gate.Mark(generation, gateKey);
+        m_UploadedScene = collidables;
+        m_UploadedKey = gateKey;
+        m_IsUploaded = true;
 
         for (const std::uint32_t index : m_Active) m_Geometries[index].Bucket.clear();
         for (const std::uint32_t index : m_ActiveTranslucent) m_Geometries[index].TranslucentBucket.clear();
@@ -279,7 +280,9 @@ namespace DevTools::Viewer::Map::System
         m_GeometryTotal = 0;
         m_InstanceCount = 0;
 
-        m_Gate.Reset();
+        m_UploadedScene.reset();
+        m_UploadedKey = 0;
+        m_IsUploaded = false;
 
         m_GeometryIndex.clear();
         std::vector<Geometry>().swap(m_Geometries);

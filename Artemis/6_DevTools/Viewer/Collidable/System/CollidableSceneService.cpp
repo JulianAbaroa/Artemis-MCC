@@ -1,19 +1,26 @@
 module DevTools.Viewer.Collidable.System;
 
+import DevTools.Viewer.Collidable.Type;
 import std;
+
+namespace
+{
+    using DevTools::Viewer::Collidable::Type::CollidableScene;
+}
 
 namespace DevTools::Viewer::Collidable::System
 {
-    auto CollidableSceneService::Update(bool isViewerActive) -> void
+    auto CollidableSceneService::Update(const std::shared_ptr<const Tick>& tick, bool isViewerActive) -> void
     {
-        if (!isViewerActive)
+        CollidableScene scene{ .Tick = tick };
+
+        if (isViewerActive)
         {
-            m_CollidableStore.Publish({});
-            return;
+            auto objects{ m_CollidableService.BuildScene() };
+            if (objects) scene.Objects = std::move(*objects);
         }
 
-        auto scene{ m_CollidableService.BuildScene() };
-        if (scene) m_CollidableStore.Publish(std::move(*scene));
+        m_CollidableStore.Publish(std::move(scene));
     }
 
     auto CollidableSceneService::Cleanup() -> void

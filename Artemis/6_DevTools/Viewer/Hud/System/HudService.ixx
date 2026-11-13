@@ -17,7 +17,6 @@ import Common.Engine.Type;
 import Services.Telemetry.State;
 import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
-import Bridge.Codec.Tick.State;
 import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Overlay.State;
 import DevTools.Viewer.Selection.State;
@@ -39,16 +38,13 @@ export namespace DevTools::Viewer::Hud::System
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
-        using TickStore = Bridge::Codec::Tick::State::TickStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
 
     public:
         HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, CollidableStore& collidableStore,
-            TickStore& tickStore, OverlayStore& overlayStore,
-            SelectionStore& selectionStore) :
+            OverlayStore& overlayStore, SelectionStore& selectionStore) :
             m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_CollidableStore(collidableStore),
-            m_TickStore(tickStore),
             m_OverlayStore(overlayStore), m_SelectionStore(selectionStore) {}
         ~HudService() = default;
 
@@ -63,7 +59,6 @@ export namespace DevTools::Viewer::Hud::System
         TelemetryStore& m_TelemetryStore;
         RenderStore& m_RenderStore;
         CollidableStore& m_CollidableStore;
-        TickStore& m_TickStore;
         OverlayStore& m_OverlayStore;
         SelectionStore& m_SelectionStore;
 

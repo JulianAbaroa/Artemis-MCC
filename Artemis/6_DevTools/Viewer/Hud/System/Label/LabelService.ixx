@@ -9,8 +9,8 @@ import :InteractionLabels;
 import :FixtureLabels;
 
 import Perception.Classifier.Type;
-import Bridge.Codec.Tick.State;
 import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Scene.System;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Selection.State;
@@ -26,17 +26,18 @@ export namespace DevTools::Viewer::Hud::System
         using Classified = Perception::Classifier::Type::Classified;
         using LabelContext = DevTools::Viewer::Hud::Type::LabelContext;
 
-        using TickStore = Bridge::Codec::Tick::State::TickStore;
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
+        using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
 
     public:
-        LabelService(TickStore& tickStore, CameraService& cameraService,
+        // param collidableStore: Source of the Tick drawn, the one of the collidable scene (D294).
+        LabelService(CollidableStore& collidableStore, CameraService& cameraService,
             SceneService& sceneService, OptionsStore& optionsStore,
             SelectionStore& selectionStore) :
-            m_TickStore(tickStore), m_SceneService(sceneService),
+            m_CollidableStore(collidableStore), m_SceneService(sceneService),
             m_OptionsStore(optionsStore), m_SelectionStore(selectionStore),
             m_Canvas(cameraService, optionsStore) {}
         ~LabelService() = default;
@@ -49,7 +50,7 @@ export namespace DevTools::Viewer::Hud::System
         auto Draw() -> void;
 
     private:
-        TickStore& m_TickStore;
+        CollidableStore& m_CollidableStore;
         SceneService& m_SceneService;
         OptionsStore& m_OptionsStore;
         SelectionStore& m_SelectionStore;

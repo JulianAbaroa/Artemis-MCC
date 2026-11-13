@@ -42,13 +42,14 @@ export namespace DevTools::Viewer::Map::System
         DynamicPass(const DynamicPass&) = delete;
         auto operator=(const DynamicPass&) -> DynamicPass& = delete;
 
-        // Rebuilds the instances when the tick generation, the selection or the translucent set change.
+        // Rebuilds the instances when a new scene is published or the selection or the translucent set change.
         // param translucentHandles: Objects drawn by DrawTranslucent instead of Draw.
+        // note: The scene is published after the Tick (D223), so it is compared by snapshot and not by the Tick generation. A gate on
+        // the generation drew the previous scene for a whole tick whenever the frame saw the Tick first (D294).
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Collidables>& collidables,
             const PaletteService& palette, std::uint32_t selectedHandle,
-            const std::unordered_set<std::uint32_t>& translucentHandles,
-            std::uint64_t generation) -> void;
+            const std::unordered_set<std::uint32_t>& translucentHandles) -> void;
 
         // return: Instances uploaded in the last rebuild, translucent ones included.
         auto GetInstanceCount() const -> UINT;
@@ -87,7 +88,10 @@ export namespace DevTools::Viewer::Map::System
         // Binds the geometry and instance buffers and draws the ranges.
         auto DrawRanges(ID3D11DeviceContext* context, const std::vector<DrawRange>& ranges) const -> void;
 
-        Engine::Render::System::UploadGate m_Gate{};
+        // Scene of the last rebuild. Kept alive so a newer snapshot can never reuse its address.
+        std::shared_ptr<const Collidables> m_UploadedScene{};
+        std::uint32_t m_UploadedKey{ 0 };
+        bool m_IsUploaded{ false };
 
         // Copies the pending vertices to the geometry buffer and grows it if needed.
         // return: False if the buffer could not be created.

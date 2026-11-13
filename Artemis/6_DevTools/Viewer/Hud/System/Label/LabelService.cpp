@@ -5,6 +5,8 @@ module;
 module DevTools.Viewer.Hud.System;
 import :Labels;
 
+import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Hud.Type;
 import std;
@@ -21,8 +23,9 @@ namespace DevTools::Viewer::Hud::System
         if (!m_SceneService.IsActive()) return;
         if (!m_OptionsStore.IsEnabled(Flag::Labels)) return;
 
-        const auto tick = m_TickStore.Acquire();
-        if (!tick) return;
+        const auto scene = m_CollidableStore.Acquire();
+        if (!scene || !scene->Tick) return;
+        const auto& tick = scene->Tick;
 
         m_Classifications.clear();
         if (tick->Classifieds)

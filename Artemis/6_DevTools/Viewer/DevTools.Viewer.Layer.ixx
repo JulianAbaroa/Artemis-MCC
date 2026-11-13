@@ -5,7 +5,6 @@ import Services.Preferences.System;
 import Engine.Render.Type;
 import Engine.Render.Window.Type;
 import Perception.Layer;
-import Bridge.Codec.Layer;
 import DevTools.Viewer.Access.Type;
 import DevTools.Gui.Layer;
 import DevTools.Gui.Backend.System;
@@ -53,17 +52,18 @@ export namespace DevTools::Viewer
 
     public:
         // param environment: Source of the debug collidables, which are not part of the Tick.
+        // note: Draws the Tick that comes with the collidable scene, not the Tick store (D294).
         Layer(Services::Layer& service, DevTools::Viewer::Access::Type::EngineAccess& engine, Perception::Layer& environment,
-            Bridge::Codec::Layer& exportLayer, DevTools::Gui::Layer& gui,
+            DevTools::Gui::Layer& gui,
             PreferencesService& preferences) :
             m_CameraService(m_CameraStore, m_OptionsStore),
             m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
             m_SelectionService(m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, m_CameraStore, m_CameraService, m_SelectionService),
-            m_MapService(service.m_Log, m_CollidableStore, exportLayer.m_TickStore, m_SceneService, m_OptionsStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, exportLayer.m_TickStore, m_OverlayStore, m_SelectionStore),
-            m_LabelService(exportLayer.m_TickStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
+            m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore),
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SelectionStore),
+            m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
         {
             auto& lifecycle = engine.m_LifecycleService;
 

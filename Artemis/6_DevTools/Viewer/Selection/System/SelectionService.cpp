@@ -1,19 +1,21 @@
 module DevTools.Viewer.Selection.System;
 
 import Common.Engine.Type;
+import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
+    using DevTools::Viewer::Collidable::Type::ShareObjects;
 }
 
 namespace DevTools::Viewer::Selection::System
 {
     auto SelectionService::Update(const Ray& ray) -> void
     {
-        this->Rebuild(m_CollidableStore.Acquire());
+        this->Rebuild(ShareObjects(m_CollidableStore.Acquire()));
 
         this->Pick(ray);
     }

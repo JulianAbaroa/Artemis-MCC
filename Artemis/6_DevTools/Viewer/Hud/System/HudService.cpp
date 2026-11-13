@@ -5,6 +5,7 @@ module;
 module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
+import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Overlay.Type;
 import std;
 
@@ -13,6 +14,7 @@ namespace
     using DevTools::Viewer::Overlay::Type::Mode;
 
     using Common::Engine::Type::k_NoHandle;
+    using DevTools::Viewer::Collidable::Type::ShareObjects;
 
 
     const ImVec4 k_Green{ 0.0f, 1.0f, 0.0f, 1.0f };
@@ -67,7 +69,8 @@ namespace DevTools::Viewer::Hud::System
             }
             else
             {
-                this->DrawSelectedPanel(m_TickStore.Acquire());
+                const auto scene = m_CollidableStore.Acquire();
+                this->DrawSelectedPanel(scene ? scene->Tick : nullptr);
             }
         }
 
@@ -145,7 +148,7 @@ namespace DevTools::Viewer::Hud::System
         switch (m_OverlayStore.GetMode())
         {
         case Mode::Collidable:
-            CollidablesHud::Draw(m_CollidableStore.Acquire(), handle);
+            CollidablesHud::Draw(ShareObjects(m_CollidableStore.Acquire()), handle);
             break;
 
         case Mode::Health:

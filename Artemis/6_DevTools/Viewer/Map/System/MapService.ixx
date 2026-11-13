@@ -15,7 +15,6 @@ import :AimPass;
 import Common.Log.System;
 import Engine.Render.Type;
 import Engine.Render.System;
-import Bridge.Codec.Tick.State;
 import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Scene.System;
@@ -54,17 +53,17 @@ export namespace DevTools::Viewer::Map::System
         using GpuStateGuard = Engine::Render::System::GpuStateGuard;
 
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
-        using TickStore = Bridge::Codec::Tick::State::TickStore;
 
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
+        // param collidableStore: The scene drawn, with the Tick it belongs to (D294).
         MapService(Log& log, CollidableStore& collidableStore,
-            TickStore& tickStore, SceneService& sceneService, OptionsStore& optionsStore) :
+            SceneService& sceneService, OptionsStore& optionsStore) :
             m_Log(log), m_CollidableStore(collidableStore),
-            m_TickStore(tickStore), m_SceneService(sceneService), m_OptionsStore(optionsStore),
+            m_SceneService(sceneService), m_OptionsStore(optionsStore),
             m_GpuPipeline(log), m_MapPass(log),
             m_DynamicPass(log), m_ZonePass(log),
             m_RaycastPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
@@ -88,7 +87,6 @@ export namespace DevTools::Viewer::Map::System
     private:
         Log& m_Log;
         CollidableStore& m_CollidableStore;
-        TickStore& m_TickStore;
         SceneService& m_SceneService;
         OptionsStore& m_OptionsStore;
 

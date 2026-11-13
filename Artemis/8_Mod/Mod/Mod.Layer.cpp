@@ -166,7 +166,7 @@ namespace Mod
     {
         const bool isViewerActive{ m_Viewer.m_CameraStore.IsActive() };
 
-        m_Viewer.m_CollidableSceneService.Update(isViewerActive);
+        m_Viewer.m_CollidableSceneService.Update(tick.Tick, isViewerActive);
 
         m_UI.m_OracleUIService.OnTick(tick);
 

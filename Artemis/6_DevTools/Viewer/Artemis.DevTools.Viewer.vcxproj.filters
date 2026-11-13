@@ -22,6 +22,9 @@
     <Filter Include="Collidable\State">
       <UniqueIdentifier>{dfdcd3c8-63db-5b61-97e0-16bff8cae28e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Collidable\Type">
+      <UniqueIdentifier>{7e87e627-28b1-483b-a9cd-0e9fd37e203c}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Collidable\System">
       <UniqueIdentifier>{32a37c9e-a6f5-50d4-8caf-3c1917270d0d}</UniqueIdentifier>
     </Filter>
@@ -162,6 +165,9 @@
     </ClCompile>
     <ClCompile Include="Collidable\State\CollidableStore.ixx">
       <Filter>Collidable\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Collidable\Type\DevTools.Viewer.Collidable.Type.ixx">
+      <Filter>Collidable\Type</Filter>
     </ClCompile>
     <ClCompile Include="Collidable\System\CollidableSceneService.cpp">
       <Filter>Collidable\System</Filter>

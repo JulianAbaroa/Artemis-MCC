@@ -108,6 +108,7 @@
     <ClCompile Include="Camera\System\CameraService.ixx" />
     <ClCompile Include="Camera\Type\DevTools.Viewer.Camera.Type.ixx" />
     <ClCompile Include="Collidable\State\CollidableStore.ixx" />
+    <ClCompile Include="Collidable\Type\DevTools.Viewer.Collidable.Type.ixx" />
     <ClCompile Include="Collidable\System\CollidableSceneService.cpp" />
     <ClCompile Include="Collidable\System\CollidableSceneService.ixx" />
     <ClCompile Include="Control\System\ControlService.cpp" />
