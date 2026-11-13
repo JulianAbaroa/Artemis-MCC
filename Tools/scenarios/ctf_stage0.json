@@ -1,6 +1,6 @@
 {
     "name": "ctf_stage0",
-    "defaults": { "config": "Artemis Training", "checks": ["no_errors"] },
+    "defaults": { "config": "Map CTF 2v2 Final", "checks": ["no_errors"] },
     "matches": [
         { "name": "stage 0: one bot against the flag (D146, D148)", "bots": [1], "events": true, "max_seconds": 1800, "repeat": 60 }
     ]

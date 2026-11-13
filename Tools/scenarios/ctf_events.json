@@ -1,6 +1,6 @@
 {
     "name": "ctf_events",
-    "defaults": { "config": "Artemis Training", "max_seconds": 900 },
+    "defaults": { "config": "Map CTF 2v2 Final", "max_seconds": 900 },
     "matches": [
         {
             "name": "ctf events by hand (A14, Q83)",

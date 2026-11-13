@@ -1,6 +1,6 @@
 {
     "name": "bridge_ctf",
-    "defaults": { "config": "Artemis Training", "checks": ["no_errors"] },
+    "defaults": { "config": "Map CTF 2v2 Final", "checks": ["no_errors"] },
     "matches": [
         { "name": "bridge events in CTF (D141)", "bots": [1], "events": true, "max_seconds": 240 }
     ]

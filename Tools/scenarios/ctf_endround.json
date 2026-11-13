@@ -1,7 +1,7 @@
 {
     "name": "ctf_endround",
     "defaults": {
-        "config": "Artemis Training",
+        "config": "Map CTF 2v2 Final",
         "max_seconds": 300
     },
     "matches": [
