@@ -56,6 +56,14 @@ namespace Blam::MapModel::Definitions::System
         // The surfaces name their material by index into the collision materials of the bsp.
         const std::int16_t materialCount{ static_cast<std::int16_t>(sbsp.CollisionMaterials.size()) };
 
+        // Seam surfaces (material with a seam index) close the bsp where it meets another bsp. Every sbsp of the map is loaded at once,
+        // so the bsp on the other side is always there and the engine test (0x12969c) goes through them (oracle, A20 7.9).
+        std::erase_if(out.CollisionGeometry, [&](const Triangle& triangle)
+        {
+            const bool isKnown{ triangle.Material >= 0 && triangle.Material < materialCount };
+            return isKnown && sbsp.CollisionMaterials[triangle.Material].SeamIndex >= 0;
+        });
+
         for (Triangle& triangle : out.CollisionGeometry)
         {
             const bool isKnown{ triangle.Material >= 0 && triangle.Material < materialCount };

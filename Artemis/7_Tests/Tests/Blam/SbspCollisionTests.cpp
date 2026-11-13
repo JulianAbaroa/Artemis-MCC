@@ -406,6 +406,39 @@ TEST_F(SbspCollisionTests, MaterialsAreGlobalIndicesOrNone)
     }
 }
 
+TEST_F(SbspCollisionTests, SeamSurfacesAreLeftOut)
+{
+    // Seam triangles of the reader, counted by the collision materials of each sbsp.
+    std::size_t expected{};
+    std::size_t seams{};
+    for (const SbspCollision& collision : s_Collisions)
+    {
+        const auto& materials{ s_Loaded->m_Map.m_TagCatalog.Sbsp.Get(collision.TagName)->CollisionMaterials };
+        auto isSeam = [&](const Triangle& t) { return t.Material >= 0 && static_cast<std::size_t>(t.Material) < materials.size() && materials[static_cast<std::size_t>(t.Material)].SeamIndex >= 0; };
+
+        std::size_t total{ collision.Structure.size() };
+        for (const Triangle& t : collision.Structure) if (isSeam(t)) { ++seams; --total; }
+        for (const auto& instance : collision.Instances)
+        {
+            const auto& definition{ collision.Definitions[static_cast<std::size_t>(instance.DefinitionIndex)] };
+            for (const Triangle& t : definition) if (!isSeam(t)) ++total;
+        }
+        expected += total;
+    }
+
+    std::size_t built{};
+    for (const auto& [name, sbsp] : s_Loaded->m_Resolved.m_DefinitionsStore.m_Sbsp.All()) built += sbsp.CollisionGeometry.size();
+
+    EXPECT_GT(seams, 0u);
+    EXPECT_EQ(built, expected);
+
+    // A ray of the oracle (2026-11-13) that the engine let through: up across the seam box of forge_halo (top at Z ~118).
+    Blam::MapModel::World::System::Raycaster raycaster{};
+    raycaster.Build(s_Loaded->m_Resolved.m_DefinitionsStore);
+    const auto hit{ raycaster.Cast(Vec3{ 63.927f, 214.909f, 60.089f }, Vec3{ 0.2889f, 0.1646f, 0.9431f }, 100.0f) };
+    EXPECT_FALSE(hit.IsHit) << hit.Distance;
+}
+
 TEST_F(SbspCollisionTests, RaycasterHitCarriesFlagsAndMaterialOfTheSurface)
 {
     Blam::MapModel::World::System::Raycaster raycaster{};
@@ -573,4 +606,85 @@ TEST(DISABLED_CollisionSweep, AllMaps)
 
     text << std::format("TOTAL {} sbsp, {} problems.\n", sbspCount, problems);
     EXPECT_GT(sbspCount, 0u);
+}
+
+// TEMPORAL (collision boxes, 2026-11-13): per sbsp, the collision materials with their shader, seam index and the triangles that
+// use them, to find what the invisible boxes of the Viewer are. Writes build/bench/coll/materials.txt.
+TEST(DISABLED_CollisionMaterials, Dump)
+{
+    const std::vector<std::string> wanted{ "forge_halo.map", "20_sword_slayer.map", "m10.map", "m45.map", "m50.map", "m70.map" };
+    std::ofstream text{ OutFolder() / "materials.txt", std::ios::trunc };
+
+    for (const std::string& file : wanted)
+    {
+        const std::filesystem::path path{ MapsFolder() / file };
+        if (!std::filesystem::exists(path)) { text << "== " << file << " missing\n"; continue; }
+
+        CollectingSink sink{};
+        Log log{ sink };
+        Blam::Map::Layer map{ log };
+        map.m_MapLoaderService.OpenFile((path.parent_path() / "shared.map").string());
+        map.m_MapLoaderService.OpenFile((path.parent_path() / "campaign.map").string());
+        map.m_MapLoaderService.OpenFile(path.string());
+        map.m_MapBuilderService.LoadForMap();
+
+        std::vector<std::string> names{};
+        for (const auto& [name, sbsp] : map.m_TagCatalog.Sbsp.All()) names.push_back(name);
+        std::ranges::sort(names);
+        const std::vector<SbspCollision> collisions{ map.m_GeometryCollisionService.ReadCollision(names) };
+        text << std::format("== {} ({} sbsp)\n", file, names.size());
+
+        for (const SbspCollision& collision : collisions)
+        {
+            const auto* tag{ map.m_TagCatalog.Sbsp.Get(collision.TagName) };
+            const auto& materials{ tag->CollisionMaterials };
+            text << std::format("  SBSP {} seams {} materials {} bounds ({:.0f},{:.0f},{:.0f})-({:.0f},{:.0f},{:.0f})\n", collision.TagName,
+                tag->StructureSeams.size(), materials.size(), tag->Data.WorldBoundsX.Min, tag->Data.WorldBoundsY.Min, tag->Data.WorldBoundsZ.Min,
+                tag->Data.WorldBoundsX.Max, tag->Data.WorldBoundsY.Max, tag->Data.WorldBoundsZ.Max);
+
+            struct Row { std::size_t Structure{}; std::size_t Placed{}; std::array<std::size_t, k_FlagCount> Flags{}; Box Bounds{}; };
+            std::map<int, Row> rows{};
+            auto add = [&](const Triangle& t, bool placed, const Vec3& a, const Vec3& b, const Vec3& c)
+            {
+                Row& row{ rows[t.Material] };
+                (placed ? row.Placed : row.Structure) += 1;
+                for (std::size_t bit = 0; bit < k_FlagCount; ++bit) if (t.SurfaceFlags & (1u << bit)) ++row.Flags[bit];
+                row.Bounds.Add(a); row.Bounds.Add(b); row.Bounds.Add(c);
+            };
+            for (const Triangle& t : collision.Structure) add(t, false, t.A, t.B, t.C);
+
+            std::map<std::uint16_t, std::pair<std::size_t, std::size_t>> placementFlags{};
+            for (const auto& instance : collision.Instances)
+            {
+                const auto& definition{ collision.Definitions[static_cast<std::size_t>(instance.DefinitionIndex)] };
+                auto& entry{ placementFlags[instance.Flags] };
+                ++entry.first; entry.second += definition.size();
+                for (const Triangle& t : definition)
+                {
+                    add(t, true, TransformPoint3x4(t.A, instance.Matrix.data()), TransformPoint3x4(t.B, instance.Matrix.data()), TransformPoint3x4(t.C, instance.Matrix.data()));
+                }
+            }
+
+            for (const auto& [index, row] : rows)
+            {
+                std::string shader{ "?" };
+                int seam{ -2 }, global{ -2 }, conveyor{ -2 }, unknown{ -2 };
+                if (index >= 0 && static_cast<std::size_t>(index) < materials.size())
+                {
+                    const auto& m{ materials[static_cast<std::size_t>(index)] };
+                    const std::int32_t tagIndex{ static_cast<std::int32_t>(m.Shader.DatumIndex & 0xFFFF) };
+                    shader = (m.Shader.DatumIndex == 0xFFFFFFFFu || tagIndex >= static_cast<std::int32_t>(map.m_TagIndexStore.GetTagsSize())) ? std::string{ "none" } : map.m_TagIndexStore.GetTagName(tagIndex);
+                    seam = m.SeamIndex; global = m.GlobalMaterialIndex; conveyor = m.ConveyorSurfaceIndex; unknown = m.Unknown;
+                }
+                const Vec3 size{ row.Bounds.Max.X - row.Bounds.Min.X, row.Bounds.Max.Y - row.Bounds.Min.Y, row.Bounds.Max.Z - row.Bounds.Min.Z };
+                text << std::format("    mat {:3} seam {:3} glob {:3} conv {:3} unk {:5} struct {:7} placed {:8} size ({:7.0f},{:7.0f},{:6.0f}) {} | {}\n", index, seam, global, conveyor, unknown,
+                    row.Structure, row.Placed, size.X, size.Y, size.Z, shader, FlagText(row.Flags));
+            }
+            for (const auto& [flags, entry] : placementFlags)
+            {
+                text << std::format("    placement flags 0x{:04X}: {} placements, {} tris\n", flags, entry.first, entry.second);
+            }
+        }
+        text.flush();
+    }
 }
