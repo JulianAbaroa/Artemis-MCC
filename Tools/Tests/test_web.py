@@ -6,6 +6,7 @@ The server runs in a thread on a free port with temporary copies of Data/Presets
 import http.client
 import json
 import os
+import re
 import shutil
 import sys
 import time
@@ -30,17 +31,52 @@ DATA = os.path.join(Repo(), "Data")
 BENCH = {"state": "ready", "watcher": True, "mcc": True, "bench": True, "configs": ["Map CTF 1v1 First", "Map Unknown 3v3"]}
 
 
+class FakeProcess:
+    """A process of env_check that has not finished until the test sets code."""
+
+    def __init__(self):
+        self.code = None
+
+    def poll(self):
+        return self.code
+
+
 class Web:
     """A running server with its temporary folders and a client that sends the token unless told otherwise."""
 
     def __init__(self, folder):
         shutil.copytree(os.path.join(DATA, "Presets"), folder / "presets")
         shutil.copytree(os.path.join(DATA, "Training"), folder / "training")
-        self.context = api.Context(str(folder / "presets"), str(folder / "training"), status_fn=lambda: BENCH)
+        self.status = dict(BENCH)
+        self.queued, self.launched, self.reports, self.phase = [], [], {}, "Running"
+        self.process = FakeProcess()
+        self.fail_queue = None
+        self.context = api.Context(str(folder / "presets"), str(folder / "training"), status_fn=lambda: self.status, queue_fn=self._queue,
+                                   report_fn=lambda job_id: self.reports.get(job_id), bench_fn=lambda: {"phase": self.phase},
+                                   launch_fn=self._launch, poll_seconds=0.01, start_seconds=0.5)
         self.server = server.make_server(0, self.context)
         self.port = self.server.server_address[1]
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread = threading.Thread(target=self.server.serve_forever, kwargs={"poll_interval": 0.02}, daemon=True)
         self.thread.start()
+
+    def _queue(self, job_id, text):
+        if self.fail_queue:
+            raise RuntimeError(self.fail_queue)
+        self.queued.append((job_id, text))
+
+    def _launch(self, argv, on_line):
+        self.launched.append(argv)
+        on_line("episode 0 agent 0x1: 5 steps")
+        return self.process
+
+    def wait(self, job_id, states=("running", "done", "error")):
+        """The answer of /api/test/<id> once its state is one of `states` (the jobs queue in a thread)."""
+        for _ in range(300):
+            status, body, _ = self.call("GET", f"/api/test/{job_id}")
+            if status == 200 and body["state"] in states:
+                return body
+            time.sleep(0.02)
+        raise AssertionError(f"the test {job_id} stayed {body['state']}")
 
     @property
     def maps_path(self):
@@ -579,4 +615,296 @@ def test_presets_folder_gets_nothing_but_presets_and_deleted(web):
     web.call("POST", "/api/presets/p1/delete", {})
     files = {os.path.relpath(os.path.join(root, file), web.context.presets_dir) for root, _, names in os.walk(web.context.presets_dir) for file in names}
     assert files == {"Catalog.xml", *(name + ".xml" for name in REAL_PRESETS), os.path.join("_deleted", "p1.xml")}
+
+
+# Lists
+
+LIST = "ctf_curriculo_inicial"
+
+
+def list_path(web, name=LIST):
+    return os.path.join(web.context.training_dir, name + ".json")
+
+
+def list_bytes(web, name=LIST):
+    with open(list_path(web, name), "rb") as handle:
+        return handle.read()
+
+
+def list_body(web, name=LIST):
+    data = web.call("GET", f"/api/lists/{name}")[1]
+    return {"order": data["order"], "entries": data["entries"]}
+
+
+def test_lists_index_and_get(web):
+    status, body, _ = web.call("GET", "/api/lists")
+    assert status == 200 and [row["name"] for row in body["lists"]] == [LIST]
+    assert body["lists"][0]["entries"] == 3 and body["lists"][0]["stale"] is None and body["lists"][0]["error"] is None
+    data = web.call("GET", f"/api/lists/{LIST}")[1]
+    assert data["name"] == LIST and data["order"] == "sequence" and data["stale"] is None and data["error"] is None
+    assert data["presets"] == ["artemis_ctf_rounds"] and data["entries"][0]["roster"] == {"rival": 1}
+    assert set(data["entries"][1]) == {"map", "preset", "roster", "rounds", "weight"}
+    assert web.call("GET", "/api/lists/nothing")[0] == 404
+
+
+def test_lists_get_then_put_is_what_save_list_writes(web):
+    before = list_bytes(web)
+    assert before == open(os.path.join(DATA, "Training", LIST + ".json"), "rb").read()
+    status, body, _ = web.call("PUT", f"/api/lists/{LIST}", list_body(web))
+    assert status == 200 and body["stale"] is None and body["entries"] == web.call("GET", f"/api/lists/{LIST}")[1]["entries"]
+    assert list_bytes(web) == before
+
+
+def test_lists_put_creates_and_edits(web):
+    entries = [{"map": "Map CTF 1v1 First", "preset": None, "roster": {"rival": 1}, "rounds": 2, "weight": 3},
+               {"map": "Map CTF 2v2 Final", "preset": "", "roster": None, "rounds": 1, "weight": 1.5},
+               {"map": "Map CTF 1v1 Final", "preset": "artemis_ctf_fast", "roster": {"auto": 1, "rival": 2}, "rounds": 4, "weight": 1}]
+    status, body, _ = web.call("PUT", "/api/lists/mine", {"order": "weighted", "entries": entries})
+    assert status == 200 and body["name"] == "mine" and body["order"] == "weighted" and body["presets"] == ["artemis_ctf_fast"]
+    expected = tmp_save(web, "expected", "weighted", [dict(entry, weight=float(entry["weight"])) for entry in entries])
+    assert list_bytes(web, "mine").replace(b'"name": "mine"', b'"name": "expected"') == expected
+    assert [row["name"] for row in web.call("GET", "/api/lists")[1]["lists"]] == [LIST, "mine"]
+
+
+def tmp_save(web, name, order, entries):
+    from artemis.training import save_list
+    path = os.path.join(os.path.dirname(web.context.training_dir), name + ".json")
+    save_list(path, name, order, entries, maps_path=web.maps_path, presets_folder=web.context.presets_dir)
+    return open(path, "rb").read()
+
+
+@pytest.mark.parametrize("change,text", [
+    (lambda body: body["entries"][0].update(roster={"auto": 1, "rival": 0}), "rival"),
+    (lambda body: body["entries"][0].update(roster={"rival": 0}), "rival"),
+    (lambda body: body["entries"][0].update(roster={"rival": 1, "x": 1}), "roster"),
+    (lambda body: body["entries"][0].update(roster={"rival": 20}), "fit"),
+    (lambda body: body["entries"][0].update(rounds=0), "rounds"),
+    (lambda body: body["entries"][0].update(weight=0), "weight"),
+    (lambda body: body["entries"][0].update(map="Map Nothing"), "catalog"),
+    (lambda body: body["entries"][0].update(preset="no_such"), "does not compile"),
+    (lambda body: body["entries"][0].update(extra=1), "extra"),
+    (lambda body: body.update(order="random"), "order"),
+    (lambda body: body.update(entries=[]), "entries"),
+    (lambda body: body.update(entries=[3]), "expected"),
+    (lambda body: body.pop("entries"), "expected"),
+])
+def test_lists_put_that_is_not_a_list_is_400_and_changes_nothing(web, change, text):
+    before = list_bytes(web)
+    body = list_body(web)
+    change(body)
+    status, answer, _ = web.call("PUT", f"/api/lists/{LIST}", body)
+    assert status == 400 and text in answer["error"] and web.context.training_dir not in answer["error"]
+    assert list_bytes(web) == before
+    assert not os.path.exists(list_path(web, "new_one"))
+
+
+def test_lists_put_of_a_new_name_that_fails_creates_no_file(web):
+    body = list_body(web)
+    body["entries"][0]["rounds"] = 0
+    assert web.call("PUT", "/api/lists/new_one", body)[0] == 400
+    assert not os.path.exists(list_path(web, "new_one"))
+
+
+@pytest.mark.parametrize("name", BAD_NAMES + ["maps", "Maps"])
+def test_list_names_that_are_not_names_are_400(web, name):
+    before = {file: open(os.path.join(web.context.training_dir, file), "rb").read() for file in os.listdir(web.context.training_dir) if file.endswith(".json")}
+    body = list_body(web)
+    for method, suffix, payload in (("GET", "", None), ("PUT", "", body), ("POST", "/delete", {})):
+        status, answer, _ = web.call(method, f"/api/lists/{quote(name, safe='/')}{suffix}", payload)
+        assert status == 400 and "error" in answer, (method, name)
+    after = {file: open(os.path.join(web.context.training_dir, file), "rb").read() for file in os.listdir(web.context.training_dir) if file.endswith(".json")}
+    assert after == before
+
+
+def test_a_stale_list_is_read_and_put_regenerates_it(web):
+    body = web.call("GET", "/api/presets/artemis_ctf_rounds")[1]
+    body["own"]["general.round_limit"] = "6"
+    assert web.call("PUT", "/api/presets/artemis_ctf_rounds", {"base": body["base"], "doc": body["doc"], "own": body["own"]})[0] == 200
+    data = web.call("GET", f"/api/lists/{LIST}")[1]
+    assert data["stale"] and "artemis_ctf_rounds" in data["stale"] and data["error"] is None and len(data["entries"]) == 3
+    assert web.call("GET", "/api/lists")[1]["lists"][0]["stale"] == data["stale"]
+    status, saved, _ = web.call("PUT", f"/api/lists/{LIST}", {"order": data["order"], "entries": data["entries"]})
+    assert status == 200 and saved["stale"] is None
+    assert web.call("GET", f"/api/lists/{LIST}")[1]["stale"] is None
+    assert json.loads(list_bytes(web))["presets"]["artemis_ctf_rounds"]["lines"] == compiled(web, "artemis_ctf_rounds").splitlines()
+
+
+def test_a_list_with_a_map_that_left_the_catalog_is_shown_with_its_error(web):
+    maps = [row for row in web.call("GET", "/api/maps")[1]["maps"] if row["config"] != "Map CTF 2v2 Final"]
+    assert web.call("PUT", "/api/maps", {"maps": maps})[0] == 200
+    data = web.call("GET", f"/api/lists/{LIST}")[1]
+    assert data["error"] and "Map CTF 2v2 Final" in data["error"] and len(data["entries"]) == 3
+    assert web.call("GET", "/api/lists")[1]["lists"][0]["error"]
+
+
+def test_list_delete_moves_it_to_deleted(web):
+    original = list_bytes(web)
+    status, body, _ = web.call("POST", f"/api/lists/{LIST}/delete", {})
+    assert status == 200 and body["moved_to"] == f"_deleted/{LIST}.json"
+    assert not os.path.exists(list_path(web))
+    assert open(os.path.join(web.context.training_dir, "_deleted", LIST + ".json"), "rb").read() == original
+    assert web.call("GET", "/api/lists")[1]["lists"] == []
+    assert web.call("POST", f"/api/lists/{LIST}/delete", {})[0] == 404
+    assert "Maps.json" in os.listdir(web.context.training_dir)
+    assert web.call("GET", "/api/maps")[1]["maps"][0]["used_by"] == []
+
+
+def test_list_changes_need_the_token(web):
+    before = list_bytes(web)
+    assert web.call("PUT", f"/api/lists/{LIST}", list_body(web), token=False)[0] == 403
+    assert web.call("POST", f"/api/lists/{LIST}/delete", {}, token="bad")[0] == 403
+    assert web.call("POST", "/api/test/entry", {"list": LIST, "index": 0}, token=False)[0] == 403
+    assert web.call("POST", "/api/test/list", {"list": LIST, "episodes": 1}, token=False)[0] == 403
+    assert list_bytes(web) == before and not web.queued and not web.launched
+
+
+# Tests of an entry and of a list
+
+def test_test_entry_queues_the_scenario_of_the_entry(web):
+    status, body, _ = web.call("POST", "/api/test/entry", {"list": LIST, "index": 1})
+    assert status == 200 and body["state"] in ("queued", "running")
+    job = web.wait(body["id"], ("running",))
+    assert job["kind"] == "entry" and job["list"] == LIST and job["index"] == 1 and job["state"] == "running"
+    (job_id, text), = web.queued
+    assert job_id == body["id"] and re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{4}", job_id)
+    entry = web.call("GET", f"/api/lists/{LIST}")[1]["entries"][1]
+    lines = text.splitlines()
+    assert lines[0].startswith("name ls3_") and "config " + entry["map"] in lines and "preset artemis_ctf_rounds" in lines and "map " + entry["map"] in lines
+    assert entry["roster"] == {"auto": 1, "rival": 1} and "roster 0 1 0 0 0 0 0 0 auto 1" in lines
+    assert f"round_setup preset=artemis_ctf_rounds; map={entry['map']}; roster=0 1 0 0 0 0 0 0 auto 1" in lines
+    assert "check no_errors" in lines and "check setup_ok" in lines and "max_seconds 150.0" in lines
+    assert not web.launched
+
+
+def test_entry_scenario_is_accepted_by_game_compile_for_every_kind_of_entry():
+    game = api.game_tool()
+    base = {"map": "Map CTF 1v1 First", "rounds": 1, "weight": 1.0}
+    cases = [dict(base, preset=None, roster=None), dict(base, preset="", roster={"rival": 1}), dict(base, preset="artemis_ctf_rounds", roster={"auto": 3, "rival": 4})]
+    for entry in cases:
+        scenario = api.entry_scenario("l", 0, entry)
+        for configs in (None, ["Map CTF 1v1 First", "Other"]):
+            text, count = game.Compile(scenario, configs)
+            assert count == 1 and "config Map CTF 1v1 First" in text and "check setup_ok" in text
+        with pytest.raises(ValueError, match="is not recorded"):
+            game.Compile(scenario, ["Other"])
+    none, base_values, full = (game.Compile(api.entry_scenario("l", 0, entry), None)[0] for entry in cases)
+    assert "preset" not in none and "roster" not in none and "map Map CTF 1v1 First" in none
+    assert "preset none" in base_values and "round_setup preset=none; map=Map CTF 1v1 First; roster=0 0 0 0 0 0 0 0 auto 0" not in base_values
+    assert "round_setup preset=none; map=Map CTF 1v1 First; roster=0 1 0 0 0 0 0 0 auto 0" in base_values
+    assert "roster 0 4 0 0 0 0 0 0 auto 3" in full
+
+
+def test_test_entry_result_comes_from_the_report(web):
+    job_id = web.call("POST", "/api/test/entry", {"list": LIST, "index": 0})[1]["id"]
+    assert web.wait(job_id, ("running",))["passed"] is None
+    web.reports[job_id] = {"id": job_id, "done": False}
+    assert web.call("GET", f"/api/test/{job_id}")[1]["state"] == "running"
+    web.reports[job_id] = {"id": job_id, "done": True, "result": "ok", "message": "", "matches": [
+        {"name": "m", "result": "ok", "end": "limit", "ticks": 10, "checks": [{"name": "setup_ok", "ok": True, "detail": "fine"}], "log": []}]}
+    done = web.call("GET", f"/api/test/{job_id}")[1]
+    assert done["state"] == "done" and done["passed"] is True and done["matches"][0]["failed"] == []
+    second = web.call("POST", "/api/test/entry", {"list": LIST, "index": 0})[1]["id"]
+    web.wait(second, ("running",))
+    web.reports[second] = {"id": second, "done": True, "result": "ok", "matches": [
+        {"name": "m", "result": "ok", "checks": [{"name": "setup_ok", "ok": False, "detail": "preset did not apply"}, {"name": "no_errors", "ok": True, "detail": ""}]}]}
+    failed = web.call("GET", f"/api/test/{second}")[1]
+    assert failed["state"] == "done" and failed["passed"] is False and failed["matches"][0]["failed"] == ["setup_ok: preset did not apply"]
+    third = web.call("POST", "/api/test/entry", {"list": LIST, "index": 0})[1]["id"]
+    web.wait(third, ("running",))
+    web.reports[third] = {"id": third, "done": True, "result": "fail", "message": "launch-timeout", "matches": []}
+    assert web.call("GET", f"/api/test/{third}")[1]["passed"] is False
+
+
+def test_only_one_test_runs_at_a_time(web):
+    first = web.call("POST", "/api/test/entry", {"list": LIST, "index": 0})[1]["id"]
+    web.wait(first, ("running",))
+    status, body, _ = web.call("POST", "/api/test/entry", {"list": LIST, "index": 1})
+    assert status == 409 and first in body["error"]
+    assert web.call("POST", "/api/test/list", {"list": LIST, "episodes": 1})[0] == 409
+    web.reports[first] = {"id": first, "done": True, "result": "ok", "matches": []}
+    assert web.call("POST", "/api/test/entry", {"list": LIST, "index": 1})[0] == 200
+
+
+def test_test_without_a_live_bench_is_409_and_queues_nothing(web):
+    for state in ("watcher_off", "no_mcc"):
+        web.status = {**BENCH, "state": state}
+        for path, body in (("/api/test/entry", {"list": LIST, "index": 0}), ("/api/test/list", {"list": LIST, "episodes": 1})):
+            status, answer, _ = web.call("POST", path, body)
+            assert status == 409 and "error" in answer
+    assert not web.queued and not web.launched and web.context.jobs == {}
+
+
+def test_a_failure_to_queue_is_an_error_state(web):
+    web.fail_queue = "the game watcher is not running"
+    job_id = web.call("POST", "/api/test/entry", {"list": LIST, "index": 0})[1]["id"]
+    job = web.wait(job_id, ("error",))
+    assert job["passed"] is False and "watcher" in job["message"]
+    web.fail_queue = None
+    assert web.call("POST", "/api/test/entry", {"list": LIST, "index": 0})[0] == 200
+
+
+@pytest.mark.parametrize("body", [{"list": LIST, "index": 3}, {"list": LIST, "index": -1}, {"list": LIST, "index": "0"}, {"list": LIST, "index": True},
+                                  {"list": LIST}, {"list": "nothing", "index": 0}, {"list": "../x", "index": 0}, {"list": "A", "index": 0}, {"index": 0}, [], "x"])
+def test_test_entry_refuses_bad_requests(web, body):
+    status, answer, _ = web.call("POST", "/api/test/entry", body)
+    assert status in (400, 404) and "error" in answer and not web.queued
+
+
+def test_test_list_builds_the_command_and_the_scenario(web):
+    status, body, _ = web.call("POST", "/api/test/list", {"list": LIST, "episodes": 3})
+    assert status == 200
+    expected = [sys.executable, os.path.join(Repo(), "Agent", "scripts", "env_check.py"), "--list", list_path(web), "--policy", "seek", "--episodes", "3"]
+    assert body["command"] == expected and body["id"].startswith("list-")
+    job = web.wait(body["id"], ("running",))
+    assert web.launched == [expected] and job["output"] == ["episode 0 agent 0x1: 5 steps"] and job["passed"] is None
+    (job_id, text), = web.queued
+    lines = text.splitlines()
+    assert job_id == body["id"] and "config Map CTF 1v1 First" in lines and "roster 0 1 0 0 0 0 0 0 auto 0" in lines and "events" in lines
+    assert "max_seconds 570.0" in lines and "check no_errors" in lines and "preset artemis_ctf_rounds" in lines
+    web.process.code = 0
+    done = web.call("GET", f"/api/test/{body['id']}")[1]
+    assert done["state"] == "done" and done["passed"] is True and "0" in done["message"]
+
+
+def test_test_list_that_fails_is_reported(web):
+    job_id = web.call("POST", "/api/test/list", {"list": LIST, "episodes": 1})[1]["id"]
+    web.wait(job_id, ("running",))
+    web.process.code = 1
+    done = web.call("GET", f"/api/test/{job_id}")[1]
+    assert done["state"] == "done" and done["passed"] is False
+
+
+def test_test_list_waits_for_the_match_and_gives_up(web):
+    web.phase = "Loading"
+    job_id = web.call("POST", "/api/test/list", {"list": LIST, "episodes": 1})[1]["id"]
+    job = web.wait(job_id, ("error",))
+    assert "did not start" in job["message"] and not web.launched
+
+
+@pytest.mark.parametrize("episodes", [0, 51, -1, "3", 2.5, True, None])
+def test_test_list_episodes_are_an_integer_from_1_to_50(web, episodes):
+    status, answer, _ = web.call("POST", "/api/test/list", {"list": LIST, "episodes": episodes})
+    assert status == 400 and "episodes" in answer["error"] and not web.queued and not web.launched
+
+
+def test_test_list_refuses_a_stale_list(web):
+    body = web.call("GET", "/api/presets/artemis_ctf_rounds")[1]
+    body["own"]["general.round_limit"] = "6"
+    web.call("PUT", "/api/presets/artemis_ctf_rounds", {"base": body["base"], "doc": body["doc"], "own": body["own"]})
+    status, answer, _ = web.call("POST", "/api/test/list", {"list": LIST, "episodes": 2})
+    assert status == 409 and "save it first" in answer["error"] and not web.launched
+
+
+def test_test_status_of_an_unknown_id_is_404(web):
+    assert web.call("GET", "/api/test/nothing")[0] == 404
+
+
+def test_the_real_launchers_are_the_fixed_ones():
+    """The default Context runs only the two commands of D291 S6: the bench queue (files, no subprocess) and env_check as a list of arguments."""
+    import inspect
+    context = api.default_context()
+    assert context.queue_fn is api.bench_queue and context.launch_fn is api.env_launch
+    source = inspect.getsource(api.env_launch)
+    assert "shell=False" in source and "shell=True" not in inspect.getsource(api)
+    assert "subprocess." not in inspect.getsource(api.bench_queue) and inspect.getsource(api).count("subprocess.Popen") == 1
 

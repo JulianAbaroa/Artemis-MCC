@@ -21,7 +21,7 @@ HOST = "127.0.0.1"
 MAX_BODY = 1024 * 1024
 MAX_DRAIN = 8 * MAX_BODY
 STATIC_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-STATIC_FILES = ("app.js", "core.js", "maps.js", "presets.js", "style.css")
+STATIC_FILES = ("app.js", "core.js", "lists.js", "maps.js", "presets.js", "style.css")
 CONTENT_TYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8"}
 TOKEN_PLACEHOLDER = "__ARTEMIS_TOKEN__"
 STATIC_URL = re.compile(r"^/static/([a-z0-9_]+\.[a-z]+)$")

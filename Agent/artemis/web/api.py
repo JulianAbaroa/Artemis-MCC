@@ -11,17 +11,23 @@ import json
 import os
 import re
 import sys
+import subprocess
 import threading
 import time
+import uuid
 from dataclasses import dataclass, field
 from typing import Callable
 
 from ..training.catalog import MAPS_PATH, ROOT, load_catalog
+from ..training.lists import ListError, StaleListError, load_list, save_list
 
 MAP_FIELDS = ("config", "name", "size", "stage")
 MAPS_FILE = "Maps.json"
 TOOLS = os.path.join(ROOT, "Tools")
 DELETED = "_deleted"
+ENV_CHECK = os.path.join(ROOT, "Agent", "scripts", "env_check.py")
+ENTRY_SECONDS = 150
+MAX_JOBS = 50
 _loaded = {}
 
 
@@ -104,13 +110,61 @@ def game_status() -> dict:
             "configs": list(bench.get("configs") or []) if alive else None}
 
 
+def bench_queue(job_id, text):
+    """Queues a compiled scenario for the bench as `game.py run` does: exports the presets, asks the watcher to reload them and writes the
+    scenario to build/game/inbox. The only request to the bench (no subprocess). Raises RuntimeError with what failed."""
+    game = game_tool()
+    if not game.Watcher():
+        raise RuntimeError("the game watcher is not running (open Tools/game_watcher.bat)")
+    if presets_tool().Export():
+        raise RuntimeError("the presets do not compile (see the Presets tab)")
+    ok, message = game.Send("presets")
+    if not ok:
+        raise RuntimeError(f"the watcher did not reload the presets: {message or 'no answer in 60 s'}")
+    target = os.path.join(game.GAME, "inbox", job_id + ".txt")
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    with open(target + ".tmp", "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+    os.replace(target + ".tmp", target)
+
+
+def bench_report(job_id):
+    """The report of a bench run, or None while it is not written."""
+    return game_tool().ReadJson(os.path.join("report", job_id + ".json"))
+
+
+def bench_state():
+    """state.json of the bench (phase, configs...), or None."""
+    return game_tool().Bench()
+
+
+def env_launch(argv, on_line):
+    """Runs env_check as a process (a list of arguments, never a shell) and sends its output lines to on_line. Returns the process."""
+    process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", cwd=ROOT, shell=False)
+
+    def pump():
+        for line in process.stdout:
+            on_line(line.rstrip())
+
+    threading.Thread(target=pump, daemon=True).start()
+    return process
+
+
 @dataclass
 class Context:
-    """The folders the API reads and writes and where it asks for the state of the bench. Tests give temporary copies of Data/."""
+    """The folders the API reads and writes, where it asks for the state of the bench and the two things it can launch (D291 S6): the scenario
+    of the bench (queue_fn, report_fn, bench_fn) and env_check (launch_fn). Tests give temporary copies of Data/ and fakes for the launchers."""
     presets_dir: str
     training_dir: str
     status_fn: Callable = game_status
+    queue_fn: Callable = bench_queue
+    report_fn: Callable = bench_report
+    bench_fn: Callable = bench_state
+    launch_fn: Callable = env_launch
+    poll_seconds: float = 1.0
+    start_seconds: float = 180.0
     lock: threading.RLock = field(default_factory=threading.RLock)
+    jobs: dict = field(default_factory=dict)
 
     @property
     def maps_path(self):
@@ -357,3 +411,249 @@ def delete_preset(context, found, body):
             raise ApiError(409, f"preset {name} cannot be deleted: it is " + " and ".join(used))
         moved = move_to_deleted(context.presets_dir, path)
     return 200, {"deleted": name, "moved_to": f"{DELETED}/{os.path.basename(moved)}"}
+
+
+# Lists
+
+def _list_path(context, found):
+    name = valid_name(found.group(1))
+    if name.lower() + ".json" == MAPS_FILE.lower():
+        raise ApiError(400, f"{name!r} is not a valid name for a list (Maps.json is the catalog of the maps)")
+    return name, safe_path(context.training_dir, name, ".json")
+
+
+def _list_files(context):
+    """Names of the lists of the folder: the .json files that are not the catalog and have a valid name."""
+    pattern = presets_tool().NAME
+    return [file[:-5] for file in sorted(os.listdir(context.training_dir))
+            if file.endswith(".json") and file.lower() != MAPS_FILE.lower() and pattern.fullmatch(file[:-5]) and os.path.isfile(os.path.join(context.training_dir, file))]
+
+
+def _read_list(context, name, path):
+    """{name, order, entries, stale, error} of a list file. A stale list (a preset changed since it was saved) and an invalid one are shown, not
+    refused: stale is the reason (Save regenerates it) and error is what is wrong with it."""
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+        rows = data["entries"]
+        entries = [{"map": row["map"], "preset": row.get("preset"), "roster": row.get("roster"), "rounds": row.get("rounds", 1), "weight": row.get("weight", 1.0)} for row in rows]
+        order = data["order"]
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+        raise ApiError(409, f"{name}.json is not a list: {error!r}") from None
+    stale = problem = None
+    try:
+        load_list(path, maps_path=context.maps_path, presets_folder=context.presets_dir)
+    except StaleListError as error:
+        stale = str(error)
+    except (ListError, OSError, ValueError) as error:
+        problem = str(error).replace(path, name + ".json")
+    return {"name": name, "order": order, "entries": entries, "presets": sorted({e["preset"] for e in entries if e["preset"]}), "stale": stale, "error": problem}
+
+
+@route("GET", r"/api/lists")
+def get_lists(context, found, body):
+    rows = []
+    for name in _list_files(context):
+        try:
+            data = _read_list(context, name, os.path.join(context.training_dir, name + ".json"))
+            rows.append({"name": name, "order": data["order"], "entries": len(data["entries"]), "stale": data["stale"], "error": data["error"]})
+        except ApiError as error:
+            rows.append({"name": name, "order": None, "entries": 0, "stale": None, "error": error.message})
+    return 200, {"lists": rows}
+
+
+@route("GET", r"/api/lists/(.+)")
+def get_list(context, found, body):
+    name, path = _list_path(context, found)
+    if not os.path.isfile(path):
+        raise ApiError(404, f"there is no list {name}")
+    return 200, _read_list(context, name, path)
+
+
+@route("PUT", r"/api/lists/(.+)")
+def put_list(context, found, body):
+    """Writes the list with save_list: it is validated like load_list, and the compiled text of its presets is saved again (that clears stale)."""
+    name, path = _list_path(context, found)
+    if not isinstance(body, dict) or not isinstance(body.get("entries"), list) or not all(isinstance(row, dict) for row in body["entries"]):
+        raise ApiError(400, 'expected {"order": "sequence" | "weighted", "entries": [{map, preset, roster, rounds, weight}, ...]}')
+    entries = [{**row, "weight": float(row["weight"])} if isinstance(row.get("weight"), int) and not isinstance(row["weight"], bool) else row for row in body["entries"]]
+    with context.lock:
+        try:
+            save_list(path, name, body.get("order"), entries, maps_path=context.maps_path, presets_folder=context.presets_dir)
+        except (ListError, TypeError) as error:
+            raise ApiError(400, str(error).replace(path, name + ".json")) from None
+        return 200, _read_list(context, name, path)
+
+
+@route("POST", r"/api/lists/(.+)/delete")
+def delete_list(context, found, body):
+    name, path = _list_path(context, found)
+    if not os.path.isfile(path):
+        raise ApiError(404, f"there is no list {name}")
+    with context.lock:
+        moved = move_to_deleted(context.training_dir, path)
+    return 200, {"deleted": name, "moved_to": f"{DELETED}/{os.path.basename(moved)}"}
+
+
+# Tests (D291 S6): one entry through the bench, a whole list through env_check
+
+def bench_roster(roster):
+    """The roster of a list entry (relative to the local player, D287) as the bench writes it: the local player is on team 0, so the bots of its
+    team are "auto" and the rival ones are team 1 (as the ls2 scenarios)."""
+    return {"auto": roster.get("auto", 0), "1": roster["rival"]}
+
+
+def _preset_word(preset):
+    """The preset of an entry for the bench: None (no change) is left out by the caller, "" (the base values) is none."""
+    return preset or None
+
+
+def entry_scenario(list_name, index, entry) -> dict:
+    """The bench scenario that tests one entry: a match on the config of its map that starts with the entry (preset, map and bots at load) and
+    has it as the setup of the next round, checked with no_errors and setup_ok."""
+    roster = entry.get("roster")
+    fields = {}
+    if entry.get("preset") is not None:
+        fields["preset"] = _preset_word(entry["preset"])
+    fields["map"] = entry["map"]
+    if roster is not None:
+        fields["roster"] = bench_roster(roster)
+    match = {"name": f"{list_name} entry {index}", "config": entry["map"], **fields, "setups": [dict(fields)],
+             "checks": ["no_errors", "setup_ok"], "max_seconds": ENTRY_SECONDS}
+    return {"name": f"ls3_{list_name}_{index}", "matches": [match]}
+
+
+def list_scenario(list_name, first, episodes) -> dict:
+    """The bench scenario env_check plays on (as ls2_env_list): the match of the first entry with a bot, long enough for the episodes."""
+    match = {"name": f"env_check --list {list_name}", "config": first["map"], "map": first["map"], "bots": [1], "events": True,
+             "checks": ["no_errors"], "max_seconds": min(7200, 240 + 110 * episodes)}
+    if first.get("preset") is not None:
+        match["preset"] = _preset_word(first["preset"])
+    return {"name": f"ls3_{list_name}_list", "matches": [match]}
+
+
+def _job_id(prefix=""):
+    return prefix + time.strftime("%Y%m%d-%H%M%S-", time.gmtime()) + uuid.uuid4().hex[:4]
+
+
+def _refresh(context, job):
+    """Brings a job up to date from the report (an entry) or the process (a list)."""
+    if job["state"] != "running":
+        return
+    job["seconds"] = round(time.time() - job["started"], 1)
+    if job["kind"] == "entry":
+        report = context.report_fn(job["id"])
+        if report and report.get("done"):
+            matches = [{"name": m.get("name"), "result": m.get("result"), "end": m.get("end"), "ticks": m.get("ticks"),
+                        "failed": [f"{c.get('name')}: {c.get('detail')}" for c in m.get("checks", []) if not c.get("ok")], "log": m.get("log", [])[:8]}
+                       for m in report.get("matches", [])]
+            job.update(state="done", matches=matches, message=report.get("message", ""),
+                       passed=report.get("result") == "ok" and not any(m["failed"] for m in matches))
+        elif job["seconds"] > ENTRY_SECONDS + 240:
+            job.update(state="error", passed=False, message=f"no report after {int(job['seconds'])} s: is MCC on the custom games screen?")
+    else:
+        process = job.get("process")
+        code = process.poll() if process else None
+        if code is not None:
+            job.update(state="done", passed=code == 0, message=f"env_check exited with {code}")
+
+
+def _public(job):
+    shown = {key: value for key, value in job.items() if key not in ("process", "started")}
+    if "output" in shown:
+        shown["output"] = list(shown["output"])
+    return shown
+
+
+def _start_job(context, kind, list_name, scenario, **extra):
+    """Registers a job and queues its scenario in a thread (the watcher can take up to 60 s to answer). 409 when another test is running:
+    the bench plays one scenario at a time. Returns the job."""
+    status = context.status_fn()
+    if status["state"] != "ready":
+        raise ApiError(409, "the game watcher is not running (open Tools/game_watcher.bat)" if status["state"] == "watcher_off"
+                       else "MCC is not open with Artemis: open it to run tests")
+    try:
+        text, _ = game_tool().Compile(scenario, status.get("configs"))
+    except ValueError as error:
+        raise ApiError(400, str(error)) from None
+    with context.lock:
+        for other in context.jobs.values():
+            _refresh(context, other)
+            if other["state"] in ("queued", "running"):
+                raise ApiError(409, f"the test {other['id']} is still running: wait for it to finish")
+        job = {"id": _job_id("list-" if kind == "list" else ""), "kind": kind, "list": list_name, "state": "queued", "passed": None, "message": "",
+               "started": time.time(), "seconds": 0.0, "scenario": scenario["name"], **extra}
+        if kind == "list":
+            job["output"] = []
+        context.jobs[job["id"]] = job
+        for old in [key for key, value in context.jobs.items() if value["state"] in ("done", "error")][:-MAX_JOBS]:
+            del context.jobs[old]
+    threading.Thread(target=_run_job, args=(context, job, text), daemon=True).start()
+    return job
+
+
+def _keep(output, line):
+    """The last 200 lines of the output of a process."""
+    output.append(line)
+    del output[:-200]
+
+
+def _run_job(context, job, text):
+    try:
+        context.queue_fn(job["id"], text)
+        if job["kind"] == "list":
+            deadline = time.time() + context.start_seconds
+            while (context.bench_fn() or {}).get("phase") != "Running":
+                if time.time() > deadline:
+                    raise RuntimeError(f"the match did not start in {int(context.start_seconds)} s: is MCC on the custom games screen?")
+                time.sleep(context.poll_seconds)
+            job["process"] = context.launch_fn(job["command"], lambda line: _keep(job["output"], line))
+        job["started"] = time.time()
+        job["state"] = "running"
+    except (RuntimeError, OSError, SystemExit) as error:
+        job.update(state="error", passed=False, message=str(error))
+
+
+def _entry_of(context, body):
+    if not isinstance(body, dict):
+        raise ApiError(400, 'expected {"list": name, "index": n}')
+    name = valid_name(body.get("list"))
+    path = safe_path(context.training_dir, name, ".json")
+    if not os.path.isfile(path):
+        raise ApiError(404, f"there is no list {name}")
+    return name, path
+
+
+@route("POST", r"/api/test/entry")
+def test_entry(context, found, body):
+    name, path = _entry_of(context, body)
+    entries = _read_list(context, name, path)["entries"]
+    index = body.get("index")
+    if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(entries):
+        raise ApiError(400, f"index must be an integer from 0 to {len(entries) - 1}")
+    job = _start_job(context, "entry", name, entry_scenario(name, index, entries[index]), index=index)
+    return 200, {"id": job["id"], "state": job["state"]}
+
+
+@route("POST", r"/api/test/list")
+def test_list(context, found, body):
+    name, path = _entry_of(context, body)
+    episodes = body.get("episodes")
+    if isinstance(episodes, bool) or not isinstance(episodes, int) or not 1 <= episodes <= 50:
+        raise ApiError(400, "episodes must be an integer from 1 to 50")
+    data = _read_list(context, name, path)
+    if data["stale"] or data["error"]:
+        raise ApiError(409, f"the list cannot be tested: {data['stale'] or data['error']} (save it first)")
+    command = [sys.executable, ENV_CHECK, "--list", path, "--policy", "seek", "--episodes", str(episodes)]
+    job = _start_job(context, "list", name, list_scenario(name, data["entries"][0], episodes), episodes=episodes, command=command)
+    return 200, {"id": job["id"], "state": job["state"], "command": command}
+
+
+@route("GET", r"/api/test/(.+)")
+def get_test(context, found, body):
+    with context.lock:
+        job = context.jobs.get(found.group(1))
+        if job is None:
+            raise ApiError(404, f"there is no test {found.group(1)}")
+        _refresh(context, job)
+        return 200, _public(job)

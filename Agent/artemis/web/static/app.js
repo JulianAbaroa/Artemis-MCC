@@ -1,5 +1,6 @@
 // The page of the lists builder (LS.3, D291): the tab bar and the chip of the bench. Every tab registers itself from its module.
 import { api, bench, h, tabs } from "/static/core.js";
+import "/static/lists.js";
 import "/static/presets.js";
 import "/static/maps.js";
 
