@@ -21,6 +21,7 @@ An error is reported as file:line: what was expected, and invalidates the whole 
 """
 import argparse, hashlib, os, re, sys
 from xml.parsers import expat
+from xml.sax.saxutils import quoteattr
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRESETS = os.path.join(ROOT, "Data", "Presets")
@@ -147,6 +148,7 @@ class Group:
         self.Offset = offset
         self.When = a.get("when", "")
         self.Check = a.get("check", "")
+        self.Traits = a.get("traits") == "true"
         self.Doc = a.get("doc", "")
         self.Indices = []
         for child in node.Children:
@@ -304,13 +306,14 @@ def Normalized(path):
         return handle.read().replace(b"\r\n", b"\n").rstrip(b"\n")
 
 
-def CompilePreset(name, folder, catalog, cache=None):
-    """Compiled text of one preset, or raises PresetError. Returns (text, base, doc, number of writes)."""
+def CompilePreset(name, folder, catalog, cache=None, paths=None):
+    """Compiled text of one preset, or raises PresetError. Returns (text, base, doc, number of writes). paths = {preset name: file} reads
+    that file instead of <folder>/<name>.xml (the web builder compiles a candidate before it replaces the preset)."""
     chain, writes, checks = [], {}, set()
     current, trail = name, []
     first_line = 1
     while current:
-        path = os.path.join(folder, current + ".xml")
+        path = (paths or {}).get(current) or os.path.join(folder, current + ".xml")
         if current in trail:
             raise PresetError(os.path.join(folder, trail[-1] + ".xml"), first_line, f"the chain of bases has a cycle ({' -> '.join(trail + [current])})")
         if not os.path.isfile(path):
@@ -334,6 +337,84 @@ def CompilePreset(name, folder, catalog, cache=None):
         lines.append(f"write {offset:x} {when} {data.hex()} {mask.hex()}")
     lines += [f"check {kind} {index}" for kind, index in sorted(checks)]
     return "\n".join(lines) + "\n", top[0], top[1], len(writes)
+
+
+KEY = re.compile(r"^([a-z][a-z0-9_]*)(?:\[(\d+(?:,\d+)*)\])?\.([a-z][a-z0-9_]*)$")
+
+
+def ValueKey(group, values, field):
+    """Name of one value of a preset: 'general.round_limit', 'team[0].primary_color', 'loadout[1,2].primary_weapon'."""
+    return f"{group}[{','.join(str(v) for v in values)}].{field}" if values else f"{group}.{field}"
+
+
+def ParseKey(catalog, key):
+    """(group, index values, field) of a ValueKey. Raises ValueError when the group, the indices or the field are not in the catalog."""
+    found = KEY.fullmatch(key) if isinstance(key, str) else None
+    group = catalog.Groups.get(found.group(1)) if found else None
+    if group is None:
+        raise ValueError(f"'{key}' is not a value of a preset (expected group.field or group[index].field of the catalog)")
+    values = tuple(int(v) for v in found.group(2).split(",")) if found.group(2) else ()
+    if len(values) != len(group.Indices) or any(not 0 <= v < count for v, (_, count, _) in zip(values, group.Indices)):
+        raise ValueError(f"'{key}': group '{group.Name}' needs the indices {', '.join(f'{n} (0 to {c - 1})' for n, c, _ in group.Indices) or 'none'}")
+    if found.group(3) not in group.ByName:
+        raise ValueError(f"'{key}': group '{group.Name}' has no field '{found.group(3)}' (expected one of: {', '.join(group.ByName)})")
+    return group, values, found.group(3)
+
+
+def ReadOwn(path, catalog):
+    """The values one XML sets as they are written (enum name or number): ({ValueKey: text}, base name, doc)."""
+    root = ParseXml(path)
+    if root.Tag != "preset":
+        raise PresetError(path, root.Line, "expected <preset>")
+    own = {}
+    for node in root.Children:
+        group = catalog.Groups.get(node.Tag)
+        if group is None:
+            raise PresetError(path, node.Line, f"unknown element <{node.Tag}> (expected one of: {', '.join(catalog.Groups)})")
+        attrs, values = dict(node.Attrs), []
+        for name, count, _ in group.Indices:
+            number = Number(attrs.pop(name, ""))
+            if number is None or not 0 <= number < count:
+                raise PresetError(path, node.Line, f"'{name}' of <{node.Tag}> must be a number from 0 to {count - 1}")
+            values.append(number)
+        for name, text in attrs.items():
+            if name not in group.ByName:
+                raise PresetError(path, node.Line, f"unknown attribute '{name}' in <{node.Tag}> (expected one of: {', '.join(group.ByName)})")
+            own[ValueKey(node.Tag, values, name)] = text
+    return own, root.Attrs.get("base", ""), root.Attrs.get("doc", "")
+
+
+def Resolve(name, folder, catalog, paths=None):
+    """The values a preset ends up with and where each comes from: {ValueKey: (text, name of the preset of the chain that sets it)}. The
+    nearest preset of the chain of bases wins, as in CompilePreset. The chain has to compile (a cycle just stops)."""
+    chain, current = [], name
+    while current and current not in [link for link, _ in chain]:
+        own, base, _ = ReadOwn((paths or {}).get(current) or os.path.join(folder, current + ".xml"), catalog)
+        chain.append((current, own))
+        current = base
+    resolved = {}
+    for link, own in reversed(chain):
+        resolved.update({key: (text, link) for key, text in own.items()})
+    return resolved
+
+
+def PresetXml(base, doc, own, catalog, comment=""):
+    """XML of a preset from its own values {ValueKey: text}, in the format of the files of the repo: one element per group and index
+    (catalog order, the indices first, then the fields in the order they come in `own`, so a preset read with ReadOwn is written as it was), LF lines and no final newline. comment is kept as written.
+    Raises ValueError for a key that is not in the catalog."""
+    order = list(catalog.Groups)
+    elements = {}
+    for key, text in own.items():
+        group, values, field = ParseKey(catalog, key)
+        elements.setdefault((order.index(group.Name), values), {})[field] = str(text)
+    root = "".join(f" {name}={quoteattr(value)}" for name, value in (("base", base), ("doc", doc)) if value)
+    lines = ['<?xml version="1.0" encoding="utf-8"?>'] + ([comment] if comment else []) + [f"<preset{root}>"]
+    for (index, values), fields in sorted(elements.items()):
+        group = catalog.Groups[order[index]]
+        parts = [f"{name}={quoteattr(str(v))}" for (name, _, _), v in zip(group.Indices, values)]
+        parts += [f"{name}={quoteattr(text)}" for name, text in fields.items()]
+        lines.append(f"  <{group.Name} {' '.join(parts)} />")
+    return "\n".join(lines + ["</preset>"])
 
 
 def Sources(folder):

@@ -141,6 +141,7 @@
     <Content Include="Agent\artemis\web\static\app.js" />
     <Content Include="Agent\artemis\web\static\core.js" />
     <Content Include="Agent\artemis\web\static\maps.js" />
+    <Content Include="Agent\artemis\web\static\presets.js" />
     <Content Include="Agent\artemis\web\static\style.css" />
   </ItemGroup>
   <ItemGroup>

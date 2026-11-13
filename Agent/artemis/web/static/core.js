@@ -24,7 +24,7 @@ export function h(tag, attributes = {}, ...children) {
     else if (value === true) element.setAttribute(key, "");
     else if (value !== false && value !== null && value !== undefined) element.setAttribute(key, value);
   }
-  for (const child of children.flat()) element.append(child);
+  for (const child of children.flat()) if (child !== null && child !== undefined && child !== false) element.append(child);
   return element;
 }
 

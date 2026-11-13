@@ -8,6 +8,8 @@ import json
 import os
 import shutil
 import sys
+import time
+from urllib.parse import quote
 import threading
 
 import pytest
@@ -20,6 +22,9 @@ if AGENT not in sys.path:
 
 from artemis.training import load_catalog  # noqa: E402
 from artemis.web import api, server  # noqa: E402
+
+sys.path.insert(0, os.path.join(Repo(), "Tools"))
+import presets  # noqa: E402
 
 DATA = os.path.join(Repo(), "Data")
 BENCH = {"state": "ready", "watcher": True, "mcc": True, "bench": True, "configs": ["Map CTF 1v1 First", "Map Unknown 3v3"]}
@@ -337,3 +342,241 @@ def test_the_real_data_is_untouched():
     """The tests write in temporary copies: the folders of the context are never the ones of the repo."""
     assert api.default_context().training_dir == os.path.join(DATA, "Training")
     assert api.default_context().presets_dir == os.path.join(DATA, "Presets")
+
+
+# Names, paths and deleting (S4, S5)
+
+BAD_NAMES = ["../x", "..", "a/b", "A", "a b", "x" * 32, "a.b", "%2e%2e", "a\n", "ñ", "..%2fx", "a\\b"]
+
+
+@pytest.mark.parametrize("name", BAD_NAMES)
+def test_valid_name_and_safe_path_refuse_names_that_are_not_names(tmp_path, name):
+    with pytest.raises(api.ApiError) as error:
+        api.valid_name(name)
+    assert error.value.status == 400
+    with pytest.raises(api.ApiError):
+        api.safe_path(str(tmp_path), name, ".xml")
+
+
+def test_safe_path_builds_the_path_inside_the_folder(tmp_path):
+    assert api.safe_path(str(tmp_path), "a_1", ".xml") == os.path.join(str(tmp_path), "a_1.xml")
+    assert api.valid_name("x" * 31) == "x" * 31
+    for bad in (None, 3, ["a"], {"a": 1}):
+        with pytest.raises(api.ApiError):
+            api.valid_name(bad)
+    link = tmp_path / "out"
+    link.mkdir()
+    inner = tmp_path / "inner"
+    os.symlink(str(link), str(inner))
+    with pytest.raises(api.ApiError):
+        api.safe_path(str(inner), "..", "")
+
+
+def test_move_to_deleted_never_overwrites_or_removes(tmp_path):
+    names = []
+    for round_ in range(3):
+        file = tmp_path / "p.xml"
+        file.write_text(f"v{round_}")
+        names.append(api.move_to_deleted(str(tmp_path), str(file)))
+        assert not file.exists()
+    assert len(set(names)) == 3 and all(os.path.dirname(name) == str(tmp_path / "_deleted") for name in names)
+    assert sorted(open(name).read() for name in names) == ["v0", "v1", "v2"]
+    assert os.path.basename(names[0]) == "p.xml" and os.path.basename(names[1]).startswith("p_") and time.strftime("%Y") in os.path.basename(names[1])
+
+
+# Catalog
+
+def test_catalog_endpoint_expands_the_groups_and_fields(web):
+    status, body, _ = web.call("GET", "/api/catalog")
+    assert status == 200
+    catalog = presets.Catalog(os.path.join(web.context.presets_dir, "Catalog.xml"))
+    assert list(body["enums"]) == list(catalog.Enums) and body["enums"]["bool_trait"] == ["unchanged", "disabled", "enabled"]
+    assert [group["name"] for group in body["groups"]] == list(catalog.Groups)
+    names = {group["name"]: group for group in body["groups"]}
+    assert names["team"]["indices"] == [{"name": "index", "count": 8}] and names["loadout"]["indices"][1] == {"name": "index", "count": 5}
+    assert names["trait_set"]["check"] == "megalo_trait_set" and names["trait_set"]["traits"] and not names["general"]["traits"]
+    assert [f["name"] for f in names["base_traits"]["fields"]] == [f["name"] for f in names["red_traits"]["fields"]]
+    assert names["base_traits"]["when"] == "tick" and names["red_traits"]["fields"][0]["when"] == "pickup"
+    field = next(f for f in names["base_traits"]["fields"] if f["name"] == "jump_height")
+    assert field["type"] == "s32" and field["unit"] == "%" and field["enum"] is None and field["min"] == -(1 << 31) and field["doc"]
+    gravity = next(f for f in names["base_traits"]["fields"] if f["name"] == "gravity")
+    assert gravity["enum"] == "player_gravity" and gravity["min"] is None
+    assert sum(len(group["fields"]) for group in body["groups"] if not group["traits"]) + len(names["base_traits"]["fields"]) == 77
+
+
+# Presets
+
+REAL_PRESETS = ["artemis_ctf_base", "artemis_ctf_colors", "artemis_ctf_fast", "artemis_ctf_rounds"]
+
+
+def preset_path(web, name):
+    return os.path.join(web.context.presets_dir, name + ".xml")
+
+
+def preset_bytes(web, name):
+    with open(preset_path(web, name), "rb") as handle:
+        return handle.read()
+
+
+def tree(web):
+    """Every file of the presets folder with its bytes: what a refused request must leave as it was."""
+    return {os.path.join(root, file): open(os.path.join(root, file), "rb").read() for root, _, files in os.walk(web.context.presets_dir) for file in files}
+
+
+def compiled(web, name):
+    return presets.CompilePreset(name, web.context.presets_dir, presets.Catalog(os.path.join(web.context.presets_dir, "Catalog.xml")))[0]
+
+
+def test_presets_list(web):
+    status, body, _ = web.call("GET", "/api/presets")
+    rows = {row["name"]: row for row in body["presets"]}
+    assert status == 200 and sorted(rows) == REAL_PRESETS
+    assert rows["artemis_ctf_rounds"]["base"] == "artemis_ctf_fast" and rows["artemis_ctf_base"]["base"] == ""
+    assert rows["artemis_ctf_fast"]["doc"].startswith("Short rounds")
+
+
+@pytest.mark.parametrize("name", REAL_PRESETS)
+def test_preset_get_then_put_leaves_the_file_and_the_compiled_lines_identical(web, name):
+    before, lines = preset_bytes(web, name), compiled(web, name)
+    status, body, _ = web.call("GET", f"/api/presets/{name}")
+    assert status == 200 and body["name"] == name and body["writes"] == len([l for l in lines.splitlines() if l.startswith("write ")])
+    status, written, _ = web.call("PUT", f"/api/presets/{name}", {"base": body["base"], "doc": body["doc"], "own": body["own"]})
+    assert status == 200 and written["lines"] == lines.splitlines() and written["writes"] == body["writes"]
+    assert preset_bytes(web, name) == before
+    assert compiled(web, name) == lines
+    assert not [file for file in os.listdir(web.context.presets_dir) if file.endswith(".tmp")]
+
+
+def test_preset_resolved_tells_where_each_value_comes_from(web):
+    body = web.call("GET", "/api/presets/artemis_ctf_rounds")[1]
+    assert body["base"] == "artemis_ctf_fast" and body["own"] == {"general.round_limit": "4", "general.time_limit_minutes": "1"}
+    resolved = body["resolved"]
+    assert resolved["general.round_limit"] == {"value": "4", "from": "artemis_ctf_rounds"}
+    assert resolved["general.time_limit_minutes"] == {"value": "1", "from": "artemis_ctf_rounds"}
+    assert resolved["base_traits.gravity"] == {"value": "50%", "from": "artemis_ctf_fast"}
+    assert resolved["base_traits.jump_height"] == {"value": "100", "from": "artemis_ctf_base"}
+    assert body["checks"] == ["megalo_trait_set 0"]
+    assert web.call("GET", "/api/presets/artemis_ctf_base")[1]["checks"] == []
+
+
+def test_preset_put_creates_a_new_preset_in_the_repo_format(web):
+    body = {"base": "artemis_ctf_fast", "doc": "A test.", "own": {"respawn.time_seconds": 7, "general.round_limit": "2", "base_traits.gravity": "100%"}}
+    status, answer, _ = web.call("PUT", "/api/presets/my_test", body)
+    assert status == 200 and answer["writes"] > 5 and answer["checks"] == ["megalo_trait_set 0"] and answer["lines"][0] == "preset my_test"
+    assert preset_bytes(web, "my_test") == (
+        b'<?xml version="1.0" encoding="utf-8"?>\r\n<preset base="artemis_ctf_fast" doc="A test.">\r\n  <general round_limit="2" />\r\n'
+        b'  <respawn time_seconds="7" />\r\n  <base_traits gravity="100%" />\r\n</preset>')
+    got = web.call("GET", "/api/presets/my_test")[1]
+    assert got["resolved"]["respawn.time_seconds"] == {"value": "7", "from": "my_test"}
+    assert got["resolved"]["general.time_limit_minutes"]["from"] == "artemis_ctf_fast"
+    assert "my_test" in [row["name"] for row in web.call("GET", "/api/presets")[1]["presets"]]
+    updated = web.call("PUT", "/api/presets/my_test", {"base": "", "doc": "", "own": {"general.round_limit": "9"}})
+    assert updated[0] == 200 and preset_bytes(web, "my_test").endswith(b'<general round_limit="9" />\r\n</preset>') and b"base=" not in preset_bytes(web, "my_test")
+
+
+def test_preset_put_keeps_the_comment_of_the_file(web):
+    web.call("PUT", "/api/presets/artemis_ctf_base", {"base": "", "doc": "changed", "own": {"general.round_limit": "5"}})
+    assert b"<!-- The Artemis CTF gametype as measured in Forge" in preset_bytes(web, "artemis_ctf_base")
+
+
+@pytest.mark.parametrize("name,body,text", [
+    ("artemis_ctf_fast", {"own": {"base_traits.gravity": "not_a_value"}}, "not a valid value"),
+    ("artemis_ctf_fast", {"own": {"general.round_limit": "99999999"}}, "outside the range"),
+    ("artemis_ctf_fast", {"own": {"general.nothing": "1"}}, "no field"),
+    ("artemis_ctf_fast", {"own": {"nothing.x": "1"}}, "not a value of a preset"),
+    ("artemis_ctf_fast", {"own": {"team.primary_color": "1"}}, "indices"),
+    ("artemis_ctf_fast", {"own": {"team[8].primary_color": "1"}}, "indices"),
+    ("artemis_ctf_fast", {"base": "no_such_base", "own": {}}, "does not exist"),
+    ("artemis_ctf_fast", {"base": "artemis_ctf_fast", "own": {}}, "cycle"),
+    ("artemis_ctf_base", {"base": "artemis_ctf_rounds", "own": {}}, "cycle"),
+    ("artemis_ctf_fast", {"base": "../x", "own": {}}, "not a valid name"),
+    ("artemis_ctf_fast", {"base": "A", "own": {}}, "not a valid name"),
+    ("artemis_ctf_fast", {"own": {"general.round_limit": ""}}, "text or a number"),
+    ("artemis_ctf_fast", {"own": {"general.round_limit": True}}, "text or a number"),
+    ("artemis_ctf_fast", {"own": {"general.round_limit": None}}, "text or a number"),
+    ("artemis_ctf_fast", {"own": ["x"]}, "expected"),
+    ("artemis_ctf_fast", {"own": {}, "doc": 3}, "expected"),
+    ("brand_new", {"base": "brand_new", "own": {}}, "cycle"),
+])
+def test_preset_put_that_does_not_compile_is_400_and_changes_nothing(web, name, body, text):
+    before = tree(web)
+    status, answer, _ = web.call("PUT", f"/api/presets/{name}", body)
+    assert status == 400 and text in answer["error"] and ".tmp" not in answer["error"]
+    assert tree(web) == before
+
+
+def test_preset_put_error_names_the_file_and_the_field(web):
+    """The error of an enum value names the field and the file the user is saving, not the temporary file."""
+    answer = web.call("PUT", "/api/presets/artemis_ctf_fast", {"own": {"base_traits.gravity": "zzz"}})[1]
+    assert "artemis_ctf_fast.xml" in answer["error"] and "gravity" in answer["error"]
+
+
+@pytest.mark.parametrize("name", BAD_NAMES)
+def test_preset_names_that_are_not_names_are_400_in_every_endpoint(web, name):
+    before = tree(web)
+    for method, suffix, body in (("GET", "", None), ("PUT", "", {"own": {}}), ("POST", "/delete", {})):
+        status, answer, _ = web.call(method, f"/api/presets/{quote(name, safe='/')}{suffix}", body)
+        assert status == 400 and "error" in answer, (method, name)
+    assert tree(web) == before
+    assert not os.path.exists(os.path.join(web.context.presets_dir, "..", "x.xml"))
+
+
+def test_preset_that_does_not_exist_is_404(web):
+    assert web.call("GET", "/api/presets/nothing")[0] == 404
+    assert web.call("POST", "/api/presets/nothing/delete", {})[0] == 404
+
+
+def test_preset_changes_need_the_token(web):
+    before = tree(web)
+    for method, path in (("PUT", "/api/presets/artemis_ctf_fast"), ("POST", "/api/presets/artemis_ctf_rounds/delete")):
+        assert web.call(method, path, {"own": {}}, token=False)[0] == 403
+    assert tree(web) == before
+
+
+def test_preset_get_of_one_that_does_not_compile_is_409(web):
+    with open(preset_path(web, "artemis_ctf_rounds"), "w") as handle:
+        handle.write('<preset base="gone"><general round_limit="1" /></preset>')
+    status, body, _ = web.call("GET", "/api/presets/artemis_ctf_rounds")
+    assert status == 409 and "gone" in body["error"]
+
+
+def test_preset_delete_moves_the_file_to_deleted(web):
+    web.call("PUT", "/api/presets/scratch", {"base": "artemis_ctf_fast", "doc": "x", "own": {"general.round_limit": "2"}})
+    original = preset_bytes(web, "scratch")
+    status, body, _ = web.call("POST", "/api/presets/scratch/delete", {})
+    assert status == 200 and body["deleted"] == "scratch" and body["moved_to"] == "_deleted/scratch.xml"
+    assert not os.path.exists(preset_path(web, "scratch"))
+    with open(os.path.join(web.context.presets_dir, "_deleted", "scratch.xml"), "rb") as handle:
+        assert handle.read() == original
+    assert web.call("GET", "/api/presets/scratch")[0] == 404
+    assert "scratch" not in [row["name"] for row in web.call("GET", "/api/presets")[1]["presets"]]
+    web.call("PUT", "/api/presets/scratch", {"base": "artemis_ctf_fast", "doc": "again", "own": {}})
+    status, body, _ = web.call("POST", "/api/presets/scratch/delete", {})
+    assert status == 200 and body["moved_to"] != "_deleted/scratch.xml"
+    assert len(os.listdir(os.path.join(web.context.presets_dir, "_deleted"))) == 2
+
+
+def test_preset_delete_of_a_base_or_a_preset_of_a_list_is_409(web):
+    before = tree(web)
+    status, body, _ = web.call("POST", "/api/presets/artemis_ctf_fast/delete", {})
+    assert status == 409 and "artemis_ctf_rounds" in body["error"] and "base" in body["error"]
+    assert web.call("POST", "/api/presets/artemis_ctf_base/delete", {})[0] == 409
+    status, body, _ = web.call("POST", "/api/presets/artemis_ctf_rounds/delete", {})
+    assert status == 409 and "ctf_curriculo_inicial" in body["error"] and os.path.exists(preset_path(web, "artemis_ctf_rounds"))
+    web.call("PUT", "/api/presets/loose", {"base": "", "doc": "", "own": {}})
+    with open(os.path.join(web.context.training_dir, "mine.json"), "w") as handle:
+        json.dump({"entries": [{"map": "Map CTF 1v1 First", "preset": "loose"}, {"map": "x", "preset": None}]}, handle)
+    status, body, _ = web.call("POST", "/api/presets/loose/delete", {})
+    assert status == 409 and "mine" in body["error"] and os.path.exists(preset_path(web, "loose"))
+    os.remove(os.path.join(web.context.training_dir, "mine.json"))
+    assert web.call("POST", "/api/presets/loose/delete", {})[0] == 200
+    after = tree(web)
+    assert {path: data for path, data in after.items() if "_deleted" not in path and "loose" not in path} == {path: data for path, data in before.items()}
+
+
+def test_presets_folder_gets_nothing_but_presets_and_deleted(web):
+    web.call("PUT", "/api/presets/p1", {"own": {"general.round_limit": "1"}})
+    web.call("POST", "/api/presets/p1/delete", {})
+    files = {os.path.relpath(os.path.join(root, file), web.context.presets_dir) for root, _, names in os.walk(web.context.presets_dir) for file in names}
+    assert files == {"Catalog.xml", *(name + ".xml" for name in REAL_PRESETS), os.path.join("_deleted", "p1.xml")}
+

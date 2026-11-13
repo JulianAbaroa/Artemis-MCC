@@ -295,3 +295,97 @@ def test_game_compile_refuses_a_preset_that_is_not_a_name(preset):
     with pytest.raises(ValueError, match="preset"):
         game.Compile({"matches": [{"config": "c", "preset": preset}]}, None)
 
+
+# --- own values, resolution with origin, and the writer of the web builder (LS.3) ----------------------------------------------
+
+REAL = os.path.join(REPO, "Data", "Presets")
+
+
+def test_group_traits_flag_and_value_keys():
+    catalog = Catalog()
+    assert [name for name, group in catalog.Groups.items() if group.Traits] == [
+        "respawn_traits", "base_traits", "red_traits", "blue_traits", "yellow_traits", "trait_set"]
+    assert presets.ValueKey("general", (), "round_limit") == "general.round_limit"
+    assert presets.ValueKey("loadout", (1, 2), "primary") == "loadout[1,2].primary"
+    assert presets.ParseKey(catalog, "loadout[1,2].primary")[1:] == ((1, 2), "primary")
+    assert presets.ParseKey(catalog, "team[7].primary_color")[1] == (7,)
+
+
+@pytest.mark.parametrize("key", ["round_limit", "general[0].round_limit", "general.nothing", "nothing.x", "team.primary_color", "team[8].primary_color",
+                                 "team[1,2].primary_color", "loadout[1].primary", "General.round_limit", "general.round_limit\n", 3])
+def test_parse_key_refuses_what_is_not_a_value_of_the_catalog(key):
+    with pytest.raises(ValueError):
+        presets.ParseKey(Catalog(), key)
+
+
+def test_read_own_gives_the_values_as_written_in_file_order():
+    own, base, doc = presets.ReadOwn(os.path.join(REAL, "artemis_ctf_fast.xml"), Catalog())
+    assert base == "artemis_ctf_base" and doc.startswith("Short rounds")
+    assert own == {"general.time_limit_minutes": "2", "respawn.time_seconds": "3", "base_traits.gravity": "50%", "base_traits.movement_speed": "120%",
+                   "trait_set[0].movement_speed": "90%"}
+    assert list(own)[2:4] == ["base_traits.gravity", "base_traits.movement_speed"]
+
+
+def test_read_own_errors_name_the_file_and_the_line(tmp_path):
+    folder = Folder(tmp_path, a=Preset('  <team primary_color="1" />'), b=Preset('  <general nothing="1" />'), c=Preset('  <nothing x="1" />'))
+    for name, text in (("a", "'index' of <team>"), ("b", "unknown attribute 'nothing'"), ("c", "unknown element <nothing>")):
+        with pytest.raises(presets.PresetError, match=text):
+            presets.ReadOwn(os.path.join(folder, name + ".xml"), Catalog())
+
+
+def test_resolve_tells_which_preset_of_the_chain_sets_each_value():
+    resolved = presets.Resolve("artemis_ctf_rounds", REAL, Catalog())
+    assert resolved["general.round_limit"] == ("4", "artemis_ctf_rounds")
+    assert resolved["general.time_limit_minutes"] == ("1", "artemis_ctf_rounds")
+    assert resolved["base_traits.gravity"] == ("50%", "artemis_ctf_fast")
+    assert resolved["base_traits.jump_height"] == ("100", "artemis_ctf_base")
+    assert resolved["trait_set[0].movement_speed"] == ("90%", "artemis_ctf_fast")
+    assert resolved["respawn.loadout_camera_seconds"] == ("10", "artemis_ctf_base")
+    assert "team[0].primary_color" not in resolved
+    assert presets.Resolve("artemis_ctf_colors", REAL, Catalog())["team[1].primary_color"] == ("0xFF8000", "artemis_ctf_colors")
+
+
+def test_resolved_values_are_the_compiled_writes(tmp_path):
+    """The values Resolve gives, written in one preset without a base, compile to the same lines as the chain (except the name and source)."""
+    catalog = Catalog()
+    resolved = presets.Resolve("artemis_ctf_rounds", REAL, catalog)
+    xml = presets.PresetXml("", "", {key: value for key, (value, _) in resolved.items()}, catalog)
+    folder = Folder(tmp_path, flat=xml)
+    flat = presets.CompilePreset("flat", folder, catalog)[0].splitlines()[2:]
+    assert flat == presets.CompilePreset("artemis_ctf_rounds", REAL, catalog)[0].splitlines()[2:]
+
+
+@pytest.mark.parametrize("name", ["artemis_ctf_base", "artemis_ctf_colors", "artemis_ctf_fast", "artemis_ctf_rounds"])
+def test_preset_xml_writes_back_the_real_presets_as_they_are(name):
+    catalog = Catalog()
+    path = os.path.join(REAL, name + ".xml")
+    own, base, doc = presets.ReadOwn(path, catalog)
+    with open(path, encoding="utf-8", newline="") as handle:
+        text = handle.read().replace("\r\n", "\n")
+    comment = re.search(r"-->", text) and text[text.index("<!--"):text.index("-->") + 3]
+    assert presets.PresetXml(base, doc, own, catalog, comment or "") == text
+
+
+def test_preset_xml_orders_elements_by_catalog_and_escapes_values():
+    catalog = Catalog()
+    own = {"trait_set[1].gravity": "50%", "team[1].primary_color": "1", "general.round_limit": "2", "team[0].primary_color": "0", "respawn.time_seconds": "3"}
+    text = presets.PresetXml("a_base", 'say "hi" & <go>', own, catalog)
+    assert text.splitlines()[1] == "<preset base=\"a_base\" doc='say \"hi\" &amp; &lt;go&gt;'>"
+    assert [line.split()[0] for line in text.splitlines()[2:-1]] == ["<general", "<respawn", "<team", "<team", "<trait_set"]
+    assert presets.PresetXml("", "", {}, catalog) == '<?xml version="1.0" encoding="utf-8"?>\n<preset>\n</preset>'
+    with pytest.raises(ValueError):
+        presets.PresetXml("", "", {"general.nothing": "1"}, catalog)
+
+
+def test_compile_preset_reads_a_candidate_file_in_place_of_the_preset(tmp_path):
+    catalog = Catalog()
+    folder = Folder(tmp_path, a=Preset('  <general round_limit="2" />'), b=Preset('  <general round_limit="3" />', base="a"))
+    candidate = tmp_path / "candidate.xml"
+    candidate.write_text(Preset('  <general round_limit="5" />', base="a"), encoding="utf-8")
+    text = presets.CompilePreset("b", folder, catalog, paths={"b": str(candidate)})[0]
+    assert text == presets.CompilePreset("b", Folder(tmp_path, a=Preset('  <general round_limit="2" />'), b=Preset('  <general round_limit="5" />', base="a")), catalog)[0]
+    cycle = tmp_path / "cycle.xml"
+    cycle.write_text(Preset('  <general round_limit="5" />', base="b"), encoding="utf-8")
+    with pytest.raises(presets.PresetError, match="cycle"):
+        presets.CompilePreset("a", folder, catalog, paths={"a": str(cycle)})
+

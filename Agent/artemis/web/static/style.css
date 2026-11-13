@@ -30,4 +30,12 @@ button.primary { background: var(--accent); color: #0b0d11; border-color: var(--
 .dirty { color: var(--warn); }
 .status { position: fixed; left: 0; right: 0; bottom: 0; padding: 6px 16px; background: var(--panel); border-top: 1px solid var(--line); color: var(--dim); min-height: 30px; }
 .status.ok { color: var(--ok); }
-.status.error { color: var(--error); }
+.status.error { color: var(--error); }tr.inherited td { color: var(--dim); }
+tr.inherited input, tr.inherited select { color: var(--dim); }
+input.invalid { border-color: var(--error); }
+details { border: 1px solid var(--line); border-radius: 4px; margin: 6px 0; padding: 4px 8px; background: var(--panel); }
+summary { cursor: pointer; font-weight: 500; }
+details table { margin-top: 6px; }
+details td:first-child { width: 22%; }
+input[type="checkbox"] { width: auto; }
+input[type="search"] { width: 220px; }
