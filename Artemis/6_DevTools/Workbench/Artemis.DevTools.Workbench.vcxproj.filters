@@ -85,30 +85,6 @@
     <Filter Include="Logs\Type">
       <UniqueIdentifier>{d4e200c8-a704-541b-b777-1382a8e4b450}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ObjectTable">
-      <UniqueIdentifier>{6f014d19-0894-5103-8a0c-a9291a5b8a71}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ObjectTable\State">
-      <UniqueIdentifier>{abe724b4-5a20-5e4f-a270-3c24cc3a0f5a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ObjectTable\System">
-      <UniqueIdentifier>{98dc0cc7-d815-5b5c-b7cb-6567f9feca4e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ObjectTable\Type">
-      <UniqueIdentifier>{c239bcb0-4fbb-54e2-a560-3d942276fa38}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PlayerTable">
-      <UniqueIdentifier>{e3d0f1de-b48b-5422-9e5b-d523c1c290e3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PlayerTable\State">
-      <UniqueIdentifier>{531b19d9-886c-5542-bd3d-beea9ad69198}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PlayerTable\System">
-      <UniqueIdentifier>{bdd6e4fa-1ae2-5424-b15c-9438b8f371a2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PlayerTable\Type">
-      <UniqueIdentifier>{d2c23f21-3f8c-538a-8e80-0cedc7ffeb1f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{c488358f-1030-5bf1-82e9-066f0232bfce}</UniqueIdentifier>
     </Filter>
@@ -233,39 +209,6 @@
     <ClCompile Include="Logs\Type\DevTools.Workbench.Logs.Type.ixx">
       <Filter>Logs\Type</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.cpp">
-      <Filter>ObjectTable\State</Filter>
-    </ClCompile>
-    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.ixx">
-      <Filter>ObjectTable\State</Filter>
-    </ClCompile>
-    <ClCompile Include="ObjectTable\System\ObjectTableUIService.cpp">
-      <Filter>ObjectTable\System</Filter>
-    </ClCompile>
-    <ClCompile Include="ObjectTable\System\ObjectTableUIService.ixx">
-      <Filter>ObjectTable\System</Filter>
-    </ClCompile>
-    <ClCompile Include="ObjectTable\Type\DevTools.Workbench.ObjectTable.Type.ixx">
-      <Filter>ObjectTable\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.cpp">
-      <Filter>PlayerTable\State</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.ixx">
-      <Filter>PlayerTable\State</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerTable\System\PlayerTableUIService.cpp">
-      <Filter>PlayerTable\System</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerTable\System\PlayerTableUIService.ixx">
-      <Filter>PlayerTable\System</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerTable\Type\DevTools.Workbench.PlayerTable.Type.ixx">
-      <Filter>PlayerTable\Type</Filter>
-    </ClCompile>
-    <Image Include="Resources\Icons\cube-solid.png">
-      <Filter>Resources\Icons</Filter>
-    </Image>
     <Image Include="Resources\Icons\file-lines-solid.png">
       <Filter>Resources\Icons</Filter>
     </Image>
@@ -282,9 +225,6 @@
       <Filter>Resources\Icons</Filter>
     </ClInclude>
     <Image Include="Resources\Icons\map-solid.png">
-      <Filter>Resources\Icons</Filter>
-    </Image>
-    <Image Include="Resources\Icons\person-rifle-solid.png">
       <Filter>Resources\Icons</Filter>
     </Image>
     <ClCompile Include="Settings\State\SettingsUIStore.cpp">

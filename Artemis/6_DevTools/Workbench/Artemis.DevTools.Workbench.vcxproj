@@ -129,17 +129,6 @@
     <ClCompile Include="Logs\System\LogsUIService.cpp" />
     <ClCompile Include="Logs\System\LogsUIService.ixx" />
     <ClCompile Include="Logs\Type\DevTools.Workbench.Logs.Type.ixx" />
-    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.cpp" />
-    <ClCompile Include="ObjectTable\State\ObjectTableUIStore.ixx" />
-    <ClCompile Include="ObjectTable\System\ObjectTableUIService.cpp" />
-    <ClCompile Include="ObjectTable\System\ObjectTableUIService.ixx" />
-    <ClCompile Include="ObjectTable\Type\DevTools.Workbench.ObjectTable.Type.ixx" />
-    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.cpp" />
-    <ClCompile Include="PlayerTable\State\PlayerTableUIStore.ixx" />
-    <ClCompile Include="PlayerTable\System\PlayerTableUIService.cpp" />
-    <ClCompile Include="PlayerTable\System\PlayerTableUIService.ixx" />
-    <ClCompile Include="PlayerTable\Type\DevTools.Workbench.PlayerTable.Type.ixx" />
-    <Image Include="Resources\Icons\cube-solid.png" />
     <Image Include="Resources\Icons\file-lines-solid.png" />
     <Image Include="Resources\Icons\gear-solid.png" />
     <None Include="CONTRACT.md" />
@@ -147,7 +136,6 @@
     <ClCompile Include="Resources\Icons\IconData.cpp" />
     <ClInclude Include="Resources\Icons\IconData.h" />
     <Image Include="Resources\Icons\map-solid.png" />
-    <Image Include="Resources\Icons\person-rifle-solid.png" />
     <ClCompile Include="Settings\State\SettingsUIStore.cpp" />
     <ClCompile Include="Settings\State\SettingsUIStore.ixx" />
     <ClCompile Include="Settings\System\SettingsUIService.cpp" />

@@ -76,17 +76,11 @@
     <ClCompile Include="Format\System\Hex\HexFormater.ixx" />
     <ClCompile Include="Format\System\Team\TeamFormater.cpp" />
     <ClCompile Include="Format\System\Team\TeamFormater.ixx" />
-    <ClCompile Include="Widget\System\CopyableField\CopyableFieldGuiService.cpp" />
-    <ClCompile Include="Widget\System\CopyableField\CopyableFieldGuiService.ixx" />
-    <ClCompile Include="Widget\System\HandleDrawer\HandleDrawerGuiService.cpp" />
-    <ClCompile Include="Widget\System\HandleDrawer\HandleDrawerGuiService.ixx" />
     <ClCompile Include="Widget\System\Inspector\InspectorGuiService.ixx" />
     <ClCompile Include="Widget\System\Panel\PanelGuiService.cpp" />
     <ClCompile Include="Widget\System\Panel\PanelGuiService.ixx" />
     <ClCompile Include="Widget\System\ResponsiveCard\ResponsiveCardGuiService.cpp" />
     <ClCompile Include="Widget\System\ResponsiveCard\ResponsiveCardGuiService.ixx" />
-    <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.cpp" />
-    <ClCompile Include="Widget\System\SearchFilter\SearchFilterGuiService.ixx" />
     <ClCompile Include="Widget\System\Status\StatusGuiService.cpp" />
     <ClCompile Include="Widget\System\Status\StatusGuiService.ixx" />
     <ClCompile Include="Widget\System\DisabledScope\DisabledScope.cpp" />

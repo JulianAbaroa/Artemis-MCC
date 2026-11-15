@@ -19,8 +19,6 @@ namespace DevTools::Workbench
     auto Layer::Shutdown() -> void
     {
         m_LauncherUIService.ReleaseIcons();
-        m_ObjectTableUIStore.Cleanup();
-        m_PlayerTableUIStore.Cleanup();
     }
 
     auto Layer::DrawFrame(const FrameContext& frame) -> void
@@ -31,12 +29,6 @@ namespace DevTools::Workbench
 
         if (isMenuVisible) m_LauncherUIService.DrawDockSpace();
 
-        m_LauncherUIService.DrawTab(Tab::ObjectTable, "Object Table", [this] {
-            m_ObjectTableUIService.Draw();
-        });
-        m_LauncherUIService.DrawTab(Tab::PlayerTable, "Player Table", [this] {
-            m_PlayerTableUIService.Draw();
-        });
         m_LauncherUIService.DrawTab(Tab::DefinitionsInspector, "Definitions Inspector", [this] {
             m_DefinitionsInspectorUIService.Draw();
         });

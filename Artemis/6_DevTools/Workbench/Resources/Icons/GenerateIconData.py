@@ -4,7 +4,7 @@ import sys
 LICENSE_HEADER = (
     "// ============================================================\n"
     "// Icon data embedded from Font Awesome Free (https://fontawesome.com)\n"
-    "// Icons: cube, person-rifle, gear, file-lines, map\n"
+    "// Icons: gear, file-lines, map\n"
     "// License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)\n"
     "// Changes: downloaded as PNG, embedded as byte arrays.\n"
     "// This attribution applies to the icon byte data below, not to\n"
@@ -13,8 +13,6 @@ LICENSE_HEADER = (
 )
 
 ICONS = {
-    "cube-solid.png":          "Objects",
-    "person-rifle-solid.png":  "Players",
     "map-solid.png":           "Map",
     "gear-solid.png":          "Settings",
     "file-lines-solid.png":    "Logs",
@@ -49,7 +47,6 @@ def generate(png_dir: str):
     ]
     cpp_lines = [
         LICENSE_HEADER,
-        '#include "pch.h"\n',
         '#include "IconData.h"\n\n',
     ]
 

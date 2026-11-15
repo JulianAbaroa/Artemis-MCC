@@ -22,8 +22,6 @@ namespace
     // Tabs in the order of the launcher buttons.
     constexpr std::array<Tab, k_TabCount> k_Tabs
     {
-        Tab::ObjectTable,
-        Tab::PlayerTable,
         Tab::DefinitionsInspector,
         Tab::Settings,
         Tab::Simulation,
@@ -47,8 +45,6 @@ namespace
 
         switch (tab)
         {
-        case Tab::ObjectTable: return { "Objects", "Object Table", Data::Objects, Data::ObjectsSize };
-        case Tab::PlayerTable: return { "Players", "Player Table", Data::Players, Data::PlayersSize };
         case Tab::DefinitionsInspector: return { "Definitions", "Definitions Inspector", nullptr, 0 };
         case Tab::Settings: return { "Settings", "Settings", Data::Settings, Data::SettingsSize };
         case Tab::Simulation: return { "Simulation", "Simulation", nullptr, 0 };

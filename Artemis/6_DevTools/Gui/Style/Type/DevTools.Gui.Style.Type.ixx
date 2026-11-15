@@ -11,9 +11,6 @@ export namespace DevTools::Gui::Style::Type
     // Color of the section titles of the panels.
     inline constexpr ImVec4 k_SectionColor{ 0.8f, 0.8f, 0.8f, 1.0f };
 
-    // Space between the cards of a card table.
-    inline constexpr float k_CardSpacing{ 8.0f };
-
     // Seconds the feedback animation of a widget lasts.
     inline constexpr float k_AnimationDuration{ 0.6f };
 

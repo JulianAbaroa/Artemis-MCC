@@ -7,9 +7,7 @@ export namespace DevTools::Workbench::Launcher::Type
     // Tabs of the launcher window.
     enum class Tab : std::uint8_t
     {
-        ObjectTable = 0,
-        PlayerTable,
-        DefinitionsInspector,
+        DefinitionsInspector = 0,
         Settings,
         Simulation,
         Logs,

@@ -17,10 +17,6 @@ import DevTools.Workbench.Hotkey.State;
 import DevTools.Workbench.Hotkey.System;
 import DevTools.Workbench.Launcher.State;
 import DevTools.Workbench.Launcher.System;
-import DevTools.Workbench.ObjectTable.State;
-import DevTools.Workbench.ObjectTable.System;
-import DevTools.Workbench.PlayerTable.State;
-import DevTools.Workbench.PlayerTable.System;
 import DevTools.Workbench.DefinitionsInspector.System;
 import DevTools.Workbench.Settings.State;
 import DevTools.Workbench.Settings.System;
@@ -52,8 +48,6 @@ export namespace DevTools::Workbench
 
         using HotkeyUIStore = DevTools::Workbench::Hotkey::State::HotkeyUIStore;
         using LauncherUIStore = DevTools::Workbench::Launcher::State::LauncherUIStore;
-        using ObjectTableUIStore = DevTools::Workbench::ObjectTable::State::ObjectTableUIStore;
-        using PlayerTableUIStore = DevTools::Workbench::PlayerTable::State::PlayerTableUIStore;
         using SettingsUIStore = DevTools::Workbench::Settings::State::SettingsUIStore;
         using SimulationUIStore = DevTools::Workbench::Simulation::State::SimulationUIStore;
         using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
@@ -63,8 +57,6 @@ export namespace DevTools::Workbench
 
         using HotkeyUIService = DevTools::Workbench::Hotkey::System::HotkeyUIService;
         using LauncherUIService = DevTools::Workbench::Launcher::System::LauncherUIService;
-        using ObjectTableUIService = DevTools::Workbench::ObjectTable::System::ObjectTableUIService;
-        using PlayerTableUIService = DevTools::Workbench::PlayerTable::System::PlayerTableUIService;
         using DefinitionsInspectorUIService = DevTools::Workbench::DefinitionsInspector::System::DefinitionsInspectorUIService;
         using SettingsUIService = DevTools::Workbench::Settings::System::SettingsUIService;
         using SimulationUIService = DevTools::Workbench::Simulation::System::SimulationUIService;
@@ -80,8 +72,6 @@ export namespace DevTools::Workbench
             m_BackendGuiService(gui.m_BackendGuiService),
             m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, viewer.m_OverlayStore),
             m_LauncherUIService(service.m_SettingsStore, m_LauncherUIStore),
-            m_ObjectTableUIService(engine.m_CaptureStore, exportLayer.m_TickStore, m_ObjectTableUIStore),
-            m_PlayerTableUIService(engine.m_CaptureStore, exportLayer.m_TickStore, m_PlayerTableUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
             m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore, m_SettingsUIStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
@@ -145,8 +135,6 @@ export namespace DevTools::Workbench
         // --- State ---
         HotkeyUIStore m_HotkeyUIStore{};
         LauncherUIStore m_LauncherUIStore{};
-        ObjectTableUIStore m_ObjectTableUIStore{};
-        PlayerTableUIStore m_PlayerTableUIStore{};
         SettingsUIStore m_SettingsUIStore{};
         SimulationUIStore m_SimulationUIStore{};
         TickDumpUIStore m_TickDumpUIStore{};
@@ -157,8 +145,6 @@ export namespace DevTools::Workbench
         // --- System ---
         HotkeyUIService m_HotkeyUIService;
         LauncherUIService m_LauncherUIService;
-        ObjectTableUIService m_ObjectTableUIService;
-        PlayerTableUIService m_PlayerTableUIService;
         DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
         SettingsUIService m_SettingsUIService;
         SimulationUIService m_SimulationUIService;
