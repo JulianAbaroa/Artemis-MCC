@@ -1,5 +1,7 @@
 export module Views.Raycast.State;
 
+export import :Scene;
+
 import Common.State.Type;
 import Views.Raycast.Type;
 

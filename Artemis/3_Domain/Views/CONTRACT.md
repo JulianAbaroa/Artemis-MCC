@@ -14,7 +14,7 @@ can pick up, enter or use) and the raycasts it sees with.
 
 ## Input and output
 - Input: the stores of `Perception::Layer`, `Blam::Runtime::Layer` and `Blam::MapModel::Layer` (world and raycaster).
-- Output: `SelfStore`, `AffordanceStore` and `RaycastStore`, members of `Views::Layer`, one published value per tick.
+- Output: `SelfStore`, `AffordanceStore` and `RaycastStore`, members of `Views::Layer`, one published value per tick. `RaycastSceneStore` is also a member, but it is state between ticks and not an output.
 
 ## Public interface
 Other projects may import only these modules; everything else in the project is internal.
@@ -24,14 +24,15 @@ Other projects may import only these modules; everything else in the project is 
 | `Views.Layer` | The facade: stores and services; `Cleanup()` forgets the map. |
 | `Views.Self.Type`, `Views.Self.State` | The agent's player (`k_SelfLocalIndex`) and its position. |
 | `Views.Affordance.Type`, `Views.Affordance.State` | What the agent can interact with, and how. |
-| `Views.Raycast.Type`, `Views.Raycast.State` | The rays of the agent and what they hit. A static hit is a collision surface and carries its flags (`SurfaceFlags`) and global material (`Material`, -1 if none), a dynamic hit or a miss gives 0 and -1 (D272). |
+| `Views.Raycast.Type`, `Views.Raycast.State` | The rays of the agent and what they hit, cast through one scene of all the collidable objects of the tick (D298, D299), with no radius around the agent. `RaycastSceneStore` keeps that scene between ticks. A static hit is a collision surface and carries its flags (`SurfaceFlags`) and global material (`Material`, -1 if none), a dynamic hit or a miss gives 0 and -1 (D272). |
 | `Views.Oracle.Type`, `Views.Oracle.System` | Dev tool only (R3, D272), outside the pipeline: `OracleSample` (a ray with the engine answers and ours), `RayDifference`, `OracleStats` and its counters; `Compare` (the engine without objects against `Raycaster`, and with objects against the tick: hit or not, distance beyond `k_DistanceTolerance`, kind, object handle, material and surface flags), `Record` (counters, worst 20, cost histogram), `Summarize`, `Percentile`, `FormatSummary`, `FormatReport`, `ResolveRootObject` and `RandomDirection`. Pure functions, no engine call. |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Blam.Map`, `Blam.MapModel`, `Blam.Runtime`, `Perception`.
 
 ## State between ticks
-None: every store holds only the value of the last tick.
+- `RaycastSceneStore` (`Views.Raycast.State`): the two level ray scene (a hierarchy per collision mesh of the map and the trees of instances, the fixed one is rebuilt only when a fixed part or its pose changes) and, by handle, the parts of each Fixed or Phased object with the `CollidablePartsKey` they were built from. A fixed object whose key is the same keeps its parts without collecting them again (D299), one that is gone or not fixed anymore leaves. It is used on the AI thread. `Cleanup()` runs on the lifecycle thread, so it only marks the store, and the next use empties it all: the hierarchies of the meshes point into the collision models of the map, so nothing of an old map may be used. The first tick after a load builds the hierarchies of the meshes (about 14 ms once).
+- Every other store holds only the value of the last tick.
 
 ## Threads
 Updates run on the AI thread, called by `Bridge.Codec.Pipeline.System` after `Perception`. Nothing blocks.

@@ -4,6 +4,8 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Math.System;
 import Common.Geometry.System;
+import Common.Semantic.Type;
+import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
 import Perception.Collidable.Type;
 import Views.Raycast.Type;
@@ -22,6 +24,7 @@ namespace
 {
     using Common::Math::Type::Triangle;
     using Common::Math::Type::Vec3;
+    using Common::Semantic::Type::Physics;
     using Perception::Collidable::Type::CollidablePart;
     using Tests::Support::Bench::Micros;
     using Tests::Support::Bench::Series;
@@ -49,12 +52,14 @@ namespace
     using Views::Raycast::System::ResolveAimRange;
     using Views::Raycast::System::ResolvePerceptionOrigin;
     using Views::Raycast::Type::CachedPart;
+    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::DynamicCache;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
     using Views::Raycast::Type::SelfExclusion;
     using std::chrono::steady_clock;
@@ -294,9 +299,12 @@ namespace
             lines.push_back(TimeLine("M3   rays (240)", m_M3Rays));
             lines.push_back(RayLine("M3   ray (mean of the 240)", m_M3Ray));
             lines.push_back(std::format("M5 16 agents, shared two level scene, every {} records, us per tick", k_EveryRecords));
-            lines.push_back(TimeLine("M5 total", m_M5Total));
+            lines.push_back(TimeLine("M5 total (gather with reuse)", m_M5Total));
             lines.push_back(TimeLine("M5   exclusion + aim + origin", m_M5Prepare));
+            lines.push_back(TimeLine("M5   gather parts (reuse)", m_GatherReuse));
             lines.push_back(TimeLine("M5   gather parts (all objects)", m_Gather));
+            lines.push_back(CountLine("M5   objects that kept their parts", m_Reused));
+            lines.push_back(TimeLine("M5   keys of all objects (no parts)", m_KeyOnly));
             lines.push_back(TimeLine("M5   arm MOBILE tree", m_Mobile));
             lines.push_back(TimeLine("M5   rays (240)", m_M5Rays));
             lines.push_back(RayLine("M5   ray (mean of the 240)", m_M5Ray));
@@ -311,6 +319,8 @@ namespace
             lines.push_back(std::format("M5 mesh BVHs: {} built in total ({} meshes in the scene), {:.1f} us in total, first use of each.",
                 m_MeshesBuilt, m_Scene.Meshes.size(), m_MeshBvhUs));
             lines.push_back(TimeLine("M5   each mesh BVH call that built", m_MeshBvhCall));
+            lines.push_back(std::format("M5 reuse check against gathering everything (same tick, own scene): {} rays compared, {} differences; the poses of the FIXED tree compared {} times, {} differences.",
+                m_ReuseCompared, m_ReuseDifferences, m_PosesCompared, m_PoseDifferences));
             lines.push_back(std::format("M5 check against M2 (same agents, origins, directions, exclusions): {} rays compared, {} differences.",
                 m_SceneCompared, m_SceneDifferences));
             lines.push_back(std::format("  of which the scene hits an object that QueryNearby leaves out of the cache of M2 (its center is beyond the radius): {}.",
@@ -386,7 +396,7 @@ namespace
             lines.push_back("Heaviest, 16 agents (ms per tick, mean):");
             this->AppendHeaviest(lines, { { "M2 total", &m_M2Total }, { "M2 caches", &m_M2Cache }, { "M2 rays", &m_M2Rays },
                 { "M3 total", &m_M3Total }, { "M3 shared cache", &m_M3Cache }, { "M3 rays", &m_M3Rays }, { "M4 static rays", &m_M4Total },
-                { "M5 total", &m_M5Total }, { "M5 gather", &m_Gather }, { "M5 rays", &m_M5Rays } });
+                { "M5 total", &m_M5Total }, { "M5 gather (reuse)", &m_GatherReuse }, { "M5 rays", &m_M5Rays } });
             return lines;
         }
 
@@ -409,11 +419,19 @@ namespace
         Series m_M4Total{}, m_M4Ray{};
         Series m_M2Ray{}, m_M3Ray{};
         Series m_M5Total{}, m_M5Prepare{}, m_M5Rays{}, m_M5Ray{};
-        Series m_Gather{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
+        Series m_Gather{}, m_GatherReuse{}, m_KeyOnly{}, m_Reused{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
 
-        // The shared scene lives for the whole film, as it would in the pipeline.
+        // The shared scene lives for the whole film, as it would in the pipeline, with the parts of the fixed objects it reuses.
         RaycastScene m_Scene{};
+        FixedPartsCache m_Reuse{};
+
+        // The scene of gathering every object each time, only to check the reuse.
+        RaycastScene m_FullScene{};
+        std::size_t m_ReuseCompared{};
+        std::size_t m_ReuseDifferences{};
+        std::size_t m_PosesCompared{};
+        std::size_t m_PoseDifferences{};
         std::size_t m_Armings{};
         std::size_t m_MeshesBuilt{};
         double m_MeshBvhUs{};
@@ -542,15 +560,37 @@ namespace
             m_HitsNone.Add(static_cast<double>(hitsNone));
         }
 
-        // Gathers every object of the tick and arms the scene, the way a decision tick would.
+        // Collects the parts of every object of the tick, as RS.0 did: no reuse.
+        static auto GatherAll(Chain& chain) -> SceneObjects
+        {
+            SceneObjects objects{};
+            const auto table{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!table) return objects;
+
+            for (const auto& [handle, object] : *table)
+            {
+                auto collidable{ chain.m_Environment.m_CollidableService.CollectPartsFor(handle) };
+                if (!collidable || collidable->Parts.empty()) continue;
+
+                const bool isFixed{ object.Placement && (object.Placement->Physics == Physics::Fixed || object.Placement->Physics == Physics::Phased) };
+                objects.push_back(SceneObject{ handle, isFixed, std::move(collidable->Parts) });
+            }
+
+            std::ranges::sort(objects, [](const SceneObject& a, const SceneObject& b) { return a.Handle < b.Handle; });
+            return objects;
+        }
+
+        // Gathers every object of the tick with the reuse of the fixed ones and arms the scene, the way a decision tick would.
         // return: The microseconds the gather and the mobile tree took.
         auto ArmScene(Chain& chain) -> std::pair<double, double>
         {
             ++m_Armings;
 
+            std::size_t reused{};
             auto start{ steady_clock::now() };
-            const SceneObjects objects{ GatherSceneObjects(chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore) };
+            const SceneObjects objects{ GatherSceneObjects(m_Reuse, chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore, &reused) };
             const double gatherUs{ Micros(start, steady_clock::now()) };
+            m_Reused.Add(static_cast<double>(reused));
 
             start = steady_clock::now();
             const std::size_t built{ PrepareMeshBvhs(m_Scene, objects) };
@@ -770,10 +810,30 @@ namespace
 
             m_M5Total.Add(Micros(total5, end5));
             m_M5Prepare.Add(Micros(total5, prepared5));
-            m_Gather.Add(gatherUs);
+            m_GatherReuse.Add(gatherUs);
             m_Mobile.Add(mobileUs);
             m_M5Rays.Add(Micros(armed5, end5));
             m_M5Ray.Add(Micros(armed5, end5) / static_cast<double>(m5Hits.size()));
+
+            // The same tick gathered without reuse: its own timing, its poses and its hits must be the ones of the scene with reuse.
+            auto startAll{ steady_clock::now() };
+            const SceneObjects all{ GatherAll(chain) };
+            m_Gather.Add(Micros(startAll, steady_clock::now()));
+            const auto table{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (table)
+            {
+                startAll = steady_clock::now();
+                std::size_t keys{};
+                Perception::Collidable::Type::CollidablePartsKey key{};
+                for (const auto& [handle, object] : *table) keys += chain.m_Environment.m_CollidableService.MakePartsKey(handle, key, nullptr) ? 1 : 0;
+                m_Sink += static_cast<double>(keys);
+                m_KeyOnly.Add(Micros(startAll, steady_clock::now()));
+            }
+            PrepareMeshBvhs(m_FullScene, all);
+            ArmFixedScene(m_FullScene, all);
+            ArmMobileScene(m_FullScene, all);
+            ++m_PosesCompared;
+            if (!(m_FullScene.FixedPoses == m_Scene.FixedPoses)) ++m_PoseDifferences;
 
             // Counted pass and comparison, outside the clocks.
             std::size_t flat{ 0 };
@@ -788,6 +848,10 @@ namespace
                     const RaycastHit counted{ CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, &counters) };
                     m_SceneNodesRay.Add(static_cast<double>(counters.Nodes));
                     m_SceneTrianglesRay.Add(static_cast<double>(counters.Triangles));
+
+                    ++m_ReuseCompared;
+                    const RaycastHit full{ CastSceneRay(raycaster, m_FullScene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr) };
+                    if (!SameFullHit(full, m5Hits[flat])) ++m_ReuseDifferences;
 
                     ++m_SceneCompared;
                     if (SameFullHit(counted, m5Hits[flat]) && SameFullHit(m2Hits[flat], m5Hits[flat])) continue;
@@ -827,11 +891,11 @@ namespace
         ASSERT_FALSE(file.empty()) << "Cannot write the report of " << film;
 
         std::vector<std::string> sceneReport{};
-        sceneReport.push_back(std::format("RS.0 shared ray scene: film {}, {} records, K = {}, scene every {} records, {:%Y-%m-%d %H:%M:%S} UTC, {}.",
+        sceneReport.push_back(std::format("RS.1 shared ray scene wired into Self: film {}, {} records, K = {}, scene every {} records, {:%Y-%m-%d %H:%M:%S} UTC, {}.",
             film, outcome.Records, k_EveryRecords, k_SceneEvery, now, Tests::Support::Bench::Configuration()));
         sceneReport.push_back("");
         for (const std::string& line : bench.SceneLines()) sceneReport.push_back(line);
-        const std::filesystem::path sceneFile{ Tests::Support::Bench::WriteReport(std::format("rs0_{}.txt", film), sceneReport) };
+        const std::filesystem::path sceneFile{ Tests::Support::Bench::WriteReport(std::format("rs1_{}.txt", film), sceneReport) };
         ASSERT_FALSE(sceneFile.empty()) << "Cannot write the scene report of " << film;
 
         ::testing::Test::RecordProperty("ReportFile", file.string());

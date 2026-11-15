@@ -63,6 +63,8 @@
     <ClCompile Include="Affordance\Type\Views.Affordance.Type.ixx" />
     <ClCompile Include="Views.Layer.ixx" />
     <ClCompile Include="Raycast\Views.Raycast.Type.ixx" />
+    <ClCompile Include="Raycast\State\RaycastSceneStore.cpp" />
+    <ClCompile Include="Raycast\State\RaycastSceneStore.ixx" />
     <ClCompile Include="Raycast\State\RaycastStore.ixx" />
     <ClCompile Include="Raycast\System\RaycastCast.ixx" />
     <ClCompile Include="Raycast\System\RaycastScene.cpp" />

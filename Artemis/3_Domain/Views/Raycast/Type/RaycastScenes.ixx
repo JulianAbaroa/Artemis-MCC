@@ -13,6 +13,7 @@ namespace
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Perception::Collidable::Type::CollidablePart;
+    using Perception::Collidable::Type::CollidablePartsKey;
 }
 
 export namespace Views::Raycast::Type
@@ -33,6 +34,40 @@ export namespace Views::Raycast::Type
     {
         using vector::vector;
     };
+
+    // A live object of the tick and whether it is fixed, before its parts are collected.
+    struct SceneRef
+    {
+        std::uint32_t Handle{ 0 };
+        bool IsFixed{ false };
+    };
+
+    // The live objects of the tick.
+    struct SceneRefs : std::vector<SceneRef>
+    {
+        using vector::vector;
+    };
+
+    // Parts of a fixed object with the key they were built from (D299).
+    // note: IsSeen is the mark of the gather in course: what it does not mark is dropped at its end.
+    struct FixedParts
+    {
+        CollidablePartsKey Key{};
+        std::vector<CollidablePart> Parts{};
+        bool IsSeen{ false };
+    };
+
+    // The parts of the fixed objects that the last gather kept, by handle.
+    struct FixedPartsCache : std::unordered_map<std::uint32_t, FixedParts>
+    {
+        using unordered_map::unordered_map;
+    };
+
+    // Fills the key of the parts of an object, given the key kept for it or null. Gives false if the object is gone.
+    using SceneKeyFunction = std::function<bool(std::uint32_t, CollidablePartsKey&, const CollidablePartsKey*)>;
+
+    // Collects the parts of an object, or nothing if it is gone.
+    using ScenePartsFunction = std::function<std::optional<std::vector<CollidablePart>>(std::uint32_t)>;
 
     // Hierarchy over the triangles of one collision mesh, in its local space.
     // note: A leaf counts Order slots from Left. Order holds indices into the triangles of the mesh.

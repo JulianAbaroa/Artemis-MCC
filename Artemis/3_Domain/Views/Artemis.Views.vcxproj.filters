@@ -64,6 +64,12 @@
     <ClCompile Include="Raycast\Views.Raycast.Type.ixx">
       <Filter>Raycast</Filter>
     </ClCompile>
+    <ClCompile Include="Raycast\State\RaycastSceneStore.cpp">
+      <Filter>Raycast\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\State\RaycastSceneStore.ixx">
+      <Filter>Raycast\State</Filter>
+    </ClCompile>
     <ClCompile Include="Raycast\State\RaycastStore.ixx">
       <Filter>Raycast\State</Filter>
     </ClCompile>

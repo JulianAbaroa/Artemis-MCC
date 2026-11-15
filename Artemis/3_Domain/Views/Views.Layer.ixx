@@ -23,6 +23,7 @@ export namespace Views
         using SelfStore = Views::Self::State::SelfStore;
         using AffordanceStore = Views::Affordance::State::AffordanceStore;
         using RaycastStore = Views::Raycast::State::RaycastStore;
+        using RaycastSceneStore = Views::Raycast::State::RaycastSceneStore;
 
         using SelfService = Views::Self::System::SelfService;
         using AffordanceService = Views::Affordance::System::AffordanceService;
@@ -33,7 +34,7 @@ export namespace Views
             Perception::Layer& environment) :
             m_SelfService(log, tables.m_PlayerStore, m_SelfStore),
             m_AffordanceService(log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, environment.m_ClassifierStore, environment.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
-            m_RaycastService(log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore) {}
+            m_RaycastService(log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore, m_RaycastSceneStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
@@ -43,6 +44,7 @@ export namespace Views
         SelfStore m_SelfStore{};
         AffordanceStore m_AffordanceStore{};
         RaycastStore m_RaycastStore{};
+        RaycastSceneStore m_RaycastSceneStore{};
 
         // --- System ---
         SelfService m_SelfService;

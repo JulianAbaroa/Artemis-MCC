@@ -85,24 +85,10 @@ namespace Perception::Collidable::System
         instance.Forward = object.Forward;
         instance.Up = object.Up;
 
-        Context ctx{};
-        ctx.Coll = m_WorldStore.GetCollForObject(object.TagName, m_DefinitionsStore);
-
-        const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
-
-        // Objects without a render model (like the invisible spawn points) reserve the bone block but never
-        // write it, so their matrices are not valid. They are placed like a rigid object instead.
-        if (bones != nullptr && !std::ranges::any_of(bones->Matrices, Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid))
-        {
-            bones = nullptr;
-        }
-
-        const DamageSectionTable* damage = m_DamageSectionsStore.Get(object.Handle);
-
-        if (ctx.Coll)
-        {
-            ctx.States = m_WorldStore.GetRegionStates(object.TagName);
-        }
+        const CollidableInputs inputs{ this->ResolveInputs(object, nullptr) };
+        const Context& ctx{ inputs.Resolved };
+        const BoneMatrixTable* bones{ inputs.Bones };
+        const DamageSectionTable* damage{ inputs.Damage };
 
         if (buildWorldMesh)
         {
@@ -114,6 +100,71 @@ namespace Perception::Collidable::System
         this->BuildRegionDiagnostics(instance, ctx, damage);
 
         return instance;
+    }
+
+    auto CollidableService::ResolveInputs(const AliveObject& object, const CollidablePartsKey* previous) const -> CollidableInputs
+    {
+        CollidableInputs inputs{};
+        const bool isKnown{ previous != nullptr && object.DatumIndex != 0 && previous->DatumIndex == object.DatumIndex };
+        if (isKnown)
+        {
+            inputs.Resolved.Coll = previous->CollModel;
+            inputs.Resolved.States = previous->States;
+        }
+        else
+        {
+            inputs.Resolved.Coll = m_WorldStore.GetCollForObject(object.TagName, m_DefinitionsStore);
+        }
+
+        inputs.Bones = m_BoneMatricesStore.Get(object.Handle);
+
+        // Objects without a render model (like the invisible spawn points) reserve the bone block but never
+        // write it, so their matrices are not valid. They are placed like a rigid object instead.
+        if (inputs.Bones != nullptr && !std::ranges::any_of(inputs.Bones->Matrices, Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid))
+        {
+            inputs.Bones = nullptr;
+        }
+
+        inputs.Damage = m_DamageSectionsStore.Get(object.Handle);
+
+        if (!isKnown && inputs.Resolved.Coll)
+        {
+            inputs.Resolved.States = m_WorldStore.GetRegionStates(object.TagName);
+        }
+
+        return inputs;
+    }
+
+    auto CollidableService::MakePartsKey(std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) -> bool
+    {
+        auto objectTablePtr = m_ObjectTableStore.Acquire();
+        if (!objectTablePtr) return false;
+
+        auto it = objectTablePtr->find(handle);
+        if (it == objectTablePtr->end()) return false;
+
+        const AliveObject& object{ it->second };
+        const CollidableInputs inputs{ this->ResolveInputs(object, previous) };
+
+        key.Handle = object.Handle;
+        key.DatumIndex = object.DatumIndex;
+        if (object.DatumIndex == 0) key.TagName = object.TagName;
+        else key.TagName.clear();
+        key.Position = object.BoundingCenter;
+        key.Forward = object.Forward;
+        key.Up = object.Up;
+
+        key.HasBones = inputs.Bones != nullptr;
+        if (key.HasBones) key.Bones.assign(inputs.Bones->Matrices.begin(), inputs.Bones->Matrices.end());
+        else key.Bones.clear();
+
+        key.HasDamage = inputs.Damage != nullptr;
+        if (key.HasDamage) key.DamageRegions.assign(inputs.Damage->Regions.Bytes.begin(), inputs.Damage->Regions.Bytes.end());
+        else key.DamageRegions.clear();
+
+        key.CollModel = inputs.Resolved.Coll;
+        key.States = inputs.Resolved.States;
+        return true;
     }
 
     auto CollidableService::CollectPartsFor(std::uint32_t handle) -> std::optional<Collidable>

@@ -10,6 +10,7 @@ import Common.Semantic.Type;
 import Blam.MapModel.Definitions.Type;
 import Blam.MapModel.World.Type;
 import Blam.Runtime.Object.Type;
+import Perception.Collidable.Type;
 
 namespace
 {
@@ -20,19 +21,27 @@ namespace
     using Blam::MapModel::World::Type::Raycast::BvhBounds;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Views::Raycast::Type::CachedPart;
+    using Views::Raycast::Type::FixedParts;
+    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::MeshBvh;
     using Views::Raycast::Type::MeshBvhs;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneKeyFunction;
     using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::ScenePartsFunction;
     using Views::Raycast::Type::ScenePiece;
+    using Views::Raycast::Type::SceneRef;
+    using Views::Raycast::Type::SceneRefs;
     using Views::Raycast::Type::ScenePose;
     using Views::Raycast::Type::SceneTree;
     using Views::Raycast::Type::SelfExclusion;
 
+    using Perception::Collidable::Type::CollidablePart;
+    using Perception::Collidable::Type::CollidablePartsKey;
     using Perception::Collidable::System::CollidableService;
     using Blam::Runtime::Object::State::ObjectTableStore;
     using Blam::MapModel::World::System::Raycaster;
@@ -269,21 +278,87 @@ namespace
 
 namespace Views::Raycast::System
 {
-    auto GatherSceneObjects(CollidableService& collidableService, const ObjectTableStore& objectStore) -> SceneObjects
+    auto GatherSceneObjects(FixedPartsCache& reuse, CollidableService& collidableService, const ObjectTableStore& objectStore,
+        std::size_t* reused) -> SceneObjects
     {
-        SceneObjects objects{};
         const auto objectTablePtr = objectStore.Acquire();
-        if (!objectTablePtr) return objects;
+        if (!objectTablePtr)
+        {
+            reuse.clear();
+            if (reused) *reused = 0;
+            return SceneObjects{};
+        }
 
-        objects.reserve(objectTablePtr->size());
+        SceneRefs refs{};
+        refs.reserve(objectTablePtr->size());
         for (const auto& [handle, object] : *objectTablePtr)
         {
-            auto collidable = collidableService.CollectPartsFor(handle);
-            if (!collidable || collidable->Parts.empty()) continue;
-
             const bool isFixed{ object.Placement && (object.Placement->Physics == Physics::Fixed || object.Placement->Physics == Physics::Phased) };
-            objects.push_back(SceneObject{ handle, isFixed, std::move(collidable->Parts) });
+            refs.push_back(SceneRef{ handle, isFixed });
         }
+
+        const SceneKeyFunction keyOf{ [&](std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) { return collidableService.MakePartsKey(handle, key, previous); } };
+        const ScenePartsFunction partsOf{ [&](std::uint32_t handle) -> std::optional<std::vector<CollidablePart>>
+        {
+            auto collidable = collidableService.CollectPartsFor(handle);
+            if (!collidable) return std::nullopt;
+
+            return std::move(collidable->Parts);
+        } };
+
+        return GatherSceneObjects(reuse, refs, keyOf, partsOf, reused);
+    }
+
+    auto GatherSceneObjects(FixedPartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
+        std::size_t* reused) -> SceneObjects
+    {
+        SceneObjects objects{};
+        objects.reserve(refs.size());
+
+        CollidablePartsKey key{};
+        std::size_t reusedCount{ 0 };
+
+        for (const SceneRef& ref : refs)
+        {
+            if (!ref.IsFixed)
+            {
+                auto parts = partsOf(ref.Handle);
+                if (parts && !parts->empty()) objects.push_back(SceneObject{ ref.Handle, false, std::move(*parts) });
+                continue;
+            }
+
+            auto entry = reuse.find(ref.Handle);
+            if (!keyOf(ref.Handle, key, entry != reuse.end() ? &entry->second.Key : nullptr)) continue;
+
+            if (entry != reuse.end() && entry->second.Key == key)
+            {
+                ++reusedCount;
+            }
+            else
+            {
+                auto parts = partsOf(ref.Handle);
+                entry = reuse.insert_or_assign(ref.Handle, FixedParts{ key, parts ? std::move(*parts) : std::vector<CollidablePart>{}, false }).first;
+            }
+
+            entry->second.IsSeen = true;
+            if (!entry->second.Parts.empty()) objects.push_back(SceneObject{ ref.Handle, true, entry->second.Parts });
+        }
+
+        // What this gather did not see is gone or not fixed anymore.
+        for (auto entry = reuse.begin(); entry != reuse.end();)
+        {
+            if (entry->second.IsSeen)
+            {
+                entry->second.IsSeen = false;
+                ++entry;
+            }
+            else
+            {
+                entry = reuse.erase(entry);
+            }
+        }
+
+        if (reused) *reused = reusedCount;
 
         std::ranges::sort(objects, [](const SceneObject& a, const SceneObject& b) { return a.Handle < b.Handle; });
         return objects;
@@ -347,10 +422,5 @@ namespace Views::Raycast::System
         RaycastHit best{ CastStatic(raycaster, origin, direction, maxDistance) };
         CastScene(scene, exclusion, origin, direction, maxDistance, best, counters);
         return best;
-    }
-
-    auto CleanupScene(RaycastScene& scene) -> void
-    {
-        scene = RaycastScene{};
     }
 }

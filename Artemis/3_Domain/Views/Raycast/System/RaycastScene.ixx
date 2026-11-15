@@ -9,15 +9,19 @@ import std;
 
 // The two level ray scene that all agents share (D298): one hierarchy per collision mesh and two hierarchies of instances, one for
 // the fixed objects and one for the rest. Free functions over data of the Type module, so whoever owns the RaycastScene decides when
-// it lives. Not wired into the pipeline yet and internal to Views: not in the public interface.
+// it lives (RaycastSceneStore). Internal to Views: not in the public interface.
 
 namespace
 {
     using Common::Math::Type::Vec3;
     using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneKeyFunction;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::ScenePartsFunction;
+    using Views::Raycast::Type::SceneRefs;
     using Views::Raycast::Type::SelfExclusion;
 
     using Perception::Collidable::System::CollidableService;
@@ -28,8 +32,17 @@ namespace
 export namespace Views::Raycast::System
 {
     // Collects the parts of every object of the tick that has collision, sorted by handle.
-    // note: No radius: it is the whole tick. Objects with Fixed or Phased placement are marked as fixed.
-    auto GatherSceneObjects(CollidableService& collidableService, const ObjectTableStore& objectStore) -> SceneObjects;
+    // param reuse: The parts of the fixed objects of the last gather. A fixed object whose key is the same keeps its parts without
+    // collecting them again, and an object that is gone or no longer fixed leaves it (D299).
+    // param reused: Receives how many objects kept their parts. Null for none.
+    // note: No radius: it is the whole tick. Objects with Fixed or Phased placement are marked as fixed. The result is the one of
+    // collecting every object.
+    auto GatherSceneObjects(FixedPartsCache& reuse, CollidableService& collidableService, const ObjectTableStore& objectStore,
+        std::size_t* reused) -> SceneObjects;
+
+    // The same gather over the given objects, with the key and the parts of an object given by functions.
+    auto GatherSceneObjects(FixedPartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
+        std::size_t* reused) -> SceneObjects;
 
     // Builds the hierarchies of the collision meshes of the objects that do not have one yet.
     // return: How many it built.
@@ -54,6 +67,4 @@ export namespace Views::Raycast::System
     auto CastSceneRay(const Raycaster& raycaster, const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin,
         const Vec3& direction, float maxDistance, SceneCounters* counters) -> RaycastHit;
 
-    // Forgets the hierarchies, with the map.
-    auto CleanupScene(RaycastScene& scene) -> void;
 }

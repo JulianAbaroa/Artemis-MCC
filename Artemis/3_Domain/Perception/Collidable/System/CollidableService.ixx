@@ -27,6 +27,8 @@ export namespace Perception::Collidable::System
         using DamageSectionTable = Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
         using Classified = Perception::Classifier::Type::Classified;
         using Collidable = Perception::Collidable::Type::Collidable;
+        using CollidableInputs = Perception::Collidable::Type::CollidableInputs;
+        using CollidablePartsKey = Perception::Collidable::Type::CollidablePartsKey;
         using CollidablePart = Perception::Collidable::Type::CollidablePart;
         using Collidables = Perception::Collidable::Type::Collidables;
         using Context = Perception::Collidable::Type::Context;
@@ -59,6 +61,14 @@ export namespace Perception::Collidable::System
         // note: Each part is a collision mesh with the transform that places it in the world.
         auto CollectPartsFor(std::uint32_t handle) -> std::optional<Collidable>;
 
+        // Fills the key the parts of an object are built from, without building them.
+        // param key: Receives the key. Its vectors keep their capacity, so a key reused from object to object allocates nothing.
+        // param previous: The key kept for this handle, or null. A row with the same datum index is the same tag, which resolves to the
+        // same collision model and region states for as long as the map is loaded, so they are taken from it and not searched by name.
+        // return: Whether the object is in the table. The key is left as it was if it is not.
+        // note: Reads what CollectPartsFor reads, so a handle whose key did not change gets the same parts from it.
+        auto MakePartsKey(std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) -> bool;
+
         auto QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>;
 
         // Logs the cleanup with the rest of the layer. The scene it builds is owned by its caller (D224), so there is no state to clear.
@@ -74,6 +84,11 @@ export namespace Perception::Collidable::System
         WorldStore& m_WorldStore;
 
         auto BuildInstance(const AliveObject& object, bool buildWorldMesh) -> Collidable;
+
+        // Resolves the collision model, region states and tables an object is built from.
+        // note: The one place BuildInstance and MakePartsKey read them, so a new input changes both.
+        // param previous: Key of the same row from an earlier call, or null. Its resolved model and states are used if the tag is the same.
+        auto ResolveInputs(const AliveObject& object, const CollidablePartsKey* previous) const -> CollidableInputs;
 
         auto CollectMesh(const Collidable& instance, const Context& ctx,
             const BoneMatrixTable* boneMatrixTable,

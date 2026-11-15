@@ -46,22 +46,25 @@ export namespace Views::Raycast::System
         using CollidableService = Perception::Collidable::System::CollidableService;
         using SelfStore = Views::Self::State::SelfStore;
         using RaycastStore = Views::Raycast::State::RaycastStore;
+        using RaycastSceneStore = Views::Raycast::State::RaycastSceneStore;
 
     public:
         RaycastService(Log& log, PlayerTableStore& playerStore,
             ObjectTableStore& objectStore, DefinitionsStore& definitionsStore,
             Raycaster& raycaster, SelfStore& selfStore,
             CollidableService& collidableService, EntitiesStore& entitiesStore,
-            PlayersStore& playersStore, RaycastStore& raycastStore) :
+            PlayersStore& playersStore, RaycastStore& raycastStore, RaycastSceneStore& raycastSceneStore) :
             m_Log(log), m_PlayerStore(playerStore),
             m_ObjectStore(objectStore), m_DefinitionsStore(definitionsStore),
             m_Raycaster(raycaster), m_SelfStore(selfStore),
             m_CollidableService(collidableService), m_EntitiesStore(entitiesStore),
-            m_PlayersStore(playersStore), m_RaycastStore(raycastStore)
+            m_PlayersStore(playersStore), m_RaycastStore(raycastStore), m_RaycastSceneStore(raycastSceneStore)
         {
         }
         ~RaycastService() = default;
 
+        // Casts the rays of Self through the shared scene: the aim ray and the perception rays, with the objects of the tick and no radius.
+        // note: The parts of the fixed objects are kept between ticks while their key is the same (D299).
         auto Update() -> void;
 
         auto Cleanup() -> void;
@@ -77,5 +80,6 @@ export namespace Views::Raycast::System
         EntitiesStore& m_EntitiesStore;
         PlayersStore& m_PlayersStore;
         RaycastStore& m_RaycastStore;
+        RaycastSceneStore& m_RaycastSceneStore;
     };
 }

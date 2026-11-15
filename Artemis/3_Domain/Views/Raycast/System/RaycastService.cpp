@@ -20,12 +20,14 @@ namespace
     using Common::Math::Type::Vec3;
     using Common::Math::Type::Triangle;
     using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::CachedPart;
     using Views::Raycast::Type::CachedDynamic;
     using Views::Raycast::Type::DynamicCache;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::Raycasts;
+    using Views::Raycast::Type::SceneObjects;
     using Views::Raycast::Type::SelfExclusion;
     using Perception::Collidable::Type::CollidablePart;
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
@@ -496,19 +498,18 @@ namespace Views::Raycast::System
         const Vec3 originForward = perceptionOrigin.Valid ?
             perceptionOrigin.Forward : selfPtr->Forward;
 
-        const float cameraToOriginDistance = Common::Math::System::Distance(
-            selfPtr->Position, originPosition);
+        RaycastScene& scene = m_RaycastSceneStore.Scene();
+        const SceneObjects objects = GatherSceneObjects(m_RaycastSceneStore.Parts(), m_CollidableService, m_ObjectStore, nullptr);
+        ArmFixedScene(scene, objects);
+        ArmMobileScene(scene, objects);
 
-        const DynamicCache dynamicCache = BuildDynamicCache(m_CollidableService, selfPtr->Position,
-            DynamicCacheRadius(aimRange, cameraToOriginDistance), selfExclusion);
-
-        result.AimHit = CastRay(m_Raycaster, dynamicCache, selfPtr->Position, selfPtr->Forward, aimRange);
+        result.AimHit = CastSceneRay(m_Raycaster, scene, selfExclusion, selfPtr->Position, selfPtr->Forward, aimRange, nullptr);
 
         result.PerceptionHits.reserve(k_PerceptionRayCount);
 
         for (const Vec3& direction : PerceptionDirections(originForward))
         {
-            result.PerceptionHits.push_back(CastRay(m_Raycaster, dynamicCache, originPosition, direction, k_PerceptionRange));
+            result.PerceptionHits.push_back(CastSceneRay(m_Raycaster, scene, selfExclusion, originPosition, direction, k_PerceptionRange, nullptr));
         }
 
         m_RaycastStore.Publish(std::move(result));
@@ -517,6 +518,7 @@ namespace Views::Raycast::System
     auto RaycastService::Cleanup() -> void
     {
         m_RaycastStore.Cleanup();
+        m_RaycastSceneStore.Cleanup();
         m_Log.Message("[RaycastService] INFO: Cleanup completed.");
     }
 }
