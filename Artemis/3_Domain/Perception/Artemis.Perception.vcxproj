@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Aim\State\AimStore.ixx" />
+    <ClCompile Include="Aim\State\TagVitalitiesStore.ixx" />
     <ClCompile Include="Aim\System\AimService.cpp" />
     <ClCompile Include="Aim\System\AimService.ixx" />
     <ClCompile Include="Aim\Type\Perception.Aim.Type.ixx" />

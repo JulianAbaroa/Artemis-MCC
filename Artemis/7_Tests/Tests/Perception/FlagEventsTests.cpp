@@ -341,6 +341,8 @@ TEST_F(FlagEventsTests, LightEventsOfAnotherMatchAreForgotten)
 namespace
 {
     constexpr std::uint32_t k_Stand{ 0x5001 };
+    constexpr std::uint32_t k_FlagTag{ 0xE0001 };
+    constexpr std::uint32_t k_RifleTag{ 0xE0002 };
     constexpr std::uint32_t k_FlagRecreated{ 0x1003 };
 
     // The flag pass over what a light snapshot decodes into, with what the last full tick published made by hand.
@@ -349,9 +351,9 @@ namespace
     protected:
         auto SetUp() -> void override
         {
-            m_Chain.m_Environment.m_TagClassificationsStore.Add("weap", "test\\flag",
+            m_Chain.m_Environment.m_TagClassificationsStore.Add(k_FlagTag,
                 TagClassification{ .Function = Function::ObjectiveItem, .Subtype = static_cast<std::uint8_t>(Subtype::ObjectiveItem::Flag) });
-            m_Chain.m_Environment.m_TagClassificationsStore.Add("weap", "test\\rifle", TagClassification{ .Function = Function::Weapon });
+            m_Chain.m_Environment.m_TagClassificationsStore.Add(k_RifleTag, TagClassification{ .Function = Function::Weapon });
 
             Players players{};
             players.Rows.push_back(Player{ .Handle = k_Player, .BipedHandle = k_Biped });
@@ -389,6 +391,7 @@ namespace
                 object.Handle = handle;
                 object.FourCC = "weap";
                 object.TagName = handle == k_Rifle ? "test\\rifle" : "test\\flag";
+                object.DatumIndex = handle == k_Rifle ? k_RifleTag : k_FlagTag;
                 object.WorldOrigin = flagPosition;
                 object.Multiplayer = Multiplayer{ .Team = Team::Blue };
                 object.Specific = weapon;

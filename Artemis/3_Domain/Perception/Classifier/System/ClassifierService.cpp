@@ -192,6 +192,8 @@ namespace Perception::Classifier::System
         if (!objectTablePtr) return;
         const ObjectTable& objectTable = *objectTablePtr;
 
+        m_TagClassificationsStore.Refresh();
+
         Classifieds results;
         results.reserve(objectTable.size());
 
@@ -257,7 +259,7 @@ namespace Perception::Classifier::System
         std::size_t conflicts{ 0 };
         std::map<Function, std::size_t> defaults{};
 
-        for (const auto& [key, classification] : m_TagClassificationsStore.GetAll())
+        for (const auto& [datumIndex, classification] : m_TagClassificationsStore.GetAll())
         {
             switch (classification.Source)
             {
@@ -287,13 +289,13 @@ namespace Perception::Classifier::System
         // note: Before the definitions are frozen the multiplayer kinds and the vitality are missing, so nothing is cached.
         if (!this->IsDefinitionsReady()) return this->ClassifyTag(object);
 
-        if (const TagClassification* stored{ m_TagClassificationsStore.Find(object.FourCC, object.TagName) }; stored != nullptr)
+        if (const TagClassification* stored{ m_TagClassificationsStore.Find(object.DatumIndex) }; stored != nullptr)
         {
             return *stored;
         }
 
         const TagClassification classification{ this->ClassifyTag(object) };
-        m_TagClassificationsStore.Add(object.FourCC, object.TagName, classification);
+        m_TagClassificationsStore.Add(object.DatumIndex, classification);
 
         if (classification.Function == Function::Unknown)
         {

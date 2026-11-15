@@ -83,8 +83,8 @@ export namespace Perception::Classifier::Type
         using vector::vector;
     };
 
-    // Classification of every tag, by tag name.
-    struct TagClassifications : std::unordered_map<std::string, TagClassification>
+    // Classification of every tag, by the datum index of the tag.
+    struct TagClassifications : std::unordered_map<std::uint32_t, TagClassification>
     {
         using unordered_map::unordered_map;
     };

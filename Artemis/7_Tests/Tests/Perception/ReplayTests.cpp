@@ -259,6 +259,18 @@ namespace
         std::vector<std::string> Failures{};
     };
 
+    // The tags the objects of a film were made of, to check that the datum index identifies the tag (the key of the classifications).
+    struct DatumData
+    {
+        // Group and name of each datum index seen.
+        std::unordered_map<std::uint32_t, std::string> TagOfDatum{};
+        // The datum index of each group and name seen.
+        std::unordered_map<std::string, std::uint32_t> DatumOfTag{};
+        std::size_t Objects{};
+        // The texts of the checks that failed.
+        std::vector<std::string> Failures{};
+    };
+
     // What the first exit of a lift looked like when the lift published it.
     struct LiftSeen
     {
@@ -359,6 +371,7 @@ namespace
         std::shared_ptr<const Perception::Match::Type::MatchStatus> LastMatch{};
         std::map<std::uint32_t, PowerupSample> Powerups{};
         LightFlagsData LightFlags{};
+        DatumData Datums{};
     };
 
     // Engine ticks that the tests ask for in each film.
@@ -687,6 +700,38 @@ namespace
         return chain.m_Environment.m_FlagPassService.BuildFlags();
     }
 
+    // Checks that a datum index always comes with the same group and tag name, and that a group and tag name always has the same datum index.
+    auto ObserveDatums(const Chain& chain, std::string_view film, DatumData& data) -> void
+    {
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (!objects) return;
+
+        for (const auto& [handle, object] : *objects)
+        {
+            ++data.Objects;
+
+            const auto seen{ data.TagOfDatum.find(object.DatumIndex) };
+            if (seen != data.TagOfDatum.end())
+            {
+                const bool isSame{ seen->second.size() == object.FourCC.size() + 1 + object.TagName.size()
+                    && seen->second.starts_with(object.FourCC) && seen->second.ends_with(object.TagName) };
+                if (!isSame && data.Failures.size() < 20)
+                {
+                    data.Failures.push_back(std::format("{}: datum {:#x} is {} and {}|{}", film, object.DatumIndex, seen->second, object.FourCC, object.TagName));
+                }
+                continue;
+            }
+
+            std::string tag{ object.FourCC + "|" + object.TagName };
+            const auto [it, isNew]{ data.DatumOfTag.try_emplace(tag, object.DatumIndex) };
+            if (!isNew && data.Failures.size() < 20)
+            {
+                data.Failures.push_back(std::format("{}: tag {} has the datums {:#x} and {:#x}", film, tag, it->second, object.DatumIndex));
+            }
+            data.TagOfDatum.emplace(object.DatumIndex, std::move(tag));
+        }
+    }
+
     // Compares the flags of the light pass with the ObjectiveDetails the full pipeline published for the same record.
     auto CompareLightFlags(const Chain& chain, const std::optional<Perception::Details::Type::ObjectiveDetails>& light, std::size_t record,
         LightFlagsData& data) -> void
@@ -748,6 +793,7 @@ namespace
             if (plan.IsExplosives) ObserveExplosives(chain, result->Explosives);
             if (plan.IsSuelo) ObserveSuelo(chain, result->Suelo);
             if (plan.IsGround) ObserveGround(chain, film, result->Ground);
+            ObserveDatums(chain, film, result->Datums);
             if (plan.IsLiftExit) ObserveLiftExit(chain, result->LiftExit);
             if (plan.IsLiftScan) ObserveLiftScan(chain, result->LiftScan);
             if (plan.IsGravity) ObserveGravity(chain, result->Gravity);
@@ -791,6 +837,8 @@ namespace
         { "GroundIsConsistentWithTheContactInEveryFilm",
             { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo" } },
         { "LiftsCarryTheStagesOfTheirTagsAndTheMeasuredExitOfTheLiftsFilm", { "lifts" } },
+        { "DatumIndexIdentifiesTheTagInEveryFilm",
+            { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts", "powerups" } },
         { "EveryLiftOfEveryFilmHasStagesAndABipedInAPhantomIsNearALift",
             { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts" } },
         { "CtfCGravityIsConstantAndJumpHeightFollowsTheFlagOfThePlayer0", { "ctf_c" } },
@@ -1791,6 +1839,29 @@ TEST_F(ReplayTests, GroundIsConsistentWithTheContactInEveryFilm)
         ++replayed;
         for (const std::string& failure : result.Ground.Failures) ADD_FAILURE() << failure;
         EXPECT_GT(result.Ground.Bodies, 0u) << film;
+    }
+
+    if (replayed == 0) GTEST_SKIP() << skipped;
+}
+
+TEST_F(ReplayTests, DatumIndexIdentifiesTheTagInEveryFilm)
+{
+    std::size_t replayed{ 0 };
+    std::string skipped{};
+    for (const std::string film : { "cgb_displace_1min", "ctf_c", "ctf_d", "armas_a", "armas_b", "explosivos", "suelo", "lifts", "powerups" })
+    {
+        const FilmResult& result{ Film(film) };
+        if (!result.Pass.Error.empty()) { ADD_FAILURE() << result.Pass.Error; continue; }
+        if (!result.Pass.Skip.empty())
+        {
+            skipped += result.Pass.Skip + ". ";
+            continue;
+        }
+
+        ++replayed;
+        for (const std::string& failure : result.Datums.Failures) ADD_FAILURE() << failure;
+        EXPECT_GT(result.Datums.Objects, 0u) << film;
+        EXPECT_EQ(result.Datums.TagOfDatum.size(), result.Datums.DatumOfTag.size()) << film;
     }
 
     if (replayed == 0) GTEST_SKIP() << skipped;

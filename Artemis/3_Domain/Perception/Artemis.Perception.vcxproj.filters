@@ -177,6 +177,9 @@
     <ClCompile Include="Aim\State\AimStore.ixx">
       <Filter>Aim\State</Filter>
     </ClCompile>
+    <ClCompile Include="Aim\State\TagVitalitiesStore.ixx">
+      <Filter>Aim\State</Filter>
+    </ClCompile>
     <ClCompile Include="Aim\System\AimService.cpp">
       <Filter>Aim\System</Filter>
     </ClCompile>

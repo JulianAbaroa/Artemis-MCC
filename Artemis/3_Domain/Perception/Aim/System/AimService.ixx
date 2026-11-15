@@ -31,13 +31,14 @@ export namespace Perception::Aim::System
         using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
         using BoneMatricesStore = Blam::Runtime::Object::State::BoneMatricesStore;
         using AimStore = Perception::Aim::State::AimStore;
+        using TagVitalitiesStore = Perception::Aim::State::TagVitalitiesStore;
 
     public:
         AimService(Log& log, VitalityStore& vitalityStore,
             ObjectTableStore& objectStore, BoneMatricesStore& boneMatricesStore,
-            AimStore& aimStore) : m_Log(log),
+            AimStore& aimStore, TagVitalitiesStore& tagVitalitiesStore) : m_Log(log),
             m_VitalityStore(vitalityStore), m_ObjectStore(objectStore),
-            m_BoneMatricesStore(boneMatricesStore), m_AimStore(aimStore) {}
+            m_BoneMatricesStore(boneMatricesStore), m_AimStore(aimStore), m_TagVitalitiesStore(tagVitalitiesStore) {}
         ~AimService() = default;
 
         auto Update() -> void;
@@ -50,6 +51,11 @@ export namespace Perception::Aim::System
         ObjectTableStore& m_ObjectStore;
         BoneMatricesStore& m_BoneMatricesStore;
         AimStore& m_AimStore;
+        TagVitalitiesStore& m_TagVitalitiesStore;
+
+        // return: The vitality layout of the tag of the object, null if it has none.
+        // note: Before the store is frozen the layouts are still being added, so nothing is cached.
+        auto LayoutOf(const AliveObject& object, bool isFrozen) -> const Vitality*;
 
         static auto MakeAim(const ModelLinkAnchor& anchor, const AliveObject& object,
             const BoneMatrixTable* bones) -> SectionAim;

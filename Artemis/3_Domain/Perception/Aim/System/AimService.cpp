@@ -15,11 +15,14 @@ namespace Perception::Aim::System
 
         const ObjectTable& objectTable = *objectTablePtr;
 
+        m_TagVitalitiesStore.Refresh();
+        const bool isFrozen{ m_VitalityStore.IsFrozen() };
+
         Aims result;
 
         for (const auto& [handle, object] : objectTable)
         {
-            const Vitality* layout = m_VitalityStore.Get(object.TagName);
+            const Vitality* layout = this->LayoutOf(object, isFrozen);
             if (!layout || !this->HasAnchors(*layout)) continue;
 
             const BoneMatrixTable* bones = m_BoneMatricesStore.Get(object.Handle);
@@ -37,6 +40,15 @@ namespace Perception::Aim::System
         }
 
         m_AimStore.Publish(std::move(result));
+    }
+
+    auto AimService::LayoutOf(const AliveObject& object, bool isFrozen) -> const Vitality*
+    {
+        if (!isFrozen) return m_VitalityStore.Get(object.TagName);
+
+        if (const auto* stored{ m_TagVitalitiesStore.Find(object.DatumIndex) }; stored != nullptr) return stored->get();
+
+        return m_TagVitalitiesStore.Add(object.DatumIndex, m_VitalityStore.GetShared(object.TagName)).get();
     }
 
     auto AimService::MakeAim(const ModelLinkAnchor& anchor, const AliveObject& object,
@@ -93,6 +105,7 @@ namespace Perception::Aim::System
     auto AimService::Cleanup() -> void
     {
         m_AimStore.Cleanup();
+        m_TagVitalitiesStore.Cleanup();
 
         m_Log.Message("[AimService] INFO: Cleanup completed.");
     }

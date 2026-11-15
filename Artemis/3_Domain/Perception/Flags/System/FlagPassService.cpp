@@ -33,7 +33,7 @@ namespace Perception::Flags::System
         {
             if (!std::holds_alternative<Weapon>(object.Specific)) continue;
 
-            const auto* classification{ m_TagClassificationsStore.Find(object.FourCC, object.TagName) };
+            const auto* classification{ m_TagClassificationsStore.Find(object.DatumIndex) };
             if (classification != nullptr && classification->IsFlag()) candidates.emplace_back(handle, &object);
         }
         if (candidates.empty()) return flags;

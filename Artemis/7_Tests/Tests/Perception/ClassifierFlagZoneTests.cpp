@@ -39,9 +39,16 @@ namespace
             object.Handle = handle;
             object.FourCC = fourCC;
             object.TagName = tag;
+            object.DatumIndex = this->DatumOf(tag);
             object.Profile.ObjectKind = kind;
             object.ParentHandle = parent;
             m_Chain.m_Tables.m_ObjectStore.AddObject(handle, object);
+        }
+
+        // The datum index of a tag: one per tag name, as in a loaded map.
+        auto DatumOf(std::string_view tag) -> std::uint32_t
+        {
+            return m_Datums.try_emplace(std::string{ tag }, static_cast<std::uint32_t>(m_Datums.size() + 1)).first->second;
         }
 
         // Classifies the objects added so far and returns the one of the handle.
@@ -60,6 +67,7 @@ namespace
         }
 
         Chain m_Chain{};
+        std::unordered_map<std::string, std::uint32_t> m_Datums{};
     };
 }
 

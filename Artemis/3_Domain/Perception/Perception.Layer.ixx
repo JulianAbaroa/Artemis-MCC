@@ -51,6 +51,7 @@ export namespace Perception
         using GroundMemoryStore = Perception::Players::State::GroundMemoryStore;
         using PlayersStore = Perception::Players::State::PlayersStore;
         using AimStore = Perception::Aim::State::AimStore;
+        using TagVitalitiesStore = Perception::Aim::State::TagVitalitiesStore;
         using EventsStore = Perception::Events::State::EventsStore;
         using EventsMemoryStore = Perception::Events::State::EventsMemoryStore;
         using MatchStore = Perception::Match::State::MatchStore;
@@ -90,7 +91,7 @@ export namespace Perception
             m_PlayersService(log, tables.m_ObjectStore, tables.m_PlayerStore, tables.m_GameStore, m_VitalityDetailsStore, m_EntitiesStore, m_GroundMemoryStore, m_PlayersStore),
             m_ObjectiveDetailsService(log, tables.m_ObjectStore, tables.m_GameStore, m_ClassifierStore, m_EntitiesStore, m_PlayersStore, m_ZoneDetailsStore, m_ObjectiveDetailsStore),
             m_CollidableService(log, resolved.m_DefinitionsStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_DamageSectionsStore, m_ClassifierStore, resolved.m_WorldStore),
-            m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore),
+            m_AimService(log, resolved.m_VitalityStore, tables.m_ObjectStore, tables.m_BoneMatricesStore, m_AimStore, m_TagVitalitiesStore),
             m_EventsService(tables.m_GameStore, m_ObjectiveDetailsStore, m_EventsMemoryStore, m_EventsStore),
             m_FlagPassService(tables.m_LightObjectStore, tables.m_LightGameStore, m_TagClassificationsStore, m_ObjectiveDetailsStore, m_PlayersStore, m_EventsService),
             m_MatchService(tables.m_PlayerStore, tables.m_GameStore, m_EventsMemoryStore, m_MatchStore) {}
@@ -119,6 +120,7 @@ export namespace Perception
         GroundMemoryStore m_GroundMemoryStore{};
         PlayersStore m_PlayersStore{};
         AimStore m_AimStore{};
+        TagVitalitiesStore m_TagVitalitiesStore{};
         EventsStore m_EventsStore{};
         EventsMemoryStore m_EventsMemoryStore{};
         MatchStore m_MatchStore{};
