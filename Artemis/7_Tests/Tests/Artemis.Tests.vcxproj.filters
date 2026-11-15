@@ -120,6 +120,9 @@
     <ClCompile Include="Views\RaycastOracleTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="Views\RaycastSceneTests.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Bench.ixx">
       <Filter>Support</Filter>
     </ClCompile>

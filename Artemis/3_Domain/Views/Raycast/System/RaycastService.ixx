@@ -1,6 +1,7 @@
 export module Views.Raycast.System;
 
 export import :Cast;
+export import :Scene;
 
 import Common.Math.Type;
 import Common.Log.System;

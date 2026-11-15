@@ -155,6 +155,7 @@
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
     <ClCompile Include="Views\RaycastOracleTests.cpp" />
+    <ClCompile Include="Views\RaycastSceneTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Bench.ixx" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
     <ClCompile Include="Support\Tests.Support.EngineMemory.ixx" />

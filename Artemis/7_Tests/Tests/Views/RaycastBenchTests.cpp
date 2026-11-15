@@ -31,13 +31,18 @@ namespace
     using Tests::Support::FilmPass::RunFilmPass;
     using Tests::Support::Pipeline::Chain;
     using Views::Raycast::System::ArmDynamicCache;
+    using Views::Raycast::System::ArmFixedScene;
+    using Views::Raycast::System::ArmMobileScene;
     using Views::Raycast::System::BuildDynamicCache;
     using Views::Raycast::System::BuildSelfExclusion;
     using Views::Raycast::System::CastDynamic;
     using Views::Raycast::System::CastRay;
+    using Views::Raycast::System::CastSceneRay;
     using Views::Raycast::System::CastStatic;
     using Views::Raycast::System::DynamicCacheRadius;
+    using Views::Raycast::System::GatherSceneObjects;
     using Views::Raycast::System::PerceptionDirections;
+    using Views::Raycast::System::PrepareMeshBvhs;
     using Views::Raycast::System::PrepareParts;
     using Views::Raycast::System::RayHitsBox;
     using Views::Raycast::System::RayNearPoint;
@@ -48,6 +53,9 @@ namespace
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::RaycastScene;
+    using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneObjects;
     using Views::Raycast::Type::SelfExclusion;
     using std::chrono::steady_clock;
 
@@ -67,6 +75,12 @@ namespace
 
     // The 16 agent metrics (M2, M3, M4) run every K records, M0 and M1 run at every record. K = 30 on ctf_d, to stay under 150 s.
     constexpr std::size_t k_EveryRecords{ 30 };
+
+    // The shared scene is armed and checked against RaycastStore every this many records: a decision every 4 ticks (D273).
+    constexpr std::size_t k_SceneEvery{ 4 };
+
+    // Differences between M2 and M5 the report describes in full, of each kind.
+    constexpr std::size_t k_MaxDifferenceLines{ 6 };
 
     // Where and where to one agent looks from.
     struct Origin
@@ -198,6 +212,39 @@ namespace
         return a.Hit == b.Hit && a.Kind == b.Kind && a.Distance == b.Distance && a.ObjectHandle == b.ObjectHandle;
     }
 
+    // Every field of two hits, the point and the region included.
+    auto SameFullHit(const RaycastHit& a, const RaycastHit& b) -> bool
+    {
+        return SameHit(a, b) && a.RegionIndex == b.RegionIndex && a.SurfaceFlags == b.SurfaceFlags && a.Material == b.Material
+            && a.Point.X == b.Point.X && a.Point.Y == b.Point.Y && a.Point.Z == b.Point.Z;
+    }
+
+    auto DescribeHit(const RaycastHit& hit) -> std::string
+    {
+        return std::format("hit={} kind={} d={:.9g} handle={:08X} region={} flags={} material={}", hit.Hit, static_cast<int>(hit.Kind),
+            hit.Distance, hit.ObjectHandle, hit.RegionIndex, hit.SurfaceFlags, hit.Material);
+    }
+
+    auto TimeLine(std::string_view label, const Series& series) -> std::string
+    {
+        const Stats s{ series.Summary() };
+        return std::format("{:<34} n={:<6} mean={:>10.1f} p50={:>10.1f} p99={:>10.1f} max={:>10.1f} us   mean/N4={:.4f} ms",
+            label, s.N, s.Mean, s.P50, s.P99, s.Max, s.Mean / k_NanosPerMicro / k_DecisionEvery);
+    }
+
+    auto CountLine(std::string_view label, const Series& series) -> std::string
+    {
+        const Stats s{ series.Summary() };
+        return std::format("{:<34} n={:<6} mean={:>10.2f} p99={:>10.1f} max={:>10.1f}", label, s.N, s.Mean, s.P99, s.Max);
+    }
+
+    auto RayLine(std::string_view label, const Series& series) -> std::string
+    {
+        const Stats s{ series.Summary() };
+        return std::format("{:<34} n={:<6} mean={:>10.3f} p50={:>10.3f} p99={:>10.3f} max={:>10.1f} us per ray",
+            label, s.N, s.Mean, s.P50, s.P99, s.Max);
+    }
+
     // Gathers the numbers of the bench from the records of a film. It only reads the chain and times calls.
     class RaycastBench
     {
@@ -228,30 +275,61 @@ namespace
             m_DownHits += down.Hit ? 1 : 0;
             this->MeasureUpdate(chain);
             this->MeasureOneAgent(chain, self);
+            if (record % k_SceneEvery == 0) this->MeasureSelfScene(chain, self);
             if (record % k_EveryRecords == 0) this->MeasureSixteenAgents(chain, self);
+        }
+
+        // return: The lines of the shared scene part (RS.0): M2, M3 and M5 side by side, and the comparison.
+        auto SceneLines() const -> std::vector<std::string>
+        {
+            std::vector<std::string> lines{};
+            lines.push_back(std::format("M2 16 agents as today (own cache), every {} records, us per tick", k_EveryRecords));
+            lines.push_back(TimeLine("M2 total", m_M2Total));
+            lines.push_back(TimeLine("M2   caches (16)", m_M2Cache));
+            lines.push_back(TimeLine("M2   rays (240)", m_M2Rays));
+            lines.push_back(RayLine("M2   ray (mean of the 240)", m_M2Ray));
+            lines.push_back("M3 16 agents, ONE shared cache without exclusion, us per tick");
+            lines.push_back(TimeLine("M3 total", m_M3Total));
+            lines.push_back(TimeLine("M3   shared cache (1)", m_M3Cache));
+            lines.push_back(TimeLine("M3   rays (240)", m_M3Rays));
+            lines.push_back(RayLine("M3   ray (mean of the 240)", m_M3Ray));
+            lines.push_back(std::format("M5 16 agents, shared two level scene, every {} records, us per tick", k_EveryRecords));
+            lines.push_back(TimeLine("M5 total", m_M5Total));
+            lines.push_back(TimeLine("M5   exclusion + aim + origin", m_M5Prepare));
+            lines.push_back(TimeLine("M5   gather parts (all objects)", m_Gather));
+            lines.push_back(TimeLine("M5   arm MOBILE tree", m_Mobile));
+            lines.push_back(TimeLine("M5   rays (240)", m_M5Rays));
+            lines.push_back(RayLine("M5   ray (mean of the 240)", m_M5Ray));
+            lines.push_back(CountLine("M5 nodes visited per ray", m_SceneNodesRay));
+            lines.push_back(CountLine("M5 triangles tested per ray", m_SceneTrianglesRay));
+            lines.push_back(CountLine("M5 objects in the scene", m_SceneObjectsSeries));
+            lines.push_back(CountLine("M5 leaves of the FIXED tree", m_FixedLeaves));
+            lines.push_back(CountLine("M5 leaves of the MOBILE tree", m_MobileLeaves));
+            lines.push_back(std::format("M5 FIXED tree rebuilt {} times in the {} armings of the film (a decision every {} records, and the K records).",
+                m_Scene.FixedBuilds, m_Armings, k_SceneEvery));
+            lines.push_back(TimeLine("M5   each FIXED rebuild", m_FixedArm));
+            lines.push_back(std::format("M5 mesh BVHs: {} built in total ({} meshes in the scene), {:.1f} us in total, first use of each.",
+                m_MeshesBuilt, m_Scene.Meshes.size(), m_MeshBvhUs));
+            lines.push_back(TimeLine("M5   each mesh BVH call that built", m_MeshBvhCall));
+            lines.push_back(std::format("M5 check against M2 (same agents, origins, directions, exclusions): {} rays compared, {} differences.",
+                m_SceneCompared, m_SceneDifferences));
+            lines.push_back(std::format("  of which the scene hits an object that QueryNearby leaves out of the cache of M2 (its center is beyond the radius): {}.",
+                m_SceneByRadius));
+            lines.push_back(std::format("  UNEXPLAINED (still different when the scene is limited to the objects of the cache of M2): {}.",
+                m_SceneUnexplained));
+            lines.push_back(std::format("M1 check of the scene for Self against RaycastStore: {} rays compared, {} differences, {} by the radius, {} UNEXPLAINED.",
+                m_SelfCompared, m_SelfDifferences, m_SelfByRadius, m_SelfUnexplained));
+            for (const std::string& line : m_SceneMessages) lines.push_back("  " + line);
+            return lines;
         }
 
         // return: The lines of the report, without the header.
         auto Lines() const -> std::vector<std::string>
         {
             std::vector<std::string> lines{};
-            const auto time{ [&](std::string_view label, const Series& series)
-            {
-                const Stats s{ series.Summary() };
-                lines.push_back(std::format("{:<34} n={:<6} mean={:>10.1f} p50={:>10.1f} p99={:>10.1f} max={:>10.1f} us   mean/N4={:.4f} ms",
-                    label, s.N, s.Mean, s.P50, s.P99, s.Max, s.Mean / k_NanosPerMicro / k_DecisionEvery));
-            } };
-            const auto count{ [&](std::string_view label, const Series& series)
-            {
-                const Stats s{ series.Summary() };
-                lines.push_back(std::format("{:<34} n={:<6} mean={:>10.2f} p99={:>10.1f} max={:>10.1f}", label, s.N, s.Mean, s.P99, s.Max));
-            } };
-            const auto ray{ [&](std::string_view label, const Series& series)
-            {
-                const Stats s{ series.Summary() };
-                lines.push_back(std::format("{:<34} n={:<6} mean={:>10.3f} p50={:>10.3f} p99={:>10.3f} max={:>10.1f} us per ray",
-                    label, s.N, s.Mean, s.P50, s.P99, s.Max));
-            } };
+            const auto time{ [&](std::string_view label, const Series& series) { lines.push_back(TimeLine(label, series)); } };
+            const auto count{ [&](std::string_view label, const Series& series) { lines.push_back(CountLine(label, series)); } };
+            const auto ray{ [&](std::string_view label, const Series& series) { lines.push_back(RayLine(label, series)); } };
 
             lines.push_back(std::format("Static world: {} sbsp, {} triangles. A ray straight down from the camera of Self hit it in {} of {} records.",
                 m_Sbsps, m_StaticTriangles, m_DownHits, m_Measured));
@@ -299,12 +377,16 @@ namespace
             ray("M4 ray", m_M4Ray);
 
             lines.push_back("");
+            for (const std::string& line : this->SceneLines()) lines.push_back(line);
+
+            lines.push_back("");
             lines.push_back("Heaviest, 1 agent (ms per tick, mean):");
             this->AppendHeaviest(lines, { { "QueryNearby", &m_Query }, { "arm the cache", &m_Arm }, { "BuildSelfExclusion", &m_Exclusion },
                 { "static rays (15)", &m_StaticTick }, { "dynamic rays (15)", &m_DynamicTick }, { "Update (M0)", &m_Update } });
             lines.push_back("Heaviest, 16 agents (ms per tick, mean):");
             this->AppendHeaviest(lines, { { "M2 total", &m_M2Total }, { "M2 caches", &m_M2Cache }, { "M2 rays", &m_M2Rays },
-                { "M3 total", &m_M3Total }, { "M3 shared cache", &m_M3Cache }, { "M3 rays", &m_M3Rays }, { "M4 static rays", &m_M4Total } });
+                { "M3 total", &m_M3Total }, { "M3 shared cache", &m_M3Cache }, { "M3 rays", &m_M3Rays }, { "M4 static rays", &m_M4Total },
+                { "M5 total", &m_M5Total }, { "M5 gather", &m_Gather }, { "M5 rays", &m_M5Rays } });
             return lines;
         }
 
@@ -325,6 +407,27 @@ namespace
         Series m_M2Total{}, m_M2Prepare{}, m_M2Cache{}, m_M2Rays{};
         Series m_M3Total{}, m_M3Prepare{}, m_M3Cache{}, m_M3Rays{}, m_M3Objects{};
         Series m_M4Total{}, m_M4Ray{};
+        Series m_M2Ray{}, m_M3Ray{};
+        Series m_M5Total{}, m_M5Prepare{}, m_M5Rays{}, m_M5Ray{};
+        Series m_Gather{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
+        Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
+
+        // The shared scene lives for the whole film, as it would in the pipeline.
+        RaycastScene m_Scene{};
+        std::size_t m_Armings{};
+        std::size_t m_MeshesBuilt{};
+        double m_MeshBvhUs{};
+        std::size_t m_SceneCompared{};
+        std::size_t m_SceneDifferences{};
+        std::size_t m_SelfCompared{};
+        std::size_t m_SelfDifferences{};
+        std::size_t m_SceneByRadius{};
+        std::size_t m_SceneUnexplained{};
+        std::size_t m_SelfByRadius{};
+        std::size_t m_SelfUnexplained{};
+        std::size_t m_RadiusLines{};
+        std::size_t m_UnexplainedLines{};
+        std::vector<std::string> m_SceneMessages{};
 
         static auto AppendHeaviest(std::vector<std::string>& lines, std::vector<std::pair<std::string_view, const Series*>> rows) -> void
         {
@@ -439,6 +542,90 @@ namespace
             m_HitsNone.Add(static_cast<double>(hitsNone));
         }
 
+        // Gathers every object of the tick and arms the scene, the way a decision tick would.
+        // return: The microseconds the gather and the mobile tree took.
+        auto ArmScene(Chain& chain) -> std::pair<double, double>
+        {
+            ++m_Armings;
+
+            auto start{ steady_clock::now() };
+            const SceneObjects objects{ GatherSceneObjects(chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore) };
+            const double gatherUs{ Micros(start, steady_clock::now()) };
+
+            start = steady_clock::now();
+            const std::size_t built{ PrepareMeshBvhs(m_Scene, objects) };
+            const double meshUs{ Micros(start, steady_clock::now()) };
+            if (built > 0)
+            {
+                m_MeshesBuilt += built;
+                m_MeshBvhUs += meshUs;
+                m_MeshBvhCall.Add(meshUs);
+            }
+
+            start = steady_clock::now();
+            const bool rebuilt{ ArmFixedScene(m_Scene, objects) };
+            if (rebuilt) m_FixedArm.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            ArmMobileScene(m_Scene, objects);
+            const double mobileUs{ Micros(start, steady_clock::now()) };
+
+            m_SceneObjectsSeries.Add(static_cast<double>(objects.size()));
+            m_FixedLeaves.Add(static_cast<double>(m_Scene.Fixed.Pieces.size()));
+            m_MobileLeaves.Add(static_cast<double>(m_Scene.Mobile.Pieces.size()));
+            return { gatherUs, mobileUs };
+        }
+
+        // The exclusion of an agent plus every object of the scene that QueryNearby leaves out of its cache.
+        // note: With it the scene sees the same objects as the cache of M2, so any difference left is the scene's.
+        auto RadiusExclusion(Chain& chain, const Agent& agent) const -> SelfExclusion
+        {
+            const std::vector<std::uint32_t> nearby{ chain.m_Environment.m_CollidableService.QueryNearby(agent.Source.Camera, agent.Radius) };
+            const std::unordered_set<std::uint32_t> inside{ nearby.begin(), nearby.end() };
+
+            SelfExclusion exclusion{ agent.Exclusion };
+            for (const auto* tree : { &m_Scene.Fixed, &m_Scene.Mobile })
+            {
+                for (const auto& piece : tree->Pieces)
+                {
+                    if (!inside.contains(piece.Handle)) exclusion.insert(piece.Handle);
+                }
+            }
+
+            return exclusion;
+        }
+
+        // M1 with the scene: the rays of Self against what RaycastService published.
+        auto MeasureSelfScene(Chain& chain, const Origin& self) -> void
+        {
+            const auto published{ chain.m_Egocentric.m_RaycastStore.Acquire() };
+            if (!published) return;
+
+            this->ArmScene(chain);
+            const Agent agent{ PrepareAgent(chain, self) };
+            const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
+            for (std::size_t index{ 0 }; index < rays.size(); ++index)
+            {
+                const Ray& ray{ rays[index] };
+                const RaycastHit hit{ CastSceneRay(chain.m_Resolved.m_Raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr) };
+                const RaycastHit& expected{ index == 0 ? published->AimHit : published->PerceptionHits[index - 1] };
+
+                ++m_SelfCompared;
+                if (SameFullHit(hit, expected)) continue;
+
+                ++m_SelfDifferences;
+                const RaycastHit limited{ CastSceneRay(chain.m_Resolved.m_Raycaster, m_Scene, this->RadiusExclusion(chain, agent), ray.Origin, ray.Direction, ray.Range, nullptr) };
+                const bool explained{ SameFullHit(limited, expected) };
+                (explained ? m_SelfByRadius : m_SelfUnexplained) += 1;
+                if (explained ? m_RadiusLines < k_MaxDifferenceLines : m_UnexplainedLines < k_MaxDifferenceLines)
+                {
+                    ++(explained ? m_RadiusLines : m_UnexplainedLines);
+                    m_SceneMessages.push_back(std::format("Self ray {} ({}): RaycastStore [{}] scene [{}]", index,
+                        explained ? "radius" : "UNEXPLAINED", DescribeHit(expected), DescribeHit(hit)));
+                }
+            }
+        }
+
         // The origins of the 16 agents: the live players first, then past positions of Self.
         auto BuildOrigins(const Chain& chain, const Origin& self) const -> std::vector<Origin>
         {
@@ -484,6 +671,8 @@ namespace
             double prepareUs{};
             double cacheUs{};
             double raysUs{};
+            std::vector<RaycastHit> m2Hits{};
+            m2Hits.reserve(origins.size() * k_RaysPerAgent);
             const auto total2{ steady_clock::now() };
             for (const Origin& origin : origins)
             {
@@ -496,13 +685,19 @@ namespace
                 cacheUs += Micros(start, steady_clock::now());
 
                 start = steady_clock::now();
-                for (const Ray& ray : RaysOf(agent)) m_Sink += CastRay(raycaster, cache, ray.Origin, ray.Direction, ray.Range).Distance;
+                for (const Ray& ray : RaysOf(agent))
+                {
+                    const RaycastHit hit{ CastRay(raycaster, cache, ray.Origin, ray.Direction, ray.Range) };
+                    m_Sink += hit.Distance;
+                    m2Hits.push_back(hit);
+                }
                 raysUs += Micros(start, steady_clock::now());
             }
             m_M2Total.Add(Micros(total2, steady_clock::now()));
             m_M2Prepare.Add(prepareUs);
             m_M2Cache.Add(cacheUs);
             m_M2Rays.Add(raysUs);
+            m_M2Ray.Add(raysUs / static_cast<double>(origins.size() * k_RaysPerAgent));
 
             // M3: the same agents over one cache that holds the sphere of all of them.
             const auto total3{ steady_clock::now() };
@@ -532,6 +727,7 @@ namespace
             m_M3Prepare.Add(Micros(total3, prepared3));
             m_M3Cache.Add(Micros(prepared3, cached3));
             m_M3Rays.Add(Micros(cached3, end3));
+            m_M3Ray.Add(Micros(cached3, end3) / static_cast<double>(agents.size() * k_RaysPerAgent));
             m_M3Objects.Add(static_cast<double>(shared.size()));
 
             // M4: the same rays against the static world only.
@@ -543,6 +739,70 @@ namespace
             const double total4{ Micros(start4, steady_clock::now()) };
             m_M4Total.Add(total4);
             m_M4Ray.Add(total4 / static_cast<double>(agents.size() * k_RaysPerAgent));
+
+            this->MeasureScene(chain, origins, m2Hits);
+        }
+
+        // M5: the same agents over the shared two level scene, compared ray by ray with M2.
+        auto MeasureScene(Chain& chain, const std::vector<Origin>& origins, const std::vector<RaycastHit>& m2Hits) -> void
+        {
+            const auto& raycaster{ chain.m_Resolved.m_Raycaster };
+
+            const auto total5{ steady_clock::now() };
+            std::vector<Agent> agents{};
+            agents.reserve(origins.size());
+            for (const Origin& origin : origins) agents.push_back(PrepareAgent(chain, origin));
+            const auto prepared5{ steady_clock::now() };
+
+            const auto [gatherUs, mobileUs] { this->ArmScene(chain) };
+            const auto armed5{ steady_clock::now() };
+
+            std::vector<RaycastHit> m5Hits{};
+            m5Hits.reserve(agents.size() * k_RaysPerAgent);
+            for (const Agent& agent : agents)
+            {
+                for (const Ray& ray : RaysOf(agent))
+                {
+                    m5Hits.push_back(CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr));
+                }
+            }
+            const auto end5{ steady_clock::now() };
+
+            m_M5Total.Add(Micros(total5, end5));
+            m_M5Prepare.Add(Micros(total5, prepared5));
+            m_Gather.Add(gatherUs);
+            m_Mobile.Add(mobileUs);
+            m_M5Rays.Add(Micros(armed5, end5));
+            m_M5Ray.Add(Micros(armed5, end5) / static_cast<double>(m5Hits.size()));
+
+            // Counted pass and comparison, outside the clocks.
+            std::size_t flat{ 0 };
+            for (std::size_t agentIndex{ 0 }; agentIndex < agents.size(); ++agentIndex)
+            {
+                const Agent& agent{ agents[agentIndex] };
+                const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
+                for (std::size_t index{ 0 }; index < rays.size(); ++index, ++flat)
+                {
+                    SceneCounters counters{};
+                    const Ray& ray{ rays[index] };
+                    const RaycastHit counted{ CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, &counters) };
+                    m_SceneNodesRay.Add(static_cast<double>(counters.Nodes));
+                    m_SceneTrianglesRay.Add(static_cast<double>(counters.Triangles));
+
+                    ++m_SceneCompared;
+                    if (SameFullHit(counted, m5Hits[flat]) && SameFullHit(m2Hits[flat], m5Hits[flat])) continue;
+
+                    ++m_SceneDifferences;
+                    const RaycastHit limited{ CastSceneRay(raycaster, m_Scene, this->RadiusExclusion(chain, agent), ray.Origin, ray.Direction, ray.Range, nullptr) };
+                    const bool explained{ SameFullHit(limited, m2Hits[flat]) };
+                    (explained ? m_SceneByRadius : m_SceneUnexplained) += 1;
+                    if (explained ? m_RadiusLines >= k_MaxDifferenceLines : m_UnexplainedLines >= k_MaxDifferenceLines) continue;
+
+                    ++(explained ? m_RadiusLines : m_UnexplainedLines);
+                    m_SceneMessages.push_back(std::format("agent {} ray {} ({}): M2 [{}] M5 [{}] limited to the M2 objects [{}]",
+                        agentIndex, index, explained ? "radius" : "UNEXPLAINED", DescribeHit(m2Hits[flat]), DescribeHit(m5Hits[flat]), DescribeHit(limited)));
+                }
+            }
         }
     };
 
@@ -565,6 +825,14 @@ namespace
 
         const std::filesystem::path file{ Tests::Support::Bench::WriteReport(std::format("raycast_{}.txt", film), report) };
         ASSERT_FALSE(file.empty()) << "Cannot write the report of " << film;
+
+        std::vector<std::string> sceneReport{};
+        sceneReport.push_back(std::format("RS.0 shared ray scene: film {}, {} records, K = {}, scene every {} records, {:%Y-%m-%d %H:%M:%S} UTC, {}.",
+            film, outcome.Records, k_EveryRecords, k_SceneEvery, now, Tests::Support::Bench::Configuration()));
+        sceneReport.push_back("");
+        for (const std::string& line : bench.SceneLines()) sceneReport.push_back(line);
+        const std::filesystem::path sceneFile{ Tests::Support::Bench::WriteReport(std::format("rs0_{}.txt", film), sceneReport) };
+        ASSERT_FALSE(sceneFile.empty()) << "Cannot write the scene report of " << film;
 
         ::testing::Test::RecordProperty("ReportFile", file.string());
         for (std::size_t index{ 0 }; index < report.size(); ++index)

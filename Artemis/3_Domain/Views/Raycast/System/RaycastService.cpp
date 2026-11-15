@@ -394,6 +394,22 @@ namespace Views::Raycast::System
         return best;
     }
 
+    auto PoseRay(const std::array<float, 12>& toLocal, const Vec3& origin, const Vec3& direction, Vec3& localOrigin,
+        Vec3& localDirection) -> void
+    {
+        const auto& m = toLocal;
+        localOrigin = {
+            m[0] * origin.X + m[1] * origin.Y + m[2] * origin.Z + m[3],
+            m[4] * origin.X + m[5] * origin.Y + m[6] * origin.Z + m[7],
+            m[8] * origin.X + m[9] * origin.Y + m[10] * origin.Z + m[11]
+        };
+        localDirection = {
+            m[0] * direction.X + m[1] * direction.Y + m[2] * direction.Z,
+            m[4] * direction.X + m[5] * direction.Y + m[6] * direction.Z,
+            m[8] * direction.X + m[9] * direction.Y + m[10] * direction.Z
+        };
+    }
+
     auto CastDynamic(const DynamicCache& dynamicCache, const Vec3& origin, const Vec3& direction, float maxDistance,
         RaycastHit& best) -> void
     {
@@ -411,17 +427,9 @@ namespace Views::Raycast::System
 
                 if (!RayNearPoint(origin, direction, limit, part.Center, part.Radius)) continue;
 
-                const auto& m = part.ToLocal;
-                const Vec3 localOrigin{
-                    m[0] * origin.X + m[1] * origin.Y + m[2] * origin.Z + m[3],
-                    m[4] * origin.X + m[5] * origin.Y + m[6] * origin.Z + m[7],
-                    m[8] * origin.X + m[9] * origin.Y + m[10] * origin.Z + m[11]
-                };
-                const Vec3 localDirection{
-                    m[0] * direction.X + m[1] * direction.Y + m[2] * direction.Z,
-                    m[4] * direction.X + m[5] * direction.Y + m[6] * direction.Z,
-                    m[8] * direction.X + m[9] * direction.Y + m[10] * direction.Z
-                };
+                Vec3 localOrigin{};
+                Vec3 localDirection{};
+                PoseRay(part.ToLocal, origin, direction, localOrigin, localDirection);
 
                 if (!RayHitsBox(localOrigin, localDirection, part.Source->LocalMin, part.Source->LocalMax, limit)) continue;
 

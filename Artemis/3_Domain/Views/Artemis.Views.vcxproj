@@ -65,9 +65,12 @@
     <ClCompile Include="Raycast\Views.Raycast.Type.ixx" />
     <ClCompile Include="Raycast\State\RaycastStore.ixx" />
     <ClCompile Include="Raycast\System\RaycastCast.ixx" />
+    <ClCompile Include="Raycast\System\RaycastScene.cpp" />
+    <ClCompile Include="Raycast\System\RaycastScene.ixx" />
     <ClCompile Include="Raycast\System\RaycastService.cpp" />
     <ClCompile Include="Raycast\System\RaycastService.ixx" />
     <ClCompile Include="Raycast\Type\RaycastConstant.ixx" />
+    <ClCompile Include="Raycast\Type\RaycastScenes.ixx" />
     <ClCompile Include="Raycast\Type\Raycasts.ixx" />
     <ClCompile Include="Self\State\SelfStore.ixx" />
     <ClCompile Include="Self\System\SelfService.cpp" />

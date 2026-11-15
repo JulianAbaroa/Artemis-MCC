@@ -13,16 +13,16 @@ import std;
 namespace
 {
     using Common::Math::Type::k_FloatMax;
+    using Blam::MapModel::World::Type::Raycast::BvhBounds;
+    using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
+    using Blam::MapModel::World::Type::Raycast::k_StackSize;
 
     // Triangles a leaf holds before it is split.
     constexpr int k_LeafSize{ 4 };
 
     // Deepest level of the hierarchy, so the traversal stack stays bounded.
     constexpr int k_MaxDepth{ 60 };
-
-    // Slots of the traversal stack.
-    constexpr int k_StackSize{ 128 };
 
     // Bins used to choose where a node splits.
     constexpr int k_Bins{ 16 };
@@ -41,6 +41,7 @@ namespace
         std::array<float, 3> Min{};
         std::array<float, 3> Max{};
         std::array<float, 3> Center{};
+        std::uint32_t Index{};
     };
 
     // Box that grows to hold the points and boxes it is given.
@@ -273,6 +274,46 @@ namespace Blam::MapModel::World::System
         {
             m_Triangles.push_back(prim.Tri);
         }
+    }
+
+    auto BuildBoundsBvh(const std::vector<BvhBounds>& bounds, std::vector<BvhNode>& nodes, std::vector<std::uint32_t>& order) -> void
+    {
+        nodes.clear();
+        order.clear();
+        if (bounds.empty()) return;
+
+        std::vector<Prim> prims{};
+        prims.reserve(bounds.size());
+        for (std::size_t index{ 0 }; index < bounds.size(); ++index)
+        {
+            Prim prim{};
+            prim.Min = bounds[index].Min;
+            prim.Max = bounds[index].Max;
+            prim.Center = {
+                (prim.Min[0] + prim.Max[0]) * 0.5f,
+                (prim.Min[1] + prim.Max[1]) * 0.5f,
+                (prim.Min[2] + prim.Max[2]) * 0.5f
+            };
+            prim.Index = static_cast<std::uint32_t>(index);
+            prims.push_back(prim);
+        }
+
+        nodes.resize(1);
+        FillNode(prims, 0, prims.size(), 0, nodes, 0);
+
+        order.reserve(prims.size());
+        for (const Prim& prim : prims) order.push_back(prim.Index);
+    }
+
+    auto RayEntersNode(const BvhNode& node, const std::array<float, 3>& origin, const std::array<float, 3>& inverse, float tMax,
+        float& enter) -> bool
+    {
+        return EntersBox(node, origin, inverse, tMax, enter);
+    }
+
+    auto InverseDirection(float component) -> float
+    {
+        return SafeInverse(component);
     }
 
     auto Raycaster::Cast(const Vec3& origin, const Vec3& direction, float maxDistance) const -> Hit

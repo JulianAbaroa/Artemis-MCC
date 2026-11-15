@@ -13,6 +13,9 @@ export namespace Blam::MapModel::World::Type::Raycast
     // Padding of every box of a ray tree, so rays that graze a triangle edge are not lost to rounding.
     inline constexpr float k_BoxPadding{ 1.0e-3f };
 
+    // Slots of the stack that traverses a hierarchy.
+    inline constexpr int k_StackSize{ 128 };
+
     // Node of the bounding volume hierarchy.
     // note: An inner node has its children at Left and Left + 1. A leaf has Count triangles starting at Left.
     struct BvhNode
@@ -21,6 +24,13 @@ export namespace Blam::MapModel::World::Type::Raycast
         std::array<float, 3> Max{};
         std::int32_t Left{};
         std::int32_t Count{};
+    };
+
+    // Box of one primitive of a hierarchy, before the hierarchy is built.
+    struct BvhBounds
+    {
+        std::array<float, 3> Min{};
+        std::array<float, 3> Max{};
     };
 
     // Closest collision surface a ray hits.

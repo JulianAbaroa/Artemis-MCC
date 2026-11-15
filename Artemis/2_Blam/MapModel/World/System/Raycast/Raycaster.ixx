@@ -44,4 +44,18 @@ export namespace Blam::MapModel::World::System
         // Builds the hierarchy over the collision triangles of the sbsps.
         auto BuildBvh(const std::vector<const Sbsp*>& sbsps) -> void;
     };
+
+    // Builds a hierarchy over boxes, with the same surface area heuristic the Raycaster uses for its triangles (D298).
+    // param order: Receives, for each slot the leaves count from, the index in bounds of the box that sits there. Empty if there are no boxes.
+    auto BuildBoundsBvh(const std::vector<Blam::MapModel::World::Type::Raycast::BvhBounds>& bounds,
+        std::vector<Blam::MapModel::World::Type::Raycast::BvhNode>& nodes, std::vector<std::uint32_t>& order) -> void;
+
+    // Whether a ray enters the box of a node before tMax.
+    // param inverse: InverseDirection of each component of the direction.
+    // param enter: The distance at which the ray enters the box.
+    auto RayEntersNode(const Blam::MapModel::World::Type::Raycast::BvhNode& node, const std::array<float, 3>& origin,
+        const std::array<float, 3>& inverse, float tMax, float& enter) -> bool;
+
+    // return: The inverse of a component of a direction, finite when the component is zero.
+    auto InverseDirection(float component) -> float;
 }

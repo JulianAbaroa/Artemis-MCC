@@ -70,6 +70,12 @@
     <ClCompile Include="Raycast\System\RaycastCast.ixx">
       <Filter>Raycast\System</Filter>
     </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastScene.cpp">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastScene.ixx">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
     <ClCompile Include="Raycast\System\RaycastService.cpp">
       <Filter>Raycast\System</Filter>
     </ClCompile>
@@ -77,6 +83,9 @@
       <Filter>Raycast\System</Filter>
     </ClCompile>
     <ClCompile Include="Raycast\Type\RaycastConstant.ixx">
+      <Filter>Raycast\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\Type\RaycastScenes.ixx">
       <Filter>Raycast\Type</Filter>
     </ClCompile>
     <ClCompile Include="Raycast\Type\Raycasts.ixx">

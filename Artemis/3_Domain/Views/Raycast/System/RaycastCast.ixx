@@ -73,6 +73,12 @@ export namespace Views::Raycast::System
     // Whether a ray crosses a box before travelling tMax.
     auto RayHitsBox(const Vec3& origin, const Vec3& direction, const Vec3& boxMin, const Vec3& boxMax, float tMax) -> bool;
 
+    // Takes a ray to the local space of a part.
+    // param toLocal: The ToLocal of a CachedPart.
+    // note: The direction is not normalized again, so distances along the local ray are the same as along the world ray.
+    auto PoseRay(const std::array<float, 12>& toLocal, const Vec3& origin, const Vec3& direction, Vec3& localOrigin,
+        Vec3& localDirection) -> void;
+
     // return: The hit of the ray against the static world, with the origin, direction and range of the ray filled in.
     auto CastStatic(const Raycaster& raycaster, const Vec3& origin, const Vec3& direction, float maxDistance) -> RaycastHit;
 
