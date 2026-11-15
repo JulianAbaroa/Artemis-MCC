@@ -21,17 +21,18 @@ namespace
     using Blam::MapModel::World::Type::Raycast::BvhBounds;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Views::Raycast::Type::CachedPart;
-    using Views::Raycast::Type::FixedParts;
-    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::MeshBvh;
     using Views::Raycast::Type::MeshBvhs;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneGatherCounters;
     using Views::Raycast::Type::SceneKeyFunction;
     using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::SceneParts;
+    using Views::Raycast::Type::ScenePartsCache;
     using Views::Raycast::Type::ScenePartsFunction;
     using Views::Raycast::Type::ScenePiece;
     using Views::Raycast::Type::SceneRef;
@@ -48,6 +49,8 @@ namespace
 
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
     using Blam::MapModel::World::Type::Raycast::k_StackSize;
+    using Views::Raycast::Type::Constant::k_FixedRebuildGathers;
+    using Views::Raycast::Type::Constant::k_RestGathers;
 
     // Who wins between two dynamic hits at the same distance.
     struct TieKey
@@ -187,7 +190,8 @@ namespace
     }
 
     // Goes down one instance tree and into the mesh of every piece the ray reaches.
-    auto CastTree(const SceneTree& tree, const RayState& world, CastState& state) -> void
+    // param filtered: Sorted handles whose pieces are skipped. Null for none.
+    auto CastTree(const SceneTree& tree, const std::vector<std::uint32_t>* filtered, const RayState& world, CastState& state) -> void
     {
         if (tree.Nodes.empty()) return;
 
@@ -206,6 +210,7 @@ namespace
                 {
                     const ScenePiece& piece{ tree.Pieces[tree.Order[static_cast<std::size_t>(slot)]] };
                     if (state.Exclusion.contains(piece.Handle)) continue;
+                    if (filtered && std::ranges::binary_search(*filtered, piece.Handle)) continue;
 
                     const float limit{ state.Limit() };
                     if (!Views::Raycast::System::RayNearPoint(world.Origin, world.Direction, limit, piece.Part.Center, piece.Part.Radius)) continue;
@@ -225,14 +230,14 @@ namespace
         }
     }
 
-    // Builds an instance tree over the parts of the objects whose IsFixed is fixed.
-    auto ArmTree(SceneTree& tree, const MeshBvhs& meshes, const SceneObjects& objects, bool fixed) -> void
+    // Builds an instance tree over the parts of the objects whose IsCovered is covered.
+    auto ArmTree(SceneTree& tree, const MeshBvhs& meshes, const SceneObjects& objects, bool covered) -> void
     {
         tree.Pieces.clear();
 
         for (const SceneObject& object : objects)
         {
-            if (object.IsFixed != fixed) continue;
+            if (object.IsCovered != covered) continue;
 
             const std::vector<CachedPart> parts{ Views::Raycast::System::PrepareParts(object.Parts) };
             for (std::size_t index{ 0 }; index < parts.size(); ++index)
@@ -274,18 +279,32 @@ namespace
         Blam::MapModel::World::System::BuildBoundsBvh(bounds, bvh.Nodes, bvh.Order);
         return bvh;
     }
+
+    // Whether the parts of an object are exactly the poses armed in [begin, end).
+    auto IsSamePoses(const std::vector<ScenePose>& armed, std::size_t begin, std::size_t end, const SceneObject& object) -> bool
+    {
+        if (end - begin != object.Parts.size()) return false;
+
+        for (std::size_t index{ 0 }; index < object.Parts.size(); ++index)
+        {
+            const auto& part{ object.Parts[index] };
+            if (!(armed[begin + index] == ScenePose{ object.Handle, part.Source, part.Transform })) return false;
+        }
+
+        return true;
+    }
 }
 
 namespace Views::Raycast::System
 {
-    auto GatherSceneObjects(FixedPartsCache& reuse, CollidableService& collidableService, const ObjectTableStore& objectStore,
-        std::size_t* reused) -> SceneObjects
+    auto GatherSceneObjects(ScenePartsCache& reuse, CollidableService& collidableService, const ObjectTableStore& objectStore,
+        SceneGatherCounters* counters) -> SceneObjects
     {
         const auto objectTablePtr = objectStore.Acquire();
         if (!objectTablePtr)
         {
             reuse.clear();
-            if (reused) *reused = 0;
+            if (counters) *counters = SceneGatherCounters{};
             return SceneObjects{};
         }
 
@@ -293,8 +312,8 @@ namespace Views::Raycast::System
         refs.reserve(objectTablePtr->size());
         for (const auto& [handle, object] : *objectTablePtr)
         {
-            const bool isFixed{ object.Placement && (object.Placement->Physics == Physics::Fixed || object.Placement->Physics == Physics::Phased) };
-            refs.push_back(SceneRef{ handle, isFixed });
+            const bool isFixedPhysics{ object.Placement && (object.Placement->Physics == Physics::Fixed || object.Placement->Physics == Physics::Phased) };
+            refs.push_back(SceneRef{ handle, isFixedPhysics });
         }
 
         const SceneKeyFunction keyOf{ [&](std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) { return collidableService.MakePartsKey(handle, key, previous); } };
@@ -306,45 +325,45 @@ namespace Views::Raycast::System
             return std::move(collidable->Parts);
         } };
 
-        return GatherSceneObjects(reuse, refs, keyOf, partsOf, reused);
+        return GatherSceneObjects(reuse, refs, keyOf, partsOf, counters);
     }
 
-    auto GatherSceneObjects(FixedPartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
-        std::size_t* reused) -> SceneObjects
+    auto GatherSceneObjects(ScenePartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
+        SceneGatherCounters* counters) -> SceneObjects
     {
         SceneObjects objects{};
         objects.reserve(refs.size());
 
         CollidablePartsKey key{};
-        std::size_t reusedCount{ 0 };
+        SceneGatherCounters count{};
 
         for (const SceneRef& ref : refs)
         {
-            if (!ref.IsFixed)
-            {
-                auto parts = partsOf(ref.Handle);
-                if (parts && !parts->empty()) objects.push_back(SceneObject{ ref.Handle, false, std::move(*parts) });
-                continue;
-            }
-
             auto entry = reuse.find(ref.Handle);
-            if (!keyOf(ref.Handle, key, entry != reuse.end() ? &entry->second.Key : nullptr)) continue;
+            const bool isKnown{ entry != reuse.end() };
+            if (!keyOf(ref.Handle, key, isKnown ? &entry->second.Key : nullptr)) continue;
 
-            if (entry != reuse.end() && entry->second.Key == key)
+            const bool isSame{ isKnown && entry->second.Key == key };
+            if (isSame)
             {
-                ++reusedCount;
+                ++count.Reused;
+                ++entry->second.StillGathers;
             }
             else
             {
+                ++count.Collected;
                 auto parts = partsOf(ref.Handle);
-                entry = reuse.insert_or_assign(ref.Handle, FixedParts{ key, parts ? std::move(*parts) : std::vector<CollidablePart>{}, false }).first;
+                entry = reuse.insert_or_assign(ref.Handle, SceneParts{ key, parts ? std::move(*parts) : std::vector<CollidablePart>{}, false, 0 }).first;
             }
 
             entry->second.IsSeen = true;
-            if (!entry->second.Parts.empty()) objects.push_back(SceneObject{ ref.Handle, true, entry->second.Parts });
+
+            // A fixed or phased object rests while its key does not change, and the rest rest after k_RestGathers equal keys.
+            const bool isAtRest{ (ref.IsFixedPhysics && (isSame || !isKnown)) || entry->second.StillGathers >= k_RestGathers };
+            if (!entry->second.Parts.empty()) objects.push_back(SceneObject{ ref.Handle, isAtRest, entry->second.Parts, false });
         }
 
-        // What this gather did not see is gone or not fixed anymore.
+        // What this gather did not see is gone.
         for (auto entry = reuse.begin(); entry != reuse.end();)
         {
             if (entry->second.IsSeen)
@@ -358,7 +377,7 @@ namespace Views::Raycast::System
             }
         }
 
-        if (reused) *reused = reusedCount;
+        if (counters) *counters = count;
 
         std::ranges::sort(objects, [](const SceneObject& a, const SceneObject& b) { return a.Handle < b.Handle; });
         return objects;
@@ -381,21 +400,85 @@ namespace Views::Raycast::System
         return built;
     }
 
-    auto ArmFixedScene(RaycastScene& scene, const SceneObjects& objects) -> bool
+    auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects) -> bool
     {
-        std::vector<ScenePose> poses{};
-        for (const SceneObject& object : objects)
+        ++scene.GathersSinceBuild;
+
+        const std::vector<ScenePose>& armed{ scene.FixedPoses };
+        std::vector<std::uint32_t>& filter{ scene.FixedFilter };
+        std::vector<std::uint32_t> left{};
+        std::size_t pending{ 0 };
+        std::size_t cursor{ 0 };
+
+        const auto groupEnd{ [&](std::size_t begin)
         {
+            std::size_t end{ begin };
+            while (end < armed.size() && armed[end].Handle == armed[begin].Handle) ++end;
+            return end;
+        } };
+        const auto isFiltered{ [&](std::uint32_t handle) { return std::ranges::binary_search(filter, handle); } };
+        const auto leave{ [&](std::uint32_t handle) { if (!isFiltered(handle)) left.push_back(handle); } };
+
+        // Walk the armed objects and the objects at rest together, both by handle.
+        for (SceneObject& object : objects)
+        {
+            object.IsCovered = false;
+            if (!object.IsFixed) continue;
+
+            while (cursor < armed.size() && armed[cursor].Handle < object.Handle)
+            {
+                leave(armed[cursor].Handle);
+                cursor = groupEnd(cursor);
+            }
+
+            if (cursor == armed.size() || armed[cursor].Handle != object.Handle)
+            {
+                ++pending;
+                continue;
+            }
+
+            const std::size_t end{ groupEnd(cursor) };
+            if (!isFiltered(object.Handle))
+            {
+                if (IsSamePoses(armed, cursor, end, object)) object.IsCovered = true;
+                else left.push_back(object.Handle);
+            }
+
+            cursor = end;
+        }
+
+        while (cursor < armed.size())
+        {
+            leave(armed[cursor].Handle);
+            cursor = groupEnd(cursor);
+        }
+
+        // What left comes in ascending order and is not in the filter yet.
+        const std::ptrdiff_t previous{ static_cast<std::ptrdiff_t>(filter.size()) };
+        filter.insert(filter.end(), left.begin(), left.end());
+        std::inplace_merge(filter.begin(), filter.begin() + previous, filter.end());
+
+        scene.FixedPending = pending;
+        scene.FixedFiltered = filter.size();
+
+        const bool isDirty{ pending > 0 || !filter.empty() };
+        const bool isDue{ scene.FixedBuilds == 0 || scene.GathersSinceBuild >= k_FixedRebuildGathers };
+        if (!isDirty || !isDue) return false;
+
+        std::vector<ScenePose> poses{};
+        for (SceneObject& object : objects)
+        {
+            object.IsCovered = object.IsFixed;
             if (!object.IsFixed) continue;
 
             for (const auto& part : object.Parts) poses.push_back(ScenePose{ object.Handle, part.Source, part.Transform });
         }
 
-        if (scene.FixedBuilds > 0 && poses == scene.FixedPoses) return false;
-
         PrepareMeshBvhs(scene, objects);
         ArmTree(scene.Fixed, scene.Meshes, objects, true);
         scene.FixedPoses = std::move(poses);
+        filter.clear();
+        scene.GathersSinceBuild = 0;
         ++scene.FixedBuilds;
         return true;
     }
@@ -412,8 +495,8 @@ namespace Views::Raycast::System
         CastState state{ best, exclusion, origin, direction, maxDistance, counters, TieKey{} };
         const RayState world{ MakeRayState(origin, direction) };
 
-        CastTree(scene.Fixed, world, state);
-        CastTree(scene.Mobile, world, state);
+        CastTree(scene.Fixed, &scene.FixedFilter, world, state);
+        CastTree(scene.Mobile, nullptr, world, state);
     }
 
     auto CastSceneRay(const Raycaster& raycaster, const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin,

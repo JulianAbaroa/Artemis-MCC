@@ -385,7 +385,7 @@ namespace Views::Raycast::System
             perceptionOrigin.Forward : selfPtr->Forward;
 
         RaycastScene& scene = m_RaycastSceneStore.Scene();
-        const SceneObjects objects = GatherSceneObjects(m_RaycastSceneStore.Parts(), m_CollidableService, m_ObjectStore, nullptr);
+        SceneObjects objects = GatherSceneObjects(m_RaycastSceneStore.Parts(), m_CollidableService, m_ObjectStore, nullptr);
         ArmFixedScene(scene, objects);
         ArmMobileScene(scene, objects);
 

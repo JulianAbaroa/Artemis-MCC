@@ -15,11 +15,12 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Views::Raycast::Type::RaycastHit;
-    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneGatherCounters;
     using Views::Raycast::Type::SceneKeyFunction;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::ScenePartsCache;
     using Views::Raycast::Type::ScenePartsFunction;
     using Views::Raycast::Type::SceneRefs;
     using Views::Raycast::Type::SelfExclusion;
@@ -31,28 +32,34 @@ namespace
 
 export namespace Views::Raycast::System
 {
-    // Collects the parts of every object of the tick that has collision, sorted by handle.
-    // param reuse: The parts of the fixed objects of the last gather. A fixed object whose key is the same keeps its parts without
-    // collecting them again, and an object that is gone or no longer fixed leaves it (D299).
-    // param reused: Receives how many objects kept their parts. Null for none.
-    // note: No radius: it is the whole tick. Objects with Fixed or Phased placement are marked as fixed. The result is the one of
-    // collecting every object.
-    auto GatherSceneObjects(FixedPartsCache& reuse, CollidableService& collidableService, const ObjectTableStore& objectStore,
-        std::size_t* reused) -> SceneObjects;
+    // Collects the parts of every object of the tick that has collision, sorted by handle, and marks the ones at rest.
+    // param reuse: The parts of the objects of the last gather. An object whose key is the same keeps its parts without collecting them
+    // again, and an object that is gone leaves it (D299, D300).
+    // param counters: Receives what the gather did. Null for none.
+    // note: No radius: it is the whole tick. An object is at rest (IsFixed) if its placement is Fixed or Phased and its key did not change
+    // since the last gather or it is new, or if its key was the same in the last k_RestGathers gathers. A change of key takes it out of
+    // rest in that same gather. The parts are the ones of collecting every object.
+    auto GatherSceneObjects(ScenePartsCache& reuse, CollidableService& collidableService, const ObjectTableStore& objectStore,
+        SceneGatherCounters* counters) -> SceneObjects;
 
     // The same gather over the given objects, with the key and the parts of an object given by functions.
-    auto GatherSceneObjects(FixedPartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
-        std::size_t* reused) -> SceneObjects;
+    auto GatherSceneObjects(ScenePartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
+        SceneGatherCounters* counters) -> SceneObjects;
 
     // Builds the hierarchies of the collision meshes of the objects that do not have one yet.
     // return: How many it built.
     auto PrepareMeshBvhs(RaycastScene& scene, const SceneObjects& objects) -> std::size_t;
 
-    // Rebuilds the fixed tree only if the set of fixed parts or any of their transforms is not exactly what it was built from.
-    // return: Whether it rebuilt it.
-    auto ArmFixedScene(RaycastScene& scene, const SceneObjects& objects) -> bool;
+    // Keeps the fixed tree up to date with the objects at rest and marks which objects it covers (D300).
+    // param objects: Sorted by handle, as GatherSceneObjects gives them. Their IsCovered is set.
+    // return: Whether it built the fixed tree.
+    // note: An object in the tree that is not at rest with the same poses any more goes to the filter of the scene: its old parts stop
+    // hitting at once and its current ones go to the mobile tree. An object at rest that is not in the tree waits in the mobile tree.
+    // The tree is built again, with every object at rest and an empty filter, only if there is something waiting or filtered and
+    // k_FixedRebuildGathers gathers passed since the last build, or it was never built.
+    auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects) -> bool;
 
-    // Rebuilds the tree of the objects that are not fixed. Runs every decision tick.
+    // Rebuilds the tree of the objects that the fixed tree does not cover. Runs every decision tick, after ArmFixedScene.
     auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects) -> void;
 
     // Looks for a dynamic hit nearer than the one in best through both trees, and replaces it.

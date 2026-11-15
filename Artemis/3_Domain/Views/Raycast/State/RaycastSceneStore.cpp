@@ -5,8 +5,8 @@ import Views.Raycast.Type;
 
 namespace
 {
-    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::RaycastScene;
+    using Views::Raycast::Type::ScenePartsCache;
 }
 
 namespace Views::Raycast::State
@@ -18,7 +18,7 @@ namespace Views::Raycast::State
         return m_Scene;
     }
 
-    auto RaycastSceneStore::Parts() -> FixedPartsCache&
+    auto RaycastSceneStore::Parts() -> ScenePartsCache&
     {
         this->DropIfStale();
 
@@ -35,6 +35,6 @@ namespace Views::Raycast::State
         if (!m_IsStale.exchange(false)) return;
 
         m_Scene = RaycastScene{};
-        m_Parts = FixedPartsCache{};
+        m_Parts = ScenePartsCache{};
     }
 }

@@ -3,7 +3,6 @@
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Math.System;
-import Common.Semantic.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
 import Views.Raycast.Type;
@@ -21,7 +20,6 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Common::Semantic::Type::Physics;
     using Tests::Support::Bench::Micros;
     using Tests::Support::Bench::Series;
     using Tests::Support::Bench::Stats;
@@ -39,13 +37,14 @@ namespace
     using Views::Raycast::System::PrepareMeshBvhs;
     using Views::Raycast::System::ResolveAimRange;
     using Views::Raycast::System::ResolvePerceptionOrigin;
-    using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneGatherCounters;
     using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::ScenePartsCache;
     using Views::Raycast::Type::SelfExclusion;
     using std::chrono::steady_clock;
 
@@ -212,6 +211,7 @@ namespace
             lines.push_back(TimeLine("M5   gather parts (reuse)", m_GatherReuse));
             lines.push_back(TimeLine("M5   gather parts (all objects)", m_Gather));
             lines.push_back(CountLine("M5   objects that kept their parts", m_Reused));
+            lines.push_back(CountLine("M5   objects collected (CollectPartsFor)", m_Collected));
             lines.push_back(TimeLine("M5   keys of all objects (no parts)", m_KeyOnly));
             lines.push_back(TimeLine("M5   arm MOBILE tree", m_Mobile));
             lines.push_back(TimeLine("M5   rays (240)", m_M5Rays));
@@ -219,19 +219,24 @@ namespace
             lines.push_back(CountLine("M5 nodes visited per ray", m_SceneNodesRay));
             lines.push_back(CountLine("M5 triangles tested per ray", m_SceneTrianglesRay));
             lines.push_back(CountLine("M5 objects in the scene", m_SceneObjectsSeries));
+            lines.push_back(CountLine("M5 objects at rest", m_RestObjects));
             lines.push_back(CountLine("M5 leaves of the FIXED tree", m_FixedLeaves));
             lines.push_back(CountLine("M5 leaves of the MOBILE tree", m_MobileLeaves));
-            lines.push_back(std::format("M5 FIXED tree rebuilt {} times in the {} armings of the film (a decision every {} records, and the K records).",
-                m_Scene.FixedBuilds, m_Armings, k_SceneEvery));
+            lines.push_back(CountLine("M5 handles filtered out of FIXED", m_Filtered));
+            lines.push_back(CountLine("M5 objects at rest waiting for FIXED", m_Pending));
+            lines.push_back(std::format("M5 FIXED tree rebuilt {} times in the {} armings of the film (a decision every {} records, and the K records): "
+                "{} with objects waiting only, {} with filtered handles only, {} with both (the first build counts as waiting).",
+                m_Scene.FixedBuilds, m_Armings, k_SceneEvery, m_RebuildWaiting, m_RebuildFiltered, m_RebuildBoth));
             lines.push_back(TimeLine("M5   each FIXED rebuild", m_FixedArm));
             lines.push_back(std::format("M5 mesh BVHs: {} built in total ({} meshes in the scene), {:.1f} us in total, first use of each.",
                 m_MeshesBuilt, m_Scene.Meshes.size(), m_MeshBvhUs));
             lines.push_back(TimeLine("M5   each mesh BVH call that built", m_MeshBvhCall));
-            lines.push_back(std::format("M5 reuse check against gathering everything (same tick, own scene): {} rays compared, {} differences; the poses of the FIXED tree compared {} times, {} differences.",
-                m_ReuseCompared, m_ReuseDifferences, m_PosesCompared, m_PoseDifferences));
+            lines.push_back(std::format("M5 exactness check against a reference scene with every object gathered without reuse and all in MOBILE (same tick, own scene): {} rays compared, {} differences.",
+                m_ReuseCompared, m_ReuseDifferences));
             lines.push_back(std::format("M1 check of the scene for Self against RaycastStore: {} rays compared, {} differences.",
                 m_SelfCompared, m_SelfDifferences));
             for (const std::string& line : m_SceneMessages) lines.push_back("  " + line);
+            for (const std::string& line : this->MobileGroupLines()) lines.push_back(line);
             return lines;
         }
 
@@ -283,26 +288,87 @@ namespace
         Series m_StaticRay{};
         Series m_M4Total{}, m_M4Ray{};
         Series m_M5Total{}, m_M5Prepare{}, m_M5Rays{}, m_M5Ray{};
-        Series m_Gather{}, m_GatherReuse{}, m_KeyOnly{}, m_Reused{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
+        Series m_Gather{}, m_GatherReuse{}, m_KeyOnly{}, m_Reused{}, m_Collected{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
+        Series m_RestObjects{}, m_Filtered{}, m_Pending{};
 
-        // The shared scene lives for the whole film, as it would in the pipeline, with the parts of the fixed objects it reuses.
+        // The shared scene lives for the whole film, as it would in the pipeline, with the parts of the objects it reuses.
         RaycastScene m_Scene{};
-        FixedPartsCache m_Reuse{};
+        ScenePartsCache m_Reuse{};
 
-        // The scene of gathering every object each time, only to check the reuse.
+        // The reference scene: every object gathered without reuse, all in the MOBILE tree and the FIXED one empty. Only to check the exactness.
         RaycastScene m_FullScene{};
         std::size_t m_ReuseCompared{};
         std::size_t m_ReuseDifferences{};
-        std::size_t m_PosesCompared{};
-        std::size_t m_PoseDifferences{};
         std::size_t m_Armings{};
+        std::size_t m_RebuildWaiting{};
+        std::size_t m_RebuildFiltered{};
+        std::size_t m_RebuildBoth{};
         std::size_t m_MeshesBuilt{};
         double m_MeshBvhUs{};
         std::size_t m_SelfCompared{};
         std::size_t m_SelfDifferences{};
         std::size_t m_DifferenceLines{};
         std::vector<std::string> m_SceneMessages{};
+
+        // What the MOBILE tree holds, by kind of object: objects and leaves per arming, and the part of them at rest but waiting.
+        struct MobileGroup
+        {
+            double Objects{};
+            double Leaves{};
+            double WaitingObjects{};
+            double WaitingLeaves{};
+        };
+
+        std::map<std::string, MobileGroup> m_MobileGroups{};
+        std::size_t m_MobileArmings{};
+
+        // Adds the objects the FIXED tree does not cover to the groups, named by four character code, physics and whether it has a parent.
+        auto CountMobileGroups(Chain& chain, const SceneObjects& objects) -> void
+        {
+            const auto table{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!table) return;
+
+            ++m_MobileArmings;
+            for (const SceneObject& object : objects)
+            {
+                if (object.IsCovered) continue;
+
+                std::string name{ "?" };
+                const auto row{ table->find(object.Handle) };
+                if (row != table->end())
+                {
+                    const auto& alive{ row->second };
+                    const int physics{ alive.Placement ? static_cast<int>(alive.Placement->Physics) : -1 };
+                    name = std::format("{} physics {} {}", alive.FourCC, physics, alive.ParentHandle != k_NoHandle && alive.ParentHandle != 0 ? "parented" : "free");
+                }
+
+                MobileGroup& group{ m_MobileGroups[name] };
+                group.Objects += 1.0;
+                group.Leaves += static_cast<double>(object.Parts.size());
+                if (!object.IsFixed) continue;
+
+                group.WaitingObjects += 1.0;
+                group.WaitingLeaves += static_cast<double>(object.Parts.size());
+            }
+        }
+
+        auto MobileGroupLines() const -> std::vector<std::string>
+        {
+            std::vector<std::string> lines{};
+            lines.push_back(std::format("MOBILE by group, mean per arming over {} armings: objects / leaves / objects at rest waiting for FIXED / their leaves",
+                m_MobileArmings));
+            std::vector<std::pair<std::string, MobileGroup>> rows{ m_MobileGroups.begin(), m_MobileGroups.end() };
+            std::ranges::sort(rows, [](const auto& a, const auto& b) { return a.second.Leaves > b.second.Leaves; });
+            const double armings{ m_MobileArmings > 0 ? static_cast<double>(m_MobileArmings) : 1.0 };
+            for (const auto& [name, group] : rows)
+            {
+                lines.push_back(std::format("  {:<40} {:8.1f} {:8.1f} {:8.1f} {:8.1f}", name, group.Objects / armings, group.Leaves / armings,
+                    group.WaitingObjects / armings, group.WaitingLeaves / armings));
+            }
+
+            return lines;
+        }
 
         static auto AppendHeaviest(std::vector<std::string>& lines, std::vector<std::pair<std::string_view, const Series*>> rows) -> void
         {
@@ -349,7 +415,7 @@ namespace
             m_StaticTick.Add(staticUs);
         }
 
-        // Collects the parts of every object of the tick, as RS.0 did: no reuse.
+        // Collects the parts of every object of the tick with no reuse and no rest, as RS.0 did.
         static auto GatherAll(Chain& chain) -> SceneObjects
         {
             SceneObjects objects{};
@@ -361,25 +427,25 @@ namespace
                 auto collidable{ chain.m_Environment.m_CollidableService.CollectPartsFor(handle) };
                 if (!collidable || collidable->Parts.empty()) continue;
 
-                const bool isFixed{ object.Placement && (object.Placement->Physics == Physics::Fixed || object.Placement->Physics == Physics::Phased) };
-                objects.push_back(SceneObject{ handle, isFixed, std::move(collidable->Parts) });
+                objects.push_back(SceneObject{ handle, false, std::move(collidable->Parts), false });
             }
 
             std::ranges::sort(objects, [](const SceneObject& a, const SceneObject& b) { return a.Handle < b.Handle; });
             return objects;
         }
 
-        // Gathers every object of the tick with the reuse of the fixed ones and arms the scene, the way a decision tick would.
+        // Gathers every object of the tick with reuse and rest and arms the scene, the way a decision tick would.
         // return: The microseconds the gather and the mobile tree took.
         auto ArmScene(Chain& chain) -> std::pair<double, double>
         {
             ++m_Armings;
 
-            std::size_t reused{};
+            SceneGatherCounters gathered{};
             auto start{ steady_clock::now() };
-            const SceneObjects objects{ GatherSceneObjects(m_Reuse, chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore, &reused) };
+            SceneObjects objects{ GatherSceneObjects(m_Reuse, chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore, &gathered) };
             const double gatherUs{ Micros(start, steady_clock::now()) };
-            m_Reused.Add(static_cast<double>(reused));
+            m_Reused.Add(static_cast<double>(gathered.Reused));
+            m_Collected.Add(static_cast<double>(gathered.Collected));
 
             start = steady_clock::now();
             const std::size_t built{ PrepareMeshBvhs(m_Scene, objects) };
@@ -393,13 +459,23 @@ namespace
 
             start = steady_clock::now();
             const bool rebuilt{ ArmFixedScene(m_Scene, objects) };
-            if (rebuilt) m_FixedArm.Add(Micros(start, steady_clock::now()));
+            if (rebuilt)
+            {
+                m_FixedArm.Add(Micros(start, steady_clock::now()));
+                if (m_Scene.FixedPending > 0 && m_Scene.FixedFiltered > 0) ++m_RebuildBoth;
+                else if (m_Scene.FixedPending > 0) ++m_RebuildWaiting;
+                else ++m_RebuildFiltered;
+            }
 
             start = steady_clock::now();
             ArmMobileScene(m_Scene, objects);
             const double mobileUs{ Micros(start, steady_clock::now()) };
 
+            this->CountMobileGroups(chain, objects);
             m_SceneObjectsSeries.Add(static_cast<double>(objects.size()));
+            m_RestObjects.Add(static_cast<double>(std::ranges::count_if(objects, [](const SceneObject& object) { return object.IsFixed; })));
+            m_Filtered.Add(static_cast<double>(m_Scene.FixedFiltered));
+            m_Pending.Add(static_cast<double>(m_Scene.FixedPending));
             m_FixedLeaves.Add(static_cast<double>(m_Scene.Fixed.Pieces.size()));
             m_MobileLeaves.Add(static_cast<double>(m_Scene.Mobile.Pieces.size()));
             return { gatherUs, mobileUs };
@@ -488,7 +564,7 @@ namespace
             this->MeasureScene(chain, origins);
         }
 
-        // M5: the 16 agents over the shared two level scene with the reuse of fixed parts, compared ray by ray with the scene of gathering everything.
+        // M5: the 16 agents over the shared two level scene with the objects at rest, compared ray by ray with the reference scene.
         auto MeasureScene(Chain& chain, const std::vector<Origin>& origins) -> void
         {
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
@@ -520,7 +596,7 @@ namespace
             m_M5Rays.Add(Micros(armed5, end5));
             m_M5Ray.Add(Micros(armed5, end5) / static_cast<double>(m5Hits.size()));
 
-            // The same tick gathered without reuse: its own timing, its poses and its hits must be the ones of the scene with reuse.
+            // The same tick gathered without reuse and all in MOBILE: its own timing, and its hits must be the ones of the scene with rest.
             auto startAll{ steady_clock::now() };
             const SceneObjects all{ GatherAll(chain) };
             m_Gather.Add(Micros(startAll, steady_clock::now()));
@@ -535,10 +611,7 @@ namespace
                 m_KeyOnly.Add(Micros(startAll, steady_clock::now()));
             }
             PrepareMeshBvhs(m_FullScene, all);
-            ArmFixedScene(m_FullScene, all);
             ArmMobileScene(m_FullScene, all);
-            ++m_PosesCompared;
-            if (!(m_FullScene.FixedPoses == m_Scene.FixedPoses)) ++m_PoseDifferences;
 
             // Counted pass and comparison, outside the clocks.
             std::size_t flat{ 0 };
@@ -562,8 +635,10 @@ namespace
         }
     };
 
-    // Replays the film, measures, and writes the report to build/bench/raycast_<film>.txt of the repository.
-    auto RunBench(std::string_view film) -> void
+    // Replays the film, measures, and writes the report to build/bench/raycast_<name>.txt of the repository.
+    // param film: Folder of the film, relative to RecordingsFolder.
+    // param name: Name of the film in the reports.
+    auto RunBench(std::string_view film, std::string_view name) -> void
     {
         RaycastBench bench{};
         const FilmOutcome outcome{ RunFilmPass(film, false, [&](const Chain& chain, std::size_t record) { bench.Observe(chain, record); }) };
@@ -579,15 +654,15 @@ namespace
         report.push_back("");
         report.insert(report.end(), lines.begin(), lines.end());
 
-        const std::filesystem::path file{ Tests::Support::Bench::WriteReport(std::format("raycast_{}.txt", film), report) };
+        const std::filesystem::path file{ Tests::Support::Bench::WriteReport(std::format("raycast_{}.txt", name), report) };
         ASSERT_FALSE(file.empty()) << "Cannot write the report of " << film;
 
         std::vector<std::string> sceneReport{};
-        sceneReport.push_back(std::format("RS.1 shared ray scene wired into Self: film {}, {} records, K = {}, scene every {} records, {:%Y-%m-%d %H:%M:%S} UTC, {}.",
+        sceneReport.push_back(std::format("RS.1b objects at rest in the fixed tree: film {}, {} records, K = {}, scene every {} records, {:%Y-%m-%d %H:%M:%S} UTC, {}.",
             film, outcome.Records, k_EveryRecords, k_SceneEvery, now, Tests::Support::Bench::Configuration()));
         sceneReport.push_back("");
         for (const std::string& line : bench.SceneLines()) sceneReport.push_back(line);
-        const std::filesystem::path sceneFile{ Tests::Support::Bench::WriteReport(std::format("rs1_{}.txt", film), sceneReport) };
+        const std::filesystem::path sceneFile{ Tests::Support::Bench::WriteReport(std::format("rs1_{}.txt", name), sceneReport) };
         ASSERT_FALSE(sceneFile.empty()) << "Cannot write the scene report of " << film;
 
         ::testing::Test::RecordProperty("ReportFile", file.string());
@@ -601,10 +676,16 @@ namespace
 
 TEST(DISABLED_RaycastBench, CtfD)
 {
-    RunBench("ctf_d");
+    RunBench("ctf_d", "ctf_d");
 }
 
 TEST(DISABLED_RaycastBench, CtfC)
 {
-    RunBench("ctf_c");
+    RunBench("ctf_c", "ctf_c");
+}
+
+// Forge World with about 650 pieces (D300). The film is in BenchFilms so the replay tests do not walk it.
+TEST(DISABLED_RaycastBench, Forge650)
+{
+    RunBench("BenchFilms/forge650", "forge650");
 }

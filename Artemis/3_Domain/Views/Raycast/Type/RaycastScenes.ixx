@@ -23,10 +23,13 @@ export namespace Views::Raycast::Type
     {
         std::uint32_t Handle{ 0 };
 
-        // Fixed and phased objects do not move: their parts go to the tree that is rebuilt only when they change.
+        // At rest in this gather (D300): its parts may go to the fixed tree, which is rebuilt rarely.
         bool IsFixed{ false };
 
         std::vector<CollidablePart> Parts{};
+
+        // Set by ArmFixedScene: its parts are in the fixed tree and not filtered, so the mobile tree leaves them out.
+        bool IsCovered{ false };
     };
 
     // Every object of the tick that has collision parts, by handle.
@@ -35,11 +38,11 @@ export namespace Views::Raycast::Type
         using vector::vector;
     };
 
-    // A live object of the tick and whether it is fixed, before its parts are collected.
+    // A live object of the tick and whether the engine places it as fixed or phased, before its parts are collected.
     struct SceneRef
     {
         std::uint32_t Handle{ 0 };
-        bool IsFixed{ false };
+        bool IsFixedPhysics{ false };
     };
 
     // The live objects of the tick.
@@ -48,19 +51,31 @@ export namespace Views::Raycast::Type
         using vector::vector;
     };
 
-    // Parts of a fixed object with the key they were built from (D299).
-    // note: IsSeen is the mark of the gather in course: what it does not mark is dropped at its end.
-    struct FixedParts
+    // Parts of an object with the key they were built from (D299, D300).
+    // note: IsSeen is the mark of the gather in course: what it does not mark is dropped at its end. StillGathers counts the gathers
+    // in a row that found the same key: 0 in the gather where the key changes or the object appears.
+    struct SceneParts
     {
         CollidablePartsKey Key{};
         std::vector<CollidablePart> Parts{};
         bool IsSeen{ false };
+        std::size_t StillGathers{ 0 };
     };
 
-    // The parts of the fixed objects that the last gather kept, by handle.
-    struct FixedPartsCache : std::unordered_map<std::uint32_t, FixedParts>
+    // The parts of the objects that the last gather saw, by handle.
+    struct ScenePartsCache : std::unordered_map<std::uint32_t, SceneParts>
     {
         using unordered_map::unordered_map;
+    };
+
+    // What one gather did, for the offline bench.
+    struct SceneGatherCounters
+    {
+        // Objects that kept their parts because their key was the same.
+        std::size_t Reused{ 0 };
+
+        // Objects whose parts were collected again.
+        std::size_t Collected{ 0 };
     };
 
     // Fills the key of the parts of an object, given the key kept for it or null. Gives false if the object is gone.
@@ -120,11 +135,23 @@ export namespace Views::Raycast::Type
         SceneTree Fixed{};
         SceneTree Mobile{};
 
-        // Poses the fixed tree was built from.
+        // Poses the fixed tree was built from, by handle.
         std::vector<ScenePose> FixedPoses{};
+
+        // Handles that are in the fixed tree but must not be hit any more (they changed or left rest), sorted. Their current parts are
+        // in the mobile tree. Emptied when the fixed tree is built.
+        std::vector<std::uint32_t> FixedFilter{};
 
         // Times the fixed tree was built, the first one included.
         std::size_t FixedBuilds{ 0 };
+
+        // Gathers armed since the last build of the fixed tree.
+        std::size_t GathersSinceBuild{ 0 };
+
+        // Objects at rest that are not in the fixed tree yet, and handles filtered out of it, as the last gather found them.
+        // note: Kept as they were before a build, which empties the filter. For the bench.
+        std::size_t FixedPending{ 0 };
+        std::size_t FixedFiltered{ 0 };
     };
 
     // What one cast of the scene visited, for the offline bench.
