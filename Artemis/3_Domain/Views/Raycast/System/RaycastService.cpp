@@ -6,7 +6,6 @@ module Views.Raycast.System;
 
 import Common.Engine.Type;
 import Common.Math.System;
-import Common.Geometry.System;
 import Blam.MapModel.Definitions.Type;
 import Blam.MapModel.World.Type;
 import Blam.Runtime.Player.Type;
@@ -18,12 +17,9 @@ import Perception.Players.Type;
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Common::Math::Type::Triangle;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::CachedPart;
-    using Views::Raycast::Type::CachedDynamic;
-    using Views::Raycast::Type::DynamicCache;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::Raycasts;
@@ -37,7 +33,6 @@ namespace
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Loadout;
 
-    using Perception::Collidable::System::CollidableService;
     using Blam::MapModel::Definitions::State::DefinitionsStore;
     using Perception::Entities::State::EntitiesStore;
     using Blam::Runtime::Object::State::ObjectTableStore;
@@ -47,7 +42,6 @@ namespace
 
     using Views::Raycast::Type::Constant::k_FallbackAimRange;
     using Views::Raycast::Type::Constant::k_MaxRayRange;
-    using Views::Raycast::Type::Constant::k_DynamicRejectMargin;
     using Views::Raycast::Type::Constant::k_PerceptionRange;
     using Views::Raycast::Type::Constant::k_PerceptionRayCount;
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
@@ -136,11 +130,6 @@ namespace Views::Raycast::System
         }
 
         return directions;
-    }
-
-    auto DynamicCacheRadius(float aimRange, float cameraToOriginDistance) -> float
-    {
-        return (std::max)(aimRange, k_PerceptionRange) + cameraToOriginDistance;
     }
 
     auto ResolveAimRange(const PlayerTableStore& playerStore, const ObjectTableStore& objectStore,
@@ -294,46 +283,6 @@ namespace Views::Raycast::System
         return out;
     }
 
-    auto ArmDynamicCache(CollidableService& collidableService, const std::vector<std::uint32_t>& candidates,
-        const SelfExclusion& selfExclusion) -> DynamicCache
-    {
-        DynamicCache cache;
-        cache.reserve(candidates.size());
-
-        for (std::uint32_t handle : candidates)
-        {
-            if (selfExclusion.contains(handle)) continue;
-
-            auto collidable = collidableService.CollectPartsFor(handle);
-            if (!collidable) continue;
-
-            CachedDynamic entry{};
-            entry.Parts = PrepareParts(collidable->Parts);
-
-            float boundingRadius{};
-            for (const CachedPart& part : entry.Parts)
-            {
-                const float dx = part.Center.X - collidable->Position.X;
-                const float dy = part.Center.Y - collidable->Position.Y;
-                const float dz = part.Center.Z - collidable->Position.Z;
-                boundingRadius = (std::max)(boundingRadius, std::sqrt(dx * dx + dy * dy + dz * dz) + part.Radius);
-            }
-
-            entry.BoundingRadius = boundingRadius + k_DynamicRejectMargin;
-            entry.Data = std::move(*collidable);
-
-            cache.emplace(handle, std::move(entry));
-        }
-
-        return cache;
-    }
-
-    auto BuildDynamicCache(CollidableService& collidableService, const Vec3& origin, float radius,
-        const SelfExclusion& selfExclusion) -> DynamicCache
-    {
-        return ArmDynamicCache(collidableService, collidableService.QueryNearby(origin, radius), selfExclusion);
-    }
-
     auto RayNearPoint(const Common::Math::Type::Vec3& origin, const Common::Math::Type::Vec3& direction,
         float limit, const Common::Math::Type::Vec3& center, float radius) -> bool
     {
@@ -410,69 +359,6 @@ namespace Views::Raycast::System
             m[4] * direction.X + m[5] * direction.Y + m[6] * direction.Z,
             m[8] * direction.X + m[9] * direction.Y + m[10] * direction.Z
         };
-    }
-
-    auto CastDynamic(const DynamicCache& dynamicCache, const Vec3& origin, const Vec3& direction, float maxDistance,
-        RaycastHit& best) -> void
-    {
-        for (const auto& [handle, entry] : dynamicCache)
-        {
-            const auto& collidable = entry.Data;
-
-            float limit = best.Hit ? best.Distance : maxDistance;
-
-            if (!RayNearPoint(origin, direction, limit, collidable.Position, entry.BoundingRadius)) continue;
-
-            for (const CachedPart& part : entry.Parts)
-            {
-                limit = best.Hit ? best.Distance : maxDistance;
-
-                if (!RayNearPoint(origin, direction, limit, part.Center, part.Radius)) continue;
-
-                Vec3 localOrigin{};
-                Vec3 localDirection{};
-                PoseRay(part.ToLocal, origin, direction, localOrigin, localDirection);
-
-                if (!RayHitsBox(localOrigin, localDirection, part.Source->LocalMin, part.Source->LocalMax, limit)) continue;
-
-                for (const Triangle& triangle : part.Source->Triangles)
-                {
-                    float distance = 0.0f;
-                    const float currentBest = best.Hit ? best.Distance : maxDistance;
-
-                    if (!Common::Geometry::System::RayIntersectsTriangle(
-                        localOrigin, localDirection, triangle, currentBest, distance))
-                    {
-                        continue;
-                    }
-
-                    if (!best.Hit || distance < best.Distance)
-                    {
-                        best.Hit = true;
-                        best.Kind = HitKind::Dynamic;
-                        best.Distance = distance;
-                        best.ObjectHandle = handle;
-                        best.RegionIndex = part.Source->RegionIndex;
-                        best.SurfaceFlags = 0;
-                        best.Material = -1;
-                        best.Point = {
-                            origin.X + direction.X * distance,
-                            origin.Y + direction.Y * distance,
-                            origin.Z + direction.Z * distance
-                        };
-                    }
-                }
-            }
-        }
-    }
-
-    auto CastRay(const Raycaster& raycaster, const DynamicCache& dynamicCache, const Vec3& origin, const Vec3& direction,
-        float maxDistance) -> RaycastHit
-    {
-        RaycastHit best = CastStatic(raycaster, origin, direction, maxDistance);
-        CastDynamic(dynamicCache, origin, direction, maxDistance, best);
-
-        return best;
     }
 }
 

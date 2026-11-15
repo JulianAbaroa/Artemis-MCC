@@ -64,12 +64,11 @@ export namespace Perception::Collidable::System
         // Fills the key the parts of an object are built from, without building them.
         // param key: Receives the key. Its vectors keep their capacity, so a key reused from object to object allocates nothing.
         // param previous: The key kept for this handle, or null. A row with the same datum index is the same tag, which resolves to the
-        // same collision model and region states for as long as the map is loaded, so they are taken from it and not searched by name.
+        // same collision model and region states while it lives (the store that keeps the key is emptied with the map), so they are
+        // taken from it and not searched by name.
         // return: Whether the object is in the table. The key is left as it was if it is not.
         // note: Reads what CollectPartsFor reads, so a handle whose key did not change gets the same parts from it.
         auto MakePartsKey(std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) -> bool;
-
-        auto QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>;
 
         // Logs the cleanup with the rest of the layer. The scene it builds is owned by its caller (D224), so there is no state to clear.
         auto Cleanup() -> void;

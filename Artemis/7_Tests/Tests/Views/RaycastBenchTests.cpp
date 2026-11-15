@@ -3,11 +3,9 @@
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Math.System;
-import Common.Geometry.System;
 import Common.Semantic.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
-import Perception.Collidable.Type;
 import Views.Raycast.Type;
 import Views.Raycast.System;
 import Tests.Support.Bench;
@@ -22,10 +20,8 @@ import std;
 
 namespace
 {
-    using Common::Math::Type::Triangle;
     using Common::Math::Type::Vec3;
     using Common::Semantic::Type::Physics;
-    using Perception::Collidable::Type::CollidablePart;
     using Tests::Support::Bench::Micros;
     using Tests::Support::Bench::Series;
     using Tests::Support::Bench::Stats;
@@ -33,28 +29,17 @@ namespace
     using Tests::Support::FilmPass::RecordingsFolder;
     using Tests::Support::FilmPass::RunFilmPass;
     using Tests::Support::Pipeline::Chain;
-    using Views::Raycast::System::ArmDynamicCache;
     using Views::Raycast::System::ArmFixedScene;
     using Views::Raycast::System::ArmMobileScene;
-    using Views::Raycast::System::BuildDynamicCache;
     using Views::Raycast::System::BuildSelfExclusion;
-    using Views::Raycast::System::CastDynamic;
-    using Views::Raycast::System::CastRay;
     using Views::Raycast::System::CastSceneRay;
     using Views::Raycast::System::CastStatic;
-    using Views::Raycast::System::DynamicCacheRadius;
     using Views::Raycast::System::GatherSceneObjects;
     using Views::Raycast::System::PerceptionDirections;
     using Views::Raycast::System::PrepareMeshBvhs;
-    using Views::Raycast::System::PrepareParts;
-    using Views::Raycast::System::RayHitsBox;
-    using Views::Raycast::System::RayNearPoint;
     using Views::Raycast::System::ResolveAimRange;
     using Views::Raycast::System::ResolvePerceptionOrigin;
-    using Views::Raycast::Type::CachedPart;
     using Views::Raycast::Type::FixedPartsCache;
-    using Views::Raycast::Type::DynamicCache;
-    using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
@@ -78,13 +63,13 @@ namespace
     // A sample of the past positions of Self is kept every this many records.
     constexpr std::size_t k_HistoryEvery{ 60 };
 
-    // The 16 agent metrics (M2, M3, M4) run every K records, M0 and M1 run at every record. K = 30 on ctf_d, to stay under 150 s.
+    // The 16 agent metrics (M4, M5) run every K records, M0 and M1 run at every record. K = 30 on ctf_d, to stay under 150 s.
     constexpr std::size_t k_EveryRecords{ 30 };
 
     // The shared scene is armed and checked against RaycastStore every this many records: a decision every 4 ticks (D273).
     constexpr std::size_t k_SceneEvery{ 4 };
 
-    // Differences between M2 and M5 the report describes in full, of each kind.
+    // Differences between Self and the published rays that the report describes in full.
     constexpr std::size_t k_MaxDifferenceLines{ 6 };
 
     // Where and where to one agent looks from.
@@ -105,7 +90,6 @@ namespace
         float AimRange{};
         SelfExclusion Exclusion{};
         Vec3 RayPosition{};
-        float Radius{};
         std::array<Vec3, k_PerceptionRayCount> Directions{};
     };
 
@@ -142,74 +126,8 @@ namespace
             ResolvePerceptionOrigin(chain.m_Environment.m_EntitiesStore, chain.m_Tables.m_ObjectStore, source.BipedHandle) };
         agent.RayPosition = perceptionOrigin.Valid ? perceptionOrigin.Position : source.Camera;
         const Vec3 forward{ perceptionOrigin.Valid ? perceptionOrigin.Forward : source.Forward };
-        agent.Radius = DynamicCacheRadius(agent.AimRange, Common::Math::System::Distance(source.Camera, agent.RayPosition));
         agent.Directions = PerceptionDirections(forward);
         return agent;
-    }
-
-    // Copy of CastDynamic that counts the triangles it tests, so the production code carries no counter.
-    // note: The bench checks every ray against CastDynamic.
-    auto CastDynamicCounted(const DynamicCache& dynamicCache, const Vec3& origin, const Vec3& direction, float maxDistance,
-        RaycastHit& best, std::size_t& triangles) -> void
-    {
-        for (const auto& [handle, entry] : dynamicCache)
-        {
-            const auto& collidable = entry.Data;
-
-            float limit = best.Hit ? best.Distance : maxDistance;
-
-            if (!RayNearPoint(origin, direction, limit, collidable.Position, entry.BoundingRadius)) continue;
-
-            for (const CachedPart& part : entry.Parts)
-            {
-                limit = best.Hit ? best.Distance : maxDistance;
-
-                if (!RayNearPoint(origin, direction, limit, part.Center, part.Radius)) continue;
-
-                const auto& m = part.ToLocal;
-                const Vec3 localOrigin{
-                    m[0] * origin.X + m[1] * origin.Y + m[2] * origin.Z + m[3],
-                    m[4] * origin.X + m[5] * origin.Y + m[6] * origin.Z + m[7],
-                    m[8] * origin.X + m[9] * origin.Y + m[10] * origin.Z + m[11]
-                };
-                const Vec3 localDirection{
-                    m[0] * direction.X + m[1] * direction.Y + m[2] * direction.Z,
-                    m[4] * direction.X + m[5] * direction.Y + m[6] * direction.Z,
-                    m[8] * direction.X + m[9] * direction.Y + m[10] * direction.Z
-                };
-
-                if (!RayHitsBox(localOrigin, localDirection, part.Source->LocalMin, part.Source->LocalMax, limit)) continue;
-
-                for (const Triangle& triangle : part.Source->Triangles)
-                {
-                    float distance = 0.0f;
-                    const float currentBest = best.Hit ? best.Distance : maxDistance;
-
-                    ++triangles;
-                    if (!Common::Geometry::System::RayIntersectsTriangle(
-                        localOrigin, localDirection, triangle, currentBest, distance))
-                    {
-                        continue;
-                    }
-
-                    if (!best.Hit || distance < best.Distance)
-                    {
-                        best.Hit = true;
-                        best.Kind = HitKind::Dynamic;
-                        best.Distance = distance;
-                        best.ObjectHandle = handle;
-                        best.RegionIndex = part.Source->RegionIndex;
-                        best.SurfaceFlags = 0;
-                        best.Material = -1;
-                        best.Point = {
-                            origin.X + direction.X * distance,
-                            origin.Y + direction.Y * distance,
-                            origin.Z + direction.Z * distance
-                        };
-                    }
-                }
-            }
-        }
     }
 
     auto SameHit(const RaycastHit& a, const RaycastHit& b) -> bool
@@ -284,20 +202,10 @@ namespace
             if (record % k_EveryRecords == 0) this->MeasureSixteenAgents(chain, self);
         }
 
-        // return: The lines of the shared scene part (RS.0): M2, M3 and M5 side by side, and the comparison.
+        // return: The lines of the shared scene part: M5 and the checks of the reuse and of Self.
         auto SceneLines() const -> std::vector<std::string>
         {
             std::vector<std::string> lines{};
-            lines.push_back(std::format("M2 16 agents as today (own cache), every {} records, us per tick", k_EveryRecords));
-            lines.push_back(TimeLine("M2 total", m_M2Total));
-            lines.push_back(TimeLine("M2   caches (16)", m_M2Cache));
-            lines.push_back(TimeLine("M2   rays (240)", m_M2Rays));
-            lines.push_back(RayLine("M2   ray (mean of the 240)", m_M2Ray));
-            lines.push_back("M3 16 agents, ONE shared cache without exclusion, us per tick");
-            lines.push_back(TimeLine("M3 total", m_M3Total));
-            lines.push_back(TimeLine("M3   shared cache (1)", m_M3Cache));
-            lines.push_back(TimeLine("M3   rays (240)", m_M3Rays));
-            lines.push_back(RayLine("M3   ray (mean of the 240)", m_M3Ray));
             lines.push_back(std::format("M5 16 agents, shared two level scene, every {} records, us per tick", k_EveryRecords));
             lines.push_back(TimeLine("M5 total (gather with reuse)", m_M5Total));
             lines.push_back(TimeLine("M5   exclusion + aim + origin", m_M5Prepare));
@@ -321,14 +229,8 @@ namespace
             lines.push_back(TimeLine("M5   each mesh BVH call that built", m_MeshBvhCall));
             lines.push_back(std::format("M5 reuse check against gathering everything (same tick, own scene): {} rays compared, {} differences; the poses of the FIXED tree compared {} times, {} differences.",
                 m_ReuseCompared, m_ReuseDifferences, m_PosesCompared, m_PoseDifferences));
-            lines.push_back(std::format("M5 check against M2 (same agents, origins, directions, exclusions): {} rays compared, {} differences.",
-                m_SceneCompared, m_SceneDifferences));
-            lines.push_back(std::format("  of which the scene hits an object that QueryNearby leaves out of the cache of M2 (its center is beyond the radius): {}.",
-                m_SceneByRadius));
-            lines.push_back(std::format("  UNEXPLAINED (still different when the scene is limited to the objects of the cache of M2): {}.",
-                m_SceneUnexplained));
-            lines.push_back(std::format("M1 check of the scene for Self against RaycastStore: {} rays compared, {} differences, {} by the radius, {} UNEXPLAINED.",
-                m_SelfCompared, m_SelfDifferences, m_SelfByRadius, m_SelfUnexplained));
+            lines.push_back(std::format("M1 check of the scene for Self against RaycastStore: {} rays compared, {} differences.",
+                m_SelfCompared, m_SelfDifferences));
             for (const std::string& line : m_SceneMessages) lines.push_back("  " + line);
             return lines;
         }
@@ -347,40 +249,11 @@ namespace
             lines.push_back("M0 Update real (1 agent: Self), every record, us per tick");
             time("M0 Update", m_Update);
             lines.push_back("");
-            lines.push_back("M1 breakdown of the same agent, every record, us per tick");
+            lines.push_back("M1 pieces of Update that do not depend on the scene, every record, us per tick");
             time("M1 BuildSelfExclusion", m_Exclusion);
             time("M1 aim range + origin + directions", m_Setup);
-            time("M1 QueryNearby", m_Query);
-            time("M1 arm the cache (production call)", m_Arm);
-            time("M1   of which CollectPartsFor", m_Collect);
-            time("M1   of which PrepareParts", m_Prepare);
             time("M1 15 rays, static part (sum)", m_StaticTick);
-            time("M1 15 rays, dynamic part (sum)", m_DynamicTick);
             ray("M1 ray, static part", m_StaticRay);
-            ray("M1 ray, dynamic part", m_DynamicRay);
-            count("M1 candidates of QueryNearby", m_Candidates);
-            count("M1 objects in the cache", m_Objects);
-            count("M1 parts in the cache", m_Parts);
-            count("M1 triangles tested per tick", m_TrianglesTick);
-            count("M1 triangles tested per ray", m_TrianglesRay);
-            count("M1 rays that hit static (per tick)", m_HitsStatic);
-            count("M1 rays that hit dynamic (per tick)", m_HitsDynamic);
-            count("M1 rays that hit nothing (per tick)", m_HitsNone);
-            lines.push_back(std::format("M1 check: {} rays compared with the instrumented copy and with RaycastStore, {} differences.",
-                m_Compared, m_Differences));
-            lines.push_back("");
-            lines.push_back(std::format("M2 16 agents as today (own cache, 15 rays each), every {} records, us per tick", k_EveryRecords));
-            time("M2 total", m_M2Total);
-            time("M2   exclusion + aim + origin", m_M2Prepare);
-            time("M2   caches (16)", m_M2Cache);
-            time("M2   rays (240)", m_M2Rays);
-            lines.push_back("");
-            lines.push_back("M3 16 agents with ONE shared cache (no exclusion: an agent may hit its own biped), us per tick");
-            time("M3 total", m_M3Total);
-            time("M3   exclusion + aim + origin", m_M3Prepare);
-            time("M3   shared cache (1)", m_M3Cache);
-            time("M3   rays (240)", m_M3Rays);
-            count("M3 objects in the shared cache", m_M3Objects);
             lines.push_back("");
             lines.push_back("M4 static world only: 16 x 15 rays");
             time("M4 total", m_M4Total);
@@ -391,12 +264,9 @@ namespace
 
             lines.push_back("");
             lines.push_back("Heaviest, 1 agent (ms per tick, mean):");
-            this->AppendHeaviest(lines, { { "QueryNearby", &m_Query }, { "arm the cache", &m_Arm }, { "BuildSelfExclusion", &m_Exclusion },
-                { "static rays (15)", &m_StaticTick }, { "dynamic rays (15)", &m_DynamicTick }, { "Update (M0)", &m_Update } });
+            this->AppendHeaviest(lines, { { "BuildSelfExclusion", &m_Exclusion }, { "static rays (15)", &m_StaticTick }, { "Update (M0)", &m_Update } });
             lines.push_back("Heaviest, 16 agents (ms per tick, mean):");
-            this->AppendHeaviest(lines, { { "M2 total", &m_M2Total }, { "M2 caches", &m_M2Cache }, { "M2 rays", &m_M2Rays },
-                { "M3 total", &m_M3Total }, { "M3 shared cache", &m_M3Cache }, { "M3 rays", &m_M3Rays }, { "M4 static rays", &m_M4Total },
-                { "M5 total", &m_M5Total }, { "M5 gather (reuse)", &m_GatherReuse }, { "M5 rays", &m_M5Rays } });
+            this->AppendHeaviest(lines, { { "M4 static rays", &m_M4Total }, { "M5 total", &m_M5Total }, { "M5 gather (reuse)", &m_GatherReuse }, { "M5 rays", &m_M5Rays } });
             return lines;
         }
 
@@ -406,18 +276,12 @@ namespace
         std::size_t m_Sbsps{};
         std::size_t m_StaticTriangles{};
         std::size_t m_DownHits{};
-        std::size_t m_Compared{};
-        std::size_t m_Differences{};
         double m_Sink{};
 
         Series m_Update{};
-        Series m_Exclusion{}, m_Setup{}, m_Query{}, m_Arm{}, m_Collect{}, m_Prepare{}, m_StaticTick{}, m_DynamicTick{};
-        Series m_StaticRay{}, m_DynamicRay{};
-        Series m_Candidates{}, m_Objects{}, m_Parts{}, m_TrianglesTick{}, m_TrianglesRay{}, m_HitsStatic{}, m_HitsDynamic{}, m_HitsNone{};
-        Series m_M2Total{}, m_M2Prepare{}, m_M2Cache{}, m_M2Rays{};
-        Series m_M3Total{}, m_M3Prepare{}, m_M3Cache{}, m_M3Rays{}, m_M3Objects{};
+        Series m_Exclusion{}, m_Setup{}, m_StaticTick{};
+        Series m_StaticRay{};
         Series m_M4Total{}, m_M4Ray{};
-        Series m_M2Ray{}, m_M3Ray{};
         Series m_M5Total{}, m_M5Prepare{}, m_M5Rays{}, m_M5Ray{};
         Series m_Gather{}, m_GatherReuse{}, m_KeyOnly{}, m_Reused{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
@@ -435,16 +299,9 @@ namespace
         std::size_t m_Armings{};
         std::size_t m_MeshesBuilt{};
         double m_MeshBvhUs{};
-        std::size_t m_SceneCompared{};
-        std::size_t m_SceneDifferences{};
         std::size_t m_SelfCompared{};
         std::size_t m_SelfDifferences{};
-        std::size_t m_SceneByRadius{};
-        std::size_t m_SceneUnexplained{};
-        std::size_t m_SelfByRadius{};
-        std::size_t m_SelfUnexplained{};
-        std::size_t m_RadiusLines{};
-        std::size_t m_UnexplainedLines{};
+        std::size_t m_DifferenceLines{};
         std::vector<std::string> m_SceneMessages{};
 
         static auto AppendHeaviest(std::vector<std::string>& lines, std::vector<std::pair<std::string_view, const Series*>> rows) -> void
@@ -465,99 +322,31 @@ namespace
             m_Update.Add(Micros(start, steady_clock::now()));
         }
 
-        // M1: the same agent as Update, piece by piece.
+        // M1: the pieces of Update that do not depend on the scene: the exclusion, the agent values and the static rays.
         auto MeasureOneAgent(Chain& chain, const Origin& self) -> void
         {
-            auto& collidables{ chain.m_Environment.m_CollidableService };
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
 
             auto start{ steady_clock::now() };
             const SelfExclusion exclusion{ BuildSelfExclusion(chain.m_Environment.m_PlayersStore, chain.m_Environment.m_EntitiesStore,
                 chain.m_Tables.m_ObjectStore, self.PlayerHandle, self.BipedHandle) };
             m_Exclusion.Add(Micros(start, steady_clock::now()));
+            m_Sink += static_cast<double>(exclusion.size());
 
             start = steady_clock::now();
-            Agent agent{ PrepareAgent(chain, self) };
+            const Agent agent{ PrepareAgent(chain, self) };
             m_Setup.Add(Micros(start, steady_clock::now()));
 
-            start = steady_clock::now();
-            const std::vector<std::uint32_t> candidates{ collidables.QueryNearby(self.Camera, agent.Radius) };
-            m_Query.Add(Micros(start, steady_clock::now()));
-
-            start = steady_clock::now();
-            const DynamicCache cache{ ArmDynamicCache(collidables, candidates, agent.Exclusion) };
-            m_Arm.Add(Micros(start, steady_clock::now()));
-
-            // The same work as ArmDynamicCache, with a clock around each call.
-            double collectUs{};
-            double prepareUs{};
-            std::size_t parts{};
-            for (const std::uint32_t handle : candidates)
-            {
-                if (agent.Exclusion.contains(handle)) continue;
-
-                start = steady_clock::now();
-                const auto collidable{ collidables.CollectPartsFor(handle) };
-                collectUs += Micros(start, steady_clock::now());
-                if (!collidable) continue;
-
-                start = steady_clock::now();
-                const std::vector<CachedPart> prepared{ PrepareParts(collidable->Parts) };
-                prepareUs += Micros(start, steady_clock::now());
-                parts += prepared.size();
-            }
-            m_Collect.Add(collectUs);
-            m_Prepare.Add(prepareUs);
-            m_Candidates.Add(static_cast<double>(candidates.size()));
-            m_Objects.Add(static_cast<double>(cache.size()));
-            m_Parts.Add(static_cast<double>(parts));
-
-            const auto published{ chain.m_Egocentric.m_RaycastStore.Acquire() };
-            const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
             double staticUs{};
-            double dynamicUs{};
-            std::size_t triangles{};
-            std::size_t hitsStatic{};
-            std::size_t hitsDynamic{};
-            std::size_t hitsNone{};
-            for (std::size_t index{ 0 }; index < rays.size(); ++index)
+            for (const Ray& ray : RaysOf(agent))
             {
-                const Ray& ray{ rays[index] };
-
                 start = steady_clock::now();
-                RaycastHit hit{ CastStatic(raycaster, ray.Origin, ray.Direction, ray.Range) };
-                const auto middle{ steady_clock::now() };
-                CastDynamic(cache, ray.Origin, ray.Direction, ray.Range, hit);
-                const auto end{ steady_clock::now() };
-                staticUs += Micros(start, middle);
-                dynamicUs += Micros(middle, end);
-                m_StaticRay.Add(Micros(start, middle));
-                m_DynamicRay.Add(Micros(middle, end));
-
-                RaycastHit counted{ CastStatic(raycaster, ray.Origin, ray.Direction, ray.Range) };
-                std::size_t rayTriangles{};
-                CastDynamicCounted(cache, ray.Origin, ray.Direction, ray.Range, counted, rayTriangles);
-                triangles += rayTriangles;
-                m_TrianglesRay.Add(static_cast<double>(rayTriangles));
-
-                ++m_Compared;
-                if (!SameHit(hit, counted)) ++m_Differences;
-                if (published)
-                {
-                    const RaycastHit& expected{ index == 0 ? published->AimHit : published->PerceptionHits[index - 1] };
-                    if (!SameHit(hit, expected)) ++m_Differences;
-                }
-
-                if (!hit.Hit) ++hitsNone;
-                else if (hit.Kind == HitKind::Static) ++hitsStatic;
-                else ++hitsDynamic;
+                m_Sink += CastStatic(raycaster, ray.Origin, ray.Direction, ray.Range).Distance;
+                const double rayUs{ Micros(start, steady_clock::now()) };
+                staticUs += rayUs;
+                m_StaticRay.Add(rayUs);
             }
             m_StaticTick.Add(staticUs);
-            m_DynamicTick.Add(dynamicUs);
-            m_TrianglesTick.Add(static_cast<double>(triangles));
-            m_HitsStatic.Add(static_cast<double>(hitsStatic));
-            m_HitsDynamic.Add(static_cast<double>(hitsDynamic));
-            m_HitsNone.Add(static_cast<double>(hitsNone));
         }
 
         // Collects the parts of every object of the tick, as RS.0 did: no reuse.
@@ -616,26 +405,7 @@ namespace
             return { gatherUs, mobileUs };
         }
 
-        // The exclusion of an agent plus every object of the scene that QueryNearby leaves out of its cache.
-        // note: With it the scene sees the same objects as the cache of M2, so any difference left is the scene's.
-        auto RadiusExclusion(Chain& chain, const Agent& agent) const -> SelfExclusion
-        {
-            const std::vector<std::uint32_t> nearby{ chain.m_Environment.m_CollidableService.QueryNearby(agent.Source.Camera, agent.Radius) };
-            const std::unordered_set<std::uint32_t> inside{ nearby.begin(), nearby.end() };
-
-            SelfExclusion exclusion{ agent.Exclusion };
-            for (const auto* tree : { &m_Scene.Fixed, &m_Scene.Mobile })
-            {
-                for (const auto& piece : tree->Pieces)
-                {
-                    if (!inside.contains(piece.Handle)) exclusion.insert(piece.Handle);
-                }
-            }
-
-            return exclusion;
-        }
-
-        // M1 with the scene: the rays of Self against what RaycastService published.
+        // M1 with the scene: the rays of Self cast through a scene of the bench against what RaycastService published.
         auto MeasureSelfScene(Chain& chain, const Origin& self) -> void
         {
             const auto published{ chain.m_Egocentric.m_RaycastStore.Acquire() };
@@ -654,15 +424,10 @@ namespace
                 if (SameFullHit(hit, expected)) continue;
 
                 ++m_SelfDifferences;
-                const RaycastHit limited{ CastSceneRay(chain.m_Resolved.m_Raycaster, m_Scene, this->RadiusExclusion(chain, agent), ray.Origin, ray.Direction, ray.Range, nullptr) };
-                const bool explained{ SameFullHit(limited, expected) };
-                (explained ? m_SelfByRadius : m_SelfUnexplained) += 1;
-                if (explained ? m_RadiusLines < k_MaxDifferenceLines : m_UnexplainedLines < k_MaxDifferenceLines)
-                {
-                    ++(explained ? m_RadiusLines : m_UnexplainedLines);
-                    m_SceneMessages.push_back(std::format("Self ray {} ({}): RaycastStore [{}] scene [{}]", index,
-                        explained ? "radius" : "UNEXPLAINED", DescribeHit(expected), DescribeHit(hit)));
-                }
+                if (m_DifferenceLines >= k_MaxDifferenceLines) continue;
+
+                ++m_DifferenceLines;
+                m_SceneMessages.push_back(std::format("Self ray {}: RaycastStore [{}] scene [{}]", index, DescribeHit(expected), DescribeHit(hit)));
             }
         }
 
@@ -700,77 +465,17 @@ namespace
             return origins;
         }
 
-        // M2, M3 and M4 for the origins of this record.
+        // M4 for the origins of this record, then M5.
         auto MeasureSixteenAgents(Chain& chain, const Origin& self) -> void
         {
-            auto& collidables{ chain.m_Environment.m_CollidableService };
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
             const std::vector<Origin> origins{ this->BuildOrigins(chain, self) };
 
-            // M2: every agent resolves, builds its cache and casts.
-            double prepareUs{};
-            double cacheUs{};
-            double raysUs{};
-            std::vector<RaycastHit> m2Hits{};
-            m2Hits.reserve(origins.size() * k_RaysPerAgent);
-            const auto total2{ steady_clock::now() };
-            for (const Origin& origin : origins)
-            {
-                auto start{ steady_clock::now() };
-                const Agent agent{ PrepareAgent(chain, origin) };
-                prepareUs += Micros(start, steady_clock::now());
-
-                start = steady_clock::now();
-                const DynamicCache cache{ BuildDynamicCache(collidables, agent.Source.Camera, agent.Radius, agent.Exclusion) };
-                cacheUs += Micros(start, steady_clock::now());
-
-                start = steady_clock::now();
-                for (const Ray& ray : RaysOf(agent))
-                {
-                    const RaycastHit hit{ CastRay(raycaster, cache, ray.Origin, ray.Direction, ray.Range) };
-                    m_Sink += hit.Distance;
-                    m2Hits.push_back(hit);
-                }
-                raysUs += Micros(start, steady_clock::now());
-            }
-            m_M2Total.Add(Micros(total2, steady_clock::now()));
-            m_M2Prepare.Add(prepareUs);
-            m_M2Cache.Add(cacheUs);
-            m_M2Rays.Add(raysUs);
-            m_M2Ray.Add(raysUs / static_cast<double>(origins.size() * k_RaysPerAgent));
-
-            // M3: the same agents over one cache that holds the sphere of all of them.
-            const auto total3{ steady_clock::now() };
+            // M4: the rays of every agent against the static world only.
             std::vector<Agent> agents{};
             agents.reserve(origins.size());
             for (const Origin& origin : origins) agents.push_back(PrepareAgent(chain, origin));
-            const auto prepared3{ steady_clock::now() };
 
-            Vec3 center{};
-            for (const Agent& agent : agents)
-            {
-                center.X += agent.Source.Camera.X / static_cast<float>(agents.size());
-                center.Y += agent.Source.Camera.Y / static_cast<float>(agents.size());
-                center.Z += agent.Source.Camera.Z / static_cast<float>(agents.size());
-            }
-            float radius{};
-            for (const Agent& agent : agents) radius = (std::max)(radius, Common::Math::System::Distance(center, agent.Source.Camera) + agent.Radius);
-            const DynamicCache shared{ BuildDynamicCache(collidables, center, radius, SelfExclusion{}) };
-            const auto cached3{ steady_clock::now() };
-
-            for (const Agent& agent : agents)
-            {
-                for (const Ray& ray : RaysOf(agent)) m_Sink += CastRay(raycaster, shared, ray.Origin, ray.Direction, ray.Range).Distance;
-            }
-            const auto end3{ steady_clock::now() };
-            m_M3Total.Add(Micros(total3, end3));
-            m_M3Prepare.Add(Micros(total3, prepared3));
-            m_M3Cache.Add(Micros(prepared3, cached3));
-            m_M3Rays.Add(Micros(cached3, end3));
-            m_M3Ray.Add(Micros(cached3, end3) / static_cast<double>(agents.size() * k_RaysPerAgent));
-            m_M3Objects.Add(static_cast<double>(shared.size()));
-
-            // M4: the same rays against the static world only.
             const auto start4{ steady_clock::now() };
             for (const Agent& agent : agents)
             {
@@ -780,11 +485,11 @@ namespace
             m_M4Total.Add(total4);
             m_M4Ray.Add(total4 / static_cast<double>(agents.size() * k_RaysPerAgent));
 
-            this->MeasureScene(chain, origins, m2Hits);
+            this->MeasureScene(chain, origins);
         }
 
-        // M5: the same agents over the shared two level scene, compared ray by ray with M2.
-        auto MeasureScene(Chain& chain, const std::vector<Origin>& origins, const std::vector<RaycastHit>& m2Hits) -> void
+        // M5: the 16 agents over the shared two level scene with the reuse of fixed parts, compared ray by ray with the scene of gathering everything.
+        auto MeasureScene(Chain& chain, const std::vector<Origin>& origins) -> void
         {
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
 
@@ -845,26 +550,13 @@ namespace
                 {
                     SceneCounters counters{};
                     const Ray& ray{ rays[index] };
-                    const RaycastHit counted{ CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, &counters) };
+                    m_Sink += CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, &counters).Distance;
                     m_SceneNodesRay.Add(static_cast<double>(counters.Nodes));
                     m_SceneTrianglesRay.Add(static_cast<double>(counters.Triangles));
 
                     ++m_ReuseCompared;
                     const RaycastHit full{ CastSceneRay(raycaster, m_FullScene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr) };
                     if (!SameFullHit(full, m5Hits[flat])) ++m_ReuseDifferences;
-
-                    ++m_SceneCompared;
-                    if (SameFullHit(counted, m5Hits[flat]) && SameFullHit(m2Hits[flat], m5Hits[flat])) continue;
-
-                    ++m_SceneDifferences;
-                    const RaycastHit limited{ CastSceneRay(raycaster, m_Scene, this->RadiusExclusion(chain, agent), ray.Origin, ray.Direction, ray.Range, nullptr) };
-                    const bool explained{ SameFullHit(limited, m2Hits[flat]) };
-                    (explained ? m_SceneByRadius : m_SceneUnexplained) += 1;
-                    if (explained ? m_RadiusLines >= k_MaxDifferenceLines : m_UnexplainedLines >= k_MaxDifferenceLines) continue;
-
-                    ++(explained ? m_RadiusLines : m_UnexplainedLines);
-                    m_SceneMessages.push_back(std::format("agent {} ray {} ({}): M2 [{}] M5 [{}] limited to the M2 objects [{}]",
-                        agentIndex, index, explained ? "radius" : "UNEXPLAINED", DescribeHit(m2Hits[flat]), DescribeHit(m5Hits[flat]), DescribeHit(limited)));
                 }
             }
         }
@@ -881,7 +573,7 @@ namespace
         const std::vector<std::string> lines{ bench.Lines() };
         const auto now{ std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()) };
         std::vector<std::string> report{};
-        report.push_back(std::format("Raycast bench: film {}, {} records, K = {} (M2, M3 and M4 every K records), {:%Y-%m-%d %H:%M:%S} UTC, {}.",
+        report.push_back(std::format("Raycast bench: film {}, {} records, K = {} (M4 and M5 every K records), {:%Y-%m-%d %H:%M:%S} UTC, {}.",
             film, outcome.Records, k_EveryRecords, now, Tests::Support::Bench::Configuration()));
         report.push_back(std::format("Pass: {:.1f} s. Times in microseconds per tick unless it says otherwise. mean/N4 = ms per tick averaged over a decision every 4 ticks.", outcome.Seconds));
         report.push_back("");

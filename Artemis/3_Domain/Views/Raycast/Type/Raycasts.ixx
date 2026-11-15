@@ -2,13 +2,11 @@ export module Views.Raycast.Type:Raycasts;
 
 import Common.Math.Type;
 import Blam.MapModel.Definitions.Type;
-import Perception.Collidable.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
-    using Perception::Collidable::Type::Collidable;
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
 }
 
@@ -58,13 +56,6 @@ export namespace Views::Raycast::Type
         float Radius{ 0.0f };
     };
 
-    struct CachedDynamic
-    {
-        Collidable Data{};
-        std::vector<CachedPart> Parts{};
-        float BoundingRadius{ 0.0f };
-    };
-
     struct PerceptionOrigin
     {
         Vec3 Position{};
@@ -77,12 +68,6 @@ export namespace Views::Raycast::Type
         RaycastHit AimHit{};
 
         std::vector<RaycastHit> PerceptionHits{};
-    };
-
-    // Cached ray trees of the dynamic objects, by handle.
-    struct DynamicCache : std::unordered_map<std::uint32_t, CachedDynamic>
-    {
-        using unordered_map::unordered_map;
     };
 
     // Handles a ray of the viewer ignores: its own biped and what it carries.

@@ -178,30 +178,6 @@ namespace Perception::Collidable::System
         return this->BuildInstance(it->second, false);
     }
 
-    auto CollidableService::QueryNearby(const Vec3& origin, float radius) const -> std::vector<std::uint32_t>
-    {
-        std::vector<std::uint32_t> out;
-
-        auto objectTablePtr = m_ObjectTableStore.Acquire();
-        if (!objectTablePtr) return out;
-
-        const float radiusSq = radius * radius;
-
-        for (const auto& [handle, object] : *objectTablePtr)
-        {
-            const float dx = object.BoundingCenter.X - origin.X;
-            const float dy = object.BoundingCenter.Y - origin.Y;
-            const float dz = object.BoundingCenter.Z - origin.Z;
-
-            if (dx * dx + dy * dy + dz * dz <= radiusSq)
-            {
-                out.push_back(handle);
-            }
-        }
-
-        return out;
-    }
-
     auto CollidableService::CollectMesh(const Collidable& instance,
         const Context& ctx, const BoneMatrixTable* bones, const DamageSectionTable* damage) -> CollMesh
     {

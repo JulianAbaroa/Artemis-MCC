@@ -30,7 +30,6 @@ export namespace Views::Raycast::System
     {
     private:
         using Vec3 = Common::Math::Type::Vec3;
-        using DynamicCache = Views::Raycast::Type::DynamicCache;
         using Self = Views::Self::Type::Self;
         using Raycasts = Views::Raycast::Type::Raycasts;
         using SelfExclusion = Views::Raycast::Type::SelfExclusion;

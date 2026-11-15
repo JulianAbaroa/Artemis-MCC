@@ -45,4 +45,4 @@ An agent without a unit (dead, not spawned) gets an empty view for that tick.
 - Deterministic and pure, like the rest of the pipeline.
 
 ## Tests
-`PipelineTests` and `ReplayTests.Recordings` in `Artemis.Tests` (the views reach the flattened tick). `RaycastOracleCompare/Record/Cost/Report` tests the oracle logic with made-up results.
+`PipelineTests` and `ReplayTests.Recordings` in `Artemis.Tests` (the views reach the flattened tick). `RaycastOracleCompare/Record/Cost/Report` tests the oracle logic with made-up results. `RaycastScene.*` and `RaycastSelfUpdateTests.*` test the shared ray scene (random rays against a linear reference, the reuse of fixed parts, the store between ticks and the update of Self over a made-up map).

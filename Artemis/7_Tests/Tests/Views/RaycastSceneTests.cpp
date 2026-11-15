@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+import Common.Geometry.System;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Blam.MapModel.Definitions.Type;
@@ -13,7 +14,7 @@ import Tests.Support.Pipeline;
 import std;
 
 // The shared two level ray scene (D298, RS.0) with made-up meshes: poses, exclusion, ties, the fixed tree and the exactness against
-// the linear cast of the dynamic cache. RS.1 (D299): the reuse of the parts of fixed objects, the store between ticks and the Self update.
+// a linear reference written here. RS.1 (D299): the reuse of the parts of fixed objects, the store between ticks and the Self update.
 
 namespace
 {
@@ -30,12 +31,11 @@ namespace
     using Views::Raycast::State::RaycastSceneStore;
     using Views::Raycast::System::ArmFixedScene;
     using Views::Raycast::System::ArmMobileScene;
-    using Views::Raycast::System::CastDynamic;
     using Views::Raycast::System::CastScene;
     using Views::Raycast::System::GatherSceneObjects;
+    using Views::Raycast::System::PoseRay;
     using Views::Raycast::System::PrepareParts;
-    using Views::Raycast::Type::CachedDynamic;
-    using Views::Raycast::Type::DynamicCache;
+    using Views::Raycast::Type::CachedPart;
     using Views::Raycast::Type::FixedPartsCache;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::RaycastHit;
@@ -87,6 +87,45 @@ namespace
     {
         ArmFixedScene(scene, objects);
         ArmMobileScene(scene, objects);
+    }
+
+    // The reference of the random rays: every triangle of every part, in the local space of the part, with no hierarchy and no culling.
+    // note: The part order and the local pose are the ones the scene uses. At equal distance the lowest handle, part and triangle wins.
+    auto CastLinear(const SceneObjects& objects, const Vec3& origin, const Vec3& direction, float maxDistance) -> RaycastHit
+    {
+        RaycastHit best{};
+        std::array<std::uint32_t, 3> bestKey{};
+        for (const SceneObject& object : objects)
+        {
+            const std::vector<CachedPart> parts{ PrepareParts(object.Parts) };
+            for (std::size_t partIndex{ 0 }; partIndex < parts.size(); ++partIndex)
+            {
+                Vec3 localOrigin{};
+                Vec3 localDirection{};
+                PoseRay(parts[partIndex].ToLocal, origin, direction, localOrigin, localDirection);
+
+                const std::vector<Triangle>& triangles{ parts[partIndex].Source->Triangles };
+                for (std::size_t triangleIndex{ 0 }; triangleIndex < triangles.size(); ++triangleIndex)
+                {
+                    float distance{ 0.0f };
+                    const float limit{ best.Hit ? best.Distance : maxDistance };
+                    if (!Common::Geometry::System::RayIntersectsTriangle(localOrigin, localDirection, triangles[triangleIndex], limit, distance)) continue;
+
+                    const std::array<std::uint32_t, 3> key{ object.Handle, static_cast<std::uint32_t>(partIndex), static_cast<std::uint32_t>(triangleIndex) };
+                    if (best.Hit && !(distance < best.Distance || (distance == best.Distance && key < bestKey))) continue;
+
+                    best.Hit = true;
+                    best.Kind = HitKind::Dynamic;
+                    best.Distance = distance;
+                    best.ObjectHandle = object.Handle;
+                    best.RegionIndex = parts[partIndex].Source->RegionIndex;
+                    best.Point = { origin.X + direction.X * distance, origin.Y + direction.Y * distance, origin.Z + direction.Z * distance };
+                    bestKey = key;
+                }
+            }
+        }
+
+        return best;
     }
 
     auto Cast(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, const Vec3& direction) -> RaycastHit
@@ -496,7 +535,7 @@ TEST_F(RaycastSelfUpdateTests, CleanupOfTheServiceForgetsTheSceneOnTheNextUpdate
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().Meshes.empty());
 }
 
-TEST(RaycastScene, GivesTheSameHitAsTheLinearCastOnRandomRays)
+TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceOnRandomRays)
 {
     std::mt19937 random{ 298 };
     std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
@@ -520,9 +559,8 @@ TEST(RaycastScene, GivesTheSameHitAsTheLinearCastOnRandomRays)
         }
     }
 
-    // Objects with a turn around Z and a tilt, in the cache of the linear cast and in the scene.
+    // Objects with a turn around Z and a tilt.
     SceneObjects objects{};
-    DynamicCache cache{};
     for (std::uint32_t handle{ 1 }; handle <= 6; ++handle)
     {
         const float angle{ unit(random) * 3.1f };
@@ -535,11 +573,6 @@ TEST(RaycastScene, GivesTheSameHitAsTheLinearCastOnRandomRays)
             0.0f, sx, cx, where.Z };
 
         objects.push_back(MakeObject(handle, mesh, transform, handle % 2 == 0));
-
-        CachedDynamic entry{};
-        entry.Parts = PrepareParts(objects.back().Parts);
-        entry.BoundingRadius = 1.0e6f;
-        cache.emplace(handle, std::move(entry));
     }
 
     RaycastScene scene{};
@@ -553,8 +586,7 @@ TEST(RaycastScene, GivesTheSameHitAsTheLinearCastOnRandomRays)
         const float length{ std::sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z) };
         direction = { direction.X / length, direction.Y / length, direction.Z / length };
 
-        RaycastHit expected{};
-        CastDynamic(cache, origin, direction, 30.0f, expected);
+        const RaycastHit expected{ CastLinear(objects, origin, direction, 30.0f) };
         RaycastHit actual{};
         CastScene(scene, SelfExclusion{}, origin, direction, 30.0f, actual, nullptr);
 

@@ -6,7 +6,6 @@ import Blam.MapModel.Definitions.State;
 import Blam.Runtime.Player.State;
 import Blam.Runtime.Object.State;
 import Perception.Collidable.Type;
-import Perception.Collidable.System;
 import Perception.Entities.State;
 import Perception.Players.State;
 import Views.Raycast.Type;
@@ -20,13 +19,11 @@ namespace
     using Common::Math::Type::Vec3;
     using Perception::Collidable::Type::CollidablePart;
     using Views::Raycast::Type::CachedPart;
-    using Views::Raycast::Type::DynamicCache;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::SelfExclusion;
     using Views::Raycast::Type::Constant::k_PerceptionRayCount;
 
-    using Perception::Collidable::System::CollidableService;
     using Blam::MapModel::Definitions::State::DefinitionsStore;
     using Perception::Entities::State::EntitiesStore;
     using Blam::Runtime::Object::State::ObjectTableStore;
@@ -39,9 +36,6 @@ export namespace Views::Raycast::System
 {
     // return: The world directions of the perception rays (a cube: six faces and eight corners) for an agent that looks at forward.
     auto PerceptionDirections(const Vec3& forward) -> std::array<Vec3, k_PerceptionRayCount>;
-
-    // return: The radius of the dynamic cache of one agent: the farthest ray, measured from the camera.
-    auto DynamicCacheRadius(float aimRange, float cameraToOriginDistance) -> float;
 
     // return: The aim range of the weapon of the player, capped at the maximum ray range. The fallback range if it has none.
     auto ResolveAimRange(const PlayerTableStore& playerStore, const ObjectTableStore& objectStore,
@@ -59,14 +53,6 @@ export namespace Views::Raycast::System
     // note: Computed once per tick for each object, instead of posing every triangle.
     auto PrepareParts(const std::vector<CollidablePart>& parts) -> std::vector<CachedPart>;
 
-    // Builds the cache of the objects of the candidates that the exclusion does not hide.
-    auto ArmDynamicCache(CollidableService& collidableService, const std::vector<std::uint32_t>& candidates,
-        const SelfExclusion& selfExclusion) -> DynamicCache;
-
-    // Builds the cache of the dynamic objects within a radius of the origin: QueryNearby and ArmDynamicCache.
-    auto BuildDynamicCache(CollidableService& collidableService, const Vec3& origin, float radius,
-        const SelfExclusion& selfExclusion) -> DynamicCache;
-
     // Whether a ray passes within a radius of a point, before travelling limit.
     auto RayNearPoint(const Vec3& origin, const Vec3& direction, float limit, const Vec3& center, float radius) -> bool;
 
@@ -81,13 +67,4 @@ export namespace Views::Raycast::System
 
     // return: The hit of the ray against the static world, with the origin, direction and range of the ray filled in.
     auto CastStatic(const Raycaster& raycaster, const Vec3& origin, const Vec3& direction, float maxDistance) -> RaycastHit;
-
-    // Looks for a dynamic hit nearer than the one in best, and replaces it.
-    // param best: The result of CastStatic for the same ray.
-    auto CastDynamic(const DynamicCache& dynamicCache, const Vec3& origin, const Vec3& direction, float maxDistance,
-        RaycastHit& best) -> void;
-
-    // return: The nearest hit of the ray against the static world and the dynamic cache.
-    auto CastRay(const Raycaster& raycaster, const DynamicCache& dynamicCache, const Vec3& origin, const Vec3& direction,
-        float maxDistance) -> RaycastHit;
 }
