@@ -243,10 +243,10 @@ namespace Views::Affordance::System
             outSeats.push_back(std::move(status));
         }
 
-        const auto nodeIt = objectGraph.find(object.Handle);
-        if (nodeIt != objectGraph.end())
+        const auto* node = objectGraph.Find(object.Handle);
+        if (node != nullptr)
         {
-            for (std::uint32_t childHandle : nodeIt->second.ChildrenHandles)
+            for (std::uint32_t childHandle : objectGraph.ChildrenOf(*node))
             {
                 auto childObjIt = objectTable.find(childHandle);
                 if (childObjIt == objectTable.end()) continue;
@@ -292,10 +292,10 @@ namespace Views::Affordance::System
     {
         std::vector<std::uint32_t> parts;
 
-        auto nodeIt = objectGraph.find(vehicleHandle);
-        if (nodeIt == objectGraph.end()) return parts;
+        const auto* node = objectGraph.Find(vehicleHandle);
+        if (node == nullptr) return parts;
 
-        for (std::uint32_t childHandle : nodeIt->second.ChildrenHandles)
+        for (std::uint32_t childHandle : objectGraph.ChildrenOf(*node))
         {
             auto objIt = objectTable.find(childHandle);
             if (objIt == objectTable.end()) continue;
@@ -311,10 +311,10 @@ namespace Views::Affordance::System
     {
         std::vector<std::uint32_t> bipeds;
 
-        auto nodeIt = objectGraph.find(vehicleHandle);
-        if (nodeIt == objectGraph.end()) return bipeds;
+        const auto* node = objectGraph.Find(vehicleHandle);
+        if (node == nullptr) return bipeds;
 
-        for (std::uint32_t childHandle : nodeIt->second.ChildrenHandles)
+        for (std::uint32_t childHandle : objectGraph.ChildrenOf(*node))
         {
             auto objIt = objectTable.find(childHandle);
             if (objIt == objectTable.end()) continue;

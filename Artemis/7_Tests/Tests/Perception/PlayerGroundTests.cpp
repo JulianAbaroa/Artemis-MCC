@@ -104,7 +104,6 @@ namespace
 
             Entities entities{};
             entities.Rows.push_back(Entity{ .Handle = k_BipedHandle });
-            entities.Index.emplace(k_BipedHandle, 0);
             m_Chain.m_Environment.m_EntitiesStore.Publish(std::move(entities));
 
             if (engineTick != 0) m_Chain.m_Tables.m_GameStore.Publish(AliveGame{ .EngineTick = engineTick });

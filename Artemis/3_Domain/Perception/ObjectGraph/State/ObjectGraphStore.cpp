@@ -13,17 +13,18 @@ namespace Perception::ObjectGraph::State
     {
         auto snap = this->Acquire();
         if (!snap) return {};
-        auto it = snap->find(handle);
-        if (it == snap->end()) return {};
-        return it->second.ChildrenHandles;
+        const auto* node = snap->Find(handle);
+        if (node == nullptr) return {};
+        const auto children = snap->ChildrenOf(*node);
+        return std::vector<std::uint32_t>{ children.begin(), children.end() };
     }
 
     auto ObjectGraphStore::GetParent(std::uint32_t handle) const -> std::uint32_t
     {
         auto snap = this->Acquire();
         if (!snap) return k_NoHandle;
-        auto it = snap->find(handle);
-        return it != snap->end() ? it->second.ParentHandle : k_NoHandle;
+        const auto* node = snap->Find(handle);
+        return node != nullptr ? node->ParentHandle : k_NoHandle;
     }
 
     auto ObjectGraphStore::GetSubtree(std::uint32_t rootHandle) const -> std::vector<std::uint32_t>
@@ -41,10 +42,10 @@ namespace Perception::ObjectGraph::State
             pending.pop();
             result.push_back(current);
 
-            auto it = snap->find(current);
-            if (it == snap->end()) continue;
+            const auto* node = snap->Find(current);
+            if (node == nullptr) continue;
 
-            for (std::uint32_t child : it->second.ChildrenHandles)
+            for (std::uint32_t child : snap->ChildrenOf(*node))
             {
                 pending.push(child);
             }

@@ -151,12 +151,6 @@ namespace Perception::Entities::System
 
         std::ranges::sort(entities.Rows, {}, &Entity::Handle);
 
-        entities.Index.reserve(entities.Rows.size());
-        for (std::size_t row{ 0 }; row < entities.Rows.size(); ++row)
-        {
-            entities.Index.emplace(entities.Rows[row].Handle, row);
-        }
-
         m_EntitiesStore.Publish(std::move(entities));
     }
 

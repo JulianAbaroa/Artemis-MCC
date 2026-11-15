@@ -167,12 +167,12 @@ TEST_F(ProjectileDetailsTests, TheEntityOfAProjectileHasTheTeamOfThePlayerThatFi
     const auto entities{ m_Chain.m_Environment.m_EntitiesStore.Acquire() };
     ASSERT_NE(entities, nullptr);
 
-    const auto fired{ entities->Index.find(k_FromVehicle) };
-    ASSERT_NE(fired, entities->Index.end());
-    EXPECT_EQ(entities->Rows[fired->second].Team, Team::Blue);
+    const auto* fired{ entities->Find(k_FromVehicle) };
+    ASSERT_NE(fired, nullptr);
+    EXPECT_EQ(fired->Team, Team::Blue);
 
     // Without a player the team is what it was before: Neutral for a projectile of a map without team.
-    const auto noPlayer{ entities->Index.find(k_InFlight) };
-    ASSERT_NE(noPlayer, entities->Index.end());
-    EXPECT_EQ(entities->Rows[noPlayer->second].Team, Team::Neutral);
+    const auto* noPlayer{ entities->Find(k_InFlight) };
+    ASSERT_NE(noPlayer, nullptr);
+    EXPECT_EQ(noPlayer->Team, Team::Neutral);
 }

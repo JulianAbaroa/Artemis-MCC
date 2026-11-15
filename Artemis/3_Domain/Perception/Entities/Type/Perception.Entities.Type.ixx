@@ -67,17 +67,17 @@ export namespace Perception::Entities::Type
         std::optional<float> Vitality{};
     };
 
-    // Every live object as an entity, sorted by handle, with the row of each handle.
+    // Every live object as an entity, sorted by handle.
     struct Entities
     {
         std::vector<Entity> Rows{};
-        std::unordered_map<std::uint32_t, std::size_t> Index{};
 
         // return: The entity of the handle, or null if it is not live.
+        // note: Binary search, so Rows must stay sorted by handle.
         auto Find(std::uint32_t handle) const -> const Entity*
         {
-            const auto it{ Index.find(handle) };
-            return it == Index.end() ? nullptr : &Rows[it->second];
+            const auto it{ std::ranges::lower_bound(Rows, handle, {}, &Entity::Handle) };
+            return (it == Rows.end() || it->Handle != handle) ? nullptr : &*it;
         }
     };
 }

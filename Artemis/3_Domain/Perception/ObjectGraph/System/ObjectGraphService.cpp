@@ -26,11 +26,14 @@ namespace Perception::ObjectGraph::System
         if (!objectTablePtr) return;
         const ObjectTable& objectTable = *objectTablePtr;
 
+        nodes.Nodes.reserve(objectTable.size());
+
         for (const auto& [handle, object] : objectTable)
         {
             ObjectNode node{};
             node.Handle = handle;
             node.ParentHandle = object.ParentHandle;
+            node.FirstChild = static_cast<std::uint32_t>(nodes.Children.size());
 
             std::uint32_t childHandle = object.ChildHandle;
             while (childHandle != k_NoHandle)
@@ -38,12 +41,15 @@ namespace Perception::ObjectGraph::System
                 auto it = objectTable.find(childHandle);
                 if (it == objectTable.end()) break;
 
-                node.ChildrenHandles.push_back(childHandle);
+                nodes.Children.push_back(childHandle);
                 childHandle = it->second.NextSiblingHandle;
             }
 
-            nodes.emplace(handle, std::move(node));
+            node.ChildCount = static_cast<std::uint32_t>(nodes.Children.size()) - node.FirstChild;
+            nodes.Nodes.push_back(node);
         }
+
+        std::ranges::sort(nodes.Nodes, {}, &ObjectNode::Handle);
     }
 
     auto ObjectGraphService::Cleanup() -> void

@@ -106,7 +106,6 @@ namespace
             this->AddEntity(entities, k_AllyBiped, Team::Red, m_AllyPosition);
             this->AddEntity(entities, k_EnemyBiped, Team::Blue, Vec3{ 0.5f, 0.0f, 0.0f });
             std::ranges::sort(entities.Rows, {}, &Entity::Handle);
-            for (std::size_t row{ 0 }; row < entities.Rows.size(); ++row) entities.Index.emplace(entities.Rows[row].Handle, row);
             m_Chain.m_Environment.m_EntitiesStore.Publish(std::move(entities));
 
             Players players{};
