@@ -18,6 +18,28 @@ namespace
     using Perception::Collidable::Type::k_NoPermutation;
     using Perception::Collidable::Type::Collidables;
 
+    // Copies the source into the vector only when the bytes differ.
+    // return: Whether it copied.
+    template <typename T>
+    auto AssignIfDifferent(std::vector<T>& target, const T* source, std::size_t count) -> bool
+    {
+        if (target.size() == count && (count == 0 || std::memcmp(target.data(), source, count * sizeof(T)) == 0)) return false;
+
+        target.assign(source, source + count);
+        return true;
+    }
+
+    // Sets the field to the value when the bytes differ.
+    // return: Whether it set it.
+    template <typename T>
+    auto SetIfDifferent(T& field, const T& value) -> bool
+    {
+        if (std::memcmp(&field, &value, sizeof(T)) == 0) return false;
+
+        field = value;
+        return true;
+    }
+
     // Axes of a rigid object (no bones) and the center of its collision bounds, in the object space.
     struct RigidFrame
     {
@@ -135,36 +157,40 @@ namespace Perception::Collidable::System
         return inputs;
     }
 
-    auto CollidableService::MakePartsKey(std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) -> bool
+    auto CollidableService::UpdatePartsKey(const AliveObject& object, CollidablePartsKey& key, bool isKnown) -> bool
     {
-        auto objectTablePtr = m_ObjectTableStore.Acquire();
-        if (!objectTablePtr) return false;
+        // The inputs read the key before it is written.
+        const CollidableInputs inputs{ this->ResolveInputs(object, isKnown ? &key : nullptr) };
 
-        auto it = objectTablePtr->find(handle);
-        if (it == objectTablePtr->end()) return false;
+        bool isChanged{ false };
+        isChanged |= SetIfDifferent(key.Handle, object.Handle);
+        isChanged |= SetIfDifferent(key.DatumIndex, object.DatumIndex);
 
-        const AliveObject& object{ it->second };
-        const CollidableInputs inputs{ this->ResolveInputs(object, previous) };
+        // The name only when the row has no tag.
+        const std::string_view tagName{ object.DatumIndex == 0 ? std::string_view{ object.TagName } : std::string_view{} };
+        if (key.TagName != tagName)
+        {
+            key.TagName = tagName;
+            isChanged = true;
+        }
 
-        key.Handle = object.Handle;
-        key.DatumIndex = object.DatumIndex;
-        if (object.DatumIndex == 0) key.TagName = object.TagName;
-        else key.TagName.clear();
-        key.Position = object.BoundingCenter;
-        key.Forward = object.Forward;
-        key.Up = object.Up;
+        isChanged |= SetIfDifferent(key.Position, object.BoundingCenter);
+        isChanged |= SetIfDifferent(key.Forward, object.Forward);
+        isChanged |= SetIfDifferent(key.Up, object.Up);
 
-        key.HasBones = inputs.Bones != nullptr;
-        if (key.HasBones) key.Bones.assign(inputs.Bones->Matrices.begin(), inputs.Bones->Matrices.end());
-        else key.Bones.clear();
+        const bool hasBones{ inputs.Bones != nullptr };
+        isChanged |= SetIfDifferent(key.HasBones, hasBones);
+        if (hasBones) isChanged |= AssignIfDifferent(key.Bones, inputs.Bones->Matrices.data(), inputs.Bones->Matrices.size());
+        else isChanged |= AssignIfDifferent(key.Bones, static_cast<const BoneMatrix*>(nullptr), 0);
 
-        key.HasDamage = inputs.Damage != nullptr;
-        if (key.HasDamage) key.DamageRegions.assign(inputs.Damage->Regions.Bytes.begin(), inputs.Damage->Regions.Bytes.end());
-        else key.DamageRegions.clear();
+        const bool hasDamage{ inputs.Damage != nullptr };
+        isChanged |= SetIfDifferent(key.HasDamage, hasDamage);
+        if (hasDamage) isChanged |= AssignIfDifferent(key.DamageRegions, inputs.Damage->Regions.Bytes.data(), inputs.Damage->Regions.Bytes.size());
+        else isChanged |= AssignIfDifferent(key.DamageRegions, static_cast<const std::uint8_t*>(nullptr), 0);
 
-        key.CollModel = inputs.Resolved.Coll;
-        key.States = inputs.Resolved.States;
-        return true;
+        isChanged |= SetIfDifferent(key.CollModel, inputs.Resolved.Coll);
+        isChanged |= SetIfDifferent(key.States, inputs.Resolved.States);
+        return isChanged;
     }
 
     auto CollidableService::CollectPartsFor(std::uint32_t handle) -> std::optional<Collidable>

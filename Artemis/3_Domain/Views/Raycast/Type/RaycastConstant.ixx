@@ -14,5 +14,12 @@ export namespace Views::Raycast::Type::Constant
     constexpr std::size_t k_RestGathers{ 8 };
 
     // Gathers since the last build before the fixed tree is built again for new objects at rest or for objects that left it (D300).
+    // note: Counted in gathers. It stays as the least spacing between two builds (D301). Today Self gathers every tick, with RS.2 it will be every decision.
     constexpr std::size_t k_FixedRebuildGathers{ 32 };
+
+    // Objects waiting (at rest and not in the fixed tree, plus handles filtered out of it) that make a build due once the spacing passed (D301).
+    constexpr std::size_t k_FixedRebuildPending{ 16 };
+
+    // Gathers that any waiting object may wait before a build is due, once the spacing passed (D301).
+    constexpr std::size_t k_FixedRebuildMaxGathers{ 512 };
 }

@@ -37,6 +37,7 @@ namespace
     using Views::Raycast::System::PrepareMeshBvhs;
     using Views::Raycast::System::ResolveAimRange;
     using Views::Raycast::System::ResolvePerceptionOrigin;
+    using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
@@ -212,7 +213,14 @@ namespace
             lines.push_back(TimeLine("M5   gather parts (all objects)", m_Gather));
             lines.push_back(CountLine("M5   objects that kept their parts", m_Reused));
             lines.push_back(CountLine("M5   objects collected (CollectPartsFor)", m_Collected));
-            lines.push_back(TimeLine("M5   keys of all objects (no parts)", m_KeyOnly));
+            lines.push_back(TimeLine("M5   key stage: Acquire of the table, once per object", m_StageAcquire));
+            lines.push_back(TimeLine("M5   key stage: find by handle", m_StageFind));
+            lines.push_back(TimeLine("M5   key stage: BoneMatricesStore Get", m_StageBones));
+            lines.push_back(TimeLine("M5   key stage: DamageSectionsStore Get", m_StageDamage));
+            lines.push_back(TimeLine("M5   key stage: any valid matrix", m_StageValid));
+            lines.push_back(TimeLine("M5   key stage: copy bones and damage to the key", m_StageCopy));
+            lines.push_back(TimeLine("M5   key stage: key == previous key", m_StageCompare));
+            lines.push_back(TimeLine("M5   key stage: whole key of every object, with previous", m_StageKey));
             lines.push_back(TimeLine("M5   arm MOBILE tree", m_Mobile));
             lines.push_back(TimeLine("M5   rays (240)", m_M5Rays));
             lines.push_back(RayLine("M5   ray (mean of the 240)", m_M5Ray));
@@ -288,9 +296,10 @@ namespace
         Series m_StaticRay{};
         Series m_M4Total{}, m_M4Ray{};
         Series m_M5Total{}, m_M5Prepare{}, m_M5Rays{}, m_M5Ray{};
-        Series m_Gather{}, m_GatherReuse{}, m_KeyOnly{}, m_Reused{}, m_Collected{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
+        Series m_Gather{}, m_GatherReuse{}, m_Reused{}, m_Collected{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
         Series m_RestObjects{}, m_Filtered{}, m_Pending{};
+        Series m_StageAcquire{}, m_StageFind{}, m_StageBones{}, m_StageDamage{}, m_StageValid{}, m_StageCopy{}, m_StageCompare{}, m_StageKey{};
 
         // The shared scene lives for the whole film, as it would in the pipeline, with the parts of the objects it reuses.
         RaycastScene m_Scene{};
@@ -415,23 +424,31 @@ namespace
             m_StaticTick.Add(staticUs);
         }
 
-        // Collects the parts of every object of the tick with no reuse and no rest, as RS.0 did.
-        static auto GatherAll(Chain& chain) -> SceneObjects
+        // Every object of the tick with the parts collected again, and the vectors its objects view.
+        struct AllObjects
         {
-            SceneObjects objects{};
+            std::deque<std::vector<Perception::Collidable::Type::CollidablePart>> Storage{};
+            SceneObjects Objects{};
+        };
+
+        // Collects the parts of every object of the tick with no reuse and no rest, as RS.0 did.
+        static auto GatherAll(Chain& chain) -> AllObjects
+        {
+            AllObjects all{};
             const auto table{ chain.m_Tables.m_ObjectStore.Acquire() };
-            if (!table) return objects;
+            if (!table) return all;
 
             for (const auto& [handle, object] : *table)
             {
                 auto collidable{ chain.m_Environment.m_CollidableService.CollectPartsFor(handle) };
                 if (!collidable || collidable->Parts.empty()) continue;
 
-                objects.push_back(SceneObject{ handle, false, std::move(collidable->Parts), false });
+                all.Storage.push_back(std::move(collidable->Parts));
+                all.Objects.push_back(SceneObject{ handle, false, all.Storage.back(), false });
             }
 
-            std::ranges::sort(objects, [](const SceneObject& a, const SceneObject& b) { return a.Handle < b.Handle; });
-            return objects;
+            std::ranges::sort(all.Objects, [](const SceneObject& a, const SceneObject& b) { return a.Handle < b.Handle; });
+            return all;
         }
 
         // Gathers every object of the tick with reuse and rest and arms the scene, the way a decision tick would.
@@ -448,7 +465,7 @@ namespace
             m_Collected.Add(static_cast<double>(gathered.Collected));
 
             start = steady_clock::now();
-            const std::size_t built{ PrepareMeshBvhs(m_Scene, objects) };
+            const std::size_t built{ PrepareMeshBvhs(m_Scene, objects, false) };
             const double meshUs{ Micros(start, steady_clock::now()) };
             if (built > 0)
             {
@@ -564,6 +581,82 @@ namespace
             this->MeasureScene(chain, origins);
         }
 
+        // The cost of each stage of the key of every object of the tick, one loop per stage, outside the clocks of the gather.
+        template <typename Table>
+        auto MeasureKeyStages(Chain& chain, const Table& table) -> void
+        {
+            auto& collidable{ chain.m_Environment.m_CollidableService };
+            const auto& boneStore{ chain.m_Tables.m_BoneMatricesStore };
+            const auto& damageStore{ chain.m_Tables.m_DamageSectionsStore };
+            Perception::Collidable::Type::CollidablePartsKey key{};
+            std::size_t sink{ 0 };
+
+            auto start{ steady_clock::now() };
+            for (std::size_t index{ 0 }; index < table.size(); ++index) sink += chain.m_Tables.m_ObjectStore.Acquire().use_count();
+            m_StageAcquire.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            for (const auto& [handle, object] : table) sink += table.find(handle) != table.end() ? 1 : 0;
+            m_StageFind.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            for (const auto& [handle, object] : table) sink += boneStore.Get(handle) != nullptr ? 1 : 0;
+            m_StageBones.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            for (const auto& [handle, object] : table) sink += damageStore.Get(handle) != nullptr ? 1 : 0;
+            m_StageDamage.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            for (const auto& [handle, object] : table)
+            {
+                const auto* bones{ boneStore.Get(handle) };
+                if (bones) sink += std::ranges::any_of(bones->Matrices, Blam::Runtime::Object::Type::BoneMatrix::IsBoneMatrixValid) ? 1 : 0;
+            }
+            m_StageValid.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            for (const auto& [handle, object] : table)
+            {
+                const auto* bones{ boneStore.Get(handle) };
+                const auto* damage{ damageStore.Get(handle) };
+                if (bones) key.Bones.assign(bones->Matrices.begin(), bones->Matrices.end());
+                if (damage) key.DamageRegions.assign(damage->Regions.Bytes.begin(), damage->Regions.Bytes.end());
+                sink += key.Bones.size() + key.DamageRegions.size();
+            }
+            m_StageCopy.Add(Micros(start, steady_clock::now()));
+
+            // The whole key as the gather makes it: updated in place in the kept key, which does not change in the same tick (so same stays 0).
+            std::size_t same{ 0 };
+            start = steady_clock::now();
+            for (const auto& [handle, object] : table)
+            {
+                const auto entry{ m_Reuse.find(handle) };
+                if (entry != m_Reuse.end()) same += collidable.UpdatePartsKey(object, entry->second.Key, true) ? 1 : 0;
+            }
+            m_StageKey.Add(Micros(start, steady_clock::now()));
+
+            std::vector<Perception::Collidable::Type::CollidablePartsKey> keys{};
+            keys.reserve(table.size());
+            for (const auto& [handle, object] : table)
+            {
+                const auto entry{ m_Reuse.find(handle) };
+                if (entry != m_Reuse.end()) keys.push_back(entry->second.Key);
+            }
+            start = steady_clock::now();
+            std::size_t index{ 0 };
+            for (const auto& [handle, object] : table)
+            {
+                const auto entry{ m_Reuse.find(handle) };
+                if (entry == m_Reuse.end()) continue;
+
+                same += keys[index] == entry->second.Key ? 1 : 0;
+                ++index;
+            }
+            m_StageCompare.Add(Micros(start, steady_clock::now()));
+            m_Sink += static_cast<double>(sink + same);
+        }
+
         // M5: the 16 agents over the shared two level scene with the objects at rest, compared ray by ray with the reference scene.
         auto MeasureScene(Chain& chain, const std::vector<Origin>& origins) -> void
         {
@@ -597,21 +690,13 @@ namespace
             m_M5Ray.Add(Micros(armed5, end5) / static_cast<double>(m5Hits.size()));
 
             // The same tick gathered without reuse and all in MOBILE: its own timing, and its hits must be the ones of the scene with rest.
-            auto startAll{ steady_clock::now() };
-            const SceneObjects all{ GatherAll(chain) };
+            const auto startAll{ steady_clock::now() };
+            const AllObjects all{ GatherAll(chain) };
             m_Gather.Add(Micros(startAll, steady_clock::now()));
             const auto table{ chain.m_Tables.m_ObjectStore.Acquire() };
-            if (table)
-            {
-                startAll = steady_clock::now();
-                std::size_t keys{};
-                Perception::Collidable::Type::CollidablePartsKey key{};
-                for (const auto& [handle, object] : *table) keys += chain.m_Environment.m_CollidableService.MakePartsKey(handle, key, nullptr) ? 1 : 0;
-                m_Sink += static_cast<double>(keys);
-                m_KeyOnly.Add(Micros(startAll, steady_clock::now()));
-            }
-            PrepareMeshBvhs(m_FullScene, all);
-            ArmMobileScene(m_FullScene, all);
+            if (table) this->MeasureKeyStages(chain, *table);
+            PrepareMeshBvhs(m_FullScene, all.Objects, false);
+            ArmMobileScene(m_FullScene, all.Objects);
 
             // Counted pass and comparison, outside the clocks.
             std::size_t flat{ 0 };
@@ -634,6 +719,136 @@ namespace
             }
         }
     };
+
+    // Several rules for the rebuild of the fixed tree (D301) run side by side over the same film, each with its own scene and cache, the
+    // way Self runs them: a gather at every record, the arming, and the 15 rays of Self. Only the scene part of Update is timed.
+    class RuleSweep
+    {
+    public:
+        explicit RuleSweep(const std::vector<FixedRebuildRule>& rules)
+        {
+            for (const FixedRebuildRule& rule : rules) m_Runs.push_back(Run{ .Rule = rule });
+        }
+
+        // Called after each record of the pass.
+        auto Observe(const Chain& constChain, std::size_t record) -> void
+        {
+            Chain& chain{ const_cast<Chain&>(constChain) };
+            const auto selfPtr{ chain.m_Egocentric.m_SelfStore.Acquire() };
+            if (!selfPtr || !selfPtr->IsAlive) return;
+
+            const Origin self{ selfPtr->Position, selfPtr->Forward, selfPtr->Handle, selfPtr->BipedHandle, false };
+            const Agent agent{ PrepareAgent(chain, self) };
+            const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
+
+            ++m_Records;
+            std::vector<RaycastHit> reference{};
+            for (std::size_t index{ 0 }; index < m_Runs.size(); ++index)
+            {
+                Run& run{ m_Runs[index] };
+                std::vector<RaycastHit> hits{};
+                hits.reserve(rays.size());
+
+                const auto start{ steady_clock::now() };
+                SceneObjects objects{ GatherSceneObjects(run.Reuse, chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore, nullptr) };
+                const auto gathered{ steady_clock::now() };
+                const bool rebuilt{ ArmFixedScene(run.Scene, objects, run.Rule) };
+                ArmMobileScene(run.Scene, objects);
+                for (const Ray& ray : rays) hits.push_back(CastSceneRay(chain.m_Resolved.m_Raycaster, run.Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr));
+                const auto end{ steady_clock::now() };
+
+                run.Total.Add(Micros(start, end));
+                run.Gather.Add(Micros(start, gathered));
+                if (rebuilt) run.Rebuild.Add(Micros(gathered, end));
+                run.MobileLeaves.Add(static_cast<double>(run.Scene.Mobile.Pieces.size()));
+                run.Filtered.Add(static_cast<double>(run.Scene.FixedFiltered));
+                run.Pending.Add(static_cast<double>(run.Scene.FixedPending));
+
+                if (index == 0)
+                {
+                    reference = std::move(hits);
+                    continue;
+                }
+
+                for (std::size_t ray{ 0 }; ray < hits.size(); ++ray)
+                {
+                    ++m_Compared;
+                    if (!SameFullHit(hits[ray], reference[ray])) ++m_Differences;
+                }
+            }
+
+            m_Sink += static_cast<double>(record);
+        }
+
+        // return: One row per rule: the scene part of Update in us, the rebuilds and what waits.
+        auto Lines() const -> std::vector<std::string>
+        {
+            std::vector<std::string> lines{};
+            lines.push_back(std::format("{} records. Per record, in us: gather + arm + 15 rays of Self (total), the gather alone, and the whole record in which the fixed tree was built.", m_Records));
+            lines.push_back("  spacing  N  T    builds  total mean     p99     max  | gather mean | build rec mean | MOBILE leaves | filtered | pending");
+            for (const Run& run : m_Runs)
+            {
+                const Stats total{ run.Total.Summary() };
+                const Stats gather{ run.Gather.Summary() };
+                const Stats rebuild{ run.Rebuild.Summary() };
+                lines.push_back(std::format("  {:>6} {:>3} {:>4} {:>6} {:>10.1f} {:>7.1f} {:>7.1f}  | {:>11.1f} | {:>14.1f} | {:>13.1f} | {:>8.2f} | {:>7.2f}",
+                    run.Rule.Spacing, run.Rule.Pending, run.Rule.MaxGathers, run.Scene.FixedBuilds, total.Mean, total.P99, total.Max,
+                    gather.Mean, rebuild.Mean, run.MobileLeaves.Summary().Mean, run.Filtered.Summary().Mean, run.Pending.Summary().Mean));
+            }
+
+            lines.push_back(std::format("Rays of every rule against the first one: {} compared, {} differences.", m_Compared, m_Differences));
+            return lines;
+        }
+
+    private:
+        struct Run
+        {
+            FixedRebuildRule Rule{};
+            RaycastScene Scene{};
+            ScenePartsCache Reuse{};
+            Series Total{}, Gather{}, Rebuild{}, MobileLeaves{}, Filtered{}, Pending{};
+        };
+
+        std::vector<Run> m_Runs{};
+        std::size_t m_Records{};
+        std::size_t m_Compared{};
+        std::size_t m_Differences{};
+        double m_Sink{};
+    };
+
+    // The rules of the sweep: the lines "N T" of build/bench/rs1c_sweep.txt, each with the spacing of the constants.
+    // note: Without the file, N in {1, 4, 8, 16, 32} with T = 256.
+    auto SweepRules() -> std::vector<FixedRebuildRule>
+    {
+        const std::filesystem::path source{ std::source_location::current().file_name() };
+        std::ifstream in{ source.parent_path().parent_path().parent_path().parent_path().parent_path() / "build" / "bench" / "rs1c_sweep.txt" };
+        std::vector<FixedRebuildRule> rules{};
+        std::size_t pending{};
+        std::size_t maxGathers{};
+        while (in >> pending >> maxGathers) rules.push_back(FixedRebuildRule{ .Pending = pending, .MaxGathers = maxGathers });
+
+        if (rules.empty())
+        {
+            for (const std::size_t pendingRule : { 1, 4, 8, 16, 32 }) rules.push_back(FixedRebuildRule{ .Pending = pendingRule, .MaxGathers = 256 });
+        }
+
+        return rules;
+    }
+
+    // Replays the film with the rules of SweepRules and writes build/bench/rs1c_sweep_<name>.txt.
+    auto RunSweep(std::string_view film, std::string_view name) -> void
+    {
+        RuleSweep sweep{ SweepRules() };
+        const FilmOutcome outcome{ RunFilmPass(film, false, [&](const Chain& chain, std::size_t record) { sweep.Observe(chain, record); }) };
+        if (!outcome.Skip.empty()) GTEST_SKIP() << outcome.Skip;
+        ASSERT_TRUE(outcome.Error.empty()) << outcome.Error;
+
+        std::vector<std::string> report{};
+        report.push_back(std::format("RS.1c rebuild rule sweep: film {}, pass {:.1f} s, {}.", film, outcome.Seconds, Tests::Support::Bench::Configuration()));
+        for (const std::string& line : sweep.Lines()) report.push_back(line);
+        ASSERT_FALSE(Tests::Support::Bench::WriteReport(std::format("rs1c_sweep_{}.txt", name), report).empty());
+        EXPECT_GT(outcome.Records, 0u);
+    }
 
     // Replays the film, measures, and writes the report to build/bench/raycast_<name>.txt of the repository.
     // param film: Folder of the film, relative to RecordingsFolder.
@@ -688,4 +903,20 @@ TEST(DISABLED_RaycastBench, CtfC)
 TEST(DISABLED_RaycastBench, Forge650)
 {
     RunBench("BenchFilms/forge650", "forge650");
+}
+
+// The rules of the rebuild of the fixed tree side by side (D301). The rules are in build/bench/rs1c_sweep.txt, one "N T" per line.
+TEST(DISABLED_RaycastBench, SweepForge650)
+{
+    RunSweep("BenchFilms/forge650", "forge650");
+}
+
+TEST(DISABLED_RaycastBench, SweepCtfD)
+{
+    RunSweep("ctf_d", "ctf_d");
+}
+
+TEST(DISABLED_RaycastBench, SweepCtfC)
+{
+    RunSweep("ctf_c", "ctf_c");
 }

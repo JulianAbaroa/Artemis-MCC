@@ -210,7 +210,7 @@ namespace Views::Raycast::System
         return { objectIt->second.BoundingCenter, objectIt->second.Forward, true };
     }
 
-    auto PrepareParts(const std::vector<CollidablePart>& parts) -> std::vector<CachedPart>
+    auto PrepareParts(std::span<const CollidablePart> parts) -> std::vector<CachedPart>
     {
         std::vector<CachedPart> out{};
         out.reserve(parts.size());

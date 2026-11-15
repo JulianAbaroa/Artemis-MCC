@@ -21,6 +21,7 @@ namespace
     using Blam::MapModel::World::Type::Raycast::BvhBounds;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Views::Raycast::Type::CachedPart;
+    using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::MeshBvh;
     using Views::Raycast::Type::MeshBvhs;
@@ -49,7 +50,6 @@ namespace
 
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
     using Blam::MapModel::World::Type::Raycast::k_StackSize;
-    using Views::Raycast::Type::Constant::k_FixedRebuildGathers;
     using Views::Raycast::Type::Constant::k_RestGathers;
 
     // Who wins between two dynamic hits at the same distance.
@@ -313,10 +313,10 @@ namespace Views::Raycast::System
         for (const auto& [handle, object] : *objectTablePtr)
         {
             const bool isFixedPhysics{ object.Placement && (object.Placement->Physics == Physics::Fixed || object.Placement->Physics == Physics::Phased) };
-            refs.push_back(SceneRef{ handle, isFixedPhysics });
+            refs.push_back(SceneRef{ handle, isFixedPhysics, &object });
         }
 
-        const SceneKeyFunction keyOf{ [&](std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) { return collidableService.MakePartsKey(handle, key, previous); } };
+        const SceneKeyFunction keyOf{ [&](const SceneRef& ref, CollidablePartsKey& key, bool isKnown) { return collidableService.UpdatePartsKey(*ref.Object, key, isKnown); } };
         const ScenePartsFunction partsOf{ [&](std::uint32_t handle) -> std::optional<std::vector<CollidablePart>>
         {
             auto collidable = collidableService.CollectPartsFor(handle);
@@ -334,33 +334,33 @@ namespace Views::Raycast::System
         SceneObjects objects{};
         objects.reserve(refs.size());
 
-        CollidablePartsKey key{};
         SceneGatherCounters count{};
 
         for (const SceneRef& ref : refs)
         {
-            auto entry = reuse.find(ref.Handle);
-            const bool isKnown{ entry != reuse.end() };
-            if (!keyOf(ref.Handle, key, isKnown ? &entry->second.Key : nullptr)) continue;
+            const auto [entry, isNew] = reuse.try_emplace(ref.Handle);
+            SceneParts& cached{ entry->second };
 
-            const bool isSame{ isKnown && entry->second.Key == key };
+            const bool isChanged{ keyOf(ref, cached.Key, !isNew) };
+            const bool isSame{ !isNew && !isChanged };
             if (isSame)
             {
                 ++count.Reused;
-                ++entry->second.StillGathers;
+                ++cached.StillGathers;
             }
             else
             {
                 ++count.Collected;
                 auto parts = partsOf(ref.Handle);
-                entry = reuse.insert_or_assign(ref.Handle, SceneParts{ key, parts ? std::move(*parts) : std::vector<CollidablePart>{}, false, 0 }).first;
+                cached.Parts = parts ? std::move(*parts) : std::vector<CollidablePart>{};
+                cached.StillGathers = 0;
             }
 
-            entry->second.IsSeen = true;
+            cached.IsSeen = true;
 
             // A fixed or phased object rests while its key does not change, and the rest rest after k_RestGathers equal keys.
-            const bool isAtRest{ (ref.IsFixedPhysics && (isSame || !isKnown)) || entry->second.StillGathers >= k_RestGathers };
-            if (!entry->second.Parts.empty()) objects.push_back(SceneObject{ ref.Handle, isAtRest, entry->second.Parts, false });
+            const bool isAtRest{ (ref.IsFixedPhysics && (isSame || isNew)) || cached.StillGathers >= k_RestGathers };
+            if (!cached.Parts.empty()) objects.push_back(SceneObject{ ref.Handle, isAtRest, cached.Parts, false });
         }
 
         // What this gather did not see is gone.
@@ -383,11 +383,13 @@ namespace Views::Raycast::System
         return objects;
     }
 
-    auto PrepareMeshBvhs(RaycastScene& scene, const SceneObjects& objects) -> std::size_t
+    auto PrepareMeshBvhs(RaycastScene& scene, const SceneObjects& objects, bool covered) -> std::size_t
     {
         std::size_t built{ 0 };
         for (const SceneObject& object : objects)
         {
+            if (object.IsCovered != covered) continue;
+
             for (const auto& part : object.Parts)
             {
                 if (!part.Source || part.Source->Triangles.empty() || scene.Meshes.contains(part.Source)) continue;
@@ -400,7 +402,7 @@ namespace Views::Raycast::System
         return built;
     }
 
-    auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects) -> bool
+    auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects, const FixedRebuildRule& rule) -> bool
     {
         ++scene.GathersSinceBuild;
 
@@ -461,9 +463,12 @@ namespace Views::Raycast::System
         scene.FixedPending = pending;
         scene.FixedFiltered = filter.size();
 
-        const bool isDirty{ pending > 0 || !filter.empty() };
-        const bool isDue{ scene.FixedBuilds == 0 || scene.GathersSinceBuild >= k_FixedRebuildGathers };
-        if (!isDirty || !isDue) return false;
+        const std::size_t waiting{ pending + filter.size() };
+        scene.FixedWaitingGathers = waiting > 0 ? scene.FixedWaitingGathers + 1 : 0;
+
+        const bool isSpaced{ scene.GathersSinceBuild >= rule.Spacing };
+        const bool isDue{ scene.FixedBuilds == 0 || (isSpaced && (waiting >= rule.Pending || scene.FixedWaitingGathers >= rule.MaxGathers)) };
+        if (waiting == 0 || !isDue) return false;
 
         std::vector<ScenePose> poses{};
         for (SceneObject& object : objects)
@@ -474,18 +479,19 @@ namespace Views::Raycast::System
             for (const auto& part : object.Parts) poses.push_back(ScenePose{ object.Handle, part.Source, part.Transform });
         }
 
-        PrepareMeshBvhs(scene, objects);
+        PrepareMeshBvhs(scene, objects, true);
         ArmTree(scene.Fixed, scene.Meshes, objects, true);
         scene.FixedPoses = std::move(poses);
         filter.clear();
         scene.GathersSinceBuild = 0;
+        scene.FixedWaitingGathers = 0;
         ++scene.FixedBuilds;
         return true;
     }
 
     auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects) -> void
     {
-        PrepareMeshBvhs(scene, objects);
+        PrepareMeshBvhs(scene, objects, false);
         ArmTree(scene.Mobile, scene.Meshes, objects, false);
     }
 

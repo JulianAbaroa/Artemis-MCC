@@ -37,6 +37,7 @@ namespace
     using Views::Raycast::System::PoseRay;
     using Views::Raycast::System::PrepareParts;
     using Views::Raycast::Type::CachedPart;
+    using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
@@ -48,13 +49,20 @@ namespace
     using Views::Raycast::Type::SceneParts;
     using Views::Raycast::Type::ScenePartsCache;
     using Views::Raycast::Type::ScenePartsFunction;
+    using Views::Raycast::Type::SceneRef;
     using Views::Raycast::Type::SceneRefs;
     using Views::Raycast::Type::SelfExclusion;
 
     using Views::Raycast::Type::Constant::k_FixedRebuildGathers;
+    using Views::Raycast::Type::Constant::k_FixedRebuildMaxGathers;
+    using Views::Raycast::Type::Constant::k_FixedRebuildPending;
     using Views::Raycast::Type::Constant::k_RestGathers;
 
     constexpr float k_Range{ 50.0f };
+
+    // The rule of D300: a build is due as soon as one object waits and the spacing passed. The tests of the trees use it to keep their
+    // sequences short. The rule of the constants has its own tests.
+    constexpr FixedRebuildRule k_EveryWaiting{ k_FixedRebuildGathers, 1, k_FixedRebuildMaxGathers };
 
     // A square of 2 x 2 m on the plane x = 1 of its local space.
     auto MakeSquare() -> CollMesh
@@ -74,12 +82,26 @@ namespace
         return { 0.0f, -1.0f, 0.0f, x, 1.0f, 0.0f, 0.0f, y, 0.0f, 0.0f, 1.0f, z };
     }
 
+    // The parts the objects of the tests view, as the cache of a gather owns them. They live as long as the test binary.
+    auto PartsPool() -> std::deque<std::vector<CollidablePart>>&
+    {
+        static std::deque<std::vector<CollidablePart>> pool{};
+        return pool;
+    }
+
     auto MakeObject(std::uint32_t handle, const CollMesh& mesh, const std::array<float, 12>& transform, bool isFixed) -> SceneObject
     {
         CollidablePart part{};
         part.Source = &mesh;
         part.Transform = transform;
-        return SceneObject{ handle, isFixed, { part } };
+        PartsPool().push_back({ part });
+        return SceneObject{ handle, isFixed, PartsPool().back() };
+    }
+
+    // Moves the first part of an object that views a vector of the pool.
+    auto MovePart(SceneObject& object, const std::array<float, 12>& transform) -> void
+    {
+        const_cast<CollidablePart&>(object.Parts[0]).Transform = transform;
     }
 
     // The objects sorted by handle, as the gather gives them.
@@ -95,7 +117,7 @@ namespace
     auto Arm(RaycastScene& scene, const SceneObjects& objects) -> void
     {
         SceneObjects marked{ objects };
-        ArmFixedScene(scene, marked);
+        ArmFixedScene(scene, marked, k_EveryWaiting);
         ArmMobileScene(scene, marked);
     }
 
@@ -212,16 +234,16 @@ TEST(RaycastScene, ChangedFixedObjectIsFilteredAtOnceAndTheTreeIsBuiltAgainAfter
     SceneObjects objects = Objects({ MakeObject(1, mesh, QuarterTurn(0.0f, 0.0f, 0.0f), true), MakeObject(2, mesh, QuarterTurn(5.0f, 0.0f, 0.0f), false) });
     RaycastScene scene{};
 
-    EXPECT_TRUE(ArmFixedScene(scene, objects));
-    EXPECT_FALSE(ArmFixedScene(scene, objects));
+    EXPECT_TRUE(ArmFixedScene(scene, objects, k_EveryWaiting));
+    EXPECT_FALSE(ArmFixedScene(scene, objects, k_EveryWaiting));
     EXPECT_EQ(scene.FixedBuilds, 1u);
     EXPECT_EQ(scene.Fixed.Pieces.size(), 1u);
     EXPECT_TRUE(objects[0].IsCovered);
     EXPECT_FALSE(objects[1].IsCovered);
 
     // A mobile object that moves or leaves does not touch the fixed tree.
-    objects[1].Parts[0].Transform = QuarterTurn(6.0f, 1.0f, 0.0f);
-    EXPECT_FALSE(ArmFixedScene(scene, objects));
+    MovePart(objects[1], QuarterTurn(6.0f, 1.0f, 0.0f));
+    EXPECT_FALSE(ArmFixedScene(scene, objects, k_EveryWaiting));
     EXPECT_TRUE(scene.FixedFilter.empty());
 
     // Object 1 stands at y = 1 and its old leaf would hit at 6 m. It moves 3 m: the old leaf stops hitting in this very gather, the new
@@ -229,8 +251,8 @@ TEST(RaycastScene, ChangedFixedObjectIsFilteredAtOnceAndTheTreeIsBuiltAgainAfter
     const Vec3 origin{ 0.0f, -5.0f, 0.0f };
     const Vec3 up{ 0.0f, 1.0f, 0.0f };
     ASSERT_NEAR(Cast(scene, SelfExclusion{}, origin, up).Distance, 6.0f, 1.0e-4f);
-    objects[0].Parts[0].Transform = QuarterTurn(0.0f, 3.0f, 0.0f);
-    EXPECT_FALSE(ArmFixedScene(scene, objects));
+    MovePart(objects[0], QuarterTurn(0.0f, 3.0f, 0.0f));
+    EXPECT_FALSE(ArmFixedScene(scene, objects, k_EveryWaiting));
     ArmMobileScene(scene, objects);
     EXPECT_EQ(scene.FixedFilter, std::vector<std::uint32_t>{ 1u });
     EXPECT_EQ(scene.FixedFiltered, 1u);
@@ -241,11 +263,11 @@ TEST(RaycastScene, ChangedFixedObjectIsFilteredAtOnceAndTheTreeIsBuiltAgainAfter
     EXPECT_NEAR(moved.Distance, 9.0f, 1.0e-4f);
 
     // No build until k_FixedRebuildGathers gathers passed since the last one.
-    while (scene.GathersSinceBuild + 1 < k_FixedRebuildGathers) EXPECT_FALSE(ArmFixedScene(scene, objects));
+    while (scene.GathersSinceBuild + 1 < k_FixedRebuildGathers) EXPECT_FALSE(ArmFixedScene(scene, objects, k_EveryWaiting));
     EXPECT_EQ(scene.FixedBuilds, 1u);
     EXPECT_FALSE(scene.FixedFilter.empty());
 
-    EXPECT_TRUE(ArmFixedScene(scene, objects));
+    EXPECT_TRUE(ArmFixedScene(scene, objects, k_EveryWaiting));
     ArmMobileScene(scene, objects);
     EXPECT_EQ(scene.FixedBuilds, 2u);
     EXPECT_TRUE(scene.FixedFilter.empty());
@@ -271,7 +293,7 @@ TEST(RaycastScene, AnObjectThatDisappearsFromTheFixedTreeStopsHittingInThatGathe
     // Object 1 is gone: no rebuild, and the ray goes on to object 2.
     objects.erase(objects.begin());
     SceneObjects marked{ objects };
-    EXPECT_FALSE(ArmFixedScene(scene, marked));
+    EXPECT_FALSE(ArmFixedScene(scene, marked, k_EveryWaiting));
     ArmMobileScene(scene, marked);
     EXPECT_EQ(scene.FixedFilter, std::vector<std::uint32_t>{ 1u });
     EXPECT_EQ(Cast(scene, SelfExclusion{}, origin, up).ObjectHandle, 2u);
@@ -281,7 +303,7 @@ TEST(RaycastScene, AnObjectThatDisappearsFromTheFixedTreeStopsHittingInThatGathe
     SceneObjects both = Objects({ MakeObject(1, mesh, QuarterTurn(0.0f, 0.0f, 0.0f), true), MakeObject(2, mesh, QuarterTurn(0.0f, 4.0f, 0.0f), true) });
     Arm(other, both);
     both[0].IsFixed = false;
-    EXPECT_FALSE(ArmFixedScene(other, both));
+    EXPECT_FALSE(ArmFixedScene(other, both, k_EveryWaiting));
     ArmMobileScene(other, both);
     EXPECT_EQ(other.FixedFilter, std::vector<std::uint32_t>{ 1u });
     EXPECT_EQ(other.Mobile.Pieces.size(), 1u);
@@ -295,11 +317,11 @@ TEST(RaycastScene, ANewObjectAtRestWaitsInTheMobileTreeUntilTheTreeIsBuilt)
     const CollMesh mesh{ MakeSquare() };
     SceneObjects objects = Objects({ MakeObject(1, mesh, QuarterTurn(0.0f, 0.0f, 0.0f), true) });
     RaycastScene scene{};
-    EXPECT_TRUE(ArmFixedScene(scene, objects));
+    EXPECT_TRUE(ArmFixedScene(scene, objects, k_EveryWaiting));
 
     // A second object at rest is not in the tree: it hits from the mobile tree and nothing is built.
     objects = Objects({ MakeObject(1, mesh, QuarterTurn(0.0f, 0.0f, 0.0f), true), MakeObject(2, mesh, QuarterTurn(0.0f, 4.0f, 0.0f), true) });
-    EXPECT_FALSE(ArmFixedScene(scene, objects));
+    EXPECT_FALSE(ArmFixedScene(scene, objects, k_EveryWaiting));
     ArmMobileScene(scene, objects);
     EXPECT_EQ(scene.FixedPending, 1u);
     EXPECT_TRUE(objects[0].IsCovered);
@@ -308,8 +330,8 @@ TEST(RaycastScene, ANewObjectAtRestWaitsInTheMobileTreeUntilTheTreeIsBuilt)
     EXPECT_EQ(scene.Mobile.Pieces.size(), 1u);
     EXPECT_EQ(Cast(scene, SelfExclusion{}, { 0.0f, 2.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }).ObjectHandle, 2u);
 
-    while (scene.GathersSinceBuild + 1 < k_FixedRebuildGathers) EXPECT_FALSE(ArmFixedScene(scene, objects));
-    EXPECT_TRUE(ArmFixedScene(scene, objects));
+    while (scene.GathersSinceBuild + 1 < k_FixedRebuildGathers) EXPECT_FALSE(ArmFixedScene(scene, objects, k_EveryWaiting));
+    EXPECT_TRUE(ArmFixedScene(scene, objects, k_EveryWaiting));
     ArmMobileScene(scene, objects);
     EXPECT_EQ(scene.Fixed.Pieces.size(), 2u);
     EXPECT_TRUE(scene.Mobile.Pieces.empty());
@@ -325,8 +347,8 @@ TEST(RaycastScene, StoreCleanupMarksAndTheNextCallForgetsMeshesTreesAndParts)
     store.Parts().emplace(1u, SceneParts{ CollidablePartsKey{}, {}, false, 5 });
 
     // Object 1 moves: it goes to the filter, and the scene keeps its counters.
-    objects[0].Parts[0].Transform = QuarterTurn(10.0f, 1.0f, 0.0f);
-    ArmFixedScene(store.Scene(), objects);
+    MovePart(objects[0], QuarterTurn(10.0f, 1.0f, 0.0f));
+    ArmFixedScene(store.Scene(), objects, k_EveryWaiting);
     ArmMobileScene(store.Scene(), objects);
     ASSERT_EQ(store.Scene().FixedFilter.size(), 1u);
     ASSERT_GT(store.Scene().GathersSinceBuild, 0u);
@@ -352,7 +374,7 @@ TEST(RaycastScene, StoreCleanupMarksAndTheNextCallForgetsMeshesTreesAndParts)
     EXPECT_FALSE(Cast(scene, SelfExclusion{}, { 10.0f, -5.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }).Hit);
 
     // It arms again from nothing, and a second call does not forget again.
-    EXPECT_TRUE(ArmFixedScene(scene, objects));
+    EXPECT_TRUE(ArmFixedScene(scene, objects, k_EveryWaiting));
     EXPECT_FALSE(store.Scene().Meshes.empty());
 }
 
@@ -366,6 +388,9 @@ namespace
         std::unordered_map<std::uint32_t, CollidablePartsKey> Keys{};
         std::unordered_map<std::uint32_t, std::array<float, 12>> Poses{};
         std::unordered_map<std::uint32_t, int> PartsCalls{};
+
+        // Parts of an object, each 3 m further along y than the one before. One if not set.
+        std::unordered_map<std::uint32_t, std::size_t> PartCounts{};
         ScenePartsCache Reuse{};
 
         auto Add(std::uint32_t handle, bool isFixed, float x) -> void
@@ -396,20 +421,30 @@ namespace
 
         auto Gather(SceneGatherCounters& counters) -> SceneObjects
         {
-            const SceneKeyFunction keyOf{ [&](std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey*)
+            const SceneKeyFunction keyOf{ [&](const SceneRef& ref, CollidablePartsKey& key, bool)
             {
-                const auto found{ Keys.find(handle) };
+                const auto found{ Keys.find(ref.Handle) };
                 if (found == Keys.end()) return false;
+
+                const bool isChanged{ !(key == found->second) };
                 key = found->second;
-                return true;
+                return isChanged;
             } };
             const ScenePartsFunction partsOf{ [&](std::uint32_t handle) -> std::optional<std::vector<CollidablePart>>
             {
                 ++PartsCalls[handle];
-                CollidablePart part{};
-                part.Source = &Mesh;
-                part.Transform = Poses[handle];
-                return std::vector<CollidablePart>{ part };
+                std::vector<CollidablePart> parts{};
+                const std::size_t count{ PartCounts.contains(handle) ? PartCounts[handle] : 1 };
+                for (std::size_t index{ 0 }; index < count; ++index)
+                {
+                    CollidablePart part{};
+                    part.Source = &Mesh;
+                    part.Transform = Poses[handle];
+                    part.Transform[7] += 3.0f * static_cast<float>(index);
+                    parts.push_back(part);
+                }
+
+                return parts;
             } };
 
             return GatherSceneObjects(Reuse, Refs, keyOf, partsOf, &counters);
@@ -517,7 +552,7 @@ TEST(RaycastScene, AnObjectWithoutPartsIsNotRecollectedEither)
 {
     GatherFixture fixture{};
     fixture.Add(1, true, 1.0f);
-    const SceneKeyFunction keyOf{ [&](std::uint32_t, CollidablePartsKey& key, const CollidablePartsKey*) { key = fixture.Keys[1]; return true; } };
+    const SceneKeyFunction keyOf{ [&](const SceneRef&, CollidablePartsKey& key, bool) { const bool isChanged{ !(key == fixture.Keys[1]) }; key = fixture.Keys[1]; return isChanged; } };
     int calls{ 0 };
     const ScenePartsFunction none{ [&](std::uint32_t) -> std::optional<std::vector<CollidablePart>> { ++calls; return std::vector<CollidablePart>{}; } };
 
@@ -543,7 +578,7 @@ TEST(RaycastScene, ANormalObjectRestsAfterTheRestGathersAndIsNotCollectedAgain)
         EXPECT_EQ(objects[0].IsFixed, gather == k_RestGathers) << gather;
         EXPECT_EQ(fixture.Reuse.at(1).StillGathers, gather) << gather;
 
-        ArmFixedScene(scene, objects);
+        ArmFixedScene(scene, objects, k_EveryWaiting);
         EXPECT_EQ(scene.Fixed.Pieces.size(), gather == k_RestGathers ? 1u : 0u) << gather;
     }
 
@@ -584,99 +619,114 @@ TEST(RaycastScene, AFixedOrPhasedObjectRestsAtOnceAndLeavesRestWhenItsKeyChanges
     EXPECT_TRUE(objects[0].IsFixed);
 }
 
-TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceWhileObjectsRestMoveEnterAndLeave)
+namespace
 {
-    std::mt19937 random{ 300 };
-    std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
-    const auto point{ [&](float scale) { return Vec3{ unit(random) * scale, unit(random) * scale, unit(random) * scale }; } };
-    const auto transformOf{ [&](const Vec3& where) -> std::array<float, 12>
+    // Objects that rest, move, enter and leave over 120 gathers: the scene gives the hit of the linear reference for 60 random rays each.
+    auto CheckLinearReference(const FixedRebuildRule& rule, std::size_t minBuilds) -> void
     {
-        const float angle{ unit(random) * 3.1f };
-        const float cz{ std::cos(angle) }, sz{ std::sin(angle) };
-        return { cz, -sz, 0.0f, where.X, sz, cz, 0.0f, where.Y, 0.0f, 0.0f, 1.0f, where.Z };
-    } };
-
-    GatherFixture fixture{};
-    fixture.Mesh = CollMesh{};
-    fixture.Mesh.RegionIndex = 1;
-    fixture.Mesh.LocalMin = { 1.0e9f, 1.0e9f, 1.0e9f };
-    fixture.Mesh.LocalMax = { -1.0e9f, -1.0e9f, -1.0e9f };
-    for (int index{ 0 }; index < 60; ++index)
-    {
-        const Vec3 center{ point(2.0f) };
-        const Vec3 a{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
-        const Vec3 b{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
-        const Vec3 c{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
-        fixture.Mesh.Triangles.push_back(Triangle{ a, b, c });
-        for (const Vec3& p : { a, b, c })
+        std::mt19937 random{ 300 };
+        std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
+        const auto point{ [&](float scale) { return Vec3{ unit(random) * scale, unit(random) * scale, unit(random) * scale }; } };
+        const auto transformOf{ [&](const Vec3& where) -> std::array<float, 12>
         {
-            fixture.Mesh.LocalMin = { (std::min)(fixture.Mesh.LocalMin.X, p.X), (std::min)(fixture.Mesh.LocalMin.Y, p.Y), (std::min)(fixture.Mesh.LocalMin.Z, p.Z) };
-            fixture.Mesh.LocalMax = { (std::max)(fixture.Mesh.LocalMax.X, p.X), (std::max)(fixture.Mesh.LocalMax.Y, p.Y), (std::max)(fixture.Mesh.LocalMax.Z, p.Z) };
+            const float angle{ unit(random) * 3.1f };
+            const float cz{ std::cos(angle) }, sz{ std::sin(angle) };
+            return { cz, -sz, 0.0f, where.X, sz, cz, 0.0f, where.Y, 0.0f, 0.0f, 1.0f, where.Z };
+        } };
+
+        GatherFixture fixture{};
+        fixture.Mesh = CollMesh{};
+        fixture.Mesh.RegionIndex = 1;
+        fixture.Mesh.LocalMin = { 1.0e9f, 1.0e9f, 1.0e9f };
+        fixture.Mesh.LocalMax = { -1.0e9f, -1.0e9f, -1.0e9f };
+        for (int index{ 0 }; index < 60; ++index)
+        {
+            const Vec3 center{ point(2.0f) };
+            const Vec3 a{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
+            const Vec3 b{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
+            const Vec3 c{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
+            fixture.Mesh.Triangles.push_back(Triangle{ a, b, c });
+            for (const Vec3& p : { a, b, c })
+            {
+                fixture.Mesh.LocalMin = { (std::min)(fixture.Mesh.LocalMin.X, p.X), (std::min)(fixture.Mesh.LocalMin.Y, p.Y), (std::min)(fixture.Mesh.LocalMin.Z, p.Z) };
+                fixture.Mesh.LocalMax = { (std::max)(fixture.Mesh.LocalMax.X, p.X), (std::max)(fixture.Mesh.LocalMax.Y, p.Y), (std::max)(fixture.Mesh.LocalMax.Z, p.Z) };
+            }
         }
-    }
 
-    constexpr std::uint32_t k_Objects{ 14 };
-    for (std::uint32_t handle{ 1 }; handle <= k_Objects; ++handle)
-    {
-        const Vec3 where{ point(8.0f) };
-        fixture.Add(handle, handle % 3 == 0, where.X);
-        fixture.Keys[handle].Position = where;
-        fixture.Poses[handle] = transformOf(where);
-    }
-
-    RaycastScene scene{};
-    std::size_t hits{ 0 };
-    bool wasFiltered{ false };
-    bool wasPending{ false };
-    for (int gather{ 0 }; gather < 120; ++gather)
-    {
-        // A few objects move (their key and parts change), one leaves for a while and comes back.
-        for (int moves{ 0 }; moves < 2; ++moves)
+        constexpr std::uint32_t k_Objects{ 14 };
+        for (std::uint32_t handle{ 1 }; handle <= k_Objects; ++handle)
         {
-            if (unit(random) < 0.2f) continue;
-
-            const std::uint32_t handle{ 1 + static_cast<std::uint32_t>((unit(random) * 0.5f + 0.5f) * (k_Objects - 1)) };
             const Vec3 where{ point(8.0f) };
+            fixture.Add(handle, handle % 3 == 0, where.X);
             fixture.Keys[handle].Position = where;
             fixture.Poses[handle] = transformOf(where);
         }
 
-        if (gather % 17 == 5) std::erase_if(fixture.Refs, [](const auto& ref) { return ref.Handle == 2; });
-        if (gather % 17 == 9) fixture.Refs.push_back({ 2, false });
-
-        SceneObjects objects{ fixture.Gather() };
-        ArmFixedScene(scene, objects);
-        ArmMobileScene(scene, objects);
-        wasFiltered = wasFiltered || scene.FixedFiltered > 0;
-        wasPending = wasPending || scene.FixedPending > 0;
-
-        for (int index{ 0 }; index < 60; ++index)
+        RaycastScene scene{};
+        std::size_t hits{ 0 };
+        bool wasFiltered{ false };
+        bool wasPending{ false };
+        for (int gather{ 0 }; gather < 120; ++gather)
         {
-            const Vec3 origin{ point(14.0f) };
-            Vec3 direction{ unit(random), unit(random), unit(random) };
-            const float length{ std::sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z) };
-            direction = { direction.X / length, direction.Y / length, direction.Z / length };
+            // A few objects move (their key and parts change), one leaves for a while and comes back.
+            for (int moves{ 0 }; moves < 2; ++moves)
+            {
+                if (unit(random) < 0.2f) continue;
 
-            const RaycastHit expected{ CastLinear(objects, origin, direction, 30.0f) };
-            RaycastHit actual{};
-            CastScene(scene, SelfExclusion{}, origin, direction, 30.0f, actual, nullptr);
+                const std::uint32_t handle{ 1 + static_cast<std::uint32_t>((unit(random) * 0.5f + 0.5f) * (k_Objects - 1)) };
+                const Vec3 where{ point(8.0f) };
+                fixture.Keys[handle].Position = where;
+                fixture.Poses[handle] = transformOf(where);
+            }
 
-            ASSERT_EQ(actual.Hit, expected.Hit) << "gather " << gather << " ray " << index;
-            if (!expected.Hit) continue;
+            if (gather % 17 == 5) std::erase_if(fixture.Refs, [](const auto& ref) { return ref.Handle == 2; });
+            if (gather % 17 == 9) fixture.Refs.push_back({ 2, false });
 
-            ++hits;
-            EXPECT_EQ(actual.Distance, expected.Distance) << "gather " << gather << " ray " << index;
-            EXPECT_EQ(actual.ObjectHandle, expected.ObjectHandle) << "gather " << gather << " ray " << index;
-            EXPECT_EQ(actual.RegionIndex, expected.RegionIndex) << "gather " << gather << " ray " << index;
-            EXPECT_EQ(actual.Point.X, expected.Point.X) << "gather " << gather << " ray " << index;
+            SceneObjects objects{ fixture.Gather() };
+            ArmFixedScene(scene, objects, rule);
+            ArmMobileScene(scene, objects);
+            wasFiltered = wasFiltered || scene.FixedFiltered > 0;
+            wasPending = wasPending || scene.FixedPending > 0;
+
+            for (int index{ 0 }; index < 60; ++index)
+            {
+                const Vec3 origin{ point(14.0f) };
+                Vec3 direction{ unit(random), unit(random), unit(random) };
+                const float length{ std::sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z) };
+                direction = { direction.X / length, direction.Y / length, direction.Z / length };
+
+                const RaycastHit expected{ CastLinear(objects, origin, direction, 30.0f) };
+                RaycastHit actual{};
+                CastScene(scene, SelfExclusion{}, origin, direction, 30.0f, actual, nullptr);
+
+                ASSERT_EQ(actual.Hit, expected.Hit) << "gather " << gather << " ray " << index;
+                if (!expected.Hit) continue;
+
+                ++hits;
+                EXPECT_EQ(actual.Distance, expected.Distance) << "gather " << gather << " ray " << index;
+                EXPECT_EQ(actual.ObjectHandle, expected.ObjectHandle) << "gather " << gather << " ray " << index;
+                EXPECT_EQ(actual.RegionIndex, expected.RegionIndex) << "gather " << gather << " ray " << index;
+                EXPECT_EQ(actual.Point.X, expected.Point.X) << "gather " << gather << " ray " << index;
+            }
         }
-    }
 
-    // The test went through every state: leaves filtered, objects waiting, and the fixed tree built more than once.
-    EXPECT_GT(hits, 300u);
-    EXPECT_TRUE(wasFiltered);
-    EXPECT_TRUE(wasPending);
-    EXPECT_GE(scene.FixedBuilds, 3u);
+        // The test went through every state: leaves filtered, objects waiting, and the fixed tree built more than once.
+        EXPECT_GT(hits, 300u);
+        EXPECT_TRUE(wasFiltered);
+        EXPECT_TRUE(wasPending);
+        EXPECT_GE(scene.FixedBuilds, minBuilds);
+    }
+}
+
+TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceWhileObjectsRestMoveEnterAndLeave)
+{
+    CheckLinearReference(k_EveryWaiting, 3);
+}
+
+TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceWhenTheTreeWaitsForManyOrForLong)
+{
+    // The tree is built after 10 gathers with 3 waiting or after 40 gathers with one: the hits do not depend on when.
+    CheckLinearReference(FixedRebuildRule{ 10, 3, 40 }, 2);
 }
 
 namespace
@@ -798,8 +848,13 @@ TEST_F(RaycastSelfUpdateTests, AFixedObjectKeepsItsPartsAndTheFixedTreeBetweenTi
     EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().FixedBuilds, 1u);
     EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().FixedFilter.size(), 1u);
 
-    // After k_FixedRebuildGathers gathers the tree is built again with the filter empty.
-    for (std::size_t tick{ 0 }; tick < k_FixedRebuildGathers; ++tick) EXPECT_NEAR(this->Aim().Distance, 46.0f, 1.0e-3f) << tick;
+    // One handle waits, fewer than k_FixedRebuildPending: the tree is built again with the filter empty when the wait reaches
+    // k_FixedRebuildMaxGathers gathers. The gather of the move was the first of the wait.
+    for (std::size_t tick{ 1 }; tick < k_FixedRebuildMaxGathers; ++tick)
+    {
+        EXPECT_NEAR(this->Aim().Distance, 46.0f, 1.0e-3f) << tick;
+        EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().FixedBuilds, tick + 1 < k_FixedRebuildMaxGathers ? 1u : 2u) << tick;
+    }
     EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().FixedBuilds, 2u);
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().FixedFilter.empty());
 }
@@ -820,6 +875,188 @@ TEST_F(RaycastSelfUpdateTests, CleanupOfTheServiceForgetsTheSceneOnTheNextUpdate
     m_Tables.m_ObjectStore.Publish();
     EXPECT_FALSE(this->Aim().Hit);
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().Meshes.empty());
+}
+
+namespace
+{
+    // Objects 1..count at rest, each on its own spot, sorted by handle.
+    auto RestingObjects(const CollMesh& mesh, std::uint32_t count) -> SceneObjects
+    {
+        SceneObjects objects{};
+        for (std::uint32_t handle{ 1 }; handle <= count; ++handle)
+        {
+            objects.push_back(MakeObject(handle, mesh, QuarterTurn(static_cast<float>(handle) * 4.0f, 0.0f, 0.0f), true));
+        }
+
+        return objects;
+    }
+
+    // Builds the tree over one object and lets the spacing pass with nothing waiting.
+    auto BuiltAndSpaced(RaycastScene& scene, const CollMesh& mesh, const FixedRebuildRule& rule) -> void
+    {
+        SceneObjects first{ RestingObjects(mesh, 1) };
+        ASSERT_TRUE(ArmFixedScene(scene, first, rule));
+        for (std::size_t gather{ 0 }; gather < rule.Spacing; ++gather) ASSERT_FALSE(ArmFixedScene(scene, first, rule));
+        ASSERT_GE(scene.GathersSinceBuild, rule.Spacing);
+        ASSERT_EQ(scene.FixedWaitingGathers, 0u);
+    }
+}
+
+TEST(RaycastScene, FewerObjectsWaitingThanThePendingThresholdDoNotBuildTheTreeEvenAfterTheSpacing)
+{
+    static_assert(k_FixedRebuildPending > 1 && k_FixedRebuildMaxGathers > k_FixedRebuildGathers + 10);
+    const FixedRebuildRule rule{};
+    const CollMesh mesh{ MakeSquare() };
+    RaycastScene scene{};
+    BuiltAndSpaced(scene, mesh, rule);
+
+    // One object short of the threshold waits more than the spacing and the tree stays.
+    SceneObjects waiting{ RestingObjects(mesh, static_cast<std::uint32_t>(k_FixedRebuildPending)) };
+    for (std::size_t gather{ 1 }; gather <= k_FixedRebuildGathers + 10; ++gather)
+    {
+        EXPECT_FALSE(ArmFixedScene(scene, waiting, rule)) << gather;
+        EXPECT_EQ(scene.FixedPending, k_FixedRebuildPending - 1) << gather;
+        EXPECT_EQ(scene.FixedWaitingGathers, gather) << gather;
+    }
+    EXPECT_EQ(scene.FixedBuilds, 1u);
+
+    // They hit from the mobile tree meanwhile.
+    ArmMobileScene(scene, waiting);
+    EXPECT_EQ(scene.Fixed.Pieces.size(), 1u);
+    EXPECT_EQ(scene.Mobile.Pieces.size(), k_FixedRebuildPending - 1);
+
+    // The threshold object arrives: the build is due at once, with all of them at rest.
+    waiting = RestingObjects(mesh, static_cast<std::uint32_t>(k_FixedRebuildPending) + 1);
+    EXPECT_TRUE(ArmFixedScene(scene, waiting, rule));
+    EXPECT_EQ(scene.FixedBuilds, 2u);
+    EXPECT_EQ(scene.FixedWaitingGathers, 0u);
+    ArmMobileScene(scene, waiting);
+    EXPECT_EQ(scene.Fixed.Pieces.size(), k_FixedRebuildPending + 1);
+    EXPECT_TRUE(scene.Mobile.Pieces.empty());
+}
+
+TEST(RaycastScene, HandlesFilteredCountAsWaitingForTheThreshold)
+{
+    const FixedRebuildRule rule{ 4, 3, 1000 };
+    const CollMesh mesh{ MakeSquare() };
+    RaycastScene scene{};
+    SceneObjects objects{ RestingObjects(mesh, 5) };
+    ASSERT_TRUE(ArmFixedScene(scene, objects, rule));
+    for (int gather{ 0 }; gather < 4; ++gather) ASSERT_FALSE(ArmFixedScene(scene, objects, rule));
+
+    // Two objects move (filtered) and one more rests (pending): 3 waiting, due at once.
+    MovePart(objects[0], QuarterTurn(0.0f, 1.0f, 0.0f));
+    MovePart(objects[1], QuarterTurn(0.0f, 1.0f, 0.0f));
+    SceneObjects more{ objects };
+    more.push_back(MakeObject(6, mesh, QuarterTurn(40.0f, 0.0f, 0.0f), true));
+    EXPECT_TRUE(ArmFixedScene(scene, more, rule));
+    EXPECT_EQ(scene.FixedFiltered, 2u);
+    EXPECT_EQ(scene.FixedPending, 1u);
+    EXPECT_TRUE(scene.FixedFilter.empty());
+}
+
+TEST(RaycastScene, OneObjectWaitingBuildsTheTreeWhenItsWaitReachesTheMaxGathers)
+{
+    const FixedRebuildRule rule{};
+    const CollMesh mesh{ MakeSquare() };
+    RaycastScene scene{};
+    BuiltAndSpaced(scene, mesh, rule);
+
+    SceneObjects waiting{ RestingObjects(mesh, 2) };
+    for (std::size_t gather{ 1 }; gather <= k_FixedRebuildMaxGathers; ++gather)
+    {
+        EXPECT_EQ(ArmFixedScene(scene, waiting, rule), gather == k_FixedRebuildMaxGathers) << gather;
+    }
+
+    EXPECT_EQ(scene.FixedBuilds, 2u);
+    EXPECT_EQ(scene.FixedWaitingGathers, 0u);
+    EXPECT_EQ(scene.FixedPending, 1u);
+    ArmMobileScene(scene, waiting);
+    EXPECT_EQ(scene.Fixed.Pieces.size(), 2u);
+}
+
+TEST(RaycastScene, TheWaitStartsOverWhenNothingWaitsAnyMore)
+{
+    const FixedRebuildRule rule{ 2, 5, 10 };
+    const CollMesh mesh{ MakeSquare() };
+    RaycastScene scene{};
+    BuiltAndSpaced(scene, mesh, rule);
+
+    SceneObjects waiting{ RestingObjects(mesh, 2) };
+    for (std::size_t gather{ 1 }; gather <= 9; ++gather) ASSERT_FALSE(ArmFixedScene(scene, waiting, rule));
+    EXPECT_EQ(scene.FixedWaitingGathers, 9u);
+
+    // The object that waited is gone: nothing waits, and a new one starts counting from one.
+    SceneObjects none{ RestingObjects(mesh, 1) };
+    EXPECT_FALSE(ArmFixedScene(scene, none, rule));
+    EXPECT_EQ(scene.FixedWaitingGathers, 0u);
+    EXPECT_FALSE(ArmFixedScene(scene, waiting, rule));
+    EXPECT_EQ(scene.FixedWaitingGathers, 1u);
+}
+
+TEST(RaycastScene, TheSpacingStillHoldsWhenTheThresholdIsReachedRightAfterABuild)
+{
+    const FixedRebuildRule rule{ 6, 2, 1000 };
+    const CollMesh mesh{ MakeSquare() };
+    RaycastScene scene{};
+    SceneObjects first{ RestingObjects(mesh, 1) };
+    ASSERT_TRUE(ArmFixedScene(scene, first, rule));
+
+    SceneObjects waiting{ RestingObjects(mesh, 4) };
+    for (std::size_t gather{ 1 }; gather < rule.Spacing; ++gather) EXPECT_FALSE(ArmFixedScene(scene, waiting, rule)) << gather;
+    EXPECT_TRUE(ArmFixedScene(scene, waiting, rule));
+    EXPECT_EQ(scene.FixedBuilds, 2u);
+}
+
+TEST(RaycastScene, ThePartsOfAnObjectAfterAKeyChangeAreTheNewOnesWhateverTheirNumber)
+{
+    // The cache replaces the vector of an object when its key changes, with more or fewer parts. The view of the objects must be the new
+    // vector and the scene the one of collecting it, over several rounds that grow and shrink it.
+    GatherFixture fixture{};
+    fixture.Add(1, false, 0.0f);
+    fixture.Add(2, true, 4.0f);
+    fixture.Add(3, false, 8.0f);
+    RaycastScene scene{};
+
+    const std::array<std::size_t, 8> counts{ 1, 40, 2, 300, 1, 17, 64, 3 };
+    for (std::size_t round{ 0 }; round < counts.size(); ++round)
+    {
+        fixture.PartCounts[1] = counts[round];
+        fixture.Keys[1].Position.X += 1.0f;
+        fixture.Poses[1] = QuarterTurn(-20.0f, 0.5f * static_cast<float>(round), 0.0f);
+        fixture.PartCounts[3] = counts[counts.size() - 1 - round];
+        fixture.Keys[3].Position.X += 1.0f;
+
+        SceneObjects objects{ fixture.Gather() };
+        ASSERT_EQ(objects.size(), 3u) << round;
+        ASSERT_EQ(objects[0].Handle, 1u);
+        ASSERT_EQ(objects[0].Parts.size(), counts[round]) << round;
+        ASSERT_EQ(objects[2].Parts.size(), counts[counts.size() - 1 - round]) << round;
+        EXPECT_EQ(objects[0].Parts.data(), fixture.Reuse.at(1).Parts.data()) << round;
+        EXPECT_EQ(objects[0].Parts.back().Transform[7], 0.5f * static_cast<float>(round) + 3.0f * static_cast<float>(counts[round] - 1)) << round;
+
+        ArmFixedScene(scene, objects, k_EveryWaiting);
+        ArmMobileScene(scene, objects);
+
+        // A ray along y through the x of object 1 hits the first of its parts, which is where the new transform puts it.
+        const Vec3 origin{ -20.0f, -5.0f, 0.0f };
+        const Vec3 up{ 0.0f, 1.0f, 0.0f };
+        RaycastHit actual{};
+        CastScene(scene, SelfExclusion{}, origin, up, 2000.0f, actual, nullptr);
+        const RaycastHit expected{ CastLinear(objects, origin, up, 2000.0f) };
+        ASSERT_EQ(actual.Hit, expected.Hit) << round;
+        EXPECT_EQ(actual.Distance, expected.Distance) << round;
+        EXPECT_EQ(actual.ObjectHandle, 1u) << round;
+        EXPECT_NEAR(actual.Distance, 5.0f + 0.5f * static_cast<float>(round) + 1.0f, 1.0e-3f) << round;
+
+        // The same ray from behind the farthest part hits the last one of the new vector.
+        const Vec3 behind{ -20.0f, 3.0f * static_cast<float>(counts[round]) + 20.0f, 0.0f };
+        const Vec3 down{ 0.0f, -1.0f, 0.0f };
+        RaycastHit last{};
+        CastScene(scene, SelfExclusion{}, behind, down, 2000.0f, last, nullptr);
+        EXPECT_EQ(last.Hit, CastLinear(objects, behind, down, 2000.0f).Hit) << round;
+        EXPECT_EQ(last.Distance, CastLinear(objects, behind, down, 2000.0f).Distance) << round;
+    }
 }
 
 TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceOnRandomRays)

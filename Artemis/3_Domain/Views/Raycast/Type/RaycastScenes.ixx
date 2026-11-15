@@ -1,10 +1,12 @@
 export module Views.Raycast.Type:Scene;
 
 import :Raycasts;
+import :Constant;
 
 import Common.Math.Type;
 import Blam.MapModel.Definitions.Type;
 import Blam.MapModel.World.Type;
+import Blam.Runtime.Object.Type;
 import Perception.Collidable.Type;
 import std;
 
@@ -12,6 +14,7 @@ namespace
 {
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
+    using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Perception::Collidable::Type::CollidablePart;
     using Perception::Collidable::Type::CollidablePartsKey;
 }
@@ -26,7 +29,9 @@ export namespace Views::Raycast::Type
         // At rest in this gather (D300): its parts may go to the fixed tree, which is rebuilt rarely.
         bool IsFixed{ false };
 
-        std::vector<CollidablePart> Parts{};
+        // The parts the cache of the gather keeps for this object.
+        // note: A view, not a copy. Valid until the next gather changes the cache, so nobody keeps a SceneObject past the arming and casting of its tick.
+        std::span<const CollidablePart> Parts{};
 
         // Set by ArmFixedScene: its parts are in the fixed tree and not filtered, so the mobile tree leaves them out.
         bool IsCovered{ false };
@@ -39,10 +44,12 @@ export namespace Views::Raycast::Type
     };
 
     // A live object of the tick and whether the engine places it as fixed or phased, before its parts are collected.
+    // note: Object is the row of the table the gather holds, valid during the gather. Null only in tests with a made-up key function.
     struct SceneRef
     {
         std::uint32_t Handle{ 0 };
         bool IsFixedPhysics{ false };
+        const AliveObject* Object{ nullptr };
     };
 
     // The live objects of the tick.
@@ -78,8 +85,10 @@ export namespace Views::Raycast::Type
         std::size_t Collected{ 0 };
     };
 
-    // Fills the key of the parts of an object, given the key kept for it or null. Gives false if the object is gone.
-    using SceneKeyFunction = std::function<bool(std::uint32_t, CollidablePartsKey&, const CollidablePartsKey*)>;
+    // Brings the key kept for an object up to date with its row, in place.
+    // param isKnown: The key is the one kept for this object. If not, it is empty and the object is new.
+    // return: Whether the key differs from what it held.
+    using SceneKeyFunction = std::function<bool(const SceneRef&, CollidablePartsKey&, bool)>;
 
     // Collects the parts of an object, or nothing if it is gone.
     using ScenePartsFunction = std::function<std::optional<std::vector<CollidablePart>>(std::uint32_t)>;
@@ -128,6 +137,15 @@ export namespace Views::Raycast::Type
         auto operator==(const ScenePose&) const -> bool = default;
     };
 
+    // When the fixed tree is built again (D301): the least gathers between builds, the waiting objects that make a build due at once,
+    // and the gathers after which any waiting object makes it due.
+    struct FixedRebuildRule
+    {
+        std::size_t Spacing{ Constant::k_FixedRebuildGathers };
+        std::size_t Pending{ Constant::k_FixedRebuildPending };
+        std::size_t MaxGathers{ Constant::k_FixedRebuildMaxGathers };
+    };
+
     // The two level ray scene shared by all agents: a hierarchy per mesh and two hierarchies of instances.
     struct RaycastScene
     {
@@ -147,6 +165,9 @@ export namespace Views::Raycast::Type
 
         // Gathers armed since the last build of the fixed tree.
         std::size_t GathersSinceBuild{ 0 };
+
+        // Gathers in a row that had objects at rest waiting for the fixed tree or handles filtered out of it. Zero when none waits and after a build.
+        std::size_t FixedWaitingGathers{ 0 };
 
         // Objects at rest that are not in the fixed tree yet, and handles filtered out of it, as the last gather found them.
         // note: Kept as they were before a build, which empties the filter. For the bench.

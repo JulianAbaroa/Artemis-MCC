@@ -51,7 +51,7 @@ export namespace Views::Raycast::System
 
     // Prepares the parts of an object to be hit by rays.
     // note: Computed once per tick for each object, instead of posing every triangle.
-    auto PrepareParts(const std::vector<CollidablePart>& parts) -> std::vector<CachedPart>;
+    auto PrepareParts(std::span<const CollidablePart> parts) -> std::vector<CachedPart>;
 
     // Whether a ray passes within a radius of a point, before travelling limit.
     auto RayNearPoint(const Vec3& origin, const Vec3& direction, float limit, const Vec3& center, float radius) -> bool;

@@ -2,6 +2,7 @@
 
 import Bridge.Codec.Pipeline.System;
 import Blam.Layout.Snapshot.Type;
+import Blam.Runtime.Object.Type;
 import Perception.Collidable.Type;
 import Tests.Support.Pipeline;
 import std;
@@ -11,6 +12,8 @@ import std;
 namespace
 {
     using Blam::Layout::Snapshot::Type::Snapshot;
+    using Blam::Runtime::Object::Type::Alive::AliveObject;
+    using Blam::Runtime::Object::Type::BoneMatrix::BoneMatrix;
     using Perception::Collidable::Type::CollidablePartsKey;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
@@ -74,43 +77,139 @@ TEST_F(CollidableSceneTests, ThePipelineDoesNotBuildTheScene)
     EXPECT_EQ(calls, 24u);
 }
 
-TEST_F(CollidableSceneTests, MakePartsKeyFailsForAnUnknownHandleAndIsStableForALiveOne)
+TEST_F(CollidableSceneTests, UpdatePartsKeyFillsTheKeyOfARowAndTellsWhetherItChanged)
 {
-    CollidablePartsKey first{};
-    CollidablePartsKey second{};
-    EXPECT_FALSE(m_Environment.m_CollidableService.MakePartsKey(k_BipedHandle, first, nullptr));
-
     m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {});
-    EXPECT_FALSE(m_Environment.m_CollidableService.MakePartsKey(0x12345678, first, nullptr));
-    EXPECT_EQ(first, CollidablePartsKey{});
-
-    ASSERT_TRUE(m_Environment.m_CollidableService.MakePartsKey(k_BipedHandle, first, nullptr));
-    ASSERT_TRUE(m_Environment.m_CollidableService.MakePartsKey(k_BipedHandle, second, &first));
-    EXPECT_EQ(first.Handle, k_BipedHandle);
-    EXPECT_EQ(first, second);
-
-    // The key reads what CollectPartsFor reads: the row fields of the object.
     const auto objects{ m_Tables.m_ObjectStore.Acquire() };
     ASSERT_NE(objects, nullptr);
-    const auto& row{ objects->at(k_BipedHandle) };
+    AliveObject row{ objects->at(k_BipedHandle) };
+    auto& service{ m_Environment.m_CollidableService };
+
+    // A new key is filled from the row, and the same row again changes nothing.
+    CollidablePartsKey first{};
+    EXPECT_TRUE(service.UpdatePartsKey(row, first, false));
+    EXPECT_FALSE(service.UpdatePartsKey(row, first, true));
+    EXPECT_EQ(first.Handle, k_BipedHandle);
     EXPECT_EQ(first.Position.X, row.BoundingCenter.X);
     EXPECT_EQ(first.Forward.Y, row.Forward.Y);
     EXPECT_EQ(first.Up.Z, row.Up.Z);
     EXPECT_EQ(first.DatumIndex, row.DatumIndex);
 
+    // The key updated in place is the key made from nothing.
+    CollidablePartsKey fresh{};
+    service.UpdatePartsKey(row, fresh, false);
+    EXPECT_EQ(first, fresh);
+
+    // The row fields of the pose are part of the key.
+    row.BoundingCenter.X += 1.0f;
+    EXPECT_TRUE(service.UpdatePartsKey(row, first, true));
+    EXPECT_EQ(first.Position.X, row.BoundingCenter.X);
+    EXPECT_FALSE(service.UpdatePartsKey(row, first, true));
+    row.Forward.Y += 0.5f;
+    EXPECT_TRUE(service.UpdatePartsKey(row, first, true));
+    row.Up.Z -= 0.5f;
+    EXPECT_TRUE(service.UpdatePartsKey(row, first, true));
+    EXPECT_FALSE(service.UpdatePartsKey(row, first, true));
+
     // The same tag resolves to the same model and states, so a key of the same datum index lends them and another one does not.
     ASSERT_NE(row.DatumIndex, 0u);
     static const int marker{};
-    CollidablePartsKey lent{};
-    lent.DatumIndex = row.DatumIndex;
+    CollidablePartsKey lent{ first };
     lent.CollModel = reinterpret_cast<decltype(lent.CollModel)>(&marker);
-    CollidablePartsKey third{};
-    ASSERT_TRUE(m_Environment.m_CollidableService.MakePartsKey(k_BipedHandle, third, &lent));
-    EXPECT_EQ(third.CollModel, lent.CollModel);
+    EXPECT_FALSE(service.UpdatePartsKey(row, lent, true));
+    EXPECT_EQ(lent.CollModel, reinterpret_cast<decltype(lent.CollModel)>(&marker));
 
     lent.DatumIndex += 1;
-    ASSERT_TRUE(m_Environment.m_CollidableService.MakePartsKey(k_BipedHandle, third, &lent));
-    EXPECT_EQ(third.CollModel, first.CollModel);
+    EXPECT_TRUE(service.UpdatePartsKey(row, lent, true));
+    EXPECT_EQ(lent.DatumIndex, row.DatumIndex);
+    EXPECT_EQ(lent.CollModel, first.CollModel);
+}
+
+TEST_F(CollidableSceneTests, UpdatePartsKeyTakesBonesOnlyWhenOneIsValidAndTheDamageOnlyWithATable)
+{
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {});
+    const auto objects{ m_Tables.m_ObjectStore.Acquire() };
+    ASSERT_NE(objects, nullptr);
+    const AliveObject row{ objects->at(k_BipedHandle) };
+    auto& service{ m_Environment.m_CollidableService };
+
+    m_Tables.m_BoneMatricesStore.Discard(k_BipedHandle);
+    m_Tables.m_DamageSectionsStore.Discard(k_BipedHandle);
+    CollidablePartsKey key{};
+    service.UpdatePartsKey(row, key, false);
+    EXPECT_FALSE(key.HasBones);
+    EXPECT_TRUE(key.Bones.empty());
+    EXPECT_FALSE(key.HasDamage);
+    EXPECT_TRUE(key.DamageRegions.empty());
+
+    // Matrices that are not valid (the invisible objects) are no bones: the key is the one of a rigid object.
+    BoneMatrix valid{};
+    valid.Scale = 1.0f;
+    valid.Rotation = { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+    BoneMatrix invalid{};
+    m_Tables.m_BoneMatricesStore.Write(k_BipedHandle).Matrices = { invalid, invalid };
+    EXPECT_FALSE(service.UpdatePartsKey(row, key, true));
+    EXPECT_FALSE(key.HasBones);
+    EXPECT_TRUE(key.Bones.empty());
+
+    // One valid matrix: all the matrices go to the key, and a change of any byte is a change of key.
+    m_Tables.m_BoneMatricesStore.Write(k_BipedHandle).Matrices = { invalid, valid };
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_TRUE(key.HasBones);
+    ASSERT_EQ(key.Bones.size(), 2u);
+    EXPECT_EQ(key.Bones[1].Scale, 1.0f);
+    EXPECT_FALSE(service.UpdatePartsKey(row, key, true));
+    valid.Translation[2] = 3.0f;
+    m_Tables.m_BoneMatricesStore.Write(k_BipedHandle).Matrices = { invalid, valid };
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_EQ(key.Bones[1].Translation[2], 3.0f);
+    m_Tables.m_BoneMatricesStore.Write(k_BipedHandle).Matrices = { valid };
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_EQ(key.Bones.size(), 1u);
+
+    // The damage bytes go to the key when the object has a table.
+    m_Tables.m_DamageSectionsStore.Write(k_BipedHandle).Regions.Bytes = { 1, 2, 3 };
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_TRUE(key.HasDamage);
+    EXPECT_EQ(key.DamageRegions, (std::vector<std::uint8_t>{ 1, 2, 3 }));
+    EXPECT_FALSE(service.UpdatePartsKey(row, key, true));
+    m_Tables.m_DamageSectionsStore.Write(k_BipedHandle).Regions.Bytes = { 1, 9, 3 };
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    m_Tables.m_DamageSectionsStore.Discard(k_BipedHandle);
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_FALSE(key.HasDamage);
+    EXPECT_TRUE(key.DamageRegions.empty());
+}
+
+TEST_F(CollidableSceneTests, UpdatePartsKeyKeepsTheNameOnlyForARowWithoutTag)
+{
+    m_Export.m_PipelineService.Run(WithBipedAndPlayer(), 1, {});
+    const auto objects{ m_Tables.m_ObjectStore.Acquire() };
+    ASSERT_NE(objects, nullptr);
+    AliveObject row{ objects->at(k_BipedHandle) };
+    auto& service{ m_Environment.m_CollidableService };
+
+    CollidablePartsKey key{};
+    service.UpdatePartsKey(row, key, false);
+    EXPECT_TRUE(key.TagName.empty());
+
+    row.DatumIndex = 0;
+    row.TagName = "scenery\\rock";
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_EQ(key.DatumIndex, 0u);
+    EXPECT_EQ(key.TagName, "scenery\\rock");
+    EXPECT_FALSE(service.UpdatePartsKey(row, key, true));
+
+    row.TagName = "scenery\\tree";
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_EQ(key.TagName, "scenery\\tree");
+
+    // With a datum index the name is not part of the key.
+    row.DatumIndex = 0x1234;
+    EXPECT_TRUE(service.UpdatePartsKey(row, key, true));
+    EXPECT_TRUE(key.TagName.empty());
+    row.TagName = "other";
+    EXPECT_FALSE(service.UpdatePartsKey(row, key, true));
 }
 
 TEST(CollidablePartsKey, EqualityIsByBytesOverEveryField)

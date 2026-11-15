@@ -14,6 +14,7 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
@@ -43,21 +44,27 @@ export namespace Views::Raycast::System
         SceneGatherCounters* counters) -> SceneObjects;
 
     // The same gather over the given objects, with the key and the parts of an object given by functions.
+    // note: The key of each object is updated in its entry of reuse, in place. The parts of a SceneObject are a view of that entry, so
+    // they are valid until the next gather: arm and cast before gathering again. An entry is replaced only for objects whose key changed,
+    // before their SceneObject is made, and only entries of objects not in the result are erased.
     auto GatherSceneObjects(ScenePartsCache& reuse, const SceneRefs& refs, const SceneKeyFunction& keyOf, const ScenePartsFunction& partsOf,
         SceneGatherCounters* counters) -> SceneObjects;
 
-    // Builds the hierarchies of the collision meshes of the objects that do not have one yet.
+    // Builds the hierarchies of the collision meshes of the objects whose IsCovered is covered that do not have one yet.
+    // note: The arming functions call it for the objects of the tree they build, so the objects the other tree keeps are not walked.
     // return: How many it built.
-    auto PrepareMeshBvhs(RaycastScene& scene, const SceneObjects& objects) -> std::size_t;
+    auto PrepareMeshBvhs(RaycastScene& scene, const SceneObjects& objects, bool covered) -> std::size_t;
 
     // Keeps the fixed tree up to date with the objects at rest and marks which objects it covers (D300).
     // param objects: Sorted by handle, as GatherSceneObjects gives them. Their IsCovered is set.
     // return: Whether it built the fixed tree.
     // note: An object in the tree that is not at rest with the same poses any more goes to the filter of the scene: its old parts stop
     // hitting at once and its current ones go to the mobile tree. An object at rest that is not in the tree waits in the mobile tree.
-    // The tree is built again, with every object at rest and an empty filter, only if there is something waiting or filtered and
-    // k_FixedRebuildGathers gathers passed since the last build, or it was never built.
-    auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects) -> bool;
+    // The tree is built again, with every object at rest and an empty filter, when something waits (objects at rest not in it plus
+    // filtered handles) and either it was never built, or rule.Spacing gathers passed since the last build and there are rule.Pending
+    // waiting or the oldest wait lasted rule.MaxGathers gathers (D301). What waits lives in the mobile tree and the filter, so the hits
+    // do not depend on when the tree is built.
+    auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects, const FixedRebuildRule& rule = {}) -> bool;
 
     // Rebuilds the tree of the objects that the fixed tree does not cover. Runs every decision tick, after ArmFixedScene.
     auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects) -> void;

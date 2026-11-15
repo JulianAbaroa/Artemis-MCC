@@ -61,14 +61,16 @@ export namespace Perception::Collidable::System
         // note: Each part is a collision mesh with the transform that places it in the world.
         auto CollectPartsFor(std::uint32_t handle) -> std::optional<Collidable>;
 
-        // Fills the key the parts of an object are built from, without building them.
-        // param key: Receives the key. Its vectors keep their capacity, so a key reused from object to object allocates nothing.
-        // param previous: The key kept for this handle, or null. A row with the same datum index is the same tag, which resolves to the
-        // same collision model and region states while it lives (the store that keeps the key is emptied with the map), so they are
-        // taken from it and not searched by name.
-        // return: Whether the object is in the table. The key is left as it was if it is not.
-        // note: Reads what CollectPartsFor reads, so a handle whose key did not change gets the same parts from it.
-        auto MakePartsKey(std::uint32_t handle, CollidablePartsKey& key, const CollidablePartsKey* previous) -> bool;
+        // Brings the key the parts of an object are built from up to date with its row, without building them.
+        // param object: The row of the live table. No lookup is done, the caller holds the table.
+        // param key: The key kept for this object. A field is written only when it differs, so a key that did not change is not copied
+        // and one that did keeps the capacity of its vectors.
+        // param isKnown: The key is the one kept for this object. Its collision model and region states are taken from it when the row has
+        // the same datum index (the same tag, which resolves to the same ones while it lives, and the store that keeps the key is emptied
+        // with the map). When false the key is empty and they are searched by name.
+        // return: Whether the key differs from what it held. The same as comparing the key before and after with ==.
+        // note: Reads what CollectPartsFor reads, so an object whose key did not change gets the same parts from it.
+        auto UpdatePartsKey(const AliveObject& object, CollidablePartsKey& key, bool isKnown) -> bool;
 
         // Logs the cleanup with the rest of the layer. The scene it builds is owned by its caller (D224), so there is no state to clear.
         auto Cleanup() -> void;
@@ -85,7 +87,7 @@ export namespace Perception::Collidable::System
         auto BuildInstance(const AliveObject& object, bool buildWorldMesh) -> Collidable;
 
         // Resolves the collision model, region states and tables an object is built from.
-        // note: The one place BuildInstance and MakePartsKey read them, so a new input changes both.
+        // note: The one place BuildInstance and UpdatePartsKey read them, so a new input changes both.
         // param previous: Key of the same row from an earlier call, or null. Its resolved model and states are used if the tag is the same.
         auto ResolveInputs(const AliveObject& object, const CollidablePartsKey* previous) const -> CollidableInputs;
 
