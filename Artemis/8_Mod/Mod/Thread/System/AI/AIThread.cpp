@@ -138,8 +138,8 @@ namespace Mod::Thread::System
 
                 const auto snapshot{ this->ExecuteTick(current) };
 
-                // The engine can start tearing down while the tick runs: the Cleanup empties the stores it writes and does not wait
-                // for it past its timeout. The state is read again here, before anything is published, not only when the tick began.
+                // The engine can start tearing down while the tick runs: the Cleanup empties the stores it writes, and the game thread waits
+                // for this tick at most 1 s (C.9). The state is read again here, before anything is published, not only when the tick began.
                 if (snapshot == nullptr || !lifecycle.CanPublish())
                 {
                     this->DiscardTick(current);

@@ -252,7 +252,8 @@ TEST_F(LifecycleStoreTests, TickRunningAtTeardownDoesNotPublish)
         m_Store.EndTick();
     } };
 
-    // The detour: TearingDown, a wait that expires, the Cleanup goes on.
+    // The detour: TearingDown, a wait that expires, the Cleanup goes on. The detour waits 1 s (k_TickEndTimeout); 10 ms is a short test
+    // value, the tick is held on purpose so the wait expires.
     m_Store.SetStatus(Status::TearingDown);
     if (!m_Store.WaitForTickEnd(milliseconds{ 10 })) m_Store.AddTeardownTimeout();
 

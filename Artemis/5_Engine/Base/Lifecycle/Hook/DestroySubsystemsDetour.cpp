@@ -18,6 +18,13 @@ namespace
     using std::chrono::milliseconds;
 
     using Engine::Base::Hook::System::k_DrainTimeout;
+
+    // How long the teardown waits for the load of the Artemis resources.
+    constexpr milliseconds k_LoadEndTimeout{ 1000 };
+    // How long the teardown waits for the Artemis tick in flight (C.9, D297). The tick stops at the next stage boundary once it sees
+    // TearingDown, so it ends within a few milliseconds. The cap only matters if the AI thread hangs. The Cleanup then runs with no stage
+    // still reading the stores it empties.
+    constexpr milliseconds k_TickEndTimeout{ 1000 };
 }
 
 namespace Engine::Base::Lifecycle::Hook
@@ -38,14 +45,15 @@ namespace Engine::Base::Lifecycle::Hook
 
         lifecycle.SetStatus(Status::TearingDown);
 
-        if (!lifecycle.WaitForLoadEnd(milliseconds(1000)))
+        if (!lifecycle.WaitForLoadEnd(k_LoadEndTimeout))
         {
             logs.Message("[DestroySubsystemsDetour] WARNING:"
                 " Artemis resources load did not finish within timeout.");
         }
-        if (!lifecycle.WaitForTickEnd(milliseconds(10)))
+        if (!lifecycle.WaitForTickEnd(k_TickEndTimeout))
         {
-            // The Cleanup runs anyway. The tick that is still running publishes nothing: it sees the state before it publishes (C.7).
+            // The Cleanup runs anyway (the AI thread hangs). The tick that is still running publishes nothing: it sees the state before
+            // it publishes (C.7).
             lifecycle.AddTeardownTimeout();
             logs.Message("[DestroySubsystemsDetour] WARNING:"
                 " Artemis tick did not finish within timeout.");
