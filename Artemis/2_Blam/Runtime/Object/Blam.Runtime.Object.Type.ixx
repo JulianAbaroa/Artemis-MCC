@@ -15,4 +15,5 @@ export import :Alive;
 export import :Profile;
 export import :Size;
 export import :HandleAudit;
+export import :RawCopy;
 export import :Constant;

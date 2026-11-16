@@ -153,6 +153,9 @@
     <ClCompile Include="Object\Type\ObjectProfile.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Object\Type\ObjectRawCopy.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Object\Type\ObjectSize.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>

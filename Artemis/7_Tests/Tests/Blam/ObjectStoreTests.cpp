@@ -103,25 +103,28 @@ TEST(ObjectTableStoreTests, CleanupLeavesNothingToAcquire)
     EXPECT_FLOAT_EQ(OriginOf(store.Acquire()), 2.0f);
 }
 
-TEST(BoneMatricesStoreTests, HandleNotWrittenSinceTheLastClearIsNull)
+TEST(BoneMatricesStoreTests, TableStaysVisibleUntilItIsDiscarded)
 {
     BoneMatricesStore store{};
     store.Write(k_Handle).Matrices.resize(3);
-    ASSERT_NE(store.Get(k_Handle), nullptr);
-    EXPECT_EQ(store.Get(k_Handle)->Matrices.size(), 3u);
 
-    store.Clear();
+    for (int tick{ 0 }; tick < 3; ++tick)
+    {
+        store.Prune();
+        ASSERT_NE(store.Get(k_Handle), nullptr);
+        EXPECT_EQ(store.Get(k_Handle)->Matrices.size(), 3u);
+    }
 
+    store.Discard(k_Handle);
     EXPECT_EQ(store.Get(k_Handle), nullptr);
 }
 
-TEST(BoneMatricesStoreTests, WriteAfterClearHasOnlyTheNewValues)
+TEST(BoneMatricesStoreTests, WriteOverAnExistingTableHasOnlyTheNewValues)
 {
     BoneMatricesStore store{};
     auto& first{ store.Write(k_Handle) };
     first.Matrices.resize(5);
     for (BoneMatrix& bone : first.Matrices) bone.Scale = 9.0f;
-    store.Clear();
 
     auto& second{ store.Write(k_Handle) };
     EXPECT_TRUE(second.Matrices.empty());
@@ -143,33 +146,37 @@ TEST(BoneMatricesStoreTests, DiscardedTableIsNull)
     EXPECT_NE(store.Get(k_Handle), nullptr);
 }
 
-TEST(BoneMatricesStoreTests, HandlesNotWrittenForLongAreDroppedWhenTheStoreOutgrowsTheLiveOnes)
+TEST(BoneMatricesStoreTests, HandlesWithNoTableAreDroppedWhenTheyOutnumberTheLiveOnes)
 {
     BoneMatricesStore store{};
     for (std::uint32_t handle{ 1 }; handle <= 500; ++handle) store.Write(handle).Matrices.resize(1);
-    store.Clear();
-    store.Write(1).Matrices.resize(1);
-    store.Clear();
-    store.Write(1).Matrices.resize(1);
+    for (std::uint32_t handle{ 2 }; handle <= 500; ++handle) store.Discard(handle);
+    store.Prune();
 
     EXPECT_NE(store.Get(1), nullptr);
     EXPECT_EQ(store.Get(2), nullptr);
     store.Write(2).Matrices.resize(4);
     EXPECT_EQ(store.Get(2)->Matrices.size(), 4u);
+    EXPECT_EQ(store.Get(1)->Matrices.size(), 1u);
 }
 
-TEST(DamageSectionsStoreTests, HandleNotWrittenSinceTheLastClearIsNull)
+TEST(DamageSectionsStoreTests, TableStaysVisibleUntilItIsDiscarded)
 {
     DamageSectionsStore store{};
     store.Write(k_Handle).Sections.resize(2);
-    ASSERT_NE(store.Get(k_Handle), nullptr);
 
-    store.Clear();
+    for (int tick{ 0 }; tick < 3; ++tick)
+    {
+        store.Prune();
+        ASSERT_NE(store.Get(k_Handle), nullptr);
+        EXPECT_EQ(store.Get(k_Handle)->Sections.size(), 2u);
+    }
 
+    store.Discard(k_Handle);
     EXPECT_EQ(store.Get(k_Handle), nullptr);
 }
 
-TEST(DamageSectionsStoreTests, WriteAfterClearHasNoLeftoversWithFewerSections)
+TEST(DamageSectionsStoreTests, WriteOverAnExistingTableHasNoLeftoversWithFewerSections)
 {
     DamageSectionsStore store{};
     auto& first{ store.Write(k_Handle) };
@@ -178,7 +185,6 @@ TEST(DamageSectionsStoreTests, WriteAfterClearHasNoLeftoversWithFewerSections)
     first.Regions.Size = 16;
     first.Regions.Offset = 0x40;
     first.Regions.Bytes.assign(16, 0xAB);
-    store.Clear();
 
     auto& second{ store.Write(k_Handle) };
     EXPECT_TRUE(second.Sections.empty());

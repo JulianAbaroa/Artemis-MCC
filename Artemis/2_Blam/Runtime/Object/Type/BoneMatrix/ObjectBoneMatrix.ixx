@@ -91,14 +91,14 @@ export namespace Blam::Runtime::Object::Type::BoneMatrix
         return IsBoneMatrixValid(bone) ? &bone : nullptr;
     }
 
-    // The table of an object and the Clear generation of the store it was written in (0 = never, or discarded).
+    // The table of an object and whether the store shows it (an invisible entry is kept for its buffers).
     struct BoneMatrixEntry
     {
         BoneMatrixTable Table{};
-        std::uint64_t Generation{};
+        bool IsVisible{};
     };
 
-    // Bone matrix tables, by object handle. The entries of older generations are kept for their buffers and are not visible.
+    // Bone matrix tables, by object handle. The invisible entries are kept for their buffers until the store prunes them.
     struct BoneMatrixTables : std::unordered_map<std::uint32_t, BoneMatrixEntry>
     {
         using unordered_map::unordered_map;

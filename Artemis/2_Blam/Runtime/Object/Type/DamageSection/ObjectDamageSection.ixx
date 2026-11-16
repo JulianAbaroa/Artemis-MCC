@@ -38,14 +38,14 @@ export namespace Blam::Runtime::Object::Type::DamageSection
         RegionBlock Regions{};
     };
 
-    // The table of an object and the Clear generation of the store it was written in (0 = never, or discarded).
+    // The table of an object and whether the store shows it (an invisible entry is kept for its buffers).
     struct DamageSectionEntry
     {
         DamageSectionTable Table{};
-        std::uint64_t Generation{};
+        bool IsVisible{};
     };
 
-    // Damage section tables, by object handle. The entries of older generations are kept for their buffers and are not visible.
+    // Damage section tables, by object handle. The invisible entries are kept for their buffers until the store prunes them.
     struct DamageSectionTables : std::unordered_map<std::uint32_t, DamageSectionEntry>
     {
         using unordered_map::unordered_map;

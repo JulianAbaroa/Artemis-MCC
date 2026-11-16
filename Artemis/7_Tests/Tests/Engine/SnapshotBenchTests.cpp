@@ -72,6 +72,7 @@ namespace
     using Blam::Runtime::Object::Type::DamageSection::DamageSection;
     using Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
     using Blam::Runtime::Object::Type::HandleAudit::HandleAudit;
+    using Blam::Runtime::Object::Type::RawCopy::RawCopies;
     using std::chrono::steady_clock;
 
     using Blam::Layout::Object::Type::Constant::k_DataArrayCapacity;
@@ -319,7 +320,12 @@ namespace
             m_Alive.Add(static_cast<double>(snapshot.RawObjects.Size()));
             m_IsReplicaPending = false;
 
-            if ((record - 1) % k_EveryRecords == 0)
+            // The replica of the dirty pass and of the bone and damage stores runs on every record, like production, so its copies and
+            // tables are those of the previous tick. It is timed only on the measured records.
+            const bool isMeasured{ (record - 1) % k_EveryRecords == 0 };
+            this->ReplicaDirtyPass(snapshot, isMeasured);
+
+            if (isMeasured)
             {
                 this->MeasureCapture(snapshot);
                 this->MeasureLight(chain);
@@ -389,19 +395,22 @@ namespace
             add("ObjectTable stage:");
             add(TimeRow("O0 stage ObjectTable (production, every record)", m_Stages[0]));
             add(std::format("O1 breakdown on a copy of the previous table, {} records measured:", m_O1Publish.Summary().N));
-            add(TimeRow("O1 Clear of bones and damage stores", m_O1Clear));
+            add(TimeRow("O1 dead objects: Discard + Prune of the stores", m_O1Clear));
+            add(TimeRow("O1 dirty pass (memcmp + copy of the dirty)", m_O1Dirty));
             add(TimeRow("O1 DiscoverObjects (HasObject of each object)", m_O1Discover));
             add(TimeRow("O1 AuditHandles", m_O1Audit));
             add(TimeRow("O1 loop UpdateObjects (find + ResolveWorldOrigin)", m_O1Loop));
             add(TimeRow("O1 RemoveObject of the dead", m_O1Remove));
             add(TimeRow("O1 Publish (copy of the table)", m_O1Publish));
-            add(TimeRow("O1 bones store: write in place per object", m_O1Bones));
-            add(TimeRow("O1 damage store: write in place per object", m_O1Damage));
+            add(TimeRow("O1 bones store: Discard + write of the dirty", m_O1Bones));
+            add(TimeRow("O1 damage store: Discard + write of the dirty", m_O1Damage));
             add(TimeRow("O1 sum of the parts above", m_O1Sum));
             add(TimeRow("O1 rest of O0 (UpdateObjectData etc.), O0 - sum", m_O1Rest));
             add(CounterRow("O1 alive objects in the table", m_OTable));
             add(CounterRow("O1 new objects of the tick", m_ONew));
             add(CounterRow("O1 dead objects of the tick", m_ODead));
+            add(CounterRow("O1 dirty objects of the tick (every record)", m_ODirty));
+            add(CounterRow("O1 clean objects of the tick (every record)", m_OClean));
             add(CounterRow("O1 bone tables set", m_OBoneSets));
             add(CounterRow("O1 damage tables set", m_ODamageSets));
             add(std::format("O1 check: {} tables compared (WorldOrigin, who is alive, audit, bone and damage tables), {} differences.", m_ObjectCompared, m_ObjectDiffs));
@@ -481,6 +490,8 @@ namespace
         // ObjectTable.
         ObjectTableStore m_ReplicaStore{};
         BoneMatricesStore m_ReplicaBones{};
+        BoneMatricesStore m_FreshBones{};
+        DamageSectionsStore m_FreshDamage{};
         DamageSectionsStore m_ReplicaDamage{};
         ObjectTable m_O2Target{};
         std::atomic<std::shared_ptr<const ObjectTable>> m_O2Sink{};
@@ -493,6 +504,12 @@ namespace
         std::size_t m_ReplicaDamageSets{};
         std::size_t m_ObjectCompared{};
         std::size_t m_ObjectDiffs{};
+        // Replica of the dirty pass of ObjectTableService: the copies live between records.
+        RawCopies m_ReplicaCopies{};
+        std::vector<std::uint8_t> m_ReplicaDirty{};
+        std::vector<std::uint32_t> m_ReplicaHandles{};
+        double m_PassClearUs{}, m_PassDirtyUs{}, m_PassBonesUs{}, m_PassDamageUs{};
+        Series m_ODirty{}, m_OClean{}, m_O1Dirty{};
         Series m_O1Clear{}, m_O1Discover{}, m_O1Audit{}, m_O1Loop{}, m_O1Remove{}, m_O1Publish{}, m_O1Bones{}, m_O1Damage{}, m_O1Sum{}, m_O1Rest{};
         Series m_OTable{}, m_ONew{}, m_ODead{}, m_OBoneSets{}, m_ODamageSets{};
         Series m_O2Assign{}, m_O2Pointer{}, m_O2Destroy{};
@@ -741,6 +758,88 @@ namespace
         }
 
         // O1 and O2 on a copy of the table the previous record left, for the Snapshot of this record. The chain is not touched.
+        // The dirty pass and the bone and damage stores of ObjectTableService::UpdateObjectTable, over every object of the Snapshot.
+        // note: Runs on every record. The times are kept in m_Pass* and added to the series when measured.
+        auto ReplicaDirtyPass(const Snapshot& snapshot, bool isMeasured) -> void
+        {
+            std::size_t dirty{};
+            m_ReplicaDirty.assign(snapshot.RawObjects.Size(), 0);
+            auto start{ steady_clock::now() };
+            std::size_t index{ 0 };
+            for (const RawObject& datum : snapshot.RawObjects)
+            {
+                const std::uint32_t slot{ datum.Handle & k_HandleIndexMask };
+                bool isDirty{ true };
+                if (slot < k_MaxObjects)
+                {
+                    auto& copy{ m_ReplicaCopies[slot] };
+                    if (copy.Handle == datum.Handle && copy.Bytes.size() == datum.Bytes.size() &&
+                        (datum.Bytes.empty() || std::memcmp(copy.Bytes.data(), datum.Bytes.data(), datum.Bytes.size()) == 0)) isDirty = false;
+                    else
+                    {
+                        copy.Handle = datum.Handle;
+                        copy.Bytes.assign(datum.Bytes.begin(), datum.Bytes.end());
+                    }
+                }
+
+                m_ReplicaDirty[index++] = isDirty ? 1 : 0;
+                if (isDirty) ++dirty;
+            }
+            auto end{ steady_clock::now() };
+            m_PassDirtyUs = Micros(start, end);
+
+            start = steady_clock::now();
+            index = 0;
+            for (const RawObject& datum : snapshot.RawObjects)
+            {
+                if (m_ReplicaDirty[index++] == 0) continue;
+
+                m_ReplicaBones.Discard(datum.Handle);
+                FillBones(datum, datum.Handle, m_ReplicaBones);
+            }
+            end = steady_clock::now();
+            m_PassBonesUs = Micros(start, end);
+
+            start = steady_clock::now();
+            index = 0;
+            for (const RawObject& datum : snapshot.RawObjects)
+            {
+                if (m_ReplicaDirty[index++] == 0) continue;
+
+                m_ReplicaDamage.Discard(datum.Handle);
+                FillDamage(datum, datum.Handle, m_ReplicaDamage);
+            }
+            end = steady_clock::now();
+            m_PassDamageUs = Micros(start, end);
+
+            // The objects of the last record that are gone lose their tables, then the stores prune.
+            start = steady_clock::now();
+            for (const std::uint32_t handle : m_ReplicaHandles)
+            {
+                if (snapshot.RawObjects.Contains(handle)) continue;
+
+                m_ReplicaBones.Discard(handle);
+                m_ReplicaDamage.Discard(handle);
+            }
+            m_ReplicaBones.Prune();
+            m_ReplicaDamage.Prune();
+            end = steady_clock::now();
+            m_PassClearUs = Micros(start, end);
+
+            m_ReplicaHandles.clear();
+            for (const RawObject& datum : snapshot.RawObjects) m_ReplicaHandles.push_back(datum.Handle);
+
+            m_ODirty.Add(static_cast<double>(dirty));
+            m_OClean.Add(static_cast<double>(snapshot.RawObjects.Size() - dirty));
+            if (isMeasured)
+            {
+                m_O1Clear.Add(m_PassClearUs);
+                m_O1Dirty.Add(m_PassDirtyUs);
+                m_O1Bones.Add(m_PassBonesUs);
+                m_O1Damage.Add(m_PassDamageUs);
+            }
+        }
+
         auto MeasureObjectTable(const Chain& chain, const Snapshot& snapshot) -> void
         {
             m_ReplicaPrevious = chain.m_Tables.m_ObjectStore.Acquire();
@@ -754,20 +853,13 @@ namespace
             for (const std::uint32_t handle : stale) store.RemoveObject(handle);
             for (const auto& [handle, object] : *m_ReplicaPrevious) store.AddObject(handle, object);
 
-            auto start{ steady_clock::now() };
-            m_ReplicaBones.Clear();
-            m_ReplicaDamage.Clear();
-            auto end{ steady_clock::now() };
-            const double clearUs{ Micros(start, end) };
-            m_O1Clear.Add(clearUs);
-
             std::size_t added{};
-            start = steady_clock::now();
+            auto start{ steady_clock::now() };
             for (const RawObject& datum : snapshot.RawObjects)
             {
                 if (!store.HasObject(datum.Handle)) ++added;
             }
-            end = steady_clock::now();
+            auto end{ steady_clock::now() };
             const double discoverUs{ Micros(start, end) };
             m_O1Discover.Add(discoverUs);
 
@@ -806,35 +898,38 @@ namespace
             m_O1Publish.Add(publishUs);
             m_ReplicaPublished = store.Acquire();
 
-            // The objects the stores of bones and damage get tables for: the ones of the table that the Snapshot still has.
-            std::vector<const RawObject*> raws{};
+            // The objects the stores of bones and damage are checked for: the ones of the table that the Snapshot still has.
             m_ReplicaList.clear();
             for (const auto& [handle, object] : *m_ReplicaPublished)
             {
                 const RawObject* datum{ snapshot.RawObjects.Find(handle) };
                 if (datum == nullptr) continue;
 
-                raws.push_back(datum);
                 m_ReplicaList.push_back(handle);
             }
 
+            // The dirty pass already ran for this record: its parts are the ones kept by ReplicaDirtyPass.
             m_ReplicaBoneSets = 0;
-            start = steady_clock::now();
-            for (std::size_t index{ 0 }; index < raws.size(); ++index) m_ReplicaBoneSets += FillBones(*raws[index], m_ReplicaList[index], m_ReplicaBones) ? 1 : 0;
-            end = steady_clock::now();
-            const double bonesUs{ Micros(start, end) };
-            m_O1Bones.Add(bonesUs);
-
             m_ReplicaDamageSets = 0;
-            start = steady_clock::now();
-            for (std::size_t index{ 0 }; index < raws.size(); ++index) m_ReplicaDamageSets += FillDamage(*raws[index], m_ReplicaList[index], m_ReplicaDamage) ? 1 : 0;
-            end = steady_clock::now();
-            const double damageUs{ Micros(start, end) };
-            m_O1Damage.Add(damageUs);
+            for (const std::uint32_t handle : m_ReplicaList)
+            {
+                if (m_ReplicaBones.Get(handle) != nullptr) ++m_ReplicaBoneSets;
+                if (m_ReplicaDamage.Get(handle) != nullptr) ++m_ReplicaDamageSets;
+            }
 
-            // The bones and damage sets happen inside the loop in production: the sum counts them once, with the loop of the replica.
-            m_O1Sum.Add(clearUs + discoverUs + auditUs + loopUs + removeUs + publishUs + bonesUs + damageUs);
-            m_O1Rest.Add(m_Stages[0].Summary().N == 0 ? 0.0 : m_Stages[0].Summary().Mean - (clearUs + discoverUs + auditUs + loopUs + removeUs + publishUs + bonesUs + damageUs));
+            // The truth for the check: every table read in full from the Snapshot, as the code did before the dirty pass.
+            for (const std::uint32_t handle : m_ReplicaList)
+            {
+                const RawObject* datum{ snapshot.RawObjects.Find(handle) };
+                m_FreshBones.Discard(handle);
+                m_FreshDamage.Discard(handle);
+                FillBones(*datum, handle, m_FreshBones);
+                FillDamage(*datum, handle, m_FreshDamage);
+            }
+
+            const double partsUs{ m_PassClearUs + m_PassDirtyUs + m_PassBonesUs + m_PassDamageUs + discoverUs + auditUs + loopUs + removeUs + publishUs };
+            m_O1Sum.Add(partsUs);
+            m_O1Rest.Add(m_Stages[0].Summary().N == 0 ? 0.0 : m_Stages[0].Summary().Mean - partsUs);
 
             m_OTable.Add(static_cast<double>(m_ReplicaPrevious->size()));
             m_ONew.Add(static_cast<double>(added));
@@ -905,12 +1000,37 @@ namespace
             }
             if (bones != m_ReplicaBoneSets || damage != m_ReplicaDamageSets) ++m_ObjectDiffs;
 
+            // The tables of the pipeline, kept for the clean objects, must be what a full read of the Snapshot gives.
+            for (const std::uint32_t handle : m_ReplicaList)
+            {
+                const BoneMatrixTable* have{ chain.m_Tables.m_BoneMatricesStore.Get(handle) };
+                const BoneMatrixTable* want{ m_FreshBones.Get(handle) };
+                if ((have == nullptr) != (want == nullptr)) ++m_ObjectDiffs;
+                else if (have != nullptr && (have->Matrices.size() != want->Matrices.size() ||
+                    std::memcmp(have->Matrices.data(), want->Matrices.data(), want->Matrices.size() * sizeof(BoneMatrix)) != 0)) ++m_ObjectDiffs;
+
+                const DamageSectionTable* haveDamage{ chain.m_Tables.m_DamageSectionsStore.Get(handle) };
+                const DamageSectionTable* wantDamage{ m_FreshDamage.Get(handle) };
+                if ((haveDamage == nullptr) != (wantDamage == nullptr)) ++m_ObjectDiffs;
+                else if (haveDamage != nullptr)
+                {
+                    bool isSame{ haveDamage->Sections.size() == wantDamage->Sections.size() && haveDamage->Regions.Size == wantDamage->Regions.Size &&
+                        haveDamage->Regions.Offset == wantDamage->Regions.Offset && haveDamage->Regions.Bytes == wantDamage->Regions.Bytes };
+                    for (std::size_t section{ 0 }; isSame && section < wantDamage->Sections.size(); ++section)
+                    {
+                        isSame = haveDamage->Sections[section].DamageLevelMask == wantDamage->Sections[section].DamageLevelMask &&
+                            haveDamage->Sections[section].Vitality == wantDamage->Sections[section].Vitality;
+                    }
+                    if (!isSame) ++m_ObjectDiffs;
+                }
+            }
+
             if (m_ObjectDiffs != before) this->Note(std::format("The ObjectTable replica differs from the pipeline in {} things (record {}).", m_ObjectDiffs - before, m_ObjectCompared));
         }
     };
 
-    // Replays the film, measures, and writes the report to build/bench/snapshot_<film>.txt of the repository.
-    auto RunBench(std::string_view film) -> void
+    // Replays the film, measures, and writes the report to build/bench/snapshot_<name>.txt of the repository.
+    auto RunBench(std::string_view film, std::string_view name) -> void
     {
         SnapshotBench bench{};
         const FilmOutcome outcome{ RunFilmPass(film, false,
@@ -935,7 +1055,7 @@ namespace
         report.push_back(std::format("Differences found in the checks: {}.", bench.Differences()));
         for (const std::string& note : bench.Notes()) report.push_back("  " + note);
 
-        const std::filesystem::path file{ Tests::Support::Bench::WriteReport(std::format("snapshot_{}.txt", film), report) };
+        const std::filesystem::path file{ Tests::Support::Bench::WriteReport(std::format("snapshot_{}.txt", name), report) };
         ASSERT_FALSE(file.empty()) << "Cannot write the report of " << film;
 
         ::testing::Test::RecordProperty("ReportFile", file.string());
@@ -950,10 +1070,16 @@ namespace
 
 TEST(DISABLED_SnapshotBench, CtfD)
 {
-    RunBench("ctf_d");
+    RunBench("ctf_d", "ctf_d");
 }
 
 TEST(DISABLED_SnapshotBench, CtfC)
 {
-    RunBench("ctf_c");
+    RunBench("ctf_c", "ctf_c");
+}
+
+// Forge World with about 650 pieces (D300). The film is in BenchFilms so the replay tests do not walk it.
+TEST(DISABLED_SnapshotBench, Forge650)
+{
+    RunBench("BenchFilms/forge650", "forge650");
 }

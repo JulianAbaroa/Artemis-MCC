@@ -23,6 +23,7 @@ namespace
     using Common::Team::Type::Team;
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
     using Blam::MapModel::Definitions::Type::Object::ToObjectKind;
+    using Blam::Runtime::Object::Type::RawCopy::RawCopy;
     using Blam::Layout::Snapshot::Type::RawObject;
     using Blam::Layout::Snapshot::Type::RawObjectTable;
     using Blam::Layout::Snapshot::Type::Snapshot;
@@ -150,7 +151,25 @@ namespace Blam::Runtime::Object::System
         profile.ObjectKind = objectKind;
         object.Profile = profile;
 
+        // A new object has no clean state to reuse, whatever the slot held before.
+        const std::uint32_t slot{ handle & k_HandleIndexMask };
+        if (slot < k_MaxObjects) m_RawCopies[slot].Handle = k_NoHandle;
+
         m_ObjectStore.AddObject(handle, object);
+    }
+
+    auto ObjectTableService::TakeRawCopy(const RawObject& datum) -> bool
+    {
+        const std::uint32_t slot{ datum.Handle & k_HandleIndexMask };
+        if (slot >= k_MaxObjects) return true;
+
+        RawCopy& copy{ m_RawCopies[slot] };
+        if (copy.Handle == datum.Handle && copy.Bytes.size() == datum.Bytes.size() &&
+            (datum.Bytes.empty() || std::memcmp(copy.Bytes.data(), datum.Bytes.data(), datum.Bytes.size()) == 0)) return false;
+
+        copy.Handle = datum.Handle;
+        copy.Bytes.assign(datum.Bytes.begin(), datum.Bytes.end());
+        return true;
     }
 
     auto ObjectTableService::SetProfile(AliveObject& object, Profile& profile) -> void
@@ -177,9 +196,6 @@ namespace Blam::Runtime::Object::System
     {
         if (!snapshot.HasObjectTable) return;
 
-        m_BoneMatricesStore.Clear();
-        m_DamageSectionsStore.Clear();
-
         this->DiscoverObjects(snapshot);
         // note: The audit follows links to objects a light snapshot does not have.
         if (!snapshot.IsLight) this->AuditHandles(snapshot);
@@ -195,7 +211,14 @@ namespace Blam::Runtime::Object::System
                     return;
                 }
 
-                this->UpdateObjectData(*datum, object, snapshot.IsLight);
+                // A clean object keeps its tables. A dirty one starts without them and gets the ones its datum still has.
+                if (this->TakeRawCopy(*datum))
+                {
+                    m_BoneMatricesStore.Discard(handle);
+                    m_DamageSectionsStore.Discard(handle);
+                    this->UpdateObjectData(*datum, object, snapshot.IsLight);
+                }
+
                 object.Placement = this->ReadPlacement(snapshot, *datum);
                 object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, *datum);
             });
@@ -203,7 +226,12 @@ namespace Blam::Runtime::Object::System
         for (std::uint32_t handle : deadHandles)
         {
             m_ObjectStore.RemoveObject(handle);
+            m_BoneMatricesStore.Discard(handle);
+            m_DamageSectionsStore.Discard(handle);
         }
+
+        m_BoneMatricesStore.Prune();
+        m_DamageSectionsStore.Prune();
 
         m_ObjectStore.Publish();
     }

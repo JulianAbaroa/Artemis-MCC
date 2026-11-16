@@ -592,6 +592,137 @@ TEST_F(RuntimeTests, BoneMatricesAreCopiedForThisTickOnly)
     EXPECT_EQ(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
 }
 
+TEST_F(RuntimeTests, CleanObjectKeepsItsRowAndItsBoneAndDamageTables)
+{
+    constexpr std::uint16_t k_BonesOffset{ 0xE80 };
+    constexpr std::uint16_t k_RegionsOffset{ 0xF00 };
+
+    OwnedObject raw{ MakeBiped() };
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesSize, static_cast<std::uint16_t>(sizeof(BoneMatrix)));
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesOffset, k_BonesOffset);
+    Put(raw.Bytes, ObjeOffset::k_RegionStateSize, std::uint16_t{ 4 });
+    Put(raw.Bytes, ObjeOffset::k_RegionStateOffset, k_RegionsOffset);
+    Put(raw.Bytes, k_RegionsOffset, std::uint32_t{ 0xA1B2C3D4 });
+    BoneMatrix bone{};
+    bone.Scale = 3.0f;
+    Put(raw.Bytes, k_BonesOffset, bone);
+
+    this->UpdateObjects(WithObjects({ raw }));
+    const BoneMatrixTable* bonesBefore{ m_Tables.m_BoneMatricesStore.Get(k_BipedHandle) };
+    const DamageSectionTable* damageBefore{ m_Tables.m_DamageSectionsStore.Get(k_BipedHandle) };
+    ASSERT_NE(bonesBefore, nullptr);
+    ASSERT_NE(damageBefore, nullptr);
+
+    for (int tick{ 0 }; tick < 3; ++tick)
+    {
+        const auto table{ this->UpdateObjects(WithObjects({ raw })) };
+        ASSERT_NE(table, nullptr);
+        EXPECT_FLOAT_EQ(table->at(k_BipedHandle).Origin.Z, 30.0f);
+        EXPECT_FLOAT_EQ(table->at(k_BipedHandle).WorldOrigin.Z, 30.0f);
+
+        const BoneMatrixTable* bones{ m_Tables.m_BoneMatricesStore.Get(k_BipedHandle) };
+        const DamageSectionTable* damage{ m_Tables.m_DamageSectionsStore.Get(k_BipedHandle) };
+        ASSERT_NE(bones, nullptr);
+        ASSERT_NE(damage, nullptr);
+        ASSERT_EQ(bones->Matrices.size(), 1u);
+        EXPECT_FLOAT_EQ(bones->Matrices[0].Scale, 3.0f);
+        ASSERT_EQ(damage->Regions.Bytes.size(), 4u);
+        EXPECT_EQ(damage->Regions.Bytes[0], 0xD4);
+    }
+}
+
+TEST_F(RuntimeTests, ChangedByteInTheBoneZoneReadsTheBonesAgain)
+{
+    constexpr std::uint16_t k_BonesOffset{ 0xE80 };
+
+    OwnedObject raw{ MakeBiped() };
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesSize, static_cast<std::uint16_t>(sizeof(BoneMatrix)));
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesOffset, k_BonesOffset);
+    BoneMatrix bone{};
+    bone.Scale = 1.0f;
+    Put(raw.Bytes, k_BonesOffset, bone);
+
+    this->UpdateObjects(WithObjects({ raw }));
+    this->UpdateObjects(WithObjects({ raw }));
+    ASSERT_NE(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
+
+    bone.Scale = 5.0f;
+    Put(raw.Bytes, k_BonesOffset, bone);
+    this->UpdateObjects(WithObjects({ raw }));
+
+    const BoneMatrixTable* bones{ m_Tables.m_BoneMatricesStore.Get(k_BipedHandle) };
+    ASSERT_NE(bones, nullptr);
+    ASSERT_EQ(bones->Matrices.size(), 1u);
+    EXPECT_FLOAT_EQ(bones->Matrices[0].Scale, 5.0f);
+}
+
+TEST_F(RuntimeTests, SlotReusedUnderAnotherSaltIsANewObject)
+{
+    constexpr std::uint16_t k_BonesOffset{ 0xE80 };
+    const std::uint32_t reused{ MakeHandle(0xEC09, 3) };
+
+    OwnedObject raw{ MakeBiped() };
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesSize, static_cast<std::uint16_t>(sizeof(BoneMatrix)));
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesOffset, k_BonesOffset);
+    this->UpdateObjects(WithObjects({ raw }));
+    ASSERT_NE(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
+
+    // The same bytes in the same slot, with another salt: the old object died and a new one took the slot.
+    OwnedObject other{ raw };
+    other.Handle = reused;
+    const auto table{ this->UpdateObjects(WithObjects({ other })) };
+    ASSERT_NE(table, nullptr);
+    EXPECT_EQ(table->size(), 1u);
+    EXPECT_TRUE(table->contains(reused));
+    EXPECT_FALSE(table->contains(k_BipedHandle));
+    EXPECT_NE(m_Tables.m_BoneMatricesStore.Get(reused), nullptr);
+    EXPECT_EQ(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
+    EXPECT_FLOAT_EQ(table->at(reused).Origin.X, 10.0f);
+}
+
+TEST_F(RuntimeTests, DeadObjectLosesItsTablesAndComesBackNew)
+{
+    constexpr std::uint16_t k_BonesOffset{ 0xE80 };
+
+    OwnedObject raw{ MakeBiped() };
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesSize, static_cast<std::uint16_t>(sizeof(BoneMatrix)));
+    Put(raw.Bytes, ObjeOffset::k_NodeMatricesOffset, k_BonesOffset);
+    this->UpdateObjects(WithObjects({ raw }));
+    this->UpdateObjects(WithObjects({ raw }));
+    ASSERT_NE(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
+
+    const auto gone{ this->UpdateObjects(WithObjects({ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) })) };
+    ASSERT_NE(gone, nullptr);
+    EXPECT_FALSE(gone->contains(k_BipedHandle));
+    EXPECT_EQ(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
+
+    // The identical datum under the same handle is a new object: its row and tables are made again.
+    const auto back{ this->UpdateObjects(WithObjects({ raw })) };
+    ASSERT_NE(back, nullptr);
+    ASSERT_TRUE(back->contains(k_BipedHandle));
+    EXPECT_FLOAT_EQ(back->at(k_BipedHandle).Origin.X, 10.0f);
+    EXPECT_NE(m_Tables.m_BoneMatricesStore.Get(k_BipedHandle), nullptr);
+}
+
+TEST_F(RuntimeTests, CleanObjectFollowsItsParentThatMoves)
+{
+    OwnedObject weapon{ MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) };
+    Put(weapon.Bytes, ObjeOffset::k_ParentHandle, k_BipedHandle);
+    Put(weapon.Bytes, ObjeOffset::k_Origin, Vec3{ 1.0f, 2.0f, 3.0f });
+
+    OwnedObject biped{ MakeBiped() };
+    this->UpdateObjects(WithObjects({ biped, weapon }));
+
+    // Only the parent changes: the weapon datum is the same bytes, so it is clean, and its world origin still moves with the parent.
+    Put(biped.Bytes, ObjeOffset::k_Origin, Vec3{ 110.0f, 20.0f, 30.0f });
+    const auto table{ this->UpdateObjects(WithObjects({ biped, weapon })) };
+    ASSERT_NE(table, nullptr);
+    EXPECT_FLOAT_EQ(table->at(k_WeaponHandle).Origin.X, 1.0f);
+    EXPECT_FLOAT_EQ(table->at(k_WeaponHandle).WorldOrigin.X, 108.0f);
+    EXPECT_FLOAT_EQ(table->at(k_WeaponHandle).WorldOrigin.Y, 21.0f);
+    EXPECT_FLOAT_EQ(table->at(k_WeaponHandle).WorldOrigin.Z, 33.0f);
+}
+
 TEST_F(RuntimeTests, ObjectThatLeavesTheSnapshotIsRemoved)
 {
     ASSERT_EQ(this->UpdateObjects(WithObjects({ MakeBiped(), MakeObject(k_WeaponHandle, ObjectKind::Weapon, k_RifleTag) }))->size(), 2u);

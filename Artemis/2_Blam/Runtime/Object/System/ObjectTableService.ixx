@@ -28,6 +28,7 @@ export namespace Blam::Runtime::Object::System
         using DamageSection = Blam::Runtime::Object::Type::DamageSection::DamageSection;
         using DamageSectionTable = Blam::Runtime::Object::Type::DamageSection::DamageSectionTable;
         using HandleAudit = Blam::Runtime::Object::Type::HandleAudit::HandleAudit;
+        using RawCopies = Blam::Runtime::Object::Type::RawCopy::RawCopies;
 
         using Log = Common::Log::System::Log;
         using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
@@ -49,7 +50,9 @@ export namespace Blam::Runtime::Object::System
         ~ObjectTableService() = default;
 
         // Builds the alive objects from the snapshot of the tick.
-        // note: Does not read the game memory. Does nothing while the snapshot has no object table.
+        // note: Does not read the game memory. Does nothing while the snapshot has no object table. An object whose datum has the same
+        // handle and the same bytes as in the last tick that read it is clean: it is not decoded again and keeps its bone and damage
+        // tables. Placement and WorldOrigin are always recomputed (D303).
         auto UpdateObjectTable(const Snapshot& snapshot) -> void;
 
         // return: What the object links of the last tick resolved to (stale salt, free slot, salt 0). Zero before the first tick.
@@ -71,6 +74,10 @@ export namespace Blam::Runtime::Object::System
         // a tick that straggles past the teardown cannot set it for the next load.
         std::uint64_t m_ReportedEpoch{ std::numeric_limits<std::uint64_t>::max() };
 
+        // The datum bytes each slot had in the last tick that read it. AI thread only, so Cleanup (another thread) leaves it: AddObject
+        // drops the copy of a new object, which is what makes a new map's objects dirty.
+        RawCopies m_RawCopies{};
+
         // Counts what the object handles the runtime follows resolve to, into m_HandleAudit: the parent, child and next sibling of every
         // object, the weapon slots of the bipeds and vehicles, the owner and shooter of the projectiles, and the bipeds, weapons and
         // objective of the player table.
@@ -79,6 +86,10 @@ export namespace Blam::Runtime::Object::System
 
         // Adds the objects of the snapshot that are not stored yet.
         auto DiscoverObjects(const Snapshot& snapshot) -> void;
+
+        // Compares the datum with the copy of its slot and leaves the copy equal to the datum.
+        // return: Whether the object is dirty: it has no copy of the same handle or the bytes differ.
+        auto TakeRawCopy(const RawObject& datum) -> bool;
 
         // Adds the object of a snapshot entry.
         // note: Does nothing if the tag of the datum index cannot be resolved.
