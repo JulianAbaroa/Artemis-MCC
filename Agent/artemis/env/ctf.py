@@ -42,7 +42,7 @@ OBS_SIZE = STATE_SIZE + sum(ACTION_NVEC)
 @dataclass
 class CtfConfig:
     period: int = 4
-    latency: int = 2
+    latency: int = 4
     scale: float = 0.0
     turn_limit: float = 0.1
     # Asks Artemis for its pipeline only on decision ticks (Q101). Off by default: the checks of env_check read every tick.

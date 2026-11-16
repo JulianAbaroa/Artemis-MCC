@@ -720,7 +720,7 @@ def Main():
     parser.add_argument("--agents", choices=["bots", "all"], default="bots")
     parser.add_argument("--period", type=int, default=4)
     parser.add_argument("--sparse", action="store_true", help="run, turn: ask Artemis for its pipeline only on decision ticks (Q101)")
-    parser.add_argument("--latency", type=int, default=2)
+    parser.add_argument("--latency", type=int, default=4)
     parser.add_argument("--crash-after", type=int, default=0)
     parser.add_argument("--pause-every", type=int, default=0, help="run: decisions between two pauses (0 = none)")
     parser.add_argument("--pause-seconds", type=float, default=30.0, help="run: length of each pause")

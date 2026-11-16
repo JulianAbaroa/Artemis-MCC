@@ -17,6 +17,8 @@ namespace
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
+    using Control::Lockstep::Type::k_DefaultLatency;
+    using Control::Lockstep::Type::k_MinLatency;
     using Control::Lockstep::Type::WaitResult;
     using Control::Lockstep::System::ApplyConnection;
     using Control::Lockstep::System::BuildOverride;
@@ -88,6 +90,13 @@ TEST(LockstepTests, DecideControlOwnerModeAndAgents)
 TEST(LockstepTests, DecideControlClampsPeriodAndLatency)
 {
     const BridgeControlState previous{};
+
+    // D304: d = 4 until the client asks for another one; k_MinLatency stays the floor.
+    EXPECT_EQ(previous.Latency, 4);
+    EXPECT_EQ(k_DefaultLatency, 4);
+    EXPECT_EQ(k_MinLatency, 2);
+    EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 0, 0, 0), previous).Latency, 4);
+    EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 0, 2, 0), previous).Latency, 2);
 
     EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 100, 0, 0), previous).DecisionPeriod, 60);
     EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 1, 0, 0), previous).DecisionPeriod, 2);
