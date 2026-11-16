@@ -54,6 +54,10 @@ export namespace Views::Raycast::Type
         // Sphere that encloses the part in the world.
         Vec3 Center{};
         float Radius{ 0.0f };
+
+        // Box aligned to the world axes that encloses the posed local box of the part (RK.1).
+        Vec3 Min{};
+        Vec3 Max{};
     };
 
     struct PerceptionOrigin

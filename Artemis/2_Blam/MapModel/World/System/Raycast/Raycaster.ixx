@@ -1,3 +1,7 @@
+module;
+
+#include <emmintrin.h>
+
 export module Blam.MapModel.World.System:Raycast;
 
 import Common.Math.Type;
@@ -64,10 +68,34 @@ export namespace Blam::MapModel::World::System
     auto BoundsBvhArea(const std::vector<Blam::MapModel::World::Type::Raycast::BvhNode>& nodes) -> float;
 
     // Whether a ray enters the box of a node before tMax.
-    // param inverse: InverseDirection of each component of the direction.
+    // param ray: The origin and InverseDirection of each component of the direction.
     // param enter: The distance at which the ray enters the box.
-    auto RayEntersNode(const Blam::MapModel::World::Type::Raycast::BvhNode& node, const std::array<float, 3>& origin,
-        const std::array<float, 3>& inverse, float tMax, float& enter) -> bool;
+    // note: Defined here so the traversal loops inline it. The three slabs are done together in one register and combined at the end, so the
+    // test has no branch per axis (they mispredict). The distances are the same operations as the one axis at a time form.
+    inline auto RayEntersNode(const Blam::MapModel::World::Type::Raycast::BvhNode& node, const Blam::MapModel::World::Type::Raycast::RayLanes& ray,
+        float tMax, float& enter) -> bool
+    {
+        const __m128 origin{ _mm_loadu_ps(ray.Origin.data()) };
+        const __m128 inverse{ _mm_loadu_ps(ray.Inverse.data()) };
+
+        // The fourth lane of the upper corner overlaps the next field of the node (an integer): it is cleared so it never computes with it.
+        const __m128 keep{ _mm_castsi128_ps(_mm_set_epi32(0, -1, -1, -1)) };
+        const __m128 ta{ _mm_mul_ps(_mm_sub_ps(_mm_loadu_ps(node.Min.data()), origin), inverse) };
+        const __m128 tb{ _mm_mul_ps(_mm_sub_ps(_mm_and_ps(_mm_loadu_ps(node.Max.data()), keep), origin), inverse) };
+
+        const __m128 low{ _mm_min_ps(ta, tb) };
+        const __m128 high{ _mm_max_ps(ta, tb) };
+
+        const __m128 lowMax{ _mm_max_ss(_mm_max_ss(low, _mm_shuffle_ps(low, low, _MM_SHUFFLE(1, 1, 1, 1))), _mm_movehl_ps(low, low)) };
+        const __m128 highMin{ _mm_min_ss(_mm_min_ss(high, _mm_shuffle_ps(high, high, _MM_SHUFFLE(1, 1, 1, 1))), _mm_movehl_ps(high, high)) };
+
+        const float t0{ (std::max)(0.0f, _mm_cvtss_f32(lowMax)) };
+        const float t1{ (std::min)(tMax, _mm_cvtss_f32(highMin)) };
+        if (t0 > t1) return false;
+
+        enter = t0;
+        return true;
+    }
 
     // return: The inverse of a component of a direction, finite when the component is zero.
     auto InverseDirection(float component) -> float;

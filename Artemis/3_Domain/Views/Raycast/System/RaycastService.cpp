@@ -24,6 +24,7 @@ namespace
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::Raycasts;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::SceneReach;
     using Views::Raycast::Type::SelfExclusion;
     using Perception::Collidable::Type::CollidablePart;
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
@@ -255,6 +256,8 @@ namespace Views::Raycast::System
         out.Center = toWorld((lo.X + hi.X) * 0.5f, (lo.Y + hi.Y) * 0.5f, (lo.Z + hi.Z) * 0.5f);
 
         float radiusSq{};
+        Common::Math::Type::Vec3 boxMin{ out.Center };
+        Common::Math::Type::Vec3 boxMax{ out.Center };
         for (const float x : { lo.X, hi.X })
         {
             for (const float y : { lo.Y, hi.Y })
@@ -266,11 +269,15 @@ namespace Views::Raycast::System
                     const float dy = corner.Y - out.Center.Y;
                     const float dz = corner.Z - out.Center.Z;
                     radiusSq = (std::max)(radiusSq, dx * dx + dy * dy + dz * dz);
+                    boxMin = { (std::min)(boxMin.X, corner.X), (std::min)(boxMin.Y, corner.Y), (std::min)(boxMin.Z, corner.Z) };
+                    boxMax = { (std::max)(boxMax.X, corner.X), (std::max)(boxMax.Y, corner.Y), (std::max)(boxMax.Z, corner.Z) };
                 }
             }
         }
 
         out.Radius = std::sqrt(radiusSq);
+        out.Min = boxMin;
+        out.Max = boxMax;
         return true;
     }
 
@@ -291,11 +298,10 @@ namespace Views::Raycast::System
         return cx * cx + cy * cy + cz * cz <= radius * radius;
     }
 
-    auto RayHitsBox(const Common::Math::Type::Vec3& origin, const Common::Math::Type::Vec3& direction,
+    auto RayHitsBox(const Common::Math::Type::Vec3& origin, const std::array<float, 3>& inverse,
         const Common::Math::Type::Vec3& boxMin, const Common::Math::Type::Vec3& boxMax, float tMax) -> bool
     {
         const std::array<float, 3> o{ origin.X, origin.Y, origin.Z };
-        const std::array<float, 3> dir{ direction.X, direction.Y, direction.Z };
         const std::array<float, 3> lo{ boxMin.X - k_BoxPadding, boxMin.Y - k_BoxPadding, boxMin.Z - k_BoxPadding };
         const std::array<float, 3> hi{ boxMax.X + k_BoxPadding, boxMax.Y + k_BoxPadding, boxMax.Z + k_BoxPadding };
 
@@ -303,12 +309,10 @@ namespace Views::Raycast::System
         float t1{ tMax };
         for (int axis = 0; axis < 3; ++axis)
         {
-            const float inverse = std::fabs(dir[axis]) < 1.0e-20f ? 1.0e20f : 1.0f / dir[axis];
-            float ta = (lo[axis] - o[axis]) * inverse;
-            float tb = (hi[axis] - o[axis]) * inverse;
-            if (ta > tb) std::swap(ta, tb);
-            t0 = (std::max)(t0, ta);
-            t1 = (std::min)(t1, tb);
+            const float ta = (lo[axis] - o[axis]) * inverse[axis];
+            const float tb = (hi[axis] - o[axis]) * inverse[axis];
+            t0 = (std::max)(t0, (std::min)(ta, tb));
+            t1 = (std::min)(t1, (std::max)(ta, tb));
             if (t0 > t1) return false;
         }
 
@@ -384,9 +388,11 @@ namespace Views::Raycast::System
 
         result.PerceptionHits.reserve(k_PerceptionRayCount);
 
+        const SceneReach reach{ GatherSceneReach(scene, selfExclusion, originPosition, k_PerceptionRange, nullptr) };
+
         for (const Vec3& direction : PerceptionDirections(originForward))
         {
-            result.PerceptionHits.push_back(CastSceneRay(m_Raycaster, scene, selfExclusion, originPosition, direction, k_PerceptionRange, nullptr));
+            result.PerceptionHits.push_back(CastSceneRayReach(m_Raycaster, scene, reach, selfExclusion, originPosition, direction, k_PerceptionRange, nullptr));
         }
 
         m_RaycastStore.Publish(std::move(result));

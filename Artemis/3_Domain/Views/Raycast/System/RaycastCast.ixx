@@ -59,7 +59,8 @@ export namespace Views::Raycast::System
     auto RayNearPoint(const Vec3& origin, const Vec3& direction, float limit, const Vec3& center, float radius) -> bool;
 
     // Whether a ray crosses a box before travelling tMax.
-    auto RayHitsBox(const Vec3& origin, const Vec3& direction, const Vec3& boxMin, const Vec3& boxMax, float tMax) -> bool;
+    // param inverse: InverseDirection of each component of the direction of the ray.
+    auto RayHitsBox(const Vec3& origin, const std::array<float, 3>& inverse, const Vec3& boxMin, const Vec3& boxMax, float tMax) -> bool;
 
     // Takes a ray to the local space of a part.
     // param toLocal: The ToLocal of a CachedPart.

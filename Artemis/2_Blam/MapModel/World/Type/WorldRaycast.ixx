@@ -16,6 +16,13 @@ export namespace Blam::MapModel::World::Type::Raycast
     // Slots of the stack that traverses a hierarchy.
     inline constexpr int k_StackSize{ 128 };
 
+    // A ray prepared to be tested against many boxes: its origin and the inverse of its direction, in four lanes (the fourth is not used).
+    struct RayLanes
+    {
+        std::array<float, 4> Origin{};
+        std::array<float, 4> Inverse{};
+    };
+
     // Node of the bounding volume hierarchy.
     // note: An inner node has its children at Left and Left + 1. A leaf has Count triangles starting at Left.
     struct BvhNode

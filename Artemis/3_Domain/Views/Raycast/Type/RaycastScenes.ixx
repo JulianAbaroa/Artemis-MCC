@@ -12,6 +12,7 @@ import std;
 
 namespace
 {
+    using Common::Math::Type::Vec3;
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
@@ -193,10 +194,37 @@ export namespace Views::Raycast::Type
         std::size_t FixedFiltered{ 0 };
     };
 
+    // The pieces of the scene that rays from one origin and up to one range can touch (RK.1), for an agent whose rays share their origin.
+    // note: The pieces are the ones of the trees of the scene it was gathered from, without the ones the exclusion and the filter of the fixed tree
+    // leave out. Valid until the scene is armed again.
+    struct SceneReachPiece
+    {
+        const ScenePiece* Piece{ nullptr };
+
+        // Box of the part in the world, with a margin, to cull the pieces a ray can not reach before looking at them.
+        std::array<float, 3> Min{};
+        std::array<float, 3> Max{};
+    };
+
+    struct SceneReach
+    {
+        Vec3 Origin{};
+        float Radius{ 0.0f };
+        std::vector<SceneReachPiece> Pieces{};
+    };
+
     // What one cast of the scene visited, for the offline bench.
     struct SceneCounters
     {
+        // Nodes of the instance trees and of the mesh hierarchies together, and the triangles tested.
         std::size_t Nodes{ 0 };
         std::size_t Triangles{ 0 };
+
+        // Profile (RK.1): nodes of the instance trees only, pieces the leaves reached, pieces that passed the exclusion, the filter and the
+        // sphere test, and pieces whose mesh was entered after the local box test.
+        std::size_t TreeNodes{ 0 };
+        std::size_t Pieces{ 0 };
+        std::size_t NearPieces{ 0 };
+        std::size_t EnteredPieces{ 0 };
     };
 }

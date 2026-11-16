@@ -15,6 +15,7 @@ namespace
     using Common::Math::Type::k_FloatMax;
     using Blam::MapModel::World::Type::Raycast::BvhBounds;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
+    using Blam::MapModel::World::Type::Raycast::RayLanes;
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
     using Blam::MapModel::World::Type::Raycast::k_StackSize;
 
@@ -193,25 +194,6 @@ namespace
         FillNode(prims, mid, end, left + 1, nodes, depth + 1);
     }
 
-    // Distance at which a ray enters a box, or false when it misses it before tMax.
-    auto EntersBox(const Blam::MapModel::World::Type::Raycast::BvhNode& node, const std::array<float, 3>& origin,
-        const std::array<float, 3>& inverse, float tMax, float& outEnter) -> bool
-    {
-        float t0{ 0.0f };
-        float t1{ tMax };
-        for (int axis = 0; axis < 3; ++axis)
-        {
-            float ta = (node.Min[axis] - origin[axis]) * inverse[axis];
-            float tb = (node.Max[axis] - origin[axis]) * inverse[axis];
-            if (ta > tb) std::swap(ta, tb);
-            t0 = (std::max)(t0, ta);
-            t1 = (std::min)(t1, tb);
-            if (t0 > t1) return false;
-        }
-
-        outEnter = t0;
-        return true;
-    }
 }
 
 namespace Blam::MapModel::World::System
@@ -358,12 +340,6 @@ namespace Blam::MapModel::World::System
         return area;
     }
 
-    auto RayEntersNode(const BvhNode& node, const std::array<float, 3>& origin, const std::array<float, 3>& inverse, float tMax,
-        float& enter) -> bool
-    {
-        return EntersBox(node, origin, inverse, tMax, enter);
-    }
-
     auto InverseDirection(float component) -> float
     {
         return SafeInverse(component);
@@ -374,8 +350,7 @@ namespace Blam::MapModel::World::System
         Hit best{};
         if (maxDistance <= 0.0f || m_Nodes.empty()) return best;
 
-        const std::array<float, 3> rayOrigin{ origin.X, origin.Y, origin.Z };
-        const std::array<float, 3> inverse{ SafeInverse(direction.X), SafeInverse(direction.Y), SafeInverse(direction.Z) };
+        const RayLanes lanes{ { origin.X, origin.Y, origin.Z, 0.0f }, { SafeInverse(direction.X), SafeInverse(direction.Y), SafeInverse(direction.Z), 0.0f } };
 
         float closest{ maxDistance };
 
@@ -416,8 +391,8 @@ namespace Blam::MapModel::World::System
             const std::int32_t leftIndex{ node.Left };
             float leftEnter{};
             float rightEnter{};
-            const bool hitLeft = EntersBox(m_Nodes[static_cast<std::size_t>(leftIndex)], rayOrigin, inverse, closest, leftEnter);
-            const bool hitRight = EntersBox(m_Nodes[static_cast<std::size_t>(leftIndex) + 1], rayOrigin, inverse, closest, rightEnter);
+            const bool hitLeft = Blam::MapModel::World::System::RayEntersNode(m_Nodes[static_cast<std::size_t>(leftIndex)], lanes, closest, leftEnter);
+            const bool hitRight = Blam::MapModel::World::System::RayEntersNode(m_Nodes[static_cast<std::size_t>(leftIndex) + 1], lanes, closest, rightEnter);
 
             // The nearer child is pushed last, so it is visited first.
             if (hitLeft && hitRight)

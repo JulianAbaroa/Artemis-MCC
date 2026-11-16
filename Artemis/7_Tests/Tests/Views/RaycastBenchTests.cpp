@@ -34,9 +34,12 @@ namespace
     using Views::Raycast::System::ArmFixedScene;
     using Views::Raycast::System::ArmMobileScene;
     using Views::Raycast::System::BuildSelfExclusion;
+    using Views::Raycast::System::CastScene;
     using Views::Raycast::System::CastSceneRay;
+    using Views::Raycast::System::CastSceneRayReach;
     using Views::Raycast::System::CastStatic;
     using Views::Raycast::System::GatherSceneObjects;
+    using Views::Raycast::System::GatherSceneReach;
     using Views::Raycast::System::PerceptionDirections;
     using Views::Raycast::System::PrepareMeshBvhs;
     using Views::Raycast::System::PreparePart;
@@ -49,6 +52,7 @@ namespace
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneReach;
     using Views::Raycast::Type::SceneGatherCounters;
     using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
@@ -235,6 +239,20 @@ namespace
             lines.push_back(RayLine("M5   ray (mean of the 240)", m_M5Ray));
             lines.push_back(CountLine("M5 nodes visited per ray", m_SceneNodesRay));
             lines.push_back(CountLine("M5 triangles tested per ray", m_SceneTrianglesRay));
+            lines.push_back(TimeLine("M5 profile: 16 aim rays, scene part through the trees (after the static hit)", m_ProfAimTrees));
+            lines.push_back(TimeLine("M5 profile: 224 perception rays, scene part through the trees", m_ProfPerceptionTrees));
+            lines.push_back(TimeLine("M5 profile: 224 perception rays through the reach, with the static world, no gather", m_ProfPerceptionReach));
+            lines.push_back(TimeLine("M5   of rays: 16 gathers of the reach (pieces within 20 of the origin)", m_ProfReach));
+            lines.push_back(CountLine("M5 reach: tree nodes visited per agent", m_ProfReachNodes));
+            lines.push_back(CountLine("M5 reach: pieces kept per agent", m_ProfReachPieces));
+            lines.push_back(CountLine("M5 profile: instance tree nodes per ray", m_ProfTreeNodes));
+            lines.push_back(CountLine("M5 profile: mesh nodes per ray", m_ProfMeshNodes));
+            lines.push_back(CountLine("M5 profile: pieces reached by the leaves per ray", m_ProfPieces));
+            lines.push_back(CountLine("M5 profile: pieces past exclusion, filter and sphere per ray", m_ProfNear));
+            lines.push_back(CountLine("M5 profile: pieces whose mesh is entered per ray", m_ProfEntered));
+            lines.push_back(TimeLine("M5 profile: 240 rays, static world only", m_ProfStatic));
+            lines.push_back(TimeLine("M5 profile: 240 rays, FIXED tree only (after the static hit)", m_ProfFixed));
+            lines.push_back(TimeLine("M5 profile: 240 rays, MOBILE tree only (after the static hit)", m_ProfMobile));
             lines.push_back(CountLine("M5 objects in the scene", m_SceneObjectsSeries));
             lines.push_back(CountLine("M5 objects at rest", m_RestObjects));
             lines.push_back(CountLine("M5 leaves of the FIXED tree", m_FixedLeaves));
@@ -306,6 +324,9 @@ namespace
         Series m_M4Total{}, m_M4Ray{};
         Series m_M5Total{}, m_M5Prepare{}, m_M5Rays{}, m_M5Ray{};
         Series m_Gather{}, m_GatherReuse{}, m_Reused{}, m_Collected{}, m_Mobile{}, m_FixedArm{}, m_MeshBvhCall{};
+        Series m_ProfAimTrees{}, m_ProfPerceptionTrees{}, m_ProfPerceptionReach{};
+        Series m_ProfReach{}, m_ProfReachNodes{}, m_ProfReachPieces{};
+        Series m_ProfTreeNodes{}, m_ProfMeshNodes{}, m_ProfPieces{}, m_ProfNear{}, m_ProfEntered{}, m_ProfStatic{}, m_ProfFixed{}, m_ProfMobile{};
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
         Series m_RestObjects{}, m_Filtered{}, m_Pending{};
         Series m_StageAcquire{}, m_StageFind{}, m_StageBones{}, m_StageDamage{}, m_StageValid{}, m_StageCopy{}, m_StageCompare{}, m_StageKey{};
@@ -667,6 +688,73 @@ namespace
         }
 
         // M5: the 16 agents over the shared two level scene with the objects at rest, compared ray by ray with the reference scene.
+        // Profile of M5 (RK.1): the 240 rays timed against the static world alone, then against each instance tree alone starting from the static hit.
+        auto MeasureParts(Chain& chain, const std::vector<Agent>& agents) -> void
+        {
+            const auto& raycaster{ chain.m_Resolved.m_Raycaster };
+            std::vector<Ray> rays{};
+            std::vector<const SelfExclusion*> exclusions{};
+            for (const Agent& agent : agents)
+            {
+                for (const Ray& ray : RaysOf(agent))
+                {
+                    rays.push_back(ray);
+                    exclusions.push_back(&agent.Exclusion);
+                }
+            }
+
+            std::vector<RaycastHit> statics{};
+            statics.reserve(rays.size());
+            auto start{ steady_clock::now() };
+            for (const Ray& ray : rays) statics.push_back(CastStatic(raycaster, ray.Origin, ray.Direction, ray.Range));
+            m_ProfStatic.Add(Micros(start, steady_clock::now()));
+
+            // Scene part of the aim rays and of the perception rays apart, through the trees and, for the perception ones, through the reach.
+            std::vector<SceneReach> reaches{};
+            for (const Agent& agent : agents) reaches.push_back(GatherSceneReach(m_Scene, agent.Exclusion, agent.RayPosition, k_PerceptionRange, nullptr));
+            double aimTrees{ 0.0 };
+            double perceptionTrees{ 0.0 };
+            double perceptionReach{ 0.0 };
+            for (std::size_t index{ 0 }; index < rays.size(); ++index)
+            {
+                const bool isAim{ index % k_RaysPerAgent == 0 };
+                auto begin{ steady_clock::now() };
+                RaycastHit best{ statics[index] };
+                CastScene(m_Scene, *exclusions[index], rays[index].Origin, rays[index].Direction, rays[index].Range, best, nullptr);
+                (isAim ? aimTrees : perceptionTrees) += Micros(begin, steady_clock::now());
+                m_Sink += best.Distance;
+
+                if (isAim) continue;
+                begin = steady_clock::now();
+                const RaycastHit viaReach{ CastSceneRayReach(raycaster, m_Scene, reaches[index / k_RaysPerAgent], *exclusions[index], rays[index].Origin, rays[index].Direction, rays[index].Range, nullptr) };
+                perceptionReach += Micros(begin, steady_clock::now());
+                m_Sink += viaReach.Distance;
+            }
+
+            m_ProfAimTrees.Add(aimTrees);
+            m_ProfPerceptionTrees.Add(perceptionTrees);
+            m_ProfPerceptionReach.Add(perceptionReach);
+
+            RaycastScene fixedOnly{};
+            fixedOnly.Fixed = m_Scene.Fixed;
+            fixedOnly.FixedFilter = m_Scene.FixedFilter;
+            RaycastScene mobileOnly{};
+            mobileOnly.Mobile = m_Scene.Mobile;
+
+            for (int which = 0; which < 2; ++which)
+            {
+                const RaycastScene& scene{ which == 0 ? fixedOnly : mobileOnly };
+                start = steady_clock::now();
+                for (std::size_t index{ 0 }; index < rays.size(); ++index)
+                {
+                    RaycastHit best{ statics[index] };
+                    CastScene(scene, *exclusions[index], rays[index].Origin, rays[index].Direction, rays[index].Range, best, nullptr);
+                    m_Sink += best.Distance;
+                }
+                (which == 0 ? m_ProfFixed : m_ProfMobile).Add(Micros(start, steady_clock::now()));
+            }
+        }
+
         auto MeasureScene(Chain& chain, const std::vector<Origin>& origins) -> void
         {
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
@@ -682,14 +770,19 @@ namespace
 
             std::vector<RaycastHit> m5Hits{};
             m5Hits.reserve(agents.size() * k_RaysPerAgent);
+            double reachUs{ 0.0 };
             for (const Agent& agent : agents)
             {
+                const auto reachStart{ steady_clock::now() };
+                const SceneReach reach{ GatherSceneReach(m_Scene, agent.Exclusion, agent.RayPosition, k_PerceptionRange, nullptr) };
+                reachUs += Micros(reachStart, steady_clock::now());
                 for (const Ray& ray : RaysOf(agent))
                 {
-                    m5Hits.push_back(CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr));
+                    m5Hits.push_back(CastSceneRayReach(raycaster, m_Scene, reach, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr));
                 }
             }
             const auto end5{ steady_clock::now() };
+            m_ProfReach.Add(reachUs);
 
             m_M5Total.Add(Micros(total5, end5));
             m_M5Prepare.Add(Micros(total5, prepared5));
@@ -697,6 +790,8 @@ namespace
             m_Mobile.Add(mobileUs);
             m_M5Rays.Add(Micros(armed5, end5));
             m_M5Ray.Add(Micros(armed5, end5) / static_cast<double>(m5Hits.size()));
+
+            this->MeasureParts(chain, agents);
 
             // The same tick gathered without reuse and all in MOBILE: its own timing, and its hits must be the ones of the scene with rest.
             const auto startAll{ steady_clock::now() };
@@ -713,13 +808,22 @@ namespace
             {
                 const Agent& agent{ agents[agentIndex] };
                 const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
+                SceneCounters gathered{};
+                const SceneReach reach{ GatherSceneReach(m_Scene, agent.Exclusion, agent.RayPosition, k_PerceptionRange, &gathered) };
+                m_ProfReachNodes.Add(static_cast<double>(gathered.TreeNodes));
+                m_ProfReachPieces.Add(static_cast<double>(reach.Pieces.size()));
                 for (std::size_t index{ 0 }; index < rays.size(); ++index, ++flat)
                 {
                     SceneCounters counters{};
                     const Ray& ray{ rays[index] };
-                    m_Sink += CastSceneRay(raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, &counters).Distance;
+                    m_Sink += CastSceneRayReach(raycaster, m_Scene, reach, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, &counters).Distance;
                     m_SceneNodesRay.Add(static_cast<double>(counters.Nodes));
                     m_SceneTrianglesRay.Add(static_cast<double>(counters.Triangles));
+                    m_ProfTreeNodes.Add(static_cast<double>(counters.TreeNodes));
+                    m_ProfMeshNodes.Add(static_cast<double>(counters.Nodes - counters.TreeNodes));
+                    m_ProfPieces.Add(static_cast<double>(counters.Pieces));
+                    m_ProfNear.Add(static_cast<double>(counters.NearPieces));
+                    m_ProfEntered.Add(static_cast<double>(counters.EnteredPieces));
 
                     ++m_ReuseCompared;
                     const RaycastHit full{ CastSceneRay(raycaster, m_FullScene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr) };

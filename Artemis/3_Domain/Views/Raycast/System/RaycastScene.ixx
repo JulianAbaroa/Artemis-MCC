@@ -19,6 +19,7 @@ namespace
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
+    using Views::Raycast::Type::SceneReach;
     using Views::Raycast::Type::SceneGatherCounters;
     using Views::Raycast::Type::SceneKeyFunction;
     using Views::Raycast::Type::SceneObjects;
@@ -82,6 +83,18 @@ export namespace Views::Raycast::System
     // note: At equal distance a static hit stays, and between dynamic hits the lowest handle, then part, then triangle wins.
     auto CastScene(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, const Vec3& direction,
         float maxDistance, RaycastHit& best, SceneCounters* counters) -> void;
+
+    // Gathers the pieces of both trees that a ray from origin of at most radius can touch, once for the rays of an agent that share their origin (RK.1).
+    // param exclusion: Handles the rays ignore: their pieces are left out here, so the casts do not look at them.
+    // param counters: Receives the nodes of the trees the gather visited (TreeNodes) and the pieces it kept (Pieces). Null for none.
+    // note: A piece that a ray from the origin within the radius touches is always in it: the nodes are tested against the box of the ball and
+    // the pieces against its sphere, and both hold anything such a ray can hit. The pieces of the fixed tree that the filter lists are left out.
+    auto GatherSceneReach(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, float radius, SceneCounters* counters) -> SceneReach;
+
+    // return: The nearest hit of the ray against the static world and the scene, through the pieces of reach.
+    // note: The same hit as CastSceneRay. A ray that does not start at the origin of reach or is longer than its radius is cast through the trees.
+    auto CastSceneRayReach(const Raycaster& raycaster, const RaycastScene& scene, const SceneReach& reach, const SelfExclusion& exclusion,
+        const Vec3& origin, const Vec3& direction, float maxDistance, SceneCounters* counters) -> RaycastHit;
 
     // return: The nearest hit of the ray against the static world and the scene.
     auto CastSceneRay(const Raycaster& raycaster, const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin,
