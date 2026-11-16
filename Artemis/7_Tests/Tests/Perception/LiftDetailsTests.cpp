@@ -123,12 +123,14 @@ namespace
         // Sets the phantom bit and the velocity of a biped in the table, as the engine does between two ticks.
         auto Set(std::uint32_t handle, bool isInPhantom, const Vec3& velocity = Vec3{}) -> void
         {
-            m_Chain.m_Tables.m_ObjectStore.UpdateObjects([&](std::uint32_t objectHandle, AliveObject& object)
+            m_Chain.m_Tables.m_ObjectStore.Edit([&]
             {
-                if (objectHandle != handle) return;
+                AliveObject* object{ m_Chain.m_Tables.m_ObjectStore.FindRow(handle) };
+                if (object == nullptr) return;
 
-                object.IsInPhantom = isInPhantom;
-                object.LinearVelocity = velocity;
+                object->IsInPhantom = isInPhantom;
+                object->LinearVelocity = velocity;
+                m_Chain.m_Tables.m_ObjectStore.MarkChanged(handle);
             });
         }
 

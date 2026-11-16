@@ -81,6 +81,7 @@
     <ClCompile Include="Object\Type\ObjectPlacement.ixx" />
     <ClCompile Include="Object\Type\ObjectProfile.ixx" />
     <ClCompile Include="Object\Type\ObjectRawCopy.ixx" />
+    <ClCompile Include="Object\Type\ObjectSlot.ixx" />
     <ClCompile Include="Object\Type\ObjectSize.ixx" />
     <ClCompile Include="Object\Type\Specific\ObjectBiped.ixx" />
     <ClCompile Include="Object\Type\Specific\ObjectCrate.ixx" />

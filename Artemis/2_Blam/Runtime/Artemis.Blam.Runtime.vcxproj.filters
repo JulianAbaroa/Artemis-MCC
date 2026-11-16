@@ -156,6 +156,9 @@
     <ClCompile Include="Object\Type\ObjectRawCopy.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Object\Type\ObjectSlot.ixx">
+      <Filter>Object\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Object\Type\ObjectSize.ixx">
       <Filter>Object\Type</Filter>
     </ClCompile>

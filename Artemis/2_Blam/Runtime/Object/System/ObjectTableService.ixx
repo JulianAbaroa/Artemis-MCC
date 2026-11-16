@@ -77,6 +77,8 @@ export namespace Blam::Runtime::Object::System
         // The datum bytes each slot had in the last tick that read it. AI thread only, so Cleanup (another thread) leaves it: AddObject
         // drops the copy of a new object, which is what makes a new map's objects dirty.
         RawCopies m_RawCopies{};
+        // Tick of this service, the one the copies mark the objects they saw in. Starts at 0 and the first tick is 1.
+        std::uint64_t m_Tick{};
 
         // Counts what the object handles the runtime follows resolve to, into m_HandleAudit: the parent, child and next sibling of every
         // object, the weapon slots of the bipeds and vehicles, the owner and shooter of the projectiles, and the bipeds, weapons and
@@ -84,16 +86,27 @@ export namespace Blam::Runtime::Object::System
         // note: A handle whose slot holds another salt is not an error: the object it named was deleted. Only salt 0 is logged.
         auto AuditHandles(const Snapshot& snapshot) -> void;
 
-        // Adds the objects of the snapshot that are not stored yet.
-        auto DiscoverObjects(const Snapshot& snapshot) -> void;
+        // One pass over the objects of the snapshot, by slot: adds the ones that are new (an object of the same slot with another handle
+        // leaves), decodes the dirty ones and recomputes Placement and WorldOrigin of all. Marks the rows that changed for Publish.
+        // note: Runs inside ObjectTableStore::Edit.
+        auto UpdateRows(const Snapshot& snapshot) -> void;
 
-        // Compares the datum with the copy of its slot and leaves the copy equal to the datum.
+        // Removes the rows of the objects that the pass did not see in the snapshot.
+        // note: Runs inside ObjectTableStore::Edit.
+        auto RemoveGoneRows() -> void;
+
+        // Compares the datum with the copy of its slot and leaves the copy equal to the datum. Marks the slot as seen in this tick.
         // return: Whether the object is dirty: it has no copy of the same handle or the bytes differ.
         auto TakeRawCopy(const RawObject& datum) -> bool;
 
-        // Adds the object of a snapshot entry.
-        // note: Does nothing if the tag of the datum index cannot be resolved.
-        auto AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind kind) -> void;
+        // Adds the row of a snapshot entry.
+        // return: The row, or null if the tag of the datum index cannot be resolved.
+        // note: Runs inside ObjectTableStore::Edit. A row of another handle in the slot leaves first.
+        auto AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind kind) -> AliveObject*;
+
+        // Takes the row of the handle out of the table and its bone and damage tables.
+        // note: Runs inside ObjectTableStore::Edit.
+        auto RemoveObject(std::uint32_t handle) -> void;
 
         auto UpdateObjectData(const RawObject& datum, AliveObject& object, bool isLight) -> void;
 

@@ -133,10 +133,10 @@ namespace
 
 namespace Blam::Runtime::Object::System
 {
-    auto ObjectTableService::AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind objectKind) -> void
+    auto ObjectTableService::AddObject(std::uint32_t handle, std::uint32_t datumIndex, ObjectKind objectKind) -> AliveObject*
     {
         auto tag = m_TagResolverService.ResolveHandle(datumIndex);
-        if (!tag.IsValid) return;
+        if (!tag.IsValid) return nullptr;
 
         AliveObject object;
         object.Handle = handle;
@@ -144,18 +144,29 @@ namespace Blam::Runtime::Object::System
         object.FourCC = tag.FourCC;
         object.TagName = tag.TagName;
 
-        if (object.FourCC == "" || object.TagName == "") return;
+        if (object.FourCC == "" || object.TagName == "") return nullptr;
 
         Profile profile;
         this->SetProfile(object, profile);
         profile.ObjectKind = objectKind;
         object.Profile = profile;
 
+        // The object that had the slot is gone: the engine reused it under another salt.
+        const std::uint32_t occupant{ m_ObjectStore.SlotHandle(handle) };
+        if (occupant != k_NoHandle && occupant != handle) this->RemoveObject(occupant);
+
         // A new object has no clean state to reuse, whatever the slot held before.
         const std::uint32_t slot{ handle & k_HandleIndexMask };
         if (slot < k_MaxObjects) m_RawCopies[slot].Handle = k_NoHandle;
 
-        m_ObjectStore.AddObject(handle, object);
+        return &m_ObjectStore.AddRow(handle, object);
+    }
+
+    auto ObjectTableService::RemoveObject(std::uint32_t handle) -> void
+    {
+        m_ObjectStore.RemoveRow(handle);
+        m_BoneMatricesStore.Discard(handle);
+        m_DamageSectionsStore.Discard(handle);
     }
 
     auto ObjectTableService::TakeRawCopy(const RawObject& datum) -> bool
@@ -164,6 +175,8 @@ namespace Blam::Runtime::Object::System
         if (slot >= k_MaxObjects) return true;
 
         RawCopy& copy{ m_RawCopies[slot] };
+        copy.SeenTick = m_Tick;
+
         if (copy.Handle == datum.Handle && copy.Bytes.size() == datum.Bytes.size() &&
             (datum.Bytes.empty() || std::memcmp(copy.Bytes.data(), datum.Bytes.data(), datum.Bytes.size()) == 0)) return false;
 
@@ -179,16 +192,58 @@ namespace Blam::Runtime::Object::System
         profile.HasMode = m_TagResolverService.HasMode(object.TagName);
     }
 
-    auto ObjectTableService::DiscoverObjects(const Snapshot& snapshot) -> void
+    auto ObjectTableService::UpdateRows(const Snapshot& snapshot) -> void
     {
         for (const RawObject& datum : snapshot.RawObjects)
         {
             const std::uint32_t handle{ datum.Handle };
-            if (m_ObjectStore.HasObject(handle)) continue;
+            // An index the table cannot hold has no slot: the object is not stored.
+            if ((handle & k_HandleIndexMask) >= k_MaxObjects) continue;
 
-            std::uint32_t datumIndex{ datum.Read<std::uint32_t>(ObjeOffset::k_TagHandle) };
+            bool isChanged{ false };
+            AliveObject* object{ m_ObjectStore.FindRow(handle) };
+            if (object == nullptr)
+            {
+                object = this->AddObject(handle, datum.Read<std::uint32_t>(ObjeOffset::k_TagHandle), ToObjectKind(datum.KindId));
+                if (object == nullptr) continue;
 
-            this->AddObject(handle, datumIndex, ToObjectKind(datum.KindId));
+                isChanged = true;
+            }
+
+            // A clean object keeps its tables. A dirty one starts without them and gets the ones its datum still has.
+            if (this->TakeRawCopy(datum))
+            {
+                m_BoneMatricesStore.Discard(handle);
+                m_DamageSectionsStore.Discard(handle);
+                this->UpdateObjectData(datum, *object, snapshot.IsLight);
+                isChanged = true;
+            }
+
+            const std::optional<Placement> placement{ this->ReadPlacement(snapshot, datum) };
+            if (placement != object->Placement)
+            {
+                object->Placement = placement;
+                isChanged = true;
+            }
+
+            const Vec3 worldOrigin{ ResolveWorldOrigin(snapshot.RawObjects, datum) };
+            if (std::memcmp(&worldOrigin, &object->WorldOrigin, sizeof(Vec3)) != 0)
+            {
+                object->WorldOrigin = worldOrigin;
+                isChanged = true;
+            }
+
+            if (isChanged) m_ObjectStore.MarkChanged(handle);
+        }
+    }
+
+    auto ObjectTableService::RemoveGoneRows() -> void
+    {
+        for (const RawCopy& copy : m_RawCopies)
+        {
+            if (copy.Handle == k_NoHandle || copy.SeenTick == m_Tick) continue;
+
+            if (m_ObjectStore.FindRow(copy.Handle) != nullptr) this->RemoveObject(copy.Handle);
         }
     }
 
@@ -196,39 +251,14 @@ namespace Blam::Runtime::Object::System
     {
         if (!snapshot.HasObjectTable) return;
 
-        this->DiscoverObjects(snapshot);
         // note: The audit follows links to objects a light snapshot does not have.
         if (!snapshot.IsLight) this->AuditHandles(snapshot);
 
-        std::vector<std::uint32_t> deadHandles{};
-
-        m_ObjectStore.UpdateObjects(
-            [&](std::uint32_t handle, AliveObject& object) {
-                const RawObject* datum = snapshot.RawObjects.Find(handle);
-                if (datum == nullptr)
-                {
-                    deadHandles.push_back(handle);
-                    return;
-                }
-
-                // A clean object keeps its tables. A dirty one starts without them and gets the ones its datum still has.
-                if (this->TakeRawCopy(*datum))
-                {
-                    m_BoneMatricesStore.Discard(handle);
-                    m_DamageSectionsStore.Discard(handle);
-                    this->UpdateObjectData(*datum, object, snapshot.IsLight);
-                }
-
-                object.Placement = this->ReadPlacement(snapshot, *datum);
-                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, *datum);
-            });
-
-        for (std::uint32_t handle : deadHandles)
-        {
-            m_ObjectStore.RemoveObject(handle);
-            m_BoneMatricesStore.Discard(handle);
-            m_DamageSectionsStore.Discard(handle);
-        }
+        ++m_Tick;
+        m_ObjectStore.Edit([&] {
+            this->UpdateRows(snapshot);
+            this->RemoveGoneRows();
+        });
 
         m_BoneMatricesStore.Prune();
         m_DamageSectionsStore.Prune();

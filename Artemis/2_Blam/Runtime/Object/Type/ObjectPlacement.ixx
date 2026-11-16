@@ -36,5 +36,7 @@ export namespace Blam::Runtime::Object::Type::Placement
 
         // note: 0xFF = default color.
         std::uint8_t Color{};
+
+        auto operator==(const Placement&) const -> bool = default;
     };
 }

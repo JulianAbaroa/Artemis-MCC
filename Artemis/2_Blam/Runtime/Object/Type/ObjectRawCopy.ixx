@@ -19,6 +19,8 @@ export namespace Blam::Runtime::Object::Type::RawCopy
         std::uint32_t Handle{ k_NoHandle };
         // Kept between ticks: a new copy is written over the buffer, so a steady tick allocates nothing.
         std::vector<std::uint8_t> Bytes{};
+        // Tick of the service that last saw the object of this slot in the snapshot.
+        std::uint64_t SeenTick{};
     };
 
     // One copy per slot of the object table (the handle index, without the salt).

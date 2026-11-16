@@ -345,7 +345,9 @@ namespace
         // Runs after the pipeline of a record: checks the copies of the ObjectTable stage against what the pipeline published.
         auto After(const Chain& chain) -> void
         {
-            if (m_IsReplicaPending) this->VerifyObjectTable(chain);
+            const bool isMeasured{ m_IsReplicaPending };
+            if (isMeasured) this->VerifyObjectTable(chain);
+            this->ReplicaRowsPass(chain, isMeasured);
         }
 
         auto Differences() const -> std::size_t { return m_CaptureDiffs + m_ObjectDiffs; }
@@ -397,11 +399,8 @@ namespace
             add(std::format("O1 breakdown on a copy of the previous table, {} records measured:", m_O1Publish.Summary().N));
             add(TimeRow("O1 dead objects: Discard + Prune of the stores", m_O1Clear));
             add(TimeRow("O1 dirty pass (memcmp + copy of the dirty)", m_O1Dirty));
-            add(TimeRow("O1 DiscoverObjects (HasObject of each object)", m_O1Discover));
             add(TimeRow("O1 AuditHandles", m_O1Audit));
-            add(TimeRow("O1 loop UpdateObjects (find + ResolveWorldOrigin)", m_O1Loop));
-            add(TimeRow("O1 RemoveObject of the dead", m_O1Remove));
-            add(TimeRow("O1 Publish (copy of the table)", m_O1Publish));
+            add(TimeRow("O1 Publish by rows (replica store, every record)", m_O1Publish));
             add(TimeRow("O1 bones store: Discard + write of the dirty", m_O1Bones));
             add(TimeRow("O1 damage store: Discard + write of the dirty", m_O1Damage));
             add(TimeRow("O1 sum of the parts above", m_O1Sum));
@@ -409,6 +408,7 @@ namespace
             add(CounterRow("O1 alive objects in the table", m_OTable));
             add(CounterRow("O1 new objects of the tick", m_ONew));
             add(CounterRow("O1 dead objects of the tick", m_ODead));
+            add(CounterRow("O1 rows changed per publish (every record)", m_ORowsChanged));
             add(CounterRow("O1 dirty objects of the tick (every record)", m_ODirty));
             add(CounterRow("O1 clean objects of the tick (every record)", m_OClean));
             add(CounterRow("O1 bone tables set", m_OBoneSets));
@@ -497,7 +497,9 @@ namespace
         std::atomic<std::shared_ptr<const ObjectTable>> m_O2Sink{};
         bool m_IsReplicaPending{};
         std::shared_ptr<const ObjectTable> m_ReplicaPrevious{};
-        std::shared_ptr<const ObjectTable> m_ReplicaPublished{};
+        std::vector<std::uint32_t> m_RowHandles{};
+        double m_PassAuditUs{};
+        Series m_ORowsChanged{};
         HandleAudit m_ReplicaAudit{};
         std::vector<std::uint32_t> m_ReplicaList{};
         std::size_t m_ReplicaBoneSets{};
@@ -510,7 +512,7 @@ namespace
         std::vector<std::uint32_t> m_ReplicaHandles{};
         double m_PassClearUs{}, m_PassDirtyUs{}, m_PassBonesUs{}, m_PassDamageUs{};
         Series m_ODirty{}, m_OClean{}, m_O1Dirty{};
-        Series m_O1Clear{}, m_O1Discover{}, m_O1Audit{}, m_O1Loop{}, m_O1Remove{}, m_O1Publish{}, m_O1Bones{}, m_O1Damage{}, m_O1Sum{}, m_O1Rest{};
+        Series m_O1Clear{}, m_O1Audit{}, m_O1Publish{}, m_O1Bones{}, m_O1Damage{}, m_O1Sum{}, m_O1Rest{};
         Series m_OTable{}, m_ONew{}, m_ODead{}, m_OBoneSets{}, m_ODamageSets{};
         Series m_O2Assign{}, m_O2Pointer{}, m_O2Destroy{};
         std::vector<std::string> m_Notes{};
@@ -845,68 +847,26 @@ namespace
             m_ReplicaPrevious = chain.m_Tables.m_ObjectStore.Acquire();
             if (!m_ReplicaPrevious || m_ReplicaPrevious->empty() || !snapshot.HasObjectTable) return;
 
-            // The store as it is when UpdateObjectTable begins. It lives between measures like the one of production, so its pool of
-            // published tables is warm.
-            ObjectTableStore& store{ m_ReplicaStore };
-            std::vector<std::uint32_t> stale{};
-            store.UpdateObjects([&](std::uint32_t handle, AliveObject&) { stale.push_back(handle); });
-            for (const std::uint32_t handle : stale) store.RemoveObject(handle);
-            for (const auto& [handle, object] : *m_ReplicaPrevious) store.AddObject(handle, object);
-
             std::size_t added{};
-            auto start{ steady_clock::now() };
             for (const RawObject& datum : snapshot.RawObjects)
             {
-                if (!store.HasObject(datum.Handle)) ++added;
+                if (!m_ReplicaPrevious->contains(datum.Handle)) ++added;
             }
-            auto end{ steady_clock::now() };
-            const double discoverUs{ Micros(start, end) };
-            m_O1Discover.Add(discoverUs);
 
-            start = steady_clock::now();
-            m_ReplicaAudit = AuditHandles(snapshot);
-            end = steady_clock::now();
-            const double auditUs{ Micros(start, end) };
-            m_O1Audit.Add(auditUs);
-
-            std::vector<std::uint32_t> dead{};
-            start = steady_clock::now();
-            store.UpdateObjects([&](std::uint32_t handle, AliveObject& object) {
-                const RawObject* datum{ snapshot.RawObjects.Find(handle) };
-                if (datum == nullptr)
-                {
-                    dead.push_back(handle);
-                    return;
-                }
-
-                object.WorldOrigin = ResolveWorldOrigin(snapshot.RawObjects, *datum);
-            });
-            end = steady_clock::now();
-            const double loopUs{ Micros(start, end) };
-            m_O1Loop.Add(loopUs);
-
-            start = steady_clock::now();
-            for (const std::uint32_t handle : dead) store.RemoveObject(handle);
-            end = steady_clock::now();
-            const double removeUs{ Micros(start, end) };
-            m_O1Remove.Add(removeUs);
-
-            start = steady_clock::now();
-            store.Publish();
-            end = steady_clock::now();
-            const double publishUs{ Micros(start, end) };
-            m_O1Publish.Add(publishUs);
-            m_ReplicaPublished = store.Acquire();
-
+            std::size_t dead{};
             // The objects the stores of bones and damage are checked for: the ones of the table that the Snapshot still has.
             m_ReplicaList.clear();
-            for (const auto& [handle, object] : *m_ReplicaPublished)
+            for (const auto& [handle, object] : *m_ReplicaPrevious)
             {
-                const RawObject* datum{ snapshot.RawObjects.Find(handle) };
-                if (datum == nullptr) continue;
-
-                m_ReplicaList.push_back(handle);
+                if (snapshot.RawObjects.Contains(handle)) m_ReplicaList.push_back(handle);
+                else ++dead;
             }
+
+            auto start{ steady_clock::now() };
+            m_ReplicaAudit = AuditHandles(snapshot);
+            auto end{ steady_clock::now() };
+            m_PassAuditUs = Micros(start, end);
+            m_O1Audit.Add(m_PassAuditUs);
 
             // The dirty pass already ran for this record: its parts are the ones kept by ReplicaDirtyPass.
             m_ReplicaBoneSets = 0;
@@ -927,13 +887,9 @@ namespace
                 FillDamage(*datum, handle, m_FreshDamage);
             }
 
-            const double partsUs{ m_PassClearUs + m_PassDirtyUs + m_PassBonesUs + m_PassDamageUs + discoverUs + auditUs + loopUs + removeUs + publishUs };
-            m_O1Sum.Add(partsUs);
-            m_O1Rest.Add(m_Stages[0].Summary().N == 0 ? 0.0 : m_Stages[0].Summary().Mean - partsUs);
-
             m_OTable.Add(static_cast<double>(m_ReplicaPrevious->size()));
             m_ONew.Add(static_cast<double>(added));
-            m_ODead.Add(static_cast<double>(dead.size()));
+            m_ODead.Add(static_cast<double>(dead));
             m_OBoneSets.Add(static_cast<double>(m_ReplicaBoneSets));
             m_ODamageSets.Add(static_cast<double>(m_ReplicaDamageSets));
 
@@ -957,6 +913,74 @@ namespace
             m_IsReplicaPending = true;
         }
 
+        // The rows of ObjectTableStore as ObjectTableService uses them, over the table the pipeline published: the replica store brings its rows
+        // to the production ones (a row is written only when the object is new or dirty or its placement or world origin moved) and publishes.
+        // note: Runs on every record, after the pipeline, so the pooled tables of the replica see the same changes per publish as production.
+        auto ReplicaRowsPass(const Chain& chain, bool isMeasured) -> void
+        {
+            const auto published{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!published || !m_Snapshot->HasObjectTable) return;
+
+            ObjectTableStore& store{ m_ReplicaStore };
+            std::size_t changed{};
+            store.Edit([&] {
+                std::size_t index{ 0 };
+                for (const RawObject& datum : m_Snapshot->RawObjects)
+                {
+                    const bool isDirty{ m_ReplicaDirty[index++] != 0 };
+                    const auto it{ published->find(datum.Handle) };
+                    if (it == published->end()) continue;
+
+                    AliveObject* row{ store.FindRow(datum.Handle) };
+                    if (row == nullptr)
+                    {
+                        store.AddRow(datum.Handle, it->second);
+                        ++changed;
+                    }
+                    else if (isDirty || row->Placement != it->second.Placement || std::memcmp(&row->WorldOrigin, &it->second.WorldOrigin, sizeof(Vec3)) != 0)
+                    {
+                        *row = it->second;
+                        store.MarkChanged(datum.Handle);
+                        ++changed;
+                    }
+                }
+
+                for (const std::uint32_t handle : m_RowHandles)
+                {
+                    if (!published->contains(handle)) store.RemoveRow(handle);
+                }
+            });
+
+            m_RowHandles.clear();
+            for (const auto& [handle, object] : *published) m_RowHandles.push_back(handle);
+
+            const auto start{ steady_clock::now() };
+            store.Publish();
+            const auto end{ steady_clock::now() };
+            m_ORowsChanged.Add(static_cast<double>(changed));
+            if (!isMeasured) return;
+
+            const double publishUs{ Micros(start, end) };
+            m_O1Publish.Add(publishUs);
+
+            // The table the replica published must be the table of the pipeline.
+            const std::size_t before{ m_ObjectDiffs };
+            const auto replica{ store.Acquire() };
+            if (replica->size() != published->size()) ++m_ObjectDiffs;
+            for (const auto& [handle, object] : *published)
+            {
+                const auto it{ replica->find(handle) };
+                if (it == replica->end()) ++m_ObjectDiffs;
+                else if (it->second.Handle != object.Handle || it->second.Placement != object.Placement ||
+                    std::memcmp(&it->second.WorldOrigin, &object.WorldOrigin, sizeof(Vec3)) != 0 || std::memcmp(&it->second.Origin, &object.Origin, sizeof(Vec3)) != 0) ++m_ObjectDiffs;
+            }
+            if (m_ObjectDiffs != before) this->Note(std::format("The Publish by rows replica differs from the published table in {} things.", m_ObjectDiffs - before));
+
+            const double partsUs{ m_PassClearUs + m_PassDirtyUs + m_PassBonesUs + m_PassDamageUs + m_PassAuditUs + publishUs };
+            m_O1Sum.Add(partsUs);
+            m_O1Rest.Add(m_Stages[0].Summary().N == 0 ? 0.0 : m_Stages[0].Summary().Mean - partsUs);
+        }
+
         // Compares what the replica of the ObjectTable stage got with what the pipeline published for this record.
         auto VerifyObjectTable(const Chain& chain) -> void
         {
@@ -973,12 +997,14 @@ namespace
             if (audit.Checked != m_ReplicaAudit.Checked || audit.Matching != m_ReplicaAudit.Matching || audit.Stale != m_ReplicaAudit.Stale ||
                 audit.Free != m_ReplicaAudit.Free || audit.ZeroSalt != m_ReplicaAudit.ZeroSalt) ++m_ObjectDiffs;
 
-            for (const auto& [handle, object] : *m_ReplicaPublished)
+            // Where each object is: the world origin of the pipeline is the one the Snapshot gives.
+            for (const auto& [handle, object] : *published)
             {
-                const auto it{ published->find(handle) };
-                if (it == published->end()) ++m_ObjectDiffs;
-                else if (it->second.WorldOrigin.X != object.WorldOrigin.X || it->second.WorldOrigin.Y != object.WorldOrigin.Y ||
-                    it->second.WorldOrigin.Z != object.WorldOrigin.Z) ++m_ObjectDiffs;
+                const RawObject* datum{ m_Snapshot->RawObjects.Find(handle) };
+                if (datum == nullptr) continue;
+
+                const Vec3 expected{ ResolveWorldOrigin(m_Snapshot->RawObjects, *datum) };
+                if (std::memcmp(&expected, &object.WorldOrigin, sizeof(Vec3)) != 0) ++m_ObjectDiffs;
             }
 
             // Who is alive: what the Snapshot has stays, what it lost goes, and the rest of the published table is new.

@@ -23,14 +23,12 @@ namespace
     // Makes the object of k_Handle with the given X in its origin, so a table is told from another by its value.
     auto Store(ObjectTableStore& store, float x) -> void
     {
-        if (!store.HasObject(k_Handle))
-        {
+        store.Edit([&] {
             AliveObject object{};
             object.Handle = k_Handle;
-            store.AddObject(k_Handle, object);
-        }
-
-        store.UpdateObjects([&](std::uint32_t, AliveObject& object) { object.Origin.X = x; });
+            store.AddRow(k_Handle, object).Origin.X = x;
+            store.MarkChanged(k_Handle);
+        });
     }
 
     auto OriginOf(const std::shared_ptr<const ObjectTable>& table) -> float
@@ -101,6 +99,132 @@ TEST(ObjectTableStoreTests, CleanupLeavesNothingToAcquire)
     Store(store, 2.0f);
     store.Publish();
     EXPECT_FLOAT_EQ(OriginOf(store.Acquire()), 2.0f);
+}
+
+namespace
+{
+    // What a table must hold: handle -> origin X (the row also carries 2 x X in WorldOrigin.Y and X as the placement index).
+    using Reference = std::map<std::uint32_t, float>;
+
+    auto MakeRow(std::uint32_t handle, float x) -> AliveObject
+    {
+        AliveObject object{};
+        object.Handle = handle;
+        object.Origin.X = x;
+        object.WorldOrigin.Y = 2.0f * x;
+        object.Placement = Blam::Runtime::Object::Type::Placement::Placement{ .Index = static_cast<std::uint16_t>(x) };
+        return object;
+    }
+
+    auto SameAs(const ObjectTable& table, const Reference& reference) -> bool
+    {
+        if (table.size() != reference.size()) return false;
+
+        for (const auto& [handle, x] : reference)
+        {
+            const auto it{ table.find(handle) };
+            if (it == table.end()) return false;
+
+            const AliveObject& row{ it->second };
+            if (row.Handle != handle || row.Origin.X != x || row.WorldOrigin.Y != 2.0f * x || !row.Placement || row.Placement->Index != static_cast<std::uint16_t>(x)) return false;
+        }
+
+        return true;
+    }
+}
+
+// Publish copies only the rows that changed since the pooled table it writes over was published. Whatever the objects do (arrive, leave, change,
+// a slot reused under another salt) and whoever holds an old table, the published table equals the whole table and a held table does not move.
+TEST(ObjectTableStoreTests, PublishByRowsEqualsTheWholeTableWhileReadersHoldOldOnes)
+{
+    ObjectTableStore store{};
+    std::mt19937 random{ 303 };
+    Reference reference{};
+    std::uint32_t salt{ 1 };
+    std::vector<std::pair<std::shared_ptr<const ObjectTable>, Reference>> held{};
+
+    const auto pick{ [&]() -> std::uint32_t {
+        auto it{ reference.begin() };
+        std::advance(it, random() % reference.size());
+        return it->first;
+    } };
+
+    for (int tick{ 1 }; tick <= 400; ++tick)
+    {
+        store.Edit([&] {
+            const std::uint32_t operations{ random() % 6 };
+            for (std::uint32_t operation{ 0 }; operation < operations; ++operation)
+            {
+                const std::uint32_t kind{ random() % 4 };
+                if (kind == 0 || reference.empty())
+                {
+                    // An arrival, often in a slot that has an object: the slot is reused under a new salt.
+                    const std::uint32_t slot{ 1 + (random() % 40) };
+                    const std::uint32_t handle{ (salt++ << 16) | slot };
+                    const float x{ static_cast<float>(tick * 100 + operation) };
+                    for (auto it{ reference.begin() }; it != reference.end(); ++it)
+                    {
+                        if ((it->first & 0xFFFF) == slot)
+                        {
+                            reference.erase(it);
+                            break;
+                        }
+                    }
+                    store.AddRow(handle, MakeRow(handle, x));
+                    reference[handle] = x;
+                }
+                else if (kind == 1)
+                {
+                    const std::uint32_t handle{ pick() };
+                    store.RemoveRow(handle);
+                    reference.erase(handle);
+                }
+                else
+                {
+                    const std::uint32_t handle{ pick() };
+                    const float x{ static_cast<float>(tick * 100 + operation) };
+                    AliveObject* row{ store.FindRow(handle) };
+                    ASSERT_NE(row, nullptr);
+                    *row = MakeRow(handle, x);
+                    store.MarkChanged(handle);
+                    reference[handle] = x;
+                }
+            }
+        });
+        store.Publish();
+
+        const auto published{ store.Acquire() };
+        ASSERT_NE(published, nullptr);
+        ASSERT_TRUE(SameAs(*published, reference)) << "tick " << tick;
+
+        // Readers: some keep the table for a few ticks, some let go of everything.
+        if (random() % 4 == 0) held.emplace_back(published, reference);
+        if (held.size() > 5 || random() % 40 == 0) held.erase(held.begin(), held.begin() + (random() % (held.size() + 1)));
+        for (const auto& [table, expected] : held) ASSERT_TRUE(SameAs(*table, expected)) << "held table, tick " << tick;
+    }
+}
+
+TEST(ObjectTableStoreTests, EditRowsFollowTheSlotAndNeedNoSearch)
+{
+    ObjectTableStore store{};
+    store.Edit([&] {
+        EXPECT_EQ(store.FindRow(k_Handle), nullptr);
+        store.AddRow(k_Handle, MakeRow(k_Handle, 1.0f));
+        ASSERT_NE(store.FindRow(k_Handle), nullptr);
+        EXPECT_EQ(store.SlotHandle(k_Handle), k_Handle);
+
+        // Another salt of the same slot does not find the row, and adding it takes the old one out.
+        const std::uint32_t other{ k_Handle + 0x10000 };
+        EXPECT_EQ(store.FindRow(other), nullptr);
+        store.AddRow(other, MakeRow(other, 2.0f));
+        EXPECT_EQ(store.FindRow(k_Handle), nullptr);
+        ASSERT_NE(store.FindRow(other), nullptr);
+    });
+    store.Publish();
+
+    const auto table{ store.Acquire() };
+    EXPECT_EQ(table->size(), 1u);
+    EXPECT_TRUE(table->contains(k_Handle + 0x10000));
 }
 
 TEST(BoneMatricesStoreTests, TableStaysVisibleUntilItIsDiscarded)
