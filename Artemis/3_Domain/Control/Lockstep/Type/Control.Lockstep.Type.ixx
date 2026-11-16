@@ -20,7 +20,7 @@ export namespace Control::Lockstep::Type
     // Lockstep timeouts in a row after which Lockstep is suspended until the client answers again.
     inline constexpr std::uint32_t k_MaxLockstepTimeouts{ 2 };
 
-    // Decision period N and latency d until the client asks for others (D114; d = N = 4 since D304: the decision tick and the client get the whole cycle).
+    // Decision period N and latency d until the client asks for others (D114). Since D304 d = N = 4: the decision tick and the client get the whole cycle.
     inline constexpr std::uint8_t k_DefaultDecisionPeriod{ 4 };
     inline constexpr std::uint8_t k_DefaultLatency{ 4 };
 

@@ -64,7 +64,7 @@ namespace Engine::Capture::Hook
         {
             const int ticks{ (std::max)(requestedTicks, 0) };
             self->m_TelemetryStore.RecordSimTick(ticks, callNs);
-            if (ticks > 0) self->m_LifecycleStore.SignalTick();
+            if (ticks > 0) frameDetour.ProduceTick();
             return;
         }
 

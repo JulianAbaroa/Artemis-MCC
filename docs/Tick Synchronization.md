@@ -1,37 +1,31 @@
 ## The Problem
 
-On one side, there's the main thread of the Blam game engine, the one that executes all the game's logic, and the **logic-ticks**. On the other side, there's the AI thread of Artemis, which consumes the generated data from those logic-ticks when it reads the *object table*, generating the Artemis logic-tick.
+On one side, there is the main thread of the Blam game engine, which executes all the game logic, the **logic-ticks**. On the other side, there is the AI thread of Artemis, which processes the data of those ticks.
 
-The problem is, that the AI thread and the Game's thread run asynchronously. This means it's possible that the AI thread could be reading the *object table* while the game is writing on it, generating unstable, corrupted and unreliable data for Artemis logic-tick. As the project needed to have reliable logic-ticks, I needed to ensure that the readings occur always at the correct time, when Blam just finished the write of its logic-tick.
-## Mental Model: Blam-Artemis tick synchronization
+The two threads run asynchronously, so the AI thread must never read the *object table* while the game is writing it: the data would be unstable and corrupted.
 
-So, if Artemis is able to know when exactly Blam ends the writing of its logic-tick, then it knows exactly when it has to start reading. Then, the most reliable way to resolve this synchronization problem, is to find a Blam function that defines when a logic-tick is going to be executed, and  that function is FUN_180057434 (SimulationTicks), who receives as parameter, the amount of ticks that has to be executed at any given moment, and if that amount is higher than zero, then it calls FUN_1800575AC (ExecuteGameFrame), who is the real processor of the logic-tick of Halo Reach.
+## Mental Model: the game thread copies, the AI thread processes
 
-Therefore, once we are able to hook this function, we just need to send a signal to execute the Artemis logic-tick, **after** the logic-ticks were executed. In this way, we would be able to read the data as soon as these logic-ticks finished writing. While this is happening, the AI thread will be *waiting* to receive the signal, to proceed and execute one Artemis logic-tick.
+Blam tells us exactly when it finishes writing a logic-tick: the functions that run the simulation (`SimulationTicks` runs `ExecuteGameFrame` once per tick in a loop). Artemis hooks them, and a tick is complete when the next `ExecuteGameFrame` of the same call starts, or when `SimulationTicks` returns.
 
-But, since we are in a multi-threading context, sending signals between threads is not that simple, and a flag is not enough in this case, because we need to know if we weren't able to process a Blam logic-tick, for example, if Artemis logic-tick is taking too much time to be processed. That's why we need a tick counter.
+At that point the **game thread itself** copies the tick into a Snapshot (`CaptureService`, through the `TickProducer` port) and puts it in a bounded FIFO queue (`TickQueue`, 4 ticks, one producer and one consumer). The engine writes nothing between two ticks, so the copy is stable without any handshake with the AI thread. The game goes on at once. The AI thread takes the queued ticks in order and runs the pipeline over the Snapshots; it never reads game memory.
 
-Also, we have to consider the context where we are working on, a game engine with its own life-cycle. For instance, what happens if the AI thread is waiting for a Blam logic-tick when the game engine has started closing itself? Artemis needs a way to react to the current state of Blam, and here is where the hook to FUN_18000C8F8 (DestroySubsystems) plays its role. This function is called by Blam whenever the game engine has started closing itself. Artemis uses this hook to warn its subsystems to close themselves, **before** Blam ends its closing.
 ## Every tick, not every frame
 
-SimulationTicks runs all the logic-ticks of a frame in a loop, calling ExecuteGameFrame once per tick. When the engine runs several ticks in one frame (a slow frame, or a game speed above 1x), signaling only after SimulationTicks returns means Artemis sees only the last tick of that frame. So Artemis also hooks FUN_1800575AC (ExecuteGameFrame): inside a SimulationTicks call, a tick is complete when the next ExecuteGameFrame starts, and the SimulationTicks hook signals the last one when the call returns. ExecuteGameFrame has other callers (network code), and those calls are not counted.
+When the engine runs several ticks in one frame (a slow frame, or a game speed above 1x), the hooks hand over every tick, not only the last one of the frame.
 
-## The game waits for the read
+## Backpressure
 
-Signaling alone is not enough when the engine runs several ticks in a row: right after the signal the game thread starts writing the next tick while the AI thread may still be reading this one. So SignalTick also blocks the game thread until the AI thread ends the read of that tick (EndRead), but only while the AI thread is consuming ticks (SetReaderActive). The read is short: DatumService copies the object table and the Tables services read the player and interaction tables. Everything after that works on Artemis' own copies, so the game runs the next tick while Artemis processes the rest of this one. If the AI thread is busy with the previous tick, the game waits for it: no tick is ever skipped, the game just runs slower. A wait longer than 100 ms gives up and is counted as a read timeout, so a stuck AI thread slows the game down but never freezes it.
+If the AI thread falls more than one decision cycle behind, the queue is full and the game thread waits for room, at most 100 ms (`k_ReadTimeout`). Past it the tick is not queued and is counted as lost (telemetry: dropped ticks), so a stuck AI thread slows the game down but never freezes it.
+
+## The life-cycle of the engine
+
+The game thread queues ticks only while the AI thread consumes them (the queue is open) and has loaded the resources of the current map (`LifecycleStore::MarkLoaded`, compared with the teardown epoch). When the engine tears down, the teardown epoch goes up, so nothing more is queued for the old map. The game thread waits only for the tick the AI thread is processing (`BeginTick`/`WaitForTickEnd`), never for the queued ones: the AI thread discards them, and a tick of an old epoch is never processed against the stores of the new map.
 
 ## Design Decisions
 
-Because of the multi-threading context, the use of atomic variables was practically a necessity. But, I could have used a ```std::atomic<bool>``` as a signal to determine if Artemis had to execute a logic-tick, but, as I mentioned earlier, a boolean wouldn't allow me to quantify if I **lost** Blam logic-ticks. For this reason, I decided to use a ```std::atomic<uint64_t>```, not only to save the dropped ticks, but to be able to know the executed Artemis logic-ticks, and to be able to allow the lambda to  compare the tick counter value with the last seen one.
+The queue is a mutex and two condition variables (`Common.State.Type::BoundedQueue`): the producer waits for room with a timeout, the consumer waits for an entry, and closing the queue wakes the producer. No wakeup can be lost because every predicate is checked under the mutex.
 
- Atomic variables protected any thread from obtaining half-finished data of the variable, but they didn't protect by default from the possibility that the increased value of the tick were propagated **before** the logic-tick data of Blam, generating the read of the **previous** logic-tick data by the AI thread. For this reason, the selection of the correct ```memory_order``` was so important.
+The Snapshots come from a small pool filled only by the game thread: the AI thread releases one by dropping its reference, and the game thread takes it again when only the pool holds it (an acquire fence orders the AI thread's last reads before the game thread rewrites it).
 
-```SignalTick()```, called from the main thread of Blam, increments the ticks counter using ```std::memory_order_release```, that ensures the modified structures by the Blam logic-tick were written and visible for any other thread before the value of the tick were incremented. 
-
-```WaitForTick()```, called from Artemis AI thread, sleeps the thread while it waits the ticks counter to be incremented. Whenever the thread is awakened by ```notify_one()``` or *spurious wakeups* , it gets the ticks counter by using ```std::memory_order_acquire```, that ensures what was written before the previous ```std::memory_order_release``` it is already visible from the AI thread.
-
-This ensures Artemis from reading outdated logic-tick data, but how was able the AI thread to securely wait for the tick counter to be increased in the first place? 
-
-By using a condition variable. Combining it with a mutex was necessary to avoid any *lost wakeup*, since it protects against the case of ```SignalTick()``` sending the ```notify_one()``` while the condition variable has not yet caused the AI thread to go to sleep by using ```wait()```. For that protection to hold, ```SignalTick()``` must increment the counter while holding the same mutex: an increment outside it could land between the AI thread's check of the predicate and its ```wait()```, and that wakeup would be lost. And the lambda of the CV ensures that, before the AI thread goes to sleep, it always checks if the ticks counter is **different** from the last known one, and if it is, the ```wait()``` is ended, proceeding to execute one Artemis logic-tick.
-
-Lastly, if the subsystem loses any ```notify_one()``` while it is occupied performing the Artemis logic tick, it doesn't really matter, since the ticks counter serves as a source of truth, telling us the exact amount of Blam logic-ticks that were lost during that time. If the dropped logic-ticks are higher than 0, then it means the Artemis logic-tick is too slow and it has to be optimized or simplified.
+Between popping a tick and starting it the AI thread can lose a race with the teardown, so `BeginTick` goes up first and the epoch is checked after; `BeginTick` and `WaitForTickEnd` put a full fence around their store and load, so one of the two always sees the other.

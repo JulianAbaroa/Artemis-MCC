@@ -5,7 +5,7 @@ The project is in active development. The data extraction layer works, the seman
 ## How it works
 Artemis operates as a proxy DLL (`wtsapi32.dll`), injecting into the game process via auto-proxy injection. Once inside, it uses function hooking to read game state data in real-time from the engine, player table, object table, read .map files, and other relevant data extracted directly from memory and disk.
 
-Artemis works in engine logic ticks (60 per second of game time), never in milliseconds. It hooks the functions that run the simulation so it sees every tick, and the game waits for Artemis to copy the data of each tick before it writes the next one. Because of that the data stays consistent at any game speed, and no tick is ever skipped: if Artemis is slower than the game, the game slows down. See [`docs/Tick Synchronization.md`](docs/Tick%20Synchronization.md).
+Artemis works in engine logic ticks (60 per second of game time), never in milliseconds. It hooks the functions that run the simulation so it sees every tick, and the game thread itself copies the data of each tick, between two ticks, into a snapshot and queues it for the AI thread. Because of that the data stays consistent at any game speed, and the game only waits when the queue is full: if Artemis falls behind by more than a few ticks, the game slows down. See [`docs/Tick Synchronization.md`](docs/Tick%20Synchronization.md).
 
 Training needs the game to run faster than real time. Halo Reach simulates with a fixed time step, and the engine has its own time scale (the same mechanism Theater uses to fast-forward films), so the game can run many times faster without changing the length of a tick or the physics.
 

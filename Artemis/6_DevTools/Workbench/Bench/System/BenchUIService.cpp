@@ -386,6 +386,7 @@ namespace
 
         // The light ticks of the sparse mode are apart from the sweeps: the average is over them only.
         const double lightAvgUs{ delta.LightTicks > 0 ? static_cast<double>(delta.LightNs) / static_cast<double>(delta.LightTicks) / 1e3 : 0.0 };
+        const double queueDepthAvg{ delta.QueuePushes > 0 ? static_cast<double>(delta.QueueDepthSum) / static_cast<double>(delta.QueuePushes) : 0.0 };
         const double waitMs{ lockstep.LockstepWaits > 0
             ? static_cast<double>(lockstep.LockstepWaitNs) / static_cast<double>(lockstep.LockstepWaits) / 1e6 : 0.0 };
 
@@ -393,12 +394,15 @@ namespace
             "\"read_timeouts\":{},\"sweep_ms\":{{\"avg\":{:.3f},\"p50\":{:.3f},\"p99\":{:.3f},\"max\":{:.3f}}},"
             "\"stages\":{{{}}},\"lockstep\":{{\"waits\":{},\"avg_ms\":{:.3f},\"max_ms\":{:.3f},\"timeouts\":{}}},"
             "\"light\":{{\"ticks\":{},\"avg_us\":{:.1f},\"max_us\":{:.1f}}},"
-            "\"object_slots_max\":{},\"objects_max\":{}}}",
+            "\"object_slots_max\":{},\"objects_max\":{},"
+            "\"capture_ms\":{:.3f},\"queue_wait_ms\":{:.3f},\"queue_depth\":{{\"avg\":{:.2f},\"max\":{}}}}}",
             delta.Ticks, wallMs, engineNs * perTick / 1e6, static_cast<double>(delta.ReadWaitNs) * perTick / 1e6, delta.ReadTimeouts,
             static_cast<double>(delta.SweepNs) * perSweep / 1e6, percentileMs(0.5), percentileMs(0.99),
             static_cast<double>(delta.SweepMaxNs) / 1e6, stages, lockstep.LockstepWaits, waitMs,
             static_cast<double>(lockstep.LockstepWaitMaxNs) / 1e6, lockstep.LockstepTimeouts, delta.LightTicks, lightAvgUs,
-            static_cast<double>(delta.LightMaxNs) / 1e3, delta.ObjectSlotsMax, delta.ObjectsMax);
+            static_cast<double>(delta.LightMaxNs) / 1e3, delta.ObjectSlotsMax, delta.ObjectsMax,
+            static_cast<double>(delta.CaptureNs) * perTick / 1e6, static_cast<double>(delta.QueueWaitNs) * perTick / 1e6, queueDepthAvg,
+            delta.QueueDepthMax);
     }
 
     // return: Players of the tick, null without one.

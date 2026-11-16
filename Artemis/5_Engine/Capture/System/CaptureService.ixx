@@ -4,9 +4,15 @@ import Common.Log.System;
 import Services.Telemetry.State;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.Memory.System;
+import Engine.Capture.Type;
 import Engine.Capture.State;
 import Blam.Layout.Snapshot.Type;
 import std;
+
+namespace
+{
+    using Engine::Capture::Type::k_TickQueueDepth;
+}
 
 export namespace Engine::Capture::System
 {
@@ -39,13 +45,14 @@ export namespace Engine::Capture::System
         // Copies everything the tick pipeline reads from the game (objects, placements and the regions of RegionId) into a new
         // Snapshot and publishes it.
         // return: The published snapshot. It is also returned without the thread context, with the flags off and nothing copied.
-        // note: Runs on the AI thread inside the read window, the game thread waits for it.
+        // note: Game thread only, between two ticks (D305): the engine writes nothing then, so the copy is stable. The AI thread works on
+        // the returned Snapshot and drops it when it is done.
         auto Capture() -> std::shared_ptr<const Snapshot>;
 
         // Copies only what the flag pass needs into a light Snapshot (IsLight): the objects of kind k_LightKindId (the flags are weapons,
         // and this project cannot filter by tag) and the regions IsLightRegion says (game clock, game engine globals and megalo objects).
         // return: The snapshot, not published: the store keeps the last full one. Without the thread context it holds nothing.
-        // note: Runs on the AI thread inside the read window, like Capture. It takes no telemetry and never checks the capacities.
+        // note: Game thread only, like Capture. It takes no telemetry and never checks the capacities.
         auto CaptureLight() -> std::shared_ptr<const Snapshot>;
 
         // Clears the stored addresses and snapshot.
@@ -58,15 +65,18 @@ export namespace Engine::Capture::System
         CaptureStore& m_CaptureStore;
         TelemetryStore& m_TelemetryStore;
 
-        // Snapshots Capture reuses (D276). Owned and changed only by Capture, on the AI thread: Cleanup, which runs on the game thread,
-        // only drops the published Snapshot of the store and never touches the pool. A new teardown epoch starts a new pool.
-        static constexpr std::size_t k_SnapshotPoolCapacity{ 4 };
+        // Snapshots Capture reuses (D276). The pool is filled and changed only by Capture, on the game thread (D305), and the AI thread
+        // releases a Snapshot by dropping its reference: the pool takes one again when only it holds it. A new teardown epoch starts a new
+        // pool.
+        // note: Capacity = the queue (k_TickQueueDepth) + the one the AI thread processes + the one being filled + the published one of the
+        // store + one an observer keeps (the viewer). A Snapshot above it is not kept: the dump queue or a viewer may hold many.
+        static constexpr std::size_t k_SnapshotPoolCapacity{ k_TickQueueDepth + 4 };
         std::vector<std::shared_ptr<Snapshot>> m_Pool{};
         std::uint64_t m_PoolEpoch{ std::numeric_limits<std::uint64_t>::max() };
 
         // return: A snapshot to fill: one from the pool that nobody else holds (emptied of objects), else a new one that joins the pool
         // while it has room (above k_SnapshotPoolCapacity it is not kept: the dump queue or a viewer may hold many).
-        // note: Runs on the AI thread inside the read window.
+        // note: Game thread only.
         auto AcquireSnapshot(std::uint64_t epoch) -> std::shared_ptr<Snapshot>;
 
         // Teardown epoch the capacities were checked for, or the maximum before the first check. A new load runs under a new epoch, so
@@ -76,7 +86,7 @@ export namespace Engine::Capture::System
 
         // Compares the capacity of the object and player tables of the engine (data array header) with k_MaxObjects and k_MaxPlayers,
         // once per map load. A difference is a WARNING with both values, nothing else changes.
-        // note: Runs on the AI thread inside the read window.
+        // note: Game thread only.
         auto CheckCapacities(std::uintptr_t threadContext, std::uint64_t epoch) -> void;
 
         // Copies the datum of every live object of the object table: the slots below the first-unused mark of the engine data array

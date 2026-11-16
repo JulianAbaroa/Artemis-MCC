@@ -109,6 +109,9 @@ namespace Mod
         // The action source is connected before any hook goes in (D243).
         m_Control.m_PlayerActionDetour.SetActionSource(m_BridgeActionSource);
 
+        // The tick producer is connected before the tick hooks go in too.
+        m_Capture.m_ExecuteGameFrameDetour.SetTickProducer(m_TickProducer);
+
         // The setup service applies the bots through the bots service (D286): Engine.Base cannot see Engine.Control.
         m_Base.m_MatchSetupService.SetRosterPort(&m_Control.m_BotService);
 

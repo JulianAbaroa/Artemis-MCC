@@ -148,4 +148,109 @@ export namespace Common::State::Type
         std::condition_variable m_NotEmpty{};
         std::condition_variable m_NotFull{};
     };
+    // A FIFO queue between one producer thread and one consumer thread bounded by the number of entries.
+    // The producer waits for room up to a timeout and then gives the entry up (it is not queued and the caller counts it as lost), so a
+    // consumer that stopped never holds the producer longer than that. The queue starts closed: Push does nothing until SetOpen(true), and
+    // closing it wakes a producer that waits for room.
+    template <typename T>
+    class BoundedQueue
+    {
+    public:
+        struct PushResult
+        {
+            // The entry was queued (false if the queue was closed or the wait timed out).
+            bool IsQueued{};
+            // The producer waited the whole timeout and the queue was still full.
+            bool IsTimedOut{};
+            // The producer had to wait for room.
+            bool IsWaited{};
+            // Entries in the queue right after the push, the new one included. 0 if it was not queued.
+            std::size_t Depth{};
+        };
+
+        explicit BoundedQueue(std::size_t capacity) : m_Capacity{ capacity } {}
+        ~BoundedQueue() = default;
+
+        BoundedQueue(const BoundedQueue&) = delete;
+        auto operator=(const BoundedQueue&) -> BoundedQueue& = delete;
+
+        // Opens or closes the queue. Closing wakes a producer that waits for room, and its entry is not queued. It does not remove entries.
+        auto SetOpen(bool value) -> void
+        {
+            {
+                std::lock_guard lock{ m_Mutex };
+                m_IsOpen = value;
+            }
+            m_NotFull.notify_all();
+        }
+
+        auto IsOpen() const -> bool
+        {
+            std::lock_guard lock{ m_Mutex };
+            return m_IsOpen;
+        }
+
+        // param timeout: Longest wait for room.
+        auto Push(T value, std::chrono::milliseconds timeout) -> PushResult
+        {
+            PushResult result{};
+            {
+                std::unique_lock lock{ m_Mutex };
+                if (m_IsOpen && m_Entries.size() >= m_Capacity)
+                {
+                    result.IsWaited = true;
+                    m_NotFull.wait_for(lock, timeout, [this] { return m_Entries.size() < m_Capacity || !m_IsOpen; });
+                    if (m_IsOpen && m_Entries.size() >= m_Capacity) result.IsTimedOut = true;
+                }
+                if (!m_IsOpen || result.IsTimedOut) return result;
+                m_Entries.push_back(std::move(value));
+                result.IsQueued = true;
+                result.Depth = m_Entries.size();
+            }
+            m_NotEmpty.notify_one();
+            return result;
+        }
+
+        // return: The oldest entry, or none after the timeout. Works on a closed queue too, to drain it.
+        auto WaitPop(std::chrono::milliseconds timeout) -> std::optional<T>
+        {
+            std::optional<T> value{};
+            {
+                std::unique_lock lock{ m_Mutex };
+                if (!m_NotEmpty.wait_for(lock, timeout, [this] { return !m_Entries.empty(); })) return std::nullopt;
+                value = std::move(m_Entries.front());
+                m_Entries.pop_front();
+            }
+            m_NotFull.notify_one();
+            return value;
+        }
+
+        auto Size() const -> std::size_t
+        {
+            std::lock_guard lock{ m_Mutex };
+            return m_Entries.size();
+        }
+
+        // Removes every entry.
+        // return: How many were removed.
+        auto Clear() -> std::size_t
+        {
+            std::size_t removed{ 0 };
+            {
+                std::lock_guard lock{ m_Mutex };
+                removed = m_Entries.size();
+                m_Entries.clear();
+            }
+            m_NotFull.notify_all();
+            return removed;
+        }
+
+    private:
+        const std::size_t m_Capacity{};
+        bool m_IsOpen{};
+        std::deque<T> m_Entries{};
+        mutable std::mutex m_Mutex{};
+        std::condition_variable m_NotEmpty{};
+        std::condition_variable m_NotFull{};
+    };
 }

@@ -40,9 +40,10 @@ return data, so they are tested without MCC.
 minhook by `Engine.Base`, imgui by `DevTools.Gui`, stb by `DevTools.Workbench`.
 
 ## One tick
-1. Game thread: the tick hooks of `Engine.Capture` open the read window and the game waits.
-2. AI thread (`Mod`): `Engine.Capture` copies the live objects and memory regions into a Snapshot, then the read window ends and
-   the game goes on.
+1. Game thread: when a tick completes, the tick hooks of `Engine.Capture` call the `TickProducer` (`Mod`, D305): it reads the bridge clock
+   and `Engine.Capture` copies the live objects and memory regions into a Snapshot (a light one in sparse mode), right there between two
+   ticks, and queues it. The game goes on at once and waits only when the queue (4 ticks) is full.
+2. AI thread (`Mod`): takes the queued ticks in order.
 3. AI thread: `Bridge.Codec.Pipeline.System` runs the pure chain over the Snapshot: `Blam.Runtime` (tables), `Perception` (the
    world), `Views` (the agent), then the assembly of the Tick.
 4. On a decision tick with a client connected, the Tick goes to the bridge thread, which flattens it (`Bridge.Codec`) and publishes

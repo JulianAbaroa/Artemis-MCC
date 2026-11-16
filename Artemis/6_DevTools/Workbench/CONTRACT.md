@@ -17,7 +17,7 @@ Group `6_DevTools` - static library inside the game process - the launcher, insp
   ticks of the decisions); it cannot go with `tickdump` or `events`. The `perf` block also has a `light` entry (ticks, mean and max in microseconds).
   Each match report also gets a `perf` block (omitted when the run had no sweeps): the cumulative telemetry counters and the Lockstep
   counters are photographed when the run begins and when it ends, and the difference gives ticks, wall, engine (without the Lockstep
-  wait), read wait and sweep times (avg, p50, p99, max) per tick or sweep, the average of each sweep stage, and the Lockstep waits, plus the highest first-unused slot (`object_slots_max`) and live count (`objects_max`) of the engine object table.
+  wait), read wait (with `capture_ms`, `queue_wait_ms` and the `queue_depth` avg and max, D305) and sweep times (avg, p50, p99, max) per tick or sweep, the average of each sweep stage, and the Lockstep waits, plus the highest first-unused slot (`object_slots_max`) and live count (`objects_max`) of the engine object table.
 
 ## Does not
 - Take part in the tick: the AI thread only hands it the immutable `ObservedTick`.

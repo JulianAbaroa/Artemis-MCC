@@ -55,8 +55,8 @@ namespace Mod::Thread::System
 
             const Status status{ lifecycle.GetStatus() };
 
-            // The game thread waits for each tick read only while this thread is consuming ticks.
-            lifecycle.SetReaderActive(status == Status::Running);
+            // The game thread queues ticks only while this thread consumes them, and only once the resources of the map are loaded.
+            this->SetConsuming(status == Status::Running && m_IsLoaded);
 
             switch (status)
             {
@@ -68,6 +68,8 @@ namespace Mod::Thread::System
             case Status::Initialized:
                 if (m_Map.m_FileStore.IsLoaded() && !m_IsLoaded)
                 {
+                    const std::uint64_t loadEpoch{ lifecycle.GetTeardownEpoch() };
+
                     lifecycle.BeginLoad();
                     if (!this->IsStable())
                     {
@@ -78,6 +80,8 @@ namespace Mod::Thread::System
                     this->LoadResources();
                     lifecycle.EndLoad();
 
+                    // From here the game thread may queue ticks. The first one it queues is the first after the load (D207).
+                    lifecycle.MarkLoaded(loadEpoch);
                     m_IsLoaded = true;
                 }
                 else
@@ -88,91 +92,8 @@ namespace Mod::Thread::System
 
             case Status::Running:
             {
-                std::uint64_t current{ lifecycle.WaitForTick(m_Last, m_Dropped) };
-                m_Last = current;
-                const std::uint64_t droppedBefore{ m_Dropped };
-
-                // The game thread waits for this read, so the action tick of the bridge is the one of the state about to be copied.
-                m_Transport.m_BridgeService.CaptureClock(m_Dropped == 0, m_BridgeClock);
-
-                if (m_Dropped > 0)
-                {
-                    telemetry.RecordDroppedTicks(m_Dropped);
-                    logs.Message("[AIThread] WARNING: Dropped {} ticks before tick {}.", m_Dropped, current);
-                }
-                m_Dropped = 0;
-
-                lifecycle.BeginTick();
-                if (!this->IsStable())
-                {
-                    lifecycle.EndRead(current);
-                    lifecycle.EndTick();
-                    break;
-                }
-
-                auto tickStart{ steady_clock::now() };
-                m_StageNs.fill(0);
-                m_Stage = 0;
-                m_StageStart = tickStart;
-
-                const bool isFirstAfterLoad{ std::exchange(m_IsFirstTickAfterLoad, false) };
-
-                // Sparse mode (Q101): a tick that is not a decision only does the light pass. The first tick after a load and the first
-                // one after the mode changed to sparse run the whole pipeline, so the tick of a decision always has the state it needs.
-                const bool wasSparse{ std::exchange(m_IsSparse, m_BridgeClock.IsSparse) };
-                if (m_BridgeClock.IsSparse && !m_BridgeClock.IsDecision && wasSparse && !isFirstAfterLoad)
-                {
-                    if (!this->ExecuteLightTick())
-                    {
-                        this->DiscardTick(current);
-                        lifecycle.EndTick();
-                        break;
-                    }
-
-                    const auto lightEnd{ steady_clock::now() };
-                    lifecycle.EndTick();
-                    telemetry.RecordLightTick(static_cast<std::uint64_t>(
-                        std::chrono::duration_cast<nanoseconds>(lightEnd - tickStart).count()));
-                    break;
-                }
-
-                const auto snapshot{ this->ExecuteTick(current) };
-
-                // The engine can start tearing down while the tick runs: the Cleanup empties the stores it writes, and the game thread waits
-                // for this tick at most 1 s (C.9). The state is read again here, before anything is published, not only when the tick began.
-                if (snapshot == nullptr || !lifecycle.CanPublish())
-                {
-                    this->DiscardTick(current);
-                    lifecycle.EndTick();
-                    break;
-                }
-
-                if (m_BridgeClock.IsDecision)
-                {
-                    m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = m_BridgeClock });
-                    m_Transport.m_BridgeService.MarkPushed(m_BridgeClock.ActionTick);
-                }
-                this->EndStage();
-
-                if (!m_Observers.empty())
-                {
-                    const ObservedTick observed{ .Tick = m_Export.m_TickStore.Acquire(), .Snapshot = snapshot, .Generation = current,
-                        .DroppedBefore = droppedBefore, .IsFirstAfterLoad = isFirstAfterLoad };
-                    for (const auto& observer : m_Observers) observer(observed);
-                }
-                this->EndStage();
-
-                auto tickEnd{ steady_clock::now() };
-                lifecycle.EndTick();
-
-                const auto sweepNs{ static_cast<std::uint64_t>(
-                    std::chrono::duration_cast<nanoseconds>(tickEnd - tickStart).count()) };
-
-                // Time not covered by a stage (the read handoff, telemetry) goes to the last one.
-                m_StageNs.back() = OtherStageNs(sweepNs, std::span<const std::uint64_t>{ m_StageNs }.first(m_StageNs.size() - 1));
-                telemetry.RecordSweep(sweepNs, m_StageNs);
-                if (sweepNs >= static_cast<std::uint64_t>(k_SlowSweep.count())) this->ReportSlowSweep(sweepNs);
-
+                std::optional<CapturedTick> tick{ m_TickQueue.WaitPop(k_PopTimeout) };
+                if (tick.has_value()) this->ProcessTick(*tick);
                 break;
             }
 
@@ -183,7 +104,7 @@ namespace Mod::Thread::System
             }
         }
 
-        lifecycle.SetReaderActive(false);
+        this->SetConsuming(false);
 
         logs.Message("[AIThread] INFO: Stopped.");
     }
@@ -194,47 +115,130 @@ namespace Mod::Thread::System
         m_Resolved.m_DefinitionsBuilder.BuildForMap();
         m_Resolved.m_WorldBuilder.BuildForMap();
         m_Resolved.m_VitalityBuilder.BuildForMap();
-
-        m_IsFirstTickAfterLoad = true;
     }
 
-    auto AIThread::ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>
+    auto AIThread::SetConsuming(bool value) -> void
     {
-        const auto snapshot{ m_Capture.m_CaptureService.Capture() };
+        if (m_IsConsuming == value) return;
 
-        // Last use of game memory: from here on everything works on the Snapshot, so the game thread runs the next tick.
-        m_Base.m_LifecycleStore.EndRead(m_Last);
+        m_IsConsuming = value;
+        m_TickQueue.SetOpen(value);
+    }
+
+    auto AIThread::ProcessTick(const CapturedTick& tick) -> void
+    {
+        auto& logs{ m_Service.m_Log };
+        auto& telemetry{ m_Service.m_TelemetryStore };
+        auto& lifecycle{ m_Base.m_LifecycleStore };
+
+        m_Last = tick.Generation;
+        m_TickEpoch = tick.Epoch;
+
+        // The game thread waits for the tick in progress when the teardown starts, not for the ones still queued. The flag goes up before the
+        // state is read, so a teardown that starts after the pop either sees the flag or is seen here (LifecycleStore::BeginTick).
+        lifecycle.BeginTick();
+        if (!this->IsStable() || tick.Epoch != lifecycle.GetTeardownEpoch())
+        {
+            this->DiscardTick(tick.Generation);
+            lifecycle.EndTick();
+            return;
+        }
+
+        if (tick.DroppedBefore > 0)
+        {
+            logs.Message("[AIThread] WARNING: Dropped {} ticks before tick {}.", tick.DroppedBefore, tick.Generation);
+        }
+
+        const auto tickStart{ steady_clock::now() };
+        m_StageNs.fill(0);
+        m_Stage = 0;
+        m_StageStart = tickStart;
+
+        // Sparse mode (Q101): the game thread chose a light capture for a tick that is not a decision.
+        if (tick.IsLight)
+        {
+            if (!this->ExecuteLightTick(tick))
+            {
+                this->DiscardTick(tick.Generation);
+                lifecycle.EndTick();
+                return;
+            }
+
+            const auto lightEnd{ steady_clock::now() };
+            lifecycle.EndTick();
+            telemetry.RecordLightTick(static_cast<std::uint64_t>(
+                std::chrono::duration_cast<nanoseconds>(lightEnd - tickStart).count()));
+            return;
+        }
+
+        // The engine can start tearing down while the tick runs: the Cleanup empties the stores it writes, and the game thread waits
+        // for this tick at most 1 s (C.9). The state is read again here, before anything is published, not only when the tick began.
+        if (!this->ExecuteTick(tick) || !this->IsCurrent())
+        {
+            this->DiscardTick(tick.Generation);
+            lifecycle.EndTick();
+            return;
+        }
+
+        if (tick.Clock.IsDecision)
+        {
+            m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = tick.Clock });
+        }
         this->EndStage();
 
-        // A teardown that began during the read: the pipeline would only write stores the Cleanup is emptying.
-        if (!m_Base.m_LifecycleStore.CanPublish()) return nullptr;
+        if (!m_Observers.empty())
+        {
+            const ObservedTick observed{ .Tick = m_Export.m_TickStore.Acquire(), .Snapshot = tick.Snapshot, .Generation = tick.Generation,
+                .DroppedBefore = tick.DroppedBefore, .IsFirstAfterLoad = tick.IsFirstAfterLoad };
+            for (const auto& observer : m_Observers) observer(observed);
+        }
+        this->EndStage();
 
-        m_Export.m_PipelineService.Run(*snapshot, generation, m_EndStage, m_CanPublish);
+        const auto tickEnd{ steady_clock::now() };
+        lifecycle.EndTick();
 
-        // The pipeline stops between stages when the teardown starts: what it left is not a tick to publish.
-        if (!m_Base.m_LifecycleStore.CanPublish()) return nullptr;
+        const auto sweepNs{ static_cast<std::uint64_t>(
+            std::chrono::duration_cast<nanoseconds>(tickEnd - tickStart).count()) };
 
-        return snapshot;
+        // Time not covered by a stage (the telemetry) goes to the last one.
+        m_StageNs.back() = OtherStageNs(sweepNs, std::span<const std::uint64_t>{ m_StageNs }.first(m_StageNs.size() - 1));
+        telemetry.RecordSweep(sweepNs, m_StageNs);
+        if (sweepNs >= static_cast<std::uint64_t>(k_SlowSweep.count())) this->ReportSlowSweep(sweepNs);
     }
 
-    auto AIThread::ExecuteLightTick() -> bool
+    auto AIThread::ExecuteTick(const CapturedTick& tick) -> bool
     {
-        const auto snapshot{ m_Capture.m_CaptureService.CaptureLight() };
+        // A teardown that began after the copy: the pipeline would only write stores the Cleanup is emptying.
+        if (!this->IsCurrent()) return false;
 
-        // Last use of game memory, as in ExecuteTick.
-        m_Base.m_LifecycleStore.EndRead(m_Last);
+        m_Export.m_PipelineService.Run(*tick.Snapshot, tick.Generation, m_EndStage, m_CanPublish);
 
-        if (snapshot == nullptr || !m_Base.m_LifecycleStore.CanPublish()) return false;
+        // The pipeline stops between stages when the teardown starts: what it left is not a tick to publish.
+        return this->IsCurrent();
+    }
 
-        m_Export.m_PipelineService.RunLight(*snapshot);
+    auto AIThread::ExecuteLightTick(const CapturedTick& tick) -> bool
+    {
+        if (!this->IsCurrent()) return false;
 
-        return m_Base.m_LifecycleStore.CanPublish();
+        m_Export.m_PipelineService.RunLight(*tick.Snapshot);
+
+        return this->IsCurrent();
     }
 
     auto AIThread::DiscardTick(std::uint64_t generation) -> void
     {
         m_Base.m_LifecycleStore.AddDiscardedTick();
         m_Service.m_Log.Message("[AIThread] INFO: Tick {} discarded: the engine is tearing down.", generation);
+    }
+
+    auto AIThread::DiscardPending() -> void
+    {
+        const std::size_t discarded{ m_TickQueue.Clear() };
+        if (discarded == 0) return;
+
+        for (std::size_t i{ 0 }; i < discarded; ++i) m_Base.m_LifecycleStore.AddDiscardedTick();
+        m_Service.m_Log.Message("[AIThread] INFO: {} queued ticks discarded: the engine is tearing down.", discarded);
     }
 
     auto AIThread::EndStage() -> void
@@ -262,6 +266,11 @@ namespace Mod::Thread::System
         m_Service.m_Log.Message("[AIThread] WARNING: Slow sweep of {:.1f} ms at tick {}: {}.", sweepNs / 1e6, m_Last, stages);
     }
 
+    auto AIThread::IsCurrent() const -> bool
+    {
+        return m_Base.m_LifecycleStore.CanPublish() && m_TickEpoch == m_Base.m_LifecycleStore.GetTeardownEpoch();
+    }
+
     auto AIThread::IsStable() -> bool
     {
         auto& lifecycle{ m_Base.m_LifecycleStore };
@@ -272,10 +281,9 @@ namespace Mod::Thread::System
 
     auto AIThread::Reset() -> void
     {
-        m_Base.m_LifecycleStore.ResetTickGeneration();
+        this->SetConsuming(false);
+        this->DiscardPending();
         m_IsLoaded = false;
-        m_IsSparse = false;
         m_Last = 0;
-        m_Transport.m_BridgeService.ResetClock();
     }
 }

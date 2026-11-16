@@ -64,6 +64,14 @@ export namespace Services::Telemetry::State
         std::atomic<std::uint64_t> m_TotalLightTicks{ 0 };
         std::atomic<std::uint64_t> m_TotalLightNs{ 0 };
         std::atomic<std::uint64_t> m_LightMaxNs{ 0 };
+        // Time the game thread spent copying the game into a Snapshot and waiting for room in the tick queue, summed over all ticks (D305).
+        // Both are part of the read wait.
+        std::atomic<std::uint64_t> m_TotalCaptureNs{ 0 };
+        std::atomic<std::uint64_t> m_TotalQueueWaitNs{ 0 };
+        // Depth of the tick queue right after each push: the sum, the number of pushes and the highest since the last CopyPerf.
+        std::atomic<std::uint64_t> m_TotalQueueDepth{ 0 };
+        std::atomic<std::uint64_t> m_TotalQueuePushes{ 0 };
+        std::atomic<std::uint64_t> m_QueueDepthMax{ 0 };
         // Highest first-unused slot and highest live count of the engine object table since the last CopyPerf.
         std::atomic<std::uint64_t> m_ObjectSlotsMax{ 0 };
         std::atomic<std::uint64_t> m_ObjectsMax{ 0 };
@@ -99,6 +107,12 @@ export namespace Services::Telemetry::State
         // param isTimedOut: Whether the wait ended by timeout.
         auto RecordReadWait(std::uint64_t waitNs, bool isTimedOut) -> void;
 
+        // Records what the game thread spent on one tick it queued for the AI thread (D305). The sum of the two is also what RecordReadWait gets.
+        // param depth: Entries in the queue right after the push, 0 if the tick was not queued (nothing is counted for the depth then).
+        // note: The game thread is the only writer of the totals and the maximum. CopyPerf restarts the maximum, so a push that races it can
+        // lose one sample of the maximum: acceptable for a statistic.
+        auto RecordTickQueue(std::uint64_t captureNs, std::uint64_t queueWaitNs, std::size_t depth) -> void;
+
         // Records one AI sweep: its duration and the time of each of its stages.
         // param stageNs: Time of each stage in the order of the registered names. Entries past k_MaxStages are ignored.
         auto RecordSweep(std::uint64_t durationNs, std::span<const std::uint64_t> stageNs) -> void;
@@ -112,14 +126,14 @@ export namespace Services::Telemetry::State
         auto SetStageNames(std::span<const std::string_view> names) -> void;
 
         // Keeps the highest first-unused slot and live count of the object table seen since the last CopyPerf.
-        // note: The AI thread is the only writer (Capture).
+        // note: The game thread is the only writer (Capture, D305).
         auto RecordObjectTable(std::uint64_t slots, std::uint64_t live) -> void;
 
         // Names registered with SetStageNames.
         auto GetStageNames() const -> std::span<const std::string_view>;
 
         // Photo of the cumulative counters.
-        // note: Restarts SweepMaxNs, LightMaxNs, ObjectSlotsMax and ObjectsMax, so the maximum of a photo is the one since the previous photo. One consumer at a time.
+        // note: Restarts SweepMaxNs, LightMaxNs, QueueDepthMax, ObjectSlotsMax and ObjectsMax, so the maximum of a photo is the one since the previous photo. One consumer at a time.
         auto CopyPerf(PerfSnapshot& out) -> void;
 
         // Counts one presented frame.

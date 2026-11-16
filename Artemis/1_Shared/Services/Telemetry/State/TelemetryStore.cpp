@@ -39,6 +39,17 @@ namespace Services::Telemetry::State
         }
     }
 
+    auto TelemetryStore::RecordTickQueue(std::uint64_t captureNs, std::uint64_t queueWaitNs, std::size_t depth) -> void
+    {
+        m_TotalCaptureNs.fetch_add(captureNs, std::memory_order_relaxed);
+        m_TotalQueueWaitNs.fetch_add(queueWaitNs, std::memory_order_relaxed);
+        if (depth == 0) return;
+
+        m_TotalQueueDepth.fetch_add(depth, std::memory_order_relaxed);
+        m_TotalQueuePushes.fetch_add(1, std::memory_order_relaxed);
+        if (depth > m_QueueDepthMax.load(std::memory_order_relaxed)) m_QueueDepthMax.store(depth, std::memory_order_relaxed);
+    }
+
     auto TelemetryStore::RecordSweep(std::uint64_t durationNs, std::span<const std::uint64_t> stageNs) -> void
     {
         m_Sweeps.fetch_add(1, std::memory_order_relaxed);
@@ -97,6 +108,11 @@ namespace Services::Telemetry::State
         out.LightTicks = m_TotalLightTicks.load(std::memory_order_relaxed);
         out.LightNs = m_TotalLightNs.load(std::memory_order_relaxed);
         out.LightMaxNs = m_LightMaxNs.exchange(0, std::memory_order_relaxed);
+        out.CaptureNs = m_TotalCaptureNs.load(std::memory_order_relaxed);
+        out.QueueWaitNs = m_TotalQueueWaitNs.load(std::memory_order_relaxed);
+        out.QueueDepthSum = m_TotalQueueDepth.load(std::memory_order_relaxed);
+        out.QueuePushes = m_TotalQueuePushes.load(std::memory_order_relaxed);
+        out.QueueDepthMax = m_QueueDepthMax.exchange(0, std::memory_order_relaxed);
         out.ObjectSlotsMax = m_ObjectSlotsMax.exchange(0, std::memory_order_relaxed);
         out.ObjectsMax = m_ObjectsMax.exchange(0, std::memory_order_relaxed);
 

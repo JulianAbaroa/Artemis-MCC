@@ -66,6 +66,11 @@ namespace Services::Telemetry::System
         result.LightTicks = Difference(later.LightTicks, earlier.LightTicks);
         result.LightNs = Difference(later.LightNs, earlier.LightNs);
         result.LightMaxNs = later.LightMaxNs;
+        result.CaptureNs = Difference(later.CaptureNs, earlier.CaptureNs);
+        result.QueueWaitNs = Difference(later.QueueWaitNs, earlier.QueueWaitNs);
+        result.QueueDepthSum = Difference(later.QueueDepthSum, earlier.QueueDepthSum);
+        result.QueuePushes = Difference(later.QueuePushes, earlier.QueuePushes);
+        result.QueueDepthMax = later.QueueDepthMax;
         result.ObjectSlotsMax = later.ObjectSlotsMax;
         result.ObjectsMax = later.ObjectsMax;
 

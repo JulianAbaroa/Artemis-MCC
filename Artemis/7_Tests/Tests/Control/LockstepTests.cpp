@@ -27,6 +27,7 @@ namespace
     using Control::Lockstep::System::GetDueDecision;
     using Control::Lockstep::System::GetReleasedOverride;
     using Control::Lockstep::System::IsDecisionTick;
+    using Control::Lockstep::System::IsLightTick;
     using Control::Lockstep::System::IsSparse;
     using Control::Lockstep::System::ReadClock;
     using Control::Lockstep::System::RecordWait;
@@ -433,6 +434,21 @@ TEST(LockstepTests, SparseNeedsRequestClientAndNoDemand)
     // Asking for 0 again goes back to every tick.
     client.RequestSparse = 0;
     EXPECT_FALSE(IsSparse(DecideControl(client, control), 0));
+}
+
+TEST(LockstepTests, OnlyASparseTickThatIsNotADecisionNorTheFirstOneIsLight)
+{
+    // IsLightTick(isSparse, isDecision, wasSparse, isFirstAfterLoad)
+    EXPECT_TRUE(IsLightTick(true, false, true, false));
+
+    // Not sparse: every tick runs the pipeline.
+    EXPECT_FALSE(IsLightTick(false, false, true, false));
+    // A decision tick always runs the whole pipeline.
+    EXPECT_FALSE(IsLightTick(true, true, true, false));
+    // The first tick after the mode turned on runs it too.
+    EXPECT_FALSE(IsLightTick(true, false, false, false));
+    // And so does the first tick after a map load.
+    EXPECT_FALSE(IsLightTick(true, false, true, true));
 }
 
 TEST(LockstepTests, SparseEndsWithTheClient)

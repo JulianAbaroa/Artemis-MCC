@@ -87,6 +87,12 @@
     <ClCompile Include="Port\System\BridgeEngineAdapter.ixx">
       <Filter>Port\System</Filter>
     </ClCompile>
+    <ClCompile Include="Port\System\TickProducerAdapter.cpp">
+      <Filter>Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Port\System\TickProducerAdapter.ixx">
+      <Filter>Port\System</Filter>
+    </ClCompile>
     <None Include="Proxy\GenerateProxyExports.py">
       <Filter>Proxy</Filter>
     </None>

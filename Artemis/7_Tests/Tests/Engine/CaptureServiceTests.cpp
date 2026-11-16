@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 
 import Common.Engine.Type;
+import Common.State.Type;
 import Common.Log.System;
 import Common.Log.Type;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.Lifecycle.Type;
 import Engine.Base.Memory.System;
 import Engine.Capture.State;
+import Engine.Capture.Type;
 import Engine.Capture.System;
 import Services.Telemetry.State;
 import Services.Telemetry.Type;
@@ -27,11 +29,13 @@ namespace
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Log::System::Log;
     using Common::Log::Type::LogLevel;
+    using Common::State::Type::BoundedQueue;
     using Engine::Base::Lifecycle::State::LifecycleStore;
     using Engine::Base::Lifecycle::Type::Status;
     using Engine::Base::Memory::System::MemoryReaderService;
     using Engine::Capture::State::CaptureStore;
     using Engine::Capture::System::CaptureService;
+    using Engine::Capture::Type::k_TickQueueDepth;
     using Services::Telemetry::State::TelemetryStore;
     using Services::Telemetry::Type::PerfSnapshot;
     using Blam::Layout::Snapshot::Type::IsLightRegion;
@@ -597,4 +601,70 @@ TEST_F(CaptureServiceTests, CaptureLightWithoutThreadContextHoldsNothing)
     EXPECT_FALSE(light->HasThreadContext);
     EXPECT_TRUE(light->RawObjects.IsEmpty());
     EXPECT_FALSE(light->IsCaptured(RegionId::TimeGlobals));
+}
+
+// D305: the game thread fills the pool (Capture) and the AI thread releases the Snapshots. Every queued Snapshot keeps the contents of its
+// own capture while the producer goes on, and no Snapshot is in flight twice.
+TEST_F(CaptureServiceTests, SnapshotsCapturedOnOneThreadAndReleasedOnAnotherAreNeitherOverwrittenNorHandedOutTwice)
+{
+    this->SetCapacities(2048, static_cast<std::int32_t>(k_MaxPlayers));
+    this->AddLive(3);
+    this->AddLive(5);
+    this->AddLive(8);
+
+    // The mark decides how many of the three objects each capture finds: 4 -> 1, 6 -> 2, 9 -> 3.
+    constexpr std::array<std::int32_t, 3> k_Marks{ 4, 6, 9 };
+
+    struct QueuedSnapshot
+    {
+        std::shared_ptr<const Snapshot> Value{};
+        std::size_t ExpectedObjects{};
+    };
+
+    BoundedQueue<QueuedSnapshot> queue{ k_TickQueueDepth };
+    queue.SetOpen(true);
+
+    std::mutex inFlightMutex{};
+    std::set<const void*> inFlight{};
+    std::atomic<int> overwritten{ 0 };
+    std::atomic<int> duplicated{ 0 };
+    constexpr int k_Ticks{ 600 };
+
+    std::jthread consumer{ [&] {
+        int taken{ 0 };
+        while (taken < k_Ticks)
+        {
+            std::optional<QueuedSnapshot> item{ queue.WaitPop(std::chrono::milliseconds{ 100 }) };
+            if (!item.has_value()) continue;
+
+            // Slow enough that the queue fills and the producer has to reuse the pool while this one is held.
+            if (taken % 5 == 0) std::this_thread::sleep_for(std::chrono::microseconds{ 300 });
+            if (item->Value->RawObjects.Size() != item->ExpectedObjects) ++overwritten;
+
+            {
+                std::lock_guard lock{ inFlightMutex };
+                inFlight.erase(item->Value.get());
+            }
+            item.reset();
+            ++taken;
+        }
+    } };
+
+    for (int tick{ 0 }; tick < k_Ticks; ++tick)
+    {
+        const std::size_t shape{ static_cast<std::size_t>(tick) % k_Marks.size() };
+        this->SetMark(k_Marks[shape], static_cast<std::int32_t>(shape + 1));
+
+        auto snapshot{ m_Service.Capture() };
+        {
+            std::lock_guard lock{ inFlightMutex };
+            if (!inFlight.insert(snapshot.get()).second) ++duplicated;
+        }
+
+        EXPECT_TRUE(queue.Push(QueuedSnapshot{ std::move(snapshot), shape + 1 }, std::chrono::milliseconds{ 5000 }).IsQueued);
+    }
+    consumer.join();
+
+    EXPECT_EQ(overwritten.load(), 0);
+    EXPECT_EQ(duplicated.load(), 0);
 }

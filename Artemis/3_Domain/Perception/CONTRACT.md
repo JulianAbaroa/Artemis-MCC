@@ -74,7 +74,7 @@ Other projects may import only these modules; everything else in the project is 
 - Every other store holds only the value of the last tick. `Cleanup()` forgets the map.
 
 ## Threads
-Updates run on the AI thread, after the read window closed: the game is not waiting for them. Nothing blocks and no thread is
+Updates run on the AI thread, over the Snapshot the game thread already copied: the game is not waiting for them. Nothing blocks and no thread is
 created. `Cleanup()` runs on the lifecycle thread: the stores that keep history only mark themselves and empty on the next update.
 Other threads (development tools) read the published stores without locks.
 

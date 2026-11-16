@@ -82,6 +82,11 @@ namespace Control::Lockstep::System
         return control.IsClientConnected && control.IsSparseRequested && everyTickDemand == 0;
     }
 
+    auto IsLightTick(bool isSparse, bool isDecision, bool wasSparse, bool isFirstAfterLoad) -> bool
+    {
+        return isSparse && !isDecision && wasSparse && !isFirstAfterLoad;
+    }
+
     auto BuildOverride(const BridgeAction& action, float turnLimit, bool& isRejected) -> ActionOverride
     {
         // The engine keeps the yaw in [0, 2 pi): any finite yaw is wrapped there.
@@ -113,8 +118,8 @@ namespace Control::Lockstep::System
     {
         if (control.Mode != BridgeMode::Lockstep || hook.IsLockstepSuspended || actionTick < control.Latency) return 0;
 
-        // note: The AI thread hands decision t over before it reads tick t + 1, and the game thread waits for that read, so at tick
-        // t + d (d >= 2) a decision that will be published is always pushed already.
+        // note: The game thread marks decision t as pushed when it queues the tick for the AI thread, so at tick t + d a decision that will
+        // be published is always marked, however far behind the AI thread is (D305). The wait is then for the answer of the client.
         const std::uint64_t due{ (actionTick - control.Latency) / control.DecisionPeriod * control.DecisionPeriod };
         if (due > 0 && due <= pushedDecision && sequence < due) return due;
 

@@ -152,6 +152,10 @@ namespace Engine::Capture::System
         {
             if (pooled.use_count() != 1) continue;
 
+            // The AI thread dropped its reference with a release decrement, but use_count reads it relaxed: the fence makes everything it
+            // read from the Snapshot happen before this thread writes it again (D305).
+            std::atomic_thread_fence(std::memory_order_acquire);
+
             // The flags, the epoch and every region address are written by Capture, and every region goes through CopyRegion, which empties it when its address is 0.
             pooled->RawObjects.Clear();
             return pooled;

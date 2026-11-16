@@ -11,7 +11,6 @@ import Blam.Runtime.Layer;
 import Perception.Layer;
 import Views.Layer;
 import Bridge.Codec.Layer;
-import Bridge.Codec.Flat.Type;
 import Bridge.Codec.Pipeline.Type;
 import Bridge.Codec.Pipeline.System;
 import std;
@@ -23,29 +22,30 @@ namespace
 
 export namespace Mod::Thread::System
 {
-    // Thread that loads the map resources and runs the simulation tick pipeline.
-    // note: Runs until the lifecycle stops and blocks on the lifecycle events while idle.
+    // Thread that loads the map resources and runs the simulation tick pipeline over the ticks the game thread queued (D305).
+    // note: Runs until the lifecycle stops and blocks on the lifecycle events while idle. It never touches game memory: the game thread
+    // copies each tick into a Snapshot and queues it, and this thread takes the items in order.
     class AIThread
     {
     private:
         using steady_clock = std::chrono::steady_clock;
 
-        using BridgeClock = Bridge::Codec::Flat::Type::BridgeClock;
-
         using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
 
+        using CapturedTick = Bridge::Codec::Pipeline::Type::CapturedTick;
         using ObservedTick = Bridge::Codec::Pipeline::Type::ObservedTick;
+        using TickQueue = Bridge::Codec::Pipeline::Type::TickQueue;
 
     public:
         AIThread(Services::Layer& service, Engine::Base::Layer& base, Engine::Capture::Layer& capture,
             Bridge::Transport::Layer& transport, Blam::Map::Layer& map,
             Blam::MapModel::Layer& resolved, Blam::Runtime::Layer& tables,
             Perception::Layer& environment, Views::Layer& egocentric,
-            Bridge::Codec::Layer& exportLayer) :
+            Bridge::Codec::Layer& exportLayer, TickQueue& tickQueue) :
             m_Service(service), m_Base(base), m_Capture(capture), m_Transport(transport), m_Map(map),
             m_Resolved(resolved), m_Tables(tables),
             m_Environment(environment), m_Egocentric(egocentric),
-            m_Export(exportLayer) {}
+            m_Export(exportLayer), m_TickQueue(tickQueue) {}
         ~AIThread() = default;
 
         // Runs the thread loop until the lifecycle stops.
@@ -66,32 +66,34 @@ export namespace Mod::Thread::System
         Perception::Layer& m_Environment;
         Views::Layer& m_Egocentric;
         Bridge::Codec::Layer& m_Export;
+        TickQueue& m_TickQueue;
         std::vector<std::function<void(const ObservedTick&)>> m_Observers{};
 
-        // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep.
-        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 4> k_StageNames{ [] {
-            std::array<std::string_view, k_PipelineStageNames.size() + 4> names{ "Capture" };
-            std::ranges::copy(k_PipelineStageNames, names.begin() + 1);
-            names[k_PipelineStageNames.size() + 1] = "Bridge";
-            names[k_PipelineStageNames.size() + 2] = "Observers";
+        // Longest wait for the next queued tick. The thread looks at the lifecycle again after it, so a teardown or a stop is noticed.
+        static constexpr std::chrono::milliseconds k_PopTimeout{ 10 };
+
+        // Stages of a sweep, in the order they run. Timed to find the one behind a slow sweep. The capture is not one of them: the game thread
+        // does it (D305) and the telemetry times it apart.
+        static constexpr std::array<std::string_view, k_PipelineStageNames.size() + 3> k_StageNames{ [] {
+            std::array<std::string_view, k_PipelineStageNames.size() + 3> names{};
+            std::ranges::copy(k_PipelineStageNames, names.begin());
+            names[k_PipelineStageNames.size()] = "Bridge";
+            names[k_PipelineStageNames.size() + 1] = "Observers";
             names.back() = "Other";
             return names;
         }() };
 
         bool m_IsLoaded{ false };
-        // The next tick that runs the pipeline is the first one after the map loaded (D207).
-        bool m_IsFirstTickAfterLoad{ true };
-        // Whether the previous tick was read in sparse mode (Q101). The first tick after it turns on runs the whole pipeline.
-        bool m_IsSparse{ false };
+        // Whether the queue is open, that is, this thread consumes ticks. The game thread queues only then.
+        bool m_IsConsuming{ false };
 
         // Teardown epoch (LifecycleStore) the state was last reset for.
         std::uint64_t m_ResetEpoch{ 0 };
 
+        // Generation of the last tick taken from the queue, for the logs.
         std::uint64_t m_Last{ 0 };
-        std::uint64_t m_Dropped{ 0 };
-
-        // Clock of the bridge read with the current tick (D135): its action tick and whether a frame goes to Python.
-        BridgeClock m_BridgeClock{};
+        // Teardown epoch of the tick being processed.
+        std::uint64_t m_TickEpoch{ 0 };
 
         // Time of each stage in the current sweep, in nanoseconds.
         std::array<std::uint64_t, k_StageNames.size()> m_StageNs{};
@@ -101,23 +103,32 @@ export namespace Mod::Thread::System
         // Calls EndStage. Built once so the pipeline takes it without allocating every tick.
         std::function<void()> m_EndStage{ [this] { this->EndStage(); } };
         // Asks the lifecycle whether the tick may still publish, for the pipeline right before it assembles the Tick.
-        std::function<bool()> m_CanPublish{ [this] { return m_Base.m_LifecycleStore.CanPublish(); } };
+        std::function<bool()> m_CanPublish{ [this] { return this->IsCurrent(); } };
 
         // Builds the map, definitions, world and vitality data once the map file is loaded.
         auto LoadResources() -> void;
 
-        // Copies the game into a Snapshot, releases the game thread and runs the pipeline over the Snapshot.
-        // return: The Snapshot the tick was built from, or null if the engine started tearing down once the read ended (the pipeline
-        // did not run).
-        auto ExecuteTick(std::uint64_t generation) -> std::shared_ptr<const Snapshot>;
+        // Opens or closes the queue: the game thread queues ticks only while it is open.
+        auto SetConsuming(bool value) -> void;
 
-        // Sparse mode, a tick that is not a decision: copies only what the light pass needs, releases the game thread and runs the light pass
-        // (the flag pass). Nothing is published and no observer runs.
-        // return: False if the engine started tearing down once the read ended (the pass did not complete).
-        auto ExecuteLightTick() -> bool;
+        // Runs the pipeline over the Snapshot of a queued tick.
+        // return: False if the engine started tearing down before or while it ran (the pipeline did not complete, nothing is published).
+        auto ExecuteTick(const CapturedTick& tick) -> bool;
+
+        // Sparse mode, a tick that is not a decision: runs the light pass (the flag pass) over the light Snapshot. Nothing is published and
+        // no observer runs.
+        // return: False if the engine started tearing down before or while it ran (the pass did not complete).
+        auto ExecuteLightTick(const CapturedTick& tick) -> bool;
+
+        // Takes a queued tick through the pipeline, hands it to the bridge on a decision and to the observers, and records the telemetry.
+        auto ProcessTick(const CapturedTick& tick) -> void;
 
         // Counts a tick that was cut by a teardown (shown in the log of the teardown) and logs it.
         auto DiscardTick(std::uint64_t generation) -> void;
+
+        // Drops the ticks still in the queue, counted as discarded.
+        // note: Only called when the teardown epoch changed: the game thread queues nothing for the old epoch any more.
+        auto DiscardPending() -> void;
 
         // Records the time since the previous stage ended as the next stage of k_StageNames.
         auto EndStage() -> void;
@@ -127,10 +138,14 @@ export namespace Mod::Thread::System
         // note: The game waits for the read of each tick for up to 100 ms (LifecycleStore), so a sweep near that drops ticks.
         auto ReportSlowSweep(std::uint64_t sweepNs) -> void;
 
+        // Checks whether the tick being processed may still publish: the engine is not tearing down and the tick belongs to the current
+        // teardown epoch, so a tick that outlived the wait of the game thread never publishes into the stores of the next map.
+        auto IsCurrent() const -> bool;
+
         // Checks whether the lifecycle is running and not tearing down.
         auto IsStable() -> bool;
 
-        // Clears the tick generation and the load state for the next map.
+        // Closes the queue, drops its ticks and clears the load state for the next map.
         // note: Idempotent: Run calls it when the teardown epoch changed and again in TearingDown.
         auto Reset() -> void;
     };

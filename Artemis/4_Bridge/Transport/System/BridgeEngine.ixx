@@ -7,8 +7,8 @@ import std;
 export namespace Bridge::Transport::System
 {
     // What the bridge reads and writes in the engine (D215). Implemented by the owner (Mod), the bridge never imports the engine.
-    // note: The bridge calls it from its own thread (Update, EndTick), from the AI thread (CaptureClock) and from the game thread
-    // (Apply, and BeginMatch when the engine initializes).
+    // note: The bridge calls it from its own thread (Update, EndTick), and from the game thread (CaptureClock, Apply, and BeginMatch
+    // when the engine initializes).
     class BridgeEngine
     {
     private:

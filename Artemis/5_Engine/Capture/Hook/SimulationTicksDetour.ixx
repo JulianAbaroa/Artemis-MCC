@@ -16,8 +16,8 @@ export namespace Engine::Capture::Hook
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, keeps the engine speed requested by
     // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), applies the match setup requested between rounds (D286), records the telemetry of the call
     // and closes its last tick (ExecuteGameFrameDetour closes the others).
-    // note: Without the ExecuteGameFrame hook it signals once per call that advanced ticks, so only the last tick of a frame is seen.
-    // note: Game main thread only. See docs/Tick Synchronization.md.
+    // note: Without the ExecuteGameFrame hook it produces once per call that advanced ticks, so only the last tick of a frame is seen.
+    // note: Game main thread only.
     class SimulationTicksDetour
     {
     private:

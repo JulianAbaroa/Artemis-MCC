@@ -198,3 +198,25 @@ TEST(TelemetryTests, LightTicksAreCountedApartFromTheSweeps)
     // The maximum restarts with each photo, as the one of the sweeps.
     EXPECT_EQ(Photo(store).LightMaxNs, 0u);
 }
+
+TEST(TelemetryTests, TickQueueKeepsTheCaptureTheWaitAndTheDepthOfEachPush)
+{
+    TelemetryStore store{};
+    store.RecordTickQueue(500, 0, 1);
+    const PerfSnapshot before{ Photo(store) };
+
+    store.RecordTickQueue(700, 40, 2);
+    store.RecordTickQueue(600, 0, 4);
+    // A tick that was not queued (lost or nothing to read) adds its times but no depth sample.
+    store.RecordTickQueue(300, 100, 0);
+
+    const PerfSnapshot delta{ Subtract(Photo(store), before) };
+    EXPECT_EQ(delta.CaptureNs, 1'600u);
+    EXPECT_EQ(delta.QueueWaitNs, 140u);
+    EXPECT_EQ(delta.QueuePushes, 2u);
+    EXPECT_EQ(delta.QueueDepthSum, 6u);
+    EXPECT_EQ(delta.QueueDepthMax, 4u);
+
+    // The maximum restarts with each photo, as the others of the store.
+    EXPECT_EQ(Photo(store).QueueDepthMax, 0u);
+}

@@ -32,7 +32,7 @@ export namespace Engine::Capture
             m_ObjectTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_PlayerTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_InteractionTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
-            m_ExecuteGameFrameDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, base.m_LifecycleStore, m_OracleService),
+            m_ExecuteGameFrameDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, m_OracleService),
             m_SimulationTicksDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, base.m_LifecycleStore, m_CaptureStore,
                 base.m_MatchSetupService, m_ExecuteGameFrameDetour) {}
         ~Layer() = default;

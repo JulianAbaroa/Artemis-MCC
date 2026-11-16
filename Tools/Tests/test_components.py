@@ -306,13 +306,14 @@ def test_the_domain_does_not_read_the_game():
     assert not wrong, wrong
 
 
-def test_read_window_ends_right_after_the_copy():
-    text = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
-    capture = text.index("m_CaptureService.Capture()")
-    end_read = text.index("EndRead(m_Last)")
-    # The first table update is the first stage of the pipeline (M5c, D205).
-    first_table = text.index("m_PipelineService.Run(")
-    assert capture < end_read < first_table
+def test_the_tick_is_copied_on_the_game_thread_before_the_oracle_and_the_ai_thread_never_reads_memory():
+    ai = Read("Artemis/8_Mod/Mod/Thread/System/AI/AIThread.cpp")
+    assert "m_CaptureService" not in ai and "MemoryReaderService" not in ai
+    # D305: the producer reads the clock, copies, and only then queues; the hook runs the oracle after the producer.
+    producer = Read("Artemis/8_Mod/Mod/Port/System/TickProducerAdapter.cpp")
+    assert producer.index("CaptureClock(") < producer.index("m_CaptureService.Capture()") < producer.index("m_TickQueue.Push(")
+    frame = Read("Artemis/5_Engine/Capture/Hook/ExecuteGameFrameDetour.cpp")
+    assert frame.index("this->ProduceTick()") < frame.index("m_OracleService.Run()")
 
 
 # ---- M5b: Perception, Views, Bridge.Codec and Contract (D198-D201)
@@ -1007,8 +1008,8 @@ def test_mod_wires_the_engine_before_the_tools():
     members = MOD_MEMBER.findall(Read(f"{MOD}/Mod.Layer.ixx"))
     assert members == [
         "m_Module", "m_IsMinHookReady", "m_Service", "m_Base", "m_Capture", "m_Control", "m_Match", "m_Render", "m_BridgeEngineAdapter",
-        "m_Transport", "m_BridgeActionSource", "m_IsEngineWired", "m_Preferences", "m_EngineAccess", "m_Map", "m_Resolved", "m_Tables",
-        "m_Environment", "m_Egocentric", "m_Export", "m_Gui", "m_Viewer", "m_UI", "m_Main", "m_AI", "m_Bench", "m_Bridge", "m_Dump",
+        "m_Transport", "m_BridgeActionSource", "m_TickQueue", "m_TickProducer", "m_IsEngineWired", "m_Preferences", "m_EngineAccess", "m_Map",
+        "m_Resolved", "m_Tables", "m_Environment", "m_Egocentric", "m_Export", "m_Gui", "m_Viewer", "m_UI", "m_Main", "m_AI", "m_Bench", "m_Bridge", "m_Dump",
         "m_AIThread", "m_BenchThread", "m_BridgeThread", "m_DumpThread"], members
     assert members.index("m_IsEngineWired") > members.index("m_BridgeActionSource")
     assert members.index("m_IsEngineWired") < members.index("m_Gui")

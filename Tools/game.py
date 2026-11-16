@@ -245,6 +245,10 @@ def PerfLines(perf):
              f"avg {lockstep.get('avg_ms', 0):.2f} max {lockstep.get('max_ms', 0):.2f} ms"]
     if "object_slots_max" in perf:
         lines[0] += f" | object slots max {perf['object_slots_max']} objects max {perf.get('objects_max', 0)}"
+    queue = perf.get("queue_depth")
+    if queue is not None:
+        lines[0] += (f" | capture {perf.get('capture_ms', 0):.2f} queue wait {perf.get('queue_wait_ms', 0):.2f} ms "
+                     f"depth avg/max {queue.get('avg', 0):.2f}/{queue.get('max', 0)}")
     light = perf.get("light", {})
     if light.get("ticks"):
         lines[0] += f" | light {light['ticks']} ticks avg {light.get('avg_us', 0):.0f} max {light.get('max_us', 0):.0f} us"

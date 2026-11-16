@@ -34,6 +34,11 @@ export namespace Control::Lockstep::System
     // note: Without a client, or when it leaves, every tick runs the pipeline.
     auto IsSparse(const BridgeControlState& control, std::uint32_t everyTickDemand) -> bool;
 
+    // return: Whether a tick only needs the light capture and the flag pass (Q101): sparse mode, not a decision, the previous tick was
+    // already sparse and it is not the first tick after a map load. The first tick after a load and the first after the mode turned on run
+    // the whole pipeline, so the tick of a decision always has the state it needs.
+    auto IsLightTick(bool isSparse, bool isDecision, bool wasSparse, bool isFirstAfterLoad) -> bool;
+
     // return: The override of a player for the action of the client, with the values the engine accepts.
     // param turnLimit: Turn limit of the client. A value that is not a positive number is 0 (straight to the target).
     // param isRejected: Set to true when a value had to be changed. Never set to false.
@@ -44,7 +49,7 @@ export namespace Control::Lockstep::System
     auto ToClientRequests(std::uint8_t requests) -> ClientRequests;
 
     // return: The decision the game thread has to wait for before this action tick, or 0 if it does not wait.
-    // param pushedDecision: Last decision the AI thread handed to the bridge.
+    // param pushedDecision: Last decision tick handed to the AI thread, so its frame will reach the client (D305).
     // param sequence: Last decision the client answered.
     // note: Only in Lockstep, not suspended. The tick of a decision plus the latency waits for it, if it was published.
     auto GetDueDecision(std::uint64_t actionTick, const BridgeControlState& control, const BridgeHookState& hook,

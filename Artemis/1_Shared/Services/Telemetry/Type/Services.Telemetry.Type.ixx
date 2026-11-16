@@ -19,6 +19,7 @@ export namespace Services::Telemetry::Type
         std::uint64_t Ticks{ 0 };
         // Engine time of the simulation calls, without the wait for the AI read. It still includes the Lockstep wait.
         std::uint64_t EngineNs{ 0 };
+        // Time the game thread waited per tick for the AI read: since D305 the capture plus the wait for room in the tick queue.
         std::uint64_t ReadWaitNs{ 0 };
         std::uint64_t ReadTimeouts{ 0 };
         std::uint64_t Sweeps{ 0 };
@@ -34,6 +35,14 @@ export namespace Services::Telemetry::Type
         std::uint64_t LightNs{ 0 };
         // Longest light tick since the previous photo. It is not a difference: the store restarts it when a photo is taken.
         std::uint64_t LightMaxNs{ 0 };
+        // The parts of ReadWaitNs (D305): the time copying the game into a Snapshot and the time waiting for room in the tick queue.
+        std::uint64_t CaptureNs{ 0 };
+        std::uint64_t QueueWaitNs{ 0 };
+        // Depth of the tick queue right after each push: the sum and the number of pushes (the average is their quotient), and the highest
+        // since the previous photo. The maximum is not a difference: the store restarts it when a photo is taken.
+        std::uint64_t QueueDepthSum{ 0 };
+        std::uint64_t QueuePushes{ 0 };
+        std::uint64_t QueueDepthMax{ 0 };
         // Highest first-unused slot (+0x44) and highest live count (+0x48) of the engine object table since the previous photo.
         // They are not differences: the store restarts them when a photo is taken.
         std::uint64_t ObjectSlotsMax{ 0 };

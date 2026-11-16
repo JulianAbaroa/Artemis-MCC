@@ -69,15 +69,16 @@ export namespace Bridge::Transport::System
         // still.
         auto Update() -> void;
 
-        // Reads the clock of the tick being read. AI thread, while the game thread waits for the read (SyncRead).
+        // Reads the clock of the tick about to be copied. Game thread, between two ticks, right before the capture (D305).
         // param isConsecutive: False after dropped ticks or a reset, so a jump is not counted as a clock skip.
         // note: The first read of a new match is not a skip either: every engine starts the clock again (D139).
         auto CaptureClock(bool isConsecutive, BridgeClock& out) -> void;
 
-        // Forgets the last read tick (the AI thread starts over after a teardown).
+        // Forgets the last read tick. Game thread, when the first tick of a new teardown epoch is produced.
         auto ResetClock() -> void;
 
-        // Records that the AI thread handed this decision tick to the bridge thread. AI thread.
+        // Records that this decision tick was handed to the AI thread (queued, D305): its frame goes to the client, so the game thread
+        // waits for the answer at the tick of the decision plus the latency. Game thread, right after the tick was queued.
         auto MarkPushed(std::uint64_t tick) -> void;
 
         // return: The buffer the next tick goes to, marked as being written, or null when the bridge is closed.

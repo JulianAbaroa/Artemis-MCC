@@ -7,11 +7,14 @@ import :ExecuteGameFrame;
 
 import Engine.Base.Memory.Type;
 import Engine.Base.Hook.System;
+import Engine.Capture.Type;
 import std;
 
 namespace
 {
     namespace Signature = Engine::Base::Memory::Type::Signature;
+
+    using Engine::Capture::Type::ProducedTick;
 
     using Engine::Base::Hook::System::k_DrainTimeout;
 }
@@ -96,17 +99,34 @@ namespace Engine::Capture::Hook
         return m_SimulationWaitNs;
     }
 
+    auto ExecuteGameFrameDetour::SetTickProducer(TickProducer& tickProducer) -> void
+    {
+        m_TickProducer = &tickProducer;
+    }
+
     auto ExecuteGameFrameDetour::CloseTick() -> void
     {
+        this->ProduceTick();
+
+        // The copy of the tick is complete and the game thread is between two ticks: the oracle runs after the read, as it did when the
+        // AI thread read the tick (D272, D305).
+        m_OracleService.Run();
+    }
+
+    auto ExecuteGameFrameDetour::ProduceTick() -> void
+    {
+        if (m_TickProducer == nullptr) return;
+
         auto start{ steady_clock::now() };
-        const bool isRead{ m_LifecycleStore.SignalTick() };
+        const ProducedTick produced{ m_TickProducer->Produce() };
         auto end{ steady_clock::now() };
 
-        const auto waitNs{ static_cast<std::uint64_t>(std::chrono::duration_cast<nanoseconds>(end - start).count()) };
-        m_SimulationWaitNs += waitNs;
-        m_TelemetryStore.RecordReadWait(waitNs, !isRead);
+        const auto readNs{ static_cast<std::uint64_t>(std::chrono::duration_cast<nanoseconds>(end - start).count()) };
+        m_SimulationWaitNs += readNs;
+        m_TelemetryStore.RecordReadWait(readNs, produced.IsLost);
+        m_TelemetryStore.RecordTickQueue(produced.CaptureNs, produced.QueueWaitNs, produced.QueueDepth);
 
-        // The window is closed and the game thread is between two ticks: the oracle does not delay the AI read (D272).
-        m_OracleService.Run();
+        // A lost tick is counted here, when it happens: the next queued tick may be discarded and would take the count with it.
+        if (produced.IsLost) m_TelemetryStore.RecordDroppedTicks(1);
     }
 }

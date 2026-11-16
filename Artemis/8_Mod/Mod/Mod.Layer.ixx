@@ -7,6 +7,7 @@ export module Mod.Layer;
 import Services.Layer;
 import Services.Preferences.System;
 import Engine.Base.Layer;
+import Engine.Capture.Type;
 import Engine.Capture.Layer;
 import Engine.Control.Layer;
 import Engine.Match.Layer;
@@ -27,6 +28,11 @@ import Mod.Port.System;
 import Mod.Thread.System;
 import std;
 
+namespace
+{
+    using Engine::Capture::Type::k_TickQueueDepth;
+}
+
 export namespace Mod
 {
     // Root of the DLL. Owns every Layer, the lifecycle wiring of the engine and the threads.
@@ -41,8 +47,10 @@ export namespace Mod
 
         using BridgeEngineAdapter = Mod::Port::System::BridgeEngineAdapter;
         using BridgeActionSource = Mod::Port::System::BridgeActionSource;
+        using TickProducerAdapter = Mod::Port::System::TickProducerAdapter;
 
         using ObservedTick = Bridge::Codec::Pipeline::Type::ObservedTick;
+        using TickQueue = Bridge::Codec::Pipeline::Type::TickQueue;
 
         using MainThread = Mod::Thread::System::MainThread;
         using AIThread = Mod::Thread::System::AIThread;
@@ -93,6 +101,10 @@ export namespace Mod
         Bridge::Transport::Layer m_Transport{ m_Service, m_BridgeEngineAdapter };
         BridgeActionSource m_BridgeActionSource{ m_Transport.m_BridgeService };
 
+        // The ticks the game thread copies for the AI thread (D305), and the producer that fills the queue from the tick hooks.
+        TickQueue m_TickQueue{ k_TickQueueDepth };
+        TickProducerAdapter m_TickProducer{ m_Base.m_LifecycleStore, m_Capture.m_CaptureService, m_Transport.m_BridgeService, m_TickQueue };
+
         // Registers the lifecycle callbacks of the engine. A member and not the body of the constructor so they are registered before the
         // tools build theirs: LifecycleService calls them in registration order (M8 C, sec. 2.5).
         bool m_IsEngineWired{ this->WireEngine() };
@@ -135,7 +147,7 @@ export namespace Mod
         DevTools::Workbench::Layer m_UI{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
 
         MainThread m_Main{ m_Service, m_Base, m_Match, m_Render };
-        AIThread m_AI{ m_Service, m_Base, m_Capture, m_Transport, m_Map, m_Resolved, m_Tables, m_Environment, m_Egocentric, m_Export };
+        AIThread m_AI{ m_Service, m_Base, m_Capture, m_Transport, m_Map, m_Resolved, m_Tables, m_Environment, m_Egocentric, m_Export, m_TickQueue };
         BenchThread m_Bench{ m_Service, m_Base, m_UI.m_BenchUIService };
         BridgeThread m_Bridge{ m_Service, m_Base, m_Transport, m_Export };
         DumpThread m_Dump{ m_Service, m_Base, m_UI.m_TickDumpUIService };
