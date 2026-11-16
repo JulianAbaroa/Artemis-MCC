@@ -1070,6 +1070,12 @@ TEST(DISABLED_RaycastBench, Forge650)
     RunBench("BenchFilms/forge650", "forge650");
 }
 
+// Alien Landing 8v8 with 16 players acting at x10 (RS.2): the map of the in-game breakdown, to set the bench against the game.
+TEST(DISABLED_RaycastBench, Alien8v8)
+{
+    RunBench("BenchFilms/alien8v8", "alien8v8");
+}
+
 // The rules of the rebuild of the fixed tree side by side (D301). The rules are in build/bench/rs1c_sweep.txt, one "N T" per line.
 TEST(DISABLED_RaycastBench, SweepForge650)
 {
