@@ -3,6 +3,8 @@
 import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Math.System;
+import Blam.MapModel.World.System;
+import Blam.MapModel.World.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
 import Views.Raycast.Type;
@@ -20,6 +22,8 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Blam::MapModel::World::Type::Raycast::BvhBounds;
+    using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Tests::Support::Bench::Micros;
     using Tests::Support::Bench::Series;
     using Tests::Support::Bench::Stats;
@@ -35,9 +39,12 @@ namespace
     using Views::Raycast::System::GatherSceneObjects;
     using Views::Raycast::System::PerceptionDirections;
     using Views::Raycast::System::PrepareMeshBvhs;
+    using Views::Raycast::System::PreparePart;
     using Views::Raycast::System::ResolveAimRange;
     using Views::Raycast::System::ResolvePerceptionOrigin;
+    using Views::Raycast::Type::CachedPart;
     using Views::Raycast::Type::FixedRebuildRule;
+    using Views::Raycast::Type::MobileRebuildRule;
     using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
@@ -45,12 +52,14 @@ namespace
     using Views::Raycast::Type::SceneGatherCounters;
     using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::ScenePiece;
     using Views::Raycast::Type::ScenePartsCache;
     using Views::Raycast::Type::SelfExclusion;
     using std::chrono::steady_clock;
 
     using Common::Engine::Type::k_NoHandle;
     using Tests::Support::Bench::k_NanosPerMicro;
+    using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
     using Views::Raycast::Type::Constant::k_PerceptionRange;
     using Views::Raycast::Type::Constant::k_PerceptionRayCount;
 
@@ -720,14 +729,143 @@ namespace
         }
     };
 
+    // RS.1d part A: what the mobile tree costs by stage, how many of its leaves change pose from one record to the next and how many
+    // records in a row it keeps exactly the same pieces. Every stage runs in its own loop over the objects of the mobile tree.
+    class MobileStages
+    {
+    public:
+        // Called with the scene after ArmFixedScene and before ArmMobileScene, so scene.Mobile is still the one of the previous record.
+        auto Observe(RaycastScene& scene, const SceneObjects& objects) -> void
+        {
+            auto start{ steady_clock::now() };
+            const std::size_t built{ PrepareMeshBvhs(scene, objects, false) };
+            const double meshUs{ Micros(start, steady_clock::now()) };
+
+            start = steady_clock::now();
+            std::vector<std::vector<CachedPart>> prepared{};
+            prepared.reserve(objects.size());
+            for (const SceneObject& object : objects)
+            {
+                if (object.IsCovered) continue;
+                std::vector<CachedPart>& parts{ prepared.emplace_back() };
+                for (const auto& part : object.Parts)
+                {
+                    CachedPart cached{};
+                    if (PreparePart(part, cached)) parts.push_back(cached);
+                }
+            }
+            const double prepareUs{ Micros(start, steady_clock::now()) };
+
+            start = steady_clock::now();
+            std::vector<ScenePiece> pieces{};
+            std::size_t group{ 0 };
+            for (const SceneObject& object : objects)
+            {
+                if (object.IsCovered) continue;
+
+                const std::vector<CachedPart>& parts{ prepared[group++] };
+                for (std::size_t index{ 0 }; index < parts.size(); ++index)
+                {
+                    ScenePiece piece{};
+                    piece.Part = parts[index];
+                    piece.Bvh = &scene.Meshes.at(parts[index].Source);
+                    piece.Handle = object.Handle;
+                    piece.PartIndex = static_cast<std::uint32_t>(index);
+                    pieces.push_back(piece);
+                }
+            }
+            const double piecesUs{ Micros(start, steady_clock::now()) };
+
+            start = steady_clock::now();
+            std::vector<BvhBounds> bounds{};
+            bounds.reserve(pieces.size());
+            for (const ScenePiece& piece : pieces)
+            {
+                const Vec3& c{ piece.Part.Center };
+                const float r{ piece.Part.Radius + k_BoxPadding };
+                bounds.push_back(BvhBounds{ { c.X - r, c.Y - r, c.Z - r }, { c.X + r, c.Y + r, c.Z + r } });
+            }
+            const double boxesUs{ Micros(start, steady_clock::now()) };
+
+            start = steady_clock::now();
+            std::vector<BvhNode> nodes{};
+            std::vector<std::uint32_t> order{};
+            Blam::MapModel::World::System::BuildBoundsBvh(bounds, nodes, order);
+            const double bvhUs{ Micros(start, steady_clock::now()) };
+            m_Sink += static_cast<double>(nodes.size());
+
+            // Against the pieces armed in the previous record.
+            const std::vector<ScenePiece>& old{ scene.Mobile.Pieces };
+            bool same{ old.size() == pieces.size() };
+            std::size_t changed{ 0 };
+            for (std::size_t index{ 0 }; same && index < pieces.size(); ++index)
+            {
+                same = old[index].Handle == pieces[index].Handle && old[index].Bvh == pieces[index].Bvh && old[index].PartIndex == pieces[index].PartIndex;
+                if (!same) break;
+                if (old[index].Part.ToLocal != pieces[index].Part.ToLocal) ++changed;
+            }
+
+            ++m_Records;
+            if (built > 0) return;
+
+            m_Mesh.Add(meshUs);
+            m_Prepare.Add(prepareUs);
+            m_Pieces.Add(piecesUs);
+            m_Boxes.Add(boxesUs);
+            m_Bvh.Add(bvhUs);
+            m_Leaves.Add(static_cast<double>(pieces.size()));
+            if (same)
+            {
+                ++m_Same;
+                ++m_Streak;
+                m_Changed.Add(static_cast<double>(changed));
+                m_ChangedShare.Add(pieces.empty() ? 0.0 : 100.0 * static_cast<double>(changed) / static_cast<double>(pieces.size()));
+                return;
+            }
+
+            if (m_Streak > 0) m_Streaks.Add(static_cast<double>(m_Streak));
+            m_Streak = 0;
+        }
+
+        auto Lines() const -> std::vector<std::string>
+        {
+            std::vector<std::string> lines{};
+            lines.push_back(std::format("RS.1d part A: mobile tree by stage, every record, us per arming ({} records, {} with exactly the pieces of the previous record).", m_Records, m_Same));
+            lines.push_back(TimeLine("A PrepareMeshBvhs (all built)", m_Mesh));
+            lines.push_back(TimeLine("A PrepareParts of every object", m_Prepare));
+            lines.push_back(TimeLine("A pieces (push_back, meshes.at)", m_Pieces));
+            lines.push_back(TimeLine("A boxes of the leaves", m_Boxes));
+            lines.push_back(TimeLine("A BuildBoundsBvh", m_Bvh));
+            lines.push_back(CountLine("A leaves of the mobile tree", m_Leaves));
+            lines.push_back(CountLine("A leaves that changed pose (same pieces)", m_Changed));
+            lines.push_back(CountLine("A share of leaves that changed pose, % (same pieces)", m_ChangedShare));
+            lines.push_back(CountLine("A records in a row with the same pieces", m_Streaks));
+            return lines;
+        }
+
+    private:
+        Series m_Mesh{}, m_Prepare{}, m_Pieces{}, m_Boxes{}, m_Bvh{}, m_Leaves{}, m_Changed{}, m_ChangedShare{}, m_Streaks{};
+        std::size_t m_Records{};
+        std::size_t m_Same{};
+        std::size_t m_Streak{};
+        double m_Sink{};
+    };
+
+    // One rule of the sweep: when the fixed tree (D301) and the mobile tree (D302) are built again.
+    struct SweepRule
+    {
+        FixedRebuildRule Fixed{};
+        MobileRebuildRule Mobile{};
+    };
+
     // Several rules for the rebuild of the fixed tree (D301) run side by side over the same film, each with its own scene and cache, the
     // way Self runs them: a gather at every record, the arming, and the 15 rays of Self. Only the scene part of Update is timed.
     class RuleSweep
     {
     public:
-        explicit RuleSweep(const std::vector<FixedRebuildRule>& rules)
+        explicit RuleSweep(const std::vector<SweepRule>& rules)
         {
-            for (const FixedRebuildRule& rule : rules) m_Runs.push_back(Run{ .Rule = rule });
+            for (const SweepRule& rule : rules) m_Runs.push_back(Run{ .Rule = rule.Fixed, .Mobile = rule.Mobile });
         }
 
         // Called after each record of the pass.
@@ -753,9 +891,17 @@ namespace
                 SceneObjects objects{ GatherSceneObjects(run.Reuse, chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore, nullptr) };
                 const auto gathered{ steady_clock::now() };
                 const bool rebuilt{ ArmFixedScene(run.Scene, objects, run.Rule) };
-                ArmMobileScene(run.Scene, objects);
+                if (index == 0) m_Stages.Observe(run.Scene, objects);
+                const std::size_t degradedBefore{ run.Scene.MobileDegraded };
+                const auto armStart{ steady_clock::now() };
+                ArmMobileScene(run.Scene, objects, run.Mobile);
+                const auto armed{ steady_clock::now() };
                 for (const Ray& ray : rays) hits.push_back(CastSceneRay(chain.m_Resolved.m_Raycaster, run.Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr));
                 const auto end{ steady_clock::now() };
+
+                run.Arm.Add(Micros(armStart, armed));
+                run.Rays.Add(Micros(armed, end));
+                if (run.Scene.MobileDegraded > degradedBefore) run.Ratio.Add(static_cast<double>(run.Scene.MobileAreaRatio));
 
                 run.Total.Add(Micros(start, end));
                 run.Gather.Add(Micros(start, gathered));
@@ -796,7 +942,18 @@ namespace
                     gather.Mean, rebuild.Mean, run.MobileLeaves.Summary().Mean, run.Filtered.Summary().Mean, run.Pending.Summary().Mean));
             }
 
+            lines.push_back("  RS.1d mobile tree per rule: R = largest area growth before a build, builds (all / asked by the rule), refits, arm MOBILE us, 15 rays us, mean area ratio at the rule's builds");
+            for (const Run& run : m_Runs)
+            {
+                const Stats arm{ run.Arm.Summary() };
+                const Stats rays{ run.Rays.Summary() };
+                lines.push_back(std::format("  R {:>6.2f} {:>6} {:>6} {:>7} | arm mean {:>7.1f} p99 {:>7.1f} | rays mean {:>7.1f} p99 {:>7.1f} | ratio at rebuild {:>6.2f}",
+                    run.Mobile.MaxArea, run.Scene.MobileBuilds, run.Scene.MobileDegraded, run.Scene.MobileRefits, arm.Mean, arm.P99, rays.Mean, rays.P99,
+                    run.Ratio.Summary().Mean));
+            }
+
             lines.push_back(std::format("Rays of every rule against the first one: {} compared, {} differences.", m_Compared, m_Differences));
+            for (const std::string& line : m_Stages.Lines()) lines.push_back(line);
             return lines;
         }
 
@@ -804,32 +961,40 @@ namespace
         struct Run
         {
             FixedRebuildRule Rule{};
+            MobileRebuildRule Mobile{};
             RaycastScene Scene{};
             ScenePartsCache Reuse{};
-            Series Total{}, Gather{}, Rebuild{}, MobileLeaves{}, Filtered{}, Pending{};
+            Series Total{}, Gather{}, Rebuild{}, MobileLeaves{}, Filtered{}, Pending{}, Arm{}, Rays{}, Ratio{};
         };
 
         std::vector<Run> m_Runs{};
+        MobileStages m_Stages{};
         std::size_t m_Records{};
         std::size_t m_Compared{};
         std::size_t m_Differences{};
         double m_Sink{};
     };
 
-    // The rules of the sweep: the lines "N T" of build/bench/rs1c_sweep.txt, each with the spacing of the constants.
-    // note: Without the file, N in {1, 4, 8, 16, 32} with T = 256.
-    auto SweepRules() -> std::vector<FixedRebuildRule>
+    // The rules of the sweep: the lines "N T R" of build/bench/rs1c_sweep.txt, each with the spacing of the constants.
+    // note: Without the file, the fixed rule of the constants and R in {1, 1.25, 1.5, 2}.
+    auto SweepRules() -> std::vector<SweepRule>
     {
         const std::filesystem::path source{ std::source_location::current().file_name() };
         std::ifstream in{ source.parent_path().parent_path().parent_path().parent_path().parent_path() / "build" / "bench" / "rs1c_sweep.txt" };
-        std::vector<FixedRebuildRule> rules{};
+        std::vector<SweepRule> rules{};
         std::size_t pending{};
         std::size_t maxGathers{};
-        while (in >> pending >> maxGathers) rules.push_back(FixedRebuildRule{ .Pending = pending, .MaxGathers = maxGathers });
+        float maxArea{};
+        while (in >> pending >> maxGathers >> maxArea)
+        {
+            // An area of 0 in the file stands for never building the mobile tree again while its pieces stay the same.
+            rules.push_back(SweepRule{ FixedRebuildRule{ .Pending = pending, .MaxGathers = maxGathers },
+                MobileRebuildRule{ .MaxArea = maxArea > 0.0f ? maxArea : std::numeric_limits<float>::infinity() } });
+        }
 
         if (rules.empty())
         {
-            for (const std::size_t pendingRule : { 1, 4, 8, 16, 32 }) rules.push_back(FixedRebuildRule{ .Pending = pendingRule, .MaxGathers = 256 });
+            for (const float areaRule : { 1.0f, 1.25f, 1.5f, 2.0f }) rules.push_back(SweepRule{ FixedRebuildRule{}, MobileRebuildRule{ .MaxArea = areaRule } });
         }
 
         return rules;

@@ -15,6 +15,7 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Views::Raycast::Type::FixedRebuildRule;
+    using Views::Raycast::Type::MobileRebuildRule;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
@@ -66,8 +67,13 @@ export namespace Views::Raycast::System
     // do not depend on when the tree is built.
     auto ArmFixedScene(RaycastScene& scene, SceneObjects& objects, const FixedRebuildRule& rule = {}) -> bool;
 
-    // Rebuilds the tree of the objects that the fixed tree does not cover. Runs every decision tick, after ArmFixedScene.
-    auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects) -> void;
+    // Keeps the tree of the objects that the fixed tree does not cover up to date. Runs every decision tick, after ArmFixedScene (D302).
+    // note: Its pieces are the parts of those objects in their pose of the tick. When they are the same pieces as in the last arming
+    // (same handles, meshes and part indices, in the same order) only their poses changed: the hierarchy keeps its topology and its boxes
+    // are refitted from the leaves up, which holds exactly what a build would. The tree is built again when the pieces change (an object
+    // appears, leaves or changes its number of parts), or when the refit ends with the area of its inner nodes above rule.MaxArea times
+    // the area it had when it was built. The hits do not depend on which of the two ran. RaycastSceneStore::Cleanup drops the state with the scene.
+    auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects, const MobileRebuildRule& rule = {}) -> void;
 
     // Looks for a dynamic hit nearer than the one in best through both trees, and replaces it.
     // param best: The result of CastStatic for the same ray.

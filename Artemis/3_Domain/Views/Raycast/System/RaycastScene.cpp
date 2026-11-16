@@ -25,6 +25,7 @@ namespace
     using Views::Raycast::Type::HitKind;
     using Views::Raycast::Type::MeshBvh;
     using Views::Raycast::Type::MeshBvhs;
+    using Views::Raycast::Type::MobileRebuildRule;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
@@ -230,38 +231,81 @@ namespace
         }
     }
 
-    // Builds an instance tree over the parts of the objects whose IsCovered is covered.
-    auto ArmTree(SceneTree& tree, const MeshBvhs& meshes, const SceneObjects& objects, bool covered) -> void
+    // Sets the pieces of an instance tree to the parts of the objects whose IsCovered is covered, in place.
+    // return: Whether they are the same pieces as before (handle, mesh and part index, in the same order), so only the poses changed.
+    // note: The tree is not valid afterwards, its hierarchy is built or refitted by the caller.
+    auto AssemblePieces(SceneTree& tree, const MeshBvhs& meshes, const SceneObjects& objects, bool covered) -> bool
     {
-        tree.Pieces.clear();
+        std::size_t count{ 0 };
+        bool isSame{ true };
 
         for (const SceneObject& object : objects)
         {
             if (object.IsCovered != covered) continue;
 
-            const std::vector<CachedPart> parts{ Views::Raycast::System::PrepareParts(object.Parts) };
-            for (std::size_t index{ 0 }; index < parts.size(); ++index)
+            std::uint32_t partIndex{ 0 };
+            for (const auto& part : object.Parts)
             {
                 ScenePiece piece{};
-                piece.Part = parts[index];
-                piece.Bvh = &meshes.at(parts[index].Source);
+                if (!Views::Raycast::System::PreparePart(part, piece.Part)) continue;
+
+                piece.Bvh = &meshes.at(piece.Part.Source);
                 piece.Handle = object.Handle;
-                piece.PartIndex = static_cast<std::uint32_t>(index);
-                tree.Pieces.push_back(piece);
+                piece.PartIndex = partIndex++;
+
+                if (count >= tree.Pieces.size())
+                {
+                    isSame = false;
+                    tree.Pieces.push_back(piece);
+                }
+                else
+                {
+                    const ScenePiece& armed{ tree.Pieces[count] };
+                    if (armed.Handle != piece.Handle || armed.Bvh != piece.Bvh || armed.PartIndex != piece.PartIndex) isSame = false;
+                    tree.Pieces[count] = piece;
+                }
+
+                ++count;
             }
         }
 
-        // The box of the sphere of the part: it holds the part whatever its pose.
+        if (count != tree.Pieces.size())
+        {
+            isSame = false;
+            tree.Pieces.erase(tree.Pieces.begin() + static_cast<std::ptrdiff_t>(count), tree.Pieces.end());
+        }
+
+        return isSame;
+    }
+
+    // The box of the sphere of each piece: it holds the part whatever its pose.
+    auto PieceBounds(const std::vector<ScenePiece>& pieces) -> std::vector<BvhBounds>
+    {
         std::vector<BvhBounds> bounds{};
-        bounds.reserve(tree.Pieces.size());
-        for (const ScenePiece& piece : tree.Pieces)
+        bounds.reserve(pieces.size());
+        for (const ScenePiece& piece : pieces)
         {
             const Vec3& c{ piece.Part.Center };
             const float r{ piece.Part.Radius + k_BoxPadding };
             bounds.push_back(BvhBounds{ { c.X - r, c.Y - r, c.Z - r }, { c.X + r, c.Y + r, c.Z + r } });
         }
 
+        return bounds;
+    }
+
+    // Builds the hierarchy of an instance tree from the boxes of its pieces.
+    // return: The area of its inner nodes.
+    auto BuildTree(SceneTree& tree, const std::vector<BvhBounds>& bounds) -> float
+    {
         Blam::MapModel::World::System::BuildBoundsBvh(bounds, tree.Nodes, tree.Order);
+        return Blam::MapModel::World::System::BoundsBvhArea(tree.Nodes);
+    }
+
+    // Builds an instance tree over the parts of the objects whose IsCovered is covered.
+    auto ArmTree(SceneTree& tree, const MeshBvhs& meshes, const SceneObjects& objects, bool covered) -> void
+    {
+        AssemblePieces(tree, meshes, objects, covered);
+        BuildTree(tree, PieceBounds(tree.Pieces));
     }
 
     auto BuildMeshBvh(const CollMesh& mesh) -> MeshBvh
@@ -489,10 +533,32 @@ namespace Views::Raycast::System
         return true;
     }
 
-    auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects) -> void
+    auto ArmMobileScene(RaycastScene& scene, const SceneObjects& objects, const MobileRebuildRule& rule) -> void
     {
         PrepareMeshBvhs(scene, objects, false);
-        ArmTree(scene.Mobile, scene.Meshes, objects, false);
+
+        SceneTree& tree{ scene.Mobile };
+        const bool isSame{ AssemblePieces(tree, scene.Meshes, objects, false) };
+        if (isSame && tree.Pieces.empty()) return;
+
+        const std::vector<BvhBounds> bounds{ PieceBounds(tree.Pieces) };
+        scene.MobileAreaRatio = 1.0f;
+        if (isSame)
+        {
+            // The boxes of the leaves are the spheres of the parts, so a refit holds exactly what a build would. What can be lost is quality.
+            const float area{ Blam::MapModel::World::System::RefitBoundsBvh(bounds, tree.Order, tree.Nodes) };
+            if (scene.MobileBuiltArea > 0.0f) scene.MobileAreaRatio = area / scene.MobileBuiltArea;
+            if (!(scene.MobileAreaRatio > rule.MaxArea))
+            {
+                ++scene.MobileRefits;
+                return;
+            }
+
+            ++scene.MobileDegraded;
+        }
+
+        scene.MobileBuiltArea = BuildTree(tree, bounds);
+        ++scene.MobileBuilds;
     }
 
     auto CastScene(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, const Vec3& direction,

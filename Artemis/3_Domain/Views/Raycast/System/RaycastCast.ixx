@@ -49,9 +49,11 @@ export namespace Views::Raycast::System
     auto ResolvePerceptionOrigin(const EntitiesStore& entitiesStore, const ObjectTableStore& objectStore,
         std::uint32_t selfBipedHandle) -> PerceptionOrigin;
 
-    // Prepares the parts of an object to be hit by rays.
-    // note: Computed once per tick for each object, instead of posing every triangle.
-    auto PrepareParts(std::span<const CollidablePart> parts) -> std::vector<CachedPart>;
+    // Prepares one part to be hit by rays.
+    // note: Computed once per tick for each part, instead of posing every triangle.
+    // param out: Receives the part when it can be hit. Every field is written.
+    // return: False for a part without a collision mesh, with no triangles or with a transform that cannot be inverted: it is left out.
+    auto PreparePart(const CollidablePart& part, CachedPart& out) -> bool;
 
     // Whether a ray passes within a radius of a point, before travelling limit.
     auto RayNearPoint(const Vec3& origin, const Vec3& direction, float limit, const Vec3& center, float radius) -> bool;

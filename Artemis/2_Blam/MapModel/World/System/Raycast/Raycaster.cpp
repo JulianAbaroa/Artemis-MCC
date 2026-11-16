@@ -305,6 +305,59 @@ namespace Blam::MapModel::World::System
         for (const Prim& prim : prims) order.push_back(prim.Index);
     }
 
+    auto RefitBoundsBvh(const std::vector<BvhBounds>& bounds, const std::vector<std::uint32_t>& order, std::vector<BvhNode>& nodes) -> float
+    {
+        if (nodes.empty() || bounds.size() != order.size()) return BoundsBvhArea(nodes);
+
+        // Children always sit after their parent, so going backwards visits them first.
+        for (std::size_t index{ nodes.size() }; index-- > 0;)
+        {
+            BvhNode& node{ nodes[index] };
+            Bounds fitted{};
+            if (node.Count > 0)
+            {
+                for (std::int32_t slot{ node.Left }; slot < node.Left + node.Count; ++slot)
+                {
+                    const BvhBounds& box{ bounds[order[static_cast<std::size_t>(slot)]] };
+                    fitted.Include(box.Min);
+                    fitted.Include(box.Max);
+                }
+            }
+            else
+            {
+                for (std::size_t child{ static_cast<std::size_t>(node.Left) }; child < static_cast<std::size_t>(node.Left) + 2; ++child)
+                {
+                    fitted.Include(nodes[child].Min);
+                    fitted.Include(nodes[child].Max);
+                }
+            }
+
+            for (int axis = 0; axis < 3; ++axis)
+            {
+                node.Min[axis] = fitted.Min[axis] - (node.Count > 0 ? k_BoxPadding : 0.0f);
+                node.Max[axis] = fitted.Max[axis] + (node.Count > 0 ? k_BoxPadding : 0.0f);
+            }
+        }
+
+        return BoundsBvhArea(nodes);
+    }
+
+    auto BoundsBvhArea(const std::vector<BvhNode>& nodes) -> float
+    {
+        float area{ 0.0f };
+        for (const BvhNode& node : nodes)
+        {
+            if (node.Count > 0) continue;
+
+            const float dx{ node.Max[0] - node.Min[0] };
+            const float dy{ node.Max[1] - node.Min[1] };
+            const float dz{ node.Max[2] - node.Min[2] };
+            area += 2.0f * (dx * dy + dy * dz + dz * dx);
+        }
+
+        return area;
+    }
+
     auto RayEntersNode(const BvhNode& node, const std::array<float, 3>& origin, const std::array<float, 3>& inverse, float tMax,
         float& enter) -> bool
     {

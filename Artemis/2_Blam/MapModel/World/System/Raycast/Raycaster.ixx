@@ -50,6 +50,19 @@ export namespace Blam::MapModel::World::System
     auto BuildBoundsBvh(const std::vector<Blam::MapModel::World::Type::Raycast::BvhBounds>& bounds,
         std::vector<Blam::MapModel::World::Type::Raycast::BvhNode>& nodes, std::vector<std::uint32_t>& order) -> void;
 
+    // Fits the boxes of a hierarchy built by BuildBoundsBvh to new boxes of the same primitives, keeping its topology (D302).
+    // param bounds: The new box of each primitive, in the order BuildBoundsBvh was given them. Its size is the one of order.
+    // param order: What BuildBoundsBvh returned for the hierarchy.
+    // return: BoundsBvhArea of the refitted hierarchy.
+    // note: Each box ends equal to the one a build over the same boxes would give the same node, so nothing a node holds is lost.
+    // Only the quality of the hierarchy can get worse as the primitives move away from where it was built. Nothing changes if the sizes
+    // do not match the hierarchy.
+    auto RefitBoundsBvh(const std::vector<Blam::MapModel::World::Type::Raycast::BvhBounds>& bounds, const std::vector<std::uint32_t>& order,
+        std::vector<Blam::MapModel::World::Type::Raycast::BvhNode>& nodes) -> float;
+
+    // return: The sum of the surface areas of the inner nodes of a hierarchy, the measure of how well it is built. Zero without inner nodes.
+    auto BoundsBvhArea(const std::vector<Blam::MapModel::World::Type::Raycast::BvhNode>& nodes) -> float;
+
     // Whether a ray enters the box of a node before tMax.
     // param inverse: InverseDirection of each component of the direction.
     // param enter: The distance at which the ray enters the box.

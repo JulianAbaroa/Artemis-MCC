@@ -105,6 +105,7 @@
     <ClCompile Include="Engine\MapVariantCatalogTests.cpp" />
     <ClCompile Include="Blam\MapVariantTests.cpp" />
     <ClCompile Include="Blam\MapModelTests.cpp" />
+    <ClCompile Include="Blam\BoundsBvhRefitTests.cpp" />
     <ClCompile Include="Blam\SbspCollisionTests.cpp" />
     <ClCompile Include="Blam\CollisionResultTests.cpp" />
     <ClCompile Include="Blam\MapTests.cpp" />

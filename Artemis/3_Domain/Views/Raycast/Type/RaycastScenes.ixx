@@ -146,6 +146,12 @@ export namespace Views::Raycast::Type
         std::size_t MaxGathers{ Constant::k_FixedRebuildMaxGathers };
     };
 
+    // When the MOBILE tree is built again instead of refitted (D302): the largest growth of the area of its inner nodes since its build.
+    struct MobileRebuildRule
+    {
+        float MaxArea{ Constant::k_MobileRebuildArea };
+    };
+
     // The two level ray scene shared by all agents: a hierarchy per mesh and two hierarchies of instances.
     struct RaycastScene
     {
@@ -168,6 +174,18 @@ export namespace Views::Raycast::Type
 
         // Gathers in a row that had objects at rest waiting for the fixed tree or handles filtered out of it. Zero when none waits and after a build.
         std::size_t FixedWaitingGathers{ 0 };
+
+        // Times the mobile tree was built (any change in its pieces, or a refit that grew past the rule) and refitted over the same pieces.
+        // MobileDegraded counts the builds the rule asked for.
+        std::size_t MobileBuilds{ 0 };
+        std::size_t MobileRefits{ 0 };
+        std::size_t MobileDegraded{ 0 };
+
+        // Sum of the areas of the inner nodes of the mobile tree when it was last built, to measure how much a refit lets it grow.
+        float MobileBuiltArea{ 0.0f };
+
+        // Area of the last refit over MobileBuiltArea. The one that asked for a build when it did. 1 after a build for other reasons.
+        float MobileAreaRatio{ 1.0f };
 
         // Objects at rest that are not in the fixed tree yet, and handles filtered out of it, as the last gather found them.
         // note: Kept as they were before a build, which empties the filter. For the bench.

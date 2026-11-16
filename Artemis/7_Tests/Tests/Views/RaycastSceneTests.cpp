@@ -35,10 +35,11 @@ namespace
     using Views::Raycast::System::CastScene;
     using Views::Raycast::System::GatherSceneObjects;
     using Views::Raycast::System::PoseRay;
-    using Views::Raycast::System::PrepareParts;
+    using Views::Raycast::System::PreparePart;
     using Views::Raycast::Type::CachedPart;
     using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::HitKind;
+    using Views::Raycast::Type::MobileRebuildRule;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
@@ -104,6 +105,62 @@ namespace
         const_cast<CollidablePart&>(object.Parts[0]).Transform = transform;
     }
 
+    // A mesh of 150 random triangles around the origin.
+    auto MakeRandomMesh(std::mt19937& random) -> CollMesh
+    {
+        std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
+        CollMesh mesh{};
+        mesh.RegionIndex = 1;
+        mesh.LocalMin = { 1.0e9f, 1.0e9f, 1.0e9f };
+        mesh.LocalMax = { -1.0e9f, -1.0e9f, -1.0e9f };
+        for (int index{ 0 }; index < 150; ++index)
+        {
+            const Vec3 center{ unit(random) * 3.0f, unit(random) * 3.0f, unit(random) * 3.0f };
+            const Vec3 a{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
+            const Vec3 b{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
+            const Vec3 c{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
+            mesh.Triangles.push_back(Triangle{ a, b, c });
+            for (const Vec3& p : { a, b, c })
+            {
+                mesh.LocalMin = { (std::min)(mesh.LocalMin.X, p.X), (std::min)(mesh.LocalMin.Y, p.Y), (std::min)(mesh.LocalMin.Z, p.Z) };
+                mesh.LocalMax = { (std::max)(mesh.LocalMax.X, p.X), (std::max)(mesh.LocalMax.Y, p.Y), (std::max)(mesh.LocalMax.Z, p.Z) };
+            }
+        }
+
+        return mesh;
+    }
+
+    // A turn around Z and a tilt, then a translation within spread of the origin.
+    auto RandomPose(std::mt19937& random, float spread) -> std::array<float, 12>
+    {
+        std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
+        const float angle{ unit(random) * 3.1f };
+        const float tilt{ unit(random) * 0.6f };
+        const float cz{ std::cos(angle) }, sz{ std::sin(angle) }, cx{ std::cos(tilt) }, sx{ std::sin(tilt) };
+        const Vec3 where{ unit(random) * spread, unit(random) * spread, unit(random) * spread };
+        return {
+            cz, -sz * cx, sz * sx, where.X,
+            sz, cz * cx, -cz * sx, where.Y,
+            0.0f, sx, cx, where.Z };
+    }
+
+    // An object whose count parts are the same mesh in the same pose, a metre apart.
+    auto MakeObjectWithParts(std::uint32_t handle, const CollMesh& mesh, std::size_t count, const std::array<float, 12>& transform) -> SceneObject
+    {
+        std::vector<CollidablePart> parts{};
+        for (std::size_t index{ 0 }; index < count; ++index)
+        {
+            CollidablePart part{};
+            part.Source = &mesh;
+            part.Transform = transform;
+            part.Transform[3] += static_cast<float>(index);
+            parts.push_back(part);
+        }
+
+        PartsPool().push_back(std::move(parts));
+        return SceneObject{ handle, false, PartsPool().back() };
+    }
+
     // The objects sorted by handle, as the gather gives them.
     auto Objects(std::initializer_list<SceneObject> list) -> SceneObjects
     {
@@ -119,6 +176,19 @@ namespace
         SceneObjects marked{ objects };
         ArmFixedScene(scene, marked, k_EveryWaiting);
         ArmMobileScene(scene, marked);
+    }
+
+    // The parts of an object that rays can hit, prepared one by one.
+    auto PrepareParts(std::span<const CollidablePart> parts) -> std::vector<CachedPart>
+    {
+        std::vector<CachedPart> prepared{};
+        for (const CollidablePart& part : parts)
+        {
+            CachedPart cached{};
+            if (PreparePart(part, cached)) prepared.push_back(cached);
+        }
+
+        return prepared;
     }
 
     // The reference of the random rays: every triangle of every part, in the local space of the part, with no hierarchy and no culling.
@@ -1065,39 +1135,11 @@ TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceOnRandomRays)
     std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
     const auto point{ [&](float scale) { return Vec3{ unit(random) * scale, unit(random) * scale, unit(random) * scale }; } };
 
-    CollMesh mesh{};
-    mesh.RegionIndex = 1;
-    mesh.LocalMin = { 1.0e9f, 1.0e9f, 1.0e9f };
-    mesh.LocalMax = { -1.0e9f, -1.0e9f, -1.0e9f };
-    for (int index{ 0 }; index < 150; ++index)
-    {
-        const Vec3 center{ point(3.0f) };
-        const Vec3 a{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
-        const Vec3 b{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
-        const Vec3 c{ center.X + unit(random), center.Y + unit(random), center.Z + unit(random) };
-        mesh.Triangles.push_back(Triangle{ a, b, c });
-        for (const Vec3& p : { a, b, c })
-        {
-            mesh.LocalMin = { (std::min)(mesh.LocalMin.X, p.X), (std::min)(mesh.LocalMin.Y, p.Y), (std::min)(mesh.LocalMin.Z, p.Z) };
-            mesh.LocalMax = { (std::max)(mesh.LocalMax.X, p.X), (std::max)(mesh.LocalMax.Y, p.Y), (std::max)(mesh.LocalMax.Z, p.Z) };
-        }
-    }
+    const CollMesh mesh{ MakeRandomMesh(random) };
 
     // Objects with a turn around Z and a tilt.
     SceneObjects objects{};
-    for (std::uint32_t handle{ 1 }; handle <= 6; ++handle)
-    {
-        const float angle{ unit(random) * 3.1f };
-        const float tilt{ unit(random) * 0.6f };
-        const float cz{ std::cos(angle) }, sz{ std::sin(angle) }, cx{ std::cos(tilt) }, sx{ std::sin(tilt) };
-        const Vec3 where{ point(6.0f) };
-        const std::array<float, 12> transform{
-            cz, -sz * cx, sz * sx, where.X,
-            sz, cz * cx, -cz * sx, where.Y,
-            0.0f, sx, cx, where.Z };
-
-        objects.push_back(MakeObject(handle, mesh, transform, handle % 2 == 0));
-    }
+    for (std::uint32_t handle{ 1 }; handle <= 6; ++handle) objects.push_back(MakeObject(handle, mesh, RandomPose(random, 6.0f), handle % 2 == 0));
 
     RaycastScene scene{};
     Arm(scene, objects);
@@ -1139,4 +1181,241 @@ TEST(RaycastScene, CountsWhatItVisits)
     CastScene(scene, SelfExclusion{}, { 10.0f, -5.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, k_Range, best, &counters);
     EXPECT_GE(counters.Nodes, 2u);
     EXPECT_GE(counters.Triangles, 1u);
+}
+
+namespace
+{
+    // The rule that never builds the mobile tree again while its pieces stay the same.
+    constexpr MobileRebuildRule k_NeverRebuild{ std::numeric_limits<float>::infinity() };
+
+    // Whether two hits are the same hit.
+    auto IsSameHit(const RaycastHit& a, const RaycastHit& b) -> bool
+    {
+        return a.Hit == b.Hit && (!a.Hit || (a.Distance == b.Distance && a.ObjectHandle == b.ObjectHandle && a.RegionIndex == b.RegionIndex
+            && a.Point.X == b.Point.X && a.Point.Y == b.Point.Y && a.Point.Z == b.Point.Z));
+    }
+
+    // Casts random rays through the scene and the linear reference over the same objects.
+    // return: The rays that hit.
+    auto CompareRandomRays(const RaycastScene& scene, const SceneObjects& objects, std::mt19937& random, int count) -> int
+    {
+        std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
+        int hits{ 0 };
+        for (int index{ 0 }; index < count; ++index)
+        {
+            const Vec3 origin{ unit(random) * 14.0f, unit(random) * 14.0f, unit(random) * 14.0f };
+            Vec3 direction{ unit(random), unit(random), unit(random) };
+            const float length{ std::sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z) };
+            direction = { direction.X / length, direction.Y / length, direction.Z / length };
+
+            const RaycastHit expected{ CastLinear(objects, origin, direction, 30.0f) };
+            RaycastHit actual{};
+            CastScene(scene, SelfExclusion{}, origin, direction, 30.0f, actual, nullptr);
+            EXPECT_TRUE(IsSameHit(actual, expected)) << "ray " << index;
+            hits += expected.Hit ? 1 : 0;
+        }
+
+        return hits;
+    }
+}
+
+TEST(RaycastScene, ARefittedMobileTreeGivesTheSameHitAsTheLinearReferenceAndAFreshBuild)
+{
+    std::mt19937 random{ 302 };
+    const CollMesh mesh{ MakeRandomMesh(random) };
+
+    SceneObjects objects{};
+    for (std::uint32_t handle{ 1 }; handle <= 10; ++handle) objects.push_back(MakeObject(handle, mesh, RandomPose(random, 6.0f), false));
+
+    // Every 8th round the objects land far away, so the hierarchy built for the earlier poses is bad for them.
+    RaycastScene refitted{};
+    int hits{ 0 };
+    for (int round{ 0 }; round < 40; ++round)
+    {
+        for (SceneObject& object : objects) MovePart(object, RandomPose(random, round % 8 == 7 ? 40.0f : 6.0f));
+
+        ArmMobileScene(refitted, objects, k_NeverRebuild);
+        RaycastScene fresh{};
+        ArmMobileScene(fresh, objects);
+
+        hits += CompareRandomRays(refitted, objects, random, 60);
+        for (int index{ 0 }; index < 60; ++index)
+        {
+            const Vec3 origin{ static_cast<float>(index) - 30.0f, 3.0f, -2.0f };
+            const Vec3 direction{ 0.0f, 0.6f, 0.8f };
+            RaycastHit a{};
+            RaycastHit b{};
+            CastScene(refitted, SelfExclusion{}, origin, direction, 30.0f, a, nullptr);
+            CastScene(fresh, SelfExclusion{}, origin, direction, 30.0f, b, nullptr);
+            EXPECT_TRUE(IsSameHit(a, b)) << "round " << round << " ray " << index;
+        }
+    }
+
+    EXPECT_GT(hits, 100);
+    EXPECT_EQ(refitted.MobileBuilds, 1u);
+    EXPECT_EQ(refitted.MobileRefits, 39u);
+    EXPECT_EQ(refitted.MobileDegraded, 0u);
+}
+
+TEST(RaycastScene, TheMobileTreeIsBuiltAgainWhenAPieceAppearsLeavesOrChangesItsParts)
+{
+    std::mt19937 random{ 5 };
+    const CollMesh mesh{ MakeRandomMesh(random) };
+    const CollMesh other{ MakeRandomMesh(random) };
+    const std::array<float, 12> pose{ RandomPose(random, 5.0f) };
+
+    SceneObjects objects{ Objects({ MakeObject(1, mesh, pose, false), MakeObject(2, mesh, pose, false), MakeObject(3, mesh, pose, false) }) };
+    RaycastScene scene{};
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 1u);
+
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 1u);
+    EXPECT_EQ(scene.MobileRefits, 1u);
+
+    // An object appears.
+    objects = Objects({ objects[0], objects[1], objects[2], MakeObject(4, mesh, pose, false) });
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 2u);
+    EXPECT_EQ(scene.MobileRefits, 1u);
+
+    // An object leaves.
+    objects = Objects({ objects[0], objects[2], objects[3] });
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 3u);
+
+    // An object changes its number of parts.
+    objects = Objects({ objects[0], MakeObjectWithParts(objects[1].Handle, mesh, 3, pose), objects[2] });
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 4u);
+    EXPECT_EQ(scene.Mobile.Pieces.size(), 5u);
+
+    // An object keeps its number of parts but one is another mesh.
+    objects = Objects({ objects[0], MakeObject(objects[1].Handle, other, pose, false), objects[2] });
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 5u);
+
+    // A part that cannot be hit leaves its piece out, so the pieces differ too.
+    std::array<float, 12> flat{ pose };
+    flat.fill(0.0f);
+    objects = Objects({ objects[0], MakeObjectWithParts(objects[1].Handle, other, 2, flat), objects[2] });
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 6u);
+    EXPECT_EQ(scene.Mobile.Pieces.size(), 2u);
+
+    // Same pieces again: refit, and the hits are still the reference.
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 6u);
+    EXPECT_EQ(scene.MobileRefits, 2u);
+    CompareRandomRays(scene, objects, random, 200);
+}
+
+TEST(RaycastScene, ARefitThatLetsTheTreeGrowPastTheRuleBuildsItAgain)
+{
+    std::mt19937 random{ 9 };
+    const CollMesh mesh{ MakeRandomMesh(random) };
+
+    SceneObjects objects{};
+    for (std::uint32_t handle{ 1 }; handle <= 8; ++handle) objects.push_back(MakeObject(handle, mesh, RandomPose(random, 0.5f), false));
+
+    const MobileRebuildRule rule{ 1.5f };
+    RaycastScene scene{};
+    RaycastScene lenient{};
+    ArmMobileScene(scene, objects, rule);
+    ArmMobileScene(lenient, objects, k_NeverRebuild);
+    ASSERT_GT(scene.MobileBuiltArea, 0.0f);
+
+    // A little movement is a refit.
+    for (SceneObject& object : objects) MovePart(object, RandomPose(random, 0.5f));
+    ArmMobileScene(scene, objects, rule);
+    EXPECT_EQ(scene.MobileRefits, 1u);
+    EXPECT_EQ(scene.MobileDegraded, 0u);
+    EXPECT_LE(scene.MobileAreaRatio, 1.5f);
+
+    // The objects part ways: the area of the refitted tree is far above the one it was built with.
+    const float builtArea{ scene.MobileBuiltArea };
+    for (SceneObject& object : objects) MovePart(object, RandomPose(random, 80.0f));
+    ArmMobileScene(scene, objects, rule);
+    ArmMobileScene(lenient, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileDegraded, 1u);
+    EXPECT_EQ(scene.MobileBuilds, 2u);
+    EXPECT_EQ(scene.MobileRefits, 1u);
+    EXPECT_GT(scene.MobileAreaRatio, 1.5f);
+    EXPECT_GT(scene.MobileBuiltArea, builtArea * 1.5f);
+    EXPECT_EQ(lenient.MobileBuilds, 1u);
+    EXPECT_EQ(lenient.MobileDegraded, 0u);
+
+    // The tree built again is the reference for the next refits, and the hits do not depend on the rule.
+    ArmMobileScene(scene, objects, rule);
+    EXPECT_EQ(scene.MobileRefits, 2u);
+    EXPECT_EQ(scene.MobileDegraded, 1u);
+    EXPECT_NEAR(scene.MobileAreaRatio, 1.0f, 1.0e-4f);
+    std::mt19937 again{ random };
+    EXPECT_EQ(CompareRandomRays(scene, objects, random, 400), CompareRandomRays(lenient, objects, again, 400));
+}
+
+TEST(RaycastScene, RefitsAMobileTreeOfOneLeafAndLeavesAnEmptyOneAlone)
+{
+    const CollMesh mesh{ MakeSquare() };
+    RaycastScene scene{};
+
+    ArmMobileScene(scene, SceneObjects{}, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 0u);
+    EXPECT_EQ(scene.MobileRefits, 0u);
+    EXPECT_TRUE(scene.Mobile.Nodes.empty());
+
+    SceneObjects objects{ Objects({ MakeObject(1, mesh, QuarterTurn(10.0f, 0.0f, 0.0f), false) }) };
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    ASSERT_EQ(scene.Mobile.Nodes.size(), 1u);
+    EXPECT_EQ(scene.MobileBuilds, 1u);
+    EXPECT_TRUE(Cast(scene, SelfExclusion{}, { 10.0f, -5.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }).Hit);
+
+    // The only leaf moves: the same tree follows it.
+    MovePart(objects[0], QuarterTurn(10.0f, 20.0f, 0.0f));
+    ArmMobileScene(scene, objects, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 1u);
+    EXPECT_EQ(scene.MobileRefits, 1u);
+    EXPECT_EQ(scene.MobileAreaRatio, 1.0f);
+    EXPECT_FALSE(Cast(scene, SelfExclusion{}, { 10.0f, 15.0f, 0.0f }, { 0.0f, -1.0f, 0.0f }).Hit);
+    const RaycastHit moved{ Cast(scene, SelfExclusion{}, { 10.0f, 15.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }) };
+    ASSERT_TRUE(moved.Hit);
+    EXPECT_EQ(moved.ObjectHandle, 1u);
+    EXPECT_NEAR(moved.Distance, 6.0f, 1.0e-4f);
+
+    // The object leaves: an empty tree, built once, and the next empty arming does nothing.
+    ArmMobileScene(scene, SceneObjects{}, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 2u);
+    EXPECT_TRUE(scene.Mobile.Nodes.empty());
+    EXPECT_FALSE(Cast(scene, SelfExclusion{}, { 10.0f, 15.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }).Hit);
+
+    ArmMobileScene(scene, SceneObjects{}, k_NeverRebuild);
+    EXPECT_EQ(scene.MobileBuilds, 2u);
+    EXPECT_EQ(scene.MobileRefits, 1u);
+}
+
+TEST(RaycastScene, AfterACleanupTheMobileTreeIsNotRefittedOverTheOldOne)
+{
+    const CollMesh mesh{ MakeSquare() };
+    SceneObjects objects{};
+    for (std::uint32_t handle{ 1 }; handle <= 8; ++handle) objects.push_back(MakeObject(handle, mesh, QuarterTurn(10.0f * static_cast<float>(handle), 0.0f, 0.0f), false));
+
+    RaycastSceneStore store{};
+    ArmMobileScene(store.Scene(), objects);
+    ArmMobileScene(store.Scene(), objects);
+    ASSERT_EQ(store.Scene().MobileBuilds, 1u);
+    ASSERT_EQ(store.Scene().MobileRefits, 1u);
+    ASSERT_GT(store.Scene().MobileBuiltArea, 0.0f);
+
+    store.Cleanup();
+    RaycastScene& scene{ store.Scene() };
+    EXPECT_EQ(scene.MobileBuilds, 0u);
+    EXPECT_EQ(scene.MobileRefits, 0u);
+    EXPECT_EQ(scene.MobileDegraded, 0u);
+    EXPECT_EQ(scene.MobileBuiltArea, 0.0f);
+    EXPECT_TRUE(scene.Mobile.Nodes.empty());
+
+    ArmMobileScene(scene, objects);
+    EXPECT_EQ(scene.MobileBuilds, 1u);
+    EXPECT_EQ(scene.MobileRefits, 0u);
+    EXPECT_TRUE(Cast(scene, SelfExclusion{}, { 20.0f, -5.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }).Hit);
 }
