@@ -10,7 +10,6 @@ import Blam.MapModel.Definitions.Type;
 import Blam.MapModel.World.Type;
 import Blam.Runtime.Player.Type;
 import Blam.Runtime.Object.Type;
-import Perception.ObjectGraph.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
 
@@ -46,7 +45,6 @@ namespace
     using Views::Raycast::Type::Constant::k_PerceptionRange;
     using Views::Raycast::Type::Constant::k_PerceptionRayCount;
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
-    using Perception::ObjectGraph::Type::k_MaxParentDepth;
     using Common::Engine::Type::k_NoHandle;
 
     constexpr float k_InvSqrt3 = 0.57735026918962576451f;
@@ -67,24 +65,6 @@ namespace
             { -k_InvSqrt3, -k_InvSqrt3,  k_InvSqrt3 },
             { -k_InvSqrt3, -k_InvSqrt3, -k_InvSqrt3 },
     } };
-
-    // Returns the vehicle at the root of the parent chain of a biped, or 0xFFFFFFFF when it rides none.
-    // note: A turret is a vehicle attached to another one, so the root is the vehicle that carries every part.
-    auto FindVehicleRoot(const Entities& entities, std::uint32_t bipedHandle) -> std::uint32_t
-    {
-        const Entity* current = entities.Find(bipedHandle);
-        if (!current || current->ParentHandle == k_NoHandle) return k_NoHandle;
-
-        for (int depth{ 0 }; depth < k_MaxParentDepth && current->ParentHandle != k_NoHandle; ++depth)
-        {
-            const Entity* parent = entities.Find(current->ParentHandle);
-            if (!parent) break;
-
-            current = parent;
-        }
-
-        return current->Kind == ObjectKind::Vehicle ? current->Handle : k_NoHandle;
-    }
 
     // return: The aim range of the weapon of the player without the cap, or the fallback range if it has none.
     auto ResolveAimRangeUncapped(const PlayerTableStore& playerStore, const ObjectTableStore& objectStore,

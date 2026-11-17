@@ -79,4 +79,17 @@ export namespace Views::Raycast::Type
     {
         using unordered_set::unordered_set;
     };
+
+    // The exclusion of every player of a tick, in the order of the rows of its Players.
+    struct PlayerExclusions : std::vector<SelfExclusion>
+    {
+        using vector::vector;
+    };
+
+    // Where an agent looks from.
+    struct EyePoint
+    {
+        Vec3 Position{};
+        bool Valid{ false };
+    };
 }

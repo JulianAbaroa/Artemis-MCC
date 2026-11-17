@@ -7,11 +7,15 @@ import Blam.MapModel.World.System;
 import Blam.MapModel.World.Type;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Player.Type;
+import Perception.Entities.Type;
+import Perception.ObjectGraph.Type;
+import Perception.Players.Type;
 import Views.Raycast.Type;
 import Views.Raycast.System;
 import Tests.Support.Bench;
 import Tests.Support.FilmPass;
 import Tests.Support.Pipeline;
+import Tests.Support.ViewProbe;
 import std;
 
 // Offline bench of the rays of Views (D273, F3.B): what each part of RaycastService costs today for one agent, and what it would cost
@@ -31,8 +35,15 @@ namespace
     using Tests::Support::FilmPass::RecordingsFolder;
     using Tests::Support::FilmPass::RunFilmPass;
     using Tests::Support::Pipeline::Chain;
+    using Blam::MapModel::World::System::Raycaster;
+    using Blam::Runtime::Object::Type::Alive::ObjectTable;
+    using Perception::Players::Type::Player;
+    using Perception::Players::Type::Players;
+    using Tests::Support::ViewProbe::EyeProbe;
+    using Tests::Support::ViewProbe::PlayerEye;
     using Views::Raycast::System::ArmFixedScene;
     using Views::Raycast::System::ArmMobileScene;
+    using Views::Raycast::System::BuildGraphExclusions;
     using Views::Raycast::System::BuildSelfExclusion;
     using Views::Raycast::System::CastScene;
     using Views::Raycast::System::CastSceneRay;
@@ -46,9 +57,11 @@ namespace
     using Views::Raycast::System::ResolveAimRange;
     using Views::Raycast::System::ResolvePerceptionOrigin;
     using Views::Raycast::Type::CachedPart;
+    using Views::Raycast::Type::EyePoint;
     using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::MobileRebuildRule;
     using Views::Raycast::Type::PerceptionOrigin;
+    using Views::Raycast::Type::PlayerExclusions;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
@@ -64,6 +77,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
     using Tests::Support::Bench::k_NanosPerMicro;
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
+    using Views::Raycast::Type::Constant::k_MobileRebuildArea;
     using Views::Raycast::Type::Constant::k_PerceptionRange;
     using Views::Raycast::Type::Constant::k_PerceptionRayCount;
 
@@ -181,6 +195,510 @@ namespace
             label, s.N, s.Mean, s.P50, s.P99, s.Max);
     }
 
+    // Sight (design 1.4, F4.B): the constants of the proposal. A player is a candidate to see another when it is within the range and the
+    // other falls inside the cone around its aim.
+    constexpr float k_SightRange{ 150.0f };
+    constexpr float k_SightHalfAngleDegrees{ 45.0f };
+    constexpr float k_DegreesToRadians{ 0.017453292519943295f };
+
+    // Same result of an aim ray: the same hit or miss, the same kind and object, and the distance within this many world units.
+    constexpr float k_AimTolerance{ 0.01f };
+
+    // The same call as a decision: the cone and range of the design for the player of this row.
+    struct SightPoint
+    {
+        std::size_t Row{};
+        Vec3 Eye{};
+        Vec3 Aim{};
+    };
+
+    // What the sight pass of a decision counted, and who sees whom (rows of Players, a viewer in the first index).
+    struct SightCounts
+    {
+        std::size_t Alive{};
+        std::size_t Pairs{};
+        std::size_t Candidates{};
+        std::size_t Free{};
+        std::array<std::array<std::uint8_t, k_Agents>, k_Agents> Seen{};
+    };
+
+    auto LengthOf(const Vec3& v) -> float
+    {
+        return std::sqrt((v.X * v.X) + (v.Y * v.Y) + (v.Z * v.Z));
+    }
+
+    auto DotOf(const Vec3& a, const Vec3& b) -> float
+    {
+        return (a.X * b.X) + (a.Y * b.Y) + (a.Z * b.Z);
+    }
+
+    // return: The vector with length 1, or the fallback when it has no length.
+    auto UnitOf(const Vec3& v, const Vec3& fallback) -> Vec3
+    {
+        const float length{ LengthOf(v) };
+        return length > 1.0e-6f ? Vec3{ v.X / length, v.Y / length, v.Z / length } : fallback;
+    }
+
+    // return: Whether two aim rays hit the same thing: both miss, or both hit the same kind and object.
+    auto SameAimTarget(const RaycastHit& a, const RaycastHit& b) -> bool
+    {
+        if (a.Hit != b.Hit) return false;
+        return !a.Hit || (a.Kind == b.Kind && a.ObjectHandle == b.ObjectHandle);
+    }
+
+    // return: The eye and aim of every live player with a biped and a tag, in the order of the rows (at most k_Agents).
+    auto BuildSightPoints(const Chain& chain, const Players& players, const ObjectTable& objects) -> std::vector<SightPoint>
+    {
+        std::vector<SightPoint> points{};
+        for (std::size_t row{ 0 }; row < players.Rows.size() && row < k_Agents; ++row)
+        {
+            const Player& player{ players.Rows[row] };
+            if (!player.IsAlive()) continue;
+
+            const EyePoint eye{ PlayerEye(chain, objects, player) };
+            if (!eye.Valid) continue;
+
+            const Vec3 aim{ UnitOf(player.Body->Aim, Vec3{}) };
+            if (LengthOf(aim) == 0.0f) continue;
+
+            points.push_back(SightPoint{ row, eye.Position, aim });
+        }
+
+        return points;
+    }
+
+    // The sight pass: one ray from eye to eye for each pair of live players with the other in the cone of at least one of them, cast through the
+    // scene excluding both. Free = nothing hit before the other eye.
+    // param exclusions: The exclusion of each row of Players.
+    // param hits: Receives the hit of every ray in order, to compare scenes. Null for none.
+    auto RunSight(const Raycaster& raycaster, const RaycastScene& scene, const std::vector<SightPoint>& points, const PlayerExclusions& exclusions,
+        SightCounts& counts, std::vector<RaycastHit>* hits) -> void
+    {
+        const float cosHalf{ std::cos(k_SightHalfAngleDegrees * k_DegreesToRadians) };
+        counts.Alive = points.size();
+        counts.Pairs = points.size() * (points.size() - 1) / 2;
+        for (std::size_t first{ 0 }; first < points.size(); ++first)
+        {
+            for (std::size_t second{ first + 1 }; second < points.size(); ++second)
+            {
+                const SightPoint& a{ points[first] };
+                const SightPoint& b{ points[second] };
+                const Vec3 delta{ b.Eye.X - a.Eye.X, b.Eye.Y - a.Eye.Y, b.Eye.Z - a.Eye.Z };
+                const float distance{ LengthOf(delta) };
+                if (distance > k_SightRange || distance < 1.0e-4f) continue;
+
+                const Vec3 direction{ delta.X / distance, delta.Y / distance, delta.Z / distance };
+                const bool aSeesB{ DotOf(a.Aim, direction) >= cosHalf };
+                const bool bSeesA{ -DotOf(b.Aim, direction) >= cosHalf };
+                if (!aSeesB && !bSeesA) continue;
+
+                ++counts.Candidates;
+                SelfExclusion both{ exclusions[a.Row] };
+                both.insert(exclusions[b.Row].begin(), exclusions[b.Row].end());
+                const RaycastHit hit{ CastSceneRay(raycaster, scene, both, a.Eye, direction, distance, nullptr) };
+                if (hits) hits->push_back(hit);
+                if (hit.Hit) continue;
+
+                ++counts.Free;
+                if (aSeesB) counts.Seen[a.Row][b.Row] = 1;
+                if (bSeesA) counts.Seen[b.Row][a.Row] = 1;
+            }
+        }
+    }
+
+    // The size of a View of the design (1.2) as one flat struct: a bound for the cost of building them, not the final type (F4.1).
+    struct ViewSelfRow
+    {
+        Vec3 Eye{}, Feet{}, Aim{}, Velocity{}, OwnVelocity{};
+        float Crouch{}, Shield{}, Energy{}, Yaw{}, Pitch{};
+        std::array<std::uint32_t, 8> Counters{};
+        std::array<std::byte, 32> Weapons{};
+    };
+
+    struct ViewRayRow
+    {
+        float Distance{};
+        std::uint32_t Handle{};
+        std::uint32_t Flags{};
+        std::uint8_t Kind{}, Function{}, Relation{}, Padding{};
+    };
+
+    struct ViewOtherRow
+    {
+        Vec3 Position{};
+        Vec3 Velocity{};
+        float Facing{};
+        std::array<std::uint8_t, 4> Flags{};
+    };
+
+    struct ViewFlagRow
+    {
+        Vec3 Position{};
+        Vec3 Stand{};
+        std::array<std::uint32_t, 6> Values{};
+    };
+
+    struct ViewSoundRow
+    {
+        Vec3 Direction{};
+        std::array<float, 3> Values{};
+        std::array<std::uint32_t, 4> Tags{};
+    };
+
+    struct ViewNoticeRow
+    {
+        std::array<std::uint32_t, 4> Values{};
+    };
+
+    struct LocalView
+    {
+        std::array<std::uint32_t, 4> Head{};
+        ViewSelfRow Self{};
+        ViewRayRow Aim{};
+        std::array<ViewRayRow, 16> Rays{};
+        std::array<ViewOtherRow, 16> Others{};
+        std::array<ViewFlagRow, 2> Flags{};
+        std::array<ViewSoundRow, 8> Sounds{};
+        std::array<ViewNoticeRow, 8> Notices{};
+    };
+
+    // One scene kept up to date at one cadence, with what each arming did (F4.B).
+    struct SceneArming
+    {
+        double Gather{};
+        double Meshes{};
+        double Fixed{};
+        double Mobile{};
+
+        auto Total() const -> double { return Gather + Meshes + Fixed + Mobile; }
+    };
+
+    class SceneStream
+    {
+    public:
+        RaycastScene Scene{};
+
+        // Gathers the objects of the tick and arms both trees, as RaycastService would on a decision.
+        auto Arm(Chain& chain) -> SceneArming
+        {
+            SceneArming times{};
+            SceneGatherCounters gathered{};
+            auto start{ steady_clock::now() };
+            SceneObjects objects{ GatherSceneObjects(m_Reuse, chain.m_Environment.m_CollidableService, chain.m_Tables.m_ObjectStore, &gathered) };
+            times.Gather = Micros(start, steady_clock::now());
+
+            start = steady_clock::now();
+            PrepareMeshBvhs(Scene, objects, false);
+            times.Meshes = Micros(start, steady_clock::now());
+
+            start = steady_clock::now();
+            ArmFixedScene(Scene, objects);
+            times.Fixed = Micros(start, steady_clock::now());
+
+            const std::size_t refits{ Scene.MobileRefits };
+            const std::size_t degraded{ Scene.MobileDegraded };
+            start = steady_clock::now();
+            ArmMobileScene(Scene, objects);
+            times.Mobile = Micros(start, steady_clock::now());
+
+            ++m_Armings;
+            if (Scene.MobileRefits > refits || Scene.MobileDegraded > degraded) m_Ratio.Add(static_cast<double>(Scene.MobileAreaRatio));
+            m_Arming.Add(times.Total());
+            m_Rest.Add(static_cast<double>(std::ranges::count_if(objects, [](const SceneObject& object) { return object.IsFixed; })));
+            m_FixedLeaves.Add(static_cast<double>(Scene.Fixed.Pieces.size()));
+            m_MobileLeaves.Add(static_cast<double>(Scene.Mobile.Pieces.size()));
+            m_Waiting.Add(static_cast<double>(Scene.FixedPending));
+            return times;
+        }
+
+        // return: The lines of what the armings of this cadence did.
+        auto Lines(std::string_view label) const -> std::vector<std::string>
+        {
+            std::vector<std::string> lines{};
+            lines.push_back(std::format("{}: {} armings. FIXED tree built {} times. MOBILE tree built {} times ({} asked for by the area rule), refitted {} times.",
+                label, m_Armings, Scene.FixedBuilds, Scene.MobileBuilds, Scene.MobileDegraded, Scene.MobileRefits));
+            const Stats ratio{ m_Ratio.Summary() };
+            lines.push_back(std::format("{}: MobileAreaRatio of the refits  n={:<6} p50={:>8.4f} p99={:>8.4f} max={:>8.4f} (k_MobileRebuildArea = {})",
+                label, ratio.N, ratio.P50, ratio.P99, ratio.Max, k_MobileRebuildArea));
+            lines.push_back(TimeLine(std::format("{}: arming", label), m_Arming));
+            lines.push_back(CountLine(std::format("{}: objects at rest", label), m_Rest));
+            lines.push_back(CountLine(std::format("{}: leaves of FIXED", label), m_FixedLeaves));
+            lines.push_back(CountLine(std::format("{}: leaves of MOBILE", label), m_MobileLeaves));
+            lines.push_back(CountLine(std::format("{}: objects at rest waiting", label), m_Waiting));
+            return lines;
+        }
+
+    private:
+        ScenePartsCache m_Reuse{};
+        std::size_t m_Armings{};
+        Series m_Ratio{}, m_Arming{}, m_Rest{}, m_FixedLeaves{}, m_MobileLeaves{}, m_Waiting{};
+    };
+
+    // What one of the 16 agents casts from, resolved as a View would: the eye A, the aim of the engine and the perception origin.
+    struct ViewAgent
+    {
+        Origin Source{};
+        std::size_t Row{ k_Agents };
+        EyePoint Eye{};
+        Vec3 Aim{};
+        float AimRange{};
+        Vec3 RayPosition{};
+        std::array<Vec3, k_PerceptionRayCount> Directions{};
+    };
+
+    // M6: everything RS.2 and the views per agent add to a decision, measured as the pipeline would run it once per decision (F4.B).
+    class DecisionBench
+    {
+    public:
+        // Gathers and arms the scene of this decision.
+        auto ArmScene(Chain& chain) -> SceneArming { return m_Stream.Arm(chain); }
+
+        // The decision: exclusions from the graph, eyes and origins, the 16 x 15 rays, sight and the 16 views, each timed. The scene was armed before.
+        auto Measure(Chain& chain, const std::vector<Origin>& origins, const SceneArming& armed) -> void
+        {
+            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+            const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+            const auto nodes{ chain.m_Environment.m_ObjectGraphStore.Acquire() };
+            const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!players || !entities || !nodes || !objects) return;
+
+            const auto& raycaster{ chain.m_Resolved.m_Raycaster };
+            const RaycastScene& scene{ m_Stream.Scene };
+            const SelfExclusion none{};
+
+            // The exclusions of the players: the scan of today, once per agent, and the pass over the graph.
+            auto start{ steady_clock::now() };
+            for (const Origin& origin : origins)
+            {
+                m_Sink += static_cast<double>(BuildSelfExclusion(chain.m_Environment.m_PlayersStore, chain.m_Environment.m_EntitiesStore,
+                    chain.m_Tables.m_ObjectStore, origin.PlayerHandle, origin.BipedHandle).size());
+            }
+            m_ExclusionScan.Add(Micros(start, steady_clock::now()));
+
+            start = steady_clock::now();
+            const PlayerExclusions graph{ BuildGraphExclusions(*players, *entities, *nodes) };
+            const double exclusionUs{ Micros(start, steady_clock::now()) };
+
+            // The eye, the aim, the range and the perception origin of each agent.
+            start = steady_clock::now();
+            std::vector<ViewAgent> agents{};
+            agents.reserve(origins.size());
+            for (const Origin& origin : origins) agents.push_back(this->Prepare(chain, *players, *objects, origin));
+            const double prepareUs{ Micros(start, steady_clock::now()) };
+
+            const auto exclusionOf{ [&](const ViewAgent& agent) -> const SelfExclusion&
+            {
+                return agent.Row < graph.size() ? graph[agent.Row] : none;
+            } };
+
+            // The aim ray from the eye along the aim of the engine, and the perception rays through the reach of each agent.
+            std::vector<RaycastHit> aimHits{};
+            std::vector<RaycastHit> perceptionHits{};
+            aimHits.reserve(agents.size());
+            perceptionHits.reserve(agents.size() * k_PerceptionRayCount);
+            double aimUs{ 0.0 };
+            double perceptionUs{ 0.0 };
+            for (const ViewAgent& agent : agents)
+            {
+                const SelfExclusion& exclusion{ exclusionOf(agent) };
+                start = steady_clock::now();
+                aimHits.push_back(CastSceneRay(raycaster, scene, exclusion, agent.Eye.Position, agent.Aim, agent.AimRange, nullptr));
+                aimUs += Micros(start, steady_clock::now());
+
+                start = steady_clock::now();
+                const SceneReach reach{ GatherSceneReach(scene, exclusion, agent.RayPosition, k_PerceptionRange, nullptr) };
+                for (const Vec3& direction : agent.Directions)
+                {
+                    perceptionHits.push_back(CastSceneRayReach(raycaster, scene, reach, exclusion, agent.RayPosition, direction, k_PerceptionRange, nullptr));
+                }
+                perceptionUs += Micros(start, steady_clock::now());
+            }
+
+            // Sight.
+            start = steady_clock::now();
+            const std::vector<SightPoint> points{ BuildSightPoints(chain, *players, *objects) };
+            SightCounts sight{};
+            RunSight(raycaster, scene, points, graph, sight, nullptr);
+            const double sightUs{ Micros(start, steady_clock::now()) };
+
+            // The 16 views, copied without a bridge.
+            start = steady_clock::now();
+            this->Assemble(agents, *players, *objects, aimHits, perceptionHits, sight);
+            const double viewsUs{ Micros(start, steady_clock::now()) };
+
+            m_Exclusion.Add(exclusionUs);
+            m_Prepare.Add(prepareUs);
+            m_Scene.Add(armed.Total());
+            m_Aim.Add(aimUs);
+            m_Perception.Add(perceptionUs);
+            m_SightUs.Add(sightUs);
+            m_Views.Add(viewsUs);
+            m_Total.Add(exclusionUs + prepareUs + armed.Total() + aimUs + perceptionUs + sightUs + viewsUs);
+            m_Alive.Add(static_cast<double>(sight.Alive));
+            m_Pairs.Add(static_cast<double>(sight.Pairs));
+            m_Candidates.Add(static_cast<double>(sight.Candidates));
+            m_Free.Add(static_cast<double>(sight.Free));
+            if (sight.Candidates > 0) m_SightRay.Add(sightUs / static_cast<double>(sight.Candidates));
+
+            // Outside the clocks: the aim ray of today, from the camera of the player, and which aim rays change.
+            start = steady_clock::now();
+            std::vector<RaycastHit> todayHits{};
+            todayHits.reserve(agents.size());
+            for (const ViewAgent& agent : agents)
+            {
+                todayHits.push_back(CastSceneRay(raycaster, scene, exclusionOf(agent), agent.Source.Camera, agent.Source.Forward, agent.AimRange, nullptr));
+            }
+            m_AimToday.Add(Micros(start, steady_clock::now()));
+
+            for (std::size_t index{ 0 }; index < agents.size(); ++index)
+            {
+                const ViewAgent& agent{ agents[index] };
+                if (agent.Source.IsPast || agent.Row >= players->Rows.size()) continue;
+
+                const bool isLocal{ players->Rows[agent.Row].LocalIndex.has_value() };
+                ++(isLocal ? m_LocalAimRays : m_OtherAimRays);
+                if (isLocal)
+                {
+                    const float cosine{ std::clamp(DotOf(agent.Aim, agent.Source.Forward), -1.0f, 1.0f) };
+                    m_AimAngle.Add(static_cast<double>(std::acos(cosine) / k_DegreesToRadians));
+                }
+
+                const bool isSameTarget{ SameAimTarget(aimHits[index], todayHits[index]) };
+                const bool isSameDistance{ !aimHits[index].Hit || std::fabs(aimHits[index].Distance - todayHits[index].Distance) <= k_AimTolerance };
+                if (!isSameTarget || !isSameDistance) ++(isLocal ? m_LocalAimChanged : m_OtherAimChanged);
+                if (isLocal && !isSameTarget) ++m_LocalAimTargetChanged;
+                if (isLocal && isSameTarget && aimHits[index].Hit) m_AimDistance.Add(static_cast<double>(std::fabs(aimHits[index].Distance - todayHits[index].Distance)));
+            }
+        }
+
+        // return: The lines of the table M6 of the decisions.
+        auto Lines() const -> std::vector<std::string>
+        {
+            std::vector<std::string> lines{};
+            lines.push_back(std::format("M6 16 agents, one decision every {} records (all of RS.2 and the views per agent), us per decision", k_SceneEvery));
+            lines.push_back(TimeLine("M6 exclusions: BuildSelfExclusion x16", m_ExclusionScan));
+            lines.push_back(TimeLine("M6 exclusions: one pass over the graph", m_Exclusion));
+            lines.push_back(TimeLine("M6 eye A + aim + range + origin x16", m_Prepare));
+            lines.push_back(TimeLine("M6 scene: gather + FIXED + MOBILE", m_Scene));
+            lines.push_back(TimeLine("M6 aim rays x16 from Eye A + Body.Aim", m_Aim));
+            lines.push_back(TimeLine("M6   aim rays x16 from the camera (today)", m_AimToday));
+            lines.push_back(std::format("M6   aim rays that change against today (other object, kind or distance > {} wu): local {} of {}, other players {} of {}.",
+                k_AimTolerance, m_LocalAimChanged, m_LocalAimRays, m_OtherAimChanged, m_OtherAimRays));
+            const Stats delta{ m_AimDistance.Summary() };
+            lines.push_back(std::format("M6   of the local ones, {} hit another target (object, kind or hit against miss). Distance difference of the local rays on the same target, wu: n={} p50={:.4f} p99={:.4f} max={:.4f}.",
+                m_LocalAimTargetChanged, delta.N, delta.P50, delta.P99, delta.Max));
+            const Stats angle{ m_AimAngle.Summary() };
+            lines.push_back(std::format("M6   angle between Body.Aim and the camera forward of today, local players, degrees: n={} p50={:.4f} p99={:.4f} max={:.4f}",
+                angle.N, angle.P50, angle.P99, angle.Max));
+            lines.push_back(TimeLine("M6 perception rays x224 (reach + casts)", m_Perception));
+            lines.push_back(CountLine("M6 sight: live players", m_Alive));
+            lines.push_back(CountLine("M6 sight: pairs of live players", m_Pairs));
+            lines.push_back(CountLine("M6 sight: candidates (= rays)", m_Candidates));
+            lines.push_back(CountLine("M6 sight: free lines", m_Free));
+            lines.push_back(TimeLine("M6 sight: total", m_SightUs));
+            lines.push_back(RayLine("M6 sight: per ray", m_SightRay));
+            lines.push_back(TimeLine("M6 views: 16 Views assembled, no bridge", m_Views));
+            lines.push_back(std::format("M6 views: {} bytes per View, {} bytes for 16 (a bound: one flat struct of the size of the design, not the final type).",
+                sizeof(LocalView), sizeof(LocalView) * k_Agents));
+            lines.push_back(TimeLine("M6 TOTAL per decision", m_Total));
+            for (const std::string& line : m_Stream.Lines("M6 scene at one gather per decision")) lines.push_back(line);
+            return lines;
+        }
+
+        auto Stream() const -> const SceneStream& { return m_Stream; }
+        auto TotalMeanMs() const -> double { return m_Total.Summary().Mean / k_NanosPerMicro; }
+
+    private:
+        // The eye, aim, range and perception origin of an agent. A filler (a past position of Self) keeps the camera of that moment.
+        auto Prepare(Chain& chain, const Players& players, const ObjectTable& objects, const Origin& origin) const -> ViewAgent
+        {
+            ViewAgent agent{};
+            agent.Source = origin;
+            const Player* player{ players.Find(origin.PlayerHandle) };
+            if (player) agent.Row = static_cast<std::size_t>(player - players.Rows.data());
+
+            const EyePoint eye{ (!origin.IsPast && player) ? PlayerEye(chain, objects, *player) : EyePoint{} };
+            agent.Eye = eye.Valid ? eye : EyePoint{ origin.Camera, true };
+            agent.Aim = (!origin.IsPast && player && player->Body) ? UnitOf(player->Body->Aim, origin.Forward) : origin.Forward;
+            agent.AimRange = ResolveAimRange(chain.m_Tables.m_PlayerStore, chain.m_Tables.m_ObjectStore, chain.m_Resolved.m_DefinitionsStore, origin.PlayerHandle);
+
+            const PerceptionOrigin perceptionOrigin{ origin.IsPast ? PerceptionOrigin{} :
+                ResolvePerceptionOrigin(chain.m_Environment.m_EntitiesStore, chain.m_Tables.m_ObjectStore, origin.BipedHandle) };
+            agent.RayPosition = perceptionOrigin.Valid ? perceptionOrigin.Position : origin.Camera;
+            agent.Directions = PerceptionDirections(perceptionOrigin.Valid ? perceptionOrigin.Forward : origin.Forward);
+            return agent;
+        }
+
+        // Copies what each View holds from what the pipeline already computed: Self, the aim and perception hits, and one row per player.
+        auto Assemble(const std::vector<ViewAgent>& agents, const Players& players, const ObjectTable& objects, const std::vector<RaycastHit>& aimHits,
+            const std::vector<RaycastHit>& perceptionHits, const SightCounts& sight) -> void
+        {
+            struct Row
+            {
+                Vec3 Position{};
+                Vec3 Velocity{};
+                float Facing{};
+                bool IsLive{ false };
+            };
+            std::array<Row, k_Agents> rows{};
+            for (std::size_t index{ 0 }; index < players.Rows.size() && index < k_Agents; ++index)
+            {
+                const Player& player{ players.Rows[index] };
+                const auto object{ objects.find(player.BipedHandle) };
+                if (!player.Body || object == objects.end()) continue;
+
+                rows[index] = Row{ object->second.WorldOrigin, player.Body->OwnVelocity, std::atan2(object->second.Forward.Y, object->second.Forward.X), true };
+            }
+
+            for (std::size_t index{ 0 }; index < agents.size() && index < m_Views16.size(); ++index)
+            {
+                const ViewAgent& agent{ agents[index] };
+                LocalView& view{ m_Views16[index] };
+                view = LocalView{};
+
+                view.Head = { static_cast<std::uint32_t>(agent.Row), agent.Source.PlayerHandle, 1, 0 };
+                view.Self.Eye = agent.Eye.Position;
+                view.Self.Aim = agent.Aim;
+                view.Self.Yaw = std::atan2(agent.Aim.Y, agent.Aim.X);
+                view.Self.Pitch = std::asin(std::clamp(agent.Aim.Z, -1.0f, 1.0f));
+                if (agent.Row < k_Agents && rows[agent.Row].IsLive)
+                {
+                    view.Self.Feet = rows[agent.Row].Position;
+                    view.Self.OwnVelocity = rows[agent.Row].Velocity;
+                    view.Self.Crouch = players.Rows[agent.Row].Body->CrouchFraction;
+                    view.Self.Counters[0] = players.Rows[agent.Row].Body->TicksAlive;
+                }
+
+                const RaycastHit& aim{ aimHits[index] };
+                view.Aim = ViewRayRow{ aim.Distance, aim.ObjectHandle, static_cast<std::uint32_t>(aim.SurfaceFlags), static_cast<std::uint8_t>(aim.Kind), 0, 0, 0 };
+                for (std::size_t ray{ 0 }; ray < k_PerceptionRayCount; ++ray)
+                {
+                    const RaycastHit& hit{ perceptionHits[(index * k_PerceptionRayCount) + ray] };
+                    view.Rays[ray] = ViewRayRow{ hit.Distance, hit.ObjectHandle, static_cast<std::uint32_t>(hit.SurfaceFlags), static_cast<std::uint8_t>(hit.Kind), 0, 0, 0 };
+                }
+
+                for (std::size_t other{ 0 }; other < k_Agents; ++other)
+                {
+                    const Row& row{ rows[other] };
+                    if (!row.IsLive) continue;
+
+                    const bool isSeen{ agent.Row < k_Agents && sight.Seen[agent.Row][other] != 0 };
+                    view.Others[other] = ViewOtherRow{ row.Position, row.Velocity, row.Facing, { 1, static_cast<std::uint8_t>(isSeen ? 1 : 0), 0, 0 } };
+                }
+
+                m_Sink += static_cast<double>(view.Rays[0].Distance + view.Others[0].Position.X + static_cast<float>(view.Head[0]));
+            }
+        }
+
+        SceneStream m_Stream{};
+        std::array<LocalView, k_Agents> m_Views16{};
+        double m_Sink{};
+        std::size_t m_LocalAimTargetChanged{};
+        std::size_t m_LocalAimRays{}, m_LocalAimChanged{}, m_OtherAimRays{}, m_OtherAimChanged{};
+        Series m_ExclusionScan{}, m_Exclusion{}, m_Prepare{}, m_Scene{}, m_Aim{}, m_AimToday{}, m_Perception{}, m_SightUs{}, m_SightRay{}, m_Views{}, m_Total{};
+        Series m_Alive{}, m_Pairs{}, m_Candidates{}, m_Free{}, m_AimAngle{}, m_AimDistance{};
+    };
+
     // Gathers the numbers of the bench from the records of a film. It only reads the chain and times calls.
     class RaycastBench
     {
@@ -191,11 +709,20 @@ namespace
         auto Observe(const Chain& constChain, std::size_t record) -> void
         {
             Chain& chain{ const_cast<Chain&>(constChain) };
+
+            // The scenes of F4.B are armed before anything else: at every decision, and at every tick to see what the cadence changes.
+            const bool isDecision{ record % k_SceneEvery == 0 };
+            SceneArming armed{};
+            if (isDecision) armed = m_Decision.ArmScene(chain);
+            m_TickStream.Arm(chain);
+            m_Eye.Observe(chain);
+
             const auto selfPtr{ chain.m_Egocentric.m_SelfStore.Acquire() };
             if (!selfPtr || !selfPtr->IsAlive) return;
 
             const Origin self{ selfPtr->Position, selfPtr->Forward, selfPtr->Handle, selfPtr->BipedHandle, false };
             if (record % k_HistoryEvery == 1) m_History.push_back(Origin{ self.Camera, self.Forward, self.PlayerHandle, self.BipedHandle, true });
+            if (isDecision) m_Decision.Measure(chain, this->BuildOrigins(chain, self), armed);
 
             if (m_Measured == 0)
             {
@@ -275,6 +802,14 @@ namespace
             return lines;
         }
 
+        // return: The rule of the design (2.4) applied to the mean TOTAL of a decision of this film.
+        auto VerdictLine(std::string_view name) const -> std::string
+        {
+            const double limit{ name == "alien8v8" ? 2.9 : 2.2 };
+            const double mean{ m_Decision.TotalMeanMs() };
+            return std::format("M6 rule of the design (2.4): mean TOTAL per decision {:.3f} ms against {:.1f} ms: {}.", mean, limit, mean <= limit ? "wire RS.2" : "RK.2 first");
+        }
+
         // return: The lines of the report, without the header.
         auto Lines() const -> std::vector<std::string>
         {
@@ -303,6 +838,14 @@ namespace
             for (const std::string& line : this->SceneLines()) lines.push_back(line);
 
             lines.push_back("");
+            for (const std::string& line : m_Decision.Lines()) lines.push_back(line);
+            lines.push_back(std::format("M6 sight exactness against the reference scene (every object gathered without reuse, all in MOBILE): {} rays compared, {} differences.",
+                m_SightCompared, m_SightDifferences));
+            for (const std::string& line : m_TickStream.Lines("M6 scene at one gather per tick")) lines.push_back(line);
+            lines.push_back("");
+            for (const std::string& line : m_Eye.Lines()) lines.push_back(line);
+
+            lines.push_back("");
             lines.push_back("Heaviest, 1 agent (ms per tick, mean):");
             this->AppendHeaviest(lines, { { "BuildSelfExclusion", &m_Exclusion }, { "static rays (15)", &m_StaticTick }, { "Update (M0)", &m_Update } });
             lines.push_back("Heaviest, 16 agents (ms per tick, mean):");
@@ -329,6 +872,12 @@ namespace
         Series m_ProfTreeNodes{}, m_ProfMeshNodes{}, m_ProfPieces{}, m_ProfNear{}, m_ProfEntered{}, m_ProfStatic{}, m_ProfFixed{}, m_ProfMobile{};
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
         Series m_RestObjects{}, m_Filtered{}, m_Pending{};
+        DecisionBench m_Decision{};
+        SceneStream m_TickStream{};
+        EyeProbe m_Eye{};
+        std::size_t m_SightCompared{};
+        std::size_t m_SightDifferences{};
+
         Series m_StageAcquire{}, m_StageFind{}, m_StageBones{}, m_StageDamage{}, m_StageValid{}, m_StageCopy{}, m_StageCompare{}, m_StageKey{};
 
         // The shared scene lives for the whole film, as it would in the pipeline, with the parts of the objects it reuses.
@@ -755,6 +1304,37 @@ namespace
             }
         }
 
+        // The sight rays of this tick through the scene with rest against the reference scene: the same hits.
+        auto CheckSight(Chain& chain) -> void
+        {
+            const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+            const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+            const auto nodes{ chain.m_Environment.m_ObjectGraphStore.Acquire() };
+            const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+            if (!players || !entities || !nodes || !objects) return;
+
+            const PlayerExclusions graph{ BuildGraphExclusions(*players, *entities, *nodes) };
+            const std::vector<SightPoint> points{ BuildSightPoints(chain, *players, *objects) };
+            std::vector<RaycastHit> hits{};
+            std::vector<RaycastHit> reference{};
+            SightCounts counts{};
+            SightCounts referenceCounts{};
+            RunSight(chain.m_Resolved.m_Raycaster, m_Scene, points, graph, counts, &hits);
+            RunSight(chain.m_Resolved.m_Raycaster, m_FullScene, points, graph, referenceCounts, &reference);
+
+            m_SightCompared += reference.size();
+            if (hits.size() != reference.size())
+            {
+                ++m_SightDifferences;
+                return;
+            }
+
+            for (std::size_t index{ 0 }; index < hits.size(); ++index)
+            {
+                if (!SameFullHit(hits[index], reference[index])) ++m_SightDifferences;
+            }
+        }
+
         auto MeasureScene(Chain& chain, const std::vector<Origin>& origins) -> void
         {
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
@@ -801,6 +1381,7 @@ namespace
             if (table) this->MeasureKeyStages(chain, *table);
             PrepareMeshBvhs(m_FullScene, all.Objects, false);
             ArmMobileScene(m_FullScene, all.Objects);
+            this->CheckSight(chain);
 
             // Counted pass and comparison, outside the clocks.
             std::size_t flat{ 0 };
@@ -1129,7 +1710,8 @@ namespace
         if (!outcome.Skip.empty()) GTEST_SKIP() << outcome.Skip;
         ASSERT_TRUE(outcome.Error.empty()) << outcome.Error;
 
-        const std::vector<std::string> lines{ bench.Lines() };
+        std::vector<std::string> lines{ bench.Lines() };
+        lines.push_back(bench.VerdictLine(name));
         const auto now{ std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()) };
         std::vector<std::string> report{};
         report.push_back(std::format("Raycast bench: film {}, {} records, K = {} (M4 and M5 every K records), {:%Y-%m-%d %H:%M:%S} UTC, {}.",

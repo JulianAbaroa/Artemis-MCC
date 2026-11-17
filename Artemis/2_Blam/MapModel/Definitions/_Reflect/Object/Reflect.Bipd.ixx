@@ -22,6 +22,9 @@ export namespace Common::Reflect::Type
             MakeField("HeightStanding", &Bipd::HeightStanding),
             MakeField("HeightCrouching", &Bipd::HeightCrouching),
             MakeField("PhysicsRadius", &Bipd::PhysicsRadius),
+            MakeField("StandingCameraHeight", &Bipd::StandingCameraHeight),
+            MakeField("CrouchingCameraHeight", &Bipd::CrouchingCameraHeight),
+            MakeField("HeadNodeIndex", &Bipd::HeadNodeIndex),
         };
     };
 }

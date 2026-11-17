@@ -156,6 +156,8 @@
     <ClCompile Include="Services\SettingsStoreTests.cpp" />
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
+    <ClCompile Include="Views\ViewEyeTests.cpp" />
+    <ClCompile Include="Views\ViewExclusionTests.cpp" />
     <ClCompile Include="Views\RaycastOracleTests.cpp" />
     <ClCompile Include="Views\RaycastSceneTests.cpp" />
     <ClCompile Include="Support\Tests.Support.Bench.ixx" />
@@ -166,6 +168,7 @@
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />
     <ClCompile Include="Support\Tests.Support.Pipeline.ixx" />
     <ClCompile Include="Support\Tests.Support.Replay.ixx" />
+    <ClCompile Include="Support\Tests.Support.ViewProbe.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

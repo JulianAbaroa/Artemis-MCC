@@ -67,6 +67,10 @@
     <ClCompile Include="Raycast\State\RaycastSceneStore.ixx" />
     <ClCompile Include="Raycast\State\RaycastStore.ixx" />
     <ClCompile Include="Raycast\System\RaycastCast.ixx" />
+    <ClCompile Include="Raycast\System\RaycastExclusion.cpp" />
+    <ClCompile Include="Raycast\System\RaycastExclusion.ixx" />
+    <ClCompile Include="Raycast\System\RaycastEye.cpp" />
+    <ClCompile Include="Raycast\System\RaycastEye.ixx" />
     <ClCompile Include="Raycast\System\RaycastScene.cpp" />
     <ClCompile Include="Raycast\System\RaycastScene.ixx" />
     <ClCompile Include="Raycast\System\RaycastService.cpp" />

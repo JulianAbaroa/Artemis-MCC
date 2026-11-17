@@ -12,6 +12,9 @@ namespace Blam::MapModel::Definitions::System
         out.HeightStanding = bipd.Data.HeightStanding;
         out.HeightCrouching = bipd.Data.HeightCrouching;
         out.PhysicsRadius = bipd.Data.Radius;
+        out.StandingCameraHeight = bipd.Data.StandingCameraHeight;
+        out.CrouchingCameraHeight = bipd.Data.CrouchingCameraHeight;
+        out.HeadNodeIndex = bipd.Data.HeadNodeIndex;
 
         return out;
     }

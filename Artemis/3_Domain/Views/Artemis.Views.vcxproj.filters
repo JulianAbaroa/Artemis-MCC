@@ -76,6 +76,18 @@
     <ClCompile Include="Raycast\System\RaycastCast.ixx">
       <Filter>Raycast\System</Filter>
     </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastExclusion.cpp">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastExclusion.ixx">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastEye.cpp">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\System\RaycastEye.ixx">
+      <Filter>Raycast\System</Filter>
+    </ClCompile>
     <ClCompile Include="Raycast\System\RaycastScene.cpp">
       <Filter>Raycast\System</Filter>
     </ClCompile>
