@@ -80,7 +80,8 @@ export namespace Views::Raycast::System
     // param best: The result of CastStatic for the same ray.
     // param exclusion: Handles the ray ignores.
     // param counters: Receives what the cast visited. Null for none.
-    // note: At equal distance a static hit stays, and between dynamic hits the lowest handle, then part, then triangle wins.
+    // note: At equal distance a static hit stays, and between dynamic hits the lowest handle, then part, then triangle wins. A ray whose origin,
+    // direction or range is not a number (NaN or infinite) leaves best as it is (RV.1).
     auto CastScene(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, const Vec3& direction,
         float maxDistance, RaycastHit& best, SceneCounters* counters) -> void;
 
@@ -92,7 +93,8 @@ export namespace Views::Raycast::System
     auto GatherSceneReach(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, float radius, SceneCounters* counters) -> SceneReach;
 
     // return: The nearest hit of the ray against the static world and the scene, through the pieces of reach.
-    // note: The same hit as CastSceneRay. A ray that does not start at the origin of reach or is longer than its radius is cast through the trees.
+    // note: The same hit as CastSceneRay. A ray that does not start at the origin of reach, is longer than its radius, has another exclusion than the
+    // one the reach was gathered with, or comes after the scene was armed again, is cast through the trees (RV.1).
     auto CastSceneRayReach(const Raycaster& raycaster, const RaycastScene& scene, const SceneReach& reach, const SelfExclusion& exclusion,
         const Vec3& origin, const Vec3& direction, float maxDistance, SceneCounters* counters) -> RaycastHit;
 

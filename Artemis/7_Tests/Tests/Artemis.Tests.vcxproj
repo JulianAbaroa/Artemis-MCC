@@ -106,6 +106,10 @@
     <ClCompile Include="Blam\MapVariantTests.cpp" />
     <ClCompile Include="Blam\MapModelTests.cpp" />
     <ClCompile Include="Blam\BoundsBvhRefitTests.cpp" />
+    <ClCompile Include="Blam\RaycasterTests.cpp" />
+    <ClCompile Include="Engine\TickProducerTests.cpp" />
+    <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.ixx" />
+    <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.cpp" />
     <ClCompile Include="Blam\SbspCollisionTests.cpp" />
     <ClCompile Include="Blam\CollisionResultTests.cpp" />
     <ClCompile Include="Blam\MapTests.cpp" />
@@ -163,8 +167,10 @@
     <ClCompile Include="Support\Tests.Support.Bench.ixx" />
     <ClCompile Include="Support\Tests.Support.Blam.ixx" />
     <ClCompile Include="Support\Tests.Support.EngineMemory.ixx" />
+    <ClCompile Include="Support\Tests.Support.FakeBridge.ixx" />
     <ClCompile Include="Support\Tests.Support.FilmPass.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
+    <ClCompile Include="Support\Tests.Support.ModPort.ixx" />
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />
     <ClCompile Include="Support\Tests.Support.Pipeline.ixx" />
     <ClCompile Include="Support\Tests.Support.Replay.ixx" />

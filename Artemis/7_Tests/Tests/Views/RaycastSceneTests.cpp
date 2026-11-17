@@ -4,6 +4,7 @@ import Common.Geometry.System;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Blam.MapModel.Definitions.Type;
+import Blam.MapModel.World.System;
 import Blam.Runtime.Object.Type;
 import Perception.Collidable.Type;
 import Views.Self.Type;
@@ -24,6 +25,7 @@ namespace
     using Common::Semantic::Type::Physics;
     using Blam::MapModel::Definitions::Type::Coll::Coll;
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
+    using Blam::MapModel::World::System::Raycaster;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Placement::Placement;
     using Perception::Collidable::Type::CollidablePart;
@@ -33,7 +35,10 @@ namespace
     using Views::Raycast::System::ArmFixedScene;
     using Views::Raycast::System::ArmMobileScene;
     using Views::Raycast::System::CastScene;
+    using Views::Raycast::System::CastSceneRay;
+    using Views::Raycast::System::CastSceneRayReach;
     using Views::Raycast::System::GatherSceneObjects;
+    using Views::Raycast::System::GatherSceneReach;
     using Views::Raycast::System::PoseRay;
     using Views::Raycast::System::PreparePart;
     using Views::Raycast::Type::CachedPart;
@@ -47,6 +52,7 @@ namespace
     using Views::Raycast::Type::SceneKeyFunction;
     using Views::Raycast::Type::SceneObject;
     using Views::Raycast::Type::SceneObjects;
+    using Views::Raycast::Type::SceneReach;
     using Views::Raycast::Type::SceneParts;
     using Views::Raycast::Type::ScenePartsCache;
     using Views::Raycast::Type::ScenePartsFunction;
@@ -1418,4 +1424,265 @@ TEST(RaycastScene, AfterACleanupTheMobileTreeIsNotRefittedOverTheOldOne)
     EXPECT_EQ(scene.MobileBuilds, 1u);
     EXPECT_EQ(scene.MobileRefits, 0u);
     EXPECT_TRUE(Cast(scene, SelfExclusion{}, { 20.0f, -5.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }).Hit);
+}
+
+// RV.1: rays that are not numbers (S1) and the reach of the rays of an agent (RK.1) against the trees (S2, S4).
+
+namespace
+{
+    constexpr float k_NaN{ std::numeric_limits<float>::quiet_NaN() };
+    constexpr float k_Infinity{ std::numeric_limits<float>::infinity() };
+
+    // Two objects that a ray up from the origin crosses one after the other: the plane of the first at y = 6, the one of the second at y = 11.
+    auto TwoInARow(const CollMesh& mesh) -> SceneObjects
+    {
+        return Objects({ MakeObject(1, mesh, QuarterTurn(0.0f, 5.0f, 0.0f), false), MakeObject(2, mesh, QuarterTurn(0.0f, 10.0f, 0.0f), true) });
+    }
+
+    auto ExpectSameHit(const RaycastHit& actual, const RaycastHit& expected, std::string_view what) -> void
+    {
+        ASSERT_EQ(actual.Hit, expected.Hit) << what;
+        if (!expected.Hit) return;
+
+        EXPECT_EQ(actual.Kind, expected.Kind) << what;
+        EXPECT_EQ(actual.Distance, expected.Distance) << what;
+        EXPECT_EQ(actual.ObjectHandle, expected.ObjectHandle) << what;
+        EXPECT_EQ(actual.RegionIndex, expected.RegionIndex) << what;
+        EXPECT_EQ(actual.Point.X, expected.Point.X) << what;
+        EXPECT_EQ(actual.Point.Y, expected.Point.Y) << what;
+        EXPECT_EQ(actual.Point.Z, expected.Point.Z) << what;
+    }
+}
+
+TEST(RaycastScene, NonFiniteRayMisses)
+{
+    const CollMesh mesh{ MakeSquare() };
+    const SceneObjects objects{ TwoInARow(mesh) };
+    RaycastScene scene{};
+    Arm(scene, objects);
+
+    const Raycaster raycaster{};
+    const Vec3 origin{ 0.0f, 0.0f, 0.0f };
+    const Vec3 up{ 0.0f, 1.0f, 0.0f };
+    const SelfExclusion none{};
+
+    // The ray itself is fine.
+    ASSERT_NEAR(Cast(scene, none, origin, up).Distance, 6.0f, 1.0e-4f);
+    const SceneReach reach{ GatherSceneReach(scene, none, origin, k_Range, nullptr) };
+    ASSERT_NEAR(CastSceneRayReach(raycaster, scene, reach, none, origin, up, k_Range, nullptr).Distance, 6.0f, 1.0e-4f);
+
+    const std::array<float, 2> bad{ k_NaN, k_Infinity };
+    for (const float value : bad)
+    {
+        const std::array<Vec3, 6> origins{ Vec3{ value, 0.0f, 0.0f }, Vec3{ 0.0f, value, 0.0f }, Vec3{ 0.0f, 0.0f, value }, origin, origin, origin };
+        const std::array<Vec3, 6> directions{ up, up, up, Vec3{ value, 1.0f, 0.0f }, Vec3{ 0.0f, value, 0.0f }, Vec3{ 0.0f, 1.0f, value } };
+        for (std::size_t index{ 0 }; index < origins.size(); ++index)
+        {
+            const std::string what{ std::format("value {} case {}", value, index) };
+
+            RaycastHit viaScene{};
+            CastScene(scene, none, origins[index], directions[index], k_Range, viaScene, nullptr);
+            EXPECT_FALSE(viaScene.Hit) << what;
+
+            EXPECT_FALSE(CastSceneRay(raycaster, scene, none, origins[index], directions[index], k_Range, nullptr).Hit) << what;
+            EXPECT_FALSE(CastSceneRayReach(raycaster, scene, reach, none, origins[index], directions[index], k_Range, nullptr).Hit) << what;
+        }
+
+        // A range that is not a number is a ray that goes nowhere.
+        RaycastHit ranged{};
+        CastScene(scene, none, origin, up, value, ranged, nullptr);
+        EXPECT_FALSE(ranged.Hit) << value;
+        EXPECT_FALSE(CastSceneRay(raycaster, scene, none, origin, up, value, nullptr).Hit) << value;
+        EXPECT_FALSE(CastSceneRayReach(raycaster, scene, reach, none, origin, up, value, nullptr).Hit) << value;
+    }
+
+    // A ray that is not a number counts nothing and leaves the hit it was given as it was.
+    SceneCounters counters{};
+    RaycastHit kept{};
+    kept.Hit = true;
+    kept.Distance = 3.0f;
+    CastScene(scene, none, origin, { k_NaN, k_NaN, k_NaN }, k_Range, kept, &counters);
+    EXPECT_TRUE(kept.Hit);
+    EXPECT_EQ(kept.Distance, 3.0f);
+    EXPECT_EQ(counters.Nodes, 0u);
+    EXPECT_EQ(counters.Triangles, 0u);
+}
+
+TEST(RaycastScene, ReachGivesTheSameHitAsTheTreesOnRandomRays)
+{
+    std::mt19937 random{ 2026 };
+    std::uniform_real_distribution<float> unit{ -1.0f, 1.0f };
+    const auto point{ [&](float scale) { return Vec3{ unit(random) * scale, unit(random) * scale, unit(random) * scale }; } };
+
+    const CollMesh mesh{ MakeRandomMesh(random) };
+    SceneObjects objects{};
+    for (std::uint32_t handle{ 1 }; handle <= 8; ++handle) objects.push_back(MakeObject(handle, mesh, RandomPose(random, 6.0f), handle % 2 == 0));
+
+    // The fixed tree is built over the objects at rest, then one of them moves: its handle is in the filter and its new parts in the mobile tree.
+    RaycastScene scene{};
+    {
+        SceneObjects marked{ objects };
+        ASSERT_TRUE(ArmFixedScene(scene, marked, k_EveryWaiting));
+        ArmMobileScene(scene, marked);
+    }
+
+    MovePart(objects[3], RandomPose(random, 6.0f));
+    {
+        SceneObjects marked{ objects };
+        ASSERT_FALSE(ArmFixedScene(scene, marked, k_EveryWaiting));
+        ArmMobileScene(scene, marked);
+    }
+
+    ASSERT_EQ(scene.FixedFilter, std::vector<std::uint32_t>{ 4u });
+
+    const Raycaster raycaster{};
+    constexpr float k_Radius{ 30.0f };
+    const std::array<float, 4> ranges{ 12.0f, k_Radius, k_Radius, 45.0f };
+
+    // The same agent with and without handles in its exclusion, one of them in the filter.
+    SelfExclusion excluded{};
+    excluded.insert(3);
+    excluded.insert(4);
+    const std::array<const SelfExclusion*, 2> exclusions{ &excluded, nullptr };
+    const SelfExclusion none{};
+
+    int hits{ 0 };
+    int casts{ 0 };
+    for (int origins{ 0 }; origins < 25; ++origins)
+    {
+        const Vec3 origin{ point(14.0f) };
+        for (const SelfExclusion* choice : exclusions)
+        {
+            const SelfExclusion& exclusion{ choice != nullptr ? *choice : none };
+            const SceneReach reach{ GatherSceneReach(scene, exclusion, origin, k_Radius, nullptr) };
+            for (int index{ 0 }; index < 40; ++index)
+            {
+                Vec3 direction{ unit(random), unit(random), unit(random) };
+                const float length{ std::sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z) };
+                direction = { direction.X / length, direction.Y / length, direction.Z / length };
+
+                const float range{ ranges[static_cast<std::size_t>(index) % ranges.size()] };
+                const RaycastHit expected{ CastSceneRay(raycaster, scene, exclusion, origin, direction, range, nullptr) };
+                const RaycastHit actual{ CastSceneRayReach(raycaster, scene, reach, exclusion, origin, direction, range, nullptr) };
+                ExpectSameHit(actual, expected, std::format("origin {} ray {} range {}", origins, index, range));
+                if (::testing::Test::HasFailure()) return;
+
+                ++casts;
+                if (expected.Hit) ++hits;
+            }
+        }
+    }
+
+    EXPECT_EQ(casts, 2000);
+    EXPECT_GT(hits, 150);
+}
+
+TEST(RaycastScene, ReachFallsBackWhenTheOriginOrTheRangeDiffer)
+{
+    // The only object is 100 m up: a reach of 10 m from the origin has no piece of it.
+    const CollMesh mesh{ MakeSquare() };
+    const SceneObjects objects = Objects({ MakeObject(1, mesh, QuarterTurn(0.0f, 100.0f, 0.0f), false) });
+    RaycastScene scene{};
+    Arm(scene, objects);
+
+    const Raycaster raycaster{};
+    const SelfExclusion none{};
+    const Vec3 origin{ 0.0f, 0.0f, 0.0f };
+    const Vec3 up{ 0.0f, 1.0f, 0.0f };
+    const SceneReach reach{ GatherSceneReach(scene, none, origin, 10.0f, nullptr) };
+    ASSERT_TRUE(reach.Pieces.empty());
+
+    // The ray of the reach goes through it and finds nothing, which is what the trees find within that range.
+    EXPECT_FALSE(CastSceneRayReach(raycaster, scene, reach, none, origin, up, 10.0f, nullptr).Hit);
+
+    // Another origin: the trees answer.
+    const Vec3 closeBy{ 0.0f, 95.0f, 0.0f };
+    const RaycastHit moved{ CastSceneRayReach(raycaster, scene, reach, none, closeBy, up, 10.0f, nullptr) };
+    ASSERT_TRUE(moved.Hit);
+    EXPECT_NEAR(moved.Distance, 6.0f, 1.0e-3f);
+    ExpectSameHit(moved, CastSceneRay(raycaster, scene, none, closeBy, up, 10.0f, nullptr), "other origin");
+
+    // The origin moved by one coordinate only, a hair, is still another origin.
+    const Vec3 hair{ 0.0f, std::nextafter(0.0f, 1.0f), 0.0f };
+    ASSERT_NE(hair.Y, origin.Y);
+    ExpectSameHit(CastSceneRayReach(raycaster, scene, reach, none, hair, up, 200.0f, nullptr), CastSceneRay(raycaster, scene, none, hair, up, 200.0f, nullptr), "hair");
+
+    // The same origin and a longer range than the radius: the trees answer too.
+    const RaycastHit longer{ CastSceneRayReach(raycaster, scene, reach, none, origin, up, 150.0f, nullptr) };
+    ASSERT_TRUE(longer.Hit);
+    EXPECT_EQ(longer.ObjectHandle, 1u);
+    EXPECT_NEAR(longer.Distance, 101.0f, 1.0e-3f);
+}
+
+TEST(RaycastScene, ReachOfAnotherExclusionFallsBack)
+{
+    // The agent i stands inside the object 1 and the agent j inside the object 2, with the same origin for the rays of both.
+    const CollMesh mesh{ MakeSquare() };
+    const SceneObjects objects{ TwoInARow(mesh) };
+    RaycastScene scene{};
+    Arm(scene, objects);
+
+    const Raycaster raycaster{};
+    const Vec3 origin{ 0.0f, 0.0f, 0.0f };
+    const Vec3 up{ 0.0f, 1.0f, 0.0f };
+    SelfExclusion ofI{};
+    ofI.insert(1);
+    SelfExclusion ofJ{};
+    ofJ.insert(2);
+
+    const SceneReach reachOfI{ GatherSceneReach(scene, ofI, origin, k_Range, nullptr) };
+
+    // With its own exclusion the reach of i skips the object 1 and finds the object 2.
+    const RaycastHit own{ CastSceneRayReach(raycaster, scene, reachOfI, ofI, origin, up, k_Range, nullptr) };
+    ASSERT_TRUE(own.Hit);
+    EXPECT_EQ(own.ObjectHandle, 2u);
+    EXPECT_NEAR(own.Distance, 11.0f, 1.0e-3f);
+
+    // With the exclusion of j it must not: j ignores the object 2 and meets the object 1, which the reach of i had left out.
+    const RaycastHit other{ CastSceneRayReach(raycaster, scene, reachOfI, ofJ, origin, up, k_Range, nullptr) };
+    ASSERT_TRUE(other.Hit);
+    EXPECT_EQ(other.ObjectHandle, 1u);
+    EXPECT_NEAR(other.Distance, 6.0f, 1.0e-3f);
+    ExpectSameHit(other, CastSceneRay(raycaster, scene, ofJ, origin, up, k_Range, nullptr), "exclusion of j");
+
+    // A reach of an empty exclusion used with one that has handles, and the reverse, are other exclusions too.
+    const SelfExclusion none{};
+    const SceneReach reachOfNone{ GatherSceneReach(scene, none, origin, k_Range, nullptr) };
+    ExpectSameHit(CastSceneRayReach(raycaster, scene, reachOfNone, ofI, origin, up, k_Range, nullptr), CastSceneRay(raycaster, scene, ofI, origin, up, k_Range, nullptr), "none then i");
+    ExpectSameHit(CastSceneRayReach(raycaster, scene, reachOfI, none, origin, up, k_Range, nullptr), CastSceneRay(raycaster, scene, none, origin, up, k_Range, nullptr), "i then none");
+
+    // The same handles in another set, built in another order, are the same exclusion: the reach is used.
+    SelfExclusion twoA{};
+    twoA.insert(1);
+    twoA.insert(2);
+    SelfExclusion twoB{};
+    twoB.insert(2);
+    twoB.insert(1);
+    const SceneReach reachOfTwo{ GatherSceneReach(scene, twoA, origin, k_Range, nullptr) };
+    EXPECT_FALSE(CastSceneRayReach(raycaster, scene, reachOfTwo, twoB, origin, up, k_Range, nullptr).Hit);
+}
+
+TEST(RaycastScene, ReachOfAnEarlierGatherFallsBackOnceTheSceneIsArmedAgain)
+{
+    const CollMesh mesh{ MakeSquare() };
+    const SceneObjects objects{ TwoInARow(mesh) };
+    RaycastScene scene{};
+    Arm(scene, objects);
+
+    const Raycaster raycaster{};
+    const SelfExclusion none{};
+    const Vec3 origin{ 0.0f, 0.0f, 0.0f };
+    const Vec3 up{ 0.0f, 1.0f, 0.0f };
+    const SceneReach reach{ GatherSceneReach(scene, none, origin, k_Range, nullptr) };
+    ASSERT_EQ(CastSceneRayReach(raycaster, scene, reach, none, origin, up, k_Range, nullptr).ObjectHandle, 1u);
+
+    // The object 1 leaves and the scene is armed again: the pieces of the reach are not the ones of the trees any more.
+    const SceneObjects later = Objects({ objects[1] });
+    Arm(scene, later);
+
+    const RaycastHit actual{ CastSceneRayReach(raycaster, scene, reach, none, origin, up, k_Range, nullptr) };
+    ASSERT_TRUE(actual.Hit);
+    EXPECT_EQ(actual.ObjectHandle, 2u);
+    EXPECT_NEAR(actual.Distance, 11.0f, 1.0e-3f);
+    ExpectSameHit(actual, CastSceneRay(raycaster, scene, none, origin, up, k_Range, nullptr), "after the arm");
 }

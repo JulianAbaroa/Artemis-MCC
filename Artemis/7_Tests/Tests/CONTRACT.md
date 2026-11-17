@@ -10,7 +10,8 @@ decision records, `MakeLight` and `RunLight` on the others) and compares the Tic
 
 ## Does not
 - Need the game: anything that needs MCC is the in-game bench (`Tools/game.py`).
-- Reference `DevTools.*` or `Mod`.
+- Reference `DevTools.*` or `Mod`. The one source of `Mod` it uses is `TickProducerAdapter` (RV.1): its two files are compiled into the test executable, with
+  `Tests.Support.ModPort` as the primary interface of `Mod.Port.System`, so the rules of the game thread run over the real services without MCC.
 
 ## Input and output
 - Input: hand-made data, the user's Reach `.map` files, recordings (`.sdump` + golden `.tdump`, kept outside the repo).

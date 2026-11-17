@@ -7,6 +7,7 @@ import :Raycast;
 
 import Common.Geometry.System;
 import Common.Math.Type;
+import Common.Math.System;
 import Blam.MapModel.World.Type;
 import std;
 
@@ -348,7 +349,8 @@ namespace Blam::MapModel::World::System
     auto Raycaster::Cast(const Vec3& origin, const Vec3& direction, float maxDistance) const -> Hit
     {
         Hit best{};
-        if (maxDistance <= 0.0f || m_Nodes.empty()) return best;
+        if (!(maxDistance > 0.0f) || !std::isfinite(maxDistance) || m_Nodes.empty()) return best;
+        if (!Common::Math::System::IsFinite(origin) || !Common::Math::System::IsFinite(direction)) return best;
 
         const RayLanes lanes{ { origin.X, origin.Y, origin.Z, 0.0f }, { SafeInverse(direction.X), SafeInverse(direction.Y), SafeInverse(direction.Z), 0.0f } };
 

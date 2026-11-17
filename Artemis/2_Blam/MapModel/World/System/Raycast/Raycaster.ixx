@@ -36,6 +36,7 @@ export namespace Blam::MapModel::World::System
         // counts. The hit carries the flags and the global material of the surface (D272).
         // param direction: Unit vector.
         // param maxDistance: Rays that would travel further miss.
+        // note: A ray whose origin, direction or range is not a number (NaN or infinite) misses, and costs nothing.
         auto Cast(const Vec3& origin, const Vec3& direction, float maxDistance) const -> Hit;
 
         // Removes the hierarchy.

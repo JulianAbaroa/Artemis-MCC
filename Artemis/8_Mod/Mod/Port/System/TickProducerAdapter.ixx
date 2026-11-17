@@ -32,9 +32,11 @@ export namespace Mod::Port::System
         auto operator=(const TickProducerAdapter&) -> TickProducerAdapter& = delete;
 
         // Reads the clock, copies the tick and queues it. The queue wait is capped by k_ReadTimeout: past it the tick is lost, counted in
-        // the next queued one (DroppedBefore) and the clock does not count the jump as a skip.
+        // the next queued one (DroppedBefore) and the clock does not count the jump as a skip. Neither does it count the ticks that went by
+        // while the queue was shut or the map was not loaded.
         // note: The first tick of a teardown epoch starts the numbering and the sparse state over. A decision tick that was queued is marked
-        // for the bridge, so Lockstep waits for its answer however far behind the AI thread is.
+        // for the bridge, so Lockstep waits for its answer however far behind the AI thread is. Marked means queued for the AI thread, not
+        // delivered to the client.
         auto Produce() -> ProducedTick override;
 
     private:
@@ -53,5 +55,8 @@ export namespace Mod::Port::System
         std::uint64_t m_Lost{ 0 };
         // Whether the previous tick that was queued was in sparse mode (Q101).
         bool m_IsPreviousSparse{ false };
+        // Whether ticks went by without a clock read since the last one (the queue was shut or the map was not loaded): the next read is not
+        // judged as consecutive, so the jump is not counted as a clock skip.
+        bool m_IsClockStale{ false };
     };
 }

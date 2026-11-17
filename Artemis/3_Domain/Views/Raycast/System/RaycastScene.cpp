@@ -5,6 +5,7 @@ module;
 module Views.Raycast.System;
 
 import Common.Math.Type;
+import Common.Math.System;
 import Common.Geometry.System;
 import Common.Semantic.Type;
 import Blam.MapModel.Definitions.Type;
@@ -28,6 +29,7 @@ namespace
     using Views::Raycast::Type::MeshBvhs;
     using Views::Raycast::Type::MobileRebuildRule;
     using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::SceneStamp;
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneCounters;
     using Views::Raycast::Type::SceneGatherCounters;
@@ -450,6 +452,26 @@ namespace
 
         return true;
     }
+
+    // Whether a ray can be cast: its origin, direction and range are numbers. One that is not misses (RV.1).
+    auto IsFiniteRay(const Vec3& origin, const Vec3& direction, float maxDistance) -> bool
+    {
+        return std::isfinite(maxDistance) && Common::Math::System::IsFinite(origin) && Common::Math::System::IsFinite(direction);
+    }
+
+    auto StampOf(const RaycastScene& scene) -> SceneStamp
+    {
+        return SceneStamp{ scene.GathersSinceBuild, scene.FixedBuilds, scene.MobileBuilds, scene.MobileRefits };
+    }
+
+    // Whether the reach was gathered from this scene as it is now and for this exclusion: the same handles, whatever their order.
+    // note: Equal sizes and every handle of the exclusion in the sorted list of the reach make the two sets equal.
+    auto IsReachOf(const SceneReach& reach, const RaycastScene& scene, const SelfExclusion& exclusion) -> bool
+    {
+        if (!(reach.Stamp == StampOf(scene)) || reach.Excluded.size() != exclusion.size()) return false;
+
+        return std::ranges::all_of(exclusion, [&](std::uint32_t handle) { return std::ranges::binary_search(reach.Excluded, handle); });
+    }
 }
 
 namespace Views::Raycast::System
@@ -677,6 +699,8 @@ namespace Views::Raycast::System
     auto CastScene(const RaycastScene& scene, const SelfExclusion& exclusion, const Vec3& origin, const Vec3& direction,
         float maxDistance, RaycastHit& best, SceneCounters* counters) -> void
     {
+        if (!IsFiniteRay(origin, direction, maxDistance)) return;
+
         CastState state{ best, exclusion, origin, direction, maxDistance, counters, TieKey{} };
         const RayState world{ MakeRayState(origin, direction) };
 
@@ -689,6 +713,9 @@ namespace Views::Raycast::System
         SceneReach reach{};
         reach.Origin = origin;
         reach.Radius = radius;
+        reach.Excluded.assign(exclusion.begin(), exclusion.end());
+        std::ranges::sort(reach.Excluded);
+        reach.Stamp = StampOf(scene);
 
         const ExcludedHandles excluded{ exclusion };
         GatherTree(scene.Fixed, &scene.FixedFilter, excluded, reach, counters);
@@ -699,7 +726,10 @@ namespace Views::Raycast::System
     auto CastSceneRayReach(const Raycaster& raycaster, const RaycastScene& scene, const SceneReach& reach, const SelfExclusion& exclusion,
         const Vec3& origin, const Vec3& direction, float maxDistance, SceneCounters* counters) -> RaycastHit
     {
-        if (origin.X != reach.Origin.X || origin.Y != reach.Origin.Y || origin.Z != reach.Origin.Z || maxDistance > reach.Radius)
+        if (!IsFiniteRay(origin, direction, maxDistance)) return CastStatic(raycaster, origin, direction, maxDistance);
+
+        if (origin.X != reach.Origin.X || origin.Y != reach.Origin.Y || origin.Z != reach.Origin.Z || maxDistance > reach.Radius
+            || !IsReachOf(reach, scene, exclusion))
         {
             return CastSceneRay(raycaster, scene, exclusion, origin, direction, maxDistance, counters);
         }

@@ -39,7 +39,7 @@ namespace Common::Geometry::System
         if (v < 0.0f || u + v > 1.0f) return false;
 
         const float t = Dot(edge2, qvec) * invDet;
-        if (t <= k_Epsilon || t > maxDistance) return false;
+        if (!(t > k_Epsilon && t <= maxDistance)) return false;
 
         outDistance = t;
         return true;

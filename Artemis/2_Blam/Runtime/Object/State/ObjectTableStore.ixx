@@ -56,6 +56,10 @@ export namespace Blam::Runtime::Object::State
         auto Publish() -> void;
         auto Acquire() const -> std::shared_ptr<const ObjectTable>;
 
+        // Sets a function that Publish calls once it has armed the table and before it publishes it. Empty for none.
+        // note: Only for tests, to reach the moment a Cleanup of another thread could slip in. The function must not call the store.
+        auto SetPublishProbe(std::function<void()> probe) -> void;
+
         auto Cleanup() -> void;
 
     private:
@@ -75,6 +79,7 @@ export namespace Blam::Runtime::Object::State
         // Whether some row has no slot (a handle index of k_MaxObjects or more), which no row function can follow: Publish copies whole.
         bool m_IsUntracked{};
         mutable std::mutex m_Mutex{};
+        std::function<void()> m_PublishProbe{};
 
         auto AddRowLocked(std::uint32_t handle, const AliveObject& object) -> AliveObject&;
         auto RemoveRowLocked(std::uint32_t handle) -> std::optional<AliveObject>;

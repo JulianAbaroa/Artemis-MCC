@@ -160,8 +160,16 @@ namespace Blam::Runtime::Object::State
             }
 
             ++m_Tick;
+
+            // Published under the lock, so a Cleanup cannot come between the arming and the store and leave the table of the old map out.
+            if (m_PublishProbe) m_PublishProbe();
+            m_PublishedTable.store(target, std::memory_order_release);
         }
-        m_PublishedTable.store(target, std::memory_order_release);
+    }
+
+    auto ObjectTableStore::SetPublishProbe(std::function<void()> probe) -> void
+    {
+        m_PublishProbe = std::move(probe);
     }
 
     auto ObjectTableStore::Acquire() const -> std::shared_ptr<const ObjectTable>

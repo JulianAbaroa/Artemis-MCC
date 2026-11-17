@@ -28,6 +28,9 @@ export namespace Common::Math::System
     // Returns the length of the vector.
     auto Length(const Vec3& v) -> float;
 
+    // Returns whether the three components are numbers (neither NaN nor infinite).
+    auto IsFinite(const Vec3& v) -> bool;
+
     // Returns the vector rotated by a unit quaternion (x, y, z, w).
     auto Rotate(const Vec4& quaternion, const Vec3& v) -> Vec3;
 

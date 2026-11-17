@@ -37,7 +37,9 @@ The session with the client (heartbeats, owner, counters, suspension after timeo
 - AI thread: captures the clock while the game waits for the read of a tick, with whether the tick is a decision and whether the mode is sparse (`Control.Lockstep.System::IsSparse` over the control and the every-tick demand of the settings, Q101). The bridge thread publishes the effective value as `IsSparse`.
 - Game thread: applies the actions in the PlayerAction hook and, in Lockstep, waits for them: at most `k_LockstepTimeout` per
   decision; two timeouts in a row suspend Lockstep until the client answers; no limit while paused and the client is alive; the wait
-  ends at once if the client leaves or the bridge stops.
+  ends at once if the client leaves or the bridge stops. It waits only for decisions up to the last one marked with `MarkPushed`, which means
+  queued for the AI thread, not delivered to the client (RV.1): a decision the producer lost is never marked, and if the AI thread hangs with a
+  Lockstep client connected the game waits `k_LockstepTimeout` per decision until two timeouts suspend it.
 
 ## Errors
 A region that cannot be created leaves the bridge off; the game is not affected. A client that leaves or crashes: its players go

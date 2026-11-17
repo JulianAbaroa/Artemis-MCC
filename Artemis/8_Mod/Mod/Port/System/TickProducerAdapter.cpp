@@ -32,17 +32,24 @@ namespace Mod::Port::System
             m_Generation = 0;
             m_Lost = 0;
             m_IsPreviousSparse = false;
+            m_IsClockStale = false;
             m_BridgeService.ResetClock();
         }
 
         // The loaded epoch is the one the AI thread loaded the resources under: after a teardown it never matches until the next load, so
         // nothing is queued for the old map and no tick of the new one before its resources are there.
-        if (!m_TickQueue.IsOpen() || m_LifecycleStore.GetLoadedEpoch() != epoch || !m_LifecycleStore.CanPublish()) return {};
+        // The clock is not read on a tick that goes by, so the next read comes after ticks nobody saw: it must not count that as a skip.
+        if (!m_TickQueue.IsOpen() || m_LifecycleStore.GetLoadedEpoch() != epoch || !m_LifecycleStore.CanPublish())
+        {
+            m_IsClockStale = true;
+            return {};
+        }
 
         const auto captureStart{ steady_clock::now() };
 
         BridgeClock clock{};
-        m_BridgeService.CaptureClock(m_Lost == 0, clock);
+        m_BridgeService.CaptureClock(m_Lost == 0 && !m_IsClockStale, clock);
+        m_IsClockStale = false;
 
         const bool isFirstAfterLoad{ m_FirstDoneEpoch != epoch };
         const bool isLight{ IsLightTick(clock.IsSparse, clock.IsDecision, m_IsPreviousSparse, isFirstAfterLoad) };

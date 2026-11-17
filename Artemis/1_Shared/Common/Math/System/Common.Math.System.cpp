@@ -58,6 +58,11 @@ namespace Common::Math::System
         return std::sqrt(Dot(v, v));
     }
 
+    auto IsFinite(const Vec3& v) -> bool
+    {
+        return std::isfinite(v.X) && std::isfinite(v.Y) && std::isfinite(v.Z);
+    }
+
     auto Distance(const Vec3& a, const Vec3& b) -> float
     {
         return Length(Subtract(a, b));

@@ -65,6 +65,9 @@ namespace Engine::Capture::Hook
             const int ticks{ (std::max)(requestedTicks, 0) };
             self->m_TelemetryStore.RecordSimTick(ticks, callNs);
             if (ticks > 0) frameDetour.ProduceTick();
+
+            // One tick is produced per call, so the others of a call that ran several are not captured: they count as lost.
+            if (ticks > 1) self->m_TelemetryStore.RecordDroppedTicks(static_cast<std::uint64_t>(ticks - 1));
             return;
         }
 

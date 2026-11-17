@@ -138,7 +138,13 @@
     <ClCompile Include="Support\Tests.Support.EngineMemory.ixx">
       <Filter>Support</Filter>
     </ClCompile>
+    <ClCompile Include="Support\Tests.Support.FakeBridge.ixx">
+      <Filter>Support</Filter>
+    </ClCompile>
     <ClCompile Include="Support\Tests.Support.Log.ixx">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="Support\Tests.Support.ModPort.ixx">
       <Filter>Support</Filter>
     </ClCompile>
     <ClCompile Include="Support\Tests.Support.Maps.ixx">
@@ -152,6 +158,18 @@
     </ClCompile>
     <ClCompile Include="Blam\BoundsBvhRefitTests.cpp">
       <Filter>Blam</Filter>
+    </ClCompile>
+    <ClCompile Include="Blam\RaycasterTests.cpp">
+      <Filter>Blam</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\TickProducerTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.ixx">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Blam\SbspCollisionTests.cpp">
       <Filter>Blam</Filter>

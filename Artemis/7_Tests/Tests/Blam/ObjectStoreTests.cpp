@@ -101,6 +101,37 @@ TEST(ObjectTableStoreTests, CleanupLeavesNothingToAcquire)
     EXPECT_FLOAT_EQ(OriginOf(store.Acquire()), 2.0f);
 }
 
+// The teardown does not wait for a publish that is slow (D297): its Cleanup can come while the AI thread has the table armed. What the
+// publish was about to put out belongs to the map that is gone, so nothing may stay published after the Cleanup (RV.1, S9).
+TEST(ObjectTableStoreTests, CleanupDuringPublishLeavesNothingPublished)
+{
+    ObjectTableStore store{};
+    Store(store, 1.0f);
+
+    std::thread teardown{};
+    std::atomic<bool> isCleaned{ false };
+    store.SetPublishProbe([&] {
+        teardown = std::thread([&] {
+            store.Cleanup();
+            isCleaned.store(true);
+        });
+
+        // The Cleanup is done at once when the store is free, and waits for the end of the Publish when the lock is held.
+        for (int wait{ 0 }; wait < 50 && !isCleaned.load(); ++wait) std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
+    });
+    store.Publish();
+    teardown.join();
+    store.SetPublishProbe({});
+
+    EXPECT_EQ(store.Acquire(), nullptr);
+
+    // The next map publishes as usual.
+    Store(store, 2.0f);
+    store.Publish();
+    ASSERT_NE(store.Acquire(), nullptr);
+    EXPECT_FLOAT_EQ(OriginOf(store.Acquire()), 2.0f);
+}
+
 namespace
 {
     // What a table must hold: handle -> origin X (the row also carries 2 x X in WorldOrigin.Y and X as the placement index).

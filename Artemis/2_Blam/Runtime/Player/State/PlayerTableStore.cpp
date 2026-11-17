@@ -22,12 +22,9 @@ namespace Blam::Runtime::Player::State
 
     auto PlayerTableStore::Publish() -> void
     {
-        std::shared_ptr<const PlayerTable> snapshot{};
-        {
-            std::lock_guard<std::mutex> lock(m_Mutex);
-            snapshot = std::make_shared<const PlayerTable>(m_PlayerTable);
-        }
-        m_PublishedPlayerTable.store(snapshot, std::memory_order_release);
+        // Published under the lock, so a Cleanup cannot come between the copy and the store and leave the table of the old map out.
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        m_PublishedPlayerTable.store(std::make_shared<const PlayerTable>(m_PlayerTable), std::memory_order_release);
     }
 
     auto PlayerTableStore::Acquire() const -> std::shared_ptr<const PlayerTable>

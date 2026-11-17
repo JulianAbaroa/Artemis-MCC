@@ -38,9 +38,10 @@ clock (`CaptureClock`: the action tick of the state about to be copied), decides
 pushes a `CapturedTick` (Snapshot, clock, generation, epoch, light, ticks lost before, first after load) into the `TickQueue` (one producer,
 one consumer, FIFO, `k_TickQueueDepth` = 4). It queues only while the AI thread has the queue open (it is consuming: `Running` with the map
 resources loaded) and `GetLoadedEpoch` equals the teardown epoch. A queue full for `k_ReadTimeout` loses the tick (counted in the next one as
-DroppedBefore, which the AI thread logs; the hook adds it to the dropped ticks of the telemetry when it happens, so a discard never loses it). A decision tick that was queued is marked for the bridge right there, so
+DroppedBefore, which the AI thread logs; the hook adds it to the dropped ticks of the telemetry when it happens, so a discard never loses it). A decision tick that was queued is marked for the bridge right there (queued for the AI thread, not delivered to the client, RV.1), so
 Lockstep waits at the tick of the decision plus the latency for the answer of the client even when the AI thread is behind. The first tick of a
-teardown epoch restarts the numbering, the sparse state and the clock of the bridge. The AI thread waits for a queued tick up to 10 ms, then looks
+teardown epoch restarts the numbering, the sparse state and the clock of the bridge. Ticks that go by without a clock read (the queue shut or the
+map not loaded) make the next read not consecutive, so the jump is not counted as a clock skip (RV.1). The AI thread waits for a queued tick up to 10 ms, then looks
 at the lifecycle again.
 
 Sparse mode (Q101): when the bridge clock says IsSparse (the client asked for it, is connected and nobody needs every tick: the
@@ -66,5 +67,6 @@ The check and the push are two steps, so observers must stay well under the 1 s 
 - The action source is connected before the action hook is installed.
 
 ## Tests
-In game, with the bench (`Tools/game.py`: perf and bots stress scenarios, golden film), `Agent/scripts/bridge_check.py` and the
+`TickProducerTests` in `Artemis.Tests` (RV.1) run `TickProducerAdapter` over the real `CaptureService` (fake memory), `BridgeService` (store with a fake region),
+queue and `LifecycleStore`: the test executable compiles its two sources. In game, with the bench (`Tools/game.py`: perf and bots stress scenarios, golden film), `Agent/scripts/bridge_check.py` and the
 stage-0 smoke test (`Agent/scripts/env_check.py`).

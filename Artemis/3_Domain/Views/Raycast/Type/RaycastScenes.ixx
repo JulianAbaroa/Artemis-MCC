@@ -194,9 +194,22 @@ export namespace Views::Raycast::Type
         std::size_t FixedFiltered{ 0 };
     };
 
+    // What a scene had counted when a reach was gathered from it (RV.1): the gathers armed since the last build of the fixed tree, the builds of the
+    // fixed tree, and the builds and refits of the mobile one. Any change to the pieces of the trees moves at least one of them.
+    struct SceneStamp
+    {
+        std::size_t Gathers{ 0 };
+        std::size_t FixedBuilds{ 0 };
+        std::size_t MobileBuilds{ 0 };
+        std::size_t MobileRefits{ 0 };
+
+        auto operator==(const SceneStamp&) const -> bool = default;
+    };
+
     // The pieces of the scene that rays from one origin and up to one range can touch (RK.1), for an agent whose rays share their origin.
     // note: The pieces are the ones of the trees of the scene it was gathered from, without the ones the exclusion and the filter of the fixed tree
-    // leave out. Valid until the scene is armed again.
+    // leave out. Valid until the scene is armed again: Stamp and Excluded tell what it was gathered from, so a cast that does not match falls back
+    // to the trees (RV.1).
     struct SceneReachPiece
     {
         const ScenePiece* Piece{ nullptr };
@@ -211,6 +224,10 @@ export namespace Views::Raycast::Type
         Vec3 Origin{};
         float Radius{ 0.0f };
         std::vector<SceneReachPiece> Pieces{};
+
+        // The handles of the exclusion it was gathered with, sorted, and what the scene had counted then.
+        std::vector<std::uint32_t> Excluded{};
+        SceneStamp Stamp{};
     };
 
     // What one cast of the scene visited, for the offline bench.
