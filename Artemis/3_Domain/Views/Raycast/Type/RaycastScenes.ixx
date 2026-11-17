@@ -16,6 +16,7 @@ namespace
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::World::Type::Raycast::BvhNode;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
+    using Blam::Runtime::Object::Type::Alive::ObjectTable;
     using Perception::Collidable::Type::CollidablePart;
     using Perception::Collidable::Type::CollidablePartsKey;
 }
@@ -156,6 +157,10 @@ export namespace Views::Raycast::Type
     // The two level ray scene shared by all agents: a hierarchy per mesh and two hierarchies of instances.
     struct RaycastScene
     {
+        // Object table the scene was last prepared for, and how many times it was prepared (PrepareScene).
+        std::weak_ptr<const ObjectTable> PreparedFor{};
+        std::size_t Prepares{ 0 };
+
         MeshBvhs Meshes{};
         SceneTree Fixed{};
         SceneTree Mobile{};

@@ -14,7 +14,7 @@ export namespace Bridge::Codec::Pipeline::System
     inline constexpr std::array<std::string_view, 25> k_PipelineStageNames{
         "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
         "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "ExplosiveDetails", "ProjectileDetails", "WeaponDetails", "Entities", "Players",
-        "ObjectiveDetails", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Views", "Assemble" };
+        "ObjectiveDetails", "Aim", "Events", "Match", "Self", "Affordance", "Views", "Raycast", "Assemble" };
 
     // Runs the pure chain of one tick over a Snapshot: Tables, Environment (with Relations), Egocentric and the assembly of the Tick (D205).
     // note: The one place where the order of the tick lives. The AI thread and the tests call it.

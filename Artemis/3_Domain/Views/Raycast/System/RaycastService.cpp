@@ -360,9 +360,12 @@ namespace Views::Raycast::System
             perceptionOrigin.Forward : selfPtr->Forward;
 
         RaycastScene& scene = m_RaycastSceneStore.Scene();
-        SceneObjects objects = GatherSceneObjects(m_RaycastSceneStore.Parts(), m_CollidableService, m_ObjectStore, nullptr);
-        ArmFixedScene(scene, objects);
-        ArmMobileScene(scene, objects);
+        if (!TakePreparedScene(scene, m_ObjectStore))
+        {
+            // Alone, it does not leave the mark that tells the next Update that someone else gathered.
+            PrepareScene(scene, m_RaycastSceneStore.Parts(), m_CollidableService, m_ObjectStore);
+            scene.PreparedFor.reset();
+        }
 
         result.AimHit = CastSceneRay(m_Raycaster, scene, selfExclusion, selfPtr->Position, selfPtr->Forward, aimRange, nullptr);
 

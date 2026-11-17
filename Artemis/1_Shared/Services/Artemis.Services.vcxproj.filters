@@ -22,6 +22,12 @@
     <Filter Include="Preferences\Type">
       <UniqueIdentifier>{93bb059c-04e8-4943-9232-25fd3b7f8182}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Observed">
+      <UniqueIdentifier>{698A9883-BDDC-41B3-8FAF-5E2125A2A943}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Observed\State">
+      <UniqueIdentifier>{1DB4F1C0-1C3E-450A-A352-48F87790260B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Settings">
       <UniqueIdentifier>{625e2b27-a2a3-4107-b143-408777dc7f7f}</UniqueIdentifier>
     </Filter>
@@ -68,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="Preferences\System\PreferencesService.ixx">
       <Filter>Preferences\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Observed\State\ObservedPlayerStore.ixx">
+      <Filter>Observed\State</Filter>
     </ClCompile>
     <ClCompile Include="Settings\State\SettingsStore.cpp">
       <Filter>Settings\State</Filter>

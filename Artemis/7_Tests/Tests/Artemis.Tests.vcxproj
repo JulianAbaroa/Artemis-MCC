@@ -162,6 +162,7 @@
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
     <ClCompile Include="Views\ViewEyeTests.cpp" />
     <ClCompile Include="Views\ViewExclusionTests.cpp" />
+    <ClCompile Include="Views\ViewRaysTests.cpp" />
     <ClCompile Include="Views\ViewsSelfTests.cpp" />
     <ClCompile Include="Views\RaycastOracleTests.cpp" />
     <ClCompile Include="Views\RaycastSceneTests.cpp" />

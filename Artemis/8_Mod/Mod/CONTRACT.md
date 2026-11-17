@@ -8,7 +8,7 @@ The composition root. `Mod::Layer` owns every Layer in dependency order, connect
 `ActionSource` over `BridgeService`), builds `EngineAccess` for the development tools, registers the tick observers, installs the
 hooks and runs the threads:
 - Main: installs and supervises the hooks, reinstalls them when the engine is recreated, drives the shutdown.
-- AI: loads the map data, then takes the queued ticks in order (the game thread copied each Snapshot, D305), runs the pipeline over them with the `AgentSet` it builds each tick (D307: the players of the `AgentMask` of the bridge when a client owns the instance, plus the local player 0, which is the one of the last published player table, and the followed player of the Viewer is not in it yet),
+- AI: loads the map data, then takes the queued ticks in order (the game thread copied each Snapshot, D305), runs the pipeline over them with the `AgentSet` it builds each tick (D307: the players of the `AgentMask` of the bridge when a client owns the instance, plus the local player 0, which is the one of the last published player table, and the player the Viewer follows, which the Viewer writes in the `ObservedPlayerStore` of `Services`, F4.2),
   hands decision ticks to the bridge and the `ObservedTick` to the observers; times every stage. It never reads game memory.
 - Bridge, Dump, Bench: the bridge transport, the TickDump writer and the in-game bench.
 `DllMain` and `Proxy/` forward the real `wtsapi32` exports.

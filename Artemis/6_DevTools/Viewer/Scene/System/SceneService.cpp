@@ -1,11 +1,15 @@
 module DevTools.Viewer.Scene.System;
 
 import Common.Engine.Type;
+import Perception.Players.Type;
 import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
 {
+    using DevTools::Viewer::Camera::Type::Follow;
+    using Perception::Players::Type::Player;
+
     using Common::Engine::Type::k_NoHandle;
 }
 
@@ -18,6 +22,7 @@ namespace DevTools::Viewer::Scene::System
 
     auto SceneService::Deactivate() -> void
     {
+        m_ObservedStore.Set(k_NoHandle);
         m_CameraService.Deactivate();
     }
 
@@ -31,6 +36,16 @@ namespace DevTools::Viewer::Scene::System
 
         m_CameraService.Update(tick, viewport, acceptInput, followHandle);
 
+        std::uint32_t observed{ k_NoHandle };
+        if (followHandle && m_CameraStore.GetFollow() != Follow::Off && tick && tick->Players)
+        {
+            for (const Player& player : tick->Players->Rows)
+            {
+                if (player.BipedHandle == *followHandle) observed = player.Handle;
+            }
+        }
+        m_ObservedStore.Set(observed);
+
         m_PaletteService.Build(tick);
 
         m_SelectionService.Update(m_CameraService.GetCenterRay());
@@ -43,6 +58,7 @@ namespace DevTools::Viewer::Scene::System
 
     auto SceneService::Reset() -> void
     {
+        m_ObservedStore.Set(k_NoHandle);
         m_PaletteService.Reset();
         m_SelectionService.Reset();
     }

@@ -1,6 +1,7 @@
 export module Services.Layer;
 
 import Common.Log.System;
+import Services.Observed.State;
 import Services.Settings.State;
 import Services.Settings.System;
 import Services.Logs.State;
@@ -16,6 +17,7 @@ export namespace Services
     {
     private:
         using Log = Common::Log::System::Log;
+        using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
         using SettingsService = Services::Settings::System::SettingsService;
         using LogsStore = Services::Logs::State::LogsStore;
@@ -33,6 +35,7 @@ export namespace Services
 
         // --- State ---
         SettingsStore m_SettingsStore{};
+        ObservedPlayerStore m_ObservedPlayerStore{};
         LogsStore m_LogsStore{};
         TelemetryStore m_TelemetryStore{};
 

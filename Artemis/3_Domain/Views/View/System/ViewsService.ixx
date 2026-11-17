@@ -2,10 +2,14 @@ export module Views.View.System;
 
 import Common.Log.System;
 import Blam.MapModel.Definitions.State;
+import Blam.MapModel.World.System;
 import Blam.Runtime.Object.State;
+import Perception.Collidable.System;
 import Perception.Details.State;
 import Perception.Entities.State;
+import Perception.ObjectGraph.State;
 import Perception.Players.State;
+import Views.Raycast.State;
 import Views.View.Type;
 import Views.View.State;
 import std;
@@ -13,7 +17,7 @@ import std;
 export namespace Views::View::System
 {
     // Builds the View of every agent of the set, one per row of Players (F4, D307).
-    // note: F4.1 fills the head and Self. The other sections are zero until F4.2 to F4.6.
+    // note: F4.1 fills the head and Self, F4.2 the aim hit and the rays. The other sections are zero until F4.3 to F4.6.
     class ViewsService
     {
     private:
@@ -21,6 +25,10 @@ export namespace Views::View::System
         using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
         using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
         using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
+        using ObjectGraphStore = Perception::ObjectGraph::State::ObjectGraphStore;
+        using CollidableService = Perception::Collidable::System::CollidableService;
+        using Raycaster = Blam::MapModel::World::System::Raycaster;
+        using RaycastSceneStore = Views::Raycast::State::RaycastSceneStore;
         using WeaponDetailsStore = Perception::Details::State::WeaponDetailsStore;
         using EntitiesStore = Perception::Entities::State::EntitiesStore;
         using PlayersStore = Perception::Players::State::PlayersStore;
@@ -30,14 +38,17 @@ export namespace Views::View::System
     public:
         ViewsService(Log& log, ObjectTableStore& objectStore, DefinitionsStore& definitionsStore,
             EntitiesStore& entitiesStore, PlayersStore& playersStore, WeaponDetailsStore& weaponDetailsStore,
-            ObjectiveDetailsStore& objectiveDetailsStore, ViewsStore& viewsStore) : m_Log(log),
+            ObjectiveDetailsStore& objectiveDetailsStore, ObjectGraphStore& graphStore, Raycaster& raycaster,
+            CollidableService& collidableService, RaycastSceneStore& sceneStore, ViewsStore& viewsStore) : m_Log(log),
             m_ObjectStore(objectStore), m_DefinitionsStore(definitionsStore), m_EntitiesStore(entitiesStore),
             m_PlayersStore(playersStore), m_WeaponDetailsStore(weaponDetailsStore),
-            m_ObjectiveDetailsStore(objectiveDetailsStore), m_ViewsStore(viewsStore) {}
+            m_ObjectiveDetailsStore(objectiveDetailsStore), m_GraphStore(graphStore), m_Raycaster(raycaster),
+            m_CollidableService(collidableService), m_SceneStore(sceneStore), m_ViewsStore(viewsStore) {}
         ~ViewsService() = default;
 
         // Publishes the Views of the tick: a computed one for each player of the set, a zero one for the others.
-        // note: Reads the stores the same tick published, so it runs after Perception.
+        // note: Reads the stores the same tick published, so it runs after Perception. The ray scene is prepared once, when the first agent
+        // with a body needs it, and the exclusions of every player come from one pass over the object graph (F4.2).
         auto Update(const AgentSet& agents) -> void;
 
         auto Cleanup() -> void;
@@ -50,6 +61,10 @@ export namespace Views::View::System
         PlayersStore& m_PlayersStore;
         WeaponDetailsStore& m_WeaponDetailsStore;
         ObjectiveDetailsStore& m_ObjectiveDetailsStore;
+        ObjectGraphStore& m_GraphStore;
+        Raycaster& m_Raycaster;
+        CollidableService& m_CollidableService;
+        RaycastSceneStore& m_SceneStore;
         ViewsStore& m_ViewsStore;
     };
 }

@@ -65,7 +65,7 @@ export namespace Views::Raycast::System
         ~RaycastService() = default;
 
         // Casts the rays of Self through the shared scene: the aim ray and the perception rays, with the objects of the tick and no radius.
-        // note: The parts of the fixed objects are kept between ticks while their key is the same (D299).
+        // note: The scene is the one the Views of the same tick prepared (they run first), or it prepares it when it runs alone (F4.2).
         auto Update() -> void;
 
         auto Cleanup() -> void;

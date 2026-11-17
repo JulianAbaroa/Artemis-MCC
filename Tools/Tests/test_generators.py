@@ -126,7 +126,7 @@ def test_tag_structures_import_what_they_use():
 
 # --- GenerateBridge, GenerateSemantic, GenerateCatalog (in-memory --check) ---------------------------------------------------
 
-@pytest.mark.parametrize("script, args", [("GenerateBridge.py", []), ("GenerateSemantic.py", []), ("GenerateCatalog.py", [TAG_OUT])])
+@pytest.mark.parametrize("script, args", [("GenerateBridge.py", []), ("GenerateSemantic.py", []), ("GenerateViews.py", []), ("GenerateCatalog.py", [TAG_OUT])])
 def test_in_memory_generator_check_matches_the_repo(script, args):
     result = Run(script, *args, "--check")
     assert result.returncode == 0, result.stdout + result.stderr
@@ -168,6 +168,7 @@ def test_check_and_out_leave_the_repo_untouched(tmp_path):
     Run("GenerateDatum.py", "--out", str(tmp_path / "datum"))
     Run("GenerateBridge.py", "--check")
     Run("GenerateSemantic.py", "--check")
+    Run("GenerateViews.py", "--check")
     Run("GenerateCatalog.py", TAG_OUT, "--check")
     if os.path.isdir(ASSEMBLY_TAGS):
         Run("GenerateTags.py", ASSEMBLY_TAGS, "--check")

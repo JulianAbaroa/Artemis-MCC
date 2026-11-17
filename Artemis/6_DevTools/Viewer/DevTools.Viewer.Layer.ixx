@@ -1,6 +1,7 @@
 export module DevTools.Viewer.Layer;
 
 import Services.Layer;
+import Services.Observed.State;
 import Services.Preferences.System;
 import Engine.Render.Type;
 import Engine.Render.Window.Type;
@@ -60,7 +61,7 @@ export namespace DevTools::Viewer
             m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
             m_SelectionService(m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
-            m_SceneService(service.m_SettingsStore, m_CameraStore, m_CameraService, m_SelectionService),
+            m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore),
             m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SelectionStore),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)

@@ -1,6 +1,7 @@
 export module DevTools.Viewer.Scene.System;
 
 import Common.Math.Type;
+import Services.Observed.State;
 import Services.Settings.State;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
@@ -18,6 +19,7 @@ export namespace DevTools::Viewer::Scene::System
     {
     private:
         using Tick = Bridge::Codec::Tick::Type::Tick;
+        using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
@@ -27,9 +29,9 @@ export namespace DevTools::Viewer::Scene::System
         using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
     public:
-        SceneService(SettingsStore& settingsStore, CameraStore& cameraStore,
+        SceneService(SettingsStore& settingsStore, ObservedPlayerStore& observedStore, CameraStore& cameraStore,
             CameraService& cameraService, SelectionService& selectionService) :
-            m_SettingsStore(settingsStore), m_CameraStore(cameraStore),
+            m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_CameraStore(cameraStore),
             m_CameraService(cameraService), m_SelectionService(selectionService) {}
         ~SceneService() = default;
 
@@ -43,7 +45,8 @@ export namespace DevTools::Viewer::Scene::System
         auto Deactivate() -> void;
 
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
-        // note: Follows or orbits the selected object according to the follow mode of the camera.
+        // note: Follows or orbits the selected object according to the follow mode of the camera. When it follows the biped of a player, that
+        // player is the observed one of the Services (the AI thread gives it a View).
         auto Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport) -> void;
 
         auto ClearSelection() -> void;
@@ -60,6 +63,7 @@ export namespace DevTools::Viewer::Scene::System
 
     private:
         SettingsStore& m_SettingsStore;
+        ObservedPlayerStore& m_ObservedStore;
         CameraStore& m_CameraStore;
         CameraService& m_CameraService;
         SelectionService& m_SelectionService;

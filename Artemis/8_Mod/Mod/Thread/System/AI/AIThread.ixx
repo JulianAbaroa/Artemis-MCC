@@ -114,9 +114,9 @@ export namespace Mod::Thread::System
         auto SetConsuming(bool value) -> void;
 
         // return: The players that get a View in this tick (D307). With a client that owns the instance, the players of its AgentMask and the
-        // local player 0. Without one, the local player 0.
-        // note: The local player is the one of the last published player table, so it is missing in the first tick after a load. Nobody
-        // reads the Viewer's followed player here (an observer, the AI thread imports no tool): it joins the set when the Viewer shows Views (VW.2).
+        // local player 0. Without one, the local player 0. In both, the player the Viewer follows (ObservedPlayerStore of Services, which the
+        // Viewer writes: the AI thread imports no tool).
+        // note: The local player is the one of the last published player table, so it is missing in the first tick after a load.
         auto BuildAgentSet() const -> AgentSet;
 
         // Runs the pipeline over the Snapshot of a queued tick.

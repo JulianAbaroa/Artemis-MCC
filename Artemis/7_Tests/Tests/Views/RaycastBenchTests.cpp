@@ -12,6 +12,7 @@ import Perception.ObjectGraph.Type;
 import Perception.Players.Type;
 import Views.Raycast.Type;
 import Views.Raycast.System;
+import Views.View.Type;
 import Tests.Support.Bench;
 import Tests.Support.FilmPass;
 import Tests.Support.Pipeline;
@@ -607,6 +608,7 @@ namespace
 
         auto Stream() const -> const SceneStream& { return m_Stream; }
         auto TotalMeanMs() const -> double { return m_Total.Summary().Mean / k_NanosPerMicro; }
+        auto TotalWithoutSightMs() const -> double { return (m_Total.Summary().Mean - m_SightUs.Summary().Mean) / k_NanosPerMicro; }
 
     private:
         // The eye, aim, range and perception origin of an agent. A filler (a past position of Self) keeps the camera of that moment.
@@ -723,6 +725,7 @@ namespace
             const Origin self{ selfPtr->Position, selfPtr->Forward, selfPtr->Handle, selfPtr->BipedHandle, false };
             if (record % k_HistoryEvery == 1) m_History.push_back(Origin{ self.Camera, self.Forward, self.PlayerHandle, self.BipedHandle, true });
             if (isDecision) m_Decision.Measure(chain, this->BuildOrigins(chain, self), armed);
+            if (isDecision) this->MeasureViewsUpdate(chain);
 
             if (m_Measured == 0)
             {
@@ -839,6 +842,9 @@ namespace
 
             lines.push_back("");
             for (const std::string& line : m_Decision.Lines()) lines.push_back(line);
+            lines.push_back(TimeLine("M6 REAL ViewsService::Update (16 agents)", m_ViewsReal));
+            lines.push_back(std::format("M6 REAL against the M6 TOTAL without sight (F4.3 adds it): {:.3f} ms against {:.3f} ms, {:+.1f}%.", m_ViewsReal.Summary().Mean / k_NanosPerMicro,
+                m_Decision.TotalWithoutSightMs(), 100.0 * (m_ViewsReal.Summary().Mean / k_NanosPerMicro / m_Decision.TotalWithoutSightMs() - 1.0)));
             lines.push_back(std::format("M6 sight exactness against the reference scene (every object gathered without reuse, all in MOBILE): {} rays compared, {} differences.",
                 m_SightCompared, m_SightDifferences));
             for (const std::string& line : m_TickStream.Lines("M6 scene at one gather per tick")) lines.push_back(line);
@@ -873,6 +879,7 @@ namespace
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
         Series m_RestObjects{}, m_Filtered{}, m_Pending{};
         DecisionBench m_Decision{};
+        Series m_ViewsReal{};
         SceneStream m_TickStream{};
         EyeProbe m_Eye{};
         std::size_t m_SightCompared{};
@@ -966,6 +973,16 @@ namespace
                 lines.push_back(std::format("  {:<22} {:>9.4f} ms per tick, {:.4f} ms averaged over N = 4",
                     rows[index].first, rows[index].second->Summary().Mean / k_NanosPerMicro, rows[index].second->Summary().Mean / k_NanosPerMicro / k_DecisionEvery));
             }
+        }
+
+        // Times ViewsService::Update with every player an agent, as the pipeline calls it (F4.2): scene, exclusions, aim and rays of 16 agents.
+        // note: The chain is the one of this pass and Update only publishes again the Views the pipeline just made.
+        auto MeasureViewsUpdate(Chain& chain) -> void
+        {
+            const auto start{ std::chrono::steady_clock::now() };
+            chain.m_Egocentric.m_ViewsService.Update(Views::View::Type::AgentSet::All());
+            const auto end{ std::chrono::steady_clock::now() };
+            m_ViewsReal.Add(std::chrono::duration<double, std::micro>(end - start).count());
         }
 
         // M0: RaycastService::Update as it is.

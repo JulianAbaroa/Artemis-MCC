@@ -115,6 +115,9 @@
     <ClCompile Include="Raycast\Type\RaycastConstant.ixx">
       <Filter>Raycast\Type</Filter>
     </ClCompile>
+    <ClCompile Include="Raycast\Type\RaycastPattern.ixx">
+      <Filter>Raycast\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Raycast\Type\RaycastScenes.ixx">
       <Filter>Raycast\Type</Filter>
     </ClCompile>

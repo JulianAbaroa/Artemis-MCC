@@ -29,7 +29,7 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Bridge.Codec.Layer` | The facade: `TickService`, `FlatService`, `PipelineService` and their stores; `Cleanup()`. |
-| `Bridge.Codec.Pipeline.System` | `PipelineService::Run` (it takes the `AgentSet` of the tick, every player by default) and the names of its stages, and `RunLight` (Q101): decodes a light Snapshot into the light stores of Blam.Runtime and runs the flag pass of Perception. It touches no store of the full tick and assembles no Tick. |
+| `Bridge.Codec.Pipeline.System` | `PipelineService::Run` (it takes the `AgentSet` of the tick, every player by default) and the names of its stages (`Views` runs before `Raycast`: it prepares the ray scene the old Self reuses, F4.2), and `RunLight` (Q101): decodes a light Snapshot into the light stores of Blam.Runtime and runs the flag pass of Perception. It touches no store of the full tick and assembles no Tick. |
 | `Bridge.Codec.Pipeline.Type` | `CapturedTick` and `TickQueue`: one tick the game thread copied and queued for the AI thread (Snapshot, bridge clock, generation, epoch, light, lost before, first after load), and the queue that carries them (D305). `ObservedTick`: what the AI thread hands to the tick observers. |
 | `Bridge.Codec.Tick.Type`, `Bridge.Codec.Tick.State` | The Tick and its store. |
 | `Bridge.Codec.Flat.Type`, `Bridge.Codec.Flat.System` | `BridgeClock` (with `IsDecision` and `IsSparse`), `FlatRequest`, `FlatService::Flatten`. |

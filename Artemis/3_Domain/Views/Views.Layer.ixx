@@ -39,7 +39,7 @@ export namespace Views
             m_SelfService(log, tables.m_PlayerStore, m_SelfStore),
             m_AffordanceService(log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, environment.m_ClassifierStore, environment.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
             m_RaycastService(log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore, m_RaycastSceneStore),
-            m_ViewsService(log, tables.m_ObjectStore, resolved.m_DefinitionsStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_WeaponDetailsStore, environment.m_ObjectiveDetailsStore, m_ViewsStore) {}
+            m_ViewsService(log, tables.m_ObjectStore, resolved.m_DefinitionsStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_WeaponDetailsStore, environment.m_ObjectiveDetailsStore, environment.m_ObjectGraphStore, resolved.m_Raycaster, environment.m_CollidableService, m_RaycastSceneStore, m_ViewsStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;

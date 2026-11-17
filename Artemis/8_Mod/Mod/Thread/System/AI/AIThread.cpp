@@ -1,6 +1,8 @@
 module Mod.Thread.System;
 import :AI;
 
+import Common.Engine.Type;
+import Services.Observed.State;
 import Services.Telemetry.Type;
 import Services.Telemetry.System;
 import Contract.Bridge.Type;
@@ -22,6 +24,7 @@ namespace
     using Views::Self::Type::k_SelfLocalIndex;
     using Services::Telemetry::System::OtherStageNs;
     using Services::Telemetry::Type::k_MaxStages;
+    using Common::Engine::Type::k_NoHandle;
 
     using std::chrono::steady_clock;
     using std::chrono::nanoseconds;
@@ -230,6 +233,9 @@ namespace Mod::Thread::System
 
         const BridgeControlState control{ m_Transport.m_BridgeStore.GetControl() };
         if (control.IsClientConnected && control.Owner == BridgeOwner::Python) agents.Mask = control.AgentMask;
+
+        const std::uint32_t observed{ m_Service.m_ObservedPlayerStore.Get() };
+        if (observed != k_NoHandle) agents.Add(observed);
 
         const auto players{ m_Tables.m_PlayerStore.Acquire() };
         if (!players) return agents;

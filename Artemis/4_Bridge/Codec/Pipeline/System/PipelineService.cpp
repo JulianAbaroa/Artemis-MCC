@@ -61,9 +61,9 @@ namespace Bridge::Codec::Pipeline::System
         if (!stage()) return;
         m_Egocentric.m_AffordanceService.Update();
         if (!stage()) return;
-        m_Egocentric.m_RaycastService.Update();
-        if (!stage()) return;
         m_Egocentric.m_ViewsService.Update(agents);
+        if (!stage()) return;
+        m_Egocentric.m_RaycastService.Update();
         if (!stage()) return;
 
         m_TickService.Assemble(generation);

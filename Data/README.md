@@ -105,6 +105,14 @@ Per tag: `name`, `group` (fourcc), `kind` (ObjectKind), `mp` (multiplayer object
 
 Writes the module `Common.Semantic.Type` (primary in `Artemis/1_Shared/Common/Semantic/`, partitions under `Type/`): the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.
 
+## View rays
+
+`Views/Rays.xml` is the pattern of the perception rays of a View (D311): one `<ray yaw pitch range>` per ray, in the frame of the agent (degrees, positive yaw to the left, positive pitch up, range in world units), at most 16. It starts as the cube of the old Self (6 faces and 8 corners, range 20).
+
+    python Tools/TagTranspiler/GenerateViews.py
+
+Writes the partition `Views.Raycast.Type:Pattern` (`Artemis/3_Domain/Views/Raycast/Type/RaycastPattern.ixx`). `--check` compares with the repo and writes nothing. It fails on more than 16 rows or a range that is not positive.
+
 ## Presets
 
 `Presets/` holds the gametype presets (Q97, D264, D265): sets of values that Artemis writes into the game variant `V` (the one the engine reads: respawn time, traits, rounds, loadouts...) at load and between rounds. The XML is the source of truth, hand-edited and committed. The DLL does not read XML: `Tools/presets.py` compiles it into text files and editing a preset needs no rebuild.
