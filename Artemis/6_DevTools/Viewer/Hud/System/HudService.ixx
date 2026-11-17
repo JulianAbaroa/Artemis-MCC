@@ -4,6 +4,7 @@ export import :Affordances;
 export import :Collidables;
 export import :Fixtures;
 export import :Vitalities;
+export import :ObservedView;
 export import :Canvas;
 export import :PlayerLabels;
 export import :ObjectLabels;
@@ -19,6 +20,7 @@ import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Overlay.State;
+import DevTools.Viewer.Scene.System;
 import DevTools.Viewer.Selection.State;
 import std;
 
@@ -29,7 +31,7 @@ namespace
 
 export namespace DevTools::Viewer::Hud::System
 {
-    // Draws the overlay window with the telemetry or the panel of the selected object.
+    // Draws the overlay window with the telemetry, the panel of the selected object or the View of the watched player.
     class HudService
     {
     private:
@@ -40,12 +42,13 @@ export namespace DevTools::Viewer::Hud::System
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
+        using SceneService = DevTools::Viewer::Scene::System::SceneService;
 
     public:
         HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, CollidableStore& collidableStore,
-            OverlayStore& overlayStore, SelectionStore& selectionStore) :
+            OverlayStore& overlayStore, SelectionStore& selectionStore, SceneService& sceneService) :
             m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_CollidableStore(collidableStore),
-            m_OverlayStore(overlayStore), m_SelectionStore(selectionStore) {}
+            m_OverlayStore(overlayStore), m_SelectionStore(selectionStore), m_SceneService(sceneService) {}
         ~HudService() = default;
 
         HudService(const HudService&) = delete;
@@ -61,11 +64,13 @@ export namespace DevTools::Viewer::Hud::System
         CollidableStore& m_CollidableStore;
         OverlayStore& m_OverlayStore;
         SelectionStore& m_SelectionStore;
+        SceneService& m_SceneService;
 
         std::uint32_t m_LastHandle{ k_NoHandle };
 
         auto DrawNavBar() -> void;
         auto DrawDefault() -> void;
+        auto DrawViewPanel(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawSelectedPanel(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawPanel(const Tick& tick, std::uint32_t handle) -> void;
 

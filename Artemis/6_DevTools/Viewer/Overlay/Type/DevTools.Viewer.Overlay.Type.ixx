@@ -12,6 +12,7 @@ export namespace DevTools::Viewer::Overlay::Type
         Health,
         Fixture,
         Affordance,
+        View,
 
         Count
     };

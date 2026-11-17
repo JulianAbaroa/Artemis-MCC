@@ -5,7 +5,12 @@ Group `6_DevTools` - static library inside the game process - the 3D debug viewe
 ## Responsibility
 In sparse mode (Q101) it sees only the decision ticks and does not raise the every-tick demand. The HUD shows the light ticks per second and their mean time next to the sweep time.
 Draws the map and a HUD over the game frame from the published Tick: a free or game camera, the collidables, zones, fixtures and
-labels, an overlay with telemetry or the panel of the selected object, and picking by ray. It also defines `EngineAccess`: the
+labels, an overlay with telemetry, the panel of the selected object or the panel of the View of the watched player, and picking by ray.
+It also draws that View (`ViewPass`, option `View of the watched player`, on by default): the cone of sight (`k_SightHalfAngle` and
+`k_SightRange` of `Views.Raycast.Type`, from the eye along the aim, none in Full mode), a line to each player it sees, markers for its
+allies, the two flags (a line to the stand when away, the carrier ringed), the radar points and the sounds, all in the color of the
+relation (enemy red, ally blue, none yellow). The only thing it draws from the Tick is, in grey, the players the View does not contain, to
+compare by eye with what the game shows. It also defines `EngineAccess`: the
 exact members of the engine and bridge Layers the development tools may use, so they import none of those Layers.
 
 ## Does not
@@ -22,11 +27,11 @@ Other projects may import only these modules; everything else in the project is 
 
 | Module | What it gives |
 |---|---|
-| `DevTools.Viewer.Layer` | The facade: camera, selection, overlay, options and the services that draw. While the camera follows or orbits the biped of a player, `SceneService` writes that player in the `ObservedPlayerStore` of `Services` (none otherwise), so the AI thread gives it a View (F4.2). The camera, the labels, the aim hit label and the rays it draws come from the View of the watched player (`SceneService::GetObservedView`: the observed one, else the primary local player), and the free camera seats on the View of the local player. |
+| `DevTools.Viewer.Layer` | The facade: camera, selection, overlay, options and the services that draw. While the camera follows or orbits the biped of a player, `SceneService` writes that player in the `ObservedPlayerStore` of `Services` (none otherwise), so the AI thread gives it a View (F4.2). The camera, the labels, the aim hit label and the rays and the View it draws come from the View of the watched player (`SceneService::GetObservedView`: the observed one, else the primary local player), and the free camera seats on the View of the local player. |
 | `DevTools.Viewer.Access.Type` | `EngineAccess`: what the tools use of the engine and the bridge (it also carries the `OracleStore` of the raycast oracle and the `MapVariantDecodeStore` the bench asks decodes through), built by `Mod`. |
 | `DevTools.Viewer.Camera.Type`, `DevTools.Viewer.Camera.State` | Camera modes, lens, rays and the camera input. |
-| `DevTools.Viewer.Options.Type`, `DevTools.Viewer.Options.State` | Viewer options and their preference keys. |
-| `DevTools.Viewer.Overlay.State`, `DevTools.Viewer.Selection.State` | Overlay mode and page; selected object and pick requests. |
+| `DevTools.Viewer.Options.Type`, `DevTools.Viewer.Options.State` | Viewer options and their preference keys (`Viewer_PlayerView` is the one of the View pass). |
+| `DevTools.Viewer.Overlay.State`, `DevTools.Viewer.Selection.State` | Overlay mode (telemetry, the panels of the selected object and `View`) and page; selected object and pick requests. |
 
 ## Depends on
 Every pure project, `Services`, `Bridge.Transport`, the five `Engine.*` projects and `DevTools.Gui`; it imports engine modules only

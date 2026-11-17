@@ -48,6 +48,16 @@ export namespace DevTools::Viewer::Style::Type
     inline constexpr Color k_RayPerceptionHitStatic{ 1.0f, 1.0f, 0.0f };
     inline constexpr Color k_RayPerceptionNoHit{ 1.0f, 1.0f, 1.0f };
 
+    // The View of the watched player (F4.4): what each other player is to it, and what it does not know.
+    inline constexpr Color k_ViewEnemy{ 1.00f, 0.20f, 0.20f };
+    inline constexpr Color k_ViewAlly{ 0.25f, 0.50f, 1.00f };
+    inline constexpr Color k_ViewAllyDim{ 0.15f, 0.28f, 0.55f };
+    inline constexpr Color k_ViewNone{ 1.00f, 0.90f, 0.20f };
+    inline constexpr Color k_ViewHidden{ 0.45f, 0.45f, 0.45f };
+    inline constexpr Color k_ViewCone{ 0.90f, 0.90f, 0.60f };
+    inline constexpr Color k_ViewRadar{ 0.30f, 0.90f, 0.90f };
+    inline constexpr Color k_ViewSound{ 1.00f, 0.60f, 0.15f };
+
     inline constexpr Color k_LimitKill{ 0.90f, 0.30f, 0.30f };
     inline constexpr Color k_LimitSoftKill{ 0.95f, 0.55f, 0.20f };
     inline constexpr Color k_LimitSafe{ 0.40f, 0.85f, 0.50f };

@@ -739,8 +739,10 @@ def test_the_dll_does_not_list_the_sources_of_the_engine_projects():
 DEVTOOLS = "Artemis/6_DevTools"
 DEVTOOLS_ROOTS = {"DevTools.Gui", "DevTools.Viewer", "DevTools.Workbench"}
 PURE_ROOTS = {"Blam.Map", "Blam.MapModel", "Blam.Layout", "Blam.Runtime", "Perception", "Views", "Bridge.Codec", "Contract", "Control"}
+# Systems of the pure components that the tools read because they are pure functions over published data. Views.View.System: the Viewer
+# finds the View it watches and draws from it (FindObservedView, RaycastsOf, ViewPositionOf, AimDirectionOf), so it computes nothing itself.
 DEVTOOLS_PURE_SYSTEMS = {"Bridge.Codec.Dump.System", "Bridge.Codec.Flat.System", "Blam.Layout.Snapshot.System", "Perception.Collidable.System",
-                         "Blam.MapModel.Definitions.Reflect"}
+                         "Blam.MapModel.Definitions.Reflect", "Views.View.System"}
 
 
 def DevToolsSources():

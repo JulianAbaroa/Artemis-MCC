@@ -17,6 +17,11 @@ namespace
     using Common::Math::Type::k_TwoPi;
 
     constexpr int k_CylinderSegments{ 24 };
+    constexpr float k_DashLength{ 0.6f };
+    constexpr float k_DashGap{ 0.4f };
+    constexpr float k_HeadLength{ 0.45f };
+    constexpr float k_HeadWidth{ 0.2f };
+    constexpr float k_Minimum{ 1e-5f };
 
     struct Basis
     {
@@ -50,10 +55,108 @@ namespace
     {
         return Vertex{ position.X, position.Y, position.Z, color.R, color.G, color.B };
     }
+
+    // return: A basis whose Right and Up are perpendicular to the axis, whatever its direction.
+    auto BasisAround(const Vec3& axis) -> Basis
+    {
+        const bool isVertical{ std::fabs(VecMath::Normalize(axis).Z) > 0.99f };
+        return MakeBasis(axis, isVertical ? Vec3{ 1.0f, 0.0f, 0.0f } : Vec3{ 0.0f, 0.0f, 1.0f });
+    }
+
+    auto AppendHead(std::vector<Vertex>& out, const Vec3& tip, const Vec3& direction, const Color& color) -> void
+    {
+        const Basis basis{ BasisAround(direction) };
+        const Vec3 baseCenter{ VecMath::Subtract(tip, VecMath::Scale(direction, k_HeadLength)) };
+
+        for (const Vec3& side : { basis.Right, basis.Up })
+        {
+            const Vec3 offset{ VecMath::Scale(side, k_HeadWidth) };
+
+            out.push_back(MakeVertex(tip, color));
+            out.push_back(MakeVertex(VecMath::Add(baseCenter, offset), color));
+            out.push_back(MakeVertex(tip, color));
+            out.push_back(MakeVertex(VecMath::Subtract(baseCenter, offset), color));
+        }
+    }
 }
 
 namespace DevTools::Viewer::Geometry::System
 {
+    auto AppendLine(std::vector<Vertex>& out, const Vec3& from, const Vec3& to, const Color& color) -> void
+    {
+        out.push_back(MakeVertex(from, color));
+        out.push_back(MakeVertex(to, color));
+    }
+
+    auto AppendArrow(std::vector<Vertex>& out, const Vec3& from, const Vec3& to, const Color& color, bool dashed) -> void
+    {
+        const Vec3 delta{ VecMath::Subtract(to, from) };
+        const float length{ VecMath::Length(delta) };
+        if (length < k_Minimum) return;
+
+        const Vec3 direction{ VecMath::Scale(delta, 1.0f / length) };
+
+        if (!dashed)
+        {
+            AppendLine(out, from, to, color);
+        }
+        else
+        {
+            for (float at{ 0.0f }; at < length; at += k_DashLength + k_DashGap)
+            {
+                const float end{ (std::min)(at + k_DashLength, length) };
+                AppendLine(out, VecMath::Add(from, VecMath::Scale(direction, at)),
+                    VecMath::Add(from, VecMath::Scale(direction, end)), color);
+            }
+        }
+
+        AppendHead(out, to, direction, color);
+    }
+
+    auto AppendCircle(std::vector<Vertex>& out, const Vec3& center, const Vec3& normal, float radius,
+        int segments, const Color& color) -> void
+    {
+        if (segments < 3) return;
+
+        const Basis basis{ BasisAround(normal) };
+        const auto pointAt = [&](int index) -> Vec3
+        {
+            const float angle{ k_TwoPi * static_cast<float>(index) / static_cast<float>(segments) };
+            return ToWorld(center, basis, radius * std::cos(angle), 0.0f, radius * std::sin(angle));
+        };
+
+        for (int index{ 0 }; index < segments; ++index)
+        {
+            AppendLine(out, pointAt(index), pointAt(index + 1), color);
+        }
+    }
+
+    auto AppendCross(std::vector<Vertex>& out, const Vec3& center, float halfSize, const Color& color) -> void
+    {
+        AppendLine(out, Vec3{ center.X - halfSize, center.Y, center.Z }, Vec3{ center.X + halfSize, center.Y, center.Z }, color);
+        AppendLine(out, Vec3{ center.X, center.Y - halfSize, center.Z }, Vec3{ center.X, center.Y + halfSize, center.Z }, color);
+        AppendLine(out, Vec3{ center.X, center.Y, center.Z - halfSize }, Vec3{ center.X, center.Y, center.Z + halfSize }, color);
+    }
+
+    auto AppendCone(std::vector<Vertex>& out, const Vec3& apex, const Vec3& axis, float halfAngle, float slantLength,
+        int lines, const Color& color) -> void
+    {
+        if (lines < 1) return;
+
+        const Basis basis{ BasisAround(axis) };
+        const float along{ slantLength * std::cos(halfAngle) };
+        const float radius{ slantLength * std::sin(halfAngle) };
+        const Vec3 center{ ToWorld(apex, basis, 0.0f, along, 0.0f) };
+
+        AppendCircle(out, center, axis, radius, k_CylinderSegments, color);
+
+        for (int index{ 0 }; index < lines; ++index)
+        {
+            const float angle{ k_TwoPi * static_cast<float>(index) / static_cast<float>(lines) };
+            AppendLine(out, apex, ToWorld(apex, basis, radius * std::cos(angle), along, radius * std::sin(angle)), color);
+        }
+    }
+
     auto AppendSolid(std::vector<Vertex>& out, const Vec3& position,
         const Vec3& forward, const Vec3& up, const ZoneShape& zone,
         const Color& color) -> void

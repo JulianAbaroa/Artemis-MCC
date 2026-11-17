@@ -238,6 +238,12 @@
     <ClCompile Include="Map\System\RaycastPass.ixx">
       <Filter>Map\System</Filter>
     </ClCompile>
+    <ClCompile Include="Map\System\ViewPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\ViewPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
     <ClCompile Include="Map\System\ZonePass.cpp">
       <Filter>Map\System</Filter>
     </ClCompile>
@@ -389,6 +395,12 @@
       <Filter>Hud\System\Panel</Filter>
     </ClCompile>
     <ClCompile Include="Hud\System\Panel\HealthsHud.ixx">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\ViewHud.cpp">
+      <Filter>Hud\System\Panel</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Panel\ViewHud.ixx">
       <Filter>Hud\System\Panel</Filter>
     </ClCompile>
   </ItemGroup>

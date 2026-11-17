@@ -35,6 +35,7 @@ export namespace DevTools::Viewer::Options::Type
         PlayerWeaponSecondary,
         PlayerWeaponHeld,
         PlayerSelf,
+        PlayerView,
 
         ObjectSelectedOnly,
         ObjectVehicles,
@@ -199,6 +200,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::PlayerSelf, Group::Players, "PlayerSelf", "Include local player",
             "Also labels the local player.", false },
+
+        { Flag::PlayerView, Group::Players, "PlayerView", "View of the watched player",
+            "Draws what the watched player knows (its View): the cone of sight, a line to each player it sees, its allies, the flags, and in grey the players it does not know.", true },
 
         { Flag::ObjectSelectedOnly, Group::Objects, "ObjectSelectedOnly", "Selected object only",
             "Only the selected object gets a label. Turn it off to label every enabled category.", true },

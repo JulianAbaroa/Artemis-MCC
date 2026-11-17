@@ -31,6 +31,7 @@ namespace
         case Mode::Health:     return "Health";
         case Mode::Fixture:    return "Fixture";
         case Mode::Affordance: return "Affordance";
+        case Mode::View:       return "View";
         default:               return "?";
         }
     }
@@ -67,6 +68,11 @@ namespace DevTools::Viewer::Hud::System
             {
                 this->DrawDefault();
             }
+            else if (m_OverlayStore.GetMode() == Mode::View)
+            {
+                const auto scene = m_CollidableStore.Acquire();
+                this->DrawViewPanel(scene ? scene->Tick : nullptr);
+            }
             else
             {
                 const auto scene = m_CollidableStore.Acquire();
@@ -91,6 +97,12 @@ namespace DevTools::Viewer::Hud::System
     {
         this->DrawFramerate();
         this->DrawTelemetry();
+    }
+
+    auto HudService::DrawViewPanel(const std::shared_ptr<const Tick>& tick) -> void
+    {
+        // note: It follows the watched player, not the selection, so it needs no selected object.
+        ViewHud::Draw(tick ? m_SceneService.GetObservedView(*tick) : nullptr);
     }
 
     auto HudService::DrawSelectedPanel(const std::shared_ptr<const Tick>& tick) -> void

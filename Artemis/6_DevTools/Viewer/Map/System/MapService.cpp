@@ -125,6 +125,10 @@ namespace DevTools::Viewer::Map::System
                 const auto* view{ m_SceneService.GetObservedView(*tick) };
                 const Raycasts raycasts{ view ? RaycastsOf(*view) : Raycasts{} };
                 m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation);
+
+                // note: With the option off the pass gets no View and draws nothing.
+                const bool showView{ m_OptionsStore.IsEnabled(Flag::PlayerView) };
+                m_ViewPass.Upload(frame.Device, frame.Context, showView ? view : nullptr, tick.get(), tick->Generation);
             }
 
             {
@@ -207,6 +211,8 @@ namespace DevTools::Viewer::Map::System
         m_RaycastPass.Draw(context, m_GpuPipeline);
         m_Profiler.MarkGpu(context, Gpu::Raycast);
 
+        m_ViewPass.Draw(context, m_GpuPipeline);
+
         m_FixturePass.Draw(context, m_GpuPipeline);
 
         m_AimPass.Draw(context, m_GpuPipeline);
@@ -251,6 +257,7 @@ namespace DevTools::Viewer::Map::System
         m_DynamicPass.Release();
         m_ZonePass.Release();
         m_RaycastPass.Release();
+        m_ViewPass.Release();
         m_FixturePass.Release();
         m_LimitsPass.Release();
         m_AimPass.Release();

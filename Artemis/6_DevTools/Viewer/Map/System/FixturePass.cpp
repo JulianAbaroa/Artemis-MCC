@@ -12,6 +12,7 @@ import Engine.Render.System;
 import Perception.Details.Type;
 import Perception.Entities.Type;
 import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Geometry.System;
 import DevTools.Viewer.Style.Type;
 import std;
 
@@ -20,10 +21,9 @@ namespace
     using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
     using Common::Math::System::Add;
-    using Common::Math::System::Cross;
     using Common::Math::System::Length;
     using Common::Math::System::Scale;
-    using Common::Math::System::Subtract;
+    using DevTools::Viewer::Geometry::System::AppendArrow;
     using DevTools::Viewer::Style::Type::Color;
 
     using Engine::Render::Type::VertexLayout;
@@ -32,12 +32,7 @@ namespace
 
     constexpr UINT k_InitialCapacity{ 1024 };
     constexpr std::size_t k_MaxDestinations{ 8 };
-    constexpr float k_DashLength{ 0.6f };
-    constexpr float k_DashGap{ 0.4f };
-    constexpr float k_HeadLength{ 0.45f };
-    constexpr float k_HeadWidth{ 0.2f };
     constexpr float k_AnchorLift{ 0.4f };
-    constexpr float k_Minimum{ 1e-5f };
 
     // return: The point lifted so the arrows do not sink into the floor.
     auto Raised(const Vec3& p) -> Vec3
@@ -45,58 +40,11 @@ namespace
         return { p.X, p.Y, p.Z + k_AnchorLift };
     }
 
-    auto AppendLine(std::vector<Vertex>& vertices, const Vec3& a, const Vec3& b, const Color& c) -> void
-    {
-        vertices.push_back(Vertex{ a.X, a.Y, a.Z, c.R, c.G, c.B });
-        vertices.push_back(Vertex{ b.X, b.Y, b.Z, c.R, c.G, c.B });
-    }
-
-    auto AppendHead(std::vector<Vertex>& vertices, const Vec3& tip, const Vec3& dir, const Color& c) -> void
-    {
-        Vec3 side = Cross(dir, Vec3{ 0.0f, 0.0f, 1.0f });
-        if (Length(side) < 0.1f) side = Cross(dir, Vec3{ 1.0f, 0.0f, 0.0f });
-
-        side = Scale(side, 1.0f / Length(side));
-        const Vec3 other = Cross(dir, side);
-        const Vec3 baseCenter = Subtract(tip, Scale(dir, k_HeadLength));
-
-        AppendLine(vertices, tip, Add(baseCenter, Scale(side, k_HeadWidth)), c);
-        AppendLine(vertices, tip, Subtract(baseCenter, Scale(side, k_HeadWidth)), c);
-        AppendLine(vertices, tip, Add(baseCenter, Scale(other, k_HeadWidth)), c);
-        AppendLine(vertices, tip, Subtract(baseCenter, Scale(other, k_HeadWidth)), c);
-    }
-
-    // Appends an arrow with a head at the tip. A dashed arrow is drawn as separate segments.
-    auto AppendArrow(std::vector<Vertex>& vertices, const Vec3& from, const Vec3& to,
-        const Color& c, bool dashed) -> void
-    {
-        const Vec3 delta = Subtract(to, from);
-        const float length = Length(delta);
-        if (length < k_Minimum) return;
-
-        const Vec3 dir = Scale(delta, 1.0f / length);
-
-        if (!dashed)
-        {
-            AppendLine(vertices, from, to, c);
-        }
-        else
-        {
-            for (float at = 0.0f; at < length; at += k_DashLength + k_DashGap)
-            {
-                const float end = (std::min)(at + k_DashLength, length);
-                AppendLine(vertices, Add(from, Scale(dir, at)), Add(from, Scale(dir, end)), c);
-            }
-        }
-
-        AppendHead(vertices, to, dir, c);
-    }
-
     auto AppendDirectional(std::vector<Vertex>& vertices, const Vec3& origin, const Vec3& direction,
         float length, const Color& c) -> void
     {
         const float magnitude = Length(direction);
-        if (magnitude < k_Minimum) return;
+        if (magnitude <= 0.0f) return;
 
         const Vec3 from = Raised(origin);
         AppendArrow(vertices, from, Add(from, Scale(direction, length / magnitude)), c, false);
